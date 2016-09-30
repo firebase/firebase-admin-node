@@ -1,0 +1,12 @@
+.idea
+.DS_Store
+npm-debug.log
+
+lib/
+.tmp/
+typings/
+coverage/
+node_modules/
+
+# Real key file should not be checked in
+test/resources/key.json
