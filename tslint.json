@@ -8,6 +8,7 @@
       "static-before-instance",
       "variables-before-functions"
     ],
+    "max-line-length": [true, 120],
     "no-consecutive-blank-lines": false,
     "object-literal-sort-keys": false,
     "ordered-imports": false,

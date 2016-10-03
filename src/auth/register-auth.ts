@@ -1,5 +1,6 @@
 import {Auth} from './auth';
-import {FirebaseApp} from '../firebase-app';
+import {AppHook, FirebaseApp} from '../firebase-app';
+import {FirebaseServiceInterface} from '../firebase-service';
 import * as firebase from '../default-namespace';
 
 /**
@@ -33,7 +34,7 @@ function serviceFactory(app: FirebaseApp, extendApp: (props: Object) => void): F
 let appHook: AppHook = (event: string, app: FirebaseApp) => {
   if (event === 'create') {
     // Initializes auth so listeners and getToken() functions are available to other services immediately.
-    (app as FirebaseAppInterface).auth();
+    app.auth();
   }
 };
 

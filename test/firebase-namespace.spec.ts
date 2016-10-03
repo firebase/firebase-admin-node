@@ -7,6 +7,7 @@ import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
+import {FirebaseAppOptions} from '../src/firebase-app';
 import {FirebaseNamespace} from '../src/firebase-namespace';
 
 chai.should();
@@ -18,7 +19,7 @@ const DEFAULT_APP_NAME = '[DEFAULT]';
 
 const mockAppName = 'mock-app-name';
 const mockServiceName = 'mock-service-name';
-const mockOptions = {} as FirebaseAppOptions;
+const mockOptions: FirebaseAppOptions = {};
 
 
 describe('FirebaseNamespace', () => {

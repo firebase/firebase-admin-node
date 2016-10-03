@@ -13,8 +13,8 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import {
-  ApplicationDefaultCredential, CertCredential, Certificate, MetadataServiceCredential,
-  RefreshToken, RefreshTokenCredential, UnauthenticatedCredential,
+  ApplicationDefaultCredential, CertCredential, Certificate, GoogleOAuthAccessToken,
+  MetadataServiceCredential, RefreshToken, RefreshTokenCredential, UnauthenticatedCredential,
 } from '../src/auth/credential';
 
 chai.should();
@@ -188,7 +188,7 @@ describe('Credential', () => {
     });
 
     it('should create access tokens', () => {
-      const expected = {
+      const expected: GoogleOAuthAccessToken = {
         access_token: 'anAccessToken',
         expires_in: 42,
       };

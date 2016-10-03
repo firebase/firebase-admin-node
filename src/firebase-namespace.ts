@@ -1,9 +1,14 @@
 import {deepExtend} from './utils/deep-copy';
-import {FirebaseApp} from './firebase-app';
+import {AppHook, FirebaseApp, FirebaseAppOptions} from './firebase-app';
+import {FirebaseServiceFactory, FirebaseServiceInterface} from './firebase-service';
 
 const DEFAULT_APP_NAME = '[DEFAULT]';
 
-class FirebaseNamespaceInternals implements FirebaseNamespaceInternalsInterface {
+interface FirebaseServiceNamespace <T extends FirebaseServiceInterface> {
+  (app?: FirebaseApp): T;
+}
+
+class FirebaseNamespaceInternals {
   public serviceFactories: {[serviceName: string]: FirebaseServiceFactory} = {};
 
   private apps_: {[appName: string]: FirebaseApp} = {};
@@ -147,7 +152,7 @@ class FirebaseNamespaceInternals implements FirebaseNamespaceInternalsInterface 
 /**
  * Global Firebase context object.
  */
-class FirebaseNamespace implements FirebaseNamespaceInterface {
+class FirebaseNamespace {
   public SDK_VERSION = '<XXX_SDK_VERSION_XXX>';
   public INTERNAL: FirebaseNamespaceInternals;
 
@@ -194,4 +199,7 @@ class FirebaseNamespace implements FirebaseNamespaceInterface {
   }
 };
 
-export {FirebaseNamespace};
+export {
+  FirebaseNamespace,
+  FirebaseNamespaceInternals
+};

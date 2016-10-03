@@ -13,10 +13,11 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import * as mocks from './resources/mocks';
-import {FirebaseApp} from '../src/firebase-app';
 import {FirebaseNamespace} from '../src/firebase-namespace';
-import {Auth, FirebaseAccessToken} from '../src/auth/auth';
+import {GoogleOAuthAccessToken} from '../src/auth/credential';
 import {FirebaseTokenGenerator} from '../src/auth/token-generator';
+import {Auth, FirebaseAccessToken} from '../src/auth/auth';
+import {FirebaseApp, FirebaseAppOptions} from '../src/firebase-app';
 
 chai.should();
 chai.use(sinonChai);
@@ -304,7 +305,7 @@ describe('Auth', () => {
     });
 
     it('should accept a well-formed custom credential implementation', () => {
-      const oracle = {
+      const oracle: GoogleOAuthAccessToken = {
         access_token: 'This is a custom token',
         expires_in: ONE_HOUR_IN_SECONDS,
       };

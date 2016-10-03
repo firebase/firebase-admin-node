@@ -46,7 +46,7 @@ function copyAttr(to: Object, from: Object, key: string, alt: string) {
   }
 }
 
-export class RefreshToken {
+class RefreshToken {
   public clientId: string;
   public clientSecret: string;
   public refreshToken: string;
@@ -95,7 +95,7 @@ export class RefreshToken {
 /**
  * A struct containing the fields necessary to use service-account JSON credentials.
  */
-export class Certificate implements CertificateInterface {
+class Certificate {
   public projectId: string;
   public privateKey: string;
   public clientEmail: string;
@@ -123,10 +123,20 @@ export class Certificate implements CertificateInterface {
 }
 
 /**
+ * Interface for Google OAuth 2.0 access tokens.
+ */
+interface GoogleOAuthAccessToken {
+  /* tslint:disable:variable-name */
+  access_token: string;
+  expires_in: number;
+  /* tslint:enable:variable-name */
+}
+
+/**
  * A wrapper around the http and https request libraries to simplify & promisify JSON requests.
  * TODO(inlined): Create a type for "transit".
  */
-function requestAccessToken(transit, options: Object, data?: Object): Promise<AccessToken> {
+function requestAccessToken(transit, options: Object, data?: Object): Promise<GoogleOAuthAccessToken> {
   return new Promise((resolve, reject) => {
     const req = transit.request(options, (res) => {
       let buffers: Buffer[] = [];
@@ -161,14 +171,14 @@ function requestAccessToken(transit, options: Object, data?: Object): Promise<Ac
 /**
  * Implementation of Credential that uses a service account certificate.
  */
-export class CertCredential implements CredentialInterface {
+class CertCredential implements Credential {
   private certificate_: Certificate;
 
   constructor(certificate: Certificate) {
     this.certificate_ = certificate;
   }
 
-  public getAccessToken(): Promise<AccessToken> {
+  public getAccessToken(): Promise<GoogleOAuthAccessToken> {
     const token = this.createAuthJwt_();
     const postData = 'grant_type=urn%3Aietf%3Aparams%3Aoauth%3A' +
       'grant-type%3Ajwt-bearer&assertion=' +
@@ -209,10 +219,18 @@ export class CertCredential implements CredentialInterface {
 }
 
 /**
+ * Interface for things that generate access tokens.
+ */
+interface Credential {
+  getAccessToken(): Promise<GoogleOAuthAccessToken>;
+  getCertificate(): Certificate;
+}
+
+/**
  * Noop implementation of Credential.getToken that returns a Promise of null.
  */
-export class UnauthenticatedCredential implements CredentialInterface {
-  public getAccessToken(): Promise<AccessToken> {
+class UnauthenticatedCredential implements Credential {
+  public getAccessToken(): Promise<GoogleOAuthAccessToken> {
     return Promise.resolve(null);
   }
 
@@ -224,14 +242,14 @@ export class UnauthenticatedCredential implements CredentialInterface {
 /**
  * Implementation of Credential that gets access tokens from refresh tokens.
  */
-export class RefreshTokenCredential implements CredentialInterface {
+class RefreshTokenCredential implements Credential {
   private refreshToken_: RefreshToken;
 
   constructor(refreshToken: RefreshToken) {
     this.refreshToken_ = refreshToken;
   }
 
-  public getAccessToken(): Promise<AccessToken> {
+  public getAccessToken(): Promise<GoogleOAuthAccessToken> {
     const postData =
       'client_id=' + this.refreshToken_.clientId + '&' +
       'client_secret=' + this.refreshToken_.clientSecret + '&' +
@@ -262,8 +280,8 @@ export class RefreshTokenCredential implements CredentialInterface {
  * in the Google Cloud Platform. This authenticates the process as the default service account
  * of an App Engine instance or Google Compute Engine machine.
  */
-export class MetadataServiceCredential implements CredentialInterface {
-  public getAccessToken(): Promise<AccessToken> {
+class MetadataServiceCredential implements Credential {
+  public getAccessToken(): Promise<GoogleOAuthAccessToken> {
     const options = {
       method: 'GET',
       host: GOOGLE_METADATA_SERVICE_HOST,
@@ -285,8 +303,8 @@ export class MetadataServiceCredential implements CredentialInterface {
  * ApplicationDefaultCredential implements the process for loading credentials as
  * described in https://developers.google.com/identity/protocols/application-default-credentials
  */
-export class ApplicationDefaultCredential implements CredentialInterface {
-  private credential_: CredentialInterface;
+class ApplicationDefaultCredential implements Credential {
+  private credential_: Credential;
 
   constructor() {
     if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
@@ -305,7 +323,7 @@ export class ApplicationDefaultCredential implements CredentialInterface {
     this.credential_ = new MetadataServiceCredential();
   }
 
-  public getAccessToken(): Promise<AccessToken> {
+  public getAccessToken(): Promise<GoogleOAuthAccessToken> {
     return this.credential_.getAccessToken();
   }
 
@@ -314,7 +332,19 @@ export class ApplicationDefaultCredential implements CredentialInterface {
   }
 
   // Used in testing to verify we are delegating to the correct implementation.
-  public getCredential(): CredentialInterface {
+  public getCredential(): Credential {
     return this.credential_;
   }
+}
+
+export {
+  ApplicationDefaultCredential,
+  Certificate,
+  CertCredential,
+  Credential,
+  GoogleOAuthAccessToken,
+  MetadataServiceCredential,
+  RefreshToken,
+  RefreshTokenCredential,
+  UnauthenticatedCredential,
 }

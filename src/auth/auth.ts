@@ -1,16 +1,18 @@
-import {FirebaseApp} from '../firebase-app';
+import {Credential} from './credential';
 import {FirebaseTokenGenerator} from './token-generator';
-import {CertCredential, Certificate, UnauthenticatedCredential} from './credential';
+import {FirebaseApp, FirebaseAppOptions} from '../firebase-app';
+import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
+import {CertCredential, Certificate, GoogleOAuthAccessToken, UnauthenticatedCredential} from './credential';
 
 /**
  * Gets a Credential from app options.
  *
  * @return {Credential}
  */
-function getCredential(app: FirebaseApp): CredentialInterface {
+function getCredential(app: FirebaseApp): Credential {
   const opts: FirebaseAppOptions = app.options;
   if (opts.credential) {
-    return opts.credential as CredentialInterface;
+    return opts.credential as Credential;
   }
 
   // We must be careful because '' is falsy. An opt || env test would coalesce '' || undefined as undefined.
@@ -34,7 +36,7 @@ function getCredential(app: FirebaseApp): CredentialInterface {
  * @param {Object} app The app for this auth service
  * @constructor
  */
-export class Auth implements FirebaseServiceInterface {
+class Auth implements FirebaseServiceInterface {
   private app_: FirebaseApp;
   private tokenGenerator_: FirebaseTokenGenerator;
   private authTokenManager_: AuthTokenManager;
@@ -63,7 +65,7 @@ export class Auth implements FirebaseServiceInterface {
   }
 
   get app(): FirebaseApp {
-    return this.app_ as FirebaseApp;
+    return this.app_;
   }
 
   get INTERNAL(): AuthTokenManager {
@@ -101,17 +103,17 @@ export class Auth implements FirebaseServiceInterface {
   };
 };
 
-export class FirebaseAccessToken {
+class FirebaseAccessToken {
   public accessToken: string;
   public expirationTime: number;
 }
 
-class AuthTokenManager implements FirebaseServiceInternals {
-  private credential: CredentialInterface;
+class AuthTokenManager implements FirebaseServiceInternalsInterface {
+  private credential: Credential;
   private cachedToken: FirebaseAccessToken;
   private tokenListeners: Array<(token: string) => void>;
 
-  constructor(credential: CredentialInterface) {
+  constructor(credential: Credential) {
     this.credential = credential;
     this.tokenListeners = [];
   }
@@ -143,26 +145,26 @@ class AuthTokenManager implements FirebaseServiceInternals {
         .then(() => {
           return this.credential.getAccessToken();
         })
-        .then((result) => {
+        .then((result: GoogleOAuthAccessToken) => {
           if (result === null) {
             return null;
           }
-          // Since the customer can provide the credential implementation, we want to weakly verify the return type until
-          // the type is properly exported.
+          // Since the customer can provide the credential implementation, we want to weakly verify
+          // the return type until the type is properly exported.
           if (typeof result !== 'object' ||
             typeof result.expires_in !== 'number' ||
             typeof result.access_token !== 'string') {
             throw new Error('firebase.initializeApp was called with a credential ' +
               'that creates invalid access tokens: ' + JSON.stringify(result));
           }
-          const token = {
-            accessToken: result.access_token as string,
+          const token: FirebaseAccessToken = {
+            accessToken: result.access_token,
             expirationTime: Date.now() + (result.expires_in * 1000),
           };
 
           const hasAccessTokenChanged = (this.cachedToken && this.cachedToken.accessToken !== token.accessToken);
-          const hasExpirationTimeChanged = (this.cachedToken && this.cachedToken.expirationTime !== token.expirationTime);
-          if (!this.cachedToken || hasAccessTokenChanged || hasExpirationTimeChanged) {
+          const hasExpirationChanged = (this.cachedToken && this.cachedToken.expirationTime !== token.expirationTime);
+          if (!this.cachedToken || hasAccessTokenChanged || hasExpirationChanged) {
             this.cachedToken = token;
             this.tokenListeners.forEach((listener) => {
               listener(token.accessToken);
@@ -194,4 +196,10 @@ class AuthTokenManager implements FirebaseServiceInternals {
   public removeAuthTokenListener(listener: (token: string) => void) {
     this.tokenListeners = this.tokenListeners.filter((other) => other !== listener);
   }
+}
+
+
+export {
+  Auth,
+  FirebaseAccessToken,
 }

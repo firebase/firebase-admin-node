@@ -1,17 +1,49 @@
+import {Credential} from './auth/credential';
+import {FirebaseAccessToken} from './auth/auth';
 import {deepCopy, deepExtend} from './utils/deep-copy';
+import {FirebaseServiceInterface} from './firebase-service';
+import {FirebaseNamespaceInternals} from './firebase-namespace';
+
+
+/**
+ * Type representing a callback which is called every time an app lifecycle event occurs.
+ */
+type AppHook = (event: string, app: FirebaseApp) => void;
+
+
+/**
+ * Type representing the options object passed into firebase.initializeApp().
+ */
+type FirebaseAppOptions = {
+ databaseURL?: string,
+ credential?: Credential,
+ serviceAccount?: string|Object,
+ databaseAuthVariableOverride?: Object
+};
+
+
+/**
+ * Interface representing the internals of a FirebaseApp instance.
+ */
+interface FirebaseAppInternalsInterface {
+  getToken?(): Promise<FirebaseAccessToken>;
+  addAuthTokenListener?(fn: (token?: string) => void): void;
+  removeAuthTokenListener?(fn: (token?: string) => void): void;
+}
+
 
 /**
  * Global context object for a collection of services using a shared authentication state.
  */
-class FirebaseApp implements FirebaseAppInterface {
-  public INTERNAL: FirebaseAppInternals;
+class FirebaseApp {
+  public INTERNAL: FirebaseAppInternalsInterface;
 
   private name_: string;
   private options_: FirebaseAppOptions;
   private services_: {[name: string]: FirebaseServiceInterface} = {};
   private isDeleted_ = false;
 
-  constructor(options: FirebaseAppOptions, name: string, private firebaseInternals_: FirebaseNamespaceInternalsInterface) {
+  constructor(options: FirebaseAppOptions, name: string, private firebaseInternals_: FirebaseNamespaceInternals) {
     this.name_ = name;
     this.options_ = deepCopy(options) as FirebaseAppOptions;
 
@@ -20,6 +52,12 @@ class FirebaseApp implements FirebaseAppInterface {
       this[serviceName] = this.getService_.bind(this, serviceName);
     });
   }
+
+  /**
+   * Firebase services (defined via firebase.registerService()).
+   */
+  public auth(): FirebaseServiceInterface;
+  public database(): FirebaseServiceInterface;
 
   /**
    * Returns the name of the FirebaseApp instance.
@@ -95,4 +133,9 @@ class FirebaseApp implements FirebaseAppInterface {
   }
 };
 
-export {FirebaseApp};
+
+export {
+  AppHook,
+  FirebaseApp,
+  FirebaseAppOptions,
+};

@@ -30,7 +30,7 @@ interface JWTPayload {
 /**
  * Class for generating and verifying different types of Firebase Auth tokens (JWTs).
  */
-export class FirebaseTokenGenerator {
+class FirebaseTokenGenerator {
   private certificate_: Certificate;
   private publicKeys_: Object;
   private publicKeysExpireAt_: number;
@@ -52,12 +52,17 @@ export class FirebaseTokenGenerator {
    *                  the provided payload.
    */
   public createCustomToken(uid: string, developerClaims?: Object): string {
+    let errorMessage: string;
     if (typeof uid !== 'string' || uid === '') {
-      throw new Error('First argument to createCustomToken() must be a non-empty string uid');
+      errorMessage = 'First argument to createCustomToken() must be a non-empty string uid';
     } else if (uid.length > 128) {
-      throw new Error('First argument to createCustomToken() must a uid with less than or equal to 128 characters');
-    } else if (typeof developerClaims !== 'undefined' && (typeof developerClaims !== 'object' || developerClaims === null || developerClaims instanceof Array)) {
-      throw new Error('Optional second argument to createCustomToken() must be an object containing the developer claims');
+      errorMessage = 'First argument to createCustomToken() must a uid with less than or equal to 128 characters';
+    } else if (!this.isDeveloperClaimsValid_(developerClaims)) {
+      errorMessage = 'Second argument to createCustomToken() must be an object containing the developer claims';
+    }
+
+    if (typeof errorMessage !== 'undefined') {
+      throw new Error(errorMessage);
     }
 
     let jwtPayload: JWTPayload = {};
@@ -137,17 +142,20 @@ export class FirebaseTokenGenerator {
       errorMessage = 'Firebase ID token has incorrect algorithm. Expected "' + ALGORITHM + '" but got ' +
         '"' + header.alg + '".' + verifyIdTokenDocsMessage;
     } else if (payload.aud !== this.certificate_.projectId) {
-      errorMessage = 'Firebase ID token has incorrect "aud" (audience) claim. Expected "' + this.certificate_.projectId +
-        '" but got "' + payload.aud + '".' + projectIdMatchMessage + verifyIdTokenDocsMessage;
+      errorMessage = 'Firebase ID token has incorrect "aud" (audience) claim. Expected "' +
+        this.certificate_.projectId + '" but got "' + payload.aud + '".' + projectIdMatchMessage +
+        verifyIdTokenDocsMessage;
     } else if (payload.iss !== 'https://securetoken.google.com/' + this.certificate_.projectId) {
-      errorMessage = 'Firebase ID token has incorrect "iss" (issuer) claim. Expected "https://securetoken.google.com/' +
-        this.certificate_.projectId + '" but got "' + payload.iss + '".' + projectIdMatchMessage + verifyIdTokenDocsMessage;
+      errorMessage = 'Firebase ID token has incorrect "iss" (issuer) claim. Expected ' +
+        '"https://securetoken.google.com/' + this.certificate_.projectId + '" but got "' +
+        payload.iss + '".' + projectIdMatchMessage + verifyIdTokenDocsMessage;
     } else if (typeof payload.sub !== 'string') {
       errorMessage = 'Firebase ID token has no "sub" (subject) claim.' + verifyIdTokenDocsMessage;
     } else if (payload.sub === '') {
       errorMessage = 'Firebase ID token has an empty string "sub" (subject) claim.' + verifyIdTokenDocsMessage;
     } else if (payload.sub.length > 128) {
-      errorMessage = 'Firebase ID token has "sub" (subject) claim longer than 128 characters.' + verifyIdTokenDocsMessage;
+      errorMessage = 'Firebase ID token has "sub" (subject) claim longer than 128 characters.' +
+        verifyIdTokenDocsMessage;
     }
 
     if (typeof errorMessage !== 'undefined') {
@@ -185,12 +193,34 @@ export class FirebaseTokenGenerator {
 
 
   /**
+   * Returns whether or not the provided developer claims are valid.
+   *
+   * @param {Object} [developerClaims] Optional developer claims to validate.
+   * @return {boolean} True if the provided claims are valid; otherwise, false.
+   */
+  private isDeveloperClaimsValid_(developerClaims?: Object): boolean {
+    if (typeof developerClaims === 'undefined') {
+      return true;
+    }
+
+    if (typeof developerClaims === 'object' && developerClaims !== null && !(developerClaims instanceof Array)) {
+      return true;
+    }
+
+    return false;
+  }
+
+
+  /**
    * Fetches the public keys for the Google certs.
    *
    * @return {Promise<Object>} A promise fulfilled with public keys for the Google certs.
    */
   private fetchPublicKeys_(): Promise<Object> {
-    if (typeof this.publicKeys_ !== 'undefined' && typeof this.publicKeysExpireAt_ !== 'undefined' && Date.now() < this.publicKeysExpireAt_) {
+    const publicKeysExist = (typeof this.publicKeys_ !== 'undefined');
+    const publicKeysExpiredExists = (typeof this.publicKeysExpireAt_ !== 'undefined');
+    const publicKeysStillValid = (publicKeysExpiredExists && Date.now() < this.publicKeysExpireAt_);
+    if (publicKeysExist && publicKeysStillValid) {
       return Promise.resolve(this.publicKeys_);
     }
 
@@ -198,7 +228,7 @@ export class FirebaseTokenGenerator {
       https.get(CLIENT_CERT_URL, (res) => {
         const buffers: Buffer[] = [];
 
-        res.on('data', (buffer) => buffers.push(buffer));
+        res.on('data', (buffer) => buffers.push(buffer as Buffer));
 
         res.on('end', () => {
           try {
@@ -236,4 +266,8 @@ export class FirebaseTokenGenerator {
       }).on('error', reject);
     });
   }
+}
+
+export {
+  FirebaseTokenGenerator
 }

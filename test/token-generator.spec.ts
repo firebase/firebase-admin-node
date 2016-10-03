@@ -243,7 +243,7 @@ describe('FirebaseTokenGenerator', () => {
       invalidDeveloperClaims.forEach((invalidDevClaims) => {
         expect(() => {
           tokenGenerator.createCustomToken(mocks.uid, invalidDevClaims);
-        }).to.throw('Optional second argument to createCustomToken() must be an object containing the developer claims');
+        }).to.throw('Second argument to createCustomToken() must be an object containing the developer claims');
       });
     });
 
@@ -403,8 +403,9 @@ describe('FirebaseTokenGenerator', () => {
     });
 
     it('should throw if the token generator was initialized with no project ID', () => {
-      const certificateWithNoProjectId = _.omit(mocks.certificateObject, 'project_id');
-      const tokenGeneratorWithNoProjectId = new FirebaseTokenGenerator(new Certificate(certificateWithNoProjectId as any));
+      const certificateObjectWithNoProjectId = _.omit(mocks.certificateObject, 'project_id');
+      const certificateWithNoProjectId = new Certificate(certificateObjectWithNoProjectId as any);
+      const tokenGeneratorWithNoProjectId = new FirebaseTokenGenerator(certificateWithNoProjectId);
 
       const mockIdToken = mocks.generateIdToken();
 
@@ -431,7 +432,8 @@ describe('FirebaseTokenGenerator', () => {
       });
 
       return tokenGenerator.verifyIdToken(mockIdToken)
-        .should.eventually.be.rejectedWith('Firebase ID token has "kid" claim which does not correspond to a known public key');
+        .should.eventually.be.rejectedWith('Firebase ID token has "kid" claim which does not ' +
+          'correspond to a known public key');
     });
 
     it('should be rejected given an ID token with an incorrect algorithm', () => {

@@ -7,8 +7,9 @@ import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import {FirebaseApp} from '../src/firebase-app';
 import {FirebaseNamespace} from '../src/firebase-namespace';
+import {FirebaseServiceInterface} from '../src/firebase-service';
+import {FirebaseApp, FirebaseAppOptions} from '../src/firebase-app';
 
 chai.should();
 chai.use(sinonChai);
@@ -17,10 +18,9 @@ chai.use(chaiAsPromised);
 
 const mockAppName = 'mock-app-name';
 const mockServiceNames = ['mock-service-name-1', 'mock-service-name-2'];
-const mockOptions = {
-  foo: 'bar',
-  baz: false,
-} as FirebaseAppOptions;
+const mockOptions: FirebaseAppOptions = {
+  databaseURL: 'https://foo.firebaseio.com',
+};
 
 
 const deleteSpy = sinon.spy();
