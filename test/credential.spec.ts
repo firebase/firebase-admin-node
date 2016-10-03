@@ -6,8 +6,10 @@ import path = require('path');
 import http = require('http');
 import stream = require('stream');
 
+import * as _ from 'lodash';
 import {expect} from 'chai';
 import * as chai from 'chai';
+import * as nock from 'nock';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
@@ -21,13 +23,8 @@ chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
-let TEST_CERTIFICATE_OBJECT;
-try {
-  const certPath = path.resolve(__dirname, 'resources/key.json');
-  TEST_CERTIFICATE_OBJECT = JSON.parse(fs.readFileSync(certPath).toString());
-} catch (error) {
-  throw new Error('key.json not found. Have you added a key.json file to your resources yet?');
-}
+const certPath = path.resolve(__dirname, 'resources/mock.key.json');
+const MOCK_CERTIFICATE_OBJECT = JSON.parse(fs.readFileSync(certPath).toString());
 
 let TEST_GCLOUD_CREDENTIALS;
 const GCLOUD_CREDENTIAL_SUFFIX = 'gcloud/application_default_credentials.json';
@@ -40,7 +37,37 @@ try {
 
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 
+
+/**
+ * Returns a mocked out success response from the URL generating Google access tokens.
+ *
+ * @return {Object} A nock response object.
+ */
+function mockFetchAccessToken(): nock.Scope {
+  return nock('https://accounts.google.com:443')
+    .post('/o/oauth2/token')
+    .reply(200, {
+      access_token: 'access_token_' + _.random(999999999),
+      token_type: 'Bearer',
+      expires_in: 3600,
+    }, {
+      'cache-control': 'no-cache, no-store, max-age=0, must-revalidate',
+    });
+}
+
+
 describe('Credential', () => {
+  let mockedRequests: nock.Scope[] = [];
+
+  afterEach(() => {
+    _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
+    mockedRequests = [];
+  });
+
+  after(() => {
+    nock.cleanAll();
+  });
+
   describe('Certificate', () => {
     describe('fromPath', () => {
       it('should throw if called with no argument', () => {
@@ -65,7 +92,7 @@ describe('Credential', () => {
       });
 
       it('should not throw given a valid path to a service account', () => {
-        const validPath = path.resolve(__dirname, 'resources/key.json');
+        const validPath = path.resolve(__dirname, 'resources/mock.key.json');
         expect(() => Certificate.fromPath(validPath)).not.to.throw();
       });
     });
@@ -75,13 +102,13 @@ describe('Credential', () => {
         expect(() => {
           return new Certificate({
             client_email: '',
-            private_key: TEST_CERTIFICATE_OBJECT.private_key,
+            private_key: MOCK_CERTIFICATE_OBJECT.private_key,
           });
         }).to.throw(Error);
 
         expect(() => {
           return new Certificate({
-            private_key: TEST_CERTIFICATE_OBJECT.private_key,
+            private_key: MOCK_CERTIFICATE_OBJECT.private_key,
           });
         }).to.throw(Error);
       });
@@ -89,14 +116,14 @@ describe('Credential', () => {
       it('should throw if service account does not contain a valid "private_key"', () => {
         expect(() => {
           return new Certificate({
-            client_email: TEST_CERTIFICATE_OBJECT.client_email,
+            client_email: MOCK_CERTIFICATE_OBJECT.client_email,
             private_key: '',
           });
         }).to.throw(Error);
 
         expect(() => {
           return new Certificate({
-            client_email: TEST_CERTIFICATE_OBJECT.client_email,
+            client_email: MOCK_CERTIFICATE_OBJECT.client_email,
           });
         }).to.throw(Error);
       });
@@ -104,8 +131,8 @@ describe('Credential', () => {
       it('should not throw given a valid service account object', () => {
         expect(() => {
           return new Certificate({
-            private_key: TEST_CERTIFICATE_OBJECT.private_key,
-            client_email: TEST_CERTIFICATE_OBJECT.client_email,
+            private_key: MOCK_CERTIFICATE_OBJECT.private_key,
+            client_email: MOCK_CERTIFICATE_OBJECT.client_email,
           });
         }).not.to.throw();
       });
@@ -113,8 +140,8 @@ describe('Credential', () => {
       it('should accept "clientEmail" in place of "client_email" for the service account', () => {
         expect(() => {
           return new Certificate({
-            private_key: TEST_CERTIFICATE_OBJECT.private_key,
-            clientEmail: TEST_CERTIFICATE_OBJECT.client_email,
+            private_key: MOCK_CERTIFICATE_OBJECT.private_key,
+            clientEmail: MOCK_CERTIFICATE_OBJECT.client_email,
           });
         }).not.to.throw();
       });
@@ -122,8 +149,8 @@ describe('Credential', () => {
       it('should accept "privateKey" in place of "private_key" for the service account', () => {
         expect(() => {
           return new Certificate({
-            privateKey: TEST_CERTIFICATE_OBJECT.private_key,
-            client_email: TEST_CERTIFICATE_OBJECT.client_email,
+            privateKey: MOCK_CERTIFICATE_OBJECT.private_key,
+            client_email: MOCK_CERTIFICATE_OBJECT.client_email,
           });
         }).not.to.throw();
       });
@@ -133,16 +160,18 @@ describe('Credential', () => {
 
   describe('CertCredential', () => {
     it('should return a Credential', () => {
-      const c = new CertCredential(new Certificate(TEST_CERTIFICATE_OBJECT));
+      const c = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
       expect(c.getCertificate()).to.deep.equal({
-        projectId: TEST_CERTIFICATE_OBJECT.project_id,
-        clientEmail: TEST_CERTIFICATE_OBJECT.client_email,
-        privateKey: TEST_CERTIFICATE_OBJECT.private_key,
+        projectId: MOCK_CERTIFICATE_OBJECT.project_id,
+        clientEmail: MOCK_CERTIFICATE_OBJECT.client_email,
+        privateKey: MOCK_CERTIFICATE_OBJECT.private_key,
       });
     });
 
     it('should create access tokens', () => {
-      const c = new CertCredential(new Certificate(TEST_CERTIFICATE_OBJECT));
+      mockedRequests.push(mockFetchAccessToken());
+
+      const c = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
       return c.getAccessToken().then((token) => {
         expect(token.access_token).to.be.a('string').and.to.not.be.empty;
         expect(token.expires_in).to.equal(ONE_HOUR_IN_SECONDS);
@@ -223,7 +252,7 @@ describe('Credential', () => {
     });
 
     it('should return a CertCredential with GOOGLE_APPLICATION_CREDENTIALS set', () => {
-      process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, './resources/key.json');
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, './resources/mock.key.json');
       const c = new ApplicationDefaultCredential();
       expect(c.getCredential()).to.be.an.instanceof(CertCredential);
     });
@@ -256,7 +285,9 @@ describe('Credential', () => {
     });
 
     it('should create access tokens', () => {
-      process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, './resources/key.json');
+      mockedRequests.push(mockFetchAccessToken());
+
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, './resources/mock.key.json');
       const c = new ApplicationDefaultCredential();
       return c.getAccessToken().then((token) => {
         expect(token.access_token).to.be.a('string').and.to.not.be.empty;
@@ -265,12 +296,12 @@ describe('Credential', () => {
     });
 
     it('should return a Credential', () => {
-      process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, './resources/key.json');
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, './resources/mock.key.json');
       const c = new ApplicationDefaultCredential();
       expect(c.getCertificate()).to.deep.equal({
-        projectId: TEST_CERTIFICATE_OBJECT.project_id,
-        clientEmail: TEST_CERTIFICATE_OBJECT.client_email,
-        privateKey: TEST_CERTIFICATE_OBJECT.private_key,
+        projectId: MOCK_CERTIFICATE_OBJECT.project_id,
+        clientEmail: MOCK_CERTIFICATE_OBJECT.client_email,
+        privateKey: MOCK_CERTIFICATE_OBJECT.private_key,
       });
     });
   });

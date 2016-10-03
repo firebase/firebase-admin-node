@@ -20,11 +20,7 @@ $ npm install                  # Install local npm dependencies
 $ typings install              # Install TypeScript typings
 ```
 
-In order to run the tests you will need a valid service account key at
-`./test/resources/key.json`. Follow the instructions for [downloading a JSON key
-file](https://developers.google.com/identity/protocols/application-default-credentials#howtheywork).
-
-You will also need to [download the gcloud CLI](https://cloud.google.com/sdk/downloads#interactive)
+In order to run the tests, you need to [download the gcloud CLI](https://cloud.google.com/sdk/downloads#interactive)
 and run the following command:
 
 ```bash

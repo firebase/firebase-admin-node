@@ -8,28 +8,24 @@ import https = require('https');
 import * as _ from 'lodash';
 import {expect} from 'chai';
 import * as chai from 'chai';
+import * as nock from 'nock';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import * as mocks from './resources/mocks';
+import {Auth} from '../src/auth/auth';
 import {FirebaseNamespace} from '../src/firebase-namespace';
 import {GoogleOAuthAccessToken} from '../src/auth/credential';
 import {FirebaseTokenGenerator} from '../src/auth/token-generator';
-import {Auth, FirebaseAccessToken} from '../src/auth/auth';
 import {FirebaseApp, FirebaseAppOptions} from '../src/firebase-app';
 
 chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
-let TEST_CERTIFICATE_OBJECT;
-try {
-  const certPath = path.resolve(__dirname, 'resources/key.json');
-  TEST_CERTIFICATE_OBJECT = JSON.parse(fs.readFileSync(certPath).toString());
-} catch (error) {
-  throw new Error('key.json not found. Have you added a key.json file to your resources yet?');
-}
+const certPath = path.resolve(__dirname, 'resources/mock.key.json');
+const MOCK_CERTIFICATE_OBJECT = JSON.parse(fs.readFileSync(certPath).toString());
 
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 
@@ -55,8 +51,8 @@ function createAuthWithObject() {
   const app = createAppWithOptions({
     serviceAccount: {
       project_id: mocks.projectId,
-      private_key: TEST_CERTIFICATE_OBJECT.private_key,
-      client_email: TEST_CERTIFICATE_OBJECT.client_email,
+      private_key: MOCK_CERTIFICATE_OBJECT.private_key,
+      client_email: MOCK_CERTIFICATE_OBJECT.client_email,
     },
   });
   return new Auth(app);
@@ -69,25 +65,42 @@ function createAuthWithObject() {
  */
 function createAuthWithPath() {
   const app = createAppWithOptions({
-    serviceAccount: path.resolve(__dirname, 'resources/key.json'),
+    serviceAccount: path.resolve(__dirname, 'resources/mock.key.json'),
   });
   return new Auth(app);
 }
 
+
 /**
- * Google OAuth returns the same access token if the expiration time didn't
- * change. Since expiration time has second resolution, we need to wait a
- * second until we are guaranteed to receive a new access token.
+ * Returns a mocked out success response from the URL generating Google access tokens.
+ *
+ * @return {Object} A nock response object.
  */
-function forceCompleteRefresh(auth): Promise<FirebaseAccessToken> {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      auth.INTERNAL.getToken(true).then(resolve, reject);
-    }, 1000);
-  });
+function mockFetchAccessToken(): nock.Scope {
+  return nock('https://accounts.google.com:443')
+    .post('/o/oauth2/token')
+    .reply(200, {
+      access_token: 'access_token_' + _.random(999999999),
+      token_type: 'Bearer',
+      expires_in: 3600,
+    }, {
+      'cache-control': 'no-cache, no-store, max-age=0, must-revalidate',
+    });
 }
 
+
 describe('Auth', () => {
+  let mockedRequests: nock.Scope[] = [];
+
+  afterEach(() => {
+    _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
+    mockedRequests = [];
+  });
+
+  after(() => {
+    nock.cleanAll();
+  });
+
   describe('Constructor', () => {
     it('should throw given no app', () => {
       expect(() => {
@@ -135,7 +148,7 @@ describe('Auth', () => {
         let app = createAppWithOptions({
           serviceAccount: {
             client_email: '',
-            private_key: TEST_CERTIFICATE_OBJECT.private_key,
+            private_key: MOCK_CERTIFICATE_OBJECT.private_key,
           },
         });
 
@@ -145,7 +158,7 @@ describe('Auth', () => {
 
         app = createAppWithOptions({
           serviceAccount: {
-            private_key: TEST_CERTIFICATE_OBJECT.private_key,
+            private_key: MOCK_CERTIFICATE_OBJECT.private_key,
           },
         });
 
@@ -157,7 +170,7 @@ describe('Auth', () => {
       it('should throw if service account is does not contain a valid "private_key"', () => {
         let app = createAppWithOptions({
           serviceAccount: {
-            client_email: TEST_CERTIFICATE_OBJECT.client_email,
+            client_email: MOCK_CERTIFICATE_OBJECT.client_email,
             private_key: '',
           },
         });
@@ -168,7 +181,7 @@ describe('Auth', () => {
 
         app = createAppWithOptions({
           serviceAccount: {
-            client_email: TEST_CERTIFICATE_OBJECT.client_email,
+            client_email: MOCK_CERTIFICATE_OBJECT.client_email,
           },
         });
 
@@ -179,7 +192,7 @@ describe('Auth', () => {
 
       it('should not throw given a valid path to a service account', () => {
         const app = createAppWithOptions({
-          serviceAccount: path.resolve(__dirname, 'resources/key.json'),
+          serviceAccount: path.resolve(__dirname, 'resources/mock.key.json'),
         });
 
         expect(() => {
@@ -190,8 +203,8 @@ describe('Auth', () => {
       it('should not throw given a valid service account object', () => {
         const app = createAppWithOptions({
           serviceAccount: {
-            private_key: TEST_CERTIFICATE_OBJECT.private_key,
-            client_email: TEST_CERTIFICATE_OBJECT.client_email,
+            private_key: MOCK_CERTIFICATE_OBJECT.private_key,
+            client_email: MOCK_CERTIFICATE_OBJECT.client_email,
           },
         });
 
@@ -203,8 +216,8 @@ describe('Auth', () => {
       it('should accept "clientEmail" in place of "client_email" for the service account', () => {
         const app = createAppWithOptions({
           serviceAccount: {
-            private_key: TEST_CERTIFICATE_OBJECT.private_key,
-            clientEmail: TEST_CERTIFICATE_OBJECT.client_email,
+            private_key: MOCK_CERTIFICATE_OBJECT.private_key,
+            clientEmail: MOCK_CERTIFICATE_OBJECT.client_email,
           },
         });
 
@@ -216,8 +229,8 @@ describe('Auth', () => {
       it('should accept "privateKey" in place of "private_key" for the service account', () => {
         const app = createAppWithOptions({
           serviceAccount: {
-            privateKey: TEST_CERTIFICATE_OBJECT.private_key,
-            client_email: TEST_CERTIFICATE_OBJECT.client_email,
+            privateKey: MOCK_CERTIFICATE_OBJECT.private_key,
+            client_email: MOCK_CERTIFICATE_OBJECT.client_email,
           },
         });
 
@@ -228,8 +241,8 @@ describe('Auth', () => {
 
       it('should not mutate the provided service account object', () => {
         const serviceAccount = {
-          privateKey: TEST_CERTIFICATE_OBJECT.private_key,
-          clientEmail: TEST_CERTIFICATE_OBJECT.client_email,
+          privateKey: MOCK_CERTIFICATE_OBJECT.private_key,
+          clientEmail: MOCK_CERTIFICATE_OBJECT.client_email,
         };
         const serviceAccountClone = _.clone(serviceAccount);
 
@@ -328,7 +341,7 @@ describe('Auth', () => {
 
   describe('app', () => {
     const app = createAppWithOptions({
-      serviceAccount: path.resolve(__dirname, 'resources/key.json'),
+      serviceAccount: path.resolve(__dirname, 'resources/mock.key.json'),
     });
 
     it('returns the app from the constructor', () => {
@@ -406,22 +419,29 @@ describe('Auth', () => {
 
   describe('INTERNAL.getToken()', () => {
     let spy: Sinon.SinonSpy;
+
     beforeEach(() => spy = sinon.spy(https, 'request'));
     afterEach(() => spy.restore());
 
     it('returns a valid token with options object', () => {
+      mockedRequests.push(mockFetchAccessToken());
+
       return createAuthWithObject().INTERNAL.getToken().then((token) => {
         expect(token.accessToken).to.be.a('string').and.to.not.be.empty;
       });
     });
 
     it('returns a valid token with options path', () => {
+      mockedRequests.push(mockFetchAccessToken());
+
       return createAuthWithPath().INTERNAL.getToken().then((token) => {
         expect(token.accessToken).to.be.a('string').and.to.not.be.empty;
       });
     });
 
     it('returns the cached token', () => {
+      mockedRequests.push(mockFetchAccessToken());
+
       const auth = createAuthWithPath();
       return auth.INTERNAL.getToken().then((token1) => {
         return auth.INTERNAL.getToken().then((token2) => {
@@ -432,10 +452,13 @@ describe('Auth', () => {
     });
 
     it('returns a new token with force refresh', () => {
+      mockedRequests.push(mockFetchAccessToken());
+      mockedRequests.push(mockFetchAccessToken());
+
       const auth = createAuthWithPath();
       return auth.INTERNAL.getToken()
         .then((token1) => {
-          return forceCompleteRefresh(auth).then((token2) => {
+          return auth.INTERNAL.getToken(true).then((token2) => {
             expect(token1.accessToken).to.not.equal(token2.accessToken);
             expect(https.request).to.have.been.calledTwice;
           });
@@ -452,6 +475,8 @@ describe('Auth', () => {
     });
 
     it('is notified when the token changes', () => {
+      mockedRequests.push(mockFetchAccessToken());
+
       const events = [];
       const auth = createAuthWithPath();
       auth.INTERNAL.addAuthTokenListener(events.push.bind(events));
@@ -461,6 +486,8 @@ describe('Auth', () => {
     });
 
     it('can be called twice', () => {
+      mockedRequests.push(mockFetchAccessToken());
+
       const events1 = [];
       const events2 = [];
       const auth = createAuthWithPath();
@@ -473,18 +500,23 @@ describe('Auth', () => {
     });
 
     it('will be called on token refresh', () => {
+      mockedRequests.push(mockFetchAccessToken());
+      mockedRequests.push(mockFetchAccessToken());
+
       const events = [];
       const auth = createAuthWithPath();
       auth.INTERNAL.addAuthTokenListener(events.push.bind(events));
       return auth.INTERNAL.getToken().then((token) => {
         expect(events).to.deep.equal([token.accessToken]);
-        return forceCompleteRefresh(auth).then((newToken) => {
+        return auth.INTERNAL.getToken(true).then((newToken) => {
           expect(events).to.deep.equal([token.accessToken, newToken.accessToken]);
         });
       });
     });
 
     it('will fire with the initial token if it exists', () => {
+      mockedRequests.push(mockFetchAccessToken());
+
       const auth = createAuthWithPath();
       return auth.INTERNAL.getToken().then(() => {
         return new Promise((resolve) => {
@@ -496,6 +528,9 @@ describe('Auth', () => {
 
   describe('INTERNAL.removeTokenListener()', () => {
     it('removes the listener', () => {
+      mockedRequests.push(mockFetchAccessToken());
+      mockedRequests.push(mockFetchAccessToken());
+
       const events1 = [];
       const events2 = [];
       const auth = createAuthWithPath();
@@ -507,7 +542,7 @@ describe('Auth', () => {
         expect(events1).to.deep.equal([token.accessToken]);
         expect(events2).to.deep.equal([token.accessToken]);
         auth.INTERNAL.removeAuthTokenListener(listener1);
-        return forceCompleteRefresh(auth).then((newToken) => {
+        return auth.INTERNAL.getToken(true).then((newToken) => {
           expect(events1).to.deep.equal([token.accessToken]);
           expect(events2).to.deep.equal([token.accessToken, newToken.accessToken]);
         });

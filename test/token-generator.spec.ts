@@ -133,7 +133,7 @@ describe('FirebaseTokenGenerator', () => {
   });
 
   after(() => {
-    nock.restore();
+    nock.cleanAll();
   });
 
   describe('Constructor', () => {
