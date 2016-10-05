@@ -2,6 +2,19 @@
   "name": "firebase-admin",
   "version": "4.0.0",
   "description": "Firebase admin SDK for Node.js",
+  "author": "Firebase (https://firebase.google.com/)",
+  "homepage": "https://firebase.google.com/",
+  "keywords": [
+    "admin",
+    "database",
+    "Firebase",
+    "realtime",
+    "authentication"
+  ],
+  "main": "lib/index.js",
+  "files": [
+    "lib/"
+  ],
   "dependencies": {
     "faye-websocket": "0.9.3",
     "jsonwebtoken": "7.1.9"
