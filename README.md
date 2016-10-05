@@ -4,7 +4,7 @@ The Firebase admin SDK for Node.js, found on npm at `firebase-admin`.
 
 ## Local Setup
 
-Follow the [setup instructions for Git-on-Borg](https://gerrit-internal.git.corp.google.com/docs/+/master/users/from-gmac.md#)
+Follow the [setup instructions for Git-on-Borg](https://gerrit-internal.git.corp.google.com/docs/+/master/users/from-gmac.md#Setup)
 and then clone the repo to your local machine with the commit hook:
 
 ```bash
@@ -32,3 +32,34 @@ Finally, simply run `gulp` to lint, build, and test the code:
 ```bash
 $ gulp   # Lint, build, and test
 ```
+
+## Proposing Changes
+
+Git-on-Borg requires all reviews to contain just a single commit. To propose a change to this repo,
+follow the local setup instructions above. It is important to use the `git clone` command above
+which includes the commit hook. Once you are set up locally, create a new feature branch:
+
+```bash
+$ git checkout -b <NEW_BRANCH_NAME>
+```
+
+After you've made your code changes, commit your files:
+
+```bash
+$ git commit -am "<COMMIT_MESSAGE>"
+```
+
+To kick off a new CL, upload the changes to Gerrit, the code review tool:
+
+```bash
+$ git push origin HEAD:refs/for/master
+```
+
+You should see the CL show up [within the Gerrit UI](https://team-review.git.corp.google.com/#/dashboard/self). If you need to make changes after your first commit, you will need to amend the previous
+commit so that you only ever have one commit:
+
+```bash
+$ git commit --amend
+```
+
+You can then upload your changes back to Gerrit via the same `git push` command listed above.
