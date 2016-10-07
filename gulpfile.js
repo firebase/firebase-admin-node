@@ -87,6 +87,10 @@ gulp.task('compile', function() {
 
 gulp.task('vendor', function() {
   return gulp.src(paths.vendor)
+    // Replace default namespace import path in database.js
+    .pipe(replace(/\.\/app-node/g, '../default-namespace'))
+
+    // Write to build directory
     .pipe(gulp.dest(paths.build))
 });
 
@@ -104,13 +108,18 @@ gulp.task('lint', function() {
 // Runs the test suite
 gulp.task('test', function() {
   merge(
+    // Copy compiled source and test files
     gulp.src(paths.tests.concat(paths.src), {base: '.'})
       .pipe(ts(project))
       .pipe(gulp.dest(paths.testBuild)),
+    // Copy compiled database vendor files
+    gulp.src(paths.build + 'database/**/*')
+      .pipe(gulp.dest(paths.testBuild + 'src/database/')),
+    // Copy test resources
     gulp.src(paths.resources, {base: '.'})
       .pipe(gulp.dest(paths.testBuild))
   ).on('finish', function() {
-    return gulp.src(paths.testBuild + 'src/**/*.js')
+    return gulp.src([paths.testBuild + 'src/**/*.js', '!' + paths.testBuild + 'src/database/**/*'])
       .pipe(istanbul())
       .pipe(istanbul.hookRequire())
       .on('finish', function() {

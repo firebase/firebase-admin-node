@@ -63,3 +63,46 @@ $ git commit --amend
 ```
 
 You can then upload your changes back to Gerrit via the same `git push` command listed above.
+
+
+## Updating Realtime Database Code
+
+The code for the Realtime Database in [database/database.js](./database/database.js) of this repo
+is imported as a minified file from the [firebase/firebase-client-js](https://github.com/firebase/firebase-client-js)
+GitHub repo. To update that code, follow these instructions:
+
+1. Make sure you have access to the [firebase/firebase-client-js](https://github.com/firebase/firebase-client-js)
+GitHub repo. If you do not have access, the above link will 404 and you should send an email to
+firebase-ops@google.com with your GitHub username requesting access.
+
+2. Clone the GitHub repo.
+
+3. Switch to the `firebase-v2` branch:
+
+  ```
+  $ git checkout firebase-v2
+  ```
+
+4. Configure the repo:
+
+  ```
+  $ source tools/use
+  $ configure-project
+  ```
+
+5. Compile the Firebase JavaScript client artifacts:
+
+  ```
+  $ build-client
+  ```
+
+6. Copy `target/firebase-node.js` in the `firebase/firebase-client-js` repo into
+[`database/database.js`](./database/database.js) of this repo.
+
+7. Add a comment to the top of the file with the format:
+
+   `/* Copied from firebase/firebase-client-js commit <commit_hash> */`
+
+   where `<commit_hash>` is the commit hash from which you copied the file.
+
+8. After ensuring all tests still pass, send a CL containing the updated file.

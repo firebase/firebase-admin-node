@@ -167,6 +167,21 @@ class FirebaseNamespace {
   }
 
   /**
+   * Firebase services available off of a FirebaseNamespace instance. These are monkey-patched via
+   * firebase.registerService(), but we need to include a dummy implementation to get TypeScript to
+   * compile it without errors.
+   */
+  /* istanbul ignore next */
+  public auth(): FirebaseServiceInterface {
+    throw new Error('Firebase auth() service has not been registered');
+  }
+
+  /* istanbul ignore next */
+  public database(): FirebaseServiceInterface {
+    throw new Error('Firebase database() service has not been registered');
+  }
+
+  /**
    * Initializes the FirebaseApp instance.
    *
    * @param {FirebaseAppOptions} options Options for the FirebaseApp instance.
