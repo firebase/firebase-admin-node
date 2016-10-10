@@ -257,105 +257,114 @@ describe('FirebaseTokenGenerator', () => {
       });
     });
 
-    it('should not throw given a valid uid and no developer claims', () => {
-      expect(() => {
-        tokenGenerator.createCustomToken(mocks.uid);
-      }).not.to.throw();
+    it('should be fulfilled given a valid uid and no developer claims', () => {
+      return tokenGenerator.createCustomToken(mocks.uid);
     });
 
-    it('should not throw given a valid uid and empty object developer claims', () => {
-      expect(() => {
-        tokenGenerator.createCustomToken(mocks.uid, {});
-      }).not.to.throw();
+    it('should be fulfilled given a valid uid and empty object developer claims', () => {
+       return tokenGenerator.createCustomToken(mocks.uid, {});
     });
 
-    it('should not throw given a valid uid and valid developer claims', () => {
-      expect(() => {
-        tokenGenerator.createCustomToken(mocks.uid, mocks.developerClaims);
-      }).not.to.throw();
+    it('should be fulfilled given a valid uid and valid developer claims', () => {
+      return tokenGenerator.createCustomToken(mocks.uid, mocks.developerClaims);
     });
 
-    it('should return a Firebase Custom JWT', () => {
-      const token = tokenGenerator.createCustomToken(mocks.uid);
-      expect(token).to.be.a('string').and.to.not.be.empty;
+    it('should be fulfilled with a Firebase Custom JWT', () => {
+      return tokenGenerator.createCustomToken(mocks.uid)
+        .should.eventually.be.a('string').and.not.be.empty;
     });
 
-    it('should return a JWT with the correct decoded payload', () => {
+    it('should be fulfilled with a JWT with the correct decoded payload', () => {
       clock = sinon.useFakeTimers(1000);
 
-      const token = tokenGenerator.createCustomToken(mocks.uid);
-      const decoded = jwt.decode(token);
+      return tokenGenerator.createCustomToken(mocks.uid)
+        .then(token => {
+          const decoded = jwt.decode(token);
 
-      expect(decoded).to.deep.equal({
-        uid: mocks.uid,
-        iat: 1,
-        exp: ONE_HOUR_IN_SECONDS + 1,
-        aud: FIREBASE_AUDIENCE,
-        iss: mocks.certificateObject.client_email,
-        sub: mocks.certificateObject.client_email,
-      });
+          expect(decoded).to.deep.equal({
+            uid: mocks.uid,
+            iat: 1,
+            exp: ONE_HOUR_IN_SECONDS + 1,
+            aud: FIREBASE_AUDIENCE,
+            iss: mocks.certificateObject.client_email,
+            sub: mocks.certificateObject.client_email,
+          });
+        });
     });
 
-    it('should return a JWT with the developer claims in its decoded payload', () => {
+    it('should be fulfilled with a JWT with the developer claims in its decoded payload', () => {
       clock = sinon.useFakeTimers(1000);
 
-      const token = tokenGenerator.createCustomToken(mocks.uid, mocks.developerClaims);
-      const decoded = jwt.decode(token);
+      return tokenGenerator.createCustomToken(mocks.uid, mocks.developerClaims)
+        .then(token => {
+          const decoded = jwt.decode(token);
 
-      expect(decoded).to.deep.equal({
-        uid: mocks.uid,
-        iat: 1,
-        exp: ONE_HOUR_IN_SECONDS + 1,
-        aud: FIREBASE_AUDIENCE,
-        iss: mocks.certificateObject.client_email,
-        sub: mocks.certificateObject.client_email,
-        claims: {
-          one: 'uno',
-          two: 'dos',
-        },
-      });
+          expect(decoded).to.deep.equal({
+            uid: mocks.uid,
+            iat: 1,
+            exp: ONE_HOUR_IN_SECONDS + 1,
+            aud: FIREBASE_AUDIENCE,
+            iss: mocks.certificateObject.client_email,
+            sub: mocks.certificateObject.client_email,
+            claims: {
+              one: 'uno',
+              two: 'dos',
+            },
+          });
+        });
     });
 
-    it('should return a JWT with the correct header', () => {
+    it('should be fulfilled with a JWT with the correct header', () => {
       clock = sinon.useFakeTimers(1000);
 
-      const token = tokenGenerator.createCustomToken(mocks.uid);
-      const decoded = jwt.decode(token, {
-        complete: true,
-      });
+      return tokenGenerator.createCustomToken(mocks.uid)
+        .then(token => {
+          const decoded = jwt.decode(token, {
+            complete: true,
+          });
 
-      expect(decoded.header).to.deep.equal({
-        typ: 'JWT',
-        alg: ALGORITHM,
-      });
+          expect(decoded.header).to.deep.equal({
+            typ: 'JWT',
+            alg: ALGORITHM,
+          });
+        });
     });
 
-    it('should return a JWT which can be verified by the service account public key', () => {
-      const token = tokenGenerator.createCustomToken(mocks.uid);
-      return verifyToken(token, mocks.keyPairs[0].public);
+    it('should be fulfilled with a JWT which can be verified by the service account public key', () => {
+      return tokenGenerator.createCustomToken(mocks.uid)
+        .then(token => {
+          return verifyToken(token, mocks.keyPairs[0].public);
+        });
     });
 
-    it('should return a JWT which cannot be verified by a random public key', () => {
-      const token = tokenGenerator.createCustomToken(mocks.uid);
-      return verifyToken(token, mocks.keyPairs[1].public)
-        .should.eventually.be.rejectedWith('invalid signature');
+    it('should be fulfilled with a JWT which cannot be verified by a random public key', () => {
+      return tokenGenerator.createCustomToken(mocks.uid)
+        .then(token => {
+          return verifyToken(token, mocks.keyPairs[1].public)
+            .should.eventually.be.rejectedWith('invalid signature');
+        });
     });
 
-    it('should return a JWT which expires after one hour', () => {
+    it('should be fulfilled with a JWT which expires after one hour', () => {
       clock = sinon.useFakeTimers(1000);
 
-      const token = tokenGenerator.createCustomToken(mocks.uid);
+      let token;
+      return tokenGenerator.createCustomToken(mocks.uid)
+        .then(result => {
+          token = result;
 
-      clock.tick((ONE_HOUR_IN_SECONDS * 1000) - 1);
+          clock.tick((ONE_HOUR_IN_SECONDS * 1000) - 1);
 
-      // Token should still be valid
-      return verifyToken(token, mocks.keyPairs[0].public).then(() => {
-        clock.tick(1);
+          // Token should still be valid
+          return verifyToken(token, mocks.keyPairs[0].public);
+        })
+        .then(() => {
+          clock.tick(1);
 
-        // Token should now be invalid
-        return verifyToken(token, mocks.keyPairs[0].public)
-          .should.eventually.be.rejectedWith('jwt expired');
-      });
+          // Token should now be invalid
+          return verifyToken(token, mocks.keyPairs[0].public)
+            .should.eventually.be.rejectedWith('jwt expired');
+        });
     });
 
     it('should not mutate the passed in developer claims', () => {
@@ -363,8 +372,10 @@ describe('FirebaseTokenGenerator', () => {
         foo: 'bar',
       };
       const clonedClaims = _.clone(originalClaims);
-      tokenGenerator.createCustomToken(mocks.uid, clonedClaims);
-      expect(originalClaims).to.deep.equal(clonedClaims);
+      return tokenGenerator.createCustomToken(mocks.uid, clonedClaims)
+        .then(() => {
+          expect(originalClaims).to.deep.equal(clonedClaims);
+        });
     });
   });
 
@@ -535,10 +546,11 @@ describe('FirebaseTokenGenerator', () => {
     });
 
     it('should be rejected given a custom token', () => {
-      const customToken = tokenGenerator.createCustomToken(mocks.uid);
-
-      return tokenGenerator.verifyIdToken(customToken)
-        .should.eventually.be.rejectedWith('verifyIdToken() expects an ID token, but was given a custom token');
+      return tokenGenerator.createCustomToken(mocks.uid)
+        .then(customToken => {
+          return tokenGenerator.verifyIdToken(customToken)
+            .should.eventually.be.rejectedWith('verifyIdToken() expects an ID token, but was given a custom token');
+        });
     });
 
     it('should be rejected given a legacy custom token', () => {
