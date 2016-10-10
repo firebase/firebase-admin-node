@@ -359,13 +359,13 @@ describe('Auth', () => {
   });
 
   describe('createCustomToken()', () => {
-    let stub: Sinon.SinonStub;
+    let spy: Sinon.SinonSpy;
     beforeEach(() => {
-      stub = sinon.stub(FirebaseTokenGenerator.prototype, 'createCustomToken', _.noop);
+      spy = sinon.spy(FirebaseTokenGenerator.prototype, 'createCustomToken');
     });
 
     afterEach(() => {
-      stub.restore();
+      spy.restore();
     });
 
     it('should throw if service account is not specified (and env not set)', () => {
@@ -379,10 +379,12 @@ describe('Auth', () => {
 
     it('should forward on the call to the token generator\'s createCustomToken() method', () => {
       const auth = createAuthWithObject();
-      auth.createCustomToken(mocks.uid, mocks.developerClaims);
-      expect(FirebaseTokenGenerator.prototype.createCustomToken)
-        .to.have.been.calledOnce
-        .and.calledWith(mocks.uid, mocks.developerClaims);
+      return auth.createCustomToken(mocks.uid, mocks.developerClaims)
+        .then(() => {
+          expect(spy)
+            .to.have.been.calledOnce
+            .and.calledWith(mocks.uid, mocks.developerClaims);
+        });
     });
   });
 

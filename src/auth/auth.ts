@@ -79,9 +79,9 @@ class Auth implements FirebaseServiceInterface {
    * @param {string} uid The uid to use as the JWT subject.
    * @param {Object=} developerClaims Optional additional claims to include in the JWT payload.
    *
-   * @return {string} A JWT for the provided payload.
+   * @return {Promise<string>} A JWT for the provided payload.
    */
-  public createCustomToken(uid: string, developerClaims?: Object): string {
+  public createCustomToken(uid: string, developerClaims?: Object): Promise<string> {
     if (typeof this.tokenGenerator_ === 'undefined') {
       throw new Error('Must initialize FirebaseApp with a service account to call auth().createCustomToken()');
     }

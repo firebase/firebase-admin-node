@@ -48,10 +48,10 @@ class FirebaseTokenGenerator {
    * @param {string} uid The user ID to use for the generated Firebase Auth Custom token.
    * @param {Object} [developerClaims] Optional developer claims to include in the generated Firebase
    *                 Auth Custom token.
-   * @return {string} A Firebase Auth Custom token signed with a service account key and containing
-   *                  the provided payload.
+   * @return {Promise<string>} A Promise fulfilled with a Firebase Auth Custom token signed with a
+   *                           service account key and containing the provided payload.
    */
-  public createCustomToken(uid: string, developerClaims?: Object): string {
+  public createCustomToken(uid: string, developerClaims?: Object): Promise<string> {
     let errorMessage: string;
     if (typeof uid !== 'string' || uid === '') {
       errorMessage = 'First argument to createCustomToken() must be a non-empty string uid';
@@ -74,7 +74,7 @@ class FirebaseTokenGenerator {
         /* istanbul ignore else */
         if (developerClaims.hasOwnProperty(key)) {
           if (BLACKLISTED_CLAIMS.indexOf(key) !== -1) {
-            throw new Error('Developer claim "' + key + '" is reserved and cannot be specified');
+            throw new Error(`Developer claim "${key}" is reserved and cannot be specified`);
           }
 
           claims[key] = developerClaims[key];
@@ -84,13 +84,15 @@ class FirebaseTokenGenerator {
     }
     jwtPayload.uid = uid;
 
-    return jwt.sign(jwtPayload, this.certificate_.privateKey, {
+    const customToken = jwt.sign(jwtPayload, this.certificate_.privateKey, {
       audience: FIREBASE_AUDIENCE,
       expiresIn: ONE_HOUR_IN_SECONDS,
       issuer: this.certificate_.clientEmail,
       subject: this.certificate_.clientEmail,
       algorithm: ALGORITHM,
     });
+
+    return Promise.resolve(customToken);
   }
 
   /**
