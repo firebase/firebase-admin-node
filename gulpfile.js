@@ -37,6 +37,7 @@ var paths = {
   ],
 
   tests: [
+    'test/utils.ts',
     'test/*.spec.ts',
     'test/resources/mocks.ts'
   ],

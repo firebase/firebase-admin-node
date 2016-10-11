@@ -14,6 +14,8 @@ import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
+import * as utils from './utils';
+
 import {
   ApplicationDefaultCredential, CertCredential, Certificate, GoogleOAuthAccessToken,
   MetadataServiceCredential, RefreshToken, RefreshTokenCredential, UnauthenticatedCredential,
@@ -36,24 +38,6 @@ try {
 }
 
 const ONE_HOUR_IN_SECONDS = 60 * 60;
-
-
-/**
- * Returns a mocked out success response from the URL generating Google access tokens.
- *
- * @return {Object} A nock response object.
- */
-function mockFetchAccessToken(): nock.Scope {
-  return nock('https://accounts.google.com:443')
-    .post('/o/oauth2/token')
-    .reply(200, {
-      access_token: 'access_token_' + _.random(999999999),
-      token_type: 'Bearer',
-      expires_in: 3600,
-    }, {
-      'cache-control': 'no-cache, no-store, max-age=0, must-revalidate',
-    });
-}
 
 
 describe('Credential', () => {
@@ -169,7 +153,7 @@ describe('Credential', () => {
     });
 
     it('should create access tokens', () => {
-      mockedRequests.push(mockFetchAccessToken());
+      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
       const c = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
       return c.getAccessToken().then((token) => {
@@ -285,7 +269,7 @@ describe('Credential', () => {
     });
 
     it('should create access tokens', () => {
-      mockedRequests.push(mockFetchAccessToken());
+      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
       process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, './resources/mock.key.json');
       const c = new ApplicationDefaultCredential();

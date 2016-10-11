@@ -168,7 +168,7 @@ class FirebaseNamespace {
 
   /**
    * Firebase services available off of a FirebaseNamespace instance. These are monkey-patched via
-   * firebase.registerService(), but we need to include a dummy implementation to get TypeScript to
+   * registerService(), but we need to include a dummy implementation to get TypeScript to
    * compile it without errors.
    */
   /* istanbul ignore next */

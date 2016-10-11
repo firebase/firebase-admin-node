@@ -43,13 +43,13 @@ class Auth implements FirebaseServiceInterface {
 
   constructor(app: FirebaseApp) {
     if (typeof app !== 'object' || !('options' in app)) {
-      throw new Error('First parameter to Auth constructor must be an instance of firebase.App');
+      throw new Error('First parameter to Auth constructor must be an instance of FirebaseApp');
     }
     this.app_ = app;
 
     const credential = getCredential(app);
     if (credential && typeof credential.getAccessToken !== 'function') {
-      throw new Error('Called firebase.initializeApp() with an invalid credential parameter');
+      throw new Error('Called initializeApp() with an invalid credential parameter');
     }
     this.authTokenManager_ = new AuthTokenManager(credential);
 
@@ -154,7 +154,7 @@ class AuthTokenManager implements FirebaseServiceInternalsInterface {
           if (typeof result !== 'object' ||
             typeof result.expires_in !== 'number' ||
             typeof result.access_token !== 'string') {
-            throw new Error('firebase.initializeApp was called with a credential ' +
+            throw new Error('initializeApp() was called with a credential ' +
               'that creates invalid access tokens: ' + JSON.stringify(result));
           }
           const token: FirebaseAccessToken = {

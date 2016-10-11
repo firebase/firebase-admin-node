@@ -13,7 +13,9 @@ import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
+import * as utils from './utils';
 import * as mocks from './resources/mocks';
+
 import {Auth} from '../src/auth/auth';
 import {FirebaseNamespace} from '../src/firebase-namespace';
 import {GoogleOAuthAccessToken} from '../src/auth/credential';
@@ -37,9 +39,8 @@ const ONE_HOUR_IN_SECONDS = 60 * 60;
  * @return {FirebaseApp} A new FirebaseApp instance with the provided options.
  */
 function createAppWithOptions(options: Object) {
-  const mockAppName = 'mock-app-name';
   const mockFirebaseNamespaceInternals = new FirebaseNamespace().INTERNAL;
-  return new FirebaseApp(options as FirebaseAppOptions, mockAppName, mockFirebaseNamespaceInternals);
+  return new FirebaseApp(options as FirebaseAppOptions, mocks.appName, mockFirebaseNamespaceInternals);
 }
 
 /**
@@ -71,24 +72,6 @@ function createAuthWithPath() {
 }
 
 
-/**
- * Returns a mocked out success response from the URL generating Google access tokens.
- *
- * @return {Object} A nock response object.
- */
-function mockFetchAccessToken(): nock.Scope {
-  return nock('https://accounts.google.com:443')
-    .post('/o/oauth2/token')
-    .reply(200, {
-      access_token: 'access_token_' + _.random(999999999),
-      token_type: 'Bearer',
-      expires_in: 3600,
-    }, {
-      'cache-control': 'no-cache, no-store, max-age=0, must-revalidate',
-    });
-}
-
-
 describe('Auth', () => {
   let mockedRequests: nock.Scope[] = [];
 
@@ -107,7 +90,7 @@ describe('Auth', () => {
         // We must defeat the type system to successfully even compile this line.
         const authAny: any = Auth;
         return new authAny();
-      }).to.throw('First parameter to Auth constructor must be an instance of firebase.App');
+      }).to.throw('First parameter to Auth constructor must be an instance of FirebaseApp');
     });
 
     describe('with service account', () => {
@@ -262,7 +245,7 @@ describe('Auth', () => {
   describe('without any authentication', () => {
     it('should be able to construct an app but not get a token', () => {
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
-      const app = createAppWithOptions({});
+      const app = createAppWithOptions(mocks.appOptionsNoAuth);
       const auth = new Auth(app);
 
       return auth.INTERNAL.getToken().then((token) => {
@@ -287,7 +270,7 @@ describe('Auth', () => {
 
       expect(() => {
         return new Auth(app);
-      }).to.throw('Called firebase.initializeApp() with an invalid credential parameter');
+      }).to.throw('Called initializeApp() with an invalid credential parameter');
 
       app = createAppWithOptions({
         credential: true as any,
@@ -295,7 +278,7 @@ describe('Auth', () => {
 
       expect(() => {
         return new Auth(app);
-      }).to.throw('Called firebase.initializeApp() with an invalid credential parameter');
+      }).to.throw('Called initializeApp() with an invalid credential parameter');
     });
 
     it('should cause getToken to cleanly fail if the custom credential returns invalid AccessTokens', () => {
@@ -312,7 +295,7 @@ describe('Auth', () => {
       return auth.INTERNAL.getToken().then(() => {
         throw new Error('Unexpected success');
       }, (err) => {
-        expect(err.toString()).to.include('firebase.initializeApp was called with a credential ' +
+        expect(err.toString()).to.include('initializeApp() was called with a credential ' +
         'that creates invalid access tokens');
       });
     });
@@ -370,7 +353,7 @@ describe('Auth', () => {
 
     it('should throw if service account is not specified (and env not set)', () => {
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
-      const app = createAppWithOptions({});
+      const app = createAppWithOptions(mocks.appOptionsNoAuth);
       const auth = new Auth(app);
       expect(() => {
         auth.createCustomToken(mocks.uid, mocks.developerClaims);
@@ -395,7 +378,7 @@ describe('Auth', () => {
 
     it('should throw if service account is not specified (and env not set)', () => {
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
-      const app = createAppWithOptions({});
+      const app = createAppWithOptions(mocks.appOptionsNoAuth);
       const auth = new Auth(app);
       const mockIdToken = mocks.generateIdToken();
       expect(() => {
@@ -426,7 +409,7 @@ describe('Auth', () => {
     afterEach(() => spy.restore());
 
     it('returns a valid token with options object', () => {
-      mockedRequests.push(mockFetchAccessToken());
+      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
       return createAuthWithObject().INTERNAL.getToken().then((token) => {
         expect(token.accessToken).to.be.a('string').and.to.not.be.empty;
@@ -434,7 +417,7 @@ describe('Auth', () => {
     });
 
     it('returns a valid token with options path', () => {
-      mockedRequests.push(mockFetchAccessToken());
+      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
       return createAuthWithPath().INTERNAL.getToken().then((token) => {
         expect(token.accessToken).to.be.a('string').and.to.not.be.empty;
@@ -442,7 +425,7 @@ describe('Auth', () => {
     });
 
     it('returns the cached token', () => {
-      mockedRequests.push(mockFetchAccessToken());
+      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
       const auth = createAuthWithPath();
       return auth.INTERNAL.getToken().then((token1) => {
@@ -454,8 +437,8 @@ describe('Auth', () => {
     });
 
     it('returns a new token with force refresh', () => {
-      mockedRequests.push(mockFetchAccessToken());
-      mockedRequests.push(mockFetchAccessToken());
+      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
+      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
       const auth = createAuthWithPath();
       return auth.INTERNAL.getToken()
@@ -477,7 +460,7 @@ describe('Auth', () => {
     });
 
     it('is notified when the token changes', () => {
-      mockedRequests.push(mockFetchAccessToken());
+      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
       const events = [];
       const auth = createAuthWithPath();
@@ -488,7 +471,7 @@ describe('Auth', () => {
     });
 
     it('can be called twice', () => {
-      mockedRequests.push(mockFetchAccessToken());
+      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
       const events1 = [];
       const events2 = [];
@@ -502,8 +485,8 @@ describe('Auth', () => {
     });
 
     it('will be called on token refresh', () => {
-      mockedRequests.push(mockFetchAccessToken());
-      mockedRequests.push(mockFetchAccessToken());
+      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
+      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
       const events = [];
       const auth = createAuthWithPath();
@@ -517,7 +500,7 @@ describe('Auth', () => {
     });
 
     it('will fire with the initial token if it exists', () => {
-      mockedRequests.push(mockFetchAccessToken());
+      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
       const auth = createAuthWithPath();
       return auth.INTERNAL.getToken().then(() => {
@@ -530,8 +513,8 @@ describe('Auth', () => {
 
   describe('INTERNAL.removeTokenListener()', () => {
     it('removes the listener', () => {
-      mockedRequests.push(mockFetchAccessToken());
-      mockedRequests.push(mockFetchAccessToken());
+      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
+      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
       const events1 = [];
       const events2 = [];

@@ -12,7 +12,7 @@ type AppHook = (event: string, app: FirebaseApp) => void;
 
 
 /**
- * Type representing the options object passed into firebase.initializeApp().
+ * Type representing the options object passed into initializeApp().
  */
 type FirebaseAppOptions = {
  databaseURL?: string,
@@ -47,6 +47,26 @@ class FirebaseApp {
     this.name_ = name;
     this.options_ = deepCopy(options) as FirebaseAppOptions;
 
+    let errorMessage;
+    if (typeof this.options_ !== 'object' || this.options_ === null) {
+      errorMessage = 'The first argument passed to initializeApp() must be a non-empty object.';
+    } else {
+      const hasCredential = ('credential' in this.options_);
+      const hasDatabaseUrl = ('databaseURL' in this.options_);
+      const hasServiceAccount = ('serviceAccount' in this.options_);
+      if (!hasCredential && !hasDatabaseUrl && !hasServiceAccount) {
+        errorMessage = 'The first argument passed to initializeApp() must specify either ' +
+          '"databaseURL" or one of "serviceAccount" and "credential".';
+      } else if (hasCredential && hasServiceAccount) {
+        errorMessage = 'The first argument passed to initializeApp() cannot specify both the ' +
+          '"serviceAccount" and "credential" keys.';
+      }
+    }
+
+    if (typeof errorMessage !== 'undefined') {
+      throw new Error(`Invalid Firebase app options. ${errorMessage}`);
+    }
+
     Object.keys(firebaseInternals_.serviceFactories).forEach((serviceName) => {
       // Defer calling createService() until the service is accessed
       this[serviceName] = this.getService_.bind(this, serviceName);
@@ -55,7 +75,7 @@ class FirebaseApp {
 
   /**
    * Firebase services available off of a FirebaseApp instance. These are monkey-patched via
-   * firebase.registerService(), but we need to include a dummy implementation to get TypeScript to
+   * registerService(), but we need to include a dummy implementation to get TypeScript to
    * compile it without errors.
    */
   /* istanbul ignore next */

@@ -3,6 +3,8 @@
 import * as _ from 'lodash';
 import * as jwt from 'jsonwebtoken';
 
+import {FirebaseAppOptions} from '../../src/firebase-app';
+
 const ALGORITHM = 'RS256';
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 
@@ -11,6 +13,23 @@ export let projectId = 'project_id';
 export let developerClaims = {
   one: 'uno',
   two: 'dos',
+};
+
+export let appName = 'mock-app-name';
+
+export let serviceName = 'mock-service-name';
+
+export let appOptions: FirebaseAppOptions = {
+  databaseURL: 'https://databaseName.firebaseio.com',
+  serviceAccount: require('./mock.key.json'),
+};
+
+export let appOptionsNoAuth: FirebaseAppOptions = {
+  databaseURL: 'https://databaseName.firebaseio.com',
+};
+
+export let appOptionsNoDatabaseUrl: FirebaseAppOptions = {
+  serviceAccount: require('./mock.key.json'),
 };
 
 /* tslint:disable:no-var-requires */
