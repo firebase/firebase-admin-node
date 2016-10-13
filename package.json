@@ -43,6 +43,5 @@
     "tslint": "^3.5.0",
     "typescript": "^2.0.3",
     "typings": "^1.0.4"
-  },
-  "license": "UNLICENSED"
+  }
 }
