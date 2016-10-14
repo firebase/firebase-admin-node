@@ -8,3 +8,4 @@ import './token-generator.spec';
 import './auth.spec';
 import './credential.spec';
 import './firebase-namespace.spec';
+import './user-record.spec';
