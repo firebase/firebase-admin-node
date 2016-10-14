@@ -9,3 +9,5 @@ import './auth.spec';
 import './credential.spec';
 import './firebase-namespace.spec';
 import './user-record.spec';
+import './api-request.spec';
+import './auth-api-request.spec';

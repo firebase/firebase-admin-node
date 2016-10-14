@@ -1,5 +1,8 @@
 'use strict';
 
+import events = require('events');
+import stream = require('stream');
+
 import * as _ from 'lodash';
 import * as jwt from 'jsonwebtoken';
 
@@ -70,4 +73,15 @@ export function generateIdToken(overrides?: Object): string {
   }, overrides);
 
   return jwt.sign(developerClaims, certificateObject.private_key, options);
+}
+
+
+/** Mock socket emitter class. */
+export class MockSocketEmitter extends events.EventEmitter {
+  public setTimeout = (timeout: number) => undefined;
+}
+
+/** Mock stream passthrough class with dummy abort method. */
+export class MockStream extends stream.PassThrough {
+  public abort = () => undefined;
 }

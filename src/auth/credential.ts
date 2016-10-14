@@ -205,6 +205,7 @@ class CertCredential implements Credential {
       scope: [
         'https://www.googleapis.com/auth/userinfo.email',
         'https://www.googleapis.com/auth/firebase.database',
+        'https://www.googleapis.com/auth/identitytoolkit',
       ].join(' '),
     };
 
