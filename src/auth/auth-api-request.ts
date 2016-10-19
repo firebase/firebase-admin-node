@@ -33,6 +33,15 @@ export const FIREBASE_AUTH_GET_ACCOUNT_INFO = new ApiSettings('getAccountInfo', 
     }
   });
 
+/** Instantiates the deleteAccount endpoint settings. */
+export const FIREBASE_AUTH_DELETE_ACCOUNT = new ApiSettings('deleteAccount', 'POST')
+  // Set request validator.
+  .setRequestValidator((request: any) => {
+    if (!request.localId) {
+      throw new Error('Server request is missing user identifier');
+    }
+  });
+
 /**
  * Class that provides mechanism to send requests to the Firebase Auth backend endpoints.
  *
@@ -83,6 +92,19 @@ export class FirebaseAuthRequestHandler {
       email: [email],
     };
     return this.invokeRequestHandler(FIREBASE_AUTH_GET_ACCOUNT_INFO, request);
+  }
+
+  /**
+   * Deletes an account identified by a uid.
+   *
+   * @param {string} uid The uid of the user to delete.
+   * @return {Promise<Object>} A promise that resolves when the user is deleted.
+   */
+  public deleteAccount(uid: string): Promise<Object> {
+    const request = {
+      localId: uid,
+    };
+    return this.invokeRequestHandler(FIREBASE_AUTH_DELETE_ACCOUNT, request);
   }
 
   /**
