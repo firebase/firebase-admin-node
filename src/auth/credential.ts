@@ -125,7 +125,7 @@ class Certificate {
 /**
  * Interface for Google OAuth 2.0 access tokens.
  */
-interface GoogleOAuthAccessToken {
+type GoogleOAuthAccessToken = {
   /* tslint:disable:variable-name */
   access_token: string;
   expires_in: number;
