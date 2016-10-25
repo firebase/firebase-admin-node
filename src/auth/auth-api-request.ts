@@ -1,3 +1,6 @@
+import * as validator from '../utils/validator';
+
+import {deepCopy} from '../utils/deep-copy';
 import {Credential} from './credential';
 import {
   HttpMethod, SignedApiRequestHandler, ApiSettings,
@@ -16,6 +19,91 @@ const FIREBASE_AUTH_HEADER = {
 };
 /** Firebase Auth request timeout duration in seconds. */
 const FIREBASE_AUTH_TIMEOUT = 10000;
+
+
+/**
+ * Validates a create/edit request object. All unsupported parameters
+ * are removed from the original request. If an invalid field is passed
+ * an error is thrown.
+ *
+ * @param {any} request The create/edit request object.
+ */
+function validateCreateEditRequest(request: any) {
+    // Hash set of whitelisted parameters.
+    let validKeys = {
+      displayName: true,
+      localId: true,
+      email: true,
+      password: true,
+      rawPassword: true,
+      emailVerified: true,
+      photoUrl: true,
+      disabled: true,
+      disableUser: true,
+    };
+    // Remove invalid keys from original request.
+    for (let key in request) {
+      if (!(key in validKeys)) {
+        delete request[key];
+      }
+    }
+    // For any invalid parameter, use the external key name in the error description.
+    // displayName should be a string.
+    if (typeof request.displayName !== 'undefined' &&
+        typeof request.displayName !== 'string') {
+      throw new Error('displayName must be a valid string.');
+    }
+    if (typeof request.localId !== 'undefined' &&
+        !(validator.isAlphanumeric(request.localId) &&
+          request.localId.length <= 128 &&
+          request.localId.length > 0)) {
+      // This is called localId on the backend but the developer specifies this as
+      // uid externally. So the error message should use the client facing name.
+      throw new Error('uid must be a string with at most 128 alphanumeric characters.');
+    }
+    // email should be a string and a valid email.
+    if (typeof request.email !== 'undefined' && !validator.isEmail(request.email)) {
+      throw new Error('email provided must be a valid email.');
+    }
+    // password should be a string and a minimum of 6 chars.
+    if (typeof request.password !== 'undefined' &&
+        (typeof request.password !== 'string' ||
+         request.password.length < 6 )) {
+      throw new Error('password must be a string with at least 6 characters.');
+    }
+    // rawPassword should be a string and a minimum of 6 chars.
+    if (typeof request.rawPassword !== 'undefined' &&
+        (typeof request.rawPassword !== 'string' ||
+         request.rawPassword.length < 6 )) {
+      // This is called rawPassword on the backend but the developer specifies this as
+      // password externally. So the error message should use the client facing name.
+      throw new Error('password must be a string with at least 6 characters.');
+    }
+    // emailVerified should be a boolean.
+    if (typeof request.emailVerified !== 'undefined' &&
+        typeof request.emailVerified !== 'boolean') {
+      throw new Error('emailVerified field must be a boolean.');
+    }
+    // photoUrl should be a URL.
+    if (typeof request.photoUrl !== 'undefined' &&
+        !validator.isURL(request.photoUrl)) {
+      // This is called photoUrl on the backend but the developer specifies this as
+      // photoURL externally. So the error message should use the client facing name.
+      throw new Error('photoURL must be a valid URL.');
+    }
+    // disabled should be a boolean.
+    if (typeof request.disabled !== 'undefined' &&
+        typeof request.disabled !== 'boolean') {
+      throw new Error('disabled field must be a boolean.');
+    }
+    // disableUser should be a boolean.
+    if (typeof request.disableUser !== 'undefined' &&
+        typeof request.disableUser !== 'boolean') {
+      // This is called disableUser on the backend but the developer specifies this as
+      // disabled externally. So the error message should use the client facing name.
+      throw new Error('disabled field must be a boolean.');
+    }
+};
 
 
 /** Instantiates the getAccountInfo endpoint settings. */
@@ -39,6 +127,93 @@ export const FIREBASE_AUTH_DELETE_ACCOUNT = new ApiSettings('deleteAccount', 'PO
   .setRequestValidator((request: any) => {
     if (!request.localId) {
       throw new Error('Server request is missing user identifier');
+    }
+  });
+
+/** Instantiates the setAccountInfo endpoint settings for updating existing accounts. */
+export const FIREBASE_AUTH_SET_ACCOUNT_INFO = new ApiSettings('setAccountInfo', 'POST')
+  // Set request validator.
+  .setRequestValidator((request: any) => {
+    // localId is a required parameter.
+    if (typeof request.localId === 'undefined') {
+      throw new Error('Server request is missing user identifier');
+    }
+    validateCreateEditRequest(request);
+  })
+  // Set response validator.
+  .setResponseValidator((response: any) => {
+    // If the localId is not returned, then the request failed.
+    if (!response.localId) {
+      throw new Error('User not found');
+    }
+  });
+
+/**
+ * Instantiates the uploadAccount endpoint settings for creating a new user with uid
+ * specified.
+ */
+export const FIREBASE_AUTH_UPLOAD_ACCOUNT = new ApiSettings('uploadAccount', 'POST')
+  // Set request validator.
+  .setRequestValidator((request: any) => {
+    let validKeys: any = {
+      users: true,
+      // Required to throw an error when a user already exists with the provided uid.
+      allowOverwrite: true,
+    };
+    // Remove unsupported properties.
+    for (let key in request) {
+      if (!(key in validKeys)) {
+        delete request[key];
+      }
+    }
+    // Required uploadAccount parameter.
+    if (typeof request.users === 'undefined' ||
+        request.users == null ||
+        !request.users.length) {
+      throw new Error('Invalid uploadAccount request. No users provider.');
+    }
+    // Validate each user within users.
+    for (let user of request.users) {
+      // localId is a required parameter.
+      if (typeof user.localId === 'undefined') {
+        throw new Error('Server request is missing user identifier');
+      }
+      // Validate user.
+      validateCreateEditRequest(user);
+    }
+  })
+  // Set response validator.
+  .setResponseValidator((response: any) => {
+    // Return the first error. UploadAccount is used to upload multiple accounts.
+    // If an error occurs in any account to be upload, an array of errors is
+    // returned.
+    if (typeof response.error !== 'undefined' &&
+        response.error.length &&
+        typeof response.error[0].message === 'string') {
+      // Get error description.
+      throw new Error(response.error[0].message);
+    }
+  });
+
+/**
+ * Instantiates the signupNewUser endpoint settings for creating a new user without
+ * uid being specified. The backend will create a new one and return it.
+ */
+export const FIREBASE_AUTH_SIGN_UP_NEW_USER = new ApiSettings('signupNewUser', 'POST')
+  // Set request validator.
+  .setRequestValidator((request: any) => {
+    // localId should not be specified.
+    // This should not occur as when the uid is provided, uploadAccount is used instead.
+    if (typeof request.localId !== 'undefined') {
+      throw new Error('User identifier must not be specified');
+    }
+    validateCreateEditRequest(request);
+  })
+  // Set response validator.
+  .setResponseValidator((response: any) => {
+    // If the localId is not returned, then the request failed.
+    if (!response.localId) {
+      throw new Error('Unable to create new user');
     }
   });
 
@@ -105,6 +280,81 @@ export class FirebaseAuthRequestHandler {
       localId: uid,
     };
     return this.invokeRequestHandler(FIREBASE_AUTH_DELETE_ACCOUNT, request);
+  }
+
+  /**
+   * Edits an existing user.
+   *
+   * @param {string} uid The user to edit.
+   * @param {Object} properties The properties to set on the user.
+   * @return {Promise<string>} A promise that resolves when the operation completes
+   *     with the user id that was edited.
+   */
+  public updateExistingAccount(uid: string, properties: Object): Promise<string> {
+    // Build the setAccountInfo request.
+    let request: any = deepCopy(properties);
+    request.localId = uid;
+    // Rewrite photoURL to photoUrl.
+    if (typeof request.photoURL !== 'undefined') {
+      request.photoUrl = request.photoURL;
+      delete request.photoURL;
+    }
+    // Rewrite disabled to disableUser.
+    if (typeof request.disabled !== 'undefined') {
+      request.disableUser = request.disabled;
+      delete request.disabled;
+    }
+    return this.invokeRequestHandler(FIREBASE_AUTH_SET_ACCOUNT_INFO, request)
+        .then((response: any) => {
+          return response.localId as string;
+        });
+  }
+
+  /**
+   * Create a new user with the properties supplied.
+   *
+   * @param {Object} properties The properties to set on the user.
+   * @return {Promise<string>} A promise that resolves when the operation completes
+   *     with the user id that was created.
+   */
+  public createNewAccount(properties: Object): Promise<string> {
+    // Build the signupNewUser/uploadAccount request.
+    let request: any = deepCopy(properties);
+    let finalRequest: any;
+    let apiSettings: ApiSettings;
+    // Rewrite photoURL to photoUrl.
+    if (typeof request.photoURL !== 'undefined') {
+      request.photoUrl = request.photoURL;
+      delete request.photoURL;
+    }
+    if (typeof request.uid !== 'undefined') {
+      request.localId = request.uid;
+      // If uid specified, use uploadAccount endpoint.
+      apiSettings = FIREBASE_AUTH_UPLOAD_ACCOUNT;
+      // This endpoint takes a hashed password.
+      // To pass a plain text password, pass it via rawPassword field.
+      if (typeof request.password !== 'undefined') {
+        request.rawPassword = request.password;
+        delete request.password;
+      }
+      // Construct uploadAccount request.
+      finalRequest = {
+        users: [request],
+        // Do not overwrite existing users.
+        allowOverwrite: false,
+      };
+    } else {
+      // If uid not specified, use signupNewUser endpoint.
+      apiSettings = FIREBASE_AUTH_SIGN_UP_NEW_USER;
+      finalRequest = request;
+    }
+    return this.invokeRequestHandler(apiSettings, finalRequest)
+      .then((response: any) => {
+        // Return the user id. It is returned in the setAccountInfo and signupNewUser
+        // endpoints but not the uploadAccount endpoint. In that case return the same
+        // one in request.
+        return (response.localId || request.localId) as string;
+      });
   }
 
   /**
