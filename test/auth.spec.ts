@@ -20,6 +20,8 @@ import {Auth} from '../src/auth/auth';
 import {FirebaseNamespace} from '../src/firebase-namespace';
 import {GoogleOAuthAccessToken} from '../src/auth/credential';
 import {FirebaseTokenGenerator} from '../src/auth/token-generator';
+import {FirebaseAuthRequestHandler} from '../src/auth/auth-api-request';
+import {UserRecord} from '../src/auth/user-record';
 import {FirebaseApp, FirebaseAppOptions} from '../src/firebase-app';
 
 chai.should();
@@ -69,6 +71,56 @@ function createAuthWithPath() {
     serviceAccount: path.resolve(__dirname, 'resources/mock.key.json'),
   });
   return new Auth(app);
+}
+
+
+/**
+ * @return {Object} A sample valid server response as returned from getAccountInfo
+ *     endpoint.
+ */
+function getValidGetAccountInfoResponse() {
+  let userResponse: Object = {
+    localId: 'abcdefghijklmnopqrstuvwxyz',
+    email: 'user@gmail.com',
+    emailVerified: true,
+    displayName: 'John Doe',
+    providerUserInfo: [
+      {
+        providerId: 'google.com',
+        displayName: 'John Doe',
+        photoUrl: 'https://lh3.googleusercontent.com/1234567890/photo.jpg',
+        federatedId: '1234567890',
+        email: 'user@gmail.com',
+        rawId: '1234567890',
+      },
+      {
+        providerId: 'facebook.com',
+        displayName: 'John Smith',
+        photoUrl: 'https://facebook.com/0987654321/photo.jpg',
+        federatedId: '0987654321',
+        email: 'user@facebook.com',
+        rawId: '0987654321',
+      },
+    ],
+    photoUrl: 'https://lh3.googleusercontent.com/1234567890/photo.jpg',
+    validSince: '1476136676',
+    lastLoginAt: '1476235905000',
+    createdAt: '1476136676000',
+  };
+  return {
+    kind: 'identitytoolkit#GetAccountInfoResponse',
+    users: [userResponse],
+  };
+}
+
+/**
+ * Returns a user record corresponding to the getAccountInfo response.
+ *
+ * @param {any} serverResponse Raw getAccountInfo response.
+ * @return {Object} The corresponding user record.
+ */
+function getValidUserRecord(serverResponse: any) {
+  return new UserRecord(serverResponse.users[0]);
 }
 
 
@@ -392,6 +444,181 @@ describe('Auth', () => {
       return auth.verifyIdToken(mockIdToken).then(() => {
         expect(stub).to.have.been.calledOnce.and.calledWith(mockIdToken);
       });
+    });
+  });
+
+  describe('getUser()', () => {
+    // Mock credential used to initialize the auth instance.
+    const accessToken: GoogleOAuthAccessToken = {
+      access_token: utils.generateRandomAccessToken(),
+      expires_in: ONE_HOUR_IN_SECONDS,
+    };
+    const credential = {
+      getAccessToken: () => Promise.resolve(accessToken),
+    };
+    const app = createAppWithOptions({
+      credential,
+    });
+    // Initialize all test variables, expected parameters and results.
+    const auth = new Auth(app);
+    const uid = 'abcdefghijklmnopqrstuvwxyz';
+    const expectedGetAccountInfoResult = getValidGetAccountInfoResponse();
+    const expectedUserRecord = getValidUserRecord(expectedGetAccountInfoResult);
+    const expectedError = new Error('User not found');
+    // Stubs used to simulate underlying api calls.
+    let stubs: Sinon.SinonStub[] = [];
+    afterEach(() => {
+      _.forEach(stubs, (stub) => stub.restore());
+    });
+    after(() => {
+      stubs = [];
+    });
+
+    it('should resolve with a UserRecord on success', () => {
+      // Stub getAccountInfoByUid to return expected result.
+      let stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByUid')
+        .returns(Promise.resolve(expectedGetAccountInfoResult));
+      stubs.push(stub);
+      return auth.getUser(uid)
+        .then((userRecord) => {
+          // Confirm underlying API called with expected parameters.
+          expect(stub).to.have.been.calledOnce.and.calledWith(uid);
+          // Confirm expected user record response returned.
+          expect(userRecord).to.deep.equal(expectedUserRecord);
+        });
+    });
+
+    it('should throw an error when the backend returns an error', () => {
+      // Stub getAccountInfoByUid to throw a backend error.
+      let stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByUid')
+        .returns(Promise.reject(expectedError));
+      stubs.push(stub);
+      return auth.getUser(uid)
+        .then((userRecord) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Confirm underlying API called with expected parameters.
+          expect(stub).to.have.been.calledOnce.and.calledWith(uid);
+          // Confirm expected error returned.
+          expect(error).to.equal(expectedError);
+        });
+    });
+  });
+
+  describe('getUserByEmail()', () => {
+    // Mock credential used to initialize the auth instance.
+    const accessToken: GoogleOAuthAccessToken = {
+      access_token: utils.generateRandomAccessToken(),
+      expires_in: ONE_HOUR_IN_SECONDS,
+    };
+    const credential = {
+      getAccessToken: () => Promise.resolve(accessToken),
+    };
+    const app = createAppWithOptions({
+      credential,
+    });
+    // Initialize all test variables, expected parameters and results.
+    const auth = new Auth(app);
+    const email = 'user@gmail.com';
+    const expectedGetAccountInfoResult = getValidGetAccountInfoResponse();
+    const expectedUserRecord = getValidUserRecord(expectedGetAccountInfoResult);
+    const expectedError = new Error('User not found');
+
+    // Stubs used to simulate underlying api calls.
+    let stubs: Sinon.SinonStub[] = [];
+    afterEach(() => {
+      _.forEach(stubs, (stub) => stub.restore());
+    });
+    after(() => {
+      stubs = [];
+    });
+
+    it('should resolve with a UserRecord on success', () => {
+      // Stub getAccountInfoByEmail to return expected result.
+      let stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByEmail')
+        .returns(Promise.resolve(expectedGetAccountInfoResult));
+      stubs.push(stub);
+      return auth.getUserByEmail(email)
+        .then((userRecord) => {
+          // Confirm underlying API called with expected parameters.
+          expect(stub).to.have.been.calledOnce.and.calledWith(email);
+          // Confirm expected user record response returned.
+          expect(userRecord).to.deep.equal(expectedUserRecord);
+        });
+    });
+
+    it('should throw an error when the backend returns an error', () => {
+      // Stub getAccountInfoByEmail to throw a backend error.
+      let stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByEmail')
+        .returns(Promise.reject(expectedError));
+      stubs.push(stub);
+      return auth.getUserByEmail(email)
+        .then((userRecord) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Confirm underlying API called with expected parameters.
+          expect(stub).to.have.been.calledOnce.and.calledWith(email);
+          // Confirm expected error returned.
+          expect(error).to.equal(expectedError);
+        });
+    });
+  });
+
+  describe('deleteUser()', () => {
+    // Mock credential used to initialize the auth instance.
+    const accessToken: GoogleOAuthAccessToken = {
+      access_token: utils.generateRandomAccessToken(),
+      expires_in: ONE_HOUR_IN_SECONDS,
+    };
+    const credential = {
+      getAccessToken: () => Promise.resolve(accessToken),
+    };
+    const app = createAppWithOptions({
+      credential,
+    });
+    // Initialize all test variables, expected parameters and results.
+    const auth = new Auth(app);
+    const uid = 'abcdefghijklmnopqrstuvwxyz';
+    const expectedDeleteAccountResult = {kind: 'identitytoolkit#DeleteAccountResponse'};
+    const expectedError = new Error('User not found');
+
+    // Stubs used to simulate underlying api calls.
+    let stubs: Sinon.SinonStub[] = [];
+    afterEach(() => {
+      _.forEach(stubs, (stub) => stub.restore());
+    });
+    after(() => {
+      stubs = [];
+    });
+
+    it('should resolve with void on success', () => {
+      // Stub deleteAccount to return expected result.
+      let stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'deleteAccount')
+        .returns(Promise.resolve(expectedDeleteAccountResult));
+      stubs.push(stub);
+      return auth.deleteUser(uid)
+        .then((result) => {
+          // Confirm underlying API called with expected parameters.
+          expect(stub).to.have.been.calledOnce.and.calledWith(uid);
+          // Confirm expected result is undefined.
+          expect(result).to.be.undefined;
+        });
+    });
+
+    it('should throw an error when the backend returns an error', () => {
+      // Stub deleteAccount to throw a backend error.
+      let stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'deleteAccount')
+        .returns(Promise.reject(expectedError));
+      stubs.push(stub);
+      return auth.deleteUser(uid)
+        .then(() => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Confirm underlying API called with expected parameters.
+          expect(stub).to.have.been.calledOnce.and.calledWith(uid);
+          // Confirm expected error returned.
+          expect(error).to.equal(expectedError);
+        });
     });
   });
 

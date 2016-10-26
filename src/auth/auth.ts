@@ -3,6 +3,8 @@ import {FirebaseTokenGenerator} from './token-generator';
 import {FirebaseApp, FirebaseAppOptions} from '../firebase-app';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
 import {CertCredential, Certificate, GoogleOAuthAccessToken, UnauthenticatedCredential} from './credential';
+import {FirebaseAuthRequestHandler} from './auth-api-request';
+import {UserRecord} from './user-record';
 
 /**
  * Gets a Credential from app options.
@@ -40,6 +42,7 @@ class Auth implements FirebaseServiceInterface {
   private app_: FirebaseApp;
   private tokenGenerator_: FirebaseTokenGenerator;
   private authTokenManager_: AuthTokenManager;
+  private authRequestHandler: FirebaseAuthRequestHandler;
 
   constructor(app: FirebaseApp) {
     if (typeof app !== 'object' || !('options' in app)) {
@@ -62,6 +65,8 @@ class Auth implements FirebaseServiceInterface {
     if (serviceAccount) {
       this.tokenGenerator_ = new FirebaseTokenGenerator(serviceAccount);
     }
+    // Initialize auth request handler with the credential.
+    this.authRequestHandler = new FirebaseAuthRequestHandler(credential);
   }
 
   get app(): FirebaseApp {
@@ -100,6 +105,50 @@ class Auth implements FirebaseServiceInterface {
       throw new Error('Must initialize FirebaseApp with a service account to call auth().verifyIdToken()');
     }
     return this.tokenGenerator_.verifyIdToken(idToken);
+  };
+
+  /**
+   * Looks up the user identified by the provided user id and returns a promise that is
+   * fulfilled with a user record for the given user if that user is found.
+   *
+   * @param {string} uid The uid of the user to look up.
+   * @return {Promise<UserRecord>} A promise that resolves with the corresponding user record.
+   */
+  public getUser(uid: string): Promise<UserRecord> {
+    return this.authRequestHandler.getAccountInfoByUid(uid)
+      .then((response: any) => {
+        // Returns the user record populated with server response.
+        return new UserRecord(response.users[0]);
+      });
+  };
+
+  /**
+   * Looks up the user identified by the provided email and returns a promise that is
+   * fulfilled with a user record for the given user if that user is found.
+   *
+   * @param {string} email The email of the user to look up.
+   * @return {Promise<UserRecord>} A promise that resolves with the corresponding user record.
+   */
+  public getUserByEmail(email: string): Promise<UserRecord> {
+    return this.authRequestHandler.getAccountInfoByEmail(email)
+      .then((response: any) => {
+        // Returns the user record populated with server response.
+        return new UserRecord(response.users[0]);
+      });
+  };
+
+  /**
+   * Deletes the user identified by the provided user id and returns a promise that is
+   * fulfilled when the user is found and successfully deleted.
+   *
+   * @param {string} uid The uid of the user to delete.
+   * @return {Promise<void>} A promise that resolves when the user is successfully deleted.
+   */
+  public deleteUser(uid: string): Promise<void> {
+    return this.authRequestHandler.deleteAccount(uid)
+      .then((response) => {
+        // Return nothing on success.
+      });
   };
 };
 
