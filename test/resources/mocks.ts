@@ -1,11 +1,14 @@
 'use strict';
 
+// Use untyped import syntax for Node built-ins.
+import path = require('path');
 import events = require('events');
 import stream = require('stream');
 
 import * as _ from 'lodash';
 import * as jwt from 'jsonwebtoken';
 
+import {CertCredential} from '../../src/auth/credential';
 import {FirebaseAppOptions} from '../../src/firebase-app';
 
 const ALGORITHM = 'RS256';
@@ -22,9 +25,11 @@ export let appName = 'mock-app-name';
 
 export let serviceName = 'mock-service-name';
 
+export let credential = new CertCredential(path.resolve(__dirname, './mock.key.json'));
+
 export let appOptions: FirebaseAppOptions = {
+  credential,
   databaseURL: 'https://databaseName.firebaseio.com',
-  serviceAccount: require('./mock.key.json'),
 };
 
 export let appOptionsNoAuth: FirebaseAppOptions = {
@@ -32,7 +37,14 @@ export let appOptionsNoAuth: FirebaseAppOptions = {
 };
 
 export let appOptionsNoDatabaseUrl: FirebaseAppOptions = {
-  serviceAccount: require('./mock.key.json'),
+  credential,
+};
+
+export let refreshToken = {
+  clientId: 'mock-client-id',
+  clientSecret: 'mock-client-secret',
+  refreshToken: 'mock-refresh-token',
+  type: 'refreshToken',
 };
 
 /* tslint:disable:no-var-requires */

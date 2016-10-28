@@ -17,8 +17,9 @@ import * as utils from './utils';
 import * as mocks from './resources/mocks';
 
 import {Auth} from '../src/auth/auth';
+import {CertCredential} from '../src/auth/credential';
 import {FirebaseNamespace} from '../src/firebase-namespace';
-import {GoogleOAuthAccessToken} from '../src/auth/credential';
+import {GoogleOAuthAccessToken, UnauthenticatedCredential} from '../src/auth/credential';
 import {FirebaseTokenGenerator} from '../src/auth/token-generator';
 import {FirebaseAuthRequestHandler} from '../src/auth/auth-api-request';
 import {UserRecord} from '../src/auth/user-record';
@@ -52,11 +53,11 @@ function createAppWithOptions(options: Object) {
  */
 function createAuthWithObject() {
   const app = createAppWithOptions({
-    serviceAccount: {
+    credential: new CertCredential({
       project_id: mocks.projectId,
       private_key: MOCK_CERTIFICATE_OBJECT.private_key,
       client_email: MOCK_CERTIFICATE_OBJECT.client_email,
-    },
+    }),
   });
   return new Auth(app);
 }
@@ -68,7 +69,7 @@ function createAuthWithObject() {
  */
 function createAuthWithPath() {
   const app = createAppWithOptions({
-    serviceAccount: path.resolve(__dirname, 'resources/mock.key.json'),
+    credential: new CertCredential(path.resolve(__dirname, 'resources/mock.key.json')),
   });
   return new Auth(app);
 }
@@ -227,7 +228,7 @@ describe('Auth', () => {
 
       it('should not throw given a valid path to a service account', () => {
         const app = createAppWithOptions({
-          serviceAccount: path.resolve(__dirname, 'resources/mock.key.json'),
+          credential: new CertCredential(path.resolve(__dirname, 'resources/mock.key.json')),
         });
 
         expect(() => {
@@ -237,10 +238,10 @@ describe('Auth', () => {
 
       it('should not throw given a valid service account object', () => {
         const app = createAppWithOptions({
-          serviceAccount: {
+          credential: new CertCredential({
             private_key: MOCK_CERTIFICATE_OBJECT.private_key,
             client_email: MOCK_CERTIFICATE_OBJECT.client_email,
-          },
+          }),
         });
 
         expect(() => {
@@ -250,10 +251,10 @@ describe('Auth', () => {
 
       it('should accept "clientEmail" in place of "client_email" for the service account', () => {
         const app = createAppWithOptions({
-          serviceAccount: {
+          credential: new CertCredential({
             private_key: MOCK_CERTIFICATE_OBJECT.private_key,
             clientEmail: MOCK_CERTIFICATE_OBJECT.client_email,
-          },
+          }),
         });
 
         expect(() => {
@@ -263,10 +264,10 @@ describe('Auth', () => {
 
       it('should accept "privateKey" in place of "private_key" for the service account', () => {
         const app = createAppWithOptions({
-          serviceAccount: {
+          credential: new CertCredential({
             privateKey: MOCK_CERTIFICATE_OBJECT.private_key,
             client_email: MOCK_CERTIFICATE_OBJECT.client_email,
-          },
+          }),
         });
 
         expect(() => {
@@ -282,7 +283,7 @@ describe('Auth', () => {
         const serviceAccountClone = _.clone(serviceAccount);
 
         const app = createAppWithOptions({
-          serviceAccount,
+          credential: new CertCredential(serviceAccount),
         });
 
         expect(() => {
@@ -294,10 +295,12 @@ describe('Auth', () => {
     });
   });
 
-  describe('without any authentication', () => {
+  describe('without unauthenticated credentials', () => {
     it('should be able to construct an app but not get a token', () => {
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
-      const app = createAppWithOptions(mocks.appOptionsNoAuth);
+      const app = createAppWithOptions({
+        credential: new UnauthenticatedCredential(),
+      });
       const auth = new Auth(app);
 
       return auth.INTERNAL.getToken().then((token) => {
@@ -376,7 +379,7 @@ describe('Auth', () => {
 
   describe('app', () => {
     const app = createAppWithOptions({
-      serviceAccount: path.resolve(__dirname, 'resources/mock.key.json'),
+      credential: new CertCredential(path.resolve(__dirname, 'resources/mock.key.json')),
     });
 
     it('returns the app from the constructor', () => {
@@ -405,7 +408,9 @@ describe('Auth', () => {
 
     it('should throw if service account is not specified (and env not set)', () => {
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
-      const app = createAppWithOptions(mocks.appOptionsNoAuth);
+      const app = createAppWithOptions({
+        credential: new UnauthenticatedCredential(),
+      });
       const auth = new Auth(app);
       expect(() => {
         auth.createCustomToken(mocks.uid, mocks.developerClaims);
@@ -430,7 +435,9 @@ describe('Auth', () => {
 
     it('should throw if service account is not specified (and env not set)', () => {
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
-      const app = createAppWithOptions(mocks.appOptionsNoAuth);
+      const app = createAppWithOptions({
+        credential: new UnauthenticatedCredential(),
+      });
       const auth = new Auth(app);
       const mockIdToken = mocks.generateIdToken();
       expect(() => {

@@ -1,12 +1,26 @@
 import {deepExtend} from './utils/deep-copy';
 import {AppHook, FirebaseApp, FirebaseAppOptions} from './firebase-app';
 import {FirebaseServiceFactory, FirebaseServiceInterface} from './firebase-service';
+import {
+  Credential,
+  CertCredential,
+  RefreshTokenCredential,
+  UnauthenticatedCredential,
+  ApplicationDefaultCredential,
+} from './auth/credential';
 
 const DEFAULT_APP_NAME = '[DEFAULT]';
+
+let globalAppDefaultCred: ApplicationDefaultCredential;
+let globalUnauthenticatedCred: UnauthenticatedCredential;
+let globalCertCreds: { [key: string]: CertCredential } = {};
+let globalRefreshTokenCreds: { [key: string]: RefreshTokenCredential } = {};
+
 
 interface FirebaseServiceNamespace <T extends FirebaseServiceInterface> {
   (app?: FirebaseApp): T;
 }
+
 
 class FirebaseNamespaceInternals {
   public serviceFactories: {[serviceName: string]: FirebaseServiceFactory} = {};
@@ -149,10 +163,44 @@ class FirebaseNamespaceInternals {
 }
 
 
+let firebaseCredential = {
+  cert: (serviceAccountPathOrObject: string|Object): Credential => {
+    const stringifiedServiceAccount = JSON.stringify(serviceAccountPathOrObject);
+    if (!(stringifiedServiceAccount in globalCertCreds)) {
+      globalCertCreds[stringifiedServiceAccount] = new CertCredential(serviceAccountPathOrObject);
+    }
+    return globalCertCreds[stringifiedServiceAccount];
+  },
+
+  refreshToken: (refreshTokenPathOrObject: string|Object): Credential => {
+    const stringifiedRefreshToken = JSON.stringify(refreshTokenPathOrObject);
+    if (!(stringifiedRefreshToken in globalRefreshTokenCreds)) {
+      globalRefreshTokenCreds[stringifiedRefreshToken] = new RefreshTokenCredential(refreshTokenPathOrObject);
+    }
+    return globalRefreshTokenCreds[stringifiedRefreshToken];
+  },
+
+  unauthenticated: (): Credential => {
+    if (typeof globalUnauthenticatedCred === 'undefined') {
+      globalUnauthenticatedCred = new UnauthenticatedCredential();
+    }
+    return globalUnauthenticatedCred;
+  },
+
+  applicationDefault: (): Credential => {
+    if (typeof globalAppDefaultCred === 'undefined') {
+      globalAppDefaultCred = new ApplicationDefaultCredential();
+    }
+    return globalAppDefaultCred;
+  },
+};
+
+
 /**
  * Global Firebase context object.
  */
 class FirebaseNamespace {
+  public credential = firebaseCredential;
   public SDK_VERSION = '<XXX_SDK_VERSION_XXX>';
   public INTERNAL: FirebaseNamespaceInternals;
 

@@ -47,24 +47,39 @@ class FirebaseApp {
     this.name_ = name;
     this.options_ = deepCopy(options) as FirebaseAppOptions;
 
-    let errorMessage;
     if (typeof this.options_ !== 'object' || this.options_ === null) {
-      errorMessage = 'The first argument passed to initializeApp() must be a non-empty object.';
-    } else {
-      const hasCredential = ('credential' in this.options_);
-      const hasDatabaseUrl = ('databaseURL' in this.options_);
-      const hasServiceAccount = ('serviceAccount' in this.options_);
-      if (!hasCredential && !hasDatabaseUrl && !hasServiceAccount) {
-        errorMessage = 'The first argument passed to initializeApp() must specify either ' +
-          '"databaseURL" or one of "serviceAccount" and "credential".';
-      } else if (hasCredential && hasServiceAccount) {
-        errorMessage = 'The first argument passed to initializeApp() cannot specify both the ' +
-          '"serviceAccount" and "credential" keys.';
-      }
+      // Ensure the options are a non-null object
+      this.options_ = {};
     }
 
+    const hasCredential = ('credential' in this.options_);
+    const hasServiceAccount = ('serviceAccount' in this.options_);
+
+    let errorMessage: string;
+    if (!hasCredential && !hasServiceAccount) {
+      errorMessage = 'The first argument passed to initializeApp() must be an object containing ' +
+      'at least a "credential" property.';
+    } else if (hasCredential && hasServiceAccount) {
+      errorMessage = 'The first argument passed to initializeApp() cannot specify both the ' +
+        '"credential" and "serviceAccount" properties.';
+    }
+    // TODO(jwenger): NEXT MAJOR RELEASE - throw error if the "credential" property is not specified
+
     if (typeof errorMessage !== 'undefined') {
-      throw new Error(`Invalid Firebase app options. ${errorMessage}`);
+      throw new Error(
+        `Invalid Firebase app options passed as the first argument to initializeApp(). ${errorMessage}`
+      );
+    }
+
+    // TODO(jwenger): NEXT MAJOR RELEASE - remove "serviceAccount" property deprecation warning
+    if (hasServiceAccount) {
+      /* tslint:disable:no-console */
+      console.log(
+        'WARNING: The "serviceAccount" property specified in the first argument to initializeApp() ' +
+        'is deprecated and will be removed in the next major version. You should instead use the ' +
+        '"credential" property.'
+      );
+      /* tslint:enable:no-console */
     }
 
     Object.keys(firebaseInternals_.serviceFactories).forEach((serviceName) => {
