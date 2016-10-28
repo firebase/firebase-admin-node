@@ -16,6 +16,30 @@ function isAlphanumeric(alphanumeric: any): boolean {
 
 
 /**
+ * Validates that a string is a valid Firebase Auth uid.
+ *
+ * @param {any} uid The string to validate.
+ * @return {boolean} Whether the string is a valid Firebase Auth uid.
+ */
+function isUid(uid: any): boolean {
+  // A uid should be an alphanumeric string with up to 128 characters.
+  return isAlphanumeric(uid) && uid.length > 0 && uid.length <= 128;
+}
+
+
+/**
+ * Validates that a string is a valid Firebase Auth password.
+ *
+ * @param {any} password The password string to validate.
+ * @return {boolean} Whether the string is a valid Firebase Auth password.
+ */
+function isPassword(password: any): boolean {
+  // A password must be a string of at least 6 characters.
+  return typeof password === 'string' && password.length >= 6;
+}
+
+
+/**
  * Validates that a string is a valid email.
  *
  * @param {any} email The string to validate.
@@ -76,5 +100,7 @@ function isURL(urlStr: any): boolean {
 export {
   isAlphanumeric,
   isEmail,
+  isPassword,
   isURL,
+  isUid,
 }

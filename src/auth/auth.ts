@@ -150,6 +150,42 @@ class Auth implements FirebaseServiceInterface {
         // Return nothing on success.
       });
   };
+
+  /**
+   * Creates a new user with the properties provided.
+   *
+   * @param {Object} properties The properties to set on the new user record to be created.
+   * @return {Promise<UserRecord>} A promise that resolves with the newly created user record.
+   */
+  public createUser(properties: Object): Promise<UserRecord> {
+    return this.authRequestHandler.createNewAccount(properties)
+      .then((uid) => {
+        // Return the corresponding user record.
+        return this.getUser(uid);
+      })
+      .catch((error) => {
+        if (error.message && error.message === 'User not found') {
+          // Something must have happened after creating the user and then retrieving it.
+          throw new Error('Unable to create the user record provided.');
+        }
+        throw error;
+      });
+  };
+
+  /**
+   * Updates an existing user with the properties provided.
+   *
+   * @param {string} uid The uid identifier of the user to update.
+   * @param {Object} properties The properties to update on the existing user.
+   * @return {Promise<UserRecord>} A promise that resolves with the modified user record.
+   */
+  public updateUser(uid: string, properties: Object): Promise<UserRecord> {
+    return this.authRequestHandler.updateExistingAccount(uid, properties)
+      .then((existingUid) => {
+        // Return the corresponding user record.
+        return this.getUser(existingUid);
+      });
+  };
 };
 
 class FirebaseAccessToken {

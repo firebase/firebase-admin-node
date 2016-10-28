@@ -15,6 +15,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import {mockFetchAccessTokenViaJwt, generateRandomAccessToken} from './utils';
 import {CertCredential, Certificate} from '../src/auth/credential';
 import {HttpRequestHandler} from '../src/utils/api-request';
+import * as validator from '../src/utils/validator';
 import {
   FirebaseAuthRequestHandler, FIREBASE_AUTH_GET_ACCOUNT_INFO,
   FIREBASE_AUTH_DELETE_ACCOUNT, FIREBASE_AUTH_SET_ACCOUNT_INFO,
@@ -108,6 +109,25 @@ describe('FIREBASE_AUTH_DELETE_ACCOUNT', () => {
 });
 
 describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
+  // Spy on all validators.
+  let isUidSpy: Sinon.SinonSpy;
+  let isEmailSpy: Sinon.SinonSpy;
+  let isPasswordSpy: Sinon.SinonSpy;
+  let isUrlSpy: Sinon.SinonSpy;
+
+  beforeEach(() => {
+    isUidSpy = sinon.spy(validator, 'isUid');
+    isEmailSpy = sinon.spy(validator, 'isEmail');
+    isPasswordSpy = sinon.spy(validator, 'isPassword');
+    isUrlSpy = sinon.spy(validator, 'isURL');
+  });
+  afterEach(() => {
+    isUidSpy.restore();
+    isEmailSpy.restore();
+    isPasswordSpy.restore();
+    isUrlSpy.restore();
+  });
+
   it('should return the correct endpoint', () => {
     expect(FIREBASE_AUTH_SET_ACCOUNT_INFO.getEndpoint()).to.equal('setAccountInfo');
   });
@@ -121,6 +141,7 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
       expect(() => {
         return requestValidator(validRequest);
       }).not.to.throw();
+      expect(isUidSpy).to.have.been.calledOnce.and.calledWith('1234');
     });
     it('should succeed with valid localId and other optional parameters', () => {
       const validRequest = {
@@ -137,18 +158,25 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
       expect(() => {
         return requestValidator(validRequest);
       }).not.to.throw();
+      expect(isUidSpy).to.have.been.calledOnce.and.calledWith('1234');
+      expect(isEmailSpy).to.have.been.calledOnce.and.calledWith('user@example.com');
+      expect(isPasswordSpy).to.have.been.calledOnce.and.calledWith('password');
+      expect(isUrlSpy).to.have.been.calledOnce.and
+        .calledWith('http://www.example.com/1234/photo.png');
     });
     it('should fail when localId not passed', () => {
       const invalidRequest = {};
       expect(() => {
         return requestValidator(invalidRequest);
       }).to.throw();
+      expect(isUidSpy).to.have.not.been.called;
     });
     describe('called with invalid parameters', () => {
       it('should fail with invalid localId', () => {
         expect(() => {
           return requestValidator({localId: '1234_$%on'});
         }).to.throw();
+        expect(isUidSpy).to.have.been.calledOnce.and.calledWith('1234_$%on');
       });
       it('should fail with invalid displayName', () => {
         expect(() => {
@@ -159,11 +187,13 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
         expect(() => {
           return requestValidator({localId: '1234', email: 'invalid'});
         }).to.throw();
+        expect(isEmailSpy).to.have.been.calledOnce.and.calledWith('invalid');
       });
       it('should fail with invalid password', () => {
         expect(() => {
           return requestValidator({localId: '1234', password: 'short'});
         }).to.throw();
+        expect(isPasswordSpy).to.have.been.calledOnce.and.calledWith('short');
       });
       it('should fail with invalid emailVerified flag', () => {
         expect(() => {
@@ -174,6 +204,7 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
         expect(() => {
           return requestValidator({localId: '1234', photoUrl: 'invalid url'});
         }).to.throw();
+        expect(isUrlSpy).to.have.been.calledOnce.and.calledWith('invalid url');
       });
       it('should fail with invalid disableUser flag', () => {
         expect(() => {
@@ -193,13 +224,32 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
     it('should fail when localId is not returned', () => {
       const invalidResponse = {};
       expect(() => {
-        responseValidator(invalidResponse);
+        return responseValidator(invalidResponse);
       }).to.throw();
     });
   });
 });
 
 describe('FIREBASE_AUTH_UPLOAD_ACCOUNT', () => {
+  // Spy on all validators.
+  let isUidSpy: Sinon.SinonSpy;
+  let isEmailSpy: Sinon.SinonSpy;
+  let isPasswordSpy: Sinon.SinonSpy;
+  let isUrlSpy: Sinon.SinonSpy;
+
+  beforeEach(() => {
+    isUidSpy = sinon.spy(validator, 'isUid');
+    isEmailSpy = sinon.spy(validator, 'isEmail');
+    isPasswordSpy = sinon.spy(validator, 'isPassword');
+    isUrlSpy = sinon.spy(validator, 'isURL');
+  });
+  afterEach(() => {
+    isUidSpy.restore();
+    isEmailSpy.restore();
+    isPasswordSpy.restore();
+    isUrlSpy.restore();
+  });
+
   it('should return the correct endpoint', () => {
     expect(FIREBASE_AUTH_UPLOAD_ACCOUNT.getEndpoint()).to.equal('uploadAccount');
   });
@@ -215,6 +265,7 @@ describe('FIREBASE_AUTH_UPLOAD_ACCOUNT', () => {
       expect(() => {
         return requestValidator(validRequest);
       }).not.to.throw();
+      expect(isUidSpy).to.have.been.calledOnce.and.calledWith('1234');
     });
     it('should succeed with valid user parameters', () => {
       const validRequest = {
@@ -234,6 +285,11 @@ describe('FIREBASE_AUTH_UPLOAD_ACCOUNT', () => {
       expect(() => {
         return requestValidator(validRequest);
       }).not.to.throw();
+      expect(isUidSpy).to.have.been.calledOnce.and.calledWith('1234');
+      expect(isEmailSpy).to.have.been.calledOnce.and.calledWith('user@example.com');
+      expect(isPasswordSpy).to.have.been.calledOnce.and.calledWith('password');
+      expect(isUrlSpy).to.have.been.calledOnce.and
+        .calledWith('http://www.example.com/1234/photo.png');
     });
     it('should ignore invalid parameters', () => {
       const validRequest = {
@@ -246,28 +302,35 @@ describe('FIREBASE_AUTH_UPLOAD_ACCOUNT', () => {
       expect(() => {
         return requestValidator(validRequest);
       }).not.to.throw();
+      expect(isUidSpy).to.have.been.calledTwice;
+      expect(isUidSpy.firstCall).to.have.been.calledWith('user1');
+      expect(isUidSpy.secondCall).to.have.been.calledWith('user2');
     });
     it('should fail when no user is passed', () => {
       expect(() => {
         return requestValidator({});
       }).to.throw();
+      expect(isUidSpy).to.have.not.been.called;
     });
     it('should fail when an empty list of users are passed', () => {
       expect(() => {
         return requestValidator({users: []});
       }).to.throw();
+      expect(isUidSpy).to.have.not.been.called;
     });
     it('should fail when localId not passed within a user', () => {
       const invalidRequest = {users: [{displayName: 'New User'}]};
       expect(() => {
         return requestValidator(invalidRequest);
       }).to.throw();
+      expect(isUidSpy).to.have.not.been.called;
     });
     describe('called with invalid parameters', () => {
       it('should fail with invalid localId', () => {
         expect(() => {
           return requestValidator({users: [{localId: '1234_$%on'}]});
         }).to.throw();
+        expect(isUidSpy).to.have.been.calledOnce.and.calledWith('1234_$%on');
       });
       it('should fail with invalid displayName', () => {
         expect(() => {
@@ -282,6 +345,7 @@ describe('FIREBASE_AUTH_UPLOAD_ACCOUNT', () => {
             users: [{localId: '1234', email: 'invalid'}],
           });
         }).to.throw();
+        expect(isEmailSpy).to.have.been.calledOnce.and.calledWith('invalid');
       });
       it('should fail with invalid rawPassword', () => {
         expect(() => {
@@ -289,6 +353,7 @@ describe('FIREBASE_AUTH_UPLOAD_ACCOUNT', () => {
             users: [{localId: '1234', rawPassword: 'short'}],
           });
         }).to.throw();
+        expect(isPasswordSpy).to.have.been.calledOnce.and.calledWith('short');
       });
       it('should fail with invalid emailVerified flag', () => {
         expect(() => {
@@ -303,6 +368,7 @@ describe('FIREBASE_AUTH_UPLOAD_ACCOUNT', () => {
             users: [{localId: '1234', photoUrl: 'invalid url'}],
           });
         }).to.throw();
+        expect(isUrlSpy).to.have.been.calledOnce.and.calledWith('invalid url');
       });
       it('should fail with invalid disabled flag', () => {
         expect(() => {
@@ -336,6 +402,22 @@ describe('FIREBASE_AUTH_UPLOAD_ACCOUNT', () => {
 });
 
 describe('FIREBASE_AUTH_SIGN_UP_NEW_USER', () => {
+  // Spy on all validators.
+  let isEmailSpy: Sinon.SinonSpy;
+  let isPasswordSpy: Sinon.SinonSpy;
+  let isUrlSpy: Sinon.SinonSpy;
+
+  beforeEach(() => {
+    isEmailSpy = sinon.spy(validator, 'isEmail');
+    isPasswordSpy = sinon.spy(validator, 'isPassword');
+    isUrlSpy = sinon.spy(validator, 'isURL');
+  });
+  afterEach(() => {
+    isEmailSpy.restore();
+    isPasswordSpy.restore();
+    isUrlSpy.restore();
+  });
+
   it('should return the correct endpoint', () => {
     expect(FIREBASE_AUTH_SIGN_UP_NEW_USER.getEndpoint()).to.equal('signupNewUser');
   });
@@ -358,6 +440,10 @@ describe('FIREBASE_AUTH_SIGN_UP_NEW_USER', () => {
       expect(() => {
         return requestValidator(validRequest);
       }).not.to.throw();
+      expect(isEmailSpy).to.have.been.calledOnce.and.calledWith('user@example.com');
+      expect(isPasswordSpy).to.have.been.calledOnce.and.calledWith('password');
+      expect(isUrlSpy).to.have.been.calledOnce.and
+        .calledWith('http://www.example.com/1234/photo.png');
     });
     it('should fail when localId is passed', () => {
       expect(() => {
@@ -374,11 +460,13 @@ describe('FIREBASE_AUTH_SIGN_UP_NEW_USER', () => {
         expect(() => {
           return requestValidator({email: 'invalid'});
         }).to.throw();
+        expect(isEmailSpy).to.have.been.calledOnce.and.calledWith('invalid');
       });
       it('should fail with invalid password', () => {
         expect(() => {
           return requestValidator({password: 'short'});
         }).to.throw();
+        expect(isPasswordSpy).to.have.been.calledOnce.and.calledWith('short');
       });
       it('should fail with invalid emailVerified flag', () => {
         expect(() => {
@@ -389,6 +477,7 @@ describe('FIREBASE_AUTH_SIGN_UP_NEW_USER', () => {
         expect(() => {
           return requestValidator({photoUrl: 'invalid url'});
         }).to.throw();
+        expect(isUrlSpy).to.have.been.calledOnce.and.calledWith('invalid url');
       });
       it('should fail with invalid disabled flag', () => {
         expect(() => {
