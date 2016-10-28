@@ -110,6 +110,8 @@ class Certificate {
   }
 
   constructor(json: Object) {
+    // TODO: validate Certificate
+
     copyAttr(this, json, 'projectId', 'project_id');
     copyAttr(this, json, 'privateKey', 'private_key');
     copyAttr(this, json, 'clientEmail', 'client_email');
@@ -174,8 +176,12 @@ function requestAccessToken(transit, options: Object, data?: Object): Promise<Go
 class CertCredential implements Credential {
   private certificate_: Certificate;
 
-  constructor(certificate: Certificate) {
-    this.certificate_ = certificate;
+  constructor(serviceAccountPathOrObject: string|Object) {
+    if (typeof serviceAccountPathOrObject === 'string') {
+      this.certificate_ = Certificate.fromPath(serviceAccountPathOrObject);
+    } else {
+      this.certificate_ = new Certificate(serviceAccountPathOrObject);
+    }
   }
 
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
@@ -246,8 +252,12 @@ class UnauthenticatedCredential implements Credential {
 class RefreshTokenCredential implements Credential {
   private refreshToken_: RefreshToken;
 
-  constructor(refreshToken: RefreshToken) {
-    this.refreshToken_ = refreshToken;
+  constructor(refreshTokenPathOrObject: string|Object) {
+    if (typeof refreshTokenPathOrObject === 'string') {
+      this.refreshToken_ = RefreshToken.fromPath(refreshTokenPathOrObject);
+    } else {
+      this.refreshToken_ = new RefreshToken(refreshTokenPathOrObject);
+    }
   }
 
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {

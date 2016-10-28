@@ -56,76 +56,103 @@ describe('Firebase', () => {
       }).to.throw('Invalid Firebase app options');
     });
 
-    xit('should throw given an options object containing both the "serviceAccount" and "credential" keys', () => {
+    it('should throw given an options object containing neither a "serviceAccount" nor a "credential" key', () => {
+      expect(() => {
+        firebaseAdmin.initializeApp(mocks.appOptionsNoAuth);
+      }).to.throw('Invalid Firebase app options');
+    });
+
+    it('should throw given an options object containing both the "serviceAccount" and "credential" keys', () => {
       expect(() => {
         firebaseAdmin.initializeApp({
-          credential: firebaseAdmin.auth.applicationDefaultCredential(),
+          credential: firebaseAdmin.credential.applicationDefault(),
           serviceAccount: mocks.certificateObject,
         });
       }).to.throw('Invalid Firebase app options');
     });
 
-    it('should throw after calling database() given no databaseURL option', () => {
-      firebaseAdmin.initializeApp(mocks.appOptionsNoDatabaseUrl);
-
-      expect(() => {
-        firebaseAdmin.database();
-      }).to.throw('Can\'t determine Firebase Database URL');
+    it('should not modify the provided options object', () => {
+      let optionsClone = _.clone(mocks.appOptions);
+      firebaseAdmin.initializeApp(mocks.appOptions);
+      expect(optionsClone).to.deep.equal(mocks.appOptions);
     });
 
-    it('should initialize SDK to return null access tokens given no authentication', () => {
-      firebaseAdmin.initializeApp(mocks.appOptionsNoAuth);
-      return (firebaseAdmin.app().auth().INTERNAL as any).getToken()
-        .should.eventually.be.null;
-    });
+    describe('serviceAccount key', () => {
+      it('should initialize SDK given a service account object', () => {
+        mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
-    it('should initialize SDK to return actual access tokens given a service account object', () => {
-      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
+        firebaseAdmin.initializeApp({
+          serviceAccount: mocks.certificateObject,
+        });
 
-      firebaseAdmin.initializeApp({
-        serviceAccount: mocks.certificateObject,
-      });
-
-      return (firebaseAdmin.app().auth().INTERNAL as any).getToken()
+        return (firebaseAdmin.app().auth().INTERNAL as any).getToken()
           .should.eventually.have.keys(['accessToken', 'expirationTime']);
-    });
-
-    it('should initialize SDK to return actual access tokens given a service account filename', () => {
-      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
-
-      firebaseAdmin.initializeApp({
-        serviceAccount: path.resolve(__dirname, 'resources/mock.key.json'),
       });
 
-      return (firebaseAdmin.app().auth().INTERNAL as any).getToken()
+      it('should initialize SDK given a service account filename', () => {
+        mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
+
+        firebaseAdmin.initializeApp({
+          serviceAccount: path.resolve(__dirname, 'resources/mock.key.json'),
+        });
+
+        return (firebaseAdmin.app().auth().INTERNAL as any).getToken()
           .should.eventually.have.keys(['accessToken', 'expirationTime']);
+      });
     });
 
-    xit('should initialize SDK to return actual access tokens given an application default credential', () => {
-      firebaseAdmin.initializeApp({
-        credential: firebaseAdmin.auth.applicationDefaultCredential(),
+    describe('credential key', () => {
+      it('should initialize SDK given an unauthenticated authentication', () => {
+        firebaseAdmin.initializeApp({
+          credential: firebaseAdmin.credential.unauthenticated(),
+        });
+
+        return (firebaseAdmin.app().auth().INTERNAL as any).getToken()
+          .should.eventually.be.null;
       });
 
-      return (firebaseAdmin.app().auth().INTERNAL as any).getToken()
-        .should.eventually.have.keys(['accessToken', 'expirationTime']);
-    });
+      it('should initialize SDK given a cert credential with a service account object', () => {
+        mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
-    xit('should initialize SDK to return actual access tokens given a metadata service credential', () => {
-      firebaseAdmin.initializeApp({
-        credential: firebaseAdmin.auth.metadataServiceCredential(),
+        firebaseAdmin.initializeApp({
+          credential: firebaseAdmin.credential.cert(mocks.certificateObject),
+        });
+
+        return (firebaseAdmin.app().auth().INTERNAL as any).getToken()
+            .should.eventually.have.keys(['accessToken', 'expirationTime']);
       });
 
-      return (firebaseAdmin.app().auth().INTERNAL as any).getToken()
-        .should.eventually.have.keys(['accessToken', 'expirationTime']);
-    });
+      it('should initialize SDK given a cert credential with service account filename', () => {
+        mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
-    xit('should initialize SDK to return actual access tokens given a refresh token credential', () => {
-      firebaseAdmin.initializeApp({
-        credential: firebaseAdmin.auth.refreshTokenCredential(/* refreshToken */),
+        const keyPath = path.resolve(__dirname, 'resources/mock.key.json');
+        firebaseAdmin.initializeApp({
+          credential: firebaseAdmin.credential.cert(keyPath),
+        });
+
+        return (firebaseAdmin.app().auth().INTERNAL as any).getToken()
+            .should.eventually.have.keys(['accessToken', 'expirationTime']);
       });
 
-      return (firebaseAdmin.app().auth().INTERNAL as any).getToken()
-        .should.eventually.have.keys(['accessToken', 'expirationTime']);
+      it('should initialize SDK given an application default credential', () => {
+        firebaseAdmin.initializeApp({
+          credential: firebaseAdmin.credential.applicationDefault(),
+        });
+
+        return (firebaseAdmin.app().auth().INTERNAL as any).getToken()
+          .should.eventually.have.keys(['accessToken', 'expirationTime']);
+      });
+
+      // TODO(jwenger): mock out the refresh token endpoint so this test will work
+      xit('should initialize SDK given a refresh token credential', () => {
+        nock.recorder.rec();
+        firebaseAdmin.initializeApp({
+          credential: firebaseAdmin.credential.refreshToken(mocks.refreshToken),
+        });
+
+        return (firebaseAdmin.app().auth().INTERNAL as any).getToken()
+          .should.eventually.have.keys(['accessToken', 'expirationTime']);
+      });
     });
   });
 
@@ -134,6 +161,14 @@ describe('Firebase', () => {
       expect(() => {
         return firebaseAdmin.database();
       }).to.throw(`No Firebase app named '[DEFAULT]' exists.`);
+    });
+
+    it('should throw given no databaseURL key when initializing the app', () => {
+      firebaseAdmin.initializeApp(mocks.appOptionsNoDatabaseUrl);
+
+      expect(() => {
+        firebaseAdmin.database();
+      }).to.throw('Can\'t determine Firebase Database URL');
     });
 
     it('should return the database service', () => {
