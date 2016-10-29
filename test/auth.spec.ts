@@ -629,6 +629,211 @@ describe('Auth', () => {
     });
   });
 
+  describe('createUser()', () => {
+    // Mock credential used to initialize the auth instance.
+    const accessToken: GoogleOAuthAccessToken = {
+      access_token: utils.generateRandomAccessToken(),
+      expires_in: ONE_HOUR_IN_SECONDS,
+    };
+    const credential = {
+      getAccessToken: () => Promise.resolve(accessToken),
+    };
+    const app = createAppWithOptions({
+      credential,
+    });
+    // Initialize all test variables, expected parameters and results.
+    const auth = new Auth(app);
+    const uid = 'abcdefghijklmnopqrstuvwxyz';
+    const expectedGetAccountInfoResult = getValidGetAccountInfoResponse();
+    const expectedUserRecord = getValidUserRecord(expectedGetAccountInfoResult);
+    const expectedError = new Error('INTERNAL_SERVER_ERROR');
+    const unableToCreateUserError = new Error('Unable to create the user record provided.');
+    const propertiesToCreate = {
+      displayName: expectedUserRecord.displayName,
+      photoURL: expectedUserRecord.photoURL,
+      email: expectedUserRecord.email,
+      emailVerified: expectedUserRecord.emailVerified,
+      password: 'password',
+    };
+    // Stubs used to simulate underlying api calls.
+    let stubs: Sinon.SinonStub[] = [];
+    afterEach(() => {
+      _.forEach(stubs, (stub) => stub.restore());
+    });
+    after(() => {
+      stubs = [];
+    });
+
+    it('should resolve with a UserRecord on createNewAccount request success', () => {
+      // Stub createNewAccount to return expected uid.
+      let createUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'createNewAccount')
+        .returns(Promise.resolve(uid));
+      // Stub getAccountInfoByUid to return expected result.
+      let getUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByUid')
+        .returns(Promise.resolve(expectedGetAccountInfoResult));
+      stubs.push(createUserStub);
+      stubs.push(getUserStub);
+      return auth.createUser(propertiesToCreate)
+        .then((userRecord) => {
+          // Confirm underlying API called with expected parameters.
+          expect(createUserStub).to.have.been.calledOnce.and.calledWith(propertiesToCreate);
+          expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+          // Confirm expected user record response returned.
+          expect(userRecord).to.deep.equal(expectedUserRecord);
+        });
+    });
+
+    it('should throw an error when createNewAccount returns an error', () => {
+      // Stub createNewAccount to throw a backend error.
+      let createUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'createNewAccount')
+        .returns(Promise.reject(expectedError));
+      stubs.push(createUserStub);
+      return auth.createUser(propertiesToCreate)
+        .then((userRecord) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Confirm underlying API called with expected parameters.
+          expect(createUserStub).to.have.been.calledOnce.and.calledWith(propertiesToCreate);
+          // Confirm expected error returned.
+          expect(error).to.equal(expectedError);
+        });
+    });
+
+    it('should throw an error when getUser returns a User not found error', () => {
+      // Stub createNewAccount to return expected uid.
+      let createUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'createNewAccount')
+        .returns(Promise.resolve(uid));
+      // Stub getAccountInfoByUid to throw user not found error.
+      let getUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByUid')
+        .returns(Promise.reject(new Error('User not found')));
+      stubs.push(createUserStub);
+      stubs.push(getUserStub);
+      return auth.createUser(propertiesToCreate)
+        .then((userRecord) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Confirm underlying API called with expected parameters.
+          expect(createUserStub).to.have.been.calledOnce.and.calledWith(propertiesToCreate);
+          expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+          // Confirm expected error returned.
+          expect(error.toString()).to.equal(unableToCreateUserError.toString());
+        });
+    });
+
+    it('should echo getUser error if an error occurs while retrieving the user record', () => {
+      // Stub createNewAccount to return expected uid.
+      let createUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'createNewAccount')
+        .returns(Promise.resolve(uid));
+      // Stub getAccountInfoByUid to throw expected error.
+      let getUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByUid')
+        .returns(Promise.reject(expectedError));
+      stubs.push(createUserStub);
+      stubs.push(getUserStub);
+      return auth.createUser(propertiesToCreate)
+        .then((userRecord) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Confirm underlying API called with expected parameters.
+          expect(createUserStub).to.have.been.calledOnce.and.calledWith(propertiesToCreate);
+          expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+          // Confirm expected error returned (same error thrown by getUser).
+          expect(error).to.equal(expectedError);
+        });
+    });
+  });
+
+  describe('updateUser()', () => {
+    // Mock credential used to initialize the auth instance.
+    const accessToken: GoogleOAuthAccessToken = {
+      access_token: utils.generateRandomAccessToken(),
+      expires_in: ONE_HOUR_IN_SECONDS,
+    };
+    const credential = {
+      getAccessToken: () => Promise.resolve(accessToken),
+    };
+    const app = createAppWithOptions({
+      credential,
+    });
+    // Initialize all test variables, expected parameters and results.
+    const auth = new Auth(app);
+    const uid = 'abcdefghijklmnopqrstuvwxyz';
+    const expectedGetAccountInfoResult = getValidGetAccountInfoResponse();
+    const expectedUserRecord = getValidUserRecord(expectedGetAccountInfoResult);
+    const expectedError = new Error('User not found');
+    const propertiesToEdit = {
+      displayName: expectedUserRecord.displayName,
+      photoURL: expectedUserRecord.photoURL,
+      email: expectedUserRecord.email,
+      emailVerified: expectedUserRecord.emailVerified,
+      password: 'password',
+    };
+    // Stubs used to simulate underlying api calls.
+    let stubs: Sinon.SinonStub[] = [];
+    afterEach(() => {
+      _.forEach(stubs, (stub) => stub.restore());
+    });
+    after(() => {
+      stubs = [];
+    });
+
+    it('should resolve with a UserRecord on updateExistingAccount request success', () => {
+      // Stub updateExistingAccount to return expected uid.
+      let updateUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'updateExistingAccount')
+        .returns(Promise.resolve(uid));
+      // Stub getAccountInfoByUid to return expected result.
+      let getUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByUid')
+        .returns(Promise.resolve(expectedGetAccountInfoResult));
+      stubs.push(updateUserStub);
+      stubs.push(getUserStub);
+      return auth.updateUser(uid, propertiesToEdit)
+        .then((userRecord) => {
+          // Confirm underlying API called with expected parameters.
+          expect(updateUserStub).to.have.been.calledOnce.and.calledWith(uid, propertiesToEdit);
+          expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+          // Confirm expected user record response returned.
+          expect(userRecord).to.deep.equal(expectedUserRecord);
+        });
+    });
+
+    it('should throw an error when updateExistingAccount returns an error', () => {
+      // Stub updateExistingAccount to throw a backend error.
+      let updateUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'updateExistingAccount')
+        .returns(Promise.reject(expectedError));
+      stubs.push(updateUserStub);
+      return auth.updateUser(uid, propertiesToEdit)
+        .then((userRecord) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Confirm underlying API called with expected parameters.
+          expect(updateUserStub).to.have.been.calledOnce.and.calledWith(uid, propertiesToEdit);
+          // Confirm expected error returned.
+          expect(error).to.equal(expectedError);
+        });
+    });
+
+    it('should echo getUser error if an error occurs while retrieving the user record', () => {
+      // Stub updateExistingAccount to return expected uid.
+      let updateUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'updateExistingAccount')
+        .returns(Promise.resolve(uid));
+      // Stub getAccountInfoByUid to throw an expected error.
+      let getUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByUid')
+        .returns(Promise.reject(expectedError));
+      stubs.push(updateUserStub);
+      stubs.push(getUserStub);
+      return auth.updateUser(uid, propertiesToEdit)
+        .then((userRecord) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Confirm underlying API called with expected parameters.
+          expect(updateUserStub).to.have.been.calledOnce.and.calledWith(uid, propertiesToEdit);
+          expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+          // Confirm expected error returned (same error thrown by getUser).
+          expect(error).to.equal(expectedError);
+        });
+    });
+  });
+
+
   describe('INTERNAL.delete()', () => {
     it('should delete auth instance', () => {
       const auth = createAuthWithObject();

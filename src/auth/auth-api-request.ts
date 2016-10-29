@@ -53,10 +53,7 @@ function validateCreateEditRequest(request: any) {
         typeof request.displayName !== 'string') {
       throw new Error('displayName must be a valid string.');
     }
-    if (typeof request.localId !== 'undefined' &&
-        !(validator.isAlphanumeric(request.localId) &&
-          request.localId.length <= 128 &&
-          request.localId.length > 0)) {
+    if (typeof request.localId !== 'undefined' && !validator.isUid(request.localId)) {
       // This is called localId on the backend but the developer specifies this as
       // uid externally. So the error message should use the client facing name.
       throw new Error('uid must be a string with at most 128 alphanumeric characters.');
@@ -67,14 +64,12 @@ function validateCreateEditRequest(request: any) {
     }
     // password should be a string and a minimum of 6 chars.
     if (typeof request.password !== 'undefined' &&
-        (typeof request.password !== 'string' ||
-         request.password.length < 6 )) {
+        !validator.isPassword(request.password)) {
       throw new Error('password must be a string with at least 6 characters.');
     }
     // rawPassword should be a string and a minimum of 6 chars.
     if (typeof request.rawPassword !== 'undefined' &&
-        (typeof request.rawPassword !== 'string' ||
-         request.rawPassword.length < 6 )) {
+        !validator.isPassword(request.rawPassword)) {
       // This is called rawPassword on the backend but the developer specifies this as
       // password externally. So the error message should use the client facing name.
       throw new Error('password must be a string with at least 6 characters.');
