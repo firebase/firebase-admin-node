@@ -1,6 +1,7 @@
 import {Auth} from './auth';
 import {AppHook, FirebaseApp} from '../firebase-app';
 import {FirebaseServiceInterface} from '../firebase-service';
+import {FirebaseServiceNamespace} from '../firebase-namespace';
 import * as firebase from '../default-namespace';
 
 /**
@@ -38,7 +39,7 @@ let appHook: AppHook = (event: string, app: FirebaseApp) => {
   }
 };
 
-export default function() {
+export default function(): FirebaseServiceNamespace<FirebaseServiceInterface> {
   return firebase.INTERNAL.registerService(
     'auth',
     serviceFactory,

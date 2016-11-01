@@ -2,10 +2,12 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "es5",
-    "noImplicitAny": false
+    "noImplicitAny": false,
+    "declaration": true
   },
   "files": [
     "src/index.ts",
-    "typings/index.d.ts"
+    "typings/index.d.ts",
+    "node_modules/typescript/lib/lib.es6.d.ts"
   ]
 }

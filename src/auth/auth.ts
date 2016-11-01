@@ -188,12 +188,12 @@ class Auth implements FirebaseServiceInterface {
   };
 };
 
-class FirebaseAccessToken {
+export class FirebaseAccessToken {
   public accessToken: string;
   public expirationTime: number;
 }
 
-class AuthTokenManager implements FirebaseServiceInternalsInterface {
+export class AuthTokenManager implements FirebaseServiceInternalsInterface {
   private credential: Credential;
   private cachedToken: FirebaseAccessToken;
   private tokenListeners: Array<(token: string) => void>;
@@ -286,5 +286,4 @@ class AuthTokenManager implements FirebaseServiceInternalsInterface {
 
 export {
   Auth,
-  FirebaseAccessToken,
 }

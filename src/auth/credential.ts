@@ -46,7 +46,7 @@ function copyAttr(to: Object, from: Object, key: string, alt: string) {
   }
 }
 
-class RefreshToken {
+export class RefreshToken {
   public clientId: string;
   public clientSecret: string;
   public refreshToken: string;
@@ -95,7 +95,7 @@ class RefreshToken {
 /**
  * A struct containing the fields necessary to use service-account JSON credentials.
  */
-class Certificate {
+export class Certificate {
   public projectId: string;
   public privateKey: string;
   public clientEmail: string;
@@ -127,7 +127,7 @@ class Certificate {
 /**
  * Interface for Google OAuth 2.0 access tokens.
  */
-type GoogleOAuthAccessToken = {
+export type GoogleOAuthAccessToken = {
   /* tslint:disable:variable-name */
   access_token: string;
   expires_in: number;
@@ -173,7 +173,7 @@ function requestAccessToken(transit, options: Object, data?: Object): Promise<Go
 /**
  * Implementation of Credential that uses a service account certificate.
  */
-class CertCredential implements Credential {
+export class CertCredential implements Credential {
   private certificate_: Certificate;
 
   constructor(serviceAccountPathOrObject: string|Object) {
@@ -228,7 +228,7 @@ class CertCredential implements Credential {
 /**
  * Interface for things that generate access tokens.
  */
-interface Credential {
+export interface Credential {
   getAccessToken(): Promise<GoogleOAuthAccessToken>;
   getCertificate(): Certificate;
 }
@@ -236,7 +236,7 @@ interface Credential {
 /**
  * Noop implementation of Credential.getToken that returns a Promise of null.
  */
-class UnauthenticatedCredential implements Credential {
+export class UnauthenticatedCredential implements Credential {
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
     return Promise.resolve(null);
   }
@@ -249,7 +249,7 @@ class UnauthenticatedCredential implements Credential {
 /**
  * Implementation of Credential that gets access tokens from refresh tokens.
  */
-class RefreshTokenCredential implements Credential {
+export class RefreshTokenCredential implements Credential {
   private refreshToken_: RefreshToken;
 
   constructor(refreshTokenPathOrObject: string|Object) {
@@ -291,7 +291,7 @@ class RefreshTokenCredential implements Credential {
  * in the Google Cloud Platform. This authenticates the process as the default service account
  * of an App Engine instance or Google Compute Engine machine.
  */
-class MetadataServiceCredential implements Credential {
+export class MetadataServiceCredential implements Credential {
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
     const options = {
       method: 'GET',
@@ -314,7 +314,7 @@ class MetadataServiceCredential implements Credential {
  * ApplicationDefaultCredential implements the process for loading credentials as
  * described in https://developers.google.com/identity/protocols/application-default-credentials
  */
-class ApplicationDefaultCredential implements Credential {
+export class ApplicationDefaultCredential implements Credential {
   private credential_: Credential;
 
   constructor() {
@@ -346,16 +346,4 @@ class ApplicationDefaultCredential implements Credential {
   public getCredential(): Credential {
     return this.credential_;
   }
-}
-
-export {
-  ApplicationDefaultCredential,
-  Certificate,
-  CertCredential,
-  Credential,
-  GoogleOAuthAccessToken,
-  MetadataServiceCredential,
-  RefreshToken,
-  RefreshTokenCredential,
-  UnauthenticatedCredential,
 }

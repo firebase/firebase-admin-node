@@ -30,7 +30,7 @@ interface JWTPayload {
 /**
  * Class for generating and verifying different types of Firebase Auth tokens (JWTs).
  */
-class FirebaseTokenGenerator {
+export class FirebaseTokenGenerator {
   private certificate_: Certificate;
   private publicKeys_: Object;
   private publicKeysExpireAt_: number;
@@ -268,8 +268,4 @@ class FirebaseTokenGenerator {
       }).on('error', reject);
     });
   }
-}
-
-export {
-  FirebaseTokenGenerator
 }

@@ -4,14 +4,14 @@ import {FirebaseApp} from './firebase-app';
 /**
  * Internals of a FirebaseService instance.
  */
-interface FirebaseServiceInternalsInterface {
+export interface FirebaseServiceInternalsInterface {
   delete(): Promise<void>;
 }
 
 /**
  * Services are exposed through instances, each of which is associated with a FirebaseApp.
  */
-interface FirebaseServiceInterface {
+export interface FirebaseServiceInterface {
   app: FirebaseApp;
   INTERNAL: FirebaseServiceInternalsInterface;
 }
@@ -20,13 +20,6 @@ interface FirebaseServiceInterface {
  * Factory method to create FirebaseService instances given a FirebaseApp instance. Can optionally
  * add properties and methods to each FirebaseApp instance via the extendApp() function.
  */
-interface FirebaseServiceFactory {
+export interface FirebaseServiceFactory {
   (app: FirebaseApp, extendApp?: (props: Object) => void): FirebaseServiceInterface;
-}
-
-
-export {
-  FirebaseServiceFactory,
-  FirebaseServiceInterface,
-  FirebaseServiceInternalsInterface,
 }

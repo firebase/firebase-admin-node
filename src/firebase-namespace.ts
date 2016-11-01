@@ -17,12 +17,11 @@ let globalCertCreds: { [key: string]: CertCredential } = {};
 let globalRefreshTokenCreds: { [key: string]: RefreshTokenCredential } = {};
 
 
-interface FirebaseServiceNamespace <T extends FirebaseServiceInterface> {
+export interface FirebaseServiceNamespace <T extends FirebaseServiceInterface> {
   (app?: FirebaseApp): T;
 }
 
-
-class FirebaseNamespaceInternals {
+export class FirebaseNamespaceInternals {
   public serviceFactories: {[serviceName: string]: FirebaseServiceFactory} = {};
 
   private apps_: {[appName: string]: FirebaseApp} = {};
@@ -199,7 +198,7 @@ let firebaseCredential = {
 /**
  * Global Firebase context object.
  */
-class FirebaseNamespace {
+export class FirebaseNamespace {
   public credential = firebaseCredential;
   public SDK_VERSION = '<XXX_SDK_VERSION_XXX>';
   public INTERNAL: FirebaseNamespaceInternals;
@@ -260,9 +259,4 @@ class FirebaseNamespace {
   public get apps(): FirebaseApp[] {
     return this.INTERNAL.apps;
   }
-};
-
-export {
-  FirebaseNamespace,
-  FirebaseNamespaceInternals
 };

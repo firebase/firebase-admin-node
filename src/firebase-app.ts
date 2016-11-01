@@ -8,13 +8,13 @@ import {FirebaseNamespaceInternals} from './firebase-namespace';
 /**
  * Type representing a callback which is called every time an app lifecycle event occurs.
  */
-type AppHook = (event: string, app: FirebaseApp) => void;
+export type AppHook = (event: string, app: FirebaseApp) => void;
 
 
 /**
  * Type representing the options object passed into initializeApp().
  */
-type FirebaseAppOptions = {
+export type FirebaseAppOptions = {
  databaseURL?: string,
  credential?: Credential,
  serviceAccount?: string|Object,
@@ -25,7 +25,7 @@ type FirebaseAppOptions = {
 /**
  * Interface representing the internals of a FirebaseApp instance.
  */
-interface FirebaseAppInternalsInterface {
+export interface FirebaseAppInternalsInterface {
   getToken?(): Promise<FirebaseAccessToken>;
   addAuthTokenListener?(fn: (token?: string) => void): void;
   removeAuthTokenListener?(fn: (token?: string) => void): void;
@@ -35,7 +35,7 @@ interface FirebaseAppInternalsInterface {
 /**
  * Global context object for a collection of services using a shared authentication state.
  */
-class FirebaseApp {
+export class FirebaseApp {
   public INTERNAL: FirebaseAppInternalsInterface;
 
   private name_: string;
@@ -175,11 +175,4 @@ class FirebaseApp {
       throw new Error(`Firebase app named '${this.name_}' has already been deleted.`);
     }
   }
-};
-
-
-export {
-  AppHook,
-  FirebaseApp,
-  FirebaseAppOptions,
 };

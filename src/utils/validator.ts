@@ -6,7 +6,7 @@ import url = require('url');
  * @param {any} alphanumeric The string to validate.
  * @return {boolean} Whether the string is alpha-numeric or not.
  */
-function isAlphanumeric(alphanumeric: any): boolean {
+export function isAlphanumeric(alphanumeric: any): boolean {
   if (typeof alphanumeric !== 'string') {
     return false;
   }
@@ -21,7 +21,7 @@ function isAlphanumeric(alphanumeric: any): boolean {
  * @param {any} uid The string to validate.
  * @return {boolean} Whether the string is a valid Firebase Auth uid.
  */
-function isUid(uid: any): boolean {
+export function isUid(uid: any): boolean {
   // A uid should be an alphanumeric string with up to 128 characters.
   return isAlphanumeric(uid) && uid.length > 0 && uid.length <= 128;
 }
@@ -33,7 +33,7 @@ function isUid(uid: any): boolean {
  * @param {any} password The password string to validate.
  * @return {boolean} Whether the string is a valid Firebase Auth password.
  */
-function isPassword(password: any): boolean {
+export function isPassword(password: any): boolean {
   // A password must be a string of at least 6 characters.
   return typeof password === 'string' && password.length >= 6;
 }
@@ -45,7 +45,7 @@ function isPassword(password: any): boolean {
  * @param {any} email The string to validate.
  * @return {boolean} Whether the string is valid email or not.
  */
-function isEmail(email: any): boolean {
+export function isEmail(email: any): boolean {
   if (typeof email !== 'string') {
     return false;
   }
@@ -61,7 +61,7 @@ function isEmail(email: any): boolean {
  * @param {any} urlStr The string to validate.
  * @return {boolean} Whether the string is valid web URL or not.
  */
-function isURL(urlStr: any): boolean {
+export function isURL(urlStr: any): boolean {
   if (typeof urlStr !== 'string') {
     return false;
   }
@@ -94,13 +94,4 @@ function isURL(urlStr: any): boolean {
     return false;
   }
   return true;
-}
-
-
-export {
-  isAlphanumeric,
-  isEmail,
-  isPassword,
-  isURL,
-  isUid,
 }

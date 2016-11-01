@@ -74,18 +74,25 @@ gulp.task('cleanup', function() {
 });
 
 gulp.task('compile', function() {
-  return gulp.src(paths.src)
+  var tsResult = gulp.src(paths.src)
+    .pipe(ts(project));
+
+  return merge([
+    // Generate TypeScript d.ts files
+    tsResult.dts
+      .pipe(gulp.dest(paths.build + 'declarations')),
+
     // Compile TypeScript
-    .pipe(ts(project)).js
+    tsResult.js
+      // Replace SDK version
+      .pipe(replace(/\<XXX_SDK_VERSION_XXX\>/g, pkg.version))
 
-    // Replace SDK version
-    .pipe(replace(/\<XXX_SDK_VERSION_XXX\>/g, pkg.version))
+      // Add header
+      .pipe(header(banner))
 
-    // Add header
-    .pipe(header(banner))
-
-    // Write to build directory
-    .pipe(gulp.dest(paths.build));
+      // Write to build directory
+      .pipe(gulp.dest(paths.build))
+  ]);
 });
 
 gulp.task('copyDatabase', function() {

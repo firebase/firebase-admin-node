@@ -12,10 +12,11 @@
     "realtime",
     "authentication"
   ],
-  "main": "lib/index.js",
+  "main": "lib/declarations/index.js",
   "files": [
     "lib/"
   ],
+  "types": "./lib/index.d.ts",
   "dependencies": {
     "faye-websocket": "0.9.3",
     "jsonwebtoken": "7.1.9"
