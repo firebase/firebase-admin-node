@@ -3,6 +3,7 @@
 /**************/
 /*  REQUIRES  */
 /**************/
+var fs = require('fs');
 var _ = require('lodash');
 var gulp = require('gulp');
 var pkg = require('./package.json');
@@ -32,7 +33,7 @@ var paths = {
     'typings/index.d.ts'
   ],
 
-  vendor: [
+  databaseSrc: [
     'src/**/*.js'
   ],
 
@@ -55,6 +56,12 @@ var paths = {
 
 var project = ts.createProject('tsconfig.json');
 
+var banner = [
+  `/*! firebase-admin v${pkg.version}`,
+  `    https://developers.google.com/terms */`,
+  ``,
+].join('\n');
+
 /***********/
 /*  TASKS  */
 /***********/
@@ -67,11 +74,6 @@ gulp.task('cleanup', function() {
 });
 
 gulp.task('compile', function() {
-  var banner = [
-    `/*! firebase-admin v${pkg.version}`,
-    `    https://developers.google.com/terms */`,
-    ``].join('\n');
-
   return gulp.src(paths.src)
     // Compile TypeScript
     .pipe(ts(project)).js
@@ -86,10 +88,14 @@ gulp.task('compile', function() {
     .pipe(gulp.dest(paths.build));
 });
 
-gulp.task('vendor', function() {
-  return gulp.src(paths.vendor)
+gulp.task('copyDatabase', function() {
+  return gulp.src(paths.databaseSrc)
     // Replace default namespace import path in database.js
     .pipe(replace(/\.\/app-node/g, '../default-namespace'))
+
+    // Add headers
+    .pipe(header(fs.readFileSync('src/database/database-license.txt', 'utf8')))
+    .pipe(header(banner))
 
     // Write to build directory
     .pipe(gulp.dest(paths.build))
@@ -113,7 +119,7 @@ gulp.task('test', function() {
     gulp.src(paths.tests.concat(paths.src), {base: '.'})
       .pipe(ts(project))
       .pipe(gulp.dest(paths.testBuild)),
-    // Copy compiled database vendor files
+    // Copy compiled database files
     gulp.src(paths.build + 'database/**/*')
       .pipe(gulp.dest(paths.testBuild + 'src/database/')),
     // Copy test resources
@@ -144,7 +150,7 @@ gulp.task('watch', function() {
 
 // Build task
 gulp.task('build', function(done) {
-  runSequence('cleanup', 'compile', 'vendor', function(error) {
+  runSequence('cleanup', 'compile', 'copyDatabase', function(error) {
     done(error && error.err);
   });
 });
