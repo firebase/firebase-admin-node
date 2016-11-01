@@ -834,6 +834,280 @@ describe('Auth', () => {
   });
 
 
+  describe('Parallel user write operations', () => {
+    // Mock credential used to initialize the auth instance.
+    const accessToken: GoogleOAuthAccessToken = {
+      access_token: utils.generateRandomAccessToken(),
+      expires_in: ONE_HOUR_IN_SECONDS,
+    };
+    const credential = {
+      getAccessToken: () => Promise.resolve(accessToken),
+    };
+    const app = createAppWithOptions({
+      credential,
+    });
+    // Initialize all test variables, expected parameters and results.
+    const auth = new Auth(app);
+    const uid = 'abcdefghijklmnopqrstuvwxyz';
+    const expectedGetAccountInfoResult = getValidGetAccountInfoResponse();
+    const expectedUserRecord = getValidUserRecord(expectedGetAccountInfoResult);
+    const propertiesToEdit = {
+      displayName: expectedUserRecord.displayName,
+      photoURL: expectedUserRecord.photoURL,
+      email: expectedUserRecord.email,
+      emailVerified: expectedUserRecord.emailVerified,
+      password: 'password',
+    };
+    const expectedDeleteAccountResult = {kind: 'identitytoolkit#DeleteAccountResponse'};
+
+    // Stubs used to simulate underlying api calls.
+    let stubs: Sinon.SinonStub[] = [];
+    afterEach(() => {
+      _.forEach(stubs, (stub) => stub.restore());
+    });
+    after(() => {
+      stubs = [];
+    });
+
+    it('should be serialized on the same user and run sequentially on success', (done) => {
+      let order: number[] = [];
+      // Stub updateExistingAccount to succeed after a 10ms delay.
+      // Add index to order stack on execution.
+      let updateUserStub = sinon.stub(
+          FirebaseAuthRequestHandler.prototype,
+          'updateExistingAccount',
+          (currentUid: string, properties: Object) => {
+            return new Promise((resolve, reject) => {
+              setTimeout(() => {
+                order.push(0);
+                resolve(currentUid);
+              }, 10);
+            });
+          }
+      );
+      stubs.push(updateUserStub);
+      // Stub getAccountInfoByUid to succeed after a 10ms delay.
+      // Add index to order stack on execution.
+      let getUserStub = sinon.stub(
+          FirebaseAuthRequestHandler.prototype,
+          'getAccountInfoByUid',
+          (currentUid: string) => {
+            return new Promise((resolve, reject) => {
+              setTimeout(() => {
+                order.push(1);
+                resolve(expectedGetAccountInfoResult);
+              }, 10);
+            });
+          }
+      );
+      stubs.push(getUserStub);
+      // Stub deleteAccount to succeed in 2ms. Add to order stack on execution.
+      // Even though this executes a lot faster than the above 2 rpc calls,
+      // it will still wait in the queue for the above to resolve first.
+      let deleteUserStub = sinon.stub(
+          FirebaseAuthRequestHandler.prototype,
+          'deleteAccount',
+          (currentUid: string) => {
+            return new Promise((resolve, reject) => {
+              setTimeout(() => {
+                order.push(2);
+                resolve(expectedDeleteAccountResult);
+              }, 2);
+            });
+          }
+      );
+      stubs.push(deleteUserStub);
+      let promises: Promise<any>[] = [];
+      // Run update and delete on the same user.
+      promises.push(auth.updateUser(uid, propertiesToEdit));
+      promises.push(auth.deleteUser(uid));
+      Promise.all(promises)
+        .then((result) => {
+          // Confirm underlying API called with expected parameters.
+          expect(updateUserStub).to.have.been.calledOnce.and.calledWith(uid, propertiesToEdit);
+          expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+          expect(deleteUserStub).to.have.been.calledOnce.and.calledWith(uid);
+          // Confirm correct sequence order.
+          // All APIs should run in the same order they are called.
+          // Even though delete user takes 2ms, and the update user call takes 20ms, the former
+          // will wait for the latter to resolve first.
+          expect(order).to.deep.equal([0, 1, 2]);
+          done();
+        });
+    });
+
+    it('should not be serialized if running on different users', (done) => {
+      let order: string[] = [];
+      // Stub updateExistingAccount to return expected uid.
+      // Resolve in uid ms and log to order array prefixed with character 'u'.
+      let updateUserStub = sinon.stub(
+          FirebaseAuthRequestHandler.prototype,
+          'updateExistingAccount',
+          (currentUid: string, properties: Object) => {
+            return new Promise((resolve, reject) => {
+              setTimeout(() => {
+                order.push('u' + currentUid);
+                resolve(currentUid);
+              }, parseFloat(currentUid));
+            });
+          }
+      );
+      stubs.push(updateUserStub);
+      // Stub getAccountInfoByUid to return expected result.
+      // Resolve in uid ms and log to order array prefixed with character 'g'.
+      let getUserStub = sinon.stub(
+          FirebaseAuthRequestHandler.prototype,
+          'getAccountInfoByUid',
+          (currentUid: string) => {
+            return new Promise((resolve, reject) => {
+              setTimeout(() => {
+                order.push('g' + currentUid);
+                resolve(expectedGetAccountInfoResult);
+              }, parseFloat(currentUid));
+            });
+          }
+      );
+      stubs.push(getUserStub);
+      let promises: Promise<any>[] = [];
+      // Each update run on a different user.
+      // Should take 50ms in total to resolve.
+      promises.push(auth.updateUser('25', propertiesToEdit));
+      // Should take 10ms in total to resolve.
+      promises.push(auth.updateUser('5', propertiesToEdit));
+      // Should take 2ms in total to resolve.
+      promises.push(auth.updateUser('1', propertiesToEdit));
+      Promise.all(promises)
+        .then((result) => {
+          // Confirm underlying API called correct number of times.
+          expect(updateUserStub).to.have.been.calledThrice;
+          expect(getUserStub).to.have.been.calledThrice;
+          // Confirm correct sequence order.
+          // Even though they are called as follows: 25, 5, 1.
+          // They are run in parallel since each operation is run in a different
+          // queue (different uids) and the fastest will finish first: 1, 5, 25.
+          expect(order).to.deep.equal([
+            'u1', 'g1', 'u5', 'g5', 'u25', 'g25',
+          ]);
+          done();
+        });
+    });
+
+    it('should be serialized if the same API is running on the same user', (done) => {
+      // update user delays in decreasing order.
+      let updateUserDelays = [25, 5, 1];
+      // get user delays in decreasing order.
+      let getUserDelays = [25, 5, 1];
+      let order: string[] = [];
+      // Stub updateExistingAccount to return current uid.
+      // Pick the slowest delay from the queue and log to order array prefixed with char 'u'.
+      let updateUserStub = sinon.stub(
+          FirebaseAuthRequestHandler.prototype,
+          'updateExistingAccount',
+          (currentUid: string, properties: Object) => {
+            return new Promise((resolve, reject) => {
+              // Get the slowest delay, each time a shorter delay is returned.
+              let delay = updateUserDelays.shift();
+              setTimeout(() => {
+                order.push('u' + delay);
+                resolve(currentUid);
+              }, delay);
+            });
+          }
+      );
+      stubs.push(updateUserStub);
+      // Stub getAccountInfoByUid to return expected result.
+      // Pick the slowest delay from the queue and log to order array prefixed with char 'g'.
+      let getUserStub = sinon.stub(
+          FirebaseAuthRequestHandler.prototype,
+          'getAccountInfoByUid',
+          (currentUid: string) => {
+            return new Promise((resolve, reject) => {
+              // Get the slowest delay, each time a shorter delay is returned.
+              let delay = getUserDelays.shift();
+              setTimeout(() => {
+                order.push('g' + delay);
+                resolve(expectedGetAccountInfoResult);
+              }, delay);
+            });
+          }
+      );
+      stubs.push(getUserStub);
+      let promises: Promise<any>[] = [];
+      // Run all updates on the same user id.
+      // Should take 50ms in total to resolve.
+      promises.push(auth.updateUser(uid, propertiesToEdit));
+      // Should take 10ms in total to resolve.
+      promises.push(auth.updateUser(uid, propertiesToEdit));
+      // Should take 2ms in total to resolve.
+      promises.push(auth.updateUser(uid, propertiesToEdit));
+      Promise.all(promises)
+        .then((result) => {
+          // Confirm underlying API called correct number of times.
+          expect(updateUserStub).to.have.been.calledThrice;
+          expect(getUserStub).to.have.been.calledThrice;
+          // Confirm correct sequence order.
+          // Since all three operations run on the same user, they will be
+          // serialized. Event though they are called from slowest to fastest.
+          expect(order).to.deep.equal([
+            'u25', 'g25', 'u5', 'g5', 'u1', 'g1',
+          ]);
+          done();
+        });
+    });
+
+    it('should be serialized on the same user even when error is thrown', (done) => {
+      let order: number[] = [];
+      // Stub updateExistingAccount to throw an error after 10ms.
+      // Add index to order stack on execution.
+      let updateUserStub = sinon.stub(
+          FirebaseAuthRequestHandler.prototype,
+          'updateExistingAccount',
+          (properties: Object) => {
+            return new Promise((resolve, reject) => {
+              setTimeout(() => {
+                order.push(0);
+                reject(new Error('some error'));
+              }, 10);
+            });
+          }
+      );
+      stubs.push(updateUserStub);
+      // Stub deleteAccount to succeed in 2ms. Add index to order stack on execution.
+      // Even though this executes a lot faster than the above rpc call,
+      // it will still wait in the queue for the above to resolve first.
+      let deleteUserStub = sinon.stub(
+          FirebaseAuthRequestHandler.prototype,
+          'deleteAccount',
+          (currentUid: string) => {
+            return new Promise((resolve, reject) => {
+              setTimeout(() => {
+                order.push(1);
+                resolve(expectedDeleteAccountResult);
+              }, 2);
+            });
+          }
+      );
+      stubs.push(deleteUserStub);
+      // Promise.all will reject on first error. Instead run in parallel and then check on
+      // deleteUser that createUser was executed first.
+      // All operations run on the same user.
+      auth.updateUser(uid, propertiesToEdit);
+      auth.deleteUser(uid)
+       .then((result) => {
+          // Confirm underlying API called with expected parameters.
+          expect(updateUserStub).to.have.been.calledOnce.and.calledWith(uid, propertiesToEdit);
+          expect(deleteUserStub).to.have.been.calledOnce.and.calledWith(uid);
+          // Confirm correct sequence order.
+          // All APIs should run in the same order they are called.
+          // Even though delete user takes 2ms, and the update user call takes 10ms, the former
+          // will wait for the latter to resolve first.
+          // If an error occurs during sequence, it will not break next call in sequence.
+          expect(order).to.deep.equal([0, 1]);
+          done();
+        });
+    });
+  });
+
   describe('INTERNAL.delete()', () => {
     it('should delete auth instance', () => {
       const auth = createAuthWithObject();
