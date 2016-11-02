@@ -21,6 +21,7 @@ export interface FirebaseServiceNamespace <T extends FirebaseServiceInterface> {
   (app?: FirebaseApp): T;
 }
 
+
 export class FirebaseNamespaceInternals {
   public serviceFactories: {[serviceName: string]: FirebaseServiceFactory} = {};
 
@@ -259,4 +260,4 @@ export class FirebaseNamespace {
   public get apps(): FirebaseApp[] {
     return this.INTERNAL.apps;
   }
-};
+}

@@ -175,4 +175,4 @@ export class FirebaseApp {
       throw new Error(`Firebase app named '${this.name_}' has already been deleted.`);
     }
   }
-};
+}
