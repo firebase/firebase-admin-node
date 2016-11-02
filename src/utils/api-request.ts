@@ -52,7 +52,7 @@ export class HttpRequestHandler {
     return new Promise((resolve, reject) => {
       const req = https.request(options, (res) => {
         let buffers: Buffer[] = [];
-        res.on('data', (buffer) => buffers.push(buffer));
+        res.on('data', (buffer: Buffer) => buffers.push(buffer));
         res.on('end', () => {
           try {
             const json = JSON.parse(Buffer.concat(buffers).toString());

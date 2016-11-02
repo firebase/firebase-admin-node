@@ -12,16 +12,27 @@
     "realtime",
     "authentication"
   ],
-  "main": "lib/declarations/index.js",
+  "main": "lib/index.js",
   "files": [
     "lib/"
   ],
   "types": "./lib/index.d.ts",
   "dependencies": {
+    "@types/jsonwebtoken": "^7.1.33",
     "faye-websocket": "0.9.3",
     "jsonwebtoken": "7.1.9"
   },
   "devDependencies": {
+    "@types/chai": "^3.4.34",
+    "@types/chai-as-promised": "0.0.29",
+    "@types/firebase-token-generator": "^2.0.28",
+    "@types/lodash": "^4.14.38",
+    "@types/mocha": "^2.2.32",
+    "@types/nock": "^8.0.33",
+    "@types/request": "0.0.32",
+    "@types/request-promise": "^4.1.33",
+    "@types/sinon": "^1.16.31",
+    "@types/sinon-chai": "^2.7.27",
     "chai": "^3.5.0",
     "chai-as-promised": "^6.0.0",
     "del": "^2.2.1",
@@ -33,7 +44,7 @@
     "gulp-mocha": "^3.0.1",
     "gulp-replace": "^0.5.4",
     "gulp-tslint": "^6.0.2",
-    "gulp-typescript": "^2.13.6",
+    "gulp-typescript": "^3.1.2",
     "lodash": "^4.6.1",
     "merge2": "^1.0.2",
     "nock": "^8.0.0",
