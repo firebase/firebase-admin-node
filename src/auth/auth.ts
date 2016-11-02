@@ -5,6 +5,7 @@ import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../fi
 import {CertCredential, Certificate, GoogleOAuthAccessToken, UnauthenticatedCredential} from './credential';
 import {FirebaseAuthRequestHandler} from './auth-api-request';
 import {UserRecord} from './user-record';
+import {FirebaseAuthError, AUTH_CLIENT_ERROR_CODE} from '../utils/error';
 
 /**
  * Gets a Credential from app options.
@@ -28,7 +29,7 @@ function getCredential(app: FirebaseApp): Credential {
   } else if (typeof certificateOrPath === 'object') {
     return new CertCredential(new Certificate(certificateOrPath));
   } else {
-    throw new Error('Invalid service account provided');
+    throw new FirebaseAuthError(AUTH_CLIENT_ERROR_CODE.INVALID_SERVICE_ACCOUNT);
   }
 }
 
@@ -62,13 +63,17 @@ class Auth implements FirebaseServiceInterface {
 
   constructor(app: FirebaseApp) {
     if (typeof app !== 'object' || !('options' in app)) {
-      throw new Error('First parameter to Auth constructor must be an instance of FirebaseApp');
+      throw new FirebaseAuthError(
+        AUTH_CLIENT_ERROR_CODE.INVALID_ARGUMENT,
+        'First parameter to Auth constructor must be an instance of FirebaseApp');
     }
     this.app_ = app;
 
     const credential = getCredential(app);
     if (credential && typeof credential.getAccessToken !== 'function') {
-      throw new Error('Called initializeApp() with an invalid credential parameter');
+      throw new FirebaseAuthError(
+        AUTH_CLIENT_ERROR_CODE.INVALID_CREDENTIAL,
+        'Called initializeApp() with an invalid credential parameter');
     }
     this.authTokenManager_ = new AuthTokenManager(credential);
 
@@ -113,7 +118,9 @@ class Auth implements FirebaseServiceInterface {
    */
   public createCustomToken(uid: string, developerClaims?: Object): Promise<string> {
     if (typeof this.tokenGenerator_ === 'undefined') {
-      throw new Error('Must initialize FirebaseApp with a service account to call auth().createCustomToken()');
+      throw new FirebaseAuthError(
+        AUTH_CLIENT_ERROR_CODE.INVALID_SERVICE_ACCOUNT,
+        'Must initialize FirebaseApp with a service account to call auth().createCustomToken()');
     }
     return this.tokenGenerator_.createCustomToken(uid, developerClaims);
   };
@@ -127,7 +134,9 @@ class Auth implements FirebaseServiceInterface {
    */
   public verifyIdToken(idToken: string): Promise<Object> {
     if (typeof this.tokenGenerator_ === 'undefined') {
-      throw new Error('Must initialize FirebaseApp with a service account to call auth().verifyIdToken()');
+      throw new FirebaseAuthError(
+        AUTH_CLIENT_ERROR_CODE.INVALID_SERVICE_ACCOUNT,
+        'Must initialize FirebaseApp with a service account to call auth().verifyIdToken()');
     }
     return this.tokenGenerator_.verifyIdToken(idToken);
   };
@@ -175,9 +184,11 @@ class Auth implements FirebaseServiceInterface {
         return this.getUser(uid);
       })
       .catch((error) => {
-        if (error.message && error.message === 'User not found') {
+        if (error.code === 'auth/user-not-found') {
           // Something must have happened after creating the user and then retrieving it.
-          throw new Error('Unable to create the user record provided.');
+          throw new FirebaseAuthError(
+            AUTH_CLIENT_ERROR_CODE.INTERNAL_ERROR,
+            'Unable to create the user record provided.');
         }
         throw error;
       });
@@ -336,7 +347,9 @@ export class AuthTokenManager implements FirebaseServiceInternalsInterface {
           if (typeof result !== 'object' ||
             typeof result.expires_in !== 'number' ||
             typeof result.access_token !== 'string') {
-            throw new Error('initializeApp() was called with a credential ' +
+            throw new FirebaseAuthError(
+              AUTH_CLIENT_ERROR_CODE.INVALID_CREDENTIAL,
+              'initializeApp() was called with a credential ' +
               'that creates invalid access tokens: ' + JSON.stringify(result));
           }
           const token: FirebaseAccessToken = {

@@ -8,3 +8,4 @@ import './user-record.spec';
 import './api-request.spec';
 import './auth-api-request.spec';
 import './validator.spec';
+import './error.spec';
