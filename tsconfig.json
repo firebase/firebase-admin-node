@@ -3,11 +3,12 @@
     "module": "commonjs",
     "target": "es5",
     "noImplicitAny": false,
-    "declaration": true
+    "lib": ["es5", "es2015.promise"],
+    "outDir": "lib",
+    "declaration": true,
+    "rootDir": "."
   },
   "files": [
-    "src/index.ts",
-    "typings/index.d.ts",
-    "node_modules/typescript/lib/lib.es6.d.ts"
+    "src/index.ts"
   ]
 }

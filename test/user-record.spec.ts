@@ -144,7 +144,7 @@ describe('UserInfo', () => {
 
     it('should throw when modifying readonly providerId property', () => {
       expect(() => {
-        userInfo.providerId = 'facebook.com';
+        (userInfo as any).providerId = 'facebook.com';
       }).to.throw(Error);
     });
 
@@ -154,7 +154,7 @@ describe('UserInfo', () => {
 
     it('should throw when modifying readonly displayName property', () => {
       expect(() => {
-        userInfo.displayName = 'Jane Doe';
+        (userInfo as any).displayName = 'Jane Doe';
       }).to.throw(Error);
     });
 
@@ -164,7 +164,7 @@ describe('UserInfo', () => {
 
     it('should throw when modifying readonly photoURL property', () => {
       expect(() => {
-        userInfo.photoURL = 'http://localhost/photo.jpg';
+        (userInfo as any).photoURL = 'http://localhost/photo.jpg';
       }).to.throw(Error);
     });
 
@@ -174,7 +174,7 @@ describe('UserInfo', () => {
 
     it('should throw when modifying readonly email property', () => {
       expect(() => {
-        userInfo.email = 'user@example.com';
+        (userInfo as any).email = 'user@example.com';
       }).to.throw(Error);
     });
 
@@ -184,7 +184,7 @@ describe('UserInfo', () => {
 
     it('should throw when modifying readonly uid property', () => {
       expect(() => {
-        userInfo.uid = '00000000';
+        (userInfo as any).uid = '00000000';
       }).to.throw(Error);
     });
   });
@@ -244,7 +244,7 @@ describe('UserMetadata', () => {
 
     it('should throw when modifying readonly lastSignedInAt property', () => {
       expect(() => {
-        actualMetadata.lastSignedInAt = new Date();
+        (actualMetadata as any).lastSignedInAt = new Date();
       }).to.throw(Error);
     });
 
@@ -254,7 +254,7 @@ describe('UserMetadata', () => {
 
     it('should throw when modifying readonly createdAt property', () => {
       expect(() => {
-        actualMetadata.createdAt = new Date();
+        (actualMetadata as any).createdAt = new Date();
       }).to.throw(Error);
     });
   });
@@ -301,7 +301,7 @@ describe('UserRecord', () => {
 
     it('show throw when modifying readonly uid property', () => {
       expect(() => {
-        userRecord.uid = '00000000';
+        (userRecord as any).uid = '00000000';
       }).to.throw(Error);
     });
 
@@ -311,7 +311,7 @@ describe('UserRecord', () => {
 
     it('should throw when modifying readonly email property', () => {
       expect(() => {
-        userRecord.email = 'newUser@example.com';
+        (userRecord as any).email = 'newUser@example.com';
       }).to.throw(Error);
     });
 
@@ -321,7 +321,7 @@ describe('UserRecord', () => {
 
     it('should throw when modifying readonly emailVerified property', () => {
       expect(() => {
-        userRecord.emailVerified = false;
+        (userRecord as any).emailVerified = false;
       }).to.throw(Error);
     });
 
@@ -331,7 +331,7 @@ describe('UserRecord', () => {
 
     it('should throw when modifying readonly displayName property', () => {
       expect(() => {
-        userRecord.displayName = 'Jane Doe';
+        (userRecord as any).displayName = 'Jane Doe';
       }).to.throw(Error);
     });
 
@@ -342,7 +342,7 @@ describe('UserRecord', () => {
 
     it('should throw when modifying readonly photoURL property', () => {
       expect(() => {
-        userRecord.photoURL = 'http://localhost/photo.jpg';
+        (userRecord as any).photoURL = 'http://localhost/photo.jpg';
       }).to.throw(Error);
     });
 
@@ -352,7 +352,7 @@ describe('UserRecord', () => {
 
     it('should throw when modifying readonly disabled property', () => {
       expect(() => {
-        userRecord.disabled = true;
+        (userRecord as any).disabled = true;
       }).to.throw(Error);
     });
 
@@ -366,7 +366,7 @@ describe('UserRecord', () => {
 
     it('should throw when modifying readonly metadata property', () => {
       expect(() => {
-        userRecord.metadata = new UserMetadata({
+        (userRecord as any).metadata = new UserMetadata({
           lastLoginAt: new Date().getTime(),
           createdAt: new Date().getTime(),
         });
@@ -375,7 +375,7 @@ describe('UserRecord', () => {
 
     it('should throw when modifying readonly metadata internals', () => {
       expect(() => {
-        userRecord.metadata.lastSignedInAt = new Date();
+        (userRecord as any).metadata.lastSignedInAt = new Date();
       }).to.throw(Error);
     });
 
@@ -403,7 +403,7 @@ describe('UserRecord', () => {
 
     it('should throw when modifying readonly providerData property', () => {
       expect(() => {
-        userRecord.providerData = [
+        (userRecord as any).providerData = [
            new UserInfo({
              providerId: 'google.com',
              displayName: 'Jane Doe',
@@ -417,7 +417,7 @@ describe('UserRecord', () => {
 
     it('should throw when modifying readonly providerData internals', () => {
       expect(() => {
-        userRecord.providerData[0].displayName = 'John Smith';
+        (userRecord.providerData[0] as any).displayName = 'John Smith';
       }).to.throw(Error);
     });
   });

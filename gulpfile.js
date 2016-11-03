@@ -34,7 +34,8 @@ var paths = {
   ],
 
   databaseSrc: [
-    'src/**/*.js'
+    'src/**/*.js',
+    'src/**/*.d.ts'
   ],
 
   tests: [
@@ -54,7 +55,11 @@ var paths = {
   testRunner: ['.tmp/test/index.spec.js']
 };
 
-var project = ts.createProject('tsconfig.json');
+// Create a separate project for buildProject that overrides the rootDir
+// This ensures that the generated production files are in their own root
+// rather than including both src and test in the lib dir.
+var buildProject = ts.createProject('tsconfig.json', {rootDir: 'src'});
+var testProject = ts.createProject('tsconfig.json');
 
 var banner = [
   `/*! firebase-admin v${pkg.version}`,
@@ -74,25 +79,18 @@ gulp.task('cleanup', function() {
 });
 
 gulp.task('compile', function() {
-  var tsResult = gulp.src(paths.src)
-    .pipe(ts(project));
+  return gulp.src(paths.src)
+    // Compile Typescript into .js and .d.ts files
+    .pipe(buildProject())
 
-  return merge([
-    // Generate TypeScript d.ts files
-    tsResult.dts
-      .pipe(gulp.dest(paths.build + 'declarations')),
+    // Replace SDK version
+    .pipe(replace(/\<XXX_SDK_VERSION_XXX\>/g, pkg.version))
 
-    // Compile TypeScript
-    tsResult.js
-      // Replace SDK version
-      .pipe(replace(/\<XXX_SDK_VERSION_XXX\>/g, pkg.version))
+    // Add header
+    .pipe(header(banner))
 
-      // Add header
-      .pipe(header(banner))
-
-      // Write to build directory
-      .pipe(gulp.dest(paths.build))
-  ]);
+    // Write to build directory
+    .pipe(gulp.dest(paths.build))
 });
 
 gulp.task('copyDatabase', function() {
@@ -124,7 +122,7 @@ gulp.task('test', function() {
   merge(
     // Copy compiled source and test files
     gulp.src(paths.tests.concat(paths.src), {base: '.'})
-      .pipe(ts(project))
+      .pipe(testProject())
       .pipe(gulp.dest(paths.testBuild)),
     // Copy compiled database files
     gulp.src(paths.build + 'database/**/*')

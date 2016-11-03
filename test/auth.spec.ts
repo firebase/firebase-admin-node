@@ -391,7 +391,7 @@ describe('Auth', () => {
     it('is read-only', () => {
       const auth = new Auth(app);
       expect(() => {
-        auth.app = app as FirebaseApp;
+        (auth as any).app = app;
       }).to.throw('Cannot set property app of #<Auth> which has only a getter');
     });
   });
