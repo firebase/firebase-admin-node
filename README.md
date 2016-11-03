@@ -15,8 +15,9 @@ $ git clone sso://team/firebase-team/firebase-admin-node && (cd firebase-admin-n
 Next, install all necessary dependencies:
 
 ```bash
-$ npm install -g gulp # Install global npm dependencies
-$ npm install         # Install local npm dependencies
+$ npm install -g gulp typings  # Install global npm dependencies
+$ npm install                  # Install local npm dependencies
+$ typings install              # Install TypeScript typings
 ```
 
 In order to run the tests, you need to [download the gcloud CLI](https://cloud.google.com/sdk/downloads#interactive)

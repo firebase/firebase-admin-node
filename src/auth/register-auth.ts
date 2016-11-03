@@ -1,8 +1,8 @@
 import {Auth} from './auth';
 import {AppHook, FirebaseApp} from '../firebase-app';
 import {FirebaseServiceInterface} from '../firebase-service';
-import * as firebase from '../default-namespace';
 import {FirebaseServiceNamespace} from '../firebase-namespace';
+import * as firebase from '../default-namespace';
 
 /**
  * Factory function that creates a new auth service.

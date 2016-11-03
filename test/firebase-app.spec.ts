@@ -76,7 +76,7 @@ describe('FirebaseApp', () => {
 
     it('should be read-only', () => {
       expect(() => {
-        (mockApp as any).name = 'foo';
+        mockApp.name = 'foo';
       }).to.throw(`Cannot set property name of #<FirebaseApp> which has only a getter`);
     });
   });
@@ -96,7 +96,7 @@ describe('FirebaseApp', () => {
 
     it('should be read-only', () => {
       expect(() => {
-        (mockApp as any).options = {};
+        mockApp.options = {};
       }).to.throw(`Cannot set property options of #<FirebaseApp> which has only a getter`);
     });
 

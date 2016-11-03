@@ -1,0 +1,22 @@
+{
+  "globalDevDependencies": {
+    "chai": "registry:dt/chai#3.4.0+20160601211834",
+    "chai-as-promised": "registry:dt/chai-as-promised#0.0.0+20160423070304",
+    "firebase-token-generator": "registry:dt/firebase-token-generator#2.0.0+20160316155526",
+    "mocha": "registry:dt/mocha#2.2.5+20160619032855",
+    "nock": "registry:dt/nock#0.54.0+20160613160405",
+    "request-promise": "registry:dt/request-promise#3.0.0+20160628092802",
+    "sinon": "registry:dt/sinon#1.16.0+20160517064723"
+  },
+  "globalDependencies": {
+    "es6-promise": "registry:dt/es6-promise#0.0.0+20160614011821",
+    "jsonwebtoken": "registry:dt/jsonwebtoken#0.0.0+20160627133958",
+    "node": "registry:dt/node#6.0.0+20160709114037",
+    "promises-a-plus": "github:DefinitelyTyped/DefinitelyTyped/promises-a-plus/promises-a-plus.d.ts#56068d3354648384ff32db20b6fcda4262856f33",
+    "sinon-chai": "registry:dt/sinon-chai#2.7.0+20160317120654"
+  },
+  "dependencies": {
+    "lodash": "registry:npm/lodash#4.0.0+20160701205107",
+    "request": "registry:npm/request#2.69.0+20160428223725"
+  }
+}
