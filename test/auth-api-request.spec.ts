@@ -12,6 +12,7 @@ import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
+import {deepCopy} from '../src/utils/deep-copy';
 import {mockFetchAccessTokenViaJwt, generateRandomAccessToken} from './utils';
 import {CertCredential, Certificate} from '../src/auth/credential';
 import {HttpRequestHandler} from '../src/utils/api-request';
@@ -281,6 +282,7 @@ describe('FIREBASE_AUTH_UPLOAD_ACCOUNT', () => {
           ignoreMe: 'bla',
         }],
         allowOverwrite: false,
+        sanityCheck: true,
       };
       expect(() => {
         return requestValidator(validRequest);
@@ -763,6 +765,18 @@ describe('FirebaseAuthRequestHandler', () => {
       photoUrl: 'http://localhost/1234/photo.png',
       password: 'password',
     };
+    // Valid request to delete photoURL and displayName.
+    const validDeleteData = deepCopy(validData);
+    validDeleteData.displayName = null;
+    validDeleteData.photoURL = null;
+    const expectedValidDeleteData = {
+      localId: uid,
+      email: 'user@example.com',
+      emailVerified: true,
+      disableUser: false,
+      password: 'password',
+      deleteAttribute: ['DISPLAY_NAME', 'PHOTO_URL'],
+    };
     const accessToken = generateRandomAccessToken();
     const headers = {
       'Content-Type': 'application/json',
@@ -819,6 +833,32 @@ describe('FirebaseAuthRequestHandler', () => {
           // Confirm expected rpc request parameters sent.
           expect(stub).to.have.been.calledOnce.and.calledWith(
               host, port, path, httpMethod, expectedValidData, headers, timeout);
+        });
+    });
+
+    it('should be fulfilled given valid paramaters to delete', () => {
+      // Successful result server response.
+      const expectedResult = {
+        kind: 'identitytoolkit#SetAccountInfoResponse',
+        localId: uid,
+      };
+
+      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        .returns(Promise.resolve(expectedResult));
+      stubs.push(stub);
+
+      mockedRequests.push(mockFetchAccessTokenViaJwt(accessToken));
+      const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
+      const requestHandler = new FirebaseAuthRequestHandler(cred);
+      // Send update request to delete display name and photo URL.
+      return requestHandler.updateExistingAccount(uid, validDeleteData)
+        .then((returnedUid: string) => {
+          // uid should be returned.
+          expect(returnedUid).to.be.equal(uid);
+          // Confirm expected rpc request parameters sent. In this case, displayName
+          // and photoURL removed from request and deleteAttribute added.
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              host, port, path, httpMethod, expectedValidDeleteData, headers, timeout);
         });
     });
 
@@ -895,6 +935,7 @@ describe('FirebaseAuthRequestHandler', () => {
           },
         ],
         allowOverwrite: false,
+        sanityCheck: true,
       };
       const invalidData = {
         uid,
@@ -907,6 +948,7 @@ describe('FirebaseAuthRequestHandler', () => {
           },
         ],
         allowOverwrite: false,
+        sanityCheck: true,
       };
       const accessToken = generateRandomAccessToken();
       const headers = {

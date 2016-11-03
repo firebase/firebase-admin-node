@@ -79,14 +79,18 @@ export function isURL(urlStr: any): boolean {
     if ((scheme !== 'http:' && scheme !== 'https:') || !slashes) {
       return false;
     }
-    // Validate hostname.
-    if (!/^\w+([\.-]?\w+)*$/.test(hostname)) {
+    // Validate hostname: Can contain letters, numbers, underscore and dashes separated by a dot.
+    // Each zone must not start with a hyphen or underscore.
+    if (!/^[a-zA-Z0-9]+[\w\-]*([\.]?[a-zA-Z0-9]+[\w\-]*)*$/.test(hostname)) {
       return false;
     }
+    // Allow for pathnames: (/chars+)*
+    // Where chars can be a combination of: a-z A-Z 0-9 - _ . ~ ! $ & ' ( ) * + , ; = : @
+    let pathnameRe = /^(\/[\w\-\.\~\!\$\'\(\)\*\+\,\;\=\:\@]+)*$/;
     // Validate pathname.
     if (pathname &&
         pathname !== '/' &&
-        !/^(\/[\w\-]+([\.]?[\w\-]+)*)*$/.test(pathname)) {
+        !pathnameRe.test(pathname)) {
       return false;
     }
     // Allow any query string and hash as long as no invalid character is used.

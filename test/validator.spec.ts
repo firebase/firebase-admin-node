@@ -152,12 +152,15 @@ describe('isURL()', () => {
   });
 
   it('show return true with a valid web URL string', () => {
+    expect(isURL('https://www.example.com:8080')).to.be.true;
+    expect(isURL('https://www.example.com')).to.be.true;
     expect(isURL('https://www.example.com:8080/path/name/index.php?a=1&b=2&c=3#abcd'))
       .to.be.true;
     expect(isURL('http://www.example.com:8080/path/name/index.php?a=1&b=2&c=3#abcd'))
       .to.be.true;
     expect(isURL('http://localhost/path/name/index.php?a=1&b=2&c=3#abcd')).to.be.true;
     expect(isURL('http://127.0.0.1/path/name/index.php?a=1&b=2&c=3#abcd')).to.be.true;
+    expect(isURL('http://a--b.c-c.co-uk/')).to.be.true;
   });
 
   it('should return false with an invalid web URL string', () => {
@@ -168,5 +171,8 @@ describe('isURL()', () => {
     expect(isURL('http://www.exam[].com')).to.be.false;
     expect(isURL('http://`a--b.com')).to.be.false;
     expect(isURL('http://.com')).to.be.false;
+    expect(isURL('http://abc.com.')).to.be.false;
+    expect(isURL('http://-abc.com')).to.be.false;
+    expect(isURL('http://www._abc.com')).to.be.false;
   });
 });
