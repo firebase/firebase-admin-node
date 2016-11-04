@@ -40,6 +40,8 @@ function validateCreateEditRequest(request: any) {
       photoUrl: true,
       disabled: true,
       disableUser: true,
+      deleteAttribute: true,
+      sanityCheck: true,
     };
     // Remove invalid keys from original request.
     for (let key in request) {
@@ -154,6 +156,8 @@ export const FIREBASE_AUTH_UPLOAD_ACCOUNT = new ApiSettings('uploadAccount', 'PO
       users: true,
       // Required to throw an error when a user already exists with the provided uid.
       allowOverwrite: true,
+      // Required to throw an error if the email is already in use by another account.
+      sanityCheck: true,
     };
     // Remove unsupported properties.
     for (let key in request) {
@@ -289,6 +293,30 @@ export class FirebaseAuthRequestHandler {
     // Build the setAccountInfo request.
     let request: any = deepCopy(properties);
     request.localId = uid;
+    // For deleting displayName or photoURL, these values must be passed as null.
+    // They will be removed from the backend request and an additional parameter
+    // deleteAttribute: ['PHOTO_URL', 'DISPLAY_NAME']
+    // with an array of the parameter names to delete will be passed.
+
+    // Parameters that are deletable and their deleteAttribute names.
+    // Use client facing names, photoURL instead of photoUrl.
+    let deletableParams = {
+      displayName: 'DISPLAY_NAME',
+      photoURL: 'PHOTO_URL',
+    };
+    // Properties to delete if available.
+    request.deleteAttribute = [];
+    for (let key in deletableParams) {
+      if (request[key] === null) {
+        // Add property identifier to list of attributes to delete.
+        request.deleteAttribute.push(deletableParams[key]);
+        // Remove property from request.
+        delete request[key];
+      }
+    }
+    if (request.deleteAttribute.length === 0) {
+      delete request.deleteAttribute;
+    }
     // Rewrite photoURL to photoUrl.
     if (typeof request.photoURL !== 'undefined') {
       request.photoUrl = request.photoURL;
@@ -337,6 +365,10 @@ export class FirebaseAuthRequestHandler {
         users: [request],
         // Do not overwrite existing users.
         allowOverwrite: false,
+        // Do not allow duplicate emails.
+        // This will force the backend to throw an error when an email is
+        // already in use by another existing account.
+        sanityCheck: true,
       };
     } else {
       // If uid not specified, use signupNewUser endpoint.
