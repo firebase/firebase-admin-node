@@ -102,15 +102,6 @@ describe('Firebase', () => {
     });
 
     describe('credential key', () => {
-      it('should initialize SDK given an unauthenticated authentication', () => {
-        firebaseAdmin.initializeApp({
-          credential: firebaseAdmin.credential.unauthenticated(),
-        });
-
-        return (firebaseAdmin.app().auth().INTERNAL as any).getToken()
-          .should.eventually.be.null;
-      });
-
       it('should initialize SDK given a cert credential with a service account object', () => {
         mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 

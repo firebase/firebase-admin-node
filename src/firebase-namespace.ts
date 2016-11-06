@@ -5,14 +5,12 @@ import {
   Credential,
   CertCredential,
   RefreshTokenCredential,
-  UnauthenticatedCredential,
   ApplicationDefaultCredential,
 } from './auth/credential';
 
 const DEFAULT_APP_NAME = '[DEFAULT]';
 
 let globalAppDefaultCred: ApplicationDefaultCredential;
-let globalUnauthenticatedCred: UnauthenticatedCredential;
 let globalCertCreds: { [key: string]: CertCredential } = {};
 let globalRefreshTokenCreds: { [key: string]: RefreshTokenCredential } = {};
 
@@ -178,13 +176,6 @@ let firebaseCredential = {
       globalRefreshTokenCreds[stringifiedRefreshToken] = new RefreshTokenCredential(refreshTokenPathOrObject);
     }
     return globalRefreshTokenCreds[stringifiedRefreshToken];
-  },
-
-  unauthenticated: (): Credential => {
-    if (typeof globalUnauthenticatedCred === 'undefined') {
-      globalUnauthenticatedCred = new UnauthenticatedCredential();
-    }
-    return globalUnauthenticatedCred;
   },
 
   applicationDefault: (): Credential => {

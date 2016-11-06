@@ -17,7 +17,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import {mockFetchAccessTokenViaJwt, generateRandomAccessToken} from './utils';
 import {MockSocketEmitter, MockStream} from './resources/mocks';
 import {
-  CertCredential, Certificate, UnauthenticatedCredential,
+  CertCredential, Certificate,
 } from '../src/auth/credential';
 import {
   SignedApiRequestHandler, HttpRequestHandler, ApiSettings,
@@ -224,18 +224,6 @@ describe('SignedApiRequestHandler', () => {
           expect(result).to.deep.equal(expectedResult);
           expect(stub).to.have.been.calledOnce.and.calledWith(
               host, port, path, httpMethod, data, headers, timeout);
-        });
-    });
-    it('should reject when an unauthenticated credential is used', () => {
-      mockedRequests.push();
-      const cred = new UnauthenticatedCredential();
-      const requestHandler = new SignedApiRequestHandler(cred);
-      return requestHandler.sendRequest(
-          host, port, path, httpMethod, data, preHeaders, timeout)
-        .then((result) => {
-          throw new Error('Unexpected success');
-        }, (error) => {
-          expect(error.toString()).to.include('Unable to fetch Google OAuth2');
         });
     });
   });

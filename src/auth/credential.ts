@@ -234,19 +234,6 @@ export interface Credential {
 }
 
 /**
- * Noop implementation of Credential.getToken that returns a Promise of null.
- */
-export class UnauthenticatedCredential implements Credential {
-  public getAccessToken(): Promise<GoogleOAuthAccessToken> {
-    return Promise.resolve(null);
-  }
-
-  public getCertificate(): Certificate {
-    return null;
-  }
-}
-
-/**
  * Implementation of Credential that gets access tokens from refresh tokens.
  */
 export class RefreshTokenCredential implements Credential {

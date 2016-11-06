@@ -18,7 +18,7 @@ import * as utils from './utils';
 
 import {
   ApplicationDefaultCredential, CertCredential, Certificate, GoogleOAuthAccessToken,
-  MetadataServiceCredential, RefreshToken, RefreshTokenCredential, UnauthenticatedCredential,
+  MetadataServiceCredential, RefreshToken, RefreshTokenCredential,
 } from '../src/auth/credential';
 
 chai.should();
@@ -160,18 +160,6 @@ describe('Credential', () => {
         expect(token.access_token).to.be.a('string').and.to.not.be.empty;
         expect(token.expires_in).to.equal(ONE_HOUR_IN_SECONDS);
       });
-    });
-  });
-
-  describe('UnauthenticatedCredential', () => {
-    it('should not return a service account', () => {
-      const c = new UnauthenticatedCredential();
-      expect(c.getCertificate()).to.be.null;
-    });
-
-    it('should resolve null for access tokens', () => {
-      const c = new UnauthenticatedCredential();
-      return c.getAccessToken().then((token) => expect(token).to.be.null);
     });
   });
 

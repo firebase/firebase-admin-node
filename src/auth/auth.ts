@@ -2,7 +2,7 @@ import {Credential} from './credential';
 import {FirebaseTokenGenerator} from './token-generator';
 import {FirebaseApp, FirebaseAppOptions} from '../firebase-app';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {CertCredential, Certificate, GoogleOAuthAccessToken, UnauthenticatedCredential} from './credential';
+import {CertCredential, Certificate, GoogleOAuthAccessToken} from './credential';
 import {FirebaseAuthRequestHandler} from './auth-api-request';
 import {UserRecord} from './user-record';
 import {FirebaseAuthError, AUTH_CLIENT_ERROR_CODE} from '../utils/error';
@@ -22,9 +22,7 @@ function getCredential(app: FirebaseApp): Credential {
   const certificateOrPath = typeof opts.serviceAccount === 'undefined' ?
     process.env.GOOGLE_APPLICATION_CREDENTIALS :
     opts.serviceAccount;
-  if (typeof certificateOrPath === 'undefined') {
-    return new UnauthenticatedCredential();
-  } else if (typeof certificateOrPath === 'string') {
+  if (typeof certificateOrPath === 'string') {
     return new CertCredential(Certificate.fromPath(certificateOrPath));
   } else if (typeof certificateOrPath === 'object') {
     return new CertCredential(new Certificate(certificateOrPath));

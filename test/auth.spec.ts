@@ -19,7 +19,7 @@ import * as mocks from './resources/mocks';
 import {Auth} from '../src/auth/auth';
 import {CertCredential} from '../src/auth/credential';
 import {FirebaseNamespace} from '../src/firebase-namespace';
-import {GoogleOAuthAccessToken, UnauthenticatedCredential} from '../src/auth/credential';
+import {GoogleOAuthAccessToken} from '../src/auth/credential';
 import {FirebaseTokenGenerator} from '../src/auth/token-generator';
 import {FirebaseAuthRequestHandler} from '../src/auth/auth-api-request';
 import {UserRecord} from '../src/auth/user-record';
@@ -125,6 +125,18 @@ function getValidUserRecord(serverResponse: any) {
   return new UserRecord(serverResponse.users[0]);
 }
 
+/**
+ * Noop implementation of Credential.getToken that returns a Promise of null.
+ */
+class UnauthenticatedCredential {
+  public getAccessToken(): Promise<GoogleOAuthAccessToken> {
+    return Promise.resolve(null);
+  }
+
+  public getCertificate(): Certificate {
+    return null;
+  }
+}
 
 describe('Auth', () => {
   let mockedRequests: nock.Scope[] = [];
@@ -292,20 +304,6 @@ describe('Auth', () => {
         }).not.to.throw();
 
         expect(serviceAccount).to.deep.equal(serviceAccountClone);
-      });
-    });
-  });
-
-  describe('without unauthenticated credentials', () => {
-    it('should be able to construct an app but not get a token', () => {
-      delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
-      const app = createAppWithOptions({
-        credential: new UnauthenticatedCredential(),
-      });
-      const auth = new Auth(app);
-
-      return auth.INTERNAL.getToken().then((token) => {
-        expect(token).to.be.null;
       });
     });
   });
