@@ -1,107 +1,71 @@
-# firebase-admin - Node.js
+# Firebase Admin Node.js SDK
 
-The Firebase admin SDK for Node.js, found on npm at `firebase-admin`.
 
-## Local Setup
+## Table of Contents
 
-Follow the [setup instructions for Git-on-Borg](https://gerrit-internal.git.corp.google.com/docs/+/master/users/from-gmac.md#Setup)
-and then clone the repo to your local machine with the commit hook:
+ * [Overview](#overview)
+ * [Installation](#installation)
+ * [Documentation](#documentation)
+ * [Release Notes](#release-notes)
+ * [Acknowledgments](#acknowledgments)
+ * [License](#license)
 
-```bash
-$ git credential-corpsso login   # Similar to prodaccess; need to do this daily
-$ git clone sso://team/firebase-team/firebase-admin-node && (cd firebase-admin-node && curl -Lo `git rev-parse --git-dir`/hooks/commit-msg https://gerrit-review.googlesource.com/tools/hooks/commit-msg ; chmod +x `git rev-parse --git-dir`/hooks/commit-msg)
-```
 
-Next, install all necessary dependencies:
+## Overview
 
-```bash
-$ npm install -g gulp # Install global npm dependencies
-$ npm install         # Install local npm dependencies
-```
+[Firebase](https://firebase.google.com) provides the tools and infrastructure
+you need to develop your app, grow your user base, and earn money. The Firebase
+Admin Node.js SDK provides admin (second-party) access to several Firebase
+services.
 
-In order to run the tests, you need to [download the gcloud CLI](https://cloud.google.com/sdk/downloads#interactive)
-and run the following command:
+For more information, visit the
+[Firebase Admin SDK setup guide](https://firebase.google.com/docs/admin/setup/).
 
-```bash
-gcloud beta auth application-default login
-```
 
-Finally, simply run `gulp` to lint, build, and test the code:
+## Installation
+
+The Firebase Admin Node.js SDK is available on npm as `firebase-admin`:
 
 ```bash
-$ gulp   # Lint, build, and test
+$ npm install --save firebase-admin
 ```
 
-## Proposing Changes
+To use the module in your application, `require` it from any JavaScript file:
 
-Git-on-Borg requires all reviews to contain just a single commit. To propose a change to this repo,
-follow the local setup instructions above. It is important to use the `git clone` command above
-which includes the commit hook. Once you are set up locally, create a new feature branch:
-
-```bash
-$ git checkout -b <NEW_BRANCH_NAME>
+```js
+var admin = require("firebase-admin");
 ```
 
-After you've made your code changes, commit your files:
+If you are using ES2015, you can `import` the module instead:
 
-```bash
-$ git commit -am "<COMMIT_MESSAGE>"
+```js
+import * as admin from "firebase-admin";
 ```
 
-To kick off a new CL, upload the changes to Gerrit, the code review tool:
 
-```bash
-$ git push origin HEAD:refs/for/master
-```
+## Documentation
 
-You should see the CL show up [within the Gerrit UI](https://team-review.git.corp.google.com/#/dashboard/self). If you need to make changes after your first commit, you will need to amend the previous
-commit so that you only ever have one commit:
-
-```bash
-$ git commit --amend
-```
-
-You can then upload your changes back to Gerrit via the same `git push` command listed above.
+* [Setup Guide](https://firebase.google.com/docs/admin/setup/)
+* [Database Guide](https://firebase.google.com/docs/database/admin/start/)
+* [Authentication Guide](https://firebase.google.com/docs/auth/admin/)
+* [API Reference](https://firebase.google.com/docs/reference/admin/node)
 
 
-## Updating Realtime Database Code
+## Release Notes
 
-The code for the Realtime Database in [database/database.js](./database/database.js) of this repo
-is imported as a minified file from the [firebase/firebase-client-js](https://github.com/firebase/firebase-client-js)
-GitHub repo. To update that code, follow these instructions:
+Release Notes for the Firebase Admin Node.js SDK are available
+[here](https://firebase.google.com/support/releases/).
 
-1. Make sure you have access to the [firebase/firebase-client-js](https://github.com/firebase/firebase-client-js)
-GitHub repo. If you do not have access, the above link will 404 and you should send an email to
-firebase-ops@google.com with your GitHub username requesting access.
 
-2. Clone the GitHub repo.
+## Acknowledgments
 
-3. Switch to the `firebase-v2` branch:
+Thanks to the team at [Casetext](https://casetext.com/) for transferring
+ownership of the `firebase-admin` npm module over to the Firebase team
+and for their longtime use and support of the Firebase platform.
 
-  ```
-  $ git checkout firebase-v2
-  ```
 
-4. Configure the repo:
+## License
 
-  ```
-  $ source tools/use
-  $ configure-project
-  ```
+The Firebase Admin Node.js SDK is covered by the
+[Google APIs Terms of Service](https://developers.google.com/terms/).
 
-5. Compile the Firebase JavaScript client artifacts:
-
-  ```
-  $ build-client
-  ```
-
-6. Copy `target/firebase-node.js` of the `firebase/firebase-client-js` repo into
-[`src/database/database.js`](./src/database/database.js) of this repo.
-
-7. Add a comment to the top of the file with the format:
-
-   `/* Copied from firebase/firebase-client-js commit <commit_hash> */`
-
-   where `<commit_hash>` is the commit hash from which you copied the file.
-
-8. After ensuring all tests still pass, send a CL containing the updated file.
