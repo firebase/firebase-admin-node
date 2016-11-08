@@ -63,7 +63,7 @@ var testProject = ts.createProject('tsconfig.json');
 
 var banner = [
   `/*! firebase-admin v${pkg.version}`,
-  `    https://developers.google.com/terms */`,
+  `    https://firebase.google.com/terms/ */`,
   ``,
 ].join('\n');
 

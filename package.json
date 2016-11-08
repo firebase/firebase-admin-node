@@ -3,7 +3,7 @@
   "version": "4.0.1",
   "description": "Firebase admin SDK for Node.js",
   "author": "Firebase (https://firebase.google.com/)",
-  "license": "SEE LICENSE IN https://developers.google.com/terms",
+  "license": "SEE LICENSE IN https://firebase.google.com/terms/",
   "homepage": "https://firebase.google.com/",
   "keywords": [
     "admin",
