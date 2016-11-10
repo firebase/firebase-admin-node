@@ -52,7 +52,7 @@ describe('FirebaseApp', () => {
       return mockApp.delete().then(() => {
         expect(() => {
           return mockApp.name;
-        }).to.throw(`Firebase app named '${mocks.appName}' has already been deleted.`);
+        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
       });
     });
 
@@ -86,7 +86,7 @@ describe('FirebaseApp', () => {
       return mockApp.delete().then(() => {
         expect(() => {
           return mockApp.options;
-        }).to.throw(`Firebase app named '${mocks.appName}' has already been deleted.`);
+        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
       });
     });
 
@@ -112,7 +112,7 @@ describe('FirebaseApp', () => {
       return mockApp.delete().then(() => {
         expect(() => {
           return mockApp.delete();
-        }).to.throw(`Firebase app named '${mocks.appName}' has already been deleted.`);
+        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
       });
     });
 
@@ -150,7 +150,7 @@ describe('FirebaseApp', () => {
       return app.delete().then(() => {
         expect(() => {
           return app[mocks.serviceName]();
-        }).to.throw(`Firebase app named '${mocks.appName}' has already been deleted.`);
+        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
       });
     });
 

@@ -413,7 +413,7 @@ describe('Auth', () => {
       const auth = new Auth(app);
       expect(() => {
         auth.createCustomToken(mocks.uid, mocks.developerClaims);
-      }).to.throw('Must initialize FirebaseApp with a service account to call auth().createCustomToken()');
+      }).to.throw('Must initialize app with a cert credential to call auth().createCustomToken()');
     });
 
     it('should forward on the call to the token generator\'s createCustomToken() method', () => {
@@ -441,7 +441,7 @@ describe('Auth', () => {
       const mockIdToken = mocks.generateIdToken();
       expect(() => {
         auth.verifyIdToken(mockIdToken);
-      }).to.throw('Must initialize FirebaseApp with a service account to call auth().verifyIdToken()');
+      }).to.throw('Must initialize app with a cert credential to call auth().verifyIdToken()');
     });
 
     it('should forward on the call to the token generator\'s verifyIdToken() method', () => {
