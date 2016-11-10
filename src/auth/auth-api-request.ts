@@ -1,7 +1,7 @@
 import * as validator from '../utils/validator';
 
 import {deepCopy} from '../utils/deep-copy';
-import {FirebaseAuthError, AUTH_CLIENT_ERROR_CODE} from '../utils/error';
+import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
 import {Credential} from './credential';
 import {
   HttpMethod, SignedApiRequestHandler, ApiSettings,
@@ -54,52 +54,52 @@ function validateCreateEditRequest(request: any) {
     // displayName should be a string.
     if (typeof request.displayName !== 'undefined' &&
         typeof request.displayName !== 'string') {
-      throw new FirebaseAuthError(AUTH_CLIENT_ERROR_CODE.INVALID_DISPLAY_NAME);
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_DISPLAY_NAME);
     }
     if (typeof request.localId !== 'undefined' && !validator.isUid(request.localId)) {
       // This is called localId on the backend but the developer specifies this as
       // uid externally. So the error message should use the client facing name.
-      throw new FirebaseAuthError(AUTH_CLIENT_ERROR_CODE.INVALID_UID);
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_UID);
     }
     // email should be a string and a valid email.
     if (typeof request.email !== 'undefined' && !validator.isEmail(request.email)) {
-      throw new FirebaseAuthError(AUTH_CLIENT_ERROR_CODE.INVALID_EMAIL);
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);
     }
     // password should be a string and a minimum of 6 chars.
     if (typeof request.password !== 'undefined' &&
         !validator.isPassword(request.password)) {
-      throw new FirebaseAuthError(AUTH_CLIENT_ERROR_CODE.INVALID_PASSWORD);
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PASSWORD);
     }
     // rawPassword should be a string and a minimum of 6 chars.
     if (typeof request.rawPassword !== 'undefined' &&
         !validator.isPassword(request.rawPassword)) {
       // This is called rawPassword on the backend but the developer specifies this as
       // password externally. So the error message should use the client facing name.
-      throw new FirebaseAuthError(AUTH_CLIENT_ERROR_CODE.INVALID_PASSWORD);
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PASSWORD);
     }
     // emailVerified should be a boolean.
     if (typeof request.emailVerified !== 'undefined' &&
         typeof request.emailVerified !== 'boolean') {
-     throw new FirebaseAuthError(AUTH_CLIENT_ERROR_CODE.INVALID_EMAIL_VERIFIED);
+     throw new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL_VERIFIED);
     }
     // photoUrl should be a URL.
     if (typeof request.photoUrl !== 'undefined' &&
         !validator.isURL(request.photoUrl)) {
       // This is called photoUrl on the backend but the developer specifies this as
       // photoURL externally. So the error message should use the client facing name.
-      throw new FirebaseAuthError(AUTH_CLIENT_ERROR_CODE.INVALID_PHOTO_URL);
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PHOTO_URL);
     }
     // disabled should be a boolean.
     if (typeof request.disabled !== 'undefined' &&
         typeof request.disabled !== 'boolean') {
-      throw new FirebaseAuthError(AUTH_CLIENT_ERROR_CODE.INVALID_DISABLED_FIELD);
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_DISABLED_FIELD);
     }
     // disableUser should be a boolean.
     if (typeof request.disableUser !== 'undefined' &&
         typeof request.disableUser !== 'boolean') {
       // This is called disableUser on the backend but the developer specifies this as
       // disabled externally. So the error message should use the client facing name.
-      throw new FirebaseAuthError(AUTH_CLIENT_ERROR_CODE.INVALID_DISABLED_FIELD);
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_DISABLED_FIELD);
     }
 };
 
@@ -110,14 +110,14 @@ export const FIREBASE_AUTH_GET_ACCOUNT_INFO = new ApiSettings('getAccountInfo', 
   .setRequestValidator((request: any) => {
     if (!request.localId && !request.email) {
       throw new FirebaseAuthError(
-        AUTH_CLIENT_ERROR_CODE.INTERNAL_ERROR,
+        AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Server request is missing user identifier');
     }
   })
   // Set response validator.
   .setResponseValidator((response: any) => {
     if (!response.users) {
-      throw new FirebaseAuthError(AUTH_CLIENT_ERROR_CODE.USER_NOT_FOUND);
+      throw new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
     }
   });
 
@@ -127,7 +127,7 @@ export const FIREBASE_AUTH_DELETE_ACCOUNT = new ApiSettings('deleteAccount', 'PO
   .setRequestValidator((request: any) => {
     if (!request.localId) {
       throw new FirebaseAuthError(
-        AUTH_CLIENT_ERROR_CODE.INTERNAL_ERROR,
+        AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Server request is missing user identifier');
     }
   });
@@ -139,7 +139,7 @@ export const FIREBASE_AUTH_SET_ACCOUNT_INFO = new ApiSettings('setAccountInfo', 
     // localId is a required parameter.
     if (typeof request.localId === 'undefined') {
       throw new FirebaseAuthError(
-        AUTH_CLIENT_ERROR_CODE.INTERNAL_ERROR,
+        AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Server request is missing user identifier');
     }
     validateCreateEditRequest(request);
@@ -148,7 +148,7 @@ export const FIREBASE_AUTH_SET_ACCOUNT_INFO = new ApiSettings('setAccountInfo', 
   .setResponseValidator((response: any) => {
     // If the localId is not returned, then the request failed.
     if (!response.localId) {
-      throw new FirebaseAuthError(AUTH_CLIENT_ERROR_CODE.USER_NOT_FOUND);
+      throw new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
     }
   });
 
@@ -177,7 +177,7 @@ export const FIREBASE_AUTH_UPLOAD_ACCOUNT = new ApiSettings('uploadAccount', 'PO
         request.users == null ||
         !request.users.length) {
       throw new FirebaseAuthError(
-        AUTH_CLIENT_ERROR_CODE.INTERNAL_ERROR,
+        AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Invalid uploadAccount request. No users provider.');
     }
     // Validate each user within users.
@@ -185,7 +185,7 @@ export const FIREBASE_AUTH_UPLOAD_ACCOUNT = new ApiSettings('uploadAccount', 'PO
       // localId is a required parameter.
       if (typeof user.localId === 'undefined') {
         throw new FirebaseAuthError(
-          AUTH_CLIENT_ERROR_CODE.INTERNAL_ERROR,
+          AuthClientErrorCode.INTERNAL_ERROR,
           'INTERNAL ASSERT FAILED: Server request is missing user identifier');
       }
       // Validate user.
@@ -204,11 +204,11 @@ export const FIREBASE_AUTH_UPLOAD_ACCOUNT = new ApiSettings('uploadAccount', 'PO
       if (response.error[0].message.indexOf('can not overwrite') !== -1) {
         // Duplicate user error
         throw new FirebaseAuthError(
-          AUTH_CLIENT_ERROR_CODE.UID_ALREADY_EXISTS,
+          AuthClientErrorCode.UID_ALREADY_EXISTS,
           response.error[0].message);
       }
       throw new FirebaseAuthError(
-        AUTH_CLIENT_ERROR_CODE.INTERNAL_ERROR,
+        AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: ' + response.error[0].message);
     }
   });
@@ -224,7 +224,7 @@ export const FIREBASE_AUTH_SIGN_UP_NEW_USER = new ApiSettings('signupNewUser', '
     // This should not occur as when the uid is provided, uploadAccount is used instead.
     if (typeof request.localId !== 'undefined') {
      throw new FirebaseAuthError(
-        AUTH_CLIENT_ERROR_CODE.INTERNAL_ERROR,
+        AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: User identifier must not be specified');
     }
     validateCreateEditRequest(request);
@@ -234,7 +234,7 @@ export const FIREBASE_AUTH_SIGN_UP_NEW_USER = new ApiSettings('signupNewUser', '
     // If the localId is not returned, then the request failed.
     if (!response.localId) {
       throw new FirebaseAuthError(
-        AUTH_CLIENT_ERROR_CODE.INTERNAL_ERROR,
+        AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Unable to create new user');
     }
   });
