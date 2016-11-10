@@ -38,9 +38,9 @@ export class FirebaseNamespaceInternals {
    */
   public initializeApp(options: FirebaseAppOptions, appName = DEFAULT_APP_NAME): FirebaseApp {
     if (typeof appName !== 'string' || appName === '') {
-      throw new Error(`Illegal Firebase app name '${appName}' provided. App name must be a non-empty string.`);
+      throw new Error(`Illegal Firebase app name "${appName}" provided. App name must be a non-empty string.`);
     } else if (appName in this.apps_) {
-      throw new Error(`Firebase app named '${appName}' already exists.`);
+      throw new Error(`Firebase app named "${appName}" already exists.`);
     }
 
     let app = new FirebaseApp(options, appName, this);
@@ -61,9 +61,9 @@ export class FirebaseNamespaceInternals {
    */
   public app(appName = DEFAULT_APP_NAME): FirebaseApp {
     if (typeof appName !== 'string' || appName === '') {
-      throw new Error(`Illegal Firebase app name '${appName}' provided. App name must be a non-empty string.`);
+      throw new Error(`Illegal Firebase app name "${appName}" provided. App name must be a non-empty string.`);
     } else if (!(appName in this.apps_)) {
-      throw new Error(`No Firebase app named '${appName}' exists.`);
+      throw new Error(`Firebase app named "${appName}" does not exist.`);
     }
 
     return this.apps_[appName];
@@ -110,9 +110,9 @@ export class FirebaseNamespaceInternals {
     if (typeof serviceName === 'undefined') {
       throw new Error(`No service name provided. Service name must be a non-empty string.`);
     } else if (typeof serviceName !== 'string' || serviceName === '') {
-      throw new Error(`Illegal service name '${serviceName}' provided. Service name must be a non-empty string.`);
+      throw new Error(`Illegal service name "${serviceName}" provided. Service name must be a non-empty string.`);
     } else if (serviceName in this.serviceFactories) {
-      throw new Error(`Firebase service named '${serviceName}' has already been registered.`);
+      throw new Error(`Firebase service named "${serviceName}" has already been registered.`);
     }
 
     this.serviceFactories[serviceName] = createService;
@@ -212,12 +212,12 @@ export class FirebaseNamespace {
    */
   /* istanbul ignore next */
   public auth(): FirebaseServiceInterface {
-    throw new Error('Firebase auth() service has not been registered');
+    throw new Error('INTERNAL ASSERT FAILED: Firebase auth() service has not been registered.');
   }
 
   /* istanbul ignore next */
   public database(): FirebaseServiceInterface {
-    throw new Error('Firebase database() service has not been registered');
+    throw new Error('INTERNAL ASSERT FAILED: Firebase database() service has not been registered.');
   }
 
   /**

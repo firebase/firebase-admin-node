@@ -57,17 +57,16 @@ export class FirebaseApp {
 
     let errorMessage: string;
     if (!hasCredential && !hasServiceAccount) {
-      errorMessage = 'The first argument passed to initializeApp() must be an object containing ' +
-      'at least a "credential" property.';
+      errorMessage = 'Options must be an object containing at least a "credential" property.';
     } else if (hasCredential && hasServiceAccount) {
-      errorMessage = 'The first argument passed to initializeApp() cannot specify both the ' +
-        '"credential" and "serviceAccount" properties.';
+      errorMessage = 'Options cannot specify both the "credential" and "serviceAccount" properties.';
     }
     // TODO(jwenger): NEXT MAJOR RELEASE - throw error if the "credential" property is not specified
 
     if (typeof errorMessage !== 'undefined') {
       throw new Error(
-        `Invalid Firebase app options passed as the first argument to initializeApp(). ${errorMessage}`
+        `Invalid Firebase app options passed as the first argument to initializeApp() for the ` +
+        `app named "${this.name_}". ${errorMessage}`
       );
     }
 
@@ -95,12 +94,12 @@ export class FirebaseApp {
    */
   /* istanbul ignore next */
   public auth(): FirebaseServiceInterface {
-    throw new Error('Firebase auth() service has not been registered');
+    throw new Error('INTERNAL ASSERT FAILED: Firebase auth() service has not been registered.');
   }
 
   /* istanbul ignore next */
   public database(): FirebaseServiceInterface {
-    throw new Error('Firebase database() service has not been registered');
+    throw new Error('INTERNAL ASSERT FAILED: Firebase database() service has not been registered.');
   }
 
   /**
@@ -172,7 +171,7 @@ export class FirebaseApp {
    */
   private checkDestroyed_(): void {
     if (this.isDeleted_) {
-      throw new Error(`Firebase app named '${this.name_}' has already been deleted.`);
+      throw new Error(`Firebase app named "${this.name_}" has already been deleted.`);
     }
   }
 }

@@ -117,8 +117,8 @@ class Auth implements FirebaseServiceInterface {
   public createCustomToken(uid: string, developerClaims?: Object): Promise<string> {
     if (typeof this.tokenGenerator_ === 'undefined') {
       throw new FirebaseAuthError(
-        AUTH_CLIENT_ERROR_CODE.INVALID_SERVICE_ACCOUNT,
-        'Must initialize FirebaseApp with a service account to call auth().createCustomToken()');
+        AUTH_CLIENT_ERROR_CODE.INVALID_CREDENTIAL,
+        'Must initialize app with a cert credential to call auth().createCustomToken()');
     }
     return this.tokenGenerator_.createCustomToken(uid, developerClaims);
   };
@@ -133,8 +133,8 @@ class Auth implements FirebaseServiceInterface {
   public verifyIdToken(idToken: string): Promise<Object> {
     if (typeof this.tokenGenerator_ === 'undefined') {
       throw new FirebaseAuthError(
-        AUTH_CLIENT_ERROR_CODE.INVALID_SERVICE_ACCOUNT,
-        'Must initialize FirebaseApp with a service account to call auth().verifyIdToken()');
+        AUTH_CLIENT_ERROR_CODE.INVALID_CREDENTIAL,
+        'Must initialize app with a cert credential to call auth().verifyIdToken()');
     }
     return this.tokenGenerator_.verifyIdToken(idToken);
   };
