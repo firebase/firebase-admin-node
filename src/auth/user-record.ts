@@ -1,4 +1,4 @@
-import {FirebaseAuthError, AUTH_CLIENT_ERROR_CODE} from '../utils/error';
+import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
 
 /**
  * Parses a time stamp string or number and returns the corresponding date if valid.
@@ -36,7 +36,7 @@ export class UserMetadata {
     this.createdAtInternal = parseDate(response.createdAt);
     if (!this.createdAtInternal) {
       throw new FirebaseAuthError(
-        AUTH_CLIENT_ERROR_CODE.INTERNAL_ERROR,
+        AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Invalid metadata response');
     }
     this.lastSignedInAtInternal = parseDate(response.lastLoginAt);
@@ -80,7 +80,7 @@ export class UserInfo {
     // Provider user id and provider id are required.
     if (!response.rawId || !response.providerId) {
       throw new FirebaseAuthError(
-        AUTH_CLIENT_ERROR_CODE.INTERNAL_ERROR,
+        AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Invalid user info response');
     }
     this.uidInternal = response.rawId;
@@ -149,7 +149,7 @@ export class UserRecord {
     // The Firebase user id is required.
     if (!response.localId) {
       throw new FirebaseAuthError(
-        AUTH_CLIENT_ERROR_CODE.INTERNAL_ERROR,
+        AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Invalid user response');
     }
     this.uidInternal = response.localId;

@@ -5,7 +5,7 @@ import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../fi
 import {CertCredential, Certificate, GoogleOAuthAccessToken} from './credential';
 import {FirebaseAuthRequestHandler} from './auth-api-request';
 import {UserRecord} from './user-record';
-import {FirebaseAuthError, AUTH_CLIENT_ERROR_CODE} from '../utils/error';
+import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
 
 /**
  * Gets a Credential from app options.
@@ -27,7 +27,7 @@ function getCredential(app: FirebaseApp): Credential {
   } else if (typeof certificateOrPath === 'object') {
     return new CertCredential(new Certificate(certificateOrPath));
   } else {
-    throw new FirebaseAuthError(AUTH_CLIENT_ERROR_CODE.INVALID_SERVICE_ACCOUNT);
+    throw new FirebaseAuthError(AuthClientErrorCode.INVALID_SERVICE_ACCOUNT);
   }
 }
 
@@ -62,7 +62,7 @@ class Auth implements FirebaseServiceInterface {
   constructor(app: FirebaseApp) {
     if (typeof app !== 'object' || !('options' in app)) {
       throw new FirebaseAuthError(
-        AUTH_CLIENT_ERROR_CODE.INVALID_ARGUMENT,
+        AuthClientErrorCode.INVALID_ARGUMENT,
         'First parameter to Auth constructor must be an instance of FirebaseApp');
     }
     this.app_ = app;
@@ -70,7 +70,7 @@ class Auth implements FirebaseServiceInterface {
     const credential = getCredential(app);
     if (credential && typeof credential.getAccessToken !== 'function') {
       throw new FirebaseAuthError(
-        AUTH_CLIENT_ERROR_CODE.INVALID_CREDENTIAL,
+        AuthClientErrorCode.INVALID_CREDENTIAL,
         'Called initializeApp() with an invalid credential parameter');
     }
     this.authTokenManager_ = new AuthTokenManager(credential);
@@ -117,7 +117,7 @@ class Auth implements FirebaseServiceInterface {
   public createCustomToken(uid: string, developerClaims?: Object): Promise<string> {
     if (typeof this.tokenGenerator_ === 'undefined') {
       throw new FirebaseAuthError(
-        AUTH_CLIENT_ERROR_CODE.INVALID_CREDENTIAL,
+        AuthClientErrorCode.INVALID_CREDENTIAL,
         'Must initialize app with a cert credential to call auth().createCustomToken()');
     }
     return this.tokenGenerator_.createCustomToken(uid, developerClaims);
@@ -133,7 +133,7 @@ class Auth implements FirebaseServiceInterface {
   public verifyIdToken(idToken: string): Promise<Object> {
     if (typeof this.tokenGenerator_ === 'undefined') {
       throw new FirebaseAuthError(
-        AUTH_CLIENT_ERROR_CODE.INVALID_CREDENTIAL,
+        AuthClientErrorCode.INVALID_CREDENTIAL,
         'Must initialize app with a cert credential to call auth().verifyIdToken()');
     }
     return this.tokenGenerator_.verifyIdToken(idToken);
@@ -185,7 +185,7 @@ class Auth implements FirebaseServiceInterface {
         if (error.code === 'auth/user-not-found') {
           // Something must have happened after creating the user and then retrieving it.
           throw new FirebaseAuthError(
-            AUTH_CLIENT_ERROR_CODE.INTERNAL_ERROR,
+            AuthClientErrorCode.INTERNAL_ERROR,
             'Unable to create the user record provided.');
         }
         throw error;
@@ -346,7 +346,7 @@ export class AuthTokenManager implements FirebaseServiceInternalsInterface {
             typeof result.expires_in !== 'number' ||
             typeof result.access_token !== 'string') {
             throw new FirebaseAuthError(
-              AUTH_CLIENT_ERROR_CODE.INVALID_CREDENTIAL,
+              AuthClientErrorCode.INVALID_CREDENTIAL,
               'initializeApp() was called with a credential ' +
               'that creates invalid access tokens: ' + JSON.stringify(result));
           }

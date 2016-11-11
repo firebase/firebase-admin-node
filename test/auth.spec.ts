@@ -17,14 +17,14 @@ import * as utils from './utils';
 import * as mocks from './resources/mocks';
 
 import {Auth} from '../src/auth/auth';
-import {CertCredential} from '../src/auth/credential';
+import {Certificate, CertCredential} from '../src/auth/credential';
 import {FirebaseNamespace} from '../src/firebase-namespace';
 import {GoogleOAuthAccessToken} from '../src/auth/credential';
 import {FirebaseTokenGenerator} from '../src/auth/token-generator';
 import {FirebaseAuthRequestHandler} from '../src/auth/auth-api-request';
 import {UserRecord} from '../src/auth/user-record';
 import {FirebaseApp, FirebaseAppOptions} from '../src/firebase-app';
-import {FirebaseAuthError, AUTH_CLIENT_ERROR_CODE} from '../src/utils/error';
+import {AuthClientErrorCode, FirebaseAuthError} from '../src/utils/error';
 
 chai.should();
 chai.use(sinonChai);
@@ -470,8 +470,7 @@ describe('Auth', () => {
     const uid = 'abcdefghijklmnopqrstuvwxyz';
     const expectedGetAccountInfoResult = getValidGetAccountInfoResponse();
     const expectedUserRecord = getValidUserRecord(expectedGetAccountInfoResult);
-    const expectedError = new FirebaseAuthError(
-      AUTH_CLIENT_ERROR_CODE.USER_NOT_FOUND;
+    const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
     // Stubs used to simulate underlying api calls.
     let stubs: Sinon.SinonStub[] = [];
     afterEach(() => {
@@ -529,8 +528,7 @@ describe('Auth', () => {
     const email = 'user@gmail.com';
     const expectedGetAccountInfoResult = getValidGetAccountInfoResponse();
     const expectedUserRecord = getValidUserRecord(expectedGetAccountInfoResult);
-    const expectedError = new FirebaseAuthError(
-      AUTH_CLIENT_ERROR_CODE.USER_NOT_FOUND);
+    const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
 
     // Stubs used to simulate underlying api calls.
     let stubs: Sinon.SinonStub[] = [];
@@ -588,7 +586,7 @@ describe('Auth', () => {
     const auth = new Auth(app);
     const uid = 'abcdefghijklmnopqrstuvwxyz';
     const expectedDeleteAccountResult = {kind: 'identitytoolkit#DeleteAccountResponse'};
-    const expectedError = new FirebaseAuthError(AUTH_CLIENT_ERROR_CODE.USER_NOT_FOUND);
+    const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
 
     // Stubs used to simulate underlying api calls.
     let stubs: Sinon.SinonStub[] = [];
@@ -648,10 +646,10 @@ describe('Auth', () => {
     const expectedGetAccountInfoResult = getValidGetAccountInfoResponse();
     const expectedUserRecord = getValidUserRecord(expectedGetAccountInfoResult);
     const expectedError = new FirebaseAuthError(
-      AUTH_CLIENT_ERROR_CODE.INTERNAL_ERROR,
+      AuthClientErrorCode.INTERNAL_ERROR,
       'Unable to create the user record provided.');
     const unableToCreateUserError = new FirebaseAuthError(
-      AUTH_CLIENT_ERROR_CODE.INTERNAL_ERROR,
+      AuthClientErrorCode.INTERNAL_ERROR,
       'Unable to create the user record provided.');
     const propertiesToCreate = {
       displayName: expectedUserRecord.displayName,
@@ -709,8 +707,7 @@ describe('Auth', () => {
       let createUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'createNewAccount')
         .returns(Promise.resolve(uid));
       // Stub getAccountInfoByUid to throw user not found error.
-      let userNotFoundError = new FirebaseAuthError(
-        AUTH_CLIENT_ERROR_CODE.USER_NOT_FOUND);
+      let userNotFoundError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
       let getUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByUid')
         .returns(Promise.reject(userNotFoundError));
       stubs.push(createUserStub);
@@ -766,8 +763,7 @@ describe('Auth', () => {
     const uid = 'abcdefghijklmnopqrstuvwxyz';
     const expectedGetAccountInfoResult = getValidGetAccountInfoResponse();
     const expectedUserRecord = getValidUserRecord(expectedGetAccountInfoResult);
-    const expectedError = new FirebaseAuthError(
-      AUTH_CLIENT_ERROR_CODE.USER_NOT_FOUND);
+    const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
     const propertiesToEdit = {
       displayName: expectedUserRecord.displayName,
       photoURL: expectedUserRecord.photoURL,

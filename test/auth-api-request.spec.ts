@@ -22,7 +22,7 @@ import {
   FIREBASE_AUTH_DELETE_ACCOUNT, FIREBASE_AUTH_SET_ACCOUNT_INFO,
   FIREBASE_AUTH_UPLOAD_ACCOUNT, FIREBASE_AUTH_SIGN_UP_NEW_USER,
 } from '../src/auth/auth-api-request';
-import {FirebaseAuthError, AUTH_CLIENT_ERROR_CODE} from '../src/utils/error';
+import {AuthClientErrorCode, FirebaseAuthError} from '../src/utils/error';
 
 chai.should();
 chai.use(sinonChai);
@@ -563,7 +563,7 @@ describe('FirebaseAuthRequestHandler', () => {
       const expectedResult = {
         kind: 'identitytoolkit#GetAccountInfoResponse',
       };
-      const expectedError = new FirebaseAuthError(AUTH_CLIENT_ERROR_CODE.USER_NOT_FOUND);
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
       const data = {email: ['user@example.com']};
       const accessToken = generateRandomAccessToken();
       const headers = {
@@ -626,7 +626,7 @@ describe('FirebaseAuthRequestHandler', () => {
       const expectedResult = {
         kind: 'identitytoolkit#GetAccountInfoResponse',
       };
-      const expectedError = new FirebaseAuthError(AUTH_CLIENT_ERROR_CODE.USER_NOT_FOUND);
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
       const accessToken = generateRandomAccessToken();
       const data = {localId: ['uid']};
       const headers = {
@@ -865,7 +865,7 @@ describe('FirebaseAuthRequestHandler', () => {
 
     it('should be rejected given an invalid parameters', () => {
       // Expected error when an invalid email is provided.
-      const expectedError = new FirebaseAuthError(AUTH_CLIENT_ERROR_CODE.INVALID_EMAIL);
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);
       const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
       const requestHandler = new FirebaseAuthRequestHandler(cred);
       // Send update request with invalid email.
@@ -1005,7 +1005,7 @@ describe('FirebaseAuthRequestHandler', () => {
 
       it('should be rejected given an invalid parameters', () => {
         // Expected error when an invalid email is provided.
-        const expectedError = new FirebaseAuthError(AUTH_CLIENT_ERROR_CODE.INVALID_EMAIL);
+        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);
         const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
         const requestHandler = new FirebaseAuthRequestHandler(cred);
         // Create new account with invalid email.
@@ -1021,7 +1021,7 @@ describe('FirebaseAuthRequestHandler', () => {
       it('should be rejected when the backend returns a user exists error', () => {
         // Expected error when the uid already exists.
         const expectedError = new FirebaseAuthError(
-          AUTH_CLIENT_ERROR_CODE.UID_ALREADY_EXISTS,
+          AuthClientErrorCode.UID_ALREADY_EXISTS,
           'localId belongs to an existing account - can not overwrite.');
         const expectedResult = {
           error: [
@@ -1139,7 +1139,7 @@ describe('FirebaseAuthRequestHandler', () => {
       it('should be rejected given an invalid parameters', () => {
         // Expected error when an invalid email is provided.
         const expectedError =
-          new FirebaseAuthError(AUTH_CLIENT_ERROR_CODE.INVALID_EMAIL);
+          new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);
         const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
         const requestHandler = new FirebaseAuthRequestHandler(cred);
         // Send create new account request with invalid data.
