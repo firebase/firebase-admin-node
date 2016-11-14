@@ -48,13 +48,13 @@ import * as admin from "firebase-admin";
 * [Setup Guide](https://firebase.google.com/docs/admin/setup/)
 * [Database Guide](https://firebase.google.com/docs/database/admin/start/)
 * [Authentication Guide](https://firebase.google.com/docs/auth/admin/)
-* [API Reference](https://firebase.google.com/docs/reference/admin/node)
+* [API Reference](https://firebase.google.com/docs/reference/admin/node/)
 
 
 ## Release Notes
 
 Release Notes for the Firebase Admin Node.js SDK are available
-[here](https://firebase.google.com/support/releases/).
+[here](https://firebase.google.com/support/release-notes/admin/node/).
 
 
 ## Acknowledgments
