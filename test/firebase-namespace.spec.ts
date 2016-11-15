@@ -101,7 +101,7 @@ describe('FirebaseNamespace', () => {
     it('should throw given no app name if the default app does not exist', () => {
       expect(() => {
         return firebaseNamespace.app();
-      }).to.throw(`Firebase app named "${DEFAULT_APP_NAME}" does not exist.`);
+      }).to.throw('The default Firebase app does not exist.');
     });
 
     it('should return the app associated with the provided app name', () => {
@@ -147,22 +147,22 @@ describe('FirebaseNamespace', () => {
       expect(() => {
         firebaseNamespace.initializeApp(mocks.appOptions);
         firebaseNamespace.initializeApp(mocks.appOptions);
-      }).to.throw(`Firebase app named "${DEFAULT_APP_NAME}" already exists.`);
+      }).to.throw('The default Firebase app already exists.');
 
       expect(() => {
         firebaseNamespace.initializeApp(mocks.appOptions);
         firebaseNamespace.initializeApp(mocks.appOptions, DEFAULT_APP_NAME);
-      }).to.throw(`Firebase app named "${DEFAULT_APP_NAME}" already exists.`);
+      }).to.throw('The default Firebase app already exists.');
 
       expect(() => {
         firebaseNamespace.initializeApp(mocks.appOptions, DEFAULT_APP_NAME);
         firebaseNamespace.initializeApp(mocks.appOptions);
-      }).to.throw(`Firebase app named "${DEFAULT_APP_NAME}" already exists.`);
+      }).to.throw('The default Firebase app already exists.');
 
       expect(() => {
         firebaseNamespace.initializeApp(mocks.appOptions, DEFAULT_APP_NAME);
         firebaseNamespace.initializeApp(mocks.appOptions, DEFAULT_APP_NAME);
-      }).to.throw(`Firebase app named "${DEFAULT_APP_NAME}" already exists.`);
+      }).to.throw('The default Firebase app already exists.');
     });
 
     it('should return a new app with the provided options and app name', () => {
@@ -247,7 +247,7 @@ describe('FirebaseNamespace', () => {
       firebaseNamespace.INTERNAL.removeApp(DEFAULT_APP_NAME);
       expect(() => {
         return firebaseNamespace.app();
-      }).to.throw(`Firebase app named "${DEFAULT_APP_NAME}" does not exist.`);
+      }).to.throw('The default Firebase app does not exist.');
     });
 
     it('should not be idempotent', () => {

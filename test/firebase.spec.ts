@@ -151,7 +151,7 @@ describe('Firebase', () => {
     it('should throw if the app has not be initialized', () => {
       expect(() => {
         return firebaseAdmin.database();
-      }).to.throw(`Firebase app named "[DEFAULT]" does not exist.`);
+      }).to.throw('The default Firebase app does not exist.');
     });
 
     it('should throw given no databaseURL key when initializing the app', () => {
@@ -174,7 +174,7 @@ describe('Firebase', () => {
     it('should throw if the app has not be initialized', () => {
       expect(() => {
         return firebaseAdmin.auth();
-      }).to.throw(`Firebase app named "[DEFAULT]" does not exist.`);
+      }).to.throw('The default Firebase app does not exist.');
     });
 
     it('should return the auth service', () => {

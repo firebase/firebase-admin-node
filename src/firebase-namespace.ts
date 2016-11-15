@@ -40,7 +40,21 @@ export class FirebaseNamespaceInternals {
     if (typeof appName !== 'string' || appName === '') {
       throw new Error(`Illegal Firebase app name "${appName}" provided. App name must be a non-empty string.`);
     } else if (appName in this.apps_) {
-      throw new Error(`Firebase app named "${appName}" already exists.`);
+      if (appName === DEFAULT_APP_NAME) {
+        throw new Error(
+          'The default Firebase app already exists. This means you called initializeApp() ' +
+          'more than once without providing an app name as the second argument. In most cases ' +
+          'you only need to call initializeApp() once. But if you do want to initialize ' +
+          'multiple apps, pass a second argument to initializeApp() to give each app a unique ' +
+          'name.'
+        );
+      } else {
+        throw new Error(
+          `Firebase app named "${appName}" already exists. This means you called initializeApp() ` +
+          'more than once with the same app name as the second argument. Make sure you provide a ' +
+          'unique name every time you call initializeApp().'
+        );
+      }
     }
 
     let app = new FirebaseApp(options, appName, this);
@@ -63,7 +77,14 @@ export class FirebaseNamespaceInternals {
     if (typeof appName !== 'string' || appName === '') {
       throw new Error(`Illegal Firebase app name "${appName}" provided. App name must be a non-empty string.`);
     } else if (!(appName in this.apps_)) {
-      throw new Error(`Firebase app named "${appName}" does not exist.`);
+      let errorMessage: string;
+      if (appName === DEFAULT_APP_NAME) {
+        errorMessage = 'The default Firebase app does not exist. ';
+      } else {
+        errorMessage = `Firebase app named "${appName}" does not exist. `;
+      }
+      errorMessage += 'Make sure you call initializeApp() before using any of the Firebase services.';
+      throw new Error(errorMessage);
     }
 
     return this.apps_[appName];
