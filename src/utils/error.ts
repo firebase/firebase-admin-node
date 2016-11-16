@@ -124,7 +124,7 @@ class AuthClientErrorCode {
   };
   public static INVALID_UID = {
     code: 'invalid-uid',
-    message: 'The uid must be a non-empty string with at most 128 alphanumeric characters.',
+    message: 'The uid must be a non-empty string with at most 128 characters.',
   };
   public static MISSING_UID = {
     code: 'missing-uid',

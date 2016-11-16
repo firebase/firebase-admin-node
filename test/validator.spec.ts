@@ -4,7 +4,7 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import {
-  isAlphanumeric, isEmail, isPassword, isURL, isUid,
+  isEmail, isPassword, isURL, isUid,
 } from '../src/utils/validator';
 
 
@@ -14,10 +14,10 @@ chai.use(chaiAsPromised);
 
 
 /**
- * @param {number} numOfChars The number of alphanumeric characters within the string.
- * @return {string} A string with a specific number of alphanumeric characters.
+ * @param {number} numOfChars The number of random characters within the string.
+ * @return {string} A string with a specific number of random characters.
  */
-function createAlphanumericString(numOfChars: number): string {
+function createRandomString(numOfChars: number): string {
   let chars = [];
   let allowedChars = '1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
   while (numOfChars > 0) {
@@ -28,36 +28,11 @@ function createAlphanumericString(numOfChars: number): string {
   return chars.join('');
 }
 
-
-describe('isAlphanumeric()', () => {
-  it('should return false with a non string', () => {
-    expect(isAlphanumeric(12.4)).to.be.false;
-  });
-
-  it('should return false with a null input', () => {
-    expect(isAlphanumeric(null)).to.be.false;
-  });
-
-  it('should return false with an undefined input', () => {
-    expect(isAlphanumeric(undefined)).to.be.false;
-  });
-
-  it('should return true with a valid alphanumeric string', () => {
-    expect(isAlphanumeric('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890'))
-      .to.be.true;
-    expect(isAlphanumeric('')).to.be.true;
-  });
-
-  it('should return false with an invalid alphanumeric string', () => {
-    expect(isAlphanumeric('1-f\|][{}?><:@')).to.be.false;
-  });
-});
-
 describe('isUid()', () => {
   it('should return true with a valid uid', () => {
-    expect(isUid(createAlphanumericString(1))).to.be.true;
-    expect(isUid(createAlphanumericString(5))).to.be.true;
-    expect(isUid(createAlphanumericString(128))).to.be.true;
+    expect(isUid(createRandomString(1))).to.be.true;
+    expect(isUid(createRandomString(5))).to.be.true;
+    expect(isUid(createRandomString(128))).to.be.true;
   });
 
   it('should return false with a null input', () => {
@@ -69,20 +44,15 @@ describe('isUid()', () => {
   });
 
   it('should return false with an invalid type', () => {
-    expect(isUid({uid: createAlphanumericString(1)})).to.be.false;
+    expect(isUid({uid: createRandomString(1)})).to.be.false;
   });
 
   it('should return false with an empty string', () => {
     expect(isUid('')).to.be.false;
   });
 
-  it('should return false with an alphanumeric string longer than 128 characters', () => {
-    expect(isUid(createAlphanumericString(129))).to.be.false;
-  });
-
-  it('should return false with an invalid alphanumeric string', () => {
-    // One non alpha numeric character should be enough to break the requirement.
-    expect(isUid(createAlphanumericString(12) + '?')).to.be.false;
+  it('should return false with a string longer than 128 characters', () => {
+    expect(isUid(createRandomString(129))).to.be.false;
   });
 });
 

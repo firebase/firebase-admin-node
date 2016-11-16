@@ -1,19 +1,5 @@
 import url = require('url');
 
-/**
- * Validates that a string is alpha numeric.
- *
- * @param {any} alphanumeric The string to validate.
- * @return {boolean} Whether the string is alpha-numeric or not.
- */
-export function isAlphanumeric(alphanumeric: any): boolean {
-  if (typeof alphanumeric !== 'string') {
-    return false;
-  }
-  let re = /^[a-zA-Z0-9]*$/;
-  return re.test(alphanumeric);
-}
-
 
 /**
  * Validates that a string is a valid Firebase Auth uid.
@@ -22,8 +8,7 @@ export function isAlphanumeric(alphanumeric: any): boolean {
  * @return {boolean} Whether the string is a valid Firebase Auth uid.
  */
 export function isUid(uid: any): boolean {
-  // A uid should be an alphanumeric string with up to 128 characters.
-  return isAlphanumeric(uid) && uid.length > 0 && uid.length <= 128;
+  return typeof uid === 'string' && uid.length > 0 && uid.length <= 128;
 }
 
 
