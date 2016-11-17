@@ -176,9 +176,9 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
     describe('called with invalid parameters', () => {
       it('should fail with invalid localId', () => {
         expect(() => {
-          return requestValidator({localId: '1234_$%on'});
+          return requestValidator({localId: ''});
         }).to.throw();
-        expect(isUidSpy).to.have.been.calledOnce.and.calledWith('1234_$%on');
+        expect(isUidSpy).to.have.been.calledOnce.and.calledWith('');
       });
       it('should fail with invalid displayName', () => {
         expect(() => {
@@ -331,9 +331,9 @@ describe('FIREBASE_AUTH_UPLOAD_ACCOUNT', () => {
     describe('called with invalid parameters', () => {
       it('should fail with invalid localId', () => {
         expect(() => {
-          return requestValidator({users: [{localId: '1234_$%on'}]});
+          return requestValidator({users: [{localId: ''}]});
         }).to.throw();
-        expect(isUidSpy).to.have.been.calledOnce.and.calledWith('1234_$%on');
+        expect(isUidSpy).to.have.been.calledOnce.and.calledWith('');
       });
       it('should fail with invalid displayName', () => {
         expect(() => {
@@ -863,7 +863,7 @@ describe('FirebaseAuthRequestHandler', () => {
         });
     });
 
-    it('should be rejected given an invalid parameters', () => {
+    it('should be rejected given invalid parameters', () => {
       // Expected error when an invalid email is provided.
       const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);
       const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
@@ -1003,7 +1003,7 @@ describe('FirebaseAuthRequestHandler', () => {
           });
       });
 
-      it('should be rejected given an invalid parameters', () => {
+      it('should be rejected given invalid parameters', () => {
         // Expected error when an invalid email is provided.
         const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);
         const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
@@ -1136,7 +1136,7 @@ describe('FirebaseAuthRequestHandler', () => {
           });
       });
 
-      it('should be rejected given an invalid parameters', () => {
+      it('should be rejected given invalid parameters', () => {
         // Expected error when an invalid email is provided.
         const expectedError =
           new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);
