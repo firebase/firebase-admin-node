@@ -120,7 +120,7 @@ export class FirebaseTokenGenerator {
 
     const projectIdMatchMessage = ' Make sure the ID token comes from the same Firebase project as the ' +
       'service account used to authenticate this SDK.';
-    const verifyIdTokenDocsMessage = ' See https://firebase.google.com/docs/auth/server/verify-id-tokens ' +
+    const verifyIdTokenDocsMessage = ' See https://firebase.google.com/docs/auth/admin/verify-id-tokens ' +
       'for details on how to retrieve an ID token.';
 
     let errorMessage: string;
