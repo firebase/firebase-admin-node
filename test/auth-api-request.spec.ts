@@ -112,10 +112,10 @@ describe('FIREBASE_AUTH_DELETE_ACCOUNT', () => {
 
 describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
   // Spy on all validators.
-  let isUidSpy: Sinon.SinonSpy;
-  let isEmailSpy: Sinon.SinonSpy;
-  let isPasswordSpy: Sinon.SinonSpy;
-  let isUrlSpy: Sinon.SinonSpy;
+  let isUidSpy: sinon.SinonSpy;
+  let isEmailSpy: sinon.SinonSpy;
+  let isPasswordSpy: sinon.SinonSpy;
+  let isUrlSpy: sinon.SinonSpy;
 
   beforeEach(() => {
     isUidSpy = sinon.spy(validator, 'isUid');
@@ -234,10 +234,10 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
 
 describe('FIREBASE_AUTH_UPLOAD_ACCOUNT', () => {
   // Spy on all validators.
-  let isUidSpy: Sinon.SinonSpy;
-  let isEmailSpy: Sinon.SinonSpy;
-  let isPasswordSpy: Sinon.SinonSpy;
-  let isUrlSpy: Sinon.SinonSpy;
+  let isUidSpy: sinon.SinonSpy;
+  let isEmailSpy: sinon.SinonSpy;
+  let isPasswordSpy: sinon.SinonSpy;
+  let isUrlSpy: sinon.SinonSpy;
 
   beforeEach(() => {
     isUidSpy = sinon.spy(validator, 'isUid');
@@ -406,9 +406,9 @@ describe('FIREBASE_AUTH_UPLOAD_ACCOUNT', () => {
 
 describe('FIREBASE_AUTH_SIGN_UP_NEW_USER', () => {
   // Spy on all validators.
-  let isEmailSpy: Sinon.SinonSpy;
-  let isPasswordSpy: Sinon.SinonSpy;
-  let isUrlSpy: Sinon.SinonSpy;
+  let isEmailSpy: sinon.SinonSpy;
+  let isPasswordSpy: sinon.SinonSpy;
+  let isUrlSpy: sinon.SinonSpy;
 
   beforeEach(() => {
     isEmailSpy = sinon.spy(validator, 'isEmail');
@@ -508,7 +508,7 @@ describe('FIREBASE_AUTH_SIGN_UP_NEW_USER', () => {
 
 describe('FirebaseAuthRequestHandler', () => {
   let mockedRequests: nock.Scope[] = [];
-  let stubs: Sinon.SinonStub[] = [];
+  let stubs: sinon.SinonStub[] = [];
   afterEach(() => {
     _.forEach(stubs, (stub) => stub.restore());
     _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());

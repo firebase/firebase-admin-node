@@ -196,7 +196,7 @@ describe('SignedApiRequestHandler', () => {
         {localId: 'uid'},
       ],
     };
-    let stub: Sinon.SinonStub;
+    let stub: sinon.SinonStub;
     beforeEach(() => stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult)));
     afterEach(() => stub.restore());

@@ -396,7 +396,7 @@ describe('Auth', () => {
   });
 
   describe('createCustomToken()', () => {
-    let spy: Sinon.SinonSpy;
+    let spy: sinon.SinonSpy;
     beforeEach(() => {
       spy = sinon.spy(FirebaseTokenGenerator.prototype, 'createCustomToken');
     });
@@ -428,7 +428,7 @@ describe('Auth', () => {
   });
 
   describe('verifyIdToken()', () => {
-    let stub: Sinon.SinonStub;
+    let stub: sinon.SinonStub;
     beforeEach(() => stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifyIdToken').returns(Promise.resolve()));
     afterEach(() => stub.restore());
 
@@ -472,7 +472,7 @@ describe('Auth', () => {
     const expectedUserRecord = getValidUserRecord(expectedGetAccountInfoResult);
     const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
     // Stubs used to simulate underlying api calls.
-    let stubs: Sinon.SinonStub[] = [];
+    let stubs: sinon.SinonStub[] = [];
     afterEach(() => {
       _.forEach(stubs, (stub) => stub.restore());
     });
@@ -531,7 +531,7 @@ describe('Auth', () => {
     const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
 
     // Stubs used to simulate underlying api calls.
-    let stubs: Sinon.SinonStub[] = [];
+    let stubs: sinon.SinonStub[] = [];
     afterEach(() => {
       _.forEach(stubs, (stub) => stub.restore());
     });
@@ -589,7 +589,7 @@ describe('Auth', () => {
     const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
 
     // Stubs used to simulate underlying api calls.
-    let stubs: Sinon.SinonStub[] = [];
+    let stubs: sinon.SinonStub[] = [];
     afterEach(() => {
       _.forEach(stubs, (stub) => stub.restore());
     });
@@ -659,7 +659,7 @@ describe('Auth', () => {
       password: 'password',
     };
     // Stubs used to simulate underlying api calls.
-    let stubs: Sinon.SinonStub[] = [];
+    let stubs: sinon.SinonStub[] = [];
     afterEach(() => {
       _.forEach(stubs, (stub) => stub.restore());
     });
@@ -772,7 +772,7 @@ describe('Auth', () => {
       password: 'password',
     };
     // Stubs used to simulate underlying api calls.
-    let stubs: Sinon.SinonStub[] = [];
+    let stubs: sinon.SinonStub[] = [];
     afterEach(() => {
       _.forEach(stubs, (stub) => stub.restore());
     });
@@ -865,7 +865,7 @@ describe('Auth', () => {
     const expectedDeleteAccountResult = {kind: 'identitytoolkit#DeleteAccountResponse'};
 
     // Stubs used to simulate underlying api calls.
-    let stubs: Sinon.SinonStub[] = [];
+    let stubs: sinon.SinonStub[] = [];
     afterEach(() => {
       _.forEach(stubs, (stub) => stub.restore());
     });
@@ -1120,7 +1120,7 @@ describe('Auth', () => {
   });
 
   describe('INTERNAL.getToken()', () => {
-    let spy: Sinon.SinonSpy;
+    let spy: sinon.SinonSpy;
 
     beforeEach(() => spy = sinon.spy(https, 'request'));
     afterEach(() => spy.restore());
