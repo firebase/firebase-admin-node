@@ -52,7 +52,6 @@ describe('HttpRequestHandler', () => {
   const data = {key: 'value'};
   const headers = {
     'Content-Type': 'application/json',
-    'Content-Length': JSON.stringify(data).length,
   };
   const options = {
     method: httpMethod,

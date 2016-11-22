@@ -39,7 +39,6 @@ export class HttpRequestHandler {
       } catch (e) {
         return Promise.reject(e);
       }
-      headers['Content-Length'] = requestData.length;
     }
     const options = {
       method: httpMethod,
