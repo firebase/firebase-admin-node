@@ -104,7 +104,7 @@ export class FirebaseTokenGenerator {
    */
   public verifyIdToken(idToken: string): Promise<Object> {
     if (typeof idToken !== 'string') {
-      throw new Error('First argument to verifyIdToken() must be a Firebase ID token');
+      throw new Error('First argument to verifyIdToken() must be a Firebase ID token string');
     }
 
     if (typeof this.certificate_.projectId !== 'string' || this.certificate_.projectId === '') {
