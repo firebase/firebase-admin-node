@@ -1,6 +1,6 @@
 {
   "name": "firebase-admin",
-  "version": "4.0.3",
+  "version": "4.0.4",
   "dependencies": {
     "@types/jsonwebtoken": {
       "version": "7.1.33",
@@ -8,14 +8,9 @@
       "resolved": "https://registry.npmjs.org/@types/jsonwebtoken/-/jsonwebtoken-7.1.33.tgz"
     },
     "@types/node": {
-      "version": "6.0.49",
+      "version": "0.0.2",
       "from": "@types/node@*",
-      "resolved": "https://registry.npmjs.org/@types/node/-/node-6.0.49.tgz"
-    },
-    "base64-url": {
-      "version": "1.3.3",
-      "from": "base64-url@>=1.2.1 <2.0.0",
-      "resolved": "https://registry.npmjs.org/base64-url/-/base64-url-1.3.3.tgz"
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-0.0.2.tgz"
     },
     "base64url": {
       "version": "2.0.0",
@@ -28,9 +23,9 @@
       "resolved": "https://registry.npmjs.org/buffer-equal-constant-time/-/buffer-equal-constant-time-1.0.1.tgz"
     },
     "ecdsa-sig-formatter": {
-      "version": "1.0.7",
-      "from": "ecdsa-sig-formatter@1.0.7",
-      "resolved": "https://registry.npmjs.org/ecdsa-sig-formatter/-/ecdsa-sig-formatter-1.0.7.tgz"
+      "version": "1.0.9",
+      "from": "ecdsa-sig-formatter@1.0.9",
+      "resolved": "https://registry.npmjs.org/ecdsa-sig-formatter/-/ecdsa-sig-formatter-1.0.9.tgz"
     },
     "faye-websocket": {
       "version": "0.9.3",
@@ -58,9 +53,9 @@
       "resolved": "https://registry.npmjs.org/jsonwebtoken/-/jsonwebtoken-7.1.9.tgz"
     },
     "jwa": {
-      "version": "1.1.4",
+      "version": "1.1.5",
       "from": "jwa@>=1.1.4 <2.0.0",
-      "resolved": "https://registry.npmjs.org/jwa/-/jwa-1.1.4.tgz"
+      "resolved": "https://registry.npmjs.org/jwa/-/jwa-1.1.5.tgz"
     },
     "jws": {
       "version": "3.1.4",
@@ -73,9 +68,9 @@
       "resolved": "https://registry.npmjs.org/lodash.once/-/lodash.once-4.1.1.tgz"
     },
     "moment": {
-      "version": "2.16.0",
+      "version": "2.17.1",
       "from": "moment@>=2.0.0 <3.0.0",
-      "resolved": "https://registry.npmjs.org/moment/-/moment-2.16.0.tgz"
+      "resolved": "https://registry.npmjs.org/moment/-/moment-2.17.1.tgz"
     },
     "ms": {
       "version": "0.7.2",
