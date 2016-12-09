@@ -1,5 +1,15 @@
 # Contributing | Firebase Admin Node.js SDK
 
+## Table of Contents
+
+1. [Local Setup](#Local-Setup)
+2. [Proposing Changes](#Proposing-Changes)
+3. [Release Process](#Release-Process)
+   1. [Initial Steps](#Initial-Steps)
+   2. [Recurring Steps](#Recurring-Steps)
+4. [Updating Realtime Database Code](#Updating-Realtime-Database-Code)
+5. [Updating Reference Documentation](#Updating-Reference-Documentation)
+
 
 ## Local Setup
 
@@ -64,6 +74,61 @@ $ git commit --amend
 You can then upload your changes back to Gerrit via the same `git push` command listed above.
 
 
+## Release Process
+
+### Initial Steps
+
+1. Email firebase-ops@google.com and vikrum@google.com requesting the following:
+   1. Read access to the
+      [`firebase/firebase-client-js`](https://www.github.com/firebase/firebase-client-js) GitHub
+      repo in order to get the latest Realtime Database code.
+   2. Editor access to the
+      [Firebase Development](https://pantheon.corp.google.com/home/dashboard?project=firebase-dev)
+      GCP project in order to upload new release tarballs.
+   3. Access to the
+      [Firebase SF production Jenkins instance](https://jenkins-firebase-prod.firebaseint.com/) in
+      order to do Catapult deploys.
+
+### Recurring Steps
+
+1. [If needed] Update `src/database/database.js` to the latest commit.
+   1. See [Updating Realtime Database Code](#Updating-Realtime-Database-Code) for details.
+2. Prepare release notes for the upcoming release (e.g.,
+   [cl/141203171](https://critique.corp.google.com/#review/141203171)).
+3. Create a release tarball containing the code that will be shipped.
+   1. Run `$ ./createReleaseTarball.sh X.Y.Z-rc#` where `X.Y.Z` is the SDK's new SemVer version
+      number and `#` is the release candidate version, starting at `0`.
+   2. This will update the `package.json` and `npm-shrinkwrap.json` files as well and create a new
+      tarball named `firebase-admin-X.Y.Z-rc#.tgz`.
+4. Create a CL with the updated `package.json` and `npm-shrinkwrap.json` (e.g.,
+   [gob-cl/56646](https://team-review.git.corp.google.com/#/c/56646/)).
+5. Upload the `firebase-admin-X.Y.Z-rc#.tgz` tarball to the
+   [firebase-admin-node](https://pantheon.corp.google.com/storage/browser/firebase-admin-node/?project=firebase-dev)
+   GCS bucket within the Firebase Development project.
+   1. After uploading, make sure to select "Public link" on the right hand side to ensure the
+      tarball is publicly accessible.
+   2. The tarball can be downloaded via:
+      `$ npm install https://storage.googleapis.com/firebase-admin-node/firebase-admin-X.Y.Z-rc#.tgz`
+   3. When the release is actually going to happen, copy the latest release candidate to
+      `firebase-admin-X.Y.Z.tgz` (note the lack of a `-rc#` suffix).
+6. Deploy the library via [Catapult](https://jenkins-firebase-prod.firebaseint.com/job/catapult/build).
+   1. Select "firebase-admin" from the dropdown.
+   2. Type the version number into the input box.
+   3. Click "Build".
+7. Ping someone with OWNERS approval to publish the release notes to production.
+8. [If needed] Update the reference documentation if the Admin Node.js externs have changed since
+   the last release.
+   1. See [Updating Reference Documentation](#Updating-Reference-Documentation) for details.
+9. Perform some sanity checks.
+   1. Make sure that the Jenkins build succeeded.
+      1. You can view output from the build by clicking on the build in the "Build History" box on
+         the left-hand side and then clicking "Console Output".
+   2. Ensure that the release was actually published to npm.
+      1. `$ npm show firebase-admin version`
+   3. Ensure the [@FirebaseRelease](https://twitter.com/firebaserelease) release tweet went out.
+
+
+
 ## Updating Realtime Database Code
 
 The code for the Realtime Database in [database/database.js](./database/database.js) of this repo
@@ -105,3 +170,30 @@ firebase-ops@google.com with your GitHub username requesting access.
    where `<commit_hash>` is the commit hash from which you copied the file.
 
 8. After ensuring all tests still pass, send a CL containing the updated file.
+
+
+# Updating Reference Documentation
+
+The [reference documentation for this SDK](https://firebase.google.com/docs/reference/admin/node/)
+is generated from
+[extern files](https://cs.corp.google.com/piper///depot/google3/firebase/jscore/api/admin/) located
+in google3. These extern files are the source of truth and should be edited directly.
+
+To turn these extern files into actual HTML files, run the following from the root `google3/`
+directory of a CitC client:
+
+```bash
+$ cd firebase/jscore
+$ source tools/use
+$ regenerate-admin-reference
+```
+
+You can then stage the generated HTML files to
+[staging Devsite](https://firebase-dot-devsite.googleplex.com/docs/reference/admin/node/):
+
+```bash
+$ devsite stage ../../googledata/devsite/site-firebase/en/docs/reference/admin/node/
+```
+
+If things look good on staging Devsite, create a new CL with the updates to the generated files
+(e.g., [cl/141195439](https://critique.corp.google.com/#review/141195439)).
