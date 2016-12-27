@@ -32,13 +32,11 @@ export class UserMetadata {
   private createdAtInternal: Date;
 
   constructor(response: any) {
-    // Creation date is required.
+    // Creation date should always be available but due to some backend bugs there
+    // were cases in the past where users did not have creation date properly set.
+    // This included legacy Firebase migrating project users and some anonymous users.
+    // These bugs have already been addressed since then.
     this.createdAtInternal = parseDate(response.createdAt);
-    if (!this.createdAtInternal) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
-        'INTERNAL ASSERT FAILED: Invalid metadata response');
-    }
     this.lastSignedInAtInternal = parseDate(response.lastLoginAt);
   }
 

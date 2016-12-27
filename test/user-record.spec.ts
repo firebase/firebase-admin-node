@@ -210,22 +210,24 @@ describe('UserMetadata', () => {
   };
 
   describe('constructor', () =>  {
-    it('should throw when no createdAt is provided', () => {
-      expect(() =>  {
-        return new UserMetadata({});
-      }).to.throw(Error);
-    });
-
-    it('should succeed when createdAt is provided', () => {
+    it('should initialize as expected when a valid createdAt is provided', () => {
       expect(() => {
         return new UserMetadata({createdAt: '1476136676000'});
       }).not.to.throw(Error);
     });
 
-    it('should throw when an invalid createdAt is provided', () => {
-      expect(() =>  {
-        return new UserMetadata({createdAt: 'invalid'});
-      }).to.throw(Error);
+    it('should set createdAt and lastSignedInAt to null when not provided', () => {
+      let metadata = new UserMetadata({});
+      expect(metadata.createdAt).to.be.null;
+      expect(metadata.lastSignedInAt).to.be.null;
+    });
+
+    it('should set createdAt to null when createdAt value is invalid', () => {
+      let metadata = new UserMetadata({
+        createdAt: 'invalid',
+      });
+      expect(metadata.createdAt).to.be.null;
+      expect(metadata.lastSignedInAt).to.be.null;
     });
 
     it('should set lastSignedInAt to null when lastLoginAt value is invalid', () => {
@@ -274,21 +276,9 @@ describe('UserRecord', () => {
       }).to.throw(Error);
     });
 
-    it('should throw when only localId is provided', () => {
+    it('should succeed when only localId is provided', () => {
       expect(() =>  {
         return new UserRecord({localId: '123456789'});
-      }).to.throw(Error);
-    });
-
-    it('should throw when only createdAt is provided', () => {
-      expect(() =>  {
-        return new UserRecord({createdAt: '1476136676000'});
-      }).to.throw(Error);
-    });
-
-    it('should succeed when a localId and createdAt are provided', () => {
-      expect(() => {
-        return new UserRecord({localId: '123456789', createdAt: '1476136676000'});
       }).not.to.throw(Error);
     });
   });
