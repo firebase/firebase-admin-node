@@ -29,13 +29,11 @@ var istanbul = require('gulp-istanbul');
 /****************/
 var paths = {
   src: [
-    'src/**/*.ts',
-    'typings/index.d.ts'
+    'src/**/*.ts'
   ],
 
   databaseSrc: [
-    'src/**/*.js',
-    'src/**/*.d.ts'
+    'src/**/*.js'
   ],
 
   tests: [
@@ -106,10 +104,22 @@ gulp.task('copyDatabase', function() {
     .pipe(gulp.dest(paths.build))
 });
 
+gulp.task('copyTypings', function() {
+  return gulp.src('src/index.d.ts')
+    // Add header
+    .pipe(header(banner))
+
+    // Write to build directory
+    .pipe(gulp.dest(paths.build))
+});
+
 // Lints the source and test files
 gulp.task('lint', function() {
   let filesToLint = _.clone(paths.src.concat(paths.tests));
-  filesToLint.splice(filesToLint.indexOf('typings/index.d.ts'), 1)
+
+  // Don't lint the hand-crafted TypeScript typings file
+  filesToLint.push('!src/index.d.ts');
+
   return gulp.src(filesToLint)
     .pipe(tslint())
     .pipe(tslint.report({
@@ -155,7 +165,7 @@ gulp.task('watch', function() {
 
 // Build task
 gulp.task('build', function(done) {
-  runSequence('cleanup', 'compile', 'copyDatabase', function(error) {
+  runSequence('cleanup', 'compile', 'copyDatabase', 'copyTypings', function(error) {
     done(error && error.err);
   });
 });

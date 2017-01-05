@@ -5,7 +5,8 @@
     "noImplicitAny": false,
     "lib": ["es5", "es2015.promise"],
     "outDir": "lib",
-    "declaration": true,
+    // We manually craft typings in src/index.d.ts instead of auto-generating them.
+    // "declaration": true,
     "rootDir": "."
   },
   "files": [
