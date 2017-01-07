@@ -16,7 +16,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from './utils';
 import * as mocks from './resources/mocks';
 
-import {Auth} from '../src/auth/auth';
+import {Auth, FirebaseAccessToken} from '../src/auth/auth';
 import {Certificate, CertCredential} from '../src/auth/credential';
 import {FirebaseNamespace} from '../src/firebase-namespace';
 import {GoogleOAuthAccessToken} from '../src/auth/credential';
@@ -1170,7 +1170,7 @@ describe('Auth', () => {
 
   describe('INTERNAL.addAuthTokenListener()', () => {
     it('does not fire if there is no cached token', () => {
-      const events = [];
+      const events: string[] = [];
       const auth = createAuthWithPath();
       auth.INTERNAL.addAuthTokenListener(events.push.bind(events));
       expect(events).to.be.empty;
@@ -1179,7 +1179,7 @@ describe('Auth', () => {
     it('is notified when the token changes', () => {
       mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
-      const events = [];
+      const events: string[] = [];
       const auth = createAuthWithPath();
       auth.INTERNAL.addAuthTokenListener(events.push.bind(events));
       return auth.INTERNAL.getToken().then((token) => {
@@ -1190,8 +1190,8 @@ describe('Auth', () => {
     it('can be called twice', () => {
       mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
-      const events1 = [];
-      const events2 = [];
+      const events1: string[] = [];
+      const events2: string[] = [];
       const auth = createAuthWithPath();
       auth.INTERNAL.addAuthTokenListener(events1.push.bind(events1));
       auth.INTERNAL.addAuthTokenListener(events2.push.bind(events2));
@@ -1205,7 +1205,7 @@ describe('Auth', () => {
       mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
       mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
-      const events = [];
+      const events: string[] = [];
       const auth = createAuthWithPath();
       auth.INTERNAL.addAuthTokenListener(events.push.bind(events));
       return auth.INTERNAL.getToken().then((token) => {
@@ -1233,18 +1233,18 @@ describe('Auth', () => {
       mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
       mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
-      const events1 = [];
-      const events2 = [];
+      const events1: string[] = [];
+      const events2: string[] = [];
       const auth = createAuthWithPath();
-      const listener1 = (token) => { events1.push(token); };
-      const listener2 = (token) => { events2.push(token); };
+      const listener1 = (token: string) => { events1.push(token); };
+      const listener2 = (token: string) => { events2.push(token); };
       auth.INTERNAL.addAuthTokenListener(listener1);
       auth.INTERNAL.addAuthTokenListener(listener2);
-      return auth.INTERNAL.getToken().then((token) => {
+      return auth.INTERNAL.getToken().then((token: FirebaseAccessToken) => {
         expect(events1).to.deep.equal([token.accessToken]);
         expect(events2).to.deep.equal([token.accessToken]);
         auth.INTERNAL.removeAuthTokenListener(listener1);
-        return auth.INTERNAL.getToken(true).then((newToken) => {
+        return auth.INTERNAL.getToken(true).then((newToken: FirebaseAccessToken) => {
           expect(events1).to.deep.equal([token.accessToken]);
           expect(events2).to.deep.equal([token.accessToken, newToken.accessToken]);
         });

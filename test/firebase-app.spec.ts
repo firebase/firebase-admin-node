@@ -32,7 +32,7 @@ function mockServiceFactory(app: FirebaseApp): FirebaseServiceInterface {
 describe('FirebaseApp', () => {
   let mockApp: FirebaseApp;
   let firebaseNamespace: FirebaseNamespace;
-  let firebaseNamespaceInternals;
+  let firebaseNamespaceInternals: FirebaseNamespaceInternals;
 
   beforeEach(() => {
     firebaseNamespace = new FirebaseNamespace();

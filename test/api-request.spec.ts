@@ -32,9 +32,9 @@ const certPath = path.resolve(__dirname, 'resources/mock.key.json');
 const MOCK_CERTIFICATE_OBJECT = JSON.parse(fs.readFileSync(certPath).toString());
 
 describe('HttpRequestHandler', () => {
-  let httpStub;
-  let request;
-  let writeSpy;
+  let httpStub: sinon.SinonStub;
+  let request: MockStream;
+  let writeSpy: sinon.SinonSpy;
   beforeEach(() => {
     request = new MockStream();
     httpStub = sinon.stub(https, 'request');

@@ -98,7 +98,7 @@ function mockFailedFetchPublicKeys(): nock.Scope {
  * @param {Object} publicKey The public key to use to verify the token.
  * @return {Promise<Object>} A promise fulfilled with the decoded token if it is valid; otherwise, a rejected promise.
  */
-function verifyToken(token, publicKey): Promise<Object> {
+function verifyToken(token: string, publicKey: string): Promise<Object> {
   return new Promise((resolve, reject) => {
     jwt.verify(token, publicKey, {
       algorithms: [ALGORITHM],
@@ -114,10 +114,10 @@ function verifyToken(token, publicKey): Promise<Object> {
 
 
 describe('FirebaseTokenGenerator', () => {
-  let tokenGenerator;
+  let tokenGenerator: FirebaseTokenGenerator;
 
-  let clock;
-  let httpsSpy;
+  let clock: sinon.SinonFakeTimers;
+  let httpsSpy: sinon.SinonSpy;
   beforeEach(() => {
     tokenGenerator = new FirebaseTokenGenerator(new Certificate(mocks.certificateObject));
     httpsSpy = sinon.spy(https, 'get');
@@ -381,7 +381,7 @@ describe('FirebaseTokenGenerator', () => {
 
 
   describe('verifyIdToken()', () => {
-    let mockedRequests = [];
+    let mockedRequests: nock.Scope[] = [];
 
     afterEach(() => {
       _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());

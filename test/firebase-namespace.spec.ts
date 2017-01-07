@@ -20,7 +20,7 @@ const DEFAULT_APP_NAME = '[DEFAULT]';
 
 
 describe('FirebaseNamespace', () => {
-  let firebaseNamespace;
+  let firebaseNamespace: FirebaseNamespace;
 
   beforeEach(() => {
     firebaseNamespace = new FirebaseNamespace();
