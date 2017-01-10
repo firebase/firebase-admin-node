@@ -31,20 +31,6 @@ function getCredential(app: FirebaseApp): Credential {
   }
 }
 
-/**
- * Interface representing single user write queue.
- */
-interface SingleUserWriteQueue {
-  pending: number;
-  queue: Promise<any>;
-}
-
-/**
- * Interface representing the write queue map for users identified by uid.
- */
-interface UserWriteMap {
-  [uid: string]: SingleUserWriteQueue;
-}
 
 /**
  * Auth service bound to the provided app.
@@ -57,7 +43,6 @@ class Auth implements FirebaseServiceInterface {
   private tokenGenerator_: FirebaseTokenGenerator;
   private authTokenManager_: AuthTokenManager;
   private authRequestHandler: FirebaseAuthRequestHandler;
-  private userWriteMap: UserWriteMap;
 
   constructor(app: FirebaseApp) {
     if (typeof app !== 'object' || !('options' in app)) {
@@ -86,15 +71,6 @@ class Auth implements FirebaseServiceInterface {
     }
     // Initialize auth request handler with the credential.
     this.authRequestHandler = new FirebaseAuthRequestHandler(credential);
-    // Initialize user record write map (uid to queue).
-    // Firebase auth backend does not lock transactions running on the same user record.
-    // Edits on the same user record could overwrite each other, depending on the last one
-    // to execute.
-    // Multiple create user requests with the same email could create multiple
-    // records where one will always be used depending on the backend lookup algorithm.
-    // This promise queue ensures user record writes are serialized.
-    // TODO(bojeil): Remove this logic (b/32584015) which is currently blocked by b/32556583
-    this.userWriteMap = {};
   }
 
   get app(): FirebaseApp {
@@ -200,8 +176,10 @@ class Auth implements FirebaseServiceInterface {
    * @return {Promise<void>} A promise that resolves when the user is successfully deleted.
    */
   public deleteUser(uid: string): Promise<void> {
-    // Add to queue and wait for it to execute.
-    return this.serializeApiRequest(uid, this.deleteUserUnserialized.bind(this, uid));
+    return this.authRequestHandler.deleteAccount(uid)
+      .then((response) => {
+        // Return nothing on success.
+      });
   };
 
   /**
@@ -212,85 +190,11 @@ class Auth implements FirebaseServiceInterface {
    * @return {Promise<UserRecord>} A promise that resolves with the modified user record.
    */
   public updateUser(uid: string, properties: Object): Promise<UserRecord> {
-    // Add to queue and wait for it to execute.
-    return this.serializeApiRequest(
-        uid, this.updateUserUnserialized.bind(this, uid, properties));
-  };
-
-  /**
-   * Deletes the user identified by the provided user id and returns a promise that is
-   * fulfilled when the user is found and successfully deleted.
-   * This will run without being serialized in the user write queue.
-   *
-   * @param {string} uid The uid of the user to delete.
-   * @return {Promise<void>} A promise that resolves when the user is successfully deleted.
-   */
-  private deleteUserUnserialized(uid: string): Promise<void> {
-    return this.authRequestHandler.deleteAccount(uid)
-      .then((response) => {
-        // Return nothing on success.
-      });
-  };
-
-  /**
-   * Updates an existing user with the properties provided.
-   * This will run without being serialized in the user write queue.
-   *
-   * @param {string} uid The uid identifier of the user to update.
-   * @param {Object} properties The properties to update on the existing user.
-   * @return {Promise<UserRecord>} A promise that resolves with the modified user record.
-   */
-  private updateUserUnserialized(uid: string, properties: Object): Promise<UserRecord> {
     return this.authRequestHandler.updateExistingAccount(uid, properties)
       .then((existingUid) => {
         // Return the corresponding user record.
         return this.getUser(existingUid);
       });
-  };
-
-  /**
-   * @param {string} uid The uid identifier of the request.
-   * @param {() => Promise<any>} boundFn Promise returning function to queue with this
-   *     context and arguments already bound.
-   * @return {Promise<any>} The resulting promise which resolves when all pending previous
-   *     promises on the same user are resolved.
-   */
-  private serializeApiRequest(
-      uid: string,
-      boundFn: () => Promise<any>): Promise<any> {
-    // Check if there is a pending queue for the current user.
-    // If not initialize one.
-    if (typeof this.userWriteMap[uid] === 'undefined') {
-      this.userWriteMap[uid] = {
-        queue: Promise.resolve(),
-        pending: 0,
-      };
-    }
-    // Increment pending counter for current user.
-    this.userWriteMap[uid].pending++;
-    this.userWriteMap[uid].queue = this.userWriteMap[uid].queue
-      .then(() => {
-        return boundFn();
-      }, (error) => {
-        return boundFn();
-      })
-      // On completion, cleanup user queue if no other pending promises found.
-      .then((result) => {
-        // Clean up any user specific queues that are no longer pending.
-        if (--this.userWriteMap[uid].pending === 0) {
-          delete this.userWriteMap[uid];
-        }
-        // Funnel result back.
-        return result;
-      }, (error) => {
-        // Clean up any user specific queues that are no longer pending.
-        if (--this.userWriteMap[uid].pending === 0) {
-          delete this.userWriteMap[uid];
-        }
-        // Rethrow error.
-        throw error;
-      });
-    return this.userWriteMap[uid].queue;
   };
 };
 
