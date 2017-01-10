@@ -202,9 +202,14 @@ export const FIREBASE_AUTH_UPLOAD_ACCOUNT = new ApiSettings('uploadAccount', 'PO
         typeof response.error[0].message === 'string') {
       // Get error description.
       if (response.error[0].message.indexOf('can not overwrite') !== -1) {
-        // Duplicate user error
+        // Duplicate user error.
         throw new FirebaseAuthError(
           AuthClientErrorCode.UID_ALREADY_EXISTS,
+          response.error[0].message);
+      } else if (response.error[0].message.indexOf('email exists') !== -1) {
+        // Email exists error.
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.EMAIL_ALREADY_EXISTS,
           response.error[0].message);
       }
       throw new FirebaseAuthError(

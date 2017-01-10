@@ -1051,6 +1051,39 @@ describe('FirebaseAuthRequestHandler', () => {
           });
       });
 
+      it('should be rejected when the backend returns an email exists error', () => {
+        // Expected error when the email already exists.
+        const expectedError = new FirebaseAuthError(
+          AuthClientErrorCode.EMAIL_ALREADY_EXISTS,
+          'email exists in other account in database');
+        const expectedResult = {
+          error: [
+            {
+              index: 0,
+              message: 'email exists in other account in database',
+            },
+          ],
+        };
+
+        let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+          .returns(Promise.resolve(expectedResult));
+        stubs.push(stub);
+
+        mockedRequests.push(mockFetchAccessTokenViaJwt(accessToken));
+        const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
+        const requestHandler = new FirebaseAuthRequestHandler(cred);
+        // Send create new account request and simulate a backend error that the email
+        // already exists.
+        return requestHandler.createNewAccount(validData)
+          .then((returnedUid: string) => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            expect(error).to.deep.equal(expectedError);
+            expect(stub).to.have.been.calledOnce.and.calledWith(
+                host, port, path, httpMethod, expectedValidData, headers, timeout);
+          });
+      });
+
       it('should be rejected when the backend returns a generic error', () => {
         // Some generic backend error.
         const expectedError = FirebaseAuthError.fromServerError('INTERNAL_SERVER_ERROR');
