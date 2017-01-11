@@ -77,8 +77,125 @@ describe('Firebase', () => {
       expect(optionsClone).to.deep.equal(mocks.appOptions);
     });
 
-    describe('serviceAccount key', () => {
-      it('should initialize SDK given a service account object', () => {
+    describe('"serviceAccount" key', () => {
+      const invalidServiceAccounts = [undefined, null, NaN, 0, 1, true, false, _.noop];
+      invalidServiceAccounts.forEach((invalidServiceAccount) => {
+        it('should throw given invalid service account: ' + JSON.stringify(invalidServiceAccount), () => {
+          expect(() => {
+            firebaseAdmin.initializeApp({
+              serviceAccount: invalidServiceAccount,
+            });
+          }).to.throw('Invalid Firebase app options');
+        });
+      });
+
+      it('should throw if service account points to an invalid path', () => {
+        expect(() => {
+          firebaseAdmin.initializeApp({
+            serviceAccount: 'invalid-file',
+          });
+        }).to.throw('Failed to parse certificate key file');
+      });
+
+      it('should throw if service account is an empty string', () => {
+        expect(() => {
+          firebaseAdmin.initializeApp({
+            serviceAccount: '',
+          });
+        }).to.throw('Failed to parse certificate key file');
+      });
+
+      it('should throw if certificate object does not contain a valid "client_email"', () => {
+        const mockCertificateObject = _.clone(mocks.certificateObject);
+        mockCertificateObject.client_email = '';
+
+        expect(() => {
+          firebaseAdmin.initializeApp({
+            serviceAccount: mockCertificateObject,
+          });
+        }).to.throw('Certificate object must contain a string "client_email" property');
+
+        delete mockCertificateObject.client_email;
+
+        expect(() => {
+          firebaseAdmin.initializeApp({
+            serviceAccount: mockCertificateObject,
+          });
+        }).to.throw('Certificate object must contain a string "client_email" property');
+      });
+
+      it('should throw if certificate object does not contain a valid "private_key"', () => {
+        const mockCertificateObject = _.clone(mocks.certificateObject);
+        mockCertificateObject.private_key = '';
+
+        expect(() => {
+          firebaseAdmin.initializeApp({
+            serviceAccount: mockCertificateObject,
+          });
+        }).to.throw('Certificate object must contain a string "private_key" property');
+
+        delete mockCertificateObject.private_key;
+
+        expect(() => {
+          firebaseAdmin.initializeApp({
+            serviceAccount: mockCertificateObject,
+          });
+        }).to.throw('Certificate object must contain a string "private_key" property');
+      });
+
+      it('should not throw given a valid path to a certificate key file', () => {
+        expect(() => {
+          firebaseAdmin.initializeApp({
+            serviceAccount: path.resolve(__dirname, 'resources/mock.key.json'),
+          });
+        }).not.to.throw();
+      });
+
+      it('should not throw given a valid certificate object', () => {
+        expect(() => {
+          firebaseAdmin.initializeApp({
+            serviceAccount: mocks.certificateObject,
+          });
+        }).not.to.throw();
+      });
+
+      it('should accept "clientEmail" in place of "client_email" within the certificate object', () => {
+        const mockCertificateObject = _.clone(mocks.certificateObject);
+        mockCertificateObject.clientEmail = mockCertificateObject.client_email;
+        delete mockCertificateObject.client_email;
+
+        expect(() => {
+          firebaseAdmin.initializeApp({
+            serviceAccount: mockCertificateObject,
+          });
+        }).not.to.throw();
+      });
+
+      it('should accept "privateKey" in place of "private_key" within the certificate object', () => {
+        const mockCertificateObject = _.clone(mocks.certificateObject);
+        mockCertificateObject.privateKey = mockCertificateObject.private_key;
+        delete mockCertificateObject.private_key;
+
+        expect(() => {
+          firebaseAdmin.initializeApp({
+            serviceAccount: mockCertificateObject,
+          });
+        }).not.to.throw();
+      });
+
+      it('should not mutate the provided certificate object', () => {
+        const mockCertificateObject = _.clone(mocks.certificateObject);
+
+        expect(() => {
+          firebaseAdmin.initializeApp({
+            serviceAccount: mocks.certificateObject,
+          });
+        }).not.to.throw();
+
+        expect(mocks.certificateObject).to.deep.equal(mockCertificateObject);
+      });
+
+      it('should initialize SDK given a certificate object', () => {
         mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
         firebaseAdmin.initializeApp({
@@ -89,7 +206,7 @@ describe('Firebase', () => {
           .should.eventually.have.keys(['accessToken', 'expirationTime']);
       });
 
-      it('should initialize SDK given a service account filename', () => {
+      it('should initialize SDK given a valid path to a certificate key file', () => {
         mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
         firebaseAdmin.initializeApp({
@@ -101,8 +218,37 @@ describe('Firebase', () => {
       });
     });
 
-    describe('credential key', () => {
-      it('should initialize SDK given a cert credential with a service account object', () => {
+    describe('"credential" key', () => {
+      const invalidCredentials = [undefined, null, NaN, 0, 1, '', 'a', true, false, '', _.noop];
+      invalidCredentials.forEach((invalidCredential) => {
+        it('should throw given non-object credential: ' + JSON.stringify(invalidCredential), () => {
+          expect(() => {
+            firebaseAdmin.initializeApp({
+              credential: invalidCredential as any,
+            });
+          }).to.throw('Invalid Firebase app options');
+        });
+      });
+
+      it('should throw given a credential which doesn\'t implement the Credential interface', () => {
+        expect(() => {
+          firebaseAdmin.initializeApp({
+            credential: {
+              foo: () => null,
+            },
+          } as any);
+        }).to.throw('Invalid Firebase app options');
+
+        expect(() => {
+          firebaseAdmin.initializeApp({
+            credential: {
+              getAccessToken: true,
+            },
+          } as any);
+        }).to.throw('Invalid Firebase app options');
+      });
+
+      it('should initialize SDK given a cert credential with a certificate object', () => {
         mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
         firebaseAdmin.initializeApp({
@@ -110,10 +256,10 @@ describe('Firebase', () => {
         });
 
         return (firebaseAdmin.app().auth().INTERNAL as any).getToken()
-            .should.eventually.have.keys(['accessToken', 'expirationTime']);
+          .should.eventually.have.keys(['accessToken', 'expirationTime']);
       });
 
-      it('should initialize SDK given a cert credential with service account filename', () => {
+      it('should initialize SDK given a cert credential with a valid path to a certificate key file', () => {
         mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
         const keyPath = path.resolve(__dirname, 'resources/mock.key.json');
@@ -122,7 +268,7 @@ describe('Firebase', () => {
         });
 
         return (firebaseAdmin.app().auth().INTERNAL as any).getToken()
-            .should.eventually.have.keys(['accessToken', 'expirationTime']);
+          .should.eventually.have.keys(['accessToken', 'expirationTime']);
       });
 
       it('should initialize SDK given an application default credential', () => {

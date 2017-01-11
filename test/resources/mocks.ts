@@ -9,6 +9,7 @@ import * as _ from 'lodash';
 import * as jwt from 'jsonwebtoken';
 
 import {CertCredential} from '../../src/auth/credential';
+import {FirebaseNamespace} from '../../src/firebase-namespace';
 import {FirebaseServiceInterface} from '../../src/firebase-service';
 import {FirebaseApp, FirebaseAppOptions} from '../../src/firebase-app';
 
@@ -40,6 +41,8 @@ export let appOptionsNoAuth: FirebaseAppOptions = {
 export let appOptionsNoDatabaseUrl: FirebaseAppOptions = {
   credential,
 };
+
+export let app = new FirebaseApp(appOptions, appName, new FirebaseNamespace().INTERNAL);
 
 export let refreshToken = {
   clientId: 'mock-client-id',
@@ -88,9 +91,12 @@ export function generateIdToken(overrides?: Object): string {
   return jwt.sign(developerClaims, certificateObject.private_key, options);
 }
 
-export function firebaseServiceFactory(app: FirebaseApp, extendApp: (props: Object) => void): FirebaseServiceInterface {
+export function firebaseServiceFactory(
+  firebaseApp: FirebaseApp,
+  extendApp: (props: Object) => void
+): FirebaseServiceInterface {
   return {
-    app,
+    app: firebaseApp,
     INTERNAL: {},
   } as FirebaseServiceInterface;
 }

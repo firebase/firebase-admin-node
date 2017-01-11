@@ -124,10 +124,6 @@ class AuthClientErrorCode {
     code: 'invalid-photo-url',
     message: 'The photoURL field must be a valid URL.',
   };
-  public static INVALID_SERVICE_ACCOUNT = {
-    code: 'invalid-service-account',
-    message: 'The service account provided is invalid.',
-  };
   public static INVALID_UID = {
     code: 'invalid-uid',
     message: 'The uid must be a non-empty string with at most 128 characters.',

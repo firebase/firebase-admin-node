@@ -154,34 +154,34 @@ describe('FirebaseTokenGenerator', () => {
       });
     });
 
-    it('should throw given an object without a "private_key" field', () => {
+    it('should throw given an object without a "private_key" property', () => {
       const invalidCertificate = _.omit(mocks.certificateObject, 'private_key');
       expect(() => {
         return new FirebaseTokenGenerator(new Certificate(invalidCertificate as any));
-      }).to.throw('Service account key must contain a string "private_key" field');
+      }).to.throw('Certificate object must contain a string "private_key" property');
     });
 
-    it('should throw given an object with an empty string "private_key" field', () => {
+    it('should throw given an object with an empty string "private_key" property', () => {
       let invalidCertificate = _.clone(mocks.certificateObject);
       invalidCertificate.private_key = '';
       expect(() => {
         return new FirebaseTokenGenerator(new Certificate(invalidCertificate as any));
-      }).to.throw('Service account key must contain a string "private_key" field');
+      }).to.throw('Certificate object must contain a string "private_key" property');
     });
 
-    it('should throw given an object without a "client_email" field', () => {
+    it('should throw given an object without a "client_email" property', () => {
       const invalidCertificate = _.omit(mocks.certificateObject, 'client_email');
       expect(() => {
         return new FirebaseTokenGenerator(new Certificate(invalidCertificate as any));
-      }).to.throw('Service account key must contain a string "client_email" field');
+      }).to.throw('Certificate object must contain a string "client_email" property');
     });
 
-    it('should throw given an object without an empty string "client_email" field', () => {
+    it('should throw given an object without an empty string "client_email" property', () => {
       const invalidCertificate = _.clone(mocks.certificateObject);
       invalidCertificate.client_email = '';
       expect(() => {
         return new FirebaseTokenGenerator(new Certificate(invalidCertificate as any));
-      }).to.throw('Service account key must contain a string "client_email" field');
+      }).to.throw('Certificate object must contain a string "client_email" property');
     });
 
     it('should not throw given a valid certificate', () => {
@@ -192,7 +192,7 @@ describe('FirebaseTokenGenerator', () => {
       }).not.to.throw();
     });
 
-    it('should not throw given an object representing a service account key', () => {
+    it('should not throw given an object representing a certificate key', () => {
       expect(() => {
         return new FirebaseTokenGenerator(mocks.certificateObject);
       }).not.to.throw();

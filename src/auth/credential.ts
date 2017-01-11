@@ -81,19 +81,19 @@ export class RefreshToken {
     copyAttr(this, json, 'type', 'type');
 
     if (typeof this.clientId !== 'string' || !this.clientId) {
-      throw new Error('Refresh token must contain a "client_id" field');
+      throw new Error('Refresh token must contain a "client_id" property');
     } else if (typeof this.clientSecret !== 'string' || !this.clientSecret) {
-      throw new Error('Refresh token must contain a "client_secret" field');
+      throw new Error('Refresh token must contain a "client_secret" property');
     } else if (typeof this.refreshToken !== 'string' || !this.refreshToken) {
-      throw new Error('Refresh token must contain a "refresh_token" field');
+      throw new Error('Refresh token must contain a "refresh_token" property');
     } else if (typeof this.type !== 'string' || !this.type) {
-      throw new Error('Refresh token must contain a "type" field');
+      throw new Error('Refresh token must contain a "type" property');
     }
   }
 }
 
 /**
- * A struct containing the fields necessary to use service-account JSON credentials.
+ * A struct containing the properties necessary to use service-account JSON credentials.
  */
 export class Certificate {
   public projectId: string;
@@ -105,21 +105,23 @@ export class Certificate {
       return new Certificate(JSON.parse(fs.readFileSync(path, 'utf8')));
     } catch (error) {
       // Throw a nicely formed error message if the file contents cannot be parsed
-      throw new Error('Failed to parse service account key file: ' + error);
+      throw new Error('Failed to parse certificate key file: ' + error);
     }
   }
 
   constructor(json: Object) {
-    // TODO: validate Certificate
+    if (typeof json !== 'object' || json === null) {
+      throw new Error('Certificate object must be an object.');
+    }
 
     copyAttr(this, json, 'projectId', 'project_id');
     copyAttr(this, json, 'privateKey', 'private_key');
     copyAttr(this, json, 'clientEmail', 'client_email');
 
     if (typeof this.privateKey !== 'string' || !this.privateKey) {
-      throw new Error('Service account key must contain a string "private_key" field');
+      throw new Error('Certificate object must contain a string "private_key" property');
     } else if (typeof this.clientEmail !== 'string' || !this.clientEmail) {
-      throw new Error('Service account key must contain a string "client_email" field');
+      throw new Error('Certificate object must contain a string "client_email" property');
     }
   }
 }

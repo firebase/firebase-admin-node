@@ -1,7 +1,6 @@
 'use strict';
 
 // Use untyped import syntax for Node built-ins
-import fs = require('fs');
 import path = require('path');
 import https = require('https');
 
@@ -30,9 +29,6 @@ chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
-const certPath = path.resolve(__dirname, 'resources/mock.key.json');
-const MOCK_CERTIFICATE_OBJECT = JSON.parse(fs.readFileSync(certPath).toString());
-
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 
 
@@ -45,34 +41,6 @@ const ONE_HOUR_IN_SECONDS = 60 * 60;
 function createAppWithOptions(options: Object) {
   const mockFirebaseNamespaceInternals = new FirebaseNamespace().INTERNAL;
   return new FirebaseApp(options as FirebaseAppOptions, mocks.appName, mockFirebaseNamespaceInternals);
-}
-
-/**
- * Returns a new Auth instance from a service account in object form.
- *
- * @return {Auth} A new Auth instance.
- */
-function createAuthWithObject() {
-  const app = createAppWithOptions({
-    credential: new CertCredential({
-      project_id: mocks.projectId,
-      private_key: MOCK_CERTIFICATE_OBJECT.private_key,
-      client_email: MOCK_CERTIFICATE_OBJECT.client_email,
-    }),
-  });
-  return new Auth(app);
-}
-
-/**
- * Returns a new Auth instance from a service account in path form.
- *
- * @return {Auth} A new Auth instance.
- */
-function createAuthWithPath() {
-  const app = createAppWithOptions({
-    credential: new CertCredential(path.resolve(__dirname, 'resources/mock.key.json')),
-  });
-  return new Auth(app);
 }
 
 
@@ -151,164 +119,6 @@ describe('Auth', () => {
   });
 
   describe('Constructor', () => {
-    it('should throw given no app', () => {
-      expect(() => {
-        // We must defeat the type system to successfully even compile this line.
-        const authAny: any = Auth;
-        return new authAny();
-      }).to.throw('First parameter to Auth constructor must be an instance of FirebaseApp');
-    });
-
-    describe('with service account', () => {
-      const invalidServiceAccounts = [null, NaN, 0, 1, true, false, '', 'a', [], {}, { a: 1 }, _.noop];
-      invalidServiceAccounts.forEach((invalidServiceAccount) => {
-        it('should throw given invalid service account: ' + JSON.stringify(invalidServiceAccount), () => {
-          const app = createAppWithOptions({
-            serviceAccount: invalidServiceAccount,
-          });
-
-          expect(() => {
-            return new Auth(app);
-          }).to.throw(Error);
-        });
-      });
-
-      it('should throw if service account points to an invalid path', () => {
-        const app = createAppWithOptions({
-          serviceAccount: 'invalid-file',
-        });
-
-        expect(() => {
-          return new Auth(app);
-        }).to.throw('Failed to parse service account key file');
-      });
-
-      it('should throw if service account is an empty string', () => {
-        const app = createAppWithOptions({
-          serviceAccount: '',
-        });
-
-        expect(() => {
-          return new Auth(app);
-        }).to.throw('Failed to parse service account key file');
-      });
-
-      it('should throw if service account is does not contain a valid "client_email"', () => {
-        let app = createAppWithOptions({
-          serviceAccount: {
-            client_email: '',
-            private_key: MOCK_CERTIFICATE_OBJECT.private_key,
-          },
-        });
-
-        expect(() => {
-          return new Auth(app);
-        }).to.throw('Service account key must contain a string "client_email" field');
-
-        app = createAppWithOptions({
-          serviceAccount: {
-            private_key: MOCK_CERTIFICATE_OBJECT.private_key,
-          },
-        });
-
-        expect(() => {
-          return new Auth(app);
-        }).to.throw('Service account key must contain a string "client_email" field');
-      });
-
-      it('should throw if service account is does not contain a valid "private_key"', () => {
-        let app = createAppWithOptions({
-          serviceAccount: {
-            client_email: MOCK_CERTIFICATE_OBJECT.client_email,
-            private_key: '',
-          },
-        });
-
-        expect(() => {
-          return new Auth(app);
-        }).to.throw('Service account key must contain a string "private_key" field');
-
-        app = createAppWithOptions({
-          serviceAccount: {
-            client_email: MOCK_CERTIFICATE_OBJECT.client_email,
-          },
-        });
-
-        expect(() => {
-          return new Auth(app);
-        }).to.throw('Service account key must contain a string "private_key" field');
-      });
-
-      it('should not throw given a valid path to a service account', () => {
-        const app = createAppWithOptions({
-          credential: new CertCredential(path.resolve(__dirname, 'resources/mock.key.json')),
-        });
-
-        expect(() => {
-          return new Auth(app);
-        }).not.to.throw();
-      });
-
-      it('should not throw given a valid service account object', () => {
-        const app = createAppWithOptions({
-          credential: new CertCredential({
-            private_key: MOCK_CERTIFICATE_OBJECT.private_key,
-            client_email: MOCK_CERTIFICATE_OBJECT.client_email,
-          }),
-        });
-
-        expect(() => {
-          return new Auth(app);
-        }).not.to.throw();
-      });
-
-      it('should accept "clientEmail" in place of "client_email" for the service account', () => {
-        const app = createAppWithOptions({
-          credential: new CertCredential({
-            private_key: MOCK_CERTIFICATE_OBJECT.private_key,
-            clientEmail: MOCK_CERTIFICATE_OBJECT.client_email,
-          }),
-        });
-
-        expect(() => {
-          return new Auth(app);
-        }).not.to.throw();
-      });
-
-      it('should accept "privateKey" in place of "private_key" for the service account', () => {
-        const app = createAppWithOptions({
-          credential: new CertCredential({
-            privateKey: MOCK_CERTIFICATE_OBJECT.private_key,
-            client_email: MOCK_CERTIFICATE_OBJECT.client_email,
-          }),
-        });
-
-        expect(() => {
-          return new Auth(app);
-        }).not.to.throw();
-      });
-
-      it('should not mutate the provided service account object', () => {
-        const serviceAccount = {
-          privateKey: MOCK_CERTIFICATE_OBJECT.private_key,
-          clientEmail: MOCK_CERTIFICATE_OBJECT.client_email,
-        };
-        const serviceAccountClone = _.clone(serviceAccount);
-
-        const app = createAppWithOptions({
-          credential: new CertCredential(serviceAccount),
-        });
-
-        expect(() => {
-          return new Auth(app);
-        }).not.to.throw();
-
-        expect(serviceAccount).to.deep.equal(serviceAccountClone);
-      });
-    });
-  });
-
-  describe('with explicit credentials', () => {
     beforeEach(() => {
       this.clock = sinon.useFakeTimers(1000);
     });
@@ -317,25 +127,31 @@ describe('Auth', () => {
       this.clock.restore();
     });
 
-    it('should throw if credential is provided but does not conform to Credential', () => {
-      let app = createAppWithOptions({
-        credential: {} as any,
+    const invalidApps = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
+    invalidApps.forEach((invalidApp) => {
+      it('should throw given invalid app: ' + JSON.stringify(invalidApp), () => {
+        expect(() => {
+          const authAny: any = Auth;
+          return new authAny(invalidApp);
+        }).to.throw('First argument passed to admin.auth() must be a valid Firebase app instance.');
       });
-
-      expect(() => {
-        return new Auth(app);
-      }).to.throw('Called initializeApp() with an invalid credential parameter');
-
-      app = createAppWithOptions({
-        credential: true as any,
-      });
-
-      expect(() => {
-        return new Auth(app);
-      }).to.throw('Called initializeApp() with an invalid credential parameter');
     });
 
-    it('should cause getToken to cleanly fail if the custom credential returns invalid AccessTokens', () => {
+    it('should throw given no app', () => {
+      expect(() => {
+        const authAny: any = Auth;
+        return new authAny();
+      }).to.throw('First argument passed to admin.auth() must be a valid Firebase app instance.');
+    });
+
+    it('should not throw given a valid app', () => {
+      expect(() => {
+        return new Auth(mocks.app);
+      }).not.to.throw();
+    });
+
+    it('should throw calling getToken() given an app with a custom credential implementation which ' +
+      'returns invalid access tokens', () => {
       const credential = {
         getAccessToken: () => 5,
       };
@@ -354,7 +170,7 @@ describe('Auth', () => {
       });
     });
 
-    it('should accept a well-formed custom credential implementation', () => {
+    it('should accept an app containing a well-formed custom credential implementation', () => {
       const oracle: GoogleOAuthAccessToken = {
         access_token: 'This is a custom token',
         expires_in: ONE_HOUR_IN_SECONDS,
@@ -405,7 +221,7 @@ describe('Auth', () => {
       spy.restore();
     });
 
-    it('should throw if service account is not specified (and env not set)', () => {
+    it('should throw if a cert credential is not specified (and env not set)', () => {
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
       const app = createAppWithOptions({
         credential: new UnauthenticatedCredential(),
@@ -417,7 +233,7 @@ describe('Auth', () => {
     });
 
     it('should forward on the call to the token generator\'s createCustomToken() method', () => {
-      const auth = createAuthWithObject();
+      const auth = new Auth(mocks.app);
       return auth.createCustomToken(mocks.uid, mocks.developerClaims)
         .then(() => {
           expect(spy)
@@ -432,7 +248,7 @@ describe('Auth', () => {
     beforeEach(() => stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifyIdToken').returns(Promise.resolve()));
     afterEach(() => stub.restore());
 
-    it('should throw if service account is not specified (and env not set)', () => {
+    it('should throw if a cert credential is not specified (and env not set)', () => {
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
       const app = createAppWithOptions({
         credential: new UnauthenticatedCredential(),
@@ -445,7 +261,7 @@ describe('Auth', () => {
     });
 
     it('should forward on the call to the token generator\'s verifyIdToken() method', () => {
-      const auth = createAuthWithObject();
+      const auth = new Auth(mocks.app);
       const mockIdToken = mocks.generateIdToken();
       return auth.verifyIdToken(mockIdToken).then(() => {
         expect(stub).to.have.been.calledOnce.and.calledWith(mockIdToken);
@@ -839,7 +655,7 @@ describe('Auth', () => {
 
   describe('INTERNAL.delete()', () => {
     it('should delete auth instance', () => {
-      const auth = createAuthWithObject();
+      const auth = new Auth(mocks.app);
       auth.INTERNAL.delete().should.eventually.be.fulfilled;
     });
   });
@@ -853,7 +669,8 @@ describe('Auth', () => {
     it('returns a valid token with options object', () => {
       mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
-      return createAuthWithObject().INTERNAL.getToken().then((token) => {
+      const auth = new Auth(mocks.app);
+      return auth.INTERNAL.getToken().then((token) => {
         expect(token.accessToken).to.be.a('string').and.to.not.be.empty;
       });
     });
@@ -861,7 +678,8 @@ describe('Auth', () => {
     it('returns a valid token with options path', () => {
       mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
-      return createAuthWithPath().INTERNAL.getToken().then((token) => {
+      const auth = new Auth(mocks.app);
+      return auth.INTERNAL.getToken().then((token) => {
         expect(token.accessToken).to.be.a('string').and.to.not.be.empty;
       });
     });
@@ -869,7 +687,7 @@ describe('Auth', () => {
     it('returns the cached token', () => {
       mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
-      const auth = createAuthWithPath();
+      const auth = new Auth(mocks.app);
       return auth.INTERNAL.getToken().then((token1) => {
         return auth.INTERNAL.getToken().then((token2) => {
           expect(token1.accessToken).to.equal(token2.accessToken);
@@ -882,7 +700,7 @@ describe('Auth', () => {
       mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
       mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
-      const auth = createAuthWithPath();
+      const auth = new Auth(mocks.app);
       return auth.INTERNAL.getToken()
         .then((token1) => {
           return auth.INTERNAL.getToken(true).then((token2) => {
@@ -896,7 +714,7 @@ describe('Auth', () => {
   describe('INTERNAL.addAuthTokenListener()', () => {
     it('does not fire if there is no cached token', () => {
       const events: string[] = [];
-      const auth = createAuthWithPath();
+      const auth = new Auth(mocks.app);
       auth.INTERNAL.addAuthTokenListener(events.push.bind(events));
       expect(events).to.be.empty;
     });
@@ -905,7 +723,7 @@ describe('Auth', () => {
       mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
       const events: string[] = [];
-      const auth = createAuthWithPath();
+      const auth = new Auth(mocks.app);
       auth.INTERNAL.addAuthTokenListener(events.push.bind(events));
       return auth.INTERNAL.getToken().then((token) => {
         expect(events).to.deep.equal([token.accessToken]);
@@ -917,7 +735,7 @@ describe('Auth', () => {
 
       const events1: string[] = [];
       const events2: string[] = [];
-      const auth = createAuthWithPath();
+      const auth = new Auth(mocks.app);
       auth.INTERNAL.addAuthTokenListener(events1.push.bind(events1));
       auth.INTERNAL.addAuthTokenListener(events2.push.bind(events2));
       return auth.INTERNAL.getToken().then((token) => {
@@ -931,7 +749,7 @@ describe('Auth', () => {
       mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
       const events: string[] = [];
-      const auth = createAuthWithPath();
+      const auth = new Auth(mocks.app);
       auth.INTERNAL.addAuthTokenListener(events.push.bind(events));
       return auth.INTERNAL.getToken().then((token) => {
         expect(events).to.deep.equal([token.accessToken]);
@@ -944,7 +762,7 @@ describe('Auth', () => {
     it('will fire with the initial token if it exists', () => {
       mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
-      const auth = createAuthWithPath();
+      const auth = new Auth(mocks.app);
       return auth.INTERNAL.getToken().then(() => {
         return new Promise((resolve) => {
           auth.INTERNAL.addAuthTokenListener(resolve);
@@ -960,7 +778,7 @@ describe('Auth', () => {
 
       const events1: string[] = [];
       const events2: string[] = [];
-      const auth = createAuthWithPath();
+      const auth = new Auth(mocks.app);
       const listener1 = (token: string) => { events1.push(token); };
       const listener2 = (token: string) => { events2.push(token); };
       auth.INTERNAL.addAuthTokenListener(listener1);

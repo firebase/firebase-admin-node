@@ -1,35 +1,11 @@
 import {Credential} from './credential';
 import {FirebaseTokenGenerator} from './token-generator';
-import {FirebaseApp, FirebaseAppOptions} from '../firebase-app';
+import {FirebaseApp} from '../firebase-app';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {CertCredential, Certificate, GoogleOAuthAccessToken} from './credential';
+import {GoogleOAuthAccessToken} from './credential';
 import {FirebaseAuthRequestHandler} from './auth-api-request';
 import {UserRecord} from './user-record';
 import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
-
-/**
- * Gets a Credential from app options.
- *
- * @return {Credential}
- */
-function getCredential(app: FirebaseApp): Credential {
-  const opts: FirebaseAppOptions = app.options;
-  if (opts.credential) {
-    return opts.credential as Credential;
-  }
-
-  // We must be careful because '' is falsy. An opt || env test would coalesce '' || undefined as undefined.
-  const certificateOrPath = typeof opts.serviceAccount === 'undefined' ?
-    process.env.GOOGLE_APPLICATION_CREDENTIALS :
-    opts.serviceAccount;
-  if (typeof certificateOrPath === 'string') {
-    return new CertCredential(Certificate.fromPath(certificateOrPath));
-  } else if (typeof certificateOrPath === 'object') {
-    return new CertCredential(new Certificate(certificateOrPath));
-  } else {
-    throw new FirebaseAuthError(AuthClientErrorCode.INVALID_SERVICE_ACCOUNT);
-  }
-}
 
 
 /**
@@ -45,32 +21,28 @@ class Auth implements FirebaseServiceInterface {
   private authRequestHandler: FirebaseAuthRequestHandler;
 
   constructor(app: FirebaseApp) {
-    if (typeof app !== 'object' || !('options' in app)) {
+    if (typeof app !== 'object' || app === null || !('options' in app)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        'First parameter to Auth constructor must be an instance of FirebaseApp');
+        'First argument passed to admin.auth() must be a valid Firebase app instance.'
+      );
     }
+
     this.app_ = app;
 
-    const credential = getCredential(app);
-    if (credential && typeof credential.getAccessToken !== 'function') {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CREDENTIAL,
-        'Called initializeApp() with an invalid credential parameter');
-    }
-    this.authTokenManager_ = new AuthTokenManager(credential);
+    this.authTokenManager_ = new AuthTokenManager(app.options.credential);
 
     // TODO (inlined): plumb this into a factory method for tokenGenerator_ once we
     // can generate custom tokens from access tokens.
     let serviceAccount;
-    if (typeof credential.getCertificate === 'function') {
-      serviceAccount = credential.getCertificate();
+    if (typeof app.options.credential.getCertificate === 'function') {
+      serviceAccount = app.options.credential.getCertificate();
     }
     if (serviceAccount) {
       this.tokenGenerator_ = new FirebaseTokenGenerator(serviceAccount);
     }
     // Initialize auth request handler with the credential.
-    this.authRequestHandler = new FirebaseAuthRequestHandler(credential);
+    this.authRequestHandler = new FirebaseAuthRequestHandler(app.options.credential);
   }
 
   get app(): FirebaseApp {

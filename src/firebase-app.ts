@@ -1,7 +1,7 @@
-import {Credential} from './auth/credential';
 import {FirebaseAccessToken} from './auth/auth';
 import {deepCopy, deepExtend} from './utils/deep-copy';
 import {FirebaseServiceInterface} from './firebase-service';
+import {Credential, CertCredential} from './auth/credential';
 import {FirebaseNamespaceInternals} from './firebase-namespace';
 
 
@@ -63,6 +63,21 @@ export class FirebaseApp {
     }
     // TODO(jwenger): NEXT MAJOR RELEASE - throw error if the "credential" property is not specified
 
+    if (hasServiceAccount) {
+      const serviceAccount = this.options_.serviceAccount;
+      const serviceAccountIsString = (typeof serviceAccount === 'string');
+      const serviceAccountIsNonNullObject = (typeof serviceAccount === 'object' && serviceAccount !== null);
+      if (!serviceAccountIsString && !serviceAccountIsNonNullObject) {
+        errorMessage = 'The "serviceAccount" property must be a string representing the file path to ' +
+          'a key file or an object representing the contents of a key file.';
+      }
+    } else if (hasCredential) {
+      const credential = this.options_.credential;
+      if (typeof credential !== 'object' || credential === null || typeof credential.getAccessToken !== 'function') {
+        errorMessage = 'The "credential" property must be an object which implements the Credential interface.';
+      }
+    }
+
     if (typeof errorMessage !== 'undefined') {
       throw new Error(
         `Invalid Firebase app options passed as the first argument to initializeApp() for the ` +
@@ -70,7 +85,8 @@ export class FirebaseApp {
       );
     }
 
-    // TODO(jwenger): NEXT MAJOR RELEASE - remove "serviceAccount" property deprecation warning
+    // TODO(jwenger): NEXT MAJOR RELEASE - remove "serviceAccount" property deprecation warning and
+    // relevant error handling above
     if (hasServiceAccount) {
       /* tslint:disable:no-console */
       console.log(
@@ -79,6 +95,8 @@ export class FirebaseApp {
         '"credential" property.'
       );
       /* tslint:enable:no-console */
+
+      this.options_.credential = new CertCredential(this.options_.serviceAccount);
     }
 
     Object.keys(firebaseInternals_.serviceFactories).forEach((serviceName) => {
