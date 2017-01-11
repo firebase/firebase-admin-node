@@ -9,7 +9,8 @@ import * as _ from 'lodash';
 import * as jwt from 'jsonwebtoken';
 
 import {CertCredential} from '../../src/auth/credential';
-import {FirebaseAppOptions} from '../../src/firebase-app';
+import {FirebaseServiceInterface} from '../../src/firebase-service';
+import {FirebaseApp, FirebaseAppOptions} from '../../src/firebase-app';
 
 const ALGORITHM = 'RS256';
 const ONE_HOUR_IN_SECONDS = 60 * 60;
@@ -87,6 +88,12 @@ export function generateIdToken(overrides?: Object): string {
   return jwt.sign(developerClaims, certificateObject.private_key, options);
 }
 
+export function firebaseServiceFactory(app: FirebaseApp, extendApp: (props: Object) => void): FirebaseServiceInterface {
+  return {
+    app,
+    INTERNAL: {},
+  } as FirebaseServiceInterface;
+}
 
 /** Mock socket emitter class. */
 export class MockSocketEmitter extends events.EventEmitter {

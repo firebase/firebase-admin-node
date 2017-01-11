@@ -10,7 +10,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as mocks from './resources/mocks';
 
 import {FirebaseApp} from '../src/firebase-app';
-import {FirebaseNamespace} from '../src/firebase-namespace';
+import {FirebaseNamespace, FirebaseNamespaceInternals} from '../src/firebase-namespace';
 import {FirebaseServiceInterface} from '../src/firebase-service';
 
 chai.should();

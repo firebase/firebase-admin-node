@@ -203,7 +203,7 @@ describe('FirebaseTokenGenerator', () => {
   describe('createCustomToken()', () => {
     it('should throw given no uid', () => {
       expect(() => {
-        tokenGenerator.createCustomToken();
+        (tokenGenerator as any).createCustomToken();
       }).to.throw('First argument to createCustomToken() must be a non-empty string uid');
     });
 
@@ -211,7 +211,7 @@ describe('FirebaseTokenGenerator', () => {
     invalidUids.forEach((invalidUid) => {
       it('should throw given a non-string uid: ' + JSON.stringify(invalidUid), () => {
         expect(() => {
-          tokenGenerator.createCustomToken(invalidUid);
+          tokenGenerator.createCustomToken(invalidUid as any);
         }).to.throw('First argument to createCustomToken() must be a non-empty string uid');
       });
     });
@@ -390,7 +390,7 @@ describe('FirebaseTokenGenerator', () => {
 
     it('should throw given no ID token', () => {
       expect(() => {
-        tokenGenerator.verifyIdToken();
+        (tokenGenerator as any).verifyIdToken();
       }).to.throw('First argument to verifyIdToken() must be a Firebase ID token');
     });
 
@@ -398,7 +398,7 @@ describe('FirebaseTokenGenerator', () => {
     invalidIdTokens.forEach((invalidIdToken) => {
       it('should throw given a non-string ID token: ' + JSON.stringify(invalidIdToken), () => {
         expect(() => {
-          tokenGenerator.verifyIdToken(invalidIdToken);
+          tokenGenerator.verifyIdToken(invalidIdToken as any);
         }).to.throw('First argument to verifyIdToken() must be a Firebase ID token');
       });
     });
