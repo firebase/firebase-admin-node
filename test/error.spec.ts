@@ -88,5 +88,31 @@ describe('FirebaseAuthError', () => {
         expect(error.message).to.be.equal('An unexpected error occurred.');
       });
     });
+
+    describe('with raw server response specified', () => {
+      const mockRawServerResponse = {
+        error: {
+          code: 'UNEXPECTED_ERROR',
+          message: 'An unexpected error occurred.',
+        },
+      };
+
+      it('should not include raw server response from an expected server code', () => {
+        let error = FirebaseAuthError.fromServerError(
+            'USER_NOT_FOUND', 'Invalid uid', mockRawServerResponse);
+        expect(error.code).to.be.equal('auth/user-not-found');
+        expect(error.message).to.be.equal('Invalid uid');
+      });
+
+      it('should include raw server response from an unexpected server code', () => {
+        let error = FirebaseAuthError.fromServerError(
+            'UNEXPECTED_ERROR', 'An unexpected error occurred.', mockRawServerResponse);
+        expect(error.code).to.be.equal('auth/internal-error');
+        expect(error.message).to.be.equal(
+          'An unexpected error occurred. Raw server response: ' +
+          `${ JSON.stringify(mockRawServerResponse) }`
+        );
+      });
+    });
   });
 });
