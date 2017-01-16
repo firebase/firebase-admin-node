@@ -142,6 +142,13 @@ class AuthClientErrorCode {
     code: 'project-not-found',
     message: 'No Firebase project was found for the provided credential.',
   };
+  public static INSUFFICIENT_PERMISSION = {
+    code: 'insufficient-permission',
+    message: 'Credential implementation provided to initializeApp() via the "credential" property ' +
+      'has insufficient permission to access the requested resource. See ' +
+      'https://firebase.google.com/docs/admin/setup for details on how to authenticate this SDK ' +
+      'with appropriate permissions.',
+  };
   public static UID_ALREADY_EXISTS = {
     code: 'uid-already-exists',
     message: 'The user with the provided uid already exists.',
@@ -156,6 +163,8 @@ class AuthClientErrorCode {
 const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   // Project not found.
   CONFIGURATION_NOT_FOUND: 'PROJECT_NOT_FOUND',
+  // Provided credential has insufficient permissions.
+  INSUFFICIENT_PERMISSION: 'INSUFFICIENT_PERMISSION',
   // uploadAccount provides an email that already exists.
   DUPLICATE_EMAIL: 'EMAIL_EXISTS',
   // uploadAccount provides a localId that already exists.
