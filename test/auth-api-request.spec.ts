@@ -645,10 +645,10 @@ describe('FirebaseAuthRequestHandler', () => {
     it('should be rejected when the backend returns an error', () => {
       const expectedResult = {
         error: {
-          message: 'INTERNAL_SERVER_ERROR',
+          message: 'OPERATION_NOT_ALLOWED',
         },
       };
-      const expectedError = FirebaseAuthError.fromServerError('INTERNAL_SERVER_ERROR');
+      const expectedError = FirebaseAuthError.fromServerError('OPERATION_NOT_ALLOWED');
       const data = {localId: ['uid']};
       const headers = {
         'Content-Type': 'application/json',
@@ -700,10 +700,10 @@ describe('FirebaseAuthRequestHandler', () => {
     it('should be rejected when the backend returns an error', () => {
       const expectedResult = {
         error: {
-          message: 'INTERNAL_SERVER_ERROR',
+          message: 'OPERATION_NOT_ALLOWED',
         },
       };
-      const expectedError = FirebaseAuthError.fromServerError('INTERNAL_SERVER_ERROR');
+      const expectedError = FirebaseAuthError.fromServerError('OPERATION_NOT_ALLOWED');
       const data = {localId: 'uid'};
       const headers = {
         'Content-Type': 'application/json',
@@ -855,10 +855,10 @@ describe('FirebaseAuthRequestHandler', () => {
 
     it('should be rejected when the backend returns an error', () => {
       // Backend returned error.
-      const expectedError = FirebaseAuthError.fromServerError('INTERNAL_SERVER_ERROR');
+      const expectedError = FirebaseAuthError.fromServerError('OPERATION_NOT_ALLOWED');
       const expectedResult = {
         error: {
-          message: 'INTERNAL_SERVER_ERROR',
+          message: 'OPERATION_NOT_ALLOWED',
         },
       };
 
@@ -1049,10 +1049,10 @@ describe('FirebaseAuthRequestHandler', () => {
 
       it('should be rejected when the backend returns a generic error', () => {
         // Some generic backend error.
-        const expectedError = FirebaseAuthError.fromServerError('INTERNAL_SERVER_ERROR');
+        const expectedError = FirebaseAuthError.fromServerError('OPERATION_NOT_ALLOWED');
         const expectedResult = {
           error: {
-            message: 'INTERNAL_SERVER_ERROR',
+            message: 'OPERATION_NOT_ALLOWED',
           },
         };
 
@@ -1143,10 +1143,10 @@ describe('FirebaseAuthRequestHandler', () => {
 
       it('should be rejected when the backend returns a generic error', () => {
         // Some generic backend error.
-        const expectedError = FirebaseAuthError.fromServerError('INTERNAL_SERVER_ERROR');
+        const expectedError = FirebaseAuthError.fromServerError('OPERATION_NOT_ALLOWED');
         const expectedResult = {
           error: {
-            message: 'INTERNAL_SERVER_ERROR',
+            message: 'OPERATION_NOT_ALLOWED',
           },
         };
 

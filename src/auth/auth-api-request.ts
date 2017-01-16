@@ -435,7 +435,7 @@ export class FirebaseAuthRequestHandler {
         // Check for backend errors in the response.
         let errorCode = FirebaseAuthRequestHandler.getErrorCode(response);
         if (errorCode) {
-          throw FirebaseAuthError.fromServerError(errorCode);
+          throw FirebaseAuthError.fromServerError(errorCode, /* message */ undefined, response);
         }
         // Validate response.
         let responseValidator = apiSettings.getResponseValidator();

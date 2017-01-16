@@ -66,13 +66,27 @@ class FirebaseAuthError extends FirebaseError {
    * @param {string} serverErrorCode The server error code.
    * @param {string} [message] The error message. The default message is used
    *     if not provided.
+   * @param {Object} [rawServerResponse] The error's raw server response.
    * @return {FirebaseAuthError} The corresponding developer facing error.
    */
-  public static fromServerError(serverErrorCode: string, message?: string): FirebaseAuthError {
+  public static fromServerError(
+    serverErrorCode: string,
+    message?: string,
+    rawServerResponse?: Object,
+  ): FirebaseAuthError {
     // If not found, default to internal error.
     let clientCodeKey = AUTH_SERVER_TO_CLIENT_CODE[serverErrorCode] || 'INTERNAL_ERROR';
     const error: ErrorInfo = deepCopy(AuthClientErrorCode[clientCodeKey]);
     error.message = message || error.message;
+
+    if (clientCodeKey === 'INTERNAL_ERROR' && typeof rawServerResponse !== 'undefined') {
+      try {
+        error.message += ` Raw server response: ${ JSON.stringify(rawServerResponse) }`;
+      } catch (e) {
+        // Ignore JSON parsing error.
+      }
+    }
+
     return new FirebaseAuthError(error);
   }
 
