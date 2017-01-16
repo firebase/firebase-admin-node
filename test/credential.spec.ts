@@ -42,6 +42,10 @@ describe('Credential', () => {
   let mockedRequests: nock.Scope[] = [];
   let mockCertificateObject;
 
+  before(() => utils.mockFetchAccessTokenRequests());
+
+  after(() => nock.cleanAll());
+
   beforeEach(() => {
     mockCertificateObject = _.clone(mocks.certificateObject);
   });
@@ -51,9 +55,6 @@ describe('Credential', () => {
     mockedRequests = [];
   });
 
-  after(() => {
-    nock.cleanAll();
-  });
 
   describe('Certificate', () => {
     describe('fromPath', () => {
@@ -175,8 +176,6 @@ describe('Credential', () => {
     });
 
     it('should create access tokens', () => {
-      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
-
       const c = new CertCredential(mockCertificateObject);
       return c.getAccessToken().then((token) => {
         expect(token.access_token).to.be.a('string').and.to.not.be.empty;
@@ -279,8 +278,6 @@ describe('Credential', () => {
     });
 
     it('should create access tokens', () => {
-      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
-
       process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, './resources/mock.key.json');
       const c = new ApplicationDefaultCredential();
       return c.getAccessToken().then((token) => {

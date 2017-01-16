@@ -42,7 +42,9 @@ export let appOptionsNoDatabaseUrl: FirebaseAppOptions = {
   credential,
 };
 
-export let app = new FirebaseApp(appOptions, appName, new FirebaseNamespace().INTERNAL);
+export function app(): FirebaseApp {
+  return new FirebaseApp(appOptions, appName, new FirebaseNamespace().INTERNAL);
+}
 
 export let refreshToken = {
   clientId: 'mock-client-id',

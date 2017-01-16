@@ -3,10 +3,12 @@
 import {expect} from 'chai';
 import * as _ from 'lodash';
 import * as chai from 'chai';
+import * as nock from 'nock';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
+import * as utils from './utils';
 import * as mocks from './resources/mocks';
 
 import {FirebaseNamespace} from '../src/firebase-namespace';
@@ -21,6 +23,10 @@ const DEFAULT_APP_NAME = '[DEFAULT]';
 
 describe('FirebaseNamespace', () => {
   let firebaseNamespace: FirebaseNamespace;
+
+  before(() => utils.mockFetchAccessTokenRequests());
+
+  after(() => nock.cleanAll());
 
   beforeEach(() => {
     firebaseNamespace = new FirebaseNamespace();

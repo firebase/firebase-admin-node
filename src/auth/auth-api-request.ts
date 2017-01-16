@@ -1,8 +1,8 @@
 import * as validator from '../utils/validator';
 
 import {deepCopy} from '../utils/deep-copy';
+import {FirebaseApp} from '../firebase-app';
 import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
-import {Credential} from './credential';
 import {
   HttpMethod, SignedApiRequestHandler, ApiSettings,
 } from '../utils/api-request';
@@ -266,8 +266,8 @@ export class FirebaseAuthRequestHandler {
     return (response.error && (response.error as any).message) || null;
   }
 
-  constructor(credential: Credential) {
-    this.signedApiRequestHandler = new SignedApiRequestHandler(credential);
+  constructor(app: FirebaseApp) {
+    this.signedApiRequestHandler = new SignedApiRequestHandler(app);
   }
 
   /**

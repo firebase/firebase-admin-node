@@ -1,8 +1,6 @@
 'use strict';
 
 // Use untyped import syntax for Node built-ins.
-import fs = require('fs');
-import path = require('path');
 import https = require('https');
 import stream = require('stream');
 
@@ -14,11 +12,10 @@ import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import {mockFetchAccessTokenViaJwt, generateRandomAccessToken} from './utils';
-import {MockSocketEmitter, MockStream} from './resources/mocks';
-import {
-  CertCredential, Certificate,
-} from '../src/auth/credential';
+import * as utils from './utils';
+import * as mocks from './resources/mocks';
+
+import {FirebaseApp} from '../src/firebase-app';
 import {
   SignedApiRequestHandler, HttpRequestHandler, ApiSettings,
 } from '../src/utils/api-request';
@@ -28,22 +25,22 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
 
-const certPath = path.resolve(__dirname, 'resources/mock.key.json');
-const MOCK_CERTIFICATE_OBJECT = JSON.parse(fs.readFileSync(certPath).toString());
-
 describe('HttpRequestHandler', () => {
   let httpStub: sinon.SinonStub;
-  let request: MockStream;
+  let request: mocks.MockStream;
   let writeSpy: sinon.SinonSpy;
+
   beforeEach(() => {
-    request = new MockStream();
+    request = new mocks.MockStream();
     httpStub = sinon.stub(https, 'request');
     writeSpy = sinon.spy(request, 'write');
   });
+
   afterEach(() => {
     httpStub.restore();
     writeSpy.restore();
   });
+
   const httpMethod: any = 'POST';
   const host = 'www.googleapis.com';
   const port = 443;
@@ -81,7 +78,7 @@ describe('HttpRequestHandler', () => {
     it('should return a promise that rejects on network error', () => {
       const expected = new Error('Network timeout');
       httpStub.returns(request);
-      const expectedSocket = new MockSocketEmitter();
+      const expectedSocket = new mocks.MockSocketEmitter();
       let httpRequestHandler = new HttpRequestHandler();
       const p = httpRequestHandler.sendRequest(
           host, port, path, httpMethod, data, headers, timeout)
@@ -171,12 +168,22 @@ describe('HttpRequestHandler', () => {
 });
 
 describe('SignedApiRequestHandler', () => {
+  let mockApp: FirebaseApp;
+  let mockAccessToken: string = utils.generateRandomAccessToken();
+
+  before(() => utils.mockFetchAccessTokenRequests(mockAccessToken));
+
+  after(() => nock.cleanAll());
+
+  beforeEach(() => {
+    mockApp = mocks.app();
+  });
+
   describe('Constructor', () => {
-    it('should succeed with a credential', () => {
+    it('should succeed with a FirebaseApp instance', () => {
       expect(() => {
-        const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
         const authRequestHandlerAny: any = SignedApiRequestHandler;
-        return new authRequestHandlerAny(cred);
+        return new authRequestHandlerAny(mockApp);
       }).not.to.throw(Error);
     });
   });
@@ -187,9 +194,7 @@ describe('SignedApiRequestHandler', () => {
       _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
       mockedRequests = [];
     });
-    after(() => {
-      nock.cleanAll();
-    });
+
     const expectedResult = {
       users : [
         {localId: 'uid'},
@@ -200,13 +205,12 @@ describe('SignedApiRequestHandler', () => {
         .returns(Promise.resolve(expectedResult)));
     afterEach(() => stub.restore());
     const data = {localId: ['uid']};
-    const accessToken = generateRandomAccessToken();
     const preHeaders = {
       'Content-Type': 'application/json',
     };
     const headers = {
       'Content-Type': 'application/json',
-      Authorization: 'Bearer ' + accessToken,
+      Authorization: 'Bearer ' + mockAccessToken,
     };
     const httpMethod: any = 'POST';
     const host = 'www.googleapis.com';
@@ -214,9 +218,7 @@ describe('SignedApiRequestHandler', () => {
     const path = '/identitytoolkit/v3/relyingparty/getAccountInfo';
     const timeout = 10000;
     it('should resolve successfully with a valid request', () => {
-      mockedRequests.push(mockFetchAccessTokenViaJwt(accessToken));
-      const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
-      const requestHandler = new SignedApiRequestHandler(cred);
+      const requestHandler = new SignedApiRequestHandler(mockApp);
       return requestHandler.sendRequest(
           host, port, path, httpMethod, data, preHeaders, timeout)
         .then((result) => {

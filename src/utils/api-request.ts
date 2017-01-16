@@ -1,5 +1,5 @@
-import {Credential} from '../auth/credential';
 import {deepCopy} from './deep-copy';
+import {FirebaseApp} from '../firebase-app';
 
 import https = require('https');
 
@@ -89,7 +89,7 @@ export class HttpRequestHandler {
  * @constructor
  */
 export class SignedApiRequestHandler extends HttpRequestHandler {
-  constructor(private credential: Credential) {
+  constructor(private app_: FirebaseApp) {
     super();
   }
 
@@ -114,7 +114,8 @@ export class SignedApiRequestHandler extends HttpRequestHandler {
       headers: Object,
       timeout: number): Promise<Object> {
     let ancestorSendRequest = super.sendRequest;
-    return this.credential.getAccessToken().then((accessTokenObj) => {
+
+    return this.app_.INTERNAL.getToken().then((accessTokenObj) => {
       if (accessTokenObj == null) {
         return Promise.reject('Unable to fetch Google OAuth2 access token. ' +
             'Make sure you initialized the SDK with a credential that can f' +
@@ -122,7 +123,7 @@ export class SignedApiRequestHandler extends HttpRequestHandler {
       }
       let headersCopy: Object = deepCopy(headers);
       let authorizationHeaderKey = 'Authorization';
-      headersCopy[authorizationHeaderKey] = 'Bearer ' + accessTokenObj.access_token;
+      headersCopy[authorizationHeaderKey] = 'Bearer ' + accessTokenObj.accessToken;
       return ancestorSendRequest(host, port, path, httpMethod, data, headersCopy, timeout);
     });
   }

@@ -1,9 +1,5 @@
 'use strict';
 
-// Use untyped import syntax for Node built-ins
-import path = require('path');
-import https = require('https');
-
 import * as _ from 'lodash';
 import {expect} from 'chai';
 import * as chai from 'chai';
@@ -15,14 +11,13 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from './utils';
 import * as mocks from './resources/mocks';
 
-import {Auth, FirebaseAccessToken} from '../src/auth/auth';
-import {Certificate, CertCredential} from '../src/auth/credential';
-import {FirebaseNamespace} from '../src/firebase-namespace';
+import {Auth} from '../src/auth/auth';
+import {UserRecord} from '../src/auth/user-record';
+import {FirebaseApp} from '../src/firebase-app';
+import {Certificate} from '../src/auth/credential';
 import {GoogleOAuthAccessToken} from '../src/auth/credential';
 import {FirebaseTokenGenerator} from '../src/auth/token-generator';
 import {FirebaseAuthRequestHandler} from '../src/auth/auth-api-request';
-import {UserRecord} from '../src/auth/user-record';
-import {FirebaseApp, FirebaseAppOptions} from '../src/firebase-app';
 import {AuthClientErrorCode, FirebaseAuthError} from '../src/utils/error';
 
 chai.should();
@@ -30,18 +25,6 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
 const ONE_HOUR_IN_SECONDS = 60 * 60;
-
-
-/**
- * Returns a new FirebaseApp instance with the provided options.
- *
- * @param {Object} options The options for the FirebaseApp instance to create.
- * @return {FirebaseApp} A new FirebaseApp instance with the provided options.
- */
-function createAppWithOptions(options: Object) {
-  const mockFirebaseNamespaceInternals = new FirebaseNamespace().INTERNAL;
-  return new FirebaseApp(options as FirebaseAppOptions, mocks.appName, mockFirebaseNamespaceInternals);
-}
 
 
 /**
@@ -107,26 +90,18 @@ class UnauthenticatedCredential {
 }
 
 describe('Auth', () => {
-  let mockedRequests: nock.Scope[] = [];
+  let mockApp: FirebaseApp;
 
-  afterEach(() => {
-    _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
-    mockedRequests = [];
+  before(() => utils.mockFetchAccessTokenRequests());
+
+  after(() => nock.cleanAll());
+
+  beforeEach(() => {
+    mockApp = mocks.app();
   });
 
-  after(() => {
-    nock.cleanAll();
-  });
 
   describe('Constructor', () => {
-    beforeEach(() => {
-      this.clock = sinon.useFakeTimers(1000);
-    });
-
-    afterEach(() => {
-      this.clock.restore();
-    });
-
     const invalidApps = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
     invalidApps.forEach((invalidApp) => {
       it('should throw given invalid app: ' + JSON.stringify(invalidApp), () => {
@@ -146,64 +121,21 @@ describe('Auth', () => {
 
     it('should not throw given a valid app', () => {
       expect(() => {
-        return new Auth(mocks.app);
+        return new Auth(mockApp);
       }).not.to.throw();
-    });
-
-    it('should throw calling getToken() given an app with a custom credential implementation which ' +
-      'returns invalid access tokens', () => {
-      const credential = {
-        getAccessToken: () => 5,
-      };
-
-      const app = createAppWithOptions({
-        credential: credential as any,
-      });
-
-      const auth = new Auth(app);
-
-      return auth.INTERNAL.getToken().then(() => {
-        throw new Error('Unexpected success');
-      }, (err) => {
-        expect(err.toString()).to.include('initializeApp() was called with a credential ' +
-        'that creates invalid access tokens');
-      });
-    });
-
-    it('should accept an app containing a well-formed custom credential implementation', () => {
-      const oracle: GoogleOAuthAccessToken = {
-        access_token: 'This is a custom token',
-        expires_in: ONE_HOUR_IN_SECONDS,
-      };
-      const credential = {
-        getAccessToken: () => Promise.resolve(oracle),
-      };
-
-      const app = createAppWithOptions({
-        credential,
-      });
-
-      const auth = new Auth(app);
-
-      return auth.INTERNAL.getToken().then((token) => {
-        expect(token.accessToken).to.equal(oracle.access_token);
-        expect(+token.expirationTime).to.equal((ONE_HOUR_IN_SECONDS + 1) * 1000);
-      });
     });
   });
 
   describe('app', () => {
-    const app = createAppWithOptions({
-      credential: new CertCredential(path.resolve(__dirname, 'resources/mock.key.json')),
-    });
-
     it('returns the app from the constructor', () => {
+      const app = mockApp;
       const auth = new Auth(app);
       // We expect referential equality here
       expect(auth.app).to.equal(app);
     });
 
     it('is read-only', () => {
+      const app = mockApp;
       const auth = new Auth(app);
       expect(() => {
         (auth as any).app = app;
@@ -223,7 +155,7 @@ describe('Auth', () => {
 
     it('should throw if a cert credential is not specified (and env not set)', () => {
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
-      const app = createAppWithOptions({
+      const app = utils.createAppWithOptions({
         credential: new UnauthenticatedCredential(),
       });
       const auth = new Auth(app);
@@ -233,7 +165,7 @@ describe('Auth', () => {
     });
 
     it('should forward on the call to the token generator\'s createCustomToken() method', () => {
-      const auth = new Auth(mocks.app);
+      const auth = new Auth(mockApp);
       return auth.createCustomToken(mocks.uid, mocks.developerClaims)
         .then(() => {
           expect(spy)
@@ -250,7 +182,7 @@ describe('Auth', () => {
 
     it('should throw if a cert credential is not specified (and env not set)', () => {
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
-      const app = createAppWithOptions({
+      const app = utils.createAppWithOptions({
         credential: new UnauthenticatedCredential(),
       });
       const auth = new Auth(app);
@@ -261,7 +193,7 @@ describe('Auth', () => {
     });
 
     it('should forward on the call to the token generator\'s verifyIdToken() method', () => {
-      const auth = new Auth(mocks.app);
+      const auth = new Auth(mockApp);
       const mockIdToken = mocks.generateIdToken();
       return auth.verifyIdToken(mockIdToken).then(() => {
         expect(stub).to.have.been.calledOnce.and.calledWith(mockIdToken);
@@ -278,7 +210,7 @@ describe('Auth', () => {
     const credential = {
       getAccessToken: () => Promise.resolve(accessToken),
     };
-    const app = createAppWithOptions({
+    const app = utils.createAppWithOptions({
       credential,
     });
     // Initialize all test variables, expected parameters and results.
@@ -336,7 +268,7 @@ describe('Auth', () => {
     const credential = {
       getAccessToken: () => Promise.resolve(accessToken),
     };
-    const app = createAppWithOptions({
+    const app = utils.createAppWithOptions({
       credential,
     });
     // Initialize all test variables, expected parameters and results.
@@ -395,7 +327,7 @@ describe('Auth', () => {
     const credential = {
       getAccessToken: () => Promise.resolve(accessToken),
     };
-    const app = createAppWithOptions({
+    const app = utils.createAppWithOptions({
       credential,
     });
     // Initialize all test variables, expected parameters and results.
@@ -453,7 +385,7 @@ describe('Auth', () => {
     const credential = {
       getAccessToken: () => Promise.resolve(accessToken),
     };
-    const app = createAppWithOptions({
+    const app = utils.createAppWithOptions({
       credential,
     });
     // Initialize all test variables, expected parameters and results.
@@ -571,7 +503,7 @@ describe('Auth', () => {
     const credential = {
       getAccessToken: () => Promise.resolve(accessToken),
     };
-    const app = createAppWithOptions({
+    const app = utils.createAppWithOptions({
       credential,
     });
     // Initialize all test variables, expected parameters and results.
@@ -655,143 +587,8 @@ describe('Auth', () => {
 
   describe('INTERNAL.delete()', () => {
     it('should delete auth instance', () => {
-      const auth = new Auth(mocks.app);
+      const auth = new Auth(mockApp);
       auth.INTERNAL.delete().should.eventually.be.fulfilled;
-    });
-  });
-
-  describe('INTERNAL.getToken()', () => {
-    let spy: sinon.SinonSpy;
-
-    beforeEach(() => spy = sinon.spy(https, 'request'));
-    afterEach(() => spy.restore());
-
-    it('returns a valid token with options object', () => {
-      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
-
-      const auth = new Auth(mocks.app);
-      return auth.INTERNAL.getToken().then((token) => {
-        expect(token.accessToken).to.be.a('string').and.to.not.be.empty;
-      });
-    });
-
-    it('returns a valid token with options path', () => {
-      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
-
-      const auth = new Auth(mocks.app);
-      return auth.INTERNAL.getToken().then((token) => {
-        expect(token.accessToken).to.be.a('string').and.to.not.be.empty;
-      });
-    });
-
-    it('returns the cached token', () => {
-      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
-
-      const auth = new Auth(mocks.app);
-      return auth.INTERNAL.getToken().then((token1) => {
-        return auth.INTERNAL.getToken().then((token2) => {
-          expect(token1.accessToken).to.equal(token2.accessToken);
-          expect(https.request).to.have.been.calledOnce;
-        });
-      });
-    });
-
-    it('returns a new token with force refresh', () => {
-      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
-      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
-
-      const auth = new Auth(mocks.app);
-      return auth.INTERNAL.getToken()
-        .then((token1) => {
-          return auth.INTERNAL.getToken(true).then((token2) => {
-            expect(token1.accessToken).to.not.equal(token2.accessToken);
-            expect(https.request).to.have.been.calledTwice;
-          });
-        });
-    });
-  });
-
-  describe('INTERNAL.addAuthTokenListener()', () => {
-    it('does not fire if there is no cached token', () => {
-      const events: string[] = [];
-      const auth = new Auth(mocks.app);
-      auth.INTERNAL.addAuthTokenListener(events.push.bind(events));
-      expect(events).to.be.empty;
-    });
-
-    it('is notified when the token changes', () => {
-      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
-
-      const events: string[] = [];
-      const auth = new Auth(mocks.app);
-      auth.INTERNAL.addAuthTokenListener(events.push.bind(events));
-      return auth.INTERNAL.getToken().then((token) => {
-        expect(events).to.deep.equal([token.accessToken]);
-      });
-    });
-
-    it('can be called twice', () => {
-      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
-
-      const events1: string[] = [];
-      const events2: string[] = [];
-      const auth = new Auth(mocks.app);
-      auth.INTERNAL.addAuthTokenListener(events1.push.bind(events1));
-      auth.INTERNAL.addAuthTokenListener(events2.push.bind(events2));
-      return auth.INTERNAL.getToken().then((token) => {
-        expect(events1).to.deep.equal([token.accessToken]);
-        expect(events2).to.deep.equal([token.accessToken]);
-      });
-    });
-
-    it('will be called on token refresh', () => {
-      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
-      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
-
-      const events: string[] = [];
-      const auth = new Auth(mocks.app);
-      auth.INTERNAL.addAuthTokenListener(events.push.bind(events));
-      return auth.INTERNAL.getToken().then((token) => {
-        expect(events).to.deep.equal([token.accessToken]);
-        return auth.INTERNAL.getToken(true).then((newToken) => {
-          expect(events).to.deep.equal([token.accessToken, newToken.accessToken]);
-        });
-      });
-    });
-
-    it('will fire with the initial token if it exists', () => {
-      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
-
-      const auth = new Auth(mocks.app);
-      return auth.INTERNAL.getToken().then(() => {
-        return new Promise((resolve) => {
-          auth.INTERNAL.addAuthTokenListener(resolve);
-        });
-      }).should.eventually.be.fulfilled.and.not.be.empty;
-    });
-  });
-
-  describe('INTERNAL.removeTokenListener()', () => {
-    it('removes the listener', () => {
-      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
-      mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
-
-      const events1: string[] = [];
-      const events2: string[] = [];
-      const auth = new Auth(mocks.app);
-      const listener1 = (token: string) => { events1.push(token); };
-      const listener2 = (token: string) => { events2.push(token); };
-      auth.INTERNAL.addAuthTokenListener(listener1);
-      auth.INTERNAL.addAuthTokenListener(listener2);
-      return auth.INTERNAL.getToken().then((token: FirebaseAccessToken) => {
-        expect(events1).to.deep.equal([token.accessToken]);
-        expect(events2).to.deep.equal([token.accessToken]);
-        auth.INTERNAL.removeAuthTokenListener(listener1);
-        return auth.INTERNAL.getToken(true).then((newToken: FirebaseAccessToken) => {
-          expect(events1).to.deep.equal([token.accessToken]);
-          expect(events2).to.deep.equal([token.accessToken, newToken.accessToken]);
-        });
-      });
     });
   });
 });

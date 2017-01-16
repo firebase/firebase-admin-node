@@ -21,6 +21,10 @@ chai.use(chaiAsPromised);
 describe('Firebase', () => {
   let mockedRequests: nock.Scope[] = [];
 
+  before(() => utils.mockFetchAccessTokenRequests());
+
+  after(() => nock.cleanAll());
+
   afterEach(() => {
     firebaseAdmin.apps.forEach((app) => {
       app.delete();
@@ -28,10 +32,6 @@ describe('Firebase', () => {
 
     _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
     mockedRequests = [];
-  });
-
-  after(() => {
-    nock.cleanAll();
   });
 
   describe('#initializeApp()', () => {
@@ -196,24 +196,21 @@ describe('Firebase', () => {
       });
 
       it('should initialize SDK given a certificate object', () => {
-        mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
 
         firebaseAdmin.initializeApp({
           serviceAccount: mocks.certificateObject,
         });
 
-        return (firebaseAdmin.app().auth().INTERNAL as any).getToken()
+        return firebaseAdmin.app().INTERNAL.getToken()
           .should.eventually.have.keys(['accessToken', 'expirationTime']);
       });
 
       it('should initialize SDK given a valid path to a certificate key file', () => {
-        mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
-
         firebaseAdmin.initializeApp({
           serviceAccount: path.resolve(__dirname, 'resources/mock.key.json'),
         });
 
-        return (firebaseAdmin.app().auth().INTERNAL as any).getToken()
+        return firebaseAdmin.app().INTERNAL.getToken()
           .should.eventually.have.keys(['accessToken', 'expirationTime']);
       });
     });
@@ -249,25 +246,21 @@ describe('Firebase', () => {
       });
 
       it('should initialize SDK given a cert credential with a certificate object', () => {
-        mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
-
         firebaseAdmin.initializeApp({
           credential: firebaseAdmin.credential.cert(mocks.certificateObject),
         });
 
-        return (firebaseAdmin.app().auth().INTERNAL as any).getToken()
+        return firebaseAdmin.app().INTERNAL.getToken()
           .should.eventually.have.keys(['accessToken', 'expirationTime']);
       });
 
       it('should initialize SDK given a cert credential with a valid path to a certificate key file', () => {
-        mockedRequests.push(utils.mockFetchAccessTokenViaJwt());
-
         const keyPath = path.resolve(__dirname, 'resources/mock.key.json');
         firebaseAdmin.initializeApp({
           credential: firebaseAdmin.credential.cert(keyPath),
         });
 
-        return (firebaseAdmin.app().auth().INTERNAL as any).getToken()
+        return firebaseAdmin.app().INTERNAL.getToken()
           .should.eventually.have.keys(['accessToken', 'expirationTime']);
       });
 
@@ -276,7 +269,7 @@ describe('Firebase', () => {
           credential: firebaseAdmin.credential.applicationDefault(),
         });
 
-        return (firebaseAdmin.app().auth().INTERNAL as any).getToken()
+        return firebaseAdmin.app().INTERNAL.getToken()
           .should.eventually.have.keys(['accessToken', 'expirationTime']);
       });
 
@@ -287,7 +280,7 @@ describe('Firebase', () => {
           credential: firebaseAdmin.credential.refreshToken(mocks.refreshToken),
         });
 
-        return (firebaseAdmin.app().auth().INTERNAL as any).getToken()
+        return firebaseAdmin.app().INTERNAL.getToken()
           .should.eventually.have.keys(['accessToken', 'expirationTime']);
       });
     });

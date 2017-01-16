@@ -1,9 +1,5 @@
 'use strict';
 
-// Use untyped import syntax for Node built-ins.
-import fs = require('fs');
-import path = require('path');
-
 import * as _ from 'lodash';
 import {expect} from 'chai';
 import * as chai from 'chai';
@@ -12,9 +8,11 @@ import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
+import * as utils from './utils';
+import * as mocks from './resources/mocks';
+
 import {deepCopy} from '../src/utils/deep-copy';
-import {mockFetchAccessTokenViaJwt, generateRandomAccessToken} from './utils';
-import {CertCredential, Certificate} from '../src/auth/credential';
+import {FirebaseApp} from '../src/firebase-app';
 import {HttpRequestHandler} from '../src/utils/api-request';
 import * as validator from '../src/utils/validator';
 import {
@@ -27,10 +25,6 @@ import {AuthClientErrorCode, FirebaseAuthError} from '../src/utils/error';
 chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
-
-
-const certPath = path.resolve(__dirname, 'resources/mock.key.json');
-const MOCK_CERTIFICATE_OBJECT = JSON.parse(fs.readFileSync(certPath).toString());
 
 
 describe('FIREBASE_AUTH_GET_ACCOUNT_INFO', () => {
@@ -507,21 +501,31 @@ describe('FIREBASE_AUTH_SIGN_UP_NEW_USER', () => {
 });
 
 describe('FirebaseAuthRequestHandler', () => {
+  let mockApp: FirebaseApp;
   let mockedRequests: nock.Scope[] = [];
   let stubs: sinon.SinonStub[] = [];
-  afterEach(() => {
-    _.forEach(stubs, (stub) => stub.restore());
-    _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
-  });
+  let mockAccessToken: string = utils.generateRandomAccessToken();
+
+  before(() => utils.mockFetchAccessTokenRequests(mockAccessToken));
+
   after(() => {
     stubs = [];
     nock.cleanAll();
   });
+
+  beforeEach(() => {
+    mockApp = mocks.app();
+  });
+
+  afterEach(() => {
+    _.forEach(stubs, (stub) => stub.restore());
+    _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
+  });
+
   describe('Constructor', () => {
-    it('should succeed with a credential', () => {
+    it('should succeed with a FirebaseApp instance', () => {
       expect(() => {
-        const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
-        return new FirebaseAuthRequestHandler(cred);
+        return new FirebaseAuthRequestHandler(mockApp);
       }).not.to.throw(Error);
     });
   });
@@ -539,19 +543,16 @@ describe('FirebaseAuthRequestHandler', () => {
         ],
       };
       const data = {email: ['user@example.com']};
-      const accessToken = generateRandomAccessToken();
       const headers = {
         'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + accessToken,
+        Authorization: 'Bearer ' + mockAccessToken,
       };
 
       let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
 
-      mockedRequests.push(mockFetchAccessTokenViaJwt(accessToken));
-      const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
-      const requestHandler = new FirebaseAuthRequestHandler(cred);
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       return requestHandler.getAccountInfoByEmail('user@example.com')
         .then((result) => {
           expect(result).to.deep.equal(expectedResult);
@@ -565,19 +566,16 @@ describe('FirebaseAuthRequestHandler', () => {
       };
       const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
       const data = {email: ['user@example.com']};
-      const accessToken = generateRandomAccessToken();
       const headers = {
         'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + accessToken,
+        Authorization: 'Bearer ' + mockAccessToken,
       };
 
       let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
 
-      mockedRequests.push(mockFetchAccessTokenViaJwt(accessToken));
-      const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
-      const requestHandler = new FirebaseAuthRequestHandler(cred);
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       return requestHandler.getAccountInfoByEmail('user@example.com')
         .then((resp) => {
           throw new Error('Unexpected success');
@@ -602,19 +600,16 @@ describe('FirebaseAuthRequestHandler', () => {
         ],
       };
       const data = {localId: ['uid']};
-      const accessToken = generateRandomAccessToken();
       const headers = {
         'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + accessToken,
+        Authorization: 'Bearer ' + mockAccessToken,
       };
 
       let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
 
-      mockedRequests.push(mockFetchAccessTokenViaJwt(accessToken));
-      const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
-      const requestHandler = new FirebaseAuthRequestHandler(cred);
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       return requestHandler.getAccountInfoByUid('uid')
         .then((result) => {
           expect(result).to.deep.equal(expectedResult);
@@ -627,20 +622,17 @@ describe('FirebaseAuthRequestHandler', () => {
         kind: 'identitytoolkit#GetAccountInfoResponse',
       };
       const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
-      const accessToken = generateRandomAccessToken();
       const data = {localId: ['uid']};
       const headers = {
         'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + accessToken,
+        Authorization: 'Bearer ' + mockAccessToken,
       };
 
       let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
 
-      mockedRequests.push(mockFetchAccessTokenViaJwt(accessToken));
-      const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
-      const requestHandler = new FirebaseAuthRequestHandler(cred);
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       return requestHandler.getAccountInfoByUid('uid')
         .then((resp) => {
           throw new Error('Unexpected success');
@@ -658,19 +650,16 @@ describe('FirebaseAuthRequestHandler', () => {
       };
       const expectedError = FirebaseAuthError.fromServerError('INTERNAL_SERVER_ERROR');
       const data = {localId: ['uid']};
-      const accessToken = generateRandomAccessToken();
       const headers = {
         'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + accessToken,
+        Authorization: 'Bearer ' + mockAccessToken,
       };
 
       let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
 
-      mockedRequests.push(mockFetchAccessTokenViaJwt(accessToken));
-      const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
-      const requestHandler = new FirebaseAuthRequestHandler(cred);
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       return requestHandler.getAccountInfoByUid('uid')
         .then((resp) => {
           throw new Error('Unexpected success');
@@ -693,17 +682,14 @@ describe('FirebaseAuthRequestHandler', () => {
         kind: 'identitytoolkit#DeleteAccountResponse',
       };
       const data = {localId: 'uid'};
-      const accessToken = generateRandomAccessToken();
       const headers = {
         'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + accessToken,
+        Authorization: 'Bearer ' + mockAccessToken,
       };
       let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
-      mockedRequests.push(mockFetchAccessTokenViaJwt(accessToken));
-      const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
-      const requestHandler = new FirebaseAuthRequestHandler(cred);
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       return requestHandler.deleteAccount('uid')
         .then((result) => {
           expect(result).to.deep.equal(expectedResult);
@@ -719,17 +705,14 @@ describe('FirebaseAuthRequestHandler', () => {
       };
       const expectedError = FirebaseAuthError.fromServerError('INTERNAL_SERVER_ERROR');
       const data = {localId: 'uid'};
-      const accessToken = generateRandomAccessToken();
       const headers = {
         'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + accessToken,
+        Authorization: 'Bearer ' + mockAccessToken,
       };
       let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
-      mockedRequests.push(mockFetchAccessTokenViaJwt(accessToken));
-      const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
-      const requestHandler = new FirebaseAuthRequestHandler(cred);
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       return requestHandler.deleteAccount('uid')
         .then((resp) => {
           throw new Error('Unexpected success');
@@ -778,10 +761,9 @@ describe('FirebaseAuthRequestHandler', () => {
       password: 'password',
       deleteAttribute: ['DISPLAY_NAME', 'PHOTO_URL'],
     };
-    const accessToken = generateRandomAccessToken();
     const headers = {
       'Content-Type': 'application/json',
-      Authorization: 'Bearer ' + accessToken,
+      Authorization: 'Bearer ' + mockAccessToken,
     };
     const invalidData = {
       uid,
@@ -798,9 +780,7 @@ describe('FirebaseAuthRequestHandler', () => {
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
 
-      mockedRequests.push(mockFetchAccessTokenViaJwt(accessToken));
-      const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
-      const requestHandler = new FirebaseAuthRequestHandler(cred);
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       // Send empty update request.
       return requestHandler.updateExistingAccount(uid, {})
         .then((returnedUid: string) => {
@@ -823,9 +803,7 @@ describe('FirebaseAuthRequestHandler', () => {
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
 
-      mockedRequests.push(mockFetchAccessTokenViaJwt(accessToken));
-      const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
-      const requestHandler = new FirebaseAuthRequestHandler(cred);
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       // Send update request with all possible valid parameters.
       return requestHandler.updateExistingAccount(uid, validData)
         .then((returnedUid: string) => {
@@ -848,9 +826,7 @@ describe('FirebaseAuthRequestHandler', () => {
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
 
-      mockedRequests.push(mockFetchAccessTokenViaJwt(accessToken));
-      const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
-      const requestHandler = new FirebaseAuthRequestHandler(cred);
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       // Send update request to delete display name and photo URL.
       return requestHandler.updateExistingAccount(uid, validDeleteData)
         .then((returnedUid: string) => {
@@ -866,8 +842,7 @@ describe('FirebaseAuthRequestHandler', () => {
     it('should be rejected given invalid parameters', () => {
       // Expected error when an invalid email is provided.
       const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);
-      const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
-      const requestHandler = new FirebaseAuthRequestHandler(cred);
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       // Send update request with invalid email.
       return requestHandler.updateExistingAccount(uid, invalidData)
         .then((returnedUid: string) => {
@@ -891,9 +866,7 @@ describe('FirebaseAuthRequestHandler', () => {
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
 
-      mockedRequests.push(mockFetchAccessTokenViaJwt(accessToken));
-      const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
-      const requestHandler = new FirebaseAuthRequestHandler(cred);
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       return requestHandler.updateExistingAccount(uid, validData)
         .then((returnedUid: string) => {
           throw new Error('Unexpected success');
@@ -951,10 +924,9 @@ describe('FirebaseAuthRequestHandler', () => {
         allowOverwrite: false,
         sanityCheck: true,
       };
-      const accessToken = generateRandomAccessToken();
       const headers = {
         'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + accessToken,
+        Authorization: 'Bearer ' + mockAccessToken,
       };
       it('should be fulfilled given a valid localId', () => {
         // Successful uploadAccount response.
@@ -966,9 +938,7 @@ describe('FirebaseAuthRequestHandler', () => {
           .returns(Promise.resolve(expectedResult));
         stubs.push(stub);
 
-        mockedRequests.push(mockFetchAccessTokenViaJwt(accessToken));
-        const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
-        const requestHandler = new FirebaseAuthRequestHandler(cred);
+        const requestHandler = new FirebaseAuthRequestHandler(mockApp);
         // Send empty create new account request with only a uid provided.
         return requestHandler.createNewAccount({uid})
           .then((returnedUid: string) => {
@@ -989,9 +959,7 @@ describe('FirebaseAuthRequestHandler', () => {
           .returns(Promise.resolve(expectedResult));
         stubs.push(stub);
 
-        mockedRequests.push(mockFetchAccessTokenViaJwt(accessToken));
-        const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
-        const requestHandler = new FirebaseAuthRequestHandler(cred);
+        const requestHandler = new FirebaseAuthRequestHandler(mockApp);
         // Create a new account with all possible valid data.
         return requestHandler.createNewAccount(validData)
           .then((returnedUid: string) => {
@@ -1006,8 +974,7 @@ describe('FirebaseAuthRequestHandler', () => {
       it('should be rejected given invalid parameters', () => {
         // Expected error when an invalid email is provided.
         const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);
-        const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
-        const requestHandler = new FirebaseAuthRequestHandler(cred);
+        const requestHandler = new FirebaseAuthRequestHandler(mockApp);
         // Create new account with invalid email.
         return requestHandler.createNewAccount(invalidData)
           .then((returnedUid: string) => {
@@ -1036,9 +1003,7 @@ describe('FirebaseAuthRequestHandler', () => {
           .returns(Promise.resolve(expectedResult));
         stubs.push(stub);
 
-        mockedRequests.push(mockFetchAccessTokenViaJwt(accessToken));
-        const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
-        const requestHandler = new FirebaseAuthRequestHandler(cred);
+        const requestHandler = new FirebaseAuthRequestHandler(mockApp);
         // Send create new account request and simulate a backend error that the user
         // already exists.
         return requestHandler.createNewAccount(validData)
@@ -1069,9 +1034,7 @@ describe('FirebaseAuthRequestHandler', () => {
           .returns(Promise.resolve(expectedResult));
         stubs.push(stub);
 
-        mockedRequests.push(mockFetchAccessTokenViaJwt(accessToken));
-        const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
-        const requestHandler = new FirebaseAuthRequestHandler(cred);
+        const requestHandler = new FirebaseAuthRequestHandler(mockApp);
         // Send create new account request and simulate a backend error that the email
         // already exists.
         return requestHandler.createNewAccount(validData)
@@ -1097,9 +1060,7 @@ describe('FirebaseAuthRequestHandler', () => {
           .returns(Promise.resolve(expectedResult));
         stubs.push(stub);
 
-        mockedRequests.push(mockFetchAccessTokenViaJwt(accessToken));
-        const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
-        const requestHandler = new FirebaseAuthRequestHandler(cred);
+        const requestHandler = new FirebaseAuthRequestHandler(mockApp);
         // Send create new account request with valid data but simulate backend error.
         return requestHandler.createNewAccount(validData)
           .then((returnedUid: string) => {
@@ -1139,10 +1100,9 @@ describe('FirebaseAuthRequestHandler', () => {
       const invalidData = {
         email: 'user@invalid@',
       };
-      const accessToken = generateRandomAccessToken();
       const headers = {
         'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + accessToken,
+        Authorization: 'Bearer ' + mockAccessToken,
       };
       it('should be fulfilled given valid parameters', () => {
         // signupNewUser successful response.
@@ -1155,9 +1115,7 @@ describe('FirebaseAuthRequestHandler', () => {
           .returns(Promise.resolve(expectedResult));
         stubs.push(stub);
 
-        mockedRequests.push(mockFetchAccessTokenViaJwt(accessToken));
-        const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
-        const requestHandler = new FirebaseAuthRequestHandler(cred);
+        const requestHandler = new FirebaseAuthRequestHandler(mockApp);
         // Send request with valid data.
         return requestHandler.createNewAccount(validData)
           .then((returnedUid: string) => {
@@ -1173,8 +1131,7 @@ describe('FirebaseAuthRequestHandler', () => {
         // Expected error when an invalid email is provided.
         const expectedError =
           new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);
-        const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
-        const requestHandler = new FirebaseAuthRequestHandler(cred);
+        const requestHandler = new FirebaseAuthRequestHandler(mockApp);
         // Send create new account request with invalid data.
         return requestHandler.createNewAccount(invalidData)
           .then((returnedUid: string) => {
@@ -1197,9 +1154,7 @@ describe('FirebaseAuthRequestHandler', () => {
           .returns(Promise.resolve(expectedResult));
         stubs.push(stub);
 
-        mockedRequests.push(mockFetchAccessTokenViaJwt(accessToken));
-        const cred = new CertCredential(new Certificate(MOCK_CERTIFICATE_OBJECT));
-        const requestHandler = new FirebaseAuthRequestHandler(cred);
+        const requestHandler = new FirebaseAuthRequestHandler(mockApp);
         // Send valid create new account request and simulate backend error.
         return requestHandler.createNewAccount(validData)
           .then((returnedUid: string) => {

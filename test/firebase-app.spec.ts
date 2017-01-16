@@ -1,22 +1,29 @@
 'use strict';
 
+// Use untyped import syntax for Node built-ins
+import https = require('https');
+
 import {expect} from 'chai';
 import * as _ from 'lodash';
 import * as chai from 'chai';
+import * as nock from 'nock';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
+import * as utils from './utils';
 import * as mocks from './resources/mocks';
 
-import {FirebaseApp} from '../src/firebase-app';
-import {FirebaseNamespace, FirebaseNamespaceInternals} from '../src/firebase-namespace';
+import {GoogleOAuthAccessToken} from '../src/auth/credential';
 import {FirebaseServiceInterface} from '../src/firebase-service';
+import {FirebaseApp, FirebaseAccessToken} from '../src/firebase-app';
+import {FirebaseNamespace, FirebaseNamespaceInternals} from '../src/firebase-namespace';
 
 chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
+const ONE_HOUR_IN_SECONDS = 60 * 60;
 
 const deleteSpy = sinon.spy();
 function mockServiceFactory(app: FirebaseApp): FirebaseServiceInterface {
@@ -31,10 +38,19 @@ function mockServiceFactory(app: FirebaseApp): FirebaseServiceInterface {
 
 describe('FirebaseApp', () => {
   let mockApp: FirebaseApp;
+  let mockedRequests: nock.Scope[] = [];
   let firebaseNamespace: FirebaseNamespace;
   let firebaseNamespaceInternals: FirebaseNamespaceInternals;
 
+  before(() => utils.mockFetchAccessTokenRequests());
+
+  after(() => nock.cleanAll());
+
   beforeEach(() => {
+    this.clock = sinon.useFakeTimers(1000);
+
+    mockApp = mocks.app();
+
     firebaseNamespace = new FirebaseNamespace();
     firebaseNamespaceInternals = firebaseNamespace.INTERNAL;
 
@@ -43,8 +59,57 @@ describe('FirebaseApp', () => {
   });
 
   afterEach(() => {
+    this.clock.restore();
+
     deleteSpy.reset();
     (firebaseNamespaceInternals.removeApp as any).restore();
+
+    _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
+    mockedRequests = [];
+  });
+
+  describe('constructor', () => {
+    let consoleErrorSpy: sinon.SinonSpy;
+
+    beforeEach(() => {
+      consoleErrorSpy = sinon.spy(console, 'error');
+    });
+
+    afterEach(() => {
+      consoleErrorSpy.restore();
+    });
+
+    it('logs an error given a custom credential implementation which returns invalid access tokens', () => {
+      const credential = {
+        getAccessToken: () => 5,
+      };
+
+      const app = utils.createAppWithOptions({
+        credential: credential as any,
+      });
+
+      // The FirebaseApp constructor asynchronously logs by calling getToken(). Since that method
+      // is cached, we can call it again in this test and, once it is rejected, check if the
+      // FirebaseApp constructor logged an error.
+      return app.INTERNAL.getToken().then(() => {
+        throw new Error('Unexpected success');
+      }, (err) => {
+        expect(consoleErrorSpy).to.have.been.calledOnce.and.calledWith(new Error());
+      });
+    });
+
+    it('does not log an error given a well-formed custom credential implementation', () => {
+      const app = utils.createAppWithOptions({
+        credential: mocks.credential,
+      });
+
+      // The FirebaseApp constructor asynchronously logs by calling getToken(). Since that method
+      // is cached, we can call it again in this test and check if it is fulfilled, ensure the
+      // FirebaseApp constructor did not log an error.
+      return app.INTERNAL.getToken().then((token) => {
+        expect(consoleErrorSpy).not.to.have.been.called;
+      });
+    });
   });
 
   describe('#name', () => {
@@ -177,6 +242,173 @@ describe('FirebaseApp', () => {
       const serviceNamespace2 = app[mocks.serviceName]();
       expect(createServiceSpy).to.have.been.calledOnce;
       expect(serviceNamespace1).to.deep.equal(serviceNamespace2);
+    });
+  });
+
+  describe('INTERNAL.getToken()', () => {
+    let httpsSpy: sinon.SinonSpy;
+
+    beforeEach(() => httpsSpy = sinon.spy(https, 'request'));
+    afterEach(() => httpsSpy.restore());
+
+    it('throws a custom credential implementation which returns invalid access tokens', () => {
+      const credential = {
+        getAccessToken: () => 5,
+      };
+
+      const app = utils.createAppWithOptions({
+        credential: credential as any,
+      });
+
+      return app.INTERNAL.getToken().then(() => {
+        throw new Error('Unexpected success');
+      }, (err) => {
+        expect(err.toString()).to.include('Invalid access token generated');
+      });
+    });
+
+    it('returns a valid token given a well-formed custom credential implementation', () => {
+      const oracle: GoogleOAuthAccessToken = {
+        access_token: 'This is a custom token',
+        expires_in: ONE_HOUR_IN_SECONDS,
+      };
+      const credential = {
+        getAccessToken: () => Promise.resolve(oracle),
+      };
+
+      const app = utils.createAppWithOptions({
+        credential,
+      });
+
+      return app.INTERNAL.getToken().then((token) => {
+        expect(token.accessToken).to.equal(oracle.access_token);
+        expect(+token.expirationTime).to.equal((ONE_HOUR_IN_SECONDS + 1) * 1000);
+      });
+    });
+
+    it('returns a valid token given no arguments', () => {
+      return mockApp.INTERNAL.getToken().then((token) => {
+        expect(token).to.have.keys(['accessToken', 'expirationTime']);
+        expect(token.accessToken).to.be.a('string').and.to.not.be.empty;
+        expect(token.expirationTime).to.be.a('number');
+      });
+    });
+
+    it('returns a valid token with force refresh', () => {
+      return mockApp.INTERNAL.getToken(true).then((token) => {
+        expect(token).to.have.keys(['accessToken', 'expirationTime']);
+        expect(token.accessToken).to.be.a('string').and.to.not.be.empty;
+        expect(token.expirationTime).to.be.a('number');
+      });
+    });
+
+    it('returns the cached token given no arguments', () => {
+      return mockApp.INTERNAL.getToken(true).then((token1) => {
+        this.clock.tick(1000);
+        return mockApp.INTERNAL.getToken().then((token2) => {
+          expect(token1).to.deep.equal(token2);
+          expect(https.request).to.have.been.calledOnce;
+        });
+      });
+    });
+
+    it('returns a new token with force refresh', () => {
+      return mockApp.INTERNAL.getToken(true).then((token1) => {
+        this.clock.tick(1000);
+        return mockApp.INTERNAL.getToken(true).then((token2) => {
+          expect(token1).to.not.deep.equal(token2);
+          expect(https.request).to.have.been.calledTwice;
+        });
+      });
+    });
+  });
+
+  describe('INTERNAL.addAuthTokenListener()', () => {
+    let addAuthTokenListenerSpy: sinon.SinonSpy;
+
+    before(() => {
+      addAuthTokenListenerSpy = sinon.spy();
+    });
+
+    afterEach(() => {
+      addAuthTokenListenerSpy.reset();
+    });
+
+    it('is notified when the token changes', () => {
+      mockApp.INTERNAL.addAuthTokenListener(addAuthTokenListenerSpy);
+
+      return mockApp.INTERNAL.getToken().then((token: FirebaseAccessToken) => {
+        expect(addAuthTokenListenerSpy).to.have.been.calledOnce.and.calledWith(token.accessToken);
+      });
+    });
+
+    it('can be called twice', () => {
+      mockApp.INTERNAL.addAuthTokenListener(addAuthTokenListenerSpy);
+      mockApp.INTERNAL.addAuthTokenListener(addAuthTokenListenerSpy);
+
+      return mockApp.INTERNAL.getToken().then((token: FirebaseAccessToken) => {
+        expect(addAuthTokenListenerSpy).to.have.been.calledTwice;
+        expect(addAuthTokenListenerSpy.firstCall).to.have.been.calledWith(token.accessToken);
+        expect(addAuthTokenListenerSpy.secondCall).to.have.been.calledWith(token.accessToken);
+      });
+    });
+
+    it('will be called on token refresh', () => {
+      mockApp.INTERNAL.addAuthTokenListener(addAuthTokenListenerSpy);
+
+      return mockApp.INTERNAL.getToken().then((token: FirebaseAccessToken) => {
+        expect(addAuthTokenListenerSpy).to.have.been.calledOnce.and.calledWith(token.accessToken);
+
+        this.clock.tick(1000);
+
+        return mockApp.INTERNAL.getToken(true);
+      }).then((token: FirebaseAccessToken) => {
+        expect(addAuthTokenListenerSpy).to.have.been.calledTwice;
+        expect(addAuthTokenListenerSpy.secondCall).to.have.been.calledWith(token.accessToken);
+      });
+    });
+
+    it('will fire with the initial token if it exists', () => {
+      return mockApp.INTERNAL.getToken().then((getTokenResult: FirebaseAccessToken) => {
+        return new Promise((resolve) => {
+          mockApp.INTERNAL.addAuthTokenListener(resolve);
+        }).then((addAuthTokenListenerArgument) => {
+          expect(addAuthTokenListenerArgument).to.equal(getTokenResult.accessToken);
+        });
+      });
+    });
+  });
+
+  describe('INTERNAL.removeTokenListener()', () => {
+    let addAuthTokenListenerSpies: sinon.SinonSpy[] = [];
+
+    before(() => {
+      addAuthTokenListenerSpies[0] = sinon.spy();
+      addAuthTokenListenerSpies[1] = sinon.spy();
+    });
+
+    afterEach(() => {
+      addAuthTokenListenerSpies.forEach((spy) => spy.reset());
+    });
+
+    it('removes the listener', () => {
+      mockApp.INTERNAL.addAuthTokenListener(addAuthTokenListenerSpies[0]);
+      mockApp.INTERNAL.addAuthTokenListener(addAuthTokenListenerSpies[1]);
+
+      return mockApp.INTERNAL.getToken().then((token: FirebaseAccessToken) => {
+        expect(addAuthTokenListenerSpies[0]).to.have.been.calledOnce.and.calledWith(token.accessToken);
+        expect(addAuthTokenListenerSpies[1]).to.have.been.calledOnce.and.calledWith(token.accessToken);
+
+        mockApp.INTERNAL.removeAuthTokenListener(addAuthTokenListenerSpies[0]);
+
+        this.clock.tick(1000);
+
+        return mockApp.INTERNAL.getToken(true);
+      }).then((token: FirebaseAccessToken) => {
+        expect(addAuthTokenListenerSpies[0]).to.have.been.calledOnce;
+        expect(addAuthTokenListenerSpies[1]).to.have.been.calledTwice;
+        expect(addAuthTokenListenerSpies[1].secondCall).to.have.been.calledWith(token.accessToken);
+      });
     });
   });
 });

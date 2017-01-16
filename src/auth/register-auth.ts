@@ -12,17 +12,7 @@ import {FirebaseServiceNamespace} from '../firebase-namespace';
  * @return {Auth} The auth service for the specified app.
  */
 function serviceFactory(app: FirebaseApp, extendApp: (props: Object) => void): FirebaseServiceInterface {
-  const auth = new Auth(app);
-
-  extendApp({
-    INTERNAL: {
-      getToken: auth.INTERNAL.getToken.bind(auth.INTERNAL),
-      addAuthTokenListener: auth.INTERNAL.addAuthTokenListener.bind(auth.INTERNAL),
-      removeAuthTokenListener: auth.INTERNAL.removeAuthTokenListener.bind(auth.INTERNAL),
-    },
-  });
-
-  return auth;
+  return new Auth(app);
 }
 
 /**

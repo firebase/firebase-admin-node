@@ -20,6 +20,9 @@ export interface FirebaseServiceNamespace <T extends FirebaseServiceInterface> {
 }
 
 
+/**
+ * Internals of a FirebaseNamespace instance.
+ */
 export class FirebaseNamespaceInternals {
   public serviceFactories: {[serviceName: string]: FirebaseServiceFactory} = {};
 

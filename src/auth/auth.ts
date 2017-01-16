@@ -1,11 +1,25 @@
-import {Credential} from './credential';
-import {FirebaseTokenGenerator} from './token-generator';
-import {FirebaseApp} from '../firebase-app';
-import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {GoogleOAuthAccessToken} from './credential';
-import {FirebaseAuthRequestHandler} from './auth-api-request';
 import {UserRecord} from './user-record';
+import {FirebaseApp} from '../firebase-app';
+import {FirebaseTokenGenerator} from './token-generator';
+import {FirebaseAuthRequestHandler} from './auth-api-request';
 import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
+import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
+
+
+/**
+ * Internals of an Auth instance.
+ */
+export class AuthInternals implements FirebaseServiceInternalsInterface {
+  /**
+   * Deletes the service and its associated resources.
+   *
+   * @return {Promise<()>} An empty Promise that will be fulfilled when the service is deleted.
+   */
+  public delete(): Promise<void> {
+    // There are no resources to clean up
+    return Promise.resolve(undefined);
+  }
+}
 
 
 /**
@@ -15,9 +29,10 @@ import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
  * @constructor
  */
 class Auth implements FirebaseServiceInterface {
+  public INTERNAL: AuthInternals = new AuthInternals();
+
   private app_: FirebaseApp;
   private tokenGenerator_: FirebaseTokenGenerator;
-  private authTokenManager_: AuthTokenManager;
   private authRequestHandler: FirebaseAuthRequestHandler;
 
   constructor(app: FirebaseApp) {
@@ -30,8 +45,6 @@ class Auth implements FirebaseServiceInterface {
 
     this.app_ = app;
 
-    this.authTokenManager_ = new AuthTokenManager(app.options.credential);
-
     // TODO (inlined): plumb this into a factory method for tokenGenerator_ once we
     // can generate custom tokens from access tokens.
     let serviceAccount;
@@ -41,16 +54,12 @@ class Auth implements FirebaseServiceInterface {
     if (serviceAccount) {
       this.tokenGenerator_ = new FirebaseTokenGenerator(serviceAccount);
     }
-    // Initialize auth request handler with the credential.
-    this.authRequestHandler = new FirebaseAuthRequestHandler(app.options.credential);
+    // Initialize auth request handler with the app.
+    this.authRequestHandler = new FirebaseAuthRequestHandler(app);
   }
 
   get app(): FirebaseApp {
     return this.app_;
-  }
-
-  get INTERNAL(): AuthTokenManager {
-    return this.authTokenManager_;
   }
 
   /**
@@ -169,103 +178,6 @@ class Auth implements FirebaseServiceInterface {
       });
   };
 };
-
-export class FirebaseAccessToken {
-  public accessToken: string;
-  public expirationTime: number;
-}
-
-export class AuthTokenManager implements FirebaseServiceInternalsInterface {
-  private credential: Credential;
-  private cachedToken: FirebaseAccessToken;
-  private tokenListeners: Array<(token: string) => void>;
-
-  constructor(credential: Credential) {
-    this.credential = credential;
-    this.tokenListeners = [];
-  }
-
-  /**
-   * Deletes the service and its associated resources.
-   *
-   * @return {Promise<()>} An empty Promise that will be fulfilled when the service is deleted.
-   */
-  public delete(): Promise<void> {
-    // There are no resources to clean up
-    return Promise.resolve(undefined);
-  }
-
-  /**
-   * Gets an auth token for the associated app.
-   *
-   * @param {boolean} forceRefresh Whether or not to force a token refresh.
-   * @return {Promise<Object>} A Promise that will be fulfilled with the current or new token.
-   */
-  public getToken(forceRefresh?: boolean): Promise<FirebaseAccessToken> {
-    const expired = this.cachedToken && this.cachedToken.expirationTime < Date.now();
-    if (this.cachedToken && !forceRefresh && !expired) {
-      return Promise.resolve(this.cachedToken);
-    } else {
-      // credential may be an external class; resolving it in a promise helps us
-      // protect against exceptions and upgrades the result to a promise in all cases.
-      return Promise.resolve()
-        .then(() => {
-          return this.credential.getAccessToken();
-        })
-        .then((result: GoogleOAuthAccessToken) => {
-          if (result === null) {
-            return null;
-          }
-          // Since the customer can provide the credential implementation, we want to weakly verify
-          // the return type until the type is properly exported.
-          if (typeof result !== 'object' ||
-            typeof result.expires_in !== 'number' ||
-            typeof result.access_token !== 'string') {
-            throw new FirebaseAuthError(
-              AuthClientErrorCode.INVALID_CREDENTIAL,
-              'initializeApp() was called with a credential ' +
-              'that creates invalid access tokens: ' + JSON.stringify(result));
-          }
-          const token: FirebaseAccessToken = {
-            accessToken: result.access_token,
-            expirationTime: Date.now() + (result.expires_in * 1000),
-          };
-
-          const hasAccessTokenChanged = (this.cachedToken && this.cachedToken.accessToken !== token.accessToken);
-          const hasExpirationChanged = (this.cachedToken && this.cachedToken.expirationTime !== token.expirationTime);
-          if (!this.cachedToken || hasAccessTokenChanged || hasExpirationChanged) {
-            this.cachedToken = token;
-            this.tokenListeners.forEach((listener) => {
-              listener(token.accessToken);
-            });
-          }
-
-          return token;
-        });
-    }
-  }
-
-  /**
-   * Adds a listener that is called each time a token changes.
-   *
-   * @param {function(string)} listener The listener that will be called with each new token.
-   */
-  public addAuthTokenListener(listener: (token: string) => void) {
-    this.tokenListeners.push(listener);
-    if (this.cachedToken) {
-      listener(this.cachedToken.accessToken);
-    }
-  }
-
-  /**
-   * Removes a token listener.
-   *
-   * @param {function(string)} listener The listener to remove.
-   */
-  public removeAuthTokenListener(listener: (token: string) => void) {
-    this.tokenListeners = this.tokenListeners.filter((other) => other !== listener);
-  }
-}
 
 
 export {
