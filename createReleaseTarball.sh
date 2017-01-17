@@ -21,6 +21,7 @@ if [[ $1 == "-h" || $1 == "--help" ]]; then
 fi
 
 VERSION=$1
+VERSION_WITHOUT_RC=${VERSION%-*}
 
 
 #############################
@@ -69,8 +70,8 @@ fi
 #########################
 #  UPDATE package.json  #
 #########################
-echo "[INFO] Updating version number in package.json to ${VERSION}..."
-sed -i '' -e s/"\"version\": \".*\""/"\"version\": \"${VERSION}\""/ package.json
+echo "[INFO] Updating version number in package.json to ${VERSION_WITHOUT_RC}..."
+sed -i '' -e s/"\"version\": \".*\""/"\"version\": \"${VERSION_WITHOUT_RC}\""/ package.json
 echo
 
 
