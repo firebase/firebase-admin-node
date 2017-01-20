@@ -130,6 +130,10 @@ if [[ $? -ne 0 ]]; then
 fi
 echo
 
+# Since npm pack uses the version number in the package.json when creating the tarball,
+# rename the tarball to include the RC version.
+mv firebase-admin-${VERSION_WITHOUT_RC}.tgz firebase-admin-${VERSION}.tgz
+
 
 ##############
 #  EPILOGUE  #
