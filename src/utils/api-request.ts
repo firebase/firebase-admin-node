@@ -1,5 +1,6 @@
 import {deepCopy} from './deep-copy';
 import {FirebaseApp} from '../firebase-app';
+import {FirebaseError} from './error';
 
 import https = require('https');
 
@@ -61,20 +62,35 @@ export class HttpRequestHandler {
           }
         });
       });
+
       if (timeout) {
         // Listen to timeouts and throw a network error.
         req.on('socket', (socket) => {
           socket.setTimeout(timeout);
           socket.on('timeout', () => {
             req.abort();
-            reject(new Error(host + ' network timeout. Try again.'));
+
+            const networkTimeoutError = new FirebaseError({
+              code: 'network-timeout',
+              message: `${ host } network timeout. Please try again.`,
+            });
+            reject(networkTimeoutError);
           });
         });
       }
-      req.on('error', reject);
+
+      req.on('error', (error) => {
+        const networkRequestError = new FirebaseError({
+          code: 'network-error',
+          message: `A network request error has occurred: ${ error && error.message }`,
+        });
+        reject(networkRequestError);
+      });
+
       if (requestData) {
         req.write(requestData);
       }
+
       req.end();
     });
   }
@@ -142,7 +158,7 @@ export class ApiSettings {
 
   constructor(private endpoint: string, private httpMethod: HttpMethod = 'POST') {
     if (!endpoint) {
-      throw new Error('Unspecified API settings endpoint');
+      throw new Error(`INTERNAL ASSERT FAILED: Unspecified API settings endpoint: ${ endpoint }`);
     }
     this.setRequestValidator(null)
         .setResponseValidator(null);

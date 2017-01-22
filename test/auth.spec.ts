@@ -24,8 +24,6 @@ chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
-const ONE_HOUR_IN_SECONDS = 60 * 60;
-
 
 /**
  * @return {Object} A sample valid server response as returned from getAccountInfo
@@ -90,6 +88,7 @@ class UnauthenticatedCredential {
 }
 
 describe('Auth', () => {
+  let auth: Auth;
   let mockApp: FirebaseApp;
 
   before(() => utils.mockFetchAccessTokenRequests());
@@ -98,6 +97,7 @@ describe('Auth', () => {
 
   beforeEach(() => {
     mockApp = mocks.app();
+    auth = new Auth(mockApp);
   });
 
 
@@ -128,17 +128,13 @@ describe('Auth', () => {
 
   describe('app', () => {
     it('returns the app from the constructor', () => {
-      const app = mockApp;
-      const auth = new Auth(app);
       // We expect referential equality here
-      expect(auth.app).to.equal(app);
+      expect(auth.app).to.equal(mockApp);
     });
 
     it('is read-only', () => {
-      const app = mockApp;
-      const auth = new Auth(app);
       expect(() => {
-        (auth as any).app = app;
+        (auth as any).app = mockApp;
       }).to.throw('Cannot set property app of #<Auth> which has only a getter');
     });
   });
@@ -155,17 +151,18 @@ describe('Auth', () => {
 
     it('should throw if a cert credential is not specified (and env not set)', () => {
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
-      const app = utils.createAppWithOptions({
+
+      const unauthenticatedApp = utils.createAppWithOptions({
         credential: new UnauthenticatedCredential(),
       });
-      const auth = new Auth(app);
+      const unauthenticatedAuth = new Auth(unauthenticatedApp);
+
       expect(() => {
-        auth.createCustomToken(mocks.uid, mocks.developerClaims);
+        unauthenticatedAuth.createCustomToken(mocks.uid, mocks.developerClaims);
       }).to.throw('Must initialize app with a cert credential to call auth().createCustomToken()');
     });
 
     it('should forward on the call to the token generator\'s createCustomToken() method', () => {
-      const auth = new Auth(mockApp);
       return auth.createCustomToken(mocks.uid, mocks.developerClaims)
         .then(() => {
           expect(spy)
@@ -182,18 +179,20 @@ describe('Auth', () => {
 
     it('should throw if a cert credential is not specified (and env not set)', () => {
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
-      const app = utils.createAppWithOptions({
+
+      const unauthenticatedApp = utils.createAppWithOptions({
         credential: new UnauthenticatedCredential(),
       });
-      const auth = new Auth(app);
+      const unauthenticatedAuth = new Auth(unauthenticatedApp);
+
       const mockIdToken = mocks.generateIdToken();
+
       expect(() => {
-        auth.verifyIdToken(mockIdToken);
+        unauthenticatedAuth.verifyIdToken(mockIdToken);
       }).to.throw('Must initialize app with a cert credential to call auth().verifyIdToken()');
     });
 
     it('should forward on the call to the token generator\'s verifyIdToken() method', () => {
-      const auth = new Auth(mockApp);
       const mockIdToken = mocks.generateIdToken();
       return auth.verifyIdToken(mockIdToken).then(() => {
         expect(stub).to.have.been.calledOnce.and.calledWith(mockIdToken);
@@ -202,19 +201,6 @@ describe('Auth', () => {
   });
 
   describe('getUser()', () => {
-    // Mock credential used to initialize the auth instance.
-    const accessToken: GoogleOAuthAccessToken = {
-      access_token: utils.generateRandomAccessToken(),
-      expires_in: ONE_HOUR_IN_SECONDS,
-    };
-    const credential = {
-      getAccessToken: () => Promise.resolve(accessToken),
-    };
-    const app = utils.createAppWithOptions({
-      credential,
-    });
-    // Initialize all test variables, expected parameters and results.
-    const auth = new Auth(app);
     const uid = 'abcdefghijklmnopqrstuvwxyz';
     const expectedGetAccountInfoResult = getValidGetAccountInfoResponse();
     const expectedUserRecord = getValidUserRecord(expectedGetAccountInfoResult);
@@ -260,19 +246,6 @@ describe('Auth', () => {
   });
 
   describe('getUserByEmail()', () => {
-    // Mock credential used to initialize the auth instance.
-    const accessToken: GoogleOAuthAccessToken = {
-      access_token: utils.generateRandomAccessToken(),
-      expires_in: ONE_HOUR_IN_SECONDS,
-    };
-    const credential = {
-      getAccessToken: () => Promise.resolve(accessToken),
-    };
-    const app = utils.createAppWithOptions({
-      credential,
-    });
-    // Initialize all test variables, expected parameters and results.
-    const auth = new Auth(app);
     const email = 'user@gmail.com';
     const expectedGetAccountInfoResult = getValidGetAccountInfoResponse();
     const expectedUserRecord = getValidUserRecord(expectedGetAccountInfoResult);
@@ -319,19 +292,6 @@ describe('Auth', () => {
   });
 
   describe('deleteUser()', () => {
-    // Mock credential used to initialize the auth instance.
-    const accessToken: GoogleOAuthAccessToken = {
-      access_token: utils.generateRandomAccessToken(),
-      expires_in: ONE_HOUR_IN_SECONDS,
-    };
-    const credential = {
-      getAccessToken: () => Promise.resolve(accessToken),
-    };
-    const app = utils.createAppWithOptions({
-      credential,
-    });
-    // Initialize all test variables, expected parameters and results.
-    const auth = new Auth(app);
     const uid = 'abcdefghijklmnopqrstuvwxyz';
     const expectedDeleteAccountResult = {kind: 'identitytoolkit#DeleteAccountResponse'};
     const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
@@ -377,19 +337,6 @@ describe('Auth', () => {
   });
 
   describe('createUser()', () => {
-    // Mock credential used to initialize the auth instance.
-    const accessToken: GoogleOAuthAccessToken = {
-      access_token: utils.generateRandomAccessToken(),
-      expires_in: ONE_HOUR_IN_SECONDS,
-    };
-    const credential = {
-      getAccessToken: () => Promise.resolve(accessToken),
-    };
-    const app = utils.createAppWithOptions({
-      credential,
-    });
-    // Initialize all test variables, expected parameters and results.
-    const auth = new Auth(app);
     const uid = 'abcdefghijklmnopqrstuvwxyz';
     const expectedGetAccountInfoResult = getValidGetAccountInfoResponse();
     const expectedUserRecord = getValidUserRecord(expectedGetAccountInfoResult);
@@ -495,19 +442,6 @@ describe('Auth', () => {
   });
 
   describe('updateUser()', () => {
-    // Mock credential used to initialize the auth instance.
-    const accessToken: GoogleOAuthAccessToken = {
-      access_token: utils.generateRandomAccessToken(),
-      expires_in: ONE_HOUR_IN_SECONDS,
-    };
-    const credential = {
-      getAccessToken: () => Promise.resolve(accessToken),
-    };
-    const app = utils.createAppWithOptions({
-      credential,
-    });
-    // Initialize all test variables, expected parameters and results.
-    const auth = new Auth(app);
     const uid = 'abcdefghijklmnopqrstuvwxyz';
     const expectedGetAccountInfoResult = getValidGetAccountInfoResponse();
     const expectedUserRecord = getValidUserRecord(expectedGetAccountInfoResult);
@@ -586,8 +520,7 @@ describe('Auth', () => {
   });
 
   describe('INTERNAL.delete()', () => {
-    it('should delete auth instance', () => {
-      const auth = new Auth(mockApp);
+    it('should delete Auth instance', () => {
       auth.INTERNAL.delete().should.eventually.be.fulfilled;
     });
   });

@@ -18,7 +18,7 @@ const FIREBASE_AUTH_PATH = '/identitytoolkit/v3/relyingparty/';
 const FIREBASE_AUTH_HEADER = {
   'Content-Type': 'application/json',
 };
-/** Firebase Auth request timeout duration in seconds. */
+/** Firebase Auth request timeout duration in milliseconds. */
 const FIREBASE_AUTH_TIMEOUT = 10000;
 
 
@@ -246,9 +246,6 @@ export const FIREBASE_AUTH_SIGN_UP_NEW_USER = new ApiSettings('signupNewUser', '
 
 /**
  * Class that provides mechanism to send requests to the Firebase Auth backend endpoints.
- *
- * @param {Credential} credential The service account credential used to sign HTTP requests.
- * @constructor
  */
 export class FirebaseAuthRequestHandler {
   private host: string = FIREBASE_AUTH_HOST;
@@ -266,6 +263,10 @@ export class FirebaseAuthRequestHandler {
     return (response.error && (response.error as any).message) || null;
   }
 
+  /**
+   * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
+   * @constructor
+   */
   constructor(app: FirebaseApp) {
     this.signedApiRequestHandler = new SignedApiRequestHandler(app);
   }

@@ -211,9 +211,9 @@ export class CertCredential implements Credential {
   private createAuthJwt_(): string {
     const claims = {
       scope: [
-        'https://www.googleapis.com/auth/userinfo.email',
         'https://www.googleapis.com/auth/firebase.database',
         'https://www.googleapis.com/auth/identitytoolkit',
+        'https://www.googleapis.com/auth/userinfo.email',
       ].join(' '),
     };
 

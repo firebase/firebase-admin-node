@@ -61,13 +61,13 @@ class FirebaseError extends Error {
  */
 class FirebaseAuthError extends FirebaseError {
   /**
-   * Creates the developer facing error corresponding to the backend error code.
+   * Creates the developer-facing error corresponding to the backend error code.
    *
    * @param {string} serverErrorCode The server error code.
    * @param {string} [message] The error message. The default message is used
    *     if not provided.
    * @param {Object} [rawServerResponse] The error's raw server response.
-   * @return {FirebaseAuthError} The corresponding developer facing error.
+   * @return {FirebaseAuthError} The corresponding developer-facing error.
    */
   public static fromServerError(
     serverErrorCode: string,
@@ -96,7 +96,10 @@ class FirebaseAuthError extends FirebaseError {
   }
 }
 
-/** @const {TODO} Auth client error codes and their default messages. */
+
+/**
+ * Auth client error codes and their default messages.
+ */
 class AuthClientErrorCode {
   public static INVALID_ARGUMENT = {
     code: 'argument-error',

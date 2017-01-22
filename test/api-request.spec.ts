@@ -59,7 +59,7 @@ describe('HttpRequestHandler', () => {
   };
   describe('sendRequest', () => {
     it('should return a promise that rejects on unexpected error', () => {
-      const expected = new Error('some error');
+      const expectedError = new Error('some error');
       httpStub.returns(request);
       let httpRequestHandler = new HttpRequestHandler();
       const p = httpRequestHandler.sendRequest(
@@ -67,16 +67,16 @@ describe('HttpRequestHandler', () => {
         .then((resp) => {
           throw new Error('Unexpected success');
         }, (error) => {
-          expect(error).to.deep.equal(expected);
+          expect(error.code).to.equal('network-error');
+          expect(error.message).to.include(expectedError.message);
           expect(httpStub).to.have.been.calledOnce.and.calledWith(options);
           expect(writeSpy).to.have.been.calledOnce.and.calledWith(JSON.stringify(data));
         });
-      request.emit('error', expected);
+      request.emit('error', expectedError);
       return p;
     });
 
     it('should return a promise that rejects on network error', () => {
-      const expected = new Error('Network timeout');
       httpStub.returns(request);
       const expectedSocket = new mocks.MockSocketEmitter();
       let httpRequestHandler = new HttpRequestHandler();
@@ -85,7 +85,8 @@ describe('HttpRequestHandler', () => {
         .then((resp) => {
           throw new Error('Unexpected success');
         }, (error) => {
-          expect(error).to.deep.equal(expected);
+          expect(error.code).to.equal('network-timeout');
+          expect(error.message).to.include(`${ host } network timeout.`);
           expect(httpStub).to.have.been.calledOnce.and.calledWith(options);
           expect(writeSpy).to.have.been.calledOnce.and.calledWith(JSON.stringify(data));
         });

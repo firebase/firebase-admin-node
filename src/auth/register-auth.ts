@@ -5,18 +5,19 @@ import * as firebase from '../default-namespace';
 import {FirebaseServiceNamespace} from '../firebase-namespace';
 
 /**
- * Factory function that creates a new auth service.
- * @param {Object} app The app for this service
- * @param {function(Object)} extendApp An extend function to extend the app
- *                                     namespace
- * @return {Auth} The auth service for the specified app.
+ * Factory function that creates a new Auth service.
+ *
+ * @param {Object} app The app for this service.
+ * @param {function(Object)} extendApp An extend function to extend the app namespace.
+ *
+ * @return {Auth} The Auth service for the specified app.
  */
 function serviceFactory(app: FirebaseApp, extendApp: (props: Object) => void): FirebaseServiceInterface {
   return new Auth(app);
 }
 
 /**
- * Handles app life-cycle events. Initializes auth so listerners and getToken() functions are
+ * Handles app life-cycle events. Initializes auth so listeners and getToken() functions are
  * available to other services immediately.
  *
  * @param {string} event The app event that is occurring.
