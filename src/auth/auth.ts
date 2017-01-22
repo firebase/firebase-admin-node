@@ -24,9 +24,6 @@ export class AuthInternals implements FirebaseServiceInternalsInterface {
 
 /**
  * Auth service bound to the provided app.
- *
- * @param {Object} app The app for this auth service
- * @constructor
  */
 class Auth implements FirebaseServiceInterface {
   public INTERNAL: AuthInternals = new AuthInternals();
@@ -35,6 +32,10 @@ class Auth implements FirebaseServiceInterface {
   private tokenGenerator_: FirebaseTokenGenerator;
   private authRequestHandler: FirebaseAuthRequestHandler;
 
+  /**
+   * @param {Object} app The app for this Auth service.
+   * @constructor
+   */
   constructor(app: FirebaseApp) {
     if (typeof app !== 'object' || app === null || !('options' in app)) {
       throw new FirebaseAuthError(
@@ -58,6 +59,11 @@ class Auth implements FirebaseServiceInterface {
     this.authRequestHandler = new FirebaseAuthRequestHandler(app);
   }
 
+  /**
+   * Returns the app associated with this Auth instance.
+   *
+   * @return {FirebaseApp} The app associated with this Auth instance.
+   */
   get app(): FirebaseApp {
     return this.app_;
   }
@@ -85,7 +91,7 @@ class Auth implements FirebaseServiceInterface {
    * the promise if the token could not be verified.
    *
    * @param {string} idToken The JWT to verify.
-   * @return {Object} A Promise that will be fulfilled after a successful verification.
+   * @return {Promise<Object>} A Promise that will be fulfilled after a successful verification.
    */
   public verifyIdToken(idToken: string): Promise<Object> {
     if (typeof this.tokenGenerator_ === 'undefined') {
