@@ -215,6 +215,11 @@ let firebaseCredential = {
  * Global Firebase context object.
  */
 export class FirebaseNamespace {
+  // Hack to prevent Babel from modifying the object returned as the default admin namespace.
+  /* tslint:disable:variable-name */
+  public __esModule = true;
+  /* tslint:enable:variable-name */
+
   public credential = firebaseCredential;
   public SDK_VERSION = '<XXX_SDK_VERSION_XXX>';
   public INTERNAL: FirebaseNamespaceInternals;
