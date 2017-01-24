@@ -109,8 +109,8 @@ describe('FirebaseAuthError', () => {
             'UNEXPECTED_ERROR', 'An unexpected error occurred.', mockRawServerResponse);
         expect(error.code).to.be.equal('auth/internal-error');
         expect(error.message).to.be.equal(
-          'An unexpected error occurred. Raw server response: ' +
-          `${ JSON.stringify(mockRawServerResponse) }`
+          'An unexpected error occurred. Raw server response: "' +
+          `${ JSON.stringify(mockRawServerResponse) }"`
         );
       });
     });

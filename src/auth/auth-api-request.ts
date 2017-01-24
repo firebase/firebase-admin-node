@@ -2,6 +2,7 @@ import * as validator from '../utils/validator';
 
 import {deepCopy} from '../utils/deep-copy';
 import {FirebaseApp} from '../firebase-app';
+import {FirebaseError} from '../utils/error';
 import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
 import {
   HttpMethod, SignedApiRequestHandler, ApiSettings,
@@ -443,6 +444,14 @@ export class FirebaseAuthRequestHandler {
         responseValidator(response);
         // Return entire response.
         return response;
+      })
+      .catch((error) => {
+        if (error instanceof FirebaseError) {
+          throw error;
+        }
+
+        let errorCode = FirebaseAuthRequestHandler.getErrorCode(error) || 'INTERNAL_ERROR';
+        throw FirebaseAuthError.fromServerError(errorCode, /* message */ undefined, error);
       });
   }
 }

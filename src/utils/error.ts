@@ -81,7 +81,7 @@ class FirebaseAuthError extends FirebaseError {
 
     if (clientCodeKey === 'INTERNAL_ERROR' && typeof rawServerResponse !== 'undefined') {
       try {
-        error.message += ` Raw server response: ${ JSON.stringify(rawServerResponse) }`;
+        error.message += ` Raw server response: "${ JSON.stringify(rawServerResponse) }"`;
       } catch (e) {
         // Ignore JSON parsing error.
       }
