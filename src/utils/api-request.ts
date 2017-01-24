@@ -54,11 +54,38 @@ export class HttpRequestHandler {
         let buffers: Buffer[] = [];
         res.on('data', (buffer: Buffer) => buffers.push(buffer));
         res.on('end', () => {
-          try {
-            const json = JSON.parse(Buffer.concat(buffers).toString());
-            resolve(json);
-          } catch (err) {
-            reject('Failed to parse response data: ' + err.toString());
+          const response = Buffer.concat(buffers).toString();
+
+          const statusCode = res.statusCode || 200;
+
+          const responseHeaders = res.headers || {};
+          const contentType = responseHeaders['content-type'] || 'application/json';
+
+          if (contentType.indexOf('text/html') !== -1) {
+            // Text response
+            if (statusCode >= 200 && statusCode < 300) {
+              resolve(response);
+            } else {
+              reject(response);
+            }
+          } else {
+            // JSON response
+            try {
+              const json = JSON.parse(response);
+
+              if (statusCode >= 200 && statusCode < 300) {
+                resolve(json);
+              } else {
+                reject(json);
+              }
+            } catch (error) {
+              const parsingError = new FirebaseError({
+                code: 'unable-to-parse-response',
+                message: `Failed to parse response data: "${ error.toString() }". Raw server ` +
+                         `response: "${ response }."`,
+              });
+              reject(parsingError);
+            }
           }
         });
       });
