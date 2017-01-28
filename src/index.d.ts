@@ -58,14 +58,18 @@ declare namespace admin.auth {
   interface UserMetadata {
     lastSignedInAt: Date;
     createdAt: Date;
+
+    toJSON(): Object;
   }
 
   interface UserInfo {
-     uid: string;
-     displayName: string;
-     email: string;
-     photoURL: string;
-     providerId: string;
+    uid: string;
+    displayName: string;
+    email: string;
+    photoURL: string;
+    providerId: string;
+
+    toJSON(): Object;
   }
 
   interface UserRecord {
@@ -77,6 +81,8 @@ declare namespace admin.auth {
     disabled: boolean;
     metadata: admin.auth.UserMetadata;
     providerData: admin.auth.UserInfo[];
+
+    toJSON(): Object;
   }
 
   interface DecodedIdToken {
