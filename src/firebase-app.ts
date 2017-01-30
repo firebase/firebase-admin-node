@@ -240,6 +240,11 @@ export class FirebaseApp {
     throw new Error('INTERNAL ASSERT FAILED: Firebase database() service has not been registered.');
   }
 
+  /* istanbul ignore next */
+  public messaging(): FirebaseServiceInterface {
+    throw new Error('INTERNAL ASSERT FAILED: Firebase messaging() service has not been registered.');
+  }
+
   /**
    * Returns the name of the FirebaseApp instance.
    *

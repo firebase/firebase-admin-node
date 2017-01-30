@@ -40,6 +40,7 @@ declare namespace admin {
   function app(name?: string): admin.app.App;
   function auth(app?: admin.app.App): admin.auth.Auth;
   function database(app?: admin.app.App): admin.database.Database;
+  function messaging(app?: admin.app.App): admin.messaging.Messaging;
   function initializeApp(options: admin.AppOptions, name?: string): admin.app.App;
 }
 
@@ -50,6 +51,7 @@ declare namespace admin.app {
 
     auth(): admin.auth.Auth;
     database(): admin.database.Database;
+    messaging(): admin.messaging.Messaging;
     delete(): admin.Promise<undefined>;
   }
 }
@@ -214,6 +216,101 @@ declare namespace admin.database {
 
 declare namespace admin.database.ServerValue {
   var TIMESTAMP: number;
+}
+
+declare namespace admin.messaging {
+  type DataMessagePayload = {
+    [key: string]: string;
+  };
+
+  type NotificationPayload = {
+    tag?: string;
+    body?: string;
+    icon?: string;
+    badge?: string;
+    color?: string;
+    sound?: string;
+    title?: string;
+    bodyLocKey?: string;
+    bodyLocArgs?: string;
+    clickAction?: string;
+    titleLocKey?: string;
+    titleLocArgs?: string;
+    [other: string]: string;
+  };
+
+  type MessagingPayload = {
+    data?: admin.messaging.DataMessagePayload;
+    notification?: admin.messaging.NotificationPayload;
+  };
+
+  type MessagingOptions = {
+    dryRun?: boolean;
+    priority?: string;
+    timeToLive?: number;
+    collapseKey?: string;
+    contentAvailable?: boolean;
+    restrictedPackageName?: string;
+    [other: string]: any;
+  };
+
+  type MessagingDeviceResult = {
+    error?: string;
+    messageId?: string;
+    registrationId?: string;
+  };
+
+  type MessagingDevicesResponse = {
+    success: number;
+    failure: number;
+    multicastId: number;
+    canonicalIds: number;
+    results?: admin.messaging.MessagingDeviceResult[];
+  };
+
+  type MessagingDeviceGroupResponse = {
+    success: number;
+    failure: number;
+    failedRegistrationIds?: string[];
+  };
+
+  type MessagingTopicResponse = {
+    messageId: number;
+  };
+
+  type MessagingConditionResponse = {
+    messageId: number;
+  };
+
+  interface Messaging {
+    app: admin.app.App;
+
+    sendToDevice(
+      registrationToken: string,
+      payload: admin.messaging.MessagingPayload,
+      options?: admin.messaging.MessagingOptions
+    ): admin.Promise<admin.messaging.MessagingDevicesResponse>;
+    sendToDevice(
+      registrationTokens: string[],
+      payload: admin.messaging.MessagingPayload,
+      options?: admin.messaging.MessagingOptions
+    ): admin.Promise<admin.messaging.MessagingDevicesResponse>;
+    sendToDeviceGroup(
+      notificationKey: string,
+      payload: admin.messaging.MessagingPayload,
+      options?: admin.messaging.MessagingOptions
+    ): admin.Promise<admin.messaging.MessagingDeviceGroupResponse>;
+    sendToTopic(
+      topic: string,
+      payload: admin.messaging.MessagingPayload,
+      options?: admin.messaging.MessagingOptions
+    ): admin.Promise<admin.messaging.MessagingTopicResponse>;
+    sendToCondition(
+      condition: string,
+      payload: admin.messaging.MessagingPayload,
+      options?: admin.messaging.MessagingOptions
+    ): admin.Promise<admin.messaging.MessagingConditionResponse>;
+  }
 }
 
 declare module 'firebase-admin' {

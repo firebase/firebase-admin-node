@@ -112,3 +112,41 @@ export class MockSocketEmitter extends events.EventEmitter {
 export class MockStream extends stream.PassThrough {
   public abort = () => undefined;
 }
+
+/**
+ * MESSAGING
+ */
+const mockPayloadDataValue = {
+  foo: 'one',
+  bar: 'two',
+};
+
+const mockPayloadNotificationValue = {
+  title: 'Mock Title',
+  body: 'Mock body.',
+};
+
+export const messaging = {
+  topic: 'mock-topic',
+  topicWithPrefix: '/topics/mock-topic',
+  topicWithPrivatePrefix: '/topics/private/mock-topic',
+  condition: "'mock-topic-0' in topics || ('mock-topic-1' in topics && 'mock-topic-2' in topics)",
+  messageId: 1212121212,
+  multicastId: 1234567890,
+  notificationKey: 'mock-notification-key',
+  registrationToken: 'mock-registration-token',
+  payloadDataOnly: {
+    data: mockPayloadDataValue,
+  },
+  payloadNotificationOnly: {
+    notification: mockPayloadNotificationValue,
+  },
+  payload: {
+    data: mockPayloadDataValue,
+    notification: mockPayloadNotificationValue,
+  },
+  options: {
+    collapseKey: 'foo',
+    dryRun: true,
+  },
+};

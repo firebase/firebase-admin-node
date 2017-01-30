@@ -98,6 +98,21 @@ class FirebaseAuthError extends FirebaseError {
 
 
 /**
+ * Firebase Messaging error code structure. This extends FirebaseError.
+ *
+ * @param {ErrorInfo} info The error code info.
+ * @param {string} [message] The error message. This will override the default message if provided.
+ * @constructor
+ */
+class FirebaseMessagingError extends FirebaseError {
+  constructor(info: ErrorInfo, message?: string) {
+    // Override default message if custom message provided.
+    super({code: 'messaging/' + info.code, message: message || info.message});
+  }
+}
+
+
+/**
  * Auth client error codes and their default messages.
  */
 class AuthClientErrorCode {
@@ -176,6 +191,32 @@ class AuthClientErrorCode {
   };
 };
 
+/**
+ * Messaging client error codes and their default messages.
+ */
+class MessagingClientErrorCode {
+  public static INVALID_ARGUMENT = {
+    code: 'invalid-argument',
+    message: 'Invalid argument provided.',
+  };
+  public static INVALID_RECIPIENT = {
+    code: 'invalid-recipient',
+    message: 'Invalid message recipient provided.',
+  };
+  public static INVALID_PAYLOAD = {
+    code: 'invalid-payload',
+    message: 'Invalid message payload provided.',
+  };
+  public static INVALID_OPTIONS = {
+    code: 'invalid-options',
+    message: 'Invalid message options provided.',
+  };
+  public static INTERNAL_ERROR = {
+    code: 'internal-error',
+    message: 'An internal error has occurred.',
+  };
+};
+
 /** @const {ServerToClientCode} Auth server to client enum error codes. */
 const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   // Project not found.
@@ -212,4 +253,6 @@ export {
   FirebaseError,
   FirebaseAuthError,
   AuthClientErrorCode,
+  FirebaseMessagingError,
+  MessagingClientErrorCode,
 }
