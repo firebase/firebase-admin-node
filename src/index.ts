@@ -1,5 +1,6 @@
 import * as firebase from './default-namespace';
 import registerAuth from './auth/register-auth';
+import registerMessaging from './messaging/register-messaging';
 
 // Register the Database service
 // For historical reasons, the database code is included as minified code and registers itself
@@ -10,5 +11,8 @@ require('./database/database');
 
 // Register the Auth service
 registerAuth();
+
+// Register the Messaging service
+registerMessaging();
 
 export = firebase;

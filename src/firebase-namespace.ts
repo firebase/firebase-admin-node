@@ -249,6 +249,11 @@ export class FirebaseNamespace {
     throw new Error('INTERNAL ASSERT FAILED: Firebase database() service has not been registered.');
   }
 
+  /* istanbul ignore next */
+  public messaging(): FirebaseServiceInterface {
+    throw new Error('INTERNAL ASSERT FAILED: Firebase messaging() service has not been registered.');
+  }
+
   /**
    * Initializes the FirebaseApp instance.
    *

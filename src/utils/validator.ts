@@ -2,6 +2,61 @@ import url = require('url');
 
 
 /**
+ * Validates that a value is a boolean.
+ *
+ * @param {any} value The value to validate.
+ * @return {boolean} Whether the value is a boolean or not.
+ */
+export function isBoolean(value: any): boolean {
+  return typeof value === 'boolean';
+}
+
+
+/**
+ * Validates that a value is a number.
+ *
+ * @param {any} value The value to validate.
+ * @return {boolean} Whether the value is a number or not.
+ */
+export function isNumber(value: any): boolean {
+  return typeof value === 'number' && !isNaN(value);
+}
+
+
+/**
+ * Validates that a value is a string.
+ *
+ * @param {any} value The value to validate.
+ * @return {boolean} Whether the value is a string or not.
+ */
+export function isString(value: any): boolean {
+  return typeof value === 'string';
+}
+
+
+/**
+ * Validates that a value is a non-empty string.
+ *
+ * @param {any} value The value to validate.
+ * @return {boolean} Whether the value is a non-empty string or not.
+ */
+export function isNonEmptyString(value: any): boolean {
+  return typeof value === 'string' && value !== '';
+}
+
+
+/**
+ * Validates that a value is a non-null object.
+ *
+ * @param {any} value The value to validate.
+ * @return {boolean} Whether the value is a non-null object or not.
+ */
+export function isNonNullObject(value: any): boolean {
+  return typeof value === 'object' && value !== null && !(value instanceof Array);
+}
+
+
+/**
  * Validates that a string is a valid Firebase Auth uid.
  *
  * @param {any} uid The string to validate.
@@ -83,4 +138,20 @@ export function isURL(urlStr: any): boolean {
     return false;
   }
   return true;
+}
+
+
+/**
+ * Validates that the provided topic is a valid FCM topic name.
+ *
+ * @param {any} topic The topic to validate.
+ * @return {boolean} Whether the provided topic is a valid FCM topic name.
+ */
+export function isTopic(topic: any): boolean {
+  if (typeof topic !== 'string') {
+    return false;
+  }
+
+  const VALID_TOPIC_REGEX = /^(\/topics\/)?(private\/)?[a-zA-Z0-9-_.~%]+$/;
+  return VALID_TOPIC_REGEX.test(topic);
 }

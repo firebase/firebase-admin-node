@@ -323,4 +323,19 @@ describe('Firebase', () => {
       }).not.to.throw();
     });
   });
+
+  describe('#messaging', () => {
+    it('should throw if the app has not be initialized', () => {
+      expect(() => {
+        return firebaseAdmin.messaging();
+      }).to.throw('The default Firebase app does not exist.');
+    });
+
+    it('should return the messaging service', () => {
+      firebaseAdmin.initializeApp(mocks.appOptions);
+      expect(() => {
+        return firebaseAdmin.messaging();
+      }).not.to.throw();
+    });
+  });
 });

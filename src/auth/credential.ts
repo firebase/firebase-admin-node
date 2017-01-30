@@ -212,6 +212,7 @@ export class CertCredential implements Credential {
     const claims = {
       scope: [
         'https://www.googleapis.com/auth/firebase.database',
+        'https://www.googleapis.com/auth/firebase.messaging',
         'https://www.googleapis.com/auth/identitytoolkit',
         'https://www.googleapis.com/auth/userinfo.email',
       ].join(' '),

@@ -7,5 +7,6 @@ import './firebase-namespace.spec';
 import './user-record.spec';
 import './api-request.spec';
 import './auth-api-request.spec';
+import './messaging.spec';
 import './validator.spec';
 import './error.spec';
