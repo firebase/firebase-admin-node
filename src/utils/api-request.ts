@@ -66,7 +66,10 @@ export class HttpRequestHandler {
             if (statusCode >= 200 && statusCode < 300) {
               resolve(response);
             } else {
-              reject(response);
+              reject({
+                statusCode,
+                error: response,
+              });
             }
           } else {
             // JSON response
@@ -76,7 +79,10 @@ export class HttpRequestHandler {
               if (statusCode >= 200 && statusCode < 300) {
                 resolve(json);
               } else {
-                reject(json);
+                reject({
+                  statusCode,
+                  error: json,
+                });
               }
             } catch (error) {
               const parsingError = new FirebaseError({

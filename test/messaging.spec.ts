@@ -26,6 +26,29 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
 
+const mockServerErrorResponse = {
+  json: {
+    error: 'NotRegistered',
+  },
+  text: 'Some text error',
+};
+
+const expectedErrorCodes = {
+  json: 'messaging/registration-token-not-registered',
+  text: 'messaging/unknown-error',
+  unknownError: 'messaging/unknown-error',
+};
+
+const STATUS_CODE_TO_ERROR_MAP = {
+  200: 'messaging/unknown-error',
+  400: 'messaging/invalid-argument',
+  401: 'messaging/authentication-error',
+  403: 'messaging/authentication-error',
+  404: 'messaging/unknown-error',
+  500: 'messaging/internal-error',
+  503: 'messaging/server-unavailable',
+};
+
 function mockSendToDeviceStringRequest(): nock.Scope {
   return nock('https://fcm.googleapis.com:443')
     .post('/fcm/send')
@@ -45,25 +68,36 @@ function mockSendToDeviceArrayRequest(): nock.Scope {
     .post('/fcm/send')
     .reply(200, {
       multicast_id: mocks.messaging.multicastId,
-      success: 2,
-      failure: 1,
-      canonical_ids: 0,
+      success: 1,
+      failure: 2,
+      canonical_ids: 1,
       results: [
-        { message_id: `0:${ mocks.messaging.messageId }` },
+        {
+          message_id: `0:${ mocks.messaging.messageId }`,
+          registration_id: mocks.messaging.registrationToken + '3',
+        },
         { error: 'some-error' },
-        { message_id: `2:${ mocks.messaging.messageId }` },
+        { error: mockServerErrorResponse.json.error },
       ],
     });
 }
 
-function mockSendToDeviceGroupRequest(): nock.Scope {
-  // TODO(jwenger): add failed_registration_ids.
+function mockSendToDeviceGroupRequest(numFailedRegistrationTokens = 0): nock.Scope {
+  const response: any = {
+    success: 5 - numFailedRegistrationTokens,
+    failure: numFailedRegistrationTokens,
+  };
+
+  if (numFailedRegistrationTokens > 0) {
+    response.failed_registration_ids = [];
+    for (let i = 0; i < numFailedRegistrationTokens; i++) {
+      response.failed_registration_ids.push(mocks.messaging.registrationToken + i);
+    }
+  }
+
   return nock('https://fcm.googleapis.com:443')
     .post('/fcm/send')
-    .reply(200, {
-      success: 5,
-      failure: 0,
-    });
+    .reply(200, response);
 }
 
 function mockSendToTopicRequest(): nock.Scope {
@@ -74,35 +108,29 @@ function mockSendToTopicRequest(): nock.Scope {
     });
 }
 
-function mockSendToTopicRequestWithError(errorFormat = 'json'): nock.Scope {
-  let response;
-  if (errorFormat === 'json') {
-    response = {
-      error: 'TODO(jwenger): mock proper error format',
-    };
-  } else {
-    response = '<html>Error</html>';
-  }
-
-  return nock('https://fcm.googleapis.com:443')
-    .defaultReplyHeaders({
-      'Content-Type': (req, res, body) => {
-        if (errorFormat === 'json') {
-          return 'application/json; charset=UTF-8';
-        } else {
-          return 'text/html; charset=UTF-8';
-        }
-      },
-    })
-    .post('/fcm/send')
-    .reply(200, response);
-}
-
 function mockSendToConditionRequest(): nock.Scope {
   return nock('https://fcm.googleapis.com:443')
     .post('/fcm/send')
     .reply(200, {
       message_id: mocks.messaging.messageId,
+    });
+}
+
+function mockRequestWithError(statusCode, errorFormat, responseOverride?: any): nock.Scope {
+  let response;
+  let contentType;
+  if (errorFormat === 'json') {
+    response = mockServerErrorResponse.json;
+    contentType = 'application/json; charset=UTF-8';
+  } else {
+    response = mockServerErrorResponse.text;
+    contentType = 'text/html; charset=UTF-8';
+  }
+
+  return nock('https://fcm.googleapis.com:443')
+    .post('/fcm/send')
+    .reply(statusCode, responseOverride || response, {
+      'Content-Type': contentType,
     });
 }
 
@@ -125,7 +153,7 @@ describe('Messaging', () => {
     messaging = new Messaging(mockApp);
 
     mockResponse = new stream.PassThrough();
-    mockResponse.write(JSON.stringify({ foo: 1 }));
+    mockResponse.write(JSON.stringify({ mockResponse: true }));
     mockResponse.end();
 
     mockRequestStream = new mocks.MockStream();
@@ -227,12 +255,84 @@ describe('Messaging', () => {
       }).to.throw('Registration token provided to sendToDevice() at index 1 must be a non-empty string');
     });
 
+    it('should throw given an array containing more than 1,000 registration tokens', () => {
+      mockedRequests.push(mockSendToDeviceArrayRequest());
+
+      const registrationTokens = (Array(1000) as any).fill(mocks.messaging.registrationToken);
+
+      expect(() => {
+        messaging.sendToDevice(registrationTokens, mocks.messaging.payload);
+      }).not.to.throw();
+
+      registrationTokens.push(mocks.messaging.registrationToken);
+
+      expect(() => {
+        messaging.sendToDevice(registrationTokens, mocks.messaging.payload);
+      }).to.throw('Too many registration tokens provided in a single request.');
+    });
+
+    it('should be rejected given a 200 JSON server response with a known error', () => {
+      mockedRequests.push(mockRequestWithError(200, 'json'));
+
+      return messaging.sendToDevice(
+        mocks.messaging.registrationToken,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.json);
+    });
+
+    it('should be rejected given a 200 JSON server response with an unknown error', () => {
+      mockedRequests.push(mockRequestWithError(200, 'json', { error: 'Unknown' }));
+
+      return messaging.sendToDevice(
+        mocks.messaging.registrationToken,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.unknownError);
+    });
+
+    it('should be rejected given a non-2xx JSON server response', () => {
+      mockedRequests.push(mockRequestWithError(400, 'json'));
+
+      return messaging.sendToDevice(
+        mocks.messaging.registrationToken,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.json);
+    });
+
+    it('should be rejected given a non-2xx JSON server response with an unknown error', () => {
+      mockedRequests.push(mockRequestWithError(400, 'json', { error: 'Unknown' }));
+
+      return messaging.sendToDevice(
+        mocks.messaging.registrationToken,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.unknownError);
+    });
+
+    it('should be rejected given a non-2xx JSON server response without an error', () => {
+      mockedRequests.push(mockRequestWithError(400, 'json', { foo: 'bar' }));
+
+      return messaging.sendToDevice(
+        mocks.messaging.registrationToken,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.unknownError);
+    });
+
+    _.forEach(STATUS_CODE_TO_ERROR_MAP, (expectedError, statusCode) => {
+      it(`should be rejected given a ${ statusCode } text server response`, () => {
+        mockedRequests.push(mockRequestWithError(statusCode, 'text'));
+
+        return messaging.sendToDevice(
+          mocks.messaging.registrationToken,
+          mocks.messaging.payload,
+        ).should.eventually.be.rejected.and.have.property('code', expectedError);
+      });
+    });
+
     it('should be fulfilled given a valid registration token and payload', () => {
       mockedRequests.push(mockSendToDeviceStringRequest());
 
       return messaging.sendToDevice(
         mocks.messaging.registrationToken,
-        mocks.messaging.payloadDataOnly,
+        mocks.messaging.payload,
       );
     });
 
@@ -241,7 +341,7 @@ describe('Messaging', () => {
 
       return messaging.sendToDevice(
         mocks.messaging.registrationToken,
-        mocks.messaging.payloadDataOnly,
+        mocks.messaging.payload,
         mocks.messaging.options,
       );
     });
@@ -255,7 +355,7 @@ describe('Messaging', () => {
           mocks.messaging.registrationToken + '1',
           mocks.messaging.registrationToken + '2',
         ],
-        mocks.messaging.payloadDataOnly,
+        mocks.messaging.payload,
       );
     });
 
@@ -268,22 +368,21 @@ describe('Messaging', () => {
           mocks.messaging.registrationToken + '1',
           mocks.messaging.registrationToken + '2',
         ],
-        mocks.messaging.payloadDataOnly,
+        mocks.messaging.payload,
         mocks.messaging.options,
       );
     });
 
-    // TODO(jwenger): get test working with next CL
-    xit('should be fulfilled with the server response given a single registration token', () => {
+    it('should be fulfilled with the server response given a single registration token', () => {
       mockedRequests.push(mockSendToDeviceStringRequest());
 
       return messaging.sendToDevice(
         mocks.messaging.registrationToken,
-        mocks.messaging.payloadDataOnly,
+        mocks.messaging.payload,
       ).should.eventually.deep.equal({
-        failure: 0,
-        success: 1,
-        canonicalIds: 0,
+        failureCount: 0,
+        successCount: 1,
+        canonicalRegistrationTokenCount: 0,
         multicastId: mocks.messaging.multicastId,
         results: [
           { messageId: `0:${ mocks.messaging.messageId }` },
@@ -291,8 +390,7 @@ describe('Messaging', () => {
       });
     });
 
-    // TODO(jwenger): get test working with next CL
-    xit('should be fulfilled with the server response given an array of registration tokens', () => {
+    it('should be fulfilled with the server response given an array of registration tokens', () => {
       mockedRequests.push(mockSendToDeviceArrayRequest());
 
       return messaging.sendToDevice(
@@ -301,17 +399,24 @@ describe('Messaging', () => {
           mocks.messaging.registrationToken + '1',
           mocks.messaging.registrationToken + '2',
         ],
-        mocks.messaging.payloadDataOnly,
-      ).should.eventually.deep.equal({
-        failure: 1,
-        success: 2,
-        canonicalIds: 0,
-        multicastId: mocks.messaging.multicastId,
-        results: [
-          { messageId: `0:${ mocks.messaging.messageId }` },
-          { error: 'some-error' },
-          { messageId: `2:${ mocks.messaging.messageId }` },
-        ],
+        mocks.messaging.payload,
+      ).then((response) => {
+        expect(response).to.have.keys([
+          'failureCount', 'successCount', 'canonicalRegistrationTokenCount', 'multicastId', 'results',
+        ]);
+        expect(response.failureCount).to.equal(2);
+        expect(response.successCount).to.equal(1);
+        expect(response.canonicalRegistrationTokenCount).to.equal(1);
+        expect(response.multicastId).to.equal(mocks.messaging.multicastId);
+        expect(response.results).to.have.length(3);
+        expect(response.results[0]).to.deep.equal({
+          messageId: `0:${ mocks.messaging.messageId }`,
+          canonicalRegistrationToken: mocks.messaging.registrationToken + '3',
+        });
+        expect(response.results[1]).to.have.keys(['error']);
+        expect(response.results[1].error).to.have.property('code', expectedErrorCodes.unknownError);
+        expect(response.results[2]).to.have.keys(['error']);
+        expect(response.results[2].error).to.have.property('code', expectedErrorCodes.json);
       });
     });
 
@@ -411,6 +516,62 @@ describe('Messaging', () => {
       }).to.throw(invalidArgumentError);
     });
 
+    it('should be rejected given a 200 JSON server response with a known error', () => {
+      mockedRequests.push(mockRequestWithError(200, 'json'));
+
+      return messaging.sendToDeviceGroup(
+        mocks.messaging.notificationKey,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.json);
+    });
+
+    it('should be rejected given a 200 JSON server response with an unknown error', () => {
+      mockedRequests.push(mockRequestWithError(200, 'json', { error: 'Unknown' }));
+
+      return messaging.sendToDeviceGroup(
+        mocks.messaging.notificationKey,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.unknownError);
+    });
+
+    it('should be rejected given a non-2xx JSON server response', () => {
+      mockedRequests.push(mockRequestWithError(400, 'json'));
+
+      return messaging.sendToDeviceGroup(
+        mocks.messaging.notificationKey,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.json);
+    });
+
+    it('should be rejected given a non-2xx JSON server response with an unknown error', () => {
+      mockedRequests.push(mockRequestWithError(400, 'json', { error: 'Unknown' }));
+
+      return messaging.sendToDeviceGroup(
+        mocks.messaging.notificationKey,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.unknownError);
+    });
+
+    it('should be rejected given a non-2xx JSON server response without an error', () => {
+      mockedRequests.push(mockRequestWithError(400, 'json', { foo: 'bar' }));
+
+      return messaging.sendToDeviceGroup(
+        mocks.messaging.notificationKey,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.unknownError);
+    });
+
+    _.forEach(STATUS_CODE_TO_ERROR_MAP, (expectedError, statusCode) => {
+      it(`should be rejected given a ${ statusCode } text server response`, () => {
+        mockedRequests.push(mockRequestWithError(statusCode, 'text'));
+
+        return messaging.sendToDeviceGroup(
+        mocks.messaging.notificationKey,
+          mocks.messaging.payload,
+        ).should.eventually.be.rejected.and.have.property('code', expectedError);
+      });
+    });
+
     it('should be fulfilled given a valid notification key and payload', () => {
       mockedRequests.push(mockSendToDeviceGroupRequest());
 
@@ -430,16 +591,51 @@ describe('Messaging', () => {
       );
     });
 
-    // TODO(jwenger): get test working with next CL
-    xit('should be fulfilled with the server response', () => {
+    it('should be fulfilled with the server response (no failed registration tokens)', () => {
       mockedRequests.push(mockSendToDeviceGroupRequest());
 
       return messaging.sendToDeviceGroup(
         mocks.messaging.notificationKey,
         mocks.messaging.payloadDataOnly,
       ).should.eventually.deep.equal({
-        failure: 0,
-        success: 1,
+        failureCount: 0,
+        successCount: 5,
+        failedRegistrationTokens: [],
+      });
+    });
+
+    it('should be fulfilled with the server response (some failed registration token)', () => {
+      mockedRequests.push(mockSendToDeviceGroupRequest(/* numFailedRegistrationTokens */ 2));
+
+      return messaging.sendToDeviceGroup(
+        mocks.messaging.notificationKey,
+        mocks.messaging.payloadDataOnly,
+      ).should.eventually.deep.equal({
+        failureCount: 2,
+        successCount: 3,
+        failedRegistrationTokens: [
+          mocks.messaging.registrationToken + '0',
+          mocks.messaging.registrationToken + '1',
+        ],
+      });
+    });
+
+    it('should be fulfilled with the server response (all failed registration token)', () => {
+      mockedRequests.push(mockSendToDeviceGroupRequest(/* numFailedRegistrationTokens */ 5));
+
+      return messaging.sendToDeviceGroup(
+        mocks.messaging.notificationKey,
+        mocks.messaging.payloadDataOnly,
+      ).should.eventually.deep.equal({
+        failureCount: 5,
+        successCount: 0,
+        failedRegistrationTokens: [
+          mocks.messaging.registrationToken + '0',
+          mocks.messaging.registrationToken + '1',
+          mocks.messaging.registrationToken + '2',
+          mocks.messaging.registrationToken + '3',
+          mocks.messaging.registrationToken + '4',
+        ],
       });
     });
 
@@ -528,26 +724,60 @@ describe('Messaging', () => {
       }).to.throw(invalidArgumentError);
     });
 
-    // TODO(jwenger): get test working with next CL
-    xit('should be rejected when a JSON server error is returned', () => {
-      mockedRequests.push(mockSendToTopicRequestWithError());
+    it('should be rejected given a 200 JSON server response with a known error', () => {
+      mockedRequests.push(mockRequestWithError(200, 'json'));
 
       return messaging.sendToTopic(
         mocks.messaging.topic,
         mocks.messaging.payload,
-        mocks.messaging.options,
-      ).should.eventually.be.rejectedWith('foo');
+      ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.json);
     });
 
-    // TODO(jwenger): get test working with next CL
-    xit('should be rejected when a text server error is returned', () => {
-      mockedRequests.push(mockSendToTopicRequestWithError('text'));
+    it('should be rejected given a 200 JSON server response with an unknown error', () => {
+      mockedRequests.push(mockRequestWithError(200, 'json', { error: 'Unknown' }));
 
       return messaging.sendToTopic(
         mocks.messaging.topic,
         mocks.messaging.payload,
-        mocks.messaging.options,
-      ).should.eventually.be.rejectedWith('foo');
+      ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.unknownError);
+    });
+
+    it('should be rejected given a non-2xx JSON server response', () => {
+      mockedRequests.push(mockRequestWithError(400, 'json'));
+
+      return messaging.sendToTopic(
+        mocks.messaging.topic,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.json);
+    });
+
+    it('should be rejected given a non-2xx JSON server response with an unknown error', () => {
+      mockedRequests.push(mockRequestWithError(400, 'json', { error: 'Unknown' }));
+
+      return messaging.sendToTopic(
+        mocks.messaging.topic,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.unknownError);
+    });
+
+    it('should be rejected given a non-2xx JSON server response without an error', () => {
+      mockedRequests.push(mockRequestWithError(400, 'json', { foo: 'bar' }));
+
+      return messaging.sendToTopic(
+        mocks.messaging.topic,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.unknownError);
+    });
+
+    _.forEach(STATUS_CODE_TO_ERROR_MAP, (expectedError, statusCode) => {
+      it(`should be rejected given a ${ statusCode } text server response`, () => {
+        mockedRequests.push(mockRequestWithError(statusCode, 'text'));
+
+        return messaging.sendToTopic(
+        mocks.messaging.topic,
+          mocks.messaging.payload,
+        ).should.eventually.be.rejected.and.have.property('code', expectedError);
+      });
     });
 
     it('should be fulfilled given a valid topic and payload (topic name not prefixed with "/topics/")', () => {
@@ -587,8 +817,7 @@ describe('Messaging', () => {
       );
     });
 
-    // TODO(jwenger): get test working with next CL
-    xit('should be fulfilled with the server response', () => {
+    it('should be fulfilled with the server response', () => {
       mockedRequests.push(mockSendToTopicRequest());
 
       return messaging.sendToTopic(
@@ -687,6 +916,62 @@ describe('Messaging', () => {
       }).to.throw(invalidArgumentError);
     });
 
+    it('should be rejected given a 200 JSON server response with a known error', () => {
+      mockedRequests.push(mockRequestWithError(200, 'json'));
+
+      return messaging.sendToCondition(
+        mocks.messaging.condition,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.json);
+    });
+
+    it('should be rejected given a 200 JSON server response with an unknown error', () => {
+      mockedRequests.push(mockRequestWithError(200, 'json', { error: 'Unknown' }));
+
+      return messaging.sendToCondition(
+        mocks.messaging.condition,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.unknownError);
+    });
+
+    it('should be rejected given a non-2xx JSON server response', () => {
+      mockedRequests.push(mockRequestWithError(400, 'json'));
+
+      return messaging.sendToCondition(
+        mocks.messaging.condition,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.json);
+    });
+
+    it('should be rejected given a non-2xx JSON server response with an unknown error', () => {
+      mockedRequests.push(mockRequestWithError(400, 'json', { error: 'Unknown' }));
+
+      return messaging.sendToCondition(
+        mocks.messaging.condition,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.unknownError);
+    });
+
+    it('should be rejected given a non-2xx JSON server response without an error', () => {
+      mockedRequests.push(mockRequestWithError(400, 'json', { foo: 'bar' }));
+
+      return messaging.sendToCondition(
+        mocks.messaging.condition,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.unknownError);
+    });
+
+    _.forEach(STATUS_CODE_TO_ERROR_MAP, (expectedError, statusCode) => {
+      it(`should be rejected given a ${ statusCode } text server response`, () => {
+        mockedRequests.push(mockRequestWithError(statusCode, 'text'));
+
+        return messaging.sendToCondition(
+        mocks.messaging.condition,
+          mocks.messaging.payload,
+        ).should.eventually.be.rejected.and.have.property('code', expectedError);
+      });
+    });
+
     it('should be fulfilled given a valid condition and payload', () => {
       mockedRequests.push(mockSendToConditionRequest());
 
@@ -706,8 +991,7 @@ describe('Messaging', () => {
       );
     });
 
-    // TODO(jwenger): get test working with next CL
-    xit('should be fulfilled with the server response', () => {
+    it('should be fulfilled with the server response', () => {
       mockedRequests.push(mockSendToConditionRequest());
 
       return messaging.sendToCondition(
@@ -849,9 +1133,7 @@ describe('Messaging', () => {
       }).to.throw('Messaging payload contains an invalid value for the "data" property.');
     });
 
-    const blacklistedDataPayloadKeys = BLACKLISTED_DATA_PAYLOAD_KEYS.concat([
-      'gcm', 'gcmfoo', 'google', 'googlefoo',
-    ]);
+    const blacklistedDataPayloadKeys = BLACKLISTED_DATA_PAYLOAD_KEYS.concat(['google.', 'google.foo']);
     blacklistedDataPayloadKeys.forEach((blacklistedProperty) => {
       it(`should throw given blacklisted "data.${blacklistedProperty}" property`, () => {
         expect(() => {
@@ -864,6 +1146,22 @@ describe('Messaging', () => {
             },
           );
         }).to.throw(`Messaging payload contains the blacklisted "data.${blacklistedProperty}" property.`);
+      });
+    });
+
+    const nonBlacklistedDataPayloadKeys = ['google', '.google', 'goo.gle', 'googlefoo', 'googlef.oo'];
+    nonBlacklistedDataPayloadKeys.forEach((nonBlacklistedProperty) => {
+      it(`should not throw given non-blacklisted "data.${nonBlacklistedProperty}" property`, () => {
+        expect(() => {
+          messaging.sendToDevice(
+            mocks.messaging.registrationToken,
+            {
+              data: {
+                [nonBlacklistedProperty]: 'foo',
+              },
+            },
+          );
+        }).not.to.throw();
       });
     });
 
@@ -1094,7 +1392,7 @@ describe('Messaging', () => {
       mockedRequests.push(mockSendToDeviceStringRequest());
 
       const mockOptionsClone: MessagingOptions = _.clone(mocks.messaging.options);
-      mockOptionsClone.foo = 'bar';
+      (mockOptionsClone as any).foo = 'bar';
 
       expect(() => {
         messaging.sendToDevice(

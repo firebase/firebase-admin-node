@@ -6,7 +6,7 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import {
-  FirebaseError, FirebaseAuthError,
+  FirebaseError, FirebaseAuthError, FirebaseMessagingError, MessagingClientErrorCode,
 } from '../src/utils/error';
 
 chai.should();
@@ -50,7 +50,7 @@ describe('FirebaseAuthError', () => {
   it('should initialize successfully with a message specified', () => {
     let errorCodeInfo = {
       code: 'code',
-     message: 'message',
+      message: 'message',
     };
     let error = new FirebaseAuthError(errorCodeInfo, 'overrideMessage');
     expect(error.code).to.be.equal('auth/code');
@@ -111,6 +111,91 @@ describe('FirebaseAuthError', () => {
         expect(error.message).to.be.equal(
           'An unexpected error occurred. Raw server response: "' +
           `${ JSON.stringify(mockRawServerResponse) }"`
+        );
+      });
+    });
+  });
+});
+
+describe('FirebaseMessagingError', () => {
+  it('should initialize successfully with no message specified', () => {
+    const errorCodeInfo = {
+      code: 'code',
+      message: 'message',
+    };
+    const error = new FirebaseMessagingError(errorCodeInfo);
+    expect(error.code).to.be.equal('messaging/code');
+    expect(error.message).to.be.equal('message');
+  });
+
+  it('should initialize successfully with a message specified', () => {
+    const errorCodeInfo = {
+      code: 'code',
+      message: 'message',
+    };
+    const error = new FirebaseMessagingError(errorCodeInfo, 'Message override.');
+    expect(error.code).to.be.equal('messaging/code');
+    expect(error.message).to.be.equal('Message override.');
+  });
+
+  describe('fromServerError()', () => {
+    describe('without message specified', () => {
+      it('should initialize an error from an expected server code', () => {
+        const error = FirebaseMessagingError.fromServerError('InvalidRegistration');
+        const expectedError = MessagingClientErrorCode.INVALID_REGISTRATION_TOKEN;
+        expect(error.code).to.equal('messaging/' + expectedError.code);
+        expect(error.message).to.equal(expectedError.message);
+      });
+
+      it('should initialize an error from an unexpected server code', () => {
+        const error = FirebaseMessagingError.fromServerError('UNEXPECTED_ERROR');
+        const expectedError = MessagingClientErrorCode.UNKNOWN_ERROR;
+        expect(error.code).to.equal('messaging/' + expectedError.code);
+        expect(error.message).to.equal(expectedError.message);
+      });
+    });
+
+    describe('with message specified', () => {
+      it('should initialize an error from an expected server code', () => {
+        const error = FirebaseMessagingError.fromServerError('InvalidRegistration', 'Message override.');
+        const expectedError = MessagingClientErrorCode.INVALID_REGISTRATION_TOKEN;
+        expect(error.code).to.equal('messaging/' + expectedError.code);
+        expect(error.message).to.equal('Message override.');
+      });
+
+      it('should initialize an error from an unexpected server code', () => {
+        const error = FirebaseMessagingError.fromServerError('UNEXPECTED_ERROR', 'Message override.');
+        const expectedError = MessagingClientErrorCode.UNKNOWN_ERROR;
+        expect(error.code).to.equal('messaging/' + expectedError.code);
+        expect(error.message).to.equal('Message override.');
+      });
+    });
+
+    describe('with raw server response specified', () => {
+      const mockRawServerResponse = {
+        error: {
+          code: 'UNEXPECTED_ERROR',
+          message: 'Message override.',
+        },
+      };
+
+      it('should not include raw server response from an expected server code', () => {
+        const error = FirebaseMessagingError.fromServerError(
+          'InvalidRegistration', /* message */ undefined, mockRawServerResponse
+        );
+        const expectedError = MessagingClientErrorCode.INVALID_REGISTRATION_TOKEN;
+        expect(error.code).to.equal('messaging/' + expectedError.code);
+        expect(error.message).to.equal(expectedError.message);
+      });
+
+      it('should include raw server response from an unexpected server code', () => {
+        const error = FirebaseMessagingError.fromServerError(
+          'UNEXPECTED_ERROR', /* message */ undefined, mockRawServerResponse
+        );
+        const expectedError = MessagingClientErrorCode.UNKNOWN_ERROR;
+        expect(error.code).to.equal('messaging/' + expectedError.code);
+        expect(error.message).to.be.equal(
+          `${ expectedError.message } Raw server response: "${ JSON.stringify(mockRawServerResponse) }"`
         );
       });
     });

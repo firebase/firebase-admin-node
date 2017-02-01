@@ -1167,4 +1167,61 @@ describe('FirebaseAuthRequestHandler', () => {
       });
     });
   });
+
+  describe('non-2xx responses', () => {
+    it('should be rejected given a simulated non-2xx response with a known error code', () => {
+      const mockErrorResponse = {
+        error: {
+          error: {
+            message: 'USER_NOT_FOUND',
+          },
+        },
+        statusCode: 400,
+      };
+
+      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        .returns(Promise.reject(mockErrorResponse));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.getAccountInfoByEmail('user@example.com')
+        .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
+    });
+
+    it('should be rejected given a simulated non-2xx response with an unknown error code', () => {
+      const mockErrorResponse = {
+        error: {
+          error: {
+            message: 'UNKNOWN_ERROR_CODE',
+          },
+        },
+        statusCode: 400,
+      };
+
+      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        .returns(Promise.reject(mockErrorResponse));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.getAccountInfoByEmail('user@example.com')
+        .should.eventually.be.rejected.and.have.property('code', 'auth/internal-error');
+    });
+
+    it('should be rejected given a simulated non-2xx response with no error code', () => {
+      const mockErrorResponse = {
+        error: {
+          foo: 'bar',
+        },
+        statusCode: 400,
+      };
+
+      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        .returns(Promise.reject(mockErrorResponse));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.getAccountInfoByEmail('user@example.com')
+        .should.eventually.be.rejected.and.have.property('code', 'auth/internal-error');
+    });
+  });
 });

@@ -26,12 +26,39 @@ const CAMELCASE_OPTIONS_KEYS_MAP = {
   restrictedPackageName: 'restricted_package_name',
 };
 
+// Key renames for the MessagingDeviceResult object.
+const MESSAGING_DEVICE_RESULT_KEYS_MAP = {
+  message_id: 'messageId',
+  registration_id: 'canonicalRegistrationToken',
+};
+
+// Key renames for the MessagingDevicesResponse object.
+const MESSAGING_DEVICES_RESPONSE_KEYS_MAP = {
+  canonical_ids: 'canonicalRegistrationTokenCount',
+  failure: 'failureCount',
+  success: 'successCount',
+  multicast_id: 'multicastId',
+};
+
+// Key renames for the MessagingDeviceGroupResponse object.
+const MESSAGING_DEVICE_GROUP_RESPONSE_KEYS_MAP = {
+  success: 'successCount',
+  failure: 'failureCount',
+  failed_registration_ids: 'failedRegistrationTokens',
+};
+
+// Key renames for the MessagingTopicResponse object.
+const MESSAGING_TOPIC_RESPONSE_KEYS_MAP = {
+  message_id: 'messageId',
+};
+
+// Key renames for the MessagingConditionResponse object.
+const MESSAGING_CONDITION_RESPONSE_KEYS_MAP = {
+  message_id: 'messageId',
+};
+
 // Keys which are not allowed in the messaging data payload object.
-export const BLACKLISTED_DATA_PAYLOAD_KEYS = [
-  'from', 'to', 'registration_ids', 'condition', 'notification_key', 'collapse_key', 'priority',
-  'content_available', 'delay_while_idle', 'time_to_live', 'restricted_package_name', 'dry_run',
-  'data', 'notification',
-];
+export const BLACKLISTED_DATA_PAYLOAD_KEYS = ['from'];
 
 // Keys which are not allowed in the messaging options object.
 export const BLACKLISTED_OPTIONS_KEYS = [
@@ -45,7 +72,7 @@ export type DataMessagePayload = {
 };
 
 /* Payload for notification messages */
-export type NotificationPayload = {
+export type NotificationMessagePayload = {
   tag?: string;
   body?: string;
   icon?: string;
@@ -64,7 +91,7 @@ export type NotificationPayload = {
 /* Composite messaging payload (data and notification payloads are both optional) */
 export type MessagingPayload = {
   data?: DataMessagePayload;
-  notification?: NotificationPayload;
+  notification?: NotificationMessagePayload;
 };
 
 /* Options that can passed along with messages */
@@ -82,23 +109,23 @@ export type MessagingOptions = {
 export type MessagingDeviceResult = {
   error?: string;
   messageId?: string;
-  registrationId?: string;
+  canonicalRegistrationToken?: string;
 };
 
 /* Response payload from sending to a single device ID or array of device IDs */
 export type MessagingDevicesResponse = {
-  success: number;
-  failure: number;
+  canonicalRegistrationTokenCount: number;
+  failureCount: number;
   multicastId: number;
-  canonicalIds: number;
-  results?: MessagingDeviceResult[];
+  results: MessagingDeviceResult[];
+  successCount: number;
 };
 
 /* Response payload from sending to a device group */
 export type MessagingDeviceGroupResponse = {
-  success: number;
-  failure: number;
-  failedRegistrationIds?: string[];
+  successCount: number;
+  failureCount: number;
+  failedRegistrationTokens: string[];
 };
 
 /* Response payload from sending to a topic */
@@ -181,6 +208,14 @@ class Messaging implements FirebaseServiceInterface {
     options: MessagingOptions = {},
   ): Promise<MessagingDevicesResponse> {
     if (registrationTokenOrTokens instanceof Array && registrationTokenOrTokens.length !== 0) {
+      if (registrationTokenOrTokens.length > 1000) {
+        throw new FirebaseMessagingError(
+          MessagingClientErrorCode.INVALID_RECIPIENT,
+          'Too many registration tokens provided in a single request. Batch your requests to ' +
+          'contain no more than 1,000 registration tokens per request.'
+        );
+      }
+
       registrationTokenOrTokens.forEach((registrationToken, index) => {
         if (!validator.isNonEmptyString(registrationToken)) {
           throw new FirebaseMessagingError(
@@ -208,7 +243,26 @@ class Messaging implements FirebaseServiceInterface {
       request.registration_ids = registrationTokenOrTokens;
     }
 
-    return this.messagingRequestHandler.invokeRequestHandler(request);
+    return this.messagingRequestHandler.invokeRequestHandler(request)
+      .then((response) => {
+        // Rename properties on the server response
+        utils.renameProperties(response, MESSAGING_DEVICES_RESPONSE_KEYS_MAP);
+        if ('results' in response) {
+          (response as any).results.forEach((messagingDeviceResult) => {
+            utils.renameProperties(messagingDeviceResult, MESSAGING_DEVICE_RESULT_KEYS_MAP);
+
+            // Map the FCM server's error strings to actual error objects.
+            if ('error' in messagingDeviceResult) {
+              const newError = FirebaseMessagingError.fromServerError(
+                messagingDeviceResult.error, /* message */ undefined, messagingDeviceResult.error
+              );
+              messagingDeviceResult.error = newError;
+            }
+          });
+        }
+
+        return response;
+      });
   }
 
   /**
@@ -241,7 +295,17 @@ class Messaging implements FirebaseServiceInterface {
     deepExtend(request, optionsCopy);
     request.to = notificationKey;
 
-    return this.messagingRequestHandler.invokeRequestHandler(request);
+    return this.messagingRequestHandler.invokeRequestHandler(request)
+      .then((response) => {
+        // Rename properties on the server response
+        utils.renameProperties(response, MESSAGING_DEVICE_GROUP_RESPONSE_KEYS_MAP);
+
+        // Add the 'failedRegistrationTokens' property if it does not exist on the response, which
+        // it won't when the 'failureCount' property has a value of 0)
+        (response as any).failedRegistrationTokens = (response as any).failedRegistrationTokens || [];
+
+        return response;
+      });
   }
 
   /**
@@ -278,7 +342,13 @@ class Messaging implements FirebaseServiceInterface {
     deepExtend(request, optionsCopy);
     request.to = topic;
 
-    return this.messagingRequestHandler.invokeRequestHandler(request);
+    return this.messagingRequestHandler.invokeRequestHandler(request)
+      .then((response) => {
+        // Rename properties on the server response
+        utils.renameProperties(response, MESSAGING_TOPIC_RESPONSE_KEYS_MAP);
+
+        return response;
+      });
   }
 
   /**
@@ -310,7 +380,13 @@ class Messaging implements FirebaseServiceInterface {
     deepExtend(request, optionsCopy);
     request.condition = condition;
 
-    return this.messagingRequestHandler.invokeRequestHandler(request);
+    return this.messagingRequestHandler.invokeRequestHandler(request)
+      .then((response) => {
+        // Rename properties on the server response
+        utils.renameProperties(response, MESSAGING_CONDITION_RESPONSE_KEYS_MAP);
+
+        return response;
+      });
   }
 
   /**
@@ -377,8 +453,8 @@ class Messaging implements FirebaseServiceInterface {
             `Messaging payload contains an invalid value for the "${ payloadKey }.${ subKey }" ` +
             `property. Values must be strings.`
           );
-        } else if (payloadKey === 'data' && /^gcm|google/.test(subKey)) {
-          // Validate the data payload does not contain keys which start with 'gcm' or 'google'.
+        } else if (payloadKey === 'data' && /^google\./.test(subKey)) {
+          // Validate the data payload does not contain keys which start with 'google.'.
           throw new FirebaseMessagingError(
             MessagingClientErrorCode.INVALID_PAYLOAD,
             `Messaging payload contains the blacklisted "data.${ subKey }" property.`
@@ -440,14 +516,14 @@ class Messaging implements FirebaseServiceInterface {
     utils.renameProperties(optionsCopy, CAMELCASE_OPTIONS_KEYS_MAP);
 
     // Validate the options object contains valid values for whitelisted properties
-    if ('collapse_key' in optionsCopy && !validator.isNonEmptyString(optionsCopy.collapse_key)) {
+    if ('collapse_key' in optionsCopy && !validator.isNonEmptyString((optionsCopy as any).collapse_key)) {
       const keyName = ('collapseKey' in options) ? 'collapseKey' : 'collapse_key';
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_OPTIONS,
         `Messaging options contains an invalid value for the "${ keyName }" property. Value must ` +
         'be a non-empty string.'
       );
-    } else if ('dry_run' in optionsCopy && !validator.isBoolean(optionsCopy.dry_run)) {
+    } else if ('dry_run' in optionsCopy && !validator.isBoolean((optionsCopy as any).dry_run)) {
       const keyName = ('dryRun' in options) ? 'dryRun' : 'dry_run';
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_OPTIONS,
@@ -461,21 +537,21 @@ class Messaging implements FirebaseServiceInterface {
         'be a non-empty string.'
       );
     } else if ('restricted_package_name' in optionsCopy &&
-               !validator.isNonEmptyString(optionsCopy.restricted_package_name)) {
+               !validator.isNonEmptyString((optionsCopy as any).restricted_package_name)) {
       const keyName = ('restrictedPackageName' in options) ? 'restrictedPackageName' : 'restricted_package_name';
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_OPTIONS,
         `Messaging options contains an invalid value for the "${ keyName }" property. Value must ` +
         'be a non-empty string.'
       );
-    } else if ('time_to_live' in optionsCopy && !validator.isNumber(optionsCopy.time_to_live)) {
+    } else if ('time_to_live' in optionsCopy && !validator.isNumber((optionsCopy as any).time_to_live)) {
       const keyName = ('timeToLive' in options) ? 'timeToLive' : 'time_to_live';
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_OPTIONS,
         `Messaging options contains an invalid value for the "${ keyName }" property. Value must ` +
         'be a number.'
       );
-    } else if ('content_available' in optionsCopy && !validator.isBoolean(optionsCopy.content_available)) {
+    } else if ('content_available' in optionsCopy && !validator.isBoolean((optionsCopy as any).content_available)) {
       const keyName = ('contentAvailable' in options) ? 'contentAvailable' : 'content_available';
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_OPTIONS,

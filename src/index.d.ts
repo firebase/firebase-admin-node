@@ -1,4 +1,10 @@
 declare namespace admin {
+  interface FirebaseError {
+    code: string;
+    message: string;
+    stack: string;
+  }
+
   class Promise<T> extends Promise_Instance<T> {
     static all(values: admin.Promise<any>[]): admin.Promise<any[]>;
     static reject(error: Error): admin.Promise<any>;
@@ -229,7 +235,7 @@ declare namespace admin.messaging {
     [key: string]: string;
   };
 
-  type NotificationPayload = {
+  type NotificationMessagePayload = {
     tag?: string;
     body?: string;
     icon?: string;
@@ -247,7 +253,7 @@ declare namespace admin.messaging {
 
   type MessagingPayload = {
     data?: admin.messaging.DataMessagePayload;
-    notification?: admin.messaging.NotificationPayload;
+    notification?: admin.messaging.NotificationMessagePayload;
   };
 
   type MessagingOptions = {
@@ -261,23 +267,23 @@ declare namespace admin.messaging {
   };
 
   type MessagingDeviceResult = {
-    error?: string;
+    error?: admin.FirebaseError;
     messageId?: string;
-    registrationId?: string;
+    canonicalRegistrationToken?: string;
   };
 
   type MessagingDevicesResponse = {
-    success: number;
-    failure: number;
+    canonicalRegistrationTokenCount: number;
+    failureCount: number;
     multicastId: number;
-    canonicalIds: number;
-    results?: admin.messaging.MessagingDeviceResult[];
+    results: admin.messaging.MessagingDeviceResult[];
+    successCount: number;
   };
 
   type MessagingDeviceGroupResponse = {
-    success: number;
-    failure: number;
-    failedRegistrationIds?: string[];
+    successCount: number;
+    failureCount: number;
+    failedRegistrationTokens: string[];
   };
 
   type MessagingTopicResponse = {

@@ -258,9 +258,9 @@ export class FirebaseAuthRequestHandler {
 
   /**
    * @param {Object} response The response to check for errors.
-   * @return {string} The error code if present, an empty string otherwise.
+   * @return {string|null} The error code if present; null otherwise.
    */
-  private static getErrorCode(response: any): string {
+  private static getErrorCode(response: any): string|null {
     return (response.error && (response.error as any).message) || null;
   }
 
@@ -445,12 +445,21 @@ export class FirebaseAuthRequestHandler {
         // Return entire response.
         return response;
       })
-      .catch((error) => {
+      .catch((response) => {
+        let error;
+        if (typeof response === 'object' && 'statusCode' in response) {
+          // response came directly from a non-200 response.
+          error = response.error;
+        } else {
+          // response came from a thrown error on a 200 response.
+          error = response;
+        }
+
         if (error instanceof FirebaseError) {
           throw error;
         }
 
-        let errorCode = FirebaseAuthRequestHandler.getErrorCode(error) || 'INTERNAL_ERROR';
+        let errorCode = FirebaseAuthRequestHandler.getErrorCode(error);
         throw FirebaseAuthError.fromServerError(errorCode, /* message */ undefined, error);
       });
   }

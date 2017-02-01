@@ -197,14 +197,20 @@ describe('HttpRequestHandler', () => {
         mockedRequests.push(mockRequestWithError(400));
 
         return httpRequestHandler.sendRequest(mockHost, mockPort, mockPath, 'GET')
-          .should.eventually.be.rejected.and.deep.equal(mockErrorResponse);
+          .should.eventually.be.rejected.and.deep.equal({
+            error: mockErrorResponse,
+            statusCode: 400,
+          });
       });
 
       it('should be rejected given a 5xx response', () => {
         mockedRequests.push(mockRequestWithError(500));
 
         return httpRequestHandler.sendRequest(mockHost, mockPort, mockPath, 'GET')
-          .should.eventually.be.rejected.and.deep.equal(mockErrorResponse);
+          .should.eventually.be.rejected.and.deep.equal({
+            error: mockErrorResponse,
+            statusCode: 500,
+          });
       });
 
       it('should be rejected given an error when parsing the JSON response', () => {
@@ -235,14 +241,20 @@ describe('HttpRequestHandler', () => {
         mockedRequests.push(mockRequestWithError(400, 'text/html'));
 
         return httpRequestHandler.sendRequest(mockHost, mockPort, mockPath, 'GET')
-          .should.eventually.be.rejectedWith('Text error');
+          .should.eventually.be.rejected.and.deep.equal({
+            error: mockTextErrorResponse,
+            statusCode: 400,
+          });
       });
 
       it('should be rejected given a 5xx response', () => {
         mockedRequests.push(mockRequestWithError(500, 'text/html'));
 
         return httpRequestHandler.sendRequest(mockHost, mockPort, mockPath, 'GET')
-          .should.eventually.be.rejectedWith('Text error');
+          .should.eventually.be.rejected.and.deep.equal({
+            error: mockTextErrorResponse,
+            statusCode: 500,
+          });
       });
 
       it('should be fulfilled given a 2xx response', () => {

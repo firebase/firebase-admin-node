@@ -105,6 +105,36 @@ class FirebaseAuthError extends FirebaseError {
  * @constructor
  */
 class FirebaseMessagingError extends FirebaseError {
+  /**
+   * Creates the developer-facing error corresponding to the backend error code.
+   *
+   * @param {string} serverErrorCode The server error code.
+   * @param {string} [message] The error message. The default message is used
+   *     if not provided.
+   * @param {Object} [rawServerResponse] The error's raw server response.
+   * @return {FirebaseMessagingError} The corresponding developer-facing error.
+   */
+  public static fromServerError(
+    serverErrorCode: string,
+    message?: string,
+    rawServerResponse?: Object,
+  ): FirebaseMessagingError {
+    // If not found, default to unknown error.
+    let clientCodeKey = MESSAGING_SERVER_TO_CLIENT_CODE[serverErrorCode] || 'UNKNOWN_ERROR';
+    const error: ErrorInfo = deepCopy(MessagingClientErrorCode[clientCodeKey]);
+    error.message = message || error.message;
+
+    if (clientCodeKey === 'UNKNOWN_ERROR' && typeof rawServerResponse !== 'undefined') {
+      try {
+        error.message += ` Raw server response: "${ JSON.stringify(rawServerResponse) }"`;
+      } catch (e) {
+        // Ignore JSON parsing error.
+      }
+    }
+
+    return new FirebaseMessagingError(error);
+  }
+
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
     super({code: 'messaging/' + info.code, message: message || info.message});
@@ -207,13 +237,70 @@ class MessagingClientErrorCode {
     code: 'invalid-payload',
     message: 'Invalid message payload provided.',
   };
+  public static INVALID_DATA_PAYLOAD_KEY = {
+    code: 'invalid-data-payload-key',
+    message: 'The data message payload contains an invalid key. See the reference documentation ' +
+      'for the DataMessagePayload for restricted keys.',
+  };
+  public static PAYLOAD_SIZE_LIMIT_EXCEEDED = {
+    code: 'payload-size-limit-exceeded',
+    message: 'The provided message payload exceeds the FCM size limits. See the error documentation ' +
+      'for more details.',
+  };
   public static INVALID_OPTIONS = {
     code: 'invalid-options',
     message: 'Invalid message options provided.',
   };
+  public static INVALID_REGISTRATION_TOKEN = {
+    code: 'invalid-registration-token',
+    message: 'Invalid registration token provided. Make sure it matches the registration token ' +
+      'the client app receives from registering with FCM.',
+  };
+  public static REGISTRATION_TOKEN_NOT_REGISTERED = {
+    code: 'registration-token-not-registered',
+    message: 'Provided registration token is not registered. A previously valid registration ' +
+      'token can be unregistered for a variety of reasons. See the error documentation for more ' +
+      'details. Remove this registration token and stop using it to send messages.',
+  };
+  public static INVALID_PACKAGE_NAME = {
+    code: 'invalid-package-name',
+    message: 'The message was addressed to a registration token whose package name does not match ' +
+      'the provided "restrictedPackageName" option.',
+  };
+  public static DEVICE_MESSAGE_RATE_EXCEEDED = {
+    code: 'device-message-rate-exceeded',
+    message: 'The rate of messages to a particular device is too high. Reduce the number of ' +
+      'messages sent to this device and do not immediately retry sending to this device.',
+  };
+  public static TOPICS_MESSAGE_RATE_EXCEEDED = {
+    code: 'topics-topics-rate-exceeded',
+    message: 'The rate of messages to subscribers to a particular topic is too high. Reduce the ' +
+      'number of messages sent for this topic, and do not immediately retry sending.',
+  };
+  public static INVALID_APNS_CREDENTIALS = {
+    code: 'invalid-apns-credentials',
+    message: 'A message targeted to an iOS device could not be sent because the required APNs ' +
+      'SSL certificate was not uploaded or has expired. Check the validity of your development ' +
+      'and production certificates.',
+  };
+  public static AUTHENTICATION_ERROR = {
+    code: 'authentication-error',
+    message: 'An error occurred when trying to authenticate to the FCM servers. Make sure the ' +
+      'credential used to authenticate this SDK has the proper permissions. See ' +
+      'https://firebase.google.com/docs/admin/setup for setup instructions.',
+  };
+  public static SERVER_UNAVAILABLE = {
+    code: 'server-unavailable',
+    message: 'The FCM server could not process the request in time. See the error documentation ' +
+      'for more details.',
+  };
   public static INTERNAL_ERROR = {
     code: 'internal-error',
     message: 'An internal error has occurred.',
+  };
+  public static UNKNOWN_ERROR = {
+    code: 'unknown-error',
+    message: 'An unknown server error was returned.',
   };
 };
 
@@ -245,6 +332,34 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   USER_NOT_FOUND: 'USER_NOT_FOUND',
   // Password provided is too weak.
   WEAK_PASSWORD: 'INVALID_PASSWORD',
+};
+
+/** @const {ServerToClientCode} Messaging server to client enum error codes. */
+const MESSAGING_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
+  // Generic invalid message parameter provided.
+  InvalidParameters: 'INVALID_ARGUMENT',
+  // Invalid registration token format.
+  InvalidRegistration: 'INVALID_REGISTRATION_TOKEN',
+  // Registration token is not registered.
+  NotRegistered: 'REGISTRATION_TOKEN_NOT_REGISTERED',
+  // Registration token does not match restricted package name.
+  InvalidPackageName: 'INVALID_PACKAGE_NAME',
+  // Message payload size limit exceeded.
+  MessageTooBig: 'PAYLOAD_SIZE_LIMIT_EXCEEDED',
+  // Invalid key in the data message payload.
+  InvalidDataKey: 'INVALID_DATA_PAYLOAD_KEY',
+  // Invalid time to live option.
+  InvalidTtl: 'INVALID_OPTIONS',
+  // Device message rate exceeded.
+  DeviceMessageRateExceeded: 'DEVICE_MESSAGE_RATE_EXCEEDED',
+  // Topics message rate exceeded.
+  TopicsMessageRateExceeded: 'TOPICS_MESSAGE_RATE_EXCEEDED',
+  // Invalid APNs credentials.
+  InvalidApnsCredential: 'INVALID_APNS_CREDENTIALS',
+  // FCM server unavailable.
+  Unavailable: 'SERVER_UNAVAILABLE',
+  // FCM server internal error.
+  InternalServerError: 'INTERNAL_ERROR',
 };
 
 
