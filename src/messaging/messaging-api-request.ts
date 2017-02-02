@@ -1,7 +1,9 @@
 import {FirebaseApp} from '../firebase-app';
+import {FirebaseError} from '../utils/error';
 import {HttpMethod, SignedApiRequestHandler} from '../utils/api-request';
 import {FirebaseMessagingError, MessagingClientErrorCode} from '../utils/error';
 
+import * as validator from '../utils/validator';
 
 // FCM backend constants
 const FIREBASE_MESSAGING_HOST = 'fcm.googleapis.com';
@@ -26,7 +28,7 @@ export class FirebaseMessagingRequestHandler {
    * @return {string|null} The error code if present; null otherwise.
    */
   private static getErrorCode(response: any): string|null {
-    if ('error' in response) {
+    if (validator.isNonNullObject(response) && 'error' in response) {
       if (typeof response.error === 'string') {
         return response.error;
       } else {
@@ -82,6 +84,11 @@ export class FirebaseMessagingRequestHandler {
       return response;
     })
     .catch((response: { statusCode: number, error: string|Object }) => {
+      // Re-throw the error if it already has the proper format.
+      if (response.error instanceof FirebaseError) {
+        throw response.error;
+      }
+
       // Add special handling for non-JSON responses.
       if (typeof response.error === 'string') {
         let error;

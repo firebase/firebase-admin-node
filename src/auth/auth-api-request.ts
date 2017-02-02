@@ -261,7 +261,7 @@ export class FirebaseAuthRequestHandler {
    * @return {string|null} The error code if present; null otherwise.
    */
   private static getErrorCode(response: any): string|null {
-    return (response.error && (response.error as any).message) || null;
+    return (validator.isNonNullObject(response) && response.error && (response.error as any).message) || null;
   }
 
   /**

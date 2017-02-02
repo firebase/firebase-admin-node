@@ -61,7 +61,7 @@ export class HttpRequestHandler {
           const responseHeaders = res.headers || {};
           const contentType = responseHeaders['content-type'] || 'application/json';
 
-          if (contentType.indexOf('text/html') !== -1) {
+          if (contentType.indexOf('text/html') !== -1 || contentType.indexOf('text/plain') !== -1) {
             // Text response
             if (statusCode >= 200 && statusCode < 300) {
               resolve(response);
@@ -90,7 +90,10 @@ export class HttpRequestHandler {
                 message: `Failed to parse response data: "${ error.toString() }". Raw server ` +
                          `response: "${ response }."`,
               });
-              reject(parsingError);
+              reject({
+                statusCode,
+                error: parsingError,
+              });
             }
           }
         });
@@ -107,7 +110,10 @@ export class HttpRequestHandler {
               code: 'network-timeout',
               message: `${ host } network timeout. Please try again.`,
             });
-            reject(networkTimeoutError);
+            reject({
+              statusCode: 408,
+              error: networkTimeoutError,
+            });
           });
         });
       }
@@ -117,7 +123,10 @@ export class HttpRequestHandler {
           code: 'network-error',
           message: `A network request error has occurred: ${ error && error.message }`,
         });
-        reject(networkRequestError);
+        reject({
+          statusCode: 502,
+          error: networkRequestError,
+        });
       });
 
       if (requestData) {

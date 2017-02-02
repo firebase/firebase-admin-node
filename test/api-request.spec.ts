@@ -144,10 +144,17 @@ describe('HttpRequestHandler', () => {
       mockRequestStream.emit('error', new Error('some error'));
 
       return sendRequestPromise
-        .should.eventually.be.rejected.and.have.property('code', 'network-error');
+        .then(() => {
+          throw new Error('Unexpected success.');
+        })
+        .catch((response) => {
+          expect(response).to.have.keys(['error', 'statusCode']);
+          expect(response.error).to.have.property('code', 'network-error');
+          expect(response.statusCode).to.equal(502);
+        });
      });
 
-    it('should be rejected on a network error', () => {
+    it('should be rejected on a network timeout', () => {
       httpsRequestStub = sinon.stub(https, 'request');
       httpsRequestStub.returns(mockRequestStream);
 
@@ -161,7 +168,14 @@ describe('HttpRequestHandler', () => {
       mockSocket.emit('timeout');
 
       return sendRequestPromise
-        .should.eventually.be.rejected.and.have.property('code', 'network-timeout');
+        .then(() => {
+          throw new Error('Unexpected success.');
+        })
+        .catch((response) => {
+          expect(response).to.have.keys(['error', 'statusCode']);
+          expect(response.error).to.have.property('code', 'network-timeout');
+          expect(response.statusCode).to.equal(408);
+        });
     });
 
     it('should forward the provided options on to the underlying https.request() method', () => {
@@ -217,7 +231,14 @@ describe('HttpRequestHandler', () => {
         mockedRequests.push(mockRequestWithError(400, undefined, mockTextErrorResponse));
 
         return httpRequestHandler.sendRequest(mockHost, mockPort, mockPath, 'GET')
-          .should.eventually.be.rejected.and.have.property('code', 'unable-to-parse-response');
+          .then(() => {
+            throw new Error('Unexpected success.');
+          })
+          .catch((response) => {
+            expect(response).to.have.keys(['error', 'statusCode']);
+            expect(response.error).to.have.property('code', 'unable-to-parse-response');
+            expect(response.statusCode).to.equal(400);
+          });
       });
 
       it('should be fulfilled given a 2xx response', () => {
