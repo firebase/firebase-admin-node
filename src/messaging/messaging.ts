@@ -208,22 +208,28 @@ class Messaging implements FirebaseServiceInterface {
     options: MessagingOptions = {},
   ): Promise<MessagingDevicesResponse> {
     if (registrationTokenOrTokens instanceof Array && registrationTokenOrTokens.length !== 0) {
+      // Validate the array contains no more than 1,000 registration tokens.
       if (registrationTokenOrTokens.length > 1000) {
-        throw new FirebaseMessagingError(
+        return Promise.reject(new FirebaseMessagingError(
           MessagingClientErrorCode.INVALID_RECIPIENT,
           'Too many registration tokens provided in a single request. Batch your requests to ' +
           'contain no more than 1,000 registration tokens per request.'
-        );
+        ));
       }
 
-      registrationTokenOrTokens.forEach((registrationToken, index) => {
-        if (!validator.isNonEmptyString(registrationToken)) {
-          throw new FirebaseMessagingError(
-            MessagingClientErrorCode.INVALID_RECIPIENT,
-            `Registration token provided to sendToDevice() at index ${index} must be a non-empty string.`
-          );
-        }
-      });
+      // Validate the array contains registration tokens which are non-empty strings.
+      try {
+        registrationTokenOrTokens.forEach((registrationToken, index) => {
+          if (!validator.isNonEmptyString(registrationToken)) {
+            throw new FirebaseMessagingError(
+              MessagingClientErrorCode.INVALID_RECIPIENT,
+              `Registration token provided to sendToDevice() at index ${index} must be a non-empty string.`
+            );
+          }
+        });
+      } catch (error) {
+        return Promise.reject(error);
+      }
     } else if (!validator.isNonEmptyString(registrationTokenOrTokens)) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_RECIPIENT,
@@ -231,19 +237,28 @@ class Messaging implements FirebaseServiceInterface {
       );
     }
 
-    const payloadCopy = this.validateMessagingPayload_(payload);
-    const optionsCopy = this.validateMessagingOptions_(options);
+    // Validate the types of the payload and options arguments. Since these are common developer
+    // errors, throw an error instead of returning a rejected promise.
+    this.validateMessagingPayloadAndOptionsTypes(payload, options);
 
-    const request: any = deepCopy(payloadCopy);
-    deepExtend(request, optionsCopy);
+    return Promise.resolve()
+      .then(() => {
+        // Validate the contents of the payload and options objects. Because we are now in a
+        // promise, any thrown error will cause this method to return a rejected promise.
+        const payloadCopy = this.validateMessagingPayload(payload);
+        const optionsCopy = this.validateMessagingOptions(options);
 
-    if (validator.isString(registrationTokenOrTokens)) {
-      request.to = registrationTokenOrTokens;
-    } else {
-      request.registration_ids = registrationTokenOrTokens;
-    }
+        const request: any = deepCopy(payloadCopy);
+        deepExtend(request, optionsCopy);
 
-    return this.messagingRequestHandler.invokeRequestHandler(request)
+        if (validator.isString(registrationTokenOrTokens)) {
+          request.to = registrationTokenOrTokens;
+        } else {
+          request.registration_ids = registrationTokenOrTokens;
+        }
+
+        return this.messagingRequestHandler.invokeRequestHandler(request);
+      })
       .then((response) => {
         // Rename properties on the server response
         utils.renameProperties(response, MESSAGING_DEVICES_RESPONSE_KEYS_MAP);
@@ -288,14 +303,23 @@ class Messaging implements FirebaseServiceInterface {
       );
     }
 
-    const payloadCopy = this.validateMessagingPayload_(payload);
-    const optionsCopy = this.validateMessagingOptions_(options);
+    // Validate the types of the payload and options arguments. Since these are common developer
+    // errors, throw an error instead of returning a rejected promise.
+    this.validateMessagingPayloadAndOptionsTypes(payload, options);
 
-    const request: any = deepCopy(payloadCopy);
-    deepExtend(request, optionsCopy);
-    request.to = notificationKey;
+    return Promise.resolve()
+      .then(() => {
+        // Validate the contents of the payload and options objects. Because we are now in a
+        // promise, any thrown error will cause this method to return a rejected promise.
+        const payloadCopy = this.validateMessagingPayload(payload);
+        const optionsCopy = this.validateMessagingOptions(options);
 
-    return this.messagingRequestHandler.invokeRequestHandler(request)
+        const request: any = deepCopy(payloadCopy);
+        deepExtend(request, optionsCopy);
+        request.to = notificationKey;
+
+        return this.messagingRequestHandler.invokeRequestHandler(request);
+      })
       .then((response) => {
         // Rename properties on the server response
         utils.renameProperties(response, MESSAGING_DEVICE_GROUP_RESPONSE_KEYS_MAP);
@@ -323,11 +347,16 @@ class Messaging implements FirebaseServiceInterface {
     payload: MessagingPayload,
     options: MessagingOptions = {},
   ): Promise<MessagingTopicResponse> {
-    if (!validator.isTopic(topic)) {
+    if (!validator.isNonEmptyString(topic)) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_RECIPIENT,
         'Topic provided to sendToTopic() must be a string which matches the format "/topics/[a-zA-Z0-9-_.~%]+".'
       );
+    } else if (!validator.isTopic(topic)) {
+      return Promise.reject(new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_RECIPIENT,
+        'Topic provided to sendToTopic() must be a string which matches the format "/topics/[a-zA-Z0-9-_.~%]+".'
+      ));
     }
 
     // Prepend the topic with /topics/ if necessary
@@ -335,14 +364,23 @@ class Messaging implements FirebaseServiceInterface {
       topic = `/topics/${ topic }`;
     }
 
-    const payloadCopy = this.validateMessagingPayload_(payload);
-    const optionsCopy = this.validateMessagingOptions_(options);
+    // Validate the types of the payload and options arguments. Since these are common developer
+    // errors, throw an error instead of returning a rejected promise.
+    this.validateMessagingPayloadAndOptionsTypes(payload, options);
 
-    const request: any = deepCopy(payloadCopy);
-    deepExtend(request, optionsCopy);
-    request.to = topic;
+    return Promise.resolve()
+      .then(() => {
+        // Validate the contents of the payload and options objects. Because we are now in a
+        // promise, any thrown error will cause this method to return a rejected promise.
+        const payloadCopy = this.validateMessagingPayload(payload);
+        const optionsCopy = this.validateMessagingOptions(options);
 
-    return this.messagingRequestHandler.invokeRequestHandler(request)
+        const request: any = deepCopy(payloadCopy);
+        deepExtend(request, optionsCopy);
+        request.to = topic;
+
+        return this.messagingRequestHandler.invokeRequestHandler(request);
+      })
       .then((response) => {
         // Rename properties on the server response
         utils.renameProperties(response, MESSAGING_TOPIC_RESPONSE_KEYS_MAP);
@@ -373,20 +411,56 @@ class Messaging implements FirebaseServiceInterface {
       );
     }
 
-    const payloadCopy = this.validateMessagingPayload_(payload);
-    const optionsCopy = this.validateMessagingOptions_(options);
+    // Validate the types of the payload and options arguments. Since these are common developer
+    // errors, throw an error instead of returning a rejected promise.
+    this.validateMessagingPayloadAndOptionsTypes(payload, options);
 
-    const request: any = deepCopy(payloadCopy);
-    deepExtend(request, optionsCopy);
-    request.condition = condition;
+    return Promise.resolve()
+      .then(() => {
+        // Validate the contents of the payload and options objects. Because we are now in a
+        // promise, any thrown error will cause this method to return a rejected promise.
+        const payloadCopy = this.validateMessagingPayload(payload);
+        const optionsCopy = this.validateMessagingOptions(options);
 
-    return this.messagingRequestHandler.invokeRequestHandler(request)
+        const request: any = deepCopy(payloadCopy);
+        deepExtend(request, optionsCopy);
+        request.condition = condition;
+
+        return this.messagingRequestHandler.invokeRequestHandler(request);
+      })
       .then((response) => {
         // Rename properties on the server response
         utils.renameProperties(response, MESSAGING_CONDITION_RESPONSE_KEYS_MAP);
 
         return response;
       });
+  }
+
+  /**
+   * Validates the types of the messaging payload and options. If invalid, an error will be thrown.
+   *
+   * @param {MessagingPayload} payload The messaging payload to validate.
+   * @param {MessagingOptions} options The messaging options to validate.
+   */
+  private validateMessagingPayloadAndOptionsTypes(
+    payload: MessagingPayload,
+    options: MessagingOptions,
+  ) {
+    // Validate the payload is an object
+    if (!validator.isNonNullObject(payload)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_PAYLOAD,
+        'Messaging payload must be an object with at least one of the "data" or "notification" properties.'
+      );
+    }
+
+    // Validate the options argument is an object
+    if (!validator.isNonNullObject(options)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_OPTIONS,
+        'Messaging options must be an object.'
+      );
+    }
   }
 
   /**
@@ -397,16 +471,8 @@ class Messaging implements FirebaseServiceInterface {
    * @return {MessagingPayload} A copy of the provided payload with whitelisted properties switched
    *     from camelCase to underscore_case.
    */
-  private validateMessagingPayload_(payload: MessagingPayload) {
+  private validateMessagingPayload(payload: MessagingPayload) {
     const payloadCopy: MessagingPayload = deepCopy(payload);
-
-    // Validate the payload is an object
-    if (!validator.isNonNullObject(payloadCopy)) {
-      throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_PAYLOAD,
-        'Messaging payload must be an object with at least one of the "data" or "notification" properties.'
-      );
-    }
 
     const payloadKeys = Object.keys(payloadCopy);
     const validPayloadKeys = ['data', 'notification'];
@@ -491,16 +557,8 @@ class Messaging implements FirebaseServiceInterface {
    * @return {MessagingOptions} A copy of the provided options with whitelisted properties switched
    *   from camelCase to underscore_case.
    */
-  private validateMessagingOptions_(options: MessagingOptions) {
+  private validateMessagingOptions(options: MessagingOptions) {
     const optionsCopy: MessagingOptions = deepCopy(options);
-
-    // Validate the options argument is an object
-    if (!validator.isNonNullObject(optionsCopy)) {
-      throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_OPTIONS,
-        'Messaging options must be an object.'
-      );
-    }
 
     // Validate the options object does not contain blacklisted properties
     BLACKLISTED_OPTIONS_KEYS.forEach((blacklistedKey) => {

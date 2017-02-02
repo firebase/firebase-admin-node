@@ -240,7 +240,7 @@ class MessagingClientErrorCode {
   public static INVALID_DATA_PAYLOAD_KEY = {
     code: 'invalid-data-payload-key',
     message: 'The data message payload contains an invalid key. See the reference documentation ' +
-      'for the DataMessagePayload for restricted keys.',
+      'for the DataMessagePayload type for restricted keys.',
   };
   public static PAYLOAD_SIZE_LIMIT_EXCEEDED = {
     code: 'payload-size-limit-exceeded',
@@ -273,9 +273,9 @@ class MessagingClientErrorCode {
       'messages sent to this device and do not immediately retry sending to this device.',
   };
   public static TOPICS_MESSAGE_RATE_EXCEEDED = {
-    code: 'topics-topics-rate-exceeded',
+    code: 'topics-message-rate-exceeded',
     message: 'The rate of messages to subscribers to a particular topic is too high. Reduce the ' +
-      'number of messages sent for this topic, and do not immediately retry sending.',
+      'number of messages sent for this topic, and do not immediately retry sending to this topic.',
   };
   public static INVALID_APNS_CREDENTIALS = {
     code: 'invalid-apns-credentials',

@@ -243,32 +243,30 @@ describe('Messaging', () => {
       }).to.throw(invalidArgumentError);
     });
 
-    it('should throw given empty string within array for registration token(s) argument', () => {
-      expect(() => {
-        messaging.sendToDevice(['foo', 'bar', ''], mocks.messaging.payloadDataOnly);
-      }).to.throw('Registration token provided to sendToDevice() at index 2 must be a non-empty string');
+    it('should be rejected given empty string within array for registration token(s) argument', () => {
+      return messaging.sendToDevice(['foo', 'bar', ''], mocks.messaging.payloadDataOnly)
+        .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-recipient');
     });
 
-    it('should throw given non-string value within array for registration token(s) argument', () => {
-      expect(() => {
-        messaging.sendToDevice(['foo', true as any, 'bar'], mocks.messaging.payloadDataOnly);
-      }).to.throw('Registration token provided to sendToDevice() at index 1 must be a non-empty string');
+    it('should be rejected given non-string value within array for registration token(s) argument', () => {
+      return messaging.sendToDevice(['foo', true as any, 'bar'], mocks.messaging.payloadDataOnly)
+        .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-recipient');
     });
 
-    it('should throw given an array containing more than 1,000 registration tokens', () => {
+    it('should be rejected given an array containing more than 1,000 registration tokens', () => {
       mockedRequests.push(mockSendToDeviceArrayRequest());
 
+      // Create an array of exactly 1,000 registration tokens
       const registrationTokens = (Array(1000) as any).fill(mocks.messaging.registrationToken);
 
-      expect(() => {
-        messaging.sendToDevice(registrationTokens, mocks.messaging.payload);
-      }).not.to.throw();
+      return messaging.sendToDevice(registrationTokens, mocks.messaging.payload)
+        .then(() => {
+          // Push the array of registration tokens over 1,000 items
+          registrationTokens.push(mocks.messaging.registrationToken);
 
-      registrationTokens.push(mocks.messaging.registrationToken);
-
-      expect(() => {
-        messaging.sendToDevice(registrationTokens, mocks.messaging.payload);
-      }).to.throw('Too many registration tokens provided in a single request.');
+          return messaging.sendToDevice(registrationTokens, mocks.messaging.payload)
+            .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-recipient');
+        });
     });
 
     it('should be rejected given a 200 JSON server response with a known error', () => {
@@ -711,17 +709,10 @@ describe('Messaging', () => {
 
     const topicsWithInvalidCharacters = ['f*o*o', '/topics/f+o+o', 'foo/topics/foo', '$foo', '/topics/foo&'];
     topicsWithInvalidCharacters.forEach((invalidTopic) => {
-      it(`should throw given topic argument which has invalid characters: ${ invalidTopic }`, () => {
-        expect(() => {
-          messaging.sendToTopic(invalidTopic, mocks.messaging.payload);
-        }).to.throw(invalidArgumentError);
+      it(`should be rejected given topic argument which has invalid characters: ${ invalidTopic }`, () => {
+        return messaging.sendToTopic(invalidTopic, mocks.messaging.payload)
+          .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-recipient');
       });
-    });
-
-    it('should throw given topic argument which has invalid characters', () => {
-      expect(() => {
-        messaging.sendToTopic('/topics/f*o*o', mocks.messaging.payload);
-      }).to.throw(invalidArgumentError);
     });
 
     it('should be rejected given a 200 JSON server response with a known error', () => {
@@ -1051,142 +1042,136 @@ describe('Messaging', () => {
   describe('Payload validation', () => {
     const invalidPayloads = [null, NaN, 0, 1, true, false, '', 'a', [], ['a', 1], _.noop];
     invalidPayloads.forEach((invalidPayload) => {
-      it(`should throw given invalid type for condition argument: ${ JSON.stringify(invalidPayload) }`, () => {
+      it(`should throw given invalid type for payload argument: ${ JSON.stringify(invalidPayload) }`, () => {
         expect(() => {
           messaging.sendToDevice(mocks.messaging.registrationToken, invalidPayload as MessagingPayload);
+        }).to.throw('Messaging payload must be an object');
+
+        expect(() => {
+          messaging.sendToDeviceGroup(mocks.messaging.notificationKey, invalidPayload as MessagingPayload);
+        }).to.throw('Messaging payload must be an object');
+
+        expect(() => {
+          messaging.sendToTopic(mocks.messaging.topic, invalidPayload as MessagingPayload);
+        }).to.throw('Messaging payload must be an object');
+
+        expect(() => {
+          messaging.sendToCondition(mocks.messaging.condition, invalidPayload as MessagingPayload);
         }).to.throw('Messaging payload must be an object');
       });
     });
 
-    it('should throw given an empty payload', () => {
-      expect(() => {
-        messaging.sendToDevice(mocks.messaging.registrationToken, {} as MessagingPayload);
-      }).to.throw('Messaging payload must contain at least one of the "data" or "notification" properties.');
+    it('should be rejected given an empty payload', () => {
+      return messaging.sendToDeviceGroup(mocks.messaging.notificationKey, {} as MessagingPayload)
+        .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-payload');
     });
 
-    it('should throw given a non-empty payload with neither the "data" nor the "notification" property', () => {
-      expect(() => {
-        messaging.sendToDevice(mocks.messaging.registrationToken, {
-          foo: 'one',
-          bar: 'two',
-        } as MessagingPayload);
-      }).to.throw('Messaging payload contains an invalid "foo" property.');
+    it('should be rejected given a non-empty payload with neither the "data" nor the "notification" property', () => {
+      return messaging.sendToTopic(mocks.messaging.topic, {
+        foo: 'one',
+        bar: 'two',
+      } as MessagingPayload)
+        .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-payload');
     });
 
-    it('should throw given an otherwise valid payload with an additional invalid property', () => {
+    it('should be rejected given an otherwise valid payload with an additional invalid property', () => {
       let mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payload);
       (mockPayloadClone as any).foo = 'one';
-      expect(() => {
-        messaging.sendToDevice(mocks.messaging.registrationToken, mockPayloadClone);
-      }).to.throw('Messaging payload contains an invalid "foo" property.');
+
+      return messaging.sendToCondition(mocks.messaging.condition, mockPayloadClone)
+        .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-payload');
     });
 
-    it('should throw given a non-object value for the "data" property', () => {
-      expect(() => {
-        messaging.sendToDevice(mocks.messaging.registrationToken, {
-          data: 'foo' as any,
-        });
-      }).to.throw('Messaging payload contains an invalid value for the "data" property.');
+    it('should be rejected given a non-object value for the "data" property', () => {
+      return messaging.sendToDevice(mocks.messaging.registrationToken, {
+        data: 'foo' as any,
+      }).should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-payload');
     });
 
-    it('should throw given a non-object value for the "notification" property', () => {
-      expect(() => {
-        messaging.sendToDevice(mocks.messaging.registrationToken, {
-          notification: true as any,
-        });
-      }).to.throw('Messaging payload contains an invalid value for the "notification" property.');
+    it('should be rejected given a non-object value for the "notification" property', () => {
+      return messaging.sendToDevice(mocks.messaging.registrationToken, {
+        notification: true as any,
+      }).should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-payload');
     });
 
-    it('should throw given a non-string value for a property within the "data" property', () => {
-      expect(() => {
-        messaging.sendToDevice(mocks.messaging.registrationToken, {
-          data: {
-            foo: 1 as any,
-          },
-        });
-      }).to.throw('Messaging payload contains an invalid value for the "data.foo" property.');
+    it('should be rejected given a non-string value for a property within the "data" property', () => {
+      return messaging.sendToDevice(mocks.messaging.registrationToken, {
+        data: {
+          foo: 1 as any,
+        },
+      }).should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-payload');
     });
 
-    it('should throw given a non-string value for a property within the "notification" property', () => {
-      expect(() => {
-        messaging.sendToDevice(mocks.messaging.registrationToken, {
-          notification: {
-            foo: true as any,
-          },
-        });
-      }).to.throw('Messaging payload contains an invalid value for the "notification.foo" property.');
+    it('should be rejected given a non-string value for a property within the "notification" property', () => {
+      return messaging.sendToDevice(mocks.messaging.registrationToken, {
+        notification: {
+          foo: true as any,
+        },
+      }).should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-payload');
     });
 
-    it('should throw given a valid "data" property but invalid "notification" property', () => {
+    it('should be rejected given a valid "data" property but invalid "notification" property', () => {
       let mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payloadDataOnly);
       (mockPayloadClone as any).notification = 'foo';
-      expect(() => {
-        messaging.sendToDevice(mocks.messaging.registrationToken, mockPayloadClone);
-      }).to.throw('Messaging payload contains an invalid value for the "notification" property.');
+
+      return messaging.sendToDevice(mocks.messaging.registrationToken, mockPayloadClone)
+        .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-payload');
     });
 
-    it('should throw given a valid "notification" property but invalid "data" property', () => {
+    it('should be rejected given a valid "notification" property but invalid "data" property', () => {
       let mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payloadNotificationOnly);
       (mockPayloadClone as any).data = 'foo';
-      expect(() => {
-        messaging.sendToDevice(mocks.messaging.registrationToken, mockPayloadClone);
-      }).to.throw('Messaging payload contains an invalid value for the "data" property.');
+
+      return messaging.sendToDevice(mocks.messaging.registrationToken, mockPayloadClone)
+        .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-payload');
     });
 
     const blacklistedDataPayloadKeys = BLACKLISTED_DATA_PAYLOAD_KEYS.concat(['google.', 'google.foo']);
     blacklistedDataPayloadKeys.forEach((blacklistedProperty) => {
-      it(`should throw given blacklisted "data.${blacklistedProperty}" property`, () => {
-        expect(() => {
-          messaging.sendToDevice(
-            mocks.messaging.registrationToken,
-            {
-              data: {
-                [blacklistedProperty]: 'foo',
-              },
+      it(`should be rejected given blacklisted "data.${blacklistedProperty}" property`, () => {
+        return messaging.sendToDevice(
+          mocks.messaging.registrationToken,
+          {
+            data: {
+              [blacklistedProperty]: 'foo',
             },
-          );
-        }).to.throw(`Messaging payload contains the blacklisted "data.${blacklistedProperty}" property.`);
+          },
+        ).should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-payload');
       });
     });
 
     const nonBlacklistedDataPayloadKeys = ['google', '.google', 'goo.gle', 'googlefoo', 'googlef.oo'];
     nonBlacklistedDataPayloadKeys.forEach((nonBlacklistedProperty) => {
-      it(`should not throw given non-blacklisted "data.${nonBlacklistedProperty}" property`, () => {
-        expect(() => {
-          messaging.sendToDevice(
-            mocks.messaging.registrationToken,
-            {
-              data: {
-                [nonBlacklistedProperty]: 'foo',
-              },
+      it(`should be fulfilled given non-blacklisted "data.${nonBlacklistedProperty}" property`, () => {
+        mockedRequests.push(mockSendToDeviceStringRequest());
+
+        return messaging.sendToDevice(
+          mocks.messaging.registrationToken,
+          {
+            data: {
+              [nonBlacklistedProperty]: 'foo',
             },
-          );
-        }).not.to.throw();
+          },
+        );
       });
     });
 
-    it('should not throw given a valid payload containing only the "data" property', () => {
+    it('should be fulfilled given a valid payload containing only the "data" property', () => {
       mockedRequests.push(mockSendToDeviceStringRequest());
 
-      expect(() => {
-        messaging.sendToDevice(mocks.messaging.registrationToken, mocks.messaging.payloadDataOnly);
-      }).not.to.throw();
+      return messaging.sendToDevice(mocks.messaging.registrationToken, mocks.messaging.payloadDataOnly);
     });
 
-    it('should not throw given a valid payload containing only the "notification" property', () => {
+    it('should be fulfillled given a valid payload containing only the "notification" property', () => {
       mockedRequests.push(mockSendToDeviceStringRequest());
 
-      expect(() => {
-        messaging.sendToDevice(mocks.messaging.registrationToken, mocks.messaging.payloadNotificationOnly);
-      }).not.to.throw();
+      return messaging.sendToDevice(mocks.messaging.registrationToken, mocks.messaging.payloadNotificationOnly);
     });
 
-    it('should not throw given a valid payload containing both "data" and "notification" properties', () => {
+    it('should be fulfillled given a valid payload containing both "data" and "notification" properties', () => {
       mockedRequests.push(mockSendToDeviceStringRequest());
 
-      expect(() => {
-        messaging.sendToDevice(mocks.messaging.registrationToken, mocks.messaging.payload);
-      }).not.to.throw();
+      return messaging.sendToDevice(mocks.messaging.registrationToken, mocks.messaging.payload);
     });
 
     it('should add "data" and "notification" as top-level properties of the request data', () => {
@@ -1279,20 +1264,42 @@ describe('Messaging', () => {
             invalidOption as MessagingOptions
           );
         }).to.throw('Messaging options must be an object');
+
+        expect(() => {
+          messaging.sendToDeviceGroup(
+            mocks.messaging.notificationKey,
+            mocks.messaging.payload,
+            invalidOption as MessagingOptions
+          );
+        }).to.throw('Messaging options must be an object');
+
+        expect(() => {
+          messaging.sendToTopic(
+            mocks.messaging.topic,
+            mocks.messaging.payload,
+            invalidOption as MessagingOptions
+          );
+        }).to.throw('Messaging options must be an object');
+
+        expect(() => {
+          messaging.sendToCondition(
+            mocks.messaging.condition,
+            mocks.messaging.payload,
+            invalidOption as MessagingOptions
+          );
+        }).to.throw('Messaging options must be an object');
       });
     });
 
     BLACKLISTED_OPTIONS_KEYS.forEach((blacklistedProperty) => {
-      it(`should throw given blacklisted "${blacklistedProperty}" property`, () => {
-        expect(() => {
-          messaging.sendToDevice(
-            mocks.messaging.registrationToken,
-            mocks.messaging.payload,
-            {
-              [blacklistedProperty]: 'foo',
-            },
-          );
-        }).to.throw(`Messaging options contains the blacklisted "${blacklistedProperty}" property.`);
+      it(`should be rejected given blacklisted "${blacklistedProperty}" property`, () => {
+        return messaging.sendToDevice(
+          mocks.messaging.registrationToken,
+          mocks.messaging.payload,
+          {
+            [blacklistedProperty]: 'foo',
+          },
+        ).should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-options');
       });
     });
 
@@ -1335,72 +1342,62 @@ describe('Messaging', () => {
 
       keysToTest.forEach((key) => {
         invalidValues.forEach(({ value, text }) => {
-          it(`should throw given ${ text } value for the "${ key }" property`, () => {
-            expect(() => {
-              messaging.sendToDevice(
-                mocks.messaging.registrationToken,
-                mocks.messaging.payload,
-                {
-                  [key]: value as any,
-                },
-              );
-            }).to.throw(`Messaging options contains an invalid value for the "${ key }" property.`);
-          });
-        });
-
-        it(`should not throw given ${ type } value for the "${ key }" property`, () => {
-          mockedRequests.push(mockSendToDeviceStringRequest());
-
-          expect(() => {
-            messaging.sendToDevice(
+          it(`should be rejected given ${ text } value for the "${ key }" property`, () => {
+            return messaging.sendToDevice(
               mocks.messaging.registrationToken,
               mocks.messaging.payload,
               {
-                [key]: validValue,
+                [key]: value as any,
               },
-            );
-          }).not.to.throw();
+            ).should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-options');
+          });
+        });
+
+        it(`should be fulfilled given ${ type } value for the "${ key }" property`, () => {
+          mockedRequests.push(mockSendToDeviceStringRequest());
+
+          return messaging.sendToDevice(
+            mocks.messaging.registrationToken,
+            mocks.messaging.payload,
+            {
+              [key]: validValue,
+            },
+          );
         });
       });
     });
 
-    it('should not throw given an empty options object', () => {
+    it('should be fulfilled given an empty options object', () => {
       mockedRequests.push(mockSendToDeviceStringRequest());
 
-      expect(() => {
-        messaging.sendToDevice(
-          mocks.messaging.registrationToken,
-          mocks.messaging.payload,
-          {},
-        );
-      }).not.to.throw();
+      return messaging.sendToDeviceGroup(
+        mocks.messaging.notificationKey,
+        mocks.messaging.payload,
+        {},
+      );
     });
 
-    it('should not throw given an options object containing only whitelisted properties', () => {
+    it('should be fulfilled given an options object containing only whitelisted properties', () => {
       mockedRequests.push(mockSendToDeviceStringRequest());
 
-      expect(() => {
-        messaging.sendToDevice(
-          mocks.messaging.registrationToken,
-          mocks.messaging.payload,
-          mocks.messaging.options,
-        );
-      }).not.to.throw();
+      return messaging.sendToTopic(
+        mocks.messaging.topic,
+        mocks.messaging.payload,
+        mocks.messaging.options,
+      );
     });
 
-    it('should not throw given an options object containing non-whitelisted properties', () => {
+    it('should be fulfilled given an options object containing non-whitelisted properties', () => {
       mockedRequests.push(mockSendToDeviceStringRequest());
 
       const mockOptionsClone: MessagingOptions = _.clone(mocks.messaging.options);
       (mockOptionsClone as any).foo = 'bar';
 
-      expect(() => {
-        messaging.sendToDevice(
-          mocks.messaging.registrationToken,
-          mocks.messaging.payload,
-          mockOptionsClone,
-        );
-      }).not.to.throw();
+      return messaging.sendToCondition(
+        mocks.messaging.condition,
+        mocks.messaging.payload,
+        mockOptionsClone,
+      );
     });
 
     it('should add provided options as top-level properties of the request data', () => {
