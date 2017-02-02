@@ -104,7 +104,7 @@ export class FirebaseAppInternals {
           if (error.message.indexOf('invalid_grant') !== -1) {
             errorMessage += ' The most likely cause of this error is using a certificate key file ' +
             'which has been revoked. Make sure the key ID for your key file is still present at ' +
-            'https://console.firebase.google.com/iam-admin/serviceaccounts/project. If not, generate' +
+            'https://console.firebase.google.com/iam-admin/serviceaccounts/project. If not, generate ' +
             'a new key file at https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk.';
           }
 
