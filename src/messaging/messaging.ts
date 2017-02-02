@@ -415,6 +415,12 @@ class Messaging implements FirebaseServiceInterface {
     // errors, throw an error instead of returning a rejected promise.
     this.validateMessagingPayloadAndOptionsTypes(payload, options);
 
+    // The FCM server rejects conditions which are surrounded in single quotes. When the condition
+    // is stringified over the wire, double quotes in it get converted to \" which the FCM server
+    // does not properly handle. We can get around this by replacing internal double quotes with
+    // single quotes.
+    condition = condition.replace(/"/g, '\'');
+
     return Promise.resolve()
       .then(() => {
         // Validate the contents of the payload and options objects. Because we are now in a
