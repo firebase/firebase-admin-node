@@ -258,9 +258,15 @@ class MessagingClientErrorCode {
   };
   public static REGISTRATION_TOKEN_NOT_REGISTERED = {
     code: 'registration-token-not-registered',
-    message: 'Provided registration token is not registered. A previously valid registration ' +
+    message: 'The provided registration token is not registered. A previously valid registration ' +
       'token can be unregistered for a variety of reasons. See the error documentation for more ' +
       'details. Remove this registration token and stop using it to send messages.',
+  };
+  public static MISMATCHED_CREDENTIAL = {
+    code: 'mismatched-credential',
+    message: 'The credential used to authenticate this SDK does not have permission to send ' +
+      'messages to the device corresponding to the provided registration token. Make sure the ' +
+      'credential and registration token both belong to the same Firebase project.',
   };
   public static INVALID_PACKAGE_NAME = {
     code: 'invalid-package-name',
@@ -342,6 +348,8 @@ const MESSAGING_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   InvalidRegistration: 'INVALID_REGISTRATION_TOKEN',
   // Registration token is not registered.
   NotRegistered: 'REGISTRATION_TOKEN_NOT_REGISTERED',
+  // Mismatched sender ID.
+  MismatchSenderId: 'MISMATCHED_CREDENTIAL',
   // Registration token does not match restricted package name.
   InvalidPackageName: 'INVALID_PACKAGE_NAME',
   // Message payload size limit exceeded.
