@@ -3,6 +3,8 @@ declare namespace admin {
     code: string;
     message: string;
     stack: string;
+
+    toJSON(): Object;
   }
 
   class Promise<T> extends Promise_Instance<T> {
