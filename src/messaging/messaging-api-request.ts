@@ -13,6 +13,7 @@ const FIREBASE_MESSAGING_TIMEOUT = 10000;
 const FIREBASE_MESSAGING_HTTP_METHOD: HttpMethod = 'POST';
 const FIREBASE_MESSAGING_HEADERS = {
   'Content-Type': 'application/json',
+  'Sdk-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
   access_token_auth: 'true',
 };
 
