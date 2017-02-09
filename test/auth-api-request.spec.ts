@@ -505,6 +505,7 @@ describe('FirebaseAuthRequestHandler', () => {
   let mockedRequests: nock.Scope[] = [];
   let stubs: sinon.SinonStub[] = [];
   let mockAccessToken: string = utils.generateRandomAccessToken();
+  let expectedHeaders: Object;
 
   before(() => utils.mockFetchAccessTokenRequests(mockAccessToken));
 
@@ -515,6 +516,12 @@ describe('FirebaseAuthRequestHandler', () => {
 
   beforeEach(() => {
     mockApp = mocks.app();
+
+    expectedHeaders = {
+      'Content-Type': 'application/json',
+      'X-Client-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
+      Authorization: 'Bearer ' + mockAccessToken,
+    };
   });
 
   afterEach(() => {
@@ -543,10 +550,6 @@ describe('FirebaseAuthRequestHandler', () => {
         ],
       };
       const data = {email: ['user@example.com']};
-      const headers = {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + mockAccessToken,
-      };
 
       let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
@@ -557,7 +560,7 @@ describe('FirebaseAuthRequestHandler', () => {
         .then((result) => {
           expect(result).to.deep.equal(expectedResult);
           expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, data, headers, timeout);
+              host, port, path, httpMethod, data, expectedHeaders, timeout);
         });
     });
     it('should be rejected given an invalid email', () => {
@@ -566,10 +569,6 @@ describe('FirebaseAuthRequestHandler', () => {
       };
       const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
       const data = {email: ['user@example.com']};
-      const headers = {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + mockAccessToken,
-      };
 
       let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
@@ -582,7 +581,7 @@ describe('FirebaseAuthRequestHandler', () => {
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
           expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, data, headers, timeout);
+              host, port, path, httpMethod, data, expectedHeaders, timeout);
         });
     });
   });
@@ -600,10 +599,6 @@ describe('FirebaseAuthRequestHandler', () => {
         ],
       };
       const data = {localId: ['uid']};
-      const headers = {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + mockAccessToken,
-      };
 
       let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
@@ -614,7 +609,7 @@ describe('FirebaseAuthRequestHandler', () => {
         .then((result) => {
           expect(result).to.deep.equal(expectedResult);
           expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, data, headers, timeout);
+              host, port, path, httpMethod, data, expectedHeaders, timeout);
         });
     });
     it('should be rejected given an invalid localId', () => {
@@ -623,10 +618,6 @@ describe('FirebaseAuthRequestHandler', () => {
       };
       const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
       const data = {localId: ['uid']};
-      const headers = {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + mockAccessToken,
-      };
 
       let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
@@ -639,7 +630,7 @@ describe('FirebaseAuthRequestHandler', () => {
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
           expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, data, headers, timeout);
+              host, port, path, httpMethod, data, expectedHeaders, timeout);
         });
     });
     it('should be rejected when the backend returns an error', () => {
@@ -650,10 +641,6 @@ describe('FirebaseAuthRequestHandler', () => {
       };
       const expectedError = FirebaseAuthError.fromServerError('OPERATION_NOT_ALLOWED');
       const data = {localId: ['uid']};
-      const headers = {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + mockAccessToken,
-      };
 
       let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
@@ -666,7 +653,7 @@ describe('FirebaseAuthRequestHandler', () => {
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
           expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, data, headers, timeout);
+              host, port, path, httpMethod, data, expectedHeaders, timeout);
         });
     });
   });
@@ -682,10 +669,7 @@ describe('FirebaseAuthRequestHandler', () => {
         kind: 'identitytoolkit#DeleteAccountResponse',
       };
       const data = {localId: 'uid'};
-      const headers = {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + mockAccessToken,
-      };
+
       let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
@@ -694,7 +678,7 @@ describe('FirebaseAuthRequestHandler', () => {
         .then((result) => {
           expect(result).to.deep.equal(expectedResult);
           expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, data, headers, timeout);
+              host, port, path, httpMethod, data, expectedHeaders, timeout);
         });
     });
     it('should be rejected when the backend returns an error', () => {
@@ -705,10 +689,7 @@ describe('FirebaseAuthRequestHandler', () => {
       };
       const expectedError = FirebaseAuthError.fromServerError('OPERATION_NOT_ALLOWED');
       const data = {localId: 'uid'};
-      const headers = {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + mockAccessToken,
-      };
+
       let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
@@ -719,7 +700,7 @@ describe('FirebaseAuthRequestHandler', () => {
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
           expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, data, headers, timeout);
+              host, port, path, httpMethod, data, expectedHeaders, timeout);
         });
     });
   });
@@ -761,14 +742,11 @@ describe('FirebaseAuthRequestHandler', () => {
       password: 'password',
       deleteAttribute: ['DISPLAY_NAME', 'PHOTO_URL'],
     };
-    const headers = {
-      'Content-Type': 'application/json',
-      Authorization: 'Bearer ' + mockAccessToken,
-    };
     const invalidData = {
       uid,
       email: 'user@invalid@',
     };
+
     it('should be fulfilled given a valid localId', () => {
       // Successful result server response.
       const expectedResult = {
@@ -788,7 +766,7 @@ describe('FirebaseAuthRequestHandler', () => {
           expect(returnedUid).to.be.equal(uid);
           // Confirm expected rpc request parameters sent.
           expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, {localId: uid}, headers, timeout);
+              host, port, path, httpMethod, {localId: uid}, expectedHeaders, timeout);
         });
     });
 
@@ -811,7 +789,7 @@ describe('FirebaseAuthRequestHandler', () => {
           expect(returnedUid).to.be.equal(uid);
           // Confirm expected rpc request parameters sent.
           expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, expectedValidData, headers, timeout);
+              host, port, path, httpMethod, expectedValidData, expectedHeaders, timeout);
         });
     });
 
@@ -835,7 +813,7 @@ describe('FirebaseAuthRequestHandler', () => {
           // Confirm expected rpc request parameters sent. In this case, displayName
           // and photoURL removed from request and deleteAttribute added.
           expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, expectedValidDeleteData, headers, timeout);
+              host, port, path, httpMethod, expectedValidDeleteData, expectedHeaders, timeout);
         });
     });
 
@@ -873,7 +851,7 @@ describe('FirebaseAuthRequestHandler', () => {
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
           expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, expectedValidData, headers, timeout);
+              host, port, path, httpMethod, expectedValidData, expectedHeaders, timeout);
         });
     });
   });
@@ -924,10 +902,6 @@ describe('FirebaseAuthRequestHandler', () => {
         allowOverwrite: false,
         sanityCheck: true,
       };
-      const headers = {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + mockAccessToken,
-      };
       it('should be fulfilled given a valid localId', () => {
         // Successful uploadAccount response.
         const expectedResult = {
@@ -946,7 +920,7 @@ describe('FirebaseAuthRequestHandler', () => {
             expect(returnedUid).to.be.equal(uid);
             // Confirm expected rpc request parameters sent.
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                host, port, path, httpMethod, emptyRequest, headers, timeout);
+                host, port, path, httpMethod, emptyRequest, expectedHeaders, timeout);
           });
       });
 
@@ -967,7 +941,7 @@ describe('FirebaseAuthRequestHandler', () => {
             expect(returnedUid).to.be.equal(uid);
             // Confirm expected rpc request parameters sent.
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                host, port, path, httpMethod, expectedValidData, headers, timeout);
+                host, port, path, httpMethod, expectedValidData, expectedHeaders, timeout);
           });
       });
 
@@ -1012,7 +986,7 @@ describe('FirebaseAuthRequestHandler', () => {
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                host, port, path, httpMethod, expectedValidData, headers, timeout);
+                host, port, path, httpMethod, expectedValidData, expectedHeaders, timeout);
           });
       });
 
@@ -1043,7 +1017,7 @@ describe('FirebaseAuthRequestHandler', () => {
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                host, port, path, httpMethod, expectedValidData, headers, timeout);
+                host, port, path, httpMethod, expectedValidData, expectedHeaders, timeout);
           });
       });
 
@@ -1068,7 +1042,7 @@ describe('FirebaseAuthRequestHandler', () => {
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                host, port, path, httpMethod, expectedValidData, headers, timeout);
+                host, port, path, httpMethod, expectedValidData, expectedHeaders, timeout);
           });
       });
     });
@@ -1100,10 +1074,7 @@ describe('FirebaseAuthRequestHandler', () => {
       const invalidData = {
         email: 'user@invalid@',
       };
-      const headers = {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + mockAccessToken,
-      };
+
       it('should be fulfilled given valid parameters', () => {
         // signupNewUser successful response.
         const expectedResult = {
@@ -1123,7 +1094,7 @@ describe('FirebaseAuthRequestHandler', () => {
             expect(returnedUid).to.be.equal(uid);
             // Confirm expected rpc request parameters sent.
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                host, port, path, httpMethod, expectedValidData, headers, timeout);
+                host, port, path, httpMethod, expectedValidData, expectedHeaders, timeout);
           });
       });
 
@@ -1162,7 +1133,7 @@ describe('FirebaseAuthRequestHandler', () => {
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                host, port, path, httpMethod, expectedValidData, headers, timeout);
+                host, port, path, httpMethod, expectedValidData, expectedHeaders, timeout);
           });
       });
     });
