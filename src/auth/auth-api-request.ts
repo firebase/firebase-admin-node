@@ -18,6 +18,7 @@ const FIREBASE_AUTH_PATH = '/identitytoolkit/v3/relyingparty/';
 /** Firebase Auth request header. */
 const FIREBASE_AUTH_HEADER = {
   'Content-Type': 'application/json',
+  'X-Client-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
 };
 /** Firebase Auth request timeout duration in milliseconds. */
 const FIREBASE_AUTH_TIMEOUT = 10000;
