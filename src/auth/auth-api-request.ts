@@ -155,85 +155,12 @@ export const FIREBASE_AUTH_SET_ACCOUNT_INFO = new ApiSettings('setAccountInfo', 
   });
 
 /**
- * Instantiates the uploadAccount endpoint settings for creating a new user with uid
- * specified.
- */
-export const FIREBASE_AUTH_UPLOAD_ACCOUNT = new ApiSettings('uploadAccount', 'POST')
-  // Set request validator.
-  .setRequestValidator((request: any) => {
-    let validKeys: any = {
-      users: true,
-      // Required to throw an error when a user already exists with the provided uid.
-      allowOverwrite: true,
-      // Required to throw an error if the email is already in use by another account.
-      sanityCheck: true,
-    };
-    // Remove unsupported properties.
-    for (let key in request) {
-      if (!(key in validKeys)) {
-        delete request[key];
-      }
-    }
-    // Required uploadAccount parameter.
-    if (typeof request.users === 'undefined' ||
-        request.users == null ||
-        !request.users.length) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
-        'INTERNAL ASSERT FAILED: Invalid uploadAccount request. No users provider.');
-    }
-    // Validate each user within users.
-    for (let user of request.users) {
-      // localId is a required parameter.
-      if (typeof user.localId === 'undefined') {
-        throw new FirebaseAuthError(
-          AuthClientErrorCode.INTERNAL_ERROR,
-          'INTERNAL ASSERT FAILED: Server request is missing user identifier');
-      }
-      // Validate user.
-      validateCreateEditRequest(user);
-    }
-  })
-  // Set response validator.
-  .setResponseValidator((response: any) => {
-    // Return the first error. UploadAccount is used to upload multiple accounts.
-    // If an error occurs in any account to be upload, an array of errors is
-    // returned.
-    if (typeof response.error !== 'undefined' &&
-        response.error.length &&
-        typeof response.error[0].message === 'string') {
-      // Get error description.
-      if (response.error[0].message.indexOf('can not overwrite') !== -1) {
-        // Duplicate user error.
-        throw new FirebaseAuthError(
-          AuthClientErrorCode.UID_ALREADY_EXISTS,
-          response.error[0].message);
-      } else if (response.error[0].message.indexOf('email exists') !== -1) {
-        // Email exists error.
-        throw new FirebaseAuthError(
-          AuthClientErrorCode.EMAIL_ALREADY_EXISTS,
-          response.error[0].message);
-      }
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
-        'INTERNAL ASSERT FAILED: ' + response.error[0].message);
-    }
-  });
-
-/**
- * Instantiates the signupNewUser endpoint settings for creating a new user without
- * uid being specified. The backend will create a new one and return it.
+ * Instantiates the signupNewUser endpoint settings for creating a new user with or without
+ * uid being specified. The backend will create a new one if not provided and return it.
  */
 export const FIREBASE_AUTH_SIGN_UP_NEW_USER = new ApiSettings('signupNewUser', 'POST')
   // Set request validator.
   .setRequestValidator((request: any) => {
-    // localId should not be specified.
-    // This should not occur as when the uid is provided, uploadAccount is used instead.
-    if (typeof request.localId !== 'undefined') {
-     throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
-        'INTERNAL ASSERT FAILED: User identifier must not be specified');
-    }
     validateCreateEditRequest(request);
   })
   // Set response validator.
@@ -372,46 +299,22 @@ export class FirebaseAuthRequestHandler {
    *     with the user id that was created.
    */
   public createNewAccount(properties: Object): Promise<string> {
-    // Build the signupNewUser/uploadAccount request.
+    // Build the signupNewUser request.
     let request: any = deepCopy(properties);
-    let finalRequest: any;
-    let apiSettings: ApiSettings;
     // Rewrite photoURL to photoUrl.
     if (typeof request.photoURL !== 'undefined') {
       request.photoUrl = request.photoURL;
       delete request.photoURL;
     }
+    // Rewrite uid to localId if it exists.
     if (typeof request.uid !== 'undefined') {
       request.localId = request.uid;
-      // If uid specified, use uploadAccount endpoint.
-      apiSettings = FIREBASE_AUTH_UPLOAD_ACCOUNT;
-      // This endpoint takes a hashed password.
-      // To pass a plain text password, pass it via rawPassword field.
-      if (typeof request.password !== 'undefined') {
-        request.rawPassword = request.password;
-        delete request.password;
-      }
-      // Construct uploadAccount request.
-      finalRequest = {
-        users: [request],
-        // Do not overwrite existing users.
-        allowOverwrite: false,
-        // Do not allow duplicate emails.
-        // This will force the backend to throw an error when an email is
-        // already in use by another existing account.
-        sanityCheck: true,
-      };
-    } else {
-      // If uid not specified, use signupNewUser endpoint.
-      apiSettings = FIREBASE_AUTH_SIGN_UP_NEW_USER;
-      finalRequest = request;
+      delete request.uid;
     }
-    return this.invokeRequestHandler(apiSettings, finalRequest)
+    return this.invokeRequestHandler(FIREBASE_AUTH_SIGN_UP_NEW_USER, request)
       .then((response: any) => {
-        // Return the user id. It is returned in the setAccountInfo and signupNewUser
-        // endpoints but not the uploadAccount endpoint. In that case return the same
-        // one in request.
-        return (response.localId || request.localId) as string;
+        // Return the user id.
+        return response.localId as string;
       });
   }
 

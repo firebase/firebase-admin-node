@@ -101,6 +101,10 @@ export class Certificate {
   public clientEmail: string;
 
   public static fromPath(path: string): Certificate {
+    // Node bug encountered in v6.x. fs.readFileSync hangs when path is a 0 or 1.
+    if (typeof path !== 'string') {
+      throw new Error('Failed to parse certificate key file: TypeError: path must be a string');
+    }
     try {
       return new Certificate(JSON.parse(fs.readFileSync(path, 'utf8')));
     } catch (error) {

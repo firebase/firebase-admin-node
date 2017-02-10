@@ -18,7 +18,7 @@ import * as validator from '../src/utils/validator';
 import {
   FirebaseAuthRequestHandler, FIREBASE_AUTH_GET_ACCOUNT_INFO,
   FIREBASE_AUTH_DELETE_ACCOUNT, FIREBASE_AUTH_SET_ACCOUNT_INFO,
-  FIREBASE_AUTH_UPLOAD_ACCOUNT, FIREBASE_AUTH_SIGN_UP_NEW_USER,
+  FIREBASE_AUTH_SIGN_UP_NEW_USER,
 } from '../src/auth/auth-api-request';
 import {AuthClientErrorCode, FirebaseAuthError} from '../src/utils/error';
 
@@ -226,7 +226,7 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
   });
 });
 
-describe('FIREBASE_AUTH_UPLOAD_ACCOUNT', () => {
+describe('FIREBASE_AUTH_SIGN_UP_NEW_USER', () => {
   // Spy on all validators.
   let isUidSpy: sinon.SinonSpy;
   let isEmailSpy: sinon.SinonSpy;
@@ -247,175 +247,6 @@ describe('FIREBASE_AUTH_UPLOAD_ACCOUNT', () => {
   });
 
   it('should return the correct endpoint', () => {
-    expect(FIREBASE_AUTH_UPLOAD_ACCOUNT.getEndpoint()).to.equal('uploadAccount');
-  });
-  it('should return the correct http method', () => {
-    expect(FIREBASE_AUTH_UPLOAD_ACCOUNT.getHttpMethod()).to.equal('POST');
-  });
-  describe('requestValidator', () => {
-    const requestValidator = FIREBASE_AUTH_UPLOAD_ACCOUNT.getRequestValidator();
-    it('should succeed with valid user passed', () => {
-      const validRequest = {
-        users: [{localId: '1234'}],
-      };
-      expect(() => {
-        return requestValidator(validRequest);
-      }).not.to.throw();
-      expect(isUidSpy).to.have.been.calledOnce.and.calledWith('1234');
-    });
-    it('should succeed with valid user parameters', () => {
-      const validRequest = {
-        users: [{
-          localId: '1234',
-          displayName: 'John Doe',
-          email: 'user@example.com',
-          rawPassword: 'password',
-          emailVerified: true,
-          photoUrl: 'http://www.example.com/1234/photo.png',
-          disabled: false,
-          // Pass an unsupported parameter which should be ignored.
-          ignoreMe: 'bla',
-        }],
-        allowOverwrite: false,
-        sanityCheck: true,
-      };
-      expect(() => {
-        return requestValidator(validRequest);
-      }).not.to.throw();
-      expect(isUidSpy).to.have.been.calledOnce.and.calledWith('1234');
-      expect(isEmailSpy).to.have.been.calledOnce.and.calledWith('user@example.com');
-      expect(isPasswordSpy).to.have.been.calledOnce.and.calledWith('password');
-      expect(isUrlSpy).to.have.been.calledOnce.and
-        .calledWith('http://www.example.com/1234/photo.png');
-    });
-    it('should ignore invalid parameters', () => {
-      const validRequest = {
-        users: [
-          {localId: 'user1', invalid: 'value'},
-          {localId: 'user2', other: 'something'},
-        ],
-        invalidAgain: 'anotherValue',
-      };
-      expect(() => {
-        return requestValidator(validRequest);
-      }).not.to.throw();
-      expect(isUidSpy).to.have.been.calledTwice;
-      expect(isUidSpy.firstCall).to.have.been.calledWith('user1');
-      expect(isUidSpy.secondCall).to.have.been.calledWith('user2');
-    });
-    it('should fail when no user is passed', () => {
-      expect(() => {
-        return requestValidator({});
-      }).to.throw();
-      expect(isUidSpy).to.have.not.been.called;
-    });
-    it('should fail when an empty list of users are passed', () => {
-      expect(() => {
-        return requestValidator({users: []});
-      }).to.throw();
-      expect(isUidSpy).to.have.not.been.called;
-    });
-    it('should fail when localId not passed within a user', () => {
-      const invalidRequest = {users: [{displayName: 'New User'}]};
-      expect(() => {
-        return requestValidator(invalidRequest);
-      }).to.throw();
-      expect(isUidSpy).to.have.not.been.called;
-    });
-    describe('called with invalid parameters', () => {
-      it('should fail with invalid localId', () => {
-        expect(() => {
-          return requestValidator({users: [{localId: ''}]});
-        }).to.throw();
-        expect(isUidSpy).to.have.been.calledOnce.and.calledWith('');
-      });
-      it('should fail with invalid displayName', () => {
-        expect(() => {
-          return requestValidator({
-            users: [{localId: '1234', displayName: ['John Doe']}],
-          });
-        }).to.throw();
-      });
-      it('should fail with invalid email', () => {
-        expect(() => {
-          return requestValidator({
-            users: [{localId: '1234', email: 'invalid'}],
-          });
-        }).to.throw();
-        expect(isEmailSpy).to.have.been.calledOnce.and.calledWith('invalid');
-      });
-      it('should fail with invalid rawPassword', () => {
-        expect(() => {
-          return requestValidator({
-            users: [{localId: '1234', rawPassword: 'short'}],
-          });
-        }).to.throw();
-        expect(isPasswordSpy).to.have.been.calledOnce.and.calledWith('short');
-      });
-      it('should fail with invalid emailVerified flag', () => {
-        expect(() => {
-          return requestValidator({
-            users: [{localId: '1234', emailVerified: 'yes'}],
-          });
-        }).to.throw();
-      });
-      it('should fail with invalid photoUrl', () => {
-        expect(() => {
-          return requestValidator({
-            users: [{localId: '1234', photoUrl: 'invalid url'}],
-          });
-        }).to.throw();
-        expect(isUrlSpy).to.have.been.calledOnce.and.calledWith('invalid url');
-      });
-      it('should fail with invalid disabled flag', () => {
-        expect(() => {
-          return requestValidator({
-            users: [{localId: '1234', disabled: 'no'}],
-          });
-        }).to.throw();
-      });
-    });
-  });
-  it('should throw an error when the response contains an array of errors', () => {
-    const responseValidator = FIREBASE_AUTH_UPLOAD_ACCOUNT.getResponseValidator();
-    const errorResponse = {
-      error: [
-        {
-          index: 0,
-          message: 'localId belongs to an existing account - can not overwrite.',
-        },
-      ],
-    };
-    expect(() => {
-      return responseValidator(errorResponse);
-    }).to.throw();
-  });
-  it('should succeed when no error is returned in the response', () => {
-    const responseValidator = FIREBASE_AUTH_UPLOAD_ACCOUNT.getResponseValidator();
-    expect(() => {
-      return responseValidator({kind: 'identitytoolkit#UploadAccountResponse'});
-    }).not.to.throw();
-  });
-});
-
-describe('FIREBASE_AUTH_SIGN_UP_NEW_USER', () => {
-  // Spy on all validators.
-  let isEmailSpy: sinon.SinonSpy;
-  let isPasswordSpy: sinon.SinonSpy;
-  let isUrlSpy: sinon.SinonSpy;
-
-  beforeEach(() => {
-    isEmailSpy = sinon.spy(validator, 'isEmail');
-    isPasswordSpy = sinon.spy(validator, 'isPassword');
-    isUrlSpy = sinon.spy(validator, 'isURL');
-  });
-  afterEach(() => {
-    isEmailSpy.restore();
-    isPasswordSpy.restore();
-    isUrlSpy.restore();
-  });
-
-  it('should return the correct endpoint', () => {
     expect(FIREBASE_AUTH_SIGN_UP_NEW_USER.getEndpoint()).to.equal('signupNewUser');
   });
   it('should return the correct http method', () => {
@@ -423,7 +254,7 @@ describe('FIREBASE_AUTH_SIGN_UP_NEW_USER', () => {
   });
   describe('requestValidator', () => {
     const requestValidator = FIREBASE_AUTH_SIGN_UP_NEW_USER.getRequestValidator();
-    it('should succeed with valid parameters', () => {
+    it('should succeed with valid parameters excluding uid', () => {
       const validRequest = {
         displayName: 'John Doe',
         email: 'user@example.com',
@@ -437,17 +268,45 @@ describe('FIREBASE_AUTH_SIGN_UP_NEW_USER', () => {
       expect(() => {
         return requestValidator(validRequest);
       }).not.to.throw();
+      expect(isUidSpy).to.have.not.been.called;
       expect(isEmailSpy).to.have.been.calledOnce.and.calledWith('user@example.com');
       expect(isPasswordSpy).to.have.been.calledOnce.and.calledWith('password');
       expect(isUrlSpy).to.have.been.calledOnce.and
         .calledWith('http://www.example.com/1234/photo.png');
     });
-    it('should fail when localId is passed', () => {
+    it('should succeed with valid parameters including uid', () => {
+      const validRequest = {
+        localId: '1234',
+        displayName: 'John Doe',
+        email: 'user@example.com',
+        password: 'password',
+        emailVerified: true,
+        photoUrl: 'http://www.example.com/1234/photo.png',
+        disabled: false,
+        // Pass an unsupported parameter which should be ignored.
+        ignoreMe: 'bla',
+      };
       expect(() => {
-        return requestValidator({localId: '1234'});
-      }).to.throw();
+        return requestValidator(validRequest);
+      }).not.to.throw();
+      expect(isUidSpy).to.have.been.calledOnce.and.calledWith('1234');
+      expect(isEmailSpy).to.have.been.calledOnce.and.calledWith('user@example.com');
+      expect(isPasswordSpy).to.have.been.calledOnce.and.calledWith('password');
+      expect(isUrlSpy).to.have.been.calledOnce.and
+        .calledWith('http://www.example.com/1234/photo.png');
+    });
+    it('should succeed with no parameters', () => {
+      expect(() => {
+        return requestValidator({});
+      }).not.to.throw();
     });
     describe('called with invalid parameters', () => {
+      it('should fail with invalid localId', () => {
+        expect(() => {
+          return requestValidator({localId: ''});
+        }).to.throw();
+        expect(isUidSpy).to.have.been.calledOnce.and.calledWith('');
+      });
       it('should fail with invalid displayName', () => {
         expect(() => {
           return requestValidator({displayName: ['John Doe']});
@@ -861,7 +720,7 @@ describe('FirebaseAuthRequestHandler', () => {
       const httpMethod = 'POST';
       const host = 'www.googleapis.com';
       const port = 443;
-      const path = '/identitytoolkit/v3/relyingparty/uploadAccount';
+      const path = '/identitytoolkit/v3/relyingparty/signupNewUser';
       const timeout = 10000;
       const uid = '12345678';
       const validData = {
@@ -875,37 +734,26 @@ describe('FirebaseAuthRequestHandler', () => {
         ignoredProperty: 'value',
       };
       const expectedValidData = {
-        users: [
-          {
-            localId: uid,
-            displayName: 'John Doe',
-            email: 'user@example.com',
-            emailVerified: true,
-            disabled: false,
-            photoUrl: 'http://localhost/1234/photo.png',
-            rawPassword: 'password',
-          },
-        ],
-        allowOverwrite: false,
-        sanityCheck: true,
+        localId: uid,
+        displayName: 'John Doe',
+        email: 'user@example.com',
+        emailVerified: true,
+        disabled: false,
+        photoUrl: 'http://localhost/1234/photo.png',
+        password: 'password',
       };
       const invalidData = {
         uid,
         email: 'user@invalid@',
       };
       const emptyRequest = {
-        users: [
-          {
-            localId: uid,
-          },
-        ],
-        allowOverwrite: false,
-        sanityCheck: true,
+        localId: uid,
       };
       it('should be fulfilled given a valid localId', () => {
         // Successful uploadAccount response.
         const expectedResult = {
-          kind: 'identitytoolkit#UploadAccountResponse',
+          kind: 'identitytoolkit#SignupNewUserResponse',
+          localId: uid,
         };
 
         let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
@@ -926,7 +774,8 @@ describe('FirebaseAuthRequestHandler', () => {
 
       it('should be fulfilled given valid parameters', () => {
         const expectedResult = {
-          kind: 'identitytoolkit#UploadAccountResponse',
+          kind: 'identitytoolkit#SignupNewUserResponse',
+          localId: uid,
         };
 
         let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
@@ -961,16 +810,11 @@ describe('FirebaseAuthRequestHandler', () => {
 
       it('should be rejected when the backend returns a user exists error', () => {
         // Expected error when the uid already exists.
-        const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.UID_ALREADY_EXISTS,
-          'localId belongs to an existing account - can not overwrite.');
+        const expectedError = new FirebaseAuthError(AuthClientErrorCode.UID_ALREADY_EXISTS);
         const expectedResult = {
-          error: [
-            {
-              index: 0,
-              message: 'localId belongs to an existing account - can not overwrite.',
-            },
-          ],
+          error: {
+            message: 'DUPLICATE_LOCAL_ID',
+          },
         };
 
         let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
@@ -992,16 +836,11 @@ describe('FirebaseAuthRequestHandler', () => {
 
       it('should be rejected when the backend returns an email exists error', () => {
         // Expected error when the email already exists.
-        const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.EMAIL_ALREADY_EXISTS,
-          'email exists in other account in database');
+        const expectedError = new FirebaseAuthError(AuthClientErrorCode.EMAIL_ALREADY_EXISTS);
         const expectedResult = {
-          error: [
-            {
-              index: 0,
-              message: 'email exists in other account in database',
-            },
-          ],
+          error: {
+            message: 'EMAIL_EXISTS',
+          },
         };
 
         let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
