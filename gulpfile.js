@@ -93,9 +93,6 @@ gulp.task('compile', function() {
 
 gulp.task('copyDatabase', function() {
   return gulp.src(paths.databaseSrc)
-    // Replace default namespace import path in database.js
-    .pipe(replace(/\.\/app-node/g, '../default-namespace'))
-
     // Add headers
     .pipe(header(fs.readFileSync('src/database/database-license.txt', 'utf8')))
     .pipe(header(banner))

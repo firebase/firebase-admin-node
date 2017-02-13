@@ -160,7 +160,7 @@ firebase-ops@google.com with your GitHub username requesting access.
   $ build-client
   ```
 
-6. Copy `target/firebase-node.js` of the `firebase/firebase-client-js` repo into
+6. Copy `target/firebase-admin-node.js` of the `firebase/firebase-client-js` repo into
 [`src/database/database.js`](./src/database/database.js) of this repo.
 
 7. Add a comment to the top of the file with the format:
