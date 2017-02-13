@@ -36,10 +36,11 @@ declare namespace admin {
   }
 
   interface AppOptions {
-    databaseURL?: string;
     credential?: admin.credential.Credential;
-    serviceAccount?: string|admin.ServiceAccount;
     databaseAuthVariableOverride?: Object;
+    databaseURL?: string;
+    serviceAccount?: string|admin.ServiceAccount;
+    storageBucket?: string;
   }
 
   var SDK_VERSION: string;

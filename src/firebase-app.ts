@@ -15,10 +15,11 @@ export type AppHook = (event: string, app: FirebaseApp) => void;
  * Type representing the options object passed into initializeApp().
  */
 export type FirebaseAppOptions = {
- databaseURL?: string,
- credential?: Credential,
- serviceAccount?: string|Object,
- databaseAuthVariableOverride?: Object
+  credential?: Credential,
+  databaseAuthVariableOverride?: Object
+  databaseURL?: string,
+  serviceAccount?: string|Object,
+  storageBucket?: string,
 };
 
 /**
