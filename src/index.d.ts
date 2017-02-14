@@ -264,6 +264,7 @@ declare namespace admin.messaging {
     priority?: string;
     timeToLive?: number;
     collapseKey?: string;
+    mutableContent?: boolean;
     contentAvailable?: boolean;
     restrictedPackageName?: string;
     [other: string]: any;

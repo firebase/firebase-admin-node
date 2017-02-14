@@ -1308,6 +1308,7 @@ describe('Messaging', () => {
       priority: { type: 'string' },
       timeToLive: { type: 'number', underscoreCasedKey: 'time_to_live' },
       collapseKey: { type: 'string', underscoreCasedKey: 'collapse_key' },
+      mutableContent: { type: 'boolean', underscoreCasedKey: 'mutable_content' },
       contentAvailable: { type: 'boolean', underscoreCasedKey: 'content_available' },
       restrictedPackageName: { type: 'string', underscoreCasedKey: 'restricted_package_name' },
     };
@@ -1430,6 +1431,7 @@ describe('Messaging', () => {
           dryRun: true,
           timeToLive: 1,
           collapseKey: 'foo',
+          mutableContent: true,
           contentAvailable: false,
           restrictedPackageName: 'bar',
           otherKey: true,
@@ -1438,8 +1440,8 @@ describe('Messaging', () => {
         expect(requestWriteSpy).to.have.been.calledOnce;
         const requestData = JSON.parse(requestWriteSpy.args[0][0]);
         expect(requestData).to.have.keys([
-          'to', 'data', 'dry_run', 'time_to_live', 'collapse_key', 'content_available',
-          'restricted_package_name', 'otherKey',
+          'to', 'data', 'dry_run', 'time_to_live', 'collapse_key', 'mutable_content',
+          'content_available', 'restricted_package_name', 'otherKey',
         ]);
       });
     });

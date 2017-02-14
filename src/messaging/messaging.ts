@@ -22,6 +22,7 @@ const CAMELCASE_OPTIONS_KEYS_MAP = {
   dryRun: 'dry_run',
   timeToLive: 'time_to_live',
   collapseKey: 'collapse_key',
+  mutableContent: 'mutable_content',
   contentAvailable: 'content_available',
   restrictedPackageName: 'restricted_package_name',
 };
@@ -100,6 +101,7 @@ export type MessagingOptions = {
   priority?: string;
   timeToLive?: number;
   collapseKey?: string;
+  mutableContent?: boolean;
   contentAvailable?: boolean;
   restrictedPackageName?: string;
   [other: string]: any;
@@ -617,6 +619,13 @@ class Messaging implements FirebaseServiceInterface {
       );
     } else if ('content_available' in optionsCopy && !validator.isBoolean((optionsCopy as any).content_available)) {
       const keyName = ('contentAvailable' in options) ? 'contentAvailable' : 'content_available';
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_OPTIONS,
+        `Messaging options contains an invalid value for the "${ keyName }" property. Value must ` +
+        'be a boolean.'
+      );
+    } else if ('mutable_content' in optionsCopy && !validator.isBoolean((optionsCopy as any).mutable_content)) {
+      const keyName = ('mutableContent' in options) ? 'mutableContent' : 'mutable_content';
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_OPTIONS,
         `Messaging options contains an invalid value for the "${ keyName }" property. Value must ` +
