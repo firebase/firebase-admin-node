@@ -114,10 +114,18 @@ if [[ $? -ne 0 ]]; then
 fi
 echo
 
-echo "[INFO] Linting, building, and running tests..."
+echo "[INFO] Linting, building, and running unit tests..."
 gulp
 if [[ $? -ne 0 ]]; then
-  echo "Error: Failed to lint, build, and run tests."
+  echo "Error: Failed to lint, build, and run unit tests."
+  exit 1
+fi
+echo
+
+echo "[INFO] Running integration test suite..."
+node test/integration
+if [[ $? -ne 0 ]]; then
+  echo "Error: Integration test suite failed."
   exit 1
 fi
 echo

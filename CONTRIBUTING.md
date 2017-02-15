@@ -3,12 +3,13 @@
 ## Table of Contents
 
 1. [Local Setup](#Local-Setup)
-2. [Proposing Changes](#Proposing-Changes)
-3. [Release Process](#Release-Process)
+2. [Running Tests](#Running-Tests)
+3. [Proposing Changes](#Proposing-Changes)
+4. [Release Process](#Release-Process)
    1. [Initial Steps](#Initial-Steps)
    2. [Recurring Steps](#Recurring-Steps)
-4. [Updating Realtime Database Code](#Updating-Realtime-Database-Code)
-5. [Updating Reference Documentation](#Updating-Reference-Documentation)
+5. [Updating Realtime Database Code](#Updating-Realtime-Database-Code)
+6. [Updating Reference Documentation](#Updating-Reference-Documentation)
 
 
 ## Local Setup
@@ -40,6 +41,31 @@ Finally, simply run `gulp` to lint, build, and test the code:
 ```bash
 $ gulp   # Lint, build, and test
 ```
+
+
+## Running Tests
+
+There are two test suites: unit and integration. The unit test suite is intended to be run during
+development and the integration test suite is intended to be run before packaging up release
+candidates.
+
+To run the unit test suite:
+
+```bash
+$ gulp   # Lint, build, and run unit test suite
+```
+
+To run the integration test suite:
+
+```bash
+$ node test/integration   # Run integration test suite
+```
+
+The integration test suite requires you to generate a service account key JSON file for the
+**admin-sdks-test** Firebase project and save it to `test/resources/key.json`. You can generate this
+from the
+[**Service Accounts**](https://console.firebase.google.com/project/admin-sdks-test/settings/serviceaccounts/adminsdk)
+tab of that project's settings page.
 
 
 ## Proposing Changes
