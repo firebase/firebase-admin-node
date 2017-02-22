@@ -207,6 +207,10 @@ export class FirebaseAuthRequestHandler {
    * @return {Promise<Object>} A promise that resolves with the user information.
    */
   public getAccountInfoByUid(uid: string): Promise<Object> {
+    if (!validator.isUid(uid)) {
+      return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_UID));
+    }
+
     const request = {
       localId: [uid],
     };
@@ -220,6 +224,10 @@ export class FirebaseAuthRequestHandler {
    * @return {Promise<Object>} A promise that resolves with the user information.
    */
   public getAccountInfoByEmail(email: string): Promise<Object> {
+    if (!validator.isEmail(email)) {
+      return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL));
+    }
+
     const request = {
       email: [email],
     };
@@ -233,6 +241,10 @@ export class FirebaseAuthRequestHandler {
    * @return {Promise<Object>} A promise that resolves when the user is deleted.
    */
   public deleteAccount(uid: string): Promise<Object> {
+    if (!validator.isUid(uid)) {
+      return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_UID));
+    }
+
     const request = {
       localId: uid,
     };
@@ -248,6 +260,17 @@ export class FirebaseAuthRequestHandler {
    *     with the user id that was edited.
    */
   public updateExistingAccount(uid: string, properties: Object): Promise<string> {
+    if (!validator.isUid(uid)) {
+      return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_UID));
+    } else if (!validator.isNonNullObject(properties)) {
+      return Promise.reject(
+        new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          'Properties argument must be a non-null object.',
+        ),
+      );
+    }
+
     // Build the setAccountInfo request.
     let request: any = deepCopy(properties);
     request.localId = uid;
@@ -299,6 +322,15 @@ export class FirebaseAuthRequestHandler {
    *     with the user id that was created.
    */
   public createNewAccount(properties: Object): Promise<string> {
+    if (!validator.isNonNullObject(properties)) {
+      return Promise.reject(
+        new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          'Properties argument must be a non-null object.',
+        ),
+      );
+    }
+
     // Build the signupNewUser request.
     let request: any = deepCopy(properties);
     // Rewrite photoURL to photoUrl.

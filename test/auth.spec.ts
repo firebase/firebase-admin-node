@@ -20,6 +20,8 @@ import {FirebaseTokenGenerator} from '../src/auth/token-generator';
 import {FirebaseAuthRequestHandler} from '../src/auth/auth-api-request';
 import {AuthClientErrorCode, FirebaseAuthError} from '../src/utils/error';
 
+import * as validator from '../src/utils/validator';
+
 chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -205,13 +207,31 @@ describe('Auth', () => {
     const expectedGetAccountInfoResult = getValidGetAccountInfoResponse();
     const expectedUserRecord = getValidUserRecord(expectedGetAccountInfoResult);
     const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
+
     // Stubs used to simulate underlying api calls.
     let stubs: sinon.SinonStub[] = [];
+    beforeEach(() => sinon.spy(validator, 'isUid'));
     afterEach(() => {
+      (validator.isUid as any).restore();
       _.forEach(stubs, (stub) => stub.restore());
-    });
-    after(() => {
       stubs = [];
+    });
+
+    it('should be rejected given no uid', () => {
+      return (auth as any).getUser()
+        .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-uid');
+    });
+
+    it('should be rejected given an invalid uid', () => {
+      const invalidUid = ('a' as any).repeat(129);
+      return auth.getUser(invalidUid)
+        .then(() => {
+          throw new Error('Unexpected success');
+        })
+        .catch((error) => {
+          expect(error).to.have.property('code', 'auth/invalid-uid');
+          expect(validator.isUid).to.have.been.calledOnce.and.calledWith(invalidUid);
+        });
     });
 
     it('should resolve with a UserRecord on success', () => {
@@ -253,11 +273,28 @@ describe('Auth', () => {
 
     // Stubs used to simulate underlying api calls.
     let stubs: sinon.SinonStub[] = [];
+    beforeEach(() => sinon.spy(validator, 'isEmail'));
     afterEach(() => {
+      (validator.isEmail as any).restore();
       _.forEach(stubs, (stub) => stub.restore());
-    });
-    after(() => {
       stubs = [];
+    });
+
+    it('should be rejected given no email', () => {
+      return (auth as any).getUserByEmail()
+        .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-email');
+    });
+
+    it('should be rejected given an invalid email', () => {
+      const invalidEmail = 'name-example-com';
+      return auth.getUserByEmail(invalidEmail)
+        .then(() => {
+          throw new Error('Unexpected success');
+        })
+        .catch((error) => {
+          expect(error).to.have.property('code', 'auth/invalid-email');
+          expect(validator.isEmail).to.have.been.calledOnce.and.calledWith(invalidEmail);
+        });
     });
 
     it('should resolve with a UserRecord on success', () => {
@@ -298,11 +335,28 @@ describe('Auth', () => {
 
     // Stubs used to simulate underlying api calls.
     let stubs: sinon.SinonStub[] = [];
+    beforeEach(() => sinon.spy(validator, 'isUid'));
     afterEach(() => {
+      (validator.isUid as any).restore();
       _.forEach(stubs, (stub) => stub.restore());
-    });
-    after(() => {
       stubs = [];
+    });
+
+    it('should be rejected given no uid', () => {
+      return (auth as any).deleteUser()
+        .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-uid');
+    });
+
+    it('should be rejected given an invalid uid', () => {
+      const invalidUid = ('a' as any).repeat(129);
+      return auth.deleteUser(invalidUid)
+        .then(() => {
+          throw new Error('Unexpected success');
+        })
+        .catch((error) => {
+          expect(error).to.have.property('code', 'auth/invalid-uid');
+          expect(validator.isUid).to.have.been.calledOnce.and.calledWith(invalidUid);
+        });
     });
 
     it('should resolve with void on success', () => {
@@ -355,11 +409,27 @@ describe('Auth', () => {
     };
     // Stubs used to simulate underlying api calls.
     let stubs: sinon.SinonStub[] = [];
+    beforeEach(() => sinon.spy(validator, 'isNonNullObject'));
     afterEach(() => {
+      (validator.isNonNullObject as any).restore();
       _.forEach(stubs, (stub) => stub.restore());
-    });
-    after(() => {
       stubs = [];
+    });
+
+    it('should be rejected given no properties', () => {
+      return (auth as any).createUser()
+        .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
+    });
+
+    it('should be rejected given invalid properties', () => {
+      return auth.createUser(null)
+        .then(() => {
+          throw new Error('Unexpected success');
+        })
+        .catch((error) => {
+          expect(error).to.have.property('code', 'auth/argument-error');
+          expect(validator.isNonNullObject).to.have.been.calledOnce.and.calledWith(null);
+        });
     });
 
     it('should resolve with a UserRecord on createNewAccount request success', () => {
@@ -455,11 +525,48 @@ describe('Auth', () => {
     };
     // Stubs used to simulate underlying api calls.
     let stubs: sinon.SinonStub[] = [];
-    afterEach(() => {
-      _.forEach(stubs, (stub) => stub.restore());
+    beforeEach(() => {
+      sinon.spy(validator, 'isUid');
+      sinon.spy(validator, 'isNonNullObject');
     });
-    after(() => {
+    afterEach(() => {
+      (validator.isUid as any).restore();
+      (validator.isNonNullObject as any).restore();
+      _.forEach(stubs, (stub) => stub.restore());
       stubs = [];
+    });
+
+    it('should be rejected given no uid', () => {
+      return (auth as any).updateUser(undefined, propertiesToEdit)
+        .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-uid');
+    });
+
+    it('should be rejected given an invalid uid', () => {
+      const invalidUid = ('a' as any).repeat(129);
+      return auth.updateUser(invalidUid, propertiesToEdit)
+        .then(() => {
+          throw new Error('Unexpected success');
+        })
+        .catch((error) => {
+          expect(error).to.have.property('code', 'auth/invalid-uid');
+          expect(validator.isUid).to.have.been.calledOnce.and.calledWith(invalidUid);
+        });
+    });
+
+    it('should be rejected given no properties', () => {
+      return (auth as any).updateUser(uid)
+        .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
+    });
+
+    it('should be rejected given invalid properties', () => {
+      return auth.updateUser(uid, null)
+        .then(() => {
+          throw new Error('Unexpected success');
+        })
+        .catch((error) => {
+          expect(error).to.have.property('code', 'auth/argument-error');
+          expect(validator.isNonNullObject).to.have.been.calledOnce.and.calledWith(null);
+        });
     });
 
     it('should resolve with a UserRecord on updateExistingAccount request success', () => {
