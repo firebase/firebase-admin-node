@@ -1,4 +1,7 @@
 import {Certificate} from './credential';
+import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
+
+import * as validator from '../utils/validator';
 
 import * as jwt from 'jsonwebtoken';
 
@@ -37,7 +40,10 @@ export class FirebaseTokenGenerator {
 
   constructor(certificate: Certificate) {
     if (!certificate) {
-      throw new Error('Must provide a service account to use FirebaseTokenGenerator');
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CREDENTIAL,
+        'INTERNAL ASSERT: Must provide a certificate to use FirebaseTokenGenerator.',
+      );
     }
     this.certificate_ = certificate;
   }
@@ -54,15 +60,25 @@ export class FirebaseTokenGenerator {
   public createCustomToken(uid: string, developerClaims?: Object): Promise<string> {
     let errorMessage: string;
     if (typeof uid !== 'string' || uid === '') {
-      errorMessage = 'First argument to createCustomToken() must be a non-empty string uid';
+      errorMessage = 'First argument to createCustomToken() must be a non-empty string uid.';
     } else if (uid.length > 128) {
-      errorMessage = 'First argument to createCustomToken() must a uid with less than or equal to 128 characters';
+      errorMessage = 'First argument to createCustomToken() must a uid with less than or equal to 128 characters.';
     } else if (!this.isDeveloperClaimsValid_(developerClaims)) {
-      errorMessage = 'Second argument to createCustomToken() must be an object containing the developer claims';
+      errorMessage = 'Second argument to createCustomToken() must be an object containing the developer claims.';
     }
 
     if (typeof errorMessage !== 'undefined') {
-      throw new Error(errorMessage);
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, errorMessage);
+    }
+
+    if (!validator.isNonEmptyString(this.certificate_.privateKey)) {
+      errorMessage = 'createCustomToken() requires a certificate with "private_key" set.';
+    } else if (!validator.isNonEmptyString(this.certificate_.clientEmail)) {
+      errorMessage = 'createCustomToken() requires a certificate with "client_email" set.';
+    }
+
+    if (typeof errorMessage !== 'undefined') {
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_CREDENTIAL, errorMessage);
     }
 
     let jwtPayload: JWTPayload = {};
@@ -74,7 +90,10 @@ export class FirebaseTokenGenerator {
         /* istanbul ignore else */
         if (developerClaims.hasOwnProperty(key)) {
           if (BLACKLISTED_CLAIMS.indexOf(key) !== -1) {
-            throw new Error(`Developer claim "${key}" is reserved and cannot be specified`);
+            throw new FirebaseAuthError(
+              AuthClientErrorCode.INVALID_ARGUMENT,
+              `Developer claim "${key}" is reserved and cannot be specified.`,
+            );
           }
 
           claims[key] = developerClaims[key];
@@ -104,11 +123,17 @@ export class FirebaseTokenGenerator {
    */
   public verifyIdToken(idToken: string): Promise<Object> {
     if (typeof idToken !== 'string') {
-      throw new Error('First argument to verifyIdToken() must be a Firebase ID token string');
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        'First argument to verifyIdToken() must be a Firebase ID token string.',
+      );
     }
 
-    if (typeof this.certificate_.projectId !== 'string' || this.certificate_.projectId === '') {
-      throw new Error('verifyIdToken() requires a service account with "project_id" set');
+    if (!validator.isNonEmptyString(this.certificate_.projectId)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CREDENTIAL,
+        'verifyIdToken() requires a certificate with "project_id" set.',
+      );
     }
 
     const fullDecodedToken = jwt.decode(idToken, {

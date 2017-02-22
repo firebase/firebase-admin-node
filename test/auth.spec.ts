@@ -14,10 +14,9 @@ import * as mocks from './resources/mocks';
 import {Auth} from '../src/auth/auth';
 import {UserRecord} from '../src/auth/user-record';
 import {FirebaseApp} from '../src/firebase-app';
-import {Certificate} from '../src/auth/credential';
-import {GoogleOAuthAccessToken} from '../src/auth/credential';
 import {FirebaseTokenGenerator} from '../src/auth/token-generator';
 import {FirebaseAuthRequestHandler} from '../src/auth/auth-api-request';
+import {ApplicationDefaultCredential} from '../src/auth/credential';
 import {AuthClientErrorCode, FirebaseAuthError} from '../src/utils/error';
 
 chai.should();
@@ -74,22 +73,12 @@ function getValidUserRecord(serverResponse: any) {
   return new UserRecord(serverResponse.users[0]);
 }
 
-/**
- * Noop implementation of Credential.getToken that returns a Promise of null.
- */
-class UnauthenticatedCredential {
-  public getAccessToken(): Promise<GoogleOAuthAccessToken> {
-    return Promise.resolve(null);
-  }
-
-  public getCertificate(): Certificate {
-    return null;
-  }
-}
 
 describe('Auth', () => {
   let auth: Auth;
   let mockApp: FirebaseApp;
+  let oldProcessEnv: Object;
+  let applicationDefaultCredentialApp: FirebaseApp;
 
   before(() => utils.mockFetchAccessTokenRequests());
 
@@ -98,6 +87,16 @@ describe('Auth', () => {
   beforeEach(() => {
     mockApp = mocks.app();
     auth = new Auth(mockApp);
+
+    applicationDefaultCredentialApp = utils.createAppWithOptions({
+      credential: new ApplicationDefaultCredential(),
+    });
+
+    oldProcessEnv = process.env;
+  });
+
+  afterEach(() => {
+    process.env = oldProcessEnv;
   });
 
 
@@ -149,17 +148,12 @@ describe('Auth', () => {
       spy.restore();
     });
 
-    it('should throw if a cert credential is not specified (and env not set)', () => {
-      delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
-
-      const unauthenticatedApp = utils.createAppWithOptions({
-        credential: new UnauthenticatedCredential(),
-      });
-      const unauthenticatedAuth = new Auth(unauthenticatedApp);
+    it('should throw if a cert credential is not specified', () => {
+      const applicationDefaultCredentialAuth = new Auth(applicationDefaultCredentialApp);
 
       expect(() => {
-        unauthenticatedAuth.createCustomToken(mocks.uid, mocks.developerClaims);
-      }).to.throw('Must initialize app with a cert credential to call auth().createCustomToken()');
+        applicationDefaultCredentialAuth.createCustomToken(mocks.uid, mocks.developerClaims);
+      }).to.throw('Must initialize app with a cert credential');
     });
 
     it('should forward on the call to the token generator\'s createCustomToken() method', () => {
@@ -177,24 +171,31 @@ describe('Auth', () => {
     beforeEach(() => stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifyIdToken').returns(Promise.resolve()));
     afterEach(() => stub.restore());
 
-    it('should throw if a cert credential is not specified (and env not set)', () => {
-      delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
-
-      const unauthenticatedApp = utils.createAppWithOptions({
-        credential: new UnauthenticatedCredential(),
-      });
-      const unauthenticatedAuth = new Auth(unauthenticatedApp);
-
+    it('should throw if a cert credential is not specified', () => {
       const mockIdToken = mocks.generateIdToken();
 
+      const applicationDefaultCredentialAuth = new Auth(applicationDefaultCredentialApp);
+
       expect(() => {
-        unauthenticatedAuth.verifyIdToken(mockIdToken);
-      }).to.throw('Must initialize app with a cert credential to call auth().verifyIdToken()');
+        applicationDefaultCredentialAuth.verifyIdToken(mockIdToken);
+      }).to.throw('Must initialize app with a cert credential');
     });
 
     it('should forward on the call to the token generator\'s verifyIdToken() method', () => {
       const mockIdToken = mocks.generateIdToken();
       return auth.verifyIdToken(mockIdToken).then(() => {
+        expect(stub).to.have.been.calledOnce.and.calledWith(mockIdToken);
+      });
+    });
+
+    it('should work with a non-cert credential when the GCLOUD_PROJECT environment variable is present', () => {
+      process.env.GCLOUD_PROJECT = mocks.projectId;
+
+      const applicationDefaultCredentialAuth = new Auth(applicationDefaultCredentialApp);
+
+      const mockIdToken = mocks.generateIdToken();
+
+      return applicationDefaultCredentialAuth.verifyIdToken(mockIdToken).then(() => {
         expect(stub).to.have.been.calledOnce.and.calledWith(mockIdToken);
       });
     });

@@ -129,7 +129,6 @@ describe('FirebaseTokenGenerator', () => {
       clock = undefined;
     }
     httpsSpy.restore();
-    process.env.GOOGLE_APPLICATION_CREDENTIALS = undefined;
   });
 
   after(() => {
@@ -142,7 +141,7 @@ describe('FirebaseTokenGenerator', () => {
         // Need to overcome the type system to allow a call with no parameter
         const anyFirebaseTokenGenerator: any = FirebaseTokenGenerator;
         return new anyFirebaseTokenGenerator();
-      }).to.throw('Must provide a service account to use FirebaseTokenGenerator');
+      }).to.throw('Must provide a certificate to use FirebaseTokenGenerator');
     });
 
     const invalidCredentials = [null, NaN, 0, 1, true, false, '', 'a', [], {}, { a: 1 }, _.noop];
@@ -255,6 +254,26 @@ describe('FirebaseTokenGenerator', () => {
           tokenGenerator.createCustomToken(mocks.uid, blacklistedDeveloperClaims);
         }).to.throw('Developer claim "' + blacklistedClaim + '" is reserved and cannot be specified');
       });
+    });
+
+    it('should throw if the token generator was initialized with no "private_key"', () => {
+      const certificateObjectWithNoPrivateKey: any = _.omit(mocks.certificateObject, 'private_key');
+      certificateObjectWithNoPrivateKey.clientEmail = certificateObjectWithNoPrivateKey.client_email;
+      const tokenGeneratorWithNoPrivateKey = new FirebaseTokenGenerator(certificateObjectWithNoPrivateKey);
+
+      expect(() => {
+        tokenGeneratorWithNoPrivateKey.createCustomToken(mocks.uid);
+      }).to.throw('createCustomToken() requires a certificate with "private_key" set');
+    });
+
+    it('should throw if the token generator was initialized with no "client_email"', () => {
+      const certificateObjectWithNoClientEmail: any = _.omit(mocks.certificateObject, 'client_email');
+      certificateObjectWithNoClientEmail.privateKey = certificateObjectWithNoClientEmail.private_key;
+      const tokenGeneratorWithNoClientEmail = new FirebaseTokenGenerator(certificateObjectWithNoClientEmail);
+
+      expect(() => {
+        tokenGeneratorWithNoClientEmail.createCustomToken(mocks.uid);
+      }).to.throw('createCustomToken() requires a certificate with "client_email" set');
     });
 
     it('should be fulfilled given a valid uid and no developer claims', () => {
@@ -413,16 +432,15 @@ describe('FirebaseTokenGenerator', () => {
         .should.eventually.be.rejectedWith('Decoding Firebase ID token failed');
     });
 
-    it('should throw if the token generator was initialized with no project ID', () => {
-      const certificateObjectWithNoProjectId = _.omit(mocks.certificateObject, 'project_id');
-      const certificateWithNoProjectId = new Certificate(certificateObjectWithNoProjectId as any);
-      const tokenGeneratorWithNoProjectId = new FirebaseTokenGenerator(certificateWithNoProjectId);
+    it('should throw if the token generator was initialized with no "project_id"', () => {
+      const certificateObjectWithNoProjectId: any = _.omit(mocks.certificateObject, 'project_id');
+      const tokenGeneratorWithNoProjectId = new FirebaseTokenGenerator(certificateObjectWithNoProjectId);
 
       const mockIdToken = mocks.generateIdToken();
 
       expect(() => {
         tokenGeneratorWithNoProjectId.verifyIdToken(mockIdToken);
-      }).to.throw('verifyIdToken() requires a service account with "project_id" set');
+      }).to.throw('verifyIdToken() requires a certificate with "project_id" set');
     });
 
     it('should be rejected given an ID token with no kid', () => {

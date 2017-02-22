@@ -1,9 +1,12 @@
 import {UserRecord} from './user-record';
+import {Certificate} from './credential';
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseTokenGenerator} from './token-generator';
 import {FirebaseAuthRequestHandler} from './auth-api-request';
 import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
+
+import * as validator from '../utils/validator';
 
 
 /**
@@ -53,7 +56,16 @@ class Auth implements FirebaseServiceInterface {
       serviceAccount = app.options.credential.getCertificate();
     }
     if (serviceAccount) {
+      // Cert credentials and Application Default Credentials created from a service account file
+      // provide a certificate we can use to mint custom tokens and verify ID tokens.
       this.tokenGenerator_ = new FirebaseTokenGenerator(serviceAccount);
+    } else if (validator.isNonEmptyString(process.env.GCLOUD_PROJECT)) {
+      // Google infrastructure like GAE, GCE, and GCF store the GCP / Firebase project ID in an
+      // environment variable that we can use to get verifyIdToken() to work. createCustomToken()
+      // still won't work since it requires a private key and client email which we do not have.
+      this.tokenGenerator_ = new FirebaseTokenGenerator({
+        projectId: process.env.GCLOUD_PROJECT,
+      } as Certificate);
     }
     // Initialize auth request handler with the app.
     this.authRequestHandler = new FirebaseAuthRequestHandler(app);
@@ -81,7 +93,8 @@ class Auth implements FirebaseServiceInterface {
     if (typeof this.tokenGenerator_ === 'undefined') {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_CREDENTIAL,
-        'Must initialize app with a cert credential to call auth().createCustomToken()');
+        'Must initialize app with a cert credential to call auth().createCustomToken().',
+      );
     }
     return this.tokenGenerator_.createCustomToken(uid, developerClaims);
   };
@@ -97,7 +110,9 @@ class Auth implements FirebaseServiceInterface {
     if (typeof this.tokenGenerator_ === 'undefined') {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_CREDENTIAL,
-        'Must initialize app with a cert credential to call auth().verifyIdToken()');
+        'Must initialize app with a cert credential or set your Firebase project ID as the ' +
+        'GCLOUD_PROJECT environment variable to call auth().verifyIdToken().',
+      );
     }
     return this.tokenGenerator_.verifyIdToken(idToken);
   };

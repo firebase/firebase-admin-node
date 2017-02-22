@@ -41,6 +41,7 @@ const ONE_HOUR_IN_SECONDS = 60 * 60;
 describe('Credential', () => {
   let mockedRequests: nock.Scope[] = [];
   let mockCertificateObject;
+  let oldProcessEnv: Object;
 
   before(() => utils.mockFetchAccessTokenRequests());
 
@@ -48,11 +49,13 @@ describe('Credential', () => {
 
   beforeEach(() => {
     mockCertificateObject = _.clone(mocks.certificateObject);
+    oldProcessEnv = process.env;
   });
 
   afterEach(() => {
     _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
     mockedRequests = [];
+    process.env = oldProcessEnv;
   });
 
 
