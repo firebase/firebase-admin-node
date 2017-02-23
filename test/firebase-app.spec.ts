@@ -82,11 +82,10 @@ describe('FirebaseApp', () => {
     it('logs an error given a custom credential implementation which returns invalid access tokens', () => {
       const credential = {
         getAccessToken: () => 5,
+        getCertificate: () => mocks.certificateObject,
       };
 
-      const app = utils.createAppWithOptions({
-        credential: credential as any,
-      });
+      const app = utils.createAppWithOptions({ credential });
 
       // The FirebaseApp constructor asynchronously logs by calling getToken(). Since that method
       // is cached, we can call it again in this test and, once it is rejected, check if the
@@ -95,6 +94,25 @@ describe('FirebaseApp', () => {
         throw new Error('Unexpected success');
       }, (err) => {
         expect(consoleErrorSpy).to.have.been.calledOnce.and.calledWith(new Error());
+      });
+    });
+
+    it('does not log an error given a custom credential implementation which returns invalid access ' +
+       'tokens and a null certificate', () => {
+      const credential = {
+        getAccessToken: () => 5,
+        getCertificate: () => null,
+      };
+
+      const app = utils.createAppWithOptions({ credential });
+
+      // The FirebaseApp constructor asynchronously logs by calling getToken(). Since that method
+      // is cached, we can call it again in this test and, once it is rejected, check if the
+      // FirebaseApp constructor logged an error.
+      return app.INTERNAL.getToken().then(() => {
+        throw new Error('Unexpected success');
+      }, (err) => {
+        expect(consoleErrorSpy).not.to.have.been.called;
       });
     });
 
@@ -276,9 +294,7 @@ describe('FirebaseApp', () => {
         getAccessToken: () => Promise.resolve(oracle),
       };
 
-      const app = utils.createAppWithOptions({
-        credential,
-      });
+      const app = utils.createAppWithOptions({ credential });
 
       return app.INTERNAL.getToken().then((token) => {
         expect(token.accessToken).to.equal(oracle.access_token);
