@@ -218,12 +218,20 @@ export class FirebaseApp {
     // call this here to provide the developer with an error as soon as possible and so that each
     // individual service doesn't have to worry about logging this class of error. Because getToken()
     // caches tokens, there is no real performance penalty for calling this here.
-    this.INTERNAL.getToken()
-      .catch((error) => {
-        /* tslint:disable:no-console */
-        console.error(error);
-        /* tslint:enable:no-console */
-      });
+    // b/35366344: We only do this if the credential has a non-null certificate to ensure we do not
+    // do this check for things like Application Default Credentials on Cloud Functions, which
+    // often results in ECONNTIMEOUT errors.
+    if (typeof this.options_.credential.getCertificate === 'function') {
+      const certificate = this.options_.credential.getCertificate();
+      if (certificate) {
+        this.INTERNAL.getToken()
+          .catch((error) => {
+            /* tslint:disable:no-console */
+            console.error(error);
+            /* tslint:enable:no-console */
+          });
+      }
+    }
   }
 
   /**
