@@ -17,8 +17,8 @@ import * as mocks from './resources/mocks';
 
 import {FirebaseApp} from '../src/firebase-app';
 import {
-  Messaging, MessagingOptions, MessagingPayload, BLACKLISTED_OPTIONS_KEYS,
-  BLACKLISTED_DATA_PAYLOAD_KEYS,
+  Messaging, MessagingOptions, MessagingPayload, MessagingDevicesResponse,
+  BLACKLISTED_OPTIONS_KEYS, BLACKLISTED_DATA_PAYLOAD_KEYS,
 } from '../src/messaging/messaging';
 
 chai.should();
@@ -49,17 +49,20 @@ const STATUS_CODE_TO_ERROR_MAP = {
   503: 'messaging/server-unavailable',
 };
 
-function mockSendToDeviceStringRequest(): nock.Scope {
+function mockSendToDeviceStringRequest(mockFailure = false): nock.Scope {
+  let deviceResult: Object = { message_id: `0:${ mocks.messaging.messageId }` };
+  if (mockFailure) {
+    deviceResult = { error: 'InvalidRegistration' };
+  }
+
   return nock('https://fcm.googleapis.com:443')
     .post('/fcm/send')
     .reply(200, {
       multicast_id: mocks.messaging.multicastId,
-      success: 1,
-      failure: 0,
+      success: mockFailure ? 0 : 1,
+      failure: mockFailure ? 1 : 0,
       canonical_ids: 0,
-      results: [
-        { message_id: `0:${ mocks.messaging.messageId }` },
-      ],
+      results: [ deviceResult ],
     });
 }
 
@@ -398,7 +401,7 @@ describe('Messaging', () => {
           mocks.messaging.registrationToken + '2',
         ],
         mocks.messaging.payload,
-      ).then((response) => {
+      ).then((response: MessagingDevicesResponse) => {
         expect(response).to.have.keys([
           'failureCount', 'successCount', 'canonicalRegistrationTokenCount', 'multicastId', 'results',
         ]);
@@ -460,6 +463,22 @@ describe('Messaging', () => {
       });
     });
 
+    it('should be fulfilled given a notification key which actually causes a device group response', () => {
+      mockedRequests.push(mockSendToDeviceGroupRequest(/* numFailedRegistrationTokens */ 2));
+
+      return messaging.sendToDevice(
+        mocks.messaging.notificationKey,
+        mocks.messaging.payload,
+      ).should.eventually.deep.equal({
+        failureCount: 2,
+        successCount: 3,
+        failedRegistrationTokens: [
+          mocks.messaging.registrationToken + '0',
+          mocks.messaging.registrationToken + '1',
+        ],
+      });
+    });
+
     it('should not mutate the payload argument', () => {
       mockedRequests.push(mockSendToDeviceStringRequest());
 
@@ -512,6 +531,11 @@ describe('Messaging', () => {
       expect(() => {
         messaging.sendToDeviceGroup('', mocks.messaging.payloadDataOnly);
       }).to.throw(invalidArgumentError);
+    });
+
+    it('should throw given a registration token which has a colon', () => {
+      return messaging.sendToDeviceGroup('tok:en', mocks.messaging.payloadDataOnly)
+        .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-recipient');
     });
 
     it('should be rejected given a 200 JSON server response with a known error', () => {
@@ -568,6 +592,15 @@ describe('Messaging', () => {
           mocks.messaging.payload,
         ).should.eventually.be.rejected.and.have.property('code', expectedError);
       });
+    });
+
+    it('should be rejected given a devices response which has a success count of 0', () => {
+      mockedRequests.push(mockSendToDeviceStringRequest(/* mockFailure */ true));
+
+      return messaging.sendToDeviceGroup(
+        mocks.messaging.registrationToken,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-recipient');
     });
 
     it('should be fulfilled given a valid notification key and payload', () => {
@@ -652,6 +685,23 @@ describe('Messaging', () => {
           data: mocks.messaging.payload.data,
           notification: mocks.messaging.payload.notification,
         });
+      });
+    });
+
+    it('should be fulfilled given a registration token which actually causes a devices response', () => {
+      mockedRequests.push(mockSendToDeviceStringRequest());
+
+      return messaging.sendToDeviceGroup(
+        mocks.messaging.registrationToken,
+        mocks.messaging.payload,
+      ).should.eventually.deep.equal({
+        failureCount: 0,
+        successCount: 1,
+        canonicalRegistrationTokenCount: 0,
+        multicastId: mocks.messaging.multicastId,
+        results: [
+          { messageId: `0:${ mocks.messaging.messageId }` },
+        ],
       });
     });
 
