@@ -142,6 +142,52 @@ export type MessagingConditionResponse = {
 
 
 /**
+ * Maps a raw FCM server response to a MessagingDevicesResponse object.
+ *
+ * @param {Object} response The raw FCM server response to map.
+ *
+ * @return {MessagingDeviceGroupResponse} The mapped MessagingDevicesResponse object.
+ */
+function mapRawResponseToDevicesResponse(response): MessagingDevicesResponse {
+  // Rename properties on the server response
+  utils.renameProperties(response, MESSAGING_DEVICES_RESPONSE_KEYS_MAP);
+  if ('results' in response) {
+    (response as any).results.forEach((messagingDeviceResult) => {
+      utils.renameProperties(messagingDeviceResult, MESSAGING_DEVICE_RESULT_KEYS_MAP);
+
+      // Map the FCM server's error strings to actual error objects.
+      if ('error' in messagingDeviceResult) {
+        const newError = FirebaseMessagingError.fromServerError(
+          messagingDeviceResult.error, /* message */ undefined, messagingDeviceResult.error
+        );
+        messagingDeviceResult.error = newError;
+      }
+    });
+  }
+
+  return response;
+}
+
+/**
+ * Maps a raw FCM server response to a MessagingDeviceGroupResponse object.
+ *
+ * @param {Object} response The raw FCM server response to map.
+ *
+ * @return {MessagingDeviceGroupResponse} The mapped MessagingDeviceGroupResponse object.
+ */
+function mapRawResponseToDeviceGroupResponse(response): MessagingDeviceGroupResponse {
+  // Rename properties on the server response
+  utils.renameProperties(response, MESSAGING_DEVICE_GROUP_RESPONSE_KEYS_MAP);
+
+  // Add the 'failedRegistrationTokens' property if it does not exist on the response, which
+  // it won't when the 'failureCount' property has a value of 0)
+  (response as any).failedRegistrationTokens = (response as any).failedRegistrationTokens || [];
+
+  return response;
+}
+
+
+/**
  * Internals of a Messaging instance.
  */
 export class MessagingInternals implements FirebaseServiceInternalsInterface {
@@ -201,14 +247,14 @@ class Messaging implements FirebaseServiceInterface {
    * @param {MessagingPayload} payload The message payload.
    * @param {MessagingOptions} [options = {}] Optional options to alter the message.
    *
-   * @return {Promise<MessagingDevicesResponse>} A Promise fulfilled with the server's response
-   *     after the message has been sent.
+   * @return {Promise<MessagingDevicesResponse|MessagingDeviceGroupResponse>} A Promise fulfilled
+   *     with the server's response after the message has been sent.
    */
   public sendToDevice(
     registrationTokenOrTokens: string|string[],
     payload: MessagingPayload,
     options: MessagingOptions = {},
-  ): Promise<MessagingDevicesResponse> {
+  ): Promise<MessagingDevicesResponse|MessagingDeviceGroupResponse> {
     if (registrationTokenOrTokens instanceof Array && registrationTokenOrTokens.length !== 0) {
       // Validate the array contains no more than 1,000 registration tokens.
       if (registrationTokenOrTokens.length > 1000) {
@@ -262,23 +308,16 @@ class Messaging implements FirebaseServiceInterface {
         return this.messagingRequestHandler.invokeRequestHandler(request);
       })
       .then((response) => {
-        // Rename properties on the server response
-        utils.renameProperties(response, MESSAGING_DEVICES_RESPONSE_KEYS_MAP);
-        if ('results' in response) {
-          (response as any).results.forEach((messagingDeviceResult) => {
-            utils.renameProperties(messagingDeviceResult, MESSAGING_DEVICE_RESULT_KEYS_MAP);
-
-            // Map the FCM server's error strings to actual error objects.
-            if ('error' in messagingDeviceResult) {
-              const newError = FirebaseMessagingError.fromServerError(
-                messagingDeviceResult.error, /* message */ undefined, messagingDeviceResult.error
-              );
-              messagingDeviceResult.error = newError;
-            }
-          });
+        // The sendToDevice() and sendToDeviceGroup() methods both set the `to` query parameter in
+        // the underlying FCM request. If the provided registration token argument is actually a
+        // valid notification key, the response from the FCM server will be a device group response.
+        // If that is the case, we map the response to a MessagingDeviceGroupResponse.
+        // See b/35394951 for more context.
+        if ('multicast_id' in response) {
+          return mapRawResponseToDevicesResponse(response);
+        } else {
+          return mapRawResponseToDeviceGroupResponse(response);
         }
-
-        return response;
       });
   }
 
@@ -290,19 +329,30 @@ class Messaging implements FirebaseServiceInterface {
    * @param {MessagingPayload} payload The message payload.
    * @param {MessagingOptions} [options = {}] Optional options to alter the message.
    *
-   * @return {Promise<MessagingDeviceGroupResponse>} A Promise fulfilled with the server's response
-   *     after the message has been sent.
+   * @return {Promise<MessagingDeviceGroupResponse|MessagingDevicesResponse>} A Promise fulfilled
+   *     with the server's response after the message has been sent.
    */
   public sendToDeviceGroup(
     notificationKey: string,
     payload: MessagingPayload,
     options: MessagingOptions = {},
-  ): Promise<MessagingDeviceGroupResponse> {
+  ): Promise<MessagingDeviceGroupResponse|MessagingDevicesResponse> {
     if (!validator.isNonEmptyString(notificationKey)) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_RECIPIENT,
         'Notification key provided to sendToDeviceGroup() must be a non-empty string.'
       );
+    } else if (notificationKey.indexOf(':') !== -1) {
+      // It is possible the developer provides a registration token instead of a notification key
+      // to this method. We can detect some of those cases by checking to see if the string contains
+      // a colon. Not all registration tokens will contain a colon (only newer ones will), but no
+      // notification keys will contain a colon, so we can use it as a rough heuristic.
+      // See b/35394951 for more context.
+      return Promise.reject(new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_RECIPIENT,
+        'Notification key provided to sendToDeviceGroup() has the format of a registration token. ' +
+        'You should use sendToDevice() instead.'
+      ));
     }
 
     // Validate the types of the payload and options arguments. Since these are common developer
@@ -323,14 +373,26 @@ class Messaging implements FirebaseServiceInterface {
         return this.messagingRequestHandler.invokeRequestHandler(request);
       })
       .then((response) => {
-        // Rename properties on the server response
-        utils.renameProperties(response, MESSAGING_DEVICE_GROUP_RESPONSE_KEYS_MAP);
+        // The sendToDevice() and sendToDeviceGroup() methods both set the `to` query parameter in
+        // the underlying FCM request. If the provided notification key argument has an invalid
+        // format (that is, it is either a registration token or some random string), the response
+        // from the FCM server will default to a devices response (which we detect by looking for
+        // the `multicast_id` property). If that is the case, we either throw an error saying the
+        // provided notification key is invalid (if the message failed to send) or map the response
+        // to a MessagingDevicesResponse (if the message succeeded).
+        // See b/35394951 for more context.
+        if ('multicast_id' in response) {
+          if ((response as any).success === 0) {
+            return Promise.reject(new FirebaseMessagingError(
+              MessagingClientErrorCode.INVALID_RECIPIENT,
+              'Notification key provided to sendToDeviceGroup() is invalid.'
+            ));
+          } else {
+            return mapRawResponseToDevicesResponse(response);
+          }
+        }
 
-        // Add the 'failedRegistrationTokens' property if it does not exist on the response, which
-        // it won't when the 'failureCount' property has a value of 0)
-        (response as any).failedRegistrationTokens = (response as any).failedRegistrationTokens || [];
-
-        return response;
+        return mapRawResponseToDeviceGroupResponse(response);
       });
   }
 
