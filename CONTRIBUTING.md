@@ -167,35 +167,29 @@ firebase-ops@google.com with your GitHub username requesting access.
 
 2. Clone the GitHub repo.
 
-3. Switch to the `firebase-v2` branch:
-
-  ```
-  $ git checkout firebase-v2
-  ```
-
-4. Configure the repo:
+3. Configure the repo:
 
   ```
   $ source tools/use
   $ configure-project
   ```
 
-5. Compile the Firebase JavaScript client artifacts:
+4. On the `master` branch, compile the Firebase JavaScript client artifacts:
 
   ```
   $ build-client
   ```
 
-6. Copy `target/firebase-admin-node.js` of the `firebase/firebase-client-js` repo into
+5. Copy `target/firebase-admin-node.js` of the `firebase/firebase-client-js` repo into
 [`src/database/database.js`](./src/database/database.js) of this repo.
 
-7. Add a comment to the top of the file with the format:
+6. Add a comment to the top of the file with the format:
 
    `/* Copied from firebase/firebase-client-js commit <commit_hash> */`
 
    where `<commit_hash>` is the commit hash from which you copied the file.
 
-8. After ensuring all tests still pass, send a CL containing the updated file.
+7. After ensuring all tests still pass, send a CL containing the updated file.
 
 
 # Updating Reference Documentation
