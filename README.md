@@ -48,6 +48,7 @@ import * as admin from "firebase-admin";
 * [Setup Guide](https://firebase.google.com/docs/admin/setup/)
 * [Database Guide](https://firebase.google.com/docs/database/admin/start/)
 * [Authentication Guide](https://firebase.google.com/docs/auth/admin/)
+* [Cloud Messaging Guide](https://firebase.google.com/docs/cloud-messaging/admin/)
 * [API Reference](https://firebase.google.com/docs/reference/admin/node/)
 
 
