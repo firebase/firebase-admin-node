@@ -147,6 +147,7 @@ declare namespace admin.database {
     hasChild(path: string): boolean;
     hasChildren(): boolean;
     numChildren(): number;
+    toJSON(): Object;
     val(): any;
   }
 
@@ -192,6 +193,7 @@ declare namespace admin.database {
     orderByPriority(): admin.database.Query;
     orderByValue(): admin.database.Query;
     startAt(value: number|string|boolean|null, key?: string): admin.database.Query;
+    toJSON(): Object;
     toString(): string;
   }
 
