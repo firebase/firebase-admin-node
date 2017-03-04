@@ -14,7 +14,7 @@ declare namespace admin {
   }
 
   class Promise_Instance<T> implements admin.Thenable<any> {
-    constructor(resolver: (a?: (a: T) => undefined, b?: (a: Error) => undefined) => any);
+    constructor(resolver: (a?: (a: T) => void, b?: (a: Error) => void) => any);
     catch(onReject?: (a: Error) => any): admin.Thenable<any>;
     then(onResolve?: (a: T) => any, onReject?: (a: Error) => any): admin.Promise<any>;
   }
@@ -61,7 +61,7 @@ declare namespace admin.app {
     auth(): admin.auth.Auth;
     database(): admin.database.Database;
     messaging(): admin.messaging.Messaging;
-    delete(): admin.Promise<undefined>;
+    delete(): admin.Promise<void>;
   }
 }
 
@@ -107,7 +107,7 @@ declare namespace admin.auth {
 
     createCustomToken(uid: string, developerClaims?: Object): admin.Promise<string>;
     createUser(properties: Object): admin.Promise<admin.auth.UserRecord>;
-    deleteUser(uid: string): admin.Promise<undefined>;
+    deleteUser(uid: string): admin.Promise<void>;
     getUser(uid: string): admin.Promise<admin.auth.UserRecord>;
     getUserByEmail(email: string): admin.Promise<admin.auth.UserRecord>;
     updateUser(uid: string, properties: Object): admin.Promise<admin.auth.UserRecord>;
@@ -129,8 +129,8 @@ declare namespace admin.database {
   interface Database {
     app: admin.app.App;
 
-    goOffline(): undefined;
-    goOnline(): undefined;
+    goOffline(): void;
+    goOnline(): void;
     ref(path?: string): admin.database.Reference;
     refFromURL(url: string): admin.database.Reference;
   }
@@ -151,15 +151,15 @@ declare namespace admin.database {
   }
 
   interface OnDisconnect {
-    cancel(onComplete?: (a: Error|null) => any): admin.Promise<undefined>;
-    remove(onComplete?: (a: Error|null) => any): admin.Promise<undefined>;
-    set(value: any, onComplete?: (a: Error|null) => any): admin.Promise<undefined>;
+    cancel(onComplete?: (a: Error|null) => any): admin.Promise<void>;
+    remove(onComplete?: (a: Error|null) => any): admin.Promise<void>;
+    set(value: any, onComplete?: (a: Error|null) => any): admin.Promise<void>;
     setWithPriority(
       value: any,
       priority: number|string|null,
       onComplete?: (a: Error|null) => any
-    ): admin.Promise<undefined>;
-    update(values: Object, onComplete?: (a: Error|null) => any): admin.Promise<undefined>;
+    ): admin.Promise<void>;
+    update(values: Object, onComplete?: (a: Error|null) => any): admin.Promise<void>;
   }
 
   interface Query {
@@ -174,7 +174,7 @@ declare namespace admin.database {
       eventType?: string,
       callback?: (a: admin.database.DataSnapshot, b?: string|null) => any,
       context?: Object|null
-    ): undefined;
+    ): void;
     on(
       eventType: string,
       callback: (a: admin.database.DataSnapshot|null, b?: string) => any,
@@ -203,16 +203,16 @@ declare namespace admin.database {
     child(path: string): admin.database.Reference;
     onDisconnect(): admin.database.OnDisconnect;
     push(value?: any, onComplete?: (a: Error|null) => any): admin.database.ThenableReference;
-    remove(onComplete?: (a: Error|null) => any): admin.Promise<undefined>;
-    set(value: any, onComplete?: (a: Error|null) => any): admin.Promise<undefined>;
+    remove(onComplete?: (a: Error|null) => any): admin.Promise<void>;
+    set(value: any, onComplete?: (a: Error|null) => any): admin.Promise<void>;
     setPriority(
       priority: string|number|null,
       onComplete: (a: Error|null) => any
-    ): admin.Promise<undefined>;
+    ): admin.Promise<void>;
     setWithPriority(
       newVal: any, newPriority: string|number|null,
       onComplete?: (a: Error|null) => any
-    ): admin.Promise<undefined>;
+    ): admin.Promise<void>;
     transaction(
       transactionUpdate: (a: any) => any,
       onComplete?: (a: Error|null, b: boolean, c: admin.database.DataSnapshot|null) => any,
@@ -221,7 +221,7 @@ declare namespace admin.database {
       committed: boolean,
       snapshot: admin.database.DataSnapshot|null
     }>;
-    update(values: Object, onComplete?: (a: Error|null) => any): admin.Promise<undefined>;
+    update(values: Object, onComplete?: (a: Error|null) => any): admin.Promise<void>;
   }
 
   interface ThenableReference extends admin.database.Reference, admin.Thenable<any> {}
