@@ -7,23 +7,6 @@ declare namespace admin {
     toJSON(): Object;
   }
 
-  class Promise<T> extends Promise_Instance<T> {
-    static all(values: admin.Promise<any>[]): admin.Promise<any[]>;
-    static reject(error: Error): admin.Promise<any>;
-    static resolve<T>(value?: T): admin.Promise<T>;
-  }
-
-  class Promise_Instance<T> implements admin.Thenable<any> {
-    constructor(resolver: (a?: (a: T) => void, b?: (a: Error) => void) => any);
-    catch(onReject?: (a: Error) => any): admin.Thenable<any>;
-    then(onResolve?: (a: T) => any, onReject?: (a: Error) => any): admin.Promise<any>;
-  }
-
-  interface Thenable<T> {
-    catch(onReject?: (a: Error) => any): admin.Thenable<any>;
-    then(onResolve?: (a: T) => any, onReject?: (a: Error) => any): admin.Thenable<any>;
-  }
-
   interface ServiceAccount {
     projectId?: string;
     clientEmail?: string;
@@ -61,7 +44,7 @@ declare namespace admin.app {
     auth(): admin.auth.Auth;
     database(): admin.database.Database;
     messaging(): admin.messaging.Messaging;
-    delete(): admin.Promise<void>;
+    delete(): Promise<void>;
   }
 }
 
@@ -105,19 +88,19 @@ declare namespace admin.auth {
   interface Auth {
     app: admin.app.App;
 
-    createCustomToken(uid: string, developerClaims?: Object): admin.Promise<string>;
-    createUser(properties: Object): admin.Promise<admin.auth.UserRecord>;
-    deleteUser(uid: string): admin.Promise<void>;
-    getUser(uid: string): admin.Promise<admin.auth.UserRecord>;
-    getUserByEmail(email: string): admin.Promise<admin.auth.UserRecord>;
-    updateUser(uid: string, properties: Object): admin.Promise<admin.auth.UserRecord>;
-    verifyIdToken(idToken: string): admin.Promise<DecodedIdToken>;
+    createCustomToken(uid: string, developerClaims?: Object): Promise<string>;
+    createUser(properties: Object): Promise<admin.auth.UserRecord>;
+    deleteUser(uid: string): Promise<void>;
+    getUser(uid: string): Promise<admin.auth.UserRecord>;
+    getUserByEmail(email: string): Promise<admin.auth.UserRecord>;
+    updateUser(uid: string, properties: Object): Promise<admin.auth.UserRecord>;
+    verifyIdToken(idToken: string): Promise<DecodedIdToken>;
   }
 }
 
 declare namespace admin.credential {
   interface Credential {
-    getAccessToken(): admin.Promise<admin.GoogleOAuthAccessToken>;
+    getAccessToken(): Promise<admin.GoogleOAuthAccessToken>;
   }
 
   function applicationDefault(): admin.credential.Credential;
@@ -152,15 +135,15 @@ declare namespace admin.database {
   }
 
   interface OnDisconnect {
-    cancel(onComplete?: (a: Error|null) => any): admin.Promise<void>;
-    remove(onComplete?: (a: Error|null) => any): admin.Promise<void>;
-    set(value: any, onComplete?: (a: Error|null) => any): admin.Promise<void>;
+    cancel(onComplete?: (a: Error|null) => any): Promise<void>;
+    remove(onComplete?: (a: Error|null) => any): Promise<void>;
+    set(value: any, onComplete?: (a: Error|null) => any): Promise<void>;
     setWithPriority(
       value: any,
       priority: number|string|null,
       onComplete?: (a: Error|null) => any
-    ): admin.Promise<void>;
-    update(values: Object, onComplete?: (a: Error|null) => any): admin.Promise<void>;
+    ): Promise<void>;
+    update(values: Object, onComplete?: (a: Error|null) => any): Promise<void>;
   }
 
   interface Query {
@@ -187,7 +170,7 @@ declare namespace admin.database {
       successCallback?: (a: admin.database.DataSnapshot, b?: string) => any,
       failureCallbackOrContext?: Object|null,
       context?: Object|null
-    ): admin.Promise<any>;
+    ): Promise<any>;
     orderByChild(path: string): admin.database.Query;
     orderByKey(): admin.database.Query;
     orderByPriority(): admin.database.Query;
@@ -205,28 +188,28 @@ declare namespace admin.database {
     child(path: string): admin.database.Reference;
     onDisconnect(): admin.database.OnDisconnect;
     push(value?: any, onComplete?: (a: Error|null) => any): admin.database.ThenableReference;
-    remove(onComplete?: (a: Error|null) => any): admin.Promise<void>;
-    set(value: any, onComplete?: (a: Error|null) => any): admin.Promise<void>;
+    remove(onComplete?: (a: Error|null) => any): Promise<void>;
+    set(value: any, onComplete?: (a: Error|null) => any): Promise<void>;
     setPriority(
       priority: string|number|null,
       onComplete: (a: Error|null) => any
-    ): admin.Promise<void>;
+    ): Promise<void>;
     setWithPriority(
       newVal: any, newPriority: string|number|null,
       onComplete?: (a: Error|null) => any
-    ): admin.Promise<void>;
+    ): Promise<void>;
     transaction(
       transactionUpdate: (a: any) => any,
       onComplete?: (a: Error|null, b: boolean, c: admin.database.DataSnapshot|null) => any,
       applyLocally?: boolean
-    ): admin.Promise<{
+    ): Promise<{
       committed: boolean,
       snapshot: admin.database.DataSnapshot|null
     }>;
-    update(values: Object, onComplete?: (a: Error|null) => any): admin.Promise<void>;
+    update(values: Object, onComplete?: (a: Error|null) => any): Promise<void>;
   }
 
-  interface ThenableReference extends admin.database.Reference, admin.Thenable<any> {}
+  interface ThenableReference extends admin.database.Reference, Promise<any> {}
 
   function enableLogging(logger?: boolean|((message: string) => any), persistent?: boolean): any;
 }
@@ -307,27 +290,27 @@ declare namespace admin.messaging {
       registrationToken: string,
       payload: admin.messaging.MessagingPayload,
       options?: admin.messaging.MessagingOptions
-    ): admin.Promise<admin.messaging.MessagingDevicesResponse>;
+    ): Promise<admin.messaging.MessagingDevicesResponse>;
     sendToDevice(
       registrationTokens: string[],
       payload: admin.messaging.MessagingPayload,
       options?: admin.messaging.MessagingOptions
-    ): admin.Promise<admin.messaging.MessagingDevicesResponse>;
+    ): Promise<admin.messaging.MessagingDevicesResponse>;
     sendToDeviceGroup(
       notificationKey: string,
       payload: admin.messaging.MessagingPayload,
       options?: admin.messaging.MessagingOptions
-    ): admin.Promise<admin.messaging.MessagingDeviceGroupResponse>;
+    ): Promise<admin.messaging.MessagingDeviceGroupResponse>;
     sendToTopic(
       topic: string,
       payload: admin.messaging.MessagingPayload,
       options?: admin.messaging.MessagingOptions
-    ): admin.Promise<admin.messaging.MessagingTopicResponse>;
+    ): Promise<admin.messaging.MessagingTopicResponse>;
     sendToCondition(
       condition: string,
       payload: admin.messaging.MessagingPayload,
       options?: admin.messaging.MessagingOptions
-    ): admin.Promise<admin.messaging.MessagingConditionResponse>;
+    ): Promise<admin.messaging.MessagingConditionResponse>;
   }
 }
 
