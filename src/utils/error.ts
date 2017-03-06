@@ -21,7 +21,7 @@ type ServerToClientCode = {
  * @param {ErrorInfo} errorInfo The error information (code and message).
  * @constructor
  */
-class FirebaseError extends Error {
+export class FirebaseError extends Error {
   constructor(private errorInfo: ErrorInfo) {
     super(errorInfo.message);
 
@@ -52,6 +52,22 @@ class FirebaseError extends Error {
 }
 
 /**
+ * Firebase App error code structure. This extends FirebaseError.
+ *
+ * @param {string} code The error code.
+ * @param {string} message The error message.
+ * @constructor
+ */
+export class FirebaseAppError extends FirebaseError {
+  constructor(code: string, message: string) {
+    super({
+      code: 'app/' + code,
+      message,
+    });
+  }
+}
+
+/**
  * Firebase Auth error code structure. This extends FirebaseError.
  *
  * @param {ErrorInfo} info The error code info.
@@ -59,7 +75,7 @@ class FirebaseError extends Error {
  *     message if provided.
  * @constructor
  */
-class FirebaseAuthError extends FirebaseError {
+export class FirebaseAuthError extends FirebaseError {
   /**
    * Creates the developer-facing error corresponding to the backend error code.
    *
@@ -104,7 +120,7 @@ class FirebaseAuthError extends FirebaseError {
  * @param {string} [message] The error message. This will override the default message if provided.
  * @constructor
  */
-class FirebaseMessagingError extends FirebaseError {
+export class FirebaseMessagingError extends FirebaseError {
   /**
    * Creates the developer-facing error corresponding to the backend error code.
    *
@@ -143,9 +159,25 @@ class FirebaseMessagingError extends FirebaseError {
 
 
 /**
+ * App client error codes and their default messages.
+ */
+export class AppErrorCodes {
+  public static APP_DELETED = 'app-deleted';
+  public static APP_NOT_FOUND = 'app-not-found';
+  public static DUPLICATE_APP_NAME = 'duplicate-app-name';
+  public static INTERNAL_ERROR = 'internal-error';
+  public static INVALID_APP_NAME = 'invalid-app-name';
+  public static INVALID_APP_OPTIONS = 'invalid-app-options';
+  public static INVALID_CREDENTIAL = 'invalid-credential';
+  public static NETWORK_ERROR = 'network-error';
+  public static NETWORK_TIMEOUT = 'network-timeout';
+  public static UNABLE_TO_PARSE_RESPONSE = 'unable-to-parse-response';
+};
+
+/**
  * Auth client error codes and their default messages.
  */
-class AuthClientErrorCode {
+export class AuthClientErrorCode {
   public static INVALID_ARGUMENT = {
     code: 'argument-error',
     message: 'Invalid argument provided.',
@@ -224,7 +256,7 @@ class AuthClientErrorCode {
 /**
  * Messaging client error codes and their default messages.
  */
-class MessagingClientErrorCode {
+export class MessagingClientErrorCode {
   public static INVALID_ARGUMENT = {
     code: 'invalid-argument',
     message: 'Invalid argument provided.',
@@ -369,13 +401,3 @@ const MESSAGING_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   // FCM server internal error.
   InternalServerError: 'INTERNAL_ERROR',
 };
-
-
-export {
-  ErrorInfo,
-  FirebaseError,
-  FirebaseAuthError,
-  AuthClientErrorCode,
-  FirebaseMessagingError,
-  MessagingClientErrorCode,
-}

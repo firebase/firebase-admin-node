@@ -186,15 +186,21 @@ export class FirebaseTokenGenerator {
     }
 
     if (typeof errorMessage !== 'undefined') {
-      return Promise.reject(new Error(errorMessage));
+      return Promise.reject(
+        new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, errorMessage)
+      );
     }
 
     return this.fetchPublicKeys_().then((publicKeys) => {
       if (!publicKeys.hasOwnProperty(header.kid)) {
-        errorMessage = 'Firebase ID token has "kid" claim which does not correspond to a known ' +
-          'public key. Most likely the ID token is expired, so get a fresh token from your client ' +
-          'app and try again.' + verifyIdTokenDocsMessage;
-        return Promise.reject(new Error(errorMessage));
+        return Promise.reject(
+          new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_ARGUMENT,
+            'Firebase ID token has "kid" claim which does not correspond to a known public key. ' +
+            'Most likely the ID token is expired, so get a fresh token from your client app and ' +
+            'try again.' + verifyIdTokenDocsMessage,
+          )
+        );
       }
 
       return new Promise((resolve, reject) => {
@@ -208,7 +214,10 @@ export class FirebaseTokenGenerator {
             } else if (error.name === 'JsonWebTokenError') {
               errorMessage = 'Firebase ID token has invalid signature.' + verifyIdTokenDocsMessage;
             }
-            reject(new Error(errorMessage));
+
+            return reject(
+              new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, errorMessage)
+            );
           } else {
             decodedToken.uid = decodedToken.sub;
             resolve(decodedToken);
@@ -267,7 +276,8 @@ export class FirebaseTokenGenerator {
               if (response.error_description) {
                 errorMessage += ' (' + response.error_description + ')';
               }
-              reject(new Error(errorMessage));
+
+              reject(new FirebaseAuthError(AuthClientErrorCode.INTERNAL_ERROR, errorMessage));
             } else {
               /* istanbul ignore else */
               if (res.headers.hasOwnProperty('cache-control')) {

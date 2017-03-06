@@ -3,6 +3,7 @@ import {GoogleOAuthAccessToken} from './auth/credential';
 import {FirebaseServiceInterface} from './firebase-service';
 import {Credential, CertCredential} from './auth/credential';
 import {FirebaseNamespaceInternals} from './firebase-namespace';
+import {AppErrorCodes, FirebaseAppError} from './utils/error';
 
 
 /**
@@ -67,9 +68,11 @@ export class FirebaseAppInternals {
           if (typeof result !== 'object' ||
             typeof result.expires_in !== 'number' ||
             typeof result.access_token !== 'string') {
-            throw new Error(
-              `Invalid access token generated: ${JSON.stringify(result)}. Valid access tokens must ` +
-              'be an object with the "expires_in" (number) and "access_token" (string) properties.'
+            throw new FirebaseAppError(
+              AppErrorCodes.INVALID_CREDENTIAL,
+              `Invalid access token generated: ${JSON.stringify(result)}. Valid access tokens ` +
+              'must be an object with the "expires_in" (number) and "access_token" (string) ' +
+              'properties.',
             );
           }
 
@@ -111,7 +114,7 @@ export class FirebaseAppInternals {
             'https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk.';
           }
 
-          throw new Error(errorMessage);
+          throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
         });
 
       return this.cachedTokenPromise_;
@@ -189,7 +192,8 @@ export class FirebaseApp {
     }
 
     if (typeof errorMessage !== 'undefined') {
-      throw new Error(
+      throw new FirebaseAppError(
+        AppErrorCodes.INVALID_APP_OPTIONS,
         `Invalid Firebase app options passed as the first argument to initializeApp() for the ` +
         `app named "${this.name_}". ${errorMessage}`
       );
@@ -243,17 +247,26 @@ export class FirebaseApp {
    */
   /* istanbul ignore next */
   public auth(): FirebaseServiceInterface {
-    throw new Error('INTERNAL ASSERT FAILED: Firebase auth() service has not been registered.');
+    throw new FirebaseAppError(
+      AppErrorCodes.INTERNAL_ERROR,
+      'INTERNAL ASSERT FAILED: Firebase auth() service has not been registered.',
+    );
   }
 
   /* istanbul ignore next */
   public database(): FirebaseServiceInterface {
-    throw new Error('INTERNAL ASSERT FAILED: Firebase database() service has not been registered.');
+    throw new FirebaseAppError(
+      AppErrorCodes.INTERNAL_ERROR,
+      'INTERNAL ASSERT FAILED: Firebase database() service has not been registered.',
+    );
   }
 
   /* istanbul ignore next */
   public messaging(): FirebaseServiceInterface {
-    throw new Error('INTERNAL ASSERT FAILED: Firebase messaging() service has not been registered.');
+    throw new FirebaseAppError(
+      AppErrorCodes.INTERNAL_ERROR,
+      'INTERNAL ASSERT FAILED: Firebase messaging() service has not been registered.',
+    );
   }
 
   /**
@@ -325,7 +338,10 @@ export class FirebaseApp {
    */
   private checkDestroyed_(): void {
     if (this.isDeleted_) {
-      throw new Error(`Firebase app named "${this.name_}" has already been deleted.`);
+      throw new FirebaseAppError(
+        AppErrorCodes.APP_DELETED,
+        `Firebase app named "${this.name_}" has already been deleted.`,
+      );
     }
   }
 }
