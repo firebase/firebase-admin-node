@@ -7,6 +7,8 @@ import http = require('http');
 import path = require('path');
 import https = require('https');
 
+import {AppErrorCodes, FirebaseAppError} from '../utils/error';
+
 
 const GOOGLE_TOKEN_AUDIENCE = 'https://accounts.google.com/o/oauth2/token';
 const GOOGLE_AUTH_TOKEN_HOST = 'accounts.google.com';
@@ -70,7 +72,10 @@ export class RefreshToken {
       return new RefreshToken(JSON.parse(jsonString));
     } catch (error) {
       // Throw a nicely formed error message if the file contents cannot be parsed
-      throw new Error('Failed to parse refresh token file: ' + error);
+      throw new FirebaseAppError(
+        AppErrorCodes.INVALID_CREDENTIAL,
+        'Failed to parse refresh token file: ' + error,
+      );
     }
   }
 
@@ -80,14 +85,19 @@ export class RefreshToken {
     copyAttr(this, json, 'refreshToken', 'refresh_token');
     copyAttr(this, json, 'type', 'type');
 
+    let errorMessage;
     if (typeof this.clientId !== 'string' || !this.clientId) {
-      throw new Error('Refresh token must contain a "client_id" property');
+      errorMessage = 'Refresh token must contain a "client_id" property.';
     } else if (typeof this.clientSecret !== 'string' || !this.clientSecret) {
-      throw new Error('Refresh token must contain a "client_secret" property');
+      errorMessage = 'Refresh token must contain a "client_secret" property.';
     } else if (typeof this.refreshToken !== 'string' || !this.refreshToken) {
-      throw new Error('Refresh token must contain a "refresh_token" property');
+      errorMessage = 'Refresh token must contain a "refresh_token" property.';
     } else if (typeof this.type !== 'string' || !this.type) {
-      throw new Error('Refresh token must contain a "type" property');
+      errorMessage = 'Refresh token must contain a "type" property.';
+    }
+
+    if (typeof errorMessage !== 'undefined') {
+      throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
     }
   }
 }
@@ -103,29 +113,43 @@ export class Certificate {
   public static fromPath(path: string): Certificate {
     // Node bug encountered in v6.x. fs.readFileSync hangs when path is a 0 or 1.
     if (typeof path !== 'string') {
-      throw new Error('Failed to parse certificate key file: TypeError: path must be a string');
+      throw new FirebaseAppError(
+        AppErrorCodes.INVALID_CREDENTIAL,
+        'Failed to parse certificate key file: TypeError: path must be a string',
+      );
     }
     try {
       return new Certificate(JSON.parse(fs.readFileSync(path, 'utf8')));
     } catch (error) {
       // Throw a nicely formed error message if the file contents cannot be parsed
-      throw new Error('Failed to parse certificate key file: ' + error);
+      throw new FirebaseAppError(
+        AppErrorCodes.INVALID_CREDENTIAL,
+        'Failed to parse certificate key file: ' + error,
+      );
     }
   }
 
   constructor(json: Object) {
     if (typeof json !== 'object' || json === null) {
-      throw new Error('Certificate object must be an object.');
+      throw new FirebaseAppError(
+        AppErrorCodes.INVALID_CREDENTIAL,
+        'Certificate object must be an object.',
+      );
     }
 
     copyAttr(this, json, 'projectId', 'project_id');
     copyAttr(this, json, 'privateKey', 'private_key');
     copyAttr(this, json, 'clientEmail', 'client_email');
 
+    let errorMessage;
     if (typeof this.privateKey !== 'string' || !this.privateKey) {
-      throw new Error('Certificate object must contain a string "private_key" property');
+      errorMessage = 'Certificate object must contain a string "private_key" property.';
     } else if (typeof this.clientEmail !== 'string' || !this.clientEmail) {
-      throw new Error('Certificate object must contain a string "client_email" property');
+      errorMessage = 'Certificate object must contain a string "client_email" property.';
+    }
+
+    if (typeof errorMessage !== 'undefined') {
+      throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
     }
   }
 }
@@ -153,18 +177,24 @@ function requestAccessToken(transit, options: Object, data?: Object): Promise<Go
         try {
           const json = JSON.parse(Buffer.concat(buffers).toString());
           if (json.error) {
-            let msg = 'Error fetching access token: ' + json.error;
+            let errorMessage = 'Error fetching access token: ' + json.error;
             if (json.error_description) {
-              msg += ' (' + json.error_description + ')';
+              errorMessage += ' (' + json.error_description + ')';
             }
-            reject(new Error(msg));
+            reject(new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage));
           } else if (!json.access_token || !json.expires_in) {
-            reject(new Error('Unexpected response from server'));
+            reject(new FirebaseAppError(
+              AppErrorCodes.INVALID_CREDENTIAL,
+              `Unexpected response while fetching access token: ${ JSON.stringify(json) }`,
+            ));
           } else {
             resolve(json);
           }
         } catch (err) {
-          reject(err);
+          reject(new FirebaseAppError(
+            AppErrorCodes.INVALID_CREDENTIAL,
+            `Failed to parse access token response: ${err.toString()}`,
+          ));
         }
       });
     });

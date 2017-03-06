@@ -93,7 +93,8 @@ describe('FirebaseApp', () => {
       return app.INTERNAL.getToken().then(() => {
         throw new Error('Unexpected success');
       }, (err) => {
-        expect(consoleErrorSpy).to.have.been.calledOnce.and.calledWith(new Error());
+        expect(consoleErrorSpy).to.have.been.calledOnce;
+        expect(consoleErrorSpy.args[0][0] instanceof Error).to.be.true;
       });
     });
 

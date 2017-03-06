@@ -1,6 +1,6 @@
 import {deepCopy} from './deep-copy';
 import {FirebaseApp} from '../firebase-app';
-import {FirebaseError} from './error';
+import {AppErrorCodes, FirebaseAppError} from './error';
 
 import https = require('https');
 
@@ -85,11 +85,11 @@ export class HttpRequestHandler {
                 });
               }
             } catch (error) {
-              const parsingError = new FirebaseError({
-                code: 'unable-to-parse-response',
-                message: `Failed to parse response data: "${ error.toString() }". Raw server ` +
-                         `response: "${ response }."`,
-              });
+              const parsingError = new FirebaseAppError(
+                AppErrorCodes.UNABLE_TO_PARSE_RESPONSE,
+                `Failed to parse response data: "${ error.toString() }". Raw server` +
+                `response: "${ response }."`,
+              );
               reject({
                 statusCode,
                 error: parsingError,
@@ -106,10 +106,10 @@ export class HttpRequestHandler {
           socket.on('timeout', () => {
             req.abort();
 
-            const networkTimeoutError = new FirebaseError({
-              code: 'network-timeout',
-              message: `${ host } network timeout. Please try again.`,
-            });
+            const networkTimeoutError = new FirebaseAppError(
+              AppErrorCodes.NETWORK_TIMEOUT,
+              `${ host } network timeout. Please try again.`,
+            );
             reject({
               statusCode: 408,
               error: networkTimeoutError,
@@ -119,10 +119,10 @@ export class HttpRequestHandler {
       }
 
       req.on('error', (error) => {
-        const networkRequestError = new FirebaseError({
-          code: 'network-error',
-          message: `A network request error has occurred: ${ error && error.message }`,
-        });
+        const networkRequestError = new FirebaseAppError(
+          AppErrorCodes.NETWORK_ERROR,
+          `A network request error has occurred: ${ error && error.message }`,
+        );
         reject({
           statusCode: 502,
           error: networkRequestError,
@@ -175,9 +175,14 @@ export class SignedApiRequestHandler extends HttpRequestHandler {
 
     return this.app_.INTERNAL.getToken().then((accessTokenObj) => {
       if (accessTokenObj == null) {
-        return Promise.reject('Unable to fetch Google OAuth2 access token. ' +
-            'Make sure you initialized the SDK with a credential that can f' +
-            'etch access tokens.');
+        return Promise.reject(
+          new FirebaseAppError(
+            AppErrorCodes.INVALID_CREDENTIAL,
+            'Credential implementation provided to initializeApp() via the "credential" ' +
+            'property generated a null Google OAuth2 access token. Make sure you initialized ' +
+            'the SDK with a credential that can generate valid access tokens.',
+          )
+        );
       }
       let headersCopy: Object = deepCopy(headers);
       let authorizationHeaderKey = 'Authorization';
@@ -199,9 +204,6 @@ export class ApiSettings {
   private responseValidator: ApiCallbackFunction;
 
   constructor(private endpoint: string, private httpMethod: HttpMethod = 'POST') {
-    if (!endpoint) {
-      throw new Error(`INTERNAL ASSERT FAILED: Unspecified API settings endpoint: ${ endpoint }`);
-    }
     this.setRequestValidator(null)
         .setResponseValidator(null);
   }

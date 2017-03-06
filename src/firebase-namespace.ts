@@ -1,4 +1,5 @@
 import {deepExtend} from './utils/deep-copy';
+import {AppErrorCodes, FirebaseAppError} from './utils/error';
 import {AppHook, FirebaseApp, FirebaseAppOptions} from './firebase-app';
 import {FirebaseServiceFactory, FirebaseServiceInterface} from './firebase-service';
 import {
@@ -41,21 +42,26 @@ export class FirebaseNamespaceInternals {
    */
   public initializeApp(options: FirebaseAppOptions, appName = DEFAULT_APP_NAME): FirebaseApp {
     if (typeof appName !== 'string' || appName === '') {
-      throw new Error(`Illegal Firebase app name "${appName}" provided. App name must be a non-empty string.`);
+      throw new FirebaseAppError(
+        AppErrorCodes.INVALID_APP_NAME,
+        `Invalid Firebase app name "${appName}" provided. App name must be a non-empty string.`,
+      );
     } else if (appName in this.apps_) {
       if (appName === DEFAULT_APP_NAME) {
-        throw new Error(
+        throw new FirebaseAppError(
+          AppErrorCodes.DUPLICATE_APP_NAME,
           'The default Firebase app already exists. This means you called initializeApp() ' +
           'more than once without providing an app name as the second argument. In most cases ' +
           'you only need to call initializeApp() once. But if you do want to initialize ' +
           'multiple apps, pass a second argument to initializeApp() to give each app a unique ' +
-          'name.'
+          'name.',
         );
       } else {
-        throw new Error(
+        throw new FirebaseAppError(
+          AppErrorCodes.DUPLICATE_APP_NAME,
           `Firebase app named "${appName}" already exists. This means you called initializeApp() ` +
           'more than once with the same app name as the second argument. Make sure you provide a ' +
-          'unique name every time you call initializeApp().'
+          'unique name every time you call initializeApp().',
         );
       }
     }
@@ -78,7 +84,10 @@ export class FirebaseNamespaceInternals {
    */
   public app(appName = DEFAULT_APP_NAME): FirebaseApp {
     if (typeof appName !== 'string' || appName === '') {
-      throw new Error(`Illegal Firebase app name "${appName}" provided. App name must be a non-empty string.`);
+      throw new FirebaseAppError(
+        AppErrorCodes.INVALID_APP_NAME,
+        `Invalid Firebase app name "${appName}" provided. App name must be a non-empty string.`,
+      );
     } else if (!(appName in this.apps_)) {
       let errorMessage: string;
       if (appName === DEFAULT_APP_NAME) {
@@ -87,7 +96,8 @@ export class FirebaseNamespaceInternals {
         errorMessage = `Firebase app named "${appName}" does not exist. `;
       }
       errorMessage += 'Make sure you call initializeApp() before using any of the Firebase services.';
-      throw new Error(errorMessage);
+
+      throw new FirebaseAppError(AppErrorCodes.APP_NOT_FOUND, errorMessage);
     }
 
     return this.apps_[appName];
@@ -110,7 +120,10 @@ export class FirebaseNamespaceInternals {
    */
   public removeApp(appName: string): void {
     if (typeof appName === 'undefined') {
-      throw new Error(`No Firebase app name provided. App name must be a non-empty string.`);
+      throw new FirebaseAppError(
+        AppErrorCodes.INVALID_APP_NAME,
+        `No Firebase app name provided. App name must be a non-empty string.`,
+      );
     }
 
     let appToRemove = this.app(appName);
@@ -131,12 +144,20 @@ export class FirebaseNamespaceInternals {
                          createService: FirebaseServiceFactory,
                          serviceProperties?: Object,
                          appHook?: AppHook): FirebaseServiceNamespace<FirebaseServiceInterface> {
+    let errorMessage;
     if (typeof serviceName === 'undefined') {
-      throw new Error(`No service name provided. Service name must be a non-empty string.`);
+      errorMessage = `No service name provided. Service name must be a non-empty string.`;
     } else if (typeof serviceName !== 'string' || serviceName === '') {
-      throw new Error(`Illegal service name "${serviceName}" provided. Service name must be a non-empty string.`);
+      errorMessage = `Invalid service name "${serviceName}" provided. Service name must be a non-empty string.`;
     } else if (serviceName in this.serviceFactories) {
-      throw new Error(`Firebase service named "${serviceName}" has already been registered.`);
+      errorMessage = `Firebase service named "${serviceName}" has already been registered.`;
+    }
+
+    if (typeof errorMessage !== 'undefined') {
+      throw new FirebaseAppError(
+        AppErrorCodes.INTERNAL_ERROR,
+        `INTERNAL ASSERT FAILED: ${errorMessage}`,
+      );
     }
 
     this.serviceFactories[serviceName] = createService;
@@ -241,17 +262,26 @@ export class FirebaseNamespace {
    */
   /* istanbul ignore next */
   public auth(): FirebaseServiceInterface {
-    throw new Error('INTERNAL ASSERT FAILED: Firebase auth() service has not been registered.');
+    throw new FirebaseAppError(
+      AppErrorCodes.INTERNAL_ERROR,
+      'INTERNAL ASSERT FAILED: Firebase auth() service has not been registered.',
+    );
   }
 
   /* istanbul ignore next */
   public database(): FirebaseServiceInterface {
-    throw new Error('INTERNAL ASSERT FAILED: Firebase database() service has not been registered.');
+    throw new FirebaseAppError(
+      AppErrorCodes.INTERNAL_ERROR,
+      'INTERNAL ASSERT FAILED: Firebase database() service has not been registered.',
+    );
   }
 
   /* istanbul ignore next */
   public messaging(): FirebaseServiceInterface {
-    throw new Error('INTERNAL ASSERT FAILED: Firebase messaging() service has not been registered.');
+    throw new FirebaseAppError(
+      AppErrorCodes.INTERNAL_ERROR,
+      'INTERNAL ASSERT FAILED: Firebase messaging() service has not been registered.',
+    );
   }
 
   /**

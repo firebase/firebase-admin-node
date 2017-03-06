@@ -149,7 +149,7 @@ describe('HttpRequestHandler', () => {
         })
         .catch((response) => {
           expect(response).to.have.keys(['error', 'statusCode']);
-          expect(response.error).to.have.property('code', 'network-error');
+          expect(response.error).to.have.property('code', 'app/network-error');
           expect(response.statusCode).to.equal(502);
         });
      });
@@ -173,7 +173,7 @@ describe('HttpRequestHandler', () => {
         })
         .catch((response) => {
           expect(response).to.have.keys(['error', 'statusCode']);
-          expect(response.error).to.have.property('code', 'network-timeout');
+          expect(response.error).to.have.property('code', 'app/network-timeout');
           expect(response.statusCode).to.equal(408);
         });
     });
@@ -236,7 +236,7 @@ describe('HttpRequestHandler', () => {
           })
           .catch((response) => {
             expect(response).to.have.keys(['error', 'statusCode']);
-            expect(response.error).to.have.property('code', 'unable-to-parse-response');
+            expect(response.error).to.have.property('code', 'app/unable-to-parse-response');
             expect(response.statusCode).to.equal(400);
           });
       });
@@ -362,13 +362,6 @@ describe('SignedApiRequestHandler', () => {
 
 describe('ApiSettings', () => {
   describe('Constructor', () => {
-    it('should throw an error with an unspecified endpoint', () => {
-      expect(() => {
-        const apiSettingsAny: any = ApiSettings;
-        return new apiSettingsAny();
-      }).to.throw();
-    });
-
     it('should succeed with a specified endpoint and a default http method', () => {
       expect(() => {
         const apiSettingsAny: any = ApiSettings;

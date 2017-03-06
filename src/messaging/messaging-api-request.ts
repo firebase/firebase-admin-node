@@ -86,7 +86,9 @@ export class FirebaseMessagingRequestHandler {
     })
     .catch((response: { statusCode: number, error: string|Object }) => {
       // Re-throw the error if it already has the proper format.
-      if (response.error instanceof FirebaseError) {
+      if (response instanceof FirebaseError) {
+        throw response;
+      } else if (response.error instanceof FirebaseError) {
         throw response.error;
       }
 
