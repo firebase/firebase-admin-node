@@ -163,6 +163,7 @@ declare namespace admin.database {
     update(values: Object, onComplete?: (a: Error|null) => any): admin.Promise<void>;
   }
 
+  type EventType = 'value' | 'child_added' | 'child_changed' | 'child_moved' | 'child_removed';
   interface Query {
     ref: admin.database.Reference;
 
@@ -172,18 +173,18 @@ declare namespace admin.database {
     limitToFirst(limit: number): admin.database.Query;
     limitToLast(limit: number): admin.database.Query;
     off(
-      eventType?: string,
+      eventType?: admin.database.EventType,
       callback?: (a: admin.database.DataSnapshot, b?: string|null) => any,
       context?: Object|null
     ): void;
     on(
-      eventType: string,
+      eventType: admin.database.EventType,
       callback: (a: admin.database.DataSnapshot|null, b?: string) => any,
       cancelCallbackOrContext?: Object|null,
       context?: Object|null
     ): (a: admin.database.DataSnapshot|null, b?: string) => any;
     once(
-      eventType: string,
+      eventType: admin.database.EventType,
       successCallback?: (a: admin.database.DataSnapshot, b?: string) => any,
       failureCallbackOrContext?: Object|null,
       context?: Object|null
