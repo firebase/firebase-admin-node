@@ -80,9 +80,21 @@ declare namespace admin.auth {
   }
 
   interface DecodedIdToken {
-    uid: string;
+    aud: string;
+    auth_time: number;
+    exp: number;
+    firebase: {
+      identities: {
+        [key: string]: any;
+      };
+      sign_in_provider: string;
+      [key: string]: any;
+    };
+    iat: number;
+    iss: string;
     sub: string;
-    [other: string]: any;
+    uid: string;
+    [key: string]: any;
   }
 
   interface Auth {
@@ -94,7 +106,7 @@ declare namespace admin.auth {
     getUser(uid: string): Promise<admin.auth.UserRecord>;
     getUserByEmail(email: string): Promise<admin.auth.UserRecord>;
     updateUser(uid: string, properties: Object): Promise<admin.auth.UserRecord>;
-    verifyIdToken(idToken: string): Promise<DecodedIdToken>;
+    verifyIdToken(idToken: string): Promise<admin.auth.DecodedIdToken>;
   }
 }
 
@@ -237,7 +249,7 @@ declare namespace admin.messaging {
     clickAction?: string;
     titleLocKey?: string;
     titleLocArgs?: string;
-    [other: string]: string;
+    [key: string]: string | undefined;
   };
 
   type MessagingPayload = {
@@ -253,7 +265,7 @@ declare namespace admin.messaging {
     mutableContent?: boolean;
     contentAvailable?: boolean;
     restrictedPackageName?: string;
-    [other: string]: any;
+    [key: string]: any | undefined;
   };
 
   type MessagingDeviceResult = {
