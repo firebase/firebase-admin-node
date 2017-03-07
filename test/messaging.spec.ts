@@ -146,6 +146,9 @@ describe('Messaging', () => {
   let requestWriteSpy: sinon.SinonSpy;
   let httpsRequestStub: sinon.SinonStub;
   let mockRequestStream: mocks.MockStream;
+  let nullAccessTokenMessaging: Messaging;
+  let malformedAccessTokenMessaging: Messaging;
+  let rejectedPromiseAccessTokenMessaging: Messaging;
 
   before(() => utils.mockFetchAccessTokenRequests());
 
@@ -162,6 +165,10 @@ describe('Messaging', () => {
     mockRequestStream = new mocks.MockStream();
 
     requestWriteSpy = sinon.spy(mockRequestStream, 'write');
+
+    nullAccessTokenMessaging = new Messaging(mocks.appReturningNullAccessToken());
+    malformedAccessTokenMessaging = new Messaging(mocks.appReturningMalformedAccessToken());
+    rejectedPromiseAccessTokenMessaging = new Messaging(mocks.appRejectedWhileFetchingAccessToken());
   });
 
   afterEach(() => {
@@ -328,6 +335,27 @@ describe('Messaging', () => {
       });
     });
 
+    it('should be rejected given an app which returns null access tokens', () => {
+      return nullAccessTokenMessaging.sendToDevice(
+        mocks.messaging.registrationToken,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which returns invalid access tokens', () => {
+      return nullAccessTokenMessaging.sendToDevice(
+        mocks.messaging.registrationToken,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which fails to generate access tokens', () => {
+      return nullAccessTokenMessaging.sendToDevice(
+        mocks.messaging.registrationToken,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
     it('should be fulfilled given a valid registration token and payload', () => {
       mockedRequests.push(mockSendToDeviceStringRequest());
 
@@ -422,45 +450,55 @@ describe('Messaging', () => {
     });
 
     it('should set the appropriate request data given a single registration token', () => {
-      httpsRequestStub = sinon.stub(https, 'request');
-      httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
+      // Wait for the initial getToken() call to complete before stubbing https.request.
+      return mockApp.INTERNAL.getToken()
+        .then(() => {
+          httpsRequestStub = sinon.stub(https, 'request');
+          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
 
-      return messaging.sendToDevice(
-        mocks.messaging.registrationToken,
-        mocks.messaging.payload,
-      ).then(() => {
-        expect(requestWriteSpy).to.have.been.calledOnce;
-        const requestData = JSON.parse(requestWriteSpy.args[0][0]);
-        expect(requestData).to.deep.equal({
-          to: mocks.messaging.registrationToken,
-          data: mocks.messaging.payload.data,
-          notification: mocks.messaging.payload.notification,
+          return messaging.sendToDevice(
+            mocks.messaging.registrationToken,
+            mocks.messaging.payload,
+          );
+        })
+        .then(() => {
+          expect(requestWriteSpy).to.have.been.calledOnce;
+          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(requestData).to.deep.equal({
+            to: mocks.messaging.registrationToken,
+            data: mocks.messaging.payload.data,
+            notification: mocks.messaging.payload.notification,
+          });
         });
-      });
     });
 
     it('should set the appropriate request data given an array of registration tokens', () => {
-      httpsRequestStub = sinon.stub(https, 'request');
-      httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
-
       const registrationTokens = [
         mocks.messaging.registrationToken + '0',
         mocks.messaging.registrationToken + '1',
         mocks.messaging.registrationToken + '2',
       ];
 
-      return messaging.sendToDevice(
-        registrationTokens,
-        mocks.messaging.payload,
-      ).then(() => {
-        expect(requestWriteSpy).to.have.been.calledOnce;
-        const requestData = JSON.parse(requestWriteSpy.args[0][0]);
-        expect(requestData).to.deep.equal({
-          registration_ids: registrationTokens,
-          data: mocks.messaging.payload.data,
-          notification: mocks.messaging.payload.notification,
+      // Wait for the initial getToken() call to complete before stubbing https.request.
+      return mockApp.INTERNAL.getToken()
+        .then(() => {
+          httpsRequestStub = sinon.stub(https, 'request');
+          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
+
+          return messaging.sendToDevice(
+            registrationTokens,
+            mocks.messaging.payload,
+          );
+        })
+        .then(() => {
+          expect(requestWriteSpy).to.have.been.calledOnce;
+          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(requestData).to.deep.equal({
+            registration_ids: registrationTokens,
+            data: mocks.messaging.payload.data,
+            notification: mocks.messaging.payload.notification,
+          });
         });
-      });
     });
 
     it('should be fulfilled given a notification key which actually causes a device group response', () => {
@@ -598,9 +636,30 @@ describe('Messaging', () => {
       mockedRequests.push(mockSendToDeviceStringRequest(/* mockFailure */ true));
 
       return messaging.sendToDeviceGroup(
-        mocks.messaging.registrationToken,
+        mocks.messaging.notificationKey,
         mocks.messaging.payload,
       ).should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-recipient');
+    });
+
+    it('should be rejected given an app which returns null access tokens', () => {
+      return nullAccessTokenMessaging.sendToDeviceGroup(
+        mocks.messaging.notificationKey,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which returns invalid access tokens', () => {
+      return nullAccessTokenMessaging.sendToDeviceGroup(
+        mocks.messaging.notificationKey,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which fails to generate access tokens', () => {
+      return nullAccessTokenMessaging.sendToDeviceGroup(
+        mocks.messaging.notificationKey,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
     });
 
     it('should be fulfilled given a valid notification key and payload', () => {
@@ -671,21 +730,25 @@ describe('Messaging', () => {
     });
 
     it('should set the appropriate request data', () => {
-      httpsRequestStub = sinon.stub(https, 'request');
-      httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
+      // Wait for the initial getToken() call to complete before stubbing https.request.
+      return mockApp.INTERNAL.getToken()
+        .then(() => {
+          httpsRequestStub = sinon.stub(https, 'request');
+          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
 
-      return messaging.sendToDeviceGroup(
-        mocks.messaging.notificationKey,
-        mocks.messaging.payload,
-      ).then(() => {
-        expect(requestWriteSpy).to.have.been.calledOnce;
-        const requestData = JSON.parse(requestWriteSpy.args[0][0]);
-        expect(requestData).to.deep.equal({
-          to: mocks.messaging.notificationKey,
-          data: mocks.messaging.payload.data,
-          notification: mocks.messaging.payload.notification,
+          return messaging.sendToDeviceGroup(
+            mocks.messaging.notificationKey,
+            mocks.messaging.payload,
+          );
+        }).then(() => {
+          expect(requestWriteSpy).to.have.been.calledOnce;
+          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(requestData).to.deep.equal({
+            to: mocks.messaging.notificationKey,
+            data: mocks.messaging.payload.data,
+            notification: mocks.messaging.payload.notification,
+          });
         });
-      });
     });
 
     it('should be fulfilled given a registration token which actually causes a devices response', () => {
@@ -821,6 +884,27 @@ describe('Messaging', () => {
       });
     });
 
+    it('should be rejected given an app which returns null access tokens', () => {
+      return nullAccessTokenMessaging.sendToTopic(
+        mocks.messaging.topic,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which returns invalid access tokens', () => {
+      return nullAccessTokenMessaging.sendToTopic(
+        mocks.messaging.topic,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which fails to generate access tokens', () => {
+      return nullAccessTokenMessaging.sendToTopic(
+        mocks.messaging.topic,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
     it('should be fulfilled given a valid topic and payload (topic name not prefixed with "/topics/")', () => {
       mockedRequests.push(mockSendToTopicRequest());
 
@@ -870,39 +954,48 @@ describe('Messaging', () => {
     });
 
     it('should set the appropriate request data (topic name not prefixed with "/topics/")', () => {
-      httpsRequestStub = sinon.stub(https, 'request');
-      httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
+      // Wait for the initial getToken() call to complete before stubbing https.request.
+      return mockApp.INTERNAL.getToken()
+        .then(() => {
+          httpsRequestStub = sinon.stub(https, 'request');
+          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
 
-      return messaging.sendToTopic(
-        mocks.messaging.topic,
-        mocks.messaging.payload,
-      ).then(() => {
-        expect(requestWriteSpy).to.have.been.calledOnce;
-        const requestData = JSON.parse(requestWriteSpy.args[0][0]);
-        expect(requestData).to.deep.equal({
-          to: mocks.messaging.topicWithPrefix,
-          data: mocks.messaging.payload.data,
-          notification: mocks.messaging.payload.notification,
+          return messaging.sendToTopic(
+            mocks.messaging.topic,
+            mocks.messaging.payload,
+          );
+        }).then(() => {
+          expect(requestWriteSpy).to.have.been.calledOnce;
+          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(requestData).to.deep.equal({
+            to: mocks.messaging.topicWithPrefix,
+            data: mocks.messaging.payload.data,
+            notification: mocks.messaging.payload.notification,
+          });
         });
-      });
     });
 
     it('should set the appropriate request data (topic name prefixed with "/topics/")', () => {
-      httpsRequestStub = sinon.stub(https, 'request');
-      httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
+      // Wait for the initial getToken() call to complete before stubbing https.request.
+      return mockApp.INTERNAL.getToken()
+        .then(() => {
+          httpsRequestStub = sinon.stub(https, 'request');
+          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
 
-      return messaging.sendToTopic(
-        mocks.messaging.topicWithPrefix,
-        mocks.messaging.payload,
-      ).then(() => {
-        expect(requestWriteSpy).to.have.been.calledOnce;
-        const requestData = JSON.parse(requestWriteSpy.args[0][0]);
-        expect(requestData).to.deep.equal({
-          to: mocks.messaging.topicWithPrefix,
-          data: mocks.messaging.payload.data,
-          notification: mocks.messaging.payload.notification,
+          return messaging.sendToTopic(
+            mocks.messaging.topicWithPrefix,
+            mocks.messaging.payload,
+          );
+        })
+        .then(() => {
+          expect(requestWriteSpy).to.have.been.calledOnce;
+          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(requestData).to.deep.equal({
+            to: mocks.messaging.topicWithPrefix,
+            data: mocks.messaging.payload.data,
+            notification: mocks.messaging.payload.notification,
+          });
         });
-      });
     });
 
     it('should not mutate the payload argument', () => {
@@ -1013,6 +1106,27 @@ describe('Messaging', () => {
       });
     });
 
+    it('should be rejected given an app which returns null access tokens', () => {
+      return nullAccessTokenMessaging.sendToCondition(
+        mocks.messaging.condition,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which returns invalid access tokens', () => {
+      return nullAccessTokenMessaging.sendToCondition(
+        mocks.messaging.condition,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which fails to generate access tokens', () => {
+      return nullAccessTokenMessaging.sendToCondition(
+        mocks.messaging.condition,
+        mocks.messaging.payload,
+      ).should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
     it('should be fulfilled given a valid condition and payload', () => {
       mockedRequests.push(mockSendToConditionRequest());
 
@@ -1044,21 +1158,26 @@ describe('Messaging', () => {
     });
 
     it('should set the appropriate request data', () => {
-      httpsRequestStub = sinon.stub(https, 'request');
-      httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
+      // Wait for the initial getToken() call to complete before stubbing https.request.
+      return mockApp.INTERNAL.getToken()
+        .then(() => {
+          httpsRequestStub = sinon.stub(https, 'request');
+          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
 
-      return messaging.sendToCondition(
-        mocks.messaging.condition,
-        mocks.messaging.payload,
-      ).then(() => {
-        expect(requestWriteSpy).to.have.been.calledOnce;
-        const requestData = JSON.parse(requestWriteSpy.args[0][0]);
-        expect(requestData).to.deep.equal({
-          condition: mocks.messaging.condition,
-          data: mocks.messaging.payload.data,
-          notification: mocks.messaging.payload.notification,
+          return messaging.sendToCondition(
+            mocks.messaging.condition,
+            mocks.messaging.payload,
+          );
+        })
+        .then(() => {
+          expect(requestWriteSpy).to.have.been.calledOnce;
+          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(requestData).to.deep.equal({
+            condition: mocks.messaging.condition,
+            data: mocks.messaging.payload.data,
+            notification: mocks.messaging.payload.notification,
+          });
         });
-      });
     });
 
     it('should not mutate the payload argument', () => {
@@ -1225,68 +1344,82 @@ describe('Messaging', () => {
     });
 
     it('should add "data" and "notification" as top-level properties of the request data', () => {
-      httpsRequestStub = sinon.stub(https, 'request');
-      httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
+      // Wait for the initial getToken() call to complete before stubbing https.request.
+      return mockApp.INTERNAL.getToken()
+        .then(() => {
+          httpsRequestStub = sinon.stub(https, 'request');
+          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
 
-      return messaging.sendToDevice(
-        mocks.messaging.registrationToken,
-        mocks.messaging.payload,
-      ).then(() => {
-        expect(requestWriteSpy).to.have.been.calledOnce;
-        const requestData = JSON.parse(requestWriteSpy.args[0][0]);
-        expect(requestData).to.have.keys(['to', 'data', 'notification']);
-        expect(requestData.data).to.deep.equal(mocks.messaging.payload.data);
-        expect(requestData.notification).to.deep.equal(mocks.messaging.payload.notification);
-      });
+          return messaging.sendToDevice(
+            mocks.messaging.registrationToken,
+            mocks.messaging.payload,
+          );
+        })
+        .then(() => {
+          expect(requestWriteSpy).to.have.been.calledOnce;
+          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(requestData).to.have.keys(['to', 'data', 'notification']);
+          expect(requestData.data).to.deep.equal(mocks.messaging.payload.data);
+          expect(requestData.notification).to.deep.equal(mocks.messaging.payload.notification);
+        });
     });
 
     it('should convert whitelisted camelCased properties to underscore_cased properties', () => {
-      httpsRequestStub = sinon.stub(https, 'request');
-      httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
+      // Wait for the initial getToken() call to complete before stubbing https.request.
+      return mockApp.INTERNAL.getToken()
+        .then(() => {
+          httpsRequestStub = sinon.stub(https, 'request');
+          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
 
-      return messaging.sendToDevice(
-        mocks.messaging.registrationToken,
-        {
-          notification: {
-            bodyLocArgs: 'one',
-            bodyLocKey: 'two',
-            clickAction: 'three',
-            titleLocArgs: 'four',
-            titleLocKey: 'five',
+          return messaging.sendToDevice(
+            mocks.messaging.registrationToken,
+            {
+              notification: {
+                bodyLocArgs: 'one',
+                bodyLocKey: 'two',
+                clickAction: 'three',
+                titleLocArgs: 'four',
+                titleLocKey: 'five',
+                otherKey: 'six',
+              },
+            },
+          );
+        }).then(() => {
+          expect(requestWriteSpy).to.have.been.calledOnce;
+          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(requestData.notification).to.deep.equal({
+            body_loc_args: 'one',
+            body_loc_key: 'two',
+            click_action: 'three',
+            title_loc_args: 'four',
+            title_loc_key: 'five',
             otherKey: 'six',
-          },
-        },
-      ).then(() => {
-        expect(requestWriteSpy).to.have.been.calledOnce;
-        const requestData = JSON.parse(requestWriteSpy.args[0][0]);
-        expect(requestData.notification).to.deep.equal({
-          body_loc_args: 'one',
-          body_loc_key: 'two',
-          click_action: 'three',
-          title_loc_args: 'four',
-          title_loc_key: 'five',
-          otherKey: 'six',
+          });
         });
-      });
     });
 
     it('should give whitelisted camelCased properties higher precedence than underscore_cased properties', () => {
-      httpsRequestStub = sinon.stub(https, 'request');
-      httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
+      // Wait for the initial getToken() call to complete before stubbing https.request.
+      return mockApp.INTERNAL.getToken()
+        .then(() => {
+          httpsRequestStub = sinon.stub(https, 'request');
+          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
 
-      return messaging.sendToDevice(
-        mocks.messaging.registrationToken,
-        {
-          notification: {
-            bodyLocArgs: 'foo',
-            body_loc_args: 'bar',
-          },
-        },
-      ).then(() => {
-        expect(requestWriteSpy).to.have.been.calledOnce;
-        const requestData = JSON.parse(requestWriteSpy.args[0][0]);
-        expect(requestData.notification.body_loc_args).to.equal('foo');
-      });
+          return messaging.sendToDevice(
+            mocks.messaging.registrationToken,
+            {
+              notification: {
+                bodyLocArgs: 'foo',
+                body_loc_args: 'bar',
+              },
+            },
+          );
+        })
+        .then(() => {
+          expect(requestWriteSpy).to.have.been.calledOnce;
+          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(requestData.notification.body_loc_args).to.equal('foo');
+        });
     });
 
     it('should not mutate the provided payload object', () => {
@@ -1452,66 +1585,81 @@ describe('Messaging', () => {
     });
 
     it('should add provided options as top-level properties of the request data', () => {
-      httpsRequestStub = sinon.stub(https, 'request');
-      httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
-
       const mockOptionsClone: MessagingOptions = _.clone(mocks.messaging.options);
 
-      return messaging.sendToDevice(
-        mocks.messaging.registrationToken,
-        mocks.messaging.payloadDataOnly,
-        mockOptionsClone,
-      ).then(() => {
-        expect(requestWriteSpy).to.have.been.calledOnce;
-        const requestData = JSON.parse(requestWriteSpy.args[0][0]);
-        expect(requestData).to.have.keys(['to', 'data', 'dry_run', 'collapse_key']);
-        expect(requestData.dry_run).to.equal(mockOptionsClone.dryRun);
-        expect(requestData.collapse_key).to.equal(mockOptionsClone.collapseKey);
-      });
+      // Wait for the initial getToken() call to complete before stubbing https.request.
+      return mockApp.INTERNAL.getToken()
+        .then(() => {
+          httpsRequestStub = sinon.stub(https, 'request');
+          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
+
+          return messaging.sendToDevice(
+            mocks.messaging.registrationToken,
+            mocks.messaging.payloadDataOnly,
+            mockOptionsClone,
+          );
+        })
+        .then(() => {
+          expect(requestWriteSpy).to.have.been.calledOnce;
+          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(requestData).to.have.keys(['to', 'data', 'dry_run', 'collapse_key']);
+          expect(requestData.dry_run).to.equal(mockOptionsClone.dryRun);
+          expect(requestData.collapse_key).to.equal(mockOptionsClone.collapseKey);
+        });
     });
 
     it('should convert whitelisted camelCased properties to underscore_cased properties', () => {
-      httpsRequestStub = sinon.stub(https, 'request');
-      httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
+      // Wait for the initial getToken() call to complete before stubbing https.request.
+      return mockApp.INTERNAL.getToken()
+        .then(() => {
+          httpsRequestStub = sinon.stub(https, 'request');
+          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
 
-      return messaging.sendToDevice(
-        mocks.messaging.registrationToken,
-        mocks.messaging.payloadDataOnly,
-        {
-          dryRun: true,
-          timeToLive: 1,
-          collapseKey: 'foo',
-          mutableContent: true,
-          contentAvailable: false,
-          restrictedPackageName: 'bar',
-          otherKey: true,
-        },
-      ).then(() => {
-        expect(requestWriteSpy).to.have.been.calledOnce;
-        const requestData = JSON.parse(requestWriteSpy.args[0][0]);
-        expect(requestData).to.have.keys([
-          'to', 'data', 'dry_run', 'time_to_live', 'collapse_key', 'mutable_content',
-          'content_available', 'restricted_package_name', 'otherKey',
-        ]);
-      });
+          return messaging.sendToDevice(
+            mocks.messaging.registrationToken,
+            mocks.messaging.payloadDataOnly,
+            {
+              dryRun: true,
+              timeToLive: 1,
+              collapseKey: 'foo',
+              mutableContent: true,
+              contentAvailable: false,
+              restrictedPackageName: 'bar',
+              otherKey: true,
+            },
+          );
+        })
+        .then(() => {
+          expect(requestWriteSpy).to.have.been.calledOnce;
+          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(requestData).to.have.keys([
+            'to', 'data', 'dry_run', 'time_to_live', 'collapse_key', 'mutable_content',
+            'content_available', 'restricted_package_name', 'otherKey',
+          ]);
+        });
     });
 
     it('should give whitelisted camelCased properties higher precedence than underscore_cased properties', () => {
-      httpsRequestStub = sinon.stub(https, 'request');
-      httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
+      // Wait for the initial getToken() call to complete before stubbing https.request.
+      return mockApp.INTERNAL.getToken()
+        .then(() => {
+          httpsRequestStub = sinon.stub(https, 'request');
+          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
 
-      return messaging.sendToDevice(
-        mocks.messaging.registrationToken,
-        mocks.messaging.payloadDataOnly,
-        {
-          dryRun: true,
-          dry_run: false,
-        },
-      ).then(() => {
-        expect(requestWriteSpy).to.have.been.calledOnce;
-        const requestData = JSON.parse(requestWriteSpy.args[0][0]);
-        expect(requestData.dry_run).to.be.true;
-      });
+          return messaging.sendToDevice(
+            mocks.messaging.registrationToken,
+            mocks.messaging.payloadDataOnly,
+            {
+              dryRun: true,
+              dry_run: false,
+            },
+          );
+        })
+        .then(() => {
+          expect(requestWriteSpy).to.have.been.calledOnce;
+          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(requestData.dry_run).to.be.true;
+        });
     });
 
     it('should not mutate the provided options object', () => {

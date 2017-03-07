@@ -1,3 +1,4 @@
+import * as validator from './utils/validator';
 import {deepCopy, deepExtend} from './utils/deep-copy';
 import {GoogleOAuthAccessToken} from './auth/credential';
 import {FirebaseServiceInterface} from './firebase-service';
@@ -59,20 +60,16 @@ export class FirebaseAppInternals {
       // protect against exceptions and upgrades the result to a promise in all cases.
       this.cachedTokenPromise_ = Promise.resolve(this.credential_.getAccessToken())
         .then((result: GoogleOAuthAccessToken) => {
-          if (result === null) {
-            return null;
-          }
-
           // Since the developer can provide the credential implementation, we want to weakly verify
           // the return type until the type is properly exported.
-          if (typeof result !== 'object' ||
+          if (!validator.isNonNullObject(result) ||
             typeof result.expires_in !== 'number' ||
             typeof result.access_token !== 'string') {
             throw new FirebaseAppError(
               AppErrorCodes.INVALID_CREDENTIAL,
-              `Invalid access token generated: ${JSON.stringify(result)}. Valid access tokens ` +
-              'must be an object with the "expires_in" (number) and "access_token" (string) ' +
-              'properties.',
+              `Invalid access token generated: "${JSON.stringify(result)}". Valid access ` +
+              'tokens must be an object with the "expires_in" (number) and "access_token" ' +
+              '(string) properties.',
             );
           }
 
@@ -219,25 +216,6 @@ export class FirebaseApp {
     });
 
     this.INTERNAL = new FirebaseAppInternals(this.options_.credential);
-
-    // Asynchronously ensure the provided credential can generate OAuth access tokens. We explicitly
-    // call this here to provide the developer with an error as soon as possible and so that each
-    // individual service doesn't have to worry about logging this class of error. Because getToken()
-    // caches tokens, there is no real performance penalty for calling this here.
-    // b/35366344: We only do this if the credential has a non-null certificate to ensure we do not
-    // do this check for things like Application Default Credentials on Cloud Functions, which
-    // often results in ECONNTIMEOUT errors.
-    if (typeof this.options_.credential.getCertificate === 'function') {
-      const certificate = this.options_.credential.getCertificate();
-      if (certificate) {
-        this.INTERNAL.getToken()
-          .catch((error) => {
-            /* tslint:disable:no-console */
-            console.error(error);
-            /* tslint:enable:no-console */
-          });
-      }
-    }
   }
 
   /**

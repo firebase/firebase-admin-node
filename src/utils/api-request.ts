@@ -174,16 +174,6 @@ export class SignedApiRequestHandler extends HttpRequestHandler {
     let ancestorSendRequest = super.sendRequest;
 
     return this.app_.INTERNAL.getToken().then((accessTokenObj) => {
-      if (accessTokenObj == null) {
-        return Promise.reject(
-          new FirebaseAppError(
-            AppErrorCodes.INVALID_CREDENTIAL,
-            'Credential implementation provided to initializeApp() via the "credential" ' +
-            'property generated a null Google OAuth2 access token. Make sure you initialized ' +
-            'the SDK with a credential that can generate valid access tokens.',
-          )
-        );
-      }
       let headersCopy: Object = deepCopy(headers);
       let authorizationHeaderKey = 'Authorization';
       headersCopy[authorizationHeaderKey] = 'Bearer ' + accessTokenObj.accessToken;

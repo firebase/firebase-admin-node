@@ -16,7 +16,6 @@ import {UserRecord} from '../src/auth/user-record';
 import {FirebaseApp} from '../src/firebase-app';
 import {FirebaseTokenGenerator} from '../src/auth/token-generator';
 import {FirebaseAuthRequestHandler} from '../src/auth/auth-api-request';
-import {ApplicationDefaultCredential} from '../src/auth/credential';
 import {AuthClientErrorCode, FirebaseAuthError} from '../src/utils/error';
 
 import * as validator from '../src/utils/validator';
@@ -80,7 +79,9 @@ describe('Auth', () => {
   let auth: Auth;
   let mockApp: FirebaseApp;
   let oldProcessEnv: Object;
-  let applicationDefaultCredentialApp: FirebaseApp;
+  let nullAccessTokenAuth: Auth;
+  let malformedAccessTokenAuth: Auth;
+  let rejectedPromiseAccessTokenAuth: Auth;
 
   before(() => utils.mockFetchAccessTokenRequests());
 
@@ -90,9 +91,9 @@ describe('Auth', () => {
     mockApp = mocks.app();
     auth = new Auth(mockApp);
 
-    applicationDefaultCredentialApp = utils.createAppWithOptions({
-      credential: new ApplicationDefaultCredential(),
-    });
+    nullAccessTokenAuth = new Auth(mocks.appReturningNullAccessToken());
+    malformedAccessTokenAuth = new Auth(mocks.appReturningMalformedAccessToken());
+    rejectedPromiseAccessTokenAuth = new Auth(mocks.appRejectedWhileFetchingAccessToken());
 
     oldProcessEnv = process.env;
   });
@@ -151,7 +152,7 @@ describe('Auth', () => {
     });
 
     it('should throw if a cert credential is not specified', () => {
-      const applicationDefaultCredentialAuth = new Auth(applicationDefaultCredentialApp);
+      const applicationDefaultCredentialAuth = new Auth(mocks.applicationDefaultApp());
 
       expect(() => {
         applicationDefaultCredentialAuth.createCustomToken(mocks.uid, mocks.developerClaims);
@@ -166,17 +167,38 @@ describe('Auth', () => {
             .and.calledWith(mocks.uid, mocks.developerClaims);
         });
     });
+
+    it('should be fulfilled given an app which returns null access tokens', () => {
+      // createCustomToken() does not rely on an access token and therefore works in this scenario.
+      return nullAccessTokenAuth.createCustomToken(mocks.uid, mocks.developerClaims)
+        .should.eventually.be.fulfilled;
+    });
+
+    it('should be fulfilled given an app which returns invalid access tokens', () => {
+      // createCustomToken() does not rely on an access token and therefore works in this scenario.
+      return malformedAccessTokenAuth.createCustomToken(mocks.uid, mocks.developerClaims)
+        .should.eventually.be.fulfilled;
+    });
+
+    it('should be fulfilled given an app which fails to generate access tokens', () => {
+      // createCustomToken() does not rely on an access token and therefore works in this scenario.
+      return rejectedPromiseAccessTokenAuth.createCustomToken(mocks.uid, mocks.developerClaims)
+        .should.eventually.be.fulfilled;
+    });
   });
 
   describe('verifyIdToken()', () => {
     let stub: sinon.SinonStub;
-    beforeEach(() => stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifyIdToken').returns(Promise.resolve()));
+    let mockIdToken: string;
+
+    beforeEach(() => {
+      stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifyIdToken').returns(Promise.resolve());
+      mockIdToken = mocks.generateIdToken();
+    });
     afterEach(() => stub.restore());
 
     it('should throw if a cert credential is not specified', () => {
-      const mockIdToken = mocks.generateIdToken();
-
-      const applicationDefaultCredentialAuth = new Auth(applicationDefaultCredentialApp);
+      const applicationDefaultCredentialAuth = new Auth(mocks.applicationDefaultApp());
 
       expect(() => {
         applicationDefaultCredentialAuth.verifyIdToken(mockIdToken);
@@ -184,7 +206,6 @@ describe('Auth', () => {
     });
 
     it('should forward on the call to the token generator\'s verifyIdToken() method', () => {
-      const mockIdToken = mocks.generateIdToken();
       return auth.verifyIdToken(mockIdToken).then(() => {
         expect(stub).to.have.been.calledOnce.and.calledWith(mockIdToken);
       });
@@ -193,13 +214,29 @@ describe('Auth', () => {
     it('should work with a non-cert credential when the GCLOUD_PROJECT environment variable is present', () => {
       process.env.GCLOUD_PROJECT = mocks.projectId;
 
-      const applicationDefaultCredentialAuth = new Auth(applicationDefaultCredentialApp);
-
-      const mockIdToken = mocks.generateIdToken();
+      const applicationDefaultCredentialAuth = new Auth(mocks.applicationDefaultApp());
 
       return applicationDefaultCredentialAuth.verifyIdToken(mockIdToken).then(() => {
         expect(stub).to.have.been.calledOnce.and.calledWith(mockIdToken);
       });
+    });
+
+    it('should be fulfilled given an app which returns null access tokens', () => {
+      // verifyIdToken() does not rely on an access token and therefore works in this scenario.
+      return nullAccessTokenAuth.verifyIdToken(mockIdToken)
+        .should.eventually.be.fulfilled;
+    });
+
+    it('should be fulfilled given an app which returns invalid access tokens', () => {
+      // verifyIdToken() does not rely on an access token and therefore works in this scenario.
+      return malformedAccessTokenAuth.verifyIdToken(mockIdToken)
+        .should.eventually.be.fulfilled;
+    });
+
+    it('should be fulfilled given an app which fails to generate access tokens', () => {
+      // verifyIdToken() does not rely on an access token and therefore works in this scenario.
+      return rejectedPromiseAccessTokenAuth.verifyIdToken(mockIdToken)
+        .should.eventually.be.fulfilled;
     });
   });
 
@@ -233,6 +270,21 @@ describe('Auth', () => {
           expect(error).to.have.property('code', 'auth/invalid-uid');
           expect(validator.isUid).to.have.been.calledOnce.and.calledWith(invalidUid);
         });
+    });
+
+    it('should be rejected given an app which returns null access tokens', () => {
+      return nullAccessTokenAuth.getUser(uid)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which returns invalid access tokens', () => {
+      return malformedAccessTokenAuth.getUser(uid)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which fails to generate access tokens', () => {
+      return rejectedPromiseAccessTokenAuth.getUser(uid)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
     });
 
     it('should resolve with a UserRecord on success', () => {
@@ -298,6 +350,21 @@ describe('Auth', () => {
         });
     });
 
+    it('should be rejected given an app which returns null access tokens', () => {
+      return nullAccessTokenAuth.getUserByEmail(email)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which returns invalid access tokens', () => {
+      return malformedAccessTokenAuth.getUserByEmail(email)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which fails to generate access tokens', () => {
+      return rejectedPromiseAccessTokenAuth.getUserByEmail(email)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
     it('should resolve with a UserRecord on success', () => {
       // Stub getAccountInfoByEmail to return expected result.
       let stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByEmail')
@@ -358,6 +425,21 @@ describe('Auth', () => {
           expect(error).to.have.property('code', 'auth/invalid-uid');
           expect(validator.isUid).to.have.been.calledOnce.and.calledWith(invalidUid);
         });
+    });
+
+    it('should be rejected given an app which returns null access tokens', () => {
+      return nullAccessTokenAuth.deleteUser(uid)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which returns invalid access tokens', () => {
+      return malformedAccessTokenAuth.deleteUser(uid)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which fails to generate access tokens', () => {
+      return rejectedPromiseAccessTokenAuth.deleteUser(uid)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
     });
 
     it('should resolve with void on success', () => {
@@ -431,6 +513,21 @@ describe('Auth', () => {
           expect(error).to.have.property('code', 'auth/argument-error');
           expect(validator.isNonNullObject).to.have.been.calledOnce.and.calledWith(null);
         });
+    });
+
+    it('should be rejected given an app which returns null access tokens', () => {
+      return nullAccessTokenAuth.createUser(propertiesToCreate)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which returns invalid access tokens', () => {
+      return malformedAccessTokenAuth.createUser(propertiesToCreate)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which fails to generate access tokens', () => {
+      return rejectedPromiseAccessTokenAuth.createUser(propertiesToCreate)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
     });
 
     it('should resolve with a UserRecord on createNewAccount request success', () => {
@@ -568,6 +665,21 @@ describe('Auth', () => {
           expect(error).to.have.property('code', 'auth/argument-error');
           expect(validator.isNonNullObject).to.have.been.calledOnce.and.calledWith(null);
         });
+    });
+
+    it('should be rejected given an app which returns null access tokens', () => {
+      return nullAccessTokenAuth.updateUser(uid, propertiesToEdit)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which returns invalid access tokens', () => {
+      return malformedAccessTokenAuth.updateUser(uid, propertiesToEdit)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which fails to generate access tokens', () => {
+      return rejectedPromiseAccessTokenAuth.updateUser(uid, propertiesToEdit)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
     });
 
     it('should resolve with a UserRecord on updateExistingAccount request success', () => {

@@ -68,69 +68,6 @@ describe('FirebaseApp', () => {
     mockedRequests = [];
   });
 
-  describe('constructor', () => {
-    let consoleErrorSpy: sinon.SinonSpy;
-
-    beforeEach(() => {
-      consoleErrorSpy = sinon.spy(console, 'error');
-    });
-
-    afterEach(() => {
-      consoleErrorSpy.restore();
-    });
-
-    it('logs an error given a custom credential implementation which returns invalid access tokens', () => {
-      const credential = {
-        getAccessToken: () => 5,
-        getCertificate: () => mocks.certificateObject,
-      };
-
-      const app = utils.createAppWithOptions({ credential });
-
-      // The FirebaseApp constructor asynchronously logs by calling getToken(). Since that method
-      // is cached, we can call it again in this test and, once it is rejected, check if the
-      // FirebaseApp constructor logged an error.
-      return app.INTERNAL.getToken().then(() => {
-        throw new Error('Unexpected success');
-      }, (err) => {
-        expect(consoleErrorSpy).to.have.been.calledOnce;
-        expect(consoleErrorSpy.args[0][0] instanceof Error).to.be.true;
-      });
-    });
-
-    it('does not log an error given a custom credential implementation which returns invalid access ' +
-       'tokens and a null certificate', () => {
-      const credential = {
-        getAccessToken: () => 5,
-        getCertificate: () => null,
-      };
-
-      const app = utils.createAppWithOptions({ credential });
-
-      // The FirebaseApp constructor asynchronously logs by calling getToken(). Since that method
-      // is cached, we can call it again in this test and, once it is rejected, check if the
-      // FirebaseApp constructor logged an error.
-      return app.INTERNAL.getToken().then(() => {
-        throw new Error('Unexpected success');
-      }, (err) => {
-        expect(consoleErrorSpy).not.to.have.been.called;
-      });
-    });
-
-    it('does not log an error given a well-formed custom credential implementation', () => {
-      const app = utils.createAppWithOptions({
-        credential: mocks.credential,
-      });
-
-      // The FirebaseApp constructor asynchronously logs by calling getToken(). Since that method
-      // is cached, we can call it again in this test and check if it is fulfilled, ensure the
-      // FirebaseApp constructor did not log an error.
-      return app.INTERNAL.getToken().then((token) => {
-        expect(consoleErrorSpy).not.to.have.been.called;
-      });
-    });
-  });
-
   describe('#name', () => {
     it('should throw if the app has already been deleted', () => {
       return mockApp.delete().then(() => {

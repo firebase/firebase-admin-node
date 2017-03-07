@@ -8,10 +8,10 @@ import stream = require('stream');
 import * as _ from 'lodash';
 import * as jwt from 'jsonwebtoken';
 
-import {CertCredential} from '../../src/auth/credential';
 import {FirebaseNamespace} from '../../src/firebase-namespace';
 import {FirebaseServiceInterface} from '../../src/firebase-service';
 import {FirebaseApp, FirebaseAppOptions} from '../../src/firebase-app';
+import {CertCredential, ApplicationDefaultCredential} from '../../src/auth/credential';
 
 const ALGORITHM = 'RS256';
 const ONE_HOUR_IN_SECONDS = 60 * 60;
@@ -27,15 +27,17 @@ export let appName = 'mock-app-name';
 
 export let serviceName = 'mock-service-name';
 
+export let databaseURL = 'https://databaseName.firebaseio.com';
+
 export let credential = new CertCredential(path.resolve(__dirname, './mock.key.json'));
 
 export let appOptions: FirebaseAppOptions = {
   credential,
-  databaseURL: 'https://databaseName.firebaseio.com',
+  databaseURL,
 };
 
 export let appOptionsNoAuth: FirebaseAppOptions = {
-  databaseURL: 'https://databaseName.firebaseio.com',
+  databaseURL,
 };
 
 export let appOptionsNoDatabaseUrl: FirebaseAppOptions = {
@@ -44,6 +46,43 @@ export let appOptionsNoDatabaseUrl: FirebaseAppOptions = {
 
 export function app(): FirebaseApp {
   return new FirebaseApp(appOptions, appName, new FirebaseNamespace().INTERNAL);
+}
+
+export function applicationDefaultApp(): FirebaseApp {
+  return new FirebaseApp({
+    credential: new ApplicationDefaultCredential(),
+    databaseURL,
+  }, appName, new FirebaseNamespace().INTERNAL);
+}
+
+export function appReturningNullAccessToken(): FirebaseApp {
+  return new FirebaseApp({
+    credential: {
+      getAccessToken: () => null,
+      getCertificate: () => credential.getCertificate(),
+    } as any,
+    databaseURL,
+  }, appName, new FirebaseNamespace().INTERNAL);
+}
+
+export function appReturningMalformedAccessToken(): FirebaseApp {
+  return new FirebaseApp({
+    credential: {
+      getAccessToken: () => 5,
+      getCertificate: () => credential.getCertificate(),
+    } as any,
+    databaseURL,
+  }, appName, new FirebaseNamespace().INTERNAL);
+}
+
+export function appRejectedWhileFetchingAccessToken(): FirebaseApp {
+  return new FirebaseApp({
+    credential: {
+      getAccessToken: () => Promise.reject(new Error('Promise intentionally rejected.')),
+      getCertificate: () => credential.getCertificate(),
+    } as any,
+    databaseURL,
+  }, appName, new FirebaseNamespace().INTERNAL);
 }
 
 export let refreshToken = {
