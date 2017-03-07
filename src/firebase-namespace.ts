@@ -49,7 +49,7 @@ export class FirebaseNamespaceInternals {
     } else if (appName in this.apps_) {
       if (appName === DEFAULT_APP_NAME) {
         throw new FirebaseAppError(
-          AppErrorCodes.DUPLICATE_APP_NAME,
+          AppErrorCodes.DUPLICATE_APP,
           'The default Firebase app already exists. This means you called initializeApp() ' +
           'more than once without providing an app name as the second argument. In most cases ' +
           'you only need to call initializeApp() once. But if you do want to initialize ' +
@@ -58,7 +58,7 @@ export class FirebaseNamespaceInternals {
         );
       } else {
         throw new FirebaseAppError(
-          AppErrorCodes.DUPLICATE_APP_NAME,
+          AppErrorCodes.DUPLICATE_APP,
           `Firebase app named "${appName}" already exists. This means you called initializeApp() ` +
           'more than once with the same app name as the second argument. Make sure you provide a ' +
           'unique name every time you call initializeApp().',
@@ -97,7 +97,7 @@ export class FirebaseNamespaceInternals {
       }
       errorMessage += 'Make sure you call initializeApp() before using any of the Firebase services.';
 
-      throw new FirebaseAppError(AppErrorCodes.APP_NOT_FOUND, errorMessage);
+      throw new FirebaseAppError(AppErrorCodes.NO_APP, errorMessage);
     }
 
     return this.apps_[appName];

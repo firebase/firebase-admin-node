@@ -163,14 +163,14 @@ export class FirebaseMessagingError extends FirebaseError {
  */
 export class AppErrorCodes {
   public static APP_DELETED = 'app-deleted';
-  public static APP_NOT_FOUND = 'app-not-found';
-  public static DUPLICATE_APP_NAME = 'duplicate-app-name';
+  public static DUPLICATE_APP = 'duplicate-app';
   public static INTERNAL_ERROR = 'internal-error';
   public static INVALID_APP_NAME = 'invalid-app-name';
   public static INVALID_APP_OPTIONS = 'invalid-app-options';
   public static INVALID_CREDENTIAL = 'invalid-credential';
   public static NETWORK_ERROR = 'network-error';
   public static NETWORK_TIMEOUT = 'network-timeout';
+  public static NO_APP = 'no-app';
   public static UNABLE_TO_PARSE_RESPONSE = 'unable-to-parse-response';
 };
 
