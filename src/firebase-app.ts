@@ -98,11 +98,13 @@ export class FirebaseAppInternals {
             this.cachedTokenPromise_ = null;
           }
 
-          let errorMessage = 'Credential implementation provided to initializeApp() via the ' +
-            '"credential" property failed to fetch a valid Google OAuth2 access token with the ' +
-            `following error: "${error.message}".`;
+          let errorMessage = (typeof error === 'string') ? error : error.message;
 
-          if (error.message.indexOf('invalid_grant') !== -1) {
+          errorMessage = 'Credential implementation provided to initializeApp() via the ' +
+            '"credential" property failed to fetch a valid Google OAuth2 access token with the ' +
+            `following error: "${errorMessage}".`;
+
+          if (errorMessage.indexOf('invalid_grant') !== -1) {
             errorMessage += ' There are two likely causes: (1) your server time is not properly ' +
             'synced or (2) your certificate key file has been revoked. To solve (1), re-sync the ' +
             'time on your server. To solve (2), make sure the key ID for your key file is still ' +
