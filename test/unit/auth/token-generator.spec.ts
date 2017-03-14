@@ -1,7 +1,6 @@
 'use strict';
 
 // Use untyped import syntax for Node built-ins
-import path = require('path');
 import https = require('https');
 
 import * as _ from 'lodash';
@@ -14,9 +13,9 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import LegacyFirebaseTokenGenerator = require('firebase-token-generator');
 
-import * as mocks from './resources/mocks';
-import {FirebaseTokenGenerator} from '../src/auth/token-generator';
-import {CertCredential, Certificate} from '../src/auth/credential';
+import * as mocks from '../../resources/mocks';
+import {FirebaseTokenGenerator} from '../../../src/auth/token-generator';
+import {Certificate} from '../../../src/auth/credential';
 
 chai.should();
 chai.use(sinonChai);
@@ -185,9 +184,7 @@ describe('FirebaseTokenGenerator', () => {
 
     it('should not throw given a valid certificate', () => {
       expect(() => {
-        const pathToCertificate = path.resolve(__dirname, 'resources/mock.key.json');
-        const certCredential = new CertCredential(Certificate.fromPath(pathToCertificate));
-        return new FirebaseTokenGenerator(certCredential.getCertificate());
+        return new FirebaseTokenGenerator(new Certificate(mocks.certificateObject));
       }).not.to.throw();
     });
 

@@ -10,9 +10,9 @@ import * as nock from 'nock';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import * as utils from './utils';
-import * as mocks from './resources/mocks';
+import * as mocks from '../resources/mocks';
 
-import * as firebaseAdmin from '../src/index';
+import * as firebaseAdmin from '../../src/index';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -146,7 +146,7 @@ describe('Firebase', () => {
       it('should not throw given a valid path to a certificate key file', () => {
         expect(() => {
           firebaseAdmin.initializeApp({
-            serviceAccount: path.resolve(__dirname, 'resources/mock.key.json'),
+            serviceAccount: path.resolve(__dirname, '../resources/mock.key.json'),
           });
         }).not.to.throw();
       });
@@ -207,7 +207,7 @@ describe('Firebase', () => {
 
       it('should initialize SDK given a valid path to a certificate key file', () => {
         firebaseAdmin.initializeApp({
-          serviceAccount: path.resolve(__dirname, 'resources/mock.key.json'),
+          serviceAccount: path.resolve(__dirname, '../resources/mock.key.json'),
         });
 
         return firebaseAdmin.app().INTERNAL.getToken()
@@ -255,7 +255,7 @@ describe('Firebase', () => {
       });
 
       it('should initialize SDK given a cert credential with a valid path to a certificate key file', () => {
-        const keyPath = path.resolve(__dirname, 'resources/mock.key.json');
+        const keyPath = path.resolve(__dirname, '../resources/mock.key.json');
         firebaseAdmin.initializeApp({
           credential: firebaseAdmin.credential.cert(keyPath),
         });

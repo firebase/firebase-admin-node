@@ -7,7 +7,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import {
   FirebaseError, FirebaseAuthError, FirebaseMessagingError, MessagingClientErrorCode,
-} from '../src/utils/error';
+} from '../../../src/utils/error';
 
 chai.should();
 chai.use(sinonChai);

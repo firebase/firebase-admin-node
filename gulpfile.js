@@ -37,8 +37,8 @@ var paths = {
   ],
 
   tests: [
-    'test/utils.ts',
-    'test/*.spec.ts',
+    'test/unit/utils.ts',
+    'test/unit/**/*.spec.ts',
     'test/resources/mocks.ts'
   ],
 
@@ -50,7 +50,7 @@ var paths = {
 
   testBuild: '.tmp/',
 
-  testRunner: ['.tmp/test/index.spec.js']
+  testRunner: ['.tmp/test/unit/index.spec.js']
 };
 
 // Create a separate project for buildProject that overrides the rootDir

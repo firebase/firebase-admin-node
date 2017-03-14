@@ -8,17 +8,17 @@ import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import * as utils from './utils';
-import * as mocks from './resources/mocks';
+import * as utils from '../utils';
+import * as mocks from '../../resources/mocks';
 
-import {Auth} from '../src/auth/auth';
-import {UserRecord} from '../src/auth/user-record';
-import {FirebaseApp} from '../src/firebase-app';
-import {FirebaseTokenGenerator} from '../src/auth/token-generator';
-import {FirebaseAuthRequestHandler} from '../src/auth/auth-api-request';
-import {AuthClientErrorCode, FirebaseAuthError} from '../src/utils/error';
+import {Auth} from '../../../src/auth/auth';
+import {UserRecord} from '../../../src/auth/user-record';
+import {FirebaseApp} from '../../../src/firebase-app';
+import {FirebaseTokenGenerator} from '../../../src/auth/token-generator';
+import {FirebaseAuthRequestHandler} from '../../../src/auth/auth-api-request';
+import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/utils/error';
 
-import * as validator from '../src/utils/validator';
+import * as validator from '../../../src/utils/validator';
 
 chai.should();
 chai.use(sinonChai);

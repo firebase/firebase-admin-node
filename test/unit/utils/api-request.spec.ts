@@ -12,13 +12,13 @@ import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import * as utils from './utils';
-import * as mocks from './resources/mocks';
+import * as utils from '../utils';
+import * as mocks from '../../resources/mocks';
 
-import {FirebaseApp} from '../src/firebase-app';
+import {FirebaseApp} from '../../../src/firebase-app';
 import {
   SignedApiRequestHandler, HttpRequestHandler, ApiSettings,
-} from '../src/utils/api-request';
+} from '../../../src/utils/api-request';
 
 chai.should();
 chai.use(sinonChai);

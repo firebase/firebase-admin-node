@@ -12,14 +12,14 @@ import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import * as utils from './utils';
-import * as mocks from './resources/mocks';
+import * as utils from '../utils';
+import * as mocks from '../../resources/mocks';
 
-import {FirebaseApp} from '../src/firebase-app';
+import {FirebaseApp} from '../../../src/firebase-app';
 import {
   Messaging, MessagingOptions, MessagingPayload, MessagingDevicesResponse,
   BLACKLISTED_OPTIONS_KEYS, BLACKLISTED_DATA_PAYLOAD_KEYS,
-} from '../src/messaging/messaging';
+} from '../../../src/messaging/messaging';
 
 chai.should();
 chai.use(sinonChai);

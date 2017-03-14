@@ -9,9 +9,9 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import * as utils from './utils';
-import * as mocks from './resources/mocks';
+import * as mocks from '../resources/mocks';
 
-import {FirebaseNamespace} from '../src/firebase-namespace';
+import {FirebaseNamespace} from '../../src/firebase-namespace';
 
 chai.should();
 chai.use(sinonChai);

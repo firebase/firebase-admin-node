@@ -6,7 +6,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import {
   isBoolean, isNumber, isString, isNonEmptyString, isNonNullObject, isEmail, isPassword, isURL, isUid,
-} from '../src/utils/validator';
+} from '../../../src/utils/validator';
 
 
 chai.should();

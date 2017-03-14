@@ -14,13 +14,13 @@ import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import * as utils from './utils';
-import * as mocks from './resources/mocks';
+import * as utils from '../utils';
+import * as mocks from '../../resources/mocks';
 
 import {
   ApplicationDefaultCredential, CertCredential, Certificate, GoogleOAuthAccessToken,
   MetadataServiceCredential, RefreshToken, RefreshTokenCredential,
-} from '../src/auth/credential';
+} from '../../../src/auth/credential';
 
 chai.should();
 chai.use(sinonChai);
@@ -82,7 +82,7 @@ describe('Credential', () => {
       });
 
       it('should throw if called with the path to an invalid file', () => {
-        const invalidPath = path.resolve(__dirname, 'resources/unparesable.json');
+        const invalidPath = path.resolve(__dirname, '../../resources/unparesable.json');
         expect(() => Certificate.fromPath(invalidPath))
           .to.throw('Failed to parse certificate key file: Error: ENOENT: no such file or directory');
       });
@@ -93,7 +93,7 @@ describe('Credential', () => {
       });
 
       it('should not throw given a valid path to a key file', () => {
-        const validPath = path.resolve(__dirname, 'resources/mock.key.json');
+        const validPath = path.resolve(__dirname, '../../resources/mock.key.json');
         expect(() => Certificate.fromPath(validPath)).not.to.throw();
       });
     });
@@ -248,7 +248,7 @@ describe('Credential', () => {
     });
 
     it('should return a CertCredential with GOOGLE_APPLICATION_CREDENTIALS set', () => {
-      process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, './resources/mock.key.json');
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../../resources/mock.key.json');
       const c = new ApplicationDefaultCredential();
       expect(c.getCredential()).to.be.an.instanceof(CertCredential);
     });
@@ -281,7 +281,7 @@ describe('Credential', () => {
     });
 
     it('should create access tokens', () => {
-      process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, './resources/mock.key.json');
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../../resources/mock.key.json');
       const c = new ApplicationDefaultCredential();
       return c.getAccessToken().then((token) => {
         expect(token.access_token).to.be.a('string').and.to.not.be.empty;
@@ -290,7 +290,7 @@ describe('Credential', () => {
     });
 
     it('should return a Credential', () => {
-      process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, './resources/mock.key.json');
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../../resources/mock.key.json');
       const c = new ApplicationDefaultCredential();
       expect(c.getCertificate()).to.deep.equal({
         projectId: mockCertificateObject.project_id,

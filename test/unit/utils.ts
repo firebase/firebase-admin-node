@@ -1,10 +1,10 @@
 import * as _ from 'lodash';
 import * as nock from 'nock';
 
-import * as mocks from './resources/mocks';
+import * as mocks from '../resources/mocks';
 
-import {FirebaseNamespace} from '../src/firebase-namespace';
-import {FirebaseApp, FirebaseAppOptions} from '../src/firebase-app';
+import {FirebaseNamespace} from '../../src/firebase-namespace';
+import {FirebaseApp, FirebaseAppOptions} from '../../src/firebase-app';
 
 /**
  * Returns a new FirebaseApp instance with the provided options.
