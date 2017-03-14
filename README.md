@@ -69,4 +69,3 @@ and for their longtime use and support of the Firebase platform.
 
 The Firebase Admin Node.js SDK is covered by the
 [Terms of Service for Firebase Services](https://firebase.google.com/terms/).
-
