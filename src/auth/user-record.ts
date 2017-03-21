@@ -1,3 +1,4 @@
+import * as utils from '../utils';
 import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
 
 /**
@@ -28,26 +29,16 @@ function parseDate(time: any): Date {
  * @constructor
  */
 export class UserMetadata {
-  private lastSignedInAtInternal: Date;
-  private createdAtInternal: Date;
+  public readonly createdAt: Date;
+  public readonly lastSignedInAt: Date;
 
   constructor(response: any) {
     // Creation date should always be available but due to some backend bugs there
     // were cases in the past where users did not have creation date properly set.
     // This included legacy Firebase migrating project users and some anonymous users.
     // These bugs have already been addressed since then.
-    this.createdAtInternal = parseDate(response.createdAt);
-    this.lastSignedInAtInternal = parseDate(response.lastLoginAt);
-  }
-
-  /** @return {Date} The user's last sign-in date. */
-  public get lastSignedInAt(): Date {
-    return this.lastSignedInAtInternal;
-  }
-
-  /** @return {Date} The user's account creation date. */
-  public get createdAt(): Date {
-    return this.createdAtInternal;
+    utils.addReadonlyGetter(this, 'createdAt', parseDate(response.createdAt));
+    utils.addReadonlyGetter(this, 'lastSignedInAt', parseDate(response.lastLoginAt));
   }
 
   /** @return {Object} The plain object representation of the user's metadata. */
@@ -68,11 +59,11 @@ export class UserMetadata {
  * @constructor
  */
 export class UserInfo {
-  private uidInternal: string;
-  private displayNameInternal: string;
-  private emailInternal: string;
-  private photoURLInternal: string;
-  private providerIdInternal: string;
+  public readonly uid: string;
+  public readonly displayName: string;
+  public readonly email: string;
+  public readonly photoURL: string;
+  public readonly providerId: string;
 
   constructor(response: any) {
     // Provider user id and provider id are required.
@@ -81,36 +72,12 @@ export class UserInfo {
         AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Invalid user info response');
     }
-    this.uidInternal = response.rawId;
-    this.displayNameInternal = response.displayName;
-    this.emailInternal = response.email;
-    this.photoURLInternal = response.photoUrl;
-    this.providerIdInternal = response.providerId;
-  }
 
-  /** @return {string} The provider user id. */
-  public get uid(): string {
-    return this.uidInternal;
-  }
-
-  /** @return {string} The provider display name. */
-  public get displayName(): string {
-    return this.displayNameInternal;
-  }
-
-  /** @return {string} The provider email. */
-  public get email(): string {
-    return this.emailInternal;
-  }
-
-  /** @return {string} The provider photo URL. */
-  public get photoURL(): string {
-    return this.photoURLInternal;
-  }
-
-  /** @return {string} The provider Firebase ID. */
-  public get providerId(): string {
-    return this.providerIdInternal;
+    utils.addReadonlyGetter(this, 'uid', response.rawId);
+    utils.addReadonlyGetter(this, 'displayName', response.displayName);
+    utils.addReadonlyGetter(this, 'email', response.email);
+    utils.addReadonlyGetter(this, 'photoURL', response.photoUrl);
+    utils.addReadonlyGetter(this, 'providerId', response.providerId);
   }
 
   /** @return {Object} The plain object representation of the current provider data. */
@@ -134,14 +101,14 @@ export class UserInfo {
  * @constructor
  */
 export class UserRecord {
-  private uidInternal: string;
-  private emailInternal: string;
-  private emailVerifiedInternal: boolean;
-  private displayNameInternal: string;
-  private photoURLInternal: string;
-  private disabledInternal: boolean;
-  private metadataInternal: UserMetadata;
-  private providerDataInternal: UserInfo[];
+  public readonly uid: string;
+  public readonly email: string;
+  public readonly emailVerified: boolean;
+  public readonly displayName: string;
+  public readonly photoURL: string;
+  public readonly disabled: boolean;
+  public readonly metadata: UserMetadata;
+  public readonly providerData: UserInfo[];
 
   constructor(response: any) {
     // The Firebase user id is required.
@@ -150,72 +117,34 @@ export class UserRecord {
         AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Invalid user response');
     }
-    this.uidInternal = response.localId;
-    this.emailInternal = response.email;
-    this.emailVerifiedInternal  = !!response.emailVerified;
-    this.displayNameInternal = response.displayName;
-    this.photoURLInternal = response.photoUrl;
+
+    utils.addReadonlyGetter(this, 'uid', response.localId);
+    utils.addReadonlyGetter(this, 'email', response.email);
+    utils.addReadonlyGetter(this, 'emailVerified', !!response.emailVerified);
+    utils.addReadonlyGetter(this, 'displayName', response.displayName);
+    utils.addReadonlyGetter(this, 'photoURL', response.photoUrl);
     // If disabled is not provided, the account is enabled by default.
-    this.disabledInternal = response.disabled || false;
-    this.metadataInternal = new UserMetadata(response);
-    let providerData: UserInfo[] = response.providerUserInfo || [];
-    this.providerDataInternal = [];
-    for (let entry of providerData) {
-      this.providerData.push(new UserInfo(entry));
+    utils.addReadonlyGetter(this, 'disabled', response.disabled || false);
+    utils.addReadonlyGetter(this, 'metadata', new UserMetadata(response));
+    const providerData: UserInfo[] = [];
+    for (let entry of (response.providerUserInfo || [])) {
+      providerData.push(new UserInfo(entry));
     }
-  }
-
-  /** @return {string} The Firebase user id corresponding to the current user record. */
-  public get uid(): string {
-    return this.uidInternal;
-  }
-
-  /** @return {string} The primary email corresponding to the current user record. */
-  public get email(): string {
-    return this.emailInternal;
-  }
-
-  /** @return {boolean} Whether the primary email is verified. */
-  public get emailVerified(): boolean {
-    return this.emailVerifiedInternal;
-  }
-
-  /** @return {string} The display name corresponding to the current user record. */
-  public get displayName(): string {
-    return this.displayNameInternal;
-  }
-
-  /** @return {string} The photo URL corresponding to the current user record. */
-  public get photoURL(): string {
-    return this.photoURLInternal;
-  }
-
-  /** @return {boolean} Whether the current user is disabled or not. */
-  public get disabled(): boolean {
-    return this.disabledInternal;
-  }
-
-  /** @return {UserMetadata} The user record's metadata. */
-  public get metadata(): UserMetadata {
-    return this.metadataInternal;
-  }
-
-  /** @return {UserInfo[]} The list of providers linked to the current record. */
-  public get providerData(): UserInfo[] {
-    return this.providerDataInternal;
+    utils.addReadonlyGetter(this, 'providerData', providerData);
   }
 
   /** @return {Object} The plain object representation of the user record. */
   public toJSON(): Object {
-    let json: any = {};
-    json.uid = this.uid;
-    json.email = this.email;
-    json.emailVerified = this.emailVerified;
-    json.displayName = this.displayName;
-    json.photoURL = this.photoURL;
-    json.disabled = this.disabled;
-    // Convert metadata to json.
-    json.metadata = this.metadata.toJSON();
+    let json: any = {
+      uid: this.uid,
+      email: this.email,
+      emailVerified: this.emailVerified,
+      displayName: this.displayName,
+      photoURL: this.photoURL,
+      disabled: this.disabled,
+      // Convert metadata to json.
+      metadata: this.metadata.toJSON(),
+    };
     json.providerData = [];
     for (let entry of this.providerData) {
        // Convert each provider data to json.

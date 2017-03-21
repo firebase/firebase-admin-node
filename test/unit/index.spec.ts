@@ -4,6 +4,7 @@ import './firebase-app.spec';
 import './firebase-namespace.spec';
 
 // Utilities
+import './utils/index.spec';
 import './utils/error.spec';
 import './utils/validator.spec';
 import './utils/api-request.spec';
