@@ -18,8 +18,7 @@ export function renameProperties(obj: Object, keyMap: { [key: string]: string })
 }
 
 /**
- * Defines a new property directly on an object, or modifies an existing property on an object, and
- * returns the object.
+ * Defines a new read-only property directly on an object and returns the object.
  *
  * @param {Object} obj The object on which to define the property.
  * @param {string} prop The name of the property to be defined or modified.
@@ -27,7 +26,7 @@ export function renameProperties(obj: Object, keyMap: { [key: string]: string })
  *
  * @return {Object} The object that was passed to the function.
  */
-export function addGetter(obj: Object, prop: string, value: any): void {
+export function addReadonlyGetter(obj: Object, prop: string, value: any): void {
   Object.defineProperty(obj, prop, {
     value,
     // Make this property read-only.

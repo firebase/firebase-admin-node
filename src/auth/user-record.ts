@@ -37,8 +37,8 @@ export class UserMetadata {
     // were cases in the past where users did not have creation date properly set.
     // This included legacy Firebase migrating project users and some anonymous users.
     // These bugs have already been addressed since then.
-    utils.addGetter(this, 'createdAt', parseDate(response.createdAt));
-    utils.addGetter(this, 'lastSignedInAt', parseDate(response.lastLoginAt));
+    utils.addReadonlyGetter(this, 'createdAt', parseDate(response.createdAt));
+    utils.addReadonlyGetter(this, 'lastSignedInAt', parseDate(response.lastLoginAt));
   }
 
   /** @return {Object} The plain object representation of the user's metadata. */
@@ -73,11 +73,11 @@ export class UserInfo {
         'INTERNAL ASSERT FAILED: Invalid user info response');
     }
 
-    utils.addGetter(this, 'uid', response.rawId);
-    utils.addGetter(this, 'displayName', response.displayName);
-    utils.addGetter(this, 'email', response.email);
-    utils.addGetter(this, 'photoURL', response.photoUrl);
-    utils.addGetter(this, 'providerId', response.providerId);
+    utils.addReadonlyGetter(this, 'uid', response.rawId);
+    utils.addReadonlyGetter(this, 'displayName', response.displayName);
+    utils.addReadonlyGetter(this, 'email', response.email);
+    utils.addReadonlyGetter(this, 'photoURL', response.photoUrl);
+    utils.addReadonlyGetter(this, 'providerId', response.providerId);
   }
 
   /** @return {Object} The plain object representation of the current provider data. */
@@ -118,19 +118,19 @@ export class UserRecord {
         'INTERNAL ASSERT FAILED: Invalid user response');
     }
 
-    utils.addGetter(this, 'uid', response.localId);
-    utils.addGetter(this, 'email', response.email);
-    utils.addGetter(this, 'emailVerified', !!response.emailVerified);
-    utils.addGetter(this, 'displayName', response.displayName);
-    utils.addGetter(this, 'photoURL', response.photoUrl);
+    utils.addReadonlyGetter(this, 'uid', response.localId);
+    utils.addReadonlyGetter(this, 'email', response.email);
+    utils.addReadonlyGetter(this, 'emailVerified', !!response.emailVerified);
+    utils.addReadonlyGetter(this, 'displayName', response.displayName);
+    utils.addReadonlyGetter(this, 'photoURL', response.photoUrl);
     // If disabled is not provided, the account is enabled by default.
-    utils.addGetter(this, 'disabled', response.disabled || false);
-    utils.addGetter(this, 'metadata', new UserMetadata(response));
+    utils.addReadonlyGetter(this, 'disabled', response.disabled || false);
+    utils.addReadonlyGetter(this, 'metadata', new UserMetadata(response));
     const providerData: UserInfo[] = [];
     for (let entry of (response.providerUserInfo || [])) {
       providerData.push(new UserInfo(entry));
     }
-    utils.addGetter(this, 'providerData', providerData);
+    utils.addReadonlyGetter(this, 'providerData', providerData);
   }
 
   /** @return {Object} The plain object representation of the user record. */
