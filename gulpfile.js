@@ -60,9 +60,9 @@ var buildProject = ts.createProject('tsconfig.json', {rootDir: 'src'});
 var testProject = ts.createProject('tsconfig.json');
 
 var banner = [
-  `/*! firebase-admin v${pkg.version}`,
-  `    https://firebase.google.com/terms/ */`,
-  ``,
+  '/*! firebase-admin v${pkg.version}',
+  '    https://firebase.google.com/terms/ */',
+  '',
 ].join('\n');
 
 /***********/
