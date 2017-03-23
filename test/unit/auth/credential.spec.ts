@@ -32,8 +32,20 @@ const GCLOUD_CREDENTIAL_PATH = path.resolve(process.env.HOME, '.config', GCLOUD_
 try {
   TEST_GCLOUD_CREDENTIALS = JSON.parse(fs.readFileSync(GCLOUD_CREDENTIAL_PATH).toString());
 } catch (error) {
-  throw new Error('gcloud credentials not found. Have you tried running `gcloud beta auth application-default login`?');
+  // tslint:disable-next-line:no-console
+  console.log(
+    'WARNING: gcloud credentials not found. Run `gcloud beta auth application-default login`. ' +
+    'Relevant tests will be skipped.'
+  );
 }
+
+const logGcloudSkippedTestWarning = () => {
+  // tslint:disable-next-line:no-console
+  console.log(
+    'WARNING: Test being skipped because gcloud credentials not found. Run `gcloud beta auth ' +
+    'application-default login`.'
+  );
+};
 
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 
@@ -189,11 +201,21 @@ describe('Credential', () => {
 
   describe('RefreshTokenCredential', () => {
     it('should not return a certificate', () => {
+      if (!TEST_GCLOUD_CREDENTIALS) {
+        logGcloudSkippedTestWarning();
+        return;
+      }
+
       const c = new RefreshTokenCredential(new RefreshToken(TEST_GCLOUD_CREDENTIALS));
       expect(c.getCertificate()).to.be.null;
     });
 
     it('should create access tokens', () => {
+      if (!TEST_GCLOUD_CREDENTIALS) {
+        logGcloudSkippedTestWarning();
+        return;
+      }
+
       const c = new RefreshTokenCredential(new RefreshToken(TEST_GCLOUD_CREDENTIALS));
       return c.getAccessToken().then((token) => {
         expect(token.access_token).to.be.a('string').and.to.not.be.empty;
