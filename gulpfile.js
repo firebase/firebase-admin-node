@@ -112,7 +112,7 @@ gulp.task('copyTypings', function() {
 
 // Lints the source and test files
 gulp.task('lint', function() {
-  let filesToLint = _.clone(paths.src.concat(paths.tests));
+  var filesToLint = _.clone(paths.src.concat(paths.tests));
 
   // Don't lint the hand-crafted TypeScript typings file
   filesToLint.push('!src/index.d.ts');
