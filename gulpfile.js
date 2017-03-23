@@ -60,9 +60,9 @@ var buildProject = ts.createProject('tsconfig.json', {rootDir: 'src'});
 var testProject = ts.createProject('tsconfig.json');
 
 var banner = [
-  '/*! firebase-admin v${pkg.version}',
-  '    https://firebase.google.com/terms/ */',
-  '',
+  `/*! firebase-admin v${pkg.version}`,
+  `    https://firebase.google.com/terms/ */`,
+  ``,
 ].join('\n');
 
 /***********/
@@ -112,7 +112,7 @@ gulp.task('copyTypings', function() {
 
 // Lints the source and test files
 gulp.task('lint', function() {
-  var filesToLint = _.clone(paths.src.concat(paths.tests));
+  let filesToLint = _.clone(paths.src.concat(paths.tests));
 
   // Don't lint the hand-crafted TypeScript typings file
   filesToLint.push('!src/index.d.ts');
