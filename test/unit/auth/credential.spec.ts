@@ -39,12 +39,27 @@ try {
   );
 }
 
-const logGcloudSkippedTestWarning = () => {
-  // tslint:disable-next-line:no-console
-  console.log(
-    'WARNING: Test being skipped because gcloud credentials not found. Run `gcloud beta auth ' +
-    'application-default login`.'
-  );
+/**
+ * Logs a warning and returns true if no gcloud credentials are found, meaning the test which calls
+ * this will be skipped.
+ *
+ * The only thing that should ever skip these tests is continuous integration. When developing
+ * locally, these tests should be run.
+ *
+ * @return {boolean} Whether or not the caller should skip the current test.
+ */
+const skipAndLogWarningIfNoGcloud = () => {
+  if (typeof TEST_GCLOUD_CREDENTIALS === 'undefined') {
+    // tslint:disable-next-line:no-console
+    console.log(
+      'WARNING: Test being skipped because gcloud credentials not found. Run `gcloud beta auth ' +
+      'application-default login`.'
+    );
+
+    return true;
+  }
+
+  return false;
 };
 
 const ONE_HOUR_IN_SECONDS = 60 * 60;
@@ -201,8 +216,7 @@ describe('Credential', () => {
 
   describe('RefreshTokenCredential', () => {
     it('should not return a certificate', () => {
-      if (!TEST_GCLOUD_CREDENTIALS) {
-        logGcloudSkippedTestWarning();
+      if (skipAndLogWarningIfNoGcloud()) {
         return;
       }
 
@@ -211,8 +225,7 @@ describe('Credential', () => {
     });
 
     it('should create access tokens', () => {
-      if (!TEST_GCLOUD_CREDENTIALS) {
-        logGcloudSkippedTestWarning();
+      if (skipAndLogWarningIfNoGcloud()) {
         return;
       }
 
@@ -286,6 +299,10 @@ describe('Credential', () => {
     });
 
     it('should return a RefreshTokenCredential with gcloud login', () => {
+      if (skipAndLogWarningIfNoGcloud()) {
+        return;
+      }
+
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
       expect((new ApplicationDefaultCredential()).getCredential()).to.be.an.instanceof(RefreshTokenCredential);
     });
