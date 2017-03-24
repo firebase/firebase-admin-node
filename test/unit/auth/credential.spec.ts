@@ -32,8 +32,35 @@ const GCLOUD_CREDENTIAL_PATH = path.resolve(process.env.HOME, '.config', GCLOUD_
 try {
   TEST_GCLOUD_CREDENTIALS = JSON.parse(fs.readFileSync(GCLOUD_CREDENTIAL_PATH).toString());
 } catch (error) {
-  throw new Error('gcloud credentials not found. Have you tried running `gcloud beta auth application-default login`?');
+  // tslint:disable-next-line:no-console
+  console.log(
+    'WARNING: gcloud credentials not found. Run `gcloud beta auth application-default login`. ' +
+    'Relevant tests will be skipped.'
+  );
 }
+
+/**
+ * Logs a warning and returns true if no gcloud credentials are found, meaning the test which calls
+ * this will be skipped.
+ *
+ * The only thing that should ever skip these tests is continuous integration. When developing
+ * locally, these tests should be run.
+ *
+ * @return {boolean} Whether or not the caller should skip the current test.
+ */
+const skipAndLogWarningIfNoGcloud = () => {
+  if (typeof TEST_GCLOUD_CREDENTIALS === 'undefined') {
+    // tslint:disable-next-line:no-console
+    console.log(
+      'WARNING: Test being skipped because gcloud credentials not found. Run `gcloud beta auth ' +
+      'application-default login`.'
+    );
+
+    return true;
+  }
+
+  return false;
+};
 
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 
@@ -189,11 +216,19 @@ describe('Credential', () => {
 
   describe('RefreshTokenCredential', () => {
     it('should not return a certificate', () => {
+      if (skipAndLogWarningIfNoGcloud()) {
+        return;
+      }
+
       const c = new RefreshTokenCredential(new RefreshToken(TEST_GCLOUD_CREDENTIALS));
       expect(c.getCertificate()).to.be.null;
     });
 
     it('should create access tokens', () => {
+      if (skipAndLogWarningIfNoGcloud()) {
+        return;
+      }
+
       const c = new RefreshTokenCredential(new RefreshToken(TEST_GCLOUD_CREDENTIALS));
       return c.getAccessToken().then((token) => {
         expect(token.access_token).to.be.a('string').and.to.not.be.empty;
@@ -264,6 +299,10 @@ describe('Credential', () => {
     });
 
     it('should return a RefreshTokenCredential with gcloud login', () => {
+      if (skipAndLogWarningIfNoGcloud()) {
+        return;
+      }
+
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
       expect((new ApplicationDefaultCredential()).getCredential()).to.be.an.instanceof(RefreshTokenCredential);
     });
