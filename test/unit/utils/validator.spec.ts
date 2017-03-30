@@ -5,7 +5,8 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import {
-  isBoolean, isNumber, isString, isNonEmptyString, isNonNullObject, isEmail, isPassword, isURL, isUid,
+  isArray, isNonEmptyArray, isBoolean, isNumber, isString, isNonEmptyString, isNonNullObject,
+  isEmail, isPassword, isURL, isUid,
 } from '../../../src/utils/validator';
 
 
@@ -28,6 +29,64 @@ function createRandomString(numOfChars: number): string {
   }
   return chars.join('');
 }
+
+describe('isArray()', () => {
+  it('should return false given no argument', () => {
+    expect(isArray(undefined as any)).to.be.false;
+  });
+
+  const nonBooleans = [null, NaN, 0, 1, '', 'a', true, false, {}, { a: 1 }, _.noop];
+  nonBooleans.forEach((nonBoolean) => {
+    it('should return false given a non-array argument: ' + JSON.stringify(nonBoolean), () => {
+      expect(isArray(nonBoolean as any)).to.be.false;
+    });
+  });
+
+  it('should return true given an empty array', () => {
+    expect(isArray([])).to.be.true;
+  });
+
+  it('should return true given a non-empty array', () => {
+    expect(isArray([1, 2, 3])).to.be.true;
+  });
+
+  it('should return true given an empty array created from Array constructor', () => {
+    expect(isArray(new Array())).to.be.true;
+  });
+
+  it('should return true given a non-empty array created from Array constructor', () => {
+    expect(isArray(new Array(1, 2, 3))).to.be.true;
+  });
+});
+
+describe('isNonEmptyArray()', () => {
+  it('should return false given no argument', () => {
+    expect(isNonEmptyArray(undefined as any)).to.be.false;
+  });
+
+  const nonBooleans = [null, NaN, 0, 1, '', 'a', true, false, {}, { a: 1 }, _.noop];
+  nonBooleans.forEach((nonBoolean) => {
+    it('should return false given a non-array argument: ' + JSON.stringify(nonBoolean), () => {
+      expect(isNonEmptyArray(nonBoolean as any)).to.be.false;
+    });
+  });
+
+  it('should return false given an empty array', () => {
+    expect(isNonEmptyArray([])).to.be.false;
+  });
+
+  it('should return true given a non-empty array', () => {
+    expect(isNonEmptyArray([1, 2, 3])).to.be.true;
+  });
+
+  it('should return false given an empty array created from Array constructor', () => {
+    expect(isNonEmptyArray(new Array())).to.be.false;
+  });
+
+  it('should return true given a non-empty array created from Array constructor', () => {
+    expect(isNonEmptyArray(new Array(1, 2, 3))).to.be.true;
+  });
+});
 
 describe('isBoolean()', () => {
   it('should return false given no argument', () => {
