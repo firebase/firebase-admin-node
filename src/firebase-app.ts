@@ -90,9 +90,9 @@ export class FirebaseAppInternals {
           }
 
           // Establish a timeout to proactively refresh the token five minutes before it expires. In
-          // the rare cases the token is very short-lived, refresh it immediately
+          // the rare cases the token is very short-lived, refresh it immediately.
           let refreshTimeInSeconds = (result.expires_in - (5 * 60));
-          if (refreshTimeInSeconds <= 0) {
+          if (refreshTimeInSeconds <= 60) {
             refreshTimeInSeconds = 0;
           }
 
