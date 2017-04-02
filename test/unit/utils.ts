@@ -26,6 +26,7 @@ export function createAppWithOptions(options: Object) {
  *
  * @param {string} [token] The optional access token to return. If not specified, a random one
  *     is created.
+ * @param {number} [expiresIn] The optional expires in value to use for the access token.
  * @return {Object} A nock response object.
  */
 export function mockFetchAccessTokenRequests(
