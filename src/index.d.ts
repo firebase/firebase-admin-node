@@ -7,6 +7,11 @@ declare namespace admin {
     toJSON(): Object;
   }
 
+  type FirebaseArrayIndexError {
+    index: number;
+    error: FirebaseError;
+  }
+
   interface ServiceAccount {
     projectId?: string;
     clientEmail?: string;
@@ -299,9 +304,7 @@ declare namespace admin.messaging {
   type MessagingTopicManagementResponse = {
     failureCount: number;
     successCount: number;
-    results: {
-      error?: admin.FirebaseError;
-    }[];
+    errors: admin.FirebaseArrayIndexError[];
   };
 
   interface Messaging {
