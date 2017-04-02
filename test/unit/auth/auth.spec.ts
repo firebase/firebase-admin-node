@@ -100,6 +100,7 @@ describe('Auth', () => {
 
   afterEach(() => {
     process.env = oldProcessEnv;
+    return mockApp.delete();
   });
 
 

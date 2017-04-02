@@ -42,11 +42,9 @@ describe('FirebaseApp', () => {
   let firebaseNamespace: FirebaseNamespace;
   let firebaseNamespaceInternals: FirebaseNamespaceInternals;
 
-  before(() => utils.mockFetchAccessTokenRequests());
-
-  after(() => nock.cleanAll());
-
   beforeEach(() => {
+    utils.mockFetchAccessTokenRequests();
+
     this.clock = sinon.useFakeTimers(1000);
 
     mockApp = mocks.app();
@@ -66,6 +64,8 @@ describe('FirebaseApp', () => {
 
     _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
     mockedRequests = [];
+
+    nock.cleanAll();
   });
 
   describe('#name', () => {
@@ -270,6 +270,40 @@ describe('FirebaseApp', () => {
       return mockApp.INTERNAL.getToken(true).then((token1) => {
         this.clock.tick(1000);
         return mockApp.INTERNAL.getToken(true).then((token2) => {
+          expect(token1).to.not.deep.equal(token2);
+          expect(https.request).to.have.been.calledTwice;
+        });
+      });
+    });
+
+    it('proactively refreshes the token five minutes before it expires', () => {
+      return mockApp.INTERNAL.getToken(true).then((token1) => {
+        const expiryInMilliseconds = token1.expirationTime - Date.now();
+
+        this.clock.tick(expiryInMilliseconds - (5 * 60 * 1000) - 1000);
+
+        return mockApp.INTERNAL.getToken().then((token2) => {
+          expect(token1).to.deep.equal(token2);
+          expect(https.request).to.have.been.calledOnce;
+
+          this.clock.tick(1000);
+
+          return mockApp.INTERNAL.getToken().then((token3) => {
+            expect(token1).to.not.deep.equal(token3);
+            expect(https.request).to.have.been.calledTwice;
+          });
+        });
+      });
+    });
+
+    it('proactively refreshes the token immediately if it expires in five minutes or less', () => {
+      nock.cleanAll();
+      utils.mockFetchAccessTokenRequests(/* token */ undefined, /* expiresIn */ 5 * 60);
+
+      return mockApp.INTERNAL.getToken(true).then((token1) => {
+        this.clock.tick(1);
+
+        return mockApp.INTERNAL.getToken().then((token2) => {
           expect(token1).to.not.deep.equal(token2);
           expect(https.request).to.have.been.calledTwice;
         });

@@ -386,6 +386,7 @@ describe('FirebaseAuthRequestHandler', () => {
   afterEach(() => {
     _.forEach(stubs, (stub) => stub.restore());
     _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
+    return mockApp.delete();
   });
 
   describe('Constructor', () => {

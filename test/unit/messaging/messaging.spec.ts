@@ -180,6 +180,8 @@ describe('Messaging', () => {
     if (httpsRequestStub && httpsRequestStub.restore) {
       httpsRequestStub.restore();
     }
+
+    return mockApp.delete();
   });
 
 

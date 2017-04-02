@@ -37,9 +37,11 @@ export type FirebaseAccessToken = {
  * Internals of a FirebaseApp instance.
  */
 export class FirebaseAppInternals {
+  private isDeleted_ = false;
   private cachedToken_: FirebaseAccessToken;
   private cachedTokenPromise_: Promise<FirebaseAccessToken>;
   private tokenListeners_: Array<(token: string) => void>;
+  private tokenRefreshTimeout_: NodeJS.Timer;
 
   constructor(private credential_: Credential) {
     this.tokenListeners_ = [];
@@ -85,6 +87,22 @@ export class FirebaseAppInternals {
             this.tokenListeners_.forEach((listener) => {
               listener(token.accessToken);
             });
+          }
+
+          // Establish a timeout to proactively refresh the token five minutes before it expires. In
+          // the rare cases the token is very short-lived, refresh it immediately
+          let refreshTimeInSeconds = (result.expires_in - (5 * 60));
+          if (refreshTimeInSeconds <= 0) {
+            refreshTimeInSeconds = 0;
+          }
+
+          // The token refresh timeout keeps the Node.js process alive, so only create it if this
+          // instance has not already been deleted.
+          if (!this.isDeleted_) {
+            this.tokenRefreshTimeout_ = setTimeout(() => {
+              this.getToken(/* forceRefresh */ true);
+              clearTimeout(this.tokenRefreshTimeout_);
+            }, refreshTimeInSeconds * 1000);
           }
 
           return token;
@@ -139,6 +157,16 @@ export class FirebaseAppInternals {
    */
   public removeAuthTokenListener(listener: (token: string) => void) {
     this.tokenListeners_ = this.tokenListeners_.filter((other) => other !== listener);
+  }
+
+  /**
+   * Deletes the FirebaseAppInternals instance.
+   */
+  public delete(): void {
+    this.isDeleted_ = true;
+
+    // Clear the token refresh timeout so it doesn't keep the Node.js process alive.
+    clearTimeout(this.tokenRefreshTimeout_);
   }
 }
 
@@ -277,6 +305,8 @@ export class FirebaseApp {
   public delete(): Promise<void> {
     this.checkDestroyed_();
     this.firebaseInternals_.removeApp(this.name_);
+
+    this.INTERNAL.delete();
 
     return Promise.all(Object.keys(this.services_).map((serviceName) => {
       return this.services_[serviceName].INTERNAL.delete();
