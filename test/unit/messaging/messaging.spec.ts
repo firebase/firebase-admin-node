@@ -2134,11 +2134,11 @@ describe('Messaging', () => {
     });
   }
 
-  describe.only('subscribeToTopic()', () => {
+  describe('subscribeToTopic()', () => {
     tokenSubscriptionTests('subscribeToTopic');
   });
 
-  describe.only('unsubscribeFromTopic()', () => {
+  describe('unsubscribeFromTopic()', () => {
     tokenSubscriptionTests('unsubscribeFromTopic');
   });
 
