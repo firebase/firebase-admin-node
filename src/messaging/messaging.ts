@@ -2,7 +2,9 @@ import {FirebaseApp} from '../firebase-app';
 import {deepCopy, deepExtend} from '../utils/deep-copy';
 import {FirebaseMessagingRequestHandler} from './messaging-api-request';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {FirebaseError, MessagingClientErrorCode, FirebaseMessagingError} from '../utils/error';
+import {
+  ErrorInfo, FirebaseError, FirebaseArrayIndexError, MessagingClientErrorCode, FirebaseMessagingError,
+} from '../utils/error';
 
 import * as utils from '../utils';
 import * as validator from '../utils/validator';
@@ -152,9 +154,7 @@ export type MessagingConditionResponse = {
 export type MessagingTopicManagementResponse = {
   failureCount: number;
   successCount: number;
-  results: {
-    error?: FirebaseError;
-  }[];
+  errors: FirebaseArrayIndexError[];
 };
 
 
@@ -215,8 +215,9 @@ function mapRawResponseToTopicManagementResponse(response): MessagingTopicManage
   response.successCount = 0;
   response.failureCount = 0;
 
+  const errors: FirebaseArrayIndexError[] = [];
   if ('results' in response) {
-    response.results.forEach((tokenManagementResult) => {
+    response.results.forEach((tokenManagementResult, index) => {
       // Map the FCM server's error strings to actual error objects.
       if ('error' in tokenManagementResult) {
         response.failureCount += 1;
@@ -224,12 +225,19 @@ function mapRawResponseToTopicManagementResponse(response): MessagingTopicManage
         const newError = FirebaseMessagingError.fromServerError(
           tokenManagementResult.error, /* message */ undefined, tokenManagementResult.error
         );
-        tokenManagementResult.error = newError;
+
+        errors.push({
+          index,
+          error: newError,
+        });
       } else {
         response.successCount += 1;
       }
     });
   }
+
+  delete response.results;
+  response.errors = errors;
 
   return response;
 }
@@ -305,14 +313,18 @@ class Messaging implements FirebaseServiceInterface {
   ): Promise<MessagingDevicesResponse|MessagingDeviceGroupResponse> {
     // Validate the input argument types. Since these are common developer errors when getting
     // started, throw an error instead of returning a rejected promise.
-    this.validateRegistrationTokensType(registrationTokenOrTokens, 'sendToDevice', 'INVALID_RECIPIENT');
+    this.validateRegistrationTokensType(
+      registrationTokenOrTokens, 'sendToDevice', MessagingClientErrorCode.INVALID_RECIPIENT
+    );
     this.validateMessagingPayloadAndOptionsTypes(payload, options);
 
     return Promise.resolve()
       .then(() => {
         // Validate the contents of the input arguments. Because we are now in a promise, any thrown
         // error will cause this method to return a rejected promise.
-        this.validateRegistrationTokens(registrationTokenOrTokens, 'sendToDevice', 'INVALID_RECIPIENT');
+        this.validateRegistrationTokens(
+          registrationTokenOrTokens, 'sendToDevice', MessagingClientErrorCode.INVALID_RECIPIENT
+        );
         const payloadCopy = this.validateMessagingPayload(payload);
         const optionsCopy = this.validateMessagingOptions(options);
 
@@ -433,10 +445,10 @@ class Messaging implements FirebaseServiceInterface {
   ): Promise<MessagingTopicResponse> {
     // Validate the input argument types. Since these are common developer errors when getting
     // started, throw an error instead of returning a rejected promise.
-    this.validateTopicType(topic, 'sendToTopic', 'INVALID_RECIPIENT');
+    this.validateTopicType(topic, 'sendToTopic', MessagingClientErrorCode.INVALID_RECIPIENT);
     this.validateMessagingPayloadAndOptionsTypes(payload, options);
 
-    // Prepend the topic with /topics/ if necessary
+    // Prepend the topic with /topics/ if necessary.
     topic = this.normalizeTopic(topic);
 
     return Promise.resolve()
@@ -445,7 +457,7 @@ class Messaging implements FirebaseServiceInterface {
         // promise, any thrown error will cause this method to return a rejected promise.
         const payloadCopy = this.validateMessagingPayload(payload);
         const optionsCopy = this.validateMessagingOptions(options);
-        this.validateTopic(topic, 'sendToTopic', 'INVALID_RECIPIENT');
+        this.validateTopic(topic, 'sendToTopic', MessagingClientErrorCode.INVALID_RECIPIENT);
 
         const request: any = deepCopy(payloadCopy);
         deepExtend(request, optionsCopy);
@@ -578,7 +590,7 @@ class Messaging implements FirebaseServiceInterface {
     this.validateRegistrationTokensType(registrationTokenOrTokens, methodName);
     this.validateTopicType(topic, methodName);
 
-    // Prepend the topic with /topics/ if necessary
+    // Prepend the topic with /topics/ if necessary.
     topic = this.normalizeTopic(topic);
 
     return Promise.resolve()
@@ -805,17 +817,17 @@ class Messaging implements FirebaseServiceInterface {
    *
    * @param {string|string[]} registrationTokenOrTokens The registration token(s) to validate.
    * @param {string} method The method name to use in error messages.
-   * @param {string?} [errorCode] The error code to use if the registration tokens are invalid.
+   * @param {ErrorInfo?} [errorInfo] The error info to use if the registration tokens are invalid.
    */
   private validateRegistrationTokensType(
     registrationTokenOrTokens: string|string[],
     methodName: string,
-    errorCode = 'INVALID_ARGUMENT',
+    errorInfo: ErrorInfo = MessagingClientErrorCode.INVALID_ARGUMENT,
   ) {
     if (!validator.isNonEmptyArray(registrationTokenOrTokens) &&
         !validator.isNonEmptyString(registrationTokenOrTokens)) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode[errorCode],
+        errorInfo,
         `Registration token(s) provided to ${methodName}() must be a non-empty string or a ` +
         'non-empty array.',
       );
@@ -828,18 +840,18 @@ class Messaging implements FirebaseServiceInterface {
    * @param {string|string[]} registrationTokenOrTokens The registration token or an array of
    *     registration tokens to validate.
    * @param {string} method The method name to use in error messages.
-   * @param {string?} [errorCode] The error code to use if the registration tokens are invalid.
+   * @param {errorInfo?} [ErrorInfo] The error info to use if the registration tokens are invalid.
    */
   private validateRegistrationTokens(
     registrationTokenOrTokens: string|string[],
     methodName: string,
-    errorCode = 'INVALID_ARGUMENT',
+    errorInfo: ErrorInfo = MessagingClientErrorCode.INVALID_ARGUMENT,
   ) {
     if (validator.isArray(registrationTokenOrTokens)) {
       // Validate the array contains no more than 1,000 registration tokens.
       if (registrationTokenOrTokens.length > 1000) {
         throw new FirebaseMessagingError(
-          MessagingClientErrorCode[errorCode],
+          errorInfo,
           `Too many registration tokens provided in a single request to ${methodName}(). Batch ` +
           'your requests to contain no more than 1,000 registration tokens per request.',
         );
@@ -849,7 +861,7 @@ class Messaging implements FirebaseServiceInterface {
       (registrationTokenOrTokens as string[]).forEach((registrationToken, index) => {
         if (!validator.isNonEmptyString(registrationToken)) {
           throw new FirebaseMessagingError(
-            MessagingClientErrorCode[errorCode],
+            errorInfo,
             `Registration token provided to ${methodName}() at index ${index} must be a ` +
             'non-empty string.',
           );
@@ -863,16 +875,16 @@ class Messaging implements FirebaseServiceInterface {
    *
    * @param {string} topic The topic to validate.
    * @param {string} method The method name to use in error messages.
-   * @param {string?} [errorCode] The error code to use if the topic is invalid.
+   * @param {ErrorInfo?} [errorInfo] The error info to use if the topic is invalid.
    */
   private validateTopicType(
     topic: string|string[],
     methodName: string,
-    errorCode = 'INVALID_ARGUMENT',
+    errorInfo: ErrorInfo = MessagingClientErrorCode.INVALID_ARGUMENT,
   ) {
     if (!validator.isNonEmptyString(topic)) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode[errorCode],
+        errorInfo,
         `Topic provided to ${methodName}() must be a string which matches the format ` +
         '"/topics/[a-zA-Z0-9-_.~%]+".',
       );
@@ -884,16 +896,16 @@ class Messaging implements FirebaseServiceInterface {
    *
    * @param {string} topic The topic to validate.
    * @param {string} method The method name to use in error messages.
-   * @param {string?} [errorCode] The error code to use if the topic is invalid.
+   * @param {ErrorInfo?} [errorInfo] The error info to use if the topic is invalid.
    */
   private validateTopic(
     topic: string,
     methodName: string,
-    errorCode = 'INVALID_ARGUMENT',
+    errorInfo: ErrorInfo = MessagingClientErrorCode.INVALID_ARGUMENT,
   ) {
     if (!validator.isTopic(topic)) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode[errorCode],
+        errorInfo,
         `Topic provided to ${methodName}() must be a string which matches the format ` +
         '"/topics/[a-zA-Z0-9-_.~%]+".',
       );

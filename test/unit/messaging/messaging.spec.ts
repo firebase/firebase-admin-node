@@ -17,7 +17,7 @@ import * as mocks from '../../resources/mocks';
 
 import {FirebaseApp} from '../../../src/firebase-app';
 import {
-  Messaging, MessagingOptions, MessagingPayload, MessagingDevicesResponse,
+  Messaging, MessagingOptions, MessagingPayload, MessagingDevicesResponse, MessagingTopicManagementResponse,
   BLACKLISTED_OPTIONS_KEYS, BLACKLISTED_DATA_PAYLOAD_KEYS,
 } from '../../../src/messaging/messaging';
 
@@ -138,7 +138,7 @@ function mockTopicSubscriptionRequest(
   }
 
   for (let i = 0; i < failureCount; i++) {
-    mockedResults.push({ error: 'NOT_FOUND' });
+    mockedResults.push({ error: 'TOO_MANY_TOPICS' });
   }
 
   const path = (methodName === 'subscribeToTopic') ? FCM_TOPIC_MANAGEMENT_ADD_PATH : FCM_TOPIC_MANAGEMENT_REMOVE_PATH;
@@ -1961,9 +1961,7 @@ describe('Messaging', () => {
       ).should.eventually.deep.equal({
         failureCount: 0,
         successCount: 1,
-        results: [
-          {},
-        ],
+        errors: [],
       });
     });
 
@@ -1977,13 +1975,11 @@ describe('Messaging', () => {
       ).should.eventually.deep.equal({
         failureCount: 0,
         successCount: 1,
-        results: [
-          {},
-        ],
+        errors: [],
       });
     });
 
-    xit('should be fulfilled with the server response given an array of registration tokens ' +
+    it('should be fulfilled with the server response given an array of registration tokens ' +
        'and topic (topic name not prefixed with "/topics/")', () => {
       mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1, /* failureCount */ 2));
 
@@ -1994,20 +1990,21 @@ describe('Messaging', () => {
           mocks.messaging.registrationToken + '2',
         ],
         mocks.messaging.topic,
-      ).then((response: MessagingDevicesResponse) => {
-        expect(response).to.have.keys(['failureCount', 'successCount', 'results']);
+      ).then((response: MessagingTopicManagementResponse) => {
+        expect(response).to.have.keys(['failureCount', 'successCount', 'errors']);
         expect(response.failureCount).to.equal(2);
         expect(response.successCount).to.equal(1);
-        expect(response.results).to.have.length(3);
-        expect(response.results[0]).to.deep.equal({});
-        expect(response.results[1]).to.have.keys(['error']);
-        expect(response.results[1].error).to.have.property('code', 'TODO');
-        expect(response.results[2]).to.have.keys(['error']);
-        expect(response.results[2].error).to.have.property('code', 'TODO');
+        expect(response.errors).to.have.length(2);
+        expect(response.errors[0]).to.have.keys(['index', 'error']);
+        expect(response.errors[0].index).to.equal(1);
+        expect(response.errors[0].error).to.have.property('code', 'messaging/too-many-topics');
+        expect(response.errors[1]).to.have.keys(['index', 'error']);
+        expect(response.errors[1].index).to.equal(2);
+        expect(response.errors[1].error).to.have.property('code', 'messaging/too-many-topics');
       });
     });
 
-    xit('should be fulfilled with the server response given an array of registration tokens ' +
+    it('should be fulfilled with the server response given an array of registration tokens ' +
        'and topic (topic name prefixed with "/topics/")', () => {
       mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1, /* failureCount */ 2));
 
@@ -2018,16 +2015,17 @@ describe('Messaging', () => {
           mocks.messaging.registrationToken + '2',
         ],
         mocks.messaging.topicWithPrefix,
-      ).then((response: MessagingDevicesResponse) => {
-        expect(response).to.have.keys(['failureCount', 'successCount', 'results']);
+      ).then((response: MessagingTopicManagementResponse) => {
+        expect(response).to.have.keys(['failureCount', 'successCount', 'errors']);
         expect(response.failureCount).to.equal(2);
         expect(response.successCount).to.equal(1);
-        expect(response.results).to.have.length(3);
-        expect(response.results[0]).to.deep.equal({});
-        expect(response.results[1]).to.have.keys(['error']);
-        expect(response.results[1].error).to.have.property('code', 'TODO');
-        expect(response.results[2]).to.have.keys(['error']);
-        expect(response.results[2].error).to.have.property('code', 'TODO');
+        expect(response.errors).to.have.length(2);
+        expect(response.errors[0]).to.have.keys(['index', 'error']);
+        expect(response.errors[0].index).to.equal(1);
+        expect(response.errors[0].error).to.have.property('code', 'messaging/too-many-topics');
+        expect(response.errors[1]).to.have.keys(['index', 'error']);
+        expect(response.errors[1].index).to.equal(2);
+        expect(response.errors[1].error).to.have.property('code', 'messaging/too-many-topics');
       });
     });
 
@@ -2136,11 +2134,11 @@ describe('Messaging', () => {
     });
   }
 
-  describe('subscribeToTopic()', () => {
+  describe.only('subscribeToTopic()', () => {
     tokenSubscriptionTests('subscribeToTopic');
   });
 
-  describe('unsubscribeFromTopic()', () => {
+  describe.only('unsubscribeFromTopic()', () => {
     tokenSubscriptionTests('unsubscribeFromTopic');
   });
 
