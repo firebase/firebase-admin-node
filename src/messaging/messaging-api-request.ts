@@ -54,7 +54,7 @@ export class FirebaseMessagingRequestHandler {
    * @param {Object} requestData The request data.
    * @return {Promise<Object>} A promise that resolves with the response.
    */
-  public invokeRequestHandler(host, path, requestData: Object): Promise<Object> {
+  public invokeRequestHandler(host: string, path: string, requestData: Object): Promise<Object> {
     return this.signedApiRequestHandler.sendRequest(
       host,
       FIREBASE_MESSAGING_PORT,
