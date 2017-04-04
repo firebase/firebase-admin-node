@@ -1,6 +1,6 @@
 {
   "name": "firebase-admin",
-  "version": "4.1.4",
+  "version": "4.2.0",
   "dependencies": {
     "@types/jsonwebtoken": {
       "version": "7.2.0",
