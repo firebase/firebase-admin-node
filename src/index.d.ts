@@ -7,7 +7,7 @@ declare namespace admin {
     toJSON(): Object;
   }
 
-  type FirebaseArrayIndexError {
+  type FirebaseArrayIndexError = {
     index: number;
     error: FirebaseError;
   }
