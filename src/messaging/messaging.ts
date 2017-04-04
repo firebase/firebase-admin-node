@@ -2,10 +2,19 @@ import {FirebaseApp} from '../firebase-app';
 import {deepCopy, deepExtend} from '../utils/deep-copy';
 import {FirebaseMessagingRequestHandler} from './messaging-api-request';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {MessagingClientErrorCode, FirebaseMessagingError} from '../utils/error';
+import {
+  ErrorInfo, FirebaseError, FirebaseArrayIndexError, MessagingClientErrorCode, FirebaseMessagingError,
+} from '../utils/error';
 
 import * as utils from '../utils';
 import * as validator from '../utils/validator';
+
+// FCM endpoints
+const FCM_SEND_HOST = 'fcm.googleapis.com';
+const FCM_SEND_PATH = '/fcm/send';
+const FCM_TOPIC_MANAGEMENT_HOST = 'iid.googleapis.com';
+const FCM_TOPIC_MANAGEMENT_ADD_PATH = '/iid/v1:batchAdd';
+const FCM_TOPIC_MANAGEMENT_REMOVE_PATH = '/iid/v1:batchRemove';
 
 
 // Key renames for the messaging notification payload object.
@@ -109,7 +118,7 @@ export type MessagingOptions = {
 
 /* Individual status response payload from single devices */
 export type MessagingDeviceResult = {
-  error?: string;
+  error?: FirebaseError;
   messageId?: string;
   canonicalRegistrationToken?: string;
 };
@@ -138,6 +147,14 @@ export type MessagingTopicResponse = {
 /* Response payload from sending to a condition */
 export type MessagingConditionResponse = {
   messageId: number;
+};
+
+
+/* Response payload from sending to a single registration token or array of registration tokens */
+export type MessagingTopicManagementResponse = {
+  failureCount: number;
+  successCount: number;
+  errors: FirebaseArrayIndexError[];
 };
 
 
@@ -182,6 +199,45 @@ function mapRawResponseToDeviceGroupResponse(response): MessagingDeviceGroupResp
   // Add the 'failedRegistrationTokens' property if it does not exist on the response, which
   // it won't when the 'failureCount' property has a value of 0)
   (response as any).failedRegistrationTokens = (response as any).failedRegistrationTokens || [];
+
+  return response;
+}
+
+/**
+ * Maps a raw FCM server response to a MessagingTopicManagementResponse object.
+ *
+ * @param {Object} response The raw FCM server response to map.
+ *
+ * @return {MessagingTopicManagementResponse} The mapped MessagingTopicManagementResponse object.
+ */
+function mapRawResponseToTopicManagementResponse(response): MessagingTopicManagementResponse {
+  // Add the success and failure counts.
+  response.successCount = 0;
+  response.failureCount = 0;
+
+  const errors: FirebaseArrayIndexError[] = [];
+  if ('results' in response) {
+    response.results.forEach((tokenManagementResult, index) => {
+      // Map the FCM server's error strings to actual error objects.
+      if ('error' in tokenManagementResult) {
+        response.failureCount += 1;
+
+        const newError = FirebaseMessagingError.fromServerError(
+          tokenManagementResult.error, /* message */ undefined, tokenManagementResult.error
+        );
+
+        errors.push({
+          index,
+          error: newError,
+        });
+      } else {
+        response.successCount += 1;
+      }
+    });
+  }
+
+  delete response.results;
+  response.errors = errors;
 
   return response;
 }
@@ -255,44 +311,20 @@ class Messaging implements FirebaseServiceInterface {
     payload: MessagingPayload,
     options: MessagingOptions = {},
   ): Promise<MessagingDevicesResponse|MessagingDeviceGroupResponse> {
-    if (registrationTokenOrTokens instanceof Array && registrationTokenOrTokens.length !== 0) {
-      // Validate the array contains no more than 1,000 registration tokens.
-      if (registrationTokenOrTokens.length > 1000) {
-        return Promise.reject(new FirebaseMessagingError(
-          MessagingClientErrorCode.INVALID_RECIPIENT,
-          'Too many registration tokens provided in a single request. Batch your requests to ' +
-          'contain no more than 1,000 registration tokens per request.'
-        ));
-      }
-
-      // Validate the array contains registration tokens which are non-empty strings.
-      try {
-        registrationTokenOrTokens.forEach((registrationToken, index) => {
-          if (!validator.isNonEmptyString(registrationToken)) {
-            throw new FirebaseMessagingError(
-              MessagingClientErrorCode.INVALID_RECIPIENT,
-              `Registration token provided to sendToDevice() at index ${index} must be a non-empty string.`
-            );
-          }
-        });
-      } catch (error) {
-        return Promise.reject(error);
-      }
-    } else if (!validator.isNonEmptyString(registrationTokenOrTokens)) {
-      throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_RECIPIENT,
-        'Registration token provided to sendToDevice() must be a non-empty string or a non-empty array.'
-      );
-    }
-
-    // Validate the types of the payload and options arguments. Since these are common developer
-    // errors, throw an error instead of returning a rejected promise.
+    // Validate the input argument types. Since these are common developer errors when getting
+    // started, throw an error instead of returning a rejected promise.
+    this.validateRegistrationTokensType(
+      registrationTokenOrTokens, 'sendToDevice', MessagingClientErrorCode.INVALID_RECIPIENT
+    );
     this.validateMessagingPayloadAndOptionsTypes(payload, options);
 
     return Promise.resolve()
       .then(() => {
-        // Validate the contents of the payload and options objects. Because we are now in a
-        // promise, any thrown error will cause this method to return a rejected promise.
+        // Validate the contents of the input arguments. Because we are now in a promise, any thrown
+        // error will cause this method to return a rejected promise.
+        this.validateRegistrationTokens(
+          registrationTokenOrTokens, 'sendToDevice', MessagingClientErrorCode.INVALID_RECIPIENT
+        );
         const payloadCopy = this.validateMessagingPayload(payload);
         const optionsCopy = this.validateMessagingOptions(options);
 
@@ -305,7 +337,7 @@ class Messaging implements FirebaseServiceInterface {
           request.registration_ids = registrationTokenOrTokens;
         }
 
-        return this.messagingRequestHandler.invokeRequestHandler(request);
+        return this.messagingRequestHandler.invokeRequestHandler(FCM_SEND_HOST, FCM_SEND_PATH, request);
       })
       .then((response) => {
         // The sendToDevice() and sendToDeviceGroup() methods both set the `to` query parameter in
@@ -370,7 +402,7 @@ class Messaging implements FirebaseServiceInterface {
         deepExtend(request, optionsCopy);
         request.to = notificationKey;
 
-        return this.messagingRequestHandler.invokeRequestHandler(request);
+        return this.messagingRequestHandler.invokeRequestHandler(FCM_SEND_HOST, FCM_SEND_PATH, request);
       })
       .then((response) => {
         // The sendToDevice() and sendToDeviceGroup() methods both set the `to` query parameter in
@@ -411,26 +443,13 @@ class Messaging implements FirebaseServiceInterface {
     payload: MessagingPayload,
     options: MessagingOptions = {},
   ): Promise<MessagingTopicResponse> {
-    if (!validator.isNonEmptyString(topic)) {
-      throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_RECIPIENT,
-        'Topic provided to sendToTopic() must be a string which matches the format "/topics/[a-zA-Z0-9-_.~%]+".'
-      );
-    } else if (!validator.isTopic(topic)) {
-      return Promise.reject(new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_RECIPIENT,
-        'Topic provided to sendToTopic() must be a string which matches the format "/topics/[a-zA-Z0-9-_.~%]+".'
-      ));
-    }
-
-    // Prepend the topic with /topics/ if necessary
-    if (!/^\/topics\//.test(topic)) {
-      topic = `/topics/${ topic }`;
-    }
-
-    // Validate the types of the payload and options arguments. Since these are common developer
-    // errors, throw an error instead of returning a rejected promise.
+    // Validate the input argument types. Since these are common developer errors when getting
+    // started, throw an error instead of returning a rejected promise.
+    this.validateTopicType(topic, 'sendToTopic', MessagingClientErrorCode.INVALID_RECIPIENT);
     this.validateMessagingPayloadAndOptionsTypes(payload, options);
+
+    // Prepend the topic with /topics/ if necessary.
+    topic = this.normalizeTopic(topic);
 
     return Promise.resolve()
       .then(() => {
@@ -438,12 +457,13 @@ class Messaging implements FirebaseServiceInterface {
         // promise, any thrown error will cause this method to return a rejected promise.
         const payloadCopy = this.validateMessagingPayload(payload);
         const optionsCopy = this.validateMessagingOptions(options);
+        this.validateTopic(topic, 'sendToTopic', MessagingClientErrorCode.INVALID_RECIPIENT);
 
         const request: any = deepCopy(payloadCopy);
         deepExtend(request, optionsCopy);
         request.to = topic;
 
-        return this.messagingRequestHandler.invokeRequestHandler(request);
+        return this.messagingRequestHandler.invokeRequestHandler(FCM_SEND_HOST, FCM_SEND_PATH, request);
       })
       .then((response) => {
         // Rename properties on the server response
@@ -474,7 +494,6 @@ class Messaging implements FirebaseServiceInterface {
         'Condition provided to sendToCondition() must be a non-empty string.'
       );
     }
-
     // Validate the types of the payload and options arguments. Since these are common developer
     // errors, throw an error instead of returning a rejected promise.
     this.validateMessagingPayloadAndOptionsTypes(payload, options);
@@ -496,13 +515,108 @@ class Messaging implements FirebaseServiceInterface {
         deepExtend(request, optionsCopy);
         request.condition = condition;
 
-        return this.messagingRequestHandler.invokeRequestHandler(request);
+        return this.messagingRequestHandler.invokeRequestHandler(FCM_SEND_HOST, FCM_SEND_PATH, request);
       })
       .then((response) => {
         // Rename properties on the server response
         utils.renameProperties(response, MESSAGING_CONDITION_RESPONSE_KEYS_MAP);
 
         return response;
+      });
+  }
+
+  /**
+   * Subscribes a single device or an array of devices to a topic.
+   *
+   * @param {string|string[]} registrationTokenOrTokens The registration token or an array of
+   *     registration tokens to subscribe to the topic.
+   * @param {string} topic The topic to which to subscribe.
+   *
+   * @return {Promise<MessagingTopicManagementResponse>} A Promise fulfilled with the parsed FCM
+   *   server response.
+   */
+  public subscribeToTopic(
+    registrationTokenOrTokens: string|string[],
+    topic: string,
+  ): Promise<MessagingTopicManagementResponse> {
+    return this.sendTopicManagementRequest(
+      registrationTokenOrTokens,
+      topic,
+      'subscribeToTopic',
+      FCM_TOPIC_MANAGEMENT_ADD_PATH,
+    );
+  }
+
+  /**
+   * Unsubscribes a single device or an array of devices from a topic.
+   *
+   * @param {string|string[]} registrationTokenOrTokens The registration token or an array of
+   *     registration tokens to unsubscribe from the topic.
+   * @param {string} topic The topic to which to subscribe.
+   *
+   * @return {Promise<MessagingTopicManagementResponse>} A Promise fulfilled with the parsed FCM
+   *   server response.
+   */
+  public unsubscribeFromTopic(
+    registrationTokenOrTokens: string|string[],
+    topic: string,
+  ): Promise<MessagingTopicManagementResponse> {
+    return this.sendTopicManagementRequest(
+      registrationTokenOrTokens,
+      topic,
+      'unsubscribeFromTopic',
+      FCM_TOPIC_MANAGEMENT_REMOVE_PATH,
+    );
+  }
+
+  /**
+   * Helper method which sends and handles topic subscription management requests.
+   *
+   * @param {string|string[]} registrationTokenOrTokens The registration token or an array of
+   *     registration tokens to unsubscribe from the topic.
+   * @param {string} topic The topic to which to subscribe.
+   * @param {string} methodName The name of the original method called.
+   * @param {string} path The endpoint path to use for the request.
+   *
+   * @return {Promise<MessagingTopicManagementResponse>} A Promise fulfilled with the parsed server
+   *   response.
+   */
+  private sendTopicManagementRequest(
+    registrationTokenOrTokens: string|string[],
+    topic: string,
+    methodName: string,
+    path: string,
+  ): Promise<MessagingTopicManagementResponse> {
+    this.validateRegistrationTokensType(registrationTokenOrTokens, methodName);
+    this.validateTopicType(topic, methodName);
+
+    // Prepend the topic with /topics/ if necessary.
+    topic = this.normalizeTopic(topic);
+
+    return Promise.resolve()
+      .then(() => {
+        // Validate the contents of the input arguments. Because we are now in a promise, any thrown
+        // error will cause this method to return a rejected promise.
+        this.validateRegistrationTokens(registrationTokenOrTokens, methodName);
+        this.validateTopic(topic, methodName);
+
+        // Ensure the registration token(s) input argument is an array.
+        let registrationTokensArray: string[] = registrationTokenOrTokens as string[];
+        if (validator.isString(registrationTokenOrTokens)) {
+          registrationTokensArray = [registrationTokenOrTokens as string];
+        }
+
+        const request = {
+          to: topic,
+          registration_tokens: registrationTokensArray,
+        };
+
+        return this.messagingRequestHandler.invokeRequestHandler(
+          FCM_TOPIC_MANAGEMENT_HOST, path, request
+        );
+      })
+      .then((response) => {
+        return mapRawResponseToTopicManagementResponse(response);
       });
   }
 
@@ -696,6 +810,120 @@ class Messaging implements FirebaseServiceInterface {
     }
 
     return optionsCopy;
+  }
+
+  /**
+   * Validates the type of the provided registration token(s). If invalid, an error will be thrown.
+   *
+   * @param {string|string[]} registrationTokenOrTokens The registration token(s) to validate.
+   * @param {string} method The method name to use in error messages.
+   * @param {ErrorInfo?} [errorInfo] The error info to use if the registration tokens are invalid.
+   */
+  private validateRegistrationTokensType(
+    registrationTokenOrTokens: string|string[],
+    methodName: string,
+    errorInfo: ErrorInfo = MessagingClientErrorCode.INVALID_ARGUMENT,
+  ) {
+    if (!validator.isNonEmptyArray(registrationTokenOrTokens) &&
+        !validator.isNonEmptyString(registrationTokenOrTokens)) {
+      throw new FirebaseMessagingError(
+        errorInfo,
+        `Registration token(s) provided to ${methodName}() must be a non-empty string or a ` +
+        'non-empty array.',
+      );
+    }
+  }
+
+  /**
+   * Validates the provided registration tokens. If invalid, an error will be thrown.
+   *
+   * @param {string|string[]} registrationTokenOrTokens The registration token or an array of
+   *     registration tokens to validate.
+   * @param {string} method The method name to use in error messages.
+   * @param {errorInfo?} [ErrorInfo] The error info to use if the registration tokens are invalid.
+   */
+  private validateRegistrationTokens(
+    registrationTokenOrTokens: string|string[],
+    methodName: string,
+    errorInfo: ErrorInfo = MessagingClientErrorCode.INVALID_ARGUMENT,
+  ) {
+    if (validator.isArray(registrationTokenOrTokens)) {
+      // Validate the array contains no more than 1,000 registration tokens.
+      if (registrationTokenOrTokens.length > 1000) {
+        throw new FirebaseMessagingError(
+          errorInfo,
+          `Too many registration tokens provided in a single request to ${methodName}(). Batch ` +
+          'your requests to contain no more than 1,000 registration tokens per request.',
+        );
+      }
+
+      // Validate the array contains registration tokens which are non-empty strings.
+      (registrationTokenOrTokens as string[]).forEach((registrationToken, index) => {
+        if (!validator.isNonEmptyString(registrationToken)) {
+          throw new FirebaseMessagingError(
+            errorInfo,
+            `Registration token provided to ${methodName}() at index ${index} must be a ` +
+            'non-empty string.',
+          );
+        }
+      });
+    }
+  }
+
+  /**
+   * Validates the type of the provided topic. If invalid, an error will be thrown.
+   *
+   * @param {string} topic The topic to validate.
+   * @param {string} method The method name to use in error messages.
+   * @param {ErrorInfo?} [errorInfo] The error info to use if the topic is invalid.
+   */
+  private validateTopicType(
+    topic: string|string[],
+    methodName: string,
+    errorInfo: ErrorInfo = MessagingClientErrorCode.INVALID_ARGUMENT,
+  ) {
+    if (!validator.isNonEmptyString(topic)) {
+      throw new FirebaseMessagingError(
+        errorInfo,
+        `Topic provided to ${methodName}() must be a string which matches the format ` +
+        '"/topics/[a-zA-Z0-9-_.~%]+".',
+      );
+    }
+  }
+
+  /**
+   * Validates the provided topic. If invalid, an error will be thrown.
+   *
+   * @param {string} topic The topic to validate.
+   * @param {string} method The method name to use in error messages.
+   * @param {ErrorInfo?} [errorInfo] The error info to use if the topic is invalid.
+   */
+  private validateTopic(
+    topic: string,
+    methodName: string,
+    errorInfo: ErrorInfo = MessagingClientErrorCode.INVALID_ARGUMENT,
+  ) {
+    if (!validator.isTopic(topic)) {
+      throw new FirebaseMessagingError(
+        errorInfo,
+        `Topic provided to ${methodName}() must be a string which matches the format ` +
+        '"/topics/[a-zA-Z0-9-_.~%]+".',
+      );
+    }
+  }
+
+  /**
+   * Normalizes the provided topic name by prepending it with '/topics/', if necessary.
+   *
+   * @param {string} topic The topic name to normalize.
+   *
+   * @return {string} The normalized topic name.
+   */
+  private normalizeTopic(topic: string) {
+    if (!/^\/topics\//.test(topic)) {
+      topic = `/topics/${ topic }`;
+    }
+    return topic;
   }
 };
 

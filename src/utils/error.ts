@@ -3,9 +3,14 @@ import {deepCopy} from '../utils/deep-copy';
 /**
  * Defines error info type. This includes a code and message string.
  */
-type ErrorInfo = {
+export type ErrorInfo = {
   code: string;
   message: string;
+}
+
+export type FirebaseArrayIndexError = {
+  index: number;
+  error: FirebaseError;
 }
 
 /**
@@ -321,6 +326,11 @@ export class MessagingClientErrorCode {
       'SSL certificate was not uploaded or has expired. Check the validity of your development ' +
       'and production certificates.',
   };
+  public static TOO_MANY_TOPICS = {
+    code: 'too-many-topics',
+    message: 'The maximum number of topics the provided registration token can be subscribed to ' +
+      'has been exceeded.',
+  };
   public static AUTHENTICATION_ERROR = {
     code: 'authentication-error',
     message: 'An error occurred when trying to authenticate to the FCM servers. Make sure the ' +
@@ -334,7 +344,7 @@ export class MessagingClientErrorCode {
   };
   public static INTERNAL_ERROR = {
     code: 'internal-error',
-    message: 'An internal error has occurred.',
+    message: 'An internal error has occurred. Please retry the request.',
   };
   public static UNKNOWN_ERROR = {
     code: 'unknown-error',
@@ -374,14 +384,21 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
 
 /** @const {ServerToClientCode} Messaging server to client enum error codes. */
 const MESSAGING_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
+  /* GENERIC ERRORS */
   // Generic invalid message parameter provided.
   InvalidParameters: 'INVALID_ARGUMENT',
+  // Mismatched sender ID.
+  MismatchSenderId: 'MISMATCHED_CREDENTIAL',
+  // FCM server unavailable.
+  Unavailable: 'SERVER_UNAVAILABLE',
+  // FCM server internal error.
+  InternalServerError: 'INTERNAL_ERROR',
+
+  /* SEND ERRORS */
   // Invalid registration token format.
   InvalidRegistration: 'INVALID_REGISTRATION_TOKEN',
   // Registration token is not registered.
   NotRegistered: 'REGISTRATION_TOKEN_NOT_REGISTERED',
-  // Mismatched sender ID.
-  MismatchSenderId: 'MISMATCHED_CREDENTIAL',
   // Registration token does not match restricted package name.
   InvalidPackageName: 'INVALID_PACKAGE_NAME',
   // Message payload size limit exceeded.
@@ -396,8 +413,14 @@ const MESSAGING_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   TopicsMessageRateExceeded: 'TOPICS_MESSAGE_RATE_EXCEEDED',
   // Invalid APNs credentials.
   InvalidApnsCredential: 'INVALID_APNS_CREDENTIALS',
-  // FCM server unavailable.
-  Unavailable: 'SERVER_UNAVAILABLE',
-  // FCM server internal error.
-  InternalServerError: 'INTERNAL_ERROR',
+
+  /* TOPIC SUBSCRIPTION MANAGEMENT ERRORS */
+  NOT_FOUND: 'REGISTRATION_TOKEN_NOT_REGISTERED',
+  INVALID_ARGUMENT: 'INVALID_REGISTRATION_TOKEN',
+  TOO_MANY_TOPICS: 'TOO_MANY_TOPICS',
+  RESOURCE_EXHAUSTED: 'TOO_MANY_TOPICS',
+  PERMISSION_DENIED: 'AUTHENTICATION_ERROR',
+  DEADLINE_EXCEEDED: 'SERVER_UNAVAILABLE',
+  INTERNAL: 'INTERNAL_ERROR',
+  UNKNOWN: 'UNKNOWN_ERROR',
 };

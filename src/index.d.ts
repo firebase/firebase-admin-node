@@ -7,6 +7,11 @@ declare namespace admin {
     toJSON(): Object;
   }
 
+  type FirebaseArrayIndexError = {
+    index: number;
+    error: FirebaseError;
+  }
+
   interface ServiceAccount {
     projectId?: string;
     clientEmail?: string;
@@ -296,6 +301,12 @@ declare namespace admin.messaging {
     messageId: number;
   };
 
+  type MessagingTopicManagementResponse = {
+    failureCount: number;
+    successCount: number;
+    errors: admin.FirebaseArrayIndexError[];
+  };
+
   interface Messaging {
     app: admin.app.App;
 
@@ -324,6 +335,22 @@ declare namespace admin.messaging {
       payload: admin.messaging.MessagingPayload,
       options?: admin.messaging.MessagingOptions
     ): Promise<admin.messaging.MessagingConditionResponse>;
+    subscribeToTopic(
+      registrationToken: string,
+      topic: string
+    ): Promise<admin.messaging.MessagingTopicManagementResponse>;
+    subscribeToTopic(
+      registrationTokens: string[],
+      topic: string
+    ): Promise<admin.messaging.MessagingTopicManagementResponse>;
+    unsubscribeFromTopic(
+      registrationToken: string,
+      topic: string
+    ): Promise<admin.messaging.MessagingTopicManagementResponse>;
+    unsubscribeFromTopic(
+      registrationTokens: string[],
+      topic: string
+    ): Promise<admin.messaging.MessagingTopicManagementResponse>;
   }
 }
 

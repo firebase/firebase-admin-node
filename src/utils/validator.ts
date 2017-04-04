@@ -1,5 +1,25 @@
 import url = require('url');
 
+/**
+ * Validates that a value is an array.
+ *
+ * @param {any} value The value to validate.
+ * @return {boolean} Whether the value is an array or not.
+ */
+export function isArray(value: any): boolean {
+  return value instanceof Array;
+}
+
+/**
+ * Validates that a value is a non-empty array.
+ *
+ * @param {any} value The value to validate.
+ * @return {boolean} Whether the value is a non-empty array or not.
+ */
+export function isNonEmptyArray(value: any): boolean {
+  return isArray(value) && value.length !== 0;
+}
+
 
 /**
  * Validates that a value is a boolean.
@@ -41,7 +61,7 @@ export function isString(value: any): boolean {
  * @return {boolean} Whether the value is a non-empty string or not.
  */
 export function isNonEmptyString(value: any): boolean {
-  return typeof value === 'string' && value !== '';
+  return isString(value) && value !== '';
 }
 
 

@@ -15,6 +15,8 @@ function test(utils) {
   var topic = 'mock-topic';
   var condition = '"test0" in topics || ("test1" in topics && "test2" in topics)';
 
+  var invalidTopic = 'topic-$%#^';
+
   var payload = {
     data: {
       foo: 'bar',
@@ -104,6 +106,34 @@ function test(utils) {
       });
   }
 
+  function subscribeToTopic() {
+    return admin.messaging().subscribeToTopic(registrationToken, topic)
+      .then(function(response) {
+        utils.assert(
+          typeof response.successCount === 'number',
+          'messaging().subscribeToTopic()',
+          'Response does not contain successCount.'
+        );
+      })
+      .catch(function(error) {
+        utils.logFailure('messaging().subscribeToTopic()', error);
+      });
+  }
+
+  function unsubscribeFromTopic() {
+    return admin.messaging().unsubscribeFromTopic(registrationToken, topic)
+      .then(function(response) {
+        utils.assert(
+          typeof response.successCount === 'number',
+          'messaging().unsubscribeFromTopic()',
+          'Response does not contain successCount.'
+        );
+      })
+      .catch(function(error) {
+        utils.logFailure('messaging().unsubscribeFromTopic()', error);
+      });
+  }
+
   function sendToDeviceWithError() {
     return admin.messaging().sendToDevice(registrationToken, invalidPayload, options)
       .then(function() {
@@ -174,6 +204,34 @@ function test(utils) {
       });
   }
 
+  function subscribeToTopicWithError() {
+    return admin.messaging().subscribeToTopic(registrationToken, invalidTopic)
+      .then(function(response) {
+        utils.logFailure('messaging().subscribeToTopic(invalidTopic)', 'Unexpectedly subscribed to topic.');
+      })
+      .catch(function(error) {
+        utils.assert(
+          error.code === 'messaging/invalid-argument',
+          'messaging().subscribeToTopic(invalidTopic)',
+          'Incorrect error code: ' + error.code
+        );
+      });
+  }
+
+  function unsubscribeFromTopicWithError() {
+    return admin.messaging().unsubscribeFromTopic(registrationToken, invalidTopic)
+      .then(function(response) {
+        utils.logFailure('messaging().unsubscribeFromTopic(invalidTopic)', 'Unexpectedly unsubscribed from topic.');
+      })
+      .catch(function(error) {
+        utils.assert(
+          error.code === 'messaging/invalid-argument',
+          'messaging().unsubscribeFromTopic(invalidTopic)',
+          'Incorrect error code: ' + error.code
+        );
+      });
+  }
+
 
   return Promise.resolve()
     .then(sendToDevice)
@@ -181,11 +239,15 @@ function test(utils) {
     .then(sendToDeviceGroup)
     .then(sendToTopic)
     .then(sendToCondition)
+    .then(subscribeToTopic)
+    .then(unsubscribeFromTopic)
     .then(sendToDeviceWithError)
     .then(sendToDevicesWithError)
     .then(sendToDeviceGroupWithError)
     .then(sendToTopicWithError)
-    .then(sendToConditionWithError);
+    .then(sendToConditionWithError)
+    .then(subscribeToTopicWithError)
+    .then(unsubscribeFromTopicWithError);
 };
 
 

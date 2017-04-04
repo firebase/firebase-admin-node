@@ -17,7 +17,7 @@ import * as mocks from '../../resources/mocks';
 
 import {FirebaseApp} from '../../../src/firebase-app';
 import {
-  Messaging, MessagingOptions, MessagingPayload, MessagingDevicesResponse,
+  Messaging, MessagingOptions, MessagingPayload, MessagingDevicesResponse, MessagingTopicManagementResponse,
   BLACKLISTED_OPTIONS_KEYS, BLACKLISTED_DATA_PAYLOAD_KEYS,
 } from '../../../src/messaging/messaging';
 
@@ -25,6 +25,13 @@ chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
+
+// FCM endpoints
+const FCM_SEND_HOST = 'fcm.googleapis.com';
+const FCM_SEND_PATH = '/fcm/send';
+const FCM_TOPIC_MANAGEMENT_HOST = 'iid.googleapis.com';
+const FCM_TOPIC_MANAGEMENT_ADD_PATH = '/iid/v1:batchAdd';
+const FCM_TOPIC_MANAGEMENT_REMOVE_PATH = '/iid/v1:batchRemove';
 
 const mockServerErrorResponse = {
   json: {
@@ -55,8 +62,8 @@ function mockSendToDeviceStringRequest(mockFailure = false): nock.Scope {
     deviceResult = { error: 'InvalidRegistration' };
   }
 
-  return nock('https://fcm.googleapis.com:443')
-    .post('/fcm/send')
+  return nock(`https://${FCM_SEND_HOST}:443`)
+    .post(FCM_SEND_PATH)
     .reply(200, {
       multicast_id: mocks.messaging.multicastId,
       success: mockFailure ? 0 : 1,
@@ -67,8 +74,8 @@ function mockSendToDeviceStringRequest(mockFailure = false): nock.Scope {
 }
 
 function mockSendToDeviceArrayRequest(): nock.Scope {
-  return nock('https://fcm.googleapis.com:443')
-    .post('/fcm/send')
+  return nock(`https://${FCM_SEND_HOST}:443`)
+    .post(FCM_SEND_PATH)
     .reply(200, {
       multicast_id: mocks.messaging.multicastId,
       success: 1,
@@ -98,28 +105,56 @@ function mockSendToDeviceGroupRequest(numFailedRegistrationTokens = 0): nock.Sco
     }
   }
 
-  return nock('https://fcm.googleapis.com:443')
-    .post('/fcm/send')
+  return nock(`https://${FCM_SEND_HOST}:443`)
+    .post(FCM_SEND_PATH)
     .reply(200, response);
 }
 
 function mockSendToTopicRequest(): nock.Scope {
-  return nock('https://fcm.googleapis.com:443')
-    .post('/fcm/send')
+  return nock(`https://${FCM_SEND_HOST}:443`)
+    .post(FCM_SEND_PATH)
     .reply(200, {
       message_id: mocks.messaging.messageId,
     });
 }
 
 function mockSendToConditionRequest(): nock.Scope {
-  return nock('https://fcm.googleapis.com:443')
-    .post('/fcm/send')
+  return nock(`https://${FCM_SEND_HOST}:443`)
+    .post(FCM_SEND_PATH)
     .reply(200, {
       message_id: mocks.messaging.messageId,
     });
 }
 
-function mockRequestWithError(statusCode, errorFormat, responseOverride?: any): nock.Scope {
+function mockTopicSubscriptionRequest(
+  methodName: string,
+  successCount = 1,
+  failureCount = 0,
+): nock.Scope {
+  const mockedResults = [];
+
+  for (let i = 0; i < successCount; i++) {
+    mockedResults.push({});
+  }
+
+  for (let i = 0; i < failureCount; i++) {
+    mockedResults.push({ error: 'TOO_MANY_TOPICS' });
+  }
+
+  const path = (methodName === 'subscribeToTopic') ? FCM_TOPIC_MANAGEMENT_ADD_PATH : FCM_TOPIC_MANAGEMENT_REMOVE_PATH;
+
+  return nock(`https://${FCM_TOPIC_MANAGEMENT_HOST}:443`)
+    .post(path)
+    .reply(200, {
+      results: mockedResults,
+    });
+}
+
+function mockSendRequestWithError(
+  statusCode: number,
+  errorFormat: 'json'|'text',
+  responseOverride?: any,
+): nock.Scope {
   let response;
   let contentType;
   if (errorFormat === 'json') {
@@ -130,8 +165,33 @@ function mockRequestWithError(statusCode, errorFormat, responseOverride?: any): 
     contentType = 'text/html; charset=UTF-8';
   }
 
-  return nock('https://fcm.googleapis.com:443')
-    .post('/fcm/send')
+  return nock(`https://${FCM_SEND_HOST}:443`)
+    .post(FCM_SEND_PATH)
+    .reply(statusCode, responseOverride || response, {
+      'Content-Type': contentType,
+    });
+}
+
+function mockTopicSubscriptionRequestWithError(
+  methodName: string,
+  statusCode: number,
+  errorFormat: 'json'|'text',
+  responseOverride?: any,
+): nock.Scope {
+  let response;
+  let contentType;
+  if (errorFormat === 'json') {
+    response = mockServerErrorResponse.json;
+    contentType = 'application/json; charset=UTF-8';
+  } else {
+    response = mockServerErrorResponse.text;
+    contentType = 'text/html; charset=UTF-8';
+  }
+
+  const path = (methodName === 'subscribeToTopic') ? FCM_TOPIC_MANAGEMENT_ADD_PATH : FCM_TOPIC_MANAGEMENT_REMOVE_PATH;
+
+  return nock(`https://${FCM_TOPIC_MANAGEMENT_HOST}:443`)
+    .post(path)
     .reply(statusCode, responseOverride || response, {
       'Content-Type': contentType,
     });
@@ -222,8 +282,8 @@ describe('Messaging', () => {
   });
 
   describe('sendToDevice()', () => {
-    const invalidArgumentError = 'Registration token provided to sendToDevice() must be a non-empty ' +
-      'string or a non-empty array';
+    const invalidArgumentError = 'Registration token(s) provided to sendToDevice() must be a ' +
+      'non-empty string or a non-empty array';
 
     const invalidRegistrationTokens = [null, NaN, 0, 1, true, false, {}, { a: 1 }, _.noop];
     invalidRegistrationTokens.forEach((invalidRegistrationToken) => {
@@ -280,7 +340,7 @@ describe('Messaging', () => {
     });
 
     it('should be rejected given a 200 JSON server response with a known error', () => {
-      mockedRequests.push(mockRequestWithError(200, 'json'));
+      mockedRequests.push(mockSendRequestWithError(200, 'json'));
 
       return messaging.sendToDevice(
         mocks.messaging.registrationToken,
@@ -289,7 +349,7 @@ describe('Messaging', () => {
     });
 
     it('should be rejected given a 200 JSON server response with an unknown error', () => {
-      mockedRequests.push(mockRequestWithError(200, 'json', { error: 'Unknown' }));
+      mockedRequests.push(mockSendRequestWithError(200, 'json', { error: 'Unknown' }));
 
       return messaging.sendToDevice(
         mocks.messaging.registrationToken,
@@ -298,7 +358,7 @@ describe('Messaging', () => {
     });
 
     it('should be rejected given a non-2xx JSON server response', () => {
-      mockedRequests.push(mockRequestWithError(400, 'json'));
+      mockedRequests.push(mockSendRequestWithError(400, 'json'));
 
       return messaging.sendToDevice(
         mocks.messaging.registrationToken,
@@ -307,7 +367,7 @@ describe('Messaging', () => {
     });
 
     it('should be rejected given a non-2xx JSON server response with an unknown error', () => {
-      mockedRequests.push(mockRequestWithError(400, 'json', { error: 'Unknown' }));
+      mockedRequests.push(mockSendRequestWithError(400, 'json', { error: 'Unknown' }));
 
       return messaging.sendToDevice(
         mocks.messaging.registrationToken,
@@ -316,7 +376,7 @@ describe('Messaging', () => {
     });
 
     it('should be rejected given a non-2xx JSON server response without an error', () => {
-      mockedRequests.push(mockRequestWithError(400, 'json', { foo: 'bar' }));
+      mockedRequests.push(mockSendRequestWithError(400, 'json', { foo: 'bar' }));
 
       return messaging.sendToDevice(
         mocks.messaging.registrationToken,
@@ -326,7 +386,7 @@ describe('Messaging', () => {
 
     _.forEach(STATUS_CODE_TO_ERROR_MAP, (expectedError, statusCode) => {
       it(`should be rejected given a ${ statusCode } text server response`, () => {
-        mockedRequests.push(mockRequestWithError(statusCode, 'text'));
+        mockedRequests.push(mockSendRequestWithError(parseInt(statusCode, 10), 'text'));
 
         return messaging.sendToDevice(
           mocks.messaging.registrationToken,
@@ -577,7 +637,7 @@ describe('Messaging', () => {
     });
 
     it('should be rejected given a 200 JSON server response with a known error', () => {
-      mockedRequests.push(mockRequestWithError(200, 'json'));
+      mockedRequests.push(mockSendRequestWithError(200, 'json'));
 
       return messaging.sendToDeviceGroup(
         mocks.messaging.notificationKey,
@@ -586,7 +646,7 @@ describe('Messaging', () => {
     });
 
     it('should be rejected given a 200 JSON server response with an unknown error', () => {
-      mockedRequests.push(mockRequestWithError(200, 'json', { error: 'Unknown' }));
+      mockedRequests.push(mockSendRequestWithError(200, 'json', { error: 'Unknown' }));
 
       return messaging.sendToDeviceGroup(
         mocks.messaging.notificationKey,
@@ -595,7 +655,7 @@ describe('Messaging', () => {
     });
 
     it('should be rejected given a non-2xx JSON server response', () => {
-      mockedRequests.push(mockRequestWithError(400, 'json'));
+      mockedRequests.push(mockSendRequestWithError(400, 'json'));
 
       return messaging.sendToDeviceGroup(
         mocks.messaging.notificationKey,
@@ -604,7 +664,7 @@ describe('Messaging', () => {
     });
 
     it('should be rejected given a non-2xx JSON server response with an unknown error', () => {
-      mockedRequests.push(mockRequestWithError(400, 'json', { error: 'Unknown' }));
+      mockedRequests.push(mockSendRequestWithError(400, 'json', { error: 'Unknown' }));
 
       return messaging.sendToDeviceGroup(
         mocks.messaging.notificationKey,
@@ -613,7 +673,7 @@ describe('Messaging', () => {
     });
 
     it('should be rejected given a non-2xx JSON server response without an error', () => {
-      mockedRequests.push(mockRequestWithError(400, 'json', { foo: 'bar' }));
+      mockedRequests.push(mockSendRequestWithError(400, 'json', { foo: 'bar' }));
 
       return messaging.sendToDeviceGroup(
         mocks.messaging.notificationKey,
@@ -623,7 +683,7 @@ describe('Messaging', () => {
 
     _.forEach(STATUS_CODE_TO_ERROR_MAP, (expectedError, statusCode) => {
       it(`should be rejected given a ${ statusCode } text server response`, () => {
-        mockedRequests.push(mockRequestWithError(statusCode, 'text'));
+        mockedRequests.push(mockSendRequestWithError(parseInt(statusCode, 10), 'text'));
 
         return messaging.sendToDeviceGroup(
         mocks.messaging.notificationKey,
@@ -829,7 +889,7 @@ describe('Messaging', () => {
     });
 
     it('should be rejected given a 200 JSON server response with a known error', () => {
-      mockedRequests.push(mockRequestWithError(200, 'json'));
+      mockedRequests.push(mockSendRequestWithError(200, 'json'));
 
       return messaging.sendToTopic(
         mocks.messaging.topic,
@@ -838,7 +898,7 @@ describe('Messaging', () => {
     });
 
     it('should be rejected given a 200 JSON server response with an unknown error', () => {
-      mockedRequests.push(mockRequestWithError(200, 'json', { error: 'Unknown' }));
+      mockedRequests.push(mockSendRequestWithError(200, 'json', { error: 'Unknown' }));
 
       return messaging.sendToTopic(
         mocks.messaging.topic,
@@ -847,7 +907,7 @@ describe('Messaging', () => {
     });
 
     it('should be rejected given a non-2xx JSON server response', () => {
-      mockedRequests.push(mockRequestWithError(400, 'json'));
+      mockedRequests.push(mockSendRequestWithError(400, 'json'));
 
       return messaging.sendToTopic(
         mocks.messaging.topic,
@@ -856,7 +916,7 @@ describe('Messaging', () => {
     });
 
     it('should be rejected given a non-2xx JSON server response with an unknown error', () => {
-      mockedRequests.push(mockRequestWithError(400, 'json', { error: 'Unknown' }));
+      mockedRequests.push(mockSendRequestWithError(400, 'json', { error: 'Unknown' }));
 
       return messaging.sendToTopic(
         mocks.messaging.topic,
@@ -865,7 +925,7 @@ describe('Messaging', () => {
     });
 
     it('should be rejected given a non-2xx JSON server response without an error', () => {
-      mockedRequests.push(mockRequestWithError(400, 'json', { foo: 'bar' }));
+      mockedRequests.push(mockSendRequestWithError(400, 'json', { foo: 'bar' }));
 
       return messaging.sendToTopic(
         mocks.messaging.topic,
@@ -875,7 +935,7 @@ describe('Messaging', () => {
 
     _.forEach(STATUS_CODE_TO_ERROR_MAP, (expectedError, statusCode) => {
       it(`should be rejected given a ${ statusCode } text server response`, () => {
-        mockedRequests.push(mockRequestWithError(statusCode, 'text'));
+        mockedRequests.push(mockSendRequestWithError(parseInt(statusCode, 10), 'text'));
 
         return messaging.sendToTopic(
         mocks.messaging.topic,
@@ -1051,7 +1111,7 @@ describe('Messaging', () => {
     });
 
     it('should be rejected given a 200 JSON server response with a known error', () => {
-      mockedRequests.push(mockRequestWithError(200, 'json'));
+      mockedRequests.push(mockSendRequestWithError(200, 'json'));
 
       return messaging.sendToCondition(
         mocks.messaging.condition,
@@ -1060,7 +1120,7 @@ describe('Messaging', () => {
     });
 
     it('should be rejected given a 200 JSON server response with an unknown error', () => {
-      mockedRequests.push(mockRequestWithError(200, 'json', { error: 'Unknown' }));
+      mockedRequests.push(mockSendRequestWithError(200, 'json', { error: 'Unknown' }));
 
       return messaging.sendToCondition(
         mocks.messaging.condition,
@@ -1069,7 +1129,7 @@ describe('Messaging', () => {
     });
 
     it('should be rejected given a non-2xx JSON server response', () => {
-      mockedRequests.push(mockRequestWithError(400, 'json'));
+      mockedRequests.push(mockSendRequestWithError(400, 'json'));
 
       return messaging.sendToCondition(
         mocks.messaging.condition,
@@ -1078,7 +1138,7 @@ describe('Messaging', () => {
     });
 
     it('should be rejected given a non-2xx JSON server response with an unknown error', () => {
-      mockedRequests.push(mockRequestWithError(400, 'json', { error: 'Unknown' }));
+      mockedRequests.push(mockSendRequestWithError(400, 'json', { error: 'Unknown' }));
 
       return messaging.sendToCondition(
         mocks.messaging.condition,
@@ -1087,7 +1147,7 @@ describe('Messaging', () => {
     });
 
     it('should be rejected given a non-2xx JSON server response without an error', () => {
-      mockedRequests.push(mockRequestWithError(400, 'json', { foo: 'bar' }));
+      mockedRequests.push(mockSendRequestWithError(400, 'json', { foo: 'bar' }));
 
       return messaging.sendToCondition(
         mocks.messaging.condition,
@@ -1097,7 +1157,7 @@ describe('Messaging', () => {
 
     _.forEach(STATUS_CODE_TO_ERROR_MAP, (expectedError, statusCode) => {
       it(`should be rejected given a ${ statusCode } text server response`, () => {
-        mockedRequests.push(mockRequestWithError(statusCode, 'text'));
+        mockedRequests.push(mockSendRequestWithError(parseInt(statusCode, 10), 'text'));
 
         return messaging.sendToCondition(
         mocks.messaging.condition,
@@ -1675,6 +1735,411 @@ describe('Messaging', () => {
         expect(mockOptionsClone).to.deep.equal(mocks.messaging.options);
       });
     });
+  });
+
+  function tokenSubscriptionTests(methodName) {
+    let invalidRegistrationTokensArgumentError = 'Registration token(s) provided to ' +
+      `${methodName}() must be a non-empty string or a non-empty array`;
+
+    const invalidRegistrationTokens = [null, NaN, 0, 1, true, false, {}, { a: 1 }, _.noop];
+    invalidRegistrationTokens.forEach((invalidRegistrationToken) => {
+      it('should throw given invalid type for registration token(s) argument: ' +
+        JSON.stringify(invalidRegistrationToken), () => {
+        expect(() => {
+          messaging[methodName](invalidRegistrationToken as string, mocks.messaging.topic);
+        }).to.throw(invalidRegistrationTokensArgumentError);
+      });
+    });
+
+    it('should throw given no registration token(s) argument', () => {
+      expect(() => {
+        messaging[methodName](undefined as string, mocks.messaging.topic);
+      }).to.throw(invalidRegistrationTokensArgumentError);
+    });
+
+    it('should throw given empty string for registration token(s) argument', () => {
+      expect(() => {
+        messaging[methodName]('', mocks.messaging.topic);
+      }).to.throw(invalidRegistrationTokensArgumentError);
+    });
+
+    it('should throw given empty array for registration token(s) argument', () => {
+      expect(() => {
+        messaging[methodName]([], mocks.messaging.topic);
+      }).to.throw(invalidRegistrationTokensArgumentError);
+    });
+
+    it('should be rejected given empty string within array for registration token(s) argument', () => {
+      return messaging[methodName](['foo', 'bar', ''], mocks.messaging.topic)
+        .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
+    });
+
+    it('should be rejected given non-string value within array for registration token(s) argument', () => {
+      return messaging[methodName](['foo', true as any, 'bar'], mocks.messaging.topic)
+        .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
+    });
+
+    it('should be rejected given an array containing more than 1,000 registration tokens', () => {
+      mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1000));
+
+      // Create an array of exactly 1,000 registration tokens
+      const registrationTokens = (Array(1000) as any).fill(mocks.messaging.registrationToken);
+
+      return messaging[methodName](registrationTokens, mocks.messaging.topic)
+        .then(() => {
+          // Push the array of registration tokens over 1,000 items
+          registrationTokens.push(mocks.messaging.registrationToken);
+
+          return messaging[methodName](registrationTokens, mocks.messaging.topic)
+            .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
+        });
+    });
+
+    const invalidTopicArgumentError = `Topic provided to ${methodName}() must be a string which matches`;
+
+    const invalidTopics = [null, NaN, 0, 1, true, false, [], ['a', 1], {}, { a: 1 }, _.noop];
+    invalidTopics.forEach((invalidTopic) => {
+      it(`should throw given invalid type for topic argument: ${ JSON.stringify(invalidTopic) }`, () => {
+        expect(() => {
+          messaging[methodName](mocks.messaging.registrationToken, invalidTopic as string);
+        }).to.throw(invalidTopicArgumentError);
+      });
+    });
+
+    it('should throw given no topic argument', () => {
+      expect(() => {
+        messaging[methodName](mocks.messaging.registrationToken, undefined as string);
+      }).to.throw(invalidTopicArgumentError);
+    });
+
+    it('should throw given empty string for topic argument', () => {
+      expect(() => {
+        messaging[methodName](mocks.messaging.registrationToken, '');
+      }).to.throw(invalidTopicArgumentError);
+    });
+
+    const topicsWithInvalidCharacters = ['f*o*o', '/topics/f+o+o', 'foo/topics/foo', '$foo', '/topics/foo&'];
+    topicsWithInvalidCharacters.forEach((invalidTopic) => {
+      it(`should be rejected given topic argument which has invalid characters: ${ invalidTopic }`, () => {
+        return messaging[methodName](mocks.messaging.registrationToken, invalidTopic)
+          .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
+      });
+    });
+
+    it('should be rejected given a 200 JSON server response with a known error', () => {
+      mockedRequests.push(mockTopicSubscriptionRequestWithError(methodName, 200, 'json'));
+
+      return messaging[methodName](
+        mocks.messaging.registrationToken,
+        mocks.messaging.topic,
+      ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.json);
+    });
+
+    it('should be rejected given a 200 JSON server response with an unknown error', () => {
+      mockedRequests.push(mockTopicSubscriptionRequestWithError(methodName, 200, 'json', { error: 'Unknown' }));
+
+      return messaging[methodName](
+        mocks.messaging.registrationToken,
+        mocks.messaging.topic,
+      ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.unknownError);
+    });
+
+    it('should be rejected given a non-2xx JSON server response', () => {
+      mockedRequests.push(mockTopicSubscriptionRequestWithError(methodName, 400, 'json'));
+
+      return messaging[methodName](
+        mocks.messaging.registrationToken,
+        mocks.messaging.topic,
+      ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.json);
+    });
+
+    it('should be rejected given a non-2xx JSON server response with an unknown error', () => {
+      mockedRequests.push(mockTopicSubscriptionRequestWithError(methodName, 400, 'json', { error: 'Unknown' }));
+
+      return messaging[methodName](
+        mocks.messaging.registrationToken,
+        mocks.messaging.topic,
+      ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.unknownError);
+    });
+
+    it('should be rejected given a non-2xx JSON server response without an error', () => {
+      mockedRequests.push(mockTopicSubscriptionRequestWithError(methodName, 400, 'json', { foo: 'bar' }));
+
+      return messaging[methodName](
+        mocks.messaging.registrationToken,
+        mocks.messaging.topic,
+      ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.unknownError);
+    });
+
+    _.forEach(STATUS_CODE_TO_ERROR_MAP, (expectedError, statusCode) => {
+      it(`should be rejected given a ${ statusCode } text server response`, () => {
+        mockedRequests.push(mockTopicSubscriptionRequestWithError(methodName, parseInt(statusCode, 10), 'text'));
+
+        return messaging[methodName](
+          mocks.messaging.registrationToken,
+          mocks.messaging.topic,
+        ).should.eventually.be.rejected.and.have.property('code', expectedError);
+      });
+    });
+
+    it('should be rejected given an app which returns null access tokens', () => {
+      return nullAccessTokenMessaging[methodName](
+        mocks.messaging.registrationToken,
+        mocks.messaging.topic,
+      ).should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which returns invalid access tokens', () => {
+      return nullAccessTokenMessaging[methodName](
+        mocks.messaging.registrationToken,
+        mocks.messaging.topic,
+      ).should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which fails to generate access tokens', () => {
+      return nullAccessTokenMessaging[methodName](
+        mocks.messaging.registrationToken,
+        mocks.messaging.topic,
+      ).should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be fulfilled given a valid registration token and topic (topic name not prefixed ' +
+       'with "/topics/")', () => {
+      mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1));
+
+      return messaging[methodName](
+        mocks.messaging.registrationToken,
+        mocks.messaging.topic,
+      );
+    });
+
+    it('should be fulfilled given a valid registration token and topic (topic name prefixed ' +
+       'with "/topics/")', () => {
+      mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1));
+
+      return messaging[methodName](
+        mocks.messaging.registrationToken,
+        mocks.messaging.topicWithPrefix,
+      );
+    });
+
+    it('should be fulfilled given a valid array of registration tokens and topic (topic name not ' +
+       'prefixed with "/topics/")', () => {
+      mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 3));
+
+      return messaging[methodName](
+        [
+          mocks.messaging.registrationToken + '0',
+          mocks.messaging.registrationToken + '1',
+          mocks.messaging.registrationToken + '2',
+        ],
+        mocks.messaging.topic,
+      );
+    });
+
+    it('should be fulfilled given a valid array of registration tokens and topic (topic name ' +
+       'prefixed with "/topics/")', () => {
+      mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 3));
+
+      return messaging[methodName](
+        [
+          mocks.messaging.registrationToken + '0',
+          mocks.messaging.registrationToken + '1',
+          mocks.messaging.registrationToken + '2',
+        ],
+        mocks.messaging.topicWithPrefix,
+      );
+    });
+
+    it('should be fulfilled with the server response given a single registration token and topic ' +
+       '(topic name not prefixed with "/topics/")', () => {
+      mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1));
+
+      return messaging[methodName](
+        mocks.messaging.registrationToken,
+        mocks.messaging.topic,
+      ).should.eventually.deep.equal({
+        failureCount: 0,
+        successCount: 1,
+        errors: [],
+      });
+    });
+
+    it('should be fulfilled with the server response given a single registration token and topic ' +
+       '(topic name prefixed with "/topics/")', () => {
+      mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1));
+
+      return messaging[methodName](
+        mocks.messaging.registrationToken,
+        mocks.messaging.topicWithPrefix,
+      ).should.eventually.deep.equal({
+        failureCount: 0,
+        successCount: 1,
+        errors: [],
+      });
+    });
+
+    it('should be fulfilled with the server response given an array of registration tokens ' +
+       'and topic (topic name not prefixed with "/topics/")', () => {
+      mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1, /* failureCount */ 2));
+
+      return messaging[methodName](
+        [
+          mocks.messaging.registrationToken + '0',
+          mocks.messaging.registrationToken + '1',
+          mocks.messaging.registrationToken + '2',
+        ],
+        mocks.messaging.topic,
+      ).then((response: MessagingTopicManagementResponse) => {
+        expect(response).to.have.keys(['failureCount', 'successCount', 'errors']);
+        expect(response.failureCount).to.equal(2);
+        expect(response.successCount).to.equal(1);
+        expect(response.errors).to.have.length(2);
+        expect(response.errors[0]).to.have.keys(['index', 'error']);
+        expect(response.errors[0].index).to.equal(1);
+        expect(response.errors[0].error).to.have.property('code', 'messaging/too-many-topics');
+        expect(response.errors[1]).to.have.keys(['index', 'error']);
+        expect(response.errors[1].index).to.equal(2);
+        expect(response.errors[1].error).to.have.property('code', 'messaging/too-many-topics');
+      });
+    });
+
+    it('should be fulfilled with the server response given an array of registration tokens ' +
+       'and topic (topic name prefixed with "/topics/")', () => {
+      mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1, /* failureCount */ 2));
+
+      return messaging[methodName](
+        [
+          mocks.messaging.registrationToken + '0',
+          mocks.messaging.registrationToken + '1',
+          mocks.messaging.registrationToken + '2',
+        ],
+        mocks.messaging.topicWithPrefix,
+      ).then((response: MessagingTopicManagementResponse) => {
+        expect(response).to.have.keys(['failureCount', 'successCount', 'errors']);
+        expect(response.failureCount).to.equal(2);
+        expect(response.successCount).to.equal(1);
+        expect(response.errors).to.have.length(2);
+        expect(response.errors[0]).to.have.keys(['index', 'error']);
+        expect(response.errors[0].index).to.equal(1);
+        expect(response.errors[0].error).to.have.property('code', 'messaging/too-many-topics');
+        expect(response.errors[1]).to.have.keys(['index', 'error']);
+        expect(response.errors[1].index).to.equal(2);
+        expect(response.errors[1].error).to.have.property('code', 'messaging/too-many-topics');
+      });
+    });
+
+    it('should set the appropriate request data given a single registration token and topic ' +
+       '(topic name not prefixed with "/topics/")', () => {
+      // Wait for the initial getToken() call to complete before stubbing https.request.
+      return mockApp.INTERNAL.getToken()
+        .then(() => {
+          httpsRequestStub = sinon.stub(https, 'request');
+          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
+
+          return messaging[methodName](
+            mocks.messaging.registrationToken,
+            mocks.messaging.topic,
+          );
+        })
+        .then(() => {
+          expect(requestWriteSpy).to.have.been.calledOnce;
+          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(requestData).to.deep.equal({
+            to: mocks.messaging.topicWithPrefix,
+            registration_tokens: [mocks.messaging.registrationToken],
+          });
+        });
+    });
+
+    it('should set the appropriate request data given a single registration token and topic ' +
+       '(topic name prefixed with "/topics/")', () => {
+      // Wait for the initial getToken() call to complete before stubbing https.request.
+      return mockApp.INTERNAL.getToken()
+        .then(() => {
+          httpsRequestStub = sinon.stub(https, 'request');
+          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
+
+          return messaging[methodName](
+            mocks.messaging.registrationToken,
+            mocks.messaging.topicWithPrefix,
+          );
+        })
+        .then(() => {
+          expect(requestWriteSpy).to.have.been.calledOnce;
+          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(requestData).to.deep.equal({
+            to: mocks.messaging.topicWithPrefix,
+            registration_tokens: [mocks.messaging.registrationToken],
+          });
+        });
+    });
+
+    it('should set the appropriate request data given an array of registration tokens and ' +
+       'topic (topic name not prefixed with "/topics/")', () => {
+      const registrationTokens = [
+        mocks.messaging.registrationToken + '0',
+        mocks.messaging.registrationToken + '1',
+        mocks.messaging.registrationToken + '2',
+      ];
+
+      // Wait for the initial getToken() call to complete before stubbing https.request.
+      return mockApp.INTERNAL.getToken()
+        .then(() => {
+          httpsRequestStub = sinon.stub(https, 'request');
+          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
+
+          return messaging[methodName](
+            registrationTokens,
+            mocks.messaging.topic,
+          );
+        })
+        .then(() => {
+          expect(requestWriteSpy).to.have.been.calledOnce;
+          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(requestData).to.deep.equal({
+            to: mocks.messaging.topicWithPrefix,
+            registration_tokens: registrationTokens,
+          });
+        });
+    });
+
+    it('should set the appropriate request data given an array of registration tokens and ' +
+       'topic (topic name prefixed with "/topics/")', () => {
+      const registrationTokens = [
+        mocks.messaging.registrationToken + '0',
+        mocks.messaging.registrationToken + '1',
+        mocks.messaging.registrationToken + '2',
+      ];
+
+      // Wait for the initial getToken() call to complete before stubbing https.request.
+      return mockApp.INTERNAL.getToken()
+        .then(() => {
+          httpsRequestStub = sinon.stub(https, 'request');
+          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
+
+          return messaging[methodName](
+            registrationTokens,
+            mocks.messaging.topicWithPrefix,
+          );
+        })
+        .then(() => {
+          expect(requestWriteSpy).to.have.been.calledOnce;
+          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(requestData).to.deep.equal({
+            to: mocks.messaging.topicWithPrefix,
+            registration_tokens: registrationTokens,
+          });
+        });
+    });
+  }
+
+  describe('subscribeToTopic()', () => {
+    tokenSubscriptionTests('subscribeToTopic');
+  });
+
+  describe('unsubscribeFromTopic()', () => {
+    tokenSubscriptionTests('unsubscribeFromTopic');
   });
 
   describe('INTERNAL.delete()', () => {

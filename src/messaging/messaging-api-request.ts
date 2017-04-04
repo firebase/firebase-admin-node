@@ -6,9 +6,7 @@ import {FirebaseMessagingError, MessagingClientErrorCode} from '../utils/error';
 import * as validator from '../utils/validator';
 
 // FCM backend constants
-const FIREBASE_MESSAGING_HOST = 'fcm.googleapis.com';
 const FIREBASE_MESSAGING_PORT = 443;
-const FIREBASE_MESSAGING_PATH = '/fcm/send';
 const FIREBASE_MESSAGING_TIMEOUT = 10000;
 const FIREBASE_MESSAGING_HTTP_METHOD: HttpMethod = 'POST';
 const FIREBASE_MESSAGING_HEADERS = {
@@ -51,14 +49,16 @@ export class FirebaseMessagingRequestHandler {
   /**
    * Invokes the request handler with the provided request data.
    *
+   * @param {string} host The host to which to send the request.
+   * @param {string} path The path to which to send the request.
    * @param {Object} requestData The request data.
    * @return {Promise<Object>} A promise that resolves with the response.
    */
-  public invokeRequestHandler(requestData: Object): Promise<Object> {
+  public invokeRequestHandler(host: string, path: string, requestData: Object): Promise<Object> {
     return this.signedApiRequestHandler.sendRequest(
-      FIREBASE_MESSAGING_HOST,
+      host,
       FIREBASE_MESSAGING_PORT,
-      FIREBASE_MESSAGING_PATH,
+      path,
       FIREBASE_MESSAGING_HTTP_METHOD,
       requestData,
       FIREBASE_MESSAGING_HEADERS,
