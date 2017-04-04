@@ -13,8 +13,8 @@ import * as validator from '../utils/validator';
 const FCM_SEND_HOST = 'fcm.googleapis.com';
 const FCM_SEND_PATH = '/fcm/send';
 const FCM_TOPIC_MANAGEMENT_HOST = 'iid.googleapis.com';
-const FCM_TOPIC_MANAGEMENT_ADD_PATH = '/iid/v1/batchAdd';
-const FCM_TOPIC_MANAGEMENT_REMOVE_PATH = '/iid/v1/batchRemove';
+const FCM_TOPIC_MANAGEMENT_ADD_PATH = '/iid/v1:batchAdd';
+const FCM_TOPIC_MANAGEMENT_REMOVE_PATH = '/iid/v1:batchRemove';
 
 
 // Key renames for the messaging notification payload object.
