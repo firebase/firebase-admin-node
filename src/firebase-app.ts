@@ -58,6 +58,9 @@ export class FirebaseAppInternals {
     if (this.cachedTokenPromise_ && !forceRefresh && !expired) {
       return this.cachedTokenPromise_;
     } else {
+      // Clear the outstanding token refresh timeout. This is a noop if the timeout is undefined.
+      clearTimeout(this.tokenRefreshTimeout_);
+
       // this.credential_ may be an external class; resolving it in a promise helps us
       // protect against exceptions and upgrades the result to a promise in all cases.
       this.cachedTokenPromise_ = Promise.resolve(this.credential_.getAccessToken())
@@ -89,20 +92,26 @@ export class FirebaseAppInternals {
             });
           }
 
-          // Establish a timeout to proactively refresh the token five minutes before it expires. In
-          // the rare cases the token is very short-lived, refresh it immediately.
+          // Establish a timeout to proactively refresh the token every minute starting at five
+          // minutes before it expires. Once a token refresh succeeds, no further retries are
+          // needed; if it fails, retry every minute until the token expires (resulting in a total
+          // of four retries: at 4, 3, 2, and 1 minutes).
           let refreshTimeInSeconds = (result.expires_in - (5 * 60));
-          if (refreshTimeInSeconds <= 60) {
-            refreshTimeInSeconds = 0;
+          let numRetries = 4;
+
+          // In the rare cases the token is short-lived (that is, it expires in less than five
+          // minutes from when it was fetched), establish the timeout to refresh it after the
+          // current minute ends and update the number of retries that should be attempted before
+          // the token expires.
+          if (refreshTimeInSeconds <= 0) {
+            refreshTimeInSeconds = result.expires_in % 60;
+            numRetries = Math.floor(result.expires_in / 60) - 1;
           }
 
           // The token refresh timeout keeps the Node.js process alive, so only create it if this
           // instance has not already been deleted.
-          if (!this.isDeleted_) {
-            this.tokenRefreshTimeout_ = setTimeout(() => {
-              this.getToken(/* forceRefresh */ true);
-              clearTimeout(this.tokenRefreshTimeout_);
-            }, refreshTimeInSeconds * 1000);
+          if (numRetries && !this.isDeleted_) {
+            this.setTokenRefreshTimeout(refreshTimeInSeconds * 1000, numRetries);
           }
 
           return token;
@@ -167,6 +176,27 @@ export class FirebaseAppInternals {
 
     // Clear the token refresh timeout so it doesn't keep the Node.js process alive.
     clearTimeout(this.tokenRefreshTimeout_);
+  }
+
+  /**
+   * Establishes timeout to refresh the Google OAuth2 access token used by the SDK.
+   *
+   * @param {number} delayInMilliseconds The delay to use for the timeout.
+   * @param {number} numRetries The number of times to retry fetching a new token if the prior fetch
+   *   failed.
+   */
+  private setTokenRefreshTimeout(delayInMilliseconds: number, numRetries: number): void {
+    this.tokenRefreshTimeout_ = setTimeout(() => {
+      this.getToken(/* forceRefresh */ true)
+        .catch((error) => {
+          // Ignore the error since this might just be an intermittent failure. If we really cannot
+          // refresh the token, an error will be logged once the existing token expires and we try
+          // to fetch a fresh one.
+          if (numRetries > 0) {
+            this.setTokenRefreshTimeout(60 * 1000, numRetries - 1);
+          }
+        });
+    }, delayInMilliseconds);
   }
 }
 
