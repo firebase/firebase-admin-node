@@ -309,6 +309,10 @@ describe('SignedApiRequestHandler', () => {
     mockApp = mocks.app();
   });
 
+  afterEach(() => {
+    return mockApp.delete();
+  });
+
   describe('Constructor', () => {
     it('should succeed with a FirebaseApp instance', () => {
       expect(() => {
