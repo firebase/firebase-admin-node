@@ -56,7 +56,23 @@ export class FirebaseAppInternals {
   public getToken(forceRefresh?: boolean): Promise<FirebaseAccessToken> {
     const expired = this.cachedToken_ && this.cachedToken_.expirationTime < Date.now();
     if (this.cachedTokenPromise_ && !forceRefresh && !expired) {
-      return this.cachedTokenPromise_;
+      return this.cachedTokenPromise_
+        .catch((error) => {
+          // Update the cached token promise to avoid caching errors. Set it to resolve with the
+          // cached token if we have one (and return that promise since the token has still not
+          // expired).
+          if (this.cachedToken_) {
+            this.cachedTokenPromise_ = Promise.resolve(this.cachedToken_);
+            return this.cachedTokenPromise_;
+          }
+
+          // Otherwise, set the cached token promise to null so that it will force a refresh next
+          // time getToken() is called.
+          this.cachedTokenPromise_ = null;
+
+          // And re-throw the caught error.
+          throw error;
+        });
     } else {
       // Clear the outstanding token refresh timeout. This is a noop if the timeout is undefined.
       clearTimeout(this.tokenRefreshTimeout_);
@@ -117,14 +133,6 @@ export class FirebaseAppInternals {
           return token;
         })
         .catch((error) => {
-          // Update the cached token promise to avoid caching errors. Set it to resolve with the
-          // cached token if we have one; otherwise, set it to null.
-          if (this.cachedToken_) {
-            this.cachedTokenPromise_ = Promise.resolve(this.cachedToken_);
-          } else {
-            this.cachedTokenPromise_ = null;
-          }
-
           let errorMessage = (typeof error === 'string') ? error : error.message;
 
           errorMessage = 'Credential implementation provided to initializeApp() via the ' +
