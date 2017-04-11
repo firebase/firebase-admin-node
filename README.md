@@ -67,5 +67,5 @@ and for their longtime use and support of the Firebase platform.
 
 ## License
 
-The Firebase Admin Node.js SDK is covered by the
-[Terms of Service for Firebase Services](https://firebase.google.com/terms/).
+The Firebase Admin Node.js SDK is made available with the
+[Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0) license.

@@ -3,7 +3,7 @@
   "version": "4.2.0",
   "description": "Firebase admin SDK for Node.js",
   "author": "Firebase (https://firebase.google.com/)",
-  "license": "SEE LICENSE IN https://firebase.google.com/terms/",
+  "license": "Apache-2.0",
   "homepage": "https://firebase.google.com/",
   "keywords": [
     "admin",
@@ -15,6 +15,7 @@
   "main": "lib/index.js",
   "files": [
     "lib/",
+    "LICENSE",
     "README.md",
     "package.json",
     "npm-shrinkwrap.json"
