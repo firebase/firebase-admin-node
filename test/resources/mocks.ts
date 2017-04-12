@@ -61,7 +61,9 @@ export let appOptionsNoDatabaseUrl: FirebaseAppOptions = {
 };
 
 export function app(): FirebaseApp {
-  return new FirebaseApp(appOptions, appName, new FirebaseNamespace().INTERNAL);
+  const namespaceInternals = new FirebaseNamespace().INTERNAL;
+  namespaceInternals.removeApp = _.noop;
+  return new FirebaseApp(appOptions, appName, namespaceInternals);
 }
 
 export function applicationDefaultApp(): FirebaseApp {

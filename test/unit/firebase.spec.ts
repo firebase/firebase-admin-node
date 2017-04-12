@@ -42,12 +42,15 @@ describe('Firebase', () => {
   after(() => nock.cleanAll());
 
   afterEach(() => {
+    const deletePromises = [];
     firebaseAdmin.apps.forEach((app) => {
-      app.delete();
+      deletePromises.push(app.delete());
     });
 
     _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
     mockedRequests = [];
+
+    return Promise.all(deletePromises);
   });
 
   describe('#initializeApp()', () => {

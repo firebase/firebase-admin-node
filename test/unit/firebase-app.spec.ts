@@ -40,6 +40,7 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
 const ONE_HOUR_IN_SECONDS = 60 * 60;
+const ONE_MINUTE_IN_MILLISECONDS = 60 * 1000;
 
 const deleteSpy = sinon.spy();
 function mockServiceFactory(app: FirebaseApp): FirebaseServiceInterface {
@@ -58,11 +59,9 @@ describe('FirebaseApp', () => {
   let firebaseNamespace: FirebaseNamespace;
   let firebaseNamespaceInternals: FirebaseNamespaceInternals;
 
-  before(() => utils.mockFetchAccessTokenRequests());
-
-  after(() => nock.cleanAll());
-
   beforeEach(() => {
+    utils.mockFetchAccessTokenRequests();
+
     this.clock = sinon.useFakeTimers(1000);
 
     mockApp = mocks.app();
@@ -82,6 +81,8 @@ describe('FirebaseApp', () => {
 
     _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
     mockedRequests = [];
+
+    nock.cleanAll();
   });
 
   describe('#name', () => {
@@ -219,9 +220,24 @@ describe('FirebaseApp', () => {
 
   describe('INTERNAL.getToken()', () => {
     let httpsSpy: sinon.SinonSpy;
+    let getAccessTokenSpy: sinon.SinonSpy;
+    let getAccessTokenStub: sinon.SinonStub;
 
-    beforeEach(() => httpsSpy = sinon.spy(https, 'request'));
-    afterEach(() => httpsSpy.restore());
+    beforeEach(() => {
+      httpsSpy = sinon.spy(https, 'request');
+    });
+
+    afterEach(() => {
+      httpsSpy.restore();
+
+      if (typeof getAccessTokenSpy !== 'undefined') {
+        getAccessTokenSpy.restore();
+      }
+
+      if (typeof getAccessTokenStub !== 'undefined') {
+        getAccessTokenStub.restore();
+      }
+    });
 
     it('throws a custom credential implementation which returns invalid access tokens', () => {
       const credential = {
@@ -277,7 +293,7 @@ describe('FirebaseApp', () => {
         this.clock.tick(1000);
         return mockApp.INTERNAL.getToken().then((token2) => {
           expect(token1).to.deep.equal(token2);
-          expect(https.request).to.have.been.calledOnce;
+          expect(httpsSpy).to.have.been.calledOnce;
         });
       });
     });
@@ -287,7 +303,219 @@ describe('FirebaseApp', () => {
         this.clock.tick(1000);
         return mockApp.INTERNAL.getToken(true).then((token2) => {
           expect(token1).to.not.deep.equal(token2);
-          expect(https.request).to.have.been.calledTwice;
+          expect(httpsSpy).to.have.been.calledTwice;
+        });
+      });
+    });
+
+    it('proactively refreshes the token five minutes before it expires', () => {
+      // Force a token refresh.
+      return mockApp.INTERNAL.getToken(true).then((token1) => {
+        // Forward the clock to five minutes and one second before expiry.
+        const expiryInMilliseconds = token1.expirationTime - Date.now();
+        this.clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS) - 1000);
+
+        return mockApp.INTERNAL.getToken().then((token2) => {
+          // Ensure the token has not been proactively refreshed.
+          expect(token1).to.deep.equal(token2);
+          expect(httpsSpy).to.have.been.calledOnce;
+
+          // Forward the clock to exactly five minutes before expiry.
+          this.clock.tick(1000);
+
+          return mockApp.INTERNAL.getToken().then((token3) => {
+            // Ensure the token was proactively refreshed.
+            expect(token1).to.not.deep.equal(token3);
+            expect(httpsSpy).to.have.been.calledTwice;
+          });
+        });
+      });
+    });
+
+    it('retries to proactively refresh the token if a proactive refresh attempt fails', () => {
+      // Force a token refresh.
+      return mockApp.INTERNAL.getToken(true).then((token1) => {
+        // Stub the getToken() method to return a rejected promise.
+        getAccessTokenStub = sinon.stub(mockApp.options.credential, 'getAccessToken');
+        getAccessTokenStub.returns(Promise.reject(new Error('Intentionally rejected')));
+
+        // Forward the clock to exactly five minutes before expiry.
+        const expiryInMilliseconds = token1.expirationTime - Date.now();
+        this.clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS));
+
+        // Forward the clock to exactly four minutes before expiry.
+        this.clock.tick(60 * 1000);
+
+        // Restore the stubbed getAccessToken() method.
+        getAccessTokenStub.restore();
+        getAccessTokenStub = undefined;
+
+        return mockApp.INTERNAL.getToken().then((token2) => {
+          // Ensure the token has not been proactively refreshed.
+          expect(token1).to.deep.equal(token2);
+          expect(httpsSpy).to.have.been.calledOnce;
+
+          // Forward the clock to exactly three minutes before expiry.
+          this.clock.tick(60 * 1000);
+
+          return mockApp.INTERNAL.getToken().then((token3) => {
+            // Ensure the token was proactively refreshed.
+            expect(token1).to.not.deep.equal(token3);
+            expect(httpsSpy).to.have.been.calledTwice;
+          });
+        });
+      });
+    });
+
+    it('stops retrying to proactively refresh the token after five attempts', () => {
+      // Force a token refresh.
+      let originalToken;
+      return mockApp.INTERNAL.getToken(true).then((token) => {
+        originalToken = token;
+
+        // Stub the credential's getAccessToken() method to always return a rejected promise.
+        getAccessTokenStub = sinon.stub(mockApp.options.credential, 'getAccessToken');
+        getAccessTokenStub.returns(Promise.reject(new Error('Intentionally rejected')));
+
+        // Expect the call count to initially be zero.
+        expect(getAccessTokenStub.callCount).to.equal(0);
+
+        // Forward the clock to exactly five minutes before expiry.
+        const expiryInMilliseconds = token.expirationTime - Date.now();
+        this.clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS));
+
+        // Due to synchronous timing issues when the timer is mocked, make a call to getToken()
+        // without forcing a refresh to ensure there is enough time for the underlying token refresh
+        // timeout to fire and complete.
+        return mockApp.INTERNAL.getToken();
+      }).then((token) => {
+        // Ensure the token was attempted to be proactively refreshed one time.
+        expect(getAccessTokenStub.callCount).to.equal(1);
+
+        // Ensure the proactive refresh failed.
+        expect(token).to.deep.equal(originalToken);
+
+        // Forward the clock to four minutes before expiry.
+        this.clock.tick(ONE_MINUTE_IN_MILLISECONDS);
+
+        // See note above about calling getToken().
+        return mockApp.INTERNAL.getToken();
+      }).then((token) => {
+        // Ensure the token was attempted to be proactively refreshed two times.
+        expect(getAccessTokenStub.callCount).to.equal(2);
+
+        // Ensure the proactive refresh failed.
+        expect(token).to.deep.equal(originalToken);
+
+        // Forward the clock to three minutes before expiry.
+        this.clock.tick(ONE_MINUTE_IN_MILLISECONDS);
+
+        // See note above about calling getToken().
+        return mockApp.INTERNAL.getToken();
+      }).then((token) => {
+        // Ensure the token was attempted to be proactively refreshed three times.
+        expect(getAccessTokenStub.callCount).to.equal(3);
+
+        // Ensure the proactive refresh failed.
+        expect(token).to.deep.equal(originalToken);
+
+        // Forward the clock to two minutes before expiry.
+        this.clock.tick(ONE_MINUTE_IN_MILLISECONDS);
+
+        // See note above about calling getToken().
+        return mockApp.INTERNAL.getToken();
+      }).then((token) => {
+        // Ensure the token was attempted to be proactively refreshed four times.
+        expect(getAccessTokenStub.callCount).to.equal(4);
+
+        // Ensure the proactive refresh failed.
+        expect(token).to.deep.equal(originalToken);
+
+        // Forward the clock to one minute before expiry.
+        this.clock.tick(ONE_MINUTE_IN_MILLISECONDS);
+
+        // See note above about calling getToken().
+        return mockApp.INTERNAL.getToken();
+      }).then((token) => {
+        // Ensure the token was attempted to be proactively refreshed five times.
+        expect(getAccessTokenStub.callCount).to.equal(5);
+
+        // Ensure the proactive refresh failed.
+        expect(token).to.deep.equal(originalToken);
+
+        // Forward the clock to expiry.
+        this.clock.tick(ONE_MINUTE_IN_MILLISECONDS);
+
+        // See note above about calling getToken().
+        return mockApp.INTERNAL.getToken();
+      }).then((token) => {
+        // Ensure the token was not attempted to be proactively refreshed a sixth time.
+        expect(getAccessTokenStub.callCount).to.equal(5);
+
+        // Ensure the token has never been refresh.
+        expect(token).to.deep.equal(originalToken);
+      });
+    });
+
+    it('resets the proactive refresh timeout upon a force refresh', () => {
+      // Force a token refresh.
+      return mockApp.INTERNAL.getToken(true).then((token1) => {
+         // Forward the clock to five minutes and one second before expiry.
+        let expiryInMilliseconds = token1.expirationTime - Date.now();
+        this.clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS) - 1000);
+
+        // Force a token refresh.
+        return mockApp.INTERNAL.getToken(true).then((token2) => {
+          // Ensure the token was force refreshed.
+          expect(token1).to.not.deep.equal(token2);
+          expect(httpsSpy).to.have.been.calledTwice;
+
+          // Forward the clock to exactly five minutes before the original token's expiry.
+          this.clock.tick(1000);
+
+          return mockApp.INTERNAL.getToken().then((token3) => {
+            // Ensure the token hasn't changed, meaning the proactive refresh was canceled.
+            expect(token2).to.deep.equal(token3);
+            expect(httpsSpy).to.have.been.calledTwice;
+
+            // Forward the clock to exactly five minutes before the refreshed token's expiry.
+            expiryInMilliseconds = token3.expirationTime - Date.now();
+            this.clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS));
+
+            return mockApp.INTERNAL.getToken().then((token4) => {
+              // Ensure the token was proactively refreshed.
+              expect(token3).to.not.deep.equal(token4);
+              expect(httpsSpy).to.have.been.calledThrice;
+            });
+          });
+        });
+      });
+    });
+
+    it('proactively refreshes the token at the next full minute if it expires in five minutes or less', () => {
+      // Turn off default mocking of one hour access tokens and replace it with a short-lived token.
+      nock.cleanAll();
+      utils.mockFetchAccessTokenRequests(/* token */ undefined, /* expiresIn */ 3 * 60 + 10);
+
+      // Force a token refresh.
+      return mockApp.INTERNAL.getToken(true).then((token1) => {
+        getAccessTokenSpy = sinon.spy(mockApp.options.credential, 'getAccessToken');
+
+        // Move the clock forward to three minutes and one second before expiry.
+        this.clock.tick(9 * 1000);
+
+        // Expect the call count to initially be zero.
+        expect(getAccessTokenSpy.callCount).to.equal(0);
+
+        // Move the clock forward to exactly three minutes before expiry.
+        this.clock.tick(1000);
+
+        // Expect the underlying getAccessToken() method to have been called once.
+        expect(getAccessTokenSpy.callCount).to.equal(1);
+
+        return mockApp.INTERNAL.getToken().then((token2) => {
+          // Ensure the token was proactively refreshed.
+          expect(token1).to.not.deep.equal(token2);
         });
       });
     });

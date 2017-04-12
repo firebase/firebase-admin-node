@@ -42,16 +42,20 @@ export function createAppWithOptions(options: Object) {
  *
  * @param {string} [token] The optional access token to return. If not specified, a random one
  *     is created.
+ * @param {number} [expiresIn] The optional expires in value to use for the access token.
  * @return {Object} A nock response object.
  */
-export function mockFetchAccessTokenRequests(token?: string): nock.Scope {
+export function mockFetchAccessTokenRequests(
+  token: string = generateRandomAccessToken(),
+  expiresIn: number = 60 * 60,
+): nock.Scope {
   return nock('https://accounts.google.com:443')
     .persist()
     .post('/o/oauth2/token')
     .reply(200, {
-      access_token: token || generateRandomAccessToken(),
+      access_token: token,
       token_type: 'Bearer',
-      expires_in: 3600,
+      expires_in: expiresIn,
     }, {
       'cache-control': 'no-cache, no-store, max-age=0, must-revalidate',
     });
