@@ -43,7 +43,6 @@ declare namespace admin {
     credential?: admin.credential.Credential;
     databaseAuthVariableOverride?: Object;
     databaseURL?: string;
-    serviceAccount?: string|admin.ServiceAccount;
     storageBucket?: string;
   }
 
@@ -71,8 +70,8 @@ declare namespace admin.app {
 
 declare namespace admin.auth {
   interface UserMetadata {
-    lastSignedInAt: Date;
-    createdAt: Date;
+    lastSignInTime: string;
+    creationTime: string;
 
     toJSON(): Object;
   }

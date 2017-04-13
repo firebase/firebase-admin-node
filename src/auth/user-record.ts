@@ -21,13 +21,13 @@ import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
  * Parses a time stamp string or number and returns the corresponding date if valid.
  *
  * @param {any} time The unix timestamp string or number in milliseconds.
- * @return {Date} The corresponding date if valid.
+ * @return {string} The corresponding date as a UTC string, if valid.
  */
-function parseDate(time: any): Date {
+function parseDate(time: any): string {
   try {
     let date = new Date(parseInt(time, 10));
     if (!isNaN(date.getTime())) {
-      return date;
+      return date.toUTCString();
     }
   } catch (e) {
     // Do nothing. null will be returned.
@@ -45,23 +45,23 @@ function parseDate(time: any): Date {
  * @constructor
  */
 export class UserMetadata {
-  public readonly createdAt: Date;
-  public readonly lastSignedInAt: Date;
+  public readonly creationTime: string;
+  public readonly lastSignInTime: string;
 
   constructor(response: any) {
     // Creation date should always be available but due to some backend bugs there
     // were cases in the past where users did not have creation date properly set.
     // This included legacy Firebase migrating project users and some anonymous users.
     // These bugs have already been addressed since then.
-    utils.addReadonlyGetter(this, 'createdAt', parseDate(response.createdAt));
-    utils.addReadonlyGetter(this, 'lastSignedInAt', parseDate(response.lastLoginAt));
+    utils.addReadonlyGetter(this, 'creationTime', parseDate(response.createdAt));
+    utils.addReadonlyGetter(this, 'lastSignInTime', parseDate(response.lastLoginAt));
   }
 
   /** @return {Object} The plain object representation of the user's metadata. */
   public toJSON(): Object {
     return {
-      lastSignedInAt: this.lastSignedInAt,
-      createdAt: this.createdAt,
+      lastSignInTime: this.lastSignInTime,
+      creationTime: this.creationTime,
     };
   }
 }

@@ -90,8 +90,8 @@ function getUserJSON(): Object {
     ],
     photoURL: 'https://lh3.googleusercontent.com/1234567890/photo.jpg',
     metadata: {
-      lastSignedInAt: new Date(1476235905000),
-      createdAt: new Date(1476136676000),
+      lastSignInTime: new Date(1476235905000).toUTCString(),
+      creationTime: new Date(1476136676000).toUTCString(),
     },
   };
 }
@@ -217,62 +217,62 @@ describe('UserMetadata', () => {
   const expectedLastLoginAt = 1476235905000;
   const expectedCreatedAt = 1476136676000;
   const actualMetadata: UserMetadata = new UserMetadata({
-    lastLoginAt: expectedLastLoginAt.toString(),
-    createdAt: expectedCreatedAt.toString(),
+    lastLoginAt: expectedLastLoginAt,
+    createdAt: expectedCreatedAt,
   });
   const expectedMetadataJSON = {
-    lastSignedInAt: new Date(expectedLastLoginAt),
-    createdAt: new Date(expectedCreatedAt),
+    lastSignInTime: new Date(expectedLastLoginAt).toUTCString(),
+    creationTime: new Date(expectedCreatedAt).toUTCString(),
   };
 
   describe('constructor', () =>  {
-    it('should initialize as expected when a valid createdAt is provided', () => {
+    it('should initialize as expected when a valid creationTime is provided', () => {
       expect(() => {
         return new UserMetadata({createdAt: '1476136676000'});
       }).not.to.throw(Error);
     });
 
-    it('should set createdAt and lastSignedInAt to null when not provided', () => {
+    it('should set creationTime and lastSignInTime to null when not provided', () => {
       let metadata = new UserMetadata({});
-      expect(metadata.createdAt).to.be.null;
-      expect(metadata.lastSignedInAt).to.be.null;
+      expect(metadata.creationTime).to.be.null;
+      expect(metadata.lastSignInTime).to.be.null;
     });
 
-    it('should set createdAt to null when createdAt value is invalid', () => {
+    it('should set creationTime to null when creationTime value is invalid', () => {
       let metadata = new UserMetadata({
         createdAt: 'invalid',
       });
-      expect(metadata.createdAt).to.be.null;
-      expect(metadata.lastSignedInAt).to.be.null;
+      expect(metadata.creationTime).to.be.null;
+      expect(metadata.lastSignInTime).to.be.null;
     });
 
-    it('should set lastSignedInAt to null when lastLoginAt value is invalid', () => {
+    it('should set lastSignInTime to null when lastLoginAt value is invalid', () => {
       let metadata = new UserMetadata({
         createdAt: '1476235905000',
         lastLoginAt: 'invalid',
       });
-      expect(metadata.lastSignedInAt).to.be.null;
+      expect(metadata.lastSignInTime).to.be.null;
     });
   });
 
   describe('getters', () => {
-    it('should return expected lastSignedInAt', () => {
-      expect(actualMetadata.lastSignedInAt.getTime()).to.equal(expectedLastLoginAt);
+    it('should return expected lastSignInTime', () => {
+      expect(actualMetadata.lastSignInTime).to.equal(expectedMetadataJSON.lastSignInTime);
     });
 
-    it('should throw when modifying readonly lastSignedInAt property', () => {
+    it('should throw when modifying readonly lastSignInTime property', () => {
       expect(() => {
-        (actualMetadata as any).lastSignedInAt = new Date();
+        (actualMetadata as any).lastSignInTime = new Date();
       }).to.throw(Error);
     });
 
-    it('should return expected createdAt', () => {
-      expect(actualMetadata.createdAt.getTime()).to.equal(expectedCreatedAt);
+    it('should return expected creationTime', () => {
+      expect(actualMetadata.creationTime).to.equal(expectedMetadataJSON.creationTime);
     });
 
-    it('should throw when modifying readonly createdAt property', () => {
+    it('should throw when modifying readonly creationTime property', () => {
       expect(() => {
-        (actualMetadata as any).createdAt = new Date();
+        (actualMetadata as any).creationTime = new Date();
       }).to.throw(Error);
     });
   });
@@ -373,15 +373,15 @@ describe('UserRecord', () => {
     it('should throw when modifying readonly metadata property', () => {
       expect(() => {
         (userRecord as any).metadata = new UserMetadata({
-          lastLoginAt: new Date().getTime(),
-          createdAt: new Date().getTime(),
+          createdAt: new Date().toUTCString(),
+          lastLoginAt: new Date().toUTCString(),
         });
       }).to.throw(Error);
     });
 
     it('should throw when modifying readonly metadata internals', () => {
       expect(() => {
-        (userRecord as any).metadata.lastSignedInAt = new Date();
+        (userRecord as any).metadata.lastSignInTime = new Date();
       }).to.throw(Error);
     });
 
