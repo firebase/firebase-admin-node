@@ -4,7 +4,6 @@ var serviceAccount = require('./test/resources/key.json');
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: 'https://admin-sdks-test.firebaseio.com',
   storageBucket: 'admin-sdks-test.appspot.com',
 });
 
