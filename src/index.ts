@@ -1,5 +1,6 @@
 import * as firebase from './default-namespace';
 import registerAuth from './auth/register-auth';
+import registerStorage from './storage/register-storage';
 import registerMessaging from './messaging/register-messaging';
 
 // Register the Database service
@@ -14,5 +15,8 @@ registerAuth();
 
 // Register the Messaging service
 registerMessaging();
+
+// Register the Storage service
+registerStorage();
 
 export = firebase;

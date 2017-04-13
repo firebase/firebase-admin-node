@@ -25,6 +25,9 @@
     "faye-websocket": "0.9.3",
     "jsonwebtoken": "7.1.9"
   },
+  "optionalDependencies": {
+    "@google-cloud/storage": "^1.0.0"
+  },
   "devDependencies": {
     "@types/chai": "^3.4.34",
     "@types/chai-as-promised": "0.0.29",
