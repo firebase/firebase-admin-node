@@ -106,7 +106,7 @@ gulp.task('compile', function() {
 gulp.task('copyDatabase', function() {
   return gulp.src(paths.databaseSrc)
     // Add headers
-    .pipe(header(fs.readFileSync('src/database/database-license.txt', 'utf8')))
+    .pipe(header(fs.readFileSync('third_party/database-license.txt', 'utf8')))
     .pipe(header(banner))
 
     // Write to build directory
