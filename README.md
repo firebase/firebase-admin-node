@@ -43,6 +43,13 @@ import * as admin from "firebase-admin";
 ```
 
 
+## Contributing
+
+Please refer to the [CONTRIBUTING page](./CONTRIBUTING.md) for more information
+about how you can contribute to this project. We welcome bug reports, feature
+requests, code review feedback, and also pull requests.
+
+
 ## Documentation
 
 * [Setup Guide](https://firebase.google.com/docs/admin/setup/)
@@ -67,5 +74,8 @@ and for their longtime use and support of the Firebase platform.
 
 ## License
 
-The Firebase Admin Node.js SDK is made available with the
-[Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0) license.
+Firebase Admin Node.js SDK is licensed under the
+[Apache License, version 2.0](http://www.apache.org/licenses/LICENSE-2.0).
+
+Your use of Firebase is governed by the
+[Terms of Service for Firebase Services](https://firebase.google.com/terms/).
