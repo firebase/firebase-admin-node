@@ -5,8 +5,8 @@
 
  * [Overview](#overview)
  * [Installation](#installation)
+ * [Contributing](#contributing)
  * [Documentation](#documentation)
- * [Release Notes](#release-notes)
  * [Acknowledgments](#acknowledgments)
  * [License](#license)
 
@@ -57,12 +57,7 @@ requests, code review feedback, and also pull requests.
 * [Authentication Guide](https://firebase.google.com/docs/auth/admin/)
 * [Cloud Messaging Guide](https://firebase.google.com/docs/cloud-messaging/admin/)
 * [API Reference](https://firebase.google.com/docs/reference/admin/node/)
-
-
-## Release Notes
-
-Release Notes for the Firebase Admin Node.js SDK are available
-[here](https://firebase.google.com/support/release-notes/admin/node/).
+* [Release Notes](https://firebase.google.com/support/release-notes/admin/node/)
 
 
 ## Acknowledgments
