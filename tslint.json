@@ -1,0 +1,18 @@
+{
+  "extends": "tslint:latest",
+  "rules": {
+    "interface-name": false,
+    "max-line-length": false,
+    "member-ordering": [true,
+      "public-before-private",
+      "static-before-instance",
+      "variables-before-functions"
+    ],
+    "max-line-length": [true, 120],
+    "no-consecutive-blank-lines": false,
+    "object-literal-sort-keys": false,
+    "ordered-imports": false,
+    "quotemark": [true, "single", "avoid-escape"],
+    "variable-name": [true, "ban-keywords", "check-format", "allow-trailing-underscore"]
+  }
+}
