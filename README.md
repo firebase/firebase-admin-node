@@ -1,3 +1,7 @@
+This is an archive of the
+[firebase/firebase-admin-node](https://github.com/firebase/firebase-admin-node)
+repo as it existed before its history was nuked, and made open source.
+
 # Firebase Admin Node.js SDK
 
 
