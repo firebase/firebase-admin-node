@@ -171,7 +171,7 @@ describe('Credential', () => {
         }).to.throw('Certificate object must contain a string "client_email" property');
       });
 
-      it('should throw if certificate object does not contain a valid "private_key"', () => {
+      it('should throw if certificate object does not contain a "private_key"', () => {
         mockCertificateObject.private_key = '';
 
         expect(() => {
@@ -183,6 +183,14 @@ describe('Credential', () => {
         expect(() => {
           return new Certificate(mockCertificateObject);
         }).to.throw('Certificate object must contain a string "private_key" property');
+      });
+
+      it('should throw if certificate object does not contain a valid "private_key"', () => {
+        mockCertificateObject.private_key = 'invalid.key';
+
+        expect(() => {
+          return new Certificate(mockCertificateObject);
+        }).to.throw('Failed to parse private key: Error: Invalid PEM formatted message.');
       });
 
       it('should not throw given a valid certificate object', () => {
