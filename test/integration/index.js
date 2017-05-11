@@ -26,32 +26,23 @@ var auth = require('./auth');
 var database = require('./database');
 var messaging = require('./messaging');
 
-var serviceAccount;
-try {
-  serviceAccount = require('../resources/key.json');
-} catch(error) {
-  console.log(chalk.red(
-    'The integration test suite requires a service account key JSON file for the ' +
-    '`admin-sdks-test` project to be saved to `test/resources/key.json`.',
-    error
-  ));
-  process.exit(1);
-}
+var serviceAccount = utils.getCredential();
+var databaseURL = 'https://' + utils.getProjectId() + '.firebaseio.com';
 
 var defaultApp = admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: 'https://admin-sdks-test.firebaseio.com',
+  databaseURL: databaseURL,
 });
 
 var nullApp = admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: 'https://admin-sdks-test.firebaseio.com',
+  databaseURL: databaseURL,
   databaseAuthVariableOverride: null,
 }, 'null');
 
 var nonNullApp = admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: 'https://admin-sdks-test.firebaseio.com',
+  databaseURL: databaseURL,
   databaseAuthVariableOverride: {
     uid: utils.generateRandomString(20),
   },
