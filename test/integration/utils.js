@@ -37,9 +37,9 @@ try {
 }
 
 var apiKey = process.argv[2];
-if (apiKey == undefined) {
+if (typeof apiKey === 'undefined') {
   console.log(chalk.red(
-    'The integration test suite requires a API key for a ' +
+    'The integration test suite requires an API key for a ' +
     'Firebase project to be specified as a command-line argument.'));
   process.exit(1);
 }
@@ -62,6 +62,11 @@ function getProjectId() {
   return serviceAccount.project_id;
 }
 
+/**
+ * Returns the API key of the project the integration tests are executed against.
+ *
+ * @return {string} A Firebase API key.
+ */
 function getApiKey() {
   return apiKey;
 }
