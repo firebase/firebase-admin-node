@@ -16,6 +16,8 @@
 
 var _ = require('lodash');
 var chalk = require('chalk');
+var fs = require('fs');
+var path = require('path');
 
 var failureCount = 0;
 var successCount = 0;
@@ -36,11 +38,16 @@ try {
   process.exit(1);
 }
 
-var apiKey = process.argv[2];
-if (typeof apiKey === 'undefined') {
+var apiKey;
+
+try {
+  apiKey = fs.readFileSync(path.join(__dirname, '../resources/apikey.txt'))
+} catch (error) {
   console.log(chalk.red(
     'The integration test suite requires an API key for a ' +
-    'Firebase project to be specified as a command-line argument.'));
+    'Firebase project to be saved to `test/resources/apikey.txt`.',
+    error
+  ));
   process.exit(1);
 }
 
