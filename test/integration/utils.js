@@ -16,6 +16,8 @@
 
 var _ = require('lodash');
 var chalk = require('chalk');
+var fs = require('fs');
+var path = require('path');
 
 var failureCount = 0;
 var successCount = 0;
@@ -23,6 +25,58 @@ var successCount = 0;
 var failure = chalk.red;
 var success = chalk.green;
 
+var serviceAccount;
+
+try {
+  serviceAccount = require('../resources/key.json');
+} catch(error) {
+  console.log(chalk.red(
+    'The integration test suite requires a service account key JSON file for a ' +
+    'Firebase project to be saved to `test/resources/key.json`.',
+    error
+  ));
+  process.exit(1);
+}
+
+var apiKey;
+
+try {
+  apiKey = fs.readFileSync(path.join(__dirname, '../resources/apikey.txt'))
+} catch (error) {
+  console.log(chalk.red(
+    'The integration test suite requires an API key for a ' +
+    'Firebase project to be saved to `test/resources/apikey.txt`.',
+    error
+  ));
+  process.exit(1);
+}
+
+/**
+ * Returns the service account credential used for runnnig integration tests.
+ *
+ * @return {Object} A service account credential.
+ */
+function getCredential() {
+  return serviceAccount;
+}
+
+/**
+ * Returns the ID of the project the integration tests are executed against.
+ *
+ * @return {string} A project ID.
+ */
+function getProjectId() {
+  return serviceAccount.project_id;
+}
+
+/**
+ * Returns the API key of the project the integration tests are executed against.
+ *
+ * @return {string} A Firebase API key.
+ */
+function getApiKey() {
+  return apiKey;
+}
 
 /**
  * Logs a message to the console in green text.
@@ -125,5 +179,8 @@ module.exports = {
   logFailure: logFailure,
   logSuccess: logSuccess,
   logResults: logResults,
-  generateRandomString: generateRandomString
+  generateRandomString: generateRandomString,
+  getCredential: getCredential,
+  getProjectId: getProjectId,
+  getApiKey: getApiKey
 }

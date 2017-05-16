@@ -15,6 +15,7 @@
  */
 
 import * as jwt from 'jsonwebtoken';
+import * as forge from 'node-forge';
 
 // Use untyped import syntax for Node built-ins
 import fs = require('fs');
@@ -166,6 +167,14 @@ export class Certificate {
 
     if (typeof errorMessage !== 'undefined') {
       throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
+    }
+
+    try {
+      forge.pki.privateKeyFromPem(this.privateKey);
+    } catch (error) {
+      throw new FirebaseAppError(
+        AppErrorCodes.INVALID_CREDENTIAL,
+        'Failed to parse private key: ' + error);
     }
   }
 }

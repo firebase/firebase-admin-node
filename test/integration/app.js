@@ -40,7 +40,7 @@ function test(utils) {
   );
 
   utils.assert(
-    defaultApp.options.databaseURL === 'https://admin-sdks-test.firebaseio.com',
+    defaultApp.options.databaseURL === 'https://' + utils.getProjectId() + '.firebaseio.com',
     'app.options.databaseURL',
     'databaseURL is incorrect.'
   );

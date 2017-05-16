@@ -18,10 +18,11 @@ var _ = require('lodash');
 var firebase = require('firebase');
 
 var admin = require('../../lib/index');
+var testutils = require('./utils');
 
 firebase.initializeApp({
-  apiKey: "AIzaSyB9merDS-vSCzloW_WpTibO_-NzgoFR2JA",
-  authDomain: "admin-sdks-test.firebaseapp.com",
+  apiKey: testutils.getApiKey(),
+  authDomain: testutils.getProjectId() + ".firebaseapp.com",
 });
 
 function test(utils) {

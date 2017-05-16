@@ -137,11 +137,13 @@ To run the integration test suite:
 $ node test/integration   # Run integration test suite
 ```
 
-The integration test suite requires you to generate a service account key JSON file for the
-**admin-sdks-test** Firebase project and save it to `test/resources/key.json`. You can generate this
-from the
-[**Service Accounts**](https://console.firebase.google.com/project/admin-sdks-test/settings/serviceaccounts/adminsdk)
-tab of that project's settings page.
+The integration test suite requires a service account JSON key file, and an API key for a Firebase
+project. Create a new project in the [Firebase console](https://console.firebase.google.com) if
+you do not already have one. Use a separate, dedicated project for integration tests since the
+test suite makes a large number of writes to the Firebase realtime database. Download the service
+account key file from the "Settings > Service Accounts" page of the project, and copy it to
+`test/resources/key.json`. Also obtain the API key for the same project from "Settings > General",
+and save it to `test/resource/apikey.txt`.
 
 ### Repo Organization
 

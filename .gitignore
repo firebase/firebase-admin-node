@@ -10,6 +10,7 @@ node_modules/
 
 # Real key file should not be checked in
 test/resources/key.json
+test/resources/apikey.txt
 
 # Release tarballs should not be checked in
 firebase-admin-*.tgz
