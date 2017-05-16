@@ -1,6 +1,6 @@
 {
   "name": "firebase-admin",
-  "version": "4.2.1",
+  "version": "5.0.0",
   "description": "Firebase admin SDK for Node.js",
   "author": "Firebase (https://firebase.google.com/)",
   "license": "Apache-2.0",

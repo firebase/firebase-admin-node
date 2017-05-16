@@ -1,6 +1,6 @@
 {
   "name": "firebase-admin",
-  "version": "4.2.1",
+  "version": "5.0.0",
   "dependencies": {
     "@types/jsonwebtoken": {
       "version": "7.2.0",
@@ -8,9 +8,9 @@
       "resolved": "https://registry.npmjs.org/@types/jsonwebtoken/-/jsonwebtoken-7.2.0.tgz"
     },
     "@types/node": {
-      "version": "7.0.12",
+      "version": "7.0.18",
       "from": "@types/node@*",
-      "resolved": "https://registry.npmjs.org/@types/node/-/node-7.0.12.tgz"
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-7.0.18.tgz"
     },
     "base64url": {
       "version": "2.0.0",
@@ -76,6 +76,11 @@
       "version": "0.7.3",
       "from": "ms@>=0.7.1 <0.8.0",
       "resolved": "https://registry.npmjs.org/ms/-/ms-0.7.3.tgz"
+    },
+    "node-forge": {
+      "version": "0.7.1",
+      "from": "node-forge@0.7.1",
+      "resolved": "https://registry.npmjs.org/node-forge/-/node-forge-0.7.1.tgz"
     },
     "safe-buffer": {
       "version": "5.0.1",
