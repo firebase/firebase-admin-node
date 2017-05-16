@@ -77,6 +77,11 @@
       "from": "ms@>=0.7.1 <0.8.0",
       "resolved": "https://registry.npmjs.org/ms/-/ms-0.7.3.tgz"
     },
+    "node-forge": {
+      "version": "0.7.1",
+      "from": "node-forge@0.7.1",
+      "resolved": "https://registry.npmjs.org/node-forge/-/node-forge-0.7.1.tgz"
+    },
     "safe-buffer": {
       "version": "5.0.1",
       "from": "safe-buffer@>=5.0.1 <6.0.0",
