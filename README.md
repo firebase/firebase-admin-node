@@ -15,8 +15,8 @@
 
 [Firebase](https://firebase.google.com) provides the tools and infrastructure
 you need to develop your app, grow your user base, and earn money. The Firebase
-Admin Node.js SDK provides admin (second-party) access to several Firebase
-services.
+Admin Node.js SDK enables access to Firebase services from privileged environments
+(such as servers or cloud) in Node.js.
 
 For more information, visit the
 [Firebase Admin SDK setup guide](https://firebase.google.com/docs/admin/setup/).
