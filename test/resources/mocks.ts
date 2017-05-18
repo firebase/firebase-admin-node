@@ -27,7 +27,7 @@ import * as jwt from 'jsonwebtoken';
 import {FirebaseNamespace} from '../../src/firebase-namespace';
 import {FirebaseServiceInterface} from '../../src/firebase-service';
 import {FirebaseApp, FirebaseAppOptions} from '../../src/firebase-app';
-import {CertCredential, ApplicationDefaultCredential} from '../../src/auth/credential';
+import {Certificate, Credential, CertCredential, GoogleOAuthAccessToken} from '../../src/auth/credential';
 
 const ALGORITHM = 'RS256';
 const ONE_HOUR_IN_SECONDS = 60 * 60;
@@ -60,15 +60,28 @@ export let appOptionsNoDatabaseUrl: FirebaseAppOptions = {
   credential,
 };
 
+export class MockCredential implements Credential {
+  public getAccessToken(): Promise<GoogleOAuthAccessToken> {
+    return Promise.resolve({
+      access_token: 'mock-token',
+      expires_in: 3600,
+    });
+  }
+
+  public getCertificate(): Certificate {
+    return null;
+  }
+}
+
 export function app(): FirebaseApp {
   const namespaceInternals = new FirebaseNamespace().INTERNAL;
   namespaceInternals.removeApp = _.noop;
   return new FirebaseApp(appOptions, appName, namespaceInternals);
 }
 
-export function applicationDefaultApp(): FirebaseApp {
+export function mockCredentialApp(): FirebaseApp {
   return new FirebaseApp({
-    credential: new ApplicationDefaultCredential(),
+    credential: new MockCredential(),
     databaseURL,
   }, appName, new FirebaseNamespace().INTERNAL);
 }

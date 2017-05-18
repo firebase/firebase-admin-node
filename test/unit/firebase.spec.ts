@@ -136,12 +136,21 @@ describe('Firebase', () => {
     });
 
     it('should initialize SDK given an application default credential', () => {
+      let credPath: string;
+      credPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../resources/mock.key.json');
       firebaseAdmin.initializeApp({
         credential: firebaseAdmin.credential.applicationDefault(),
       });
 
-      return firebaseAdmin.app().INTERNAL.getToken()
-        .should.eventually.have.keys(['accessToken', 'expirationTime']);
+      return firebaseAdmin.app().INTERNAL.getToken().then(token => {
+        if (typeof credPath === 'undefined') {
+          delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+        } else {
+          process.env.GOOGLE_APPLICATION_CREDENTIALS = credPath;
+        }
+        return token;
+      }).should.eventually.have.keys(['accessToken', 'expirationTime']);
     });
 
     // TODO(jwenger): mock out the refresh token endpoint so this test will work
