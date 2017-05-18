@@ -169,7 +169,7 @@ describe('Auth', () => {
     });
 
     it('should throw if a cert credential is not specified', () => {
-      const applicationDefaultCredentialAuth = new Auth(mocks.applicationDefaultApp());
+      const applicationDefaultCredentialAuth = new Auth(mocks.mockCredentialApp());
 
       expect(() => {
         applicationDefaultCredentialAuth.createCustomToken(mocks.uid, mocks.developerClaims);
@@ -215,7 +215,7 @@ describe('Auth', () => {
     afterEach(() => stub.restore());
 
     it('should throw if a cert credential is not specified', () => {
-      const applicationDefaultCredentialAuth = new Auth(mocks.applicationDefaultApp());
+      const applicationDefaultCredentialAuth = new Auth(mocks.mockCredentialApp());
 
       expect(() => {
         applicationDefaultCredentialAuth.verifyIdToken(mockIdToken);
@@ -231,7 +231,7 @@ describe('Auth', () => {
     it('should work with a non-cert credential when the GCLOUD_PROJECT environment variable is present', () => {
       process.env.GCLOUD_PROJECT = mocks.projectId;
 
-      const applicationDefaultCredentialAuth = new Auth(mocks.applicationDefaultApp());
+      const applicationDefaultCredentialAuth = new Auth(mocks.mockCredentialApp());
 
       return applicationDefaultCredentialAuth.verifyIdToken(mockIdToken).then(() => {
         expect(stub).to.have.been.calledOnce.and.calledWith(mockIdToken);
