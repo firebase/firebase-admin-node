@@ -144,7 +144,7 @@ describe('Firebase', () => {
       });
 
       return firebaseAdmin.app().INTERNAL.getToken().then(token => {
-        if (credPath === 'undefined') {
+        if (typeof credPath === 'undefined') {
           delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
         } else {
           process.env.GOOGLE_APPLICATION_CREDENTIALS = credPath;
