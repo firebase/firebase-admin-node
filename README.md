@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/firebase/firebase-admin-node.svg?branch=master)](https://travis-ci.org/firebase/firebase-admin-node)
+
 # Firebase Admin Node.js SDK
 
 
