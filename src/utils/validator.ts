@@ -161,8 +161,8 @@ export function isURL(urlStr: any): boolean {
       return false;
     }
     // Allow for pathnames: (/chars+)*
-    // Where chars can be a combination of: a-z A-Z 0-9 - _ . ~ ! $ & ' ( ) * + , ; = : @
-    let pathnameRe = /^(\/[\w\-\.\~\!\$\'\(\)\*\+\,\;\=\:\@]+)*$/;
+    // Where chars can be a combination of: a-z A-Z 0-9 - _ . ~ ! $ & ' ( ) * + , ; = : @ %
+    let pathnameRe = /^(\/[\w\-\.\~\!\$\'\(\)\*\+\,\;\=\:\@\%]+)*$/;
     // Validate pathname.
     if (pathname &&
         pathname !== '/' &&
