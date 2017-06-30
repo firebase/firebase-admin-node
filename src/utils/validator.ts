@@ -132,6 +132,27 @@ export function isEmail(email: any): boolean {
 
 
 /**
+ * Validates that a string is a valid phone number.
+ *
+ * @param {any} phoneNumber The string to validate.
+ * @return {boolean} Whether the string is a valid phone number or not.
+ */
+export function isPhoneNumber(phoneNumber: any): boolean {
+  if (typeof phoneNumber !== 'string') {
+    return false;
+  }
+  // Phone number validation is very lax here. Backend will enforce E.164
+  // spec compliance and will normalize accordingly.
+  // The phone number string must be non-empty and starts with a plus sign.
+  let re1 = /^\+/;
+  // The phone number string must contain at least one alphanumeric character.
+  let re2 = /[\da-zA-Z]+/;
+  return re1.test(phoneNumber) && re2.test(phoneNumber);
+}
+
+
+
+/**
  * Validates that a string is a valid web URL.
  *
  * @param {any} urlStr The string to validate.
