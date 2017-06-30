@@ -64,30 +64,24 @@ export class Storage implements FirebaseServiceInterface {
       });
     }
 
-    // TODO: properly validate storageBucket option (although maybe this should be done in the
-    //       FirebaseApp constructor instead?)
-    // if (!validator.isNonEmptyString(app.options.storageBucket)) {
-    // }
-
     const cert = app.options.credential.getCertificate();
-    this.storageClient = storage({
-      // TODO: as far as I can tell, this is not required...
-      // projectId: cert.projectId,
-
-      // TODO: this will only work for cert credential; need to figure out a way to authenticate
-      //       gcloud via our existing credentials.
-      // Relevant code:
-      //       https://github.com/GoogleCloudPlatform/google-cloud-node/blob/
-      //       895529e11318bb849777cf9fa94e7117e5b3b203/packages/common/src/util.js#L326
-      credentials: {
-        private_key: cert.privateKey,
-        client_email: cert.clientEmail,
-      },
-    });
+    if (cert != null) {
+      // cert is available when the SDK has been initialized with a service account JSON file,
+      // or by setting the GOOGLE_APPLICATION_CREDENTIALS envrionment variable.
+      this.storageClient = storage({
+        credentials: {
+          private_key: cert.privateKey,
+          client_email: cert.clientEmail,
+        },
+      });
+    } else {
+      // In all other cases try to use the Google application default credentials.
+      this.storageClient = storage();
+    }
     this.appInternal = app;
   }
 
-  public bucket(name?: string): any {
+  public bucket(name?: string): Promise<any> {
     let bucketName;
     if (typeof name !== 'undefined') {
       bucketName = name;
@@ -102,7 +96,17 @@ export class Storage implements FirebaseServiceInterface {
                  'explicitly when calling the getBucket() method.',
       });
     }
-    return this.storageClient.bucket(bucketName);
+    const bucket = this.storageClient.bucket(bucketName);
+    return bucket.exists()
+      .then((data) => {
+        if (data[0]) {
+          return bucket;
+        }
+        throw new FirebaseError({
+          code: 'storage/invalid-argument',
+          message: 'Bucket ' + bucketName + ' does not exist.',
+        });
+      });
   }
 
   /**

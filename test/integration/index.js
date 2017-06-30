@@ -25,19 +25,23 @@ var app = require('./app');
 var auth = require('./auth');
 var database = require('./database');
 var messaging = require('./messaging');
+var storage = require('./storage');
 
 var serviceAccount = utils.getCredential();
 var databaseURL = 'https://' + utils.getProjectId() + '.firebaseio.com';
+var storageBucket = utils.getProjectId() + '.appspot.com';
 
 var defaultApp = admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: databaseURL,
+  storageBucket: storageBucket,
 });
 
 var nullApp = admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: databaseURL,
   databaseAuthVariableOverride: null,
+  storageBucket: storageBucket,
 }, 'null');
 
 var nonNullApp = admin.initializeApp({
@@ -46,6 +50,7 @@ var nonNullApp = admin.initializeApp({
   databaseAuthVariableOverride: {
     uid: utils.generateRandomString(20),
   },
+  storageBucket: storageBucket,
 }, 'nonNull');
 
 
@@ -81,6 +86,7 @@ return Promise.resolve()
   .then(_.partial(auth.test, utils))
   .then(_.partial(database.test, utils))
   .then(_.partial(messaging.test, utils))
+  .then(_.partial(storage.test, utils))
   .then(utils.logResults)
   .catch(function(error) {
     console.log(chalk.red('\nSOMETHING WENT WRONG!', error));
