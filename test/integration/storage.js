@@ -21,15 +21,28 @@ function test(utils) {
   console.log('\nStorage:');
   
   function testDefaultBucket() {
-    return admin.storage().bucket().then((bucket) => {
-      return testCloudStorage(bucket, 'storage().bucket()');
-    });
+    return admin.storage().bucket()
+      .then((bucket) => {
+        return verifyBucket(bucket, 'storage().bucket()');
+      })
+      .then(() => {
+        utils.logSuccess('storage().bucket()');
+      })
+      .catch((error) => {
+        handleGcsError(error, 'storage().bucket()');
+      });
   }
 
   function testCustomBucket() {
     return admin.storage().bucket(utils.getProjectId() + '.appspot.com')
       .then((bucket) => {
-        return testCloudStorage(bucket, 'storage().bucket(string)');
+        return verifyBucket(bucket, 'storage().bucket(string)');
+      })
+      .then(() => {
+        utils.logSuccess('storage().bucket(string)');
+      })
+      .catch((error) => {
+        handleGcsError(error, 'storage().bucket(string)');
       });
   }
 
@@ -49,7 +62,7 @@ function test(utils) {
       });
   }
 
-  function testCloudStorage(bucket, testName) {
+  function verifyBucket(bucket, testName) {
     const expected = 'Hello World: ' + testName;
     const file = bucket.file('data_' + Date.now() + '.txt');
     return file.save(expected)
@@ -57,26 +70,35 @@ function test(utils) {
         return file.download();
       })
       .then((data) => {
-        return data[0].toString();
-      })
-      .then((actual) => {
-        utils.assert(
-            actual == expected, testName,
-            'Data read from GCS do not match expected'
-        );
+        if (data[0].toString() != expected) {
+          utils.logFailure(
+              testName + '.file().download()',
+              'Data read from GCS do not match expected');
+        }
         return file.delete();
       })
-      .catch((error) => {
-        let reason;
-        if (error.message) {
-            reason = error.message;
-        } else {
-            reason = JSON.stringify(error);
+      .then((resp) => {
+        return file.exists();
+      })
+      .then((data) => {
+        if (data[0]) {
+          utils.logFailure(
+              testName + '.file().delete()',
+              'Failed to delete file from GCS');
         }
-        utils.logFailure(
-            testName, 
-            'Error while interacting with bucket: ' + reason);    
       });
+  }
+
+  function handleGcsError(error, testName) {
+    let reason;
+    if (error.message) {
+        reason = error.message;
+    } else {
+        reason = JSON.stringify(error);
+    }
+    utils.logFailure(
+        testName, 
+        'Error while interacting with bucket: ' + reason);    
   }
 
   return Promise.resolve()
