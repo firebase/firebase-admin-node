@@ -25,7 +25,6 @@
   ],
   "types": "./lib/index.d.ts",
   "dependencies": {
-    "@google-cloud/storage": "^1.1.1",
     "@types/jsonwebtoken": "^7.1.33",
     "faye-websocket": "0.9.3",
     "jsonwebtoken": "7.1.9",
