@@ -25,10 +25,14 @@
   ],
   "types": "./lib/index.d.ts",
   "dependencies": {
+    "@google-cloud/storage": "^1.1.1",
     "@types/jsonwebtoken": "^7.1.33",
     "faye-websocket": "0.9.3",
     "jsonwebtoken": "7.1.9",
     "node-forge": "0.7.1"
+  },
+  "optionalDependencies": {
+    "@google-cloud/storage": "^1.1.1"
   },
   "devDependencies": {
     "@types/chai": "^3.4.34",

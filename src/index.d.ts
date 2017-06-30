@@ -53,6 +53,7 @@ declare namespace admin {
   function auth(app?: admin.app.App): admin.auth.Auth;
   function database(app?: admin.app.App): admin.database.Database;
   function messaging(app?: admin.app.App): admin.messaging.Messaging;
+  function storage(app?: admin.app.App): admin.storage.Storage;
   function initializeApp(options: admin.AppOptions, name?: string): admin.app.App;
 }
 
@@ -64,6 +65,7 @@ declare namespace admin.app {
     auth(): admin.auth.Auth;
     database(): admin.database.Database;
     messaging(): admin.messaging.Messaging;
+    storage(): admin.storage.Storage;
     delete(): Promise<void>;
   }
 }
@@ -366,6 +368,13 @@ declare namespace admin.messaging {
       registrationTokens: string[],
       topic: string
     ): Promise<admin.messaging.MessagingTopicManagementResponse>;
+  }
+}
+
+declare namespace admin.storage {
+  interface Storage {
+    app: admin.app.App;
+    bucket(name?: string): any;
   }
 }
 

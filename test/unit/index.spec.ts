@@ -34,3 +34,6 @@ import './auth/auth-api-request.spec';
 
 // Messaging
 import './messaging/messaging.spec';
+
+// Storage
+import './storage/storage.spec';
