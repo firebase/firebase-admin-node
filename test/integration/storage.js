@@ -29,7 +29,7 @@ function test(utils) {
         utils.logSuccess('storage().bucket()');
       })
       .catch((error) => {
-        handleGcsError(error, 'storage().bucket()');
+        handleError(error, 'storage().bucket()');
       });
   }
 
@@ -42,7 +42,7 @@ function test(utils) {
         utils.logSuccess('storage().bucket(string)');
       })
       .catch((error) => {
-        handleGcsError(error, 'storage().bucket(string)');
+        handleError(error, 'storage().bucket(string)');
       });
   }
 
@@ -71,9 +71,7 @@ function test(utils) {
       })
       .then((data) => {
         if (data[0].toString() != expected) {
-          utils.logFailure(
-              testName + '.file().download()',
-              'Data read from GCS do not match expected');
+          return Promise.reject('Data read from GCS does not match expected');
         }
         return file.delete();
       })
@@ -82,14 +80,12 @@ function test(utils) {
       })
       .then((data) => {
         if (data[0]) {
-          utils.logFailure(
-              testName + '.file().delete()',
-              'Failed to delete file from GCS');
+          return Promise.reject('Failed to delete file from GCS');
         }
       });
   }
 
-  function handleGcsError(error, testName) {
+  function handleError(error, testName) {
     let reason;
     if (error.message) {
         reason = error.message;
