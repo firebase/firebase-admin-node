@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import * as storage from '@google-cloud/storage';
-
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
@@ -61,6 +59,18 @@ export class Storage implements FirebaseServiceInterface {
       throw new FirebaseError({
         code: 'storage/invalid-argument',
         message: 'First argument passed to admin.storage() must be a valid Firebase app instance.',
+      });
+    }
+
+    let storage;
+    try {
+      /* tslint:disable-next-line:no-var-requires */
+      storage = require('@google-cloud/storage');
+    } catch (e) {
+      throw new FirebaseError({
+        code: 'storage/missing-dependencies',
+        message: 'Failed to import the Cloud Storage client library for Node.js. '
+          + 'Make sure to install the "@google-cloud/storage" npm package.',
       });
     }
 
