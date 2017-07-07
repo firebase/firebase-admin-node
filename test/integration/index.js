@@ -87,11 +87,11 @@ function updateRules() {
     rules : {
       '.read': 'auth != null',
       '.write': 'auth != null',
-    }
-  }
+    },
+  };
   const headers = {
     'Content-Type': 'application/json',
-  }
+  };
   return client.sendRequest(dbUrl.host, 443, '/.settings/rules.json', 
     'PUT', defaultRules, headers, 10000);
 }
