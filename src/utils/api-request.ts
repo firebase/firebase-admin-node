@@ -104,7 +104,8 @@ export class HttpRequestHandler {
               const parsingError = new FirebaseAppError(
                 AppErrorCodes.UNABLE_TO_PARSE_RESPONSE,
                 `Failed to parse response data: "${ error.toString() }". Raw server` +
-                `response: "${ response }."`,
+                `response: "${ response }". Status code: "${ res.statusCode }". Outgoing ` +
+                `request: "${ options.method } ${options.host}${ options.path }"`,
               );
               reject({
                 statusCode,
