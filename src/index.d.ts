@@ -203,7 +203,7 @@ declare namespace admin.database {
       successCallback?: (a: admin.database.DataSnapshot, b?: string) => any,
       failureCallbackOrContext?: Object|null,
       context?: Object|null
-    ): Promise<any>;
+    ): Promise<admin.database.Datasnapshot>;
     orderByChild(path: string): admin.database.Query;
     orderByKey(): admin.database.Query;
     orderByPriority(): admin.database.Query;
