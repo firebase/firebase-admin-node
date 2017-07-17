@@ -374,7 +374,7 @@ declare namespace admin.messaging {
 declare namespace admin.storage {
   interface Storage {
     app: admin.app.App;
-    bucket(name?: string): Promise<any>;
+    bucket(name?: string): any;
   }
 }
 

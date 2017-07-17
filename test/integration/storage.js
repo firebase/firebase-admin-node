@@ -21,10 +21,8 @@ function test(utils) {
   console.log('\nStorage:');
   
   function testDefaultBucket() {
-    return admin.storage().bucket()
-      .then((bucket) => {
-        return verifyBucket(bucket, 'storage().bucket()');
-      })
+    const bucket = admin.storage().bucket();
+    return verifyBucket(bucket, 'storage().bucker()')
       .then(() => {
         utils.logSuccess('storage().bucket()');
       })
@@ -34,10 +32,8 @@ function test(utils) {
   }
 
   function testCustomBucket() {
-    return admin.storage().bucket(utils.getProjectId() + '.appspot.com')
-      .then((bucket) => {
-        return verifyBucket(bucket, 'storage().bucket(string)');
-      })
+    const bucket = admin.storage().bucket(utils.getProjectId() + '.appspot.com');
+    return verifyBucket(bucket, 'storage().bucket(string)')
       .then(() => {
         utils.logSuccess('storage().bucket(string)');
       })
@@ -47,18 +43,13 @@ function test(utils) {
   }
 
   function testNonExistingBucket() {
-    return admin.storage().bucket('non.existing')
-      .then((bucket) => {
-        utils.logFailure(
-            'storage().bucket("non.existing")', 
-            'Promise not rejected for non existing bucket');
+    const bucket = admin.storage().bucket('non.existing');
+    return bucket.exists()
+      .then((data) => {
+        utils.assert(!data[0], 'storage().bucket("non.existing").exists() returned true');
       })
       .catch((error) => {
-        utils.assert(
-            error.message == 'Bucket non.existing does not exist.',
-            'storage().bucket("non.existing")',
-            'Incorrect error message: ' + error.message
-        );
+        handleError(error, 'storage().bucket("non.existing")');
       });
   }
 

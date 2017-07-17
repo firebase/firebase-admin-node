@@ -91,7 +91,7 @@ export class Storage implements FirebaseServiceInterface {
     this.appInternal = app;
   }
 
-  public bucket(name?: string): Promise<any> {
+  public bucket(name?: string): any {
     let bucketName;
     if (typeof name !== 'undefined') {
       bucketName = name;
@@ -106,17 +106,7 @@ export class Storage implements FirebaseServiceInterface {
                  'explicitly when calling the getBucket() method.',
       });
     }
-    const bucket = this.storageClient.bucket(bucketName);
-    return bucket.exists()
-      .then((data) => {
-        if (data[0]) {
-          return bucket;
-        }
-        throw new FirebaseError({
-          code: 'storage/invalid-argument',
-          message: 'Bucket ' + bucketName + ' does not exist.',
-        });
-      });
+    return this.storageClient.bucket(bucketName);
   }
 
   /**
