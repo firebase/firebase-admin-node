@@ -25,10 +25,12 @@ import {Storage} from '../../../src/storage/storage';
 
 describe('Messaging', () => {
   let mockApp: FirebaseApp;
+  let mockCredentialApp: FirebaseApp;
   let storage: Storage;
 
   beforeEach(() => {
     mockApp = mocks.app();
+    mockCredentialApp = mocks.mockCredentialApp();
     storage = new Storage(mockApp);
   });
 
@@ -52,6 +54,16 @@ describe('Messaging', () => {
         const storageAny: any = Storage;
         return new storageAny();
       }).to.throw('First argument passed to admin.storage() must be a valid Firebase app instance.');
+    });
+
+    it('should throw given invalid credential', () => {
+      const expectedError = 'Failed to initialize Google Cloud Storage client with the available ' + 
+        'credential. Must initialize the SDK with a certificate credential or application default ' +
+        'credentials to use Cloud Storage API.';
+      expect(() => {
+        const storageAny: any = Storage;
+        return new storageAny(mockCredentialApp);
+      }).to.throw(expectedError);
     });
 
     it('should not throw given a valid app', () => {
