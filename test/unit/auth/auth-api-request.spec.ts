@@ -64,7 +64,13 @@ describe('FIREBASE_AUTH_GET_ACCOUNT_INFO', () => {
         return requestValidator(validRequest);
       }).not.to.throw();
     });
-    it('should fail when localId and email not passed', () => {
+    it('should succeed with phoneNumber passed', () => {
+      const validRequest = {phoneNumber: ['+11234567890']};
+      expect(() => {
+        return requestValidator(validRequest);
+      }).not.to.throw();
+    });
+    it('should fail when neither localId, email or phoneNumber are passed', () => {
       const invalidRequest = {bla: ['1234']};
       expect(() => {
         return requestValidator(invalidRequest);
@@ -126,18 +132,21 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
   let isEmailSpy: sinon.SinonSpy;
   let isPasswordSpy: sinon.SinonSpy;
   let isUrlSpy: sinon.SinonSpy;
+  let isPhoneNumberSpy: sinon.SinonSpy;
 
   beforeEach(() => {
     isUidSpy = sinon.spy(validator, 'isUid');
     isEmailSpy = sinon.spy(validator, 'isEmail');
     isPasswordSpy = sinon.spy(validator, 'isPassword');
     isUrlSpy = sinon.spy(validator, 'isURL');
+    isPhoneNumberSpy = sinon.spy(validator, 'isPhoneNumber');
   });
   afterEach(() => {
     isUidSpy.restore();
     isEmailSpy.restore();
     isPasswordSpy.restore();
     isUrlSpy.restore();
+    isPhoneNumberSpy.restore();
   });
 
   it('should return the correct endpoint', () => {
@@ -164,6 +173,7 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
         emailVerified: true,
         photoUrl: 'http://www.example.com/1234/photo.png',
         disableUser: false,
+        phoneNumber: '+11234567890',
         // Pass an unsupported parameter which should be ignored.
         ignoreMe: 'bla',
       };
@@ -175,6 +185,7 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
       expect(isPasswordSpy).to.have.been.calledOnce.and.calledWith('password');
       expect(isUrlSpy).to.have.been.calledOnce.and
         .calledWith('http://www.example.com/1234/photo.png');
+      expect(isPhoneNumberSpy).to.have.been.calledOnce.and.calledWith('+11234567890');
     });
     it('should fail when localId not passed', () => {
       const invalidRequest = {};
@@ -223,6 +234,12 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
           return requestValidator({localId: '1234', disableUser: 'no'});
         }).to.throw();
       });
+      it('should fail with invalid phoneNumber', () => {
+        expect(() => {
+          return requestValidator({localId: '1234', phoneNumber: 'invalid'});
+        }).to.throw();
+        expect(isPhoneNumberSpy).to.have.been.calledOnce.and.calledWith('invalid');
+      });
     });
   });
   describe('responseValidator', () => {
@@ -248,18 +265,21 @@ describe('FIREBASE_AUTH_SIGN_UP_NEW_USER', () => {
   let isEmailSpy: sinon.SinonSpy;
   let isPasswordSpy: sinon.SinonSpy;
   let isUrlSpy: sinon.SinonSpy;
+  let isPhoneNumberSpy: sinon.SinonSpy;
 
   beforeEach(() => {
     isUidSpy = sinon.spy(validator, 'isUid');
     isEmailSpy = sinon.spy(validator, 'isEmail');
     isPasswordSpy = sinon.spy(validator, 'isPassword');
     isUrlSpy = sinon.spy(validator, 'isURL');
+    isPhoneNumberSpy = sinon.spy(validator, 'isPhoneNumber');
   });
   afterEach(() => {
     isUidSpy.restore();
     isEmailSpy.restore();
     isPasswordSpy.restore();
     isUrlSpy.restore();
+    isPhoneNumberSpy.restore();
   });
 
   it('should return the correct endpoint', () => {
@@ -278,6 +298,7 @@ describe('FIREBASE_AUTH_SIGN_UP_NEW_USER', () => {
         emailVerified: true,
         photoUrl: 'http://www.example.com/1234/photo.png',
         disabled: false,
+        phoneNumber: '+11234567890',
         // Pass an unsupported parameter which should be ignored.
         ignoreMe: 'bla',
       };
@@ -289,6 +310,7 @@ describe('FIREBASE_AUTH_SIGN_UP_NEW_USER', () => {
       expect(isPasswordSpy).to.have.been.calledOnce.and.calledWith('password');
       expect(isUrlSpy).to.have.been.calledOnce.and
         .calledWith('http://www.example.com/1234/photo.png');
+      expect(isPhoneNumberSpy).to.have.been.calledOnce.and.calledWith('+11234567890');
     });
     it('should succeed with valid parameters including uid', () => {
       const validRequest = {
@@ -299,6 +321,7 @@ describe('FIREBASE_AUTH_SIGN_UP_NEW_USER', () => {
         emailVerified: true,
         photoUrl: 'http://www.example.com/1234/photo.png',
         disabled: false,
+        phoneNumber: '+11234567890',
         // Pass an unsupported parameter which should be ignored.
         ignoreMe: 'bla',
       };
@@ -310,6 +333,7 @@ describe('FIREBASE_AUTH_SIGN_UP_NEW_USER', () => {
       expect(isPasswordSpy).to.have.been.calledOnce.and.calledWith('password');
       expect(isUrlSpy).to.have.been.calledOnce.and
         .calledWith('http://www.example.com/1234/photo.png');
+      expect(isPhoneNumberSpy).to.have.been.calledOnce.and.calledWith('+11234567890');
     });
     it('should succeed with no parameters', () => {
       expect(() => {
@@ -355,6 +379,12 @@ describe('FIREBASE_AUTH_SIGN_UP_NEW_USER', () => {
         expect(() => {
           return requestValidator({disabled: 'no'});
         }).to.throw();
+      });
+      it('should fail with invalid phoneNumber', () => {
+        expect(() => {
+          return requestValidator({phoneNumber: 'invalid'});
+        }).to.throw();
+        expect(isPhoneNumberSpy).to.have.been.calledOnce.and.calledWith('invalid');
       });
     });
   });
@@ -674,6 +704,7 @@ describe('FirebaseAuthRequestHandler', () => {
       disabled: false,
       photoURL: 'http://localhost/1234/photo.png',
       password: 'password',
+      phoneNumber: '+11234567890',
       ignoredProperty: 'value',
     };
     const expectedValidData = {
@@ -684,6 +715,7 @@ describe('FirebaseAuthRequestHandler', () => {
       disableUser: false,
       photoUrl: 'http://localhost/1234/photo.png',
       password: 'password',
+      phoneNumber: '+11234567890',
     };
     // Valid request to delete photoURL and displayName.
     const validDeleteData = deepCopy(validData);
@@ -695,11 +727,29 @@ describe('FirebaseAuthRequestHandler', () => {
       emailVerified: true,
       disableUser: false,
       password: 'password',
+      phoneNumber: '+11234567890',
       deleteAttribute: ['DISPLAY_NAME', 'PHOTO_URL'],
+    };
+    // Valid request to delete phoneNumber.
+    const validDeletePhoneNumberData = deepCopy(validData);
+    validDeletePhoneNumberData.phoneNumber = null;
+    const expectedValidDeletePhoneNumberData = {
+      localId: uid,
+      displayName: 'John Doe',
+      email: 'user@example.com',
+      emailVerified: true,
+      disableUser: false,
+      photoUrl: 'http://localhost/1234/photo.png',
+      password: 'password',
+      deleteProvider: ['phone'],
     };
     const invalidData = {
       uid,
       email: 'user@invalid@',
+    };
+    const invalidPhoneNumberData = {
+      uid,
+      phoneNumber: 'invalid',
     };
 
     it('should be fulfilled given a valid localId', () => {
@@ -748,7 +798,7 @@ describe('FirebaseAuthRequestHandler', () => {
         });
     });
 
-    it('should be fulfilled given valid paramaters to delete', () => {
+    it('should be fulfilled given valid profile paramaters to delete', () => {
       // Successful result server response.
       const expectedResult = {
         kind: 'identitytoolkit#SetAccountInfoResponse',
@@ -772,7 +822,32 @@ describe('FirebaseAuthRequestHandler', () => {
         });
     });
 
-    it('should be rejected given invalid parameters', () => {
+    it('should be fulfilled given phone number to delete', () => {
+      // Successful result server response.
+      const expectedResult = {
+        kind: 'identitytoolkit#SetAccountInfoResponse',
+        localId: uid,
+      };
+
+      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        .returns(Promise.resolve(expectedResult));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      // Send update request to delete phone number.
+      return requestHandler.updateExistingAccount(uid, validDeletePhoneNumberData)
+        .then((returnedUid: string) => {
+          // uid should be returned.
+          expect(returnedUid).to.be.equal(uid);
+          // Confirm expected rpc request parameters sent. In this case, phoneNumber
+          // removed from request and deleteProvider added.
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              host, port, path, httpMethod, expectedValidDeletePhoneNumberData, expectedHeaders,
+              timeout);
+        });
+    });
+
+    it('should be rejected given invalid parameters such as email', () => {
       // Expected error when an invalid email is provided.
       const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -782,6 +857,20 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           // Invalid email error should be thrown.
+          expect(error).to.deep.equal(expectedError);
+        });
+    });
+
+    it('should be rejected given invalid parameters such as phoneNumber', () => {
+      // Expected error when an invalid phone number is provided.
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER);
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      // Send update request with invalid phone number.
+      return requestHandler.updateExistingAccount(uid, invalidPhoneNumberData)
+        .then((returnedUid: string) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Invalid phone number error should be thrown.
           expect(error).to.deep.equal(expectedError);
         });
     });
@@ -827,6 +916,7 @@ describe('FirebaseAuthRequestHandler', () => {
         disabled: false,
         photoURL: 'http://localhost/1234/photo.png',
         password: 'password',
+        phoneNumber: '+11234567890',
         ignoredProperty: 'value',
       };
       const expectedValidData = {
@@ -837,10 +927,15 @@ describe('FirebaseAuthRequestHandler', () => {
         disabled: false,
         photoUrl: 'http://localhost/1234/photo.png',
         password: 'password',
+        phoneNumber: '+11234567890',
       };
       const invalidData = {
         uid,
         email: 'user@invalid@',
+      };
+      const invalidPhoneNumberData = {
+        uid,
+        phoneNumber: 'invalid',
       };
       const emptyRequest = {
         localId: uid,
@@ -890,7 +985,7 @@ describe('FirebaseAuthRequestHandler', () => {
           });
       });
 
-      it('should be rejected given invalid parameters', () => {
+      it('should be rejected given invalid parameters such as email', () => {
         // Expected error when an invalid email is provided.
         const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);
         const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -900,6 +995,20 @@ describe('FirebaseAuthRequestHandler', () => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Expected invalid email error should be thrown.
+            expect(error).to.deep.equal(expectedError);
+          });
+      });
+
+      it('should be rejected given invalid parameters such as phoneNumber', () => {
+        // Expected error when an invalid phone number is provided.
+        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER);
+        const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+        // Create new account with invalid phone number.
+        return requestHandler.createNewAccount(invalidPhoneNumberData)
+          .then((returnedUid: string) => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Expected invalid phone number error should be thrown.
             expect(error).to.deep.equal(expectedError);
           });
       });
@@ -996,6 +1105,7 @@ describe('FirebaseAuthRequestHandler', () => {
         disabled: false,
         photoURL: 'http://localhost/1234/photo.png',
         password: 'password',
+        phoneNumber: '+11234567890',
         ignoredProperty: 'value',
       };
       const expectedValidData = {
@@ -1005,9 +1115,14 @@ describe('FirebaseAuthRequestHandler', () => {
         disabled: false,
         photoUrl: 'http://localhost/1234/photo.png',
         password: 'password',
+        phoneNumber: '+11234567890',
       };
       const invalidData = {
         email: 'user@invalid@',
+      };
+      const invalidPhoneNumberData = {
+        uid,
+        phoneNumber: 'invalid',
       };
 
       it('should be fulfilled given valid parameters', () => {
@@ -1033,13 +1148,27 @@ describe('FirebaseAuthRequestHandler', () => {
           });
       });
 
-      it('should be rejected given invalid parameters', () => {
+      it('should be rejected given invalid parameters such as email', () => {
         // Expected error when an invalid email is provided.
         const expectedError =
           new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);
         const requestHandler = new FirebaseAuthRequestHandler(mockApp);
         // Send create new account request with invalid data.
         return requestHandler.createNewAccount(invalidData)
+          .then((returnedUid: string) => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            expect(error).to.deep.equal(expectedError);
+          });
+      });
+
+      it('should be rejected given invalid parameters such as phone number', () => {
+        // Expected error when an invalid phone number is provided.
+        const expectedError =
+          new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER);
+        const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+        // Send create new account request with invalid data.
+        return requestHandler.createNewAccount(invalidPhoneNumberData)
           .then((returnedUid: string) => {
             throw new Error('Unexpected success');
           }, (error) => {

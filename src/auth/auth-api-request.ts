@@ -60,7 +60,9 @@ function validateCreateEditRequest(request: any) {
       disabled: true,
       disableUser: true,
       deleteAttribute: true,
+      deleteProvider: true,
       sanityCheck: true,
+      phoneNumber: true,
     };
     // Remove invalid keys from original request.
     for (let key in request) {
@@ -82,6 +84,11 @@ function validateCreateEditRequest(request: any) {
     // email should be a string and a valid email.
     if (typeof request.email !== 'undefined' && !validator.isEmail(request.email)) {
       throw new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);
+    }
+    // phoneNumber should be a string and a valid phone number.
+    if (typeof request.phoneNumber !== 'undefined' &&
+        !validator.isPhoneNumber(request.phoneNumber)) {
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER);
     }
     // password should be a string and a minimum of 6 chars.
     if (typeof request.password !== 'undefined' &&
@@ -126,7 +133,7 @@ function validateCreateEditRequest(request: any) {
 export const FIREBASE_AUTH_GET_ACCOUNT_INFO = new ApiSettings('getAccountInfo', 'POST')
   // Set request validator.
   .setRequestValidator((request: any) => {
-    if (!request.localId && !request.email) {
+    if (!request.localId && !request.email && !request.phoneNumber) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Server request is missing user identifier');
@@ -217,7 +224,7 @@ export class FirebaseAuthRequestHandler {
   }
 
   /**
-   * Looks a user by uid.
+   * Looks up a user by uid.
    *
    * @param {string} uid The uid of the user to lookup.
    * @return {Promise<Object>} A promise that resolves with the user information.
@@ -234,7 +241,7 @@ export class FirebaseAuthRequestHandler {
   }
 
   /**
-   * Looks a user by email.
+   * Looks up a user by email.
    *
    * @param {string} email The email of the user to lookup.
    * @return {Promise<Object>} A promise that resolves with the user information.
@@ -249,6 +256,24 @@ export class FirebaseAuthRequestHandler {
     };
     return this.invokeRequestHandler(FIREBASE_AUTH_GET_ACCOUNT_INFO, request);
   }
+
+  /**
+   * Looks up a user by phone number.
+   *
+   * @param {string} phoneNumber The phone number of the user to lookup.
+   * @return {Promise<Object>} A promise that resolves with the user information.
+   */
+  public getAccountInfoByPhoneNumber(phoneNumber: string): Promise<Object> {
+    if (!validator.isPhoneNumber(phoneNumber)) {
+      return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER));
+    }
+
+    const request = {
+      phoneNumber: [phoneNumber],
+    };
+    return this.invokeRequestHandler(FIREBASE_AUTH_GET_ACCOUNT_INFO, request);
+  }
+
 
   /**
    * Deletes an account identified by a uid.
@@ -314,6 +339,20 @@ export class FirebaseAuthRequestHandler {
     if (request.deleteAttribute.length === 0) {
       delete request.deleteAttribute;
     }
+
+    // For deleting phoneNumber, this value must be passed as null.
+    // It will be removed from the backend request and an additional parameter
+    // deleteProvider: ['phone'] with an array of providerIds (phone in this case),
+    // will be passed.
+    // Currently this applies to phone provider only.
+    if (request.phoneNumber === null) {
+      request.deleteProvider = ['phone'];
+      delete request.phoneNumber;
+    } else {
+      // Doesn't apply to other providers in admin SDK.
+      delete request.deleteProvider;
+    }
+
     // Rewrite photoURL to photoUrl.
     if (typeof request.photoURL !== 'undefined') {
       request.photoUrl = request.photoURL;

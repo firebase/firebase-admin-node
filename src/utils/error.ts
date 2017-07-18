@@ -235,6 +235,11 @@ export class AuthClientErrorCode {
     code: 'invalid-password',
     message: 'The password must be a string with at least 6 characters.',
   };
+  public static INVALID_PHONE_NUMBER = {
+    code: 'invalid-phone-number',
+    message: 'The phone number must be a non-empty E.164 standard compliant identifier ' +
+      'string.',
+  };
   public static INVALID_PHOTO_URL = {
     code: 'invalid-photo-url',
     message: 'The photoURL field must be a valid URL.',
@@ -252,6 +257,10 @@ export class AuthClientErrorCode {
     message: 'The given sign-in provider is disabled for this Firebase project. ' +
         'Enable it in the Firebase console, under the sign-in method tab of the ' +
         'Auth section.',
+  };
+  public static PHONE_NUMBER_ALREADY_EXISTS = {
+    code: 'phone-number-already-exists',
+    message: 'The user with the provided phone number already exists.',
   };
   public static PROJECT_NOT_FOUND = {
     code: 'project-not-found',
@@ -382,6 +391,8 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   EMAIL_EXISTS: 'EMAIL_ALREADY_EXISTS',
   // Invalid email provided.
   INVALID_EMAIL: 'INVALID_EMAIL',
+  // Invalid phone number.
+  INVALID_PHONE_NUMBER: 'INVALID_PHONE_NUMBER',
   // Invalid service account.
   INVALID_SERVICE_ACCOUNT: 'INVALID_SERVICE_ACCOUNT',
   // No localId provided (deleteAccount missing localId).
@@ -390,6 +401,8 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   MISSING_USER_ACCOUNT: 'MISSING_UID',
   // Password auth disabled in console.
   OPERATION_NOT_ALLOWED: 'OPERATION_NOT_ALLOWED',
+  // Phone number already exists.
+  PHONE_NUMBER_EXISTS: 'PHONE_NUMBER_ALREADY_EXISTS',
   // Project not found.
   PROJECT_NOT_FOUND: 'PROJECT_NOT_FOUND',
   // User on which action is to be performed is not found.
