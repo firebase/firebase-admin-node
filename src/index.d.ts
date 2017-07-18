@@ -80,6 +80,7 @@ declare namespace admin.auth {
     uid: string;
     displayName: string;
     email: string;
+    phoneNumber: string;
     photoURL: string;
     providerId: string;
 
@@ -91,6 +92,7 @@ declare namespace admin.auth {
     email: string;
     emailVerified: boolean;
     displayName: string;
+    phoneNumber: string;
     photoURL: string;
     disabled: boolean;
     metadata: admin.auth.UserMetadata;
@@ -125,6 +127,7 @@ declare namespace admin.auth {
     deleteUser(uid: string): Promise<void>;
     getUser(uid: string): Promise<admin.auth.UserRecord>;
     getUserByEmail(email: string): Promise<admin.auth.UserRecord>;
+    getUserByPhoneNumber(phoneNumber: string): Promise<admin.auth.UserRecord>;
     updateUser(uid: string, properties: Object): Promise<admin.auth.UserRecord>;
     verifyIdToken(idToken: string): Promise<admin.auth.DecodedIdToken>;
   }

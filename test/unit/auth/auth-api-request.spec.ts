@@ -534,6 +534,85 @@ describe('FirebaseAuthRequestHandler', () => {
     });
   });
 
+  describe('getAccountInfoByPhoneNumber', () => {
+    const httpMethod = 'POST';
+    const host = 'www.googleapis.com';
+    const port = 443;
+    const path = '/identitytoolkit/v3/relyingparty/getAccountInfo';
+    const timeout = 10000;
+    it('should be fulfilled given a valid phoneNumber', () => {
+      const expectedResult = {
+        users : [
+          {
+            localId: 'uid',
+            phoneNumber: '+11234567890',
+            providerUserInfo: [
+              {
+                providerId: 'phone',
+                rawId: '+11234567890',
+                phoneNumber: '+11234567890',
+              },
+            ],
+          },
+        ],
+      };
+      const data = {
+        phoneNumber: ['+11234567890'],
+      };
+
+      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        .returns(Promise.resolve(expectedResult));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.getAccountInfoByPhoneNumber('+11234567890')
+        .then((result) => {
+          expect(result).to.deep.equal(expectedResult);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              host, port, path, httpMethod, data, expectedHeaders, timeout);
+        });
+    });
+    it('should be rejected given an invalid phoneNumber', () => {
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_PHONE_NUMBER);
+
+      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest');
+      stubs.push(stub);
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.getAccountInfoByPhoneNumber('invalid')
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+          expect(stub).to.have.not.been.called;
+        });
+
+    });
+    it('should be rejected when the backend returns an error', () => {
+      const expectedResult = {
+        kind: 'identitytoolkit#GetAccountInfoResponse',
+      };
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
+      const data = {
+        phoneNumber: ['+11234567890'],
+      };
+
+      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        .returns(Promise.resolve(expectedResult));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.getAccountInfoByPhoneNumber('+11234567890')
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              host, port, path, httpMethod, data, expectedHeaders, timeout);
+        });
+    });
+  });
+
   describe('deleteAccount', () => {
     const httpMethod = 'POST';
     const host = 'www.googleapis.com';
