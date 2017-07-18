@@ -57,7 +57,7 @@ describe('Messaging', () => {
     });
 
     it('should throw given invalid credential', () => {
-      const expectedError = 'Failed to initialize Google Cloud Storage client with the available ' + 
+      const expectedError = 'Failed to initialize Google Cloud Storage client with the available ' +
         'credential. Must initialize the SDK with a certificate credential or application default ' +
         'credentials to use Cloud Storage API.';
       expect(() => {

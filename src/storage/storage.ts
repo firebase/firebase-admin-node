@@ -17,7 +17,7 @@
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {ApplicationDefaultCredential} from '../auth/credential'
+import {ApplicationDefaultCredential} from '../auth/credential';
 
 import * as validator from '../utils/validator';
 
@@ -91,8 +91,8 @@ export class Storage implements FirebaseServiceInterface {
     } else {
       throw new FirebaseError({
         code: 'storage/invalid-credential',
-        message: 'Failed to initialize Google Cloud Storage client with the available credential. ' + 
-          'Must initialize the SDK with a certificate credential or application default credentials ' + 
+        message: 'Failed to initialize Google Cloud Storage client with the available credential. ' +
+          'Must initialize the SDK with a certificate credential or application default credentials ' +
           'to use Cloud Storage API.',
       });
     }
