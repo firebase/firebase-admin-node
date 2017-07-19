@@ -798,7 +798,7 @@ describe('FirebaseAuthRequestHandler', () => {
         });
     });
 
-    it('should be fulfilled given valid profile paramaters to delete', () => {
+    it('should be fulfilled given valid profile parameters to delete', () => {
       // Successful result server response.
       const expectedResult = {
         kind: 'identitytoolkit#SetAccountInfoResponse',
