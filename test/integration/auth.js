@@ -82,7 +82,7 @@ function test(utils) {
     ];
     return Promise.all(promises)
       .catch(function(error) {
-        utils.logFailure('setUp()', error);
+        utils.logFailure('before()', error);
       });
   }
 
