@@ -22,7 +22,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import {
   isArray, isNonEmptyArray, isBoolean, isNumber, isString, isNonEmptyString, isNonNullObject,
-  isEmail, isPassword, isURL, isUid,
+  isEmail, isPassword, isURL, isUid, isPhoneNumber,
 } from '../../../src/utils/validator';
 
 
@@ -376,5 +376,46 @@ describe('isURL()', () => {
     expect(isURL('http://abc.com.')).to.be.false;
     expect(isURL('http://-abc.com')).to.be.false;
     expect(isURL('http://www._abc.com')).to.be.false;
+  });
+});
+
+describe('isPhoneNumber()', () => {
+  it('should return false given no argument', () => {
+    expect(isPhoneNumber(undefined as any)).to.be.false;
+  });
+
+  const nonStrings = [null, NaN, 0, 1, true, false, [], ['a'], {}, { a: 1 }, _.noop];
+  nonStrings.forEach((nonString) => {
+    it('should return false given a non-string argument: ' + JSON.stringify(nonString), () => {
+      expect(isPhoneNumber(nonString as any)).to.be.false;
+    });
+  });
+
+  it('should return false given an empty string', () => {
+    expect(isPhoneNumber('')).to.be.false;
+  });
+
+  it('should return false given a string with only whitespace', () => {
+    expect(isPhoneNumber(' ')).to.be.false;
+  });
+
+  it('should return false given a string with only a plus sign', () => {
+    expect(isPhoneNumber('+')).to.be.false;
+  });
+
+  it('should return false given a string with a plus sign and no alphanumeric char', () => {
+    expect(isPhoneNumber('+ ()-')).to.be.false;
+  });
+
+  it('should return true given a valid phone number', () => {
+    expect(isPhoneNumber('+11234567890')).to.be.true;
+  });
+
+  it('should return true given a valid phone number that is formatted', () => {
+    expect(isPhoneNumber('+1 (123) 456-7890')).to.be.true;
+  });
+
+  it('should return true given a valid phone number with alphabetical chars', () => {
+    expect(isPhoneNumber('+1 800 FLOwerS')).to.be.true;
   });
 });

@@ -51,6 +51,7 @@ function getValidGetAccountInfoResponse() {
     email: 'user@gmail.com',
     emailVerified: true,
     displayName: 'John Doe',
+    phoneNumber: '+11234567890',
     providerUserInfo: [
       {
         providerId: 'google.com',
@@ -67,6 +68,11 @@ function getValidGetAccountInfoResponse() {
         federatedId: '0987654321',
         email: 'user@facebook.com',
         rawId: '0987654321',
+      },
+      {
+        providerId: 'phone',
+        phoneNumber: '+11234567890',
+        rawId: '+11234567890',
       },
     ],
     photoUrl: 'https://lh3.googleusercontent.com/1234567890/photo.jpg',
@@ -413,6 +419,85 @@ describe('Auth', () => {
     });
   });
 
+  describe('getUserByPhoneNumber()', () => {
+    const phoneNumber = '+11234567890';
+    const expectedGetAccountInfoResult = getValidGetAccountInfoResponse();
+    const expectedUserRecord = getValidUserRecord(expectedGetAccountInfoResult);
+    const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
+
+    // Stubs used to simulate underlying api calls.
+    let stubs: sinon.SinonStub[] = [];
+    beforeEach(() => sinon.spy(validator, 'isPhoneNumber'));
+    afterEach(() => {
+      (validator.isPhoneNumber as any).restore();
+      _.forEach(stubs, (stub) => stub.restore());
+      stubs = [];
+    });
+
+    it('should be rejected given no phone number', () => {
+      return (auth as any).getUserByPhoneNumber()
+        .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-phone-number');
+    });
+
+    it('should be rejected given an invalid phone number', () => {
+      const invalidPhoneNumber = 'invalid';
+      return auth.getUserByPhoneNumber(invalidPhoneNumber)
+        .then(() => {
+          throw new Error('Unexpected success');
+        })
+        .catch((error) => {
+          expect(error).to.have.property('code', 'auth/invalid-phone-number');
+          expect(validator.isPhoneNumber)
+            .to.have.been.calledOnce.and.calledWith(invalidPhoneNumber);
+        });
+    });
+
+    it('should be rejected given an app which returns null access tokens', () => {
+      return nullAccessTokenAuth.getUserByPhoneNumber(phoneNumber)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which returns invalid access tokens', () => {
+      return malformedAccessTokenAuth.getUserByPhoneNumber(phoneNumber)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which fails to generate access tokens', () => {
+      return rejectedPromiseAccessTokenAuth.getUserByPhoneNumber(phoneNumber)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should resolve with a UserRecord on success', () => {
+      // Stub getAccountInfoByPhoneNumber to return expected result.
+      let stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByPhoneNumber')
+        .returns(Promise.resolve(expectedGetAccountInfoResult));
+      stubs.push(stub);
+      return auth.getUserByPhoneNumber(phoneNumber)
+        .then((userRecord) => {
+          // Confirm underlying API called with expected parameters.
+          expect(stub).to.have.been.calledOnce.and.calledWith(phoneNumber);
+          // Confirm expected user record response returned.
+          expect(userRecord).to.deep.equal(expectedUserRecord);
+        });
+    });
+
+    it('should throw an error when the backend returns an error', () => {
+      // Stub getAccountInfoByPhoneNumber to throw a backend error.
+      let stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByPhoneNumber')
+        .returns(Promise.reject(expectedError));
+      stubs.push(stub);
+      return auth.getUserByPhoneNumber(phoneNumber)
+        .then((userRecord) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Confirm underlying API called with expected parameters.
+          expect(stub).to.have.been.calledOnce.and.calledWith(phoneNumber);
+          // Confirm expected error returned.
+          expect(error).to.equal(expectedError);
+        });
+    });
+  });
+
   describe('deleteUser()', () => {
     const uid = 'abcdefghijklmnopqrstuvwxyz';
     const expectedDeleteAccountResult = {kind: 'identitytoolkit#DeleteAccountResponse'};
@@ -506,6 +591,7 @@ describe('Auth', () => {
       email: expectedUserRecord.email,
       emailVerified: expectedUserRecord.emailVerified,
       password: 'password',
+      phoneNumber: expectedUserRecord.phoneNumber,
     };
     // Stubs used to simulate underlying api calls.
     let stubs: sinon.SinonStub[] = [];
@@ -637,6 +723,7 @@ describe('Auth', () => {
       email: expectedUserRecord.email,
       emailVerified: expectedUserRecord.emailVerified,
       password: 'password',
+      phoneNumber: expectedUserRecord.phoneNumber,
     };
     // Stubs used to simulate underlying api calls.
     let stubs: sinon.SinonStub[] = [];

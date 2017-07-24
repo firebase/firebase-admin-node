@@ -33,23 +33,75 @@ function test(utils) {
 
   var newUserUid = utils.generateRandomString(20);
   var nonexistentUid = utils.generateRandomString(20);
+  var testPhoneNumber = '+11234567890';
+  var testPhoneNumber2 = '+16505550101';
+  var nonexistentPhoneNumber = '+18888888888';
+  var updatedEmail = utils.generateRandomString(20) + '@example.com';
+  var updatedPhone = '+16505550102';
 
   var mockUserData = {
     email: newUserUid + '@example.com',
     emailVerified: false,
+    phoneNumber: testPhoneNumber,
     password: 'password',
     displayName: 'Random User ' + newUserUid,
     photoURL: 'http://www.example.com/' + newUserUid + '/photo.png',
     disabled: false,
   };
 
+  /**
+   * Helper function that deletes the user with the specified phone number
+   * if it exists.
+   * @param {string} phoneNumber The phone number of the user to delete.
+   * @return {Promise} A promise that resolves when the user is deleted
+   *     or is found not to exist.
+   */
+  function deletePhoneNumberUser(phoneNumber) {
+    return admin.auth().getUserByPhoneNumber(phoneNumber)
+      .then(function(userRecord) {
+        return admin.auth().deleteUser(userRecord.uid);
+      })
+      .catch(function(error) {
+        // Suppress user not found error.
+        if (error.code !== 'auth/user-not-found') {
+          throw error;
+        }
+      });
+  }
+
+  /**
+   * @return {Promise} A promise that resolves when test preparations are ready.
+   */
+  function before() {
+    // Delete any existing users that could affect the test outcome.
+    var promises = [
+      deletePhoneNumberUser(testPhoneNumber),
+      deletePhoneNumberUser(testPhoneNumber2),
+      deletePhoneNumberUser(nonexistentPhoneNumber),
+      deletePhoneNumberUser(updatedPhone)
+    ];
+    return Promise.all(promises)
+      .catch(function(error) {
+        utils.logFailure('before()', error);
+      });
+  }
+
   function testCreateUserWithoutUid() {
     var newUserData = _.clone(mockUserData);
     newUserData.email = utils.generateRandomString(20) + '@example.com';
+    newUserData.phoneNumber = testPhoneNumber2;
     return admin.auth().createUser(newUserData)
       .then(function(userRecord) {
         uidFromCreateUserWithoutUid = userRecord.uid;
         utils.assert(typeof userRecord.uid === 'string', 'auth().createUser(noUid)', 'Incorrect uid type.');
+        // Confirm expected email.
+        utils.assert(
+          userRecord.email === newUserData.email.toLowerCase(),
+          'auth().createUser(noUid)', 'Incorrect email.');
+        // Confirm expected phone number.
+        utils.assert(
+          userRecord.phoneNumber === newUserData.phoneNumber,
+          'auth().createUser(noUid)', 'Incorrect phone.');
       })
       .catch(function(error) {
         utils.logFailure('auth().createUser(noUid)', error);
@@ -62,6 +114,14 @@ function test(utils) {
     return admin.auth().createUser(newUserData)
       .then(function(userRecord) {
         utils.assert(userRecord.uid === newUserUid, 'auth().createUser(withUid)', 'Incorrect uid.');
+        // Confirm expected email.
+        utils.assert(
+          userRecord.email === newUserData.email.toLowerCase(),
+          'auth().createUser(withUid)', 'Incorrect email.');
+        // Confirm expected phone number.
+        utils.assert(
+          userRecord.phoneNumber === newUserData.phoneNumber,
+          'auth().createUser(withUid)', 'Incorrect phone.');
       })
       .catch(function(error) {
         utils.logFailure('auth().createUser(withUid)', error);
@@ -104,10 +164,22 @@ function test(utils) {
       });
   }
 
+  function testGetUserByPhoneNumber() {
+    return admin.auth().getUserByPhoneNumber(mockUserData.phoneNumber)
+      .then(function(userRecord) {
+        utils.assert(userRecord.uid === newUserUid, 'auth().getUserByPhoneNumber()', 'Incorrect uid.');
+      })
+      .catch(function(error) {
+        utils.logFailure('auth().getUserByPhoneNumber()', error);
+      });
+  }
+
   function testUpdateUser() {
     var updatedDisplayName = 'Updated User ' + newUserUid;
 
     return admin.auth().updateUser(newUserUid, {
+      email: updatedEmail,
+      phoneNumber: updatedPhone,
       emailVerified: true,
       displayName: updatedDisplayName,
     })
@@ -117,6 +189,13 @@ function test(utils) {
           'auth().updateUser()',
           'Incorrect emailVerified or displayName.'
         );
+        // Confirm expected email.
+        utils.assert(
+          userRecord.email === updatedEmail.toLowerCase(),
+          'auth().updateUser()', 'Incorrect email.');
+        // Confirm expected phone number.
+        utils.assert(
+          userRecord.phoneNumber === updatedPhone, 'auth().updateUser()', 'Incorrect phone.');
       })
       .catch(function(error) {
         utils.logFailure('auth().updateUser()', error);
@@ -159,6 +238,21 @@ function test(utils) {
         utils.assert(
           error.code === 'auth/user-not-found',
           'auth().getUserEmail(nonexistentEmail)',
+          'Incorrect error code: ' + error.code
+        );
+      });
+  }
+
+  function testGetNonexistentUserByPhoneNumberWithError() {
+    return admin.auth().getUserByPhoneNumber(nonexistentPhoneNumber)
+      .then(function() {
+        utils.logFailure(
+          'auth().getUserByPhoneNumber(nonexistentPhoneNumber)', 'User unexpectedly returned.');
+      })
+      .catch(function(error) {
+        utils.assert(
+          error.code === 'auth/user-not-found',
+          'auth().getUserByPhoneNumber(nonexistentPhoneNumber)',
           'Incorrect error code: ' + error.code
         );
       });
@@ -234,15 +328,17 @@ function test(utils) {
   }
 
 
-  return Promise.resolve()
+  return before()
     .then(testCreateUserWithoutUid)
     .then(testCreateUserWithUid)
     .then(testCreateDuplicateUserWithError)
     .then(testGetUser)
     .then(testGetUserByEmail)
+    .then(testGetUserByPhoneNumber)
     .then(testUpdateUser)
     .then(testGetNonexistentUserWithError)
     .then(testGetNonexistentUserByEmailWithError)
+    .then(testGetNonexistentUserByPhoneNumberWithError)
     .then(testUpdateNonexistentUserWithError)
     .then(testDeleteNonexistentUserWithError)
     .then(testCreateCustomToken)

@@ -36,6 +36,7 @@ function getValidUserResponse(): Object {
     email: 'user@gmail.com',
     emailVerified: true,
     displayName: 'John Doe',
+    phoneNumber: '+11234567890',
     providerUserInfo: [
       {
         providerId: 'google.com',
@@ -53,6 +54,11 @@ function getValidUserResponse(): Object {
         email: 'user@facebook.com',
         rawId: '0987654321',
       },
+      {
+        providerId: 'phone',
+        rawId: '+11234567890',
+        phoneNumber: '+11234567890',
+      },
     ],
     photoUrl: 'https://lh3.googleusercontent.com/1234567890/photo.jpg',
     validSince: '1476136676',
@@ -69,6 +75,7 @@ function getUserJSON(): Object {
   return {
     uid: 'abcdefghijklmnopqrstuvwxyz',
     email: 'user@gmail.com',
+    phoneNumber: '+11234567890',
     emailVerified: true,
     disabled: false,
     displayName: 'John Doe',
@@ -79,6 +86,7 @@ function getUserJSON(): Object {
         photoURL: 'https://lh3.googleusercontent.com/1234567890/photo.jpg',
         email: 'user@gmail.com',
         uid: '1234567890',
+        phoneNumber: undefined,
       },
       {
         providerId: 'facebook.com',
@@ -86,6 +94,15 @@ function getUserJSON(): Object {
         photoURL: 'https://facebook.com/0987654321/photo.jpg',
         email: 'user@facebook.com',
         uid: '0987654321',
+        phoneNumber: undefined,
+      },
+      {
+        providerId: 'phone',
+        displayName: undefined,
+        photoURL: undefined,
+        email: undefined,
+        uid: '+11234567890',
+        phoneNumber: '+11234567890',
       },
     ],
     photoURL: 'https://lh3.googleusercontent.com/1234567890/photo.jpg',
@@ -121,6 +138,34 @@ function getUserInfoJSON(): Object {
     photoURL: 'https://lh3.googleusercontent.com/1234567890/photo.jpg',
     uid: '1234567890',
     email: 'user@gmail.com',
+    phoneNumber: undefined,
+  };
+}
+
+/**
+ * @return {Object} A sample user info response with phone number as returned
+ *     from getAccountInfo endpoint.
+ */
+function getUserInfoWithPhoneNumberResponse(): Object {
+  return {
+    providerId: 'phone',
+    phoneNumber: '+11234567890',
+    rawId: '+11234567890',
+  };
+}
+
+/**
+ * @return {Object} The JSON representation of the above user info response
+ *     with a phone number.
+ */
+function getUserInfoWithPhoneNumberJSON(): Object {
+  return {
+    providerId: 'phone',
+    displayName: undefined,
+    photoURL: undefined,
+    uid: '+11234567890',
+    email: undefined,
+    phoneNumber: '+11234567890',
   };
 }
 
@@ -153,7 +198,9 @@ describe('UserInfo', () => {
 
   describe('getters', () => {
     const userInfoResponse: any = getUserInfoResponse();
-    const userInfo = new UserInfo(getUserInfoResponse());
+    const userInfo = new UserInfo(userInfoResponse);
+    const userInfoWithPhoneNumberResponse: any = getUserInfoWithPhoneNumberResponse();
+    const userInfoWithPhoneNumber = new UserInfo(userInfoWithPhoneNumberResponse);
     it('should return expected providerId', () => {
       expect(userInfo.providerId).to.equal(userInfoResponse.providerId);
     });
@@ -203,12 +250,29 @@ describe('UserInfo', () => {
         (userInfo as any).uid = '00000000';
       }).to.throw(Error);
     });
+
+    it('should return expected phoneNumber', () => {
+      expect(userInfoWithPhoneNumber.phoneNumber)
+        .to.equal(userInfoWithPhoneNumberResponse.phoneNumber);
+    });
+
+    it('should throw when modifying readonly phoneNumber property', () => {
+      expect(() => {
+        (userInfoWithPhoneNumber as any).phoneNumber = '+10987654321';
+      }).to.throw(Error);
+    });
   });
 
   describe('toJSON', () => {
     const userInfo = new UserInfo(getUserInfoResponse());
+    const userInfoWithPhoneNumber =
+        new UserInfo(getUserInfoWithPhoneNumberResponse());
     it('should return expected JSON object', () => {
       expect(userInfo.toJSON()).to.deep.equal(getUserInfoJSON());
+    });
+    it('should return expected JSON object with phone number', () => {
+      expect(userInfoWithPhoneNumber.toJSON())
+        .to.deep.equal(getUserInfoWithPhoneNumberJSON());
     });
   });
 });
@@ -362,6 +426,16 @@ describe('UserRecord', () => {
       }).to.throw(Error);
     });
 
+    it('should return expected phoneNumber', () => {
+      expect(userRecord.phoneNumber).to.equal('+11234567890');
+    });
+
+    it('should throw when modifying readonly phoneNumber property', () => {
+      expect(() => {
+        (userRecord as any).phoneNumber = '+10987654321';
+      }).to.throw(Error);
+    });
+
     it('should return expected metadata', () => {
       let metadata = new UserMetadata({
         createdAt: '1476136676000',
@@ -402,6 +476,11 @@ describe('UserRecord', () => {
           federatedId: '0987654321',
           email: 'user@facebook.com',
           rawId: '0987654321',
+        }),
+        new UserInfo({
+          providerId: 'phone',
+          phoneNumber: '+11234567890',
+          rawId: '+11234567890',
         }),
       ];
       expect(userRecord.providerData).to.deep.equal(providerData);

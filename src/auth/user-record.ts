@@ -80,6 +80,7 @@ export class UserInfo {
   public readonly email: string;
   public readonly photoURL: string;
   public readonly providerId: string;
+  public readonly phoneNumber: string;
 
   constructor(response: any) {
     // Provider user id and provider id are required.
@@ -94,6 +95,7 @@ export class UserInfo {
     utils.addReadonlyGetter(this, 'email', response.email);
     utils.addReadonlyGetter(this, 'photoURL', response.photoUrl);
     utils.addReadonlyGetter(this, 'providerId', response.providerId);
+    utils.addReadonlyGetter(this, 'phoneNumber', response.phoneNumber);
   }
 
   /** @return {Object} The plain object representation of the current provider data. */
@@ -104,6 +106,7 @@ export class UserInfo {
       email: this.email,
       photoURL: this.photoURL,
       providerId: this.providerId,
+      phoneNumber: this.phoneNumber,
     };
   }
 }
@@ -122,6 +125,7 @@ export class UserRecord {
   public readonly emailVerified: boolean;
   public readonly displayName: string;
   public readonly photoURL: string;
+  public readonly phoneNumber: string;
   public readonly disabled: boolean;
   public readonly metadata: UserMetadata;
   public readonly providerData: UserInfo[];
@@ -139,6 +143,7 @@ export class UserRecord {
     utils.addReadonlyGetter(this, 'emailVerified', !!response.emailVerified);
     utils.addReadonlyGetter(this, 'displayName', response.displayName);
     utils.addReadonlyGetter(this, 'photoURL', response.photoUrl);
+    utils.addReadonlyGetter(this, 'phoneNumber', response.phoneNumber);
     // If disabled is not provided, the account is enabled by default.
     utils.addReadonlyGetter(this, 'disabled', response.disabled || false);
     utils.addReadonlyGetter(this, 'metadata', new UserMetadata(response));
@@ -157,6 +162,7 @@ export class UserRecord {
       emailVerified: this.emailVerified,
       displayName: this.displayName,
       photoURL: this.photoURL,
+      phoneNumber: this.phoneNumber,
       disabled: this.disabled,
       // Convert metadata to json.
       metadata: this.metadata.toJSON(),
