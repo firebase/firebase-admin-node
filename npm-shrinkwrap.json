@@ -1,6 +1,6 @@
 {
   "name": "firebase-admin",
-  "version": "5.0.0",
+  "version": "5.1.0",
   "dependencies": {
     "@google-cloud/common": {
       "version": "0.13.3",
@@ -53,9 +53,9 @@
       "dev": true
     },
     "@types/jsonwebtoken": {
-      "version": "7.2.0",
+      "version": "7.2.2",
       "from": "@types/jsonwebtoken@>=7.1.33 <8.0.0",
-      "resolved": "https://registry.npmjs.org/@types/jsonwebtoken/-/jsonwebtoken-7.2.0.tgz"
+      "resolved": "https://registry.npmjs.org/@types/jsonwebtoken/-/jsonwebtoken-7.2.2.tgz"
     },
     "@types/lodash": {
       "version": "4.14.64",
@@ -76,9 +76,9 @@
       "dev": true
     },
     "@types/node": {
-      "version": "7.0.18",
+      "version": "8.0.16",
       "from": "@types/node@*",
-      "resolved": "https://registry.npmjs.org/@types/node/-/node-7.0.18.tgz"
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-8.0.16.tgz"
     },
     "@types/promises-a-plus": {
       "version": "0.0.27",
@@ -3197,9 +3197,9 @@
       "dev": true
     },
     "safe-buffer": {
-      "version": "5.0.1",
+      "version": "5.1.1",
       "from": "safe-buffer@>=5.0.1 <6.0.0",
-      "resolved": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.0.1.tgz"
+      "resolved": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.1.1.tgz"
     },
     "samsam": {
       "version": "1.1.2",

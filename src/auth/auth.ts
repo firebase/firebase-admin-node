@@ -164,6 +164,21 @@ class Auth implements FirebaseServiceInterface {
   };
 
   /**
+   * Looks up the user identified by the provided phone number and returns a promise that is
+   * fulfilled with a user record for the given user if that user is found.
+   *
+   * @param {string} phoneNumber The phone number of the user to look up.
+   * @return {Promise<UserRecord>} A promise that resolves with the corresponding user record.
+   */
+  public getUserByPhoneNumber(phoneNumber: string): Promise<UserRecord> {
+    return this.authRequestHandler.getAccountInfoByPhoneNumber(phoneNumber)
+      .then((response: any) => {
+        // Returns the user record populated with server response.
+        return new UserRecord(response.users[0]);
+      });
+  };
+
+  /**
    * Creates a new user with the properties provided.
    *
    * @param {Object} properties The properties to set on the new user record to be created.

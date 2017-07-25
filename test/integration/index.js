@@ -27,6 +27,9 @@ var database = require('./database');
 var messaging = require('./messaging');
 var storage = require('./storage');
 
+var apiRequest = require('../../lib/utils/api-request');
+var url = require('url');
+
 var serviceAccount = utils.getCredential();
 var databaseURL = 'https://' + utils.getProjectId() + '.firebaseio.com';
 var storageBucket = utils.getProjectId() + '.appspot.com';
@@ -80,8 +83,26 @@ utils.assert(
   'App instances do not match.'
 );
 
+function updateRules() {
+  // Update database rules to the defaults. Rest of the test suite
+  // expects it.
+  const client = new apiRequest.SignedApiRequestHandler(defaultApp);
+  const dbUrl =  url.parse(defaultApp.options.databaseURL);
+  const defaultRules = {
+    rules : {
+      '.read': 'auth != null',
+      '.write': 'auth != null',
+    },
+  };
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+  return client.sendRequest(dbUrl.host, 443, '/.settings/rules.json', 
+    'PUT', defaultRules, headers, 10000);
+}
 
 return Promise.resolve()
+  .then(updateRules)
   .then(_.partial(app.test, utils))
   .then(_.partial(auth.test, utils))
   .then(_.partial(database.test, utils))
