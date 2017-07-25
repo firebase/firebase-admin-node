@@ -16,6 +16,7 @@
 
 var _ = require('lodash');
 var chalk = require('chalk');
+var readline = require('readline');
 
 var admin = require('../../lib/index');
 
@@ -78,6 +79,58 @@ utils.assert(
   'App instances do not match.'
 );
 
+/**
+ * Prompts the developer whether the Database rules should be
+ * overwritten with the relevant rules for the integration tests.
+ * The developer has 3 options:
+ * yes/y to agree to the rules overwrite.
+ * skip to skip the overwrite (rules already manually configured) and continue
+ * with the tests.
+ * no/n or other to abort.
+ * @return {Promise} A promise that resolves when the rules change is processed.
+ */
+function promptForUpdateRules() {
+  return new Promise(function(resolve, reject) {
+    // Defines prompt interface.
+    var rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+    // Options to display to end user.
+    var question = 'Warning: This test will overwrite your ';
+    question += 'project\'s existing Database rules.\n';
+    question += 'Overwrite Database rules for tests?\n';
+    // Yes to overwrite the rules.
+    question += '* \'yes\' to agree\n'
+    // Skip to continue without overwriting the rules.
+    question += '* \'skip\' to continue without the overwrite\n';
+    // No to cancel.
+    question += '* \'no\' to cancel\n';
+    // Prompt user with the 3 options.
+    rl.question(question, function(answer) {
+      rl.close();
+      // Resolve the promise with the answer.
+      resolve(answer);
+    });
+  })
+  .then(function(answer) {
+    switch (answer.toLowerCase()) {
+      case 'y':
+      case 'yes':
+        // Proceed and update the rules.
+        return updateRules();
+      case 'skip':
+        // Continue without updating the rules.
+        return Promise.resolve();
+      case 'no':
+      case 'n':
+      default:
+        // Abort and exit.
+        throw new Error('Integration test aborted!');
+    }
+  });
+}
+
 function updateRules() {
   // Update database rules to the defaults. Rest of the test suite
   // expects it.
@@ -97,7 +150,7 @@ function updateRules() {
 }
 
 return Promise.resolve()
-  .then(updateRules)
+  .then(promptForUpdateRules)
   .then(_.partial(app.test, utils))
   .then(_.partial(auth.test, utils))
   .then(_.partial(database.test, utils))
