@@ -30,9 +30,6 @@
     "jsonwebtoken": "7.1.9",
     "node-forge": "0.7.1"
   },
-  "optionalDependencies": {
-    "@google-cloud/storage": "^1.1.1"
-  },
   "devDependencies": {
     "@types/chai": "^3.4.34",
     "@types/chai-as-promised": "0.0.29",
