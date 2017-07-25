@@ -51,12 +51,6 @@ export class Storage implements FirebaseServiceInterface {
    */
   constructor(app: FirebaseApp) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
-      // TODO: create FirebaseStorageError and StorageClientErrorCode type
-      // throw new FirebaseStorageError(
-      //   StorageClientErrorCode.INVALID_ARGUMENT,
-      //   'First argument passed to admin.storage() must be a valid Firebase app instance.'
-      // );
-
       throw new FirebaseError({
         code: 'storage/invalid-argument',
         message: 'First argument passed to admin.storage() must be a valid Firebase app instance.',
