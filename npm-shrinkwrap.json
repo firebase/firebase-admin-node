@@ -1,6 +1,6 @@
 {
   "name": "firebase-admin",
-  "version": "5.0.1",
+  "version": "5.1.0",
   "dependencies": {
     "@types/jsonwebtoken": {
       "version": "7.2.2",
@@ -8,9 +8,9 @@
       "resolved": "https://registry.npmjs.org/@types/jsonwebtoken/-/jsonwebtoken-7.2.2.tgz"
     },
     "@types/node": {
-      "version": "8.0.10",
+      "version": "8.0.16",
       "from": "@types/node@*",
-      "resolved": "https://registry.npmjs.org/@types/node/-/node-8.0.10.tgz"
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-8.0.16.tgz"
     },
     "base64url": {
       "version": "2.0.0",
