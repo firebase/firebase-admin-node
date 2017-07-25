@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+ import {Bucket} from '@google-cloud/storage';
+
 declare namespace admin {
   interface FirebaseError {
     code: string;
@@ -377,7 +379,7 @@ declare namespace admin.messaging {
 declare namespace admin.storage {
   interface Storage {
     app: admin.app.App;
-    bucket(name?: string): any;
+    bucket(name?: string): Bucket;
   }
 }
 

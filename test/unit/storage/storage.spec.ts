@@ -86,7 +86,7 @@ describe('Messaging', () => {
     });
   });
 
-  describe('bucket()', () => {
+  describe('bucket(invalid)', () => {
     const expectedError = 'Bucket name not specified or invalid. Specify a valid bucket name via ' +
         'the storageBucket option when initializing the app, or specify the bucket name ' +
         'explicitly when calling the getBucket() method.';
@@ -101,4 +101,9 @@ describe('Messaging', () => {
     });
   });
 
+  describe('bucket(valid)', () => {
+    it('should return a bucket object', () => {
+      expect(storage.bucket('foo').name).to.equal('foo');
+    });
+  });
 });

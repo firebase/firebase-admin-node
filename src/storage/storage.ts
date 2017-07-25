@@ -18,6 +18,7 @@ import {FirebaseApp} from '../firebase-app';
 import {FirebaseError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
 import {ApplicationDefaultCredential} from '../auth/credential';
+import {Bucket} from '@google-cloud/storage';
 
 import * as validator from '../utils/validator';
 
@@ -93,7 +94,7 @@ export class Storage implements FirebaseServiceInterface {
     this.appInternal = app;
   }
 
-  public bucket(name?: string): any {
+  public bucket(name?: string): Bucket {
     let bucketName;
     if (typeof name !== 'undefined') {
       bucketName = name;
