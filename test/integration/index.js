@@ -14,6 +14,19 @@
  * limitations under the License.
  */
 
+/**
+ * Runs Firebase Admin SDK integration tests.
+ * Usage:
+ * node index.js
+ * Where the following configuration files need to be provided:
+ * test/resources/key.json: The service account key file.
+ * test/resources/apikey.txt: The API key for the same project.
+ *
+ * Accepts an optional flag to specify whether to overwrite
+ * the specified project's Database rules or skip that step.
+ * node index.js --overwrite yes|skip
+ */
+
 var _ = require('lodash');
 var chalk = require('chalk');
 var readline = require('readline');
@@ -87,10 +100,18 @@ utils.assert(
  * skip to skip the overwrite (rules already manually configured) and continue
  * with the tests.
  * no/n or other to abort.
+ * @param {*|undefined} overwrite An optional answer that can be provided to
+ *     bypass the need to prompt the user whether to proceed with, skip or abort
+ *     the Database rules overwrite.
  * @return {Promise} A promise that resolves when the rules change is processed.
  */
-function promptForUpdateRules() {
+function promptForUpdateRules(overwrite) {
   return new Promise(function(resolve, reject) {
+    // Overwrite answer already provided.
+    if (typeof overwrite === 'string') {
+      resolve(overwrite);
+      return;
+    }
     // Defines prompt interface.
     var rl = readline.createInterface({
       input: process.stdin,
@@ -149,8 +170,38 @@ function updateRules() {
     'PUT', defaultRules, headers, 10000);
 }
 
-return Promise.resolve()
-  .then(promptForUpdateRules)
+/**
+ * Parses the script arguments and returns all the provided flags.
+ * @param {Array<string>} argv The process.argv list of script arguments.
+ * @return {Object} A key/value object with the provided script flags and
+ *     their values.
+ */
+function getScriptArguments(argv) {
+  // Dictionary of flags.
+  var flags = {};
+  var lastFlag = null;
+  // Skip first 2 arguments: node index.js
+  // Expected format: --flagA valueA --flagB --flagC valueC
+  for (var i = 2; i < argv.length; i++) {
+    if (argv[i].indexOf('--') === 0) {
+      // Get the last flag name.
+      lastFlag = argv[i].substr(2);
+      // If flag passed with no argument, set to true.
+      flags[lastFlag] = true;
+    } else if (lastFlag) {
+      // Argument provided for last flag, overwrite its value.
+      flags[lastFlag] = argv[i];
+      lastFlag = null;
+    } else {
+      // Value provided without a flag name.
+      throw new Error('Invalid script argument: "' + argv[i] + '"!');
+    }
+  }
+  return flags;
+}
+
+var flags = getScriptArguments(process.argv);
+return promptForUpdateRules(flags['overwrite'])
   .then(_.partial(app.test, utils))
   .then(_.partial(auth.test, utils))
   .then(_.partial(database.test, utils))
