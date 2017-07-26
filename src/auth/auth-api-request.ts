@@ -23,6 +23,7 @@ import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
 import {
   HttpMethod, SignedApiRequestHandler, ApiSettings,
 } from '../utils/api-request';
+import {CreateRequest, UpdateRequest} from './user-record';
 
 
 /** Firebase Auth backend host. */
@@ -300,7 +301,7 @@ export class FirebaseAuthRequestHandler {
    * @return {Promise<string>} A promise that resolves when the operation completes
    *     with the user id that was edited.
    */
-  public updateExistingAccount(uid: string, properties: Object): Promise<string> {
+  public updateExistingAccount(uid: string, properties: UpdateRequest): Promise<string> {
     if (!validator.isUid(uid)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_UID));
     } else if (!validator.isNonNullObject(properties)) {
@@ -376,7 +377,7 @@ export class FirebaseAuthRequestHandler {
    * @return {Promise<string>} A promise that resolves when the operation completes
    *     with the user id that was created.
    */
-  public createNewAccount(properties: Object): Promise<string> {
+  public createNewAccount(properties: CreateRequest): Promise<string> {
     if (!validator.isNonNullObject(properties)) {
       return Promise.reject(
         new FirebaseAuthError(

@@ -35,6 +35,29 @@ function parseDate(time: any): string {
   return null;
 }
 
+/** Parameters for create user operation */
+export type CreateRequest = {
+  uid?: string;
+  displayName?: string;
+  email?: string;
+  emailVerified?: boolean;
+  phoneNumber?: string;
+  photoURL?: string;
+  disabled?: boolean;
+  password?: string;
+}
+
+/** Parameters for update user operation */
+export type UpdateRequest = {
+  displayName?: string;
+  email?: string;
+  emailVerified?: boolean;
+  phoneNumber?: string;
+  photoURL?: string;
+  disabled?: boolean;
+  password?: string;
+}
+
 
 /**
  * User metadata class that provides metadata information like user account creation
