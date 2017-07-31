@@ -45,11 +45,14 @@ export let serviceName = 'mock-service-name';
 
 export let databaseURL = 'https://databaseName.firebaseio.com';
 
+export let storageBucket = 'bucketName.appspot.com';
+
 export let credential = new CertCredential(path.resolve(__dirname, './mock.key.json'));
 
 export let appOptions: FirebaseAppOptions = {
   credential,
   databaseURL,
+  storageBucket,
 };
 
 export let appOptionsNoAuth: FirebaseAppOptions = {

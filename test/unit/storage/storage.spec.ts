@@ -23,7 +23,7 @@ import * as mocks from '../../resources/mocks';
 import {FirebaseApp} from '../../../src/firebase-app';
 import {Storage} from '../../../src/storage/storage';
 
-describe('Messaging', () => {
+describe('Storage', () => {
   let mockApp: FirebaseApp;
   let mockCredentialApp: FirebaseApp;
   let storage: Storage;
@@ -98,6 +98,12 @@ describe('Messaging', () => {
                 bucketAny(invalidName);
             }).to.throw(expectedError);
         });
+    });
+  });
+
+  describe('bucket()', () => {
+    it('should return a bucket object', () => {
+      expect(storage.bucket().name).to.equal('bucketName.appspot.com');
     });
   });
 

@@ -22,7 +22,7 @@ function test(utils) {
   
   function testDefaultBucket() {
     const bucket = admin.storage().bucket();
-    return verifyBucket(bucket, 'storage().bucker()')
+    return verifyBucket(bucket, 'storage().bucket()')
       .then(() => {
         utils.logSuccess('storage().bucket()');
       })

@@ -33,7 +33,7 @@ class StorageInternals implements FirebaseServiceInternalsInterface {
    */
   public delete(): Promise<void> {
     // There are no resources to clean up.
-    return Promise.resolve(undefined);
+    return Promise.resolve();
   }
 }
 
@@ -101,15 +101,16 @@ export class Storage implements FirebaseServiceInterface {
     } else {
       bucketName = this.appInternal.options.storageBucket;
     }
-    if (typeof bucketName !== 'string' || bucketName === '') {
-      throw new FirebaseError({
-        code: 'storage/invalid-argument',
-        message: 'Bucket name not specified or invalid. Specify a valid bucket name via the ' +
-                 'storageBucket option when initializing the app, or specify the bucket name ' +
-                 'explicitly when calling the getBucket() method.',
-      });
+
+    if (validator.isNonEmptyString(bucketName)) {
+      return this.storageClient.bucket(bucketName);
     }
-    return this.storageClient.bucket(bucketName);
+    throw new FirebaseError({
+      code: 'storage/invalid-argument',
+      message: 'Bucket name not specified or invalid. Specify a valid bucket name via the ' +
+                'storageBucket option when initializing the app, or specify the bucket name ' +
+                'explicitly when calling the getBucket() method.',
+    });
   }
 
   /**
