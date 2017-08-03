@@ -343,12 +343,7 @@ declare namespace admin.messaging {
     app: admin.app.App;
 
     sendToDevice(
-      registrationToken: string,
-      payload: admin.messaging.MessagingPayload,
-      options?: admin.messaging.MessagingOptions
-    ): Promise<admin.messaging.MessagingDevicesResponse>;
-    sendToDevice(
-      registrationTokens: string[],
+      registrationToken: string | string[],
       payload: admin.messaging.MessagingPayload,
       options?: admin.messaging.MessagingOptions
     ): Promise<admin.messaging.MessagingDevicesResponse>;
