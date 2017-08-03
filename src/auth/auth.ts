@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {UserRecord} from './user-record';
+import {UserRecord, CreateRequest, UpdateRequest} from './user-record';
 import {Certificate} from './credential';
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseTokenGenerator} from './token-generator';
@@ -181,10 +181,10 @@ class Auth implements FirebaseServiceInterface {
   /**
    * Creates a new user with the properties provided.
    *
-   * @param {Object} properties The properties to set on the new user record to be created.
+   * @param {CreateRequest} properties The properties to set on the new user record to be created.
    * @return {Promise<UserRecord>} A promise that resolves with the newly created user record.
    */
-  public createUser(properties: Object): Promise<UserRecord> {
+  public createUser(properties: CreateRequest): Promise<UserRecord> {
     return this.authRequestHandler.createNewAccount(properties)
       .then((uid) => {
         // Return the corresponding user record.
@@ -219,10 +219,10 @@ class Auth implements FirebaseServiceInterface {
    * Updates an existing user with the properties provided.
    *
    * @param {string} uid The uid identifier of the user to update.
-   * @param {Object} properties The properties to update on the existing user.
+   * @param {UpdateRequest} properties The properties to update on the existing user.
    * @return {Promise<UserRecord>} A promise that resolves with the modified user record.
    */
-  public updateUser(uid: string, properties: Object): Promise<UserRecord> {
+  public updateUser(uid: string, properties: UpdateRequest): Promise<UserRecord> {
     return this.authRequestHandler.updateExistingAccount(uid, properties)
       .then((existingUid) => {
         // Return the corresponding user record.

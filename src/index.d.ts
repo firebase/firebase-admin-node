@@ -101,6 +101,20 @@ declare namespace admin.auth {
     toJSON(): Object;
   }
 
+  interface UpdateRequest {
+    displayName?: string;
+    email?: string;
+    emailVerified?: boolean;
+    phoneNumber?: string;
+    photoURL?: string;
+    disabled?: boolean;
+    password?: string;
+  }
+
+  interface CreateRequest extends UpdateRequest {
+    uid?: string;
+  }
+
   interface DecodedIdToken {
     aud: string;
     auth_time: number;
@@ -123,12 +137,12 @@ declare namespace admin.auth {
     app: admin.app.App;
 
     createCustomToken(uid: string, developerClaims?: Object): Promise<string>;
-    createUser(properties: Object): Promise<admin.auth.UserRecord>;
+    createUser(properties: admin.auth.CreateRequest): Promise<admin.auth.UserRecord>;
     deleteUser(uid: string): Promise<void>;
     getUser(uid: string): Promise<admin.auth.UserRecord>;
     getUserByEmail(email: string): Promise<admin.auth.UserRecord>;
     getUserByPhoneNumber(phoneNumber: string): Promise<admin.auth.UserRecord>;
-    updateUser(uid: string, properties: Object): Promise<admin.auth.UserRecord>;
+    updateUser(uid: string, properties: admin.auth.UpdateRequest): Promise<admin.auth.UserRecord>;
     verifyIdToken(idToken: string): Promise<admin.auth.DecodedIdToken>;
   }
 }
