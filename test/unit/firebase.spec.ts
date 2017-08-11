@@ -217,4 +217,19 @@ describe('Firebase', () => {
       }).not.to.throw();
     });
   });
+
+  describe('#storage', () => {
+    it('should throw if the app has not be initialized', () => {
+      expect(() => {
+        return firebaseAdmin.storage();
+      }).to.throw('The default Firebase app does not exist.');
+    });
+
+    it('should return the storage service', () => {
+      firebaseAdmin.initializeApp(mocks.appOptions);
+      expect(() => {
+        return firebaseAdmin.storage();
+      }).not.to.throw();
+    });
+  });
 });

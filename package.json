@@ -47,6 +47,8 @@
     "del": "^2.2.1",
     "firebase": "^3.6.9",
     "firebase-token-generator": "^2.0.0",
+    "@google-cloud/storage": "^1.2.1",
+    "@types/google-cloud__storage": "^1.1.1",
     "gulp": "^3.9.1",
     "gulp-exit": "0.0.2",
     "gulp-header": "^1.8.8",
