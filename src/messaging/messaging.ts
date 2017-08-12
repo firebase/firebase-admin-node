@@ -712,13 +712,27 @@ class Messaging implements FirebaseServiceInterface {
       }
 
       Object.keys(value).forEach((subKey) => {
+
         if (!validator.isString(value[subKey])) {
+          //exceptions are keys with names ending _args which must be array of strings
+          //especially to support localization for iOS/android.
+          //e.g.: body_loc_args : ["arg1","arg2"], title_loc_args:["title_arg1","title_arg2", "arg3"]
+          if (/^.*_args$/.test(subKey)) {
+            if (!validator.isArray(value[subKey])) {
+            throw new FirebaseMessagingError(
+              MessagingClientErrorCode.INVALID_PAYLOAD,
+              `Messaging payload contains an invalid value for the "${ payloadKey }.${ subKey }" ` +
+              `property. Values must be array of strings.`
+            );
+            }
+          } else {
           // Validate all sub-keys have a string value
           throw new FirebaseMessagingError(
             MessagingClientErrorCode.INVALID_PAYLOAD,
             `Messaging payload contains an invalid value for the "${ payloadKey }.${ subKey }" ` +
             `property. Values must be strings.`
           );
+          }
         } else if (payloadKey === 'data' && /^google\./.test(subKey)) {
           // Validate the data payload does not contain keys which start with 'google.'.
           throw new FirebaseMessagingError(
