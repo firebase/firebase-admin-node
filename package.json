@@ -25,6 +25,7 @@
   ],
   "types": "./lib/index.d.ts",
   "dependencies": {
+    "@google-cloud/storage": "^1.2.1",
     "@types/jsonwebtoken": "^7.1.33",
     "faye-websocket": "0.9.3",
     "jsonwebtoken": "7.1.9",
@@ -47,7 +48,6 @@
     "del": "^2.2.1",
     "firebase": "^3.6.9",
     "firebase-token-generator": "^2.0.0",
-    "@google-cloud/storage": "^1.2.1",
     "@types/google-cloud__storage": "^1.1.1",
     "gulp": "^3.9.1",
     "gulp-exit": "0.0.2",
