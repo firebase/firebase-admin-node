@@ -157,6 +157,18 @@ echo
 mv firebase-admin-${VERSION_WITHOUT_RC}.tgz firebase-admin-${VERSION}.tgz
 
 
+############################
+#  VERIFY RELEASE TARBALL  #
+############################
+echo "[INFO] Running release tarball verification..."
+bash verifyReleaseTarball.sh firebase-admin-${VERSION}.tgz
+if [[ $? -ne 0 ]]; then
+  echo "Error: Release tarball failed verification."
+  exit 1
+fi
+echo
+
+
 ##############
 #  EPILOGUE  #
 ##############
