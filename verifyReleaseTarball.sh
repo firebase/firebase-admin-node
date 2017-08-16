@@ -14,6 +14,12 @@
 
 #!/bin/bash
 
+# This helper script installs the firebase-admin package locally as a
+# typical developer would, and runs some test code using the
+# installed package as a dependency. This ensures that the distros
+# built by our tools can be installed and consumed by downstream
+# applications.
+
 set -e
 
 if [ -z "$1" ]; then
@@ -25,10 +31,14 @@ fi
 # Variables
 PKG_NAME="$1"
 ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-GULP_CLI="$ROOT/node_modules/.bin/gulp"
 MOCHA_CLI="$ROOT/node_modules/.bin/mocha -r ts-node/register"
 DIR="$ROOT/test/integration/typescript"
 WORK_DIR=`mktemp -d`
+
+if [ ! -f "$ROOT/$PKG_NAME" ]; then
+  echo "Package $PKG_NAME does not exist."
+  exit 1
+fi
 
 # check if tmp dir was created
 if [[ ! "$WORK_DIR" || ! -d "$WORK_DIR" ]]; then
@@ -48,16 +58,14 @@ trap cleanup EXIT
 # Enter work dir
 pushd "$WORK_DIR"
 
-if [ ! -d "$ROOT/lib" ]; then
-  pushd $ROOT
-  $GULP_CLI build
-  popd
-fi
-
-# Simulate env
+# Copy test sources into working directory
 cp -r $DIR/* .
 cp "$ROOT/test/resources/mock.key.json" .
+
+# Install the test package
 npm install
+
+# Install firebase-admin package
 npm install "$ROOT/$PKG_NAME"
 
 echo "> tsc -p tsconfig.json"

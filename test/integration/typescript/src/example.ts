@@ -16,8 +16,6 @@
 
 import * as firebase from 'firebase-admin';
 
-const serviceAccount = 'mock.key.json';
-
 export function initApp(serviceAcct: any, name: string) {
     return firebase.initializeApp({
         credential: firebase.credential.cert(serviceAcct)
