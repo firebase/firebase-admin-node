@@ -1,6 +1,6 @@
 {
   "name": "firebase-admin",
-  "version": "5.2.0",
+  "version": "5.2.1",
   "dependencies": {
     "@google-cloud/common": {
       "version": "0.13.4",
