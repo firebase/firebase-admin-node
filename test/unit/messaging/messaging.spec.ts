@@ -1579,7 +1579,7 @@ describe('Messaging', () => {
       restrictedPackageName: { type: 'string', underscoreCasedKey: 'restricted_package_name' },
     };
 
-    _.forEach(whitelistedOptionsKeys as any, ({ type, underscoreCasedKey }, camelCasedKey) => {
+    _.forEach(whitelistedOptionsKeys, ({ type, underscoreCasedKey }, camelCasedKey) => {
       let validValue;
       let invalidValues;
       if (type === 'string') {
