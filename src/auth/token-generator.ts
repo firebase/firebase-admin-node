@@ -152,7 +152,7 @@ export class FirebaseTokenGenerator {
       );
     }
 
-    const fullDecodedToken = jwt.decode(idToken, {
+    const fullDecodedToken: any = jwt.decode(idToken, {
       complete: true,
     });
 
@@ -222,7 +222,7 @@ export class FirebaseTokenGenerator {
       return new Promise((resolve, reject) => {
         jwt.verify(idToken, publicKeys[header.kid], {
           algorithms: [ALGORITHM],
-        }, (error, decodedToken) => {
+        }, (error, decodedToken: any) => {
           if (error) {
             if (error.name === 'TokenExpiredError') {
               errorMessage = 'Firebase ID token has expired. Get a fresh token from your client app and try ' +
@@ -297,12 +297,12 @@ export class FirebaseTokenGenerator {
             } else {
               /* istanbul ignore else */
               if (res.headers.hasOwnProperty('cache-control')) {
-                const cacheControlHeader = res.headers['cache-control'];
+                const cacheControlHeader: string = res.headers['cache-control'] as string;
                 const parts = cacheControlHeader.split(',');
                 parts.forEach((part) => {
                   const subParts = part.trim().split('=');
                   if (subParts[0] === 'max-age') {
-                    const maxAge = subParts[1];
+                    const maxAge: number = +subParts[1];
                     this.publicKeysExpireAt_ = Date.now() + (maxAge * 1000);
                   }
                 });

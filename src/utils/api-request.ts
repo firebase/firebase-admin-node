@@ -18,6 +18,7 @@ import {deepCopy} from './deep-copy';
 import {FirebaseApp} from '../firebase-app';
 import {AppErrorCodes, FirebaseAppError} from './error';
 
+import {OutgoingHttpHeaders} from 'http';
 import https = require('https');
 
 /** Http method type definition. */
@@ -57,12 +58,12 @@ export class HttpRequestHandler {
         return Promise.reject(e);
       }
     }
-    const options = {
+    const options: https.RequestOptions = {
       method: httpMethod,
       host,
       port,
       path,
-      headers,
+      headers: headers as OutgoingHttpHeaders,
     };
     // Only https endpoints.
     return new Promise((resolve, reject) => {

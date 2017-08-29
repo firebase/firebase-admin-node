@@ -100,7 +100,7 @@ function getValidUserRecord(serverResponse: any) {
 describe('Auth', () => {
   let auth: Auth;
   let mockApp: FirebaseApp;
-  let oldProcessEnv: Object;
+  let oldProcessEnv: NodeJS.ProcessEnv;
   let nullAccessTokenAuth: Auth;
   let malformedAccessTokenAuth: Auth;
   let rejectedPromiseAccessTokenAuth: Auth;

@@ -351,7 +351,7 @@ describe('FirebaseTokenGenerator', () => {
 
       return tokenGenerator.createCustomToken(mocks.uid)
         .then(token => {
-          const decoded = jwt.decode(token, {
+          const decoded: any = jwt.decode(token, {
             complete: true,
           });
 
