@@ -1564,7 +1564,12 @@ describe('Messaging', () => {
       });
     });
 
-    const whitelistedOptionsKeys = {
+    const whitelistedOptionsKeys: {
+      [name: string]: {
+        type: string,
+        underscoreCasedKey?: string
+      }
+    } = {
       dryRun: { type: 'boolean', underscoreCasedKey: 'dry_run' },
       priority: { type: 'string' },
       timeToLive: { type: 'number', underscoreCasedKey: 'time_to_live' },
