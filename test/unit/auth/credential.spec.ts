@@ -79,6 +79,7 @@ const skipAndLogWarningIfNoGcloud = () => {
 };
 
 const ONE_HOUR_IN_SECONDS = 60 * 60;
+const FIVE_MINUTES_IN_SECONDS = 5 * 60;
 
 
 describe('Credential', () => {
@@ -256,7 +257,7 @@ describe('Credential', () => {
       const c = new RefreshTokenCredential(new RefreshToken(TEST_GCLOUD_CREDENTIALS));
       return c.getAccessToken().then((token) => {
         expect(token.access_token).to.be.a('string').and.to.not.be.empty;
-        expect(token.expires_in).to.equal(ONE_HOUR_IN_SECONDS);
+        expect(token.expires_in).to.greaterThan(FIVE_MINUTES_IN_SECONDS);
       });
     });
   });
