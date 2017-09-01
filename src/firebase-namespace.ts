@@ -308,6 +308,14 @@ export class FirebaseNamespace {
     );
   }
 
+  /* istanbul ignore next */
+  public firestore(): FirebaseServiceFactory {
+    throw new FirebaseAppError(
+      AppErrorCodes.INTERNAL_ERROR,
+      'INTERNAL ASSERT FAILED: Firebase firestore() service has not been registered.',
+    );
+  }
+
   /**
    * Initializes the FirebaseApp instance.
    *

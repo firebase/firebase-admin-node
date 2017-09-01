@@ -37,6 +37,7 @@ export type FirebaseAppOptions = {
   databaseAuthVariableOverride?: Object
   databaseURL?: string,
   storageBucket?: string,
+  projectId?: string,
 };
 
 /**
@@ -307,6 +308,14 @@ export class FirebaseApp {
     throw new FirebaseAppError(
       AppErrorCodes.INTERNAL_ERROR,
       'INTERNAL ASSERT FAILED: Firebase storage() service has not been registered.',
+    );
+  }
+
+  /* istanbul ignore next */
+  public firestore(): FirebaseServiceInterface {
+    throw new FirebaseAppError(
+      AppErrorCodes.INTERNAL_ERROR,
+      'INTERNAL ASSERT FAILED: Firebase firestore() service has not been registered.',
     );
   }
 

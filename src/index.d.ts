@@ -54,6 +54,7 @@ declare namespace admin {
   function database(app?: admin.app.App): admin.database.Database;
   function messaging(app?: admin.app.App): admin.messaging.Messaging;
   function storage(app?: admin.app.App): admin.storage.Storage;
+  function firestore(app?: admin.app.App): admin.firestore.Firestore;
   function initializeApp(options: admin.AppOptions, name?: string): admin.app.App;
 }
 
@@ -387,6 +388,13 @@ declare namespace admin.storage {
   interface Storage {
     app: admin.app.App;
     bucket(name?: string): any;
+  }
+}
+
+declare namespace admin.firestore {
+  interface Firestore {
+    app: admin.app.App;
+    client(): any;
   }
 }
 
