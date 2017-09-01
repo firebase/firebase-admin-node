@@ -67,7 +67,7 @@ describe('Firestore', () => {
     it('should throw given an invalid credential', () => {
       // Project ID is read from the environment variable, but the credential is unsupported.
       process.env.GCLOUD_PROJECT = 'project_id';
-      const expectedError = 'Failed to initialize Google Cloud Firestore client with the available credential. '
+      const expectedError = 'Failed to initialize Google Cloud Firestore client with the available credentials. '
         + 'Must initialize the SDK with a certificate credential or application default credentials '
         + 'to use Cloud Firestore API.';
       expect(() => {
