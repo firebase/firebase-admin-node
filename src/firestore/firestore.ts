@@ -74,7 +74,7 @@ export class Firestore implements FirebaseServiceInterface {
     const projectId: string = utils.getProjectId(app);
     if (!validator.isNonEmptyString(projectId)) {
         throw new FirebaseError({
-            code: 'firestore/project-id-not-found',
+            code: 'firestore/no-project-id',
             message: 'Failed to determine project ID for Firestore. Initialize the '
               + 'SDK with service account credentials or set project ID as an app option. '
               + 'Alternatively set the GCLOUD_PROJECT environment variable.',
@@ -100,7 +100,7 @@ export class Firestore implements FirebaseServiceInterface {
     } else {
       throw new FirebaseError({
         code: 'firestore/invalid-credential',
-        message: 'Failed to initialize Google Cloud Firestore client with the available credential. ' +
+        message: 'Failed to initialize Google Cloud Firestore client with the available credentials. ' +
           'Must initialize the SDK with a certificate credential or application default credentials ' +
           'to use Cloud Firestore API.',
       });
