@@ -101,7 +101,7 @@ gulp.task('copyTypings', function() {
     .pipe(gulp.dest(paths.build))
 });
 
-// Re-runs the linter and regenerates js every time a source file changes
+// Regenerates js every time a source file changes
 gulp.task('watch', function() {
   gulp.watch(paths.src, ['compile']);
 });

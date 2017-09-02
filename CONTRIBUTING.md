@@ -187,5 +187,5 @@ Here are some highlights of the directory structure and notable source files
 * `gulpfile.js` - Defines the `gulp` tasks necessary for building release artifacts.
 * `tslint.json` - TypeScript linting rules.
 * `tsconfig.json` - TypeScript configuration options.
-* `tsconfig-lint.json` - TypeScript configuration options for the linter. This simple widens
+* `tsconfig-lint.json` - TypeScript configuration options for the linter. This simply widens
   the scope of `tsconfig.json` by including some test source files in the project.
