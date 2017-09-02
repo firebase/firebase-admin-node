@@ -38,86 +38,69 @@ class FirestoreInternals implements FirebaseServiceInternalsInterface {
 }
 
 /**
- * Storage service bound to the provided app.
+ * Creates a new Firestore service instance for the given FirebaseApp.
  */
-export class Firestore implements FirebaseServiceInterface {
-  public INTERNAL: FirestoreInternals = new FirestoreInternals();
-
-  private appInternal: FirebaseApp;
-  private firestore_: any;
-
-  /**
-   * @param {Object} app The app for this Storage service.
-   * @constructor
-   */
-  constructor(app: FirebaseApp) {
-    if (!validator.isNonNullObject(app) || !('options' in app)) {
-      throw new FirebaseError({
-        code: 'firestore/invalid-argument',
-        message: 'First argument passed to admin.firestore() must be a valid Firebase app instance.',
-      });
-    }
-
-    /* tslint:disable-next-line:variable-name */
-    let FirestoreClient;
-    try {
-      /* tslint:disable-next-line:no-var-requires */
-      FirestoreClient = require('@google-cloud/firestore');
-    } catch (e) {
-      throw new FirebaseError({
-        code: 'firestore/missing-dependencies',
-        message: 'Failed to import the Cloud Firestore client library for Node.js. '
-          + 'Make sure to install the "@google-cloud/firestore" npm package.',
-      });
-    }
-
-    const projectId: string = utils.getProjectId(app);
-    if (!validator.isNonEmptyString(projectId)) {
-        throw new FirebaseError({
-            code: 'firestore/no-project-id',
-            message: 'Failed to determine project ID for Firestore. Initialize the '
-              + 'SDK with service account credentials or set project ID as an app option. '
-              + 'Alternatively set the GCLOUD_PROJECT environment variable.',
-        });
-    }
-
-    const cert: Certificate = app.options.credential.getCertificate();
-    if (cert != null) {
-      // cert is available when the SDK has been initialized with a service account JSON file,
-      // or by setting the GOOGLE_APPLICATION_CREDENTIALS envrionment variable.
-      this.firestore_ = new FirestoreClient({
-        credentials: {
-          private_key: cert.privateKey,
-          client_email: cert.clientEmail,
-        },
-        projectId,
-      });
-    } else if (app.options.credential instanceof ApplicationDefaultCredential) {
-      // Try to use the Google application default credentials.
-      this.firestore_ = new FirestoreClient({
-        projectId,
-      });
-    } else {
-      throw new FirebaseError({
-        code: 'firestore/invalid-credential',
-        message: 'Failed to initialize Google Cloud Firestore client with the available credentials. ' +
-          'Must initialize the SDK with a certificate credential or application default credentials ' +
-          'to use Cloud Firestore API.',
-      });
-    }
-    this.appInternal = app;
+export function initFirestore(app: FirebaseApp): FirebaseServiceInterface {
+  if (!validator.isNonNullObject(app) || !('options' in app)) {
+    throw new FirebaseError({
+      code: 'firestore/invalid-argument',
+      message: 'First argument passed to admin.firestore() must be a valid Firebase app instance.',
+    });
   }
 
-  public client(): any {
-      return this.firestore_;
+  /* tslint:disable-next-line:variable-name */
+  let Firestore;
+  try {
+    /* tslint:disable-next-line:no-var-requires */
+    Firestore = require('@google-cloud/firestore');
+  } catch (e) {
+    throw new FirebaseError({
+      code: 'firestore/missing-dependencies',
+      message: 'Failed to import the Cloud Firestore client library for Node.js. '
+        + 'Make sure to install the "@google-cloud/firestore" npm package.',
+    });
   }
 
-  /**
-   * Returns the app associated with this Storage instance.
-   *
-   * @return {FirebaseApp} The app associated with this Storage instance.
-   */
-  get app(): FirebaseApp {
-    return this.appInternal;
+  const projectId: string = utils.getProjectId(app);
+  if (!validator.isNonEmptyString(projectId)) {
+      throw new FirebaseError({
+          code: 'firestore/no-project-id',
+          message: 'Failed to determine project ID for Firestore. Initialize the '
+            + 'SDK with service account credentials or set project ID as an app option. '
+            + 'Alternatively set the GCLOUD_PROJECT environment variable.',
+      });
   }
-};
+
+  const cert: Certificate = app.options.credential.getCertificate();
+  let firestore: any;
+  if (cert != null) {
+    // cert is available when the SDK has been initialized with a service account JSON file,
+    // or by setting the GOOGLE_APPLICATION_CREDENTIALS envrionment variable.
+    firestore = new Firestore({
+      credentials: {
+        private_key: cert.privateKey,
+        client_email: cert.clientEmail,
+      },
+      projectId,
+    });
+  } else if (app.options.credential instanceof ApplicationDefaultCredential) {
+    // Try to use the Google application default credentials.
+    firestore = new Firestore({
+      projectId,
+    });
+  } else {
+    throw new FirebaseError({
+      code: 'firestore/invalid-credential',
+      message: 'Failed to initialize Google Cloud Firestore client with the available credentials. ' +
+        'Must initialize the SDK with a certificate credential or application default credentials ' +
+        'to use Cloud Firestore API.',
+    });
+  }
+
+  // Extend the Firestore client object so it implements FirebaseServiceInterface.
+  Object.defineProperty(firestore, 'app', {
+    get: () => { return app; },
+  });
+  firestore.INTERNAL = new FirestoreInternals();
+  return firestore;
+}

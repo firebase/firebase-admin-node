@@ -1,4 +1,4 @@
-import {Firestore} from './firestore';
+import {initFirestore} from './firestore';
 import {AppHook, FirebaseApp} from '../firebase-app';
 import {FirebaseServiceInterface} from '../firebase-service';
 import * as firebase from '../default-namespace';
@@ -13,7 +13,7 @@ import {FirebaseServiceNamespace} from '../firebase-namespace';
  * @return {Firestore} The Firestore service for the specified app.
  */
 function serviceFactory(app: FirebaseApp, extendApp: (props: Object) => void): FirebaseServiceInterface {
-  return new Firestore(app);
+  return initFirestore(app);
 }
 
 /**
@@ -30,7 +30,7 @@ export default function(): FirebaseServiceNamespace<FirebaseServiceInterface> {
   return firebase.INTERNAL.registerService(
     'firestore',
     serviceFactory,
-    {Firestore},
+    {},
     appHook
   );
 }

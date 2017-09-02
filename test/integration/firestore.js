@@ -25,7 +25,7 @@ function test(utils) {
         name: 'Mountain View',
         population: 77846,
     };
-    const reference = admin.firestore().client().collection('cities').doc('Mountain View')
+    const reference = admin.firestore().collection('cities').doc('Mountain View')
     return reference.set(expected)
         .then(result => {
             return reference.get();
