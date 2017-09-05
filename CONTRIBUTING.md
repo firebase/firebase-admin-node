@@ -104,37 +104,31 @@ follow the prompts:
 $ gcloud beta auth application-default login
 ```
 
-### Lint, Build, and Test
+### Running the Linter
 
 Source files are written in [TypeScript](https://www.typescriptlang.org/) and linted using
-[TSLint](https://palantir.github.io/tslint/). Tests are run on the compiled JavaScript files.
-
-The lint, build, and test process is kicked off via the default `gulp` task, although you can also
-run each task individually:
+[TSLint](https://palantir.github.io/tslint/). Run the following command to kick off the linter:
 
 ```bash
-$ gulp         # Lint, build, and test
-$ gulp lint    # Just lint
-$ gulp build   # Just build
-$ gulp test    # Just test
+$ npm run lint
 ```
 
 ### Running Tests
 
 There are two test suites: unit and integration. The unit test suite is intended to be run during
-development and the integration test suite is intended to be run before packaging up release
+development, and the integration test suite is intended to be run before packaging up release
 candidates.
 
 To run the unit test suite:
 
-```
-$ gulp   # Lint, build, and run unit test suite
+```bash
+$ npm test   # Lint and run unit test suite
 ```
 
-To run the integration test suite:
+If you wish to skip the linter, and only run the unit tests:
 
-```
-$ node test/integration   # Run integration test suite
+```bash
+$ npm run test:unit
 ```
 
 The integration test suite requires a service account JSON key file, and an API key for a Firebase
@@ -143,7 +137,22 @@ you do not already have one. Use a separate, dedicated project for integration t
 test suite makes a large number of writes to the Firebase realtime database. Download the service
 account key file from the "Settings > Service Accounts" page of the project, and copy it to
 `test/resources/key.json`. Also obtain the API key for the same project from "Settings > General",
-and save it to `test/resource/apikey.txt`.
+and save it to `test/resource/apikey.txt`. Finally, to run the integration test suite:
+
+```bash
+$ npm run integration   # Build and run integration test suite
+```
+
+The integration test suite overwrites the security rules present in your Firebase project. You
+will be prompted before the overwrite takes place:
+
+```
+Warning: This test will overwrite your project's existing Database rules.
+Overwrite Database rules for tests?
+* 'yes' to agree
+* 'skip' to continue without the overwrite
+* 'no' to cancel
+```
 
 ### Repo Organization
 
@@ -173,6 +182,10 @@ Here are some highlights of the directory structure and notable source files
   * `resources/` - Provides mocks for several variables as well as mock service account keys.
 * `.github/` - Contribution instructions as well as issue and pull request templates.
 * `createReleaseTarball.sh` - Generates a new release tarball and ensures it passes all tests.
-* `gulpfile.js` - Defines the `gulp` tasks.
+* `verifyReleaseTarball.sh` - Installs and validates the release tarballs created by
+  `createReleaseTarball.sh`.
+* `gulpfile.js` - Defines the `gulp` tasks necessary for building release artifacts.
 * `tslint.json` - TypeScript linting rules.
 * `tsconfig.json` - TypeScript configuration options.
+* `tsconfig-lint.json` - TypeScript configuration options for the linter. This simply widens
+  the scope of `tsconfig.json` by including some test source files in the project.

@@ -28,16 +28,11 @@ var runSequence = require('run-sequence');
 // File I/O
 var fs = require('fs');
 var exit = require('gulp-exit');
-var tslint = require('gulp-tslint');
 var ts = require('gulp-typescript');
 var del = require('del');
 var merge = require('merge2');
 var header = require('gulp-header');
 var replace = require('gulp-replace');
-
-// Testing
-var mocha = require('gulp-mocha');
-var istanbul = require('gulp-istanbul');
 
 
 /****************/
@@ -52,28 +47,13 @@ var paths = {
     'src/**/*.js'
   ],
 
-  tests: [
-    'test/unit/utils.ts',
-    'test/unit/**/*.spec.ts',
-    'test/resources/mocks.ts'
-  ],
-
-  resources: [
-    'test/resources/*.json'
-  ],
-
   build: 'lib/',
-
-  testBuild: '.tmp/',
-
-  testRunner: ['.tmp/test/unit/index.spec.js']
 };
 
 // Create a separate project for buildProject that overrides the rootDir
 // This ensures that the generated production files are in their own root
 // rather than including both src and test in the lib dir.
 var buildProject = ts.createProject('tsconfig.json', {rootDir: 'src'});
-var testProject = ts.createProject('tsconfig.json');
 
 var banner = `/*! firebase-admin v${pkg.version} */\n`;
 
@@ -84,7 +64,6 @@ var banner = `/*! firebase-admin v${pkg.version} */\n`;
 gulp.task('cleanup', function() {
   return del([
     paths.build,
-    paths.testBuild
   ]);
 });
 
@@ -122,54 +101,9 @@ gulp.task('copyTypings', function() {
     .pipe(gulp.dest(paths.build))
 });
 
-// Lints the source and test files
-gulp.task('lint', function() {
-  let filesToLint = _.clone(paths.src.concat(paths.tests));
-
-  // Don't lint the hand-crafted TypeScript typings file
-  filesToLint.push('!src/index.d.ts');
-
-  return gulp.src(filesToLint)
-    .pipe(tslint())
-    .pipe(tslint.report({
-      summarizeFailureOutput: true
-    }));
-});
-
-// Runs the test suite
-gulp.task('test', function() {
-  merge(
-    // Copy compiled source and test files
-    gulp.src(paths.tests.concat(paths.src), {base: '.'})
-      .pipe(testProject())
-      .pipe(gulp.dest(paths.testBuild)),
-    // Copy compiled database files
-    gulp.src(paths.build + 'database/**/*')
-      .pipe(gulp.dest(paths.testBuild + 'src/database/')),
-    // Copy test resources
-    gulp.src(paths.resources, {base: '.'})
-      .pipe(gulp.dest(paths.testBuild))
-  ).on('finish', function() {
-    return gulp.src([paths.testBuild + 'src/**/*.js', '!' + paths.testBuild + 'src/database/**/*'])
-      .pipe(istanbul())
-      .pipe(istanbul.hookRequire())
-      .on('finish', function() {
-        return gulp.src(paths.testRunner)
-          .pipe(mocha({
-            reporter: 'spec',
-            timeout: 5000
-          }))
-          .pipe(istanbul.writeReports())
-          .on('finish', function() {
-            return del(paths.testBuild).then(exit);
-          });
-      });
-  })
-});
-
-// Re-runs the linter and regenerates js every time a source file changes
+// Regenerates js every time a source file changes
 gulp.task('watch', function() {
-  gulp.watch(paths.src, ['lint', 'compile']);
+  gulp.watch(paths.src, ['compile']);
 });
 
 // Build task
@@ -181,7 +115,7 @@ gulp.task('build', function(done) {
 
 // Default task
 gulp.task('default', function(done) {
-  runSequence('lint', 'build', 'test', function(error) {
+  runSequence('build', function(error) {
     done(error && error.err);
   });
 });

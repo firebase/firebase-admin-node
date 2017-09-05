@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+      "module": "commonjs",
+      "target": "es5",
+      "noImplicitAny": false,
+      "lib": ["es5", "es2015.promise"],
+      "outDir": "lib",
+      // We manually craft typings in src/index.d.ts instead of auto-generating them.
+      // "declaration": true,
+      "rootDir": "."
+    },
+    "files": [
+      "src/index.ts",
+      "test/unit/utils.ts",
+      "test/unit/**/*.spec.ts",
+      "test/resources/mocks.ts"
+    ]
+  }
+  
