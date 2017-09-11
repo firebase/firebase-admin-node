@@ -301,7 +301,7 @@ export class FirebaseNamespace {
   }
 
   /* istanbul ignore next */
-  public storage(): FirebaseServiceFactory {
+  public storage(): FirebaseServiceInterface {
     throw new FirebaseAppError(
       AppErrorCodes.INTERNAL_ERROR,
       'INTERNAL ASSERT FAILED: Firebase storage() service has not been registered.',
