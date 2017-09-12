@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import {deepCopy} from '../utils/deep-copy';
 import * as utils from '../utils';
 import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
 
@@ -144,6 +145,9 @@ export class UserRecord {
   public readonly disabled: boolean;
   public readonly metadata: UserMetadata;
   public readonly providerData: UserInfo[];
+  public readonly passwordHash?: string;
+  public readonly passwordSalt?: string;
+  public readonly customClaims: Object;
 
   constructor(response: any) {
     // The Firebase user id is required.
@@ -167,6 +171,15 @@ export class UserRecord {
       providerData.push(new UserInfo(entry));
     }
     utils.addReadonlyGetter(this, 'providerData', providerData);
+    utils.addReadonlyGetter(this, 'passwordHash', response.passwordHash);
+    utils.addReadonlyGetter(this, 'passwordSalt', response.salt);
+    try {
+      utils.addReadonlyGetter(
+          this, 'customClaims', JSON.parse(response.customAttributes));
+    } catch (e) {
+      // Ignore error.
+      utils.addReadonlyGetter(this, 'customClaims', undefined);
+    }
   }
 
   /** @return {Object} The plain object representation of the user record. */
@@ -181,6 +194,9 @@ export class UserRecord {
       disabled: this.disabled,
       // Convert metadata to json.
       metadata: this.metadata.toJSON(),
+      passwordHash: this.passwordHash,
+      passwordSalt: this.passwordSalt,
+      customClaims: deepCopy(this.customClaims),
     };
     json.providerData = [];
     for (let entry of this.providerData) {

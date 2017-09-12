@@ -82,13 +82,24 @@ export function isNonEmptyString(value: any): boolean {
 
 
 /**
+ * Validates that a value is a nullable object.
+ *
+ * @param {any} value The value to validate.
+ * @return {boolean} Whether the value is an object or not.
+ */
+export function isObject(value: any): boolean {
+  return typeof value === 'object' && !(value instanceof Array);
+}
+
+
+/**
  * Validates that a value is a non-null object.
  *
  * @param {any} value The value to validate.
  * @return {boolean} Whether the value is a non-null object or not.
  */
 export function isNonNullObject(value: any): boolean {
-  return typeof value === 'object' && value !== null && !(value instanceof Array);
+  return isObject(value) && value !== null;
 }
 
 

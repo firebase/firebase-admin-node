@@ -84,7 +84,7 @@ const ONE_HOUR_IN_SECONDS = 60 * 60;
 describe('Credential', () => {
   let mockedRequests: nock.Scope[] = [];
   let mockCertificateObject;
-  let oldProcessEnv: Object;
+  let oldProcessEnv: NodeJS.ProcessEnv;
 
   before(() => utils.mockFetchAccessTokenRequests());
 

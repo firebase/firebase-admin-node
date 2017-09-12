@@ -431,10 +431,10 @@ class Messaging implements FirebaseServiceInterface {
         // See b/35394951 for more context.
         if ('multicast_id' in response) {
           if ((response as any).success === 0) {
-            return Promise.reject(new FirebaseMessagingError(
+            throw new FirebaseMessagingError(
               MessagingClientErrorCode.INVALID_RECIPIENT,
               'Notification key provided to sendToDeviceGroup() is invalid.'
-            ));
+            );
           } else {
             return mapRawResponseToDevicesResponse(response);
           }
@@ -485,7 +485,7 @@ class Messaging implements FirebaseServiceInterface {
         // Rename properties on the server response
         utils.renameProperties(response, MESSAGING_TOPIC_RESPONSE_KEYS_MAP);
 
-        return response;
+        return response as MessagingTopicResponse;
       });
   }
 
@@ -537,7 +537,7 @@ class Messaging implements FirebaseServiceInterface {
         // Rename properties on the server response
         utils.renameProperties(response, MESSAGING_CONDITION_RESPONSE_KEYS_MAP);
 
-        return response;
+        return response as MessagingConditionResponse;
       });
   }
 

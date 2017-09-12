@@ -99,6 +99,9 @@ declare namespace admin.auth {
     disabled: boolean;
     metadata: admin.auth.UserMetadata;
     providerData: admin.auth.UserInfo[];
+    passwordHash?: string;
+    passwordSalt?: string;
+    customClaims?: Object;
 
     toJSON(): Object;
   }
@@ -135,6 +138,11 @@ declare namespace admin.auth {
     [key: string]: any;
   }
 
+  interface ListUsersResult {
+    users: admin.auth.UserRecord[];
+    pageToken?: string;
+  }
+
   interface Auth {
     app: admin.app.App;
 
@@ -144,8 +152,10 @@ declare namespace admin.auth {
     getUser(uid: string): Promise<admin.auth.UserRecord>;
     getUserByEmail(email: string): Promise<admin.auth.UserRecord>;
     getUserByPhoneNumber(phoneNumber: string): Promise<admin.auth.UserRecord>;
+    listUsers(maxResults?: number, pageToken?: string): Promise<admin.auth.ListUsersResult>;
     updateUser(uid: string, properties: admin.auth.UpdateRequest): Promise<admin.auth.UserRecord>;
     verifyIdToken(idToken: string): Promise<admin.auth.DecodedIdToken>;
+    setCustomUserClaims(uid: string, customUserClaims: Object): Promise<void>;
   }
 }
 

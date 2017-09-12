@@ -1564,7 +1564,12 @@ describe('Messaging', () => {
       });
     });
 
-    const whitelistedOptionsKeys = {
+    const whitelistedOptionsKeys: {
+      [name: string]: {
+        type: string,
+        underscoreCasedKey?: string
+      }
+    } = {
       dryRun: { type: 'boolean', underscoreCasedKey: 'dry_run' },
       priority: { type: 'string' },
       timeToLive: { type: 'number', underscoreCasedKey: 'time_to_live' },
@@ -1574,7 +1579,7 @@ describe('Messaging', () => {
       restrictedPackageName: { type: 'string', underscoreCasedKey: 'restricted_package_name' },
     };
 
-    _.forEach(whitelistedOptionsKeys as any, ({ type, underscoreCasedKey }, camelCasedKey) => {
+    _.forEach(whitelistedOptionsKeys, ({ type, underscoreCasedKey }, camelCasedKey) => {
       let validValue;
       let invalidValues;
       if (type === 'string') {
