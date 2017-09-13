@@ -128,18 +128,34 @@ if [[ $? -ne 0 ]]; then
 fi
 echo
 
-echo "[INFO] Linting, building, and running unit tests..."
-gulp
+echo "[INFO] Running linter..."
+npm run lint
 if [[ $? -ne 0 ]]; then
-  echo "Error: Failed to lint, build, and run unit tests."
+  echo "Error: Linter failed."
   exit 1
 fi
 echo
 
-echo "[INFO] Running integration test suite..."
-node test/integration
+echo "[INFO] Running unit tests..."
+npm run test:unit
 if [[ $? -ne 0 ]]; then
-  echo "Error: Integration test suite failed."
+  echo "Error: Unit tests failed."
+  exit 1
+fi
+echo
+
+echo "[INFO] Building the release package contents..."
+npm run build
+if [[ $? -ne 0 ]]; then
+  echo "Error: Failed to build release package contents."
+  exit 1
+fi
+echo
+
+echo "[INFO] Running integration tests..."
+npm run test:integration -- --overwrite yes
+if [[ $? -ne 0 ]]; then
+  echo "Error: Integration tests failed."
   exit 1
 fi
 echo
