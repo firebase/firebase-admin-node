@@ -44,10 +44,10 @@ function test(utils) {
             if (snapshot.exists) {
                 return Promise.reject('Failed to delete document from Firestore');
             }
-            utils.logSuccess('firestore().client()');
+            utils.logSuccess('firestore()');
         })
         .catch(err => {
-            utils.logFailure('firestore().client()', 'Error while interacting with Firestore: ' + err);     
+            utils.logFailure('firestore()', 'Error while interacting with Firestore: ' + err);     
         });
   }
 

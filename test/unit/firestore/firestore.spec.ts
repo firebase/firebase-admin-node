@@ -106,12 +106,12 @@ describe('Firestore', () => {
     });
   });
 
-  describe('client()', () => {
-    it('should return an object when project ID is present in credential', () => {
+  describe('projectId', () => {
+    it('should return a string when project ID is present in credential', () => {
       expect(firestore.projectId).to.equal('project_id');
     });
 
-    it('should return an object when project ID is present in app options', () => {
+    it('should return a string when project ID is present in app options', () => {
       expect((initFirestore(projectIdApp) as any).projectId).to.equal('explicit-project-id');
     });
   });
