@@ -58,7 +58,7 @@ export function addReadonlyGetter(obj: Object, prop: string, value: any): void {
 }
 
 /**
- * Determines the Google Cloud project ID associated with a Firebase app. Examing
+ * Determines the Google Cloud project ID associated with a Firebase app by examining
  * the Firebase app options, credentials and the local environment in that order.
  * 
  * @param {FirebaseApp} app A Firebase app to get the project ID from.

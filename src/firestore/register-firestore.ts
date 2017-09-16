@@ -5,7 +5,7 @@ import * as firebase from '../default-namespace';
 import {FirebaseServiceNamespace} from '../firebase-namespace';
 
 /**
- * Factory function that creates a new Storage service.
+ * Factory function that creates a new Firestore service.
  *
  * @param {Object} app The app for this service.
  * @param {function(Object)} extendApp An extend function to extend the app namespace.

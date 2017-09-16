@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
+var _ = require('lodash');
 var admin = require('../../lib/index');
-var stream = require('stream');
 
 function test(utils) {
   console.log('\nFirestore:');
@@ -32,7 +32,7 @@ function test(utils) {
         })
         .then(snapshot => {
             var data = snapshot.data();
-            if (data.name !== expected.name || data.population !== expected.population) {
+            if (!_.isEqual(expected, data)) {
                 return Promise.reject('Data read from Firestore did not match expected');    
             }
             return reference.delete();

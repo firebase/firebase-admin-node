@@ -15,7 +15,7 @@
  */
 
 import {FirebaseApp} from '../firebase-app';
-import {FirebaseError} from '../utils/error';
+import {FirebaseFirestoreError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
 import {ApplicationDefaultCredential, Certificate} from '../auth/credential';
 
@@ -39,11 +39,14 @@ class FirestoreInternals implements FirebaseServiceInternalsInterface {
 
 /**
  * Creates a new Firestore service instance for the given FirebaseApp.
+ *
+ * @param {FirebaseApp} app The App for this Firestore service.
+ * @return {FirebaseServiceInterface} A Firestore service instance.
  */
 export function initFirestore(app: FirebaseApp): FirebaseServiceInterface {
   if (!validator.isNonNullObject(app) || !('options' in app)) {
-    throw new FirebaseError({
-      code: 'firestore/invalid-argument',
+    throw new FirebaseFirestoreError({
+      code: 'invalid-argument',
       message: 'First argument passed to admin.firestore() must be a valid Firebase app instance.',
     });
   }
@@ -54,8 +57,8 @@ export function initFirestore(app: FirebaseApp): FirebaseServiceInterface {
     /* tslint:disable-next-line:no-var-requires */
     Firestore = require('@google-cloud/firestore');
   } catch (e) {
-    throw new FirebaseError({
-      code: 'firestore/missing-dependencies',
+    throw new FirebaseFirestoreError({
+      code: 'missing-dependencies',
       message: 'Failed to import the Cloud Firestore client library for Node.js. '
         + 'Make sure to install the "@google-cloud/firestore" npm package.',
     });
@@ -63,8 +66,8 @@ export function initFirestore(app: FirebaseApp): FirebaseServiceInterface {
 
   const projectId: string = utils.getProjectId(app);
   if (!validator.isNonEmptyString(projectId)) {
-      throw new FirebaseError({
-          code: 'firestore/no-project-id',
+      throw new FirebaseFirestoreError({
+          code: 'no-project-id',
           message: 'Failed to determine project ID for Firestore. Initialize the '
             + 'SDK with service account credentials or set project ID as an app option. '
             + 'Alternatively set the GCLOUD_PROJECT environment variable.',
@@ -89,8 +92,8 @@ export function initFirestore(app: FirebaseApp): FirebaseServiceInterface {
       projectId,
     });
   } else {
-    throw new FirebaseError({
-      code: 'firestore/invalid-credential',
+    throw new FirebaseFirestoreError({
+      code: 'invalid-credential',
       message: 'Failed to initialize Google Cloud Firestore client with the available credentials. ' +
         'Must initialize the SDK with a certificate credential or application default credentials ' +
         'to use Cloud Firestore API.',
@@ -98,9 +101,7 @@ export function initFirestore(app: FirebaseApp): FirebaseServiceInterface {
   }
 
   // Extend the Firestore client object so it implements FirebaseServiceInterface.
-  Object.defineProperty(firestore, 'app', {
-    get: () => { return app; },
-  });
+  utils.addReadonlyGetter(firestore, 'app', app);
   firestore.INTERNAL = new FirestoreInternals();
   return firestore;
 }
