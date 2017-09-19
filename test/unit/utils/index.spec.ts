@@ -79,7 +79,7 @@ describe('getProjectId()', () => {
     let app: FirebaseApp = mocks.mockCredentialApp();
     expect(getProjectId(app)).to.equal('env-var-project-id');
   });
-  it('should return null when project ID is set', () => {
+  it('should return null when project ID is not set', () => {
     delete process.env.GCLOUD_PROJECT;
     let app: FirebaseApp = mocks.mockCredentialApp();
     expect(getProjectId(app)).to.be.null;
