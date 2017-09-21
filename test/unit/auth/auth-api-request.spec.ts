@@ -1257,7 +1257,7 @@ describe('FirebaseAuthRequestHandler', () => {
       // Expected error when invalid claims are provided.
       const expectedError = new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        'CustomUserClaims argument must be a nullable object.',
+        'CustomUserClaims argument must be an object or null.',
       );
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       // Send request with invalid claims.

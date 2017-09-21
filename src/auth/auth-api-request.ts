@@ -422,7 +422,7 @@ export class FirebaseAuthRequestHandler {
       return Promise.reject(
         new FirebaseAuthError(
           AuthClientErrorCode.INVALID_ARGUMENT,
-          'CustomUserClaims argument must be a nullable object.',
+          'CustomUserClaims argument must be an object or null.',
         ),
       );
     }
