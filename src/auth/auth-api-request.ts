@@ -41,8 +41,8 @@ const FIREBASE_AUTH_HEADER = {
 const FIREBASE_AUTH_TIMEOUT = 10000;
 
 
-/** List of blacklisted claims which cannot be provided when creating a custom token. */
-export const BLACKLISTED_CLAIMS = [
+/** List of reserved claims which cannot be provided when creating a custom token. */
+export const RESERVED_CLAIMS = [
   'acr', 'amr', 'at_hash', 'aud', 'auth_time', 'azp', 'cnf', 'c_hash', 'exp', 'iat',
   'iss', 'jti', 'nbf', 'nonce', 'sub', 'firebase',
 ];
@@ -51,7 +51,7 @@ export const BLACKLISTED_CLAIMS = [
 const MAX_CLAIMS_PAYLOAD_SIZE = 1000;
 
 /** Maximum allowed number of users to batch download at one time. */
-const MAXIMUM_DOWNLOAD_ACCOUNT_PAGE_SIZE = 1000;
+const MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE = 1000;
 
 
 /**
@@ -155,15 +155,17 @@ function validateCreateEditRequest(request: any) {
       }
       const invalidClaims = [];
       // Check for any invalid claims.
-      BLACKLISTED_CLAIMS.forEach((blacklistedClaim) => {
+      RESERVED_CLAIMS.forEach((blacklistedClaim) => {
         if (developerClaims.hasOwnProperty(blacklistedClaim)) {
           invalidClaims.push(blacklistedClaim);
         }
       });
       // Throw an error if an invalid claim is detected.
-      if (invalidClaims.length) {
+      if (invalidClaims.length > 0) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.FORBIDDEN_CLAIM,
+          invalidClaims.length > 1 ?
+          `Developer claims "${invalidClaims.join('", "')}" are reserved and cannot be specified.` :
           `Developer claim "${invalidClaims[0]}" is reserved and cannot be specified.`,
         );
       }
@@ -189,11 +191,12 @@ export const FIREBASE_AUTH_DOWNLOAD_ACCOUNT = new ApiSettings('downloadAccount',
     }
     // Validate max results.
     if (!validator.isNumber(request.maxResults) ||
-        request.maxResults > MAXIMUM_DOWNLOAD_ACCOUNT_PAGE_SIZE) {
+        request.maxResults <= 0 ||
+        request.maxResults > MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        `Required "maxResults" must be a number that does not exceed the allowed ` +
-        `${MAXIMUM_DOWNLOAD_ACCOUNT_PAGE_SIZE}.`
+        `Required "maxResults" must be a positive non-zero number that does not exceed ` +
+        `the allowed ${MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE}.`
       );
     }
   });
@@ -358,12 +361,14 @@ export class FirebaseAuthRequestHandler {
    * @param {number=} maxResults The page size, 1000 if undefined. This is also the maximum
    *     allowed limit.
    * @param {string=} pageToken The next page token. If not specified, returns users starting
-   *     without any offset.
+   *     without any offset. Users are returned in the order they were created from oldest to
+   *     newest, relative to the page token offset.
    * @return {Promise<Object>} A promise that resolves with the current batch of downloaded
-   *     users and the next page token if available.
+   *     users and the next page token if available. For the last page, an empty list of users
+   *     and no page token are returned.
    */
   public downloadAccount(
-      maxResults: number = MAXIMUM_DOWNLOAD_ACCOUNT_PAGE_SIZE,
+      maxResults: number = MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE,
       pageToken?: string): Promise<{users: Object[], nextPageToken?: string}> {
     // Construct request.
     const request = {
@@ -417,11 +422,11 @@ export class FirebaseAuthRequestHandler {
       return Promise.reject(
         new FirebaseAuthError(
           AuthClientErrorCode.INVALID_ARGUMENT,
-          'CustomUserClaims argument must be a non-null object.',
+          'CustomUserClaims argument must be a nullable object.',
         ),
       );
     }
-    // Delete operation. Replace null will an empty object.
+    // Delete operation. Replace null with an empty object.
     if (customUserClaims === null) {
       customUserClaims = {};
     }

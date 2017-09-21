@@ -106,12 +106,21 @@ function test(utils) {
       });
   }
 
-  /** Clean up routine to run before tests. */
+  /**
+   * Clean up routine to run before tests. This ensures any new users to be
+   * created in the test, will not collide with existing users.
+   */
   function before() {
     return cleanup('before');
   }
 
-  /** Clean up routine to run after tests. */
+  /**
+   * Clean up routine to run after tests. This cleans up the user database
+   * from all intermediate users created. The before test should be sufficient
+   * but for good practice, these temporary users are also removed from the
+   * Auth backend, minimizing the surface area of project changes caused by
+   * this test.
+   */
   function after() {
     return cleanup('after');
   }

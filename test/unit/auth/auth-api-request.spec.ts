@@ -35,7 +35,7 @@ import {
   FirebaseAuthRequestHandler, FIREBASE_AUTH_GET_ACCOUNT_INFO,
   FIREBASE_AUTH_DELETE_ACCOUNT, FIREBASE_AUTH_SET_ACCOUNT_INFO,
   FIREBASE_AUTH_SIGN_UP_NEW_USER, FIREBASE_AUTH_DOWNLOAD_ACCOUNT,
-  BLACKLISTED_CLAIMS,
+  RESERVED_CLAIMS,
 } from '../../../src/auth/auth-api-request';
 import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/utils/error';
 
@@ -124,11 +124,23 @@ describe('FIREBASE_AUTH_DOWNLOAD_ACCOUNT', () => {
         }).to.throw();
         expect(isNumber).to.have.been.calledOnce.and.calledWith('');
       });
+      it('should fail with zero maxResults', () => {
+        expect(() => {
+          return requestValidator({maxResults: 0});
+        }).to.throw();
+        expect(isNumber).to.have.been.calledOnce.and.calledWith(0);
+      });
+      it('should fail with negative maxResults', () => {
+        expect(() => {
+          return requestValidator({maxResults: -500});
+        }).to.throw();
+        expect(isNumber).to.have.been.calledOnce.and.calledWith(-500);
+      });
       it('should fail with maxResults exceeding allowed limit', () => {
         expect(() => {
-          return requestValidator({maxResults: 10000});
+          return requestValidator({maxResults: 1001});
         }).to.throw();
-        expect(isNumber).to.have.been.calledOnce.and.calledWith(10000);
+        expect(isNumber).to.have.been.calledOnce.and.calledWith(1001);
       });
       it('should fail with invalid nextPageToken', () => {
         expect(() => {
@@ -357,7 +369,7 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
           return requestValidator({localId: '1234', customAttributes: largeClaims});
         }).to.throw(`Developer claims payload should not exceed 1000 characters.`);
       });
-      BLACKLISTED_CLAIMS.forEach((invalidClaim) => {
+      RESERVED_CLAIMS.forEach((invalidClaim) => {
         it(`should fail with customAttributes containing blacklisted claim: ${invalidClaim}`, () => {
           expect(() => {
             // Instantiate custom attributes with invalid claims.
@@ -366,6 +378,15 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
             return requestValidator({localId: '1234', customAttributes: JSON.stringify(claims)});
           }).to.throw(`Developer claim "${invalidClaim}" is reserved and cannot be specified.`);
         });
+      });
+      it('should fail with customAttributes containing multi-blacklisted claims', () => {
+        expect(() => {
+          const claims = {
+            sub: 'sub',
+            auth_time: 'time',
+          };
+          return requestValidator({localId: '1234', customAttributes: JSON.stringify(claims)});
+        }).to.throw(`Developer claims "auth_time", "sub" are reserved and cannot be specified.`);
       });
     });
   });
@@ -850,11 +871,12 @@ describe('FirebaseAuthRequestHandler', () => {
     it('should be rejected given an invalid maxResults', () => {
       const expectedError = new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        `Required "maxResults" must be a number that does not exceed the allowed 1000.`,
+        `Required "maxResults" must be a positive non-zero number that does not ` +
+        `exceed the allowed 1000.`,
       );
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
-      return requestHandler.downloadAccount(10000, nextPageToken)
+      return requestHandler.downloadAccount(1001, nextPageToken)
         .then((resp) => {
           throw new Error('Unexpected success');
         }, (error) => {
@@ -1235,7 +1257,7 @@ describe('FirebaseAuthRequestHandler', () => {
       // Expected error when invalid claims are provided.
       const expectedError = new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        'CustomUserClaims argument must be a non-null object.',
+        'CustomUserClaims argument must be a nullable object.',
       );
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       // Send request with invalid claims.

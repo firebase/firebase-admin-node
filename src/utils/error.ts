@@ -201,7 +201,7 @@ export class AppErrorCodes {
 export class AuthClientErrorCode {
   public static CLAIMS_TOO_LARGE = {
     code: 'claims-too-large',
-    message: '`Developer claims maximum payload size exceeded.',
+    message: 'Developer claims maximum payload size exceeded.',
   };
   public static INVALID_ARGUMENT = {
     code: 'argument-error',
@@ -212,7 +212,7 @@ export class AuthClientErrorCode {
     message: 'The email address is already in use by another account.',
   };
   public static FORBIDDEN_CLAIM = {
-    code: 'forbidden-claim',
+    code: 'reserved-claim',
     message: 'The specified developer claim is reserved and cannot be specified.',
   };
   public static INTERNAL_ERROR = {

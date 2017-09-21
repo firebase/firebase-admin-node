@@ -41,6 +41,13 @@ export class AuthInternals implements FirebaseServiceInternalsInterface {
 }
 
 
+/** Response object for a listUsers operation. */
+export interface ListUsersResult {
+  users: UserRecord[];
+  pageToken?: string;
+}
+
+
 /**
  * Auth service bound to the provided app.
  */
@@ -179,17 +186,18 @@ class Auth implements FirebaseServiceInterface {
   };
 
   /**
-   * Exports the users (single batch only) with a size of maxResults and starting from
-   * the offset as specified by pageToken.
+   * Exports a batch of user accounts. Batch size is determined by the maxResults argument.
+   * Starting point of the batch is determined by the pageToken argument.
    *
    * @param {number=} maxResults The page size, 1000 if undefined. This is also the maximum
    *     allowed limit.
    * @param {string=} pageToken The next page token. If not specified, returns users starting
    *     without any offset.
    * @return {Promise<{users: UserRecord[], pageToken?: string}>} A promise that resolves with
-   *     the current batch of downloaded users and the next page token.
+   *     the current batch of downloaded users and the next page token. For the last page, an
+   *     empty list of users and no page token are returned.
    */
-  public listUsers(maxResults?: number, pageToken?: string): Promise<Object> {
+  public listUsers(maxResults?: number, pageToken?: string): Promise<ListUsersResult> {
     return this.authRequestHandler.downloadAccount(maxResults, pageToken)
       .then((response: any) => {
         // List of users to return.
