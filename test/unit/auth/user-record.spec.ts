@@ -19,6 +19,7 @@ import * as chai from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
+import {deepCopy} from '../../../src/utils/deep-copy';
 import {UserInfo, UserMetadata, UserRecord} from '../../../src/auth/user-record';
 
 
@@ -59,11 +60,23 @@ function getValidUserResponse(): Object {
         rawId: '+11234567890',
         phoneNumber: '+11234567890',
       },
+      {
+        providerId: 'password',
+        email: 'user@gmail.com',
+        rawId: 'user@gmail.com',
+        federatedId: 'user@gmail.com',
+        displayName: 'John Doe',
+      },
     ],
+    passwordHash: 'passwordHash',
+    salt: 'passwordSalt',
     photoUrl: 'https://lh3.googleusercontent.com/1234567890/photo.jpg',
     validSince: '1476136676',
     lastLoginAt: '1476235905000',
     createdAt: '1476136676000',
+    customAttributes: JSON.stringify({
+      admin: true,
+    }),
   };
 }
 
@@ -104,11 +117,24 @@ function getUserJSON(): Object {
         uid: '+11234567890',
         phoneNumber: '+11234567890',
       },
+      {
+        providerId: 'password',
+        displayName: 'John Doe',
+        photoURL: undefined,
+        email: 'user@gmail.com',
+        uid: 'user@gmail.com',
+        phoneNumber: undefined,
+      },
     ],
+    passwordHash: 'passwordHash',
+    passwordSalt: 'passwordSalt',
     photoURL: 'https://lh3.googleusercontent.com/1234567890/photo.jpg',
     metadata: {
       lastSignInTime: new Date(1476235905000).toUTCString(),
       creationTime: new Date(1476136676000).toUTCString(),
+    },
+    customClaims: {
+      admin: true,
     },
   };
 }
@@ -364,7 +390,8 @@ describe('UserRecord', () => {
   });
 
   describe('getters', () => {
-    const userRecord = new UserRecord(getValidUserResponse());
+    const validUserResponse = getValidUserResponse();
+    const userRecord = new UserRecord(validUserResponse);
     it('should return expected uid', () => {
       expect(userRecord.uid).to.equal('abcdefghijklmnopqrstuvwxyz');
     });
@@ -436,6 +463,72 @@ describe('UserRecord', () => {
       }).to.throw(Error);
     });
 
+    it('should return expected passwordHash', () => {
+      expect(userRecord.passwordHash).to.equal('passwordHash');
+    });
+
+    it('should return expected undefined passwordHash', () => {
+      let resp: any = deepCopy(validUserResponse);
+      delete resp.passwordHash;
+      expect((new UserRecord(resp)).passwordHash).to.be.undefined;
+    });
+
+    it('should return expected empty string passwordHash', () => {
+      // This happens for users that were migrated from other Auth systems
+      // using different hashing algorithms.
+      let resp: any = deepCopy(validUserResponse);
+      resp.passwordHash = '';
+      expect((new UserRecord(resp)).passwordHash).to.be.equal('');
+    });
+
+    it('should throw when modifying readonly passwordHash property', () => {
+      expect(() => {
+        (userRecord as any).passwordHash = 'bla';
+      }).to.throw(Error);
+    });
+
+    it('should return expected passwordSalt', () => {
+      expect(userRecord.passwordSalt).to.equal('passwordSalt');
+    });
+
+    it('should return expected undefined passwordSalt', () => {
+      let resp: any = deepCopy(validUserResponse);
+      delete resp.salt;
+      expect((new UserRecord(resp)).passwordSalt).to.be.undefined;
+    });
+
+    it('should return expected empty string passwordSalt', () => {
+      // This happens for users that were migrated from other Auth systems
+      // using different hashing algorithms.
+      let resp: any = deepCopy(validUserResponse);
+      resp.salt = '';
+      expect((new UserRecord(resp)).passwordSalt).to.be.equal('');
+    });
+
+    it('should throw when modifying readonly passwordSalt property', () => {
+      expect(() => {
+        (userRecord as any).passwordSalt = 'bla';
+      }).to.throw(Error);
+    });
+
+    it('should return expected customClaims', () => {
+      expect(userRecord.customClaims).to.deep.equal({
+        admin: true,
+      });
+    });
+
+    it('should throw when modifying readonly customClaims property', () => {
+      expect(() => {
+        (userRecord as any).customClaims = {admin: false};
+      }).to.throw(Error);
+    });
+
+    it('should return expected undefined customClaims', () => {
+      let resp: any = deepCopy(validUserResponse);
+      delete resp.customAttributes;
+      expect((new UserRecord(resp)).customClaims).to.be.undefined;
+    });
+
     it('should return expected metadata', () => {
       let metadata = new UserMetadata({
         createdAt: '1476136676000',
@@ -481,6 +574,13 @@ describe('UserRecord', () => {
           providerId: 'phone',
           phoneNumber: '+11234567890',
           rawId: '+11234567890',
+        }),
+        new UserInfo({
+          providerId: 'password',
+          displayName: 'John Doe',
+          email: 'user@gmail.com',
+          rawId: 'user@gmail.com',
+          federatedId: 'user@gmail.com',
         }),
       ];
       expect(userRecord.providerData).to.deep.equal(providerData);

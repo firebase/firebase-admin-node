@@ -41,6 +41,13 @@ export class AuthInternals implements FirebaseServiceInternalsInterface {
 }
 
 
+/** Response object for a listUsers operation. */
+export interface ListUsersResult {
+  users: UserRecord[];
+  pageToken?: string;
+}
+
+
 /**
  * Auth service bound to the provided app.
  */
@@ -179,6 +186,40 @@ class Auth implements FirebaseServiceInterface {
   };
 
   /**
+   * Exports a batch of user accounts. Batch size is determined by the maxResults argument.
+   * Starting point of the batch is determined by the pageToken argument.
+   *
+   * @param {number=} maxResults The page size, 1000 if undefined. This is also the maximum
+   *     allowed limit.
+   * @param {string=} pageToken The next page token. If not specified, returns users starting
+   *     without any offset.
+   * @return {Promise<{users: UserRecord[], pageToken?: string}>} A promise that resolves with
+   *     the current batch of downloaded users and the next page token. For the last page, an
+   *     empty list of users and no page token are returned.
+   */
+  public listUsers(maxResults?: number, pageToken?: string): Promise<ListUsersResult> {
+    return this.authRequestHandler.downloadAccount(maxResults, pageToken)
+      .then((response: any) => {
+        // List of users to return.
+        const users: UserRecord[] = [];
+        // Convert each user response to a UserRecord.
+        response.users.forEach((userResponse) => {
+          users.push(new UserRecord(userResponse));
+        });
+        // Return list of user records and the next page token if available.
+        let result = {
+          users,
+          pageToken: response.nextPageToken,
+        };
+        // Delete result.pageToken if undefined.
+        if (typeof result.pageToken === 'undefined') {
+          delete result.pageToken;
+        }
+        return result;
+      });
+  };
+
+  /**
    * Creates a new user with the properties provided.
    *
    * @param {CreateRequest} properties The properties to set on the new user record to be created.
@@ -227,6 +268,21 @@ class Auth implements FirebaseServiceInterface {
       .then((existingUid) => {
         // Return the corresponding user record.
         return this.getUser(existingUid);
+      });
+  };
+
+  /**
+   * Sets additional developer claims on an existing user identified by the provided UID.
+   *
+   * @param {string} uid The user to edit.
+   * @param {Object} customUserClaims The developer claims to set.
+   * @return {Promise<void>} A promise that resolves when the operation completes
+   *     successfully.
+   */
+  public setCustomUserClaims(uid: string, customUserClaims: Object): Promise<void> {
+    return this.authRequestHandler.setCustomUserClaims(uid, customUserClaims)
+      .then((existingUid) => {
+        // Return nothing on success.
       });
   };
 };

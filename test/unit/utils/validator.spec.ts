@@ -22,7 +22,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import {
   isArray, isNonEmptyArray, isBoolean, isNumber, isString, isNonEmptyString, isNonNullObject,
-  isEmail, isPassword, isURL, isUid, isPhoneNumber,
+  isEmail, isPassword, isURL, isUid, isPhoneNumber, isObject,
 } from '../../../src/utils/validator';
 
 
@@ -217,6 +217,39 @@ describe('isNonEmptyString()', () => {
 
   it('should return true given a non-empty string', () => {
     expect(isNonEmptyString('foo')).to.be.true;
+  });
+});
+
+describe('isObject()', () => {
+  it('should return false given no argument', () => {
+    expect(isObject(undefined as any)).to.be.false;
+  });
+
+  const nonStrings = [NaN, 0, 1, true, false, '', 'a', _.noop];
+  nonStrings.forEach((nonString) => {
+    it('should return false given a non-object argument: ' + JSON.stringify(nonString), () => {
+      expect(isObject(nonString as any)).to.be.false;
+    });
+  });
+
+  it('should return false given an empty array', () => {
+    expect(isObject([])).to.be.false;
+  });
+
+  it('should return false given a non-empty array', () => {
+    expect(isObject(['a'])).to.be.false;
+  });
+
+  it('should return true given null', () => {
+    expect(isObject(null)).to.be.true;
+  });
+
+  it('should return true given an empty object', () => {
+    expect(isObject({})).to.be.true;
+  });
+
+  it('should return true given a non-empty object', () => {
+    expect(isObject({ a: 1 })).to.be.true;
   });
 });
 
