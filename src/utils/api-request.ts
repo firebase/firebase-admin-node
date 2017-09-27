@@ -32,6 +32,7 @@ export type ApiCallbackFunction = (data: Object) => void;
 export class HttpRequestHandler {
   /**
    * Sends HTTP requests and returns a promise that resolves with the result.
+   * Will retry once if the first attempt encounters an AppErrorCodes.NETWORK_ERROR.
    *
    * @param {string} host The HTTP host.
    * @param {number} port The port number.
@@ -43,6 +44,43 @@ export class HttpRequestHandler {
    * @return {Promise<Object>} A promise that resolves with the response.
    */
   public sendRequest(
+      host: string,
+      port: number,
+      path: string,
+      httpMethod: HttpMethod,
+      data?: Object,
+      headers?: Object,
+      timeout?: number): Promise<Object> {
+    // Convenience for calling the real _sendRequest() method with the original params.
+    const sendOneRequest = () => {
+      return this._sendRequest(host, port, path, httpMethod, data, headers, timeout);
+    };
+
+    return sendOneRequest()
+      .catch((response: { statusCode: number, error: string|Object }) => {
+        // Retry if the request failed due to a network error.
+        if (response.error instanceof FirebaseAppError) {
+          if ((<FirebaseAppError> response.error).hasCode(AppErrorCodes.NETWORK_ERROR)) {
+            return sendOneRequest();
+          }
+        }
+        return Promise.reject(response);
+      });
+  }
+
+  /**
+   * Sends HTTP requests and returns a promise that resolves with the result.
+   *
+   * @param {string} host The HTTP host.
+   * @param {number} port The port number.
+   * @param {string} path The endpoint path.
+   * @param {HttpMethod} httpMethod The http method.
+   * @param {Object} [data] The request JSON.
+   * @param {Object} [headers] The request headers.
+   * @param {number} [timeout] The request timeout in milliseconds.
+   * @return {Promise<Object>} A promise that resolves with the response.
+   */
+  private _sendRequest(
       host: string,
       port: number,
       path: string,
@@ -189,13 +227,11 @@ export class SignedApiRequestHandler extends HttpRequestHandler {
       data: Object,
       headers: Object,
       timeout: number): Promise<Object> {
-    let ancestorSendRequest = super.sendRequest;
-
     return this.app_.INTERNAL.getToken().then((accessTokenObj) => {
       let headersCopy: Object = deepCopy(headers);
       let authorizationHeaderKey = 'Authorization';
       headersCopy[authorizationHeaderKey] = 'Bearer ' + accessTokenObj.accessToken;
-      return ancestorSendRequest(host, port, path, httpMethod, data, headersCopy, timeout);
+      return super.sendRequest(host, port, path, httpMethod, data, headersCopy, timeout);
     });
   }
 }

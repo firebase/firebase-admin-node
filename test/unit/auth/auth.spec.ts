@@ -843,6 +843,253 @@ describe('Auth', () => {
     });
   });
 
+  describe('setCustomUserClaims()', () => {
+    const uid = 'abcdefghijklmnopqrstuvwxyz';
+    const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
+    const customClaims = {
+      admin: true,
+      groupId: '123456',
+    };
+    // Stubs used to simulate underlying api calls.
+    let stubs: sinon.SinonStub[] = [];
+    beforeEach(() => {
+      sinon.spy(validator, 'isUid');
+      sinon.spy(validator, 'isObject');
+    });
+    afterEach(() => {
+      (validator.isUid as any).restore();
+      (validator.isObject as any).restore();
+      _.forEach(stubs, (stub) => stub.restore());
+      stubs = [];
+    });
+
+    it('should be rejected given no uid', () => {
+      return (auth as any).setCustomUserClaims(undefined, customClaims)
+        .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-uid');
+    });
+
+    it('should be rejected given an invalid uid', () => {
+      const invalidUid = ('a' as any).repeat(129);
+      return auth.setCustomUserClaims(invalidUid, customClaims)
+        .then(() => {
+          throw new Error('Unexpected success');
+        })
+        .catch((error) => {
+          expect(error).to.have.property('code', 'auth/invalid-uid');
+          expect(validator.isUid).to.have.been.calledOnce.and.calledWith(invalidUid);
+        });
+    });
+
+    it('should be rejected given no custom user claims', () => {
+      return (auth as any).setCustomUserClaims(uid)
+        .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
+    });
+
+    it('should be rejected given invalid custom user claims', () => {
+      return auth.setCustomUserClaims(uid, 'invalid')
+        .then(() => {
+          throw new Error('Unexpected success');
+        })
+        .catch((error) => {
+          expect(error).to.have.property('code', 'auth/argument-error');
+          expect(validator.isObject).to.have.been.calledOnce.and.calledWith('invalid');
+        });
+    });
+
+    it('should be rejected given an app which returns null access tokens', () => {
+      return nullAccessTokenAuth.setCustomUserClaims(uid, customClaims)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which returns invalid access tokens', () => {
+      return malformedAccessTokenAuth.setCustomUserClaims(uid, customClaims)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which fails to generate access tokens', () => {
+      return rejectedPromiseAccessTokenAuth.setCustomUserClaims(uid, customClaims)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should resolve on setCustomUserClaims request success', () => {
+      // Stub setCustomUserClaims to return expected uid.
+      let setCustomUserClaimsStub = sinon
+        .stub(FirebaseAuthRequestHandler.prototype, 'setCustomUserClaims')
+        .returns(Promise.resolve(uid));
+      stubs.push(setCustomUserClaimsStub);
+      return auth.setCustomUserClaims(uid, customClaims)
+        .then((response) => {
+          expect(response).to.be.undefined;
+          // Confirm underlying API called with expected parameters.
+          expect(setCustomUserClaimsStub)
+            .to.have.been.calledOnce.and.calledWith(uid, customClaims);
+        });
+    });
+
+    it('should throw an error when setCustomUserClaims returns an error', () => {
+      // Stub setCustomUserClaims to throw a backend error.
+      let setCustomUserClaimsStub = sinon
+        .stub(FirebaseAuthRequestHandler.prototype, 'setCustomUserClaims')
+        .returns(Promise.reject(expectedError));
+      stubs.push(setCustomUserClaimsStub);
+      return auth.setCustomUserClaims(uid, customClaims)
+        .then(() => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Confirm underlying API called with expected parameters.
+          expect(setCustomUserClaimsStub)
+            .to.have.been.calledOnce.and.calledWith(uid, customClaims);
+          // Confirm expected error returned.
+          expect(error).to.equal(expectedError);
+        });
+    });
+  });
+
+  describe('listUsers()', () => {
+    const expectedError = new FirebaseAuthError(AuthClientErrorCode.INTERNAL_ERROR);
+    const pageToken = 'PAGE_TOKEN';
+    const maxResult = 500;
+    const downloadAccountResponse: any = {
+      users: [
+        {localId: 'UID1'},
+        {localId: 'UID2'},
+        {localId: 'UID3'},
+      ],
+      nextPageToken: 'NEXT_PAGE_TOKEN',
+    };
+    const expectedResult: any = {
+      users: [
+        new UserRecord({localId: 'UID1'}),
+        new UserRecord({localId: 'UID2'}),
+        new UserRecord({localId: 'UID3'}),
+      ],
+      pageToken: 'NEXT_PAGE_TOKEN',
+    };
+    const emptyDownloadAccountResponse = {
+      users: [],
+    };
+    const emptyExpectedResult: any = {
+      users: [],
+    };
+    // Stubs used to simulate underlying api calls.
+    let stubs: sinon.SinonStub[] = [];
+    beforeEach(() => {
+      sinon.spy(validator, 'isNonEmptyString');
+      sinon.spy(validator, 'isNumber');
+    });
+    afterEach(() => {
+      (validator.isNonEmptyString as any).restore();
+      (validator.isNumber as any).restore();
+      _.forEach(stubs, (stub) => stub.restore());
+      stubs = [];
+    });
+
+    it('should be rejected given an invalid page token', () => {
+      const invalidToken = {};
+      return auth.listUsers(undefined, invalidToken as any)
+        .then(() => {
+          throw new Error('Unexpected success');
+        })
+        .catch((error) => {
+          expect(error).to.have.property('code', 'auth/invalid-page-token');
+          expect(validator.isNonEmptyString)
+            .to.have.been.calledOnce.and.calledWith(invalidToken);
+        });
+    });
+
+    it('should be rejected given an invalid max result', () => {
+      const invalidResults = 5000;
+      return auth.listUsers(invalidResults)
+        .then(() => {
+          throw new Error('Unexpected success');
+        })
+        .catch((error) => {
+          expect(error).to.have.property('code', 'auth/argument-error');
+          expect(validator.isNumber)
+            .to.have.been.calledOnce.and.calledWith(invalidResults);
+        });
+    });
+
+    it('should be rejected given an app which returns null access tokens', () => {
+      return nullAccessTokenAuth.listUsers(maxResult)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which returns invalid access tokens', () => {
+      return malformedAccessTokenAuth.listUsers(maxResult)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which fails to generate access tokens', () => {
+      return rejectedPromiseAccessTokenAuth.listUsers(maxResult)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should resolve on downloadAccount request success with users in response', () => {
+      // Stub downloadAccount to return expected response.
+      let downloadAccountStub = sinon
+        .stub(FirebaseAuthRequestHandler.prototype, 'downloadAccount')
+        .returns(Promise.resolve(downloadAccountResponse));
+      stubs.push(downloadAccountStub);
+      return auth.listUsers(maxResult, pageToken)
+        .then((response) => {
+          expect(response).to.deep.equal(expectedResult);
+          // Confirm underlying API called with expected parameters.
+          expect(downloadAccountStub)
+            .to.have.been.calledOnce.and.calledWith(maxResult, pageToken);
+        });
+    });
+
+    it('should resolve on downloadAccount request success with default options', () => {
+      // Stub downloadAccount to return expected response.
+      let downloadAccountStub = sinon
+        .stub(FirebaseAuthRequestHandler.prototype, 'downloadAccount')
+        .returns(Promise.resolve(downloadAccountResponse));
+      stubs.push(downloadAccountStub);
+      return auth.listUsers()
+        .then((response) => {
+          expect(response).to.deep.equal(expectedResult);
+          // Confirm underlying API called with expected parameters.
+          expect(downloadAccountStub)
+            .to.have.been.calledOnce.and.calledWith(undefined, undefined);
+        });
+    });
+
+
+    it('should resolve on downloadAccount request success with no users in response', () => {
+      // Stub downloadAccount to return expected response.
+      let downloadAccountStub = sinon
+        .stub(FirebaseAuthRequestHandler.prototype, 'downloadAccount')
+        .returns(Promise.resolve(emptyDownloadAccountResponse));
+      stubs.push(downloadAccountStub);
+      return auth.listUsers(maxResult, pageToken)
+        .then((response) => {
+          expect(response).to.deep.equal(emptyExpectedResult);
+          // Confirm underlying API called with expected parameters.
+          expect(downloadAccountStub)
+            .to.have.been.calledOnce.and.calledWith(maxResult, pageToken);
+        });
+    });
+
+    it('should throw an error when downloadAccount returns an error', () => {
+      // Stub downloadAccount to throw a backend error.
+      let downloadAccountStub = sinon
+        .stub(FirebaseAuthRequestHandler.prototype, 'downloadAccount')
+        .returns(Promise.reject(expectedError));
+      stubs.push(downloadAccountStub);
+      return auth.listUsers(maxResult, pageToken)
+        .then((results) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Confirm underlying API called with expected parameters.
+          expect(downloadAccountStub)
+            .to.have.been.calledOnce.and.calledWith(maxResult, pageToken);
+          // Confirm expected error returned.
+          expect(error).to.equal(expectedError);
+        });
+    });
+  });
+
   describe('INTERNAL.delete()', () => {
     it('should delete Auth instance', () => {
       auth.INTERNAL.delete().should.eventually.be.fulfilled;

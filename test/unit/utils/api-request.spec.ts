@@ -100,7 +100,7 @@ function mockRequest(
 }
 
 /**
- * Returns a mocked out error response for a dummy URL.
+ * Returns a mocked out HTTP error response for a dummy URL.
  *
  * @param {number} [statusCode] Optional response status code.
  * @param {string} [responseContentType] Optional response content type.
@@ -108,7 +108,7 @@ function mockRequest(
  *
  * @return {Object} A nock response object.
  */
-function mockRequestWithError(
+function mockRequestWithHttpError(
   statusCode = 400,
   responseContentType = 'application/json',
   response: any = mockErrorResponse,
@@ -124,6 +124,19 @@ function mockRequestWithError(
     });
 }
 
+/**
+ * Returns a mocked out error response for a dummy URL, useful for simulating
+ * network errors.
+ *
+ * @param {Error} [err] The request error.
+ *
+ * @return {Object} A nock response object.
+ */
+function mockRequestWithError(err: Error) {
+  return nock('https://' + mockHost)
+    .get(mockPath)
+    .replyWithError(err);
+}
 
 describe('HttpRequestHandler', () => {
   let mockedRequests: nock.Scope[] = [];
@@ -151,13 +164,11 @@ describe('HttpRequestHandler', () => {
 
 
   describe('sendRequest', () => {
-    it('should be rejected on an unexpected error', () => {
-      httpsRequestStub = sinon.stub(https, 'request');
-      httpsRequestStub.returns(mockRequestStream);
+    it('should be rejected, after 1 retry, on multiple network errors', () => {
+      mockedRequests.push(mockRequestWithError(new Error('first error')));
+      mockedRequests.push(mockRequestWithError(new Error('second error')));
 
       const sendRequestPromise = httpRequestHandler.sendRequest(mockHost, mockPort, mockPath, 'GET');
-
-      mockRequestStream.emit('error', new Error('some error'));
 
       return sendRequestPromise
         .then(() => {
@@ -168,7 +179,15 @@ describe('HttpRequestHandler', () => {
           expect(response.error).to.have.property('code', 'app/network-error');
           expect(response.statusCode).to.equal(502);
         });
-     });
+    });
+
+    it('should succeed, after 1 retry, on a single network error', () => {
+      mockedRequests.push(mockRequestWithError(new Error('first error')));
+      mockedRequests.push(mockRequest());
+
+      return httpRequestHandler.sendRequest(mockHost, mockPort, mockPath, 'GET')
+        .should.eventually.be.fulfilled.and.deep.equal(mockSuccessResponse);
+    });
 
     it('should be rejected on a network timeout', () => {
       httpsRequestStub = sinon.stub(https, 'request');
@@ -224,7 +243,7 @@ describe('HttpRequestHandler', () => {
 
     describe('with JSON response', () => {
       it('should be rejected given a 4xx response', () => {
-        mockedRequests.push(mockRequestWithError(400));
+        mockedRequests.push(mockRequestWithHttpError(400));
 
         return httpRequestHandler.sendRequest(mockHost, mockPort, mockPath, 'GET')
           .should.eventually.be.rejected.and.deep.equal({
@@ -234,7 +253,7 @@ describe('HttpRequestHandler', () => {
       });
 
       it('should be rejected given a 5xx response', () => {
-        mockedRequests.push(mockRequestWithError(500));
+        mockedRequests.push(mockRequestWithHttpError(500));
 
         return httpRequestHandler.sendRequest(mockHost, mockPort, mockPath, 'GET')
           .should.eventually.be.rejected.and.deep.equal({
@@ -244,7 +263,7 @@ describe('HttpRequestHandler', () => {
       });
 
       it('should be rejected given an error when parsing the JSON response', () => {
-        mockedRequests.push(mockRequestWithError(400, undefined, mockTextErrorResponse));
+        mockedRequests.push(mockRequestWithHttpError(400, undefined, mockTextErrorResponse));
 
         return httpRequestHandler.sendRequest(mockHost, mockPort, mockPath, 'GET')
           .then(() => {
@@ -275,7 +294,7 @@ describe('HttpRequestHandler', () => {
 
     describe('with text response', () => {
       it('should be rejected given a 4xx response', () => {
-        mockedRequests.push(mockRequestWithError(400, 'text/html'));
+        mockedRequests.push(mockRequestWithHttpError(400, 'text/html'));
 
         return httpRequestHandler.sendRequest(mockHost, mockPort, mockPath, 'GET')
           .should.eventually.be.rejected.and.deep.equal({
@@ -285,7 +304,7 @@ describe('HttpRequestHandler', () => {
       });
 
       it('should be rejected given a 5xx response', () => {
-        mockedRequests.push(mockRequestWithError(500, 'text/html'));
+        mockedRequests.push(mockRequestWithHttpError(500, 'text/html'));
 
         return httpRequestHandler.sendRequest(mockHost, mockPort, mockPath, 'GET')
           .should.eventually.be.rejected.and.deep.equal({

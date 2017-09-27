@@ -38,6 +38,11 @@ function test(utils) {
   var nonexistentPhoneNumber = '+18888888888';
   var updatedEmail = utils.generateRandomString(20) + '@example.com';
   var updatedPhone = '+16505550102';
+  var customClaims = {
+    admin: true,
+    groupId: '1234'
+  };
+  var uids = [newUserUid + '-1', newUserUid + '-2', newUserUid + '-3'];
 
   var mockUserData = {
     email: newUserUid + '@example.com',
@@ -70,9 +75,12 @@ function test(utils) {
   }
 
   /**
+   * Runs cleanup routine that could affect outcome of tests and removes any
+   * intermediate users created.
+   * @param {string} label The test label.
    * @return {Promise} A promise that resolves when test preparations are ready.
    */
-  function before() {
+  function cleanup(label) {
     // Delete any existing users that could affect the test outcome.
     var promises = [
       deletePhoneNumberUser(testPhoneNumber),
@@ -80,10 +88,41 @@ function test(utils) {
       deletePhoneNumberUser(nonexistentPhoneNumber),
       deletePhoneNumberUser(updatedPhone)
     ];
+    // Delete list of users for testing listUsers.
+    uids.forEach(function(uid) {
+      promises.push(
+        admin.auth().deleteUser(uid)
+          .catch(function(error) {
+            // Suppress user not found error.
+            if (error.code !== 'auth/user-not-found') {
+              throw error;
+            }
+          })
+      );
+    });
     return Promise.all(promises)
       .catch(function(error) {
-        utils.logFailure('before()', error);
+        utils.logFailure(label + '()', error);
       });
+  }
+
+  /**
+   * Clean up routine to run before tests. This ensures any new users to be
+   * created in the test, will not collide with existing users.
+   */
+  function before() {
+    return cleanup('before');
+  }
+
+  /**
+   * Clean up routine to run after tests. This cleans up the user database
+   * from all intermediate users created. The before test should be sufficient
+   * but for good practice, these temporary users are also removed from the
+   * Auth backend, minimizing the surface area of project changes caused by
+   * this test.
+   */
+  function after() {
+    return cleanup('after');
   }
 
   function testCreateUserWithoutUid() {
@@ -151,6 +190,89 @@ function test(utils) {
       })
       .catch(function(error) {
         utils.logFailure('auth().getUser()', error);
+      });
+  }
+
+  function testListUsers() {
+    var promises = [];
+    uids.forEach(function(uid) {
+      var tempUserData = {
+        uid: uid,
+        password: 'password'
+      };
+      promises.push(admin.auth().createUser(tempUserData));
+    });
+    return Promise.all(promises)
+      .then(function() {
+        // Return 2 users with the provided page token.
+        // This test will fail if other users are created in between.
+        return admin.auth().listUsers(2, uids[0]);
+      })
+      .then(function(listUsersResult) {
+        // Confirm expected number of users.
+        utils.assert(
+          listUsersResult.users.length == 2,
+          'auth().listUsers() expected number of results',
+          'Incorrect number of results.');
+        // Confirm next page token present.
+        utils.assert(
+          typeof listUsersResult.pageToken === 'string',
+          'auth().listUsers() expected next page token',
+          'Missing next page token from results.');
+        // Confirm each user's uid and the hashed passwords.
+        utils.assert(
+          listUsersResult.users[0].uid === uids[1] &&
+          listUsersResult.users[0].passwordHash.length &&
+          listUsersResult.users[0].passwordSalt.length,
+          'auth().listUsers() expected first user',
+          'Incorrect first user returned.');
+        utils.assert(
+          listUsersResult.users[1].uid === uids[2] &&
+          listUsersResult.users[1].passwordHash.length &&
+          listUsersResult.users[1].passwordSalt.length,
+          'auth().listUsers() expected second user',
+          'Incorrect second user returned.');
+      })
+      .catch(function(error) {
+        utils.logFailure('auth().listUsers()', error);
+      });
+  }
+
+  function testCustomAttributes() {
+    // Set custom claims on the user.
+    return admin.auth().setCustomUserClaims(newUserUid, customClaims)
+      .then(function() {
+        return admin.auth().getUser(newUserUid);
+      })
+      .then(function(userRecord) {
+        // Confirm custom claims set on the UserRecord.
+        utils.assert(
+          _.isEqual(userRecord.customClaims, customClaims),
+          'auth().setCustomUserClaims() expected claims on UserRecord',
+          'Incorrect claims.');
+        // Use client SDK to sign in the user.
+        return firebase.auth().signInWithEmailAndPassword(
+          userRecord.email, mockUserData.password);
+      })
+      .then(function(user) {
+         // Get the user's ID token.
+         return user.getToken();
+      })
+      .then(function(idToken) {
+         // Verify ID token contents.
+         return admin.auth().verifyIdToken(idToken);
+      })
+      .then(function(decodedIdToken) {
+        // Confirm expected claims set on the user's ID token.
+        for (var key in customClaims) {
+          utils.assert(
+            customClaims[key] === decodedIdToken[key],
+            'auth().setCustomUserClaims() expected ID token key: ' + key,
+            'Incorrect or missing claim "' + key + '".');
+        }
+      })
+      .catch(function(error) {
+        utils.logFailure('auth().setCustomUserClaims()', error);
       });
   }
 
@@ -335,6 +457,7 @@ function test(utils) {
     .then(testGetUser)
     .then(testGetUserByEmail)
     .then(testGetUserByPhoneNumber)
+    .then(testCustomAttributes)
     .then(testUpdateUser)
     .then(testGetNonexistentUserWithError)
     .then(testGetNonexistentUserByEmailWithError)
@@ -344,9 +467,12 @@ function test(utils) {
     .then(testCreateCustomToken)
     .then(testVerifyIdToken)
     .then(testVerifyIdTokenWithError)
+    .then(testListUsers)
     // testDeleteUser() should be the last test and should ensure all users created by previous
     // tests are deleted.
-    .then(testDeleteUser);
+    .then(testDeleteUser)
+    // Cleanup after tests.
+    .then(after);
 };
 
 

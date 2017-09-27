@@ -73,30 +73,67 @@ export class FirebaseError extends Error {
 }
 
 /**
- * Firebase App error code structure. This extends FirebaseError.
+ * A FirebaseError with a prefix in front of the error code.
+ *
+ * @param {string} codePrefix The prefix to apply to the error code.
+ * @param {string} code The error code.
+ * @param {string} message The error message.
+ * @constructor
+ */
+class PrefixedFirebaseError extends FirebaseError {
+  constructor(private codePrefix: string, code: string, message: string) {
+    super({
+      code: `${codePrefix}/${code}`,
+      message,
+    });
+
+    /* tslint:disable:max-line-length */
+    // Set the prototype explicitly. See the following link for more details:
+    // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
+    /* tslint:enable:max-line-length */
+    (this as any).__proto__ = PrefixedFirebaseError.prototype;
+  }
+
+  /**
+   * Allows the error type to be checked without needing to know implementation details
+   * of the code prefixing.
+   *
+   * @param {string} code The non-prefixed error code to test against.
+   * @return {boolean} True if the code matches, false otherwise.
+   */
+  public hasCode(code: string): boolean {
+    return `${this.codePrefix}/${code}` === this.code;
+  }
+}
+
+/**
+ * Firebase App error code structure. This extends PrefixedFirebaseError.
  *
  * @param {string} code The error code.
  * @param {string} message The error message.
  * @constructor
  */
-export class FirebaseAppError extends FirebaseError {
+export class FirebaseAppError extends PrefixedFirebaseError {
   constructor(code: string, message: string) {
-    super({
-      code: 'app/' + code,
-      message,
-    });
+    super('app', code, message);
+
+    /* tslint:disable:max-line-length */
+    // Set the prototype explicitly. See the following link for more details:
+    // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
+    /* tslint:enable:max-line-length */
+    (this as any).__proto__ = FirebaseAppError.prototype;
   }
 }
 
 /**
- * Firebase Auth error code structure. This extends FirebaseError.
+ * Firebase Auth error code structure. This extends PrefixedFirebaseError.
  *
  * @param {ErrorInfo} info The error code info.
  * @param {string} [message] The error message. This will override the default
  *     message if provided.
  * @constructor
  */
-export class FirebaseAuthError extends FirebaseError {
+export class FirebaseAuthError extends PrefixedFirebaseError {
   /**
    * Creates the developer-facing error corresponding to the backend error code.
    *
@@ -129,7 +166,13 @@ export class FirebaseAuthError extends FirebaseError {
 
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
-    super({code: 'auth/' + info.code, message: message || info.message});
+    super('auth', info.code, message || info.message);
+
+    /* tslint:disable:max-line-length */
+    // Set the prototype explicitly. See the following link for more details:
+    // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
+    /* tslint:enable:max-line-length */
+    (this as any).__proto__ = FirebaseAuthError.prototype;
   }
 }
 
@@ -150,13 +193,13 @@ export class FirebaseFirestoreError extends FirebaseError {
 
 
 /**
- * Firebase Messaging error code structure. This extends FirebaseError.
+ * Firebase Messaging error code structure. This extends PrefixedFirebaseError.
  *
  * @param {ErrorInfo} info The error code info.
  * @param {string} [message] The error message. This will override the default message if provided.
  * @constructor
  */
-export class FirebaseMessagingError extends FirebaseError {
+export class FirebaseMessagingError extends PrefixedFirebaseError {
   /**
    * Creates the developer-facing error corresponding to the backend error code.
    *
@@ -189,7 +232,13 @@ export class FirebaseMessagingError extends FirebaseError {
 
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
-    super({code: 'messaging/' + info.code, message: message || info.message});
+    super('messaging', info.code, message || info.message);
+
+    /* tslint:disable:max-line-length */
+    // Set the prototype explicitly. See the following link for more details:
+    // https://github.com/Microsoft/TypeScript/wiki/Breaking-Changes#extending-built-ins-like-error-array-and-map-may-no-longer-work
+    /* tslint:enable:max-line-length */
+    (this as any).__proto__ = FirebaseMessagingError.prototype;
   }
 }
 
@@ -214,6 +263,10 @@ export class AppErrorCodes {
  * Auth client error codes and their default messages.
  */
 export class AuthClientErrorCode {
+  public static CLAIMS_TOO_LARGE = {
+    code: 'claims-too-large',
+    message: 'Developer claims maximum payload size exceeded.',
+  };
   public static INVALID_ARGUMENT = {
     code: 'argument-error',
     message: 'Invalid argument provided.',
@@ -222,9 +275,17 @@ export class AuthClientErrorCode {
     code: 'email-already-exists',
     message: 'The email address is already in use by another account.',
   };
+  public static FORBIDDEN_CLAIM = {
+    code: 'reserved-claim',
+    message: 'The specified developer claim is reserved and cannot be specified.',
+  };
   public static INTERNAL_ERROR = {
     code: 'internal-error',
     message: 'An internal error has occurred.',
+  };
+  public static INVALID_CLAIMS = {
+    code: 'invalid-claims',
+    message: 'The provided custom claim attributes are invalid.',
   };
   public static INVALID_CREDENTIAL = {
     code: 'invalid-credential',
@@ -245,6 +306,10 @@ export class AuthClientErrorCode {
   public static INVALID_EMAIL = {
     code: 'invalid-email',
     message: 'The email address is improperly formatted.',
+  };
+  public static INVALID_PAGE_TOKEN = {
+    code: 'invalid-page-token',
+    message: 'The page token must be a valid non-empty string.',
   };
   public static INVALID_PASSWORD = {
     code: 'invalid-password',
@@ -394,6 +459,8 @@ export class MessagingClientErrorCode {
 
 /** @const {ServerToClientCode} Auth server to client enum error codes. */
 const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
+  // Claims payload is too large.
+  CLAIMS_TOO_LARGE: 'CLAIMS_TOO_LARGE',
   // Project not found.
   CONFIGURATION_NOT_FOUND: 'PROJECT_NOT_FOUND',
   // Provided credential has insufficient permissions.
@@ -404,8 +471,14 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   DUPLICATE_LOCAL_ID: 'UID_ALREADY_EXISTS',
   // setAccountInfo email already exists.
   EMAIL_EXISTS: 'EMAIL_ALREADY_EXISTS',
+  // Reserved claim name.
+  FORBIDDEN_CLAIM: 'FORBIDDEN_CLAIM',
+  // Invalid claims provided.
+  INVALID_CLAIMS: 'INVALID_CLAIMS',
   // Invalid email provided.
   INVALID_EMAIL: 'INVALID_EMAIL',
+  // Invalid page token.
+  INVALID_PAGE_SELECTION: 'INVALID_PAGE_TOKEN',
   // Invalid phone number.
   INVALID_PHONE_NUMBER: 'INVALID_PHONE_NUMBER',
   // Invalid service account.

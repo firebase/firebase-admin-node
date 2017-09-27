@@ -34,7 +34,8 @@ import * as validator from '../../../src/utils/validator';
 import {
   FirebaseAuthRequestHandler, FIREBASE_AUTH_GET_ACCOUNT_INFO,
   FIREBASE_AUTH_DELETE_ACCOUNT, FIREBASE_AUTH_SET_ACCOUNT_INFO,
-  FIREBASE_AUTH_SIGN_UP_NEW_USER,
+  FIREBASE_AUTH_SIGN_UP_NEW_USER, FIREBASE_AUTH_DOWNLOAD_ACCOUNT,
+  RESERVED_CLAIMS,
 } from '../../../src/auth/auth-api-request';
 import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/utils/error';
 
@@ -42,6 +43,114 @@ chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
+
+/**
+ * @param {number} numOfChars The number of random characters within the string.
+ * @return {string} A string with a specific number of random characters.
+ */
+function createRandomString(numOfChars: number): string {
+  let chars = [];
+  let allowedChars = '1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  while (numOfChars > 0) {
+    let index = Math.floor(Math.random() * allowedChars.length);
+    chars.push(allowedChars.charAt(index));
+    numOfChars--;
+  }
+  return chars.join('');
+}
+
+
+describe('FIREBASE_AUTH_DOWNLOAD_ACCOUNT', () => {
+  // Spy on all validators.
+  let isNonEmptyString: sinon.SinonSpy;
+  let isNumber: sinon.SinonSpy;
+
+  beforeEach(() => {
+    isNonEmptyString = sinon.spy(validator, 'isNonEmptyString');
+    isNumber = sinon.spy(validator, 'isNumber');
+  });
+  afterEach(() => {
+    isNonEmptyString.restore();
+    isNumber.restore();
+  });
+
+  it('should return the correct endpoint', () => {
+    expect(FIREBASE_AUTH_DOWNLOAD_ACCOUNT.getEndpoint()).to.equal('downloadAccount');
+  });
+  it('should return the correct http method', () => {
+    expect(FIREBASE_AUTH_DOWNLOAD_ACCOUNT.getHttpMethod()).to.equal('POST');
+  });
+  it('should return empty response validator', () => {
+    expect(FIREBASE_AUTH_DOWNLOAD_ACCOUNT.getResponseValidator()).to.not.be.null;
+    expect(() => {
+      const emptyResponse = {};
+      const responseValidator = FIREBASE_AUTH_DOWNLOAD_ACCOUNT.getResponseValidator();
+      responseValidator(emptyResponse);
+    }).not.to.throw();
+  });
+  describe('requestValidator', () => {
+    const requestValidator = FIREBASE_AUTH_DOWNLOAD_ACCOUNT.getRequestValidator();
+    it('should succeed with valid maxResults passed', () => {
+      const validRequest = {maxResults: 500};
+      expect(() => {
+        return requestValidator(validRequest);
+      }).not.to.throw();
+      expect(isNumber).to.have.been.calledOnce.and.calledWith(500);
+    });
+    it('should succeed with valid maxResults and other optional parameters', () => {
+      const validRequest = {
+        maxResults: 500,
+        nextPageToken: 'PAGE_TOKEN',
+        // Pass an unsupported parameter which should be ignored.
+        ignoreMe: 'bla',
+      };
+      expect(() => {
+        return requestValidator(validRequest);
+      }).not.to.throw();
+      expect(isNumber).to.have.been.calledOnce.and.calledWith(500);
+      expect(isNonEmptyString).to.have.been.calledOnce.and.calledWith('PAGE_TOKEN');
+    });
+    it('should fail when maxResults not passed', () => {
+      const invalidRequest = {};
+      expect(() => {
+        return requestValidator(invalidRequest);
+      }).to.throw();
+      expect(isNumber).to.have.been.calledOnce.and.calledWith(undefined);
+    });
+    describe('called with invalid parameters', () => {
+      it('should fail with invalid maxResults', () => {
+        expect(() => {
+          return requestValidator({maxResults: ''});
+        }).to.throw();
+        expect(isNumber).to.have.been.calledOnce.and.calledWith('');
+      });
+      it('should fail with zero maxResults', () => {
+        expect(() => {
+          return requestValidator({maxResults: 0});
+        }).to.throw();
+        expect(isNumber).to.have.been.calledOnce.and.calledWith(0);
+      });
+      it('should fail with negative maxResults', () => {
+        expect(() => {
+          return requestValidator({maxResults: -500});
+        }).to.throw();
+        expect(isNumber).to.have.been.calledOnce.and.calledWith(-500);
+      });
+      it('should fail with maxResults exceeding allowed limit', () => {
+        expect(() => {
+          return requestValidator({maxResults: 1001});
+        }).to.throw();
+        expect(isNumber).to.have.been.calledOnce.and.calledWith(1001);
+      });
+      it('should fail with invalid nextPageToken', () => {
+        expect(() => {
+          return requestValidator({maxResults: 1000, nextPageToken: ['PAGE_TOKEN']});
+        }).to.throw();
+        expect(isNonEmptyString).to.have.been.calledOnce.and.calledWith(['PAGE_TOKEN']);
+      });
+    });
+  });
+});
 
 describe('FIREBASE_AUTH_GET_ACCOUNT_INFO', () => {
   it('should return the correct endpoint', () => {
@@ -174,6 +283,7 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
         photoUrl: 'http://www.example.com/1234/photo.png',
         disableUser: false,
         phoneNumber: '+11234567890',
+        customAttributes: JSON.stringify({admin: true, groupId: '123'}),
         // Pass an unsupported parameter which should be ignored.
         ignoreMe: 'bla',
       };
@@ -186,6 +296,13 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
       expect(isUrlSpy).to.have.been.calledOnce.and
         .calledWith('http://www.example.com/1234/photo.png');
       expect(isPhoneNumberSpy).to.have.been.calledOnce.and.calledWith('+11234567890');
+    });
+    it('should succeed with valid localId and customAttributes with 1000 char payload', () => {
+      // Test with 1000 characters.
+      const atLimitClaims = JSON.stringify({key: createRandomString(990)});
+      expect(() => {
+        return requestValidator({localId: '1234', customAttributes: atLimitClaims});
+      }).not.to.throw();
     });
     it('should fail when localId not passed', () => {
       const invalidRequest = {};
@@ -239,6 +356,37 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
           return requestValidator({localId: '1234', phoneNumber: 'invalid'});
         }).to.throw();
         expect(isPhoneNumberSpy).to.have.been.calledOnce.and.calledWith('invalid');
+      });
+      it('should fail with invalid JSON customAttributes', () => {
+        expect(() => {
+          return requestValidator({localId: '1234', customAttributes: 'invalid'});
+        }).to.throw();
+      });
+      it('should fail with customAttributes exceeding maximum allowed payload', () => {
+        // Test with 1001 characters.
+        const largeClaims = JSON.stringify({key: createRandomString(991)});
+        expect(() => {
+          return requestValidator({localId: '1234', customAttributes: largeClaims});
+        }).to.throw(`Developer claims payload should not exceed 1000 characters.`);
+      });
+      RESERVED_CLAIMS.forEach((invalidClaim) => {
+        it(`should fail with customAttributes containing blacklisted claim: ${invalidClaim}`, () => {
+          expect(() => {
+            // Instantiate custom attributes with invalid claims.
+            let claims = {};
+            claims[invalidClaim] = 'bla';
+            return requestValidator({localId: '1234', customAttributes: JSON.stringify(claims)});
+          }).to.throw(`Developer claim "${invalidClaim}" is reserved and cannot be specified.`);
+        });
+      });
+      it('should fail with customAttributes containing multi-blacklisted claims', () => {
+        expect(() => {
+          const claims = {
+            sub: 'sub',
+            auth_time: 'time',
+          };
+          return requestValidator({localId: '1234', customAttributes: JSON.stringify(claims)});
+        }).to.throw(`Developer claims "auth_time", "sub" are reserved and cannot be specified.`);
       });
     });
   });
@@ -385,6 +533,11 @@ describe('FIREBASE_AUTH_SIGN_UP_NEW_USER', () => {
           return requestValidator({phoneNumber: 'invalid'});
         }).to.throw();
         expect(isPhoneNumberSpy).to.have.been.calledOnce.and.calledWith('invalid');
+      });
+      it('should fail with customAttributes', () => {
+        expect(() => {
+          return requestValidator({customAttributes: JSON.stringify({admin: true})});
+        }).to.throw();
       });
     });
   });
@@ -643,6 +796,134 @@ describe('FirebaseAuthRequestHandler', () => {
     });
   });
 
+  describe('downloadAccount', () => {
+    const httpMethod = 'POST';
+    const host = 'www.googleapis.com';
+    const port = 443;
+    const path = '/identitytoolkit/v3/relyingparty/downloadAccount';
+    const timeout = 10000;
+    const nextPageToken = 'PAGE_TOKEN';
+    const maxResults = 500;
+    const expectedResult = {
+      users : [
+        {localId: 'uid1'},
+        {localId: 'uid2'},
+      ],
+      nextPageToken: 'NEXT_PAGE_TOKEN',
+    };
+    it('should be fulfilled given a valid parameters', () => {
+      const data = {
+        maxResults,
+        nextPageToken,
+      };
+
+      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        .returns(Promise.resolve(expectedResult));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.downloadAccount(maxResults, nextPageToken)
+        .then((result) => {
+          expect(result).to.deep.equal(expectedResult);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              host, port, path, httpMethod, data, expectedHeaders, timeout);
+        });
+    });
+    it('should be fulfilled with empty user array when no users exist', () => {
+      const emptyExpectedResult = {
+        users: [],
+      };
+      const data = {
+        maxResults,
+        nextPageToken,
+      };
+
+      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        .returns(Promise.resolve({}));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.downloadAccount(maxResults, nextPageToken)
+        .then((result) => {
+          expect(result).to.deep.equal(emptyExpectedResult);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              host, port, path, httpMethod, data, expectedHeaders, timeout);
+        });
+    });
+    it('should be fulfilled given no parameters', () => {
+      // Default maxResults should be used.
+      const data = {
+        maxResults: 1000,
+      };
+
+      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        .returns(Promise.resolve(expectedResult));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.downloadAccount()
+        .then((result) => {
+          expect(result).to.deep.equal(expectedResult);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              host, port, path, httpMethod, data, expectedHeaders, timeout);
+        });
+    });
+    it('should be rejected given an invalid maxResults', () => {
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        `Required "maxResults" must be a positive non-zero number that does not ` +
+        `exceed the allowed 1000.`,
+      );
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.downloadAccount(1001, nextPageToken)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+        });
+    });
+    it('should be rejected given an invalid next page token', () => {
+      const expectedError = new FirebaseAuthError(
+         AuthClientErrorCode.INVALID_PAGE_TOKEN,
+      );
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.downloadAccount(maxResults, '')
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+        });
+    });
+    it('should be rejected when the backend returns an error', () => {
+      const expectedServerError = {
+        error: {
+          message: 'INVALID_PAGE_SELECTION',
+        },
+      };
+      const expectedError = FirebaseAuthError.fromServerError('INVALID_PAGE_SELECTION');
+      const data = {
+        maxResults,
+        nextPageToken,
+      };
+
+      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        .returns(Promise.resolve(expectedServerError));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.downloadAccount(maxResults, nextPageToken)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              host, port, path, httpMethod, data, expectedHeaders, timeout);
+        });
+    });
+  });
+
   describe('deleteAccount', () => {
     const httpMethod = 'POST';
     const host = 'www.googleapis.com';
@@ -890,6 +1171,138 @@ describe('FirebaseAuthRequestHandler', () => {
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       return requestHandler.updateExistingAccount(uid, validData)
+        .then((returnedUid: string) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              host, port, path, httpMethod, expectedValidData, expectedHeaders, timeout);
+        });
+    });
+  });
+
+  describe('setCustomUserClaims', () => {
+    const httpMethod = 'POST';
+    const host = 'www.googleapis.com';
+    const port = 443;
+    const path = '/identitytoolkit/v3/relyingparty/setAccountInfo';
+    const timeout = 10000;
+    const uid = '12345678';
+    const claims = {admin: true, groupId: '1234'};
+    const expectedValidData = {
+      localId: uid,
+      customAttributes: JSON.stringify(claims),
+    };
+    const expectedEmptyClaimsData = {
+      localId: uid,
+      customAttributes: JSON.stringify({}),
+    };
+    const expectedResult = {
+      localId: uid,
+    };
+
+    it('should be fulfilled given a valid localId and customAttributes', () => {
+      // Successful result server response.
+      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        .returns(Promise.resolve(expectedResult));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      // Send empty request.
+      return requestHandler.setCustomUserClaims(uid, claims)
+        .then((returnedUid: string) => {
+          // uid should be returned.
+          expect(returnedUid).to.be.equal(uid);
+          // Confirm expected rpc request parameters sent.
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              host, port, path, httpMethod, expectedValidData,
+              expectedHeaders, timeout);
+        });
+    });
+
+    it('should be fulfilled given valid localId and null claims', () => {
+      // Successful result server response.
+      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        .returns(Promise.resolve(expectedResult));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      // Send request to delete custom claims.
+      return requestHandler.setCustomUserClaims(uid, null)
+        .then((returnedUid: string) => {
+          // uid should be returned.
+          expect(returnedUid).to.be.equal(uid);
+          // Confirm expected rpc request parameters sent.
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              host, port, path, httpMethod, expectedEmptyClaimsData,
+              expectedHeaders, timeout);
+        });
+    });
+
+    it('should be rejected given invalid parameters such as uid', () => {
+      // Expected error when an invalid uid is provided.
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_UID);
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      // Send request with invalid uid.
+      return requestHandler.setCustomUserClaims('', claims)
+        .then((returnedUid: string) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Invalid uid error should be thrown.
+          expect(error).to.deep.equal(expectedError);
+        });
+    });
+
+    it('should be rejected given invalid parameters such as customClaims', () => {
+      // Expected error when invalid claims are provided.
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        'CustomUserClaims argument must be an object or null.',
+      );
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      // Send request with invalid claims.
+      return requestHandler.setCustomUserClaims(uid, 'invalid')
+        .then((returnedUid: string) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Invalid argument error should be thrown.
+          expect(error).to.deep.equal(expectedError);
+        });
+    });
+
+    it('should be rejected given customClaims with blacklisted claims', () => {
+      // Expected error when invalid claims are provided.
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.FORBIDDEN_CLAIM,
+        `Developer claim "aud" is reserved and cannot be specified.`,
+      );
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      const blacklistedClaims = {admin: true, aud: 'bla'};
+      // Send request with blacklisted claims.
+      return requestHandler.setCustomUserClaims(uid, blacklistedClaims)
+        .then((returnedUid: string) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Forbidden claims error should be thrown.
+          expect(error).to.deep.equal(expectedError);
+        });
+    });
+
+    it('should be rejected when the backend returns an error', () => {
+      // Backend returned error.
+      const expectedError = FirebaseAuthError.fromServerError('USER_NOT_FOUND');
+      const expectedServerError = {
+        error: {
+          message: 'USER_NOT_FOUND',
+        },
+      };
+
+      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        .returns(Promise.resolve(expectedServerError));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.setCustomUserClaims(uid, claims)
         .then((returnedUid: string) => {
           throw new Error('Unexpected success');
         }, (error) => {

@@ -41,6 +41,19 @@ const FIREBASE_AUTH_HEADER = {
 const FIREBASE_AUTH_TIMEOUT = 10000;
 
 
+/** List of reserved claims which cannot be provided when creating a custom token. */
+export const RESERVED_CLAIMS = [
+  'acr', 'amr', 'at_hash', 'aud', 'auth_time', 'azp', 'cnf', 'c_hash', 'exp', 'iat',
+  'iss', 'jti', 'nbf', 'nonce', 'sub', 'firebase',
+];
+
+/** Maximum allowed number of characters in the custom claims payload. */
+const MAX_CLAIMS_PAYLOAD_SIZE = 1000;
+
+/** Maximum allowed number of users to batch download at one time. */
+const MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE = 1000;
+
+
 /**
  * Validates a create/edit request object. All unsupported parameters
  * are removed from the original request. If an invalid field is passed
@@ -64,6 +77,7 @@ function validateCreateEditRequest(request: any) {
       deleteProvider: true,
       sanityCheck: true,
       phoneNumber: true,
+      customAttributes: true,
     };
     // Remove invalid keys from original request.
     for (let key in request) {
@@ -127,7 +141,65 @@ function validateCreateEditRequest(request: any) {
       // disabled externally. So the error message should use the client facing name.
       throw new FirebaseAuthError(AuthClientErrorCode.INVALID_DISABLED_FIELD);
     }
+    // customAttributes should be stringified JSON with no blacklisted claims.
+    // The payload should not exceed 1KB.
+    if (typeof request.customAttributes !== 'undefined') {
+      let developerClaims;
+      try {
+        developerClaims = JSON.parse(request.customAttributes);
+      } catch (error) {
+        // JSON parsing error. This should never happen as we stringify the claims internally.
+        // However, we still need to check since setAccountInfo via edit requests could pass
+        // this field.
+        throw new FirebaseAuthError(AuthClientErrorCode.INVALID_CLAIMS, error.message);
+      }
+      const invalidClaims = [];
+      // Check for any invalid claims.
+      RESERVED_CLAIMS.forEach((blacklistedClaim) => {
+        if (developerClaims.hasOwnProperty(blacklistedClaim)) {
+          invalidClaims.push(blacklistedClaim);
+        }
+      });
+      // Throw an error if an invalid claim is detected.
+      if (invalidClaims.length > 0) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.FORBIDDEN_CLAIM,
+          invalidClaims.length > 1 ?
+          `Developer claims "${invalidClaims.join('", "')}" are reserved and cannot be specified.` :
+          `Developer claim "${invalidClaims[0]}" is reserved and cannot be specified.`,
+        );
+      }
+      // Check claims payload does not exceed maxmimum size.
+      if (request.customAttributes.length > MAX_CLAIMS_PAYLOAD_SIZE) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.CLAIMS_TOO_LARGE,
+          `Developer claims payload should not exceed ${MAX_CLAIMS_PAYLOAD_SIZE} characters.`,
+        );
+      }
+    }
 };
+
+
+/** Instantiates the downloadAccount endpoint settings. */
+export const FIREBASE_AUTH_DOWNLOAD_ACCOUNT = new ApiSettings('downloadAccount', 'POST')
+  // Set request validator.
+  .setRequestValidator((request: any) => {
+    // Validate next page token.
+    if (typeof request.nextPageToken !== 'undefined' &&
+        !validator.isNonEmptyString(request.nextPageToken)) {
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PAGE_TOKEN);
+    }
+    // Validate max results.
+    if (!validator.isNumber(request.maxResults) ||
+        request.maxResults <= 0 ||
+        request.maxResults > MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        `Required "maxResults" must be a positive non-zero number that does not exceed ` +
+        `the allowed ${MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE}.`
+      );
+    }
+  });
 
 
 /** Instantiates the getAccountInfo endpoint settings. */
@@ -185,6 +257,13 @@ export const FIREBASE_AUTH_SET_ACCOUNT_INFO = new ApiSettings('setAccountInfo', 
 export const FIREBASE_AUTH_SIGN_UP_NEW_USER = new ApiSettings('signupNewUser', 'POST')
   // Set request validator.
   .setRequestValidator((request: any) => {
+    // signupNewUser does not support customAttributes.
+    if (typeof request.customAttributes !== 'undefined') {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        `"customAttributes" cannot be set when creating a new user.`,
+      );
+    }
     validateCreateEditRequest(request);
   })
   // Set response validator.
@@ -275,6 +354,40 @@ export class FirebaseAuthRequestHandler {
     return this.invokeRequestHandler(FIREBASE_AUTH_GET_ACCOUNT_INFO, request);
   }
 
+  /**
+   * Exports the users (single batch only) with a size of maxResults and starting from
+   * the offset as specified by pageToken.
+   *
+   * @param {number=} maxResults The page size, 1000 if undefined. This is also the maximum
+   *     allowed limit.
+   * @param {string=} pageToken The next page token. If not specified, returns users starting
+   *     without any offset. Users are returned in the order they were created from oldest to
+   *     newest, relative to the page token offset.
+   * @return {Promise<Object>} A promise that resolves with the current batch of downloaded
+   *     users and the next page token if available. For the last page, an empty list of users
+   *     and no page token are returned.
+   */
+  public downloadAccount(
+      maxResults: number = MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE,
+      pageToken?: string): Promise<{users: Object[], nextPageToken?: string}> {
+    // Construct request.
+    const request = {
+      maxResults,
+      nextPageToken: pageToken,
+    };
+    // Remove next page token if not provided.
+    if (typeof request.nextPageToken === 'undefined') {
+      delete request.nextPageToken;
+    }
+    return this.invokeRequestHandler(FIREBASE_AUTH_DOWNLOAD_ACCOUNT, request)
+        .then((response: any) => {
+          // No more users available.
+          if (!response.users) {
+            response.users = [];
+          }
+          return response as {users: Object[], nextPageToken?: string};
+        });
+  }
 
   /**
    * Deletes an account identified by a uid.
@@ -291,6 +404,41 @@ export class FirebaseAuthRequestHandler {
       localId: uid,
     };
     return this.invokeRequestHandler(FIREBASE_AUTH_DELETE_ACCOUNT, request);
+  }
+
+  /**
+   * Sets additional developer claims on an existing user identified by provided UID.
+   *
+   * @param {string} uid The user to edit.
+   * @param {Object} customUserClaims The developer claims to set.
+   * @return {Promise<string>} A promise that resolves when the operation completes
+   *     with the user id that was edited.
+   */
+  public setCustomUserClaims(uid: string, customUserClaims: Object): Promise<string> {
+    // Validate user UID.
+    if (!validator.isUid(uid)) {
+      return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_UID));
+    } else if (!validator.isObject(customUserClaims)) {
+      return Promise.reject(
+        new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          'CustomUserClaims argument must be an object or null.',
+        ),
+      );
+    }
+    // Delete operation. Replace null with an empty object.
+    if (customUserClaims === null) {
+      customUserClaims = {};
+    }
+    // Construct custom user attribute editting request.
+    let request: any = {
+      localId: uid,
+      customAttributes: JSON.stringify(customUserClaims),
+    };
+    return this.invokeRequestHandler(FIREBASE_AUTH_SET_ACCOUNT_INFO, request)
+        .then((response: any) => {
+          return response.localId as string;
+        });
   }
 
   /**
