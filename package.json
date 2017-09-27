@@ -49,7 +49,7 @@
   "types": "./lib/index.d.ts",
   "dependencies": {
     "google-auth-library": "^0.10.0",
-    "@google-cloud/firestore": "file:firestore-0.6.6.tgz",
+    "@google-cloud/firestore": "file:firestore-0.7.0.tgz",
     "@google-cloud/storage": "^1.2.1",
     "@types/jsonwebtoken": "^7.1.33",
     "faye-websocket": "0.9.3",

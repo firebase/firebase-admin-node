@@ -18,6 +18,7 @@ import {FirebaseApp} from '../firebase-app';
 import {FirebaseFirestoreError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
 import {ApplicationDefaultCredential, Certificate} from '../auth/credential';
+import {Firestore} from '@google-cloud/firestore';
 
 import * as validator from '../utils/validator';
 import * as utils from '../utils/index';
@@ -37,30 +38,11 @@ class FirestoreInternals implements FirebaseServiceInternalsInterface {
   }
 }
 
-/**
- * Creates a new Firestore service instance for the given FirebaseApp.
- *
- * @param {FirebaseApp} app The App for this Firestore service.
- * @return {FirebaseServiceInterface} A Firestore service instance.
- */
-export function initFirestore(app: FirebaseApp): FirebaseServiceInterface {
+function initFirestore(app: FirebaseApp): Firestore {
   if (!validator.isNonNullObject(app) || !('options' in app)) {
     throw new FirebaseFirestoreError({
       code: 'invalid-argument',
       message: 'First argument passed to admin.firestore() must be a valid Firebase app instance.',
-    });
-  }
-
-  /* tslint:disable-next-line:variable-name */
-  let Firestore;
-  try {
-    /* tslint:disable-next-line:no-var-requires */
-    Firestore = require('@google-cloud/firestore');
-  } catch (e) {
-    throw new FirebaseFirestoreError({
-      code: 'missing-dependencies',
-      message: 'Failed to import the Cloud Firestore client library for Node.js. '
-        + 'Make sure to install the "@google-cloud/firestore" npm package.',
     });
   }
 
@@ -75,7 +57,7 @@ export function initFirestore(app: FirebaseApp): FirebaseServiceInterface {
   }
 
   const cert: Certificate = app.options.credential.getCertificate();
-  let firestore: any;
+  let firestore: Firestore;
   if (cert != null) {
     // cert is available when the SDK has been initialized with a service account JSON file,
     // or by setting the GOOGLE_APPLICATION_CREDENTIALS envrionment variable.
@@ -99,6 +81,17 @@ export function initFirestore(app: FirebaseApp): FirebaseServiceInterface {
         'to use Cloud Firestore API.',
     });
   }
+  return firestore;
+}
+
+/**
+ * Creates a new Firestore service instance for the given FirebaseApp.
+ *
+ * @param {FirebaseApp} app The App for this Firestore service.
+ * @return {FirebaseServiceInterface} A Firestore service instance.
+ */
+export function initFirestoreService(app: FirebaseApp): FirebaseServiceInterface {
+  let firestore: any = initFirestore(app);
 
   // Extend the Firestore client object so it implements FirebaseServiceInterface.
   utils.addReadonlyGetter(firestore, 'app', app);

@@ -15,6 +15,7 @@
  */
 
 import {Bucket} from '@google-cloud/storage';
+import {Firestore} from '@google-cloud/firestore';
 
 declare namespace admin {
   interface FirebaseError {
@@ -56,7 +57,7 @@ declare namespace admin {
   function database(app?: admin.app.App): admin.database.Database;
   function messaging(app?: admin.app.App): admin.messaging.Messaging;
   function storage(app?: admin.app.App): admin.storage.Storage;
-  function firestore(app?: admin.app.App): any;
+  function firestore(app?: admin.app.App): Firestore;
   function initializeApp(options: admin.AppOptions, name?: string): admin.app.App;
 }
 
@@ -67,7 +68,7 @@ declare namespace admin.app {
 
     auth(): admin.auth.Auth;
     database(): admin.database.Database;
-    firestore(): any;
+    firestore(): Firestore;
     messaging(): admin.messaging.Messaging;
     storage(): admin.storage.Storage;
     delete(): Promise<void>;

@@ -21,7 +21,7 @@ import {expect} from 'chai';
 
 import * as mocks from '../../resources/mocks';
 import {FirebaseApp} from '../../../src/firebase-app';
-import {initFirestore} from '../../../src/firestore/firestore';
+import {initFirestoreService} from '../../../src/firestore/firestore';
 
 describe('Firestore', () => {
   let mockApp: FirebaseApp;
@@ -37,7 +37,7 @@ describe('Firestore', () => {
       credential: mocks.credential,
       projectId: 'explicit-project-id',
     });
-    firestore = initFirestore(mockApp);
+    firestore = initFirestoreService(mockApp);
     gcloudProject = process.env.GCLOUD_PROJECT;
   });
 
@@ -51,7 +51,7 @@ describe('Firestore', () => {
     invalidApps.forEach((invalidApp) => {
       it(`should throw given invalid app: ${ JSON.stringify(invalidApp) }`, () => {
         expect(() => {
-          const firestoreAny: any = initFirestore;
+          const firestoreAny: any = initFirestoreService;
           return firestoreAny(invalidApp);
         }).to.throw('First argument passed to admin.firestore() must be a valid Firebase app instance.');
       });
@@ -59,7 +59,7 @@ describe('Firestore', () => {
 
     it('should throw given no app', () => {
       expect(() => {
-        const firestoreAny: any = initFirestore;
+        const firestoreAny: any = initFirestoreService;
         return firestoreAny();
       }).to.throw('First argument passed to admin.firestore() must be a valid Firebase app instance.');
     });
@@ -71,7 +71,7 @@ describe('Firestore', () => {
         + 'Must initialize the SDK with a certificate credential or application default credentials '
         + 'to use Cloud Firestore API.';
       expect(() => {
-        return initFirestore(mockCredentialApp);
+        return initFirestoreService(mockCredentialApp);
       }).to.throw(expectedError);
     });
 
@@ -82,13 +82,13 @@ describe('Firestore', () => {
         + 'account credentials or set project ID as an app option. Alternatively set the GCLOUD_PROJECT '
         + 'environment variable.';
       expect(() => {
-        return initFirestore(mockCredentialApp);
+        return initFirestoreService(mockCredentialApp);
       }).to.throw(expectedError);
     });
 
     it('should not throw given a valid app', () => {
       expect(() => {
-        return initFirestore(mockApp);
+        return initFirestoreService(mockApp);
       }).not.to.throw();
     });
   });
@@ -112,7 +112,7 @@ describe('Firestore', () => {
     });
 
     it('should return a string when project ID is present in app options', () => {
-      expect((initFirestore(projectIdApp) as any).projectId).to.equal('explicit-project-id');
+      expect((initFirestoreService(projectIdApp) as any).projectId).to.equal('explicit-project-id');
     });
   });
 });
