@@ -2,6 +2,7 @@
   "name": "firebase-admin-typescript-test",
   "version": "1.0.0",
   "devDependencies": {
+    "@types/google-cloud__storage": "^1.1.1",
     "@types/chai": "^3.4.35",
     "@types/mocha": "^2.2.39",
     "@types/node": "^7.0.8",
