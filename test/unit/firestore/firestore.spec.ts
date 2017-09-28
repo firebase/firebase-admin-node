@@ -21,27 +21,38 @@ import {expect} from 'chai';
 
 import * as mocks from '../../resources/mocks';
 import {FirebaseApp} from '../../../src/firebase-app';
+import {ApplicationDefaultCredential} from '../../../src/auth/credential';
 import {initFirestoreService} from '../../../src/firestore/firestore';
 
 describe('Firestore', () => {
   let mockApp: FirebaseApp;
   let mockCredentialApp: FirebaseApp;
+  let defaultCredentialApp: FirebaseApp;
   let projectIdApp: FirebaseApp;
   let firestore: any;
+
+  let appCredentials: string;
   let gcloudProject: string;
 
   beforeEach(() => {
+    appCredentials = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    gcloudProject = process.env.GCLOUD_PROJECT;
+    delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+
     mockApp = mocks.app();
     mockCredentialApp = mocks.mockCredentialApp();
+    defaultCredentialApp = mocks.appWithOptions({
+      credential: new ApplicationDefaultCredential(),
+    });
     projectIdApp = mocks.appWithOptions({
       credential: mocks.credential,
       projectId: 'explicit-project-id',
     });
     firestore = initFirestoreService(mockApp);
-    gcloudProject = process.env.GCLOUD_PROJECT;
   });
 
   afterEach(() => {
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = appCredentials;
     process.env.GCLOUD_PROJECT = gcloudProject;
     return mockApp.delete();
   });
@@ -64,7 +75,7 @@ describe('Firestore', () => {
       }).to.throw('First argument passed to admin.firestore() must be a valid Firebase app instance.');
     });
 
-    it('should throw given an invalid credential', () => {
+    it('should throw given an invalid credential with project ID', () => {
       // Project ID is read from the environment variable, but the credential is unsupported.
       process.env.GCLOUD_PROJECT = 'project_id';
       const expectedError = 'Failed to initialize Google Cloud Firestore client with the available credentials. '
@@ -75,12 +86,12 @@ describe('Firestore', () => {
       }).to.throw(expectedError);
     });
 
-    it('should throw given no project ID', () => {
+    it('should throw given an invalid credential without project ID', () => {
       // Project ID not set in the environment.
       delete process.env.GCLOUD_PROJECT;
-      const expectedError = 'Failed to determine project ID for Firestore. Initialize the SDK with service '
-        + 'account credentials or set project ID as an app option. Alternatively set the GCLOUD_PROJECT '
-        + 'environment variable.';
+      const expectedError = 'Failed to initialize Google Cloud Firestore client with the available credentials. '
+        + 'Must initialize the SDK with a certificate credential or application default credentials '
+        + 'to use Cloud Firestore API.';
       expect(() => {
         return initFirestoreService(mockCredentialApp);
       }).to.throw(expectedError);
@@ -89,6 +100,14 @@ describe('Firestore', () => {
     it('should not throw given a valid app', () => {
       expect(() => {
         return initFirestoreService(mockApp);
+      }).not.to.throw();
+    });
+
+    it('should not throw given application default credentials without project ID', () => {
+      // Project ID not set in the environment.
+      delete process.env.GCLOUD_PROJECT;
+      expect(() => {
+        return initFirestoreService(defaultCredentialApp);
       }).not.to.throw();
     });
   });
@@ -113,6 +132,11 @@ describe('Firestore', () => {
 
     it('should return a string when project ID is present in app options', () => {
       expect((initFirestoreService(projectIdApp) as any).projectId).to.equal('explicit-project-id');
+    });
+
+    it('should return a string when project ID is present in environment', () => {
+      process.env.GCLOUD_PROJECT = 'env-project-id';
+      expect((initFirestoreService(defaultCredentialApp) as any).projectId).to.equal('env-project-id');
     });
   });
 });

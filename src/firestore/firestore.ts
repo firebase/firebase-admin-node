@@ -47,32 +47,37 @@ function initFirestore(app: FirebaseApp): Firestore {
   }
 
   const projectId: string = utils.getProjectId(app);
-  if (!validator.isNonEmptyString(projectId)) {
-      throw new FirebaseFirestoreError({
-          code: 'no-project-id',
-          message: 'Failed to determine project ID for Firestore. Initialize the '
-            + 'SDK with service account credentials or set project ID as an app option. '
-            + 'Alternatively set the GCLOUD_PROJECT environment variable.',
-      });
-  }
-
   const cert: Certificate = app.options.credential.getCertificate();
-  let firestore: Firestore;
+  let options: any;
   if (cert != null) {
     // cert is available when the SDK has been initialized with a service account JSON file,
     // or by setting the GOOGLE_APPLICATION_CREDENTIALS envrionment variable.
-    firestore = new Firestore({
+
+    if (!validator.isNonEmptyString(projectId)) {
+      // Assert for an explicit projct ID (either via AppOptions or the cert itself).
+      throw new FirebaseFirestoreError({
+        code: 'no-project-id',
+        message: 'Failed to determine project ID for Firestore. Initialize the '
+          + 'SDK with service account credentials or set project ID as an app option. '
+          + 'Alternatively set the GCLOUD_PROJECT environment variable.',
+      });
+    }
+    options = {
       credentials: {
         private_key: cert.privateKey,
         client_email: cert.clientEmail,
       },
       projectId,
-    });
+    };
   } else if (app.options.credential instanceof ApplicationDefaultCredential) {
     // Try to use the Google application default credentials.
-    firestore = new Firestore({
-      projectId,
-    });
+    if (validator.isNonEmptyString(projectId)) {
+      options = {projectId};
+    } else {
+      // If an explicit project ID is not available, let Firestore client discover one from the
+      // environment. This prevents the users from having to set GCLOUD_PROJECT in GCP runtimes.
+      options = {};
+    }
   } else {
     throw new FirebaseFirestoreError({
       code: 'invalid-credential',
@@ -81,7 +86,7 @@ function initFirestore(app: FirebaseApp): Firestore {
         'to use Cloud Firestore API.',
     });
   }
-  return firestore;
+  return new Firestore(options);
 }
 
 /**
