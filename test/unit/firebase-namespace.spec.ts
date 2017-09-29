@@ -28,6 +28,10 @@ import * as utils from './utils';
 import * as mocks from '../resources/mocks';
 
 import {FirebaseNamespace} from '../../src/firebase-namespace';
+import {FirebaseApp} from '../../src/firebase-app';
+import {Auth} from '../../src/auth/auth';
+import {Messaging} from '../../src/messaging/messaging';
+import {Storage} from '../../src/storage/storage';
 
 chai.should();
 chai.use(sinonChai);
@@ -35,7 +39,8 @@ chai.use(chaiAsPromised);
 
 
 const DEFAULT_APP_NAME = '[DEFAULT]';
-
+const DEFAULT_APP_NOT_FOUND = 'The default Firebase app does not exist. Make sure you call initializeApp() '
+  + 'before using any of the Firebase services.';
 
 describe('FirebaseNamespace', () => {
   let firebaseNamespace: FirebaseNamespace;
@@ -330,6 +335,87 @@ describe('FirebaseNamespace', () => {
       expect(() => {
         firebaseNamespace.INTERNAL.registerService(mocks.serviceName, mocks.firebaseServiceFactory);
       }).to.throw(`Firebase service named "${mocks.serviceName}" has already been registered.`);
+    });
+  });
+
+  describe('#auth()', () => {
+    it('should throw when called before initializing an app', () => {
+      expect(() => {
+        firebaseNamespace.auth();
+      }).to.throw(DEFAULT_APP_NOT_FOUND);
+    });
+
+    it('should throw when default app is not initialized', () => {
+      firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
+      expect(() => {
+        firebaseNamespace.auth();
+      }).to.throw(DEFAULT_APP_NOT_FOUND);
+    });
+
+    it('should return a valid namespace when the default app is initialized', () => {
+      let app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions);
+      let auth: Auth = firebaseNamespace.auth();
+      expect(auth.app).to.be.deep.equal(app);
+    });
+
+    it('should return a valid namespace when the named app is initialized', () => {
+      let app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
+      let auth: Auth = firebaseNamespace.auth(app);
+      expect(auth.app).to.be.deep.equal(app);
+    });
+  });
+
+  describe('#messaging()', () => {
+    it('should throw when called before initializing an app', () => {
+      expect(() => {
+        firebaseNamespace.messaging();
+      }).to.throw(DEFAULT_APP_NOT_FOUND);
+    });
+
+    it('should throw when default app is not initialized', () => {
+      firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
+      expect(() => {
+        firebaseNamespace.messaging();
+      }).to.throw(DEFAULT_APP_NOT_FOUND);
+    });
+
+    it('should return a valid namespace when the default app is initialized', () => {
+      let app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions);
+      let fcm: Messaging = firebaseNamespace.messaging();
+      expect(fcm.app).to.be.deep.equal(app);
+    });
+
+    it('should return a valid namespace when the named app is initialized', () => {
+      let app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
+      let fcm: Messaging = firebaseNamespace.messaging(app);
+      expect(fcm.app).to.be.deep.equal(app);
+    });
+  });
+
+  describe('#storage()', () => {
+    it('should throw when called before initializing an app', () => {
+      expect(() => {
+        firebaseNamespace.storage();
+      }).to.throw(DEFAULT_APP_NOT_FOUND);
+    });
+
+    it('should throw when default app is not initialized', () => {
+      firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
+      expect(() => {
+        firebaseNamespace.storage();
+      }).to.throw(DEFAULT_APP_NOT_FOUND);
+    });
+
+    it('should return a valid namespace when the default app is initialized', () => {
+      let app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions);
+      let gcs: Storage = firebaseNamespace.storage();
+      expect(gcs.app).to.be.deep.equal(app);
+    });
+
+    it('should return a valid namespace when the named app is initialized', () => {
+      let app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
+      let gcs: Storage = firebaseNamespace.storage(app);
+      expect(gcs.app).to.be.deep.equal(app);
     });
   });
 });

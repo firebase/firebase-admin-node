@@ -25,6 +25,10 @@ import {
   ApplicationDefaultCredential,
 } from './auth/credential';
 
+import {Auth} from './auth/auth';
+import {Messaging} from './messaging/messaging';
+import {Storage} from './storage/storage';
+
 const DEFAULT_APP_NAME = '[DEFAULT]';
 
 let globalAppDefaultCred: ApplicationDefaultCredential;
@@ -272,16 +276,14 @@ export class FirebaseNamespace {
   }
 
   /**
-   * Firebase services available off of a FirebaseNamespace instance. These are monkey-patched via
-   * registerService(), but we need to include a dummy implementation to get TypeScript to
-   * compile it without errors.
+   * Gets the Auth service for the default app or a given app.
+   *
+   * @param {FirebaseApp=} app Optional app whose `Auth` service to return.
+   * @return {Auth} The default `Auth` service if no app is provided
+   *   or the `Auth` service associated with the provided app.
    */
-  /* istanbul ignore next */
-  public auth(): FirebaseServiceInterface {
-    throw new FirebaseAppError(
-      AppErrorCodes.INTERNAL_ERROR,
-      'INTERNAL ASSERT FAILED: Firebase auth() service has not been registered.',
-    );
+  public auth(app?: FirebaseApp): Auth {
+    return this.ensureApp(app).auth();
   }
 
   /* istanbul ignore next */
@@ -292,20 +294,26 @@ export class FirebaseNamespace {
     );
   }
 
-  /* istanbul ignore next */
-  public messaging(): FirebaseServiceInterface {
-    throw new FirebaseAppError(
-      AppErrorCodes.INTERNAL_ERROR,
-      'INTERNAL ASSERT FAILED: Firebase messaging() service has not been registered.',
-    );
+  /**
+   * Gets the Messaging service for the default app or a given app.
+   *
+   * @param {FirebaseApp=} app Optional app whose `Messaging` service to return.
+   * @return {Messaging} The default `Messaging` service if no app is provided
+   *   or the `Messaging` service associated with the provided app.
+   */
+  public messaging(app?: FirebaseApp): Messaging {
+    return this.ensureApp(app).messaging();
   }
 
-  /* istanbul ignore next */
-  public storage(): FirebaseServiceInterface {
-    throw new FirebaseAppError(
-      AppErrorCodes.INTERNAL_ERROR,
-      'INTERNAL ASSERT FAILED: Firebase storage() service has not been registered.',
-    );
+  /**
+   * Gets the Storage service for the default app or a given app.
+   *
+   * @param {FirebaseApp=} app Optional app whose `Storage` service to return.
+   * @return {Storage} The default `Storage` service if no app is provided
+   *   or the `Storage` service associated with the provided app.
+   */
+  public storage(app?: FirebaseApp): Storage {
+    return this.ensureApp(app).storage();
   }
 
   /**
@@ -338,5 +346,12 @@ export class FirebaseNamespace {
    */
   public get apps(): FirebaseApp[] {
     return this.INTERNAL.apps;
+  }
+
+  private ensureApp(app?: FirebaseApp): FirebaseApp {
+    if (typeof app === 'undefined') {
+      app = this.app();
+    }
+    return app;
   }
 }
