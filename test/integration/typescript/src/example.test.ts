@@ -33,8 +33,16 @@ describe('Init App', () => {
         const bucket: Bucket = app.storage().bucket('TestBucket');
         expect(bucket.name).to.equal('TestBucket')
     });
-    it('Should return a Firestore client', () => {
+    it('Should return a Firestore client from the app', () => {
         const firestore: Firestore = app.firestore();
-        expect(firestore).to.not.be.null;
+        expect(firestore).to.be.instanceOf(admin.firestore.Firestore);
+    });
+    it('Should return a Firestore client', () => {
+        const firestore: Firestore = admin.firestore(app);
+        expect(firestore).to.be.instanceOf(admin.firestore.Firestore);
+    });
+    it('Should return a Firestore FieldValue', () => {
+        const fieldValue = admin.firestore.FieldValue;
+        expect(fieldValue).to.not.be.null;
     });
 });

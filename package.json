@@ -53,10 +53,11 @@
     "@types/jsonwebtoken": "^7.1.33",
     "faye-websocket": "0.9.3",
     "jsonwebtoken": "7.1.9",
-    "node-forge": "0.7.1"
+    "node-forge": "0.7.1",
+    "lodash": "^4.6.1"
   },
   "devDependencies": {
-    "@google-cloud/firestore": "file:firestore-0.7.0.tgz",
+    "@google-cloud/firestore": "file:firestore-0.8.0.tgz",
     "@types/chai": "^3.4.34",
     "@types/chai-as-promised": "0.0.29",
     "@types/firebase-token-generator": "^2.0.28",
@@ -82,7 +83,6 @@
     "gulp-replace": "^0.5.4",
     "gulp-tslint": "^6.0.2",
     "gulp-typescript": "^3.1.2",
-    "lodash": "^4.6.1",
     "merge2": "^1.0.2",
     "mocha": "^3.5.0",
     "nock": "^8.0.0",

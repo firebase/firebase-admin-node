@@ -51,8 +51,51 @@ function test(utils) {
         });
   }
 
+  function testFieldValue() {
+    const expected = {
+        name: 'Mountain View',
+        population: 77846,
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+    };
+    const reference = admin.firestore().collection('cities').doc()
+    return reference.set(expected)
+        .then(result => {
+            return reference.get();
+        })
+        .then(snapshot => {
+            var data = snapshot.data();
+            if (data.timestamp && data.timestamp instanceof Date) {
+                utils.logSuccess('firestore.FieldValue');
+            } else {
+                utils.logFailure('firestore.FieldValue', 'Server timestamp value not present');
+            }
+            return reference.delete();
+        });
+  }
+
+  function testFieldPath() {
+    return Promise.resolve(admin.firestore.FieldPath).then(fieldPath => {
+        utils.assert(
+            typeof fieldPath !== 'undefined',
+            'firestore.FieldPath',
+            'FieldPath not available in firestore namespace')
+    });
+  }
+
+  function testGeoPoint() {
+    return Promise.resolve(admin.firestore.GeoPoint).then(geoPoint => {
+        utils.assert(
+            typeof geoPoint !== 'undefined',
+            'firestore.GeoPoint',
+            'GeoPoint not available in firestore namespace')
+    });
+  }
+
   return Promise.resolve()
-    .then(testFirestore);
+    .then(testFirestore)
+    .then(testFieldValue)
+    .then(testFieldPath)
+    .then(testGeoPoint);
 }
 
 module.exports = {

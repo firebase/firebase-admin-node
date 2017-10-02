@@ -3,6 +3,8 @@ import {AppHook, FirebaseApp} from '../firebase-app';
 import {FirebaseServiceInterface} from '../firebase-service';
 import * as firebase from '../default-namespace';
 import {FirebaseServiceNamespace} from '../firebase-namespace';
+import * as firestoreNamespace from '@google-cloud/firestore';
+import * as _ from 'lodash/object';
 
 /**
  * Factory function that creates a new Firestore service.
@@ -30,7 +32,7 @@ export default function(): FirebaseServiceNamespace<FirebaseServiceInterface> {
   return firebase.INTERNAL.registerService(
     'firestore',
     serviceFactory,
-    {},
+    _.assign({}, firestoreNamespace),
     appHook
   );
 }
