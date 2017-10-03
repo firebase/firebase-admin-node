@@ -50,6 +50,7 @@
   "dependencies": {
     "google-auth-library": "^0.10.0",
     "@google-cloud/storage": "^1.2.1",
+    "@google-cloud/firestore": "^0.8.0",
     "@types/google-cloud__storage": "^1.1.1",
     "@types/jsonwebtoken": "^7.1.33",
     "faye-websocket": "0.9.3",
@@ -58,7 +59,6 @@
     "lodash": "^4.6.1"
   },
   "devDependencies": {
-    "@google-cloud/firestore": "file:firestore-0.8.0.tgz",
     "@types/chai": "^3.4.34",
     "@types/chai-as-promised": "0.0.29",
     "@types/firebase-token-generator": "^2.0.28",
