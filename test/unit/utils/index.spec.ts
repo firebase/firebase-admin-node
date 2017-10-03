@@ -16,7 +16,10 @@
 
 import {expect} from 'chai';
 
-import {addReadonlyGetter} from '../../../src/utils/index';
+import * as mocks from '../../resources/mocks';
+import {addReadonlyGetter, getProjectId} from '../../../src/utils/index';
+import {isNonEmptyString} from '../../../src/utils/validator'
+import {FirebaseApp, FirebaseAppOptions} from '../../../src/firebase-app';
 
 type Obj = {
   [key: string]: any;
@@ -44,5 +47,47 @@ describe('addReadonlyGetter()', () => {
     addReadonlyGetter(obj, 'foo', true);
 
     expect(obj).to.have.keys(['foo']);
+  });
+});
+
+describe('getProjectId()', () => {
+  let gcloudProject: string
+
+  before(() => {
+    gcloudProject = process.env.GCLOUD_PROJECT;
+  });
+
+  after(() => {
+    if (isNonEmptyString(gcloudProject)) {
+      process.env.GCLOUD_PROJECT = gcloudProject;
+    } else {
+      delete process.env.GCLOUD_PROJECT;
+    }
+  });
+
+  it('should return the explicitly specified project ID from app options', () => {
+    let options: FirebaseAppOptions = {
+      credential: new mocks.MockCredential(),
+      projectId: 'explicit-project-id',
+    };
+    let app: FirebaseApp = mocks.appWithOptions(options);
+    expect(getProjectId(app)).to.equal(options.projectId);
+  });
+
+  it('should return the project ID from service account', () => {
+    let app: FirebaseApp = mocks.app();
+    expect(getProjectId(app)).to.equal('project_id');
+  });
+
+  it('should return the project ID set in environment', () => {
+    process.env.GCLOUD_PROJECT = 'env-var-project-id';
+    let app: FirebaseApp = mocks.mockCredentialApp();
+    expect(getProjectId(app)).to.equal('env-var-project-id');
+  });
+
+  it('should return null when project ID is not set', () => {
+    delete process.env.GCLOUD_PROJECT;
+    let app: FirebaseApp = mocks.mockCredentialApp();
+    expect(getProjectId(app)).to.be.null;
   });
 });

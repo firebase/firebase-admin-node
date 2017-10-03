@@ -15,6 +15,7 @@
  */
 
 import {Bucket} from '@google-cloud/storage';
+import * as _firestore from '@google-cloud/firestore';
 
 declare namespace admin {
   interface FirebaseError {
@@ -56,6 +57,7 @@ declare namespace admin {
   function database(app?: admin.app.App): admin.database.Database;
   function messaging(app?: admin.app.App): admin.messaging.Messaging;
   function storage(app?: admin.app.App): admin.storage.Storage;
+  function firestore(app?: admin.app.App): admin.firestore.Firestore;
   function initializeApp(options: admin.AppOptions, name?: string): admin.app.App;
 }
 
@@ -66,6 +68,7 @@ declare namespace admin.app {
 
     auth(): admin.auth.Auth;
     database(): admin.database.Database;
+    firestore(): admin.firestore.Firestore;
     messaging(): admin.messaging.Messaging;
     storage(): admin.storage.Storage;
     delete(): Promise<void>;
@@ -400,6 +403,13 @@ declare namespace admin.storage {
     app: admin.app.App;
     bucket(name?: string): Bucket;
   }
+}
+
+declare namespace admin.firestore {
+  export import FieldPath = _firestore.FieldPath;
+  export import FieldValue = _firestore.FieldValue;
+  export import Firestore = _firestore.Firestore;
+  export import GeoPoint = _firestore.GeoPoint;
 }
 
 declare module 'firebase-admin' {

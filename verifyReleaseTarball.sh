@@ -66,7 +66,7 @@ cp "$ROOT/test/resources/mock.key.json" .
 npm install
 
 # Install firebase-admin package
-npm install "$ROOT/$PKG_NAME"
+npm install -S "$ROOT/$PKG_NAME"
 
 echo "> tsc -p tsconfig.json"
 tsc -p tsconfig.json

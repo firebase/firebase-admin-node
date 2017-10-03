@@ -18,6 +18,7 @@ import * as firebase from './default-namespace';
 import registerAuth from './auth/register-auth';
 import registerMessaging from './messaging/register-messaging';
 import registerStorage from './storage/register-storage';
+import registerFirestore from './firestore/register-firestore';
 
 // Register the Database service
 // For historical reasons, the database code is included as minified code and registers itself
@@ -34,5 +35,8 @@ registerMessaging();
 
 // Register the Storage service
 registerStorage();
+
+// Register the Firestore service
+registerFirestore();
 
 export = firebase;

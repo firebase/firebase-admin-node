@@ -176,6 +176,21 @@ export class FirebaseAuthError extends PrefixedFirebaseError {
   }
 }
 
+/**
+ * Firebase Firestore error code structure. This extends FirebaseError.
+ *
+ * @param {ErrorInfo} info The error code info.
+ * @param {string} [message] The error message. This will override the default
+ *     message if provided.
+ * @constructor
+ */
+export class FirebaseFirestoreError extends FirebaseError {
+  constructor(info: ErrorInfo, message?: string) {
+    // Override default message if custom message provided.
+    super({code: 'firestore/' + info.code, message: message || info.message});
+  }
+}
+
 
 /**
  * Firebase Messaging error code structure. This extends PrefixedFirebaseError.

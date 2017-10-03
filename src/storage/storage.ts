@@ -17,7 +17,7 @@
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {ApplicationDefaultCredential} from '../auth/credential';
+import {ApplicationDefaultCredential, Certificate} from '../auth/credential';
 import {Bucket} from '@google-cloud/storage';
 
 import * as validator from '../utils/validator';
@@ -47,7 +47,7 @@ export class Storage implements FirebaseServiceInterface {
   private storageClient: any;
 
   /**
-   * @param {Object} app The app for this Storage service.
+   * @param {FirebaseApp} app The app for this Storage service.
    * @constructor
    */
   constructor(app: FirebaseApp) {
@@ -70,7 +70,7 @@ export class Storage implements FirebaseServiceInterface {
       });
     }
 
-    const cert = app.options.credential.getCertificate();
+    const cert: Certificate = app.options.credential.getCertificate();
     if (cert != null) {
       // cert is available when the SDK has been initialized with a service account JSON file,
       // or by setting the GOOGLE_APPLICATION_CREDENTIALS envrionment variable.
@@ -94,6 +94,14 @@ export class Storage implements FirebaseServiceInterface {
     this.appInternal = app;
   }
 
+  /**
+   * Returns a reference to a Google Cloud Storage bucket. Returned reference can be used to upload
+   * and download content from Google Cloud Storage.
+   *
+   * @param {string=} name Optional name of the bucket to be retrieved. If name is not specified,
+   *   retrieves a reference to the default bucket.
+   * @return {Bucket} A Bucket object from the @google-cloud/storage library.
+   */
   public bucket(name?: string): Bucket {
     let bucketName;
     if (typeof name !== 'undefined') {

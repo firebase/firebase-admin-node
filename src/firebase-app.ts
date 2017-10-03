@@ -21,6 +21,7 @@ import {GoogleOAuthAccessToken} from './auth/credential';
 import {FirebaseServiceInterface} from './firebase-service';
 import {FirebaseNamespaceInternals} from './firebase-namespace';
 import {AppErrorCodes, FirebaseAppError} from './utils/error';
+import {Firestore} from '@google-cloud/firestore';
 
 
 /**
@@ -37,6 +38,7 @@ export type FirebaseAppOptions = {
   databaseAuthVariableOverride?: Object
   databaseURL?: string,
   storageBucket?: string,
+  projectId?: string,
 };
 
 /**
@@ -307,6 +309,14 @@ export class FirebaseApp {
     throw new FirebaseAppError(
       AppErrorCodes.INTERNAL_ERROR,
       'INTERNAL ASSERT FAILED: Firebase storage() service has not been registered.',
+    );
+  }
+
+  /* istanbul ignore next */
+  public firestore(): Firestore {
+    throw new FirebaseAppError(
+      AppErrorCodes.INTERNAL_ERROR,
+      'INTERNAL ASSERT FAILED: Firebase firestore() service has not been registered.',
     );
   }
 

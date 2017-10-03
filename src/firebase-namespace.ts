@@ -24,6 +24,7 @@ import {
   RefreshTokenCredential,
   ApplicationDefaultCredential,
 } from './auth/credential';
+import {Firestore} from '@google-cloud/firestore';
 
 const DEFAULT_APP_NAME = '[DEFAULT]';
 
@@ -305,6 +306,14 @@ export class FirebaseNamespace {
     throw new FirebaseAppError(
       AppErrorCodes.INTERNAL_ERROR,
       'INTERNAL ASSERT FAILED: Firebase storage() service has not been registered.',
+    );
+  }
+
+  /* istanbul ignore next */
+  public firestore(): Firestore {
+    throw new FirebaseAppError(
+      AppErrorCodes.INTERNAL_ERROR,
+      'INTERNAL ASSERT FAILED: Firebase firestore() service has not been registered.',
     );
   }
 

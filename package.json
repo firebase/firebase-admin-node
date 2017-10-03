@@ -48,11 +48,15 @@
   ],
   "types": "./lib/index.d.ts",
   "dependencies": {
+    "google-auth-library": "^0.10.0",
     "@google-cloud/storage": "^1.2.1",
+    "@google-cloud/firestore": "^0.8.0",
+    "@types/google-cloud__storage": "^1.1.1",
     "@types/jsonwebtoken": "^7.1.33",
     "faye-websocket": "0.9.3",
     "jsonwebtoken": "7.1.9",
-    "node-forge": "0.7.1"
+    "node-forge": "0.7.1",
+    "lodash": "^4.6.1"
   },
   "devDependencies": {
     "@types/chai": "^3.4.34",
@@ -61,6 +65,7 @@
     "@types/lodash": "^4.14.38",
     "@types/mocha": "^2.2.32",
     "@types/nock": "^8.0.33",
+    "@types/node": "^8.0.32",
     "@types/request": "0.0.32",
     "@types/request-promise": "^4.1.33",
     "@types/sinon": "^1.16.31",
@@ -71,7 +76,6 @@
     "del": "^2.2.1",
     "firebase": "^3.6.9",
     "firebase-token-generator": "^2.0.0",
-    "@types/google-cloud__storage": "^1.1.1",
     "gulp": "^3.9.1",
     "gulp-exit": "0.0.2",
     "gulp-header": "^1.8.8",
@@ -80,7 +84,6 @@
     "gulp-replace": "^0.5.4",
     "gulp-tslint": "^6.0.2",
     "gulp-typescript": "^3.1.2",
-    "lodash": "^4.6.1",
     "merge2": "^1.0.2",
     "mocha": "^3.5.0",
     "nock": "^8.0.0",
@@ -91,8 +94,8 @@
     "run-sequence": "^1.1.5",
     "sinon": "^1.17.3",
     "sinon-chai": "^2.8.0",
-    "tslint": "^3.5.0",
     "ts-node": "^3.3.0",
+    "tslint": "^3.5.0",
     "typescript": "^2.0.3",
     "typings": "^1.0.4"
   }
