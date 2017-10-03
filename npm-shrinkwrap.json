@@ -1,6 +1,6 @@
 {
   "name": "firebase-admin",
-  "version": "5.4.0",
+  "version": "5.4.1",
   "dependencies": {
     "@google-cloud/common": {
       "version": "0.13.5",
@@ -442,6 +442,11 @@
       "from": "google-gax@>=0.14.1 <0.15.0",
       "resolved": "https://registry.npmjs.org/google-gax/-/google-gax-0.14.1.tgz",
       "dependencies": {
+        "@types/node": {
+          "version": "7.0.43",
+          "from": "@types/node@>=7.0.29 <8.0.0",
+          "resolved": "https://registry.npmjs.org/@types/node/-/node-7.0.43.tgz"
+        },
         "google-auto-auth": {
           "version": "0.5.4",
           "from": "google-auto-auth@>=0.5.2 <0.6.0",
