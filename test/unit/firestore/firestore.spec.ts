@@ -119,7 +119,7 @@ describe('Firestore', () => {
     it('is read-only', () => {
       expect(() => {
         firestore.app = mockApp;
-      }).to.throw('Cannot assign to read only property \'app\' of object \'#<Firestore>\'');
+      }).to.throw(/Cannot assign to read only property \'app\' of .*/);
     });
   });
 
