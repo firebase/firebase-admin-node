@@ -91,11 +91,39 @@ function test(utils) {
     });
   }
 
+  function testSetDocumentReference() {
+    const expected = {
+        name: 'Mountain View',
+        population: 77846,
+    };
+    const source = admin.firestore().collection('cities').doc();
+    const target = admin.firestore().collection('cities').doc();
+    return source.set(expected)
+        .then(result => {
+            return target.set({name: 'Palo Alto', sisterCity: source});
+        })
+        .then(result => {
+            return target.get();
+        })
+        .then(snapshot => {
+            var data = snapshot.data();
+            utils.assert(
+                _.isEqual(source.path, data.sisterCity.path),
+                'firestore.DocumentReference',
+                'Data read from Firestore did not match expected: ' + data);
+            var promises = [];
+            promises.push(source.delete());
+            promises.push(target.delete());
+            return Promise.all(promises);
+        });
+  }
+
   return Promise.resolve()
     .then(testFirestore)
     .then(testFieldValue)
     .then(testFieldPath)
-    .then(testGeoPoint);
+    .then(testGeoPoint)
+    .then(testSetDocumentReference);
 }
 
 module.exports = {
