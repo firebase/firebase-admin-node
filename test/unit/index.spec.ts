@@ -37,3 +37,6 @@ import './messaging/messaging.spec';
 
 // Storage
 import './storage/storage.spec';
+
+// Firestore
+import './firestore/firestore.spec';

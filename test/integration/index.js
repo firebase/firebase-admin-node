@@ -40,6 +40,7 @@ var auth = require('./auth');
 var database = require('./database');
 var messaging = require('./messaging');
 var storage = require('./storage');
+var firestore = require('./firestore');
 
 var apiRequest = require('../../lib/utils/api-request');
 var url = require('url');
@@ -212,6 +213,7 @@ return promptForUpdateRules(flags['overwrite'])
   .then(_.partial(database.test, utils))
   .then(_.partial(messaging.test, utils))
   .then(_.partial(storage.test, utils))
+  .then(_.partial(firestore.test, utils))
   .then(utils.logResults)
   .catch(function(error) {
     console.log(chalk.red('\nSOMETHING WENT WRONG!', error));

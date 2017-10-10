@@ -89,6 +89,10 @@ export function mockCredentialApp(): FirebaseApp {
   }, appName, new FirebaseNamespace().INTERNAL);
 }
 
+export function appWithOptions(options: FirebaseAppOptions): FirebaseApp {
+  return new FirebaseApp(options, appName, new FirebaseNamespace().INTERNAL);
+}
+
 export function appReturningNullAccessToken(): FirebaseApp {
   return new FirebaseApp({
     credential: {

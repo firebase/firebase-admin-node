@@ -14,6 +14,11 @@
  * limitations under the License.
  */
 
+ import {FirebaseApp, FirebaseAppOptions} from '../firebase-app';
+ import {Certificate} from '../auth/credential';
+
+ import * as validator from './validator';
+
 /**
  * Renames properties on an object given a mapping from old to new property names.
  *
@@ -50,4 +55,30 @@ export function addReadonlyGetter(obj: Object, prop: string, value: any): void {
     // Include this property during enumeration of obj's properties.
     enumerable: true,
   });
+}
+
+/**
+ * Determines the Google Cloud project ID associated with a Firebase app by examining
+ * the Firebase app options, credentials and the local environment in that order.
+ * 
+ * @param {FirebaseApp} app A Firebase app to get the project ID from.
+ * 
+ * @return {string} A project ID string or null. 
+ */
+export function getProjectId(app: FirebaseApp): string {
+  const options: FirebaseAppOptions = app.options;
+  if (validator.isNonEmptyString(options.projectId)) {
+    return options.projectId;
+  }
+
+  const cert: Certificate = options.credential.getCertificate();
+  if (cert != null && validator.isNonEmptyString(cert.projectId)) {
+    return cert.projectId;
+  }
+
+  let projectId = process.env.GCLOUD_PROJECT;
+  if (validator.isNonEmptyString(projectId)) {
+    return projectId;
+  }
+  return null;
 }
