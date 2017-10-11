@@ -25,6 +25,7 @@ import {
   ApplicationDefaultCredential,
 } from './auth/credential';
 import {Firestore} from '@google-cloud/firestore';
+import * as _ from 'lodash/object';
 
 import {Auth} from './auth/auth';
 import {Messaging} from './messaging/messaging';
@@ -37,8 +38,9 @@ let globalCertCreds: { [key: string]: CertCredential } = {};
 let globalRefreshTokenCreds: { [key: string]: RefreshTokenCredential } = {};
 
 
-export interface FirebaseServiceNamespace <T extends FirebaseServiceInterface> {
+export interface FirebaseServiceNamespace <T> {
   (app?: FirebaseApp): T;
+  [key: string]: any;
 }
 
 
@@ -277,14 +279,16 @@ export class FirebaseNamespace {
   }
 
   /**
-   * Gets the Auth service for the default app or a given app.
-   *
-   * @param {FirebaseApp=} app Optional app whose `Auth` service to return.
-   * @return {Auth} The default `Auth` service if no app is provided
-   *   or the `Auth` service associated with the provided app.
+   * Gets the `Auth` service namespace. The returned namespace can be used to get the
+   * `Auth` service for the default app or an explicitly specified app.
    */
-  public auth(app?: FirebaseApp): Auth {
-    return this.ensureApp(app).auth();
+  get auth(): FirebaseServiceNamespace<Auth> {
+    const ns: FirebaseNamespace = this;
+    let fn: FirebaseServiceNamespace<Auth> = (app?: FirebaseApp) => {
+      return ns.ensureApp(app).auth();
+    };
+    _.assign(fn, {Auth});
+    return fn;
   }
 
   /* istanbul ignore next */
@@ -296,33 +300,42 @@ export class FirebaseNamespace {
   }
 
   /**
-   * Gets the Messaging service for the default app or a given app.
-   *
-   * @param {FirebaseApp=} app Optional app whose `Messaging` service to return.
-   * @return {Messaging} The default `Messaging` service if no app is provided
-   *   or the `Messaging` service associated with the provided app.
+   * Gets the `Messaging` service namespace. The returned namespace can be used to get the
+   * `Messaging` service for the default app or an explicitly specified app.
    */
-  public messaging(app?: FirebaseApp): Messaging {
-    return this.ensureApp(app).messaging();
+  get messaging(): FirebaseServiceNamespace<Messaging> {
+    const ns: FirebaseNamespace = this;
+    let fn: FirebaseServiceNamespace<Messaging> = (app?: FirebaseApp) => {
+      return ns.ensureApp(app).messaging();
+    };
+    _.assign(fn, {Messaging});
+    return fn;
   }
 
   /**
-   * Gets the Storage service for the default app or a given app.
-   *
-   * @param {FirebaseApp=} app Optional app whose `Storage` service to return.
-   * @return {Storage} The default `Storage` service if no app is provided
-   *   or the `Storage` service associated with the provided app.
+   * Gets the `Storage` service namespace. The returned namespace can be used to get the
+   * `Storage` service for the default app or an explicitly specified app.
    */
-  public storage(app?: FirebaseApp): Storage {
-    return this.ensureApp(app).storage();
+  get storage(): FirebaseServiceNamespace<Storage> {
+    const ns: FirebaseNamespace = this;
+    let fn: FirebaseServiceNamespace<Storage> = (app?: FirebaseApp) => {
+      return ns.ensureApp(app).storage();
+    };
+    _.assign(fn, {Storage});
+    return fn;
   }
 
-  /* istanbul ignore next */
-  public firestore(): Firestore {
-    throw new FirebaseAppError(
-      AppErrorCodes.INTERNAL_ERROR,
-      'INTERNAL ASSERT FAILED: Firebase firestore() service has not been registered.',
-    );
+  /**
+   * Gets the `Firestore` service namespace. The returned namespace can be used to get the
+   * `Firestore` service for the default app or an explicitly specified app.
+   */
+  get firestore(): FirebaseServiceNamespace<Firestore> {
+    const ns: FirebaseNamespace = this;
+    let fn: FirebaseServiceNamespace<Firestore> = (app?: FirebaseApp) => {
+      return ns.ensureApp(app).firestore();
+    };
+    _.assign(fn, require('@google-cloud/firestore'));
+    return fn;
   }
 
   /**

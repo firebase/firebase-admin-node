@@ -22,6 +22,7 @@ import {FirebaseServiceInterface} from './firebase-service';
 import {FirebaseNamespaceInternals} from './firebase-namespace';
 import {AppErrorCodes, FirebaseAppError} from './utils/error';
 import {Firestore} from '@google-cloud/firestore';
+import {FirestoreService} from './firestore/firestore';
 
 import {Auth} from './auth/auth';
 import {Messaging} from './messaging/messaging';
@@ -319,12 +320,11 @@ export class FirebaseApp {
     });
   }
 
-  /* istanbul ignore next */
   public firestore(): Firestore {
-    throw new FirebaseAppError(
-      AppErrorCodes.INTERNAL_ERROR,
-      'INTERNAL ASSERT FAILED: Firebase firestore() service has not been registered.',
-    );
+    let service: FirestoreService = this.ensureService_('firestore', () => {
+      return new FirestoreService(this);
+    });
+    return service.client;
   }
 
   /**

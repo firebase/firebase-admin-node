@@ -47,29 +47,34 @@ function test(utils) {
             utils.logSuccess('firestore()');
         })
         .catch(err => {
-            utils.logFailure('firestore()', 'Error while interacting with Firestore: ' + err);     
+            utils.logFailure('firestore()', 'Error while interacting with Firestore: ' + err);
         });
   }
 
   function testFieldValue() {
-    const expected = {
-        name: 'Mountain View',
-        population: 77846,
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
-    };
     const reference = admin.firestore().collection('cities').doc()
-    return reference.set(expected)
+    return Promise.resolve()
+        .then(() => {
+            const expected = {
+                name: 'Mountain View',
+                population: 77846,
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+            };
+            return reference.set(expected);
+        })
         .then(result => {
             return reference.get();
         })
         .then(snapshot => {
             var data = snapshot.data();
-            if (data.timestamp && data.timestamp instanceof Date) {
-                utils.logSuccess('firestore.FieldValue');
-            } else {
-                utils.logFailure('firestore.FieldValue', 'Server timestamp value not present');
-            }
+            utils.assert(
+                data.timestamp && data.timestamp instanceof Date,
+                'firestore.FieldValue',
+                'Server timestamp value not present');
             return reference.delete();
+        })
+        .catch(err => {
+            utils.logFailure('firestore.FieldValue', 'Error while interacting with Firestore: ' + err);
         });
   }
 
@@ -115,6 +120,9 @@ function test(utils) {
             promises.push(source.delete());
             promises.push(target.delete());
             return Promise.all(promises);
+        })
+        .catch(err => {
+            utils.logFailure('firestore.DocumentReference', 'Error while interacting with Firestore: ' + err);
         });
   }
 

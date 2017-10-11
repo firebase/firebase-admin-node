@@ -32,6 +32,12 @@ import {FirebaseApp} from '../../src/firebase-app';
 import {Auth} from '../../src/auth/auth';
 import {Messaging} from '../../src/messaging/messaging';
 import {Storage} from '../../src/storage/storage';
+import {
+  Firestore,
+  FieldPath,
+  FieldValue,
+  GeoPoint
+} from '@google-cloud/firestore';
 
 chai.should();
 chai.use(sinonChai);
@@ -363,6 +369,10 @@ describe('FirebaseNamespace', () => {
       let auth: Auth = firebaseNamespace.auth(app);
       expect(auth.app).to.be.deep.equal(app);
     });
+
+    it('should return a reference to Auth type', () => {
+      expect(firebaseNamespace.auth.Auth).to.be.deep.equal(Auth);
+    });
   });
 
   describe('#messaging()', () => {
@@ -390,6 +400,10 @@ describe('FirebaseNamespace', () => {
       let fcm: Messaging = firebaseNamespace.messaging(app);
       expect(fcm.app).to.be.deep.equal(app);
     });
+
+    it('should return a reference to Messaging type', () => {
+      expect(firebaseNamespace.messaging.Messaging).to.be.deep.equal(Messaging);
+    });
   });
 
   describe('#storage()', () => {
@@ -416,6 +430,53 @@ describe('FirebaseNamespace', () => {
       let app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
       let gcs: Storage = firebaseNamespace.storage(app);
       expect(gcs.app).to.be.deep.equal(app);
+    });
+
+    it('should return a reference to Storage type', () => {
+      expect(firebaseNamespace.storage.Storage).to.be.deep.equal(Storage);
+    });
+  });
+
+  describe('#firestore()', () => {
+    it('should throw when called before initializing an app', () => {
+      expect(() => {
+        firebaseNamespace.firestore();
+      }).to.throw(DEFAULT_APP_NOT_FOUND);
+    });
+
+    it('should throw when default app is not initialized', () => {
+      firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
+      expect(() => {
+        firebaseNamespace.firestore();
+      }).to.throw(DEFAULT_APP_NOT_FOUND);
+    });
+
+    it('should return a valid namespace when the default app is initialized', () => {
+      let app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions);
+      let fs: Firestore = firebaseNamespace.firestore();
+      expect(fs).to.not.be.null;
+    });
+
+    it('should return a valid namespace when the named app is initialized', () => {
+      let app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
+      let fs: Firestore = firebaseNamespace.firestore(app);
+      expect(fs).to.not.be.null;
+    });
+
+    it('should return a reference to Firestore type', () => {
+      expect(firebaseNamespace.firestore.Firestore).to.be.deep.equal(Firestore);
+    });
+
+    it('should return a reference to FieldPath type', () => {
+      expect(firebaseNamespace.firestore.FieldPath).to.be.deep.equal(FieldPath);
+    });
+
+    it('should return a reference to FieldValue type', () => {
+      expect(firebaseNamespace.firestore.FieldValue).to.be.deep.equal(FieldValue);
+    });
+
+    it('should return a reference to GeoPoint type', () => {
+      expect(firebaseNamespace.firestore.GeoPoint).to.be.deep.equal(GeoPoint);
     });
   });
 });

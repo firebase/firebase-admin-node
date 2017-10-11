@@ -22,7 +22,7 @@ import {expect} from 'chai';
 import * as mocks from '../../resources/mocks';
 import {FirebaseApp} from '../../../src/firebase-app';
 import {ApplicationDefaultCredential} from '../../../src/auth/credential';
-import {initFirestoreService} from '../../../src/firestore/firestore';
+import {FirestoreService} from '../../../src/firestore/firestore';
 
 describe('Firestore', () => {
   let mockApp: FirebaseApp;
@@ -52,7 +52,7 @@ describe('Firestore', () => {
       credential: mocks.credential,
       projectId: 'explicit-project-id',
     });
-    firestore = initFirestoreService(mockApp);
+    firestore = new FirestoreService(mockApp);
   });
 
   afterEach(() => {
@@ -66,16 +66,16 @@ describe('Firestore', () => {
     invalidApps.forEach((invalidApp) => {
       it(`should throw given invalid app: ${ JSON.stringify(invalidApp) }`, () => {
         expect(() => {
-          const firestoreAny: any = initFirestoreService;
-          return firestoreAny(invalidApp);
+          const firestoreAny: any = FirestoreService;
+          return new firestoreAny(invalidApp);
         }).to.throw('First argument passed to admin.firestore() must be a valid Firebase app instance.');
       });
     });
 
     it('should throw given no app', () => {
       expect(() => {
-        const firestoreAny: any = initFirestoreService;
-        return firestoreAny();
+        const firestoreAny: any = FirestoreService;
+        return new firestoreAny();
       }).to.throw('First argument passed to admin.firestore() must be a valid Firebase app instance.');
     });
 
@@ -83,7 +83,7 @@ describe('Firestore', () => {
       // Project ID is read from the environment variable, but the credential is unsupported.
       process.env.GCLOUD_PROJECT = 'project_id';
       expect(() => {
-        return initFirestoreService(mockCredentialApp);
+        return new FirestoreService(mockCredentialApp);
       }).to.throw(invalidCredError);
     });
 
@@ -91,13 +91,13 @@ describe('Firestore', () => {
       // Project ID not set in the environment.
       delete process.env.GCLOUD_PROJECT;
       expect(() => {
-        return initFirestoreService(mockCredentialApp);
+        return new FirestoreService(mockCredentialApp);
       }).to.throw(invalidCredError);
     });
 
     it('should not throw given a valid app', () => {
       expect(() => {
-        return initFirestoreService(mockApp);
+        return new FirestoreService(mockApp);
       }).not.to.throw();
     });
 
@@ -105,7 +105,7 @@ describe('Firestore', () => {
       // Project ID not set in the environment.
       delete process.env.GCLOUD_PROJECT;
       expect(() => {
-        return initFirestoreService(defaultCredentialApp);
+        return new FirestoreService(defaultCredentialApp);
       }).not.to.throw();
     });
   });
@@ -119,22 +119,35 @@ describe('Firestore', () => {
     it('is read-only', () => {
       expect(() => {
         firestore.app = mockApp;
-      }).to.throw(/Cannot assign to read only property \'app\' of .*/);
+      }).to.throw('Cannot set property app of #<FirestoreService> which has only a getter');
     });
   });
 
-  describe('projectId', () => {
+  describe('client', () => {
+    it('returns the client from the constructor', () => {
+      // We expect referential equality here
+      expect(firestore.client).to.not.be.null;
+    });
+
+    it('is read-only', () => {
+      expect(() => {
+        firestore.client = mockApp;
+      }).to.throw('Cannot set property client of #<FirestoreService> which has only a getter');
+    });
+  });
+
+  describe('client.projectId', () => {
     it('should return a string when project ID is present in credential', () => {
-      expect(firestore.projectId).to.equal('project_id');
+      expect(firestore.client.projectId).to.equal('project_id');
     });
 
     it('should return a string when project ID is present in app options', () => {
-      expect((initFirestoreService(projectIdApp) as any).projectId).to.equal('explicit-project-id');
+      expect((new FirestoreService(projectIdApp).client as any).projectId).to.equal('explicit-project-id');
     });
 
     it('should return a string when project ID is present in environment', () => {
       process.env.GCLOUD_PROJECT = 'env-project-id';
-      expect((initFirestoreService(defaultCredentialApp) as any).projectId).to.equal('env-project-id');
+      expect((new FirestoreService(defaultCredentialApp).client as any).projectId).to.equal('env-project-id');
     });
   });
 });
