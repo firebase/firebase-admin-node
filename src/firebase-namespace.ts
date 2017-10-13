@@ -25,7 +25,6 @@ import {
   ApplicationDefaultCredential,
 } from './auth/credential';
 import {Firestore} from '@google-cloud/firestore';
-import * as _ from 'lodash/object';
 
 import {Auth} from './auth/auth';
 import {Messaging} from './messaging/messaging';
@@ -287,8 +286,7 @@ export class FirebaseNamespace {
     let fn: FirebaseServiceNamespace<Auth> = (app?: FirebaseApp) => {
       return ns.ensureApp(app).auth();
     };
-    _.assign(fn, {Auth});
-    return fn;
+    return Object.assign(fn, {Auth});
   }
 
   /* istanbul ignore next */
@@ -308,8 +306,7 @@ export class FirebaseNamespace {
     let fn: FirebaseServiceNamespace<Messaging> = (app?: FirebaseApp) => {
       return ns.ensureApp(app).messaging();
     };
-    _.assign(fn, {Messaging});
-    return fn;
+    return Object.assign(fn, {Messaging});
   }
 
   /**
@@ -321,8 +318,7 @@ export class FirebaseNamespace {
     let fn: FirebaseServiceNamespace<Storage> = (app?: FirebaseApp) => {
       return ns.ensureApp(app).storage();
     };
-    _.assign(fn, {Storage});
-    return fn;
+    return Object.assign(fn, {Storage});
   }
 
   /**
@@ -334,8 +330,7 @@ export class FirebaseNamespace {
     let fn: FirebaseServiceNamespace<Firestore> = (app?: FirebaseApp) => {
       return ns.ensureApp(app).firestore();
     };
-    _.assign(fn, require('@google-cloud/firestore'));
-    return fn;
+    return Object.assign(fn, require('@google-cloud/firestore'));
   }
 
   /**
