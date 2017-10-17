@@ -35,6 +35,11 @@ import {FirebaseServiceInterface} from '../../src/firebase-service';
 import {FirebaseApp, FirebaseAccessToken} from '../../src/firebase-app';
 import {FirebaseNamespace, FirebaseNamespaceInternals} from '../../src/firebase-namespace';
 
+import {Auth} from '../../src/auth/auth';
+import {Messaging} from '../../src/messaging/messaging';
+import {Storage} from '../../src/storage/storage';
+import {Firestore} from '@google-cloud/firestore';
+
 chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
@@ -176,6 +181,110 @@ describe('FirebaseApp', () => {
         expect(deleteSpy.firstCall.args).to.deep.equal([mocks.appName]);
         expect(deleteSpy.secondCall.args).to.deep.equal([mocks.appName]);
       });
+    });
+  });
+
+  describe('auth()', () => {
+    it('should throw if the app has already been deleted', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      return app.delete().then(() => {
+        expect(() => {
+          return app.auth();
+        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
+      });
+    });
+
+    it('should return the Auth namespace', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      const authNamespace: Auth = app.auth();
+      expect(authNamespace).not.be.null;
+    });
+
+    it('should return a cached version of Auth on subsequent calls', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+      const serviceNamespace1: Auth = app.auth();
+      const serviceNamespace2: Auth = app.auth();
+      expect(serviceNamespace1).to.deep.equal(serviceNamespace2);
+    });
+  });
+
+  describe('messaging()', () => {
+    it('should throw if the app has already been deleted', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      return app.delete().then(() => {
+        expect(() => {
+          return app.messaging();
+        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
+      });
+    });
+
+    it('should return the Messaging namespace', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      const fcmNamespace: Messaging = app.messaging();
+      expect(fcmNamespace).not.be.null;
+    });
+
+    it('should return a cached version of Messaging on subsequent calls', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+      const serviceNamespace1: Messaging = app.messaging();
+      const serviceNamespace2: Messaging = app.messaging();
+      expect(serviceNamespace1).to.deep.equal(serviceNamespace2);
+    });
+  });
+
+  describe('storage()', () => {
+    it('should throw if the app has already been deleted', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      return app.delete().then(() => {
+        expect(() => {
+          return app.storage();
+        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
+      });
+    });
+
+    it('should return the Storage namespace', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      const gcsNamespace: Storage = app.storage();
+      expect(gcsNamespace).not.be.null;
+    });
+
+    it('should return a cached version of Messaging on subsequent calls', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+      const serviceNamespace1: Storage = app.storage();
+      const serviceNamespace2: Storage = app.storage();
+      expect(serviceNamespace1).to.deep.equal(serviceNamespace2);
+    });
+  });
+
+  describe('firestore()', () => {
+    it('should throw if the app has already been deleted', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      return app.delete().then(() => {
+        expect(() => {
+          return app.firestore();
+        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
+      });
+    });
+
+    it('should return the Firestore client', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      const fs: Firestore = app.firestore();
+      expect(fs).not.be.null;
+    });
+
+    it('should return a cached version of Firestore on subsequent calls', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+      const service1: Firestore = app.firestore();
+      const service2: Firestore = app.firestore();
+      expect(service1).to.deep.equal(service2);
     });
   });
 

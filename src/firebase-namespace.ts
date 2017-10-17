@@ -26,6 +26,10 @@ import {
 } from './auth/credential';
 import {Firestore} from '@google-cloud/firestore';
 
+import {Auth} from './auth/auth';
+import {Messaging} from './messaging/messaging';
+import {Storage} from './storage/storage';
+
 const DEFAULT_APP_NAME = '[DEFAULT]';
 
 let globalAppDefaultCred: ApplicationDefaultCredential;
@@ -33,8 +37,9 @@ let globalCertCreds: { [key: string]: CertCredential } = {};
 let globalRefreshTokenCreds: { [key: string]: RefreshTokenCredential } = {};
 
 
-export interface FirebaseServiceNamespace <T extends FirebaseServiceInterface> {
+export interface FirebaseServiceNamespace <T> {
   (app?: FirebaseApp): T;
+  [key: string]: any;
 }
 
 
@@ -273,16 +278,15 @@ export class FirebaseNamespace {
   }
 
   /**
-   * Firebase services available off of a FirebaseNamespace instance. These are monkey-patched via
-   * registerService(), but we need to include a dummy implementation to get TypeScript to
-   * compile it without errors.
+   * Gets the `Auth` service namespace. The returned namespace can be used to get the
+   * `Auth` service for the default app or an explicitly specified app.
    */
-  /* istanbul ignore next */
-  public auth(): FirebaseServiceInterface {
-    throw new FirebaseAppError(
-      AppErrorCodes.INTERNAL_ERROR,
-      'INTERNAL ASSERT FAILED: Firebase auth() service has not been registered.',
-    );
+  get auth(): FirebaseServiceNamespace<Auth> {
+    const ns: FirebaseNamespace = this;
+    let fn: FirebaseServiceNamespace<Auth> = (app?: FirebaseApp) => {
+      return ns.ensureApp(app).auth();
+    };
+    return Object.assign(fn, {Auth});
   }
 
   /* istanbul ignore next */
@@ -293,28 +297,40 @@ export class FirebaseNamespace {
     );
   }
 
-  /* istanbul ignore next */
-  public messaging(): FirebaseServiceInterface {
-    throw new FirebaseAppError(
-      AppErrorCodes.INTERNAL_ERROR,
-      'INTERNAL ASSERT FAILED: Firebase messaging() service has not been registered.',
-    );
+  /**
+   * Gets the `Messaging` service namespace. The returned namespace can be used to get the
+   * `Messaging` service for the default app or an explicitly specified app.
+   */
+  get messaging(): FirebaseServiceNamespace<Messaging> {
+    const ns: FirebaseNamespace = this;
+    let fn: FirebaseServiceNamespace<Messaging> = (app?: FirebaseApp) => {
+      return ns.ensureApp(app).messaging();
+    };
+    return Object.assign(fn, {Messaging});
   }
 
-  /* istanbul ignore next */
-  public storage(): FirebaseServiceInterface {
-    throw new FirebaseAppError(
-      AppErrorCodes.INTERNAL_ERROR,
-      'INTERNAL ASSERT FAILED: Firebase storage() service has not been registered.',
-    );
+  /**
+   * Gets the `Storage` service namespace. The returned namespace can be used to get the
+   * `Storage` service for the default app or an explicitly specified app.
+   */
+  get storage(): FirebaseServiceNamespace<Storage> {
+    const ns: FirebaseNamespace = this;
+    let fn: FirebaseServiceNamespace<Storage> = (app?: FirebaseApp) => {
+      return ns.ensureApp(app).storage();
+    };
+    return Object.assign(fn, {Storage});
   }
 
-  /* istanbul ignore next */
-  public firestore(): Firestore {
-    throw new FirebaseAppError(
-      AppErrorCodes.INTERNAL_ERROR,
-      'INTERNAL ASSERT FAILED: Firebase firestore() service has not been registered.',
-    );
+  /**
+   * Gets the `Firestore` service namespace. The returned namespace can be used to get the
+   * `Firestore` service for the default app or an explicitly specified app.
+   */
+  get firestore(): FirebaseServiceNamespace<Firestore> {
+    const ns: FirebaseNamespace = this;
+    let fn: FirebaseServiceNamespace<Firestore> = (app?: FirebaseApp) => {
+      return ns.ensureApp(app).firestore();
+    };
+    return Object.assign(fn, require('@google-cloud/firestore'));
   }
 
   /**
@@ -347,5 +363,12 @@ export class FirebaseNamespace {
    */
   public get apps(): FirebaseApp[] {
     return this.INTERNAL.apps;
+  }
+
+  private ensureApp(app?: FirebaseApp): FirebaseApp {
+    if (typeof app === 'undefined') {
+      app = this.app();
+    }
+    return app;
   }
 }

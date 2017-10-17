@@ -245,7 +245,7 @@ describe('Credential', () => {
         return;
       }
 
-      const c = new RefreshTokenCredential(new RefreshToken(TEST_GCLOUD_CREDENTIALS));
+      const c = new RefreshTokenCredential(TEST_GCLOUD_CREDENTIALS);
       expect(c.getCertificate()).to.be.null;
     });
 
@@ -254,7 +254,7 @@ describe('Credential', () => {
         return;
       }
 
-      const c = new RefreshTokenCredential(new RefreshToken(TEST_GCLOUD_CREDENTIALS));
+      const c = new RefreshTokenCredential(TEST_GCLOUD_CREDENTIALS);
       return c.getAccessToken().then((token) => {
         expect(token.access_token).to.be.a('string').and.to.not.be.empty;
         expect(token.expires_in).to.greaterThan(FIVE_MINUTES_IN_SECONDS);

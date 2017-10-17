@@ -22,7 +22,11 @@ import {FirebaseServiceInterface} from './firebase-service';
 import {FirebaseNamespaceInternals} from './firebase-namespace';
 import {AppErrorCodes, FirebaseAppError} from './utils/error';
 import {Firestore} from '@google-cloud/firestore';
+import {FirestoreService} from './firestore/firestore';
 
+import {Auth} from './auth/auth';
+import {Messaging} from './messaging/messaging';
+import {Storage} from './storage/storage';
 
 /**
  * Type representing a callback which is called every time an app lifecycle event occurs.
@@ -276,16 +280,14 @@ export class FirebaseApp {
   }
 
   /**
-   * Firebase services available off of a FirebaseApp instance. These are monkey-patched via
-   * registerService(), but we need to include a dummy implementation to get TypeScript to
-   * compile it without errors.
+   * Returns the Auth service instance associated with this app.
+   * 
+   * @return {Auth} The Auth service instance of this app.
    */
-  /* istanbul ignore next */
-  public auth(): FirebaseServiceInterface {
-    throw new FirebaseAppError(
-      AppErrorCodes.INTERNAL_ERROR,
-      'INTERNAL ASSERT FAILED: Firebase auth() service has not been registered.',
-    );
+  public auth(): Auth {
+    return this.ensureService_('auth', () => {
+      return new Auth(this);
+    });
   }
 
   /* istanbul ignore next */
@@ -296,28 +298,33 @@ export class FirebaseApp {
     );
   }
 
-  /* istanbul ignore next */
-  public messaging(): FirebaseServiceInterface {
-    throw new FirebaseAppError(
-      AppErrorCodes.INTERNAL_ERROR,
-      'INTERNAL ASSERT FAILED: Firebase messaging() service has not been registered.',
-    );
+  /**
+   * Returns the Messaging service instance associated with this app.
+   * 
+   * @return {Messaging} The Messaging service instance of this app.
+   */
+  public messaging(): Messaging {
+    return this.ensureService_('messaging', () => {
+      return new Messaging(this);
+    });
   }
 
-  /* istanbul ignore next */
-  public storage(): FirebaseServiceInterface {
-    throw new FirebaseAppError(
-      AppErrorCodes.INTERNAL_ERROR,
-      'INTERNAL ASSERT FAILED: Firebase storage() service has not been registered.',
-    );
+  /**
+   * Returns the Storage service instance associated with this app.
+   * 
+   * @return {Storage} The Storage service instance of this app.
+   */
+  public storage(): Storage {
+    return this.ensureService_('storage', () => {
+      return new Storage(this);
+    });
   }
 
-  /* istanbul ignore next */
   public firestore(): Firestore {
-    throw new FirebaseAppError(
-      AppErrorCodes.INTERNAL_ERROR,
-      'INTERNAL ASSERT FAILED: Firebase firestore() service has not been registered.',
-    );
+    let service: FirestoreService = this.ensureService_('firestore', () => {
+      return new FirestoreService(this);
+    });
+    return service.client;
   }
 
   /**
@@ -359,9 +366,22 @@ export class FirebaseApp {
     });
   }
 
+  private ensureService_<T extends FirebaseServiceInterface>(serviceName: string, initializer: () => T): T {
+    this.checkDestroyed_();
+
+    let service: T;
+    if (serviceName in this.services_) {
+      service = this.services_[serviceName] as T;
+    } else {
+      service = initializer();
+      this.services_[serviceName] = service;
+    }
+    return service;
+  }
+
   /**
    * Returns the service instance associated with this FirebaseApp instance (creating it on demand
-   * if needed).
+   * if needed). This is used for looking up monkeypatched service instances.
    *
    * @param {string} serviceName The name of the service instance to return.
    * @return {FirebaseServiceInterface} The service instance with the provided name.

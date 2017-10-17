@@ -262,7 +262,7 @@ function mapRawResponseToTopicManagementResponse(response): MessagingTopicManage
 /**
  * Internals of a Messaging instance.
  */
-export class MessagingInternals implements FirebaseServiceInternalsInterface {
+class MessagingInternals implements FirebaseServiceInternalsInterface {
   /**
    * Deletes the service and its associated resources.
    *
@@ -278,7 +278,7 @@ export class MessagingInternals implements FirebaseServiceInternalsInterface {
 /**
  * Messaging service bound to the provided app.
  */
-class Messaging implements FirebaseServiceInterface {
+export class Messaging implements FirebaseServiceInterface {
   public INTERNAL: MessagingInternals = new MessagingInternals();
 
   private appInternal: FirebaseApp;
@@ -942,8 +942,3 @@ class Messaging implements FirebaseServiceInterface {
     return topic;
   }
 };
-
-
-export {
-  Messaging,
-}

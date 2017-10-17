@@ -38,6 +38,31 @@ class FirestoreInternals implements FirebaseServiceInternalsInterface {
   }
 }
 
+export class FirestoreService implements FirebaseServiceInterface {
+  public INTERNAL: FirestoreInternals = new FirestoreInternals();
+
+  private appInternal: FirebaseApp;
+  private firestoreClient: Firestore;
+
+  constructor(app: FirebaseApp) {
+    this.firestoreClient = initFirestore(app);
+    this.appInternal = app;
+  }
+
+  /**
+   * Returns the app associated with this Storage instance.
+   *
+   * @return {FirebaseApp} The app associated with this Storage instance.
+   */
+  get app(): FirebaseApp {
+    return this.appInternal;
+  }
+
+  get client(): Firestore {
+    return this.firestoreClient;
+  }
+}
+
 function initFirestore(app: FirebaseApp): Firestore {
   if (!validator.isNonNullObject(app) || !('options' in app)) {
     throw new FirebaseFirestoreError({
@@ -87,19 +112,4 @@ function initFirestore(app: FirebaseApp): Firestore {
     });
   }
   return new Firestore(options);
-}
-
-/**
- * Creates a new Firestore service instance for the given FirebaseApp.
- *
- * @param {FirebaseApp} app The App for this Firestore service.
- * @return {FirebaseServiceInterface} A Firestore service instance.
- */
-export function initFirestoreService(app: FirebaseApp): FirebaseServiceInterface {
-  let firestore: any = initFirestore(app);
-
-  // Extend the Firestore client object so it implements FirebaseServiceInterface.
-  utils.addReadonlyGetter(firestore, 'app', app);
-  firestore.INTERNAL = new FirestoreInternals();
-  return firestore;
 }

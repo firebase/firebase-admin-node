@@ -28,7 +28,7 @@ import * as validator from '../utils/validator';
 /**
  * Internals of an Auth instance.
  */
-export class AuthInternals implements FirebaseServiceInternalsInterface {
+class AuthInternals implements FirebaseServiceInternalsInterface {
   /**
    * Deletes the service and its associated resources.
    *
@@ -51,7 +51,7 @@ export interface ListUsersResult {
 /**
  * Auth service bound to the provided app.
  */
-class Auth implements FirebaseServiceInterface {
+export class Auth implements FirebaseServiceInterface {
   public INTERNAL: AuthInternals = new AuthInternals();
 
   private app_: FirebaseApp;
@@ -286,8 +286,3 @@ class Auth implements FirebaseServiceInterface {
       });
   };
 };
-
-
-export {
-  Auth,
-}
