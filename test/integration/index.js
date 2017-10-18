@@ -112,11 +112,13 @@ utils.assert(
 );
 
 // Calling admin.firestore should load Firestore
+const firestoreNamespace = admin.firestore;
 utils.assert(
-  typeof admin.firestore !== 'undefined',
+  typeof firestoreNamespace !== 'undefined',
   'admin.firestore',
   'Firestore namespace could not be loaded.'
 );
+
 gcloud = require.cache[require.resolve('@google-cloud/firestore')];
 utils.assert(
   typeof gcloud !== 'undefined',
