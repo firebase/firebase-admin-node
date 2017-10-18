@@ -97,6 +97,32 @@ utils.assert(
   'admin.messaging(app).app',
   'App instances do not match.'
 );
+utils.assert(
+  _.isEqual(admin.storage(nonNullApp).app, nonNullApp),
+  'admin.storage(app).app',
+  'App instances do not match.'
+);
+
+// Firestore should not be loaded yet.
+var gcloud = require.cache[require.resolve('@google-cloud/firestore')];
+utils.assert(
+  typeof gcloud === 'undefined',
+  'require(firebase-admin)',
+  'Firestore module already loaded'
+);
+
+// Calling admin.firestore should load Firestore
+utils.assert(
+  typeof admin.firestore !== 'undefined',
+  'admin.firestore',
+  'Firestore namespace could not be loaded.'
+);
+gcloud = require.cache[require.resolve('@google-cloud/firestore')];
+utils.assert(
+  typeof gcloud !== 'undefined',
+  'admin.firestore',
+  'Firestore module not loaded'
+);
 
 /**
  * Prompts the developer whether the Database rules should be
