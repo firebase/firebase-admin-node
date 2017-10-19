@@ -111,5 +111,8 @@ function initFirestore(app: FirebaseApp): Firestore {
         'to use Cloud Firestore API.',
     });
   }
-  return new Firestore(options);
+
+  // Lazy-load the Firestore implementation here, which in turns loads gRPC.
+  let firestoreDatabase = require('@google-cloud/firestore');
+  return new firestoreDatabase(options);
 }
