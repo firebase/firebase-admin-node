@@ -32,6 +32,9 @@ import './auth/user-record.spec';
 import './auth/token-generator.spec';
 import './auth/auth-api-request.spec';
 
+// Database
+import './database/database.spec';
+
 // Messaging
 import './messaging/messaging.spec';
 

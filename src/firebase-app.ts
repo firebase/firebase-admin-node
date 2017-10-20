@@ -293,9 +293,6 @@ export class FirebaseApp {
   }
 
   public database(url?: string): Database {
-    if (typeof url === 'undefined') {
-      url = this.options.databaseURL;
-    }
     let service: DatabaseService = this.ensureService_('database', () => {
       return new DatabaseService(this);
     });

@@ -238,6 +238,13 @@ describe('FirebaseApp', () => {
   });
 
   describe('database()', () => {
+    afterEach(() => {
+      try {
+        firebaseNamespace.app(mocks.appName).delete();
+      } catch (e) {
+      }
+    });
+
     it('should throw if the app has already been deleted', () => {
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
 
@@ -248,39 +255,63 @@ describe('FirebaseApp', () => {
       });
     });
 
-    it('should return the Database namespace', () => {
+    it('should return the Database', () => {
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+      const db: Database = app.database();
+      expect(db).not.be.null;
+    });
 
-      const dbNamespace: Database = app.database();
-      expect(dbNamespace).not.be.null;
-      return app.delete();
+    it('should return the Database for different apps', () => {
+      const app1 = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+      const app2 = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName + '-other');
+      const db1: Database = app1.database();
+      const db2: Database = app2.database();
+      expect(db1).to.not.deep.equal(db2);
+      expect(db1.ref().toString()).to.equal('https://databasename.firebaseio.com/');
+      expect(db2.ref().toString()).to.equal('https://databasename.firebaseio.com/');
+      return app2.delete();
+    });
+
+    it('should throw when databaseURL is not set', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
+      expect(() => {
+        app.database();
+      }).to.throw('Can\'t determine Firebase Database URL.');
     });
 
     it('should return a cached version of Database on subsequent calls', () => {
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-      const serviceNamespace1: Database = app.database();
-      const serviceNamespace2: Database = app.database();
-      expect(serviceNamespace1).to.deep.equal(serviceNamespace2);
-      return app.delete();
+      const db1: Database = app.database();
+      const db2: Database = app.database();
+      expect(db1).to.deep.equal(db2);
+      expect(db1.ref().toString()).to.equal('https://databasename.firebaseio.com/');
     });
 
     it('should return a Database instance for the specified URL', () => {
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-      const serviceNamespace1: Database = app.database();
-      const serviceNamespace2: Database = app.database('https://other-database.firebaseio.com');
-      expect(serviceNamespace1.ref().toString()).to.equal('https://databasename.firebaseio.com/');
-      expect(serviceNamespace2.ref().toString()).to.equal('https://other-database.firebaseio.com/');
-      return app.delete();
+      const db1: Database = app.database();
+      const db2: Database = app.database('https://other-database.firebaseio.com');
+      expect(db1.ref().toString()).to.equal('https://databasename.firebaseio.com/');
+      expect(db2.ref().toString()).to.equal('https://other-database.firebaseio.com/');
     });
 
-    const invalidUrls = [null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
-    invalidUrls.forEach((url) => {
-      it(`should throw given invalid URL: ${JSON.stringify(url)}`, () => {
+    const invalidArgs = [null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
+    invalidArgs.forEach((url) => {
+      it(`should throw given invalid URL argument: ${JSON.stringify(url)}`, () => {
         const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
         expect(() => {
           (app as any).database(url);
-        }).to.throw('Can\'t determine Firebase Database URL.');
-        return app.delete();
+        }).to.throw('Database URL must be a valid, non-empty URL string.');
+      });
+    });
+
+    const invalidUrls = ['a', 'foo', 'google.com'];
+    invalidUrls.forEach((url) => {
+      it(`should throw given invalid URL string: ${JSON.stringify(url)}`, () => {
+        const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+        expect(() => {
+          app.database(url);
+        }).to.throw('FIREBASE FATAL ERROR: Cannot parse Firebase url. Please use https://<YOUR FIREBASE>.firebaseio.com');
       });
     });
   });

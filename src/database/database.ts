@@ -36,30 +36,50 @@ export class DatabaseService implements FirebaseServiceInterface {
   private appInternal: FirebaseApp;
 
   constructor(app: FirebaseApp) {
+    if (!validator.isNonNullObject(app) || !('options' in app)) {
+      throw new FirebaseDatabaseError({
+        code: 'database/invalid-argument',
+        message: 'First argument passed to admin.database() must be a valid Firebase app instance.',
+      });
+    }
     this.appInternal = app;
   }
 
   /**
-   * Returns the app associated with this Storage instance.
+   * Returns the app associated with this DatabaseService instance.
    *
-   * @return {FirebaseApp} The app associated with this Storage instance.
+   * @return {FirebaseApp} The app associated with this DatabaseService instance.
    */
   get app(): FirebaseApp {
     return this.appInternal;
   }
 
-  public getDatabase(url: string): Database {
-    if (!validator.isNonEmptyString(url)) {
+  public getDatabase(url?: string): Database {
+    let dbUrl: string = this.ensureUrl(url);
+    if (!validator.isNonEmptyString(dbUrl)) {
       throw new FirebaseDatabaseError({
         code: 'invalid-argument',
-        message: 'Can\'t determine Firebase Database URL.',
+        message: 'Database URL must be a valid, non-empty URL string.',
       });
     }
-    let db: Database = this.INTERNAL.databases[url];
+
+    let db: Database = this.INTERNAL.databases[dbUrl];
     if (typeof db === 'undefined') {
-      db = initStandalone(this.appInternal, url).instance;
-      this.INTERNAL.databases[url] = db;
+      db = initStandalone(this.appInternal, dbUrl).instance;
+      this.INTERNAL.databases[dbUrl] = db;
     }
     return db;
+  }
+
+  private ensureUrl(url?: string): string {
+    if (typeof url !== 'undefined') {
+      return url;
+    } else if (typeof this.appInternal.options.databaseURL !== 'undefined') {
+      return this.appInternal.options.databaseURL;
+    }
+    throw new FirebaseDatabaseError({
+      code: 'invalid-argument',
+      message: 'Can\'t determine Firebase Database URL.',
+    });
   }
 }
