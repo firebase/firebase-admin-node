@@ -55,7 +55,7 @@
     "@types/jsonwebtoken": "^7.1.33",
     "@types/node": "^8.0.32",
     "faye-websocket": "0.9.3",
-    "jsonwebtoken": "7.1.9",
+    "jsonwebtoken": "7.4.3",
     "node-forge": "0.7.1"
   },
   "devDependencies": {
