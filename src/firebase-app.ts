@@ -21,12 +21,14 @@ import {GoogleOAuthAccessToken} from './auth/credential';
 import {FirebaseServiceInterface} from './firebase-service';
 import {FirebaseNamespaceInternals} from './firebase-namespace';
 import {AppErrorCodes, FirebaseAppError} from './utils/error';
-import {Firestore} from '@google-cloud/firestore';
-import {FirestoreService} from './firestore/firestore';
 
 import {Auth} from './auth/auth';
 import {Messaging} from './messaging/messaging';
 import {Storage} from './storage/storage';
+import {DatabaseService} from './database/database';
+import {Database} from '@firebase/database';
+import {Firestore} from '@google-cloud/firestore';
+import {FirestoreService} from './firestore/firestore';
 
 /**
  * Type representing a callback which is called every time an app lifecycle event occurs.
@@ -290,12 +292,14 @@ export class FirebaseApp {
     });
   }
 
-  /* istanbul ignore next */
-  public database(): FirebaseServiceInterface {
-    throw new FirebaseAppError(
-      AppErrorCodes.INTERNAL_ERROR,
-      'INTERNAL ASSERT FAILED: Firebase database() service has not been registered.',
-    );
+  public database(url?: string): Database {
+    if (typeof url === 'undefined') {
+      url = this.options.databaseURL;
+    }
+    let service: DatabaseService = this.ensureService_('database', () => {
+      return new DatabaseService(this);
+    });
+    return service.getDatabase(url);
   }
 
   /**
