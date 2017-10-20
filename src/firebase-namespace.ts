@@ -24,18 +24,12 @@ import {
   RefreshTokenCredential,
   ApplicationDefaultCredential,
 } from './auth/credential';
-import {Firestore} from '@google-cloud/firestore';
 
 import {Auth} from './auth/auth';
 import {Messaging} from './messaging/messaging';
 import {Storage} from './storage/storage';
-import {
-  enableLogging,
-  Database,
-  Query,
-  Reference,
-  ServerValue,
-} from '@firebase/database';
+import {Database} from '@firebase/database';
+import {Firestore} from '@google-cloud/firestore';
 
 const DEFAULT_APP_NAME = '[DEFAULT]';
 
@@ -305,14 +299,7 @@ export class FirebaseNamespace {
     let fn: FirebaseServiceNamespace<Database> = (app?: FirebaseApp) => {
       return ns.ensureApp(app).database();
     };
-    const databaseNamespace = {
-      enableLogging,
-      Database,
-      Query,
-      Reference,
-      ServerValue,
-    };
-    return Object.assign(fn, databaseNamespace);
+    return Object.assign(fn, require('@firebase/database'));
   }
 
   /**

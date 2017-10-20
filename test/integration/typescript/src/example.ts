@@ -18,7 +18,8 @@ import * as firebase from 'firebase-admin';
 
 export function initApp(serviceAcct: any, name: string) {
     return firebase.initializeApp({
-        credential: firebase.credential.cert(serviceAcct)
+        credential: firebase.credential.cert(serviceAcct),
+        databaseURL: 'https://mock.firebaseio.com'
     }, name);
 }
 

@@ -29,10 +29,21 @@ describe('Init App', () => {
     it('Should return an initialized App', () => {
         expect(app.name).to.equal('TestApp');
     });
+
+    it('Should return a Database client', () => {
+        const db = admin.database(app);
+        expect(db).to.be.instanceOf(admin.database.Database);
+    });
+    it('Should return a Database ServerValue', () => {
+        const serverValue = admin.database.ServerValue;
+        expect(serverValue).to.not.be.null;
+    });
+
     it('Should return a Cloud Storage client', () => {
         const bucket: Bucket = app.storage().bucket('TestBucket');
         expect(bucket.name).to.equal('TestBucket')
     });
+
     it('Should return a Firestore client from the app', () => {
         const firestore: Firestore = app.firestore();
         expect(firestore).to.be.instanceOf(admin.firestore.Firestore);

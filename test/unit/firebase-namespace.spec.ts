@@ -33,6 +33,8 @@ import {Auth} from '../../src/auth/auth';
 import {
   enableLogging,
   Database,
+  DataSnapshot,
+  OnDisconnect,
   Query,
   Reference,
   ServerValue,
@@ -412,6 +414,14 @@ describe('FirebaseNamespace', () => {
 
     it('should return a reference to Database type', () => {
       expect(firebaseNamespace.database.Database).to.be.deep.equal(Database);
+    });
+
+    it('should return a reference to DataSnapshot type', () => {
+      expect(firebaseNamespace.database.DataSnapshot).to.be.deep.equal(DataSnapshot);
+    });
+
+    it('should return a reference to OnDisconnect type', () => {
+      expect(firebaseNamespace.database.OnDisconnect).to.be.deep.equal(OnDisconnect);
     });
 
     it('should return a reference to Query type', () => {
