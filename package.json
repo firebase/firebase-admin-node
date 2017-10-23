@@ -55,7 +55,7 @@
     "@types/jsonwebtoken": "^7.1.33",
     "@types/node": "^8.0.32",
     "faye-websocket": "0.9.3",
-    "jsonwebtoken": "7.1.9",
+    "jsonwebtoken": "7.4.3",
     "node-forge": "0.7.1"
   },
   "devDependencies": {
@@ -65,7 +65,7 @@
     "@types/lodash": "^4.14.38",
     "@types/mocha": "^2.2.32",
     "@types/nock": "^8.0.33",
-    "@types/request": "0.0.32",
+    "@types/request": "2.0.6",
     "@types/request-promise": "^4.1.33",
     "@types/sinon": "^1.16.31",
     "@types/sinon-chai": "^2.7.27",
@@ -96,7 +96,6 @@
     "sinon-chai": "^2.8.0",
     "ts-node": "^3.3.0",
     "tslint": "^3.5.0",
-    "typescript": "^2.0.3",
-    "typings": "^1.0.4"
+    "typescript": "^2.0.3"
   }
 }
