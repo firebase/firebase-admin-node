@@ -1,6 +1,6 @@
 {
   "name": "firebase-admin",
-  "version": "5.4.2",
+  "version": "5.4.3",
   "lockfileVersion": 1,
   "requires": true,
   "dependencies": {
@@ -273,9 +273,9 @@
       "dev": true
     },
     "ajv": {
-      "version": "5.2.3",
-      "resolved": "https://registry.npmjs.org/ajv/-/ajv-5.2.3.tgz",
-      "integrity": "sha1-wG9Zh3jETGsWGrr+NGa4GtGBTtI=",
+      "version": "5.2.4",
+      "resolved": "https://registry.npmjs.org/ajv/-/ajv-5.2.4.tgz",
+      "integrity": "sha1-Pa+ai2ciEpn9ro2C0RftjmyAJEs=",
       "requires": {
         "co": "4.6.0",
         "fast-deep-equal": "1.0.0",
@@ -751,7 +751,7 @@
       "requires": {
         "dot-prop": "4.2.0",
         "graceful-fs": "4.1.11",
-        "make-dir": "1.0.0",
+        "make-dir": "1.1.0",
         "unique-string": "1.0.0",
         "write-file-atomic": "2.3.0",
         "xdg-basedir": "3.0.0"
@@ -1828,7 +1828,7 @@
       "resolved": "https://registry.npmjs.org/google-auth-library/-/google-auth-library-0.10.0.tgz",
       "integrity": "sha1-bhW6vuhf0d0U2NEoopW2g41SE24=",
       "requires": {
-        "gtoken": "1.2.2",
+        "gtoken": "1.2.3",
         "jws": "3.1.4",
         "lodash.noop": "3.0.1",
         "request": "2.83.0"
@@ -2636,9 +2636,9 @@
       }
     },
     "gtoken": {
-      "version": "1.2.2",
-      "resolved": "https://registry.npmjs.org/gtoken/-/gtoken-1.2.2.tgz",
-      "integrity": "sha1-Fyd2oanZasCfwioA9b6DzubeiCA=",
+      "version": "1.2.3",
+      "resolved": "https://registry.npmjs.org/gtoken/-/gtoken-1.2.3.tgz",
+      "integrity": "sha512-wQAJflfoqSgMWrSBk9Fg86q+sd6s7y6uJhIvvIPz++RElGlMtEqsdAR2oWwZ/WTEtp7P9xFbJRrT976oRgzJ/w==",
       "requires": {
         "google-p12-pem": "0.1.2",
         "jws": "3.1.4",
@@ -2771,9 +2771,9 @@
       }
     },
     "gulp-typescript": {
-      "version": "3.2.2",
-      "resolved": "https://registry.npmjs.org/gulp-typescript/-/gulp-typescript-3.2.2.tgz",
-      "integrity": "sha1-t+Xh08s193LlPmBAJmAYJuK+d/w=",
+      "version": "3.2.3",
+      "resolved": "https://registry.npmjs.org/gulp-typescript/-/gulp-typescript-3.2.3.tgz",
+      "integrity": "sha512-Np2sJXgtDUwIAoMtlJ9uXsVmpu1FWXlKZw164hLuo56uJa7qo5W2KZ0yAYiYH/HUsaz5L0O2toMOcLIokpFCPg==",
       "dev": true,
       "requires": {
         "gulp-util": "3.0.8",
@@ -3021,7 +3021,7 @@
       "resolved": "https://registry.npmjs.org/har-validator/-/har-validator-5.0.3.tgz",
       "integrity": "sha1-ukAsJmGU8VlW7xXg/PJCmT9qff0=",
       "requires": {
-        "ajv": "5.2.3",
+        "ajv": "5.2.4",
         "har-schema": "2.0.0"
       }
     },
@@ -3908,11 +3908,18 @@
       "dev": true
     },
     "make-dir": {
-      "version": "1.0.0",
-      "resolved": "https://registry.npmjs.org/make-dir/-/make-dir-1.0.0.tgz",
-      "integrity": "sha1-l6ARdR6R3YfPre9Ygy67BJNt6Xg=",
+      "version": "1.1.0",
+      "resolved": "https://registry.npmjs.org/make-dir/-/make-dir-1.1.0.tgz",
+      "integrity": "sha512-0Pkui4wLJ7rxvmfUvs87skoEaxmu0hCUApF8nonzpl7q//FWp9zu8W61Scz4sd/kUiqDxvUhtoam2efDyiBzcA==",
       "requires": {
-        "pify": "2.3.0"
+        "pify": "3.0.0"
+      },
+      "dependencies": {
+        "pify": {
+          "version": "3.0.0",
+          "resolved": "https://registry.npmjs.org/pify/-/pify-3.0.0.tgz",
+          "integrity": "sha1-5aSs0sEB/fPZpNB/DbxNtJ3SgXY="
+        }
       }
     },
     "make-error": {
