@@ -43,8 +43,7 @@
     "lib/",
     "LICENSE",
     "README.md",
-    "package.json",
-    "npm-shrinkwrap.json"
+    "package.json"
   ],
   "types": "./lib/index.d.ts",
   "dependencies": {
