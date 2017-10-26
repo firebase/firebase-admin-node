@@ -410,6 +410,7 @@ declare namespace admin.firestore {
   export import FieldValue = _firestore.FieldValue;
   export import Firestore = _firestore.Firestore;
   export import GeoPoint = _firestore.GeoPoint;
+  export import setLogFunction = _firestore.setLogFunction;
 }
 
 declare module 'firebase-admin' {
