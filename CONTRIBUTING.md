@@ -185,6 +185,7 @@ Here are some highlights of the directory structure and notable source files
 * `verifyReleaseTarball.sh` - Installs and validates the release tarballs created by
   `createReleaseTarball.sh`.
 * `gulpfile.js` - Defines the `gulp` tasks necessary for building release artifacts.
+* `package-lock.json` - A snapshot of the dependency tree for development and CI purposes.
 * `tslint.json` - TypeScript linting rules.
 * `tsconfig.json` - TypeScript configuration options.
 * `tsconfig-lint.json` - TypeScript configuration options for the linter. This simply widens
