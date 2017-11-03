@@ -1,7 +1,7 @@
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseDatabaseError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {initStandalone, Database} from '@firebase/database';
+import {Database} from '@firebase/database';
 
 import * as validator from '../utils/validator';
 
@@ -65,7 +65,8 @@ export class DatabaseService implements FirebaseServiceInterface {
 
     let db: Database = this.INTERNAL.databases[dbUrl];
     if (typeof db === 'undefined') {
-      db = initStandalone(this.appInternal, dbUrl).instance;
+      let rtdb = require('@firebase/database');
+      db = rtdb.initStandalone(this.appInternal, dbUrl).instance;
       this.INTERNAL.databases[dbUrl] = db;
     }
     return db;
