@@ -307,7 +307,7 @@ describe('FirebaseApp', () => {
 
     const invalidUrls = ['a', 'foo', 'google.com'];
     invalidUrls.forEach((url) => {
-      it(`should throw given invalid URL string: ${JSON.stringify(url)}`, () => {
+      it(`should throw given invalid URL string: '${url}'`, () => {
         const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
         expect(() => {
           app.database(url);

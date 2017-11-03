@@ -292,6 +292,11 @@ export class FirebaseApp {
     });
   }
 
+  /**
+   * Returns the Database service for the specified URL, and the current app.
+   *
+   * @return {Database} The Database service instance of this app.
+   */
   public database(url?: string): Database {
     let service: DatabaseService = this.ensureService_('database', () => {
       return new DatabaseService(this);

@@ -78,7 +78,6 @@ function test(utils) {
     .then(testRemove);
 };
 
-
 module.exports = {
   test: test
 }
