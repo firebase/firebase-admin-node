@@ -45,7 +45,8 @@ import {
   Firestore,
   FieldPath,
   FieldValue,
-  GeoPoint
+  GeoPoint,
+  setLogFunction,
 } from '@google-cloud/firestore';
 
 chai.should();
@@ -543,6 +544,10 @@ describe('FirebaseNamespace', () => {
 
     it('should return a reference to GeoPoint type', () => {
       expect(firebaseNamespace.firestore.GeoPoint).to.be.deep.equal(GeoPoint);
+    });
+
+    it('should return a reference to setLogFunction', () => {
+      expect(firebaseNamespace.firestore.setLogFunction).to.be.deep.equal(setLogFunction);
     });
   });
 });

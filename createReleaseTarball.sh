@@ -89,13 +89,13 @@ sed -i '' -e s/"\"version\": \".*\""/"\"version\": \"${VERSION_WITHOUT_RC}\""/ p
 echo
 
 
-####################################
-#  REGENERATE npm-shrinkwrap.json  #
-####################################
-echo "[INFO] Removing lib/, node_modules/, and npm-shrinkwrap..."
-rm -rf lib/ node_modules/ npm-shrinkwrap.json
+############################
+#  REINSTALL DEPENDENCIES  #
+############################
+echo "[INFO] Removing lib/, and node_modules/..."
+rm -rf lib/ node_modules/
 if [[ $? -ne 0 ]]; then
-  echo "Error: Failed to remove lib/, node_modules/, and npm-shrinkwrap."
+  echo "Error: Failed to remove lib/, and node_modules/."
   exit 1
 fi
 echo
@@ -104,14 +104,6 @@ echo "[INFO] Installing production node modules..."
 npm install --production
 if [[ $? -ne 0 ]]; then
   echo "Error: Failed to install production node modules."
-  exit 1
-fi
-echo
-
-echo "[INFO] Regenerating npm-shrinkwrap.json file..."
-npm shrinkwrap
-if [[ $? -ne 0 ]]; then
-  echo "Error: Failed to regenerate npm-shrinkwrap.json file."
   exit 1
 fi
 echo
@@ -190,5 +182,5 @@ echo
 ##############
 
 echo "[INFO] firebase-admin-${VERSION}.tgz successfully created!"
-echo "[INFO] Create a CL for the updated package.json and npm-shrinkwrap.json if this is an actual release."
+echo "[INFO] Create a CL for the updated package.json if this is an actual release."
 echo

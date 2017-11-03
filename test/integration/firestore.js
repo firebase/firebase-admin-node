@@ -126,12 +126,33 @@ function test(utils) {
         });
   }
 
-  return Promise.resolve()
+  function testSetLogFunction() {
+    const logs = [];
+    const source = admin.firestore().collection('cities').doc();
+    return Promise.resolve().then(() => {
+      admin.firestore.setLogFunction((log) => {
+          logs.push(log);
+      })
+      return source.set({name: 'San Francisco'});
+    }).then(result => {
+      return source.delete();
+    }).then(result => {
+      utils.assert(
+          logs.length > 0,
+          'firestore.setLogFunction()',
+          'Log function did not update');
+    }).catch(err => {
+      utils.logFailure('firestore.setLogFunction()', 'Error while setting log function: ' + err);
+    });
+}
+
+return Promise.resolve()
     .then(testFirestore)
     .then(testFieldValue)
     .then(testFieldPath)
     .then(testGeoPoint)
-    .then(testSetDocumentReference);
+    .then(testSetDocumentReference)
+    .then(testSetLogFunction);
 }
 
 module.exports = {
