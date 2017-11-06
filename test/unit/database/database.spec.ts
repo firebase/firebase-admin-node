@@ -35,7 +35,7 @@ describe('Database', () => {
 
   afterEach(() => {
     return database.INTERNAL.delete().then(() => {
-        return mockApp.delete();
+      return mockApp.delete();
     });
   });
 
@@ -91,7 +91,7 @@ describe('Database', () => {
     it('should return a cached version of Database on subsequent calls', () => {
       const db1: Database = database.getDatabase(mockApp.options.databaseURL);
       const db2: Database = database.getDatabase(mockApp.options.databaseURL);
-      expect(db1).to.deep.equal(db2);
+      expect(db1).to.equal(db2);
       expect(db1.ref().toString()).to.equal('https://databasename.firebaseio.com/');
     });
 

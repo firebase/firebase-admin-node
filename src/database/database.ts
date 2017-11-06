@@ -38,7 +38,7 @@ export class DatabaseService implements FirebaseServiceInterface {
   constructor(app: FirebaseApp) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseDatabaseError({
-        code: 'database/invalid-argument',
+        code: 'invalid-argument',
         message: 'First argument passed to admin.database() must be a valid Firebase app instance.',
       });
     }

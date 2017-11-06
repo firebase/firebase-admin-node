@@ -283,7 +283,7 @@ describe('FirebaseApp', () => {
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
       const db1: Database = app.database();
       const db2: Database = app.database();
-      expect(db1).to.deep.equal(db2);
+      expect(db1).to.equal(db2);
       expect(db1.ref().toString()).to.equal('https://databasename.firebaseio.com/');
     });
 
