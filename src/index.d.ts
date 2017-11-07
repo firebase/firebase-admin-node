@@ -68,7 +68,7 @@ declare namespace admin.app {
     options: admin.AppOptions;
 
     auth(): admin.auth.Auth;
-    database(): admin.database.Database;
+    database(url?: string): admin.database.Database;
     firestore(): admin.firestore.Firestore;
     messaging(): admin.messaging.Messaging;
     storage(): admin.storage.Storage;
