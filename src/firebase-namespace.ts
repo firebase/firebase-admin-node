@@ -24,11 +24,12 @@ import {
   RefreshTokenCredential,
   ApplicationDefaultCredential,
 } from './auth/credential';
-import {Firestore} from '@google-cloud/firestore';
 
 import {Auth} from './auth/auth';
 import {Messaging} from './messaging/messaging';
 import {Storage} from './storage/storage';
+import {Database} from '@firebase/database';
+import {Firestore} from '@google-cloud/firestore';
 
 const DEFAULT_APP_NAME = '[DEFAULT]';
 
@@ -289,12 +290,16 @@ export class FirebaseNamespace {
     return Object.assign(fn, {Auth});
   }
 
-  /* istanbul ignore next */
-  public database(): FirebaseServiceInterface {
-    throw new FirebaseAppError(
-      AppErrorCodes.INTERNAL_ERROR,
-      'INTERNAL ASSERT FAILED: Firebase database() service has not been registered.',
-    );
+  /**
+   * Gets the `Database` service namespace. The returned namespace can be used to get the
+   * `Database` service for the default app or an explicitly specified app.
+   */
+  get database(): FirebaseServiceNamespace<Database> {
+    const ns: FirebaseNamespace = this;
+    let fn: FirebaseServiceNamespace<Database> = (app?: FirebaseApp) => {
+      return ns.ensureApp(app).database();
+    };
+    return Object.assign(fn, require('@firebase/database'));
   }
 
   /**

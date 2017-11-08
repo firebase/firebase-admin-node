@@ -20,7 +20,7 @@ var admin = require('../../lib/index');
 function test(utils) {
   console.log('\nDatabase:');
 
-  var ref = admin.database().ref('adminNodeSdkManualTest');
+  const ref = admin.database().ref('adminNodeSdkManualTest');
 
   function testSet() {
     return ref.set({
@@ -28,33 +28,55 @@ function test(utils) {
       timestamp: admin.database.ServerValue.TIMESTAMP,
     })
       .then(function() {
-        utils.logSuccess('database().set()');
+        utils.logSuccess('database.ref().set()');
       })
       .catch(function(error) {
-        utils.logFailure('database().set()', error);
+        utils.logFailure('database.ref().set()', error);
       });
   }
 
   function testOnce() {
     return ref.once('value')
-      .then(function(snapshot) {
+      .then((snapshot) => {
         var value = snapshot.val();
         utils.assert(
           value.success === true && typeof value.timestamp === 'number',
-          'database.once()',
+          'database.ref().once()',
           'Snapshot has unexpected value'
         );
-      }).catch(function(error) {
-        utils.logFailure('database().once()', error)
+      }).catch((error) => {
+        utils.logFailure('database.ref().once()', error)
       });
   }
 
+  function testChild() {
+    return ref.child('timestamp').once('value')
+      .then((snapshot) => {
+        utils.assert(
+          typeof snapshot.val() === 'number',
+          'database.ref().child()',
+          'Child snapshot has unexpected value'
+        );
+      }).catch((error) => {
+        utils.logFailure('database.ref().child()', error);
+      });
+  }
+
+  function testRemove() {
+    return ref.remove()
+      .then(() => {
+        utils.logSuccess('database.ref().remove()')
+      }).catch((error) => {
+        utils.logFailure('database.ref().remove()', error);
+      });
+  }
 
   return Promise.resolve()
     .then(testSet)
-    .then(testOnce);
+    .then(testOnce)
+    .then(testChild)
+    .then(testRemove);
 };
-
 
 module.exports = {
   test: test
