@@ -23,4 +23,12 @@ export function initApp(serviceAcct: any, name: string) {
     }, name);
 }
 
+export function addValueEventListener(
+    // Check for type compilation
+    db: firebase.database.Database,
+    callback: (s: firebase.database.DataSnapshot) => any) {
+    let eventType: firebase.database.EventType = 'value';
+    db.ref().on(eventType, callback);
+}
+
 export default initApp;

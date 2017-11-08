@@ -303,6 +303,8 @@ declare namespace admin.database {
   export import enableLogging = _rtdb.enableLogging;
   export import OnDisconnect = _rtdb.OnDisconnect;
   export import DataSnapshot = _rtdb.DataSnapshot;
+
+  type EventType = 'value' | 'child_added' | 'child_changed' | 'child_moved' | 'child_removed';
 }
 
 declare namespace admin.firestore {

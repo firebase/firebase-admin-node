@@ -49,6 +49,23 @@ function test(utils) {
       });
   }
 
+  function testDatabaseWithUrl() {
+    let app = admin.app()
+    let url = app.options.databaseURL;
+    let refFromApp = app.database(url).ref(ref.path);
+    return refFromApp.once('value')
+      .then((snapshot) => {
+        var value = snapshot.val();
+        utils.assert(
+          value.success === true && typeof value.timestamp === 'number',
+          'app.database(url).ref().once()',
+          'Snapshot has unexpected value'
+        );
+      }).catch((error) => {
+        utils.logFailure('app.database(url).ref().once()', error)
+      });
+  }
+
   function testChild() {
     return ref.child('timestamp').once('value')
       .then((snapshot) => {
@@ -74,6 +91,7 @@ function test(utils) {
   return Promise.resolve()
     .then(testSet)
     .then(testOnce)
+    .then(testDatabaseWithUrl)
     .then(testChild)
     .then(testRemove);
 };
