@@ -34,6 +34,12 @@ describe('Init App', () => {
         const db = admin.database(app);
         expect(db).to.be.instanceOf(admin.database.Database);
     });
+
+    it('Should return a Database client for URL', () => {
+        const db = app.database('https://other-mock.firebaseio.com');
+        expect(db).to.be.instanceOf(admin.database.Database);
+    });
+
     it('Should return a Database ServerValue', () => {
         const serverValue = admin.database.ServerValue;
         expect(serverValue).to.not.be.null;
@@ -48,10 +54,12 @@ describe('Init App', () => {
         const firestore: Firestore = app.firestore();
         expect(firestore).to.be.instanceOf(admin.firestore.Firestore);
     });
+
     it('Should return a Firestore client', () => {
         const firestore: Firestore = admin.firestore(app);
         expect(firestore).to.be.instanceOf(admin.firestore.Firestore);
     });
+
     it('Should return a Firestore FieldValue', () => {
         const fieldValue = admin.firestore.FieldValue;
         expect(fieldValue).to.not.be.null;
