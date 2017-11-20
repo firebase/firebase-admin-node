@@ -196,7 +196,7 @@ declare namespace admin.database {
     hasChild(path: string): boolean;
     hasChildren(): boolean;
     numChildren(): number;
-    toJSON(): Object;
+    toJSON(): Object | null;
     val(): any;
   }
 
@@ -213,7 +213,7 @@ declare namespace admin.database {
   }
 
   type EventType = 'value' | 'child_added' | 'child_changed' | 'child_moved' | 'child_removed';
-  
+
   interface Query {
     ref: admin.database.Reference;
 
@@ -252,6 +252,7 @@ declare namespace admin.database {
     key: string|null;
     parent: admin.database.Reference|null;
     root: admin.database.Reference;
+    path: string;
 
     child(path: string): admin.database.Reference;
     onDisconnect(): admin.database.OnDisconnect;
@@ -277,7 +278,7 @@ declare namespace admin.database {
     update(values: Object, onComplete?: (a: Error|null) => any): Promise<void>;
   }
 
-  interface ThenableReference extends admin.database.Reference, Promise<any> {}
+  interface ThenableReference extends admin.database.Reference, PromiseLike<any> {}
 
   function enableLogging(logger?: boolean|((message: string) => any), persistent?: boolean): any;
 }
