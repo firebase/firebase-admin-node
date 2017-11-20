@@ -32,12 +32,12 @@ describe('Init App', () => {
 
     it('Should return a Database client', () => {
         const db = admin.database(app);
-        expect(db).to.be.instanceOf(admin.database.Database);
+        expect(db).to.be.instanceOf((admin.database as any).Database);
     });
 
     it('Should return a Database client for URL', () => {
         const db = app.database('https://other-mock.firebaseio.com');
-        expect(db).to.be.instanceOf(admin.database.Database);
+        expect(db).to.be.instanceOf((admin.database as any).Database);
     });
 
     it('Should return a Database ServerValue', () => {
