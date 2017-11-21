@@ -22,7 +22,7 @@ import {OutgoingHttpHeaders} from 'http';
 import https = require('https');
 
 /** Http method type definition. */
-export type HttpMethod = 'GET' | 'POST';
+export type HttpMethod = 'GET' | 'POST' | 'DELETE';
 /** API callback function type definition. */
 export type ApiCallbackFunction = (data: Object) => void;
 
@@ -224,11 +224,16 @@ export class SignedApiRequestHandler extends HttpRequestHandler {
       port: number,
       path: string,
       httpMethod: HttpMethod,
-      data: Object,
-      headers: Object,
-      timeout: number): Promise<Object> {
+      data?: Object,
+      headers?: Object,
+      timeout?: number): Promise<Object> {
     return this.app_.INTERNAL.getToken().then((accessTokenObj) => {
-      let headersCopy: Object = deepCopy(headers);
+      let headersCopy: Object;
+      if (typeof headers !== 'undefined') {
+        headersCopy = deepCopy(headers);
+      } else {
+        headersCopy = {};
+      }
       let authorizationHeaderKey = 'Authorization';
       headersCopy[authorizationHeaderKey] = 'Bearer ' + accessTokenObj.accessToken;
       return super.sendRequest(host, port, path, httpMethod, data, headersCopy, timeout);

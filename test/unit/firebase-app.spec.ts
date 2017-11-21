@@ -40,6 +40,7 @@ import {Messaging} from '../../src/messaging/messaging';
 import {Storage} from '../../src/storage/storage';
 import {Firestore} from '@google-cloud/firestore';
 import {Database} from '@firebase/database';
+import {InstanceId} from '../../src/instance-id/instance-id';
 
 chai.should();
 chai.use(sinonChai);
@@ -367,6 +368,32 @@ describe('FirebaseApp', () => {
       const service1: Firestore = app.firestore();
       const service2: Firestore = app.firestore();
       expect(service1).to.deep.equal(service2);
+    });
+  });
+
+  describe('instanceId()', () => {
+    it('should throw if the app has already been deleted', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      return app.delete().then(() => {
+        expect(() => {
+          return app.instanceId();
+        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
+      });
+    });
+
+    it('should return the InstanceId client', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      const iid: InstanceId = app.instanceId();
+      expect(iid).not.be.null;
+    });
+
+    it('should return a cached version of InstanceId on subsequent calls', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+      const service1: InstanceId = app.instanceId();
+      const service2: InstanceId = app.instanceId();
+      expect(service1).to.equal(service2);
     });
   });
 

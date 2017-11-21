@@ -206,6 +206,21 @@ export class FirebaseFirestoreError extends FirebaseError {
   }
 }
 
+/**
+ * Firebase instance ID error code structure. This extends FirebaseError.
+ *
+ * @param {ErrorInfo} info The error code info.
+ * @param {string} [message] The error message. This will override the default
+ *     message if provided.
+ * @constructor
+ */
+export class FirebaseInstanceIdError extends FirebaseError {
+  constructor(info: ErrorInfo, message?: string) {
+    // Override default message if custom message provided.
+    super({code: 'instance-id/' + info.code, message: message || info.message});
+  }
+}
+
 
 /**
  * Firebase Messaging error code structure. This extends PrefixedFirebaseError.
@@ -471,6 +486,25 @@ export class MessagingClientErrorCode {
     message: 'An unknown server error was returned.',
   };
 };
+
+export class InstanceIdClientErrorCode {
+  public static INVALID_ARGUMENT = {
+    code: 'invalid-argument',
+    message: 'Invalid argument provided.',
+  };
+  public static INVALID_PROJECT_ID = {
+    code: 'invalid-project-id',
+    message: 'Invalid project ID provided.',
+  };
+  public static INVALID_INSTANCE_ID = {
+    code: 'invalid-instance-id',
+    message: 'Invalid instance ID provided.',
+  };
+  public static API_ERROR = {
+    code: 'api-error',
+    message: 'Instance ID API call failed.',
+  };
+}
 
 /** @const {ServerToClientCode} Auth server to client enum error codes. */
 const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {

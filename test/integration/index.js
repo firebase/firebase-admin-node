@@ -38,6 +38,7 @@ var utils = require('./utils');
 var app = require('./app');
 var auth = require('./auth');
 var database = require('./database');
+var instanceId = require('./instance-id');
 var messaging = require('./messaging');
 var storage = require('./storage');
 var firestore = require('./firestore');
@@ -239,6 +240,7 @@ return promptForUpdateRules(flags['overwrite'])
   .then(_.partial(app.test, utils))
   .then(_.partial(auth.test, utils))
   .then(_.partial(database.test, utils))
+  .then(_.partial(instanceId.test, utils))
   .then(_.partial(messaging.test, utils))
   .then(_.partial(storage.test, utils))
   .then(_.partial(firestore.test, utils))
