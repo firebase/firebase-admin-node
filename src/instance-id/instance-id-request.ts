@@ -97,7 +97,7 @@ export class FirebaseInstanceIdRequestHandler {
 
         let message: string;
         if (response.statusCode === 404) {
-          message = 'Failed to find the specified instance ID';
+          message = 'Failed to find the instance ID: ' + apiSettings.getEndpoint();
         } else if (response.statusCode === 429) {
           message = 'Request throttled out by the backend server';
         } else if (response.statusCode === 500) {
