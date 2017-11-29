@@ -83,21 +83,29 @@ export class FirebaseInstanceIdRequestHandler {
       })
       .catch((response) => {
         let error;
-        if (typeof response === 'object' && 'statusCode' in response) {
-          // response came directly from a non-200 response.
+        if (typeof response === 'object' && 'error' in response) {
           error = response.error;
         } else {
-          // response came from a 200 response.
           error = response;
         }
 
         if (error instanceof FirebaseError) {
+          // In case of timeouts and other network errors, the API request handler returns a
+          // FirebaseError wrapped in the response. Simply throw it here.
           throw error;
         }
-        throw new FirebaseInstanceIdError(
-          InstanceIdClientErrorCode.API_ERROR,
-          JSON.stringify(error)
-        );
+
+        let message: string;
+        if (response.statusCode === 404) {
+          message = 'Failed to find the specified instance ID';
+        } else if (response.statusCode === 429) {
+          message = 'Request throttled out by the backend server';
+        } else if (response.statusCode === 500) {
+          message = 'Internal server error';
+        } else {
+          message = JSON.stringify(error);
+        }
+        throw new FirebaseInstanceIdError(InstanceIdClientErrorCode.API_ERROR, message);
       });
   }
 }

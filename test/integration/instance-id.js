@@ -26,9 +26,14 @@ function test(utils) {
       })
       .catch(err => {
         utils.assert(
-            err.code == 'instance-id/api-error',
-            'admin.instanceId().deleteInstanceId(non-existing)',
-            'Invalid error for non-existing instance ID: ' + err);
+          err.code == 'instance-id/api-error',
+          'admin.instanceId().deleteInstanceId(non-existing)',
+          'Invalid error for non-existing instance ID: ' + err);
+        // TODO: Update error message when backend is fixed.
+        utils.assert(
+          err.message == 'Request throttled out by the backend server',
+          'admin.instanceId().deleteInstanceId(non-existing)',
+          'Invalid error for non-existing instance ID: ' + err)
       });
   }
 
