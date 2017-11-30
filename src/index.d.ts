@@ -47,6 +47,8 @@ declare namespace admin {
     databaseAuthVariableOverride?: Object;
     databaseURL?: string;
     storageBucket?: string;
+    projectId?: string;
+    authDomain?: string;
   }
 
   var SDK_VERSION: string;
