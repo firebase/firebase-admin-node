@@ -45,7 +45,6 @@ export type FirebaseAppOptions = {
   databaseURL?: string,
   storageBucket?: string,
   projectId?: string,
-  authDomain?: string,
 };
 
 /**
