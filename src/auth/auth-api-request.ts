@@ -78,6 +78,7 @@ function validateCreateEditRequest(request: any) {
       sanityCheck: true,
       phoneNumber: true,
       customAttributes: true,
+      validSince: true,
     };
     // Remove invalid keys from original request.
     for (let key in request) {
@@ -133,6 +134,11 @@ function validateCreateEditRequest(request: any) {
     if (typeof request.disabled !== 'undefined' &&
         typeof request.disabled !== 'boolean') {
       throw new FirebaseAuthError(AuthClientErrorCode.INVALID_DISABLED_FIELD);
+    }
+    // validSince should be a number.
+    if (typeof request.validSince !== 'undefined' &&
+        !validator.isNumber(request.validSince)) {
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_TOKENS_VALID_AFTER_TIME);
     }
     // disableUser should be a boolean.
     if (typeof request.disableUser !== 'undefined' &&
@@ -262,6 +268,13 @@ export const FIREBASE_AUTH_SIGN_UP_NEW_USER = new ApiSettings('signupNewUser', '
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
         `"customAttributes" cannot be set when creating a new user.`,
+      );
+    }
+    // signupNewUser does not support validSince.
+    if (typeof request.validSince !== 'undefined') {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        `"validSince" cannot be set when creating a new user.`,
       );
     }
     validateCreateEditRequest(request);
@@ -512,6 +525,32 @@ export class FirebaseAuthRequestHandler {
       request.disableUser = request.disabled;
       delete request.disabled;
     }
+    return this.invokeRequestHandler(FIREBASE_AUTH_SET_ACCOUNT_INFO, request)
+        .then((response: any) => {
+          return response.localId as string;
+        });
+  }
+
+  /**
+   * Revokes all refresh tokens for the specified user identified by the uid provided.
+   * In addition to revoking all refresh tokens for a user, all ID tokens issued
+   * before revocation will also be revoked on the Auth backend. Any request with an
+   * ID token generated before revocation will be rejected with a token expired error.
+   *
+   * @param {string} uid The user whose tokens are to be revoked.
+   * @return {Promise<string>} A promise that resolves when the operation completes
+   *     successfully with the user id of the corresponding user.
+   */
+  public revokeRefreshTokens(uid: string): Promise<string> {
+    // Validate user UID.
+    if (!validator.isUid(uid)) {
+      return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_UID));
+    }
+    let request: any = {
+      localId: uid,
+      // validSince is in UTC seconds.
+      validSince: Math.ceil(new Date().getTime() / 1000),
+    };
     return this.invokeRequestHandler(FIREBASE_AUTH_SET_ACCOUNT_INFO, request)
         .then((response: any) => {
           return response.localId as string;

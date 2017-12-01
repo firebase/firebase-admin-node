@@ -256,7 +256,7 @@ function test(utils) {
       })
       .then(function(user) {
          // Get the user's ID token.
-         return user.getToken();
+         return user.getIdToken();
       })
       .then(function(idToken) {
          // Verify ID token contents.
@@ -418,7 +418,7 @@ function test(utils) {
         return firebase.auth().signInWithCustomToken(customToken);
       })
       .then(function(user) {
-        return user.getToken();
+        return user.getIdToken();
       })
       .then(function(idToken) {
         utils.logSuccess('auth.createCustomToken()');
@@ -449,11 +449,78 @@ function test(utils) {
       });
   }
 
+  function testRefreshTokenRevocation() {
+    var currentIdToken = null;
+    var currentUser = null;
+    // Sign in with an email and password account.
+    return firebase.auth().signInWithEmailAndPassword(mockUserData.email, mockUserData.password)
+      .then(function(user) {
+        currentUser = user;
+        // Get user's ID token.
+        return user.getIdToken();
+      })
+      .then(function(idToken) {
+        currentIdToken = idToken;
+        // Verify that user's ID token while checking for revocation.
+        return admin.auth().verifyIdToken(currentIdToken, true)
+      })
+      .then(function(decodedIdToken) {
+        // Verification should succeed. Revoke that user's session.
+        return admin.auth().revokeRefreshTokens(decodedIdToken.sub);
+      })
+      .then(function() {
+        // verifyIdToken without checking revocation should still succeed.
+        return admin.auth().verifyIdToken(currentIdToken);
+      })
+      .then(function() {
+        // verifyIdToken while checking for revocation should fail.
+        return admin.auth().verifyIdToken(currentIdToken, true)
+          .then(function(decodedIdToken) {
+            throw new Error('verifyIdToken(revoked, true) succeeded');
+          })
+          .catch(function(error) {
+            utils.assert(
+              error.code === 'auth/id-token-revoked',
+              'auth().verifyIdToken(revokedIdToken, true)',
+              'Expected auth/id-token-revoked was not thrown');
+          });
+      })
+      .then(function() {
+        // Confirm token revoked on client.
+        return currentUser.reload()
+          .then(function() {
+            throw new Error('revokedUser.reload() succeeded');
+          })
+          .catch(function(error) {
+            utils.assert(
+              error.code === 'auth/user-token-expired',
+              'auth().revokeRefreshTokens(uid)',
+              'Expected auth/user-token-expired was not thrown');
+          });
+      })
+      .then(function() {
+        // New sign-in should succeed.
+        return firebase.auth().signInWithEmailAndPassword(
+            mockUserData.email, mockUserData.password);
+      })
+      .then(function(user) {
+        // Get new session's ID token.
+        return user.getIdToken();
+      })
+      .then(function(idToken) {
+        // ID token for new session should be valid even with revocation check.
+        return admin.auth().verifyIdToken(idToken, true)
+      })
+      .catch(function(error) {
+        utils.logFailure('auth().revokeRefreshTokens()', error);
+      });
+  }
 
   return before()
     .then(testCreateUserWithoutUid)
     .then(testCreateUserWithUid)
     .then(testCreateDuplicateUserWithError)
+    .then(testRefreshTokenRevocation)
     .then(testGetUser)
     .then(testGetUserByEmail)
     .then(testGetUserByPhoneNumber)
