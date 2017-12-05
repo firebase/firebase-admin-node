@@ -29,9 +29,8 @@ function test(utils) {
           err.code == 'instance-id/api-error',
           'admin.instanceId().deleteInstanceId(non-existing)',
           'Invalid error for non-existing instance ID: ' + err);
-        // TODO: Update error message when backend is fixed.
         utils.assert(
-          err.message == 'Request throttled out by the backend server',
+          err.message == 'Failed to find the instance ID: non-existing',
           'admin.instanceId().deleteInstanceId(non-existing)',
           'Invalid error for non-existing instance ID: ' + err)
       });

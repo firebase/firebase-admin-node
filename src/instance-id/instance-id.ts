@@ -72,7 +72,7 @@ export class InstanceId implements FirebaseServiceInterface {
 
     /**
      * Deletes the specified instance ID from Firebase. This can be used to delete an instance ID
-     * and associated user data from a Firebase project, pursuant to the General Data protection
+     * and associated user data from a Firebase project, pursuant to the General Data Protection
      * Regulation (GDPR).
      *
      * @param {string} instanceId The instance ID to be deleted
