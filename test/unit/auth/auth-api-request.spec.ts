@@ -1374,9 +1374,10 @@ describe('FirebaseAuthRequestHandler', () => {
 
     it('should be rejected given an invalid uid', () => {
       const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_UID);
+      const invalidUid: any = {'localId': uid}; 
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
-      return requestHandler.revokeRefreshTokens({'localId': uid} as any)
+      return requestHandler.revokeRefreshTokens(invalidUid as any)
         .then((resp) => {
           throw new Error('Unexpected success');
         }, (error) => {
@@ -1395,7 +1396,7 @@ describe('FirebaseAuthRequestHandler', () => {
       };
       const requestData = {
         localId: uid,
-        validSince: Math.ceil((now.getTime() + 2000) / 1000),
+        validSince: Math.ceil((now.getTime() + 5000) / 1000),
       };
 
       let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
@@ -1403,8 +1404,8 @@ describe('FirebaseAuthRequestHandler', () => {
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
-      // Simulate 2 seconds passed.
-      clock.tick(2000);
+      // Simulate 5 seconds passed.
+      clock.tick(5000);
       return requestHandler.revokeRefreshTokens(uid)
         .then((returnedUid: string) => {
           throw new Error('Unexpected success');

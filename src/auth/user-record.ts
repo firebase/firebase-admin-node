@@ -181,9 +181,12 @@ export class UserRecord {
       // Ignore error.
       utils.addReadonlyGetter(this, 'customClaims', undefined);
     }
+    let validAfterTime: string = null;
     // Convert validSince first to UTC milliseconds and then to UTC date string.
-    utils.addReadonlyGetter(
-        this, 'tokensValidAfterTime', parseDate(response.validSince * 1000));
+    if (typeof response.validSince !== 'undefined') {
+      validAfterTime = parseDate(response.validSince * 1000);
+    }
+    utils.addReadonlyGetter(this, 'tokensValidAfterTime', validAfterTime);
   }
 
   /** @return {Object} The plain object representation of the user record. */

@@ -63,7 +63,6 @@ export interface DecodedIdToken {
   iat: number;
   iss: string;
   sub: string;
-  uid: string;
   [key: string]: any;
 }
 
@@ -165,26 +164,26 @@ export class Auth implements FirebaseServiceInterface {
     return this.tokenGenerator_.verifyIdToken(idToken)
       .then((decodedIdToken: DecodedIdToken) => {
         // Whether to check if the token was revoked.
-        if (checkRevoked) {
-          // Get tokens valid after time for the corresponding user.
-          return this.getUser(decodedIdToken.sub)
-            .then((user: UserRecord) => {
-              // If no tokens valid after time available, token is not revoked.
-              if (user.tokensValidAfterTime) {
-                // Get the ID token authentication time and convert to milliseconds UTC.
-                const authTimeUtc = decodedIdToken.auth_time * 1000;
-                // Get user tokens valid after time in milliseconds UTC.
-                const validSinceUtc = new Date(user.tokensValidAfterTime).getTime();
-                // Check if authentication time is older than valid since time.
-                if (authTimeUtc < validSinceUtc) {
-                  throw new FirebaseAuthError(AuthClientErrorCode.ID_TOKEN_REVOKED);
-                }
-              }
-              // All checks above passed. Return the decoded token.
-              return decodedIdToken;
-            });
+        if (!checkRevoked) {
+          return decodedIdToken;
         }
-        return decodedIdToken;
+        // Get tokens valid after time for the corresponding user.
+        return this.getUser(decodedIdToken.sub)
+          .then((user: UserRecord) => {
+            // If no tokens valid after time available, token is not revoked.
+            if (user.tokensValidAfterTime) {
+              // Get the ID token authentication time and convert to milliseconds UTC.
+              const authTimeUtc = decodedIdToken.auth_time * 1000;
+              // Get user tokens valid after time in milliseconds UTC.
+              const validSinceUtc = new Date(user.tokensValidAfterTime).getTime();
+              // Check if authentication time is older than valid since time.
+              if (authTimeUtc < validSinceUtc) {
+                throw new FirebaseAuthError(AuthClientErrorCode.ID_TOKEN_REVOKED);
+              }
+            }
+            // All checks above passed. Return the decoded token.
+            return decodedIdToken;
+          });
       });
   };
 

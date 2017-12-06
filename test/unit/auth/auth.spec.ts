@@ -104,7 +104,7 @@ function getValidUserRecord(serverResponse: any) {
  * @param {Date} authTime The authentication time of the ID token.
  * @return {DecodedIdToken} The generated decoded ID token.
  */
-function getDecodedIdToken(uid: string, authTime: Date) {
+function getDecodedIdToken(uid: string, authTime: Date): DecodedIdToken {
   return {
     iss: 'https://securetoken.google.com/project123456789',
     aud: 'project123456789',
@@ -268,7 +268,12 @@ describe('Auth', () => {
     });
 
     it('should forward on the call to the token generator\'s verifyIdToken() method', () => {
+      // Stub getUser call.
+      let getUserStub = sinon.stub(Auth.prototype, 'getUser');
+      stubs.push(getUserStub);
       return auth.verifyIdToken(mockIdToken).then((result) => {
+        // Confirm getUser never called.
+        expect(getUserStub).not.to.have.been.called;
         expect(result).to.deep.equal(decodedIdToken);
         expect(stub).to.have.been.calledOnce.and.calledWith(mockIdToken);
       });
