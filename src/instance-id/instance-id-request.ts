@@ -32,7 +32,7 @@ const FIREBASE_IID_PATH = '/v1/';
 const FIREBASE_IID_TIMEOUT = 10000;
 
 /**
- * Class that provides mechanism to send requests to the Firebase Auth backend endpoints.
+ * Class that provides mechanism to send requests to the Firebase Instance ID backend endpoints.
  */
 export class FirebaseInstanceIdRequestHandler {
 

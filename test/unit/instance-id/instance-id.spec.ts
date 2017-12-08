@@ -39,155 +39,150 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
 describe('InstanceId', () => {
-    let iid: InstanceId;
-    let mockApp: FirebaseApp;
-    let mockCredentialApp: FirebaseApp;
+  let iid: InstanceId;
+  let mockApp: FirebaseApp;
+  let mockCredentialApp: FirebaseApp;
 
-    let nullAccessTokenClient: InstanceId;
-    let malformedAccessTokenClient: InstanceId;
-    let rejectedPromiseAccessTokenClient: InstanceId;
+  let nullAccessTokenClient: InstanceId;
+  let malformedAccessTokenClient: InstanceId;
+  let rejectedPromiseAccessTokenClient: InstanceId;
 
-    let gcloudProject: string;
+  let gcloudProject: string;
 
-    const noProjectIdError = 'Failed to determine project ID for InstanceId. Initialize the SDK '
-    + 'with service account credentials or set project ID as an app option. Alternatively set the '
-    + 'GCLOUD_PROJECT environment variable.';
-  
-    before(() => utils.mockFetchAccessTokenRequests());
-  
-    after(() => nock.cleanAll());
-  
-    beforeEach(() => {
-      mockApp = mocks.app();
-      mockCredentialApp = mocks.mockCredentialApp();
-      iid = new InstanceId(mockApp);
+  const noProjectIdError = 'Failed to determine project ID for InstanceId. Initialize the SDK '
+  + 'with service account credentials or set project ID as an app option. Alternatively set the '
+  + 'GCLOUD_PROJECT environment variable.';
 
-      gcloudProject = process.env.GCLOUD_PROJECT;
+  before(() => utils.mockFetchAccessTokenRequests());
 
-      nullAccessTokenClient = new InstanceId(mocks.appReturningNullAccessToken());
-      malformedAccessTokenClient = new InstanceId(mocks.appReturningMalformedAccessToken());
-      rejectedPromiseAccessTokenClient = new InstanceId(mocks.appRejectedWhileFetchingAccessToken());
-    });
-  
-    afterEach(() => {
-      process.env.GCLOUD_PROJECT = gcloudProject;
-      return mockApp.delete();
-    });
-  
-  
-    describe('Constructor', () => {
-      const invalidApps = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
-      invalidApps.forEach((invalidApp) => {
-        it('should throw given invalid app: ' + JSON.stringify(invalidApp), () => {
-          expect(() => {
-            const iidAny: any = InstanceId;
-            return new iidAny(invalidApp);
-          }).to.throw('First argument passed to admin.instanceId() must be a valid Firebase app instance.');
-        });
-      });
-  
-      it('should throw given no app', () => {
+  after(() => nock.cleanAll());
+
+  beforeEach(() => {
+    mockApp = mocks.app();
+    mockCredentialApp = mocks.mockCredentialApp();
+    iid = new InstanceId(mockApp);
+
+    gcloudProject = process.env.GCLOUD_PROJECT;
+
+    nullAccessTokenClient = new InstanceId(mocks.appReturningNullAccessToken());
+    malformedAccessTokenClient = new InstanceId(mocks.appReturningMalformedAccessToken());
+    rejectedPromiseAccessTokenClient = new InstanceId(mocks.appRejectedWhileFetchingAccessToken());
+  });
+
+  afterEach(() => {
+    process.env.GCLOUD_PROJECT = gcloudProject;
+    return mockApp.delete();
+  });
+
+
+  describe('Constructor', () => {
+    const invalidApps = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
+    invalidApps.forEach((invalidApp) => {
+      it('should throw given invalid app: ' + JSON.stringify(invalidApp), () => {
         expect(() => {
           const iidAny: any = InstanceId;
-          return new iidAny();
+          return new iidAny(invalidApp);
         }).to.throw('First argument passed to admin.instanceId() must be a valid Firebase app instance.');
       });
-
-      it('should throw given an invalid credential without project ID', () => {
-        // Project ID not set in the environment.
-        delete process.env.GCLOUD_PROJECT;
-        expect(() => {
-          return new InstanceId(mockCredentialApp);
-        }).to.throw(noProjectIdError);
-      });
-  
-      it('should not throw given a valid app', () => {
-        expect(() => {
-          return new InstanceId(mockApp);
-        }).not.to.throw();
-      });
-    });
-  
-    describe('app', () => {
-      it('returns the app from the constructor', () => {
-        // We expect referential equality here
-        expect(iid.app).to.equal(mockApp);
-      });
-  
-      it('is read-only', () => {
-        expect(() => {
-          (iid as any).app = mockApp;
-        }).to.throw('Cannot set property app of #<InstanceId> which has only a getter');
-      });
     });
 
-    describe('deleteInstanceId()', () => {
+    it('should throw given no app', () => {
+      expect(() => {
+        const iidAny: any = InstanceId;
+        return new iidAny();
+      }).to.throw('First argument passed to admin.instanceId() must be a valid Firebase app instance.');
+    });
 
-      // Stubs used to simulate underlying api calls.
-      let stubs: sinon.SinonStub[] = [];
-      const expectedError = new FirebaseInstanceIdError(InstanceIdClientErrorCode.API_ERROR);
-      const testInstanceId = 'test-iid';
+    it('should throw given an invalid credential without project ID', () => {
+      // Project ID not set in the environment.
+      delete process.env.GCLOUD_PROJECT;
+      expect(() => {
+        return new InstanceId(mockCredentialApp);
+      }).to.throw(noProjectIdError);
+    });
 
-      afterEach(() => {
-        _.forEach(stubs, (stub) => stub.restore());
-        stubs = [];
-      });
+    it('should not throw given a valid app', () => {
+      expect(() => {
+        return new InstanceId(mockApp);
+      }).not.to.throw();
+    });
+  });
 
-      it('should be rejected given no instance ID', () => {
-        return (iid as any).deleteInstanceId()
+  describe('app', () => {
+    it('returns the app from the constructor', () => {
+      // We expect referential equality here
+      expect(iid.app).to.equal(mockApp);
+    });
+
+    it('is read-only', () => {
+      expect(() => {
+        (iid as any).app = mockApp;
+      }).to.throw('Cannot set property app of #<InstanceId> which has only a getter');
+    });
+  });
+
+  describe('deleteInstanceId()', () => {
+
+    // Stubs used to simulate underlying api calls.
+    let stubs: sinon.SinonStub[] = [];
+    const expectedError = new FirebaseInstanceIdError(InstanceIdClientErrorCode.API_ERROR);
+    const testInstanceId = 'test-iid';
+
+    afterEach(() => {
+      _.forEach(stubs, (stub) => stub.restore());
+      stubs = [];
+    });
+
+    it('should be rejected given no instance ID', () => {
+      return (iid as any).deleteInstanceId()
         .should.eventually.be.rejected.and.have.property('code', 'instance-id/invalid-instance-id');
-      });
-
-      it('should be rejected given an invalid instance ID', () => {
-        return iid.deleteInstanceId('')
-        .then(() => {
-            throw new Error('Unexpected success');
-        })
-        .catch((error) => {
-            expect(error).to.have.property('code', 'instance-id/invalid-instance-id');
-        });
-      });
-
-      it('should be rejected given an app which returns null access tokens', () => {
-        return nullAccessTokenClient.deleteInstanceId(testInstanceId)
-        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
-      });
-
-      it('should be rejected given an app which returns invalid access tokens', () => {
-        return malformedAccessTokenClient.deleteInstanceId(testInstanceId)
-        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
-      });
-
-      it('should be rejected given an app which fails to generate access tokens', () => {
-        return rejectedPromiseAccessTokenClient.deleteInstanceId(testInstanceId)
-        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
-      });
-
-      it('should resolve without errors on success', () => {
-        let stub = sinon.stub(FirebaseInstanceIdRequestHandler.prototype, 'deleteInstanceId')
-          .returns(Promise.resolve(null));
-        stubs.push(stub);
-        return iid.deleteInstanceId(testInstanceId)
-          .then((result) => {
-            // Confirm underlying API called with expected parameters.
-            expect(stub).to.have.been.calledOnce.and.calledWith(testInstanceId);
-          });
-      });
-
-      it('should throw an error when the backend returns an error', () => {
-        // Stub getAccountInfoByUid to throw a backend error.
-        let stub = sinon.stub(FirebaseInstanceIdRequestHandler.prototype, 'deleteInstanceId')
-          .returns(Promise.reject(expectedError));
-        stubs.push(stub);
-        return iid.deleteInstanceId(testInstanceId)
-          .then((result) => {
-            throw new Error('Unexpected success');
-          }, (error) => {
-            // Confirm underlying API called with expected parameters.
-            expect(stub).to.have.been.calledOnce.and.calledWith(testInstanceId);
-            // Confirm expected error returned.
-            expect(error).to.equal(expectedError);
-          });
-      });
     });
+
+    it('should be rejected given an invalid instance ID', () => {
+      return iid.deleteInstanceId('')
+        .should.eventually.be.rejected.and.have.property('code', 'instance-id/invalid-instance-id');
+    });
+
+    it('should be rejected given an app which returns null access tokens', () => {
+      return nullAccessTokenClient.deleteInstanceId(testInstanceId)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which returns invalid access tokens', () => {
+      return malformedAccessTokenClient.deleteInstanceId(testInstanceId)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which fails to generate access tokens', () => {
+      return rejectedPromiseAccessTokenClient.deleteInstanceId(testInstanceId)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should resolve without errors on success', () => {
+      let stub = sinon.stub(FirebaseInstanceIdRequestHandler.prototype, 'deleteInstanceId')
+        .returns(Promise.resolve(null));
+      stubs.push(stub);
+      return iid.deleteInstanceId(testInstanceId)
+        .then((result) => {
+          // Confirm underlying API called with expected parameters.
+          expect(stub).to.have.been.calledOnce.and.calledWith(testInstanceId);
+        });
+    });
+
+    it('should throw an error when the backend returns an error', () => {
+      // Stub deleteInstanceId to throw a backend error.
+      let stub = sinon.stub(FirebaseInstanceIdRequestHandler.prototype, 'deleteInstanceId')
+        .returns(Promise.reject(expectedError));
+      stubs.push(stub);
+      return iid.deleteInstanceId(testInstanceId)
+        .then((result) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Confirm underlying API called with expected parameters.
+          expect(stub).to.have.been.calledOnce.and.calledWith(testInstanceId);
+          // Confirm expected error returned.
+          expect(error).to.equal(expectedError);
+        });
+    });
+  });
 });

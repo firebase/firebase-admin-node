@@ -228,12 +228,7 @@ export class SignedApiRequestHandler extends HttpRequestHandler {
       headers?: Object,
       timeout?: number): Promise<Object> {
     return this.app_.INTERNAL.getToken().then((accessTokenObj) => {
-      let headersCopy: Object;
-      if (typeof headers !== 'undefined') {
-        headersCopy = deepCopy(headers);
-      } else {
-        headersCopy = {};
-      }
+      let headersCopy: Object = (headers && deepCopy(headers)) || {};
       let authorizationHeaderKey = 'Authorization';
       headersCopy[authorizationHeaderKey] = 'Bearer ' + accessTokenObj.accessToken;
       return super.sendRequest(host, port, path, httpMethod, data, headersCopy, timeout);

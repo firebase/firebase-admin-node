@@ -570,12 +570,14 @@ describe('FirebaseNamespace', () => {
       let app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions);
       let iid: InstanceId = firebaseNamespace.instanceId();
       expect(iid).to.not.be.null;
+      expect(iid.app).to.be.deep.equal(app);
     });
 
     it('should return a valid namespace when the named app is initialized', () => {
       let app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
       let iid: InstanceId = firebaseNamespace.instanceId(app);
       expect(iid).to.not.be.null;
+      expect(iid.app).to.be.deep.equal(app);
     });
 
     it('should return a reference to InstanceId type', () => {
