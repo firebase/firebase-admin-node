@@ -20,7 +20,6 @@ import {
   HttpMethod, SignedApiRequestHandler, ApiSettings,
 } from '../utils/api-request';
 
-import * as util from 'util';
 import * as validator from '../utils/validator';
 
 /** Firebase IID backend host. */
@@ -111,7 +110,7 @@ export class FirebaseInstanceIdRequestHandler {
 
         let message: string = ERROR_CODES[response.statusCode];
         if (message) {
-          message = util.format(message, apiSettings.getEndpoint());
+          message = message.replace('%s', apiSettings.getEndpoint());
         } else {
           message = JSON.stringify(error);
         }
