@@ -20,6 +20,7 @@ import {
   HttpMethod, SignedApiRequestHandler, ApiSettings,
 } from '../utils/api-request';
 
+import * as util from 'util';
 import * as validator from '../utils/validator';
 
 /** Firebase IID backend host. */
@@ -30,6 +31,19 @@ const FIREBASE_IID_PORT = 443;
 const FIREBASE_IID_PATH = '/v1/';
 /** Firebase IID request timeout duration in milliseconds. */
 const FIREBASE_IID_TIMEOUT = 10000;
+
+/** HTTP error codes raised by the backend server. */
+const ERROR_CODES = {
+  400: 'Invalid argument. Instance ID "%s" is malformed.',
+  401: 'Request not authorized.',
+  403: 'Permission denied. Project does not match instance ID or the client does not have ' +
+       'sufficient privileges.',
+  404: 'Failed to find the instance ID: "%s".',
+  409: 'Instance ID "%s" is already deleted.',
+  429: 'Request throttled out by the backend server.',
+  500: 'Internal server error.',
+  503: 'Backend servers are over capacity. Try again later.',
+};
 
 /**
  * Class that provides mechanism to send requests to the Firebase Instance ID backend endpoints.
@@ -95,13 +109,9 @@ export class FirebaseInstanceIdRequestHandler {
           throw error;
         }
 
-        let message: string;
-        if (response.statusCode === 404) {
-          message = 'Failed to find the instance ID: ' + apiSettings.getEndpoint();
-        } else if (response.statusCode === 429) {
-          message = 'Request throttled out by the backend server';
-        } else if (response.statusCode === 500) {
-          message = 'Internal server error';
+        let message: string = ERROR_CODES[response.statusCode];
+        if (message) {
+          message = util.format(message, apiSettings.getEndpoint());
         } else {
           message = JSON.stringify(error);
         }
