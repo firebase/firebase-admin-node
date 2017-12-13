@@ -30,7 +30,6 @@ import * as mocks from '../../resources/mocks';
 import {FirebaseApp} from '../../../src/firebase-app';
 import {HttpRequestHandler} from '../../../src/utils/api-request';
 import { FirebaseInstanceIdRequestHandler } from '../../../src/instance-id/instance-id-request';
-import { FirebaseInstanceIdError, InstanceIdClientErrorCode } from '../../../src/utils/error';
 
 chai.should();
 chai.use(sinonChai);
@@ -103,9 +102,8 @@ describe('FirebaseInstanceIdRequestHandler', () => {
         stubs.push(stub);
   
         const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp, projectId);
-        return requestHandler.deleteInstanceId('test-iid')
-          .should.eventually.be.rejected.and.have.property(
-            'message', 'Failed to find the instance ID: "test-iid".');
+        return expect(requestHandler.deleteInstanceId('test-iid'))
+          .to.be.rejectedWith('Failed to find the instance ID: "test-iid".');
     });
 
     it('should throw for HTTP 409 errors', () => {
@@ -116,9 +114,8 @@ describe('FirebaseInstanceIdRequestHandler', () => {
         stubs.push(stub);
   
         const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp, projectId);
-        return requestHandler.deleteInstanceId('test-iid')
-          .should.eventually.be.rejected.and.have.property(
-            'message', 'Instance ID "test-iid" is already deleted.');
+        return expect(requestHandler.deleteInstanceId('test-iid'))
+          .to.be.rejectedWith('Instance ID "test-iid" is already deleted.');
     });
 
     it('should throw for unexpected HTTP errors', () => {
@@ -129,9 +126,8 @@ describe('FirebaseInstanceIdRequestHandler', () => {
         stubs.push(stub);
   
         const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp, projectId);
-        return requestHandler.deleteInstanceId('test-iid')
-          .should.eventually.be.rejected.and.have.property(
-            'message', JSON.stringify(expectedResult));
+        return expect(requestHandler.deleteInstanceId('test-iid'))
+          .to.be.rejectedWith(JSON.stringify(expectedResult));
     });
   });
 });
