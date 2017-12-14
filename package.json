@@ -52,7 +52,6 @@
     "@google-cloud/firestore": "^0.10.0",
     "@google-cloud/storage": "^1.2.1",
     "@types/google-cloud__storage": "^1.1.1",
-    "@types/jsonwebtoken": "^7.1.33",
     "@types/node": "^8.0.32",
     "faye-websocket": "0.9.3",
     "jsonwebtoken": "7.4.3",
