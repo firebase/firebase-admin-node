@@ -33,12 +33,11 @@ const FIREBASE_IID_TIMEOUT = 10000;
 
 /** HTTP error codes raised by the backend server. */
 const ERROR_CODES = {
-  400: 'Invalid argument. Instance ID "%s" is malformed.',
+  400: 'Malformed instance ID argument.',
   401: 'Request not authorized.',
-  403: 'Permission denied. Project does not match instance ID or the client does not have ' +
-       'sufficient privileges.',
-  404: 'Failed to find the instance ID: "%s".',
-  409: 'Instance ID "%s" is already deleted.',
+  403: 'Project does not match instance ID or the client does not have sufficient privileges.',
+  404: 'Failed to find the instance ID.',
+  409: 'Already deleted.',
   429: 'Request throttled out by the backend server.',
   500: 'Internal server error.',
   503: 'Backend servers are over capacity. Try again later.',
@@ -108,9 +107,10 @@ export class FirebaseInstanceIdRequestHandler {
           throw error;
         }
 
-        let message: string = ERROR_CODES[response.statusCode];
-        if (message) {
-          message = message.replace('%s', apiSettings.getEndpoint());
+        let template: string = ERROR_CODES[response.statusCode];
+        let message: string;
+        if (template) {
+          message = `Instance ID "${apiSettings.getEndpoint()}": ${template}`;
         } else {
           message = JSON.stringify(error);
         }

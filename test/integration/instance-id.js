@@ -30,7 +30,7 @@ function test(utils) {
           'admin.instanceId().deleteInstanceId(non-existing)',
           'Invalid error for non-existing instance ID: ' + err);
         utils.assert(
-          err.message == 'Failed to find the instance ID: non-existing',
+          err.message == 'Instance ID "non-existing": Failed to find the instance ID.',
           'admin.instanceId().deleteInstanceId(non-existing)',
           'Invalid error for non-existing instance ID: ' + err)
       });

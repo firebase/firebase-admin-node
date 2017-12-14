@@ -29,7 +29,7 @@ import * as mocks from '../../resources/mocks';
 
 import {FirebaseApp} from '../../../src/firebase-app';
 import {HttpRequestHandler} from '../../../src/utils/api-request';
-import { FirebaseInstanceIdRequestHandler } from '../../../src/instance-id/instance-id-request';
+import {FirebaseInstanceIdRequestHandler} from '../../../src/instance-id/instance-id-request';
 
 chai.should();
 chai.use(sinonChai);
@@ -102,8 +102,14 @@ describe('FirebaseInstanceIdRequestHandler', () => {
         stubs.push(stub);
   
         const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp, projectId);
-        return expect(requestHandler.deleteInstanceId('test-iid'))
-          .to.be.rejectedWith('Failed to find the instance ID: "test-iid".');
+        return requestHandler.deleteInstanceId('test-iid')
+          .then(() => {
+            throw new Error('Unexpected success');
+          })
+          .catch((error) => {
+            expect(error.code).to.equal('instance-id/api-error');
+            expect(error.message).to.equal('Instance ID "test-iid": Failed to find the instance ID.');
+          });
     });
 
     it('should throw for HTTP 409 errors', () => {
@@ -114,8 +120,14 @@ describe('FirebaseInstanceIdRequestHandler', () => {
         stubs.push(stub);
   
         const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp, projectId);
-        return expect(requestHandler.deleteInstanceId('test-iid'))
-          .to.be.rejectedWith('Instance ID "test-iid" is already deleted.');
+        return requestHandler.deleteInstanceId('test-iid')
+          .then(() => {
+            throw new Error('Unexpected success');
+          })
+          .catch((error) => {
+            expect(error.code).to.equal('instance-id/api-error');
+            expect(error.message).to.equal('Instance ID "test-iid": Already deleted.');
+          });
     });
 
     it('should throw for unexpected HTTP errors', () => {
@@ -126,8 +138,14 @@ describe('FirebaseInstanceIdRequestHandler', () => {
         stubs.push(stub);
   
         const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp, projectId);
-        return expect(requestHandler.deleteInstanceId('test-iid'))
-          .to.be.rejectedWith(JSON.stringify(expectedResult));
+        return requestHandler.deleteInstanceId('test-iid')
+          .then(() => {
+            throw new Error('Unexpected success');
+          })
+          .catch((error) => {
+            expect(error.code).to.equal('instance-id/api-error');
+            expect(error.message).to.equal(JSON.stringify(expectedResult));
+          });
     });
   });
 });
