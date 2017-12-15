@@ -1628,7 +1628,7 @@ describe('FirebaseAuthRequestHandler', () => {
       };
 
       let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.reject(mockErrorResponse));
+        .rejects(mockErrorResponse);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -1647,7 +1647,7 @@ describe('FirebaseAuthRequestHandler', () => {
       };
 
       let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.reject(mockErrorResponse));
+        .rejects(mockErrorResponse);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -1664,7 +1664,7 @@ describe('FirebaseAuthRequestHandler', () => {
       };
 
       let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.reject(mockErrorResponse));
+        .rejects(mockErrorResponse);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
