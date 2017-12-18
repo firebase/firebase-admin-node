@@ -186,9 +186,9 @@ describe('FirebaseApp', () => {
     it('should use the existing values when some of them aren\'t overwritten', () => {
       firebaseNamespaceInternals.CONFIG_FILE_VAR = "TEST_FIERBASE_CONFIG"
       process.env[firebaseNamespaceInternals.CONFIG_FILE_VAR] = './test/resources/firebase_config_partial.json';
-      const app = firebaseNamespace.initializeApp(mocks.appOptionsNoAuth, mocks.appName);
+      const app = firebaseNamespace.initializeApp(mocks.appOptionsAuthDB, mocks.appName);
       delete process.env[firebaseNamespaceInternals.CONFIG_FILE_VAR];
-      expect(app.options.databaseURL).to.equal('https://hipster-chat.firebaseio.com');
+      expect(app.options.databaseURL).to.equal('https://databaseName.firebaseio.com');
       expect(app.options.projectId).to.equal('hipster-chat');
       expect(app.options.storageBucket).to.equal(undefined);
     });
