@@ -19,7 +19,7 @@
 // Use untyped import syntax for Node built-ins
 import https = require('https');
 
-import {expect} from 'chai';
+import { expect } from 'chai';
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as nock from 'nock';
@@ -30,16 +30,16 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from './utils';
 import * as mocks from '../resources/mocks';
 
-import {GoogleOAuthAccessToken} from '../../src/auth/credential';
-import {FirebaseServiceInterface} from '../../src/firebase-service';
-import {FirebaseApp, FirebaseAccessToken} from '../../src/firebase-app';
-import {FirebaseNamespace, FirebaseNamespaceInternals} from '../../src/firebase-namespace';
+import { GoogleOAuthAccessToken } from '../../src/auth/credential';
+import { FirebaseServiceInterface } from '../../src/firebase-service';
+import { FirebaseApp, FirebaseAccessToken } from '../../src/firebase-app';
+import { FirebaseNamespace, FirebaseNamespaceInternals } from '../../src/firebase-namespace';
 
-import {Auth} from '../../src/auth/auth';
-import {Messaging} from '../../src/messaging/messaging';
-import {Storage} from '../../src/storage/storage';
-import {Firestore} from '@google-cloud/firestore';
-import {Database} from '@firebase/database';
+import { Auth } from '../../src/auth/auth';
+import { Messaging } from '../../src/messaging/messaging';
+import { Storage } from '../../src/storage/storage';
+import { Firestore } from '@google-cloud/firestore';
+import { Database } from '@firebase/database';
 
 chai.should();
 chai.use(sinonChai);
@@ -148,6 +148,15 @@ describe('FirebaseApp', () => {
       const original = _.clone(mockApp.options);
       (mockApp.options as any).foo = 'changed';
       expect(mockApp.options).to.deep.equal(original);
+    });
+
+    it('should overwrite the config values with the ones in the config file', () => {
+      process.env.FIREBASE_CONFIG = './test/resources/firebase_config.json';
+      const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
+      delete process.env.FIREBASE_CONFIG
+      expect(app.options.databaseURL).to.equal("https://hipster-chat.firebaseio.com")
+      expect(app.options.projectId).to.equal("hipster-chat")
+      expect(app.options.storageBucket).to.equal("hipster-chat.appspot.com")
     });
   });
 
@@ -651,7 +660,7 @@ describe('FirebaseApp', () => {
     it('resets the proactive refresh timeout upon a force refresh', () => {
       // Force a token refresh.
       return mockApp.INTERNAL.getToken(true).then((token1) => {
-         // Forward the clock to five minutes and one second before expiry.
+        // Forward the clock to five minutes and one second before expiry.
         let expiryInMilliseconds = token1.expirationTime - Date.now();
         this.clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS) - 1000);
 

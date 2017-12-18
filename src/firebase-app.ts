@@ -13,22 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-import {Credential} from './auth/credential';
+import fs = require('fs');
+import { Credential } from './auth/credential';
 import * as validator from './utils/validator';
-import {deepCopy, deepExtend} from './utils/deep-copy';
-import {GoogleOAuthAccessToken} from './auth/credential';
-import {FirebaseServiceInterface} from './firebase-service';
-import {FirebaseNamespaceInternals} from './firebase-namespace';
-import {AppErrorCodes, FirebaseAppError} from './utils/error';
+import { deepCopy, deepExtend } from './utils/deep-copy';
+import { GoogleOAuthAccessToken } from './auth/credential';
+import { FirebaseServiceInterface } from './firebase-service';
+import { FirebaseNamespaceInternals } from './firebase-namespace';
+import { AppErrorCodes, FirebaseAppError } from './utils/error';
 
-import {Auth} from './auth/auth';
-import {Messaging} from './messaging/messaging';
-import {Storage} from './storage/storage';
-import {Database} from '@firebase/database';
-import {DatabaseService} from './database/database';
-import {Firestore} from '@google-cloud/firestore';
-import {FirestoreService} from './firestore/firestore';
+import { Auth } from './auth/auth';
+import { Messaging } from './messaging/messaging';
+import { Storage } from './storage/storage';
+import { Database } from '@firebase/database';
+import { DatabaseService } from './database/database';
+import { Firestore } from '@google-cloud/firestore';
+import { FirestoreService } from './firestore/firestore';
 
 /**
  * Type representing a callback which is called every time an app lifecycle event occurs.
@@ -164,11 +164,11 @@ export class FirebaseAppInternals {
 
           if (errorMessage.indexOf('invalid_grant') !== -1) {
             errorMessage += ' There are two likely causes: (1) your server time is not properly ' +
-            'synced or (2) your certificate key file has been revoked. To solve (1), re-sync the ' +
-            'time on your server. To solve (2), make sure the key ID for your key file is still ' +
-            'present at https://console.firebase.google.com/iam-admin/serviceaccounts/project. If ' +
-            'not, generate a new key file at ' +
-            'https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk.';
+              'synced or (2) your certificate key file has been revoked. To solve (1), re-sync the ' +
+              'time on your server. To solve (2), make sure the key ID for your key file is still ' +
+              'present at https://console.firebase.google.com/iam-admin/serviceaccounts/project. If ' +
+              'not, generate a new key file at ' +
+              'https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk.';
           }
 
           throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
@@ -241,8 +241,9 @@ export class FirebaseApp {
 
   private name_: string;
   private options_: FirebaseAppOptions;
-  private services_: {[name: string]: FirebaseServiceInterface} = {};
+  private services_: { [name: string]: FirebaseServiceInterface } = {};
   private isDeleted_ = false;
+  private configFile_ = 'FIREBASE_CONFIG';
 
   constructor(options: FirebaseAppOptions, name: string, private firebaseInternals_: FirebaseNamespaceInternals) {
     this.name_ = name;
@@ -272,6 +273,7 @@ export class FirebaseApp {
         `app named "${this.name_}". ${errorMessage}`
       );
     }
+    this.useConfigVar_();
 
     Object.keys(firebaseInternals_.serviceFactories).forEach((serviceName) => {
       // Defer calling createService() until the service is accessed
@@ -408,7 +410,7 @@ export class FirebaseApp {
   /**
    * Callback function used to extend an App instance at the time of service instance creation.
    */
-  private extendApp_(props: {[prop: string]: any}): void {
+  private extendApp_(props: { [prop: string]: any }): void {
     deepExtend(this, props);
   }
 
@@ -421,6 +423,41 @@ export class FirebaseApp {
         AppErrorCodes.APP_DELETED,
         `Firebase app named "${this.name_}" has already been deleted.`,
       );
+    }
+  }
+
+  private useConfigVar_(): FirebaseAppOptions {
+    if (this.options_.databaseURL !== undefined &&
+      this.options_.projectId !== undefined &&
+      this.options_.storageBucket !== undefined) {
+      return;
+    }
+    if (process.env[this.configFile_]) {
+      let contents;
+      try {
+        contents = fs.readFileSync(process.env[this.configFile_], 'utf8');
+      } catch (ignored) {
+        return;
+      }
+      let jsonContent;
+      try {
+        jsonContent = JSON.parse(contents);
+      } catch (error) {
+        // Throw a nicely formed error message if the file contents cannot be parsed
+        throw new FirebaseAppError(
+          AppErrorCodes.INVALID_APP_OPTIONS,
+          'Failed to parse app options file: ' + error,
+        );
+      }
+      if (this.options_.databaseURL === undefined) {
+        this.options_.databaseURL = jsonContent.databaseURL;
+      }
+      if (this.options_.projectId === undefined) {
+        this.options_.projectId = jsonContent.projectId;
+      }
+      if (this.options_.storageBucket === undefined) {
+        this.options_.storageBucket = jsonContent.storageBucket;
+      }
     }
   }
 }

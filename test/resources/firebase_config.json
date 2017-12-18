@@ -1,0 +1,5 @@
+{
+  "databaseURL": "https://hipster-chat.firebaseio.com",
+  "projectId": "hipster-chat",
+  "storageBucket": "hipster-chat.appspot.com"
+}
