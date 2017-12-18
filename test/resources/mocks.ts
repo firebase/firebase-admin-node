@@ -66,7 +66,7 @@ export let appOptionsNoDatabaseUrl: FirebaseAppOptions = {
 export let appOptionsAuthDB: FirebaseAppOptions = {
   credential,
   databaseURL,
-}
+};
 
 export class MockCredential implements Credential {
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
