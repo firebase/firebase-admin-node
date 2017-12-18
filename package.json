@@ -88,7 +88,7 @@
     "nock": "^8.0.0",
     "npm-run-all": "^4.1.1",
     "nyc": "^11.1.0",
-    "request": "^2.83.0",
+    "request": "^2.75.0",
     "request-promise": "^4.1.1",
     "run-sequence": "^1.1.5",
     "sinon": "^4.1.3",
