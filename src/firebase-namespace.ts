@@ -231,7 +231,7 @@ export class FirebaseNamespaceInternals {
 
 
 let firebaseCredential = {
-  cert: (serviceAccountPathOrObject: string | Object): Credential => {
+  cert: (serviceAccountPathOrObject: string|Object): Credential => {
     const stringifiedServiceAccount = JSON.stringify(serviceAccountPathOrObject);
     if (!(stringifiedServiceAccount in globalCertCreds)) {
       globalCertCreds[stringifiedServiceAccount] = new CertCredential(serviceAccountPathOrObject);
@@ -239,7 +239,7 @@ let firebaseCredential = {
     return globalCertCreds[stringifiedServiceAccount];
   },
 
-  refreshToken: (refreshTokenPathOrObject: string | Object): Credential => {
+  refreshToken: (refreshTokenPathOrObject: string|Object): Credential => {
     const stringifiedRefreshToken = JSON.stringify(refreshTokenPathOrObject);
     if (!(stringifiedRefreshToken in globalRefreshTokenCreds)) {
       globalRefreshTokenCreds[stringifiedRefreshToken] = new RefreshTokenCredential(refreshTokenPathOrObject);
@@ -268,7 +268,6 @@ export class FirebaseNamespace {
   public credential = firebaseCredential;
   public SDK_VERSION = '<XXX_SDK_VERSION_XXX>';
   public INTERNAL: FirebaseNamespaceInternals;
-
 
   /* tslint:disable */
   // TODO(jwenger): Database is the only consumer of firebase.Promise. We should update it to use
