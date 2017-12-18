@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 import fs = require('fs');
-import { Credential } from './auth/credential';
+import {Credential} from './auth/credential';
 import * as validator from './utils/validator';
-import { deepCopy, deepExtend } from './utils/deep-copy';
-import { GoogleOAuthAccessToken } from './auth/credential';
-import { FirebaseServiceInterface } from './firebase-service';
-import { FirebaseNamespaceInternals } from './firebase-namespace';
-import { AppErrorCodes, FirebaseAppError } from './utils/error';
+import {deepCopy, deepExtend} from './utils/deep-copy';
+import {GoogleOAuthAccessToken} from './auth/credential';
+import {FirebaseServiceInterface} from './firebase-service';
+import {FirebaseNamespaceInternals} from './firebase-namespace';
+import {AppErrorCodes, FirebaseAppError} from './utils/error';
 
-import { Auth } from './auth/auth';
-import { Messaging } from './messaging/messaging';
-import { Storage } from './storage/storage';
-import { Database } from '@firebase/database';
-import { DatabaseService } from './database/database';
-import { Firestore } from '@google-cloud/firestore';
-import { FirestoreService } from './firestore/firestore';
+import {Auth} from './auth/auth';
+import {Messaging} from './messaging/messaging';
+import {Storage} from './storage/storage';
+import {Database} from '@firebase/database';
+import {DatabaseService} from './database/database';
+import {Firestore} from '@google-cloud/firestore';
+import {FirestoreService} from './firestore/firestore';
 
 /**
  * Type representing a callback which is called every time an app lifecycle event occurs.
@@ -164,11 +164,11 @@ export class FirebaseAppInternals {
 
           if (errorMessage.indexOf('invalid_grant') !== -1) {
             errorMessage += ' There are two likely causes: (1) your server time is not properly ' +
-              'synced or (2) your certificate key file has been revoked. To solve (1), re-sync the ' +
-              'time on your server. To solve (2), make sure the key ID for your key file is still ' +
-              'present at https://console.firebase.google.com/iam-admin/serviceaccounts/project. If ' +
-              'not, generate a new key file at ' +
-              'https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk.';
+            'synced or (2) your certificate key file has been revoked. To solve (1), re-sync the ' +
+            'time on your server. To solve (2), make sure the key ID for your key file is still ' +
+            'present at https://console.firebase.google.com/iam-admin/serviceaccounts/project. If ' +
+            'not, generate a new key file at ' +
+            'https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk.';
           }
 
           throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
@@ -241,7 +241,7 @@ export class FirebaseApp {
 
   private name_: string;
   private options_: FirebaseAppOptions;
-  private services_: { [name: string]: FirebaseServiceInterface } = {};
+  private services_: {[name: string]: FirebaseServiceInterface} = {};
   private isDeleted_ = false;
 
   constructor(options: FirebaseAppOptions, name: string, private firebaseInternals_: FirebaseNamespaceInternals) {
@@ -264,7 +264,7 @@ export class FirebaseApp {
     if (typeof credential !== 'object' || credential === null || typeof credential.getAccessToken !== 'function') {
       errorMessage = 'The "credential" property must be an object which implements the Credential interface.';
     }
-
+    console.log(credential)
     if (typeof errorMessage !== 'undefined') {
       throw new FirebaseAppError(
         AppErrorCodes.INVALID_APP_OPTIONS,
@@ -409,7 +409,7 @@ export class FirebaseApp {
   /**
    * Callback function used to extend an App instance at the time of service instance creation.
    */
-  private extendApp_(props: { [prop: string]: any }): void {
+  private extendApp_(props: {[prop: string]: any}): void {
     deepExtend(this, props);
   }
 

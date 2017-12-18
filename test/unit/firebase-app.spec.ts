@@ -182,6 +182,16 @@ describe('FirebaseApp', () => {
       expect(app.options.projectId).to.equal('hipster-chat');
       expect(app.options.storageBucket).to.equal('bucketName.appspot.com');
     });
+
+    it('should use the existing values when some of them aren\'t overwritten', () => {
+      firebaseNamespaceInternals.CONFIG_FILE_VAR = "TEST_FIERBASE_CONFIG"
+      process.env[firebaseNamespaceInternals.CONFIG_FILE_VAR] = './test/resources/firebase_config_partial.json';
+      const app = firebaseNamespace.initializeApp(mocks.appOptionsNoAuth, mocks.appName);
+      delete process.env[firebaseNamespaceInternals.CONFIG_FILE_VAR];
+      expect(app.options.databaseURL).to.equal('https://hipster-chat.firebaseio.com');
+      expect(app.options.projectId).to.equal('hipster-chat');
+      expect(app.options.storageBucket).to.equal(undefined);
+    });
   });
 
   describe('#delete()', () => {
@@ -684,7 +694,7 @@ describe('FirebaseApp', () => {
     it('resets the proactive refresh timeout upon a force refresh', () => {
       // Force a token refresh.
       return mockApp.INTERNAL.getToken(true).then((token1) => {
-        // Forward the clock to five minutes and one second before expiry.
+         // Forward the clock to five minutes and one second before expiry.
         let expiryInMilliseconds = token1.expirationTime - Date.now();
         this.clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS) - 1000);
 

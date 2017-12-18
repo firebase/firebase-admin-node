@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import { deepExtend } from './utils/deep-copy';
-import { AppErrorCodes, FirebaseAppError } from './utils/error';
-import { AppHook, FirebaseApp, FirebaseAppOptions } from './firebase-app';
-import { FirebaseServiceFactory, FirebaseServiceInterface } from './firebase-service';
+import {deepExtend} from './utils/deep-copy';
+import {AppErrorCodes, FirebaseAppError} from './utils/error';
+import {AppHook, FirebaseApp, FirebaseAppOptions} from './firebase-app';
+import {FirebaseServiceFactory, FirebaseServiceInterface} from './firebase-service';
 import {
   Credential,
   CertCredential,
@@ -25,17 +25,17 @@ import {
   ApplicationDefaultCredential,
 } from './auth/credential';
 
-import { Auth } from './auth/auth';
-import { Messaging } from './messaging/messaging';
-import { Storage } from './storage/storage';
-import { Database } from '@firebase/database';
-import { Firestore } from '@google-cloud/firestore';
+import {Auth} from './auth/auth';
+import {Messaging} from './messaging/messaging';
+import {Storage} from './storage/storage';
+import {Database} from '@firebase/database';
+import {Firestore} from '@google-cloud/firestore';
 
 const DEFAULT_APP_NAME = '[DEFAULT]';
 
 let globalAppDefaultCred: ApplicationDefaultCredential;
-let globalCertCreds: { [key: string]: CertCredential } = {};
-let globalRefreshTokenCreds: { [key: string]: RefreshTokenCredential } = {};
+let globalCertCreds: {[key: string]: CertCredential} = {};
+let globalRefreshTokenCreds: {[key: string]: RefreshTokenCredential} = {};
 
 
 export interface FirebaseServiceNamespace<T> {
@@ -49,12 +49,12 @@ export interface FirebaseServiceNamespace<T> {
  */
 export class FirebaseNamespaceInternals {
   public CONFIG_FILE_VAR: string = 'FIREBASE_CONFIG';
-  public serviceFactories: { [serviceName: string]: FirebaseServiceFactory } = {};
+  public serviceFactories: {[serviceName: string]: FirebaseServiceFactory} = {};
 
-  private apps_: { [appName: string]: FirebaseApp } = {};
-  private appHooks_: { [service: string]: AppHook } = {};
+  private apps_: {[appName: string]: FirebaseApp} = {};
+  private appHooks_: {[service: string]: AppHook} = {};
 
-  constructor(public firebase_) { }
+  constructor(public firebase_) {}
 
   /**
    * Initializes the FirebaseApp instance.
@@ -289,7 +289,7 @@ export class FirebaseNamespace {
     let fn: FirebaseServiceNamespace<Auth> = (app?: FirebaseApp) => {
       return ns.ensureApp(app).auth();
     };
-    return Object.assign(fn, { Auth });
+    return Object.assign(fn, {Auth});
   }
 
   /**
@@ -313,7 +313,7 @@ export class FirebaseNamespace {
     let fn: FirebaseServiceNamespace<Messaging> = (app?: FirebaseApp) => {
       return ns.ensureApp(app).messaging();
     };
-    return Object.assign(fn, { Messaging });
+    return Object.assign(fn, {Messaging});
   }
 
   /**
@@ -325,7 +325,7 @@ export class FirebaseNamespace {
     let fn: FirebaseServiceNamespace<Storage> = (app?: FirebaseApp) => {
       return ns.ensureApp(app).storage();
     };
-    return Object.assign(fn, { Storage });
+    return Object.assign(fn, {Storage});
   }
 
   /**
