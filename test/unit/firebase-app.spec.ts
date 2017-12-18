@@ -19,7 +19,7 @@
 // Use untyped import syntax for Node built-ins
 import https = require('https');
 
-import { expect } from 'chai';
+import {expect} from 'chai';
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as nock from 'nock';
@@ -30,16 +30,16 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from './utils';
 import * as mocks from '../resources/mocks';
 
-import { GoogleOAuthAccessToken } from '../../src/auth/credential';
-import { FirebaseServiceInterface } from '../../src/firebase-service';
-import { FirebaseApp, FirebaseAccessToken } from '../../src/firebase-app';
-import { FirebaseNamespace, FirebaseNamespaceInternals } from '../../src/firebase-namespace';
+import {GoogleOAuthAccessToken} from '../../src/auth/credential';
+import {FirebaseServiceInterface} from '../../src/firebase-service';
+import {FirebaseApp, FirebaseAccessToken} from '../../src/firebase-app';
+import {FirebaseNamespace, FirebaseNamespaceInternals} from '../../src/firebase-namespace';
 
-import { Auth } from '../../src/auth/auth';
-import { Messaging } from '../../src/messaging/messaging';
-import { Storage } from '../../src/storage/storage';
-import { Firestore } from '@google-cloud/firestore';
-import { Database } from '@firebase/database';
+import {Auth} from '../../src/auth/auth';
+import {Messaging} from '../../src/messaging/messaging';
+import {Storage} from '../../src/storage/storage';
+import {Firestore} from '@google-cloud/firestore';
+import {Database} from '@firebase/database';
 
 chai.should();
 chai.use(sinonChai);
@@ -498,7 +498,7 @@ describe('FirebaseApp', () => {
         getAccessToken: () => Promise.resolve(oracle),
       };
 
-      const app = utils.createAppWithOptions({ credential });
+      const app = utils.createAppWithOptions({credential});
 
       return app.INTERNAL.getToken().then((token) => {
         expect(token.accessToken).to.equal(oracle.access_token);
