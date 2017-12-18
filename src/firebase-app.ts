@@ -243,7 +243,6 @@ export class FirebaseApp {
   private options_: FirebaseAppOptions;
   private services_: { [name: string]: FirebaseServiceInterface } = {};
   private isDeleted_ = false;
-  private configFile_ = 'FIREBASE_CONFIG';
 
   constructor(options: FirebaseAppOptions, name: string, private firebaseInternals_: FirebaseNamespaceInternals) {
     this.name_ = name;
@@ -432,10 +431,10 @@ export class FirebaseApp {
       this.options_.storageBucket !== undefined) {
       return;
     }
-    if (process.env[this.configFile_]) {
+    if (process.env[this.firebaseInternals_.CONFIG_FILE]) {
       let contents;
       try {
-        contents = fs.readFileSync(process.env[this.configFile_], 'utf8');
+        contents = fs.readFileSync(process.env[this.firebaseInternals_.CONFIG_FILE], 'utf8');
       } catch (ignored) {
         return;
       }

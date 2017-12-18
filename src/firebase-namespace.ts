@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import {deepExtend} from './utils/deep-copy';
-import {AppErrorCodes, FirebaseAppError} from './utils/error';
-import {AppHook, FirebaseApp, FirebaseAppOptions} from './firebase-app';
-import {FirebaseServiceFactory, FirebaseServiceInterface} from './firebase-service';
+import { deepExtend } from './utils/deep-copy';
+import { AppErrorCodes, FirebaseAppError } from './utils/error';
+import { AppHook, FirebaseApp, FirebaseAppOptions } from './firebase-app';
+import { FirebaseServiceFactory, FirebaseServiceInterface } from './firebase-service';
 import {
   Credential,
   CertCredential,
@@ -25,11 +25,11 @@ import {
   ApplicationDefaultCredential,
 } from './auth/credential';
 
-import {Auth} from './auth/auth';
-import {Messaging} from './messaging/messaging';
-import {Storage} from './storage/storage';
-import {Database} from '@firebase/database';
-import {Firestore} from '@google-cloud/firestore';
+import { Auth } from './auth/auth';
+import { Messaging } from './messaging/messaging';
+import { Storage } from './storage/storage';
+import { Database } from '@firebase/database';
+import { Firestore } from '@google-cloud/firestore';
 
 const DEFAULT_APP_NAME = '[DEFAULT]';
 
@@ -38,7 +38,7 @@ let globalCertCreds: { [key: string]: CertCredential } = {};
 let globalRefreshTokenCreds: { [key: string]: RefreshTokenCredential } = {};
 
 
-export interface FirebaseServiceNamespace <T> {
+export interface FirebaseServiceNamespace<T> {
   (app?: FirebaseApp): T;
   [key: string]: any;
 }
@@ -48,12 +48,13 @@ export interface FirebaseServiceNamespace <T> {
  * Internals of a FirebaseNamespace instance.
  */
 export class FirebaseNamespaceInternals {
-  public serviceFactories: {[serviceName: string]: FirebaseServiceFactory} = {};
+  public CONFIG_FILE: string = 'FIREBASE_CONFIG';
+  public serviceFactories: { [serviceName: string]: FirebaseServiceFactory } = {};
 
-  private apps_: {[appName: string]: FirebaseApp} = {};
-  private appHooks_: {[service: string]: AppHook} = {};
+  private apps_: { [appName: string]: FirebaseApp } = {};
+  private appHooks_: { [service: string]: AppHook } = {};
 
-  constructor(public firebase_) {}
+  constructor(public firebase_) { }
 
   /**
    * Initializes the FirebaseApp instance.
@@ -230,7 +231,7 @@ export class FirebaseNamespaceInternals {
 
 
 let firebaseCredential = {
-  cert: (serviceAccountPathOrObject: string|Object): Credential => {
+  cert: (serviceAccountPathOrObject: string | Object): Credential => {
     const stringifiedServiceAccount = JSON.stringify(serviceAccountPathOrObject);
     if (!(stringifiedServiceAccount in globalCertCreds)) {
       globalCertCreds[stringifiedServiceAccount] = new CertCredential(serviceAccountPathOrObject);
@@ -238,7 +239,7 @@ let firebaseCredential = {
     return globalCertCreds[stringifiedServiceAccount];
   },
 
-  refreshToken: (refreshTokenPathOrObject: string|Object): Credential => {
+  refreshToken: (refreshTokenPathOrObject: string | Object): Credential => {
     const stringifiedRefreshToken = JSON.stringify(refreshTokenPathOrObject);
     if (!(stringifiedRefreshToken in globalRefreshTokenCreds)) {
       globalRefreshTokenCreds[stringifiedRefreshToken] = new RefreshTokenCredential(refreshTokenPathOrObject);
@@ -268,6 +269,7 @@ export class FirebaseNamespace {
   public SDK_VERSION = '<XXX_SDK_VERSION_XXX>';
   public INTERNAL: FirebaseNamespaceInternals;
 
+
   /* tslint:disable */
   // TODO(jwenger): Database is the only consumer of firebase.Promise. We should update it to use
   // use the native Promise and then remove this.
@@ -287,7 +289,7 @@ export class FirebaseNamespace {
     let fn: FirebaseServiceNamespace<Auth> = (app?: FirebaseApp) => {
       return ns.ensureApp(app).auth();
     };
-    return Object.assign(fn, {Auth});
+    return Object.assign(fn, { Auth });
   }
 
   /**
@@ -311,7 +313,7 @@ export class FirebaseNamespace {
     let fn: FirebaseServiceNamespace<Messaging> = (app?: FirebaseApp) => {
       return ns.ensureApp(app).messaging();
     };
-    return Object.assign(fn, {Messaging});
+    return Object.assign(fn, { Messaging });
   }
 
   /**
@@ -323,7 +325,7 @@ export class FirebaseNamespace {
     let fn: FirebaseServiceNamespace<Storage> = (app?: FirebaseApp) => {
       return ns.ensureApp(app).storage();
     };
-    return Object.assign(fn, {Storage});
+    return Object.assign(fn, { Storage });
   }
 
   /**
