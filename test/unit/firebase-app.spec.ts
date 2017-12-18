@@ -74,7 +74,6 @@ describe('FirebaseApp', () => {
 
     firebaseNamespace = new FirebaseNamespace();
     firebaseNamespaceInternals = firebaseNamespace.INTERNAL;
-    firebaseNamespaceInternals.CONFIG_FILE = "TEST_CONFIG"
     sinon.stub(firebaseNamespaceInternals, 'removeApp');
     mockApp = new FirebaseApp(mocks.appOptions, mocks.appName, firebaseNamespaceInternals);
   });
@@ -151,12 +150,37 @@ describe('FirebaseApp', () => {
     });
 
     it('should overwrite the config values with the ones in the config file', () => {
-      process.env[firebaseNamespaceInternals.CONFIG_FILE] = './test/resources/firebase_config.json';
+      firebaseNamespaceInternals.CONFIG_FILE_VAR = "TEST_FIERBASE_CONFIG"
+      process.env[firebaseNamespaceInternals.CONFIG_FILE_VAR] = './test/resources/firebase_config.json';
       const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
-      delete process.env[firebaseNamespaceInternals.CONFIG_FILE]
-      expect(app.options.databaseURL).to.equal("https://hipster-chat.firebaseio.com")
-      expect(app.options.projectId).to.equal("hipster-chat")
-      expect(app.options.storageBucket).to.equal("hipster-chat.appspot.com")
+      delete process.env[firebaseNamespaceInternals.CONFIG_FILE_VAR];
+      expect(app.options.databaseURL).to.equal("https://hipster-chat.firebaseio.com");
+      expect(app.options.projectId).to.equal("hipster-chat");
+      expect(app.options.storageBucket).to.equal("hipster-chat.appspot.com");
+    });
+
+    it('should find the default config var name', () => {
+      expect(firebaseNamespaceInternals.CONFIG_FILE_VAR).to.equal('FIREBASE_CONFIG')
+    });
+
+    it('should ignore a non existant file', () => {
+      firebaseNamespaceInternals.CONFIG_FILE_VAR = "TEST_FIERBASE_CONFIG"
+      process.env[firebaseNamespaceInternals.CONFIG_FILE_VAR] = './test/resources/firebase_config_non_existant.json';
+      const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
+      delete process.env[firebaseNamespaceInternals.CONFIG_FILE_VAR];
+      expect(app.options.databaseURL).to.equal(undefined);
+      expect(app.options.projectId).to.equal(undefined);
+      expect(app.options.storageBucket).to.equal(undefined);
+    });
+
+    it('should use the existing values when some of them exist', () => {
+      firebaseNamespaceInternals.CONFIG_FILE_VAR = "TEST_FIERBASE_CONFIG"
+      process.env[firebaseNamespaceInternals.CONFIG_FILE_VAR] = './test/resources/firebase_config.json';
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+      delete process.env[firebaseNamespaceInternals.CONFIG_FILE_VAR];
+      expect(app.options.databaseURL).to.equal('https://databaseName.firebaseio.com');
+      expect(app.options.projectId).to.equal('hipster-chat');
+      expect(app.options.storageBucket).to.equal('bucketName.appspot.com');
     });
   });
 

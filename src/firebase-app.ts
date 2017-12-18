@@ -431,10 +431,10 @@ export class FirebaseApp {
       this.options_.storageBucket !== undefined) {
       return;
     }
-    if (process.env[this.firebaseInternals_.CONFIG_FILE]) {
+    if (process.env[this.firebaseInternals_.CONFIG_FILE_VAR]) {
       let contents;
       try {
-        contents = fs.readFileSync(process.env[this.firebaseInternals_.CONFIG_FILE], 'utf8');
+        contents = fs.readFileSync(process.env[this.firebaseInternals_.CONFIG_FILE_VAR], 'utf8');
       } catch (ignored) {
         return;
       }

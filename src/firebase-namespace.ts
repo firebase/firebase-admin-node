@@ -48,7 +48,7 @@ export interface FirebaseServiceNamespace<T> {
  * Internals of a FirebaseNamespace instance.
  */
 export class FirebaseNamespaceInternals {
-  public CONFIG_FILE: string = 'FIREBASE_CONFIG';
+  public CONFIG_FILE_VAR: string = 'FIREBASE_CONFIG';
   public serviceFactories: { [serviceName: string]: FirebaseServiceFactory } = {};
 
   private apps_: { [appName: string]: FirebaseApp } = {};
