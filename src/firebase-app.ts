@@ -271,7 +271,7 @@ export class FirebaseApp {
         `app named "${this.name_}". ${errorMessage}`
       );
     }
-    this.useConfigVar_();
+    this.useConfigEnvVar_();
 
     Object.keys(firebaseInternals_.serviceFactories).forEach((serviceName) => {
       // Defer calling createService() until the service is accessed
@@ -424,18 +424,25 @@ export class FirebaseApp {
     }
   }
 
-  private useConfigVar_(): FirebaseAppOptions {
+  /**
+   * Parse the file pointed to by the FIREBASE_CONFIG_FILE_VAR, if it exists 
+   */
+  private useConfigEnvVar_(): FirebaseAppOptions {
+    const FIREBASE_CONFIG_FILE_VAR: string = 'FIREBASE_CONFIG';
     if (this.options_.databaseURL !== undefined &&
       this.options_.projectId !== undefined &&
       this.options_.storageBucket !== undefined) {
       return;
     }
-    if (process.env[this.firebaseInternals_.CONFIG_FILE_VAR]) {
+    if (process.env[FIREBASE_CONFIG_FILE_VAR]) {
       let contents;
       try {
-        contents = fs.readFileSync(process.env[this.firebaseInternals_.CONFIG_FILE_VAR], 'utf8');
-      } catch (ignored) {
-        return;
+        contents = fs.readFileSync(process.env[FIREBASE_CONFIG_FILE_VAR], 'utf8');
+      } catch (error) {
+        throw new FirebaseAppError(
+          AppErrorCodes.INVALID_APP_OPTIONS,
+          'Failed to read app options file: ' + error,
+        );
       }
       let jsonContent;
       try {
@@ -447,14 +454,10 @@ export class FirebaseApp {
           'Failed to parse app options file: ' + error,
         );
       }
-      if (this.options_.databaseURL === undefined) {
-        this.options_.databaseURL = jsonContent.databaseURL;
-      }
-      if (this.options_.projectId === undefined) {
-        this.options_.projectId = jsonContent.projectId;
-      }
-      if (this.options_.storageBucket === undefined) {
-        this.options_.storageBucket = jsonContent.storageBucket;
+      for (let field of ['databaseURL', 'projectId', 'storageBucket']) {
+        if (this.options_[field] === undefined) {
+          this.options_[field] = jsonContent[field];
+        }
       }
     }
   }

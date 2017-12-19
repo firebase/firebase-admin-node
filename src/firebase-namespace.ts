@@ -48,14 +48,13 @@ export interface FirebaseServiceNamespace<T> {
  * Internals of a FirebaseNamespace instance.
  */
 export class FirebaseNamespaceInternals {
-  public CONFIG_FILE_VAR: string = 'FIREBASE_CONFIG';
   public serviceFactories: {[serviceName: string]: FirebaseServiceFactory} = {};
 
   private apps_: {[appName: string]: FirebaseApp} = {};
   private appHooks_: {[service: string]: AppHook} = {};
 
   constructor(public firebase_) {}
-
+  
   /**
    * Initializes the FirebaseApp instance.
    *
@@ -64,7 +63,9 @@ export class FirebaseNamespaceInternals {
    *
    * @return {FirebaseApp} A new FirebaseApp instance.
    */
-  public initializeApp(options: FirebaseAppOptions, appName = DEFAULT_APP_NAME): FirebaseApp {
+  public initializeApp(
+    options: FirebaseAppOptions = { credential: new ApplicationDefaultCredential() },
+    appName = DEFAULT_APP_NAME): FirebaseApp {
     if (typeof appName !== 'string' || appName === '') {
       throw new FirebaseAppError(
         AppErrorCodes.INVALID_APP_NAME,
@@ -347,7 +348,8 @@ export class FirebaseNamespace {
    *
    * @return {FirebaseApp} A new FirebaseApp instance.
    */
-  public initializeApp(options: FirebaseAppOptions, appName?: string): FirebaseApp {
+  public initializeApp(options?: FirebaseAppOptions, appName?: string): FirebaseApp {
+    console.log( typeof(options))
     return this.INTERNAL.initializeApp(options, appName);
   }
 

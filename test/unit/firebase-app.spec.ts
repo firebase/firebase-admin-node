@@ -30,7 +30,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from './utils';
 import * as mocks from '../resources/mocks';
 
-import {GoogleOAuthAccessToken} from '../../src/auth/credential';
+import {ApplicationDefaultCredential, GoogleOAuthAccessToken} from '../../src/auth/credential';
 import {FirebaseServiceInterface} from '../../src/firebase-service';
 import {FirebaseApp, FirebaseAccessToken} from '../../src/firebase-app';
 import {FirebaseNamespace, FirebaseNamespaceInternals} from '../../src/firebase-namespace';
@@ -47,7 +47,7 @@ chai.use(chaiAsPromised);
 
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 const ONE_MINUTE_IN_MILLISECONDS = 60 * 1000;
-
+const FIREBASE_CONFIG_FILE_VAR = "FIREBASE_CONFIG";
 const deleteSpy = sinon.spy();
 function mockServiceFactory(app: FirebaseApp): FirebaseServiceInterface {
   return {
@@ -64,6 +64,7 @@ describe('FirebaseApp', () => {
   let mockedRequests: nock.Scope[] = [];
   let firebaseNamespace: FirebaseNamespace;
   let firebaseNamespaceInternals: FirebaseNamespaceInternals;
+  let firebaseConfig: string;
 
   beforeEach(() => {
     utils.mockFetchAccessTokenRequests();
@@ -71,6 +72,9 @@ describe('FirebaseApp', () => {
     this.clock = sinon.useFakeTimers(1000);
 
     mockApp = mocks.app();
+
+//    firebaseConfig = process.env[FIREBASE_CONFIG_FILE_VAR];
+  //  delete process.env[FIREBASE_CONFIG_FILE_VAR];
 
     firebaseNamespace = new FirebaseNamespace();
     firebaseNamespaceInternals = firebaseNamespace.INTERNAL;
@@ -81,6 +85,7 @@ describe('FirebaseApp', () => {
   afterEach(() => {
     this.clock.restore();
 
+    //process.env[FIREBASE_CONFIG_FILE_VAR] = firebaseConfig;
     deleteSpy.reset();
     (firebaseNamespaceInternals.removeApp as any).restore();
 
@@ -150,46 +155,52 @@ describe('FirebaseApp', () => {
     });
 
     it('should overwrite the config values with the ones in the config file', () => {
-      firebaseNamespaceInternals.CONFIG_FILE_VAR = "TEST_FIERBASE_CONFIG"
-      process.env[firebaseNamespaceInternals.CONFIG_FILE_VAR] = './test/resources/firebase_config.json';
+      process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/firebase_config.json';
       const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
-      delete process.env[firebaseNamespaceInternals.CONFIG_FILE_VAR];
-      expect(app.options.databaseURL).to.equal("https://hipster-chat.firebaseio.com");
-      expect(app.options.projectId).to.equal("hipster-chat");
-      expect(app.options.storageBucket).to.equal("hipster-chat.appspot.com");
+      delete process.env[FIREBASE_CONFIG_FILE_VAR];
+      expect(app.options.databaseURL).to.equal("https://hipster-chat.firebaseio.mock");
+      expect(app.options.projectId).to.equal("hipster-chat-mock");
+      expect(app.options.storageBucket).to.equal("hipster-chat.appspot.mock");
     });
 
-    it('should find the default config var name', () => {
-      expect(firebaseNamespaceInternals.CONFIG_FILE_VAR).to.equal('FIREBASE_CONFIG')
+    it('should complain about a non existant file', () => {
+      process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/firebase_config_non_existant.json';
+      expect(() => {
+       const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
+      }).to.throw(`Failed to read app options file: Error: ENOENT: no such file or directory, open './test/resources/firebase_config_non_existant.json'`);
+      delete process.env[FIREBASE_CONFIG_FILE_VAR];
     });
 
-    it('should ignore a non existant file', () => {
-      firebaseNamespaceInternals.CONFIG_FILE_VAR = "TEST_FIERBASE_CONFIG"
-      process.env[firebaseNamespaceInternals.CONFIG_FILE_VAR] = './test/resources/firebase_config_non_existant.json';
+    it('should use the existing values when some of them exist', () => {
+      process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/firebase_config.json';
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+      delete process.env[FIREBASE_CONFIG_FILE_VAR];
+      expect(app.options.databaseURL).to.equal('https://databaseName.firebaseio.com');
+      expect(app.options.projectId).to.equal('hipster-chat-mock');
+      expect(app.options.storageBucket).to.equal('bucketName.appspot.com');
+    });
+
+    it('should use the existing values when some of them aren\'t overwritten', () => {
+      process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/firebase_config_partial.json';
+      const app = firebaseNamespace.initializeApp(mocks.appOptionsAuthDB, mocks.appName);
+      delete process.env[FIREBASE_CONFIG_FILE_VAR];
+      expect(app.options.databaseURL).to.equal('https://databaseName.firebaseio.com');
+      expect(app.options.projectId).to.equal('hipster-chat-mock');
+      expect(app.options.storageBucket).to.equal(undefined);
+    });
+
+    it('should init without problem when the config env var isn\'t set', () => {
       const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
-      delete process.env[firebaseNamespaceInternals.CONFIG_FILE_VAR];
       expect(app.options.databaseURL).to.equal(undefined);
       expect(app.options.projectId).to.equal(undefined);
       expect(app.options.storageBucket).to.equal(undefined);
     });
 
-    it('should use the existing values when some of them exist', () => {
-      firebaseNamespaceInternals.CONFIG_FILE_VAR = "TEST_FIERBASE_CONFIG"
-      process.env[firebaseNamespaceInternals.CONFIG_FILE_VAR] = './test/resources/firebase_config.json';
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-      delete process.env[firebaseNamespaceInternals.CONFIG_FILE_VAR];
-      expect(app.options.databaseURL).to.equal('https://databaseName.firebaseio.com');
-      expect(app.options.projectId).to.equal('hipster-chat');
-      expect(app.options.storageBucket).to.equal('bucketName.appspot.com');
-    });
-
-    it('should use the existing values when some of them aren\'t overwritten', () => {
-      firebaseNamespaceInternals.CONFIG_FILE_VAR = "TEST_FIERBASE_CONFIG"
-      process.env[firebaseNamespaceInternals.CONFIG_FILE_VAR] = './test/resources/firebase_config_partial.json';
-      const app = firebaseNamespace.initializeApp(mocks.appOptionsAuthDB, mocks.appName);
-      delete process.env[firebaseNamespaceInternals.CONFIG_FILE_VAR];
-      expect(app.options.databaseURL).to.equal('https://databaseName.firebaseio.com');
-      expect(app.options.projectId).to.equal('hipster-chat');
+    it('should init with no params setting default credential', () => {
+      const app = firebaseNamespace.initializeApp();
+      expect(app.options.credential).to.be.instanceOf(ApplicationDefaultCredential)
+      expect(app.options.databaseURL).to.equal(undefined);
+      expect(app.options.projectId).to.equal(undefined);
       expect(app.options.storageBucket).to.equal(undefined);
     });
   });

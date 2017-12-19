@@ -1,5 +1,5 @@
 {
-  "databaseURL": "https://hipster-chat.firebaseio.com",
-  "projectId": "hipster-chat",
-  "storageBucket": "hipster-chat.appspot.com"
+  "databaseURL": "https://hipster-chat.firebaseio.mock",
+  "projectId": "hipster-chat-mock",
+  "storageBucket": "hipster-chat.appspot.mock"
 }
