@@ -53,8 +53,8 @@ export class FirebaseNamespaceInternals {
   private apps_: {[appName: string]: FirebaseApp} = {};
   private appHooks_: {[service: string]: AppHook} = {};
 
-  constructor(public firebase_) {}
-  
+  constructor(public firebase_) { }
+
   /**
    * Initializes the FirebaseApp instance.
    *
@@ -349,7 +349,6 @@ export class FirebaseNamespace {
    * @return {FirebaseApp} A new FirebaseApp instance.
    */
   public initializeApp(options?: FirebaseAppOptions, appName?: string): FirebaseApp {
-    console.log( typeof(options))
     return this.INTERNAL.initializeApp(options, appName);
   }
 
