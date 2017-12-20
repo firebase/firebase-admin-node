@@ -40,10 +40,6 @@ export type AppHook = (event: string, app: FirebaseApp) => void;
  */
 export const FIREBASE_CONFIG_FILE_VAR: string = 'FIREBASE_CONFIG';
 
-/**
- * List of keys expected in the config file. 
- */
-
 export const FIREBASE_CONFIG_KEYS = ['databaseURL', 'projectId', 'storageBucket'];
 
 /**
@@ -444,10 +440,7 @@ export class FirebaseApp {
         allSpecified = false;
       }
     }
-    if (allSpecified) {
-      return;
-    }
-    if (process.env[FIREBASE_CONFIG_FILE_VAR] === undefined) {
+    if (allSpecified || process.env[FIREBASE_CONFIG_FILE_VAR] === undefined) {
       return;
     }
     let contents;
@@ -471,7 +464,7 @@ export class FirebaseApp {
     }
     for (let key in jsonContent) {
       if (jsonContent.hasOwnProperty(key)) {
-        if (FIREBASE_CONFIG_KEYS.indexOf(key) == -1) {
+        if (FIREBASE_CONFIG_KEYS.indexOf(key) === -1) {
           throw new FirebaseAppError(
             AppErrorCodes.INVALID_APP_OPTIONS,
             `"${key}" is not a valid config key`,
