@@ -14,21 +14,21 @@
  * limitations under the License.
  */
 import fs = require('fs');
-import { Credential } from './auth/credential';
+import {Credential} from './auth/credential';
 import * as validator from './utils/validator';
-import { deepCopy, deepExtend } from './utils/deep-copy';
-import { GoogleOAuthAccessToken } from './auth/credential';
-import { FirebaseServiceInterface } from './firebase-service';
-import { FirebaseNamespaceInternals } from './firebase-namespace';
-import { AppErrorCodes, FirebaseAppError } from './utils/error';
+import {deepCopy, deepExtend} from './utils/deep-copy';
+import {GoogleOAuthAccessToken} from './auth/credential';
+import {FirebaseServiceInterface} from './firebase-service';
+import {FirebaseNamespaceInternals} from './firebase-namespace';
+import {AppErrorCodes, FirebaseAppError} from './utils/error';
 
-import { Auth } from './auth/auth';
-import { Messaging } from './messaging/messaging';
-import { Storage } from './storage/storage';
-import { Database } from '@firebase/database';
-import { DatabaseService } from './database/database';
-import { Firestore } from '@google-cloud/firestore';
-import { FirestoreService } from './firestore/firestore';
+import {Auth} from './auth/auth';
+import {Messaging} from './messaging/messaging';
+import {Storage} from './storage/storage';
+import {Database} from '@firebase/database';
+import {DatabaseService} from './database/database';
+import {Firestore} from '@google-cloud/firestore';
+import {FirestoreService} from './firestore/firestore';
 
 
 /**
@@ -253,7 +253,7 @@ export class FirebaseApp {
 
   private name_: string;
   private options_: FirebaseAppOptions;
-  private services_: { [name: string]: FirebaseServiceInterface } = {};
+  private services_: {[name: string]: FirebaseServiceInterface} = {};
   private isDeleted_ = false;
 
   constructor(options: FirebaseAppOptions, name: string, private firebaseInternals_: FirebaseNamespaceInternals) {
@@ -420,7 +420,7 @@ export class FirebaseApp {
   /**
    * Callback function used to extend an App instance at the time of service instance creation.
    */
-  private extendApp_(props: { [prop: string]: any }): void {
+  private extendApp_(props: {[prop: string]: any}): void {
     deepExtend(this, props);
   }
 
