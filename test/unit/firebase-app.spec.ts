@@ -169,28 +169,28 @@ describe('FirebaseApp', () => {
       process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/non_existant.json';
 
       expect(() => {
-       const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
+       firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
       }).to.throw(`Failed to read app options file: Error: ENOENT: no such file or directory`);
     });
 
     it('should throw when the environment variable points to an empty file', () => {
       process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/firebase_config_empty.json'  ;
       expect(() => {
-        const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
+        firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
       }).to.throw(`Failed to parse app options file`);
     });
 
     it('should throw when the environment variable points to bad json', () => {
       process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/firebase_config_bad.json'  ;
       expect(() => {
-        const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
+        firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
       }).to.throw(`Failed to parse app options file`);
     });
 
     it('should throw when the config file has a bad key', () => {
       process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/firebase_config_bad_key.json'  ;
       expect(() => {
-        const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
+        firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
       }).to.throw(`is not a valid config key`);
     });
 
