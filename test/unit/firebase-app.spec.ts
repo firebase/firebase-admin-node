@@ -177,7 +177,7 @@ describe('FirebaseApp', () => {
       process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/firebase_config_bad.json'  ;
       expect(() => {
         const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
-      }).to.throw(`Failed to parse app options file: SyntaxError: Unexpected end of JSON input`);
+      }).to.throw(`Failed to parse app options file`);
     });
 
     it('should use the existing values when some of them exist', () => {
