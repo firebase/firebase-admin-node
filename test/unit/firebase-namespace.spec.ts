@@ -48,6 +48,7 @@ import {
   GeoPoint,
   setLogFunction,
 } from '@google-cloud/firestore';
+import {InstanceId} from '../../src/instance-id/instance-id';
 
 chai.should();
 chai.use(sinonChai);
@@ -548,6 +549,39 @@ describe('FirebaseNamespace', () => {
 
     it('should return a reference to setLogFunction', () => {
       expect(firebaseNamespace.firestore.setLogFunction).to.be.deep.equal(setLogFunction);
+    });
+  });
+
+  describe('#instanceId()', () => {
+    it('should throw when called before initializing an app', () => {
+      expect(() => {
+        firebaseNamespace.instanceId();
+      }).to.throw(DEFAULT_APP_NOT_FOUND);
+    });
+
+    it('should throw when default app is not initialized', () => {
+      firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
+      expect(() => {
+        firebaseNamespace.instanceId();
+      }).to.throw(DEFAULT_APP_NOT_FOUND);
+    });
+
+    it('should return a valid namespace when the default app is initialized', () => {
+      let app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions);
+      let iid: InstanceId = firebaseNamespace.instanceId();
+      expect(iid).to.not.be.null;
+      expect(iid.app).to.be.deep.equal(app);
+    });
+
+    it('should return a valid namespace when the named app is initialized', () => {
+      let app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
+      let iid: InstanceId = firebaseNamespace.instanceId(app);
+      expect(iid).to.not.be.null;
+      expect(iid.app).to.be.deep.equal(app);
+    });
+
+    it('should return a reference to InstanceId type', () => {
+      expect(firebaseNamespace.instanceId.InstanceId).to.be.deep.equal(InstanceId);
     });
   });
 });
