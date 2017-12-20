@@ -38,7 +38,6 @@ export type AppHook = (event: string, app: FirebaseApp) => void;
 /**
  * Constant holding the enviromnet variable that holds the default config.
  */
-
 export const FIREBASE_CONFIG_FILE_VAR: string = 'FIREBASE_CONFIG';
 
 /**
@@ -470,11 +469,16 @@ export class FirebaseApp {
         'Failed to parse app options file: ' + error,
       );
     }
+    for (let key in jsonContent) {
+      if (jsonContent.hasOwnProperty(key)) {
+        if (FIREBASE_CONFIG_KEYS.indexOf(key) == -1) {
+          throw new FirebaseAppError(
+            AppErrorCodes.INVALID_APP_OPTIONS,
+            `"${key}" is not a valid config key`,
+          );
+        }
+      }
+    }
     this.options_ = Object.assign(jsonContent, this.options_);
-    // for (let field of FIREBASE_CONFIG_KEYS) {
-    //   if (this.options_[field] === undefined) {
-    //     this.options_[field] = jsonContent[field];
-    //   }
-    // }
   }
 }

@@ -82,7 +82,7 @@ describe('FirebaseApp', () => {
 
   afterEach(() => {
     this.clock.restore();
-    if (firebaseConfigVar == undefined || firebaseConfigVar == 'undefined') {
+    if (firebaseConfigVar == undefined) {
       delete process.env[FIREBASE_CONFIG_FILE_VAR];
     } else {
       process.env[FIREBASE_CONFIG_FILE_VAR] = firebaseConfigVar;
@@ -156,7 +156,7 @@ describe('FirebaseApp', () => {
       expect(mockApp.options).to.deep.equal(original);
     });
 
-    it('should overwrite the config values with the ones in the config file', () => {
+    it('should ammend the missing config values with the ones in the config file', () => {
       process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/firebase_config.json';
       const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
       expect(app.options.databaseURL).to.equal("https://hipster-chat.firebaseio.mock");
@@ -165,21 +165,35 @@ describe('FirebaseApp', () => {
     });
 
     it('should throw when the environment variable points to non existing file', () => {
-      process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/firebase_config_non_existant.json';
+      process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/non_existant.json';
       
       expect(() => {
        const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
-      }).to.throw(`Failed to read app options file: Error: ENOENT: no such file or directory, open './test/resources/firebase_config_non_existant.json'`);
+      }).to.throw(`Failed to read app options file: Error: ENOENT: no such file or directory, open './test/resources/non_existant.json'`);
     });
 
-    it('should throw when the environment variable points to non parsable file', () => {
+    it('should throw when the environment variable points to an empty file', () => {
+      process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/firebase_config_empty.json'  ;
+      expect(() => {
+        const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
+      }).to.throw(`Failed to parse app options file`);
+    });
+
+    it('should throw when the environment variable points to bad json', () => {
       process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/firebase_config_bad.json'  ;
       expect(() => {
         const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
       }).to.throw(`Failed to parse app options file`);
     });
 
-    it('should use the existing values when some of them exist', () => {
+    it('should throw when the config file has a bad key', () => {
+      process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/firebase_config_bad_key.json'  ;
+      expect(() => {
+        const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
+      }).to.throw(`is not a valid config key`);
+    });
+
+    it('should use explicitly specified options when available', () => {
       process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/firebase_config.json';
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
       expect(app.options.databaseURL).to.equal('https://databaseName.firebaseio.com');
@@ -187,7 +201,7 @@ describe('FirebaseApp', () => {
       expect(app.options.storageBucket).to.equal('bucketName.appspot.com');
     });
 
-    it('should use the existing values when some of them are not overwritten', () => {
+    it('should use the existing default config values to ammend even if some are misisng', () => {
       process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/firebase_config_partial.json';
       const app = firebaseNamespace.initializeApp(mocks.appOptionsAuthDB, mocks.appName);
       expect(app.options.databaseURL).to.equal('https://databaseName.firebaseio.com');
@@ -210,7 +224,7 @@ describe('FirebaseApp', () => {
       expect(app.options.storageBucket).to.equal(undefined);
     });
 
-    it('should init with params from the config file, setting default credential', () => {
+    it('should init when no init arguments are provided', () => {
       process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/firebase_config.json';
       const app = firebaseNamespace.initializeApp();
       expect(app.options.credential).to.be.instanceOf(ApplicationDefaultCredential)
