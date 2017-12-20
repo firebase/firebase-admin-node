@@ -164,7 +164,7 @@ describe('FirebaseApp', () => {
       expect(app.options.storageBucket).to.equal("hipster-chat.appspot.mock");
     });
 
-    it('should complain about a non existant file', () => {
+    it('should throw when the environment variable points to non existing file', () => {
       process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/firebase_config_non_existant.json';
       
       expect(() => {
@@ -173,7 +173,7 @@ describe('FirebaseApp', () => {
       
     });
 
-    it('should complain about a non parsable file', () => {
+    it('should throw when the environment variable points to non parsable file', () => {
       process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/firebase_config_bad.json'  ;
       expect(() => {
         const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
@@ -209,6 +209,16 @@ describe('FirebaseApp', () => {
       expect(app.options.databaseURL).to.equal(undefined);
       expect(app.options.projectId).to.equal(undefined);
       expect(app.options.storageBucket).to.equal(undefined);
+    });
+
+    it('should init with params from the config file, setting default credential', () => {
+      process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/firebase_config.json';
+      const app = firebaseNamespace.initializeApp();
+      expect(app.options.credential).to.be.instanceOf(ApplicationDefaultCredential)
+      expect(app.options.databaseURL).to.equal("https://hipster-chat.firebaseio.mock");
+      expect(app.options.projectId).to.equal("hipster-chat-mock");
+      expect(app.options.storageBucket).to.equal("hipster-chat.appspot.mock");
+
     });
   });
 
