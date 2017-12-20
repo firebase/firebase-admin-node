@@ -30,7 +30,6 @@ import {DatabaseService} from './database/database';
 import {Firestore} from '@google-cloud/firestore';
 import {FirestoreService} from './firestore/firestore';
 
-
 /**
  * Type representing a callback which is called every time an app lifecycle event occurs.
  */
@@ -176,11 +175,11 @@ export class FirebaseAppInternals {
 
           if (errorMessage.indexOf('invalid_grant') !== -1) {
             errorMessage += ' There are two likely causes: (1) your server time is not properly ' +
-              'synced or (2) your certificate key file has been revoked. To solve (1), re-sync the ' +
-              'time on your server. To solve (2), make sure the key ID for your key file is still ' +
-              'present at https://console.firebase.google.com/iam-admin/serviceaccounts/project. If ' +
-              'not, generate a new key file at ' +
-              'https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk.';
+            'synced or (2) your certificate key file has been revoked. To solve (1), re-sync the ' +
+            'time on your server. To solve (2), make sure the key ID for your key file is still ' +
+            'present at https://console.firebase.google.com/iam-admin/serviceaccounts/project. If ' +
+            'not, generate a new key file at ' +
+            'https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk.';
           }
 
           throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
