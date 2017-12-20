@@ -170,7 +170,6 @@ describe('FirebaseApp', () => {
       expect(() => {
        const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
       }).to.throw(`Failed to read app options file: Error: ENOENT: no such file or directory, open './test/resources/firebase_config_non_existant.json'`);
-      
     });
 
     it('should throw when the environment variable points to non parsable file', () => {
