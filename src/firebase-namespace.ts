@@ -61,10 +61,8 @@ export class FirebaseNamespaceInternals {
    *
    * @return {FirebaseApp} A new FirebaseApp instance.
    */
-  public initializeApp(
-    options?: FirebaseAppOptions,
-    appName = DEFAULT_APP_NAME): FirebaseApp {
-    if (options === undefined) {
+  public initializeApp(options?: FirebaseAppOptions, appName = DEFAULT_APP_NAME): FirebaseApp {
+    if (typeof options === 'undefined') {
       options = {credential: new ApplicationDefaultCredential() };
     }
     if (typeof appName !== 'string' || appName === '') {

@@ -30,7 +30,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from './utils';
 import * as mocks from '../resources/mocks';
 
-import {ApplicationDefaultCredential, GoogleOAuthAccessToken} from '../../src/auth/credential';
+import {ApplicationDefaultCredential, CertCredential, GoogleOAuthAccessToken} from '../../src/auth/credential';
 import {FirebaseServiceInterface} from '../../src/firebase-service';
 import {FirebaseApp, FirebaseAccessToken, FIREBASE_CONFIG_FILE_VAR} from '../../src/firebase-app';
 import {FirebaseNamespace, FirebaseNamespaceInternals} from '../../src/firebase-namespace';
@@ -82,10 +82,10 @@ describe('FirebaseApp', () => {
 
   afterEach(() => {
     this.clock.restore();
-    if (firebaseConfigVar == undefined) {
-      delete process.env[FIREBASE_CONFIG_FILE_VAR];
-    } else {
+    if (firebaseConfigVar) {
       process.env[FIREBASE_CONFIG_FILE_VAR] = firebaseConfigVar;
+    } else {
+      delete process.env[FIREBASE_CONFIG_FILE_VAR];
     }
     
     deleteSpy.reset();
@@ -196,6 +196,7 @@ describe('FirebaseApp', () => {
     it('should use explicitly specified options when available', () => {
       process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/firebase_config.json';
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+      expect(app.options.credential).to.be.instanceOf(CertCredential)
       expect(app.options.databaseURL).to.equal('https://databaseName.firebaseio.com');
       expect(app.options.projectId).to.equal('hipster-chat-mock');
       expect(app.options.storageBucket).to.equal('bucketName.appspot.com');
@@ -211,12 +212,13 @@ describe('FirebaseApp', () => {
 
     it('should not throw when the config environment variable is not set', () => {
       const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
+      expect(app.options.credential).to.be.instanceOf(CertCredential)
       expect(app.options.databaseURL).to.equal(undefined);
       expect(app.options.projectId).to.equal(undefined);
       expect(app.options.storageBucket).to.equal(undefined);
     });
 
-    it('should init with no params setting default credential', () => {
+    it('should init with application default credentials when no options provided and the environment variable is not set', () => {
       const app = firebaseNamespace.initializeApp();
       expect(app.options.credential).to.be.instanceOf(ApplicationDefaultCredential)
       expect(app.options.databaseURL).to.equal(undefined);

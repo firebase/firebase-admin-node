@@ -463,13 +463,11 @@ export class FirebaseApp {
       );
     }
     for (let key in jsonContent) {
-      if (jsonContent.hasOwnProperty(key)) {
-        if (FIREBASE_CONFIG_KEYS.indexOf(key) === -1) {
-          throw new FirebaseAppError(
-            AppErrorCodes.INVALID_APP_OPTIONS,
-            `"${key}" is not a valid config key`,
-          );
-        }
+      if (FIREBASE_CONFIG_KEYS.indexOf(key) === -1) {
+        throw new FirebaseAppError(
+          AppErrorCodes.INVALID_APP_OPTIONS,
+          `"${key}" is not a valid config key`,
+        );
       }
     }
     this.options_ = Object.assign(jsonContent, this.options_);
