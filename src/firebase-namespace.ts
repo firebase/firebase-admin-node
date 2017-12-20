@@ -64,7 +64,7 @@ export class FirebaseNamespaceInternals {
   public initializeApp(
     options?: FirebaseAppOptions,
     appName = DEFAULT_APP_NAME): FirebaseApp {
-    if (options == undefined) {
+    if (options === undefined) {
       options = {credential: new ApplicationDefaultCredential() };
     }
     if (typeof appName !== 'string' || appName === '') {
@@ -167,9 +167,9 @@ export class FirebaseNamespaceInternals {
    * @return {FirebaseServiceNamespace<FirebaseServiceInterface>} The Firebase service's namespace.
    */
   public registerService(serviceName: string,
-    createService: FirebaseServiceFactory,
-    serviceProperties?: Object,
-    appHook?: AppHook): FirebaseServiceNamespace<FirebaseServiceInterface> {
+                         createService: FirebaseServiceFactory,
+                         serviceProperties?: Object,
+                         appHook?: AppHook): FirebaseServiceNamespace<FirebaseServiceInterface> {
     let errorMessage;
     if (typeof serviceName === 'undefined') {
       errorMessage = `No service name provided. Service name must be a non-empty string.`;

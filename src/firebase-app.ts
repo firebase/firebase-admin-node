@@ -448,8 +448,8 @@ export class FirebaseApp {
     if (allSpecified) {
       return;
     }
-    if (process.env[FIREBASE_CONFIG_FILE_VAR] == undefined) {
-      return
+    if (process.env[FIREBASE_CONFIG_FILE_VAR] === undefined) {
+      return;
     }
     let contents;
     try {

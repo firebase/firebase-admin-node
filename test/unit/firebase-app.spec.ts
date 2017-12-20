@@ -82,10 +82,12 @@ describe('FirebaseApp', () => {
 
   afterEach(() => {
     this.clock.restore();
-    if (firebaseConfigVar!= undefined &&  firebaseConfigVar !== 'undefined') {
+    if (firebaseConfigVar == undefined || firebaseConfigVar == 'undefined') {
+      delete process.env[FIREBASE_CONFIG_FILE_VAR];
+    } else {
       process.env[FIREBASE_CONFIG_FILE_VAR] = firebaseConfigVar;
     }
-  
+    
     deleteSpy.reset();
     (firebaseNamespaceInternals.removeApp as any).restore();
 
@@ -164,13 +166,15 @@ describe('FirebaseApp', () => {
 
     it('should complain about a non existant file', () => {
       process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/firebase_config_non_existant.json';
+      
       expect(() => {
        const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
       }).to.throw(`Failed to read app options file: Error: ENOENT: no such file or directory, open './test/resources/firebase_config_non_existant.json'`);
+      
     });
 
     it('should complain about a non parsable file', () => {
-      process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/firebase_config_bad.json';
+      process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/firebase_config_bad.json'  ;
       expect(() => {
         const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
       }).to.throw(`Failed to parse app options file: SyntaxError: Unexpected end of JSON input`);
