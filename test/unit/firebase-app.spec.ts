@@ -72,7 +72,7 @@ describe('FirebaseApp', () => {
 
     mockApp = mocks.app();
 
-    let firebaseConfigVar = process.env[FIREBASE_CONFIG_FILE_VAR];
+    firebaseConfigVar = process.env[FIREBASE_CONFIG_FILE_VAR];
     delete process.env[FIREBASE_CONFIG_FILE_VAR];
     firebaseNamespace = new FirebaseNamespace();
     firebaseNamespaceInternals = firebaseNamespace.INTERNAL;
@@ -87,7 +87,7 @@ describe('FirebaseApp', () => {
     } else {
       delete process.env[FIREBASE_CONFIG_FILE_VAR];
     }
-    
+
     deleteSpy.reset();
     (firebaseNamespaceInternals.removeApp as any).restore();
 
@@ -159,17 +159,18 @@ describe('FirebaseApp', () => {
     it('should ammend the missing config values with the ones in the config file', () => {
       process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/firebase_config.json';
       const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
-      expect(app.options.databaseURL).to.equal("https://hipster-chat.firebaseio.mock");
-      expect(app.options.projectId).to.equal("hipster-chat-mock");
-      expect(app.options.storageBucket).to.equal("hipster-chat.appspot.mock");
+      expect(app.options.databaseAuthVariableOverride).to.equal('this#is#an#auth#string');
+      expect(app.options.databaseURL).to.equal('https://hipster-chat.firebaseio.mock');
+      expect(app.options.projectId).to.equal('hipster-chat-mock');
+      expect(app.options.storageBucket).to.equal('hipster-chat.appspot.mock');
     });
 
     it('should throw when the environment variable points to non existing file', () => {
       process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/non_existant.json';
-      
+
       expect(() => {
        const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
-      }).to.throw(`Failed to read app options file: Error: ENOENT: no such file or directory, open './test/resources/non_existant.json'`);
+      }).to.throw(`Failed to read app options file: Error: ENOENT: no such file or directory`);
     });
 
     it('should throw when the environment variable points to an empty file', () => {
@@ -196,7 +197,8 @@ describe('FirebaseApp', () => {
     it('should use explicitly specified options when available', () => {
       process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/firebase_config.json';
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-      expect(app.options.credential).to.be.instanceOf(CertCredential)
+      expect(app.options.credential).to.be.instanceOf(CertCredential);
+      expect(app.options.databaseAuthVariableOverride).to.equal('this#is#an#auth#string');
       expect(app.options.databaseURL).to.equal('https://databaseName.firebaseio.com');
       expect(app.options.projectId).to.equal('hipster-chat-mock');
       expect(app.options.storageBucket).to.equal('bucketName.appspot.com');
@@ -212,15 +214,15 @@ describe('FirebaseApp', () => {
 
     it('should not throw when the config environment variable is not set', () => {
       const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
-      expect(app.options.credential).to.be.instanceOf(CertCredential)
+      expect(app.options.credential).to.be.instanceOf(CertCredential);
       expect(app.options.databaseURL).to.equal(undefined);
       expect(app.options.projectId).to.equal(undefined);
       expect(app.options.storageBucket).to.equal(undefined);
     });
 
-    it('should init with application default credentials when no options provided and the environment variable is not set', () => {
+    it('should init with application default creds when no options provided and env variable is not set', () => {
       const app = firebaseNamespace.initializeApp();
-      expect(app.options.credential).to.be.instanceOf(ApplicationDefaultCredential)
+      expect(app.options.credential).to.be.instanceOf(ApplicationDefaultCredential);
       expect(app.options.databaseURL).to.equal(undefined);
       expect(app.options.projectId).to.equal(undefined);
       expect(app.options.storageBucket).to.equal(undefined);
@@ -229,10 +231,11 @@ describe('FirebaseApp', () => {
     it('should init when no init arguments are provided', () => {
       process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/firebase_config.json';
       const app = firebaseNamespace.initializeApp();
-      expect(app.options.credential).to.be.instanceOf(ApplicationDefaultCredential)
-      expect(app.options.databaseURL).to.equal("https://hipster-chat.firebaseio.mock");
-      expect(app.options.projectId).to.equal("hipster-chat-mock");
-      expect(app.options.storageBucket).to.equal("hipster-chat.appspot.mock");
+      expect(app.options.credential).to.be.instanceOf(ApplicationDefaultCredential);
+      expect(app.options.databaseAuthVariableOverride).to.equal('this#is#an#auth#string');
+      expect(app.options.databaseURL).to.equal('https://hipster-chat.firebaseio.mock');
+      expect(app.options.projectId).to.equal('hipster-chat-mock');
+      expect(app.options.storageBucket).to.equal('hipster-chat.appspot.mock');
 
     });
   });

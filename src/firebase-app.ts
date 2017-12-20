@@ -51,7 +51,7 @@ export type FirebaseAppOptions = {
   projectId?: string,
 };
 
-export const FIREBASE_CONFIG_KEYS = ['databaseURL', 'projectId', 'storageBucket'];
+export const FIREBASE_CONFIG_KEYS = ['databaseAuthVariableOverride', 'databaseURL', 'projectId', 'storageBucket'];
 
 /**
  * Type representing a Firebase OAuth access token (derived from a Google OAuth2 access token) which
