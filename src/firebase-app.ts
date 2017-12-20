@@ -40,8 +40,6 @@ export type AppHook = (event: string, app: FirebaseApp) => void;
  */
 export const FIREBASE_CONFIG_FILE_VAR: string = 'FIREBASE_CONFIG';
 
-export const FIREBASE_CONFIG_KEYS = ['databaseURL', 'projectId', 'storageBucket'];
-
 /**
  * Type representing the options object passed into initializeApp().
  */
@@ -52,6 +50,8 @@ export type FirebaseAppOptions = {
   storageBucket?: string,
   projectId?: string,
 };
+
+export const FIREBASE_CONFIG_KEYS = ['databaseURL', 'projectId', 'storageBucket'];
 
 /**
  * Type representing a Firebase OAuth access token (derived from a Google OAuth2 access token) which
