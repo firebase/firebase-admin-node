@@ -32,7 +32,6 @@ import {Database} from '@firebase/database';
 import {Firestore} from '@google-cloud/firestore';
 
 const DEFAULT_APP_NAME = '[DEFAULT]';
-
 let globalAppDefaultCred: ApplicationDefaultCredential;
 let globalCertCreds: {[key: string]: CertCredential} = {};
 let globalRefreshTokenCreds: {[key: string]: RefreshTokenCredential} = {};
@@ -49,11 +48,10 @@ export interface FirebaseServiceNamespace<T> {
  */
 export class FirebaseNamespaceInternals {
   public serviceFactories: {[serviceName: string]: FirebaseServiceFactory} = {};
-
   private apps_: {[appName: string]: FirebaseApp} = {};
   private appHooks_: {[service: string]: AppHook} = {};
 
-  constructor(public firebase_) { }
+  constructor(public firebase_) {}
 
   /**
    * Initializes the FirebaseApp instance.
@@ -64,8 +62,11 @@ export class FirebaseNamespaceInternals {
    * @return {FirebaseApp} A new FirebaseApp instance.
    */
   public initializeApp(
-    options: FirebaseAppOptions = { credential: new ApplicationDefaultCredential() },
+    options?: FirebaseAppOptions,
     appName = DEFAULT_APP_NAME): FirebaseApp {
+    if (options == undefined) {
+      options = {credential: new ApplicationDefaultCredential() };
+    }
     if (typeof appName !== 'string' || appName === '') {
       throw new FirebaseAppError(
         AppErrorCodes.INVALID_APP_NAME,
@@ -166,9 +167,9 @@ export class FirebaseNamespaceInternals {
    * @return {FirebaseServiceNamespace<FirebaseServiceInterface>} The Firebase service's namespace.
    */
   public registerService(serviceName: string,
-                         createService: FirebaseServiceFactory,
-                         serviceProperties?: Object,
-                         appHook?: AppHook): FirebaseServiceNamespace<FirebaseServiceInterface> {
+    createService: FirebaseServiceFactory,
+    serviceProperties?: Object,
+    appHook?: AppHook): FirebaseServiceNamespace<FirebaseServiceInterface> {
     let errorMessage;
     if (typeof serviceName === 'undefined') {
       errorMessage = `No service name provided. Service name must be a non-empty string.`;
@@ -232,7 +233,7 @@ export class FirebaseNamespaceInternals {
 
 
 let firebaseCredential = {
-  cert: (serviceAccountPathOrObject: string|Object): Credential => {
+  cert: (serviceAccountPathOrObject: string | Object): Credential => {
     const stringifiedServiceAccount = JSON.stringify(serviceAccountPathOrObject);
     if (!(stringifiedServiceAccount in globalCertCreds)) {
       globalCertCreds[stringifiedServiceAccount] = new CertCredential(serviceAccountPathOrObject);
@@ -240,7 +241,7 @@ let firebaseCredential = {
     return globalCertCreds[stringifiedServiceAccount];
   },
 
-  refreshToken: (refreshTokenPathOrObject: string|Object): Credential => {
+  refreshToken: (refreshTokenPathOrObject: string | Object): Credential => {
     const stringifiedRefreshToken = JSON.stringify(refreshTokenPathOrObject);
     if (!(stringifiedRefreshToken in globalRefreshTokenCreds)) {
       globalRefreshTokenCreds[stringifiedRefreshToken] = new RefreshTokenCredential(refreshTokenPathOrObject);
