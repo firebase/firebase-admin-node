@@ -339,6 +339,7 @@ describe('FirebaseApp', () => {
       try {
         firebaseNamespace.app(mocks.appName).delete();
       } catch (e) {
+        // ignore
       }
     });
 
