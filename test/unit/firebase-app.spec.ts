@@ -410,7 +410,8 @@ describe('FirebaseApp', () => {
         const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
         expect(() => {
           app.database(url);
-        }).to.throw('FIREBASE FATAL ERROR: Cannot parse Firebase url. Please use https://<YOUR FIREBASE>.firebaseio.com');
+        }).to.throw('FIREBASE FATAL ERROR: Cannot parse Firebase url. ' +
+                    'Please use https://<YOUR FIREBASE>.firebaseio.com');
       });
     });
   });
