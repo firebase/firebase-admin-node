@@ -169,9 +169,8 @@ describe('FirebaseApp', () => {
 
     it('should throw when the environment variable points to non existing file', () => {
       process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/non_existant.json';
-
       expect(() => {
-       firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
+        firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
       }).to.throw(`Failed to read app options file: Error: ENOENT: no such file or directory`);
     });
 
