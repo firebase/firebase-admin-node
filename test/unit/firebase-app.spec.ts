@@ -194,6 +194,13 @@ describe('FirebaseApp', () => {
       }).to.throw(`is not a valid config key`);
     });
 
+    it('should throw when the config file has a bad key even if we do not need it', () => {
+      process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/firebase_config_bad_key.json'  ;
+      expect(() => {
+        firebaseNamespace.initializeApp(mocks.appOptionsWithOverride, mocks.appName);
+      }).to.throw(`is not a valid config key`);
+    });
+
     it('should use explicitly specified options when available', () => {
       process.env[FIREBASE_CONFIG_FILE_VAR] = './test/resources/firebase_config.json';
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);

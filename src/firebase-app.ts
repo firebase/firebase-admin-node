@@ -434,13 +434,7 @@ export class FirebaseApp {
    * Parse the file pointed to by the FIREBASE_CONFIG_FILE_VAR, if it exists 
    */
   private loadOptionsFromEnvironment() {
-    let allSpecified: boolean = true;
-    for (let key in FIREBASE_CONFIG_KEYS) {
-      if (typeof this.options_[key] === 'undefined') {
-        allSpecified = false;
-      }
-    }
-    if (allSpecified || process.env[FIREBASE_CONFIG_FILE_VAR] === undefined) {
+    if ( process.env[FIREBASE_CONFIG_FILE_VAR] === undefined) {
       return;
     }
     let contents;
