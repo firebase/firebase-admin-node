@@ -49,7 +49,7 @@ export interface FirebaseServiceNamespace<T> {
  */
 export class FirebaseNamespaceInternals {
   public serviceFactories: { [serviceName: string]: FirebaseServiceFactory } = {};
-  
+
   private apps_: {[appName: string]: FirebaseApp} = {};
   private appHooks_: {[service: string]: AppHook} = {};
 
