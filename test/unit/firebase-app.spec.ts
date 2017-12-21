@@ -47,10 +47,11 @@ chai.use(chaiAsPromised);
 
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 const ONE_MINUTE_IN_MILLISECONDS = 60 * 1000;
+
 const deleteSpy = sinon.spy();
 function mockServiceFactory(app: FirebaseApp): FirebaseServiceInterface {
   return {
-  app,
+    app,
     INTERNAL: {
       delete: deleteSpy.bind(null, app.name),
     },
@@ -76,6 +77,7 @@ describe('FirebaseApp', () => {
     delete process.env[FIREBASE_CONFIG_FILE_VAR];
     firebaseNamespace = new FirebaseNamespace();
     firebaseNamespaceInternals = firebaseNamespace.INTERNAL;
+
     sinon.stub(firebaseNamespaceInternals, 'removeApp');
     mockApp = new FirebaseApp(mocks.appOptions, mocks.appName, firebaseNamespaceInternals);
   });
@@ -243,7 +245,6 @@ describe('FirebaseApp', () => {
       expect(app.options.databaseURL).to.equal('https://hipster-chat.firebaseio.mock');
       expect(app.options.projectId).to.equal('hipster-chat-mock');
       expect(app.options.storageBucket).to.equal('hipster-chat.appspot.mock');
-
     });
   });
 
