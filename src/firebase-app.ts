@@ -273,7 +273,7 @@ export class FirebaseApp {
     if (typeof credential !== 'object' || credential === null || typeof credential.getAccessToken !== 'function') {
       errorMessage = 'The "credential" property must be an object which implements the Credential interface.';
     }
-    
+
     if (typeof errorMessage !== 'undefined') {
       throw new FirebaseAppError(
         AppErrorCodes.INVALID_APP_OPTIONS,
