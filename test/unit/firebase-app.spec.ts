@@ -216,23 +216,23 @@ describe('FirebaseApp', () => {
       const app = firebaseNamespace.initializeApp(mocks.appOptionsAuthDB, mocks.appName);
       expect(app.options.databaseURL).to.equal('https://databaseName.firebaseio.com');
       expect(app.options.projectId).to.equal('hipster-chat-mock');
-      expect(app.options.storageBucket).to.equal(undefined);
+      expect(app.options.storageBucket).to.be.undefined;
     });
 
     it('should not throw when the config environment variable is not set', () => {
       const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
       expect(app.options.credential).to.be.instanceOf(CertCredential);
-      expect(app.options.databaseURL).to.equal(undefined);
-      expect(app.options.projectId).to.equal(undefined);
-      expect(app.options.storageBucket).to.equal(undefined);
+      expect(app.options.databaseURL).to.be.undefined;
+      expect(app.options.projectId).to.be.undefined;
+      expect(app.options.storageBucket).to.be.undefined;
     });
 
     it('should init with application default creds when no options provided and env variable is not set', () => {
       const app = firebaseNamespace.initializeApp();
       expect(app.options.credential).to.be.instanceOf(ApplicationDefaultCredential);
-      expect(app.options.databaseURL).to.equal(undefined);
-      expect(app.options.projectId).to.equal(undefined);
-      expect(app.options.storageBucket).to.equal(undefined);
+      expect(app.options.databaseURL).to.be.undefined;
+      expect(app.options.projectId).to.be.undefined;
+      expect(app.options.storageBucket).to.be.undefined;
     });
 
     it('should init when no init arguments are provided', () => {

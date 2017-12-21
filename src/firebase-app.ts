@@ -51,6 +51,9 @@ export type FirebaseAppOptions = {
   projectId?: string,
 };
 
+/**
+ * Valid keys for the json file with the default config settings.
+ */
 export const FIREBASE_CONFIG_KEYS = ['databaseAuthVariableOverride', 'databaseURL', 'projectId', 'storageBucket'];
 
 /**
@@ -434,7 +437,7 @@ export class FirebaseApp {
    * Parse the file pointed to by the FIREBASE_CONFIG_FILE_VAR, if it exists 
    */
   private loadOptionsFromEnvironment() {
-    if ( process.env[FIREBASE_CONFIG_FILE_VAR] === undefined) {
+    if (typeof process.env[FIREBASE_CONFIG_FILE_VAR] === 'undefined') {
       return;
     }
     let contents;
