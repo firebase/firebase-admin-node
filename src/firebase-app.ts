@@ -36,7 +36,7 @@ import {FirestoreService} from './firestore/firestore';
 export type AppHook = (event: string, app: FirebaseApp) => void;
 
 /**
- * Constant holding the enviromnet variable that holds the default config.
+ * Constant holding the environment variable that holds the default config.
  */
 export const FIREBASE_CONFIG_FILE_VAR: string = 'FIREBASE_CONFIG';
 
