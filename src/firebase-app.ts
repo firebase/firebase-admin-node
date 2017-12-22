@@ -29,6 +29,7 @@ import {Database} from '@firebase/database';
 import {DatabaseService} from './database/database';
 import {Firestore} from '@google-cloud/firestore';
 import {FirestoreService} from './firestore/firestore';
+import {InstanceId} from './instance-id/instance-id';
 
 /**
  * Type representing a callback which is called every time an app lifecycle event occurs.
@@ -331,6 +332,17 @@ export class FirebaseApp {
       return new FirestoreService(this);
     });
     return service.client;
+  }
+
+  /**
+   * Returns the InstanceId service instance associated with this app.
+   * 
+   * @return {InstanceId} The InstanceId service instance of this app.
+   */
+  public instanceId(): InstanceId {
+    return this.ensureService_('iid', () => {
+      return new InstanceId(this);
+    });
   }
 
   /**

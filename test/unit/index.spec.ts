@@ -43,3 +43,7 @@ import './storage/storage.spec';
 
 // Firestore
 import './firestore/firestore.spec';
+
+// InstanceId
+import './instance-id/instance-id.spec';
+import './instance-id/instance-id-request.spec';

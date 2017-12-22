@@ -30,6 +30,7 @@ import {Messaging} from './messaging/messaging';
 import {Storage} from './storage/storage';
 import {Database} from '@firebase/database';
 import {Firestore} from '@google-cloud/firestore';
+import {InstanceId} from './instance-id/instance-id';
 
 const DEFAULT_APP_NAME = '[DEFAULT]';
 
@@ -336,6 +337,18 @@ export class FirebaseNamespace {
       return ns.ensureApp(app).firestore();
     };
     return Object.assign(fn, require('@google-cloud/firestore'));
+  }
+
+  /**
+   * Gets the `InstanceId` service namespace. The returned namespace can be used to get the
+   * `Instance` service for the default app or an explicitly specified app.
+   */
+  get instanceId(): FirebaseServiceNamespace<InstanceId> {
+    const ns: FirebaseNamespace = this;
+    let fn: FirebaseServiceNamespace<InstanceId> = (app?: FirebaseApp) => {
+      return ns.ensureApp(app).instanceId();
+    };
+    return Object.assign(fn, {InstanceId});
   }
 
   /**

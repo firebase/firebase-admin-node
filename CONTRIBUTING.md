@@ -137,7 +137,7 @@ you do not already have one. Use a separate, dedicated project for integration t
 test suite makes a large number of writes to the Firebase realtime database. Download the service
 account key file from the "Settings > Service Accounts" page of the project, and copy it to
 `test/resources/key.json`. Also obtain the API key for the same project from "Settings > General",
-and save it to `test/resource/apikey.txt`. Finally, to run the integration test suite:
+and save it to `test/resources/apikey.txt`. Finally, to run the integration test suite:
 
 ```bash
 $ npm run integration   # Build and run integration test suite

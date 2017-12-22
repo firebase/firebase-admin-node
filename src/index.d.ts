@@ -47,6 +47,7 @@ declare namespace admin {
     databaseAuthVariableOverride?: Object;
     databaseURL?: string;
     storageBucket?: string;
+    projectId?: string;
   }
 
   var SDK_VERSION: string;
@@ -58,6 +59,7 @@ declare namespace admin {
   function messaging(app?: admin.app.App): admin.messaging.Messaging;
   function storage(app?: admin.app.App): admin.storage.Storage;
   function firestore(app?: admin.app.App): admin.firestore.Firestore;
+  function instanceId(app?: admin.app.App): admin.instanceId.InstanceId;
   function initializeApp(options: admin.AppOptions, name?: string): admin.app.App;
 }
 
@@ -69,6 +71,7 @@ declare namespace admin.app {
     auth(): admin.auth.Auth;
     database(url?: string): admin.database.Database;
     firestore(): admin.firestore.Firestore;
+    instanceId(): admin.instanceId.InstanceId;
     messaging(): admin.messaging.Messaging;
     storage(): admin.storage.Storage;
     delete(): Promise<void>;
@@ -415,6 +418,14 @@ declare namespace admin.firestore {
   export import Firestore = _firestore.Firestore;
   export import GeoPoint = _firestore.GeoPoint;
   export import setLogFunction = _firestore.setLogFunction;
+}
+
+declare namespace admin.instanceId {
+  interface InstanceId {
+    app: admin.app.App;
+
+    deleteInstanceId(instanceId: string): Promise<void>;
+  }
 }
 
 declare module 'firebase-admin' {
