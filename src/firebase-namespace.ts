@@ -34,11 +34,11 @@ import {Firestore} from '@google-cloud/firestore';
 const DEFAULT_APP_NAME = '[DEFAULT]';
 
 let globalAppDefaultCred: ApplicationDefaultCredential;
-let globalCertCreds: {[key: string]: CertCredential} = {};
-let globalRefreshTokenCreds: {[key: string]: RefreshTokenCredential} = {};
+let globalCertCreds: { [key: string]: CertCredential } = {};
+let globalRefreshTokenCreds: { [key: string]: RefreshTokenCredential } = {};
 
 
-export interface FirebaseServiceNamespace<T> {
+export interface FirebaseServiceNamespace <T> {
   (app?: FirebaseApp): T;
   [key: string]: any;
 }
@@ -48,7 +48,7 @@ export interface FirebaseServiceNamespace<T> {
  * Internals of a FirebaseNamespace instance.
  */
 export class FirebaseNamespaceInternals {
-  public serviceFactories: { [serviceName: string]: FirebaseServiceFactory } = {};
+  public serviceFactories: {[serviceName: string]: FirebaseServiceFactory} = {};
 
   private apps_: {[appName: string]: FirebaseApp} = {};
   private appHooks_: {[service: string]: AppHook} = {};
