@@ -15,6 +15,7 @@
  */
 
 import {FirebaseApp} from '../firebase-app';
+import {renameProperties} from '../utils/index';
 import {deepCopy, deepExtend} from '../utils/deep-copy';
 import {FirebaseMessagingRequestHandler} from './messaging-api-request';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
@@ -91,6 +92,125 @@ export const BLACKLISTED_OPTIONS_KEYS = [
   'condition', 'data', 'notification', 'registrationIds', 'registration_ids', 'to',
 ];
 
+export interface BaseMessage {
+  data?: {[key: string]: string};
+  notification?: Notification;
+  android?: AndroidConfig;
+};
+
+export interface Notification {
+  title?: string;
+  body?: string;
+};
+
+export interface AndroidConfig {
+  collapseKey?: string;
+  priority?: ('high'|'normal');
+  ttl?: string;
+  restrictedPackageName?: string;
+  data?: {[key: string]: string};
+  notification?: AndroidNotification;
+};
+
+function validateAndroidConfig(config: AndroidConfig) {
+  if (!validator.isNonNullObject(config)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'AndroidConfig must be a non-null object');
+  }
+  if (config.ttl && !/^\d+(\.\d*)?s$/.test(config.ttl)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD,
+      'TTL must be a non-negative decimal value with "s" suffix');
+  }
+  if (config.notification) {
+    validateAndroidNotification(config.notification);
+  }
+
+  const propertyMappings = {
+    collapseKey: 'collapse_key',
+    restrictedPackageName: 'restricted_package_name',
+  };
+  renameProperties(config, propertyMappings);
+}
+
+export interface AndroidNotification {
+  title?: string;
+  body?: string;
+  icon?: string;
+  color?: string;
+  sound?: string;
+  tag?: string;
+  clickAction?: string;
+  bodyLocKey?: string;
+  bodyLocArgs?: string[];
+  titleLocKey?: string;
+  titleLocArgs: string[];
+};
+
+function validateAndroidNotification(notification: AndroidNotification) {
+  if (!validator.isNonNullObject(notification)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'AndroidNotification must be a non-null object');
+  }
+
+  if (notification.color && !/^#[0-9a-fA-F]{6}$/.test(notification.color)) {
+    throw new FirebaseMessagingError(MessagingClientErrorCode.INVALID_PAYLOAD, 'Color must be ni the form #RRGGBB');
+  }
+  if (validator.isNonEmptyArray(notification.bodyLocArgs)) {
+    if (!validator.isNonEmptyString(notification.bodyLocKey)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_PAYLOAD, 'bodyLocKey is required when specifying bodyLocArgs');
+    }
+  }
+  if (validator.isNonEmptyArray(notification.titleLocArgs)) {
+    if (!validator.isNonEmptyString(notification.titleLocKey)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_PAYLOAD, 'titleLocKey is required when specifying titleLocArgs');
+    }
+  }
+
+  const propertyMappings = {
+    clickAction: 'click_action',
+    bodyLocKey: 'body_loc_key',
+    bodyLocArgs: 'body_loc_args',
+    titleLocKey: 'title_loc_key',
+    titleLocArgs: 'title_loc_args',
+  };
+  renameProperties(notification, propertyMappings);
+}
+
+export interface TokenMessage extends BaseMessage {
+  token: string;
+}
+
+export interface TopicMessage extends BaseMessage {
+  topic: string;
+}
+
+export interface ConditionMessage extends BaseMessage {
+  condition: string;
+}
+
+export type Message = TokenMessage | TopicMessage | ConditionMessage;
+
+function validateMessage(message: Message) {
+  if (!validator.isNonNullObject(message)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'Message must be a non-null object');
+  }
+
+  let anyMessage = message as any;
+  let targets = [anyMessage.token, anyMessage.topic, anyMessage.condition];
+  if (targets.filter(v => validator.isNonEmptyString(v)).length !== 1) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD,
+      'Exactly one of topic, token or conditio is required');
+  }
+
+  if (message.android) {
+    validateAndroidConfig(message.android);
+  }
+}
 
 /* Payload for data messages */
 export type DataMessagePayload = {
@@ -279,8 +399,10 @@ class MessagingInternals implements FirebaseServiceInternalsInterface {
  * Messaging service bound to the provided app.
  */
 export class Messaging implements FirebaseServiceInterface {
+
   public INTERNAL: MessagingInternals = new MessagingInternals();
 
+  private projectId: string;
   private appInternal: FirebaseApp;
   private messagingRequestHandler: FirebaseMessagingRequestHandler;
 
@@ -296,9 +418,19 @@ export class Messaging implements FirebaseServiceInterface {
       );
     }
 
-    this.appInternal = app;
+    const projectId: string = utils.getProjectId(app);
+    if (!validator.isNonEmptyString(projectId)) {
+      // Assert for an explicit projct ID (either via AppOptions or the cert itself).
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_ARGUMENT,
+        'Failed to determine project ID for Messaging. Initialize the '
+        + 'SDK with service account credentials or set project ID as an app option. '
+        + 'Alternatively set the GCLOUD_PROJECT environment variable.',
+      );
+    }
 
-    // Initialize messaging request handler with the app.
+    this.projectId = projectId;
+    this.appInternal = app;
     this.messagingRequestHandler = new FirebaseMessagingRequestHandler(app);
   }
 
@@ -309,6 +441,20 @@ export class Messaging implements FirebaseServiceInterface {
    */
   get app(): FirebaseApp {
     return this.appInternal;
+  }
+
+  public send(message: Message): Promise<string> {
+    const path = `/v1/projects/${this.projectId}/messages:send`;
+    return Promise.resolve()
+      .then(() => {
+        let copy: Message = deepCopy(message);
+        validateMessage(copy);
+        let request = {message: copy};
+        return this.messagingRequestHandler.invokeRequestHandler(FCM_SEND_HOST, path, request);
+      })
+      .then((response) => {
+        return (response as any).name;
+      });
   }
 
   /**

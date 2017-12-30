@@ -51,6 +51,28 @@ function test(utils) {
     timeToLive: 60
   };
 
+  function sendToTarget() {
+    let message = {
+      data: {
+        foo: 'bar',
+      },
+      notification: {
+        title: 'Message title',
+        body: 'Message body',
+      },
+      android: {
+        restrictedPackageName: 'com.hkj.testing'
+      },
+      topic: 'foo-bar',
+    };
+    return admin.messaging().send(message)
+      .then((name) => {
+        utils.assert(name === 'foo', 'messaging().send()', 'Received response: ' + name);
+      })
+      .catch((error) => {
+        utils.logFailure('messaging().sendToDevice(string)', error);
+      });
+  }
 
   function sendToDevice() {
     return admin.messaging().sendToDevice(registrationToken, payload, options)
@@ -250,6 +272,7 @@ function test(utils) {
 
 
   return Promise.resolve()
+    .then(sendToTarget)
     .then(sendToDevice)
     .then(sendToDevices)
     .then(sendToDeviceGroup)
