@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import fs = require('fs');
 import {deepExtend} from './utils/deep-copy';
 import {AppErrorCodes, FirebaseAppError} from './utils/error';
 import {AppHook, FirebaseApp, FirebaseAppOptions} from './firebase-app';
@@ -32,6 +33,12 @@ import {Database} from '@firebase/database';
 import {Firestore} from '@google-cloud/firestore';
 
 const DEFAULT_APP_NAME = '[DEFAULT]';
+
+/**
+ * Constant holding the environment variable that holds the default config.
+ */
+export const FIREBASE_CONFIG_FILE_VAR: string = 'FIREBASE_CONFIG';
+
 
 let globalAppDefaultCred: ApplicationDefaultCredential;
 let globalCertCreds: { [key: string]: CertCredential } = {};
@@ -65,7 +72,8 @@ export class FirebaseNamespaceInternals {
    */
   public initializeApp(options?: FirebaseAppOptions, appName = DEFAULT_APP_NAME): FirebaseApp {
     if (typeof options === 'undefined') {
-      options = {credential: new ApplicationDefaultCredential() };
+      options = this.loadOptionsFromEnvVar();
+      options.credential = new ApplicationDefaultCredential();
     }
     if (typeof appName !== 'string' || appName === '') {
       throw new FirebaseAppError(
@@ -228,6 +236,36 @@ export class FirebaseNamespaceInternals {
         this.appHooks_[serviceName](eventName, app);
       }
     });
+  }
+
+  /**
+   * Parse the file pointed to by the FIREBASE_CONFIG_FILE_VAR, if it exists 
+   */
+  private loadOptionsFromEnvVar(): FirebaseAppOptions {
+    if (typeof process.env[FIREBASE_CONFIG_FILE_VAR] === 'undefined' ||
+      process.env[FIREBASE_CONFIG_FILE_VAR] === '') {
+      return {};
+    }
+    let contents;
+    try {
+      contents = fs.readFileSync(process.env[FIREBASE_CONFIG_FILE_VAR], 'utf8');
+    } catch (error) {
+      throw new FirebaseAppError(
+        AppErrorCodes.INVALID_APP_OPTIONS,
+        'Failed to read app options file: ' + error,
+      );
+    }
+    let jsonContent;
+    try {
+      jsonContent = JSON.parse(contents);
+    } catch (error) {
+      // Throw a nicely formed error message if the file contents cannot be parsed
+      throw new FirebaseAppError(
+        AppErrorCodes.INVALID_APP_OPTIONS,
+        'Failed to parse app options file: ' + error,
+      );
+    }
+    return jsonContent as FirebaseAppOptions;
   }
 }
 

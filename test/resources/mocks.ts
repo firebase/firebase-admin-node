@@ -45,7 +45,7 @@ export let serviceName = 'mock-service-name';
 
 export let databaseURL = 'https://databaseName.firebaseio.com';
 
-export let databaseAuthVariableOverride = 'some#string';
+export let databaseAuthVariableOverride = { 'some#string': 'some#val' };
 
 export let storageBucket = 'bucketName.appspot.com';
 

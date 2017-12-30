@@ -59,7 +59,7 @@ declare namespace admin {
   function messaging(app?: admin.app.App): admin.messaging.Messaging;
   function storage(app?: admin.app.App): admin.storage.Storage;
   function firestore(app?: admin.app.App): admin.firestore.Firestore;
-  function initializeApp(options: admin.AppOptions, name?: string): admin.app.App;
+  function initializeApp(options?: admin.AppOptions, name?: string): admin.app.App;
 }
 
 declare namespace admin.app {

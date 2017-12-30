@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import fs = require('fs');
 import {Credential} from './auth/credential';
 import * as validator from './utils/validator';
 import {deepCopy, deepExtend} from './utils/deep-copy';
@@ -37,11 +36,6 @@ import {FirestoreService} from './firestore/firestore';
 export type AppHook = (event: string, app: FirebaseApp) => void;
 
 /**
- * Constant holding the environment variable that holds the default config.
- */
-export const FIREBASE_CONFIG_FILE_VAR: string = 'FIREBASE_CONFIG';
-
-/**
  * Type representing the options object passed into initializeApp().
  */
 export type FirebaseAppOptions = {
@@ -51,11 +45,6 @@ export type FirebaseAppOptions = {
   storageBucket?: string,
   projectId?: string,
 };
-
-/**
- * Valid keys for the json file with the default config settings.
- */
-export const FIREBASE_CONFIG_KEYS = ['databaseAuthVariableOverride', 'databaseURL', 'projectId', 'storageBucket'];
 
 /**
  * Type representing a Firebase OAuth access token (derived from a Google OAuth2 access token) which
@@ -260,6 +249,8 @@ export class FirebaseApp {
 
     if (typeof this.options_ !== 'object' || this.options_ === null) {
       // Ensure the options are a non-null object
+      // This shouldn't hapen 
+      //   throw new FirebaseAppError(AppErrorCodes.INVALID_APP_OPTIONS, 'This should not happen');
       this.options_ = {};
     }
 
@@ -269,7 +260,6 @@ export class FirebaseApp {
     if (!hasCredential) {
       errorMessage = 'Options must be an object containing at least a "credential" property.';
     }
-
     const credential = this.options_.credential;
     if (typeof credential !== 'object' || credential === null || typeof credential.getAccessToken !== 'function') {
       errorMessage = 'The "credential" property must be an object which implements the Credential interface.';
@@ -282,7 +272,6 @@ export class FirebaseApp {
         `app named "${this.name_}". ${errorMessage}`
       );
     }
-    this.loadOptionsFromEnvironment();
 
     Object.keys(firebaseInternals_.serviceFactories).forEach((serviceName) => {
       // Defer calling createService() until the service is accessed
@@ -433,43 +422,5 @@ export class FirebaseApp {
         `Firebase app named "${this.name_}" has already been deleted.`,
       );
     }
-  }
-
-  /**
-   * Parse the file pointed to by the FIREBASE_CONFIG_FILE_VAR, if it exists 
-   */
-  private loadOptionsFromEnvironment() {
-    if (typeof process.env[FIREBASE_CONFIG_FILE_VAR] === 'undefined' ||
-        process.env[FIREBASE_CONFIG_FILE_VAR] === '' ) {
-      return;
-    }
-    let contents;
-    try {
-      contents = fs.readFileSync(process.env[FIREBASE_CONFIG_FILE_VAR], 'utf8');
-    } catch (error) {
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_APP_OPTIONS,
-        'Failed to read app options file: ' + error,
-      );
-    }
-    let jsonContent;
-    try {
-      jsonContent = JSON.parse(contents);
-    } catch (error) {
-      // Throw a nicely formed error message if the file contents cannot be parsed
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_APP_OPTIONS,
-        'Failed to parse app options file: ' + error,
-      );
-    }
-    for (let key in jsonContent) {
-      if (FIREBASE_CONFIG_KEYS.indexOf(key) === -1) {
-        throw new FirebaseAppError(
-          AppErrorCodes.INVALID_APP_OPTIONS,
-          `"${key}" is not a valid config key`,
-        );
-      }
-    }
-    this.options_ = Object.assign(jsonContent, this.options_);
   }
 }
