@@ -33,7 +33,7 @@ import * as mocks from '../../resources/mocks';
 
 import {FirebaseApp} from '../../../src/firebase-app';
 import {
-  Messaging, MessagingOptions, MessagingPayload, MessagingDevicesResponse, MessagingTopicManagementResponse,
+  Message, Messaging, MessagingOptions, MessagingPayload, MessagingDevicesResponse, MessagingTopicManagementResponse,
   BLACKLISTED_OPTIONS_KEYS, BLACKLISTED_DATA_PAYLOAD_KEYS,
 } from '../../../src/messaging/messaging';
 
@@ -71,6 +71,14 @@ const STATUS_CODE_TO_ERROR_MAP = {
   500: 'messaging/internal-error',
   503: 'messaging/server-unavailable',
 };
+
+function mockSendRequest(): nock.Scope {
+  return nock(`https://${FCM_SEND_HOST}:443`)
+    .post('/v1/projects/project_id/messages:send')
+    .reply(200, {
+      name: 'projects/projec_id/messages/message_id'
+    });
+}
 
 function mockSendToDeviceStringRequest(mockFailure = false): nock.Scope {
   let deviceResult: Object = { message_id: `0:${ mocks.messaging.messageId }` };
@@ -296,6 +304,110 @@ describe('Messaging', () => {
       expect(() => {
         (messaging as any).app = mockApp;
       }).to.throw('Cannot set property app of #<Messaging> which has only a getter');
+    });
+  });
+
+  describe('send()', () => {
+    it('should throw given no message', () => {
+      expect(() => {
+        messaging.send(undefined as Message)
+      }).to.throw('Message must be a non-null object');
+      expect(() => {
+        messaging.send(null)
+      }).to.throw('Message must be a non-null object');
+    });
+
+    const noTarget = [
+      {}, {token: null}, {token: ''}, {topic: null}, {topic: ''}, {condition: null}, {condition: ''}
+    ];
+    noTarget.forEach((message) => {
+      it(`should throw given message without target: ${ JSON.stringify(message) }`, () => {
+        expect(() => {
+          messaging.send(message as any);
+        }).to.throw('Exactly one of topic, token or condition is required');
+      });
+    });
+
+    const multipleTargets = [
+      {token: 'a', topic: 'b'},
+      {token: 'a', condition: 'b'},
+      {condition: 'a', topic: 'b'},
+      {token: 'a', topic: 'b', condition: 'c'},
+    ];
+    multipleTargets.forEach((message) => {
+      it(`should throw given message without target: ${ JSON.stringify(message)}`, () => {
+        expect(() => {
+          messaging.send(message as any);
+        }).to.throw('Exactly one of topic, token or condition is required');
+      });
+    });
+
+    const invalidTtls = ['', 'abc', '123', '-123s', '1.2.3s', 'As', 's'];
+    invalidTtls.forEach((ttl) => {
+      it(`should throw given an invalid ttl: ${ ttl }`, () => {
+        let message: Message = {
+          condition: 'topic-name',
+          android: {
+            ttl
+          },
+        };
+        expect(() => {
+          messaging.send(message);
+        }).to.throw('TTL must be a non-negative decimal value with "s" suffix');
+      });
+    })
+
+    const invalidColors = ['', 'foo', '123', '#AABBCX', '112233', '#11223'];
+    invalidColors.forEach((color) => {
+      it(`should throw given an invalid color: ${ color }`, () => {
+        let message: Message = {
+          condition: 'topic-name',
+          android: {
+            notification: {
+              color
+            },
+          },
+        };
+        expect(() => {
+          messaging.send(message);
+        }).to.throw('Color must be in the form #RRGGBB');
+      });
+    });
+
+    it('should throw given titleLocArgs without titleLocKey', () => {
+      let message: Message = {
+        condition: 'topic-name',
+        android: {
+          notification: {
+            titleLocArgs: ['foo'],
+          },
+        },
+      };
+      expect(() => {
+        messaging.send(message);
+      }).to.throw('titleLocKey is required when specifying titleLocArgs');
+    });
+
+    it('should throw given bodyLocArgs without bodyLocKey', () => {
+      let message: Message = {
+        condition: 'topic-name',
+        android: {
+          notification: {
+            bodyLocArgs: ['foo'],
+          },
+        },
+      };
+      expect(() => {
+        messaging.send(message);
+      }).to.throw('bodyLocKey is required when specifying bodyLocArgs');
+    });
+
+    it('should be fulfilled with the message ID given a registration token', () => {
+      mockedRequests.push(mockSendRequest());
+
+      return messaging.send(
+        {token: 'mock-token'},
+      ).should.eventually.equal('projects/projec_id/messages/message_id');
     });
   });
 
@@ -1688,6 +1800,46 @@ describe('Messaging', () => {
           expect(requestData).to.have.keys(['to', 'data', 'dry_run', 'collapse_key']);
           expect(requestData.dry_run).to.equal(mockOptionsClone.dryRun);
           expect(requestData.collapse_key).to.equal(mockOptionsClone.collapseKey);
+        });
+    });
+
+    it('should convert camelCased android properties to underscore_cased properties', () => {
+      // Wait for the initial getToken() call to complete before stubbing https.request.
+      return mockApp.INTERNAL.getToken()
+        .then(() => {
+          httpsRequestStub = sinon.stub(https, 'request');
+          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
+
+          return messaging.send({
+            token: 'mock-token',
+            android: {
+              collapseKey: 'test.key',
+              restrictedPackageName: 'test.package',
+              ttl: '3.5s',
+              priority: 'high',
+              notification: {
+                title: 'test.title',
+                body: 'test.body'
+              }
+            }
+          });
+        })
+        .then(() => {
+          expect(requestWriteSpy).to.have.been.calledOnce;
+          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(requestData.message).to.deep.equal({
+            token: 'mock-token',
+            android: {
+              collapse_key: 'test.key',
+              restricted_package_name: 'test.package',
+              ttl: '3.5s',
+              priority: 'high',
+              notification: {
+                title: 'test.title',
+                body: 'test.body'
+              }
+            }
+          });
         });
     });
 

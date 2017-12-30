@@ -117,7 +117,7 @@ function validateAndroidConfig(config: AndroidConfig) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD, 'AndroidConfig must be a non-null object');
   }
-  if (config.ttl && !/^\d+(\.\d*)?s$/.test(config.ttl)) {
+  if (typeof config.ttl !== 'undefined' && !/^\d+(\.\d*)?s$/.test(config.ttl)) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD,
       'TTL must be a non-negative decimal value with "s" suffix');
@@ -144,7 +144,7 @@ export interface AndroidNotification {
   bodyLocKey?: string;
   bodyLocArgs?: string[];
   titleLocKey?: string;
-  titleLocArgs: string[];
+  titleLocArgs?: string[];
 };
 
 function validateAndroidNotification(notification: AndroidNotification) {
@@ -153,8 +153,8 @@ function validateAndroidNotification(notification: AndroidNotification) {
       MessagingClientErrorCode.INVALID_PAYLOAD, 'AndroidNotification must be a non-null object');
   }
 
-  if (notification.color && !/^#[0-9a-fA-F]{6}$/.test(notification.color)) {
-    throw new FirebaseMessagingError(MessagingClientErrorCode.INVALID_PAYLOAD, 'Color must be ni the form #RRGGBB');
+  if (typeof notification.color !== 'undefined' && !/^#[0-9a-fA-F]{6}$/.test(notification.color)) {
+    throw new FirebaseMessagingError(MessagingClientErrorCode.INVALID_PAYLOAD, 'Color must be in the form #RRGGBB');
   }
   if (validator.isNonEmptyArray(notification.bodyLocArgs)) {
     if (!validator.isNonEmptyString(notification.bodyLocKey)) {
@@ -204,7 +204,7 @@ function validateMessage(message: Message) {
   if (targets.filter(v => validator.isNonEmptyString(v)).length !== 1) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD,
-      'Exactly one of topic, token or conditio is required');
+      'Exactly one of topic, token or condition is required');
   }
 
   if (message.android) {
@@ -445,10 +445,10 @@ export class Messaging implements FirebaseServiceInterface {
 
   public send(message: Message): Promise<string> {
     const path = `/v1/projects/${this.projectId}/messages:send`;
+    const copy: Message = deepCopy(message);
+    validateMessage(copy);
     return Promise.resolve()
       .then(() => {
-        let copy: Message = deepCopy(message);
-        validateMessage(copy);
         let request = {message: copy};
         return this.messagingRequestHandler.invokeRequestHandler(FCM_SEND_HOST, path, request);
       })
