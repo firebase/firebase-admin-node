@@ -96,12 +96,31 @@ export interface BaseMessage {
   data?: {[key: string]: string};
   notification?: Notification;
   android?: AndroidConfig;
+  webpush?: WebpushConfig;
+  apns?: ApnsConfig;
 };
 
 export interface Notification {
   title?: string;
   body?: string;
 };
+
+export interface WebpushConfig {
+  headers?: {[key: string]: string};
+  data?: {[key: string]: string};
+  notification?: WebpushNotification;
+}
+
+export interface WebpushNotification {
+  title?: string;
+  body?: string;
+  icon?: string;
+}
+
+export interface ApnsConfig {
+  headers?: {[key: string]: string};
+  payload: Object;
+}
 
 export interface AndroidConfig {
   collapseKey?: string;
@@ -111,27 +130,6 @@ export interface AndroidConfig {
   data?: {[key: string]: string};
   notification?: AndroidNotification;
 };
-
-function validateAndroidConfig(config: AndroidConfig) {
-  if (!validator.isNonNullObject(config)) {
-    throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD, 'AndroidConfig must be a non-null object');
-  }
-  if (typeof config.ttl !== 'undefined' && !/^\d+(\.\d*)?s$/.test(config.ttl)) {
-    throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD,
-      'TTL must be a non-negative decimal value with "s" suffix');
-  }
-  if (config.notification) {
-    validateAndroidNotification(config.notification);
-  }
-
-  const propertyMappings = {
-    collapseKey: 'collapse_key',
-    restrictedPackageName: 'restricted_package_name',
-  };
-  renameProperties(config, propertyMappings);
-}
 
 export interface AndroidNotification {
   title?: string;
@@ -147,7 +145,62 @@ export interface AndroidNotification {
   titleLocArgs?: string[];
 };
 
+function validateStringMap(map: Object, label: string) {
+  if (typeof map === 'undefined') {
+    return;
+  }
+  if (!validator.isNonNullObject(map)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD, `${label} must be a non-null object`);
+  }
+  Object.keys(map).forEach((key) => {
+    if (!validator.isString(map[key])) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_PAYLOAD, `${label} must only contain string values`);
+    }
+  });
+}
+
+function validateWebpushConfig(config: WebpushConfig) {
+  if (typeof config === 'undefined') {
+    return;
+  }
+  if (!validator.isNonNullObject(config)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'WebpushConfig must be a non-null object');
+  }
+  validateStringMap(config.headers, 'WebpushConfig.headers');
+  validateStringMap(config.data, 'WebpushConfig.data');
+}
+
+function validateAndroidConfig(config: AndroidConfig) {
+  if (typeof config === 'undefined') {
+    return;
+  }
+  if (!validator.isNonNullObject(config)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'AndroidConfig must be a non-null object');
+  }
+
+  if (typeof config.ttl !== 'undefined' && !/^\d+(\.\d*)?s$/.test(config.ttl)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD,
+      'TTL must be a non-negative decimal value with "s" suffix');
+  }
+  validateStringMap(config.data, 'AndroidConfig.data');
+  validateAndroidNotification(config.notification);
+
+  const propertyMappings = {
+    collapseKey: 'collapse_key',
+    restrictedPackageName: 'restricted_package_name',
+  };
+  renameProperties(config, propertyMappings);
+}
+
 function validateAndroidNotification(notification: AndroidNotification) {
+  if (typeof notification === 'undefined') {
+    return;
+  }
   if (!validator.isNonNullObject(notification)) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD, 'AndroidNotification must be a non-null object');
@@ -206,10 +259,15 @@ function validateMessage(message: Message) {
       MessagingClientErrorCode.INVALID_PAYLOAD,
       'Exactly one of topic, token or condition is required');
   }
-
-  if (message.android) {
-    validateAndroidConfig(message.android);
+  if (anyMessage.topic && anyMessage.topic.startsWith('/topics/')) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD,
+      'Topic name must be specified without the "/topics/" prefix');
   }
+
+  validateStringMap(message.data, 'data');
+  validateWebpushConfig(message.webpush);
+  validateAndroidConfig(message.android);
 }
 
 /* Payload for data messages */

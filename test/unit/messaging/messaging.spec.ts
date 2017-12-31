@@ -33,7 +33,8 @@ import * as mocks from '../../resources/mocks';
 
 import {FirebaseApp} from '../../../src/firebase-app';
 import {
-  Message, Messaging, MessagingOptions, MessagingPayload, MessagingDevicesResponse, MessagingTopicManagementResponse,
+  AndroidConfig, Message, Messaging, MessagingOptions, MessagingPayload, MessagingDevicesResponse, 
+  MessagingTopicManagementResponse, WebpushConfig,
   BLACKLISTED_OPTIONS_KEYS, BLACKLISTED_DATA_PAYLOAD_KEYS,
 } from '../../../src/messaging/messaging';
 
@@ -400,6 +401,22 @@ describe('Messaging', () => {
       expect(() => {
         messaging.send(message);
       }).to.throw('bodyLocKey is required when specifying bodyLocArgs');
+    });
+
+    const invalidDataMessages: any = [
+      {label: 'data', message: {data: {k1: true}}},
+      {label: 'AndroidConfig.data', message: {android: {data: {k1: true}}}},
+      {label: 'WebpushConfig.data', message: {webpush: {data: {k1: true}}}},
+      {label: 'WebpushConfig.headers', message: {webpush: {headers: {k1: true}}}},
+    ];
+    invalidDataMessages.forEach((config) => {
+      it(`should throw given data with non-string value: ${config.label}`, () => {
+        let message = config.message;
+        message.token = 'token';
+        expect(() => {
+          messaging.send(message);
+        }).to.throw(`${config.label} must only contain string values`);
+      });
     });
 
     it('should be fulfilled with the message ID given a registration token', () => {
@@ -1803,44 +1820,220 @@ describe('Messaging', () => {
         });
     });
 
-    it('should convert camelCased android properties to underscore_cased properties', () => {
-      // Wait for the initial getToken() call to complete before stubbing https.request.
-      return mockApp.INTERNAL.getToken()
-        .then(() => {
-          httpsRequestStub = sinon.stub(https, 'request');
-          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
+    const validMessages: {
+      label: string;
+      req: any;
+      want?: any;      
+    }[] = [
+      {
+        label: 'Generic data message',
+        req: {
+          data: {
+            k1: 'v1',
+            k2: 'v2',
+          },
+        },
+      },
+      {
+        label: 'Generic notification message',
+        req: {
+          notification: {
+            title: 'test.title',
+            body: 'test.body',
+          },
+        },
+      },
+      {
+        label: 'Android data message',
+        req: {
+          android: {
+            data: {
+              k1: 'v1',
+              k2: 'v2',
+            },
+          },
+        },
+      },
+      {
+        label: 'Android notification message',
+        req: {
+          android: {
+            notification: {
+              title: 'test.title',
+              body: 'test.body',
+              icon: 'test.icon',
+              color: '#112233',
+              sound: 'test.sound',
+              tag: 'test.tag',
+            },
+          },
+        }
+      },
+      {
+        label: 'Android camel cased properties',
+        req: {
+          android: {
+            collapseKey: 'test.key',
+            restrictedPackageName: 'test.package',
+            notification: {
+              clickAction: 'test.click.action',
+              titleLocKey: 'title.loc.key',
+              titleLocArgs: ['arg1', 'arg2'],
+              bodyLocKey: 'body.loc.key',
+              bodyLocArgs: ['arg1', 'arg2'],
+            },
+          },
+        },
+        want: {
+          android: {
+            collapse_key: 'test.key',
+            restricted_package_name: 'test.package',
+            notification: {
+              click_action: 'test.click.action',
+              title_loc_key: 'title.loc.key',
+              title_loc_args: ['arg1', 'arg2'],
+              body_loc_key: 'body.loc.key',
+              body_loc_args: ['arg1', 'arg2'],
+            },
+          },
+        },
+      },
+      {
+        label: 'All Android properties',
+        req: {
+          android: {
+            priority: 'high',
+            collapseKey: 'test.key',
+            restrictedPackageName: 'test.package',
+            ttl: '5.0001s',
+            data: {
+              k1: 'v1',
+              k2: 'v2',
+            },
+            notification: {
+              title: 'test.title',
+              body: 'test.body',
+              icon: 'test.icon',
+              color: '#112233',
+              sound: 'test.sound',
+              tag: 'test.tag',
+              clickAction: 'test.click.action',
+              titleLocKey: 'title.loc.key',
+              titleLocArgs: ['arg1', 'arg2'],
+              bodyLocKey: 'body.loc.key',
+              bodyLocArgs: ['arg1', 'arg2'],
+            },
+          },
+        },
+        want: {
+          android: {
+            priority: 'high',
+            collapse_key: 'test.key',
+            restricted_package_name: 'test.package',
+            ttl: '5.0001s',
+            data: {
+              k1: 'v1',
+              k2: 'v2',
+            },
+            notification: {
+              title: 'test.title',
+              body: 'test.body',
+              icon: 'test.icon',
+              color: '#112233',
+              sound: 'test.sound',
+              tag: 'test.tag',
+              click_action: 'test.click.action',
+              title_loc_key: 'title.loc.key',
+              title_loc_args: ['arg1', 'arg2'],
+              body_loc_key: 'body.loc.key',
+              body_loc_args: ['arg1', 'arg2'],
+            },
+          },
+        }
+      },
+      {
+        label: 'Webpush data message',
+        req: {
+          webpush: {
+            data: {
+              k1: 'v1',
+              k2: 'v2',
+            },
+          },
+        },
+      },
+      {
+        label: 'Webpush notification message',
+        req: {
+          webpush: {
+            notification: {
+              title: 'test.title',
+              body: 'test.body',
+              icon: 'test.icon',
+            },
+          },
+        },
+      },
+      {
+        label: 'All Webpush properties',
+        req: {
+          webpush: {
+            headers: {
+              h1: 'v1',
+              h2: 'v2',
+            },
+            data: {
+              k1: 'v1',
+              k2: 'v2',
+            },
+            notification: {
+              title: 'test.title',
+              body: 'test.body',
+              icon: 'test.icon',
+            },
+          },
+        },
+      },
+      {
+        label: 'All APNS properties',
+        req: {
+          apns: {
+            headers: {
+              h1: 'v1',
+              h2: 'v2',
+            },
+            payload: {
+              k1: 'v2',
+              k2: 1.23,
+              k3: true,
+              k4: {
+                foo: 'bar',
+              },
+            },
+          },
+        },
+      },
+    ];
 
-          return messaging.send({
-            token: 'mock-token',
-            android: {
-              collapseKey: 'test.key',
-              restrictedPackageName: 'test.package',
-              ttl: '3.5s',
-              priority: 'high',
-              notification: {
-                title: 'test.title',
-                body: 'test.body'
-              }
-            }
+    validMessages.forEach((config) => {
+      it(`should serialize well-formed Message: ${config.label}`, () => {
+        // Wait for the initial getToken() call to complete before stubbing https.request.
+        return mockApp.INTERNAL.getToken()
+          .then(() => {
+            httpsRequestStub = sinon.stub(https, 'request');
+            httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
+            let req = config.req;
+            req.token = 'mock-token';
+            return messaging.send(req);
+          })
+          .then(() => {
+            expect(requestWriteSpy).to.have.been.calledOnce;
+            const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+            let want = config.want || config.req;
+            want.token = 'mock-token';
+            expect(requestData.message).to.deep.equal(want);
           });
-        })
-        .then(() => {
-          expect(requestWriteSpy).to.have.been.calledOnce;
-          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
-          expect(requestData.message).to.deep.equal({
-            token: 'mock-token',
-            android: {
-              collapse_key: 'test.key',
-              restricted_package_name: 'test.package',
-              ttl: '3.5s',
-              priority: 'high',
-              notification: {
-                title: 'test.title',
-                body: 'test.body'
-              }
-            }
-          });
-        });
+      });
     });
 
     it('should convert whitelisted camelCased properties to underscore_cased properties', () => {
