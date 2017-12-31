@@ -148,8 +148,7 @@ export interface AndroidNotification {
 function validateStringMap(map: Object, label: string) {
   if (typeof map === 'undefined') {
     return;
-  }
-  if (!validator.isNonNullObject(map)) {
+  } else if (!validator.isNonNullObject(map)) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD, `${label} must be a non-null object`);
   }
@@ -164,8 +163,7 @@ function validateStringMap(map: Object, label: string) {
 function validateWebpushConfig(config: WebpushConfig) {
   if (typeof config === 'undefined') {
     return;
-  }
-  if (!validator.isNonNullObject(config)) {
+  } else if (!validator.isNonNullObject(config)) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD, 'WebpushConfig must be a non-null object');
   }
@@ -176,8 +174,7 @@ function validateWebpushConfig(config: WebpushConfig) {
 function validateAndroidConfig(config: AndroidConfig) {
   if (typeof config === 'undefined') {
     return;
-  }
-  if (!validator.isNonNullObject(config)) {
+  } else if (!validator.isNonNullObject(config)) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD, 'AndroidConfig must be a non-null object');
   }
@@ -200,8 +197,7 @@ function validateAndroidConfig(config: AndroidConfig) {
 function validateAndroidNotification(notification: AndroidNotification) {
   if (typeof notification === 'undefined') {
     return;
-  }
-  if (!validator.isNonNullObject(notification)) {
+  } else if (!validator.isNonNullObject(notification)) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD, 'AndroidNotification must be a non-null object');
   }
