@@ -343,88 +343,24 @@ describe('Messaging', () => {
       });
     });
 
-    const invalidTtls = ['', 'abc', '123', '-123s', '1.2.3s', 'As', 's'];
-    invalidTtls.forEach((ttl) => {
-      it(`should throw given an invalid ttl: ${ ttl }`, () => {
-        let message: Message = {
-          condition: 'topic-name',
-          android: {
-            ttl
-          },
-        };
-        expect(() => {
-          messaging.send(message);
-        }).to.throw('TTL must be a non-negative decimal value with "s" suffix');
-      });
-    })
-
-    const invalidColors = ['', 'foo', '123', '#AABBCX', '112233', '#11223'];
-    invalidColors.forEach((color) => {
-      it(`should throw given an invalid color: ${ color }`, () => {
-        let message: Message = {
-          condition: 'topic-name',
-          android: {
-            notification: {
-              color
-            },
-          },
-        };
-        expect(() => {
-          messaging.send(message);
-        }).to.throw('android.notification.color must be in the form #RRGGBB');
-      });
-    });
-
-    it('should throw given titleLocArgs without titleLocKey', () => {
-      let message: Message = {
-        condition: 'topic-name',
-        android: {
-          notification: {
-            titleLocArgs: ['foo'],
-          },
-        },
-      };
-      expect(() => {
-        messaging.send(message);
-      }).to.throw('titleLocKey is required when specifying titleLocArgs');
-    });
-
-    it('should throw given bodyLocArgs without bodyLocKey', () => {
-      let message: Message = {
-        condition: 'topic-name',
-        android: {
-          notification: {
-            bodyLocArgs: ['foo'],
-          },
-        },
-      };
-      expect(() => {
-        messaging.send(message);
-      }).to.throw('bodyLocKey is required when specifying bodyLocArgs');
-    });
-
-    const invalidDataMessages: any = [
-      {label: 'data', message: {data: {k1: true}}},
-      {label: 'android.data', message: {android: {data: {k1: true}}}},
-      {label: 'webpush.data', message: {webpush: {data: {k1: true}}}},
-      {label: 'webpush.headers', message: {webpush: {headers: {k1: true}}}},
-      {label: 'apns.headers', message: {apns: {headers: {k1: true}}}},
-    ];
-    invalidDataMessages.forEach((config) => {
-      it(`should throw given data with non-string value: ${config.label}`, () => {
-        let message = config.message;
-        message.token = 'token';
-        expect(() => {
-          messaging.send(message);
-        }).to.throw(`${config.label} must only contain string values`);
-      });
-    });
-
     it('should be fulfilled with the message ID given a registration token', () => {
       mockedRequests.push(mockSendRequest());
-
       return messaging.send(
         {token: 'mock-token'},
+      ).should.eventually.equal('projects/projec_id/messages/message_id');
+    });
+
+    it('should be fulfilled with the message ID given a topic', () => {
+      mockedRequests.push(mockSendRequest());
+      return messaging.send(
+        {topic: 'mock-topic'},
+      ).should.eventually.equal('projects/projec_id/messages/message_id');
+    });
+
+    it('should be fulfilled with the message ID given a condition', () => {
+      mockedRequests.push(mockSendRequest());
+      return messaging.send(
+        {condition: '"foo" in topics'},
       ).should.eventually.equal('projects/projec_id/messages/message_id');
     });
   });
@@ -1640,6 +1576,92 @@ describe('Messaging', () => {
         mockPayloadClone,
       ).then(() => {
         expect(mockPayloadClone).to.deep.equal(mocks.messaging.payload);
+      });
+    });
+
+    const invalidTtls = ['', 'abc', '123', '-123s', '1.2.3s', 'As', 's'];
+    invalidTtls.forEach((ttl) => {
+      it(`should throw given an invalid ttl: ${ ttl }`, () => {
+        let message: Message = {
+          condition: 'topic-name',
+          android: {
+            ttl
+          },
+        };
+        expect(() => {
+          messaging.send(message);
+        }).to.throw('TTL must be a non-negative decimal value with "s" suffix');
+      });
+    })
+
+    const invalidColors = ['', 'foo', '123', '#AABBCX', '112233', '#11223'];
+    invalidColors.forEach((color) => {
+      it(`should throw given an invalid color: ${ color }`, () => {
+        let message: Message = {
+          condition: 'topic-name',
+          android: {
+            notification: {
+              color
+            },
+          },
+        };
+        expect(() => {
+          messaging.send(message);
+        }).to.throw('android.notification.color must be in the form #RRGGBB');
+      });
+    });
+
+    it('should throw given titleLocArgs without titleLocKey', () => {
+      let message: Message = {
+        condition: 'topic-name',
+        android: {
+          notification: {
+            titleLocArgs: ['foo'],
+          },
+        },
+      };
+      expect(() => {
+        messaging.send(message);
+      }).to.throw('titleLocKey is required when specifying titleLocArgs');
+    });
+
+    it('should throw given bodyLocArgs without bodyLocKey', () => {
+      let message: Message = {
+        condition: 'topic-name',
+        android: {
+          notification: {
+            bodyLocArgs: ['foo'],
+          },
+        },
+      };
+      expect(() => {
+        messaging.send(message);
+      }).to.throw('bodyLocKey is required when specifying bodyLocArgs');
+    });
+
+    const invalidDataMessages: any = [
+      {label: 'data', message: {data: {k1: true}}},
+      {label: 'android.data', message: {android: {data: {k1: true}}}},
+      {label: 'webpush.data', message: {webpush: {data: {k1: true}}}},
+      {label: 'webpush.headers', message: {webpush: {headers: {k1: true}}}},
+      {label: 'apns.headers', message: {apns: {headers: {k1: true}}}},
+    ];
+    invalidDataMessages.forEach((config) => {
+      it(`should throw given data with non-string value: ${config.label}`, () => {
+        let message = config.message;
+        message.token = 'token';
+        expect(() => {
+          messaging.send(message);
+        }).to.throw(`${config.label} must only contain string values`);
+      });
+    });
+
+    const invalidApnsPayloads: any = [null, '', 'payload', true, 1.23];
+    invalidApnsPayloads.forEach((payload) => {
+      it(`should throw given APNS payload with invalid object: ${payload}`, () => {
+        expect(() => {
+          messaging.send({apns: {payload}, token: 'token'});
+        }).to.throw('apns.payload must be a non-null object');
       });
     });
   });

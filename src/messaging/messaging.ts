@@ -474,7 +474,7 @@ export class Messaging implements FirebaseServiceInterface {
 
   public INTERNAL: MessagingInternals = new MessagingInternals();
 
-  private projectId: string;
+  private urlPath: string;
   private appInternal: FirebaseApp;
   private messagingRequestHandler: FirebaseMessagingRequestHandler;
 
@@ -501,7 +501,7 @@ export class Messaging implements FirebaseServiceInterface {
       );
     }
 
-    this.projectId = projectId;
+    this.urlPath = `/v1/projects/${projectId}/messages:send`;
     this.appInternal = app;
     this.messagingRequestHandler = new FirebaseMessagingRequestHandler(app);
   }
@@ -516,13 +516,12 @@ export class Messaging implements FirebaseServiceInterface {
   }
 
   public send(message: Message): Promise<string> {
-    const path = `/v1/projects/${this.projectId}/messages:send`;
     const copy: Message = deepCopy(message);
     validateMessage(copy);
     return Promise.resolve()
       .then(() => {
         let request = {message: copy};
-        return this.messagingRequestHandler.invokeRequestHandler(FCM_SEND_HOST, path, request);
+        return this.messagingRequestHandler.invokeRequestHandler(FCM_SEND_HOST, this.urlPath, request);
       })
       .then((response) => {
         return (response as any).name;
