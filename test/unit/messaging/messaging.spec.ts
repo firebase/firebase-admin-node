@@ -371,7 +371,7 @@ describe('Messaging', () => {
         };
         expect(() => {
           messaging.send(message);
-        }).to.throw('Color must be in the form #RRGGBB');
+        }).to.throw('android.notification.color must be in the form #RRGGBB');
       });
     });
 
@@ -405,9 +405,10 @@ describe('Messaging', () => {
 
     const invalidDataMessages: any = [
       {label: 'data', message: {data: {k1: true}}},
-      {label: 'AndroidConfig.data', message: {android: {data: {k1: true}}}},
-      {label: 'WebpushConfig.data', message: {webpush: {data: {k1: true}}}},
-      {label: 'WebpushConfig.headers', message: {webpush: {headers: {k1: true}}}},
+      {label: 'android.data', message: {android: {data: {k1: true}}}},
+      {label: 'webpush.data', message: {webpush: {data: {k1: true}}}},
+      {label: 'webpush.headers', message: {webpush: {headers: {k1: true}}}},
+      {label: 'apns.headers', message: {apns: {headers: {k1: true}}}},
     ];
     invalidDataMessages.forEach((config) => {
       it(`should throw given data with non-string value: ${config.label}`, () => {

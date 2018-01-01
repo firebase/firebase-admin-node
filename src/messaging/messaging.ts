@@ -165,10 +165,24 @@ function validateWebpushConfig(config: WebpushConfig) {
     return;
   } else if (!validator.isNonNullObject(config)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD, 'WebpushConfig must be a non-null object');
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'webpush must be a non-null object');
   }
-  validateStringMap(config.headers, 'WebpushConfig.headers');
-  validateStringMap(config.data, 'WebpushConfig.data');
+  validateStringMap(config.headers, 'webpush.headers');
+  validateStringMap(config.data, 'webpush.data');
+}
+
+function validateApnsConfig(config: ApnsConfig) {
+  if (typeof config === 'undefined') {
+    return;
+  } else if (!validator.isNonNullObject(config)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'apns must be a non-null object');
+  }
+  validateStringMap(config.headers, 'apns.headers');
+  if (typeof config.payload !== 'undefined' && !validator.isNonNullObject(config.payload)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'apns.payload must be a non-null object');
+  }
 }
 
 function validateAndroidConfig(config: AndroidConfig) {
@@ -176,7 +190,7 @@ function validateAndroidConfig(config: AndroidConfig) {
     return;
   } else if (!validator.isNonNullObject(config)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD, 'AndroidConfig must be a non-null object');
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'android must be a non-null object');
   }
 
   if (typeof config.ttl !== 'undefined' && !/^\d+(\.\d*)?s$/.test(config.ttl)) {
@@ -184,7 +198,7 @@ function validateAndroidConfig(config: AndroidConfig) {
       MessagingClientErrorCode.INVALID_PAYLOAD,
       'TTL must be a non-negative decimal value with "s" suffix');
   }
-  validateStringMap(config.data, 'AndroidConfig.data');
+  validateStringMap(config.data, 'android.data');
   validateAndroidNotification(config.notification);
 
   const propertyMappings = {
@@ -199,22 +213,25 @@ function validateAndroidNotification(notification: AndroidNotification) {
     return;
   } else if (!validator.isNonNullObject(notification)) {
     throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD, 'AndroidNotification must be a non-null object');
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'android.notification must be a non-null object');
   }
 
   if (typeof notification.color !== 'undefined' && !/^#[0-9a-fA-F]{6}$/.test(notification.color)) {
-    throw new FirebaseMessagingError(MessagingClientErrorCode.INVALID_PAYLOAD, 'Color must be in the form #RRGGBB');
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'android.notification.color must be in the form #RRGGBB');
   }
   if (validator.isNonEmptyArray(notification.bodyLocArgs)) {
     if (!validator.isNonEmptyString(notification.bodyLocKey)) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_PAYLOAD, 'bodyLocKey is required when specifying bodyLocArgs');
+        MessagingClientErrorCode.INVALID_PAYLOAD,
+        'android.notification.bodyLocKey is required when specifying bodyLocArgs');
     }
   }
   if (validator.isNonEmptyArray(notification.titleLocArgs)) {
     if (!validator.isNonEmptyString(notification.titleLocKey)) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_PAYLOAD, 'titleLocKey is required when specifying titleLocArgs');
+        MessagingClientErrorCode.INVALID_PAYLOAD,
+        'android.notification.titleLocKey is required when specifying titleLocArgs');
     }
   }
 
@@ -262,8 +279,9 @@ function validateMessage(message: Message) {
   }
 
   validateStringMap(message.data, 'data');
-  validateWebpushConfig(message.webpush);
   validateAndroidConfig(message.android);
+  validateWebpushConfig(message.webpush);
+  validateApnsConfig(message.apns);
 }
 
 /* Payload for data messages */
