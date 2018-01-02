@@ -30,7 +30,9 @@ import {Auth} from './auth/auth';
 import {Messaging} from './messaging/messaging';
 import {Storage} from './storage/storage';
 import {Database} from '@firebase/database';
-import {Firestore} from '@google-cloud/firestore';
+import { Firestore } from '@google-cloud/firestore';
+
+import * as validator from './utils/validator';
 
 const DEFAULT_APP_NAME = '[DEFAULT]';
 
@@ -65,7 +67,8 @@ export class FirebaseNamespaceInternals {
   /**
    * Initializes the FirebaseApp instance.
    *
-   * @param {FirebaseAppOptions} options Options for the FirebaseApp instance.
+   * @param {FirebaseAppOptions} options Optional options for the FirebaseApp instance. If none present
+   *                             will try to initialize from the FIREBASE_CONFIG environment variable.
    * @param {string} [appName] Optional name of the FirebaseApp instance.
    *
    * @return {FirebaseApp} A new FirebaseApp instance.
@@ -242,21 +245,14 @@ export class FirebaseNamespaceInternals {
    * Parse the file pointed to by the FIREBASE_CONFIG_FILE_VAR, if it exists 
    */
   private loadOptionsFromEnvVar(): FirebaseAppOptions {
-    if (typeof process.env[FIREBASE_CONFIG_FILE_VAR] === 'undefined' ||
-      process.env[FIREBASE_CONFIG_FILE_VAR] === '') {
+    let filePath = process.env[FIREBASE_CONFIG_FILE_VAR];
+    if (!validator.isNonEmptyString(filePath)) {
       return {};
     }
     let contents;
-    try {
-      contents = fs.readFileSync(process.env[FIREBASE_CONFIG_FILE_VAR], 'utf8');
-    } catch (error) {
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_APP_OPTIONS,
-        'Failed to read app options file: ' + error,
-      );
-    }
     let jsonContent;
     try {
+      contents = fs.readFileSync(process.env[FIREBASE_CONFIG_FILE_VAR], 'utf8');
       jsonContent = JSON.parse(contents);
     } catch (error) {
       // Throw a nicely formed error message if the file contents cannot be parsed
@@ -382,7 +378,8 @@ export class FirebaseNamespace {
   /**
    * Initializes the FirebaseApp instance.
    *
-   * @param {FirebaseAppOptions} options Options for the FirebaseApp instance.
+   * @param {FirebaseAppOptions} [options] Optional options for the FirebaseApp instance.
+   *   If none present will try to initialize from the FIREBASE_CONFIG environment variable.
    * @param {string} [appName] Optional name of the FirebaseApp instance.
    *
    * @return {FirebaseApp} A new FirebaseApp instance.

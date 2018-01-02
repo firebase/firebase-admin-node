@@ -249,8 +249,6 @@ export class FirebaseApp {
 
     if (typeof this.options_ !== 'object' || this.options_ === null) {
       // Ensure the options are a non-null object
-      // This shouldn't hapen 
-      //   throw new FirebaseAppError(AppErrorCodes.INVALID_APP_OPTIONS, 'This should not happen');
       this.options_ = {};
     }
 

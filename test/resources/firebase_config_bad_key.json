@@ -1,4 +1,4 @@
 {
-  "databaseUrl": "https://hipster-chat.firebaseio.mock",
+  "notAValidKeyValue": "The key value here is not valid.",
   "projectId": "hipster-chat-mock"
 }
