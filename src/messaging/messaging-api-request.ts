@@ -46,11 +46,22 @@ export class FirebaseMessagingRequestHandler {
     if (validator.isNonNullObject(response) && 'error' in response) {
       if (typeof response.error === 'string') {
         return response.error;
+      } else if ('status' in response.error) {
+        return response.error.status;
       } else {
         return response.error.message;
       }
     }
 
+    return null;
+  }
+
+  private static getErrorMessage(response: any): string|null {
+    if (validator.isNonNullObject(response) && 'error' in response) {
+      if (validator.isNonEmptyString(response.error.message)) {
+        return response.error.message;
+      }
+    }
     return null;
   }
 
@@ -139,7 +150,8 @@ export class FirebaseMessagingRequestHandler {
 
       // For JSON responses, map the server response to a client-side error.
       const errorCode = FirebaseMessagingRequestHandler.getErrorCode(response.error);
-      throw FirebaseMessagingError.fromServerError(errorCode, /* message */ undefined, response.error);
+      const errorMessage = FirebaseMessagingRequestHandler.getErrorMessage(response.error);
+      throw FirebaseMessagingError.fromServerError(errorCode, errorMessage, response.error);
     });
   }
 }

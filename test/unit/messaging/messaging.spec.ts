@@ -81,6 +81,28 @@ function mockSendRequest(): nock.Scope {
     });
 }
 
+function mockSendError(
+  statusCode: number,
+  errorFormat: 'json'|'text',
+  responseOverride?: any
+): nock.Scope {
+  let response;
+  let contentType;
+  if (errorFormat === 'json') {
+    response = mockServerErrorResponse.json;
+    contentType = 'application/json; charset=UTF-8';
+  } else {
+    response = mockServerErrorResponse.text;
+    contentType = 'text/html; charset=UTF-8';
+  }
+
+  return nock(`https://${FCM_SEND_HOST}:443`)
+    .post('/v1/projects/project_id/messages:send')
+    .reply(statusCode, responseOverride || response, {
+      'Content-Type': contentType,
+    });
+}
+
 function mockSendToDeviceStringRequest(mockFailure = false): nock.Scope {
   let deviceResult: Object = { message_id: `0:${ mocks.messaging.messageId }` };
   if (mockFailure) {
@@ -178,7 +200,7 @@ function mockTopicSubscriptionRequest(
 function mockSendRequestWithError(
   statusCode: number,
   errorFormat: 'json'|'text',
-  responseOverride?: any,
+  responseOverride?: any
 ): nock.Scope {
   let response;
   let contentType;
@@ -362,6 +384,36 @@ describe('Messaging', () => {
       return messaging.send(
         {condition: '"foo" in topics'},
       ).should.eventually.equal('projects/projec_id/messages/message_id');
+    });
+
+    it('should fail when the backend server returns a detailed error', () => {
+      const resp = {
+        error: {
+          status: 'INVALID_ARGUMENT',
+          message: 'test error message',
+        },
+      };
+      mockedRequests.push(mockSendError(400, 'json', resp));
+      return messaging.send(
+        {token: 'mock-token'},
+      ).should.eventually.be.rejectedWith('test error message')
+       .and.have.property('code', 'messaging/invalid-argument');
+    });
+
+    it('should fail when the backend server returns an unknown error', () => {
+      const resp = {error: 'test error message'};
+      mockedRequests.push(mockSendError(400, 'json', resp));
+      return messaging.send(
+        {token: 'mock-token'},
+      ).should.eventually.be.rejected.and.have.property('code', 'messaging/unknown-error');
+    });
+
+    it('should fail when the backend server returns a non-json error', () => {
+      // Error code will be determined based on the status code.
+      mockedRequests.push(mockSendError(400, 'text', 'foo bar'));
+      return messaging.send(
+        {token: 'mock-token'},
+      ).should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
     });
   });
 

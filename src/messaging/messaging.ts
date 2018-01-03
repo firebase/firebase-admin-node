@@ -430,7 +430,7 @@ function mapRawResponseToTopicManagementResponse(response): MessagingTopicManage
       if ('error' in tokenManagementResult) {
         response.failureCount += 1;
 
-        const newError = FirebaseMessagingError.fromServerError(
+        const newError = FirebaseMessagingError.fromTopicManagementServerError(
           tokenManagementResult.error, /* message */ undefined, tokenManagementResult.error
         );
 

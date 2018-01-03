@@ -260,6 +260,27 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
     return new FirebaseMessagingError(error);
   }
 
+  public static fromTopicManagementServerError(
+    serverErrorCode: string,
+    message?: string,
+    rawServerResponse?: Object,
+  ): FirebaseMessagingError {
+    // If not found, default to unknown error.
+    let clientCodeKey = TOPIC_MGT_SERVER_TO_CLIENT_CODE[serverErrorCode] || 'UNKNOWN_ERROR';
+    const error: ErrorInfo = deepCopy(MessagingClientErrorCode[clientCodeKey]);
+    error.message = message || error.message;
+
+    if (clientCodeKey === 'UNKNOWN_ERROR' && typeof rawServerResponse !== 'undefined') {
+      try {
+        error.message += ` Raw server response: "${ JSON.stringify(rawServerResponse) }"`;
+      } catch (e) {
+        // Ignore JSON parsing error.
+      }
+    }
+
+    return new FirebaseMessagingError(error);
+  }
+
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
     super('messaging', info.code, message || info.message);
@@ -580,6 +601,19 @@ const MESSAGING_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   // Invalid APNs credentials.
   InvalidApnsCredential: 'INVALID_APNS_CREDENTIALS',
 
+  /* FCM new server API error codes */
+  NOT_FOUND: 'REGISTRATION_TOKEN_NOT_REGISTERED',
+  INVALID_ARGUMENT: 'INVALID_ARGUMENT',
+  RESOURCE_EXHAUSTED: 'TOO_MANY_TOPICS',
+  PERMISSION_DENIED: 'AUTHENTICATION_ERROR',
+  UNAUTHENTICATED: 'AUTHENTICATION_ERROR',
+  UNAVAILABLE: 'SERVER_UNAVAILABLE',
+  INTERNAL: 'INTERNAL_ERROR',
+  UNKNOWN: 'UNKNOWN_ERROR',
+};
+
+/** @const {ServerToClientCode} Topic management (IID) server to client enum error codes. */
+const TOPIC_MGT_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   /* TOPIC SUBSCRIPTION MANAGEMENT ERRORS */
   NOT_FOUND: 'REGISTRATION_TOKEN_NOT_REGISTERED',
   INVALID_ARGUMENT: 'INVALID_REGISTRATION_TOKEN',
