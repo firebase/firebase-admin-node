@@ -98,7 +98,7 @@ describe('FirebaseInstanceIdRequestHandler', () => {
         const expectedResult = {'statusCode': 404};
   
         let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-          .returns(Promise.reject(expectedResult));
+          .rejects(expectedResult);
         stubs.push(stub);
   
         const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp, projectId);
@@ -116,7 +116,7 @@ describe('FirebaseInstanceIdRequestHandler', () => {
         const expectedResult = {'statusCode': 409};
   
         let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-          .returns(Promise.reject(expectedResult));
+          .rejects(expectedResult);
         stubs.push(stub);
   
         const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp, projectId);
@@ -134,7 +134,7 @@ describe('FirebaseInstanceIdRequestHandler', () => {
         const expectedResult = {'statusCode': 511};
   
         let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-          .returns(Promise.reject(expectedResult));
+          .rejects(expectedResult);
         stubs.push(stub);
   
         const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp, projectId);
