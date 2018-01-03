@@ -178,7 +178,7 @@ describe('FirebaseApp', () => {
       process.env[FIREBASE_CONFIG_VAR] = '{,,';
       expect(() => {
         firebaseNamespace.initializeApp();
-      }).to.throw(`Failed to parse app options file: SyntaxError: Unexpected token , in JSON at position 1`);
+      }).to.throw(`Failed to parse app options file: SyntaxError: Unexpected token ,`);
     });
 
     it('should throw when the environment variable points to an empty file', () => {
