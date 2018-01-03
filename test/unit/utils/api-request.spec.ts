@@ -397,6 +397,42 @@ describe('SignedApiRequestHandler', () => {
         });
     });
   });
+
+  describe('sendDeleteRequest', () => {
+    let mockedRequests: nock.Scope[] = [];
+    afterEach(() => {
+      _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
+      mockedRequests = [];
+    });
+
+    const expectedResult = {
+      users : [
+        {localId: 'uid'},
+      ],
+    };
+    let stub: sinon.SinonStub;
+    beforeEach(() => stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        .returns(Promise.resolve(expectedResult)));
+    afterEach(() => stub.restore());
+    const headers = {
+      Authorization: 'Bearer ' + mockAccessToken,
+    };
+    const httpMethod: any = 'DELETE';
+    const host = 'www.googleapis.com';
+    const port = 443;
+    const path = '/identitytoolkit/v3/relyingparty/getAccountInfo';
+    const timeout = 10000;
+    it('should resolve successfully with a valid request', () => {
+      const requestHandler = new SignedApiRequestHandler(mockApp);
+      return requestHandler.sendRequest(
+          host, port, path, httpMethod, undefined, undefined, timeout)
+        .then((result) => {
+          expect(result).to.deep.equal(expectedResult);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              host, port, path, httpMethod, undefined, headers, timeout);
+        });
+    });
+  });
 });
 
 describe('ApiSettings', () => {
