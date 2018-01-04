@@ -148,6 +148,7 @@ export class UserRecord {
   public readonly passwordHash?: string;
   public readonly passwordSalt?: string;
   public readonly customClaims: Object;
+  public readonly tokensValidAfterTime?: string;
 
   constructor(response: any) {
     // The Firebase user id is required.
@@ -180,6 +181,12 @@ export class UserRecord {
       // Ignore error.
       utils.addReadonlyGetter(this, 'customClaims', undefined);
     }
+    let validAfterTime: string = null;
+    // Convert validSince first to UTC milliseconds and then to UTC date string.
+    if (typeof response.validSince !== 'undefined') {
+      validAfterTime = parseDate(response.validSince * 1000);
+    }
+    utils.addReadonlyGetter(this, 'tokensValidAfterTime', validAfterTime);
   }
 
   /** @return {Object} The plain object representation of the user record. */
@@ -197,6 +204,7 @@ export class UserRecord {
       passwordHash: this.passwordHash,
       passwordSalt: this.passwordSalt,
       customClaims: deepCopy(this.customClaims),
+      tokensValidAfterTime: this.tokensValidAfterTime,
     };
     json.providerData = [];
     for (let entry of this.providerData) {

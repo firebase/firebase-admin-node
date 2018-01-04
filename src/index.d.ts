@@ -110,6 +110,7 @@ declare namespace admin.auth {
     passwordHash?: string;
     passwordSalt?: string;
     customClaims?: Object;
+    tokensValidAfterTime?: string;
 
     toJSON(): Object;
   }
@@ -162,8 +163,9 @@ declare namespace admin.auth {
     getUserByPhoneNumber(phoneNumber: string): Promise<admin.auth.UserRecord>;
     listUsers(maxResults?: number, pageToken?: string): Promise<admin.auth.ListUsersResult>;
     updateUser(uid: string, properties: admin.auth.UpdateRequest): Promise<admin.auth.UserRecord>;
-    verifyIdToken(idToken: string): Promise<admin.auth.DecodedIdToken>;
+    verifyIdToken(idToken: string, checkRevoked?: boolean): Promise<admin.auth.DecodedIdToken>;
     setCustomUserClaims(uid: string, customUserClaims: Object): Promise<void>;
+    revokeRefreshTokens(uid: string): Promise<void>;
   }
 }
 

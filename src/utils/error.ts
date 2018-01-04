@@ -309,6 +309,10 @@ export class AuthClientErrorCode {
     code: 'reserved-claim',
     message: 'The specified developer claim is reserved and cannot be specified.',
   };
+  public static ID_TOKEN_REVOKED = {
+    code: 'id-token-revoked',
+    message: 'The Firebase ID token has been revoked.',
+  };
   public static INTERNAL_ERROR = {
     code: 'internal-error',
     message: 'An internal error has occurred.',
@@ -357,6 +361,10 @@ export class AuthClientErrorCode {
   public static INVALID_UID = {
     code: 'invalid-uid',
     message: 'The uid must be a non-empty string with at most 128 characters.',
+  };
+  public static INVALID_TOKENS_VALID_AFTER_TIME = {
+    code: 'invalid-tokens-valid-after-time',
+    message: 'The tokensValidAfterTime must be a valid UTC number in seconds.',
   };
   public static MISSING_UID = {
     code: 'missing-uid',

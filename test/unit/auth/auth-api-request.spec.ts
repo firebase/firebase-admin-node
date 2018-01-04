@@ -242,6 +242,7 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
   let isPasswordSpy: sinon.SinonSpy;
   let isUrlSpy: sinon.SinonSpy;
   let isPhoneNumberSpy: sinon.SinonSpy;
+  let isNumberSpy: sinon.SinonSpy;
 
   beforeEach(() => {
     isUidSpy = sinon.spy(validator, 'isUid');
@@ -249,6 +250,7 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
     isPasswordSpy = sinon.spy(validator, 'isPassword');
     isUrlSpy = sinon.spy(validator, 'isURL');
     isPhoneNumberSpy = sinon.spy(validator, 'isPhoneNumber');
+    isNumberSpy = sinon.spy(validator, 'isNumber');
   });
   afterEach(() => {
     isUidSpy.restore();
@@ -256,6 +258,7 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
     isPasswordSpy.restore();
     isUrlSpy.restore();
     isPhoneNumberSpy.restore();
+    isNumberSpy.restore();
   });
 
   it('should return the correct endpoint', () => {
@@ -284,6 +287,7 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
         disableUser: false,
         phoneNumber: '+11234567890',
         customAttributes: JSON.stringify({admin: true, groupId: '123'}),
+        validSince: 1476136676,
         // Pass an unsupported parameter which should be ignored.
         ignoreMe: 'bla',
       };
@@ -296,6 +300,7 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
       expect(isUrlSpy).to.have.been.calledOnce.and
         .calledWith('http://www.example.com/1234/photo.png');
       expect(isPhoneNumberSpy).to.have.been.calledOnce.and.calledWith('+11234567890');
+      expect(isNumberSpy).to.have.been.calledOnce.and.calledWith(1476136676);
     });
     it('should succeed with valid localId and customAttributes with 1000 char payload', () => {
       // Test with 1000 characters.
@@ -387,6 +392,12 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
           };
           return requestValidator({localId: '1234', customAttributes: JSON.stringify(claims)});
         }).to.throw(`Developer claims "auth_time", "sub" are reserved and cannot be specified.`);
+      });
+      it('should fail with invalid validSince', () => {
+        expect(() => {
+          return requestValidator({localId: '1234', validSince: 'invalid'});
+        }).to.throw('The tokensValidAfterTime must be a valid UTC number in seconds.');
+        expect(isNumberSpy).to.have.been.calledOnce.and.calledWith('invalid');
       });
     });
   });
@@ -537,6 +548,11 @@ describe('FIREBASE_AUTH_SIGN_UP_NEW_USER', () => {
       it('should fail with customAttributes', () => {
         expect(() => {
           return requestValidator({customAttributes: JSON.stringify({admin: true})});
+        }).to.throw();
+      });
+      it('should fail with validSince', () => {
+        expect(() => {
+          return requestValidator({validSince: 1476136676});
         }).to.throw();
       });
     });
@@ -1309,6 +1325,94 @@ describe('FirebaseAuthRequestHandler', () => {
           expect(error).to.deep.equal(expectedError);
           expect(stub).to.have.been.calledOnce.and.calledWith(
               host, port, path, httpMethod, expectedValidData, expectedHeaders, timeout);
+        });
+    });
+  });
+
+  describe('revokeRefreshTokens', () => {
+    const httpMethod = 'POST';
+    const host = 'www.googleapis.com';
+    const port = 443;
+    const path = '/identitytoolkit/v3/relyingparty/setAccountInfo';
+    const timeout = 10000;
+    const uid = '12345678';
+    const now = new Date();
+    const expectedResult = {
+      localId: uid,
+    };
+    let clock;
+
+    beforeEach(() => {
+      clock = sinon.useFakeTimers(now.getTime());
+    });
+
+    afterEach(() => {
+      clock.restore();
+    });
+
+    it('should be fulfilled given a valid uid', () => {
+      const requestData = {
+        localId: uid,
+        // Current time should be passed, rounded up.
+        validSince: Math.ceil((now.getTime() + 5000) / 1000),
+      };
+
+      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        .returns(Promise.resolve(expectedResult));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      // Simulate 5 seconds passed.
+      clock.tick(5000);
+      return requestHandler.revokeRefreshTokens(uid)
+        .then((returnedUid: string) => {
+          expect(returnedUid).to.be.equal(uid);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              host, port, path, httpMethod, requestData, expectedHeaders, timeout);
+        });
+    });
+
+    it('should be rejected given an invalid uid', () => {
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_UID);
+      const invalidUid: any = {'localId': uid}; 
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.revokeRefreshTokens(invalidUid as any)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Invalid uid error should be thrown.
+          expect(error).to.deep.equal(expectedError);
+        });
+    });
+
+    it('should be rejected when the backend returns an error', () => {
+      // Backend returned error.
+      const expectedError = FirebaseAuthError.fromServerError('USER_NOT_FOUND');
+      const expectedServerError = {
+        error: {
+          message: 'USER_NOT_FOUND',
+        },
+      };
+      const requestData = {
+        localId: uid,
+        validSince: Math.ceil((now.getTime() + 5000) / 1000),
+      };
+
+      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        .returns(Promise.resolve(expectedServerError));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      // Simulate 5 seconds passed.
+      clock.tick(5000);
+      return requestHandler.revokeRefreshTokens(uid)
+        .then((returnedUid: string) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              host, port, path, httpMethod, requestData, expectedHeaders, timeout);
         });
     });
   });

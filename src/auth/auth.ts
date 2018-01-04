@@ -48,6 +48,25 @@ export interface ListUsersResult {
 }
 
 
+/** Inteface representing a decoded ID token. */
+export interface DecodedIdToken {
+  aud: string;
+  auth_time: number;
+  exp: number;
+  firebase: {
+    identities: {
+      [key: string]: any;
+    };
+    sign_in_provider: string;
+    [key: string]: any;
+  };
+  iat: number;
+  iss: string;
+  sub: string;
+  [key: string]: any;
+}
+
+
 /**
  * Auth service bound to the provided app.
  */
@@ -124,12 +143,17 @@ export class Auth implements FirebaseServiceInterface {
 
   /**
    * Verifies a JWT auth token. Returns a Promise with the tokens claims. Rejects
-   * the promise if the token could not be verified.
+   * the promise if the token could not be verified. If checkRevoked is set to true,
+   * verifies if the session corresponding to the ID token was revoked. If the corresponding
+   * user's session was invalidated, an auth/id-token-revoked error is thrown. If not specified
+   * the check is not applied.
    *
    * @param {string} idToken The JWT to verify.
-   * @return {Promise<Object>} A Promise that will be fulfilled after a successful verification.
+   * @param {boolean=} checkRevoked Whether to check if the ID token is revoked.
+   * @return {Promise<DecodedIdToken>} A Promise that will be fulfilled after a successful
+   *     verification.
    */
-  public verifyIdToken(idToken: string): Promise<Object> {
+  public verifyIdToken(idToken: string, checkRevoked: boolean = false): Promise<Object> {
     if (typeof this.tokenGenerator_ === 'undefined') {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_CREDENTIAL,
@@ -137,7 +161,30 @@ export class Auth implements FirebaseServiceInterface {
         'GCLOUD_PROJECT environment variable to call auth().verifyIdToken().',
       );
     }
-    return this.tokenGenerator_.verifyIdToken(idToken);
+    return this.tokenGenerator_.verifyIdToken(idToken)
+      .then((decodedIdToken: DecodedIdToken) => {
+        // Whether to check if the token was revoked.
+        if (!checkRevoked) {
+          return decodedIdToken;
+        }
+        // Get tokens valid after time for the corresponding user.
+        return this.getUser(decodedIdToken.sub)
+          .then((user: UserRecord) => {
+            // If no tokens valid after time available, token is not revoked.
+            if (user.tokensValidAfterTime) {
+              // Get the ID token authentication time and convert to milliseconds UTC.
+              const authTimeUtc = decodedIdToken.auth_time * 1000;
+              // Get user tokens valid after time in milliseconds UTC.
+              const validSinceUtc = new Date(user.tokensValidAfterTime).getTime();
+              // Check if authentication time is older than valid since time.
+              if (authTimeUtc < validSinceUtc) {
+                throw new FirebaseAuthError(AuthClientErrorCode.ID_TOKEN_REVOKED);
+              }
+            }
+            // All checks above passed. Return the decoded token.
+            return decodedIdToken;
+          });
+      });
   };
 
   /**
@@ -281,6 +328,23 @@ export class Auth implements FirebaseServiceInterface {
    */
   public setCustomUserClaims(uid: string, customUserClaims: Object): Promise<void> {
     return this.authRequestHandler.setCustomUserClaims(uid, customUserClaims)
+      .then((existingUid) => {
+        // Return nothing on success.
+      });
+  };
+
+  /**
+   * Revokes all refresh tokens for the specified user identified by the provided UID.
+   * In addition to revoking all refresh tokens for a user, all ID tokens issued before
+   * revocation will also be revoked on the Auth backend. Any request with an ID token
+   * generated before revocation will be rejected with a token expired error.
+   *
+   * @param {string} uid The user whose tokens are to be revoked.
+   * @return {Promise<void>} A promise that resolves when the operation completes
+   *     successfully.
+   */
+  public revokeRefreshTokens(uid: string): Promise<void> {
+    return this.authRequestHandler.revokeRefreshTokens(uid)
       .then((existingUid) => {
         // Return nothing on success.
       });

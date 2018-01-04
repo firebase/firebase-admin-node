@@ -27,7 +27,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
-import {Auth} from '../../../src/auth/auth';
+import {Auth, DecodedIdToken} from '../../../src/auth/auth';
 import {UserRecord} from '../../../src/auth/user-record';
 import {FirebaseApp} from '../../../src/firebase-app';
 import {FirebaseTokenGenerator} from '../../../src/auth/token-generator';
@@ -95,6 +95,29 @@ function getValidGetAccountInfoResponse() {
 function getValidUserRecord(serverResponse: any) {
   return new UserRecord(serverResponse.users[0]);
 }
+
+
+/**
+ * Generates a mock decoded ID token with the provided parameters.
+ *
+ * @param {string} uid The uid corresponding to the ID token.
+ * @param {Date} authTime The authentication time of the ID token.
+ * @return {DecodedIdToken} The generated decoded ID token.
+ */
+function getDecodedIdToken(uid: string, authTime: Date): DecodedIdToken {
+  return {
+    iss: 'https://securetoken.google.com/project123456789',
+    aud: 'project123456789',
+    auth_time: Math.floor(authTime.getTime() / 1000),
+    sub: uid,
+    iat: Math.floor(authTime.getTime() / 1000),
+    exp: Math.floor(authTime.getTime() / 1000 + 3600),
+    firebase: {
+      identities: {},
+      sign_in_provider: 'custom',
+    },
+  };
+};
 
 
 describe('Auth', () => {
@@ -213,12 +236,28 @@ describe('Auth', () => {
   describe('verifyIdToken()', () => {
     let stub: sinon.SinonStub;
     let mockIdToken: string;
+    const expectedUserRecord = getValidUserRecord(getValidGetAccountInfoResponse());
+    // Set auth_time of token to expected user's tokensValidAfterTime.
+    const validSince = new Date(expectedUserRecord.tokensValidAfterTime);
+    // Set expected uid to expected user's.
+    const uid = expectedUserRecord.uid;
+    // Set expected decoded ID token with expected UID and auth time.
+    const decodedIdToken = getDecodedIdToken(uid, validSince);
+    let clock;
 
+    // Stubs used to simulate underlying api calls.
+    let stubs: sinon.SinonStub[] = [];
     beforeEach(() => {
-      stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifyIdToken').returns(Promise.resolve());
+      stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifyIdToken')
+        .returns(Promise.resolve(decodedIdToken));
+      stubs.push(stub);
       mockIdToken = mocks.generateIdToken();
+      clock = sinon.useFakeTimers(validSince.getTime());
     });
-    afterEach(() => stub.restore());
+    afterEach(() => {
+      _.forEach(stubs, (stub) => stub.restore());
+      clock.restore();
+    });
 
     it('should throw if a cert credential is not specified', () => {
       const mockCredentialAuth = new Auth(mocks.mockCredentialApp());
@@ -229,7 +268,13 @@ describe('Auth', () => {
     });
 
     it('should forward on the call to the token generator\'s verifyIdToken() method', () => {
-      return auth.verifyIdToken(mockIdToken).then(() => {
+      // Stub getUser call.
+      let getUserStub = sinon.stub(Auth.prototype, 'getUser');
+      stubs.push(getUserStub);
+      return auth.verifyIdToken(mockIdToken).then((result) => {
+        // Confirm getUser never called.
+        expect(getUserStub).not.to.have.been.called;
+        expect(result).to.deep.equal(decodedIdToken);
         expect(stub).to.have.been.calledOnce.and.calledWith(mockIdToken);
       });
     });
@@ -260,6 +305,120 @@ describe('Auth', () => {
       // verifyIdToken() does not rely on an access token and therefore works in this scenario.
       return rejectedPromiseAccessTokenAuth.verifyIdToken(mockIdToken)
         .should.eventually.be.fulfilled;
+    });
+
+    it('should be fulfilled with checkRevoked set to true using an unrevoked ID token', () => {
+      let getUserStub = sinon.stub(Auth.prototype, 'getUser')
+        .returns(Promise.resolve(expectedUserRecord));
+      stubs.push(getUserStub);
+      // Verify ID token while checking if revoked.
+      return auth.verifyIdToken(mockIdToken, true)
+        .then((result) => {
+          // Confirm underlying API called with expected parameters.
+          expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+          expect(result).to.deep.equal(decodedIdToken);
+        });
+    });
+
+    it('should be rejected with checkRevoked set to true using a revoked ID token', () => {
+      // One second before validSince.
+      let oneSecBeforeValidSince = new Date(validSince.getTime() - 1000);
+      // Restore verifyIdToken stub.
+      stub.restore();
+      // Simulate revoked ID token returned with auth_time one second before validSince.
+      stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifyIdToken')
+        .returns(Promise.resolve(getDecodedIdToken(uid, oneSecBeforeValidSince)));
+      stubs.push(stub);
+      let getUserStub = sinon.stub(Auth.prototype, 'getUser')
+        .returns(Promise.resolve(expectedUserRecord));
+      stubs.push(getUserStub);
+      // Verify ID token while checking if revoked.
+      return auth.verifyIdToken(mockIdToken, true)
+        .then((result) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Confirm underlying API called with expected parameters.
+          expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+          // Confirm expected error returned.
+          expect(error).to.have.property('code', 'auth/id-token-revoked');
+        });
+    });
+
+    it('should be fulfilled with checkRevoked set to false using a revoked ID token', () => {
+      // One second before validSince.
+      let oneSecBeforeValidSince = new Date(validSince.getTime() - 1000);
+      let oneSecBeforeValidSinceDecodedIdToken =
+          getDecodedIdToken(uid, oneSecBeforeValidSince);
+      // Restore verifyIdToken stub.
+      stub.restore();
+      // Simulate revoked ID token returned with auth_time one second before validSince.
+      stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifyIdToken')
+        .returns(Promise.resolve(oneSecBeforeValidSinceDecodedIdToken));
+      stubs.push(stub);
+      // Verify ID token without checking if revoked.
+      // This call should succeed.
+      return auth.verifyIdToken(mockIdToken, false)
+        .then((result) => {
+          expect(result).to.deep.equal(oneSecBeforeValidSinceDecodedIdToken);
+        });
+    });
+
+    it('should be rejected with checkRevoked set to true if underlying RPC fails', () => {
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
+      let getUserStub = sinon.stub(Auth.prototype, 'getUser')
+        .returns(Promise.reject(expectedError));
+      stubs.push(getUserStub);
+      // Verify ID token while checking if revoked.
+      // This should fail with the underlying RPC error.
+      return auth.verifyIdToken(mockIdToken, true)
+        .then((result) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Confirm underlying API called with expected parameters.
+          expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+          // Confirm expected error returned.
+          expect(error).to.equal(expectedError);
+        });
+    });
+
+    it('should be fulfilled with checkRevoked set to true when no validSince available', () => {
+      // Simulate no validSince set on the user.
+      let noValidSinceGetAccountInfoResponse = getValidGetAccountInfoResponse();
+      delete noValidSinceGetAccountInfoResponse['users'][0]['validSince'];
+      const noValidSinceExpectedUserRecord =
+         getValidUserRecord(noValidSinceGetAccountInfoResponse);
+      // Confirm null tokensValidAfterTime on user.
+      expect(noValidSinceExpectedUserRecord.tokensValidAfterTime).to.be.null;
+      // Simulate getUser returns the expected user with no validSince.
+      let getUserStub = sinon.stub(Auth.prototype, 'getUser')
+        .returns(Promise.resolve(noValidSinceExpectedUserRecord));
+      stubs.push(getUserStub);
+      // Verify ID token while checking if revoked.
+      return auth.verifyIdToken(mockIdToken, true)
+        .then((result) => {
+          // Confirm underlying API called with expected parameters.
+          expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+          expect(result).to.deep.equal(decodedIdToken);
+        });
+    });
+
+    it('should be rejected with checkRevoked set to true using an invalid ID token', () => {
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_CREDENTIAL);
+      // Restore verifyIdToken stub.
+      stub.restore();
+      // Simulate ID token is invalid.
+      stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifyIdToken')
+        .returns(Promise.reject(expectedError));
+      stubs.push(stub);
+      // Verify ID token while checking if revoked.
+      // This should fail with the underlying token generator verifyIdToken error.
+      return auth.verifyIdToken(mockIdToken, true)
+        .then((result) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Confirm expected error returned.
+          expect(error).to.equal(expectedError);
+        });
     });
   });
 
@@ -1084,6 +1243,85 @@ describe('Auth', () => {
           // Confirm underlying API called with expected parameters.
           expect(downloadAccountStub)
             .to.have.been.calledOnce.and.calledWith(maxResult, pageToken);
+          // Confirm expected error returned.
+          expect(error).to.equal(expectedError);
+        });
+    });
+  });
+
+  describe('revokeRefreshTokens()', () => {
+    const uid = 'abcdefghijklmnopqrstuvwxyz';
+    const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
+    // Stubs used to simulate underlying api calls.
+    let stubs: sinon.SinonStub[] = [];
+    beforeEach(() => {
+      sinon.spy(validator, 'isUid');
+    });
+    afterEach(() => {
+      (validator.isUid as any).restore();
+      _.forEach(stubs, (stub) => stub.restore());
+      stubs = [];
+    });
+
+    it('should be rejected given no uid', () => {
+      return (auth as any).revokeRefreshTokens(undefined)
+        .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-uid');
+    });
+
+    it('should be rejected given an invalid uid', () => {
+      const invalidUid = ('a' as any).repeat(129);
+      return auth.revokeRefreshTokens(invalidUid)
+        .then(() => {
+          throw new Error('Unexpected success');
+        })
+        .catch((error) => {
+          expect(error).to.have.property('code', 'auth/invalid-uid');
+          expect(validator.isUid).to.have.been.calledOnce.and.calledWith(invalidUid);
+        });
+    });
+
+    it('should be rejected given an app which returns null access tokens', () => {
+      return nullAccessTokenAuth.revokeRefreshTokens(uid)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which returns invalid access tokens', () => {
+      return malformedAccessTokenAuth.revokeRefreshTokens(uid)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which fails to generate access tokens', () => {
+      return rejectedPromiseAccessTokenAuth.revokeRefreshTokens(uid)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should resolve on underlying revokeRefreshTokens request success', () => {
+      // Stub revokeRefreshTokens to return expected uid.
+      let revokeRefreshTokensStub =
+          sinon.stub(FirebaseAuthRequestHandler.prototype, 'revokeRefreshTokens')
+          .returns(Promise.resolve(uid));
+      stubs.push(revokeRefreshTokensStub);
+      return auth.revokeRefreshTokens(uid)
+        .then((result) => {
+          // Confirm underlying API called with expected parameters.
+          expect(revokeRefreshTokensStub).to.have.been.calledOnce.and.calledWith(uid);
+          // Confirm expected response returned.
+          expect(result).to.be.undefined;
+        });
+    });
+
+    it('should throw when underlying revokeRefreshTokens request returns an error', () => {
+      // Stub revokeRefreshTokens to throw a backend error.
+      let revokeRefreshTokensStub =
+          sinon.stub(FirebaseAuthRequestHandler.prototype, 'revokeRefreshTokens')
+          .returns(Promise.reject(expectedError));
+      stubs.push(revokeRefreshTokensStub);
+      return auth.revokeRefreshTokens(uid)
+        .then((result) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Confirm underlying API called with expected parameters.
+          expect(revokeRefreshTokensStub).to.have.been.calledOnce.and.calledWith(uid);
           // Confirm expected error returned.
           expect(error).to.equal(expectedError);
         });
