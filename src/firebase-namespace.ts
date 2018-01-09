@@ -258,9 +258,8 @@ export class FirebaseNamespaceInternals {
     if (!validator.isNonEmptyString(config)) {
       return {};
     }
-    let contents;
-    let jsonContent;
     try {
+      let contents;      
       if (config.startsWith('{')) {
         // Assume json object.
         contents = config;
@@ -268,7 +267,7 @@ export class FirebaseNamespaceInternals {
         // Assume filename.
         contents = fs.readFileSync(config, 'utf8');
       }
-      jsonContent = JSON.parse(contents);
+      return JSON.parse(contents) as FirebaseAppOptions;
     } catch (error) {
       // Throw a nicely formed error message if the file contents cannot be parsed
       throw new FirebaseAppError(
@@ -276,7 +275,6 @@ export class FirebaseNamespaceInternals {
         'Failed to parse app options file: ' + error,
       );
     }
-    return jsonContent as FirebaseAppOptions;
   }
 }
 
