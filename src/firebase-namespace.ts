@@ -259,7 +259,7 @@ export class FirebaseNamespaceInternals {
       return {};
     }
     try {
-      let contents;      
+      let contents;
       if (config.startsWith('{')) {
         // Assume json object.
         contents = config;
