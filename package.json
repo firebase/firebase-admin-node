@@ -54,7 +54,7 @@
     "@types/google-cloud__storage": "^1.1.1",
     "@types/node": "^8.0.53",
     "faye-websocket": "0.9.3",
-    "jsonwebtoken": "7.4.3",
+    "jsonwebtoken": "8.1.0",
     "node-forge": "0.7.1"
   },
   "devDependencies": {
