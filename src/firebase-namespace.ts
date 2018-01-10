@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import fs = require('fs');
 import {deepExtend} from './utils/deep-copy';
 import {AppErrorCodes, FirebaseAppError} from './utils/error';
 import {AppHook, FirebaseApp, FirebaseAppOptions} from './firebase-app';
@@ -32,7 +33,17 @@ import {Database} from '@firebase/database';
 import {Firestore} from '@google-cloud/firestore';
 import {InstanceId} from './instance-id/instance-id';
 
+import * as validator from './utils/validator';
+
 const DEFAULT_APP_NAME = '[DEFAULT]';
+
+/**
+ * Constant holding the environment variable name with the default config.
+ * If the environmet variable contains a string that starts with '{' it will be parsed as JSON,
+ * otherwise it will be assumed to be pointing to a file.
+ */
+export const FIREBASE_CONFIG_VAR: string = 'FIREBASE_CONFIG';
+
 
 let globalAppDefaultCred: ApplicationDefaultCredential;
 let globalCertCreds: { [key: string]: CertCredential } = {};
@@ -59,12 +70,20 @@ export class FirebaseNamespaceInternals {
   /**
    * Initializes the FirebaseApp instance.
    *
-   * @param {FirebaseAppOptions} options Options for the FirebaseApp instance.
+   * @param {FirebaseAppOptions} options Optional options for the FirebaseApp instance. If none present
+   *                             will try to initialize from the FIREBASE_CONFIG environment variable.
+   *                             If the environmet variable contains a string that starts with '{'
+   *                             it will be parsed as JSON,
+   *                             otherwise it will be assumed to be pointing to a file.
    * @param {string} [appName] Optional name of the FirebaseApp instance.
    *
    * @return {FirebaseApp} A new FirebaseApp instance.
    */
-  public initializeApp(options: FirebaseAppOptions, appName = DEFAULT_APP_NAME): FirebaseApp {
+  public initializeApp(options?: FirebaseAppOptions, appName = DEFAULT_APP_NAME): FirebaseApp {
+    if (typeof options === 'undefined') {
+      options = this.loadOptionsFromEnvVar();
+      options.credential = new ApplicationDefaultCredential();
+    }
     if (typeof appName !== 'string' || appName === '') {
       throw new FirebaseAppError(
         AppErrorCodes.INVALID_APP_NAME,
@@ -227,6 +246,36 @@ export class FirebaseNamespaceInternals {
       }
     });
   }
+
+  /**
+   * Parse the file pointed to by the FIREBASE_CONFIG_VAR, if it exists.
+   * Or if the FIREBASE_CONFIG_ENV contains a valid JSON object, parse it directly.
+   * If the environmet variable contains a string that starts with '{' it will be parsed as JSON,
+   * otherwise it will be assumed to be pointing to a file.
+   */
+  private loadOptionsFromEnvVar(): FirebaseAppOptions {
+    let config = process.env[FIREBASE_CONFIG_VAR];
+    if (!validator.isNonEmptyString(config)) {
+      return {};
+    }
+    try {
+      let contents;
+      if (config.startsWith('{')) {
+        // Assume json object.
+        contents = config;
+      } else {
+        // Assume filename.
+        contents = fs.readFileSync(config, 'utf8');
+      }
+      return JSON.parse(contents) as FirebaseAppOptions;
+    } catch (error) {
+      // Throw a nicely formed error message if the file contents cannot be parsed
+      throw new FirebaseAppError(
+        AppErrorCodes.INVALID_APP_OPTIONS,
+        'Failed to parse app options file: ' + error,
+      );
+    }
+  }
 }
 
 
@@ -354,12 +403,15 @@ export class FirebaseNamespace {
   /**
    * Initializes the FirebaseApp instance.
    *
-   * @param {FirebaseAppOptions} options Options for the FirebaseApp instance.
+   * @param {FirebaseAppOptions} [options] Optional options for the FirebaseApp instance.
+   *   If none present will try to initialize from the FIREBASE_CONFIG environment variable.
+   *   If the environmet variable contains a string that starts with '{' it will be parsed as JSON,
+   *   otherwise it will be assumed to be pointing to a file.
    * @param {string} [appName] Optional name of the FirebaseApp instance.
    *
    * @return {FirebaseApp} A new FirebaseApp instance.
    */
-  public initializeApp(options: FirebaseAppOptions, appName?: string): FirebaseApp {
+  public initializeApp(options?: FirebaseAppOptions, appName?: string): FirebaseApp {
     return this.INTERNAL.initializeApp(options, appName);
   }
 

@@ -30,10 +30,10 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from './utils';
 import * as mocks from '../resources/mocks';
 
-import {GoogleOAuthAccessToken} from '../../src/auth/credential';
+import {ApplicationDefaultCredential, CertCredential, GoogleOAuthAccessToken} from '../../src/auth/credential';
 import {FirebaseServiceInterface} from '../../src/firebase-service';
 import {FirebaseApp, FirebaseAccessToken} from '../../src/firebase-app';
-import {FirebaseNamespace, FirebaseNamespaceInternals} from '../../src/firebase-namespace';
+import {FirebaseNamespace, FirebaseNamespaceInternals, FIREBASE_CONFIG_VAR} from '../../src/firebase-namespace';
 
 import {Auth} from '../../src/auth/auth';
 import {Messaging} from '../../src/messaging/messaging';
@@ -65,6 +65,7 @@ describe('FirebaseApp', () => {
   let mockedRequests: nock.Scope[] = [];
   let firebaseNamespace: FirebaseNamespace;
   let firebaseNamespaceInternals: FirebaseNamespaceInternals;
+  let firebaseConfigVar: string;
 
   beforeEach(() => {
     utils.mockFetchAccessTokenRequests();
@@ -73,6 +74,8 @@ describe('FirebaseApp', () => {
 
     mockApp = mocks.app();
 
+    firebaseConfigVar = process.env[FIREBASE_CONFIG_VAR];
+    delete process.env[FIREBASE_CONFIG_VAR];
     firebaseNamespace = new FirebaseNamespace();
     firebaseNamespaceInternals = firebaseNamespace.INTERNAL;
 
@@ -82,6 +85,11 @@ describe('FirebaseApp', () => {
 
   afterEach(() => {
     this.clock.restore();
+    if (firebaseConfigVar) {
+      process.env[FIREBASE_CONFIG_VAR] = firebaseConfigVar;
+    } else {
+      delete process.env[FIREBASE_CONFIG_VAR];
+    }
 
     deleteSpy.reset();
     (firebaseNamespaceInternals.removeApp as any).restore();
@@ -149,6 +157,154 @@ describe('FirebaseApp', () => {
       const original = _.clone(mockApp.options);
       (mockApp.options as any).foo = 'changed';
       expect(mockApp.options).to.deep.equal(original);
+    });
+
+    it('should ignore the config file when options is not null', () => {
+      process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config.json';
+      const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
+      expect(app.options.databaseAuthVariableOverride).to.be.undefined;
+      expect(app.options.databaseURL).to.undefined;
+      expect(app.options.projectId).to.be.undefined;
+      expect(app.options.storageBucket).to.undefined;
+    });
+
+    it('should throw when the environment variable points to non existing file', () => {
+      process.env[FIREBASE_CONFIG_VAR] = './test/resources/non_existant.json';
+      expect(() => {
+        firebaseNamespace.initializeApp();
+      }).to.throw(`Failed to parse app options file: Error: ENOENT: no such file or directory`);
+    });
+
+    it('should throw when the environment variable contains bad json', () => {
+      process.env[FIREBASE_CONFIG_VAR] = '{,,';
+      expect(() => {
+        firebaseNamespace.initializeApp();
+      }).to.throw(`Failed to parse app options file: SyntaxError: Unexpected token ,`);
+    });
+
+    it('should throw when the environment variable points to an empty file', () => {
+      process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config_empty.json';
+      expect(() => {
+        firebaseNamespace.initializeApp();
+      }).to.throw(`Failed to parse app options file`);
+    });
+
+    it('should throw when the environment variable points to bad json', () => {
+      process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config_bad.json';
+      expect(() => {
+        firebaseNamespace.initializeApp();
+      }).to.throw(`Failed to parse app options file`);
+    });
+
+    it('should ignore a bad config key in the config file', () => {
+      process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config_bad_key.json';
+      const app = firebaseNamespace.initializeApp();
+      expect(app.options.projectId).to.equal("hipster-chat-mock");
+      expect(app.options.databaseAuthVariableOverride).to.be.undefined;
+      expect(app.options.databaseURL).to.undefined;
+      expect(app.options.storageBucket).to.undefined;
+    });
+
+    it('should ignore a bad config key in the json string', () => {
+      process.env[FIREBASE_CONFIG_VAR] = 
+      `{
+        "notAValidKeyValue": "The key value here is not valid.",
+        "projectId": "hipster-chat-mock"
+      }`;
+      const app = firebaseNamespace.initializeApp();
+      expect(app.options.projectId).to.equal("hipster-chat-mock");
+      expect(app.options.databaseAuthVariableOverride).to.be.undefined;
+      expect(app.options.databaseURL).to.undefined;
+      expect(app.options.storageBucket).to.undefined;
+    });
+
+    it('should not throw when the config file has a bad key and the config file is unused', () => {
+      process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config_bad_key.json';
+      const app = firebaseNamespace.initializeApp(mocks.appOptionsWithOverride, mocks.appName);
+      expect(app.options.projectId).to.equal("project_id");
+      expect(app.options.databaseAuthVariableOverride).to.deep.equal({ 'some#string': 'some#val' });
+      expect(app.options.databaseURL).to.equal('https://databaseName.firebaseio.com');
+      expect(app.options.storageBucket).to.equal('bucketName.appspot.com');
+    });
+
+    it('should not throw when the config json has a bad key and the config json is unused', () => {
+      process.env[FIREBASE_CONFIG_VAR] = 
+      `{
+        "notAValidKeyValue": "The key value here is not valid.",
+        "projectId": "hipster-chat-mock"
+      }`;  const app = firebaseNamespace.initializeApp(mocks.appOptionsWithOverride, mocks.appName);
+      expect(app.options.projectId).to.equal("project_id");
+      expect(app.options.databaseAuthVariableOverride).to.deep.equal({ 'some#string': 'some#val' });
+      expect(app.options.databaseURL).to.equal('https://databaseName.firebaseio.com');
+      expect(app.options.storageBucket).to.equal('bucketName.appspot.com');
+    });
+
+    it('should use explicitly specified options when available and ignore the config file', () => {
+      process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config.json';
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+      expect(app.options.credential).to.be.instanceOf(CertCredential);
+      expect(app.options.databaseAuthVariableOverride).to.be.undefined;
+      expect(app.options.databaseURL).to.equal('https://databaseName.firebaseio.com');
+      expect(app.options.projectId).to.be.undefined;
+      expect(app.options.storageBucket).to.equal('bucketName.appspot.com');
+    });
+
+    it('should not throw if some fields are missing', () => {
+      process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config_partial.json';
+      const app = firebaseNamespace.initializeApp(mocks.appOptionsAuthDB, mocks.appName);
+      expect(app.options.databaseURL).to.equal('https://databaseName.firebaseio.com');
+      expect(app.options.projectId).to.be.undefined;
+      expect(app.options.storageBucket).to.be.undefined;
+    });
+
+    it('should not throw when the config environment variable is not set, and some options are present', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
+      expect(app.options.credential).to.be.instanceOf(CertCredential);
+      expect(app.options.databaseURL).to.be.undefined;
+      expect(app.options.projectId).to.be.undefined;
+      expect(app.options.storageBucket).to.be.undefined;
+    });
+
+    it('should init with application default creds when no options provided and env variable is not set', () => {
+      const app = firebaseNamespace.initializeApp();
+      expect(app.options.credential).to.be.instanceOf(ApplicationDefaultCredential);
+      expect(app.options.databaseURL).to.be.undefined;
+      expect(app.options.projectId).to.be.undefined;
+      expect(app.options.storageBucket).to.be.undefined;
+    });
+
+    it('should init with application default creds when no options provided and env variable is an empty json', () => {
+      process.env[FIREBASE_CONFIG_VAR] = '{}';
+      const app = firebaseNamespace.initializeApp();
+      expect(app.options.credential).to.be.instanceOf(ApplicationDefaultCredential);
+      expect(app.options.databaseURL).to.be.undefined;
+      expect(app.options.projectId).to.be.undefined;
+      expect(app.options.storageBucket).to.be.undefined;
+    });
+
+    it('should init when no init arguments are provided and config var points to a file', () => {
+      process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config.json';
+      const app = firebaseNamespace.initializeApp();
+      expect(app.options.credential).to.be.instanceOf(ApplicationDefaultCredential);
+      expect(app.options.databaseAuthVariableOverride).to.deep.equal({ 'some#key': 'some#val' });
+      expect(app.options.databaseURL).to.equal('https://hipster-chat.firebaseio.mock');
+      expect(app.options.projectId).to.equal('hipster-chat-mock');
+      expect(app.options.storageBucket).to.equal('hipster-chat.appspot.mock');
+    });
+
+    it('should init when no init arguments are provided and config var is json', () => {
+      process.env[FIREBASE_CONFIG_VAR] = `{
+        "databaseAuthVariableOverride":  { "some#key": "some#val" },
+        "databaseURL": "https://hipster-chat.firebaseio.mock",
+        "projectId": "hipster-chat-mock",
+        "storageBucket": "hipster-chat.appspot.mock"
+      }`;      
+      const app = firebaseNamespace.initializeApp();
+      expect(app.options.credential).to.be.instanceOf(ApplicationDefaultCredential);
+      expect(app.options.databaseAuthVariableOverride).to.deep.equal({ 'some#key': 'some#val' });
+      expect(app.options.databaseURL).to.equal('https://hipster-chat.firebaseio.mock');
+      expect(app.options.projectId).to.equal('hipster-chat-mock');
+      expect(app.options.storageBucket).to.equal('hipster-chat.appspot.mock');
     });
   });
 
@@ -243,6 +399,7 @@ describe('FirebaseApp', () => {
       try {
         firebaseNamespace.app(mocks.appName).delete();
       } catch (e) {
+        // ignore
       }
     });
 
@@ -314,7 +471,8 @@ describe('FirebaseApp', () => {
         const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
         expect(() => {
           app.database(url);
-        }).to.throw('FIREBASE FATAL ERROR: Cannot parse Firebase url. Please use https://<YOUR FIREBASE>.firebaseio.com');
+        }).to.throw('FIREBASE FATAL ERROR: Cannot parse Firebase url. ' +
+                    'Please use https://<YOUR FIREBASE>.firebaseio.com');
       });
     });
   });
@@ -482,7 +640,7 @@ describe('FirebaseApp', () => {
         getAccessToken: () => Promise.resolve(oracle),
       };
 
-      const app = utils.createAppWithOptions({ credential });
+      const app = utils.createAppWithOptions({credential});
 
       return app.INTERNAL.getToken().then((token) => {
         expect(token.accessToken).to.equal(oracle.access_token);

@@ -36,7 +36,6 @@ import {InstanceId} from './instance-id/instance-id';
  */
 export type AppHook = (event: string, app: FirebaseApp) => void;
 
-
 /**
  * Type representing the options object passed into initializeApp().
  */
@@ -260,7 +259,6 @@ export class FirebaseApp {
     if (!hasCredential) {
       errorMessage = 'Options must be an object containing at least a "credential" property.';
     }
-
     const credential = this.options_.credential;
     if (typeof credential !== 'object' || credential === null || typeof credential.getAccessToken !== 'function') {
       errorMessage = 'The "credential" property must be an object which implements the Credential interface.';
