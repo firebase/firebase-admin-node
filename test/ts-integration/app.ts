@@ -6,7 +6,7 @@ import {
 } from './setup';
 
 describe('admin.app()', () => {
-  it('should return the default App', () => {
+  it('returns the default App', () => {
     let app = admin.app();
     expect(app).to.deep.equal(defaultApp);
     expect(app.name).to.equal('[DEFAULT]');
@@ -14,7 +14,7 @@ describe('admin.app()', () => {
     expect(app.options.databaseURL).to.equal(databaseUrl)
   });
 
-  it('should return the App named "null"', () => {
+  it('returns the App named "null"', () => {
     let app = admin.app('null');
     expect(app).to.deep.equal(nullApp);
     expect(app.name).to.equal('null');
@@ -22,7 +22,7 @@ describe('admin.app()', () => {
     expect(app.options.databaseAuthVariableOverride).to.be.null;
   });
 
-  it('should return the App named "nonNull"', () => {
+  it('returns the App named "nonNull"', () => {
     let app = admin.app('nonNull');
     expect(app).to.deep.equal(nonNullApp);
     expect(app.name).to.equal('nonNull');
@@ -31,13 +31,13 @@ describe('admin.app()', () => {
   });
 });
 
-describe('Init', () => {
-  it('Firestore should not be loaded by default', () => {
+describe('SDK Initialization', () => {
+  it('does not load Firestore by default', () => {
     var gcloud = require.cache[require.resolve('@google-cloud/firestore')];
     expect(gcloud).to.be.undefined;
   });
 
-  it('admin.firestore should load Firestore', () => {
+  it('calling admin.firestore loads Firestore', () => {
     const firestoreNamespace = admin.firestore;
     expect(firestoreNamespace).to.not.be.null;
     var gcloud = require.cache[require.resolve('@google-cloud/firestore')];
