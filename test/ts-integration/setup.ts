@@ -15,12 +15,14 @@
  */
 
 import * as admin from '../../lib/index';
+import fs = require('fs');
+import minimist = require('minimist');
+import path = require('path');
+import {random} from 'lodash';
 
+/* tslint:disable:no-var-requires */
 const chalk = require('chalk');
-const fs = require('fs');
-const minimist = require('minimist');
-const path = require('path');
-const _ = require('lodash');
+/* tslint:enable:no-var-requires */
 
 export let databaseUrl: string;
 export let storageBucket: string;
@@ -34,6 +36,7 @@ export let nonNullApp: admin.app.App;
 export let cmdArgs: any;
 
 before(() => {
+  /* tslint:disable:no-console */
   let serviceAccount: any;
   try {
     serviceAccount = require('../resources/key.json');
@@ -47,7 +50,7 @@ before(() => {
   }
 
   try {
-    apiKey = fs.readFileSync(path.join(__dirname, '../resources/apikey.txt'));
+    apiKey = fs.readFileSync(path.join(__dirname, '../resources/apikey.txt')).toString();
   } catch (error) {
     console.log(chalk.red(
       'The integration test suite requires an API key for a ' +
@@ -56,6 +59,7 @@ before(() => {
     ));
     throw error;
   }
+  /* tslint:enable:no-console */
 
   projectId = serviceAccount.project_id;
   databaseUrl = 'https://' + projectId + '.firebaseio.com';
@@ -96,7 +100,7 @@ export function generateRandomString(length: number): string {
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let text = '';
   for (let i = 0; i < length; i++) {
-    text += alphabet.charAt(_.random(alphabet.length - 1));
+    text += alphabet.charAt(random(alphabet.length - 1));
   }
   return text;
 }

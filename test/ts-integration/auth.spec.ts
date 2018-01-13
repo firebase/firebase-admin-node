@@ -18,11 +18,9 @@ import * as admin from '../../lib/index';
 import {expect} from 'chai';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-
+import firebase = require('firebase');
+import {clone} from 'lodash';
 import {generateRandomString, projectId, apiKey} from './setup';
-
-const firebase = require('firebase');
-const _ = require('lodash');
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -66,7 +64,7 @@ describe('admin.auth', () => {
   });
 
   it('createUser() creates a new user when called without a UID', () => {
-    let newUserData = _.clone(mockUserData);
+    let newUserData = clone(mockUserData);
     newUserData.email = generateRandomString(20) + '@example.com';
     newUserData.phoneNumber = testPhoneNumber2;
     return admin.auth().createUser(newUserData)
@@ -81,7 +79,7 @@ describe('admin.auth', () => {
   });
 
   it('createUser() creates a new user with the specified UID', () => {
-    let newUserData = _.clone(mockUserData);
+    let newUserData: any = clone(mockUserData);
     newUserData.uid = newUserUid;
     return admin.auth().createUser(newUserData)
       .then((userRecord) => {
@@ -94,7 +92,7 @@ describe('admin.auth', () => {
   });
 
   it('createUser() fails when the UID is already in use', () => {
-    let newUserData = _.clone(mockUserData);
+    let newUserData: any = clone(mockUserData);
     newUserData.uid = newUserUid;
     return admin.auth().createUser(newUserData)
       .should.eventually.be.rejected.and.have.property('code', 'auth/uid-already-exists');
@@ -122,11 +120,11 @@ describe('admin.auth', () => {
   });
 
   it('listUsers() returns up to the specified number of users', () => {
-    let promises = [];
+    let promises: Promise<admin.auth.UserRecord>[] = [];
     uids.forEach((uid) => {
       const tempUserData = {
         uid,
-        password: 'password'
+        password: 'password',
       };
       promises.push(admin.auth().createUser(tempUserData));
     });
@@ -154,7 +152,7 @@ describe('admin.auth', () => {
 
   it('revokeRefreshTokens() invalidates existing sessions and ID tokens', () => {
     let currentIdToken: string = null;
-    let currentUser = null;
+    let currentUser: any = null;
     // Sign in with an email and password account.
     return firebase.auth().signInWithEmailAndPassword(mockUserData.email, mockUserData.password)
       .then((user) => {
@@ -225,7 +223,9 @@ describe('admin.auth', () => {
       .then((decodedIdToken) => {
         // Confirm expected claims set on the user's ID token.
         for (let key in customClaims) {
-          expect(decodedIdToken[key]).to.equal(customClaims[key]);
+          if (customClaims.hasOwnProperty(key)) {
+            expect(decodedIdToken[key]).to.equal(customClaims[key]);
+          }
         }
       });
   });
@@ -289,18 +289,19 @@ describe('admin.auth', () => {
       })
       .then((token) => {
         expect(token.uid).to.equal(newUserUid);
+        expect(token.isAdmin).to.be.true;
       });
   });
 
   it('verifyIdToken() fails when called with an invalid token', () => {
     return admin.auth().verifyIdToken('invalid-token')
-      .should.eventually.be.rejected;
+      .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
   });
 
   it('deleteUser() deletes the user with the given UID', () => {
     return Promise.all([
       admin.auth().deleteUser(newUserUid),
-      admin.auth().deleteUser(uidFromCreateUserWithoutUid)
+      admin.auth().deleteUser(uidFromCreateUserWithoutUid),
     ]).should.eventually.be.fulfilled;
   });
 });
@@ -333,11 +334,11 @@ function deletePhoneNumberUser(phoneNumber) {
  */
 function cleanup() {
   // Delete any existing users that could affect the test outcome.
-  let promises = [
+  let promises: Promise<void>[] = [
     deletePhoneNumberUser(testPhoneNumber),
     deletePhoneNumberUser(testPhoneNumber2),
     deletePhoneNumberUser(nonexistentPhoneNumber),
-    deletePhoneNumberUser(updatedPhone)
+    deletePhoneNumberUser(updatedPhone),
   ];
   // Delete list of users for testing listUsers.
   uids.forEach((uid) => {

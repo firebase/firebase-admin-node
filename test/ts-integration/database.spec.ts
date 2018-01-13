@@ -18,11 +18,13 @@ import * as admin from '../../lib/index';
 import {expect} from 'chai';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
+import url = require('url');
 import {defaultApp, nullApp, nonNullApp, cmdArgs, databaseUrl} from './setup';
 
+/* tslint:disable:no-var-requires */
 const apiRequest = require('../../lib/utils/api-request');
-const url = require('url');
 const chalk = require('chalk');
+/* tslint:enable:no-var-requires */
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -32,12 +34,14 @@ const path = 'adminNodeSdkManualTest';
 describe('admin.database', () => {
 
   before(() => {
+    /* tslint:disable:no-console */
     if (!cmdArgs.updateRules) {
       console.log(chalk.yellow('    Not updating security rules. Some tests may fail.'));
       console.log(chalk.yellow('    Set the --updateRules flag to force update rules.'));
-      return
+      return;
     }
     console.log(chalk.yellow('    Updating security rules to defaults.'));
+    /* tslint:enable:no-console */
     const client = new apiRequest.SignedApiRequestHandler(defaultApp);
     const dbUrl =  url.parse(databaseUrl);
     const defaultRules = {
@@ -49,7 +53,7 @@ describe('admin.database', () => {
     const headers = {
       'Content-Type': 'application/json',
     };
-    return client.sendRequest(dbUrl.host, 443, '/.settings/rules.json', 
+    return client.sendRequest(dbUrl.host, 443, '/.settings/rules.json',
       'PUT', defaultRules, headers, 10000);
   });
 

@@ -75,4 +75,12 @@ describe('admin.app', () => {
     expect(admin.messaging(app).app).to.deep.equal(app);
     expect(admin.storage(app).app).to.deep.equal(app);
   });
+
+  it('namespace services are attached to the named App', () => {
+    let app = admin.app('null');
+    expect(admin.auth(app).app).to.deep.equal(app);
+    expect(admin.database(app).app).to.deep.equal(app);
+    expect(admin.messaging(app).app).to.deep.equal(app);
+    expect(admin.storage(app).app).to.deep.equal(app);
+  });
 });

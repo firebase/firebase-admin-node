@@ -18,9 +18,8 @@ import * as admin from '../../lib/index';
 import {expect} from 'chai';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
+import {clone} from 'lodash';
 import {DocumentReference} from '@google-cloud/firestore';
-
-const _ = require('lodash');
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -62,7 +61,7 @@ describe('admin.firestore', () => {
   });
 
   it('admin.firestore.FieldValue.serverTimestamp() provides a server-side timestamp', () => {
-    let expected = _.clone(mountainView);
+    let expected: any = clone(mountainView);
     expected.timestamp = admin.firestore.FieldValue.serverTimestamp();
     return reference.set(expected)
       .then(result => {
