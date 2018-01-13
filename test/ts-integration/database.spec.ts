@@ -2,8 +2,11 @@ import * as admin from '../../lib/index';
 import {expect} from 'chai';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
+import {defaultApp, nullApp, nonNullApp, cmdArgs, databaseUrl} from './setup';
 
-import {defaultApp, nullApp, nonNullApp, databaseUrl} from './setup';
+const apiRequest = require('../../lib/utils/api-request');
+const url = require('url');
+const chalk = require('chalk');
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -11,6 +14,27 @@ chai.use(chaiAsPromised);
 const path = 'adminNodeSdkManualTest';
 
 describe('admin.database()', () => {
+
+  before(() => {
+    if (!cmdArgs.updateRules) {
+      console.log(chalk.yellow('    Not updating security rules: --updateRules flag not set'));
+      return
+    }
+    console.log(chalk.yellow('    Updating security rules to defaults'));
+    const client = new apiRequest.SignedApiRequestHandler(defaultApp);
+    const dbUrl =  url.parse(databaseUrl);
+    const defaultRules = {
+      rules : {
+        '.read': 'auth != null',
+        '.write': 'auth != null',
+      },
+    };
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    return client.sendRequest(dbUrl.host, 443, '/.settings/rules.json', 
+      'PUT', defaultRules, headers, 10000);
+  });
 
   it('returns a database client', () => {
     const db = admin.database();

@@ -18,6 +18,7 @@ import * as admin from '../../lib/index';
 
 const chalk = require('chalk');
 const fs = require('fs');
+const minimist = require('minimist');
 const path = require('path');
 const _ = require('lodash');
 
@@ -30,13 +31,15 @@ export let defaultApp: admin.app.App;
 export let nullApp: admin.app.App;
 export let nonNullApp: admin.app.App;
 
+export let cmdArgs: any;
+
 before(() => {
   let serviceAccount: any;
   try {
     serviceAccount = require('../resources/key.json');
   } catch (error) {
     console.log(chalk.red(
-      'The integration test suite requires a service account key JSON file for a ' +
+      'The integration test suite requires a service account JSON file for a ' +
       'Firebase project to be saved to `test/resources/key.json`.',
       error
     ));
@@ -79,6 +82,8 @@ before(() => {
     },
     storageBucket,
   }, 'nonNull');
+
+  cmdArgs = minimist(process.argv.slice(2));
 });
 
 /**
