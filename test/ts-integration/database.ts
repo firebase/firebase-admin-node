@@ -11,6 +11,16 @@ chai.use(chaiAsPromised);
 const path = 'adminNodeSdkManualTest';
 
 describe('admin.database()', () => {
+
+  it('returns a database client', () => {
+    const db = admin.database();
+    expect(db).to.be.instanceOf((admin.database as any).Database);
+  });
+
+  it('ServerValue type is defined', () => {
+    const serverValue = admin.database.ServerValue;
+    expect(serverValue).to.not.be.null;
+  });
     
   it('default app is not blocked by security rules', () => {
     return defaultApp.database().ref('blocked').set(admin.database.ServerValue.TIMESTAMP)
@@ -63,39 +73,46 @@ describe('admin.database()', () => {
   });
 });
 
-describe('app.database(url).ref()', () => {
+describe('app.database(url)', () => {
 
-  let refWithUrl: admin.database.Reference;
-  
-  before(() => {
-    let app = admin.app();
-    refWithUrl = app.database(app.options.databaseURL).ref(path);
+  it('returns a Database client for URL', () => {
+    const db = admin.app().database('https://other-mock.firebaseio.com');
+    expect(db).to.be.instanceOf((admin.database as any).Database);
   });
 
-  it('.set() completes successfully', () => {
-    return refWithUrl.set({
-      success: true,
-      timestamp: admin.database.ServerValue.TIMESTAMP,
-    }).should.eventually.be.fulfilled;
-  });
+  describe('DatabaseReference', () => {
+    let refWithUrl: admin.database.Reference;
 
-  it('.once() returns the current value of the reference', () => {
-    return refWithUrl.once('value')
-      .then((snapshot) => {
-        var value = snapshot.val();
-        expect(value.success).to.be.true;
-        expect(typeof value.timestamp).to.equal('number');
-      });
-  });
+    before(() => {
+      const app = admin.app();
+      refWithUrl = app.database(app.options.databaseURL).ref(path);
+    });
 
-  it('.child().once() returns the current value of the child', () => {
-    return refWithUrl.child('timestamp').once('value')
-      .then((snapshot) => {
-        expect(typeof snapshot.val()).to.equal('number');
-      });
-  });
+    it('.set() completes successfully', () => {
+      return refWithUrl.set({
+        success: true,
+        timestamp: admin.database.ServerValue.TIMESTAMP,
+      }).should.eventually.be.fulfilled;
+    });
 
-  it('.remove() completes successfully', () => {
-    return refWithUrl.remove().should.eventually.be.fulfilled;
+    it('.once() returns the current value of the reference', () => {
+      return refWithUrl.once('value')
+        .then((snapshot) => {
+          var value = snapshot.val();
+          expect(value.success).to.be.true;
+          expect(typeof value.timestamp).to.equal('number');
+        });
+    });
+
+    it('.child().once() returns the current value of the child', () => {
+      return refWithUrl.child('timestamp').once('value')
+        .then((snapshot) => {
+          expect(typeof snapshot.val()).to.equal('number');
+        });
+    });
+
+    it('.remove() completes successfully', () => {
+      return refWithUrl.remove().should.eventually.be.fulfilled;
+    });
   });
 });
