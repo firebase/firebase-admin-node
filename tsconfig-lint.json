@@ -13,6 +13,7 @@
       "src/index.ts",
       "test/unit/utils.ts",
       "test/unit/**/*.spec.ts",
+      "test/integration/*.ts",
       "test/resources/mocks.ts"
     ]
   }
