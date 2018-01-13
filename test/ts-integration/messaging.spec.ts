@@ -1,3 +1,19 @@
+/*!
+ * Copyright 2017 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import * as admin from '../../lib/index';
 import {expect} from 'chai';
 import * as chai from 'chai';
@@ -10,8 +26,10 @@ chai.use(chaiAsPromised);
 // work. The intention of these integration tests is that the endpoints returns the proper payload,
 // but it is hard to ensure these tokens will always be valid. The tests below should still pass
 // even if they are rotated or invalid.
-const registrationToken = 'fGw0qy4TGgk:APA91bGtWGjuhp4WRhHXgbabIYp1jxEKI08ofj_v1bKhWAGJQ4e3arRCWzeTfHaLz83mBnDh0aPWB1AykXAVUUGl2h1wT4XI6XazWpvY7RBUSYfoxtqSWGIm2nvWh2BOP1YG501SsRoE';
-const notificationKey = 'APA91bFYr4cWCkDs_H9VY2Ai6Erw1ABup1NEYqBjz70O8SzxjpALp_bN913XJMlOepaVv9eQs2QrtqX_RZ6cVVv4czgTQXg62qicITR6tQDizaFilDnlVf0';
+const registrationToken = 'fGw0qy4TGgk:APA91bGtWGjuhp4WRhHXgbabIYp1jxEKI08ofj_v1bKhWAGJQ4e3arRCW'
+  + 'zeTfHaLz83mBnDh0aPWB1AykXAVUUGl2h1wT4XI6XazWpvY7RBUSYfoxtqSWGIm2nvWh2BOP1YG501SsRoE';
+const notificationKey = 'APA91bFYr4cWCkDs_H9VY2Ai6Erw1ABup1NEYqBjz70O8SzxjpALp_bN913XJMlOepaVv9e'
+  + 'Qs2QrtqX_RZ6cVVv4czgTQXg62qicITR6tQDizaFilDnlVf0';
 
 const registrationTokens = [registrationToken + '0', registrationToken + '1', registrationToken + '2'];
 const topic = 'mock-topic';
