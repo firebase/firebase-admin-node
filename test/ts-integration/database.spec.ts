@@ -1,4 +1,4 @@
-import * as admin from '../../lib/index'
+import * as admin from '../../lib/index';
 import {expect} from 'chai';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
@@ -21,7 +21,7 @@ describe('admin.database()', () => {
     const serverValue = admin.database.ServerValue;
     expect(serverValue).to.not.be.null;
   });
-    
+
   it('default app is not blocked by security rules', () => {
     return defaultApp.database().ref('blocked').set(admin.database.ServerValue.TIMESTAMP)
       .should.eventually.be.fulfilled;
@@ -39,7 +39,7 @@ describe('admin.database()', () => {
 
   describe('DatabaseReference', () => {
     let ref: admin.database.Reference;
-    
+
     before(() => {
       ref = admin.database().ref(path);
     });
@@ -54,7 +54,7 @@ describe('admin.database()', () => {
     it('.once() returns the current value of the reference', () => {
       return ref.once('value')
         .then((snapshot) => {
-          var value = snapshot.val();
+          let value = snapshot.val();
           expect(value.success).to.be.true;
           expect(typeof value.timestamp).to.equal('number');
         });
@@ -98,7 +98,7 @@ describe('app.database(url)', () => {
     it('.once() returns the current value of the reference', () => {
       return refWithUrl.once('value')
         .then((snapshot) => {
-          var value = snapshot.val();
+          let value = snapshot.val();
           expect(value.success).to.be.true;
           expect(typeof value.timestamp).to.equal('number');
         });

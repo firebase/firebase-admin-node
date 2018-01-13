@@ -1,4 +1,4 @@
-import * as admin from '../../lib/index'
+import * as admin from '../../lib/index';
 import {expect} from 'chai';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
@@ -34,42 +34,42 @@ const invalidPayload: any = {
 };
 
 const options = {
-  timeToLive: 60
+  timeToLive: 60,
 };
 
 describe('admin.messaging()', () => {
   it('.sendToDevice(token) returns a response with multicast ID', () => {
     return admin.messaging().sendToDevice(registrationToken, payload, options)
-      .then(function(response) {
+      .then((response) => {
         expect(typeof response.multicastId).to.equal('number');
       });
   });
 
   it('.sendToDevice(token-list) returns a response with multicat ID', () => {
     return admin.messaging().sendToDevice(registrationTokens, payload, options)
-      .then(function(response) {
+      .then((response) => {
         expect(typeof response.multicastId).to.equal('number');
       });
   });
 
   it('.sendToDeviceGroup() returns a response with success count', () => {
     return admin.messaging().sendToDeviceGroup(notificationKey, payload, options)
-      .then(function(response) {
+      .then((response) => {
         expect(typeof response.successCount).to.equal('number');
       });
   });
 
   it('.sendToTopic() returns a response with message ID', () => {
     return admin.messaging().sendToTopic(topic, payload, options)
-      .then(function(response) {
+      .then((response) => {
         expect(typeof response.messageId).to.equal('number');
       });
   });
 
   it('.sendToCondition() returns a response with message ID', () => {
     return admin.messaging().sendToCondition(condition, payload, options)
-      .then(function(response) {
-        expect(typeof response.messageId).to.equal('number');        
+      .then((response) => {
+        expect(typeof response.messageId).to.equal('number');
       });
   });
 
@@ -101,15 +101,15 @@ describe('admin.messaging()', () => {
   it('.subscribeToTopic() returns a response with success count', () => {
     return admin.messaging().subscribeToTopic(registrationToken, topic)
       .then((response) => {
-        expect(typeof response.successCount).to.equal('number');        
+        expect(typeof response.successCount).to.equal('number');
       });
   });
 
   it('.unsubscribeFromTopic() returns a response with success count', () => {
     return admin.messaging().unsubscribeFromTopic(registrationToken, topic)
       .then((response) => {
-        expect(typeof response.successCount).to.equal('number');        
-      });      
+        expect(typeof response.successCount).to.equal('number');
+      });
   });
 
   it('.subscribeToTopic() fails when called with invalid topic', () => {

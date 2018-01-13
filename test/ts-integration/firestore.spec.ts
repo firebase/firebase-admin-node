@@ -1,4 +1,4 @@
-import * as admin from '../../lib/index'
+import * as admin from '../../lib/index';
 import {expect} from 'chai';
 import {DocumentReference} from '@google-cloud/firestore';
 import * as chai from 'chai';
@@ -19,7 +19,7 @@ describe('admin.firestore', () => {
   let reference: DocumentReference;
 
   before(() => {
-    reference = admin.firestore().collection('cities').doc()
+    reference = admin.firestore().collection('cities').doc();
   });
 
   it('returns a Firestore client', () => {
@@ -33,7 +33,7 @@ describe('admin.firestore', () => {
         return reference.get();
       })
       .then(snapshot => {
-        var data = snapshot.data();
+        let data = snapshot.data();
         expect(data).to.deep.equal(mountainView);
         return reference.delete();
       })
@@ -53,7 +53,7 @@ describe('admin.firestore', () => {
         return reference.get();
       })
       .then(snapshot => {
-        var data = snapshot.data();
+        let data = snapshot.data();
         expect(data.timestamp).is.not.null;
         expect(data.timestamp instanceof Date).is.true;
         return reference.delete();
@@ -84,9 +84,9 @@ describe('admin.firestore', () => {
           return target.get();
       })
       .then(snapshot => {
-          var data = snapshot.data();
+          let data = snapshot.data();
           expect(data.sisterCity.path).to.deep.equal(source.path);
-          var promises = [];
+          let promises = [];
           promises.push(source.delete());
           promises.push(target.delete());
           return Promise.all(promises);
@@ -99,7 +99,7 @@ describe('admin.firestore', () => {
     const source = admin.firestore().collection('cities').doc();
     admin.firestore.setLogFunction((log) => {
       logs.push(log);
-    })
+    });
     return source.set({name: 'San Francisco'})
       .then(result => {
         return source.delete();

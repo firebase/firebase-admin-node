@@ -1,4 +1,4 @@
-import * as admin from '../../lib/index'
+import * as admin from '../../lib/index';
 import {expect} from 'chai';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';

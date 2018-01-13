@@ -1,4 +1,4 @@
-import * as admin from '../../lib/index'
+import * as admin from '../../lib/index';
 import {expect} from 'chai';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
@@ -20,10 +20,9 @@ const updatedEmail = generateRandomString(20) + '@example.com';
 const updatedPhone = '+16505550102';
 const customClaims = {
   admin: true,
-  groupId: '1234'
+  groupId: '1234',
 };
-var uids = [newUserUid + '-1', newUserUid + '-2', newUserUid + '-3'];
-
+const uids = [newUserUid + '-1', newUserUid + '-2', newUserUid + '-3'];
 const mockUserData = {
   email: newUserUid + '@example.com',
   emailVerified: false,
@@ -36,13 +35,12 @@ const mockUserData = {
 
 describe('admin.auth()', () => {
 
-  let idTokenToTest: string;
   let uidFromCreateUserWithoutUid: string;
 
   before(() => {
     firebase.initializeApp({
       apiKey,
-      authDomain: projectId + ".firebaseapp.com",
+      authDomain: projectId + '.firebaseapp.com',
     });
     cleanup();
   });
@@ -56,9 +54,9 @@ describe('admin.auth()', () => {
     newUserData.email = generateRandomString(20) + '@example.com';
     newUserData.phoneNumber = testPhoneNumber2;
     return admin.auth().createUser(newUserData)
-      .then(function(userRecord) {
+      .then((userRecord) => {
         uidFromCreateUserWithoutUid = userRecord.uid;
-        expect(typeof userRecord.uid).to.equal('string')
+        expect(typeof userRecord.uid).to.equal('string');
         // Confirm expected email.
         expect(userRecord.email).to.equal(newUserData.email.toLowerCase());
         // Confirm expected phone number.
@@ -70,7 +68,7 @@ describe('admin.auth()', () => {
     let newUserData = _.clone(mockUserData);
     newUserData.uid = newUserUid;
     return admin.auth().createUser(newUserData)
-      .then(function(userRecord) {
+      .then((userRecord) => {
         expect(userRecord.uid).to.equal(newUserUid);
         // Confirm expected email.
         expect(userRecord.email).to.equal(newUserData.email.toLowerCase());
@@ -80,7 +78,7 @@ describe('admin.auth()', () => {
   });
 
   it('.createUser() fails when the UID is already in use', () => {
-    var newUserData = _.clone(mockUserData);
+    let newUserData = _.clone(mockUserData);
     newUserData.uid = newUserUid;
     return admin.auth().createUser(newUserData)
       .should.eventually.be.rejected.and.have.property('code', 'auth/uid-already-exists');
@@ -88,41 +86,41 @@ describe('admin.auth()', () => {
 
   it('.getUser() returns a user record with the matching UID', () => {
     return admin.auth().getUser(newUserUid)
-      .then(function(userRecord) {
+      .then((userRecord) => {
         expect(userRecord.uid).to.equal(newUserUid);
       });
   });
 
   it('.getUserByEmail() returns a user record with the matching email', () => {
     return admin.auth().getUserByEmail(mockUserData.email)
-      .then(function(userRecord) {
+      .then((userRecord) => {
         expect(userRecord.uid).to.equal(newUserUid);
       });
   });
 
   it('.getUserByPhoneNumber() returns a user record with the matching phone number', () => {
     return admin.auth().getUserByPhoneNumber(mockUserData.phoneNumber)
-      .then(function(userRecord) {
+      .then((userRecord) => {
         expect(userRecord.uid).to.equal(newUserUid);
       });
   });
 
   it('.listUsers() returns up to the specified number of users', () => {
     let promises = [];
-    uids.forEach(function(uid) {
-      var tempUserData = {
-        uid: uid,
+    uids.forEach((uid) => {
+      const tempUserData = {
+        uid,
         password: 'password'
       };
       promises.push(admin.auth().createUser(tempUserData));
     });
     return Promise.all(promises)
-      .then(function() {
+      .then(() => {
         // Return 2 users with the provided page token.
         // This test will fail if other users are created in between.
         return admin.auth().listUsers(2, uids[0]);
       })
-      .then(function(listUsersResult) {
+      .then((listUsersResult) => {
         // Confirm expected number of users.
         expect(listUsersResult.users.length).to.equal(2);
         // Confirm next page token present.
@@ -131,7 +129,7 @@ describe('admin.auth()', () => {
         expect(listUsersResult.users[0].uid).to.equal(uids[1]);
         expect(listUsersResult.users[0].passwordHash.length).greaterThan(0);
         expect(listUsersResult.users[0].passwordSalt.length).greaterThan(0);
-        
+
         expect(listUsersResult.users[1].uid).to.equal(uids[2]);
         expect(listUsersResult.users[1].passwordHash.length).greaterThan(0);
         expect(listUsersResult.users[1].passwordSalt.length).greaterThan(0);
@@ -139,49 +137,49 @@ describe('admin.auth()', () => {
   });
 
   it('.revokeRefreshTokens() invalidates existing sessions and ID tokens', () => {
-    let currentIdToken:string = null;
+    let currentIdToken: string = null;
     let currentUser = null;
     // Sign in with an email and password account.
     return firebase.auth().signInWithEmailAndPassword(mockUserData.email, mockUserData.password)
-      .then(function(user) {
+      .then((user) => {
         currentUser = user;
         // Get user's ID token.
         return user.getIdToken();
       })
-      .then(function(idToken) {
+      .then((idToken) => {
         currentIdToken = idToken;
         // Verify that user's ID token while checking for revocation.
-        return admin.auth().verifyIdToken(currentIdToken, true)
+        return admin.auth().verifyIdToken(currentIdToken, true);
       })
-      .then(function(decodedIdToken) {
+      .then((decodedIdToken) => {
         // Verification should succeed. Revoke that user's session.
         return admin.auth().revokeRefreshTokens(decodedIdToken.sub);
       })
-      .then(function() {
+      .then(() => {
         // verifyIdToken without checking revocation should still succeed.
         return admin.auth().verifyIdToken(currentIdToken)
           .should.eventually.be.fulfilled;
       })
-      .then(function() {
+      .then(() => {
         // verifyIdToken while checking for revocation should fail.
         return admin.auth().verifyIdToken(currentIdToken, true)
           .should.eventually.be.rejected.and.have.property('code', 'auth/id-token-revoked');
       })
-      .then(function() {
+      .then(() => {
         // Confirm token revoked on client.
         return currentUser.reload()
           .should.eventually.be.rejected.and.have.property('code', 'auth/user-token-expired');
       })
-      .then(function() {
+      .then(() => {
         // New sign-in should succeed.
         return firebase.auth().signInWithEmailAndPassword(
             mockUserData.email, mockUserData.password);
       })
-      .then(function(user) {
+      .then((user) => {
         // Get new session's ID token.
         return user.getIdToken();
       })
-      .then(function(idToken) {
+      .then((idToken) => {
         // ID token for new session should be valid even with revocation check.
         return admin.auth().verifyIdToken(idToken, true)
           .should.eventually.be.fulfilled;
@@ -191,26 +189,26 @@ describe('admin.auth()', () => {
   it('.setCustomUserClaims() sets claims that are accessible via user\'s ID token', () => {
     // Set custom claims on the user.
     return admin.auth().setCustomUserClaims(newUserUid, customClaims)
-      .then(function() {
+      .then(() => {
         return admin.auth().getUser(newUserUid);
       })
-      .then(function(userRecord) {
+      .then((userRecord) => {
         // Confirm custom claims set on the UserRecord.
         expect(userRecord.customClaims).to.deep.equal(customClaims);
         return firebase.auth().signInWithEmailAndPassword(
           userRecord.email, mockUserData.password);
       })
-      .then(function(user) {
+      .then((user) => {
          // Get the user's ID token.
          return user.getIdToken();
       })
-      .then(function(idToken) {
+      .then((idToken) => {
          // Verify ID token contents.
          return admin.auth().verifyIdToken(idToken);
       })
-      .then(function(decodedIdToken) {
+      .then((decodedIdToken) => {
         // Confirm expected claims set on the user's ID token.
-        for (var key in customClaims) {
+        for (let key in customClaims) {
           expect(decodedIdToken[key]).to.equal(customClaims[key]);
         }
       });
@@ -224,7 +222,7 @@ describe('admin.auth()', () => {
       emailVerified: true,
       displayName: updatedDisplayName,
     })
-      .then(function(userRecord) {
+      .then((userRecord) => {
         expect(userRecord.emailVerified).to.be.true;
         expect(userRecord.displayName).to.equal(updatedDisplayName);
         // Confirm expected email.
@@ -264,16 +262,16 @@ describe('admin.auth()', () => {
     return admin.auth().createCustomToken(newUserUid, {
       isAdmin: true,
     })
-      .then(function(customToken) {
+      .then((customToken) => {
         return firebase.auth().signInWithCustomToken(customToken);
       })
-      .then(function(user) {
+      .then((user) => {
         return user.getIdToken();
       })
-      .then(function(idToken) {
+      .then((idToken) => {
         return admin.auth().verifyIdToken(idToken);
       })
-      .then(function(token) {
+      .then((token) => {
         expect(token.uid).to.equal(newUserUid);
       });
   });
@@ -300,10 +298,10 @@ describe('admin.auth()', () => {
  */
 function deletePhoneNumberUser(phoneNumber) {
   return admin.auth().getUserByPhoneNumber(phoneNumber)
-    .then(function(userRecord) {
+    .then((userRecord) => {
       return admin.auth().deleteUser(userRecord.uid);
     })
-    .catch(function(error) {
+    .catch((error) => {
       // Suppress user not found error.
       if (error.code !== 'auth/user-not-found') {
         throw error;
@@ -319,17 +317,17 @@ function deletePhoneNumberUser(phoneNumber) {
  */
 function cleanup() {
   // Delete any existing users that could affect the test outcome.
-  var promises = [
+  let promises = [
     deletePhoneNumberUser(testPhoneNumber),
     deletePhoneNumberUser(testPhoneNumber2),
     deletePhoneNumberUser(nonexistentPhoneNumber),
     deletePhoneNumberUser(updatedPhone)
   ];
   // Delete list of users for testing listUsers.
-  uids.forEach(function(uid) {
+  uids.forEach((uid) => {
     promises.push(
       admin.auth().deleteUser(uid)
-        .catch(function(error) {
+        .catch((error) => {
           // Suppress user not found error.
           if (error.code !== 'auth/user-not-found') {
             throw error;

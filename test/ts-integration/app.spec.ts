@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import * as admin from '../../lib/index'
+import * as admin from '../../lib/index';
 import {expect} from 'chai';
 import {
-  defaultApp, nullApp, nonNullApp, databaseUrl, projectId, storageBucket
+  defaultApp, nullApp, nonNullApp, databaseUrl, projectId, storageBucket,
 } from './setup';
 
 describe('SDK Initialization', () => {
@@ -28,14 +28,14 @@ describe('SDK Initialization', () => {
   });
 
   it('does not load Firestore by default', () => {
-    var gcloud = require.cache[require.resolve('@google-cloud/firestore')];
+    let gcloud = require.cache[require.resolve('@google-cloud/firestore')];
     expect(gcloud).to.be.undefined;
   });
 
   it('calling admin.firestore loads Firestore', () => {
     const firestoreNamespace = admin.firestore;
     expect(firestoreNamespace).to.not.be.null;
-    var gcloud = require.cache[require.resolve('@google-cloud/firestore')];
+    let gcloud = require.cache[require.resolve('@google-cloud/firestore')];
     expect(gcloud).to.not.be.undefined;
   });
 });
@@ -44,7 +44,7 @@ describe('admin.app()', () => {
   it('returns the default App', () => {
     let app = admin.app();
     expect(app).to.deep.equal(defaultApp);
-    expect(app.name).to.equal('[DEFAULT]');    
+    expect(app.name).to.equal('[DEFAULT]');
     expect(app.options.databaseURL).to.equal(databaseUrl);
     expect(app.options.databaseAuthVariableOverride).to.be.undefined;
     expect(app.options.storageBucket).to.equal(storageBucket);
@@ -53,7 +53,7 @@ describe('admin.app()', () => {
   it('returns the App named "null"', () => {
     let app = admin.app('null');
     expect(app).to.deep.equal(nullApp);
-    expect(app.name).to.equal('null');    
+    expect(app.name).to.equal('null');
     expect(app.options.databaseURL).to.equal(databaseUrl);
     expect(app.options.databaseAuthVariableOverride).to.be.null;
     expect(app.options.storageBucket).to.equal(storageBucket);
@@ -62,9 +62,9 @@ describe('admin.app()', () => {
   it('returns the App named "nonNull"', () => {
     let app = admin.app('nonNull');
     expect(app).to.deep.equal(nonNullApp);
-    expect(app.name).to.equal('nonNull');    
+    expect(app.name).to.equal('nonNull');
     expect(app.options.databaseURL).to.equal(databaseUrl);
-    expect((app.options.databaseAuthVariableOverride as any).uid).to.be.ok;    
+    expect((app.options.databaseAuthVariableOverride as any).uid).to.be.ok;
     expect(app.options.storageBucket).to.equal(storageBucket);
   });
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import * as admin from '../../lib/index'
+import * as admin from '../../lib/index';
 
 const chalk = require('chalk');
 const fs = require('fs');
@@ -30,11 +30,11 @@ export let defaultApp: admin.app.App;
 export let nullApp: admin.app.App;
 export let nonNullApp: admin.app.App;
 
-before(function() {
+before(() => {
   let serviceAccount: any;
   try {
     serviceAccount = require('../resources/key.json');
-  } catch(error) {
+  } catch (error) {
     console.log(chalk.red(
       'The integration test suite requires a service account key JSON file for a ' +
       'Firebase project to be saved to `test/resources/key.json`.',
@@ -44,7 +44,7 @@ before(function() {
   }
 
   try {
-    apiKey = fs.readFileSync(path.join(__dirname, '../resources/apikey.txt'))
+    apiKey = fs.readFileSync(path.join(__dirname, '../resources/apikey.txt'));
   } catch (error) {
     console.log(chalk.red(
       'The integration test suite requires an API key for a ' +
@@ -61,23 +61,23 @@ before(function() {
   defaultApp = admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
     databaseURL: databaseUrl,
-    storageBucket: storageBucket,
+    storageBucket,
   });
-  
+
   nullApp = admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
     databaseURL: databaseUrl,
     databaseAuthVariableOverride: null,
-    storageBucket: storageBucket,
+    storageBucket,
   }, 'null');
-  
+
   nonNullApp = admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
     databaseURL: databaseUrl,
     databaseAuthVariableOverride: {
       uid: generateRandomString(20),
     },
-    storageBucket: storageBucket,
+    storageBucket,
   }, 'nonNull');
 });
 
@@ -90,7 +90,7 @@ before(function() {
 export function generateRandomString(length: number): string {
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let text = '';
-  for (var i = 0; i < length; i++) {
+  for (let i = 0; i < length; i++) {
     text += alphabet.charAt(_.random(alphabet.length - 1));
   }
   return text;
