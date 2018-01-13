@@ -8,7 +8,7 @@ const path = require('path');
 
 let serviceAccount: any;
 export let databaseUrl: string;
-let storageBucket: string;
+export let storageBucket: string;
 export let projectId: string;
 export let apiKey: string;
 
@@ -42,6 +42,7 @@ before(function() {
 
   projectId = serviceAccount.project_id;
   databaseUrl = 'https://' + projectId + '.firebaseio.com';
+  storageBucket = projectId + '.appspot.com';
 
   defaultApp = admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),

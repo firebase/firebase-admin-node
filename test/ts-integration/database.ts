@@ -3,7 +3,7 @@ import {expect} from 'chai';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import {defaultApp, nullApp, nonNullApp} from './setup';
+import {defaultApp, nullApp, nonNullApp, databaseUrl} from './setup';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -76,7 +76,7 @@ describe('admin.database()', () => {
 describe('app.database(url)', () => {
 
   it('returns a Database client for URL', () => {
-    const db = admin.app().database('https://other-mock.firebaseio.com');
+    const db = admin.app().database(databaseUrl);
     expect(db).to.be.instanceOf((admin.database as any).Database);
   });
 
@@ -85,7 +85,7 @@ describe('app.database(url)', () => {
 
     before(() => {
       const app = admin.app();
-      refWithUrl = app.database(app.options.databaseURL).ref(path);
+      refWithUrl = app.database(databaseUrl).ref(path);
     });
 
     it('.set() completes successfully', () => {
