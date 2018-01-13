@@ -159,3 +159,11 @@ describe('admin.database', () => {
     });
   });
 });
+
+function addValueEventListener(
+    // Check for type compilation
+    db: admin.database.Database,
+    callback: (s: admin.database.DataSnapshot) => any) {
+    let eventType: admin.database.EventType = 'value';
+    db.ref().on(eventType, callback);
+}

@@ -42,6 +42,11 @@ describe('admin.firestore', () => {
     expect(firestore).to.be.instanceOf(admin.firestore.Firestore);
   });
 
+  it('app.firestore() returns a Firestore client', () => {
+    const firestore = admin.app().firestore();
+    expect(firestore).to.be.instanceOf(admin.firestore.Firestore);
+  });
+
   it('supports basic data access', () => {
     return reference.set(mountainView)
       .then(result => {
