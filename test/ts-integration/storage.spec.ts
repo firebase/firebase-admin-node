@@ -25,20 +25,20 @@ import {projectId} from './setup';
 chai.should();
 chai.use(chaiAsPromised);
 
-describe('admin.storage()', () => {
-  it('.bucket() returns a handle to the default bucket', () => {
+describe('admin.storage', () => {
+  it('bucket() returns a handle to the default bucket', () => {
     const bucket: Bucket = admin.storage().bucket();
     return verifyBucket(bucket, 'storage().bucket()')
       .should.eventually.be.fulfilled;
   }).timeout(5000);
 
-  it('.bucket(string) returns a handle to the specified bucket', () => {
+  it('bucket(string) returns a handle to the specified bucket', () => {
     const bucket: Bucket = admin.storage().bucket(projectId + '.appspot.com');
     return verifyBucket(bucket, 'storage().bucket(string)')
       .should.eventually.be.fulfilled;
   }).timeout(5000);
 
-  it('.bucket(non-existing) returns a handle which can be queried for existence', () => {
+  it('bucket(non-existing) returns a handle which can be queried for existence', () => {
     const bucket: Bucket = admin.storage().bucket('non.existing');
     return bucket.exists()
       .then((data) => {

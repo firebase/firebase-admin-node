@@ -29,7 +29,7 @@ chai.use(chaiAsPromised);
 
 const path = 'adminNodeSdkManualTest';
 
-describe('admin.database()', () => {
+describe('admin.database', () => {
 
   before(() => {
     if (!cmdArgs.updateRules) {
@@ -53,17 +53,17 @@ describe('admin.database()', () => {
       'PUT', defaultRules, headers, 10000);
   });
 
-  it('returns a database client', () => {
+  it('admin.database() returns a database client', () => {
     const db = admin.database();
     expect(db).to.be.instanceOf((admin.database as any).Database);
   });
 
-  it('ServerValue type is defined', () => {
+  it('admin.database.ServerValue type is defined', () => {
     const serverValue = admin.database.ServerValue;
     expect(serverValue).to.not.be.null;
   });
 
-  it('default app is not blocked by security rules', () => {
+  it('default App is not blocked by security rules', () => {
     return defaultApp.database().ref('blocked').set(admin.database.ServerValue.TIMESTAMP)
       .should.eventually.be.fulfilled;
   });
@@ -78,21 +78,21 @@ describe('admin.database()', () => {
       .should.eventually.be.fulfilled;
   });
 
-  describe('DatabaseReference', () => {
+  describe('admin.database().ref()', () => {
     let ref: admin.database.Reference;
 
     before(() => {
       ref = admin.database().ref(path);
     });
 
-    it('.set() completes successfully', () => {
+    it('set() completes successfully', () => {
       return ref.set({
         success: true,
         timestamp: admin.database.ServerValue.TIMESTAMP,
       }).should.eventually.be.fulfilled;
     });
 
-    it('.once() returns the current value of the reference', () => {
+    it('once() returns the current value of the reference', () => {
       return ref.once('value')
         .then((snapshot) => {
           let value = snapshot.val();
@@ -101,27 +101,20 @@ describe('admin.database()', () => {
         });
     });
 
-    it('.child().once() returns the current value of the child', () => {
+    it('child().once() returns the current value of the child', () => {
       return ref.child('timestamp').once('value')
         .then((snapshot) => {
           expect(typeof snapshot.val()).to.equal('number');
         });
     });
 
-    it('.remove() completes successfully', () => {
+    it('remove() completes successfully', () => {
       return ref.remove().should.eventually.be.fulfilled;
     });
   });
-});
 
-describe('app.database(url)', () => {
+  describe('app.database(url).ref()', () => {
 
-  it('returns a Database client for URL', () => {
-    const db = admin.app().database(databaseUrl);
-    expect(db).to.be.instanceOf((admin.database as any).Database);
-  });
-
-  describe('DatabaseReference', () => {
     let refWithUrl: admin.database.Reference;
 
     before(() => {
@@ -129,14 +122,19 @@ describe('app.database(url)', () => {
       refWithUrl = app.database(databaseUrl).ref(path);
     });
 
-    it('.set() completes successfully', () => {
+    it('app.database(url) returns a Database client for URL', () => {
+      const db = admin.app().database(databaseUrl);
+      expect(db).to.be.instanceOf((admin.database as any).Database);
+    });
+
+    it('set() completes successfully', () => {
       return refWithUrl.set({
         success: true,
         timestamp: admin.database.ServerValue.TIMESTAMP,
       }).should.eventually.be.fulfilled;
     });
 
-    it('.once() returns the current value of the reference', () => {
+    it('once() returns the current value of the reference', () => {
       return refWithUrl.once('value')
         .then((snapshot) => {
           let value = snapshot.val();
@@ -145,14 +143,14 @@ describe('app.database(url)', () => {
         });
     });
 
-    it('.child().once() returns the current value of the child', () => {
+    it('child().once() returns the current value of the child', () => {
       return refWithUrl.child('timestamp').once('value')
         .then((snapshot) => {
           expect(typeof snapshot.val()).to.equal('number');
         });
     });
 
-    it('.remove() completes successfully', () => {
+    it('remove() completes successfully', () => {
       return refWithUrl.remove().should.eventually.be.fulfilled;
     });
   });

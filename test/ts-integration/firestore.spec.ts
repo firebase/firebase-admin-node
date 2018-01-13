@@ -38,7 +38,7 @@ describe('admin.firestore', () => {
     reference = admin.firestore().collection('cities').doc();
   });
 
-  it('returns a Firestore client', () => {
+  it('admin.firestore() returns a Firestore client', () => {
     const firestore = admin.firestore();
     expect(firestore).to.be.instanceOf(admin.firestore.Firestore);
   });
@@ -61,7 +61,7 @@ describe('admin.firestore', () => {
       });
   });
 
-  it('.FieldValue.serverTimestamp() provides a server-side timestamp', () => {
+  it('admin.firestore.FieldValue.serverTimestamp() provides a server-side timestamp', () => {
     let expected = _.clone(mountainView);
     expected.timestamp = admin.firestore.FieldValue.serverTimestamp();
     return reference.set(expected)
@@ -77,15 +77,15 @@ describe('admin.firestore', () => {
       .should.eventually.be.fulfilled;
   });
 
-  it('.FieldPath type is defined', () => {
+  it('admin.firestore.FieldPath type is defined', () => {
     expect(typeof admin.firestore.FieldPath).to.be.not.undefined;
   });
 
-  it('.FieldValue type is defined', () => {
+  it('admin.firestore.FieldValue type is defined', () => {
     expect(typeof admin.firestore.FieldValue).to.be.not.undefined;
   });
 
-  it('.GeoPoint type is defined', () => {
+  it('admin.firestore.GeoPoint type is defined', () => {
     expect(typeof admin.firestore.GeoPoint).to.be.not.undefined;
   });
 
@@ -110,7 +110,7 @@ describe('admin.firestore', () => {
       .should.eventually.be.fulfilled;
   });
 
-  it('.setLogFunction() enables logging for the Firestore module', () => {
+  it('admin.firestore.setLogFunction() enables logging for the Firestore module', () => {
     const logs = [];
     const source = admin.firestore().collection('cities').doc();
     admin.firestore.setLogFunction((log) => {

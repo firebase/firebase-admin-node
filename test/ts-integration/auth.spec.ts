@@ -49,7 +49,7 @@ const mockUserData = {
   disabled: false,
 };
 
-describe('admin.auth()', () => {
+describe('admin.auth', () => {
 
   let uidFromCreateUserWithoutUid: string;
 
@@ -65,7 +65,7 @@ describe('admin.auth()', () => {
     cleanup();
   });
 
-  it('.createUser() creates a new user when called without a UID', () => {
+  it('createUser() creates a new user when called without a UID', () => {
     let newUserData = _.clone(mockUserData);
     newUserData.email = generateRandomString(20) + '@example.com';
     newUserData.phoneNumber = testPhoneNumber2;
@@ -80,7 +80,7 @@ describe('admin.auth()', () => {
       });
   });
 
-  it('.createUser() creates a new user with the specified UID', () => {
+  it('createUser() creates a new user with the specified UID', () => {
     let newUserData = _.clone(mockUserData);
     newUserData.uid = newUserUid;
     return admin.auth().createUser(newUserData)
@@ -93,35 +93,35 @@ describe('admin.auth()', () => {
       });
   });
 
-  it('.createUser() fails when the UID is already in use', () => {
+  it('createUser() fails when the UID is already in use', () => {
     let newUserData = _.clone(mockUserData);
     newUserData.uid = newUserUid;
     return admin.auth().createUser(newUserData)
       .should.eventually.be.rejected.and.have.property('code', 'auth/uid-already-exists');
   });
 
-  it('.getUser() returns a user record with the matching UID', () => {
+  it('getUser() returns a user record with the matching UID', () => {
     return admin.auth().getUser(newUserUid)
       .then((userRecord) => {
         expect(userRecord.uid).to.equal(newUserUid);
       });
   });
 
-  it('.getUserByEmail() returns a user record with the matching email', () => {
+  it('getUserByEmail() returns a user record with the matching email', () => {
     return admin.auth().getUserByEmail(mockUserData.email)
       .then((userRecord) => {
         expect(userRecord.uid).to.equal(newUserUid);
       });
   });
 
-  it('.getUserByPhoneNumber() returns a user record with the matching phone number', () => {
+  it('getUserByPhoneNumber() returns a user record with the matching phone number', () => {
     return admin.auth().getUserByPhoneNumber(mockUserData.phoneNumber)
       .then((userRecord) => {
         expect(userRecord.uid).to.equal(newUserUid);
       });
   });
 
-  it('.listUsers() returns up to the specified number of users', () => {
+  it('listUsers() returns up to the specified number of users', () => {
     let promises = [];
     uids.forEach((uid) => {
       const tempUserData = {
@@ -152,7 +152,7 @@ describe('admin.auth()', () => {
       });
   });
 
-  it('.revokeRefreshTokens() invalidates existing sessions and ID tokens', () => {
+  it('revokeRefreshTokens() invalidates existing sessions and ID tokens', () => {
     let currentIdToken: string = null;
     let currentUser = null;
     // Sign in with an email and password account.
@@ -202,7 +202,7 @@ describe('admin.auth()', () => {
       });
   }).timeout(10000);
 
-  it('.setCustomUserClaims() sets claims that are accessible via user\'s ID token', () => {
+  it('setCustomUserClaims() sets claims that are accessible via user\'s ID token', () => {
     // Set custom claims on the user.
     return admin.auth().setCustomUserClaims(newUserUid, customClaims)
       .then(() => {
@@ -230,7 +230,7 @@ describe('admin.auth()', () => {
       });
   });
 
-  it('.updateUser() updates the user record with the given parameters', () => {
+  it('updateUser() updates the user record with the given parameters', () => {
     const updatedDisplayName = 'Updated User ' + newUserUid;
     return admin.auth().updateUser(newUserUid, {
       email: updatedEmail,
@@ -248,33 +248,33 @@ describe('admin.auth()', () => {
       });
   });
 
-  it('.getUser() fails when called with a non-existing UID', () => {
+  it('getUser() fails when called with a non-existing UID', () => {
     return admin.auth().getUser(nonexistentUid)
       .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
   });
 
-  it('.getUserByEmail() fails when called with a non-existing email', () => {
+  it('getUserByEmail() fails when called with a non-existing email', () => {
     return admin.auth().getUserByEmail(nonexistentUid + '@example.com')
       .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
   });
 
-  it('.getUserByPhoneNumber() fails when called with a non-existing phone number', () => {
+  it('getUserByPhoneNumber() fails when called with a non-existing phone number', () => {
     return admin.auth().getUserByPhoneNumber(nonexistentPhoneNumber)
       .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
   });
 
-  it('.updateUser() fails when called with a non-existing UID', () => {
+  it('updateUser() fails when called with a non-existing UID', () => {
     return admin.auth().updateUser(nonexistentUid, {
       emailVerified: true,
     }).should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
   });
 
-  it('.deleteUser() fails when called with a non-existing UID', () => {
+  it('deleteUser() fails when called with a non-existing UID', () => {
     return admin.auth().deleteUser(nonexistentUid)
       .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
   });
 
-  it('.createCustomToken() mints a JWT that can be used to sign in', () => {
+  it('createCustomToken() mints a JWT that can be used to sign in', () => {
     return admin.auth().createCustomToken(newUserUid, {
       isAdmin: true,
     })
@@ -292,12 +292,12 @@ describe('admin.auth()', () => {
       });
   });
 
-  it('.verifyIdToken() fails when called with an invalid token', () => {
+  it('verifyIdToken() fails when called with an invalid token', () => {
     return admin.auth().verifyIdToken('invalid-token')
       .should.eventually.be.rejected;
   });
 
-  it('.deleteUser() deletes the user with the given UID', () => {
+  it('deleteUser() deletes the user with the given UID', () => {
     return Promise.all([
       admin.auth().deleteUser(newUserUid),
       admin.auth().deleteUser(uidFromCreateUserWithoutUid)

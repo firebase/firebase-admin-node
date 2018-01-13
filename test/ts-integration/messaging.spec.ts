@@ -55,87 +55,87 @@ const options = {
   timeToLive: 60,
 };
 
-describe('admin.messaging()', () => {
-  it('.sendToDevice(token) returns a response with multicast ID', () => {
+describe('admin.messaging', () => {
+  it('sendToDevice(token) returns a response with multicast ID', () => {
     return admin.messaging().sendToDevice(registrationToken, payload, options)
       .then((response) => {
         expect(typeof response.multicastId).to.equal('number');
       });
   });
 
-  it('.sendToDevice(token-list) returns a response with multicat ID', () => {
+  it('sendToDevice(token-list) returns a response with multicat ID', () => {
     return admin.messaging().sendToDevice(registrationTokens, payload, options)
       .then((response) => {
         expect(typeof response.multicastId).to.equal('number');
       });
   });
 
-  it('.sendToDeviceGroup() returns a response with success count', () => {
+  it('sendToDeviceGroup() returns a response with success count', () => {
     return admin.messaging().sendToDeviceGroup(notificationKey, payload, options)
       .then((response) => {
         expect(typeof response.successCount).to.equal('number');
       });
   });
 
-  it('.sendToTopic() returns a response with message ID', () => {
+  it('sendToTopic() returns a response with message ID', () => {
     return admin.messaging().sendToTopic(topic, payload, options)
       .then((response) => {
         expect(typeof response.messageId).to.equal('number');
       });
   });
 
-  it('.sendToCondition() returns a response with message ID', () => {
+  it('sendToCondition() returns a response with message ID', () => {
     return admin.messaging().sendToCondition(condition, payload, options)
       .then((response) => {
         expect(typeof response.messageId).to.equal('number');
       });
   });
 
-  it('.sendToDevice(token) fails when called with invalid payload', () =>  {
+  it('sendToDevice(token) fails when called with invalid payload', () =>  {
     return admin.messaging().sendToDevice(registrationToken, invalidPayload, options)
       .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-payload');
   });
 
-  it('.sendToDevice(token-list) fails when called with invalid payload', () =>  {
+  it('sendToDevice(token-list) fails when called with invalid payload', () =>  {
     return admin.messaging().sendToDevice(registrationTokens, invalidPayload, options)
       .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-payload');
   });
 
-  it('.sendToDeviceGroup() fails when called with invalid payload', () =>  {
+  it('sendToDeviceGroup() fails when called with invalid payload', () =>  {
     return admin.messaging().sendToDeviceGroup(notificationKey, invalidPayload, options)
       .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-payload');
   });
 
-  it('.sendToTopic() fails when called with invalid payload', () =>  {
+  it('sendToTopic() fails when called with invalid payload', () =>  {
     return admin.messaging().sendToTopic(topic, invalidPayload, options)
       .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-payload');
   });
 
-  it('.sendToCondition() fails when called with invalid payload', () =>  {
+  it('sendToCondition() fails when called with invalid payload', () =>  {
     return admin.messaging().sendToCondition(condition, invalidPayload, options)
       .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-payload');
   });
 
-  it('.subscribeToTopic() returns a response with success count', () => {
+  it('subscribeToTopic() returns a response with success count', () => {
     return admin.messaging().subscribeToTopic(registrationToken, topic)
       .then((response) => {
         expect(typeof response.successCount).to.equal('number');
       });
   });
 
-  it('.unsubscribeFromTopic() returns a response with success count', () => {
+  it('unsubscribeFromTopic() returns a response with success count', () => {
     return admin.messaging().unsubscribeFromTopic(registrationToken, topic)
       .then((response) => {
         expect(typeof response.successCount).to.equal('number');
       });
   });
 
-  it('.subscribeToTopic() fails when called with invalid topic', () => {
+  it('subscribeToTopic() fails when called with invalid topic', () => {
     return admin.messaging().subscribeToTopic(registrationToken, invalidTopic)
       .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
   });
 
-  it('.unsubscribeFromTopic() fails when called with invalid topic', () => {
+  it('unsubscribeFromTopic() fails when called with invalid topic', () => {
     return admin.messaging().unsubscribeFromTopic(registrationToken, invalidTopic)
       .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
   });
