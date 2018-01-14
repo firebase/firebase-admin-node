@@ -175,7 +175,7 @@ export class FirebaseNamespaceInternals {
    *
    * @param {string} serviceName The name of the Firebase service to register.
    * @param {FirebaseServiceFactory} createService A factory method to generate an instance of the Firebase service.
-   * @param {Object} [serviceProperties] Optional properties to extend this Firebase namespace with.
+   * @param {object} [serviceProperties] Optional properties to extend this Firebase namespace with.
    * @param {AppHook} [appHook] Optional callback that handles app-related events like app creation and deletion.
    * @return {FirebaseServiceNamespace<FirebaseServiceInterface>} The Firebase service's namespace.
    */

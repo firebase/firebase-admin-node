@@ -73,7 +73,8 @@ export class FirebaseAppInternals {
    * Gets an auth token for the associated app.
    *
    * @param {boolean} forceRefresh Whether or not to force a token refresh.
-   * @return {Promise<Object>} A Promise that will be fulfilled with the current or new token.
+   * @return {Promise<FirebaseAccessToken>} A Promise that will be fulfilled with the current or
+   *   new token.
    */
   public getToken(forceRefresh?: boolean): Promise<FirebaseAccessToken> {
     const expired = this.cachedToken_ && this.cachedToken_.expirationTime < Date.now();

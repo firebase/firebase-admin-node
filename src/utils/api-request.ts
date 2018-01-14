@@ -41,7 +41,7 @@ export class HttpRequestHandler {
    * @param {object} [data] The request JSON.
    * @param {object} [headers] The request headers.
    * @param {number} [timeout] The request timeout in milliseconds.
-   * @return {Promise<Object>} A promise that resolves with the response.
+   * @return {Promise<object>} A promise that resolves with the response.
    */
   public sendRequest(
       host: string,
@@ -78,7 +78,7 @@ export class HttpRequestHandler {
    * @param {object} [data] The request JSON.
    * @param {object} [headers] The request headers.
    * @param {number} [timeout] The request timeout in milliseconds.
-   * @return {Promise<Object>} A promise that resolves with the response.
+   * @return {Promise<object>} A promise that resolves with the response.
    */
   private _sendRequest(
       host: string,

@@ -44,7 +44,7 @@ export class InstanceId implements FirebaseServiceInterface {
   private requestHandler: FirebaseInstanceIdRequestHandler;
 
   /**
-   * @param {Object} app The app for this InstanceId service.
+   * @param {FirebaseApp} app The app for this InstanceId service.
    * @constructor
    */
   constructor(app: FirebaseApp) {

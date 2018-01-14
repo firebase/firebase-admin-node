@@ -63,7 +63,7 @@ export class FirebaseError extends Error {
     return this.errorInfo.message;
   }
 
-  /** @return {Object} The object representation of the error. */
+  /** @return {object} The object representation of the error. */
   public toJSON(): object {
     return {
       code: this.code,
@@ -140,7 +140,7 @@ export class FirebaseAuthError extends PrefixedFirebaseError {
    * @param {string} serverErrorCode The server error code.
    * @param {string} [message] The error message. The default message is used
    *     if not provided.
-   * @param {Object} [rawServerResponse] The error's raw server response.
+   * @param {object} [rawServerResponse] The error's raw server response.
    * @return {FirebaseAuthError} The corresponding developer-facing error.
    */
   public static fromServerError(
@@ -236,7 +236,7 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
    * @param {string} serverErrorCode The server error code.
    * @param {string} [message] The error message. The default message is used
    *     if not provided.
-   * @param {Object} [rawServerResponse] The error's raw server response.
+   * @param {object} [rawServerResponse] The error's raw server response.
    * @return {FirebaseMessagingError} The corresponding developer-facing error.
    */
   public static fromServerError(
