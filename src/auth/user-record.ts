@@ -26,7 +26,7 @@ import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
  */
 function parseDate(time: any): string {
   try {
-    let date = new Date(parseInt(time, 10));
+    const date = new Date(parseInt(time, 10));
     if (!isNaN(date.getTime())) {
       return date.toUTCString();
     }
@@ -74,7 +74,7 @@ export class UserMetadata {
   }
 
   /** @return {Object} The plain object representation of the user's metadata. */
-  public toJSON(): Object {
+  public toJSON(): object {
     return {
       lastSignInTime: this.lastSignInTime,
       creationTime: this.creationTime,
@@ -115,7 +115,7 @@ export class UserInfo {
   }
 
   /** @return {Object} The plain object representation of the current provider data. */
-  public toJSON(): Object {
+  public toJSON(): object {
     return {
       uid: this.uid,
       displayName: this.displayName,
@@ -147,7 +147,7 @@ export class UserRecord {
   public readonly providerData: UserInfo[];
   public readonly passwordHash?: string;
   public readonly passwordSalt?: string;
-  public readonly customClaims: Object;
+  public readonly customClaims: object;
   public readonly tokensValidAfterTime?: string;
 
   constructor(response: any) {
@@ -168,7 +168,7 @@ export class UserRecord {
     utils.addReadonlyGetter(this, 'disabled', response.disabled || false);
     utils.addReadonlyGetter(this, 'metadata', new UserMetadata(response));
     const providerData: UserInfo[] = [];
-    for (let entry of (response.providerUserInfo || [])) {
+    for (const entry of (response.providerUserInfo || [])) {
       providerData.push(new UserInfo(entry));
     }
     utils.addReadonlyGetter(this, 'providerData', providerData);
@@ -190,8 +190,8 @@ export class UserRecord {
   }
 
   /** @return {Object} The plain object representation of the user record. */
-  public toJSON(): Object {
-    let json: any = {
+  public toJSON(): object {
+    const json: any = {
       uid: this.uid,
       email: this.email,
       emailVerified: this.emailVerified,
@@ -207,7 +207,7 @@ export class UserRecord {
       tokensValidAfterTime: this.tokensValidAfterTime,
     };
     json.providerData = [];
-    for (let entry of this.providerData) {
+    for (const entry of this.providerData) {
        // Convert each provider data to json.
        json.providerData.push(entry.toJSON());
     }

@@ -85,7 +85,7 @@ export class Auth implements FirebaseServiceInterface {
     if (typeof app !== 'object' || app === null || !('options' in app)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        'First argument passed to admin.auth() must be a valid Firebase app instance.'
+        'First argument passed to admin.auth() must be a valid Firebase app instance.',
       );
     }
 
@@ -105,9 +105,10 @@ export class Auth implements FirebaseServiceInterface {
       // Google infrastructure like GAE, GCE, and GCF store the GCP / Firebase project ID in an
       // environment variable that we can use to get verifyIdToken() to work. createCustomToken()
       // still won't work since it requires a private key and client email which we do not have.
-      this.tokenGenerator_ = new FirebaseTokenGenerator({
+      const cert: any = {
         projectId: process.env.GCLOUD_PROJECT,
-      } as Certificate);
+      };
+      this.tokenGenerator_ = new FirebaseTokenGenerator(cert);
     }
     // Initialize auth request handler with the app.
     this.authRequestHandler = new FirebaseAuthRequestHandler(app);
@@ -131,7 +132,7 @@ export class Auth implements FirebaseServiceInterface {
    *
    * @return {Promise<string>} A JWT for the provided payload.
    */
-  public createCustomToken(uid: string, developerClaims?: Object): Promise<string> {
+  public createCustomToken(uid: string, developerClaims?: object): Promise<string> {
     if (typeof this.tokenGenerator_ === 'undefined') {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_CREDENTIAL,
@@ -139,7 +140,7 @@ export class Auth implements FirebaseServiceInterface {
       );
     }
     return this.tokenGenerator_.createCustomToken(uid, developerClaims);
-  };
+  }
 
   /**
    * Verifies a JWT auth token. Returns a Promise with the tokens claims. Rejects
@@ -153,7 +154,7 @@ export class Auth implements FirebaseServiceInterface {
    * @return {Promise<DecodedIdToken>} A Promise that will be fulfilled after a successful
    *     verification.
    */
-  public verifyIdToken(idToken: string, checkRevoked: boolean = false): Promise<Object> {
+  public verifyIdToken(idToken: string, checkRevoked: boolean = false): Promise<object> {
     if (typeof this.tokenGenerator_ === 'undefined') {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_CREDENTIAL,
@@ -185,7 +186,7 @@ export class Auth implements FirebaseServiceInterface {
             return decodedIdToken;
           });
       });
-  };
+  }
 
   /**
    * Looks up the user identified by the provided user id and returns a promise that is
@@ -200,7 +201,7 @@ export class Auth implements FirebaseServiceInterface {
         // Returns the user record populated with server response.
         return new UserRecord(response.users[0]);
       });
-  };
+  }
 
   /**
    * Looks up the user identified by the provided email and returns a promise that is
@@ -215,7 +216,7 @@ export class Auth implements FirebaseServiceInterface {
         // Returns the user record populated with server response.
         return new UserRecord(response.users[0]);
       });
-  };
+  }
 
   /**
    * Looks up the user identified by the provided phone number and returns a promise that is
@@ -230,7 +231,7 @@ export class Auth implements FirebaseServiceInterface {
         // Returns the user record populated with server response.
         return new UserRecord(response.users[0]);
       });
-  };
+  }
 
   /**
    * Exports a batch of user accounts. Batch size is determined by the maxResults argument.
@@ -254,7 +255,7 @@ export class Auth implements FirebaseServiceInterface {
           users.push(new UserRecord(userResponse));
         });
         // Return list of user records and the next page token if available.
-        let result = {
+        const result = {
           users,
           pageToken: response.nextPageToken,
         };
@@ -264,7 +265,7 @@ export class Auth implements FirebaseServiceInterface {
         }
         return result;
       });
-  };
+  }
 
   /**
    * Creates a new user with the properties provided.
@@ -287,7 +288,7 @@ export class Auth implements FirebaseServiceInterface {
         }
         throw error;
       });
-  };
+  }
 
   /**
    * Deletes the user identified by the provided user id and returns a promise that is
@@ -301,7 +302,7 @@ export class Auth implements FirebaseServiceInterface {
       .then((response) => {
         // Return nothing on success.
       });
-  };
+  }
 
   /**
    * Updates an existing user with the properties provided.
@@ -316,7 +317,7 @@ export class Auth implements FirebaseServiceInterface {
         // Return the corresponding user record.
         return this.getUser(existingUid);
       });
-  };
+  }
 
   /**
    * Sets additional developer claims on an existing user identified by the provided UID.
@@ -326,12 +327,12 @@ export class Auth implements FirebaseServiceInterface {
    * @return {Promise<void>} A promise that resolves when the operation completes
    *     successfully.
    */
-  public setCustomUserClaims(uid: string, customUserClaims: Object): Promise<void> {
+  public setCustomUserClaims(uid: string, customUserClaims: object): Promise<void> {
     return this.authRequestHandler.setCustomUserClaims(uid, customUserClaims)
       .then((existingUid) => {
         // Return nothing on success.
       });
-  };
+  }
 
   /**
    * Revokes all refresh tokens for the specified user identified by the provided UID.
@@ -348,5 +349,5 @@ export class Auth implements FirebaseServiceInterface {
       .then((existingUid) => {
         // Return nothing on success.
       });
-  };
-};
+  }
+}

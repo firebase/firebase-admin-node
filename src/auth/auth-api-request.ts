@@ -18,8 +18,7 @@ import * as validator from '../utils/validator';
 
 import {deepCopy} from '../utils/deep-copy';
 import {FirebaseApp} from '../firebase-app';
-import {FirebaseError} from '../utils/error';
-import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
+import {AuthClientErrorCode, FirebaseAuthError, FirebaseError} from '../utils/error';
 import {
   HttpMethod, SignedApiRequestHandler, ApiSettings,
 } from '../utils/api-request';
@@ -63,7 +62,7 @@ const MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE = 1000;
  */
 function validateCreateEditRequest(request: any) {
     // Hash set of whitelisted parameters.
-    let validKeys = {
+    const validKeys = {
       displayName: true,
       localId: true,
       email: true,
@@ -81,7 +80,7 @@ function validateCreateEditRequest(request: any) {
       validSince: true,
     };
     // Remove invalid keys from original request.
-    for (let key in request) {
+    for (const key in request) {
       if (!(key in validKeys)) {
         delete request[key];
       }
@@ -183,7 +182,7 @@ function validateCreateEditRequest(request: any) {
         );
       }
     }
-};
+}
 
 
 /** Instantiates the downloadAccount endpoint settings. */
@@ -202,7 +201,7 @@ export const FIREBASE_AUTH_DOWNLOAD_ACCOUNT = new ApiSettings('downloadAccount',
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
         `Required "maxResults" must be a positive non-zero number that does not exceed ` +
-        `the allowed ${MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE}.`
+        `the allowed ${MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE}.`,
       );
     }
   });
@@ -296,7 +295,7 @@ export class FirebaseAuthRequestHandler {
   private host: string = FIREBASE_AUTH_HOST;
   private port: number = FIREBASE_AUTH_PORT;
   private path: string = FIREBASE_AUTH_PATH;
-  private headers: Object = FIREBASE_AUTH_HEADER;
+  private headers: object = FIREBASE_AUTH_HEADER;
   private timeout: number = FIREBASE_AUTH_TIMEOUT;
   private signedApiRequestHandler: SignedApiRequestHandler;
 
@@ -304,7 +303,7 @@ export class FirebaseAuthRequestHandler {
    * @param {Object} response The response to check for errors.
    * @return {string|null} The error code if present; null otherwise.
    */
-  private static getErrorCode(response: any): string|null {
+  private static getErrorCode(response: any): string | null {
     return (validator.isNonNullObject(response) && response.error && (response.error as any).message) || null;
   }
 
@@ -322,7 +321,7 @@ export class FirebaseAuthRequestHandler {
    * @param {string} uid The uid of the user to lookup.
    * @return {Promise<Object>} A promise that resolves with the user information.
    */
-  public getAccountInfoByUid(uid: string): Promise<Object> {
+  public getAccountInfoByUid(uid: string): Promise<object> {
     if (!validator.isUid(uid)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_UID));
     }
@@ -339,7 +338,7 @@ export class FirebaseAuthRequestHandler {
    * @param {string} email The email of the user to lookup.
    * @return {Promise<Object>} A promise that resolves with the user information.
    */
-  public getAccountInfoByEmail(email: string): Promise<Object> {
+  public getAccountInfoByEmail(email: string): Promise<object> {
     if (!validator.isEmail(email)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL));
     }
@@ -356,7 +355,7 @@ export class FirebaseAuthRequestHandler {
    * @param {string} phoneNumber The phone number of the user to lookup.
    * @return {Promise<Object>} A promise that resolves with the user information.
    */
-  public getAccountInfoByPhoneNumber(phoneNumber: string): Promise<Object> {
+  public getAccountInfoByPhoneNumber(phoneNumber: string): Promise<object> {
     if (!validator.isPhoneNumber(phoneNumber)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER));
     }
@@ -382,7 +381,7 @@ export class FirebaseAuthRequestHandler {
    */
   public downloadAccount(
       maxResults: number = MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE,
-      pageToken?: string): Promise<{users: Object[], nextPageToken?: string}> {
+      pageToken?: string): Promise<{users: object[], nextPageToken?: string}> {
     // Construct request.
     const request = {
       maxResults,
@@ -398,7 +397,7 @@ export class FirebaseAuthRequestHandler {
           if (!response.users) {
             response.users = [];
           }
-          return response as {users: Object[], nextPageToken?: string};
+          return response as {users: object[], nextPageToken?: string};
         });
   }
 
@@ -408,7 +407,7 @@ export class FirebaseAuthRequestHandler {
    * @param {string} uid The uid of the user to delete.
    * @return {Promise<Object>} A promise that resolves when the user is deleted.
    */
-  public deleteAccount(uid: string): Promise<Object> {
+  public deleteAccount(uid: string): Promise<object> {
     if (!validator.isUid(uid)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_UID));
     }
@@ -427,7 +426,7 @@ export class FirebaseAuthRequestHandler {
    * @return {Promise<string>} A promise that resolves when the operation completes
    *     with the user id that was edited.
    */
-  public setCustomUserClaims(uid: string, customUserClaims: Object): Promise<string> {
+  public setCustomUserClaims(uid: string, customUserClaims: object): Promise<string> {
     // Validate user UID.
     if (!validator.isUid(uid)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_UID));
@@ -444,7 +443,7 @@ export class FirebaseAuthRequestHandler {
       customUserClaims = {};
     }
     // Construct custom user attribute editting request.
-    let request: any = {
+    const request: any = {
       localId: uid,
       customAttributes: JSON.stringify(customUserClaims),
     };
@@ -475,7 +474,7 @@ export class FirebaseAuthRequestHandler {
     }
 
     // Build the setAccountInfo request.
-    let request: any = deepCopy(properties);
+    const request: any = deepCopy(properties);
     request.localId = uid;
     // For deleting displayName or photoURL, these values must be passed as null.
     // They will be removed from the backend request and an additional parameter
@@ -484,13 +483,13 @@ export class FirebaseAuthRequestHandler {
 
     // Parameters that are deletable and their deleteAttribute names.
     // Use client facing names, photoURL instead of photoUrl.
-    let deletableParams = {
+    const deletableParams = {
       displayName: 'DISPLAY_NAME',
       photoURL: 'PHOTO_URL',
     };
     // Properties to delete if available.
     request.deleteAttribute = [];
-    for (let key in deletableParams) {
+    for (const key in deletableParams) {
       if (request[key] === null) {
         // Add property identifier to list of attributes to delete.
         request.deleteAttribute.push(deletableParams[key]);
@@ -546,7 +545,7 @@ export class FirebaseAuthRequestHandler {
     if (!validator.isUid(uid)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_UID));
     }
-    let request: any = {
+    const request: any = {
       localId: uid,
       // validSince is in UTC seconds.
       validSince: Math.ceil(new Date().getTime() / 1000),
@@ -575,7 +574,7 @@ export class FirebaseAuthRequestHandler {
     }
 
     // Build the signupNewUser request.
-    let request: any = deepCopy(properties);
+    const request: any = deepCopy(properties);
     // Rewrite photoURL to photoUrl.
     if (typeof request.photoURL !== 'undefined') {
       request.photoUrl = request.photoURL;
@@ -600,13 +599,13 @@ export class FirebaseAuthRequestHandler {
    * @param {Object} requestData The request data.
    * @return {Promise<Object>} A promise that resolves with the response.
    */
-  private invokeRequestHandler(apiSettings: ApiSettings, requestData: Object): Promise<Object> {
-    let path: string = this.path + apiSettings.getEndpoint();
-    let httpMethod: HttpMethod = apiSettings.getHttpMethod();
+  private invokeRequestHandler(apiSettings: ApiSettings, requestData: object): Promise<object> {
+    const path: string = this.path + apiSettings.getEndpoint();
+    const httpMethod: HttpMethod = apiSettings.getHttpMethod();
     return Promise.resolve()
       .then(() => {
         // Validate request.
-        let requestValidator = apiSettings.getRequestValidator();
+        const requestValidator = apiSettings.getRequestValidator();
         requestValidator(requestData);
         // Process request.
         return this.signedApiRequestHandler.sendRequest(
@@ -614,31 +613,24 @@ export class FirebaseAuthRequestHandler {
       })
       .then((response) => {
         // Check for backend errors in the response.
-        let errorCode = FirebaseAuthRequestHandler.getErrorCode(response);
+        const errorCode = FirebaseAuthRequestHandler.getErrorCode(response);
         if (errorCode) {
           throw FirebaseAuthError.fromServerError(errorCode, /* message */ undefined, response);
         }
         // Validate response.
-        let responseValidator = apiSettings.getResponseValidator();
+        const responseValidator = apiSettings.getResponseValidator();
         responseValidator(response);
         // Return entire response.
         return response;
       })
       .catch((response) => {
-        let error;
-        if (typeof response === 'object' && 'statusCode' in response) {
-          // response came directly from a non-200 response.
-          error = response.error;
-        } else {
-          // response came from a thrown error on a 200 response.
-          error = response;
-        }
-
+        const error = (typeof response === 'object' && 'statusCode' in response)
+          ? response.error : response;
         if (error instanceof FirebaseError) {
           throw error;
         }
 
-        let errorCode = FirebaseAuthRequestHandler.getErrorCode(error);
+        const errorCode = FirebaseAuthRequestHandler.getErrorCode(error);
         throw FirebaseAuthError.fromServerError(errorCode, /* message */ undefined, error);
       });
   }
