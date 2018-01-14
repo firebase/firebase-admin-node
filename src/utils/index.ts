@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
- import {FirebaseApp, FirebaseAppOptions} from '../firebase-app';
- import {Certificate} from '../auth/credential';
+import {FirebaseApp, FirebaseAppOptions} from '../firebase-app';
+import {Certificate} from '../auth/credential';
 
- import * as validator from './validator';
+import * as validator from './validator';
 
 /**
  * Renames properties on an object given a mapping from old to new property names.

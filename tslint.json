@@ -7,7 +7,6 @@
       "static-before-instance",
       "variables-before-functions"
     ],
-    "align": false,
     "prefer-object-spread": false,
     "no-implicit-dependencies": [true, "dev"],
     "max-classes-per-file": [true, 20],
