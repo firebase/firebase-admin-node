@@ -51,7 +51,7 @@ export class InstanceId implements FirebaseServiceInterface {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseInstanceIdError(
         InstanceIdClientErrorCode.INVALID_ARGUMENT,
-        'First argument passed to admin.instanceId() must be a valid Firebase app instance.'
+        'First argument passed to admin.instanceId() must be a valid Firebase app instance.',
       );
     }
 
