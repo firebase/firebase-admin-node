@@ -177,11 +177,11 @@ export interface MessagingTopicManagementResponse {
 /**
  * Maps a raw FCM server response to a MessagingDevicesResponse object.
  *
- * @param {Object} response The raw FCM server response to map.
+ * @param {object} response The raw FCM server response to map.
  *
  * @return {MessagingDeviceGroupResponse} The mapped MessagingDevicesResponse object.
  */
-function mapRawResponseToDevicesResponse(response): MessagingDevicesResponse {
+function mapRawResponseToDevicesResponse(response: object): MessagingDevicesResponse {
   // Rename properties on the server response
   utils.renameProperties(response, MESSAGING_DEVICES_RESPONSE_KEYS_MAP);
   if ('results' in response) {
@@ -198,17 +198,17 @@ function mapRawResponseToDevicesResponse(response): MessagingDevicesResponse {
     });
   }
 
-  return response;
+  return response as MessagingDevicesResponse;
 }
 
 /**
  * Maps a raw FCM server response to a MessagingDeviceGroupResponse object.
  *
- * @param {Object} response The raw FCM server response to map.
+ * @param {object} response The raw FCM server response to map.
  *
  * @return {MessagingDeviceGroupResponse} The mapped MessagingDeviceGroupResponse object.
  */
-function mapRawResponseToDeviceGroupResponse(response): MessagingDeviceGroupResponse {
+function mapRawResponseToDeviceGroupResponse(response: object): MessagingDeviceGroupResponse {
   // Rename properties on the server response
   utils.renameProperties(response, MESSAGING_DEVICE_GROUP_RESPONSE_KEYS_MAP);
 
@@ -216,46 +216,45 @@ function mapRawResponseToDeviceGroupResponse(response): MessagingDeviceGroupResp
   // it won't when the 'failureCount' property has a value of 0)
   (response as any).failedRegistrationTokens = (response as any).failedRegistrationTokens || [];
 
-  return response;
+  return response as MessagingDeviceGroupResponse;
 }
 
 /**
  * Maps a raw FCM server response to a MessagingTopicManagementResponse object.
  *
- * @param {Object} response The raw FCM server response to map.
+ * @param {object} response The raw FCM server response to map.
  *
  * @return {MessagingTopicManagementResponse} The mapped MessagingTopicManagementResponse object.
  */
-function mapRawResponseToTopicManagementResponse(response): MessagingTopicManagementResponse {
+function mapRawResponseToTopicManagementResponse(response: object): MessagingTopicManagementResponse {
   // Add the success and failure counts.
-  response.successCount = 0;
-  response.failureCount = 0;
+  const result: MessagingTopicManagementResponse = {
+    successCount: 0,
+    failureCount: 0,
+    errors: [],
+  };
 
   const errors: FirebaseArrayIndexError[] = [];
   if ('results' in response) {
-    response.results.forEach((tokenManagementResult, index) => {
+    (response as any).results.forEach((tokenManagementResult, index) => {
       // Map the FCM server's error strings to actual error objects.
       if ('error' in tokenManagementResult) {
-        response.failureCount += 1;
+        result.failureCount += 1;
 
         const newError = FirebaseMessagingError.fromServerError(
           tokenManagementResult.error, /* message */ undefined, tokenManagementResult.error,
         );
 
-        errors.push({
+        result.errors.push({
           index,
           error: newError,
         });
       } else {
-        response.successCount += 1;
+        result.successCount += 1;
       }
     });
   }
-
-  delete response.results;
-  response.errors = errors;
-
-  return response;
+  return result;
 }
 
 
@@ -285,7 +284,7 @@ export class Messaging implements FirebaseServiceInterface {
   private messagingRequestHandler: FirebaseMessagingRequestHandler;
 
   /**
-   * @param {Object} app The app for this Messaging service.
+   * @param {FirebaseApp} app The app for this Messaging service.
    * @constructor
    */
   constructor(app: FirebaseApp) {

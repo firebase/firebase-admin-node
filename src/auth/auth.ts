@@ -78,7 +78,7 @@ export class Auth implements FirebaseServiceInterface {
   private authRequestHandler: FirebaseAuthRequestHandler;
 
   /**
-   * @param {Object} app The app for this Auth service.
+   * @param {object} app The app for this Auth service.
    * @constructor
    */
   constructor(app: FirebaseApp) {
@@ -128,7 +128,7 @@ export class Auth implements FirebaseServiceInterface {
    * signInWithCustomToken().
    *
    * @param {string} uid The uid to use as the JWT subject.
-   * @param {Object=} developerClaims Optional additional claims to include in the JWT payload.
+   * @param {object=} developerClaims Optional additional claims to include in the JWT payload.
    *
    * @return {Promise<string>} A JWT for the provided payload.
    */
@@ -323,7 +323,7 @@ export class Auth implements FirebaseServiceInterface {
    * Sets additional developer claims on an existing user identified by the provided UID.
    *
    * @param {string} uid The user to edit.
-   * @param {Object} customUserClaims The developer claims to set.
+   * @param {object} customUserClaims The developer claims to set.
    * @return {Promise<void>} A promise that resolves when the operation completes
    *     successfully.
    */

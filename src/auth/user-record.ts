@@ -56,7 +56,7 @@ export interface CreateRequest extends UpdateRequest {
  * User metadata class that provides metadata information like user account creation
  * and last sign in time.
  *
- * @param {Object} response The server side response returned from the getAccountInfo
+ * @param {object} response The server side response returned from the getAccountInfo
  *     endpoint.
  * @constructor
  */
@@ -73,7 +73,7 @@ export class UserMetadata {
     utils.addReadonlyGetter(this, 'lastSignInTime', parseDate(response.lastLoginAt));
   }
 
-  /** @return {Object} The plain object representation of the user's metadata. */
+  /** @return {object} The plain object representation of the user's metadata. */
   public toJSON(): object {
     return {
       lastSignInTime: this.lastSignInTime,
@@ -86,7 +86,7 @@ export class UserMetadata {
  * User info class that provides provider user information for different
  * Firebase providers like google.com, facebook.com, password, etc.
  *
- * @param {Object} response The server side response returned from the getAccountInfo
+ * @param {object} response The server side response returned from the getAccountInfo
  *     endpoint.
  * @constructor
  */
@@ -114,7 +114,7 @@ export class UserInfo {
     utils.addReadonlyGetter(this, 'phoneNumber', response.phoneNumber);
   }
 
-  /** @return {Object} The plain object representation of the current provider data. */
+  /** @return {object} The plain object representation of the current provider data. */
   public toJSON(): object {
     return {
       uid: this.uid,
@@ -131,7 +131,7 @@ export class UserInfo {
  * User record class that defines the Firebase user object populated from
  * the Firebase Auth getAccountInfo response.
  *
- * @param {Object} response The server side response returned from the getAccountInfo
+ * @param {any} response The server side response returned from the getAccountInfo
  *     endpoint.
  * @constructor
  */
@@ -189,7 +189,7 @@ export class UserRecord {
     utils.addReadonlyGetter(this, 'tokensValidAfterTime', validAfterTime);
   }
 
-  /** @return {Object} The plain object representation of the user record. */
+  /** @return {object} The plain object representation of the user record. */
   public toJSON(): object {
     const json: any = {
       uid: this.uid,

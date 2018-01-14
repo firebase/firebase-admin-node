@@ -38,7 +38,7 @@ export class FirebaseMessagingRequestHandler {
   private signedApiRequestHandler: SignedApiRequestHandler;
 
   /**
-   * @param {Object} response The response to check for errors.
+   * @param {object} response The response to check for errors.
    * @return {string|null} The error code if present; null otherwise.
    */
   private static getErrorCode(response: any): string | null {
@@ -66,8 +66,8 @@ export class FirebaseMessagingRequestHandler {
    *
    * @param {string} host The host to which to send the request.
    * @param {string} path The path to which to send the request.
-   * @param {Object} requestData The request data.
-   * @return {Promise<Object>} A promise that resolves with the response.
+   * @param {object} requestData The request data.
+   * @return {Promise<object>} A promise that resolves with the response.
    */
   public invokeRequestHandler(host: string, path: string, requestData: object): Promise<object> {
     return this.signedApiRequestHandler.sendRequest(

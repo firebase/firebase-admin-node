@@ -68,7 +68,7 @@ export class FirebaseTokenGenerator {
    * Creates a new Firebase Auth Custom token.
    *
    * @param {string} uid The user ID to use for the generated Firebase Auth Custom token.
-   * @param {Object} [developerClaims] Optional developer claims to include in the generated Firebase
+   * @param {object} [developerClaims] Optional developer claims to include in the generated Firebase
    *                 Auth Custom token.
    * @return {Promise<string>} A Promise fulfilled with a Firebase Auth Custom token signed with a
    *                           service account key and containing the provided payload.
@@ -134,7 +134,7 @@ export class FirebaseTokenGenerator {
    * Verifies the format and signature of a Firebase Auth ID token.
    *
    * @param {string} idToken The Firebase Auth ID token to verify.
-   * @return {Promise<Object>} A promise fulfilled with the decoded claims of the Firebase Auth ID
+   * @return {Promise<object>} A promise fulfilled with the decoded claims of the Firebase Auth ID
    *                           token.
    */
   public verifyIdToken(idToken: string): Promise<object> {
@@ -243,7 +243,7 @@ export class FirebaseTokenGenerator {
   /**
    * Returns whether or not the provided developer claims are valid.
    *
-   * @param {Object} [developerClaims] Optional developer claims to validate.
+   * @param {object} [developerClaims] Optional developer claims to validate.
    * @return {boolean} True if the provided claims are valid; otherwise, false.
    */
   private isDeveloperClaimsValid_(developerClaims?: object): boolean {
@@ -262,7 +262,7 @@ export class FirebaseTokenGenerator {
   /**
    * Fetches the public keys for the Google certs.
    *
-   * @return {Promise<Object>} A promise fulfilled with public keys for the Google certs.
+   * @return {Promise<object>} A promise fulfilled with public keys for the Google certs.
    */
   private fetchPublicKeys_(): Promise<object> {
     const publicKeysExist = (typeof this.publicKeys_ !== 'undefined');

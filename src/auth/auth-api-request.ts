@@ -300,7 +300,7 @@ export class FirebaseAuthRequestHandler {
   private signedApiRequestHandler: SignedApiRequestHandler;
 
   /**
-   * @param {Object} response The response to check for errors.
+   * @param {any} response The response to check for errors.
    * @return {string|null} The error code if present; null otherwise.
    */
   private static getErrorCode(response: any): string | null {
@@ -319,7 +319,7 @@ export class FirebaseAuthRequestHandler {
    * Looks up a user by uid.
    *
    * @param {string} uid The uid of the user to lookup.
-   * @return {Promise<Object>} A promise that resolves with the user information.
+   * @return {Promise<object>} A promise that resolves with the user information.
    */
   public getAccountInfoByUid(uid: string): Promise<object> {
     if (!validator.isUid(uid)) {
@@ -336,7 +336,7 @@ export class FirebaseAuthRequestHandler {
    * Looks up a user by email.
    *
    * @param {string} email The email of the user to lookup.
-   * @return {Promise<Object>} A promise that resolves with the user information.
+   * @return {Promise<object>} A promise that resolves with the user information.
    */
   public getAccountInfoByEmail(email: string): Promise<object> {
     if (!validator.isEmail(email)) {
@@ -353,7 +353,7 @@ export class FirebaseAuthRequestHandler {
    * Looks up a user by phone number.
    *
    * @param {string} phoneNumber The phone number of the user to lookup.
-   * @return {Promise<Object>} A promise that resolves with the user information.
+   * @return {Promise<object>} A promise that resolves with the user information.
    */
   public getAccountInfoByPhoneNumber(phoneNumber: string): Promise<object> {
     if (!validator.isPhoneNumber(phoneNumber)) {
@@ -375,7 +375,7 @@ export class FirebaseAuthRequestHandler {
    * @param {string=} pageToken The next page token. If not specified, returns users starting
    *     without any offset. Users are returned in the order they were created from oldest to
    *     newest, relative to the page token offset.
-   * @return {Promise<Object>} A promise that resolves with the current batch of downloaded
+   * @return {Promise<object>} A promise that resolves with the current batch of downloaded
    *     users and the next page token if available. For the last page, an empty list of users
    *     and no page token are returned.
    */
@@ -405,7 +405,7 @@ export class FirebaseAuthRequestHandler {
    * Deletes an account identified by a uid.
    *
    * @param {string} uid The uid of the user to delete.
-   * @return {Promise<Object>} A promise that resolves when the user is deleted.
+   * @return {Promise<object>} A promise that resolves when the user is deleted.
    */
   public deleteAccount(uid: string): Promise<object> {
     if (!validator.isUid(uid)) {
@@ -422,7 +422,7 @@ export class FirebaseAuthRequestHandler {
    * Sets additional developer claims on an existing user identified by provided UID.
    *
    * @param {string} uid The user to edit.
-   * @param {Object} customUserClaims The developer claims to set.
+   * @param {object} customUserClaims The developer claims to set.
    * @return {Promise<string>} A promise that resolves when the operation completes
    *     with the user id that was edited.
    */
@@ -457,7 +457,7 @@ export class FirebaseAuthRequestHandler {
    * Edits an existing user.
    *
    * @param {string} uid The user to edit.
-   * @param {Object} properties The properties to set on the user.
+   * @param {object} properties The properties to set on the user.
    * @return {Promise<string>} A promise that resolves when the operation completes
    *     with the user id that was edited.
    */
@@ -559,7 +559,7 @@ export class FirebaseAuthRequestHandler {
   /**
    * Create a new user with the properties supplied.
    *
-   * @param {Object} properties The properties to set on the user.
+   * @param {object} properties The properties to set on the user.
    * @return {Promise<string>} A promise that resolves when the operation completes
    *     with the user id that was created.
    */
@@ -596,8 +596,8 @@ export class FirebaseAuthRequestHandler {
    * Invokes the request handler based on the API settings object passed.
    *
    * @param {ApiSettings} apiSettings The API endpoint settings to apply to request and response.
-   * @param {Object} requestData The request data.
-   * @return {Promise<Object>} A promise that resolves with the response.
+   * @param {object} requestData The request data.
+   * @return {Promise<object>} A promise that resolves with the response.
    */
   private invokeRequestHandler(apiSettings: ApiSettings, requestData: object): Promise<object> {
     const path: string = this.path + apiSettings.getEndpoint();

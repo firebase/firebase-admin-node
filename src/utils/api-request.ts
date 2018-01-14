@@ -38,8 +38,8 @@ export class HttpRequestHandler {
    * @param {number} port The port number.
    * @param {string} path The endpoint path.
    * @param {HttpMethod} httpMethod The http method.
-   * @param {Object} [data] The request JSON.
-   * @param {Object} [headers] The request headers.
+   * @param {object} [data] The request JSON.
+   * @param {object} [headers] The request headers.
    * @param {number} [timeout] The request timeout in milliseconds.
    * @return {Promise<Object>} A promise that resolves with the response.
    */
@@ -75,8 +75,8 @@ export class HttpRequestHandler {
    * @param {number} port The port number.
    * @param {string} path The endpoint path.
    * @param {HttpMethod} httpMethod The http method.
-   * @param {Object} [data] The request JSON.
-   * @param {Object} [headers] The request headers.
+   * @param {object} [data] The request JSON.
+   * @param {object} [headers] The request headers.
    * @param {number} [timeout] The request timeout in milliseconds.
    * @return {Promise<Object>} A promise that resolves with the response.
    */
@@ -214,8 +214,8 @@ export class SignedApiRequestHandler extends HttpRequestHandler {
    * @param {number} port The port number.
    * @param {string} path The endpoint path.
    * @param {HttpMethod} httpMethod The http method.
-   * @param {Object} data The request JSON.
-   * @param {Object} headers The request headers.
+   * @param {object} data The request JSON.
+   * @param {object} headers The request headers.
    * @param {number} timeout The request timeout in milliseconds.
    * @return {Promise} A promise that resolves with the response.
    */
