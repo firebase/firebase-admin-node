@@ -103,13 +103,8 @@ export class Storage implements FirebaseServiceInterface {
    * @return {Bucket} A Bucket object from the @google-cloud/storage library.
    */
   public bucket(name?: string): Bucket {
-    let bucketName;
-    if (typeof name !== 'undefined') {
-      bucketName = name;
-    } else {
-      bucketName = this.appInternal.options.storageBucket;
-    }
-
+    const bucketName = (typeof name !== 'undefined')
+      ? name :  this.appInternal.options.storageBucket;
     if (validator.isNonEmptyString(bucketName)) {
       return this.storageClient.bucket(bucketName);
     }
@@ -129,4 +124,4 @@ export class Storage implements FirebaseServiceInterface {
   get app(): FirebaseApp {
     return this.appInternal;
   }
-};
+}

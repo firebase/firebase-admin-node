@@ -15,9 +15,8 @@
  */
 
 import {FirebaseApp} from '../firebase-app';
-import {FirebaseError} from '../utils/error';
 import {HttpMethod, SignedApiRequestHandler} from '../utils/api-request';
-import {FirebaseMessagingError, MessagingClientErrorCode} from '../utils/error';
+import {FirebaseError, FirebaseMessagingError, MessagingClientErrorCode} from '../utils/error';
 
 import * as validator from '../utils/validator';
 
@@ -28,7 +27,7 @@ const FIREBASE_MESSAGING_HTTP_METHOD: HttpMethod = 'POST';
 const FIREBASE_MESSAGING_HEADERS = {
   'Content-Type': 'application/json',
   'Sdk-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
-  access_token_auth: 'true',
+  'access_token_auth': 'true',
 };
 
 
@@ -42,7 +41,7 @@ export class FirebaseMessagingRequestHandler {
    * @param {Object} response The response to check for errors.
    * @return {string|null} The error code if present; null otherwise.
    */
-  private static getErrorCode(response: any): string|null {
+  private static getErrorCode(response: any): string | null {
     if (validator.isNonNullObject(response) && 'error' in response) {
       if (typeof response.error === 'string') {
         return response.error;
@@ -70,7 +69,7 @@ export class FirebaseMessagingRequestHandler {
    * @param {Object} requestData The request data.
    * @return {Promise<Object>} A promise that resolves with the response.
    */
-  public invokeRequestHandler(host: string, path: string, requestData: Object): Promise<Object> {
+  public invokeRequestHandler(host: string, path: string, requestData: object): Promise<object> {
     return this.signedApiRequestHandler.sendRequest(
       host,
       FIREBASE_MESSAGING_PORT,
@@ -100,7 +99,7 @@ export class FirebaseMessagingRequestHandler {
       // Return entire response.
       return response;
     })
-    .catch((response: { statusCode: number, error: string|Object }) => {
+    .catch((response: { statusCode: number, error: string | object }) => {
       // Re-throw the error if it already has the proper format.
       if (response instanceof FirebaseError) {
         throw response;
