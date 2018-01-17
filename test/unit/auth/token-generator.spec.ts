@@ -458,7 +458,7 @@ describe('FirebaseTokenGenerator', () => {
 
     it('should be rejected given an ID token with no kid', () => {
       const mockIdToken = mocks.generateIdToken({
-        header: undefined,
+        header: {foo: 'bar'},
       });
       return tokenGenerator.verifyIdToken(mockIdToken)
         .should.eventually.be.rejectedWith('Firebase ID token has no "kid" claim');

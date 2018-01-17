@@ -45,6 +45,8 @@ export let serviceName = 'mock-service-name';
 
 export let databaseURL = 'https://databaseName.firebaseio.com';
 
+export let databaseAuthVariableOverride = { 'some#string': 'some#val' };
+
 export let storageBucket = 'bucketName.appspot.com';
 
 export let credential = new CertCredential(path.resolve(__dirname, './mock.key.json'));
@@ -55,12 +57,25 @@ export let appOptions: FirebaseAppOptions = {
   storageBucket,
 };
 
+export let appOptionsWithOverride: FirebaseAppOptions = {
+  credential,
+  databaseAuthVariableOverride,
+  databaseURL,
+  storageBucket,
+  projectId,
+};
+
 export let appOptionsNoAuth: FirebaseAppOptions = {
   databaseURL,
 };
 
 export let appOptionsNoDatabaseUrl: FirebaseAppOptions = {
   credential,
+};
+
+export let appOptionsAuthDB: FirebaseAppOptions = {
+  credential,
+  databaseURL,
 };
 
 export class MockCredential implements Credential {

@@ -54,12 +54,6 @@ describe('Firebase', () => {
   });
 
   describe('#initializeApp()', () => {
-    it('should throw given no options', () => {
-      expect(() => {
-        (firebaseAdmin as any).initializeApp();
-      }).to.throw('Invalid Firebase app options');
-    });
-
     const invalidOptions = [null, NaN, 0, 1, true, false, '', 'a', [], {}, _.noop];
     invalidOptions.forEach((invalidOption) => {
       it('should throw given invalid options object: ' + JSON.stringify(invalidOption), () => {

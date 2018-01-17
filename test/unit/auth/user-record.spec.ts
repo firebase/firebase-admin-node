@@ -136,6 +136,7 @@ function getUserJSON(): Object {
     customClaims: {
       admin: true,
     },
+    tokensValidAfterTime: new Date(1476136676000).toUTCString(),
   };
 }
 
@@ -392,6 +393,10 @@ describe('UserRecord', () => {
   describe('getters', () => {
     const validUserResponse = getValidUserResponse();
     const userRecord = new UserRecord(validUserResponse);
+    const validUserResponseNoValidSince = deepCopy(validUserResponse);
+    delete (validUserResponseNoValidSince as any).validSince;
+    const userRecordNoValidSince = new UserRecord(validUserResponseNoValidSince);
+    const expectedTokensValidAfterTime = new Date(1476136676000).toUTCString();
     it('should return expected uid', () => {
       expect(userRecord.uid).to.equal('abcdefghijklmnopqrstuvwxyz');
     });
@@ -529,6 +534,21 @@ describe('UserRecord', () => {
       expect((new UserRecord(resp)).customClaims).to.be.undefined;
     });
 
+    it('should return expected tokensValidAfterTime', () => {
+      expect(userRecord.tokensValidAfterTime).to.equal(expectedTokensValidAfterTime);
+    });
+
+    it('should throw when modifying readonly tokensValidAfterTime property', () => {
+      expect(() => {
+        (userRecord as any).tokensValidAfterTime =
+            new Date(1476235905000).toUTCString();
+      }).to.throw(Error);
+    });
+
+    it('should return null tokensValidAfterTime when not available', () => {
+      expect(userRecordNoValidSince.tokensValidAfterTime).to.be.null;
+    });
+
     it('should return expected metadata', () => {
       let metadata = new UserMetadata({
         createdAt: '1476136676000',
@@ -609,8 +629,15 @@ describe('UserRecord', () => {
 
   describe('toJSON', () => {
     const userRecord = new UserRecord(getValidUserResponse());
+    const validUserResponseNoValidSince = getValidUserResponse();
+    delete (validUserResponseNoValidSince as any).validSince;
+    const userRecordNoValidSince = new UserRecord(validUserResponseNoValidSince);
     it('should return expected JSON object', () => {
       expect(userRecord.toJSON()).to.deep.equal(getUserJSON());
+    });
+
+    it('should return null tokensValidAfterTime when not available', () => {
+      expect((userRecordNoValidSince.toJSON() as any).tokensValidAfterTime).to.be.null;
     });
   });
 });
