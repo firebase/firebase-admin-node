@@ -92,18 +92,32 @@ export const BLACKLISTED_OPTIONS_KEYS = [
   'condition', 'data', 'notification', 'registrationIds', 'registration_ids', 'to',
 ];
 
-export interface BaseMessage {
+interface BaseMessage {
   data?: {[key: string]: string};
   notification?: Notification;
   android?: AndroidConfig;
   webpush?: WebpushConfig;
   apns?: ApnsConfig;
-};
+}
+
+interface TokenMessage extends BaseMessage {
+  token: string;
+}
+
+interface TopicMessage extends BaseMessage {
+  topic: string;
+}
+
+interface ConditionMessage extends BaseMessage {
+  condition: string;
+}
+
+export type Message = TokenMessage | TopicMessage | ConditionMessage;
 
 export interface Notification {
   title?: string;
   body?: string;
-};
+}
 
 export interface WebpushConfig {
   headers?: {[key: string]: string};
@@ -129,7 +143,7 @@ export interface AndroidConfig {
   restrictedPackageName?: string;
   data?: {[key: string]: string};
   notification?: AndroidNotification;
-};
+}
 
 export interface AndroidNotification {
   title?: string;
@@ -143,7 +157,7 @@ export interface AndroidNotification {
   bodyLocArgs?: string[];
   titleLocKey?: string;
   titleLocArgs?: string[];
-};
+}
 
 function validateStringMap(map: Object, label: string) {
   if (typeof map === 'undefined') {
@@ -244,20 +258,6 @@ function validateAndroidNotification(notification: AndroidNotification) {
   };
   renameProperties(notification, propertyMappings);
 }
-
-export interface TokenMessage extends BaseMessage {
-  token: string;
-}
-
-export interface TopicMessage extends BaseMessage {
-  topic: string;
-}
-
-export interface ConditionMessage extends BaseMessage {
-  condition: string;
-}
-
-export type Message = TokenMessage | TopicMessage | ConditionMessage;
 
 function validateMessage(message: Message) {
   if (!validator.isNonNullObject(message)) {
@@ -515,6 +515,13 @@ export class Messaging implements FirebaseServiceInterface {
     return this.appInternal;
   }
 
+  /**
+   * Sends a message via Firebase Cloud Messaging (FCM).
+   *
+   * @param {Message} message The message to be sent.
+   *
+   * @return {Promise<string>} A Promise fulfilled with a message ID string.
+   */
   public send(message: Message): Promise<string> {
     const copy: Message = deepCopy(message);
     validateMessage(copy);

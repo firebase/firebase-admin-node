@@ -67,10 +67,11 @@ function test(utils) {
     };
     return admin.messaging().send(message)
       .then((name) => {
-        utils.assert(name === 'foo', 'messaging().send()', 'Received response: ' + name);
+        const pattern = /^projects\/.*\/messages\/.*$/;
+        utils.assert(name.match(pattern), 'messaging().send()', 'Received response: ' + name);
       })
       .catch((error) => {
-        utils.logFailure('messaging().sendToDevice(string)', error);
+        utils.logFailure('messaging().send()', error);
       });
   }
 
