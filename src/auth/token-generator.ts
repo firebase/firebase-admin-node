@@ -226,7 +226,7 @@ export class FirebaseTokenGenerator {
           if (error) {
             if (error.name === 'TokenExpiredError') {
               errorMessage = 'Firebase ID token has expired. Get a fresh token from your client app and try ' +
-                'again.' + verifyIdTokenDocsMessage;
+                'again (auth/id-token-expired).' + verifyIdTokenDocsMessage;
             } else if (error.name === 'JsonWebTokenError') {
               errorMessage = 'Firebase ID token has invalid signature.' + verifyIdTokenDocsMessage;
             }
