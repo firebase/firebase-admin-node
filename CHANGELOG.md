@@ -1,4 +1,7 @@
+Posted with additional links and information to https://firebase.google.com/support/release-notes/admin/node
+
 # Unreleased
+- 
 
 # v5.8.0
 - [added] Initialization - The `admin.initializeApp()` method can now be invoked without any arguments. This initializes an app using Google Application Default Credentials, and other `AppOptions` loaded from the `FIREBASE_CONFIG` environment variable.
@@ -10,8 +13,7 @@
 
 # v5.6.0
 - [added] A new `admin.instanceId()` API that facilitates deleting instance IDs and associated user data from Firebase projects.
-- [changed] Updated the TypeScript typings for `admin.AppOptions` to reflect the
-  introduction of the `projectId` option.
+- [changed] Updated the TypeScript typings for `admin.AppOptions` to reflect the introduction of the `projectId` option.
 - [changed] Removed some unused third party dependencies.
 
 # v5.5.1
@@ -38,7 +40,7 @@
 
 # v5.3.0
 - [changed] SDK now retries outbound HTTP calls on all low-level I/O errors.
-- [added] Auth - A new `setCustomUserClaims()` method for setting custom claims on user accounts. Custom claims set via this   method become available on the ID tokens of the corresponding users when they sign in. 
+- [added] Auth - A new `setCustomUserClaims()` method for setting custom claims on user accounts. Custom claims set via this  method become available on the ID tokens of the corresponding users when they sign in. 
 - [added] Auth - A new `listUsers()` method for listing all the users in a Firebase project in batches.
 - [changed] Storage - Declared a more concrete TypeScript return type (`Bucket`) for the `bucket()` method in the Storage API.
 
@@ -84,8 +86,7 @@
 - [changed] Added error codes to all app-level errors. All errors in the SDK now properly implement the `FirebaseError` interface.
 - [changed] Improved error handling when initializing the SDK with a credential that cannot generate valid access tokens.
 - [added] Added new `admin.database.EventType` to the TypeScript typings.
-- [changed] Realtime Database - Improved how the Realtime Database reports errors when provided with
-  various types of invalid credentials.
+- [changed] Realtime Database - Improved how the Realtime Database reports errors when provided with various types of invalid credentials.
 
 # v4.1.2
 - [changed] Auth - Improved input validation and error messages for all user management methods.
