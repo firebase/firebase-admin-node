@@ -122,7 +122,7 @@
   SDK (`index.d.ts`) has been fixed.
 
 # v5.2.0
-- [added] A new [{{firebase_storage}} API](https://firebase.google.com/docs/reference/admin/node/admin.storage)
+- [added] A new [Cloud Storage API](https://firebase.google.com/docs/reference/admin/node/admin.storage)
   that facilitates accessing Google Cloud Storage buckets using the
   [`@google-cloud/storage`](https://googlecloudplatform.github.io/google-cloud-node/#https://firebase.google.com/docs/storage/latest/storage)
   library.
@@ -238,7 +238,6 @@
 
 - [changed] Improved how the Realtime Database reports errors when provided with
   various types of invalid credentials.
-
 
 # v4.1.2
 
@@ -408,7 +407,7 @@
 
 ### Authentication
 
-- [added] A new Admin API for managing your {{firebase_auth}} users is now
+- [added] A new Admin API for managing your Firebase Authentication users is now
   available. This API lets you manage your users without using their existing
   credentials, and without worrying about client-side rate limiting. The new
   methods included in this API are
@@ -418,7 +417,7 @@
   [`updateUser()`](https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#updateUser), and
   [`deleteUser()`](https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#deleteUser). See
   [Manage Users](https://firebase.google.com/docs/auth/admin/manage-users) for more details.
-- {[changed] The
+- [changed] The
   [`createCustomToken()`](https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#createCustomToken)
   method is now asynchronous, returning a `Promise<string>` instead of a
   `string`.
