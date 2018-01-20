@@ -612,15 +612,23 @@ export class Messaging implements FirebaseServiceInterface {
    * Sends a message via Firebase Cloud Messaging (FCM).
    *
    * @param {Message} message The message to be sent.
+   * @param {boolean=} dryRun Whether to send the message in the dry-run (validation only) mode.
    *
    * @return {Promise<string>} A Promise fulfilled with a message ID string.
    */
-  public send(message: Message): Promise<string> {
+  public send(message: Message, dryRun?: boolean): Promise<string> {
     const copy: Message = deepCopy(message);
     validateMessage(copy);
+    if (typeof dryRun !== 'undefined' && !validator.isBoolean(dryRun)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_ARGUMENT, 'dryRun must be a boolean');
+    }
     return Promise.resolve()
       .then(() => {
-        let request = {message: copy};
+        let request: {message: Message, validate_only?: boolean} = {message: copy};
+        if (dryRun) {
+          request.validate_only = true;
+        }
         return this.messagingRequestHandler.invokeRequestHandler(FCM_SEND_HOST, this.urlPath, request);
       })
       .then((response) => {

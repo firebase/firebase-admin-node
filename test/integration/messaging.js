@@ -63,9 +63,19 @@ function test(utils) {
       android: {
         restrictedPackageName: 'com.hkj.testing'
       },
+      apns: {
+        payload: {
+          aps: {
+            alert: {
+              title: 'Message title',
+              body: 'Message body',
+            }
+          }
+        }
+      },
       topic: 'foo-bar',
     };
-    return admin.messaging().send(message)
+    return admin.messaging().send(message, true)
       .then((name) => {
         const pattern = /^projects\/.*\/messages\/.*$/;
         utils.assert(name.match(pattern), 'messaging().send()', 'Received response: ' + name);
