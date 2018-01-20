@@ -1746,10 +1746,26 @@ describe('Messaging', () => {
 
     const invalidApnsPayloads: any = [null, '', 'payload', true, 1.23];
     invalidApnsPayloads.forEach((payload) => {
-      it(`should throw given APNS payload with invalid object: ${payload}`, () => {
+      it(`should throw given APNS payload with invalid object: ${JSON.stringify(payload)}`, () => {
         expect(() => {
           messaging.send({apns: {payload}, token: 'token'});
         }).to.throw('apns.payload must be a non-null object');
+      });
+    });    
+    invalidApnsPayloads.forEach((aps) => {
+      it(`should throw given APNS payload with invalid aps object: ${JSON.stringify(aps)}`, () => {
+        expect(() => {
+          messaging.send({apns: {payload: {aps}}, token: 'token'});
+        }).to.throw('apns.payload.aps must be a non-null object');
+      });
+    });
+
+    const invalidApnsAlerts: any = [null, [], true, 1.23];
+    invalidApnsAlerts.forEach((alert) => {
+      it(`should throw given APNS payload with invalid aps alert: ${JSON.stringify(alert)}`, () => {
+        expect(() => {
+          messaging.send({apns: {payload: {aps: {alert}}}, token: 'token'});
+        }).to.throw('apns.payload.aps.alert must be a string or a non-null object');
       });
     });
   });
