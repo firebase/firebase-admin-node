@@ -133,7 +133,32 @@ export interface WebpushNotification {
 
 export interface ApnsConfig {
   headers?: {[key: string]: string};
-  payload: Object;
+  payload?: ApnsPayload;
+}
+
+export interface ApnsPayload {
+  aps: Aps;
+  [customData: string]: object;
+}
+
+export interface Aps {
+  alert?: string | ApsAlert;
+  badge?: number;
+  sound?: string;
+  contentAvailable?: boolean;
+  category?: string;
+  threadId?: string;
+}
+
+export interface ApsAlert {
+  title?: string;
+  body?: string;
+  locKey?: string;
+  locArgs?: string[];
+  titleLocKey?: string;
+  titleLocArgs?: string[];
+  actionLocKey?: string;
+  launchImage?: string;
 }
 
 export interface AndroidConfig {
@@ -193,10 +218,78 @@ function validateApnsConfig(config: ApnsConfig) {
       MessagingClientErrorCode.INVALID_PAYLOAD, 'apns must be a non-null object');
   }
   validateStringMap(config.headers, 'apns.headers');
-  if (typeof config.payload !== 'undefined' && !validator.isNonNullObject(config.payload)) {
+  validateApnsPayload(config.payload);
+}
+
+function validateApnsPayload(payload: ApnsPayload) {
+  if (typeof payload === 'undefined') {
+    return;
+  } else if (!validator.isNonNullObject(payload)) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD, 'apns.payload must be a non-null object');
   }
+  validateAps(payload.aps);
+}
+
+function validateAps(aps: Aps) {
+  if (typeof aps === 'undefined') {
+    return;
+  } else if (!validator.isNonNullObject(aps)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'apns.payload.aps must be a non-null object');
+  }
+  validateApsAlert(aps.alert);
+
+  const propertyMappings = {
+    contentAvailable: 'content-available',
+    threadId: 'thread-id',
+  };
+  renameProperties(aps, propertyMappings);
+
+  if (typeof aps['content-available'] !== 'undefined') {
+    if (aps['content-available'] === true) {
+      aps['content-available'] = 1;
+    } else {
+      delete aps['content-available'];
+    }
+  }
+}
+
+function validateApsAlert(alert: string | ApsAlert) {
+  if (typeof alert === 'undefined' || validator.isString(alert)) {
+    return;
+  } else if (!validator.isNonNullObject(alert)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD,
+      'apns.payload.aps.alert must be a string or a non-null object');
+  }
+
+  const apsAlert: ApsAlert = alert as ApsAlert;
+  if (validator.isNonEmptyArray(apsAlert.locArgs)) {
+    if (!validator.isNonEmptyString(apsAlert.locKey)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_PAYLOAD,
+        'apns.payload.aps.alert.locKey is required when specifying locArgs');
+    }
+  }
+  if (validator.isNonEmptyArray(apsAlert.titleLocArgs)) {
+    if (!validator.isNonEmptyString(apsAlert.titleLocKey)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_PAYLOAD,
+        'apns.payload.aps.alert.titleLocKey is required when specifying titleLocArgs');
+    }
+  }
+
+  const propertyMappings = {
+    locKey: 'loc-key',
+    locArgs: 'loc-args',
+    titleLocKey: 'title-loc-key',
+    titleLocArgs: 'title-loc-args',
+    actionLocKey: 'action-loc-key',
+    launchImage: 'launch-image',
+  };
+  renameProperties(alert, propertyMappings);
+
 }
 
 function validateAndroidConfig(config: AndroidConfig) {

@@ -1663,7 +1663,7 @@ describe('Messaging', () => {
       });
     });
 
-    it('should throw given titleLocArgs without titleLocKey', () => {
+    it('should throw given android titleLocArgs without titleLocKey', () => {
       let message: Message = {
         condition: 'topic-name',
         android: {
@@ -1677,7 +1677,7 @@ describe('Messaging', () => {
       }).to.throw('titleLocKey is required when specifying titleLocArgs');
     });
 
-    it('should throw given bodyLocArgs without bodyLocKey', () => {
+    it('should throw given android bodyLocArgs without bodyLocKey', () => {
       let message: Message = {
         condition: 'topic-name',
         android: {
@@ -1689,6 +1689,42 @@ describe('Messaging', () => {
       expect(() => {
         messaging.send(message);
       }).to.throw('bodyLocKey is required when specifying bodyLocArgs');
+    });
+
+    it('should throw given apns titleLocArgs without titleLocKey', () => {
+      let message: Message = {
+        condition: 'topic-name',
+        apns: {
+          payload: {
+            aps: {
+              alert: {
+                titleLocArgs: ['foo'],
+              }
+            }
+          },
+        },
+      };
+      expect(() => {
+        messaging.send(message);
+      }).to.throw('titleLocKey is required when specifying titleLocArgs');
+    });
+
+    it('should throw given apns locArgs without locKey', () => {
+      let message: Message = {
+        condition: 'topic-name',
+        apns: {
+          payload: {
+            aps: {
+              alert: {
+                locArgs: ['foo'],
+              }
+            }
+          },
+        },
+      };
+      expect(() => {
+        messaging.send(message);
+      }).to.throw('locKey is required when specifying locArgs');
     });
 
     const invalidDataMessages: any = [
@@ -2025,7 +2061,7 @@ describe('Messaging', () => {
             },
           },
         }
-      },
+      },      
       {
         label: 'Webpush data message',
         req: {
@@ -2070,6 +2106,27 @@ describe('Messaging', () => {
         },
       },
       {
+        label: 'APNS string alert',
+        req: {
+          apns: {
+            payload: {
+              aps: {                
+                alert: 'test.alert',                
+              },
+            },
+          },
+        },
+        want: {
+          apns: {
+            payload: {
+              aps: {
+                alert: 'test.alert',                
+              },
+            },
+          },   
+        },
+      },
+      {
         label: 'All APNS properties',
         req: {
           apns: {
@@ -2078,16 +2135,71 @@ describe('Messaging', () => {
               h2: 'v2',
             },
             payload: {
-              k1: 'v2',
-              k2: 1.23,
-              k3: true,
-              k4: {
-                foo: 'bar',
+              aps: {
+                alert: {                  
+                  titleLocKey: 'title.loc.key',
+                  titleLocArgs: ['arg1', 'arg2'],
+                  locKey: 'body.loc.key',
+                  locArgs: ['arg1', 'arg2'],
+                  actionLocKey: 'action.loc.key',
+                },
+                badge: 42,
+                sound: 'test.sound',
+                category: 'test.category',
+                contentAvailable: true,                
+                threadId: 'thread.id',
+              },
+              customKey1: 'custom.value',
+              customKey2: {nested: 'value'}
+            },
+          },
+        },
+        want: {
+          apns: {
+            headers: {
+              h1: 'v1',
+              h2: 'v2',
+            },
+            payload: {
+              aps: {
+                alert: {
+                  'title-loc-key': 'title.loc.key',
+                  'title-loc-args': ['arg1', 'arg2'],
+                  'loc-key': 'body.loc.key',
+                  'loc-args': ['arg1', 'arg2'],
+                  'action-loc-key': 'action.loc.key',
+                },
+                badge: 42,
+                sound: 'test.sound',
+                category: 'test.category',
+                'content-available': 1,
+                'thread-id': 'thread.id',
+              },
+              customKey1: 'custom.value',
+              customKey2: {nested: 'value'}
+            },
+          },   
+        },
+      },
+      {
+        label: 'APNS contentAvailable explicitly false',
+        req: {
+          apns: {
+            payload: {
+              aps: {                
+                contentAvailable: false,
               },
             },
           },
         },
-      },
+        want: {
+          apns: {
+            payload: {
+              aps: {},
+            },
+          },   
+        },
+      },      
     ];
 
     validMessages.forEach((config) => {
