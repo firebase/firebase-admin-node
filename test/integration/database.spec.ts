@@ -1,5 +1,5 @@
 /*!
- * Copyright 2017 Google Inc.
+ * Copyright 2018 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -161,9 +161,10 @@ describe('admin.database', () => {
 });
 
 function addValueEventListener(
-    // Check for type compilation
-    db: admin.database.Database,
-    callback: (s: admin.database.DataSnapshot) => any) {
-    let eventType: admin.database.EventType = 'value';
-    db.ref().on(eventType, callback);
+  // Check for type compilation. This method is not invoked by any tests. But it will
+  // trigger a TS compilation failure if the RTDB typings were not loaded correctly.
+  db: admin.database.Database,
+  callback: (s: admin.database.DataSnapshot) => any) {
+  let eventType: admin.database.EventType = 'value';
+  db.ref().on(eventType, callback);
 }

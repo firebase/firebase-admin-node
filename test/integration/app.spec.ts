@@ -1,5 +1,5 @@
 /*!
- * Copyright 2017 Google Inc.
+ * Copyright 2018 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ describe('admin', () => {
     expect(gcloud).to.be.undefined;
   });
 
-  it('calling admin.firestore loads Firestore', () => {
+  it('Loads Firestore when calling admin.firestore', () => {
     const firestoreNamespace = admin.firestore;
     expect(firestoreNamespace).to.not.be.null;
     let gcloud = require.cache[require.resolve('@google-cloud/firestore')];

@@ -1,5 +1,5 @@
 /*!
- * Copyright 2017 Google Inc.
+ * Copyright 2018 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -98,18 +98,18 @@ describe('admin.firestore', () => {
     const target = admin.firestore().collection('cities').doc();
     return source.set(mountainView)
       .then(result => {
-          return target.set({name: 'Palo Alto', sisterCity: source});
+        return target.set({name: 'Palo Alto', sisterCity: source});
       })
       .then(result => {
-          return target.get();
+        return target.get();
       })
       .then(snapshot => {
-          let data = snapshot.data();
-          expect(data.sisterCity.path).to.deep.equal(source.path);
-          let promises = [];
-          promises.push(source.delete());
-          promises.push(target.delete());
-          return Promise.all(promises);
+        let data = snapshot.data();
+        expect(data.sisterCity.path).to.deep.equal(source.path);
+        let promises = [];
+        promises.push(source.delete());
+        promises.push(target.delete());
+        return Promise.all(promises);
       })
       .should.eventually.be.fulfilled;
   });
