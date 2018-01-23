@@ -93,13 +93,13 @@ echo
 #########################
 echo "[INFO] Updating version number in CHANGELOG.md to ${VERSION_WITHOUT_RC}..."
 sed -i '' -e s/"# Unreleased"/"# v${VERSION_WITHOUT_RC}"/ CHANGELOG.md
-touch CHANGELOG.tmp
+touch TEMP_CHANGELOG.tmp
 echo "# Unreleased
 
 -
-" >> CHANGELOG.tmp
-cat CHANGELOG.md >> CHANGELOG.tmp
-mv CHANGELOG.tmp CHANGELOG.md
+" >> TEMP_CHANGELOG.tmp
+cat CHANGELOG.md >> TEMP_CHANGELOG.tmp
+mv TEMP_CHANGELOG.tmp CHANGELOG.md
 
 ############################
 #  REINSTALL DEPENDENCIES  #
