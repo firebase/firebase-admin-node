@@ -32,7 +32,7 @@ describe('admin', () => {
     expect(gcloud).to.be.undefined;
   });
 
-  it('Loads Firestore when calling admin.firestore', () => {
+  it('loads Firestore when calling admin.firestore', () => {
     const firestoreNamespace = admin.firestore;
     expect(firestoreNamespace).to.not.be.null;
     let gcloud = require.cache[require.resolve('@google-cloud/firestore')];

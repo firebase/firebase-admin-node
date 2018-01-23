@@ -161,10 +161,10 @@ describe('admin.database', () => {
 });
 
 function addValueEventListener(
+    db: admin.database.Database,
+    callback: (s: admin.database.DataSnapshot) => any) {
   // Check for type compilation. This method is not invoked by any tests. But it will
   // trigger a TS compilation failure if the RTDB typings were not loaded correctly.
-  db: admin.database.Database,
-  callback: (s: admin.database.DataSnapshot) => any) {
   let eventType: admin.database.EventType = 'value';
   db.ref().on(eventType, callback);
 }
