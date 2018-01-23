@@ -92,8 +92,8 @@ echo
 #  UPDATE CHANGELOG.md  #
 #########################
 echo "[INFO] Updating version number in CHANGELOG.md to ${VERSION_WITHOUT_RC}..."
-sed -i '' -e "1 s/# Unreleased/# v${VERSION_WITHOUT_RC}/" CHANGELOG.md
-echo -e "# Unrelased\n\n-\n" | cat - CHANGELOG.md > TEMP_CHANGELOG.md
+sed -i '' -e "1 s/# Unreleased//" CHANGELOG.md
+echo -e "# Unrelased\n\n-\n\n# v${VERSION_WITHOUT_RC}" | cat - CHANGELOG.md > TEMP_CHANGELOG.md
 mv TEMP_CHANGELOG.md CHANGELOG.md
 
 ############################
