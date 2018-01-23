@@ -88,6 +88,18 @@ echo "[INFO] Updating version number in package.json to ${VERSION_WITHOUT_RC}...
 sed -i '' -e s/"\"version\": \".*\""/"\"version\": \"${VERSION_WITHOUT_RC}\""/ package.json
 echo
 
+#########################
+#  UPDATE CHANGELOG.md  #
+#########################
+echo "[INFO] Updating version number in CHANGELOG.md to ${VERSION_WITHOUT_RC}..."
+sed -i '' -e s/"# Unreleased"/"# v${VERSION_WITHOUT_RC}"/ CHANGELOG.md
+touch CHANGELOG.tmp
+echo "# Unreleased
+
+-
+" >> CHANGELOG.tmp
+cat CHANGELOG.md >> CHANGELOG.tmp
+mv CHANGELOG.tmp CHANGELOG.md
 
 ############################
 #  REINSTALL DEPENDENCIES  #
