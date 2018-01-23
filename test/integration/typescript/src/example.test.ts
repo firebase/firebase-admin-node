@@ -64,4 +64,9 @@ describe('Init App', () => {
         const fieldValue = admin.firestore.FieldValue;
         expect(fieldValue).to.not.be.null;
     });
+
+    it('Should return a DocumentReference', () => {
+        const ref: admin.firestore.DocumentReference = admin.firestore(app).collection('test').doc();
+        expect(ref).to.not.be.null;
+    });
 });

@@ -413,6 +413,8 @@ declare namespace admin.storage {
 }
 
 declare namespace admin.firestore {
+  export import DocumentReference = _firestore.DocumentReference;
+  export import DocumentSnapshot = _firestore.DocumentSnapshot;
   export import FieldPath = _firestore.FieldPath;
   export import FieldValue = _firestore.FieldValue;
   export import Firestore = _firestore.Firestore;
