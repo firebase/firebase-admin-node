@@ -63,7 +63,7 @@ describe('admin.firestore', () => {
       .then(snapshot => {
         expect(snapshot.exists).to.be.false;
       });
-  });
+  }).timeout(5000);
 
   it('admin.firestore.FieldValue.serverTimestamp() provides a server-side timestamp', () => {
     let expected: any = clone(mountainView);
@@ -79,7 +79,7 @@ describe('admin.firestore', () => {
         return reference.delete();
       })
       .should.eventually.be.fulfilled;
-  });
+  }).timeout(5000);
 
   it('admin.firestore.FieldPath type is defined', () => {
     expect(typeof admin.firestore.FieldPath).to.be.not.undefined;
@@ -112,7 +112,7 @@ describe('admin.firestore', () => {
         return Promise.all(promises);
       })
       .should.eventually.be.fulfilled;
-  });
+  }).timeout(5000);
 
   it('admin.firestore.setLogFunction() enables logging for the Firestore module', () => {
     const logs = [];
@@ -127,5 +127,5 @@ describe('admin.firestore', () => {
       .then(result => {
         expect(logs.length).greaterThan(0);
       });
-  });
+  }).timeout(5000);
 });
