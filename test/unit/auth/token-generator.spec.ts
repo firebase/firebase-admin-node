@@ -563,7 +563,7 @@ describe('FirebaseTokenGenerator', () => {
 
         // Token should now be invalid
         return tokenGenerator.verifyIdToken(mockIdToken)
-          .should.eventually.be.rejectedWith('Firebase ID token has expired');
+          .should.eventually.be.rejectedWith('Firebase ID token has expired. Get a fresh token from your client app and try again (auth/id-token-expired)');
       });
     });
 
