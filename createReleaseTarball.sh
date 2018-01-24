@@ -152,7 +152,7 @@ fi
 echo
 
 echo "[INFO] Running integration tests..."
-npm run test:integration -- --overwrite yes
+npm run test:integration -- --updateRules
 if [[ $? -ne 0 ]]; then
   echo "Error: Integration tests failed."
   exit 1

@@ -10,8 +10,8 @@
     "lint": "tslint --project tsconfig-lint.json --format stylish",
     "test": "run-s lint test:unit",
     "integration": "run-s build test:integration",
-    "test:unit": "mocha test/**/*.spec.ts --compilers ts:ts-node/register",
-    "test:integration": "node test/integration",
+    "test:unit": "mocha test/unit/*.spec.ts --compilers ts:ts-node/register",
+    "test:integration": "mocha test/integration/*.ts --slow 5000 --compilers ts:ts-node/register",
     "test:coverage": "nyc npm run test:unit"
   },
   "nyc": {
@@ -22,8 +22,7 @@
       "src"
     ],
     "exclude": [
-      "**/*.d.ts",
-      "**/database.js"
+      "**/*.d.ts"
     ],
     "all": true
   },
@@ -84,6 +83,7 @@
     "gulp-typescript": "^3.1.2",
     "lodash": "^4.6.1",
     "merge2": "^1.0.2",
+    "minimist": "^1.2.0",
     "mocha": "^3.5.0",
     "nock": "^9.1.0",
     "npm-run-all": "^4.1.2",
