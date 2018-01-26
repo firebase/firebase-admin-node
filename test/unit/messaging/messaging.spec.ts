@@ -1740,6 +1740,39 @@ describe('Messaging', () => {
       }).to.throw('locKey is required when specifying locArgs');
     });
 
+    const invalidObjects: any[] = [null, NaN, 0, 1, true, false, '', 'string'];
+    invalidObjects.forEach((arg) => {
+      it(`should throw given invalid android config: ${JSON.stringify(arg)}`, () => {
+        expect(() => {
+          messaging.send({android: arg, topic: 'test'});
+        }).to.throw('android must be a non-null object');
+      });
+
+      it(`should throw given invalid android notification: ${JSON.stringify(arg)}`, () => {
+        expect(() => {
+          messaging.send({android: {notification: arg}, topic: 'test'});
+        }).to.throw('android.notification must be a non-null object');
+      });
+
+      it(`should throw given invalid apns config: ${JSON.stringify(arg)}`, () => {
+        expect(() => {
+          messaging.send({apns: arg, topic: 'test'});
+        }).to.throw('apns must be a non-null object');
+      });
+
+      it(`should throw given invalid webpush config: ${JSON.stringify(arg)}`, () => {
+        expect(() => {
+          messaging.send({webpush: arg, topic: 'test'});
+        }).to.throw('webpush must be a non-null object');
+      });
+
+      it(`should throw given invalid data: ${JSON.stringify(arg)}`, () => {
+        expect(() => {
+          messaging.send({data: arg, topic: 'test'});
+        }).to.throw('data must be a non-null object');
+      });
+    });
+
     const invalidDataMessages: any = [
       {label: 'data', message: {data: {k1: true}}},
       {label: 'android.data', message: {android: {data: {k1: true}}}},
@@ -2154,6 +2187,17 @@ describe('Messaging', () => {
         },
       },
       {
+        label: 'APNS headers only',
+        req: {
+          apns: {
+            headers: {
+              k1: 'v1',
+              k2: 'v2',
+            },            
+          },
+        },
+      },
+      {
         label: 'APNS string alert',
         req: {
           apns: {
@@ -2163,16 +2207,7 @@ describe('Messaging', () => {
               },
             },
           },
-        },
-        want: {
-          apns: {
-            payload: {
-              aps: {
-                alert: 'test.alert',                
-              },
-            },
-          },   
-        },
+        },        
       },
       {
         label: 'All APNS properties',
