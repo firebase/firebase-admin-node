@@ -1,6 +1,6 @@
 {
   "name": "firebase-admin",
-  "version": "5.8.0",
+  "version": "5.8.1",
   "description": "Firebase admin SDK for Node.js",
   "author": "Firebase <firebase-support@google.com> (https://firebase.google.com/)",
   "license": "Apache-2.0",
@@ -10,8 +10,8 @@
     "lint": "tslint --project tsconfig-lint.json --format stylish",
     "test": "run-s lint test:unit",
     "integration": "run-s build test:integration",
-    "test:unit": "mocha test/**/*.spec.ts --compilers ts:ts-node/register",
-    "test:integration": "node test/integration",
+    "test:unit": "mocha test/unit/*.spec.ts --compilers ts:ts-node/register",
+    "test:integration": "mocha test/integration/*.ts --slow 5000 --compilers ts:ts-node/register",
     "test:coverage": "nyc npm run test:unit"
   },
   "nyc": {
@@ -22,8 +22,7 @@
       "src"
     ],
     "exclude": [
-      "**/*.d.ts",
-      "**/database.js"
+      "**/*.d.ts"
     ],
     "all": true
   },
@@ -63,7 +62,7 @@
     "@types/firebase-token-generator": "^2.0.28",
     "@types/lodash": "^4.14.85",
     "@types/mocha": "^2.2.32",
-    "@types/nock": "^8.0.33",
+    "@types/nock": "^9.1.0",
     "@types/request": "2.0.6",
     "@types/request-promise": "^4.1.33",
     "@types/sinon": "^4.1.2",
@@ -84,8 +83,9 @@
     "gulp-typescript": "^3.1.2",
     "lodash": "^4.6.1",
     "merge2": "^1.0.2",
+    "minimist": "^1.2.0",
     "mocha": "^3.5.0",
-    "nock": "^8.0.0",
+    "nock": "^9.1.0",
     "npm-run-all": "^4.1.2",
     "nyc": "^11.3.0",
     "request": "^2.75.0",
