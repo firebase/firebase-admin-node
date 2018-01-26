@@ -15,12 +15,13 @@
  */
 
 import * as admin from '../../lib/index';
-import {expect} from 'chai';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 chai.should();
 chai.use(chaiAsPromised);
+
+const expect = chai.expect;
 
 // The registration token and notification key have the proper format, but are not guaranteed to
 // work. The intention of these integration tests is that the endpoints returns the proper payload,

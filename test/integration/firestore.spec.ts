@@ -15,7 +15,6 @@
  */
 
 import * as admin from '../../lib/index';
-import {expect} from 'chai';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import {clone} from 'lodash';
@@ -23,6 +22,8 @@ import {DocumentReference} from '@google-cloud/firestore';
 
 chai.should();
 chai.use(chaiAsPromised);
+
+const expect = chai.expect;
 
 const mountainView = {
   name: 'Mountain View',
@@ -49,31 +50,31 @@ describe('admin.firestore', () => {
 
   it('supports basic data access', () => {
     return reference.set(mountainView)
-      .then(result => {
+      .then((result) => {
         return reference.get();
       })
-      .then(snapshot => {
-        let data = snapshot.data();
+      .then((snapshot) => {
+        const data = snapshot.data();
         expect(data).to.deep.equal(mountainView);
         return reference.delete();
       })
-      .then(result => {
+      .then((result) => {
         return reference.get();
       })
-      .then(snapshot => {
+      .then((snapshot) => {
         expect(snapshot.exists).to.be.false;
       });
   }).timeout(5000);
 
   it('admin.firestore.FieldValue.serverTimestamp() provides a server-side timestamp', () => {
-    let expected: any = clone(mountainView);
+    const expected: any = clone(mountainView);
     expected.timestamp = admin.firestore.FieldValue.serverTimestamp();
     return reference.set(expected)
-      .then(result => {
+      .then((result) => {
         return reference.get();
       })
-      .then(snapshot => {
-        let data = snapshot.data();
+      .then((snapshot) => {
+        const data = snapshot.data();
         expect(data.timestamp).is.not.null;
         expect(data.timestamp instanceof Date).is.true;
         return reference.delete();
@@ -97,16 +98,16 @@ describe('admin.firestore', () => {
     const source = admin.firestore().collection('cities').doc();
     const target = admin.firestore().collection('cities').doc();
     return source.set(mountainView)
-      .then(result => {
+      .then((result) => {
         return target.set({name: 'Palo Alto', sisterCity: source});
       })
-      .then(result => {
+      .then((result) => {
         return target.get();
       })
-      .then(snapshot => {
-        let data = snapshot.data();
+      .then((snapshot) => {
+        const data = snapshot.data();
         expect(data.sisterCity.path).to.deep.equal(source.path);
-        let promises = [];
+        const promises = [];
         promises.push(source.delete());
         promises.push(target.delete());
         return Promise.all(promises);
@@ -121,10 +122,10 @@ describe('admin.firestore', () => {
       logs.push(log);
     });
     return source.set({name: 'San Francisco'})
-      .then(result => {
+      .then((result) => {
         return source.delete();
       })
-      .then(result => {
+      .then((result) => {
         expect(logs.length).greaterThan(0);
       });
   }).timeout(5000);
