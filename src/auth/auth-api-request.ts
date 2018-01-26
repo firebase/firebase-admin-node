@@ -624,8 +624,8 @@ export class FirebaseAuthRequestHandler {
         return response;
       })
       .catch((response) => {
-        const error = (typeof response === 'object' && 'statusCode' in response)
-          ? response.error : response;
+        const error = (typeof response === 'object' && 'statusCode' in response) ?
+          response.error : response;
         if (error instanceof FirebaseError) {
           throw error;
         }

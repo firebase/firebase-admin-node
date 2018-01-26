@@ -238,8 +238,8 @@ export class CertCredential implements Credential {
   private certificate_: Certificate;
 
   constructor(serviceAccountPathOrObject: string | object) {
-    this.certificate_ = (typeof serviceAccountPathOrObject === 'string')
-      ? Certificate.fromPath(serviceAccountPathOrObject) : new Certificate(serviceAccountPathOrObject);
+    this.certificate_ = (typeof serviceAccountPathOrObject === 'string') ?
+      Certificate.fromPath(serviceAccountPathOrObject) : new Certificate(serviceAccountPathOrObject);
   }
 
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
@@ -300,8 +300,8 @@ export class RefreshTokenCredential implements Credential {
   private refreshToken_: RefreshToken;
 
   constructor(refreshTokenPathOrObject: string | object) {
-    this.refreshToken_ = (typeof refreshTokenPathOrObject === 'string')
-      ? RefreshToken.fromPath(refreshTokenPathOrObject) : new RefreshToken(refreshTokenPathOrObject);
+    this.refreshToken_ = (typeof refreshTokenPathOrObject === 'string') ?
+      RefreshToken.fromPath(refreshTokenPathOrObject) : new RefreshToken(refreshTokenPathOrObject);
   }
 
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {

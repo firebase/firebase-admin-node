@@ -93,8 +93,8 @@ export class FirebaseInstanceIdRequestHandler {
         return response;
       })
       .catch((response) => {
-        const error = (typeof response === 'object' && 'error' in response)
-          ? response.error : response;
+        const error = (typeof response === 'object' && 'error' in response) ?
+          response.error : response;
         if (error instanceof FirebaseError) {
           // In case of timeouts and other network errors, the API request handler returns a
           // FirebaseError wrapped in the response. Simply throw it here.
@@ -102,8 +102,8 @@ export class FirebaseInstanceIdRequestHandler {
         }
 
         const template: string = ERROR_CODES[response.statusCode];
-        const message: string = template
-          ? `Instance ID "${apiSettings.getEndpoint()}": ${template}` : JSON.stringify(error);
+        const message: string = template ?
+          `Instance ID "${apiSettings.getEndpoint()}": ${template}` : JSON.stringify(error);
         throw new FirebaseInstanceIdError(InstanceIdClientErrorCode.API_ERROR, message);
       });
   }
