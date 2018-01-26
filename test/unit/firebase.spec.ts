@@ -19,7 +19,6 @@
 // Use untyped import syntax for Node built-ins
 import path = require('path');
 
-import {expect} from 'chai';
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as nock from 'nock';
@@ -32,6 +31,8 @@ import * as firebaseAdmin from '../../src/index';
 
 chai.should();
 chai.use(chaiAsPromised);
+
+const expect = chai.expect;
 
 
 describe('Firebase', () => {
@@ -76,7 +77,7 @@ describe('Firebase', () => {
     });
 
     it('should not modify the provided options object', () => {
-      let optionsClone = _.clone(mocks.appOptions);
+      const optionsClone = _.clone(mocks.appOptions);
       firebaseAdmin.initializeApp(mocks.appOptions);
       expect(optionsClone).to.deep.equal(mocks.appOptions);
     });
@@ -137,7 +138,7 @@ describe('Firebase', () => {
         credential: firebaseAdmin.credential.applicationDefault(),
       });
 
-      return firebaseAdmin.app().INTERNAL.getToken().then(token => {
+      return firebaseAdmin.app().INTERNAL.getToken().then((token) => {
         if (typeof credPath === 'undefined') {
           delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
         } else {

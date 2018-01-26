@@ -16,7 +16,6 @@
 
 'use strict';
 
-import {expect} from 'chai';
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as nock from 'nock';
@@ -54,6 +53,8 @@ chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
+const expect = chai.expect;
+
 
 const DEFAULT_APP_NAME = '[DEFAULT]';
 const DEFAULT_APP_NOT_FOUND = 'The default Firebase app does not exist. Make sure you call initializeApp() '
@@ -83,7 +84,7 @@ describe('FirebaseNamespace', () => {
 
     it('should return an array of apps within this namespace', () => {
       const appNames = ['one', 'two', 'three'];
-      const apps = appNames.map(appName => {
+      const apps = appNames.map((appName) => {
         return firebaseNamespace.initializeApp(mocks.appOptions, appName);
       });
 
@@ -93,7 +94,7 @@ describe('FirebaseNamespace', () => {
 
     it('should not include apps which have been deleted', () => {
       const appNames = ['one', 'two', 'three'];
-      const apps = appNames.map(appName => {
+      const apps = appNames.map((appName) => {
         return firebaseNamespace.initializeApp(mocks.appOptions, appName);
       });
 
@@ -370,14 +371,14 @@ describe('FirebaseNamespace', () => {
     });
 
     it('should return a valid namespace when the default app is initialized', () => {
-      let app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions);
-      let auth: Auth = firebaseNamespace.auth();
+      const app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions);
+      const auth: Auth = firebaseNamespace.auth();
       expect(auth.app).to.be.deep.equal(app);
     });
 
     it('should return a valid namespace when the named app is initialized', () => {
-      let app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
-      let auth: Auth = firebaseNamespace.auth(app);
+      const app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
+      const auth: Auth = firebaseNamespace.auth(app);
       expect(auth.app).to.be.deep.equal(app);
     });
 
@@ -401,15 +402,15 @@ describe('FirebaseNamespace', () => {
     });
 
     it('should return a valid namespace when the default app is initialized', () => {
-      let app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions);
-      let db: Database = firebaseNamespace.database();
+      const app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions);
+      const db: Database = firebaseNamespace.database();
       expect(db.app).to.be.deep.equal(app);
       return app.delete();
     });
 
     it('should return a valid namespace when the named app is initialized', () => {
-      let app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
-      let db: Database = firebaseNamespace.database(app);
+      const app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
+      const db: Database = firebaseNamespace.database(app);
       expect(db.app).to.be.deep.equal(app);
       return app.delete();
     });
@@ -458,14 +459,14 @@ describe('FirebaseNamespace', () => {
     });
 
     it('should return a valid namespace when the default app is initialized', () => {
-      let app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions);
-      let fcm: Messaging = firebaseNamespace.messaging();
+      const app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions);
+      const fcm: Messaging = firebaseNamespace.messaging();
       expect(fcm.app).to.be.deep.equal(app);
     });
 
     it('should return a valid namespace when the named app is initialized', () => {
-      let app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
-      let fcm: Messaging = firebaseNamespace.messaging(app);
+      const app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
+      const fcm: Messaging = firebaseNamespace.messaging(app);
       expect(fcm.app).to.be.deep.equal(app);
     });
 
@@ -489,14 +490,14 @@ describe('FirebaseNamespace', () => {
     });
 
     it('should return a valid namespace when the default app is initialized', () => {
-      let app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions);
-      let gcs: Storage = firebaseNamespace.storage();
+      const app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions);
+      const gcs: Storage = firebaseNamespace.storage();
       expect(gcs.app).to.be.deep.equal(app);
     });
 
     it('should return a valid namespace when the named app is initialized', () => {
-      let app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
-      let gcs: Storage = firebaseNamespace.storage(app);
+      const app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
+      const gcs: Storage = firebaseNamespace.storage(app);
       expect(gcs.app).to.be.deep.equal(app);
     });
 
@@ -520,14 +521,14 @@ describe('FirebaseNamespace', () => {
     });
 
     it('should return a valid namespace when the default app is initialized', () => {
-      let app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions);
-      let fs: Firestore = firebaseNamespace.firestore();
+      const app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions);
+      const fs: Firestore = firebaseNamespace.firestore();
       expect(fs).to.not.be.null;
     });
 
     it('should return a valid namespace when the named app is initialized', () => {
-      let app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
-      let fs: Firestore = firebaseNamespace.firestore(app);
+      const app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
+      const fs: Firestore = firebaseNamespace.firestore(app);
       expect(fs).to.not.be.null;
     });
 
@@ -567,15 +568,15 @@ describe('FirebaseNamespace', () => {
     });
 
     it('should return a valid namespace when the default app is initialized', () => {
-      let app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions);
-      let iid: InstanceId = firebaseNamespace.instanceId();
+      const app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions);
+      const iid: InstanceId = firebaseNamespace.instanceId();
       expect(iid).to.not.be.null;
       expect(iid.app).to.be.deep.equal(app);
     });
 
     it('should return a valid namespace when the named app is initialized', () => {
-      let app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
-      let iid: InstanceId = firebaseNamespace.instanceId(app);
+      const app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
+      const iid: InstanceId = firebaseNamespace.instanceId(app);
       expect(iid).to.not.be.null;
       expect(iid.app).to.be.deep.equal(app);
     });
