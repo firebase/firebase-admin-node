@@ -318,7 +318,7 @@ declare namespace admin.messaging {
   type AndroidConfig = {
     collapseKey?: string;
     priority?: ('high'|'normal');
-    ttl?: string;
+    ttl?: number;
     restrictedPackageName?: string;
     data?: {[key: string]: string};
     notification?: AndroidNotification;
@@ -340,7 +340,32 @@ declare namespace admin.messaging {
 
   type ApnsConfig = {
     headers?: {[key: string]: string};
-    payload: Object;
+    payload?: ApnsPayload;
+  };
+
+  type ApnsPayload = {
+    aps: Aps;
+    [customData: string]: object;
+  };
+
+  type Aps = {
+    alert?: string | ApsAlert;
+    badge?: number;
+    sound?: string;
+    contentAvailable?: boolean;
+    category?: string;
+    threadId?: string;
+  };
+
+  type ApsAlert = {
+    title?: string;
+    body?: string;
+    locKey?: string;
+    locArgs?: string[];
+    titleLocKey?: string;
+    titleLocArgs?: string[];
+    actionLocKey?: string;
+    launchImage?: string;
   };
 
   type Notification = {

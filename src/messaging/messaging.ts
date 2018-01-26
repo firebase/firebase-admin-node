@@ -112,6 +112,10 @@ interface ConditionMessage extends BaseMessage {
   condition: string;
 }
 
+/**
+ * Payload for the admin.messaging.send() operation. The payload contains all the fields
+ * in the BaseMessage type, and exactly one of token, topic or condition.
+ */
 export type Message = TokenMessage | TopicMessage | ConditionMessage;
 
 export interface Notification {
@@ -164,7 +168,7 @@ export interface ApsAlert {
 export interface AndroidConfig {
   collapseKey?: string;
   priority?: ('high'|'normal');
-  ttl?: string;
+  ttl?: number;
   restrictedPackageName?: string;
   data?: {[key: string]: string};
   notification?: AndroidNotification;
@@ -300,10 +304,25 @@ function validateAndroidConfig(config: AndroidConfig) {
       MessagingClientErrorCode.INVALID_PAYLOAD, 'android must be a non-null object');
   }
 
-  if (typeof config.ttl !== 'undefined' && !/^\d+(\.\d*)?s$/.test(config.ttl)) {
-    throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD,
-      'TTL must be a non-negative decimal value with "s" suffix');
+  if (typeof config.ttl !== 'undefined') {
+    if (!validator.isNumber(config.ttl) || config.ttl < 0) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_PAYLOAD,
+        'TTL must be a non-negative duration in milliseconds');
+    }
+    const seconds = Math.floor(config.ttl / 1000);
+    const nanos = (config.ttl - seconds * 1000) * 1000000;
+    let duration: string;
+    if (nanos > 0) {
+      let nanoString = nanos.toString();
+      while (nanoString.length < 9) {
+        nanoString = '0' + nanoString;
+      }
+      duration = `${seconds}.${nanoString}s`;
+    } else {
+      duration = `${seconds}s`;
+    }
+    (config as any).ttl = duration;
   }
   validateStringMap(config.data, 'android.data');
   validateAndroidNotification(config.notification);

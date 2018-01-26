@@ -365,27 +365,40 @@ describe('Messaging', () => {
       });
     });
 
-    it('should be fulfilled with the message ID given a registration token', () => {
-      mockedRequests.push(mockSendRequest());
-      return messaging.send(
-        {token: 'mock-token'},
-      ).should.eventually.equal('projects/projec_id/messages/message_id');
+    it('should throw given message with invalid topic name', () => {
+      expect(() => {
+        messaging.send({topic: '/topics/foo'});
+      }).to.throw('Topic name must be specified without the "/topics/" prefix');
     });
 
-    it('should be fulfilled with the message ID given a topic', () => {
-      mockedRequests.push(mockSendRequest());
-      return messaging.send(
-        {topic: 'mock-topic'},
-      ).should.eventually.equal('projects/projec_id/messages/message_id');
+    const invalidDryRun = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
+    invalidDryRun.forEach((dryRun) => {
+      it(`should throw given invalid dryRun parameter: ${JSON.stringify(dryRun)}`, () => {
+        expect(() => {
+          messaging.send({token: 'a'}, dryRun as any);
+        }).to.throw('dryRun must be a boolean');        
+      });
     });
 
-    it('should be fulfilled with the message ID given a condition', () => {
-      mockedRequests.push(mockSendRequest());
-      return messaging.send(
-        {condition: '"foo" in topics'},
-      ).should.eventually.equal('projects/projec_id/messages/message_id');
+    const targetMessages = [{token: 'mock-token'}, {topic: 'mock-topic'}, {condition: '"foo" in topics'}];
+    targetMessages.forEach((message) => {
+      it(`should be fulfilled with a message ID given a valid message: ${JSON.stringify(message)}`, () => {
+        mockedRequests.push(mockSendRequest());
+        return messaging.send(
+          message,
+        ).should.eventually.equal('projects/projec_id/messages/message_id');
+      });
     });
-
+    targetMessages.forEach((message) => {
+      it(`should be fulfilled with a message ID in dryRun mode: ${JSON.stringify(message)}`, () => {
+        mockedRequests.push(mockSendRequest());
+        return messaging.send(
+          message,
+          true,
+        ).should.eventually.equal('projects/projec_id/messages/message_id');
+      });
+    });
+    
     it('should fail when the backend server returns a detailed error', () => {
       const resp = {
         error: {
@@ -1631,18 +1644,18 @@ describe('Messaging', () => {
       });
     });
 
-    const invalidTtls = ['', 'abc', '123', '-123s', '1.2.3s', 'As', 's'];
+    const invalidTtls = ['', 'abc', '123', '-123s', '1.2.3s', 'As', 's', '1s', -1];
     invalidTtls.forEach((ttl) => {
       it(`should throw given an invalid ttl: ${ ttl }`, () => {
         let message: Message = {
           condition: 'topic-name',
           android: {
-            ttl
+            ttl: (ttl as any)
           },
         };
         expect(() => {
           messaging.send(message);
-        }).to.throw('TTL must be a non-negative decimal value with "s" suffix');
+        }).to.throw('TTL must be a non-negative duration in milliseconds');
       });
     })
 
@@ -2026,13 +2039,32 @@ describe('Messaging', () => {
         },
       },
       {
+        label: 'Android TTL',
+        req: {
+          android: {
+            priority: 'high',
+            collapseKey: 'test.key',
+            restrictedPackageName: 'test.package',
+            ttl: 5000,            
+          },
+        },
+        want: {
+          android: {
+            priority: 'high',
+            collapse_key: 'test.key',
+            restricted_package_name: 'test.package',
+            ttl: '5s',            
+          },
+        }
+      },
+      {
         label: 'All Android properties',
         req: {
           android: {
             priority: 'high',
             collapseKey: 'test.key',
             restrictedPackageName: 'test.package',
-            ttl: '5.0001s',
+            ttl: 5,
             data: {
               k1: 'v1',
               k2: 'v2',
@@ -2057,7 +2089,7 @@ describe('Messaging', () => {
             priority: 'high',
             collapse_key: 'test.key',
             restricted_package_name: 'test.package',
-            ttl: '5.0001s',
+            ttl: '0.005000000s', // 5 ms = 5,000,000 ns
             data: {
               k1: 'v1',
               k2: 'v2',
