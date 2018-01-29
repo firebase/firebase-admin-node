@@ -536,6 +536,9 @@ export class FirebaseAuthRequestHandler {
    * In addition to revoking all refresh tokens for a user, all ID tokens issued
    * before revocation will also be revoked on the Auth backend. Any request with an
    * ID token generated before revocation will be rejected with a token expired error.
+   * Note that due to the fact that the timestamp is stored in seconds, any tokens minted in
+   * the same second as the revocation will still be valid. If there is a chance that a token
+   * was minted in the last second, delay for 1 second before revoking.
    *
    * @param {string} uid The user whose tokens are to be revoked.
    * @return {Promise<string>} A promise that resolves when the operation completes
