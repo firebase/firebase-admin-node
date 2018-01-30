@@ -2,6 +2,9 @@
 
 - [changed] Exposed `admin.firestore.DocumentReference` and
   `admin.firestore.DocumentSnapshot` types from the Admin SDK typings.
+- [changed] Upgraded Firestore dependency version to 0.11.2. This includes
+  several bug fixes including a fix in the `DocumentReference.update()`
+  operation.
 
 # v5.8.1
 
