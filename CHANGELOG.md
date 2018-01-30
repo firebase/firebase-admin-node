@@ -1,4 +1,8 @@
-# Unreleased
+# Unrelased
+
+-
+
+# v5.8.2
 
 - [changed] Exposed `admin.firestore.DocumentReference` and
   `admin.firestore.DocumentSnapshot` types from the Admin SDK typings.
