@@ -17,8 +17,8 @@
 /**
  * Returns a deep copy of an object or array.
  *
- * @param {Object|array} value The object or array to deep copy.
- * @return {Object|array} A deep copy of the provided object or array.
+ * @param {object|array} value The object or array to deep copy.
+ * @return {object|array} A deep copy of the provided object or array.
  */
 export function deepCopy<T>(value: T): T {
   return deepExtend(undefined, value);
@@ -49,7 +49,7 @@ export function deepExtend(target: any, source: any): any {
   case Date:
     // Treat Dates like scalars; if the target date object had any child
     // properties - they will be lost!
-    let dateValue = (source as any) as Date;
+    const dateValue = (source as any) as Date;
     return new Date(dateValue.getTime());
 
   case Object:
@@ -68,7 +68,7 @@ export function deepExtend(target: any, source: any): any {
     return source;
   }
 
-  for (let prop in source) {
+  for (const prop in source) {
     if (!source.hasOwnProperty(prop)) {
       continue;
     }

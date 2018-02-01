@@ -58,7 +58,7 @@ const ONE_HOUR_IN_SECONDS = 60 * 60;
 const JWT_ALGORITHM = 'RS256';
 
 
-function copyAttr(to: Object, from: Object, key: string, alt: string) {
+function copyAttr(to: object, from: object, key: string, alt: string) {
   const tmp = from[key] || from[alt];
   if (typeof tmp !== 'undefined') {
     to[key] = tmp;
@@ -75,11 +75,11 @@ export class RefreshToken {
    * Tries to load a RefreshToken from a path. If the path is not present, returns null.
    * Throws if data at the path is invalid.
    */
-  public static fromPath(path: string): RefreshToken {
+  public static fromPath(filePath: string): RefreshToken {
     let jsonString: string;
 
     try {
-      jsonString = fs.readFileSync(path, 'utf8');
+      jsonString = fs.readFileSync(filePath, 'utf8');
     } catch (ignored) {
       // Ignore errors if the file is not present, as this is sometimes an expected condition
       return null;
@@ -96,7 +96,7 @@ export class RefreshToken {
     }
   }
 
-  constructor(json: Object) {
+  constructor(json: object) {
     copyAttr(this, json, 'clientId', 'client_id');
     copyAttr(this, json, 'clientSecret', 'client_secret');
     copyAttr(this, json, 'refreshToken', 'refresh_token');
@@ -127,16 +127,16 @@ export class Certificate {
   public privateKey: string;
   public clientEmail: string;
 
-  public static fromPath(path: string): Certificate {
+  public static fromPath(filePath: string): Certificate {
     // Node bug encountered in v6.x. fs.readFileSync hangs when path is a 0 or 1.
-    if (typeof path !== 'string') {
+    if (typeof filePath !== 'string') {
       throw new FirebaseAppError(
         AppErrorCodes.INVALID_CREDENTIAL,
         'Failed to parse certificate key file: TypeError: path must be a string',
       );
     }
     try {
-      return new Certificate(JSON.parse(fs.readFileSync(path, 'utf8')));
+      return new Certificate(JSON.parse(fs.readFileSync(filePath, 'utf8')));
     } catch (error) {
       // Throw a nicely formed error message if the file contents cannot be parsed
       throw new FirebaseAppError(
@@ -146,7 +146,7 @@ export class Certificate {
     }
   }
 
-  constructor(json: Object) {
+  constructor(json: object) {
     if (typeof json !== 'object' || json === null) {
       throw new FirebaseAppError(
         AppErrorCodes.INVALID_CREDENTIAL,
@@ -182,7 +182,7 @@ export class Certificate {
 /**
  * Interface for Google OAuth 2.0 access tokens.
  */
-export type GoogleOAuthAccessToken = {
+export interface GoogleOAuthAccessToken {
   /* tslint:disable:variable-name */
   access_token: string;
   expires_in: number;
@@ -193,10 +193,10 @@ export type GoogleOAuthAccessToken = {
  * A wrapper around the http and https request libraries to simplify & promisify JSON requests.
  * TODO(inlined): Create a type for "transit".
  */
-function requestAccessToken(transit, options: Object, data?: Object): Promise<GoogleOAuthAccessToken> {
+function requestAccessToken(transit, options: object, data?: any): Promise<GoogleOAuthAccessToken> {
   return new Promise((resolve, reject) => {
     const req = transit.request(options, (res) => {
-      let buffers: Buffer[] = [];
+      const buffers: Buffer[] = [];
       res.on('data', (buffer) => buffers.push(buffer));
       res.on('end', () => {
         try {
@@ -237,12 +237,9 @@ function requestAccessToken(transit, options: Object, data?: Object): Promise<Go
 export class CertCredential implements Credential {
   private certificate_: Certificate;
 
-  constructor(serviceAccountPathOrObject: string|Object) {
-    if (typeof serviceAccountPathOrObject === 'string') {
-      this.certificate_ = Certificate.fromPath(serviceAccountPathOrObject);
-    } else {
-      this.certificate_ = new Certificate(serviceAccountPathOrObject);
-    }
+  constructor(serviceAccountPathOrObject: string | object) {
+    this.certificate_ = (typeof serviceAccountPathOrObject === 'string') ?
+      Certificate.fromPath(serviceAccountPathOrObject) : new Certificate(serviceAccountPathOrObject);
   }
 
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
@@ -302,12 +299,9 @@ export interface Credential {
 export class RefreshTokenCredential implements Credential {
   private refreshToken_: RefreshToken;
 
-  constructor(refreshTokenPathOrObject: string|Object) {
-    if (typeof refreshTokenPathOrObject === 'string') {
-      this.refreshToken_ = RefreshToken.fromPath(refreshTokenPathOrObject);
-    } else {
-      this.refreshToken_ = new RefreshToken(refreshTokenPathOrObject);
-    }
+  constructor(refreshTokenPathOrObject: string | object) {
+    this.refreshToken_ = (typeof refreshTokenPathOrObject === 'string') ?
+      RefreshToken.fromPath(refreshTokenPathOrObject) : new RefreshToken(refreshTokenPathOrObject);
   }
 
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
@@ -328,7 +322,7 @@ export class RefreshTokenCredential implements Credential {
       },
     };
     return requestAccessToken(https, options, postData);
-  };
+  }
 
   public getCertificate(): Certificate {
     return null;

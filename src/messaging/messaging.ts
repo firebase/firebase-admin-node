@@ -167,7 +167,7 @@ export interface ApsAlert {
 
 export interface AndroidConfig {
   collapseKey?: string;
-  priority?: ('high'|'normal');
+  priority?: ('high' | 'normal');
   ttl?: number;
   restrictedPackageName?: string;
   data?: {[key: string]: string};
@@ -188,7 +188,7 @@ export interface AndroidNotification {
   titleLocArgs?: string[];
 }
 
-function validateStringMap(map: Object, label: string) {
+function validateStringMap(map: object, label: string) {
   if (typeof map === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(map)) {
@@ -292,8 +292,7 @@ function validateApsAlert(alert: string | ApsAlert) {
     actionLocKey: 'action-loc-key',
     launchImage: 'launch-image',
   };
-  renameProperties(alert, propertyMappings);
-
+  renameProperties(apsAlert, propertyMappings);
 }
 
 function validateAndroidConfig(config: AndroidConfig) {
@@ -377,9 +376,9 @@ function validateMessage(message: Message) {
       MessagingClientErrorCode.INVALID_PAYLOAD, 'Message must be a non-null object');
   }
 
-  let anyMessage = message as any;
-  let targets = [anyMessage.token, anyMessage.topic, anyMessage.condition];
-  if (targets.filter(v => validator.isNonEmptyString(v)).length !== 1) {
+  const anyMessage = message as any;
+  const targets = [anyMessage.token, anyMessage.topic, anyMessage.condition];
+  if (targets.filter((v) => validator.isNonEmptyString(v)).length !== 1) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD,
       'Exactly one of topic, token or condition is required');
@@ -397,12 +396,12 @@ function validateMessage(message: Message) {
 }
 
 /* Payload for data messages */
-export type DataMessagePayload = {
+export interface DataMessagePayload {
   [key: string]: string;
-};
+}
 
 /* Payload for notification messages */
-export type NotificationMessagePayload = {
+export interface NotificationMessagePayload {
   tag?: string;
   body?: string;
   icon?: string;
@@ -416,16 +415,16 @@ export type NotificationMessagePayload = {
   titleLocKey?: string;
   titleLocArgs?: string;
   [other: string]: string;
-};
+}
 
 /* Composite messaging payload (data and notification payloads are both optional) */
-export type MessagingPayload = {
+export interface MessagingPayload {
   data?: DataMessagePayload;
   notification?: NotificationMessagePayload;
-};
+}
 
 /* Options that can passed along with messages */
-export type MessagingOptions = {
+export interface MessagingOptions {
   dryRun?: boolean;
   priority?: string;
   timeToLive?: number;
@@ -434,58 +433,58 @@ export type MessagingOptions = {
   contentAvailable?: boolean;
   restrictedPackageName?: string;
   [other: string]: any;
-};
+}
 
 /* Individual status response payload from single devices */
-export type MessagingDeviceResult = {
+export interface MessagingDeviceResult {
   error?: FirebaseError;
   messageId?: string;
   canonicalRegistrationToken?: string;
-};
+}
 
 /* Response payload from sending to a single device ID or array of device IDs */
-export type MessagingDevicesResponse = {
+export interface MessagingDevicesResponse {
   canonicalRegistrationTokenCount: number;
   failureCount: number;
   multicastId: number;
   results: MessagingDeviceResult[];
   successCount: number;
-};
+}
 
 /* Response payload from sending to a device group */
-export type MessagingDeviceGroupResponse = {
+export interface MessagingDeviceGroupResponse {
   successCount: number;
   failureCount: number;
   failedRegistrationTokens: string[];
-};
+}
 
 /* Response payload from sending to a topic */
-export type MessagingTopicResponse = {
+export interface MessagingTopicResponse {
   messageId: number;
-};
+}
 
 /* Response payload from sending to a condition */
-export type MessagingConditionResponse = {
+export interface MessagingConditionResponse {
   messageId: number;
-};
+}
 
 
 /* Response payload from sending to a single registration token or array of registration tokens */
-export type MessagingTopicManagementResponse = {
+export interface MessagingTopicManagementResponse {
   failureCount: number;
   successCount: number;
   errors: FirebaseArrayIndexError[];
-};
+}
 
 
 /**
  * Maps a raw FCM server response to a MessagingDevicesResponse object.
  *
- * @param {Object} response The raw FCM server response to map.
+ * @param {object} response The raw FCM server response to map.
  *
  * @return {MessagingDeviceGroupResponse} The mapped MessagingDevicesResponse object.
  */
-function mapRawResponseToDevicesResponse(response): MessagingDevicesResponse {
+function mapRawResponseToDevicesResponse(response: object): MessagingDevicesResponse {
   // Rename properties on the server response
   utils.renameProperties(response, MESSAGING_DEVICES_RESPONSE_KEYS_MAP);
   if ('results' in response) {
@@ -495,24 +494,24 @@ function mapRawResponseToDevicesResponse(response): MessagingDevicesResponse {
       // Map the FCM server's error strings to actual error objects.
       if ('error' in messagingDeviceResult) {
         const newError = FirebaseMessagingError.fromServerError(
-          messagingDeviceResult.error, /* message */ undefined, messagingDeviceResult.error
+          messagingDeviceResult.error, /* message */ undefined, messagingDeviceResult.error,
         );
         messagingDeviceResult.error = newError;
       }
     });
   }
 
-  return response;
+  return response as MessagingDevicesResponse;
 }
 
 /**
  * Maps a raw FCM server response to a MessagingDeviceGroupResponse object.
  *
- * @param {Object} response The raw FCM server response to map.
+ * @param {object} response The raw FCM server response to map.
  *
  * @return {MessagingDeviceGroupResponse} The mapped MessagingDeviceGroupResponse object.
  */
-function mapRawResponseToDeviceGroupResponse(response): MessagingDeviceGroupResponse {
+function mapRawResponseToDeviceGroupResponse(response: object): MessagingDeviceGroupResponse {
   // Rename properties on the server response
   utils.renameProperties(response, MESSAGING_DEVICE_GROUP_RESPONSE_KEYS_MAP);
 
@@ -520,46 +519,44 @@ function mapRawResponseToDeviceGroupResponse(response): MessagingDeviceGroupResp
   // it won't when the 'failureCount' property has a value of 0)
   (response as any).failedRegistrationTokens = (response as any).failedRegistrationTokens || [];
 
-  return response;
+  return response as MessagingDeviceGroupResponse;
 }
 
 /**
  * Maps a raw FCM server response to a MessagingTopicManagementResponse object.
  *
- * @param {Object} response The raw FCM server response to map.
+ * @param {object} response The raw FCM server response to map.
  *
  * @return {MessagingTopicManagementResponse} The mapped MessagingTopicManagementResponse object.
  */
-function mapRawResponseToTopicManagementResponse(response): MessagingTopicManagementResponse {
+function mapRawResponseToTopicManagementResponse(response: object): MessagingTopicManagementResponse {
   // Add the success and failure counts.
-  response.successCount = 0;
-  response.failureCount = 0;
+  const result: MessagingTopicManagementResponse = {
+    successCount: 0,
+    failureCount: 0,
+    errors: [],
+  };
 
   const errors: FirebaseArrayIndexError[] = [];
   if ('results' in response) {
-    response.results.forEach((tokenManagementResult, index) => {
+    (response as any).results.forEach((tokenManagementResult, index) => {
       // Map the FCM server's error strings to actual error objects.
       if ('error' in tokenManagementResult) {
-        response.failureCount += 1;
-
+        result.failureCount += 1;
         const newError = FirebaseMessagingError.fromTopicManagementServerError(
-          tokenManagementResult.error, /* message */ undefined, tokenManagementResult.error
+          tokenManagementResult.error, /* message */ undefined, tokenManagementResult.error,
         );
 
-        errors.push({
+        result.errors.push({
           index,
           error: newError,
         });
       } else {
-        response.successCount += 1;
+        result.successCount += 1;
       }
     });
   }
-
-  delete response.results;
-  response.errors = errors;
-
-  return response;
+  return result;
 }
 
 
@@ -591,14 +588,14 @@ export class Messaging implements FirebaseServiceInterface {
   private messagingRequestHandler: FirebaseMessagingRequestHandler;
 
   /**
-   * @param {Object} app The app for this Messaging service.
+   * @param {FirebaseApp} app The app for this Messaging service.
    * @constructor
    */
   constructor(app: FirebaseApp) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT,
-        'First argument passed to admin.messaging() must be a valid Firebase app instance.'
+        'First argument passed to admin.messaging() must be a valid Firebase app instance.',
       );
     }
 
@@ -644,7 +641,7 @@ export class Messaging implements FirebaseServiceInterface {
     }
     return Promise.resolve()
       .then(() => {
-        let request: {message: Message, validate_only?: boolean} = {message: copy};
+        const request: {message: Message, validate_only?: boolean} = {message: copy};
         if (dryRun) {
           request.validate_only = true;
         }
@@ -667,14 +664,14 @@ export class Messaging implements FirebaseServiceInterface {
    *     with the server's response after the message has been sent.
    */
   public sendToDevice(
-    registrationTokenOrTokens: string|string[],
+    registrationTokenOrTokens: string | string[],
     payload: MessagingPayload,
     options: MessagingOptions = {},
-  ): Promise<MessagingDevicesResponse|MessagingDeviceGroupResponse> {
+  ): Promise<MessagingDevicesResponse | MessagingDeviceGroupResponse> {
     // Validate the input argument types. Since these are common developer errors when getting
     // started, throw an error instead of returning a rejected promise.
     this.validateRegistrationTokensType(
-      registrationTokenOrTokens, 'sendToDevice', MessagingClientErrorCode.INVALID_RECIPIENT
+      registrationTokenOrTokens, 'sendToDevice', MessagingClientErrorCode.INVALID_RECIPIENT,
     );
     this.validateMessagingPayloadAndOptionsTypes(payload, options);
 
@@ -683,7 +680,7 @@ export class Messaging implements FirebaseServiceInterface {
         // Validate the contents of the input arguments. Because we are now in a promise, any thrown
         // error will cause this method to return a rejected promise.
         this.validateRegistrationTokens(
-          registrationTokenOrTokens, 'sendToDevice', MessagingClientErrorCode.INVALID_RECIPIENT
+          registrationTokenOrTokens, 'sendToDevice', MessagingClientErrorCode.INVALID_RECIPIENT,
         );
         const payloadCopy = this.validateMessagingPayload(payload);
         const optionsCopy = this.validateMessagingOptions(options);
@@ -728,11 +725,11 @@ export class Messaging implements FirebaseServiceInterface {
     notificationKey: string,
     payload: MessagingPayload,
     options: MessagingOptions = {},
-  ): Promise<MessagingDeviceGroupResponse|MessagingDevicesResponse> {
+  ): Promise<MessagingDeviceGroupResponse | MessagingDevicesResponse> {
     if (!validator.isNonEmptyString(notificationKey)) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_RECIPIENT,
-        'Notification key provided to sendToDeviceGroup() must be a non-empty string.'
+        'Notification key provided to sendToDeviceGroup() must be a non-empty string.',
       );
     } else if (notificationKey.indexOf(':') !== -1) {
       // It is possible the developer provides a registration token instead of a notification key
@@ -743,7 +740,7 @@ export class Messaging implements FirebaseServiceInterface {
       return Promise.reject(new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_RECIPIENT,
         'Notification key provided to sendToDeviceGroup() has the format of a registration token. ' +
-        'You should use sendToDevice() instead.'
+        'You should use sendToDevice() instead.',
       ));
     }
 
@@ -777,7 +774,7 @@ export class Messaging implements FirebaseServiceInterface {
           if ((response as any).success === 0) {
             throw new FirebaseMessagingError(
               MessagingClientErrorCode.INVALID_RECIPIENT,
-              'Notification key provided to sendToDeviceGroup() is invalid.'
+              'Notification key provided to sendToDeviceGroup() is invalid.',
             );
           } else {
             return mapRawResponseToDevicesResponse(response);
@@ -851,7 +848,7 @@ export class Messaging implements FirebaseServiceInterface {
     if (!validator.isNonEmptyString(condition)) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_RECIPIENT,
-        'Condition provided to sendToCondition() must be a non-empty string.'
+        'Condition provided to sendToCondition() must be a non-empty string.',
       );
     }
     // Validate the types of the payload and options arguments. Since these are common developer
@@ -896,7 +893,7 @@ export class Messaging implements FirebaseServiceInterface {
    *   server response.
    */
   public subscribeToTopic(
-    registrationTokenOrTokens: string|string[],
+    registrationTokenOrTokens: string | string[],
     topic: string,
   ): Promise<MessagingTopicManagementResponse> {
     return this.sendTopicManagementRequest(
@@ -918,7 +915,7 @@ export class Messaging implements FirebaseServiceInterface {
    *   server response.
    */
   public unsubscribeFromTopic(
-    registrationTokenOrTokens: string|string[],
+    registrationTokenOrTokens: string | string[],
     topic: string,
   ): Promise<MessagingTopicManagementResponse> {
     return this.sendTopicManagementRequest(
@@ -942,7 +939,7 @@ export class Messaging implements FirebaseServiceInterface {
    *   response.
    */
   private sendTopicManagementRequest(
-    registrationTokenOrTokens: string|string[],
+    registrationTokenOrTokens: string | string[],
     topic: string,
     methodName: string,
     path: string,
@@ -972,7 +969,7 @@ export class Messaging implements FirebaseServiceInterface {
         };
 
         return this.messagingRequestHandler.invokeRequestHandler(
-          FCM_TOPIC_MANAGEMENT_HOST, path, request
+          FCM_TOPIC_MANAGEMENT_HOST, path, request,
         );
       })
       .then((response) => {
@@ -994,7 +991,7 @@ export class Messaging implements FirebaseServiceInterface {
     if (!validator.isNonNullObject(payload)) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_PAYLOAD,
-        'Messaging payload must be an object with at least one of the "data" or "notification" properties.'
+        'Messaging payload must be an object with at least one of the "data" or "notification" properties.',
       );
     }
 
@@ -1002,7 +999,7 @@ export class Messaging implements FirebaseServiceInterface {
     if (!validator.isNonNullObject(options)) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_OPTIONS,
-        'Messaging options must be an object.'
+        'Messaging options must be an object.',
       );
     }
   }
@@ -1028,7 +1025,7 @@ export class Messaging implements FirebaseServiceInterface {
         throw new FirebaseMessagingError(
           MessagingClientErrorCode.INVALID_PAYLOAD,
           `Messaging payload contains an invalid "${ payloadKey }" property. Valid properties are ` +
-          `"data" and "notification".`
+          `"data" and "notification".`,
         );
       } else {
         containsDataOrNotificationKey = true;
@@ -1039,7 +1036,7 @@ export class Messaging implements FirebaseServiceInterface {
     if (!containsDataOrNotificationKey) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_PAYLOAD,
-        'Messaging payload must contain at least one of the "data" or "notification" properties.'
+        'Messaging payload must contain at least one of the "data" or "notification" properties.',
       );
     }
 
@@ -1051,7 +1048,7 @@ export class Messaging implements FirebaseServiceInterface {
         throw new FirebaseMessagingError(
           MessagingClientErrorCode.INVALID_PAYLOAD,
           `Messaging payload contains an invalid value for the "${ payloadKey }" property. ` +
-          `Value must be an object.`
+          `Value must be an object.`,
         );
       }
 
@@ -1061,13 +1058,13 @@ export class Messaging implements FirebaseServiceInterface {
           throw new FirebaseMessagingError(
             MessagingClientErrorCode.INVALID_PAYLOAD,
             `Messaging payload contains an invalid value for the "${ payloadKey }.${ subKey }" ` +
-            `property. Values must be strings.`
+            `property. Values must be strings.`,
           );
         } else if (payloadKey === 'data' && /^google\./.test(subKey)) {
           // Validate the data payload does not contain keys which start with 'google.'.
           throw new FirebaseMessagingError(
             MessagingClientErrorCode.INVALID_PAYLOAD,
-            `Messaging payload contains the blacklisted "data.${ subKey }" property.`
+            `Messaging payload contains the blacklisted "data.${ subKey }" property.`,
           );
         }
       });
@@ -1079,7 +1076,7 @@ export class Messaging implements FirebaseServiceInterface {
         if (blacklistedKey in payloadCopy.data) {
           throw new FirebaseMessagingError(
             MessagingClientErrorCode.INVALID_PAYLOAD,
-            `Messaging payload contains the blacklisted "data.${ blacklistedKey }" property.`
+            `Messaging payload contains the blacklisted "data.${ blacklistedKey }" property.`,
           );
         }
       });
@@ -1109,7 +1106,7 @@ export class Messaging implements FirebaseServiceInterface {
       if (blacklistedKey in optionsCopy) {
         throw new FirebaseMessagingError(
           MessagingClientErrorCode.INVALID_OPTIONS,
-          `Messaging options contains the blacklisted "${ blacklistedKey }" property.`
+          `Messaging options contains the blacklisted "${ blacklistedKey }" property.`,
         );
       }
     });
@@ -1123,20 +1120,20 @@ export class Messaging implements FirebaseServiceInterface {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_OPTIONS,
         `Messaging options contains an invalid value for the "${ keyName }" property. Value must ` +
-        'be a non-empty string.'
+        'be a non-empty string.',
       );
     } else if ('dry_run' in optionsCopy && !validator.isBoolean((optionsCopy as any).dry_run)) {
       const keyName = ('dryRun' in options) ? 'dryRun' : 'dry_run';
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_OPTIONS,
         `Messaging options contains an invalid value for the "${ keyName }" property. Value must ` +
-        'be a boolean.'
+        'be a boolean.',
       );
     } else if ('priority' in optionsCopy && !validator.isNonEmptyString(optionsCopy.priority)) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_OPTIONS,
         'Messaging options contains an invalid value for the "priority" property. Value must ' +
-        'be a non-empty string.'
+        'be a non-empty string.',
       );
     } else if ('restricted_package_name' in optionsCopy &&
                !validator.isNonEmptyString((optionsCopy as any).restricted_package_name)) {
@@ -1144,28 +1141,28 @@ export class Messaging implements FirebaseServiceInterface {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_OPTIONS,
         `Messaging options contains an invalid value for the "${ keyName }" property. Value must ` +
-        'be a non-empty string.'
+        'be a non-empty string.',
       );
     } else if ('time_to_live' in optionsCopy && !validator.isNumber((optionsCopy as any).time_to_live)) {
       const keyName = ('timeToLive' in options) ? 'timeToLive' : 'time_to_live';
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_OPTIONS,
         `Messaging options contains an invalid value for the "${ keyName }" property. Value must ` +
-        'be a number.'
+        'be a number.',
       );
     } else if ('content_available' in optionsCopy && !validator.isBoolean((optionsCopy as any).content_available)) {
       const keyName = ('contentAvailable' in options) ? 'contentAvailable' : 'content_available';
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_OPTIONS,
         `Messaging options contains an invalid value for the "${ keyName }" property. Value must ` +
-        'be a boolean.'
+        'be a boolean.',
       );
     } else if ('mutable_content' in optionsCopy && !validator.isBoolean((optionsCopy as any).mutable_content)) {
       const keyName = ('mutableContent' in options) ? 'mutableContent' : 'mutable_content';
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_OPTIONS,
         `Messaging options contains an invalid value for the "${ keyName }" property. Value must ` +
-        'be a boolean.'
+        'be a boolean.',
       );
     }
 
@@ -1180,7 +1177,7 @@ export class Messaging implements FirebaseServiceInterface {
    * @param {ErrorInfo?} [errorInfo] The error info to use if the registration tokens are invalid.
    */
   private validateRegistrationTokensType(
-    registrationTokenOrTokens: string|string[],
+    registrationTokenOrTokens: string | string[],
     methodName: string,
     errorInfo: ErrorInfo = MessagingClientErrorCode.INVALID_ARGUMENT,
   ) {
@@ -1203,7 +1200,7 @@ export class Messaging implements FirebaseServiceInterface {
    * @param {errorInfo?} [ErrorInfo] The error info to use if the registration tokens are invalid.
    */
   private validateRegistrationTokens(
-    registrationTokenOrTokens: string|string[],
+    registrationTokenOrTokens: string | string[],
     methodName: string,
     errorInfo: ErrorInfo = MessagingClientErrorCode.INVALID_ARGUMENT,
   ) {
@@ -1238,7 +1235,7 @@ export class Messaging implements FirebaseServiceInterface {
    * @param {ErrorInfo?} [errorInfo] The error info to use if the topic is invalid.
    */
   private validateTopicType(
-    topic: string|string[],
+    topic: string | string[],
     methodName: string,
     errorInfo: ErrorInfo = MessagingClientErrorCode.INVALID_ARGUMENT,
   ) {
@@ -1285,4 +1282,4 @@ export class Messaging implements FirebaseServiceInterface {
     }
     return topic;
   }
-};
+}

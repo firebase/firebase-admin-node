@@ -167,7 +167,9 @@ describe('admin.auth', () => {
       })
       .then((decodedIdToken) => {
         // Verification should succeed. Revoke that user's session.
-        return admin.auth().revokeRefreshTokens(decodedIdToken.sub);
+        return new Promise((resolve) => setTimeout(() => resolve(
+          admin.auth().revokeRefreshTokens(decodedIdToken.sub)
+        ), 1000));
       })
       .then(() => {
         // verifyIdToken without checking revocation should still succeed.

@@ -1277,7 +1277,7 @@ describe('FirebaseAuthRequestHandler', () => {
       );
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       // Send request with invalid claims.
-      return requestHandler.setCustomUserClaims(uid, 'invalid')
+      return requestHandler.setCustomUserClaims(uid, 'invalid' as any)
         .then((returnedUid: string) => {
           throw new Error('Unexpected success');
         }, (error) => {

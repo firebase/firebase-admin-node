@@ -458,7 +458,7 @@ declare namespace admin.messaging {
   interface Messaging {
     app: admin.app.App;
 
-    send(message: admin.messaging.Message): Promise<string>;
+    send(message: admin.messaging.Message, dryRun?: boolean): Promise<string>;
     sendToDevice(
       registrationToken: string | string[],
       payload: admin.messaging.MessagingPayload,

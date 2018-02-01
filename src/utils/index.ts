@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
- import {FirebaseApp, FirebaseAppOptions} from '../firebase-app';
- import {Certificate} from '../auth/credential';
+import {FirebaseApp, FirebaseAppOptions} from '../firebase-app';
+import {Certificate} from '../auth/credential';
 
- import * as validator from './validator';
+import * as validator from './validator';
 
 /**
  * Renames properties on an object given a mapping from old to new property names.
  *
  * For example, this can be used to map underscore_cased properties to camelCase.
  *
- * @param {Object} obj The object whose properties to rename.
- * @param {Object} keyMap The mapping from old to new property names.
+ * @param {object} obj The object whose properties to rename.
+ * @param {object} keyMap The mapping from old to new property names.
  */
-export function renameProperties(obj: Object, keyMap: { [key: string]: string }): void {
+export function renameProperties(obj: object, keyMap: { [key: string]: string }): void {
   Object.keys(keyMap).forEach((oldKey) => {
     if (oldKey in obj) {
       const newKey = keyMap[oldKey];
@@ -41,13 +41,11 @@ export function renameProperties(obj: Object, keyMap: { [key: string]: string })
 /**
  * Defines a new read-only property directly on an object and returns the object.
  *
- * @param {Object} obj The object on which to define the property.
+ * @param {object} obj The object on which to define the property.
  * @param {string} prop The name of the property to be defined or modified.
  * @param {any} value The value associated with the property.
- *
- * @return {Object} The object that was passed to the function.
  */
-export function addReadonlyGetter(obj: Object, prop: string, value: any): void {
+export function addReadonlyGetter(obj: object, prop: string, value: any): void {
   Object.defineProperty(obj, prop, {
     value,
     // Make this property read-only.
@@ -60,10 +58,10 @@ export function addReadonlyGetter(obj: Object, prop: string, value: any): void {
 /**
  * Determines the Google Cloud project ID associated with a Firebase app by examining
  * the Firebase app options, credentials and the local environment in that order.
- * 
+ *
  * @param {FirebaseApp} app A Firebase app to get the project ID from.
- * 
- * @return {string} A project ID string or null. 
+ *
+ * @return {string} A project ID string or null.
  */
 export function getProjectId(app: FirebaseApp): string {
   const options: FirebaseAppOptions = app.options;
@@ -76,7 +74,7 @@ export function getProjectId(app: FirebaseApp): string {
     return cert.projectId;
   }
 
-  let projectId = process.env.GCLOUD_PROJECT;
+  const projectId = process.env.GCLOUD_PROJECT;
   if (validator.isNonEmptyString(projectId)) {
     return projectId;
   }

@@ -252,7 +252,7 @@ describe('FirebaseTokenGenerator', () => {
 
     it('should throw given a non-object developer claims', () => {
       const invalidDeveloperClaims = [null, NaN, [], true, false, '', 'a', 0, 1, Infinity, _.noop];
-      invalidDeveloperClaims.forEach((invalidDevClaims) => {
+      invalidDeveloperClaims.forEach((invalidDevClaims: any) => {
         expect(() => {
           tokenGenerator.createCustomToken(mocks.uid, invalidDevClaims);
         }).to.throw('Second argument to createCustomToken() must be an object containing the developer claims');

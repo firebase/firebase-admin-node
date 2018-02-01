@@ -36,6 +36,5 @@ export interface FirebaseServiceInterface {
  * Factory method to create FirebaseService instances given a FirebaseApp instance. Can optionally
  * add properties and methods to each FirebaseApp instance via the extendApp() function.
  */
-export interface FirebaseServiceFactory {
-  (app: FirebaseApp, extendApp?: (props: Object) => void): FirebaseServiceInterface;
-}
+export type FirebaseServiceFactory =
+  (app: FirebaseApp, extendApp?: (props: object) => void) => FirebaseServiceInterface;

@@ -2,12 +2,14 @@
   "extends": "tslint:latest",
   "rules": {
     "interface-name": false,
-    "max-line-length": false,
     "member-ordering": [true,
       "public-before-private",
       "static-before-instance",
       "variables-before-functions"
     ],
+    "prefer-object-spread": false,
+    "no-implicit-dependencies": [true, "dev"],
+    "max-classes-per-file": false,
     "max-line-length": [true, 120],
     "no-consecutive-blank-lines": false,
     "object-literal-sort-keys": false,

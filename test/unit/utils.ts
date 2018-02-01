@@ -25,10 +25,10 @@ import {FirebaseApp, FirebaseAppOptions} from '../../src/firebase-app';
 /**
  * Returns a new FirebaseApp instance with the provided options.
  *
- * @param {Object} options The options for the FirebaseApp instance to create.
+ * @param {object} options The options for the FirebaseApp instance to create.
  * @return {FirebaseApp} A new FirebaseApp instance with the provided options.
  */
-export function createAppWithOptions(options: Object) {
+export function createAppWithOptions(options: object) {
   const mockFirebaseNamespaceInternals = new FirebaseNamespace().INTERNAL;
   return new FirebaseApp(options as FirebaseAppOptions, mocks.appName, mockFirebaseNamespaceInternals);
 }

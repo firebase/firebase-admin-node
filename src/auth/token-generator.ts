@@ -42,7 +42,7 @@ const CLIENT_CERT_URL = 'https://www.googleapis.com/robot/v1/metadata/x509/secur
 const FIREBASE_AUDIENCE = 'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit';
 
 interface JWTPayload {
-  claims?: Object;
+  claims?: object;
   uid?: string;
 }
 
@@ -51,7 +51,7 @@ interface JWTPayload {
  */
 export class FirebaseTokenGenerator {
   private certificate_: Certificate;
-  private publicKeys_: Object;
+  private publicKeys_: object;
   private publicKeysExpireAt_: number;
 
   constructor(certificate: Certificate) {
@@ -68,12 +68,12 @@ export class FirebaseTokenGenerator {
    * Creates a new Firebase Auth Custom token.
    *
    * @param {string} uid The user ID to use for the generated Firebase Auth Custom token.
-   * @param {Object} [developerClaims] Optional developer claims to include in the generated Firebase
+   * @param {object} [developerClaims] Optional developer claims to include in the generated Firebase
    *                 Auth Custom token.
    * @return {Promise<string>} A Promise fulfilled with a Firebase Auth Custom token signed with a
    *                           service account key and containing the provided payload.
    */
-  public createCustomToken(uid: string, developerClaims?: Object): Promise<string> {
+  public createCustomToken(uid: string, developerClaims?: object): Promise<string> {
     let errorMessage: string;
     if (typeof uid !== 'string' || uid === '') {
       errorMessage = 'First argument to createCustomToken() must be a non-empty string uid.';
@@ -97,10 +97,10 @@ export class FirebaseTokenGenerator {
       throw new FirebaseAuthError(AuthClientErrorCode.INVALID_CREDENTIAL, errorMessage);
     }
 
-    let jwtPayload: JWTPayload = {};
+    const jwtPayload: JWTPayload = {};
 
     if (typeof developerClaims !== 'undefined') {
-      let claims = {};
+      const claims = {};
 
       for (const key in developerClaims) {
         /* istanbul ignore else */
@@ -134,10 +134,10 @@ export class FirebaseTokenGenerator {
    * Verifies the format and signature of a Firebase Auth ID token.
    *
    * @param {string} idToken The Firebase Auth ID token to verify.
-   * @return {Promise<Object>} A promise fulfilled with the decoded claims of the Firebase Auth ID
+   * @return {Promise<object>} A promise fulfilled with the decoded claims of the Firebase Auth ID
    *                           token.
    */
-  public verifyIdToken(idToken: string): Promise<Object> {
+  public verifyIdToken(idToken: string): Promise<object> {
     if (typeof idToken !== 'string') {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
@@ -202,9 +202,7 @@ export class FirebaseTokenGenerator {
     }
 
     if (typeof errorMessage !== 'undefined') {
-      return Promise.reject(
-        new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, errorMessage)
-      );
+      return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, errorMessage));
     }
 
     return this.fetchPublicKeys_().then((publicKeys) => {
@@ -215,7 +213,7 @@ export class FirebaseTokenGenerator {
             'Firebase ID token has "kid" claim which does not correspond to a known public key. ' +
             'Most likely the ID token is expired, so get a fresh token from your client app and ' +
             'try again.' + verifyIdTokenDocsMessage,
-          )
+          ),
         );
       }
 
@@ -231,9 +229,7 @@ export class FirebaseTokenGenerator {
               errorMessage = 'Firebase ID token has invalid signature.' + verifyIdTokenDocsMessage;
             }
 
-            return reject(
-              new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, errorMessage)
-            );
+            return reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, errorMessage));
           } else {
             decodedToken.uid = decodedToken.sub;
             resolve(decodedToken);
@@ -247,10 +243,10 @@ export class FirebaseTokenGenerator {
   /**
    * Returns whether or not the provided developer claims are valid.
    *
-   * @param {Object} [developerClaims] Optional developer claims to validate.
+   * @param {object} [developerClaims] Optional developer claims to validate.
    * @return {boolean} True if the provided claims are valid; otherwise, false.
    */
-  private isDeveloperClaimsValid_(developerClaims?: Object): boolean {
+  private isDeveloperClaimsValid_(developerClaims?: object): boolean {
     if (typeof developerClaims === 'undefined') {
       return true;
     }
@@ -266,9 +262,9 @@ export class FirebaseTokenGenerator {
   /**
    * Fetches the public keys for the Google certs.
    *
-   * @return {Promise<Object>} A promise fulfilled with public keys for the Google certs.
+   * @return {Promise<object>} A promise fulfilled with public keys for the Google certs.
    */
-  private fetchPublicKeys_(): Promise<Object> {
+  private fetchPublicKeys_(): Promise<object> {
     const publicKeysExist = (typeof this.publicKeys_ !== 'undefined');
     const publicKeysExpiredExists = (typeof this.publicKeysExpireAt_ !== 'undefined');
     const publicKeysStillValid = (publicKeysExpiredExists && Date.now() < this.publicKeysExpireAt_);

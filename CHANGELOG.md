@@ -1,10 +1,16 @@
-# Unreleased
+# Unrelased
+
+-
+
+# v5.8.2
 
 - [added] Added the `messaging.send()` method and the new `Message` type for
   sending Cloud Messaging notifications via the
   [new FCM REST endpoint](https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages).
 - [changed] Exposed `admin.firestore.DocumentReference` and
   `admin.firestore.DocumentSnapshot` types from the Admin SDK typings.
+- [changed] Upgraded Firestore dependency version to
+  [0.11.2](https://github.com/googleapis/nodejs-firestore/releases/tag/v0.11.2).
 
 # v5.8.1
 

@@ -26,7 +26,7 @@ import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
  */
 function parseDate(time: any): string {
   try {
-    let date = new Date(parseInt(time, 10));
+    const date = new Date(parseInt(time, 10));
     if (!isNaN(date.getTime())) {
       return date.toUTCString();
     }
@@ -56,7 +56,7 @@ export interface CreateRequest extends UpdateRequest {
  * User metadata class that provides metadata information like user account creation
  * and last sign in time.
  *
- * @param {Object} response The server side response returned from the getAccountInfo
+ * @param {object} response The server side response returned from the getAccountInfo
  *     endpoint.
  * @constructor
  */
@@ -73,8 +73,8 @@ export class UserMetadata {
     utils.addReadonlyGetter(this, 'lastSignInTime', parseDate(response.lastLoginAt));
   }
 
-  /** @return {Object} The plain object representation of the user's metadata. */
-  public toJSON(): Object {
+  /** @return {object} The plain object representation of the user's metadata. */
+  public toJSON(): object {
     return {
       lastSignInTime: this.lastSignInTime,
       creationTime: this.creationTime,
@@ -86,7 +86,7 @@ export class UserMetadata {
  * User info class that provides provider user information for different
  * Firebase providers like google.com, facebook.com, password, etc.
  *
- * @param {Object} response The server side response returned from the getAccountInfo
+ * @param {object} response The server side response returned from the getAccountInfo
  *     endpoint.
  * @constructor
  */
@@ -114,8 +114,8 @@ export class UserInfo {
     utils.addReadonlyGetter(this, 'phoneNumber', response.phoneNumber);
   }
 
-  /** @return {Object} The plain object representation of the current provider data. */
-  public toJSON(): Object {
+  /** @return {object} The plain object representation of the current provider data. */
+  public toJSON(): object {
     return {
       uid: this.uid,
       displayName: this.displayName,
@@ -131,7 +131,7 @@ export class UserInfo {
  * User record class that defines the Firebase user object populated from
  * the Firebase Auth getAccountInfo response.
  *
- * @param {Object} response The server side response returned from the getAccountInfo
+ * @param {any} response The server side response returned from the getAccountInfo
  *     endpoint.
  * @constructor
  */
@@ -147,7 +147,7 @@ export class UserRecord {
   public readonly providerData: UserInfo[];
   public readonly passwordHash?: string;
   public readonly passwordSalt?: string;
-  public readonly customClaims: Object;
+  public readonly customClaims: object;
   public readonly tokensValidAfterTime?: string;
 
   constructor(response: any) {
@@ -168,7 +168,7 @@ export class UserRecord {
     utils.addReadonlyGetter(this, 'disabled', response.disabled || false);
     utils.addReadonlyGetter(this, 'metadata', new UserMetadata(response));
     const providerData: UserInfo[] = [];
-    for (let entry of (response.providerUserInfo || [])) {
+    for (const entry of (response.providerUserInfo || [])) {
       providerData.push(new UserInfo(entry));
     }
     utils.addReadonlyGetter(this, 'providerData', providerData);
@@ -189,9 +189,9 @@ export class UserRecord {
     utils.addReadonlyGetter(this, 'tokensValidAfterTime', validAfterTime);
   }
 
-  /** @return {Object} The plain object representation of the user record. */
-  public toJSON(): Object {
-    let json: any = {
+  /** @return {object} The plain object representation of the user record. */
+  public toJSON(): object {
+    const json: any = {
       uid: this.uid,
       email: this.email,
       emailVerified: this.emailVerified,
@@ -207,7 +207,7 @@ export class UserRecord {
       tokensValidAfterTime: this.tokensValidAfterTime,
     };
     json.providerData = [];
-    for (let entry of this.providerData) {
+    for (const entry of this.providerData) {
        // Convert each provider data to json.
        json.providerData.push(entry.toJSON());
     }

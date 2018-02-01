@@ -137,7 +137,7 @@ export function isEmail(email: any): boolean {
     return false;
   }
   // There must at least one character before the @ symbol and another after.
-  let re = /^[^@]+@[^@]+$/;
+  const re = /^[^@]+@[^@]+$/;
   return re.test(email);
 }
 
@@ -155,9 +155,9 @@ export function isPhoneNumber(phoneNumber: any): boolean {
   // Phone number validation is very lax here. Backend will enforce E.164
   // spec compliance and will normalize accordingly.
   // The phone number string must be non-empty and starts with a plus sign.
-  let re1 = /^\+/;
+  const re1 = /^\+/;
   // The phone number string must contain at least one alphanumeric character.
-  let re2 = /[\da-zA-Z]+/;
+  const re2 = /[\da-zA-Z]+/;
   return re1.test(phoneNumber) && re2.test(phoneNumber);
 }
 
@@ -174,16 +174,16 @@ export function isURL(urlStr: any): boolean {
     return false;
   }
   // Lookup illegal characters.
-  let re = /[^a-z0-9\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\.\-\_\~\%]/i;
+  const re = /[^a-z0-9\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\.\-\_\~\%]/i;
   if (re.test(urlStr)) {
     return false;
   }
   try {
-    let uri = url.parse(urlStr);
-    let scheme = uri.protocol;
-    let slashes = uri.slashes;
-    let hostname = uri.hostname;
-    let pathname = uri.pathname;
+    const uri = url.parse(urlStr);
+    const scheme = uri.protocol;
+    const slashes = uri.slashes;
+    const hostname = uri.hostname;
+    const pathname = uri.pathname;
     if ((scheme !== 'http:' && scheme !== 'https:') || !slashes) {
       return false;
     }
@@ -194,7 +194,7 @@ export function isURL(urlStr: any): boolean {
     }
     // Allow for pathnames: (/chars+)*
     // Where chars can be a combination of: a-z A-Z 0-9 - _ . ~ ! $ & ' ( ) * + , ; = : @ %
-    let pathnameRe = /^(\/[\w\-\.\~\!\$\'\(\)\*\+\,\;\=\:\@\%]+)*$/;
+    const pathnameRe = /^(\/[\w\-\.\~\!\$\'\(\)\*\+\,\;\=\:\@\%]+)*$/;
     // Validate pathname.
     if (pathname &&
         pathname !== '/' &&
