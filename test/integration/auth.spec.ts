@@ -15,7 +15,6 @@
  */
 
 import * as admin from '../../lib/index';
-import {expect} from 'chai';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import firebase = require('firebase');
@@ -24,6 +23,8 @@ import {generateRandomString, projectId, apiKey} from './setup';
 
 chai.should();
 chai.use(chaiAsPromised);
+
+const expect = chai.expect;
 
 const newUserUid = generateRandomString(20);
 const nonexistentUid = generateRandomString(20);
@@ -64,7 +65,7 @@ describe('admin.auth', () => {
   });
 
   it('createUser() creates a new user when called without a UID', () => {
-    let newUserData = clone(mockUserData);
+    const newUserData = clone(mockUserData);
     newUserData.email = generateRandomString(20) + '@example.com';
     newUserData.phoneNumber = testPhoneNumber2;
     return admin.auth().createUser(newUserData)
@@ -79,7 +80,7 @@ describe('admin.auth', () => {
   });
 
   it('createUser() creates a new user with the specified UID', () => {
-    let newUserData: any = clone(mockUserData);
+    const newUserData: any = clone(mockUserData);
     newUserData.uid = newUserUid;
     return admin.auth().createUser(newUserData)
       .then((userRecord) => {
@@ -92,7 +93,7 @@ describe('admin.auth', () => {
   });
 
   it('createUser() fails when the UID is already in use', () => {
-    let newUserData: any = clone(mockUserData);
+    const newUserData: any = clone(mockUserData);
     newUserData.uid = newUserUid;
     return admin.auth().createUser(newUserData)
       .should.eventually.be.rejected.and.have.property('code', 'auth/uid-already-exists');
@@ -120,7 +121,7 @@ describe('admin.auth', () => {
   });
 
   it('listUsers() returns up to the specified number of users', () => {
-    let promises: Promise<admin.auth.UserRecord>[] = [];
+    const promises: Array<Promise<admin.auth.UserRecord>> = [];
     uids.forEach((uid) => {
       const tempUserData = {
         uid,
@@ -168,7 +169,7 @@ describe('admin.auth', () => {
       .then((decodedIdToken) => {
         // Verification should succeed. Revoke that user's session.
         return new Promise((resolve) => setTimeout(() => resolve(
-          admin.auth().revokeRefreshTokens(decodedIdToken.sub)
+          admin.auth().revokeRefreshTokens(decodedIdToken.sub),
         ), 1000));
       })
       .then(() => {
@@ -224,7 +225,7 @@ describe('admin.auth', () => {
       })
       .then((decodedIdToken) => {
         // Confirm expected claims set on the user's ID token.
-        for (let key in customClaims) {
+        for (const key in customClaims) {
           if (customClaims.hasOwnProperty(key)) {
             expect(decodedIdToken[key]).to.equal(customClaims[key]);
           }
@@ -331,12 +332,12 @@ function deletePhoneNumberUser(phoneNumber) {
 /**
  * Runs cleanup routine that could affect outcome of tests and removes any
  * intermediate users created.
- * 
+ *
  * @return {Promise} A promise that resolves when test preparations are ready.
  */
 function cleanup() {
   // Delete any existing users that could affect the test outcome.
-  let promises: Promise<void>[] = [
+  const promises: Array<Promise<void>> = [
     deletePhoneNumberUser(testPhoneNumber),
     deletePhoneNumberUser(testPhoneNumber2),
     deletePhoneNumberUser(nonexistentPhoneNumber),
@@ -351,7 +352,7 @@ function cleanup() {
           if (error.code !== 'auth/user-not-found') {
             throw error;
           }
-        })
+        }),
     );
   });
   return Promise.all(promises);

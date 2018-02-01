@@ -17,7 +17,6 @@
 'use strict';
 
 import * as _ from 'lodash';
-import {expect} from 'chai';
 import * as chai from 'chai';
 import * as nock from 'nock';
 import * as sinon from 'sinon';
@@ -43,16 +42,18 @@ chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
+const expect = chai.expect;
+
 
 /**
  * @param {number} numOfChars The number of random characters within the string.
  * @return {string} A string with a specific number of random characters.
  */
 function createRandomString(numOfChars: number): string {
-  let chars = [];
-  let allowedChars = '1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const chars = [];
+  const allowedChars = '1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
   while (numOfChars > 0) {
-    let index = Math.floor(Math.random() * allowedChars.length);
+    const index = Math.floor(Math.random() * allowedChars.length);
     chars.push(allowedChars.charAt(index));
     numOfChars--;
   }
@@ -378,7 +379,7 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
         it(`should fail with customAttributes containing blacklisted claim: ${invalidClaim}`, () => {
           expect(() => {
             // Instantiate custom attributes with invalid claims.
-            let claims = {};
+            const claims = {};
             claims[invalidClaim] = 'bla';
             return requestValidator({localId: '1234', customAttributes: JSON.stringify(claims)});
           }).to.throw(`Developer claim "${invalidClaim}" is reserved and cannot be specified.`);
@@ -576,10 +577,10 @@ describe('FIREBASE_AUTH_SIGN_UP_NEW_USER', () => {
 
 describe('FirebaseAuthRequestHandler', () => {
   let mockApp: FirebaseApp;
-  let mockedRequests: nock.Scope[] = [];
+  const mockedRequests: nock.Scope[] = [];
   let stubs: sinon.SinonStub[] = [];
-  let mockAccessToken: string = utils.generateRandomAccessToken();
-  let expectedHeaders: Object;
+  const mockAccessToken: string = utils.generateRandomAccessToken();
+  let expectedHeaders: object;
 
   before(() => utils.mockFetchAccessTokenRequests(mockAccessToken));
 
@@ -594,7 +595,7 @@ describe('FirebaseAuthRequestHandler', () => {
     expectedHeaders = {
       'Content-Type': 'application/json',
       'X-Client-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
-      Authorization: 'Bearer ' + mockAccessToken,
+      'Authorization': 'Bearer ' + mockAccessToken,
     };
   });
 
@@ -626,7 +627,7 @@ describe('FirebaseAuthRequestHandler', () => {
       };
       const data = {email: ['user@example.com']};
 
-      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
 
@@ -645,7 +646,7 @@ describe('FirebaseAuthRequestHandler', () => {
       const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
       const data = {email: ['user@example.com']};
 
-      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
 
@@ -675,7 +676,7 @@ describe('FirebaseAuthRequestHandler', () => {
       };
       const data = {localId: ['uid']};
 
-      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
 
@@ -694,7 +695,7 @@ describe('FirebaseAuthRequestHandler', () => {
       const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
       const data = {localId: ['uid']};
 
-      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
 
@@ -717,7 +718,7 @@ describe('FirebaseAuthRequestHandler', () => {
       const expectedError = FirebaseAuthError.fromServerError('OPERATION_NOT_ALLOWED');
       const data = {localId: ['uid']};
 
-      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
 
@@ -759,7 +760,7 @@ describe('FirebaseAuthRequestHandler', () => {
         phoneNumber: ['+11234567890'],
       };
 
-      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
 
@@ -775,7 +776,7 @@ describe('FirebaseAuthRequestHandler', () => {
       const expectedError = new FirebaseAuthError(
         AuthClientErrorCode.INVALID_PHONE_NUMBER);
 
-      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest');
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest');
       stubs.push(stub);
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       return requestHandler.getAccountInfoByPhoneNumber('invalid')
@@ -796,7 +797,7 @@ describe('FirebaseAuthRequestHandler', () => {
         phoneNumber: ['+11234567890'],
       };
 
-      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
 
@@ -833,7 +834,7 @@ describe('FirebaseAuthRequestHandler', () => {
         nextPageToken,
       };
 
-      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
 
@@ -854,7 +855,7 @@ describe('FirebaseAuthRequestHandler', () => {
         nextPageToken,
       };
 
-      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve({}));
       stubs.push(stub);
 
@@ -872,7 +873,7 @@ describe('FirebaseAuthRequestHandler', () => {
         maxResults: 1000,
       };
 
-      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
 
@@ -924,7 +925,7 @@ describe('FirebaseAuthRequestHandler', () => {
         nextPageToken,
       };
 
-      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedServerError));
       stubs.push(stub);
 
@@ -952,7 +953,7 @@ describe('FirebaseAuthRequestHandler', () => {
       };
       const data = {localId: 'uid'};
 
-      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -972,7 +973,7 @@ describe('FirebaseAuthRequestHandler', () => {
       const expectedError = FirebaseAuthError.fromServerError('OPERATION_NOT_ALLOWED');
       const data = {localId: 'uid'};
 
-      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -1056,7 +1057,7 @@ describe('FirebaseAuthRequestHandler', () => {
         localId: uid,
       };
 
-      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
 
@@ -1079,7 +1080,7 @@ describe('FirebaseAuthRequestHandler', () => {
         localId: uid,
       };
 
-      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
 
@@ -1102,7 +1103,7 @@ describe('FirebaseAuthRequestHandler', () => {
         localId: uid,
       };
 
-      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
 
@@ -1126,7 +1127,7 @@ describe('FirebaseAuthRequestHandler', () => {
         localId: uid,
       };
 
-      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
 
@@ -1181,7 +1182,7 @@ describe('FirebaseAuthRequestHandler', () => {
         },
       };
 
-      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
 
@@ -1219,7 +1220,7 @@ describe('FirebaseAuthRequestHandler', () => {
 
     it('should be fulfilled given a valid localId and customAttributes', () => {
       // Successful result server response.
-      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
 
@@ -1238,7 +1239,7 @@ describe('FirebaseAuthRequestHandler', () => {
 
     it('should be fulfilled given valid localId and null claims', () => {
       // Successful result server response.
-      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
 
@@ -1313,7 +1314,7 @@ describe('FirebaseAuthRequestHandler', () => {
         },
       };
 
-      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedServerError));
       stubs.push(stub);
 
@@ -1357,7 +1358,7 @@ describe('FirebaseAuthRequestHandler', () => {
         validSince: Math.ceil((now.getTime() + 5000) / 1000),
       };
 
-      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
 
@@ -1374,7 +1375,7 @@ describe('FirebaseAuthRequestHandler', () => {
 
     it('should be rejected given an invalid uid', () => {
       const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_UID);
-      const invalidUid: any = {'localId': uid}; 
+      const invalidUid: any = {localId: uid};
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       return requestHandler.revokeRefreshTokens(invalidUid as any)
@@ -1399,7 +1400,7 @@ describe('FirebaseAuthRequestHandler', () => {
         validSince: Math.ceil((now.getTime() + 5000) / 1000),
       };
 
-      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedServerError));
       stubs.push(stub);
 
@@ -1464,7 +1465,7 @@ describe('FirebaseAuthRequestHandler', () => {
           localId: uid,
         };
 
-        let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
           .returns(Promise.resolve(expectedResult));
         stubs.push(stub);
 
@@ -1486,7 +1487,7 @@ describe('FirebaseAuthRequestHandler', () => {
           localId: uid,
         };
 
-        let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
           .returns(Promise.resolve(expectedResult));
         stubs.push(stub);
 
@@ -1539,7 +1540,7 @@ describe('FirebaseAuthRequestHandler', () => {
           },
         };
 
-        let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
           .returns(Promise.resolve(expectedResult));
         stubs.push(stub);
 
@@ -1565,7 +1566,7 @@ describe('FirebaseAuthRequestHandler', () => {
           },
         };
 
-        let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
           .returns(Promise.resolve(expectedResult));
         stubs.push(stub);
 
@@ -1591,7 +1592,7 @@ describe('FirebaseAuthRequestHandler', () => {
           },
         };
 
-        let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
           .returns(Promise.resolve(expectedResult));
         stubs.push(stub);
 
@@ -1649,7 +1650,7 @@ describe('FirebaseAuthRequestHandler', () => {
           localId: uid,
         };
 
-        let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
           .returns(Promise.resolve(expectedResult));
         stubs.push(stub);
 
@@ -1702,7 +1703,7 @@ describe('FirebaseAuthRequestHandler', () => {
           },
         };
 
-        let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
           .returns(Promise.resolve(expectedResult));
         stubs.push(stub);
 
@@ -1731,7 +1732,7 @@ describe('FirebaseAuthRequestHandler', () => {
         statusCode: 400,
       };
 
-      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .rejects(mockErrorResponse);
       stubs.push(stub);
 
@@ -1750,7 +1751,7 @@ describe('FirebaseAuthRequestHandler', () => {
         statusCode: 400,
       };
 
-      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .rejects(mockErrorResponse);
       stubs.push(stub);
 
@@ -1767,7 +1768,7 @@ describe('FirebaseAuthRequestHandler', () => {
         statusCode: 400,
       };
 
-      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .rejects(mockErrorResponse);
       stubs.push(stub);
 

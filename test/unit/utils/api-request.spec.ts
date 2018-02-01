@@ -21,7 +21,6 @@ import https = require('https');
 import stream = require('stream');
 
 import * as _ from 'lodash';
-import {expect} from 'chai';
 import * as chai from 'chai';
 import * as nock from 'nock';
 import * as sinon from 'sinon';
@@ -40,6 +39,7 @@ chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
+const expect = chai.expect;
 
 const mockPort = 443;
 const mockHost = 'www.example.com';
@@ -143,7 +143,7 @@ describe('HttpRequestHandler', () => {
   let requestWriteSpy: sinon.SinonSpy;
   let httpsRequestStub: sinon.SinonStub;
   let mockRequestStream: mocks.MockStream;
-  let httpRequestHandler = new HttpRequestHandler();
+  const httpRequestHandler = new HttpRequestHandler();
 
   beforeEach(() => {
     mockRequestStream = new mocks.MockStream();
@@ -196,7 +196,7 @@ describe('HttpRequestHandler', () => {
       const mockSocket = new mocks.MockSocketEmitter();
 
       const sendRequestPromise = httpRequestHandler.sendRequest(
-        mockHost, mockPort, mockPath, 'GET', undefined, undefined, 5000
+        mockHost, mockPort, mockPath, 'GET', undefined, undefined, 5000,
       );
 
       mockRequestStream.emit('socket', mockSocket);
@@ -225,7 +225,7 @@ describe('HttpRequestHandler', () => {
         .returns(mockRequestStream);
 
       return httpRequestHandler.sendRequest(
-        mockHost, mockPort, mockPath, 'POST', mockRequestData, mockRequestHeaders
+        mockHost, mockPort, mockPath, 'POST', mockRequestData, mockRequestHeaders,
       )
         .then((response) => {
           expect(response).to.deep.equal(mockSuccessResponse);
@@ -287,7 +287,7 @@ describe('HttpRequestHandler', () => {
         mockedRequests.push(mockRequest(undefined, 'POST'));
 
         return httpRequestHandler.sendRequest(
-          mockHost, mockPort, mockPath, 'POST', mockRequestData, mockRequestHeaders, 10000
+          mockHost, mockPort, mockPath, 'POST', mockRequestData, mockRequestHeaders, 10000,
         ).should.eventually.be.fulfilled.and.deep.equal(mockSuccessResponse);
       });
     });
@@ -324,7 +324,7 @@ describe('HttpRequestHandler', () => {
         mockedRequests.push(mockRequest('text/html', 'POST'));
 
         return httpRequestHandler.sendRequest(
-          mockHost, mockPort, mockPath, 'POST', mockRequestData, mockRequestHeaders, 10000
+          mockHost, mockPort, mockPath, 'POST', mockRequestData, mockRequestHeaders, 10000,
         ).should.eventually.be.fulfilled.and.deep.equal(mockTextSuccessResponse);
       });
     });
@@ -334,7 +334,7 @@ describe('HttpRequestHandler', () => {
 
 describe('SignedApiRequestHandler', () => {
   let mockApp: FirebaseApp;
-  let mockAccessToken: string = utils.generateRandomAccessToken();
+  const mockAccessToken: string = utils.generateRandomAccessToken();
 
   before(() => utils.mockFetchAccessTokenRequests(mockAccessToken));
 
@@ -379,7 +379,7 @@ describe('SignedApiRequestHandler', () => {
     };
     const headers = {
       'Content-Type': 'application/json',
-      Authorization: 'Bearer ' + mockAccessToken,
+      'Authorization': 'Bearer ' + mockAccessToken,
     };
     const httpMethod: any = 'POST';
     const host = 'www.googleapis.com';
@@ -452,14 +452,14 @@ describe('ApiSettings', () => {
     });
 
     it('should populate default http method when not specified', () => {
-      let apiSettings = new ApiSettings('getAccountInfo');
+      const apiSettings = new ApiSettings('getAccountInfo');
       expect(apiSettings.getHttpMethod()).to.equal('POST');
     });
   });
 
   describe('Getters and Setters', () => {
     describe('with unset properties', () => {
-      let apiSettings: ApiSettings = new ApiSettings('getAccountInfo', 'GET');
+      const apiSettings: ApiSettings = new ApiSettings('getAccountInfo', 'GET');
       it('should resolve successfully for endpoint and http method', () => {
         expect(apiSettings.getEndpoint()).to.equal('getAccountInfo');
         expect(apiSettings.getHttpMethod()).to.equal('GET');
@@ -472,24 +472,24 @@ describe('ApiSettings', () => {
       });
     });
     describe('with null validators', () => {
-      let apiSettings: ApiSettings = new ApiSettings('getAccountInfo', 'GET');
+      const apiSettings: ApiSettings = new ApiSettings('getAccountInfo', 'GET');
       apiSettings.setResponseValidator(null);
       apiSettings.setRequestValidator(null);
       it('should not return null for requestValidator', () => {
-        let validator = apiSettings.getRequestValidator();
+        const validator = apiSettings.getRequestValidator();
         expect(() => {
           return validator({});
         }).to.not.throw();
       });
       it('should not return null for responseValidator', () => {
-        let validator = apiSettings.getResponseValidator();
+        const validator = apiSettings.getResponseValidator();
         expect(() => {
           return validator({});
         }).to.not.throw();
       });
     });
     describe('with set properties', () => {
-      let apiSettings: ApiSettings = new ApiSettings('getAccountInfo', 'GET');
+      const apiSettings: ApiSettings = new ApiSettings('getAccountInfo', 'GET');
       // Set all apiSettings properties.
       const requestValidator = (request) => undefined;
       const responseValidator = (response) => undefined;

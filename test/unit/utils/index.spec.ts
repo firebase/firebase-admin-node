@@ -18,12 +18,12 @@ import {expect} from 'chai';
 
 import * as mocks from '../../resources/mocks';
 import {addReadonlyGetter, getProjectId} from '../../../src/utils/index';
-import {isNonEmptyString} from '../../../src/utils/validator'
+import {isNonEmptyString} from '../../../src/utils/validator';
 import {FirebaseApp, FirebaseAppOptions} from '../../../src/firebase-app';
 
-type Obj = {
+interface Obj {
   [key: string]: any;
-};
+}
 
 describe('addReadonlyGetter()', () => {
   it('should add a new property to the provided object', () => {
@@ -51,7 +51,7 @@ describe('addReadonlyGetter()', () => {
 });
 
 describe('getProjectId()', () => {
-  let gcloudProject: string
+  let gcloudProject: string;
 
   before(() => {
     gcloudProject = process.env.GCLOUD_PROJECT;
@@ -66,28 +66,28 @@ describe('getProjectId()', () => {
   });
 
   it('should return the explicitly specified project ID from app options', () => {
-    let options: FirebaseAppOptions = {
+    const options: FirebaseAppOptions = {
       credential: new mocks.MockCredential(),
       projectId: 'explicit-project-id',
     };
-    let app: FirebaseApp = mocks.appWithOptions(options);
+    const app: FirebaseApp = mocks.appWithOptions(options);
     expect(getProjectId(app)).to.equal(options.projectId);
   });
 
   it('should return the project ID from service account', () => {
-    let app: FirebaseApp = mocks.app();
+    const app: FirebaseApp = mocks.app();
     expect(getProjectId(app)).to.equal('project_id');
   });
 
   it('should return the project ID set in environment', () => {
     process.env.GCLOUD_PROJECT = 'env-var-project-id';
-    let app: FirebaseApp = mocks.mockCredentialApp();
+    const app: FirebaseApp = mocks.mockCredentialApp();
     expect(getProjectId(app)).to.equal('env-var-project-id');
   });
 
   it('should return null when project ID is not set', () => {
     delete process.env.GCLOUD_PROJECT;
-    let app: FirebaseApp = mocks.mockCredentialApp();
+    const app: FirebaseApp = mocks.mockCredentialApp();
     expect(getProjectId(app)).to.be.null;
   });
 });

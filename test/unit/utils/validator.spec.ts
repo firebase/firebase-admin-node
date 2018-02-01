@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-import {expect} from 'chai';
-import * as _ from 'lodash';
 import * as chai from 'chai';
+import * as _ from 'lodash';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
@@ -30,16 +29,17 @@ chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
+const expect = chai.expect;
 
 /**
  * @param {number} numOfChars The number of random characters within the string.
  * @return {string} A string with a specific number of random characters.
  */
 function createRandomString(numOfChars: number): string {
-  let chars = [];
-  let allowedChars = '1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const chars = [];
+  const allowedChars = '1234567890abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
   while (numOfChars > 0) {
-    let index = Math.floor(Math.random() * allowedChars.length);
+    const index = Math.floor(Math.random() * allowedChars.length);
     chars.push(allowedChars.charAt(index));
     numOfChars--;
   }

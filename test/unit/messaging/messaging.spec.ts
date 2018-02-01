@@ -21,7 +21,6 @@ import https = require('https');
 import stream = require('stream');
 
 import * as _ from 'lodash';
-import {expect} from 'chai';
 import * as chai from 'chai';
 import * as nock from 'nock';
 import * as sinon from 'sinon';
@@ -41,6 +40,7 @@ chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
+const expect = chai.expect;
 
 // FCM endpoints
 const FCM_SEND_HOST = 'fcm.googleapis.com';
@@ -73,7 +73,7 @@ const STATUS_CODE_TO_ERROR_MAP = {
 };
 
 function mockSendToDeviceStringRequest(mockFailure = false): nock.Scope {
-  let deviceResult: Object = { message_id: `0:${ mocks.messaging.messageId }` };
+  let deviceResult: object = { message_id: `0:${ mocks.messaging.messageId }` };
   if (mockFailure) {
     deviceResult = { error: 'InvalidRegistration' };
   }
@@ -168,7 +168,7 @@ function mockTopicSubscriptionRequest(
 
 function mockSendRequestWithError(
   statusCode: number,
-  errorFormat: 'json'|'text',
+  errorFormat: 'json' | 'text',
   responseOverride?: any,
 ): nock.Scope {
   let response;
@@ -191,7 +191,7 @@ function mockSendRequestWithError(
 function mockTopicSubscriptionRequestWithError(
   methodName: string,
   statusCode: number,
-  errorFormat: 'json'|'text',
+  errorFormat: 'json' | 'text',
   responseOverride?: any,
 ): nock.Scope {
   let response;
@@ -598,7 +598,7 @@ describe('Messaging', () => {
     it('should not mutate the payload argument', () => {
       mockedRequests.push(mockSendToDeviceStringRequest());
 
-      let mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payload);
+      const mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payload);
 
       return messaging.sendToDevice(
         mocks.messaging.registrationToken,
@@ -611,7 +611,7 @@ describe('Messaging', () => {
     it('should not mutate the options argument', () => {
       mockedRequests.push(mockSendToDeviceStringRequest());
 
-      let mockOptionsClone: MessagingOptions = _.clone(mocks.messaging.options);
+      const mockOptionsClone: MessagingOptions = _.clone(mocks.messaging.options);
 
       return messaging.sendToDevice(
         mocks.messaging.registrationToken,
@@ -745,7 +745,7 @@ describe('Messaging', () => {
 
       return messaging.sendToDeviceGroup(
         mocks.messaging.notificationKey,
-        mocks.messaging.payloadDataOnly
+        mocks.messaging.payloadDataOnly,
       );
     });
 
@@ -849,7 +849,7 @@ describe('Messaging', () => {
     it('should not mutate the payload argument', () => {
       mockedRequests.push(mockSendToDeviceGroupRequest());
 
-      let mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payload);
+      const mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payload);
 
       return messaging.sendToDeviceGroup(
         mocks.messaging.notificationKey,
@@ -862,7 +862,7 @@ describe('Messaging', () => {
     it('should not mutate the options argument', () => {
       mockedRequests.push(mockSendToDeviceGroupRequest());
 
-      let mockOptionsClone: MessagingOptions = _.clone(mocks.messaging.options);
+      const mockOptionsClone: MessagingOptions = _.clone(mocks.messaging.options);
 
       return messaging.sendToDeviceGroup(
         mocks.messaging.notificationKey,
@@ -988,7 +988,7 @@ describe('Messaging', () => {
 
       return messaging.sendToTopic(
         mocks.messaging.topic,
-        mocks.messaging.payload
+        mocks.messaging.payload,
       );
     });
 
@@ -997,7 +997,7 @@ describe('Messaging', () => {
 
       return messaging.sendToTopic(
         mocks.messaging.topicWithPrefix,
-        mocks.messaging.payload
+        mocks.messaging.payload,
       );
     });
 
@@ -1006,7 +1006,7 @@ describe('Messaging', () => {
 
       return messaging.sendToTopic(
         mocks.messaging.topicWithPrivatePrefix,
-        mocks.messaging.payload
+        mocks.messaging.payload,
       );
     });
 
@@ -1079,7 +1079,7 @@ describe('Messaging', () => {
     it('should not mutate the payload argument', () => {
       mockedRequests.push(mockSendToTopicRequest());
 
-      let mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payload);
+      const mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payload);
 
       return messaging.sendToTopic(
         mocks.messaging.topic,
@@ -1092,7 +1092,7 @@ describe('Messaging', () => {
     it('should not mutate the options argument', () => {
       mockedRequests.push(mockSendToTopicRequest());
 
-      let mockOptionsClone: MessagingOptions = _.clone(mocks.messaging.options);
+      const mockOptionsClone: MessagingOptions = _.clone(mocks.messaging.options);
 
       return messaging.sendToTopic(
         mocks.messaging.topic,
@@ -1210,7 +1210,7 @@ describe('Messaging', () => {
 
       return messaging.sendToCondition(
         mocks.messaging.condition,
-        mocks.messaging.payloadDataOnly
+        mocks.messaging.payloadDataOnly,
       );
     });
 
@@ -1261,7 +1261,7 @@ describe('Messaging', () => {
     it('should not mutate the payload argument', () => {
       mockedRequests.push(mockSendToConditionRequest());
 
-      let mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payload);
+      const mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payload);
 
       return messaging.sendToCondition(
         mocks.messaging.condition,
@@ -1274,7 +1274,7 @@ describe('Messaging', () => {
     it('should not mutate the options argument', () => {
       mockedRequests.push(mockSendToConditionRequest());
 
-      let mockOptionsClone: MessagingOptions = _.clone(mocks.messaging.options);
+      const mockOptionsClone: MessagingOptions = _.clone(mocks.messaging.options);
 
       return messaging.sendToCondition(
         mocks.messaging.condition,
@@ -1309,20 +1309,22 @@ describe('Messaging', () => {
     });
 
     it('should be rejected given an empty payload', () => {
-      return messaging.sendToDeviceGroup(mocks.messaging.notificationKey, {} as MessagingPayload)
+      const msg: any = {};
+      return messaging.sendToDeviceGroup(mocks.messaging.notificationKey, msg)
         .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-payload');
     });
 
     it('should be rejected given a non-empty payload with neither the "data" nor the "notification" property', () => {
-      return messaging.sendToTopic(mocks.messaging.topic, {
+      const msg: any = {
         foo: 'one',
         bar: 'two',
-      } as MessagingPayload)
+      };
+      return messaging.sendToTopic(mocks.messaging.topic, msg)
         .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-payload');
     });
 
     it('should be rejected given an otherwise valid payload with an additional invalid property', () => {
-      let mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payload);
+      const mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payload);
       (mockPayloadClone as any).foo = 'one';
 
       return messaging.sendToCondition(mocks.messaging.condition, mockPayloadClone)
@@ -1358,7 +1360,7 @@ describe('Messaging', () => {
     });
 
     it('should be rejected given a valid "data" property but invalid "notification" property', () => {
-      let mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payloadDataOnly);
+      const mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payloadDataOnly);
       (mockPayloadClone as any).notification = 'foo';
 
       return messaging.sendToDevice(mocks.messaging.registrationToken, mockPayloadClone)
@@ -1366,7 +1368,7 @@ describe('Messaging', () => {
     });
 
     it('should be rejected given a valid "notification" property but invalid "data" property', () => {
-      let mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payloadNotificationOnly);
+      const mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payloadNotificationOnly);
       (mockPayloadClone as any).data = 'foo';
 
       return messaging.sendToDevice(mocks.messaging.registrationToken, mockPayloadClone)
@@ -1522,7 +1524,7 @@ describe('Messaging', () => {
           messaging.sendToDevice(
             mocks.messaging.registrationToken,
             mocks.messaging.payload,
-            invalidOption as MessagingOptions
+            invalidOption as MessagingOptions,
           );
         }).to.throw('Messaging options must be an object');
 
@@ -1530,7 +1532,7 @@ describe('Messaging', () => {
           messaging.sendToDeviceGroup(
             mocks.messaging.notificationKey,
             mocks.messaging.payload,
-            invalidOption as MessagingOptions
+            invalidOption as MessagingOptions,
           );
         }).to.throw('Messaging options must be an object');
 
@@ -1538,7 +1540,7 @@ describe('Messaging', () => {
           messaging.sendToTopic(
             mocks.messaging.topic,
             mocks.messaging.payload,
-            invalidOption as MessagingOptions
+            invalidOption as MessagingOptions,
           );
         }).to.throw('Messaging options must be an object');
 
@@ -1546,7 +1548,7 @@ describe('Messaging', () => {
           messaging.sendToCondition(
             mocks.messaging.condition,
             mocks.messaging.payload,
-            invalidOption as MessagingOptions
+            invalidOption as MessagingOptions,
           );
         }).to.throw('Messaging options must be an object');
       });
@@ -1567,8 +1569,8 @@ describe('Messaging', () => {
     const whitelistedOptionsKeys: {
       [name: string]: {
         type: string,
-        underscoreCasedKey?: string
-      }
+        underscoreCasedKey?: string,
+      },
     } = {
       dryRun: { type: 'boolean', underscoreCasedKey: 'dry_run' },
       priority: { type: 'string' },
@@ -1602,7 +1604,7 @@ describe('Messaging', () => {
       }
 
       // Only test the alternate underscoreCasedKey if it is defined
-      let keysToTest = [camelCasedKey];
+      const keysToTest = [camelCasedKey];
       if (typeof underscoreCasedKey !== 'undefined') {
         keysToTest.push(underscoreCasedKey);
       }
@@ -1761,7 +1763,7 @@ describe('Messaging', () => {
   });
 
   function tokenSubscriptionTests(methodName) {
-    let invalidRegistrationTokensArgumentError = 'Registration token(s) provided to ' +
+    const invalidRegistrationTokensArgumentError = 'Registration token(s) provided to ' +
       `${methodName}() must be a non-empty string or a non-empty array`;
 
     const invalidRegistrationTokens = [null, NaN, 0, 1, true, false, {}, { a: 1 }, _.noop];

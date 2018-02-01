@@ -82,7 +82,7 @@ describe('Database', () => {
       const db: Database = database.getDatabase();
       expect(db.ref().toString()).to.be.equal('https://databasename.firebaseio.com/');
     });
-    
+
     it('should return the Database namespace', () => {
       const db: Database = database.getDatabase(mockApp.options.databaseURL);
       expect(db.ref().toString()).to.be.equal('https://databasename.firebaseio.com/');

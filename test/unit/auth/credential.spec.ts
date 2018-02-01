@@ -23,7 +23,6 @@ import http = require('http');
 import stream = require('stream');
 
 import * as _ from 'lodash';
-import {expect} from 'chai';
 import * as chai from 'chai';
 import * as nock from 'nock';
 import * as sinon from 'sinon';
@@ -42,6 +41,8 @@ chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
+const expect = chai.expect;
+
 let TEST_GCLOUD_CREDENTIALS;
 const GCLOUD_CREDENTIAL_SUFFIX = 'gcloud/application_default_credentials.json';
 const GCLOUD_CREDENTIAL_PATH = path.resolve(process.env.HOME, '.config', GCLOUD_CREDENTIAL_SUFFIX);
@@ -51,7 +52,7 @@ try {
   // tslint:disable-next-line:no-console
   console.log(
     'WARNING: gcloud credentials not found. Run `gcloud beta auth application-default login`. ' +
-    'Relevant tests will be skipped.'
+    'Relevant tests will be skipped.',
   );
 }
 
@@ -69,7 +70,7 @@ const skipAndLogWarningIfNoGcloud = () => {
     // tslint:disable-next-line:no-console
     console.log(
       'WARNING: Test being skipped because gcloud credentials not found. Run `gcloud beta auth ' +
-      'application-default login`.'
+      'application-default login`.',
     );
 
     return true;

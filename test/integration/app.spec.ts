@@ -28,21 +28,21 @@ describe('admin', () => {
   });
 
   it('does not load Firestore by default', () => {
-    let gcloud = require.cache[require.resolve('@google-cloud/firestore')];
+    const gcloud = require.cache[require.resolve('@google-cloud/firestore')];
     expect(gcloud).to.be.undefined;
   });
 
   it('loads Firestore when calling admin.firestore', () => {
     const firestoreNamespace = admin.firestore;
     expect(firestoreNamespace).to.not.be.null;
-    let gcloud = require.cache[require.resolve('@google-cloud/firestore')];
+    const gcloud = require.cache[require.resolve('@google-cloud/firestore')];
     expect(gcloud).to.not.be.undefined;
   });
 });
 
 describe('admin.app', () => {
   it('admin.app() returns the default App', () => {
-    let app = admin.app();
+    const app = admin.app();
     expect(app).to.deep.equal(defaultApp);
     expect(app.name).to.equal('[DEFAULT]');
     expect(app.options.databaseURL).to.equal(databaseUrl);
@@ -51,7 +51,7 @@ describe('admin.app', () => {
   });
 
   it('admin.app("null") returns the App named "null"', () => {
-    let app = admin.app('null');
+    const app = admin.app('null');
     expect(app).to.deep.equal(nullApp);
     expect(app.name).to.equal('null');
     expect(app.options.databaseURL).to.equal(databaseUrl);
@@ -60,7 +60,7 @@ describe('admin.app', () => {
   });
 
   it('admin.app("nonNull") returns the App named "nonNull"', () => {
-    let app = admin.app('nonNull');
+    const app = admin.app('nonNull');
     expect(app).to.deep.equal(nonNullApp);
     expect(app.name).to.equal('nonNull');
     expect(app.options.databaseURL).to.equal(databaseUrl);
@@ -69,7 +69,7 @@ describe('admin.app', () => {
   });
 
   it('namespace services are attached to the default App', () => {
-    let app = admin.app();
+    const app = admin.app();
     expect(admin.auth(app).app).to.deep.equal(app);
     expect(admin.database(app).app).to.deep.equal(app);
     expect(admin.messaging(app).app).to.deep.equal(app);
@@ -77,7 +77,7 @@ describe('admin.app', () => {
   });
 
   it('namespace services are attached to the named App', () => {
-    let app = admin.app('null');
+    const app = admin.app('null');
     expect(admin.auth(app).app).to.deep.equal(app);
     expect(admin.database(app).app).to.deep.equal(app);
     expect(admin.messaging(app).app).to.deep.equal(app);
