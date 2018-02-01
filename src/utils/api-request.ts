@@ -24,7 +24,7 @@ import https = require('https');
 /** Http method type definition. */
 export type HttpMethod = 'GET' | 'POST' | 'DELETE';
 /** API callback function type definition. */
-export type ApiCallbackFunction = (data: Object) => void;
+export type ApiCallbackFunction = (data: object) => void;
 
 /**
  * Base class for handling HTTP requests.
@@ -38,29 +38,29 @@ export class HttpRequestHandler {
    * @param {number} port The port number.
    * @param {string} path The endpoint path.
    * @param {HttpMethod} httpMethod The http method.
-   * @param {Object} [data] The request JSON.
-   * @param {Object} [headers] The request headers.
+   * @param {object} [data] The request JSON.
+   * @param {object} [headers] The request headers.
    * @param {number} [timeout] The request timeout in milliseconds.
-   * @return {Promise<Object>} A promise that resolves with the response.
+   * @return {Promise<object>} A promise that resolves with the response.
    */
   public sendRequest(
       host: string,
       port: number,
       path: string,
       httpMethod: HttpMethod,
-      data?: Object,
-      headers?: Object,
-      timeout?: number): Promise<Object> {
+      data?: object,
+      headers?: object,
+      timeout?: number): Promise<object> {
     // Convenience for calling the real _sendRequest() method with the original params.
     const sendOneRequest = () => {
       return this._sendRequest(host, port, path, httpMethod, data, headers, timeout);
     };
 
     return sendOneRequest()
-      .catch((response: { statusCode: number, error: string|Object }) => {
+      .catch ((response: { statusCode: number, error: string | object }) => {
         // Retry if the request failed due to a network error.
         if (response.error instanceof FirebaseAppError) {
-          if ((<FirebaseAppError> response.error).hasCode(AppErrorCodes.NETWORK_ERROR)) {
+          if ((response.error as FirebaseAppError).hasCode(AppErrorCodes.NETWORK_ERROR)) {
             return sendOneRequest();
           }
         }
@@ -75,19 +75,19 @@ export class HttpRequestHandler {
    * @param {number} port The port number.
    * @param {string} path The endpoint path.
    * @param {HttpMethod} httpMethod The http method.
-   * @param {Object} [data] The request JSON.
-   * @param {Object} [headers] The request headers.
+   * @param {object} [data] The request JSON.
+   * @param {object} [headers] The request headers.
    * @param {number} [timeout] The request timeout in milliseconds.
-   * @return {Promise<Object>} A promise that resolves with the response.
+   * @return {Promise<object>} A promise that resolves with the response.
    */
   private _sendRequest(
       host: string,
       port: number,
       path: string,
       httpMethod: HttpMethod,
-      data?: Object,
-      headers?: Object,
-      timeout?: number): Promise<Object> {
+      data?: object,
+      headers?: object,
+      timeout?: number): Promise<any> {
     let requestData;
     if (data) {
       try {
@@ -106,7 +106,7 @@ export class HttpRequestHandler {
     // Only https endpoints.
     return new Promise((resolve, reject) => {
       const req = https.request(options, (res) => {
-        let buffers: Buffer[] = [];
+        const buffers: Buffer[] = [];
         res.on('data', (buffer: Buffer) => buffers.push(buffer));
         res.on('end', () => {
           const response = Buffer.concat(buffers).toString();
@@ -214,8 +214,8 @@ export class SignedApiRequestHandler extends HttpRequestHandler {
    * @param {number} port The port number.
    * @param {string} path The endpoint path.
    * @param {HttpMethod} httpMethod The http method.
-   * @param {Object} data The request JSON.
-   * @param {Object} headers The request headers.
+   * @param {object} data The request JSON.
+   * @param {object} headers The request headers.
    * @param {number} timeout The request timeout in milliseconds.
    * @return {Promise} A promise that resolves with the response.
    */
@@ -224,12 +224,12 @@ export class SignedApiRequestHandler extends HttpRequestHandler {
       port: number,
       path: string,
       httpMethod: HttpMethod,
-      data?: Object,
-      headers?: Object,
-      timeout?: number): Promise<Object> {
+      data?: object,
+      headers?: object,
+      timeout?: number): Promise<object> {
     return this.app_.INTERNAL.getToken().then((accessTokenObj) => {
-      let headersCopy: Object = (headers && deepCopy(headers)) || {};
-      let authorizationHeaderKey = 'Authorization';
+      const headersCopy: object = (headers && deepCopy(headers)) || {};
+      const authorizationHeaderKey = 'Authorization';
       headersCopy[authorizationHeaderKey] = 'Bearer ' + accessTokenObj.accessToken;
       return super.sendRequest(host, port, path, httpMethod, data, headersCopy, timeout);
     });
@@ -267,7 +267,7 @@ export class ApiSettings {
    * @return {ApiSettings} The current API settings instance.
    */
   public setRequestValidator(requestValidator: ApiCallbackFunction): ApiSettings {
-    let nullFunction = (request: Object) => undefined;
+    const nullFunction = (request: object) => undefined;
     this.requestValidator = requestValidator || nullFunction;
     return this;
   }
@@ -282,7 +282,7 @@ export class ApiSettings {
    * @return {ApiSettings} The current API settings instance.
    */
   public setResponseValidator(responseValidator: ApiCallbackFunction): ApiSettings {
-    let nullFunction = (request: Object) => undefined;
+    const nullFunction = (request: object) => undefined;
     this.responseValidator = responseValidator || nullFunction;
     return this;
   }

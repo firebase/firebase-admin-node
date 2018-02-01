@@ -96,13 +96,9 @@ function initFirestore(app: FirebaseApp): Firestore {
     };
   } else if (app.options.credential instanceof ApplicationDefaultCredential) {
     // Try to use the Google application default credentials.
-    if (validator.isNonEmptyString(projectId)) {
-      options = {projectId};
-    } else {
-      // If an explicit project ID is not available, let Firestore client discover one from the
-      // environment. This prevents the users from having to set GCLOUD_PROJECT in GCP runtimes.
-      options = {};
-    }
+    // If an explicit project ID is not available, let Firestore client discover one from the
+    // environment. This prevents the users from having to set GCLOUD_PROJECT in GCP runtimes.
+    options = validator.isNonEmptyString(projectId) ? {projectId} : {};
   } else {
     throw new FirebaseFirestoreError({
       code: 'invalid-credential',
@@ -113,6 +109,6 @@ function initFirestore(app: FirebaseApp): Firestore {
   }
 
   // Lazy-load the Firestore implementation here, which in turns loads gRPC.
-  let firestoreDatabase = require('@google-cloud/firestore');
+  const firestoreDatabase = require('@google-cloud/firestore');
   return new firestoreDatabase(options);
 }

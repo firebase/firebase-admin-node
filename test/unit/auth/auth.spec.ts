@@ -1045,7 +1045,7 @@ describe('Auth', () => {
     });
 
     it('should be rejected given invalid custom user claims', () => {
-      return auth.setCustomUserClaims(uid, 'invalid')
+      return auth.setCustomUserClaims(uid, 'invalid' as any)
         .then(() => {
           throw new Error('Unexpected success');
         })

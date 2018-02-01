@@ -46,8 +46,8 @@ export const FIREBASE_CONFIG_VAR: string = 'FIREBASE_CONFIG';
 
 
 let globalAppDefaultCred: ApplicationDefaultCredential;
-let globalCertCreds: { [key: string]: CertCredential } = {};
-let globalRefreshTokenCreds: { [key: string]: RefreshTokenCredential } = {};
+const globalCertCreds: { [key: string]: CertCredential } = {};
+const globalRefreshTokenCreds: { [key: string]: RefreshTokenCredential } = {};
 
 
 export interface FirebaseServiceNamespace <T> {
@@ -109,7 +109,7 @@ export class FirebaseNamespaceInternals {
       }
     }
 
-    let app = new FirebaseApp(options, appName, this);
+    const app = new FirebaseApp(options, appName, this);
 
     this.apps_[appName] = app;
 
@@ -132,12 +132,8 @@ export class FirebaseNamespaceInternals {
         `Invalid Firebase app name "${appName}" provided. App name must be a non-empty string.`,
       );
     } else if (!(appName in this.apps_)) {
-      let errorMessage: string;
-      if (appName === DEFAULT_APP_NAME) {
-        errorMessage = 'The default Firebase app does not exist. ';
-      } else {
-        errorMessage = `Firebase app named "${appName}" does not exist. `;
-      }
+      let errorMessage: string = (appName === DEFAULT_APP_NAME)
+        ? 'The default Firebase app does not exist. ' : `Firebase app named "${appName}" does not exist. `;
       errorMessage += 'Make sure you call initializeApp() before using any of the Firebase services.';
 
       throw new FirebaseAppError(AppErrorCodes.NO_APP, errorMessage);
@@ -169,7 +165,7 @@ export class FirebaseNamespaceInternals {
       );
     }
 
-    let appToRemove = this.app(appName);
+    const appToRemove = this.app(appName);
     this.callAppHooks_(appToRemove, 'delete');
     delete this.apps_[appName];
   }
@@ -179,13 +175,13 @@ export class FirebaseNamespaceInternals {
    *
    * @param {string} serviceName The name of the Firebase service to register.
    * @param {FirebaseServiceFactory} createService A factory method to generate an instance of the Firebase service.
-   * @param {Object} [serviceProperties] Optional properties to extend this Firebase namespace with.
+   * @param {object} [serviceProperties] Optional properties to extend this Firebase namespace with.
    * @param {AppHook} [appHook] Optional callback that handles app-related events like app creation and deletion.
    * @return {FirebaseServiceNamespace<FirebaseServiceInterface>} The Firebase service's namespace.
    */
   public registerService(serviceName: string,
                          createService: FirebaseServiceFactory,
-                         serviceProperties?: Object,
+                         serviceProperties?: object,
                          appHook?: AppHook): FirebaseServiceNamespace<FirebaseServiceInterface> {
     let errorMessage;
     if (typeof serviceName === 'undefined') {
@@ -254,19 +250,12 @@ export class FirebaseNamespaceInternals {
    * otherwise it will be assumed to be pointing to a file.
    */
   private loadOptionsFromEnvVar(): FirebaseAppOptions {
-    let config = process.env[FIREBASE_CONFIG_VAR];
+    const config = process.env[FIREBASE_CONFIG_VAR];
     if (!validator.isNonEmptyString(config)) {
       return {};
     }
     try {
-      let contents;
-      if (config.startsWith('{')) {
-        // Assume json object.
-        contents = config;
-      } else {
-        // Assume filename.
-        contents = fs.readFileSync(config, 'utf8');
-      }
+      const contents = config.startsWith('{') ? config : fs.readFileSync(config, 'utf8');
       return JSON.parse(contents) as FirebaseAppOptions;
     } catch (error) {
       // Throw a nicely formed error message if the file contents cannot be parsed
@@ -279,8 +268,8 @@ export class FirebaseNamespaceInternals {
 }
 
 
-let firebaseCredential = {
-  cert: (serviceAccountPathOrObject: string|Object): Credential => {
+const firebaseCredential = {
+  cert: (serviceAccountPathOrObject: string | object): Credential => {
     const stringifiedServiceAccount = JSON.stringify(serviceAccountPathOrObject);
     if (!(stringifiedServiceAccount in globalCertCreds)) {
       globalCertCreds[stringifiedServiceAccount] = new CertCredential(serviceAccountPathOrObject);
@@ -288,7 +277,7 @@ let firebaseCredential = {
     return globalCertCreds[stringifiedServiceAccount];
   },
 
-  refreshToken: (refreshTokenPathOrObject: string|Object): Credential => {
+  refreshToken: (refreshTokenPathOrObject: string | object): Credential => {
     const stringifiedRefreshToken = JSON.stringify(refreshTokenPathOrObject);
     if (!(stringifiedRefreshToken in globalRefreshTokenCreds)) {
       globalRefreshTokenCreds[stringifiedRefreshToken] = new RefreshTokenCredential(refreshTokenPathOrObject);
@@ -333,9 +322,8 @@ export class FirebaseNamespace {
    * `Auth` service for the default app or an explicitly specified app.
    */
   get auth(): FirebaseServiceNamespace<Auth> {
-    const ns: FirebaseNamespace = this;
-    let fn: FirebaseServiceNamespace<Auth> = (app?: FirebaseApp) => {
-      return ns.ensureApp(app).auth();
+    const fn: FirebaseServiceNamespace<Auth> = (app?: FirebaseApp) => {
+      return this.ensureApp(app).auth();
     };
     return Object.assign(fn, {Auth});
   }
@@ -345,9 +333,8 @@ export class FirebaseNamespace {
    * `Database` service for the default app or an explicitly specified app.
    */
   get database(): FirebaseServiceNamespace<Database> {
-    const ns: FirebaseNamespace = this;
-    let fn: FirebaseServiceNamespace<Database> = (app?: FirebaseApp) => {
-      return ns.ensureApp(app).database();
+    const fn: FirebaseServiceNamespace<Database> = (app?: FirebaseApp) => {
+      return this.ensureApp(app).database();
     };
     return Object.assign(fn, require('@firebase/database'));
   }
@@ -357,9 +344,8 @@ export class FirebaseNamespace {
    * `Messaging` service for the default app or an explicitly specified app.
    */
   get messaging(): FirebaseServiceNamespace<Messaging> {
-    const ns: FirebaseNamespace = this;
-    let fn: FirebaseServiceNamespace<Messaging> = (app?: FirebaseApp) => {
-      return ns.ensureApp(app).messaging();
+    const fn: FirebaseServiceNamespace<Messaging> = (app?: FirebaseApp) => {
+      return this.ensureApp(app).messaging();
     };
     return Object.assign(fn, {Messaging});
   }
@@ -369,9 +355,8 @@ export class FirebaseNamespace {
    * `Storage` service for the default app or an explicitly specified app.
    */
   get storage(): FirebaseServiceNamespace<Storage> {
-    const ns: FirebaseNamespace = this;
-    let fn: FirebaseServiceNamespace<Storage> = (app?: FirebaseApp) => {
-      return ns.ensureApp(app).storage();
+    const fn: FirebaseServiceNamespace<Storage> = (app?: FirebaseApp) => {
+      return this.ensureApp(app).storage();
     };
     return Object.assign(fn, {Storage});
   }
@@ -381,9 +366,8 @@ export class FirebaseNamespace {
    * `Firestore` service for the default app or an explicitly specified app.
    */
   get firestore(): FirebaseServiceNamespace<Firestore> {
-    const ns: FirebaseNamespace = this;
-    let fn: FirebaseServiceNamespace<Firestore> = (app?: FirebaseApp) => {
-      return ns.ensureApp(app).firestore();
+    const fn: FirebaseServiceNamespace<Firestore> = (app?: FirebaseApp) => {
+      return this.ensureApp(app).firestore();
     };
     return Object.assign(fn, require('@google-cloud/firestore'));
   }
@@ -393,9 +377,8 @@ export class FirebaseNamespace {
    * `Instance` service for the default app or an explicitly specified app.
    */
   get instanceId(): FirebaseServiceNamespace<InstanceId> {
-    const ns: FirebaseNamespace = this;
-    let fn: FirebaseServiceNamespace<InstanceId> = (app?: FirebaseApp) => {
-      return ns.ensureApp(app).instanceId();
+    const fn: FirebaseServiceNamespace<InstanceId> = (app?: FirebaseApp) => {
+      return this.ensureApp(app).instanceId();
     };
     return Object.assign(fn, {InstanceId});
   }

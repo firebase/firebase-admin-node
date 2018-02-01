@@ -94,7 +94,7 @@
     "sinon": "^4.1.3",
     "sinon-chai": "^2.8.0",
     "ts-node": "^3.3.0",
-    "tslint": "^3.5.0",
+    "tslint": "^5.9.0",
     "typescript": "^2.6.1"
   }
 }

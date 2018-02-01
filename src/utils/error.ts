@@ -19,12 +19,12 @@ import {deepCopy} from '../utils/deep-copy';
 /**
  * Defines error info type. This includes a code and message string.
  */
-export type ErrorInfo = {
+export interface ErrorInfo {
   code: string;
   message: string;
 }
 
-export type FirebaseArrayIndexError = {
+export interface FirebaseArrayIndexError {
   index: number;
   error: FirebaseError;
 }
@@ -32,7 +32,7 @@ export type FirebaseArrayIndexError = {
 /**
  * Defines a type that stores all server to client codes (string enum).
  */
-type ServerToClientCode = {
+interface ServerToClientCode {
   [code: string]: string;
 }
 
@@ -63,8 +63,8 @@ export class FirebaseError extends Error {
     return this.errorInfo.message;
   }
 
-  /** @return {Object} The object representation of the error. */
-  public toJSON(): Object {
+  /** @return {object} The object representation of the error. */
+  public toJSON(): object {
     return {
       code: this.code,
       message: this.message,
@@ -140,16 +140,16 @@ export class FirebaseAuthError extends PrefixedFirebaseError {
    * @param {string} serverErrorCode The server error code.
    * @param {string} [message] The error message. The default message is used
    *     if not provided.
-   * @param {Object} [rawServerResponse] The error's raw server response.
+   * @param {object} [rawServerResponse] The error's raw server response.
    * @return {FirebaseAuthError} The corresponding developer-facing error.
    */
   public static fromServerError(
     serverErrorCode: string,
     message?: string,
-    rawServerResponse?: Object,
+    rawServerResponse?: object,
   ): FirebaseAuthError {
     // If not found, default to internal error.
-    let clientCodeKey = AUTH_SERVER_TO_CLIENT_CODE[serverErrorCode] || 'INTERNAL_ERROR';
+    const clientCodeKey = AUTH_SERVER_TO_CLIENT_CODE[serverErrorCode] || 'INTERNAL_ERROR';
     const error: ErrorInfo = deepCopy(AuthClientErrorCode[clientCodeKey]);
     error.message = message || error.message;
 
@@ -236,16 +236,16 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
    * @param {string} serverErrorCode The server error code.
    * @param {string} [message] The error message. The default message is used
    *     if not provided.
-   * @param {Object} [rawServerResponse] The error's raw server response.
+   * @param {object} [rawServerResponse] The error's raw server response.
    * @return {FirebaseMessagingError} The corresponding developer-facing error.
    */
   public static fromServerError(
     serverErrorCode: string,
     message?: string,
-    rawServerResponse?: Object,
+    rawServerResponse?: object,
   ): FirebaseMessagingError {
     // If not found, default to unknown error.
-    let clientCodeKey = MESSAGING_SERVER_TO_CLIENT_CODE[serverErrorCode] || 'UNKNOWN_ERROR';
+    const clientCodeKey = MESSAGING_SERVER_TO_CLIENT_CODE[serverErrorCode] || 'UNKNOWN_ERROR';
     const error: ErrorInfo = deepCopy(MessagingClientErrorCode[clientCodeKey]);
     error.message = message || error.message;
 
@@ -287,7 +287,7 @@ export class AppErrorCodes {
   public static NETWORK_TIMEOUT = 'network-timeout';
   public static NO_APP = 'no-app';
   public static UNABLE_TO_PARSE_RESPONSE = 'unable-to-parse-response';
-};
+}
 
 /**
  * Auth client error codes and their default messages.
@@ -399,7 +399,7 @@ export class AuthClientErrorCode {
     code: 'user-not-found',
     message: 'There is no user record corresponding to the provided identifier.',
   };
-};
+}
 
 /**
  * Messaging client error codes and their default messages.
@@ -493,7 +493,7 @@ export class MessagingClientErrorCode {
     code: 'unknown-error',
     message: 'An unknown server error was returned.',
   };
-};
+}
 
 export class InstanceIdClientErrorCode {
   public static INVALID_ARGUMENT = {

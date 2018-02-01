@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-import {Credential} from './auth/credential';
+import {Credential, GoogleOAuthAccessToken} from './auth/credential';
 import * as validator from './utils/validator';
 import {deepCopy, deepExtend} from './utils/deep-copy';
-import {GoogleOAuthAccessToken} from './auth/credential';
 import {FirebaseServiceInterface} from './firebase-service';
 import {FirebaseNamespaceInternals} from './firebase-namespace';
 import {AppErrorCodes, FirebaseAppError} from './utils/error';
@@ -39,19 +38,19 @@ export type AppHook = (event: string, app: FirebaseApp) => void;
 /**
  * Type representing the options object passed into initializeApp().
  */
-export type FirebaseAppOptions = {
-  credential?: Credential,
-  databaseAuthVariableOverride?: Object
-  databaseURL?: string,
-  storageBucket?: string,
-  projectId?: string,
-};
+export interface FirebaseAppOptions {
+  credential?: Credential;
+  databaseAuthVariableOverride?: object;
+  databaseURL?: string;
+  storageBucket?: string;
+  projectId?: string;
+}
 
 /**
  * Type representing a Firebase OAuth access token (derived from a Google OAuth2 access token) which
  * can be used to authenticate to Firebase services such as the Realtime Database and Auth.
  */
-export type FirebaseAccessToken = {
+export interface FirebaseAccessToken {
   accessToken: string;
   expirationTime: number;
 }
@@ -74,7 +73,8 @@ export class FirebaseAppInternals {
    * Gets an auth token for the associated app.
    *
    * @param {boolean} forceRefresh Whether or not to force a token refresh.
-   * @return {Promise<Object>} A Promise that will be fulfilled with the current or new token.
+   * @return {Promise<FirebaseAccessToken>} A Promise that will be fulfilled with the current or
+   *   new token.
    */
   public getToken(forceRefresh?: boolean): Promise<FirebaseAccessToken> {
     const expired = this.cachedToken_ && this.cachedToken_.expirationTime < Date.now();
@@ -268,7 +268,7 @@ export class FirebaseApp {
       throw new FirebaseAppError(
         AppErrorCodes.INVALID_APP_OPTIONS,
         `Invalid Firebase app options passed as the first argument to initializeApp() for the ` +
-        `app named "${this.name_}". ${errorMessage}`
+        `app named "${this.name_}". ${errorMessage}`,
       );
     }
 
@@ -282,7 +282,7 @@ export class FirebaseApp {
 
   /**
    * Returns the Auth service instance associated with this app.
-   * 
+   *
    * @return {Auth} The Auth service instance of this app.
    */
   public auth(): Auth {
@@ -297,7 +297,7 @@ export class FirebaseApp {
    * @return {Database} The Database service instance of this app.
    */
   public database(url?: string): Database {
-    let service: DatabaseService = this.ensureService_('database', () => {
+    const service: DatabaseService = this.ensureService_('database', () => {
       return new DatabaseService(this);
     });
     return service.getDatabase(url);
@@ -305,7 +305,7 @@ export class FirebaseApp {
 
   /**
    * Returns the Messaging service instance associated with this app.
-   * 
+   *
    * @return {Messaging} The Messaging service instance of this app.
    */
   public messaging(): Messaging {
@@ -316,7 +316,7 @@ export class FirebaseApp {
 
   /**
    * Returns the Storage service instance associated with this app.
-   * 
+   *
    * @return {Storage} The Storage service instance of this app.
    */
   public storage(): Storage {
@@ -326,7 +326,7 @@ export class FirebaseApp {
   }
 
   public firestore(): Firestore {
-    let service: FirestoreService = this.ensureService_('firestore', () => {
+    const service: FirestoreService = this.ensureService_('firestore', () => {
       return new FirestoreService(this);
     });
     return service.client;
@@ -334,7 +334,7 @@ export class FirebaseApp {
 
   /**
    * Returns the InstanceId service instance associated with this app.
-   * 
+   *
    * @return {InstanceId} The InstanceId service instance of this app.
    */
   public instanceId(): InstanceId {
@@ -408,7 +408,7 @@ export class FirebaseApp {
     if (!(serviceName in this.services_)) {
       this.services_[serviceName] = this.firebaseInternals_.serviceFactories[serviceName](
         this,
-        this.extendApp_.bind(this)
+        this.extendApp_.bind(this),
       );
     }
 

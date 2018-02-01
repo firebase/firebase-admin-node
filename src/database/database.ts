@@ -12,7 +12,7 @@ import * as validator from '../utils/validator';
 class DatabaseInternals implements FirebaseServiceInternalsInterface {
 
   public databases: {
-    [dbUrl: string]: Database
+    [dbUrl: string]: Database,
   } = {};
 
   /**
@@ -22,7 +22,7 @@ class DatabaseInternals implements FirebaseServiceInternalsInterface {
    */
   public delete(): Promise<void> {
     for (const dbUrl of Object.keys(this.databases)) {
-      let db: Database = this.databases[dbUrl];
+      const db: Database = this.databases[dbUrl];
       db.INTERNAL.delete();
     }
     return Promise.resolve(undefined);
@@ -55,7 +55,7 @@ export class DatabaseService implements FirebaseServiceInterface {
   }
 
   public getDatabase(url?: string): Database {
-    let dbUrl: string = this.ensureUrl(url);
+    const dbUrl: string = this.ensureUrl(url);
     if (!validator.isNonEmptyString(dbUrl)) {
       throw new FirebaseDatabaseError({
         code: 'invalid-argument',
@@ -65,7 +65,7 @@ export class DatabaseService implements FirebaseServiceInterface {
 
     let db: Database = this.INTERNAL.databases[dbUrl];
     if (typeof db === 'undefined') {
-      let rtdb = require('@firebase/database');
+      const rtdb = require('@firebase/database');
       db = rtdb.initStandalone(this.appInternal, dbUrl).instance;
       this.INTERNAL.databases[dbUrl] = db;
     }

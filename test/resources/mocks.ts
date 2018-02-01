@@ -167,10 +167,10 @@ export let keyPairs = [
 /**
  * Generates a mocked Firebase ID token.
  *
- * @param {Object} overrides Overrides for the generated token's attributes.
+ * @param {object} overrides Overrides for the generated token's attributes.
  * @return {string} A mocked Firebase ID token with any provided overrides included.
  */
-export function generateIdToken(overrides?: Object): string {
+export function generateIdToken(overrides?: object): string {
   const options = _.assign({
     audience: projectId,
     expiresIn: ONE_HOUR_IN_SECONDS,
@@ -187,12 +187,13 @@ export function generateIdToken(overrides?: Object): string {
 
 export function firebaseServiceFactory(
   firebaseApp: FirebaseApp,
-  extendApp: (props: Object) => void
+  extendApp: (props: object) => void,
 ): FirebaseServiceInterface {
-  return {
+  const result = {
     app: firebaseApp,
     INTERNAL: {},
-  } as FirebaseServiceInterface;
+  };
+  return result as FirebaseServiceInterface;
 }
 
 /** Mock socket emitter class. */

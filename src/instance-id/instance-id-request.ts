@@ -57,7 +57,7 @@ export class FirebaseInstanceIdRequestHandler {
   /**
    * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
    * @param {string} projectId A Firebase project ID string.
-   * 
+   *
    * @constructor
    */
   constructor(app: FirebaseApp, projectId: string) {
@@ -65,11 +65,11 @@ export class FirebaseInstanceIdRequestHandler {
     this.path = FIREBASE_IID_PATH + `project/${projectId}/instanceId/`;
   }
 
-  public deleteInstanceId(instanceId: string): Promise<Object> {
+  public deleteInstanceId(instanceId: string): Promise<object> {
     if (!validator.isNonEmptyString(instanceId)) {
       return Promise.reject(new FirebaseInstanceIdError(
         InstanceIdClientErrorCode.INVALID_INSTANCE_ID,
-        'Instance ID must be a non-empty string.'
+        'Instance ID must be a non-empty string.',
       ));
     }
     return this.invokeRequestHandler(new ApiSettings(instanceId, 'DELETE'));
@@ -79,12 +79,11 @@ export class FirebaseInstanceIdRequestHandler {
    * Invokes the request handler based on the API settings object passed.
    *
    * @param {ApiSettings} apiSettings The API endpoint settings to apply to request and response.
-   * @param {Object} requestData The request data.
-   * @return {Promise<Object>} A promise that resolves with the response.
+   * @return {Promise<object>} A promise that resolves with the response.
    */
-  private invokeRequestHandler(apiSettings: ApiSettings): Promise<Object> {
-    let path: string = this.path + apiSettings.getEndpoint();
-    let httpMethod: HttpMethod = apiSettings.getHttpMethod();
+  private invokeRequestHandler(apiSettings: ApiSettings): Promise<object> {
+    const path: string = this.path + apiSettings.getEndpoint();
+    const httpMethod: HttpMethod = apiSettings.getHttpMethod();
     return Promise.resolve()
       .then(() => {
         return this.signedApiRequestHandler.sendRequest(
@@ -94,26 +93,17 @@ export class FirebaseInstanceIdRequestHandler {
         return response;
       })
       .catch((response) => {
-        let error;
-        if (typeof response === 'object' && 'error' in response) {
-          error = response.error;
-        } else {
-          error = response;
-        }
-
+        const error = (typeof response === 'object' && 'error' in response) ?
+          response.error : response;
         if (error instanceof FirebaseError) {
           // In case of timeouts and other network errors, the API request handler returns a
           // FirebaseError wrapped in the response. Simply throw it here.
           throw error;
         }
 
-        let template: string = ERROR_CODES[response.statusCode];
-        let message: string;
-        if (template) {
-          message = `Instance ID "${apiSettings.getEndpoint()}": ${template}`;
-        } else {
-          message = JSON.stringify(error);
-        }
+        const template: string = ERROR_CODES[response.statusCode];
+        const message: string = template ?
+          `Instance ID "${apiSettings.getEndpoint()}": ${template}` : JSON.stringify(error);
         throw new FirebaseInstanceIdError(InstanceIdClientErrorCode.API_ERROR, message);
       });
   }

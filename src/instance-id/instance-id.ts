@@ -44,14 +44,14 @@ export class InstanceId implements FirebaseServiceInterface {
   private requestHandler: FirebaseInstanceIdRequestHandler;
 
   /**
-   * @param {Object} app The app for this InstanceId service.
+   * @param {FirebaseApp} app The app for this InstanceId service.
    * @constructor
    */
   constructor(app: FirebaseApp) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseInstanceIdError(
         InstanceIdClientErrorCode.INVALID_ARGUMENT,
-        'First argument passed to admin.instanceId() must be a valid Firebase app instance.'
+        'First argument passed to admin.instanceId() must be a valid Firebase app instance.',
       );
     }
 
