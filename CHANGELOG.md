@@ -1,7 +1,13 @@
-# Unreleased
+# Unrelased
+
+-
+
+# v5.8.2
 
 - [changed] Exposed `admin.firestore.DocumentReference` and
   `admin.firestore.DocumentSnapshot` types from the Admin SDK typings.
+- [changed] Upgraded Firestore dependency version to
+  [0.11.2](https://github.com/googleapis/nodejs-firestore/releases/tag/v0.11.2).
 
 # v5.8.1
 
