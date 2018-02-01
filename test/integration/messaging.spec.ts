@@ -46,7 +46,7 @@ const message: admin.messaging.Message = {
     body: 'Message body',
   },
   android: {
-    restrictedPackageName: 'com.hkj.testing'
+    restrictedPackageName: 'com.google.firebase.testing'
   },
   apns: {
     payload: {
