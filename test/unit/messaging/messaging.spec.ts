@@ -21,7 +21,6 @@ import https = require('https');
 import stream = require('stream');
 
 import * as _ from 'lodash';
-import {expect} from 'chai';
 import * as chai from 'chai';
 import * as nock from 'nock';
 import * as sinon from 'sinon';
@@ -33,7 +32,7 @@ import * as mocks from '../../resources/mocks';
 
 import {FirebaseApp} from '../../../src/firebase-app';
 import {
-  AndroidConfig, Message, Messaging, MessagingOptions, MessagingPayload, MessagingDevicesResponse, 
+  AndroidConfig, Message, Messaging, MessagingOptions, MessagingPayload, MessagingDevicesResponse,
   MessagingTopicManagementResponse, WebpushConfig,
   BLACKLISTED_OPTIONS_KEYS, BLACKLISTED_DATA_PAYLOAD_KEYS,
 } from '../../../src/messaging/messaging';
@@ -42,6 +41,7 @@ chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
+const expect = chai.expect;
 
 // FCM endpoints
 const FCM_SEND_HOST = 'fcm.googleapis.com';
@@ -77,14 +77,14 @@ function mockSendRequest(): nock.Scope {
   return nock(`https://${FCM_SEND_HOST}:443`)
     .post('/v1/projects/project_id/messages:send')
     .reply(200, {
-      name: 'projects/projec_id/messages/message_id'
+      name: 'projects/projec_id/messages/message_id',
     });
 }
 
 function mockSendError(
   statusCode: number,
-  errorFormat: 'json'|'text',
-  responseOverride?: any
+  errorFormat: 'json' | 'text',
+  responseOverride?: any,
 ): nock.Scope {
   let response;
   let contentType;
@@ -104,7 +104,7 @@ function mockSendError(
 }
 
 function mockSendToDeviceStringRequest(mockFailure = false): nock.Scope {
-  let deviceResult: Object = { message_id: `0:${ mocks.messaging.messageId }` };
+  let deviceResult: object = { message_id: `0:${ mocks.messaging.messageId }` };
   if (mockFailure) {
     deviceResult = { error: 'InvalidRegistration' };
   }
@@ -199,8 +199,8 @@ function mockTopicSubscriptionRequest(
 
 function mockSendRequestWithError(
   statusCode: number,
-  errorFormat: 'json'|'text',
-  responseOverride?: any
+  errorFormat: 'json' | 'text',
+  responseOverride?: any,
 ): nock.Scope {
   let response;
   let contentType;
@@ -222,7 +222,7 @@ function mockSendRequestWithError(
 function mockTopicSubscriptionRequestWithError(
   methodName: string,
   statusCode: number,
-  errorFormat: 'json'|'text',
+  errorFormat: 'json' | 'text',
   responseOverride?: any,
 ): nock.Scope {
   let response;
@@ -333,15 +333,15 @@ describe('Messaging', () => {
   describe('send()', () => {
     it('should throw given no message', () => {
       expect(() => {
-        messaging.send(undefined as Message)
+        messaging.send(undefined as Message);
       }).to.throw('Message must be a non-null object');
       expect(() => {
-        messaging.send(null)
+        messaging.send(null);
       }).to.throw('Message must be a non-null object');
     });
 
     const noTarget = [
-      {}, {token: null}, {token: ''}, {topic: null}, {topic: ''}, {condition: null}, {condition: ''}
+      {}, {token: null}, {token: ''}, {topic: null}, {topic: ''}, {condition: null}, {condition: ''},
     ];
     noTarget.forEach((message) => {
       it(`should throw given message without target: ${ JSON.stringify(message) }`, () => {
@@ -376,7 +376,7 @@ describe('Messaging', () => {
       it(`should throw given invalid dryRun parameter: ${JSON.stringify(dryRun)}`, () => {
         expect(() => {
           messaging.send({token: 'a'}, dryRun as any);
-        }).to.throw('dryRun must be a boolean');        
+        }).to.throw('dryRun must be a boolean');
       });
     });
 
@@ -398,7 +398,7 @@ describe('Messaging', () => {
         ).should.eventually.equal('projects/projec_id/messages/message_id');
       });
     });
-    
+
     it('should fail when the backend server returns a detailed error', () => {
       const resp = {
         error: {
@@ -729,7 +729,7 @@ describe('Messaging', () => {
     it('should not mutate the payload argument', () => {
       mockedRequests.push(mockSendToDeviceStringRequest());
 
-      let mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payload);
+      const mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payload);
 
       return messaging.sendToDevice(
         mocks.messaging.registrationToken,
@@ -742,7 +742,7 @@ describe('Messaging', () => {
     it('should not mutate the options argument', () => {
       mockedRequests.push(mockSendToDeviceStringRequest());
 
-      let mockOptionsClone: MessagingOptions = _.clone(mocks.messaging.options);
+      const mockOptionsClone: MessagingOptions = _.clone(mocks.messaging.options);
 
       return messaging.sendToDevice(
         mocks.messaging.registrationToken,
@@ -876,7 +876,7 @@ describe('Messaging', () => {
 
       return messaging.sendToDeviceGroup(
         mocks.messaging.notificationKey,
-        mocks.messaging.payloadDataOnly
+        mocks.messaging.payloadDataOnly,
       );
     });
 
@@ -980,7 +980,7 @@ describe('Messaging', () => {
     it('should not mutate the payload argument', () => {
       mockedRequests.push(mockSendToDeviceGroupRequest());
 
-      let mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payload);
+      const mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payload);
 
       return messaging.sendToDeviceGroup(
         mocks.messaging.notificationKey,
@@ -993,7 +993,7 @@ describe('Messaging', () => {
     it('should not mutate the options argument', () => {
       mockedRequests.push(mockSendToDeviceGroupRequest());
 
-      let mockOptionsClone: MessagingOptions = _.clone(mocks.messaging.options);
+      const mockOptionsClone: MessagingOptions = _.clone(mocks.messaging.options);
 
       return messaging.sendToDeviceGroup(
         mocks.messaging.notificationKey,
@@ -1119,7 +1119,7 @@ describe('Messaging', () => {
 
       return messaging.sendToTopic(
         mocks.messaging.topic,
-        mocks.messaging.payload
+        mocks.messaging.payload,
       );
     });
 
@@ -1128,7 +1128,7 @@ describe('Messaging', () => {
 
       return messaging.sendToTopic(
         mocks.messaging.topicWithPrefix,
-        mocks.messaging.payload
+        mocks.messaging.payload,
       );
     });
 
@@ -1137,7 +1137,7 @@ describe('Messaging', () => {
 
       return messaging.sendToTopic(
         mocks.messaging.topicWithPrivatePrefix,
-        mocks.messaging.payload
+        mocks.messaging.payload,
       );
     });
 
@@ -1210,7 +1210,7 @@ describe('Messaging', () => {
     it('should not mutate the payload argument', () => {
       mockedRequests.push(mockSendToTopicRequest());
 
-      let mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payload);
+      const mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payload);
 
       return messaging.sendToTopic(
         mocks.messaging.topic,
@@ -1223,7 +1223,7 @@ describe('Messaging', () => {
     it('should not mutate the options argument', () => {
       mockedRequests.push(mockSendToTopicRequest());
 
-      let mockOptionsClone: MessagingOptions = _.clone(mocks.messaging.options);
+      const mockOptionsClone: MessagingOptions = _.clone(mocks.messaging.options);
 
       return messaging.sendToTopic(
         mocks.messaging.topic,
@@ -1341,7 +1341,7 @@ describe('Messaging', () => {
 
       return messaging.sendToCondition(
         mocks.messaging.condition,
-        mocks.messaging.payloadDataOnly
+        mocks.messaging.payloadDataOnly,
       );
     });
 
@@ -1392,7 +1392,7 @@ describe('Messaging', () => {
     it('should not mutate the payload argument', () => {
       mockedRequests.push(mockSendToConditionRequest());
 
-      let mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payload);
+      const mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payload);
 
       return messaging.sendToCondition(
         mocks.messaging.condition,
@@ -1405,7 +1405,7 @@ describe('Messaging', () => {
     it('should not mutate the options argument', () => {
       mockedRequests.push(mockSendToConditionRequest());
 
-      let mockOptionsClone: MessagingOptions = _.clone(mocks.messaging.options);
+      const mockOptionsClone: MessagingOptions = _.clone(mocks.messaging.options);
 
       return messaging.sendToCondition(
         mocks.messaging.condition,
@@ -1440,20 +1440,22 @@ describe('Messaging', () => {
     });
 
     it('should be rejected given an empty payload', () => {
-      return messaging.sendToDeviceGroup(mocks.messaging.notificationKey, {} as MessagingPayload)
+      const msg: any = {};
+      return messaging.sendToDeviceGroup(mocks.messaging.notificationKey, msg)
         .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-payload');
     });
 
     it('should be rejected given a non-empty payload with neither the "data" nor the "notification" property', () => {
-      return messaging.sendToTopic(mocks.messaging.topic, {
+      const msg: any = {
         foo: 'one',
         bar: 'two',
-      } as MessagingPayload)
+      };
+      return messaging.sendToTopic(mocks.messaging.topic, msg)
         .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-payload');
     });
 
     it('should be rejected given an otherwise valid payload with an additional invalid property', () => {
-      let mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payload);
+      const mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payload);
       (mockPayloadClone as any).foo = 'one';
 
       return messaging.sendToCondition(mocks.messaging.condition, mockPayloadClone)
@@ -1489,7 +1491,7 @@ describe('Messaging', () => {
     });
 
     it('should be rejected given a valid "data" property but invalid "notification" property', () => {
-      let mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payloadDataOnly);
+      const mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payloadDataOnly);
       (mockPayloadClone as any).notification = 'foo';
 
       return messaging.sendToDevice(mocks.messaging.registrationToken, mockPayloadClone)
@@ -1497,7 +1499,7 @@ describe('Messaging', () => {
     });
 
     it('should be rejected given a valid "notification" property but invalid "data" property', () => {
-      let mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payloadNotificationOnly);
+      const mockPayloadClone: MessagingPayload = _.clone(mocks.messaging.payloadNotificationOnly);
       (mockPayloadClone as any).data = 'foo';
 
       return messaging.sendToDevice(mocks.messaging.registrationToken, mockPayloadClone)
@@ -1647,26 +1649,26 @@ describe('Messaging', () => {
     const invalidTtls = ['', 'abc', '123', '-123s', '1.2.3s', 'As', 's', '1s', -1];
     invalidTtls.forEach((ttl) => {
       it(`should throw given an invalid ttl: ${ ttl }`, () => {
-        let message: Message = {
+        const message: Message = {
           condition: 'topic-name',
           android: {
-            ttl: (ttl as any)
+            ttl: (ttl as any),
           },
         };
         expect(() => {
           messaging.send(message);
         }).to.throw('TTL must be a non-negative duration in milliseconds');
       });
-    })
+    });
 
     const invalidColors = ['', 'foo', '123', '#AABBCX', '112233', '#11223'];
     invalidColors.forEach((color) => {
       it(`should throw given an invalid color: ${ color }`, () => {
-        let message: Message = {
+        const message: Message = {
           condition: 'topic-name',
           android: {
             notification: {
-              color
+              color,
             },
           },
         };
@@ -1677,7 +1679,7 @@ describe('Messaging', () => {
     });
 
     it('should throw given android titleLocArgs without titleLocKey', () => {
-      let message: Message = {
+      const message: Message = {
         condition: 'topic-name',
         android: {
           notification: {
@@ -1691,7 +1693,7 @@ describe('Messaging', () => {
     });
 
     it('should throw given android bodyLocArgs without bodyLocKey', () => {
-      let message: Message = {
+      const message: Message = {
         condition: 'topic-name',
         android: {
           notification: {
@@ -1705,15 +1707,15 @@ describe('Messaging', () => {
     });
 
     it('should throw given apns titleLocArgs without titleLocKey', () => {
-      let message: Message = {
+      const message: Message = {
         condition: 'topic-name',
         apns: {
           payload: {
             aps: {
               alert: {
                 titleLocArgs: ['foo'],
-              }
-            }
+              },
+            },
           },
         },
       };
@@ -1723,15 +1725,15 @@ describe('Messaging', () => {
     });
 
     it('should throw given apns locArgs without locKey', () => {
-      let message: Message = {
+      const message: Message = {
         condition: 'topic-name',
         apns: {
           payload: {
             aps: {
               alert: {
                 locArgs: ['foo'],
-              }
-            }
+              },
+            },
           },
         },
       };
@@ -1782,7 +1784,7 @@ describe('Messaging', () => {
     ];
     invalidDataMessages.forEach((config) => {
       it(`should throw given data with non-string value: ${config.label}`, () => {
-        let message = config.message;
+        const message = config.message;
         message.token = 'token';
         expect(() => {
           messaging.send(message);
@@ -1797,7 +1799,7 @@ describe('Messaging', () => {
           messaging.send({apns: {payload}, token: 'token'});
         }).to.throw('apns.payload must be a non-null object');
       });
-    });    
+    });
     invalidApnsPayloads.forEach((aps) => {
       it(`should throw given APNS payload with invalid aps object: ${JSON.stringify(aps)}`, () => {
         expect(() => {
@@ -1824,7 +1826,7 @@ describe('Messaging', () => {
           messaging.sendToDevice(
             mocks.messaging.registrationToken,
             mocks.messaging.payload,
-            invalidOption as MessagingOptions
+            invalidOption as MessagingOptions,
           );
         }).to.throw('Messaging options must be an object');
 
@@ -1832,7 +1834,7 @@ describe('Messaging', () => {
           messaging.sendToDeviceGroup(
             mocks.messaging.notificationKey,
             mocks.messaging.payload,
-            invalidOption as MessagingOptions
+            invalidOption as MessagingOptions,
           );
         }).to.throw('Messaging options must be an object');
 
@@ -1840,7 +1842,7 @@ describe('Messaging', () => {
           messaging.sendToTopic(
             mocks.messaging.topic,
             mocks.messaging.payload,
-            invalidOption as MessagingOptions
+            invalidOption as MessagingOptions,
           );
         }).to.throw('Messaging options must be an object');
 
@@ -1848,7 +1850,7 @@ describe('Messaging', () => {
           messaging.sendToCondition(
             mocks.messaging.condition,
             mocks.messaging.payload,
-            invalidOption as MessagingOptions
+            invalidOption as MessagingOptions,
           );
         }).to.throw('Messaging options must be an object');
       });
@@ -1869,8 +1871,8 @@ describe('Messaging', () => {
     const whitelistedOptionsKeys: {
       [name: string]: {
         type: string,
-        underscoreCasedKey?: string
-      }
+        underscoreCasedKey?: string,
+      },
     } = {
       dryRun: { type: 'boolean', underscoreCasedKey: 'dry_run' },
       priority: { type: 'string' },
@@ -1904,7 +1906,7 @@ describe('Messaging', () => {
       }
 
       // Only test the alternate underscoreCasedKey if it is defined
-      let keysToTest = [camelCasedKey];
+      const keysToTest = [camelCasedKey];
       if (typeof underscoreCasedKey !== 'undefined') {
         keysToTest.push(underscoreCasedKey);
       }
@@ -1993,11 +1995,11 @@ describe('Messaging', () => {
         });
     });
 
-    const validMessages: {
+    const validMessages: Array<{
       label: string;
       req: any;
-      want?: any;      
-    }[] = [
+      want?: any;
+    }> = [
       {
         label: 'Generic data message',
         req: {
@@ -2040,7 +2042,7 @@ describe('Messaging', () => {
               tag: 'test.tag',
             },
           },
-        }
+        },
       },
       {
         label: 'Android camel cased properties',
@@ -2078,7 +2080,7 @@ describe('Messaging', () => {
             priority: 'high',
             collapseKey: 'test.key',
             restrictedPackageName: 'test.package',
-            ttl: 5000,            
+            ttl: 5000,
           },
         },
         want: {
@@ -2086,9 +2088,9 @@ describe('Messaging', () => {
             priority: 'high',
             collapse_key: 'test.key',
             restricted_package_name: 'test.package',
-            ttl: '5s',            
+            ttl: '5s',
           },
-        }
+        },
       },
       {
         label: 'All Android properties',
@@ -2141,8 +2143,8 @@ describe('Messaging', () => {
               body_loc_args: ['arg1', 'arg2'],
             },
           },
-        }
-      },      
+        },
+      },
       {
         label: 'Webpush data message',
         req: {
@@ -2193,7 +2195,7 @@ describe('Messaging', () => {
             headers: {
               k1: 'v1',
               k2: 'v2',
-            },            
+            },
           },
         },
       },
@@ -2202,12 +2204,12 @@ describe('Messaging', () => {
         req: {
           apns: {
             payload: {
-              aps: {                
-                alert: 'test.alert',                
+              aps: {
+                alert: 'test.alert',
               },
             },
           },
-        },        
+        },
       },
       {
         label: 'All APNS properties',
@@ -2219,7 +2221,7 @@ describe('Messaging', () => {
             },
             payload: {
               aps: {
-                alert: {                  
+                alert: {
                   titleLocKey: 'title.loc.key',
                   titleLocArgs: ['arg1', 'arg2'],
                   locKey: 'body.loc.key',
@@ -2229,11 +2231,11 @@ describe('Messaging', () => {
                 badge: 42,
                 sound: 'test.sound',
                 category: 'test.category',
-                contentAvailable: true,                
+                contentAvailable: true,
                 threadId: 'thread.id',
               },
               customKey1: 'custom.value',
-              customKey2: {nested: 'value'}
+              customKey2: {nested: 'value'},
             },
           },
         },
@@ -2245,23 +2247,23 @@ describe('Messaging', () => {
             },
             payload: {
               aps: {
-                alert: {
+                'alert': {
                   'title-loc-key': 'title.loc.key',
                   'title-loc-args': ['arg1', 'arg2'],
                   'loc-key': 'body.loc.key',
                   'loc-args': ['arg1', 'arg2'],
                   'action-loc-key': 'action.loc.key',
                 },
-                badge: 42,
-                sound: 'test.sound',
-                category: 'test.category',
+                'badge': 42,
+                'sound': 'test.sound',
+                'category': 'test.category',
                 'content-available': 1,
                 'thread-id': 'thread.id',
               },
               customKey1: 'custom.value',
-              customKey2: {nested: 'value'}
+              customKey2: {nested: 'value'},
             },
-          },   
+          },
         },
       },
       {
@@ -2269,7 +2271,7 @@ describe('Messaging', () => {
         req: {
           apns: {
             payload: {
-              aps: {                
+              aps: {
                 contentAvailable: false,
               },
             },
@@ -2280,9 +2282,9 @@ describe('Messaging', () => {
             payload: {
               aps: {},
             },
-          },   
+          },
         },
-      },      
+      },
     ];
 
     validMessages.forEach((config) => {
@@ -2292,14 +2294,14 @@ describe('Messaging', () => {
           .then(() => {
             httpsRequestStub = sinon.stub(https, 'request');
             httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
-            let req = config.req;
+            const req = config.req;
             req.token = 'mock-token';
             return messaging.send(req);
           })
           .then(() => {
             expect(requestWriteSpy).to.have.been.calledOnce;
             const requestData = JSON.parse(requestWriteSpy.args[0][0]);
-            let want = config.want || config.req;
+            const want = config.want || config.req;
             want.token = 'mock-token';
             expect(requestData.message).to.deep.equal(want);
           });
@@ -2376,7 +2378,7 @@ describe('Messaging', () => {
   });
 
   function tokenSubscriptionTests(methodName) {
-    let invalidRegistrationTokensArgumentError = 'Registration token(s) provided to ' +
+    const invalidRegistrationTokensArgumentError = 'Registration token(s) provided to ' +
       `${methodName}() must be a non-empty string or a non-empty array`;
 
     const invalidRegistrationTokens = [null, NaN, 0, 1, true, false, {}, { a: 1 }, _.noop];

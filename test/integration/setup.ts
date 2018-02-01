@@ -44,7 +44,7 @@ before(() => {
     console.log(chalk.red(
       'The integration test suite requires a service account JSON file for a ' +
       'Firebase project to be saved to `test/resources/key.json`.',
-      error
+      error,
     ));
     throw error;
   }
@@ -55,7 +55,7 @@ before(() => {
     console.log(chalk.red(
       'The integration test suite requires an API key for a ' +
       'Firebase project to be saved to `test/resources/apikey.txt`.',
-      error
+      error,
     ));
     throw error;
   }

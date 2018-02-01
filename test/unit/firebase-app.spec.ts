@@ -19,7 +19,6 @@
 // Use untyped import syntax for Node built-ins
 import https = require('https');
 
-import {expect} from 'chai';
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as nock from 'nock';
@@ -46,6 +45,8 @@ chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
+const expect = chai.expect;
+
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 const ONE_MINUTE_IN_MILLISECONDS = 60 * 1000;
 
@@ -56,7 +57,7 @@ function mockServiceFactory(app: FirebaseApp): FirebaseServiceInterface {
     INTERNAL: {
       delete: deleteSpy.bind(null, app.name),
     },
-  } as FirebaseServiceInterface;
+  };
 }
 
 
@@ -199,20 +200,20 @@ describe('FirebaseApp', () => {
     it('should ignore a bad config key in the config file', () => {
       process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config_bad_key.json';
       const app = firebaseNamespace.initializeApp();
-      expect(app.options.projectId).to.equal("hipster-chat-mock");
+      expect(app.options.projectId).to.equal('hipster-chat-mock');
       expect(app.options.databaseAuthVariableOverride).to.be.undefined;
       expect(app.options.databaseURL).to.undefined;
       expect(app.options.storageBucket).to.undefined;
     });
 
     it('should ignore a bad config key in the json string', () => {
-      process.env[FIREBASE_CONFIG_VAR] = 
-      `{
-        "notAValidKeyValue": "The key value here is not valid.",
-        "projectId": "hipster-chat-mock"
-      }`;
+      process.env[FIREBASE_CONFIG_VAR] =
+        `{
+          "notAValidKeyValue": "The key value here is not valid.",
+          "projectId": "hipster-chat-mock"
+        }`;
       const app = firebaseNamespace.initializeApp();
-      expect(app.options.projectId).to.equal("hipster-chat-mock");
+      expect(app.options.projectId).to.equal('hipster-chat-mock');
       expect(app.options.databaseAuthVariableOverride).to.be.undefined;
       expect(app.options.databaseURL).to.undefined;
       expect(app.options.storageBucket).to.undefined;
@@ -221,19 +222,20 @@ describe('FirebaseApp', () => {
     it('should not throw when the config file has a bad key and the config file is unused', () => {
       process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config_bad_key.json';
       const app = firebaseNamespace.initializeApp(mocks.appOptionsWithOverride, mocks.appName);
-      expect(app.options.projectId).to.equal("project_id");
+      expect(app.options.projectId).to.equal('project_id');
       expect(app.options.databaseAuthVariableOverride).to.deep.equal({ 'some#string': 'some#val' });
       expect(app.options.databaseURL).to.equal('https://databaseName.firebaseio.com');
       expect(app.options.storageBucket).to.equal('bucketName.appspot.com');
     });
 
     it('should not throw when the config json has a bad key and the config json is unused', () => {
-      process.env[FIREBASE_CONFIG_VAR] = 
-      `{
-        "notAValidKeyValue": "The key value here is not valid.",
-        "projectId": "hipster-chat-mock"
-      }`;  const app = firebaseNamespace.initializeApp(mocks.appOptionsWithOverride, mocks.appName);
-      expect(app.options.projectId).to.equal("project_id");
+      process.env[FIREBASE_CONFIG_VAR] =
+        `{
+          "notAValidKeyValue": "The key value here is not valid.",
+          "projectId": "hipster-chat-mock"
+        }`;
+      const app = firebaseNamespace.initializeApp(mocks.appOptionsWithOverride, mocks.appName);
+      expect(app.options.projectId).to.equal('project_id');
       expect(app.options.databaseAuthVariableOverride).to.deep.equal({ 'some#string': 'some#val' });
       expect(app.options.databaseURL).to.equal('https://databaseName.firebaseio.com');
       expect(app.options.storageBucket).to.equal('bucketName.appspot.com');
@@ -298,7 +300,7 @@ describe('FirebaseApp', () => {
         "databaseURL": "https://hipster-chat.firebaseio.mock",
         "projectId": "hipster-chat-mock",
         "storageBucket": "hipster-chat.appspot.mock"
-      }`;      
+      }`;
       const app = firebaseNamespace.initializeApp();
       expect(app.options.credential).to.be.instanceOf(ApplicationDefaultCredential);
       expect(app.options.databaseAuthVariableOverride).to.deep.equal({ 'some#key': 'some#val' });
@@ -954,7 +956,7 @@ describe('FirebaseApp', () => {
   });
 
   describe('INTERNAL.removeTokenListener()', () => {
-    let addAuthTokenListenerSpies: sinon.SinonSpy[] = [];
+    const addAuthTokenListenerSpies: sinon.SinonSpy[] = [];
 
     before(() => {
       addAuthTokenListenerSpies[0] = sinon.spy();

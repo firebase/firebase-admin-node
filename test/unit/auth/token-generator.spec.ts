@@ -20,7 +20,6 @@
 import https = require('https');
 
 import * as _ from 'lodash';
-import {expect} from 'chai';
 import * as jwt from 'jsonwebtoken';
 import * as chai from 'chai';
 import * as nock from 'nock';
@@ -36,6 +35,8 @@ import {Certificate} from '../../../src/auth/credential';
 chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
+
+const expect = chai.expect;
 
 
 const ALGORITHM = 'RS256';
@@ -110,10 +111,10 @@ function mockFailedFetchPublicKeys(): nock.Scope {
  * Verifies a token is signed with the private key corresponding to the provided public key.
  *
  * @param {string} token The token to verify.
- * @param {Object} publicKey The public key to use to verify the token.
- * @return {Promise<Object>} A promise fulfilled with the decoded token if it is valid; otherwise, a rejected promise.
+ * @param {string} publicKey The public key to use to verify the token.
+ * @return {Promise<object>} A promise fulfilled with the decoded token if it is valid; otherwise, a rejected promise.
  */
-function verifyToken(token: string, publicKey: string): Promise<Object> {
+function verifyToken(token: string, publicKey: string): Promise<object> {
   return new Promise((resolve, reject) => {
     jwt.verify(token, publicKey, {
       algorithms: [ALGORITHM],
@@ -176,7 +177,7 @@ describe('FirebaseTokenGenerator', () => {
     });
 
     it('should throw given an object with an empty string "private_key" property', () => {
-      let invalidCertificate = _.clone(mocks.certificateObject);
+      const invalidCertificate = _.clone(mocks.certificateObject);
       invalidCertificate.private_key = '';
       expect(() => {
         return new FirebaseTokenGenerator(new Certificate(invalidCertificate as any));
@@ -310,7 +311,7 @@ describe('FirebaseTokenGenerator', () => {
       clock = sinon.useFakeTimers(1000);
 
       return tokenGenerator.createCustomToken(mocks.uid)
-        .then(token => {
+        .then((token) => {
           const decoded = jwt.decode(token);
 
           expect(decoded).to.deep.equal({
@@ -328,7 +329,7 @@ describe('FirebaseTokenGenerator', () => {
       clock = sinon.useFakeTimers(1000);
 
       return tokenGenerator.createCustomToken(mocks.uid, mocks.developerClaims)
-        .then(token => {
+        .then((token) => {
           const decoded = jwt.decode(token);
 
           expect(decoded).to.deep.equal({
@@ -350,7 +351,7 @@ describe('FirebaseTokenGenerator', () => {
       clock = sinon.useFakeTimers(1000);
 
       return tokenGenerator.createCustomToken(mocks.uid)
-        .then(token => {
+        .then((token) => {
           const decoded: any = jwt.decode(token, {
             complete: true,
           });
@@ -364,14 +365,14 @@ describe('FirebaseTokenGenerator', () => {
 
     it('should be fulfilled with a JWT which can be verified by the service account public key', () => {
       return tokenGenerator.createCustomToken(mocks.uid)
-        .then(token => {
+        .then((token) => {
           return verifyToken(token, mocks.keyPairs[0].public);
         });
     });
 
     it('should be fulfilled with a JWT which cannot be verified by a random public key', () => {
       return tokenGenerator.createCustomToken(mocks.uid)
-        .then(token => {
+        .then((token) => {
           return verifyToken(token, mocks.keyPairs[1].public)
             .should.eventually.be.rejectedWith('invalid signature');
         });
@@ -382,7 +383,7 @@ describe('FirebaseTokenGenerator', () => {
 
       let token;
       return tokenGenerator.createCustomToken(mocks.uid)
-        .then(result => {
+        .then((result) => {
           token = result;
 
           clock.tick((ONE_HOUR_IN_SECONDS * 1000) - 1);
@@ -563,7 +564,8 @@ describe('FirebaseTokenGenerator', () => {
 
         // Token should now be invalid
         return tokenGenerator.verifyIdToken(mockIdToken)
-          .should.eventually.be.rejectedWith('Firebase ID token has expired. Get a fresh token from your client app and try again (auth/id-token-expired)');
+          .should.eventually.be.rejectedWith('Firebase ID token has expired. Get a fresh token from your client ' +
+            'app and try again (auth/id-token-expired)');
       });
     });
 
@@ -578,7 +580,7 @@ describe('FirebaseTokenGenerator', () => {
 
     it('should be rejected given a custom token', () => {
       return tokenGenerator.createCustomToken(mocks.uid)
-        .then(customToken => {
+        .then((customToken) => {
           return tokenGenerator.verifyIdToken(customToken)
             .should.eventually.be.rejectedWith('verifyIdToken() expects an ID token, but was given a custom token');
         });

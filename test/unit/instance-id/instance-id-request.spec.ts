@@ -17,7 +17,6 @@
 'use strict';
 
 import * as _ from 'lodash';
-import {expect} from 'chai';
 import * as chai from 'chai';
 import * as nock from 'nock';
 import * as sinon from 'sinon';
@@ -35,13 +34,15 @@ chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
+const expect = chai.expect;
+
 describe('FirebaseInstanceIdRequestHandler', () => {
-  let mockApp: FirebaseApp;
-  let projectId: string = 'test-project-id';
-  let mockedRequests: nock.Scope[] = [];
+  const projectId: string = 'test-project-id';
+  const mockedRequests: nock.Scope[] = [];
+  const mockAccessToken: string = utils.generateRandomAccessToken();
   let stubs: sinon.SinonStub[] = [];
-  let mockAccessToken: string = utils.generateRandomAccessToken();
-  let expectedHeaders: Object;
+  let mockApp: FirebaseApp;
+  let expectedHeaders: object;
 
   before(() => utils.mockFetchAccessTokenRequests(mockAccessToken));
 
@@ -77,11 +78,11 @@ describe('FirebaseInstanceIdRequestHandler', () => {
     const port = 443;
     const path = `/v1/project/${projectId}/instanceId/test-iid`;
     const timeout = 10000;
-    
+
     it('should be fulfilled given a valid instance ID', () => {
       const expectedResult = {};
 
-      let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
       stubs.push(stub);
 
@@ -93,14 +94,14 @@ describe('FirebaseInstanceIdRequestHandler', () => {
               host, port, path, httpMethod, undefined, expectedHeaders, timeout);
         });
     });
-    
+
     it('should throw for HTTP 404 errors', () => {
-        const expectedResult = {'statusCode': 404};
-  
-        let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        const expectedResult = {statusCode: 404};
+
+        const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
           .rejects(expectedResult);
         stubs.push(stub);
-  
+
         const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp, projectId);
         return requestHandler.deleteInstanceId('test-iid')
           .then(() => {
@@ -113,12 +114,12 @@ describe('FirebaseInstanceIdRequestHandler', () => {
     });
 
     it('should throw for HTTP 409 errors', () => {
-        const expectedResult = {'statusCode': 409};
-  
-        let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        const expectedResult = {statusCode: 409};
+
+        const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
           .rejects(expectedResult);
         stubs.push(stub);
-  
+
         const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp, projectId);
         return requestHandler.deleteInstanceId('test-iid')
           .then(() => {
@@ -131,12 +132,12 @@ describe('FirebaseInstanceIdRequestHandler', () => {
     });
 
     it('should throw for unexpected HTTP errors', () => {
-        const expectedResult = {'statusCode': 511};
-  
-        let stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        const expectedResult = {statusCode: 511};
+
+        const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
           .rejects(expectedResult);
         stubs.push(stub);
-  
+
         const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp, projectId);
         return requestHandler.deleteInstanceId('test-iid')
           .then(() => {

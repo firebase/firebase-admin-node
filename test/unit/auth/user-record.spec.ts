@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import {expect} from 'chai';
 import * as chai from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
@@ -27,11 +26,13 @@ chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
+const expect = chai.expect;
+
 /**
- * @return {Object} A sample valid user response as returned from getAccountInfo
+ * @return {object} A sample valid user response as returned from getAccountInfo
  *     endpoint.
  */
-function getValidUserResponse(): Object {
+function getValidUserResponse(): object {
   return {
     localId: 'abcdefghijklmnopqrstuvwxyz',
     email: 'user@gmail.com',
@@ -81,10 +82,10 @@ function getValidUserResponse(): Object {
 }
 
 /**
- * @return {Object} The expected user JSON representation for the above user
+ * @return {object} The expected user JSON representation for the above user
  *     server response.
  */
-function getUserJSON(): Object {
+function getUserJSON(): object {
   return {
     uid: 'abcdefghijklmnopqrstuvwxyz',
     email: 'user@gmail.com',
@@ -141,10 +142,10 @@ function getUserJSON(): Object {
 }
 
 /**
- * @return {Object} A sample user info response as returned from getAccountInfo
+ * @return {object} A sample user info response as returned from getAccountInfo
  *     endpoint.
  */
-function getUserInfoResponse(): Object {
+function getUserInfoResponse(): object {
   return {
     providerId: 'google.com',
     displayName: 'John Doe',
@@ -156,9 +157,9 @@ function getUserInfoResponse(): Object {
 }
 
 /**
- * @return {Object} The JSON representation of the above user info response.
+ * @return {object} The JSON representation of the above user info response.
  */
-function getUserInfoJSON(): Object {
+function getUserInfoJSON(): object {
   return {
     providerId: 'google.com',
     displayName: 'John Doe',
@@ -170,10 +171,10 @@ function getUserInfoJSON(): Object {
 }
 
 /**
- * @return {Object} A sample user info response with phone number as returned
+ * @return {object} A sample user info response with phone number as returned
  *     from getAccountInfo endpoint.
  */
-function getUserInfoWithPhoneNumberResponse(): Object {
+function getUserInfoWithPhoneNumberResponse(): object {
   return {
     providerId: 'phone',
     phoneNumber: '+11234567890',
@@ -182,10 +183,10 @@ function getUserInfoWithPhoneNumberResponse(): Object {
 }
 
 /**
- * @return {Object} The JSON representation of the above user info response
+ * @return {object} The JSON representation of the above user info response
  *     with a phone number.
  */
-function getUserInfoWithPhoneNumberJSON(): Object {
+function getUserInfoWithPhoneNumberJSON(): object {
   return {
     providerId: 'phone',
     displayName: undefined,
@@ -324,13 +325,13 @@ describe('UserMetadata', () => {
     });
 
     it('should set creationTime and lastSignInTime to null when not provided', () => {
-      let metadata = new UserMetadata({});
+      const metadata = new UserMetadata({});
       expect(metadata.creationTime).to.be.null;
       expect(metadata.lastSignInTime).to.be.null;
     });
 
     it('should set creationTime to null when creationTime value is invalid', () => {
-      let metadata = new UserMetadata({
+      const metadata = new UserMetadata({
         createdAt: 'invalid',
       });
       expect(metadata.creationTime).to.be.null;
@@ -338,7 +339,7 @@ describe('UserMetadata', () => {
     });
 
     it('should set lastSignInTime to null when lastLoginAt value is invalid', () => {
-      let metadata = new UserMetadata({
+      const metadata = new UserMetadata({
         createdAt: '1476235905000',
         lastLoginAt: 'invalid',
       });
@@ -473,7 +474,7 @@ describe('UserRecord', () => {
     });
 
     it('should return expected undefined passwordHash', () => {
-      let resp: any = deepCopy(validUserResponse);
+      const resp: any = deepCopy(validUserResponse);
       delete resp.passwordHash;
       expect((new UserRecord(resp)).passwordHash).to.be.undefined;
     });
@@ -481,7 +482,7 @@ describe('UserRecord', () => {
     it('should return expected empty string passwordHash', () => {
       // This happens for users that were migrated from other Auth systems
       // using different hashing algorithms.
-      let resp: any = deepCopy(validUserResponse);
+      const resp: any = deepCopy(validUserResponse);
       resp.passwordHash = '';
       expect((new UserRecord(resp)).passwordHash).to.be.equal('');
     });
@@ -497,7 +498,7 @@ describe('UserRecord', () => {
     });
 
     it('should return expected undefined passwordSalt', () => {
-      let resp: any = deepCopy(validUserResponse);
+      const resp: any = deepCopy(validUserResponse);
       delete resp.salt;
       expect((new UserRecord(resp)).passwordSalt).to.be.undefined;
     });
@@ -505,7 +506,7 @@ describe('UserRecord', () => {
     it('should return expected empty string passwordSalt', () => {
       // This happens for users that were migrated from other Auth systems
       // using different hashing algorithms.
-      let resp: any = deepCopy(validUserResponse);
+      const resp: any = deepCopy(validUserResponse);
       resp.salt = '';
       expect((new UserRecord(resp)).passwordSalt).to.be.equal('');
     });
@@ -529,7 +530,7 @@ describe('UserRecord', () => {
     });
 
     it('should return expected undefined customClaims', () => {
-      let resp: any = deepCopy(validUserResponse);
+      const resp: any = deepCopy(validUserResponse);
       delete resp.customAttributes;
       expect((new UserRecord(resp)).customClaims).to.be.undefined;
     });
@@ -550,7 +551,7 @@ describe('UserRecord', () => {
     });
 
     it('should return expected metadata', () => {
-      let metadata = new UserMetadata({
+      const metadata = new UserMetadata({
         createdAt: '1476136676000',
         lastLoginAt: '1476235905000',
       });
@@ -573,7 +574,7 @@ describe('UserRecord', () => {
     });
 
     it('should return expected providerData', () => {
-      let providerData: Array<UserInfo> = [
+      const providerData: UserInfo[] = [
         new UserInfo({
           providerId: 'google.com',
           displayName: 'John Doe',

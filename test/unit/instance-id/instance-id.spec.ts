@@ -17,7 +17,6 @@
 'use strict';
 
 import * as _ from 'lodash';
-import {expect} from 'chai';
 import * as chai from 'chai';
 import * as nock from 'nock';
 import * as sinon from 'sinon';
@@ -37,6 +36,8 @@ import * as validator from '../../../src/utils/validator';
 chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
+
+const expect = chai.expect;
 
 describe('InstanceId', () => {
   let iid: InstanceId;
@@ -159,7 +160,7 @@ describe('InstanceId', () => {
     });
 
     it('should resolve without errors on success', () => {
-      let stub = sinon.stub(FirebaseInstanceIdRequestHandler.prototype, 'deleteInstanceId')
+      const stub = sinon.stub(FirebaseInstanceIdRequestHandler.prototype, 'deleteInstanceId')
         .returns(Promise.resolve(null));
       stubs.push(stub);
       return iid.deleteInstanceId(testInstanceId)
@@ -171,7 +172,7 @@ describe('InstanceId', () => {
 
     it('should throw an error when the backend returns an error', () => {
       // Stub deleteInstanceId to throw a backend error.
-      let stub = sinon.stub(FirebaseInstanceIdRequestHandler.prototype, 'deleteInstanceId')
+      const stub = sinon.stub(FirebaseInstanceIdRequestHandler.prototype, 'deleteInstanceId')
         .returns(Promise.reject(expectedError));
       stubs.push(stub);
       return iid.deleteInstanceId(testInstanceId)

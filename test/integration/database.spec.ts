@@ -15,7 +15,6 @@
  */
 
 import * as admin from '../../lib/index';
-import {expect} from 'chai';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import url = require('url');
@@ -28,6 +27,8 @@ const chalk = require('chalk');
 
 chai.should();
 chai.use(chaiAsPromised);
+
+const expect = chai.expect;
 
 const path = 'adminNodeSdkManualTest';
 
@@ -99,7 +100,7 @@ describe('admin.database', () => {
     it('once() returns the current value of the reference', () => {
       return ref.once('value')
         .then((snapshot) => {
-          let value = snapshot.val();
+          const value = snapshot.val();
           expect(value.success).to.be.true;
           expect(typeof value.timestamp).to.equal('number');
         });
@@ -141,7 +142,7 @@ describe('admin.database', () => {
     it('once() returns the current value of the reference', () => {
       return refWithUrl.once('value')
         .then((snapshot) => {
-          let value = snapshot.val();
+          const value = snapshot.val();
           expect(value.success).to.be.true;
           expect(typeof value.timestamp).to.equal('number');
         });
@@ -165,6 +166,6 @@ function addValueEventListener(
     callback: (s: admin.database.DataSnapshot) => any) {
   // Check for type compilation. This method is not invoked by any tests. But it will
   // trigger a TS compilation failure if the RTDB typings were not loaded correctly.
-  let eventType: admin.database.EventType = 'value';
+  const eventType: admin.database.EventType = 'value';
   db.ref().on(eventType, callback);
 }

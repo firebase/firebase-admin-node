@@ -15,7 +15,6 @@
  */
 
 import * as admin from '../../lib/index';
-import {expect} from 'chai';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import {Bucket, File} from '@google-cloud/storage';
@@ -24,6 +23,8 @@ import {projectId} from './setup';
 
 chai.should();
 chai.use(chaiAsPromised);
+
+const expect = chai.expect;
 
 describe('admin.storage', () => {
   it('bucket() returns a handle to the default bucket', () => {
