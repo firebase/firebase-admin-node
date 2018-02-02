@@ -22,9 +22,9 @@ chai.should();
 chai.use(chaiAsPromised);
 
 describe('admin.instanceId', () => {
-  it('deleteInstanceId() fails when called with non-existing instance ID', () => {
-    return admin.instanceId().deleteInstanceId('non-existing')
+  it('deleteInstanceId() fails when called with fictive-ID0 instance ID', () => {
+    return admin.instanceId().deleteInstanceId('fictive-ID0')
       .should.eventually.be
-      .rejectedWith('Instance ID "non-existing": Failed to find the instance ID.');
+      .rejectedWith('Instance ID "fictive-ID0": Failed to find the instance ID.');
   });
 });
