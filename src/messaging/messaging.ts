@@ -188,6 +188,12 @@ export interface AndroidNotification {
   titleLocArgs?: string[];
 }
 
+/**
+ * Checks if the given object only contains strings as child values.
+ *
+ * @param {object} map An object to be validated.
+ * @param {string} label A label to be included in the errors thrown.
+ */
 function validateStringMap(map: object, label: string) {
   if (typeof map === 'undefined') {
     return;
@@ -203,6 +209,11 @@ function validateStringMap(map: object, label: string) {
   });
 }
 
+/**
+ * Checks if the given WebpushConfig object is valid. The object must have valid headers and data.
+ *
+ * @param {WebpushConfig} config An object to be validated.
+ */
 function validateWebpushConfig(config: WebpushConfig) {
   if (typeof config === 'undefined') {
     return;
@@ -214,6 +225,12 @@ function validateWebpushConfig(config: WebpushConfig) {
   validateStringMap(config.data, 'webpush.data');
 }
 
+/**
+ * Checks if the given ApnsConfig object is valid. The object must have valid headers and a
+ * payload.
+ *
+ * @param {ApnsConfig} config An object to be validated.
+ */
 function validateApnsConfig(config: ApnsConfig) {
   if (typeof config === 'undefined') {
     return;
@@ -225,6 +242,11 @@ function validateApnsConfig(config: ApnsConfig) {
   validateApnsPayload(config.payload);
 }
 
+/**
+ * Checks if the given ApnsPayload object is valid. The object must have a valid aps value.
+ *
+ * @param {ApnsPayload} payload An object to be validated.
+ */
 function validateApnsPayload(payload: ApnsPayload) {
   if (typeof payload === 'undefined') {
     return;
@@ -235,6 +257,12 @@ function validateApnsPayload(payload: ApnsPayload) {
   validateAps(payload.aps);
 }
 
+/**
+ * Checks if the given Aps object is valid. The object must have a valid alert. If the validation
+ * is successful, transforms the input object by renaming the keys to valid APNS payload keys.
+ *
+ * @param {Aps} aps An object to be validated.
+ */
 function validateAps(aps: Aps) {
   if (typeof aps === 'undefined') {
     return;
@@ -259,6 +287,13 @@ function validateAps(aps: Aps) {
   }
 }
 
+/**
+ * Checks if the given alert object is valid. Alert could be a string or a complex object.
+ * If specified as an object, it must have valid localization parameters. If successful, transforms
+ * the input object by renaming the keys to valid APNS payload keys.
+ *
+ * @param {string | ApsAlert} alert An alert string or an object to be validated.
+ */
 function validateApsAlert(alert: string | ApsAlert) {
   if (typeof alert === 'undefined' || validator.isString(alert)) {
     return;
@@ -269,19 +304,17 @@ function validateApsAlert(alert: string | ApsAlert) {
   }
 
   const apsAlert: ApsAlert = alert as ApsAlert;
-  if (validator.isNonEmptyArray(apsAlert.locArgs)) {
-    if (!validator.isNonEmptyString(apsAlert.locKey)) {
-      throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_PAYLOAD,
-        'apns.payload.aps.alert.locKey is required when specifying locArgs');
-    }
+  if (validator.isNonEmptyArray(apsAlert.locArgs) &&
+      !validator.isNonEmptyString(apsAlert.locKey)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD,
+      'apns.payload.aps.alert.locKey is required when specifying locArgs');
   }
-  if (validator.isNonEmptyArray(apsAlert.titleLocArgs)) {
-    if (!validator.isNonEmptyString(apsAlert.titleLocKey)) {
-      throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_PAYLOAD,
-        'apns.payload.aps.alert.titleLocKey is required when specifying titleLocArgs');
-    }
+  if (validator.isNonEmptyArray(apsAlert.titleLocArgs) &&
+      !validator.isNonEmptyString(apsAlert.titleLocKey)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD,
+      'apns.payload.aps.alert.titleLocKey is required when specifying titleLocArgs');
   }
 
   const propertyMappings = {
@@ -295,6 +328,13 @@ function validateApsAlert(alert: string | ApsAlert) {
   renameProperties(apsAlert, propertyMappings);
 }
 
+/**
+ * Checks if the given AndroidConfig object is valid. The object must have valid ttl, data,
+ * and notification fields. If successful, transforms the input object by renaming keys to valid
+ * Android keys. Also transforms the ttl value to the format expected by FCM service.
+ *
+ * @param {AndroidConfig} config An object to be validated.
+ */
 function validateAndroidConfig(config: AndroidConfig) {
   if (typeof config === 'undefined') {
     return;
@@ -333,6 +373,13 @@ function validateAndroidConfig(config: AndroidConfig) {
   renameProperties(config, propertyMappings);
 }
 
+/**
+ * Checks if the given AndroidNotification object is valid. The object must have valid color and
+ * localization parameters. If successful, transforms the input object by renaming keys to valid
+ * Android keys.
+ *
+ * @param {AndroidNotification} notification An object to be validated.
+ */
 function validateAndroidNotification(notification: AndroidNotification) {
   if (typeof notification === 'undefined') {
     return;
@@ -345,19 +392,17 @@ function validateAndroidNotification(notification: AndroidNotification) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD, 'android.notification.color must be in the form #RRGGBB');
   }
-  if (validator.isNonEmptyArray(notification.bodyLocArgs)) {
-    if (!validator.isNonEmptyString(notification.bodyLocKey)) {
-      throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_PAYLOAD,
-        'android.notification.bodyLocKey is required when specifying bodyLocArgs');
-    }
+  if (validator.isNonEmptyArray(notification.bodyLocArgs) &&
+      !validator.isNonEmptyString(notification.bodyLocKey)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD,
+      'android.notification.bodyLocKey is required when specifying bodyLocArgs');
   }
-  if (validator.isNonEmptyArray(notification.titleLocArgs)) {
-    if (!validator.isNonEmptyString(notification.titleLocKey)) {
-      throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_PAYLOAD,
-        'android.notification.titleLocKey is required when specifying titleLocArgs');
-    }
+  if (validator.isNonEmptyArray(notification.titleLocArgs) &&
+      !validator.isNonEmptyString(notification.titleLocKey)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD,
+      'android.notification.titleLocKey is required when specifying titleLocArgs');
   }
 
   const propertyMappings = {
@@ -370,6 +415,13 @@ function validateAndroidNotification(notification: AndroidNotification) {
   renameProperties(notification, propertyMappings);
 }
 
+/**
+ * Checks if the given Message object is valid. Recursively validates all the child objects
+ * included in the message (android, apns, data etc.). If successful, transforms the message
+ * in place by renaming the keys to what's expected by the remote FCM service.
+ *
+ * @param {Message} Message An object to be validated.
+ */
 function validateMessage(message: Message) {
   if (!validator.isNonNullObject(message)) {
     throw new FirebaseMessagingError(

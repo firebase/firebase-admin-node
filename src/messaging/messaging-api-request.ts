@@ -55,11 +55,17 @@ export class FirebaseMessagingRequestHandler {
     return null;
   }
 
+  /**
+   * Extracts error message from the given response object.
+   *
+   * @param {object} response The response to check for errors.
+   * @return {string|null} The error message if present; null otherwise.
+   */
   private static getErrorMessage(response: any): string | null {
-    if (validator.isNonNullObject(response) && 'error' in response) {
-      if (validator.isNonEmptyString(response.error.message)) {
-        return response.error.message;
-      }
+    if (validator.isNonNullObject(response) &&
+        'error' in response &&
+        validator.isNonEmptyString(response.error.message)) {
+      return response.error.message;
     }
     return null;
   }

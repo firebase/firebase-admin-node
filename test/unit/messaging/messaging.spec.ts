@@ -1998,7 +1998,7 @@ describe('Messaging', () => {
     const validMessages: Array<{
       label: string;
       req: any;
-      want?: any;
+      expectedReq?: any;
     }> = [
       {
         label: 'Generic data message',
@@ -2059,7 +2059,7 @@ describe('Messaging', () => {
             },
           },
         },
-        want: {
+        expectedReq: {
           android: {
             collapse_key: 'test.key',
             restricted_package_name: 'test.package',
@@ -2083,7 +2083,7 @@ describe('Messaging', () => {
             ttl: 5000,
           },
         },
-        want: {
+        expectedReq: {
           android: {
             priority: 'high',
             collapse_key: 'test.key',
@@ -2119,7 +2119,7 @@ describe('Messaging', () => {
             },
           },
         },
-        want: {
+        expectedReq: {
           android: {
             priority: 'high',
             collapse_key: 'test.key',
@@ -2239,7 +2239,7 @@ describe('Messaging', () => {
             },
           },
         },
-        want: {
+        expectedReq: {
           apns: {
             headers: {
               h1: 'v1',
@@ -2277,7 +2277,7 @@ describe('Messaging', () => {
             },
           },
         },
-        want: {
+        expectedReq: {
           apns: {
             payload: {
               aps: {},
@@ -2301,9 +2301,9 @@ describe('Messaging', () => {
           .then(() => {
             expect(requestWriteSpy).to.have.been.calledOnce;
             const requestData = JSON.parse(requestWriteSpy.args[0][0]);
-            const want = config.want || config.req;
-            want.token = 'mock-token';
-            expect(requestData.message).to.deep.equal(want);
+            const expectedReq = config.expectedReq || config.req;
+            expectedReq.token = 'mock-token';
+            expect(requestData.message).to.deep.equal(expectedReq);
           });
       });
     });
