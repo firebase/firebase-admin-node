@@ -374,6 +374,15 @@ describe('Messaging', () => {
       });
     });
 
+    const invalidTopics = ['/topics/', '/foo/bar', 'foo bar'];
+    invalidTopics.forEach((topic) => {
+      it(`should throw given invalid topic name: ${JSON.stringify(topic)}`, () => {
+        expect(() => {
+          messaging.send({topic});
+        }).to.throw('Malformed topic name');
+      });
+    });
+
     const targetMessages = [
       {token: 'mock-token'}, {topic: 'mock-topic'},
       {topic: '/topics/mock-topic'}, {condition: '"foo" in topics'},

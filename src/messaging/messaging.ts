@@ -429,9 +429,16 @@ function validateMessage(message: Message) {
   }
 
   const anyMessage = message as any;
-  if (anyMessage.topic && anyMessage.topic.startsWith('/topics/')) {
+  if (anyMessage.topic) {
     // If the topic name is prefixed, remove it.
-    anyMessage.topic = anyMessage.topic.replace(/^\/topics\//, '');
+    if (anyMessage.topic.startsWith('/topics/')) {
+      anyMessage.topic = anyMessage.topic.replace(/^\/topics\//, '');
+    }
+    // Checks for illegal characters and empty string.
+    if (!/^[a-zA-Z0-9-_.~%]+$/.test(anyMessage.topic)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_PAYLOAD, 'Malformed topic name');
+    }
   }
 
   const targets = [anyMessage.token, anyMessage.topic, anyMessage.condition];
