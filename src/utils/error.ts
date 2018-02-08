@@ -484,6 +484,10 @@ export class MessagingClientErrorCode {
     message: 'The rate of messages to subscribers to a particular topic is too high. Reduce the ' +
       'number of messages sent for this topic, and do not immediately retry sending to this topic.',
   };
+  public static MESSAGE_RATE_EXCEEDED = {
+    code: 'message-rate-exceeded',
+    message: 'Sending limit exceeded for the message target.',
+  };
   public static INVALID_APNS_CREDENTIALS = {
     code: 'invalid-apns-credentials',
     message: 'A message targeted to an iOS device could not be sent because the required APNs ' +
@@ -612,7 +616,7 @@ const MESSAGING_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   /* FCM new server API error codes */
   UNREGISTERED: 'REGISTRATION_TOKEN_NOT_REGISTERED',
   INVALID_ARGUMENT: 'INVALID_ARGUMENT',
-  QUOTA_EXCEEDED: 'DEVICE_MESSAGE_RATE_EXCEEDED',
+  QUOTA_EXCEEDED: 'MESSAGE_RATE_EXCEEDED',
   SENDER_ID_MISMATCH: 'MISMATCHED_CREDENTIAL',
   APNS_AUTH_ERROR: 'INVALID_APNS_CREDENTIALS',
   UNAVAILABLE: 'SERVER_UNAVAILABLE',
