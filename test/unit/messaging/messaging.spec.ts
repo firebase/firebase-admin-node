@@ -365,12 +365,6 @@ describe('Messaging', () => {
       });
     });
 
-    it('should throw given message with invalid topic name', () => {
-      expect(() => {
-        messaging.send({topic: '/topics/foo'});
-      }).to.throw('Topic name must be specified without the "/topics/" prefix');
-    });
-
     const invalidDryRun = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
     invalidDryRun.forEach((dryRun) => {
       it(`should throw given invalid dryRun parameter: ${JSON.stringify(dryRun)}`, () => {
@@ -380,7 +374,19 @@ describe('Messaging', () => {
       });
     });
 
-    const targetMessages = [{token: 'mock-token'}, {topic: 'mock-topic'}, {condition: '"foo" in topics'}];
+    const invalidTopics = ['/topics/', '/foo/bar', 'foo bar'];
+    invalidTopics.forEach((topic) => {
+      it(`should throw given invalid topic name: ${JSON.stringify(topic)}`, () => {
+        expect(() => {
+          messaging.send({topic});
+        }).to.throw('Malformed topic name');
+      });
+    });
+
+    const targetMessages = [
+      {token: 'mock-token'}, {topic: 'mock-topic'},
+      {topic: '/topics/mock-topic'}, {condition: '"foo" in topics'},
+    ];
     targetMessages.forEach((message) => {
       it(`should be fulfilled with a message ID given a valid message: ${JSON.stringify(message)}`, () => {
         mockedRequests.push(mockSendRequest());
@@ -2306,6 +2312,21 @@ describe('Messaging', () => {
             expect(requestData.message).to.deep.equal(expectedReq);
           });
       });
+    });
+
+    it('should not throw when the message is addressed to the prefixed topic name', () => {
+      return mockApp.INTERNAL.getToken()
+        .then(() => {
+          httpsRequestStub = sinon.stub(https, 'request');
+          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
+          return messaging.send({topic: '/topics/mock-topic'});
+        })
+        .then(() => {
+          expect(requestWriteSpy).to.have.been.calledOnce;
+          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          const expectedReq = {topic: 'mock-topic'};
+          expect(requestData.message).to.deep.equal(expectedReq);
+        });
     });
 
     it('should convert whitelisted camelCased properties to underscore_cased properties', () => {

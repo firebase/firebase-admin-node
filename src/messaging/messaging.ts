@@ -429,16 +429,23 @@ function validateMessage(message: Message) {
   }
 
   const anyMessage = message as any;
+  if (anyMessage.topic) {
+    // If the topic name is prefixed, remove it.
+    if (anyMessage.topic.startsWith('/topics/')) {
+      anyMessage.topic = anyMessage.topic.replace(/^\/topics\//, '');
+    }
+    // Checks for illegal characters and empty string.
+    if (!/^[a-zA-Z0-9-_.~%]+$/.test(anyMessage.topic)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_PAYLOAD, 'Malformed topic name');
+    }
+  }
+
   const targets = [anyMessage.token, anyMessage.topic, anyMessage.condition];
   if (targets.filter((v) => validator.isNonEmptyString(v)).length !== 1) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD,
       'Exactly one of topic, token or condition is required');
-  }
-  if (anyMessage.topic && anyMessage.topic.startsWith('/topics/')) {
-    throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD,
-      'Topic name must be specified without the "/topics/" prefix');
   }
 
   validateStringMap(message.data, 'data');
