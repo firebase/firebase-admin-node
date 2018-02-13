@@ -38,6 +38,30 @@ const condition = '"test0" in topics || ("test1" in topics && "test2" in topics)
 
 const invalidTopic = 'topic-$%#^';
 
+const message: admin.messaging.Message = {
+  data: {
+    foo: 'bar',
+  },
+  notification: {
+    title: 'Message title',
+    body: 'Message body',
+  },
+  android: {
+    restrictedPackageName: 'com.google.firebase.testing',
+  },
+  apns: {
+    payload: {
+      aps: {
+        alert: {
+          title: 'Message title',
+          body: 'Message body',
+        },
+      },
+    },
+  },
+  topic: 'foo-bar',
+};
+
 const payload = {
   data: {
     foo: 'bar',
@@ -57,6 +81,13 @@ const options = {
 };
 
 describe('admin.messaging', () => {
+  it('send(message, dryRun) returns a message ID', () => {
+    return admin.messaging().send(message, true)
+      .then((name) => {
+        expect(name).matches(/^projects\/.*\/messages\/.*$/);
+      });
+  });
+
   it('sendToDevice(token) returns a response with multicast ID', () => {
     return admin.messaging().sendToDevice(registrationToken, payload, options)
       .then((response) => {

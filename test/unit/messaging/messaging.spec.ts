@@ -32,7 +32,8 @@ import * as mocks from '../../resources/mocks';
 
 import {FirebaseApp} from '../../../src/firebase-app';
 import {
-  Messaging, MessagingOptions, MessagingPayload, MessagingDevicesResponse, MessagingTopicManagementResponse,
+  AndroidConfig, Message, Messaging, MessagingOptions, MessagingPayload, MessagingDevicesResponse,
+  MessagingTopicManagementResponse, WebpushConfig,
   BLACKLISTED_OPTIONS_KEYS, BLACKLISTED_DATA_PAYLOAD_KEYS,
 } from '../../../src/messaging/messaging';
 
@@ -71,6 +72,36 @@ const STATUS_CODE_TO_ERROR_MAP = {
   500: 'messaging/internal-error',
   503: 'messaging/server-unavailable',
 };
+
+function mockSendRequest(): nock.Scope {
+  return nock(`https://${FCM_SEND_HOST}:443`)
+    .post('/v1/projects/project_id/messages:send')
+    .reply(200, {
+      name: 'projects/projec_id/messages/message_id',
+    });
+}
+
+function mockSendError(
+  statusCode: number,
+  errorFormat: 'json' | 'text',
+  responseOverride?: any,
+): nock.Scope {
+  let response;
+  let contentType;
+  if (errorFormat === 'json') {
+    response = mockServerErrorResponse.json;
+    contentType = 'application/json; charset=UTF-8';
+  } else {
+    response = mockServerErrorResponse.text;
+    contentType = 'text/html; charset=UTF-8';
+  }
+
+  return nock(`https://${FCM_SEND_HOST}:443`)
+    .post('/v1/projects/project_id/messages:send')
+    .reply(statusCode, responseOverride || response, {
+      'Content-Type': contentType,
+    });
+}
 
 function mockSendToDeviceStringRequest(mockFailure = false): nock.Scope {
   let deviceResult: object = { message_id: `0:${ mocks.messaging.messageId }` };
@@ -296,6 +327,112 @@ describe('Messaging', () => {
       expect(() => {
         (messaging as any).app = mockApp;
       }).to.throw('Cannot set property app of #<Messaging> which has only a getter');
+    });
+  });
+
+  describe('send()', () => {
+    it('should throw given no message', () => {
+      expect(() => {
+        messaging.send(undefined as Message);
+      }).to.throw('Message must be a non-null object');
+      expect(() => {
+        messaging.send(null);
+      }).to.throw('Message must be a non-null object');
+    });
+
+    const noTarget = [
+      {}, {token: null}, {token: ''}, {topic: null}, {topic: ''}, {condition: null}, {condition: ''},
+    ];
+    noTarget.forEach((message) => {
+      it(`should throw given message without target: ${ JSON.stringify(message) }`, () => {
+        expect(() => {
+          messaging.send(message as any);
+        }).to.throw('Exactly one of topic, token or condition is required');
+      });
+    });
+
+    const multipleTargets = [
+      {token: 'a', topic: 'b'},
+      {token: 'a', condition: 'b'},
+      {condition: 'a', topic: 'b'},
+      {token: 'a', topic: 'b', condition: 'c'},
+    ];
+    multipleTargets.forEach((message) => {
+      it(`should throw given message without target: ${ JSON.stringify(message)}`, () => {
+        expect(() => {
+          messaging.send(message as any);
+        }).to.throw('Exactly one of topic, token or condition is required');
+      });
+    });
+
+    const invalidDryRun = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
+    invalidDryRun.forEach((dryRun) => {
+      it(`should throw given invalid dryRun parameter: ${JSON.stringify(dryRun)}`, () => {
+        expect(() => {
+          messaging.send({token: 'a'}, dryRun as any);
+        }).to.throw('dryRun must be a boolean');
+      });
+    });
+
+    const invalidTopics = ['/topics/', '/foo/bar', 'foo bar'];
+    invalidTopics.forEach((topic) => {
+      it(`should throw given invalid topic name: ${JSON.stringify(topic)}`, () => {
+        expect(() => {
+          messaging.send({topic});
+        }).to.throw('Malformed topic name');
+      });
+    });
+
+    const targetMessages = [
+      {token: 'mock-token'}, {topic: 'mock-topic'},
+      {topic: '/topics/mock-topic'}, {condition: '"foo" in topics'},
+    ];
+    targetMessages.forEach((message) => {
+      it(`should be fulfilled with a message ID given a valid message: ${JSON.stringify(message)}`, () => {
+        mockedRequests.push(mockSendRequest());
+        return messaging.send(
+          message,
+        ).should.eventually.equal('projects/projec_id/messages/message_id');
+      });
+    });
+    targetMessages.forEach((message) => {
+      it(`should be fulfilled with a message ID in dryRun mode: ${JSON.stringify(message)}`, () => {
+        mockedRequests.push(mockSendRequest());
+        return messaging.send(
+          message,
+          true,
+        ).should.eventually.equal('projects/projec_id/messages/message_id');
+      });
+    });
+
+    it('should fail when the backend server returns a detailed error', () => {
+      const resp = {
+        error: {
+          status: 'INVALID_ARGUMENT',
+          message: 'test error message',
+        },
+      };
+      mockedRequests.push(mockSendError(400, 'json', resp));
+      return messaging.send(
+        {token: 'mock-token'},
+      ).should.eventually.be.rejectedWith('test error message')
+       .and.have.property('code', 'messaging/invalid-argument');
+    });
+
+    it('should fail when the backend server returns an unknown error', () => {
+      const resp = {error: 'test error message'};
+      mockedRequests.push(mockSendError(400, 'json', resp));
+      return messaging.send(
+        {token: 'mock-token'},
+      ).should.eventually.be.rejected.and.have.property('code', 'messaging/unknown-error');
+    });
+
+    it('should fail when the backend server returns a non-json error', () => {
+      // Error code will be determined based on the status code.
+      mockedRequests.push(mockSendError(400, 'text', 'foo bar'));
+      return messaging.send(
+        {token: 'mock-token'},
+      ).should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
     });
   });
 
@@ -1514,6 +1651,177 @@ describe('Messaging', () => {
         expect(mockPayloadClone).to.deep.equal(mocks.messaging.payload);
       });
     });
+
+    const invalidTtls = ['', 'abc', '123', '-123s', '1.2.3s', 'As', 's', '1s', -1];
+    invalidTtls.forEach((ttl) => {
+      it(`should throw given an invalid ttl: ${ ttl }`, () => {
+        const message: Message = {
+          condition: 'topic-name',
+          android: {
+            ttl: (ttl as any),
+          },
+        };
+        expect(() => {
+          messaging.send(message);
+        }).to.throw('TTL must be a non-negative duration in milliseconds');
+      });
+    });
+
+    const invalidColors = ['', 'foo', '123', '#AABBCX', '112233', '#11223'];
+    invalidColors.forEach((color) => {
+      it(`should throw given an invalid color: ${ color }`, () => {
+        const message: Message = {
+          condition: 'topic-name',
+          android: {
+            notification: {
+              color,
+            },
+          },
+        };
+        expect(() => {
+          messaging.send(message);
+        }).to.throw('android.notification.color must be in the form #RRGGBB');
+      });
+    });
+
+    it('should throw given android titleLocArgs without titleLocKey', () => {
+      const message: Message = {
+        condition: 'topic-name',
+        android: {
+          notification: {
+            titleLocArgs: ['foo'],
+          },
+        },
+      };
+      expect(() => {
+        messaging.send(message);
+      }).to.throw('titleLocKey is required when specifying titleLocArgs');
+    });
+
+    it('should throw given android bodyLocArgs without bodyLocKey', () => {
+      const message: Message = {
+        condition: 'topic-name',
+        android: {
+          notification: {
+            bodyLocArgs: ['foo'],
+          },
+        },
+      };
+      expect(() => {
+        messaging.send(message);
+      }).to.throw('bodyLocKey is required when specifying bodyLocArgs');
+    });
+
+    it('should throw given apns titleLocArgs without titleLocKey', () => {
+      const message: Message = {
+        condition: 'topic-name',
+        apns: {
+          payload: {
+            aps: {
+              alert: {
+                titleLocArgs: ['foo'],
+              },
+            },
+          },
+        },
+      };
+      expect(() => {
+        messaging.send(message);
+      }).to.throw('titleLocKey is required when specifying titleLocArgs');
+    });
+
+    it('should throw given apns locArgs without locKey', () => {
+      const message: Message = {
+        condition: 'topic-name',
+        apns: {
+          payload: {
+            aps: {
+              alert: {
+                locArgs: ['foo'],
+              },
+            },
+          },
+        },
+      };
+      expect(() => {
+        messaging.send(message);
+      }).to.throw('locKey is required when specifying locArgs');
+    });
+
+    const invalidObjects: any[] = [null, NaN, 0, 1, true, false, '', 'string'];
+    invalidObjects.forEach((arg) => {
+      it(`should throw given invalid android config: ${JSON.stringify(arg)}`, () => {
+        expect(() => {
+          messaging.send({android: arg, topic: 'test'});
+        }).to.throw('android must be a non-null object');
+      });
+
+      it(`should throw given invalid android notification: ${JSON.stringify(arg)}`, () => {
+        expect(() => {
+          messaging.send({android: {notification: arg}, topic: 'test'});
+        }).to.throw('android.notification must be a non-null object');
+      });
+
+      it(`should throw given invalid apns config: ${JSON.stringify(arg)}`, () => {
+        expect(() => {
+          messaging.send({apns: arg, topic: 'test'});
+        }).to.throw('apns must be a non-null object');
+      });
+
+      it(`should throw given invalid webpush config: ${JSON.stringify(arg)}`, () => {
+        expect(() => {
+          messaging.send({webpush: arg, topic: 'test'});
+        }).to.throw('webpush must be a non-null object');
+      });
+
+      it(`should throw given invalid data: ${JSON.stringify(arg)}`, () => {
+        expect(() => {
+          messaging.send({data: arg, topic: 'test'});
+        }).to.throw('data must be a non-null object');
+      });
+    });
+
+    const invalidDataMessages: any = [
+      {label: 'data', message: {data: {k1: true}}},
+      {label: 'android.data', message: {android: {data: {k1: true}}}},
+      {label: 'webpush.data', message: {webpush: {data: {k1: true}}}},
+      {label: 'webpush.headers', message: {webpush: {headers: {k1: true}}}},
+      {label: 'apns.headers', message: {apns: {headers: {k1: true}}}},
+    ];
+    invalidDataMessages.forEach((config) => {
+      it(`should throw given data with non-string value: ${config.label}`, () => {
+        const message = config.message;
+        message.token = 'token';
+        expect(() => {
+          messaging.send(message);
+        }).to.throw(`${config.label} must only contain string values`);
+      });
+    });
+
+    const invalidApnsPayloads: any = [null, '', 'payload', true, 1.23];
+    invalidApnsPayloads.forEach((payload) => {
+      it(`should throw given APNS payload with invalid object: ${JSON.stringify(payload)}`, () => {
+        expect(() => {
+          messaging.send({apns: {payload}, token: 'token'});
+        }).to.throw('apns.payload must be a non-null object');
+      });
+    });
+    invalidApnsPayloads.forEach((aps) => {
+      it(`should throw given APNS payload with invalid aps object: ${JSON.stringify(aps)}`, () => {
+        expect(() => {
+          messaging.send({apns: {payload: {aps}}, token: 'token'});
+        }).to.throw('apns.payload.aps must be a non-null object');
+      });
+    });
+
+    const invalidApnsAlerts: any = [null, [], true, 1.23];
+    invalidApnsAlerts.forEach((alert) => {
+      it(`should throw given APNS payload with invalid aps alert: ${JSON.stringify(alert)}`, () => {
+        expect(() => {
+          messaging.send({apns: {payload: {aps: {alert}}}, token: 'token'});
+        }).to.throw('apns.payload.aps.alert must be a string or a non-null object');
+      });
+    });
   });
 
   describe('Options validation', () => {
@@ -1690,6 +1998,334 @@ describe('Messaging', () => {
           expect(requestData).to.have.keys(['to', 'data', 'dry_run', 'collapse_key']);
           expect(requestData.dry_run).to.equal(mockOptionsClone.dryRun);
           expect(requestData.collapse_key).to.equal(mockOptionsClone.collapseKey);
+        });
+    });
+
+    const validMessages: Array<{
+      label: string;
+      req: any;
+      expectedReq?: any;
+    }> = [
+      {
+        label: 'Generic data message',
+        req: {
+          data: {
+            k1: 'v1',
+            k2: 'v2',
+          },
+        },
+      },
+      {
+        label: 'Generic notification message',
+        req: {
+          notification: {
+            title: 'test.title',
+            body: 'test.body',
+          },
+        },
+      },
+      {
+        label: 'Android data message',
+        req: {
+          android: {
+            data: {
+              k1: 'v1',
+              k2: 'v2',
+            },
+          },
+        },
+      },
+      {
+        label: 'Android notification message',
+        req: {
+          android: {
+            notification: {
+              title: 'test.title',
+              body: 'test.body',
+              icon: 'test.icon',
+              color: '#112233',
+              sound: 'test.sound',
+              tag: 'test.tag',
+            },
+          },
+        },
+      },
+      {
+        label: 'Android camel cased properties',
+        req: {
+          android: {
+            collapseKey: 'test.key',
+            restrictedPackageName: 'test.package',
+            notification: {
+              clickAction: 'test.click.action',
+              titleLocKey: 'title.loc.key',
+              titleLocArgs: ['arg1', 'arg2'],
+              bodyLocKey: 'body.loc.key',
+              bodyLocArgs: ['arg1', 'arg2'],
+            },
+          },
+        },
+        expectedReq: {
+          android: {
+            collapse_key: 'test.key',
+            restricted_package_name: 'test.package',
+            notification: {
+              click_action: 'test.click.action',
+              title_loc_key: 'title.loc.key',
+              title_loc_args: ['arg1', 'arg2'],
+              body_loc_key: 'body.loc.key',
+              body_loc_args: ['arg1', 'arg2'],
+            },
+          },
+        },
+      },
+      {
+        label: 'Android TTL',
+        req: {
+          android: {
+            priority: 'high',
+            collapseKey: 'test.key',
+            restrictedPackageName: 'test.package',
+            ttl: 5000,
+          },
+        },
+        expectedReq: {
+          android: {
+            priority: 'high',
+            collapse_key: 'test.key',
+            restricted_package_name: 'test.package',
+            ttl: '5s',
+          },
+        },
+      },
+      {
+        label: 'All Android properties',
+        req: {
+          android: {
+            priority: 'high',
+            collapseKey: 'test.key',
+            restrictedPackageName: 'test.package',
+            ttl: 5,
+            data: {
+              k1: 'v1',
+              k2: 'v2',
+            },
+            notification: {
+              title: 'test.title',
+              body: 'test.body',
+              icon: 'test.icon',
+              color: '#112233',
+              sound: 'test.sound',
+              tag: 'test.tag',
+              clickAction: 'test.click.action',
+              titleLocKey: 'title.loc.key',
+              titleLocArgs: ['arg1', 'arg2'],
+              bodyLocKey: 'body.loc.key',
+              bodyLocArgs: ['arg1', 'arg2'],
+            },
+          },
+        },
+        expectedReq: {
+          android: {
+            priority: 'high',
+            collapse_key: 'test.key',
+            restricted_package_name: 'test.package',
+            ttl: '0.005000000s', // 5 ms = 5,000,000 ns
+            data: {
+              k1: 'v1',
+              k2: 'v2',
+            },
+            notification: {
+              title: 'test.title',
+              body: 'test.body',
+              icon: 'test.icon',
+              color: '#112233',
+              sound: 'test.sound',
+              tag: 'test.tag',
+              click_action: 'test.click.action',
+              title_loc_key: 'title.loc.key',
+              title_loc_args: ['arg1', 'arg2'],
+              body_loc_key: 'body.loc.key',
+              body_loc_args: ['arg1', 'arg2'],
+            },
+          },
+        },
+      },
+      {
+        label: 'Webpush data message',
+        req: {
+          webpush: {
+            data: {
+              k1: 'v1',
+              k2: 'v2',
+            },
+          },
+        },
+      },
+      {
+        label: 'Webpush notification message',
+        req: {
+          webpush: {
+            notification: {
+              title: 'test.title',
+              body: 'test.body',
+              icon: 'test.icon',
+            },
+          },
+        },
+      },
+      {
+        label: 'All Webpush properties',
+        req: {
+          webpush: {
+            headers: {
+              h1: 'v1',
+              h2: 'v2',
+            },
+            data: {
+              k1: 'v1',
+              k2: 'v2',
+            },
+            notification: {
+              title: 'test.title',
+              body: 'test.body',
+              icon: 'test.icon',
+            },
+          },
+        },
+      },
+      {
+        label: 'APNS headers only',
+        req: {
+          apns: {
+            headers: {
+              k1: 'v1',
+              k2: 'v2',
+            },
+          },
+        },
+      },
+      {
+        label: 'APNS string alert',
+        req: {
+          apns: {
+            payload: {
+              aps: {
+                alert: 'test.alert',
+              },
+            },
+          },
+        },
+      },
+      {
+        label: 'All APNS properties',
+        req: {
+          apns: {
+            headers: {
+              h1: 'v1',
+              h2: 'v2',
+            },
+            payload: {
+              aps: {
+                alert: {
+                  titleLocKey: 'title.loc.key',
+                  titleLocArgs: ['arg1', 'arg2'],
+                  locKey: 'body.loc.key',
+                  locArgs: ['arg1', 'arg2'],
+                  actionLocKey: 'action.loc.key',
+                },
+                badge: 42,
+                sound: 'test.sound',
+                category: 'test.category',
+                contentAvailable: true,
+                threadId: 'thread.id',
+              },
+              customKey1: 'custom.value',
+              customKey2: {nested: 'value'},
+            },
+          },
+        },
+        expectedReq: {
+          apns: {
+            headers: {
+              h1: 'v1',
+              h2: 'v2',
+            },
+            payload: {
+              aps: {
+                'alert': {
+                  'title-loc-key': 'title.loc.key',
+                  'title-loc-args': ['arg1', 'arg2'],
+                  'loc-key': 'body.loc.key',
+                  'loc-args': ['arg1', 'arg2'],
+                  'action-loc-key': 'action.loc.key',
+                },
+                'badge': 42,
+                'sound': 'test.sound',
+                'category': 'test.category',
+                'content-available': 1,
+                'thread-id': 'thread.id',
+              },
+              customKey1: 'custom.value',
+              customKey2: {nested: 'value'},
+            },
+          },
+        },
+      },
+      {
+        label: 'APNS contentAvailable explicitly false',
+        req: {
+          apns: {
+            payload: {
+              aps: {
+                contentAvailable: false,
+              },
+            },
+          },
+        },
+        expectedReq: {
+          apns: {
+            payload: {
+              aps: {},
+            },
+          },
+        },
+      },
+    ];
+
+    validMessages.forEach((config) => {
+      it(`should serialize well-formed Message: ${config.label}`, () => {
+        // Wait for the initial getToken() call to complete before stubbing https.request.
+        return mockApp.INTERNAL.getToken()
+          .then(() => {
+            httpsRequestStub = sinon.stub(https, 'request');
+            httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
+            const req = config.req;
+            req.token = 'mock-token';
+            return messaging.send(req);
+          })
+          .then(() => {
+            expect(requestWriteSpy).to.have.been.calledOnce;
+            const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+            const expectedReq = config.expectedReq || config.req;
+            expectedReq.token = 'mock-token';
+            expect(requestData.message).to.deep.equal(expectedReq);
+          });
+      });
+    });
+
+    it('should not throw when the message is addressed to the prefixed topic name', () => {
+      return mockApp.INTERNAL.getToken()
+        .then(() => {
+          httpsRequestStub = sinon.stub(https, 'request');
+          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
+          return messaging.send({topic: '/topics/mock-topic'});
+        })
+        .then(() => {
+          expect(requestWriteSpy).to.have.been.calledOnce;
+          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          const expectedReq = {topic: 'mock-topic'};
+          expect(requestData.message).to.deep.equal(expectedReq);
         });
     });
 

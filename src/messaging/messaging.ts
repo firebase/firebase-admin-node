@@ -15,6 +15,7 @@
  */
 
 import {FirebaseApp} from '../firebase-app';
+import {renameProperties} from '../utils/index';
 import {deepCopy, deepExtend} from '../utils/deep-copy';
 import {FirebaseMessagingRequestHandler} from './messaging-api-request';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
@@ -91,6 +92,367 @@ export const BLACKLISTED_OPTIONS_KEYS = [
   'condition', 'data', 'notification', 'registrationIds', 'registration_ids', 'to',
 ];
 
+interface BaseMessage {
+  data?: {[key: string]: string};
+  notification?: Notification;
+  android?: AndroidConfig;
+  webpush?: WebpushConfig;
+  apns?: ApnsConfig;
+}
+
+interface TokenMessage extends BaseMessage {
+  token: string;
+}
+
+interface TopicMessage extends BaseMessage {
+  topic: string;
+}
+
+interface ConditionMessage extends BaseMessage {
+  condition: string;
+}
+
+/**
+ * Payload for the admin.messaging.send() operation. The payload contains all the fields
+ * in the BaseMessage type, and exactly one of token, topic or condition.
+ */
+export type Message = TokenMessage | TopicMessage | ConditionMessage;
+
+export interface Notification {
+  title?: string;
+  body?: string;
+}
+
+export interface WebpushConfig {
+  headers?: {[key: string]: string};
+  data?: {[key: string]: string};
+  notification?: WebpushNotification;
+}
+
+export interface WebpushNotification {
+  title?: string;
+  body?: string;
+  icon?: string;
+}
+
+export interface ApnsConfig {
+  headers?: {[key: string]: string};
+  payload?: ApnsPayload;
+}
+
+export interface ApnsPayload {
+  aps: Aps;
+  [customData: string]: object;
+}
+
+export interface Aps {
+  alert?: string | ApsAlert;
+  badge?: number;
+  sound?: string;
+  contentAvailable?: boolean;
+  category?: string;
+  threadId?: string;
+}
+
+export interface ApsAlert {
+  title?: string;
+  body?: string;
+  locKey?: string;
+  locArgs?: string[];
+  titleLocKey?: string;
+  titleLocArgs?: string[];
+  actionLocKey?: string;
+  launchImage?: string;
+}
+
+export interface AndroidConfig {
+  collapseKey?: string;
+  priority?: ('high' | 'normal');
+  ttl?: number;
+  restrictedPackageName?: string;
+  data?: {[key: string]: string};
+  notification?: AndroidNotification;
+}
+
+export interface AndroidNotification {
+  title?: string;
+  body?: string;
+  icon?: string;
+  color?: string;
+  sound?: string;
+  tag?: string;
+  clickAction?: string;
+  bodyLocKey?: string;
+  bodyLocArgs?: string[];
+  titleLocKey?: string;
+  titleLocArgs?: string[];
+}
+
+/**
+ * Checks if the given object only contains strings as child values.
+ *
+ * @param {object} map An object to be validated.
+ * @param {string} label A label to be included in the errors thrown.
+ */
+function validateStringMap(map: object, label: string) {
+  if (typeof map === 'undefined') {
+    return;
+  } else if (!validator.isNonNullObject(map)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD, `${label} must be a non-null object`);
+  }
+  Object.keys(map).forEach((key) => {
+    if (!validator.isString(map[key])) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_PAYLOAD, `${label} must only contain string values`);
+    }
+  });
+}
+
+/**
+ * Checks if the given WebpushConfig object is valid. The object must have valid headers and data.
+ *
+ * @param {WebpushConfig} config An object to be validated.
+ */
+function validateWebpushConfig(config: WebpushConfig) {
+  if (typeof config === 'undefined') {
+    return;
+  } else if (!validator.isNonNullObject(config)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'webpush must be a non-null object');
+  }
+  validateStringMap(config.headers, 'webpush.headers');
+  validateStringMap(config.data, 'webpush.data');
+}
+
+/**
+ * Checks if the given ApnsConfig object is valid. The object must have valid headers and a
+ * payload.
+ *
+ * @param {ApnsConfig} config An object to be validated.
+ */
+function validateApnsConfig(config: ApnsConfig) {
+  if (typeof config === 'undefined') {
+    return;
+  } else if (!validator.isNonNullObject(config)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'apns must be a non-null object');
+  }
+  validateStringMap(config.headers, 'apns.headers');
+  validateApnsPayload(config.payload);
+}
+
+/**
+ * Checks if the given ApnsPayload object is valid. The object must have a valid aps value.
+ *
+ * @param {ApnsPayload} payload An object to be validated.
+ */
+function validateApnsPayload(payload: ApnsPayload) {
+  if (typeof payload === 'undefined') {
+    return;
+  } else if (!validator.isNonNullObject(payload)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'apns.payload must be a non-null object');
+  }
+  validateAps(payload.aps);
+}
+
+/**
+ * Checks if the given Aps object is valid. The object must have a valid alert. If the validation
+ * is successful, transforms the input object by renaming the keys to valid APNS payload keys.
+ *
+ * @param {Aps} aps An object to be validated.
+ */
+function validateAps(aps: Aps) {
+  if (typeof aps === 'undefined') {
+    return;
+  } else if (!validator.isNonNullObject(aps)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'apns.payload.aps must be a non-null object');
+  }
+  validateApsAlert(aps.alert);
+
+  const propertyMappings = {
+    contentAvailable: 'content-available',
+    threadId: 'thread-id',
+  };
+  renameProperties(aps, propertyMappings);
+
+  if (typeof aps['content-available'] !== 'undefined') {
+    if (aps['content-available'] === true) {
+      aps['content-available'] = 1;
+    } else {
+      delete aps['content-available'];
+    }
+  }
+}
+
+/**
+ * Checks if the given alert object is valid. Alert could be a string or a complex object.
+ * If specified as an object, it must have valid localization parameters. If successful, transforms
+ * the input object by renaming the keys to valid APNS payload keys.
+ *
+ * @param {string | ApsAlert} alert An alert string or an object to be validated.
+ */
+function validateApsAlert(alert: string | ApsAlert) {
+  if (typeof alert === 'undefined' || validator.isString(alert)) {
+    return;
+  } else if (!validator.isNonNullObject(alert)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD,
+      'apns.payload.aps.alert must be a string or a non-null object');
+  }
+
+  const apsAlert: ApsAlert = alert as ApsAlert;
+  if (validator.isNonEmptyArray(apsAlert.locArgs) &&
+      !validator.isNonEmptyString(apsAlert.locKey)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD,
+      'apns.payload.aps.alert.locKey is required when specifying locArgs');
+  }
+  if (validator.isNonEmptyArray(apsAlert.titleLocArgs) &&
+      !validator.isNonEmptyString(apsAlert.titleLocKey)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD,
+      'apns.payload.aps.alert.titleLocKey is required when specifying titleLocArgs');
+  }
+
+  const propertyMappings = {
+    locKey: 'loc-key',
+    locArgs: 'loc-args',
+    titleLocKey: 'title-loc-key',
+    titleLocArgs: 'title-loc-args',
+    actionLocKey: 'action-loc-key',
+    launchImage: 'launch-image',
+  };
+  renameProperties(apsAlert, propertyMappings);
+}
+
+/**
+ * Checks if the given AndroidConfig object is valid. The object must have valid ttl, data,
+ * and notification fields. If successful, transforms the input object by renaming keys to valid
+ * Android keys. Also transforms the ttl value to the format expected by FCM service.
+ *
+ * @param {AndroidConfig} config An object to be validated.
+ */
+function validateAndroidConfig(config: AndroidConfig) {
+  if (typeof config === 'undefined') {
+    return;
+  } else if (!validator.isNonNullObject(config)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'android must be a non-null object');
+  }
+
+  if (typeof config.ttl !== 'undefined') {
+    if (!validator.isNumber(config.ttl) || config.ttl < 0) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_PAYLOAD,
+        'TTL must be a non-negative duration in milliseconds');
+    }
+    const seconds = Math.floor(config.ttl / 1000);
+    const nanos = (config.ttl - seconds * 1000) * 1000000;
+    let duration: string;
+    if (nanos > 0) {
+      let nanoString = nanos.toString();
+      while (nanoString.length < 9) {
+        nanoString = '0' + nanoString;
+      }
+      duration = `${seconds}.${nanoString}s`;
+    } else {
+      duration = `${seconds}s`;
+    }
+    (config as any).ttl = duration;
+  }
+  validateStringMap(config.data, 'android.data');
+  validateAndroidNotification(config.notification);
+
+  const propertyMappings = {
+    collapseKey: 'collapse_key',
+    restrictedPackageName: 'restricted_package_name',
+  };
+  renameProperties(config, propertyMappings);
+}
+
+/**
+ * Checks if the given AndroidNotification object is valid. The object must have valid color and
+ * localization parameters. If successful, transforms the input object by renaming keys to valid
+ * Android keys.
+ *
+ * @param {AndroidNotification} notification An object to be validated.
+ */
+function validateAndroidNotification(notification: AndroidNotification) {
+  if (typeof notification === 'undefined') {
+    return;
+  } else if (!validator.isNonNullObject(notification)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'android.notification must be a non-null object');
+  }
+
+  if (typeof notification.color !== 'undefined' && !/^#[0-9a-fA-F]{6}$/.test(notification.color)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'android.notification.color must be in the form #RRGGBB');
+  }
+  if (validator.isNonEmptyArray(notification.bodyLocArgs) &&
+      !validator.isNonEmptyString(notification.bodyLocKey)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD,
+      'android.notification.bodyLocKey is required when specifying bodyLocArgs');
+  }
+  if (validator.isNonEmptyArray(notification.titleLocArgs) &&
+      !validator.isNonEmptyString(notification.titleLocKey)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD,
+      'android.notification.titleLocKey is required when specifying titleLocArgs');
+  }
+
+  const propertyMappings = {
+    clickAction: 'click_action',
+    bodyLocKey: 'body_loc_key',
+    bodyLocArgs: 'body_loc_args',
+    titleLocKey: 'title_loc_key',
+    titleLocArgs: 'title_loc_args',
+  };
+  renameProperties(notification, propertyMappings);
+}
+
+/**
+ * Checks if the given Message object is valid. Recursively validates all the child objects
+ * included in the message (android, apns, data etc.). If successful, transforms the message
+ * in place by renaming the keys to what's expected by the remote FCM service.
+ *
+ * @param {Message} Message An object to be validated.
+ */
+function validateMessage(message: Message) {
+  if (!validator.isNonNullObject(message)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'Message must be a non-null object');
+  }
+
+  const anyMessage = message as any;
+  if (anyMessage.topic) {
+    // If the topic name is prefixed, remove it.
+    if (anyMessage.topic.startsWith('/topics/')) {
+      anyMessage.topic = anyMessage.topic.replace(/^\/topics\//, '');
+    }
+    // Checks for illegal characters and empty string.
+    if (!/^[a-zA-Z0-9-_.~%]+$/.test(anyMessage.topic)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_PAYLOAD, 'Malformed topic name');
+    }
+  }
+
+  const targets = [anyMessage.token, anyMessage.topic, anyMessage.condition];
+  if (targets.filter((v) => validator.isNonEmptyString(v)).length !== 1) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD,
+      'Exactly one of topic, token or condition is required');
+  }
+
+  validateStringMap(message.data, 'data');
+  validateAndroidConfig(message.android);
+  validateWebpushConfig(message.webpush);
+  validateApnsConfig(message.apns);
+}
 
 /* Payload for data messages */
 export interface DataMessagePayload {
@@ -240,8 +602,7 @@ function mapRawResponseToTopicManagementResponse(response: object): MessagingTop
       // Map the FCM server's error strings to actual error objects.
       if ('error' in tokenManagementResult) {
         result.failureCount += 1;
-
-        const newError = FirebaseMessagingError.fromServerError(
+        const newError = FirebaseMessagingError.fromTopicManagementServerError(
           tokenManagementResult.error, /* message */ undefined, tokenManagementResult.error,
         );
 
@@ -278,8 +639,10 @@ class MessagingInternals implements FirebaseServiceInternalsInterface {
  * Messaging service bound to the provided app.
  */
 export class Messaging implements FirebaseServiceInterface {
+
   public INTERNAL: MessagingInternals = new MessagingInternals();
 
+  private urlPath: string;
   private appInternal: FirebaseApp;
   private messagingRequestHandler: FirebaseMessagingRequestHandler;
 
@@ -295,9 +658,19 @@ export class Messaging implements FirebaseServiceInterface {
       );
     }
 
-    this.appInternal = app;
+    const projectId: string = utils.getProjectId(app);
+    if (!validator.isNonEmptyString(projectId)) {
+      // Assert for an explicit projct ID (either via AppOptions or the cert itself).
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_ARGUMENT,
+        'Failed to determine project ID for Messaging. Initialize the '
+        + 'SDK with service account credentials or set project ID as an app option. '
+        + 'Alternatively set the GCLOUD_PROJECT environment variable.',
+      );
+    }
 
-    // Initialize messaging request handler with the app.
+    this.urlPath = `/v1/projects/${projectId}/messages:send`;
+    this.appInternal = app;
     this.messagingRequestHandler = new FirebaseMessagingRequestHandler(app);
   }
 
@@ -308,6 +681,34 @@ export class Messaging implements FirebaseServiceInterface {
    */
   get app(): FirebaseApp {
     return this.appInternal;
+  }
+
+  /**
+   * Sends a message via Firebase Cloud Messaging (FCM).
+   *
+   * @param {Message} message The message to be sent.
+   * @param {boolean=} dryRun Whether to send the message in the dry-run (validation only) mode.
+   *
+   * @return {Promise<string>} A Promise fulfilled with a message ID string.
+   */
+  public send(message: Message, dryRun?: boolean): Promise<string> {
+    const copy: Message = deepCopy(message);
+    validateMessage(copy);
+    if (typeof dryRun !== 'undefined' && !validator.isBoolean(dryRun)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_ARGUMENT, 'dryRun must be a boolean');
+    }
+    return Promise.resolve()
+      .then(() => {
+        const request: {message: Message, validate_only?: boolean} = {message: copy};
+        if (dryRun) {
+          request.validate_only = true;
+        }
+        return this.messagingRequestHandler.invokeRequestHandler(FCM_SEND_HOST, this.urlPath, request);
+      })
+      .then((response) => {
+        return (response as any).name;
+      });
   }
 
   /**

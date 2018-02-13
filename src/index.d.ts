@@ -292,7 +292,99 @@ declare namespace admin.database.ServerValue {
   var TIMESTAMP: number;
 }
 
+type BaseMessage = {
+  data?: {[key: string]: string};
+  notification?: admin.messaging.Notification;
+  android?: admin.messaging.AndroidConfig;
+  webpush?: admin.messaging.WebpushConfig;
+  apns?: admin.messaging.ApnsConfig;
+};
+
+interface TokenMessage extends BaseMessage {
+  token: string;
+}
+
+interface TopicMessage extends BaseMessage {
+  topic: string;
+}
+
+interface ConditionMessage extends BaseMessage {
+  condition: string;
+}
+
 declare namespace admin.messaging {
+  type Message = TokenMessage | TopicMessage | ConditionMessage;
+
+  type AndroidConfig = {
+    collapseKey?: string;
+    priority?: ('high'|'normal');
+    ttl?: number;
+    restrictedPackageName?: string;
+    data?: {[key: string]: string};
+    notification?: AndroidNotification;
+  };
+
+  type AndroidNotification = {
+    title?: string;
+    body?: string;
+    icon?: string;
+    color?: string;
+    sound?: string;
+    tag?: string;
+    clickAction?: string;
+    bodyLocKey?: string;
+    bodyLocArgs?: string[];
+    titleLocKey?: string;
+    titleLocArgs?: string[];
+  };
+
+  type ApnsConfig = {
+    headers?: {[key: string]: string};
+    payload?: ApnsPayload;
+  };
+
+  type ApnsPayload = {
+    aps: Aps;
+    [customData: string]: object;
+  };
+
+  type Aps = {
+    alert?: string | ApsAlert;
+    badge?: number;
+    sound?: string;
+    contentAvailable?: boolean;
+    category?: string;
+    threadId?: string;
+  };
+
+  type ApsAlert = {
+    title?: string;
+    body?: string;
+    locKey?: string;
+    locArgs?: string[];
+    titleLocKey?: string;
+    titleLocArgs?: string[];
+    actionLocKey?: string;
+    launchImage?: string;
+  };
+
+  type Notification = {
+    title?: string;
+    body?: string;
+  };
+  
+  type WebpushConfig = {
+    headers?: {[key: string]: string};
+    data?: {[key: string]: string};
+    notification?: WebpushNotification;
+  };
+  
+  type WebpushNotification = {
+    title?: string;
+    body?: string;
+    icon?: string;
+  };
+
   type DataMessagePayload = {
     [key: string]: string;
   };
@@ -366,6 +458,7 @@ declare namespace admin.messaging {
   interface Messaging {
     app: admin.app.App;
 
+    send(message: admin.messaging.Message, dryRun?: boolean): Promise<string>;
     sendToDevice(
       registrationToken: string | string[],
       payload: admin.messaging.MessagingPayload,

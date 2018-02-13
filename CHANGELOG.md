@@ -1,6 +1,8 @@
 # Unrelased
 
--
+- [added] Added the `messaging.send()` method and the new `Message` type for
+  sending Cloud Messaging notifications via the
+  [new FCM REST endpoint](https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages).
 
 # v5.8.2
 

@@ -260,6 +260,27 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
     return new FirebaseMessagingError(error);
   }
 
+  public static fromTopicManagementServerError(
+    serverErrorCode: string,
+    message?: string,
+    rawServerResponse?: object,
+  ): FirebaseMessagingError {
+    // If not found, default to unknown error.
+    const clientCodeKey = TOPIC_MGT_SERVER_TO_CLIENT_CODE[serverErrorCode] || 'UNKNOWN_ERROR';
+    const error: ErrorInfo = deepCopy(MessagingClientErrorCode[clientCodeKey]);
+    error.message = message || error.message;
+
+    if (clientCodeKey === 'UNKNOWN_ERROR' && typeof rawServerResponse !== 'undefined') {
+      try {
+        error.message += ` Raw server response: "${ JSON.stringify(rawServerResponse) }"`;
+      } catch (e) {
+        // Ignore JSON parsing error.
+      }
+    }
+
+    return new FirebaseMessagingError(error);
+  }
+
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
     super('messaging', info.code, message || info.message);
@@ -463,6 +484,10 @@ export class MessagingClientErrorCode {
     message: 'The rate of messages to subscribers to a particular topic is too high. Reduce the ' +
       'number of messages sent for this topic, and do not immediately retry sending to this topic.',
   };
+  public static MESSAGE_RATE_EXCEEDED = {
+    code: 'message-rate-exceeded',
+    message: 'Sending limit exceeded for the message target.',
+  };
   public static INVALID_APNS_CREDENTIALS = {
     code: 'invalid-apns-credentials',
     message: 'A message targeted to an iOS device could not be sent because the required APNs ' +
@@ -588,6 +613,19 @@ const MESSAGING_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   // Invalid APNs credentials.
   InvalidApnsCredential: 'INVALID_APNS_CREDENTIALS',
 
+  /* FCM new server API error codes */
+  UNREGISTERED: 'REGISTRATION_TOKEN_NOT_REGISTERED',
+  INVALID_ARGUMENT: 'INVALID_ARGUMENT',
+  QUOTA_EXCEEDED: 'MESSAGE_RATE_EXCEEDED',
+  SENDER_ID_MISMATCH: 'MISMATCHED_CREDENTIAL',
+  APNS_AUTH_ERROR: 'INVALID_APNS_CREDENTIALS',
+  UNAVAILABLE: 'SERVER_UNAVAILABLE',
+  INTERNAL: 'INTERNAL_ERROR',
+  UNSPECIFIED_ERROR: 'UNKNOWN_ERROR',
+};
+
+/** @const {ServerToClientCode} Topic management (IID) server to client enum error codes. */
+const TOPIC_MGT_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   /* TOPIC SUBSCRIPTION MANAGEMENT ERRORS */
   NOT_FOUND: 'REGISTRATION_TOKEN_NOT_REGISTERED',
   INVALID_ARGUMENT: 'INVALID_REGISTRATION_TOKEN',
