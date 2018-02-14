@@ -93,7 +93,7 @@ echo
 #########################
 echo "[INFO] Updating version number in CHANGELOG.md to ${VERSION_WITHOUT_RC}..."
 sed -i '' -e "/^# Unreleased$/d" CHANGELOG.md
-echo -e "# Unrelased\n\n-\n\n# v${VERSION_WITHOUT_RC}" | cat - CHANGELOG.md > TEMP_CHANGELOG.md
+echo -e "# Unreleased\n\n-\n\n# v${VERSION_WITHOUT_RC}" | cat - CHANGELOG.md > TEMP_CHANGELOG.md
 mv TEMP_CHANGELOG.md CHANGELOG.md
 
 ############################

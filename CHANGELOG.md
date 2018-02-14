@@ -1,4 +1,8 @@
-# Unrelased
+# Unreleased
+
+-
+
+# v5.9.0
 
 - [added] Added the `messaging.send()` method and the new `Message` type for
   sending Cloud Messaging notifications via the
