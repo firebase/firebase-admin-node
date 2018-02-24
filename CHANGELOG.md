@@ -1,6 +1,8 @@
 # Unreleased
 
--
+- [changed] The `admin.initializeApp()` method can now be invoked without an
+  explicit `credential` option. In that case the SDK will get initialized with
+  Google application default credentials.
 
 # v5.9.0
 
