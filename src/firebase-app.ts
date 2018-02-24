@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {Credential, GoogleOAuthAccessToken} from './auth/credential';
+import {ApplicationDefaultCredential, Credential, GoogleOAuthAccessToken} from './auth/credential';
 import * as validator from './utils/validator';
 import {deepCopy, deepExtend} from './utils/deep-copy';
 import {FirebaseServiceInterface} from './firebase-service';
@@ -248,27 +248,26 @@ export class FirebaseApp {
     this.name_ = name;
     this.options_ = deepCopy(options) as FirebaseAppOptions;
 
-    if (typeof this.options_ !== 'object' || this.options_ === null) {
-      // Ensure the options are a non-null object
-      this.options_ = {};
-    }
-
-    const hasCredential = ('credential' in this.options_);
-
-    let errorMessage: string;
-    if (!hasCredential) {
-      errorMessage = 'Options must be an object containing at least a "credential" property.';
-    }
-    const credential = this.options_.credential;
-    if (typeof credential !== 'object' || credential === null || typeof credential.getAccessToken !== 'function') {
-      errorMessage = 'The "credential" property must be an object which implements the Credential interface.';
-    }
-
-    if (typeof errorMessage !== 'undefined') {
+    if (!validator.isNonNullObject(this.options_)) {
       throw new FirebaseAppError(
         AppErrorCodes.INVALID_APP_OPTIONS,
         `Invalid Firebase app options passed as the first argument to initializeApp() for the ` +
-        `app named "${this.name_}". ${errorMessage}`,
+        `app named "${this.name_}". Options must be a non-null object.`,
+      );
+    }
+
+    const hasCredential = ('credential' in this.options_);
+    if (!hasCredential) {
+      this.options_.credential = new ApplicationDefaultCredential();
+    }
+
+    const credential = this.options_.credential;
+    if (typeof credential !== 'object' || credential === null || typeof credential.getAccessToken !== 'function') {
+      throw new FirebaseAppError(
+        AppErrorCodes.INVALID_APP_OPTIONS,
+        `Invalid Firebase app options passed as the first argument to initializeApp() for the ` +
+        `app named "${this.name_}". The "credential" property must be an object which implements ` +
+        `the Credential interface.`,
       );
     }
 
