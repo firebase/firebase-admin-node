@@ -49,8 +49,8 @@
   ],
   "types": "./lib/index.d.ts",
   "dependencies": {
-    "@firebase/app": "^0.1.1",
-    "@firebase/database": "^0.1.3",
+    "@firebase/app": "^0.1.10",
+    "@firebase/database": "^0.1.11",
     "@google-cloud/firestore": "^0.11.2",
     "@google-cloud/storage": "^1.6.0",
     "@types/google-cloud__storage": "^1.1.7",
