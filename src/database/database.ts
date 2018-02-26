@@ -66,7 +66,8 @@ export class DatabaseService implements FirebaseServiceInterface {
     let db: Database = this.INTERNAL.databases[dbUrl];
     if (typeof db === 'undefined') {
       const rtdb = require('@firebase/database');
-      db = rtdb.initStandalone(this.appInternal, dbUrl).instance;
+      const { version } = require('../../package.json');
+      db = rtdb.initStandalone(this.appInternal, dbUrl, version).instance;
       this.INTERNAL.databases[dbUrl] = db;
     }
     return db;
