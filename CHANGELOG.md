@@ -1,6 +1,8 @@
 # Unreleased
 
--
+- [changed] Upgraded Realtime Database client to v0.1.11.
+- [changed] Modified the Realtime Database client integration to report the
+  correct user agent header.
 
 # v5.9.0
 
