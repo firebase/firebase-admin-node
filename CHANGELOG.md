@@ -6,6 +6,7 @@
 - [changed] Upgraded Realtime Database client to v0.1.11.
 - [changed] Modified the Realtime Database client integration to report the
   correct user agent header.
+- [changed] Upgraded Cloud Firestire client to v0.12.0.
 
 # v5.9.0
 
