@@ -1,5 +1,8 @@
 # Unreleased
 
+- [changed] The `admin.initializeApp()` method can now be invoked without an
+  explicit `credential` option. In that case the SDK will get initialized with
+  Google application default credentials.
 - [changed] Upgraded Realtime Database client to v0.1.11.
 - [changed] Modified the Realtime Database client integration to report the
   correct user agent header.
