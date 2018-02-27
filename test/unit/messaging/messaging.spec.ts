@@ -419,6 +419,20 @@ describe('Messaging', () => {
        .and.have.property('code', 'messaging/invalid-argument');
     });
 
+    it('should map server error code to client-side error', () => {
+      const resp = {
+        error: {
+          status: 'NOT_FOUND',
+          message: 'test error message',
+        },
+      };
+      mockedRequests.push(mockSendError(404, 'json', resp));
+      return messaging.send(
+        {token: 'mock-token'},
+      ).should.eventually.be.rejectedWith('test error message')
+       .and.have.property('code', 'messaging/registration-token-not-registered');
+    });
+
     it('should fail when the backend server returns an unknown error', () => {
       const resp = {error: 'test error message'};
       mockedRequests.push(mockSendError(400, 'json', resp));
