@@ -7,6 +7,8 @@
 - [changed] Modified the Realtime Database client integration to report the
   correct user agent header.
 - [changed] Upgraded Cloud Firestire client to v0.12.0.
+- [changed] Improved error handling in FCM by mapping more server-side errors
+  to client-side error codes.
 
 # v5.9.0
 
