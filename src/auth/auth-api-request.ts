@@ -287,6 +287,19 @@ export const FIREBASE_AUTH_SIGN_UP_NEW_USER = new ApiSettings('signupNewUser', '
         'INTERNAL ASSERT FAILED: Unable to create new user');
     }
   });
+/**
+ * Instantiates the getOobConfirmationCode endpoint settings for sending a verification email.
+ */
+export const FIREBASE_AUTH_GET_OOB_CONFIRMATION_CODE = new ApiSettings('getOobConfirmationCode', 'POST')
+  // Set request validator.
+  .setRequestValidator((request: any) => {
+    // requestType is required
+    if (typeof request.requestType === 'undefined') {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Server request is missing request type');
+    }
+  });
 
 /**
  * Class that provides mechanism to send requests to the Firebase Auth backend endpoints.
