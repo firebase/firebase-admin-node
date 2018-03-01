@@ -40,7 +40,7 @@ import {
   UserImportBuilder, UserImportRecord, UserImportResult, UserImportOptions,
 } from '../../../src/auth/user-import-builder';
 import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/utils/error';
-import {toWebSafeBase64} from '../../../src/utils'
+import {toWebSafeBase64} from '../../../src/utils';
 
 chai.should();
 chai.use(sinonChai);
@@ -981,7 +981,7 @@ describe('FirebaseAuthRequestHandler', () => {
         error: [
           {index: 0, message: 'Some error occurred'},
           {index: 1, message: 'Another error occurred'},
-        ]
+        ],
       };
       const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
         .returns(Promise.resolve(expectedResult));
@@ -1053,7 +1053,7 @@ describe('FirebaseAuthRequestHandler', () => {
         {uid: 'user16', providerData: [{}]},
         {email: 'user17@example.com'},
       ] as any;
-      const options = {
+      const validOptions = {
         hash: {
           algorithm: 'BCRYPT',
         },
@@ -1116,7 +1116,7 @@ describe('FirebaseAuthRequestHandler', () => {
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
-      return requestHandler.uploadAccount(testUsers, options)
+      return requestHandler.uploadAccount(testUsers, validOptions)
         .then((result) => {
           expect(result).to.deep.equal(expectedResult);
           expect(stub).to.have.not.been.called;

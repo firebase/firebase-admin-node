@@ -34,7 +34,9 @@ const expect = chai.expect;
 
 describe('UserImportBuilder', () => {
   const nowString = new Date().toUTCString();
-  const userRequestValidator = (request) => {};
+  const userRequestValidator = (request) => {
+    // Do not throw an error.
+  };
   const userRequestValidatorWithError = (request) => {
     // Simulate a validation error is thrown for a specific user.
     if (request.localId === '5678') {
@@ -108,7 +110,7 @@ describe('UserImportBuilder', () => {
       phoneNumber: '+16505550101',
     },
   ];
-  
+
   const options = {
     hash: {
       algorithm: 'BCRYPT' as any,
@@ -135,7 +137,7 @@ describe('UserImportBuilder', () => {
       );
       const invalidOptions = {
         hash: {
-          algorithm: 'invalid'
+          algorithm: 'invalid',
         },
       };
       expect(() =>  {
@@ -260,7 +262,7 @@ describe('UserImportBuilder', () => {
           expect(() =>  {
             return new UserImportBuilder(users, invalidOptions as any, userRequestValidator);
           }).to.throw(expectedError.message);
-        }); 
+        });
       });
 
       invalidRounds.forEach((rounds) => {
@@ -615,9 +617,9 @@ describe('UserImportBuilder', () => {
       const userRequestValidatorWithMultipleErrors = (request) => {
         // Simulate a validation error is thrown for specific users.
         if (request.localId === 'USER2') {
-          throw new FirebaseAuthError( AuthClientErrorCode.INVALID_EMAIL);
+          throw new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);
         } else if (request.localId === 'USER4') {
-          throw new FirebaseAuthError( AuthClientErrorCode.INVALID_PHONE_NUMBER);
+          throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER);
         }
       };
 
@@ -626,10 +628,10 @@ describe('UserImportBuilder', () => {
       // Seventh and eighth user will throw a client side error due to invalid type provided.
       const testUsers = [
         {uid: 'USER1'},
-        {uid: 'USER2', email: 'invalid', 'passwordHash': Buffer.from('userpass')},
+        {uid: 'USER2', email: 'invalid', passwordHash: Buffer.from('userpass')},
         {uid: 'USER3'},
         {uid: 'USER4', email: 'user@example.com', phoneNumber: 'invalid'},
-        {uid: 'USER5', email: 'johndoe@example.com', 'passwordHash': Buffer.from('password')},
+        {uid: 'USER5', email: 'johndoe@example.com', passwordHash: Buffer.from('password')},
         {uid: 'USER6', phoneNumber: '+16505550101'},
         {uid: 'USER7', email: 'other@domain.com', passwordHash: 'not a buffer' as any},
         {

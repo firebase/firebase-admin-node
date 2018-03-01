@@ -1351,7 +1351,7 @@ describe('Auth', () => {
       errors: [
         {
           index: 1,
-          error: expectedUserImportResultError
+          error: expectedUserImportResultError,
         },
       ],
     };

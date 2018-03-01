@@ -282,8 +282,8 @@ function validateCreateEditRequest(request: any, uploadAccountRequest: boolean =
       !validator.isArray(request.providerUserInfo)) {
     throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_DATA);
   } else if (validator.isArray(request.providerUserInfo)) {
-    request.providerUserInfo.forEach((providerUserInfoEntry) => { 
-      validateProviderUserInfo(providerUserInfoEntry);    
+    request.providerUserInfo.forEach((providerUserInfoEntry) => {
+      validateProviderUserInfo(providerUserInfoEntry);
     });
   }
 }
@@ -542,13 +542,13 @@ export class FirebaseAuthRequestHandler {
     }
     // If no remaining user in request after client side processing, there is no need
     // to send the request to the server.
-    if (request.users.length == 0) {
+    if (request.users.length === 0) {
       return Promise.resolve(userImportBuilder.generateResponse([]));
     }
     return this.invokeRequestHandler(FIREBASE_AUTH_UPLOAD_ACCOUNT, request)
       .then((response: any) => {
         // No error object is returned if no error encountered.
-        const failedUploads = (response.error || []) as {index: number, message: string}[];
+        const failedUploads = (response.error || []) as Array<{index: number, message: string}>;
         // Rewrite response as UserImportResult and re-insert client previously detected errors.
         return userImportBuilder.generateResponse(failedUploads);
       });

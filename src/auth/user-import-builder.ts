@@ -53,14 +53,14 @@ export interface UserImportRecord {
     lastSignInTime?: string;
     creationTime?: string;
   };
-  providerData?: {
+  providerData?: Array<{
     uid: string,
     displayName?: string,
     email?: string,
     photoURL?: string,
     providerId: string,
-  }[];
-  customClaims?: Object;
+  }>;
+  customClaims?: object;
   passwordHash?: Buffer;
   passwordSalt?: Buffer;
 }
@@ -77,7 +77,7 @@ export interface UploadAccountRequest {
   parallelization?: number;
   blockSize?: number;
   dkLen?: number;
-  users?: {
+  users?: Array<{
     localId: string;
     email?: string;
     emailVerified?: string;
@@ -85,19 +85,19 @@ export interface UploadAccountRequest {
     disabled?: boolean;
     photoUrl?: string;
     phoneNumber?: string;
-    providerUserInfo?: {
+    providerUserInfo?: Array<{
       rawId: string;
       providerId: string;
       email?: string;
       displayName?: string;
       photoUrl?: string;
-    }[];
+    }>;
     passwordHash?: string;
     salt?: string;
     lastLoginAt?: number;
     createdAt?: number;
     customAttributes?: string;
-  }[];
+  }>;
 }
 
 
@@ -106,7 +106,7 @@ export interface UserImportResult {
   failureCount: number;
   successCount: number;
   errors: FirebaseArrayIndexError[];
-};
+}
 
 
 /** Callback function to validate an object. */
@@ -145,6 +145,51 @@ export class UserImportBuilder {
   }
 
   /**
+   * Returns the corresponding constructed uploadAccount request.
+   * @return {UploadAccountRequest} The constructed uploadAccount request.
+   */
+  public generateRequest(): UploadAccountRequest {
+    const users = this.validatedUsers.map((user) => {
+      return deepCopy(user);
+    });
+    return deepExtend({users}, deepCopy(this.validatedOptions)) as UploadAccountRequest;
+  }
+
+  /**
+   * Populates the UserImportResult using the client side detected errors and the server
+   * side returned errors.
+   * @return {UserImportResult} The user import result based on the returned failed
+   *     uploadAccount response.
+   */
+  public generateResponse(
+      failedUploads: Array<{index: number, message: string}>): UserImportResult {
+    // Initialize user import result.
+    const importResult: UserImportResult = {
+      successCount: this.users.length - this.userImportResultErrors.length,
+      failureCount: this.userImportResultErrors.length,
+      errors: deepCopy(this.userImportResultErrors),
+    };
+    importResult.failureCount += failedUploads.length;
+    importResult.successCount -= failedUploads.length;
+    failedUploads.forEach((failedUpload) => {
+      importResult.errors.push({
+        // Map backend request index to original developer provided array index.
+        index: this.indexMap[failedUpload.index],
+        error: new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_USER_IMPORT,
+          failedUpload.message,
+        ),
+      });
+    });
+    // Sort errors by index.
+    importResult.errors.sort((a, b) => {
+      return a.index - b.index;
+    });
+    // Return sorted result.
+    return importResult;
+  }
+
+  /**
    * Validates and populates the hashing options of the uploadAccount request.
    * Throws an error whenever an invalid or missing options is detected.
    */
@@ -165,7 +210,7 @@ export class UserImportBuilder {
         `"hash.algorithm" must be a string matching the list of supported algorithms.`,
       );
     }
-  
+
     let rounds;
     switch (this.options.hash.algorithm) {
       case 'HMAC_SHA512':
@@ -248,7 +293,7 @@ export class UserImportBuilder {
       case 'BCRYPT':
         this.validatedOptions = {
           hashAlgorithm: this.options.hash.algorithm,
-        }
+        };
         break;
       case 'STANDARD_SCRYPT':
         const cpuMemCost = parseInt((this.options.hash.memoryCost || '0').toString(), 10);
@@ -366,7 +411,7 @@ export class UserImportBuilder {
             delete result[key];
           }
         }
-        if (result.providerUserInfo.length == 0) {
+        if (result.providerUserInfo.length === 0) {
           delete result.providerUserInfo;
         }
         // Validate the constructured user individual request. This will throw if an error
@@ -387,49 +432,5 @@ export class UserImportBuilder {
       }
       index++;
     });
-  }
-
-  /**
-   * Returns the corresponding constructed uploadAccount request.
-   * @return {UploadAccountRequest} The constructed uploadAccount request.
-   */
-  public generateRequest(): UploadAccountRequest {
-    const users = this.validatedUsers.map((user) => {
-      return deepCopy(user);
-    });
-    return deepExtend({users,}, deepCopy(this.validatedOptions)) as UploadAccountRequest;
-  }
-
-  /**
-   * Populates the UserImportResult using the client side detected errors and the server
-   * side returned errors.
-   * @return {UserImportResult} The user import result based on the returned failed
-   *     uploadAccount response.
-   */
-  public generateResponse(failedUploads: {index: number, message: string}[]): UserImportResult {
-    // Initialize user import result.
-    const importResult: UserImportResult = {
-      successCount: this.users.length - this.userImportResultErrors.length,
-      failureCount: this.userImportResultErrors.length,
-      errors: deepCopy(this.userImportResultErrors),
-    };
-    importResult.failureCount += failedUploads.length;
-    importResult.successCount -= failedUploads.length;
-    failedUploads.forEach((failedUpload) => {
-      importResult.errors.push({
-        // Map backend request index to original developer provided array index.
-        index: this.indexMap[failedUpload.index],
-        error: new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_USER_IMPORT,
-          failedUpload.message,
-        ),
-      } as FirebaseArrayIndexError);
-    });
-    // Sort errors by index.
-    importResult.errors.sort((a, b) => {
-      return a.index - b.index;
-    });
-    // Return sorted result.
-    return importResult;
   }
 }
