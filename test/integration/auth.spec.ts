@@ -509,7 +509,6 @@ describe('admin.auth', () => {
           {
             uid: uid + '-facebook',
             displayName: 'Facebook User',
-            //email,
             photoURL: photoURL + '?providerId=facebook.com',
             providerId: 'facebook.com',
           },
@@ -536,7 +535,7 @@ describe('admin.auth', () => {
             phoneNumber: importUserRecord.phoneNumber,
           });
           const actualUserRecord = userRecord.toJSON();
-          for (const key in importUserRecord) {
+          for (const key of Object.keys(importUserRecord)) {
             expect(JSON.stringify(actualUserRecord[key]))
               .to.be.equal(JSON.stringify(importUserRecord[key]));
           }
@@ -660,6 +659,8 @@ function safeDelete(uid: string): Promise<void> {
       }
     });
   // Suppress errors in delete queue to not spill over to next item in queue.
-  deleteQueue = deletePromise.catch((error) => {});
+  deleteQueue = deletePromise.catch((error) => {
+    // Do nothing.
+  });
   return deletePromise;
 }

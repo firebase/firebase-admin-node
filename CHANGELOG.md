@@ -2,6 +2,18 @@
 
 -
 
+# v5.9.1
+
+- [changed] The `admin.initializeApp()` method can now be invoked without an
+  explicit `credential` option. In that case the SDK will get initialized with
+  Google application default credentials.
+- [changed] Upgraded Realtime Database client to v0.1.11.
+- [changed] Modified the Realtime Database client integration to report the
+  correct user agent header.
+- [changed] Upgraded Cloud Firestire client to v0.12.0.
+- [changed] Improved error handling in FCM by mapping more server-side errors
+  to client-side error codes.
+
 # v5.9.0
 
 - [added] Added the `messaging.send()` method and the new `Message` type for

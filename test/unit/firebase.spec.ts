@@ -28,6 +28,7 @@ import * as utils from './utils';
 import * as mocks from '../resources/mocks';
 
 import * as firebaseAdmin from '../../src/index';
+import {ApplicationDefaultCredential} from '../../src/auth/credential';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -55,8 +56,8 @@ describe('Firebase', () => {
   });
 
   describe('#initializeApp()', () => {
-    const invalidOptions = [null, NaN, 0, 1, true, false, '', 'a', [], {}, _.noop];
-    invalidOptions.forEach((invalidOption) => {
+    const invalidOptions = [null, NaN, 0, 1, true, false, '', 'a', [], _.noop];
+    invalidOptions.forEach((invalidOption: any) => {
       it('should throw given invalid options object: ' + JSON.stringify(invalidOption), () => {
         expect(() => {
           firebaseAdmin.initializeApp(invalidOption);
@@ -64,16 +65,10 @@ describe('Firebase', () => {
       });
     });
 
-    it('should throw given an options object that does not contain any of the required keys', () => {
-      expect(() => {
-        firebaseAdmin.initializeApp({ a: 1, b: true } as any);
-      }).to.throw('Invalid Firebase app options');
-    });
-
-    it('should throw given an options object containing no "credential" key', () => {
-      expect(() => {
-        firebaseAdmin.initializeApp(mocks.appOptionsNoAuth);
-      }).to.throw('Invalid Firebase app options');
+    it('should use application default credentials when no credentials are explicitly specified', () => {
+      const app = firebaseAdmin.initializeApp(mocks.appOptionsNoAuth);
+      expect(app.options).to.have.property('credential');
+      expect(app.options.credential).to.be.instanceOf(ApplicationDefaultCredential);
     });
 
     it('should not modify the provided options object', () => {
