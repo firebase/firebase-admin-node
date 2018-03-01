@@ -21,7 +21,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import {
   isArray, isNonEmptyArray, isBoolean, isNumber, isString, isNonEmptyString, isNonNullObject,
-  isEmail, isPassword, isURL, isUid, isPhoneNumber, isObject,
+  isEmail, isPassword, isURL, isUid, isPhoneNumber, isObject, isBuffer,
 } from '../../../src/utils/validator';
 
 
@@ -450,5 +450,22 @@ describe('isPhoneNumber()', () => {
 
   it('should return true given a valid phone number with alphabetical chars', () => {
     expect(isPhoneNumber('+1 800 FLOwerS')).to.be.true;
+  });
+});
+
+describe('isBuffer()', () => {
+  it('should return false given no argument', () => {
+    expect(isBuffer(undefined as any)).to.be.false;
+  });
+
+  const nonBuffers = [null, NaN, 0, 1, '', 'a', [], ['a'], {}, { a: 1 }, _.noop, false];
+  nonBuffers.forEach((nonBuffer) => {
+    it('should return false given a non-buffer argument: ' + JSON.stringify(nonBuffer), () => {
+      expect(isBuffer(nonBuffer as any)).to.be.false;
+    });
+  });
+
+  it('should return true given a buffer', () => {
+    expect(isBuffer(Buffer.from('I am a buffer'))).to.be.true;
   });
 });
