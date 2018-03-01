@@ -319,6 +319,15 @@ export class Auth implements FirebaseServiceInterface {
       });
   }
 
+  public async sendEmailVerification(uid: string): Promise<void> {
+    const customToken = await this.createCustomToken(uid);
+    const { idToken } = await this.authRequestHandler.verifyCustomToken(customToken);
+
+    await this.authRequestHandler.sendEmailVerification(idToken);
+
+    return;
+  }
+
   /**
    * Sets additional developer claims on an existing user identified by the provided UID.
    *

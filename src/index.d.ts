@@ -163,6 +163,7 @@ declare namespace admin.auth {
     getUserByPhoneNumber(phoneNumber: string): Promise<admin.auth.UserRecord>;
     listUsers(maxResults?: number, pageToken?: string): Promise<admin.auth.ListUsersResult>;
     updateUser(uid: string, properties: admin.auth.UpdateRequest): Promise<admin.auth.UserRecord>;
+    sendEmailVerification(uid: string): Promise<void>;
     verifyIdToken(idToken: string, checkRevoked?: boolean): Promise<admin.auth.DecodedIdToken>;
     setCustomUserClaims(uid: string, customUserClaims: Object): Promise<void>;
     revokeRefreshTokens(uid: string): Promise<void>;
