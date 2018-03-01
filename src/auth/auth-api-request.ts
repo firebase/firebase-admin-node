@@ -301,6 +301,17 @@ export const FIREBASE_AUTH_GET_OOB_CONFIRMATION_CODE = new ApiSettings('getOobCo
     }
   });
 
+export const FIREBASE_AUTH_VERIFY_CUSTOM_TOKEN = new ApiSettings('verifyCustomToken', 'POST')
+  // Set request validator.
+  .setRequestValidator((request: any) => {
+    // token is required
+    if (typeof request.token === 'undefined') {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Server request is missing custom token');
+    }
+  });
+
 /**
  * Class that provides mechanism to send requests to the Firebase Auth backend endpoints.
  */
@@ -608,6 +619,24 @@ export class FirebaseAuthRequestHandler {
       });
   }
 
+  public sendEmailVerification(idToken: string): Promise<object> {
+    const request = {
+      requestType: 'VERIFY_EMAIL',
+      idToken,
+    };
+
+    return this.invokeRequestHandler(FIREBASE_AUTH_GET_OOB_CONFIRMATION_CODE, request);
+  }
+
+  public verifyCustomToken(customToken: string): Promise<any> {
+    const request = {
+      token: customToken,
+      returnSecureToken: true,
+    };
+
+    return this.invokeRequestHandler(FIREBASE_AUTH_VERIFY_CUSTOM_TOKEN, request);
+  }
+
   /**
    * Invokes the request handler based on the API settings object passed.
    *
@@ -623,6 +652,7 @@ export class FirebaseAuthRequestHandler {
         // Validate request.
         const requestValidator = apiSettings.getRequestValidator();
         requestValidator(requestData);
+
         // Process request.
         return this.signedApiRequestHandler.sendRequest(
             this.host, this.port, path, httpMethod, requestData, this.headers, this.timeout);
