@@ -510,7 +510,7 @@ export class FirebaseAuthRequestHandler {
   /**
    * Imports the list of users provided to Firebase Auth. This is useful when
    * migrating from an external authentication system without having to use the Firebase CLI SDK.
-   * A maximum list of 1000 users are allowed to be imported one at a time.
+   * At most, 1000 users are allowed to be imported one at a time.
    * When importing a list of password users, UserImportOptions are required to be specified.
    *
    * @param {UserImportRecord[]} users The list of user records to import to Firebase Auth.

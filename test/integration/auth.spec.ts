@@ -57,7 +57,6 @@ interface UserImportTest {
   importOptions: admin.auth.UserImportOptions;
   rawPassword: string;
   rawSalt?: string;
-  rawSaltBase64?: string;
   computePasswordHash(userImportTest: UserImportTest): Buffer;
 }
 
@@ -325,14 +324,14 @@ describe('admin.auth', () => {
   describe('importUsers()', () => {
     const randomUid = 'import_' + generateRandomString(20).toLowerCase();
     let importUserRecord;
+    const rawPassword = 'password';
+    const rawSalt = 'NaCl';
     // Simulate a user stored using SCRYPT being migrated to Firebase Auth via importUsers.
     // Obtained from https://github.com/firebase/scrypt.
-    const scryptRawPassword = 'user1password';
     const scryptHashKey = 'jxspr8Ki0RYycVU8zykbdLGjFQ3McFUH0uiiTvC8pVMXAn210wjLNmdZ' +
                           'JzxUECKbm0QsEmYUSDzZvpjeJ9WmXA==';
-    const scryptPasswordHash = 'lSrfV15cpx95/sZS2W9c9Kp6i/LVgQNDNC/qzrCnh1SAyZvqmZq' +
-                               'AjTdn3aoItz+VHjoZilo78198JAdRuid5lQ==';
-    const scryptPasswordSalt = '42xEC+ixf3L2lw==';
+    const scryptPasswordHash = 'V358E8LdWJXAO7muq0CufVpEOXaj8aFiC7T/rcaGieN04q/ZPJ0' +
+                               '8WhJEHGjj9lz/2TT+/86N5VjVoc5DdBhBiw==';
     const scryptHashOptions = {
       hash: {
         algorithm: 'SCRYPT',
@@ -363,8 +362,8 @@ describe('admin.auth', () => {
           return crypto.createHmac('sha256', currentHashKey)
                        .update(currentRawPassword + currentRawSalt).digest();
         },
-        rawPassword: 'password',
-        rawSalt: 'NaCl',
+        rawPassword,
+        rawSalt,
       },
       {
         name: 'SHA256',
@@ -379,8 +378,8 @@ describe('admin.auth', () => {
           const currentRawSalt = userImportTest.rawSalt;
           return crypto.createHash('sha256').update(currentRawSalt + currentRawPassword).digest();
         },
-        rawPassword: 'password',
-        rawSalt: 'NaCl',
+        rawPassword,
+        rawSalt,
       },
       {
         name: 'MD5',
@@ -396,8 +395,8 @@ describe('admin.auth', () => {
           return Buffer.from(crypto.createHash('md5')
                                    .update(currentRawSalt + currentRawPassword).digest('hex'));
         },
-        rawPassword: 'password',
-        rawSalt: 'NaCl',
+        rawPassword,
+        rawSalt,
       },
       {
         name: 'BCRYPT',
@@ -409,7 +408,7 @@ describe('admin.auth', () => {
         computePasswordHash: (userImportTest: UserImportTest): Buffer => {
           return Buffer.from(bcrypt.hashSync(userImportTest.rawPassword, 10));
         },
-        rawPassword: 'password',
+        rawPassword,
       },
       {
         name: 'STANDARD_SCRYPT',
@@ -432,8 +431,8 @@ describe('admin.auth', () => {
           return Buffer.from(scrypt.hashSync(
               currentRawPassword, {N, r, p}, dkLen, new Buffer(currentRawSalt)));
         },
-        rawPassword: 'password',
-        rawSalt: 'NaCl',
+        rawPassword,
+        rawSalt,
       },
       {
         name: 'PBKDF2_SHA256',
@@ -450,8 +449,8 @@ describe('admin.auth', () => {
           return crypto.pbkdf2Sync(
               currentRawPassword, currentRawSalt, currentRounds, 64, 'sha256');
         },
-        rawPassword: 'password',
-        rawSalt: 'NaCl',
+        rawPassword,
+        rawSalt,
       },
       {
         name: 'SCRYPT',
@@ -459,8 +458,8 @@ describe('admin.auth', () => {
         computePasswordHash: (userImportTest: UserImportTest): Buffer => {
           return Buffer.from(scryptPasswordHash, 'base64');
         },
-        rawPassword: scryptRawPassword,
-        rawSaltBase64: scryptPasswordSalt,
+        rawPassword,
+        rawSalt,
       },
     ];
 
@@ -473,8 +472,6 @@ describe('admin.auth', () => {
         importUserRecord.passwordHash = fixture.computePasswordHash(fixture);
         if (typeof fixture.rawSalt !== 'undefined') {
           importUserRecord.passwordSalt = Buffer.from(fixture.rawSalt);
-        } else if (typeof fixture.rawSaltBase64 !== 'undefined') {
-          importUserRecord.passwordSalt = Buffer.from(fixture.rawSaltBase64, 'base64');
         }
         return testImportAndSignInUser(
           importUserRecord, fixture.importOptions, fixture.rawPassword)
@@ -634,7 +631,7 @@ function cleanup() {
 }
 
 /**
- * Safe deletes a specificed user identified by uid. This API chains all delete
+ * Safely deletes a specificed user identified by uid. This API chains all delete
  * requests and throttles them as the Auth backend rate limits this endpoint.
  * A bulk delete API is being designed to help solve this issue.
  *

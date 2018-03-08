@@ -368,7 +368,8 @@ export class AuthClientErrorCode {
   };
   public static INVALID_HASH_ALGORITHM = {
     code: 'invalid-hash-algorithm',
-    message: 'The hash algorithm must be a string matching the list of supported algorithms.',
+    message: 'The hash algorithm must match one of the strings in the list of ' +
+             'supported algorithms.',
   };
   public static INVALID_HASH_BLOCK_SIZE = {
     code: 'invalid-hash-block-size',
