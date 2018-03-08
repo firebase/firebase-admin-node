@@ -93,6 +93,7 @@ describe('admin.database', () => {
     it('ref() can be called with ref', () => {
       const copy = admin.database().ref(ref);
       expect(copy).to.be.instanceof((admin.database as any).Reference);
+      expect(copy.key).to.equal(ref.key);
     });
 
     it('set() completes successfully', () => {
