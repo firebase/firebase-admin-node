@@ -66,7 +66,7 @@ export interface UserImportRecord {
 }
 
 
-/** UploadAccount user interface. */
+/** UploadAccount endpoint user interface. */
 interface UploadAccountUser {
   localId: string;
   email?: string;
