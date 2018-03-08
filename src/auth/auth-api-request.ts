@@ -81,8 +81,7 @@ function validateProviderUserInfo(request: any) {
       delete request[key];
     }
   }
-  if (typeof request.providerId === 'undefined' ||
-      !validator.isNonEmptyString(request.providerId)) {
+  if (!validator.isNonEmptyString(request.providerId)) {
     throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
   }
   if (typeof request.displayName !== 'undefined' &&
@@ -92,8 +91,7 @@ function validateProviderUserInfo(request: any) {
       `The provider "displayName" for "${request.providerId}" must be a valid string.`,
     );
   }
-  if (typeof request.rawId === 'undefined' ||
-      !validator.isNonEmptyString(request.rawId)) {
+  if (!validator.isNonEmptyString(request.rawId)) {
     // This is called localId on the backend but the developer specifies this as
     // uid externally. So the error message should use the client facing name.
     throw new FirebaseAuthError(
@@ -162,7 +160,7 @@ function validateCreateEditRequest(request: any, uploadAccountRequest: boolean =
   // For any invalid parameter, use the external key name in the error description.
   // displayName should be a string.
   if (typeof request.displayName !== 'undefined' &&
-      typeof request.displayName !== 'string') {
+      !validator.isString(request.displayName)) {
     throw new FirebaseAuthError(AuthClientErrorCode.INVALID_DISPLAY_NAME);
   }
   if ((typeof request.localId !== 'undefined' || uploadAccountRequest) &&
