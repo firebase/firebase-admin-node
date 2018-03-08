@@ -49,8 +49,8 @@
   ],
   "types": "./lib/index.d.ts",
   "dependencies": {
-    "@firebase/app": "^0.1.10",
-    "@firebase/database": "^0.1.11",
+    "@firebase/app": "canary",
+    "@firebase/database": "canary",
     "@google-cloud/firestore": "^0.12.0",
     "@google-cloud/storage": "^1.6.0",
     "@types/google-cloud__storage": "^1.1.7",

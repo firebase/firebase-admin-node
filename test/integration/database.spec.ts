@@ -90,6 +90,11 @@ describe('admin.database', () => {
       ref = admin.database().ref(path);
     });
 
+    it('ref() can be called with ref', () => {
+      const copy = admin.database().ref(ref);
+      expect(copy).to.be.instanceof((admin.database as any).Reference);
+    });
+
     it('set() completes successfully', () => {
       return ref.set({
         success: true,

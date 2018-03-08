@@ -1,6 +1,8 @@
 # Unreleased
 
--
+- [changed] Upgraded Realtime Database client to v0.2.0. With this upgrade
+  developers can call the `admin.database().ref()` method with another
+  `Reference` instance as the argument.
 
 # v5.9.1
 
