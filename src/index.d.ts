@@ -185,7 +185,7 @@ declare namespace admin.database {
 
     goOffline(): void;
     goOnline(): void;
-    ref(path?: string): admin.database.Reference;
+    ref(path?: string | admin.database.Reference): admin.database.Reference;
     refFromURL(url: string): admin.database.Reference;
   }
 
