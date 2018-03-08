@@ -293,9 +293,9 @@ export class UserImportBuilder {
    */
   private populateOptions(
       options: UserImportOptions, requiresHashOptions: boolean): UploadAccountOptions {
-    let populatedOptions: UploadAccountOptions = {};
+    let populatedOptions: UploadAccountOptions;
     if (!requiresHashOptions) {
-      return populatedOptions;
+      return {};
     }
     if (!validator.isNonNullObject(options.hash)) {
       throw new FirebaseAuthError(
@@ -459,9 +459,8 @@ export class UserImportBuilder {
    */
   private populateUsers(
       users: UserImportRecord[], userValidator?: ValidatorFunction): UploadAccountUser[] {
-    let index = 0;
     const populatedUsers: UploadAccountUser[] = [];
-    users.forEach((user) => {
+    users.forEach((user, index) => {
       try {
         const result = populateUploadAccountUser(user, userValidator);
         if (typeof result.passwordHash !== 'undefined') {
@@ -478,7 +477,6 @@ export class UserImportBuilder {
           error,
         });
       }
-      index++;
     });
     return populatedUsers;
   }
