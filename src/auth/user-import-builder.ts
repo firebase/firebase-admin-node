@@ -90,7 +90,7 @@ interface UploadAccountUser {
 }
 
 
-/** UploadAccount endpoint hash options. */
+/** UploadAccount endpoint request hash options. */
 export interface UploadAccountOptions {
   hashAlgorithm?: string;
   signerKey?: string;
