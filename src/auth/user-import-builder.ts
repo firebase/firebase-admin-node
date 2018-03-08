@@ -66,8 +66,32 @@ export interface UserImportRecord {
 }
 
 
-/** UploadAccount endpoint request interface. */
-export interface UploadAccountRequest {
+/** UploadAccount user interface. */
+interface UploadAccountUser {
+  localId: string;
+  email?: string;
+  emailVerified?: boolean;
+  displayName?: string;
+  disabled?: boolean;
+  photoUrl?: string;
+  phoneNumber?: string;
+  providerUserInfo?: Array<{
+    rawId: string;
+    providerId: string;
+    email?: string;
+    displayName?: string;
+    photoUrl?: string;
+  }>;
+  passwordHash?: string;
+  salt?: string;
+  lastLoginAt?: number;
+  createdAt?: number;
+  customAttributes?: string;
+}
+
+
+/** UploadAccount endpoint hash options. */
+export interface UploadAccountOptions {
   hashAlgorithm?: string;
   signerKey?: string;
   rounds?: number;
@@ -77,27 +101,12 @@ export interface UploadAccountRequest {
   parallelization?: number;
   blockSize?: number;
   dkLen?: number;
-  users?: Array<{
-    localId: string;
-    email?: string;
-    emailVerified?: string;
-    displayName?: string;
-    disabled?: boolean;
-    photoUrl?: string;
-    phoneNumber?: string;
-    providerUserInfo?: Array<{
-      rawId: string;
-      providerId: string;
-      email?: string;
-      displayName?: string;
-      photoUrl?: string;
-    }>;
-    passwordHash?: string;
-    salt?: string;
-    lastLoginAt?: number;
-    createdAt?: number;
-    customAttributes?: string;
-  }>;
+}
+
+
+/** UploadAccount endpoint request interface. */
+export interface UploadAccountRequest extends UploadAccountOptions {
+  users?: UploadAccountUser[];
 }
 
 
@@ -109,8 +118,94 @@ export interface UserImportResult {
 }
 
 
-/** Callback function to validate an object. */
-type ValidatorFunction = (data: object) => void;
+/** Callback function to validate an UploadAccountUser object. */
+type ValidatorFunction = (data: UploadAccountUser) => void;
+
+
+/**
+ * @param {any} obj The object to check for number field within.
+ * @param {string} key The entry key.
+ * @return {number|undefined} The corresponding number if available.
+ */
+function getNumberField(obj: any, key: string): number | undefined {
+  if (typeof obj[key] !== 'undefined' && obj[key] !== null) {
+    return parseInt(obj[key].toString(), 10);
+  }
+  return undefined;
+}
+
+
+/**
+ * Converts a UserImportRecord to a UploadAccountUser object. Throws an error when invalid
+ * fields are provided.
+ * @param {UserImportRecord} user The UserImportRecord to conver to UploadAccountUser.
+ * @param {ValidatorFunction=} userValidator The user validator function.
+ * @return {UploadAccountUser} The corresponding UploadAccountUser to return.
+ */
+function populateUploadAccountUser(
+    user: UserImportRecord, userValidator?: ValidatorFunction): UploadAccountUser {
+  const result: UploadAccountUser = {
+    localId: user.uid,
+    email: user.email,
+    emailVerified: user.emailVerified,
+    displayName: user.displayName,
+    disabled: user.disabled,
+    photoUrl: user.photoURL,
+    phoneNumber: user.phoneNumber,
+    providerUserInfo: [],
+    customAttributes: user.customClaims && JSON.stringify(user.customClaims),
+  };
+  if (typeof user.passwordHash !== 'undefined') {
+    if (!validator.isBuffer(user.passwordHash)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_PASSWORD_HASH,
+      );
+    }
+    result.passwordHash = utils.toWebSafeBase64(user.passwordHash);
+  }
+  if (typeof user.passwordSalt !== 'undefined') {
+    if (!validator.isBuffer(user.passwordSalt)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_PASSWORD_SALT,
+      );
+    }
+    result.salt = utils.toWebSafeBase64(user.passwordSalt);
+  }
+  if (validator.isNonNullObject(user.metadata)) {
+    if (validator.isNonEmptyString(user.metadata.creationTime)) {
+      result.createdAt = new Date(user.metadata.creationTime).getTime();
+    }
+    if (validator.isNonEmptyString(user.metadata.lastSignInTime)) {
+      result.lastLoginAt = new Date(user.metadata.lastSignInTime).getTime();
+    }
+  }
+  if (validator.isArray(user.providerData)) {
+    user.providerData.forEach((providerData) => {
+      result.providerUserInfo.push({
+        providerId: providerData.providerId,
+        rawId: providerData.uid,
+        email: providerData.email,
+        displayName: providerData.displayName,
+        photoUrl: providerData.photoURL,
+      });
+    });
+  }
+  // Remove blank fields.
+  for (const key in result) {
+    if (typeof result[key] === 'undefined') {
+      delete result[key];
+    }
+  }
+  if (result.providerUserInfo.length === 0) {
+    delete result.providerUserInfo;
+  }
+  // Validate the constructured user individual request. This will throw if an error
+  // is detected.
+  if (typeof userValidator === 'function') {
+    userValidator(result);
+  }
+  return result;
+}
 
 
 /**
@@ -119,8 +214,8 @@ type ValidatorFunction = (data: object) => void;
  */
 export class UserImportBuilder {
   private requiresHashOptions: boolean;
-  private validatedUsers: object[];
-  private validatedOptions: object;
+  private validatedUsers: UploadAccountUser[];
+  private validatedOptions: UploadAccountOptions;
   private indexMap: object;
   private userImportResultErrors: FirebaseArrayIndexError[];
 
@@ -140,15 +235,15 @@ export class UserImportBuilder {
     this.userImportResultErrors = [];
     this.indexMap = {};
 
-    this.validateAndPopulateUsers();
-    this.validateAndPopulateOptions();
+    this.validatedUsers = this.populateUsers(this.users, this.userRequestValidator);
+    this.validatedOptions = this.populateOptions(this.options, this.requiresHashOptions);
   }
 
   /**
    * Returns the corresponding constructed uploadAccount request.
    * @return {UploadAccountRequest} The constructed uploadAccount request.
    */
-  public generateRequest(): UploadAccountRequest {
+  public buildRequest(): UploadAccountRequest {
     const users = this.validatedUsers.map((user) => {
       return deepCopy(user);
     });
@@ -161,7 +256,7 @@ export class UserImportBuilder {
    * @return {UserImportResult} The user import result based on the returned failed
    *     uploadAccount response.
    */
-  public generateResponse(
+  public buildResponse(
       failedUploads: Array<{index: number, message: string}>): UserImportResult {
     // Initialize user import result.
     const importResult: UserImportResult = {
@@ -190,239 +285,192 @@ export class UserImportBuilder {
   }
 
   /**
-   * Validates and populates the hashing options of the uploadAccount request.
+   * Validates and returns the hashing options of the uploadAccount request.
    * Throws an error whenever an invalid or missing options is detected.
+   * @param {UserImportOptions} options The UserImportOptions.
+   * @param {boolean} requiresHashOptions Whether to require hash options.
+   * @return {UploadAccountOptions} The populated UploadAccount options.
    */
-  private validateAndPopulateOptions(): void {
-    this.validatedOptions = {};
-    if (!this.requiresHashOptions) {
-      return;
+  private populateOptions(
+      options: UserImportOptions, requiresHashOptions: boolean): UploadAccountOptions {
+    let populatedOptions: UploadAccountOptions = {};
+    if (!requiresHashOptions) {
+      return populatedOptions;
     }
-    if (!validator.isNonNullObject(this.options.hash)) {
+    if (!validator.isNonNullObject(options.hash)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.MISSING_HASH_ALGORITHM,
+        `"hash.algorithm" is missing from the provided "UserImportOptions".`,
       );
     }
-    if (typeof this.options.hash.algorithm === 'undefined' ||
-        !validator.isNonEmptyString(this.options.hash.algorithm)) {
+    if (typeof options.hash.algorithm === 'undefined' ||
+        !validator.isNonEmptyString(options.hash.algorithm)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_HASH_ALGORITHM,
         `"hash.algorithm" must be a string matching the list of supported algorithms.`,
       );
     }
 
-    let rounds;
-    switch (this.options.hash.algorithm) {
+    let rounds: number;
+    switch (options.hash.algorithm) {
       case 'HMAC_SHA512':
       case 'HMAC_SHA256':
       case 'HMAC_SHA1':
       case 'HMAC_MD5':
-        if (!validator.isBuffer(this.options.hash.key)) {
+        if (!validator.isBuffer(options.hash.key)) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_HASH_KEY,
             `A non-empty "hash.key" byte buffer must be provided for ` +
-            `hash algorithm ${this.options.hash.algorithm}.`,
+            `hash algorithm ${options.hash.algorithm}.`,
           );
         }
-        this.validatedOptions = {
-          hashAlgorithm: this.options.hash.algorithm,
-          signerKey: utils.toWebSafeBase64(this.options.hash.key),
+        populatedOptions = {
+          hashAlgorithm: options.hash.algorithm,
+          signerKey: utils.toWebSafeBase64(options.hash.key),
         };
         break;
+
       case 'MD5':
       case 'SHA1':
       case 'SHA256':
       case 'SHA512':
       case 'PBKDF_SHA1':
       case 'PBKDF2_SHA256':
-        rounds = parseInt((this.options.hash.rounds || '0').toString(), 10);
-        if (!validator.isNumber(this.options.hash.rounds) ||
-            isNaN(rounds) || rounds < 0 || rounds > 120000) {
+        rounds = getNumberField(options.hash, 'rounds');
+        if (isNaN(rounds) || rounds < 0 || rounds > 120000) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_HASH_ROUNDS,
             `A valid "hash.rounds" number between 0 and 120000 must be provided for ` +
-            `hash algorithm ${this.options.hash.algorithm}.`,
+            `hash algorithm ${options.hash.algorithm}.`,
           );
         }
-        this.validatedOptions = {
-          hashAlgorithm: this.options.hash.algorithm,
+        populatedOptions = {
+          hashAlgorithm: options.hash.algorithm,
           rounds,
         };
         break;
+
       case 'SCRYPT':
-        if (!validator.isBuffer(this.options.hash.key)) {
+        if (!validator.isBuffer(options.hash.key)) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_HASH_KEY,
             `A "hash.key" byte buffer must be provided for ` +
-            `hash algorithm ${this.options.hash.algorithm}.`,
+            `hash algorithm ${options.hash.algorithm}.`,
           );
         }
-        rounds = parseInt((this.options.hash.rounds || '0').toString(), 10);
-        if (!validator.isNumber(this.options.hash.rounds) ||
-            isNaN(rounds) || rounds <= 0 || rounds > 8) {
+        rounds = getNumberField(options.hash, 'rounds');
+        if (isNaN(rounds) || rounds <= 0 || rounds > 8) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_HASH_ROUNDS,
             `A valid "hash.rounds" number between 1 and 8 must be provided for ` +
-            `hash algorithm ${this.options.hash.algorithm}.`,
+            `hash algorithm ${options.hash.algorithm}.`,
           );
         }
-        const memoryCost = parseInt((this.options.hash.memoryCost || '0').toString(), 10);
-        if (!validator.isNumber(this.options.hash.memoryCost) ||
-            isNaN(memoryCost) || memoryCost <= 0 || memoryCost > 14) {
+        const memoryCost = getNumberField(options.hash, 'memoryCost');
+        if (isNaN(memoryCost) || memoryCost <= 0 || memoryCost > 14) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_HASH_MEMORY_COST,
             `A valid "hash.memoryCost" number between 1 and 14 must be provided for ` +
-            `hash algorithm ${this.options.hash.algorithm}.`,
+            `hash algorithm ${options.hash.algorithm}.`,
           );
         }
-        if (typeof this.options.hash.saltSeparator !== 'undefined' &&
-            !validator.isBuffer(this.options.hash.saltSeparator)) {
+        if (typeof options.hash.saltSeparator !== 'undefined' &&
+            !validator.isBuffer(options.hash.saltSeparator)) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_HASH_SALT_SEPARATOR,
             `"hash.saltSeparator" must be a byte buffer.`,
           );
         }
-        this.validatedOptions = {
-          hashAlgorithm: this.options.hash.algorithm,
-          signerKey: utils.toWebSafeBase64(this.options.hash.key),
+        populatedOptions = {
+          hashAlgorithm: options.hash.algorithm,
+          signerKey: utils.toWebSafeBase64(options.hash.key),
           rounds,
           memoryCost,
-          saltSeparator: utils.toWebSafeBase64(this.options.hash.saltSeparator || Buffer.from('')),
+          saltSeparator: utils.toWebSafeBase64(options.hash.saltSeparator || Buffer.from('')),
         };
         break;
+
       case 'BCRYPT':
-        this.validatedOptions = {
-          hashAlgorithm: this.options.hash.algorithm,
+        populatedOptions = {
+          hashAlgorithm: options.hash.algorithm,
         };
         break;
+
       case 'STANDARD_SCRYPT':
-        const cpuMemCost = parseInt((this.options.hash.memoryCost || '0').toString(), 10);
-        if (!validator.isNumber(this.options.hash.memoryCost) || isNaN(cpuMemCost)) {
+        const cpuMemCost = getNumberField(options.hash, 'memoryCost');
+        if (isNaN(cpuMemCost)) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_HASH_MEMORY_COST,
             `A valid "hash.memoryCost" number must be provided for ` +
-            `hash algorithm ${this.options.hash.algorithm}.`,
+            `hash algorithm ${options.hash.algorithm}.`,
           );
         }
-        const parallelization = parseInt((this.options.hash.parallelization || '0').toString(), 10);
-        if (!validator.isNumber(this.options.hash.parallelization) || isNaN(parallelization)) {
+        const parallelization = getNumberField(options.hash, 'parallelization');
+        if (isNaN(parallelization)) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_HASH_PARALLELIZATION,
             `A valid "hash.parallelization" number must be provided for ` +
-            `hash algorithm ${this.options.hash.algorithm}.`,
+            `hash algorithm ${options.hash.algorithm}.`,
           );
         }
-        const blockSize = parseInt((this.options.hash.blockSize || '0').toString(), 10);
-        if (!validator.isNumber(this.options.hash.blockSize) || isNaN(blockSize)) {
+        const blockSize = getNumberField(options.hash, 'blockSize');
+        if (isNaN(blockSize)) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_HASH_BLOCK_SIZE,
             `A valid "hash.blockSize" number must be provided for ` +
-            `hash algorithm ${this.options.hash.algorithm}.`,
+            `hash algorithm ${options.hash.algorithm}.`,
           );
         }
-        const dkLen = parseInt((this.options.hash.derivedKeyLength || '0').toString(), 10);
-        if (!validator.isNumber(this.options.hash.derivedKeyLength) || isNaN(dkLen)) {
+        const dkLen = getNumberField(options.hash, 'derivedKeyLength');
+        if (isNaN(dkLen)) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_HASH_DERIVED_KEY_LENGTH,
             `A valid "hash.derivedKeyLength" number must be provided for ` +
-            `hash algorithm ${this.options.hash.algorithm}.`,
+            `hash algorithm ${options.hash.algorithm}.`,
           );
         }
-        this.validatedOptions = {
-          hashAlgorithm: this.options.hash.algorithm,
+        populatedOptions = {
+          hashAlgorithm: options.hash.algorithm,
           cpuMemCost,
           parallelization,
           blockSize,
           dkLen,
         };
         break;
+
       default:
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_ALGORITHM,
-          `Unsupported hash algorithm provider "${this.options.hash.algorithm}".`,
+          `Unsupported hash algorithm provider "${options.hash.algorithm}".`,
         );
     }
+    return populatedOptions;
   }
 
   /**
-   * Validates and populates the users list of the uploadAccount request.
+   * Validates and returns the users list of the uploadAccount request.
    * Whenever a user with an error is detected, the error is cached and will later be
    * merged into the user import result. This allows the processing of valid users without
    * failing early on the first error detected.
+   * @param {UserImportRecord[]} users The UserImportRecords to convert to UnploadAccountUser
+   *     objects.
+   * @param {ValidatorFunction=} userValidator The user validator function.
+   * @return {UploadAccountUser[]} The populated uploadAccount users.
    */
-  private validateAndPopulateUsers(): void {
+  private populateUsers(
+      users: UserImportRecord[], userValidator?: ValidatorFunction): UploadAccountUser[] {
     let index = 0;
-    this.users.forEach((user) => {
+    const populatedUsers: UploadAccountUser[] = [];
+    users.forEach((user) => {
       try {
-        const result = {
-          localId: user.uid,
-          email: user.email,
-          emailVerified: user.emailVerified,
-          displayName: user.displayName,
-          disabled: user.disabled,
-          photoUrl: user.photoURL,
-          phoneNumber: user.phoneNumber,
-          providerUserInfo: [],
-          passwordHash: undefined,
-          salt: undefined,
-          lastLoginAt: undefined,
-          createdAt: undefined,
-          customAttributes: user.customClaims && JSON.stringify(user.customClaims),
-        };
-        if (typeof user.passwordHash !== 'undefined') {
+        const result = populateUploadAccountUser(user, userValidator);
+        if (typeof result.passwordHash !== 'undefined') {
           this.requiresHashOptions = true;
-          if (!validator.isBuffer(user.passwordHash)) {
-            throw new FirebaseAuthError(
-              AuthClientErrorCode.INVALID_PASSWORD_HASH,
-            );
-          }
-          result.passwordHash = utils.toWebSafeBase64(user.passwordHash);
-        }
-        if (typeof user.passwordSalt !== 'undefined') {
-          if (!validator.isBuffer(user.passwordSalt)) {
-            throw new FirebaseAuthError(
-              AuthClientErrorCode.INVALID_PASSWORD_SALT,
-            );
-          }
-          result.salt = utils.toWebSafeBase64(user.passwordSalt);
-        }
-        if (validator.isNonNullObject(user.metadata)) {
-          if (validator.isNonEmptyString(user.metadata.creationTime)) {
-            result.createdAt = new Date(user.metadata.creationTime).getTime();
-          }
-          if (validator.isNonEmptyString(user.metadata.lastSignInTime)) {
-            result.lastLoginAt = new Date(user.metadata.lastSignInTime).getTime();
-          }
-        }
-        if (validator.isArray(user.providerData)) {
-          user.providerData.forEach((providerData) => {
-            result.providerUserInfo.push({
-              providerId: providerData.providerId,
-              rawId: providerData.uid,
-              email: providerData.email,
-              displayName: providerData.displayName,
-              photoUrl: providerData.photoURL,
-            });
-          });
-        }
-        // Remove blank fields.
-        for (const key in result) {
-          if (typeof result[key] === 'undefined') {
-            delete result[key];
-          }
-        }
-        if (result.providerUserInfo.length === 0) {
-          delete result.providerUserInfo;
-        }
-        // Validate the constructured user individual request. This will throw if an error
-        // is detected.
-        if (typeof this.userRequestValidator === 'function') {
-          this.userRequestValidator(result);
         }
         // Only users that pass client screening will be passed to backend for processing.
-        this.validatedUsers.push(result);
+        populatedUsers.push(result);
         // Map user's index (the one to be sent to backend) to original developer provided array.
-        this.indexMap[this.validatedUsers.length - 1] = index;
+        this.indexMap[populatedUsers.length - 1] = index;
       } catch (error) {
         // Save the client side error with respect to the developer provided array.
         this.userImportResultErrors.push({
@@ -432,5 +480,6 @@ export class UserImportBuilder {
       }
       index++;
     });
+    return populatedUsers;
   }
 }

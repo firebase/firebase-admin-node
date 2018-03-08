@@ -124,6 +124,7 @@ describe('UserImportBuilder', () => {
     it('should throw when an empty hash algorithm is provided', () => {
       const expectedError = new FirebaseAuthError(
         AuthClientErrorCode.MISSING_HASH_ALGORITHM,
+        '"hash.algorithm" is missing from the provided "UserImportOptions".',
       );
       expect(() =>  {
         return new UserImportBuilder(users, {} as any, userRequestValidator);
@@ -191,7 +192,7 @@ describe('UserImportBuilder', () => {
           };
           const userImportBuilder =
               new UserImportBuilder(users, validOptions as any, userRequestValidator);
-          expect(userImportBuilder.generateRequest()).to.deep.equal(expectedRequest);
+          expect(userImportBuilder.buildRequest()).to.deep.equal(expectedRequest);
         });
       });
     });
@@ -232,7 +233,7 @@ describe('UserImportBuilder', () => {
           };
           const userImportBuilder =
               new UserImportBuilder(users, validOptions as any, userRequestValidator);
-          expect(userImportBuilder.generateRequest()).to.deep.equal(expectedRequest);
+          expect(userImportBuilder.buildRequest()).to.deep.equal(expectedRequest);
         });
 
       });
@@ -347,7 +348,7 @@ describe('UserImportBuilder', () => {
         };
         const userImportBuilder =
             new UserImportBuilder(users, validOptions as any, userRequestValidator);
-        expect(userImportBuilder.generateRequest()).to.deep.equal(expectedRequest);
+        expect(userImportBuilder.buildRequest()).to.deep.equal(expectedRequest);
       });
     });
 
@@ -365,7 +366,7 @@ describe('UserImportBuilder', () => {
         };
         const userImportBuilder =
             new UserImportBuilder(users, validOptions as any, userRequestValidator);
-        expect(userImportBuilder.generateRequest()).to.deep.equal(expectedRequest);
+        expect(userImportBuilder.buildRequest()).to.deep.equal(expectedRequest);
       });
     });
 
@@ -483,13 +484,13 @@ describe('UserImportBuilder', () => {
         };
         const userImportBuilder =
             new UserImportBuilder(users, validOptions as any, userRequestValidator);
-        expect(userImportBuilder.generateRequest()).to.deep.equal(expectedRequest);
+        expect(userImportBuilder.buildRequest()).to.deep.equal(expectedRequest);
       });
 
     });
   });
 
-  describe('generateRequest()', () => {
+  describe('buildRequest()', () => {
     const algorithm = 'BCRYPT';
     const validOptions = {
       hash: {
@@ -504,7 +505,7 @@ describe('UserImportBuilder', () => {
       };
       const userImportBuilder =
           new UserImportBuilder(users, validOptions as any, userRequestValidator);
-      expect(userImportBuilder.generateRequest()).to.deep.equal(expectedRequest);
+      expect(userImportBuilder.buildRequest()).to.deep.equal(expectedRequest);
     });
 
     it('should return the expected request when client side errors are detected', () => {
@@ -528,7 +529,7 @@ describe('UserImportBuilder', () => {
       };
       const userImportBuilder =
           new UserImportBuilder(users, validOptions as any, userRequestValidatorWithError);
-      expect(userImportBuilder.generateRequest()).to.deep.equal(expectedRequest);
+      expect(userImportBuilder.buildRequest()).to.deep.equal(expectedRequest);
     });
 
     it('should return expected request with no hash options when not required', () => {
@@ -544,11 +545,11 @@ describe('UserImportBuilder', () => {
       };
       const userImportBuilder =
           new UserImportBuilder(noHashUsers, validOptions as any, userRequestValidator);
-      expect(userImportBuilder.generateRequest()).to.deep.equal(expectedRequest);
+      expect(userImportBuilder.buildRequest()).to.deep.equal(expectedRequest);
     });
   });
 
-  describe('generateResponse()', () => {
+  describe('buildResponse()', () => {
     const algorithm = 'BCRYPT';
     const validOptions = {
       hash: {
@@ -564,7 +565,7 @@ describe('UserImportBuilder', () => {
       };
       const userImportBuilder =
           new UserImportBuilder(users, validOptions as any, userRequestValidator);
-      expect(userImportBuilder.generateResponse(successfulServerResponse))
+      expect(userImportBuilder.buildResponse(successfulServerResponse))
         .to.deep.equal(successfulUserImportResponse);
     });
 
@@ -588,7 +589,7 @@ describe('UserImportBuilder', () => {
       };
       const userImportBuilder =
           new UserImportBuilder(users, validOptions as any, userRequestValidator);
-      expect(userImportBuilder.generateResponse(failingServerResponse))
+      expect(userImportBuilder.buildResponse(failingServerResponse))
         .to.deep.equal(serverErrorUserImportResponse);
     });
 
@@ -604,7 +605,7 @@ describe('UserImportBuilder', () => {
       // userRequestValidatorWithError will throw on the 3rd user (index = 2).
       const userImportBuilder =
           new UserImportBuilder(users, validOptions as any, userRequestValidatorWithError);
-      expect(userImportBuilder.generateResponse(successfulServerResponse))
+      expect(userImportBuilder.buildResponse(successfulServerResponse))
         .to.deep.equal(clientErrorUserImportResponse);
     });
 
@@ -672,7 +673,7 @@ describe('UserImportBuilder', () => {
       };
       const userImportBuilder = new UserImportBuilder(
           testUsers, validOptions as any, userRequestValidatorWithMultipleErrors);
-      expect(userImportBuilder.generateResponse(failingServerResponse))
+      expect(userImportBuilder.buildResponse(failingServerResponse))
         .to.deep.equal(mixedErrorUserImportResponse);
     });
   });

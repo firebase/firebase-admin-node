@@ -52,6 +52,16 @@ const mockUserData = {
 };
 let deleteQueue = Promise.resolve();
 
+interface UserImportTest {
+  name: string;
+  importOptions: admin.auth.UserImportOptions;
+  rawPassword: string;
+  rawSalt?: string;
+  rawSaltBase64?: string;
+  computePasswordHash(userImportTest: UserImportTest): Buffer;
+}
+
+
 describe('admin.auth', () => {
 
   let uidFromCreateUserWithoutUid: string;
@@ -314,179 +324,164 @@ describe('admin.auth', () => {
 
   describe('importUsers()', () => {
     const randomUid = 'import_' + generateRandomString(20).toLowerCase();
-    let rawPassword;
-    let importOptions;
     let importUserRecord;
-    let rawSalt;
-    let hashKey;
+    // Simulate a user stored using SCRYPT being migrated to Firebase Auth via importUsers.
+    // Obtained from https://github.com/firebase/scrypt.
+    const scryptRawPassword = 'user1password';
+    const scryptHashKey = 'jxspr8Ki0RYycVU8zykbdLGjFQ3McFUH0uiiTvC8pVMXAn210wjLNmdZ' +
+                          'JzxUECKbm0QsEmYUSDzZvpjeJ9WmXA==';
+    const scryptPasswordHash = 'lSrfV15cpx95/sZS2W9c9Kp6i/LVgQNDNC/qzrCnh1SAyZvqmZq' +
+                               'AjTdn3aoItz+VHjoZilo78198JAdRuid5lQ==';
+    const scryptPasswordSalt = '42xEC+ixf3L2lw==';
+    const scryptHashOptions = {
+      hash: {
+        algorithm: 'SCRYPT',
+        key: Buffer.from(scryptHashKey, 'base64'),
+        saltSeparator: Buffer.from('Bw==', 'base64'),
+        rounds: 8,
+        memoryCost: 14,
+      },
+    };
 
     afterEach(() => {
       return safeDelete(randomUid);
     });
 
-    it('successfully imports users with HMAC_SHA256 hashed passwords', () => {
-      // Simulate a user stored using HMAC_SHA256 being migrated to Firebase Auth via importUsers.
-      hashKey = 'secret';
-      rawPassword = 'password';
-      rawSalt = 'NaCl';
-      importOptions = {
-        hash: {
-          algorithm: 'HMAC_SHA256',
-          key: Buffer.from(hashKey),
+    const fixtures: UserImportTest[] = [
+      {
+        name: 'HMAC_SHA256',
+        importOptions: {
+          hash: {
+            algorithm: 'HMAC_SHA256',
+            key: Buffer.from('secret'),
+          },
+        } as any,
+        computePasswordHash: (userImportTest: UserImportTest): Buffer => {
+          const currentHashKey = userImportTest.importOptions.hash.key.toString('utf8');
+          const currentRawPassword = userImportTest.rawPassword;
+          const currentRawSalt = userImportTest.rawSalt;
+          return crypto.createHmac('sha256', currentHashKey)
+                       .update(currentRawPassword + currentRawSalt).digest();
         },
-      };
-
-      importUserRecord = {
-        uid: randomUid,
-        email: randomUid + '@example.com',
-      };
-      importUserRecord.passwordHash =
-          crypto.createHmac('sha256', hashKey).update(rawPassword + rawSalt).digest();
-      importUserRecord.passwordSalt = Buffer.from(rawSalt);
-      return testImportAndSignInUser(importUserRecord, importOptions, rawPassword)
-        .should.eventually.be.fulfilled;
-    }).timeout(5000);
-
-    it('successfully imports users with SHA256 hashed passwords', () => {
-      // Simulate a user stored using SHA256 being migrated to Firebase Auth via importUsers.
-      rawPassword = 'password';
-      rawSalt = 'NaCl';
-      importOptions = {
-        hash: {
-          algorithm: 'SHA256',
-          rounds: 0,
+        rawPassword: 'password',
+        rawSalt: 'NaCl',
+      },
+      {
+        name: 'SHA256',
+        importOptions: {
+          hash: {
+            algorithm: 'SHA256',
+            rounds: 0,
+          },
+        } as any,
+        computePasswordHash: (userImportTest: UserImportTest): Buffer => {
+          const currentRawPassword = userImportTest.rawPassword;
+          const currentRawSalt = userImportTest.rawSalt;
+          return crypto.createHash('sha256').update(currentRawSalt + currentRawPassword).digest();
         },
-      };
-
-      importUserRecord = {
-        uid: randomUid,
-        email: randomUid + '@example.com',
-      };
-      importUserRecord.passwordHash =
-          crypto.createHash('sha256').update(rawSalt + rawPassword).digest();
-      importUserRecord.passwordSalt = Buffer.from(rawSalt);
-      return testImportAndSignInUser(importUserRecord, importOptions, rawPassword)
-        .should.eventually.be.fulfilled;
-    }).timeout(5000);
-
-    it('successfully imports users with MD5 hashed passwords', () => {
-      // Simulate a user stored using MD5 being migrated to Firebase Auth via importUsers.
-      rawPassword = 'password';
-      rawSalt = 'NaCl';
-      importOptions = {
-        hash: {
-          algorithm: 'MD5',
-          rounds: 0,
+        rawPassword: 'password',
+        rawSalt: 'NaCl',
+      },
+      {
+        name: 'MD5',
+        importOptions: {
+          hash: {
+            algorithm: 'MD5',
+            rounds: 0,
+          },
+        } as any,
+        computePasswordHash: (userImportTest: UserImportTest): Buffer => {
+          const currentRawPassword = userImportTest.rawPassword;
+          const currentRawSalt = userImportTest.rawSalt;
+          return Buffer.from(crypto.createHash('md5')
+                                   .update(currentRawSalt + currentRawPassword).digest('hex'));
         },
-      };
-
-      importUserRecord = {
-        uid: randomUid,
-        email: randomUid + '@example.com',
-      };
-      importUserRecord.passwordHash =
-          Buffer.from(crypto.createHash('md5').update(rawSalt + rawPassword).digest('hex'));
-      importUserRecord.passwordSalt = Buffer.from(rawSalt);
-      return testImportAndSignInUser(importUserRecord, importOptions, rawPassword)
-        .should.eventually.be.fulfilled;
-    }).timeout(5000);
-
-    it('successfully imports users with BCRYPT hashed passwords', () => {
-      // Simulate a user stored using BCRYPT being migrated to Firebase Auth via importUsers.
-      rawPassword = 'password';
-      importOptions = {
-        hash: {
-          algorithm: 'BCRYPT',
+        rawPassword: 'password',
+        rawSalt: 'NaCl',
+      },
+      {
+        name: 'BCRYPT',
+        importOptions: {
+          hash: {
+            algorithm: 'BCRYPT',
+          },
+        } as any,
+        computePasswordHash: (userImportTest: UserImportTest): Buffer => {
+          return Buffer.from(bcrypt.hashSync(userImportTest.rawPassword, 10));
         },
-      };
-
-      importUserRecord = {
-        uid: randomUid,
-        email: randomUid + '@example.com',
-      };
-      importUserRecord.passwordHash = Buffer.from(bcrypt.hashSync(rawPassword, 10));
-      return testImportAndSignInUser(importUserRecord, importOptions, rawPassword)
-        .should.eventually.be.fulfilled;
-    }).timeout(5000);
-
-    it('successfully imports users with STANDARD_SCRYPT hashed passwords', () => {
-      // Simulate a user stored using STANDARD_SCRYPT being migrated to
-      // Firebase Auth via importUsers.
-      rawPassword = 'password';
-      rawSalt = 'NaCl';
-      importOptions = {
-        hash: {
-          algorithm: 'STANDARD_SCRYPT',
-          memoryCost: 1024,
-          parallelization: 16,
-          blockSize: 8,
-          derivedKeyLength: 64,
+        rawPassword: 'password',
+      },
+      {
+        name: 'STANDARD_SCRYPT',
+        importOptions: {
+          hash: {
+            algorithm: 'STANDARD_SCRYPT',
+            memoryCost: 1024,
+            parallelization: 16,
+            blockSize: 8,
+            derivedKeyLength: 64,
+          },
+        } as any,
+        computePasswordHash: (userImportTest: UserImportTest): Buffer => {
+          const currentRawPassword = userImportTest.rawPassword;
+          const currentRawSalt = userImportTest.rawSalt;
+          const N = userImportTest.importOptions.hash.memoryCost;
+          const r = userImportTest.importOptions.hash.blockSize;
+          const p = userImportTest.importOptions.hash.parallelization;
+          const dkLen = userImportTest.importOptions.hash.derivedKeyLength;
+          return Buffer.from(scrypt.hashSync(
+              currentRawPassword, {N, r, p}, dkLen, new Buffer(currentRawSalt)));
         },
-      };
-
-      importUserRecord = {
-        uid: randomUid,
-        email: randomUid + '@example.com',
-      };
-      importUserRecord.passwordHash = Buffer.from(
-          scrypt.hashSync(rawPassword, {N: 1024, r: 8, p: 16}, 64, new Buffer(rawSalt)));
-      importUserRecord.passwordSalt = Buffer.from(rawSalt);
-      return testImportAndSignInUser(importUserRecord, importOptions, rawPassword)
-        .should.eventually.be.fulfilled;
-    }).timeout(5000);
-
-    it('successfully imports users with PBKDF2_SHA256 hashed passwords', () => {
-      // Simulate a user stored using PBKDF2_SHA256 being migrated to
-      // Firebase Auth via importUsers.
-      rawPassword = 'password';
-      rawSalt = 'NaCl';
-      importOptions = {
-        hash: {
-          algorithm: 'PBKDF2_SHA256',
-          rounds: 100000,
+        rawPassword: 'password',
+        rawSalt: 'NaCl',
+      },
+      {
+        name: 'PBKDF2_SHA256',
+        importOptions: {
+          hash: {
+            algorithm: 'PBKDF2_SHA256',
+            rounds: 100000,
+          },
+        } as any,
+        computePasswordHash: (userImportTest: UserImportTest): Buffer => {
+          const currentRawPassword = userImportTest.rawPassword;
+          const currentRawSalt = userImportTest.rawSalt;
+          const currentRounds = userImportTest.importOptions.hash.rounds;
+          return crypto.pbkdf2Sync(
+              currentRawPassword, currentRawSalt, currentRounds, 64, 'sha256');
         },
-      };
-
-      importUserRecord = {
-        uid: randomUid,
-        email: randomUid + '@example.com',
-      };
-      importUserRecord.passwordHash =
-          crypto.pbkdf2Sync(rawPassword, rawSalt, importOptions.hash.rounds, 64, 'sha256');
-      importUserRecord.passwordSalt = Buffer.from(rawSalt);
-      return testImportAndSignInUser(importUserRecord, importOptions, rawPassword)
-        .should.eventually.be.fulfilled;
-    }).timeout(5000);
-
-    it('successfully imports users with SCRYPT hashed passwords', () => {
-      // Simulate a user stored using SCRYPT being migrated to Firebase Auth via importUsers.
-      // Obtained from https://github.com/firebase/scrypt.
-      rawPassword = 'user1password';
-      hashKey = 'jxspr8Ki0RYycVU8zykbdLGjFQ3McFUH0uiiTvC8pVMXAn210wjLNmdZ' +
-                'JzxUECKbm0QsEmYUSDzZvpjeJ9WmXA==';
-      // passwordHash and passwordSalt are base64 encoded.
-      const passwordHash = 'lSrfV15cpx95/sZS2W9c9Kp6i/LVgQNDNC/qzrCnh1SAyZvqmZq' +
-                           'AjTdn3aoItz+VHjoZilo78198JAdRuid5lQ==';
-      const passwordSalt = '42xEC+ixf3L2lw==';
-      importOptions = {
-        hash: {
-          algorithm: 'SCRYPT',
-          key: Buffer.from(hashKey, 'base64'),
-          saltSeparator: Buffer.from('Bw==', 'base64'),
-          rounds: 8,
-          memoryCost: 14,
+        rawPassword: 'password',
+        rawSalt: 'NaCl',
+      },
+      {
+        name: 'SCRYPT',
+        importOptions: scryptHashOptions as any,
+        computePasswordHash: (userImportTest: UserImportTest): Buffer => {
+          return Buffer.from(scryptPasswordHash, 'base64');
         },
-      };
+        rawPassword: scryptRawPassword,
+        rawSaltBase64: scryptPasswordSalt,
+      },
+    ];
 
-      importUserRecord = {
-        uid: randomUid,
-        email: randomUid + '@example.com',
-      };
-      importUserRecord.passwordHash = Buffer.from(passwordHash, 'base64');
-      importUserRecord.passwordSalt = Buffer.from(passwordSalt, 'base64');
-      return testImportAndSignInUser(importUserRecord, importOptions, rawPassword)
-        .should.eventually.be.fulfilled;
-    }).timeout(5000);
+    fixtures.forEach((fixture) => {
+      it(`successfully imports users with ${fixture.name} to Firebase Auth.`, () => {
+        importUserRecord = {
+          uid: randomUid,
+          email: randomUid + '@example.com',
+        };
+        importUserRecord.passwordHash = fixture.computePasswordHash(fixture);
+        if (typeof fixture.rawSalt !== 'undefined') {
+          importUserRecord.passwordSalt = Buffer.from(fixture.rawSalt);
+        } else if (typeof fixture.rawSaltBase64 !== 'undefined') {
+          importUserRecord.passwordSalt = Buffer.from(fixture.rawSaltBase64, 'base64');
+        }
+        return testImportAndSignInUser(
+          importUserRecord, fixture.importOptions, fixture.rawPassword)
+          .should.eventually.be.fulfilled;
+
+      }).timeout(5000);
+    });
 
     it('successfully imports users with multiple OAuth providers', () => {
       const uid = randomUid;

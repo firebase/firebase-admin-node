@@ -951,9 +951,9 @@ describe('FirebaseAuthRequestHandler', () => {
       const userImportBuilder = new UserImportBuilder(testUsers, options);
       return requestHandler.uploadAccount(testUsers, options)
         .then((result) => {
-          expect(result).to.deep.equal(userImportBuilder.generateResponse([]));
+          expect(result).to.deep.equal(userImportBuilder.buildResponse([]));
           expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, userImportBuilder.generateRequest(),
+              host, port, path, httpMethod, userImportBuilder.buildRequest(),
               expectedHeaders, timeout);
         });
 
@@ -969,9 +969,9 @@ describe('FirebaseAuthRequestHandler', () => {
       const userImportBuilder = new UserImportBuilder(users, options);
       return requestHandler.uploadAccount(users, options)
         .then((result) => {
-          expect(result).to.deep.equal(userImportBuilder.generateResponse([]));
+          expect(result).to.deep.equal(userImportBuilder.buildResponse([]));
           expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, userImportBuilder.generateRequest(),
+              host, port, path, httpMethod, userImportBuilder.buildRequest(),
               expectedHeaders, timeout);
         });
     });
@@ -991,9 +991,9 @@ describe('FirebaseAuthRequestHandler', () => {
       const userImportBuilder = new UserImportBuilder(users, options);
       return requestHandler.uploadAccount(users, options)
         .then((result) => {
-          expect(result).to.deep.equal(userImportBuilder.generateResponse(expectedResult.error));
+          expect(result).to.deep.equal(userImportBuilder.buildResponse(expectedResult.error));
           expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, userImportBuilder.generateRequest(),
+              host, port, path, httpMethod, userImportBuilder.buildRequest(),
               expectedHeaders, timeout);
         });
     });
@@ -1146,7 +1146,7 @@ describe('FirebaseAuthRequestHandler', () => {
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
           expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, userImportBuilder.generateRequest(),
+              host, port, path, httpMethod, userImportBuilder.buildRequest(),
               expectedHeaders, timeout);
         });
     });

@@ -532,7 +532,7 @@ export class FirebaseAuthRequestHandler {
       // Pass true to validate the uploadAccount specific fields.
       validateCreateEditRequest(userRequest, true);
     });
-    const request = userImportBuilder.generateRequest();
+    const request = userImportBuilder.buildRequest();
     // Fail quickly if more users than allowed are to be imported.
     if (validator.isArray(users) && users.length > MAX_UPLOAD_ACCOUNT_BATCH_SIZE) {
       throw new FirebaseAuthError(
@@ -543,14 +543,14 @@ export class FirebaseAuthRequestHandler {
     // If no remaining user in request after client side processing, there is no need
     // to send the request to the server.
     if (request.users.length === 0) {
-      return Promise.resolve(userImportBuilder.generateResponse([]));
+      return Promise.resolve(userImportBuilder.buildResponse([]));
     }
     return this.invokeRequestHandler(FIREBASE_AUTH_UPLOAD_ACCOUNT, request)
       .then((response: any) => {
         // No error object is returned if no error encountered.
         const failedUploads = (response.error || []) as Array<{index: number, message: string}>;
         // Rewrite response as UserImportResult and re-insert client previously detected errors.
-        return userImportBuilder.generateResponse(failedUploads);
+        return userImportBuilder.buildResponse(failedUploads);
       });
   }
 

@@ -160,7 +160,7 @@ declare namespace admin.auth {
   interface UserImportOptions {
     hash: {
       algorithm: HashAlgorithmType;
-      key?: string;
+      key?: Buffer;
       saltSeparator?: string;
       rounds?: number;
       memoryCost?: number;
