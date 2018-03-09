@@ -501,6 +501,7 @@ describe('admin.auth', () => {
           {
             uid: uid + '-facebook',
             displayName: 'Facebook User',
+            email,
             photoURL: photoURL + '?providerId=facebook.com',
             providerId: 'facebook.com',
           },
