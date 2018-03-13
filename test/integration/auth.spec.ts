@@ -493,6 +493,7 @@ describe('admin.auth', () => {
         photoURL,
         phoneNumber: '+15554446666',
         disabled: false,
+        customClaims: {admin: true},
         metadata: {
           lastSignInTime: now,
           creationTime: now,
