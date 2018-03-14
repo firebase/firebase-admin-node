@@ -23,6 +23,10 @@ import {
   HttpMethod, SignedApiRequestHandler, ApiSettings,
 } from '../utils/api-request';
 import {CreateRequest, UpdateRequest} from './user-record';
+import {
+  UserImportBuilder, UserImportOptions, UserImportRecord,
+  UserImportResult, UploadAccountRequest,
+} from './user-import-builder';
 
 
 /** Firebase Auth backend host. */
@@ -52,6 +56,68 @@ const MAX_CLAIMS_PAYLOAD_SIZE = 1000;
 /** Maximum allowed number of users to batch download at one time. */
 const MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE = 1000;
 
+/** Maximum allowed number of users to batch upload at one time. */
+const MAX_UPLOAD_ACCOUNT_BATCH_SIZE = 1000;
+
+
+/**
+ * Validates a providerUserInfo object. All unsupported parameters
+ * are removed from the original request. If an invalid field is passed
+ * an error is thrown.
+ *
+ * @param {any} request The providerUserInfo request object.
+ */
+function validateProviderUserInfo(request: any) {
+  const validKeys = {
+    rawId: true,
+    providerId: true,
+    email: true,
+    displayName: true,
+    photoUrl: true,
+  };
+  // Remove invalid keys from original request.
+  for (const key in request) {
+    if (!(key in validKeys)) {
+      delete request[key];
+    }
+  }
+  if (!validator.isNonEmptyString(request.providerId)) {
+    throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
+  }
+  if (typeof request.displayName !== 'undefined' &&
+      typeof request.displayName !== 'string') {
+    throw new FirebaseAuthError(
+      AuthClientErrorCode.INVALID_DISPLAY_NAME,
+      `The provider "displayName" for "${request.providerId}" must be a valid string.`,
+    );
+  }
+  if (!validator.isNonEmptyString(request.rawId)) {
+    // This is called localId on the backend but the developer specifies this as
+    // uid externally. So the error message should use the client facing name.
+    throw new FirebaseAuthError(
+      AuthClientErrorCode.INVALID_UID,
+      `The provider "uid" for "${request.providerId}" must be a valid non-empty string.`,
+    );
+  }
+  // email should be a string and a valid email.
+  if (typeof request.email !== 'undefined' && !validator.isEmail(request.email)) {
+    throw new FirebaseAuthError(
+      AuthClientErrorCode.INVALID_EMAIL,
+      `The provider "email" for "${request.providerId}" must be a valid email string.`,
+    );
+  }
+  // photoUrl should be a URL.
+  if (typeof request.photoUrl !== 'undefined' &&
+      !validator.isURL(request.photoUrl)) {
+    // This is called photoUrl on the backend but the developer specifies this as
+    // photoURL externally. So the error message should use the client facing name.
+    throw new FirebaseAuthError(
+      AuthClientErrorCode.INVALID_PHOTO_URL,
+      `The provider "photoURL" for "${request.providerId}" must be a valid URL string.`,
+    );
+  }
+}
+
 
 /**
  * Validates a create/edit request object. All unsupported parameters
@@ -59,130 +125,170 @@ const MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE = 1000;
  * an error is thrown.
  *
  * @param {any} request The create/edit request object.
+ * @param {boolean=} uploadAccountRequest Whether to validate as an uploadAccount request.
  */
-function validateCreateEditRequest(request: any) {
-    // Hash set of whitelisted parameters.
-    const validKeys = {
-      displayName: true,
-      localId: true,
-      email: true,
-      password: true,
-      rawPassword: true,
-      emailVerified: true,
-      photoUrl: true,
-      disabled: true,
-      disableUser: true,
-      deleteAttribute: true,
-      deleteProvider: true,
-      sanityCheck: true,
-      phoneNumber: true,
-      customAttributes: true,
-      validSince: true,
-    };
-    // Remove invalid keys from original request.
-    for (const key in request) {
-      if (!(key in validKeys)) {
-        delete request[key];
+function validateCreateEditRequest(request: any, uploadAccountRequest: boolean = false) {
+  // Hash set of whitelisted parameters.
+  const validKeys = {
+    displayName: true,
+    localId: true,
+    email: true,
+    password: true,
+    rawPassword: true,
+    emailVerified: true,
+    photoUrl: true,
+    disabled: true,
+    disableUser: true,
+    deleteAttribute: true,
+    deleteProvider: true,
+    sanityCheck: true,
+    phoneNumber: true,
+    customAttributes: true,
+    validSince: true,
+    passwordHash: uploadAccountRequest,
+    salt: uploadAccountRequest,
+    createdAt: uploadAccountRequest,
+    lastLoginAt: uploadAccountRequest,
+    providerUserInfo: uploadAccountRequest,
+  };
+  // Remove invalid keys from original request.
+  for (const key in request) {
+    if (!(key in validKeys)) {
+      delete request[key];
+    }
+  }
+  // For any invalid parameter, use the external key name in the error description.
+  // displayName should be a string.
+  if (typeof request.displayName !== 'undefined' &&
+      !validator.isString(request.displayName)) {
+    throw new FirebaseAuthError(AuthClientErrorCode.INVALID_DISPLAY_NAME);
+  }
+  if ((typeof request.localId !== 'undefined' || uploadAccountRequest) &&
+      !validator.isUid(request.localId)) {
+    // This is called localId on the backend but the developer specifies this as
+    // uid externally. So the error message should use the client facing name.
+    throw new FirebaseAuthError(AuthClientErrorCode.INVALID_UID);
+  }
+  // email should be a string and a valid email.
+  if (typeof request.email !== 'undefined' && !validator.isEmail(request.email)) {
+    throw new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);
+  }
+  // phoneNumber should be a string and a valid phone number.
+  if (typeof request.phoneNumber !== 'undefined' &&
+      !validator.isPhoneNumber(request.phoneNumber)) {
+    throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER);
+  }
+  // password should be a string and a minimum of 6 chars.
+  if (typeof request.password !== 'undefined' &&
+      !validator.isPassword(request.password)) {
+    throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PASSWORD);
+  }
+  // rawPassword should be a string and a minimum of 6 chars.
+  if (typeof request.rawPassword !== 'undefined' &&
+      !validator.isPassword(request.rawPassword)) {
+    // This is called rawPassword on the backend but the developer specifies this as
+    // password externally. So the error message should use the client facing name.
+    throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PASSWORD);
+  }
+  // emailVerified should be a boolean.
+  if (typeof request.emailVerified !== 'undefined' &&
+      typeof request.emailVerified !== 'boolean') {
+    throw new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL_VERIFIED);
+  }
+  // photoUrl should be a URL.
+  if (typeof request.photoUrl !== 'undefined' &&
+      !validator.isURL(request.photoUrl)) {
+    // This is called photoUrl on the backend but the developer specifies this as
+    // photoURL externally. So the error message should use the client facing name.
+    throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PHOTO_URL);
+  }
+  // disabled should be a boolean.
+  if (typeof request.disabled !== 'undefined' &&
+      typeof request.disabled !== 'boolean') {
+    throw new FirebaseAuthError(AuthClientErrorCode.INVALID_DISABLED_FIELD);
+  }
+  // validSince should be a number.
+  if (typeof request.validSince !== 'undefined' &&
+      !validator.isNumber(request.validSince)) {
+    throw new FirebaseAuthError(AuthClientErrorCode.INVALID_TOKENS_VALID_AFTER_TIME);
+  }
+  // createdAt should be a number.
+  if (typeof request.createdAt !== 'undefined' &&
+      !validator.isNumber(request.createdAt)) {
+    throw new FirebaseAuthError(AuthClientErrorCode.INVALID_CREATION_TIME);
+  }
+  // lastSignInAt should be a number.
+  if (typeof request.lastLoginAt !== 'undefined' &&
+      !validator.isNumber(request.lastLoginAt)) {
+    throw new FirebaseAuthError(AuthClientErrorCode.INVALID_LAST_SIGN_IN_TIME);
+  }
+  // disableUser should be a boolean.
+  if (typeof request.disableUser !== 'undefined' &&
+      typeof request.disableUser !== 'boolean') {
+    // This is called disableUser on the backend but the developer specifies this as
+    // disabled externally. So the error message should use the client facing name.
+    throw new FirebaseAuthError(AuthClientErrorCode.INVALID_DISABLED_FIELD);
+  }
+  // customAttributes should be stringified JSON with no blacklisted claims.
+  // The payload should not exceed 1KB.
+  if (typeof request.customAttributes !== 'undefined') {
+    let developerClaims;
+    try {
+      developerClaims = JSON.parse(request.customAttributes);
+    } catch (error) {
+      // JSON parsing error. This should never happen as we stringify the claims internally.
+      // However, we still need to check since setAccountInfo via edit requests could pass
+      // this field.
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_CLAIMS, error.message);
+    }
+    const invalidClaims = [];
+    // Check for any invalid claims.
+    RESERVED_CLAIMS.forEach((blacklistedClaim) => {
+      if (developerClaims.hasOwnProperty(blacklistedClaim)) {
+        invalidClaims.push(blacklistedClaim);
       }
+    });
+    // Throw an error if an invalid claim is detected.
+    if (invalidClaims.length > 0) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.FORBIDDEN_CLAIM,
+        invalidClaims.length > 1 ?
+        `Developer claims "${invalidClaims.join('", "')}" are reserved and cannot be specified.` :
+        `Developer claim "${invalidClaims[0]}" is reserved and cannot be specified.`,
+      );
     }
-    // For any invalid parameter, use the external key name in the error description.
-    // displayName should be a string.
-    if (typeof request.displayName !== 'undefined' &&
-        typeof request.displayName !== 'string') {
-      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_DISPLAY_NAME);
+    // Check claims payload does not exceed maxmimum size.
+    if (request.customAttributes.length > MAX_CLAIMS_PAYLOAD_SIZE) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.CLAIMS_TOO_LARGE,
+        `Developer claims payload should not exceed ${MAX_CLAIMS_PAYLOAD_SIZE} characters.`,
+      );
     }
-    if (typeof request.localId !== 'undefined' && !validator.isUid(request.localId)) {
-      // This is called localId on the backend but the developer specifies this as
-      // uid externally. So the error message should use the client facing name.
-      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_UID);
-    }
-    // email should be a string and a valid email.
-    if (typeof request.email !== 'undefined' && !validator.isEmail(request.email)) {
-      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);
-    }
-    // phoneNumber should be a string and a valid phone number.
-    if (typeof request.phoneNumber !== 'undefined' &&
-        !validator.isPhoneNumber(request.phoneNumber)) {
-      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER);
-    }
-    // password should be a string and a minimum of 6 chars.
-    if (typeof request.password !== 'undefined' &&
-        !validator.isPassword(request.password)) {
-      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PASSWORD);
-    }
-    // rawPassword should be a string and a minimum of 6 chars.
-    if (typeof request.rawPassword !== 'undefined' &&
-        !validator.isPassword(request.rawPassword)) {
-      // This is called rawPassword on the backend but the developer specifies this as
-      // password externally. So the error message should use the client facing name.
-      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PASSWORD);
-    }
-    // emailVerified should be a boolean.
-    if (typeof request.emailVerified !== 'undefined' &&
-        typeof request.emailVerified !== 'boolean') {
-     throw new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL_VERIFIED);
-    }
-    // photoUrl should be a URL.
-    if (typeof request.photoUrl !== 'undefined' &&
-        !validator.isURL(request.photoUrl)) {
-      // This is called photoUrl on the backend but the developer specifies this as
-      // photoURL externally. So the error message should use the client facing name.
-      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PHOTO_URL);
-    }
-    // disabled should be a boolean.
-    if (typeof request.disabled !== 'undefined' &&
-        typeof request.disabled !== 'boolean') {
-      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_DISABLED_FIELD);
-    }
-    // validSince should be a number.
-    if (typeof request.validSince !== 'undefined' &&
-        !validator.isNumber(request.validSince)) {
-      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_TOKENS_VALID_AFTER_TIME);
-    }
-    // disableUser should be a boolean.
-    if (typeof request.disableUser !== 'undefined' &&
-        typeof request.disableUser !== 'boolean') {
-      // This is called disableUser on the backend but the developer specifies this as
-      // disabled externally. So the error message should use the client facing name.
-      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_DISABLED_FIELD);
-    }
-    // customAttributes should be stringified JSON with no blacklisted claims.
-    // The payload should not exceed 1KB.
-    if (typeof request.customAttributes !== 'undefined') {
-      let developerClaims;
-      try {
-        developerClaims = JSON.parse(request.customAttributes);
-      } catch (error) {
-        // JSON parsing error. This should never happen as we stringify the claims internally.
-        // However, we still need to check since setAccountInfo via edit requests could pass
-        // this field.
-        throw new FirebaseAuthError(AuthClientErrorCode.INVALID_CLAIMS, error.message);
-      }
-      const invalidClaims = [];
-      // Check for any invalid claims.
-      RESERVED_CLAIMS.forEach((blacklistedClaim) => {
-        if (developerClaims.hasOwnProperty(blacklistedClaim)) {
-          invalidClaims.push(blacklistedClaim);
-        }
-      });
-      // Throw an error if an invalid claim is detected.
-      if (invalidClaims.length > 0) {
-        throw new FirebaseAuthError(
-          AuthClientErrorCode.FORBIDDEN_CLAIM,
-          invalidClaims.length > 1 ?
-          `Developer claims "${invalidClaims.join('", "')}" are reserved and cannot be specified.` :
-          `Developer claim "${invalidClaims[0]}" is reserved and cannot be specified.`,
-        );
-      }
-      // Check claims payload does not exceed maxmimum size.
-      if (request.customAttributes.length > MAX_CLAIMS_PAYLOAD_SIZE) {
-        throw new FirebaseAuthError(
-          AuthClientErrorCode.CLAIMS_TOO_LARGE,
-          `Developer claims payload should not exceed ${MAX_CLAIMS_PAYLOAD_SIZE} characters.`,
-        );
-      }
-    }
+  }
+  // passwordHash has to be a base64 encoded string.
+  if (typeof request.passwordHash !== 'undefined' &&
+      !validator.isString(request.passwordHash)) {
+    throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PASSWORD_HASH);
+  }
+  // salt has to be a base64 encoded string.
+  if (typeof request.salt !== 'undefined' &&
+      !validator.isString(request.salt)) {
+    throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PASSWORD_SALT);
+  }
+  // providerUserInfo has to be an array of valid UserInfo requests.
+  if (typeof request.providerUserInfo !== 'undefined' &&
+      !validator.isArray(request.providerUserInfo)) {
+    throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_DATA);
+  } else if (validator.isArray(request.providerUserInfo)) {
+    request.providerUserInfo.forEach((providerUserInfoEntry) => {
+      validateProviderUserInfo(providerUserInfoEntry);
+    });
+  }
 }
+
+
+/** Instantiates the uploadAccount endpoint settings. */
+export const FIREBASE_AUTH_UPLOAD_ACCOUNT = new ApiSettings('uploadAccount', 'POST');
 
 
 /** Instantiates the downloadAccount endpoint settings. */
@@ -399,6 +505,51 @@ export class FirebaseAuthRequestHandler {
           }
           return response as {users: object[], nextPageToken?: string};
         });
+  }
+
+  /**
+   * Imports the list of users provided to Firebase Auth. This is useful when
+   * migrating from an external authentication system without having to use the Firebase CLI SDK.
+   * At most, 1000 users are allowed to be imported one at a time.
+   * When importing a list of password users, UserImportOptions are required to be specified.
+   *
+   * @param {UserImportRecord[]} users The list of user records to import to Firebase Auth.
+   * @param {UserImportOptions=} options The user import options, required when the users provided
+   *     include password credentials.
+   * @return {Promise<UserImportResult>} A promise that resolves when the operation completes
+   *     with the result of the import. This includes the number of successful imports, the number
+   *     of failed uploads and their corresponding errors.
+   */
+  public uploadAccount(
+      users: UserImportRecord[], options?: UserImportOptions): Promise<UserImportResult> {
+    // This will throw if any error is detected in the hash options.
+    // For errors in the list of users, this will not throw and will report the errors and the
+    // corresponding user index in the user import generated response below.
+    // No need to validate raw request or raw response as this is done in UserImportBuilder.
+    const userImportBuilder = new UserImportBuilder(users, options, (userRequest: any) => {
+      // Pass true to validate the uploadAccount specific fields.
+      validateCreateEditRequest(userRequest, true);
+    });
+    const request = userImportBuilder.buildRequest();
+    // Fail quickly if more users than allowed are to be imported.
+    if (validator.isArray(users) && users.length > MAX_UPLOAD_ACCOUNT_BATCH_SIZE) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.MAXIMUM_USER_COUNT_EXCEEDED,
+        `A maximum of ${MAX_UPLOAD_ACCOUNT_BATCH_SIZE} users can be imported at once.`,
+      );
+    }
+    // If no remaining user in request after client side processing, there is no need
+    // to send the request to the server.
+    if (request.users.length === 0) {
+      return Promise.resolve(userImportBuilder.buildResponse([]));
+    }
+    return this.invokeRequestHandler(FIREBASE_AUTH_UPLOAD_ACCOUNT, request)
+      .then((response: any) => {
+        // No error object is returned if no error encountered.
+        const failedUploads = (response.error || []) as Array<{index: number, message: string}>;
+        // Rewrite response as UserImportResult and re-insert client previously detected errors.
+        return userImportBuilder.buildResponse(failedUploads);
+      });
   }
 
   /**

@@ -17,6 +17,9 @@
 import * as admin from '../../lib/index';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
+import * as crypto from 'crypto';
+import * as bcrypt from 'bcrypt';
+import * as scrypt from 'scrypt';
 import firebase = require('firebase');
 import {clone} from 'lodash';
 import {generateRandomString, projectId, apiKey} from './setup';
@@ -47,6 +50,16 @@ const mockUserData = {
   photoURL: 'http://www.example.com/' + newUserUid + '/photo.png',
   disabled: false,
 };
+let deleteQueue = Promise.resolve();
+
+interface UserImportTest {
+  name: string;
+  importOptions: admin.auth.UserImportOptions;
+  rawPassword: string;
+  rawSalt?: string;
+  computePasswordHash(userImportTest: UserImportTest): Buffer;
+}
+
 
 describe('admin.auth', () => {
 
@@ -57,11 +70,11 @@ describe('admin.auth', () => {
       apiKey,
       authDomain: projectId + '.firebaseapp.com',
     });
-    cleanup();
+    return cleanup();
   });
 
   after(() => {
-    cleanup();
+    return cleanup();
   });
 
   it('createUser() creates a new user when called without a UID', () => {
@@ -149,7 +162,7 @@ describe('admin.auth', () => {
         expect(listUsersResult.users[1].passwordHash.length).greaterThan(0);
         expect(listUsersResult.users[1].passwordSalt.length).greaterThan(0);
       });
-  });
+  }).timeout(5000);
 
   it('revokeRefreshTokens() invalidates existing sessions and ID tokens', () => {
     let currentIdToken: string = null;
@@ -231,7 +244,7 @@ describe('admin.auth', () => {
           }
         }
       });
-  });
+  }).timeout(5000);
 
   it('updateUser() updates the user record with the given parameters', () => {
     const updatedDisplayName = 'Updated User ' + newUserUid;
@@ -307,7 +320,275 @@ describe('admin.auth', () => {
       admin.auth().deleteUser(uidFromCreateUserWithoutUid),
     ]).should.eventually.be.fulfilled;
   });
+
+  describe('importUsers()', () => {
+    const randomUid = 'import_' + generateRandomString(20).toLowerCase();
+    let importUserRecord;
+    const rawPassword = 'password';
+    const rawSalt = 'NaCl';
+    // Simulate a user stored using SCRYPT being migrated to Firebase Auth via importUsers.
+    // Obtained from https://github.com/firebase/scrypt.
+    const scryptHashKey = 'jxspr8Ki0RYycVU8zykbdLGjFQ3McFUH0uiiTvC8pVMXAn210wjLNmdZ' +
+                          'JzxUECKbm0QsEmYUSDzZvpjeJ9WmXA==';
+    const scryptPasswordHash = 'V358E8LdWJXAO7muq0CufVpEOXaj8aFiC7T/rcaGieN04q/ZPJ0' +
+                               '8WhJEHGjj9lz/2TT+/86N5VjVoc5DdBhBiw==';
+    const scryptHashOptions = {
+      hash: {
+        algorithm: 'SCRYPT',
+        key: Buffer.from(scryptHashKey, 'base64'),
+        saltSeparator: Buffer.from('Bw==', 'base64'),
+        rounds: 8,
+        memoryCost: 14,
+      },
+    };
+
+    afterEach(() => {
+      return safeDelete(randomUid);
+    });
+
+    const fixtures: UserImportTest[] = [
+      {
+        name: 'HMAC_SHA256',
+        importOptions: {
+          hash: {
+            algorithm: 'HMAC_SHA256',
+            key: Buffer.from('secret'),
+          },
+        } as any,
+        computePasswordHash: (userImportTest: UserImportTest): Buffer => {
+          const currentHashKey = userImportTest.importOptions.hash.key.toString('utf8');
+          const currentRawPassword = userImportTest.rawPassword;
+          const currentRawSalt = userImportTest.rawSalt;
+          return crypto.createHmac('sha256', currentHashKey)
+                       .update(currentRawPassword + currentRawSalt).digest();
+        },
+        rawPassword,
+        rawSalt,
+      },
+      {
+        name: 'SHA256',
+        importOptions: {
+          hash: {
+            algorithm: 'SHA256',
+            rounds: 0,
+          },
+        } as any,
+        computePasswordHash: (userImportTest: UserImportTest): Buffer => {
+          const currentRawPassword = userImportTest.rawPassword;
+          const currentRawSalt = userImportTest.rawSalt;
+          return crypto.createHash('sha256').update(currentRawSalt + currentRawPassword).digest();
+        },
+        rawPassword,
+        rawSalt,
+      },
+      {
+        name: 'MD5',
+        importOptions: {
+          hash: {
+            algorithm: 'MD5',
+            rounds: 0,
+          },
+        } as any,
+        computePasswordHash: (userImportTest: UserImportTest): Buffer => {
+          const currentRawPassword = userImportTest.rawPassword;
+          const currentRawSalt = userImportTest.rawSalt;
+          return Buffer.from(crypto.createHash('md5')
+                                   .update(currentRawSalt + currentRawPassword).digest('hex'));
+        },
+        rawPassword,
+        rawSalt,
+      },
+      {
+        name: 'BCRYPT',
+        importOptions: {
+          hash: {
+            algorithm: 'BCRYPT',
+          },
+        } as any,
+        computePasswordHash: (userImportTest: UserImportTest): Buffer => {
+          return Buffer.from(bcrypt.hashSync(userImportTest.rawPassword, 10));
+        },
+        rawPassword,
+      },
+      {
+        name: 'STANDARD_SCRYPT',
+        importOptions: {
+          hash: {
+            algorithm: 'STANDARD_SCRYPT',
+            memoryCost: 1024,
+            parallelization: 16,
+            blockSize: 8,
+            derivedKeyLength: 64,
+          },
+        } as any,
+        computePasswordHash: (userImportTest: UserImportTest): Buffer => {
+          const currentRawPassword = userImportTest.rawPassword;
+          const currentRawSalt = userImportTest.rawSalt;
+          const N = userImportTest.importOptions.hash.memoryCost;
+          const r = userImportTest.importOptions.hash.blockSize;
+          const p = userImportTest.importOptions.hash.parallelization;
+          const dkLen = userImportTest.importOptions.hash.derivedKeyLength;
+          return Buffer.from(scrypt.hashSync(
+              currentRawPassword, {N, r, p}, dkLen, new Buffer(currentRawSalt)));
+        },
+        rawPassword,
+        rawSalt,
+      },
+      {
+        name: 'PBKDF2_SHA256',
+        importOptions: {
+          hash: {
+            algorithm: 'PBKDF2_SHA256',
+            rounds: 100000,
+          },
+        } as any,
+        computePasswordHash: (userImportTest: UserImportTest): Buffer => {
+          const currentRawPassword = userImportTest.rawPassword;
+          const currentRawSalt = userImportTest.rawSalt;
+          const currentRounds = userImportTest.importOptions.hash.rounds;
+          return crypto.pbkdf2Sync(
+              currentRawPassword, currentRawSalt, currentRounds, 64, 'sha256');
+        },
+        rawPassword,
+        rawSalt,
+      },
+      {
+        name: 'SCRYPT',
+        importOptions: scryptHashOptions as any,
+        computePasswordHash: (userImportTest: UserImportTest): Buffer => {
+          return Buffer.from(scryptPasswordHash, 'base64');
+        },
+        rawPassword,
+        rawSalt,
+      },
+    ];
+
+    fixtures.forEach((fixture) => {
+      it(`successfully imports users with ${fixture.name} to Firebase Auth.`, () => {
+        importUserRecord = {
+          uid: randomUid,
+          email: randomUid + '@example.com',
+        };
+        importUserRecord.passwordHash = fixture.computePasswordHash(fixture);
+        if (typeof fixture.rawSalt !== 'undefined') {
+          importUserRecord.passwordSalt = Buffer.from(fixture.rawSalt);
+        }
+        return testImportAndSignInUser(
+          importUserRecord, fixture.importOptions, fixture.rawPassword)
+          .should.eventually.be.fulfilled;
+
+      }).timeout(5000);
+    });
+
+    it('successfully imports users with multiple OAuth providers', () => {
+      const uid = randomUid;
+      const email = uid + '@example.com';
+      const now = new Date(1476235905000).toUTCString();
+      const photoURL = 'http://www.example.com/' + uid + '/photo.png';
+      importUserRecord = {
+        uid,
+        email,
+        emailVerified: true,
+        displayName: 'Test User',
+        photoURL,
+        phoneNumber: '+15554446666',
+        disabled: false,
+        customClaims: {admin: true},
+        metadata: {
+          lastSignInTime: now,
+          creationTime: now,
+        },
+        providerData: [
+          {
+            uid: uid + '-facebook',
+            displayName: 'Facebook User',
+            email,
+            photoURL: photoURL + '?providerId=facebook.com',
+            providerId: 'facebook.com',
+          },
+          {
+            uid: uid + '-twitter',
+            displayName: 'Twitter User',
+            photoURL: photoURL + '?providerId=twitter.com',
+            providerId: 'twitter.com',
+          },
+        ],
+      };
+      uids.push(importUserRecord.uid);
+      return admin.auth().importUsers([importUserRecord])
+        .then((result) => {
+          expect(result.failureCount).to.equal(0);
+          expect(result.successCount).to.equal(1);
+          expect(result.errors.length).to.equal(0);
+          return admin.auth().getUser(uid);
+        }).then((userRecord) => {
+          // The phone number provider will be appended to the list of accounts.
+          importUserRecord.providerData.push({
+            uid: importUserRecord.phoneNumber,
+            providerId: 'phone',
+            phoneNumber: importUserRecord.phoneNumber,
+          });
+          const actualUserRecord = userRecord.toJSON();
+          for (const key of Object.keys(importUserRecord)) {
+            expect(JSON.stringify(actualUserRecord[key]))
+              .to.be.equal(JSON.stringify(importUserRecord[key]));
+          }
+        }).should.eventually.be.fulfilled;
+    });
+
+    it('fails when invalid users are provided', () => {
+      const users = [
+        {uid: generateRandomString(20).toLowerCase(), phoneNumber: '+1error'},
+        {uid: generateRandomString(20).toLowerCase(), email: 'invalid'},
+        {uid: generateRandomString(20).toLowerCase(), phoneNumber: '+1invalid'},
+        {uid: generateRandomString(20).toLowerCase(), emailVerified: 'invalid'} as any,
+      ];
+      return admin.auth().importUsers(users)
+        .then((result) => {
+          expect(result.successCount).to.equal(0);
+          expect(result.failureCount).to.equal(4);
+          expect(result.errors.length).to.equal(4);
+          expect(result.errors[0].index).to.equal(0);
+          expect(result.errors[0].error.code).to.equals('auth/invalid-user-import');
+          expect(result.errors[1].index).to.equal(1);
+          expect(result.errors[1].error.code).to.equals('auth/invalid-email');
+          expect(result.errors[2].index).to.equal(2);
+          expect(result.errors[2].error.code).to.equals('auth/invalid-user-import');
+          expect(result.errors[3].index).to.equal(3);
+          expect(result.errors[3].error.code).to.equals('auth/invalid-email-verified');
+        }).should.eventually.be.fulfilled;
+    });
+  });
 });
+
+/**
+ * Imports the provided user record with the specified hashing options and then
+ * validates the import was successful by signing in to the imported account using
+ * the corresponding plain text password.
+ * @param {admin.auth.UserImportRecord} importUserRecord The user record to import.
+ * @param {admin.auth.UserImportOptions} importOptions The import hashing options.
+ * @param {string} rawPassword The plain unhashed password string.
+ * @retunr {Promise<void>} A promise that resolved on success.
+ */
+function testImportAndSignInUser(
+    importUserRecord: any, importOptions: any, rawPassword: string): Promise<void> {
+  const users = [importUserRecord];
+  // Import the user record.
+  return admin.auth().importUsers(users, importOptions)
+    .then((result) => {
+      // Verify the import result.
+      expect(result.failureCount).to.equal(0);
+      expect(result.successCount).to.equal(1);
+      expect(result.errors.length).to.equal(0);
+      // Sign in with an email and password to the imported account.
+      return firebase.auth().signInWithEmailAndPassword(users[0].email, rawPassword);
+    })
+    .then((user) => {
+      // Confirm successful sign-in.
+      expect(user.email).to.equal(users[0].email);
+      expect(user.providerData[0].providerId).to.equal('password');
+    });
+}
 
 /**
  * Helper function that deletes the user with the specified phone number
@@ -319,7 +600,7 @@ describe('admin.auth', () => {
 function deletePhoneNumberUser(phoneNumber) {
   return admin.auth().getUserByPhoneNumber(phoneNumber)
     .then((userRecord) => {
-      return admin.auth().deleteUser(userRecord.uid);
+      return safeDelete(userRecord.uid);
     })
     .catch((error) => {
       // Suppress user not found error.
@@ -345,15 +626,35 @@ function cleanup() {
   ];
   // Delete list of users for testing listUsers.
   uids.forEach((uid) => {
-    promises.push(
-      admin.auth().deleteUser(uid)
-        .catch((error) => {
-          // Suppress user not found error.
-          if (error.code !== 'auth/user-not-found') {
-            throw error;
-          }
-        }),
-    );
+    // Use safeDelete to avoid getting throttled.
+    promises.push(safeDelete(uid));
   });
   return Promise.all(promises);
+}
+
+/**
+ * Safely deletes a specificed user identified by uid. This API chains all delete
+ * requests and throttles them as the Auth backend rate limits this endpoint.
+ * A bulk delete API is being designed to help solve this issue.
+ *
+ * @param {string} uid The identifier of the user to delete.
+ * @return {Promise} A promise that resolves when delete operation resolves.
+ */
+function safeDelete(uid: string): Promise<void> {
+  // Wait for delete queue to empty.
+  const deletePromise = deleteQueue
+    .then(() => {
+      return admin.auth().deleteUser(uid);
+    })
+    .catch((error) => {
+      // Suppress user not found error.
+      if (error.code !== 'auth/user-not-found') {
+        throw error;
+      }
+    });
+  // Suppress errors in delete queue to not spill over to next item in queue.
+  deleteQueue = deletePromise.catch((error) => {
+    // Do nothing.
+  });
+  return deletePromise;
 }

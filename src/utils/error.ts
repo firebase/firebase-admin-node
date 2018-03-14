@@ -342,6 +342,10 @@ export class AuthClientErrorCode {
     code: 'invalid-claims',
     message: 'The provided custom claim attributes are invalid.',
   };
+  public static INVALID_CREATION_TIME = {
+    code: 'invalid-creation-time',
+    message: 'The creation time must be a valid UTC date string.',
+  };
   public static INVALID_CREDENTIAL = {
     code: 'invalid-credential',
     message: 'Invalid credential object provided.',
@@ -362,6 +366,43 @@ export class AuthClientErrorCode {
     code: 'invalid-email',
     message: 'The email address is improperly formatted.',
   };
+  public static INVALID_HASH_ALGORITHM = {
+    code: 'invalid-hash-algorithm',
+    message: 'The hash algorithm must match one of the strings in the list of ' +
+             'supported algorithms.',
+  };
+  public static INVALID_HASH_BLOCK_SIZE = {
+    code: 'invalid-hash-block-size',
+    message: 'The hash block size must be a valid number.',
+  };
+  public static INVALID_HASH_DERIVED_KEY_LENGTH = {
+    code: 'invalid-hash-derived-key-length',
+    message: 'The hash derived key length must be a valid number.',
+  };
+  public static INVALID_HASH_KEY = {
+    code: 'invalid-hash-key',
+    message: 'The hash key must a valid byte buffer.',
+  };
+  public static INVALID_HASH_MEMORY_COST = {
+    code: 'invalid-hash-memory-cost',
+    message: 'The hash memory cost must be a valid number.',
+  };
+  public static INVALID_HASH_PARALLELIZATION = {
+    code: 'invalid-hash-parallelization',
+    message: 'The hash parallelization must be a valid number.',
+  };
+  public static INVALID_HASH_ROUNDS = {
+    code: 'invalid-hash-rounds',
+    message: 'The hash rounds must be a valid number.',
+  };
+  public static INVALID_HASH_SALT_SEPARATOR = {
+    code: 'invalid-hash-salt-separator',
+    message: 'The hashing algorithm salt separator field must be a valid byte buffer.',
+  };
+  public static INVALID_LAST_SIGN_IN_TIME = {
+    code: 'invalid-last-sign-in-time',
+    message: 'The last sign-in time must be a valid UTC date string.',
+  };
   public static INVALID_PAGE_TOKEN = {
     code: 'invalid-page-token',
     message: 'The page token must be a valid non-empty string.',
@@ -369,6 +410,14 @@ export class AuthClientErrorCode {
   public static INVALID_PASSWORD = {
     code: 'invalid-password',
     message: 'The password must be a string with at least 6 characters.',
+  };
+  public static INVALID_PASSWORD_HASH = {
+    code: 'invalid-password-hash',
+    message: 'The password hash must be a valid byte buffer.',
+  };
+  public static INVALID_PASSWORD_SALT = {
+    code: 'invalid-password-salt',
+    message: 'The password salt must be a valid byte buffer.',
   };
   public static INVALID_PHONE_NUMBER = {
     code: 'invalid-phone-number',
@@ -379,13 +428,34 @@ export class AuthClientErrorCode {
     code: 'invalid-photo-url',
     message: 'The photoURL field must be a valid URL.',
   };
+  public static INVALID_PROVIDER_DATA = {
+    code: 'invalid-provider-data',
+    message: 'The providerData must be a valid array of UserInfo objects.',
+  };
+  public static INVALID_PROVIDER_ID = {
+    code: 'invalid-provider-id',
+    message: 'The providerId must be a valid supported provider identifier string.',
+  };
   public static INVALID_UID = {
     code: 'invalid-uid',
     message: 'The uid must be a non-empty string with at most 128 characters.',
   };
+  public static INVALID_USER_IMPORT = {
+    code: 'invalid-user-import',
+    message: 'The user record to import is invalid.',
+  };
   public static INVALID_TOKENS_VALID_AFTER_TIME = {
     code: 'invalid-tokens-valid-after-time',
     message: 'The tokensValidAfterTime must be a valid UTC number in seconds.',
+  };
+  public static MISSING_HASH_ALGORITHM = {
+    code: 'missing-hash-algorithm',
+    message: 'Importing users with password hashes requires that the hashing ' +
+             'algorithm and its parameters be provided.',
+  };
+  public static MAXIMUM_USER_COUNT_EXCEEDED = {
+    code: 'maximum-user-count-exceeded',
+    message: 'The maximum allowed number of users to import has been exceeded.',
   };
   public static MISSING_UID = {
     code: 'missing-uid',

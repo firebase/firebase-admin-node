@@ -152,6 +152,54 @@ declare namespace admin.auth {
     pageToken?: string;
   }
 
+  type HashAlgorithmType = 'SCRYPT' | 'STANDARD_SCRYPT' | 'HMAC_SHA512' |
+      'HMAC_SHA256' | 'HMAC_SHA1' | 'HMAC_MD5' | 'MD5' | 'PBKDF_SHA1' | 'BCRYPT' |
+      'PBKDF2_SHA256' | 'SHA512' | 'SHA256' | 'SHA1';
+
+
+  interface UserImportOptions {
+    hash: {
+      algorithm: HashAlgorithmType;
+      key?: Buffer;
+      saltSeparator?: string;
+      rounds?: number;
+      memoryCost?: number;
+      parallelization?: number;
+      blockSize?: number;
+      derivedKeyLength?: number;
+    };
+  }
+
+  interface UserImportResult {
+    failureCount: number;
+    successCount: number;
+    errors: admin.FirebaseArrayIndexError[];
+  }
+
+  interface UserImportRecord {
+    uid: string;
+    email?: string;
+    emailVerified?: boolean;
+    displayName?: string;
+    phoneNumber?: string;
+    photoURL?: string;
+    disabled?: boolean;
+    metadata?: {
+      lastSignInTime?: string;
+      creationTime?: string;
+    };
+    providerData?: {
+      uid: string,
+      displayName?: string,
+      email?: string,
+      photoURL?: string,
+      providerId: string,
+    }[];
+    customClaims?: Object;
+    passwordHash?: Buffer;
+    passwordSalt?: Buffer;
+  }
+
   interface Auth {
     app: admin.app.App;
 
@@ -166,6 +214,10 @@ declare namespace admin.auth {
     verifyIdToken(idToken: string, checkRevoked?: boolean): Promise<admin.auth.DecodedIdToken>;
     setCustomUserClaims(uid: string, customUserClaims: Object): Promise<void>;
     revokeRefreshTokens(uid: string): Promise<void>;
+    importUsers(
+      users: admin.auth.UserImportRecord[],
+      options?: admin.auth.UserImportOptions,
+    ): Promise<admin.auth.UserImportResult>
   }
 }
 

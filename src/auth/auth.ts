@@ -21,6 +21,9 @@ import {FirebaseTokenGenerator} from './token-generator';
 import {FirebaseAuthRequestHandler} from './auth-api-request';
 import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
+import {
+  UserImportOptions, UserImportRecord, UserImportResult,
+} from './user-import-builder';
 
 import * as validator from '../utils/validator';
 
@@ -349,5 +352,23 @@ export class Auth implements FirebaseServiceInterface {
       .then((existingUid) => {
         // Return nothing on success.
       });
+  }
+
+  /**
+   * Imports the list of users provided to Firebase Auth. This is useful when
+   * migrating from an external authentication system without having to use the Firebase CLI SDK.
+   * At most, 1000 users are allowed to be imported one at a time.
+   * When importing a list of password users, UserImportOptions are required to be specified.
+   *
+   * @param {UserImportRecord[]} users The list of user records to import to Firebase Auth.
+   * @param {UserImportOptions=} options The user import options, required when the users provided
+   *     include password credentials.
+   * @return {Promise<UserImportResult>} A promise that resolves when the operation completes
+   *     with the result of the import. This includes the number of successful imports, the number
+   *     of failed uploads and their corresponding errors.
+   */
+  public importUsers(
+      users: UserImportRecord[], options?: UserImportOptions): Promise<UserImportResult> {
+    return this.authRequestHandler.uploadAccount(users, options);
   }
 }

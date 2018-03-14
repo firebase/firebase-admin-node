@@ -1329,6 +1329,98 @@ describe('Auth', () => {
     });
   });
 
+  describe('importUsers()', () => {
+    const users = [
+      {uid: '1234', email: 'user@example.com', passwordHash: Buffer.from('password')},
+      {uid: '5678', phoneNumber: 'invalid'},
+    ];
+    const options = {
+      hash: {
+        algorithm: 'BCRYPT' as any,
+      },
+    };
+    const expectedUserImportResultError =
+        new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER);
+    const expectedOptionsError =
+        new FirebaseAuthError(AuthClientErrorCode.INVALID_HASH_ALGORITHM);
+    const expectedServerError =
+        new FirebaseAuthError(AuthClientErrorCode.INTERNAL_ERROR);
+    const expectedUserImportResult = {
+      successCount: 1,
+      failureCount: 1,
+      errors: [
+        {
+          index: 1,
+          error: expectedUserImportResultError,
+        },
+      ],
+    };
+    // Stubs used to simulate underlying api calls.
+    let stubs: sinon.SinonStub[] = [];
+    afterEach(() => {
+      _.forEach(stubs, (stub) => stub.restore());
+      stubs = [];
+    });
+
+    it('should be rejected given an app which returns null access tokens', () => {
+      return nullAccessTokenAuth.importUsers(users, options)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which returns invalid access tokens', () => {
+      return malformedAccessTokenAuth.importUsers(users, options)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which fails to generate access tokens', () => {
+      return rejectedPromiseAccessTokenAuth.importUsers(users, options)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should resolve on underlying uploadAccount request resolution', () => {
+      // Stub uploadAccount to return expected result.
+      const uploadAccountStub =
+          sinon.stub(FirebaseAuthRequestHandler.prototype, 'uploadAccount')
+          .returns(Promise.resolve(expectedUserImportResult));
+      stubs.push(uploadAccountStub);
+      return auth.importUsers(users, options)
+        .then((result) => {
+          // Confirm underlying API called with expected parameters.
+          expect(uploadAccountStub).to.have.been.calledOnce.and.calledWith(users, options);
+          // Confirm expected response returned.
+          expect(result).to.be.equal(expectedUserImportResult);
+        });
+    });
+
+    it('should reject when underlying uploadAccount request rejects with an error', () => {
+      // Stub uploadAccount to reject with expected error.
+      const uploadAccountStub =
+          sinon.stub(FirebaseAuthRequestHandler.prototype, 'uploadAccount')
+          .returns(Promise.reject(expectedServerError));
+      stubs.push(uploadAccountStub);
+      return auth.importUsers(users, options)
+        .then((result) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Confirm underlying API called with expected parameters.
+          expect(uploadAccountStub).to.have.been.calledOnce.and.calledWith(users, options);
+          // Confirm expected error returned.
+          expect(error).to.equal(expectedServerError);
+        });
+    });
+
+    it('should throw and fail quickly when underlying uploadAccount throws', () => {
+      // Stub uploadAccount to throw with expected error.
+      const uploadAccountStub =
+          sinon.stub(FirebaseAuthRequestHandler.prototype, 'uploadAccount')
+          .throws(expectedOptionsError);
+      stubs.push(uploadAccountStub);
+      expect(() => {
+        return auth.importUsers(users, {hash: {algorithm: 'invalid' as any}});
+      }).to.throw(expectedOptionsError);
+    });
+  });
+
   describe('INTERNAL.delete()', () => {
     it('should delete Auth instance', () => {
       auth.INTERNAL.delete().should.eventually.be.fulfilled;
