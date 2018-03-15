@@ -96,7 +96,7 @@
     "request-promise": "^4.1.1",
     "run-sequence": "^1.1.5",
     "scrypt": "^6.0.3",
-    "sinon": "^4.3.0",
+    "sinon": "^4.4.5",
     "sinon-chai": "^2.8.0",
     "ts-node": "^3.3.0",
     "tslint": "^5.9.0",
