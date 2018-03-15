@@ -1,5 +1,9 @@
 # Unreleased
 
+-
+
+# v5.11.0
+
 - [changed] Added the `auth.importUsers()` method for importing users to
   Firebase Auth in bulk.
 
