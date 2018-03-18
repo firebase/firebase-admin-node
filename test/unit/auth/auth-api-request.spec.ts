@@ -34,9 +34,13 @@ import {
   FirebaseAuthRequestHandler, FIREBASE_AUTH_GET_ACCOUNT_INFO,
   FIREBASE_AUTH_DELETE_ACCOUNT, FIREBASE_AUTH_SET_ACCOUNT_INFO,
   FIREBASE_AUTH_SIGN_UP_NEW_USER, FIREBASE_AUTH_DOWNLOAD_ACCOUNT,
-  RESERVED_CLAIMS,
+  RESERVED_CLAIMS, FIREBASE_AUTH_UPLOAD_ACCOUNT,
 } from '../../../src/auth/auth-api-request';
+import {
+  UserImportBuilder, UserImportRecord, UserImportResult, UserImportOptions,
+} from '../../../src/auth/user-import-builder';
 import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/utils/error';
+import {toWebSafeBase64} from '../../../src/utils';
 
 chai.should();
 chai.use(sinonChai);
@@ -59,6 +63,32 @@ function createRandomString(numOfChars: number): string {
   }
   return chars.join('');
 }
+
+
+describe('FIREBASE_AUTH_UPLOAD_ACCOUNT', () => {
+  it('should return the correct endpoint', () => {
+    expect(FIREBASE_AUTH_UPLOAD_ACCOUNT.getEndpoint()).to.equal('uploadAccount');
+  });
+  it('should return the correct http method', () => {
+    expect(FIREBASE_AUTH_UPLOAD_ACCOUNT.getHttpMethod()).to.equal('POST');
+  });
+  it('should return empty request validator', () => {
+    expect(FIREBASE_AUTH_UPLOAD_ACCOUNT.getRequestValidator()).to.not.be.null;
+    expect(() => {
+      const emptyRequest = {};
+      const requestValidator = FIREBASE_AUTH_UPLOAD_ACCOUNT.getRequestValidator();
+      requestValidator(emptyRequest);
+    }).not.to.throw();
+  });
+  it('should return empty response validator', () => {
+    expect(FIREBASE_AUTH_UPLOAD_ACCOUNT.getResponseValidator()).to.not.be.null;
+    expect(() => {
+      const emptyResponse = {};
+      const responseValidator = FIREBASE_AUTH_UPLOAD_ACCOUNT.getResponseValidator();
+      responseValidator(emptyResponse);
+    }).not.to.throw();
+  });
+});
 
 
 describe('FIREBASE_AUTH_DOWNLOAD_ACCOUNT', () => {
@@ -811,6 +841,316 @@ describe('FirebaseAuthRequestHandler', () => {
               host, port, path, httpMethod, data, expectedHeaders, timeout);
         });
     });
+  });
+
+  describe('uploadAccount', () => {
+    const httpMethod = 'POST';
+    const host = 'www.googleapis.com';
+    const port = 443;
+    const path = '/identitytoolkit/v3/relyingparty/uploadAccount';
+    const timeout = 10000;
+    const nowString = new Date().toUTCString();
+    const users = [
+      {
+        uid: '1234',
+        email: 'user@example.com',
+        passwordHash: Buffer.from('password'),
+        passwordSalt: Buffer.from('salt'),
+        displayName: 'Test User',
+        photoURL: 'https://www.example.com/1234/photo.png',
+        disabled: true,
+        metadata: {
+          lastSignInTime: nowString,
+          creationTime: nowString,
+        },
+        providerData: [
+          {
+            uid: 'google1234',
+            email: 'user@example.com',
+            photoURL: 'https://www.google.com/1234/photo.png',
+            displayName: 'Google User',
+            providerId: 'google.com',
+          },
+        ],
+        customClaims: {admin: true},
+      },
+      {
+        uid: '9012',
+        email: 'johndoe@example.com',
+        passwordHash: Buffer.from('userpass'),
+        passwordSalt: Buffer.from('NaCl'),
+      },
+      {uid: '5678', phoneNumber: '+16505550101'},
+    ];
+    const options = {
+      hash: {
+        algorithm: 'BCRYPT' as any,
+      },
+    };
+
+    it('should throw on invalid options without making an underlying API call', () => {
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_HASH_ALGORITHM,
+        `Unsupported hash algorithm provider "invalid".`,
+      );
+      const invalidOptions = {
+        hash: {
+          algorithm: 'invalid',
+        },
+      } as any;
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest');
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      expect(() => {
+        requestHandler.uploadAccount(users, invalidOptions);
+      }).to.throw(expectedError.message);
+      expect(stub).to.have.not.been.called;
+    });
+
+    it('should throw when 1001 UserImportRecords are provided', () => {
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.MAXIMUM_USER_COUNT_EXCEEDED,
+        `A maximum of 1000 users can be imported at once.`,
+      );
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest');
+      stubs.push(stub);
+
+      const testUsers = [];
+      for (let i = 0; i < 1001; i++) {
+        testUsers.push({
+          uid: 'USER' + i.toString(),
+          email: 'user' + i.toString() + '@example.com',
+          passwordHash: Buffer.from('password'),
+        });
+      }
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      expect(() => {
+        requestHandler.uploadAccount(testUsers, options);
+      }).to.throw(expectedError.message);
+      expect(stub).to.have.not.been.called;
+    });
+
+    it('should resolve successfully when 1000 UserImportRecords are provided', () => {
+      const expectedResult = {};
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        .returns(Promise.resolve(expectedResult));
+      stubs.push(stub);
+
+      const testUsers = [];
+      for (let i = 0; i < 1000; i++) {
+        testUsers.push({
+          uid: 'USER' + i.toString(),
+          email: 'user' + i.toString() + '@example.com',
+          passwordHash: Buffer.from('password'),
+        });
+      }
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      const userImportBuilder = new UserImportBuilder(testUsers, options);
+      return requestHandler.uploadAccount(testUsers, options)
+        .then((result) => {
+          expect(result).to.deep.equal(userImportBuilder.buildResponse([]));
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              host, port, path, httpMethod, userImportBuilder.buildRequest(),
+              expectedHeaders, timeout);
+        });
+
+    });
+
+    it('should resolve with expected result on underlying API success', () => {
+      const expectedResult = {};
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        .returns(Promise.resolve(expectedResult));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      const userImportBuilder = new UserImportBuilder(users, options);
+      return requestHandler.uploadAccount(users, options)
+        .then((result) => {
+          expect(result).to.deep.equal(userImportBuilder.buildResponse([]));
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              host, port, path, httpMethod, userImportBuilder.buildRequest(),
+              expectedHeaders, timeout);
+        });
+    });
+
+    it('should resolve with expected result on underlying API partial succcess', () => {
+      const expectedResult = {
+        error: [
+          {index: 0, message: 'Some error occurred'},
+          {index: 1, message: 'Another error occurred'},
+        ],
+      };
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        .returns(Promise.resolve(expectedResult));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      const userImportBuilder = new UserImportBuilder(users, options);
+      return requestHandler.uploadAccount(users, options)
+        .then((result) => {
+          expect(result).to.deep.equal(userImportBuilder.buildResponse(expectedResult.error));
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              host, port, path, httpMethod, userImportBuilder.buildRequest(),
+              expectedHeaders, timeout);
+        });
+    });
+
+    it('should resolve without underlying API call when users are processed client side', () => {
+      // These users should fail to upload due to invalid phone number and email fields.
+      const testUsers = [
+        {uid: '1234', phoneNumber: 'invalid'},
+        {uid: '5678', email: 'invalid'},
+      ] as any;
+      const expectedResult = {
+        successCount: 0,
+        failureCount: 2,
+        errors: [
+          {index: 0, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER)},
+          {index: 1, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL)},
+        ],
+      };
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest');
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.uploadAccount(testUsers)
+        .then((result) => {
+          expect(result).to.deep.equal(expectedResult);
+          expect(stub).to.have.not.been.called;
+        });
+    });
+
+    it('should validate underlying users and resolve with expected errors', () => {
+      const testUsers = [
+        {uid: 'user1', displayName: false},
+        {uid: 123},
+        {uid: 'user2', email: 'invalid'},
+        {uid: 'user3', phoneNumber: 'invalid'},
+        {uid: 'user4', emailVerified: 'invalid'},
+        {uid: 'user5', photoURL: 'invalid'},
+        {uid: 'user6', disabled: 'invalid'},
+        {uid: 'user7', metadata: {creationTime: 'invalid'}},
+        {uid: 'user8', metadata: {lastSignInTime: 'invalid'}},
+        {uid: 'user9', customClaims: {admin: true, aud: 'bla'}},
+        {uid: 'user10', email: 'user10@example.com', passwordHash: 'invalid'},
+        {uid: 'user11', email: 'user11@example.com', passwordSalt: 'invalid'},
+        {uid: 'user12', providerData: [{providerId: 'google.com'}]},
+        {
+          uid: 'user13',
+          providerData: [{providerId: 'google.com', uid: 'RAW_ID', displayName: false}],
+        },
+        {
+          uid: 'user14',
+          providerData: [{providerId: 'google.com', uid: 'RAW_ID', email: 'invalid'}],
+        },
+        {
+          uid: 'user15',
+          providerData: [{providerId: 'google.com', uid: 'RAW_ID', photoURL: 'invalid'}],
+        },
+        {uid: 'user16', providerData: [{}]},
+        {email: 'user17@example.com'},
+      ] as any;
+      const validOptions = {
+        hash: {
+          algorithm: 'BCRYPT',
+        },
+      } as any;
+      const expectedResult = {
+        successCount: 0,
+        failureCount: testUsers.length,
+        errors: [
+          {index: 0, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_DISPLAY_NAME)},
+          {index: 1, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_UID)},
+          {index: 2, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL)},
+          {index: 3, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER)},
+          {index: 4, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL_VERIFIED)},
+          {index: 5, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PHOTO_URL)},
+          {index: 6, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_DISABLED_FIELD)},
+          {index: 7, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_CREATION_TIME)},
+          {index: 8, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_LAST_SIGN_IN_TIME)},
+          {
+            index: 9,
+            error: new FirebaseAuthError(
+              AuthClientErrorCode.FORBIDDEN_CLAIM,
+              `Developer claim "aud" is reserved and cannot be specified.`,
+            ),
+          },
+          {index: 10, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PASSWORD_HASH)},
+          {index: 11, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PASSWORD_SALT)},
+          {
+            index: 12,
+            error: new FirebaseAuthError(
+              AuthClientErrorCode.INVALID_UID,
+              `The provider "uid" for "google.com" must be a valid non-empty string.`,
+            ),
+          },
+          {
+            index: 13,
+            error: new FirebaseAuthError(
+              AuthClientErrorCode.INVALID_DISPLAY_NAME,
+              `The provider "displayName" for "google.com" must be a valid string.`,
+            ),
+          },
+          {
+            index: 14,
+            error: new FirebaseAuthError(
+              AuthClientErrorCode.INVALID_EMAIL,
+              `The provider "email" for "google.com" must be a valid email string.`,
+            ),
+          },
+          {
+            index: 15,
+            error: new FirebaseAuthError(
+              AuthClientErrorCode.INVALID_PHOTO_URL,
+              `The provider "photoURL" for "google.com" must be a valid URL string.`,
+            ),
+          },
+          {index: 16, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID)},
+          {index: 17, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_UID)},
+        ],
+      };
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest');
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.uploadAccount(testUsers, validOptions)
+        .then((result) => {
+          expect(result).to.deep.equal(expectedResult);
+          expect(stub).to.have.not.been.called;
+        });
+    });
+
+    it('should be rejected when the backend returns an error', () => {
+      const expectedServerError = {
+        error: {
+          message: 'INTERNAL_ERROR',
+        },
+      };
+      const expectedError = new FirebaseAuthError(
+         AuthClientErrorCode.INTERNAL_ERROR,
+         `An internal error has occurred. Raw server response: ` +
+         `"${JSON.stringify(expectedServerError)}"`,
+      );
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        .returns(Promise.resolve(expectedServerError));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      const userImportBuilder = new UserImportBuilder(users, options);
+      return requestHandler.uploadAccount(users, options)
+        .then((result) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              host, port, path, httpMethod, userImportBuilder.buildRequest(),
+              expectedHeaders, timeout);
+        });
+    });
+
   });
 
   describe('downloadAccount', () => {

@@ -80,3 +80,13 @@ export function getProjectId(app: FirebaseApp): string {
   }
   return null;
 }
+
+/**
+ * Encodes data using web-safe-base64.
+ *
+ * @param {Buffer} data The raw data byte input.
+ * @return {string} The base64-encoded result.
+ */
+export function toWebSafeBase64(data: Buffer): string {
+  return data.toString('base64').replace(/\//g, '_').replace(/\+/g, '-');
+}

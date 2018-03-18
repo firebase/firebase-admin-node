@@ -17,7 +17,7 @@
 import {expect} from 'chai';
 
 import * as mocks from '../../resources/mocks';
-import {addReadonlyGetter, getProjectId} from '../../../src/utils/index';
+import {addReadonlyGetter, getProjectId, toWebSafeBase64} from '../../../src/utils/index';
 import {isNonEmptyString} from '../../../src/utils/validator';
 import {FirebaseApp, FirebaseAppOptions} from '../../../src/firebase-app';
 
@@ -47,6 +47,19 @@ describe('addReadonlyGetter()', () => {
     addReadonlyGetter(obj, 'foo', true);
 
     expect(obj).to.have.keys(['foo']);
+  });
+});
+
+describe('toWebSafeBase64()', () => {
+  it('should convert a byte buffer to a web-safe base64 encoded string', () => {
+    const inputBuffer = Buffer.from('hello');
+    expect(toWebSafeBase64(inputBuffer)).to.equal(inputBuffer.toString('base64'));
+  });
+
+  it('should convert to web safe base64 encoded with plus signs and slashes replaced', () => {
+    // This converts to base64 encoded string: b++/vQ==
+    const inputBuffer = Buffer.from('o�');
+    expect(toWebSafeBase64(inputBuffer)).to.equal('b--_vQ==');
   });
 });
 

@@ -31,6 +31,7 @@ import './auth/credential.spec';
 import './auth/user-record.spec';
 import './auth/token-generator.spec';
 import './auth/auth-api-request.spec';
+import './auth/user-import-builder.spec';
 
 // Database
 import './database/database.spec';

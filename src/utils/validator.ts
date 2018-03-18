@@ -17,6 +17,16 @@
 import url = require('url');
 
 /**
+ * Validates that a value is a byte buffer.
+ *
+ * @param {any} value The value to validate.
+ * @return {boolean} Whether the value is byte buffer or not.
+ */
+export function isBuffer(value: any): boolean {
+  return value instanceof Buffer;
+}
+
+/**
  * Validates that a value is an array.
  *
  * @param {any} value The value to validate.

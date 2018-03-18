@@ -2,6 +2,18 @@
 
 -
 
+# v5.11.0
+
+- [changed] Added the `auth.importUsers()` method for importing users to
+  Firebase Auth in bulk.
+
+# v5.10.0
+
+- [changed] Upgraded Realtime Database client to v0.2.0. With this upgrade
+  developers can call the `admin.database().ref()` method with another
+  `Reference` instance as the argument.
+- [changed] Upgraded Cloud Firestire client to v0.13.0.
+
 # v5.9.1
 
 - [changed] The `admin.initializeApp()` method can now be invoked without an
