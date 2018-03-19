@@ -618,7 +618,7 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   // Provided credential has insufficient permissions.
   INSUFFICIENT_PERMISSION: 'INSUFFICIENT_PERMISSION',
   // uploadAccount provides an email that already exists.
-  DUPLICATE_EMAIL: 'EMAIL_EXISTS',
+  DUPLICATE_EMAIL: 'EMAIL_ALREADY_EXISTS',
   // uploadAccount provides a localId that already exists.
   DUPLICATE_LOCAL_ID: 'UID_ALREADY_EXISTS',
   // setAccountInfo email already exists.
