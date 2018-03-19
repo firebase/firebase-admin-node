@@ -92,7 +92,7 @@ describe('FirebaseApp', () => {
       delete process.env[FIREBASE_CONFIG_VAR];
     }
 
-    deleteSpy.reset();
+    deleteSpy.resetHistory();
     (firebaseNamespaceInternals.removeApp as any).restore();
 
     _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
@@ -907,7 +907,7 @@ describe('FirebaseApp', () => {
     });
 
     afterEach(() => {
-      addAuthTokenListenerSpy.reset();
+      addAuthTokenListenerSpy.resetHistory();
     });
 
     it('is notified when the token changes', () => {
@@ -964,7 +964,7 @@ describe('FirebaseApp', () => {
     });
 
     afterEach(() => {
-      addAuthTokenListenerSpies.forEach((spy) => spy.reset());
+      addAuthTokenListenerSpies.forEach((spy) => spy.resetHistory());
     });
 
     it('removes the listener', () => {

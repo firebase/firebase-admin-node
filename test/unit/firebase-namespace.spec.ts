@@ -309,7 +309,7 @@ describe('FirebaseNamespace', () => {
 
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
 
-      appHook.reset();
+      appHook.resetHistory();
 
       firebaseNamespace.INTERNAL.removeApp(mocks.appName);
 
