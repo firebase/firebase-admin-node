@@ -1827,6 +1827,18 @@ describe('Messaging', () => {
         }).to.throw('apns.payload.aps must be a non-null object');
       });
     });
+    it(`should throw given APNS payload with duplicate fields`, () => {
+      expect(() => {
+        messaging.send({
+          apns: {
+            payload: {
+              aps: {'mutableContent': true, 'mutable-content': 1},
+            },
+          },
+          token: 'token',
+        });
+      }).to.throw('Multiple specifications for mutableContent in Aps');
+    });
 
     const invalidApnsAlerts: any = [null, [], true, 1.23];
     invalidApnsAlerts.forEach((alert) => {
@@ -2252,6 +2264,7 @@ describe('Messaging', () => {
                 sound: 'test.sound',
                 category: 'test.category',
                 contentAvailable: true,
+                mutableContent: true,
                 threadId: 'thread.id',
               },
               customKey1: 'custom.value',
@@ -2278,6 +2291,7 @@ describe('Messaging', () => {
                 'sound': 'test.sound',
                 'category': 'test.category',
                 'content-available': 1,
+                'mutable-content': 1,
                 'thread-id': 'thread.id',
               },
               customKey1: 'custom.value',
@@ -2301,6 +2315,67 @@ describe('Messaging', () => {
           apns: {
             payload: {
               aps: {},
+            },
+          },
+        },
+      },
+      {
+        label: 'APNS content-available set explicitly',
+        req: {
+          apns: {
+            payload: {
+              aps: {
+                'content-available': 1,
+              },
+            },
+          },
+        },
+        expectedReq: {
+          apns: {
+            payload: {
+              aps: {'content-available': 1},
+            },
+          },
+        },
+      },
+      {
+        label: 'APNS mutableContent explicitly false',
+        req: {
+          apns: {
+            payload: {
+              aps: {
+                mutableContent: false,
+              },
+            },
+          },
+        },
+        expectedReq: {
+          apns: {
+            payload: {
+              aps: {},
+            },
+          },
+        },
+      },
+      {
+        label: 'APNS custom fields',
+        req: {
+          apns: {
+            payload: {
+              aps: {
+                k1: 'v1',
+                k2: true,
+              },
+            },
+          },
+        },
+        expectedReq: {
+          apns: {
+            payload: {
+              aps: {
+                k1: 'v1',
+                k2: true,
+              },
             },
           },
         },
