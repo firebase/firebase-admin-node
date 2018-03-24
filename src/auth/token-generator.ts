@@ -250,12 +250,7 @@ export class FirebaseTokenGenerator {
     if (typeof developerClaims === 'undefined') {
       return true;
     }
-
-    if (typeof developerClaims === 'object' && developerClaims !== null && !(developerClaims instanceof Array)) {
-      return true;
-    }
-
-    return false;
+    return validator.isNonNullObject(developerClaims);
   }
 
 
