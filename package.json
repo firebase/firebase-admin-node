@@ -57,7 +57,7 @@
     "@types/node": "^8.0.53",
     "faye-websocket": "0.9.3",
     "jsonwebtoken": "8.1.0",
-    "node-forge": "0.7.1"
+    "node-forge": "0.7.4"
   },
   "devDependencies": {
     "@types/chai": "^3.4.34",
