@@ -382,6 +382,7 @@ describe('isURL()', () => {
   it('show return true with a valid web URL string', () => {
     expect(isURL('https://www.example.com:8080')).to.be.true;
     expect(isURL('https://www.example.com')).to.be.true;
+    expect(isURL('http://localhost/path/name/')).to.be.true;
     expect(isURL('https://www.example.com:8080/path/name/index.php?a=1&b=2&c=3#abcd'))
       .to.be.true;
     expect(isURL('http://www.example.com:8080/path/name/index.php?a=1&b=2&c=3#abcd'))

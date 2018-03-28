@@ -318,6 +318,10 @@ export class AuthClientErrorCode {
     code: 'claims-too-large',
     message: 'Developer claims maximum payload size exceeded.',
   };
+  public static ID_TOKEN_EXPIRED = {
+    code: 'id-token-expired',
+    message: 'The provided Firebase ID token is expired.',
+  };
   public static INVALID_ARGUMENT = {
     code: 'argument-error',
     message: 'Invalid argument provided.',
@@ -329,6 +333,10 @@ export class AuthClientErrorCode {
   public static FORBIDDEN_CLAIM = {
     code: 'reserved-claim',
     message: 'The specified developer claim is reserved and cannot be specified.',
+  };
+  public static INVALID_ID_TOKEN = {
+    code: 'invalid-id-token',
+    message: 'The provided ID token is not a valid Firebase ID token.',
   };
   public static ID_TOKEN_REVOKED = {
     code: 'id-token-revoked',
@@ -436,6 +444,11 @@ export class AuthClientErrorCode {
     code: 'invalid-provider-id',
     message: 'The providerId must be a valid supported provider identifier string.',
   };
+  public static INVALID_SESSION_COOKIE_DURATION = {
+    code: 'invalid-session-cookie-duration',
+    message: 'The session cookie duration must be a valid number in milliseconds ' +
+      'between 5 minutes and 2 weeks.',
+  };
   public static INVALID_UID = {
     code: 'invalid-uid',
     message: 'The uid must be a non-empty string with at most 128 characters.',
@@ -481,6 +494,10 @@ export class AuthClientErrorCode {
       'has insufficient permission to access the requested resource. See ' +
       'https://firebase.google.com/docs/admin/setup for details on how to authenticate this SDK ' +
       'with appropriate permissions.',
+  };
+  public static SESSION_COOKIE_REVOKED = {
+    code: 'session-cookie-revoked',
+    message: 'The Firebase session cookie has been revoked.',
   };
   public static UID_ALREADY_EXISTS = {
     code: 'uid-already-exists',
@@ -627,8 +644,12 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   FORBIDDEN_CLAIM: 'FORBIDDEN_CLAIM',
   // Invalid claims provided.
   INVALID_CLAIMS: 'INVALID_CLAIMS',
+  // Invalid session cookie duration.
+  INVALID_DURATION: 'INVALID_SESSION_COOKIE_DURATION',
   // Invalid email provided.
   INVALID_EMAIL: 'INVALID_EMAIL',
+  // Invalid ID token provided.
+  INVALID_ID_TOKEN: 'INVALID_ID_TOKEN',
   // Invalid page token.
   INVALID_PAGE_SELECTION: 'INVALID_PAGE_TOKEN',
   // Invalid phone number.
@@ -645,6 +666,8 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   PHONE_NUMBER_EXISTS: 'PHONE_NUMBER_ALREADY_EXISTS',
   // Project not found.
   PROJECT_NOT_FOUND: 'PROJECT_NOT_FOUND',
+  // Token expired error.
+  TOKEN_EXPIRED: 'ID_TOKEN_EXPIRED',
   // User on which action is to be performed is not found.
   USER_NOT_FOUND: 'USER_NOT_FOUND',
   // Password provided is too weak.

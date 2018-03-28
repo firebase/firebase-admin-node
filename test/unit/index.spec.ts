@@ -30,6 +30,7 @@ import './auth/auth.spec';
 import './auth/credential.spec';
 import './auth/user-record.spec';
 import './auth/token-generator.spec';
+import './auth/token-verifier.spec';
 import './auth/auth-api-request.spec';
 import './auth/user-import-builder.spec';
 

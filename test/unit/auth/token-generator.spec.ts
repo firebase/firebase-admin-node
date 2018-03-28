@@ -16,20 +16,20 @@
 
 'use strict';
 
-// Use untyped import syntax for Node built-ins
-import https = require('https');
-
 import * as _ from 'lodash';
 import * as jwt from 'jsonwebtoken';
 import * as chai from 'chai';
-import * as nock from 'nock';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import LegacyFirebaseTokenGenerator = require('firebase-token-generator');
 
 import * as mocks from '../../resources/mocks';
-import {FirebaseTokenGenerator} from '../../../src/auth/token-generator';
+import {
+  FirebaseTokenGenerator, SESSION_COOKIE_INFO, ID_TOKEN_INFO,
+} from '../../../src/auth/token-generator';
+import * as verifier from '../../../src/auth/token-verifier';
+import {FirebaseAuthError, AuthClientErrorCode} from '../../../src/utils/error';
+
 import {Certificate} from '../../../src/auth/credential';
 
 chai.should();
@@ -46,65 +46,6 @@ const BLACKLISTED_CLAIMS = [
   'acr', 'amr', 'at_hash', 'aud', 'auth_time', 'azp', 'cnf', 'c_hash', 'exp', 'iat', 'iss', 'jti',
   'nbf', 'nonce',
 ];
-
-
-/**
- * Returns a mocked out success response from the URL containing the public keys for the Google certs.
- *
- * @return {Object} A nock response object.
- */
-function mockFetchPublicKeys(): nock.Scope {
-  const mockedResponse = {};
-  mockedResponse[mocks.certificateObject.private_key_id] = mocks.keyPairs[0].public;
-  return nock('https://www.googleapis.com')
-    .get('/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com')
-    .reply(200, mockedResponse, {
-      'cache-control': 'public, max-age=1, must-revalidate, no-transform',
-    });
-}
-
-/**
- * Returns a mocked out success response from the URL containing the public keys for the Google certs
- * which contains a public key which won't match the mocked token.
- *
- * @return {Object} A nock response object.
- */
-function mockFetchWrongPublicKeys(): nock.Scope {
-  const mockedResponse = {};
-  mockedResponse[mocks.certificateObject.private_key_id] = mocks.keyPairs[1].public;
-  return nock('https://www.googleapis.com')
-    .get('/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com')
-    .reply(200, mockedResponse, {
-      'cache-control': 'public, max-age=1, must-revalidate, no-transform',
-    });
-}
-
-/**
- * Returns a mocked out error response from the URL containing the public keys for the Google certs.
- * The status code is 200 but the response itself will contain an 'error' key.
- *
- * @return {Object} A nock response object.
- */
-function mockFetchPublicKeysWithErrorResponse(): nock.Scope {
-  return nock('https://www.googleapis.com')
-    .get('/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com')
-    .reply(200, {
-      error: 'message',
-      error_description: 'description',
-    });
-}
-
-/**
- * Returns a mocked out failed response from the URL containing the public keys for the Google certs.
- * The status code is non-200 and the response itself will fail.
- *
- * @return {Object} A nock response object.
- */
-function mockFailedFetchPublicKeys(): nock.Scope {
-  return nock('https://www.googleapis.com')
-    .get('/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com')
-    .replyWithError('message');
-}
 
 
 /**
@@ -133,10 +74,8 @@ describe('FirebaseTokenGenerator', () => {
   let tokenGenerator: FirebaseTokenGenerator;
 
   let clock: sinon.SinonFakeTimers;
-  let httpsSpy: sinon.SinonSpy;
   beforeEach(() => {
     tokenGenerator = new FirebaseTokenGenerator(new Certificate(mocks.certificateObject));
-    httpsSpy = sinon.spy(https, 'get');
   });
 
   afterEach(() => {
@@ -144,11 +83,6 @@ describe('FirebaseTokenGenerator', () => {
       clock.restore();
       clock = undefined;
     }
-    httpsSpy.restore();
-  });
-
-  after(() => {
-    nock.cleanAll();
   });
 
   describe('Constructor', () => {
@@ -412,281 +346,143 @@ describe('FirebaseTokenGenerator', () => {
     });
   });
 
+  describe('verifySessionCookie()', () => {
+    const sessionCookie = mocks.generateSessionCookie();
+    const decodedSessionCookie = jwt.decode(sessionCookie);
+    let stubs: sinon.SinonStub[] = [];
+    let tokenVerifierConstructorStub: sinon.SinonStub;
+    let sessionCookieVerifier: any;
+    let idTokenVerifier: any;
 
-  describe('verifyIdToken()', () => {
-    let mockedRequests: nock.Scope[] = [];
+    beforeEach(() => {
+      // Create stub instances to be used for session cookie verifier and id token verifier.
+      sessionCookieVerifier = sinon.createStubInstance(verifier.FirebaseTokenVerifier);
+      idTokenVerifier = sinon.createStubInstance(verifier.FirebaseTokenVerifier);
+      // Stub FirebaseTokenVerifier constructor to return stub instance above depending on
+      // issuer.
+      tokenVerifierConstructorStub = sinon.stub(verifier, 'FirebaseTokenVerifier')
+        .callsFake((certUrl, algorithm, issuer, projectId, tokenInfo) => {
+          // Return mock token verifier.
+          if (issuer === 'https://session.firebase.google.com/') {
+            return sessionCookieVerifier;
+          } else {
+            return idTokenVerifier;
+          }
+        });
+      stubs.push(tokenVerifierConstructorStub);
+    });
+
+    after(() => {
+      stubs = [];
+    });
 
     afterEach(() => {
-      _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
-      mockedRequests = [];
+      // Confirm token verifiers initialized with expected arguments.
+      expect(tokenVerifierConstructorStub).to.have.been.calledTwice.and.calledWith(
+          'https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys',
+          ALGORITHM,
+          'https://session.firebase.google.com/',
+          'project_id',
+          SESSION_COOKIE_INFO);
+      expect(tokenVerifierConstructorStub).to.have.been.calledTwice.and.calledWith(
+          'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com',
+          ALGORITHM,
+          'https://securetoken.google.com/',
+          'project_id',
+          ID_TOKEN_INFO);
+      _.forEach(stubs, (stub) => stub.restore());
     });
 
-    it('should throw given no ID token', () => {
-      expect(() => {
-        (tokenGenerator as any).verifyIdToken();
-      }).to.throw('First argument to verifyIdToken() must be a Firebase ID token');
+    it('resolves when underlying sessionCookieVerifier.verifyJWT() resolves with expected result', () =>  {
+      sessionCookieVerifier.verifyJWT.withArgs(sessionCookie).returns(Promise.resolve(decodedSessionCookie));
+
+      tokenGenerator = new FirebaseTokenGenerator(new Certificate(mocks.certificateObject));
+
+      return tokenGenerator.verifySessionCookie(sessionCookie)
+        .then((result) => {
+          expect(result).to.deep.equal(decodedSessionCookie);
+        });
     });
 
-    const invalidIdTokens = [null, NaN, 0, 1, true, false, [], {}, { a: 1 }, _.noop];
-    invalidIdTokens.forEach((invalidIdToken) => {
-      it('should throw given a non-string ID token: ' + JSON.stringify(invalidIdToken), () => {
-        expect(() => {
-          tokenGenerator.verifyIdToken(invalidIdToken as any);
-        }).to.throw('First argument to verifyIdToken() must be a Firebase ID token');
-      });
+    it('rejects when underlying sessionCookieVerifier.verifyJWT() rejects with expected error', () =>  {
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT, 'Decoding Firebase session cookie failed');
+      sessionCookieVerifier.verifyJWT.withArgs(sessionCookie).returns(Promise.reject(expectedError));
+
+      tokenGenerator = new FirebaseTokenGenerator(new Certificate(mocks.certificateObject));
+
+      return tokenGenerator.verifySessionCookie(sessionCookie)
+        .should.eventually.be.rejectedWith('Decoding Firebase session cookie failed');
+    });
+  });
+
+  describe('verifyIdToken()', () => {
+    const idToken = mocks.generateIdToken();
+    const decodedIdToken = jwt.decode(idToken);
+    let stubs: sinon.SinonStub[] = [];
+    let tokenVerifierConstructorStub: sinon.SinonStub;
+    let sessionCookieVerifier: any;
+    let idTokenVerifier: any;
+
+    beforeEach(() => {
+      // Create stub instances to be used for session cookie verifier and id token verifier.
+      sessionCookieVerifier = sinon.createStubInstance(verifier.FirebaseTokenVerifier);
+      idTokenVerifier = sinon.createStubInstance(verifier.FirebaseTokenVerifier);
+      // Stub FirebaseTokenVerifier constructor to return stub instance above depending on
+      // issuer.
+      tokenVerifierConstructorStub = sinon.stub(verifier, 'FirebaseTokenVerifier')
+        .callsFake((certUrl, algorithm, issuer, projectId, tokenInfo) => {
+          // Return mock token verifier.
+          if (issuer === 'https://session.firebase.google.com/') {
+            return sessionCookieVerifier;
+          } else {
+            return idTokenVerifier;
+          }
+        });
+      stubs.push(tokenVerifierConstructorStub);
     });
 
-    it('should throw given an empty string ID token', () => {
-      return tokenGenerator.verifyIdToken('')
+    after(() => {
+      stubs = [];
+    });
+
+    afterEach(() => {
+      // Confirm token verifiers initialized with expected arguments.
+      expect(tokenVerifierConstructorStub).to.have.been.calledTwice.and.calledWith(
+          'https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys',
+          ALGORITHM,
+          'https://session.firebase.google.com/',
+          'project_id',
+          SESSION_COOKIE_INFO);
+      expect(tokenVerifierConstructorStub).to.have.been.calledTwice.and.calledWith(
+          'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com',
+          ALGORITHM,
+          'https://securetoken.google.com/',
+          'project_id',
+          ID_TOKEN_INFO);
+      _.forEach(stubs, (stub) => stub.restore());
+    });
+
+    it('resolves when underlying idTokenVerifier.verifyJWT() resolves with expected result', () =>  {
+      idTokenVerifier.verifyJWT.withArgs(idToken).returns(Promise.resolve(decodedIdToken));
+
+      tokenGenerator = new FirebaseTokenGenerator(new Certificate(mocks.certificateObject));
+
+      return tokenGenerator.verifyIdToken(idToken)
+        .then((result) => {
+          expect(result).to.deep.equal(decodedIdToken);
+        });
+    });
+
+    it('rejects when underlying idTokenVerifier.verifyJWT() rejects with expected error', () =>  {
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT, 'Decoding Firebase ID token failed');
+      idTokenVerifier.verifyJWT.withArgs(idToken).returns(Promise.reject(expectedError));
+
+      tokenGenerator = new FirebaseTokenGenerator(new Certificate(mocks.certificateObject));
+
+      return tokenGenerator.verifyIdToken(idToken)
         .should.eventually.be.rejectedWith('Decoding Firebase ID token failed');
-    });
-
-    it('should be rejected given an invalid ID token', () => {
-      return tokenGenerator.verifyIdToken('invalid-token')
-        .should.eventually.be.rejectedWith('Decoding Firebase ID token failed');
-    });
-
-    it('should throw if the token generator was initialized with no "project_id"', () => {
-      const certificateObjectWithNoProjectId: any = _.omit(mocks.certificateObject, 'project_id');
-      const tokenGeneratorWithNoProjectId = new FirebaseTokenGenerator(certificateObjectWithNoProjectId);
-
-      const mockIdToken = mocks.generateIdToken();
-
-      expect(() => {
-        tokenGeneratorWithNoProjectId.verifyIdToken(mockIdToken);
-      }).to.throw('verifyIdToken() requires a certificate with "project_id" set');
-    });
-
-    it('should be rejected given an ID token with no kid', () => {
-      const mockIdToken = mocks.generateIdToken({
-        header: {foo: 'bar'},
-      });
-      return tokenGenerator.verifyIdToken(mockIdToken)
-        .should.eventually.be.rejectedWith('Firebase ID token has no "kid" claim');
-    });
-
-    it('should be rejected given an ID token with a kid which does not match any of the actual public keys', () => {
-      mockedRequests.push(mockFetchPublicKeys());
-
-      const mockIdToken = mocks.generateIdToken({
-        header: {
-          kid: 'wrongkid',
-        },
-      });
-
-      return tokenGenerator.verifyIdToken(mockIdToken)
-        .should.eventually.be.rejectedWith('Firebase ID token has "kid" claim which does not ' +
-          'correspond to a known public key');
-    });
-
-    it('should be rejected given an ID token with an incorrect algorithm', () => {
-      const mockIdToken = mocks.generateIdToken({
-        algorithm: 'HS256',
-      });
-      return tokenGenerator.verifyIdToken(mockIdToken)
-        .should.eventually.be.rejectedWith('Firebase ID token has incorrect algorithm');
-    });
-
-    it('should be rejected given an ID token with an incorrect audience', () => {
-      const mockIdToken = mocks.generateIdToken({
-        audience: 'incorrectAudience',
-      });
-
-      return tokenGenerator.verifyIdToken(mockIdToken)
-        .should.eventually.be.rejectedWith('Firebase ID token has incorrect "aud" (audience) claim');
-    });
-
-    it('should be rejected given an ID token with an incorrect issuer', () => {
-      const mockIdToken = mocks.generateIdToken({
-        issuer: 'incorrectIssuer',
-      });
-
-      return tokenGenerator.verifyIdToken(mockIdToken)
-        .should.eventually.be.rejectedWith('Firebase ID token has incorrect "iss" (issuer) claim');
-    });
-
-    // TODO(jwenger): jsonwebtoken no longer allows the subject to be empty, so we need to find a
-    // new way to test this
-    xit('should be rejected given an ID token with an empty string subject', () => {
-      const mockIdToken = mocks.generateIdToken({
-        subject: '',
-      });
-
-      return tokenGenerator.verifyIdToken(mockIdToken)
-        .should.eventually.be.rejectedWith('Firebase ID token has an empty string "sub" (subject) claim');
-    });
-
-    // TODO(jwenger): jsonwebtoken no longer allows the subject to be a non-string, so we need to
-    // find a new way to test this
-    xit('should be rejected given an ID token with a non-string subject', () => {
-      const mockIdToken = mocks.generateIdToken({
-        subject: 100,
-      });
-
-      return tokenGenerator.verifyIdToken(mockIdToken)
-        .should.eventually.be.rejectedWith('Firebase ID token has no "sub" (subject) claim');
-    });
-
-    it('should be rejected given an ID token with a subject with greater than 128 characters', () => {
-      mockedRequests.push(mockFetchPublicKeys());
-
-      // uid of length 128 should be fulfilled
-      let uid = Array(129).join('a');
-      expect(uid).to.have.length(128);
-      let mockIdToken = mocks.generateIdToken({
-        subject: uid,
-      });
-      return tokenGenerator.verifyIdToken(mockIdToken).then(() => {
-        // uid of length 129 should be rejected
-        uid = Array(130).join('a');
-        expect(uid).to.have.length(129);
-        mockIdToken = mocks.generateIdToken({
-          subject: uid,
-        });
-
-        return tokenGenerator.verifyIdToken(mockIdToken)
-          .should.eventually.be.rejectedWith('Firebase ID token has "sub" (subject) claim longer than 128 characters');
-      });
-    });
-
-    it('should be rejected given an expired ID token', () => {
-      mockedRequests.push(mockFetchPublicKeys());
-
-      clock = sinon.useFakeTimers(1000);
-
-      const mockIdToken = mocks.generateIdToken();
-
-      clock.tick((ONE_HOUR_IN_SECONDS * 1000) - 1);
-
-      // Token should still be valid
-      return tokenGenerator.verifyIdToken(mockIdToken).then(() => {
-        clock.tick(1);
-
-        // Token should now be invalid
-        return tokenGenerator.verifyIdToken(mockIdToken)
-          .should.eventually.be.rejectedWith('Firebase ID token has expired. Get a fresh token from your client ' +
-            'app and try again (auth/id-token-expired)');
-      });
-    });
-
-    it('should be rejected given an ID token which was not signed with the kid it specifies', () => {
-      mockedRequests.push(mockFetchWrongPublicKeys());
-
-      const mockIdToken = mocks.generateIdToken();
-
-      return tokenGenerator.verifyIdToken(mockIdToken)
-        .should.eventually.be.rejectedWith('Firebase ID token has invalid signature');
-    });
-
-    it('should be rejected given a custom token', () => {
-      return tokenGenerator.createCustomToken(mocks.uid)
-        .then((customToken) => {
-          return tokenGenerator.verifyIdToken(customToken)
-            .should.eventually.be.rejectedWith('verifyIdToken() expects an ID token, but was given a custom token');
-        });
-    });
-
-    it('should be rejected given a legacy custom token', () => {
-      const legacyTokenGenerator = new LegacyFirebaseTokenGenerator('foo');
-      const legacyCustomToken = legacyTokenGenerator.createToken({
-        uid: mocks.uid,
-      });
-
-      return tokenGenerator.verifyIdToken(legacyCustomToken)
-        .should.eventually.be.rejectedWith('verifyIdToken() expects an ID token, but was given a legacy custom token');
-    });
-
-    it('should be fulfilled with decoded claims given a valid ID token', () => {
-      mockedRequests.push(mockFetchPublicKeys());
-
-      clock = sinon.useFakeTimers(1000);
-
-      const mockIdToken = mocks.generateIdToken();
-
-      return tokenGenerator.verifyIdToken(mockIdToken)
-        .should.eventually.be.fulfilled.and.deep.equal({
-          one: 'uno',
-          two: 'dos',
-          iat: 1,
-          exp: ONE_HOUR_IN_SECONDS + 1,
-          aud: mocks.projectId,
-          iss: 'https://securetoken.google.com/' + mocks.projectId,
-          sub: mocks.uid,
-          uid: mocks.uid,
-        });
-    });
-
-    it('should not fetch the Google cert public keys until the first time verifyIdToken() is called', () => {
-      mockedRequests.push(mockFetchPublicKeys());
-
-      const anotherTokenGenerator = new FirebaseTokenGenerator(new Certificate(mocks.certificateObject));
-      expect(https.get).not.to.have.been.called;
-
-      const mockIdToken = mocks.generateIdToken();
-
-      return anotherTokenGenerator.verifyIdToken(mockIdToken)
-        .then(() => expect(https.get).to.have.been.calledOnce);
-    });
-
-    it('should not re-fetch the Google cert public keys every time verifyIdToken() is called', () => {
-      mockedRequests.push(mockFetchPublicKeys());
-
-      const mockIdToken = mocks.generateIdToken();
-
-      return tokenGenerator.verifyIdToken(mockIdToken).then(() => {
-        expect(https.get).to.have.been.calledOnce;
-        return tokenGenerator.verifyIdToken(mockIdToken);
-      }).then(() => expect(https.get).to.have.been.calledOnce);
-    });
-
-    it('should refresh the Google cert public keys after the "max-age" on the request expires', () => {
-      mockedRequests.push(mockFetchPublicKeys());
-      mockedRequests.push(mockFetchPublicKeys());
-      mockedRequests.push(mockFetchPublicKeys());
-
-      clock = sinon.useFakeTimers(1000);
-
-      const mockIdToken = mocks.generateIdToken();
-
-      return tokenGenerator.verifyIdToken(mockIdToken).then(() => {
-        expect(https.get).to.have.been.calledOnce;
-        clock.tick(999);
-        return tokenGenerator.verifyIdToken(mockIdToken);
-      }).then(() => {
-        expect(https.get).to.have.been.calledOnce;
-        clock.tick(1);
-        return tokenGenerator.verifyIdToken(mockIdToken);
-      }).then(() => {
-        // One second has passed
-        expect(https.get).to.have.been.calledTwice;
-        clock.tick(999);
-        return tokenGenerator.verifyIdToken(mockIdToken);
-      }).then(() => {
-        expect(https.get).to.have.been.calledTwice;
-        clock.tick(1);
-        return tokenGenerator.verifyIdToken(mockIdToken);
-      }).then(() => {
-        // Two seconds have passed
-        expect(https.get).to.have.been.calledThrice;
-      });
-    });
-
-    it('should be rejected if fetching the Google public keys fails', () => {
-      mockedRequests.push(mockFailedFetchPublicKeys());
-
-      const mockIdToken = mocks.generateIdToken();
-
-      return tokenGenerator.verifyIdToken(mockIdToken)
-        .should.eventually.be.rejectedWith('message');
-    });
-
-    it('should be rejected if fetching the Google public keys returns a response with an error message', () => {
-      mockedRequests.push(mockFetchPublicKeysWithErrorResponse());
-
-      const mockIdToken = mocks.generateIdToken();
-
-      return tokenGenerator.verifyIdToken(mockIdToken)
-        .should.eventually.be.rejectedWith('Error fetching public keys for Google certs: message (description)');
     });
   });
 });

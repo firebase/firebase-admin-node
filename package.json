@@ -11,7 +11,7 @@
     "test": "run-s lint test:unit",
     "integration": "run-s build test:integration",
     "test:unit": "mocha test/unit/*.spec.ts --compilers ts:ts-node/register",
-    "test:integration": "mocha test/integration/*.ts --slow 5000 --compilers ts:ts-node/register",
+    "test:integration": "mocha test/integration/*.ts --slow 5000 --timeout 5000 --compilers ts:ts-node/register",
     "test:coverage": "nyc npm run test:unit",
     "lint:src": "tslint --format stylish -p tsconfig.json",
     "lint:unit": "tslint -c tslint-test.json --format stylish test/unit/*.ts test/unit/**/*.ts",

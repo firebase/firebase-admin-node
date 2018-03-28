@@ -34,7 +34,7 @@ import {
   FirebaseAuthRequestHandler, FIREBASE_AUTH_GET_ACCOUNT_INFO,
   FIREBASE_AUTH_DELETE_ACCOUNT, FIREBASE_AUTH_SET_ACCOUNT_INFO,
   FIREBASE_AUTH_SIGN_UP_NEW_USER, FIREBASE_AUTH_DOWNLOAD_ACCOUNT,
-  RESERVED_CLAIMS, FIREBASE_AUTH_UPLOAD_ACCOUNT,
+  RESERVED_CLAIMS, FIREBASE_AUTH_UPLOAD_ACCOUNT, FIREBASE_AUTH_CREATE_SESSION_COOKIE,
 } from '../../../src/auth/auth-api-request';
 import {
   UserImportBuilder, UserImportRecord, UserImportResult, UserImportOptions,
@@ -63,6 +63,120 @@ function createRandomString(numOfChars: number): string {
   }
   return chars.join('');
 }
+
+
+describe('FIREBASE_AUTH_CREATE_SESSION_COOKIE', () => {
+  // Spy on all validators.
+  let isNonEmptyString: sinon.SinonSpy;
+  let isNumber: sinon.SinonSpy;
+
+  beforeEach(() => {
+    isNonEmptyString = sinon.spy(validator, 'isNonEmptyString');
+    isNumber = sinon.spy(validator, 'isNumber');
+  });
+  afterEach(() => {
+    isNonEmptyString.restore();
+    isNumber.restore();
+  });
+
+  it('should return the correct endpoint', () => {
+    expect(FIREBASE_AUTH_CREATE_SESSION_COOKIE.getEndpoint()).to.equal('createSessionCookie');
+  });
+  it('should return the correct http method', () => {
+    expect(FIREBASE_AUTH_CREATE_SESSION_COOKIE.getHttpMethod()).to.equal('POST');
+  });
+  describe('requestValidator', () => {
+    const requestValidator = FIREBASE_AUTH_CREATE_SESSION_COOKIE.getRequestValidator();
+    it('should succeed with valid parameters passed', () => {
+      const validRequest = {idToken: 'ID_TOKEN', validDuration: 60 * 60};
+      expect(() => {
+        return requestValidator(validRequest);
+      }).not.to.throw();
+      expect(isNonEmptyString).to.have.been.calledOnce.and.calledWith('ID_TOKEN');
+      expect(isNumber).to.have.been.calledOnce.and.calledWith(60 * 60);
+    });
+    it('should succeed with duration set at minimum allowed', () => {
+      const validDuration = 60 * 5;
+      const validRequest = {idToken: 'ID_TOKEN', validDuration};
+      expect(() => {
+        return requestValidator(validRequest);
+      }).not.to.throw();
+      expect(isNonEmptyString).to.have.been.calledOnce.and.calledWith('ID_TOKEN');
+      expect(isNumber).to.have.been.calledOnce.and.calledWith(validDuration);
+    });
+    it('should succeed with duration set at maximum allowed', () => {
+      const validDuration = 60 * 60 * 24 * 14;
+      const validRequest = {idToken: 'ID_TOKEN', validDuration};
+      expect(() => {
+        return requestValidator(validRequest);
+      }).not.to.throw();
+      expect(isNonEmptyString).to.have.been.calledOnce.and.calledWith('ID_TOKEN');
+      expect(isNumber).to.have.been.calledOnce.and.calledWith(validDuration);
+    });
+    it('should fail when idToken not passed', () => {
+      const invalidRequest = {validDuration: 60 * 60};
+      expect(() => {
+        return requestValidator(invalidRequest);
+      }).to.throw();
+      expect(isNonEmptyString).to.have.been.calledOnce.and.calledWith(undefined);
+    });
+    it('should fail when validDuration not passed', () => {
+      const invalidRequest = {idToken: 'ID_TOKEN'};
+      expect(() => {
+        return requestValidator(invalidRequest);
+      }).to.throw();
+      expect(isNumber).to.have.been.calledOnce.and.calledWith(undefined);
+    });
+    describe('called with invalid parameters', () => {
+      it('should fail with invalid idToken', () => {
+        expect(() => {
+          return requestValidator({idToken: '', validDuration: 60 * 60});
+        }).to.throw();
+        expect(isNonEmptyString).to.have.been.calledOnce.and.calledWith('');
+      });
+      it('should fail with invalid validDuration', () => {
+        expect(() => {
+          return requestValidator({idToken: 'ID_TOKEN', validDuration: 'invalid'});
+        }).to.throw();
+        expect(isNonEmptyString).to.have.been.calledOnce.and.calledWith('ID_TOKEN');
+        expect(isNumber).to.have.been.calledOnce.and.calledWith('invalid');
+      });
+      it('should fail with validDuration less than minimum allowed', () => {
+        // Duration less 5 minutes.
+        const outOfBoundDuration = 60 * 5 - 1;
+        expect(() => {
+          return requestValidator({idToken: 'ID_TOKEN', validDuration: outOfBoundDuration});
+        }).to.throw();
+        expect(isNonEmptyString).to.have.been.calledOnce.and.calledWith('ID_TOKEN');
+        expect(isNumber).to.have.been.calledOnce.and.calledWith(outOfBoundDuration);
+      });
+      it('should fail with validDuration greater than maximum allowed', () => {
+        // Duration greater than 14 days.
+        const outOfBoundDuration = 60 * 60 * 24 * 14 + 1;
+        expect(() => {
+          return requestValidator({idToken: 'ID_TOKEN', validDuration: outOfBoundDuration});
+        }).to.throw();
+        expect(isNonEmptyString).to.have.been.calledOnce.and.calledWith('ID_TOKEN');
+        expect(isNumber).to.have.been.calledOnce.and.calledWith(outOfBoundDuration);
+      });
+    });
+  });
+  describe('responseValidator', () => {
+    const responseValidator = FIREBASE_AUTH_CREATE_SESSION_COOKIE.getResponseValidator();
+    it('should succeed with sessionCookie returned', () => {
+      const validResponse = {sessionCookie: 'SESSION_COOKIE'};
+      expect(() => {
+        return responseValidator(validResponse);
+      }).not.to.throw();
+    });
+    it('should fail when no session cookie is returned', () => {
+      const invalidResponse = {};
+      expect(() => {
+        responseValidator(invalidResponse);
+      }).to.throw();
+    });
+  });
+});
 
 
 describe('FIREBASE_AUTH_UPLOAD_ACCOUNT', () => {
@@ -640,6 +754,148 @@ describe('FirebaseAuthRequestHandler', () => {
       expect(() => {
         return new FirebaseAuthRequestHandler(mockApp);
       }).not.to.throw(Error);
+    });
+  });
+
+  describe('createSessionCookie', () => {
+    const durationInMs = 24 * 60 * 60 * 1000;
+    const httpMethod = 'POST';
+    const host = 'www.googleapis.com';
+    const port = 443;
+    const path = '/identitytoolkit/v3/relyingparty/createSessionCookie';
+    const timeout = 10000;
+    it('should be fulfilled given a valid localId', () => {
+      const expectedResult = {
+        sessionCookie: 'SESSION_COOKIE',
+      };
+      const data = {idToken: 'ID_TOKEN', validDuration: durationInMs / 1000};
+
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        .returns(Promise.resolve(expectedResult));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.createSessionCookie('ID_TOKEN', durationInMs)
+        .then((result) => {
+          expect(result).to.deep.equal('SESSION_COOKIE');
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              host, port, path, httpMethod, data, expectedHeaders, timeout);
+        });
+    });
+    it('should be fulfilled given a duration equal to the maximum allowed', () => {
+      const expectedResult = {
+        sessionCookie: 'SESSION_COOKIE',
+      };
+      const durationAtLimitInMs = 14 * 24 * 60 * 60 * 1000;
+      const data = {idToken: 'ID_TOKEN', validDuration: durationAtLimitInMs / 1000};
+
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        .returns(Promise.resolve(expectedResult));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.createSessionCookie('ID_TOKEN', durationAtLimitInMs)
+        .then((result) => {
+          expect(result).to.deep.equal('SESSION_COOKIE');
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              host, port, path, httpMethod, data, expectedHeaders, timeout);
+        });
+    });
+    it('should be fulfilled given a duration equal to the minimum allowed', () => {
+      const expectedResult = {
+        sessionCookie: 'SESSION_COOKIE',
+      };
+      const durationAtLimitInMs = 5 * 60 * 1000;
+      const data = {idToken: 'ID_TOKEN', validDuration: durationAtLimitInMs / 1000};
+
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        .returns(Promise.resolve(expectedResult));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.createSessionCookie('ID_TOKEN', durationAtLimitInMs)
+        .then((result) => {
+          expect(result).to.deep.equal('SESSION_COOKIE');
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              host, port, path, httpMethod, data, expectedHeaders, timeout);
+        });
+    });
+    it('should be rejected given an invalid ID token', () => {
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ID_TOKEN,
+      );
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.createSessionCookie('', durationInMs)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+        });
+    });
+    it('should be rejected given an invalid duration', () => {
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_SESSION_COOKIE_DURATION,
+      );
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.createSessionCookie('ID_TOKEN', 'invalid' as any)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+        });
+    });
+    it('should be rejected given a duration less than minimum allowed', () => {
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_SESSION_COOKIE_DURATION,
+      );
+      const outOfBoundDuration = 60 * 1000 * 5 - 1;
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.createSessionCookie('ID_TOKEN', outOfBoundDuration)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+        });
+    });
+    it('should be rejected given a duration greater than maximum allowed', () => {
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_SESSION_COOKIE_DURATION,
+      );
+      const outOfBoundDuration = 60 * 60 * 1000 * 24 * 14 + 1;
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.createSessionCookie('ID_TOKEN', outOfBoundDuration)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+        });
+    });
+    it('should be rejected when the backend returns an error', () => {
+      const expectedResult = {
+        error: {
+          message: 'INVALID_ID_TOKEN',
+        },
+      };
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_ID_TOKEN);
+      const data = {idToken: 'invalid-token', validDuration: durationInMs / 1000};
+
+      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+        .returns(Promise.resolve(expectedResult));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.createSessionCookie('invalid-token', durationInMs)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              host, port, path, httpMethod, data, expectedHeaders, timeout);
+        });
     });
   });
 
