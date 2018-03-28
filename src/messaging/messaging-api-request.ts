@@ -43,9 +43,18 @@ export class FirebaseMessagingRequestHandler {
    */
   private static getErrorCode(response: any): string | null {
     if (validator.isNonNullObject(response) && 'error' in response) {
-      if (typeof response.error === 'string') {
+      if (validator.isString(response.error)) {
         return response.error;
-      } else if ('status' in response.error) {
+      }
+      if (validator.isArray(response.error.details)) {
+        const fcmErrorType = 'type.googleapis.com/google.firebase.fcm.v1.FcmErrorCode';
+        for (const element of response.error.details) {
+          if (element['@type'] === fcmErrorType) {
+            return element.errorCode;
+          }
+        }
+      }
+      if ('status' in response.error) {
         return response.error.status;
       } else {
         return response.error.message;
