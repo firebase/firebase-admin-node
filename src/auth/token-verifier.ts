@@ -46,6 +46,7 @@ export interface FirebaseTokenInfo {
 export class FirebaseTokenVerifier {
   private publicKeys: object;
   private publicKeysExpireAt: number;
+  private shortNameArticle: string;
 
   constructor(private clientCertUrl: string, private algorithm: string,
               private issuer: string, private projectId: string,
@@ -96,6 +97,8 @@ export class FirebaseTokenVerifier {
         `The JWT expiration error code must be a non-empty string.`,
       );
     }
+    this.shortNameArticle = tokenInfo.shortName.charAt(0).match(/[aeiou]/i) ? 'an' : 'a';
+
     // For backward compatibility, the project ID is validated in the verification call.
   }
 
@@ -107,7 +110,7 @@ export class FirebaseTokenVerifier {
    *                           token.
    */
   public verifyJWT(jwtToken: string): Promise<object> {
-    if (typeof jwtToken !== 'string') {
+    if (!validator.isString(jwtToken)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
         `First argument to ${this.tokenInfo.verifyApiName} must be a ${this.tokenInfo.jwtName} string.`,
@@ -131,22 +134,22 @@ export class FirebaseTokenVerifier {
     const projectIdMatchMessage = ` Make sure the ${this.tokenInfo.shortName} comes from the same ` +
       `Firebase project as the service account used to authenticate this SDK.`;
     const verifyJwtTokenDocsMessage = ` See ${this.tokenInfo.url} ` +
-      `for details on how to retrieve an ${this.tokenInfo.shortName}.`;
+      `for details on how to retrieve ${this.shortNameArticle} ${this.tokenInfo.shortName}.`;
 
     let errorMessage: string;
     if (!fullDecodedToken) {
       errorMessage = `Decoding ${this.tokenInfo.jwtName} failed. Make sure you passed the entire string JWT ` +
-        `which represents an ${this.tokenInfo.shortName}.` + verifyJwtTokenDocsMessage;
+        `which represents ${this.shortNameArticle} ${this.tokenInfo.shortName}.` + verifyJwtTokenDocsMessage;
     } else if (typeof header.kid === 'undefined') {
       const isCustomToken = (payload.aud === FIREBASE_AUDIENCE);
       const isLegacyCustomToken = (header.alg === 'HS256' && payload.v === 0 && 'd' in payload && 'uid' in payload.d);
 
       if (isCustomToken) {
-        errorMessage = `${this.tokenInfo.verifyApiName} expects an ${this.tokenInfo.shortName}, but ` +
-          `was given a custom token.`;
+        errorMessage = `${this.tokenInfo.verifyApiName} expects ${this.shortNameArticle} ` +
+          `${this.tokenInfo.shortName}, but was given a custom token.`;
       } else if (isLegacyCustomToken) {
-        errorMessage = `${this.tokenInfo.verifyApiName} expects an ${this.tokenInfo.shortName}, but ` +
-          `was given a legacy custom token.`;
+        errorMessage = `${this.tokenInfo.verifyApiName} expects ${this.shortNameArticle} ` +
+          `${this.tokenInfo.shortName}, but was given a legacy custom token.`;
       } else {
         errorMessage = 'Firebase ID token has no "kid" claim.';
       }
@@ -202,7 +205,7 @@ export class FirebaseTokenVerifier {
   private verifyJwtSignatureWithKey(jwtToken: string, publicKey: string): Promise<object> {
     let errorMessage: string;
     const verifyJwtTokenDocsMessage = ` See ${this.tokenInfo.url} ` +
-      `for details on how to retrieve an ${this.tokenInfo.shortName}.`;
+      `for details on how to retrieve ${this.shortNameArticle} ${this.tokenInfo.shortName}.`;
     return new Promise((resolve, reject) => {
       jwt.verify(jwtToken, publicKey, {
         algorithms: [this.algorithm],

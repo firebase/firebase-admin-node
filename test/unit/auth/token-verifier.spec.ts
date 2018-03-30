@@ -425,7 +425,7 @@ describe('FirebaseTokenVerifier', () => {
         .should.eventually.be.rejectedWith('Firebase ID token has invalid signature');
     });
 
-    it('should be rejected given a custom token', () => {
+    it('should be rejected given a custom token with error using article "an" before JWT short name', () => {
       return tokenGenerator.createCustomToken(mocks.uid)
         .then((customToken) => {
           return tokenVerifier.verifyJWT(customToken)
@@ -433,7 +433,23 @@ describe('FirebaseTokenVerifier', () => {
         });
     });
 
-    it('should be rejected given a legacy custom token', () => {
+    it('should be rejected given a custom token with error using article "a" before JWT short name', () => {
+      const tokenVerifierSessionCookie = new FirebaseTokenVerifier(
+        'https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys',
+        'RS256',
+        'https://session.firebase.google.com/',
+        'project_id',
+        SESSION_COOKIE_INFO,
+      );
+      return tokenGenerator.createCustomToken(mocks.uid)
+        .then((customToken) => {
+          return tokenVerifierSessionCookie.verifyJWT(customToken)
+            .should.eventually.be.rejectedWith(
+              'verifySessionCookie() expects a session cookie, but was given a custom token');
+        });
+    });
+
+    it('should be rejected given a legacy custom token with error using article "an" before JWT short name', () => {
       const legacyTokenGenerator = new LegacyFirebaseTokenGenerator('foo');
       const legacyCustomToken = legacyTokenGenerator.createToken({
         uid: mocks.uid,
@@ -441,6 +457,24 @@ describe('FirebaseTokenVerifier', () => {
 
       return tokenVerifier.verifyJWT(legacyCustomToken)
         .should.eventually.be.rejectedWith('verifyIdToken() expects an ID token, but was given a legacy custom token');
+    });
+
+    it('should be rejected given a legacy custom token with error using article "a" before JWT short name', () => {
+      const tokenVerifierSessionCookie = new FirebaseTokenVerifier(
+        'https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys',
+        'RS256',
+        'https://session.firebase.google.com/',
+        'project_id',
+        SESSION_COOKIE_INFO,
+      );
+      const legacyTokenGenerator = new LegacyFirebaseTokenGenerator('foo');
+      const legacyCustomToken = legacyTokenGenerator.createToken({
+        uid: mocks.uid,
+      });
+
+      return tokenVerifierSessionCookie.verifyJWT(legacyCustomToken)
+        .should.eventually.be.rejectedWith(
+          'verifySessionCookie() expects a session cookie, but was given a legacy custom token');
     });
 
     it('should be fulfilled with decoded claims given a valid Firebase JWT token', () => {

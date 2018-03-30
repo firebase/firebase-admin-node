@@ -19,7 +19,7 @@ import {Certificate} from './credential';
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseTokenGenerator} from './token-generator';
 import {FirebaseAuthRequestHandler} from './auth-api-request';
-import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
+import {AuthClientErrorCode, FirebaseAuthError, ErrorInfo} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
 import {
   UserImportOptions, UserImportRecord, UserImportResult,
@@ -73,7 +73,6 @@ export interface DecodedIdToken {
 /** Interface representing the session cookie options. */
 export interface SessionCookieOptions {
   expiresIn: number;
-  refreshThreshold?: number;
 }
 
 
@@ -180,7 +179,7 @@ export class Auth implements FirebaseServiceInterface {
         }
         return this.verifyDecodedJWTNotRevoked(
           decodedIdToken,
-          new FirebaseAuthError(AuthClientErrorCode.ID_TOKEN_REVOKED));
+          AuthClientErrorCode.ID_TOKEN_REVOKED);
       });
   }
 
@@ -378,8 +377,13 @@ export class Auth implements FirebaseServiceInterface {
    */
   public createSessionCookie(
       idToken: string, sessionCookieOptions: SessionCookieOptions): Promise<string> {
+    // Return rejected promise if expiresIn is not available.
+    if (!validator.isNonNullObject(sessionCookieOptions) ||
+        !validator.isNumber(sessionCookieOptions.expiresIn)) {
+      return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_SESSION_COOKIE_DURATION));
+    }
     return this.authRequestHandler.createSessionCookie(
-      idToken, sessionCookieOptions && sessionCookieOptions.expiresIn);
+      idToken, sessionCookieOptions.expiresIn);
   }
 
   /**
@@ -387,7 +391,7 @@ export class Auth implements FirebaseServiceInterface {
    * the promise if the token could not be verified. If checkRevoked is set to true,
    * verifies if the session corresponding to the session cookie was revoked. If the corresponding
    * user's session was invalidated, an auth/session-cookie-revoked error is thrown. If not
-   * specified the check is not applied.
+   * specified the check is not performed.
    *
    * @param {string} sessionCookie The session cookie to verify.
    * @param {boolean=} checkRevoked Whether to check if the session cookie is revoked.
@@ -411,7 +415,7 @@ export class Auth implements FirebaseServiceInterface {
         }
         return this.verifyDecodedJWTNotRevoked(
           decodedIdToken,
-          new FirebaseAuthError(AuthClientErrorCode.SESSION_COOKIE_REVOKED));
+          AuthClientErrorCode.SESSION_COOKIE_REVOKED);
       });
   }
 
@@ -420,13 +424,13 @@ export class Auth implements FirebaseServiceInterface {
    * with the decoded claims on success. Rejects the promise with revocation error if revoked.
    *
    * @param {DecodedIdToken} decodedIdToken The JWT's decoded claims.
-   * @param {FirebaseAuthError} revocationError The revocation error to throw on revocation
+   * @param {ErrorInfo} revocationErrorInfo The revocation error info to throw on revocation
    *     detection.
    * @return {Promise<DecodedIdToken>} A Promise that will be fulfilled after a successful
    *     verification.
    */
   private verifyDecodedJWTNotRevoked(
-      decodedIdToken: DecodedIdToken, revocationError: FirebaseAuthError): Promise<DecodedIdToken> {
+      decodedIdToken: DecodedIdToken, revocationErrorInfo: ErrorInfo): Promise<DecodedIdToken> {
     // Get tokens valid after time for the corresponding user.
     return this.getUser(decodedIdToken.sub)
       .then((user: UserRecord) => {
@@ -438,7 +442,7 @@ export class Auth implements FirebaseServiceInterface {
           const validSinceUtc = new Date(user.tokensValidAfterTime).getTime();
           // Check if authentication time is older than valid since time.
           if (authTimeUtc < validSinceUtc) {
-            throw revocationError;
+            throw new FirebaseAuthError(revocationErrorInfo);
           }
         }
         // All checks above passed. Return the decoded token.

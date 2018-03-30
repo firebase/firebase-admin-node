@@ -163,7 +163,7 @@ describe('admin.auth', () => {
         expect(listUsersResult.users[1].passwordHash.length).greaterThan(0);
         expect(listUsersResult.users[1].passwordSalt.length).greaterThan(0);
       });
-  }).timeout(5000);
+  });
 
   it('revokeRefreshTokens() invalidates existing sessions and ID tokens', () => {
     let currentIdToken: string = null;
@@ -245,7 +245,7 @@ describe('admin.auth', () => {
           }
         }
       });
-  }).timeout(5000);
+  });
 
   it('updateUser() updates the user record with the given parameters', () => {
     const updatedDisplayName = 'Updated User ' + newUserUid;
@@ -350,9 +350,9 @@ describe('admin.auth', () => {
         })
         .then((sessionCookie) => admin.auth().verifySessionCookie(sessionCookie))
         .then((decodedIdToken) => {
-          // Check for expected expiration with +/-2 seconds of variation.
-          expect(decodedIdToken.exp).to.be.within(expectedExp - 2, expectedExp + 2);
-          expect(decodedIdToken.iat).to.be.within(expectedIat - 2, expectedIat + 2);
+          // Check for expected expiration with +/-5 seconds of variation.
+          expect(decodedIdToken.exp).to.be.within(expectedExp - 5, expectedExp + 5);
+          expect(decodedIdToken.iat).to.be.within(expectedIat - 5, expectedIat + 5);
           // Not supported in ID token,
           delete decodedIdToken.nonce;
           // exp and iat may vary depending on network connection latency.
@@ -360,7 +360,7 @@ describe('admin.auth', () => {
           delete decodedIdToken.iat;
           expect(decodedIdToken).to.deep.equal(payloadClaims);
         });
-    }).timeout(5000);
+    });
 
     it('creates a revocable session cookie', () => {
       let currentSessionCookie: string;
@@ -385,18 +385,7 @@ describe('admin.auth', () => {
           return admin.auth().verifySessionCookie(currentSessionCookie, true)
             .should.eventually.be.rejected.and.have.property('code', 'auth/session-cookie-revoked');
         });
-    }).timeout(5000);
-
-    it('fails when called with an invalid ID token', () => {
-      return admin.auth().createSessionCookie('invalid-token', {expiresIn})
-        .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-id-token');
-    }).timeout(5000);
-
-    it('fails when called with an invalid duration', () => {
-      return admin.auth().createSessionCookie('invalid-token', {expiresIn: 60 * 1000})
-        .should.eventually.be.rejected.and.have.property(
-            'code', 'auth/invalid-session-cookie-duration');
-    }).timeout(5000);
+    });
 
     it('fails when called with a revoked ID token', () => {
       return admin.auth().createCustomToken(uid, {admin: true, groupId: '1234'})
@@ -412,7 +401,7 @@ describe('admin.auth', () => {
           return admin.auth().createSessionCookie(currentIdToken, {expiresIn})
             .should.eventually.be.rejected.and.have.property('code', 'auth/id-token-expired');
         });
-    }).timeout(5000);
+    });
 
   });
 
@@ -590,7 +579,7 @@ describe('admin.auth', () => {
           importUserRecord, fixture.importOptions, fixture.rawPassword)
           .should.eventually.be.fulfilled;
 
-      }).timeout(5000);
+      });
     });
 
     it('successfully imports users with multiple OAuth providers', () => {

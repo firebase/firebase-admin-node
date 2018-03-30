@@ -202,7 +202,6 @@ declare namespace admin.auth {
 
   interface SessionCookieOptions {
     expiresIn: number;
-    refreshThreshold?: number;
   }
 
   interface Auth {

@@ -26,7 +26,7 @@ import * as jwt from 'jsonwebtoken';
 import https = require('https');
 
 
-const ALGORITHM = 'RS256';
+const ALGORITHM_RS256 = 'RS256';
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 
 // List of blacklisted claims which cannot be provided when creating a custom token
@@ -88,14 +88,14 @@ export class FirebaseTokenGenerator {
     this.certificate_ = certificate;
     this.sessionCookieVerifier = new tokenVerify.FirebaseTokenVerifier(
         SESSION_COOKIE_CERT_URL,
-        ALGORITHM,
+        ALGORITHM_RS256,
         'https://session.firebase.google.com/',
         this.certificate_.projectId,
         SESSION_COOKIE_INFO,
     );
     this.idTokenVerifier = new tokenVerify.FirebaseTokenVerifier(
         CLIENT_CERT_URL,
-        ALGORITHM,
+        ALGORITHM_RS256,
         'https://securetoken.google.com/',
         this.certificate_.projectId,
         ID_TOKEN_INFO,
@@ -162,7 +162,7 @@ export class FirebaseTokenGenerator {
       expiresIn: ONE_HOUR_IN_SECONDS,
       issuer: this.certificate_.clientEmail,
       subject: this.certificate_.clientEmail,
-      algorithm: ALGORITHM,
+      algorithm: ALGORITHM_RS256,
     });
 
     return Promise.resolve(customToken);

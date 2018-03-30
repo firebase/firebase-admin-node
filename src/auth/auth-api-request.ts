@@ -312,7 +312,7 @@ export const FIREBASE_AUTH_CREATE_SESSION_COOKIE =
         // Set response validator.
         .setResponseValidator((response: any) => {
           // Response should always contain the session cookie.
-          if (!response.sessionCookie || !validator.isNonEmptyString(response.sessionCookie)) {
+          if (!validator.isNonEmptyString(response.sessionCookie)) {
             throw new FirebaseAuthError(AuthClientErrorCode.INTERNAL_ERROR);
           }
         });
@@ -458,7 +458,7 @@ export class FirebaseAuthRequestHandler {
    * The session cookie JWT will have the same payload claims as the provided ID token.
    *
    * @param {string} idToken The Firebase ID token to exchange for a session cookie.
-   * @param {number} expiresIn The session cookie duration.
+   * @param {number} expiresIn The session cookie duration in milliseconds.
    *
    * @return {Promise<string>} A promise that resolves on success with the created session cookie.
    */
