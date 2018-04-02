@@ -1,6 +1,8 @@
 # Unreleased
 
--
+- [feature] Added the session cookie management APIs for creating and verifying
+  session cookies, via `auth.createSessionCookie()` and
+  `auth.verifySessionCookie()`.
 
 # v5.11.0
 
