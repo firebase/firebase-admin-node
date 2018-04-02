@@ -419,6 +419,26 @@ describe('Messaging', () => {
        .and.have.property('code', 'messaging/invalid-argument');
     });
 
+    it('should fail when the backend server returns a detailed error with FCM error code', () => {
+      const resp = {
+        error: {
+          status: 'INVALID_ARGUMENT',
+          message: 'test error message',
+          details: [
+            {
+              '@type': 'type.googleapis.com/google.firebase.fcm.v1.FcmErrorCode',
+              'errorCode': 'UNREGISTERED',
+            },
+          ],
+        },
+      };
+      mockedRequests.push(mockSendError(404, 'json', resp));
+      return messaging.send(
+        {token: 'mock-token'},
+      ).should.eventually.be.rejectedWith('test error message')
+       .and.have.property('code', 'messaging/registration-token-not-registered');
+    });
+
     it('should map server error code to client-side error', () => {
       const resp = {
         error: {
