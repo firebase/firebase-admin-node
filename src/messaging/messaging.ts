@@ -153,7 +153,7 @@ export interface Aps {
   category?: string;
   threadId?: string;
   mutableContent?: boolean;
-  [customField: string]: any;
+  [customData: string]: any;
 }
 
 export interface ApsAlert {

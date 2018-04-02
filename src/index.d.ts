@@ -408,7 +408,7 @@ declare namespace admin.messaging {
     mutableContent?: boolean;
     category?: string;
     threadId?: string;
-    [customField: string]: any;
+    [customData: string]: any;
   };
 
   type ApsAlert = {
