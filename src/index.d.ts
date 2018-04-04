@@ -405,8 +405,10 @@ declare namespace admin.messaging {
     badge?: number;
     sound?: string;
     contentAvailable?: boolean;
+    mutableContent?: boolean;
     category?: string;
     threadId?: string;
+    [customData: string]: any;
   };
 
   type ApsAlert = {

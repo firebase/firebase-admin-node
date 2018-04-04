@@ -152,6 +152,8 @@ export interface Aps {
   contentAvailable?: boolean;
   category?: string;
   threadId?: string;
+  mutableContent?: boolean;
+  [customData: string]: any;
 }
 
 export interface ApsAlert {
@@ -274,15 +276,32 @@ function validateAps(aps: Aps) {
 
   const propertyMappings = {
     contentAvailable: 'content-available',
+    mutableContent: 'mutable-content',
     threadId: 'thread-id',
   };
+  Object.keys(propertyMappings).forEach((key) => {
+    if (key in aps && propertyMappings[key] in aps) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_PAYLOAD, `Multiple specifications for ${key} in Aps`);
+    }
+  });
   renameProperties(aps, propertyMappings);
 
-  if (typeof aps['content-available'] !== 'undefined') {
-    if (aps['content-available'] === true) {
+  const contentAvailable = aps['content-available'];
+  if (typeof contentAvailable !== 'undefined' && contentAvailable !== 1) {
+    if (contentAvailable === true) {
       aps['content-available'] = 1;
     } else {
       delete aps['content-available'];
+    }
+  }
+
+  const mutableContent = aps['mutable-content'];
+  if (typeof mutableContent !== 'undefined' && mutableContent !== 1) {
+    if (mutableContent === true) {
+      aps['mutable-content'] = 1;
+    } else {
+      delete aps['mutable-content'];
     }
   }
 }
