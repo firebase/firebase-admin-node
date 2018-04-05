@@ -200,6 +200,10 @@ declare namespace admin.auth {
     passwordSalt?: Buffer;
   }
 
+  interface SessionCookieOptions {
+    expiresIn: number;
+  }
+
   interface Auth {
     app: admin.app.App;
 
@@ -218,6 +222,14 @@ declare namespace admin.auth {
       users: admin.auth.UserImportRecord[],
       options?: admin.auth.UserImportOptions,
     ): Promise<admin.auth.UserImportResult>
+    createSessionCookie(
+      idToken: string,
+      sessionCookieOptions: admin.auth.SessionCookieOptions,
+    ): Promise<string>;
+    verifySessionCookie(
+      sessionCookie: string,
+      checkForRevocation?: boolean,
+    ): Promise<admin.auth.DecodedIdToken>;
   }
 }
 

@@ -59,6 +59,12 @@ const MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE = 1000;
 /** Maximum allowed number of users to batch upload at one time. */
 const MAX_UPLOAD_ACCOUNT_BATCH_SIZE = 1000;
 
+/** Minimum allowed session cookie duration in seconds (5 minutes). */
+const MIN_SESSION_COOKIE_DURATION_SECS = 5 * 60;
+
+/** Maximum allowed session cookie duration in seconds (2 weeks). */
+const MAX_SESSION_COOKIE_DURATION_SECS = 14 * 24 * 60 * 60;
+
 
 /**
  * Validates a providerUserInfo object. All unsupported parameters
@@ -287,6 +293,31 @@ function validateCreateEditRequest(request: any, uploadAccountRequest: boolean =
 }
 
 
+/** Instantiates the createSessionCookie endpoint settings. */
+export const FIREBASE_AUTH_CREATE_SESSION_COOKIE =
+    new ApiSettings('createSessionCookie', 'POST')
+        // Set request validator.
+        .setRequestValidator((request: any) => {
+          // Validate the ID token is a non-empty string.
+          if (!validator.isNonEmptyString(request.idToken)) {
+            throw new FirebaseAuthError(AuthClientErrorCode.INVALID_ID_TOKEN);
+          }
+          // Validate the custom session cookie duration.
+          if (!validator.isNumber(request.validDuration) ||
+              request.validDuration < MIN_SESSION_COOKIE_DURATION_SECS ||
+              request.validDuration > MAX_SESSION_COOKIE_DURATION_SECS) {
+            throw new FirebaseAuthError(AuthClientErrorCode.INVALID_SESSION_COOKIE_DURATION);
+          }
+        })
+        // Set response validator.
+        .setResponseValidator((response: any) => {
+          // Response should always contain the session cookie.
+          if (!validator.isNonEmptyString(response.sessionCookie)) {
+            throw new FirebaseAuthError(AuthClientErrorCode.INTERNAL_ERROR);
+          }
+        });
+
+
 /** Instantiates the uploadAccount endpoint settings. */
 export const FIREBASE_AUTH_UPLOAD_ACCOUNT = new ApiSettings('uploadAccount', 'POST');
 
@@ -419,6 +450,26 @@ export class FirebaseAuthRequestHandler {
    */
   constructor(app: FirebaseApp) {
     this.signedApiRequestHandler = new SignedApiRequestHandler(app);
+  }
+
+  /**
+   * Creates a new Firebase session cookie with the specified duration that can be used for
+   * session management (set as a server side session cookie with custom cookie policy).
+   * The session cookie JWT will have the same payload claims as the provided ID token.
+   *
+   * @param {string} idToken The Firebase ID token to exchange for a session cookie.
+   * @param {number} expiresIn The session cookie duration in milliseconds.
+   *
+   * @return {Promise<string>} A promise that resolves on success with the created session cookie.
+   */
+  public createSessionCookie(idToken: string, expiresIn: number): Promise<string> {
+    const request = {
+      idToken,
+      // Convert to seconds.
+      validDuration: expiresIn / 1000,
+    };
+    return this.invokeRequestHandler(FIREBASE_AUTH_CREATE_SESSION_COOKIE, request)
+        .then((response: any) => response.sessionCookie);
   }
 
   /**

@@ -19,7 +19,7 @@ import {Certificate} from './credential';
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseTokenGenerator} from './token-generator';
 import {FirebaseAuthRequestHandler} from './auth-api-request';
-import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
+import {AuthClientErrorCode, FirebaseAuthError, ErrorInfo} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
 import {
   UserImportOptions, UserImportRecord, UserImportResult,
@@ -51,7 +51,7 @@ export interface ListUsersResult {
 }
 
 
-/** Inteface representing a decoded ID token. */
+/** Interface representing a decoded ID token. */
 export interface DecodedIdToken {
   aud: string;
   auth_time: number;
@@ -67,6 +67,12 @@ export interface DecodedIdToken {
   iss: string;
   sub: string;
   [key: string]: any;
+}
+
+
+/** Interface representing the session cookie options. */
+export interface SessionCookieOptions {
+  expiresIn: number;
 }
 
 
@@ -171,23 +177,9 @@ export class Auth implements FirebaseServiceInterface {
         if (!checkRevoked) {
           return decodedIdToken;
         }
-        // Get tokens valid after time for the corresponding user.
-        return this.getUser(decodedIdToken.sub)
-          .then((user: UserRecord) => {
-            // If no tokens valid after time available, token is not revoked.
-            if (user.tokensValidAfterTime) {
-              // Get the ID token authentication time and convert to milliseconds UTC.
-              const authTimeUtc = decodedIdToken.auth_time * 1000;
-              // Get user tokens valid after time in milliseconds UTC.
-              const validSinceUtc = new Date(user.tokensValidAfterTime).getTime();
-              // Check if authentication time is older than valid since time.
-              if (authTimeUtc < validSinceUtc) {
-                throw new FirebaseAuthError(AuthClientErrorCode.ID_TOKEN_REVOKED);
-              }
-            }
-            // All checks above passed. Return the decoded token.
-            return decodedIdToken;
-          });
+        return this.verifyDecodedJWTNotRevoked(
+          decodedIdToken,
+          AuthClientErrorCode.ID_TOKEN_REVOKED);
       });
   }
 
@@ -370,5 +362,91 @@ export class Auth implements FirebaseServiceInterface {
   public importUsers(
       users: UserImportRecord[], options?: UserImportOptions): Promise<UserImportResult> {
     return this.authRequestHandler.uploadAccount(users, options);
+  }
+
+  /**
+   * Creates a new Firebase session cookie with the specified options that can be used for
+   * session management (set as a server side session cookie with custom cookie policy).
+   * The session cookie JWT will have the same payload claims as the provided ID token.
+   *
+   * @param {string} idToken The Firebase ID token to exchange for a session cookie.
+   * @param {SessionCookieOptions} sessionCookieOptions The session cookie options which includes
+   *     custom session duration.
+   *
+   * @return {Promise<string>} A promise that resolves on success with the created session cookie.
+   */
+  public createSessionCookie(
+      idToken: string, sessionCookieOptions: SessionCookieOptions): Promise<string> {
+    // Return rejected promise if expiresIn is not available.
+    if (!validator.isNonNullObject(sessionCookieOptions) ||
+        !validator.isNumber(sessionCookieOptions.expiresIn)) {
+      return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_SESSION_COOKIE_DURATION));
+    }
+    return this.authRequestHandler.createSessionCookie(
+      idToken, sessionCookieOptions.expiresIn);
+  }
+
+  /**
+   * Verifies a Firebase session cookie. Returns a Promise with the tokens claims. Rejects
+   * the promise if the token could not be verified. If checkRevoked is set to true,
+   * verifies if the session corresponding to the session cookie was revoked. If the corresponding
+   * user's session was invalidated, an auth/session-cookie-revoked error is thrown. If not
+   * specified the check is not performed.
+   *
+   * @param {string} sessionCookie The session cookie to verify.
+   * @param {boolean=} checkRevoked Whether to check if the session cookie is revoked.
+   * @return {Promise<DecodedIdToken>} A Promise that will be fulfilled after a successful
+   *     verification.
+   */
+  public verifySessionCookie(
+      sessionCookie: string, checkRevoked: boolean = false): Promise<DecodedIdToken> {
+    if (typeof this.tokenGenerator_ === 'undefined') {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CREDENTIAL,
+        'Must initialize app with a cert credential or set your Firebase project ID as the ' +
+        'GCLOUD_PROJECT environment variable to call auth().verifySessionCookie().',
+      );
+    }
+    return this.tokenGenerator_.verifySessionCookie(sessionCookie)
+      .then((decodedIdToken: DecodedIdToken) => {
+        // Whether to check if the token was revoked.
+        if (!checkRevoked) {
+          return decodedIdToken;
+        }
+        return this.verifyDecodedJWTNotRevoked(
+          decodedIdToken,
+          AuthClientErrorCode.SESSION_COOKIE_REVOKED);
+      });
+  }
+
+  /**
+   * Verifies the decoded Firebase issued JWT is not revoked. Returns a promise that resolves
+   * with the decoded claims on success. Rejects the promise with revocation error if revoked.
+   *
+   * @param {DecodedIdToken} decodedIdToken The JWT's decoded claims.
+   * @param {ErrorInfo} revocationErrorInfo The revocation error info to throw on revocation
+   *     detection.
+   * @return {Promise<DecodedIdToken>} A Promise that will be fulfilled after a successful
+   *     verification.
+   */
+  private verifyDecodedJWTNotRevoked(
+      decodedIdToken: DecodedIdToken, revocationErrorInfo: ErrorInfo): Promise<DecodedIdToken> {
+    // Get tokens valid after time for the corresponding user.
+    return this.getUser(decodedIdToken.sub)
+      .then((user: UserRecord) => {
+        // If no tokens valid after time available, token is not revoked.
+        if (user.tokensValidAfterTime) {
+          // Get the ID token authentication time and convert to milliseconds UTC.
+          const authTimeUtc = decodedIdToken.auth_time * 1000;
+          // Get user tokens valid after time in milliseconds UTC.
+          const validSinceUtc = new Date(user.tokensValidAfterTime).getTime();
+          // Check if authentication time is older than valid since time.
+          if (authTimeUtc < validSinceUtc) {
+            throw new FirebaseAuthError(revocationErrorInfo);
+          }
+        }
+        // All checks above passed. Return the decoded token.
+        return decodedIdToken;
+      });
   }
 }

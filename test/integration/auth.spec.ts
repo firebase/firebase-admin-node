@@ -31,6 +31,7 @@ const expect = chai.expect;
 
 const newUserUid = generateRandomString(20);
 const nonexistentUid = generateRandomString(20);
+const sessionCookieUid = generateRandomString(20);
 const testPhoneNumber = '+11234567890';
 const testPhoneNumber2 = '+16505550101';
 const nonexistentPhoneNumber = '+18888888888';
@@ -162,7 +163,7 @@ describe('admin.auth', () => {
         expect(listUsersResult.users[1].passwordHash.length).greaterThan(0);
         expect(listUsersResult.users[1].passwordSalt.length).greaterThan(0);
       });
-  }).timeout(5000);
+  });
 
   it('revokeRefreshTokens() invalidates existing sessions and ID tokens', () => {
     let currentIdToken: string = null;
@@ -244,7 +245,7 @@ describe('admin.auth', () => {
           }
         }
       });
-  }).timeout(5000);
+  });
 
   it('updateUser() updates the user record with the given parameters', () => {
     const updatedDisplayName = 'Updated User ' + newUserUid;
@@ -319,6 +320,107 @@ describe('admin.auth', () => {
       admin.auth().deleteUser(newUserUid),
       admin.auth().deleteUser(uidFromCreateUserWithoutUid),
     ]).should.eventually.be.fulfilled;
+  });
+
+  describe('createSessionCookie()', () => {
+    let expectedExp: number;
+    let expectedIat: number;
+    const expiresIn = 24 * 60 * 60 * 1000;
+    let payloadClaims: any;
+    let currentIdToken: string;
+    const uid = sessionCookieUid;
+
+    it('creates a valid Firebase session cookie', () => {
+      return admin.auth().createCustomToken(uid, {admin: true, groupId: '1234'})
+        .then((customToken) => firebase.auth().signInWithCustomToken(customToken))
+        .then((user) => user.getIdToken())
+        .then((idToken) => {
+          currentIdToken = idToken;
+          return admin.auth().verifyIdToken(idToken);
+        }).then((decodedIdTokenClaims) => {
+          expectedExp = Math.floor((new Date().getTime() + expiresIn) / 1000);
+          payloadClaims = decodedIdTokenClaims;
+          payloadClaims.iss = payloadClaims.iss.replace(
+              'securetoken.google.com', 'session.firebase.google.com');
+          delete payloadClaims.exp;
+          delete payloadClaims.iat;
+          expectedIat = Math.floor(new Date().getTime() / 1000);
+          // One day long session cookie.
+          return admin.auth().createSessionCookie(currentIdToken, {expiresIn});
+        })
+        .then((sessionCookie) => admin.auth().verifySessionCookie(sessionCookie))
+        .then((decodedIdToken) => {
+          // Check for expected expiration with +/-5 seconds of variation.
+          expect(decodedIdToken.exp).to.be.within(expectedExp - 5, expectedExp + 5);
+          expect(decodedIdToken.iat).to.be.within(expectedIat - 5, expectedIat + 5);
+          // Not supported in ID token,
+          delete decodedIdToken.nonce;
+          // exp and iat may vary depending on network connection latency.
+          delete decodedIdToken.exp;
+          delete decodedIdToken.iat;
+          expect(decodedIdToken).to.deep.equal(payloadClaims);
+        });
+    });
+
+    it('creates a revocable session cookie', () => {
+      let currentSessionCookie: string;
+      return admin.auth().createCustomToken(uid)
+        .then((customToken) => firebase.auth().signInWithCustomToken(customToken))
+        .then((user) => user.getIdToken())
+        .then((idToken) => {
+          // One day long session cookie.
+          return admin.auth().createSessionCookie(idToken, {expiresIn});
+        })
+        .then((sessionCookie) => {
+          currentSessionCookie = sessionCookie;
+          return new Promise((resolve) => setTimeout(() => resolve(
+            admin.auth().revokeRefreshTokens(uid),
+          ), 1000));
+        })
+        .then(() => {
+          return admin.auth().verifySessionCookie(currentSessionCookie)
+            .should.eventually.be.fulfilled;
+        })
+        .then(() => {
+          return admin.auth().verifySessionCookie(currentSessionCookie, true)
+            .should.eventually.be.rejected.and.have.property('code', 'auth/session-cookie-revoked');
+        });
+    });
+
+    it('fails when called with a revoked ID token', () => {
+      return admin.auth().createCustomToken(uid, {admin: true, groupId: '1234'})
+        .then((customToken) => firebase.auth().signInWithCustomToken(customToken))
+        .then((user) => user.getIdToken())
+        .then((idToken) => {
+          currentIdToken = idToken;
+          return new Promise((resolve) => setTimeout(() => resolve(
+            admin.auth().revokeRefreshTokens(uid),
+          ), 1000));
+        })
+        .then(() => {
+          return admin.auth().createSessionCookie(currentIdToken, {expiresIn})
+            .should.eventually.be.rejected.and.have.property('code', 'auth/id-token-expired');
+        });
+    });
+
+  });
+
+  describe('verifySessionCookie()', () => {
+    const uid = sessionCookieUid;
+    it('fails when called with an invalid session cookie', () => {
+      return admin.auth().verifySessionCookie('invalid-token')
+        .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
+    });
+
+    it('fails when called with a Firebase ID token', () => {
+      return admin.auth().createCustomToken(uid)
+        .then((customToken) => firebase.auth().signInWithCustomToken(customToken))
+        .then((user) => user.getIdToken())
+        .then((idToken) => {
+          return admin.auth().verifySessionCookie(idToken)
+            .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
+        });
+    });
   });
 
   describe('importUsers()', () => {
@@ -477,7 +579,7 @@ describe('admin.auth', () => {
           importUserRecord, fixture.importOptions, fixture.rawPassword)
           .should.eventually.be.fulfilled;
 
-      }).timeout(5000);
+      });
     });
 
     it('successfully imports users with multiple OAuth providers', () => {
@@ -624,6 +726,8 @@ function cleanup() {
     deletePhoneNumberUser(nonexistentPhoneNumber),
     deletePhoneNumberUser(updatedPhone),
   ];
+  // Delete user created for session cookie tests.
+  uids.push(sessionCookieUid);
   // Delete list of users for testing listUsers.
   uids.forEach((uid) => {
     // Use safeDelete to avoid getting throttled.

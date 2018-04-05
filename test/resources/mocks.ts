@@ -185,6 +185,28 @@ export function generateIdToken(overrides?: object): string {
   return jwt.sign(developerClaims, certificateObject.private_key, options);
 }
 
+/**
+ * Generates a mocked Firebase session cookie.
+ *
+ * @param {object=} overrides Overrides for the generated token's attributes.
+ * @param {number=} expiresIn Optional custom session cookie expiration in seconds.
+ * @return {string} A mocked Firebase session cookie with any provided overrides included.
+ */
+export function generateSessionCookie(overrides?: object, expiresIn?: number): string {
+  const options = _.assign({
+    audience: projectId,
+    expiresIn: expiresIn || ONE_HOUR_IN_SECONDS,
+    issuer: 'https://session.firebase.google.com/' + projectId,
+    subject: uid,
+    algorithm: ALGORITHM,
+    header: {
+      kid: certificateObject.private_key_id,
+    },
+  }, overrides);
+
+  return jwt.sign(developerClaims, certificateObject.private_key, options);
+}
+
 export function firebaseServiceFactory(
   firebaseApp: FirebaseApp,
   extendApp: (props: object) => void,

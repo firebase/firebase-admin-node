@@ -202,9 +202,9 @@ export function isURL(urlStr: any): boolean {
     if (!/^[a-zA-Z0-9]+[\w\-]*([\.]?[a-zA-Z0-9]+[\w\-]*)*$/.test(hostname)) {
       return false;
     }
-    // Allow for pathnames: (/chars+)*
+    // Allow for pathnames: (/chars+)*/?
     // Where chars can be a combination of: a-z A-Z 0-9 - _ . ~ ! $ & ' ( ) * + , ; = : @ %
-    const pathnameRe = /^(\/[\w\-\.\~\!\$\'\(\)\*\+\,\;\=\:\@\%]+)*$/;
+    const pathnameRe = /^(\/[\w\-\.\~\!\$\'\(\)\*\+\,\;\=\:\@\%]+)*\/?$/;
     // Validate pathname.
     if (pathname &&
         pathname !== '/' &&

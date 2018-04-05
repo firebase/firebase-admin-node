@@ -121,6 +121,29 @@ function getDecodedIdToken(uid: string, authTime: Date): DecodedIdToken {
 }
 
 
+/**
+ * Generates a mock decoded session cookie with the provided parameters.
+ *
+ * @param {string} uid The uid corresponding to the session cookie.
+ * @param {Date} authTime The authentication time of the session cookie.
+ * @return {DecodedIdToken} The generated decoded session cookie.
+ */
+function getDecodedSessionCookie(uid: string, authTime: Date): DecodedIdToken {
+  return {
+    iss: 'https://session.firebase.google.com/project123456789',
+    aud: 'project123456789',
+    auth_time: Math.floor(authTime.getTime() / 1000),
+    sub: uid,
+    iat: Math.floor(authTime.getTime() / 1000),
+    exp: Math.floor(authTime.getTime() / 1000 + 3600),
+    firebase: {
+      identities: {},
+      sign_in_provider: 'custom',
+    },
+  };
+}
+
+
 describe('Auth', () => {
   let auth: Auth;
   let mockApp: FirebaseApp;
@@ -142,6 +165,8 @@ describe('Auth', () => {
     rejectedPromiseAccessTokenAuth = new Auth(mocks.appRejectedWhileFetchingAccessToken());
 
     oldProcessEnv = process.env;
+    // Project ID not set in the environment.
+    delete process.env.GCLOUD_PROJECT;
   });
 
   afterEach(() => {
@@ -414,6 +439,195 @@ describe('Auth', () => {
       // Verify ID token while checking if revoked.
       // This should fail with the underlying token generator verifyIdToken error.
       return auth.verifyIdToken(mockIdToken, true)
+        .then((result) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Confirm expected error returned.
+          expect(error).to.equal(expectedError);
+        });
+    });
+  });
+
+  describe('verifySessionCookie()', () => {
+    let stub: sinon.SinonStub;
+    let mockSessionCookie: string;
+    const expectedUserRecord = getValidUserRecord(getValidGetAccountInfoResponse());
+    // Set auth_time of token to expected user's tokensValidAfterTime.
+    const validSince = new Date(expectedUserRecord.tokensValidAfterTime);
+    // Set expected uid to expected user's.
+    const uid = expectedUserRecord.uid;
+    // Set expected decoded session cookie with expected UID and auth time.
+    const decodedSessionCookie = getDecodedSessionCookie(uid, validSince);
+    let clock;
+
+    // Stubs used to simulate underlying api calls.
+    const stubs: sinon.SinonStub[] = [];
+    beforeEach(() => {
+      stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifySessionCookie')
+        .returns(Promise.resolve(decodedSessionCookie));
+      stubs.push(stub);
+      mockSessionCookie = mocks.generateSessionCookie();
+      clock = sinon.useFakeTimers(validSince.getTime());
+    });
+    afterEach(() => {
+      _.forEach(stubs, (s) => s.restore());
+      clock.restore();
+    });
+
+    it('should throw if a cert credential is not specified', () => {
+      const mockCredentialAuth = new Auth(mocks.mockCredentialApp());
+
+      expect(() => {
+        mockCredentialAuth.verifySessionCookie(mockSessionCookie);
+      }).to.throw('Must initialize app with a cert credential');
+    });
+
+    it('should forward on the call to the token generator\'s verifySessionCookie() method', () => {
+      // Stub getUser call.
+      const getUserStub = sinon.stub(Auth.prototype, 'getUser');
+      stubs.push(getUserStub);
+      return auth.verifySessionCookie(mockSessionCookie).then((result) => {
+        // Confirm getUser never called.
+        expect(getUserStub).not.to.have.been.called;
+        expect(result).to.deep.equal(decodedSessionCookie);
+        expect(stub).to.have.been.calledOnce.and.calledWith(mockSessionCookie);
+      });
+    });
+
+    it('should work with a non-cert credential when the GCLOUD_PROJECT environment variable is present', () => {
+      process.env.GCLOUD_PROJECT = mocks.projectId;
+
+      const mockCredentialAuth = new Auth(mocks.mockCredentialApp());
+
+      return mockCredentialAuth.verifySessionCookie(mockSessionCookie).then(() => {
+        expect(stub).to.have.been.calledOnce.and.calledWith(mockSessionCookie);
+      });
+    });
+
+    it('should be fulfilled given an app which returns null access tokens', () => {
+      // verifySessionCookie() does not rely on an access token and therefore works in this scenario.
+      return nullAccessTokenAuth.verifySessionCookie(mockSessionCookie)
+        .should.eventually.be.fulfilled;
+    });
+
+    it('should be fulfilled given an app which returns invalid access tokens', () => {
+      // verifySessionCookie() does not rely on an access token and therefore works in this scenario.
+      return malformedAccessTokenAuth.verifySessionCookie(mockSessionCookie)
+        .should.eventually.be.fulfilled;
+    });
+
+    it('should be fulfilled given an app which fails to generate access tokens', () => {
+      // verifySessionCookie() does not rely on an access token and therefore works in this scenario.
+      return rejectedPromiseAccessTokenAuth.verifySessionCookie(mockSessionCookie)
+        .should.eventually.be.fulfilled;
+    });
+
+    it('should be fulfilled with checkRevoked set to true using an unrevoked session cookie', () => {
+      const getUserStub = sinon.stub(Auth.prototype, 'getUser')
+        .returns(Promise.resolve(expectedUserRecord));
+      stubs.push(getUserStub);
+      // Verify ID token while checking if revoked.
+      return auth.verifySessionCookie(mockSessionCookie, true)
+        .then((result) => {
+          // Confirm underlying API called with expected parameters.
+          expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+          expect(result).to.deep.equal(decodedSessionCookie);
+        });
+    });
+
+    it('should be rejected with checkRevoked set to true using a revoked session cookie', () => {
+      // One second before validSince.
+      const oneSecBeforeValidSince = new Date(validSince.getTime() - 1000);
+      // Restore verifySessionCookie stub.
+      stub.restore();
+      // Simulate revoked session cookie returned with auth_time one second before validSince.
+      stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifySessionCookie')
+        .returns(Promise.resolve(getDecodedSessionCookie(uid, oneSecBeforeValidSince)));
+      stubs.push(stub);
+      const getUserStub = sinon.stub(Auth.prototype, 'getUser')
+        .returns(Promise.resolve(expectedUserRecord));
+      stubs.push(getUserStub);
+      // Verify session cookie while checking if revoked.
+      return auth.verifySessionCookie(mockSessionCookie, true)
+        .then((result) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Confirm underlying API called with expected parameters.
+          expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+          // Confirm expected error returned.
+          expect(error).to.have.property('code', 'auth/session-cookie-revoked');
+        });
+    });
+
+    it('should be fulfilled with checkRevoked set to false using a revoked session cookie', () => {
+      // One second before validSince.
+      const oneSecBeforeValidSince = new Date(validSince.getTime() - 1000);
+      const oneSecBeforeValidSinceDecodedSessionCookie =
+          getDecodedSessionCookie(uid, oneSecBeforeValidSince);
+      // Restore verifySessionCookie stub.
+      stub.restore();
+      // Simulate revoked session cookie returned with auth_time one second before validSince.
+      stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifySessionCookie')
+        .returns(Promise.resolve(oneSecBeforeValidSinceDecodedSessionCookie));
+      stubs.push(stub);
+      // Verify session cookie without checking if revoked.
+      // This call should succeed.
+      return auth.verifySessionCookie(mockSessionCookie, false)
+        .then((result) => {
+          expect(result).to.deep.equal(oneSecBeforeValidSinceDecodedSessionCookie);
+        });
+    });
+
+    it('should be rejected with checkRevoked set to true if underlying RPC fails', () => {
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
+      const getUserStub = sinon.stub(Auth.prototype, 'getUser')
+        .returns(Promise.reject(expectedError));
+      stubs.push(getUserStub);
+      // Verify session cookie while checking if revoked.
+      // This should fail with the underlying RPC error.
+      return auth.verifySessionCookie(mockSessionCookie, true)
+        .then((result) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Confirm underlying API called with expected parameters.
+          expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+          // Confirm expected error returned.
+          expect(error).to.equal(expectedError);
+        });
+    });
+
+    it('should be fulfilled with checkRevoked set to true when no validSince available', () => {
+      // Simulate no validSince set on the user.
+      const noValidSinceGetAccountInfoResponse = getValidGetAccountInfoResponse();
+      delete (noValidSinceGetAccountInfoResponse.users[0] as any).validSince;
+      const noValidSinceExpectedUserRecord =
+         getValidUserRecord(noValidSinceGetAccountInfoResponse);
+      // Confirm null tokensValidAfterTime on user.
+      expect(noValidSinceExpectedUserRecord.tokensValidAfterTime).to.be.null;
+      // Simulate getUser returns the expected user with no validSince.
+      const getUserStub = sinon.stub(Auth.prototype, 'getUser')
+        .returns(Promise.resolve(noValidSinceExpectedUserRecord));
+      stubs.push(getUserStub);
+      // Verify session cookie while checking if revoked.
+      return auth.verifySessionCookie(mockSessionCookie, true)
+        .then((result) => {
+          // Confirm underlying API called with expected parameters.
+          expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+          expect(result).to.deep.equal(decodedSessionCookie);
+        });
+    });
+
+    it('should be rejected with checkRevoked set to true using an invalid session cookie', () => {
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_CREDENTIAL);
+      // Restore verifySessionCookie stub.
+      stub.restore();
+      // Simulate session cookie is invalid.
+      stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifySessionCookie')
+        .returns(Promise.reject(expectedError));
+      stubs.push(stub);
+      // Verify session cookie while checking if revoked.
+      // This should fail with the underlying token generator verifySessionCookie error.
+      return auth.verifySessionCookie(mockSessionCookie, true)
         .then((result) => {
           throw new Error('Unexpected success');
         }, (error) => {
@@ -1418,6 +1632,111 @@ describe('Auth', () => {
       expect(() => {
         return auth.importUsers(users, {hash: {algorithm: 'invalid' as any}});
       }).to.throw(expectedOptionsError);
+    });
+  });
+
+  describe('createSessionCookie()', () => {
+    const idToken = 'ID_TOKEN';
+    const options = {expiresIn: 60 * 60 * 24 * 1000};
+    const sessionCookie = 'SESSION_COOKIE';
+    const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_ID_TOKEN);
+    // Stubs used to simulate underlying api calls.
+    let stubs: sinon.SinonStub[] = [];
+    beforeEach(() => {
+      sinon.spy(validator, 'isNonEmptyString');
+    });
+    afterEach(() => {
+      (validator.isNonEmptyString as any).restore();
+      _.forEach(stubs, (stub) => stub.restore());
+      stubs = [];
+    });
+
+    it('should be rejected given no ID token', () => {
+      return (auth as any).createSessionCookie(undefined, options)
+        .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-id-token');
+    });
+
+    it('should be rejected given an invalid ID token', () => {
+      const invalidIdToken = {} as any;
+      return auth.createSessionCookie(invalidIdToken, options)
+        .then(() => {
+          throw new Error('Unexpected success');
+        })
+        .catch((error) => {
+          expect(error).to.have.property('code', 'auth/invalid-id-token');
+          expect(validator.isNonEmptyString).to.have.been.calledOnce.and.calledWith(invalidIdToken);
+        });
+    });
+
+    it('should be rejected given no session duration', () => {
+      return (auth as any).createSessionCookie(idToken, undefined)
+        .should.eventually.be.rejected.and.have.property(
+           'code', 'auth/invalid-session-cookie-duration');
+    });
+
+    it('should be rejected given an invalid session duration', () => {
+      // Invalid object.
+      const invalidOptions = {} as any;
+      return auth.createSessionCookie(idToken, invalidOptions)
+        .should.eventually.be.rejected.and.have.property(
+           'code', 'auth/invalid-session-cookie-duration');
+    });
+
+    it('should be rejected given out of range session duration', () => {
+      // 1 minute duration.
+      const invalidOptions = {expiresIn: 60 * 1000};
+      return auth.createSessionCookie(idToken, invalidOptions)
+        .should.eventually.be.rejected.and.have.property(
+           'code', 'auth/invalid-session-cookie-duration');
+    });
+
+    it('should be rejected given an app which returns null access tokens', () => {
+      return nullAccessTokenAuth.createSessionCookie(idToken, options)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which returns invalid access tokens', () => {
+      return malformedAccessTokenAuth.createSessionCookie(idToken, options)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which fails to generate access tokens', () => {
+      return rejectedPromiseAccessTokenAuth.createSessionCookie(idToken, options)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should resolve on underlying createSessionCookie request success', () => {
+      // Stub createSessionCookie to return expected sessionCookie.
+      const createSessionCookieStub =
+          sinon.stub(FirebaseAuthRequestHandler.prototype, 'createSessionCookie')
+          .returns(Promise.resolve(sessionCookie));
+      stubs.push(createSessionCookieStub);
+      return auth.createSessionCookie(idToken, options)
+        .then((result) => {
+          // Confirm underlying API called with expected parameters.
+          expect(createSessionCookieStub)
+            .to.have.been.calledOnce.and.calledWith(idToken, options.expiresIn);
+          // Confirm expected response returned.
+          expect(result).to.be.equal(sessionCookie);
+        });
+    });
+
+    it('should throw when underlying createSessionCookie request returns an error', () => {
+      // Stub createSessionCookie to throw a backend error.
+      const createSessionCookieStub =
+          sinon.stub(FirebaseAuthRequestHandler.prototype, 'createSessionCookie')
+          .returns(Promise.reject(expectedError));
+      stubs.push(createSessionCookieStub);
+      return auth.createSessionCookie(idToken, options)
+        .then((result) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Confirm underlying API called with expected parameters.
+          expect(createSessionCookieStub)
+            .to.have.been.calledOnce.and.calledWith(idToken, options.expiresIn);
+          // Confirm expected error returned.
+          expect(error).to.equal(expectedError);
+        });
     });
   });
 
