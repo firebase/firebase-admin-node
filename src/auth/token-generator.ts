@@ -52,8 +52,7 @@ interface JWTPayload {
 
 /** User facing token information related to the Firebase session cookie. */
 export const SESSION_COOKIE_INFO: tokenVerify.FirebaseTokenInfo = {
-  // Placeholder until documentation page is created for session cookies.
-  url: 'https://firebase.google.com/docs/auth/admin/verify-id-tokens',
+  url: 'https://firebase.google.com/docs/auth/admin/manage-cookies',
   verifyApiName: 'verifySessionCookie()',
   jwtName: 'Firebase session cookie',
   shortName: 'session cookie',
