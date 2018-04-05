@@ -419,6 +419,26 @@ describe('Messaging', () => {
        .and.have.property('code', 'messaging/invalid-argument');
     });
 
+    it('should fail when the backend server returns a detailed error with FCM error code', () => {
+      const resp = {
+        error: {
+          status: 'INVALID_ARGUMENT',
+          message: 'test error message',
+          details: [
+            {
+              '@type': 'type.googleapis.com/google.firebase.fcm.v1.FcmErrorCode',
+              'errorCode': 'UNREGISTERED',
+            },
+          ],
+        },
+      };
+      mockedRequests.push(mockSendError(404, 'json', resp));
+      return messaging.send(
+        {token: 'mock-token'},
+      ).should.eventually.be.rejectedWith('test error message')
+       .and.have.property('code', 'messaging/registration-token-not-registered');
+    });
+
     it('should map server error code to client-side error', () => {
       const resp = {
         error: {
@@ -1827,6 +1847,18 @@ describe('Messaging', () => {
         }).to.throw('apns.payload.aps must be a non-null object');
       });
     });
+    it(`should throw given APNS payload with duplicate fields`, () => {
+      expect(() => {
+        messaging.send({
+          apns: {
+            payload: {
+              aps: {'mutableContent': true, 'mutable-content': 1},
+            },
+          },
+          token: 'token',
+        });
+      }).to.throw('Multiple specifications for mutableContent in Aps');
+    });
 
     const invalidApnsAlerts: any = [null, [], true, 1.23];
     invalidApnsAlerts.forEach((alert) => {
@@ -2252,6 +2284,7 @@ describe('Messaging', () => {
                 sound: 'test.sound',
                 category: 'test.category',
                 contentAvailable: true,
+                mutableContent: true,
                 threadId: 'thread.id',
               },
               customKey1: 'custom.value',
@@ -2278,6 +2311,7 @@ describe('Messaging', () => {
                 'sound': 'test.sound',
                 'category': 'test.category',
                 'content-available': 1,
+                'mutable-content': 1,
                 'thread-id': 'thread.id',
               },
               customKey1: 'custom.value',
@@ -2301,6 +2335,67 @@ describe('Messaging', () => {
           apns: {
             payload: {
               aps: {},
+            },
+          },
+        },
+      },
+      {
+        label: 'APNS content-available set explicitly',
+        req: {
+          apns: {
+            payload: {
+              aps: {
+                'content-available': 1,
+              },
+            },
+          },
+        },
+        expectedReq: {
+          apns: {
+            payload: {
+              aps: {'content-available': 1},
+            },
+          },
+        },
+      },
+      {
+        label: 'APNS mutableContent explicitly false',
+        req: {
+          apns: {
+            payload: {
+              aps: {
+                mutableContent: false,
+              },
+            },
+          },
+        },
+        expectedReq: {
+          apns: {
+            payload: {
+              aps: {},
+            },
+          },
+        },
+      },
+      {
+        label: 'APNS custom fields',
+        req: {
+          apns: {
+            payload: {
+              aps: {
+                k1: 'v1',
+                k2: true,
+              },
+            },
+          },
+        },
+        expectedReq: {
+          apns: {
+            payload: {
+              aps: {
+                k1: 'v1',
+                k2: true,
+              },
             },
           },
         },

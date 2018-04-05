@@ -33,7 +33,7 @@ export function isBuffer(value: any): boolean {
  * @return {boolean} Whether the value is an array or not.
  */
 export function isArray(value: any): boolean {
-  return value instanceof Array;
+  return Array.isArray(value);
 }
 
 /**
@@ -98,7 +98,7 @@ export function isNonEmptyString(value: any): boolean {
  * @return {boolean} Whether the value is an object or not.
  */
 export function isObject(value: any): boolean {
-  return typeof value === 'object' && !(value instanceof Array);
+  return typeof value === 'object' && !isArray(value);
 }
 
 

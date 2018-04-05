@@ -3,6 +3,10 @@
 - [feature] Added the session cookie management APIs for creating and verifying
   session cookies, via `auth.createSessionCookie()` and
   `auth.verifySessionCookie()`.
+- [added] Added the `mutableContent` optional field to the `Aps` type of
+  the FCM API.
+- [added] Added the support for specifying arbitrary custom key-value
+  fields in the `Aps` type.
 
 # v5.11.0
 
