@@ -18,7 +18,7 @@ import {FirebaseApp} from '../firebase-app';
 import {FirebaseError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
 import {ApplicationDefaultCredential, Certificate} from '../auth/credential';
-import {Bucket} from '@google-cloud/storage';
+import * as gcs from '@google-cloud/storage';
 
 import * as validator from '../utils/validator';
 
@@ -58,7 +58,7 @@ export class Storage implements FirebaseServiceInterface {
       });
     }
 
-    let storage;
+    let storage: typeof gcs;
     try {
       /* tslint:disable-next-line:no-var-requires */
       storage = require('@google-cloud/storage');
@@ -75,6 +75,7 @@ export class Storage implements FirebaseServiceInterface {
       // cert is available when the SDK has been initialized with a service account JSON file,
       // or by setting the GOOGLE_APPLICATION_CREDENTIALS envrionment variable.
       this.storageClient = storage({
+        projectId: cert.projectId,
         credentials: {
           private_key: cert.privateKey,
           client_email: cert.clientEmail,
@@ -102,7 +103,7 @@ export class Storage implements FirebaseServiceInterface {
    *   retrieves a reference to the default bucket.
    * @return {Bucket} A Bucket object from the @google-cloud/storage library.
    */
-  public bucket(name?: string): Bucket {
+  public bucket(name?: string): gcs.Bucket {
     const bucketName = (typeof name !== 'undefined')
       ? name :  this.appInternal.options.storageBucket;
     if (validator.isNonEmptyString(bucketName)) {
