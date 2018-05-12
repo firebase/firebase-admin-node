@@ -286,7 +286,8 @@ export class FirebaseApp {
    */
   public auth(): Auth {
     return this.ensureService_('auth', () => {
-      return new Auth(this);
+      const authService: typeof Auth = require('./auth/auth').Auth;
+      return new authService(this);
     });
   }
 
@@ -297,7 +298,8 @@ export class FirebaseApp {
    */
   public database(url?: string): Database {
     const service: DatabaseService = this.ensureService_('database', () => {
-      return new DatabaseService(this);
+      const dbService: typeof DatabaseService = require('./database/database').DatabaseService;
+      return new dbService(this);
     });
     return service.getDatabase(url);
   }
@@ -309,7 +311,8 @@ export class FirebaseApp {
    */
   public messaging(): Messaging {
     return this.ensureService_('messaging', () => {
-      return new Messaging(this);
+      const messagingService: typeof Messaging = require('./messaging/messaging').Messaging;
+      return new messagingService(this);
     });
   }
 
@@ -320,13 +323,15 @@ export class FirebaseApp {
    */
   public storage(): Storage {
     return this.ensureService_('storage', () => {
-      return new Storage(this);
+      const storageService: typeof Storage = require('./storage/storage').Storage;
+      return new storageService(this);
     });
   }
 
   public firestore(): Firestore {
     const service: FirestoreService = this.ensureService_('firestore', () => {
-      return new FirestoreService(this);
+      const firestoreService: typeof FirestoreService = require('./firestore/firestore').FirestoreService;
+      return new firestoreService(this);
     });
     return service.client;
   }
@@ -338,7 +343,8 @@ export class FirebaseApp {
    */
   public instanceId(): InstanceId {
     return this.ensureService_('iid', () => {
-      return new InstanceId(this);
+      const iidService: typeof InstanceId = require('./instance-id/instance-id').InstanceId;
+      return new iidService(this);
     });
   }
 
