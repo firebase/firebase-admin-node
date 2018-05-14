@@ -4,7 +4,7 @@
   dependencies for faster load times. This change also ensures that only
   the sources for namespaces that are actually used get loaded into the
   Node.js process.
-- [changed] Upgraded Cloud Firestire client to v0.14.0.
+- [changed] Upgraded Cloud Firestore client to v0.14.0.
 
 # v5.12.0
 
@@ -26,7 +26,7 @@
 - [changed] Upgraded Realtime Database client to v0.2.0. With this upgrade
   developers can call the `admin.database().ref()` method with another
   `Reference` instance as the argument.
-- [changed] Upgraded Cloud Firestire client to v0.13.0.
+- [changed] Upgraded Cloud Firestore client to v0.13.0.
 
 # v5.9.1
 
