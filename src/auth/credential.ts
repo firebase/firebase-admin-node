@@ -14,15 +14,10 @@
  * limitations under the License.
  */
 
-import * as jwt from 'jsonwebtoken';
-import * as forge from 'node-forge';
-
 // Use untyped import syntax for Node built-ins
 import fs = require('fs');
 import os = require('os');
-import http = require('http');
 import path = require('path');
-import https = require('https');
 
 import {AppErrorCodes, FirebaseAppError} from '../utils/error';
 
@@ -169,6 +164,7 @@ export class Certificate {
       throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
     }
 
+    const forge = require('node-forge');
     try {
       forge.pki.privateKeyFromPem(this.privateKey);
     } catch (error) {
@@ -257,6 +253,7 @@ export class CertCredential implements Credential {
         'Content-Length': postData.length,
       },
     };
+    const https = require('https');
     return requestAccessToken(https, options, postData);
   }
 
@@ -275,6 +272,7 @@ export class CertCredential implements Credential {
       ].join(' '),
     };
 
+    const jwt = require('jsonwebtoken');
     // This method is actually synchronous so we can capture and return the buffer.
     return jwt.sign(claims, this.certificate_.privateKey, {
       audience: GOOGLE_TOKEN_AUDIENCE,
@@ -321,6 +319,7 @@ export class RefreshTokenCredential implements Credential {
         'Content-Length': postData.length,
       },
     };
+    const https = require('https');
     return requestAccessToken(https, options, postData);
   }
 
@@ -345,6 +344,7 @@ export class MetadataServiceCredential implements Credential {
         'Content-Length': 0,
       },
     };
+    const http = require('http');
     return requestAccessToken(http, options);
   }
 

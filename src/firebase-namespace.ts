@@ -325,7 +325,8 @@ export class FirebaseNamespace {
     const fn: FirebaseServiceNamespace<Auth> = (app?: FirebaseApp) => {
       return this.ensureApp(app).auth();
     };
-    return Object.assign(fn, {Auth});
+    const auth = require('./auth/auth').Auth;
+    return Object.assign(fn, {Auth: auth});
   }
 
   /**
@@ -347,7 +348,8 @@ export class FirebaseNamespace {
     const fn: FirebaseServiceNamespace<Messaging> = (app?: FirebaseApp) => {
       return this.ensureApp(app).messaging();
     };
-    return Object.assign(fn, {Messaging});
+    const messaging = require('./messaging/messaging').Messaging;
+    return Object.assign(fn, {Messaging: messaging});
   }
 
   /**
@@ -358,7 +360,8 @@ export class FirebaseNamespace {
     const fn: FirebaseServiceNamespace<Storage> = (app?: FirebaseApp) => {
       return this.ensureApp(app).storage();
     };
-    return Object.assign(fn, {Storage});
+    const storage = require('./storage/storage').Storage;
+    return Object.assign(fn, {Storage: storage});
   }
 
   /**
@@ -380,7 +383,8 @@ export class FirebaseNamespace {
     const fn: FirebaseServiceNamespace<InstanceId> = (app?: FirebaseApp) => {
       return this.ensureApp(app).instanceId();
     };
-    return Object.assign(fn, {InstanceId});
+    const instanceId = require('./instance-id/instance-id').InstanceId;
+    return Object.assign(fn, {InstanceId: instanceId});
   }
 
   /**
