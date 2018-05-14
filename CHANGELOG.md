@@ -1,6 +1,10 @@
 # Unreleased
 
--
+- [changed] Admin SDK now lazy loads all child namespaces and certain heavy
+  dependencies for faster load times. This change also ensures that only
+  the sources for namespaces that are actually used get loaded into the
+  Node.js process.
+- [changed] Upgraded Cloud Firestire client to v0.14.0.
 
 # v5.12.0
 
