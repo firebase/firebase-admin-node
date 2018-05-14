@@ -579,6 +579,9 @@ declare namespace admin.firestore {
   export import Firestore = _firestore.Firestore;
   export import GeoPoint = _firestore.GeoPoint;
   export import setLogFunction = _firestore.setLogFunction;
+  export import Query = _firestore.Query;
+  export import DocumentData = _firestore.DocumentData;
+  export import QuerySnapshot = _firestore.QuerySnapshot;
 }
 
 declare namespace admin.instanceId {
