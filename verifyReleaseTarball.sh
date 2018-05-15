@@ -69,7 +69,7 @@ npm install
 npm install -S "$ROOT/$PKG_NAME"
 
 echo "> tsc -p tsconfig.json"
-tsc -p tsconfig.json
+$ROOT/node_modules/.bin/tsc -p tsconfig.json
 
 echo "> $MOCHA_CLI src/*.test.ts"
 $MOCHA_CLI src/*.test.ts
