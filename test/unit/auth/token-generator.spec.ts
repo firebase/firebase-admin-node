@@ -26,6 +26,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as mocks from '../../resources/mocks';
 import {
   FirebaseTokenGenerator, SESSION_COOKIE_INFO, ID_TOKEN_INFO,
+  CryptoSigner, JWTPayload, JWTOptions, ServiceAccountSigner,
 } from '../../../src/auth/token-generator';
 import * as verifier from '../../../src/auth/token-verifier';
 import {FirebaseAuthError, AuthClientErrorCode} from '../../../src/utils/error';
@@ -69,13 +70,36 @@ function verifyToken(token: string, publicKey: string): Promise<object> {
   });
 }
 
+class TestCryptoSigner implements CryptoSigner {
+  public sign(payload: JWTPayload, options: JWTOptions): Promise<string> {
+    return Promise.resolve('test');
+  }
+
+  public getAccount(): string {
+    return 'account';
+  }
+}
+
+describe('CryptoSigner', () => {
+  describe('ServiceAccountSigner', () => {
+    it('should throw given no arguments', () => {
+      expect(() => {
+        // Need to overcome the type system to allow a call with no parameter
+        const anyServiceAccountSigner: any = ServiceAccountSigner;
+        return new anyServiceAccountSigner();
+      }).to.throw('Must provide a certificate to initialize ServiceAccountSigner');
+    });
+  });
+});
+
 
 describe('FirebaseTokenGenerator', () => {
   let tokenGenerator: FirebaseTokenGenerator;
 
   let clock: sinon.SinonFakeTimers;
   beforeEach(() => {
-    tokenGenerator = new FirebaseTokenGenerator(new Certificate(mocks.certificateObject));
+    const cert = new Certificate(mocks.certificateObject);
+    tokenGenerator = new FirebaseTokenGenerator(new ServiceAccountSigner(cert));
   });
 
   afterEach(() => {
@@ -86,66 +110,32 @@ describe('FirebaseTokenGenerator', () => {
   });
 
   describe('Constructor', () => {
-    it('should throw given no service account', () => {
+    it('should throw given no arguments', () => {
       expect(() => {
         // Need to overcome the type system to allow a call with no parameter
         const anyFirebaseTokenGenerator: any = FirebaseTokenGenerator;
         return new anyFirebaseTokenGenerator();
-      }).to.throw('Must provide a certificate to use FirebaseTokenGenerator');
+      }).to.throw('Must provide a CryptoSigner to use FirebaseTokenGenerator');
     });
 
-    const invalidCredentials = [null, NaN, 0, 1, true, false, '', 'a', [], {}, { a: 1 }, _.noop];
-    invalidCredentials.forEach((invalidCredential) => {
-      it('should throw given invalid Credential: ' + JSON.stringify(invalidCredential), () => {
+    const invalidSigners = [null, NaN, 0, 1, true, false, '', 'a', [], _.noop];
+    invalidSigners.forEach((invalidSigner) => {
+      it('should throw given invalid signer: ' + JSON.stringify(invalidSigner), () => {
         expect(() => {
-          return new FirebaseTokenGenerator(new Certificate(invalidCredential as any));
-        }).to.throw(Error);
+          return new FirebaseTokenGenerator(invalidSigner as any, 'project-id');
+        }).to.throw('Must provide a CryptoSigner to use FirebaseTokenGenerator');
       });
     });
 
-    it('should throw given an object without a "private_key" property', () => {
-      const invalidCertificate = _.omit(mocks.certificateObject, 'private_key');
-      expect(() => {
-        return new FirebaseTokenGenerator(new Certificate(invalidCertificate as any));
-      }).to.throw('Certificate object must contain a string "private_key" property');
-    });
-
-    it('should throw given an object with an empty string "private_key" property', () => {
-      const invalidCertificate = _.clone(mocks.certificateObject);
-      invalidCertificate.private_key = '';
-      expect(() => {
-        return new FirebaseTokenGenerator(new Certificate(invalidCertificate as any));
-      }).to.throw('Certificate object must contain a string "private_key" property');
-    });
-
-    it('should throw given an object without a "client_email" property', () => {
-      const invalidCertificate = _.omit(mocks.certificateObject, 'client_email');
-      expect(() => {
-        return new FirebaseTokenGenerator(new Certificate(invalidCertificate as any));
-      }).to.throw('Certificate object must contain a string "client_email" property');
-    });
-
-    it('should throw given an object without an empty string "client_email" property', () => {
-      const invalidCertificate = _.clone(mocks.certificateObject);
-      invalidCertificate.client_email = '';
-      expect(() => {
-        return new FirebaseTokenGenerator(new Certificate(invalidCertificate as any));
-      }).to.throw('Certificate object must contain a string "client_email" property');
-    });
-
-    it('should not throw given a valid certificate', () => {
-      expect(() => {
-        return new FirebaseTokenGenerator(new Certificate(mocks.certificateObject));
-      }).not.to.throw();
-    });
-
-    it('should not throw given an object representing a certificate key', () => {
-      expect(() => {
-        return new FirebaseTokenGenerator(mocks.certificateObject);
-      }).not.to.throw();
+    const emptyProjectIds = [null, ''];
+    emptyProjectIds.forEach((projectId) => {
+      it(`should not throw given empty project ID: ${JSON.stringify(projectId)}`, () => {
+        expect(() => {
+          new FirebaseTokenGenerator(new TestCryptoSigner(), projectId);
+        }).not.to.throw;
+      });
     });
   });
-
 
   describe('createCustomToken()', () => {
     it('should throw given no uid', () => {
@@ -202,26 +192,6 @@ describe('FirebaseTokenGenerator', () => {
           tokenGenerator.createCustomToken(mocks.uid, blacklistedDeveloperClaims);
         }).to.throw('Developer claim "' + blacklistedClaim + '" is reserved and cannot be specified');
       });
-    });
-
-    it('should throw if the token generator was initialized with no "private_key"', () => {
-      const certificateObjectWithNoPrivateKey: any = _.omit(mocks.certificateObject, 'private_key');
-      certificateObjectWithNoPrivateKey.clientEmail = certificateObjectWithNoPrivateKey.client_email;
-      const tokenGeneratorWithNoPrivateKey = new FirebaseTokenGenerator(certificateObjectWithNoPrivateKey);
-
-      expect(() => {
-        tokenGeneratorWithNoPrivateKey.createCustomToken(mocks.uid);
-      }).to.throw('createCustomToken() requires a certificate with "private_key" set');
-    });
-
-    it('should throw if the token generator was initialized with no "client_email"', () => {
-      const certificateObjectWithNoClientEmail: any = _.omit(mocks.certificateObject, 'client_email');
-      certificateObjectWithNoClientEmail.privateKey = certificateObjectWithNoClientEmail.private_key;
-      const tokenGeneratorWithNoClientEmail = new FirebaseTokenGenerator(certificateObjectWithNoClientEmail);
-
-      expect(() => {
-        tokenGeneratorWithNoClientEmail.createCustomToken(mocks.uid);
-      }).to.throw('createCustomToken() requires a certificate with "client_email" set');
     });
 
     it('should be fulfilled given a valid uid and no developer claims', () => {
@@ -396,7 +366,7 @@ describe('FirebaseTokenGenerator', () => {
     it('resolves when underlying sessionCookieVerifier.verifyJWT() resolves with expected result', () =>  {
       sessionCookieVerifier.verifyJWT.withArgs(sessionCookie).returns(Promise.resolve(decodedSessionCookie));
 
-      tokenGenerator = new FirebaseTokenGenerator(new Certificate(mocks.certificateObject));
+      tokenGenerator = new FirebaseTokenGenerator(new TestCryptoSigner(), 'project_id');
 
       return tokenGenerator.verifySessionCookie(sessionCookie)
         .then((result) => {
@@ -409,7 +379,7 @@ describe('FirebaseTokenGenerator', () => {
         AuthClientErrorCode.INVALID_ARGUMENT, 'Decoding Firebase session cookie failed');
       sessionCookieVerifier.verifyJWT.withArgs(sessionCookie).returns(Promise.reject(expectedError));
 
-      tokenGenerator = new FirebaseTokenGenerator(new Certificate(mocks.certificateObject));
+      tokenGenerator = new FirebaseTokenGenerator(new TestCryptoSigner(), 'project_id');
 
       return tokenGenerator.verifySessionCookie(sessionCookie)
         .should.eventually.be.rejectedWith('Decoding Firebase session cookie failed');
@@ -466,7 +436,7 @@ describe('FirebaseTokenGenerator', () => {
     it('resolves when underlying idTokenVerifier.verifyJWT() resolves with expected result', () =>  {
       idTokenVerifier.verifyJWT.withArgs(idToken).returns(Promise.resolve(decodedIdToken));
 
-      tokenGenerator = new FirebaseTokenGenerator(new Certificate(mocks.certificateObject));
+      tokenGenerator = new FirebaseTokenGenerator(new TestCryptoSigner(), 'project_id');
 
       return tokenGenerator.verifyIdToken(idToken)
         .then((result) => {
@@ -479,7 +449,7 @@ describe('FirebaseTokenGenerator', () => {
         AuthClientErrorCode.INVALID_ARGUMENT, 'Decoding Firebase ID token failed');
       idTokenVerifier.verifyJWT.withArgs(idToken).returns(Promise.reject(expectedError));
 
-      tokenGenerator = new FirebaseTokenGenerator(new Certificate(mocks.certificateObject));
+      tokenGenerator = new FirebaseTokenGenerator(new TestCryptoSigner(), 'project_id');
 
       return tokenGenerator.verifyIdToken(idToken)
         .should.eventually.be.rejectedWith('Decoding Firebase ID token failed');

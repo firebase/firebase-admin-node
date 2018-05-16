@@ -30,7 +30,7 @@ import LegacyFirebaseTokenGenerator = require('firebase-token-generator');
 
 import * as mocks from '../../resources/mocks';
 import {
-  FirebaseTokenGenerator, SESSION_COOKIE_INFO, ID_TOKEN_INFO,
+  FirebaseTokenGenerator, SESSION_COOKIE_INFO, ID_TOKEN_INFO, ServiceAccountSigner,
 } from '../../../src/auth/token-generator';
 import {FirebaseTokenVerifier, FirebaseTokenInfo} from '../../../src/auth/token-verifier';
 
@@ -112,7 +112,8 @@ describe('FirebaseTokenVerifier', () => {
   let httpsSpy: sinon.SinonSpy;
   beforeEach(() => {
     // Needed to generate custom token for testing.
-    tokenGenerator = new FirebaseTokenGenerator(new Certificate(mocks.certificateObject));
+    const cert: Certificate = new Certificate(mocks.certificateObject);
+    tokenGenerator = new FirebaseTokenGenerator(new ServiceAccountSigner(cert));
     tokenVerifier = new FirebaseTokenVerifier(
       'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com',
       'RS256',

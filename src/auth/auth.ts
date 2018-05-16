@@ -17,7 +17,7 @@
 import {UserRecord, CreateRequest, UpdateRequest} from './user-record';
 import {Certificate} from './credential';
 import {FirebaseApp} from '../firebase-app';
-import {FirebaseTokenGenerator} from './token-generator';
+import {FirebaseTokenGenerator, signerFromApp, CryptoSigner} from './token-generator';
 import {FirebaseAuthRequestHandler} from './auth-api-request';
 import {AuthClientErrorCode, FirebaseAuthError, ErrorInfo} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
@@ -25,6 +25,7 @@ import {
   UserImportOptions, UserImportRecord, UserImportResult,
 } from './user-import-builder';
 
+import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 
 
@@ -99,26 +100,7 @@ export class Auth implements FirebaseServiceInterface {
     }
 
     this.app_ = app;
-
-    // TODO (inlined): plumb this into a factory method for tokenGenerator_ once we
-    // can generate custom tokens from access tokens.
-    let serviceAccount;
-    if (typeof app.options.credential.getCertificate === 'function') {
-      serviceAccount = app.options.credential.getCertificate();
-    }
-    if (serviceAccount) {
-      // Cert credentials and Application Default Credentials created from a service account file
-      // provide a certificate we can use to mint custom tokens and verify ID tokens.
-      this.tokenGenerator_ = new FirebaseTokenGenerator(serviceAccount);
-    } else if (validator.isNonEmptyString(process.env.GCLOUD_PROJECT)) {
-      // Google infrastructure like GAE, GCE, and GCF store the GCP / Firebase project ID in an
-      // environment variable that we can use to get verifyIdToken() to work. createCustomToken()
-      // still won't work since it requires a private key and client email which we do not have.
-      const cert: any = {
-        projectId: process.env.GCLOUD_PROJECT,
-      };
-      this.tokenGenerator_ = new FirebaseTokenGenerator(cert);
-    }
+    this.tokenGenerator_ = new FirebaseTokenGenerator(signerFromApp(app), utils.getProjectId(app));
     // Initialize auth request handler with the app.
     this.authRequestHandler = new FirebaseAuthRequestHandler(app);
   }
@@ -164,13 +146,6 @@ export class Auth implements FirebaseServiceInterface {
    *     verification.
    */
   public verifyIdToken(idToken: string, checkRevoked: boolean = false): Promise<object> {
-    if (typeof this.tokenGenerator_ === 'undefined') {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CREDENTIAL,
-        'Must initialize app with a cert credential or set your Firebase project ID as the ' +
-        'GCLOUD_PROJECT environment variable to call auth().verifyIdToken().',
-      );
-    }
     return this.tokenGenerator_.verifyIdToken(idToken)
       .then((decodedIdToken: DecodedIdToken) => {
         // Whether to check if the token was revoked.

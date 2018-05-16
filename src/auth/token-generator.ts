@@ -16,14 +16,14 @@
 
 import {Certificate} from './credential';
 import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
+import { SignedApiRequestHandler } from '../utils/api-request';
 
 import * as validator from '../utils/validator';
 import * as tokenVerify from './token-verifier';
 
-import * as jwt from 'jsonwebtoken';
-
 // Use untyped import syntax for Node built-ins
 import https = require('https');
+import { FirebaseApp } from '../firebase-app';
 
 
 const ALGORITHM_RS256 = 'RS256';
@@ -45,7 +45,7 @@ const SESSION_COOKIE_CERT_URL = 'https://www.googleapis.com/identitytoolkit/v3/r
 // Audience to use for Firebase Auth Custom tokens
 const FIREBASE_AUDIENCE = 'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit';
 
-interface JWTPayload {
+export interface JWTPayload {
   claims?: object;
   uid?: string;
 }
@@ -68,35 +68,164 @@ export const ID_TOKEN_INFO: tokenVerify.FirebaseTokenInfo = {
   expiredErrorCode: 'auth/id-token-expired',
 };
 
+export interface CryptoSigner {
+  sign(payload: JWTPayload, options: JWTOptions): Promise<string>;
+  getAccount(): string;
+}
 
-/**
- * Class for generating and verifying different types of Firebase Auth tokens (JWTs).
- */
-export class FirebaseTokenGenerator {
-  private certificate_: Certificate;
-  private sessionCookieVerifier: tokenVerify.FirebaseTokenVerifier;
-  private idTokenVerifier: tokenVerify.FirebaseTokenVerifier;
+export interface JWTOptions {
+  readonly algorithm: string;
+  readonly audience: string;
+  readonly expiresIn: number;
+  readonly issuer: string;
+  readonly subject: string;
+}
+
+export class ServiceAccountSigner implements CryptoSigner {
+  private readonly certificate_: Certificate;
 
   constructor(certificate: Certificate) {
     if (!certificate) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_CREDENTIAL,
-        'INTERNAL ASSERT: Must provide a certificate to use FirebaseTokenGenerator.',
+        'INTERNAL ASSERT: Must provide a certificate to initialize ServiceAccountSigner.',
       );
     }
     this.certificate_ = certificate;
+  }
+
+  public sign(payload: JWTPayload, options: JWTOptions): Promise<string> {
+    return Promise.resolve().then(() => {
+      const jwt = require('jsonwebtoken');
+      return jwt.sign(payload, this.certificate_.privateKey, options);
+    });
+  }
+
+  public getAccount(): string {
+    return this.certificate_.clientEmail;
+  }
+}
+
+export class IAMSigner implements CryptoSigner {
+  private readonly requestHandler_: SignedApiRequestHandler;
+  private serviceAccount_: string;
+
+  constructor(requestHandler: SignedApiRequestHandler, serviceAccount?: string) {
+    this.requestHandler_ = requestHandler;
+    this.serviceAccount_ = serviceAccount;
+  }
+
+  public sign(payload: JWTPayload, options: JWTOptions): Promise<string> {
+    return this.getServiceAccount().then((serviceAccount) => {
+      const header = {
+        alg: 'RS256',
+        typ: 'JWT',
+      };
+      const body = {
+        uid: payload.uid,
+        claims: payload.claims,
+        iss: options.issuer,
+        aud: options.audience,
+        sub: options.subject,
+        exp: options.expiresIn,
+        iat: Math.floor(Date.now() / 1000),
+      };
+      const token = `${this.encodeSegment(header)}.${this.encodeSegment(body)}`;
+      const request = {bytesToSign: Buffer.from(token).toString('base64')};
+      const promise: Promise<any> = this.requestHandler_.sendRequest(
+        'iam.googleapis.com',
+        443,
+        `v1/projects/-/serviceAccounts/${serviceAccount}:signBlob`,
+        'POST',
+        request);
+      return Promise.all([promise, token]);
+    }).then(([response, token]) => {
+      return `${token}.${response.signature}`;
+    });
+  }
+
+  public getAccount(): string {
+    return this.serviceAccount_;
+  }
+
+  private getServiceAccount(): Promise<string> {
+    if (validator.isNonEmptyString(this.serviceAccount_)) {
+      return Promise.resolve(this.serviceAccount_);
+    }
+    const options = {
+      method: 'GET',
+      host: 'metadata',
+      path: '/computeMetadata/v1/instance/service-accounts/default/email',
+      headers: {
+        'Metadata-Flavor': 'Google',
+      },
+    };
+    const http = require('http');
+    return new Promise((resolve, reject) => {
+      const req = http.request(options, (res) => {
+        const buffers: Buffer[] = [];
+        res.on('data', (buffer) => buffers.push(buffer));
+        res.on('end', () => {
+          try {
+            const serviceAccount = Buffer.concat(buffers).toString();
+            this.serviceAccount_ = serviceAccount;
+            resolve(serviceAccount);
+          } catch (err) {
+            reject(new FirebaseAuthError(
+              AuthClientErrorCode.INVALID_CREDENTIAL,
+              `Failed to determine service account: ${err.toString()}. Make sure to initialize ` +
+              `the SDK with a service account credential. Alternatively specify a service ` +
+              `account with iam.serviceAccounts.signJwt permission.`,
+            ));
+          }
+        });
+      });
+      req.on('error', reject);
+      req.end();
+    });
+  }
+
+  private encodeSegment(segment: object) {
+    return Buffer.from(JSON.stringify(segment)).toString('base64');
+  }
+}
+
+export function signerFromApp(app: FirebaseApp): CryptoSigner {
+  const cert = app.options.credential.getCertificate();
+  if (cert != null && validator.isNonEmptyString(cert.privateKey) && validator.isNonEmptyString(cert.clientEmail)) {
+    return new ServiceAccountSigner(cert);
+  }
+  return new IAMSigner(new SignedApiRequestHandler(app), app.options.serviceAccount);
+}
+
+/**
+ * Class for generating and verifying different types of Firebase Auth tokens (JWTs).
+ */
+export class FirebaseTokenGenerator {
+  private readonly signer_: CryptoSigner;
+  private readonly sessionCookieVerifier: tokenVerify.FirebaseTokenVerifier;
+  private readonly idTokenVerifier: tokenVerify.FirebaseTokenVerifier;
+
+  constructor(signer: CryptoSigner, projectId?: string) {
+    if (!validator.isNonNullObject(signer)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CREDENTIAL,
+        'INTERNAL ASSERT: Must provide a CryptoSigner to use FirebaseTokenGenerator.',
+      );
+    }
+    this.signer_ = signer;
     this.sessionCookieVerifier = new tokenVerify.FirebaseTokenVerifier(
         SESSION_COOKIE_CERT_URL,
         ALGORITHM_RS256,
         'https://session.firebase.google.com/',
-        this.certificate_.projectId,
+        projectId,
         SESSION_COOKIE_INFO,
     );
     this.idTokenVerifier = new tokenVerify.FirebaseTokenVerifier(
         CLIENT_CERT_URL,
         ALGORITHM_RS256,
         'https://securetoken.google.com/',
-        this.certificate_.projectId,
+        projectId,
         ID_TOKEN_INFO,
     );
   }
@@ -124,18 +253,7 @@ export class FirebaseTokenGenerator {
       throw new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, errorMessage);
     }
 
-    if (!validator.isNonEmptyString(this.certificate_.privateKey)) {
-      errorMessage = 'createCustomToken() requires a certificate with "private_key" set.';
-    } else if (!validator.isNonEmptyString(this.certificate_.clientEmail)) {
-      errorMessage = 'createCustomToken() requires a certificate with "client_email" set.';
-    }
-
-    if (typeof errorMessage !== 'undefined') {
-      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_CREDENTIAL, errorMessage);
-    }
-
     const jwtPayload: JWTPayload = {};
-
     if (typeof developerClaims !== 'undefined') {
       const claims = {};
 
@@ -155,16 +273,14 @@ export class FirebaseTokenGenerator {
       jwtPayload.claims = claims;
     }
     jwtPayload.uid = uid;
-
-    const customToken = jwt.sign(jwtPayload, this.certificate_.privateKey, {
+    const options: JWTOptions = {
       audience: FIREBASE_AUDIENCE,
       expiresIn: ONE_HOUR_IN_SECONDS,
-      issuer: this.certificate_.clientEmail,
-      subject: this.certificate_.clientEmail,
+      issuer: this.signer_.getAccount(),
+      subject: this.signer_.getAccount(),
       algorithm: ALGORITHM_RS256,
-    });
-
-    return Promise.resolve(customToken);
+    };
+    return this.signer_.sign(jwtPayload, options);
   }
 
   /**

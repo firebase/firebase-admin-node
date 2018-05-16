@@ -228,7 +228,7 @@ describe('Auth', () => {
 
       expect(() => {
         mockCredentialAuth.createCustomToken(mocks.uid, mocks.developerClaims);
-      }).to.throw('Must initialize app with a cert credential');
+      }).not.to.throw;
     });
 
     it('should forward on the call to the token generator\'s createCustomToken() method', () => {
@@ -259,6 +259,22 @@ describe('Auth', () => {
     });
   });
 
+  describe('No project ID', () => {
+    it('verifyIdToken() should throw', () => {
+      const mockCredentialAuth = new Auth(mocks.mockCredentialApp());
+      expect(() => {
+        mockCredentialAuth.verifyIdToken(mocks.generateIdToken());
+      }).to.throw('verifyIdToken() requires a certificate with "project_id" set.');
+    });
+
+    it('verifySessionCookie() should throw', () => {
+      const mockCredentialAuth = new Auth(mocks.mockCredentialApp());
+      expect(() => {
+        mockCredentialAuth.verifySessionCookie(mocks.generateSessionCookie());
+      }).to.throw('verifySessionCookie() requires a certificate with "project_id" set.');
+    });
+  });
+
   describe('verifyIdToken()', () => {
     let stub: sinon.SinonStub;
     let mockIdToken: string;
@@ -283,14 +299,6 @@ describe('Auth', () => {
     afterEach(() => {
       _.forEach(stubs, (s) => s.restore());
       clock.restore();
-    });
-
-    it('should throw if a cert credential is not specified', () => {
-      const mockCredentialAuth = new Auth(mocks.mockCredentialApp());
-
-      expect(() => {
-        mockCredentialAuth.verifyIdToken(mockIdToken);
-      }).to.throw('Must initialize app with a cert credential');
     });
 
     it('should forward on the call to the token generator\'s verifyIdToken() method', () => {
@@ -472,14 +480,6 @@ describe('Auth', () => {
     afterEach(() => {
       _.forEach(stubs, (s) => s.restore());
       clock.restore();
-    });
-
-    it('should throw if a cert credential is not specified', () => {
-      const mockCredentialAuth = new Auth(mocks.mockCredentialApp());
-
-      expect(() => {
-        mockCredentialAuth.verifySessionCookie(mockSessionCookie);
-      }).to.throw('Must initialize app with a cert credential');
     });
 
     it('should forward on the call to the token generator\'s verifySessionCookie() method', () => {
