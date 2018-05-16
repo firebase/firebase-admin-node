@@ -20,7 +20,8 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
 import * as scrypt from 'scrypt';
-import firebase = require('firebase');
+import firebase from '@firebase/app';
+import '@firebase/auth';
 import {clone} from 'lodash';
 import {generateRandomString, projectId, apiKey} from './setup';
 
@@ -170,7 +171,7 @@ describe('admin.auth', () => {
     let currentUser: any = null;
     // Sign in with an email and password account.
     return firebase.auth().signInWithEmailAndPassword(mockUserData.email, mockUserData.password)
-      .then((user) => {
+      .then(({user}) => {
         currentUser = user;
         // Get user's ID token.
         return user.getIdToken();
@@ -206,7 +207,7 @@ describe('admin.auth', () => {
         return firebase.auth().signInWithEmailAndPassword(
             mockUserData.email, mockUserData.password);
       })
-      .then((user) => {
+      .then(({user}) => {
         // Get new session's ID token.
         return user.getIdToken();
       })
@@ -229,7 +230,7 @@ describe('admin.auth', () => {
         return firebase.auth().signInWithEmailAndPassword(
           userRecord.email, mockUserData.password);
       })
-      .then((user) => {
+      .then(({user}) => {
          // Get the user's ID token.
          return user.getIdToken();
       })
@@ -298,7 +299,7 @@ describe('admin.auth', () => {
       .then((customToken) => {
         return firebase.auth().signInWithCustomToken(customToken);
       })
-      .then((user) => {
+      .then(({user}) => {
         return user.getIdToken();
       })
       .then((idToken) => {
@@ -333,7 +334,7 @@ describe('admin.auth', () => {
     it('creates a valid Firebase session cookie', () => {
       return admin.auth().createCustomToken(uid, {admin: true, groupId: '1234'})
         .then((customToken) => firebase.auth().signInWithCustomToken(customToken))
-        .then((user) => user.getIdToken())
+        .then(({user}) => user.getIdToken())
         .then((idToken) => {
           currentIdToken = idToken;
           return admin.auth().verifyIdToken(idToken);
@@ -366,7 +367,7 @@ describe('admin.auth', () => {
       let currentSessionCookie: string;
       return admin.auth().createCustomToken(uid)
         .then((customToken) => firebase.auth().signInWithCustomToken(customToken))
-        .then((user) => user.getIdToken())
+        .then(({user}) => user.getIdToken())
         .then((idToken) => {
           // One day long session cookie.
           return admin.auth().createSessionCookie(idToken, {expiresIn});
@@ -390,7 +391,7 @@ describe('admin.auth', () => {
     it('fails when called with a revoked ID token', () => {
       return admin.auth().createCustomToken(uid, {admin: true, groupId: '1234'})
         .then((customToken) => firebase.auth().signInWithCustomToken(customToken))
-        .then((user) => user.getIdToken())
+        .then(({user}) => user.getIdToken())
         .then((idToken) => {
           currentIdToken = idToken;
           return new Promise((resolve) => setTimeout(() => resolve(
@@ -415,7 +416,7 @@ describe('admin.auth', () => {
     it('fails when called with a Firebase ID token', () => {
       return admin.auth().createCustomToken(uid)
         .then((customToken) => firebase.auth().signInWithCustomToken(customToken))
-        .then((user) => user.getIdToken())
+        .then(({user}) => user.getIdToken())
         .then((idToken) => {
           return admin.auth().verifySessionCookie(idToken)
             .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
@@ -685,7 +686,7 @@ function testImportAndSignInUser(
       // Sign in with an email and password to the imported account.
       return firebase.auth().signInWithEmailAndPassword(users[0].email, rawPassword);
     })
-    .then((user) => {
+    .then(({user}) => {
       // Confirm successful sign-in.
       expect(user.email).to.equal(users[0].email);
       expect(user.providerData[0].providerId).to.equal('password');
