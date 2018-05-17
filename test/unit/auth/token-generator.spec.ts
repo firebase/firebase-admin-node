@@ -22,12 +22,16 @@ import * as chai from 'chai';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
+import * as nock from 'nock';
 
 import * as mocks from '../../resources/mocks';
 import {FirebaseTokenGenerator, ServiceAccountSigner, IAMSigner} from '../../../src/auth/token-generator';
 import {FirebaseAuthError, AuthClientErrorCode} from '../../../src/utils/error';
 
 import {Certificate} from '../../../src/auth/credential';
+import { SignedApiRequestHandler, HttpRequestHandler } from '../../../src/utils/api-request';
+import { FirebaseApp } from '../../../src/firebase-app';
+import * as utils from '../utils';
 
 chai.should();
 chai.use(sinonChai);
@@ -102,11 +106,129 @@ describe('CryptoSigner', () => {
   });
 
   describe('IAMSigner', () => {
+    let mockApp: FirebaseApp;
+    const mockAccessToken: string = utils.generateRandomAccessToken();
+
+    before(() => {
+      utils.mockFetchAccessTokenRequests(mockAccessToken);
+      nock('http://metadata')
+        .persist()
+        .get('/computeMetadata/v1/instance/service-accounts/default/email')
+        .reply(200, 'discovered-service-account');
+    });
+
+    after(() => nock.cleanAll());
+
+    beforeEach(() => {
+      mockApp = mocks.app();
+    });
+
+    afterEach(() => {
+      return mockApp.delete();
+    });
+
     it('should throw given no arguments', () => {
       expect(() => {
         const anyIAMSigner: any = IAMSigner;
         return new anyIAMSigner();
       }).to.throw('Must provide a request handler to initialize IAMSigner');
+    });
+
+    describe('explicit service account', () => {
+      const response = {signature: Buffer.from('testsignature').toString('base64')};
+      let stub: sinon.SinonStub;
+
+      afterEach(() => {
+        stub.restore();
+      });
+
+      it('should sign using the IAM service', () => {
+        stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+          .returns(Promise.resolve(response));
+        const requestHandler = new SignedApiRequestHandler(mockApp);
+        const signer = new IAMSigner(requestHandler, 'test-service-account');
+        const input = Buffer.from('base64');
+        return signer.sign(input).then((signature) => {
+          expect(signature.toString('base64')).to.equal(response.signature);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+            'iam.googleapis.com', 443,
+            '/v1/projects/-/serviceAccounts/test-service-account:signBlob',
+            'POST', {bytesToSign: input.toString('base64')},
+            {Authorization: `Bearer ${mockAccessToken}`}, undefined);
+        });
+      });
+
+      it('should fail if the IAM service responds with an error', () => {
+        stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+          .throws({
+            statusCode: 500,
+            error: {error: {status: 'PROJECT_NOT_FOUND', message: 'test reason'}},
+          });
+        const requestHandler = new SignedApiRequestHandler(mockApp);
+        const signer = new IAMSigner(requestHandler, 'test-service-account');
+        const input = Buffer.from('base64');
+        return signer.sign(input).catch((err) => {
+          expect(err.message).to.equal('test reason');
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+            'iam.googleapis.com', 443,
+            '/v1/projects/-/serviceAccounts/test-service-account:signBlob',
+            'POST', {bytesToSign: input.toString('base64')},
+            {Authorization: `Bearer ${mockAccessToken}`}, undefined);
+        });
+      });
+
+      it('should return the explicitly specified service account', () => {
+        const signer = new IAMSigner(new SignedApiRequestHandler(mockApp), 'test-service-account');
+        return signer.getAccount().should.eventually.equal('test-service-account');
+      });
+    });
+
+    describe('auto discovered service account', () => {
+      const input = Buffer.from('base64');
+      const response = {signature: Buffer.from('testsignature').toString('base64')};
+      let stub: sinon.SinonStub;
+
+      afterEach(() => {
+        stub.restore();
+      });
+
+      it('should sign using the IAM service', () => {
+        stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+          .returns(Promise.resolve(response));
+        const requestHandler = new SignedApiRequestHandler(mockApp);
+        const signer = new IAMSigner(requestHandler);
+        return signer.sign(input).then((signature) => {
+          expect(signature.toString('base64')).to.equal(response.signature);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+            'iam.googleapis.com', 443,
+            '/v1/projects/-/serviceAccounts/discovered-service-account:signBlob',
+            'POST', {bytesToSign: input.toString('base64')},
+            {Authorization: `Bearer ${mockAccessToken}`}, undefined);
+        });
+      });
+
+      it('should fail if the IAM service responds with an error', () => {
+        stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
+          .throws({
+            statusCode: 500,
+            error: {error: {status: 'PROJECT_NOT_FOUND', message: 'test reason'}},
+          });
+        const requestHandler = new SignedApiRequestHandler(mockApp);
+        const signer = new IAMSigner(requestHandler);
+        return signer.sign(input).catch((err) => {
+          expect(err.message).to.equal('test reason');
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+            'iam.googleapis.com', 443,
+            '/v1/projects/-/serviceAccounts/discovered-service-account:signBlob',
+            'POST', {bytesToSign: input.toString('base64')},
+            {Authorization: `Bearer ${mockAccessToken}`}, undefined);
+        });
+      });
+
+      it('should return the discovered service account', () => {
+        const signer = new IAMSigner(new SignedApiRequestHandler(mockApp));
+        return signer.getAccount().should.eventually.equal('discovered-service-account');
+      });
     });
   });
 });
