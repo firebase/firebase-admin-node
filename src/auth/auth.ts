@@ -27,6 +27,7 @@ import {
 
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
+import { FirebaseTokenVerifier, newSessionCookieVerifier, newIdTokenVerifier } from './token-verifier';
 
 
 /**
@@ -85,6 +86,8 @@ export class Auth implements FirebaseServiceInterface {
 
   private app_: FirebaseApp;
   private tokenGenerator_: FirebaseTokenGenerator;
+  private idTokenVerifier_: FirebaseTokenVerifier;
+  private sessionCookieVerifier_: FirebaseTokenVerifier;
   private authRequestHandler: FirebaseAuthRequestHandler;
 
   /**
@@ -100,7 +103,10 @@ export class Auth implements FirebaseServiceInterface {
     }
 
     this.app_ = app;
-    this.tokenGenerator_ = new FirebaseTokenGenerator(signerFromApp(app), utils.getProjectId(app));
+    this.tokenGenerator_ = new FirebaseTokenGenerator(signerFromApp(app));
+    const projectId = utils.getProjectId(app);
+    this.sessionCookieVerifier_ = newSessionCookieVerifier(projectId);
+    this.idTokenVerifier_ = newIdTokenVerifier(projectId);
     // Initialize auth request handler with the app.
     this.authRequestHandler = new FirebaseAuthRequestHandler(app);
   }
@@ -146,7 +152,7 @@ export class Auth implements FirebaseServiceInterface {
    *     verification.
    */
   public verifyIdToken(idToken: string, checkRevoked: boolean = false): Promise<object> {
-    return this.tokenGenerator_.verifyIdToken(idToken)
+    return this.idTokenVerifier_.verifyJWT(idToken)
       .then((decodedIdToken: DecodedIdToken) => {
         // Whether to check if the token was revoked.
         if (!checkRevoked) {
@@ -382,7 +388,7 @@ export class Auth implements FirebaseServiceInterface {
         'GCLOUD_PROJECT environment variable to call auth().verifySessionCookie().',
       );
     }
-    return this.tokenGenerator_.verifySessionCookie(sessionCookie)
+    return this.sessionCookieVerifier_.verifyJWT(sessionCookie)
       .then((decodedIdToken: DecodedIdToken) => {
         // Whether to check if the token was revoked.
         if (!checkRevoked) {

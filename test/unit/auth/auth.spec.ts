@@ -34,6 +34,7 @@ import {FirebaseAuthRequestHandler} from '../../../src/auth/auth-api-request';
 import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/utils/error';
 
 import * as validator from '../../../src/utils/validator';
+import { FirebaseTokenVerifier } from '../../../src/auth/token-verifier';
 
 chai.should();
 chai.use(sinonChai);
@@ -290,7 +291,7 @@ describe('Auth', () => {
     // Stubs used to simulate underlying api calls.
     const stubs: sinon.SinonStub[] = [];
     beforeEach(() => {
-      stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifyIdToken')
+      stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
         .returns(Promise.resolve(decodedIdToken));
       stubs.push(stub);
       mockIdToken = mocks.generateIdToken();
@@ -360,7 +361,7 @@ describe('Auth', () => {
       // Restore verifyIdToken stub.
       stub.restore();
       // Simulate revoked ID token returned with auth_time one second before validSince.
-      stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifyIdToken')
+      stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
         .returns(Promise.resolve(getDecodedIdToken(uid, oneSecBeforeValidSince)));
       stubs.push(stub);
       const getUserStub = sinon.stub(Auth.prototype, 'getUser')
@@ -386,7 +387,7 @@ describe('Auth', () => {
       // Restore verifyIdToken stub.
       stub.restore();
       // Simulate revoked ID token returned with auth_time one second before validSince.
-      stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifyIdToken')
+      stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
         .returns(Promise.resolve(oneSecBeforeValidSinceDecodedIdToken));
       stubs.push(stub);
       // Verify ID token without checking if revoked.
@@ -441,7 +442,7 @@ describe('Auth', () => {
       // Restore verifyIdToken stub.
       stub.restore();
       // Simulate ID token is invalid.
-      stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifyIdToken')
+      stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
         .returns(Promise.reject(expectedError));
       stubs.push(stub);
       // Verify ID token while checking if revoked.
@@ -471,7 +472,7 @@ describe('Auth', () => {
     // Stubs used to simulate underlying api calls.
     const stubs: sinon.SinonStub[] = [];
     beforeEach(() => {
-      stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifySessionCookie')
+      stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
         .returns(Promise.resolve(decodedSessionCookie));
       stubs.push(stub);
       mockSessionCookie = mocks.generateSessionCookie();
@@ -541,7 +542,7 @@ describe('Auth', () => {
       // Restore verifySessionCookie stub.
       stub.restore();
       // Simulate revoked session cookie returned with auth_time one second before validSince.
-      stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifySessionCookie')
+      stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
         .returns(Promise.resolve(getDecodedSessionCookie(uid, oneSecBeforeValidSince)));
       stubs.push(stub);
       const getUserStub = sinon.stub(Auth.prototype, 'getUser')
@@ -567,7 +568,7 @@ describe('Auth', () => {
       // Restore verifySessionCookie stub.
       stub.restore();
       // Simulate revoked session cookie returned with auth_time one second before validSince.
-      stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifySessionCookie')
+      stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
         .returns(Promise.resolve(oneSecBeforeValidSinceDecodedSessionCookie));
       stubs.push(stub);
       // Verify session cookie without checking if revoked.
@@ -622,7 +623,7 @@ describe('Auth', () => {
       // Restore verifySessionCookie stub.
       stub.restore();
       // Simulate session cookie is invalid.
-      stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifySessionCookie')
+      stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
         .returns(Promise.reject(expectedError));
       stubs.push(stub);
       // Verify session cookie while checking if revoked.

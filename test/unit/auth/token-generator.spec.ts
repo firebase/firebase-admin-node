@@ -25,8 +25,8 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import * as mocks from '../../resources/mocks';
 import {
-  FirebaseTokenGenerator, SESSION_COOKIE_INFO, ID_TOKEN_INFO,
-  CryptoSigner, JWTPayload, JWTOptions, ServiceAccountSigner,
+  FirebaseTokenGenerator, CryptoSigner, JWTPayload,
+  JWTOptions, ServiceAccountSigner,
 } from '../../../src/auth/token-generator';
 import * as verifier from '../../../src/auth/token-verifier';
 import {FirebaseAuthError, AuthClientErrorCode} from '../../../src/utils/error';
@@ -122,7 +122,7 @@ describe('FirebaseTokenGenerator', () => {
     invalidSigners.forEach((invalidSigner) => {
       it('should throw given invalid signer: ' + JSON.stringify(invalidSigner), () => {
         expect(() => {
-          return new FirebaseTokenGenerator(invalidSigner as any, 'project-id');
+          return new FirebaseTokenGenerator(invalidSigner as any);
         }).to.throw('Must provide a CryptoSigner to use FirebaseTokenGenerator');
       });
     });
@@ -131,7 +131,7 @@ describe('FirebaseTokenGenerator', () => {
     emptyProjectIds.forEach((projectId) => {
       it(`should not throw given empty project ID: ${JSON.stringify(projectId)}`, () => {
         expect(() => {
-          new FirebaseTokenGenerator(new TestCryptoSigner(), projectId);
+          new FirebaseTokenGenerator(new TestCryptoSigner());
         }).not.to.throw;
       });
     });
@@ -313,146 +313,6 @@ describe('FirebaseTokenGenerator', () => {
         .then(() => {
           expect(originalClaims).to.deep.equal(clonedClaims);
         });
-    });
-  });
-
-  describe('verifySessionCookie()', () => {
-    const sessionCookie = mocks.generateSessionCookie();
-    const decodedSessionCookie = jwt.decode(sessionCookie);
-    let stubs: sinon.SinonStub[] = [];
-    let tokenVerifierConstructorStub: sinon.SinonStub;
-    let sessionCookieVerifier: any;
-    let idTokenVerifier: any;
-
-    beforeEach(() => {
-      // Create stub instances to be used for session cookie verifier and id token verifier.
-      sessionCookieVerifier = sinon.createStubInstance(verifier.FirebaseTokenVerifier);
-      idTokenVerifier = sinon.createStubInstance(verifier.FirebaseTokenVerifier);
-      // Stub FirebaseTokenVerifier constructor to return stub instance above depending on
-      // issuer.
-      tokenVerifierConstructorStub = sinon.stub(verifier, 'FirebaseTokenVerifier')
-        .callsFake((certUrl, algorithm, issuer, projectId, tokenInfo) => {
-          // Return mock token verifier.
-          if (issuer === 'https://session.firebase.google.com/') {
-            return sessionCookieVerifier;
-          } else {
-            return idTokenVerifier;
-          }
-        });
-      stubs.push(tokenVerifierConstructorStub);
-    });
-
-    after(() => {
-      stubs = [];
-    });
-
-    afterEach(() => {
-      // Confirm token verifiers initialized with expected arguments.
-      expect(tokenVerifierConstructorStub).to.have.been.calledTwice.and.calledWith(
-          'https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys',
-          ALGORITHM,
-          'https://session.firebase.google.com/',
-          'project_id',
-          SESSION_COOKIE_INFO);
-      expect(tokenVerifierConstructorStub).to.have.been.calledTwice.and.calledWith(
-          'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com',
-          ALGORITHM,
-          'https://securetoken.google.com/',
-          'project_id',
-          ID_TOKEN_INFO);
-      _.forEach(stubs, (stub) => stub.restore());
-    });
-
-    it('resolves when underlying sessionCookieVerifier.verifyJWT() resolves with expected result', () =>  {
-      sessionCookieVerifier.verifyJWT.withArgs(sessionCookie).returns(Promise.resolve(decodedSessionCookie));
-
-      tokenGenerator = new FirebaseTokenGenerator(new TestCryptoSigner(), 'project_id');
-
-      return tokenGenerator.verifySessionCookie(sessionCookie)
-        .then((result) => {
-          expect(result).to.deep.equal(decodedSessionCookie);
-        });
-    });
-
-    it('rejects when underlying sessionCookieVerifier.verifyJWT() rejects with expected error', () =>  {
-      const expectedError = new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_ARGUMENT, 'Decoding Firebase session cookie failed');
-      sessionCookieVerifier.verifyJWT.withArgs(sessionCookie).returns(Promise.reject(expectedError));
-
-      tokenGenerator = new FirebaseTokenGenerator(new TestCryptoSigner(), 'project_id');
-
-      return tokenGenerator.verifySessionCookie(sessionCookie)
-        .should.eventually.be.rejectedWith('Decoding Firebase session cookie failed');
-    });
-  });
-
-  describe('verifyIdToken()', () => {
-    const idToken = mocks.generateIdToken();
-    const decodedIdToken = jwt.decode(idToken);
-    let stubs: sinon.SinonStub[] = [];
-    let tokenVerifierConstructorStub: sinon.SinonStub;
-    let sessionCookieVerifier: any;
-    let idTokenVerifier: any;
-
-    beforeEach(() => {
-      // Create stub instances to be used for session cookie verifier and id token verifier.
-      sessionCookieVerifier = sinon.createStubInstance(verifier.FirebaseTokenVerifier);
-      idTokenVerifier = sinon.createStubInstance(verifier.FirebaseTokenVerifier);
-      // Stub FirebaseTokenVerifier constructor to return stub instance above depending on
-      // issuer.
-      tokenVerifierConstructorStub = sinon.stub(verifier, 'FirebaseTokenVerifier')
-        .callsFake((certUrl, algorithm, issuer, projectId, tokenInfo) => {
-          // Return mock token verifier.
-          if (issuer === 'https://session.firebase.google.com/') {
-            return sessionCookieVerifier;
-          } else {
-            return idTokenVerifier;
-          }
-        });
-      stubs.push(tokenVerifierConstructorStub);
-    });
-
-    after(() => {
-      stubs = [];
-    });
-
-    afterEach(() => {
-      // Confirm token verifiers initialized with expected arguments.
-      expect(tokenVerifierConstructorStub).to.have.been.calledTwice.and.calledWith(
-          'https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys',
-          ALGORITHM,
-          'https://session.firebase.google.com/',
-          'project_id',
-          SESSION_COOKIE_INFO);
-      expect(tokenVerifierConstructorStub).to.have.been.calledTwice.and.calledWith(
-          'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com',
-          ALGORITHM,
-          'https://securetoken.google.com/',
-          'project_id',
-          ID_TOKEN_INFO);
-      _.forEach(stubs, (stub) => stub.restore());
-    });
-
-    it('resolves when underlying idTokenVerifier.verifyJWT() resolves with expected result', () =>  {
-      idTokenVerifier.verifyJWT.withArgs(idToken).returns(Promise.resolve(decodedIdToken));
-
-      tokenGenerator = new FirebaseTokenGenerator(new TestCryptoSigner(), 'project_id');
-
-      return tokenGenerator.verifyIdToken(idToken)
-        .then((result) => {
-          expect(result).to.deep.equal(decodedIdToken);
-        });
-    });
-
-    it('rejects when underlying idTokenVerifier.verifyJWT() rejects with expected error', () =>  {
-      const expectedError = new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_ARGUMENT, 'Decoding Firebase ID token failed');
-      idTokenVerifier.verifyJWT.withArgs(idToken).returns(Promise.reject(expectedError));
-
-      tokenGenerator = new FirebaseTokenGenerator(new TestCryptoSigner(), 'project_id');
-
-      return tokenGenerator.verifyIdToken(idToken)
-        .should.eventually.be.rejectedWith('Decoding Firebase ID token failed');
     });
   });
 });

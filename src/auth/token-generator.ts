@@ -14,16 +14,12 @@
  * limitations under the License.
  */
 
+import { FirebaseApp } from '../firebase-app';
 import {Certificate} from './credential';
 import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
 import { SignedApiRequestHandler } from '../utils/api-request';
 
 import * as validator from '../utils/validator';
-import * as tokenVerify from './token-verifier';
-
-// Use untyped import syntax for Node built-ins
-import https = require('https');
-import { FirebaseApp } from '../firebase-app';
 
 
 const ALGORITHM_RS256 = 'RS256';
@@ -35,13 +31,6 @@ const BLACKLISTED_CLAIMS = [
   'nbf', 'nonce',
 ];
 
-// URL containing the public keys for the Google certs (whose private keys are used to sign Firebase
-// Auth ID tokens)
-const CLIENT_CERT_URL = 'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com';
-
-// URL containing the public keys for Firebase session cookies. This will be updated to a different URL soon.
-const SESSION_COOKIE_CERT_URL = 'https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys';
-
 // Audience to use for Firebase Auth Custom tokens
 const FIREBASE_AUDIENCE = 'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit';
 
@@ -49,24 +38,6 @@ export interface JWTPayload {
   claims?: object;
   uid?: string;
 }
-
-/** User facing token information related to the Firebase session cookie. */
-export const SESSION_COOKIE_INFO: tokenVerify.FirebaseTokenInfo = {
-  url: 'https://firebase.google.com/docs/auth/admin/manage-cookies',
-  verifyApiName: 'verifySessionCookie()',
-  jwtName: 'Firebase session cookie',
-  shortName: 'session cookie',
-  expiredErrorCode: 'auth/session-cookie-expired',
-};
-
-/** User facing token information related to the Firebase ID token. */
-export const ID_TOKEN_INFO: tokenVerify.FirebaseTokenInfo = {
-  url: 'https://firebase.google.com/docs/auth/admin/verify-id-tokens',
-  verifyApiName: 'verifyIdToken()',
-  jwtName: 'Firebase ID token',
-  shortName: 'ID token',
-  expiredErrorCode: 'auth/id-token-expired',
-};
 
 export interface CryptoSigner {
   sign(payload: JWTPayload, options: JWTOptions): Promise<string>;
@@ -202,11 +173,10 @@ export function signerFromApp(app: FirebaseApp): CryptoSigner {
  * Class for generating and verifying different types of Firebase Auth tokens (JWTs).
  */
 export class FirebaseTokenGenerator {
-  private readonly signer_: CryptoSigner;
-  private readonly sessionCookieVerifier: tokenVerify.FirebaseTokenVerifier;
-  private readonly idTokenVerifier: tokenVerify.FirebaseTokenVerifier;
 
-  constructor(signer: CryptoSigner, projectId?: string) {
+  private readonly signer_: CryptoSigner;
+
+  constructor(signer: CryptoSigner) {
     if (!validator.isNonNullObject(signer)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_CREDENTIAL,
@@ -214,20 +184,6 @@ export class FirebaseTokenGenerator {
       );
     }
     this.signer_ = signer;
-    this.sessionCookieVerifier = new tokenVerify.FirebaseTokenVerifier(
-        SESSION_COOKIE_CERT_URL,
-        ALGORITHM_RS256,
-        'https://session.firebase.google.com/',
-        projectId,
-        SESSION_COOKIE_INFO,
-    );
-    this.idTokenVerifier = new tokenVerify.FirebaseTokenVerifier(
-        CLIENT_CERT_URL,
-        ALGORITHM_RS256,
-        'https://securetoken.google.com/',
-        projectId,
-        ID_TOKEN_INFO,
-    );
   }
 
   /**
@@ -281,28 +237,6 @@ export class FirebaseTokenGenerator {
       algorithm: ALGORITHM_RS256,
     };
     return this.signer_.sign(jwtPayload, options);
-  }
-
-  /**
-   * Verifies the format and signature of a Firebase Auth ID token.
-   *
-   * @param {string} idToken The Firebase Auth ID token to verify.
-   * @return {Promise<object>} A promise fulfilled with the decoded claims of the Firebase Auth ID
-   *                           token.
-   */
-  public verifyIdToken(idToken: string): Promise<object> {
-    return this.idTokenVerifier.verifyJWT(idToken);
-  }
-
-  /**
-   * Verifies the format and signature of a Firebase session cookie JWT.
-   *
-   * @param {string} sessionCookie The Firebase session cookie to verify.
-   * @return {Promise<object>} A promise fulfilled with the decoded claims of the Firebase session
-   *                           cookie.
-   */
-  public verifySessionCookie(sessionCookie: string): Promise<object> {
-    return this.sessionCookieVerifier.verifyJWT(sessionCookie);
   }
 
   /**
