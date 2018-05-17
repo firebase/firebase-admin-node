@@ -24,7 +24,7 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import * as mocks from '../../resources/mocks';
-import {FirebaseTokenGenerator, ServiceAccountSigner, JWTPayload, JWTOptions} from '../../../src/auth/token-generator';
+import {FirebaseTokenGenerator, ServiceAccountSigner, IAMSigner} from '../../../src/auth/token-generator';
 import {FirebaseAuthError, AuthClientErrorCode} from '../../../src/utils/error';
 
 import {Certificate} from '../../../src/auth/credential';
@@ -68,19 +68,9 @@ describe('CryptoSigner', () => {
   describe('ServiceAccountSigner', () => {
     it('should throw given no arguments', () => {
       expect(() => {
-        // Need to overcome the type system to allow a call with no parameter
         const anyServiceAccountSigner: any = ServiceAccountSigner;
         return new anyServiceAccountSigner();
       }).to.throw('Must provide a certificate to initialize ServiceAccountSigner');
-    });
-
-    const invalidCredentials = [null, NaN, 0, 1, true, false, '', 'a', [], {}, { a: 1 }, _.noop];
-    invalidCredentials.forEach((invalidCredential) => {
-      it('should throw given invalid Credential: ' + JSON.stringify(invalidCredential), () => {
-        expect(() => {
-          return new ServiceAccountSigner(new Certificate(invalidCredential as any));
-        }).to.throw(Error);
-      });
     });
 
     it('should not throw given a valid certificate', () => {
@@ -90,23 +80,18 @@ describe('CryptoSigner', () => {
     });
 
     it('should sign using the private_key in the certificate', () => {
-      const payload: JWTPayload = {
-        uid: 'test-user',
-        claims: {
-          admin: true,
-        },
-      };
-      const options: JWTOptions = {
-        algorithm: ALGORITHM,
-        audience: 'test-audience',
-        expiresIn: ONE_HOUR_IN_SECONDS,
-        issuer: 'test-issuer',
-        subject: 'test-subject',
-      };
+      const payload = Buffer.from('test');
       const cert = new Certificate(mocks.certificateObject);
+
+      const crypto = require('crypto');
+      const rsa = crypto.createSign('RSA-SHA256');
+      rsa.update(payload);
+      const result = rsa.sign(cert.privateKey, 'base64');
+
       const signer = new ServiceAccountSigner(cert);
-      const signedJwt: string = jwt.sign(payload, cert.privateKey, options);
-      return signer.sign(payload, options).should.eventually.equal(signedJwt);
+      return signer.sign(payload).then((signature) => {
+        expect(signature.toString('base64')).to.equal(result);
+      });
     });
 
     it('should return the client_email from the certificate', () => {
@@ -115,8 +100,16 @@ describe('CryptoSigner', () => {
       return signer.getAccount().should.eventually.equal(cert.clientEmail);
     });
   });
-});
 
+  describe('IAMSigner', () => {
+    it('should throw given no arguments', () => {
+      expect(() => {
+        const anyIAMSigner: any = IAMSigner;
+        return new anyIAMSigner();
+      }).to.throw('Must provide a request handler to initialize IAMSigner');
+    });
+  });
+});
 
 describe('FirebaseTokenGenerator', () => {
   let tokenGenerator: FirebaseTokenGenerator;
@@ -275,9 +268,7 @@ describe('FirebaseTokenGenerator', () => {
           const decoded: any = jwt.decode(token, {
             complete: true,
           });
-
           expect(decoded.header).to.deep.equal({
-            typ: 'JWT',
             alg: ALGORITHM,
           });
         });

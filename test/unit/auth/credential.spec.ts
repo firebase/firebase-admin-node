@@ -171,6 +171,15 @@ describe('Credential', () => {
           return new Certificate(invalidCertificate as any);
         }).to.throw('Certificate object must contain a string "client_email" property');
       });
+
+      const invalidCredentials = [null, NaN, 0, 1, true, false, '', 'a', [], {}, { a: 1 }, _.noop];
+      invalidCredentials.forEach((invalidCredential) => {
+        it('should throw given invalid Credential: ' + JSON.stringify(invalidCredential), () => {
+          expect(() => {
+            return new Certificate(invalidCredential as any);
+          }).to.throw(Error);
+        });
+      });
     });
 
     describe('constructor', () => {

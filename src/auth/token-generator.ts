@@ -36,22 +36,23 @@ const BLACKLISTED_CLAIMS = [
 // Audience to use for Firebase Auth Custom tokens
 const FIREBASE_AUDIENCE = 'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit';
 
-export interface JWTPayload {
-  claims?: object;
-  uid?: string;
-}
-
 export interface CryptoSigner {
-  sign(payload: JWTPayload, options: JWTOptions): Promise<string>;
+  sign(buffer: Buffer): Promise<Buffer>;
   getAccount(): Promise<string>;
 }
 
-export interface JWTOptions {
-  readonly algorithm: string;
-  readonly audience: string;
-  readonly expiresIn: number;
-  readonly issuer: string;
-  readonly subject: string;
+interface JWTHeader {
+  alg: string;
+}
+
+interface JWTBody {
+  claims?: object;
+  uid: string;
+  aud: string;
+  iat: number;
+  exp: number;
+  iss: string;
+  sub: string;
 }
 
 export class ServiceAccountSigner implements CryptoSigner {
@@ -67,11 +68,11 @@ export class ServiceAccountSigner implements CryptoSigner {
     this.certificate_ = certificate;
   }
 
-  public sign(payload: JWTPayload, options: JWTOptions): Promise<string> {
-    return Promise.resolve().then(() => {
-      const jwt = require('jsonwebtoken');
-      return jwt.sign(payload, this.certificate_.privateKey, options);
-    });
+  public sign(buffer: Buffer): Promise<Buffer> {
+    const crypto = require('crypto');
+    const sign = crypto.createSign('RSA-SHA256');
+    sign.update(buffer);
+    return Promise.resolve(sign.sign(this.certificate_.privateKey));
   }
 
   public getAccount(): Promise<string> {
@@ -84,37 +85,28 @@ export class IAMSigner implements CryptoSigner {
   private serviceAccount_: string;
 
   constructor(requestHandler: SignedApiRequestHandler, serviceAccount?: string) {
+    if (!requestHandler) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CREDENTIAL,
+        'INTERNAL ASSERT: Must provide a request handler to initialize IAMSigner.',
+      );
+    }
     this.requestHandler_ = requestHandler;
     this.serviceAccount_ = serviceAccount;
   }
 
-  public sign(payload: JWTPayload, options: JWTOptions): Promise<string> {
+  public sign(buffer: Buffer): Promise<Buffer> {
     return this.getAccount().then((serviceAccount) => {
-      const header = {
-        alg: 'RS256',
-        typ: 'JWT',
-      };
-      const iat = Math.floor(Date.now() / 1000);
-      const body = {
-        uid: payload.uid,
-        claims: payload.claims,
-        iss: options.issuer,
-        aud: options.audience,
-        sub: options.subject,
-        exp: iat + options.expiresIn,
-        iat,
-      };
-      const token = `${this.encodeSegment(header)}.${this.encodeSegment(body)}`;
-      const request = {bytesToSign: Buffer.from(token).toString('base64')};
-      const promise: Promise<any> = this.requestHandler_.sendRequest(
+      const request = {bytesToSign: buffer.toString('base64')};
+      return this.requestHandler_.sendRequest(
         'iam.googleapis.com',
         443,
         `/v1/projects/-/serviceAccounts/${serviceAccount}:signBlob`,
         'POST',
         request);
-      return Promise.all([promise, token]);
-    }).then(([response, token]) => {
-      return `${token}.${response.signature.replace(/\=+$/, '')}`;
+    }).then((response: any) => {
+      // Response from IAM is base64 encoded. Decode it into a buffer and return.
+      return new Buffer(response.signature, 'base64');
     }).catch((response) => {
       const error = (typeof response === 'object' && 'statusCode' in response) ?
         response.error : response;
@@ -163,10 +155,6 @@ export class IAMSigner implements CryptoSigner {
       });
       req.end();
     });
-  }
-
-  private encodeSegment(segment: object) {
-    return toWebSafeBase64(Buffer.from(JSON.stringify(segment))).replace(/\=+$/, '');
   }
 }
 
@@ -218,10 +206,8 @@ export class FirebaseTokenGenerator {
       throw new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, errorMessage);
     }
 
-    const jwtPayload: JWTPayload = {};
+    const claims = {};
     if (typeof developerClaims !== 'undefined') {
-      const claims = {};
-
       for (const key in developerClaims) {
         /* istanbul ignore else */
         if (developerClaims.hasOwnProperty(key)) {
@@ -231,23 +217,37 @@ export class FirebaseTokenGenerator {
               `Developer claim "${key}" is reserved and cannot be specified.`,
             );
           }
-
           claims[key] = developerClaims[key];
         }
       }
-      jwtPayload.claims = claims;
     }
-    jwtPayload.uid = uid;
     return this.signer_.getAccount().then((account) => {
-      const options: JWTOptions = {
-        audience: FIREBASE_AUDIENCE,
-        expiresIn: ONE_HOUR_IN_SECONDS,
-        issuer: account,
-        subject: account,
-        algorithm: ALGORITHM_RS256,
+      const header: JWTHeader = {
+        alg: ALGORITHM_RS256,
       };
-      return this.signer_.sign(jwtPayload, options);
+      const iat = Math.floor(Date.now() / 1000);
+      const body: JWTBody = {
+        aud: FIREBASE_AUDIENCE,
+        iat,
+        exp: iat + ONE_HOUR_IN_SECONDS,
+        iss: account,
+        sub: account,
+        uid,
+      };
+      if (Object.keys(claims).length > 0) {
+        body.claims = claims;
+      }
+      const token = `${this.encodeSegment(header)}.${this.encodeSegment(body)}`;
+      const signPromise = this.signer_.sign(Buffer.from(token));
+      return Promise.all([token, signPromise]);
+    }).then(([token, signature]) => {
+      return `${token}.${this.encodeSegment(signature)}`;
     });
+  }
+
+  private encodeSegment(segment: object | Buffer) {
+    const buffer: Buffer = (segment instanceof Buffer) ? segment : Buffer.from(JSON.stringify(segment));
+    return toWebSafeBase64(buffer).replace(/\=+$/, '');
   }
 
   /**

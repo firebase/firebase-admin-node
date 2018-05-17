@@ -311,7 +311,7 @@ describe('admin.auth', () => {
     });
   });
 
-  it.only('createCustomToken() can mint JWTs without a service account', () => {
+  it('createCustomToken() can mint JWTs without a service account', () => {
     return admin.auth(noServiceAccountApp).createCustomToken(newUserUid, {
       isAdmin: true,
     })
