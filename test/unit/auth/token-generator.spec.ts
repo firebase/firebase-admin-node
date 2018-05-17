@@ -24,11 +24,7 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import * as mocks from '../../resources/mocks';
-import {
-  FirebaseTokenGenerator, CryptoSigner, JWTPayload,
-  JWTOptions, ServiceAccountSigner,
-} from '../../../src/auth/token-generator';
-import * as verifier from '../../../src/auth/token-verifier';
+import {FirebaseTokenGenerator, ServiceAccountSigner, JWTPayload, JWTOptions} from '../../../src/auth/token-generator';
 import {FirebaseAuthError, AuthClientErrorCode} from '../../../src/utils/error';
 
 import {Certificate} from '../../../src/auth/credential';
@@ -39,7 +35,6 @@ chai.use(chaiAsPromised);
 
 const expect = chai.expect;
 
-
 const ALGORITHM = 'RS256';
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 const FIREBASE_AUDIENCE = 'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit';
@@ -47,7 +42,6 @@ const BLACKLISTED_CLAIMS = [
   'acr', 'amr', 'at_hash', 'aud', 'auth_time', 'azp', 'cnf', 'c_hash', 'exp', 'iat', 'iss', 'jti',
   'nbf', 'nonce',
 ];
-
 
 /**
  * Verifies a token is signed with the private key corresponding to the provided public key.
@@ -70,16 +64,6 @@ function verifyToken(token: string, publicKey: string): Promise<object> {
   });
 }
 
-class TestCryptoSigner implements CryptoSigner {
-  public sign(payload: JWTPayload, options: JWTOptions): Promise<string> {
-    return Promise.resolve('test');
-  }
-
-  public getAccount(): string {
-    return 'account';
-  }
-}
-
 describe('CryptoSigner', () => {
   describe('ServiceAccountSigner', () => {
     it('should throw given no arguments', () => {
@@ -88,6 +72,47 @@ describe('CryptoSigner', () => {
         const anyServiceAccountSigner: any = ServiceAccountSigner;
         return new anyServiceAccountSigner();
       }).to.throw('Must provide a certificate to initialize ServiceAccountSigner');
+    });
+
+    const invalidCredentials = [null, NaN, 0, 1, true, false, '', 'a', [], {}, { a: 1 }, _.noop];
+    invalidCredentials.forEach((invalidCredential) => {
+      it('should throw given invalid Credential: ' + JSON.stringify(invalidCredential), () => {
+        expect(() => {
+          return new ServiceAccountSigner(new Certificate(invalidCredential as any));
+        }).to.throw(Error);
+      });
+    });
+
+    it('should not throw given a valid certificate', () => {
+      expect(() => {
+        return new ServiceAccountSigner(new Certificate(mocks.certificateObject));
+      }).not.to.throw();
+    });
+
+    it('should sign using the private_key in the certificate', () => {
+      const payload: JWTPayload = {
+        uid: 'test-user',
+        claims: {
+          admin: true,
+        },
+      };
+      const options: JWTOptions = {
+        algorithm: ALGORITHM,
+        audience: 'test-audience',
+        expiresIn: ONE_HOUR_IN_SECONDS,
+        issuer: 'test-issuer',
+        subject: 'test-subject',
+      };
+      const cert = new Certificate(mocks.certificateObject);
+      const signer = new ServiceAccountSigner(cert);
+      const signedJwt: string = jwt.sign(payload, cert.privateKey, options);
+      return signer.sign(payload, options).should.eventually.equal(signedJwt);
+    });
+
+    it('should return the client_email from the certificate', () => {
+      const cert = new Certificate(mocks.certificateObject);
+      const signer = new ServiceAccountSigner(cert);
+      expect(signer.getAccount()).to.equal(cert.clientEmail);
     });
   });
 });
@@ -124,15 +149,6 @@ describe('FirebaseTokenGenerator', () => {
         expect(() => {
           return new FirebaseTokenGenerator(invalidSigner as any);
         }).to.throw('Must provide a CryptoSigner to use FirebaseTokenGenerator');
-      });
-    });
-
-    const emptyProjectIds = [null, ''];
-    emptyProjectIds.forEach((projectId) => {
-      it(`should not throw given empty project ID: ${JSON.stringify(projectId)}`, () => {
-        expect(() => {
-          new FirebaseTokenGenerator(new TestCryptoSigner());
-        }).not.to.throw;
       });
     });
   });
@@ -316,4 +332,3 @@ describe('FirebaseTokenGenerator', () => {
     });
   });
 });
-
