@@ -112,7 +112,7 @@ describe('CryptoSigner', () => {
     it('should return the client_email from the certificate', () => {
       const cert = new Certificate(mocks.certificateObject);
       const signer = new ServiceAccountSigner(cert);
-      expect(signer.getAccount()).to.equal(cert.clientEmail);
+      return signer.getAccount().should.eventually.equal(cert.clientEmail);
     });
   });
 });

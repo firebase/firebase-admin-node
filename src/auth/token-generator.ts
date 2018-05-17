@@ -43,7 +43,7 @@ export interface JWTPayload {
 
 export interface CryptoSigner {
   sign(payload: JWTPayload, options: JWTOptions): Promise<string>;
-  getAccount(): string;
+  getAccount(): Promise<string>;
 }
 
 export interface JWTOptions {
@@ -74,8 +74,8 @@ export class ServiceAccountSigner implements CryptoSigner {
     });
   }
 
-  public getAccount(): string {
-    return this.certificate_.clientEmail;
+  public getAccount(): Promise<string> {
+    return Promise.resolve(this.certificate_.clientEmail);
   }
 }
 
@@ -89,7 +89,7 @@ export class IAMSigner implements CryptoSigner {
   }
 
   public sign(payload: JWTPayload, options: JWTOptions): Promise<string> {
-    return this.getServiceAccount().then((serviceAccount) => {
+    return this.getAccount().then((serviceAccount) => {
       const header = {
         alg: 'RS256',
         typ: 'JWT',
@@ -131,11 +131,7 @@ export class IAMSigner implements CryptoSigner {
     });
   }
 
-  public getAccount(): string {
-    return this.serviceAccount_;
-  }
-
-  private getServiceAccount(): Promise<string> {
+  public getAccount(): Promise<string> {
     if (validator.isNonEmptyString(this.serviceAccount_)) {
       return Promise.resolve(this.serviceAccount_);
     }
@@ -153,21 +149,18 @@ export class IAMSigner implements CryptoSigner {
         const buffers: Buffer[] = [];
         res.on('data', (buffer) => buffers.push(buffer));
         res.on('end', () => {
-          try {
-            const serviceAccount = Buffer.concat(buffers).toString();
-            this.serviceAccount_ = serviceAccount;
-            resolve(serviceAccount);
-          } catch (err) {
-            reject(new FirebaseAuthError(
-              AuthClientErrorCode.INVALID_CREDENTIAL,
-              `Failed to determine service account: ${err.toString()}. Make sure to initialize ` +
-              `the SDK with a service account credential. Alternatively specify a service ` +
-              `account with iam.serviceAccounts.signJwt permission.`,
-            ));
-          }
+          this.serviceAccount_ = Buffer.concat(buffers).toString();
+          resolve(this.serviceAccount_);
         });
       });
-      req.on('error', reject);
+      req.on('error', (err) => {
+        reject(new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CREDENTIAL,
+          `Failed to determine service account: ${err.toString()}. Make sure to initialize ` +
+          `the SDK with a service account credential. Alternatively specify a service ` +
+          `account with iam.serviceAccounts.signBlob permission.`,
+        ));
+      });
       req.end();
     });
   }
@@ -245,14 +238,16 @@ export class FirebaseTokenGenerator {
       jwtPayload.claims = claims;
     }
     jwtPayload.uid = uid;
-    const options: JWTOptions = {
-      audience: FIREBASE_AUDIENCE,
-      expiresIn: ONE_HOUR_IN_SECONDS,
-      issuer: this.signer_.getAccount(),
-      subject: this.signer_.getAccount(),
-      algorithm: ALGORITHM_RS256,
-    };
-    return this.signer_.sign(jwtPayload, options);
+    return this.signer_.getAccount().then((account) => {
+      const options: JWTOptions = {
+        audience: FIREBASE_AUDIENCE,
+        expiresIn: ONE_HOUR_IN_SECONDS,
+        issuer: account,
+        subject: account,
+        algorithm: ALGORITHM_RS256,
+      };
+      return this.signer_.sign(jwtPayload, options);
+    });
   }
 
   /**
