@@ -16,10 +16,12 @@
 
 import { FirebaseApp } from '../firebase-app';
 import {Certificate} from './credential';
-import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
+import {AuthClientErrorCode, FirebaseAuthError, FirebaseError} from '../utils/error';
 import { SignedApiRequestHandler } from '../utils/api-request';
 
 import * as validator from '../utils/validator';
+import { toWebSafeBase64 } from '../utils';
+import { FirebaseAuthRequestHandler } from './auth-api-request';
 
 
 const ALGORITHM_RS256 = 'RS256';
@@ -92,26 +94,40 @@ export class IAMSigner implements CryptoSigner {
         alg: 'RS256',
         typ: 'JWT',
       };
+      const iat = Math.floor(Date.now() / 1000);
       const body = {
         uid: payload.uid,
         claims: payload.claims,
         iss: options.issuer,
         aud: options.audience,
         sub: options.subject,
-        exp: options.expiresIn,
-        iat: Math.floor(Date.now() / 1000),
+        exp: iat + options.expiresIn,
+        iat,
       };
       const token = `${this.encodeSegment(header)}.${this.encodeSegment(body)}`;
       const request = {bytesToSign: Buffer.from(token).toString('base64')};
       const promise: Promise<any> = this.requestHandler_.sendRequest(
         'iam.googleapis.com',
         443,
-        `v1/projects/-/serviceAccounts/${serviceAccount}:signBlob`,
+        `/v1/projects/-/serviceAccounts/${serviceAccount}:signBlob`,
         'POST',
         request);
       return Promise.all([promise, token]);
     }).then(([response, token]) => {
-      return `${token}.${response.signature}`;
+      return `${token}.${response.signature.replace(/\=+$/, '')}`;
+    }).catch((response) => {
+      const error = (typeof response === 'object' && 'statusCode' in response) ?
+        response.error : response;
+      if (error instanceof FirebaseError) {
+        throw error;
+      }
+      let errorCode: string;
+      let errorMsg: string;
+      if (validator.isNonNullObject(error) && error.error) {
+        errorCode = error.error.status || null;
+        errorMsg = error.error.message || null;
+      }
+      throw FirebaseAuthError.fromServerError(errorCode, errorMsg, error);
     });
   }
 
@@ -157,7 +173,7 @@ export class IAMSigner implements CryptoSigner {
   }
 
   private encodeSegment(segment: object) {
-    return Buffer.from(JSON.stringify(segment)).toString('base64');
+    return toWebSafeBase64(Buffer.from(JSON.stringify(segment))).replace(/\=+$/, '');
   }
 }
 

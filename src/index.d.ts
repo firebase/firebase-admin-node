@@ -46,6 +46,7 @@ declare namespace admin {
     credential?: admin.credential.Credential;
     databaseAuthVariableOverride?: Object;
     databaseURL?: string;
+    serviceAccount?: string;
     storageBucket?: string;
     projectId?: string;
   }

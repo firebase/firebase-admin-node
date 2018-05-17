@@ -19,6 +19,7 @@ import fs = require('fs');
 import minimist = require('minimist');
 import path = require('path');
 import {random} from 'lodash';
+import { Credential, CertCredential, GoogleOAuthAccessToken, Certificate } from '../../src/auth/credential';
 
 /* tslint:disable:no-var-requires */
 const chalk = require('chalk');
@@ -32,6 +33,7 @@ export let apiKey: string;
 export let defaultApp: admin.app.App;
 export let nullApp: admin.app.App;
 export let nonNullApp: admin.app.App;
+export let noServiceAccountApp: admin.app.App;
 
 export let cmdArgs: any;
 
@@ -87,8 +89,30 @@ before(() => {
     storageBucket,
   }, 'nonNull');
 
+  noServiceAccountApp = admin.initializeApp({
+    credential: new TestCredential(admin.credential.cert(serviceAccount)),
+    serviceAccount: serviceAccount.client_email,
+    projectId,
+  }, 'noServiceAccount');
+
   cmdArgs = minimist(process.argv.slice(2));
 });
+
+class TestCredential implements Credential {
+  private delegate_: admin.credential.Credential;
+
+  constructor(delegate: admin.credential.Credential) {
+    this.delegate_ = delegate;
+  }
+
+  public getAccessToken(): Promise<GoogleOAuthAccessToken> {
+    return this.delegate_.getAccessToken();
+  }
+
+  public getCertificate(): Certificate {
+    return null;
+  }
+}
 
 /**
  * Generate a random string of the specified length, optionally using the specified alphabet.
