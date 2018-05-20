@@ -17,6 +17,7 @@
 import {deepCopy} from './deep-copy';
 import {FirebaseApp} from '../firebase-app';
 import {AppErrorCodes, FirebaseAppError} from './error';
+import axios, {AxiosInstance, AxiosTransformer, AxiosResponse, AxiosError} from 'axios';
 
 import {OutgoingHttpHeaders} from 'http';
 import https = require('https');
@@ -25,6 +26,90 @@ import https = require('https');
 export type HttpMethod = 'GET' | 'POST' | 'DELETE';
 /** API callback function type definition. */
 export type ApiCallbackFunction = (data: object) => void;
+
+export interface HttpRequest {
+  method: ('get' | 'post' | 'put' | 'delete');
+  url: string;
+  headers?: {[key: string]: string};
+  data?: any;
+  timeout?: number;
+}
+
+export class HttpResponse {
+
+  public readonly status: number;
+  public readonly headers: {[key: string]: string};
+  public readonly data: any;
+  public readonly request: string;
+
+  constructor(resp: AxiosResponse) {
+    this.status = resp.status;
+    this.headers = resp.headers;
+    this.data = resp.data;
+    this.request = `${resp.config.method} ${resp.config.url}`;
+  }
+
+  public json(): any {
+    if (typeof this.data !== 'string') {
+      throw new FirebaseAppError(
+        AppErrorCodes.UNABLE_TO_PARSE_RESPONSE,
+        `Unable to parse non-string response: "${ this.data }". ` +
+        `Status code: "${ this.status }". Outgoing request: "${ this.request }."`,
+      );
+    }
+    try {
+      return JSON.parse(this.data);
+    } catch (error) {
+      throw new FirebaseAppError(
+        AppErrorCodes.UNABLE_TO_PARSE_RESPONSE,
+        `Error while parsing response data: "${ error.toString() }". Raw server ` +
+        `response: "${ this.data }". Status code: "${ this.status }". Outgoing ` +
+        `request: "${ this.request }."`,
+      );
+    }
+  }
+}
+
+export class HttpError extends Error {
+
+  public readonly response: HttpResponse;
+
+  constructor(resp: AxiosResponse) {
+    super(`Server responded with status ${resp.status}.`);
+    this.response = new HttpResponse(resp);
+  }
+}
+
+const identityTransform: AxiosTransformer = (data, header) => {
+  return data;
+};
+
+export class HttpClient {
+  public send(request: HttpRequest): Promise<HttpResponse> {
+    return axios({
+      method: request.method,
+      url: request.url,
+      headers: request.headers,
+      data: request.data,
+      timeout: request.timeout || 10000,
+      transformResponse: identityTransform,
+    }).then((resp) => {
+      return new HttpResponse(resp);
+    }).catch((err: AxiosError) => {
+      if (err.response) {
+        throw new HttpError(err.response);
+      }
+      if (err.code === 'ECONNABORTED' && err.message.match('^timeout.*exceeded$')) {
+        throw new FirebaseAppError(
+          AppErrorCodes.NETWORK_TIMEOUT,
+          `Error while making request: ${err.message}.`);
+      }
+      throw new FirebaseAppError(
+        AppErrorCodes.NETWORK_ERROR,
+        `Error while making request: ${err.message}. Error code: ${err.code}`);
+    });
+  }
+}
 
 /**
  * Base class for handling HTTP requests.
