@@ -18,53 +18,63 @@ import {deepCopy} from './deep-copy';
 import {FirebaseApp} from '../firebase-app';
 import {AppErrorCodes, FirebaseAppError} from './error';
 import axios, {AxiosInstance, AxiosTransformer, AxiosResponse, AxiosError} from 'axios';
-
 import {OutgoingHttpHeaders} from 'http';
+
 import https = require('https');
 
 /** Http method type definition. */
-export type HttpMethod = 'GET' | 'POST' | 'DELETE';
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 /** API callback function type definition. */
 export type ApiCallbackFunction = (data: object) => void;
 
 export interface HttpRequest {
-  method: ('get' | 'post' | 'put' | 'delete');
+  method: HttpMethod;
   url: string;
   headers?: {[key: string]: string};
   data?: any;
   timeout?: number;
 }
 
-export class HttpResponse {
+export interface HttpResponse {
+  readonly status: number;
+  readonly headers: {[key: string]: string};
+  readonly text: string;
+  readonly data: any;
+}
+
+class AxiosHttpResponse implements HttpResponse {
 
   public readonly status: number;
   public readonly headers: {[key: string]: string};
-  public readonly data: any;
-  public readonly request: string;
+  public readonly text: string;
+
+  private readonly data_: any;
+  private readonly request_: string;
 
   constructor(resp: AxiosResponse) {
     this.status = resp.status;
     this.headers = resp.headers;
-    this.data = resp.data;
-    this.request = `${resp.config.method} ${resp.config.url}`;
+    this.text = resp.data;
+    try {
+      this.data_ = JSON.parse(resp.data);
+    } catch (err) {
+      this.data_ = undefined;
+    }
+    this.request_ = `${resp.config.method} ${resp.config.url}`;
   }
 
-  public json(): any {
-    if (typeof this.data !== 'string') {
-      throw new FirebaseAppError(
-        AppErrorCodes.UNABLE_TO_PARSE_RESPONSE,
-        `Unable to parse non-string response: "${ this.data }". ` +
-        `Status code: "${ this.status }". Outgoing request: "${ this.request }."`,
-      );
+  get data(): any {
+    if (typeof this.data_ !== 'undefined') {
+      return this.data_;
     }
     try {
-      return JSON.parse(this.data);
+      return JSON.parse(this.text);
     } catch (error) {
       throw new FirebaseAppError(
         AppErrorCodes.UNABLE_TO_PARSE_RESPONSE,
         `Error while parsing response data: "${ error.toString() }". Raw server ` +
-        `response: "${ this.data }". Status code: "${ this.status }". Outgoing ` +
-        `request: "${ this.request }."`,
+        `response: "${ this.text }". Status code: "${ this.status }". Outgoing ` +
+        `request: "${ this.request_ }."`,
       );
     }
   }
@@ -76,7 +86,7 @@ export class HttpError extends Error {
 
   constructor(resp: AxiosResponse) {
     super(`Server responded with status ${resp.status}.`);
-    this.response = new HttpResponse(resp);
+    this.response = new AxiosHttpResponse(resp);
   }
 }
 
@@ -85,6 +95,15 @@ const identityTransform: AxiosTransformer = (data, header) => {
 };
 
 export class HttpClient {
+
+  /**
+   * Sends an HTTP request to a remote server. If the server responds with a successful response (2xx), the returned
+   * promise resolves with an HttpResponse. If the server responds with an error (4xx, 5xx), the promise rejects with
+   * an HttpError. In case of all other errors, the promise rejects with a FirebaseAppError.
+   *
+   * @param {HttpRequest} request HTTP request to be sent.
+   * @return {Promise<HttpResponse>} A promise that resolves with the response details.
+   */
   public send(request: HttpRequest): Promise<HttpResponse> {
     return axios({
       method: request.method,
@@ -94,7 +113,7 @@ export class HttpClient {
       timeout: request.timeout || 10000,
       transformResponse: identityTransform,
     }).then((resp) => {
-      return new HttpResponse(resp);
+      return new AxiosHttpResponse(resp);
     }).catch((err: AxiosError) => {
       if (err.response) {
         throw new HttpError(err.response);
@@ -107,6 +126,22 @@ export class HttpClient {
       throw new FirebaseAppError(
         AppErrorCodes.NETWORK_ERROR,
         `Error while making request: ${err.message}. Error code: ${err.code}`);
+    });
+  }
+}
+
+export class AuthorizedHttpClient extends HttpClient {
+  constructor(private readonly app: FirebaseApp) {
+    super();
+  }
+
+  public send(request: HttpRequest): Promise<HttpResponse> {
+    return this.app.INTERNAL.getToken().then((accessTokenObj) => {
+      const requestCopy = deepCopy(request);
+      requestCopy.headers = requestCopy.headers || {};
+      const authHeader = 'Authorization';
+      requestCopy.headers[authHeader] = `Bearer ${accessTokenObj.accessToken}`;
+      return super.send(requestCopy);
     });
   }
 }

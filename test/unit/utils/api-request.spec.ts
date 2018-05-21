@@ -32,7 +32,7 @@ import * as mocks from '../../resources/mocks';
 
 import {FirebaseApp} from '../../../src/firebase-app';
 import {
-  SignedApiRequestHandler, HttpRequestHandler, ApiSettings, HttpClient, HttpError,
+  SignedApiRequestHandler, HttpRequestHandler, ApiSettings, HttpClient, HttpError, AuthorizedHttpClient,
 } from '../../../src/utils/api-request';
 import { AppErrorCodes } from '../../../src/utils/error';
 
@@ -148,7 +148,7 @@ describe('HttpClient', () => {
     mockedRequests = [];
   });
 
-  it('get json response', () => {
+  it('should be fulfilled for a 2xx response with a json payload', () => {
     const respData = {foo: 'bar'};
     const scope = nock('https://' + mockHost)
       .get(mockPath)
@@ -158,18 +158,17 @@ describe('HttpClient', () => {
     mockedRequests.push(scope);
     const client = new HttpClient();
     return client.send({
-      method: 'get',
+      method: 'GET',
       url: mockUrl,
     }).then((resp) => {
       expect(resp.status).to.equal(200);
       expect(resp.headers['content-type']).to.equal('application/json');
-      expect(resp.data).to.equal(JSON.stringify(respData));
-      expect(resp.request).to.equal(`get ${mockUrl}`);
-      expect(resp.json()).to.deep.equal(respData);
+      expect(resp.text).to.equal(JSON.stringify(respData));
+      expect(resp.data).to.deep.equal(respData);
     });
   });
 
-  it('get text response', () => {
+  it('should be fulfilled for a 2xx response with a text payload', () => {
     const respData = 'foo bar';
     const scope = nock('https://' + mockHost)
       .get(mockPath)
@@ -179,26 +178,26 @@ describe('HttpClient', () => {
     mockedRequests.push(scope);
     const client = new HttpClient();
     return client.send({
-      method: 'get',
+      method: 'GET',
       url: mockUrl,
     }).then((resp) => {
       expect(resp.status).to.equal(200);
       expect(resp.headers['content-type']).to.equal('text/plain');
-      expect(resp.data).to.equal(respData);
-      expect(resp.request).to.equal(`get ${mockUrl}`);
-      expect(() => { resp.json(); }).to.throw('Error while parsing response data');
+      expect(resp.text).to.equal(respData);
+      expect(() => { resp.data; }).to.throw('Error while parsing response data');
     });
   });
 
-  it('post json request', () => {
+  it('should make a POST request with the provided headers and data', () => {
     const reqData = {request: 'data'};
     const respData = {success: true};
     const scope = nock('https://' + mockHost, {
         reqheaders: {
-          'authorization': 'Bearer token',
-          'content-type': (header) => {
-            return header.startsWith('application/json');
+          'Authorization': 'Bearer token',
+          'Content-Type': (header) => {
+            return header.startsWith('application/json'); // auto-inserted by Axios
           },
+          'My-Custom-Header': 'CustomValue',
         },
       }).post(mockPath, reqData)
       .reply(200, respData, {
@@ -207,47 +206,64 @@ describe('HttpClient', () => {
     mockedRequests.push(scope);
     const client = new HttpClient();
     return client.send({
-      method: 'post',
+      method: 'POST',
       url: mockUrl,
-      headers: {authorization: 'Bearer token'},
+      headers: {
+        'authorization': 'Bearer token',
+        'My-Custom-Header': 'CustomValue',
+      },
       data: reqData,
     }).then((resp) => {
       expect(resp.status).to.equal(200);
       expect(resp.headers['content-type']).to.equal('application/json');
-      expect(resp.request).to.equal(`post ${mockUrl}`);
-      expect(resp.json()).to.deep.equal(respData);
+      expect(resp.data).to.deep.equal(respData);
     });
   });
 
-  it('http error', () => {
+  it('should fail with an HttpError for a 4xx response', () => {
     const data = {error: 'data'};
     mockedRequests.push(mockRequestWithHttpError(400, 'application/json', data));
     const client = new HttpClient();
     return client.send({
-      method: 'get',
+      method: 'GET',
       url: mockUrl,
     }).catch((err: HttpError) => {
       expect(err.message).to.equal('Server responded with status 400.');
       const resp = err.response;
       expect(resp.status).to.equal(400);
       expect(resp.headers['content-type']).to.equal('application/json');
-      expect(resp.request).to.equal(`get ${mockUrl}`);
-      expect(resp.json()).to.deep.equal(data);
+      expect(resp.data).to.deep.equal(data);
     });
   });
 
-  it('network error', () => {
+  it('should fail with an HttpError for a 5xx response', () => {
+    const data = {error: 'data'};
+    mockedRequests.push(mockRequestWithHttpError(500, 'application/json', data));
+    const client = new HttpClient();
+    return client.send({
+      method: 'GET',
+      url: mockUrl,
+    }).catch((err: HttpError) => {
+      expect(err.message).to.equal('Server responded with status 500.');
+      const resp = err.response;
+      expect(resp.status).to.equal(500);
+      expect(resp.headers['content-type']).to.equal('application/json');
+      expect(resp.data).to.deep.equal(data);
+    });
+  });
+
+  it('should fail with a FirebaseAppError for a network error', () => {
     const data = {foo: 'bar'};
     mockedRequests.push(mockRequestWithError({message: 'test error', code: 'AWFUL_ERROR'}));
     const client = new HttpClient();
     const err = 'Error while making request: test error. Error code: AWFUL_ERROR';
     return client.send({
-      method: 'get',
+      method: 'GET',
       url: mockUrl,
     }).should.eventually.be.rejectedWith(err).and.have.property('code', 'app/network-error');
   });
 
-  it('delayed response', () => {
+  it('should timeout when the response is delayed', () => {
     const respData = {foo: 'bar'};
     const scope = nock('https://' + mockHost)
       .get(mockPath)
@@ -259,7 +275,7 @@ describe('HttpClient', () => {
     const err = 'Error while making request: timeout of 50ms exceeded.';
     const client = new HttpClient();
     return client.send({
-      method: 'get',
+      method: 'GET',
       url: mockUrl,
       timeout: 50,
     }).should.eventually.be.rejectedWith(err).and.have.property('code', 'app/network-timeout');
@@ -278,10 +294,90 @@ describe('HttpClient', () => {
     const err = 'Error while making request: timeout of 50ms exceeded.';
     const client = new HttpClient();
     return client.send({
-      method: 'get',
+      method: 'GET',
       url: mockUrl,
       timeout: 50,
     }).should.eventually.be.rejectedWith(err).and.have.property('code', 'app/network-timeout');
+  });
+});
+
+describe('AuthorizedHttpClient', () => {
+  let mockApp: FirebaseApp;
+  let mockedRequests: nock.Scope[] = [];
+
+  const mockAccessToken: string = utils.generateRandomAccessToken();
+  const requestHeaders = {
+    reqheaders: {
+      Authorization: `Bearer ${mockAccessToken}`,
+    },
+  };
+
+  before(() => utils.mockFetchAccessTokenRequests(mockAccessToken));
+
+  after(() => nock.cleanAll());
+
+  beforeEach(() => {
+    mockApp = mocks.app();
+  });
+
+  afterEach(() => {
+    _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
+    mockedRequests = [];
+    return mockApp.delete();
+  });
+
+  it('should be fulfilled for a 2xx response with a json payload', () => {
+    const respData = {foo: 'bar'};
+    const scope = nock('https://' + mockHost, requestHeaders)
+      .get(mockPath)
+      .reply(200, respData, {
+        'content-type': 'application/json',
+      });
+    mockedRequests.push(scope);
+    const client = new AuthorizedHttpClient(mockApp);
+    return client.send({
+      method: 'GET',
+      url: mockUrl,
+    }).then((resp) => {
+      expect(resp.status).to.equal(200);
+      expect(resp.headers['content-type']).to.equal('application/json');
+      expect(resp.text).to.equal(JSON.stringify(respData));
+      expect(resp.data).to.deep.equal(respData);
+    });
+  });
+
+  it('should make a POST request with the provided headers and data', () => {
+    const reqData = {request: 'data'};
+    const respData = {success: true};
+    const options = {
+      reqheaders: {
+        'Authorization': 'Bearer token',
+        'Content-Type': (header) => {
+          return header.startsWith('application/json'); // auto-inserted by Axios
+        },
+        'My-Custom-Header': 'CustomValue',
+      },
+    };
+    Object.assign(options.reqheaders, requestHeaders.reqheaders);
+    const scope = nock('https://' + mockHost, options)
+      .post(mockPath, reqData)
+      .reply(200, respData, {
+        'content-type': 'application/json',
+      });
+    mockedRequests.push(scope);
+    const client = new AuthorizedHttpClient(mockApp);
+    return client.send({
+      method: 'POST',
+      url: mockUrl,
+      headers: {
+        'My-Custom-Header': 'CustomValue',
+      },
+      data: reqData,
+    }).then((resp) => {
+      expect(resp.status).to.equal(200);
+      expect(resp.headers['content-type']).to.equal('application/json');
+      expect(resp.data).to.deep.equal(respData);
+    });
   });
 });
 

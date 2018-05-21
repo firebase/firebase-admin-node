@@ -21,6 +21,7 @@ import * as mocks from '../resources/mocks';
 
 import {FirebaseNamespace} from '../../src/firebase-namespace';
 import {FirebaseApp, FirebaseAppOptions} from '../../src/firebase-app';
+import { HttpResponse } from '../../src/utils/api-request';
 
 /**
  * Returns a new FirebaseApp instance with the provided options.
@@ -65,4 +66,13 @@ export function mockFetchAccessTokenRequests(
 /** @return {string} A randomly generated access token string. */
 export function generateRandomAccessToken(): string {
   return 'access_token_' + _.random(999999999);
+}
+
+export function responseFrom(data: any, status: number = 200, headers: any = {}): HttpResponse {
+  return {
+    status,
+    headers,
+    data,
+    text: JSON.stringify(data),
+  };
 }
