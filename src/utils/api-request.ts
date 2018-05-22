@@ -94,6 +94,16 @@ const identityTransform: AxiosTransformer = (data, header) => {
   return data;
 };
 
+function retryOnError(err) {
+  const retryCodes = ['ECONNRESET'];
+  if (retryCodes.indexOf(err.code) !== -1 && err.config && !err.config.__isRetryRequest) {
+    err.config.__isRetryRequest = true;
+    return axios(err.config);
+  }
+  throw err;
+}
+axios.interceptors.response.use(undefined, retryOnError);
+
 export class HttpClient {
 
   /**

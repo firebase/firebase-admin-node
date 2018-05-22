@@ -299,6 +299,37 @@ describe('HttpClient', () => {
       timeout: 50,
     }).should.eventually.be.rejectedWith(err).and.have.property('code', 'app/network-timeout');
   });
+
+  it('should be rejected, after 1 retry, on multiple network errors', () => {
+    mockedRequests.push(mockRequestWithError({message: 'connection reset 1', code: 'ECONNRESET'}));
+    mockedRequests.push(mockRequestWithError({message: 'connection reset 2', code: 'ECONNRESET'}));
+    const client = new HttpClient();
+    const err = 'Error while making request: connection reset 2';
+    return client.send({
+      method: 'GET',
+      url: mockUrl,
+      timeout: 50,
+    }).should.eventually.be.rejectedWith(err).and.have.property('code', 'app/network-error');
+  });
+
+  it('should succeed, after 1 retry, on a single network error', () => {
+    mockedRequests.push(mockRequestWithError({message: 'connection reset 1', code: 'ECONNRESET'}));
+    const respData = {foo: 'bar'};
+    const scope = nock('https://' + mockHost)
+      .get(mockPath)
+      .reply(200, respData, {
+        'content-type': 'application/json',
+      });
+    mockedRequests.push(scope);
+    const client = new HttpClient();
+    return client.send({
+      method: 'GET',
+      url: mockUrl,
+    }).then((resp) => {
+      expect(resp.status).to.equal(200);
+      expect(resp.data).to.deep.equal(respData);
+    });
+  });
 });
 
 describe('AuthorizedHttpClient', () => {
