@@ -81,12 +81,9 @@ class AxiosHttpResponse implements HttpResponse {
 }
 
 export class HttpError extends Error {
-
-  public readonly response: HttpResponse;
-
-  constructor(resp: AxiosResponse) {
-    super(`Server responded with status ${resp.status}.`);
-    this.response = new AxiosHttpResponse(resp);
+  constructor(public readonly response: HttpResponse) {
+    super(`Server responded with status ${response.status}.`);
+    Object.setPrototypeOf(this, HttpError.prototype); // required to make instanceof check work
   }
 }
 
@@ -126,7 +123,7 @@ export class HttpClient {
       return new AxiosHttpResponse(resp);
     }).catch((err: AxiosError) => {
       if (err.response) {
-        throw new HttpError(err.response);
+        throw new HttpError(new AxiosHttpResponse(err.response));
       }
       if (err.code === 'ECONNABORTED' && err.message.match('^timeout.*exceeded$')) {
         throw new FirebaseAppError(
