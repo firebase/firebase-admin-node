@@ -50,7 +50,7 @@ before(() => {
   }
 
   try {
-    apiKey = fs.readFileSync(path.join(__dirname, '../resources/apikey.txt')).toString();
+    apiKey = fs.readFileSync(path.join(__dirname, '../resources/apikey.txt')).toString().trim();
   } catch (error) {
     console.log(chalk.red(
       'The integration test suite requires an API key for a ' +
