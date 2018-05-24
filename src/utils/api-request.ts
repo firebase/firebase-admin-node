@@ -17,17 +17,20 @@
 import {deepCopy} from './deep-copy';
 import {FirebaseApp} from '../firebase-app';
 import {AppErrorCodes, FirebaseAppError} from './error';
-import axios, {AxiosInstance, AxiosTransformer, AxiosResponse, AxiosError} from 'axios';
 import {OutgoingHttpHeaders} from 'http';
 
+import http = require('http');
 import https = require('https');
+import url = require('url');
+import zlib = require('zlib');
+import stream = require('stream');
 
 /** Http method type definition. */
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 /** API callback function type definition. */
 export type ApiCallbackFunction = (data: object) => void;
 
-export interface HttpRequest {
+export interface HttpRequestConfig {
   method: HttpMethod;
   url: string;
   headers?: {[key: string]: string};
@@ -37,7 +40,7 @@ export interface HttpRequest {
 
 export interface HttpResponse {
   readonly status: number;
-  readonly headers: {[key: string]: string};
+  readonly headers: any;
   readonly text: string;
   readonly data: any;
 }
@@ -45,13 +48,13 @@ export interface HttpResponse {
 class AxiosHttpResponse implements HttpResponse {
 
   public readonly status: number;
-  public readonly headers: {[key: string]: string};
+  public readonly headers: any;
   public readonly text: string;
 
   private readonly data_: any;
   private readonly request_: string;
 
-  constructor(resp: AxiosResponse) {
+  constructor(resp: LowLevelResponse) {
     this.status = resp.status;
     this.headers = resp.headers;
     this.text = resp.data;
@@ -84,59 +87,196 @@ export class HttpError extends Error {
 
   public readonly response: HttpResponse;
 
-  constructor(resp: AxiosResponse) {
+  constructor(resp: LowLevelResponse) {
     super(`Server responded with status ${resp.status}.`);
     this.response = new AxiosHttpResponse(resp);
   }
 }
 
-const identityTransform: AxiosTransformer = (data, header) => {
-  return data;
-};
-
-function retryOnError(err) {
-  const retryCodes = ['ECONNRESET'];
-  if (retryCodes.indexOf(err.code) !== -1 && err.config && !err.config.__isRetryRequest) {
-    err.config.__isRetryRequest = true;
-    return axios(err.config);
-  }
-  throw err;
-}
-axios.interceptors.response.use(undefined, retryOnError);
-
 export class HttpClient {
 
   /**
    * Sends an HTTP request to a remote server. If the server responds with a successful response (2xx), the returned
-   * promise resolves with an HttpResponse. If the server responds with an error (4xx, 5xx), the promise rejects with
-   * an HttpError. In case of all other errors, the promise rejects with a FirebaseAppError.
+   * promise resolves with an HttpResponse. If the server responds with an error (3xx, 4xx, 5xx), the promise rejects
+   * with an HttpError. In case of all other errors, the promise rejects with a FirebaseAppError.
    *
    * @param {HttpRequest} request HTTP request to be sent.
    * @return {Promise<HttpResponse>} A promise that resolves with the response details.
    */
-  public send(request: HttpRequest): Promise<HttpResponse> {
-    return axios({
-      method: request.method,
-      url: request.url,
-      headers: request.headers,
-      data: request.data,
-      timeout: request.timeout || 10000,
-      transformResponse: identityTransform,
-    }).then((resp) => {
-      return new AxiosHttpResponse(resp);
-    }).catch((err: AxiosError) => {
-      if (err.response) {
-        throw new HttpError(err.response);
-      }
-      if (err.code === 'ECONNABORTED' && err.message.match('^timeout.*exceeded$')) {
+  public send(config: HttpRequestConfig): Promise<HttpResponse> {
+    return this.sendWithRetry(config);
+  }
+
+  private sendWithRetry(config: HttpRequestConfig, attempts: number = 0): Promise<HttpResponse> {
+    return sendRequest(config)
+      .then((resp) => {
+        return new AxiosHttpResponse(resp);
+      }).catch((err: LowLevelError) => {
+        const retryCodes = ['ECONNRESET', 'ETIMEDOUT'];
+        if (retryCodes.indexOf(err.code) !== -1 && attempts === 0) {
+          return this.sendWithRetry(config, attempts + 1);
+        }
+        if (err.response) {
+          throw new HttpError(err.response);
+        }
+        if (err.code === 'ETIMEDOUT') {
+          throw new FirebaseAppError(
+            AppErrorCodes.NETWORK_TIMEOUT,
+            `Error while making request: ${err.message}.`);
+        }
         throw new FirebaseAppError(
-          AppErrorCodes.NETWORK_TIMEOUT,
-          `Error while making request: ${err.message}.`);
+          AppErrorCodes.NETWORK_ERROR,
+          `Error while making request: ${err.message}. Error code: ${err.code}`);
+      });
+  }
+}
+
+interface LowLevelResponse {
+  status: number;
+  headers: http.IncomingHttpHeaders;
+  request: http.ClientRequest;
+  data?: string;
+  config: HttpRequestConfig;
+}
+
+interface LowLevelError extends Error {
+  code?: string;
+  config: HttpRequestConfig;
+  request?: http.ClientRequest;
+  response?: LowLevelResponse;
+}
+
+function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
+  return new Promise((resolve, reject) => {
+    let data = config.data;
+    const headers = config.headers || {};
+    if (data) {
+      if (typeof data === 'object') {
+        data = JSON.stringify(data);
+        if (typeof headers['Content-Type'] === 'undefined') {
+          headers['Content-Type'] = 'application/json;charset=utf-8';
+        }
       }
-      throw new FirebaseAppError(
-        AppErrorCodes.NETWORK_ERROR,
-        `Error while making request: ${err.message}. Error code: ${err.code}`);
+      if (typeof data === 'string') {
+        data = new Buffer(data, 'utf-8');
+      } else if (!(data instanceof Buffer)) {
+        return reject(createError(
+          'Request data must be a string, a Buffer or a json serializable object',
+          config,
+        ));
+      }
+      // Add Content-Length header if data exists
+      headers['Content-Length'] = data.length;
+    }
+    const parsed = url.parse(config.url);
+    const protocol = parsed.protocol || 'https:';
+    const isHttps = protocol === 'https:';
+    const options = {
+      hostname: parsed.hostname,
+      port: parsed.port,
+      path: parsed.path,
+      method: config.method,
+      headers,
+    };
+    const transport: any = isHttps ? https : http;
+    const req: http.ClientRequest = transport.request(options, (res: http.IncomingMessage) => {
+      if (req.aborted) {
+        return;
+      }
+      // uncompress the response body transparently if required
+      let respStream: stream.Readable = res;
+      const encodings = ['gzip', 'compress', 'deflate'];
+      if (encodings.indexOf(res.headers['content-encoding']) !== -1) {
+        // add the unzipper to the body stream processing pipeline
+        respStream = respStream.pipe(zlib.createUnzip());
+        // remove the content-encoding in order to not confuse downstream operations
+        delete res.headers['content-encoding'];
+      }
+
+      const response: LowLevelResponse = {
+        status: res.statusCode,
+        headers: res.headers,
+        request: req,
+        data: undefined,
+        config,
+      };
+
+      const responseBuffer = [];
+      respStream.on('data', function handleStreamData(chunk) {
+        responseBuffer.push(chunk);
+      });
+
+      respStream.on('error', function handleStreamError(err) {
+        if (req.aborted) {
+          return;
+        }
+        reject(enhanceError(err, config, null, req));
+      });
+
+      respStream.on('end', function handleStreamEnd() {
+        const responseData = Buffer.concat(responseBuffer).toString();
+        response.data = responseData;
+        settle(resolve, reject, response);
+      });
     });
+
+    // Handle errors
+    req.on('error', function handleRequestError(err) {
+      if (req.aborted) {
+        return;
+      }
+      reject(enhanceError(err, config, null, req));
+    });
+    if (config.timeout) {
+      // Listen to timeouts and throw an error.
+      req.setTimeout(config.timeout, () => {
+        req.abort();
+        reject(createError(`timeout of ${config.timeout}ms exceeded`, config, 'ETIMEDOUT', req));
+      });
+    }
+    // Send the request
+    req.end(data);
+  });
+}
+
+function createError(
+  message: string,
+  config: HttpRequestConfig,
+  code?: string,
+  request?: http.ClientRequest,
+  response?: LowLevelResponse): LowLevelError {
+
+  const error = new Error(message);
+  return enhanceError(error, config, code, request, response);
+}
+
+function enhanceError(
+  error,
+  config: HttpRequestConfig,
+  code: string,
+  request: http.ClientRequest,
+  response?: LowLevelResponse): LowLevelError {
+
+  error.config = config;
+  if (code) {
+    error.code = code;
+  }
+  error.request = request;
+  error.response = response;
+  return error;
+}
+
+function settle(resolve, reject, response: LowLevelResponse) {
+  if (response.status >= 200 && response.status < 300) {
+    resolve(response);
+  } else {
+    reject(createError(
+      'Request failed with status code ' + response.status,
+      response.config,
+      null,
+      response.request,
+      response,
+    ));
   }
 }
 
@@ -145,7 +285,7 @@ export class AuthorizedHttpClient extends HttpClient {
     super();
   }
 
-  public send(request: HttpRequest): Promise<HttpResponse> {
+  public send(request: HttpRequestConfig): Promise<HttpResponse> {
     return this.app.INTERNAL.getToken().then((accessTokenObj) => {
       const requestCopy = deepCopy(request);
       requestCopy.headers = requestCopy.headers || {};

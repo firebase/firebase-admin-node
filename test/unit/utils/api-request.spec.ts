@@ -148,6 +148,26 @@ describe('HttpClient', () => {
     mockedRequests = [];
   });
 
+  it('should be fulfilled for a 2xx response from an HTTP endpoint', () => {
+    const respData = {foo: 'bar'};
+    const scope = nock('http://' + mockHost)
+      .get(mockPath)
+      .reply(200, respData, {
+        'content-type': 'application/json',
+      });
+    mockedRequests.push(scope);
+    const client = new HttpClient();
+    return client.send({
+      method: 'GET',
+      url: `http://${mockHost}${mockPath}`,
+    }).then((resp) => {
+      expect(resp.status).to.equal(200);
+      expect(resp.headers['content-type']).to.equal('application/json');
+      expect(resp.text).to.equal(JSON.stringify(respData));
+      expect(resp.data).to.deep.equal(respData);
+    });
+  });
+
   it('should be fulfilled for a 2xx response with a json payload', () => {
     const respData = {foo: 'bar'};
     const scope = nock('https://' + mockHost)
@@ -267,6 +287,7 @@ describe('HttpClient', () => {
     const respData = {foo: 'bar'};
     const scope = nock('https://' + mockHost)
       .get(mockPath)
+      .twice()
       .delay(1000)
       .reply(200, respData, {
         'content-type': 'application/json',
@@ -281,11 +302,11 @@ describe('HttpClient', () => {
     }).should.eventually.be.rejectedWith(err).and.have.property('code', 'app/network-timeout');
   });
 
-  xit('socket timeout', () => {
-    // Currently blocked by https://github.com/axios/axios/issues/459
+  it('should timeout when a socket timeout is encountered', () => {
     const respData = {foo: 'bar timeout'};
     const scope = nock('https://' + mockHost)
       .get(mockPath)
+      .twice()
       .socketDelay(2000)
       .reply(200, respData, {
         'content-type': 'application/json',
