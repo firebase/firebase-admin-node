@@ -23,7 +23,7 @@ import {expect} from 'chai';
 import * as mocks from '../../resources/mocks';
 import {FirebaseApp} from '../../../src/firebase-app';
 import {ApplicationDefaultCredential} from '../../../src/auth/credential';
-import {FirestoreService} from '../../../src/firestore/firestore';
+import {FirestoreService, getFirestoreOptions} from '../../../src/firestore/firestore';
 
 describe('Firestore', () => {
   let mockApp: FirebaseApp;
@@ -142,17 +142,20 @@ describe('Firestore', () => {
 
   describe('client.projectId', () => {
     it('should return a string when project ID is present in credential', () => {
-      expect(firestore.client.projectId).to.equal('project_id');
+      const options = getFirestoreOptions(mockApp);
+      expect(options.projectId).to.equal('project_id');
     });
 
     it('should return a string when project ID is present in app options', () => {
-      expect((new FirestoreService(projectIdApp).client as any).projectId).to.equal('explicit-project-id');
+      const options = getFirestoreOptions(projectIdApp);
+      expect(options.projectId).to.equal('explicit-project-id');
     });
 
     it('should return a string when project ID is present in environment', () => {
       process.env.GCLOUD_PROJECT = 'env-project-id';
       process.env.GOOGLE_APPLICATION_CREDENTIALS = mockServiceAccount;
-      expect((new FirestoreService(defaultCredentialApp).client as any).projectId).to.equal('env-project-id');
+      const options = getFirestoreOptions(defaultCredentialApp);
+      expect(options.projectId).to.equal('env-project-id');
     });
   });
 });
