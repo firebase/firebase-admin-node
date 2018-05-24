@@ -45,7 +45,7 @@ export interface HttpResponse {
   readonly data: any;
 }
 
-class AxiosHttpResponse implements HttpResponse {
+class DefaultHttpResponse implements HttpResponse {
 
   public readonly status: number;
   public readonly headers: any;
@@ -89,7 +89,7 @@ export class HttpError extends Error {
 
   constructor(resp: LowLevelResponse) {
     super(`Server responded with status ${resp.status}.`);
-    this.response = new AxiosHttpResponse(resp);
+    this.response = new DefaultHttpResponse(resp);
   }
 }
 
@@ -110,7 +110,7 @@ export class HttpClient {
   private sendWithRetry(config: HttpRequestConfig, attempts: number = 0): Promise<HttpResponse> {
     return sendRequest(config)
       .then((resp) => {
-        return new AxiosHttpResponse(resp);
+        return new DefaultHttpResponse(resp);
       }).catch((err: LowLevelError) => {
         const retryCodes = ['ECONNRESET', 'ETIMEDOUT'];
         if (retryCodes.indexOf(err.code) !== -1 && attempts === 0) {
