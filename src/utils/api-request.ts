@@ -23,8 +23,8 @@ import {OutgoingHttpHeaders} from 'http';
 import http = require('http');
 import https = require('https');
 import url = require('url');
-import zlib = require('zlib');
-import stream = require('stream');
+import * as stream from 'stream';
+import * as zlibmod from 'zlib';
 
 /** Http method type definition. */
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
@@ -195,6 +195,7 @@ function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
       const encodings = ['gzip', 'compress', 'deflate'];
       if (encodings.indexOf(res.headers['content-encoding']) !== -1) {
         // add the unzipper to the body stream processing pipeline
+        const zlib: typeof zlibmod = require('zlib');
         respStream = respStream.pipe(zlib.createUnzip());
         // remove the content-encoding in order to not confuse downstream operations
         delete res.headers['content-encoding'];
