@@ -17,6 +17,7 @@
 import {deepCopy} from './deep-copy';
 import {FirebaseApp} from '../firebase-app';
 import {AppErrorCodes, FirebaseAppError} from './error';
+import * as validator from './validator';
 import {OutgoingHttpHeaders} from 'http';
 
 import http = require('http');
@@ -34,7 +35,7 @@ export interface HttpRequestConfig {
   method: HttpMethod;
   url: string;
   headers?: {[key: string]: string};
-  data?: any;
+  data?: string | object | Buffer;
   timeout?: number;
 }
 
@@ -100,6 +101,11 @@ export class HttpClient {
    * promise resolves with an HttpResponse. If the server responds with an error (3xx, 4xx, 5xx), the promise rejects
    * with an HttpError. In case of all other errors, the promise rejects with a FirebaseAppError.
    *
+   * If the request data is specified as an object, it will be serialized into a JSON string. The application/json
+   * content-type header will also be automatically set in this case. For all other payload types, the content-type
+   * header should be explicitly set by the caller. To send a JSON leaf value (e.g. "foo", 5), parse it into JSON,
+   * and pass as a string or a Buffer along with the appropriate content-type header.
+   *
    * @param {HttpRequest} request HTTP request to be sent.
    * @return {Promise<HttpResponse>} A promise that resolves with the response details.
    */
@@ -135,38 +141,39 @@ interface LowLevelResponse {
   status: number;
   headers: http.IncomingHttpHeaders;
   request: http.ClientRequest;
-  data?: string;
+  data: string;
   config: HttpRequestConfig;
 }
 
 interface LowLevelError extends Error {
-  code?: string;
   config: HttpRequestConfig;
+  code?: string;
   request?: http.ClientRequest;
   response?: LowLevelResponse;
 }
 
 function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
   return new Promise((resolve, reject) => {
-    let data = config.data;
+    let data: Buffer;
     const headers = config.headers || {};
-    if (data) {
-      if (typeof data === 'object') {
-        data = JSON.stringify(data);
+    if (config.data) {
+      if (validator.isObject(config.data)) {
+        data = new Buffer(JSON.stringify(config.data), 'utf-8');
         if (typeof headers['Content-Type'] === 'undefined') {
           headers['Content-Type'] = 'application/json;charset=utf-8';
         }
-      }
-      if (typeof data === 'string') {
-        data = new Buffer(data, 'utf-8');
-      } else if (!(data instanceof Buffer)) {
+      } else if (validator.isString(config.data)) {
+        data = new Buffer(config.data as string, 'utf-8');
+      } else if (validator.isBuffer(config.data)) {
+        data = config.data as Buffer;
+      } else {
         return reject(createError(
           'Request data must be a string, a Buffer or a json serializable object',
           config,
         ));
       }
       // Add Content-Length header if data exists
-      headers['Content-Length'] = data.length;
+      headers['Content-Length'] = data.length.toString();
     }
     const parsed = url.parse(config.url);
     const protocol = parsed.protocol || 'https:';
@@ -202,18 +209,18 @@ function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
       };
 
       const responseBuffer = [];
-      respStream.on('data', function handleStreamData(chunk) {
+      respStream.on('data', (chunk) => {
         responseBuffer.push(chunk);
       });
 
-      respStream.on('error', function handleStreamError(err) {
+      respStream.on('error', (err) => {
         if (req.aborted) {
           return;
         }
         reject(enhanceError(err, config, null, req));
       });
 
-      respStream.on('end', function handleStreamEnd() {
+      respStream.on('end', () => {
         const responseData = Buffer.concat(responseBuffer).toString();
         response.data = responseData;
         settle(resolve, reject, response);
@@ -221,7 +228,7 @@ function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
     });
 
     // Handle errors
-    req.on('error', function handleRequestError(err) {
+    req.on('error', (err) => {
       if (req.aborted) {
         return;
       }
