@@ -164,7 +164,7 @@ describe('Credential', () => {
         }).to.throw('Certificate object must contain a string "client_email" property');
       });
 
-      it('should throw given an object without an empty string "client_email" property', () => {
+      it('should throw given an object with an empty string "client_email" property', () => {
         const invalidCertificate = _.clone(mocks.certificateObject);
         invalidCertificate.client_email = '';
         expect(() => {
