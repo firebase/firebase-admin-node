@@ -112,6 +112,7 @@ describe('CryptoSigner', () => {
     before(() => {
       utils.mockFetchAccessTokenRequests(mockAccessToken);
       nock('http://metadata')
+        .matchHeader('Metadata-Flavor', 'Google')
         .persist()
         .get('/computeMetadata/v1/instance/service-accounts/default/email')
         .reply(200, 'discovered-service-account');
