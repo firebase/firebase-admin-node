@@ -21,7 +21,6 @@ import { SignedApiRequestHandler } from '../utils/api-request';
 
 import * as validator from '../utils/validator';
 import { toWebSafeBase64 } from '../utils';
-import { FirebaseAuthRequestHandler } from './auth-api-request';
 
 
 const ALGORITHM_RS256 = 'RS256';

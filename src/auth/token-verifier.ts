@@ -17,11 +17,7 @@
 import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
 
 import * as validator from '../utils/validator';
-
 import * as jwt from 'jsonwebtoken';
-
-// Use untyped import syntax for Node built-ins
-import https = require('https');
 
 // Audience to use for Firebase Auth Custom tokens
 const FIREBASE_AUDIENCE = 'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit';
@@ -268,6 +264,7 @@ export class FirebaseTokenVerifier {
     }
 
     return new Promise((resolve, reject) => {
+      const https = require('https');
       https.get(this.clientCertUrl, (res) => {
         const buffers: Buffer[] = [];
 
@@ -276,14 +273,12 @@ export class FirebaseTokenVerifier {
         res.on('end', () => {
           try {
             const response = JSON.parse(Buffer.concat(buffers).toString());
-
             if (response.error) {
               let errorMessage = 'Error fetching public keys for Google certs: ' + response.error;
               /* istanbul ignore else */
               if (response.error_description) {
                 errorMessage += ' (' + response.error_description + ')';
               }
-
               reject(new FirebaseAuthError(AuthClientErrorCode.INTERNAL_ERROR, errorMessage));
             } else {
               /* istanbul ignore else */

@@ -15,9 +15,8 @@
  */
 
 import {UserRecord, CreateRequest, UpdateRequest} from './user-record';
-import {Certificate} from './credential';
 import {FirebaseApp} from '../firebase-app';
-import {FirebaseTokenGenerator, signerFromApp, CryptoSigner} from './token-generator';
+import {FirebaseTokenGenerator, signerFromApp} from './token-generator';
 import {FirebaseAuthRequestHandler} from './auth-api-request';
 import {AuthClientErrorCode, FirebaseAuthError, ErrorInfo} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
