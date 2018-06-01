@@ -2236,6 +2236,22 @@ describe('Messaging', () => {
               title: 'test.title',
               body: 'test.body',
               icon: 'test.icon',
+              actions: [{
+                action: 'test.action.1',
+                title: 'test.action.1.title',
+                icon: 'test.action.1.icon',
+              }, {
+                action: 'test.action.2',
+                title: 'test.action.2.title',
+                icon: 'test.action.2.icon',
+              }],
+              badge: 'test.badge',
+              data: {
+                key: 'value',
+              },
+              dir: 'auto',
+              image: 'test.image',
+              requireInteraction: true,
             },
           },
         },

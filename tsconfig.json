@@ -3,7 +3,7 @@
     "module": "commonjs",
     "target": "es5",
     "noImplicitAny": false,
-    "lib": ["es5", "es2015.promise", "es2015"],
+    "lib": ["es5", "es2015.promise", "es2015", "dom"],
     "outDir": "lib",
     // We manually craft typings in src/index.d.ts instead of auto-generating them.
     // "declaration": true,

@@ -438,18 +438,17 @@ declare namespace admin.messaging {
     title?: string;
     body?: string;
   };
-  
+
   type WebpushConfig = {
     headers?: {[key: string]: string};
     data?: {[key: string]: string};
     notification?: WebpushNotification;
   };
-  
-  type WebpushNotification = {
+
+  interface WebpushNotification extends NotificationOptions {
     title?: string;
-    body?: string;
-    icon?: string;
-  };
+    [key: string]: any;
+  }
 
   type DataMessagePayload = {
     [key: string]: string;
