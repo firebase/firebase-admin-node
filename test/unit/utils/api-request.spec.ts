@@ -148,26 +148,6 @@ describe('HttpClient', () => {
     mockedRequests = [];
   });
 
-  it('should be fulfilled for a 2xx response from an HTTP endpoint', () => {
-    const respData = {foo: 'bar'};
-    const scope = nock('http://' + mockHost)
-      .get(mockPath)
-      .reply(200, respData, {
-        'content-type': 'application/json',
-      });
-    mockedRequests.push(scope);
-    const client = new HttpClient();
-    return client.send({
-      method: 'GET',
-      url: `http://${mockHost}${mockPath}`,
-    }).then((resp) => {
-      expect(resp.status).to.equal(200);
-      expect(resp.headers['content-type']).to.equal('application/json');
-      expect(resp.text).to.equal(JSON.stringify(respData));
-      expect(resp.data).to.deep.equal(respData);
-    });
-  });
-
   it('should be fulfilled for a 2xx response with a json payload', () => {
     const respData = {foo: 'bar'};
     const scope = nock('https://' + mockHost)
@@ -212,17 +192,17 @@ describe('HttpClient', () => {
     const reqData = {request: 'data'};
     const respData = {success: true};
     const scope = nock('https://' + mockHost, {
-        reqheaders: {
-          'Authorization': 'Bearer token',
-          'Content-Type': (header) => {
-            return header.startsWith('application/json'); // auto-inserted by Axios
-          },
-          'My-Custom-Header': 'CustomValue',
+      reqheaders: {
+        'Authorization': 'Bearer token',
+        'Content-Type': (header) => {
+          return header.startsWith('application/json'); // auto-inserted by Axios
         },
-      }).post(mockPath, reqData)
-      .reply(200, respData, {
-        'content-type': 'application/json',
-      });
+        'My-Custom-Header': 'CustomValue',
+      },
+    }).post(mockPath, reqData)
+    .reply(200, respData, {
+      'content-type': 'application/json',
+    });
     mockedRequests.push(scope);
     const client = new HttpClient();
     return client.send({

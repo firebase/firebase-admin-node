@@ -31,19 +31,44 @@ export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 /** API callback function type definition. */
 export type ApiCallbackFunction = (data: object) => void;
 
+/**
+ * Configuration for constructing a new HTTP request.
+ */
 export interface HttpRequestConfig {
   method: HttpMethod;
+  /** Target URL of the request. Should be a well-formed URL including protocol, hostname, port and path. */
   url: string;
   headers?: {[key: string]: string};
   data?: string | object | Buffer;
+  /** Connect and read timeout (in milliseconds) for the outgoing request. */
   timeout?: number;
 }
 
+/**
+ * Represents an HTTP response received from a remote server.
+ */
 export interface HttpResponse {
   readonly status: number;
   readonly headers: any;
+  /** Response data as a raw string. */
   readonly text: string;
+  /** Response data as a parsed JSON object. */
   readonly data: any;
+}
+
+interface LowLevelResponse {
+  status: number;
+  headers: http.IncomingHttpHeaders;
+  request: http.ClientRequest;
+  data: string;
+  config: HttpRequestConfig;
+}
+
+interface LowLevelError extends Error {
+  config: HttpRequestConfig;
+  code?: string;
+  request?: http.ClientRequest;
+  response?: LowLevelResponse;
 }
 
 class DefaultHttpResponse implements HttpResponse {
@@ -52,35 +77,33 @@ class DefaultHttpResponse implements HttpResponse {
   public readonly headers: any;
   public readonly text: string;
 
-  private readonly data_: any;
-  private readonly request_: string;
+  private readonly parsedData: any;
+  private readonly parseError: Error;
+  private readonly request: string;
 
   constructor(resp: LowLevelResponse) {
     this.status = resp.status;
     this.headers = resp.headers;
     this.text = resp.data;
     try {
-      this.data_ = JSON.parse(resp.data);
+      this.parsedData = JSON.parse(resp.data);
     } catch (err) {
-      this.data_ = undefined;
+      this.parsedData = undefined;
+      this.parseError = err;
     }
-    this.request_ = `${resp.config.method} ${resp.config.url}`;
+    this.request = `${resp.config.method} ${resp.config.url}`;
   }
 
   get data(): any {
-    if (typeof this.data_ !== 'undefined') {
-      return this.data_;
+    if (typeof this.parsedData !== 'undefined') {
+      return this.parsedData;
     }
-    try {
-      return JSON.parse(this.text);
-    } catch (error) {
-      throw new FirebaseAppError(
-        AppErrorCodes.UNABLE_TO_PARSE_RESPONSE,
-        `Error while parsing response data: "${ error.toString() }". Raw server ` +
-        `response: "${ this.text }". Status code: "${ this.status }". Outgoing ` +
-        `request: "${ this.request_ }."`,
-      );
-    }
+    throw new FirebaseAppError(
+      AppErrorCodes.UNABLE_TO_PARSE_RESPONSE,
+      `Error while parsing response data: "${ this.parseError.toString() }". Raw server ` +
+      `response: "${ this.text }". Status code: "${ this.status }". Outgoing ` +
+      `request: "${ this.request }."`,
+    );
   }
 }
 
@@ -113,6 +136,9 @@ export class HttpClient {
     return this.sendWithRetry(config);
   }
 
+  /**
+   * Sends an HTTP request, and retries it once in case of low-level network errors.
+   */
   private sendWithRetry(config: HttpRequestConfig, attempts: number = 0): Promise<HttpResponse> {
     return sendRequest(config)
       .then((resp) => {
@@ -135,21 +161,6 @@ export class HttpClient {
           `Error while making request: ${err.message}. Error code: ${err.code}`);
       });
   }
-}
-
-interface LowLevelResponse {
-  status: number;
-  headers: http.IncomingHttpHeaders;
-  request: http.ClientRequest;
-  data: string;
-  config: HttpRequestConfig;
-}
-
-interface LowLevelError extends Error {
-  config: HttpRequestConfig;
-  code?: string;
-  request?: http.ClientRequest;
-  response?: LowLevelResponse;
 }
 
 function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
@@ -190,14 +201,14 @@ function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
       if (req.aborted) {
         return;
       }
-      // uncompress the response body transparently if required
+      // Uncompress the response body transparently if required.
       let respStream: stream.Readable = res;
       const encodings = ['gzip', 'compress', 'deflate'];
       if (encodings.indexOf(res.headers['content-encoding']) !== -1) {
-        // add the unzipper to the body stream processing pipeline
+        // Add the unzipper to the body stream processing pipeline.
         const zlib: typeof zlibmod = require('zlib');
         respStream = respStream.pipe(zlib.createUnzip());
-        // remove the content-encoding in order to not confuse downstream operations
+        // Remove the content-encoding in order to not confuse downstream operations.
         delete res.headers['content-encoding'];
       }
 
@@ -224,7 +235,7 @@ function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
       respStream.on('end', () => {
         const responseData = Buffer.concat(responseBuffer).toString();
         response.data = responseData;
-        settle(resolve, reject, response);
+        finalizeRequest(resolve, reject, response);
       });
     });
 
@@ -274,7 +285,7 @@ function enhanceError(
   return error;
 }
 
-function settle(resolve, reject, response: LowLevelResponse) {
+function finalizeRequest(resolve, reject, response: LowLevelResponse) {
   if (response.status >= 200 && response.status < 300) {
     resolve(response);
   } else {

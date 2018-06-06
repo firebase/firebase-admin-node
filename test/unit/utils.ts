@@ -68,6 +68,14 @@ export function generateRandomAccessToken(): string {
   return 'access_token_' + _.random(999999999);
 }
 
+/**
+ * Creates a mock HTTP response from the given data and parameters.
+ *
+ * @param data Data to be included in the response body.
+ * @param status HTTP status code (defaults to 200).
+ * @param headers HTTP headers to be included in the ersponse.
+ * @returns {HttpResponse} An HTTP response object.
+ */
 export function responseFrom(data: any, status: number = 200, headers: any = {}): HttpResponse {
   return {
     status,
