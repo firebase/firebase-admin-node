@@ -733,7 +733,7 @@ function cleanup() {
     deletePhoneNumberUser(nonexistentPhoneNumber),
     deletePhoneNumberUser(updatedPhone),
   ];
-  // Delete user created for session cookie tests.
+  // Delete users created for session cookie tests.
   sessionCookieUids.forEach((uid) => uids.push(uid));
   // Delete list of users for testing listUsers.
   uids.forEach((uid) => {
