@@ -81,6 +81,9 @@ class DefaultHttpResponse implements HttpResponse {
   private readonly parseError: Error;
   private readonly request: string;
 
+  /**
+   * Constructs a new HttpResponse from the given LowLevelResponse.
+   */
   constructor(resp: LowLevelResponse) {
     this.status = resp.status;
     this.headers = resp.headers;
@@ -122,7 +125,8 @@ export class HttpClient {
   /**
    * Sends an HTTP request to a remote server. If the server responds with a successful response (2xx), the returned
    * promise resolves with an HttpResponse. If the server responds with an error (3xx, 4xx, 5xx), the promise rejects
-   * with an HttpError. In case of all other errors, the promise rejects with a FirebaseAppError.
+   * with an HttpError. In case of all other errors, the promise rejects with a FirebaseAppError. If a request fails
+   * due to a low-level network error, transparently retries the request once before rejecting the promise.
    *
    * If the request data is specified as an object, it will be serialized into a JSON string. The application/json
    * content-type header will also be automatically set in this case. For all other payload types, the content-type
@@ -163,6 +167,10 @@ export class HttpClient {
   }
 }
 
+/**
+ * Sends an HTTP request based on the provided configuration. This is a wrapper around the http and https
+ * packages of Node.js, providing content processing, timeouts and error handling.
+ */
 function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
   return new Promise((resolve, reject) => {
     let data: Buffer;
@@ -258,6 +266,9 @@ function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
   });
 }
 
+/**
+ * Creates a new error from the given message, and enhances it with other information available.
+ */
 function createError(
   message: string,
   config: HttpRequestConfig,
@@ -269,6 +280,10 @@ function createError(
   return enhanceError(error, config, code, request, response);
 }
 
+/**
+ * Enhances the given error by adding more information to it. Specifically, the HttpRequestConfig,
+ * the underlying request and response will be attached to the error.
+ */
 function enhanceError(
   error,
   config: HttpRequestConfig,
@@ -285,6 +300,10 @@ function enhanceError(
   return error;
 }
 
+/**
+ * Finalizes the current request in-flight by either resolving or rejecting the associated promise. In the event
+ * of an error, adds additional useful information to the returned error.
+ */
 function finalizeRequest(resolve, reject, response: LowLevelResponse) {
   if (response.status >= 200 && response.status < 300) {
     resolve(response);
