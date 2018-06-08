@@ -28,7 +28,7 @@ import * as mocks from '../../resources/mocks';
 
 import {deepCopy} from '../../../src/utils/deep-copy';
 import {FirebaseApp} from '../../../src/firebase-app';
-import {HttpClient, HttpRequest} from '../../../src/utils/api-request';
+import {HttpClient, HttpRequestConfig} from '../../../src/utils/api-request';
 import * as validator from '../../../src/utils/validator';
 import {
   FirebaseAuthRequestHandler, FIREBASE_AUTH_GET_ACCOUNT_INFO,
@@ -732,7 +732,7 @@ describe('FirebaseAuthRequestHandler', () => {
     'X-Client-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
     'Authorization': 'Bearer ' + mockAccessToken,
   };
-  const callParams = (path: string, data: any): HttpRequest => {
+  const callParams = (path: string, data: any): HttpRequestConfig => {
     return {
       method: httpMethod,
       url: `https://${host}${path}`,

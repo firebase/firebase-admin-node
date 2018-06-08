@@ -192,17 +192,17 @@ describe('HttpClient', () => {
     const reqData = {request: 'data'};
     const respData = {success: true};
     const scope = nock('https://' + mockHost, {
-        reqheaders: {
-          'Authorization': 'Bearer token',
-          'Content-Type': (header) => {
-            return header.startsWith('application/json'); // auto-inserted by Axios
-          },
-          'My-Custom-Header': 'CustomValue',
+      reqheaders: {
+        'Authorization': 'Bearer token',
+        'Content-Type': (header) => {
+          return header.startsWith('application/json'); // auto-inserted
         },
-      }).post(mockPath, reqData)
-      .reply(200, respData, {
-        'content-type': 'application/json',
-      });
+        'My-Custom-Header': 'CustomValue',
+      },
+    }).post(mockPath, reqData)
+    .reply(200, respData, {
+      'content-type': 'application/json',
+    });
     mockedRequests.push(scope);
     const client = new HttpClient();
     return client.send({
@@ -267,6 +267,7 @@ describe('HttpClient', () => {
     const respData = {foo: 'bar'};
     const scope = nock('https://' + mockHost)
       .get(mockPath)
+      .twice()
       .delay(1000)
       .reply(200, respData, {
         'content-type': 'application/json',
@@ -281,11 +282,11 @@ describe('HttpClient', () => {
     }).should.eventually.be.rejectedWith(err).and.have.property('code', 'app/network-timeout');
   });
 
-  xit('socket timeout', () => {
-    // Currently blocked by https://github.com/axios/axios/issues/459
+  it('should timeout when a socket timeout is encountered', () => {
     const respData = {foo: 'bar timeout'};
     const scope = nock('https://' + mockHost)
       .get(mockPath)
+      .twice()
       .socketDelay(2000)
       .reply(200, respData, {
         'content-type': 'application/json',

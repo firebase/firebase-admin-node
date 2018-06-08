@@ -98,19 +98,18 @@ export function getFirestoreOptions(app: FirebaseApp): any {
     // If an explicit project ID is not available, let Firestore client discover one from the
     // environment. This prevents the users from having to set GCLOUD_PROJECT in GCP runtimes.
     return validator.isNonEmptyString(projectId) ? {projectId} : {};
-  } else {
-    throw new FirebaseFirestoreError({
-      code: 'invalid-credential',
-      message: 'Failed to initialize Google Cloud Firestore client with the available credentials. ' +
-        'Must initialize the SDK with a certificate credential or application default credentials ' +
-        'to use Cloud Firestore API.',
-    });
   }
+
+  throw new FirebaseFirestoreError({
+    code: 'invalid-credential',
+    message: 'Failed to initialize Google Cloud Firestore client with the available credentials. ' +
+      'Must initialize the SDK with a certificate credential or application default credentials ' +
+      'to use Cloud Firestore API.',
+  });
 }
 
 function initFirestore(app: FirebaseApp): Firestore {
   const options = getFirestoreOptions(app);
-
   // Lazy-load the Firestore implementation here, which in turns loads gRPC.
   const firestoreDatabase: typeof Firestore = require('@google-cloud/firestore');
   return new firestoreDatabase(options);

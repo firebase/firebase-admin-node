@@ -20,7 +20,7 @@ import {deepCopy} from '../utils/deep-copy';
 import {FirebaseApp} from '../firebase-app';
 import {AuthClientErrorCode, FirebaseAuthError, FirebaseError} from '../utils/error';
 import {
-  HttpMethod, SignedApiRequestHandler, ApiSettings, AuthorizedHttpClient, HttpRequest, HttpError,
+  HttpMethod, SignedApiRequestHandler, ApiSettings, AuthorizedHttpClient, HttpRequestConfig, HttpError,
 } from '../utils/api-request';
 import {CreateRequest, UpdateRequest} from './user-record';
 import {
@@ -808,7 +808,7 @@ export class FirebaseAuthRequestHandler {
         const requestValidator = apiSettings.getRequestValidator();
         requestValidator(requestData);
         // Process request.
-        const req: HttpRequest = {
+        const req: HttpRequestConfig = {
           method: apiSettings.getHttpMethod(),
           url: `${this.baseUrl}${apiSettings.getEndpoint()}`,
           headers: FIREBASE_AUTH_HEADER,
