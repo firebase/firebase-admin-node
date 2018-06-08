@@ -32,7 +32,11 @@ const expect = chai.expect;
 
 const newUserUid = generateRandomString(20);
 const nonexistentUid = generateRandomString(20);
-const sessionCookieUid = generateRandomString(20);
+const sessionCookieUids = [
+  generateRandomString(20),
+  generateRandomString(20),
+  generateRandomString(20),
+];
 const testPhoneNumber = '+11234567890';
 const testPhoneNumber2 = '+16505550101';
 const nonexistentPhoneNumber = '+18888888888';
@@ -329,7 +333,9 @@ describe('admin.auth', () => {
     const expiresIn = 24 * 60 * 60 * 1000;
     let payloadClaims: any;
     let currentIdToken: string;
-    const uid = sessionCookieUid;
+    const uid = sessionCookieUids[0];
+    const uid2 = sessionCookieUids[1];
+    const uid3 = sessionCookieUids[2];
 
     it('creates a valid Firebase session cookie', () => {
       return admin.auth().createCustomToken(uid, {admin: true, groupId: '1234'})
@@ -365,7 +371,7 @@ describe('admin.auth', () => {
 
     it('creates a revocable session cookie', () => {
       let currentSessionCookie: string;
-      return admin.auth().createCustomToken(uid)
+      return admin.auth().createCustomToken(uid2)
         .then((customToken) => firebase.auth().signInWithCustomToken(customToken))
         .then(({user}) => user.getIdToken())
         .then((idToken) => {
@@ -375,7 +381,7 @@ describe('admin.auth', () => {
         .then((sessionCookie) => {
           currentSessionCookie = sessionCookie;
           return new Promise((resolve) => setTimeout(() => resolve(
-            admin.auth().revokeRefreshTokens(uid),
+            admin.auth().revokeRefreshTokens(uid2),
           ), 1000));
         })
         .then(() => {
@@ -389,13 +395,13 @@ describe('admin.auth', () => {
     });
 
     it('fails when called with a revoked ID token', () => {
-      return admin.auth().createCustomToken(uid, {admin: true, groupId: '1234'})
+      return admin.auth().createCustomToken(uid3, {admin: true, groupId: '1234'})
         .then((customToken) => firebase.auth().signInWithCustomToken(customToken))
         .then(({user}) => user.getIdToken())
         .then((idToken) => {
           currentIdToken = idToken;
           return new Promise((resolve) => setTimeout(() => resolve(
-            admin.auth().revokeRefreshTokens(uid),
+            admin.auth().revokeRefreshTokens(uid3),
           ), 1000));
         })
         .then(() => {
@@ -407,7 +413,7 @@ describe('admin.auth', () => {
   });
 
   describe('verifySessionCookie()', () => {
-    const uid = sessionCookieUid;
+    const uid = sessionCookieUids[0];
     it('fails when called with an invalid session cookie', () => {
       return admin.auth().verifySessionCookie('invalid-token')
         .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
@@ -727,8 +733,8 @@ function cleanup() {
     deletePhoneNumberUser(nonexistentPhoneNumber),
     deletePhoneNumberUser(updatedPhone),
   ];
-  // Delete user created for session cookie tests.
-  uids.push(sessionCookieUid);
+  // Delete users created for session cookie tests.
+  sessionCookieUids.forEach((uid) => uids.push(uid));
   // Delete list of users for testing listUsers.
   uids.forEach((uid) => {
     // Use safeDelete to avoid getting throttled.
