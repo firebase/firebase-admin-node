@@ -20,7 +20,7 @@ import {deepCopy} from '../utils/deep-copy';
 import {FirebaseApp} from '../firebase-app';
 import {AuthClientErrorCode, FirebaseAuthError, FirebaseError} from '../utils/error';
 import {
-  HttpMethod, SignedApiRequestHandler, ApiSettings, AuthorizedHttpClient, HttpRequestConfig, HttpError,
+  ApiSettings, AuthorizedHttpClient, HttpRequestConfig, HttpError,
 } from '../utils/api-request';
 import {CreateRequest, UpdateRequest} from './user-record';
 import {
@@ -801,7 +801,6 @@ export class FirebaseAuthRequestHandler {
    * @return {Promise<object>} A promise that resolves with the response.
    */
   private invokeRequestHandler(apiSettings: ApiSettings, requestData: object): Promise<object> {
-    const httpMethod: HttpMethod = apiSettings.getHttpMethod();
     return Promise.resolve()
       .then(() => {
         // Validate request.
