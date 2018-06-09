@@ -391,6 +391,11 @@ describe('admin.auth', () => {
         .then(() => {
           return admin.auth().verifySessionCookie(currentSessionCookie, true)
             .should.eventually.be.rejected.and.have.property('code', 'auth/session-cookie-revoked');
+        })
+        .then(() => {
+          // Wait an additional second to avoid token revocation for specified uid
+          // from affecting other tests that use the same uid.
+          return new Promise((resolve) => setTimeout(resolve, 1000));
         });
     });
 
