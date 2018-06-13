@@ -143,9 +143,17 @@ describe('Firebase', () => {
       }).should.eventually.have.keys(['accessToken', 'expirationTime']);
     });
 
-    // TODO(jwenger): mock out the refresh token endpoint so this test will work
-    xit('should initialize SDK given a refresh token credential', () => {
-      nock.recorder.rec();
+    it('should initialize SDK given a refresh token credential', () => {
+      const scope = nock('https://www.googleapis.com')
+        .post('/oauth2/v4/token')
+        .reply(200, {
+          access_token: 'token',
+          token_type: 'Bearer',
+          expires_in: 60 * 60,
+        }, {
+          'cache-control': 'no-cache, no-store, max-age=0, must-revalidate',
+        });
+      mockedRequests.push(scope);
       firebaseAdmin.initializeApp({
         credential: firebaseAdmin.credential.refreshToken(mocks.refreshToken),
       });

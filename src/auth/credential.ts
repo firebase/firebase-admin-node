@@ -26,7 +26,6 @@ import {HttpClient, HttpRequestConfig} from '../utils/api-request';
 const GOOGLE_TOKEN_AUDIENCE = 'https://accounts.google.com/o/oauth2/token';
 const GOOGLE_AUTH_TOKEN_HOST = 'accounts.google.com';
 const GOOGLE_AUTH_TOKEN_PATH = '/o/oauth2/token';
-const GOOGLE_AUTH_TOKEN_PORT = 443;
 
 // NOTE: the Google Metadata Service uses HTTP over a vlan
 const GOOGLE_METADATA_SERVICE_HOST = 'metadata.google.internal';
@@ -47,7 +46,6 @@ const GCLOUD_CREDENTIAL_SUFFIX = 'gcloud/application_default_credentials.json';
 const GCLOUD_CREDENTIAL_PATH = configDir && path.resolve(configDir, GCLOUD_CREDENTIAL_SUFFIX);
 
 const REFRESH_TOKEN_HOST = 'www.googleapis.com';
-const REFRESH_TOKEN_PORT = 443;
 const REFRESH_TOKEN_PATH = '/oauth2/v4/token';
 
 const ONE_HOUR_IN_SECONDS = 60 * 60;
