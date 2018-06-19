@@ -129,10 +129,9 @@ export interface WebpushConfig {
   notification?: WebpushNotification;
 }
 
-export interface WebpushNotification {
+export interface WebpushNotification extends NotificationOptions {
   title?: string;
-  body?: string;
-  icon?: string;
+  [key: string]: any;
 }
 
 export interface ApnsConfig {
