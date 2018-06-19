@@ -91,7 +91,7 @@ before(() => {
 
   noServiceAccountApp = admin.initializeApp({
     credential: new TestCredential(admin.credential.cert(serviceAccount)),
-    serviceAccount: serviceAccount.client_email,
+    serviceAccountId: serviceAccount.client_email,
     projectId,
   }, 'noServiceAccount');
 

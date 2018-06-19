@@ -81,9 +81,9 @@ export class ServiceAccountSigner implements CryptoSigner {
 
 export class IAMSigner implements CryptoSigner {
   private readonly requestHandler_: SignedApiRequestHandler;
-  private serviceAccount_: string;
+  private serviceAccountId_: string;
 
-  constructor(requestHandler: SignedApiRequestHandler, serviceAccount?: string) {
+  constructor(requestHandler: SignedApiRequestHandler, serviceAccountId?: string) {
     if (!requestHandler) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_CREDENTIAL,
@@ -91,7 +91,7 @@ export class IAMSigner implements CryptoSigner {
       );
     }
     this.requestHandler_ = requestHandler;
-    this.serviceAccount_ = serviceAccount;
+    this.serviceAccountId_ = serviceAccountId;
   }
 
   public sign(buffer: Buffer): Promise<Buffer> {
@@ -123,8 +123,8 @@ export class IAMSigner implements CryptoSigner {
   }
 
   public getAccount(): Promise<string> {
-    if (validator.isNonEmptyString(this.serviceAccount_)) {
-      return Promise.resolve(this.serviceAccount_);
+    if (validator.isNonEmptyString(this.serviceAccountId_)) {
+      return Promise.resolve(this.serviceAccountId_);
     }
     const options = {
       method: 'GET',
@@ -140,8 +140,8 @@ export class IAMSigner implements CryptoSigner {
         const buffers: Buffer[] = [];
         res.on('data', (buffer) => buffers.push(buffer));
         res.on('end', () => {
-          this.serviceAccount_ = Buffer.concat(buffers).toString();
-          resolve(this.serviceAccount_);
+          this.serviceAccountId_ = Buffer.concat(buffers).toString();
+          resolve(this.serviceAccountId_);
         });
       });
       req.on('error', (err) => {
@@ -162,7 +162,7 @@ export function signerFromApp(app: FirebaseApp): CryptoSigner {
   if (cert != null && validator.isNonEmptyString(cert.privateKey) && validator.isNonEmptyString(cert.clientEmail)) {
     return new ServiceAccountSigner(cert);
   }
-  return new IAMSigner(new SignedApiRequestHandler(app), app.options.serviceAccount);
+  return new IAMSigner(new SignedApiRequestHandler(app), app.options.serviceAccountId);
 }
 
 /**
