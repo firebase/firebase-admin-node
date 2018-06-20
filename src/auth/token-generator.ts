@@ -17,7 +17,7 @@
 import { FirebaseApp } from '../firebase-app';
 import {Certificate} from './credential';
 import {AuthClientErrorCode, FirebaseAuthError, FirebaseError} from '../utils/error';
-import { SignedApiRequestHandler } from '../utils/api-request';
+import { AuthorizedHttpClient, HttpError, HttpRequestConfig, HttpClient } from '../utils/api-request';
 
 import * as validator from '../utils/validator';
 import { toWebSafeBase64 } from '../utils';
@@ -80,79 +80,68 @@ export class ServiceAccountSigner implements CryptoSigner {
 }
 
 export class IAMSigner implements CryptoSigner {
-  private readonly requestHandler_: SignedApiRequestHandler;
-  private serviceAccountId_: string;
+  private readonly httpClient: AuthorizedHttpClient;
+  private serviceAccountId: string;
 
-  constructor(requestHandler: SignedApiRequestHandler, serviceAccountId?: string) {
-    if (!requestHandler) {
+  constructor(httpClient: AuthorizedHttpClient, serviceAccountId?: string) {
+    if (!httpClient) {
       throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CREDENTIAL,
-        'INTERNAL ASSERT: Must provide a request handler to initialize IAMSigner.',
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        'INTERNAL ASSERT: Must provide a HTTP client to initialize IAMSigner.',
       );
     }
-    this.requestHandler_ = requestHandler;
-    this.serviceAccountId_ = serviceAccountId;
+    this.httpClient = httpClient;
+    this.serviceAccountId = serviceAccountId;
   }
 
   public sign(buffer: Buffer): Promise<Buffer> {
     return this.getAccount().then((serviceAccount) => {
-      const request = {bytesToSign: buffer.toString('base64')};
-      return this.requestHandler_.sendRequest(
-        'iam.googleapis.com',
-        443,
-        `/v1/projects/-/serviceAccounts/${serviceAccount}:signBlob`,
-        'POST',
-        request);
+      const request: HttpRequestConfig = {
+        method: 'POST',
+        url: `https://iam.googleapis.com/v1/projects/-/serviceAccounts/${serviceAccount}:signBlob`,
+        data: {bytesToSign: buffer.toString('base64')},
+      };
+      return this.httpClient.send(request);
     }).then((response: any) => {
       // Response from IAM is base64 encoded. Decode it into a buffer and return.
-      return new Buffer(response.signature, 'base64');
-    }).catch((response) => {
-      const error = (typeof response === 'object' && 'statusCode' in response) ?
-        response.error : response;
-      if (error instanceof FirebaseError) {
-        throw error;
+      return new Buffer(response.data.signature, 'base64');
+    }).catch((err) => {
+      if (err instanceof HttpError) {
+        const error = err.response.data;
+        let errorCode: string;
+        let errorMsg: string;
+        if (validator.isNonNullObject(error) && error.error) {
+          errorCode = error.error.status || null;
+          errorMsg = error.error.message || null;
+        }
+        throw FirebaseAuthError.fromServerError(errorCode, errorMsg, error);
       }
-      let errorCode: string;
-      let errorMsg: string;
-      if (validator.isNonNullObject(error) && error.error) {
-        errorCode = error.error.status || null;
-        errorMsg = error.error.message || null;
-      }
-      throw FirebaseAuthError.fromServerError(errorCode, errorMsg, error);
+      throw err;
     });
   }
 
   public getAccount(): Promise<string> {
-    if (validator.isNonEmptyString(this.serviceAccountId_)) {
-      return Promise.resolve(this.serviceAccountId_);
+    if (validator.isNonEmptyString(this.serviceAccountId)) {
+      return Promise.resolve(this.serviceAccountId);
     }
-    const options = {
+    const request: HttpRequestConfig = {
       method: 'GET',
-      host: 'metadata',
-      path: '/computeMetadata/v1/instance/service-accounts/default/email',
+      url: 'http://metadata/computeMetadata/v1/instance/service-accounts/default/email',
       headers: {
         'Metadata-Flavor': 'Google',
       },
     };
-    const http = require('http');
-    return new Promise((resolve, reject) => {
-      const req = http.request(options, (res) => {
-        const buffers: Buffer[] = [];
-        res.on('data', (buffer) => buffers.push(buffer));
-        res.on('end', () => {
-          this.serviceAccountId_ = Buffer.concat(buffers).toString();
-          resolve(this.serviceAccountId_);
-        });
-      });
-      req.on('error', (err) => {
-        reject(new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_CREDENTIAL,
-          `Failed to determine service account: ${err.toString()}. Make sure to initialize ` +
-          `the SDK with a service account credential. Alternatively specify a service ` +
-          `account with iam.serviceAccounts.signBlob permission.`,
-        ));
-      });
-      req.end();
+    const client = new HttpClient();
+    return client.send(request).then((response) => {
+      this.serviceAccountId = response.text;
+      return this.serviceAccountId;
+    }).catch((err) => {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CREDENTIAL,
+        `Failed to determine service account: ${err.toString()}. Make sure to initialize ` +
+        `the SDK with a service account credential. Alternatively specify a service ` +
+        `account with iam.serviceAccounts.signBlob permission.`,
+      );
     });
   }
 }
@@ -162,7 +151,7 @@ export function signerFromApp(app: FirebaseApp): CryptoSigner {
   if (cert != null && validator.isNonEmptyString(cert.privateKey) && validator.isNonEmptyString(cert.clientEmail)) {
     return new ServiceAccountSigner(cert);
   }
-  return new IAMSigner(new SignedApiRequestHandler(app), app.options.serviceAccountId);
+  return new IAMSigner(new AuthorizedHttpClient(app), app.options.serviceAccountId);
 }
 
 /**
