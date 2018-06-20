@@ -111,12 +111,11 @@ class DefaultHttpResponse implements HttpResponse {
 }
 
 export class HttpError extends Error {
-
-  public readonly response: HttpResponse;
-
-  constructor(resp: LowLevelResponse) {
-    super(`Server responded with status ${resp.status}.`);
-    this.response = new DefaultHttpResponse(resp);
+  constructor(public readonly response: HttpResponse) {
+    super(`Server responded with status ${response.status}.`);
+    // Set the prototype so that instanceof checks will work correctly.
+    // See: https://github.com/Microsoft/TypeScript/issues/13965
+    Object.setPrototypeOf(this, HttpError.prototype);
   }
 }
 
@@ -153,7 +152,7 @@ export class HttpClient {
           return this.sendWithRetry(config, attempts + 1);
         }
         if (err.response) {
-          throw new HttpError(err.response);
+          throw new HttpError(new DefaultHttpResponse(err.response));
         }
         if (err.code === 'ETIMEDOUT') {
           throw new FirebaseAppError(

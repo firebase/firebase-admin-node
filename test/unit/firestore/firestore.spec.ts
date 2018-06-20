@@ -140,7 +140,7 @@ describe('Firestore', () => {
     });
   });
 
-  describe('client.projectId', () => {
+  describe('options.projectId', () => {
     it('should return a string when project ID is present in credential', () => {
       const options = getFirestoreOptions(mockApp);
       expect(options.projectId).to.equal('project_id');
