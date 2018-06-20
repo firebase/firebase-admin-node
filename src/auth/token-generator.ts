@@ -35,15 +35,36 @@ const BLACKLISTED_CLAIMS = [
 // Audience to use for Firebase Auth Custom tokens
 const FIREBASE_AUDIENCE = 'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit';
 
+/**
+ * CryptoSigner interface represents an object that can be used to sign JWTs.
+ */
 export interface CryptoSigner {
+  /**
+   * Cryptographically signs a buffer of data.
+   *
+   * @param {Buffer} buffer The data to be signed.
+   * @returns {Promise<object>} A promise that resolves with a base64-encoded signature.
+   */
   sign(buffer: Buffer): Promise<Buffer>;
+
+  /**
+   * Returns the ID of the service account used to sign tokens.
+   *
+   * @returns {Promise<string>} A promise that resolves with a service account ID.
+   */
   getAccount(): Promise<string>;
 }
 
+/**
+ * Represents the header of a JWT.
+ */
 interface JWTHeader {
   alg: string;
 }
 
+/**
+ * Represents the body of a JWT.
+ */
 interface JWTBody {
   claims?: object;
   uid: string;
@@ -54,9 +75,18 @@ interface JWTBody {
   sub: string;
 }
 
+/**
+ * A CryptoSigner implementation that uses an explicitly specified service account private key to
+ * sign data. Performs all operations locally, and does not make any RPC calls.
+ */
 export class ServiceAccountSigner implements CryptoSigner {
   private readonly certificate_: Certificate;
 
+  /**
+   * Create a new CryptoSigner instance from the given service account certificate.
+   *
+   * @param {Certificate} certificate A service account certificate.
+   */
   constructor(certificate: Certificate) {
     if (!certificate) {
       throw new FirebaseAuthError(
@@ -79,6 +109,14 @@ export class ServiceAccountSigner implements CryptoSigner {
   }
 }
 
+/**
+ * A CryptoSigner implementation that uses the remote IAM service to sign data. If initialized without
+ * a service account ID, attempts to discover a service account ID by consulting the local Metadata
+ * service. This will succeed in managed environments like Google Cloud Functions and App Engine.
+ *
+ * @see https://cloud.google.com/iam/reference/rest/v1/projects.serviceAccounts/signBlob
+ * @see https://cloud.google.com/compute/docs/storing-retrieving-metadata
+ */
 export class IAMSigner implements CryptoSigner {
   private readonly httpClient: AuthorizedHttpClient;
   private serviceAccountId: string;
@@ -146,6 +184,13 @@ export class IAMSigner implements CryptoSigner {
   }
 }
 
+/**
+ * Create a new CryptoSigner instance for the given app. If the app has been initialized with a service
+ * account credential, creates a ServiceAccountSigner. Otherwise creates an IAMSigner.
+ *
+ * @param {FirebaseApp} app A FirebaseApp instance.
+ * @returns {CryptoSigner} A CryptoSigner instance.
+ */
 export function signerFromApp(app: FirebaseApp): CryptoSigner {
   const cert = app.options.credential.getCertificate();
   if (cert != null && validator.isNonEmptyString(cert.privateKey) && validator.isNonEmptyString(cert.clientEmail)) {
@@ -155,7 +200,7 @@ export function signerFromApp(app: FirebaseApp): CryptoSigner {
 }
 
 /**
- * Class for generating and verifying different types of Firebase Auth tokens (JWTs).
+ * Class for generating different types of Firebase Auth tokens (JWTs).
  */
 export class FirebaseTokenGenerator {
 
