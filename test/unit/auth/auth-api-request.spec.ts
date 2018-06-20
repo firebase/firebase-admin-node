@@ -28,7 +28,7 @@ import * as mocks from '../../resources/mocks';
 
 import {deepCopy} from '../../../src/utils/deep-copy';
 import {FirebaseApp} from '../../../src/firebase-app';
-import {HttpRequestHandler} from '../../../src/utils/api-request';
+import {HttpClient, HttpRequestConfig} from '../../../src/utils/api-request';
 import * as validator from '../../../src/utils/validator';
 import {
   FirebaseAuthRequestHandler, FIREBASE_AUTH_GET_ACCOUNT_INFO,
@@ -47,6 +47,9 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
 const expect = chai.expect;
+const httpMethod = 'POST';
+const host = 'www.googleapis.com';
+const timeout = 10000;
 
 
 /**
@@ -724,7 +727,20 @@ describe('FirebaseAuthRequestHandler', () => {
   const mockedRequests: nock.Scope[] = [];
   let stubs: sinon.SinonStub[] = [];
   const mockAccessToken: string = utils.generateRandomAccessToken();
-  let expectedHeaders: object;
+  const expectedHeaders: {[key: string]: string} = {
+    'Content-Type': 'application/json',
+    'X-Client-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
+    'Authorization': 'Bearer ' + mockAccessToken,
+  };
+  const callParams = (path: string, data: any): HttpRequestConfig => {
+    return {
+      method: httpMethod,
+      url: `https://${host}${path}`,
+      headers: expectedHeaders,
+      data,
+      timeout,
+    };
+  };
 
   before(() => utils.mockFetchAccessTokenRequests(mockAccessToken));
 
@@ -735,12 +751,6 @@ describe('FirebaseAuthRequestHandler', () => {
 
   beforeEach(() => {
     mockApp = mocks.app();
-
-    expectedHeaders = {
-      'Content-Type': 'application/json',
-      'X-Client-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
-      'Authorization': 'Bearer ' + mockAccessToken,
-    };
   });
 
   afterEach(() => {
@@ -759,65 +769,53 @@ describe('FirebaseAuthRequestHandler', () => {
 
   describe('createSessionCookie', () => {
     const durationInMs = 24 * 60 * 60 * 1000;
-    const httpMethod = 'POST';
-    const host = 'www.googleapis.com';
-    const port = 443;
     const path = '/identitytoolkit/v3/relyingparty/createSessionCookie';
-    const timeout = 10000;
-    it('should be fulfilled given a valid localId', () => {
-      const expectedResult = {
-        sessionCookie: 'SESSION_COOKIE',
-      };
-      const data = {idToken: 'ID_TOKEN', validDuration: durationInMs / 1000};
 
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult));
+    it('should be fulfilled given a valid localId', () => {
+      const expectedResult = utils.responseFrom({
+        sessionCookie: 'SESSION_COOKIE',
+      });
+      const data = {idToken: 'ID_TOKEN', validDuration: durationInMs / 1000};
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       return requestHandler.createSessionCookie('ID_TOKEN', durationInMs)
         .then((result) => {
           expect(result).to.deep.equal('SESSION_COOKIE');
-          expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, data, expectedHeaders, timeout);
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
         });
     });
     it('should be fulfilled given a duration equal to the maximum allowed', () => {
-      const expectedResult = {
+      const expectedResult = utils.responseFrom({
         sessionCookie: 'SESSION_COOKIE',
-      };
+      });
       const durationAtLimitInMs = 14 * 24 * 60 * 60 * 1000;
       const data = {idToken: 'ID_TOKEN', validDuration: durationAtLimitInMs / 1000};
-
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult));
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       return requestHandler.createSessionCookie('ID_TOKEN', durationAtLimitInMs)
         .then((result) => {
           expect(result).to.deep.equal('SESSION_COOKIE');
-          expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, data, expectedHeaders, timeout);
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
         });
     });
     it('should be fulfilled given a duration equal to the minimum allowed', () => {
-      const expectedResult = {
+      const expectedResult = utils.responseFrom({
         sessionCookie: 'SESSION_COOKIE',
-      };
+      });
       const durationAtLimitInMs = 5 * 60 * 1000;
       const data = {idToken: 'ID_TOKEN', validDuration: durationAtLimitInMs / 1000};
-
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult));
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       return requestHandler.createSessionCookie('ID_TOKEN', durationAtLimitInMs)
         .then((result) => {
           expect(result).to.deep.equal('SESSION_COOKIE');
-          expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, data, expectedHeaders, timeout);
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
         });
     });
     it('should be rejected given an invalid ID token', () => {
@@ -875,16 +873,14 @@ describe('FirebaseAuthRequestHandler', () => {
         });
     });
     it('should be rejected when the backend returns an error', () => {
-      const expectedResult = {
+      const expectedResult = utils.errorFrom({
         error: {
           message: 'INVALID_ID_TOKEN',
         },
-      };
+      });
       const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_ID_TOKEN);
       const data = {idToken: 'invalid-token', validDuration: durationInMs / 1000};
-
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult));
+      const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedResult);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -893,47 +889,43 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, data, expectedHeaders, timeout);
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
         });
     });
   });
 
   describe('getAccountInfoByEmail', () => {
-    const httpMethod = 'POST';
-    const host = 'www.googleapis.com';
-    const port = 443;
     const path = '/identitytoolkit/v3/relyingparty/getAccountInfo';
-    const timeout = 10000;
     it('should be fulfilled given a valid email', () => {
-      const expectedResult = {
+      const expectedResult = utils.responseFrom({
         users : [
           {email: 'user@example.com'},
         ],
-      };
+      });
       const data = {email: ['user@example.com']};
-
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult));
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       return requestHandler.getAccountInfoByEmail('user@example.com')
         .then((result) => {
-          expect(result).to.deep.equal(expectedResult);
-          expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, data, expectedHeaders, timeout);
+          expect(result).to.deep.equal(expectedResult.data);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: httpMethod,
+            url: `https://${host}${path}`,
+            data,
+            headers: expectedHeaders,
+            timeout,
+          });
         });
     });
     it('should be rejected given an invalid email', () => {
-      const expectedResult = {
+      const expectedResult = utils.responseFrom({
         kind: 'identitytoolkit#GetAccountInfoResponse',
-      };
+      });
       const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
       const data = {email: ['user@example.com']};
-
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult));
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -942,47 +934,37 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, data, expectedHeaders, timeout);
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
         });
     });
   });
 
   describe('getAccountInfoByUid', () => {
-    const httpMethod = 'POST';
-    const host = 'www.googleapis.com';
-    const port = 443;
     const path = '/identitytoolkit/v3/relyingparty/getAccountInfo';
-    const timeout = 10000;
     it('should be fulfilled given a valid localId', () => {
-      const expectedResult = {
+      const expectedResult = utils.responseFrom({
         users : [
           {localId: 'uid'},
         ],
-      };
+      });
       const data = {localId: ['uid']};
-
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult));
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       return requestHandler.getAccountInfoByUid('uid')
         .then((result) => {
-          expect(result).to.deep.equal(expectedResult);
-          expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, data, expectedHeaders, timeout);
+          expect(result).to.deep.equal(expectedResult.data);
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
         });
     });
     it('should be rejected given an invalid localId', () => {
-      const expectedResult = {
+      const expectedResult = utils.responseFrom({
         kind: 'identitytoolkit#GetAccountInfoResponse',
-      };
+      });
       const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
       const data = {localId: ['uid']};
-
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult));
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -991,21 +973,19 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, data, expectedHeaders, timeout);
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
         });
     });
     it('should be rejected when the backend returns an error', () => {
-      const expectedResult = {
+      const expectedResult = utils.errorFrom({
         error: {
           message: 'OPERATION_NOT_ALLOWED',
         },
-      };
+      });
       const expectedError = FirebaseAuthError.fromServerError('OPERATION_NOT_ALLOWED');
       const data = {localId: ['uid']};
 
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult));
+      const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedResult);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -1014,20 +994,15 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, data, expectedHeaders, timeout);
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
         });
     });
   });
 
   describe('getAccountInfoByPhoneNumber', () => {
-    const httpMethod = 'POST';
-    const host = 'www.googleapis.com';
-    const port = 443;
     const path = '/identitytoolkit/v3/relyingparty/getAccountInfo';
-    const timeout = 10000;
     it('should be fulfilled given a valid phoneNumber', () => {
-      const expectedResult = {
+      const expectedResult = utils.responseFrom({
         users : [
           {
             localId: 'uid',
@@ -1041,28 +1016,26 @@ describe('FirebaseAuthRequestHandler', () => {
             ],
           },
         ],
-      };
+      });
       const data = {
         phoneNumber: ['+11234567890'],
       };
 
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult));
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       return requestHandler.getAccountInfoByPhoneNumber('+11234567890')
         .then((result) => {
-          expect(result).to.deep.equal(expectedResult);
-          expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, data, expectedHeaders, timeout);
+          expect(result).to.deep.equal(expectedResult.data);
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
         });
     });
     it('should be rejected given an invalid phoneNumber', () => {
       const expectedError = new FirebaseAuthError(
         AuthClientErrorCode.INVALID_PHONE_NUMBER);
 
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest');
+      const stub = sinon.stub(HttpClient.prototype, 'send');
       stubs.push(stub);
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       return requestHandler.getAccountInfoByPhoneNumber('invalid')
@@ -1075,16 +1048,15 @@ describe('FirebaseAuthRequestHandler', () => {
 
     });
     it('should be rejected when the backend returns an error', () => {
-      const expectedResult = {
+      const expectedResult = utils.responseFrom({
         kind: 'identitytoolkit#GetAccountInfoResponse',
-      };
+      });
       const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
       const data = {
         phoneNumber: ['+11234567890'],
       };
 
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult));
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -1093,18 +1065,13 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, data, expectedHeaders, timeout);
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
         });
     });
   });
 
   describe('uploadAccount', () => {
-    const httpMethod = 'POST';
-    const host = 'www.googleapis.com';
-    const port = 443;
     const path = '/identitytoolkit/v3/relyingparty/uploadAccount';
-    const timeout = 10000;
     const nowString = new Date().toUTCString();
     const users = [
       {
@@ -1154,7 +1121,7 @@ describe('FirebaseAuthRequestHandler', () => {
           algorithm: 'invalid',
         },
       } as any;
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest');
+      const stub = sinon.stub(HttpClient.prototype, 'send');
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -1169,7 +1136,7 @@ describe('FirebaseAuthRequestHandler', () => {
         AuthClientErrorCode.MAXIMUM_USER_COUNT_EXCEEDED,
         `A maximum of 1000 users can be imported at once.`,
       );
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest');
+      const stub = sinon.stub(HttpClient.prototype, 'send');
       stubs.push(stub);
 
       const testUsers = [];
@@ -1189,9 +1156,8 @@ describe('FirebaseAuthRequestHandler', () => {
     });
 
     it('should resolve successfully when 1000 UserImportRecords are provided', () => {
-      const expectedResult = {};
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult));
+      const expectedResult = utils.responseFrom({});
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
       stubs.push(stub);
 
       const testUsers = [];
@@ -1209,16 +1175,14 @@ describe('FirebaseAuthRequestHandler', () => {
         .then((result) => {
           expect(result).to.deep.equal(userImportBuilder.buildResponse([]));
           expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, userImportBuilder.buildRequest(),
-              expectedHeaders, timeout);
+            callParams(path, userImportBuilder.buildRequest()));
         });
 
     });
 
     it('should resolve with expected result on underlying API success', () => {
-      const expectedResult = {};
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult));
+      const expectedResult = utils.responseFrom({});
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -1227,30 +1191,27 @@ describe('FirebaseAuthRequestHandler', () => {
         .then((result) => {
           expect(result).to.deep.equal(userImportBuilder.buildResponse([]));
           expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, userImportBuilder.buildRequest(),
-              expectedHeaders, timeout);
+            callParams(path, userImportBuilder.buildRequest()));
         });
     });
 
     it('should resolve with expected result on underlying API partial succcess', () => {
-      const expectedResult = {
+      const expectedResult = utils.responseFrom({
         error: [
           {index: 0, message: 'Some error occurred'},
           {index: 1, message: 'Another error occurred'},
         ],
-      };
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult));
+      });
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       const userImportBuilder = new UserImportBuilder(users, options);
       return requestHandler.uploadAccount(users, options)
         .then((result) => {
-          expect(result).to.deep.equal(userImportBuilder.buildResponse(expectedResult.error));
+          expect(result).to.deep.equal(userImportBuilder.buildResponse(expectedResult.data.error));
           expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, userImportBuilder.buildRequest(),
-              expectedHeaders, timeout);
+            callParams(path, userImportBuilder.buildRequest()));
         });
     });
 
@@ -1268,7 +1229,7 @@ describe('FirebaseAuthRequestHandler', () => {
           {index: 1, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL)},
         ],
       };
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest');
+      const stub = sinon.stub(HttpClient.prototype, 'send');
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -1368,7 +1329,7 @@ describe('FirebaseAuthRequestHandler', () => {
           {index: 17, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_UID)},
         ],
       };
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest');
+      const stub = sinon.stub(HttpClient.prototype, 'send');
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -1380,18 +1341,17 @@ describe('FirebaseAuthRequestHandler', () => {
     });
 
     it('should be rejected when the backend returns an error', () => {
-      const expectedServerError = {
+      const expectedServerError = utils.errorFrom({
         error: {
           message: 'INTERNAL_ERROR',
         },
-      };
+      });
       const expectedError = new FirebaseAuthError(
          AuthClientErrorCode.INTERNAL_ERROR,
          `An internal error has occurred. Raw server response: ` +
-         `"${JSON.stringify(expectedServerError)}"`,
+         `"${JSON.stringify(expectedServerError.response.data)}"`,
       );
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedServerError));
+      const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedServerError);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -1402,65 +1362,52 @@ describe('FirebaseAuthRequestHandler', () => {
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
           expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, userImportBuilder.buildRequest(),
-              expectedHeaders, timeout);
+            callParams(path, userImportBuilder.buildRequest()));
         });
     });
 
   });
 
   describe('downloadAccount', () => {
-    const httpMethod = 'POST';
-    const host = 'www.googleapis.com';
-    const port = 443;
     const path = '/identitytoolkit/v3/relyingparty/downloadAccount';
-    const timeout = 10000;
     const nextPageToken = 'PAGE_TOKEN';
     const maxResults = 500;
-    const expectedResult = {
+    const expectedResult = utils.responseFrom({
       users : [
         {localId: 'uid1'},
         {localId: 'uid2'},
       ],
       nextPageToken: 'NEXT_PAGE_TOKEN',
-    };
+    });
     it('should be fulfilled given a valid parameters', () => {
       const data = {
         maxResults,
         nextPageToken,
       };
-
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult));
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       return requestHandler.downloadAccount(maxResults, nextPageToken)
         .then((result) => {
-          expect(result).to.deep.equal(expectedResult);
-          expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, data, expectedHeaders, timeout);
+          expect(result).to.deep.equal(expectedResult.data);
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
         });
     });
     it('should be fulfilled with empty user array when no users exist', () => {
-      const emptyExpectedResult = {
-        users: [],
-      };
       const data = {
         maxResults,
         nextPageToken,
       };
 
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve({}));
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       return requestHandler.downloadAccount(maxResults, nextPageToken)
         .then((result) => {
-          expect(result).to.deep.equal(emptyExpectedResult);
-          expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, data, expectedHeaders, timeout);
+          expect(result).to.deep.equal({users: []});
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
         });
     });
     it('should be fulfilled given no parameters', () => {
@@ -1468,17 +1415,14 @@ describe('FirebaseAuthRequestHandler', () => {
       const data = {
         maxResults: 1000,
       };
-
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult));
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       return requestHandler.downloadAccount()
         .then((result) => {
-          expect(result).to.deep.equal(expectedResult);
-          expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, data, expectedHeaders, timeout);
+          expect(result).to.deep.equal(expectedResult.data);
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
         });
     });
     it('should be rejected given an invalid maxResults', () => {
@@ -1510,19 +1454,17 @@ describe('FirebaseAuthRequestHandler', () => {
         });
     });
     it('should be rejected when the backend returns an error', () => {
-      const expectedServerError = {
+      const expectedServerError = utils.errorFrom({
         error: {
           message: 'INVALID_PAGE_SELECTION',
         },
-      };
+      });
       const expectedError = FirebaseAuthError.fromServerError('INVALID_PAGE_SELECTION');
       const data = {
         maxResults,
         nextPageToken,
       };
-
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedServerError));
+      const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedServerError);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -1531,46 +1473,38 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, data, expectedHeaders, timeout);
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
         });
     });
   });
 
   describe('deleteAccount', () => {
-    const httpMethod = 'POST';
-    const host = 'www.googleapis.com';
-    const port = 443;
     const path = '/identitytoolkit/v3/relyingparty/deleteAccount';
-    const timeout = 10000;
     it('should be fulfilled given a valid localId', () => {
-      const expectedResult = {
+      const expectedResult = utils.responseFrom({
         kind: 'identitytoolkit#DeleteAccountResponse',
-      };
+      });
       const data = {localId: 'uid'};
 
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult));
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
       stubs.push(stub);
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       return requestHandler.deleteAccount('uid')
         .then((result) => {
-          expect(result).to.deep.equal(expectedResult);
-          expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, data, expectedHeaders, timeout);
+          expect(result).to.deep.equal(expectedResult.data);
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
         });
     });
     it('should be rejected when the backend returns an error', () => {
-      const expectedResult = {
+      const expectedResult = utils.errorFrom({
         error: {
           message: 'OPERATION_NOT_ALLOWED',
         },
-      };
+      });
       const expectedError = FirebaseAuthError.fromServerError('OPERATION_NOT_ALLOWED');
       const data = {localId: 'uid'};
 
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult));
+      const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedResult);
       stubs.push(stub);
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
       return requestHandler.deleteAccount('uid')
@@ -1578,18 +1512,13 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, data, expectedHeaders, timeout);
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
         });
     });
   });
 
   describe('updateExistingAccount', () => {
-    const httpMethod = 'POST';
-    const host = 'www.googleapis.com';
-    const port = 443;
     const path = '/identitytoolkit/v3/relyingparty/setAccountInfo';
-    const timeout = 10000;
     const uid = '12345678';
     const validData = {
       displayName: 'John Doe',
@@ -1648,13 +1577,11 @@ describe('FirebaseAuthRequestHandler', () => {
 
     it('should be fulfilled given a valid localId', () => {
       // Successful result server response.
-      const expectedResult = {
+      const expectedResult = utils.responseFrom({
         kind: 'identitytoolkit#SetAccountInfoResponse',
         localId: uid,
-      };
-
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult));
+      });
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -1665,19 +1592,17 @@ describe('FirebaseAuthRequestHandler', () => {
           expect(returnedUid).to.be.equal(uid);
           // Confirm expected rpc request parameters sent.
           expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, {localId: uid}, expectedHeaders, timeout);
+            callParams(path, {localId: uid}));
         });
     });
 
     it('should be fulfilled given valid parameters', () => {
       // Successful result server response.
-      const expectedResult = {
+      const expectedResult = utils.responseFrom({
         kind: 'identitytoolkit#SetAccountInfoResponse',
         localId: uid,
-      };
-
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult));
+      });
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -1688,19 +1613,17 @@ describe('FirebaseAuthRequestHandler', () => {
           expect(returnedUid).to.be.equal(uid);
           // Confirm expected rpc request parameters sent.
           expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, expectedValidData, expectedHeaders, timeout);
+            callParams(path, expectedValidData));
         });
     });
 
     it('should be fulfilled given valid profile parameters to delete', () => {
       // Successful result server response.
-      const expectedResult = {
+      const expectedResult = utils.responseFrom({
         kind: 'identitytoolkit#SetAccountInfoResponse',
         localId: uid,
-      };
-
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult));
+      });
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -1712,19 +1635,18 @@ describe('FirebaseAuthRequestHandler', () => {
           // Confirm expected rpc request parameters sent. In this case, displayName
           // and photoURL removed from request and deleteAttribute added.
           expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, expectedValidDeleteData, expectedHeaders, timeout);
+            callParams(path, expectedValidDeleteData));
         });
     });
 
     it('should be fulfilled given phone number to delete', () => {
       // Successful result server response.
-      const expectedResult = {
+      const expectedResult = utils.responseFrom({
         kind: 'identitytoolkit#SetAccountInfoResponse',
         localId: uid,
-      };
+      });
 
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult));
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -1736,8 +1658,7 @@ describe('FirebaseAuthRequestHandler', () => {
           // Confirm expected rpc request parameters sent. In this case, phoneNumber
           // removed from request and deleteProvider added.
           expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, expectedValidDeletePhoneNumberData, expectedHeaders,
-              timeout);
+            callParams(path, expectedValidDeletePhoneNumberData));
         });
     });
 
@@ -1772,14 +1693,13 @@ describe('FirebaseAuthRequestHandler', () => {
     it('should be rejected when the backend returns an error', () => {
       // Backend returned error.
       const expectedError = FirebaseAuthError.fromServerError('OPERATION_NOT_ALLOWED');
-      const expectedResult = {
+      const expectedResult = utils.errorFrom({
         error: {
           message: 'OPERATION_NOT_ALLOWED',
         },
-      };
+      });
 
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult));
+      const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedResult);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -1789,17 +1709,13 @@ describe('FirebaseAuthRequestHandler', () => {
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
           expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, expectedValidData, expectedHeaders, timeout);
+            callParams(path, expectedValidData));
         });
     });
   });
 
   describe('setCustomUserClaims', () => {
-    const httpMethod = 'POST';
-    const host = 'www.googleapis.com';
-    const port = 443;
     const path = '/identitytoolkit/v3/relyingparty/setAccountInfo';
-    const timeout = 10000;
     const uid = '12345678';
     const claims = {admin: true, groupId: '1234'};
     const expectedValidData = {
@@ -1810,14 +1726,13 @@ describe('FirebaseAuthRequestHandler', () => {
       localId: uid,
       customAttributes: JSON.stringify({}),
     };
-    const expectedResult = {
+    const expectedResult = utils.responseFrom({
       localId: uid,
-    };
+    });
 
     it('should be fulfilled given a valid localId and customAttributes', () => {
       // Successful result server response.
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult));
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -1828,15 +1743,13 @@ describe('FirebaseAuthRequestHandler', () => {
           expect(returnedUid).to.be.equal(uid);
           // Confirm expected rpc request parameters sent.
           expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, expectedValidData,
-              expectedHeaders, timeout);
+            callParams(path, expectedValidData));
         });
     });
 
     it('should be fulfilled given valid localId and null claims', () => {
       // Successful result server response.
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult));
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -1847,8 +1760,7 @@ describe('FirebaseAuthRequestHandler', () => {
           expect(returnedUid).to.be.equal(uid);
           // Confirm expected rpc request parameters sent.
           expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, expectedEmptyClaimsData,
-              expectedHeaders, timeout);
+            callParams(path, expectedEmptyClaimsData));
         });
     });
 
@@ -1904,14 +1816,12 @@ describe('FirebaseAuthRequestHandler', () => {
     it('should be rejected when the backend returns an error', () => {
       // Backend returned error.
       const expectedError = FirebaseAuthError.fromServerError('USER_NOT_FOUND');
-      const expectedServerError = {
+      const expectedServerError = utils.errorFrom({
         error: {
           message: 'USER_NOT_FOUND',
         },
-      };
-
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedServerError));
+      });
+      const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedServerError);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -1921,22 +1831,18 @@ describe('FirebaseAuthRequestHandler', () => {
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
           expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, expectedValidData, expectedHeaders, timeout);
+            callParams(path, expectedValidData));
         });
     });
   });
 
   describe('revokeRefreshTokens', () => {
-    const httpMethod = 'POST';
-    const host = 'www.googleapis.com';
-    const port = 443;
     const path = '/identitytoolkit/v3/relyingparty/setAccountInfo';
-    const timeout = 10000;
     const uid = '12345678';
     const now = new Date();
-    const expectedResult = {
+    const expectedResult = utils.responseFrom({
       localId: uid,
-    };
+    });
     let clock;
 
     beforeEach(() => {
@@ -1953,9 +1859,7 @@ describe('FirebaseAuthRequestHandler', () => {
         // Current time should be passed, rounded up.
         validSince: Math.ceil((now.getTime() + 5000) / 1000),
       };
-
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult));
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -1964,8 +1868,7 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.revokeRefreshTokens(uid)
         .then((returnedUid: string) => {
           expect(returnedUid).to.be.equal(uid);
-          expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, requestData, expectedHeaders, timeout);
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, requestData));
         });
     });
 
@@ -1986,18 +1889,16 @@ describe('FirebaseAuthRequestHandler', () => {
     it('should be rejected when the backend returns an error', () => {
       // Backend returned error.
       const expectedError = FirebaseAuthError.fromServerError('USER_NOT_FOUND');
-      const expectedServerError = {
+      const expectedServerError = utils.errorFrom({
         error: {
           message: 'USER_NOT_FOUND',
         },
-      };
+      });
       const requestData = {
         localId: uid,
         validSince: Math.ceil((now.getTime() + 5000) / 1000),
       };
-
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedServerError));
+      const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedServerError);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -2008,19 +1909,14 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, requestData, expectedHeaders, timeout);
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, requestData));
         });
     });
   });
 
   describe('createNewAccount', () => {
     describe('with uid specified', () => {
-      const httpMethod = 'POST';
-      const host = 'www.googleapis.com';
-      const port = 443;
       const path = '/identitytoolkit/v3/relyingparty/signupNewUser';
-      const timeout = 10000;
       const uid = '12345678';
       const validData = {
         uid,
@@ -2056,13 +1952,11 @@ describe('FirebaseAuthRequestHandler', () => {
       };
       it('should be fulfilled given a valid localId', () => {
         // Successful uploadAccount response.
-        const expectedResult = {
+        const expectedResult = utils.responseFrom({
           kind: 'identitytoolkit#SignupNewUserResponse',
           localId: uid,
-        };
-
-        const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-          .returns(Promise.resolve(expectedResult));
+        });
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
         stubs.push(stub);
 
         const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -2072,19 +1966,16 @@ describe('FirebaseAuthRequestHandler', () => {
             // uid should be returned.
             expect(returnedUid).to.be.equal(uid);
             // Confirm expected rpc request parameters sent.
-            expect(stub).to.have.been.calledOnce.and.calledWith(
-                host, port, path, httpMethod, emptyRequest, expectedHeaders, timeout);
+            expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, emptyRequest));
           });
       });
 
       it('should be fulfilled given valid parameters', () => {
-        const expectedResult = {
+        const expectedResult = utils.responseFrom({
           kind: 'identitytoolkit#SignupNewUserResponse',
           localId: uid,
-        };
-
-        const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-          .returns(Promise.resolve(expectedResult));
+        });
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
         stubs.push(stub);
 
         const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -2095,7 +1986,7 @@ describe('FirebaseAuthRequestHandler', () => {
             expect(returnedUid).to.be.equal(uid);
             // Confirm expected rpc request parameters sent.
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                host, port, path, httpMethod, expectedValidData, expectedHeaders, timeout);
+              callParams(path, expectedValidData));
           });
       });
 
@@ -2130,14 +2021,12 @@ describe('FirebaseAuthRequestHandler', () => {
       it('should be rejected when the backend returns a user exists error', () => {
         // Expected error when the uid already exists.
         const expectedError = new FirebaseAuthError(AuthClientErrorCode.UID_ALREADY_EXISTS);
-        const expectedResult = {
+        const expectedResult = utils.errorFrom({
           error: {
             message: 'DUPLICATE_LOCAL_ID',
           },
-        };
-
-        const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-          .returns(Promise.resolve(expectedResult));
+        });
+        const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedResult);
         stubs.push(stub);
 
         const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -2149,21 +2038,19 @@ describe('FirebaseAuthRequestHandler', () => {
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                host, port, path, httpMethod, expectedValidData, expectedHeaders, timeout);
+              callParams(path, expectedValidData));
           });
       });
 
       it('should be rejected when the backend returns an email exists error', () => {
         // Expected error when the email already exists.
         const expectedError = new FirebaseAuthError(AuthClientErrorCode.EMAIL_ALREADY_EXISTS);
-        const expectedResult = {
+        const expectedResult = utils.errorFrom({
           error: {
             message: 'EMAIL_EXISTS',
           },
-        };
-
-        const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-          .returns(Promise.resolve(expectedResult));
+        });
+        const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedResult);
         stubs.push(stub);
 
         const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -2175,21 +2062,19 @@ describe('FirebaseAuthRequestHandler', () => {
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                host, port, path, httpMethod, expectedValidData, expectedHeaders, timeout);
+              callParams(path, expectedValidData));
           });
       });
 
       it('should be rejected when the backend returns a generic error', () => {
         // Some generic backend error.
         const expectedError = FirebaseAuthError.fromServerError('OPERATION_NOT_ALLOWED');
-        const expectedResult = {
+        const expectedResult = utils.errorFrom({
           error: {
             message: 'OPERATION_NOT_ALLOWED',
           },
-        };
-
-        const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-          .returns(Promise.resolve(expectedResult));
+        });
+        const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedResult);
         stubs.push(stub);
 
         const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -2200,17 +2085,13 @@ describe('FirebaseAuthRequestHandler', () => {
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                host, port, path, httpMethod, expectedValidData, expectedHeaders, timeout);
+              callParams(path, expectedValidData));
           });
       });
     });
 
     describe('with no uid specified', () => {
-      const httpMethod = 'POST';
-      const host = 'www.googleapis.com';
-      const port = 443;
       const path = '/identitytoolkit/v3/relyingparty/signupNewUser';
-      const timeout = 10000;
       const uid = '12345678';
       const validData = {
         displayName: 'John Doe',
@@ -2241,13 +2122,11 @@ describe('FirebaseAuthRequestHandler', () => {
 
       it('should be fulfilled given valid parameters', () => {
         // signupNewUser successful response.
-        const expectedResult = {
+        const expectedResult = utils.responseFrom({
           kind: 'identitytoolkit#SignupNewUserResponse',
           localId: uid,
-        };
-
-        const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-          .returns(Promise.resolve(expectedResult));
+        });
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
         stubs.push(stub);
 
         const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -2258,7 +2137,7 @@ describe('FirebaseAuthRequestHandler', () => {
             expect(returnedUid).to.be.equal(uid);
             // Confirm expected rpc request parameters sent.
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                host, port, path, httpMethod, expectedValidData, expectedHeaders, timeout);
+              callParams(path, expectedValidData));
           });
       });
 
@@ -2293,14 +2172,12 @@ describe('FirebaseAuthRequestHandler', () => {
       it('should be rejected when the backend returns a generic error', () => {
         // Some generic backend error.
         const expectedError = FirebaseAuthError.fromServerError('OPERATION_NOT_ALLOWED');
-        const expectedResult = {
+        const expectedResult = utils.errorFrom({
           error: {
             message: 'OPERATION_NOT_ALLOWED',
           },
-        };
-
-        const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-          .returns(Promise.resolve(expectedResult));
+        });
+        const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedResult);
         stubs.push(stub);
 
         const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -2311,7 +2188,7 @@ describe('FirebaseAuthRequestHandler', () => {
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                host, port, path, httpMethod, expectedValidData, expectedHeaders, timeout);
+              callParams(path, expectedValidData));
           });
       });
     });
@@ -2319,17 +2196,12 @@ describe('FirebaseAuthRequestHandler', () => {
 
   describe('non-2xx responses', () => {
     it('should be rejected given a simulated non-2xx response with a known error code', () => {
-      const mockErrorResponse = {
+      const mockErrorResponse = utils.errorFrom({
         error: {
-          error: {
-            message: 'USER_NOT_FOUND',
-          },
+          message: 'USER_NOT_FOUND',
         },
-        statusCode: 400,
-      };
-
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .rejects(mockErrorResponse);
+      }, 400);
+      const stub = sinon.stub(HttpClient.prototype, 'send').rejects(mockErrorResponse);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -2338,17 +2210,12 @@ describe('FirebaseAuthRequestHandler', () => {
     });
 
     it('should be rejected given a simulated non-2xx response with an unknown error code', () => {
-      const mockErrorResponse = {
+      const mockErrorResponse = utils.errorFrom({
         error: {
-          error: {
-            message: 'UNKNOWN_ERROR_CODE',
-          },
+          message: 'UNKNOWN_ERROR_CODE',
         },
-        statusCode: 400,
-      };
-
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .rejects(mockErrorResponse);
+      }, 400);
+      const stub = sinon.stub(HttpClient.prototype, 'send').rejects(mockErrorResponse);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -2357,15 +2224,12 @@ describe('FirebaseAuthRequestHandler', () => {
     });
 
     it('should be rejected given a simulated non-2xx response with no error code', () => {
-      const mockErrorResponse = {
+      const mockErrorResponse = utils.errorFrom({
         error: {
           foo: 'bar',
         },
-        statusCode: 400,
-      };
-
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .rejects(mockErrorResponse);
+      }, 400);
+      const stub = sinon.stub(HttpClient.prototype, 'send').rejects(mockErrorResponse);
       stubs.push(stub);
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);

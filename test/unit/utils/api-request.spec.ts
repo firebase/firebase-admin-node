@@ -195,7 +195,7 @@ describe('HttpClient', () => {
       reqheaders: {
         'Authorization': 'Bearer token',
         'Content-Type': (header) => {
-          return header.startsWith('application/json'); // auto-inserted by Axios
+          return header.startsWith('application/json'); // auto-inserted
         },
         'My-Custom-Header': 'CustomValue',
       },

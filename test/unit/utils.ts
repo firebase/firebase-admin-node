@@ -21,7 +21,7 @@ import * as mocks from '../resources/mocks';
 
 import {FirebaseNamespace} from '../../src/firebase-namespace';
 import {FirebaseApp, FirebaseAppOptions} from '../../src/firebase-app';
-import { HttpResponse } from '../../src/utils/api-request';
+import { HttpError, HttpResponse } from '../../src/utils/api-request';
 
 /**
  * Returns a new FirebaseApp instance with the provided options.
@@ -83,4 +83,8 @@ export function responseFrom(data: any, status: number = 200, headers: any = {})
     data,
     text: JSON.stringify(data),
   };
+}
+
+export function errorFrom(data: any, status: number = 500): HttpError {
+  return new HttpError(responseFrom(data, status));
 }

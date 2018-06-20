@@ -20,7 +20,7 @@ import {deepCopy} from '../utils/deep-copy';
 import {FirebaseApp} from '../firebase-app';
 import {AuthClientErrorCode, FirebaseAuthError, FirebaseError} from '../utils/error';
 import {
-  HttpMethod, SignedApiRequestHandler, ApiSettings,
+  ApiSettings, AuthorizedHttpClient, HttpRequestConfig, HttpError,
 } from '../utils/api-request';
 import {CreateRequest, UpdateRequest} from './user-record';
 import {
@@ -429,12 +429,8 @@ export const FIREBASE_AUTH_SIGN_UP_NEW_USER = new ApiSettings('signupNewUser', '
  * Class that provides mechanism to send requests to the Firebase Auth backend endpoints.
  */
 export class FirebaseAuthRequestHandler {
-  private host: string = FIREBASE_AUTH_HOST;
-  private port: number = FIREBASE_AUTH_PORT;
-  private path: string = FIREBASE_AUTH_PATH;
-  private headers: object = FIREBASE_AUTH_HEADER;
-  private timeout: number = FIREBASE_AUTH_TIMEOUT;
-  private signedApiRequestHandler: SignedApiRequestHandler;
+  private baseUrl: string = `https://${FIREBASE_AUTH_HOST}${FIREBASE_AUTH_PATH}`;
+  private httpClient: AuthorizedHttpClient;
 
   /**
    * @param {any} response The response to check for errors.
@@ -449,7 +445,7 @@ export class FirebaseAuthRequestHandler {
    * @constructor
    */
   constructor(app: FirebaseApp) {
-    this.signedApiRequestHandler = new SignedApiRequestHandler(app);
+    this.httpClient = new AuthorizedHttpClient(app);
   }
 
   /**
@@ -805,38 +801,35 @@ export class FirebaseAuthRequestHandler {
    * @return {Promise<object>} A promise that resolves with the response.
    */
   private invokeRequestHandler(apiSettings: ApiSettings, requestData: object): Promise<object> {
-    const path: string = this.path + apiSettings.getEndpoint();
-    const httpMethod: HttpMethod = apiSettings.getHttpMethod();
     return Promise.resolve()
       .then(() => {
         // Validate request.
         const requestValidator = apiSettings.getRequestValidator();
         requestValidator(requestData);
         // Process request.
-        return this.signedApiRequestHandler.sendRequest(
-            this.host, this.port, path, httpMethod, requestData, this.headers, this.timeout);
+        const req: HttpRequestConfig = {
+          method: apiSettings.getHttpMethod(),
+          url: `${this.baseUrl}${apiSettings.getEndpoint()}`,
+          headers: FIREBASE_AUTH_HEADER,
+          data: requestData,
+          timeout: FIREBASE_AUTH_TIMEOUT,
+        };
+        return this.httpClient.send(req);
       })
       .then((response) => {
-        // Check for backend errors in the response.
-        const errorCode = FirebaseAuthRequestHandler.getErrorCode(response);
-        if (errorCode) {
-          throw FirebaseAuthError.fromServerError(errorCode, /* message */ undefined, response);
-        }
         // Validate response.
         const responseValidator = apiSettings.getResponseValidator();
-        responseValidator(response);
+        responseValidator(response.data);
         // Return entire response.
-        return response;
+        return response.data;
       })
-      .catch((response) => {
-        const error = (typeof response === 'object' && 'statusCode' in response) ?
-          response.error : response;
-        if (error instanceof FirebaseError) {
-          throw error;
+      .catch((err) => {
+        if (err instanceof HttpError) {
+          const error = err.response.data;
+          const errorCode = FirebaseAuthRequestHandler.getErrorCode(error);
+          throw FirebaseAuthError.fromServerError(errorCode, /* message */ undefined, error);
         }
-
-        const errorCode = FirebaseAuthRequestHandler.getErrorCode(error);
-        throw FirebaseAuthError.fromServerError(errorCode, /* message */ undefined, error);
+        throw err;
       });
   }
 }
