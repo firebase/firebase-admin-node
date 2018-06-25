@@ -48,11 +48,12 @@ describe('InstanceId', () => {
   let malformedAccessTokenClient: InstanceId;
   let rejectedPromiseAccessTokenClient: InstanceId;
 
+  let googleCloudProject: string;
   let gcloudProject: string;
 
   const noProjectIdError = 'Failed to determine project ID for InstanceId. Initialize the SDK '
   + 'with service account credentials or set project ID as an app option. Alternatively set the '
-  + 'GCLOUD_PROJECT environment variable.';
+  + 'GOOGLE_CLOUD_PROJECT environment variable.';
 
   before(() => utils.mockFetchAccessTokenRequests());
 
@@ -63,6 +64,7 @@ describe('InstanceId', () => {
     mockCredentialApp = mocks.mockCredentialApp();
     iid = new InstanceId(mockApp);
 
+    googleCloudProject = process.env.GOOGLE_CLOUD_PROJECT;
     gcloudProject = process.env.GCLOUD_PROJECT;
 
     nullAccessTokenClient = new InstanceId(mocks.appReturningNullAccessToken());
@@ -71,6 +73,7 @@ describe('InstanceId', () => {
   });
 
   afterEach(() => {
+    process.env.GOOGLE_CLOUD_PROJECT = googleCloudProject;
     process.env.GCLOUD_PROJECT = gcloudProject;
     return mockApp.delete();
   });
@@ -96,6 +99,7 @@ describe('InstanceId', () => {
 
     it('should throw given an invalid credential without project ID', () => {
       // Project ID not set in the environment.
+      delete process.env.GOOGLE_CLOUD_PROJECT;
       delete process.env.GCLOUD_PROJECT;
       expect(() => {
         return new InstanceId(mockCredentialApp);
