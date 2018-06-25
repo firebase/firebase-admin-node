@@ -1,6 +1,7 @@
 # Unreleased
 
--
+- [changed] Admin SDK can now read the Firebase/GCP project ID from both
+  `GCLOUD_PROJECT` and `GOOGLE_CLOUD_PROJECT` environment variables.
 
 # v5.12.1
 
