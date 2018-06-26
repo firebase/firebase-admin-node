@@ -64,13 +64,21 @@ describe('toWebSafeBase64()', () => {
 });
 
 describe('getProjectId()', () => {
+  let googleCloudProject: string;
   let gcloudProject: string;
 
   before(() => {
+    googleCloudProject = process.env.GOOGLE_CLOUD_PROJECT;
     gcloudProject = process.env.GCLOUD_PROJECT;
   });
 
   after(() => {
+    if (isNonEmptyString(googleCloudProject)) {
+      process.env.GOOGLE_CLOUD_PROJECT = googleCloudProject;
+    } else {
+      delete process.env.GOOGLE_CLOUD_PROJECT;
+    }
+
     if (isNonEmptyString(gcloudProject)) {
       process.env.GCLOUD_PROJECT = gcloudProject;
     } else {
@@ -92,13 +100,20 @@ describe('getProjectId()', () => {
     expect(getProjectId(app)).to.equal('project_id');
   });
 
-  it('should return the project ID set in environment', () => {
+  it('should return the project ID set in GOOGLE_CLOUD_PROJECT environment variable', () => {
+    process.env.GOOGLE_CLOUD_PROJECT = 'env-var-project-id';
+    const app: FirebaseApp = mocks.mockCredentialApp();
+    expect(getProjectId(app)).to.equal('env-var-project-id');
+  });
+
+  it('should return the project ID set in GCLOUD_PROJECT environment variable', () => {
     process.env.GCLOUD_PROJECT = 'env-var-project-id';
     const app: FirebaseApp = mocks.mockCredentialApp();
     expect(getProjectId(app)).to.equal('env-var-project-id');
   });
 
   it('should return null when project ID is not set', () => {
+    delete process.env.GOOGLE_CLOUD_PROJECT;
     delete process.env.GCLOUD_PROJECT;
     const app: FirebaseApp = mocks.mockCredentialApp();
     expect(getProjectId(app)).to.be.null;

@@ -384,7 +384,7 @@ export class Auth implements FirebaseServiceInterface {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_CREDENTIAL,
         'Must initialize app with a cert credential or set your Firebase project ID as the ' +
-        'GCLOUD_PROJECT environment variable to call auth().verifySessionCookie().',
+        'GOOGLE_CLOUD_PROJECT environment variable to call auth().verifySessionCookie().',
       );
     }
     return this.sessionCookieVerifier_.verifyJWT(sessionCookie)

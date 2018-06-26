@@ -83,7 +83,7 @@ export function getFirestoreOptions(app: FirebaseApp): any {
         code: 'no-project-id',
         message: 'Failed to determine project ID for Firestore. Initialize the '
           + 'SDK with service account credentials or set project ID as an app option. '
-          + 'Alternatively set the GCLOUD_PROJECT environment variable.',
+          + 'Alternatively set the GOOGLE_CLOUD_PROJECT environment variable.',
       });
     }
     return {
@@ -96,7 +96,7 @@ export function getFirestoreOptions(app: FirebaseApp): any {
   } else if (app.options.credential instanceof ApplicationDefaultCredential) {
     // Try to use the Google application default credentials.
     // If an explicit project ID is not available, let Firestore client discover one from the
-    // environment. This prevents the users from having to set GCLOUD_PROJECT in GCP runtimes.
+    // environment. This prevents the users from having to set GOOGLE_CLOUD_PROJECT in GCP runtimes.
     return validator.isNonEmptyString(projectId) ? {projectId} : {};
   }
 

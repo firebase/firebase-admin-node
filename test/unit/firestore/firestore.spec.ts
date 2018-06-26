@@ -19,6 +19,7 @@
 import path = require('path');
 import * as _ from 'lodash';
 import {expect} from 'chai';
+import * as utils from '../../../src/utils/index';
 
 import * as mocks from '../../resources/mocks';
 import {FirebaseApp} from '../../../src/firebase-app';
@@ -33,6 +34,7 @@ describe('Firestore', () => {
   let firestore: any;
 
   let appCredentials: string;
+  let googleCloudProject: string;
   let gcloudProject: string;
 
   const invalidCredError = 'Failed to initialize Google Cloud Firestore client with the available '
@@ -43,6 +45,7 @@ describe('Firestore', () => {
 
   beforeEach(() => {
     appCredentials = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    googleCloudProject = process.env.GOOGLE_CLOUD_PROJECT;
     gcloudProject = process.env.GCLOUD_PROJECT;
     delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
 
@@ -60,7 +63,16 @@ describe('Firestore', () => {
 
   afterEach(() => {
     process.env.GOOGLE_APPLICATION_CREDENTIALS = appCredentials;
-    process.env.GCLOUD_PROJECT = gcloudProject;
+    if (googleCloudProject) {
+      process.env.GOOGLE_CLOUD_PROJECT = googleCloudProject;
+    } else {
+      delete process.env.GOOGLE_CLOUD_PROJECT;
+    }
+    if (gcloudProject) {
+      process.env.GCLOUD_PROJECT = gcloudProject;
+    } else {
+      delete process.env.GCLOUD_PROJECT;
+    }
     return mockApp.delete();
   });
 
@@ -84,7 +96,7 @@ describe('Firestore', () => {
 
     it('should throw given an invalid credential with project ID', () => {
       // Project ID is read from the environment variable, but the credential is unsupported.
-      process.env.GCLOUD_PROJECT = 'project_id';
+      process.env.GOOGLE_CLOUD_PROJECT = 'project_id';
       expect(() => {
         return new FirestoreService(mockCredentialApp);
       }).to.throw(invalidCredError);
@@ -92,6 +104,7 @@ describe('Firestore', () => {
 
     it('should throw given an invalid credential without project ID', () => {
       // Project ID not set in the environment.
+      delete process.env.GOOGLE_CLOUD_PROJECT;
       delete process.env.GCLOUD_PROJECT;
       expect(() => {
         return new FirestoreService(mockCredentialApp);
@@ -106,6 +119,7 @@ describe('Firestore', () => {
 
     it('should not throw given application default credentials without project ID', () => {
       // Project ID not set in the environment.
+      delete process.env.GOOGLE_CLOUD_PROJECT;
       delete process.env.GCLOUD_PROJECT;
       process.env.GOOGLE_APPLICATION_CREDENTIALS = mockServiceAccount;
       expect(() => {
@@ -151,7 +165,14 @@ describe('Firestore', () => {
       expect(options.projectId).to.equal('explicit-project-id');
     });
 
-    it('should return a string when project ID is present in environment', () => {
+    it('should return a string when GOOGLE_CLOUD_PROJECT is set', () => {
+      process.env.GOOGLE_CLOUD_PROJECT = 'env-project-id';
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = mockServiceAccount;
+      const options = getFirestoreOptions(defaultCredentialApp);
+      expect(options.projectId).to.equal('env-project-id');
+    });
+
+    it('should return a string when GCLOUD_PROJECT is set', () => {
       process.env.GCLOUD_PROJECT = 'env-project-id';
       process.env.GOOGLE_APPLICATION_CREDENTIALS = mockServiceAccount;
       const options = getFirestoreOptions(defaultCredentialApp);
