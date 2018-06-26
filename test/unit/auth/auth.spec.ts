@@ -166,6 +166,7 @@ describe('Auth', () => {
 
     oldProcessEnv = process.env;
     // Project ID not set in the environment.
+    delete process.env.GOOGLE_CLOUD_PROJECT;
     delete process.env.GCLOUD_PROJECT;
   });
 
@@ -301,6 +302,16 @@ describe('Auth', () => {
         // Confirm getUser never called.
         expect(getUserStub).not.to.have.been.called;
         expect(result).to.deep.equal(decodedIdToken);
+        expect(stub).to.have.been.calledOnce.and.calledWith(mockIdToken);
+      });
+    });
+
+    it('should work with a non-cert credential when the GOOGLE_CLOUD_PROJECT environment variable is present', () => {
+      process.env.GOOGLE_CLOUD_PROJECT = mocks.projectId;
+
+      const mockCredentialAuth = new Auth(mocks.mockCredentialApp());
+
+      return mockCredentialAuth.verifyIdToken(mockIdToken).then(() => {
         expect(stub).to.have.been.calledOnce.and.calledWith(mockIdToken);
       });
     });
@@ -490,6 +501,16 @@ describe('Auth', () => {
         // Confirm getUser never called.
         expect(getUserStub).not.to.have.been.called;
         expect(result).to.deep.equal(decodedSessionCookie);
+        expect(stub).to.have.been.calledOnce.and.calledWith(mockSessionCookie);
+      });
+    });
+
+    it('should work with a non-cert credential when the GOOGLE_CLOUD_PROJECT environment variable is present', () => {
+      process.env.GOOGLE_CLOUD_PROJECT = mocks.projectId;
+
+      const mockCredentialAuth = new Auth(mocks.mockCredentialApp());
+
+      return mockCredentialAuth.verifySessionCookie(mockSessionCookie).then(() => {
         expect(stub).to.have.been.calledOnce.and.calledWith(mockSessionCookie);
       });
     });

@@ -74,7 +74,7 @@ export function getProjectId(app: FirebaseApp): string {
     return cert.projectId;
   }
 
-  const projectId = process.env.GCLOUD_PROJECT;
+  const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT;
   if (validator.isNonEmptyString(projectId)) {
     return projectId;
   }
