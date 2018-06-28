@@ -143,7 +143,8 @@ export class FirebaseTokenVerifier {
     if (!validator.isNonEmptyString(this.projectId)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_CREDENTIAL,
-        `${this.tokenInfo.verifyApiName} requires a certificate with "project_id" set.`,
+        `Must initialize app with a cert credential or set your Firebase project ID as the ` +
+        `GOOGLE_CLOUD_PROJECT environment variable to call ${this.tokenInfo.verifyApiName}.`,
       );
     }
 
@@ -310,9 +311,10 @@ export class FirebaseTokenVerifier {
 /**
  * Creates a new FirebaseTokenVerifier to verify Firebase ID tokens.
  *
- * @param projectId Project ID string.
+ * @param {string} projectId Project ID string.
+ * @return {FirebaseTokenVerifier}
  */
-export function newIdTokenVerifier(projectId: string): FirebaseTokenVerifier {
+export function createIdTokenVerifier(projectId: string): FirebaseTokenVerifier {
   return new FirebaseTokenVerifier(
       CLIENT_CERT_URL,
       ALGORITHM_RS256,
@@ -325,9 +327,10 @@ export function newIdTokenVerifier(projectId: string): FirebaseTokenVerifier {
 /**
  * Creates a new FirebaseTokenVerifier to verify Firebase session cookies.
  *
- * @param projectId Project ID string.
+ * @param {string} projectId Project ID string.
+ * @return {FirebaseTokenVerifier}
  */
-export function newSessionCookieVerifier(projectId: string): FirebaseTokenVerifier {
+export function createSessionCookieVerifier(projectId: string): FirebaseTokenVerifier {
   return new FirebaseTokenVerifier(
     SESSION_COOKIE_CERT_URL,
     ALGORITHM_RS256,

@@ -100,7 +100,7 @@ describe('CryptoSigner', () => {
     it('should return the client_email from the certificate', () => {
       const cert = new Certificate(mocks.certificateObject);
       const signer = new ServiceAccountSigner(cert);
-      return signer.getAccount().should.eventually.equal(cert.clientEmail);
+      return signer.getAccountId().should.eventually.equal(cert.clientEmail);
     });
   });
 
@@ -129,9 +129,9 @@ describe('CryptoSigner', () => {
       }).to.throw('Must provide a HTTP client to initialize IAMSigner');
     });
 
-    describe('explicit service account', () => {
+    describe('explicit service account ID', () => {
       const response = {signature: Buffer.from('testsignature').toString('base64')};
-      const input = Buffer.from('base64');
+      const input = Buffer.from('input');
       const signRequest = {
         method: 'POST',
         url: `https://iam.googleapis.com/v1/projects/-/serviceAccounts/test-service-account:signBlob`,
@@ -173,12 +173,12 @@ describe('CryptoSigner', () => {
 
       it('should return the explicitly specified service account', () => {
         const signer = new IAMSigner(new AuthorizedHttpClient(mockApp), 'test-service-account');
-        return signer.getAccount().should.eventually.equal('test-service-account');
+        return signer.getAccountId().should.eventually.equal('test-service-account');
       });
     });
 
     describe('auto discovered service account', () => {
-      const input = Buffer.from('base64');
+      const input = Buffer.from('input');
       const response = {signature: Buffer.from('testsignature').toString('base64')};
       const metadataRequest = {
         method: 'GET',
@@ -235,7 +235,17 @@ describe('CryptoSigner', () => {
         stub = sinon.stub(HttpClient.prototype, 'send');
         stub.onCall(0).resolves(utils.responseFrom('discovered-service-account'));
         const signer = new IAMSigner(new AuthorizedHttpClient(mockApp));
-        return signer.getAccount().should.eventually.equal('discovered-service-account');
+        return signer.getAccountId().should.eventually.equal('discovered-service-account');
+      });
+
+      it('should return the expected error when failed to contact the Metadata server', () => {
+        stub = sinon.stub(HttpClient.prototype, 'send');
+        stub.onCall(0).rejects(utils.errorFrom('test error'));
+        const signer = new IAMSigner(new AuthorizedHttpClient(mockApp));
+        const expected = 'Failed to determine service account. Make sure to initialize the SDK with ' +
+          'a service account credential. Alternatively specify a service account with ' +
+          'iam.serviceAccounts.signBlob permission.';
+        return signer.getAccountId().should.eventually.be.rejectedWith(expected);
       });
     });
   });
@@ -400,6 +410,7 @@ describe('FirebaseTokenGenerator', () => {
           });
           expect(decoded.header).to.deep.equal({
             alg: ALGORITHM,
+            typ: 'JWT',
           });
         });
     });

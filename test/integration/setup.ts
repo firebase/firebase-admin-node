@@ -90,7 +90,7 @@ before(() => {
   }, 'nonNull');
 
   noServiceAccountApp = admin.initializeApp({
-    credential: new TestCredential(admin.credential.cert(serviceAccount)),
+    credential: new CertificatelessCredential(admin.credential.cert(serviceAccount)),
     serviceAccountId: serviceAccount.client_email,
     projectId,
   }, 'noServiceAccount');
@@ -98,15 +98,15 @@ before(() => {
   cmdArgs = minimist(process.argv.slice(2));
 });
 
-class TestCredential implements Credential {
-  private delegate_: admin.credential.Credential;
+class CertificatelessCredential implements Credential {
+  private readonly delegate: admin.credential.Credential;
 
   constructor(delegate: admin.credential.Credential) {
-    this.delegate_ = delegate;
+    this.delegate = delegate;
   }
 
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
-    return this.delegate_.getAccessToken();
+    return this.delegate.getAccessToken();
   }
 
   public getCertificate(): Certificate {

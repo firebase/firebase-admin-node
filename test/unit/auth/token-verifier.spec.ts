@@ -320,10 +320,11 @@ describe('FirebaseTokenVerifier', () => {
         verifier.ID_TOKEN_INFO,
       );
       const mockIdToken = mocks.generateIdToken();
-
+      const expected = 'Must initialize app with a cert credential or set your Firebase project ID as ' +
+        'the GOOGLE_CLOUD_PROJECT environment variable to call verifyIdToken().';
       expect(() => {
         tokenVerifierWithNoProjectId.verifyJWT(mockIdToken);
-      }).to.throw('verifyIdToken() requires a certificate with "project_id" set');
+      }).to.throw(expected);
     });
 
     it('should be rejected given a Firebase JWT token with no kid', () => {
@@ -576,107 +577,5 @@ describe('FirebaseTokenVerifier', () => {
       return tokenVerifier.verifyJWT(mockIdToken)
         .should.eventually.be.rejectedWith('Error fetching public keys for Google certs: message (description)');
     });
-  });
-});
-
-describe('verifySessionCookie()', () => {
-  const sessionCookie = mocks.generateSessionCookie();
-  const decodedSessionCookie = jwt.decode(sessionCookie);
-  let stubs: sinon.SinonStub[] = [];
-  let tokenVerifierConstructorStub: sinon.SinonStub;
-  let sessionCookieVerifier: any;
-  let idTokenVerifier: any;
-
-  beforeEach(() => {
-    // Create stub instances to be used for session cookie verifier and id token verifier.
-    sessionCookieVerifier = sinon.createStubInstance(verifier.FirebaseTokenVerifier);
-    idTokenVerifier = sinon.createStubInstance(verifier.FirebaseTokenVerifier);
-    // Stub FirebaseTokenVerifier constructor to return stub instance above depending on
-    // issuer.
-    tokenVerifierConstructorStub = sinon.stub(verifier, 'newSessionCookieVerifier')
-      .callsFake((projectId) => {
-        // Return mock token verifier.
-        return sessionCookieVerifier;
-      });
-    stubs.push(tokenVerifierConstructorStub);
-  });
-
-  after(() => {
-    stubs = [];
-  });
-
-  afterEach(() => {
-    // Confirm token verifiers initialized with expected arguments.
-    expect(tokenVerifierConstructorStub).to.have.been.calledOnce.and.calledWith('project_id');
-    _.forEach(stubs, (stub) => stub.restore());
-  });
-
-  it('resolves when underlying sessionCookieVerifier.verifyJWT() resolves with expected result', () =>  {
-    sessionCookieVerifier.verifyJWT.withArgs(sessionCookie).returns(Promise.resolve(decodedSessionCookie));
-    const auth = new Auth(mocks.app());
-    return auth.verifySessionCookie(sessionCookie)
-      .then((result) => {
-        expect(result).to.deep.equal(decodedSessionCookie);
-      });
-  });
-
-  it('rejects when underlying sessionCookieVerifier.verifyJWT() rejects with expected error', () =>  {
-    const expectedError = new FirebaseAuthError(
-      AuthClientErrorCode.INVALID_ARGUMENT, 'Decoding Firebase session cookie failed');
-    sessionCookieVerifier.verifyJWT.withArgs(sessionCookie).returns(Promise.reject(expectedError));
-    const auth = new Auth(mocks.app());
-    return auth.verifySessionCookie(sessionCookie)
-      .should.eventually.be.rejectedWith('Decoding Firebase session cookie failed');
-  });
-});
-
-describe('verifyIdToken()', () => {
-  const idToken = mocks.generateIdToken();
-  const decodedIdToken = jwt.decode(idToken);
-  let stubs: sinon.SinonStub[] = [];
-  let tokenVerifierConstructorStub: sinon.SinonStub;
-  let sessionCookieVerifier: any;
-  let idTokenVerifier: any;
-
-  beforeEach(() => {
-    // Create stub instances to be used for session cookie verifier and id token verifier.
-    sessionCookieVerifier = sinon.createStubInstance(verifier.FirebaseTokenVerifier);
-    idTokenVerifier = sinon.createStubInstance(verifier.FirebaseTokenVerifier);
-    // Stub FirebaseTokenVerifier constructor to return stub instance above depending on
-    // issuer.
-    tokenVerifierConstructorStub = sinon.stub(verifier, 'newIdTokenVerifier')
-      .callsFake((projectId) => {
-        // Return mock token verifier.
-        return idTokenVerifier;
-      });
-    stubs.push(tokenVerifierConstructorStub);
-  });
-
-  after(() => {
-    stubs = [];
-  });
-
-  afterEach(() => {
-    // Confirm token verifiers initialized with expected arguments.
-    expect(tokenVerifierConstructorStub).to.have.been.calledOnce.and.calledWith('project_id');
-    _.forEach(stubs, (stub) => stub.restore());
-  });
-
-  it('resolves when underlying idTokenVerifier.verifyJWT() resolves with expected result', () =>  {
-    idTokenVerifier.verifyJWT.withArgs(idToken).returns(Promise.resolve(decodedIdToken));
-    const auth = new Auth(mocks.app());
-    return auth.verifyIdToken(idToken)
-      .then((result) => {
-        expect(result).to.deep.equal(decodedIdToken);
-      });
-  });
-
-  it('rejects when underlying idTokenVerifier.verifyJWT() rejects with expected error', () =>  {
-    const expectedError = new FirebaseAuthError(
-      AuthClientErrorCode.INVALID_ARGUMENT, 'Decoding Firebase ID token failed');
-    idTokenVerifier.verifyJWT.withArgs(idToken).returns(Promise.reject(expectedError));
-    const auth = new Auth(mocks.app());
-    return auth.verifyIdToken(idToken)
-      .should.eventually.be.rejectedWith('Decoding Firebase ID token failed');
   });
 });

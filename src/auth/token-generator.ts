@@ -43,16 +43,16 @@ export interface CryptoSigner {
    * Cryptographically signs a buffer of data.
    *
    * @param {Buffer} buffer The data to be signed.
-   * @returns {Promise<object>} A promise that resolves with a base64-encoded signature.
+   * @return {Promise<Buffer>} A promise that resolves with the raw bytes of a signature.
    */
   sign(buffer: Buffer): Promise<Buffer>;
 
   /**
    * Returns the ID of the service account used to sign tokens.
    *
-   * @returns {Promise<string>} A promise that resolves with a service account ID.
+   * @return {Promise<string>} A promise that resolves with a service account ID.
    */
-  getAccount(): Promise<string>;
+  getAccountId(): Promise<string>;
 }
 
 /**
@@ -60,6 +60,7 @@ export interface CryptoSigner {
  */
 interface JWTHeader {
   alg: string;
+  typ: string;
 }
 
 /**
@@ -80,10 +81,10 @@ interface JWTBody {
  * sign data. Performs all operations locally, and does not make any RPC calls.
  */
 export class ServiceAccountSigner implements CryptoSigner {
-  private readonly certificate_: Certificate;
+  private readonly certificate: Certificate;
 
   /**
-   * Create a new CryptoSigner instance from the given service account certificate.
+   * Creates a new CryptoSigner instance from the given service account certificate.
    *
    * @param {Certificate} certificate A service account certificate.
    */
@@ -94,18 +95,31 @@ export class ServiceAccountSigner implements CryptoSigner {
         'INTERNAL ASSERT: Must provide a certificate to initialize ServiceAccountSigner.',
       );
     }
-    this.certificate_ = certificate;
+    if (!validator.isNonEmptyString(certificate.clientEmail) || !validator.isNonEmptyString(certificate.privateKey)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CREDENTIAL,
+        'INTERNAL ASSERT: Must provide a certificate with validate clientEmail and privateKey to ' +
+        'initialize ServiceAccountSigner.',
+      );
+    }
+    this.certificate = certificate;
   }
 
+  /**
+   * @inheritDoc
+   */
   public sign(buffer: Buffer): Promise<Buffer> {
     const crypto = require('crypto');
     const sign = crypto.createSign('RSA-SHA256');
     sign.update(buffer);
-    return Promise.resolve(sign.sign(this.certificate_.privateKey));
+    return Promise.resolve(sign.sign(this.certificate.privateKey));
   }
 
-  public getAccount(): Promise<string> {
-    return Promise.resolve(this.certificate_.clientEmail);
+  /**
+   * @inheritDoc
+   */
+  public getAccountId(): Promise<string> {
+    return Promise.resolve(this.certificate.clientEmail);
   }
 }
 
@@ -128,12 +142,21 @@ export class IAMSigner implements CryptoSigner {
         'INTERNAL ASSERT: Must provide a HTTP client to initialize IAMSigner.',
       );
     }
+    if (typeof serviceAccountId !== 'undefined' && !validator.isNonEmptyString(serviceAccountId)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        'INTERNAL ASSERT: Service account ID must be undefined or a non-empty string.',
+      );
+    }
     this.httpClient = httpClient;
     this.serviceAccountId = serviceAccountId;
   }
 
+  /**
+   * @inheritDoc
+   */
   public sign(buffer: Buffer): Promise<Buffer> {
-    return this.getAccount().then((serviceAccount) => {
+    return this.getAccountId().then((serviceAccount) => {
       const request: HttpRequestConfig = {
         method: 'POST',
         url: `https://iam.googleapis.com/v1/projects/-/serviceAccounts/${serviceAccount}:signBlob`,
@@ -142,7 +165,7 @@ export class IAMSigner implements CryptoSigner {
       return this.httpClient.send(request);
     }).then((response: any) => {
       // Response from IAM is base64 encoded. Decode it into a buffer and return.
-      return new Buffer(response.data.signature, 'base64');
+      return Buffer.from(response.data.signature, 'base64');
     }).catch((err) => {
       if (err instanceof HttpError) {
         const error = err.response.data;
@@ -158,7 +181,10 @@ export class IAMSigner implements CryptoSigner {
     });
   }
 
-  public getAccount(): Promise<string> {
+  /**
+   * @inheritDoc
+   */
+  public getAccountId(): Promise<string> {
     if (validator.isNonEmptyString(this.serviceAccountId)) {
       return Promise.resolve(this.serviceAccountId);
     }
@@ -176,9 +202,9 @@ export class IAMSigner implements CryptoSigner {
     }).catch((err) => {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_CREDENTIAL,
-        `Failed to determine service account: ${err.toString()}. Make sure to initialize ` +
+        `Failed to determine service account. Make sure to initialize ` +
         `the SDK with a service account credential. Alternatively specify a service ` +
-        `account with iam.serviceAccounts.signBlob permission.`,
+        `account with iam.serviceAccounts.signBlob permission. Original error: ${err}`,
       );
     });
   }
@@ -189,9 +215,9 @@ export class IAMSigner implements CryptoSigner {
  * account credential, creates a ServiceAccountSigner. Otherwise creates an IAMSigner.
  *
  * @param {FirebaseApp} app A FirebaseApp instance.
- * @returns {CryptoSigner} A CryptoSigner instance.
+ * @return {CryptoSigner} A CryptoSigner instance.
  */
-export function signerFromApp(app: FirebaseApp): CryptoSigner {
+export function cryptoSignerFromApp(app: FirebaseApp): CryptoSigner {
   const cert = app.options.credential.getCertificate();
   if (cert != null && validator.isNonEmptyString(cert.privateKey) && validator.isNonEmptyString(cert.clientEmail)) {
     return new ServiceAccountSigner(cert);
@@ -204,7 +230,7 @@ export function signerFromApp(app: FirebaseApp): CryptoSigner {
  */
 export class FirebaseTokenGenerator {
 
-  private readonly signer_: CryptoSigner;
+  private readonly signer: CryptoSigner;
 
   constructor(signer: CryptoSigner) {
     if (!validator.isNonNullObject(signer)) {
@@ -213,7 +239,7 @@ export class FirebaseTokenGenerator {
         'INTERNAL ASSERT: Must provide a CryptoSigner to use FirebaseTokenGenerator.',
       );
     }
-    this.signer_ = signer;
+    this.signer = signer;
   }
 
   /**
@@ -254,9 +280,10 @@ export class FirebaseTokenGenerator {
         }
       }
     }
-    return this.signer_.getAccount().then((account) => {
+    return this.signer.getAccountId().then((account) => {
       const header: JWTHeader = {
         alg: ALGORITHM_RS256,
+        typ: 'JWT',
       };
       const iat = Math.floor(Date.now() / 1000);
       const body: JWTBody = {
@@ -271,7 +298,7 @@ export class FirebaseTokenGenerator {
         body.claims = claims;
       }
       const token = `${this.encodeSegment(header)}.${this.encodeSegment(body)}`;
-      const signPromise = this.signer_.sign(Buffer.from(token));
+      const signPromise = this.signer.sign(Buffer.from(token));
       return Promise.all([token, signPromise]);
     }).then(([token, signature]) => {
       return `${token}.${this.encodeSegment(signature)}`;

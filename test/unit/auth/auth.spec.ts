@@ -261,20 +261,22 @@ describe('Auth', () => {
     });
   });
 
-  describe('No project ID', () => {
-    it('verifyIdToken() should throw', () => {
-      const mockCredentialAuth = new Auth(mocks.mockCredentialApp());
-      expect(() => {
-        mockCredentialAuth.verifyIdToken(mocks.generateIdToken());
-      }).to.throw('verifyIdToken() requires a certificate with "project_id" set.');
-    });
+  it('verifyIdToken() should throw when project ID is not specified', () => {
+    const mockCredentialAuth = new Auth(mocks.mockCredentialApp());
+    const expected = 'Must initialize app with a cert credential or set your Firebase project ID ' +
+      'as the GOOGLE_CLOUD_PROJECT environment variable to call verifyIdToken().';
+    expect(() => {
+      mockCredentialAuth.verifyIdToken(mocks.generateIdToken());
+    }).to.throw(expected);
+  });
 
-    it('verifySessionCookie() should throw', () => {
-      const mockCredentialAuth = new Auth(mocks.mockCredentialApp());
-      expect(() => {
-        mockCredentialAuth.verifySessionCookie(mocks.generateSessionCookie());
-      }).to.throw('verifySessionCookie() requires a certificate with "project_id" set.');
-    });
+  it('verifySessionCookie() should throw when project ID is not specified', () => {
+    const mockCredentialAuth = new Auth(mocks.mockCredentialApp());
+    const expected = 'Must initialize app with a cert credential or set your Firebase project ID ' +
+      'as the GOOGLE_CLOUD_PROJECT environment variable to call verifySessionCookie().';
+    expect(() => {
+      mockCredentialAuth.verifySessionCookie(mocks.generateSessionCookie());
+    }).to.throw(expected);
   });
 
   describe('verifyIdToken()', () => {
@@ -313,6 +315,19 @@ describe('Auth', () => {
         expect(result).to.deep.equal(decodedIdToken);
         expect(stub).to.have.been.calledOnce.and.calledWith(mockIdToken);
       });
+    });
+
+    it('should reject when underlying idTokenVerifier.verifyJWT() rejects with expected error', () =>  {
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT, 'Decoding Firebase ID token failed');
+      // Restore verifyIdToken stub.
+      stub.restore();
+      // Simulate ID token is invalid.
+      stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
+        .returns(Promise.reject(expectedError));
+      stubs.push(stub);
+      return auth.verifyIdToken(mockIdToken)
+        .should.eventually.be.rejectedWith('Decoding Firebase ID token failed');
     });
 
     it('should work with a non-cert credential when the GOOGLE_CLOUD_PROJECT environment variable is present', () => {
@@ -494,7 +509,7 @@ describe('Auth', () => {
       clock.restore();
     });
 
-    it('should forward on the call to the token generator\'s verifySessionCookie() method', () => {
+    it('should forward on the call to the token verifier\'s verifySessionCookie() method', () => {
       // Stub getUser call.
       const getUserStub = sinon.stub(Auth.prototype, 'getUser');
       stubs.push(getUserStub);
@@ -504,6 +519,19 @@ describe('Auth', () => {
         expect(result).to.deep.equal(decodedSessionCookie);
         expect(stub).to.have.been.calledOnce.and.calledWith(mockSessionCookie);
       });
+    });
+
+    it('should reject when underlying sessionCookieVerifier.verifyJWT() rejects with expected error', () =>  {
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT, 'Decoding Firebase session cookie failed');
+      // Restore verifySessionCookie stub.
+      stub.restore();
+      // Simulate session cookie is invalid.
+      stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
+        .returns(Promise.reject(expectedError));
+      stubs.push(stub);
+      return auth.verifySessionCookie(mockSessionCookie)
+        .should.eventually.be.rejectedWith('Decoding Firebase session cookie failed');
     });
 
     it('should work with a non-cert credential when the GOOGLE_CLOUD_PROJECT environment variable is present', () => {
