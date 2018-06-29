@@ -82,6 +82,7 @@ export function responseFrom(data: any, status: number = 200, headers: any = {})
     headers,
     data,
     text: JSON.stringify(data),
+    isJson: true,
   };
 }
 

@@ -103,21 +103,18 @@ export class FirebaseMessagingRequestHandler {
     };
     return this.httpClient.send(request).then((response) => {
       // Send non-JSON responses to the catch() below where they will be treated as errors.
-      let json;
-      try {
-        json = response.data;
-      } catch {
+      if (!response.isJson) {
         throw new HttpError(response);
       }
 
       // Check for backend errors in the response.
-      const errorCode = FirebaseMessagingRequestHandler.getErrorCode(json);
+      const errorCode = FirebaseMessagingRequestHandler.getErrorCode(response.data);
       if (errorCode) {
         throw new HttpError(response);
       }
 
       // Return entire response.
-      return json;
+      return response.data;
     })
     .catch((err) => {
       if (err instanceof HttpError) {
@@ -129,14 +126,9 @@ export class FirebaseMessagingRequestHandler {
   }
 
   private handleHttpError(err: HttpError) {
-    let json;
-    try {
-      json = err.response.data;
-    } catch {
-      json = null;
-    }
-    if (json) {
+    if (err.response.isJson) {
       // For JSON responses, map the server response to a client-side error.
+      const json = err.response.data;
       const errorCode = FirebaseMessagingRequestHandler.getErrorCode(json);
       const errorMessage = FirebaseMessagingRequestHandler.getErrorMessage(json);
       throw FirebaseMessagingError.fromServerError(errorCode, errorMessage, json);

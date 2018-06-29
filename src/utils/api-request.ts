@@ -54,6 +54,7 @@ export interface HttpResponse {
   readonly text: string;
   /** Response data as a parsed JSON object. */
   readonly data: any;
+  readonly isJson: boolean;
 }
 
 interface LowLevelResponse {
@@ -98,7 +99,7 @@ class DefaultHttpResponse implements HttpResponse {
   }
 
   get data(): any {
-    if (typeof this.parsedData !== 'undefined') {
+    if (this.isJson) {
       return this.parsedData;
     }
     throw new FirebaseAppError(
@@ -107,6 +108,10 @@ class DefaultHttpResponse implements HttpResponse {
       `response: "${ this.text }". Status code: "${ this.status }". Outgoing ` +
       `request: "${ this.request }."`,
     );
+  }
+
+  get isJson(): boolean {
+    return typeof this.parsedData !== 'undefined';
   }
 }
 
