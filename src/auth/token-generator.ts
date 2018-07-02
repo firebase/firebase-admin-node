@@ -170,13 +170,12 @@ export class IAMSigner implements CryptoSigner {
       if (err instanceof HttpError) {
         const error = err.response.data;
         let errorCode: string;
-        let errorMsg = 'Failed to sign token using the IAM service. Make sure the service account ' +
-          'ID used to sign tokens have the iam.serviceAccounts.signBlob permission. Please refer to ' +
-          'https://firebase.google.com/docs/auth/admin/create-custom-tokens for more details on how ' +
-          'to configure this feature in your Firebase projects.';
+        let errorMsg: string;
         if (validator.isNonNullObject(error) && error.error) {
           errorCode = error.error.status || null;
-          errorMsg = `${errorMsg} Original error: ${error.error.message}` || null;
+          const description = 'Please refer to https://firebase.google.com/docs/auth/admin/create-custom-tokens ' +
+            'for more details on how to use and troubleshoot this feature.';
+          errorMsg = `${error.error.message}; ${description}` || null;
         }
         throw FirebaseAuthError.fromServerError(errorCode, errorMsg, error);
       }

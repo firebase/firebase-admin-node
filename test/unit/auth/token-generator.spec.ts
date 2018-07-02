@@ -166,10 +166,9 @@ describe('CryptoSigner', () => {
         const requestHandler = new AuthorizedHttpClient(mockApp);
         const signer = new IAMSigner(requestHandler, 'test-service-account');
         return signer.sign(input).catch((err) => {
-          const message = 'Failed to sign token using the IAM service. Make sure the service account ' +
-            'ID used to sign tokens have the iam.serviceAccounts.signBlob permission. Please refer to ' +
-            'https://firebase.google.com/docs/auth/admin/create-custom-tokens for more details on how ' +
-            'to configure this feature in your Firebase projects. Original error: test reason';
+          const message = 'test reason; Please refer to ' +
+            'https://firebase.google.com/docs/auth/admin/create-custom-tokens for more details on ' +
+            'how to use and troubleshoot this feature.';
           expect(err.message).to.equal(message);
           expect(stub).to.have.been.calledOnce.and.calledWith(signRequest);
         });
@@ -228,10 +227,9 @@ describe('CryptoSigner', () => {
         const requestHandler = new AuthorizedHttpClient(mockApp);
         const signer = new IAMSigner(requestHandler);
         return signer.sign(input).catch((err) => {
-          const message = 'Failed to sign token using the IAM service. Make sure the service account ' +
-            'ID used to sign tokens have the iam.serviceAccounts.signBlob permission. Please refer to ' +
-            'https://firebase.google.com/docs/auth/admin/create-custom-tokens for more details on how ' +
-            'to configure this feature in your Firebase projects. Original error: test reason';
+          const message = 'test reason; Please refer to ' +
+            'https://firebase.google.com/docs/auth/admin/create-custom-tokens for more details on ' +
+            'how to use and troubleshoot this feature.';
           expect(err.message).to.equal(message);
           expect(stub).to.have.been.calledTwice;
           expect(stub.getCall(0).args[0]).to.deep.equal(metadataRequest);
