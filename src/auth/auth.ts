@@ -129,12 +129,6 @@ export class Auth implements FirebaseServiceInterface {
    * @return {Promise<string>} A JWT for the provided payload.
    */
   public createCustomToken(uid: string, developerClaims?: object): Promise<string> {
-    if (typeof this.tokenGenerator === 'undefined') {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CREDENTIAL,
-        'Must initialize app with a cert credential to call auth().createCustomToken().',
-      );
-    }
     return this.tokenGenerator.createCustomToken(uid, developerClaims);
   }
 
