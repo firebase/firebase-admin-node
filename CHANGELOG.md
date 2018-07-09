@@ -3,6 +3,8 @@
 - [changed] Admin SDK can now create custom tokens without being initialized
   with service account credentials. When a service account private key is not
   available, the SDK uses the remote IAM service to sign JWTs in the cloud.
+- [changed] Updated the typings of the `admin.database.Query.once()`
+  method to return a more specific type.
 - [changed] Admin SDK can now read the Firebase/GCP project ID from both
   `GCLOUD_PROJECT` and `GOOGLE_CLOUD_PROJECT` environment variables.
 
