@@ -141,6 +141,45 @@ describe('Credential', () => {
         const validPath = path.resolve(__dirname, '../../resources/mock.key.json');
         expect(() => Certificate.fromPath(validPath)).not.to.throw();
       });
+
+      it('should throw given an object without a "private_key" property', () => {
+        const invalidCertificate = _.omit(mocks.certificateObject, 'private_key');
+        expect(() => {
+          return new Certificate(invalidCertificate as any);
+        }).to.throw('Certificate object must contain a string "private_key" property');
+      });
+
+      it('should throw given an object with an empty string "private_key" property', () => {
+        const invalidCertificate = _.clone(mocks.certificateObject);
+        invalidCertificate.private_key = '';
+        expect(() => {
+          return new Certificate(invalidCertificate as any);
+        }).to.throw('Certificate object must contain a string "private_key" property');
+      });
+
+      it('should throw given an object without a "client_email" property', () => {
+        const invalidCertificate = _.omit(mocks.certificateObject, 'client_email');
+        expect(() => {
+          return new Certificate(invalidCertificate as any);
+        }).to.throw('Certificate object must contain a string "client_email" property');
+      });
+
+      it('should throw given an object with an empty string "client_email" property', () => {
+        const invalidCertificate = _.clone(mocks.certificateObject);
+        invalidCertificate.client_email = '';
+        expect(() => {
+          return new Certificate(invalidCertificate as any);
+        }).to.throw('Certificate object must contain a string "client_email" property');
+      });
+
+      const invalidCredentials = [null, NaN, 0, 1, true, false, '', 'a', [], {}, { a: 1 }, _.noop];
+      invalidCredentials.forEach((invalidCredential) => {
+        it('should throw given invalid Credential: ' + JSON.stringify(invalidCredential), () => {
+          expect(() => {
+            return new Certificate(invalidCredential as any);
+          }).to.throw(Error);
+        });
+      });
     });
 
     describe('constructor', () => {

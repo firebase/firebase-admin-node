@@ -17,14 +17,37 @@
 import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
 
 import * as validator from '../utils/validator';
-
 import * as jwt from 'jsonwebtoken';
-
-// Use untyped import syntax for Node built-ins
-import https = require('https');
 
 // Audience to use for Firebase Auth Custom tokens
 const FIREBASE_AUDIENCE = 'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit';
+
+export const ALGORITHM_RS256 = 'RS256';
+
+// URL containing the public keys for the Google certs (whose private keys are used to sign Firebase
+// Auth ID tokens)
+const CLIENT_CERT_URL = 'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com';
+
+// URL containing the public keys for Firebase session cookies. This will be updated to a different URL soon.
+const SESSION_COOKIE_CERT_URL = 'https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys';
+
+/** User facing token information related to the Firebase ID token. */
+export const ID_TOKEN_INFO: FirebaseTokenInfo = {
+  url: 'https://firebase.google.com/docs/auth/admin/verify-id-tokens',
+  verifyApiName: 'verifyIdToken()',
+  jwtName: 'Firebase ID token',
+  shortName: 'ID token',
+  expiredErrorCode: 'auth/id-token-expired',
+};
+
+/** User facing token information related to the Firebase session cookie. */
+export const SESSION_COOKIE_INFO: FirebaseTokenInfo = {
+  url: 'https://firebase.google.com/docs/auth/admin/manage-cookies',
+  verifyApiName: 'verifySessionCookie()',
+  jwtName: 'Firebase session cookie',
+  shortName: 'session cookie',
+  expiredErrorCode: 'auth/session-cookie-expired',
+};
 
 /** Interface that defines token related user facing information. */
 export interface FirebaseTokenInfo {
@@ -46,7 +69,7 @@ export interface FirebaseTokenInfo {
 export class FirebaseTokenVerifier {
   private publicKeys: object;
   private publicKeysExpireAt: number;
-  private shortNameArticle: string;
+  private readonly shortNameArticle: string;
 
   constructor(private clientCertUrl: string, private algorithm: string,
               private issuer: string, private projectId: string,
@@ -120,7 +143,8 @@ export class FirebaseTokenVerifier {
     if (!validator.isNonEmptyString(this.projectId)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_CREDENTIAL,
-        `${this.tokenInfo.verifyApiName} requires a certificate with "project_id" set.`,
+        `Must initialize app with a cert credential or set your Firebase project ID as the ` +
+        `GOOGLE_CLOUD_PROJECT environment variable to call ${this.tokenInfo.verifyApiName}.`,
       );
     }
 
@@ -241,6 +265,7 @@ export class FirebaseTokenVerifier {
     }
 
     return new Promise((resolve, reject) => {
+      const https = require('https');
       https.get(this.clientCertUrl, (res) => {
         const buffers: Buffer[] = [];
 
@@ -249,14 +274,12 @@ export class FirebaseTokenVerifier {
         res.on('end', () => {
           try {
             const response = JSON.parse(Buffer.concat(buffers).toString());
-
             if (response.error) {
               let errorMessage = 'Error fetching public keys for Google certs: ' + response.error;
               /* istanbul ignore else */
               if (response.error_description) {
                 errorMessage += ' (' + response.error_description + ')';
               }
-
               reject(new FirebaseAuthError(AuthClientErrorCode.INTERNAL_ERROR, errorMessage));
             } else {
               /* istanbul ignore else */
@@ -283,4 +306,36 @@ export class FirebaseTokenVerifier {
       }).on('error', reject);
     });
   }
+}
+
+/**
+ * Creates a new FirebaseTokenVerifier to verify Firebase ID tokens.
+ *
+ * @param {string} projectId Project ID string.
+ * @return {FirebaseTokenVerifier}
+ */
+export function createIdTokenVerifier(projectId: string): FirebaseTokenVerifier {
+  return new FirebaseTokenVerifier(
+      CLIENT_CERT_URL,
+      ALGORITHM_RS256,
+      'https://securetoken.google.com/',
+      projectId,
+      ID_TOKEN_INFO,
+  );
+}
+
+/**
+ * Creates a new FirebaseTokenVerifier to verify Firebase session cookies.
+ *
+ * @param {string} projectId Project ID string.
+ * @return {FirebaseTokenVerifier}
+ */
+export function createSessionCookieVerifier(projectId: string): FirebaseTokenVerifier {
+  return new FirebaseTokenVerifier(
+    SESSION_COOKIE_CERT_URL,
+    ALGORITHM_RS256,
+    'https://session.firebase.google.com/',
+    projectId,
+    SESSION_COOKIE_INFO,
+  );
 }

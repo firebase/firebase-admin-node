@@ -23,7 +23,7 @@ import * as scrypt from 'scrypt';
 import firebase from '@firebase/app';
 import '@firebase/auth';
 import {clone} from 'lodash';
-import {generateRandomString, projectId, apiKey} from './setup';
+import {generateRandomString, projectId, apiKey, noServiceAccountApp} from './setup';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -300,19 +300,38 @@ describe('admin.auth', () => {
     return admin.auth().createCustomToken(newUserUid, {
       isAdmin: true,
     })
-      .then((customToken) => {
-        return firebase.auth().signInWithCustomToken(customToken);
-      })
-      .then(({user}) => {
-        return user.getIdToken();
-      })
-      .then((idToken) => {
-        return admin.auth().verifyIdToken(idToken);
-      })
-      .then((token) => {
-        expect(token.uid).to.equal(newUserUid);
-        expect(token.isAdmin).to.be.true;
-      });
+    .then((customToken) => {
+      return firebase.auth().signInWithCustomToken(customToken);
+    })
+    .then(({user}) => {
+      return user.getIdToken();
+    })
+    .then((idToken) => {
+      return admin.auth().verifyIdToken(idToken);
+    })
+    .then((token) => {
+      expect(token.uid).to.equal(newUserUid);
+      expect(token.isAdmin).to.be.true;
+    });
+  });
+
+  it('createCustomToken() can mint JWTs without a service account', () => {
+    return admin.auth(noServiceAccountApp).createCustomToken(newUserUid, {
+      isAdmin: true,
+    })
+    .then((customToken) => {
+      return firebase.auth().signInWithCustomToken(customToken);
+    })
+    .then(({user}) => {
+      return user.getIdToken();
+    })
+    .then((idToken) => {
+      return admin.auth(noServiceAccountApp).verifyIdToken(idToken);
+    })
+    .then((token) => {
+      expect(token.uid).to.equal(newUserUid);
+      expect(token.isAdmin).to.be.true;
+    });
   });
 
   it('verifyIdToken() fails when called with an invalid token', () => {

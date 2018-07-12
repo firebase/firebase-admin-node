@@ -16,7 +16,7 @@
 
 import {UserRecord, CreateRequest, UpdateRequest} from './user-record';
 import {FirebaseApp} from '../firebase-app';
-import {FirebaseTokenGenerator} from './token-generator';
+import {FirebaseTokenGenerator, cryptoSignerFromApp} from './token-generator';
 import {FirebaseAuthRequestHandler} from './auth-api-request';
 import {AuthClientErrorCode, FirebaseAuthError, ErrorInfo} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
@@ -26,6 +26,7 @@ import {
 
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
+import { FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier } from './token-verifier';
 
 
 /**
@@ -82,9 +83,11 @@ export interface SessionCookieOptions {
 export class Auth implements FirebaseServiceInterface {
   public INTERNAL: AuthInternals = new AuthInternals();
 
-  private app_: FirebaseApp;
-  private tokenGenerator_: FirebaseTokenGenerator;
-  private authRequestHandler: FirebaseAuthRequestHandler;
+  private readonly app_: FirebaseApp;
+  private readonly tokenGenerator: FirebaseTokenGenerator;
+  private readonly idTokenVerifier: FirebaseTokenVerifier;
+  private readonly sessionCookieVerifier: FirebaseTokenVerifier;
+  private readonly authRequestHandler: FirebaseAuthRequestHandler;
 
   /**
    * @param {object} app The app for this Auth service.
@@ -99,27 +102,10 @@ export class Auth implements FirebaseServiceInterface {
     }
 
     this.app_ = app;
+    this.tokenGenerator = new FirebaseTokenGenerator(cryptoSignerFromApp(app));
     const projectId = utils.getProjectId(app);
-
-    // TODO (inlined): plumb this into a factory method for tokenGenerator_ once we
-    // can generate custom tokens from access tokens.
-    let serviceAccount;
-    if (typeof app.options.credential.getCertificate === 'function') {
-      serviceAccount = app.options.credential.getCertificate();
-    }
-    if (serviceAccount) {
-      // Cert credentials and Application Default Credentials created from a service account file
-      // provide a certificate we can use to mint custom tokens and verify ID tokens.
-      this.tokenGenerator_ = new FirebaseTokenGenerator(serviceAccount);
-    } else if (validator.isNonEmptyString(projectId)) {
-      // Google infrastructure like GAE, GCE, and GCF store the GCP / Firebase project ID in an
-      // environment variable that we can use to get verifyIdToken() to work. createCustomToken()
-      // still won't work since it requires a private key and client email which we do not have.
-      const cert: any = {
-        projectId,
-      };
-      this.tokenGenerator_ = new FirebaseTokenGenerator(cert);
-    }
+    this.sessionCookieVerifier = createSessionCookieVerifier(projectId);
+    this.idTokenVerifier = createIdTokenVerifier(projectId);
     // Initialize auth request handler with the app.
     this.authRequestHandler = new FirebaseAuthRequestHandler(app);
   }
@@ -143,13 +129,7 @@ export class Auth implements FirebaseServiceInterface {
    * @return {Promise<string>} A JWT for the provided payload.
    */
   public createCustomToken(uid: string, developerClaims?: object): Promise<string> {
-    if (typeof this.tokenGenerator_ === 'undefined') {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CREDENTIAL,
-        'Must initialize app with a cert credential to call auth().createCustomToken().',
-      );
-    }
-    return this.tokenGenerator_.createCustomToken(uid, developerClaims);
+    return this.tokenGenerator.createCustomToken(uid, developerClaims);
   }
 
   /**
@@ -165,14 +145,7 @@ export class Auth implements FirebaseServiceInterface {
    *     verification.
    */
   public verifyIdToken(idToken: string, checkRevoked: boolean = false): Promise<object> {
-    if (typeof this.tokenGenerator_ === 'undefined') {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CREDENTIAL,
-        'Must initialize app with a cert credential or set your Firebase project ID as the ' +
-        'GOOGLE_CLOUD_PROJECT environment variable to call auth().verifyIdToken().',
-      );
-    }
-    return this.tokenGenerator_.verifyIdToken(idToken)
+    return this.idTokenVerifier.verifyJWT(idToken)
       .then((decodedIdToken: DecodedIdToken) => {
         // Whether to check if the token was revoked.
         if (!checkRevoked) {
@@ -401,14 +374,7 @@ export class Auth implements FirebaseServiceInterface {
    */
   public verifySessionCookie(
       sessionCookie: string, checkRevoked: boolean = false): Promise<DecodedIdToken> {
-    if (typeof this.tokenGenerator_ === 'undefined') {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CREDENTIAL,
-        'Must initialize app with a cert credential or set your Firebase project ID as the ' +
-        'GOOGLE_CLOUD_PROJECT environment variable to call auth().verifySessionCookie().',
-      );
-    }
-    return this.tokenGenerator_.verifySessionCookie(sessionCookie)
+    return this.sessionCookieVerifier.verifyJWT(sessionCookie)
       .then((decodedIdToken: DecodedIdToken) => {
         // Whether to check if the token was revoked.
         if (!checkRevoked) {

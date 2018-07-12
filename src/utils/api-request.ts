@@ -437,7 +437,6 @@ export class HttpRequestHandler {
             // JSON response
             try {
               const json = JSON.parse(response);
-
               if (statusCode >= 200 && statusCode < 300) {
                 resolve(json);
               } else {

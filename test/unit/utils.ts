@@ -71,17 +71,30 @@ export function generateRandomAccessToken(): string {
 /**
  * Creates a mock HTTP response from the given data and parameters.
  *
- * @param {*} data Data to be included in the response body.
+ * @param {object | string} data Data to be included in the response body.
  * @param {number=} status HTTP status code (defaults to 200).
  * @param {*=} headers HTTP headers to be included in the ersponse.
  * @returns {HttpResponse} An HTTP response object.
  */
-export function responseFrom(data: any, status: number = 200, headers: any = {}): HttpResponse {
+export function responseFrom(data: object | string, status: number = 200, headers: any = {}): HttpResponse {
+  let responseData: any;
+  let responseText: string;
+  if (typeof data === 'object') {
+    responseData = data;
+    responseText = JSON.stringify(data);
+  } else {
+    try {
+      responseData = JSON.parse(data);
+    } catch (error) {
+      responseData = null;
+    }
+    responseText = data as string;
+  }
   return {
     status,
     headers,
-    data,
-    text: JSON.stringify(data),
+    data: responseData,
+    text: responseText,
   };
 }
 
