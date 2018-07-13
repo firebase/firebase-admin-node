@@ -42,6 +42,7 @@ export interface FirebaseAppOptions {
   credential?: Credential;
   databaseAuthVariableOverride?: object;
   databaseURL?: string;
+  serviceAccountId?: string;
   storageBucket?: string;
   projectId?: string;
 }

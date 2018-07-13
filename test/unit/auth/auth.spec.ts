@@ -34,6 +34,7 @@ import {FirebaseAuthRequestHandler} from '../../../src/auth/auth-api-request';
 import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/utils/error';
 
 import * as validator from '../../../src/utils/validator';
+import { FirebaseTokenVerifier } from '../../../src/auth/token-verifier';
 
 chai.should();
 chai.use(sinonChai);
@@ -229,7 +230,7 @@ describe('Auth', () => {
 
       expect(() => {
         mockCredentialAuth.createCustomToken(mocks.uid, mocks.developerClaims);
-      }).to.throw('Must initialize app with a cert credential');
+      }).not.to.throw;
     });
 
     it('should forward on the call to the token generator\'s createCustomToken() method', () => {
@@ -260,6 +261,24 @@ describe('Auth', () => {
     });
   });
 
+  it('verifyIdToken() should throw when project ID is not specified', () => {
+    const mockCredentialAuth = new Auth(mocks.mockCredentialApp());
+    const expected = 'Must initialize app with a cert credential or set your Firebase project ID ' +
+      'as the GOOGLE_CLOUD_PROJECT environment variable to call verifyIdToken().';
+    expect(() => {
+      mockCredentialAuth.verifyIdToken(mocks.generateIdToken());
+    }).to.throw(expected);
+  });
+
+  it('verifySessionCookie() should throw when project ID is not specified', () => {
+    const mockCredentialAuth = new Auth(mocks.mockCredentialApp());
+    const expected = 'Must initialize app with a cert credential or set your Firebase project ID ' +
+      'as the GOOGLE_CLOUD_PROJECT environment variable to call verifySessionCookie().';
+    expect(() => {
+      mockCredentialAuth.verifySessionCookie(mocks.generateSessionCookie());
+    }).to.throw(expected);
+  });
+
   describe('verifyIdToken()', () => {
     let stub: sinon.SinonStub;
     let mockIdToken: string;
@@ -275,7 +294,7 @@ describe('Auth', () => {
     // Stubs used to simulate underlying api calls.
     const stubs: sinon.SinonStub[] = [];
     beforeEach(() => {
-      stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifyIdToken')
+      stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
         .returns(Promise.resolve(decodedIdToken));
       stubs.push(stub);
       mockIdToken = mocks.generateIdToken();
@@ -284,14 +303,6 @@ describe('Auth', () => {
     afterEach(() => {
       _.forEach(stubs, (s) => s.restore());
       clock.restore();
-    });
-
-    it('should throw if a cert credential is not specified', () => {
-      const mockCredentialAuth = new Auth(mocks.mockCredentialApp());
-
-      expect(() => {
-        mockCredentialAuth.verifyIdToken(mockIdToken);
-      }).to.throw('Must initialize app with a cert credential');
     });
 
     it('should forward on the call to the token generator\'s verifyIdToken() method', () => {
@@ -304,6 +315,19 @@ describe('Auth', () => {
         expect(result).to.deep.equal(decodedIdToken);
         expect(stub).to.have.been.calledOnce.and.calledWith(mockIdToken);
       });
+    });
+
+    it('should reject when underlying idTokenVerifier.verifyJWT() rejects with expected error', () =>  {
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT, 'Decoding Firebase ID token failed');
+      // Restore verifyIdToken stub.
+      stub.restore();
+      // Simulate ID token is invalid.
+      stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
+        .returns(Promise.reject(expectedError));
+      stubs.push(stub);
+      return auth.verifyIdToken(mockIdToken)
+        .should.eventually.be.rejectedWith('Decoding Firebase ID token failed');
     });
 
     it('should work with a non-cert credential when the GOOGLE_CLOUD_PROJECT environment variable is present', () => {
@@ -363,7 +387,7 @@ describe('Auth', () => {
       // Restore verifyIdToken stub.
       stub.restore();
       // Simulate revoked ID token returned with auth_time one second before validSince.
-      stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifyIdToken')
+      stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
         .returns(Promise.resolve(getDecodedIdToken(uid, oneSecBeforeValidSince)));
       stubs.push(stub);
       const getUserStub = sinon.stub(Auth.prototype, 'getUser')
@@ -389,7 +413,7 @@ describe('Auth', () => {
       // Restore verifyIdToken stub.
       stub.restore();
       // Simulate revoked ID token returned with auth_time one second before validSince.
-      stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifyIdToken')
+      stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
         .returns(Promise.resolve(oneSecBeforeValidSinceDecodedIdToken));
       stubs.push(stub);
       // Verify ID token without checking if revoked.
@@ -444,7 +468,7 @@ describe('Auth', () => {
       // Restore verifyIdToken stub.
       stub.restore();
       // Simulate ID token is invalid.
-      stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifyIdToken')
+      stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
         .returns(Promise.reject(expectedError));
       stubs.push(stub);
       // Verify ID token while checking if revoked.
@@ -474,7 +498,7 @@ describe('Auth', () => {
     // Stubs used to simulate underlying api calls.
     const stubs: sinon.SinonStub[] = [];
     beforeEach(() => {
-      stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifySessionCookie')
+      stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
         .returns(Promise.resolve(decodedSessionCookie));
       stubs.push(stub);
       mockSessionCookie = mocks.generateSessionCookie();
@@ -485,15 +509,7 @@ describe('Auth', () => {
       clock.restore();
     });
 
-    it('should throw if a cert credential is not specified', () => {
-      const mockCredentialAuth = new Auth(mocks.mockCredentialApp());
-
-      expect(() => {
-        mockCredentialAuth.verifySessionCookie(mockSessionCookie);
-      }).to.throw('Must initialize app with a cert credential');
-    });
-
-    it('should forward on the call to the token generator\'s verifySessionCookie() method', () => {
+    it('should forward on the call to the token verifier\'s verifySessionCookie() method', () => {
       // Stub getUser call.
       const getUserStub = sinon.stub(Auth.prototype, 'getUser');
       stubs.push(getUserStub);
@@ -503,6 +519,19 @@ describe('Auth', () => {
         expect(result).to.deep.equal(decodedSessionCookie);
         expect(stub).to.have.been.calledOnce.and.calledWith(mockSessionCookie);
       });
+    });
+
+    it('should reject when underlying sessionCookieVerifier.verifyJWT() rejects with expected error', () =>  {
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT, 'Decoding Firebase session cookie failed');
+      // Restore verifySessionCookie stub.
+      stub.restore();
+      // Simulate session cookie is invalid.
+      stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
+        .returns(Promise.reject(expectedError));
+      stubs.push(stub);
+      return auth.verifySessionCookie(mockSessionCookie)
+        .should.eventually.be.rejectedWith('Decoding Firebase session cookie failed');
     });
 
     it('should work with a non-cert credential when the GOOGLE_CLOUD_PROJECT environment variable is present', () => {
@@ -562,7 +591,7 @@ describe('Auth', () => {
       // Restore verifySessionCookie stub.
       stub.restore();
       // Simulate revoked session cookie returned with auth_time one second before validSince.
-      stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifySessionCookie')
+      stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
         .returns(Promise.resolve(getDecodedSessionCookie(uid, oneSecBeforeValidSince)));
       stubs.push(stub);
       const getUserStub = sinon.stub(Auth.prototype, 'getUser')
@@ -588,7 +617,7 @@ describe('Auth', () => {
       // Restore verifySessionCookie stub.
       stub.restore();
       // Simulate revoked session cookie returned with auth_time one second before validSince.
-      stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifySessionCookie')
+      stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
         .returns(Promise.resolve(oneSecBeforeValidSinceDecodedSessionCookie));
       stubs.push(stub);
       // Verify session cookie without checking if revoked.
@@ -643,7 +672,7 @@ describe('Auth', () => {
       // Restore verifySessionCookie stub.
       stub.restore();
       // Simulate session cookie is invalid.
-      stub = sinon.stub(FirebaseTokenGenerator.prototype, 'verifySessionCookie')
+      stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
         .returns(Promise.reject(expectedError));
       stubs.push(stub);
       // Verify session cookie while checking if revoked.

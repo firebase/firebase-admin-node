@@ -46,6 +46,7 @@ declare namespace admin {
     credential?: admin.credential.Credential;
     databaseAuthVariableOverride?: Object;
     databaseURL?: string;
+    serviceAccountId?: string;
     storageBucket?: string;
     projectId?: string;
   }
@@ -307,7 +308,7 @@ declare namespace admin.database {
       successCallback?: (a: admin.database.DataSnapshot, b?: string) => any,
       failureCallbackOrContext?: Object|null,
       context?: Object|null
-    ): Promise<any>;
+    ): Promise<admin.database.DataSnapshot>;
     orderByChild(path: string): admin.database.Query;
     orderByKey(): admin.database.Query;
     orderByPriority(): admin.database.Query;
