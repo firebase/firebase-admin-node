@@ -446,8 +446,26 @@ declare namespace admin.messaging {
     notification?: WebpushNotification;
   };
 
-  interface WebpushNotification extends NotificationOptions {
+  interface WebpushNotification {
     title?: string;
+    actions?: Array<{
+      action: string;
+      icon?: string;
+      title: string;
+    }>;
+    badge?: string;
+    body?: string;
+    data?: any;
+    dir?: 'auto' | 'ltr' | 'rtl';
+    icon?: string;
+    image?: string;
+    lang?: string;
+    renotify?: boolean;
+    requireInteraction?: boolean;
+    silent?: boolean;
+    tag?: string;
+    timestamp?: number;
+    vibrate?: number | number[];
     [key: string]: any;
   }
 

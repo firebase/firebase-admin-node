@@ -7,6 +7,8 @@
   method to return a more specific type.
 - [changed] Admin SDK can now read the Firebase/GCP project ID from both
   `GCLOUD_PROJECT` and `GOOGLE_CLOUD_PROJECT` environment variables.
+- [changed] Updated the `WebpushNotification` typings to match
+  [the current API](https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages#webpushconfig).
 
 # v5.12.1
 
