@@ -9,6 +9,7 @@
   `GCLOUD_PROJECT` and `GOOGLE_CLOUD_PROJECT` environment variables.
 - [changed] Updated the `WebpushNotification` typings to match
   [the current API](https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages#webpushconfig).
+- [changed] Upgraded Cloud Firestore client to v0.15.2.
 
 # v5.12.1
 
