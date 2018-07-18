@@ -600,6 +600,7 @@ declare namespace admin.firestore {
   export import Query = _firestore.Query;
   export import DocumentData = _firestore.DocumentData;
   export import QuerySnapshot = _firestore.QuerySnapshot;
+  export import Timestamp = _firestore.Timestamp;
 }
 
 declare namespace admin.instanceId {
