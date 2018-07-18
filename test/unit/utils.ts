@@ -95,7 +95,7 @@ export function responseFrom(data: object | string, status: number = 200, header
     headers,
     data: responseData,
     text: responseText,
-    isJson: responseData != null,
+    contentJson: responseData != null,
   };
 }
 

@@ -103,7 +103,7 @@ export class FirebaseMessagingRequestHandler {
     };
     return this.httpClient.send(request).then((response) => {
       // Send non-JSON responses to the catch() below where they will be treated as errors.
-      if (!response.isJson) {
+      if (!response.contentJson) {
         throw new HttpError(response);
       }
 
@@ -126,7 +126,7 @@ export class FirebaseMessagingRequestHandler {
   }
 
   private handleHttpError(err: HttpError) {
-    if (err.response.isJson) {
+    if (err.response.contentJson) {
       // For JSON responses, map the server response to a client-side error.
       const json = err.response.data;
       const errorCode = FirebaseMessagingRequestHandler.getErrorCode(json);

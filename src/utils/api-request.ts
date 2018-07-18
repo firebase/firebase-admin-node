@@ -54,7 +54,11 @@ export interface HttpResponse {
   readonly text: string;
   /** Response data as a parsed JSON object. */
   readonly data: any;
-  readonly isJson: boolean;
+  /**
+   * Indicates if the response content is JSON-formatted or not. If true, data field can be used
+   * to retrieve the content as a parsed JSON object.
+   */
+  readonly contentJson: boolean;
 }
 
 interface LowLevelResponse {
@@ -99,7 +103,7 @@ class DefaultHttpResponse implements HttpResponse {
   }
 
   get data(): any {
-    if (this.isJson) {
+    if (this.contentJson) {
       return this.parsedData;
     }
     throw new FirebaseAppError(
@@ -110,7 +114,7 @@ class DefaultHttpResponse implements HttpResponse {
     );
   }
 
-  get isJson(): boolean {
+  get contentJson(): boolean {
     return typeof this.parsedData !== 'undefined';
   }
 }
