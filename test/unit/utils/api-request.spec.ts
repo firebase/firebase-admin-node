@@ -165,7 +165,7 @@ describe('HttpClient', () => {
       expect(resp.headers['content-type']).to.equal('application/json');
       expect(resp.text).to.equal(JSON.stringify(respData));
       expect(resp.data).to.deep.equal(respData);
-      expect(resp.contentJson).to.be.true;
+      expect(resp.isJson()).to.be.true;
     });
   });
 
@@ -186,7 +186,7 @@ describe('HttpClient', () => {
       expect(resp.headers['content-type']).to.equal('text/plain');
       expect(resp.text).to.equal(respData);
       expect(() => { resp.data; }).to.throw('Error while parsing response data');
-      expect(resp.contentJson).to.be.false;
+      expect(resp.isJson()).to.be.false;
     });
   });
 
@@ -219,7 +219,7 @@ describe('HttpClient', () => {
       expect(resp.status).to.equal(200);
       expect(resp.headers['content-type']).to.equal('application/json');
       expect(resp.data).to.deep.equal(respData);
-      expect(resp.contentJson).to.be.true;
+      expect(resp.isJson()).to.be.true;
     });
   });
 
@@ -236,7 +236,7 @@ describe('HttpClient', () => {
       expect(resp.status).to.equal(400);
       expect(resp.headers['content-type']).to.equal('application/json');
       expect(resp.data).to.deep.equal(data);
-      expect(resp.contentJson).to.be.true;
+      expect(resp.isJson()).to.be.true;
     });
   });
 
@@ -253,7 +253,7 @@ describe('HttpClient', () => {
       expect(resp.status).to.equal(500);
       expect(resp.headers['content-type']).to.equal('application/json');
       expect(resp.data).to.deep.equal(data);
-      expect(resp.contentJson).to.be.true;
+      expect(resp.isJson()).to.be.true;
     });
   });
 
