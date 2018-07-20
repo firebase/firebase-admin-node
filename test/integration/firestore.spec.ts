@@ -78,7 +78,7 @@ describe('admin.firestore', () => {
       .then((snapshot) => {
         const data = snapshot.data();
         expect(data.timestamp).is.not.null;
-        expect(data.timestamp instanceof admin.firestore.Timestamp).is.true;
+        expect(data.timestamp).to.be.instanceOf(admin.firestore.Timestamp);
         return reference.delete();
       })
       .should.eventually.be.fulfilled;
