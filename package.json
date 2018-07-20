@@ -51,7 +51,7 @@
   "dependencies": {
     "@firebase/app": "^0.3.1",
     "@firebase/database": "^0.3.1",
-    "@google-cloud/firestore": "^0.15.2",
+    "@google-cloud/firestore": "^0.15.4",
     "@google-cloud/storage": "^1.6.0",
     "@types/google-cloud__storage": "^1.1.7",
     "@types/node": "^8.0.53",
