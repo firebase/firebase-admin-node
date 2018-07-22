@@ -407,6 +407,10 @@ export class AuthClientErrorCode {
     code: 'invalid-hash-salt-separator',
     message: 'The hashing algorithm salt separator field must be a valid byte buffer.',
   };
+  public static INVALID_HASH_INPUT_ORDER = {
+    code: 'invalid-hash-input-order',
+    message: 'The hash input order must be "SALT_FIRST" or "PASSWORD_FIRST".',
+  };
   public static INVALID_LAST_SIGN_IN_TIME = {
     code: 'invalid-last-sign-in-time',
     message: 'The last sign-in time must be a valid UTC date string.',

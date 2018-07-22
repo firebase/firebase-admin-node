@@ -25,6 +25,11 @@ export type HashAlgorithmType = 'SCRYPT' | 'STANDARD_SCRYPT' | 'HMAC_SHA512' |
     'PBKDF2_SHA256' | 'SHA512' | 'SHA256' | 'SHA1';
 
 
+/** Firebase Auth supported hashing input orders for import operations. */
+export type HashInputOrderType = 'SALT_FIRST' | 'PASSWORD_FIRST';
+export type PasswordHashOrderType = 'PASSWORD_AND_SALT' | 'SALT_AND_PASSWORD';
+
+
 /** User import options for bulk account imports. */
 export interface UserImportOptions {
   hash: {
@@ -36,6 +41,7 @@ export interface UserImportOptions {
     parallelization?: number;
     blockSize?: number;
     derivedKeyLength?: number;
+    inputOrder?: HashInputOrderType;
   };
 }
 
@@ -101,6 +107,7 @@ export interface UploadAccountOptions {
   parallelization?: number;
   blockSize?: number;
   dkLen?: number;
+  passwordHashOrder?: PasswordHashOrderType;
 }
 
 
@@ -328,6 +335,7 @@ export class UserImportBuilder {
           hashAlgorithm: options.hash.algorithm,
           signerKey: utils.toWebSafeBase64(options.hash.key),
         };
+        populatedOptions = this.populateInputOrderOption(populatedOptions, options.hash.inputOrder);
         break;
 
       case 'MD5':
@@ -348,6 +356,9 @@ export class UserImportBuilder {
           hashAlgorithm: options.hash.algorithm,
           rounds,
         };
+        if (options.hash.algorithm !== 'PBKDF_SHA1' && options.hash.algorithm !== 'PBKDF2_SHA256') {
+          populatedOptions = this.populateInputOrderOption(populatedOptions, options.hash.inputOrder);
+        }
         break;
 
       case 'SCRYPT':
@@ -445,6 +456,31 @@ export class UserImportBuilder {
         );
     }
     return populatedOptions;
+  }
+
+  /**
+   * Adds a new hash order field to the populated account options, if provided.
+   * @param {UploadAccountOptions} populatedOptions The already populated account options.
+   * @param {HashInputOrderType=} inputOrder The optional hash input order.
+   * @return {UploadAccountOptions} A copy of populated options with a new field if the provided
+   *     input order was provided.
+   */
+  private populateInputOrderOption(
+    populatedOptions: UploadAccountOptions,
+    inputOrder?: HashInputOrderType,
+  ): UploadAccountOptions {
+    const populatedOptionsCopy = {...populatedOptions};
+
+    if (typeof inputOrder !== 'undefined') {
+      if (inputOrder !== 'SALT_FIRST' && inputOrder !== 'PASSWORD_FIRST') {
+        throw new FirebaseAuthError(AuthClientErrorCode.INVALID_HASH_INPUT_ORDER);
+      }
+
+      populatedOptionsCopy.passwordHashOrder =
+        inputOrder === 'SALT_FIRST' ? 'SALT_AND_PASSWORD' : 'PASSWORD_AND_SALT';
+    }
+
+    return populatedOptionsCopy;
   }
 
   /**
