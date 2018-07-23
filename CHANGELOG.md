@@ -5,6 +5,8 @@
 # v5.13.1
 
 - [changed] Upgraded Cloud Firestore client to v0.15.4.
+- [changed] Exposed the Firestore `Timestamp` type from the `admin.firestore`
+  namespace.
 
 # v5.13.0
 
