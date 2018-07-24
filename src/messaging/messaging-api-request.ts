@@ -15,17 +15,15 @@
  */
 
 import {FirebaseApp} from '../firebase-app';
-import {HttpMethod, SignedApiRequestHandler} from '../utils/api-request';
-import {FirebaseError, FirebaseMessagingError, MessagingClientErrorCode} from '../utils/error';
+import {HttpMethod, AuthorizedHttpClient, HttpRequestConfig, HttpError} from '../utils/api-request';
+import {FirebaseMessagingError, MessagingClientErrorCode} from '../utils/error';
 
 import * as validator from '../utils/validator';
 
 // FCM backend constants
-const FIREBASE_MESSAGING_PORT = 443;
 const FIREBASE_MESSAGING_TIMEOUT = 10000;
 const FIREBASE_MESSAGING_HTTP_METHOD: HttpMethod = 'POST';
 const FIREBASE_MESSAGING_HEADERS = {
-  'Content-Type': 'application/json',
   'Sdk-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
   'access_token_auth': 'true',
 };
@@ -35,7 +33,7 @@ const FIREBASE_MESSAGING_HEADERS = {
  * Class that provides a mechanism to send requests to the Firebase Cloud Messaging backend.
  */
 export class FirebaseMessagingRequestHandler {
-  private signedApiRequestHandler: SignedApiRequestHandler;
+  private readonly httpClient: AuthorizedHttpClient;
 
   /**
    * @param {object} response The response to check for errors.
@@ -84,7 +82,7 @@ export class FirebaseMessagingRequestHandler {
    * @constructor
    */
   constructor(app: FirebaseApp) {
-    this.signedApiRequestHandler = new SignedApiRequestHandler(app);
+    this.httpClient = new AuthorizedHttpClient(app);
   }
 
   /**
@@ -96,76 +94,70 @@ export class FirebaseMessagingRequestHandler {
    * @return {Promise<object>} A promise that resolves with the response.
    */
   public invokeRequestHandler(host: string, path: string, requestData: object): Promise<object> {
-    return this.signedApiRequestHandler.sendRequest(
-      host,
-      FIREBASE_MESSAGING_PORT,
-      path,
-      FIREBASE_MESSAGING_HTTP_METHOD,
-      requestData,
-      FIREBASE_MESSAGING_HEADERS,
-      FIREBASE_MESSAGING_TIMEOUT,
-    ).then((response) => {
+    const request: HttpRequestConfig = {
+      method: FIREBASE_MESSAGING_HTTP_METHOD,
+      url: `https://${host}${path}`,
+      data: requestData,
+      headers: FIREBASE_MESSAGING_HEADERS,
+      timeout: FIREBASE_MESSAGING_TIMEOUT,
+    };
+    return this.httpClient.send(request).then((response) => {
       // Send non-JSON responses to the catch() below where they will be treated as errors.
-      if (typeof response === 'string') {
-        return Promise.reject({
-          error: response,
-          statusCode: 200,
-        });
+      if (!response.isJson()) {
+        throw new HttpError(response);
       }
 
       // Check for backend errors in the response.
-      const errorCode = FirebaseMessagingRequestHandler.getErrorCode(response);
+      const errorCode = FirebaseMessagingRequestHandler.getErrorCode(response.data);
       if (errorCode) {
-        return Promise.reject({
-          error: response,
-          statusCode: 200,
-        });
+        throw new HttpError(response);
       }
 
       // Return entire response.
-      return response;
+      return response.data;
     })
-    .catch((response: { statusCode: number, error: string | object }) => {
+    .catch((err) => {
+      if (err instanceof HttpError) {
+        this.handleHttpError(err);
+      }
       // Re-throw the error if it already has the proper format.
-      if (response instanceof FirebaseError) {
-        throw response;
-      } else if (response.error instanceof FirebaseError) {
-        throw response.error;
-      }
+      throw err;
+    });
+  }
 
-      // Add special handling for non-JSON responses.
-      if (typeof response.error === 'string') {
-        let error;
-        switch (response.statusCode) {
-          case 400:
-            error = MessagingClientErrorCode.INVALID_ARGUMENT;
-            break;
-          case 401:
-          case 403:
-            error = MessagingClientErrorCode.AUTHENTICATION_ERROR;
-            break;
-          case 500:
-            error = MessagingClientErrorCode.INTERNAL_ERROR;
-            break;
-          case 503:
-            error = MessagingClientErrorCode.SERVER_UNAVAILABLE;
-            break;
-          default:
-            // Treat non-JSON responses with unexpected status codes as unknown errors.
-            error = MessagingClientErrorCode.UNKNOWN_ERROR;
-        }
-
-        throw new FirebaseMessagingError({
-          code: error.code,
-          message: `${ error.message } Raw server response: "${ response.error }". Status code: ` +
-            `${ response.statusCode }.`,
-        });
-      }
-
+  private handleHttpError(err: HttpError) {
+    if (err.response.isJson()) {
       // For JSON responses, map the server response to a client-side error.
-      const errorCode = FirebaseMessagingRequestHandler.getErrorCode(response.error);
-      const errorMessage = FirebaseMessagingRequestHandler.getErrorMessage(response.error);
-      throw FirebaseMessagingError.fromServerError(errorCode, errorMessage, response.error);
+      const json = err.response.data;
+      const errorCode = FirebaseMessagingRequestHandler.getErrorCode(json);
+      const errorMessage = FirebaseMessagingRequestHandler.getErrorMessage(json);
+      throw FirebaseMessagingError.fromServerError(errorCode, errorMessage, json);
+    }
+
+    // Non-JSON response
+    let error: {code: string, message: string};
+    switch (err.response.status) {
+      case 400:
+        error = MessagingClientErrorCode.INVALID_ARGUMENT;
+        break;
+      case 401:
+      case 403:
+        error = MessagingClientErrorCode.AUTHENTICATION_ERROR;
+        break;
+      case 500:
+        error = MessagingClientErrorCode.INTERNAL_ERROR;
+        break;
+      case 503:
+        error = MessagingClientErrorCode.SERVER_UNAVAILABLE;
+        break;
+      default:
+        // Treat non-JSON responses with unexpected status codes as unknown errors.
+        error = MessagingClientErrorCode.UNKNOWN_ERROR;
+    }
+    throw new FirebaseMessagingError({
+      code: error.code,
+      message: `${ error.message } Raw server response: "${ err.response.text }". Status code: ` +
+        `${ err.response.status }.`,
     });
   }
 }

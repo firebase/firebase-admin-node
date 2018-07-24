@@ -16,10 +16,6 @@
 
 'use strict';
 
-// Use untyped import syntax for Node built-ins.
-import https = require('https');
-import stream = require('stream');
-
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as nock from 'nock';
@@ -32,10 +28,11 @@ import * as mocks from '../../resources/mocks';
 
 import {FirebaseApp} from '../../../src/firebase-app';
 import {
-  AndroidConfig, Message, Messaging, MessagingOptions, MessagingPayload, MessagingDevicesResponse,
-  MessagingTopicManagementResponse, WebpushConfig,
+  Message, Messaging, MessagingOptions, MessagingPayload, MessagingDevicesResponse,
+  MessagingTopicManagementResponse,
   BLACKLISTED_OPTIONS_KEYS, BLACKLISTED_DATA_PAYLOAD_KEYS,
 } from '../../../src/messaging/messaging';
+import { HttpClient } from '../../../src/utils/api-request';
 
 chai.should();
 chai.use(sinonChai);
@@ -248,16 +245,19 @@ function mockTopicSubscriptionRequestWithError(
 describe('Messaging', () => {
   let mockApp: FirebaseApp;
   let messaging: Messaging;
-  let mockResponse: stream.PassThrough;
   let mockedRequests: nock.Scope[] = [];
-  let requestWriteSpy: sinon.SinonSpy;
   let httpsRequestStub: sinon.SinonStub;
-  let mockRequestStream: mocks.MockStream;
   let nullAccessTokenMessaging: Messaging;
-  let malformedAccessTokenMessaging: Messaging;
-  let rejectedPromiseAccessTokenMessaging: Messaging;
 
-  before(() => utils.mockFetchAccessTokenRequests());
+  const mockAccessToken: string = utils.generateRandomAccessToken();
+  const expectedHeaders = {
+    'Authorization': 'Bearer ' + mockAccessToken,
+    'Sdk-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
+    'access_token_auth': 'true',
+  };
+  const emptyResponse = utils.responseFrom({});
+
+  before(() => utils.mockFetchAccessTokenRequests(mockAccessToken));
 
   after(() => nock.cleanAll());
 
@@ -265,25 +265,12 @@ describe('Messaging', () => {
     mockApp = mocks.app();
     messaging = new Messaging(mockApp);
 
-    mockResponse = new stream.PassThrough();
-    mockResponse.write(JSON.stringify({ mockResponse: true }));
-    mockResponse.end();
-
-    mockRequestStream = new mocks.MockStream();
-
-    requestWriteSpy = sinon.spy(mockRequestStream, 'write');
-
     nullAccessTokenMessaging = new Messaging(mocks.appReturningNullAccessToken());
-    malformedAccessTokenMessaging = new Messaging(mocks.appReturningMalformedAccessToken());
-    rejectedPromiseAccessTokenMessaging = new Messaging(mocks.appRejectedWhileFetchingAccessToken());
   });
 
   afterEach(() => {
     _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
     mockedRequests = [];
-
-    requestWriteSpy.restore();
-
     if (httpsRequestStub && httpsRequestStub.restore) {
       httpsRequestStub.restore();
     }
@@ -702,17 +689,15 @@ describe('Messaging', () => {
       // Wait for the initial getToken() call to complete before stubbing https.request.
       return mockApp.INTERNAL.getToken()
         .then(() => {
-          httpsRequestStub = sinon.stub(https, 'request');
-          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
-
+          httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(emptyResponse);
           return messaging.sendToDevice(
             mocks.messaging.registrationToken,
             mocks.messaging.payload,
           );
         })
         .then(() => {
-          expect(requestWriteSpy).to.have.been.calledOnce;
-          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(httpsRequestStub).to.have.been.calledOnce;
+          const requestData = httpsRequestStub.args[0][0].data;
           expect(requestData).to.deep.equal({
             to: mocks.messaging.registrationToken,
             data: mocks.messaging.payload.data,
@@ -731,17 +716,15 @@ describe('Messaging', () => {
       // Wait for the initial getToken() call to complete before stubbing https.request.
       return mockApp.INTERNAL.getToken()
         .then(() => {
-          httpsRequestStub = sinon.stub(https, 'request');
-          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
-
+          httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(emptyResponse);
           return messaging.sendToDevice(
             registrationTokens,
             mocks.messaging.payload,
           );
         })
         .then(() => {
-          expect(requestWriteSpy).to.have.been.calledOnce;
-          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(httpsRequestStub).to.have.been.calledOnce;
+          const requestData = httpsRequestStub.args[0][0].data;
           expect(requestData).to.deep.equal({
             registration_ids: registrationTokens,
             data: mocks.messaging.payload.data,
@@ -982,16 +965,14 @@ describe('Messaging', () => {
       // Wait for the initial getToken() call to complete before stubbing https.request.
       return mockApp.INTERNAL.getToken()
         .then(() => {
-          httpsRequestStub = sinon.stub(https, 'request');
-          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
-
+          httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(emptyResponse);
           return messaging.sendToDeviceGroup(
             mocks.messaging.notificationKey,
             mocks.messaging.payload,
           );
         }).then(() => {
-          expect(requestWriteSpy).to.have.been.calledOnce;
-          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(httpsRequestStub).to.have.been.calledOnce;
+          const requestData = httpsRequestStub.args[0][0].data;
           expect(requestData).to.deep.equal({
             to: mocks.messaging.notificationKey,
             data: mocks.messaging.payload.data,
@@ -1206,16 +1187,14 @@ describe('Messaging', () => {
       // Wait for the initial getToken() call to complete before stubbing https.request.
       return mockApp.INTERNAL.getToken()
         .then(() => {
-          httpsRequestStub = sinon.stub(https, 'request');
-          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
-
+          httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(emptyResponse);
           return messaging.sendToTopic(
             mocks.messaging.topic,
             mocks.messaging.payload,
           );
         }).then(() => {
-          expect(requestWriteSpy).to.have.been.calledOnce;
-          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(httpsRequestStub).to.have.been.calledOnce;
+          const requestData = httpsRequestStub.args[0][0].data;
           expect(requestData).to.deep.equal({
             to: mocks.messaging.topicWithPrefix,
             data: mocks.messaging.payload.data,
@@ -1228,17 +1207,15 @@ describe('Messaging', () => {
       // Wait for the initial getToken() call to complete before stubbing https.request.
       return mockApp.INTERNAL.getToken()
         .then(() => {
-          httpsRequestStub = sinon.stub(https, 'request');
-          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
-
+          httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(emptyResponse);
           return messaging.sendToTopic(
             mocks.messaging.topicWithPrefix,
             mocks.messaging.payload,
           );
         })
         .then(() => {
-          expect(requestWriteSpy).to.have.been.calledOnce;
-          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(httpsRequestStub).to.have.been.calledOnce;
+          const requestData = httpsRequestStub.args[0][0].data;
           expect(requestData).to.deep.equal({
             to: mocks.messaging.topicWithPrefix,
             data: mocks.messaging.payload.data,
@@ -1410,17 +1387,15 @@ describe('Messaging', () => {
       // Wait for the initial getToken() call to complete before stubbing https.request.
       return mockApp.INTERNAL.getToken()
         .then(() => {
-          httpsRequestStub = sinon.stub(https, 'request');
-          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
-
+          httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(emptyResponse);
           return messaging.sendToCondition(
             mocks.messaging.condition,
             mocks.messaging.payload,
           );
         })
         .then(() => {
-          expect(requestWriteSpy).to.have.been.calledOnce;
-          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(httpsRequestStub).to.have.been.calledOnce;
+          const requestData = httpsRequestStub.args[0][0].data;
           expect(requestData).to.deep.equal({
             condition: mocks.messaging.condition,
             data: mocks.messaging.payload.data,
@@ -1598,17 +1573,15 @@ describe('Messaging', () => {
       // Wait for the initial getToken() call to complete before stubbing https.request.
       return mockApp.INTERNAL.getToken()
         .then(() => {
-          httpsRequestStub = sinon.stub(https, 'request');
-          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
-
+          httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(emptyResponse);
           return messaging.sendToDevice(
             mocks.messaging.registrationToken,
             mocks.messaging.payload,
           );
         })
         .then(() => {
-          expect(requestWriteSpy).to.have.been.calledOnce;
-          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(httpsRequestStub).to.have.been.calledOnce;
+          const requestData = httpsRequestStub.args[0][0].data;
           expect(requestData).to.have.keys(['to', 'data', 'notification']);
           expect(requestData.data).to.deep.equal(mocks.messaging.payload.data);
           expect(requestData.notification).to.deep.equal(mocks.messaging.payload.notification);
@@ -1619,9 +1592,7 @@ describe('Messaging', () => {
       // Wait for the initial getToken() call to complete before stubbing https.request.
       return mockApp.INTERNAL.getToken()
         .then(() => {
-          httpsRequestStub = sinon.stub(https, 'request');
-          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
-
+          httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(emptyResponse);
           return messaging.sendToDevice(
             mocks.messaging.registrationToken,
             {
@@ -1636,8 +1607,8 @@ describe('Messaging', () => {
             },
           );
         }).then(() => {
-          expect(requestWriteSpy).to.have.been.calledOnce;
-          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(httpsRequestStub).to.have.been.calledOnce;
+          const requestData = httpsRequestStub.args[0][0].data;
           expect(requestData.notification).to.deep.equal({
             body_loc_args: 'one',
             body_loc_key: 'two',
@@ -1653,9 +1624,7 @@ describe('Messaging', () => {
       // Wait for the initial getToken() call to complete before stubbing https.request.
       return mockApp.INTERNAL.getToken()
         .then(() => {
-          httpsRequestStub = sinon.stub(https, 'request');
-          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
-
+          httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(emptyResponse);
           return messaging.sendToDevice(
             mocks.messaging.registrationToken,
             {
@@ -1667,8 +1636,8 @@ describe('Messaging', () => {
           );
         })
         .then(() => {
-          expect(requestWriteSpy).to.have.been.calledOnce;
-          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(httpsRequestStub).to.have.been.calledOnce;
+          const requestData = httpsRequestStub.args[0][0].data;
           expect(requestData.notification.body_loc_args).to.equal('foo');
         });
     });
@@ -2029,9 +1998,7 @@ describe('Messaging', () => {
       // Wait for the initial getToken() call to complete before stubbing https.request.
       return mockApp.INTERNAL.getToken()
         .then(() => {
-          httpsRequestStub = sinon.stub(https, 'request');
-          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
-
+          httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(emptyResponse);
           return messaging.sendToDevice(
             mocks.messaging.registrationToken,
             mocks.messaging.payloadDataOnly,
@@ -2039,8 +2006,8 @@ describe('Messaging', () => {
           );
         })
         .then(() => {
-          expect(requestWriteSpy).to.have.been.calledOnce;
-          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(httpsRequestStub).to.have.been.calledOnce;
+          const requestData = httpsRequestStub.args[0][0].data;
           expect(requestData).to.have.keys(['to', 'data', 'dry_run', 'collapse_key']);
           expect(requestData.dry_run).to.equal(mockOptionsClone.dryRun);
           expect(requestData.collapse_key).to.equal(mockOptionsClone.collapseKey);
@@ -2423,18 +2390,22 @@ describe('Messaging', () => {
         // Wait for the initial getToken() call to complete before stubbing https.request.
         return mockApp.INTERNAL.getToken()
           .then(() => {
-            httpsRequestStub = sinon.stub(https, 'request');
-            httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
+            const resp = utils.responseFrom({message: 'test'});
+            httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(resp);
             const req = config.req;
             req.token = 'mock-token';
             return messaging.send(req);
           })
           .then(() => {
-            expect(requestWriteSpy).to.have.been.calledOnce;
-            const requestData = JSON.parse(requestWriteSpy.args[0][0]);
             const expectedReq = config.expectedReq || config.req;
             expectedReq.token = 'mock-token';
-            expect(requestData.message).to.deep.equal(expectedReq);
+            expect(httpsRequestStub).to.have.been.calledOnce.and.calledWith({
+              method: 'POST',
+              data: {message: expectedReq},
+              timeout: 10000,
+              url: 'https://fcm.googleapis.com/v1/projects/project_id/messages:send',
+              headers: expectedHeaders,
+            });
           });
       });
     });
@@ -2442,13 +2413,13 @@ describe('Messaging', () => {
     it('should not throw when the message is addressed to the prefixed topic name', () => {
       return mockApp.INTERNAL.getToken()
         .then(() => {
-          httpsRequestStub = sinon.stub(https, 'request');
-          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
+          const resp = utils.responseFrom({message: 'test'});
+          httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(resp);
           return messaging.send({topic: '/topics/mock-topic'});
         })
         .then(() => {
-          expect(requestWriteSpy).to.have.been.calledOnce;
-          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(httpsRequestStub).to.have.been.calledOnce;
+          const requestData = httpsRequestStub.args[0][0].data;
           const expectedReq = {topic: 'mock-topic'};
           expect(requestData.message).to.deep.equal(expectedReq);
         });
@@ -2458,9 +2429,7 @@ describe('Messaging', () => {
       // Wait for the initial getToken() call to complete before stubbing https.request.
       return mockApp.INTERNAL.getToken()
         .then(() => {
-          httpsRequestStub = sinon.stub(https, 'request');
-          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
-
+          httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(emptyResponse);
           return messaging.sendToDevice(
             mocks.messaging.registrationToken,
             mocks.messaging.payloadDataOnly,
@@ -2476,8 +2445,8 @@ describe('Messaging', () => {
           );
         })
         .then(() => {
-          expect(requestWriteSpy).to.have.been.calledOnce;
-          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(httpsRequestStub).to.have.been.calledOnce;
+          const requestData = httpsRequestStub.args[0][0].data;
           expect(requestData).to.have.keys([
             'to', 'data', 'dry_run', 'time_to_live', 'collapse_key', 'mutable_content',
             'content_available', 'restricted_package_name', 'otherKey',
@@ -2489,9 +2458,7 @@ describe('Messaging', () => {
       // Wait for the initial getToken() call to complete before stubbing https.request.
       return mockApp.INTERNAL.getToken()
         .then(() => {
-          httpsRequestStub = sinon.stub(https, 'request');
-          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
-
+          httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(emptyResponse);
           return messaging.sendToDevice(
             mocks.messaging.registrationToken,
             mocks.messaging.payloadDataOnly,
@@ -2502,8 +2469,8 @@ describe('Messaging', () => {
           );
         })
         .then(() => {
-          expect(requestWriteSpy).to.have.been.calledOnce;
-          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
+          expect(httpsRequestStub).to.have.been.calledOnce;
+          const requestData = httpsRequestStub.args[0][0].data;
           expect(requestData.dry_run).to.be.true;
         });
     });
@@ -2820,21 +2787,19 @@ describe('Messaging', () => {
       // Wait for the initial getToken() call to complete before stubbing https.request.
       return mockApp.INTERNAL.getToken()
         .then(() => {
-          httpsRequestStub = sinon.stub(https, 'request');
-          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
-
+          httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(emptyResponse);
           return messaging[methodName](
             mocks.messaging.registrationToken,
             mocks.messaging.topic,
           );
         })
         .then(() => {
-          expect(requestWriteSpy).to.have.been.calledOnce;
-          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
-          expect(requestData).to.deep.equal({
+          const expectedReq = {
             to: mocks.messaging.topicWithPrefix,
             registration_tokens: [mocks.messaging.registrationToken],
-          });
+          };
+          expect(httpsRequestStub).to.have.been.calledOnce;
+          expect(httpsRequestStub.args[0][0].data).to.deep.equal(expectedReq);
         });
     });
 
@@ -2843,21 +2808,19 @@ describe('Messaging', () => {
       // Wait for the initial getToken() call to complete before stubbing https.request.
       return mockApp.INTERNAL.getToken()
         .then(() => {
-          httpsRequestStub = sinon.stub(https, 'request');
-          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
-
+          httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(emptyResponse);
           return messaging[methodName](
             mocks.messaging.registrationToken,
             mocks.messaging.topicWithPrefix,
           );
         })
         .then(() => {
-          expect(requestWriteSpy).to.have.been.calledOnce;
-          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
-          expect(requestData).to.deep.equal({
+          const expectedReq = {
             to: mocks.messaging.topicWithPrefix,
             registration_tokens: [mocks.messaging.registrationToken],
-          });
+          };
+          expect(httpsRequestStub).to.have.been.calledOnce;
+          expect(httpsRequestStub.args[0][0].data).to.deep.equal(expectedReq);
         });
     });
 
@@ -2872,21 +2835,19 @@ describe('Messaging', () => {
       // Wait for the initial getToken() call to complete before stubbing https.request.
       return mockApp.INTERNAL.getToken()
         .then(() => {
-          httpsRequestStub = sinon.stub(https, 'request');
-          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
-
+          httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(emptyResponse);
           return messaging[methodName](
             registrationTokens,
             mocks.messaging.topic,
           );
         })
         .then(() => {
-          expect(requestWriteSpy).to.have.been.calledOnce;
-          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
-          expect(requestData).to.deep.equal({
+          const expectedReq = {
             to: mocks.messaging.topicWithPrefix,
             registration_tokens: registrationTokens,
-          });
+          };
+          expect(httpsRequestStub).to.have.been.calledOnce;
+          expect(httpsRequestStub.args[0][0].data).to.deep.equal(expectedReq);
         });
     });
 
@@ -2901,21 +2862,19 @@ describe('Messaging', () => {
       // Wait for the initial getToken() call to complete before stubbing https.request.
       return mockApp.INTERNAL.getToken()
         .then(() => {
-          httpsRequestStub = sinon.stub(https, 'request');
-          httpsRequestStub.callsArgWith(1, mockResponse).returns(mockRequestStream);
-
+          httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(emptyResponse);
           return messaging[methodName](
             registrationTokens,
             mocks.messaging.topicWithPrefix,
           );
         })
         .then(() => {
-          expect(requestWriteSpy).to.have.been.calledOnce;
-          const requestData = JSON.parse(requestWriteSpy.args[0][0]);
-          expect(requestData).to.deep.equal({
+          const expectedReq = {
             to: mocks.messaging.topicWithPrefix,
             registration_tokens: registrationTokens,
-          });
+          };
+          expect(httpsRequestStub).to.have.been.calledOnce;
+          expect(httpsRequestStub.args[0][0].data).to.deep.equal(expectedReq);
         });
     });
   }
