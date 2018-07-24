@@ -157,6 +157,7 @@ declare namespace admin.auth {
       'HMAC_SHA256' | 'HMAC_SHA1' | 'HMAC_MD5' | 'MD5' | 'PBKDF_SHA1' | 'BCRYPT' |
       'PBKDF2_SHA256' | 'SHA512' | 'SHA256' | 'SHA1';
 
+  type HashInputOrderType = 'SALT_FIRST' | 'PASSWORD_FIRST';
 
   interface UserImportOptions {
     hash: {
@@ -168,6 +169,7 @@ declare namespace admin.auth {
       parallelization?: number;
       blockSize?: number;
       derivedKeyLength?: number;
+      inputOrder?: HashInputOrderType;
     };
   }
 
