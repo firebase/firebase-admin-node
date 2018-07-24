@@ -54,6 +54,11 @@ export interface HttpResponse {
   readonly text: string;
   /** Response data as a parsed JSON object. */
   readonly data: any;
+  /**
+   * Indicates if the response content is JSON-formatted or not. If true, data field can be used
+   * to retrieve the content as a parsed JSON object.
+   */
+  isJson(): boolean;
 }
 
 interface LowLevelResponse {
@@ -98,7 +103,7 @@ class DefaultHttpResponse implements HttpResponse {
   }
 
   get data(): any {
-    if (typeof this.parsedData !== 'undefined') {
+    if (this.isJson()) {
       return this.parsedData;
     }
     throw new FirebaseAppError(
@@ -108,15 +113,18 @@ class DefaultHttpResponse implements HttpResponse {
       `request: "${ this.request }."`,
     );
   }
+
+  public isJson(): boolean {
+    return typeof this.parsedData !== 'undefined';
+  }
 }
 
 export class HttpError extends Error {
-
-  public readonly response: HttpResponse;
-
-  constructor(resp: LowLevelResponse) {
-    super(`Server responded with status ${resp.status}.`);
-    this.response = new DefaultHttpResponse(resp);
+  constructor(public readonly response: HttpResponse) {
+    super(`Server responded with status ${response.status}.`);
+    // Set the prototype so that instanceof checks will work correctly.
+    // See: https://github.com/Microsoft/TypeScript/issues/13965
+    Object.setPrototypeOf(this, HttpError.prototype);
   }
 }
 
@@ -153,7 +161,7 @@ export class HttpClient {
           return this.sendWithRetry(config, attempts + 1);
         }
         if (err.response) {
-          throw new HttpError(err.response);
+          throw new HttpError(new DefaultHttpResponse(err.response));
         }
         if (err.code === 'ETIMEDOUT') {
           throw new FirebaseAppError(
@@ -438,7 +446,6 @@ export class HttpRequestHandler {
             // JSON response
             try {
               const json = JSON.parse(response);
-
               if (statusCode >= 200 && statusCode < 300) {
                 resolve(json);
               } else {

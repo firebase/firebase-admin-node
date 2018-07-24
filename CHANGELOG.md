@@ -2,6 +2,25 @@
 
 -
 
+# v5.13.1
+
+- [changed] Upgraded Cloud Firestore client to v0.15.4.
+- [changed] Exposed the Firestore `Timestamp` type from the `admin.firestore`
+  namespace.
+
+# v5.13.0
+
+- [changed] Admin SDK can now create custom tokens without being initialized
+  with service account credentials. When a service account private key is not
+  available, the SDK uses the remote IAM service to sign JWTs in the cloud.
+- [changed] Updated the typings of the `admin.database.Query.once()`
+  method to return a more specific type.
+- [changed] Admin SDK can now read the Firebase/GCP project ID from both
+  `GCLOUD_PROJECT` and `GOOGLE_CLOUD_PROJECT` environment variables.
+- [changed] Updated the `WebpushNotification` typings to match
+  [the current API](https://firebase.google.com/docs/reference/fcm/rest/v1/projects.messages#webpushconfig).
+- [changed] Upgraded Cloud Firestore client to v0.15.2.
+
 # v5.12.1
 
 - [changed] Admin SDK now lazy loads all child namespaces and certain heavy

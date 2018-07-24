@@ -662,6 +662,8 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   MISSING_USER_ACCOUNT: 'MISSING_UID',
   // Password auth disabled in console.
   OPERATION_NOT_ALLOWED: 'OPERATION_NOT_ALLOWED',
+  // Provided credential has insufficient permissions.
+  PERMISSION_DENIED: 'INSUFFICIENT_PERMISSION',
   // Phone number already exists.
   PHONE_NUMBER_EXISTS: 'PHONE_NUMBER_ALREADY_EXISTS',
   // Project not found.

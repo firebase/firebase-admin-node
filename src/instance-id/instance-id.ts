@@ -62,7 +62,7 @@ export class InstanceId implements FirebaseServiceInterface {
         InstanceIdClientErrorCode.INVALID_PROJECT_ID,
         'Failed to determine project ID for InstanceId. Initialize the '
         + 'SDK with service account credentials or set project ID as an app option. '
-        + 'Alternatively set the GCLOUD_PROJECT environment variable.',
+        + 'Alternatively set the GOOGLE_CLOUD_PROJECT environment variable.',
       );
     }
 

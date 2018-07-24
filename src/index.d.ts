@@ -46,6 +46,7 @@ declare namespace admin {
     credential?: admin.credential.Credential;
     databaseAuthVariableOverride?: Object;
     databaseURL?: string;
+    serviceAccountId?: string;
     storageBucket?: string;
     projectId?: string;
   }
@@ -307,7 +308,7 @@ declare namespace admin.database {
       successCallback?: (a: admin.database.DataSnapshot, b?: string) => any,
       failureCallbackOrContext?: Object|null,
       context?: Object|null
-    ): Promise<any>;
+    ): Promise<admin.database.DataSnapshot>;
     orderByChild(path: string): admin.database.Query;
     orderByKey(): admin.database.Query;
     orderByPriority(): admin.database.Query;
@@ -438,18 +439,35 @@ declare namespace admin.messaging {
     title?: string;
     body?: string;
   };
-  
+
   type WebpushConfig = {
     headers?: {[key: string]: string};
     data?: {[key: string]: string};
     notification?: WebpushNotification;
   };
-  
-  type WebpushNotification = {
+
+  interface WebpushNotification {
     title?: string;
+    actions?: Array<{
+      action: string;
+      icon?: string;
+      title: string;
+    }>;
+    badge?: string;
     body?: string;
+    data?: any;
+    dir?: 'auto' | 'ltr' | 'rtl';
     icon?: string;
-  };
+    image?: string;
+    lang?: string;
+    renotify?: boolean;
+    requireInteraction?: boolean;
+    silent?: boolean;
+    tag?: string;
+    timestamp?: number;
+    vibrate?: number | number[];
+    [key: string]: any;
+  }
 
   type DataMessagePayload = {
     [key: string]: string;
@@ -582,6 +600,7 @@ declare namespace admin.firestore {
   export import Query = _firestore.Query;
   export import DocumentData = _firestore.DocumentData;
   export import QuerySnapshot = _firestore.QuerySnapshot;
+  export import Timestamp = _firestore.Timestamp;
 }
 
 declare namespace admin.instanceId {

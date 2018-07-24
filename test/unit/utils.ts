@@ -21,7 +21,7 @@ import * as mocks from '../resources/mocks';
 
 import {FirebaseNamespace} from '../../src/firebase-namespace';
 import {FirebaseApp, FirebaseAppOptions} from '../../src/firebase-app';
-import { HttpResponse } from '../../src/utils/api-request';
+import { HttpError, HttpResponse } from '../../src/utils/api-request';
 
 /**
  * Returns a new FirebaseApp instance with the provided options.
@@ -71,16 +71,34 @@ export function generateRandomAccessToken(): string {
 /**
  * Creates a mock HTTP response from the given data and parameters.
  *
- * @param {*} data Data to be included in the response body.
+ * @param {object | string} data Data to be included in the response body.
  * @param {number=} status HTTP status code (defaults to 200).
  * @param {*=} headers HTTP headers to be included in the ersponse.
  * @returns {HttpResponse} An HTTP response object.
  */
-export function responseFrom(data: any, status: number = 200, headers: any = {}): HttpResponse {
+export function responseFrom(data: object | string, status: number = 200, headers: any = {}): HttpResponse {
+  let responseData: any;
+  let responseText: string;
+  if (typeof data === 'object') {
+    responseData = data;
+    responseText = JSON.stringify(data);
+  } else {
+    try {
+      responseData = JSON.parse(data);
+    } catch (error) {
+      responseData = null;
+    }
+    responseText = data as string;
+  }
   return {
     status,
     headers,
-    data,
-    text: JSON.stringify(data),
+    data: responseData,
+    text: responseText,
+    isJson: () => responseData != null,
   };
+}
+
+export function errorFrom(data: any, status: number = 500): HttpError {
+  return new HttpError(responseFrom(data, status));
 }

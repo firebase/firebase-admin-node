@@ -131,8 +131,25 @@ export interface WebpushConfig {
 
 export interface WebpushNotification {
   title?: string;
+  actions?: Array<{
+    action: string;
+    icon?: string;
+    title: string;
+  }>;
+  badge?: string;
   body?: string;
+  data?: any;
+  dir?: 'auto' | 'ltr' | 'rtl';
   icon?: string;
+  image?: string;
+  lang?: string;
+  renotify?: boolean;
+  requireInteraction?: boolean;
+  silent?: boolean;
+  tag?: string;
+  timestamp?: number;
+  vibrate?: number | number[];
+  [key: string]: any;
 }
 
 export interface ApnsConfig {
@@ -684,7 +701,7 @@ export class Messaging implements FirebaseServiceInterface {
         MessagingClientErrorCode.INVALID_ARGUMENT,
         'Failed to determine project ID for Messaging. Initialize the '
         + 'SDK with service account credentials or set project ID as an app option. '
-        + 'Alternatively set the GCLOUD_PROJECT environment variable.',
+        + 'Alternatively set the GOOGLE_CLOUD_PROJECT environment variable.',
       );
     }
 

@@ -35,7 +35,9 @@ describe('admin.firestore', () => {
   let reference: DocumentReference;
 
   before(() => {
-    reference = admin.firestore().collection('cities').doc();
+    const db = admin.firestore();
+    db.settings({timestampsInSnapshots: true});
+    reference = db.collection('cities').doc();
   });
 
   it('admin.firestore() returns a Firestore client', () => {
@@ -76,7 +78,7 @@ describe('admin.firestore', () => {
       .then((snapshot) => {
         const data = snapshot.data();
         expect(data.timestamp).is.not.null;
-        expect(data.timestamp instanceof Date).is.true;
+        expect(data.timestamp).to.be.instanceOf(admin.firestore.Timestamp);
         return reference.delete();
       })
       .should.eventually.be.fulfilled;
@@ -92,6 +94,12 @@ describe('admin.firestore', () => {
 
   it('admin.firestore.GeoPoint type is defined', () => {
     expect(typeof admin.firestore.GeoPoint).to.be.not.undefined;
+  });
+
+  it('admin.firestore.Timestamp type is defined', () => {
+    const now = admin.firestore.Timestamp.now();
+    expect(typeof now.seconds).to.equal('number');
+    expect(typeof now.nanoseconds).to.equal('number');
   });
 
   it('supports saving references in documents', () => {
