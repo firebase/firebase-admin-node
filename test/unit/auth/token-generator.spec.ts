@@ -116,6 +116,7 @@ describe('CryptoSigner', () => {
 
     beforeEach(() => {
       mockApp = mocks.app();
+      return mockApp.INTERNAL.getToken();
     });
 
     afterEach(() => {
