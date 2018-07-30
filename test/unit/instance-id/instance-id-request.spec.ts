@@ -131,7 +131,7 @@ describe('FirebaseInstanceIdRequestHandler', () => {
     });
 
     it('should throw for unexpected HTTP errors', () => {
-        const expectedResult = {error: 'test error'}
+        const expectedResult = {error: 'test error'};
         const stub = sinon.stub(HttpClient.prototype, 'send')
           .rejects(utils.errorFrom(expectedResult, 511));
         stubs.push(stub);

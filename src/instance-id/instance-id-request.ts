@@ -89,7 +89,7 @@ export class FirebaseInstanceIdRequestHandler {
           url: `https://${this.host}${path}`,
           method: apiSettings.getHttpMethod(),
           timeout: this.timeout,
-        }
+        };
         return this.httpClient.send(req);
       })
       .then((response) => {
@@ -98,12 +98,8 @@ export class FirebaseInstanceIdRequestHandler {
       .catch((err) => {
         if (err instanceof HttpError) {
           const response = err.response;
-          let errorMessage: string;
-          if (response.isJson() && 'error' in response.data) {
-            errorMessage = response.data.error;
-          } else {
-            errorMessage = response.text;
-          }
+          const errorMessage: string = (response.isJson() && 'error' in response.data) ?
+            response.data.error : response.text;
           const template: string = ERROR_CODES[response.status];
           const message: string = template ?
             `Instance ID "${apiSettings.getEndpoint()}": ${template}` : errorMessage;
