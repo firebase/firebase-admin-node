@@ -36,6 +36,7 @@ import {
   ApplicationDefaultCredential, CertCredential, Certificate, GoogleOAuthAccessToken,
   MetadataServiceCredential, RefreshToken, RefreshTokenCredential,
 } from '../../../src/auth/credential';
+import { HttpClient } from '../../../src/utils/api-request';
 
 chai.should();
 chai.use(sinonChai);
@@ -304,7 +305,7 @@ describe('Credential', () => {
 
   describe('MetadataServiceCredential', () => {
     let httpStub;
-    before(() => httpStub = sinon.stub(http, 'request'));
+    before(() => httpStub = sinon.stub(HttpClient.prototype, 'send'));
     after(() => httpStub.restore());
 
     it('should not return a certificate', () => {
@@ -317,14 +318,8 @@ describe('Credential', () => {
         access_token: 'anAccessToken',
         expires_in: 42,
       };
-      const response = new stream.PassThrough();
-      response.write(JSON.stringify(expected));
-      response.end();
-
-      const request = new stream.PassThrough();
-
-      httpStub.callsArgWith(1, response)
-        .returns(request);
+      const response = utils.responseFrom(expected);
+      httpStub.resolves(response);
 
       const c = new MetadataServiceCredential();
       return c.getAccessToken().then((token) => {

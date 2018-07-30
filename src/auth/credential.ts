@@ -20,12 +20,12 @@ import os = require('os');
 import path = require('path');
 
 import {AppErrorCodes, FirebaseAppError} from '../utils/error';
+import {HttpClient, HttpRequestConfig} from '../utils/api-request';
 
 
 const GOOGLE_TOKEN_AUDIENCE = 'https://accounts.google.com/o/oauth2/token';
 const GOOGLE_AUTH_TOKEN_HOST = 'accounts.google.com';
 const GOOGLE_AUTH_TOKEN_PATH = '/o/oauth2/token';
-const GOOGLE_AUTH_TOKEN_PORT = 443;
 
 // NOTE: the Google Metadata Service uses HTTP over a vlan
 const GOOGLE_METADATA_SERVICE_HOST = 'metadata.google.internal';
@@ -46,7 +46,6 @@ const GCLOUD_CREDENTIAL_SUFFIX = 'gcloud/application_default_credentials.json';
 const GCLOUD_CREDENTIAL_PATH = configDir && path.resolve(configDir, GCLOUD_CREDENTIAL_SUFFIX);
 
 const REFRESH_TOKEN_HOST = 'www.googleapis.com';
-const REFRESH_TOKEN_PORT = 443;
 const REFRESH_TOKEN_PATH = '/oauth2/v4/token';
 
 const ONE_HOUR_IN_SECONDS = 60 * 60;
@@ -186,44 +185,30 @@ export interface GoogleOAuthAccessToken {
 }
 
 /**
- * A wrapper around the http and https request libraries to simplify & promisify JSON requests.
- * TODO(inlined): Create a type for "transit".
+ * Obtain a new OAuth2 token by making a remote service call.
  */
-function requestAccessToken(transit, options: object, data?: any): Promise<GoogleOAuthAccessToken> {
-  return new Promise((resolve, reject) => {
-    const req = transit.request(options, (res) => {
-      const buffers: Buffer[] = [];
-      res.on('data', (buffer) => buffers.push(buffer));
-      res.on('end', () => {
-        try {
-          const json = JSON.parse(Buffer.concat(buffers).toString());
-          if (json.error) {
-            let errorMessage = 'Error fetching access token: ' + json.error;
-            if (json.error_description) {
-              errorMessage += ' (' + json.error_description + ')';
-            }
-            reject(new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage));
-          } else if (!json.access_token || !json.expires_in) {
-            reject(new FirebaseAppError(
-              AppErrorCodes.INVALID_CREDENTIAL,
-              `Unexpected response while fetching access token: ${ JSON.stringify(json) }`,
-            ));
-          } else {
-            resolve(json);
-          }
-        } catch (err) {
-          reject(new FirebaseAppError(
-            AppErrorCodes.INVALID_CREDENTIAL,
-            `Failed to parse access token response: ${err.toString()}`,
-          ));
-        }
-      });
-    });
-    req.on('error', reject);
-    if (data) {
-      req.write(data);
+function requestAccessToken(client: HttpClient, request: HttpRequestConfig): Promise<GoogleOAuthAccessToken> {
+  return client.send(request).then((resp) => {
+    const json = resp.data;
+    if (json.error) {
+      let errorMessage = 'Error fetching access token: ' + json.error;
+      if (json.error_description) {
+        errorMessage += ' (' + json.error_description + ')';
+      }
+      throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
+    } else if (!json.access_token || !json.expires_in) {
+      throw new FirebaseAppError(
+        AppErrorCodes.INVALID_CREDENTIAL,
+        `Unexpected response while fetching access token: ${ JSON.stringify(json) }`,
+      );
+    } else {
+      return json;
     }
-    req.end();
+  }).catch((err) => {
+    throw new FirebaseAppError(
+      AppErrorCodes.INVALID_CREDENTIAL,
+      `Failed to parse access token response: ${err.toString()}`,
+    );
   });
 }
 
@@ -231,34 +216,32 @@ function requestAccessToken(transit, options: object, data?: any): Promise<Googl
  * Implementation of Credential that uses a service account certificate.
  */
 export class CertCredential implements Credential {
-  private certificate_: Certificate;
+  private readonly certificate: Certificate;
+  private readonly httpClient: HttpClient;
 
   constructor(serviceAccountPathOrObject: string | object) {
-    this.certificate_ = (typeof serviceAccountPathOrObject === 'string') ?
+    this.certificate = (typeof serviceAccountPathOrObject === 'string') ?
       Certificate.fromPath(serviceAccountPathOrObject) : new Certificate(serviceAccountPathOrObject);
+    this.httpClient = new HttpClient();
   }
 
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
     const token = this.createAuthJwt_();
     const postData = 'grant_type=urn%3Aietf%3Aparams%3Aoauth%3A' +
-      'grant-type%3Ajwt-bearer&assertion=' +
-      token;
-    const options = {
+      'grant-type%3Ajwt-bearer&assertion=' + token;
+    const request: HttpRequestConfig = {
       method: 'POST',
-      host: GOOGLE_AUTH_TOKEN_HOST,
-      port: GOOGLE_AUTH_TOKEN_PORT,
-      path: GOOGLE_AUTH_TOKEN_PATH,
+      url: `https://${GOOGLE_AUTH_TOKEN_HOST}${GOOGLE_AUTH_TOKEN_PATH}`,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Content-Length': postData.length,
       },
+      data: postData,
     };
-    const https = require('https');
-    return requestAccessToken(https, options, postData);
+    return requestAccessToken(this.httpClient, request);
   }
 
   public getCertificate(): Certificate {
-    return this.certificate_;
+    return this.certificate;
   }
 
   private createAuthJwt_(): string {
@@ -274,10 +257,10 @@ export class CertCredential implements Credential {
 
     const jwt = require('jsonwebtoken');
     // This method is actually synchronous so we can capture and return the buffer.
-    return jwt.sign(claims, this.certificate_.privateKey, {
+    return jwt.sign(claims, this.certificate.privateKey, {
       audience: GOOGLE_TOKEN_AUDIENCE,
       expiresIn: ONE_HOUR_IN_SECONDS,
-      issuer: this.certificate_.clientEmail,
+      issuer: this.certificate.clientEmail,
       algorithm: JWT_ALGORITHM,
     });
   }
@@ -295,32 +278,30 @@ export interface Credential {
  * Implementation of Credential that gets access tokens from refresh tokens.
  */
 export class RefreshTokenCredential implements Credential {
-  private refreshToken_: RefreshToken;
+  private readonly refreshToken: RefreshToken;
+  private readonly httpClient: HttpClient;
 
   constructor(refreshTokenPathOrObject: string | object) {
-    this.refreshToken_ = (typeof refreshTokenPathOrObject === 'string') ?
+    this.refreshToken = (typeof refreshTokenPathOrObject === 'string') ?
       RefreshToken.fromPath(refreshTokenPathOrObject) : new RefreshToken(refreshTokenPathOrObject);
+    this.httpClient = new HttpClient();
   }
 
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
     const postData =
-      'client_id=' + this.refreshToken_.clientId + '&' +
-      'client_secret=' + this.refreshToken_.clientSecret + '&' +
-      'refresh_token=' + this.refreshToken_.refreshToken + '&' +
+      'client_id=' + this.refreshToken.clientId + '&' +
+      'client_secret=' + this.refreshToken.clientSecret + '&' +
+      'refresh_token=' + this.refreshToken.refreshToken + '&' +
       'grant_type=refresh_token';
-
-    const options = {
+    const request: HttpRequestConfig = {
       method: 'POST',
-      host: REFRESH_TOKEN_HOST,
-      port: REFRESH_TOKEN_PORT,
-      path: REFRESH_TOKEN_PATH,
+      url: `https://${REFRESH_TOKEN_HOST}${REFRESH_TOKEN_PATH}`,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Content-Length': postData.length,
       },
+      data: postData,
     };
-    const https = require('https');
-    return requestAccessToken(https, options, postData);
+    return requestAccessToken(this.httpClient, request);
   }
 
   public getCertificate(): Certificate {
@@ -335,17 +316,15 @@ export class RefreshTokenCredential implements Credential {
  * of an App Engine instance or Google Compute Engine machine.
  */
 export class MetadataServiceCredential implements Credential {
+
+  private readonly httpClient = new HttpClient();
+
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
-    const options = {
+    const request: HttpRequestConfig = {
       method: 'GET',
-      host: GOOGLE_METADATA_SERVICE_HOST,
-      path: GOOGLE_METADATA_SERVICE_PATH,
-      headers: {
-        'Content-Length': 0,
-      },
+      url: `http://${GOOGLE_METADATA_SERVICE_HOST}${GOOGLE_METADATA_SERVICE_PATH}`,
     };
-    const http = require('http');
-    return requestAccessToken(http, options);
+    return requestAccessToken(this.httpClient, request);
   }
 
   public getCertificate(): Certificate {

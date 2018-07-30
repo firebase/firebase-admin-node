@@ -50,7 +50,7 @@ export function mockFetchAccessTokenRequests(
   token: string = generateRandomAccessToken(),
   expiresIn: number = 60 * 60,
 ): nock.Scope {
-  return nock('https://accounts.google.com:443')
+  return nock('https://accounts.google.com')
     .persist()
     .post('/o/oauth2/token')
     .reply(200, {
