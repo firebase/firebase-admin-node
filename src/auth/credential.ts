@@ -216,11 +216,11 @@ function requestAccessToken(client: HttpClient, request: HttpRequestConfig): Pro
  * Implementation of Credential that uses a service account certificate.
  */
 export class CertCredential implements Credential {
-  private readonly certificate_: Certificate;
+  private readonly certificate: Certificate;
   private readonly httpClient: HttpClient;
 
   constructor(serviceAccountPathOrObject: string | object) {
-    this.certificate_ = (typeof serviceAccountPathOrObject === 'string') ?
+    this.certificate = (typeof serviceAccountPathOrObject === 'string') ?
       Certificate.fromPath(serviceAccountPathOrObject) : new Certificate(serviceAccountPathOrObject);
     this.httpClient = new HttpClient();
   }
@@ -241,7 +241,7 @@ export class CertCredential implements Credential {
   }
 
   public getCertificate(): Certificate {
-    return this.certificate_;
+    return this.certificate;
   }
 
   private createAuthJwt_(): string {
@@ -257,10 +257,10 @@ export class CertCredential implements Credential {
 
     const jwt = require('jsonwebtoken');
     // This method is actually synchronous so we can capture and return the buffer.
-    return jwt.sign(claims, this.certificate_.privateKey, {
+    return jwt.sign(claims, this.certificate.privateKey, {
       audience: GOOGLE_TOKEN_AUDIENCE,
       expiresIn: ONE_HOUR_IN_SECONDS,
-      issuer: this.certificate_.clientEmail,
+      issuer: this.certificate.clientEmail,
       algorithm: JWT_ALGORITHM,
     });
   }
@@ -278,20 +278,20 @@ export interface Credential {
  * Implementation of Credential that gets access tokens from refresh tokens.
  */
 export class RefreshTokenCredential implements Credential {
-  private readonly refreshToken_: RefreshToken;
+  private readonly refreshToken: RefreshToken;
   private readonly httpClient: HttpClient;
 
   constructor(refreshTokenPathOrObject: string | object) {
-    this.refreshToken_ = (typeof refreshTokenPathOrObject === 'string') ?
+    this.refreshToken = (typeof refreshTokenPathOrObject === 'string') ?
       RefreshToken.fromPath(refreshTokenPathOrObject) : new RefreshToken(refreshTokenPathOrObject);
     this.httpClient = new HttpClient();
   }
 
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
     const postData =
-      'client_id=' + this.refreshToken_.clientId + '&' +
-      'client_secret=' + this.refreshToken_.clientSecret + '&' +
-      'refresh_token=' + this.refreshToken_.refreshToken + '&' +
+      'client_id=' + this.refreshToken.clientId + '&' +
+      'client_secret=' + this.refreshToken.clientSecret + '&' +
+      'refresh_token=' + this.refreshToken.refreshToken + '&' +
       'grant_type=refresh_token';
     const request: HttpRequestConfig = {
       method: 'POST',
