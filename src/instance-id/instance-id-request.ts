@@ -15,9 +15,9 @@
  */
 
 import {FirebaseApp} from '../firebase-app';
-import {FirebaseError, FirebaseInstanceIdError, InstanceIdClientErrorCode} from '../utils/error';
+import {FirebaseInstanceIdError, InstanceIdClientErrorCode} from '../utils/error';
 import {
-  HttpMethod, SignedApiRequestHandler, ApiSettings,
+  ApiSettings, AuthorizedHttpClient, HttpRequestConfig, HttpError,
 } from '../utils/api-request';
 
 import * as validator from '../utils/validator';
@@ -48,11 +48,11 @@ const ERROR_CODES = {
  */
 export class FirebaseInstanceIdRequestHandler {
 
-  private host: string = FIREBASE_IID_HOST;
-  private port: number = FIREBASE_IID_PORT;
-  private timeout: number = FIREBASE_IID_TIMEOUT;
-  private signedApiRequestHandler: SignedApiRequestHandler;
-  private path: string;
+  private readonly host: string = FIREBASE_IID_HOST;
+  private readonly port: number = FIREBASE_IID_PORT;
+  private readonly timeout: number = FIREBASE_IID_TIMEOUT;
+  private readonly httpClient: AuthorizedHttpClient;
+  private readonly path: string;
 
   /**
    * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
@@ -61,7 +61,7 @@ export class FirebaseInstanceIdRequestHandler {
    * @constructor
    */
   constructor(app: FirebaseApp, projectId: string) {
-    this.signedApiRequestHandler = new SignedApiRequestHandler(app);
+    this.httpClient = new AuthorizedHttpClient(app);
     this.path = FIREBASE_IID_PATH + `project/${projectId}/instanceId/`;
   }
 
@@ -83,28 +83,31 @@ export class FirebaseInstanceIdRequestHandler {
    */
   private invokeRequestHandler(apiSettings: ApiSettings): Promise<object> {
     const path: string = this.path + apiSettings.getEndpoint();
-    const httpMethod: HttpMethod = apiSettings.getHttpMethod();
     return Promise.resolve()
       .then(() => {
-        return this.signedApiRequestHandler.sendRequest(
-            this.host, this.port, path, httpMethod, undefined, undefined, this.timeout);
+        const req: HttpRequestConfig = {
+          url: `https://${this.host}${path}`,
+          method: apiSettings.getHttpMethod(),
+          timeout: this.timeout,
+        };
+        return this.httpClient.send(req);
       })
       .then((response) => {
-        return response;
+        return response.data;
       })
-      .catch((response) => {
-        const error = (typeof response === 'object' && 'error' in response) ?
-          response.error : response;
-        if (error instanceof FirebaseError) {
-          // In case of timeouts and other network errors, the API request handler returns a
-          // FirebaseError wrapped in the response. Simply throw it here.
-          throw error;
+      .catch((err) => {
+        if (err instanceof HttpError) {
+          const response = err.response;
+          const errorMessage: string = (response.isJson() && 'error' in response.data) ?
+            response.data.error : response.text;
+          const template: string = ERROR_CODES[response.status];
+          const message: string = template ?
+            `Instance ID "${apiSettings.getEndpoint()}": ${template}` : errorMessage;
+          throw new FirebaseInstanceIdError(InstanceIdClientErrorCode.API_ERROR, message);
         }
-
-        const template: string = ERROR_CODES[response.statusCode];
-        const message: string = template ?
-          `Instance ID "${apiSettings.getEndpoint()}": ${template}` : JSON.stringify(error);
-        throw new FirebaseInstanceIdError(InstanceIdClientErrorCode.API_ERROR, message);
+        // In case of timeouts and other network errors, the HttpClient returns a
+        // FirebaseError wrapped in the response. Simply throw it here.
+        throw err;
       });
   }
 }

@@ -27,7 +27,7 @@ import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
 import {FirebaseApp} from '../../../src/firebase-app';
-import {HttpRequestHandler} from '../../../src/utils/api-request';
+import {HttpClient} from '../../../src/utils/api-request';
 import {FirebaseInstanceIdRequestHandler} from '../../../src/instance-id/instance-id-request';
 
 chai.should();
@@ -56,6 +56,7 @@ describe('FirebaseInstanceIdRequestHandler', () => {
     expectedHeaders = {
       Authorization: 'Bearer ' + mockAccessToken,
     };
+    return mockApp.INTERNAL.getToken();
   });
 
   afterEach(() => {
@@ -75,31 +76,31 @@ describe('FirebaseInstanceIdRequestHandler', () => {
   describe('deleteInstanceId', () => {
     const httpMethod = 'DELETE';
     const host = 'console.firebase.google.com';
-    const port = 443;
     const path = `/v1/project/${projectId}/instanceId/test-iid`;
     const timeout = 10000;
 
     it('should be fulfilled given a valid instance ID', () => {
       const expectedResult = {};
-
-      const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult));
+      const stub = sinon.stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(expectedResult));
       stubs.push(stub);
 
       const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp, projectId);
       return requestHandler.deleteInstanceId('test-iid')
         .then((result) => {
           expect(result).to.deep.equal(expectedResult);
-          expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, undefined, expectedHeaders, timeout);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: httpMethod,
+            url: `https://${host}${path}`,
+            headers: expectedHeaders,
+            timeout,
+          });
         });
     });
 
     it('should throw for HTTP 404 errors', () => {
-        const expectedResult = {statusCode: 404};
-
-        const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-          .rejects(expectedResult);
+        const stub = sinon.stub(HttpClient.prototype, 'send')
+          .rejects(utils.errorFrom({}, 404));
         stubs.push(stub);
 
         const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp, projectId);
@@ -114,10 +115,8 @@ describe('FirebaseInstanceIdRequestHandler', () => {
     });
 
     it('should throw for HTTP 409 errors', () => {
-        const expectedResult = {statusCode: 409};
-
-        const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-          .rejects(expectedResult);
+        const stub = sinon.stub(HttpClient.prototype, 'send')
+          .rejects(utils.errorFrom({}, 409));
         stubs.push(stub);
 
         const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp, projectId);
@@ -132,10 +131,9 @@ describe('FirebaseInstanceIdRequestHandler', () => {
     });
 
     it('should throw for unexpected HTTP errors', () => {
-        const expectedResult = {statusCode: 511};
-
-        const stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-          .rejects(expectedResult);
+        const expectedResult = {error: 'test error'};
+        const stub = sinon.stub(HttpClient.prototype, 'send')
+          .rejects(utils.errorFrom(expectedResult, 511));
         stubs.push(stub);
 
         const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp, projectId);
@@ -145,7 +143,7 @@ describe('FirebaseInstanceIdRequestHandler', () => {
           })
           .catch((error) => {
             expect(error.code).to.equal('instance-id/api-error');
-            expect(error.message).to.equal(JSON.stringify(expectedResult));
+            expect(error.message).to.equal('test error');
           });
     });
   });
