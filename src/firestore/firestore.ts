@@ -110,7 +110,17 @@ export function getFirestoreOptions(app: FirebaseApp): any {
 
 function initFirestore(app: FirebaseApp): Firestore {
   const options = getFirestoreOptions(app);
-  // Lazy-load the Firestore implementation here, which in turns loads gRPC.
-  const firestoreDatabase: typeof Firestore = require('@google-cloud/firestore');
+  let firestoreDatabase: typeof Firestore;
+  try {
+    // Lazy-load the Firestore implementation here, which in turns loads gRPC.
+    firestoreDatabase = require('@google-cloud/firestore');
+  } catch (err) {
+    throw new FirebaseFirestoreError({
+      code: 'missing-dependencies',
+      message: 'Failed to import the Cloud Firestore client library for Node.js. '
+          + 'Make sure to install the "@google-cloud/firestore" npm package. '
+          + `Original error: ${err}`,
+    });
+  }
   return new firestoreDatabase(options);
 }

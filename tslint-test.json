@@ -8,7 +8,7 @@
       "variables-before-functions"
     ],
     "prefer-object-spread": false,
-    "no-implicit-dependencies": [true, "dev"],
+    "no-implicit-dependencies": [true, "dev", "optional"],
     "max-classes-per-file": false,
     "max-line-length": [true, 120],
     "no-consecutive-blank-lines": false,

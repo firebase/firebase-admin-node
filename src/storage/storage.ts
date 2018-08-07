@@ -60,13 +60,13 @@ export class Storage implements FirebaseServiceInterface {
 
     let storage: typeof gcs;
     try {
-      /* tslint:disable-next-line:no-var-requires */
       storage = require('@google-cloud/storage');
-    } catch (e) {
+    } catch (err) {
       throw new FirebaseError({
         code: 'storage/missing-dependencies',
         message: 'Failed to import the Cloud Storage client library for Node.js. '
-          + 'Make sure to install the "@google-cloud/storage" npm package.',
+          + 'Make sure to install the "@google-cloud/storage" npm package. '
+          + `Original error: ${err}`,
       });
     }
 

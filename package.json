@@ -54,12 +54,14 @@
   "dependencies": {
     "@firebase/app": "^0.3.1",
     "@firebase/database": "^0.3.1",
-    "@google-cloud/firestore": "^0.16.0",
-    "@google-cloud/storage": "^1.6.0",
-    "@types/google-cloud__storage": "^1.1.7",
     "@types/node": "^8.0.53",
     "jsonwebtoken": "8.1.0",
     "node-forge": "0.7.4"
+  },
+  "optionalDependencies": {
+    "@google-cloud/firestore": "^0.16.0",
+    "@google-cloud/storage": "^1.6.0",
+    "@types/google-cloud__storage": "^1.1.7"
   },
   "devDependencies": {
     "@types/chai": "^3.4.34",
