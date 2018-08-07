@@ -1,6 +1,8 @@
 # Unreleased
 
 - [changed] Upgraded Cloud Firestore client to v0.16.0.
+- [changed] Firestore and Storage client libraries are now defined as optional
+  dependencies.
 
 # v5.13.1
 
