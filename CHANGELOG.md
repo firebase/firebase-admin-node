@@ -3,6 +3,7 @@
 - [changed] Upgraded Cloud Firestore client to v0.16.0.
 - [changed] Firestore and Storage client libraries are now defined as optional
   dependencies.
+- [changed] Dropped support for Node.js 4.
 
 # v5.13.1
 
