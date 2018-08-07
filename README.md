@@ -9,6 +9,7 @@
  * [Installation](#installation)
  * [Contributing](#contributing)
  * [Documentation](#documentation)
+ * [Supported Environments](#supported-environments)
  * [Acknowledgments](#acknowledgments)
  * [License](#license)
 
@@ -50,6 +51,15 @@ import * as admin from "firebase-admin";
 Please refer to the [CONTRIBUTING page](./CONTRIBUTING.md) for more information
 about how you can contribute to this project. We welcome bug reports, feature
 requests, code review feedback, and also pull requests.
+
+
+## Supported Environments
+
+We support Node.js 6.0 and higher. Please note that the Admin SDK should only
+be used in server-side/back-end environments controlled by the app developer.
+This includes most server and serverless platforms (both on-premise and in
+the cloud). It is not recommended to use the Admin SDK in client-side
+environments.
 
 
 ## Documentation
