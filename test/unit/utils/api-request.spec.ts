@@ -16,14 +16,9 @@
 
 'use strict';
 
-// Use untyped import syntax for Node built-ins.
-import https = require('https');
-import stream = require('stream');
-
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as nock from 'nock';
-import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
@@ -32,9 +27,8 @@ import * as mocks from '../../resources/mocks';
 
 import {FirebaseApp} from '../../../src/firebase-app';
 import {
-  SignedApiRequestHandler, HttpRequestHandler, ApiSettings, HttpClient, HttpError, AuthorizedHttpClient,
+  ApiSettings, HttpClient, HttpError, AuthorizedHttpClient,
 } from '../../../src/utils/api-request';
-import { AppErrorCodes } from '../../../src/utils/error';
 
 chai.should();
 chai.use(sinonChai);
@@ -42,7 +36,6 @@ chai.use(chaiAsPromised);
 
 const expect = chai.expect;
 
-const mockPort = 443;
 const mockHost = 'www.example.com';
 const mockPath = '/foo/bar';
 const mockUrl = `https://${mockHost}${mockPath}`;
@@ -62,16 +55,6 @@ const mockErrorResponse = {
 
 const mockTextErrorResponse = 'Text error response';
 const mockTextSuccessResponse = 'Text success response';
-
-const mockRequestData = {
-  foo: 'one',
-  bar: 2,
-  baz: true,
-};
-
-const mockRequestHeaders = {
-  'content-type': 'application/json',
-};
 
 /**
  * Returns a mocked out successful response for a dummy URL.
@@ -418,303 +401,6 @@ describe('AuthorizedHttpClient', () => {
   });
 });
 
-describe('HttpRequestHandler', () => {
-  let mockedRequests: nock.Scope[] = [];
-  let requestWriteSpy: sinon.SinonSpy;
-  let httpsRequestStub: sinon.SinonStub;
-  let mockRequestStream: mocks.MockStream;
-  const httpRequestHandler = new HttpRequestHandler();
-
-  beforeEach(() => {
-    mockRequestStream = new mocks.MockStream();
-  });
-
-  afterEach(() => {
-    _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
-    mockedRequests = [];
-
-    if (requestWriteSpy && requestWriteSpy.restore) {
-      requestWriteSpy.restore();
-    }
-
-    if (httpsRequestStub && httpsRequestStub.restore) {
-      httpsRequestStub.restore();
-    }
-  });
-
-
-  describe('sendRequest', () => {
-    it('should be rejected, after 1 retry, on multiple network errors', () => {
-      mockedRequests.push(mockRequestWithError(new Error('first error')));
-      mockedRequests.push(mockRequestWithError(new Error('second error')));
-
-      const sendRequestPromise = httpRequestHandler.sendRequest(mockHost, mockPort, mockPath, 'GET');
-
-      return sendRequestPromise
-        .then(() => {
-          throw new Error('Unexpected success.');
-        })
-        .catch((response) => {
-          expect(response).to.have.keys(['error', 'statusCode']);
-          expect(response.error).to.have.property('code', 'app/network-error');
-          expect(response.statusCode).to.equal(502);
-        });
-    });
-
-    it('should succeed, after 1 retry, on a single network error', () => {
-      mockedRequests.push(mockRequestWithError(new Error('first error')));
-      mockedRequests.push(mockRequest());
-
-      return httpRequestHandler.sendRequest(mockHost, mockPort, mockPath, 'GET')
-        .should.eventually.be.fulfilled.and.deep.equal(mockSuccessResponse);
-    });
-
-    it('should be rejected on a network timeout', () => {
-      httpsRequestStub = sinon.stub(https, 'request');
-      httpsRequestStub.returns(mockRequestStream);
-
-      const mockSocket = new mocks.MockSocketEmitter();
-
-      const sendRequestPromise = httpRequestHandler.sendRequest(
-        mockHost, mockPort, mockPath, 'GET', undefined, undefined, 5000,
-      );
-
-      mockRequestStream.emit('socket', mockSocket);
-      mockSocket.emit('timeout');
-
-      return sendRequestPromise
-        .then(() => {
-          throw new Error('Unexpected success.');
-        })
-        .catch((response) => {
-          expect(response).to.have.keys(['error', 'statusCode']);
-          expect(response.error).to.have.property('code', 'app/network-timeout');
-          expect(response.statusCode).to.equal(408);
-        });
-    });
-
-    it('should forward the provided options on to the underlying https.request() method', () => {
-      requestWriteSpy = sinon.spy(mockRequestStream, 'write');
-
-      const mockResponse = new stream.PassThrough();
-      mockResponse.write(JSON.stringify(mockSuccessResponse));
-      mockResponse.end();
-
-      httpsRequestStub = sinon.stub(https, 'request');
-      httpsRequestStub.callsArgWith(1, mockResponse)
-        .returns(mockRequestStream);
-
-      return httpRequestHandler.sendRequest(
-        mockHost, mockPort, mockPath, 'POST', mockRequestData, mockRequestHeaders,
-      )
-        .then((response) => {
-          expect(response).to.deep.equal(mockSuccessResponse);
-          expect(httpsRequestStub).to.have.been.calledOnce;
-          expect(httpsRequestStub.args[0][0]).to.deep.equal({
-            method: 'POST',
-            host: mockHost,
-            port: mockPort,
-            path: mockPath,
-            headers: mockRequestHeaders,
-          });
-          expect(requestWriteSpy).to.have.been.calledOnce.and.calledWith(JSON.stringify(mockRequestData));
-        });
-    });
-
-    describe('with JSON response', () => {
-      it('should be rejected given a 4xx response', () => {
-        mockedRequests.push(mockRequestWithHttpError(400));
-
-        return httpRequestHandler.sendRequest(mockHost, mockPort, mockPath, 'GET')
-          .should.eventually.be.rejected.and.deep.equal({
-            error: mockErrorResponse,
-            statusCode: 400,
-          });
-      });
-
-      it('should be rejected given a 5xx response', () => {
-        mockedRequests.push(mockRequestWithHttpError(500));
-
-        return httpRequestHandler.sendRequest(mockHost, mockPort, mockPath, 'GET')
-          .should.eventually.be.rejected.and.deep.equal({
-            error: mockErrorResponse,
-            statusCode: 500,
-          });
-      });
-
-      it('should be rejected given an error when parsing the JSON response', () => {
-        mockedRequests.push(mockRequestWithHttpError(400, undefined, mockTextErrorResponse));
-
-        return httpRequestHandler.sendRequest(mockHost, mockPort, mockPath, 'GET')
-          .then(() => {
-            throw new Error('Unexpected success.');
-          })
-          .catch((response) => {
-            expect(response).to.have.keys(['error', 'statusCode']);
-            expect(response.error).to.have.property('code', 'app/unable-to-parse-response');
-            expect(response.statusCode).to.equal(400);
-          });
-      });
-
-      it('should be fulfilled given a 2xx response', () => {
-        mockedRequests.push(mockRequest());
-
-        return httpRequestHandler.sendRequest(mockHost, mockPort, mockPath, 'GET')
-          .should.eventually.be.fulfilled.and.deep.equal(mockSuccessResponse);
-      });
-
-      it('should accept additional parameters', () => {
-        mockedRequests.push(mockRequest(undefined, 'POST'));
-
-        return httpRequestHandler.sendRequest(
-          mockHost, mockPort, mockPath, 'POST', mockRequestData, mockRequestHeaders, 10000,
-        ).should.eventually.be.fulfilled.and.deep.equal(mockSuccessResponse);
-      });
-    });
-
-    describe('with text response', () => {
-      it('should be rejected given a 4xx response', () => {
-        mockedRequests.push(mockRequestWithHttpError(400, 'text/html'));
-
-        return httpRequestHandler.sendRequest(mockHost, mockPort, mockPath, 'GET')
-          .should.eventually.be.rejected.and.deep.equal({
-            error: mockTextErrorResponse,
-            statusCode: 400,
-          });
-      });
-
-      it('should be rejected given a 5xx response', () => {
-        mockedRequests.push(mockRequestWithHttpError(500, 'text/html'));
-
-        return httpRequestHandler.sendRequest(mockHost, mockPort, mockPath, 'GET')
-          .should.eventually.be.rejected.and.deep.equal({
-            error: mockTextErrorResponse,
-            statusCode: 500,
-          });
-      });
-
-      it('should be fulfilled given a 2xx response', () => {
-        mockedRequests.push(mockRequest('text/html'));
-
-        return httpRequestHandler.sendRequest(mockHost, mockPort, mockPath, 'GET')
-          .should.eventually.be.fulfilled.and.deep.equal(mockTextSuccessResponse);
-      });
-
-      it('should accept additional parameters', () => {
-        mockedRequests.push(mockRequest('text/html', 'POST'));
-
-        return httpRequestHandler.sendRequest(
-          mockHost, mockPort, mockPath, 'POST', mockRequestData, mockRequestHeaders, 10000,
-        ).should.eventually.be.fulfilled.and.deep.equal(mockTextSuccessResponse);
-      });
-    });
-  });
-});
-
-
-describe('SignedApiRequestHandler', () => {
-  let mockApp: FirebaseApp;
-  const mockAccessToken: string = utils.generateRandomAccessToken();
-
-  before(() => utils.mockFetchAccessTokenRequests(mockAccessToken));
-
-  after(() => nock.cleanAll());
-
-  beforeEach(() => {
-    mockApp = mocks.app();
-  });
-
-  afterEach(() => {
-    return mockApp.delete();
-  });
-
-  describe('Constructor', () => {
-    it('should succeed with a FirebaseApp instance', () => {
-      expect(() => {
-        const authRequestHandlerAny: any = SignedApiRequestHandler;
-        return new authRequestHandlerAny(mockApp);
-      }).not.to.throw(Error);
-    });
-  });
-
-  describe('sendRequest', () => {
-    let mockedRequests: nock.Scope[] = [];
-    afterEach(() => {
-      _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
-      mockedRequests = [];
-    });
-
-    const expectedResult = {
-      users : [
-        {localId: 'uid'},
-      ],
-    };
-    let stub: sinon.SinonStub;
-    beforeEach(() => stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult)));
-    afterEach(() => stub.restore());
-    const data = {localId: ['uid']};
-    const preHeaders = {
-      'Content-Type': 'application/json',
-    };
-    const headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + mockAccessToken,
-    };
-    const httpMethod: any = 'POST';
-    const host = 'www.googleapis.com';
-    const port = 443;
-    const path = '/identitytoolkit/v3/relyingparty/getAccountInfo';
-    const timeout = 10000;
-    it('should resolve successfully with a valid request', () => {
-      const requestHandler = new SignedApiRequestHandler(mockApp);
-      return requestHandler.sendRequest(
-          host, port, path, httpMethod, data, preHeaders, timeout)
-        .then((result) => {
-          expect(result).to.deep.equal(expectedResult);
-          expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, data, headers, timeout);
-        });
-    });
-  });
-
-  describe('sendDeleteRequest', () => {
-    let mockedRequests: nock.Scope[] = [];
-    afterEach(() => {
-      _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
-      mockedRequests = [];
-    });
-
-    const expectedResult = {
-      users : [
-        {localId: 'uid'},
-      ],
-    };
-    let stub: sinon.SinonStub;
-    beforeEach(() => stub = sinon.stub(HttpRequestHandler.prototype, 'sendRequest')
-        .returns(Promise.resolve(expectedResult)));
-    afterEach(() => stub.restore());
-    const headers = {
-      Authorization: 'Bearer ' + mockAccessToken,
-    };
-    const httpMethod: any = 'DELETE';
-    const host = 'www.googleapis.com';
-    const port = 443;
-    const path = '/identitytoolkit/v3/relyingparty/getAccountInfo';
-    const timeout = 10000;
-    it('should resolve successfully with a valid request', () => {
-      const requestHandler = new SignedApiRequestHandler(mockApp);
-      return requestHandler.sendRequest(
-          host, port, path, httpMethod, undefined, undefined, timeout)
-        .then((result) => {
-          expect(result).to.deep.equal(expectedResult);
-          expect(stub).to.have.been.calledOnce.and.calledWith(
-              host, port, path, httpMethod, undefined, headers, timeout);
-        });
-    });
-  });
-});
-
 describe('ApiSettings', () => {
   describe('Constructor', () => {
     it('should succeed with a specified endpoint and a default http method', () => {
@@ -784,4 +470,3 @@ describe('ApiSettings', () => {
     });
   });
 });
-
