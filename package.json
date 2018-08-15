@@ -61,7 +61,7 @@
   "optionalDependencies": {
     "@google-cloud/firestore": "^0.16.0",
     "@google-cloud/storage": "^1.6.0",
-    "@types/google-cloud__storage": "^1.1.7"
+    "@types/google-cloud__storage": "^1.7.1"
   },
   "devDependencies": {
     "@types/chai": "^3.4.34",
