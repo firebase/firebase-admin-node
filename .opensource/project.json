@@ -1,0 +1,14 @@
+{
+    "name": "Firebase Admin SDK - Node",
+    "platforms": [
+        "Node",
+        "Admin"
+    ],
+    "content": "README.md",
+    "pages": [],
+    "related": [
+        "firebase/firebase-admin-java",
+        "firebase/firebase-admin-go",
+        "firebase/firebase-admin-python"
+    ]
+}
