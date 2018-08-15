@@ -41,10 +41,10 @@ class StorageInternals implements FirebaseServiceInternalsInterface {
  * Storage service bound to the provided app.
  */
 export class Storage implements FirebaseServiceInterface {
-  public INTERNAL: StorageInternals = new StorageInternals();
+  public readonly INTERNAL: StorageInternals = new StorageInternals();
 
-  private appInternal: FirebaseApp;
-  private storageClient: any;
+  private readonly appInternal: FirebaseApp;
+  private readonly storageClient: gcs;
 
   /**
    * @param {FirebaseApp} app The app for this Storage service.
@@ -74,7 +74,7 @@ export class Storage implements FirebaseServiceInterface {
     if (cert != null) {
       // cert is available when the SDK has been initialized with a service account JSON file,
       // or by setting the GOOGLE_APPLICATION_CREDENTIALS envrionment variable.
-      this.storageClient = storage({
+      this.storageClient = new storage({
         projectId: cert.projectId,
         credentials: {
           private_key: cert.privateKey,
@@ -83,7 +83,7 @@ export class Storage implements FirebaseServiceInterface {
       });
     } else if (app.options.credential instanceof ApplicationDefaultCredential) {
       // Try to use the Google application default credentials.
-      this.storageClient = storage();
+      this.storageClient = new storage();
     } else {
       throw new FirebaseError({
         code: 'storage/invalid-credential',
