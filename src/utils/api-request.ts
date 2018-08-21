@@ -41,6 +41,7 @@ export interface HttpRequestConfig {
   data?: string | object | Buffer;
   /** Connect and read timeout (in milliseconds) for the outgoing request. */
   timeout?: number;
+  agent?: https.Agent;
 }
 
 /**
@@ -204,11 +205,16 @@ function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
     const parsed = url.parse(config.url);
     const protocol = parsed.protocol || 'https:';
     const isHttps = protocol === 'https:';
-    const options = {
+    let port: string = parsed.port;
+    if (!port) {
+      port = isHttps ? '443' : '80';
+    }
+    const options: https.RequestOptions = {
       hostname: parsed.hostname,
-      port: parsed.port,
+      port,
       path: parsed.path,
       method: config.method,
+      agent: config.agent,
       headers,
     };
     const transport: any = isHttps ? https : http;

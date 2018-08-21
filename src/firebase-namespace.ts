@@ -15,6 +15,7 @@
  */
 
 import fs = require('fs');
+import {Agent} from 'https';
 import {deepExtend} from './utils/deep-copy';
 import {AppErrorCodes, FirebaseAppError} from './utils/error';
 import {AppHook, FirebaseApp, FirebaseAppOptions} from './firebase-app';
@@ -269,10 +270,10 @@ export class FirebaseNamespaceInternals {
 
 
 const firebaseCredential = {
-  cert: (serviceAccountPathOrObject: string | object): Credential => {
+  cert: (serviceAccountPathOrObject: string | object, httpAgent?: Agent): Credential => {
     const stringifiedServiceAccount = JSON.stringify(serviceAccountPathOrObject);
     if (!(stringifiedServiceAccount in globalCertCreds)) {
-      globalCertCreds[stringifiedServiceAccount] = new CertCredential(serviceAccountPathOrObject);
+      globalCertCreds[stringifiedServiceAccount] = new CertCredential(serviceAccountPathOrObject, httpAgent);
     }
     return globalCertCreds[stringifiedServiceAccount];
   },

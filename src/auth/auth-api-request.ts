@@ -18,21 +18,18 @@ import * as validator from '../utils/validator';
 
 import {deepCopy} from '../utils/deep-copy';
 import {FirebaseApp} from '../firebase-app';
-import {AuthClientErrorCode, FirebaseAuthError, FirebaseError} from '../utils/error';
+import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
 import {
   ApiSettings, AuthorizedHttpClient, HttpRequestConfig, HttpError,
 } from '../utils/api-request';
 import {CreateRequest, UpdateRequest} from './user-record';
 import {
-  UserImportBuilder, UserImportOptions, UserImportRecord,
-  UserImportResult, UploadAccountRequest,
+  UserImportBuilder, UserImportOptions, UserImportRecord, UserImportResult,
 } from './user-import-builder';
 
 
 /** Firebase Auth backend host. */
 const FIREBASE_AUTH_HOST = 'www.googleapis.com';
-/** Firebase Auth backend port number. */
-const FIREBASE_AUTH_PORT = 443;
 /** Firebase Auth backend path. */
 const FIREBASE_AUTH_PATH = '/identitytoolkit/v3/relyingparty/';
 /** Firebase Auth request header. */
@@ -429,8 +426,9 @@ export const FIREBASE_AUTH_SIGN_UP_NEW_USER = new ApiSettings('signupNewUser', '
  * Class that provides mechanism to send requests to the Firebase Auth backend endpoints.
  */
 export class FirebaseAuthRequestHandler {
-  private baseUrl: string = `https://${FIREBASE_AUTH_HOST}${FIREBASE_AUTH_PATH}`;
-  private httpClient: AuthorizedHttpClient;
+  private readonly baseUrl: string = `https://${FIREBASE_AUTH_HOST}${FIREBASE_AUTH_PATH}`;
+  private readonly app: FirebaseApp;
+  private readonly httpClient: AuthorizedHttpClient;
 
   /**
    * @param {any} response The response to check for errors.
@@ -445,6 +443,7 @@ export class FirebaseAuthRequestHandler {
    * @constructor
    */
   constructor(app: FirebaseApp) {
+    this.app = app;
     this.httpClient = new AuthorizedHttpClient(app);
   }
 
@@ -814,6 +813,10 @@ export class FirebaseAuthRequestHandler {
           data: requestData,
           timeout: FIREBASE_AUTH_TIMEOUT,
         };
+        const agent = this.app.options.httpAgent;
+        if (agent) {
+          req.agent = agent;
+        }
         return this.httpClient.send(req);
       })
       .then((response) => {

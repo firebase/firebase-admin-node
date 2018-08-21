@@ -29,6 +29,7 @@ import {DatabaseService} from './database/database';
 import {Firestore} from '@google-cloud/firestore';
 import {FirestoreService} from './firestore/firestore';
 import {InstanceId} from './instance-id/instance-id';
+import {Agent} from 'https';
 
 /**
  * Type representing a callback which is called every time an app lifecycle event occurs.
@@ -45,6 +46,7 @@ export interface FirebaseAppOptions {
   serviceAccountId?: string;
   storageBucket?: string;
   projectId?: string;
+  httpAgent?: Agent;
 }
 
 /**

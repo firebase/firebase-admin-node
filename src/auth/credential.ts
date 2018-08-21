@@ -21,7 +21,7 @@ import path = require('path');
 
 import {AppErrorCodes, FirebaseAppError} from '../utils/error';
 import {HttpClient, HttpRequestConfig} from '../utils/api-request';
-
+import {Agent} from 'https';
 
 const GOOGLE_TOKEN_AUDIENCE = 'https://accounts.google.com/o/oauth2/token';
 const GOOGLE_AUTH_TOKEN_HOST = 'accounts.google.com';
@@ -216,13 +216,16 @@ function requestAccessToken(client: HttpClient, request: HttpRequestConfig): Pro
  * Implementation of Credential that uses a service account certificate.
  */
 export class CertCredential implements Credential {
+
   private readonly certificate: Certificate;
   private readonly httpClient: HttpClient;
+  private readonly httpAgent: Agent;
 
-  constructor(serviceAccountPathOrObject: string | object) {
+  constructor(serviceAccountPathOrObject: string | object, httpAgent?: Agent) {
     this.certificate = (typeof serviceAccountPathOrObject === 'string') ?
       Certificate.fromPath(serviceAccountPathOrObject) : new Certificate(serviceAccountPathOrObject);
     this.httpClient = new HttpClient();
+    this.httpAgent = httpAgent;
   }
 
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
@@ -231,11 +234,12 @@ export class CertCredential implements Credential {
       'grant-type%3Ajwt-bearer&assertion=' + token;
     const request: HttpRequestConfig = {
       method: 'POST',
-      url: `https://${GOOGLE_AUTH_TOKEN_HOST}${GOOGLE_AUTH_TOKEN_PATH}`,
+      url: `https://${GOOGLE_AUTH_TOKEN_HOST}:443${GOOGLE_AUTH_TOKEN_PATH}`,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       data: postData,
+      agent: this.httpAgent,
     };
     return requestAccessToken(this.httpClient, request);
   }
