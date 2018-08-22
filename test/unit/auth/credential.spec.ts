@@ -46,6 +46,12 @@ const expect = chai.expect;
 let TEST_GCLOUD_CREDENTIALS;
 const GCLOUD_CREDENTIAL_SUFFIX = 'gcloud/application_default_credentials.json';
 const GCLOUD_CREDENTIAL_PATH = path.resolve(process.env.HOME, '.config', GCLOUD_CREDENTIAL_SUFFIX);
+const MOCK_REFRESH_TOKEN_CONFIG = {
+  client_id: 'test_client_id',
+  client_secret: 'test_client_secret',
+  type: 'authorized_user',
+  refresh_token: 'test_token',
+};
 try {
   TEST_GCLOUD_CREDENTIALS = JSON.parse(fs.readFileSync(GCLOUD_CREDENTIAL_PATH).toString());
 } catch (error) {
@@ -278,11 +284,7 @@ describe('Credential', () => {
 
   describe('RefreshTokenCredential', () => {
     it('should not return a certificate', () => {
-      if (skipAndLogWarningIfNoGcloud()) {
-        return;
-      }
-
-      const c = new RefreshTokenCredential(TEST_GCLOUD_CREDENTIALS);
+      const c = new RefreshTokenCredential(MOCK_REFRESH_TOKEN_CONFIG);
       expect(c.getCertificate()).to.be.null;
     });
 
@@ -423,7 +425,7 @@ describe('Credential', () => {
 
     it('RefreshTokenCredential should use the provided HTTP Agent', () => {
       const agent = new Agent();
-      const c = new RefreshTokenCredential(TEST_GCLOUD_CREDENTIALS, agent);
+      const c = new RefreshTokenCredential(MOCK_REFRESH_TOKEN_CONFIG, agent);
       return c.getAccessToken().then((token) => {
         expect(token.access_token).to.equal(expectedToken);
         expect(stub).to.have.been.calledOnce;
