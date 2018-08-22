@@ -35,6 +35,7 @@ import {
   MetadataServiceCredential, RefreshTokenCredential,
 } from '../../../src/auth/credential';
 import { HttpClient } from '../../../src/utils/api-request';
+import {Agent} from 'https';
 
 chai.should();
 chai.use(sinonChai);
@@ -390,6 +391,64 @@ describe('Credential', () => {
         projectId: mockCertificateObject.project_id,
         clientEmail: mockCertificateObject.client_email,
         privateKey: mockCertificateObject.private_key,
+      });
+    });
+  });
+
+  describe('HTTP Agent', () => {
+    const expectedToken = utils.generateRandomAccessToken();
+    let stub: sinon.SinonStub;
+
+    beforeEach(() => {
+      stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({
+        access_token: expectedToken,
+        token_type: 'Bearer',
+        expires_in: 60 * 60,
+      }));
+    });
+
+    afterEach(() => {
+      stub.restore();
+    });
+
+    it('CertCredential should use the provided HTTP Agent', () => {
+      const agent = new Agent();
+      const c = new CertCredential(mockCertificateObject, agent);
+      return c.getAccessToken().then((token) => {
+        expect(token.access_token).to.equal(expectedToken);
+        expect(stub).to.have.been.calledOnce;
+        expect(stub.args[0][0].agent).to.equal(agent);
+      });
+    });
+
+    it('RefreshTokenCredential should use the provided HTTP Agent', () => {
+      const agent = new Agent();
+      const c = new RefreshTokenCredential(TEST_GCLOUD_CREDENTIALS, agent);
+      return c.getAccessToken().then((token) => {
+        expect(token.access_token).to.equal(expectedToken);
+        expect(stub).to.have.been.calledOnce;
+        expect(stub.args[0][0].agent).to.equal(agent);
+      });
+    });
+
+    it('MetadataServiceCredential should use the provided HTTP Agent', () => {
+      const agent = new Agent();
+      const c = new MetadataServiceCredential(agent);
+      return c.getAccessToken().then((token) => {
+        expect(token.access_token).to.equal(expectedToken);
+        expect(stub).to.have.been.calledOnce;
+        expect(stub.args[0][0].agent).to.equal(agent);
+      });
+    });
+
+    it('ApplicationDefaultCredential should use the provided HTTP Agent', () => {
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../../resources/mock.key.json');
+      const agent = new Agent();
+      const c = new ApplicationDefaultCredential(agent);
+      return c.getAccessToken().then((token) => {
+        expect(token.access_token).to.equal(expectedToken);
+        expect(stub).to.have.been.calledOnce;
+        expect(stub.args[0][0].agent).to.equal(agent);
       });
     });
   });

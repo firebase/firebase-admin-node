@@ -36,11 +36,9 @@ import {
   FIREBASE_AUTH_SIGN_UP_NEW_USER, FIREBASE_AUTH_DOWNLOAD_ACCOUNT,
   RESERVED_CLAIMS, FIREBASE_AUTH_UPLOAD_ACCOUNT, FIREBASE_AUTH_CREATE_SESSION_COOKIE,
 } from '../../../src/auth/auth-api-request';
-import {
-  UserImportBuilder, UserImportRecord, UserImportResult, UserImportOptions,
-} from '../../../src/auth/user-import-builder';
+import {UserImportBuilder} from '../../../src/auth/user-import-builder';
 import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/utils/error';
-import {toWebSafeBase64} from '../../../src/utils';
+import { Agent } from 'https';
 
 chai.should();
 chai.use(sinonChai);
@@ -719,6 +717,44 @@ describe('FIREBASE_AUTH_SIGN_UP_NEW_USER', () => {
         responseValidator(invalidResponse);
       }).to.throw();
     });
+  });
+});
+
+describe('HTTP agent', () => {
+  let mockApp: FirebaseApp;
+  let stubs: sinon.SinonStub[] = [];
+
+  before(() => utils.mockFetchAccessTokenRequests(utils.generateRandomAccessToken()));
+
+  after(() => {
+    stubs = [];
+    nock.cleanAll();
+  });
+
+  beforeEach(() => {
+    const options = deepCopy(mocks.appOptions);
+    options.httpAgent = new Agent();
+    mockApp = mocks.appWithOptions(options);
+    return mockApp.INTERNAL.getToken();
+  });
+
+  afterEach(() => {
+    _.forEach(stubs, (stub) => stub.restore());
+  });
+
+  it('should make HTTP calls using the provided agent', () => {
+    const expectedResult = utils.responseFrom({
+      sessionCookie: 'SESSION_COOKIE',
+    });
+    const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+    stubs.push(stub);
+    const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+    return requestHandler.createSessionCookie('ID_TOKEN', 24 * 60 * 60 * 1000)
+      .then((result) => {
+        expect(result).to.deep.equal('SESSION_COOKIE');
+        expect(stub).to.have.been.calledOnce;
+        expect(stub.args[0][0].agent).to.equal(mockApp.options.httpAgent);
+      });
   });
 });
 

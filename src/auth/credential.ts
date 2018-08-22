@@ -234,7 +234,7 @@ export class CertCredential implements Credential {
       'grant-type%3Ajwt-bearer&assertion=' + token;
     const request: HttpRequestConfig = {
       method: 'POST',
-      url: `https://${GOOGLE_AUTH_TOKEN_HOST}:443${GOOGLE_AUTH_TOKEN_PATH}`,
+      url: `https://${GOOGLE_AUTH_TOKEN_HOST}${GOOGLE_AUTH_TOKEN_PATH}`,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
