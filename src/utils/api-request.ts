@@ -41,7 +41,7 @@ export interface HttpRequestConfig {
   data?: string | object | Buffer;
   /** Connect and read timeout (in milliseconds) for the outgoing request. */
   timeout?: number;
-  agent?: https.Agent;
+  agent?: http.Agent;
 }
 
 /**

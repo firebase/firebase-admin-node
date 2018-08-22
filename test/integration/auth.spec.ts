@@ -24,7 +24,6 @@ import firebase from '@firebase/app';
 import '@firebase/auth';
 import {clone} from 'lodash';
 import {generateRandomString, projectId, apiKey, noServiceAccountApp} from './setup';
-import { CertCredential } from '../../src/auth/credential';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -82,21 +81,6 @@ describe('admin.auth', () => {
 
   after(() => {
     return cleanup();
-  });
-
-  it.only('test me', () => {
-    const serviceAccount = require('../resources/key.json');
-    const tunnel = require('tunnel2');
-    const tunnelingAgent = tunnel.httpsOverHttp({
-      proxy: { // Proxy settings
-        host: '45.56.123.109', // Defaults to 'localhost'
-        port: 3128, // Defaults to 443
-      },
-    });
-    const cert = new CertCredential(serviceAccount, tunnelingAgent);
-    return cert.getAccessToken().then((token) => {
-      expect(typeof token.access_token).to.equal('string');
-    });
   });
 
   it('createUser() creates a new user when called without a UID', () => {

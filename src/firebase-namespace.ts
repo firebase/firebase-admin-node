@@ -15,7 +15,7 @@
  */
 
 import fs = require('fs');
-import {Agent} from 'https';
+import {Agent} from 'http';
 import {deepExtend} from './utils/deep-copy';
 import {AppErrorCodes, FirebaseAppError} from './utils/error';
 import {AppHook, FirebaseApp, FirebaseAppOptions} from './firebase-app';
@@ -278,17 +278,18 @@ const firebaseCredential = {
     return globalCertCreds[stringifiedServiceAccount];
   },
 
-  refreshToken: (refreshTokenPathOrObject: string | object): Credential => {
+  refreshToken: (refreshTokenPathOrObject: string | object, httpAgent?: Agent): Credential => {
     const stringifiedRefreshToken = JSON.stringify(refreshTokenPathOrObject);
     if (!(stringifiedRefreshToken in globalRefreshTokenCreds)) {
-      globalRefreshTokenCreds[stringifiedRefreshToken] = new RefreshTokenCredential(refreshTokenPathOrObject);
+      globalRefreshTokenCreds[stringifiedRefreshToken] = new RefreshTokenCredential(
+        refreshTokenPathOrObject, httpAgent);
     }
     return globalRefreshTokenCreds[stringifiedRefreshToken];
   },
 
-  applicationDefault: (): Credential => {
+  applicationDefault: (httpAgent?: Agent): Credential => {
     if (typeof globalAppDefaultCred === 'undefined') {
-      globalAppDefaultCred = new ApplicationDefaultCredential();
+      globalAppDefaultCred = new ApplicationDefaultCredential(httpAgent);
     }
     return globalAppDefaultCred;
   },

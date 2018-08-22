@@ -19,8 +19,6 @@
 // Use untyped import syntax for Node built-ins
 import fs = require('fs');
 import path = require('path');
-import http = require('http');
-import stream = require('stream');
 
 import * as _ from 'lodash';
 import * as chai from 'chai';
@@ -34,7 +32,7 @@ import * as mocks from '../../resources/mocks';
 
 import {
   ApplicationDefaultCredential, CertCredential, Certificate, GoogleOAuthAccessToken,
-  MetadataServiceCredential, RefreshToken, RefreshTokenCredential,
+  MetadataServiceCredential, RefreshTokenCredential,
 } from '../../../src/auth/credential';
 import { HttpClient } from '../../../src/utils/api-request';
 
@@ -85,7 +83,6 @@ const FIVE_MINUTES_IN_SECONDS = 5 * 60;
 
 
 describe('Credential', () => {
-  let mockedRequests: nock.Scope[] = [];
   let mockCertificateObject;
   let oldProcessEnv: NodeJS.ProcessEnv;
 
@@ -99,8 +96,6 @@ describe('Credential', () => {
   });
 
   afterEach(() => {
-    _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
-    mockedRequests = [];
     process.env = oldProcessEnv;
   });
 
