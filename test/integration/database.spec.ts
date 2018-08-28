@@ -55,7 +55,7 @@ describe('admin.database', () => {
       url: `https://${dbUrl.host}/.settings/rules.json`,
       method: 'PUT',
       data: defaultRules,
-      timeuout: 10000,
+      timeout: 10000,
     });
   });
 
