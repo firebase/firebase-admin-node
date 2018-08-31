@@ -1,6 +1,7 @@
 # Unreleased
 
--
+- [added] Exposed the `CollectionReference` type from the `admin.firestore`
+  namespace.
 
 # v6.0.0
 

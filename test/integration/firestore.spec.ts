@@ -18,7 +18,6 @@ import * as admin from '../../lib/index';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import {clone} from 'lodash';
-import {DocumentReference} from '@google-cloud/firestore';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -32,7 +31,7 @@ const mountainView = {
 
 describe('admin.firestore', () => {
 
-  let reference: DocumentReference;
+  let reference: admin.firestore.DocumentReference;
 
   before(() => {
     const db = admin.firestore();
@@ -83,6 +82,10 @@ describe('admin.firestore', () => {
       })
       .should.eventually.be.fulfilled;
   }).timeout(5000);
+
+  it('admin.firestore.CollectionReference type is defined', () => {
+    expect(typeof admin.firestore.CollectionReference).to.be.not.undefined;
+  });
 
   it('admin.firestore.FieldPath type is defined', () => {
     expect(typeof admin.firestore.FieldPath).to.be.not.undefined;
