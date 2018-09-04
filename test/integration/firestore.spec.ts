@@ -105,6 +105,14 @@ describe('admin.firestore', () => {
     expect(typeof now.nanoseconds).to.equal('number');
   });
 
+  it('admin.firestore.WriteBatch type is defined', () => {
+    expect(typeof admin.firestore.WriteBatch).to.be.not.undefined;
+  });
+
+  it('admin.firestore.WriteResult type is defined', () => {
+    expect(typeof admin.firestore.WriteResult).to.be.not.undefined;
+  });
+
   it('supports saving references in documents', () => {
     const source = admin.firestore().collection('cities').doc();
     const target = admin.firestore().collection('cities').doc();
