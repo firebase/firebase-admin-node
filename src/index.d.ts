@@ -590,17 +590,22 @@ declare namespace admin.storage {
 }
 
 declare namespace admin.firestore {
+  export import CollectionReference = _firestore.CollectionReference;
+  export import DocumentData = _firestore.DocumentData;
   export import DocumentReference = _firestore.DocumentReference;
   export import DocumentSnapshot = _firestore.DocumentSnapshot;
   export import FieldPath = _firestore.FieldPath;
   export import FieldValue = _firestore.FieldValue;
   export import Firestore = _firestore.Firestore;
   export import GeoPoint = _firestore.GeoPoint;
-  export import setLogFunction = _firestore.setLogFunction;
   export import Query = _firestore.Query;
-  export import DocumentData = _firestore.DocumentData;
+  export import QueryDocumentSnapshot = _firestore.QueryDocumentSnapshot;
   export import QuerySnapshot = _firestore.QuerySnapshot;
   export import Timestamp = _firestore.Timestamp;
+  export import WriteBatch = _firestore.WriteBatch;
+  export import WriteResult = _firestore.WriteResult;
+
+  export import setLogFunction = _firestore.setLogFunction;
 }
 
 declare namespace admin.instanceId {
