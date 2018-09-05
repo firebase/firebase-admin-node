@@ -18,6 +18,7 @@ import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
 
 import * as validator from '../utils/validator';
 import * as jwt from 'jsonwebtoken';
+import { HttpClient, HttpRequestConfig, HttpError } from '../utils/api-request';
 
 // Audience to use for Firebase Auth Custom tokens
 const FIREBASE_AUDIENCE = 'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit';
@@ -264,46 +265,45 @@ export class FirebaseTokenVerifier {
       return Promise.resolve(this.publicKeys);
     }
 
-    return new Promise((resolve, reject) => {
-      const https = require('https');
-      https.get(this.clientCertUrl, (res) => {
-        const buffers: Buffer[] = [];
-
-        res.on('data', (buffer) => buffers.push(buffer as Buffer));
-
-        res.on('end', () => {
-          try {
-            const response = JSON.parse(Buffer.concat(buffers).toString());
-            if (response.error) {
-              let errorMessage = 'Error fetching public keys for Google certs: ' + response.error;
-              /* istanbul ignore else */
-              if (response.error_description) {
-                errorMessage += ' (' + response.error_description + ')';
-              }
-              reject(new FirebaseAuthError(AuthClientErrorCode.INTERNAL_ERROR, errorMessage));
-            } else {
-              /* istanbul ignore else */
-              if (res.headers.hasOwnProperty('cache-control')) {
-                const cacheControlHeader: string = res.headers['cache-control'] as string;
-                const parts = cacheControlHeader.split(',');
-                parts.forEach((part) => {
-                  const subParts = part.trim().split('=');
-                  if (subParts[0] === 'max-age') {
-                    const maxAge: number = +subParts[1];
-                    this.publicKeysExpireAt = Date.now() + (maxAge * 1000);
-                  }
-                });
-              }
-
-              this.publicKeys = response;
-              resolve(response);
-            }
-          } catch (e) {
-            /* istanbul ignore next */
-            reject(e);
+    const client = new HttpClient();
+    const request: HttpRequestConfig = {
+      method: 'GET',
+      url: this.clientCertUrl,
+    };
+    return client.send(request).then((resp) => {
+      if (!resp.isJson() || resp.data.error) {
+        // Treat all non-json messages and messages with an 'error' field as
+        // error responses.
+        throw new HttpError(resp);
+      }
+      if (resp.headers.hasOwnProperty('cache-control')) {
+        const cacheControlHeader: string = resp.headers['cache-control'];
+        const parts = cacheControlHeader.split(',');
+        parts.forEach((part) => {
+          const subParts = part.trim().split('=');
+          if (subParts[0] === 'max-age') {
+            const maxAge: number = +subParts[1];
+            this.publicKeysExpireAt = Date.now() + (maxAge * 1000);
           }
         });
-      }).on('error', reject);
+      }
+      this.publicKeys = resp.data;
+      return resp.data;
+    }).catch((err) => {
+      if (err instanceof HttpError) {
+        let errorMessage = 'Error fetching public keys for Google certs: ';
+        const resp = err.response;
+        if (resp.isJson() && resp.data.error) {
+          errorMessage += `${resp.data.error}`;
+          if (resp.data.error_description) {
+            errorMessage += ' (' + resp.data.error_description + ')';
+          }
+        } else {
+          errorMessage += `${resp.text}`;
+        }
+        throw new FirebaseAuthError(AuthClientErrorCode.INTERNAL_ERROR, errorMessage);
+      }
+      throw err;
     });
   }
 }
