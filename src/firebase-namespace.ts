@@ -39,7 +39,7 @@ const DEFAULT_APP_NAME = '[DEFAULT]';
 
 /**
  * Constant holding the environment variable name with the default config.
- * If the environmet variable contains a string that starts with '{' it will be parsed as JSON,
+ * If the environment variable contains a string that starts with '{' it will be parsed as JSON,
  * otherwise it will be assumed to be pointing to a file.
  */
 export const FIREBASE_CONFIG_VAR: string = 'FIREBASE_CONFIG';
@@ -72,7 +72,7 @@ export class FirebaseNamespaceInternals {
    *
    * @param {FirebaseAppOptions} options Optional options for the FirebaseApp instance. If none present
    *                             will try to initialize from the FIREBASE_CONFIG environment variable.
-   *                             If the environmet variable contains a string that starts with '{'
+   *                             If the environment variable contains a string that starts with '{'
    *                             it will be parsed as JSON,
    *                             otherwise it will be assumed to be pointing to a file.
    * @param {string} [appName] Optional name of the FirebaseApp instance.
@@ -246,7 +246,7 @@ export class FirebaseNamespaceInternals {
   /**
    * Parse the file pointed to by the FIREBASE_CONFIG_VAR, if it exists.
    * Or if the FIREBASE_CONFIG_ENV contains a valid JSON object, parse it directly.
-   * If the environmet variable contains a string that starts with '{' it will be parsed as JSON,
+   * If the environment variable contains a string that starts with '{' it will be parsed as JSON,
    * otherwise it will be assumed to be pointing to a file.
    */
   private loadOptionsFromEnvVar(): FirebaseAppOptions {
@@ -392,7 +392,7 @@ export class FirebaseNamespace {
    *
    * @param {FirebaseAppOptions} [options] Optional options for the FirebaseApp instance.
    *   If none present will try to initialize from the FIREBASE_CONFIG environment variable.
-   *   If the environmet variable contains a string that starts with '{' it will be parsed as JSON,
+   *   If the environment variable contains a string that starts with '{' it will be parsed as JSON,
    *   otherwise it will be assumed to be pointing to a file.
    * @param {string} [appName] Optional name of the FirebaseApp instance.
    *
