@@ -42,7 +42,7 @@ const testPhoneNumber2 = '+16505550101';
 const nonexistentPhoneNumber = '+18888888888';
 const updatedEmail = generateRandomString(20) + '@example.com';
 const updatedPhone = '+16505550102';
-const customClaims = {
+const customClaims: {[key: string]: any} = {
   admin: true,
   groupId: '1234',
 };
@@ -242,7 +242,7 @@ describe('admin.auth', () => {
          // Verify ID token contents.
          return admin.auth().verifyIdToken(idToken);
       })
-      .then((decodedIdToken) => {
+      .then((decodedIdToken: {[key: string]: any}) => {
         // Confirm expected claims set on the user's ID token.
         for (const key in customClaims) {
           if (customClaims.hasOwnProperty(key)) {
@@ -451,7 +451,7 @@ describe('admin.auth', () => {
 
   describe('importUsers()', () => {
     const randomUid = 'import_' + generateRandomString(20).toLowerCase();
-    let importUserRecord;
+    let importUserRecord: any;
     const rawPassword = 'password';
     const rawSalt = 'NaCl';
     // Simulate a user stored using SCRYPT being migrated to Firebase Auth via importUsers.
@@ -656,7 +656,7 @@ describe('admin.auth', () => {
             providerId: 'phone',
             phoneNumber: importUserRecord.phoneNumber,
           });
-          const actualUserRecord = userRecord.toJSON();
+          const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
           for (const key of Object.keys(importUserRecord)) {
             expect(JSON.stringify(actualUserRecord[key]))
               .to.be.equal(JSON.stringify(importUserRecord[key]));
@@ -725,7 +725,7 @@ function testImportAndSignInUser(
  * @return {Promise} A promise that resolves when the user is deleted
  *     or is found not to exist.
  */
-function deletePhoneNumberUser(phoneNumber) {
+function deletePhoneNumberUser(phoneNumber: string) {
   return admin.auth().getUserByPhoneNumber(phoneNumber)
     .then((userRecord) => {
       return safeDelete(userRecord.uid);
