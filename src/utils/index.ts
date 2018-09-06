@@ -27,7 +27,7 @@ import * as validator from './validator';
  * @param {object} obj The object whose properties to rename.
  * @param {object} keyMap The mapping from old to new property names.
  */
-export function renameProperties(obj: object, keyMap: { [key: string]: string }): void {
+export function renameProperties(obj: {[key: string]: any}, keyMap: { [key: string]: string }): void {
   Object.keys(keyMap).forEach((oldKey) => {
     if (oldKey in obj) {
       const newKey = keyMap[oldKey];

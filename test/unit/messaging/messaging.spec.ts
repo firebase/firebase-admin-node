@@ -249,6 +249,9 @@ describe('Messaging', () => {
   let httpsRequestStub: sinon.SinonStub;
   let nullAccessTokenMessaging: Messaging;
 
+  let messagingService: {[key: string]: any};
+  let nullAccessTokenMessagingService: {[key: string]: any};
+
   const mockAccessToken: string = utils.generateRandomAccessToken();
   const expectedHeaders = {
     'Authorization': 'Bearer ' + mockAccessToken,
@@ -264,8 +267,9 @@ describe('Messaging', () => {
   beforeEach(() => {
     mockApp = mocks.app();
     messaging = new Messaging(mockApp);
-
     nullAccessTokenMessaging = new Messaging(mocks.appReturningNullAccessToken());
+    messagingService = messaging;
+    nullAccessTokenMessagingService = nullAccessTokenMessaging;
   });
 
   afterEach(() => {
@@ -1784,7 +1788,7 @@ describe('Messaging', () => {
       });
     });
 
-    const invalidDataMessages: any = [
+    const invalidDataMessages: any[] = [
       {label: 'data', message: {data: {k1: true}}},
       {label: 'android.data', message: {android: {data: {k1: true}}}},
       {label: 'webpush.data', message: {webpush: {data: {k1: true}}}},
@@ -1801,7 +1805,7 @@ describe('Messaging', () => {
       });
     });
 
-    const invalidApnsPayloads: any = [null, '', 'payload', true, 1.23];
+    const invalidApnsPayloads: any[] = [null, '', 'payload', true, 1.23];
     invalidApnsPayloads.forEach((payload) => {
       it(`should throw given APNS payload with invalid object: ${JSON.stringify(payload)}`, () => {
         expect(() => {
@@ -1829,7 +1833,7 @@ describe('Messaging', () => {
       }).to.throw('Multiple specifications for mutableContent in Aps');
     });
 
-    const invalidApnsAlerts: any = [null, [], true, 1.23];
+    const invalidApnsAlerts: any[] = [null, [], true, 1.23];
     invalidApnsAlerts.forEach((alert) => {
       it(`should throw given APNS payload with invalid aps alert: ${JSON.stringify(alert)}`, () => {
         expect(() => {
@@ -1905,8 +1909,8 @@ describe('Messaging', () => {
     };
 
     _.forEach(whitelistedOptionsKeys, ({ type, underscoreCasedKey }, camelCasedKey) => {
-      let validValue;
-      let invalidValues;
+      let validValue: any;
+      let invalidValues: Array<{value: any, text: string}>;
       if (type === 'string') {
         invalidValues = [
           { value: true, text: 'non-string' },
@@ -2490,7 +2494,7 @@ describe('Messaging', () => {
     });
   });
 
-  function tokenSubscriptionTests(methodName) {
+  function tokenSubscriptionTests(methodName: string) {
     const invalidRegistrationTokensArgumentError = 'Registration token(s) provided to ' +
       `${methodName}() must be a non-empty string or a non-empty array`;
 
@@ -2499,36 +2503,36 @@ describe('Messaging', () => {
       it('should throw given invalid type for registration token(s) argument: ' +
         JSON.stringify(invalidRegistrationToken), () => {
         expect(() => {
-          messaging[methodName](invalidRegistrationToken as string, mocks.messaging.topic);
+          messagingService[methodName](invalidRegistrationToken as string, mocks.messaging.topic);
         }).to.throw(invalidRegistrationTokensArgumentError);
       });
     });
 
     it('should throw given no registration token(s) argument', () => {
       expect(() => {
-        messaging[methodName](undefined as string, mocks.messaging.topic);
+        messagingService[methodName](undefined as string, mocks.messaging.topic);
       }).to.throw(invalidRegistrationTokensArgumentError);
     });
 
     it('should throw given empty string for registration token(s) argument', () => {
       expect(() => {
-        messaging[methodName]('', mocks.messaging.topic);
+        messagingService[methodName]('', mocks.messaging.topic);
       }).to.throw(invalidRegistrationTokensArgumentError);
     });
 
     it('should throw given empty array for registration token(s) argument', () => {
       expect(() => {
-        messaging[methodName]([], mocks.messaging.topic);
+        messagingService[methodName]([], mocks.messaging.topic);
       }).to.throw(invalidRegistrationTokensArgumentError);
     });
 
     it('should be rejected given empty string within array for registration token(s) argument', () => {
-      return messaging[methodName](['foo', 'bar', ''], mocks.messaging.topic)
+      return messagingService[methodName](['foo', 'bar', ''], mocks.messaging.topic)
         .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
     });
 
     it('should be rejected given non-string value within array for registration token(s) argument', () => {
-      return messaging[methodName](['foo', true as any, 'bar'], mocks.messaging.topic)
+      return messagingService[methodName](['foo', true as any, 'bar'], mocks.messaging.topic)
         .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
     });
 
@@ -2538,12 +2542,12 @@ describe('Messaging', () => {
       // Create an array of exactly 1,000 registration tokens
       const registrationTokens = (Array(1000) as any).fill(mocks.messaging.registrationToken);
 
-      return messaging[methodName](registrationTokens, mocks.messaging.topic)
+      return messagingService[methodName](registrationTokens, mocks.messaging.topic)
         .then(() => {
           // Push the array of registration tokens over 1,000 items
           registrationTokens.push(mocks.messaging.registrationToken);
 
-          return messaging[methodName](registrationTokens, mocks.messaging.topic)
+          return messagingService[methodName](registrationTokens, mocks.messaging.topic)
             .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
         });
     });
@@ -2554,27 +2558,27 @@ describe('Messaging', () => {
     invalidTopics.forEach((invalidTopic) => {
       it(`should throw given invalid type for topic argument: ${ JSON.stringify(invalidTopic) }`, () => {
         expect(() => {
-          messaging[methodName](mocks.messaging.registrationToken, invalidTopic as string);
+          messagingService[methodName](mocks.messaging.registrationToken, invalidTopic as string);
         }).to.throw(invalidTopicArgumentError);
       });
     });
 
     it('should throw given no topic argument', () => {
       expect(() => {
-        messaging[methodName](mocks.messaging.registrationToken, undefined as string);
+        messagingService[methodName](mocks.messaging.registrationToken, undefined as string);
       }).to.throw(invalidTopicArgumentError);
     });
 
     it('should throw given empty string for topic argument', () => {
       expect(() => {
-        messaging[methodName](mocks.messaging.registrationToken, '');
+        messagingService[methodName](mocks.messaging.registrationToken, '');
       }).to.throw(invalidTopicArgumentError);
     });
 
     const topicsWithInvalidCharacters = ['f*o*o', '/topics/f+o+o', 'foo/topics/foo', '$foo', '/topics/foo&'];
     topicsWithInvalidCharacters.forEach((invalidTopic) => {
       it(`should be rejected given topic argument which has invalid characters: ${ invalidTopic }`, () => {
-        return messaging[methodName](mocks.messaging.registrationToken, invalidTopic)
+        return messagingService[methodName](mocks.messaging.registrationToken, invalidTopic)
           .should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
       });
     });
@@ -2582,7 +2586,7 @@ describe('Messaging', () => {
     it('should be rejected given a 200 JSON server response with a known error', () => {
       mockedRequests.push(mockTopicSubscriptionRequestWithError(methodName, 200, 'json'));
 
-      return messaging[methodName](
+      return messagingService[methodName](
         mocks.messaging.registrationToken,
         mocks.messaging.topic,
       ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.json);
@@ -2591,7 +2595,7 @@ describe('Messaging', () => {
     it('should be rejected given a 200 JSON server response with an unknown error', () => {
       mockedRequests.push(mockTopicSubscriptionRequestWithError(methodName, 200, 'json', { error: 'Unknown' }));
 
-      return messaging[methodName](
+      return messagingService[methodName](
         mocks.messaging.registrationToken,
         mocks.messaging.topic,
       ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.unknownError);
@@ -2600,7 +2604,7 @@ describe('Messaging', () => {
     it('should be rejected given a non-2xx JSON server response', () => {
       mockedRequests.push(mockTopicSubscriptionRequestWithError(methodName, 400, 'json'));
 
-      return messaging[methodName](
+      return messagingService[methodName](
         mocks.messaging.registrationToken,
         mocks.messaging.topic,
       ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.json);
@@ -2609,7 +2613,7 @@ describe('Messaging', () => {
     it('should be rejected given a non-2xx JSON server response with an unknown error', () => {
       mockedRequests.push(mockTopicSubscriptionRequestWithError(methodName, 400, 'json', { error: 'Unknown' }));
 
-      return messaging[methodName](
+      return messagingService[methodName](
         mocks.messaging.registrationToken,
         mocks.messaging.topic,
       ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.unknownError);
@@ -2618,7 +2622,7 @@ describe('Messaging', () => {
     it('should be rejected given a non-2xx JSON server response without an error', () => {
       mockedRequests.push(mockTopicSubscriptionRequestWithError(methodName, 400, 'json', { foo: 'bar' }));
 
-      return messaging[methodName](
+      return messagingService[methodName](
         mocks.messaging.registrationToken,
         mocks.messaging.topic,
       ).should.eventually.be.rejected.and.have.property('code', expectedErrorCodes.unknownError);
@@ -2628,7 +2632,7 @@ describe('Messaging', () => {
       it(`should be rejected given a ${ statusCode } text server response`, () => {
         mockedRequests.push(mockTopicSubscriptionRequestWithError(methodName, parseInt(statusCode, 10), 'text'));
 
-        return messaging[methodName](
+        return messagingService[methodName](
           mocks.messaging.registrationToken,
           mocks.messaging.topic,
         ).should.eventually.be.rejected.and.have.property('code', expectedError);
@@ -2636,21 +2640,21 @@ describe('Messaging', () => {
     });
 
     it('should be rejected given an app which returns null access tokens', () => {
-      return nullAccessTokenMessaging[methodName](
+      return nullAccessTokenMessagingService[methodName](
         mocks.messaging.registrationToken,
         mocks.messaging.topic,
       ).should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
     });
 
     it('should be rejected given an app which returns invalid access tokens', () => {
-      return nullAccessTokenMessaging[methodName](
+      return nullAccessTokenMessagingService[methodName](
         mocks.messaging.registrationToken,
         mocks.messaging.topic,
       ).should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
     });
 
     it('should be rejected given an app which fails to generate access tokens', () => {
-      return nullAccessTokenMessaging[methodName](
+      return nullAccessTokenMessagingService[methodName](
         mocks.messaging.registrationToken,
         mocks.messaging.topic,
       ).should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
@@ -2660,7 +2664,7 @@ describe('Messaging', () => {
        'with "/topics/")', () => {
       mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1));
 
-      return messaging[methodName](
+      return messagingService[methodName](
         mocks.messaging.registrationToken,
         mocks.messaging.topic,
       );
@@ -2670,7 +2674,7 @@ describe('Messaging', () => {
        'with "/topics/")', () => {
       mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1));
 
-      return messaging[methodName](
+      return messagingService[methodName](
         mocks.messaging.registrationToken,
         mocks.messaging.topicWithPrefix,
       );
@@ -2680,7 +2684,7 @@ describe('Messaging', () => {
        'prefixed with "/topics/")', () => {
       mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 3));
 
-      return messaging[methodName](
+      return messagingService[methodName](
         [
           mocks.messaging.registrationToken + '0',
           mocks.messaging.registrationToken + '1',
@@ -2694,7 +2698,7 @@ describe('Messaging', () => {
        'prefixed with "/topics/")', () => {
       mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 3));
 
-      return messaging[methodName](
+      return messagingService[methodName](
         [
           mocks.messaging.registrationToken + '0',
           mocks.messaging.registrationToken + '1',
@@ -2708,7 +2712,7 @@ describe('Messaging', () => {
        '(topic name not prefixed with "/topics/")', () => {
       mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1));
 
-      return messaging[methodName](
+      return messagingService[methodName](
         mocks.messaging.registrationToken,
         mocks.messaging.topic,
       ).should.eventually.deep.equal({
@@ -2722,7 +2726,7 @@ describe('Messaging', () => {
        '(topic name prefixed with "/topics/")', () => {
       mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1));
 
-      return messaging[methodName](
+      return messagingService[methodName](
         mocks.messaging.registrationToken,
         mocks.messaging.topicWithPrefix,
       ).should.eventually.deep.equal({
@@ -2736,7 +2740,7 @@ describe('Messaging', () => {
        'and topic (topic name not prefixed with "/topics/")', () => {
       mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1, /* failureCount */ 2));
 
-      return messaging[methodName](
+      return messagingService[methodName](
         [
           mocks.messaging.registrationToken + '0',
           mocks.messaging.registrationToken + '1',
@@ -2761,7 +2765,7 @@ describe('Messaging', () => {
        'and topic (topic name prefixed with "/topics/")', () => {
       mockedRequests.push(mockTopicSubscriptionRequest(methodName, /* successCount */ 1, /* failureCount */ 2));
 
-      return messaging[methodName](
+      return messagingService[methodName](
         [
           mocks.messaging.registrationToken + '0',
           mocks.messaging.registrationToken + '1',
@@ -2788,7 +2792,7 @@ describe('Messaging', () => {
       return mockApp.INTERNAL.getToken()
         .then(() => {
           httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(emptyResponse);
-          return messaging[methodName](
+          return messagingService[methodName](
             mocks.messaging.registrationToken,
             mocks.messaging.topic,
           );
@@ -2809,7 +2813,7 @@ describe('Messaging', () => {
       return mockApp.INTERNAL.getToken()
         .then(() => {
           httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(emptyResponse);
-          return messaging[methodName](
+          return messagingService[methodName](
             mocks.messaging.registrationToken,
             mocks.messaging.topicWithPrefix,
           );
@@ -2836,7 +2840,7 @@ describe('Messaging', () => {
       return mockApp.INTERNAL.getToken()
         .then(() => {
           httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(emptyResponse);
-          return messaging[methodName](
+          return messagingService[methodName](
             registrationTokens,
             mocks.messaging.topic,
           );
@@ -2863,7 +2867,7 @@ describe('Messaging', () => {
       return mockApp.INTERNAL.getToken()
         .then(() => {
           httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(emptyResponse);
-          return messaging[methodName](
+          return messagingService[methodName](
             registrationTokens,
             mocks.messaging.topicWithPrefix,
           );

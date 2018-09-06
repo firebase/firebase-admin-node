@@ -150,7 +150,7 @@ export class FirebaseAuthError extends PrefixedFirebaseError {
   ): FirebaseAuthError {
     // If not found, default to internal error.
     const clientCodeKey = AUTH_SERVER_TO_CLIENT_CODE[serverErrorCode] || 'INTERNAL_ERROR';
-    const error: ErrorInfo = deepCopy(AuthClientErrorCode[clientCodeKey]);
+    const error: ErrorInfo = deepCopy((AuthClientErrorCode as any)[clientCodeKey]);
     error.message = message || error.message;
 
     if (clientCodeKey === 'INTERNAL_ERROR' && typeof rawServerResponse !== 'undefined') {
@@ -246,7 +246,7 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
   ): FirebaseMessagingError {
     // If not found, default to unknown error.
     const clientCodeKey = MESSAGING_SERVER_TO_CLIENT_CODE[serverErrorCode] || 'UNKNOWN_ERROR';
-    const error: ErrorInfo = deepCopy(MessagingClientErrorCode[clientCodeKey]);
+    const error: ErrorInfo = deepCopy((MessagingClientErrorCode as any)[clientCodeKey]);
     error.message = message || error.message;
 
     if (clientCodeKey === 'UNKNOWN_ERROR' && typeof rawServerResponse !== 'undefined') {
@@ -267,7 +267,7 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
   ): FirebaseMessagingError {
     // If not found, default to unknown error.
     const clientCodeKey = TOPIC_MGT_SERVER_TO_CLIENT_CODE[serverErrorCode] || 'UNKNOWN_ERROR';
-    const error: ErrorInfo = deepCopy(MessagingClientErrorCode[clientCodeKey]);
+    const error: ErrorInfo = deepCopy((MessagingClientErrorCode as any)[clientCodeKey]);
     error.message = message || error.message;
 
     if (clientCodeKey === 'UNKNOWN_ERROR' && typeof rawServerResponse !== 'undefined') {
