@@ -1,8 +1,12 @@
 {
   "compilerOptions": {
     "module": "commonjs",
+    "typeRoots": [
+      "node_modules/@types",
+      "node_modules/@firebase/database/dist/src/api/"
+    ],
     "target": "es5",
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "lib": ["es2015"],
     "outDir": "lib",
     // We manually craft typings in src/index.d.ts instead of auto-generating them.
