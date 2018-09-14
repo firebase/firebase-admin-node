@@ -31,13 +31,13 @@ describe('admin.storage', () => {
     const bucket: Bucket = admin.storage().bucket();
     return verifyBucket(bucket, 'storage().bucket()')
       .should.eventually.be.fulfilled;
-  }).timeout(5000);
+  });
 
   it('bucket(string) returns a handle to the specified bucket', () => {
     const bucket: Bucket = admin.storage().bucket(projectId + '.appspot.com');
     return verifyBucket(bucket, 'storage().bucket(string)')
       .should.eventually.be.fulfilled;
-  }).timeout(5000);
+  });
 
   it('bucket(non-existing) returns a handle which can be queried for existence', () => {
     const bucket: Bucket = admin.storage().bucket('non.existing');

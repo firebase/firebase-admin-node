@@ -26,6 +26,10 @@ const serviceAccount = require('../mock.key.json');
 describe('Init App', () => {
     const app: admin.app.App = initApp(serviceAccount, 'TestApp');
 
+    after(() => {
+        return app.delete();
+    });
+
     it('Should return an initialized App', () => {
         expect(app.name).to.equal('TestApp');
     });
