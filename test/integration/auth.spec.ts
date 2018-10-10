@@ -24,6 +24,7 @@ import firebase from '@firebase/app';
 import '@firebase/auth';
 import {clone} from 'lodash';
 import {generateRandomString, projectId, apiKey, noServiceAccountApp} from './setup';
+import url = require('url');
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -55,6 +56,10 @@ const mockUserData = {
   displayName: 'Random User ' + newUserUid,
   photoURL: 'http://www.example.com/' + newUserUid + '/photo.png',
   disabled: false,
+};
+const actionCodeSettings = {
+  url: 'http://localhost/?a=1&b=2#c=3',
+  handleCodeInApp: false,
 };
 let deleteQueue = Promise.resolve();
 
@@ -337,6 +342,87 @@ describe('admin.auth', () => {
   it('verifyIdToken() fails when called with an invalid token', () => {
     return admin.auth().verifyIdToken('invalid-token')
       .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
+  });
+
+  describe('Link operations', () => {
+    const uid = generateRandomString(20).toLowerCase();
+    const email = uid + '@example.com';
+    const newPassword = 'newPassword';
+    const userData = {
+      uid,
+      email,
+      emailVerified: false,
+      password: 'password',
+    };
+
+    // Create the test user before running this suite of tests.
+    before(() => {
+      return admin.auth().createUser(userData);
+    });
+
+    // Sign out after each test.
+    afterEach(() => {
+      return firebase.auth().signOut();
+    });
+
+    // Delete test user at the end of test suite.
+    after(() => {
+      return safeDelete(uid);
+    });
+
+    it('generatePasswordResetLink() should return a password reset link', () => {
+      // Ensure old password set on created user.
+      return admin.auth().updateUser(uid, {password: 'password'})
+        .then((userRecord) => {
+          return admin.auth().generatePasswordResetLink(email, actionCodeSettings);
+        })
+        .then((link) => {
+          const code = getActionCode(link);
+          expect(getContinueUrl(link)).equal(actionCodeSettings.url);
+          return firebase.auth().confirmPasswordReset(code, newPassword);
+        })
+        .then(() => {
+          return firebase.auth().signInWithEmailAndPassword(email, newPassword);
+        })
+        .then((result) => {
+          expect(result.user.email).to.equal(email);
+          // Password reset also verifies the user's email.
+          expect(result.user.emailVerified).to.be.true;
+        });
+    });
+
+    it('generateEmailVerificationLink() should return a verification link', () => {
+      // Ensure the user's email is unverified.
+      return admin.auth().updateUser(uid, {password: 'password', emailVerified: false})
+        .then((userRecord) => {
+          expect(userRecord.emailVerified).to.be.false;
+          return admin.auth().generateEmailVerificationLink(email, actionCodeSettings);
+        })
+        .then((link) => {
+          const code = getActionCode(link);
+          expect(getContinueUrl(link)).equal(actionCodeSettings.url);
+          return firebase.auth().applyActionCode(code);
+        })
+        .then(() => {
+          return firebase.auth().signInWithEmailAndPassword(email, userData.password);
+        })
+        .then((result) => {
+          expect(result.user.email).to.equal(email);
+          expect(result.user.emailVerified).to.be.true;
+        });
+    });
+
+    it('generateSignInWithEmailLink() should return a sign-in link', () => {
+      return admin.auth().generateSignInWithEmailLink(email, actionCodeSettings)
+        .then((link) => {
+          expect(getContinueUrl(link)).equal(actionCodeSettings.url);
+          return firebase.auth().signInWithEmailLink(email, link);
+        })
+        .then((result) => {
+          expect(result.user.email).to.equal(email);
+          expect(result.user.emailVerified).to.be.true;
+        });
+    });
   });
 
   it('deleteUser() deletes the user with the given UID', () => {
@@ -760,6 +846,28 @@ function cleanup() {
     promises.push(safeDelete(uid));
   });
   return Promise.all(promises);
+}
+
+/**
+ * Returns the action code corresponding to the link.
+ *
+ * @param {string} link The link to parse for the action code.
+ * @return {string} The link's corresponding action code.
+ */
+function getActionCode(link: string): string {
+  const parsedUrl = new url.URL(link);
+  return parsedUrl.searchParams.get('oobCode');
+}
+
+/**
+ * Returns the continue URL corresponding to the link.
+ *
+ * @param {string} link The link to parse for the continue URL.
+ * @return {string} The link's corresponding continue URL.
+ */
+function getContinueUrl(link: string): string {
+  const parsedUrl = new url.URL(link);
+  return parsedUrl.searchParams.get('continueUrl');
 }
 
 /**

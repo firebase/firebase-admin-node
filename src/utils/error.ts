@@ -350,6 +350,10 @@ export class AuthClientErrorCode {
     code: 'invalid-claims',
     message: 'The provided custom claim attributes are invalid.',
   };
+  public static INVALID_CONTINUE_URI = {
+    code: 'invalid-continue-uri',
+    message: 'The continue URL must be a valid URL string.',
+  };
   public static INVALID_CREATION_TIME = {
     code: 'invalid-creation-time',
     message: 'The creation time must be a valid UTC date string.',
@@ -365,6 +369,11 @@ export class AuthClientErrorCode {
   public static INVALID_DISPLAY_NAME = {
     code: 'invalid-display-name',
     message: 'The displayName field must be a valid string.',
+  };
+  public static INVALID_DYNAMIC_LINK_DOMAIN = {
+    code: 'invalid-dynamic-link-domain',
+    message: 'The provided dynamic link domain is not configured or authorized ' +
+             'for the current project.',
   };
   public static INVALID_EMAIL_VERIFIED = {
     code: 'invalid-email-verified',
@@ -461,6 +470,19 @@ export class AuthClientErrorCode {
     code: 'invalid-tokens-valid-after-time',
     message: 'The tokensValidAfterTime must be a valid UTC number in seconds.',
   };
+  public static MISSING_ANDROID_PACKAGE_NAME = {
+    code: 'missing-android-pkg-name',
+    message: 'An Android Package Name must be provided if the Android App is ' +
+             'required to be installed.',
+  };
+  public static MISSING_CONTINUE_URI = {
+    code: 'missing-continue-uri',
+    message: 'A valid continue URL must be provided in the request.',
+  };
+  public static MISSING_IOS_BUNDLE_ID = {
+    code: 'missing-ios-bundle-id',
+    message: 'The request is missing an iOS Bundle ID.',
+  };
   public static MISSING_HASH_ALGORITHM = {
     code: 'missing-hash-algorithm',
     message: 'Importing users with password hashes requires that the hashing ' +
@@ -502,6 +524,11 @@ export class AuthClientErrorCode {
   public static UID_ALREADY_EXISTS = {
     code: 'uid-already-exists',
     message: 'The user with the provided uid already exists.',
+  };
+  public static UNAUTHORIZED_DOMAIN = {
+    code: 'unauthorized-continue-uri',
+    message: 'The domain of the continue URL is not whitelisted. Whitelist the domain in the ' +
+             'Firebase console.',
   };
   public static USER_NOT_FOUND = {
     code: 'user-not-found',
@@ -634,6 +661,10 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   CONFIGURATION_NOT_FOUND: 'PROJECT_NOT_FOUND',
   // Provided credential has insufficient permissions.
   INSUFFICIENT_PERMISSION: 'INSUFFICIENT_PERMISSION',
+  // ActionCodeSettings missing continue URL.
+  INVALID_CONTINUE_URI: 'INVALID_CONTINUE_URI',
+  // Dynamic link domain in provided ActionCodeSettings is not authorized.
+  INVALID_DYNAMIC_LINK_DOMAIN: 'INVALID_DYNAMIC_LINK_DOMAIN',
   // uploadAccount provides an email that already exists.
   DUPLICATE_EMAIL: 'EMAIL_ALREADY_EXISTS',
   // uploadAccount provides a localId that already exists.
@@ -656,6 +687,10 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   INVALID_PHONE_NUMBER: 'INVALID_PHONE_NUMBER',
   // Invalid service account.
   INVALID_SERVICE_ACCOUNT: 'INVALID_SERVICE_ACCOUNT',
+  // Missing Android package name.
+  MISSING_ANDROID_PACKAGE_NAME: 'MISSING_ANDROID_PACKAGE_NAME',
+  // Missing iOS bundle ID.
+  MISSING_IOS_BUNDLE_ID: 'MISSING_IOS_BUNDLE_ID',
   // No localId provided (deleteAccount missing localId).
   MISSING_LOCAL_ID: 'MISSING_UID',
   // Empty user list in uploadAccount.
@@ -670,6 +705,8 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   PROJECT_NOT_FOUND: 'PROJECT_NOT_FOUND',
   // Token expired error.
   TOKEN_EXPIRED: 'ID_TOKEN_EXPIRED',
+  // Continue URL provided in ActionCodeSettings has a domain that is not whitelisted.
+  UNAUTHORIZED_DOMAIN: 'UNAUTHORIZED_DOMAIN',
   // User on which action is to be performed is not found.
   USER_NOT_FOUND: 'USER_NOT_FOUND',
   // Password provided is too weak.

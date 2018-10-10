@@ -16,17 +16,19 @@
 
 import * as validator from '../utils/validator';
 
-import {deepCopy} from '../utils/deep-copy';
+import {deepCopy, deepExtend} from '../utils/deep-copy';
 import {FirebaseApp} from '../firebase-app';
-import {AuthClientErrorCode, FirebaseAuthError, FirebaseError} from '../utils/error';
+import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
 import {
   ApiSettings, AuthorizedHttpClient, HttpRequestConfig, HttpError,
 } from '../utils/api-request';
 import {CreateRequest, UpdateRequest} from './user-record';
 import {
   UserImportBuilder, UserImportOptions, UserImportRecord,
-  UserImportResult, UploadAccountRequest,
+  UserImportResult,
 } from './user-import-builder';
+import * as utils from '../utils/index';
+import {ActionCodeSettings, ActionCodeSettingsBuilder} from './action-code-settings-builder';
 
 
 /** Firebase Auth backend host. */
@@ -41,13 +43,18 @@ const FIREBASE_AUTH_HEADER = {
   'X-Client-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
 };
 /** Firebase Auth request timeout duration in milliseconds. */
-const FIREBASE_AUTH_TIMEOUT = 10000;
+const FIREBASE_AUTH_TIMEOUT = 25000;
 
 
 /** List of reserved claims which cannot be provided when creating a custom token. */
 export const RESERVED_CLAIMS = [
   'acr', 'amr', 'at_hash', 'aud', 'auth_time', 'azp', 'cnf', 'c_hash', 'exp', 'iat',
   'iss', 'jti', 'nbf', 'nonce', 'sub', 'firebase',
+];
+
+/** List of supported email action request types. */
+export const EMAIL_ACTION_REQUEST_TYPES = [
+  'PASSWORD_RESET', 'VERIFY_EMAIL', 'EMAIL_SIGNIN',
 ];
 
 /** Maximum allowed number of characters in the custom claims payload. */
@@ -64,6 +71,46 @@ const MIN_SESSION_COOKIE_DURATION_SECS = 5 * 60;
 
 /** Maximum allowed session cookie duration in seconds (2 weeks). */
 const MAX_SESSION_COOKIE_DURATION_SECS = 14 * 24 * 60 * 60;
+
+/** The Firebase Auth backend URL format. */
+const FIREBASE_AUTH_BASE_URL_FORMAT =
+    'https://identitytoolkit.googleapis.com/{version}/projects/{projectId}{api}';
+
+
+/** Defines a base utility to help with resource URL construction. */
+class AuthResourceUrlBuilder {
+  protected urlFormat: string;
+
+  /**
+   * The resource URL builder constructor.
+   *
+   * @param {string} projectId The resource project ID.
+   * @param {string} version The endpoint API version.
+   * @constructor
+   */
+  constructor(protected projectId: string, protected version: string) {
+    this.urlFormat = FIREBASE_AUTH_BASE_URL_FORMAT;
+  }
+
+  /**
+   * Returns the resource URL corresponding to the provided parameters.
+   *
+   * @param {string=} api The backend API name.
+   * @param {object=} params The optional additional parameters to substitute in the
+   *     URL path.
+   * @return {string} The corresponding resource URL.
+   */
+  public getUrl(api?: string, params?: object): string {
+    const baseParams = {
+      version: this.version,
+      projectId: this.projectId,
+      api: api || '',
+    };
+    const baseUrl = utils.formatString(this.urlFormat, baseParams);
+    // Substitute additional api related parameters.
+    return utils.formatString(baseUrl, params || {});
+  }
+}
 
 
 /**
@@ -295,7 +342,7 @@ function validateCreateEditRequest(request: any, uploadAccountRequest: boolean =
 
 /** Instantiates the createSessionCookie endpoint settings. */
 export const FIREBASE_AUTH_CREATE_SESSION_COOKIE =
-    new ApiSettings('createSessionCookie', 'POST')
+    new ApiSettings(':createSessionCookie', 'POST')
         // Set request validator.
         .setRequestValidator((request: any) => {
           // Validate the ID token is a non-empty string.
@@ -319,11 +366,11 @@ export const FIREBASE_AUTH_CREATE_SESSION_COOKIE =
 
 
 /** Instantiates the uploadAccount endpoint settings. */
-export const FIREBASE_AUTH_UPLOAD_ACCOUNT = new ApiSettings('uploadAccount', 'POST');
+export const FIREBASE_AUTH_UPLOAD_ACCOUNT = new ApiSettings('/accounts:batchCreate', 'POST');
 
 
 /** Instantiates the downloadAccount endpoint settings. */
-export const FIREBASE_AUTH_DOWNLOAD_ACCOUNT = new ApiSettings('downloadAccount', 'POST')
+export const FIREBASE_AUTH_DOWNLOAD_ACCOUNT = new ApiSettings('/accounts:batchGet', 'GET')
   // Set request validator.
   .setRequestValidator((request: any) => {
     // Validate next page token.
@@ -345,7 +392,7 @@ export const FIREBASE_AUTH_DOWNLOAD_ACCOUNT = new ApiSettings('downloadAccount',
 
 
 /** Instantiates the getAccountInfo endpoint settings. */
-export const FIREBASE_AUTH_GET_ACCOUNT_INFO = new ApiSettings('getAccountInfo', 'POST')
+export const FIREBASE_AUTH_GET_ACCOUNT_INFO = new ApiSettings('/accounts:lookup', 'POST')
   // Set request validator.
   .setRequestValidator((request: any) => {
     if (!request.localId && !request.email && !request.phoneNumber) {
@@ -362,7 +409,7 @@ export const FIREBASE_AUTH_GET_ACCOUNT_INFO = new ApiSettings('getAccountInfo', 
   });
 
 /** Instantiates the deleteAccount endpoint settings. */
-export const FIREBASE_AUTH_DELETE_ACCOUNT = new ApiSettings('deleteAccount', 'POST')
+export const FIREBASE_AUTH_DELETE_ACCOUNT = new ApiSettings('/accounts:delete', 'POST')
   // Set request validator.
   .setRequestValidator((request: any) => {
     if (!request.localId) {
@@ -373,7 +420,7 @@ export const FIREBASE_AUTH_DELETE_ACCOUNT = new ApiSettings('deleteAccount', 'PO
   });
 
 /** Instantiates the setAccountInfo endpoint settings for updating existing accounts. */
-export const FIREBASE_AUTH_SET_ACCOUNT_INFO = new ApiSettings('setAccountInfo', 'POST')
+export const FIREBASE_AUTH_SET_ACCOUNT_INFO = new ApiSettings('/accounts:update', 'POST')
   // Set request validator.
   .setRequestValidator((request: any) => {
     // localId is a required parameter.
@@ -396,7 +443,7 @@ export const FIREBASE_AUTH_SET_ACCOUNT_INFO = new ApiSettings('setAccountInfo', 
  * Instantiates the signupNewUser endpoint settings for creating a new user with or without
  * uid being specified. The backend will create a new one if not provided and return it.
  */
-export const FIREBASE_AUTH_SIGN_UP_NEW_USER = new ApiSettings('signupNewUser', 'POST')
+export const FIREBASE_AUTH_SIGN_UP_NEW_USER = new ApiSettings('/accounts', 'POST')
   // Set request validator.
   .setRequestValidator((request: any) => {
     // signupNewUser does not support customAttributes.
@@ -425,12 +472,37 @@ export const FIREBASE_AUTH_SIGN_UP_NEW_USER = new ApiSettings('signupNewUser', '
     }
   });
 
+const FIREBASE_AUTH_GET_OOB_CODE = new ApiSettings('/accounts:sendOobCode', 'POST')
+  // Set request validator.
+  .setRequestValidator((request: any) => {
+    if (!validator.isEmail(request.email)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_EMAIL,
+      );
+    }
+    if (EMAIL_ACTION_REQUEST_TYPES.indexOf(request.requestType) === -1) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        `"${request.requestType}" is not a supported email action request type.`,
+      );
+    }
+  })
+  // Set response validator.
+  .setResponseValidator((response: any) => {
+    // If the oobLink is not returned, then the request failed.
+    if (!response.oobLink) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Unable to create the email action link');
+    }
+  });
+
 /**
- * Class that provides mechanism to send requests to the Firebase Auth backend endpoints.
+ * Class that provides the mechanism to send requests to the Firebase Auth backend endpoints.
  */
 export class FirebaseAuthRequestHandler {
-  private baseUrl: string = `https://${FIREBASE_AUTH_HOST}${FIREBASE_AUTH_PATH}`;
-  private httpClient: AuthorizedHttpClient;
+  protected httpClient: AuthorizedHttpClient;
+  protected authUrlBuilder: AuthResourceUrlBuilder;
 
   /**
    * @param {any} response The response to check for errors.
@@ -446,6 +518,7 @@ export class FirebaseAuthRequestHandler {
    */
   constructor(app: FirebaseApp) {
     this.httpClient = new AuthorizedHttpClient(app);
+    this.authUrlBuilder = new AuthResourceUrlBuilder(utils.getProjectId(app), 'v1');
   }
 
   /**
@@ -464,7 +537,7 @@ export class FirebaseAuthRequestHandler {
       // Convert to seconds.
       validDuration: expiresIn / 1000,
     };
-    return this.invokeRequestHandler(FIREBASE_AUTH_CREATE_SESSION_COOKIE, request)
+    return this.invokeRequestHandler(this.authUrlBuilder, FIREBASE_AUTH_CREATE_SESSION_COOKIE, request)
         .then((response: any) => response.sessionCookie);
   }
 
@@ -482,7 +555,7 @@ export class FirebaseAuthRequestHandler {
     const request = {
       localId: [uid],
     };
-    return this.invokeRequestHandler(FIREBASE_AUTH_GET_ACCOUNT_INFO, request);
+    return this.invokeRequestHandler(this.authUrlBuilder, FIREBASE_AUTH_GET_ACCOUNT_INFO, request);
   }
 
   /**
@@ -499,7 +572,7 @@ export class FirebaseAuthRequestHandler {
     const request = {
       email: [email],
     };
-    return this.invokeRequestHandler(FIREBASE_AUTH_GET_ACCOUNT_INFO, request);
+    return this.invokeRequestHandler(this.authUrlBuilder, FIREBASE_AUTH_GET_ACCOUNT_INFO, request);
   }
 
   /**
@@ -516,7 +589,7 @@ export class FirebaseAuthRequestHandler {
     const request = {
       phoneNumber: [phoneNumber],
     };
-    return this.invokeRequestHandler(FIREBASE_AUTH_GET_ACCOUNT_INFO, request);
+    return this.invokeRequestHandler(this.authUrlBuilder, FIREBASE_AUTH_GET_ACCOUNT_INFO, request);
   }
 
   /**
@@ -544,7 +617,7 @@ export class FirebaseAuthRequestHandler {
     if (typeof request.nextPageToken === 'undefined') {
       delete request.nextPageToken;
     }
-    return this.invokeRequestHandler(FIREBASE_AUTH_DOWNLOAD_ACCOUNT, request)
+    return this.invokeRequestHandler(this.authUrlBuilder, FIREBASE_AUTH_DOWNLOAD_ACCOUNT, request)
         .then((response: any) => {
           // No more users available.
           if (!response.users) {
@@ -590,7 +663,7 @@ export class FirebaseAuthRequestHandler {
     if (request.users.length === 0) {
       return Promise.resolve(userImportBuilder.buildResponse([]));
     }
-    return this.invokeRequestHandler(FIREBASE_AUTH_UPLOAD_ACCOUNT, request)
+    return this.invokeRequestHandler(this.authUrlBuilder, FIREBASE_AUTH_UPLOAD_ACCOUNT, request)
       .then((response: any) => {
         // No error object is returned if no error encountered.
         const failedUploads = (response.error || []) as Array<{index: number, message: string}>;
@@ -613,7 +686,7 @@ export class FirebaseAuthRequestHandler {
     const request = {
       localId: uid,
     };
-    return this.invokeRequestHandler(FIREBASE_AUTH_DELETE_ACCOUNT, request);
+    return this.invokeRequestHandler(this.authUrlBuilder, FIREBASE_AUTH_DELETE_ACCOUNT, request);
   }
 
   /**
@@ -645,7 +718,7 @@ export class FirebaseAuthRequestHandler {
       localId: uid,
       customAttributes: JSON.stringify(customUserClaims),
     };
-    return this.invokeRequestHandler(FIREBASE_AUTH_SET_ACCOUNT_INFO, request)
+    return this.invokeRequestHandler(this.authUrlBuilder, FIREBASE_AUTH_SET_ACCOUNT_INFO, request)
         .then((response: any) => {
           return response.localId as string;
         });
@@ -722,7 +795,7 @@ export class FirebaseAuthRequestHandler {
       request.disableUser = request.disabled;
       delete request.disabled;
     }
-    return this.invokeRequestHandler(FIREBASE_AUTH_SET_ACCOUNT_INFO, request)
+    return this.invokeRequestHandler(this.authUrlBuilder, FIREBASE_AUTH_SET_ACCOUNT_INFO, request)
         .then((response: any) => {
           return response.localId as string;
         });
@@ -751,7 +824,7 @@ export class FirebaseAuthRequestHandler {
       // validSince is in UTC seconds.
       validSince: Math.ceil(new Date().getTime() / 1000),
     };
-    return this.invokeRequestHandler(FIREBASE_AUTH_SET_ACCOUNT_INFO, request)
+    return this.invokeRequestHandler(this.authUrlBuilder, FIREBASE_AUTH_SET_ACCOUNT_INFO, request)
         .then((response: any) => {
           return response.localId as string;
         });
@@ -786,7 +859,7 @@ export class FirebaseAuthRequestHandler {
       request.localId = request.uid;
       delete request.uid;
     }
-    return this.invokeRequestHandler(FIREBASE_AUTH_SIGN_UP_NEW_USER, request)
+    return this.invokeRequestHandler(this.authUrlBuilder, FIREBASE_AUTH_SIGN_UP_NEW_USER, request)
       .then((response: any) => {
         // Return the user id.
         return response.localId as string;
@@ -794,13 +867,48 @@ export class FirebaseAuthRequestHandler {
   }
 
   /**
+   * Generates the out of band email action link for the email specified using the action code settings provided.
+   * Returns a promise that resolves with the generated link.
+   *
+   * @param {string} requestType The request type. This could be either used for password reset,
+   *     email verification, email link sign-in.
+   * @param {string} email The email of the user the link is being sent to.
+   * @param {ActionCodeSettings=} actionCodeSettings The optional action code setings which defines whether
+   *     the link is to be handled by a mobile app and the additional state information to be passed in the
+   *     deep link, etc.
+   * @return {Promise<string>} A promise that resolves with the email action link.
+   */
+  public getEmailActionLink(
+      requestType: string, email: string,
+      actionCodeSettings?: ActionCodeSettings): Promise<string> {
+    let request = {requestType, email, returnOobLink: true};
+    if (typeof actionCodeSettings !== 'undefined') {
+      try {
+        const builder = new ActionCodeSettingsBuilder(actionCodeSettings);
+        request = deepExtend(request, builder.buildRequest());
+      } catch (e) {
+        return Promise.reject(e);
+      }
+    }
+    return this.invokeRequestHandler(this.authUrlBuilder, FIREBASE_AUTH_GET_OOB_CODE, request)
+      .then((response: any) => {
+        // Return the link.
+        return response.oobLink as string;
+      });
+  }
+
+  /**
    * Invokes the request handler based on the API settings object passed.
    *
+   * @param {AuthResourceUrlBuilder} urlBuilder The URL builder for Auth endpoints.
    * @param {ApiSettings} apiSettings The API endpoint settings to apply to request and response.
    * @param {object} requestData The request data.
+   * @param {object=} additionalResourceParams Additional resource related params if needed.
    * @return {Promise<object>} A promise that resolves with the response.
    */
-  private invokeRequestHandler(apiSettings: ApiSettings, requestData: object): Promise<object> {
+  protected invokeRequestHandler(
+      urlBuilder: AuthResourceUrlBuilder, apiSettings: ApiSettings,
+      requestData: object, additionalResourceParams?: object): Promise<object> {
     return Promise.resolve()
       .then(() => {
         // Validate request.
@@ -809,7 +917,7 @@ export class FirebaseAuthRequestHandler {
         // Process request.
         const req: HttpRequestConfig = {
           method: apiSettings.getHttpMethod(),
-          url: `${this.baseUrl}${apiSettings.getEndpoint()}`,
+          url: urlBuilder.getUrl(apiSettings.getEndpoint(), additionalResourceParams),
           headers: FIREBASE_AUTH_HEADER,
           data: requestData,
           timeout: FIREBASE_AUTH_TIMEOUT,
