@@ -2248,25 +2248,8 @@ describe('FirebaseAuthRequestHandler', () => {
         });
     });
 
-    it('should be fulfilled given valid parameters excluding ActionCodeSettings', () => {
-      const requestData = {
-        requestType: 'PASSWORD_RESET',
-        email,
-        returnOobLink: true,
-      };
-      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
-      stubs.push(stub);
-
-      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
-      return requestHandler.getEmailActionLink('PASSWORD_RESET', email)
-        .then((oobLink: string) => {
-          expect(oobLink).to.be.equal(expectedLink);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, requestData));
-        });
-    });
-
     EMAIL_ACTION_REQUEST_TYPES.forEach((requestType) => {
-      it('should be fulfilled given a valid requestType:' + requestType, () => {
+      it('should be fulfilled given a valid requestType:' + requestType + ' and ActionCodeSettings', () => {
         const requestData = deepExtend({
           requestType,
           email,
@@ -2282,6 +2265,45 @@ describe('FirebaseAuthRequestHandler', () => {
             expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, requestData));
           });
       });
+    });
+
+    EMAIL_ACTION_REQUEST_TYPES.forEach((requestType) => {
+      if (requestType === 'EMAIL_SIGNIN') {
+        return;
+      }
+      it('should be fulfilled given requestType:' + requestType + ' and no ActionCodeSettings', () => {
+        const requestData = {
+          requestType,
+          email,
+          returnOobLink: true,
+        };
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+
+        const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+        return requestHandler.getEmailActionLink(requestType, email)
+          .then((oobLink: string) => {
+            expect(oobLink).to.be.equal(expectedLink);
+            expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, requestData));
+          });
+      });
+    });
+
+    it('should be rejected given requestType:EMAIL_SIGNIN and no ActionCodeSettings', () => {
+      const invalidRequestType = 'EMAIL_SIGNIN';
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        `"ActionCodeSettings" must be a non-null object.`,
+      );
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.getEmailActionLink('EMAIL_SIGNIN', email)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Invalid argument error should be thrown.
+          expect(error).to.deep.equal(expectedError);
+        });
     });
 
     it('should be rejected given an invalid email', () => {

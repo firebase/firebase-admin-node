@@ -46,6 +46,7 @@ const expect = chai.expect;
 interface EmailActionTest {
   api: string;
   requestType: string;
+  requiresSettings: boolean;
 }
 
 
@@ -1797,9 +1798,9 @@ describe('Auth', () => {
   });
 
   const emailActionFlows: EmailActionTest[] = [
-    {api: 'generatePasswordResetLink', requestType: 'PASSWORD_RESET'},
-    {api: 'generateEmailVerificationLink', requestType: 'VERIFY_EMAIL'},
-    {api: 'generateSignInWithEmailLink', requestType: 'EMAIL_SIGNIN'},
+    {api: 'generatePasswordResetLink', requestType: 'PASSWORD_RESET', requiresSettings: false},
+    {api: 'generateEmailVerificationLink', requestType: 'VERIFY_EMAIL', requiresSettings: false},
+    {api: 'generateSignInWithEmailLink', requestType: 'EMAIL_SIGNIN', requiresSettings: true},
   ];
   emailActionFlows.forEach((emailActionFlow) => {
     describe(`${emailActionFlow.api}()`, () => {
@@ -1873,20 +1874,27 @@ describe('Auth', () => {
           });
       });
 
-      it('should resolve when called without actionCodeSettings with a generated link on success', () => {
-        // Stub getEmailActionLink to return expected link.
-        const getEmailActionLinkStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getEmailActionLink')
-          .returns(Promise.resolve(expectedLink));
-        stubs.push(getEmailActionLinkStub);
-        return auth[emailActionFlow.api](email)
-          .then((actualLink) => {
-            // Confirm underlying API called with expected parameters.
-            expect(getEmailActionLinkStub).to.have.been.calledOnce.and.calledWith(
-                emailActionFlow.requestType, email, undefined);
-            // Confirm expected user record response returned.
-            expect(actualLink).to.equal(expectedLink);
-          });
-      });
+      if (emailActionFlow.requiresSettings) {
+        it('should reject when called without actionCodeSettings', () => {
+          return (auth as any)[emailActionFlow.api](email, undefined)
+            .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
+        });
+      } else {
+        it('should resolve when called without actionCodeSettings with a generated link on success', () => {
+          // Stub getEmailActionLink to return expected link.
+          const getEmailActionLinkStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getEmailActionLink')
+            .returns(Promise.resolve(expectedLink));
+          stubs.push(getEmailActionLinkStub);
+          return auth[emailActionFlow.api](email)
+            .then((actualLink) => {
+              // Confirm underlying API called with expected parameters.
+              expect(getEmailActionLinkStub).to.have.been.calledOnce.and.calledWith(
+                  emailActionFlow.requestType, email, undefined);
+              // Confirm expected user record response returned.
+              expect(actualLink).to.equal(expectedLink);
+            });
+        });
+      }
 
       it('should throw an error when getEmailAction returns an error', () => {
         // Stub getEmailActionLink to throw a backend error.

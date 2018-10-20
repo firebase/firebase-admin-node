@@ -407,12 +407,12 @@ export class BaseAuth {
    * Returns a promise that resolves with the generated link.
    *
    * @param {string} email The email of the user signing in.
-   * @param {ActionCodeSettings=} actionCodeSettings The optional action code setings which defines whether
+   * @param {ActionCodeSettings} actionCodeSettings The required action code setings which defines whether
    *     the link is to be handled by a mobile app and the additional state information to be passed in the
    *     deep link, etc.
    * @return {Promise<string>} A promise that resolves with the email sign-in link.
    */
-  public generateSignInWithEmailLink(email: string, actionCodeSettings?: ActionCodeSettings): Promise<string> {
+  public generateSignInWithEmailLink(email: string, actionCodeSettings: ActionCodeSettings): Promise<string> {
     return this.authRequestHandler.getEmailActionLink('EMAIL_SIGNIN', email, actionCodeSettings);
   }
 

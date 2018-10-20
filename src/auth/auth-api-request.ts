@@ -882,7 +882,9 @@ export class FirebaseAuthRequestHandler {
       requestType: string, email: string,
       actionCodeSettings?: ActionCodeSettings): Promise<string> {
     let request = {requestType, email, returnOobLink: true};
-    if (typeof actionCodeSettings !== 'undefined') {
+    // ActionCodeSettings required for email link sign-in to determine the url where the sign-in will
+    // be completed.
+    if (typeof actionCodeSettings !== 'undefined' || requestType === 'EMAIL_SIGNIN') {
       try {
         const builder = new ActionCodeSettingsBuilder(actionCodeSettings);
         request = deepExtend(request, builder.buildRequest());

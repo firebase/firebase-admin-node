@@ -253,7 +253,7 @@ declare namespace admin.auth {
     ): Promise<string>;
     generateSignInWithEmailLink(
       email: string,
-      actionCodeSettings?: admin.auth.ActionCodeSettings,
+      actionCodeSettings: admin.auth.ActionCodeSettings,
     ): Promise<string>;
   }
 
