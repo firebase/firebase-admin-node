@@ -1,5 +1,9 @@
 # Unreleased
 
+-
+
+# v6.1.0
+
 - [added] Exposed the `CollectionReference`, `WriteBatch`, `WriteResult` and
   `QueryDocumentSnapshot` types from the `admin.firestore` namespace.
 
