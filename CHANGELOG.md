@@ -4,6 +4,7 @@
 
 # v6.1.0
 
+- [changed] Upgraded Cloud Firestore client to v0.18.0.
 - [added] Exposed the `CollectionReference`, `WriteBatch`, `WriteResult` and
   `QueryDocumentSnapshot` types from the `admin.firestore` namespace.
 
