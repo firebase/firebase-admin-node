@@ -183,6 +183,7 @@ function sendRequest(httpRequestConfig: HttpRequestConfig): Promise<LowLevelResp
   return new Promise((resolve, reject) => {
     let data: Buffer;
     const headers = config.headers || {};
+    let fullUrl: string = config.url;
     if (config.data) {
       // GET and HEAD do not support body in request.
       if (config.method === 'GET' || config.method === 'HEAD') {
@@ -194,15 +195,13 @@ function sendRequest(httpRequestConfig: HttpRequestConfig): Promise<LowLevelResp
         }
 
         // Parse URL and append data to query string.
-        const configUrl = new url.URL(config.url);
+        const configUrl = new url.URL(fullUrl);
         for (const key in config.data as any) {
           if (config.data.hasOwnProperty(key)) {
             configUrl.searchParams.append(key, config.data[key]);
           }
         }
-        config.url = configUrl.toString();
-        delete config.data;
-        delete headers['Content-Type'];
+        fullUrl = configUrl.toString();
       } else if (validator.isObject(config.data)) {
         data = new Buffer(JSON.stringify(config.data), 'utf-8');
         if (typeof headers['Content-Type'] === 'undefined') {
@@ -223,7 +222,7 @@ function sendRequest(httpRequestConfig: HttpRequestConfig): Promise<LowLevelResp
         headers['Content-Length'] = data.length.toString();
       }
     }
-    const parsed = url.parse(config.url);
+    const parsed = url.parse(fullUrl);
     const protocol = parsed.protocol || 'https:';
     const isHttps = protocol === 'https:';
     const options = {

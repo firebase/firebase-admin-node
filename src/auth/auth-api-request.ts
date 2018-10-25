@@ -39,7 +39,6 @@ const FIREBASE_AUTH_PORT = 443;
 const FIREBASE_AUTH_PATH = '/identitytoolkit/v3/relyingparty/';
 /** Firebase Auth request header. */
 const FIREBASE_AUTH_HEADER = {
-  'Content-Type': 'application/json',
   'X-Client-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
 };
 /** Firebase Auth request timeout duration in milliseconds. */
@@ -88,7 +87,7 @@ class AuthResourceUrlBuilder {
    * @param {string} version The endpoint API version.
    * @constructor
    */
-  constructor(protected projectId: string, protected version: string) {
+  constructor(protected projectId: string, protected version: string = 'v1') {
     this.urlFormat = FIREBASE_AUTH_BASE_URL_FORMAT;
   }
 
@@ -501,8 +500,8 @@ const FIREBASE_AUTH_GET_OOB_CODE = new ApiSettings('/accounts:sendOobCode', 'POS
  * Class that provides the mechanism to send requests to the Firebase Auth backend endpoints.
  */
 export class FirebaseAuthRequestHandler {
-  protected httpClient: AuthorizedHttpClient;
-  protected authUrlBuilder: AuthResourceUrlBuilder;
+  private httpClient: AuthorizedHttpClient;
+  private authUrlBuilder: AuthResourceUrlBuilder;
 
   /**
    * @param {any} response The response to check for errors.

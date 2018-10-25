@@ -726,7 +726,6 @@ describe('FirebaseAuthRequestHandler', () => {
   let stubs: sinon.SinonStub[] = [];
   const mockAccessToken: string = utils.generateRandomAccessToken();
   const expectedHeaders: {[key: string]: string} = {
-    'Content-Type': 'application/json',
     'X-Client-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
     'Authorization': 'Bearer ' + mockAccessToken,
   };

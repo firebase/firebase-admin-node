@@ -81,7 +81,7 @@ export interface SessionCookieOptions {
 /**
  * Base Auth class. Mainly used for user management APIs.
  */
-export class BaseAuth {
+class BaseAuth {
   protected readonly tokenGenerator: FirebaseTokenGenerator;
   protected readonly idTokenVerifier: FirebaseTokenVerifier;
   protected readonly sessionCookieVerifier: FirebaseTokenVerifier;
