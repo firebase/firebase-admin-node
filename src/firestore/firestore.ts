@@ -93,7 +93,7 @@ export function getFirestoreOptions(app: FirebaseApp): Settings {
         client_email: cert.clientEmail,
       },
       projectId,
-      firestoreVersion
+      firestoreVersion,
     };
   } else if (app.options.credential instanceof ApplicationDefaultCredential) {
     // Try to use the Google application default credentials.
