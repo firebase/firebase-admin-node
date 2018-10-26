@@ -444,7 +444,12 @@ declare namespace admin.messaging {
     headers?: {[key: string]: string};
     data?: {[key: string]: string};
     notification?: WebpushNotification;
+    fcmOptions?: WebpushFcmOptions;
   };
+
+  interface WebpushFcmOptions {
+    link?: string;
+  }
 
   interface WebpushNotification {
     title?: string;

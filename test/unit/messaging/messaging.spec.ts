@@ -2220,6 +2220,9 @@ describe('Messaging', () => {
               image: 'test.image',
               requireInteraction: true,
             },
+            fcmOptions: {
+              link: 'https://example.com',
+            },
           },
         },
       },
