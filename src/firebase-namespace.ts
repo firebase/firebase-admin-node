@@ -32,6 +32,7 @@ import {Storage} from './storage/storage';
 import {Database} from '@firebase/database';
 import {Firestore} from '@google-cloud/firestore';
 import {InstanceId} from './instance-id/instance-id';
+import {ProjectManagement} from './project-management/project-management';
 
 import * as validator from './utils/validator';
 
@@ -385,6 +386,18 @@ export class FirebaseNamespace {
     };
     const instanceId = require('./instance-id/instance-id').InstanceId;
     return Object.assign(fn, {InstanceId: instanceId});
+  }
+
+  /**
+   * Gets the `ProjectManagement` service namespace. The returned namespace can be used to get the
+   * `ProjectManagement` service for the default app or an explicitly specified app.
+   */
+  get projectManagement(): FirebaseServiceNamespace<ProjectManagement> {
+    const fn: FirebaseServiceNamespace<ProjectManagement> = (app?: FirebaseApp) => {
+      return this.ensureApp(app).projectManagement();
+    };
+    const projectManagement = require('./project-management/project-management').ProjectManagement;
+    return Object.assign(fn, {ProjectManagement: projectManagement});
   }
 
   /**

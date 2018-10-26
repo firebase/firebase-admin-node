@@ -29,6 +29,7 @@ import {DatabaseService} from './database/database';
 import {Firestore} from '@google-cloud/firestore';
 import {FirestoreService} from './firestore/firestore';
 import {InstanceId} from './instance-id/instance-id';
+import {ProjectManagement} from './project-management/project-management';
 
 /**
  * Type representing a callback which is called every time an app lifecycle event occurs.
@@ -350,9 +351,22 @@ export class FirebaseApp {
   }
 
   /**
+   * Returns the ProjectManagement service instance associated with this app.
+   *
+   * @return {ProjectManagement} The ProjectManagement service instance of this app.
+   */
+  public projectManagement(): ProjectManagement {
+    return this.ensureService_('project-management', () => {
+      const projectManagementService: typeof ProjectManagement =
+          require('./project-management/project-management').ProjectManagement;
+      return new projectManagementService(this);
+    });
+  }
+
+  /**
    * Returns the name of the FirebaseApp instance.
    *
-   * @returns {string} The name of the FirebaseApp instance.
+   * @return {string} The name of the FirebaseApp instance.
    */
   get name(): string {
     this.checkDestroyed_();
@@ -362,7 +376,7 @@ export class FirebaseApp {
   /**
    * Returns the options for the FirebaseApp instance.
    *
-   * @returns {FirebaseAppOptions} The options for the FirebaseApp instance.
+   * @return {FirebaseAppOptions} The options for the FirebaseApp instance.
    */
   get options(): FirebaseAppOptions {
     this.checkDestroyed_();
@@ -372,7 +386,7 @@ export class FirebaseApp {
   /**
    * Deletes the FirebaseApp instance.
    *
-   * @returns {Promise<void>} An empty Promise fulfilled once the FirebaseApp instance is deleted.
+   * @return {Promise<void>} An empty Promise fulfilled once the FirebaseApp instance is deleted.
    */
   public delete(): Promise<void> {
     this.checkDestroyed_();

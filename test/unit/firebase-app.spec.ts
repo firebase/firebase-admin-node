@@ -40,6 +40,7 @@ import {Storage} from '../../src/storage/storage';
 import {Firestore} from '@google-cloud/firestore';
 import {Database} from '@firebase/database';
 import {InstanceId} from '../../src/instance-id/instance-id';
+import {ProjectManagement} from '../../src/project-management/project-management';
 
 chai.should();
 chai.use(sinonChai);
@@ -553,6 +554,32 @@ describe('FirebaseApp', () => {
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
       const service1: InstanceId = app.instanceId();
       const service2: InstanceId = app.instanceId();
+      expect(service1).to.equal(service2);
+    });
+  });
+
+  describe('projectManagement()', () => {
+    it('should throw if the app has already been deleted', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      return app.delete().then(() => {
+        expect(() => {
+          return app.projectManagement();
+        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
+      });
+    });
+
+    it('should return the projectManagement client', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      const projectManagement: ProjectManagement = app.projectManagement();
+      expect(projectManagement).to.not.be.null;
+    });
+
+    it('should return a cached version of ProjectManagement on subsequent calls', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+      const service1: ProjectManagement = app.projectManagement();
+      const service2: ProjectManagement = app.projectManagement();
       expect(service1).to.equal(service2);
     });
   });
