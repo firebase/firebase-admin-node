@@ -178,16 +178,32 @@ describe('UserImportBuilder', () => {
           });
         });
 
+        it('should throw when invalid hash input order options is provided', () => {
+          const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_HASH_INPUT_ORDER);
+          const invalidOptions = {
+            hash: {
+              algorithm,
+              key: Buffer.from('secret'),
+              inputOrder: 'INVALID_HASH_INPUT_ORDER',
+            },
+          };
+          expect(() =>  {
+            return new UserImportBuilder(users, invalidOptions as any, userRequestValidator);
+          }).to.throw(expectedError.message);
+        });
+
         it('should not throw with valid options and should generate expected request', () => {
           const validOptions = {
             hash: {
               algorithm,
               key: Buffer.from('secret'),
+              inputOrder: 'PASSWORD_FIRST',
             },
           };
           const expectedRequest = {
             hashAlgorithm: algorithm,
             signerKey: toWebSafeBase64(Buffer.from('secret')),
+            passwordHashOrder: 'PASSWORD_AND_SALT',
             users: expectedUsersRequest,
           };
           const userImportBuilder =
@@ -219,6 +235,22 @@ describe('UserImportBuilder', () => {
           });
         });
 
+        if (algorithm !== 'PBKDF_SHA1' && algorithm !== 'PBKDF2_SHA256') {
+          it('should throw when invalid hash input order options is provided', () => {
+            const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_HASH_INPUT_ORDER);
+            const invalidOptions = {
+              hash: {
+                algorithm,
+                rounds: 120000,
+                inputOrder: 'INVALID_HASH_INPUT_ORDER',
+              },
+            };
+            expect(() =>  {
+              return new UserImportBuilder(users, invalidOptions as any, userRequestValidator);
+            }).to.throw(expectedError.message);
+          });
+        }
+
         it('should not throw with valid options and should generate expected request', () => {
           const validOptions = {
             hash: {
@@ -231,6 +263,10 @@ describe('UserImportBuilder', () => {
             rounds: 120000,
             users: expectedUsersRequest,
           };
+          if (algorithm !== 'PBKDF_SHA1' && algorithm !== 'PBKDF2_SHA256') {
+            (validOptions as any).hash.inputOrder = 'SALT_FIRST';
+            (expectedRequest as any).passwordHashOrder = 'SALT_AND_PASSWORD';
+          }
           const userImportBuilder =
               new UserImportBuilder(users, validOptions as any, userRequestValidator);
           expect(userImportBuilder.buildRequest()).to.deep.equal(expectedRequest);
