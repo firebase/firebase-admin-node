@@ -73,7 +73,7 @@ export function getFirestoreOptions(app: FirebaseApp): Settings {
 
   const projectId: string = utils.getProjectId(app);
   const cert: Certificate = app.options.credential.getCertificate();
-  const { version: firestoreVersion } = require('../../package.json');
+  const { version: firebaseVersion } = require('../../package.json');
   if (cert != null) {
     // cert is available when the SDK has been initialized with a service account JSON file,
     // or by setting the GOOGLE_APPLICATION_CREDENTIALS envrionment variable.
@@ -93,13 +93,13 @@ export function getFirestoreOptions(app: FirebaseApp): Settings {
         client_email: cert.clientEmail,
       },
       projectId,
-      firestoreVersion,
+      firebaseVersion,
     };
   } else if (app.options.credential instanceof ApplicationDefaultCredential) {
     // Try to use the Google application default credentials.
     // If an explicit project ID is not available, let Firestore client discover one from the
     // environment. This prevents the users from having to set GOOGLE_CLOUD_PROJECT in GCP runtimes.
-    return validator.isNonEmptyString(projectId) ? {projectId, firestoreVersion} : {firestoreVersion};
+    return validator.isNonEmptyString(projectId) ? {projectId, firebaseVersion} : {firebaseVersion};
   }
 
   throw new FirebaseFirestoreError({
