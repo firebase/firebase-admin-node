@@ -34,7 +34,7 @@ class ProjectManagementInternals implements FirebaseServiceInternalsInterface {
    */
   public delete(): Promise<void> {
     // There are no resources to clean up.
-    return Promise.resolve(null);
+    return Promise.resolve();
   }
 }
 

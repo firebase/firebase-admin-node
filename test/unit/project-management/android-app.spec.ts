@@ -89,11 +89,11 @@ describe('AndroidApp', () => {
     };
 
     const VALID_ANDROID_APP_METADATA: AndroidAppMetadata = {
-      resourceName: 'test-resource-name',
+      resourceName: VALID_ANDROID_APP_METADATA_API_RESPONSE.name,
       appId: APP_ID,
-      displayName: 'test-display-name',
-      projectId: 'test-project-id',
-      packageName: 'test-package-name',
+      displayName: VALID_ANDROID_APP_METADATA_API_RESPONSE.displayName,
+      projectId: VALID_ANDROID_APP_METADATA_API_RESPONSE.projectId,
+      packageName: VALID_ANDROID_APP_METADATA_API_RESPONSE.packageName,
     };
 
     it('should propagate API errors', () => {
@@ -159,9 +159,9 @@ describe('AndroidApp', () => {
     it('should resolve on success', () => {
       const stub = sinon
           .stub(ProjectManagementRequestHandler.prototype, 'setAndroidDisplayName')
-          .returns(Promise.resolve(null));
+          .returns(Promise.resolve());
       stubs.push(stub);
-      return androidApp.setDisplayName(newDisplayName).should.eventually.equal(null);
+      return androidApp.setDisplayName(newDisplayName).should.eventually.be.fulfilled;
     });
   });
 
@@ -279,9 +279,9 @@ describe('AndroidApp', () => {
     it('should resolve on success', () => {
       const stub = sinon
           .stub(ProjectManagementRequestHandler.prototype, 'addAndroidShaCertificate')
-          .returns(Promise.resolve(null));
+          .returns(Promise.resolve());
       stubs.push(stub);
-      return androidApp.addShaCertificate(certificateToAdd).should.eventually.equal(null);
+      return androidApp.addShaCertificate(certificateToAdd).should.eventually.be.fulfilled;
     });
   });
 
@@ -300,9 +300,9 @@ describe('AndroidApp', () => {
     it('should resolve on success', () => {
       const stub = sinon
           .stub(ProjectManagementRequestHandler.prototype, 'deleteAndroidShaCertificate')
-          .returns(Promise.resolve(null));
+          .returns(Promise.resolve());
       stubs.push(stub);
-      return androidApp.deleteShaCertificate(certificateToDelete).should.eventually.equal(null);
+      return androidApp.deleteShaCertificate(certificateToDelete).should.eventually.be.fulfilled;
     });
   });
 

@@ -88,11 +88,11 @@ describe('IosApp', () => {
     };
 
     const VALID_IOS_APP_METADATA: IosAppMetadata = {
-      resourceName: 'test-resource-name',
+      resourceName: VALID_IOS_APP_METADATA_API_RESPONSE.name,
       appId: APP_ID,
-      displayName: 'test-display-name',
-      projectId: 'test-project-id',
-      bundleId: 'test-bundle-id',
+      displayName: VALID_IOS_APP_METADATA_API_RESPONSE.displayName,
+      projectId: VALID_IOS_APP_METADATA_API_RESPONSE.projectId,
+      bundleId: VALID_IOS_APP_METADATA_API_RESPONSE.bundleId,
     };
 
     it('should propagate API errors', () => {
@@ -158,9 +158,9 @@ describe('IosApp', () => {
     it('should resolve on success', () => {
       const stub = sinon
           .stub(ProjectManagementRequestHandler.prototype, 'setIosDisplayName')
-          .returns(Promise.resolve(null));
+          .returns(Promise.resolve());
       stubs.push(stub);
-      return iosApp.setDisplayName(newDisplayName).should.eventually.equal(null);
+      return iosApp.setDisplayName(newDisplayName).should.eventually.be.fulfilled;
     });
   });
 
