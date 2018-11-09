@@ -16,6 +16,7 @@
 
 import {deepCopy} from './deep-copy';
 import {FirebaseApp} from '../firebase-app';
+import {FirebaseNamespace} from '../firebase-namespace';
 import {AppErrorCodes, FirebaseAppError} from './error';
 import * as validator from './validator';
 
@@ -210,6 +211,7 @@ function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
       path: parsed.path,
       method: config.method,
       headers,
+      agent: FirebaseNamespace.httpAgent,
     };
     const transport: any = isHttps ? https : http;
     const req: http.ClientRequest = transport.request(options, (res: http.IncomingMessage) => {

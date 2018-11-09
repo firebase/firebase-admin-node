@@ -244,6 +244,17 @@ describe('FirebaseNamespace', () => {
     });
   });
 
+  describe('#setHttpAgent()', () => {
+    it('should have the static http agent variable set to undefined by default', () => {
+      expect(FirebaseNamespace.httpAgent).to.equal(undefined);
+    });
+
+    it('should mutate the static http agent variable that is referenced by the HttpClient', () => {
+      firebaseNamespace.setHttpAgent(true);
+      expect(FirebaseNamespace.httpAgent).to.equal(true);
+    });
+  });
+
   describe('#INTERNAL.removeApp()', () => {
     const invalidAppNames = [null, NaN, 0, 1, true, false, [], ['a'], {}, { a: 1 }, _.noop];
     invalidAppNames.forEach((invalidAppName) => {

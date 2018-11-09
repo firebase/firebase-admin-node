@@ -15,6 +15,7 @@
  */
 
 import fs = require('fs');
+import * as http from 'http';
 import {deepExtend} from './utils/deep-copy';
 import {AppErrorCodes, FirebaseAppError} from './utils/error';
 import {AppHook, FirebaseApp, FirebaseAppOptions} from './firebase-app';
@@ -298,6 +299,8 @@ const firebaseCredential = {
  * Global Firebase context object.
  */
 export class FirebaseNamespace {
+  public static httpAgent?: boolean | http.Agent;
+
   // Hack to prevent Babel from modifying the object returned as the default admin namespace.
   /* tslint:disable:variable-name */
   public __esModule = true;
@@ -400,6 +403,14 @@ export class FirebaseNamespace {
    */
   public initializeApp(options?: FirebaseAppOptions, appName?: string): FirebaseApp {
     return this.INTERNAL.initializeApp(options, appName);
+  }
+
+  /**
+   * Sets the http agent to use globally for firebase
+   * @param agent An Agent is responsible for managing connection persistence and reuse for HTTP clients.
+   */
+  public setHttpAgent(agent: boolean | http.Agent) {
+    FirebaseNamespace.httpAgent = agent;
   }
 
   /**

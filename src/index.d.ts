@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-import {Bucket} from '@google-cloud/storage';
+import { Bucket } from '@google-cloud/storage';
 import * as _firestore from '@google-cloud/firestore';
+import * as http from 'http';
 
 declare namespace admin {
   interface FirebaseError {
@@ -62,6 +63,7 @@ declare namespace admin {
   function firestore(app?: admin.app.App): admin.firestore.Firestore;
   function instanceId(app?: admin.app.App): admin.instanceId.InstanceId;
   function initializeApp(options?: admin.AppOptions, name?: string): admin.app.App;
+  function setHttpAgent(agent: boolean | http.Agent);
 }
 
 declare namespace admin.app {
