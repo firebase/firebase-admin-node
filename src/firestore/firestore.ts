@@ -18,7 +18,7 @@ import {FirebaseApp} from '../firebase-app';
 import {FirebaseFirestoreError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
 import {ApplicationDefaultCredential, Certificate} from '../auth/credential';
-import {Firestore} from '@google-cloud/firestore';
+import {Firestore, Settings} from '@google-cloud/firestore';
 
 import * as validator from '../utils/validator';
 import * as utils from '../utils/index';
@@ -63,7 +63,7 @@ export class FirestoreService implements FirebaseServiceInterface {
   }
 }
 
-export function getFirestoreOptions(app: FirebaseApp): any {
+export function getFirestoreOptions(app: FirebaseApp): Settings {
   if (!validator.isNonNullObject(app) || !('options' in app)) {
     throw new FirebaseFirestoreError({
       code: 'invalid-argument',
@@ -73,6 +73,7 @@ export function getFirestoreOptions(app: FirebaseApp): any {
 
   const projectId: string = utils.getProjectId(app);
   const cert: Certificate = app.options.credential.getCertificate();
+  const { version: firebaseVersion } = require('../../package.json');
   if (cert != null) {
     // cert is available when the SDK has been initialized with a service account JSON file,
     // or by setting the GOOGLE_APPLICATION_CREDENTIALS envrionment variable.
@@ -92,12 +93,13 @@ export function getFirestoreOptions(app: FirebaseApp): any {
         client_email: cert.clientEmail,
       },
       projectId,
+      firebaseVersion,
     };
   } else if (app.options.credential instanceof ApplicationDefaultCredential) {
     // Try to use the Google application default credentials.
     // If an explicit project ID is not available, let Firestore client discover one from the
     // environment. This prevents the users from having to set GOOGLE_CLOUD_PROJECT in GCP runtimes.
-    return validator.isNonEmptyString(projectId) ? {projectId} : {};
+    return validator.isNonEmptyString(projectId) ? {projectId, firebaseVersion} : {firebaseVersion};
   }
 
   throw new FirebaseFirestoreError({
@@ -122,5 +124,6 @@ function initFirestore(app: FirebaseApp): Firestore {
           + `Original error: ${err}`,
     });
   }
+
   return new firestoreDatabase(options);
 }
