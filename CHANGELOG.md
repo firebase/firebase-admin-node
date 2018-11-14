@@ -1,6 +1,7 @@
 # Unreleased
 
--
+- [changed] Upgraded Cloud Firestore client to v0.19.0.
+- [added] Exposed the `Transaction` type from the `admin.firestore` namespace.
 
 # v6.1.0
 
