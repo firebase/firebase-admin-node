@@ -127,6 +127,11 @@ export interface WebpushConfig {
   headers?: {[key: string]: string};
   data?: {[key: string]: string};
   notification?: WebpushNotification;
+  fcmOptions?: WebpushFcmOptions;
+}
+
+export interface WebpushFcmOptions {
+  link?: string;
 }
 
 export interface WebpushNotification {

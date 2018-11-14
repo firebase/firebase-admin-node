@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "traceResolution": true,
     "target": "es5",
     "noImplicitAny": true,
     "lib": ["es2015"],

@@ -220,7 +220,7 @@ describe('admin.auth', () => {
         return admin.auth().verifyIdToken(idToken, true)
           .should.eventually.be.fulfilled;
       });
-  }).timeout(10000);
+  });
 
   it('setCustomUserClaims() sets claims that are accessible via user\'s ID token', () => {
     // Set custom claims on the user.
