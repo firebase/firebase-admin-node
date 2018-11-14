@@ -1,10 +1,6 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "typeRoots": [
-      "node_modules/@types",
-      "node_modules/@firebase/database/dist/src/api"
-    ],
     "traceResolution": true,
     "target": "es5",
     "noImplicitAny": true,

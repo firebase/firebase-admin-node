@@ -52,8 +52,8 @@
   ],
   "types": "./lib/index.d.ts",
   "dependencies": {
-    "@firebase/app": "^0.3.1",
-    "@firebase/database": "^0.3.1",
+    "@firebase/app": "^0.3.4",
+    "@firebase/database": "^0.3.6",
     "@types/node": "^8.0.53",
     "jsonwebtoken": "8.1.0",
     "node-forge": "0.7.4"
