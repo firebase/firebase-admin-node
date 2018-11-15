@@ -27,7 +27,7 @@ import * as mocks from '../../resources/mocks';
 
 import {FirebaseApp} from '../../../src/firebase-app';
 import {
-  ApiSettings, HttpClient, HttpError, AuthorizedHttpClient,
+  ApiSettings, HttpClient, HttpError, AuthorizedHttpClient, ApiCallbackFunction,
 } from '../../../src/utils/api-request';
 
 chai.should();
@@ -372,7 +372,7 @@ describe('AuthorizedHttpClient', () => {
     const options = {
       reqheaders: {
         'Authorization': 'Bearer token',
-        'Content-Type': (header) => {
+        'Content-Type': (header: string) => {
           return header.startsWith('application/json'); // auto-inserted by Axios
         },
         'My-Custom-Header': 'CustomValue',
@@ -457,8 +457,8 @@ describe('ApiSettings', () => {
     describe('with set properties', () => {
       const apiSettings: ApiSettings = new ApiSettings('getAccountInfo', 'GET');
       // Set all apiSettings properties.
-      const requestValidator = (request) => undefined;
-      const responseValidator = (response) => undefined;
+      const requestValidator: ApiCallbackFunction = (request) => undefined;
+      const responseValidator: ApiCallbackFunction = (response) => undefined;
       apiSettings.setRequestValidator(requestValidator);
       apiSettings.setResponseValidator(responseValidator);
       it('should return the correct requestValidator', () => {

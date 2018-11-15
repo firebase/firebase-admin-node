@@ -68,7 +68,7 @@ export interface FirebaseTokenInfo {
  * Class for verifying general purpose Firebase JWTs. This verifies ID tokens and session cookies.
  */
 export class FirebaseTokenVerifier {
-  private publicKeys: object;
+  private publicKeys: {[key: string]: string};
   private publicKeysExpireAt: number;
   private readonly shortNameArticle: string;
 
@@ -234,7 +234,7 @@ export class FirebaseTokenVerifier {
     return new Promise((resolve, reject) => {
       jwt.verify(jwtToken, publicKey, {
         algorithms: [this.algorithm],
-      }, (error, decodedToken: any) => {
+      }, (error: any, decodedToken: any) => {
         if (error) {
           if (error.name === 'TokenExpiredError') {
             errorMessage = `${this.tokenInfo.jwtName} has expired. Get a fresh token from your client ` +
@@ -257,7 +257,7 @@ export class FirebaseTokenVerifier {
    *
    * @return {Promise<object>} A promise fulfilled with public keys for the Google certs.
    */
-  private fetchPublicKeys(): Promise<object> {
+  private fetchPublicKeys(): Promise<{[key: string]: string}> {
     const publicKeysExist = (typeof this.publicKeys !== 'undefined');
     const publicKeysExpiredExists = (typeof this.publicKeysExpireAt !== 'undefined');
     const publicKeysStillValid = (publicKeysExpiredExists && Date.now() < this.publicKeysExpireAt);

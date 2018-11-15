@@ -49,7 +49,7 @@ const ONE_HOUR_IN_SECONDS = 60 * 60;
  * @return {Object} A nock response object.
  */
 function mockFetchPublicKeys(): nock.Scope {
-  const mockedResponse = {};
+  const mockedResponse: {[key: string]: string} = {};
   mockedResponse[mocks.certificateObject.private_key_id] = mocks.keyPairs[0].public;
   return nock('https://www.googleapis.com')
     .get('/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com')
@@ -65,7 +65,7 @@ function mockFetchPublicKeys(): nock.Scope {
  * @return {Object} A nock response object.
  */
 function mockFetchWrongPublicKeys(): nock.Scope {
-  const mockedResponse = {};
+  const mockedResponse: {[key: string]: string} = {};
   mockedResponse[mocks.certificateObject.private_key_id] = mocks.keyPairs[1].public;
   return nock('https://www.googleapis.com')
     .get('/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com')

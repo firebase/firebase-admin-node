@@ -220,7 +220,7 @@ export class Auth implements FirebaseServiceInterface {
         // List of users to return.
         const users: UserRecord[] = [];
         // Convert each user response to a UserRecord.
-        response.users.forEach((userResponse) => {
+        response.users.forEach((userResponse: any) => {
           users.push(new UserRecord(userResponse));
         });
         // Return list of user records and the next page token if available.

@@ -238,7 +238,7 @@ function validateCreateEditRequest(request: any, uploadAccountRequest: boolean =
   // customAttributes should be stringified JSON with no blacklisted claims.
   // The payload should not exceed 1KB.
   if (typeof request.customAttributes !== 'undefined') {
-    let developerClaims;
+    let developerClaims: object;
     try {
       developerClaims = JSON.parse(request.customAttributes);
     } catch (error) {
@@ -247,7 +247,7 @@ function validateCreateEditRequest(request: any, uploadAccountRequest: boolean =
       // this field.
       throw new FirebaseAuthError(AuthClientErrorCode.INVALID_CLAIMS, error.message);
     }
-    const invalidClaims = [];
+    const invalidClaims: string[] = [];
     // Check for any invalid claims.
     RESERVED_CLAIMS.forEach((blacklistedClaim) => {
       if (developerClaims.hasOwnProperty(blacklistedClaim)) {
@@ -286,7 +286,7 @@ function validateCreateEditRequest(request: any, uploadAccountRequest: boolean =
       !validator.isArray(request.providerUserInfo)) {
     throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_DATA);
   } else if (validator.isArray(request.providerUserInfo)) {
-    request.providerUserInfo.forEach((providerUserInfoEntry) => {
+    request.providerUserInfo.forEach((providerUserInfoEntry: any) => {
       validateProviderUserInfo(providerUserInfoEntry);
     });
   }
@@ -681,7 +681,7 @@ export class FirebaseAuthRequestHandler {
 
     // Parameters that are deletable and their deleteAttribute names.
     // Use client facing names, photoURL instead of photoUrl.
-    const deletableParams = {
+    const deletableParams: {[key: string]: string} = {
       displayName: 'DISPLAY_NAME',
       photoURL: 'PHOTO_URL',
     };

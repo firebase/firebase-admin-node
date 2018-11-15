@@ -289,7 +289,7 @@ describe('Auth', () => {
     const uid = expectedUserRecord.uid;
     // Set expected decoded ID token with expected UID and auth time.
     const decodedIdToken = getDecodedIdToken(uid, validSince);
-    let clock;
+    let clock: sinon.SinonFakeTimers;
 
     // Stubs used to simulate underlying api calls.
     const stubs: sinon.SinonStub[] = [];
@@ -493,7 +493,7 @@ describe('Auth', () => {
     const uid = expectedUserRecord.uid;
     // Set expected decoded session cookie with expected UID and auth time.
     const decodedSessionCookie = getDecodedSessionCookie(uid, validSince);
-    let clock;
+    let clock: sinon.SinonFakeTimers;
 
     // Stubs used to simulate underlying api calls.
     const stubs: sinon.SinonStub[] = [];
@@ -1389,7 +1389,7 @@ describe('Auth', () => {
       ],
       pageToken: 'NEXT_PAGE_TOKEN',
     };
-    const emptyDownloadAccountResponse = {
+    const emptyDownloadAccountResponse: any = {
       users: [],
     };
     const emptyExpectedResult: any = {

@@ -253,7 +253,7 @@ export class FirebaseTokenGenerator {
    * @return {Promise<string>} A Promise fulfilled with a Firebase Auth Custom token signed with a
    *                           service account key and containing the provided payload.
    */
-  public createCustomToken(uid: string, developerClaims?: object): Promise<string> {
+  public createCustomToken(uid: string, developerClaims?: {[key: string]: any}): Promise<string> {
     let errorMessage: string;
     if (typeof uid !== 'string' || uid === '') {
       errorMessage = 'First argument to createCustomToken() must be a non-empty string uid.';
@@ -267,7 +267,7 @@ export class FirebaseTokenGenerator {
       throw new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, errorMessage);
     }
 
-    const claims = {};
+    const claims: {[key: string]: any} = {};
     if (typeof developerClaims !== 'undefined') {
       for (const key in developerClaims) {
         /* istanbul ignore else */

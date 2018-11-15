@@ -119,7 +119,7 @@ export interface UserImportResult {
 
 
 /** Callback function to validate an UploadAccountUser object. */
-type ValidatorFunction = (data: UploadAccountUser) => void;
+export type ValidatorFunction = (data: UploadAccountUser) => void;
 
 
 /**
@@ -191,7 +191,8 @@ function populateUploadAccountUser(
     });
   }
   // Remove blank fields.
-  for (const key in result) {
+  let key: keyof UploadAccountUser;
+  for (key in result) {
     if (typeof result[key] === 'undefined') {
       delete result[key];
     }
@@ -216,7 +217,7 @@ export class UserImportBuilder {
   private requiresHashOptions: boolean;
   private validatedUsers: UploadAccountUser[];
   private validatedOptions: UploadAccountOptions;
-  private indexMap: object;
+  private indexMap: {[key: number]: number};
   private userImportResultErrors: FirebaseArrayIndexError[];
 
   /**
