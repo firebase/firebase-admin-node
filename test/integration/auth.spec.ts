@@ -557,7 +557,7 @@ describe('admin.auth', () => {
           const p = userImportTest.importOptions.hash.parallelization;
           const dkLen = userImportTest.importOptions.hash.derivedKeyLength;
           return Buffer.from(scrypt.hashSync(
-              currentRawPassword, {N, r, p}, dkLen, new Buffer(currentRawSalt)));
+              currentRawPassword, {N, r, p}, dkLen, Buffer.from(currentRawSalt)));
         },
         rawPassword,
         rawSalt,
