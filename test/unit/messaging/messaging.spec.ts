@@ -413,7 +413,7 @@ describe('Messaging', () => {
           message: 'test error message',
           details: [
             {
-              '@type': 'type.googleapis.com/google.firebase.fcm.v1.FcmErrorCode',
+              '@type': 'type.googleapis.com/google.firebase.fcm.v1.FcmError',
               'errorCode': 'UNREGISTERED',
             },
           ],
@@ -2219,6 +2219,9 @@ describe('Messaging', () => {
               dir: 'auto',
               image: 'test.image',
               requireInteraction: true,
+            },
+            fcmOptions: {
+              link: 'https://example.com',
             },
           },
         },

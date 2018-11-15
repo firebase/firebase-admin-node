@@ -1,5 +1,11 @@
 # Unreleased
 
+- [fixed] Fixing error handling in FCM. The SDK now checks the key
+  type.googleapis.com/google.firebase.fcm.v1.FcmError to set error code.
+
+# v6.1.0
+
+- [changed] Upgraded Cloud Firestore client to v0.18.0.
 - [added] Exposed the `CollectionReference`, `WriteBatch`, `WriteResult` and
   `QueryDocumentSnapshot` types from the `admin.firestore` namespace.
 
