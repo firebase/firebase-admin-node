@@ -607,6 +607,7 @@ declare namespace admin.firestore {
   export import QueryDocumentSnapshot = _firestore.QueryDocumentSnapshot;
   export import QuerySnapshot = _firestore.QuerySnapshot;
   export import Timestamp = _firestore.Timestamp;
+  export import Transaction = _firestore.Transaction;
   export import WriteBatch = _firestore.WriteBatch;
   export import WriteResult = _firestore.WriteResult;
 

@@ -184,12 +184,12 @@ function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
     const headers = config.headers || {};
     if (config.data) {
       if (validator.isObject(config.data)) {
-        data = new Buffer(JSON.stringify(config.data), 'utf-8');
+        data = Buffer.from(JSON.stringify(config.data), 'utf-8');
         if (typeof headers['Content-Type'] === 'undefined') {
           headers['Content-Type'] = 'application/json;charset=utf-8';
         }
       } else if (validator.isString(config.data)) {
-        data = new Buffer(config.data as string, 'utf-8');
+        data = Buffer.from(config.data as string, 'utf-8');
       } else if (validator.isBuffer(config.data)) {
         data = config.data as Buffer;
       } else {
