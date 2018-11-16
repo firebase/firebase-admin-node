@@ -61,7 +61,7 @@ function verifyToken(token: string, publicKey: string): Promise<object> {
       if (err) {
         reject(err);
       } else {
-        resolve(res);
+        resolve(res as object);
       }
     });
   });
@@ -283,7 +283,7 @@ describe('FirebaseTokenGenerator', () => {
       }).to.throw('Must provide a CryptoSigner to use FirebaseTokenGenerator');
     });
 
-    const invalidSigners = [null, NaN, 0, 1, true, false, '', 'a', [], _.noop];
+    const invalidSigners: any[] = [null, NaN, 0, 1, true, false, '', 'a', [], _.noop];
     invalidSigners.forEach((invalidSigner) => {
       it('should throw given invalid signer: ' + JSON.stringify(invalidSigner), () => {
         expect(() => {
@@ -332,8 +332,8 @@ describe('FirebaseTokenGenerator', () => {
     });
 
     it('should throw given a non-object developer claims', () => {
-      const invalidDeveloperClaims = [null, NaN, [], true, false, '', 'a', 0, 1, Infinity, _.noop];
-      invalidDeveloperClaims.forEach((invalidDevClaims: any) => {
+      const invalidDeveloperClaims: any[] = [null, NaN, [], true, false, '', 'a', 0, 1, Infinity, _.noop];
+      invalidDeveloperClaims.forEach((invalidDevClaims) => {
         expect(() => {
           tokenGenerator.createCustomToken(mocks.uid, invalidDevClaims);
         }).to.throw('Second argument to createCustomToken() must be an object containing the developer claims');
@@ -342,7 +342,7 @@ describe('FirebaseTokenGenerator', () => {
 
     BLACKLISTED_CLAIMS.forEach((blacklistedClaim) => {
       it('should throw given a developer claims object with a blacklisted claim: ' + blacklistedClaim, () => {
-        const blacklistedDeveloperClaims = _.clone(mocks.developerClaims);
+        const blacklistedDeveloperClaims: {[key: string]: any} = _.clone(mocks.developerClaims);
         blacklistedDeveloperClaims[blacklistedClaim] = true;
         expect(() => {
           tokenGenerator.createCustomToken(mocks.uid, blacklistedDeveloperClaims);
@@ -440,7 +440,7 @@ describe('FirebaseTokenGenerator', () => {
     it('should be fulfilled with a JWT which expires after one hour', () => {
       clock = sinon.useFakeTimers(1000);
 
-      let token;
+      let token: string;
       return tokenGenerator.createCustomToken(mocks.uid)
         .then((result) => {
           token = result;

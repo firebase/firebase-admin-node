@@ -18,10 +18,8 @@ import * as chai from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import {deepCopy, deepExtend} from '../../../src/utils/deep-copy';
-import {
-  UserImportBuilder, UserImportResult, UserImportOptions, UserImportRecord,
-} from '../../../src/auth/user-import-builder';
+import {deepCopy} from '../../../src/utils/deep-copy';
+import {UserImportBuilder, ValidatorFunction, UserImportResult} from '../../../src/auth/user-import-builder';
 import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/utils/error';
 import {toWebSafeBase64} from '../../../src/utils';
 
@@ -34,10 +32,10 @@ const expect = chai.expect;
 
 describe('UserImportBuilder', () => {
   const nowString = new Date().toUTCString();
-  const userRequestValidator = (request) => {
+  const userRequestValidator: ValidatorFunction = (request) => {
     // Do not throw an error.
   };
-  const userRequestValidatorWithError = (request) => {
+  const userRequestValidatorWithError: ValidatorFunction = (request) => {
     // Simulate a validation error is thrown for a specific user.
     if (request.localId === '5678') {
       throw new FirebaseAuthError(
@@ -557,8 +555,8 @@ describe('UserImportBuilder', () => {
       },
     };
     it('should return the expected response for successful import', () => {
-      const successfulServerResponse = [];
-      const successfulUserImportResponse = {
+      const successfulServerResponse: any = [];
+      const successfulUserImportResponse: UserImportResult = {
         successCount: 3,
         failureCount: 0,
         errors: [],
@@ -594,8 +592,8 @@ describe('UserImportBuilder', () => {
     });
 
     it('should return the expected response for import with client side errors', () => {
-      const successfulServerResponse = [];
-      const clientErrorUserImportResponse = {
+      const successfulServerResponse: any = [];
+      const clientErrorUserImportResponse: UserImportResult = {
         successCount: 2,
         failureCount: 1,
         errors: [
@@ -615,7 +613,7 @@ describe('UserImportBuilder', () => {
         {index: 1, message: 'Some error occurred in USER3!'},
         {index: 3, message: 'Another error occurred in USER6!'},
       ];
-      const userRequestValidatorWithMultipleErrors = (request) => {
+      const userRequestValidatorWithMultipleErrors: ValidatorFunction = (request) => {
         // Simulate a validation error is thrown for specific users.
         if (request.localId === 'USER2') {
           throw new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);

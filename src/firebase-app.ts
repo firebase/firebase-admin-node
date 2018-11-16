@@ -274,7 +274,7 @@ export class FirebaseApp {
 
     Object.keys(firebaseInternals_.serviceFactories).forEach((serviceName) => {
       // Defer calling createService() until the service is accessed
-      this[serviceName] = this.getService_.bind(this, serviceName);
+      (this as {[key: string]: any})[serviceName] = this.getService_.bind(this, serviceName);
     });
 
     this.INTERNAL = new FirebaseAppInternals(this.options_.credential);

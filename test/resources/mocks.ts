@@ -109,9 +109,10 @@ export function appWithOptions(options: FirebaseAppOptions): FirebaseApp {
 }
 
 export function appReturningNullAccessToken(): FirebaseApp {
+  const nullFn: () => Promise<GoogleOAuthAccessToken> = () => null;
   return new FirebaseApp({
     credential: {
-      getAccessToken: () => null,
+      getAccessToken: nullFn,
       getCertificate: () => credential.getCertificate(),
     } as any,
     databaseURL,
@@ -220,12 +221,12 @@ export function firebaseServiceFactory(
 
 /** Mock socket emitter class. */
 export class MockSocketEmitter extends events.EventEmitter {
-  public setTimeout = (timeout: number) => undefined;
+  public setTimeout: (_: number) => void = (timeout: number) => undefined;
 }
 
 /** Mock stream passthrough class with dummy abort method. */
 export class MockStream extends stream.PassThrough {
-  public abort = () => undefined;
+  public abort: () => void = () => undefined;
 }
 
 /**

@@ -37,7 +37,7 @@ import {
   RESERVED_CLAIMS, FIREBASE_AUTH_UPLOAD_ACCOUNT, FIREBASE_AUTH_CREATE_SESSION_COOKIE,
   EMAIL_ACTION_REQUEST_TYPES,
 } from '../../../src/auth/auth-api-request';
-import {UserImportBuilder} from '../../../src/auth/user-import-builder';
+import {UserImportBuilder, UserImportRecord} from '../../../src/auth/user-import-builder';
 import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/utils/error';
 import {ActionCodeSettingsBuilder} from '../../../src/auth/action-code-settings-builder';
 
@@ -335,7 +335,7 @@ describe('FIREBASE_AUTH_GET_ACCOUNT_INFO', () => {
   describe('responseValidator', () => {
     const responseValidator = FIREBASE_AUTH_GET_ACCOUNT_INFO.getResponseValidator();
     it('should succeed with users returned', () => {
-      const validResponse = {users: []};
+      const validResponse: object = {users: []};
       expect(() => {
         return responseValidator(validResponse);
       }).not.to.throw();
@@ -524,7 +524,7 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
         it(`should fail with customAttributes containing blacklisted claim: ${invalidClaim}`, () => {
           expect(() => {
             // Instantiate custom attributes with invalid claims.
-            const claims = {};
+            const claims: {[key: string]: any} = {};
             claims[invalidClaim] = 'bla';
             return requestValidator({localId: '1234', customAttributes: JSON.stringify(claims)});
           }).to.throw(`Developer claim "${invalidClaim}" is reserved and cannot be specified.`);
@@ -1142,7 +1142,7 @@ describe('FirebaseAuthRequestHandler', () => {
       const stub = sinon.stub(HttpClient.prototype, 'send');
       stubs.push(stub);
 
-      const testUsers = [];
+      const testUsers: UserImportRecord[] = [];
       for (let i = 0; i < 1001; i++) {
         testUsers.push({
           uid: 'USER' + i.toString(),
@@ -1851,7 +1851,7 @@ describe('FirebaseAuthRequestHandler', () => {
     const expectedResult = utils.responseFrom({
       localId: uid,
     });
-    let clock;
+    let clock: sinon.SinonFakeTimers;
 
     beforeEach(() => {
       clock = sinon.useFakeTimers(now.getTime());

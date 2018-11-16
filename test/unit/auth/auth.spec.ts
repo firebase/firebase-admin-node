@@ -296,7 +296,7 @@ describe('Auth', () => {
     const uid = expectedUserRecord.uid;
     // Set expected decoded ID token with expected UID and auth time.
     const decodedIdToken = getDecodedIdToken(uid, validSince);
-    let clock;
+    let clock: sinon.SinonFakeTimers;
 
     // Stubs used to simulate underlying api calls.
     const stubs: sinon.SinonStub[] = [];
@@ -500,7 +500,7 @@ describe('Auth', () => {
     const uid = expectedUserRecord.uid;
     // Set expected decoded session cookie with expected UID and auth time.
     const decodedSessionCookie = getDecodedSessionCookie(uid, validSince);
-    let clock;
+    let clock: sinon.SinonFakeTimers;
 
     // Stubs used to simulate underlying api calls.
     const stubs: sinon.SinonStub[] = [];
@@ -1396,7 +1396,7 @@ describe('Auth', () => {
       ],
       pageToken: 'NEXT_PAGE_TOKEN',
     };
-    const emptyDownloadAccountResponse = {
+    const emptyDownloadAccountResponse: any = {
       users: [],
     };
     const emptyExpectedResult: any = {
@@ -1845,17 +1845,17 @@ describe('Auth', () => {
       });
 
       it('should be rejected given an app which returns null access tokens', () => {
-        return nullAccessTokenAuth[emailActionFlow.api](email, actionCodeSettings)
+        return (nullAccessTokenAuth as any)[emailActionFlow.api](email, actionCodeSettings)
           .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
       });
 
       it('should be rejected given an app which returns invalid access tokens', () => {
-        return malformedAccessTokenAuth[emailActionFlow.api](email, actionCodeSettings)
+        return (malformedAccessTokenAuth as any)[emailActionFlow.api](email, actionCodeSettings)
           .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
       });
 
       it('should be rejected given an app which fails to generate access tokens', () => {
-        return rejectedPromiseAccessTokenAuth[emailActionFlow.api](email, actionCodeSettings)
+        return (rejectedPromiseAccessTokenAuth as any)[emailActionFlow.api](email, actionCodeSettings)
           .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
       });
 
@@ -1864,8 +1864,8 @@ describe('Auth', () => {
         const getEmailActionLinkStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getEmailActionLink')
           .returns(Promise.resolve(expectedLink));
         stubs.push(getEmailActionLinkStub);
-        return auth[emailActionFlow.api](email, actionCodeSettings)
-          .then((actualLink) => {
+        return (auth as any)[emailActionFlow.api](email, actionCodeSettings)
+          .then((actualLink: string) => {
             // Confirm underlying API called with expected parameters.
             expect(getEmailActionLinkStub).to.have.been.calledOnce.and.calledWith(
                 emailActionFlow.requestType, email, actionCodeSettings);
@@ -1885,8 +1885,8 @@ describe('Auth', () => {
           const getEmailActionLinkStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getEmailActionLink')
             .returns(Promise.resolve(expectedLink));
           stubs.push(getEmailActionLinkStub);
-          return auth[emailActionFlow.api](email)
-            .then((actualLink) => {
+          return (auth as any)[emailActionFlow.api](email)
+            .then((actualLink: string) => {
               // Confirm underlying API called with expected parameters.
               expect(getEmailActionLinkStub).to.have.been.calledOnce.and.calledWith(
                   emailActionFlow.requestType, email, undefined);
@@ -1901,10 +1901,10 @@ describe('Auth', () => {
         const getEmailActionLinkStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getEmailActionLink')
           .returns(Promise.reject(expectedError));
         stubs.push(getEmailActionLinkStub);
-        return auth[emailActionFlow.api](email, actionCodeSettings)
-          .then((actualLink) => {
+        return (auth as any)[emailActionFlow.api](email, actionCodeSettings)
+          .then((actualLink: string) => {
             throw new Error('Unexpected success');
-          }, (error) => {
+          }, (error: any) => {
             // Confirm underlying API called with expected parameters.
             expect(getEmailActionLinkStub).to.have.been.calledOnce.and.calledWith(
                 emailActionFlow.requestType, email, actionCodeSettings);

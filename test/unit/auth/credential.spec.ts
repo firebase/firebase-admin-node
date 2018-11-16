@@ -19,8 +19,6 @@
 // Use untyped import syntax for Node built-ins
 import fs = require('fs');
 import path = require('path');
-import http = require('http');
-import stream = require('stream');
 
 import * as _ from 'lodash';
 import * as chai from 'chai';
@@ -34,7 +32,7 @@ import * as mocks from '../../resources/mocks';
 
 import {
   ApplicationDefaultCredential, CertCredential, Certificate, GoogleOAuthAccessToken,
-  MetadataServiceCredential, RefreshToken, RefreshTokenCredential,
+  MetadataServiceCredential, RefreshTokenCredential,
 } from '../../../src/auth/credential';
 import { HttpClient } from '../../../src/utils/api-request';
 
@@ -44,7 +42,7 @@ chai.use(chaiAsPromised);
 
 const expect = chai.expect;
 
-let TEST_GCLOUD_CREDENTIALS;
+let TEST_GCLOUD_CREDENTIALS: any;
 const GCLOUD_CREDENTIAL_SUFFIX = 'gcloud/application_default_credentials.json';
 const GCLOUD_CREDENTIAL_PATH = path.resolve(process.env.HOME, '.config', GCLOUD_CREDENTIAL_SUFFIX);
 try {
@@ -86,7 +84,7 @@ const FIVE_MINUTES_IN_SECONDS = 5 * 60;
 
 describe('Credential', () => {
   let mockedRequests: nock.Scope[] = [];
-  let mockCertificateObject;
+  let mockCertificateObject: any;
   let oldProcessEnv: NodeJS.ProcessEnv;
 
   before(() => utils.mockFetchAccessTokenRequests());
@@ -304,7 +302,7 @@ describe('Credential', () => {
   });
 
   describe('MetadataServiceCredential', () => {
-    let httpStub;
+    let httpStub: sinon.SinonStub;
     before(() => httpStub = sinon.stub(HttpClient.prototype, 'send'));
     after(() => httpStub.restore());
 
@@ -331,7 +329,7 @@ describe('Credential', () => {
 
   describe('ApplicationDefaultCredential', () => {
     let credPath: string;
-    let fsStub;
+    let fsStub: sinon.SinonStub;
 
     beforeEach(()  => credPath = process.env.GOOGLE_APPLICATION_CREDENTIALS);
 

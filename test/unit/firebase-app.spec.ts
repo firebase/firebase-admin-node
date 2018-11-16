@@ -333,8 +333,8 @@ describe('FirebaseApp', () => {
 
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
 
-      app[mocks.serviceName]();
-      app[mocks.serviceName + '2']();
+      (app as {[key: string]: any})[mocks.serviceName]();
+      (app as {[key: string]: any})[mocks.serviceName + '2']();
 
       return app.delete().then(() => {
         expect(deleteSpy).to.have.been.calledTwice;
@@ -565,7 +565,7 @@ describe('FirebaseApp', () => {
 
       return app.delete().then(() => {
         expect(() => {
-          return app[mocks.serviceName]();
+          return (app as {[key: string]: any})[mocks.serviceName]();
         }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
       });
     });
@@ -575,7 +575,7 @@ describe('FirebaseApp', () => {
 
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
 
-      const serviceNamespace = app[mocks.serviceName]();
+      const serviceNamespace = (app as {[key: string]: any})[mocks.serviceName]();
       expect(serviceNamespace).to.have.keys(['app', 'INTERNAL']);
     });
 
@@ -587,10 +587,10 @@ describe('FirebaseApp', () => {
 
       expect(createServiceSpy).to.not.have.been.called;
 
-      const serviceNamespace1 = app[mocks.serviceName]();
+      const serviceNamespace1 = (app as {[key: string]: any})[mocks.serviceName]();
       expect(createServiceSpy).to.have.been.calledOnce;
 
-      const serviceNamespace2 = app[mocks.serviceName]();
+      const serviceNamespace2 = (app as {[key: string]: any})[mocks.serviceName]();
       expect(createServiceSpy).to.have.been.calledOnce;
       expect(serviceNamespace1).to.deep.equal(serviceNamespace2);
     });
@@ -747,7 +747,7 @@ describe('FirebaseApp', () => {
 
     it('stops retrying to proactively refresh the token after five attempts', () => {
       // Force a token refresh.
-      let originalToken;
+      let originalToken: FirebaseAccessToken;
       return mockApp.INTERNAL.getToken(true).then((token) => {
         originalToken = token;
 

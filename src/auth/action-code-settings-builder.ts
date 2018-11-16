@@ -155,10 +155,10 @@ export class ActionCodeSettingsBuilder {
    * Returns the corresponding constructed server request corresponding to the
    * current ActionCodeSettings.
    *
-   * @return {UploadAccountRequest} The constructed uploadAccount request.
+   * @return {EmailActionCodeRequest} The constructed EmailActionCodeRequest request.
    */
   public buildRequest(): EmailActionCodeRequest {
-    const request = {
+    const request: {[key: string]: any} = {
       continueUrl: this.continueUrl,
       canHandleCodeInApp: this.canHandleCodeInApp,
       dynamicLinkDomain: this.dynamicLinkDomain,
@@ -175,6 +175,6 @@ export class ActionCodeSettingsBuilder {
         }
       }
     }
-    return request;
+    return request as EmailActionCodeRequest;
   }
 }

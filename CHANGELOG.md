@@ -1,7 +1,9 @@
 # Unreleased
 
+- [changed] Upgraded Cloud Firestore client to v0.19.0.
+- [added] Exposed the `Transaction` type from the `admin.firestore` namespace.
 - [fixed] Fixing error handling in FCM. The SDK now checks the key
-  type.googleapis.com/google.firebase.fcm.v1.FcmError to set error code.
+  `type.googleapis.com/google.firebase.fcm.v1.FcmError` to set error code.
 
 # v6.1.0
 

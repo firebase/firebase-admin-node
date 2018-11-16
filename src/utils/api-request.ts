@@ -198,7 +198,9 @@ function sendRequest(httpRequestConfig: HttpRequestConfig): Promise<LowLevelResp
         const configUrl = new url.URL(fullUrl);
         for (const key in config.data as any) {
           if (config.data.hasOwnProperty(key)) {
-            configUrl.searchParams.append(key, config.data[key]);
+            configUrl.searchParams.append(
+                key,
+                (config.data as {[key: string]: string})[key]);
           }
         }
         fullUrl = configUrl.toString();
@@ -256,8 +258,8 @@ function sendRequest(httpRequestConfig: HttpRequestConfig): Promise<LowLevelResp
         config,
       };
 
-      const responseBuffer = [];
-      respStream.on('data', (chunk) => {
+      const responseBuffer: Buffer[] = [];
+      respStream.on('data', (chunk: Buffer) => {
         responseBuffer.push(chunk);
       });
 
@@ -313,7 +315,7 @@ function createError(
  * the underlying request and response will be attached to the error.
  */
 function enhanceError(
-  error,
+  error: any,
   config: HttpRequestConfig,
   code: string,
   request: http.ClientRequest,
@@ -332,7 +334,7 @@ function enhanceError(
  * Finalizes the current request in-flight by either resolving or rejecting the associated promise. In the event
  * of an error, adds additional useful information to the returned error.
  */
-function finalizeRequest(resolve, reject, response: LowLevelResponse) {
+function finalizeRequest(resolve: (_: any) => void, reject: (_: any) => void, response: LowLevelResponse) {
   if (response.status >= 200 && response.status < 300) {
     resolve(response);
   } else {
@@ -393,7 +395,7 @@ export class ApiSettings {
    * @return {ApiSettings} The current API settings instance.
    */
   public setRequestValidator(requestValidator: ApiCallbackFunction): ApiSettings {
-    const nullFunction = (request: object) => undefined;
+    const nullFunction: (_: object) => void = (_: object) => undefined;
     this.requestValidator = requestValidator || nullFunction;
     return this;
   }
@@ -408,7 +410,7 @@ export class ApiSettings {
    * @return {ApiSettings} The current API settings instance.
    */
   public setResponseValidator(responseValidator: ApiCallbackFunction): ApiSettings {
-    const nullFunction = (request: object) => undefined;
+    const nullFunction: (_: object) => void = (_: object) => undefined;
     this.responseValidator = responseValidator || nullFunction;
     return this;
   }
