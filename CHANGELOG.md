@@ -1,7 +1,7 @@
 # Unreleased
 
 - [feature] Added the email action link generation APIs for creating links for
-  links for password reset, email verification and email link sign-in via
+  password reset, email verification and email link sign-in via
   `auth.generatePasswordResetLink()`, `auth.generateEmailVerificationLink()`
   and `auth.generateSignInWithEmailLink()`.
 - [changed] Upgraded Cloud Firestore client to v0.19.0.
