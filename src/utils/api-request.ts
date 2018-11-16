@@ -26,7 +26,7 @@ import * as stream from 'stream';
 import * as zlibmod from 'zlib';
 
 /** Http method type definition. */
-export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 /** API callback function type definition. */
 export type ApiCallbackFunction = (data: object) => void;
 
@@ -178,12 +178,33 @@ export class HttpClient {
  * Sends an HTTP request based on the provided configuration. This is a wrapper around the http and https
  * packages of Node.js, providing content processing, timeouts and error handling.
  */
-function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
+function sendRequest(httpRequestConfig: HttpRequestConfig): Promise<LowLevelResponse> {
+  const config: HttpRequestConfig = deepCopy(httpRequestConfig);
   return new Promise((resolve, reject) => {
     let data: Buffer;
     const headers = config.headers || {};
+    let fullUrl: string = config.url;
     if (config.data) {
-      if (validator.isObject(config.data)) {
+      // GET and HEAD do not support body in request.
+      if (config.method === 'GET' || config.method === 'HEAD') {
+        if (!validator.isObject(config.data)) {
+          return reject(createError(
+            `${config.method} requests cannot have a body`,
+            config,
+          ));
+        }
+
+        // Parse URL and append data to query string.
+        const configUrl = new url.URL(fullUrl);
+        for (const key in config.data as any) {
+          if (config.data.hasOwnProperty(key)) {
+            configUrl.searchParams.append(
+                key,
+                (config.data as {[key: string]: string})[key]);
+          }
+        }
+        fullUrl = configUrl.toString();
+      } else if (validator.isObject(config.data)) {
         data = Buffer.from(JSON.stringify(config.data), 'utf-8');
         if (typeof headers['Content-Type'] === 'undefined') {
           headers['Content-Type'] = 'application/json;charset=utf-8';
@@ -199,9 +220,11 @@ function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
         ));
       }
       // Add Content-Length header if data exists
-      headers['Content-Length'] = data.length.toString();
+      if (data) {
+        headers['Content-Length'] = data.length.toString();
+      }
     }
-    const parsed = url.parse(config.url);
+    const parsed = url.parse(fullUrl);
     const protocol = parsed.protocol || 'https:';
     const isHttps = protocol === 'https:';
     const options = {

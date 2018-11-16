@@ -26,7 +26,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
-import {deepCopy} from '../../../src/utils/deep-copy';
+import {deepCopy, deepExtend} from '../../../src/utils/deep-copy';
 import {FirebaseApp} from '../../../src/firebase-app';
 import {HttpClient, HttpRequestConfig} from '../../../src/utils/api-request';
 import * as validator from '../../../src/utils/validator';
@@ -35,18 +35,19 @@ import {
   FIREBASE_AUTH_DELETE_ACCOUNT, FIREBASE_AUTH_SET_ACCOUNT_INFO,
   FIREBASE_AUTH_SIGN_UP_NEW_USER, FIREBASE_AUTH_DOWNLOAD_ACCOUNT,
   RESERVED_CLAIMS, FIREBASE_AUTH_UPLOAD_ACCOUNT, FIREBASE_AUTH_CREATE_SESSION_COOKIE,
+  EMAIL_ACTION_REQUEST_TYPES,
 } from '../../../src/auth/auth-api-request';
 import {UserImportBuilder, UserImportRecord} from '../../../src/auth/user-import-builder';
 import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/utils/error';
+import {ActionCodeSettingsBuilder} from '../../../src/auth/action-code-settings-builder';
 
 chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
 const expect = chai.expect;
-const httpMethod = 'POST';
-const host = 'www.googleapis.com';
-const timeout = 10000;
+const host = 'identitytoolkit.googleapis.com';
+const timeout = 25000;
 
 
 /**
@@ -80,7 +81,7 @@ describe('FIREBASE_AUTH_CREATE_SESSION_COOKIE', () => {
   });
 
   it('should return the correct endpoint', () => {
-    expect(FIREBASE_AUTH_CREATE_SESSION_COOKIE.getEndpoint()).to.equal('createSessionCookie');
+    expect(FIREBASE_AUTH_CREATE_SESSION_COOKIE.getEndpoint()).to.equal(':createSessionCookie');
   });
   it('should return the correct http method', () => {
     expect(FIREBASE_AUTH_CREATE_SESSION_COOKIE.getHttpMethod()).to.equal('POST');
@@ -181,7 +182,7 @@ describe('FIREBASE_AUTH_CREATE_SESSION_COOKIE', () => {
 
 describe('FIREBASE_AUTH_UPLOAD_ACCOUNT', () => {
   it('should return the correct endpoint', () => {
-    expect(FIREBASE_AUTH_UPLOAD_ACCOUNT.getEndpoint()).to.equal('uploadAccount');
+    expect(FIREBASE_AUTH_UPLOAD_ACCOUNT.getEndpoint()).to.equal('/accounts:batchCreate');
   });
   it('should return the correct http method', () => {
     expect(FIREBASE_AUTH_UPLOAD_ACCOUNT.getHttpMethod()).to.equal('POST');
@@ -220,10 +221,10 @@ describe('FIREBASE_AUTH_DOWNLOAD_ACCOUNT', () => {
   });
 
   it('should return the correct endpoint', () => {
-    expect(FIREBASE_AUTH_DOWNLOAD_ACCOUNT.getEndpoint()).to.equal('downloadAccount');
+    expect(FIREBASE_AUTH_DOWNLOAD_ACCOUNT.getEndpoint()).to.equal('/accounts:batchGet');
   });
   it('should return the correct http method', () => {
-    expect(FIREBASE_AUTH_DOWNLOAD_ACCOUNT.getHttpMethod()).to.equal('POST');
+    expect(FIREBASE_AUTH_DOWNLOAD_ACCOUNT.getHttpMethod()).to.equal('GET');
   });
   it('should return empty response validator', () => {
     expect(FIREBASE_AUTH_DOWNLOAD_ACCOUNT.getResponseValidator()).to.not.be.null;
@@ -299,7 +300,7 @@ describe('FIREBASE_AUTH_DOWNLOAD_ACCOUNT', () => {
 
 describe('FIREBASE_AUTH_GET_ACCOUNT_INFO', () => {
   it('should return the correct endpoint', () => {
-    expect(FIREBASE_AUTH_GET_ACCOUNT_INFO.getEndpoint()).to.equal('getAccountInfo');
+    expect(FIREBASE_AUTH_GET_ACCOUNT_INFO.getEndpoint()).to.equal('/accounts:lookup');
   });
   it('should return the correct http method', () => {
     expect(FIREBASE_AUTH_GET_ACCOUNT_INFO.getHttpMethod()).to.equal('POST');
@@ -350,7 +351,7 @@ describe('FIREBASE_AUTH_GET_ACCOUNT_INFO', () => {
 
 describe('FIREBASE_AUTH_DELETE_ACCOUNT', () => {
   it('should return the correct endpoint', () => {
-    expect(FIREBASE_AUTH_DELETE_ACCOUNT.getEndpoint()).to.equal('deleteAccount');
+    expect(FIREBASE_AUTH_DELETE_ACCOUNT.getEndpoint()).to.equal('/accounts:delete');
   });
   it('should return the correct http method', () => {
     expect(FIREBASE_AUTH_DELETE_ACCOUNT.getHttpMethod()).to.equal('POST');
@@ -407,7 +408,7 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
   });
 
   it('should return the correct endpoint', () => {
-    expect(FIREBASE_AUTH_SET_ACCOUNT_INFO.getEndpoint()).to.equal('setAccountInfo');
+    expect(FIREBASE_AUTH_SET_ACCOUNT_INFO.getEndpoint()).to.equal('/accounts:update');
   });
   it('should return the correct http method', () => {
     expect(FIREBASE_AUTH_SET_ACCOUNT_INFO.getHttpMethod()).to.equal('POST');
@@ -587,7 +588,7 @@ describe('FIREBASE_AUTH_SIGN_UP_NEW_USER', () => {
   });
 
   it('should return the correct endpoint', () => {
-    expect(FIREBASE_AUTH_SIGN_UP_NEW_USER.getEndpoint()).to.equal('signupNewUser');
+    expect(FIREBASE_AUTH_SIGN_UP_NEW_USER.getEndpoint()).to.equal('/accounts');
   });
   it('should return the correct http method', () => {
     expect(FIREBASE_AUTH_SIGN_UP_NEW_USER.getHttpMethod()).to.equal('POST');
@@ -725,13 +726,12 @@ describe('FirebaseAuthRequestHandler', () => {
   let stubs: sinon.SinonStub[] = [];
   const mockAccessToken: string = utils.generateRandomAccessToken();
   const expectedHeaders: {[key: string]: string} = {
-    'Content-Type': 'application/json',
     'X-Client-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
     'Authorization': 'Bearer ' + mockAccessToken,
   };
-  const callParams = (path: string, data: any): HttpRequestConfig => {
+  const callParams = (path: string, method: any, data: any): HttpRequestConfig => {
     return {
-      method: httpMethod,
+      method,
       url: `https://${host}${path}`,
       headers: expectedHeaders,
       data,
@@ -767,7 +767,8 @@ describe('FirebaseAuthRequestHandler', () => {
 
   describe('createSessionCookie', () => {
     const durationInMs = 24 * 60 * 60 * 1000;
-    const path = '/identitytoolkit/v3/relyingparty/createSessionCookie';
+    const path = '/v1/projects/project_id:createSessionCookie';
+    const method = 'POST';
 
     it('should be fulfilled given a valid localId', () => {
       const expectedResult = utils.responseFrom({
@@ -781,7 +782,7 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.createSessionCookie('ID_TOKEN', durationInMs)
         .then((result) => {
           expect(result).to.deep.equal('SESSION_COOKIE');
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
         });
     });
     it('should be fulfilled given a duration equal to the maximum allowed', () => {
@@ -797,7 +798,7 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.createSessionCookie('ID_TOKEN', durationAtLimitInMs)
         .then((result) => {
           expect(result).to.deep.equal('SESSION_COOKIE');
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
         });
     });
     it('should be fulfilled given a duration equal to the minimum allowed', () => {
@@ -813,7 +814,7 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.createSessionCookie('ID_TOKEN', durationAtLimitInMs)
         .then((result) => {
           expect(result).to.deep.equal('SESSION_COOKIE');
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
         });
     });
     it('should be rejected given an invalid ID token', () => {
@@ -887,13 +888,14 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
         });
     });
   });
 
   describe('getAccountInfoByEmail', () => {
-    const path = '/identitytoolkit/v3/relyingparty/getAccountInfo';
+    const path = '/v1/projects/project_id/accounts:lookup';
+    const method = 'POST';
     it('should be fulfilled given a valid email', () => {
       const expectedResult = utils.responseFrom({
         users : [
@@ -909,7 +911,7 @@ describe('FirebaseAuthRequestHandler', () => {
         .then((result) => {
           expect(result).to.deep.equal(expectedResult.data);
           expect(stub).to.have.been.calledOnce.and.calledWith({
-            method: httpMethod,
+            method,
             url: `https://${host}${path}`,
             data,
             headers: expectedHeaders,
@@ -932,13 +934,14 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
         });
     });
   });
 
   describe('getAccountInfoByUid', () => {
-    const path = '/identitytoolkit/v3/relyingparty/getAccountInfo';
+    const path = '/v1/projects/project_id/accounts:lookup';
+    const method = 'POST';
     it('should be fulfilled given a valid localId', () => {
       const expectedResult = utils.responseFrom({
         users : [
@@ -953,7 +956,7 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.getAccountInfoByUid('uid')
         .then((result) => {
           expect(result).to.deep.equal(expectedResult.data);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
         });
     });
     it('should be rejected given an invalid localId', () => {
@@ -971,7 +974,7 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
         });
     });
     it('should be rejected when the backend returns an error', () => {
@@ -992,13 +995,14 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
         });
     });
   });
 
   describe('getAccountInfoByPhoneNumber', () => {
-    const path = '/identitytoolkit/v3/relyingparty/getAccountInfo';
+    const path = '/v1/projects/project_id/accounts:lookup';
+    const method = 'POST';
     it('should be fulfilled given a valid phoneNumber', () => {
       const expectedResult = utils.responseFrom({
         users : [
@@ -1026,7 +1030,7 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.getAccountInfoByPhoneNumber('+11234567890')
         .then((result) => {
           expect(result).to.deep.equal(expectedResult.data);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
         });
     });
     it('should be rejected given an invalid phoneNumber', () => {
@@ -1063,13 +1067,14 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
         });
     });
   });
 
   describe('uploadAccount', () => {
-    const path = '/identitytoolkit/v3/relyingparty/uploadAccount';
+    const path = '/v1/projects/project_id/accounts:batchCreate';
+    const method = 'POST';
     const nowString = new Date().toUTCString();
     const users = [
       {
@@ -1173,7 +1178,7 @@ describe('FirebaseAuthRequestHandler', () => {
         .then((result) => {
           expect(result).to.deep.equal(userImportBuilder.buildResponse([]));
           expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParams(path, userImportBuilder.buildRequest()));
+            callParams(path, method, userImportBuilder.buildRequest()));
         });
 
     });
@@ -1189,7 +1194,7 @@ describe('FirebaseAuthRequestHandler', () => {
         .then((result) => {
           expect(result).to.deep.equal(userImportBuilder.buildResponse([]));
           expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParams(path, userImportBuilder.buildRequest()));
+            callParams(path, method, userImportBuilder.buildRequest()));
         });
     });
 
@@ -1209,7 +1214,7 @@ describe('FirebaseAuthRequestHandler', () => {
         .then((result) => {
           expect(result).to.deep.equal(userImportBuilder.buildResponse(expectedResult.data.error));
           expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParams(path, userImportBuilder.buildRequest()));
+            callParams(path, method, userImportBuilder.buildRequest()));
         });
     });
 
@@ -1360,14 +1365,15 @@ describe('FirebaseAuthRequestHandler', () => {
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
           expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParams(path, userImportBuilder.buildRequest()));
+            callParams(path, method, userImportBuilder.buildRequest()));
         });
     });
 
   });
 
   describe('downloadAccount', () => {
-    const path = '/identitytoolkit/v3/relyingparty/downloadAccount';
+    const path = '/v1/projects/project_id/accounts:batchGet';
+    const method = 'GET';
     const nextPageToken = 'PAGE_TOKEN';
     const maxResults = 500;
     const expectedResult = utils.responseFrom({
@@ -1389,7 +1395,7 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.downloadAccount(maxResults, nextPageToken)
         .then((result) => {
           expect(result).to.deep.equal(expectedResult.data);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
         });
     });
     it('should be fulfilled with empty user array when no users exist', () => {
@@ -1405,7 +1411,7 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.downloadAccount(maxResults, nextPageToken)
         .then((result) => {
           expect(result).to.deep.equal({users: []});
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
         });
     });
     it('should be fulfilled given no parameters', () => {
@@ -1420,7 +1426,7 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.downloadAccount()
         .then((result) => {
           expect(result).to.deep.equal(expectedResult.data);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
         });
     });
     it('should be rejected given an invalid maxResults', () => {
@@ -1471,13 +1477,14 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
         });
     });
   });
 
   describe('deleteAccount', () => {
-    const path = '/identitytoolkit/v3/relyingparty/deleteAccount';
+    const path = '/v1/projects/project_id/accounts:delete';
+    const method = 'POST';
     it('should be fulfilled given a valid localId', () => {
       const expectedResult = utils.responseFrom({
         kind: 'identitytoolkit#DeleteAccountResponse',
@@ -1490,7 +1497,7 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.deleteAccount('uid')
         .then((result) => {
           expect(result).to.deep.equal(expectedResult.data);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
         });
     });
     it('should be rejected when the backend returns an error', () => {
@@ -1510,13 +1517,14 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, data));
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
         });
     });
   });
 
   describe('updateExistingAccount', () => {
-    const path = '/identitytoolkit/v3/relyingparty/setAccountInfo';
+    const path = '/v1/projects/project_id/accounts:update';
+    const method = 'POST';
     const uid = '12345678';
     const validData = {
       displayName: 'John Doe',
@@ -1590,7 +1598,7 @@ describe('FirebaseAuthRequestHandler', () => {
           expect(returnedUid).to.be.equal(uid);
           // Confirm expected rpc request parameters sent.
           expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParams(path, {localId: uid}));
+            callParams(path, method, {localId: uid}));
         });
     });
 
@@ -1611,7 +1619,7 @@ describe('FirebaseAuthRequestHandler', () => {
           expect(returnedUid).to.be.equal(uid);
           // Confirm expected rpc request parameters sent.
           expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParams(path, expectedValidData));
+            callParams(path, method, expectedValidData));
         });
     });
 
@@ -1633,7 +1641,7 @@ describe('FirebaseAuthRequestHandler', () => {
           // Confirm expected rpc request parameters sent. In this case, displayName
           // and photoURL removed from request and deleteAttribute added.
           expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParams(path, expectedValidDeleteData));
+            callParams(path, method, expectedValidDeleteData));
         });
     });
 
@@ -1656,7 +1664,7 @@ describe('FirebaseAuthRequestHandler', () => {
           // Confirm expected rpc request parameters sent. In this case, phoneNumber
           // removed from request and deleteProvider added.
           expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParams(path, expectedValidDeletePhoneNumberData));
+            callParams(path, method, expectedValidDeletePhoneNumberData));
         });
     });
 
@@ -1707,13 +1715,14 @@ describe('FirebaseAuthRequestHandler', () => {
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
           expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParams(path, expectedValidData));
+            callParams(path, method, expectedValidData));
         });
     });
   });
 
   describe('setCustomUserClaims', () => {
-    const path = '/identitytoolkit/v3/relyingparty/setAccountInfo';
+    const path = '/v1/projects/project_id/accounts:update';
+    const method = 'POST';
     const uid = '12345678';
     const claims = {admin: true, groupId: '1234'};
     const expectedValidData = {
@@ -1741,7 +1750,7 @@ describe('FirebaseAuthRequestHandler', () => {
           expect(returnedUid).to.be.equal(uid);
           // Confirm expected rpc request parameters sent.
           expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParams(path, expectedValidData));
+            callParams(path, method, expectedValidData));
         });
     });
 
@@ -1758,7 +1767,7 @@ describe('FirebaseAuthRequestHandler', () => {
           expect(returnedUid).to.be.equal(uid);
           // Confirm expected rpc request parameters sent.
           expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParams(path, expectedEmptyClaimsData));
+            callParams(path, method, expectedEmptyClaimsData));
         });
     });
 
@@ -1829,13 +1838,14 @@ describe('FirebaseAuthRequestHandler', () => {
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
           expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParams(path, expectedValidData));
+            callParams(path, method, expectedValidData));
         });
     });
   });
 
   describe('revokeRefreshTokens', () => {
-    const path = '/identitytoolkit/v3/relyingparty/setAccountInfo';
+    const path = '/v1/projects/project_id/accounts:update';
+    const method = 'POST';
     const uid = '12345678';
     const now = new Date();
     const expectedResult = utils.responseFrom({
@@ -1866,7 +1876,7 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.revokeRefreshTokens(uid)
         .then((returnedUid: string) => {
           expect(returnedUid).to.be.equal(uid);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, requestData));
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, requestData));
         });
     });
 
@@ -1907,14 +1917,15 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, requestData));
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, requestData));
         });
     });
   });
 
   describe('createNewAccount', () => {
     describe('with uid specified', () => {
-      const path = '/identitytoolkit/v3/relyingparty/signupNewUser';
+      const path = '/v1/projects/project_id/accounts';
+      const method = 'POST';
       const uid = '12345678';
       const validData = {
         uid,
@@ -1964,7 +1975,7 @@ describe('FirebaseAuthRequestHandler', () => {
             // uid should be returned.
             expect(returnedUid).to.be.equal(uid);
             // Confirm expected rpc request parameters sent.
-            expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, emptyRequest));
+            expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, emptyRequest));
           });
       });
 
@@ -1984,7 +1995,7 @@ describe('FirebaseAuthRequestHandler', () => {
             expect(returnedUid).to.be.equal(uid);
             // Confirm expected rpc request parameters sent.
             expect(stub).to.have.been.calledOnce.and.calledWith(
-              callParams(path, expectedValidData));
+              callParams(path, method, expectedValidData));
           });
       });
 
@@ -2036,7 +2047,7 @@ describe('FirebaseAuthRequestHandler', () => {
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-              callParams(path, expectedValidData));
+              callParams(path, method, expectedValidData));
           });
       });
 
@@ -2060,7 +2071,7 @@ describe('FirebaseAuthRequestHandler', () => {
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-              callParams(path, expectedValidData));
+              callParams(path, method, expectedValidData));
           });
       });
 
@@ -2083,13 +2094,14 @@ describe('FirebaseAuthRequestHandler', () => {
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-              callParams(path, expectedValidData));
+              callParams(path, method, expectedValidData));
           });
       });
     });
 
     describe('with no uid specified', () => {
-      const path = '/identitytoolkit/v3/relyingparty/signupNewUser';
+      const path = '/v1/projects/project_id/accounts';
+      const method = 'POST';
       const uid = '12345678';
       const validData = {
         displayName: 'John Doe',
@@ -2135,7 +2147,7 @@ describe('FirebaseAuthRequestHandler', () => {
             expect(returnedUid).to.be.equal(uid);
             // Confirm expected rpc request parameters sent.
             expect(stub).to.have.been.calledOnce.and.calledWith(
-              callParams(path, expectedValidData));
+              callParams(path, method, expectedValidData));
           });
       });
 
@@ -2186,9 +2198,209 @@ describe('FirebaseAuthRequestHandler', () => {
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-              callParams(path, expectedValidData));
+              callParams(path, method, expectedValidData));
           });
       });
+    });
+  });
+
+  describe('getEmailActionLink', () => {
+    const path = '/v1/projects/project_id/accounts:sendOobCode';
+    const method = 'POST';
+    const email = 'user@example.com';
+    const actionCodeSettings = {
+      url: 'https://www.example.com/path/file?a=1&b=2',
+      handleCodeInApp: true,
+      iOS: {
+        bundleId: 'com.example.ios',
+      },
+      android: {
+        packageName: 'com.example.android',
+        installApp: true,
+        minimumVersion: '6',
+      },
+      dynamicLinkDomain: 'custom.page.link',
+    };
+    const expectedActionCodeSettingsRequest = new ActionCodeSettingsBuilder(actionCodeSettings).buildRequest();
+    const expectedLink = 'https://custom.page.link?link=' +
+        encodeURIComponent('https://projectId.firebaseapp.com/__/auth/action?oobCode=CODE') +
+        '&apn=com.example.android&ibi=com.example.ios';
+    const expectedResult = utils.responseFrom({
+      email,
+      oobLink: expectedLink,
+    });
+
+    it('should be fulfilled given a valid email', () => {
+      const requestData = deepExtend({
+        requestType: 'PASSWORD_RESET',
+        email,
+        returnOobLink: true,
+      }, expectedActionCodeSettingsRequest);
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.getEmailActionLink('PASSWORD_RESET', email, actionCodeSettings)
+        .then((oobLink: string) => {
+          expect(oobLink).to.be.equal(expectedLink);
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, requestData));
+        });
+    });
+
+    EMAIL_ACTION_REQUEST_TYPES.forEach((requestType) => {
+      it('should be fulfilled given a valid requestType:' + requestType + ' and ActionCodeSettings', () => {
+        const requestData = deepExtend({
+          requestType,
+          email,
+          returnOobLink: true,
+        }, expectedActionCodeSettingsRequest);
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+
+        const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+        return requestHandler.getEmailActionLink(requestType, email, actionCodeSettings)
+          .then((oobLink: string) => {
+            expect(oobLink).to.be.equal(expectedLink);
+            expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, requestData));
+          });
+      });
+    });
+
+    EMAIL_ACTION_REQUEST_TYPES.forEach((requestType) => {
+      if (requestType === 'EMAIL_SIGNIN') {
+        return;
+      }
+      it('should be fulfilled given requestType:' + requestType + ' and no ActionCodeSettings', () => {
+        const requestData = {
+          requestType,
+          email,
+          returnOobLink: true,
+        };
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+
+        const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+        return requestHandler.getEmailActionLink(requestType, email)
+          .then((oobLink: string) => {
+            expect(oobLink).to.be.equal(expectedLink);
+            expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, requestData));
+          });
+      });
+    });
+
+    it('should be rejected given requestType:EMAIL_SIGNIN and no ActionCodeSettings', () => {
+      const invalidRequestType = 'EMAIL_SIGNIN';
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        `"ActionCodeSettings" must be a non-null object.`,
+      );
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.getEmailActionLink('EMAIL_SIGNIN', email)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Invalid argument error should be thrown.
+          expect(error).to.deep.equal(expectedError);
+        });
+    });
+
+    it('should be rejected given an invalid email', () => {
+      const invalidEmail = 'invalid';
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.getEmailActionLink('PASSWORD_RESET', invalidEmail, actionCodeSettings)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Invalid email error should be thrown.
+          expect(error).to.deep.equal(expectedError);
+        });
+    });
+
+    it('should be rejected given an invalid request type', () => {
+      const invalidRequestType = 'invalid';
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        `"invalid" is not a supported email action request type.`,
+      );
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.getEmailActionLink(invalidRequestType, email, actionCodeSettings)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Invalid argument error should be thrown.
+          expect(error).to.deep.equal(expectedError);
+        });
+    });
+
+    it('should be rejected given an invalid ActionCodeSettings object', () => {
+      const invalidActionCodeSettings = 'invalid' as any;
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        '"ActionCodeSettings" must be a non-null object.',
+      );
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.getEmailActionLink('EMAIL_SIGNIN', email, invalidActionCodeSettings)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          // Invalid argument error should be thrown.
+          expect(error).to.deep.equal(expectedError);
+        });
+    });
+
+    it('should be rejected when the response does not contain a link', () => {
+      const expectedError = new FirebaseAuthError(
+          AuthClientErrorCode.INTERNAL_ERROR,
+          'INTERNAL ASSERT FAILED: Unable to create the email action link');
+      const requestData = deepExtend({
+        requestType: 'VERIFY_EMAIL',
+        email,
+        returnOobLink: true,
+      }, expectedActionCodeSettingsRequest);
+      // Simulate response missing link.
+      const stub = sinon.stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom({email}));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.getEmailActionLink('VERIFY_EMAIL', email, actionCodeSettings)
+        .then((returnedUid: string) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, requestData));
+        });
+    });
+
+    it('should be rejected when the backend returns an error', () => {
+      // Backend returned error.
+      const expectedError = FirebaseAuthError.fromServerError('USER_NOT_FOUND');
+      const expectedServerError = utils.errorFrom({
+        error: {
+          message: 'USER_NOT_FOUND',
+        },
+      });
+      const requestData = deepExtend({
+        requestType: 'VERIFY_EMAIL',
+        email,
+        returnOobLink: true,
+      }, expectedActionCodeSettingsRequest);
+      const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedServerError);
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.getEmailActionLink('VERIFY_EMAIL', email, actionCodeSettings)
+        .then((returnedUid: string) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, requestData));
+        });
     });
   });
 

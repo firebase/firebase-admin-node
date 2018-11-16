@@ -16,7 +16,7 @@
 
 import {UserRecord, CreateRequest, UpdateRequest} from './user-record';
 import {FirebaseApp} from '../firebase-app';
-import {FirebaseTokenGenerator, cryptoSignerFromApp} from './token-generator';
+import {FirebaseTokenGenerator, CryptoSigner, cryptoSignerFromApp} from './token-generator';
 import {FirebaseAuthRequestHandler} from './auth-api-request';
 import {AuthClientErrorCode, FirebaseAuthError, ErrorInfo} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
@@ -27,6 +27,7 @@ import {
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier } from './token-verifier';
+import {ActionCodeSettings} from './action-code-settings-builder';
 
 
 /**
@@ -78,45 +79,29 @@ export interface SessionCookieOptions {
 
 
 /**
- * Auth service bound to the provided app.
+ * Base Auth class. Mainly used for user management APIs.
  */
-export class Auth implements FirebaseServiceInterface {
-  public INTERNAL: AuthInternals = new AuthInternals();
-
-  private readonly app_: FirebaseApp;
-  private readonly tokenGenerator: FirebaseTokenGenerator;
-  private readonly idTokenVerifier: FirebaseTokenVerifier;
-  private readonly sessionCookieVerifier: FirebaseTokenVerifier;
-  private readonly authRequestHandler: FirebaseAuthRequestHandler;
+class BaseAuth {
+  protected readonly tokenGenerator: FirebaseTokenGenerator;
+  protected readonly idTokenVerifier: FirebaseTokenVerifier;
+  protected readonly sessionCookieVerifier: FirebaseTokenVerifier;
 
   /**
-   * @param {object} app The app for this Auth service.
+   * The BaseAuth class constructor.
+   *
+   * @param {string} projectId The corresponding project ID.
+   * @param {FirebaseAuthRequestHandler} authRequestHandler The RPC request handler
+   *     for this instance.
+   * @param {CryptoSigner} cryptoSigner The instance crypto signer used for custom token
+   *     minting.
    * @constructor
    */
-  constructor(app: FirebaseApp) {
-    if (typeof app !== 'object' || app === null || !('options' in app)) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_ARGUMENT,
-        'First argument passed to admin.auth() must be a valid Firebase app instance.',
-      );
-    }
-
-    this.app_ = app;
-    this.tokenGenerator = new FirebaseTokenGenerator(cryptoSignerFromApp(app));
-    const projectId = utils.getProjectId(app);
+  constructor(protected readonly projectId: string,
+              protected readonly authRequestHandler: FirebaseAuthRequestHandler,
+              cryptoSigner: CryptoSigner) {
+    this.tokenGenerator = new FirebaseTokenGenerator(cryptoSigner);
     this.sessionCookieVerifier = createSessionCookieVerifier(projectId);
     this.idTokenVerifier = createIdTokenVerifier(projectId);
-    // Initialize auth request handler with the app.
-    this.authRequestHandler = new FirebaseAuthRequestHandler(app);
-  }
-
-  /**
-   * Returns the app associated with this Auth instance.
-   *
-   * @return {FirebaseApp} The app associated with this Auth instance.
-   */
-  get app(): FirebaseApp {
-    return this.app_;
   }
 
   /**
@@ -144,7 +129,7 @@ export class Auth implements FirebaseServiceInterface {
    * @return {Promise<DecodedIdToken>} A Promise that will be fulfilled after a successful
    *     verification.
    */
-  public verifyIdToken(idToken: string, checkRevoked: boolean = false): Promise<object> {
+  public verifyIdToken(idToken: string, checkRevoked: boolean = false): Promise<DecodedIdToken> {
     return this.idTokenVerifier.verifyJWT(idToken)
       .then((decodedIdToken: DecodedIdToken) => {
         // Whether to check if the token was revoked.
@@ -387,6 +372,51 @@ export class Auth implements FirebaseServiceInterface {
   }
 
   /**
+   * Generates the out of band email action link for password reset flows for the
+   * email specified using the action code settings provided.
+   * Returns a promise that resolves with the generated link.
+   *
+   * @param {string} email The email of the user whose password is to be reset.
+   * @param {ActionCodeSettings=} actionCodeSettings The optional action code setings which defines whether
+   *     the link is to be handled by a mobile app and the additional state information to be passed in the
+   *     deep link, etc.
+   * @return {Promise<string>} A promise that resolves with the password reset link.
+   */
+  public generatePasswordResetLink(email: string, actionCodeSettings?: ActionCodeSettings): Promise<string> {
+    return this.authRequestHandler.getEmailActionLink('PASSWORD_RESET', email, actionCodeSettings);
+  }
+
+  /**
+   * Generates the out of band email action link for email verification flows for the
+   * email specified using the action code settings provided.
+   * Returns a promise that resolves with the generated link.
+   *
+   * @param {string} email The email of the user to be verified.
+   * @param {ActionCodeSettings=} actionCodeSettings The optional action code setings which defines whether
+   *     the link is to be handled by a mobile app and the additional state information to be passed in the
+   *     deep link, etc.
+   * @return {Promise<string>} A promise that resolves with the email verification link.
+   */
+  public generateEmailVerificationLink(email: string, actionCodeSettings?: ActionCodeSettings): Promise<string> {
+    return this.authRequestHandler.getEmailActionLink('VERIFY_EMAIL', email, actionCodeSettings);
+  }
+
+  /**
+   * Generates the out of band email action link for email link sign-in flows for the
+   * email specified using the action code settings provided.
+   * Returns a promise that resolves with the generated link.
+   *
+   * @param {string} email The email of the user signing in.
+   * @param {ActionCodeSettings} actionCodeSettings The required action code setings which defines whether
+   *     the link is to be handled by a mobile app and the additional state information to be passed in the
+   *     deep link, etc.
+   * @return {Promise<string>} A promise that resolves with the email sign-in link.
+   */
+  public generateSignInWithEmailLink(email: string, actionCodeSettings: ActionCodeSettings): Promise<string> {
+    return this.authRequestHandler.getEmailActionLink('EMAIL_SIGNIN', email, actionCodeSettings);
+  }
+
+  /**
    * Verifies the decoded Firebase issued JWT is not revoked. Returns a promise that resolves
    * with the decoded claims on success. Rejects the promise with revocation error if revoked.
    *
@@ -415,5 +445,51 @@ export class Auth implements FirebaseServiceInterface {
         // All checks above passed. Return the decoded token.
         return decodedIdToken;
       });
+  }
+}
+
+
+/**
+ * Auth service bound to the provided app.
+ */
+export class Auth extends BaseAuth implements FirebaseServiceInterface {
+  public INTERNAL: AuthInternals = new AuthInternals();
+  private readonly app_: FirebaseApp;
+
+  /**
+   * Returns the FirebaseApp's project ID.
+   *
+   * @param {FirebaseApp} app The project ID for an app.
+   * @return {string} The FirebaseApp's project ID.
+   */
+  private static getProjectId(app: FirebaseApp): string {
+    if (typeof app !== 'object' || app === null || !('options' in app)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        'First argument passed to admin.auth() must be a valid Firebase app instance.',
+      );
+    }
+    return utils.getProjectId(app);
+  }
+
+  /**
+   * @param {object} app The app for this Auth service.
+   * @constructor
+   */
+  constructor(app: FirebaseApp) {
+    super(
+        Auth.getProjectId(app),
+        new FirebaseAuthRequestHandler(app),
+        cryptoSignerFromApp(app));
+    this.app_ = app;
+  }
+
+  /**
+   * Returns the app associated with this Auth instance.
+   *
+   * @return {FirebaseApp} The app associated with this Auth instance.
+   */
+  get app(): FirebaseApp {
+    return this.app_;
   }
 }

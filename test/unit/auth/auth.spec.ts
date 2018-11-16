@@ -43,6 +43,13 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 
+interface EmailActionTest {
+  api: string;
+  requestType: string;
+  requiresSettings: boolean;
+}
+
+
 /**
  * @return {object} A sample valid server response as returned from getAccountInfo
  *     endpoint.
@@ -1787,6 +1794,124 @@ describe('Auth', () => {
           // Confirm expected error returned.
           expect(error).to.equal(expectedError);
         });
+    });
+  });
+
+  const emailActionFlows: EmailActionTest[] = [
+    {api: 'generatePasswordResetLink', requestType: 'PASSWORD_RESET', requiresSettings: false},
+    {api: 'generateEmailVerificationLink', requestType: 'VERIFY_EMAIL', requiresSettings: false},
+    {api: 'generateSignInWithEmailLink', requestType: 'EMAIL_SIGNIN', requiresSettings: true},
+  ];
+  emailActionFlows.forEach((emailActionFlow) => {
+    describe(`${emailActionFlow.api}()`, () => {
+      const email = 'user@example.com';
+      const actionCodeSettings = {
+        url: 'https://www.example.com/path/file?a=1&b=2',
+        handleCodeInApp: true,
+        iOS: {
+          bundleId: 'com.example.ios',
+        },
+        android: {
+          packageName: 'com.example.android',
+          installApp: true,
+          minimumVersion: '6',
+        },
+        dynamicLinkDomain: 'custom.page.link',
+      };
+      const expectedLink = 'https://custom.page.link?link=' +
+          encodeURIComponent('https://projectId.firebaseapp.com/__/auth/action?oobCode=CODE') +
+          '&apn=com.example.android&ibi=com.example.ios';
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
+      // Stubs used to simulate underlying api calls.
+      let stubs: sinon.SinonStub[] = [];
+      afterEach(() => {
+        _.forEach(stubs, (stub) => stub.restore());
+        stubs = [];
+      });
+
+      it('should be rejected given no email', () => {
+        return (auth as any)[emailActionFlow.api](undefined, actionCodeSettings)
+          .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-email');
+      });
+
+      it('should be rejected given an invalid email', () => {
+        return (auth as any)[emailActionFlow.api]('invalid', actionCodeSettings)
+          .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-email');
+      });
+
+      it('should be rejected given an invalid ActionCodeSettings object', () => {
+        return (auth as any)[emailActionFlow.api](email, 'invalid')
+          .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
+      });
+
+      it('should be rejected given an app which returns null access tokens', () => {
+        return (nullAccessTokenAuth as any)[emailActionFlow.api](email, actionCodeSettings)
+          .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+      });
+
+      it('should be rejected given an app which returns invalid access tokens', () => {
+        return (malformedAccessTokenAuth as any)[emailActionFlow.api](email, actionCodeSettings)
+          .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+      });
+
+      it('should be rejected given an app which fails to generate access tokens', () => {
+        return (rejectedPromiseAccessTokenAuth as any)[emailActionFlow.api](email, actionCodeSettings)
+          .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+      });
+
+      it('should resolve when called with actionCodeSettings with a generated link on success', () => {
+        // Stub getEmailActionLink to return expected link.
+        const getEmailActionLinkStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getEmailActionLink')
+          .returns(Promise.resolve(expectedLink));
+        stubs.push(getEmailActionLinkStub);
+        return (auth as any)[emailActionFlow.api](email, actionCodeSettings)
+          .then((actualLink: string) => {
+            // Confirm underlying API called with expected parameters.
+            expect(getEmailActionLinkStub).to.have.been.calledOnce.and.calledWith(
+                emailActionFlow.requestType, email, actionCodeSettings);
+            // Confirm expected user record response returned.
+            expect(actualLink).to.equal(expectedLink);
+          });
+      });
+
+      if (emailActionFlow.requiresSettings) {
+        it('should reject when called without actionCodeSettings', () => {
+          return (auth as any)[emailActionFlow.api](email, undefined)
+            .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
+        });
+      } else {
+        it('should resolve when called without actionCodeSettings with a generated link on success', () => {
+          // Stub getEmailActionLink to return expected link.
+          const getEmailActionLinkStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getEmailActionLink')
+            .returns(Promise.resolve(expectedLink));
+          stubs.push(getEmailActionLinkStub);
+          return (auth as any)[emailActionFlow.api](email)
+            .then((actualLink: string) => {
+              // Confirm underlying API called with expected parameters.
+              expect(getEmailActionLinkStub).to.have.been.calledOnce.and.calledWith(
+                  emailActionFlow.requestType, email, undefined);
+              // Confirm expected user record response returned.
+              expect(actualLink).to.equal(expectedLink);
+            });
+        });
+      }
+
+      it('should throw an error when getEmailAction returns an error', () => {
+        // Stub getEmailActionLink to throw a backend error.
+        const getEmailActionLinkStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getEmailActionLink')
+          .returns(Promise.reject(expectedError));
+        stubs.push(getEmailActionLinkStub);
+        return (auth as any)[emailActionFlow.api](email, actionCodeSettings)
+          .then((actualLink: string) => {
+            throw new Error('Unexpected success');
+          }, (error: any) => {
+            // Confirm underlying API called with expected parameters.
+            expect(getEmailActionLinkStub).to.have.been.calledOnce.and.calledWith(
+                emailActionFlow.requestType, email, actionCodeSettings);
+            // Confirm expected error returned.
+            expect(error).to.equal(expectedError);
+          });
+      });
     });
   });
 

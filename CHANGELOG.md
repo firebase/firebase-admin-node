@@ -1,5 +1,9 @@
 # Unreleased
 
+- [feature] Added the email action link generation APIs for creating links for
+  password reset, email verification and email link sign-in via
+  `auth.generatePasswordResetLink()`, `auth.generateEmailVerificationLink()`
+  and `auth.generateSignInWithEmailLink()`.
 - [changed] Upgraded Cloud Firestore client to v0.19.0.
 - [added] Exposed the `Transaction` type from the `admin.firestore` namespace.
 - [fixed] Fixing error handling in FCM. The SDK now checks the key

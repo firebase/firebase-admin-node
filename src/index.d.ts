@@ -205,9 +205,21 @@ declare namespace admin.auth {
     expiresIn: number;
   }
 
-  interface Auth {
-    app: admin.app.App;
+  interface ActionCodeSettings {
+    url: string;
+    handleCodeInApp?: boolean;
+    iOS?: {
+      bundleId: string;
+    };
+    android?: {
+      packageName: string;
+      installApp?: boolean;
+      minimumVersion?: string;
+    };
+    dynamicLinkDomain?: string;
+  }
 
+  interface BaseAuth {
     createCustomToken(uid: string, developerClaims?: Object): Promise<string>;
     createUser(properties: admin.auth.CreateRequest): Promise<admin.auth.UserRecord>;
     deleteUser(uid: string): Promise<void>;
@@ -231,6 +243,22 @@ declare namespace admin.auth {
       sessionCookie: string,
       checkForRevocation?: boolean,
     ): Promise<admin.auth.DecodedIdToken>;
+    generatePasswordResetLink(
+      email: string,
+      actionCodeSettings?: admin.auth.ActionCodeSettings,
+    ): Promise<string>;
+    generateEmailVerificationLink(
+      email: string,
+      actionCodeSettings?: admin.auth.ActionCodeSettings,
+    ): Promise<string>;
+    generateSignInWithEmailLink(
+      email: string,
+      actionCodeSettings: admin.auth.ActionCodeSettings,
+    ): Promise<string>;
+  }
+
+  interface Auth extends admin.auth.BaseAuth {
+    app: admin.app.App;
   }
 }
 
