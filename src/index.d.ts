@@ -289,7 +289,7 @@ declare namespace admin.database {
     child(path: string): admin.database.DataSnapshot;
     exists(): boolean;
     exportVal(): any;
-    forEach(action: (a: admin.database.DataSnapshot) => boolean): boolean;
+    forEach(action: (a: admin.database.DataSnapshot) => boolean | void): boolean;
     getPriority(): string|number|null;
     hasChild(path: string): boolean;
     hasChildren(): boolean;
