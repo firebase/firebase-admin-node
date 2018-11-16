@@ -1,6 +1,10 @@
 # Unreleased
 
-- [feature] Added the email action link generation APIs for creating links for
+-
+
+# v6.2.0
+
+- [added] Added the email action link generation APIs for creating links for
   password reset, email verification and email link sign-in via
   `auth.generatePasswordResetLink()`, `auth.generateEmailVerificationLink()`
   and `auth.generateSignInWithEmailLink()`.
