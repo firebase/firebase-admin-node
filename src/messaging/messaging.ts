@@ -41,8 +41,6 @@ const CAMELCASED_NOTIFICATION_PAYLOAD_KEYS_MAP = {
   clickAction: 'click_action',
   titleLocArgs: 'title_loc_args',
   titleLocKey: 'title_loc_key',
-  subtitleLocArgs: 'subtitle_loc_args',
-  subtitleLocKey: 'subtitle_loc_key',
 };
 
 // Key renames for the messaging options object.
