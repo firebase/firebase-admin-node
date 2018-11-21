@@ -2321,7 +2321,7 @@ describe('Messaging', () => {
                   'loc-key': 'body.loc.key',
                   'loc-args': ['arg1', 'arg2'],
                   'action-loc-key': 'action.loc.key',
-                  'launchImage': 'image',
+                  'launch-image': 'image',
                 },
                 'badge': 42,
                 'sound': 'test.sound',
