@@ -454,8 +454,8 @@ export class ExponentialBackoffPoller extends EventEmitter {
   private repollTimer: NodeJS.Timer;
 
   private pollCallback: () => Promise<object>;
-  private resolve: (object) => void;
-  private reject: (object) => void;
+  private resolve: (result: object) => void;
+  private reject: (err: object) => void;
 
   constructor(
       private readonly initialPollingDelayMillis: number = 1000,
@@ -487,7 +487,7 @@ export class ExponentialBackoffPoller extends EventEmitter {
       }
 
       this.markCompleted();
-      this.reject('ExponentialBackoffPoller deadline exceeded - Master timeout reached');
+      this.reject(new Error('ExponentialBackoffPoller deadline exceeded - Master timeout reached'));
     }, this.masterTimeoutMillis);
 
     return new Promise<object>((resolve, reject) => {

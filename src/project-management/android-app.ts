@@ -78,7 +78,7 @@ export class AndroidApp {
 
           const requiredFieldsList = ['name', 'shaHash'];
 
-          return responseData.certificates.map((certificateJson) => {
+          return responseData.certificates.map((certificateJson: any) => {
             requiredFieldsList.forEach((requiredField) => {
               assertServerResponse(
                   validator.isNonEmptyString(certificateJson[requiredField]),

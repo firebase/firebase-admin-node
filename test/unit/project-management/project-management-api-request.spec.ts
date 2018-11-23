@@ -77,7 +77,7 @@ describe('ProjectManagementRequestHandler', () => {
   });
 
   function testHttpErrors(callback: () => Promise<any>) {
-    const errorCodeMap = {
+    const errorCodeMap: any = {
       400: 'project-management/invalid-argument',
       401: 'project-management/authentication-error',
       403: 'project-management/authentication-error',
@@ -485,7 +485,7 @@ describe('ProjectManagementRequestHandler', () => {
     testHttpErrors(() => requestHandler.getAndroidShaCertificates(APP_ID));
 
     it('should succeed', () => {
-      const expectedResult = { certificates: [] };
+      const expectedResult: any = { certificates: [] };
 
       const stub = sinon.stub(HttpClient.prototype, 'send')
           .resolves(utils.responseFrom(expectedResult));

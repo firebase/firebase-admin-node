@@ -118,7 +118,7 @@ describe('IosApp', () => {
     const requiredFieldsList = ['name', 'appId', 'projectId', 'bundleId'];
     requiredFieldsList.forEach((requiredField) => {
       it(`should throw with API response missing ${requiredField}`, () => {
-        const partialApiResponse = deepCopy(VALID_IOS_APP_METADATA_API_RESPONSE);
+        const partialApiResponse: any = deepCopy(VALID_IOS_APP_METADATA_API_RESPONSE);
         delete partialApiResponse[requiredField];
 
         const stub = sinon

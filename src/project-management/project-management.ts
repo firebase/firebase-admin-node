@@ -162,7 +162,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
               responseData,
               `"apps" field must be present in the ${callerName} response data.`);
 
-          return responseData.apps.map((appJson) => {
+          return responseData.apps.map((appJson: any) => {
             assertServerResponse(
                 validator.isNonEmptyString(appJson.appId),
                 responseData,

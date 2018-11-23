@@ -119,7 +119,7 @@ describe('AndroidApp', () => {
     const requiredFieldsList = ['name', 'appId', 'projectId', 'packageName'];
     requiredFieldsList.forEach((requiredField) => {
       it(`should throw with API response missing ${requiredField}`, () => {
-        const partialApiResponse = deepCopy(VALID_ANDROID_APP_METADATA_API_RESPONSE);
+        const partialApiResponse: any = deepCopy(VALID_ANDROID_APP_METADATA_API_RESPONSE);
         delete partialApiResponse[requiredField];
 
         const stub = sinon
@@ -237,7 +237,7 @@ describe('AndroidApp', () => {
     const requiredFieldsList = ['name', 'shaHash'];
     requiredFieldsList.forEach((requiredField) => {
       it(`should throw with API response missing "certificates[].${requiredField}" field`, () => {
-        const partialApiResponse = deepCopy(VALID_ANDROID_CERTS_API_RESPONSE);
+        const partialApiResponse: any = deepCopy(VALID_ANDROID_CERTS_API_RESPONSE);
         delete partialApiResponse.certificates[1][requiredField];
 
         const stub = sinon
