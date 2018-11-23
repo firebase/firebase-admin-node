@@ -27,7 +27,7 @@ import * as stream from 'stream';
 import * as zlibmod from 'zlib';
 
 /** Http method type definition. */
-export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' | 'HEAD';
 /** API callback function type definition. */
 export type ApiCallbackFunction = (data: object) => void;
 
@@ -179,18 +179,39 @@ export class HttpClient {
  * Sends an HTTP request based on the provided configuration. This is a wrapper around the http and https
  * packages of Node.js, providing content processing, timeouts and error handling.
  */
-function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
+function sendRequest(httpRequestConfig: HttpRequestConfig): Promise<LowLevelResponse> {
+  const config: HttpRequestConfig = deepCopy(httpRequestConfig);
   return new Promise((resolve, reject) => {
     let data: Buffer;
     const headers = config.headers || {};
+    let fullUrl: string = config.url;
     if (config.data) {
-      if (validator.isObject(config.data)) {
-        data = new Buffer(JSON.stringify(config.data), 'utf-8');
+      // GET and HEAD do not support body in request.
+      if (config.method === 'GET' || config.method === 'HEAD') {
+        if (!validator.isObject(config.data)) {
+          return reject(createError(
+            `${config.method} requests cannot have a body`,
+            config,
+          ));
+        }
+
+        // Parse URL and append data to query string.
+        const configUrl = new url.URL(fullUrl);
+        for (const key in config.data as any) {
+          if (config.data.hasOwnProperty(key)) {
+            configUrl.searchParams.append(
+                key,
+                (config.data as {[key: string]: string})[key]);
+          }
+        }
+        fullUrl = configUrl.toString();
+      } else if (validator.isObject(config.data)) {
+        data = Buffer.from(JSON.stringify(config.data), 'utf-8');
         if (typeof headers['Content-Type'] === 'undefined') {
           headers['Content-Type'] = 'application/json;charset=utf-8';
         }
       } else if (validator.isString(config.data)) {
-        data = new Buffer(config.data as string, 'utf-8');
+        data = Buffer.from(config.data as string, 'utf-8');
       } else if (validator.isBuffer(config.data)) {
         data = config.data as Buffer;
       } else {
@@ -200,9 +221,11 @@ function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
         ));
       }
       // Add Content-Length header if data exists
-      headers['Content-Length'] = data.length.toString();
+      if (data) {
+        headers['Content-Length'] = data.length.toString();
+      }
     }
-    const parsed = url.parse(config.url);
+    const parsed = url.parse(fullUrl);
     const protocol = parsed.protocol || 'https:';
     const isHttps = protocol === 'https:';
     const options = {
@@ -236,8 +259,8 @@ function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
         config,
       };
 
-      const responseBuffer = [];
-      respStream.on('data', (chunk) => {
+      const responseBuffer: Buffer[] = [];
+      respStream.on('data', (chunk: Buffer) => {
         responseBuffer.push(chunk);
       });
 
@@ -293,7 +316,7 @@ function createError(
  * the underlying request and response will be attached to the error.
  */
 function enhanceError(
-  error,
+  error: any,
   config: HttpRequestConfig,
   code: string,
   request: http.ClientRequest,
@@ -312,7 +335,7 @@ function enhanceError(
  * Finalizes the current request in-flight by either resolving or rejecting the associated promise. In the event
  * of an error, adds additional useful information to the returned error.
  */
-function finalizeRequest(resolve, reject, response: LowLevelResponse) {
+function finalizeRequest(resolve: (_: any) => void, reject: (_: any) => void, response: LowLevelResponse) {
   if (response.status >= 200 && response.status < 300) {
     resolve(response);
   } else {
@@ -373,7 +396,7 @@ export class ApiSettings {
    * @return {ApiSettings} The current API settings instance.
    */
   public setRequestValidator(requestValidator: ApiCallbackFunction): ApiSettings {
-    const nullFunction = (request: object) => undefined;
+    const nullFunction: (_: object) => void = (_: object) => undefined;
     this.requestValidator = requestValidator || nullFunction;
     return this;
   }
@@ -388,7 +411,7 @@ export class ApiSettings {
    * @return {ApiSettings} The current API settings instance.
    */
   public setResponseValidator(responseValidator: ApiCallbackFunction): ApiSettings {
-    const nullFunction = (request: object) => undefined;
+    const nullFunction: (_: object) => void = (_: object) => undefined;
     this.responseValidator = responseValidator || nullFunction;
     return this;
   }

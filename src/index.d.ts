@@ -207,9 +207,21 @@ declare namespace admin.auth {
     expiresIn: number;
   }
 
-  interface Auth {
-    app: admin.app.App;
+  interface ActionCodeSettings {
+    url: string;
+    handleCodeInApp?: boolean;
+    iOS?: {
+      bundleId: string;
+    };
+    android?: {
+      packageName: string;
+      installApp?: boolean;
+      minimumVersion?: string;
+    };
+    dynamicLinkDomain?: string;
+  }
 
+  interface BaseAuth {
     createCustomToken(uid: string, developerClaims?: Object): Promise<string>;
     createUser(properties: admin.auth.CreateRequest): Promise<admin.auth.UserRecord>;
     deleteUser(uid: string): Promise<void>;
@@ -233,6 +245,22 @@ declare namespace admin.auth {
       sessionCookie: string,
       checkForRevocation?: boolean,
     ): Promise<admin.auth.DecodedIdToken>;
+    generatePasswordResetLink(
+      email: string,
+      actionCodeSettings?: admin.auth.ActionCodeSettings,
+    ): Promise<string>;
+    generateEmailVerificationLink(
+      email: string,
+      actionCodeSettings?: admin.auth.ActionCodeSettings,
+    ): Promise<string>;
+    generateSignInWithEmailLink(
+      email: string,
+      actionCodeSettings: admin.auth.ActionCodeSettings,
+    ): Promise<string>;
+  }
+
+  interface Auth extends admin.auth.BaseAuth {
+    app: admin.app.App;
   }
 }
 
@@ -263,7 +291,7 @@ declare namespace admin.database {
     child(path: string): admin.database.DataSnapshot;
     exists(): boolean;
     exportVal(): any;
-    forEach(action: (a: admin.database.DataSnapshot) => boolean): boolean;
+    forEach(action: (a: admin.database.DataSnapshot) => boolean | void): boolean;
     getPriority(): string|number|null;
     hasChild(path: string): boolean;
     hasChildren(): boolean;
@@ -609,6 +637,7 @@ declare namespace admin.firestore {
   export import QueryDocumentSnapshot = _firestore.QueryDocumentSnapshot;
   export import QuerySnapshot = _firestore.QuerySnapshot;
   export import Timestamp = _firestore.Timestamp;
+  export import Transaction = _firestore.Transaction;
   export import WriteBatch = _firestore.WriteBatch;
   export import WriteResult = _firestore.WriteResult;
 

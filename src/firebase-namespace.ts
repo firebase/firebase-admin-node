@@ -66,7 +66,7 @@ export class FirebaseNamespaceInternals {
   private apps_: {[appName: string]: FirebaseApp} = {};
   private appHooks_: {[service: string]: AppHook} = {};
 
-  constructor(public firebase_) {}
+  constructor(public firebase_: {[key: string]: any}) {}
 
   /**
    * Initializes the FirebaseApp instance.

@@ -27,7 +27,7 @@ import * as validator from './validator';
  * @param {object} obj The object whose properties to rename.
  * @param {object} keyMap The mapping from old to new property names.
  */
-export function renameProperties(obj: object, keyMap: { [key: string]: string }): void {
+export function renameProperties(obj: {[key: string]: any}, keyMap: { [key: string]: string }): void {
   Object.keys(keyMap).forEach((oldKey) => {
     if (oldKey in obj) {
       const newKey = keyMap[oldKey];
@@ -89,4 +89,25 @@ export function getProjectId(app: FirebaseApp): string {
  */
 export function toWebSafeBase64(data: Buffer): string {
   return data.toString('base64').replace(/\//g, '_').replace(/\+/g, '-');
+}
+
+/**
+ * Formats a string of form 'project/{projectId}/{api}' and replaces
+ * with corresponding arguments {projectId: '1234', api: 'resource'}
+ * and returns output: 'project/1234/resource'.
+ *
+ * @param {string} str The original string where the param need to be
+ *     replaced.
+ * @param {object=} params The optional parameters to replace in the
+ *     string.
+ * @return {string} The resulting formatted string.
+ */
+export function formatString(str: string, params?: object): string {
+  let formatted = str;
+  Object.keys(params || {}).forEach((key) => {
+    formatted = formatted.replace(
+        new RegExp('{' + key + '}', 'g'),
+        (params as {[key: string]: string})[key]);
+  });
+  return formatted;
 }

@@ -135,7 +135,7 @@ describe('admin.firestore', () => {
   });
 
   it('admin.firestore.setLogFunction() enables logging for the Firestore module', () => {
-    const logs = [];
+    const logs: string[] = [];
     const source = admin.firestore().collection('cities').doc();
     admin.firestore.setLogFunction((log) => {
       logs.push(log);

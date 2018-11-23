@@ -27,7 +27,7 @@ import * as mocks from '../../resources/mocks';
 
 import {FirebaseApp} from '../../../src/firebase-app';
 import {
-  ApiSettings, HttpClient, HttpError, AuthorizedHttpClient,
+  ApiSettings, HttpClient, HttpError, AuthorizedHttpClient, ApiCallbackFunction,
 } from '../../../src/utils/api-request';
 
 chai.should();
@@ -206,6 +206,90 @@ describe('HttpClient', () => {
     });
   });
 
+  it('should make a GET request with the provided headers and data', () => {
+    const reqData = {key1: 'value1', key2: 'value2'};
+    const respData = {success: true};
+    const scope = nock('https://' + mockHost, {
+      reqheaders: {
+        'Authorization': 'Bearer token',
+        'My-Custom-Header': 'CustomValue',
+      },
+    }).get(mockPath)
+    .query(reqData)
+    .reply(200, respData, {
+      'content-type': 'application/json',
+    });
+    mockedRequests.push(scope);
+    const client = new HttpClient();
+    return client.send({
+      method: 'GET',
+      url: mockUrl,
+      headers: {
+        'authorization': 'Bearer token',
+        'My-Custom-Header': 'CustomValue',
+      },
+      data: reqData,
+    }).then((resp) => {
+      expect(resp.status).to.equal(200);
+      expect(resp.headers['content-type']).to.equal('application/json');
+      expect(resp.data).to.deep.equal(respData);
+      expect(resp.isJson()).to.be.true;
+    });
+  });
+
+  it('should fail with a GET request containing non-object data', () => {
+    const err = 'GET requests cannot have a body.';
+    const client = new HttpClient();
+    return client.send({
+      method: 'GET',
+      url: mockUrl,
+      timeout: 50,
+      data: 'non-object-data',
+    }).should.eventually.be.rejectedWith(err).and.have.property('code', 'app/network-error');
+  });
+
+  it('should make a HEAD request with the provided headers and data', () => {
+    const reqData = {key1: 'value1', key2: 'value2'};
+    const respData = {success: true};
+    const scope = nock('https://' + mockHost, {
+      reqheaders: {
+        'Authorization': 'Bearer token',
+        'My-Custom-Header': 'CustomValue',
+      },
+    }).head(mockPath)
+    .query(reqData)
+    .reply(200, respData, {
+      'content-type': 'application/json',
+    });
+    mockedRequests.push(scope);
+    const client = new HttpClient();
+    return client.send({
+      method: 'HEAD',
+      url: mockUrl,
+      headers: {
+        'authorization': 'Bearer token',
+        'My-Custom-Header': 'CustomValue',
+      },
+      data: reqData,
+    }).then((resp) => {
+      expect(resp.status).to.equal(200);
+      expect(resp.headers['content-type']).to.equal('application/json');
+      expect(resp.data).to.deep.equal(respData);
+      expect(resp.isJson()).to.be.true;
+    });
+  });
+
+  it('should fail with a HEAD request containing non-object data', () => {
+    const err = 'HEAD requests cannot have a body.';
+    const client = new HttpClient();
+    return client.send({
+      method: 'HEAD',
+      url: mockUrl,
+      timeout: 50,
+      data: 'non-object-data',
+    }).should.eventually.be.rejectedWith(err).and.have.property('code', 'app/network-error');
+  });
+
   it('should fail with an HttpError for a 4xx response', () => {
     const data = {error: 'data'};
     mockedRequests.push(mockRequestWithHttpError(400, 'application/json', data));
@@ -372,7 +456,7 @@ describe('AuthorizedHttpClient', () => {
     const options = {
       reqheaders: {
         'Authorization': 'Bearer token',
-        'Content-Type': (header) => {
+        'Content-Type': (header: string) => {
           return header.startsWith('application/json'); // auto-inserted by Axios
         },
         'My-Custom-Header': 'CustomValue',
@@ -457,8 +541,8 @@ describe('ApiSettings', () => {
     describe('with set properties', () => {
       const apiSettings: ApiSettings = new ApiSettings('getAccountInfo', 'GET');
       // Set all apiSettings properties.
-      const requestValidator = (request) => undefined;
-      const responseValidator = (response) => undefined;
+      const requestValidator: ApiCallbackFunction = (request) => undefined;
+      const responseValidator: ApiCallbackFunction = (response) => undefined;
       apiSettings.setRequestValidator(requestValidator);
       apiSettings.setResponseValidator(responseValidator);
       it('should return the correct requestValidator', () => {

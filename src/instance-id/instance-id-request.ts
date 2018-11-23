@@ -32,7 +32,7 @@ const FIREBASE_IID_PATH = '/v1/';
 const FIREBASE_IID_TIMEOUT = 10000;
 
 /** HTTP error codes raised by the backend server. */
-const ERROR_CODES = {
+const ERROR_CODES: {[key: number]: string} = {
   400: 'Malformed instance ID argument.',
   401: 'Request not authorized.',
   403: 'Project does not match instance ID or the client does not have sufficient privileges.',
