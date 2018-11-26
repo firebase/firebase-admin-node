@@ -293,6 +293,18 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
   }
 }
 
+/**
+ * Firebase project management error code structure. This extends PrefixedFirebaseError.
+ *
+ * @param {ProjectManagementErrorCode} code The error code.
+ * @param {string} message The error message.
+ * @constructor
+ */
+export class FirebaseProjectManagementError extends PrefixedFirebaseError {
+  constructor(code: ProjectManagementErrorCode, message: string) {
+    super('project-management', code, message);
+  }
+}
 
 /**
  * App client error codes and their default messages.
@@ -652,6 +664,17 @@ export class InstanceIdClientErrorCode {
     message: 'Instance ID API call failed.',
   };
 }
+
+export type ProjectManagementErrorCode =
+    'already-exists'
+    | 'authentication-error'
+    | 'internal-error'
+    | 'invalid-argument'
+    | 'invalid-project-id'
+    | 'invalid-server-response'
+    | 'not-found'
+    | 'service-unavailable'
+    | 'unknown-error';
 
 /** @const {ServerToClientCode} Auth server to client enum error codes. */
 const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {

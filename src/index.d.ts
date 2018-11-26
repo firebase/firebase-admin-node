@@ -61,6 +61,7 @@ declare namespace admin {
   function storage(app?: admin.app.App): admin.storage.Storage;
   function firestore(app?: admin.app.App): admin.firestore.Firestore;
   function instanceId(app?: admin.app.App): admin.instanceId.InstanceId;
+  function projectManagement(app?: admin.app.App): admin.projectManagement.ProjectManagement;
   function initializeApp(options?: admin.AppOptions, name?: string): admin.app.App;
 }
 
@@ -74,6 +75,7 @@ declare namespace admin.app {
     firestore(): admin.firestore.Firestore;
     instanceId(): admin.instanceId.InstanceId;
     messaging(): admin.messaging.Messaging;
+    projectManagement(): admin.projectManagement.ProjectManagement;
     storage(): admin.storage.Storage;
     delete(): Promise<void>;
   }
@@ -647,6 +649,61 @@ declare namespace admin.instanceId {
     app: admin.app.App;
 
     deleteInstanceId(instanceId: string): Promise<void>;
+  }
+}
+
+declare namespace admin.projectManagement {
+  interface ShaCertificate {
+    certType: ('sha1' | 'sha256');
+    shaHash: string;
+    resourceName?: string;
+  }
+
+  interface AndroidAppMetadata {
+    resourceName: string;
+    appId: string;
+    displayName: string | null;
+    projectId: string;
+    packageName: string;
+  }
+
+  interface AndroidApp {
+    appId: string;
+
+    getMetadata(): Promise<admin.projectManagement.AndroidAppMetadata>;
+    setDisplayName(newDisplayName: string): Promise<void>;
+    getShaCertificates(): Promise<admin.projectManagement.ShaCertificate[]>;
+    addShaCertificate(certificateToAdd: ShaCertificate): Promise<void>;
+    deleteShaCertificate(certificateToRemove: ShaCertificate): Promise<void>;
+    getConfig(): Promise<string>;
+  }
+
+  interface IosAppMetadata {
+    resourceName: string;
+    appId: string;
+    displayName: string;
+    projectId: string;
+    bundleId: string;
+  }
+
+  interface IosApp {
+    appId: string;
+
+    getMetadata(): Promise<admin.projectManagement.IosAppMetadata>;
+    setDisplayName(newDisplayName: string): Promise<void>;
+    getConfig(): Promise<string>;
+  }
+
+  interface ProjectManagement {
+    app: admin.app.App;
+
+    listAndroidApps(): Promise<admin.projectManagement.AndroidApp[]>;
+    listIosApps(): Promise<admin.projectManagement.IosApp[]>;
+    androidApp(appId: string): admin.projectManagement.AndroidApp;
+    iosApp(appId: string): admin.projectManagement.IosApp;
+    createAndroidApp(
+        packageName: string, displayName?: string): Promise<admin.projectManagement.AndroidApp>;
+    createIosApp(bundleId: string, displayName?: string): Promise<admin.projectManagement.IosApp>;
   }
 }
 

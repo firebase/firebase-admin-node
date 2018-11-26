@@ -48,6 +48,7 @@ import {
   setLogFunction,
 } from '@google-cloud/firestore';
 import {InstanceId} from '../../src/instance-id/instance-id';
+import {ProjectManagement} from '../../src/project-management/project-management';
 
 chai.should();
 chai.use(sinonChai);
@@ -583,6 +584,40 @@ describe('FirebaseNamespace', () => {
 
     it('should return a reference to InstanceId type', () => {
       expect(firebaseNamespace.instanceId.InstanceId).to.be.deep.equal(InstanceId);
+    });
+  });
+
+  describe('#projectManagement()', () => {
+    it('should throw when called before initializing an app', () => {
+      expect(() => {
+        firebaseNamespace.projectManagement();
+      }).to.throw(DEFAULT_APP_NOT_FOUND);
+    });
+
+    it('should throw when default app is not initialized', () => {
+      firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
+      expect(() => {
+        firebaseNamespace.projectManagement();
+      }).to.throw(DEFAULT_APP_NOT_FOUND);
+    });
+
+    it('should return a valid namespace when the default app is initialized', () => {
+      const app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions);
+      const projectManagement: ProjectManagement = firebaseNamespace.projectManagement();
+      expect(projectManagement).to.not.be.null;
+      expect(projectManagement.app).to.be.deep.equal(app);
+    });
+
+    it('should return a valid namespace when the named app is initialized', () => {
+      const app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
+      const projectManagement: ProjectManagement = firebaseNamespace.projectManagement(app);
+      expect(projectManagement).to.not.be.null;
+      expect(projectManagement.app).to.be.deep.equal(app);
+    });
+
+    it('should return a reference to ProjectManagement type', () => {
+      expect(firebaseNamespace.projectManagement.ProjectManagement)
+          .to.be.deep.equal(ProjectManagement);
     });
   });
 });

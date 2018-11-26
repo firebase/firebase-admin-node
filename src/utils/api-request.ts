@@ -22,6 +22,7 @@ import * as validator from './validator';
 import http = require('http');
 import https = require('https');
 import url = require('url');
+import {EventEmitter} from 'events';
 import * as stream from 'stream';
 import * as zlibmod from 'zlib';
 
@@ -418,5 +419,123 @@ export class ApiSettings {
   /** @return {ApiCallbackFunction} The response validator. */
   public getResponseValidator(): ApiCallbackFunction {
     return this.responseValidator;
+  }
+}
+
+/**
+ * Class used for polling an endpoint with exponential backoff.
+ *
+ * Example usage:
+ * ```
+ * const poller = new ExponentialBackoffPoller();
+ * poller
+ *     .poll(() => {
+ *       return myRequestToPoll()
+ *           .then((responseData: any) => {
+ *             if (!isValid(responseData)) {
+ *               // Continue polling.
+ *               return null;
+ *             }
+ *
+ *             // Polling complete. Resolve promise with final response data.
+ *             return responseData;
+ *           });
+ *     })
+ *     .then((responseData: any) => {
+ *       console.log(`Final response: ${responseData}`);
+ *     });
+ * ```
+ */
+export class ExponentialBackoffPoller extends EventEmitter {
+  private numTries = 0;
+  private completed = false;
+
+  private masterTimer: NodeJS.Timer;
+  private repollTimer: NodeJS.Timer;
+
+  private pollCallback: () => Promise<object>;
+  private resolve: (result: object) => void;
+  private reject: (err: object) => void;
+
+  constructor(
+      private readonly initialPollingDelayMillis: number = 1000,
+      private readonly maxPollingDelayMillis: number = 10000,
+      private readonly masterTimeoutMillis: number = 60000) {
+    super();
+  }
+
+  /**
+   * Poll the provided callback with exponential backoff.
+   *
+   * @param {() => Promise<object>} callback The callback to be called for each poll. If the
+   *     callback resolves to a falsey value, polling will continue. Otherwise, the truthy
+   *     resolution will be used to resolve the promise returned by this method.
+   * @return {Promise<object>} A Promise which resolves to the truthy value returned by the provided
+   *     callback when polling is complete.
+   */
+  public poll(callback: () => Promise<object>): Promise<object> {
+    if (this.pollCallback) {
+      throw new Error('poll() can only be called once per instance of ExponentialBackoffPoller');
+    }
+
+    this.pollCallback = callback;
+    this.on('poll', this.repoll);
+
+    this.masterTimer = setTimeout(() => {
+      if (this.completed) {
+        return;
+      }
+
+      this.markCompleted();
+      this.reject(new Error('ExponentialBackoffPoller deadline exceeded - Master timeout reached'));
+    }, this.masterTimeoutMillis);
+
+    return new Promise<object>((resolve, reject) => {
+      this.resolve = resolve;
+      this.reject = reject;
+      this.repoll();
+    });
+  }
+
+  private repoll(): void {
+    this.pollCallback()
+        .then((result) => {
+          if (this.completed) {
+            return;
+          }
+
+          if (!result) {
+            this.repollTimer =
+                setTimeout(() => this.emit('poll'), this.getPollingDelayMillis());
+            this.numTries++;
+            return;
+          }
+
+          this.markCompleted();
+          this.resolve(result);
+        })
+        .catch((err) => {
+          if (this.completed) {
+            return;
+          }
+
+          this.markCompleted();
+          this.reject(err);
+        });
+  }
+
+  private getPollingDelayMillis(): number {
+    const increasedPollingDelay = Math.pow(2, this.numTries) * this.initialPollingDelayMillis;
+    return Math.min(increasedPollingDelay, this.maxPollingDelayMillis);
+  }
+
+  private markCompleted(): void {
+    this.completed = true;
+    if (this.masterTimer) {
+      clearTimeout(this.masterTimer);
+    }
+    if (this.repollTimer) {
+      clearTimeout(this.repollTimer);
+    }
   }
 }

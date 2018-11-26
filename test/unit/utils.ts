@@ -74,7 +74,7 @@ export function generateRandomAccessToken(): string {
  * @param {object | string} data Data to be included in the response body.
  * @param {number=} status HTTP status code (defaults to 200).
  * @param {*=} headers HTTP headers to be included in the ersponse.
- * @returns {HttpResponse} An HTTP response object.
+ * @return {HttpResponse} An HTTP response object.
  */
 export function responseFrom(data: object | string, status: number = 200, headers: any = {}): HttpResponse {
   let responseData: any;

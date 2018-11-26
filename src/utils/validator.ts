@@ -81,6 +81,20 @@ export function isString(value: any): boolean {
 
 
 /**
+ * Validates that a value is a base64 string.
+ *
+ * @param {any} value The value to validate.
+ * @return {boolean} Whether the value is a base64 string or not.
+ */
+export function isBase64String(value: any): boolean {
+  if (!isString(value)) {
+    return false;
+  }
+  return /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(value);
+}
+
+
+/**
  * Validates that a value is a non-empty string.
  *
  * @param {any} value The value to validate.
