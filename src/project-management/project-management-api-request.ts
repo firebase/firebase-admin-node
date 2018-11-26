@@ -28,6 +28,10 @@ const PROJECT_MANAGEMENT_HOST_AND_PORT = 'firebase.googleapis.com:443';
 const PROJECT_MANAGEMENT_PATH = '/v1/';
 /** Project management beta backend path. */
 const PROJECT_MANAGEMENT_BETA_PATH = '/v1beta1/';
+/** Project management request header. */
+const PROJECT_MANAGEMENT_HEADERS = {
+  'X-Client-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
+};
 /** Project management request timeout duration in milliseconds. */
 const PROJECT_MANAGEMENT_TIMEOUT_MILLIS = 10000;
 
@@ -275,6 +279,7 @@ export class ProjectManagementRequestHandler {
     const request: HttpRequestConfig = {
       method,
       url: `${baseUrlToUse}${path}`,
+      headers: PROJECT_MANAGEMENT_HEADERS,
       data: requestData,
       timeout: PROJECT_MANAGEMENT_TIMEOUT_MILLIS,
     };

@@ -64,7 +64,8 @@ describe('ProjectManagementRequestHandler', () => {
   beforeEach(() => {
     mockApp = mocks.app();
     expectedHeaders = {
-      Authorization: 'Bearer ' + mockAccessToken,
+      'X-Client-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
+      'Authorization': 'Bearer ' + mockAccessToken,
     };
     requestHandler = new ProjectManagementRequestHandler(mockApp);
     return mockApp.INTERNAL.getToken();
