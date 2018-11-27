@@ -4,6 +4,8 @@
 
 # v6.3.0
 
+- [added] A new `admin.projectManagement()` API for managing apps in a
+  Firebase project.
 - [added] `messaging.ApsAlert` type now supports subtitle in its payload.
 
 # v6.2.0
