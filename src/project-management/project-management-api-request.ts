@@ -115,24 +115,36 @@ export class ProjectManagementRequestHandler {
     this.httpClient = new AuthorizedHttpClient(app);
   }
 
-  public listAndroidApps(projectId: string): Promise<object> {
+  /**
+   * @param {string} parentResourceName Fully-qualified resource name of the project whose Android
+   *     apps you want to list.
+   */
+  public listAndroidApps(parentResourceName: string): Promise<object> {
     return this.invokeRequestHandler(
         'GET',
-        `projects/${projectId}/androidApps?page_size=${LIST_APPS_MAX_PAGE_SIZE}`,
+        `${parentResourceName}/androidApps?page_size=${LIST_APPS_MAX_PAGE_SIZE}`,
         /* requestData */ null,
         'v1beta1');
   }
 
-  public listIosApps(projectId: string): Promise<object> {
+  /**
+   * @param {string} parentResourceName Fully-qualified resource name of the project whose iOS apps
+   *     you want to list.
+   */
+  public listIosApps(parentResourceName: string): Promise<object> {
     return this.invokeRequestHandler(
         'GET',
-        `projects/${projectId}/iosApps?page_size=${LIST_APPS_MAX_PAGE_SIZE}`,
+        `${parentResourceName}/iosApps?page_size=${LIST_APPS_MAX_PAGE_SIZE}`,
         /* requestData */ null,
         'v1beta1');
   }
 
+  /**
+   * @param {string} parentResourceName Fully-qualified resource name of the project that you want
+   *     to create the Android app within.
+   */
   public createAndroidApp(
-      projectId: string, packageName: string, displayName?: string): Promise<object> {
+      parentResourceName: string, packageName: string, displayName?: string): Promise<object> {
     const requestData: any = {
       packageName,
     };
@@ -140,7 +152,7 @@ export class ProjectManagementRequestHandler {
       requestData.displayName = displayName;
     }
     return this
-        .invokeRequestHandler('POST', `projects/${projectId}/androidApps`, requestData, 'v1beta1')
+        .invokeRequestHandler('POST', `${parentResourceName}/androidApps`, requestData, 'v1beta1')
         .then((responseData: any) => {
           assertServerResponse(
               validator.isNonNullObject(responseData),
@@ -154,8 +166,12 @@ export class ProjectManagementRequestHandler {
         });
   }
 
+  /**
+   * @param {string} parentResourceName Fully-qualified resource name of the project that you want
+   *     to create the iOS app within.
+   */
   public createIosApp(
-      projectId: string, bundleId: string, displayName?: string): Promise<object> {
+      parentResourceName: string, bundleId: string, displayName?: string): Promise<object> {
     const requestData: any = {
       bundleId,
     };
@@ -163,7 +179,7 @@ export class ProjectManagementRequestHandler {
       requestData.displayName = displayName;
     }
     return this
-        .invokeRequestHandler('POST', `projects/${projectId}/iosApps`, requestData, 'v1beta1')
+        .invokeRequestHandler('POST', `${parentResourceName}/iosApps`, requestData, 'v1beta1')
         .then((responseData: any) => {
           assertServerResponse(
               validator.isNonNullObject(responseData),
@@ -177,69 +193,69 @@ export class ProjectManagementRequestHandler {
         });
   }
 
-  public getAndroidMetadata(appId: string): Promise<object> {
-    return this.invokeRequestHandler(
-        'GET', `projects/-/androidApps/${appId}`, /* requestData */ null, 'v1beta1');
-  }
-
-  public getIosMetadata(appId: string): Promise<object> {
-    return this.invokeRequestHandler(
-        'GET', `projects/-/iosApps/${appId}`, /* requestData */ null, 'v1beta1');
-  }
-
-  public setAndroidDisplayName(appId: string, newDisplayName: string): Promise<void> {
+  /**
+   * @param {string} resourceName Fully-qualified resource name of the entity whose display name you
+   *     want to set.
+   */
+  public setDisplayName(resourceName: string, newDisplayName: string): Promise<void> {
     const requestData = {
       displayName: newDisplayName,
     };
     return this
         .invokeRequestHandler(
-            'PATCH',
-            `projects/-/androidApps/${appId}?update_mask=display_name`,
-            requestData,
-            'v1beta1')
+            'PATCH', `${resourceName}?update_mask=display_name`, requestData, 'v1beta1')
         .then(() => null);
   }
 
-  public setIosDisplayName(appId: string, newDisplayName: string): Promise<void> {
-    const requestData = {
-      displayName: newDisplayName,
-    };
-    return this
-        .invokeRequestHandler(
-            'PATCH', `projects/-/iosApps/${appId}?update_mask=display_name`, requestData, 'v1beta1')
-        .then(() => null);
-  }
-
-  public getAndroidShaCertificates(appId: string): Promise<object> {
+  /**
+   * @param {string} parentResourceName Fully-qualified resource name of the Android app whose SHA
+   *     certificates you want to get.
+   */
+  public getAndroidShaCertificates(parentResourceName: string): Promise<object> {
     return this.invokeRequestHandler(
-        'GET', `projects/-/androidApps/${appId}/sha`, /* requestData */ null, 'v1beta1');
+        'GET', `${parentResourceName}/sha`, /* requestData */ null, 'v1beta1');
   }
 
-  public addAndroidShaCertificate(appId: string, certificate: ShaCertificate): Promise<void> {
+  /**
+   * @param {string} parentResourceName Fully-qualified resource name of the Android app that you
+   *     want to add the given SHA certificate to.
+   */
+  public addAndroidShaCertificate(
+      parentResourceName: string, certificate: ShaCertificate): Promise<void> {
     const requestData = {
       shaHash: certificate.shaHash,
       certType: CERT_TYPE_API_MAP[certificate.certType],
     };
     return this
-        .invokeRequestHandler('POST', `projects/-/androidApps/${appId}/sha`, requestData, 'v1beta1')
+        .invokeRequestHandler('POST', `${parentResourceName}/sha`, requestData, 'v1beta1')
         .then(() => null);
   }
 
-  public deleteAndroidShaCertificate(certificateToDelete: ShaCertificate): Promise<void> {
+  /**
+   * @param {string} parentResourceName Fully-qualified resource name of the app whose config you
+   *     want to get.
+   */
+  public getConfig(parentResourceName: string): Promise<object> {
+    return this.invokeRequestHandler(
+        'GET', `${parentResourceName}/config`, /* requestData */ null, 'v1beta1');
+  }
+
+  /**
+   * @param {string} parentResourceName Fully-qualified resource name of the entity that you want to
+   *     get.
+   */
+  public getResource(parentResourceName: string): Promise<object> {
+    return this.invokeRequestHandler('GET', parentResourceName, /* requestData */ null, 'v1beta1');
+  }
+
+  /**
+   * @param {string} resourceName Fully-qualified resource name of the entity that you want to
+   *     delete.
+   */
+  public deleteResource(resourceName: string): Promise<void> {
     return this
-        .invokeRequestHandler(
-            'DELETE', certificateToDelete.resourceName, /* requestData */ null, 'v1beta1')
+        .invokeRequestHandler('DELETE', resourceName, /* requestData */ null, 'v1beta1')
         .then(() => null);
-  }
-
-  public getAndroidConfig(appId: string): Promise<object> {
-    return this.invokeRequestHandler(
-        'GET', `projects/-/androidApps/${appId}/config`, /* requestData */ null, 'v1beta1');
-  }
-
-  public getIosConfig(appId: string): Promise<object> {
-    return this.invokeRequestHandler(
-        'GET', `projects/-/iosApps/${appId}/config`, /* requestData */ null, 'v1beta1');
   }
 
   private pollRemoteOperationWithExponentialBackoff(

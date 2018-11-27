@@ -44,6 +44,7 @@ class ProjectManagementInternals implements FirebaseServiceInternalsInterface {
 export class ProjectManagement implements FirebaseServiceInterface {
   public readonly INTERNAL: ProjectManagementInternals = new ProjectManagementInternals();
 
+  private readonly resourceName: string;
   private readonly projectId: string;
   private readonly requestHandler: ProjectManagementRequestHandler;
 
@@ -68,6 +69,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
               + 'set project ID as an app option. Alternatively, set the GOOGLE_CLOUD_PROJECT '
               + 'environment variable.');
     }
+    this.resourceName = `projects/${this.projectId}`;
 
     this.requestHandler = new ProjectManagementRequestHandler(app);
   }
@@ -104,7 +106,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
    * Creates a new Firebase Android app, associated with this Firebase project.
    */
   public createAndroidApp(packageName: string, displayName?: string): Promise<AndroidApp> {
-    return this.requestHandler.createAndroidApp(this.projectId, packageName, displayName)
+    return this.requestHandler.createAndroidApp(this.resourceName, packageName, displayName)
         .then((responseData: any) => {
           assertServerResponse(
               validator.isNonNullObject(responseData),
@@ -123,7 +125,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
    * Creates a new Firebase iOS app, associated with this Firebase project.
    */
   public createIosApp(bundleId: string, displayName?: string): Promise<IosApp> {
-    return this.requestHandler.createIosApp(this.projectId, bundleId, displayName)
+    return this.requestHandler.createIosApp(this.resourceName, bundleId, displayName)
         .then((responseData: any) => {
           assertServerResponse(
               validator.isNonNullObject(responseData),
@@ -143,8 +145,8 @@ export class ProjectManagement implements FirebaseServiceInterface {
    */
   private listPlatformApps<T>(platform: 'android' | 'ios', callerName: string): Promise<T[]> {
     const listPromise: Promise<object> = (platform === 'android') ?
-        this.requestHandler.listAndroidApps(this.projectId)
-        : this.requestHandler.listIosApps(this.projectId);
+        this.requestHandler.listAndroidApps(this.resourceName)
+        : this.requestHandler.listIosApps(this.resourceName);
 
     return listPromise
         .then((responseData: any) => {
