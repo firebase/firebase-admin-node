@@ -456,11 +456,14 @@ declare namespace admin.messaging {
 
   type ApsAlert = {
     title?: string;
+    subtitle?: string;
     body?: string;
     locKey?: string;
     locArgs?: string[];
     titleLocKey?: string;
     titleLocArgs?: string[];
+    subtitleLocKey?: string;
+    subtitleLocArgs?: string[];
     actionLocKey?: string;
     launchImage?: string;
   };

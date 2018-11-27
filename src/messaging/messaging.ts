@@ -180,11 +180,14 @@ export interface Aps {
 
 export interface ApsAlert {
   title?: string;
+  subtitle?: string;
   body?: string;
   locKey?: string;
   locArgs?: string[];
   titleLocKey?: string;
   titleLocArgs?: string[];
+  subtitleLocKey?: string;
+  subtitleLocArgs?: string[];
   actionLocKey?: string;
   launchImage?: string;
 }
@@ -357,12 +360,20 @@ function validateApsAlert(alert: string | ApsAlert) {
       MessagingClientErrorCode.INVALID_PAYLOAD,
       'apns.payload.aps.alert.titleLocKey is required when specifying titleLocArgs');
   }
+  if (validator.isNonEmptyArray(apsAlert.subtitleLocArgs) &&
+  !validator.isNonEmptyString(apsAlert.subtitleLocKey)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD,
+      'apns.payload.aps.alert.subtitleLocKey is required when specifying subtitleLocArgs');
+  }
 
   const propertyMappings = {
     locKey: 'loc-key',
     locArgs: 'loc-args',
     titleLocKey: 'title-loc-key',
     titleLocArgs: 'title-loc-args',
+    subtitleLocKey: 'subtitle-loc-key',
+    subtitleLocArgs: 'subtitle-loc-args',
     actionLocKey: 'action-loc-key',
     launchImage: 'launch-image',
   };

@@ -1737,6 +1737,24 @@ describe('Messaging', () => {
       }).to.throw('titleLocKey is required when specifying titleLocArgs');
     });
 
+    it('should throw given apns subtitleLocArgs without subtitleLocKey', () => {
+      const message: Message = {
+        condition: 'topic-name',
+        apns: {
+          payload: {
+            aps: {
+              alert: {
+                subtitleLocArgs: ['foo'],
+              },
+            },
+          },
+        },
+      };
+      expect(() => {
+        messaging.send(message);
+      }).to.throw('subtitleLocKey is required when specifying subtitleLocArgs');
+    });
+
     it('should throw given apns locArgs without locKey', () => {
       const message: Message = {
         condition: 'topic-name',
@@ -2264,11 +2282,17 @@ describe('Messaging', () => {
             payload: {
               aps: {
                 alert: {
+                  title: 'title',
+                  subtitle: 'subtitle',
+                  body: 'body',
                   titleLocKey: 'title.loc.key',
                   titleLocArgs: ['arg1', 'arg2'],
+                  subtitleLocKey: 'subtitle.loc.key',
+                  subtitleLocArgs: ['arg1', 'arg2'],
                   locKey: 'body.loc.key',
                   locArgs: ['arg1', 'arg2'],
                   actionLocKey: 'action.loc.key',
+                  launchImage: 'image',
                 },
                 badge: 42,
                 sound: 'test.sound',
@@ -2291,11 +2315,17 @@ describe('Messaging', () => {
             payload: {
               aps: {
                 'alert': {
+                  'title': 'title',
+                  'subtitle': 'subtitle',
+                  'body': 'body',
                   'title-loc-key': 'title.loc.key',
                   'title-loc-args': ['arg1', 'arg2'],
+                  'subtitle-loc-key': 'subtitle.loc.key',
+                  'subtitle-loc-args': ['arg1', 'arg2'],
                   'loc-key': 'body.loc.key',
                   'loc-args': ['arg1', 'arg2'],
                   'action-loc-key': 'action.loc.key',
+                  'launch-image': 'image',
                 },
                 'badge': 42,
                 'sound': 'test.sound',
