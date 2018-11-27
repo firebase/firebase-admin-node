@@ -1,5 +1,9 @@
 # Unreleased
 
+-
+
+# v6.3.0
+
 - [added] `messaging.ApsAlert` type now supports subtitle in its payload.
 
 # v6.2.0
