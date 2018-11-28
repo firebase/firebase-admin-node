@@ -4,8 +4,9 @@
 
 # v6.3.0
 
-- [added] `admin.projectManagement()` API for managing apps in a Firebase
-  project.
+- [added] A new `ProjectManagement` service, which includes the ability to
+  create, list, and get details about Android and iOS apps associated with your
+  Firebase Project.
 - [added] `messaging.ApsAlert` type now supports subtitle in its payload.
 
 # v6.2.0
@@ -24,9 +25,6 @@
 - [changed] Upgraded Cloud Firestore client to v0.18.0.
 - [added] Exposed the `CollectionReference`, `WriteBatch`, `WriteResult` and
   `QueryDocumentSnapshot` types from the `admin.firestore` namespace.
-- [added] A new `ProjectManagement` service, which includes the ability to
-  create, list, and get details about Android and iOS apps associated with your
-  Firebase Project.
 
 # v6.0.0
 
