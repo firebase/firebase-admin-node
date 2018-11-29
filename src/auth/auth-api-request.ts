@@ -33,7 +33,7 @@ import {ActionCodeSettings, ActionCodeSettingsBuilder} from './action-code-setti
 
 /** Firebase Auth backend host. */
 const FIREBASE_AUTH_HOST = 'www.googleapis.com';
-/** Firebase Auth backend port number. */	
+/** Firebase Auth backend port number. */
 const FIREBASE_AUTH_PORT = 443;
 /** Firebase Auth backend path. */
 const FIREBASE_AUTH_PATH = '/identitytoolkit/v3/relyingparty/';
