@@ -90,7 +90,7 @@ const FIVE_MINUTES_IN_SECONDS = 5 * 60;
 
 
 describe('Credential', () => {
-  let mockCertificateObject;
+  let mockCertificateObject: any;
   let oldProcessEnv: NodeJS.ProcessEnv;
 
   before(() => utils.mockFetchAccessTokenRequests());

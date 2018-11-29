@@ -742,6 +742,7 @@ describe('HTTP agent', () => {
 
   afterEach(() => {
     _.forEach(stubs, (stub) => stub.restore());
+    return mockApp.delete();
   });
 
   it('should make HTTP calls using the provided agent', () => {
