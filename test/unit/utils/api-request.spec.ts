@@ -446,6 +446,71 @@ describe('AuthorizedHttpClient', () => {
     });
   });
 
+  describe('HTTP Agent', () => {
+    let transportSpy: sinon.SinonSpy = null;
+    let mockAppWithAgent: FirebaseApp;
+    let httpAgent: Agent;
+
+    beforeEach(() => {
+      const options = mockApp.options;
+      options.httpAgent = new Agent();
+      const https = require('https');
+      transportSpy = sinon.spy(https, 'request');
+      mockAppWithAgent = mocks.appWithOptions(options);
+      httpAgent = options.httpAgent;
+    });
+
+    afterEach(() => {
+      transportSpy.restore();
+      transportSpy = null;
+      return mockAppWithAgent.delete();
+    });
+
+    it('should use the HTTP agent set in request', () => {
+      const respData = {success: true};
+      const scope = nock('https://' + mockHost, requestHeaders)
+        .get(mockPath)
+        .reply(200, respData, {
+          'content-type': 'application/json',
+        });
+      mockedRequests.push(scope);
+      const client = new AuthorizedHttpClient(mockAppWithAgent);
+      const requestAgent = new Agent();
+      return client.send({
+        method: 'GET',
+        url: mockUrl,
+        agent: requestAgent,
+      }).then((resp) => {
+        expect(resp.status).to.equal(200);
+        // First call is to the token server
+        expect(transportSpy.callCount).to.equal(2);
+        const options = transportSpy.args[1][0];
+        expect(options.agent).to.equal(requestAgent);
+      });
+    });
+
+    it('should use the HTTP agent set in AppOptions', () => {
+      const respData = {success: true};
+      const scope = nock('https://' + mockHost, requestHeaders)
+        .get(mockPath)
+        .reply(200, respData, {
+          'content-type': 'application/json',
+        });
+      mockedRequests.push(scope);
+      const client = new AuthorizedHttpClient(mockAppWithAgent);
+      return client.send({
+        method: 'GET',
+        url: mockUrl,
+      }).then((resp) => {
+        expect(resp.status).to.equal(200);
+        // First call is to the token server
+        expect(transportSpy.callCount).to.equal(2);
+        const options = transportSpy.args[1][0];
+        expect(options.agent).to.equal(httpAgent);
+      });
+    });
+  });
+
   it('should make a POST request with the provided headers and data', () => {
     const reqData = {request: 'data'};
     const respData = {success: true};

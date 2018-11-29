@@ -42,7 +42,7 @@ export interface HttpRequestConfig {
   data?: string | object | Buffer;
   /** Connect and read timeout (in milliseconds) for the outgoing request. */
   timeout?: number;
-  agent?: http.Agent;
+  httpAgent?: http.Agent;
 }
 
 /**
@@ -238,7 +238,7 @@ function sendRequest(httpRequestConfig: HttpRequestConfig): Promise<LowLevelResp
       port,
       path: parsed.path,
       method: config.method,
-      agent: config.agent,
+      agent: config.httpAgent,
       headers,
     };
     const transport: any = isHttps ? https : http;
@@ -366,6 +366,10 @@ export class AuthorizedHttpClient extends HttpClient {
       requestCopy.headers = requestCopy.headers || {};
       const authHeader = 'Authorization';
       requestCopy.headers[authHeader] = `Bearer ${accessTokenObj.accessToken}`;
+
+      if (!requestCopy.httpAgent && this.app.options.httpAgent) {
+        requestCopy.httpAgent = this.app.options.httpAgent;
+      }
       return super.send(requestCopy);
     });
   }

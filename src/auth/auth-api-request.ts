@@ -498,7 +498,6 @@ const FIREBASE_AUTH_GET_OOB_CODE = new ApiSettings('/accounts:sendOobCode', 'POS
  */
 export class FirebaseAuthRequestHandler {
 
-  private readonly app: FirebaseApp;
   private readonly httpClient: AuthorizedHttpClient;
   private authUrlBuilder: AuthResourceUrlBuilder;
 
@@ -515,7 +514,6 @@ export class FirebaseAuthRequestHandler {
    * @constructor
    */
   constructor(app: FirebaseApp) {
-    this.app = app;
     this.httpClient = new AuthorizedHttpClient(app);
     this.authUrlBuilder = new AuthResourceUrlBuilder(utils.getProjectId(app), 'v1');
   }
@@ -923,10 +921,6 @@ export class FirebaseAuthRequestHandler {
           data: requestData,
           timeout: FIREBASE_AUTH_TIMEOUT,
         };
-        const agent = this.app.options.httpAgent;
-        if (agent) {
-          req.agent = agent;
-        }
         return this.httpClient.send(req);
       })
       .then((response) => {
