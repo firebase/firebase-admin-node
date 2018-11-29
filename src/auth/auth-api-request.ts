@@ -24,7 +24,8 @@ import {
 } from '../utils/api-request';
 import {CreateRequest, UpdateRequest} from './user-record';
 import {
-  UserImportBuilder, UserImportOptions, UserImportRecord, UserImportResult,
+  UserImportBuilder, UserImportOptions, UserImportRecord,
+  UserImportResult,
 } from './user-import-builder';
 import * as utils from '../utils/index';
 import {ActionCodeSettings, ActionCodeSettingsBuilder} from './action-code-settings-builder';
@@ -32,6 +33,8 @@ import {ActionCodeSettings, ActionCodeSettingsBuilder} from './action-code-setti
 
 /** Firebase Auth backend host. */
 const FIREBASE_AUTH_HOST = 'www.googleapis.com';
+/** Firebase Auth backend port number. */	
+const FIREBASE_AUTH_PORT = 443;
 /** Firebase Auth backend path. */
 const FIREBASE_AUTH_PATH = '/identitytoolkit/v3/relyingparty/';
 /** Firebase Auth request header. */
@@ -497,8 +500,7 @@ const FIREBASE_AUTH_GET_OOB_CODE = new ApiSettings('/accounts:sendOobCode', 'POS
  * Class that provides the mechanism to send requests to the Firebase Auth backend endpoints.
  */
 export class FirebaseAuthRequestHandler {
-
-  private readonly httpClient: AuthorizedHttpClient;
+  private httpClient: AuthorizedHttpClient;
   private authUrlBuilder: AuthResourceUrlBuilder;
 
   /**
