@@ -43,7 +43,7 @@ chai.use(chaiAsPromised);
 
 const expect = chai.expect;
 
-let TEST_GCLOUD_CREDENTIALS;
+let TEST_GCLOUD_CREDENTIALS: any;
 const GCLOUD_CREDENTIAL_SUFFIX = 'gcloud/application_default_credentials.json';
 const GCLOUD_CREDENTIAL_PATH = path.resolve(process.env.HOME, '.config', GCLOUD_CREDENTIAL_SUFFIX);
 const MOCK_REFRESH_TOKEN_CONFIG = {
@@ -302,7 +302,7 @@ describe('Credential', () => {
   });
 
   describe('MetadataServiceCredential', () => {
-    let httpStub;
+    let httpStub: sinon.SinonStub;
     before(() => httpStub = sinon.stub(HttpClient.prototype, 'send'));
     after(() => httpStub.restore());
 
@@ -329,7 +329,7 @@ describe('Credential', () => {
 
   describe('ApplicationDefaultCredential', () => {
     let credPath: string;
-    let fsStub;
+    let fsStub: sinon.SinonStub;
 
     beforeEach(()  => credPath = process.env.GOOGLE_APPLICATION_CREDENTIALS);
 

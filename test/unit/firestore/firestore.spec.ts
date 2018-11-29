@@ -42,6 +42,7 @@ describe('Firestore', () => {
     + 'credentials to use Cloud Firestore API.';
 
   const mockServiceAccount = path.resolve(__dirname, '../../resources/mock.key.json');
+  const { version: firebaseVersion } = require('../../../package.json');
 
   beforeEach(() => {
     appCredentials = process.env.GOOGLE_APPLICATION_CREDENTIALS;
@@ -177,6 +178,18 @@ describe('Firestore', () => {
       process.env.GOOGLE_APPLICATION_CREDENTIALS = mockServiceAccount;
       const options = getFirestoreOptions(defaultCredentialApp);
       expect(options.projectId).to.equal('env-project-id');
+    });
+  });
+
+  describe('options.firebaseVersion', () => {
+    it('should return firebaseVersion when using credential with service account certificate', () => {
+      const options = getFirestoreOptions(mockApp);
+      expect(options.firebaseVersion).to.equal(firebaseVersion);
+    });
+
+    it('should return firebaseVersion when using credential without service account certificate', () => {
+      const options = getFirestoreOptions(defaultCredentialApp);
+      expect(options.firebaseVersion).to.equal(firebaseVersion);
     });
   });
 });

@@ -92,7 +92,6 @@ Run the following commands from the command line to get your local environment s
 ```bash
 $ git clone https://github.com/firebase/firebase-admin-node.git
 $ cd firebase-admin-node    # go to the firebase-admin-node directory
-$ npm install -g gulp       # globally install gulp task runner
 $ npm install               # install local npm build / test dependencies
 ```
 
@@ -137,21 +136,26 @@ you do not already have one. Use a separate, dedicated project for integration t
 test suite makes a large number of writes to the Firebase realtime database. Download the service
 account key file from the "Settings > Service Accounts" page of the project, and copy it to
 `test/resources/key.json`. Also obtain the API key for the same project from "Settings > General",
-and save it to `test/resources/apikey.txt`. Finally, to run the integration test suite:
+and save it to `test/resources/apikey.txt`.
+
+Some Auth integration tests require that you enable the IAM API for your Firebase/GCP project,
+and grant your service account ID the "Service Account Token Creator" role. These must be done
+via the Google Cloud Console. Refer to the
+[troubleshooting instructions](https://firebase.google.com/docs/auth/admin/create-custom-tokens#troubleshooting)
+in the official documentation for more details on how to achieve this.
+
+Finally, to run the integration test suite:
 
 ```bash
 $ npm run integration   # Build and run integration test suite
 ```
 
-The integration test suite overwrites the security rules present in your Firebase project. You
-will be prompted before the overwrite takes place:
+By default the integration test suite does not modify the Firebase security rules for the
+Realtime Database. If you want to force update the rules, so that the relevant Database
+integration tests can pass, launch the tests as follows:
 
-```
-Warning: This test will overwrite your project's existing Database rules.
-Overwrite Database rules for tests?
-* 'yes' to agree
-* 'skip' to continue without the overwrite
-* 'no' to cancel
+```bash
+$ npm run test:integration -- --updateRules
 ```
 
 ### Repo Organization

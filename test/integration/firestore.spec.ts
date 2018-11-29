@@ -18,7 +18,6 @@ import * as admin from '../../lib/index';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import {clone} from 'lodash';
-import {DocumentReference} from '@google-cloud/firestore';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -32,7 +31,7 @@ const mountainView = {
 
 describe('admin.firestore', () => {
 
-  let reference: DocumentReference;
+  let reference: admin.firestore.DocumentReference;
 
   before(() => {
     const db = admin.firestore();
@@ -66,7 +65,7 @@ describe('admin.firestore', () => {
       .then((snapshot) => {
         expect(snapshot.exists).to.be.false;
       });
-  }).timeout(5000);
+  });
 
   it('admin.firestore.FieldValue.serverTimestamp() provides a server-side timestamp', () => {
     const expected: any = clone(mountainView);
@@ -82,7 +81,11 @@ describe('admin.firestore', () => {
         return reference.delete();
       })
       .should.eventually.be.fulfilled;
-  }).timeout(5000);
+  });
+
+  it('admin.firestore.CollectionReference type is defined', () => {
+    expect(typeof admin.firestore.CollectionReference).to.be.not.undefined;
+  });
 
   it('admin.firestore.FieldPath type is defined', () => {
     expect(typeof admin.firestore.FieldPath).to.be.not.undefined;
@@ -100,6 +103,14 @@ describe('admin.firestore', () => {
     const now = admin.firestore.Timestamp.now();
     expect(typeof now.seconds).to.equal('number');
     expect(typeof now.nanoseconds).to.equal('number');
+  });
+
+  it('admin.firestore.WriteBatch type is defined', () => {
+    expect(typeof admin.firestore.WriteBatch).to.be.not.undefined;
+  });
+
+  it('admin.firestore.WriteResult type is defined', () => {
+    expect(typeof admin.firestore.WriteResult).to.be.not.undefined;
   });
 
   it('supports saving references in documents', () => {
@@ -121,10 +132,10 @@ describe('admin.firestore', () => {
         return Promise.all(promises);
       })
       .should.eventually.be.fulfilled;
-  }).timeout(5000);
+  });
 
   it('admin.firestore.setLogFunction() enables logging for the Firestore module', () => {
-    const logs = [];
+    const logs: string[] = [];
     const source = admin.firestore().collection('cities').doc();
     admin.firestore.setLogFunction((log) => {
       logs.push(log);
@@ -136,5 +147,5 @@ describe('admin.firestore', () => {
       .then((result) => {
         expect(logs.length).greaterThan(0);
       });
-  }).timeout(5000);
+  });
 });

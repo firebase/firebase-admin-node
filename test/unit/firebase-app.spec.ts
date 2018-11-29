@@ -40,6 +40,7 @@ import {Storage} from '../../src/storage/storage';
 import {Firestore} from '@google-cloud/firestore';
 import {Database} from '@firebase/database';
 import {InstanceId} from '../../src/instance-id/instance-id';
+import {ProjectManagement} from '../../src/project-management/project-management';
 
 chai.should();
 chai.use(sinonChai);
@@ -333,8 +334,8 @@ describe('FirebaseApp', () => {
 
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
 
-      app[mocks.serviceName]();
-      app[mocks.serviceName + '2']();
+      (app as {[key: string]: any})[mocks.serviceName]();
+      (app as {[key: string]: any})[mocks.serviceName + '2']();
 
       return app.delete().then(() => {
         expect(deleteSpy).to.have.been.calledTwice;
@@ -557,6 +558,32 @@ describe('FirebaseApp', () => {
     });
   });
 
+  describe('projectManagement()', () => {
+    it('should throw if the app has already been deleted', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      return app.delete().then(() => {
+        expect(() => {
+          return app.projectManagement();
+        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
+      });
+    });
+
+    it('should return the projectManagement client', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      const projectManagement: ProjectManagement = app.projectManagement();
+      expect(projectManagement).to.not.be.null;
+    });
+
+    it('should return a cached version of ProjectManagement on subsequent calls', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+      const service1: ProjectManagement = app.projectManagement();
+      const service2: ProjectManagement = app.projectManagement();
+      expect(service1).to.equal(service2);
+    });
+  });
+
   describe('#[service]()', () => {
     it('should throw if the app has already been deleted', () => {
       firebaseNamespace.INTERNAL.registerService(mocks.serviceName, mockServiceFactory);
@@ -565,7 +592,7 @@ describe('FirebaseApp', () => {
 
       return app.delete().then(() => {
         expect(() => {
-          return app[mocks.serviceName]();
+          return (app as {[key: string]: any})[mocks.serviceName]();
         }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
       });
     });
@@ -575,7 +602,7 @@ describe('FirebaseApp', () => {
 
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
 
-      const serviceNamespace = app[mocks.serviceName]();
+      const serviceNamespace = (app as {[key: string]: any})[mocks.serviceName]();
       expect(serviceNamespace).to.have.keys(['app', 'INTERNAL']);
     });
 
@@ -587,10 +614,10 @@ describe('FirebaseApp', () => {
 
       expect(createServiceSpy).to.not.have.been.called;
 
-      const serviceNamespace1 = app[mocks.serviceName]();
+      const serviceNamespace1 = (app as {[key: string]: any})[mocks.serviceName]();
       expect(createServiceSpy).to.have.been.calledOnce;
 
-      const serviceNamespace2 = app[mocks.serviceName]();
+      const serviceNamespace2 = (app as {[key: string]: any})[mocks.serviceName]();
       expect(createServiceSpy).to.have.been.calledOnce;
       expect(serviceNamespace1).to.deep.equal(serviceNamespace2);
     });
@@ -747,7 +774,7 @@ describe('FirebaseApp', () => {
 
     it('stops retrying to proactively refresh the token after five attempts', () => {
       // Force a token refresh.
-      let originalToken;
+      let originalToken: FirebaseAccessToken;
       return mockApp.INTERNAL.getToken(true).then((token) => {
         originalToken = token;
 

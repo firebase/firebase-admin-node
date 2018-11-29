@@ -43,7 +43,7 @@ describe('admin.database', () => {
     }
     console.log(chalk.yellow('    Updating security rules to defaults.'));
     /* tslint:enable:no-console */
-    const client = new apiRequest.SignedApiRequestHandler(defaultApp);
+    const client = new apiRequest.AuthorizedHttpClient(defaultApp);
     const dbUrl =  url.parse(databaseUrl);
     const defaultRules = {
       rules : {
@@ -51,11 +51,12 @@ describe('admin.database', () => {
         '.write': 'auth != null',
       },
     };
-    const headers = {
-      'Content-Type': 'application/json',
-    };
-    return client.sendRequest(dbUrl.host, 443, '/.settings/rules.json',
-      'PUT', defaultRules, headers, 10000);
+    return client.send({
+      url: `https://${dbUrl.host}/.settings/rules.json`,
+      method: 'PUT',
+      data: defaultRules,
+      timeout: 10000,
+    });
   });
 
   it('admin.database() returns a database client', () => {

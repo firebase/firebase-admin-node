@@ -33,6 +33,7 @@ import {Storage} from './storage/storage';
 import {Database} from '@firebase/database';
 import {Firestore} from '@google-cloud/firestore';
 import {InstanceId} from './instance-id/instance-id';
+import {ProjectManagement} from './project-management/project-management';
 
 import * as validator from './utils/validator';
 
@@ -40,7 +41,7 @@ const DEFAULT_APP_NAME = '[DEFAULT]';
 
 /**
  * Constant holding the environment variable name with the default config.
- * If the environmet variable contains a string that starts with '{' it will be parsed as JSON,
+ * If the environment variable contains a string that starts with '{' it will be parsed as JSON,
  * otherwise it will be assumed to be pointing to a file.
  */
 export const FIREBASE_CONFIG_VAR: string = 'FIREBASE_CONFIG';
@@ -66,14 +67,14 @@ export class FirebaseNamespaceInternals {
   private apps_: {[appName: string]: FirebaseApp} = {};
   private appHooks_: {[service: string]: AppHook} = {};
 
-  constructor(public firebase_) {}
+  constructor(public firebase_: {[key: string]: any}) {}
 
   /**
    * Initializes the FirebaseApp instance.
    *
    * @param {FirebaseAppOptions} options Optional options for the FirebaseApp instance. If none present
    *                             will try to initialize from the FIREBASE_CONFIG environment variable.
-   *                             If the environmet variable contains a string that starts with '{'
+   *                             If the environment variable contains a string that starts with '{'
    *                             it will be parsed as JSON,
    *                             otherwise it will be assumed to be pointing to a file.
    * @param {string} [appName] Optional name of the FirebaseApp instance.
@@ -247,7 +248,7 @@ export class FirebaseNamespaceInternals {
   /**
    * Parse the file pointed to by the FIREBASE_CONFIG_VAR, if it exists.
    * Or if the FIREBASE_CONFIG_ENV contains a valid JSON object, parse it directly.
-   * If the environmet variable contains a string that starts with '{' it will be parsed as JSON,
+   * If the environment variable contains a string that starts with '{' it will be parsed as JSON,
    * otherwise it will be assumed to be pointing to a file.
    */
   private loadOptionsFromEnvVar(): FirebaseAppOptions {
@@ -390,11 +391,23 @@ export class FirebaseNamespace {
   }
 
   /**
+   * Gets the `ProjectManagement` service namespace. The returned namespace can be used to get the
+   * `ProjectManagement` service for the default app or an explicitly specified app.
+   */
+  get projectManagement(): FirebaseServiceNamespace<ProjectManagement> {
+    const fn: FirebaseServiceNamespace<ProjectManagement> = (app?: FirebaseApp) => {
+      return this.ensureApp(app).projectManagement();
+    };
+    const projectManagement = require('./project-management/project-management').ProjectManagement;
+    return Object.assign(fn, {ProjectManagement: projectManagement});
+  }
+
+  /**
    * Initializes the FirebaseApp instance.
    *
    * @param {FirebaseAppOptions} [options] Optional options for the FirebaseApp instance.
    *   If none present will try to initialize from the FIREBASE_CONFIG environment variable.
-   *   If the environmet variable contains a string that starts with '{' it will be parsed as JSON,
+   *   If the environment variable contains a string that starts with '{' it will be parsed as JSON,
    *   otherwise it will be assumed to be pointing to a file.
    * @param {string} [appName] Optional name of the FirebaseApp instance.
    *

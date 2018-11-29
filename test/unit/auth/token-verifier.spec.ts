@@ -20,7 +20,6 @@
 import https = require('https');
 
 import * as _ from 'lodash';
-import * as jwt from 'jsonwebtoken';
 import * as chai from 'chai';
 import * as nock from 'nock';
 import * as sinon from 'sinon';
@@ -33,8 +32,6 @@ import {FirebaseTokenGenerator, ServiceAccountSigner} from '../../../src/auth/to
 import * as verifier from '../../../src/auth/token-verifier';
 
 import {Certificate} from '../../../src/auth/credential';
-import { FirebaseAuthError, AuthClientErrorCode } from '../../../src/utils/error';
-import { Auth } from '../../../src/auth/auth';
 
 chai.should();
 chai.use(sinonChai);
@@ -52,7 +49,7 @@ const ONE_HOUR_IN_SECONDS = 60 * 60;
  * @return {Object} A nock response object.
  */
 function mockFetchPublicKeys(): nock.Scope {
-  const mockedResponse = {};
+  const mockedResponse: {[key: string]: string} = {};
   mockedResponse[mocks.certificateObject.private_key_id] = mocks.keyPairs[0].public;
   return nock('https://www.googleapis.com')
     .get('/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com')
@@ -68,7 +65,7 @@ function mockFetchPublicKeys(): nock.Scope {
  * @return {Object} A nock response object.
  */
 function mockFetchWrongPublicKeys(): nock.Scope {
-  const mockedResponse = {};
+  const mockedResponse: {[key: string]: string} = {};
   mockedResponse[mocks.certificateObject.private_key_id] = mocks.keyPairs[1].public;
   return nock('https://www.googleapis.com')
     .get('/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com')
@@ -121,7 +118,7 @@ describe('FirebaseTokenVerifier', () => {
       'project_id',
       verifier.ID_TOKEN_INFO,
     );
-    httpsSpy = sinon.spy(https, 'get');
+    httpsSpy = sinon.spy(https, 'request');
   });
 
   afterEach(() => {
@@ -509,12 +506,12 @@ describe('FirebaseTokenVerifier', () => {
         'project_id',
         verifier.ID_TOKEN_INFO,
       );
-      expect(https.get).not.to.have.been.called;
+      expect(https.request).not.to.have.been.called;
 
       const mockIdToken = mocks.generateIdToken();
 
       return testTokenVerifier.verifyJWT(mockIdToken)
-        .then(() => expect(https.get).to.have.been.calledOnce);
+        .then(() => expect(https.request).to.have.been.calledOnce);
     });
 
     it('should not re-fetch the Google cert public keys every time verifyJWT() is called', () => {
@@ -523,9 +520,9 @@ describe('FirebaseTokenVerifier', () => {
       const mockIdToken = mocks.generateIdToken();
 
       return tokenVerifier.verifyJWT(mockIdToken).then(() => {
-        expect(https.get).to.have.been.calledOnce;
+        expect(https.request).to.have.been.calledOnce;
         return tokenVerifier.verifyJWT(mockIdToken);
-      }).then(() => expect(https.get).to.have.been.calledOnce);
+      }).then(() => expect(https.request).to.have.been.calledOnce);
     });
 
     it('should refresh the Google cert public keys after the "max-age" on the request expires', () => {
@@ -538,25 +535,25 @@ describe('FirebaseTokenVerifier', () => {
       const mockIdToken = mocks.generateIdToken();
 
       return tokenVerifier.verifyJWT(mockIdToken).then(() => {
-        expect(https.get).to.have.been.calledOnce;
+        expect(https.request).to.have.been.calledOnce;
         clock.tick(999);
         return tokenVerifier.verifyJWT(mockIdToken);
       }).then(() => {
-        expect(https.get).to.have.been.calledOnce;
+        expect(https.request).to.have.been.calledOnce;
         clock.tick(1);
         return tokenVerifier.verifyJWT(mockIdToken);
       }).then(() => {
         // One second has passed
-        expect(https.get).to.have.been.calledTwice;
+        expect(https.request).to.have.been.calledTwice;
         clock.tick(999);
         return tokenVerifier.verifyJWT(mockIdToken);
       }).then(() => {
-        expect(https.get).to.have.been.calledTwice;
+        expect(https.request).to.have.been.calledTwice;
         clock.tick(1);
         return tokenVerifier.verifyJWT(mockIdToken);
       }).then(() => {
         // Two seconds have passed
-        expect(https.get).to.have.been.calledThrice;
+        expect(https.request).to.have.been.calledThrice;
       });
     });
 

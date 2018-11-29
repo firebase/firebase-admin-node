@@ -2,6 +2,30 @@
 
 -
 
+# v6.3.0
+
+- [added] A new `ProjectManagement` service, which includes the ability to
+  create, list, and get details about Android and iOS apps associated with your
+  Firebase Project.
+- [added] `messaging.ApsAlert` type now supports subtitle in its payload.
+
+# v6.2.0
+
+- [added] Added the email action link generation APIs for creating links for
+  password reset, email verification and email link sign-in via
+  `auth.generatePasswordResetLink()`, `auth.generateEmailVerificationLink()`
+  and `auth.generateSignInWithEmailLink()`.
+- [changed] Upgraded Cloud Firestore client to v0.19.0.
+- [added] Exposed the `Transaction` type from the `admin.firestore` namespace.
+- [fixed] Fixing error handling in FCM. The SDK now checks the key
+  `type.googleapis.com/google.firebase.fcm.v1.FcmError` to set error code.
+
+# v6.1.0
+
+- [changed] Upgraded Cloud Firestore client to v0.18.0.
+- [added] Exposed the `CollectionReference`, `WriteBatch`, `WriteResult` and
+  `QueryDocumentSnapshot` types from the `admin.firestore` namespace.
+
 # v6.0.0
 
 - [changed] Upgraded Cloud Firestore client to v0.16.0.

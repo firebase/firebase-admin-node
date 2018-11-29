@@ -52,7 +52,7 @@ const ONE_HOUR_IN_SECONDS = 60 * 60;
 const JWT_ALGORITHM = 'RS256';
 
 
-function copyAttr(to: object, from: object, key: string, alt: string) {
+function copyAttr(to: {[key: string]: any}, from: {[key: string]: any}, key: string, alt: string) {
   const tmp = from[key] || from[alt];
   if (typeof tmp !== 'undefined') {
     to[key] = tmp;

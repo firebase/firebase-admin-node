@@ -127,6 +127,11 @@ export interface WebpushConfig {
   headers?: {[key: string]: string};
   data?: {[key: string]: string};
   notification?: WebpushNotification;
+  fcmOptions?: WebpushFcmOptions;
+}
+
+export interface WebpushFcmOptions {
+  link?: string;
 }
 
 export interface WebpushNotification {
@@ -175,11 +180,14 @@ export interface Aps {
 
 export interface ApsAlert {
   title?: string;
+  subtitle?: string;
   body?: string;
   locKey?: string;
   locArgs?: string[];
   titleLocKey?: string;
   titleLocArgs?: string[];
+  subtitleLocKey?: string;
+  subtitleLocArgs?: string[];
   actionLocKey?: string;
   launchImage?: string;
 }
@@ -213,7 +221,7 @@ export interface AndroidNotification {
  * @param {object} map An object to be validated.
  * @param {string} label A label to be included in the errors thrown.
  */
-function validateStringMap(map: object, label: string) {
+function validateStringMap(map: {[key: string]: any}, label: string) {
   if (typeof map === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(map)) {
@@ -291,7 +299,7 @@ function validateAps(aps: Aps) {
   }
   validateApsAlert(aps.alert);
 
-  const propertyMappings = {
+  const propertyMappings: {[key: string]: string} = {
     contentAvailable: 'content-available',
     mutableContent: 'mutable-content',
     threadId: 'thread-id',
@@ -352,12 +360,20 @@ function validateApsAlert(alert: string | ApsAlert) {
       MessagingClientErrorCode.INVALID_PAYLOAD,
       'apns.payload.aps.alert.titleLocKey is required when specifying titleLocArgs');
   }
+  if (validator.isNonEmptyArray(apsAlert.subtitleLocArgs) &&
+  !validator.isNonEmptyString(apsAlert.subtitleLocKey)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD,
+      'apns.payload.aps.alert.subtitleLocKey is required when specifying subtitleLocArgs');
+  }
 
   const propertyMappings = {
     locKey: 'loc-key',
     locArgs: 'loc-args',
     titleLocKey: 'title-loc-key',
     titleLocArgs: 'title-loc-args',
+    subtitleLocKey: 'subtitle-loc-key',
+    subtitleLocArgs: 'subtitle-loc-args',
     actionLocKey: 'action-loc-key',
     launchImage: 'launch-image',
   };
@@ -583,7 +599,7 @@ function mapRawResponseToDevicesResponse(response: object): MessagingDevicesResp
   // Rename properties on the server response
   utils.renameProperties(response, MESSAGING_DEVICES_RESPONSE_KEYS_MAP);
   if ('results' in response) {
-    (response as any).results.forEach((messagingDeviceResult) => {
+    (response as any).results.forEach((messagingDeviceResult: any) => {
       utils.renameProperties(messagingDeviceResult, MESSAGING_DEVICE_RESULT_KEYS_MAP);
 
       // Map the FCM server's error strings to actual error objects.
@@ -634,7 +650,7 @@ function mapRawResponseToTopicManagementResponse(response: object): MessagingTop
 
   const errors: FirebaseArrayIndexError[] = [];
   if ('results' in response) {
-    (response as any).results.forEach((tokenManagementResult, index) => {
+    (response as any).results.forEach((tokenManagementResult: any, index: number) => {
       // Map the FCM server's error strings to actual error objects.
       if ('error' in tokenManagementResult) {
         result.failureCount += 1;
@@ -1135,7 +1151,7 @@ export class Messaging implements FirebaseServiceInterface {
       );
     }
 
-    payloadKeys.forEach((payloadKey) => {
+    payloadKeys.forEach((payloadKey: keyof MessagingPayload) => {
       const value = payloadCopy[payloadKey];
 
       // Validate each top-level key in the payload is an object

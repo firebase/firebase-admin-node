@@ -98,6 +98,15 @@ before(() => {
   cmdArgs = minimist(process.argv.slice(2));
 });
 
+after(() => {
+  return Promise.all([
+    defaultApp.delete(),
+    nullApp.delete(),
+    nonNullApp.delete(),
+    noServiceAccountApp.delete(),
+  ]);
+});
+
 class CertificatelessCredential implements Credential {
   private readonly delegate: admin.credential.Credential;
 

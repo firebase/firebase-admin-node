@@ -63,6 +63,7 @@ declare namespace admin {
   function storage(app?: admin.app.App): admin.storage.Storage;
   function firestore(app?: admin.app.App): admin.firestore.Firestore;
   function instanceId(app?: admin.app.App): admin.instanceId.InstanceId;
+  function projectManagement(app?: admin.app.App): admin.projectManagement.ProjectManagement;
   function initializeApp(options?: admin.AppOptions, name?: string): admin.app.App;
 }
 
@@ -76,6 +77,7 @@ declare namespace admin.app {
     firestore(): admin.firestore.Firestore;
     instanceId(): admin.instanceId.InstanceId;
     messaging(): admin.messaging.Messaging;
+    projectManagement(): admin.projectManagement.ProjectManagement;
     storage(): admin.storage.Storage;
     delete(): Promise<void>;
   }
@@ -207,9 +209,21 @@ declare namespace admin.auth {
     expiresIn: number;
   }
 
-  interface Auth {
-    app: admin.app.App;
+  interface ActionCodeSettings {
+    url: string;
+    handleCodeInApp?: boolean;
+    iOS?: {
+      bundleId: string;
+    };
+    android?: {
+      packageName: string;
+      installApp?: boolean;
+      minimumVersion?: string;
+    };
+    dynamicLinkDomain?: string;
+  }
 
+  interface BaseAuth {
     createCustomToken(uid: string, developerClaims?: Object): Promise<string>;
     createUser(properties: admin.auth.CreateRequest): Promise<admin.auth.UserRecord>;
     deleteUser(uid: string): Promise<void>;
@@ -233,6 +247,22 @@ declare namespace admin.auth {
       sessionCookie: string,
       checkForRevocation?: boolean,
     ): Promise<admin.auth.DecodedIdToken>;
+    generatePasswordResetLink(
+      email: string,
+      actionCodeSettings?: admin.auth.ActionCodeSettings,
+    ): Promise<string>;
+    generateEmailVerificationLink(
+      email: string,
+      actionCodeSettings?: admin.auth.ActionCodeSettings,
+    ): Promise<string>;
+    generateSignInWithEmailLink(
+      email: string,
+      actionCodeSettings: admin.auth.ActionCodeSettings,
+    ): Promise<string>;
+  }
+
+  interface Auth extends admin.auth.BaseAuth {
+    app: admin.app.App;
   }
 }
 
@@ -263,7 +293,7 @@ declare namespace admin.database {
     child(path: string): admin.database.DataSnapshot;
     exists(): boolean;
     exportVal(): any;
-    forEach(action: (a: admin.database.DataSnapshot) => boolean): boolean;
+    forEach(action: (a: admin.database.DataSnapshot) => boolean | void): boolean;
     getPriority(): string|number|null;
     hasChild(path: string): boolean;
     hasChildren(): boolean;
@@ -428,11 +458,14 @@ declare namespace admin.messaging {
 
   type ApsAlert = {
     title?: string;
+    subtitle?: string;
     body?: string;
     locKey?: string;
     locArgs?: string[];
     titleLocKey?: string;
     titleLocArgs?: string[];
+    subtitleLocKey?: string;
+    subtitleLocArgs?: string[];
     actionLocKey?: string;
     launchImage?: string;
   };
@@ -446,7 +479,12 @@ declare namespace admin.messaging {
     headers?: {[key: string]: string};
     data?: {[key: string]: string};
     notification?: WebpushNotification;
+    fcmOptions?: WebpushFcmOptions;
   };
+
+  interface WebpushFcmOptions {
+    link?: string;
+  }
 
   interface WebpushNotification {
     title?: string;
@@ -592,17 +630,23 @@ declare namespace admin.storage {
 }
 
 declare namespace admin.firestore {
+  export import CollectionReference = _firestore.CollectionReference;
+  export import DocumentData = _firestore.DocumentData;
   export import DocumentReference = _firestore.DocumentReference;
   export import DocumentSnapshot = _firestore.DocumentSnapshot;
   export import FieldPath = _firestore.FieldPath;
   export import FieldValue = _firestore.FieldValue;
   export import Firestore = _firestore.Firestore;
   export import GeoPoint = _firestore.GeoPoint;
-  export import setLogFunction = _firestore.setLogFunction;
   export import Query = _firestore.Query;
-  export import DocumentData = _firestore.DocumentData;
+  export import QueryDocumentSnapshot = _firestore.QueryDocumentSnapshot;
   export import QuerySnapshot = _firestore.QuerySnapshot;
   export import Timestamp = _firestore.Timestamp;
+  export import Transaction = _firestore.Transaction;
+  export import WriteBatch = _firestore.WriteBatch;
+  export import WriteResult = _firestore.WriteResult;
+
+  export import setLogFunction = _firestore.setLogFunction;
 }
 
 declare namespace admin.instanceId {
@@ -610,6 +654,61 @@ declare namespace admin.instanceId {
     app: admin.app.App;
 
     deleteInstanceId(instanceId: string): Promise<void>;
+  }
+}
+
+declare namespace admin.projectManagement {
+  interface ShaCertificate {
+    certType: ('sha1' | 'sha256');
+    shaHash: string;
+    resourceName?: string;
+  }
+
+  interface AndroidAppMetadata {
+    resourceName: string;
+    appId: string;
+    displayName: string | null;
+    projectId: string;
+    packageName: string;
+  }
+
+  interface AndroidApp {
+    appId: string;
+
+    getMetadata(): Promise<admin.projectManagement.AndroidAppMetadata>;
+    setDisplayName(newDisplayName: string): Promise<void>;
+    getShaCertificates(): Promise<admin.projectManagement.ShaCertificate[]>;
+    addShaCertificate(certificateToAdd: ShaCertificate): Promise<void>;
+    deleteShaCertificate(certificateToRemove: ShaCertificate): Promise<void>;
+    getConfig(): Promise<string>;
+  }
+
+  interface IosAppMetadata {
+    resourceName: string;
+    appId: string;
+    displayName: string;
+    projectId: string;
+    bundleId: string;
+  }
+
+  interface IosApp {
+    appId: string;
+
+    getMetadata(): Promise<admin.projectManagement.IosAppMetadata>;
+    setDisplayName(newDisplayName: string): Promise<void>;
+    getConfig(): Promise<string>;
+  }
+
+  interface ProjectManagement {
+    app: admin.app.App;
+
+    listAndroidApps(): Promise<admin.projectManagement.AndroidApp[]>;
+    listIosApps(): Promise<admin.projectManagement.IosApp[]>;
+    androidApp(appId: string): admin.projectManagement.AndroidApp;
+    iosApp(appId: string): admin.projectManagement.IosApp;
+    createAndroidApp(
+        packageName: string, displayName?: string): Promise<admin.projectManagement.AndroidApp>;
+    createIosApp(bundleId: string, displayName?: string): Promise<admin.projectManagement.IosApp>;
   }
 }
 

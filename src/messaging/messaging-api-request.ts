@@ -45,7 +45,7 @@ export class FirebaseMessagingRequestHandler {
         return response.error;
       }
       if (validator.isArray(response.error.details)) {
-        const fcmErrorType = 'type.googleapis.com/google.firebase.fcm.v1.FcmErrorCode';
+        const fcmErrorType = 'type.googleapis.com/google.firebase.fcm.v1.FcmError';
         for (const element of response.error.details) {
           if (element['@type'] === fcmErrorType) {
             return element.errorCode;

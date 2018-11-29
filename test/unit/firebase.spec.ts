@@ -44,7 +44,7 @@ describe('Firebase', () => {
   after(() => nock.cleanAll());
 
   afterEach(() => {
-    const deletePromises = [];
+    const deletePromises: Array<Promise<void>> = [];
     firebaseAdmin.apps.forEach((app) => {
       deletePromises.push(app.delete());
     });
@@ -56,7 +56,7 @@ describe('Firebase', () => {
   });
 
   describe('#initializeApp()', () => {
-    const invalidOptions = [null, NaN, 0, 1, true, false, '', 'a', [], _.noop];
+    const invalidOptions: any[] = [null, NaN, 0, 1, true, false, '', 'a', [], _.noop];
     invalidOptions.forEach((invalidOption: any) => {
       it('should throw given invalid options object: ' + JSON.stringify(invalidOption), () => {
         expect(() => {
@@ -91,9 +91,7 @@ describe('Firebase', () => {
     it('should throw given a credential which doesn\'t implement the Credential interface', () => {
       expect(() => {
         firebaseAdmin.initializeApp({
-          credential: {
-            foo: () => null,
-          },
+          credential: {},
         } as any);
       }).to.throw('Invalid Firebase app options');
 

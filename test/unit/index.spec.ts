@@ -33,6 +33,7 @@ import './auth/token-generator.spec';
 import './auth/token-verifier.spec';
 import './auth/auth-api-request.spec';
 import './auth/user-import-builder.spec';
+import './auth/action-code-settings-builder.spec';
 
 // Database
 import './database/database.spec';
@@ -49,3 +50,9 @@ import './firestore/firestore.spec';
 // InstanceId
 import './instance-id/instance-id.spec';
 import './instance-id/instance-id-request.spec';
+
+// ProjectManagement
+import './project-management/project-management.spec';
+import './project-management/project-management-api-request.spec';
+import './project-management/android-app.spec';
+import './project-management/ios-app.spec';
