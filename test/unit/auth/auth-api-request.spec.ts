@@ -756,7 +756,7 @@ describe('HTTP agent', () => {
       .then((result) => {
         expect(result).to.deep.equal('SESSION_COOKIE');
         expect(stub).to.have.been.calledOnce;
-        expect(stub.args[0][0].agent).to.equal(mockApp.options.httpAgent);
+        expect(stub.args[0][0].httpAgent).to.equal(mockApp.options.httpAgent);
       });
   });
 });

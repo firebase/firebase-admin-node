@@ -154,18 +154,18 @@ describe('HttpClient', () => {
       });
     mockedRequests.push(scope);
     const client = new HttpClient();
-    const agent = new Agent();
+    const httpAgent = new Agent();
     const https = require('https');
     transportSpy = sinon.spy(https, 'request');
     return client.send({
       method: 'GET',
       url: mockUrl,
-      agent,
+      httpAgent,
     }).then((resp) => {
       expect(resp.status).to.equal(200);
       expect(transportSpy.callCount).to.equal(1);
       const options = transportSpy.args[0][0];
-      expect(options.agent).to.equal(agent);
+      expect(options.agent).to.equal(httpAgent);
     });
   });
 
@@ -449,7 +449,7 @@ describe('AuthorizedHttpClient', () => {
   describe('HTTP Agent', () => {
     let transportSpy: sinon.SinonSpy = null;
     let mockAppWithAgent: FirebaseApp;
-    let httpAgent: Agent;
+    let agentForApp: Agent;
 
     beforeEach(() => {
       const options = mockApp.options;
@@ -457,7 +457,7 @@ describe('AuthorizedHttpClient', () => {
       const https = require('https');
       transportSpy = sinon.spy(https, 'request');
       mockAppWithAgent = mocks.appWithOptions(options);
-      httpAgent = options.httpAgent;
+      agentForApp = options.httpAgent;
     });
 
     afterEach(() => {
@@ -475,17 +475,17 @@ describe('AuthorizedHttpClient', () => {
         });
       mockedRequests.push(scope);
       const client = new AuthorizedHttpClient(mockAppWithAgent);
-      const requestAgent = new Agent();
+      const httpAgent = new Agent();
       return client.send({
         method: 'GET',
         url: mockUrl,
-        agent: requestAgent,
+        httpAgent,
       }).then((resp) => {
         expect(resp.status).to.equal(200);
         // First call is to the token server
         expect(transportSpy.callCount).to.equal(2);
         const options = transportSpy.args[1][0];
-        expect(options.agent).to.equal(requestAgent);
+        expect(options.agent).to.equal(httpAgent);
       });
     });
 
@@ -506,7 +506,7 @@ describe('AuthorizedHttpClient', () => {
         // First call is to the token server
         expect(transportSpy.callCount).to.equal(2);
         const options = transportSpy.args[1][0];
-        expect(options.agent).to.equal(httpAgent);
+        expect(options.agent).to.equal(agentForApp);
       });
     });
   });

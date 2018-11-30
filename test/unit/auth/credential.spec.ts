@@ -419,7 +419,7 @@ describe('Credential', () => {
       return c.getAccessToken().then((token) => {
         expect(token.access_token).to.equal(expectedToken);
         expect(stub).to.have.been.calledOnce;
-        expect(stub.args[0][0].agent).to.equal(agent);
+        expect(stub.args[0][0].httpAgent).to.equal(agent);
       });
     });
 
@@ -429,7 +429,7 @@ describe('Credential', () => {
       return c.getAccessToken().then((token) => {
         expect(token.access_token).to.equal(expectedToken);
         expect(stub).to.have.been.calledOnce;
-        expect(stub.args[0][0].agent).to.equal(agent);
+        expect(stub.args[0][0].httpAgent).to.equal(agent);
       });
     });
 
@@ -439,7 +439,7 @@ describe('Credential', () => {
       return c.getAccessToken().then((token) => {
         expect(token.access_token).to.equal(expectedToken);
         expect(stub).to.have.been.calledOnce;
-        expect(stub.args[0][0].agent).to.equal(agent);
+        expect(stub.args[0][0].httpAgent).to.equal(agent);
       });
     });
 
@@ -450,7 +450,7 @@ describe('Credential', () => {
       return c.getAccessToken().then((token) => {
         expect(token.access_token).to.equal(expectedToken);
         expect(stub).to.have.been.calledOnce;
-        expect(stub.args[0][0].agent).to.equal(agent);
+        expect(stub.args[0][0].httpAgent).to.equal(agent);
       });
     });
   });
