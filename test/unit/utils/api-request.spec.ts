@@ -30,7 +30,7 @@ import {FirebaseApp} from '../../../src/firebase-app';
 import {
   ApiSettings, HttpClient, HttpError, AuthorizedHttpClient, ApiCallbackFunction,
 } from '../../../src/utils/api-request';
-import {Agent} from 'https';
+import {Agent} from 'http';
 
 chai.should();
 chai.use(sinonChai);

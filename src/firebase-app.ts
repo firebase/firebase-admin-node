@@ -31,7 +31,7 @@ import {FirestoreService} from './firestore/firestore';
 import {InstanceId} from './instance-id/instance-id';
 import {ProjectManagement} from './project-management/project-management';
 
-import {Agent} from 'https';
+import {Agent} from 'http';
 
 /**
  * Type representing a callback which is called every time an app lifecycle event occurs.
