@@ -50,7 +50,7 @@ declare namespace admin {
     serviceAccountId?: string;
     storageBucket?: string;
     projectId?: string;
-    httpAgent?; Agent;
+    httpAgent?: Agent;
   }
 
   var SDK_VERSION: string;

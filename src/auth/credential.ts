@@ -239,7 +239,7 @@ export class CertCredential implements Credential {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       data: postData,
-      agent: this.httpAgent,
+      httpAgent: this.httpAgent,
     };
     return requestAccessToken(this.httpClient, request);
   }
@@ -307,7 +307,7 @@ export class RefreshTokenCredential implements Credential {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       data: postData,
-      agent: this.httpAgent,
+      httpAgent: this.httpAgent,
     };
     return requestAccessToken(this.httpClient, request);
   }
@@ -336,7 +336,7 @@ export class MetadataServiceCredential implements Credential {
     const request: HttpRequestConfig = {
       method: 'GET',
       url: `http://${GOOGLE_METADATA_SERVICE_HOST}${GOOGLE_METADATA_SERVICE_PATH}`,
-      agent: this.httpAgent,
+      httpAgent: this.httpAgent,
     };
     return requestAccessToken(this.httpClient, request);
   }
