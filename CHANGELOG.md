@@ -1,6 +1,13 @@
 # Unreleased
 
--
+- [added] `AppOptions` now accepts an optional `http.Agent` object. The
+  `http.Agent` specified via this API is used when the SDK makes backend
+  HTTP calls. This can be used when it is required to deploy the Admin SDK
+  behind a proxy.
+- [added] `admin.credential.cert()`, `admin.credential.applicationDefault()`,
+  and `admin.credential.refreshToken()` methods now accept an `http.Agent`
+  as an optional argument. If specified, the `http.Agent` will be used
+  when calling Google backend servers to fetch OAuth2 access tokens.
 
 # v6.3.0
 
