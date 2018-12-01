@@ -1,6 +1,6 @@
 # Unreleased
 
--
+- [added] `messaging.AndroidNotification`type now supports channel_id.
 
 # v6.3.0
 

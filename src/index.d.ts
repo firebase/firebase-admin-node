@@ -431,6 +431,7 @@ declare namespace admin.messaging {
     bodyLocArgs?: string[];
     titleLocKey?: string;
     titleLocArgs?: string[];
+    channelId?: string;
   };
 
   type ApnsConfig = {
