@@ -213,6 +213,7 @@ export interface AndroidNotification {
   bodyLocArgs?: string[];
   titleLocKey?: string;
   titleLocArgs?: string[];
+  channelId?: string;
 }
 
 /**
@@ -463,6 +464,7 @@ function validateAndroidNotification(notification: AndroidNotification) {
     bodyLocArgs: 'body_loc_args',
     titleLocKey: 'title_loc_key',
     titleLocArgs: 'title_loc_args',
+    channelId: 'channel_id',
   };
   renameProperties(notification, propertyMappings);
 }

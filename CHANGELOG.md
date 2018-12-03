@@ -8,6 +8,7 @@
   and `admin.credential.refreshToken()` methods now accept an `http.Agent`
   as an optional argument. If specified, the `http.Agent` will be used
   when calling Google backend servers to fetch OAuth2 access tokens.
+- [added] `messaging.AndroidNotification`type now supports channel_id.
 
 # v6.3.0
 
