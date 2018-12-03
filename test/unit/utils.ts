@@ -69,6 +69,13 @@ export function generateRandomAccessToken(): string {
 }
 
 /**
+ * @return {string} A randomly generated alphanumeric string, of the specified length.
+ */
+export function generateRandomString(stringLength: number): string {
+  return _.times(stringLength, () => _.random(35).toString(36)).join('');
+}
+
+/**
  * Creates a mock HTTP response from the given data and parameters.
  *
  * @param {object | string} data Data to be included in the response body.
