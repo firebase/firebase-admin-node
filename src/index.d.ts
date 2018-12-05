@@ -447,7 +447,7 @@ declare namespace admin.messaging {
   type Aps = {
     alert?: string | ApsAlert;
     badge?: number;
-    sound?: string;
+    sound?: string | CriticalSound;
     contentAvailable?: boolean;
     mutableContent?: boolean;
     category?: string;
@@ -468,6 +468,12 @@ declare namespace admin.messaging {
     actionLocKey?: string;
     launchImage?: string;
   };
+
+  type CriticalSound = {
+    critical?: boolean;
+    name?: string;
+    volume?: number;
+  }
 
   type Notification = {
     title?: string;
