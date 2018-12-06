@@ -97,7 +97,7 @@ describe('IosApp', () => {
 
     it('should propagate API errors', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getIosMetadata')
+          .stub(ProjectManagementRequestHandler.prototype, 'getResource')
           .returns(Promise.reject(expectedError));
       stubs.push(stub);
       return iosApp.getMetadata().should.eventually.be.rejected.and.equal(expectedError);
@@ -105,7 +105,7 @@ describe('IosApp', () => {
 
     it('should throw with null API response', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getIosMetadata')
+          .stub(ProjectManagementRequestHandler.prototype, 'getResource')
           .returns(Promise.resolve(null));
       stubs.push(stub);
       return iosApp.getMetadata()
@@ -122,7 +122,7 @@ describe('IosApp', () => {
         delete partialApiResponse[requiredField];
 
         const stub = sinon
-            .stub(ProjectManagementRequestHandler.prototype, 'getIosMetadata')
+            .stub(ProjectManagementRequestHandler.prototype, 'getResource')
             .returns(Promise.resolve(partialApiResponse));
         stubs.push(stub);
         return iosApp.getMetadata()
@@ -136,7 +136,7 @@ describe('IosApp', () => {
 
     it('should resolve with metadata on success', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getIosMetadata')
+          .stub(ProjectManagementRequestHandler.prototype, 'getResource')
           .returns(Promise.resolve(VALID_IOS_APP_METADATA_API_RESPONSE));
       stubs.push(stub);
       return iosApp.getMetadata().should.eventually.deep.equal(VALID_IOS_APP_METADATA);
@@ -148,7 +148,7 @@ describe('IosApp', () => {
 
     it('should propagate API errors', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'setIosDisplayName')
+          .stub(ProjectManagementRequestHandler.prototype, 'setDisplayName')
           .returns(Promise.reject(EXPECTED_ERROR));
       stubs.push(stub);
       return iosApp.setDisplayName(newDisplayName)
@@ -157,7 +157,7 @@ describe('IosApp', () => {
 
     it('should resolve on success', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'setIosDisplayName')
+          .stub(ProjectManagementRequestHandler.prototype, 'setDisplayName')
           .returns(Promise.resolve());
       stubs.push(stub);
       return iosApp.setDisplayName(newDisplayName).should.eventually.be.fulfilled;
@@ -172,7 +172,7 @@ describe('IosApp', () => {
 
     it('should propagate API errors', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getIosConfig')
+          .stub(ProjectManagementRequestHandler.prototype, 'getConfig')
           .returns(Promise.reject(EXPECTED_ERROR));
       stubs.push(stub);
       return iosApp.getConfig().should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
@@ -180,7 +180,7 @@ describe('IosApp', () => {
 
     it('should throw with null API response', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getIosConfig')
+          .stub(ProjectManagementRequestHandler.prototype, 'getConfig')
           .returns(Promise.resolve(null));
       stubs.push(stub);
       return iosApp.getConfig()
@@ -195,7 +195,7 @@ describe('IosApp', () => {
       apiResponse.configFileContents = '1' + apiResponse.configFileContents;
 
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getIosConfig')
+          .stub(ProjectManagementRequestHandler.prototype, 'getConfig')
           .returns(Promise.resolve(apiResponse));
       stubs.push(stub);
       return iosApp.getConfig()
@@ -208,7 +208,7 @@ describe('IosApp', () => {
 
     it('should resolve with metadata on success', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getIosConfig')
+          .stub(ProjectManagementRequestHandler.prototype, 'getConfig')
           .returns(Promise.resolve(VALID_IOS_CONFIG_API_RESPONSE));
       stubs.push(stub);
       return iosApp.getConfig().should.eventually.deep.equal(VALID_IOS_CONFIG);

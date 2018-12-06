@@ -98,7 +98,7 @@ describe('AndroidApp', () => {
 
     it('should propagate API errors', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getAndroidMetadata')
+          .stub(ProjectManagementRequestHandler.prototype, 'getResource')
           .returns(Promise.reject(EXPECTED_ERROR));
       stubs.push(stub);
       return androidApp.getMetadata().should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
@@ -106,7 +106,7 @@ describe('AndroidApp', () => {
 
     it('should throw with null API response', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getAndroidMetadata')
+          .stub(ProjectManagementRequestHandler.prototype, 'getResource')
           .returns(Promise.resolve(null));
       stubs.push(stub);
       return androidApp.getMetadata()
@@ -123,7 +123,7 @@ describe('AndroidApp', () => {
         delete partialApiResponse[requiredField];
 
         const stub = sinon
-            .stub(ProjectManagementRequestHandler.prototype, 'getAndroidMetadata')
+            .stub(ProjectManagementRequestHandler.prototype, 'getResource')
             .returns(Promise.resolve(partialApiResponse));
         stubs.push(stub);
         return androidApp.getMetadata()
@@ -137,7 +137,7 @@ describe('AndroidApp', () => {
 
     it('should resolve with metadata on success', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getAndroidMetadata')
+          .stub(ProjectManagementRequestHandler.prototype, 'getResource')
           .returns(Promise.resolve(VALID_ANDROID_APP_METADATA_API_RESPONSE));
       stubs.push(stub);
       return androidApp.getMetadata().should.eventually.deep.equal(VALID_ANDROID_APP_METADATA);
@@ -149,7 +149,7 @@ describe('AndroidApp', () => {
 
     it('should propagate API errors', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'setAndroidDisplayName')
+          .stub(ProjectManagementRequestHandler.prototype, 'setDisplayName')
           .returns(Promise.reject(EXPECTED_ERROR));
       stubs.push(stub);
       return androidApp.setDisplayName(newDisplayName)
@@ -158,7 +158,7 @@ describe('AndroidApp', () => {
 
     it('should resolve on success', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'setAndroidDisplayName')
+          .stub(ProjectManagementRequestHandler.prototype, 'setDisplayName')
           .returns(Promise.resolve());
       stubs.push(stub);
       return androidApp.setDisplayName(newDisplayName).should.eventually.be.fulfilled;
@@ -290,7 +290,7 @@ describe('AndroidApp', () => {
 
     it('should propagate API errors', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'deleteAndroidShaCertificate')
+          .stub(ProjectManagementRequestHandler.prototype, 'deleteResource')
           .returns(Promise.reject(EXPECTED_ERROR));
       stubs.push(stub);
       return androidApp.deleteShaCertificate(certificateToDelete)
@@ -299,7 +299,7 @@ describe('AndroidApp', () => {
 
     it('should resolve on success', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'deleteAndroidShaCertificate')
+          .stub(ProjectManagementRequestHandler.prototype, 'deleteResource')
           .returns(Promise.resolve());
       stubs.push(stub);
       return androidApp.deleteShaCertificate(certificateToDelete).should.eventually.be.fulfilled;
@@ -314,7 +314,7 @@ describe('AndroidApp', () => {
 
     it('should propagate API errors', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getAndroidConfig')
+          .stub(ProjectManagementRequestHandler.prototype, 'getConfig')
           .returns(Promise.reject(EXPECTED_ERROR));
       stubs.push(stub);
       return androidApp.getConfig().should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
@@ -322,7 +322,7 @@ describe('AndroidApp', () => {
 
     it('should throw with null API response', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getAndroidConfig')
+          .stub(ProjectManagementRequestHandler.prototype, 'getConfig')
           .returns(Promise.resolve(null));
       stubs.push(stub);
       return androidApp.getConfig()
@@ -337,7 +337,7 @@ describe('AndroidApp', () => {
       apiResponse.configFileContents = '1' + apiResponse.configFileContents;
 
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getAndroidConfig')
+          .stub(ProjectManagementRequestHandler.prototype, 'getConfig')
           .returns(Promise.resolve(apiResponse));
       stubs.push(stub);
       return androidApp.getConfig()
@@ -350,7 +350,7 @@ describe('AndroidApp', () => {
 
     it('should resolve with metadata on success', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getAndroidConfig')
+          .stub(ProjectManagementRequestHandler.prototype, 'getConfig')
           .returns(Promise.resolve(VALID_ANDROID_CONFIG_API_RESPONSE));
       stubs.push(stub);
       return androidApp.getConfig().should.eventually.deep.equal(VALID_ANDROID_CONFIG);
