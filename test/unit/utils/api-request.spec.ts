@@ -487,9 +487,8 @@ describe('AuthorizedHttpClient', () => {
     const respData = {success: true};
     const options = {
       reqheaders: {
-        'Authorization': 'Bearer token',
         'Content-Type': (header: string) => {
-          return header.startsWith('application/json'); // auto-inserted by Axios
+          return header.startsWith('application/json'); // auto-inserted
         },
         'My-Custom-Header': 'CustomValue',
       },
@@ -513,6 +512,39 @@ describe('AuthorizedHttpClient', () => {
       expect(resp.status).to.equal(200);
       expect(resp.headers['content-type']).to.equal('application/json');
       expect(resp.data).to.deep.equal(respData);
+    });
+  });
+
+  it('should not mutate the arguments', () => {
+    const reqData = {request: 'data'};
+    const options = {
+      reqheaders: {
+        'Content-Type': (header: string) => {
+          return header.startsWith('application/json'); // auto-inserted
+        },
+        'My-Custom-Header': 'CustomValue',
+      },
+    };
+    Object.assign(options.reqheaders, requestHeaders.reqheaders);
+    const scope = nock('https://' + mockHost, options)
+      .post(mockPath, reqData)
+      .reply(200, {success: true}, {
+        'content-type': 'application/json',
+      });
+    mockedRequests.push(scope);
+    const client = new AuthorizedHttpClient(mockApp);
+    const request: HttpRequestConfig = {
+      method: 'POST',
+      url: mockUrl,
+      headers: {
+        'My-Custom-Header': 'CustomValue',
+      },
+      data: reqData,
+    };
+    const requestCopy = deepCopy(request);
+    return client.send(request).then((resp) => {
+      expect(resp.status).to.equal(200);
+      expect(request).to.deep.equal(requestCopy);
     });
   });
 });

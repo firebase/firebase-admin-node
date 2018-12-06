@@ -182,7 +182,7 @@ export class HttpClient {
 function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
   return new Promise((resolve, reject) => {
     let data: Buffer;
-    const headers = config.headers ? deepCopy(config.headers) : {};
+    const headers = Object.assign({}, config.headers);
     let fullUrl: string = config.url;
     if (config.data) {
       // GET and HEAD do not support body in request.
@@ -354,8 +354,8 @@ export class AuthorizedHttpClient extends HttpClient {
 
   public send(request: HttpRequestConfig): Promise<HttpResponse> {
     return this.app.INTERNAL.getToken().then((accessTokenObj) => {
-      const requestCopy = deepCopy(request);
-      requestCopy.headers = requestCopy.headers || {};
+      const requestCopy = Object.assign({}, request);
+      requestCopy.headers = Object.assign({}, request.headers);
       const authHeader = 'Authorization';
       requestCopy.headers[authHeader] = `Bearer ${accessTokenObj.accessToken}`;
       return super.send(requestCopy);
