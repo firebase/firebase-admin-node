@@ -42,6 +42,7 @@ export interface HttpRequestConfig {
   data?: string | object | Buffer;
   /** Connect and read timeout (in milliseconds) for the outgoing request. */
   timeout?: number;
+  httpAgent?: http.Agent;
 }
 
 /**
@@ -228,11 +229,16 @@ function sendRequest(httpRequestConfig: HttpRequestConfig): Promise<LowLevelResp
     const parsed = url.parse(fullUrl);
     const protocol = parsed.protocol || 'https:';
     const isHttps = protocol === 'https:';
-    const options = {
+    let port: string = parsed.port;
+    if (!port) {
+      port = isHttps ? '443' : '80';
+    }
+    const options: https.RequestOptions = {
       hostname: parsed.hostname,
-      port: parsed.port,
+      port,
       path: parsed.path,
       method: config.method,
+      agent: config.httpAgent,
       headers,
     };
     const transport: any = isHttps ? https : http;
@@ -360,6 +366,10 @@ export class AuthorizedHttpClient extends HttpClient {
       requestCopy.headers = requestCopy.headers || {};
       const authHeader = 'Authorization';
       requestCopy.headers[authHeader] = `Bearer ${accessTokenObj.accessToken}`;
+
+      if (!requestCopy.httpAgent && this.app.options.httpAgent) {
+        requestCopy.httpAgent = this.app.options.httpAgent;
+      }
       return super.send(requestCopy);
     });
   }
