@@ -34,6 +34,7 @@ import './auth/token-verifier.spec';
 import './auth/auth-api-request.spec';
 import './auth/user-import-builder.spec';
 import './auth/action-code-settings-builder.spec';
+import './auth/auth-config.spec';
 
 // Database
 import './database/database.spec';

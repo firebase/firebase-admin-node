@@ -28,6 +28,10 @@ import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier } from './token-verifier';
 import {ActionCodeSettings} from './action-code-settings-builder';
+import {
+  AuthProviderConfig, AuthProviderConfigFilter, ListProviderConfigResults, UpdateAuthProviderRequest,
+  SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
+} from './auth-config';
 
 
 /**
@@ -415,6 +419,157 @@ class BaseAuth {
   public generateSignInWithEmailLink(email: string, actionCodeSettings: ActionCodeSettings): Promise<string> {
     return this.authRequestHandler.getEmailActionLink('EMAIL_SIGNIN', email, actionCodeSettings);
   }
+
+  /**
+   * Returns the list of existing provider configuation matching the filter provided.
+   * At most, 100 provider configs are allowed to be imported one at a time.
+   *
+   * @param {AuthProviderConfigFilter} options The provider config filter to apply.
+   * @return {Promise<ListProviderConfigResults>} A promise that resolves with the list of provider configs
+   *     meeting the filter requirements.
+   */
+  public listProviderConfigs(options: AuthProviderConfigFilter): Promise<ListProviderConfigResults> {
+    if (options && options.type === 'oidc') {
+      return this.authRequestHandler.listOAuthIdpConfigs(options.maxResults, options.pageToken)
+        .then((response: any) => {
+          // List of provider configurations to return.
+          const providerConfigs: OIDCConfig[] = [];
+          // Convert each provider config response to a OIDCConfig.
+          response.oauthIdpConfigs.forEach((configResponse: any) => {
+            providerConfigs.push(new OIDCConfig(configResponse));
+          });
+          // Return list of provider configuration and the next page token if available.
+          const result = {
+            providerConfigs,
+            pageToken: response.nextPageToken,
+          };
+          // Delete result.pageToken if undefined.
+          if (typeof result.pageToken === 'undefined') {
+            delete result.pageToken;
+          }
+          return result;
+        });
+    } else if (options && options.type === 'saml') {
+      return this.authRequestHandler.listInboundSamlConfigs(options.maxResults, options.pageToken)
+        .then((response: any) => {
+          // List of provider configurations to return.
+          const providerConfigs: SAMLConfig[] = [];
+          // Convert each provider config response to a SAMLConfig.
+          response.inboundSamlConfigs.forEach((configResponse: any) => {
+            providerConfigs.push(new SAMLConfig(configResponse));
+          });
+          // Return list of provider configuration and the next page token if available.
+          const result = {
+            providerConfigs,
+            pageToken: response.nextPageToken,
+          };
+          // Delete result.pageToken if undefined.
+          if (typeof result.pageToken === 'undefined') {
+            delete result.pageToken;
+          }
+          return result;
+        });
+    }
+    return Promise.reject(
+        new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          `"AuthProviderConfigFilter.type" must be either "saml' or "oidc"`));
+  }
+
+  /**
+   * Takes in the provider ID whose configuration is being looked up.
+   * Returns a promise that resolves with the provider configuration corresponding to the provider ID specified.
+   *
+   * @param {string} providerId  The provider ID corresponding to the provider config to return.
+   * @return {Promise<AuthProviderConfig>}
+   */
+  public getProviderConfig(providerId: string): Promise<AuthProviderConfig> {
+    if (OIDCConfig.isProviderId(providerId)) {
+      return this.authRequestHandler.getOAuthIdpConfig(providerId)
+        .then((response: OIDCConfigServerResponse) => {
+          return new OIDCConfig(response);
+        });
+    } else if (SAMLConfig.isProviderId(providerId)) {
+      return this.authRequestHandler.getInboundSamlConfig(providerId)
+        .then((response: SAMLConfigServerResponse) => {
+          return new SAMLConfig(response);
+        });
+    }
+    return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
+  }
+
+  /**
+   * Deletes the provider configuration corresponding to the provider ID passed.
+   *
+   * @param {string} providerId The provider ID corresponding to the provider config to delete.
+   * @return {Promise<void>} A promise that resolves on completion.
+   */
+  public deleteProviderConfig(providerId: string): Promise<void> {
+    if (OIDCConfig.isProviderId(providerId)) {
+      return this.authRequestHandler.deleteOAuthIdpConfig(providerId);
+    } else if (SAMLConfig.isProviderId(providerId)) {
+      return this.authRequestHandler.deleteInboundSamlConfig(providerId);
+    }
+    return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
+  }
+
+  /**
+   * Returns a promise that resolves with the updated AuthProviderConfig when the provider configuration corresponding
+   * to the provider ID specified is updated with the specified configuration.
+   *
+   * @param {string} providerId The provider ID corresponding to the provider config to update.
+   * @param {UpdateAuthProviderRequest} updatedConfig The updated configuration.
+   * @return {Promise<AuthProviderConfig>} A promise that resolves with the updated provider configuration.
+   */
+  public updateProviderConfig(
+      providerId: string, updatedConfig: UpdateAuthProviderRequest): Promise<AuthProviderConfig> {
+    if (!validator.isNonNullObject(updatedConfig)) {
+      return Promise.reject(new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        'Request is missing "UpdateAuthProviderRequest" configuration.',
+      ));
+    }
+    if (OIDCConfig.isProviderId(providerId)) {
+      return this.authRequestHandler.updateOAuthIdpConfig(providerId, updatedConfig)
+        .then((response) => {
+          return new OIDCConfig(response);
+        });
+    } else if (SAMLConfig.isProviderId(providerId)) {
+      return this.authRequestHandler.updateInboundSamlConfig(providerId, updatedConfig)
+        .then((response) => {
+          return new SAMLConfig(response);
+        });
+    }
+    return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
+  }
+
+  /**
+   * Returns a promise that resolves with the newly created AuthProviderConfig when the new provider configuration is
+   * created.
+   * @param {AuthProviderConfig} config The provider configuration to create.
+   * @return {Promise<AuthProviderConfig>} A promise that resolves with the created provider configuration.
+   */
+  public createProviderConfig(config: AuthProviderConfig): Promise<AuthProviderConfig> {
+    if (config && OIDCConfig.isProviderId(config.providerId)) {
+      return this.authRequestHandler.createOAuthIdpConfig(config)
+        .then((response) => {
+          return new OIDCConfig(response);
+        });
+    } else if (config && SAMLConfig.isProviderId(config.providerId)) {
+      return this.authRequestHandler.createInboundSamlConfig(config)
+        .then((response) => {
+          return new SAMLConfig(response);
+        });
+    }
+    if (!validator.isNonNullObject(config)) {
+      return Promise.reject(new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        'Request is missing "AuthProviderConfig" configuration.',
+      ));
+    }
+    return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
+  }
+
 
   /**
    * Verifies the decoded Firebase issued JWT is not revoked. Returns a promise that resolves
