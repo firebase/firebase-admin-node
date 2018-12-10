@@ -75,7 +75,7 @@ export function isNumber(value: any): boolean {
  * @param {any} value The value to validate.
  * @return {boolean} Whether the value is a string or not.
  */
-export function isString(value: any): boolean {
+export function isString(value: any): value is string {
   return typeof value === 'string';
 }
 

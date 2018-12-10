@@ -348,7 +348,7 @@ function validateApsSound(sound: string | CriticalSound) {
       'apns.payload.aps.sound must be a string or a non-null object');
   }
 
-  const volume = (sound as CriticalSound).volume;
+  const volume = sound.volume;
   if (typeof volume !== 'undefined') {
     if (!validator.isNumber(volume)) {
       throw new FirebaseMessagingError(
