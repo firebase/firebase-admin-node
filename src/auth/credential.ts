@@ -21,7 +21,7 @@ import path = require('path');
 
 import {AppErrorCodes, FirebaseAppError} from '../utils/error';
 import {HttpClient, HttpRequestConfig} from '../utils/api-request';
-
+import {Agent} from 'http';
 
 const GOOGLE_TOKEN_AUDIENCE = 'https://accounts.google.com/o/oauth2/token';
 const GOOGLE_AUTH_TOKEN_HOST = 'accounts.google.com';
@@ -216,13 +216,16 @@ function requestAccessToken(client: HttpClient, request: HttpRequestConfig): Pro
  * Implementation of Credential that uses a service account certificate.
  */
 export class CertCredential implements Credential {
+
   private readonly certificate: Certificate;
   private readonly httpClient: HttpClient;
+  private readonly httpAgent: Agent;
 
-  constructor(serviceAccountPathOrObject: string | object) {
+  constructor(serviceAccountPathOrObject: string | object, httpAgent?: Agent) {
     this.certificate = (typeof serviceAccountPathOrObject === 'string') ?
       Certificate.fromPath(serviceAccountPathOrObject) : new Certificate(serviceAccountPathOrObject);
     this.httpClient = new HttpClient();
+    this.httpAgent = httpAgent;
   }
 
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
@@ -236,6 +239,7 @@ export class CertCredential implements Credential {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       data: postData,
+      httpAgent: this.httpAgent,
     };
     return requestAccessToken(this.httpClient, request);
   }
@@ -278,13 +282,16 @@ export interface Credential {
  * Implementation of Credential that gets access tokens from refresh tokens.
  */
 export class RefreshTokenCredential implements Credential {
+
   private readonly refreshToken: RefreshToken;
   private readonly httpClient: HttpClient;
+  private readonly httpAgent: Agent;
 
-  constructor(refreshTokenPathOrObject: string | object) {
+  constructor(refreshTokenPathOrObject: string | object, httpAgent?: Agent) {
     this.refreshToken = (typeof refreshTokenPathOrObject === 'string') ?
       RefreshToken.fromPath(refreshTokenPathOrObject) : new RefreshToken(refreshTokenPathOrObject);
     this.httpClient = new HttpClient();
+    this.httpAgent = httpAgent;
   }
 
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
@@ -300,6 +307,7 @@ export class RefreshTokenCredential implements Credential {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       data: postData,
+      httpAgent: this.httpAgent,
     };
     return requestAccessToken(this.httpClient, request);
   }
@@ -318,11 +326,17 @@ export class RefreshTokenCredential implements Credential {
 export class MetadataServiceCredential implements Credential {
 
   private readonly httpClient = new HttpClient();
+  private readonly httpAgent: Agent;
+
+  constructor(httpAgent?: Agent) {
+    this.httpAgent = httpAgent;
+  }
 
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
     const request: HttpRequestConfig = {
       method: 'GET',
       url: `http://${GOOGLE_METADATA_SERVICE_HOST}${GOOGLE_METADATA_SERVICE_PATH}`,
+      httpAgent: this.httpAgent,
     };
     return requestAccessToken(this.httpClient, request);
   }
@@ -340,21 +354,21 @@ export class MetadataServiceCredential implements Credential {
 export class ApplicationDefaultCredential implements Credential {
   private credential_: Credential;
 
-  constructor() {
+  constructor(httpAgent?: Agent) {
     if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
       const serviceAccount = Certificate.fromPath(process.env.GOOGLE_APPLICATION_CREDENTIALS);
-      this.credential_ = new CertCredential(serviceAccount);
+      this.credential_ = new CertCredential(serviceAccount, httpAgent);
       return;
     }
 
     // It is OK to not have this file. If it is present, it must be valid.
     const refreshToken = RefreshToken.fromPath(GCLOUD_CREDENTIAL_PATH);
     if (refreshToken) {
-      this.credential_ = new RefreshTokenCredential(refreshToken);
+      this.credential_ = new RefreshTokenCredential(refreshToken, httpAgent);
       return;
     }
 
-    this.credential_ = new MetadataServiceCredential();
+    this.credential_ = new MetadataServiceCredential(httpAgent);
   }
 
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
