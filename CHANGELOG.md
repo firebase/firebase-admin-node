@@ -1,5 +1,8 @@
 # Unreleased
 
+- [added] `messaging.Aps` type now supports configuring a critical sound.
+  A new `messaging.CriticalSound` type has been introduced for this purpose.
+- [added] `messaging.AndroidNotification` type now supports `channel_id`.
 - [added] `AppOptions` now accepts an optional `http.Agent` object. The
   `http.Agent` specified via this API is used when the SDK makes backend
   HTTP calls. This can be used when it is required to deploy the Admin SDK
