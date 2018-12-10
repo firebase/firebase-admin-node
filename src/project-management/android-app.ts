@@ -19,6 +19,8 @@ import * as validator from '../utils/validator';
 import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request';
 
 export class AndroidApp {
+  private readonly resourceName: string;
+
   constructor(
       public readonly appId: string,
       private readonly requestHandler: ProjectManagementRequestHandler) {
@@ -26,10 +28,12 @@ export class AndroidApp {
       throw new FirebaseProjectManagementError(
           'invalid-argument', 'appId must be a non-empty string.');
     }
+
+    this.resourceName = `projects/-/androidApps/${appId}`;
   }
 
   public getMetadata(): Promise<AndroidAppMetadata> {
-    return this.requestHandler.getAndroidMetadata(this.appId)
+    return this.requestHandler.getResource(this.resourceName)
         .then((responseData: any) => {
           assertServerResponse(
               validator.isNonNullObject(responseData),
@@ -56,11 +60,11 @@ export class AndroidApp {
   }
 
   public setDisplayName(newDisplayName: string): Promise<void> {
-    return this.requestHandler.setAndroidDisplayName(this.appId, newDisplayName);
+    return this.requestHandler.setDisplayName(this.resourceName, newDisplayName);
   }
 
   public getShaCertificates(): Promise<ShaCertificate[]> {
-    return this.requestHandler.getAndroidShaCertificates(this.appId)
+    return this.requestHandler.getAndroidShaCertificates(this.resourceName)
         .then((responseData: any) => {
           assertServerResponse(
               validator.isNonNullObject(responseData),
@@ -93,11 +97,11 @@ export class AndroidApp {
   }
 
   public addShaCertificate(certificateToAdd: ShaCertificate): Promise<void> {
-    return this.requestHandler.addAndroidShaCertificate(this.appId, certificateToAdd);
+    return this.requestHandler.addAndroidShaCertificate(this.resourceName, certificateToAdd);
   }
 
   public deleteShaCertificate(certificateToDelete: ShaCertificate): Promise<void> {
-    return this.requestHandler.deleteAndroidShaCertificate(certificateToDelete);
+    return this.requestHandler.deleteResource(certificateToDelete.resourceName);
   }
 
   /**
@@ -105,7 +109,7 @@ export class AndroidApp {
    *     be written to a JSON file.
    */
   public getConfig(): Promise<string> {
-    return this.requestHandler.getAndroidConfig(this.appId)
+    return this.requestHandler.getConfig(this.resourceName)
         .then((responseData: any) => {
           assertServerResponse(
               validator.isNonNullObject(responseData),

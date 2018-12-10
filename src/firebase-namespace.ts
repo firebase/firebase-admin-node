@@ -15,6 +15,7 @@
  */
 
 import fs = require('fs');
+import {Agent} from 'http';
 import {deepExtend} from './utils/deep-copy';
 import {AppErrorCodes, FirebaseAppError} from './utils/error';
 import {AppHook, FirebaseApp, FirebaseAppOptions} from './firebase-app';
@@ -270,25 +271,26 @@ export class FirebaseNamespaceInternals {
 
 
 const firebaseCredential = {
-  cert: (serviceAccountPathOrObject: string | object): Credential => {
+  cert: (serviceAccountPathOrObject: string | object, httpAgent?: Agent): Credential => {
     const stringifiedServiceAccount = JSON.stringify(serviceAccountPathOrObject);
     if (!(stringifiedServiceAccount in globalCertCreds)) {
-      globalCertCreds[stringifiedServiceAccount] = new CertCredential(serviceAccountPathOrObject);
+      globalCertCreds[stringifiedServiceAccount] = new CertCredential(serviceAccountPathOrObject, httpAgent);
     }
     return globalCertCreds[stringifiedServiceAccount];
   },
 
-  refreshToken: (refreshTokenPathOrObject: string | object): Credential => {
+  refreshToken: (refreshTokenPathOrObject: string | object, httpAgent?: Agent): Credential => {
     const stringifiedRefreshToken = JSON.stringify(refreshTokenPathOrObject);
     if (!(stringifiedRefreshToken in globalRefreshTokenCreds)) {
-      globalRefreshTokenCreds[stringifiedRefreshToken] = new RefreshTokenCredential(refreshTokenPathOrObject);
+      globalRefreshTokenCreds[stringifiedRefreshToken] = new RefreshTokenCredential(
+        refreshTokenPathOrObject, httpAgent);
     }
     return globalRefreshTokenCreds[stringifiedRefreshToken];
   },
 
-  applicationDefault: (): Credential => {
+  applicationDefault: (httpAgent?: Agent): Credential => {
     if (typeof globalAppDefaultCred === 'undefined') {
-      globalAppDefaultCred = new ApplicationDefaultCredential();
+      globalAppDefaultCred = new ApplicationDefaultCredential(httpAgent);
     }
     return globalAppDefaultCred;
   },

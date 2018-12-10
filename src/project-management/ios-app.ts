@@ -19,6 +19,8 @@ import * as validator from '../utils/validator';
 import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request';
 
 export class IosApp {
+  private readonly resourceName: string;
+
   constructor(
       public readonly appId: string,
       private readonly requestHandler: ProjectManagementRequestHandler) {
@@ -26,10 +28,12 @@ export class IosApp {
       throw new FirebaseProjectManagementError(
           'invalid-argument', 'appId must be a non-empty string.');
     }
+
+    this.resourceName = `projects/-/iosApps/${appId}`;
   }
 
   public getMetadata(): Promise<IosAppMetadata> {
-    return this.requestHandler.getIosMetadata(this.appId)
+    return this.requestHandler.getResource(this.resourceName)
         .then((responseData: any) => {
           assertServerResponse(
               validator.isNonNullObject(responseData),
@@ -56,7 +60,7 @@ export class IosApp {
   }
 
   public setDisplayName(newDisplayName: string): Promise<void> {
-    return this.requestHandler.setIosDisplayName(this.appId, newDisplayName);
+    return this.requestHandler.setDisplayName(this.resourceName, newDisplayName);
   }
 
   /**
@@ -64,7 +68,7 @@ export class IosApp {
    *     be written to a plist file.
    */
   public getConfig(): Promise<string> {
-    return this.requestHandler.getIosConfig(this.appId)
+    return this.requestHandler.getConfig(this.resourceName)
         .then((responseData: any) => {
           assertServerResponse(
               validator.isNonNullObject(responseData),

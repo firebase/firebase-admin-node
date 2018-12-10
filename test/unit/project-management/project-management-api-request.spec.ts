@@ -40,8 +40,10 @@ const VALID_SHA_1_HASH = '0123456789abcdefABCDEF012345678901234567';
 describe('ProjectManagementRequestHandler', () => {
   const HOST = 'firebase.googleapis.com';
   const PORT = 443;
-  const PROJECT_ID: string = 'test-project-id';
+  const PROJECT_RESOURCE_NAME: string = 'projects/test-project-id';
   const APP_ID: string = 'test-app-id';
+  const ANDROID_APP_RESOURCE_NAME: string = `projects/-/androidApp/${APP_ID}`;
+  const IOS_APP_RESOURCE_NAME: string = `projects/-/iosApp/${APP_ID}`;
   const PACKAGE_NAME: string = 'test-package-name';
   const BUNDLE_ID: string = 'test-bundle-id';
   const DISPLAY_NAME: string = 'test-display-name';
@@ -121,11 +123,14 @@ describe('ProjectManagementRequestHandler', () => {
   });
 
   describe('listAndroidApps', () => {
-    testHttpErrors(() => requestHandler.listAndroidApps(PROJECT_ID));
+    testHttpErrors(() => requestHandler.listAndroidApps(PROJECT_RESOURCE_NAME));
 
     it('should succeed', () => {
       const expectedResult = {
-        apps: [{ appId: APP_ID }],
+        apps: [{
+          resourceName: ANDROID_APP_RESOURCE_NAME,
+          appId: APP_ID,
+        }],
       };
 
       const stub = sinon.stub(HttpClient.prototype, 'send')
@@ -133,8 +138,8 @@ describe('ProjectManagementRequestHandler', () => {
       stubs.push(stub);
 
       const url =
-          `https://${HOST}:${PORT}/v1beta1/projects/${PROJECT_ID}/androidApps?page_size=100`;
-      return requestHandler.listAndroidApps(PROJECT_ID)
+          `https://${HOST}:${PORT}/v1beta1/${PROJECT_RESOURCE_NAME}/androidApps?page_size=100`;
+      return requestHandler.listAndroidApps(PROJECT_RESOURCE_NAME)
           .then((result) => {
             expect(result).to.deep.equal(expectedResult);
             expect(stub).to.have.been.calledOnce.and.calledWith({
@@ -149,19 +154,22 @@ describe('ProjectManagementRequestHandler', () => {
   });
 
   describe('listIosApps', () => {
-    testHttpErrors(() => requestHandler.listIosApps(PROJECT_ID));
+    testHttpErrors(() => requestHandler.listIosApps(PROJECT_RESOURCE_NAME));
 
     it('should succeed', () => {
       const expectedResult = {
-        apps: [{ appId: APP_ID }],
+        apps: [{
+          resourceName: IOS_APP_RESOURCE_NAME,
+          appId: APP_ID,
+        }],
       };
 
       const stub = sinon.stub(HttpClient.prototype, 'send')
           .resolves(utils.responseFrom(expectedResult));
       stubs.push(stub);
 
-      const url = `https://${HOST}:${PORT}/v1beta1/projects/${PROJECT_ID}/iosApps?page_size=100`;
-      return requestHandler.listIosApps(PROJECT_ID)
+      const url = `https://${HOST}:${PORT}/v1beta1/${PROJECT_RESOURCE_NAME}/iosApps?page_size=100`;
+      return requestHandler.listIosApps(PROJECT_RESOURCE_NAME)
           .then((result) => {
             expect(result).to.deep.equal(expectedResult);
             expect(stub).to.have.been.calledOnce.and.calledWith({
@@ -176,13 +184,13 @@ describe('ProjectManagementRequestHandler', () => {
   });
 
   describe('createAndroidApp', () => {
-    testHttpErrors(() => requestHandler.createAndroidApp(PROJECT_ID, PACKAGE_NAME));
+    testHttpErrors(() => requestHandler.createAndroidApp(PROJECT_RESOURCE_NAME, PACKAGE_NAME));
 
     it('should throw when initial API responseData.name is null', () => {
       const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
       stubs.push(stub);
 
-      return requestHandler.createAndroidApp(PROJECT_ID, PACKAGE_NAME, DISPLAY_NAME)
+      return requestHandler.createAndroidApp(PROJECT_RESOURCE_NAME, PACKAGE_NAME, DISPLAY_NAME)
           .should.eventually.be.rejected
           .and.have.property(
               'message',
@@ -206,7 +214,7 @@ describe('ProjectManagementRequestHandler', () => {
           .onSecondCall().resolves(utils.responseFrom(pollErrorResult));
       stubs.push(stub);
 
-      return requestHandler.createAndroidApp(PROJECT_ID, PACKAGE_NAME, DISPLAY_NAME)
+      return requestHandler.createAndroidApp(PROJECT_RESOURCE_NAME, PACKAGE_NAME, DISPLAY_NAME)
           .should.eventually.be.rejected
           .and.have.property('code', 'project-management/already-exists');
     });
@@ -220,7 +228,7 @@ describe('ProjectManagementRequestHandler', () => {
           .onSecondCall().returns(Promise.reject(pollError));
       stubs.push(stub);
 
-      return requestHandler.createAndroidApp(PROJECT_ID, PACKAGE_NAME, DISPLAY_NAME)
+      return requestHandler.createAndroidApp(PROJECT_RESOURCE_NAME, PACKAGE_NAME, DISPLAY_NAME)
           .should.eventually.be.rejected
           .and.equal(pollError);
     });
@@ -241,7 +249,7 @@ describe('ProjectManagementRequestHandler', () => {
           .onThirdCall().resolves(utils.responseFrom(secondPollResult));
       stubs.push(stub);
 
-      const initialUrl = `https://${HOST}:${PORT}/v1beta1/projects/${PROJECT_ID}/androidApps`;
+      const initialUrl = `https://${HOST}:${PORT}/v1beta1/${PROJECT_RESOURCE_NAME}/androidApps`;
       const initialData = {
         packageName: PACKAGE_NAME,
         displayName: DISPLAY_NAME,
@@ -249,7 +257,7 @@ describe('ProjectManagementRequestHandler', () => {
 
       const pollingUrl = `https://${HOST}:${PORT}/v1/${OPERATION_RESOURCE_NAME}`;
 
-      return requestHandler.createAndroidApp(PROJECT_ID, PACKAGE_NAME, DISPLAY_NAME)
+      return requestHandler.createAndroidApp(PROJECT_RESOURCE_NAME, PACKAGE_NAME, DISPLAY_NAME)
           .then((result) => {
             expect(result).to.equal(expectedJsonResponse);
             expect(stub)
@@ -273,13 +281,13 @@ describe('ProjectManagementRequestHandler', () => {
   });
 
   describe('createIosApp', () => {
-    testHttpErrors(() => requestHandler.createIosApp(PROJECT_ID, BUNDLE_ID));
+    testHttpErrors(() => requestHandler.createIosApp(PROJECT_RESOURCE_NAME, BUNDLE_ID));
 
     it('should throw when initial API responseData.name is null', () => {
       const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
       stubs.push(stub);
 
-      return requestHandler.createIosApp(PROJECT_ID, BUNDLE_ID, DISPLAY_NAME)
+      return requestHandler.createIosApp(PROJECT_RESOURCE_NAME, BUNDLE_ID, DISPLAY_NAME)
           .should.eventually.be.rejected
           .and.have.property(
               'message',
@@ -302,7 +310,7 @@ describe('ProjectManagementRequestHandler', () => {
           .onSecondCall().resolves(utils.responseFrom(pollErrorResult));
       stubs.push(stub);
 
-      return requestHandler.createIosApp(PROJECT_ID, BUNDLE_ID, DISPLAY_NAME)
+      return requestHandler.createIosApp(PROJECT_RESOURCE_NAME, BUNDLE_ID, DISPLAY_NAME)
           .should.eventually.be.rejected
           .and.have.property('code', 'project-management/already-exists');
     });
@@ -316,7 +324,7 @@ describe('ProjectManagementRequestHandler', () => {
           .onSecondCall().returns(Promise.reject(pollError));
       stubs.push(stub);
 
-      return requestHandler.createIosApp(PROJECT_ID, BUNDLE_ID, DISPLAY_NAME)
+      return requestHandler.createIosApp(PROJECT_RESOURCE_NAME, BUNDLE_ID, DISPLAY_NAME)
           .should.eventually.be.rejected
           .and.equal(pollError);
     });
@@ -337,7 +345,7 @@ describe('ProjectManagementRequestHandler', () => {
           .onThirdCall().resolves(utils.responseFrom(secondPollResult));
       stubs.push(stub);
 
-      const initialUrl = `https://${HOST}:${PORT}/v1beta1/projects/${PROJECT_ID}/iosApps`;
+      const initialUrl = `https://${HOST}:${PORT}/v1beta1/${PROJECT_RESOURCE_NAME}/iosApps`;
       const initialData = {
         bundleId: BUNDLE_ID,
         displayName: DISPLAY_NAME,
@@ -345,7 +353,7 @@ describe('ProjectManagementRequestHandler', () => {
 
       const pollingUrl = `https://${HOST}:${PORT}/v1/${OPERATION_RESOURCE_NAME}`;
 
-      return requestHandler.createIosApp(PROJECT_ID, BUNDLE_ID, DISPLAY_NAME)
+      return requestHandler.createIosApp(PROJECT_RESOURCE_NAME, BUNDLE_ID, DISPLAY_NAME)
           .then((result) => {
             expect(result).to.equal(expectedJsonResponse);
             expect(stub)
@@ -368,112 +376,27 @@ describe('ProjectManagementRequestHandler', () => {
     });
   });
 
-  describe('getAndroidMetadata', () => {
-    testHttpErrors(() => requestHandler.getAndroidMetadata(APP_ID));
-
-    it('should succeed', () => {
-      const expectedResult = {
-        name: 'test-resource-name',
-        appId: APP_ID,
-        displayName: 'test-display-name',
-        projectId: 'test-project-id',
-        packageName: 'test-package-name',
-      };
-
-      const stub = sinon.stub(HttpClient.prototype, 'send')
-          .resolves(utils.responseFrom(expectedResult));
-      stubs.push(stub);
-
-      return requestHandler.getAndroidMetadata(APP_ID)
-          .then((result) => {
-            expect(result).to.deep.equal(expectedResult);
-            expect(stub).to.have.been.calledOnce.and.calledWith({
-              method: 'GET',
-              url: `https://${HOST}:${PORT}/v1beta1/projects/-/androidApps/${APP_ID}`,
-              data: null,
-              headers: expectedHeaders,
-              timeout: 10000,
-            });
-          });
-    });
-  });
-
-  describe('getIosMetadata', () => {
-    testHttpErrors(() => requestHandler.getIosMetadata(APP_ID));
-
-    it('should succeed', () => {
-      const expectedResult = {
-        name: 'test-resource-name',
-        appId: APP_ID,
-        displayName: 'test-display-name',
-        projectId: 'test-project-id',
-        bundleId: 'test-bundle-id',
-      };
-
-      const stub = sinon.stub(HttpClient.prototype, 'send')
-          .resolves(utils.responseFrom(expectedResult));
-      stubs.push(stub);
-
-      return requestHandler.getIosMetadata(APP_ID)
-          .then((result) => {
-            expect(result).to.deep.equal(expectedResult);
-            expect(stub).to.have.been.calledOnce.and.calledWith({
-              method: 'GET',
-              url: `https://${HOST}:${PORT}/v1beta1/projects/-/iosApps/${APP_ID}`,
-              data: null,
-              headers: expectedHeaders,
-              timeout: 10000,
-            });
-          });
-    });
-  });
-
-  describe('setAndroidDisplayName', () => {
+  describe('setDisplayName', () => {
     const newDisplayName = 'test-new-display-name';
 
-    testHttpErrors(() => requestHandler.setAndroidDisplayName(APP_ID, newDisplayName));
+    testHttpErrors(
+        () => requestHandler.setDisplayName(ANDROID_APP_RESOURCE_NAME, newDisplayName));
 
     it('should succeed', () => {
       const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
       stubs.push(stub);
 
+      const url =
+          `https://${HOST}:${PORT}/v1beta1/${ANDROID_APP_RESOURCE_NAME}?update_mask=display_name`;
       const requestData = {
         displayName: newDisplayName,
       };
-      return requestHandler.setAndroidDisplayName(APP_ID, newDisplayName)
+      return requestHandler.setDisplayName(ANDROID_APP_RESOURCE_NAME, newDisplayName)
           .then((result) => {
             expect(result).to.deep.equal(null);
             expect(stub).to.have.been.calledOnce.and.calledWith({
               method: 'PATCH',
-              url: `https://${HOST}:${PORT}/v1beta1/projects/-/androidApps/${APP_ID}`
-                  + '?update_mask=display_name',
-              data: requestData,
-              headers: expectedHeaders,
-              timeout: 10000,
-            });
-          });
-    });
-  });
-
-  describe('setIosDisplayName', () => {
-    const newDisplayName = 'test-new-display-name';
-
-    testHttpErrors(() => requestHandler.setIosDisplayName(APP_ID, newDisplayName));
-
-    it('should succeed', () => {
-      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
-      stubs.push(stub);
-
-      const requestData = {
-        displayName: newDisplayName,
-      };
-      return requestHandler.setIosDisplayName(APP_ID, newDisplayName)
-          .then((result) => {
-            expect(result).to.deep.equal(null);
-            expect(stub).to.have.been.calledOnce.and.calledWith({
-              method: 'PATCH',
-              url: `https://${HOST}:${PORT}/v1beta1/projects/-/iosApps/${APP_ID}`
-                  + '?update_mask=display_name',
+              url,
               data: requestData,
               headers: expectedHeaders,
               timeout: 10000,
@@ -483,7 +406,7 @@ describe('ProjectManagementRequestHandler', () => {
   });
 
   describe('getAndroidShaCertificates', () => {
-    testHttpErrors(() => requestHandler.getAndroidShaCertificates(APP_ID));
+    testHttpErrors(() => requestHandler.getAndroidShaCertificates(ANDROID_APP_RESOURCE_NAME));
 
     it('should succeed', () => {
       const expectedResult: any = { certificates: [] };
@@ -492,8 +415,8 @@ describe('ProjectManagementRequestHandler', () => {
           .resolves(utils.responseFrom(expectedResult));
       stubs.push(stub);
 
-      const url = `https://${HOST}:${PORT}/v1beta1/projects/-/androidApps/${APP_ID}/sha`;
-      return requestHandler.getAndroidShaCertificates(APP_ID)
+      const url = `https://${HOST}:${PORT}/v1beta1/${ANDROID_APP_RESOURCE_NAME}/sha`;
+      return requestHandler.getAndroidShaCertificates(ANDROID_APP_RESOURCE_NAME)
           .then((result) => {
             expect(result).to.deep.equal(expectedResult);
             expect(stub).to.have.been.calledOnce.and.calledWith({
@@ -510,22 +433,24 @@ describe('ProjectManagementRequestHandler', () => {
   describe('addAndroidShaCertificate', () => {
     const certificateToAdd = new ShaCertificate(VALID_SHA_1_HASH);
 
-    testHttpErrors(() => requestHandler.addAndroidShaCertificate(APP_ID, certificateToAdd));
+    testHttpErrors(
+        () => requestHandler.addAndroidShaCertificate(ANDROID_APP_RESOURCE_NAME, certificateToAdd));
 
     it('should succeed', () => {
       const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
       stubs.push(stub);
 
+      const url = `https://${HOST}:${PORT}/v1beta1/${ANDROID_APP_RESOURCE_NAME}/sha`;
       const requestData = {
         shaHash: VALID_SHA_1_HASH,
         certType: 'SHA_1',
       };
-      return requestHandler.addAndroidShaCertificate(APP_ID, certificateToAdd)
+      return requestHandler.addAndroidShaCertificate(ANDROID_APP_RESOURCE_NAME, certificateToAdd)
           .then((result) => {
             expect(result).to.deep.equal(null);
             expect(stub).to.have.been.calledOnce.and.calledWith({
               method: 'POST',
-              url: `https://${HOST}:${PORT}/v1beta1/projects/-/androidApps/${APP_ID}/sha`,
+              url,
               data: requestData,
               headers: expectedHeaders,
               timeout: 10000,
@@ -534,32 +459,8 @@ describe('ProjectManagementRequestHandler', () => {
     });
   });
 
-  describe('deleteAndroidShaCertificate', () => {
-    const certificateResourceName = 'test-certificate-resource-name';
-    const certificateToDelete = new ShaCertificate(VALID_SHA_1_HASH, certificateResourceName);
-
-    testHttpErrors(() => requestHandler.deleteAndroidShaCertificate(certificateToDelete));
-
-    it('should succeed', () => {
-      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
-      stubs.push(stub);
-
-      return requestHandler.deleteAndroidShaCertificate(certificateToDelete)
-          .then((result) => {
-            expect(result).to.deep.equal(null);
-            expect(stub).to.have.been.calledOnce.and.calledWith({
-              method: 'DELETE',
-              url: `https://${HOST}:${PORT}/v1beta1/${certificateResourceName}`,
-              data: null,
-              headers: expectedHeaders,
-              timeout: 10000,
-            });
-          });
-    });
-  });
-
-  describe('getAndroidConfig', () => {
-    testHttpErrors(() => requestHandler.getAndroidConfig(APP_ID));
+  describe('getConfig', () => {
+    testHttpErrors(() => requestHandler.getConfig(ANDROID_APP_RESOURCE_NAME));
 
     it('should succeed', () => {
       const expectedResult = {
@@ -570,8 +471,8 @@ describe('ProjectManagementRequestHandler', () => {
           .resolves(utils.responseFrom(expectedResult));
       stubs.push(stub);
 
-      const url = `https://${HOST}:${PORT}/v1beta1/projects/-/androidApps/${APP_ID}/config`;
-      return requestHandler.getAndroidConfig(APP_ID)
+      const url = `https://${HOST}:${PORT}/v1beta1/${ANDROID_APP_RESOURCE_NAME}/config`;
+      return requestHandler.getConfig(ANDROID_APP_RESOURCE_NAME)
           .then((result) => {
             expect(result).to.deep.equal(expectedResult);
             expect(stub).to.have.been.calledOnce.and.calledWith({
@@ -585,24 +486,48 @@ describe('ProjectManagementRequestHandler', () => {
     });
   });
 
-  describe('getIosConfig', () => {
-    testHttpErrors(() => requestHandler.getIosConfig(APP_ID));
+  describe('getResource', () => {
+    const resourceName = 'test-resource-name';
+
+    testHttpErrors(() => requestHandler.getResource(resourceName));
 
     it('should succeed', () => {
-      const expectedResult = {
-        configFileContents: 'test-base64-string',
-      };
+      const expectedResult = { success: true };
 
       const stub = sinon.stub(HttpClient.prototype, 'send')
           .resolves(utils.responseFrom(expectedResult));
       stubs.push(stub);
 
-      const url = `https://${HOST}:${PORT}/v1beta1/projects/-/iosApps/${APP_ID}/config`;
-      return requestHandler.getIosConfig(APP_ID)
+      const url = `https://${HOST}:${PORT}/v1beta1/${resourceName}`;
+      return requestHandler.getResource(resourceName)
           .then((result) => {
             expect(result).to.deep.equal(expectedResult);
             expect(stub).to.have.been.calledOnce.and.calledWith({
               method: 'GET',
+              url,
+              data: null,
+              headers: expectedHeaders,
+              timeout: 10000,
+            });
+          });
+    });
+  });
+
+  describe('deleteResource', () => {
+    const resourceName = 'test-resource-name';
+
+    testHttpErrors(() => requestHandler.deleteResource(resourceName));
+
+    it('should succeed', () => {
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
+      stubs.push(stub);
+
+      const url = `https://${HOST}:${PORT}/v1beta1/${resourceName}`;
+      return requestHandler.deleteResource(resourceName)
+          .then((result) => {
+            expect(result).to.deep.equal(null);
+            expect(stub).to.have.been.calledOnce.and.calledWith({
+              method: 'DELETE',
               url,
               data: null,
               headers: expectedHeaders,

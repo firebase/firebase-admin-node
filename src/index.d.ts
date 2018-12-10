@@ -16,6 +16,7 @@
 
 import {Bucket} from '@google-cloud/storage';
 import * as _firestore from '@google-cloud/firestore';
+import {Agent} from 'http';
 
 declare namespace admin {
   interface FirebaseError {
@@ -49,6 +50,7 @@ declare namespace admin {
     serviceAccountId?: string;
     storageBucket?: string;
     projectId?: string;
+    httpAgent?: Agent;
   }
 
   var SDK_VERSION: string;
@@ -269,9 +271,9 @@ declare namespace admin.credential {
     getAccessToken(): Promise<admin.GoogleOAuthAccessToken>;
   }
 
-  function applicationDefault(): admin.credential.Credential;
-  function cert(serviceAccountPathOrObject: string|admin.ServiceAccount): admin.credential.Credential;
-  function refreshToken(refreshTokenPathOrObject: string|Object): admin.credential.Credential;
+  function applicationDefault(httpAgent?: Agent): admin.credential.Credential;
+  function cert(serviceAccountPathOrObject: string|admin.ServiceAccount, httpAgent?: Agent): admin.credential.Credential;
+  function refreshToken(refreshTokenPathOrObject: string|Object, httpAgent?: Agent): admin.credential.Credential;
 }
 
 declare namespace admin.database {
