@@ -239,8 +239,12 @@ function sendRequest(httpRequestConfig: HttpRequestConfig): Promise<LowLevelResp
       path: parsed.path,
       method: config.method,
       agent: config.httpAgent,
+      localAddress: undefined,
       headers,
     };
+    if (process.env.LOCAL_ADDRESS) {
+      options.localAddress = process.env.LOCAL_ADDRESS;
+    }
     const transport: any = isHttps ? https : http;
     const req: http.ClientRequest = transport.request(options, (res: http.IncomingMessage) => {
       if (req.aborted) {
