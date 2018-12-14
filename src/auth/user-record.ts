@@ -186,7 +186,7 @@ export class UserRecord {
     if (typeof response.validSince !== 'undefined') {
       validAfterTime = parseDate(response.validSince * 1000);
     }
-    utils.addReadonlyGetter(this, 'tokensValidAfterTime', validAfterTime);
+    utils.addReadonlyGetter(this, 'tokensValidAfterTime', validAfterTime || undefined);
   }
 
   /** @return {object} The plain object representation of the user record. */
