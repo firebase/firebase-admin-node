@@ -1,5 +1,6 @@
 # Unreleased
 
+- [fixed] Correctly parses error codes with details messages in Firebase Auth.
 - [fixed] Fixed optional fields in UserRecord types to be optional.
 
 # v6.4.0
