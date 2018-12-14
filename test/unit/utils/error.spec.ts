@@ -88,6 +88,13 @@ describe('FirebaseAuthError', () => {
         expect(error.code).to.be.equal('auth/internal-error');
         expect(error.message).to.be.equal('An internal error has occurred.');
       });
+
+      it('should initialize an error from an expected server with server detailed message', () => {
+        // Error code should be separated from detailed message at first colon.
+        const error = FirebaseAuthError.fromServerError('CONFIGURATION_NOT_FOUND : more details key: value');
+        expect(error.code).to.be.equal('auth/configuration-not-found');
+        expect(error.message).to.be.equal('more details key: value');
+      });
     });
 
     describe('with message specified', () => {
@@ -103,6 +110,14 @@ describe('FirebaseAuthError', () => {
             'UNEXPECTED_ERROR', 'An unexpected error occurred.');
         expect(error.code).to.be.equal('auth/internal-error');
         expect(error.message).to.be.equal('An unexpected error occurred.');
+      });
+
+      it('should initialize an error from an expected server with server detailed message', () => {
+        const error = FirebaseAuthError.fromServerError(
+            'CONFIGURATION_NOT_FOUND : more details',
+            'Ignored message');
+        expect(error.code).to.be.equal('auth/configuration-not-found');
+        expect(error.message).to.be.equal('more details');
       });
     });
 
