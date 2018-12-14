@@ -456,7 +456,7 @@ describe('Auth', () => {
       const noValidSinceExpectedUserRecord =
          getValidUserRecord(noValidSinceGetAccountInfoResponse);
       // Confirm null tokensValidAfterTime on user.
-      expect(noValidSinceExpectedUserRecord.tokensValidAfterTime).to.be.null;
+      expect(noValidSinceExpectedUserRecord.tokensValidAfterTime).to.be.undefined;
       // Simulate getUser returns the expected user with no validSince.
       const getUserStub = sinon.stub(Auth.prototype, 'getUser')
         .returns(Promise.resolve(noValidSinceExpectedUserRecord));
@@ -660,7 +660,7 @@ describe('Auth', () => {
       const noValidSinceExpectedUserRecord =
          getValidUserRecord(noValidSinceGetAccountInfoResponse);
       // Confirm null tokensValidAfterTime on user.
-      expect(noValidSinceExpectedUserRecord.tokensValidAfterTime).to.be.null;
+      expect(noValidSinceExpectedUserRecord.tokensValidAfterTime).to.be.undefined;
       // Simulate getUser returns the expected user with no validSince.
       const getUserStub = sinon.stub(Auth.prototype, 'getUser')
         .returns(Promise.resolve(noValidSinceExpectedUserRecord));
