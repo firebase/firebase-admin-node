@@ -104,11 +104,11 @@ declare namespace admin.auth {
 
   interface UserRecord {
     uid: string;
-    email: string;
+    email?: string;
     emailVerified: boolean;
-    displayName: string;
-    phoneNumber: string;
-    photoURL: string;
+    displayName?: string;
+    phoneNumber?: string;
+    photoURL?: string;
     disabled: boolean;
     metadata: admin.auth.UserMetadata;
     providerData: admin.auth.UserInfo[];
