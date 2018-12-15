@@ -105,7 +105,9 @@ export function mockCredentialApp(): FirebaseApp {
 }
 
 export function appWithOptions(options: FirebaseAppOptions): FirebaseApp {
-  return new FirebaseApp(options, appName, new FirebaseNamespace().INTERNAL);
+  const namespaceInternals = new FirebaseNamespace().INTERNAL;
+  namespaceInternals.removeApp = _.noop;
+  return new FirebaseApp(options, appName, namespaceInternals);
 }
 
 export function appReturningNullAccessToken(): FirebaseApp {

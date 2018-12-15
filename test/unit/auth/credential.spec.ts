@@ -35,6 +35,7 @@ import {
   MetadataServiceCredential, RefreshTokenCredential,
 } from '../../../src/auth/credential';
 import { HttpClient } from '../../../src/utils/api-request';
+import {Agent} from 'https';
 
 chai.should();
 chai.use(sinonChai);
@@ -45,6 +46,12 @@ const expect = chai.expect;
 let TEST_GCLOUD_CREDENTIALS: any;
 const GCLOUD_CREDENTIAL_SUFFIX = 'gcloud/application_default_credentials.json';
 const GCLOUD_CREDENTIAL_PATH = path.resolve(process.env.HOME, '.config', GCLOUD_CREDENTIAL_SUFFIX);
+const MOCK_REFRESH_TOKEN_CONFIG = {
+  client_id: 'test_client_id',
+  client_secret: 'test_client_secret',
+  type: 'authorized_user',
+  refresh_token: 'test_token',
+};
 try {
   TEST_GCLOUD_CREDENTIALS = JSON.parse(fs.readFileSync(GCLOUD_CREDENTIAL_PATH).toString());
 } catch (error) {
@@ -83,7 +90,6 @@ const FIVE_MINUTES_IN_SECONDS = 5 * 60;
 
 
 describe('Credential', () => {
-  let mockedRequests: nock.Scope[] = [];
   let mockCertificateObject: any;
   let oldProcessEnv: NodeJS.ProcessEnv;
 
@@ -97,8 +103,6 @@ describe('Credential', () => {
   });
 
   afterEach(() => {
-    _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
-    mockedRequests = [];
     process.env = oldProcessEnv;
   });
 
@@ -280,11 +284,7 @@ describe('Credential', () => {
 
   describe('RefreshTokenCredential', () => {
     it('should not return a certificate', () => {
-      if (skipAndLogWarningIfNoGcloud()) {
-        return;
-      }
-
-      const c = new RefreshTokenCredential(TEST_GCLOUD_CREDENTIALS);
+      const c = new RefreshTokenCredential(MOCK_REFRESH_TOKEN_CONFIG);
       expect(c.getCertificate()).to.be.null;
     });
 
@@ -393,6 +393,64 @@ describe('Credential', () => {
         projectId: mockCertificateObject.project_id,
         clientEmail: mockCertificateObject.client_email,
         privateKey: mockCertificateObject.private_key,
+      });
+    });
+  });
+
+  describe('HTTP Agent', () => {
+    const expectedToken = utils.generateRandomAccessToken();
+    let stub: sinon.SinonStub;
+
+    beforeEach(() => {
+      stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({
+        access_token: expectedToken,
+        token_type: 'Bearer',
+        expires_in: 60 * 60,
+      }));
+    });
+
+    afterEach(() => {
+      stub.restore();
+    });
+
+    it('CertCredential should use the provided HTTP Agent', () => {
+      const agent = new Agent();
+      const c = new CertCredential(mockCertificateObject, agent);
+      return c.getAccessToken().then((token) => {
+        expect(token.access_token).to.equal(expectedToken);
+        expect(stub).to.have.been.calledOnce;
+        expect(stub.args[0][0].httpAgent).to.equal(agent);
+      });
+    });
+
+    it('RefreshTokenCredential should use the provided HTTP Agent', () => {
+      const agent = new Agent();
+      const c = new RefreshTokenCredential(MOCK_REFRESH_TOKEN_CONFIG, agent);
+      return c.getAccessToken().then((token) => {
+        expect(token.access_token).to.equal(expectedToken);
+        expect(stub).to.have.been.calledOnce;
+        expect(stub.args[0][0].httpAgent).to.equal(agent);
+      });
+    });
+
+    it('MetadataServiceCredential should use the provided HTTP Agent', () => {
+      const agent = new Agent();
+      const c = new MetadataServiceCredential(agent);
+      return c.getAccessToken().then((token) => {
+        expect(token.access_token).to.equal(expectedToken);
+        expect(stub).to.have.been.calledOnce;
+        expect(stub.args[0][0].httpAgent).to.equal(agent);
+      });
+    });
+
+    it('ApplicationDefaultCredential should use the provided HTTP Agent', () => {
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../../resources/mock.key.json');
+      const agent = new Agent();
+      const c = new ApplicationDefaultCredential(agent);
+      return c.getAccessToken().then((token) => {
+        expect(token.access_token).to.equal(expectedToken);
+        expect(stub).to.have.been.calledOnce;
+        expect(stub.args[0][0].httpAgent).to.equal(agent);
       });
     });
   });

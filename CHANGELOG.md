@@ -1,6 +1,21 @@
 # Unreleased
 
-- [added] `messaging.AndroidNotification`type now supports channel_id.
+- [fixed] Correctly parses error codes with details messages in Firebase Auth.
+- [fixed] Fixed optional fields in UserRecord types to be optional.
+
+# v6.4.0
+
+- [added] `messaging.Aps` type now supports configuring a critical sound.
+  A new `messaging.CriticalSound` type has been introduced for this purpose.
+- [added] `messaging.AndroidNotification` type now supports `channel_id`.
+- [added] `AppOptions` now accepts an optional `http.Agent` object. The
+  `http.Agent` specified via this API is used when the SDK makes backend
+  HTTP calls. This can be used when it is required to deploy the Admin SDK
+  behind a proxy.
+- [added] `admin.credential.cert()`, `admin.credential.applicationDefault()`,
+  and `admin.credential.refreshToken()` methods now accept an `http.Agent`
+  as an optional argument. If specified, the `http.Agent` will be used
+  when calling Google backend servers to fetch OAuth2 access tokens.
 
 # v6.3.0
 

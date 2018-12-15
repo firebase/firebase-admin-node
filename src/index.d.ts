@@ -16,6 +16,7 @@
 
 import {Bucket} from '@google-cloud/storage';
 import * as _firestore from '@google-cloud/firestore';
+import {Agent} from 'http';
 
 declare namespace admin {
   interface FirebaseError {
@@ -49,6 +50,7 @@ declare namespace admin {
     serviceAccountId?: string;
     storageBucket?: string;
     projectId?: string;
+    httpAgent?: Agent;
   }
 
   var SDK_VERSION: string;
@@ -102,11 +104,11 @@ declare namespace admin.auth {
 
   interface UserRecord {
     uid: string;
-    email: string;
+    email?: string;
     emailVerified: boolean;
-    displayName: string;
-    phoneNumber: string;
-    photoURL: string;
+    displayName?: string;
+    phoneNumber?: string;
+    photoURL?: string;
     disabled: boolean;
     metadata: admin.auth.UserMetadata;
     providerData: admin.auth.UserInfo[];
@@ -332,9 +334,9 @@ declare namespace admin.credential {
     getAccessToken(): Promise<admin.GoogleOAuthAccessToken>;
   }
 
-  function applicationDefault(): admin.credential.Credential;
-  function cert(serviceAccountPathOrObject: string|admin.ServiceAccount): admin.credential.Credential;
-  function refreshToken(refreshTokenPathOrObject: string|Object): admin.credential.Credential;
+  function applicationDefault(httpAgent?: Agent): admin.credential.Credential;
+  function cert(serviceAccountPathOrObject: string|admin.ServiceAccount, httpAgent?: Agent): admin.credential.Credential;
+  function refreshToken(refreshTokenPathOrObject: string|Object, httpAgent?: Agent): admin.credential.Credential;
 }
 
 declare namespace admin.database {
@@ -510,7 +512,7 @@ declare namespace admin.messaging {
   type Aps = {
     alert?: string | ApsAlert;
     badge?: number;
-    sound?: string;
+    sound?: string | CriticalSound;
     contentAvailable?: boolean;
     mutableContent?: boolean;
     category?: string;
@@ -531,6 +533,12 @@ declare namespace admin.messaging {
     actionLocKey?: string;
     launchImage?: string;
   };
+
+  type CriticalSound = {
+    critical?: boolean;
+    name?: string;
+    volume?: number;
+  }
 
   type Notification = {
     title?: string;

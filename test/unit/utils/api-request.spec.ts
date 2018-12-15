@@ -19,6 +19,7 @@
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as nock from 'nock';
+import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
@@ -29,6 +30,7 @@ import {FirebaseApp} from '../../../src/firebase-app';
 import {
   ApiSettings, HttpClient, HttpError, AuthorizedHttpClient, ApiCallbackFunction,
 } from '../../../src/utils/api-request';
+import {Agent} from 'http';
 
 chai.should();
 chai.use(sinonChai);
@@ -40,12 +42,6 @@ const mockHost = 'www.example.com';
 const mockPath = '/foo/bar';
 const mockUrl = `https://${mockHost}${mockPath}`;
 
-const mockSuccessResponse = {
-  foo: 'one',
-  bar: 2,
-  baz: true,
-};
-
 const mockErrorResponse = {
   error: {
     code: 'error-code',
@@ -54,35 +50,6 @@ const mockErrorResponse = {
 };
 
 const mockTextErrorResponse = 'Text error response';
-const mockTextSuccessResponse = 'Text success response';
-
-/**
- * Returns a mocked out successful response for a dummy URL.
- *
- * @param {string} [responseContentType] Optional response content type.
- * @param {string} [method] Optional request method.
- * @param {any} [response] Optional response.
- *
- * @return {Object} A nock response object.
- */
-function mockRequest(
-  responseContentType = 'application/json',
-  method = 'GET',
-  response?: any,
-) {
-  if (typeof response === 'undefined') {
-    response = mockSuccessResponse;
-    if (responseContentType === 'text/html') {
-      response = mockTextSuccessResponse;
-    }
-  }
-
-  return nock('https://' + mockHost)
-    .intercept(mockPath, method)
-    .reply(200, response, {
-      'content-type': responseContentType,
-    });
-}
 
 /**
  * Returns a mocked out HTTP error response for a dummy URL.
@@ -125,10 +92,15 @@ function mockRequestWithError(err: any) {
 
 describe('HttpClient', () => {
   let mockedRequests: nock.Scope[] = [];
+  let transportSpy: sinon.SinonSpy = null;
 
   afterEach(() => {
     _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
     mockedRequests = [];
+    if (transportSpy) {
+      transportSpy.restore();
+      transportSpy = null;
+    }
   });
 
   it('should be fulfilled for a 2xx response with a json payload', () => {
@@ -170,6 +142,30 @@ describe('HttpClient', () => {
       expect(resp.text).to.equal(respData);
       expect(() => { resp.data; }).to.throw('Error while parsing response data');
       expect(resp.isJson()).to.be.false;
+    });
+  });
+
+  it('should use the specified HTTP agent', () => {
+    const respData = {success: true};
+    const scope = nock('https://' + mockHost)
+      .get(mockPath)
+      .reply(200, respData, {
+        'content-type': 'application/json',
+      });
+    mockedRequests.push(scope);
+    const client = new HttpClient();
+    const httpAgent = new Agent();
+    const https = require('https');
+    transportSpy = sinon.spy(https, 'request');
+    return client.send({
+      method: 'GET',
+      url: mockUrl,
+      httpAgent,
+    }).then((resp) => {
+      expect(resp.status).to.equal(200);
+      expect(transportSpy.callCount).to.equal(1);
+      const options = transportSpy.args[0][0];
+      expect(options.agent).to.equal(httpAgent);
     });
   });
 
@@ -447,6 +443,71 @@ describe('AuthorizedHttpClient', () => {
       expect(resp.headers['content-type']).to.equal('application/json');
       expect(resp.text).to.equal(JSON.stringify(respData));
       expect(resp.data).to.deep.equal(respData);
+    });
+  });
+
+  describe('HTTP Agent', () => {
+    let transportSpy: sinon.SinonSpy = null;
+    let mockAppWithAgent: FirebaseApp;
+    let agentForApp: Agent;
+
+    beforeEach(() => {
+      const options = mockApp.options;
+      options.httpAgent = new Agent();
+      const https = require('https');
+      transportSpy = sinon.spy(https, 'request');
+      mockAppWithAgent = mocks.appWithOptions(options);
+      agentForApp = options.httpAgent;
+    });
+
+    afterEach(() => {
+      transportSpy.restore();
+      transportSpy = null;
+      return mockAppWithAgent.delete();
+    });
+
+    it('should use the HTTP agent set in request', () => {
+      const respData = {success: true};
+      const scope = nock('https://' + mockHost, requestHeaders)
+        .get(mockPath)
+        .reply(200, respData, {
+          'content-type': 'application/json',
+        });
+      mockedRequests.push(scope);
+      const client = new AuthorizedHttpClient(mockAppWithAgent);
+      const httpAgent = new Agent();
+      return client.send({
+        method: 'GET',
+        url: mockUrl,
+        httpAgent,
+      }).then((resp) => {
+        expect(resp.status).to.equal(200);
+        // First call is to the token server
+        expect(transportSpy.callCount).to.equal(2);
+        const options = transportSpy.args[1][0];
+        expect(options.agent).to.equal(httpAgent);
+      });
+    });
+
+    it('should use the HTTP agent set in AppOptions', () => {
+      const respData = {success: true};
+      const scope = nock('https://' + mockHost, requestHeaders)
+        .get(mockPath)
+        .reply(200, respData, {
+          'content-type': 'application/json',
+        });
+      mockedRequests.push(scope);
+      const client = new AuthorizedHttpClient(mockAppWithAgent);
+      return client.send({
+        method: 'GET',
+        url: mockUrl,
+      }).then((resp) => {
+        expect(resp.status).to.equal(200);
+        // First call is to the token server
+        expect(transportSpy.callCount).to.equal(2);
+        const options = transportSpy.args[1][0];
+        expect(options.agent).to.equal(agentForApp);
+      });
     });
   });
 

@@ -170,12 +170,18 @@ export interface ApnsPayload {
 export interface Aps {
   alert?: string | ApsAlert;
   badge?: number;
-  sound?: string;
+  sound?: string | CriticalSound;
   contentAvailable?: boolean;
   category?: string;
   threadId?: string;
   mutableContent?: boolean;
   [customData: string]: any;
+}
+
+export interface CriticalSound {
+  critical?: boolean;
+  name?: string;
+  volume?: number;
 }
 
 export interface ApsAlert {
@@ -299,6 +305,7 @@ function validateAps(aps: Aps) {
       MessagingClientErrorCode.INVALID_PAYLOAD, 'apns.payload.aps must be a non-null object');
   }
   validateApsAlert(aps.alert);
+  validateApsSound(aps.sound);
 
   const propertyMappings: {[key: string]: string} = {
     contentAvailable: 'content-available',
@@ -328,6 +335,40 @@ function validateAps(aps: Aps) {
       aps['mutable-content'] = 1;
     } else {
       delete aps['mutable-content'];
+    }
+  }
+}
+
+function validateApsSound(sound: string | CriticalSound) {
+  if (typeof sound === 'undefined' || validator.isString(sound)) {
+    return;
+  } else if (!validator.isNonNullObject(sound)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD,
+      'apns.payload.aps.sound must be a string or a non-null object');
+  }
+
+  const volume = sound.volume;
+  if (typeof volume !== 'undefined') {
+    if (!validator.isNumber(volume)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_PAYLOAD,
+        'apns.payload.aps.sound.volume must be a number');
+    }
+    if (volume < 0 || volume > 1) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_PAYLOAD,
+        'apns.payload.aps.sound.volume must be in the interval [0, 1]');
+    }
+  }
+  const soundObject = sound as {[key: string]: any};
+  const key = 'critical';
+  const critical = soundObject[key];
+  if (typeof critical !== 'undefined' && critical !== 1) {
+    if (critical === true) {
+      soundObject[key] = 1;
+    } else {
+      delete soundObject[key];
     }
   }
 }
