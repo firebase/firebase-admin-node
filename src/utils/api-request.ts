@@ -180,11 +180,10 @@ export class HttpClient {
  * Sends an HTTP request based on the provided configuration. This is a wrapper around the http and https
  * packages of Node.js, providing content processing, timeouts and error handling.
  */
-function sendRequest(httpRequestConfig: HttpRequestConfig): Promise<LowLevelResponse> {
-  const config: HttpRequestConfig = deepCopy(httpRequestConfig);
+function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
   return new Promise((resolve, reject) => {
     let data: Buffer;
-    const headers = config.headers || {};
+    const headers = Object.assign({}, config.headers);
     let fullUrl: string = config.url;
     if (config.data) {
       // GET and HEAD do not support body in request.
@@ -197,15 +196,14 @@ function sendRequest(httpRequestConfig: HttpRequestConfig): Promise<LowLevelResp
         }
 
         // Parse URL and append data to query string.
-        const configUrl = new url.URL(fullUrl);
-        for (const key in config.data as any) {
-          if (config.data.hasOwnProperty(key)) {
-            configUrl.searchParams.append(
-                key,
-                (config.data as {[key: string]: string})[key]);
+        const parsedUrl = new url.URL(fullUrl);
+        const dataObj = config.data as {[key: string]: string};
+        for (const key in dataObj) {
+          if (dataObj.hasOwnProperty(key)) {
+            parsedUrl.searchParams.append(key, dataObj[key]);
           }
         }
-        fullUrl = configUrl.toString();
+        fullUrl = parsedUrl.toString();
       } else if (validator.isObject(config.data)) {
         data = Buffer.from(JSON.stringify(config.data), 'utf-8');
         if (typeof headers['Content-Type'] === 'undefined') {
@@ -362,8 +360,8 @@ export class AuthorizedHttpClient extends HttpClient {
 
   public send(request: HttpRequestConfig): Promise<HttpResponse> {
     return this.app.INTERNAL.getToken().then((accessTokenObj) => {
-      const requestCopy = deepCopy(request);
-      requestCopy.headers = requestCopy.headers || {};
+      const requestCopy = Object.assign({}, request);
+      requestCopy.headers = Object.assign({}, request.headers);
       const authHeader = 'Authorization';
       requestCopy.headers[authHeader] = `Bearer ${accessTokenObj.accessToken}`;
 
