@@ -180,7 +180,7 @@ export interface Aps {
 
 export interface CriticalSound {
   critical?: boolean;
-  name?: string;
+  name: string;
   volume?: number;
 }
 

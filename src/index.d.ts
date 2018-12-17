@@ -473,7 +473,7 @@ declare namespace admin.messaging {
 
   type CriticalSound = {
     critical?: boolean;
-    name?: string;
+    name: string;
     volume?: number;
   }
 

@@ -1728,6 +1728,7 @@ describe('Messaging', () => {
             payload: {
               aps: {
                 sound: {
+                  name: 'default',
                   volume,
                 },
               },
@@ -2397,6 +2398,31 @@ describe('Messaging', () => {
                   critical: 1,
                   name: 'test.sound',
                   volume: 0.5,
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        label: 'APNS critical sound name only',
+        req: {
+          apns: {
+            payload: {
+              aps: {
+                sound: {
+                  name: 'test.sound',
+                },
+              },
+            },
+          },
+        },
+        expectedReq: {
+          apns: {
+            payload: {
+              aps: {
+                sound: {
+                  name: 'test.sound',
                 },
               },
             },
