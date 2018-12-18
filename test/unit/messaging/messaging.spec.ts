@@ -1882,7 +1882,7 @@ describe('Messaging', () => {
       });
     });
 
-    const invalidApnsSounds: any[] = [null, [], true, 1.23];
+    const invalidApnsSounds: any[] = ['', null, [], true, 1.23];
     invalidApnsSounds.forEach((sound) => {
       it(`should throw given APNS payload with invalid aps sound: ${JSON.stringify(sound)}`, () => {
         expect(() => {
