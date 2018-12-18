@@ -100,7 +100,7 @@ export function isBase64String(value: any): boolean {
  * @param {any} value The value to validate.
  * @return {boolean} Whether the value is a non-empty string or not.
  */
-export function isNonEmptyString(value: any): boolean {
+export function isNonEmptyString(value: any): value is string {
   return isString(value) && value !== '';
 }
 

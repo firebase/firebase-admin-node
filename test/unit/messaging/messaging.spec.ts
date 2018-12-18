@@ -1887,7 +1887,24 @@ describe('Messaging', () => {
       it(`should throw given APNS payload with invalid aps sound: ${JSON.stringify(sound)}`, () => {
         expect(() => {
           messaging.send({apns: {payload: {aps: {sound}}}, token: 'token'});
-        }).to.throw('apns.payload.aps.sound must be a string or a non-null object');
+        }).to.throw('apns.payload.aps.sound must be a non-empty string or a non-null object');
+      });
+    });
+    invalidApnsSounds.forEach((name) => {
+      it(`should throw given invalid APNS critical sound name: ${name}`, () => {
+        const message: Message = {
+          condition: 'topic-name',
+          apns: {
+            payload: {
+              aps: {
+                sound: {name},
+              },
+            },
+          },
+        };
+        expect(() => {
+          messaging.send(message);
+        }).to.throw('apns.payload.aps.sound.name must be a non-empty string');
       });
     });
   });
