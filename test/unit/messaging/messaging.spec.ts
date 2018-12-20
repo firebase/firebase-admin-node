@@ -1728,6 +1728,7 @@ describe('Messaging', () => {
             payload: {
               aps: {
                 sound: {
+                  name: 'default',
                   volume,
                 },
               },
@@ -1881,12 +1882,29 @@ describe('Messaging', () => {
       });
     });
 
-    const invalidApnsSounds: any[] = [null, [], true, 1.23];
+    const invalidApnsSounds: any[] = ['', null, [], true, 1.23];
     invalidApnsSounds.forEach((sound) => {
       it(`should throw given APNS payload with invalid aps sound: ${JSON.stringify(sound)}`, () => {
         expect(() => {
           messaging.send({apns: {payload: {aps: {sound}}}, token: 'token'});
-        }).to.throw('apns.payload.aps.sound must be a string or a non-null object');
+        }).to.throw('apns.payload.aps.sound must be a non-empty string or a non-null object');
+      });
+    });
+    invalidApnsSounds.forEach((name) => {
+      it(`should throw given invalid APNS critical sound name: ${name}`, () => {
+        const message: Message = {
+          condition: 'topic-name',
+          apns: {
+            payload: {
+              aps: {
+                sound: {name},
+              },
+            },
+          },
+        };
+        expect(() => {
+          messaging.send(message);
+        }).to.throw('apns.payload.aps.sound.name must be a non-empty string');
       });
     });
   });
@@ -2397,6 +2415,31 @@ describe('Messaging', () => {
                   critical: 1,
                   name: 'test.sound',
                   volume: 0.5,
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        label: 'APNS critical sound name only',
+        req: {
+          apns: {
+            payload: {
+              aps: {
+                sound: {
+                  name: 'test.sound',
+                },
+              },
+            },
+          },
+        },
+        expectedReq: {
+          apns: {
+            payload: {
+              aps: {
+                sound: {
+                  name: 'test.sound',
                 },
               },
             },

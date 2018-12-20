@@ -180,7 +180,7 @@ export interface Aps {
 
 export interface CriticalSound {
   critical?: boolean;
-  name?: string;
+  name: string;
   volume?: number;
 }
 
@@ -340,14 +340,19 @@ function validateAps(aps: Aps) {
 }
 
 function validateApsSound(sound: string | CriticalSound) {
-  if (typeof sound === 'undefined' || validator.isString(sound)) {
+  if (typeof sound === 'undefined' || validator.isNonEmptyString(sound)) {
     return;
   } else if (!validator.isNonNullObject(sound)) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD,
-      'apns.payload.aps.sound must be a string or a non-null object');
+      'apns.payload.aps.sound must be a non-empty string or a non-null object');
   }
 
+  if (!validator.isNonEmptyString(sound.name)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD,
+      'apns.payload.aps.sound.name must be a non-empty string');
+  }
   const volume = sound.volume;
   if (typeof volume !== 'undefined') {
     if (!validator.isNumber(volume)) {
