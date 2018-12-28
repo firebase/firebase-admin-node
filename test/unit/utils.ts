@@ -15,7 +15,6 @@
  */
 
 import * as _ from 'lodash';
-import * as nock from 'nock';
 
 import * as mocks from '../resources/mocks';
 
@@ -32,34 +31,6 @@ import { HttpError, HttpResponse } from '../../src/utils/api-request';
 export function createAppWithOptions(options: object) {
   const mockFirebaseNamespaceInternals = new FirebaseNamespace().INTERNAL;
   return new FirebaseApp(options as FirebaseAppOptions, mocks.appName, mockFirebaseNamespaceInternals);
-}
-
-
-/**
- * Returns a mocked out success response from the URL generating Google access tokens given a JWT
- * signed with a service account private key.
- *
- * Calling this once will mock ALL future requests to this endpoint. Use nock.cleanAll() to unmock.
- *
- * @param {string} [token] The optional access token to return. If not specified, a random one
- *     is created.
- * @param {number} [expiresIn] The optional expires in value to use for the access token.
- * @return {Object} A nock response object.
- */
-export function mockFetchAccessTokenRequests(
-  token: string = generateRandomAccessToken(),
-  expiresIn: number = 60 * 60,
-): nock.Scope {
-  return nock('https://accounts.google.com')
-    .persist()
-    .post('/o/oauth2/token')
-    .reply(200, {
-      access_token: token,
-      token_type: 'Bearer',
-      expires_in: expiresIn,
-    }, {
-      'cache-control': 'no-cache, no-store, max-age=0, must-revalidate',
-    });
 }
 
 

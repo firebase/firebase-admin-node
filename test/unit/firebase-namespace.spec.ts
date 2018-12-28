@@ -18,12 +18,10 @@
 
 import * as _ from 'lodash';
 import * as chai from 'chai';
-import * as nock from 'nock';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import * as utils from './utils';
 import * as mocks from '../resources/mocks';
 
 import {FirebaseNamespace} from '../../src/firebase-namespace';
@@ -63,10 +61,6 @@ const DEFAULT_APP_NOT_FOUND = 'The default Firebase app does not exist. Make sur
 
 describe('FirebaseNamespace', () => {
   let firebaseNamespace: FirebaseNamespace;
-
-  before(() => utils.mockFetchAccessTokenRequests());
-
-  after(() => nock.cleanAll());
 
   beforeEach(() => {
     firebaseNamespace = new FirebaseNamespace();

@@ -92,10 +92,23 @@ const FIVE_MINUTES_IN_SECONDS = 5 * 60;
 describe('Credential', () => {
   let mockCertificateObject: any;
   let oldProcessEnv: NodeJS.ProcessEnv;
+  let getTokenScope: nock.Scope;
+  let mockedRequests: nock.Scope[] = [];
 
-  before(() => utils.mockFetchAccessTokenRequests());
+  before(() => {
+    getTokenScope = nock('https://accounts.google.com')
+      .persist()
+      .post('/o/oauth2/token')
+      .reply(200, {
+        access_token: utils.generateRandomAccessToken(),
+        token_type: 'Bearer',
+        expires_in: 3600,
+      }, {
+        'cache-control': 'no-cache, no-store, max-age=0, must-revalidate',
+      });
+  });
 
-  after(() => nock.cleanAll());
+  after(() => getTokenScope.done());
 
   beforeEach(() => {
     mockCertificateObject = _.clone(mocks.certificateObject);
@@ -103,6 +116,8 @@ describe('Credential', () => {
   });
 
   afterEach(() => {
+    _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
+    mockedRequests = [];
     process.env = oldProcessEnv;
   });
 
@@ -289,9 +304,16 @@ describe('Credential', () => {
     });
 
     it('should create access tokens', () => {
-      if (skipAndLogWarningIfNoGcloud()) {
-        return;
-      }
+      const scope = nock('https://www.googleapis.com')
+        .post('/oauth2/v4/token')
+        .reply(200, {
+          access_token: 'token',
+          token_type: 'Bearer',
+          expires_in: 60 * 60,
+        }, {
+          'cache-control': 'no-cache, no-store, max-age=0, must-revalidate',
+        });
+      mockedRequests.push(scope);
 
       const c = new RefreshTokenCredential(TEST_GCLOUD_CREDENTIALS);
       return c.getAccessToken().then((token) => {

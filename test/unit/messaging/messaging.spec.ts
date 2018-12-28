@@ -26,7 +26,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
-import {FirebaseApp} from '../../../src/firebase-app';
+import {FirebaseApp, FirebaseAppInternals} from '../../../src/firebase-app';
 import {
   Message, Messaging, MessagingOptions, MessagingPayload, MessagingDevicesResponse,
   MessagingTopicManagementResponse,
@@ -247,6 +247,7 @@ describe('Messaging', () => {
   let messaging: Messaging;
   let mockedRequests: nock.Scope[] = [];
   let httpsRequestStub: sinon.SinonStub;
+  let getTokenStub: sinon.SinonStub;
   let nullAccessTokenMessaging: Messaging;
 
   let messagingService: {[key: string]: any};
@@ -260,12 +261,16 @@ describe('Messaging', () => {
   };
   const emptyResponse = utils.responseFrom({});
 
-  before(() => utils.mockFetchAccessTokenRequests(mockAccessToken));
-
-  after(() => nock.cleanAll());
+  after(() => {
+    nock.cleanAll();
+  });
 
   beforeEach(() => {
     mockApp = mocks.app();
+    getTokenStub = sinon.stub(mockApp.INTERNAL, 'getToken').resolves({
+      accessToken: mockAccessToken,
+      expirationTime: Date.now() + 3600,
+    });
     messaging = new Messaging(mockApp);
     nullAccessTokenMessaging = new Messaging(mocks.appReturningNullAccessToken());
     messagingService = messaging;
@@ -278,7 +283,7 @@ describe('Messaging', () => {
     if (httpsRequestStub && httpsRequestStub.restore) {
       httpsRequestStub.restore();
     }
-
+    getTokenStub.restore();
     return mockApp.delete();
   });
 

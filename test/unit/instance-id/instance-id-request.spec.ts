@@ -18,7 +18,6 @@
 
 import * as _ from 'lodash';
 import * as chai from 'chai';
-import * as nock from 'nock';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
@@ -26,7 +25,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
-import {FirebaseApp} from '../../../src/firebase-app';
+import {FirebaseApp, FirebaseAppInternals} from '../../../src/firebase-app';
 import {HttpClient} from '../../../src/utils/api-request';
 import {FirebaseInstanceIdRequestHandler} from '../../../src/instance-id/instance-id-request';
 
@@ -38,17 +37,22 @@ const expect = chai.expect;
 
 describe('FirebaseInstanceIdRequestHandler', () => {
   const projectId: string = 'test-project-id';
-  const mockedRequests: nock.Scope[] = [];
   const mockAccessToken: string = utils.generateRandomAccessToken();
   let stubs: sinon.SinonStub[] = [];
+  let getTokenStub: sinon.SinonStub;
   let mockApp: FirebaseApp;
   let expectedHeaders: object;
 
-  before(() => utils.mockFetchAccessTokenRequests(mockAccessToken));
+  before(() => {
+    getTokenStub = sinon.stub(FirebaseAppInternals.prototype, 'getToken').resolves({
+      accessToken: mockAccessToken,
+      expirationTime: Date.now() + 3600,
+    });
+  });
 
   after(() => {
     stubs = [];
-    nock.cleanAll();
+    getTokenStub.restore();
   });
 
   beforeEach(() => {
@@ -61,7 +65,6 @@ describe('FirebaseInstanceIdRequestHandler', () => {
 
   afterEach(() => {
     _.forEach(stubs, (stub) => stub.restore());
-    _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
     return mockApp.delete();
   });
 

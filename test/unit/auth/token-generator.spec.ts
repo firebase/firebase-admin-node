@@ -22,7 +22,6 @@ import * as chai from 'chai';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import * as nock from 'nock';
 
 import * as mocks from '../../resources/mocks';
 import {FirebaseTokenGenerator, ServiceAccountSigner, IAMSigner} from '../../../src/auth/token-generator';
@@ -106,20 +105,20 @@ describe('CryptoSigner', () => {
 
   describe('IAMSigner', () => {
     let mockApp: FirebaseApp;
+    let getTokenStub: sinon.SinonStub;
     const mockAccessToken: string = utils.generateRandomAccessToken();
-
-    before(() => {
-      utils.mockFetchAccessTokenRequests(mockAccessToken);
-    });
-
-    after(() => nock.cleanAll());
 
     beforeEach(() => {
       mockApp = mocks.app();
+      getTokenStub = sinon.stub(mockApp.INTERNAL, 'getToken').resolves({
+        accessToken: mockAccessToken,
+        expirationTime: Date.now() + 3600,
+      });
       return mockApp.INTERNAL.getToken();
     });
 
     afterEach(() => {
+      getTokenStub.restore();
       return mockApp.delete();
     });
 

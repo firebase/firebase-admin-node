@@ -18,20 +18,16 @@
 
 import * as _ from 'lodash';
 import * as chai from 'chai';
-import * as nock from 'nock';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
 import {InstanceId} from '../../../src/instance-id/instance-id';
 import {FirebaseInstanceIdRequestHandler} from '../../../src/instance-id/instance-id-request';
 import {FirebaseApp} from '../../../src/firebase-app';
 import {FirebaseInstanceIdError, InstanceIdClientErrorCode} from '../../../src/utils/error';
-
-import * as validator from '../../../src/utils/validator';
 
 chai.should();
 chai.use(sinonChai);
@@ -43,6 +39,7 @@ describe('InstanceId', () => {
   let iid: InstanceId;
   let mockApp: FirebaseApp;
   let mockCredentialApp: FirebaseApp;
+  let getTokenStub: sinon.SinonStub;
 
   let nullAccessTokenClient: InstanceId;
   let malformedAccessTokenClient: InstanceId;
@@ -55,12 +52,12 @@ describe('InstanceId', () => {
   + 'with service account credentials or set project ID as an app option. Alternatively set the '
   + 'GOOGLE_CLOUD_PROJECT environment variable.';
 
-  before(() => utils.mockFetchAccessTokenRequests());
-
-  after(() => nock.cleanAll());
-
   beforeEach(() => {
     mockApp = mocks.app();
+    getTokenStub = sinon.stub(mockApp.INTERNAL, 'getToken').resolves({
+      accessToken: 'mock-access-token',
+      expirationTime: Date.now() + 3600,
+    });
     mockCredentialApp = mocks.mockCredentialApp();
     iid = new InstanceId(mockApp);
 
@@ -73,6 +70,7 @@ describe('InstanceId', () => {
   });
 
   afterEach(() => {
+    getTokenStub.restore();
     process.env.GOOGLE_CLOUD_PROJECT = googleCloudProject;
     process.env.GCLOUD_PROJECT = gcloudProject;
     return mockApp.delete();
