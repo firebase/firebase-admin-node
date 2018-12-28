@@ -22,6 +22,7 @@ import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
+import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
 import {InstanceId} from '../../../src/instance-id/instance-id';
@@ -54,10 +55,7 @@ describe('InstanceId', () => {
 
   beforeEach(() => {
     mockApp = mocks.app();
-    getTokenStub = sinon.stub(mockApp.INTERNAL, 'getToken').resolves({
-      accessToken: 'mock-access-token',
-      expirationTime: Date.now() + 3600,
-    });
+    getTokenStub = utils.stubGetAccessToken(undefined, mockApp);
     mockCredentialApp = mocks.mockCredentialApp();
     iid = new InstanceId(mockApp);
 

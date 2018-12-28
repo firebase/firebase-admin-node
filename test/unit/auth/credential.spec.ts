@@ -317,10 +317,7 @@ describe('Credential', () => {
   });
 
   describe('ApplicationDefaultCredential', () => {
-    let credPath: string;
     let fsStub: sinon.SinonStub;
-
-    beforeEach(()  => credPath = process.env.GOOGLE_APPLICATION_CREDENTIALS);
 
     afterEach(() => {
       if (fsStub) {

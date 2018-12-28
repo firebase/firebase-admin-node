@@ -15,11 +15,12 @@
  */
 
 import * as _ from 'lodash';
+import * as sinon from 'sinon';
 
 import * as mocks from '../resources/mocks';
 
 import {FirebaseNamespace} from '../../src/firebase-namespace';
-import {FirebaseApp, FirebaseAppOptions} from '../../src/firebase-app';
+import {FirebaseApp, FirebaseAppOptions, FirebaseAppInternals, FirebaseAccessToken} from '../../src/firebase-app';
 import { HttpError, HttpResponse } from '../../src/utils/api-request';
 
 /**
@@ -37,6 +38,29 @@ export function createAppWithOptions(options: object) {
 /** @return {string} A randomly generated access token string. */
 export function generateRandomAccessToken(): string {
   return 'access_token_' + _.random(999999999);
+}
+
+/**
+ * Creates a stub for retrieving an access token from a FirebaseApp. All services should use this
+ * method for stubbing the OAuth2 flow during unit tests.
+ *
+ * @param {string} accessToken The access token string to return.
+ * @param {FirebaseApp} app The app instance to stub. If not specified, the stub will affect all apps.
+ * @return {sinon.SinonStub} A Sinon stub.
+ */
+export function stubGetAccessToken(accessToken?: string, app?: FirebaseApp): sinon.SinonStub {
+  if (typeof accessToken === 'undefined') {
+    accessToken = generateRandomAccessToken();
+  }
+  const result: FirebaseAccessToken = {
+    accessToken,
+    expirationTime: Date.now() + 3600,
+  };
+  if (app) {
+    return sinon.stub(app.INTERNAL, 'getToken').resolves(result);
+  } else {
+    return sinon.stub(FirebaseAppInternals.prototype, 'getToken').resolves(result);
+  }
 }
 
 /**

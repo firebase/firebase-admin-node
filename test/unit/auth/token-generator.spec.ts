@@ -110,10 +110,7 @@ describe('CryptoSigner', () => {
 
     beforeEach(() => {
       mockApp = mocks.app();
-      getTokenStub = sinon.stub(mockApp.INTERNAL, 'getToken').resolves({
-        accessToken: mockAccessToken,
-        expirationTime: Date.now() + 3600,
-      });
+      getTokenStub = utils.stubGetAccessToken(mockAccessToken, mockApp);
       return mockApp.INTERNAL.getToken();
     });
 

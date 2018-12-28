@@ -267,10 +267,7 @@ describe('Messaging', () => {
 
   beforeEach(() => {
     mockApp = mocks.app();
-    getTokenStub = sinon.stub(mockApp.INTERNAL, 'getToken').resolves({
-      accessToken: mockAccessToken,
-      expirationTime: Date.now() + 3600,
-    });
+    getTokenStub = utils.stubGetAccessToken(mockAccessToken, mockApp);
     messaging = new Messaging(mockApp);
     nullAccessTokenMessaging = new Messaging(mocks.appReturningNullAccessToken());
     messagingService = messaging;

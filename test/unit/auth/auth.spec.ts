@@ -22,6 +22,7 @@ import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
+import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
 import {Auth, DecodedIdToken} from '../../../src/auth/auth';
@@ -161,10 +162,7 @@ describe('Auth', () => {
 
   beforeEach(() => {
     mockApp = mocks.app();
-    getTokenStub = sinon.stub(mockApp.INTERNAL, 'getToken').resolves({
-      accessToken: 'mock-access-token',
-      expirationTime: Date.now() + 3600,
-    });
+    getTokenStub = utils.stubGetAccessToken(undefined, mockApp);
     auth = new Auth(mockApp);
 
     nullAccessTokenAuth = new Auth(mocks.appReturningNullAccessToken());

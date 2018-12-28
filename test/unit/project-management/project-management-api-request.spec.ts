@@ -56,10 +56,7 @@ describe('ProjectManagementRequestHandler', () => {
   let requestHandler: ProjectManagementRequestHandler;
 
   before(() => {
-    getTokenStub = sinon.stub(FirebaseAppInternals.prototype, 'getToken').resolves({
-      accessToken: mockAccessToken,
-      expirationTime: Date.now() + 3600,
-    });
+    getTokenStub = utils.stubGetAccessToken(mockAccessToken);
   });
 
   after(() => {
