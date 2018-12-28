@@ -43,7 +43,6 @@ chai.use(chaiAsPromised);
 
 const expect = chai.expect;
 
-let TEST_GCLOUD_CREDENTIALS: any;
 const GCLOUD_CREDENTIAL_SUFFIX = 'gcloud/application_default_credentials.json';
 const GCLOUD_CREDENTIAL_PATH = path.resolve(process.env.HOME, '.config', GCLOUD_CREDENTIAL_SUFFIX);
 const MOCK_REFRESH_TOKEN_CONFIG = {
@@ -51,38 +50,6 @@ const MOCK_REFRESH_TOKEN_CONFIG = {
   client_secret: 'test_client_secret',
   type: 'authorized_user',
   refresh_token: 'test_token',
-};
-try {
-  TEST_GCLOUD_CREDENTIALS = JSON.parse(fs.readFileSync(GCLOUD_CREDENTIAL_PATH).toString());
-} catch (error) {
-  // tslint:disable-next-line:no-console
-  console.log(
-    'WARNING: gcloud credentials not found. Run `gcloud beta auth application-default login`. ' +
-    'Relevant tests will be skipped.',
-  );
-}
-
-/**
- * Logs a warning and returns true if no gcloud credentials are found, meaning the test which calls
- * this will be skipped.
- *
- * The only thing that should ever skip these tests is continuous integration. When developing
- * locally, these tests should be run.
- *
- * @return {boolean} Whether or not the caller should skip the current test.
- */
-const skipAndLogWarningIfNoGcloud = () => {
-  if (typeof TEST_GCLOUD_CREDENTIALS === 'undefined') {
-    // tslint:disable-next-line:no-console
-    console.log(
-      'WARNING: Test being skipped because gcloud credentials not found. Run `gcloud beta auth ' +
-      'application-default login`.',
-    );
-
-    return true;
-  }
-
-  return false;
 };
 
 const ONE_HOUR_IN_SECONDS = 60 * 60;
@@ -315,7 +282,7 @@ describe('Credential', () => {
         });
       mockedRequests.push(scope);
 
-      const c = new RefreshTokenCredential(TEST_GCLOUD_CREDENTIALS);
+      const c = new RefreshTokenCredential(mocks.refreshToken);
       return c.getAccessToken().then((token) => {
         expect(token.access_token).to.be.a('string').and.to.not.be.empty;
         expect(token.expires_in).to.greaterThan(FIVE_MINUTES_IN_SECONDS);
@@ -379,10 +346,12 @@ describe('Credential', () => {
     });
 
     it('should return a RefreshTokenCredential with gcloud login', () => {
-      if (skipAndLogWarningIfNoGcloud()) {
-        return;
+      if (!fs.existsSync(GCLOUD_CREDENTIAL_PATH)) {
+        // tslint:disable-next-line:no-console
+        console.log(
+          'WARNING: Test being skipped because gcloud credentials not found. Run `gcloud beta auth ' +
+          'application-default login`.');
       }
-
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
       expect((new ApplicationDefaultCredential()).getCredential()).to.be.an.instanceof(RefreshTokenCredential);
     });
