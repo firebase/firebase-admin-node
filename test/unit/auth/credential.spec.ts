@@ -351,6 +351,7 @@ describe('Credential', () => {
         console.log(
           'WARNING: Test being skipped because gcloud credentials not found. Run `gcloud beta auth ' +
           'application-default login`.');
+        return;
       }
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
       expect((new ApplicationDefaultCredential()).getCredential()).to.be.an.instanceof(RefreshTokenCredential);
