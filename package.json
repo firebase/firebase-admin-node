@@ -18,7 +18,8 @@
     "test:coverage": "nyc npm run test:unit",
     "lint:src": "tslint --format stylish -p tsconfig.json",
     "lint:unit": "tslint -c tslint-test.json --format stylish test/unit/*.ts test/unit/**/*.ts",
-    "lint:integration": "tslint -c tslint-test.json --format stylish test/integration/*.ts"
+    "lint:integration": "tslint -c tslint-test.json --format stylish test/integration/*.ts",
+    "postinstall": "node ./env-check.js"
   },
   "nyc": {
     "extension": [
@@ -48,7 +49,8 @@
     "lib/",
     "LICENSE",
     "README.md",
-    "package.json"
+    "package.json",
+    "env-check.js"
   ],
   "types": "./lib/index.d.ts",
   "dependencies": {
