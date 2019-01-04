@@ -1,7 +1,7 @@
 # Unreleased
 
 - [fixed] Implemented a Node.js environment check that will be executed at
-  package installation time.
+  package import time.
 - [fixed] Correctly parses error codes with details messages in Firebase Auth.
 - [fixed] Fixed optional fields in UserRecord types to be optional.
 
