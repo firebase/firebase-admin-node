@@ -2,6 +2,8 @@
 
 - [fixed] Correctly parses error codes with details messages in Firebase Auth.
 - [fixed] Fixed optional fields in UserRecord types to be optional.
+- [added] `admin.projectManagement().shaCertificate()` method to create an
+  instance of admin.projectManagement.ShaCertificate.
 
 # v6.4.0
 
