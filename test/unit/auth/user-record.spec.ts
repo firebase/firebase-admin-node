@@ -546,8 +546,8 @@ describe('UserRecord', () => {
       }).to.throw(Error);
     });
 
-    it('should return null tokensValidAfterTime when not available', () => {
-      expect(userRecordNoValidSince.tokensValidAfterTime).to.be.null;
+    it('should return undefined tokensValidAfterTime when not available', () => {
+      expect(userRecordNoValidSince.tokensValidAfterTime).to.be.undefined;
     });
 
     it('should return expected metadata', () => {
@@ -637,8 +637,8 @@ describe('UserRecord', () => {
       expect(userRecord.toJSON()).to.deep.equal(getUserJSON());
     });
 
-    it('should return null tokensValidAfterTime when not available', () => {
-      expect((userRecordNoValidSince.toJSON() as any).tokensValidAfterTime).to.be.null;
+    it('should return undefined tokensValidAfterTime when not available', () => {
+      expect((userRecordNoValidSince.toJSON() as any).tokensValidAfterTime).to.be.undefined;
     });
   });
 });

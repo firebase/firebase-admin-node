@@ -104,11 +104,11 @@ declare namespace admin.auth {
 
   interface UserRecord {
     uid: string;
-    email: string;
+    email?: string;
     emailVerified: boolean;
-    displayName: string;
-    phoneNumber: string;
-    photoURL: string;
+    displayName?: string;
+    phoneNumber?: string;
+    photoURL?: string;
     disabled: boolean;
     metadata: admin.auth.UserMetadata;
     providerData: admin.auth.UserInfo[];
@@ -449,7 +449,7 @@ declare namespace admin.messaging {
   type Aps = {
     alert?: string | ApsAlert;
     badge?: number;
-    sound?: string;
+    sound?: string | CriticalSound;
     contentAvailable?: boolean;
     mutableContent?: boolean;
     category?: string;
@@ -470,6 +470,12 @@ declare namespace admin.messaging {
     actionLocKey?: string;
     launchImage?: string;
   };
+
+  type CriticalSound = {
+    critical?: boolean;
+    name: string;
+    volume?: number;
+  }
 
   type Notification = {
     title?: string;

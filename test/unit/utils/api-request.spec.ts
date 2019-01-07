@@ -16,7 +16,6 @@
 
 'use strict';
 
-import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as nock from 'nock';
 import * as sinon from 'sinon';
@@ -28,8 +27,9 @@ import * as mocks from '../../resources/mocks';
 
 import {FirebaseApp} from '../../../src/firebase-app';
 import {
-  ApiSettings, HttpClient, HttpError, AuthorizedHttpClient, ApiCallbackFunction,
+  ApiSettings, HttpClient, HttpError, AuthorizedHttpClient, ApiCallbackFunction, HttpRequestConfig,
 } from '../../../src/utils/api-request';
+import { deepCopy } from '../../../src/utils/deep-copy';
 import {Agent} from 'http';
 
 chai.should();
@@ -95,7 +95,7 @@ describe('HttpClient', () => {
   let transportSpy: sinon.SinonSpy = null;
 
   afterEach(() => {
-    _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
+    mockedRequests.forEach((mockedRequest) => mockedRequest.done());
     mockedRequests = [];
     if (transportSpy) {
       transportSpy.restore();
@@ -199,6 +199,38 @@ describe('HttpClient', () => {
       expect(resp.headers['content-type']).to.equal('application/json');
       expect(resp.data).to.deep.equal(respData);
       expect(resp.isJson()).to.be.true;
+    });
+  });
+
+  it('should not mutate the arguments', () => {
+    const reqData = {request: 'data'};
+    const scope = nock('https://' + mockHost, {
+      reqheaders: {
+        'Authorization': 'Bearer token',
+        'Content-Type': (header) => {
+          return header.startsWith('application/json'); // auto-inserted
+        },
+        'My-Custom-Header': 'CustomValue',
+      },
+    }).post(mockPath, reqData)
+    .reply(200, {success: true}, {
+      'content-type': 'application/json',
+    });
+    mockedRequests.push(scope);
+    const client = new HttpClient();
+    const request: HttpRequestConfig = {
+      method: 'POST',
+      url: mockUrl,
+      headers: {
+        'authorization': 'Bearer token',
+        'My-Custom-Header': 'CustomValue',
+      },
+      data: reqData,
+    };
+    const requestCopy = deepCopy(request);
+    return client.send(request).then((resp) => {
+      expect(resp.status).to.equal(200);
+      expect(request).to.deep.equal(requestCopy);
     });
   });
 
@@ -421,7 +453,7 @@ describe('AuthorizedHttpClient', () => {
   });
 
   afterEach(() => {
-    _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
+    mockedRequests.forEach((mockedRequest) => mockedRequest.done());
     mockedRequests = [];
     return mockApp.delete();
   });
@@ -516,9 +548,8 @@ describe('AuthorizedHttpClient', () => {
     const respData = {success: true};
     const options = {
       reqheaders: {
-        'Authorization': 'Bearer token',
         'Content-Type': (header: string) => {
-          return header.startsWith('application/json'); // auto-inserted by Axios
+          return header.startsWith('application/json'); // auto-inserted
         },
         'My-Custom-Header': 'CustomValue',
       },
@@ -542,6 +573,39 @@ describe('AuthorizedHttpClient', () => {
       expect(resp.status).to.equal(200);
       expect(resp.headers['content-type']).to.equal('application/json');
       expect(resp.data).to.deep.equal(respData);
+    });
+  });
+
+  it('should not mutate the arguments', () => {
+    const reqData = {request: 'data'};
+    const options = {
+      reqheaders: {
+        'Content-Type': (header: string) => {
+          return header.startsWith('application/json'); // auto-inserted
+        },
+        'My-Custom-Header': 'CustomValue',
+      },
+    };
+    Object.assign(options.reqheaders, requestHeaders.reqheaders);
+    const scope = nock('https://' + mockHost, options)
+      .post(mockPath, reqData)
+      .reply(200, {success: true}, {
+        'content-type': 'application/json',
+      });
+    mockedRequests.push(scope);
+    const client = new AuthorizedHttpClient(mockApp);
+    const request: HttpRequestConfig = {
+      method: 'POST',
+      url: mockUrl,
+      headers: {
+        'My-Custom-Header': 'CustomValue',
+      },
+      data: reqData,
+    };
+    const requestCopy = deepCopy(request);
+    return client.send(request).then((resp) => {
+      expect(resp.status).to.equal(200);
+      expect(request).to.deep.equal(requestCopy);
     });
   });
 });

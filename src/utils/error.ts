@@ -148,10 +148,19 @@ export class FirebaseAuthError extends PrefixedFirebaseError {
     message?: string,
     rawServerResponse?: object,
   ): FirebaseAuthError {
+    // serverErrorCode could contain additional details:
+    // ERROR_CODE : Detailed message which can also contain colons
+    const colonSeparator = (serverErrorCode || '').indexOf(':');
+    let customMessage = null;
+    if (colonSeparator !== -1) {
+      customMessage = serverErrorCode.substring(colonSeparator + 1).trim();
+      serverErrorCode = serverErrorCode.substring(0, colonSeparator).trim();
+    }
     // If not found, default to internal error.
     const clientCodeKey = AUTH_SERVER_TO_CLIENT_CODE[serverErrorCode] || 'INTERNAL_ERROR';
     const error: ErrorInfo = deepCopy((AuthClientErrorCode as any)[clientCodeKey]);
-    error.message = message || error.message;
+    // Server detailed message should have highest priority.
+    error.message = customMessage || message || error.message;
 
     if (clientCodeKey === 'INTERNAL_ERROR' && typeof rawServerResponse !== 'undefined') {
       try {
@@ -329,6 +338,10 @@ export class AuthClientErrorCode {
   public static CLAIMS_TOO_LARGE = {
     code: 'claims-too-large',
     message: 'Developer claims maximum payload size exceeded.',
+  };
+  public static CONFIGURATION_NOT_FOUND = {
+    code: 'configuration-not-found',
+    message: 'There is no configuration corresponding to the provided identifier.',
   };
   public static ID_TOKEN_EXPIRED = {
     code: 'id-token-expired',
@@ -680,8 +693,8 @@ export type ProjectManagementErrorCode =
 const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   // Claims payload is too large.
   CLAIMS_TOO_LARGE: 'CLAIMS_TOO_LARGE',
-  // Project not found.
-  CONFIGURATION_NOT_FOUND: 'PROJECT_NOT_FOUND',
+  // Configuration not found.
+  CONFIGURATION_NOT_FOUND: 'CONFIGURATION_NOT_FOUND',
   // Provided credential has insufficient permissions.
   INSUFFICIENT_PERMISSION: 'INSUFFICIENT_PERMISSION',
   // ActionCodeSettings missing continue URL.

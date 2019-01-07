@@ -1719,6 +1719,28 @@ describe('Messaging', () => {
       }).to.throw('bodyLocKey is required when specifying bodyLocArgs');
     });
 
+    const invalidVolumes = [-0.1, 1.1];
+    invalidVolumes.forEach((volume) => {
+      it(`should throw given invalid apns sound volume: ${volume}`, () => {
+        const message: Message = {
+          condition: 'topic-name',
+          apns: {
+            payload: {
+              aps: {
+                sound: {
+                  name: 'default',
+                  volume,
+                },
+              },
+            },
+          },
+        };
+        expect(() => {
+          messaging.send(message);
+        }).to.throw('volume must be in the interval [0, 1]');
+      });
+    });
+
     it('should throw given apns titleLocArgs without titleLocKey', () => {
       const message: Message = {
         condition: 'topic-name',
@@ -1857,6 +1879,32 @@ describe('Messaging', () => {
         expect(() => {
           messaging.send({apns: {payload: {aps: {alert}}}, token: 'token'});
         }).to.throw('apns.payload.aps.alert must be a string or a non-null object');
+      });
+    });
+
+    const invalidApnsSounds: any[] = ['', null, [], true, 1.23];
+    invalidApnsSounds.forEach((sound) => {
+      it(`should throw given APNS payload with invalid aps sound: ${JSON.stringify(sound)}`, () => {
+        expect(() => {
+          messaging.send({apns: {payload: {aps: {sound}}}, token: 'token'});
+        }).to.throw('apns.payload.aps.sound must be a non-empty string or a non-null object');
+      });
+    });
+    invalidApnsSounds.forEach((name) => {
+      it(`should throw given invalid APNS critical sound name: ${name}`, () => {
+        const message: Message = {
+          condition: 'topic-name',
+          apns: {
+            payload: {
+              aps: {
+                sound: {name},
+              },
+            },
+          },
+        };
+        expect(() => {
+          messaging.send(message);
+        }).to.throw('apns.payload.aps.sound.name must be a non-empty string');
       });
     });
   });
@@ -2340,6 +2388,88 @@ describe('Messaging', () => {
               },
               customKey1: 'custom.value',
               customKey2: {nested: 'value'},
+            },
+          },
+        },
+      },
+      {
+        label: 'APNS critical sound',
+        req: {
+          apns: {
+            payload: {
+              aps: {
+                sound: {
+                  critical: true,
+                  name: 'test.sound',
+                  volume: 0.5,
+                },
+              },
+            },
+          },
+        },
+        expectedReq: {
+          apns: {
+            payload: {
+              aps: {
+                sound: {
+                  critical: 1,
+                  name: 'test.sound',
+                  volume: 0.5,
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        label: 'APNS critical sound name only',
+        req: {
+          apns: {
+            payload: {
+              aps: {
+                sound: {
+                  name: 'test.sound',
+                },
+              },
+            },
+          },
+        },
+        expectedReq: {
+          apns: {
+            payload: {
+              aps: {
+                sound: {
+                  name: 'test.sound',
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        label: 'APNS critical sound explicitly false',
+        req: {
+          apns: {
+            payload: {
+              aps: {
+                sound: {
+                  critical: false,
+                  name: 'test.sound',
+                  volume: 0.5,
+                },
+              },
+            },
+          },
+        },
+        expectedReq: {
+          apns: {
+            payload: {
+              aps: {
+                sound: {
+                  name: 'test.sound',
+                  volume: 0.5,
+                },
+              },
             },
           },
         },
