@@ -18,7 +18,7 @@ import {FirebaseApp} from '../firebase-app';
 import {FirebaseError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
 import {ApplicationDefaultCredential, Certificate} from '../auth/credential';
-import * as gcs from '@google-cloud/storage';
+import {Bucket, Storage as StorageClient} from '@google-cloud/storage';
 
 import * as validator from '../utils/validator';
 
@@ -44,7 +44,7 @@ export class Storage implements FirebaseServiceInterface {
   public readonly INTERNAL: StorageInternals = new StorageInternals();
 
   private readonly appInternal: FirebaseApp;
-  private readonly storageClient: gcs;
+  private readonly storageClient: StorageClient;
 
   /**
    * @param {FirebaseApp} app The app for this Storage service.
@@ -58,9 +58,9 @@ export class Storage implements FirebaseServiceInterface {
       });
     }
 
-    let storage: typeof gcs;
+    let storage: typeof StorageClient;
     try {
-      storage = require('@google-cloud/storage');
+      storage = require('@google-cloud/storage').Storage;
     } catch (err) {
       throw new FirebaseError({
         code: 'storage/missing-dependencies',
@@ -103,7 +103,7 @@ export class Storage implements FirebaseServiceInterface {
    *   retrieves a reference to the default bucket.
    * @return {Bucket} A Bucket object from the @google-cloud/storage library.
    */
-  public bucket(name?: string): gcs.Bucket {
+  public bucket(name?: string): Bucket {
     const bucketName = (typeof name !== 'undefined')
       ? name :  this.appInternal.options.storageBucket;
     if (validator.isNonEmptyString(bucketName)) {
