@@ -55,6 +55,7 @@ describe('admin.projectManagement', () => {
             expect(metadatas.length).to.be.at.least(1);
             const metadataOwnedByTest =
                 metadatas.find((metadata) => isIntegrationTestApp(metadata.packageName));
+            expect(metadataOwnedByTest).to.exist;
             expect(metadataOwnedByTest.appId).to.equal(androidApp.appId);
           });
     });
@@ -68,6 +69,7 @@ describe('admin.projectManagement', () => {
             expect(metadatas.length).to.be.at.least(1);
             const metadataOwnedByTest =
                 metadatas.find((metadata) => isIntegrationTestApp(metadata.bundleId));
+            expect(metadataOwnedByTest).to.exist;
             expect(metadataOwnedByTest.appId).to.equal(iosApp.appId);
           });
     });
