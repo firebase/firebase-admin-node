@@ -49,19 +49,29 @@ describe('admin.projectManagement', () => {
 
   describe('listAndroidApps()', () => {
     it('successfully lists Android apps', () => {
-      return admin.projectManagement().listAndroidApps().then((results) => {
-        expect(results.length).to.be.at.least(1);
-        expect(results[0].appId).to.equal(androidApp.appId);
-      });
+      return admin.projectManagement().listAndroidApps()
+          .then((apps) => Promise.all(apps.map((app) => app.getMetadata())))
+          .then((metadatas) => {
+            expect(metadatas.length).to.be.at.least(1);
+            const metadataOwnedByTest =
+                metadatas.find((metadata) => isIntegrationTestApp(metadata.packageName));
+            expect(metadataOwnedByTest).to.exist;
+            expect(metadataOwnedByTest.appId).to.equal(androidApp.appId);
+          });
     });
   });
 
   describe('listIosApps()', () => {
     it('successfully lists iOS apps', () => {
-      return admin.projectManagement().listIosApps().then((results) => {
-        expect(results.length).to.be.at.least(1);
-        expect(results[0].appId).to.equal(iosApp.appId);
-      });
+      return admin.projectManagement().listIosApps()
+          .then((apps) => Promise.all(apps.map((app) => app.getMetadata())))
+          .then((metadatas) => {
+            expect(metadatas.length).to.be.at.least(1);
+            const metadataOwnedByTest =
+                metadatas.find((metadata) => isIntegrationTestApp(metadata.bundleId));
+            expect(metadataOwnedByTest).to.exist;
+            expect(metadataOwnedByTest.appId).to.equal(iosApp.appId);
+          });
     });
   });
 
