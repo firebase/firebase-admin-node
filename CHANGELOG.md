@@ -1,7 +1,11 @@
 # Unreleased
 
-- [fixed] Correctly parses error codes with details messages in Firebase Auth.
-- [fixed] Fixed optional fields in UserRecord types to be optional.
+-
+
+# v6.5.0
+
+- [fixed] Correctly parses error codes sent by Firebase Auth backend servers.
+- [fixed] Correctly marked the optional fields in `UserRecord` types.
 - [added] `admin.projectManagement().shaCertificate()` method to create an
   instance of admin.projectManagement.ShaCertificate.
 
