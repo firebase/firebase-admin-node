@@ -1,6 +1,7 @@
 # Unreleased
 
--
+- [fixed] Implemented a Node.js environment check that will be executed at
+  package import time.
 
 # v6.5.0
 
