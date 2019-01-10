@@ -34,6 +34,8 @@ const PACKAGE_NAME = 'test-package-name';
 const BUNDLE_ID = 'test-bundle-id';
 const EXPECTED_ERROR = new FirebaseProjectManagementError('internal-error', 'message');
 
+const VALID_SHA_256_HASH = '0123456789abcdefABCDEF01234567890123456701234567890123456789abcd';
+
 describe('ProjectManagement', () => {
   // Stubs used to simulate underlying api calls.
   let stubs: sinon.SinonStub[] = [];
@@ -273,6 +275,14 @@ describe('ProjectManagement', () => {
   describe('iosApp', () => {
     it('should successfully return an IosApp', () => {
       return projectManagement.iosApp(APP_ID).appId.should.equal(APP_ID);
+    });
+  });
+
+  describe('shaCertificate', () => {
+    it('should successfully return a ShaCertificate', () => {
+      const shaCertificate = projectManagement.shaCertificate(VALID_SHA_256_HASH);
+      shaCertificate.shaHash.should.equal(VALID_SHA_256_HASH);
+      shaCertificate.certType.should.equal('sha256');
     });
   });
 
