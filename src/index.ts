@@ -17,7 +17,8 @@
 import * as firebase from './default-namespace';
 
 // Only Node.js has a process variable that is of [[Class]] process
-if (Object.prototype.toString.call(global.process) !== '[object process]') {
+const processGlobal = typeof process !== 'undefined' ? process : 0;
+if (Object.prototype.toString.call(processGlobal) !== '[object process]') {
   const message = `
 ======== WARNING! ========
 
