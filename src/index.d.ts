@@ -713,6 +713,7 @@ declare namespace admin.projectManagement {
     listIosApps(): Promise<admin.projectManagement.IosApp[]>;
     androidApp(appId: string): admin.projectManagement.AndroidApp;
     iosApp(appId: string): admin.projectManagement.IosApp;
+    shaCertificate(shaHash: string): admin.projectManagement.ShaCertificate;
     createAndroidApp(
         packageName: string, displayName?: string): Promise<admin.projectManagement.AndroidApp>;
     createIosApp(bundleId: string, displayName?: string): Promise<admin.projectManagement.IosApp>;
