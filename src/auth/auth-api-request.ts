@@ -31,7 +31,8 @@ import * as utils from '../utils/index';
 import {ActionCodeSettings, ActionCodeSettingsBuilder} from './action-code-settings-builder';
 import {
   SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
-  OIDCConfigServerRequest, SAMLConfigServerRequest,
+  OIDCConfigServerRequest, SAMLConfigServerRequest, AuthProviderConfig,
+  OIDCUpdateAuthProviderRequest, SAMLUpdateAuthProviderRequest,
 } from './auth-config';
 
 
@@ -390,7 +391,7 @@ export const FIREBASE_AUTH_DOWNLOAD_ACCOUNT = new ApiSettings('/accounts:batchGe
         request.maxResults > MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        `Required "maxResults" must be a positive non-zero number that does not exceed ` +
+        `Required "maxResults" must be a positive integer that does not exceed ` +
         `the allowed ${MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE}.`,
       );
     }
@@ -560,7 +561,7 @@ const LIST_OAUTH_IDP_CONFIGS = new ApiSettings('/oauthIdpConfigs', 'GET')
         request.pageSize > MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        `Required "maxResults" must be a positive non-zero number that does not exceed ` +
+        `Required "maxResults" must be a positive integer that does not exceed ` +
         `the allowed ${MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE}.`,
       );
     }
@@ -623,7 +624,7 @@ const LIST_INBOUND_SAML_CONFIGS = new ApiSettings('/inboundSamlConfigs', 'GET')
         request.pageSize > MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        `Required "maxResults" must be a positive non-zero number that does not exceed ` +
+        `Required "maxResults" must be a positive integer that does not exceed ` +
         `the allowed ${MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE}.`,
       );
     }
@@ -650,9 +651,10 @@ export class FirebaseAuthRequestHandler {
    * @constructor
    */
   constructor(app: FirebaseApp) {
+    const projectId = utils.getProjectId(app);
     this.httpClient = new AuthorizedHttpClient(app);
-    this.authUrlBuilder = new AuthResourceUrlBuilder(utils.getProjectId(app), 'v1');
-    this.projectConfigUrlBuilder = new AuthResourceUrlBuilder(utils.getProjectId(app), 'v2beta1');
+    this.authUrlBuilder = new AuthResourceUrlBuilder(projectId, 'v1');
+    this.projectConfigUrlBuilder = new AuthResourceUrlBuilder(projectId, 'v2beta1');
   }
 
   /**
@@ -1037,9 +1039,9 @@ export class FirebaseAuthRequestHandler {
    * Looks up an OIDC provider configuration by provider ID.
    *
    * @param {string} providerId The provider identifier of the configuration to lookup.
-   * @return {Promise<object>} A promise that resolves with the provider configuration information.
+   * @return {Promise<OIDCConfigServerResponse>} A promise that resolves with the provider configuration information.
    */
-  public getOAuthIdpConfig(providerId: string): Promise<object> {
+  public getOAuthIdpConfig(providerId: string): Promise<OIDCConfigServerResponse> {
     if (!OIDCConfig.isProviderId(providerId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
     }
@@ -1052,7 +1054,7 @@ export class FirebaseAuthRequestHandler {
    *
    * @param {number=} maxResults The page size, 100 if undefined. This is also the maximum
    *     allowed limit.
-   * @param {string=} pageToken The next page token. If not specified, returns OIDC configurations starting
+   * @param {string=} pageToken The next page token. If not specified, returns OIDC configurations
    *     without any offset. Configurations are returned in the order they were created from oldest to
    *     newest, relative to the page token offset.
    * @return {Promise<object>} A promise that resolves with the current batch of downloaded
@@ -1099,11 +1101,11 @@ export class FirebaseAuthRequestHandler {
   /**
    * Creates a new OIDC provider configuration with the properties provided.
    *
-   * @param {any} options The properties to set on the new OIDC provider configuration to be created.
+   * @param {AuthProviderConfig} options The properties to set on the new OIDC provider configuration to be created.
    * @return {Promise<OIDCConfigServerResponse>} A promise that resolves with the newly created OIDC
    *     configuration.
    */
-  public createOAuthIdpConfig(options: any): Promise<OIDCConfigServerResponse> {
+  public createOAuthIdpConfig(options: AuthProviderConfig): Promise<OIDCConfigServerResponse> {
     // Construct backend request.
     let request;
     try {
@@ -1127,11 +1129,12 @@ export class FirebaseAuthRequestHandler {
    * Updates an existing OIDC provider configuration with the properties provided.
    *
    * @param {string} providerId The provider identifier of the OIDC configuration to update.
-   * @param {any} options The properties to update on the existing configuration.
+   * @param {OIDCUpdateAuthProviderRequest} options The properties to update on the existing configuration.
    * @return {Promise<OIDCConfigServerResponse>} A promise that resolves with the modified provider
    *     configuration.
    */
-  public updateOAuthIdpConfig(providerId: string, options: any): Promise<OIDCConfigServerResponse> {
+  public updateOAuthIdpConfig(
+      providerId: string, options: OIDCUpdateAuthProviderRequest): Promise<OIDCConfigServerResponse> {
     if (!OIDCConfig.isProviderId(providerId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
     }
@@ -1159,9 +1162,9 @@ export class FirebaseAuthRequestHandler {
    * Looks up an SAML provider configuration by provider ID.
    *
    * @param {string} providerId The provider identifier of the configuration to lookup.
-   * @return {Promise<object>} A promise that resolves with the provider configuration information.
+   * @return {Promise<SAMLConfigServerResponse>} A promise that resolves with the provider configuration information.
    */
-  public getInboundSamlConfig(providerId: string): Promise<object> {
+  public getInboundSamlConfig(providerId: string): Promise<SAMLConfigServerResponse> {
     if (!SAMLConfig.isProviderId(providerId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
     }
@@ -1221,11 +1224,11 @@ export class FirebaseAuthRequestHandler {
   /**
    * Creates a new SAML provider configuration with the properties provided.
    *
-   * @param {any} options The properties to set on the new SAML provider configuration to be created.
+   * @param {AuthProviderConfig} options The properties to set on the new SAML provider configuration to be created.
    * @return {Promise<SAMLConfigServerResponse>} A promise that resolves with the newly created SAML
    *     configuration.
    */
-  public createInboundSamlConfig(options: any): Promise<SAMLConfigServerResponse> {
+  public createInboundSamlConfig(options: AuthProviderConfig): Promise<SAMLConfigServerResponse> {
     // Construct backend request.
     let request;
     try {
@@ -1249,11 +1252,12 @@ export class FirebaseAuthRequestHandler {
    * Updates an existing SAML provider configuration with the properties provided.
    *
    * @param {string} providerId The provider identifier of the SAML configuration to update.
-   * @param {any} options The properties to update on the existing configuration.
+   * @param {SAMLUpdateAuthProviderRequest} options The properties to update on the existing configuration.
    * @return {Promise<SAMLConfigServerResponse>} A promise that resolves with the modified provider
    *     configuration.
    */
-  public updateInboundSamlConfig(providerId: string, options: any): Promise<SAMLConfigServerResponse> {
+  public updateInboundSamlConfig(
+      providerId: string, options: SAMLUpdateAuthProviderRequest): Promise<SAMLConfigServerResponse> {
     if (!SAMLConfig.isProviderId(providerId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
     }

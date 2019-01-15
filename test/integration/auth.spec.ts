@@ -461,7 +461,7 @@ describe('admin.auth', () => {
 
     // Clean up temp configurations used for test.
     before(() => {
-      return removeTempConfigs();
+      return removeTempConfigs().then(() => admin.auth().createProviderConfig(authProviderConfig1));
     });
 
     after(() => {
@@ -469,9 +469,9 @@ describe('admin.auth', () => {
     });
 
     it('createProviderConfig() successfully creates a SAML config', () => {
-      return admin.auth().createProviderConfig(authProviderConfig1)
+      return admin.auth().createProviderConfig(authProviderConfig2)
         .then((config) => {
-          assertDeepEqualUnordered(authProviderConfig1, config);
+          assertDeepEqualUnordered(authProviderConfig2, config);
         });
     });
 
@@ -495,12 +495,9 @@ describe('admin.auth', () => {
             }
           });
       };
-      return admin.auth().createProviderConfig(authProviderConfig2)
-        .then((config: AuthProviderConfig) => {
-          // In case the project already has existing providers, list all configurations and then
-          // check the 2 test configs are available.
-          return listProviders('saml', 1);
-        })
+      // In case the project already has existing providers, list all configurations and then
+      // check the 2 test configs are available.
+      return listProviders('saml', 1)
         .then(() => {
           let index1 = 0;
           let index2 = 0;
@@ -539,6 +536,9 @@ describe('admin.auth', () => {
       const deltaChanges = {
         displayName: 'SAML_DISPLAY_NAME4',
         x509Certificates: [mocks.x509CertPairs[0].public],
+        // Note, currently backend has a bug where error is thrown when callbackURL is not
+        // passed event though it is not required. Fix is on the way.
+        callbackURL: 'https://projectId3.firebaseapp.com/__/auth/handler',
         rpEntityId: 'RP_ENTITY_ID4',
       };
       // Only above fields should be modified.
@@ -593,7 +593,7 @@ describe('admin.auth', () => {
 
     // Clean up temp configurations used for test.
     before(() => {
-      return removeTempConfigs();
+      return removeTempConfigs().then(() => admin.auth().createProviderConfig(authProviderConfig1));
     });
 
     after(() => {
@@ -601,9 +601,9 @@ describe('admin.auth', () => {
     });
 
     it('createProviderConfig() successfully creates an OIDC config', () => {
-      return admin.auth().createProviderConfig(authProviderConfig1)
+      return admin.auth().createProviderConfig(authProviderConfig2)
         .then((config) => {
-          assertDeepEqualUnordered(authProviderConfig1, config);
+          assertDeepEqualUnordered(authProviderConfig2, config);
         });
     });
 
@@ -627,12 +627,9 @@ describe('admin.auth', () => {
             }
           });
       };
-      return admin.auth().createProviderConfig(authProviderConfig2)
-        .then((config: AuthProviderConfig) => {
-          // In case the project already has existing providers, list all configurations and then
-          // check the 2 test configs are available.
-          return listProviders('oidc', 1);
-        })
+      // In case the project already has existing providers, list all configurations and then
+      // check the 2 test configs are available.
+      return listProviders('oidc', 1)
         .then(() => {
           let index1 = 0;
           let index2 = 0;

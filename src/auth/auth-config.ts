@@ -20,6 +20,7 @@ import {deepCopy} from '../utils/deep-copy';
 import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
 
 
+/** The filter interface used for listing provider configurations. */
 export interface AuthProviderConfigFilter {
   type: 'saml' | 'oidc';
   maxResults?: number;
@@ -109,11 +110,13 @@ export interface OIDCConfigServerResponse {
   enabled?: boolean;
 }
 
+/** The public API response interface for listing provider configs. */
 export interface ListProviderConfigResults {
   providerConfigs: AuthProviderConfig[];
   pageToken?: string;
 }
 
+/** The public API request interface for updating a SAML Auth provider. */
 export interface SAMLUpdateAuthProviderRequest {
   idpEntityId?: string;
   ssoURL?: string;
@@ -125,6 +128,12 @@ export interface SAMLUpdateAuthProviderRequest {
   displayName?: string;
 }
 
+/** The generic request interface for updating/creating a SAML Auth provider. */
+export interface SAMLAuthProviderRequest extends SAMLUpdateAuthProviderRequest {
+  providerId?: string;
+}
+
+/** The public API request interface for updating an OIDC Auth provider. */
 export interface OIDCUpdateAuthProviderRequest {
   clientId?: string;
   issuer?: string;
@@ -132,6 +141,12 @@ export interface OIDCUpdateAuthProviderRequest {
   displayName?: string;
 }
 
+/** The generic request interface for updating/creating an OIDC Auth provider. */
+export interface OIDCAuthProviderRequest extends OIDCUpdateAuthProviderRequest {
+  providerId?: string;
+}
+
+/** The public API request interface for updating a generic Auth provider. */
 export type UpdateAuthProviderRequest = SAMLUpdateAuthProviderRequest | OIDCUpdateAuthProviderRequest;
 
 
@@ -155,42 +170,44 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
    * Throws an error if validation fails. If the request is not a SAMLConfig request,
    * returns null.
    *
-   * @param {any} options The options object to convert to a server request.
+   * @param {SAMLAuthProviderRequest} options The options object to convert to a server request.
    * @param {boolean=} ignoreMissingFields Whether to ignore missing fields.
    * @return {?SAMLConfigServerRequest} The resulting server request or null if not valid.
    */
-  public static buildServerRequest(options: any, ignoreMissingFields: boolean = false): SAMLConfigServerRequest | null {
-    const request: SAMLConfigServerRequest = {};
-    if (typeof options !== 'undefined' &&
+  public static buildServerRequest(
+      options: SAMLAuthProviderRequest,
+      ignoreMissingFields: boolean = false): SAMLConfigServerRequest | null {
+    const makeRequest = typeof options !== 'undefined' &&
         validator.isNonNullObject(options) &&
-        (options.providerId || ignoreMissingFields)) {
-      // Validate options.
-      SAMLConfig.validate(options, ignoreMissingFields);
-      request.enabled = options.enabled;
-      request.displayName = options.displayName;
-      // IdP config.
-      if (options.idpEntityId || options.ssoURL || options.x509Certificates) {
-        request.idpConfig = {
-          idpEntityId: options.idpEntityId,
-          ssoUrl: options.ssoURL,
-          signRequest: options.enableRequestSigning,
-          idpCertificates: typeof options.x509Certificates === 'undefined' ? undefined : [],
-        };
-        if (options.x509Certificates) {
-          for (const cert of (options.x509Certificates || [])) {
-            request.idpConfig.idpCertificates.push({x509Certificate: cert});
-          }
+        (options.providerId || ignoreMissingFields);
+    if (!makeRequest) {
+      return null;
+    }
+    const request: SAMLConfigServerRequest = {};
+    // Validate options.
+    SAMLConfig.validate(options, ignoreMissingFields);
+    request.enabled = options.enabled;
+    request.displayName = options.displayName;
+    // IdP config.
+    if (options.idpEntityId || options.ssoURL || options.x509Certificates) {
+      request.idpConfig = {
+        idpEntityId: options.idpEntityId,
+        ssoUrl: options.ssoURL,
+        signRequest: options.enableRequestSigning,
+        idpCertificates: typeof options.x509Certificates === 'undefined' ? undefined : [],
+      };
+      if (options.x509Certificates) {
+        for (const cert of (options.x509Certificates || [])) {
+          request.idpConfig.idpCertificates.push({x509Certificate: cert});
         }
       }
-      // RP config.
-      if (options.callbackURL || options.rpEntityId) {
-        request.spConfig = {
-          spEntityId: options.rpEntityId,
-          callbackUri: options.callbackURL,
-        };
-      }
-    } else {
-      return null;
+    }
+    // RP config.
+    if (options.callbackURL || options.rpEntityId) {
+      request.spConfig = {
+        spEntityId: options.rpEntityId,
+        callbackUri: options.callbackURL,
+      };
     }
     return request;
   }
@@ -221,10 +238,10 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
   /**
    * Validates the SAMLConfig options object. Throws an error on failure.
    *
-   * @param {any} options The options object to validate.
+   * @param {SAMLAuthProviderRequest} options The options object to validate.
    * @param {boolean=} ignoreMissingFields Whether to ignore missing fields.
    */
-  public static validate(options: any, ignoreMissingFields: boolean = false) {
+  public static validate(options: SAMLAuthProviderRequest, ignoreMissingFields: boolean = false) {
     const validKeys = {
       enabled: true,
       displayName: true,
@@ -252,17 +269,17 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
       }
     }
     // Required fields.
-    if (!(ignoreMissingFields && typeof options.providerId === 'undefined') &&
-        !validator.isNonEmptyString(options.providerId)) {
+    if (validator.isNonEmptyString(options.providerId)) {
+      if (options.providerId.indexOf('saml.') !== 0) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_PROVIDER_ID,
+          '"SAMLAuthProviderConfig.providerId" must be a valid non-empty string prefixed with "saml.".',
+        );
+      }
+    } else if (!ignoreMissingFields) {
+      // providerId is required and not provided correctly.
       throw new FirebaseAuthError(
         !options.providerId ? AuthClientErrorCode.MISSING_PROVIDER_ID : AuthClientErrorCode.INVALID_PROVIDER_ID,
-        '"SAMLAuthProviderConfig.providerId" must be a valid non-empty string prefixed with "saml.".',
-      );
-    }
-    if (!(ignoreMissingFields && typeof options.providerId === 'undefined') &&
-        options.providerId.indexOf('saml.') !== 0) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_PROVIDER_ID,
         '"SAMLAuthProviderConfig.providerId" must be a valid non-empty string prefixed with "saml.".',
       );
     }
@@ -402,24 +419,26 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
    * Throws an error if validation fails. If the request is not a OIDCConfig request,
    * returns null.
    *
-   * @param {any} options The options object to convert to a server request.
+   * @param {OIDCAuthProviderRequest} options The options object to convert to a server request.
    * @param {boolean=} ignoreMissingFields Whether to ignore missing fields.
    * @return {?OIDCConfigServerRequest} The resulting server request or null if not valid.
    */
-  public static buildServerRequest(options: any, ignoreMissingFields: boolean = false): OIDCConfigServerRequest | null {
-    const request: OIDCConfigServerRequest = {};
-    if (typeof options !== 'undefined' &&
+  public static buildServerRequest(
+      options: OIDCAuthProviderRequest,
+      ignoreMissingFields: boolean = false): OIDCConfigServerRequest | null {
+    const makeRequest = typeof options !== 'undefined' &&
         validator.isNonNullObject(options) &&
-        (options.providerId || ignoreMissingFields)) {
-      // Validate options.
-      OIDCConfig.validate(options, ignoreMissingFields);
-      request.enabled = options.enabled;
-      request.displayName = options.displayName;
-      request.issuer = options.issuer;
-      request.clientId = options.clientId;
-    } else {
+        (options.providerId || ignoreMissingFields);
+    if (!makeRequest) {
       return null;
     }
+    const request: OIDCConfigServerRequest = {};
+    // Validate options.
+    OIDCConfig.validate(options, ignoreMissingFields);
+    request.enabled = options.enabled;
+    request.displayName = options.displayName;
+    request.issuer = options.issuer;
+    request.clientId = options.clientId;
     return request;
   }
 
@@ -449,10 +468,10 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
   /**
    * Validates the OIDCConfig options object. Throws an error on failure.
    *
-   * @param {any} options The options object to validate.
+   * @param {OIDCAuthProviderRequest} options The options object to validate.
    * @param {boolean=} ignoreMissingFields Whether to ignore missing fields.
    */
-  public static validate(options: any, ignoreMissingFields: boolean = false) {
+  public static validate(options: OIDCAuthProviderRequest, ignoreMissingFields: boolean = false) {
     const validKeys = {
       enabled: true,
       displayName: true,
@@ -476,17 +495,16 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
       }
     }
     // Required fields.
-    if (!(ignoreMissingFields && typeof options.providerId === 'undefined') &&
-        !validator.isNonEmptyString(options.providerId)) {
+    if (validator.isNonEmptyString(options.providerId)) {
+      if (options.providerId.indexOf('oidc.') !== 0) {
+        throw new FirebaseAuthError(
+          !options.providerId ? AuthClientErrorCode.MISSING_PROVIDER_ID : AuthClientErrorCode.INVALID_PROVIDER_ID,
+          '"OIDCAuthProviderConfig.providerId" must be a valid non-empty string prefixed with "oidc.".',
+        );
+      }
+    } else if (!ignoreMissingFields) {
       throw new FirebaseAuthError(
         !options.providerId ? AuthClientErrorCode.MISSING_PROVIDER_ID : AuthClientErrorCode.INVALID_PROVIDER_ID,
-        '"OIDCAuthProviderConfig.providerId" must be a valid non-empty string prefixed with "oidc.".',
-      );
-    }
-    if (!(ignoreMissingFields && typeof options.providerId === 'undefined') &&
-        options.providerId.indexOf('oidc.') !== 0) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_PROVIDER_ID,
         '"OIDCAuthProviderConfig.providerId" must be a valid non-empty string prefixed with "oidc.".',
       );
     }

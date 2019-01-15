@@ -116,10 +116,10 @@ export function formatString(str: string, params?: object): string {
  * Generates the update mask for the provided object.
  * Note this will ignore the last key with value undefined.
  *
- * @param {any} obj The object to generate the update mask for.
+ * @param {[key: string]: any} obj The object to generate the update mask for.
  * @return {Array<string>} The computed update mask list.
  */
-export function generateUpdateMask(obj: any): string[] {
+export function generateUpdateMask(obj: {[key: string]: any}): string[] {
   const updateMask: string[] = [];
   if (!validator.isNonNullObject(obj)) {
     return updateMask;

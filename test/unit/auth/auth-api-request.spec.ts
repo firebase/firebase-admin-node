@@ -1436,7 +1436,7 @@ describe('FirebaseAuthRequestHandler', () => {
     it('should be rejected given an invalid maxResults', () => {
       const expectedError = new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        `Required "maxResults" must be a positive non-zero number that does not ` +
+        `Required "maxResults" must be a positive integer that does not ` +
         `exceed the allowed 1000.`,
       );
 
@@ -2529,7 +2529,7 @@ describe('FirebaseAuthRequestHandler', () => {
     it('should be rejected given an invalid maxResults', () => {
       const expectedError = new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        `Required "maxResults" must be a positive non-zero number that does not ` +
+        `Required "maxResults" must be a positive integer that does not ` +
         `exceed the allowed 100.`,
       );
 
@@ -3006,7 +3006,7 @@ describe('FirebaseAuthRequestHandler', () => {
     it('should be rejected given an invalid maxResults', () => {
       const expectedError = new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        `Required "maxResults" must be a positive non-zero number that does not ` +
+        `Required "maxResults" must be a positive integer that does not ` +
         `exceed the allowed 100.`,
       );
 
