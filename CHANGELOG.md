@@ -1,5 +1,8 @@
 # Unreleased
 
+- [changed] `verifyIdToken()` and `verifySessionCookie()` methods now return
+  `auth/id-token-expired` and `auth/session-cookie-expired` error codes for
+  expired JWTs.
 - [fixed] Implemented a Node.js environment check that will be executed at
   package import time.
 

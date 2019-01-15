@@ -233,7 +233,7 @@ export class FirebaseTokenVerifier {
     return new Promise((resolve, reject) => {
       jwt.verify(jwtToken, publicKey, {
         algorithms: [this.algorithm],
-      }, (error: any, decodedToken: any) => {
+      }, (error: jwt.VerifyErrors, decodedToken: any) => {
         if (error) {
           if (error.name === 'TokenExpiredError') {
             const errorMessage = `${this.tokenInfo.jwtName} has expired. Get a fresh ${this.tokenInfo.shortName}` +
@@ -244,6 +244,7 @@ export class FirebaseTokenVerifier {
             const errorMessage = `${this.tokenInfo.jwtName} has invalid signature.` + verifyJwtTokenDocsMessage;
             return reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, errorMessage));
           }
+          return reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, error.message));
         } else {
           decodedToken.uid = decodedToken.sub;
           resolve(decodedToken);
