@@ -232,7 +232,7 @@ describe('SAMLConfig', () => {
     const nonAuthConfigOptions = [null, undefined, {}, {other: 'value'}];
     nonAuthConfigOptions.forEach((nonAuthConfig) => {
       it('should return null when no AuthConfig is provided: ' + JSON.stringify(nonAuthConfig), () => {
-        expect(SAMLConfig.buildServerRequest(nonAuthConfig))
+        expect(SAMLConfig.buildServerRequest(nonAuthConfig as any))
           .to.be.null;
       });
     });
@@ -282,7 +282,7 @@ describe('SAMLConfig', () => {
     const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
     nonObjects.forEach((request) => {
       it('should throw on non-null SAMLAuthProviderConfig object:' + JSON.stringify(request), () => {
-        expect(() => SAMLConfig.validate(request))
+        expect(() => SAMLConfig.validate(request as any))
           .to.throw('"SAMLAuthProviderConfig" must be a valid non-null object.');
       });
     });
@@ -530,7 +530,7 @@ describe('OIDCConfig', () => {
     const nonAuthConfigOptions = [null, undefined, {}, {other: 'value'}];
     nonAuthConfigOptions.forEach((nonAuthConfig) => {
       it('should return null when no AuthConfig is provided: ' + JSON.stringify(nonAuthConfig), () => {
-        expect(OIDCConfig.buildServerRequest(nonAuthConfig)).to.be.null;
+        expect(OIDCConfig.buildServerRequest(nonAuthConfig as any)).to.be.null;
       });
     });
   });
@@ -561,7 +561,7 @@ describe('OIDCConfig', () => {
     const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
     nonObjects.forEach((request) => {
       it('should throw on non-null OIDCAuthProviderConfig object:' + JSON.stringify(request), () => {
-        expect(() => OIDCConfig.validate(request))
+        expect(() => OIDCConfig.validate(request as any))
           .to.throw('"OIDCAuthProviderConfig" must be a valid non-null object.');
       });
     });
