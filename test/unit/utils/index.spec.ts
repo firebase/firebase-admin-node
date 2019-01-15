@@ -182,7 +182,7 @@ describe('generateUpdateMask()', () => {
   const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
   nonObjects.forEach((nonObject) => {
     it(`should return empty array for non object ${JSON.stringify(nonObject)}`, () => {
-      expect(generateUpdateMask(nonObject)).to.deep.equal([]);
+      expect(generateUpdateMask(nonObject as any)).to.deep.equal([]);
     });
   });
 
