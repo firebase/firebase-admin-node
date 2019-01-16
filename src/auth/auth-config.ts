@@ -166,7 +166,8 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
   public readonly enableRequestSigning?: boolean;
 
   /**
-   * Static method convert a client side request to a SAMLConfigServerRequest.
+   * Converts a client side request to a SAMLConfigServerRequest which is the format
+   * accepted by the backend server.
    * Throws an error if validation fails. If the request is not a SAMLConfig request,
    * returns null.
    *
@@ -177,8 +178,7 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
   public static buildServerRequest(
       options: SAMLAuthProviderRequest,
       ignoreMissingFields: boolean = false): SAMLConfigServerRequest | null {
-    const makeRequest = typeof options !== 'undefined' &&
-        validator.isNonNullObject(options) &&
+    const makeRequest = validator.isNonNullObject(options) &&
         (options.providerId || ignoreMissingFields);
     if (!makeRequest) {
       return null;
@@ -231,7 +231,7 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
    * @param {any} providerId The provider ID to check.
    * @return {boolean} Whether the provider ID corresponds to a SAML provider.
    */
-  public static isProviderId(providerId: any): boolean {
+  public static isProviderId(providerId: any): providerId is string {
     return validator.isNonEmptyString(providerId) && providerId.indexOf('saml.') === 0;
   }
 
@@ -415,7 +415,8 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
   public readonly clientId: string;
 
   /**
-   * Static method convert a client side request to a OIDCConfigServerRequest.
+   * Converts a client side request to a OIDCConfigServerRequest which is the format
+   * accepted by the backend server.
    * Throws an error if validation fails. If the request is not a OIDCConfig request,
    * returns null.
    *
@@ -426,8 +427,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
   public static buildServerRequest(
       options: OIDCAuthProviderRequest,
       ignoreMissingFields: boolean = false): OIDCConfigServerRequest | null {
-    const makeRequest = typeof options !== 'undefined' &&
-        validator.isNonNullObject(options) &&
+    const makeRequest = validator.isNonNullObject(options) &&
         (options.providerId || ignoreMissingFields);
     if (!makeRequest) {
       return null;
@@ -461,7 +461,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
    * @param {any} providerId The provider ID to check.
    * @return {boolean} Whether the provider ID corresponds to an OIDC provider.
    */
-  public static isProviderId(providerId: any): boolean {
+  public static isProviderId(providerId: any): providerId is string {
     return validator.isNonEmptyString(providerId) && providerId.indexOf('oidc.') === 0;
   }
 

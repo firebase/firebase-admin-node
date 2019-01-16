@@ -351,7 +351,7 @@ describe('Auth', () => {
     const stubs: sinon.SinonStub[] = [];
     beforeEach(() => {
       stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
-        .returns(Promise.resolve(decodedIdToken));
+        .resolves(decodedIdToken);
       stubs.push(stub);
       mockIdToken = mocks.generateIdToken();
       clock = sinon.useFakeTimers(validSince.getTime());
@@ -380,7 +380,7 @@ describe('Auth', () => {
       stub.restore();
       // Simulate ID token is invalid.
       stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(stub);
       return auth.verifyIdToken(mockIdToken)
         .should.eventually.be.rejectedWith('Decoding Firebase ID token failed');
@@ -426,7 +426,7 @@ describe('Auth', () => {
 
     it('should be fulfilled with checkRevoked set to true using an unrevoked ID token', () => {
       const getUserStub = sinon.stub(Auth.prototype, 'getUser')
-        .returns(Promise.resolve(expectedUserRecord));
+        .resolves(expectedUserRecord);
       stubs.push(getUserStub);
       // Verify ID token while checking if revoked.
       return auth.verifyIdToken(mockIdToken, true)
@@ -444,10 +444,10 @@ describe('Auth', () => {
       stub.restore();
       // Simulate revoked ID token returned with auth_time one second before validSince.
       stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
-        .returns(Promise.resolve(getDecodedIdToken(uid, oneSecBeforeValidSince)));
+        .resolves(getDecodedIdToken(uid, oneSecBeforeValidSince));
       stubs.push(stub);
       const getUserStub = sinon.stub(Auth.prototype, 'getUser')
-        .returns(Promise.resolve(expectedUserRecord));
+        .resolves(expectedUserRecord);
       stubs.push(getUserStub);
       // Verify ID token while checking if revoked.
       return auth.verifyIdToken(mockIdToken, true)
@@ -470,7 +470,7 @@ describe('Auth', () => {
       stub.restore();
       // Simulate revoked ID token returned with auth_time one second before validSince.
       stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
-        .returns(Promise.resolve(oneSecBeforeValidSinceDecodedIdToken));
+        .resolves(oneSecBeforeValidSinceDecodedIdToken);
       stubs.push(stub);
       // Verify ID token without checking if revoked.
       // This call should succeed.
@@ -483,7 +483,7 @@ describe('Auth', () => {
     it('should be rejected with checkRevoked set to true if underlying RPC fails', () => {
       const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
       const getUserStub = sinon.stub(Auth.prototype, 'getUser')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(getUserStub);
       // Verify ID token while checking if revoked.
       // This should fail with the underlying RPC error.
@@ -508,7 +508,7 @@ describe('Auth', () => {
       expect(noValidSinceExpectedUserRecord.tokensValidAfterTime).to.be.undefined;
       // Simulate getUser returns the expected user with no validSince.
       const getUserStub = sinon.stub(Auth.prototype, 'getUser')
-        .returns(Promise.resolve(noValidSinceExpectedUserRecord));
+        .resolves(noValidSinceExpectedUserRecord);
       stubs.push(getUserStub);
       // Verify ID token while checking if revoked.
       return auth.verifyIdToken(mockIdToken, true)
@@ -525,7 +525,7 @@ describe('Auth', () => {
       stub.restore();
       // Simulate ID token is invalid.
       stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(stub);
       // Verify ID token while checking if revoked.
       // This should fail with the underlying token generator verifyIdToken error.
@@ -555,7 +555,7 @@ describe('Auth', () => {
     const stubs: sinon.SinonStub[] = [];
     beforeEach(() => {
       stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
-        .returns(Promise.resolve(decodedSessionCookie));
+        .resolves(decodedSessionCookie);
       stubs.push(stub);
       mockSessionCookie = mocks.generateSessionCookie();
       clock = sinon.useFakeTimers(validSince.getTime());
@@ -584,7 +584,7 @@ describe('Auth', () => {
       stub.restore();
       // Simulate session cookie is invalid.
       stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(stub);
       return auth.verifySessionCookie(mockSessionCookie)
         .should.eventually.be.rejectedWith('Decoding Firebase session cookie failed');
@@ -630,7 +630,7 @@ describe('Auth', () => {
 
     it('should be fulfilled with checkRevoked set to true using an unrevoked session cookie', () => {
       const getUserStub = sinon.stub(Auth.prototype, 'getUser')
-        .returns(Promise.resolve(expectedUserRecord));
+        .resolves(expectedUserRecord);
       stubs.push(getUserStub);
       // Verify ID token while checking if revoked.
       return auth.verifySessionCookie(mockSessionCookie, true)
@@ -648,10 +648,10 @@ describe('Auth', () => {
       stub.restore();
       // Simulate revoked session cookie returned with auth_time one second before validSince.
       stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
-        .returns(Promise.resolve(getDecodedSessionCookie(uid, oneSecBeforeValidSince)));
+        .resolves(getDecodedSessionCookie(uid, oneSecBeforeValidSince));
       stubs.push(stub);
       const getUserStub = sinon.stub(Auth.prototype, 'getUser')
-        .returns(Promise.resolve(expectedUserRecord));
+        .resolves(expectedUserRecord);
       stubs.push(getUserStub);
       // Verify session cookie while checking if revoked.
       return auth.verifySessionCookie(mockSessionCookie, true)
@@ -674,7 +674,7 @@ describe('Auth', () => {
       stub.restore();
       // Simulate revoked session cookie returned with auth_time one second before validSince.
       stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
-        .returns(Promise.resolve(oneSecBeforeValidSinceDecodedSessionCookie));
+        .resolves(oneSecBeforeValidSinceDecodedSessionCookie);
       stubs.push(stub);
       // Verify session cookie without checking if revoked.
       // This call should succeed.
@@ -687,7 +687,7 @@ describe('Auth', () => {
     it('should be rejected with checkRevoked set to true if underlying RPC fails', () => {
       const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
       const getUserStub = sinon.stub(Auth.prototype, 'getUser')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(getUserStub);
       // Verify session cookie while checking if revoked.
       // This should fail with the underlying RPC error.
@@ -712,7 +712,7 @@ describe('Auth', () => {
       expect(noValidSinceExpectedUserRecord.tokensValidAfterTime).to.be.undefined;
       // Simulate getUser returns the expected user with no validSince.
       const getUserStub = sinon.stub(Auth.prototype, 'getUser')
-        .returns(Promise.resolve(noValidSinceExpectedUserRecord));
+        .resolves(noValidSinceExpectedUserRecord);
       stubs.push(getUserStub);
       // Verify session cookie while checking if revoked.
       return auth.verifySessionCookie(mockSessionCookie, true)
@@ -729,7 +729,7 @@ describe('Auth', () => {
       stub.restore();
       // Simulate session cookie is invalid.
       stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(stub);
       // Verify session cookie while checking if revoked.
       // This should fail with the underlying token generator verifySessionCookie error.
@@ -793,7 +793,7 @@ describe('Auth', () => {
     it('should resolve with a UserRecord on success', () => {
       // Stub getAccountInfoByUid to return expected result.
       const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByUid')
-        .returns(Promise.resolve(expectedGetAccountInfoResult));
+        .resolves(expectedGetAccountInfoResult);
       stubs.push(stub);
       return auth.getUser(uid)
         .then((userRecord) => {
@@ -807,7 +807,7 @@ describe('Auth', () => {
     it('should throw an error when the backend returns an error', () => {
       // Stub getAccountInfoByUid to throw a backend error.
       const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByUid')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(stub);
       return auth.getUser(uid)
         .then((userRecord) => {
@@ -871,7 +871,7 @@ describe('Auth', () => {
     it('should resolve with a UserRecord on success', () => {
       // Stub getAccountInfoByEmail to return expected result.
       const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByEmail')
-        .returns(Promise.resolve(expectedGetAccountInfoResult));
+        .resolves(expectedGetAccountInfoResult);
       stubs.push(stub);
       return auth.getUserByEmail(email)
         .then((userRecord) => {
@@ -885,7 +885,7 @@ describe('Auth', () => {
     it('should throw an error when the backend returns an error', () => {
       // Stub getAccountInfoByEmail to throw a backend error.
       const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByEmail')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(stub);
       return auth.getUserByEmail(email)
         .then((userRecord) => {
@@ -950,7 +950,7 @@ describe('Auth', () => {
     it('should resolve with a UserRecord on success', () => {
       // Stub getAccountInfoByPhoneNumber to return expected result.
       const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByPhoneNumber')
-        .returns(Promise.resolve(expectedGetAccountInfoResult));
+        .resolves(expectedGetAccountInfoResult);
       stubs.push(stub);
       return auth.getUserByPhoneNumber(phoneNumber)
         .then((userRecord) => {
@@ -964,7 +964,7 @@ describe('Auth', () => {
     it('should throw an error when the backend returns an error', () => {
       // Stub getAccountInfoByPhoneNumber to throw a backend error.
       const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByPhoneNumber')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(stub);
       return auth.getUserByPhoneNumber(phoneNumber)
         .then((userRecord) => {
@@ -1027,7 +1027,7 @@ describe('Auth', () => {
     it('should resolve with void on success', () => {
       // Stub deleteAccount to return expected result.
       const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'deleteAccount')
-        .returns(Promise.resolve(expectedDeleteAccountResult));
+        .resolves(expectedDeleteAccountResult);
       stubs.push(stub);
       return auth.deleteUser(uid)
         .then((result) => {
@@ -1041,7 +1041,7 @@ describe('Auth', () => {
     it('should throw an error when the backend returns an error', () => {
       // Stub deleteAccount to throw a backend error.
       const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'deleteAccount')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(stub);
       return auth.deleteUser(uid)
         .then(() => {
@@ -1116,10 +1116,10 @@ describe('Auth', () => {
     it('should resolve with a UserRecord on createNewAccount request success', () => {
       // Stub createNewAccount to return expected uid.
       const createUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'createNewAccount')
-        .returns(Promise.resolve(uid));
+        .resolves(uid);
       // Stub getAccountInfoByUid to return expected result.
       const getUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByUid')
-        .returns(Promise.resolve(expectedGetAccountInfoResult));
+        .resolves(expectedGetAccountInfoResult);
       stubs.push(createUserStub);
       stubs.push(getUserStub);
       return auth.createUser(propertiesToCreate)
@@ -1135,7 +1135,7 @@ describe('Auth', () => {
     it('should throw an error when createNewAccount returns an error', () => {
       // Stub createNewAccount to throw a backend error.
       const createUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'createNewAccount')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(createUserStub);
       return auth.createUser(propertiesToCreate)
         .then((userRecord) => {
@@ -1151,11 +1151,11 @@ describe('Auth', () => {
     it('should throw an error when getUser returns a User not found error', () => {
       // Stub createNewAccount to return expected uid.
       const createUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'createNewAccount')
-        .returns(Promise.resolve(uid));
+        .resolves(uid);
       // Stub getAccountInfoByUid to throw user not found error.
       const userNotFoundError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
       const getUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByUid')
-        .returns(Promise.reject(userNotFoundError));
+        .rejects(userNotFoundError);
       stubs.push(createUserStub);
       stubs.push(getUserStub);
       return auth.createUser(propertiesToCreate)
@@ -1173,10 +1173,10 @@ describe('Auth', () => {
     it('should echo getUser error if an error occurs while retrieving the user record', () => {
       // Stub createNewAccount to return expected uid.
       const createUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'createNewAccount')
-        .returns(Promise.resolve(uid));
+        .resolves(uid);
       // Stub getAccountInfoByUid to throw expected error.
       const getUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByUid')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(createUserStub);
       stubs.push(getUserStub);
       return auth.createUser(propertiesToCreate)
@@ -1269,10 +1269,10 @@ describe('Auth', () => {
     it('should resolve with a UserRecord on updateExistingAccount request success', () => {
       // Stub updateExistingAccount to return expected uid.
       const updateUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'updateExistingAccount')
-        .returns(Promise.resolve(uid));
+        .resolves(uid);
       // Stub getAccountInfoByUid to return expected result.
       const getUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByUid')
-        .returns(Promise.resolve(expectedGetAccountInfoResult));
+        .resolves(expectedGetAccountInfoResult);
       stubs.push(updateUserStub);
       stubs.push(getUserStub);
       return auth.updateUser(uid, propertiesToEdit)
@@ -1288,7 +1288,7 @@ describe('Auth', () => {
     it('should throw an error when updateExistingAccount returns an error', () => {
       // Stub updateExistingAccount to throw a backend error.
       const updateUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'updateExistingAccount')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(updateUserStub);
       return auth.updateUser(uid, propertiesToEdit)
         .then((userRecord) => {
@@ -1304,10 +1304,10 @@ describe('Auth', () => {
     it('should echo getUser error if an error occurs while retrieving the user record', () => {
       // Stub updateExistingAccount to return expected uid.
       const updateUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'updateExistingAccount')
-        .returns(Promise.resolve(uid));
+        .resolves(uid);
       // Stub getAccountInfoByUid to throw an expected error.
       const getUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByUid')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(updateUserStub);
       stubs.push(getUserStub);
       return auth.updateUser(uid, propertiesToEdit)
@@ -1395,7 +1395,7 @@ describe('Auth', () => {
       // Stub setCustomUserClaims to return expected uid.
       const setCustomUserClaimsStub = sinon
         .stub(FirebaseAuthRequestHandler.prototype, 'setCustomUserClaims')
-        .returns(Promise.resolve(uid));
+        .resolves(uid);
       stubs.push(setCustomUserClaimsStub);
       return auth.setCustomUserClaims(uid, customClaims)
         .then((response) => {
@@ -1410,7 +1410,7 @@ describe('Auth', () => {
       // Stub setCustomUserClaims to throw a backend error.
       const setCustomUserClaimsStub = sinon
         .stub(FirebaseAuthRequestHandler.prototype, 'setCustomUserClaims')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(setCustomUserClaimsStub);
       return auth.setCustomUserClaims(uid, customClaims)
         .then(() => {
@@ -1509,7 +1509,7 @@ describe('Auth', () => {
       // Stub downloadAccount to return expected response.
       const downloadAccountStub = sinon
         .stub(FirebaseAuthRequestHandler.prototype, 'downloadAccount')
-        .returns(Promise.resolve(downloadAccountResponse));
+        .resolves(downloadAccountResponse);
       stubs.push(downloadAccountStub);
       return auth.listUsers(maxResult, pageToken)
         .then((response) => {
@@ -1524,7 +1524,7 @@ describe('Auth', () => {
       // Stub downloadAccount to return expected response.
       const downloadAccountStub = sinon
         .stub(FirebaseAuthRequestHandler.prototype, 'downloadAccount')
-        .returns(Promise.resolve(downloadAccountResponse));
+        .resolves(downloadAccountResponse);
       stubs.push(downloadAccountStub);
       return auth.listUsers()
         .then((response) => {
@@ -1540,7 +1540,7 @@ describe('Auth', () => {
       // Stub downloadAccount to return expected response.
       const downloadAccountStub = sinon
         .stub(FirebaseAuthRequestHandler.prototype, 'downloadAccount')
-        .returns(Promise.resolve(emptyDownloadAccountResponse));
+        .resolves(emptyDownloadAccountResponse);
       stubs.push(downloadAccountStub);
       return auth.listUsers(maxResult, pageToken)
         .then((response) => {
@@ -1555,7 +1555,7 @@ describe('Auth', () => {
       // Stub downloadAccount to throw a backend error.
       const downloadAccountStub = sinon
         .stub(FirebaseAuthRequestHandler.prototype, 'downloadAccount')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(downloadAccountStub);
       return auth.listUsers(maxResult, pageToken)
         .then((results) => {
@@ -1620,7 +1620,7 @@ describe('Auth', () => {
       // Stub revokeRefreshTokens to return expected uid.
       const revokeRefreshTokensStub =
           sinon.stub(FirebaseAuthRequestHandler.prototype, 'revokeRefreshTokens')
-          .returns(Promise.resolve(uid));
+          .resolves(uid);
       stubs.push(revokeRefreshTokensStub);
       return auth.revokeRefreshTokens(uid)
         .then((result) => {
@@ -1635,7 +1635,7 @@ describe('Auth', () => {
       // Stub revokeRefreshTokens to throw a backend error.
       const revokeRefreshTokensStub =
           sinon.stub(FirebaseAuthRequestHandler.prototype, 'revokeRefreshTokens')
-          .returns(Promise.reject(expectedError));
+          .rejects(expectedError);
       stubs.push(revokeRefreshTokensStub);
       return auth.revokeRefreshTokens(uid)
         .then((result) => {
@@ -1701,7 +1701,7 @@ describe('Auth', () => {
       // Stub uploadAccount to return expected result.
       const uploadAccountStub =
           sinon.stub(FirebaseAuthRequestHandler.prototype, 'uploadAccount')
-          .returns(Promise.resolve(expectedUserImportResult));
+          .resolves(expectedUserImportResult);
       stubs.push(uploadAccountStub);
       return auth.importUsers(users, options)
         .then((result) => {
@@ -1716,7 +1716,7 @@ describe('Auth', () => {
       // Stub uploadAccount to reject with expected error.
       const uploadAccountStub =
           sinon.stub(FirebaseAuthRequestHandler.prototype, 'uploadAccount')
-          .returns(Promise.reject(expectedServerError));
+          .rejects(expectedServerError);
       stubs.push(uploadAccountStub);
       return auth.importUsers(users, options)
         .then((result) => {
@@ -1815,7 +1815,7 @@ describe('Auth', () => {
       // Stub createSessionCookie to return expected sessionCookie.
       const createSessionCookieStub =
           sinon.stub(FirebaseAuthRequestHandler.prototype, 'createSessionCookie')
-          .returns(Promise.resolve(sessionCookie));
+          .resolves(sessionCookie);
       stubs.push(createSessionCookieStub);
       return auth.createSessionCookie(idToken, options)
         .then((result) => {
@@ -1831,7 +1831,7 @@ describe('Auth', () => {
       // Stub createSessionCookie to throw a backend error.
       const createSessionCookieStub =
           sinon.stub(FirebaseAuthRequestHandler.prototype, 'createSessionCookie')
-          .returns(Promise.reject(expectedError));
+          .rejects(expectedError);
       stubs.push(createSessionCookieStub);
       return auth.createSessionCookie(idToken, options)
         .then((result) => {
@@ -1911,7 +1911,7 @@ describe('Auth', () => {
       it('should resolve when called with actionCodeSettings with a generated link on success', () => {
         // Stub getEmailActionLink to return expected link.
         const getEmailActionLinkStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getEmailActionLink')
-          .returns(Promise.resolve(expectedLink));
+          .resolves(expectedLink);
         stubs.push(getEmailActionLinkStub);
         return (auth as any)[emailActionFlow.api](email, actionCodeSettings)
           .then((actualLink: string) => {
@@ -1932,7 +1932,7 @@ describe('Auth', () => {
         it('should resolve when called without actionCodeSettings with a generated link on success', () => {
           // Stub getEmailActionLink to return expected link.
           const getEmailActionLinkStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getEmailActionLink')
-            .returns(Promise.resolve(expectedLink));
+            .resolves(expectedLink);
           stubs.push(getEmailActionLinkStub);
           return (auth as any)[emailActionFlow.api](email)
             .then((actualLink: string) => {
@@ -1948,7 +1948,7 @@ describe('Auth', () => {
       it('should throw an error when getEmailAction returns an error', () => {
         // Stub getEmailActionLink to throw a backend error.
         const getEmailActionLinkStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getEmailActionLink')
-          .returns(Promise.reject(expectedError));
+          .rejects(expectedError);
         stubs.push(getEmailActionLinkStub);
         return (auth as any)[emailActionFlow.api](email, actionCodeSettings)
           .then((actualLink: string) => {
@@ -1977,15 +1977,18 @@ describe('Auth', () => {
         .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-provider-id');
     });
 
-    it('should be rejected given an invalid provider ID', () => {
-      const invalidProviderId = '';
-      return (auth as Auth).getProviderConfig(invalidProviderId)
-        .then(() => {
-          throw new Error('Unexpected success');
-        })
-        .catch((error) => {
-          expect(error).to.have.property('code', 'auth/invalid-provider-id');
-        });
+    const invalidProviderIds = [
+        undefined, null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
+    invalidProviderIds.forEach((invalidProviderId) => {
+      it(`should be rejected given an invalid provider ID "${JSON.stringify(invalidProviderId)}"`, () => {
+        return (auth as Auth).getProviderConfig(invalidProviderId as any)
+          .then(() => {
+            throw new Error('Unexpected success');
+          })
+          .catch((error) => {
+            expect(error).to.have.property('code', 'auth/invalid-provider-id');
+          });
+      });
     });
 
     it('should be rejected given an app which returns null access tokens', () => {
@@ -2021,7 +2024,7 @@ describe('Auth', () => {
       it('should resolve with an OIDCConfig on success', () => {
         // Stub getOAuthIdpConfig to return expected result.
         const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getOAuthIdpConfig')
-          .returns(Promise.resolve(serverResponse));
+          .resolves(serverResponse);
         stubs.push(stub);
         return (auth as Auth).getProviderConfig(providerId)
           .then((result) => {
@@ -2035,7 +2038,7 @@ describe('Auth', () => {
       it('should throw an error when the backend returns an error', () => {
         // Stub getOAuthIdpConfig to throw a backend error.
         const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getOAuthIdpConfig')
-          .returns(Promise.reject(expectedError));
+          .rejects(expectedError);
         stubs.push(stub);
         return (auth as Auth).getProviderConfig(providerId)
           .then((config) => {
@@ -2075,7 +2078,7 @@ describe('Auth', () => {
       it('should resolve with a SAMLConfig on success', () => {
         // Stub getInboundSamlConfig to return expected result.
         const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getInboundSamlConfig')
-          .returns(Promise.resolve(serverResponse));
+          .resolves(serverResponse);
         stubs.push(stub);
         return (auth as Auth).getProviderConfig(providerId)
           .then((result) => {
@@ -2089,7 +2092,7 @@ describe('Auth', () => {
       it('should throw an error when the backend returns an error', () => {
         // Stub getInboundSamlConfig to throw a backend error.
         const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getInboundSamlConfig')
-          .returns(Promise.reject(expectedError));
+          .rejects(expectedError);
         stubs.push(stub);
         return (auth as Auth).getProviderConfig(providerId)
           .then((config) => {
@@ -2125,12 +2128,7 @@ describe('Auth', () => {
         type: 'unsupported',
       };
       return (auth as Auth).listProviderConfigs(invalidOptions as any)
-        .then(() => {
-          throw new Error('Unexpected success');
-        })
-        .catch((error) => {
-          expect(error).to.have.property('code', 'auth/argument-error');
-        });
+        .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
     });
 
     it('should be rejected given an app which returns null access tokens', () => {
@@ -2178,11 +2176,11 @@ describe('Auth', () => {
         providerConfigs: [],
       };
 
-      it('should resolve on listOAuthIdpConfigs request success with configs in response', () => {
+      it('should resolve on success with configs in response', () => {
         // Stub listOAuthIdpConfigs to return expected response.
         const listConfigsStub = sinon
           .stub(FirebaseAuthRequestHandler.prototype, 'listOAuthIdpConfigs')
-          .returns(Promise.resolve(listConfigsResponse));
+          .resolves(listConfigsResponse);
         stubs.push(listConfigsStub);
         return auth.listProviderConfigs(filterOptions)
           .then((response) => {
@@ -2193,11 +2191,11 @@ describe('Auth', () => {
           });
       });
 
-      it('should resolve on listOAuthIdpConfigs request success with default options', () => {
+      it('should resolve on success with default options', () => {
         // Stub listOAuthIdpConfigs to return expected response.
         const listConfigsStub = sinon
           .stub(FirebaseAuthRequestHandler.prototype, 'listOAuthIdpConfigs')
-          .returns(Promise.resolve(listConfigsResponse));
+          .resolves(listConfigsResponse);
         stubs.push(listConfigsStub);
         return (auth as Auth).listProviderConfigs({type: 'oidc'})
           .then((response) => {
@@ -2209,11 +2207,11 @@ describe('Auth', () => {
       });
 
 
-      it('should resolve on listOAuthIdpConfigs request success with no configs in response', () => {
+      it('should resolve on success with no configs in response', () => {
         // Stub listOAuthIdpConfigs to return expected response.
         const listConfigsStub = sinon
           .stub(FirebaseAuthRequestHandler.prototype, 'listOAuthIdpConfigs')
-          .returns(Promise.resolve(emptyListConfigsResponse));
+          .resolves(emptyListConfigsResponse);
         stubs.push(listConfigsStub);
         return auth.listProviderConfigs(filterOptions)
           .then((response) => {
@@ -2228,7 +2226,7 @@ describe('Auth', () => {
         // Stub listOAuthIdpConfigs to throw a backend error.
         const listConfigsStub = sinon
           .stub(FirebaseAuthRequestHandler.prototype, 'listOAuthIdpConfigs')
-          .returns(Promise.reject(expectedError));
+          .rejects(expectedError);
         stubs.push(listConfigsStub);
         return auth.listProviderConfigs(filterOptions)
           .then((results) => {
@@ -2273,11 +2271,11 @@ describe('Auth', () => {
         providerConfigs: [],
       };
 
-      it('should resolve on listInboundSamlConfigs request success with configs in response', () => {
+      it('should resolve on success with configs in response', () => {
         // Stub listInboundSamlConfigs to return expected response.
         const listConfigsStub = sinon
           .stub(FirebaseAuthRequestHandler.prototype, 'listInboundSamlConfigs')
-          .returns(Promise.resolve(listConfigsResponse));
+          .resolves(listConfigsResponse);
         stubs.push(listConfigsStub);
         return auth.listProviderConfigs(filterOptions)
           .then((response) => {
@@ -2288,11 +2286,11 @@ describe('Auth', () => {
           });
       });
 
-      it('should resolve on listInboundSamlConfigs request success with default options', () => {
+      it('should resolve on success with default options', () => {
         // Stub listInboundSamlConfigs to return expected response.
         const listConfigsStub = sinon
           .stub(FirebaseAuthRequestHandler.prototype, 'listInboundSamlConfigs')
-          .returns(Promise.resolve(listConfigsResponse));
+          .resolves(listConfigsResponse);
         stubs.push(listConfigsStub);
         return (auth as Auth).listProviderConfigs({type: 'saml'})
           .then((response) => {
@@ -2304,11 +2302,11 @@ describe('Auth', () => {
       });
 
 
-      it('should resolve on listInboundSamlConfigs request success with no configs in response', () => {
+      it('should resolve on success with no configs in response', () => {
         // Stub listInboundSamlConfigs to return expected response.
         const listConfigsStub = sinon
           .stub(FirebaseAuthRequestHandler.prototype, 'listInboundSamlConfigs')
-          .returns(Promise.resolve(emptyListConfigsResponse));
+          .resolves(emptyListConfigsResponse);
         stubs.push(listConfigsStub);
         return auth.listProviderConfigs(filterOptions)
           .then((response) => {
@@ -2323,7 +2321,7 @@ describe('Auth', () => {
         // Stub listInboundSamlConfigs to throw a backend error.
         const listConfigsStub = sinon
           .stub(FirebaseAuthRequestHandler.prototype, 'listInboundSamlConfigs')
-          .returns(Promise.reject(expectedError));
+          .rejects(expectedError);
         stubs.push(listConfigsStub);
         return auth.listProviderConfigs(filterOptions)
           .then((results) => {
@@ -2388,7 +2386,7 @@ describe('Auth', () => {
       it('should resolve with void on success', () => {
         // Stub deleteOAuthIdpConfig to resolve.
         const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'deleteOAuthIdpConfig')
-          .returns(Promise.resolve());
+          .resolves();
         stubs.push(stub);
         return (auth as Auth).deleteProviderConfig(providerId)
           .then((result) => {
@@ -2402,7 +2400,7 @@ describe('Auth', () => {
       it('should throw an error when the backend returns an error', () => {
         // Stub deleteOAuthIdpConfig to throw a backend error.
         const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'deleteOAuthIdpConfig')
-          .returns(Promise.reject(expectedError));
+          .rejects(expectedError);
         stubs.push(stub);
         return (auth as Auth).deleteProviderConfig(providerId)
           .then((config) => {
@@ -2424,7 +2422,7 @@ describe('Auth', () => {
       it('should resolve with void on success', () => {
         // Stub deleteInboundSamlConfig to resolve.
         const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'deleteInboundSamlConfig')
-          .returns(Promise.resolve());
+          .resolves();
         stubs.push(stub);
         return (auth as Auth).deleteProviderConfig(providerId)
           .then((result) => {
@@ -2438,7 +2436,7 @@ describe('Auth', () => {
       it('should throw an error when the backend returns an error', () => {
         // Stub deleteInboundSamlConfig to throw a backend error.
         const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'deleteInboundSamlConfig')
-          .returns(Promise.reject(expectedError));
+          .rejects(expectedError);
         stubs.push(stub);
         return (auth as Auth).deleteProviderConfig(providerId)
           .then((config) => {
@@ -2533,7 +2531,7 @@ describe('Auth', () => {
       it('should resolve with an OIDCConfig on updateOAuthIdpConfig request success', () => {
         // Stub updateOAuthIdpConfig to return expected server response.
         const updateConfigStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'updateOAuthIdpConfig')
-          .returns(Promise.resolve(serverResponse));
+          .resolves(serverResponse);
         stubs.push(updateConfigStub);
 
         return auth.updateProviderConfig(providerId, configOptions)
@@ -2548,7 +2546,7 @@ describe('Auth', () => {
       it('should throw an error when updateOAuthIdpConfig returns an error', () => {
         // Stub updateOAuthIdpConfig to throw a backend error.
         const updateConfigStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'updateOAuthIdpConfig')
-          .returns(Promise.reject(expectedError));
+          .rejects(expectedError);
         stubs.push(updateConfigStub);
 
         return auth.updateProviderConfig(providerId, configOptions)
@@ -2599,7 +2597,7 @@ describe('Auth', () => {
       it('should resolve with a SAMLConfig on updateInboundSamlConfig request success', () => {
         // Stub updateInboundSamlConfig to return expected server response.
         const updateConfigStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'updateInboundSamlConfig')
-          .returns(Promise.resolve(serverResponse));
+          .resolves(serverResponse);
         stubs.push(updateConfigStub);
 
         return auth.updateProviderConfig(providerId, configOptions)
@@ -2614,7 +2612,7 @@ describe('Auth', () => {
       it('should throw an error when updateInboundSamlConfig returns an error', () => {
         // Stub updateInboundSamlConfig to throw a backend error.
         const updateConfigStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'updateInboundSamlConfig')
-          .returns(Promise.reject(expectedError));
+          .rejects(expectedError);
         stubs.push(updateConfigStub);
 
         return auth.updateProviderConfig(providerId, configOptions)
@@ -2699,7 +2697,7 @@ describe('Auth', () => {
       it('should resolve with an OIDCConfig on createOAuthIdpConfig request success', () => {
         // Stub createOAuthIdpConfig to return expected server response.
         const createConfigStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'createOAuthIdpConfig')
-          .returns(Promise.resolve(serverResponse));
+          .resolves(serverResponse);
         stubs.push(createConfigStub);
 
         return (auth as Auth).createProviderConfig(configOptions)
@@ -2714,7 +2712,7 @@ describe('Auth', () => {
       it('should throw an error when createOAuthIdpConfig returns an error', () => {
         // Stub createOAuthIdpConfig to throw a backend error.
         const createConfigStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'createOAuthIdpConfig')
-          .returns(Promise.reject(expectedError));
+          .rejects(expectedError);
         stubs.push(createConfigStub);
 
         return (auth as Auth).createProviderConfig(configOptions)
@@ -2766,7 +2764,7 @@ describe('Auth', () => {
       it('should resolve with a SAMLConfig on createInboundSamlConfig request success', () => {
         // Stub createInboundSamlConfig to return expected server response.
         const createConfigStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'createInboundSamlConfig')
-          .returns(Promise.resolve(serverResponse));
+          .resolves(serverResponse);
         stubs.push(createConfigStub);
 
         return (auth as Auth).createProviderConfig(configOptions)
@@ -2781,7 +2779,7 @@ describe('Auth', () => {
       it('should throw an error when createInboundSamlConfig returns an error', () => {
         // Stub createInboundSamlConfig to throw a backend error.
         const createConfigStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'createInboundSamlConfig')
-          .returns(Promise.reject(expectedError));
+          .rejects(expectedError);
         stubs.push(createConfigStub);
 
         return (auth as Auth).createProviderConfig(configOptions)

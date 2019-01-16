@@ -167,7 +167,7 @@ export let keyPairs = [
   /* tslint:enable:max-line-length */
 ];
 
-// Randomly generate an X.509 certs using https://www.samltool.com/self_signed_certs.php
+// Randomly generated an X.509 certs using https://www.samltool.com/self_signed_certs.php
 export const x509CertPairs = [
   /* tslint:disable:max-line-length */
   {

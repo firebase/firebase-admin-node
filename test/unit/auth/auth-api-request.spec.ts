@@ -1437,7 +1437,7 @@ describe('FirebaseAuthRequestHandler', () => {
       const expectedError = new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
         `Required "maxResults" must be a positive integer that does not ` +
-        `exceed the allowed 1000.`,
+        `exceed 1000.`,
       );
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -2411,7 +2411,7 @@ describe('FirebaseAuthRequestHandler', () => {
   describe('getOAuthIdpConfig()', () => {
     const providerId = 'oidc.provider';
     const path = `/v2beta1/projects/project_id/oauthIdpConfigs/${providerId}`;
-    const method = 'GET';
+    const expectedHttpMethod = 'GET';
     const expectedResult = utils.responseFrom({
       name: `projects/project1/oauthIdpConfigs/${providerId}`,
     });
@@ -2424,7 +2424,8 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.getOAuthIdpConfig(providerId)
         .then((result) => {
           expect(result).to.deep.equal(expectedResult.data);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, {}));
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, {}));
         });
     });
 
@@ -2460,14 +2461,15 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, {}));
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, {}));
         });
     });
   });
 
   describe('listOAuthIdpConfigs()', () => {
     const path = '/v2beta1/projects/project_id/oauthIdpConfigs';
-    const method = 'GET';
+    const expectedHttpMethod = 'GET';
     const nextPageToken = 'PAGE_TOKEN';
     const maxResults = 50;
     const expectedResult = utils.responseFrom({
@@ -2490,7 +2492,8 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.listOAuthIdpConfigs(maxResults, nextPageToken)
         .then((result) => {
           expect(result).to.deep.equal(expectedResult.data);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, data));
         });
     });
 
@@ -2506,7 +2509,8 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.listOAuthIdpConfigs(maxResults, nextPageToken)
         .then((result) => {
           expect(result).to.deep.equal({oauthIdpConfigs: []});
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, data));
         });
     });
 
@@ -2522,7 +2526,8 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.listOAuthIdpConfigs()
         .then((result) => {
           expect(result).to.deep.equal(expectedResult.data);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, data));
         });
     });
 
@@ -2530,7 +2535,7 @@ describe('FirebaseAuthRequestHandler', () => {
       const expectedError = new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
         `Required "maxResults" must be a positive integer that does not ` +
-        `exceed the allowed 100.`,
+        `exceed 100.`,
       );
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -2576,7 +2581,8 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, data));
         });
     });
   });
@@ -2584,7 +2590,7 @@ describe('FirebaseAuthRequestHandler', () => {
   describe('deleteOAuthIdpConfig()', () => {
     const providerId = 'oidc.provider';
     const path = `/v2beta1/projects/project_id/oauthIdpConfigs/${providerId}`;
-    const method = 'DELETE';
+    const expectedHttpMethod = 'DELETE';
     const expectedResult = utils.responseFrom({});
 
     it('should be fulfilled given a valid provider ID', () => {
@@ -2595,7 +2601,8 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.deleteOAuthIdpConfig(providerId)
         .then((result) => {
           expect(result).to.be.undefined;
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, {}));
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, {}));
         });
     });
 
@@ -2631,7 +2638,8 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, {}));
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, {}));
         });
     });
   });
@@ -2639,7 +2647,7 @@ describe('FirebaseAuthRequestHandler', () => {
   describe('createOAuthIdpConfig', () => {
     const providerId = 'oidc.provider';
     const path = `/v2beta1/projects/project_id/oauthIdpConfigs?oauthIdpConfigId=${providerId}`;
-    const method = 'POST';
+    const expectedHttpMethod = 'POST';
     const configOptions = {
       providerId,
       displayName: 'OIDC_DISPLAY_NAME',
@@ -2665,7 +2673,8 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.createOAuthIdpConfig(configOptions)
         .then((response) => {
           expect(response).to.deep.equal(expectedResult.data);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, expectedRequest));
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, expectedRequest));
         });
     });
 
@@ -2700,7 +2709,8 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, expectedRequest));
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, expectedRequest));
         });
     });
 
@@ -2720,7 +2730,8 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, expectedRequest));
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, expectedRequest));
         });
     });
   });
@@ -2728,7 +2739,7 @@ describe('FirebaseAuthRequestHandler', () => {
   describe('updateOAuthIdpConfig()', () => {
     const providerId = 'oidc.provider';
     const path = `/v2beta1/projects/project_id/oauthIdpConfigs/${providerId}`;
-    const method = 'PATCH';
+    const expectedHttpMethod = 'PATCH';
     const configOptions = {
       displayName: 'OIDC_DISPLAY_NAME',
       enabled: true,
@@ -2762,7 +2773,8 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.updateOAuthIdpConfig(providerId, configOptions)
         .then((response) => {
           expect(response).to.deep.equal(expectedResult.data);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(expectedPath, method, expectedRequest));
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(expectedPath, expectedHttpMethod, expectedRequest));
         });
     });
 
@@ -2785,7 +2797,8 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.updateOAuthIdpConfig(providerId, partialConfigOptions)
         .then((response) => {
           expect(response).to.deep.equal(expectedPartialResult.data);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(expectedPath, method, partialRequest));
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(expectedPath, expectedHttpMethod, partialRequest));
         });
     });
 
@@ -2807,7 +2820,8 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.updateOAuthIdpConfig(providerId, partialConfigOptions)
         .then((response) => {
           expect(response).to.deep.equal(expectedPartialResult.data);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(expectedPath, method, partialRequest));
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(expectedPath, expectedHttpMethod, partialRequest));
         });
     });
 
@@ -2859,7 +2873,8 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(expectedPath, method, expectedRequest));
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(expectedPath, expectedHttpMethod, expectedRequest));
         });
     });
 
@@ -2880,7 +2895,8 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(expectedPath, method, expectedRequest));
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(expectedPath, expectedHttpMethod, expectedRequest));
         });
     });
   });
@@ -2888,7 +2904,7 @@ describe('FirebaseAuthRequestHandler', () => {
   describe('getInboundSamlConfig()', () => {
     const providerId = 'saml.provider';
     const path = `/v2beta1/projects/project_id/inboundSamlConfigs/${providerId}`;
-    const method = 'GET';
+    const expectedHttpMethod = 'GET';
     const expectedResult = utils.responseFrom({
       name: `projects/project1/inboundSamlConfigs/${providerId}`,
     });
@@ -2901,7 +2917,7 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.getInboundSamlConfig(providerId)
         .then((result) => {
           expect(result).to.deep.equal(expectedResult.data);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, {}));
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, expectedHttpMethod, {}));
         });
     });
 
@@ -2937,14 +2953,14 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, {}));
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, expectedHttpMethod, {}));
         });
     });
   });
 
   describe('listInboundSamlConfigs()', () => {
     const path = '/v2beta1/projects/project_id/inboundSamlConfigs';
-    const method = 'GET';
+    const expectedHttpMethod = 'GET';
     const nextPageToken = 'PAGE_TOKEN';
     const maxResults = 50;
     const expectedResult = utils.responseFrom({
@@ -2967,7 +2983,7 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.listInboundSamlConfigs(maxResults, nextPageToken)
         .then((result) => {
           expect(result).to.deep.equal(expectedResult.data);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, expectedHttpMethod, data));
         });
     });
 
@@ -2983,7 +2999,7 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.listInboundSamlConfigs(maxResults, nextPageToken)
         .then((result) => {
           expect(result).to.deep.equal({inboundSamlConfigs: []});
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, expectedHttpMethod, data));
         });
     });
 
@@ -2999,7 +3015,7 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.listInboundSamlConfigs()
         .then((result) => {
           expect(result).to.deep.equal(expectedResult.data);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, expectedHttpMethod, data));
         });
     });
 
@@ -3007,7 +3023,7 @@ describe('FirebaseAuthRequestHandler', () => {
       const expectedError = new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
         `Required "maxResults" must be a positive integer that does not ` +
-        `exceed the allowed 100.`,
+        `exceed 100.`,
       );
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -3053,7 +3069,7 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, expectedHttpMethod, data));
         });
     });
   });
@@ -3061,7 +3077,7 @@ describe('FirebaseAuthRequestHandler', () => {
   describe('deleteInboundSamlConfig()', () => {
     const providerId = 'saml.provider';
     const path = `/v2beta1/projects/project_id/inboundSamlConfigs/${providerId}`;
-    const method = 'DELETE';
+    const expectedHttpMethod = 'DELETE';
     const expectedResult = utils.responseFrom({});
 
     it('should be fulfilled given a valid provider ID', () => {
@@ -3072,7 +3088,7 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.deleteInboundSamlConfig(providerId)
         .then((result) => {
           expect(result).to.be.undefined;
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, {}));
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, expectedHttpMethod, {}));
         });
     });
 
@@ -3108,7 +3124,7 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, {}));
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, expectedHttpMethod, {}));
         });
     });
   });
@@ -3116,7 +3132,7 @@ describe('FirebaseAuthRequestHandler', () => {
   describe('createInboundSamlConfig', () => {
     const providerId = 'saml.provider';
     const path = `/v2beta1/projects/project_id/inboundSamlConfigs?inboundSamlConfigId=${providerId}`;
-    const method = 'POST';
+    const expectedHttpMethod = 'POST';
     const configOptions = {
       providerId,
       displayName: 'SAML_DISPLAY_NAME',
@@ -3157,7 +3173,8 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.createInboundSamlConfig(configOptions)
         .then((response) => {
           expect(response).to.deep.equal(expectedResult.data);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, expectedRequest));
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, expectedRequest));
         });
     });
 
@@ -3192,7 +3209,8 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, expectedRequest));
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, expectedRequest));
         });
     });
 
@@ -3212,7 +3230,8 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, expectedRequest));
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, expectedRequest));
         });
     });
   });
@@ -3220,7 +3239,7 @@ describe('FirebaseAuthRequestHandler', () => {
   describe('updateInboundSamlConfig()', () => {
     const providerId = 'saml.provider';
     const path = `/v2beta1/projects/project_id/inboundSamlConfigs/${providerId}`;
-    const method = 'PATCH';
+    const expectedHttpMethod = 'PATCH';
     const configOptions = {
       idpEntityId: 'IDP_ENTITY_ID',
       ssoURL: 'https://example.com/login',
@@ -3283,7 +3302,8 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.updateInboundSamlConfig(providerId, configOptions)
         .then((response) => {
           expect(response).to.deep.equal(expectedResult.data);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(expectedPath, method, expectedRequest));
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(expectedPath, expectedHttpMethod, expectedRequest));
         });
     });
 
@@ -3315,7 +3335,8 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.updateInboundSamlConfig(providerId, partialConfigOptions)
         .then((response) => {
           expect(response).to.deep.equal(expectedPartialResult.data);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(expectedPath, method, partialRequest));
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(expectedPath, expectedHttpMethod, partialRequest));
         });
     });
 
@@ -3341,7 +3362,8 @@ describe('FirebaseAuthRequestHandler', () => {
       return requestHandler.updateInboundSamlConfig(providerId, partialConfigOptions)
         .then((response) => {
           expect(response).to.deep.equal(expectedPartialResult.data);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(expectedPath, method, partialRequest));
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(expectedPath, expectedHttpMethod, partialRequest));
         });
     });
 
@@ -3393,7 +3415,8 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(expectedPath, method, expectedRequest));
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(expectedPath, expectedHttpMethod, expectedRequest));
         });
     });
 
@@ -3414,7 +3437,8 @@ describe('FirebaseAuthRequestHandler', () => {
           throw new Error('Unexpected success');
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
-          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(expectedPath, method, expectedRequest));
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(expectedPath, expectedHttpMethod, expectedRequest));
         });
     });
   });

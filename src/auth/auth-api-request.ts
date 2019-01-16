@@ -392,7 +392,7 @@ export const FIREBASE_AUTH_DOWNLOAD_ACCOUNT = new ApiSettings('/accounts:batchGe
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
         `Required "maxResults" must be a positive integer that does not exceed ` +
-        `the allowed ${MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE}.`,
+        `${MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE}.`,
       );
     }
   });
@@ -562,7 +562,7 @@ const LIST_OAUTH_IDP_CONFIGS = new ApiSettings('/oauthIdpConfigs', 'GET')
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
         `Required "maxResults" must be a positive integer that does not exceed ` +
-        `the allowed ${MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE}.`,
+        `${MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE}.`,
       );
     }
   });
@@ -625,7 +625,7 @@ const LIST_INBOUND_SAML_CONFIGS = new ApiSettings('/inboundSamlConfigs', 'GET')
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
         `Required "maxResults" must be a positive integer that does not exceed ` +
-        `the allowed ${MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE}.`,
+        `${MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE}.`,
       );
     }
   });
@@ -634,9 +634,9 @@ const LIST_INBOUND_SAML_CONFIGS = new ApiSettings('/inboundSamlConfigs', 'GET')
  * Class that provides the mechanism to send requests to the Firebase Auth backend endpoints.
  */
 export class FirebaseAuthRequestHandler {
-  private httpClient: AuthorizedHttpClient;
-  private authUrlBuilder: AuthResourceUrlBuilder;
-  private projectConfigUrlBuilder: AuthResourceUrlBuilder;
+  private readonly httpClient: AuthorizedHttpClient;
+  private readonly authUrlBuilder: AuthResourceUrlBuilder;
+  private readonly projectConfigUrlBuilder: AuthResourceUrlBuilder;
 
   /**
    * @param {any} response The response to check for errors.
@@ -1064,13 +1064,12 @@ export class FirebaseAuthRequestHandler {
   public listOAuthIdpConfigs(
       maxResults: number = MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE,
       pageToken?: string): Promise<object> {
-    const request = {
+    const request: {pageSize: number, pageToken?: string} = {
       pageSize: maxResults,
-      pageToken,
     };
-    // Remove next page token if not provided.
-    if (typeof request.pageToken === 'undefined') {
-      delete request.pageToken;
+    // Add next page token if provided.
+    if (typeof pageToken !== 'undefined') {
+      request.pageToken = pageToken;
     }
     return this.invokeRequestHandler(this.projectConfigUrlBuilder, LIST_OAUTH_IDP_CONFIGS, request)
         .then((response: any) => {
@@ -1187,13 +1186,12 @@ export class FirebaseAuthRequestHandler {
   public listInboundSamlConfigs(
       maxResults: number = MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE,
       pageToken?: string): Promise<object> {
-    const request = {
+    const request: {pageSize: number, pageToken?: string} = {
       pageSize: maxResults,
-      pageToken,
     };
-    // Remove next page token if not provided.
-    if (typeof request.pageToken === 'undefined') {
-      delete request.pageToken;
+    // Add next page token if provided.
+    if (typeof pageToken !== 'undefined') {
+      request.pageToken = pageToken;
     }
     return this.invokeRequestHandler(this.projectConfigUrlBuilder, LIST_INBOUND_SAML_CONFIGS, request)
         .then((response: any) => {

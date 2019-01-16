@@ -429,15 +429,14 @@ class BaseAuth {
    *     meeting the filter requirements.
    */
   public listProviderConfigs(options: AuthProviderConfigFilter): Promise<ListProviderConfigResults> {
-    const processResponse = (response: any, providerConfigs: AuthProviderConfig[]) => {
+    const processResponse = (response: any, providerConfigs: AuthProviderConfig[]): ListProviderConfigResults => {
       // Return list of provider configuration and the next page token if available.
-      const result = {
+      const result: ListProviderConfigResults = {
         providerConfigs,
-        pageToken: response.nextPageToken,
       };
       // Delete result.pageToken if undefined.
-      if (typeof result.pageToken === 'undefined') {
-        delete result.pageToken;
+      if (response.hasOwnProperty('nextPageToken')) {
+        result.pageToken = response.nextPageToken;
       }
       return result;
     };
