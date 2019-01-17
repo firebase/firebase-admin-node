@@ -31,8 +31,8 @@ import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
 import {
-  ApplicationDefaultCredential, CertCredential, Certificate, GoogleOAuthAccessToken,
-  MetadataServiceCredential, RefreshTokenCredential,
+  ApplicationDefaultCredential, CertCredential, Certificate, Credential, GoogleOAuthAccessToken,
+  MetadataServiceCredential, RefreshToken, RefreshTokenCredential,
 } from '../../../src/auth/credential';
 import { HttpClient } from '../../../src/utils/api-request';
 import {Agent} from 'https';
@@ -394,6 +394,36 @@ describe('Credential', () => {
         clientEmail: mockCertificateObject.client_email,
         privateKey: mockCertificateObject.private_key,
       });
+    });
+
+    it('should parse valid token if app def creds point to default refresh token loc', () => {
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = GCLOUD_CREDENTIAL_PATH;
+
+      let readFileSyncStub;
+      if (typeof TEST_GCLOUD_CREDENTIALS === 'undefined') {
+        readFileSyncStub = sinon.stub(fs, 'readFileSync').returns(JSON.stringify(MOCK_REFRESH_TOKEN_CONFIG));
+      }
+      try {
+        const c = new ApplicationDefaultCredential();
+        const val = c.getCredential();
+        expect(val).is.instanceOf(RefreshTokenCredential);
+
+        if (readFileSyncStub) {
+          expect(val).to.have.property('refreshToken').that.includes({
+            clientId: MOCK_REFRESH_TOKEN_CONFIG.client_id,
+            clientSecret: MOCK_REFRESH_TOKEN_CONFIG.client_secret,
+            refreshToken: MOCK_REFRESH_TOKEN_CONFIG.refresh_token,
+            type: MOCK_REFRESH_TOKEN_CONFIG.type,
+          });
+          // tslint:disable-next-line:no-unused-expression
+          expect(readFileSyncStub.alwaysCalledWith(GCLOUD_CREDENTIAL_PATH, 'utf8')).to.be.true;
+        }
+      } finally {
+        if (readFileSyncStub) {
+          readFileSyncStub.restore();
+        }
+        delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+      }
     });
   });
 

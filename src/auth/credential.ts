@@ -355,7 +355,10 @@ export class ApplicationDefaultCredential implements Credential {
   private credential_: Credential;
 
   constructor(httpAgent?: Agent) {
-    if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    if (process.env.GOOGLE_APPLICATION_CREDENTIALS &&
+      // if the GCLOUD_CREDENTIAL_PATH == env(GOOGLE_APPLICATION_CREDENTIALS) then its a refresh token
+      // and we should skip parsing as a certificate
+      process.env.GOOGLE_APPLICATION_CREDENTIALS !== GCLOUD_CREDENTIAL_PATH) {
       const serviceAccount = Certificate.fromPath(process.env.GOOGLE_APPLICATION_CREDENTIALS);
       this.credential_ = new CertCredential(serviceAccount, httpAgent);
       return;
