@@ -359,14 +359,14 @@ describe('Credential', () => {
     it('should throw error if type not specified on cert file', () => {
       fsStub = sinon.stub(fs, 'readFileSync').returns(JSON.stringify({}));
       expect(() => new ApplicationDefaultCredential())
-          .to.throw(Error, "Certificate file did not have 'type' parameter");
+          .to.throw(Error, 'Invalid contents in the credentials file');
     });
 
     it('should throw error if type is unknown on cert file', () => {
       fsStub = sinon.stub(fs, 'readFileSync').returns(JSON.stringify({
         type: 'foo',
       }));
-      expect(() => new ApplicationDefaultCredential()).to.throw(Error, "invalid certificate type: 'foo'");
+      expect(() => new ApplicationDefaultCredential()).to.throw(Error, 'Invalid contents in the credentials file');
     });
 
     it('should return a RefreshTokenCredential with gcloud login', () => {
