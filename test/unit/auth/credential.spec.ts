@@ -337,7 +337,7 @@ describe('Credential', () => {
       if (fsStub) {
         fsStub.restore();
       }
-      process.env.GOOGLE_APPLICATION_CREDENTIALS = this.credPath;
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = credPath;
     });
 
     it('should return a CertCredential with GOOGLE_APPLICATION_CREDENTIALS set', () => {
@@ -354,6 +354,19 @@ describe('Credential', () => {
     it('should throw if explicitly pointing to an invalid cert file', () => {
       fsStub = sinon.stub(fs, 'readFileSync').returns('invalidjson');
       expect(() => new ApplicationDefaultCredential()).to.throw(Error);
+    });
+
+    it('should throw error if type not specified on cert file', () => {
+      fsStub = sinon.stub(fs, 'readFileSync').returns(JSON.stringify({}));
+      expect(() => new ApplicationDefaultCredential())
+          .to.throw(Error, "Certificate file did not have 'type' parameter");
+    });
+
+    it('should throw error if type is unknown on cert file', () => {
+      fsStub = sinon.stub(fs, 'readFileSync').returns(JSON.stringify({
+        type: 'foo',
+      }));
+      expect(() => new ApplicationDefaultCredential()).to.throw(Error, "invalid certificate type: 'foo'");
     });
 
     it('should return a RefreshTokenCredential with gcloud login', () => {
@@ -399,31 +412,19 @@ describe('Credential', () => {
     it('should parse valid token if app def creds point to default refresh token loc', () => {
       process.env.GOOGLE_APPLICATION_CREDENTIALS = GCLOUD_CREDENTIAL_PATH;
 
-      let readFileSyncStub;
-      if (typeof TEST_GCLOUD_CREDENTIALS === 'undefined') {
-        readFileSyncStub = sinon.stub(fs, 'readFileSync').returns(JSON.stringify(MOCK_REFRESH_TOKEN_CONFIG));
-      }
-      try {
-        const c = new ApplicationDefaultCredential();
-        const val = c.getCredential();
-        expect(val).is.instanceOf(RefreshTokenCredential);
+      fsStub = sinon.stub(fs, 'readFileSync').returns(JSON.stringify(MOCK_REFRESH_TOKEN_CONFIG));
 
-        if (readFileSyncStub) {
-          expect(val).to.have.property('refreshToken').that.includes({
-            clientId: MOCK_REFRESH_TOKEN_CONFIG.client_id,
-            clientSecret: MOCK_REFRESH_TOKEN_CONFIG.client_secret,
-            refreshToken: MOCK_REFRESH_TOKEN_CONFIG.refresh_token,
-            type: MOCK_REFRESH_TOKEN_CONFIG.type,
-          });
-          // tslint:disable-next-line:no-unused-expression
-          expect(readFileSyncStub.alwaysCalledWith(GCLOUD_CREDENTIAL_PATH, 'utf8')).to.be.true;
-        }
-      } finally {
-        if (readFileSyncStub) {
-          readFileSyncStub.restore();
-        }
-        delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
-      }
+      const adc = new ApplicationDefaultCredential();
+      const c = adc.getCredential();
+      expect(c).is.instanceOf(RefreshTokenCredential);
+      expect(c).to.have.property('refreshToken').that.includes({
+        clientId: MOCK_REFRESH_TOKEN_CONFIG.client_id,
+        clientSecret: MOCK_REFRESH_TOKEN_CONFIG.client_secret,
+        refreshToken: MOCK_REFRESH_TOKEN_CONFIG.refresh_token,
+        type: MOCK_REFRESH_TOKEN_CONFIG.type,
+      });
+      // tslint:disable-next-line:no-unused-expression
+      expect(fsStub.alwaysCalledWith(GCLOUD_CREDENTIAL_PATH, 'utf8')).to.be.true;
     });
   });
 

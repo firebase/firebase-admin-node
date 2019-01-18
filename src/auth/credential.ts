@@ -355,23 +355,63 @@ export class ApplicationDefaultCredential implements Credential {
   private credential_: Credential;
 
   constructor(httpAgent?: Agent) {
-    if (process.env.GOOGLE_APPLICATION_CREDENTIALS &&
-      // if the GCLOUD_CREDENTIAL_PATH == env(GOOGLE_APPLICATION_CREDENTIALS) then its a refresh token
-      // and we should skip parsing as a certificate
-      process.env.GOOGLE_APPLICATION_CREDENTIALS !== GCLOUD_CREDENTIAL_PATH) {
-      const serviceAccount = Certificate.fromPath(process.env.GOOGLE_APPLICATION_CREDENTIALS);
-      this.credential_ = new CertCredential(serviceAccount, httpAgent);
-      return;
+
+    if (typeof process.env.GOOGLE_APPLICATION_CREDENTIALS === 'string' &&
+        !fs.existsSync(process.env.GOOGLE_APPLICATION_CREDENTIALS)) {
+      throw new Error(
+          "env variable 'GOOGLE_APPLICATION_CREDENTIAL' set to invalid path: " +
+          process.env.GOOGLE_APPLICATION_CREDENTIALS);
     }
 
-    // It is OK to not have this file. If it is present, it must be valid.
-    const refreshToken = RefreshToken.fromPath(GCLOUD_CREDENTIAL_PATH);
-    if (refreshToken) {
-      this.credential_ = new RefreshTokenCredential(refreshToken, httpAgent);
-      return;
+    let lastError: Error;
+    const paths: string[] = process.env.GOOGLE_APPLICATION_CREDENTIALS ?
+        [ process.env.GOOGLE_APPLICATION_CREDENTIALS ] : [];
+    if (GCLOUD_CREDENTIAL_PATH !== process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+      paths.push(GCLOUD_CREDENTIAL_PATH);
     }
-
-    this.credential_ = new MetadataServiceCredential(httpAgent);
+    paths.forEach((filePath) => {
+      if (!this.credential_ && filePath && typeof filePath === 'string') {
+        let fileText: string;
+        try {
+          fileText = fs.readFileSync(filePath, 'utf8');
+        } catch (error) {
+          // ignore and return to allow default
+          return;
+        }
+        try {
+          const fileContents = JSON.parse(fileText);
+          if (!fileContents.type) {
+            lastError = new FirebaseAppError(
+                AppErrorCodes.INVALID_CREDENTIAL, "Certificate file did not have 'type' parameter");
+          } else {
+            switch (fileContents.type) {
+              case 'authorized_user':
+                this.credential_ = new RefreshTokenCredential(new RefreshToken(fileContents), httpAgent);
+                break;
+              case 'service_account':
+                this.credential_ = new CertCredential(new Certificate(fileContents), httpAgent);
+                break;
+              default:
+                lastError = new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL,
+                    `invalid certificate type: '${fileContents.type}'`);
+                break;
+            }
+          }
+        } catch (error) {
+          // Throw a nicely formed error message if the file contents cannot be parsed
+          lastError = new FirebaseAppError(
+              AppErrorCodes.INVALID_CREDENTIAL,
+              `Failed to parse certificate key file (${filePath}): ${error}`,
+          );
+        }
+      }
+    });
+    if (lastError) {
+      throw lastError;
+    }
+    if (!this.credential_) {
+      this.credential_ = new MetadataServiceCredential(httpAgent);
+    }
   }
 
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
