@@ -409,7 +409,8 @@ describe('Credential', () => {
       });
     });
 
-    it('should parse valid token if app def creds point to default refresh token loc', () => {
+    it('should parse valid RefreshTokenCredential if GOOGLE_APPLICATION_CREDENTIALS environment variable ' +
+        'points to default refresh token location', () => {
       process.env.GOOGLE_APPLICATION_CREDENTIALS = GCLOUD_CREDENTIAL_PATH;
 
       fsStub = sinon.stub(fs, 'readFileSync').returns(JSON.stringify(MOCK_REFRESH_TOKEN_CONFIG));
@@ -423,7 +424,6 @@ describe('Credential', () => {
         refreshToken: MOCK_REFRESH_TOKEN_CONFIG.refresh_token,
         type: MOCK_REFRESH_TOKEN_CONFIG.type,
       });
-      // tslint:disable-next-line:no-unused-expression
       expect(fsStub.alwaysCalledWith(GCLOUD_CREDENTIAL_PATH, 'utf8')).to.be.true;
     });
   });
