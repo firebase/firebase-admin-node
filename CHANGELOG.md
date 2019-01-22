@@ -1,7 +1,16 @@
 # Unreleased
 
-- [fixed] Correctly parses error codes with details messages in Firebase Auth.
-- [fixed] Fixed optional fields in UserRecord types to be optional.
+- [fixed] Implemented a Node.js environment check that will be executed at
+  package import time.
+- [fixed] Setting GOOGLE_APPLICATION_CREDENTIALS environment variable  
+  to a refresh token instead of a certificate token now supported
+
+# v6.5.0
+
+- [fixed] Correctly parses error codes sent by Firebase Auth backend servers.
+- [fixed] Correctly marked the optional fields in `UserRecord` types.
+- [added] `admin.projectManagement().shaCertificate()` method to create an
+  instance of admin.projectManagement.ShaCertificate.
 
 # v6.4.0
 

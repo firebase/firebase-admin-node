@@ -356,8 +356,7 @@ export class ApplicationDefaultCredential implements Credential {
 
   constructor(httpAgent?: Agent) {
     if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-      const serviceAccount = Certificate.fromPath(process.env.GOOGLE_APPLICATION_CREDENTIALS);
-      this.credential_ = new CertCredential(serviceAccount, httpAgent);
+      this.credential_ = credentialFromFile(process.env.GOOGLE_APPLICATION_CREDENTIALS, httpAgent);
       return;
     }
 
@@ -382,5 +381,51 @@ export class ApplicationDefaultCredential implements Credential {
   // Used in testing to verify we are delegating to the correct implementation.
   public getCredential(): Credential {
     return this.credential_;
+  }
+}
+
+function credentialFromFile(filePath: string, httpAgent?: Agent): Credential {
+  const credentialsFile = readCredentialFile(filePath);
+  if (typeof credentialsFile !== 'object') {
+    throw new FirebaseAppError(
+        AppErrorCodes.INVALID_CREDENTIAL,
+        'Failed to parse contents of the credentials file as an object',
+    );
+  }
+  if (credentialsFile.type === 'service_account') {
+    return new CertCredential(credentialsFile, httpAgent);
+  }
+  if (credentialsFile.type === 'authorized_user') {
+    return new RefreshTokenCredential(credentialsFile, httpAgent);
+  }
+  throw new FirebaseAppError(
+      AppErrorCodes.INVALID_CREDENTIAL,
+      'Invalid contents in the credentials file',
+  );
+}
+
+function readCredentialFile(filePath: string): {[key: string]: any} {
+  if (typeof filePath !== 'string') {
+    throw new FirebaseAppError(
+        AppErrorCodes.INVALID_CREDENTIAL,
+        'Failed to parse credentials file: TypeError: path must be a string',
+    );
+  }
+  let fileText: string;
+  try {
+    fileText = fs.readFileSync(filePath, 'utf8');
+  } catch (error) {
+    throw new FirebaseAppError(
+        AppErrorCodes.INVALID_CREDENTIAL,
+        `Failed to read credentials from file ${filePath}: ` + error,
+    );
+  }
+  try {
+    return JSON.parse(fileText);
+  } catch (error) {
+    throw new FirebaseAppError(
+        AppErrorCodes.INVALID_CREDENTIAL,
+        'Failed to parse contents of the credentials file as an object: ' + error,
+    );
   }
 }
