@@ -40,9 +40,8 @@ chai.use(chaiAsPromised);
 
 const expect = chai.expect;
 
-
 const ONE_HOUR_IN_SECONDS = 60 * 60;
-
+const idTokenPublicCertPath = '/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com';
 
 /**
  * Returns a mocked out success response from the URL containing the public keys for the Google certs.
@@ -51,12 +50,9 @@ const ONE_HOUR_IN_SECONDS = 60 * 60;
  *   to the URL path of ID token public key certificates.
  * @return {Object} A nock response object.
  */
-function mockFetchPublicKeys(path?: string): nock.Scope {
+function mockFetchPublicKeys(path: string = idTokenPublicCertPath): nock.Scope {
   const mockedResponse: {[key: string]: string} = {};
   mockedResponse[mocks.certificateObject.private_key_id] = mocks.keyPairs[0].public;
-  if (typeof path === 'undefined') {
-    path = '/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com';
-  }
   return nock('https://www.googleapis.com')
     .get(path)
     .reply(200, mockedResponse, {
