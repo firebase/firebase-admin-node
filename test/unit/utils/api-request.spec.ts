@@ -353,7 +353,6 @@ describe('HttpClient', () => {
   });
 
   it('should fail with a FirebaseAppError for a network error', () => {
-    const data = {foo: 'bar'};
     mockedRequests.push(mockRequestWithError({message: 'test error', code: 'AWFUL_ERROR'}));
     const client = new HttpClient();
     const err = 'Error while making request: test error. Error code: AWFUL_ERROR';
@@ -436,6 +435,7 @@ describe('HttpClient', () => {
 describe('AuthorizedHttpClient', () => {
   let mockApp: FirebaseApp;
   let mockedRequests: nock.Scope[] = [];
+  let getTokenStub: sinon.SinonStub;
 
   const mockAccessToken: string = utils.generateRandomAccessToken();
   const requestHeaders = {
@@ -444,9 +444,13 @@ describe('AuthorizedHttpClient', () => {
     },
   };
 
-  before(() => utils.mockFetchAccessTokenRequests(mockAccessToken));
+  before(() => {
+    getTokenStub = utils.stubGetAccessToken(mockAccessToken);
+  });
 
-  after(() => nock.cleanAll());
+  after(() => {
+    getTokenStub.restore();
+  });
 
   beforeEach(() => {
     mockApp = mocks.app();
@@ -514,9 +518,8 @@ describe('AuthorizedHttpClient', () => {
         httpAgent,
       }).then((resp) => {
         expect(resp.status).to.equal(200);
-        // First call is to the token server
-        expect(transportSpy.callCount).to.equal(2);
-        const options = transportSpy.args[1][0];
+        expect(transportSpy.callCount).to.equal(1);
+        const options = transportSpy.args[0][0];
         expect(options.agent).to.equal(httpAgent);
       });
     });
@@ -535,9 +538,8 @@ describe('AuthorizedHttpClient', () => {
         url: mockUrl,
       }).then((resp) => {
         expect(resp.status).to.equal(200);
-        // First call is to the token server
-        expect(transportSpy.callCount).to.equal(2);
-        const options = transportSpy.args[1][0];
+        expect(transportSpy.callCount).to.equal(1);
+        const options = transportSpy.args[0][0];
         expect(options.agent).to.equal(agentForApp);
       });
     });

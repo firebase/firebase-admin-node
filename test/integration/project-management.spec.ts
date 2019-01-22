@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
+import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as admin from '../../lib/index';
-import * as util from '../unit/utils';
 import { projectId } from './setup';
 
 const APP_NAMESPACE_PREFIX = 'com.adminsdkintegrationtest.a';
@@ -224,14 +224,14 @@ function deleteAllShaCertificates(androidApp: admin.projectManagement.AndroidApp
  * @return {string} Dot-separated string that can be used as a unique package name or bundle ID.
  */
 function generateUniqueAppNamespace() {
-  return APP_NAMESPACE_PREFIX + util.generateRandomString(APP_NAMESPACE_SUFFIX_LENGTH);
+  return APP_NAMESPACE_PREFIX + generateRandomString(APP_NAMESPACE_SUFFIX_LENGTH);
 }
 
 /**
  * @return {string} Dot-separated string that can be used as a unique app display name.
  */
 function generateUniqueAppDisplayName() {
-  return APP_DISPLAY_NAME_PREFIX + util.generateRandomString(APP_DISPLAY_NAME_SUFFIX_LENGTH);
+  return APP_DISPLAY_NAME_PREFIX + generateRandomString(APP_DISPLAY_NAME_SUFFIX_LENGTH);
 }
 
 /**
@@ -239,4 +239,11 @@ function generateUniqueAppDisplayName() {
  */
 function isIntegrationTestApp(appNamespace: string): boolean {
   return (appNamespace.indexOf(APP_NAMESPACE_PREFIX) > -1);
+}
+
+/**
+ * @return {string} A randomly generated alphanumeric string, of the specified length.
+ */
+function generateRandomString(stringLength: number): string {
+  return _.times(stringLength, () => _.random(35).toString(36)).join('');
 }

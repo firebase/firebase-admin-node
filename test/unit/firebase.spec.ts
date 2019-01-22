@@ -20,15 +20,14 @@
 import path = require('path');
 
 import * as _ from 'lodash';
+import * as sinon from 'sinon';
 import * as chai from 'chai';
-import * as nock from 'nock';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import * as utils from './utils';
 import * as mocks from '../resources/mocks';
 
 import * as firebaseAdmin from '../../src/index';
-import {ApplicationDefaultCredential} from '../../src/auth/credential';
+import {ApplicationDefaultCredential, CertCredential, RefreshTokenCredential} from '../../src/auth/credential';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -37,20 +36,24 @@ const expect = chai.expect;
 
 
 describe('Firebase', () => {
-  let mockedRequests: nock.Scope[] = [];
+  let getTokenStub: sinon.SinonStub;
 
-  before(() => utils.mockFetchAccessTokenRequests());
+  before(() => {
+    getTokenStub = sinon.stub(CertCredential.prototype, 'getAccessToken').resolves({
+      access_token: 'mock-access-token',
+      expires_in: 3600,
+    });
+  });
 
-  after(() => nock.cleanAll());
+  after(() => {
+    getTokenStub.restore();
+  });
 
   afterEach(() => {
     const deletePromises: Array<Promise<void>> = [];
     firebaseAdmin.apps.forEach((app) => {
       deletePromises.push(app.delete());
     });
-
-    _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
-    mockedRequests = [];
 
     return Promise.all(deletePromises);
   });
@@ -142,16 +145,12 @@ describe('Firebase', () => {
     });
 
     it('should initialize SDK given a refresh token credential', () => {
-      const scope = nock('https://www.googleapis.com')
-        .post('/oauth2/v4/token')
-        .reply(200, {
-          access_token: 'token',
-          token_type: 'Bearer',
-          expires_in: 60 * 60,
-        }, {
-          'cache-control': 'no-cache, no-store, max-age=0, must-revalidate',
+      getTokenStub.restore();
+      getTokenStub = sinon.stub(RefreshTokenCredential.prototype, 'getAccessToken')
+        .resolves({
+          access_token: 'mock-access-token',
+          expires_in: 3600,
         });
-      mockedRequests.push(scope);
       firebaseAdmin.initializeApp({
         credential: firebaseAdmin.credential.refreshToken(mocks.refreshToken),
       });

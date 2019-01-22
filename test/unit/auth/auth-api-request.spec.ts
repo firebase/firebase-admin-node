@@ -18,7 +18,6 @@
 
 import * as _ from 'lodash';
 import * as chai from 'chai';
-import * as nock from 'nock';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
@@ -722,8 +721,8 @@ describe('FIREBASE_AUTH_SIGN_UP_NEW_USER', () => {
 
 describe('FirebaseAuthRequestHandler', () => {
   let mockApp: FirebaseApp;
-  const mockedRequests: nock.Scope[] = [];
   let stubs: sinon.SinonStub[] = [];
+  let getTokenStub: sinon.SinonStub;
   const mockAccessToken: string = utils.generateRandomAccessToken();
   const expectedHeaders: {[key: string]: string} = {
     'X-Client-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
@@ -739,11 +738,13 @@ describe('FirebaseAuthRequestHandler', () => {
     };
   };
 
-  before(() => utils.mockFetchAccessTokenRequests(mockAccessToken));
+  before(() => {
+    getTokenStub = utils.stubGetAccessToken(mockAccessToken);
+  });
 
   after(() => {
     stubs = [];
-    nock.cleanAll();
+    getTokenStub.restore();
   });
 
   beforeEach(() => {
@@ -753,7 +754,6 @@ describe('FirebaseAuthRequestHandler', () => {
 
   afterEach(() => {
     _.forEach(stubs, (stub) => stub.restore());
-    _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
     return mockApp.delete();
   });
 

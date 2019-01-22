@@ -15,12 +15,12 @@
  */
 
 import * as _ from 'lodash';
-import * as nock from 'nock';
+import * as sinon from 'sinon';
 
 import * as mocks from '../resources/mocks';
 
 import {FirebaseNamespace} from '../../src/firebase-namespace';
-import {FirebaseApp, FirebaseAppOptions} from '../../src/firebase-app';
+import {FirebaseApp, FirebaseAppOptions, FirebaseAppInternals, FirebaseAccessToken} from '../../src/firebase-app';
 import { HttpError, HttpResponse } from '../../src/utils/api-request';
 
 /**
@@ -35,44 +35,32 @@ export function createAppWithOptions(options: object) {
 }
 
 
-/**
- * Returns a mocked out success response from the URL generating Google access tokens given a JWT
- * signed with a service account private key.
- *
- * Calling this once will mock ALL future requests to this endpoint. Use nock.cleanAll() to unmock.
- *
- * @param {string} [token] The optional access token to return. If not specified, a random one
- *     is created.
- * @param {number} [expiresIn] The optional expires in value to use for the access token.
- * @return {Object} A nock response object.
- */
-export function mockFetchAccessTokenRequests(
-  token: string = generateRandomAccessToken(),
-  expiresIn: number = 60 * 60,
-): nock.Scope {
-  return nock('https://accounts.google.com')
-    .persist()
-    .post('/o/oauth2/token')
-    .reply(200, {
-      access_token: token,
-      token_type: 'Bearer',
-      expires_in: expiresIn,
-    }, {
-      'cache-control': 'no-cache, no-store, max-age=0, must-revalidate',
-    });
-}
-
-
 /** @return {string} A randomly generated access token string. */
 export function generateRandomAccessToken(): string {
   return 'access_token_' + _.random(999999999);
 }
 
 /**
- * @return {string} A randomly generated alphanumeric string, of the specified length.
+ * Creates a stub for retrieving an access token from a FirebaseApp. All services should use this
+ * method for stubbing the OAuth2 flow during unit tests.
+ *
+ * @param {string} accessToken The access token string to return.
+ * @param {FirebaseApp} app The app instance to stub. If not specified, the stub will affect all apps.
+ * @return {sinon.SinonStub} A Sinon stub.
  */
-export function generateRandomString(stringLength: number): string {
-  return _.times(stringLength, () => _.random(35).toString(36)).join('');
+export function stubGetAccessToken(accessToken?: string, app?: FirebaseApp): sinon.SinonStub {
+  if (typeof accessToken === 'undefined') {
+    accessToken = generateRandomAccessToken();
+  }
+  const result: FirebaseAccessToken = {
+    accessToken,
+    expirationTime: Date.now() + 3600,
+  };
+  if (app) {
+    return sinon.stub(app.INTERNAL, 'getToken').resolves(result);
+  } else {
+    return sinon.stub(FirebaseAppInternals.prototype, 'getToken').resolves(result);
+  }
 }
 
 /**
