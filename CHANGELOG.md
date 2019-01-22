@@ -1,9 +1,13 @@
 # Unreleased
 
+-
+
+# v6.5.1
+
 - [fixed] Implemented a Node.js environment check that will be executed at
   package import time.
-- [fixed] Setting GOOGLE_APPLICATION_CREDENTIALS environment variable  
-  to a refresh token instead of a certificate token now supported
+- [fixed] Setting the `GOOGLE_APPLICATION_CREDENTIALS` environment variable
+  to a refresh token instead of a service account is now supported.
 
 # v6.5.0
 
