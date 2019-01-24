@@ -20,7 +20,7 @@ import os = require('os');
 import path = require('path');
 
 import {AppErrorCodes, FirebaseAppError} from '../utils/error';
-import {HttpClient, HttpRequestConfig} from '../utils/api-request';
+import {HttpClient, HttpRequestConfig, HttpError, HttpResponse} from '../utils/api-request';
 import {Agent} from 'http';
 
 const GOOGLE_TOKEN_AUDIENCE = 'https://accounts.google.com/o/oauth2/token';
@@ -190,26 +190,34 @@ export interface GoogleOAuthAccessToken {
 function requestAccessToken(client: HttpClient, request: HttpRequestConfig): Promise<GoogleOAuthAccessToken> {
   return client.send(request).then((resp) => {
     const json = resp.data;
-    if (json.error) {
-      let errorMessage = 'Error fetching access token: ' + json.error;
-      if (json.error_description) {
-        errorMessage += ' (' + json.error_description + ')';
-      }
-      throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
-    } else if (!json.access_token || !json.expires_in) {
+    if (!json.access_token || !json.expires_in) {
       throw new FirebaseAppError(
         AppErrorCodes.INVALID_CREDENTIAL,
         `Unexpected response while fetching access token: ${ JSON.stringify(json) }`,
       );
-    } else {
-      return json;
     }
+    return json;
   }).catch((err) => {
-    throw new FirebaseAppError(
-      AppErrorCodes.INVALID_CREDENTIAL,
-      `Failed to parse access token response: ${err.toString()}`,
-    );
+    const message = getErrorMessage(err);
+    throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, message);
   });
+}
+
+function getErrorMessage(err: Error): string {
+  const detail: string = (err instanceof HttpError) ? getDetailFromResponse(err.response) : err.message;
+  return `Error fetching access token: ${detail}`;
+}
+
+function getDetailFromResponse(response: HttpResponse): string {
+  if (response.isJson() && response.data.error) {
+    const json = response.data;
+    let detail = json.error;
+    if (json.error_description) {
+      detail += ' (' + json.error_description + ')';
+    }
+    return detail;
+  }
+  return response.text;
 }
 
 /**
