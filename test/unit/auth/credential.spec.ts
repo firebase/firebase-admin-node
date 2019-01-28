@@ -31,8 +31,8 @@ import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
 import {
-  ApplicationDefaultCredential, CertCredential, Certificate, Credential, GoogleOAuthAccessToken,
-  MetadataServiceCredential, RefreshToken, RefreshTokenCredential,
+  ApplicationDefaultCredential, CertCredential, Certificate, GoogleOAuthAccessToken,
+  MetadataServiceCredential, RefreshTokenCredential,
 } from '../../../src/auth/credential';
 import { HttpClient } from '../../../src/utils/api-request';
 import {Agent} from 'https';
@@ -260,6 +260,31 @@ describe('Credential', () => {
       return c.getAccessToken().then((token) => {
         expect(token.access_token).to.be.a('string').and.to.not.be.empty;
         expect(token.expires_in).to.equal(ONE_HOUR_IN_SECONDS);
+      });
+    });
+
+    describe('Error Handling', () => {
+      let httpStub: sinon.SinonStub;
+      before(() => {
+        httpStub = sinon.stub(HttpClient.prototype, 'send');
+      });
+      after(() => httpStub.restore());
+
+      it('should throw an error including error details', () => {
+        httpStub.rejects(utils.errorFrom({
+          error: 'invalid_grant',
+          error_description: 'reason',
+        }));
+        const c = new CertCredential(mockCertificateObject);
+        return expect(c.getAccessToken()).to.be
+          .rejectedWith('Error fetching access token: invalid_grant (reason)');
+      });
+
+      it('should throw an error including error text payload', () => {
+        httpStub.rejects(utils.errorFrom('not json'));
+        const c = new CertCredential(mockCertificateObject);
+        return expect(c.getAccessToken()).to.be
+          .rejectedWith('Error fetching access token: not json');
       });
     });
   });

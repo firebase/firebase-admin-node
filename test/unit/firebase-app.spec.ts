@@ -40,6 +40,7 @@ import {Firestore} from '@google-cloud/firestore';
 import {Database} from '@firebase/database';
 import {InstanceId} from '../../src/instance-id/instance-id';
 import {ProjectManagement} from '../../src/project-management/project-management';
+import { FirebaseAppError, AppErrorCodes } from '../../src/utils/error';
 
 chai.should();
 chai.use(sinonChai);
@@ -909,6 +910,31 @@ describe('FirebaseApp', () => {
           expect(token1).to.not.deep.equal(token2);
         });
       });
+    });
+
+    it('Includes the original error in exception', () => {
+      getTokenStub.restore();
+      const mockError = new FirebaseAppError(
+        AppErrorCodes.INVALID_CREDENTIAL, 'Something went wrong');
+      getTokenStub = sinon.stub(CertCredential.prototype, 'getAccessToken').rejects(mockError);
+      const detailedMessage = 'Credential implementation provided to initializeApp() via the "credential" property'
+        + ' failed to fetch a valid Google OAuth2 access token with the following error: "Something went wrong".';
+      expect(mockApp.INTERNAL.getToken(true)).to.be.rejectedWith(detailedMessage);
+    });
+
+    it('Returns a detailed message when an error is due to an invalid_grant', () => {
+      getTokenStub.restore();
+      const mockError = new FirebaseAppError(
+        AppErrorCodes.INVALID_CREDENTIAL, 'Failed to get credentials: invalid_grant (reason)');
+      getTokenStub = sinon.stub(CertCredential.prototype, 'getAccessToken').rejects(mockError);
+      const detailedMessage = 'Credential implementation provided to initializeApp() via the "credential" property'
+        + ' failed to fetch a valid Google OAuth2 access token with the following error: "Failed to get credentials:'
+        + ' invalid_grant (reason)". There are two likely causes: (1) your server time is not properly synced or (2)'
+        + ' your certificate key file has been revoked. To solve (1), re-sync the time on your server. To solve (2),'
+        + ' make sure the key ID for your key file is still present at '
+        + 'https://console.firebase.google.com/iam-admin/serviceaccounts/project. If not, generate a new key file '
+        + 'at https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk.';
+      expect(mockApp.INTERNAL.getToken(true)).to.be.rejectedWith(detailedMessage);
     });
   });
 
