@@ -198,16 +198,23 @@ function requestAccessToken(client: HttpClient, request: HttpRequestConfig): Pro
     }
     return json;
   }).catch((err) => {
-    const message = getErrorMessage(err);
-    throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, message);
+    throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, getErrorMessage(err));
   });
 }
 
+/**
+ * Constructs a human-readable error message from the given Error.
+ */
 function getErrorMessage(err: Error): string {
   const detail: string = (err instanceof HttpError) ? getDetailFromResponse(err.response) : err.message;
   return `Error fetching access token: ${detail}`;
 }
 
+/**
+ * Extracts details from the given HTTP error response, and returns a human-readable description. If
+ * the response is JSON-formatted, looks up the error and error_description fields sent by the
+ * Google Auth servers. Otherwise returns the entire response payload as the error detail.
+ */
 function getDetailFromResponse(response: HttpResponse): string {
   if (response.isJson() && response.data.error) {
     const json = response.data;
