@@ -1,6 +1,7 @@
 # Unreleased
 
--
+- [fixed] Including additional helpful details in the errors thrown due to
+  credentials-related problems.
 
 # v6.5.1
 
