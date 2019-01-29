@@ -3,8 +3,15 @@
 - [changed] `verifyIdToken()` and `verifySessionCookie()` methods now return
   `auth/id-token-expired` and `auth/session-cookie-expired` error codes for
   expired JWTs.
+- [fixed] Including additional helpful details in the errors thrown due to
+  credentials-related problems.
+
+# v6.5.1
+
 - [fixed] Implemented a Node.js environment check that will be executed at
   package import time.
+- [fixed] Setting the `GOOGLE_APPLICATION_CREDENTIALS` environment variable
+  to a refresh token instead of a service account is now supported.
 
 # v6.5.0
 

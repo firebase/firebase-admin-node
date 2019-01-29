@@ -18,7 +18,6 @@
 
 import * as _ from 'lodash';
 import * as chai from 'chai';
-import * as nock from 'nock';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
@@ -155,17 +154,15 @@ function getDecodedSessionCookie(uid: string, authTime: Date): DecodedIdToken {
 describe('Auth', () => {
   let auth: Auth;
   let mockApp: FirebaseApp;
+  let getTokenStub: sinon.SinonStub;
   let oldProcessEnv: NodeJS.ProcessEnv;
   let nullAccessTokenAuth: Auth;
   let malformedAccessTokenAuth: Auth;
   let rejectedPromiseAccessTokenAuth: Auth;
 
-  before(() => utils.mockFetchAccessTokenRequests());
-
-  after(() => nock.cleanAll());
-
   beforeEach(() => {
     mockApp = mocks.app();
+    getTokenStub = utils.stubGetAccessToken(undefined, mockApp);
     auth = new Auth(mockApp);
 
     nullAccessTokenAuth = new Auth(mocks.appReturningNullAccessToken());
@@ -179,6 +176,7 @@ describe('Auth', () => {
   });
 
   afterEach(() => {
+    getTokenStub.restore();
     process.env = oldProcessEnv;
     return mockApp.delete();
   });

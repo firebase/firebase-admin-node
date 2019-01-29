@@ -247,6 +247,7 @@ describe('Messaging', () => {
   let messaging: Messaging;
   let mockedRequests: nock.Scope[] = [];
   let httpsRequestStub: sinon.SinonStub;
+  let getTokenStub: sinon.SinonStub;
   let nullAccessTokenMessaging: Messaging;
 
   let messagingService: {[key: string]: any};
@@ -260,12 +261,13 @@ describe('Messaging', () => {
   };
   const emptyResponse = utils.responseFrom({});
 
-  before(() => utils.mockFetchAccessTokenRequests(mockAccessToken));
-
-  after(() => nock.cleanAll());
+  after(() => {
+    nock.cleanAll();
+  });
 
   beforeEach(() => {
     mockApp = mocks.app();
+    getTokenStub = utils.stubGetAccessToken(mockAccessToken, mockApp);
     messaging = new Messaging(mockApp);
     nullAccessTokenMessaging = new Messaging(mocks.appReturningNullAccessToken());
     messagingService = messaging;
@@ -278,7 +280,7 @@ describe('Messaging', () => {
     if (httpsRequestStub && httpsRequestStub.restore) {
       httpsRequestStub.restore();
     }
-
+    getTokenStub.restore();
     return mockApp.delete();
   });
 

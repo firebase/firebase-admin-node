@@ -20,7 +20,7 @@ import os = require('os');
 import path = require('path');
 
 import {AppErrorCodes, FirebaseAppError} from '../utils/error';
-import {HttpClient, HttpRequestConfig} from '../utils/api-request';
+import {HttpClient, HttpRequestConfig, HttpError, HttpResponse} from '../utils/api-request';
 import {Agent} from 'http';
 
 const GOOGLE_TOKEN_AUDIENCE = 'https://accounts.google.com/o/oauth2/token';
@@ -190,26 +190,41 @@ export interface GoogleOAuthAccessToken {
 function requestAccessToken(client: HttpClient, request: HttpRequestConfig): Promise<GoogleOAuthAccessToken> {
   return client.send(request).then((resp) => {
     const json = resp.data;
-    if (json.error) {
-      let errorMessage = 'Error fetching access token: ' + json.error;
-      if (json.error_description) {
-        errorMessage += ' (' + json.error_description + ')';
-      }
-      throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
-    } else if (!json.access_token || !json.expires_in) {
+    if (!json.access_token || !json.expires_in) {
       throw new FirebaseAppError(
         AppErrorCodes.INVALID_CREDENTIAL,
         `Unexpected response while fetching access token: ${ JSON.stringify(json) }`,
       );
-    } else {
-      return json;
     }
+    return json;
   }).catch((err) => {
-    throw new FirebaseAppError(
-      AppErrorCodes.INVALID_CREDENTIAL,
-      `Failed to parse access token response: ${err.toString()}`,
-    );
+    throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, getErrorMessage(err));
   });
+}
+
+/**
+ * Constructs a human-readable error message from the given Error.
+ */
+function getErrorMessage(err: Error): string {
+  const detail: string = (err instanceof HttpError) ? getDetailFromResponse(err.response) : err.message;
+  return `Error fetching access token: ${detail}`;
+}
+
+/**
+ * Extracts details from the given HTTP error response, and returns a human-readable description. If
+ * the response is JSON-formatted, looks up the error and error_description fields sent by the
+ * Google Auth servers. Otherwise returns the entire response payload as the error detail.
+ */
+function getDetailFromResponse(response: HttpResponse): string {
+  if (response.isJson() && response.data.error) {
+    const json = response.data;
+    let detail = json.error;
+    if (json.error_description) {
+      detail += ' (' + json.error_description + ')';
+    }
+    return detail;
+  }
+  return response.text;
 }
 
 /**
@@ -356,8 +371,7 @@ export class ApplicationDefaultCredential implements Credential {
 
   constructor(httpAgent?: Agent) {
     if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-      const serviceAccount = Certificate.fromPath(process.env.GOOGLE_APPLICATION_CREDENTIALS);
-      this.credential_ = new CertCredential(serviceAccount, httpAgent);
+      this.credential_ = credentialFromFile(process.env.GOOGLE_APPLICATION_CREDENTIALS, httpAgent);
       return;
     }
 
@@ -382,5 +396,51 @@ export class ApplicationDefaultCredential implements Credential {
   // Used in testing to verify we are delegating to the correct implementation.
   public getCredential(): Credential {
     return this.credential_;
+  }
+}
+
+function credentialFromFile(filePath: string, httpAgent?: Agent): Credential {
+  const credentialsFile = readCredentialFile(filePath);
+  if (typeof credentialsFile !== 'object') {
+    throw new FirebaseAppError(
+        AppErrorCodes.INVALID_CREDENTIAL,
+        'Failed to parse contents of the credentials file as an object',
+    );
+  }
+  if (credentialsFile.type === 'service_account') {
+    return new CertCredential(credentialsFile, httpAgent);
+  }
+  if (credentialsFile.type === 'authorized_user') {
+    return new RefreshTokenCredential(credentialsFile, httpAgent);
+  }
+  throw new FirebaseAppError(
+      AppErrorCodes.INVALID_CREDENTIAL,
+      'Invalid contents in the credentials file',
+  );
+}
+
+function readCredentialFile(filePath: string): {[key: string]: any} {
+  if (typeof filePath !== 'string') {
+    throw new FirebaseAppError(
+        AppErrorCodes.INVALID_CREDENTIAL,
+        'Failed to parse credentials file: TypeError: path must be a string',
+    );
+  }
+  let fileText: string;
+  try {
+    fileText = fs.readFileSync(filePath, 'utf8');
+  } catch (error) {
+    throw new FirebaseAppError(
+        AppErrorCodes.INVALID_CREDENTIAL,
+        `Failed to read credentials from file ${filePath}: ` + error,
+    );
+  }
+  try {
+    return JSON.parse(fileText);
+  } catch (error) {
+    throw new FirebaseAppError(
+        AppErrorCodes.INVALID_CREDENTIAL,
+        'Failed to parse contents of the credentials file as an object: ' + error,
+    );
   }
 }
