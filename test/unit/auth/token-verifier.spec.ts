@@ -32,6 +32,7 @@ import {FirebaseTokenGenerator, ServiceAccountSigner} from '../../../src/auth/to
 import * as verifier from '../../../src/auth/token-verifier';
 
 import {Certificate} from '../../../src/auth/credential';
+import { AuthClientErrorCode } from '../../../src/utils/error';
 
 chai.should();
 chai.use(sinonChai);
@@ -39,20 +40,21 @@ chai.use(chaiAsPromised);
 
 const expect = chai.expect;
 
-
 const ONE_HOUR_IN_SECONDS = 60 * 60;
-
+const idTokenPublicCertPath = '/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com';
 
 /**
  * Returns a mocked out success response from the URL containing the public keys for the Google certs.
  *
+ * @param {string=} path URL path to which the mock request should be made. If not specified, defaults
+ *   to the URL path of ID token public key certificates.
  * @return {Object} A nock response object.
  */
-function mockFetchPublicKeys(): nock.Scope {
+function mockFetchPublicKeys(path: string = idTokenPublicCertPath): nock.Scope {
   const mockedResponse: {[key: string]: string} = {};
   mockedResponse[mocks.certificateObject.private_key_id] = mocks.keyPairs[0].public;
   return nock('https://www.googleapis.com')
-    .get('/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com')
+    .get(path)
     .reply(200, mockedResponse, {
       'cache-control': 'public, max-age=1, must-revalidate, no-transform',
     });
@@ -146,7 +148,7 @@ describe('FirebaseTokenVerifier', () => {
             verifyApiName: 'verifyToken()',
             jwtName: 'Important Token',
             shortName: 'token',
-            expiredErrorCode: 'auth/important-token-expired',
+            expiredErrorCode: AuthClientErrorCode.INVALID_ARGUMENT,
           },
        );
       }).not.to.throw();
@@ -208,7 +210,7 @@ describe('FirebaseTokenVerifier', () => {
               verifyApiName: invalidVerifyApiName as any,
               jwtName: 'Important Token',
               shortName: 'token',
-              expiredErrorCode: 'auth/important-token-expired',
+              expiredErrorCode: AuthClientErrorCode.INVALID_ARGUMENT,
             });
         }).to.throw('The JWT verify API name must be a non-empty string.');
       });
@@ -228,7 +230,7 @@ describe('FirebaseTokenVerifier', () => {
               verifyApiName: 'verifyToken()',
               jwtName: invalidJwtName as any,
               shortName: 'token',
-              expiredErrorCode: 'auth/important-token-expired',
+              expiredErrorCode: AuthClientErrorCode.INVALID_ARGUMENT,
             });
         }).to.throw('The JWT public full name must be a non-empty string.');
       });
@@ -248,13 +250,13 @@ describe('FirebaseTokenVerifier', () => {
               verifyApiName: 'verifyToken()',
               jwtName: 'Important Token',
               shortName: invalidShortName as any,
-              expiredErrorCode: 'auth/important-token-expired',
+              expiredErrorCode: AuthClientErrorCode.INVALID_ARGUMENT,
             });
         }).to.throw('The JWT public short name must be a non-empty string.');
       });
     });
 
-    const invalidExpiredErrorCodes = [null, NaN, 0, 1, true, false, [], {}, { a: 1 }, _.noop, ''];
+    const invalidExpiredErrorCodes = [null, NaN, 0, 1, true, false, [], {}, { a: 1 }, _.noop, '', 'test'];
     invalidExpiredErrorCodes.forEach((invalidExpiredErrorCode) => {
       it('should throw given an invalid expiration error code: ' + JSON.stringify(invalidExpiredErrorCode), () => {
         expect(() => {
@@ -270,7 +272,7 @@ describe('FirebaseTokenVerifier', () => {
               shortName: 'token',
               expiredErrorCode: invalidExpiredErrorCode as any,
             });
-        }).to.throw('The JWT expiration error code must be a non-empty string.');
+        }).to.throw('The JWT expiration error code must be a non-null ErrorInfo object.');
       });
     });
   });
@@ -410,8 +412,37 @@ describe('FirebaseTokenVerifier', () => {
 
         // Token should now be invalid
         return tokenVerifier.verifyJWT(mockIdToken)
-          .should.eventually.be.rejectedWith('Firebase ID token has expired. Get a fresh token from your client ' +
-            'app and try again (auth/id-token-expired)');
+          .should.eventually.be.rejectedWith('Firebase ID token has expired. Get a fresh ID token from your client ' +
+            'app and try again (auth/id-token-expired)')
+          .and.have.property('code', 'auth/id-token-expired');
+      });
+    });
+
+    it('should be rejected given an expired Firebase session cookie', () => {
+      const tokenVerifierSessionCookie = new verifier.FirebaseTokenVerifier(
+        'https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys',
+        'RS256',
+        'https://session.firebase.google.com/',
+        'project_id',
+        verifier.SESSION_COOKIE_INFO,
+      );
+      mockedRequests.push(mockFetchPublicKeys('/identitytoolkit/v3/relyingparty/publicKeys'));
+
+      clock = sinon.useFakeTimers(1000);
+
+      const mockSessionCookie = mocks.generateSessionCookie();
+
+      clock.tick((ONE_HOUR_IN_SECONDS * 1000) - 1);
+
+      // Cookie should still be valid
+      return tokenVerifierSessionCookie.verifyJWT(mockSessionCookie).then(() => {
+        clock.tick(1);
+
+        // Cookie should now be invalid
+        return tokenVerifierSessionCookie.verifyJWT(mockSessionCookie)
+          .should.eventually.be.rejectedWith('Firebase session cookie has expired. Get a fresh session cookie from ' +
+            'your client app and try again (auth/session-cookie-expired).')
+          .and.have.property('code', 'auth/session-cookie-expired');
       });
     });
 

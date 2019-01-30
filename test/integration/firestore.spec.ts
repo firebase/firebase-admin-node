@@ -35,7 +35,6 @@ describe('admin.firestore', () => {
 
   before(() => {
     const db = admin.firestore();
-    db.settings({timestampsInSnapshots: true});
     reference = db.collection('cities').doc();
   });
 

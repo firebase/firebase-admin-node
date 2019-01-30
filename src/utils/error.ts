@@ -542,6 +542,10 @@ export class AuthClientErrorCode {
       'https://firebase.google.com/docs/admin/setup for details on how to authenticate this SDK ' +
       'with appropriate permissions.',
   };
+  public static SESSION_COOKIE_EXPIRED = {
+    code: 'session-cookie-expired',
+    message: 'The Firebase session cookie is expired.',
+  };
   public static SESSION_COOKIE_REVOKED = {
     code: 'session-cookie-revoked',
     message: 'The Firebase session cookie has been revoked.',

@@ -1,5 +1,16 @@
 # Unreleased
 
+- [changed] Updated the Google Cloud Firestore client to v1.0.1. This contains
+  breaking changes. Refer to Cloud Firestore
+  [release notes](https://github.com/googleapis/nodejs-firestore/releases/tag/v0.20.0)
+  for more details and migration instructions.
+- [changed] Updated the Google Cloud Storage client to v2.3.0. This contains
+  breaking changes. Refer to Cloud Storage
+  [release notes](https://github.com/googleapis/nodejs-storage/releases/tag/v2.0.0)
+  for more details and migration instructions.
+- [changed] `verifyIdToken()` and `verifySessionCookie()` methods now return
+  `auth/id-token-expired` and `auth/session-cookie-expired` error codes for
+  expired JWTs.
 - [fixed] Including additional helpful details in the errors thrown due to
   credentials-related problems.
 
