@@ -1,5 +1,9 @@
 # Unreleased
 
+-
+
+# v7.0.0
+
 - [changed] Updated the Google Cloud Firestore client to v1.0.1. This contains
   breaking changes. Refer to Cloud Firestore
   [release notes](https://github.com/googleapis/nodejs-firestore/releases/tag/v0.20.0)
