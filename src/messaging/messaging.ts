@@ -17,6 +17,7 @@
 import {FirebaseApp} from '../firebase-app';
 import {renameProperties} from '../utils/index';
 import {deepCopy, deepExtend} from '../utils/deep-copy';
+import {BatchRequest, BatchRequestElement, SendResponse} from './batch-request';
 import {FirebaseMessagingRequestHandler} from './messaging-api-request';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
 import {
@@ -522,7 +523,7 @@ function validateAndroidNotification(notification: AndroidNotification) {
  *
  * @param {Message} Message An object to be validated.
  */
-function validateMessage(message: Message) {
+export function validateMessage(message: Message) {
   if (!validator.isNonNullObject(message)) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD, 'Message must be a non-null object');
@@ -808,6 +809,26 @@ export class Messaging implements FirebaseServiceInterface {
       })
       .then((response) => {
         return (response as any).name;
+      });
+  }
+
+  public sendBatch(messages: Message[], dryRun?: boolean): Promise<SendResponse[]> {
+    const copy: Message[] = deepCopy(messages);
+    if (!validator.isNonEmptyArray(copy)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_ARGUMENT, 'messages must be non-empty array');
+    }
+    if (typeof dryRun !== 'undefined' && !validator.isBoolean(dryRun)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_ARGUMENT, 'dryRun must be a boolean');
+    }
+
+    const batchRequest = this.createBatchRequest(copy, dryRun);
+    return Promise.resolve()
+      .then(() => {
+        const headers = {'Content-Type': batchRequest.getContentType()};
+        return this.messagingRequestHandler.sendBatchRequest(
+          FCM_SEND_HOST, '/batch', batchRequest.getMultipartPayload(), headers);
       });
   }
 
@@ -1440,5 +1461,20 @@ export class Messaging implements FirebaseServiceInterface {
       topic = `/topics/${ topic }`;
     }
     return topic;
+  }
+
+  private createBatchRequest(messages: Message[], dryRun?: boolean): BatchRequest {
+    const requests: BatchRequestElement[] = messages.map((message) => {
+      validateMessage(message);
+      const request: {message: Message, validate_only?: boolean} = {message};
+      if (dryRun) {
+        request.validate_only = true;
+      }
+      return {
+        url: `https://${FCM_SEND_HOST}${this.urlPath}`,
+        body: request,
+      };
+    });
+    return new BatchRequest(requests);
   }
 }

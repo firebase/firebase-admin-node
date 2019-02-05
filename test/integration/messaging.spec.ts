@@ -88,6 +88,18 @@ describe('admin.messaging', () => {
       });
   });
 
+  it.only('sendBatch()', () => {
+    const messages: admin.messaging.Message[] = [message, message, message];
+    return admin.messaging().sendBatch(messages, true)
+      .then((responses) => {
+        expect(responses.length).to.equal(3);
+        responses.forEach((response) => {
+          expect(response.success).to.be.true;
+          expect(response.messageId).matches(/^projects\/.*\/messages\/.*$/);
+        });
+      });
+  });
+
   it('sendToDevice(token) returns a response with multicast ID', () => {
     return admin.messaging().sendToDevice(registrationToken, payload, options)
       .then((response) => {

@@ -15,10 +15,14 @@
  */
 
 import {FirebaseApp} from '../firebase-app';
-import {HttpMethod, AuthorizedHttpClient, HttpRequestConfig, HttpError} from '../utils/api-request';
+import {
+  HttpMethod, AuthorizedHttpClient, HttpRequestConfig,
+  HttpError, parseMultipartResponse, parseHttpResponse,
+} from '../utils/api-request';
 import {FirebaseMessagingError, MessagingClientErrorCode} from '../utils/error';
 
 import * as validator from '../utils/validator';
+import { SendResponse } from './batch-request';
 
 // FCM backend constants
 const FIREBASE_MESSAGING_TIMEOUT = 10000;
@@ -118,14 +122,63 @@ export class FirebaseMessagingRequestHandler {
     })
     .catch((err) => {
       if (err instanceof HttpError) {
-        this.handleHttpError(err);
+        throw this.createFirebaseError(err);
       }
       // Re-throw the error if it already has the proper format.
       throw err;
     });
   }
 
-  private handleHttpError(err: HttpError) {
+  /**
+   * Makes an HTTP batch request to the FCM service.
+   *
+   * @param {string} host The host to which to send the batch request.
+   * @param {string} path The path to which to send the batch request.
+   * @param {object} requestData The multipart request data.
+   * @param {object} headers Additional headers to be included in the request.
+   * @return {Promise<object>} A promise that resolves with the response.
+   */
+  public sendBatchRequest(
+    host: string,
+    path: string,
+    requestData: Buffer,
+    headers: {[key: string]: string}): Promise<SendResponse[]> {
+    const request: HttpRequestConfig = {
+      method: FIREBASE_MESSAGING_HTTP_METHOD,
+      url: `https://${host}${path}`,
+      data: requestData,
+      headers: Object.assign({}, FIREBASE_MESSAGING_HEADERS, headers),
+      timeout: FIREBASE_MESSAGING_TIMEOUT,
+    };
+    return this.httpClient.send(request).then((response) => {
+      const parts = parseMultipartResponse(response.text);
+      return parts.map((part) => {
+        return this.buildSendResponse(part, request);
+      });
+    })
+    .catch((err) => {
+      if (err instanceof HttpError) {
+        throw this.createFirebaseError(err);
+      }
+      // Re-throw the error if it already has the proper format.
+      throw err;
+    });
+  }
+
+  private buildSendResponse(text: string, config: HttpRequestConfig): SendResponse {
+    const httpResponse = parseHttpResponse(text, config);
+    const result: SendResponse = {
+      success: httpResponse.status === 200,
+    };
+    if (result.success) {
+      result.messageId = httpResponse.data.name;
+    } else {
+      result.error = this.createFirebaseError(new HttpError(httpResponse));
+    }
+    return result;
+  }
+
+  private createFirebaseError(err: HttpError): FirebaseMessagingError {
     if (err.response.isJson()) {
       // For JSON responses, map the server response to a client-side error.
       const json = err.response.data;
@@ -154,7 +207,7 @@ export class FirebaseMessagingRequestHandler {
         // Treat non-JSON responses with unexpected status codes as unknown errors.
         error = MessagingClientErrorCode.UNKNOWN_ERROR;
     }
-    throw new FirebaseMessagingError({
+    return new FirebaseMessagingError({
       code: error.code,
       message: `${ error.message } Raw server response: "${ err.response.text }". Status code: ` +
         `${ err.response.status }.`,

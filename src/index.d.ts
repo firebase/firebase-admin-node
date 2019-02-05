@@ -586,10 +586,20 @@ declare namespace admin.messaging {
     errors: admin.FirebaseArrayIndexError[];
   };
 
+  type SendResponse = {
+    success: boolean;
+    messageId?: string;
+    error?: admin.FirebaseError;
+  };
+
   interface Messaging {
     app: admin.app.App;
 
     send(message: admin.messaging.Message, dryRun?: boolean): Promise<string>;
+    sendBatch(
+      messages: Array<admin.messaging.Message>,
+      dryRun?: boolean
+    ): Promise<Array<admin.messaging.SendResponse>>;
     sendToDevice(
       registrationToken: string | string[],
       payload: admin.messaging.MessagingPayload,

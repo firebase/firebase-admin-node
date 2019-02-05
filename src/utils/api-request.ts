@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import {deepCopy} from './deep-copy';
 import {FirebaseApp} from '../firebase-app';
 import {AppErrorCodes, FirebaseAppError} from './error';
 import * as validator from './validator';
@@ -204,6 +203,8 @@ function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
           }
         }
         fullUrl = parsedUrl.toString();
+      } else if (validator.isBuffer(config.data)) {
+        data = config.data as Buffer;
       } else if (validator.isObject(config.data)) {
         data = Buffer.from(JSON.stringify(config.data), 'utf-8');
         if (typeof headers['Content-Type'] === 'undefined') {
@@ -211,8 +212,6 @@ function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
         }
       } else if (validator.isString(config.data)) {
         data = Buffer.from(config.data as string, 'utf-8');
-      } else if (validator.isBuffer(config.data)) {
-        data = config.data as Buffer;
       } else {
         return reject(createError(
           'Request data must be a string, a Buffer or a json serializable object',
@@ -546,4 +545,24 @@ export class ExponentialBackoffPoller extends EventEmitter {
       clearTimeout(this.repollTimer);
     }
   }
+}
+
+export function parseMultipartResponse(response: string | Buffer): string[] {
+  const httpMessageParser = require('http-message-parser');
+  const parsedMessage = httpMessageParser(response);
+  return parsedMessage.multipart.map((part: {body: Buffer}) => part.body.toString().trim());
+}
+
+export function parseHttpResponse(
+  response: string | Buffer, config: HttpRequestConfig): HttpResponse {
+  const httpMessageParser = require('http-message-parser');
+  const parsedMessage = httpMessageParser(response);
+  const lowLevelResponse: LowLevelResponse = {
+    status: parsedMessage.statusCode,
+    headers: parsedMessage.headers,
+    data: parsedMessage.body.toString(),
+    config,
+    request: null,
+  };
+  return new DefaultHttpResponse(lowLevelResponse);
 }
