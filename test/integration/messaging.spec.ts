@@ -89,10 +89,10 @@ describe('admin.messaging', () => {
   });
 
   it.only('sendBatch()', () => {
-    const messages: admin.messaging.Message[] = [message, message, message];
+    const messages: admin.messaging.Message[] = [message];
     return admin.messaging().sendBatch(messages, true)
       .then((responses) => {
-        expect(responses.length).to.equal(3);
+        expect(responses.length).to.equal(messages.length);
         responses.forEach((response) => {
           expect(response.success).to.be.true;
           expect(response.messageId).matches(/^projects\/.*\/messages\/.*$/);

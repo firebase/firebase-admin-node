@@ -14,10 +14,17 @@
  * limitations under the License.
  */
 
-import * as validator from '../utils/validator';
-import { FirebaseMessagingError, MessagingClientErrorCode, FirebaseError } from '../utils/error';
+import { FirebaseError } from '../utils/error';
+import {
+  HttpClient, HttpRequestConfig, parseMultipartResponse,
+  HttpError, parseHttpResponse,
+} from '../utils/api-request';
+import { createFirebaseError } from './messaging-errors';
 
 const PART_DELIMITER: string = '__END_OF_PART__';
+const FIREBASE_MESSAGING_BATCH_URL = 'https://fcm.googleapis.com/batch';
+const POST_METHOD = 'POST';
+const TEN_SECONDS_IN_MILLIS = 10000;
 
 export interface BatchRequestElement {
   url: string;
@@ -25,22 +32,40 @@ export interface BatchRequestElement {
   headers?: {[key: string]: any};
 }
 
-export class BatchRequest {
+export class BatchRequestClient {
 
-  constructor(private readonly messages: BatchRequestElement[]) {
-    if (!validator.isNonEmptyArray(messages)) {
-      throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_ARGUMENT, 'messages must be a non-empty array');
-    }
+  constructor(
+    private readonly httpClient: HttpClient,
+    private readonly batchUrl: string,
+    private readonly commonHeaders?: object) {
   }
 
-  public getContentType(): string {
-    return `multipart/mixed; boundary=${PART_DELIMITER}`;
+  public send(messages: BatchRequestElement[]): Promise<string[]> {
+    const requestHeaders = {
+      'Content-Type': `multipart/mixed; boundary=${PART_DELIMITER}`,
+    };
+    const request: HttpRequestConfig = {
+      method: POST_METHOD,
+      url: this.batchUrl,
+      data: this.getMultipartPayload(messages),
+      headers: Object.assign({}, this.commonHeaders, requestHeaders),
+      timeout: TEN_SECONDS_IN_MILLIS,
+    };
+    return this.httpClient.send(request).then((response) => {
+      return parseMultipartResponse(response.text);
+    })
+    .catch((err) => {
+      if (err instanceof HttpError) {
+        throw createFirebaseError(err);
+      }
+      // Re-throw the error if it already has the proper format.
+      throw err;
+    });
   }
 
-  public getMultipartPayload(): Buffer {
+  private getMultipartPayload(messages: BatchRequestElement[]): Buffer {
     let buffer: string = '';
-    this.messages.forEach((message: BatchRequestElement, idx: number) => {
+    messages.forEach((message: BatchRequestElement, idx: number) => {
       buffer += this.serializePart(message, idx);
     });
     buffer += `--${PART_DELIMITER}--\r\n`;
@@ -74,6 +99,39 @@ export class BatchRequest {
     messagePayload += '\r\n';
     messagePayload += messageBody;
     return messagePayload;
+  }
+}
+
+export class MessagingBatchRequestClient extends BatchRequestClient {
+
+  constructor(httpClient: HttpClient, commonHeaders?: object) {
+      super(httpClient, FIREBASE_MESSAGING_BATCH_URL, commonHeaders);
+  }
+
+  public sendFcmBatchRequest(messages: BatchRequestElement[]): Promise<SendResponse[]> {
+    return super.send(messages).then((parts) => {
+      return parts.map((part, idx) => {
+        const elem = messages[idx];
+        const request: HttpRequestConfig = {
+          method: POST_METHOD,
+          url: elem.url,
+        };
+        return this.buildSendResponse(part, request);
+      });
+    });
+  }
+
+  private buildSendResponse(text: string, config: HttpRequestConfig): SendResponse {
+    const httpResponse = parseHttpResponse(text, config);
+    const result: SendResponse = {
+      success: httpResponse.status === 200,
+    };
+    if (result.success) {
+      result.messageId = httpResponse.data.name;
+    } else {
+      result.error = createFirebaseError(new HttpError(httpResponse));
+    }
+    return result;
   }
 }
 
