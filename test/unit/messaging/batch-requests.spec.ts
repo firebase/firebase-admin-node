@@ -154,8 +154,8 @@ function createMultipartPayload(parts: object[]): string {
   parts.forEach((part) => {
     payload += `--${boundary}\r\n`;
     payload += 'Content-type: application/http\r\n\r\n';
-    payload += `HTTP/1.1 200 OK\r\n`
-    payload += `Content-type: application/json\r\n\r\n`
+    payload += `HTTP/1.1 200 OK\r\n`;
+    payload += `Content-type: application/json\r\n\r\n`;
     payload += `${JSON.stringify(part)}\r\n`;
   });
   payload += `--${boundary}\r\n--`;

@@ -95,9 +95,9 @@ describe('admin.messaging', () => {
         expect(response.responses.length).to.equal(messages.length);
         expect(response.successCount).to.equal(messages.length);
         expect(response.failureCount).to.equal(0);
-        response.responses.forEach((response) => {
-          expect(response.success).to.be.true;
-          expect(response.messageId).matches(/^projects\/.*\/messages\/.*$/);
+        response.responses.forEach((resp) => {
+          expect(resp.success).to.be.true;
+          expect(resp.messageId).matches(/^projects\/.*\/messages\/.*$/);
         });
       });
   });
