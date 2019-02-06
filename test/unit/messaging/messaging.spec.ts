@@ -37,7 +37,7 @@ import {
   Messaging, BLACKLISTED_OPTIONS_KEYS, BLACKLISTED_DATA_PAYLOAD_KEYS,
 } from '../../../src/messaging/messaging';
 import { HttpClient } from '../../../src/utils/api-request';
-import { createMultipartPayload, createMultipartPayloadWithErrors } from './batch-requests.spec';
+import { createMultipartPayloadWithErrors } from './batch-requests.spec';
 
 chai.should();
 chai.use(sinonChai);
@@ -84,9 +84,6 @@ function mockSendRequest(): nock.Scope {
 }
 
 function mockBatchRequest(ids: string[]): nock.Scope {
-  const mockPayload = createMultipartPayload(ids.map((id) => {
-    return {name: id};
-  }));
   return mockBatchRequestWithErrors(ids);
 }
 
@@ -344,6 +341,15 @@ describe('Messaging', () => {
       }).to.throw('First argument passed to admin.messaging() must be a valid Firebase app instance.');
     });
 
+    it('should throw given app without project ID', () => {
+      expect(() => {
+        const appWithoutProhectId = mocks.mockCredentialApp();
+        return new Messaging(appWithoutProhectId);
+      }).to.throw('Failed to determine project ID for Messaging. Initialize the SDK with service '
+        + 'account credentials or set project ID as an app option. Alternatively set the '
+        + 'GOOGLE_CLOUD_PROJECT environment variable.');
+    });
+
     it('should not throw given a valid app', () => {
       expect(() => {
         return new Messaging(mockApp);
@@ -517,6 +523,16 @@ describe('Messaging', () => {
       expect(() => {
         messaging.sendAll([]);
       }).to.throw('messages must be a non-empty array');
+    });
+
+    it('should throw when called with more than 1000 messages', () => {
+      const messages: Message[] = [];
+      for (let i = 0; i < 1001; i++) {
+        messages.push(validMessage);
+      }
+      expect(() => {
+        messaging.sendAll(messages);
+      }).to.throw('messages list must not contain more than 1000 items');
     });
 
     it('should throw when a message is invalid', () => {
@@ -694,6 +710,12 @@ describe('Messaging', () => {
       return messaging.sendAll(
         [validMessage],
       ).should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
+    });
+
+    it('should be rejected given an app which returns null access tokens', () => {
+      return nullAccessTokenMessaging.sendAll(
+        [validMessage],
+      ).should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
     });
 
     function checkSendResponseSuccess(response: SendResponse, messageId: string) {

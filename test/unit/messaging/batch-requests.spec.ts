@@ -129,7 +129,7 @@ describe('BatchRequestClient', () => {
     }
   });
 
-  it('should add common headers', async () => {
+  it('should add common headers to the batch requests', async () => {
     const stub = sinon.stub(httpClient, 'send').resolves(
       createMultipartResponse([responseObject]));
     stubs.push(stub);
@@ -145,6 +145,30 @@ describe('BatchRequestClient', () => {
     expect(stub).to.have.been.calledOnce;
     const args: HttpRequestConfig = stub.getCall(0).args[0];
     expect(args.headers).to.have.property('X-Custom-Header', 'value');
+  });
+
+  it('should add sub request headers to the payload', async () => {
+    const stub = sinon.stub(httpClient, 'send').resolves(
+      createMultipartResponse([responseObject]));
+    stubs.push(stub);
+    const requests: SubRequest[] = [
+      {url: 'https://example.com', body: {foo: 1}, headers: {'X-Custom-Header': 'value'}},
+      {url: 'https://example.com', body: {foo: 1}, headers: {'X-Custom-Header': 'value'}},
+    ];
+    const commonHeaders = {'X-Custom-Header': 'value'};
+    const batch = new BatchRequestClient(httpClient, batchUrl, commonHeaders);
+
+    const responses: HttpResponse[] = await batch.send(requests);
+
+    expect(responses.length).to.equal(1);
+    expect(stub).to.have.been.calledOnce;
+    const args: HttpRequestConfig = stub.getCall(0).args[0];
+    const parsedRequest = parseHttpRequest(args.data as Buffer);
+    expect(parsedRequest.multipart.length).to.equal(requests.length);
+    parsedRequest.multipart.forEach((part: {body: Buffer}) => {
+      const parsedPart: {headers: object} = parseHttpRequest(part.body.toString().trim());
+      expect(parsedPart.headers).to.have.property('X-Custom-Header', 'value');
+    });
   });
 
   function checkOutgoingRequest(stub: sinon.SinonStub, requests: SubRequest[]) {

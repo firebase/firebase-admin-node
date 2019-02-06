@@ -273,11 +273,34 @@ export class Messaging implements FirebaseServiceInterface {
       });
   }
 
+  /**
+   * Sends all the messages in the given array via Firebase Cloud Messaging. Employs batching to
+   * send the entire list as a single RPC call.
+   *
+   * Compared to the send() method, this method is a significantly more efficient
+   * way to send multiple messages. It also helps avoid potential RPC quota issues that sometimes
+   * arise when making too many invocations of send().
+   *
+   * The responses list obtained from the return value corresponds to the order of input messages.
+   * An error from this method indicates a total failure -- i.e. none of the messages in the
+   * list could be sent. Partial failures are indicated by a BatchResponse return value.
+   *
+   * @param {Message[]} messages A non-empty array containing up to 1000 messages.
+   * @param {boolean=} dryRun Whether to send the message in the dry-run (validation only) mode.
+   *
+   * @return {Promise<BatchResponse>} A Promise fulfilled with an object representing the result
+   *     of the send operation.
+   */
   public sendAll(messages: Message[], dryRun?: boolean): Promise<BatchResponse> {
     const copy: Message[] = deepCopy(messages);
     if (!validator.isNonEmptyArray(copy)) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT, 'messages must be a non-empty array');
+    }
+    if (copy.length > 1000) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_ARGUMENT,
+        'messages list must not contain more than 1000 items');
     }
     if (typeof dryRun !== 'undefined' && !validator.isBoolean(dryRun)) {
       throw new FirebaseMessagingError(

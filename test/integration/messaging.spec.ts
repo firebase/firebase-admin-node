@@ -81,7 +81,7 @@ const options = {
 };
 
 describe('admin.messaging', () => {
-  it('send(message, dryRun) returns a message ID', () => {
+  it.only('send(message, dryRun) returns a message ID', () => {
     return admin.messaging().send(message, true)
       .then((name) => {
         expect(name).matches(/^projects\/.*\/messages\/.*$/);
@@ -90,6 +90,23 @@ describe('admin.messaging', () => {
 
   it('sendAll()', () => {
     const messages: admin.messaging.Message[] = [message, message, message];
+    return admin.messaging().sendAll(messages, true)
+      .then((response) => {
+        expect(response.responses.length).to.equal(messages.length);
+        expect(response.successCount).to.equal(messages.length);
+        expect(response.failureCount).to.equal(0);
+        response.responses.forEach((resp) => {
+          expect(resp.success).to.be.true;
+          expect(resp.messageId).matches(/^projects\/.*\/messages\/.*$/);
+        });
+      });
+  });
+
+  it.only('sendAll(1000)', () => {
+    const messages: admin.messaging.Message[] = [];
+    for (let i = 0; i < 1000; i++) {
+      messages.push({topic: 'foo-bar'});
+    }
     return admin.messaging().sendAll(messages, true)
       .then((response) => {
         expect(response.responses.length).to.equal(messages.length);

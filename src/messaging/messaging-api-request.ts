@@ -89,25 +89,33 @@ export class FirebaseMessagingRequestHandler {
     });
   }
 
+  /**
+   * Sends the given array of sub requests as a single batch to FCM, and parses the result into
+   * an BatchResponse object.
+   *
+   * @param {SubRequest[]} requests An array of sub requests to send.
+   * @return {Promise<BatchResponse>} A promise that resolves when the send operation is complete.
+   */
   public sendBatchRequest(requests: SubRequest[]): Promise<BatchResponse> {
-    return this.batchClient.send(requests).then((responses: HttpResponse[]) => {
-      return responses.map((part: HttpResponse) => {
-        return this.buildSendResponse(part);
+    return this.batchClient.send(requests)
+      .then((responses: HttpResponse[]) => {
+        return responses.map((part: HttpResponse) => {
+          return this.buildSendResponse(part);
+        });
+      }).then((responses: SendResponse[]) => {
+        const successCount: number = responses.filter((resp) => resp.success).length;
+        return {
+          responses,
+          successCount,
+          failureCount: responses.length - successCount,
+        };
+      }).catch((err) => {
+        if (err instanceof HttpError) {
+          throw createFirebaseError(err);
+        }
+        // Re-throw the error if it already has the proper format.
+        throw err;
       });
-    }).then((responses: SendResponse[]) => {
-      const successCount: number = responses.filter((resp) => resp.success).length;
-      return {
-        responses,
-        successCount,
-        failureCount: responses.length - successCount,
-      };
-    }).catch((err) => {
-      if (err instanceof HttpError) {
-        throw createFirebaseError(err);
-      }
-      // Re-throw the error if it already has the proper format.
-      throw err;
-    });
   }
 
   private buildSendResponse(response: HttpResponse): SendResponse {
