@@ -81,7 +81,7 @@ const options = {
 };
 
 describe('admin.messaging', () => {
-  it.only('send(message, dryRun) returns a message ID', () => {
+  it('send(message, dryRun) returns a message ID', () => {
     return admin.messaging().send(message, true)
       .then((name) => {
         expect(name).matches(/^projects\/.*\/messages\/.*$/);
@@ -102,7 +102,7 @@ describe('admin.messaging', () => {
       });
   });
 
-  it.only('sendAll(1000)', () => {
+  it('sendAll(1000)', () => {
     const messages: admin.messaging.Message[] = [];
     for (let i = 0; i < 1000; i++) {
       messages.push({topic: 'foo-bar'});
