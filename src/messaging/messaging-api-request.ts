@@ -91,12 +91,7 @@ export class FirebaseMessagingRequestHandler {
 
   public sendBatchRequest(requests: SubRequest[]): Promise<BatchResponse> {
     return this.batchClient.send(requests).then((responses: HttpResponse[]) => {
-      return responses.map((part: HttpResponse, idx: number) => {
-        const sub: SubRequest = requests[idx];
-        const request: HttpRequestConfig = {
-          method: FIREBASE_MESSAGING_HTTP_METHOD,
-          url: sub.url,
-        };
+      return responses.map((part: HttpResponse) => {
         return this.buildSendResponse(part);
       });
     }).then((responses: SendResponse[]) => {

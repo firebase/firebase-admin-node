@@ -24,7 +24,7 @@ export function createFirebaseError(err: HttpError): FirebaseMessagingError {
     const json = err.response.data;
     const errorCode = getErrorCode(json);
     const errorMessage = getErrorMessage(json);
-    throw FirebaseMessagingError.fromServerError(errorCode, errorMessage, json);
+    return FirebaseMessagingError.fromServerError(errorCode, errorMessage, json);
   }
 
   // Non-JSON response

@@ -86,7 +86,29 @@ describe('BatchRequestClient', () => {
     checkOutgoingRequest(stub, requests);
   });
 
-  it('should reject on HTTP error responses', async () => {
+  it('should handle both success and failure HTTP responses in a batch', async () => {
+    const stub = sinon.stub(httpClient, 'send').resolves(
+      createMultipartResponse([responseObject, responseObject], [responseObject]));
+    stubs.push(stub);
+    const requests: SubRequest[] = [
+      {url: 'https://example.com', body: {foo: 1}},
+      {url: 'https://example.com', body: {foo: 2}},
+      {url: 'https://example.com', body: {foo: 3}},
+    ];
+    const batch = new BatchRequestClient(httpClient, batchUrl);
+
+    const responses: HttpResponse[] = await batch.send(requests);
+
+    expect(responses.length).to.equal(3);
+    responses.forEach((response, idx) => {
+      const expectedStatus = idx < 2 ? 200 : 500;
+      expect(response.status).to.equal(expectedStatus);
+      expect(response.data).to.deep.equal(responseObject);
+    });
+    checkOutgoingRequest(stub, requests);
+  });
+
+  it('should reject on top-level HTTP error responses', async () => {
     const stub = sinon.stub(httpClient, 'send').rejects(
       utils.errorFrom({error: 'test'}));
     stubs.push(stub);
@@ -166,19 +188,32 @@ function getParsedPartData(obj: object): string {
     + `${json}`;
 }
 
-function createMultipartResponse(parts: object[]): HttpResponse {
-  return utils.responseFrom(createMultipartPayload(parts), 200, {
+function createMultipartResponse(success: object[], failures: object[] = []): HttpResponse {
+  return utils.responseFrom(createMultipartPayloadWithErrors(success, failures), 200, {
     'Content-Type': 'multipart/mixed; boundary=boundary',
   });
 }
 
-function createMultipartPayload(parts: object[]): string {
+export function createMultipartPayload(parts: object[]): string {
+  return createMultipartPayloadWithErrors(parts);
+}
+
+export function createMultipartPayloadWithErrors(
+  success: object[], failures: object[] = []): string {
+
   const boundary = 'boundary';
   let payload = '';
-  parts.forEach((part) => {
+  success.forEach((part) => {
     payload += `--${boundary}\r\n`;
     payload += 'Content-type: application/http\r\n\r\n';
     payload += `HTTP/1.1 200 OK\r\n`;
+    payload += `Content-type: application/json\r\n\r\n`;
+    payload += `${JSON.stringify(part)}\r\n`;
+  });
+  failures.forEach((part) => {
+    payload += `--${boundary}\r\n`;
+    payload += 'Content-type: application/http\r\n\r\n';
+    payload += `HTTP/1.1 500 Internal Server Error\r\n`;
     payload += `Content-type: application/json\r\n\r\n`;
     payload += `${JSON.stringify(part)}\r\n`;
   });

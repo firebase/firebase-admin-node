@@ -30,11 +30,14 @@ import {FirebaseApp} from '../../../src/firebase-app';
 import {
   Message, MessagingOptions, MessagingPayload, MessagingDevicesResponse,
   MessagingTopicManagementResponse,
+  BatchResponse,
+  SendResponse,
 } from '../../../src/messaging/messaging-types';
 import {
   Messaging, BLACKLISTED_OPTIONS_KEYS, BLACKLISTED_DATA_PAYLOAD_KEYS,
 } from '../../../src/messaging/messaging';
 import { HttpClient } from '../../../src/utils/api-request';
+import { createMultipartPayload, createMultipartPayloadWithErrors } from './batch-requests.spec';
 
 chai.should();
 chai.use(sinonChai);
@@ -80,7 +83,43 @@ function mockSendRequest(): nock.Scope {
     });
 }
 
+function mockBatchRequest(ids: string[]): nock.Scope {
+  const mockPayload = createMultipartPayload(ids.map((id) => {
+    return {name: id};
+  }));
+  return mockBatchRequestWithErrors(ids);
+}
+
+function mockBatchRequestWithErrors(ids: string[], errors: object[] = []): nock.Scope {
+  const mockPayload = createMultipartPayloadWithErrors(ids.map((id) => {
+    return {name: id};
+  }), errors);
+  return nock(`https://${FCM_SEND_HOST}:443`)
+    .post('/batch')
+    .reply(200, mockPayload, {
+      'Content-type': 'multipart/mixed; boundary=boundary',
+    });
+}
+
 function mockSendError(
+  statusCode: number,
+  errorFormat: 'json' | 'text',
+  responseOverride?: any,
+): nock.Scope {
+  return mockErrorResponse(
+    '/v1/projects/project_id/messages:send', statusCode, errorFormat, responseOverride);
+}
+
+function mockBatchError(
+  statusCode: number,
+  errorFormat: 'json' | 'text',
+  responseOverride?: any,
+): nock.Scope {
+  return mockErrorResponse('/batch', statusCode, errorFormat, responseOverride);
+}
+
+function mockErrorResponse(
+  path: string,
   statusCode: number,
   errorFormat: 'json' | 'text',
   responseOverride?: any,
@@ -96,7 +135,7 @@ function mockSendError(
   }
 
   return nock(`https://${FCM_SEND_HOST}:443`)
-    .post('/v1/projects/project_id/messages:send')
+    .post(path)
     .reply(statusCode, responseOverride || response, {
       'Content-Type': contentType,
     });
@@ -463,6 +502,214 @@ describe('Messaging', () => {
         {token: 'mock-token'},
       ).should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
     });
+  });
+
+  describe('sendAll()', () => {
+    const validMessage: Message = {token: 'a'};
+
+    it('should throw given no messages', () => {
+      expect(() => {
+        messaging.sendAll(undefined as Message[]);
+      }).to.throw('messages must be a non-empty array');
+      expect(() => {
+        messaging.sendAll(null);
+      }).to.throw('messages must be a non-empty array');
+      expect(() => {
+        messaging.sendAll([]);
+      }).to.throw('messages must be a non-empty array');
+    });
+
+    it('should throw when a message is invalid', () => {
+      const invalidMessage: Message = {} as any;
+      expect(() => {
+        messaging.sendAll([validMessage, invalidMessage]);
+      }).to.throw('Exactly one of topic, token or condition is required');
+    });
+
+    const invalidDryRun = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
+    invalidDryRun.forEach((dryRun) => {
+      it(`should throw given invalid dryRun parameter: ${JSON.stringify(dryRun)}`, () => {
+        expect(() => {
+          messaging.sendAll([{token: 'a'}], dryRun as any);
+        }).to.throw('dryRun must be a boolean');
+      });
+    });
+
+    it('should be fulfilled with a BatchResponse given valid messages', () => {
+      const messageIds = [
+        'projects/projec_id/messages/1',
+        'projects/projec_id/messages/2',
+        'projects/projec_id/messages/3',
+      ];
+      mockedRequests.push(mockBatchRequest(messageIds));
+      return messaging.sendAll([validMessage, validMessage, validMessage])
+        .then((response: BatchResponse) => {
+          expect(response.successCount).to.equal(3);
+          expect(response.failureCount).to.equal(0);
+          response.responses.forEach((resp, idx) => {
+            expect(resp.success).to.be.true;
+            expect(resp.messageId).to.equal(messageIds[idx]);
+            expect(resp.error).to.be.undefined;
+          });
+        });
+    });
+
+    it('should be fulfilled with a BatchResponse given valid messages in dryRun mode', () => {
+      const messageIds = [
+        'projects/projec_id/messages/1',
+        'projects/projec_id/messages/2',
+        'projects/projec_id/messages/3',
+      ];
+      mockedRequests.push(mockBatchRequest(messageIds));
+      return messaging.sendAll([validMessage, validMessage, validMessage], true)
+        .then((response: BatchResponse) => {
+          expect(response.successCount).to.equal(3);
+          expect(response.failureCount).to.equal(0);
+          expect(response.responses.length).to.equal(3);
+          response.responses.forEach((resp, idx) => {
+            checkSendResponseSuccess(resp, messageIds[idx]);
+          });
+        });
+    });
+
+    it('should be fulfilled with a BatchResponse when the response contains some errors', () => {
+      const messageIds = [
+        'projects/projec_id/messages/1',
+        'projects/projec_id/messages/2',
+      ];
+      const errors = [
+        {
+          error: {
+            status: 'INVALID_ARGUMENT',
+            message: 'test error message',
+          },
+        },
+      ];
+      mockedRequests.push(mockBatchRequestWithErrors(messageIds, errors));
+      return messaging.sendAll([validMessage, validMessage, validMessage], true)
+        .then((response: BatchResponse) => {
+          expect(response.successCount).to.equal(2);
+          expect(response.failureCount).to.equal(1);
+          expect(response.responses.length).to.equal(3);
+
+          const responses = response.responses;
+          checkSendResponseSuccess(responses[0], messageIds[0]);
+          checkSendResponseSuccess(responses[1], messageIds[1]);
+          checkSendResponseFailure(
+            responses[2], 'messaging/invalid-argument', 'test error message');
+        });
+    });
+
+    it('should expose the FCM error code via BatchResponse', () => {
+      const messageIds = [
+        'projects/projec_id/messages/1',
+      ];
+      const errors = [
+        {
+          error: {
+            status: 'INVALID_ARGUMENT',
+            message: 'test error message',
+            details: [
+              {
+                '@type': 'type.googleapis.com/google.firebase.fcm.v1.FcmError',
+                'errorCode': 'UNREGISTERED',
+              },
+            ],
+          },
+        },
+      ];
+      mockedRequests.push(mockBatchRequestWithErrors(messageIds, errors));
+      return messaging.sendAll([validMessage, validMessage], true)
+        .then((response: BatchResponse) => {
+          expect(response.successCount).to.equal(1);
+          expect(response.failureCount).to.equal(1);
+          expect(response.responses.length).to.equal(2);
+
+          const responses = response.responses;
+          checkSendResponseSuccess(responses[0], messageIds[0]);
+          checkSendResponseFailure(
+            responses[1], 'messaging/registration-token-not-registered');
+        });
+    });
+
+    it('should fail when the backend server returns a detailed error', () => {
+      const resp = {
+        error: {
+          status: 'INVALID_ARGUMENT',
+          message: 'test error message',
+        },
+      };
+      mockedRequests.push(mockBatchError(400, 'json', resp));
+      return messaging.sendAll(
+        [validMessage],
+      ).should.eventually.be.rejectedWith('test error message')
+       .and.have.property('code', 'messaging/invalid-argument');
+    });
+
+    it('should fail when the backend server returns a detailed error with FCM error code', () => {
+      const resp = {
+        error: {
+          status: 'INVALID_ARGUMENT',
+          message: 'test error message',
+          details: [
+            {
+              '@type': 'type.googleapis.com/google.firebase.fcm.v1.FcmError',
+              'errorCode': 'UNREGISTERED',
+            },
+          ],
+        },
+      };
+      mockedRequests.push(mockBatchError(404, 'json', resp));
+      return messaging.sendAll(
+        [validMessage],
+      ).should.eventually.be.rejectedWith('test error message')
+       .and.have.property('code', 'messaging/registration-token-not-registered');
+    });
+
+    it('should map server error code to client-side error', () => {
+      const resp = {
+        error: {
+          status: 'NOT_FOUND',
+          message: 'test error message',
+        },
+      };
+      mockedRequests.push(mockBatchError(404, 'json', resp));
+      return messaging.sendAll(
+        [validMessage],
+      ).should.eventually.be.rejectedWith('test error message')
+       .and.have.property('code', 'messaging/registration-token-not-registered');
+    });
+
+    it('should fail when the backend server returns an unknown error', () => {
+      const resp = {error: 'test error message'};
+      mockedRequests.push(mockBatchError(400, 'json', resp));
+      return messaging.sendAll(
+        [validMessage],
+      ).should.eventually.be.rejected.and.have.property('code', 'messaging/unknown-error');
+    });
+
+    it('should fail when the backend server returns a non-json error', () => {
+      // Error code will be determined based on the status code.
+      mockedRequests.push(mockBatchError(400, 'text', 'foo bar'));
+      return messaging.sendAll(
+        [validMessage],
+      ).should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
+    });
+
+    function checkSendResponseSuccess(response: SendResponse, messageId: string) {
+      expect(response.success).to.be.true;
+      expect(response.messageId).to.equal(messageId);
+      expect(response.error).to.be.undefined;
+    }
+
+    function checkSendResponseFailure(response: SendResponse, code: string, msg?: string) {
+      expect(response.success).to.be.false;
+      expect(response.messageId).to.be.undefined;
+      expect(response.error).to.have.property('code', code);
+      if (msg) {
+        expect(response.error.toString()).to.contain(msg);
+      }
+    }
   });
 
   describe('sendToDevice()', () => {

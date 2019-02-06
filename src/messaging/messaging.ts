@@ -277,7 +277,7 @@ export class Messaging implements FirebaseServiceInterface {
     const copy: Message[] = deepCopy(messages);
     if (!validator.isNonEmptyArray(copy)) {
       throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_ARGUMENT, 'messages must be non-empty array');
+        MessagingClientErrorCode.INVALID_ARGUMENT, 'messages must be a non-empty array');
     }
     if (typeof dryRun !== 'undefined' && !validator.isBoolean(dryRun)) {
       throw new FirebaseMessagingError(
