@@ -16,13 +16,15 @@
 
 import {FirebaseApp} from '../firebase-app';
 import {
-  HttpMethod, AuthorizedHttpClient, HttpRequestConfig, HttpError,
+  HttpMethod, AuthorizedHttpClient, HttpRequestConfig, HttpError, parseHttpResponse, HttpResponse,
 } from '../utils/api-request';
 import { createFirebaseError, getErrorCode } from './messaging-errors';
-import { BatchRequestElement, MessagingBatchRequestClient, SendResponse } from './batch-request';
+import { SubRequest, BatchRequestClient } from './batch-request';
+import { SendResponse, BatchResponse } from './messaging-types';
 
 // FCM backend constants
 const FIREBASE_MESSAGING_TIMEOUT = 10000;
+const FIREBASE_MESSAGING_BATCH_URL = 'https://fcm.googleapis.com/batch';
 const FIREBASE_MESSAGING_HTTP_METHOD: HttpMethod = 'POST';
 const FIREBASE_MESSAGING_HEADERS = {
   'Sdk-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
@@ -35,7 +37,7 @@ const FIREBASE_MESSAGING_HEADERS = {
  */
 export class FirebaseMessagingRequestHandler {
   private readonly httpClient: AuthorizedHttpClient;
-  private readonly batchClient: MessagingBatchRequestClient;
+  private readonly batchClient: BatchRequestClient;
 
   /**
    * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
@@ -43,8 +45,8 @@ export class FirebaseMessagingRequestHandler {
    */
   constructor(app: FirebaseApp) {
     this.httpClient = new AuthorizedHttpClient(app);
-    this.batchClient = new MessagingBatchRequestClient(
-      this.httpClient, FIREBASE_MESSAGING_HEADERS);
+    this.batchClient = new BatchRequestClient(
+      this.httpClient, FIREBASE_MESSAGING_BATCH_URL, FIREBASE_MESSAGING_HEADERS);
   }
 
   /**
@@ -87,7 +89,41 @@ export class FirebaseMessagingRequestHandler {
     });
   }
 
-  public sendBatchRequest(requests: BatchRequestElement[]): Promise<SendResponse[]> {
-    return this.batchClient.sendFcmBatchRequest(requests);
+  public sendBatchRequest(requests: SubRequest[]): Promise<BatchResponse> {
+    return this.batchClient.send(requests).then((responses: HttpResponse[]) => {
+      return responses.map((part: HttpResponse, idx: number) => {
+        const sub: SubRequest = requests[idx];
+        const request: HttpRequestConfig = {
+          method: FIREBASE_MESSAGING_HTTP_METHOD,
+          url: sub.url,
+        };
+        return this.buildSendResponse(part);
+      });
+    }).then((responses: SendResponse[]) => {
+      const successCount: number = responses.filter((resp) => resp.success).length;
+      return {
+        responses,
+        successCount,
+        failureCount: responses.length - successCount,
+      };
+    }).catch((err) => {
+      if (err instanceof HttpError) {
+        throw createFirebaseError(err);
+      }
+      // Re-throw the error if it already has the proper format.
+      throw err;
+    });
+  }
+
+  private buildSendResponse(response: HttpResponse): SendResponse {
+    const result: SendResponse = {
+      success: response.status === 200,
+    };
+    if (result.success) {
+      result.messageId = response.data.name;
+    } else {
+      result.error = createFirebaseError(new HttpError(response));
+    }
+    return result;
   }
 }

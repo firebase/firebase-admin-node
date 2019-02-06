@@ -14,24 +14,19 @@
  * limitations under the License.
  */
 
-import { FirebaseError } from '../utils/error';
 import {
-  HttpClient, HttpRequestConfig, parseMultipartResponse,
-  HttpError, parseHttpResponse,
+  HttpClient, HttpRequestConfig, parseMultipartResponse, HttpResponse, parseHttpResponse,
 } from '../utils/api-request';
-import { createFirebaseError } from './messaging-errors';
 
 const PART_DELIMITER: string = '__END_OF_PART__';
-const FIREBASE_MESSAGING_BATCH_URL = 'https://fcm.googleapis.com/batch';
-const POST_METHOD = 'POST';
 const TEN_SECONDS_IN_MILLIS = 10000;
 
-export interface BatchRequestElement {
-  url: string;
-  body: object;
-  headers?: {[key: string]: any};
-}
-
+/**
+ * An HTTP client that can be used to make batch requests. This client is not tied to any service
+ * (FCM or otherwise). Therefore it can be used to make batch requests to any service that allows
+ * it. If this requirement ever arises we can move this implementation to the utils module
+ * where it can be easily shared among other modules.
+ */
 export class BatchRequestClient {
 
   constructor(
@@ -40,104 +35,68 @@ export class BatchRequestClient {
     private readonly commonHeaders?: object) {
   }
 
-  public send(messages: BatchRequestElement[]): Promise<string[]> {
+  public send(requests: SubRequest[]): Promise<HttpResponse[]> {
     const requestHeaders = {
       'Content-Type': `multipart/mixed; boundary=${PART_DELIMITER}`,
     };
     const request: HttpRequestConfig = {
-      method: POST_METHOD,
+      method: 'POST',
       url: this.batchUrl,
-      data: this.getMultipartPayload(messages),
+      data: this.getMultipartPayload(requests),
       headers: Object.assign({}, this.commonHeaders, requestHeaders),
       timeout: TEN_SECONDS_IN_MILLIS,
     };
     return this.httpClient.send(request).then((response) => {
       return parseMultipartResponse(response.text);
-    })
-    .catch((err) => {
-      if (err instanceof HttpError) {
-        throw createFirebaseError(err);
-      }
-      // Re-throw the error if it already has the proper format.
-      throw err;
+    }).then((responses: string[]) => {
+      return responses.map((resp) => {
+        return parseHttpResponse(resp, request);
+      });
     });
   }
 
-  private getMultipartPayload(messages: BatchRequestElement[]): Buffer {
+  private getMultipartPayload(requests: SubRequest[]): Buffer {
     let buffer: string = '';
-    messages.forEach((message: BatchRequestElement, idx: number) => {
-      buffer += this.serializePart(message, idx);
+    requests.forEach((request: SubRequest, idx: number) => {
+      buffer += createPart(request, PART_DELIMITER, idx);
     });
     buffer += `--${PART_DELIMITER}--\r\n`;
-    const result = Buffer.from(buffer, 'utf-8');
-    return result;
-  }
-
-  private serializePart(message: BatchRequestElement, idx: number): string {
-    const serializedMessage: string = this.serializeMessage(message);
-    let part: string = `--${PART_DELIMITER}\r\n`;
-    part += `Content-Length: ${serializedMessage.length}\r\n`;
-    part += 'Content-Type: application/http\r\n';
-    part += `content-id: ${idx + 1}\r\n`;
-    part += 'content-transfer-encoding: binary\r\n';
-    part += '\r\n';
-    part += serializedMessage;
-    part += '\r\n';
-    return part;
-  }
-
-  private serializeMessage(message: BatchRequestElement): string {
-    const messageBody: string = JSON.stringify(message.body);
-    let messagePayload: string = `POST ${message.url} HTTP/1.1\r\n`;
-    messagePayload += `Content-Length: ${messageBody.length}\r\n`;
-    messagePayload += 'Content-Type: application/json; charset=UTF-8\r\n';
-    if (message.headers) {
-      Object.keys(message.headers).forEach((key) => {
-        messagePayload += `${key}: ${message.headers[key]}\r\n`;
-      });
-    }
-    messagePayload += '\r\n';
-    messagePayload += messageBody;
-    return messagePayload;
+    return Buffer.from(buffer, 'utf-8');
   }
 }
 
-export class MessagingBatchRequestClient extends BatchRequestClient {
+/**
+ * Represents a request that can be sent as part of an HTTP batch request.
+ */
+export interface SubRequest {
+  url: string;
+  body: object;
+  headers?: {[key: string]: any};
+}
 
-  constructor(httpClient: HttpClient, commonHeaders?: object) {
-      super(httpClient, FIREBASE_MESSAGING_BATCH_URL, commonHeaders);
-  }
+function createPart(request: SubRequest, delim: string, idx: number): string {
+  const serializedRequest: string = serializeSubRequest(request);
+  let part: string = `--${delim}\r\n`;
+  part += `Content-Length: ${serializedRequest.length}\r\n`;
+  part += 'Content-Type: application/http\r\n';
+  part += `content-id: ${idx + 1}\r\n`;
+  part += 'content-transfer-encoding: binary\r\n';
+  part += '\r\n';
+  part += `${serializedRequest}\r\n`;
+  return part;
+}
 
-  public sendFcmBatchRequest(messages: BatchRequestElement[]): Promise<SendResponse[]> {
-    return super.send(messages).then((parts) => {
-      return parts.map((part, idx) => {
-        const elem = messages[idx];
-        const request: HttpRequestConfig = {
-          method: POST_METHOD,
-          url: elem.url,
-        };
-        return this.buildSendResponse(part, request);
-      });
+function serializeSubRequest(request: SubRequest): string {
+  const requestBody: string = JSON.stringify(request.body);
+  let messagePayload: string = `POST ${request.url} HTTP/1.1\r\n`;
+  messagePayload += `Content-Length: ${requestBody.length}\r\n`;
+  messagePayload += 'Content-Type: application/json; charset=UTF-8\r\n';
+  if (request.headers) {
+    Object.keys(request.headers).forEach((key) => {
+      messagePayload += `${key}: ${request.headers[key]}\r\n`;
     });
   }
-
-  private buildSendResponse(text: string, config: HttpRequestConfig): SendResponse {
-    const httpResponse = parseHttpResponse(text, config);
-    const result: SendResponse = {
-      success: httpResponse.status === 200,
-    };
-    if (result.success) {
-      result.messageId = httpResponse.data.name;
-    } else {
-      result.error = createFirebaseError(new HttpError(httpResponse));
-    }
-    return result;
-  }
+  messagePayload += '\r\n';
+  messagePayload += requestBody;
+  return messagePayload;
 }
-
-export interface SendResponse {
-  success: boolean;
-  messageId?: string;
-  error?: FirebaseError;
-}
-

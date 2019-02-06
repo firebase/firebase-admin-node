@@ -586,6 +586,12 @@ declare namespace admin.messaging {
     errors: admin.FirebaseArrayIndexError[];
   };
 
+  type BatchResponse = {
+    responses: admin.messaging.SendResponse[];
+    successCount: number;
+    failureCount: number;
+  }
+
   type SendResponse = {
     success: boolean;
     messageId?: string;
@@ -596,10 +602,10 @@ declare namespace admin.messaging {
     app: admin.app.App;
 
     send(message: admin.messaging.Message, dryRun?: boolean): Promise<string>;
-    sendBatch(
+    sendAll(
       messages: Array<admin.messaging.Message>,
       dryRun?: boolean
-    ): Promise<Array<admin.messaging.SendResponse>>;
+    ): Promise<admin.messaging.BatchResponse>;
     sendToDevice(
       registrationToken: string | string[],
       payload: admin.messaging.MessagingPayload,
