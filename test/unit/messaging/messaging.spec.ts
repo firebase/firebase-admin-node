@@ -28,9 +28,11 @@ import * as mocks from '../../resources/mocks';
 
 import {FirebaseApp} from '../../../src/firebase-app';
 import {
-  Message, Messaging, MessagingOptions, MessagingPayload, MessagingDevicesResponse,
+  Message, MessagingOptions, MessagingPayload, MessagingDevicesResponse,
   MessagingTopicManagementResponse,
-  BLACKLISTED_OPTIONS_KEYS, BLACKLISTED_DATA_PAYLOAD_KEYS,
+} from '../../../src/messaging/messaging-types';
+import {
+  Messaging, BLACKLISTED_OPTIONS_KEYS, BLACKLISTED_DATA_PAYLOAD_KEYS,
 } from '../../../src/messaging/messaging';
 import { HttpClient } from '../../../src/utils/api-request';
 

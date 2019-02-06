@@ -26,7 +26,6 @@ import * as utils from '../utils';
 
 import { HttpClient, HttpResponse, HttpRequestConfig, HttpError } from '../../../src/utils/api-request';
 import { SubRequest, BatchRequestClient } from '../../../src/messaging/batch-request';
-import { fail } from 'assert';
 
 chai.should();
 chai.use(sinonChai);
@@ -36,6 +35,7 @@ const expect = chai.expect;
 
 describe('BatchRequestClient', () => {
 
+  const batchUrl = 'https://batch.url';
   const responseObject = { success: true };
   const httpClient = new HttpClient();
 
@@ -55,11 +55,12 @@ describe('BatchRequestClient', () => {
     const requests: SubRequest[] = [
       {url: 'https://example.com', body: {foo: 1}},
     ];
-    const batch = new BatchRequestClient(httpClient, 'https://batch.url');
+    const batch = new BatchRequestClient(httpClient, batchUrl);
 
     const responses: HttpResponse[] = await batch.send(requests);
 
     expect(responses.length).to.equal(1);
+    expect(responses[0].status).to.equal(200);
     expect(responses[0].data).to.deep.equal(responseObject);
     checkOutgoingRequest(stub, requests);
   });
@@ -73,12 +74,13 @@ describe('BatchRequestClient', () => {
       {url: 'https://example.com', body: {foo: 2}},
       {url: 'https://example.com', body: {foo: 3}},
     ];
-    const batch = new BatchRequestClient(httpClient, 'https://batch.url');
+    const batch = new BatchRequestClient(httpClient, batchUrl);
 
     const responses: HttpResponse[] = await batch.send(requests);
 
     expect(responses.length).to.equal(3);
-    responses.forEach((response, idx) => {
+    responses.forEach((response) => {
+      expect(response.status).to.equal(200);
       expect(response.data).to.deep.equal(responseObject);
     });
     checkOutgoingRequest(stub, requests);
@@ -93,40 +95,62 @@ describe('BatchRequestClient', () => {
       {url: 'https://example.com', body: {foo: 2}},
       {url: 'https://example.com', body: {foo: 3}},
     ];
-    const batch = new BatchRequestClient(httpClient, 'https://batch.url');
+    const batch = new BatchRequestClient(httpClient, batchUrl);
 
     try {
       await batch.send(requests);
-      fail('No error thrown for HTTP error');
+      sinon.assert.fail('No error thrown for HTTP error');
     } catch (err) {
       expect(err).to.be.instanceOf(HttpError);
       expect((err as HttpError).response.status).to.equal(500);
       checkOutgoingRequest(stub, requests);
     }
   });
-});
 
-function checkOutgoingRequest(stub: sinon.SinonStub, requests: SubRequest[]) {
-  expect(stub).calledOnce;
-  const args: HttpRequestConfig = stub.getCall(0).args[0];
-  expect(args.url).to.equal('https://batch.url');
-  const parsedRequest = parseHttpRequest(args.data as Buffer);
-  expect(parsedRequest.multipart.length).to.equal(requests.length);
+  it('should add common headers', async () => {
+    const stub = sinon.stub(httpClient, 'send').resolves(
+      createMultipartResponse([responseObject]));
+    stubs.push(stub);
+    const requests: SubRequest[] = [
+      {url: 'https://example.com', body: {foo: 1}},
+    ];
+    const commonHeaders = {'X-Custom-Header': 'value'};
+    const batch = new BatchRequestClient(httpClient, batchUrl, commonHeaders);
 
-  if (requests.length === 1) {
-    // http-message-parser handles single-element batches slightly differently. Specifically, the
-    // payload contents are exposed through body instead of multipart, and the body string uses
-    // \n instead of \r\n for line breaks.
-    let expectedPartData = getParsedPartData(requests[0].body);
-    expectedPartData = expectedPartData.replace(/\r\n/g, '\n');
-    expect(parsedRequest.body.trim()).to.equal(expectedPartData);
-  } else {
-    requests.forEach((req, idx) => {
-      const part = parsedRequest.multipart[idx].body.toString().trim();
-      expect(part).to.equal(getParsedPartData(req.body));
-    });
+    const responses: HttpResponse[] = await batch.send(requests);
+
+    expect(responses.length).to.equal(1);
+    expect(stub).to.have.been.calledOnce;
+    const args: HttpRequestConfig = stub.getCall(0).args[0];
+    expect(args.headers).to.have.property('X-Custom-Header', 'value');
+  });
+
+  function checkOutgoingRequest(stub: sinon.SinonStub, requests: SubRequest[]) {
+    expect(stub).to.have.been.calledOnce;
+    const args: HttpRequestConfig = stub.getCall(0).args[0];
+    expect(args.method).to.equal('POST');
+    expect(args.url).to.equal(batchUrl);
+    expect(args.headers).to.have.property(
+      'Content-Type', 'multipart/mixed; boundary=__END_OF_PART__');
+    expect(args.timeout).to.equal(10000);
+    const parsedRequest = parseHttpRequest(args.data as Buffer);
+    expect(parsedRequest.multipart.length).to.equal(requests.length);
+
+    if (requests.length === 1) {
+      // http-message-parser handles single-element batches slightly differently. Specifically, the
+      // payload contents are exposed through body instead of multipart, and the body string uses
+      // \n instead of \r\n for line breaks.
+      let expectedPartData = getParsedPartData(requests[0].body);
+      expectedPartData = expectedPartData.replace(/\r\n/g, '\n');
+      expect(parsedRequest.body.trim()).to.equal(expectedPartData);
+    } else {
+      requests.forEach((req, idx) => {
+        const part = parsedRequest.multipart[idx].body.toString().trim();
+        expect(part).to.equal(getParsedPartData(req.body));
+      });
+    }
   }
-}
+});
 
 function parseHttpRequest(text: string | Buffer): any {
   const httpMessageParser = require('http-message-parser');
