@@ -213,34 +213,27 @@ function getParsedPartData(obj: object): string {
 }
 
 function createMultipartResponse(success: object[], failures: object[] = []): HttpResponse {
-  return utils.responseFrom(createMultipartPayloadWithErrors(success, failures), 200, {
-    'Content-Type': 'multipart/mixed; boundary=boundary',
-  });
-}
-
-export function createMultipartPayload(parts: object[]): string {
-  return createMultipartPayloadWithErrors(parts);
-}
-
-export function createMultipartPayloadWithErrors(
-  success: object[], failures: object[] = []): string {
-
-  const boundary = 'boundary';
-  let payload = '';
+  const multipart: Buffer[] = [];
   success.forEach((part) => {
-    payload += `--${boundary}\r\n`;
-    payload += 'Content-type: application/http\r\n\r\n';
+    let payload: string = '';
     payload += `HTTP/1.1 200 OK\r\n`;
     payload += `Content-type: application/json\r\n\r\n`;
     payload += `${JSON.stringify(part)}\r\n`;
+    multipart.push(Buffer.from(payload, 'utf-8'));
   });
   failures.forEach((part) => {
-    payload += `--${boundary}\r\n`;
-    payload += 'Content-type: application/http\r\n\r\n';
+    let payload: string = '';
     payload += `HTTP/1.1 500 Internal Server Error\r\n`;
     payload += `Content-type: application/json\r\n\r\n`;
     payload += `${JSON.stringify(part)}\r\n`;
+    multipart.push(Buffer.from(payload, 'utf-8'));
   });
-  payload += `--${boundary}\r\n--`;
-  return payload;
+  return {
+    status: 200,
+    headers: {'Content-Type': 'multipart/mixed; boundary=boundary'},
+    multipart,
+    text: '',
+    data: null,
+    isJson: () => false,
+  };
 }

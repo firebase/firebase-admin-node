@@ -88,7 +88,7 @@ describe('admin.messaging', () => {
       });
   });
 
-  it('sendAll()', () => {
+  it.only('sendAll()', () => {
     const messages: admin.messaging.Message[] = [message, message, message];
     return admin.messaging().sendAll(messages, true)
       .then((response) => {
@@ -102,10 +102,10 @@ describe('admin.messaging', () => {
       });
   });
 
-  it('sendAll(1000)', () => {
+  it.only('sendAll(1000)', () => {
     const messages: admin.messaging.Message[] = [];
     for (let i = 0; i < 1000; i++) {
-      messages.push({topic: 'foo-bar'});
+      messages.push({topic: `foo-bar-${i % 10}`});
     }
     return admin.messaging().sendAll(messages, true)
       .then((response) => {

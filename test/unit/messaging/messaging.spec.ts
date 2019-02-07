@@ -37,7 +37,6 @@ import {
   Messaging, BLACKLISTED_OPTIONS_KEYS, BLACKLISTED_DATA_PAYLOAD_KEYS,
 } from '../../../src/messaging/messaging';
 import { HttpClient } from '../../../src/utils/api-request';
-import { createMultipartPayloadWithErrors } from './batch-requests.spec';
 
 chai.should();
 chai.use(sinonChai);
@@ -96,6 +95,29 @@ function mockBatchRequestWithErrors(ids: string[], errors: object[] = []): nock.
     .reply(200, mockPayload, {
       'Content-type': 'multipart/mixed; boundary=boundary',
     });
+}
+
+function createMultipartPayloadWithErrors(
+  success: object[], failures: object[] = []): string {
+
+  const boundary = 'boundary';
+  let payload = '';
+  success.forEach((part) => {
+    payload += `--${boundary}\r\n`;
+    payload += 'Content-type: application/http\r\n\r\n';
+    payload += `HTTP/1.1 200 OK\r\n`;
+    payload += `Content-type: application/json\r\n\r\n`;
+    payload += `${JSON.stringify(part)}\r\n`;
+  });
+  failures.forEach((part) => {
+    payload += `--${boundary}\r\n`;
+    payload += 'Content-type: application/http\r\n\r\n';
+    payload += `HTTP/1.1 500 Internal Server Error\r\n`;
+    payload += `Content-type: application/json\r\n\r\n`;
+    payload += `${JSON.stringify(part)}\r\n`;
+  });
+  payload += `--${boundary}--\r\n`;
+  return payload;
 }
 
 function mockSendError(

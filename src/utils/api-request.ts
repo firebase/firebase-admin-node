@@ -54,6 +54,7 @@ export interface HttpResponse {
   readonly text: string;
   /** Response data as a parsed JSON object. */
   readonly data: any;
+  readonly multipart?: Buffer[];
   /**
    * Indicates if the response content is JSON-formatted or not. If true, data field can be used
    * to retrieve the content as a parsed JSON object.
@@ -66,6 +67,7 @@ interface LowLevelResponse {
   headers: http.IncomingHttpHeaders;
   request: http.ClientRequest;
   data: string;
+  multipart?: Buffer[];
   config: HttpRequestConfig;
 }
 
@@ -74,6 +76,34 @@ interface LowLevelError extends Error {
   code?: string;
   request?: http.ClientRequest;
   response?: LowLevelResponse;
+}
+
+class MultipartHttpResponse implements HttpResponse {
+
+  public readonly status: number;
+  public readonly headers: any;
+  public readonly multipart: Buffer[];
+
+  constructor(resp: LowLevelResponse) {
+    this.status = resp.status;
+    this.headers = resp.headers;
+    this.multipart = resp.multipart;
+  }
+
+  get text(): string {
+    return Buffer.concat(this.multipart).toString('utf-8');
+  }
+
+  get data(): any {
+    throw new FirebaseAppError(
+      AppErrorCodes.UNABLE_TO_PARSE_RESPONSE,
+      'Unable to parse multipart payload as JSON',
+    );
+  }
+
+  public isJson(): boolean {
+    return false;
+  }
 }
 
 class DefaultHttpResponse implements HttpResponse {
@@ -154,14 +184,14 @@ export class HttpClient {
   private sendWithRetry(config: HttpRequestConfig, attempts: number = 0): Promise<HttpResponse> {
     return sendRequest(config)
       .then((resp) => {
-        return new DefaultHttpResponse(resp);
+        return this.createHttpResponse(resp);
       }).catch((err: LowLevelError) => {
         const retryCodes = ['ECONNRESET', 'ETIMEDOUT'];
         if (retryCodes.indexOf(err.code) !== -1 && attempts === 0) {
           return this.sendWithRetry(config, attempts + 1);
         }
         if (err.response) {
-          throw new HttpError(new DefaultHttpResponse(err.response));
+          throw new HttpError(this.createHttpResponse(err.response));
         }
         if (err.code === 'ETIMEDOUT') {
           throw new FirebaseAppError(
@@ -172,6 +202,13 @@ export class HttpClient {
           AppErrorCodes.NETWORK_ERROR,
           `Error while making request: ${err.message}. Error code: ${err.code}`);
       });
+  }
+
+  private createHttpResponse(resp: LowLevelResponse): HttpResponse {
+    if (resp.multipart) {
+      return new MultipartHttpResponse(resp);
+    }
+    return new DefaultHttpResponse(resp);
   }
 }
 
@@ -263,22 +300,48 @@ function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
       };
 
       const responseBuffer: Buffer[] = [];
-      respStream.on('data', (chunk: Buffer) => {
-        responseBuffer.push(chunk);
-      });
+      const boundary = getMultipartBoundary(res.headers);
+      if (boundary) {
+        const dicer = require('dicer');
+        const multipartParser = new dicer({boundary});
+        multipartParser.on('part', (part: any) => {
+          const tempBuffers: Buffer[] = [];
 
-      respStream.on('error', (err) => {
-        if (req.aborted) {
-          return;
-        }
-        reject(enhanceError(err, config, null, req));
-      });
+          part.on('data', (partData: Buffer) => {
+            tempBuffers.push(partData);
+          });
 
-      respStream.on('end', () => {
-        const responseData = Buffer.concat(responseBuffer).toString();
-        response.data = responseData;
-        finalizeRequest(resolve, reject, response);
-      });
+          part.on('end', () => {
+            responseBuffer.push(Buffer.concat(tempBuffers));
+          });
+        });
+
+        multipartParser.on('finish', () => {
+          response.data = null;
+          response.multipart = responseBuffer;
+          finalizeRequest(resolve, reject, response);
+        });
+
+        respStream.pipe(multipartParser);
+
+      } else {
+        respStream.on('data', (chunk: Buffer) => {
+          responseBuffer.push(chunk);
+        });
+
+        respStream.on('error', (err) => {
+          if (req.aborted) {
+            return;
+          }
+          reject(enhanceError(err, config, null, req));
+        });
+
+        respStream.on('end', () => {
+          const responseData = Buffer.concat(responseBuffer).toString();
+          response.data = responseData;
+          finalizeRequest(resolve, reject, response);
+        });
+      }
     });
 
     // Handle errors
@@ -288,6 +351,7 @@ function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
       }
       reject(enhanceError(err, config, null, req));
     });
+
     if (config.timeout) {
       // Listen to timeouts and throw an error.
       req.setTimeout(config.timeout, () => {
@@ -295,9 +359,31 @@ function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
         reject(createError(`timeout of ${config.timeout}ms exceeded`, config, 'ETIMEDOUT', req));
       });
     }
+
     // Send the request
     req.end(data);
   });
+}
+
+function getMultipartBoundary(headers: http.IncomingHttpHeaders): string {
+  const contentType = headers['content-type'];
+  if (!contentType.startsWith('multipart/mixed')) {
+    return null;
+  }
+
+  const segments: string[] = contentType.split(';');
+  const emptyObject: {[key: string]: string} = {};
+  const headerParams = segments.slice(1)
+    .map((segment) => segment.trim().split('='))
+    .reduce((curr, params) => {
+      if (params.length === 2) {
+        const keyValuePair: {[key: string]: string} = {};
+        keyValuePair[params[0]] = params[1];
+        return Object.assign(curr, keyValuePair);
+      }
+      return curr;
+    }, emptyObject);
+  return headerParams.boundary;
 }
 
 /**
@@ -547,12 +633,6 @@ export class ExponentialBackoffPoller extends EventEmitter {
   }
 }
 
-export function parseMultipartResponse(response: string | Buffer): string[] {
-  const httpMessageParser = require('http-message-parser');
-  const parsedMessage = httpMessageParser(response);
-  return parsedMessage.multipart.map((part: {body: Buffer}) => part.body.toString().trim());
-}
-
 export function parseHttpResponse(
   response: string | Buffer, config: HttpRequestConfig): HttpResponse {
   const httpMessageParser = require('http-message-parser');
@@ -560,7 +640,7 @@ export function parseHttpResponse(
   const lowLevelResponse: LowLevelResponse = {
     status: parsedMessage.statusCode,
     headers: parsedMessage.headers,
-    data: parsedMessage.body.toString(),
+    data: parsedMessage.body && parsedMessage.body.toString(),
     config,
     request: null,
   };

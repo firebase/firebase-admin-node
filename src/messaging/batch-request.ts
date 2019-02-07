@@ -15,7 +15,7 @@
  */
 
 import {
-  HttpClient, HttpRequestConfig, parseMultipartResponse, HttpResponse, parseHttpResponse,
+  HttpClient, HttpRequestConfig, HttpResponse, parseHttpResponse,
 } from '../utils/api-request';
 
 const PART_DELIMITER: string = '__END_OF_PART__';
@@ -47,10 +47,8 @@ export class BatchRequestClient {
       timeout: TEN_SECONDS_IN_MILLIS,
     };
     return this.httpClient.send(request).then((response) => {
-      return parseMultipartResponse(response.text);
-    }).then((responses: string[]) => {
-      return responses.map((resp) => {
-        return parseHttpResponse(resp, request);
+      return response.multipart.map((buff) => {
+        return parseHttpResponse(buff, request);
       });
     });
   }
