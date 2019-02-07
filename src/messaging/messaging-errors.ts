@@ -18,6 +18,13 @@ import {HttpError} from '../utils/api-request';
 import {FirebaseMessagingError, MessagingClientErrorCode} from '../utils/error';
 import * as validator from '../utils/validator';
 
+/**
+ * Creates a new FirebaseMessagingError by extracting the error code, message and other relevant
+ * details from an HTTP error response.
+ *
+ * @param {HttpError} err The HttpError to convert into a Firebase error
+ * @return {FirebaseMessagingError} A Fireabse error that can be returned to the user.
+ */
 export function createFirebaseError(err: HttpError): FirebaseMessagingError {
   if (err.response.isJson()) {
     // For JSON responses, map the server response to a client-side error.

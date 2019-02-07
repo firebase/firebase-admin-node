@@ -275,11 +275,8 @@ export class Messaging implements FirebaseServiceInterface {
 
   /**
    * Sends all the messages in the given array via Firebase Cloud Messaging. Employs batching to
-   * send the entire list as a single RPC call.
-   *
-   * Compared to the send() method, this method is a significantly more efficient
-   * way to send multiple messages. It also helps avoid potential RPC quota issues that sometimes
-   * arise when making too many invocations of send().
+   * send the entire list as a single RPC call. Compared to the send() method, this method is
+   * significantly more efficient way to send multiple messages.
    *
    * The responses list obtained from the return value corresponds to the order of input messages.
    * An error from this method indicates a total failure -- i.e. none of the messages in the

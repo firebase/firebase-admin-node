@@ -16,7 +16,7 @@
 
 import {FirebaseApp} from '../firebase-app';
 import {
-  HttpMethod, AuthorizedHttpClient, HttpRequestConfig, HttpError, parseHttpResponse, HttpResponse,
+  HttpMethod, AuthorizedHttpClient, HttpRequestConfig, HttpError, HttpResponse,
 } from '../utils/api-request';
 import { createFirebaseError, getErrorCode } from './messaging-errors';
 import { SubRequest, BatchRequestClient } from './batch-request';
