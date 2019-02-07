@@ -31,6 +31,7 @@ import {
 } from '../../../src/utils/api-request';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import {Agent} from 'http';
+import * as zlib from 'zlib';
 
 chai.should();
 chai.use(sinonChai);
@@ -242,6 +243,30 @@ describe('HttpClient', () => {
       expect(resp.headers['content-type']).to.equal('multipart/mixed');
       expect(resp.multipart).to.be.undefined;
       expect(resp.text).to.equal(respData);
+      expect(() => { resp.data; }).to.throw('Error while parsing response data');
+      expect(resp.isJson()).to.be.false;
+    });
+  });
+
+  it('should be fulfilled for a 2xx response with a compressed payload', () => {
+    const deflated: Buffer = zlib.deflateSync('foo bar');
+    const scope = nock('https://' + mockHost)
+      .get(mockPath)
+      .reply(200, deflated, {
+        'content-type': 'text/plain',
+        'content-encoding': 'deflate',
+      });
+    mockedRequests.push(scope);
+    const client = new HttpClient();
+    return client.send({
+      method: 'GET',
+      url: mockUrl,
+    }).then((resp) => {
+      expect(resp.status).to.equal(200);
+      expect(resp.headers['content-type']).to.equal('text/plain');
+      expect(resp.headers['content-encoding']).to.be.undefined;
+      expect(resp.multipart).to.be.undefined;
+      expect(resp.text).to.equal('foo bar');
       expect(() => { resp.data; }).to.throw('Error while parsing response data');
       expect(resp.isJson()).to.be.false;
     });
