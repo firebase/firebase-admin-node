@@ -217,6 +217,50 @@ export class HttpClient {
 }
 
 /**
+ * Parses a full HTTP response message containing both a header and a body.
+ *
+ * @param {string|Buffer} response The HTTP response to be parsed.
+ * @param {HttpRequestConfig} config The request configuration that resulted in the HTTP response.
+ * @return {HttpResponse} An object containing the parsed HTTP status, headers and the body.
+ */
+export function parseHttpResponse(
+  response: string | Buffer, config: HttpRequestConfig): HttpResponse {
+
+  const responseText: string = validator.isBuffer(response)
+    ? response.toString('utf-8') : response as string;
+  const endOfHeaderPos: number = responseText.indexOf('\r\n\r\n');
+  const headerLines: string[] = responseText.substring(0, endOfHeaderPos).split('\r\n');
+
+  const statusLine: string = headerLines[0];
+  const status: string = statusLine.trim().split(/\s/)[1];
+
+  const headers: {[key: string]: string} = {};
+  headerLines.slice(1).forEach((line) => {
+    const colonPos = line.indexOf(':');
+    const name = line.substring(0, colonPos).trim().toLowerCase();
+    const value = line.substring(colonPos + 1).trim();
+    headers[name] = value;
+  });
+
+  let data = responseText.substring(endOfHeaderPos + 4);
+  if (data.endsWith('\n')) {
+    data = data.slice(0, -1);
+  }
+  if (data.endsWith('\r')) {
+    data = data.slice(0, -1);
+  }
+
+  const lowLevelResponse: LowLevelResponse = {
+    status: parseInt(status, 10),
+    headers,
+    data,
+    config,
+    request: null,
+  };
+  return new DefaultHttpResponse(lowLevelResponse);
+}
+
+/**
  * Sends an HTTP request based on the provided configuration. This is a wrapper around the http and https
  * packages of Node.js, providing content processing, timeouts and error handling.
  */
@@ -635,41 +679,4 @@ export class ExponentialBackoffPoller extends EventEmitter {
       clearTimeout(this.repollTimer);
     }
   }
-}
-
-export function parseHttpResponse(
-  response: string | Buffer, config: HttpRequestConfig): HttpResponse {
-
-  const responseText: string = validator.isBuffer(response)
-    ? response.toString('utf-8') : response as string;
-  const endOfHeaderPos: number = responseText.indexOf('\r\n\r\n');
-  const headerLines: string[] = responseText.substring(0, endOfHeaderPos).split('\r\n');
-
-  const statusLine: string = headerLines[0];
-  const status: string = statusLine.trim().split(/\s/)[1];
-
-  const headers: {[key: string]: string} = {};
-  headerLines.slice(1).forEach((line) => {
-    const colonPos = line.indexOf(':');
-    const name = line.substring(0, colonPos).trim().toLowerCase();
-    const value = line.substring(colonPos + 1).trim();
-    headers[name] = value;
-  });
-
-  let data = responseText.substring(endOfHeaderPos + 4);
-  if (data.endsWith('\n')) {
-    data = data.slice(0, -1);
-  }
-  if (data.endsWith('\r')) {
-    data = data.slice(0, -1);
-  }
-
-  const lowLevelResponse: LowLevelResponse = {
-    status: parseInt(status, 10),
-    headers,
-    data,
-    config,
-    request: null,
-  };
-  return new DefaultHttpResponse(lowLevelResponse);
 }

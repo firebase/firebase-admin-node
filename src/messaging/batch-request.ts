@@ -29,12 +29,26 @@ const TEN_SECONDS_IN_MILLIS = 10000;
  */
 export class BatchRequestClient {
 
+  /**
+   * @param {HttpClient} httpClient The client that will be used to make HTTP calls.
+   * @param {string} batchUrl The URL that accepts batch requests.
+   * @param {object=} commonHeaders Optional headers that will be included in all requests.
+   *
+   * @constructor
+   */
   constructor(
     private readonly httpClient: HttpClient,
     private readonly batchUrl: string,
     private readonly commonHeaders?: object) {
   }
 
+  /**
+   * Sends the given array of sub requests as a single batch, and parses the results into an array
+   * of HttpResponse objects.
+   *
+   * @param {SubRequest[]} requests An array of sub requests to send.
+   * @return {Promise<HttpResponse[]>} A promise that resolves when the send operation is complete.
+   */
   public send(requests: SubRequest[]): Promise<HttpResponse[]> {
     const requestHeaders = {
       'Content-Type': `multipart/mixed; boundary=${PART_DELIMITER}`,
