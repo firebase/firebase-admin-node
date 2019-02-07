@@ -54,6 +54,7 @@ export interface HttpResponse {
   readonly text: string;
   /** Response data as a parsed JSON object. */
   readonly data: any;
+  /** For multipart responses, the payloads of individual parts. */
   readonly multipart?: Buffer[];
   /**
    * Indicates if the response content is JSON-formatted or not. If true, data field can be used
@@ -76,34 +77,6 @@ interface LowLevelError extends Error {
   code?: string;
   request?: http.ClientRequest;
   response?: LowLevelResponse;
-}
-
-class MultipartHttpResponse implements HttpResponse {
-
-  public readonly status: number;
-  public readonly headers: any;
-  public readonly multipart: Buffer[];
-
-  constructor(resp: LowLevelResponse) {
-    this.status = resp.status;
-    this.headers = resp.headers;
-    this.multipart = resp.multipart;
-  }
-
-  get text(): string {
-    return Buffer.concat(this.multipart).toString('utf-8');
-  }
-
-  get data(): any {
-    throw new FirebaseAppError(
-      AppErrorCodes.UNABLE_TO_PARSE_RESPONSE,
-      'Unable to parse multipart payload as JSON',
-    );
-  }
-
-  public isJson(): boolean {
-    return false;
-  }
 }
 
 class DefaultHttpResponse implements HttpResponse {
@@ -146,6 +119,37 @@ class DefaultHttpResponse implements HttpResponse {
 
   public isJson(): boolean {
     return typeof this.parsedData !== 'undefined';
+  }
+}
+
+class MultipartHttpResponse implements HttpResponse {
+
+  public readonly status: number;
+  public readonly headers: any;
+  public readonly multipart: Buffer[];
+
+  constructor(resp: LowLevelResponse) {
+    this.status = resp.status;
+    this.headers = resp.headers;
+    this.multipart = resp.multipart;
+  }
+
+  get text(): string {
+    throw new FirebaseAppError(
+      AppErrorCodes.UNABLE_TO_PARSE_RESPONSE,
+      'Unable to parse multipart payload as text',
+    );
+  }
+
+  get data(): any {
+    throw new FirebaseAppError(
+      AppErrorCodes.UNABLE_TO_PARSE_RESPONSE,
+      'Unable to parse multipart payload as JSON',
+    );
+  }
+
+  public isJson(): boolean {
+    return false;
   }
 }
 
@@ -367,7 +371,7 @@ function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
 
 function getMultipartBoundary(headers: http.IncomingHttpHeaders): string {
   const contentType = headers['content-type'];
-  if (!contentType.startsWith('multipart/mixed')) {
+  if (!contentType.startsWith('multipart/')) {
     return null;
   }
 

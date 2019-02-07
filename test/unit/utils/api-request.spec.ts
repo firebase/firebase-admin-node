@@ -94,6 +94,14 @@ describe('HttpClient', () => {
   let mockedRequests: nock.Scope[] = [];
   let transportSpy: sinon.SinonSpy = null;
 
+  const sampleMultipartData = '--boundary\r\n'
+      + 'Content-type: application/json\r\n\r\n'
+      + '{"foo": 1}\r\n'
+      + '--boundary\r\n'
+      + 'Content-type: text/plain\r\n\r\n'
+      + 'foo bar\r\n'
+      + '--boundary--\r\n';
+
   afterEach(() => {
     mockedRequests.forEach((mockedRequest) => mockedRequest.done());
     mockedRequests = [];
@@ -120,6 +128,7 @@ describe('HttpClient', () => {
       expect(resp.headers['content-type']).to.equal('application/json');
       expect(resp.text).to.equal(JSON.stringify(respData));
       expect(resp.data).to.deep.equal(respData);
+      expect(resp.multipart).to.be.undefined;
       expect(resp.isJson()).to.be.true;
     });
   });
@@ -139,6 +148,99 @@ describe('HttpClient', () => {
     }).then((resp) => {
       expect(resp.status).to.equal(200);
       expect(resp.headers['content-type']).to.equal('text/plain');
+      expect(resp.text).to.equal(respData);
+      expect(() => { resp.data; }).to.throw('Error while parsing response data');
+      expect(resp.multipart).to.be.undefined;
+      expect(resp.isJson()).to.be.false;
+    });
+  });
+
+  it('should be fulfilled for a 2xx response with an empty multipart payload', () => {
+    const scope = nock('https://' + mockHost)
+      .get(mockPath)
+      .reply(200, '--boundary--\r\n', {
+        'content-type': 'multipart/mixed; boundary=boundary',
+      });
+    mockedRequests.push(scope);
+    const client = new HttpClient();
+    return client.send({
+      method: 'GET',
+      url: mockUrl,
+    }).then((resp) => {
+      expect(resp.status).to.equal(200);
+      expect(resp.headers['content-type']).to.equal('multipart/mixed; boundary=boundary');
+      expect(resp.multipart).to.not.be.undefined;
+      expect(resp.multipart.length).to.equal(0);
+      expect(() => { resp.text; }).to.throw('Unable to parse multipart payload as text');
+      expect(() => { resp.data; }).to.throw('Unable to parse multipart payload as JSON');
+      expect(resp.isJson()).to.be.false;
+    });
+  });
+
+  it('should be fulfilled for a 2xx response with a multipart payload', () => {
+    const scope = nock('https://' + mockHost)
+      .get(mockPath)
+      .reply(200, sampleMultipartData, {
+        'content-type': 'multipart/mixed; boundary=boundary',
+      });
+    mockedRequests.push(scope);
+    const client = new HttpClient();
+    return client.send({
+      method: 'GET',
+      url: mockUrl,
+    }).then((resp) => {
+      expect(resp.status).to.equal(200);
+      expect(resp.headers['content-type']).to.equal('multipart/mixed; boundary=boundary');
+      expect(resp.multipart).to.not.be.undefined;
+      expect(resp.multipart.length).to.equal(2);
+      expect(resp.multipart[0].toString('utf-8')).to.equal('{"foo": 1}');
+      expect(resp.multipart[1].toString('utf-8')).to.equal('foo bar');
+      expect(() => { resp.text; }).to.throw('Unable to parse multipart payload as text');
+      expect(() => { resp.data; }).to.throw('Unable to parse multipart payload as JSON');
+      expect(resp.isJson()).to.be.false;
+    });
+  });
+
+  it('should be fulfilled for a 2xx response with any multipart payload', () => {
+    const scope = nock('https://' + mockHost)
+      .get(mockPath)
+      .reply(200, sampleMultipartData, {
+        'content-type': 'multipart/something; boundary=boundary',
+      });
+    mockedRequests.push(scope);
+    const client = new HttpClient();
+    return client.send({
+      method: 'GET',
+      url: mockUrl,
+    }).then((resp) => {
+      expect(resp.status).to.equal(200);
+      expect(resp.headers['content-type']).to.equal('multipart/something; boundary=boundary');
+      expect(resp.multipart).to.not.be.undefined;
+      expect(resp.multipart.length).to.equal(2);
+      expect(resp.multipart[0].toString('utf-8')).to.equal('{"foo": 1}');
+      expect(resp.multipart[1].toString('utf-8')).to.equal('foo bar');
+      expect(() => { resp.text; }).to.throw('Unable to parse multipart payload as text');
+      expect(() => { resp.data; }).to.throw('Unable to parse multipart payload as JSON');
+      expect(resp.isJson()).to.be.false;
+    });
+  });
+
+  it('should handle as a text response when boundary not present', () => {
+    const respData = 'foo bar';
+    const scope = nock('https://' + mockHost)
+      .get(mockPath)
+      .reply(200, respData, {
+        'content-type': 'multipart/mixed',
+      });
+    mockedRequests.push(scope);
+    const client = new HttpClient();
+    return client.send({
+      method: 'GET',
+      url: mockUrl,
+    }).then((resp) => {
+      expect(resp.status).to.equal(200);
+      expect(resp.headers['content-type']).to.equal('multipart/mixed');
+      expect(resp.multipart).to.be.undefined;
       expect(resp.text).to.equal(respData);
       expect(() => { resp.data; }).to.throw('Error while parsing response data');
       expect(resp.isJson()).to.be.false;
@@ -352,6 +454,32 @@ describe('HttpClient', () => {
     });
   });
 
+  it('should fail for an error response with a multipart payload', () => {
+    const scope = nock('https://' + mockHost)
+      .get(mockPath)
+      .reply(500, sampleMultipartData, {
+        'content-type': 'multipart/mixed; boundary=boundary',
+      });
+    mockedRequests.push(scope);
+    const client = new HttpClient();
+    return client.send({
+      method: 'GET',
+      url: mockUrl,
+    }).catch((err: HttpError) => {
+      expect(err.message).to.equal('Server responded with status 500.');
+      const resp = err.response;
+      expect(resp.status).to.equal(500);
+      expect(resp.headers['content-type']).to.equal('multipart/mixed; boundary=boundary');
+      expect(resp.multipart).to.not.be.undefined;
+      expect(resp.multipart.length).to.equal(2);
+      expect(resp.multipart[0].toString('utf-8')).to.equal('{"foo": 1}');
+      expect(resp.multipart[1].toString('utf-8')).to.equal('foo bar');
+      expect(() => { resp.text; }).to.throw('Unable to parse multipart payload as text');
+      expect(() => { resp.data; }).to.throw('Unable to parse multipart payload as JSON');
+      expect(resp.isJson()).to.be.false;
+    });
+  });
+
   it('should fail with a FirebaseAppError for a network error', () => {
     mockedRequests.push(mockRequestWithError({message: 'test error', code: 'AWFUL_ERROR'}));
     const client = new HttpClient();
@@ -428,6 +556,51 @@ describe('HttpClient', () => {
     }).then((resp) => {
       expect(resp.status).to.equal(200);
       expect(resp.data).to.deep.equal(respData);
+    });
+  });
+
+  it('should reject if the request payload is invalid', () => {
+    const client = new HttpClient();
+    const err = 'Error while making request: Request data must be a string, a Buffer '
+     + 'or a json serializable object';
+    return client.send({
+      method: 'POST',
+      url: mockUrl,
+      data: 1 as any,
+    }).should.eventually.be.rejectedWith(err).and.have.property('code', 'app/network-error');
+  });
+
+  it('should use the port 80 for http URLs', () => {
+    const respData = {foo: 'bar'};
+    const scope = nock('http://' + mockHost + ':80')
+      .get('/')
+      .reply(200, respData, {
+        'content-type': 'application/json',
+      });
+    mockedRequests.push(scope);
+    const client = new HttpClient();
+    return client.send({
+      method: 'GET',
+      url: 'http://' + mockHost,
+    }).then((resp) => {
+      expect(resp.status).to.equal(200);
+    });
+  });
+
+  it('should use the port specified in the URL', () => {
+    const respData = {foo: 'bar'};
+    const scope = nock('https://' + mockHost + ':8080')
+      .get('/')
+      .reply(200, respData, {
+        'content-type': 'application/json',
+      });
+    mockedRequests.push(scope);
+    const client = new HttpClient();
+    return client.send({
+      method: 'GET',
+      url: 'https://' + mockHost + ':8080',
+    }).then((resp) => {
+      expect(resp.status).to.equal(200);
     });
   });
 });
