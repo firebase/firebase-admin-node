@@ -22,7 +22,7 @@ import http = require('http');
 import https = require('https');
 import url = require('url');
 import {EventEmitter} from 'events';
-import * as stream from 'stream';
+import {Readable} from 'stream';
 import * as zlibmod from 'zlib';
 
 /** Http method type definition. */
@@ -285,7 +285,7 @@ function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
         return;
       }
       // Uncompress the response body transparently if required.
-      let respStream: stream.Readable = res;
+      let respStream: Readable = res;
       const encodings = ['gzip', 'compress', 'deflate'];
       if (encodings.indexOf(res.headers['content-encoding']) !== -1) {
         // Add the unzipper to the body stream processing pipeline.
@@ -639,12 +639,35 @@ export class ExponentialBackoffPoller extends EventEmitter {
 
 export function parseHttpResponse(
   response: string | Buffer, config: HttpRequestConfig): HttpResponse {
-  const httpMessageParser = require('http-message-parser');
-  const parsedMessage = httpMessageParser(response);
+
+  const responseText: string = validator.isBuffer(response)
+    ? response.toString('utf-8') : response as string;
+  const endOfHeaderPos: number = responseText.indexOf('\r\n\r\n');
+  const headerLines: string[] = responseText.substring(0, endOfHeaderPos).split('\r\n');
+
+  const statusLine: string = headerLines[0];
+  const status: string = statusLine.trim().split(/\s/)[1];
+
+  const headers: {[key: string]: string} = {};
+  headerLines.slice(1).forEach((line) => {
+    const colonPos = line.indexOf(':');
+    const name = line.substring(0, colonPos).trim().toLowerCase();
+    const value = line.substring(colonPos + 1).trim();
+    headers[name] = value;
+  });
+
+  let data = responseText.substring(endOfHeaderPos + 4);
+  if (data.endsWith('\n')) {
+    data = data.slice(0, -1);
+  }
+  if (data.endsWith('\r')) {
+    data = data.slice(0, -1);
+  }
+
   const lowLevelResponse: LowLevelResponse = {
-    status: parsedMessage.statusCode,
-    headers: parsedMessage.headers,
-    data: parsedMessage.body && parsedMessage.body.toString(),
+    status: parseInt(status, 10),
+    headers,
+    data,
     config,
     request: null,
   };

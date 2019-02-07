@@ -27,7 +27,7 @@ import * as mocks from '../../resources/mocks';
 
 import {FirebaseApp} from '../../../src/firebase-app';
 import {
-  ApiSettings, HttpClient, HttpError, AuthorizedHttpClient, ApiCallbackFunction, HttpRequestConfig,
+  ApiSettings, HttpClient, HttpError, AuthorizedHttpClient, ApiCallbackFunction, HttpRequestConfig, parseHttpResponse,
 } from '../../../src/utils/api-request';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import {Agent} from 'http';
@@ -877,5 +877,95 @@ describe('ApiSettings', () => {
         expect(apiSettings.getResponseValidator()).to.equal(responseValidator);
       });
     });
+  });
+});
+
+describe('parseHttpResponse()', () => {
+  const config: HttpRequestConfig = {
+    method: 'GET',
+    url: 'https://example.com',
+  };
+
+  it('should parse a successful response with json content', () => {
+    const text = 'HTTP/1.1 200 OK\r\n'
+      + 'Content-type: application/json\r\n'
+      + 'Date: Thu, 07 Feb 2019 19:20:34 GMT\r\n'
+      + '\r\n'
+      + '{"foo": 1}';
+
+    const response = parseHttpResponse(text, config);
+
+    expect(response.status).to.equal(200);
+    expect(Object.keys(response.headers).length).to.equal(2);
+    expect(response.headers).to.have.property('content-type', 'application/json');
+    expect(response.headers).to.have.property('date', 'Thu, 07 Feb 2019 19:20:34 GMT');
+    expect(response.isJson()).to.be.true;
+    expect(response.data).to.deep.equal({foo: 1});
+    expect(response.text).to.equal('{"foo": 1}');
+  });
+
+  it('should parse a error response with json content', () => {
+    const text = 'HTTP/1.1 400 Bad Request\r\n'
+      + 'Content-type: application/json\r\n'
+      + 'Date: Thu, 07 Feb 2019 19:20:34 GMT\r\n'
+      + '\r\n'
+      + '{"foo": 1}';
+
+    const response = parseHttpResponse(text, config);
+
+    expect(response.status).to.equal(400);
+    expect(Object.keys(response.headers).length).to.equal(2);
+    expect(response.headers).to.have.property('content-type', 'application/json');
+    expect(response.headers).to.have.property('date', 'Thu, 07 Feb 2019 19:20:34 GMT');
+    expect(response.isJson()).to.be.true;
+    expect(response.data).to.deep.equal({foo: 1});
+    expect(response.text).to.equal('{"foo": 1}');
+  });
+
+  it('should parse a response with text content', () => {
+    const text = 'HTTP/1.1 200 OK\r\n'
+      + 'Content-type: text/plain\r\n'
+      + 'Date: Thu, 07 Feb 2019 19:20:34 GMT\r\n'
+      + '\r\n'
+      + 'foo bar';
+
+    const response = parseHttpResponse(text, config);
+
+    expect(response.status).to.equal(200);
+    expect(Object.keys(response.headers).length).to.equal(2);
+    expect(response.headers).to.have.property('content-type', 'text/plain');
+    expect(response.headers).to.have.property('date', 'Thu, 07 Feb 2019 19:20:34 GMT');
+    expect(response.isJson()).to.be.false;
+    expect(response.text).to.equal('foo bar');
+  });
+
+  it('should parse given a buffer', () => {
+    const text = 'HTTP/1.1 200 OK\r\n'
+      + 'Content-type: text/plain\r\n'
+      + 'Date: Thu, 07 Feb 2019 19:20:34 GMT\r\n'
+      + '\r\n'
+      + 'foo bar';
+
+    const response = parseHttpResponse(Buffer.from(text), config);
+
+    expect(response.status).to.equal(200);
+    expect(Object.keys(response.headers).length).to.equal(2);
+    expect(response.headers).to.have.property('content-type', 'text/plain');
+    expect(response.headers).to.have.property('date', 'Thu, 07 Feb 2019 19:20:34 GMT');
+    expect(response.isJson()).to.be.false;
+    expect(response.text).to.equal('foo bar');
+  });
+
+  it('should remove any trailing white space in the payload', () => {
+    const text = 'HTTP/1.1 200 OK\r\n'
+      + 'Content-type: text/plain\r\n'
+      + 'Date: Thu, 07 Feb 2019 19:20:34 GMT\r\n'
+      + '\r\n'
+      + 'foo bar\r\n';
+
+    const response = parseHttpResponse(text, config);
+
+    expect(response.isJson()).to.be.false;
+    expect(response.text).to.equal('foo bar');
   });
 });
