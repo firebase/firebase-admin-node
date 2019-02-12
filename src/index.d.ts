@@ -610,7 +610,7 @@ declare namespace admin.messaging {
       messages: Array<admin.messaging.Message>,
       dryRun?: boolean
     ): Promise<admin.messaging.BatchResponse>;
-    sendMulticase(
+    sendMulticast(
       message: admin.messaging.MulticastMessage,
       dryRun?: boolean
     ): Promise<admin.messaging.BatchResponse>;

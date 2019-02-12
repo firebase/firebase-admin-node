@@ -1,6 +1,9 @@
 # Unreleased
 
--
+- [added] A new `messaging.sendAll()` API for sending multiple messages as a
+  single batch.
+- [added] A new `messaging.sendMulticast()` API for sending a message to
+  multiple device registration tokens.
 
 # v7.0.0
 
