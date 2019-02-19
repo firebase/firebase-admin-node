@@ -1,6 +1,7 @@
 # Unreleased
 
--
+- [fixed] Improved typings of `UpdateRequest` interface to support deletion of
+  properties.
 
 # v7.0.0
 
