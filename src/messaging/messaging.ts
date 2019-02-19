@@ -282,7 +282,7 @@ export class Messaging implements FirebaseServiceInterface {
    * An error from this method indicates a total failure -- i.e. none of the messages in the
    * list could be sent. Partial failures are indicated by a BatchResponse return value.
    *
-   * @param {Message[]} messages A non-empty array containing up to 1000 messages.
+   * @param {Message[]} messages A non-empty array containing up to 100 messages.
    * @param {boolean=} dryRun Whether to send the message in the dry-run (validation only) mode.
    *
    * @return {Promise<BatchResponse>} A Promise fulfilled with an object representing the result
@@ -294,10 +294,10 @@ export class Messaging implements FirebaseServiceInterface {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT, 'messages must be a non-empty array');
     }
-    if (copy.length > 1000) {
+    if (copy.length > 100) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT,
-        'messages list must not contain more than 1000 items');
+        'messages list must not contain more than 100 items');
     }
     if (typeof dryRun !== 'undefined' && !validator.isBoolean(dryRun)) {
       throw new FirebaseMessagingError(
