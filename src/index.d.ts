@@ -121,13 +121,13 @@ declare namespace admin.auth {
   }
 
   interface UpdateRequest {
-    displayName?: string;
+    disabled?: boolean;
+    displayName?: string | null;
     email?: string;
     emailVerified?: boolean;
-    phoneNumber?: string;
-    photoURL?: string;
-    disabled?: boolean;
     password?: string;
+    phoneNumber?: string | null;
+    photoURL?: string | null;
   }
 
   interface CreateRequest extends UpdateRequest {
