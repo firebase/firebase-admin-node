@@ -39,6 +39,8 @@ const FCM_TOPIC_MANAGEMENT_HOST = 'iid.googleapis.com';
 const FCM_TOPIC_MANAGEMENT_ADD_PATH = '/iid/v1:batchAdd';
 const FCM_TOPIC_MANAGEMENT_REMOVE_PATH = '/iid/v1:batchRemove';
 
+// Maximum messages that can be included in a batch request.
+const FCM_MAX_BATCH_SIZE = 100;
 
 // Key renames for the messaging notification payload object.
 const CAMELCASED_NOTIFICATION_PAYLOAD_KEYS_MAP = {
@@ -294,10 +296,10 @@ export class Messaging implements FirebaseServiceInterface {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT, 'messages must be a non-empty array');
     }
-    if (copy.length > 100) {
+    if (copy.length > FCM_MAX_BATCH_SIZE) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT,
-        'messages list must not contain more than 100 items');
+        `messages list must not contain more than ${FCM_MAX_BATCH_SIZE} items`);
     }
     if (typeof dryRun !== 'undefined' && !validator.isBoolean(dryRun)) {
       throw new FirebaseMessagingError(
