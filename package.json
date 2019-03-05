@@ -10,6 +10,7 @@
   },
   "scripts": {
     "build": "gulp build",
+    "prepare": "npm run build",
     "lint": "run-p lint:src lint:unit lint:integration",
     "test": "run-s lint test:unit",
     "integration": "run-s build test:integration",
