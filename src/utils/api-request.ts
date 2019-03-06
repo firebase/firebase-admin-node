@@ -264,136 +264,169 @@ export function parseHttpResponse(
   return new DefaultHttpResponse(lowLevelResponse);
 }
 
-/**
- * Sends an HTTP request based on the provided configuration. This is a wrapper around the http and https
- * packages of Node.js, providing content processing, timeouts and error handling.
- */
-function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
-  return new Promise((resolve, reject) => {
-    let data: Buffer;
-    const headers = Object.assign({}, config.headers);
-    let fullUrl: string = config.url;
-    if (config.data) {
-      // GET and HEAD do not support body in request.
-      if (config.method === 'GET' || config.method === 'HEAD') {
-        if (!validator.isObject(config.data)) {
-          return reject(createError(
-            `${config.method} requests cannot have a body`,
-            config,
-          ));
-        }
+function buildRequestOptions(config: HttpRequestConfig): https.RequestOptions {
+  let fullUrl: string = config.url;
+  if (config.data) {
+    // GET and HEAD do not support body in request.
+    if (config.method === 'GET' || config.method === 'HEAD') {
+      if (!validator.isObject(config.data)) {
+        throw new Error(`${config.method} requests cannot have a body`);
+      }
 
-        // Parse URL and append data to query string.
-        const parsedUrl = new url.URL(fullUrl);
-        const dataObj = config.data as {[key: string]: string};
-        for (const key in dataObj) {
-          if (dataObj.hasOwnProperty(key)) {
-            parsedUrl.searchParams.append(key, dataObj[key]);
-          }
+      // Parse URL and append data to query string.
+      const parsedUrl = new url.URL(fullUrl);
+      const dataObj = config.data as {[key: string]: string};
+      for (const key in dataObj) {
+        if (dataObj.hasOwnProperty(key)) {
+          parsedUrl.searchParams.append(key, dataObj[key]);
         }
-        fullUrl = parsedUrl.toString();
-      } else if (validator.isBuffer(config.data)) {
-        data = config.data as Buffer;
-      } else if (validator.isObject(config.data)) {
-        data = Buffer.from(JSON.stringify(config.data), 'utf-8');
-        if (typeof headers['Content-Type'] === 'undefined') {
-          headers['Content-Type'] = 'application/json;charset=utf-8';
-        }
-      } else if (validator.isString(config.data)) {
-        data = Buffer.from(config.data as string, 'utf-8');
-      } else {
-        return reject(createError(
-          'Request data must be a string, a Buffer or a json serializable object',
-          config,
-        ));
       }
-      // Add Content-Length header if data exists
-      if (data) {
-        headers['Content-Length'] = data.length.toString();
-      }
+      fullUrl = parsedUrl.toString();
     }
-    const parsed = url.parse(fullUrl);
-    const protocol = parsed.protocol || 'https:';
+  }
+
+  const parsed = url.parse(fullUrl);
+  const protocol = parsed.protocol || 'https:';
+  let port: string = parsed.port;
+  if (!port) {
     const isHttps = protocol === 'https:';
-    let port: string = parsed.port;
-    if (!port) {
-      port = isHttps ? '443' : '80';
+    port = isHttps ? '443' : '80';
+  }
+
+  return {
+    protocol,
+    hostname: parsed.hostname,
+    port,
+    path: parsed.path,
+    method: config.method,
+    agent: config.httpAgent,
+    headers: Object.assign({}, config.headers),
+  };
+}
+
+function buildRequestBody(config: HttpRequestConfig, headers: http.OutgoingHttpHeaders): Buffer {
+  let data: Buffer;
+  if (!config.data || config.method === 'GET' || config.method === 'HEAD') {
+    return data;
+  }
+
+  if (validator.isBuffer(config.data)) {
+    data = config.data as Buffer;
+  } else if (validator.isObject(config.data)) {
+    data = Buffer.from(JSON.stringify(config.data), 'utf-8');
+    if (typeof headers['Content-Type'] === 'undefined') {
+      headers['Content-Type'] = 'application/json;charset=utf-8';
     }
-    const options: https.RequestOptions = {
-      hostname: parsed.hostname,
-      port,
-      path: parsed.path,
-      method: config.method,
-      agent: config.httpAgent,
-      headers,
-    };
-    const transport: any = isHttps ? https : http;
-    const req: http.ClientRequest = transport.request(options, (res: http.IncomingMessage) => {
+  } else if (validator.isString(config.data)) {
+    data = Buffer.from(config.data as string, 'utf-8');
+  } else {
+    throw new Error('Request data must be a string, a Buffer or a json serializable object');
+  }
+
+  // Add Content-Length header if data exists
+  if (data) {
+    headers['Content-Length'] = data.length.toString();
+  }
+  return data;
+}
+
+function uncompressResponse(res: http.IncomingMessage): Readable {
+  // Uncompress the response body transparently if required.
+  let respStream: Readable = res;
+  const encodings = ['gzip', 'compress', 'deflate'];
+  if (encodings.indexOf(res.headers['content-encoding']) !== -1) {
+    // Add the unzipper to the body stream processing pipeline.
+    const zlib: typeof zlibmod = require('zlib');
+    respStream = respStream.pipe(zlib.createUnzip());
+    // Remove the content-encoding in order to not confuse downstream operations.
+    delete res.headers['content-encoding'];
+  }
+  return respStream;
+}
+
+function handleResponse(
+  res: http.IncomingMessage,
+  req: http.ClientRequest,
+  config: HttpRequestConfig,
+  resolve: (_: any) => void,
+  reject: (_: any) => void,
+  ) {
+
+  if (req.aborted) {
+    return;
+  }
+
+  const respStream: Readable = uncompressResponse(res);
+  const response: LowLevelResponse = {
+    status: res.statusCode,
+    headers: res.headers,
+    request: req,
+    data: undefined,
+    config,
+  };
+  const responseBuffer: Buffer[] = [];
+  const boundary = getMultipartBoundary(res.headers);
+  if (boundary) {
+    const dicer = require('dicer');
+    const multipartParser = new dicer({boundary});
+    multipartParser.on('part', (part: any) => {
+      const tempBuffers: Buffer[] = [];
+
+      part.on('data', (partData: Buffer) => {
+        tempBuffers.push(partData);
+      });
+
+      part.on('end', () => {
+        responseBuffer.push(Buffer.concat(tempBuffers));
+      });
+    });
+
+    multipartParser.on('finish', () => {
+      response.data = null;
+      response.multipart = responseBuffer;
+      finalizeRequest(resolve, reject, response);
+    });
+
+    respStream.pipe(multipartParser);
+
+  } else {
+    respStream.on('data', (chunk: Buffer) => {
+      responseBuffer.push(chunk);
+    });
+
+    respStream.on('error', (err) => {
       if (req.aborted) {
         return;
       }
-      // Uncompress the response body transparently if required.
-      let respStream: Readable = res;
-      const encodings = ['gzip', 'compress', 'deflate'];
-      if (encodings.indexOf(res.headers['content-encoding']) !== -1) {
-        // Add the unzipper to the body stream processing pipeline.
-        const zlib: typeof zlibmod = require('zlib');
-        respStream = respStream.pipe(zlib.createUnzip());
-        // Remove the content-encoding in order to not confuse downstream operations.
-        delete res.headers['content-encoding'];
-      }
+      reject(enhanceError(err, config, null, req));
+    });
 
-      const response: LowLevelResponse = {
-        status: res.statusCode,
-        headers: res.headers,
-        request: req,
-        data: undefined,
-        config,
-      };
+    respStream.on('end', () => {
+      const responseData = Buffer.concat(responseBuffer).toString();
+      response.data = responseData;
+      finalizeRequest(resolve, reject, response);
+    });
+  }
+}
 
-      const responseBuffer: Buffer[] = [];
-      const boundary = getMultipartBoundary(res.headers);
-      if (boundary) {
-        const dicer = require('dicer');
-        const multipartParser = new dicer({boundary});
-        multipartParser.on('part', (part: any) => {
-          const tempBuffers: Buffer[] = [];
+/**
+ * Sends an HTTP request based on the provided configuration. This is a wrapper around the http
+ * and https packages of Node.js, providing content processing, timeouts and error handling.
+ */
+function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
+  return new Promise((resolve, reject) => {
+    let options: https.RequestOptions;
+    let data: Buffer;
+    try {
+      options = buildRequestOptions(config);
+      data = buildRequestBody(config, options.headers);
+    } catch (err) {
+      return reject(createError(err.message, config));
+    }
 
-          part.on('data', (partData: Buffer) => {
-            tempBuffers.push(partData);
-          });
-
-          part.on('end', () => {
-            responseBuffer.push(Buffer.concat(tempBuffers));
-          });
-        });
-
-        multipartParser.on('finish', () => {
-          response.data = null;
-          response.multipart = responseBuffer;
-          finalizeRequest(resolve, reject, response);
-        });
-
-        respStream.pipe(multipartParser);
-
-      } else {
-        respStream.on('data', (chunk: Buffer) => {
-          responseBuffer.push(chunk);
-        });
-
-        respStream.on('error', (err) => {
-          if (req.aborted) {
-            return;
-          }
-          reject(enhanceError(err, config, null, req));
-        });
-
-        respStream.on('end', () => {
-          const responseData = Buffer.concat(responseBuffer).toString();
-          response.data = responseData;
-          finalizeRequest(resolve, reject, response);
-        });
-      }
+    const transport: any = options.protocol === 'https:' ? https : http;
+    const req: http.ClientRequest = transport.request(options, (res: http.IncomingMessage) => {
+      handleResponse(res, req, config, resolve, reject);
     });
 
     // Handle errors
