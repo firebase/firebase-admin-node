@@ -23,7 +23,7 @@ import * as validator from '../utils/validator';
  * details from an HTTP error response.
  *
  * @param {HttpError} err The HttpError to convert into a Firebase error
- * @return {FirebaseMessagingError} A Fireabse error that can be returned to the user.
+ * @return {FirebaseMessagingError} A Firebase error that can be returned to the user.
  */
 export function createFirebaseError(err: HttpError): FirebaseMessagingError {
   if (err.response.isJson()) {

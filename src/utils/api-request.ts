@@ -122,6 +122,10 @@ class DefaultHttpResponse implements HttpResponse {
   }
 }
 
+/**
+ * Represents a multipart HTTP response. Parts that constitute the response body can be accessed
+ * via the multipart getter. Getters for text and data throw errors.
+ */
 class MultipartHttpResponse implements HttpResponse {
 
   public readonly status: number;
@@ -226,8 +230,8 @@ export class HttpClient {
 export function parseHttpResponse(
   response: string | Buffer, config: HttpRequestConfig): HttpResponse {
 
-  const responseText: string = validator.isBuffer(response)
-    ? response.toString('utf-8') : response as string;
+  const responseText: string = validator.isBuffer(response) ?
+    response.toString('utf-8') : response as string;
   const endOfHeaderPos: number = responseText.indexOf('\r\n\r\n');
   const headerLines: string[] = responseText.substring(0, endOfHeaderPos).split('\r\n');
 
@@ -413,6 +417,10 @@ function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
   });
 }
 
+/**
+ * Extracts multipart boundary from the HTTP header. The content-type header of a multipart
+ * response has the form 'multipart/subtype; boundary=string'.
+ */
 function getMultipartBoundary(headers: http.IncomingHttpHeaders): string {
   const contentType = headers['content-type'];
   if (!contentType.startsWith('multipart/')) {
@@ -424,6 +432,7 @@ function getMultipartBoundary(headers: http.IncomingHttpHeaders): string {
   const headerParams = segments.slice(1)
     .map((segment) => segment.trim().split('='))
     .reduce((curr, params) => {
+      // Parse key=value pairs in the content-type header into properties of an object.
       if (params.length === 2) {
         const keyValuePair: {[key: string]: string} = {};
         keyValuePair[params[0]] = params[1];

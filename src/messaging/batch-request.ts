@@ -18,8 +18,17 @@ import {
   HttpClient, HttpRequestConfig, HttpResponse, parseHttpResponse,
 } from '../utils/api-request';
 
-const PART_DELIMITER: string = '__END_OF_PART__';
+const PART_BOUNDARY: string = '__END_OF_PART__';
 const TEN_SECONDS_IN_MILLIS = 10000;
+
+/**
+ * Represents a request that can be sent as part of an HTTP batch request.
+ */
+export interface SubRequest {
+  url: string;
+  body: object;
+  headers?: {[key: string]: any};
+}
 
 /**
  * An HTTP client that can be used to make batch requests. This client is not tied to any service
@@ -51,7 +60,7 @@ export class BatchRequestClient {
    */
   public send(requests: SubRequest[]): Promise<HttpResponse[]> {
     const requestHeaders = {
-      'Content-Type': `multipart/mixed; boundary=${PART_DELIMITER}`,
+      'Content-Type': `multipart/mixed; boundary=${PART_BOUNDARY}`,
     };
     const request: HttpRequestConfig = {
       method: 'POST',
@@ -70,25 +79,26 @@ export class BatchRequestClient {
   private getMultipartPayload(requests: SubRequest[]): Buffer {
     let buffer: string = '';
     requests.forEach((request: SubRequest, idx: number) => {
-      buffer += createPart(request, PART_DELIMITER, idx);
+      buffer += createPart(request, PART_BOUNDARY, idx);
     });
-    buffer += `--${PART_DELIMITER}--\r\n`;
+    buffer += `--${PART_BOUNDARY}--\r\n`;
     return Buffer.from(buffer, 'utf-8');
   }
 }
 
 /**
- * Represents a request that can be sent as part of an HTTP batch request.
+ * Creates a single part in a multipart HTTP request body. The part consists of several headers
+ * followed by the serialized sub request as the body. As per the requirements of the FCM batch
+ * API, sets the content-type header to application/http, and the content-transfer-encoding to
+ * binary.
+ *
+ * @param {SubRequest} request A sub request that will be used to populate the part.
+ * @param {string} boundary Multipart boundary string.
+ * @param {number} idx An index number that is used to set the content-id header.
  */
-export interface SubRequest {
-  url: string;
-  body: object;
-  headers?: {[key: string]: any};
-}
-
-function createPart(request: SubRequest, delim: string, idx: number): string {
+function createPart(request: SubRequest, boundary: string, idx: number): string {
   const serializedRequest: string = serializeSubRequest(request);
-  let part: string = `--${delim}\r\n`;
+  let part: string = `--${boundary}\r\n`;
   part += `Content-Length: ${serializedRequest.length}\r\n`;
   part += 'Content-Type: application/http\r\n';
   part += `content-id: ${idx + 1}\r\n`;
@@ -98,6 +108,13 @@ function createPart(request: SubRequest, delim: string, idx: number): string {
   return part;
 }
 
+/**
+ * Serializes a sub request into a string that can be embedded in a multipart HTTP request. The
+ * format of the string is the wire format of a typical HTTP request, consisting of a header and a
+ * body.
+ *
+ * @param request {SubRequest} The sub request to be serialized.
+ */
 function serializeSubRequest(request: SubRequest): string {
   const requestBody: string = JSON.stringify(request.body);
   let messagePayload: string = `POST ${request.url} HTTP/1.1\r\n`;

@@ -4,6 +4,8 @@
   single batch.
 - [added] A new `messaging.sendMulticast()` API for sending a message to
   multiple device registration tokens.
+- [fixed] Improved typings of `UpdateRequest` interface to support deletion of
+  properties.
 
 # v7.0.0
 

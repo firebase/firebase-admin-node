@@ -545,14 +545,14 @@ describe('Messaging', () => {
       }).to.throw('messages must be a non-empty array');
     });
 
-    it('should throw when called with more than 1000 messages', () => {
+    it('should throw when called with more than 100 messages', () => {
       const messages: Message[] = [];
-      for (let i = 0; i < 1001; i++) {
+      for (let i = 0; i < 101; i++) {
         messages.push(validMessage);
       }
       expect(() => {
         messaging.sendAll(messages);
-      }).to.throw('messages list must not contain more than 1000 items');
+      }).to.throw('messages list must not contain more than 100 items');
     });
 
     it('should throw when a message is invalid', () => {
@@ -786,14 +786,14 @@ describe('Messaging', () => {
       }).to.throw('tokens must be a non-empty array');
     });
 
-    it('should throw when called with more than 1000 messages', () => {
+    it('should throw when called with more than 100 messages', () => {
       const tokens: string[] = [];
-      for (let i = 0; i < 1001; i++) {
+      for (let i = 0; i < 101; i++) {
         tokens.push(`token${i}`);
       }
       expect(() => {
         messaging.sendMulticast({tokens});
-      }).to.throw('tokens list must not contain more than 1000 items');
+      }).to.throw('tokens list must not contain more than 100 items');
     });
 
     const invalidDryRun = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];

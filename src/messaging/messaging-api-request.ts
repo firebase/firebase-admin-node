@@ -91,7 +91,7 @@ export class FirebaseMessagingRequestHandler {
 
   /**
    * Sends the given array of sub requests as a single batch to FCM, and parses the result into
-   * an BatchResponse object.
+   * a BatchResponse object.
    *
    * @param {SubRequest[]} requests An array of sub requests to send.
    * @return {Promise<BatchResponse>} A promise that resolves when the send operation is complete.

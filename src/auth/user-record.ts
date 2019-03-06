@@ -38,13 +38,13 @@ function parseDate(time: any): string {
 
 /** Parameters for update user operation */
 export interface UpdateRequest {
-  displayName?: string;
+  disabled?: boolean;
+  displayName?: string | null;
   email?: string;
   emailVerified?: boolean;
-  phoneNumber?: string;
-  photoURL?: string;
-  disabled?: boolean;
   password?: string;
+  phoneNumber?: string | null;
+  photoURL?: string | null;
 }
 
 /** Parameters for create user operation */
