@@ -264,70 +264,205 @@ export function parseHttpResponse(
   return new DefaultHttpResponse(lowLevelResponse);
 }
 
-function buildRequestOptions(config: HttpRequestConfig): https.RequestOptions {
-  let fullUrl: string = config.url;
-  if (config.data) {
-    // GET and HEAD do not support body in request.
-    if (config.method === 'GET' || config.method === 'HEAD') {
-      if (!validator.isObject(config.data)) {
-        throw new Error(`${config.method} requests cannot have a body`);
-      }
+class AsyncHttpCall {
 
-      // Parse URL and append data to query string.
-      const parsedUrl = new url.URL(fullUrl);
-      const dataObj = config.data as {[key: string]: string};
-      for (const key in dataObj) {
-        if (dataObj.hasOwnProperty(key)) {
-          parsedUrl.searchParams.append(key, dataObj[key]);
-        }
-      }
-      fullUrl = parsedUrl.toString();
+  private readonly options: https.RequestOptions;
+  private readonly entity: Buffer;
+  private readonly promise: Promise<LowLevelResponse>;
+
+  private resolve: (_: any) => void;
+  private reject: (_: any) => void;
+
+  constructor(private readonly config: HttpRequestConfig) {
+    try {
+      this.options = this.buildRequestOptions();
+      this.entity = this.buildEntity(this.options.headers);
+      this.promise = new Promise((resolve, reject) => {
+        this.resolve = resolve;
+        this.reject = reject;
+        this.doExecute();
+      });
+    } catch (err) {
+      this.promise = Promise.reject(createError(err.message, config));
     }
   }
 
-  const parsed = url.parse(fullUrl);
-  const protocol = parsed.protocol || 'https:';
-  let port: string = parsed.port;
-  if (!port) {
-    const isHttps = protocol === 'https:';
-    port = isHttps ? '443' : '80';
+  public execute(): Promise<LowLevelResponse> {
+    return this.promise;
   }
 
-  return {
-    protocol,
-    hostname: parsed.hostname,
-    port,
-    path: parsed.path,
-    method: config.method,
-    agent: config.httpAgent,
-    headers: Object.assign({}, config.headers),
-  };
-}
+  private doExecute() {
+    const transport: any = this.options.protocol === 'https:' ? https : http;
+    const req: http.ClientRequest = transport.request(this.options, (res: http.IncomingMessage) => {
+      this.handleResponse(res, req);
+    });
 
-function buildRequestBody(config: HttpRequestConfig, headers: http.OutgoingHttpHeaders): Buffer {
-  let data: Buffer;
-  if (!config.data || config.method === 'GET' || config.method === 'HEAD') {
+    // Handle errors
+    req.on('error', (err) => {
+      if (req.aborted) {
+        return;
+      }
+      this.reject(enhanceError(err, this.config, null, req));
+    });
+
+    if (this.config.timeout) {
+      // Listen to timeouts and throw an error.
+      req.setTimeout(this.config.timeout, () => {
+        req.abort();
+        this.reject(createError(
+          `timeout of ${this.config.timeout}ms exceeded`, this.config, 'ETIMEDOUT', req));
+      });
+    }
+
+    // Send the request
+    req.end(this.entity);
+  }
+
+  private handleResponse(res: http.IncomingMessage, req: http.ClientRequest) {
+    if (req.aborted) {
+      return;
+    }
+
+    const response: LowLevelResponse = {
+      status: res.statusCode,
+      headers: res.headers,
+      request: req,
+      data: undefined,
+      config: this.config,
+    };
+    const boundary = getMultipartBoundary(res.headers);
+    const respStream: Readable = uncompressResponse(res);
+
+    if (boundary) {
+      this.handleMultipartResponse(response, respStream, boundary);
+    } else {
+      this.handleRegularResponse(response, respStream);
+    }
+  }
+
+  private handleMultipartResponse(
+    response: LowLevelResponse, respStream: Readable, boundary: string) {
+
+    const dicer = require('dicer');
+    const multipartParser = new dicer({boundary});
+    const responseBuffer: Buffer[] = [];
+    multipartParser.on('part', (part: any) => {
+      const tempBuffers: Buffer[] = [];
+
+      part.on('data', (partData: Buffer) => {
+        tempBuffers.push(partData);
+      });
+
+      part.on('end', () => {
+        responseBuffer.push(Buffer.concat(tempBuffers));
+      });
+    });
+
+    multipartParser.on('finish', () => {
+      response.data = null;
+      response.multipart = responseBuffer;
+      finalizeRequest(this.resolve, this.reject, response);
+    });
+
+    respStream.pipe(multipartParser);
+  }
+
+  private handleRegularResponse(response: LowLevelResponse, respStream: Readable) {
+    const responseBuffer: Buffer[] = [];
+    respStream.on('data', (chunk: Buffer) => {
+      responseBuffer.push(chunk);
+    });
+
+    respStream.on('error', (err) => {
+      if (response.request.aborted) {
+        return;
+      }
+      this.reject(enhanceError(err, this.config, null, response.request));
+    });
+
+    respStream.on('end', () => {
+      const responseData = Buffer.concat(responseBuffer).toString();
+      response.data = responseData;
+      finalizeRequest(this.resolve, this.reject, response);
+    });
+  }
+
+  private buildRequestOptions(): https.RequestOptions {
+    const parsed = this.buildUrl();
+    const protocol = parsed.protocol || 'https:';
+    let port: string = parsed.port;
+    if (!port) {
+      const isHttps = protocol === 'https:';
+      port = isHttps ? '443' : '80';
+    }
+
+    return {
+      protocol,
+      hostname: parsed.hostname,
+      port,
+      path: parsed.path,
+      method: this.config.method,
+      agent: this.config.httpAgent,
+      headers: Object.assign({}, this.config.headers),
+    };
+  }
+
+  private buildEntity(headers: http.OutgoingHttpHeaders): Buffer {
+    let data: Buffer;
+    if (!this.hasEntity() || !this.isEntityEnclosingRequest()) {
+      return data;
+    }
+
+    if (validator.isBuffer(this.config.data)) {
+      data = this.config.data as Buffer;
+    } else if (validator.isObject(this.config.data)) {
+      data = Buffer.from(JSON.stringify(this.config.data), 'utf-8');
+      if (typeof headers['Content-Type'] === 'undefined') {
+        headers['Content-Type'] = 'application/json;charset=utf-8';
+      }
+    } else if (validator.isString(this.config.data)) {
+      data = Buffer.from(this.config.data as string, 'utf-8');
+    } else {
+      throw new Error('Request data must be a string, a Buffer or a json serializable object');
+    }
+
+    // Add Content-Length header if data exists
+    if (data) {
+      headers['Content-Length'] = data.length.toString();
+    }
     return data;
   }
 
-  if (validator.isBuffer(config.data)) {
-    data = config.data as Buffer;
-  } else if (validator.isObject(config.data)) {
-    data = Buffer.from(JSON.stringify(config.data), 'utf-8');
-    if (typeof headers['Content-Type'] === 'undefined') {
-      headers['Content-Type'] = 'application/json;charset=utf-8';
+  private buildUrl(): url.UrlWithStringQuery {
+    const fullUrl: string = this.config.url;
+    if (!this.hasEntity() || this.isEntityEnclosingRequest()) {
+      return url.parse(fullUrl);
     }
-  } else if (validator.isString(config.data)) {
-    data = Buffer.from(config.data as string, 'utf-8');
-  } else {
-    throw new Error('Request data must be a string, a Buffer or a json serializable object');
+
+    if (!validator.isObject(this.config.data)) {
+      throw new Error(`${this.config.method} requests cannot have a body`);
+    }
+
+    // Parse URL and append data to query string.
+    const parsedUrl = new url.URL(fullUrl);
+    const dataObj = this.config.data as {[key: string]: string};
+    for (const key in dataObj) {
+      if (dataObj.hasOwnProperty(key)) {
+        parsedUrl.searchParams.append(key, dataObj[key]);
+      }
+    }
+
+    return url.parse(parsedUrl.toString());
   }
 
-  // Add Content-Length header if data exists
-  if (data) {
-    headers['Content-Length'] = data.length.toString();
+  private isEntityEnclosingRequest(): boolean {
+    // GET and HEAD do not support body in request.
+    return this.config.method !== 'GET' && this.config.method !== 'HEAD';
   }
-  return data;
+
+  private hasEntity(): boolean {
+    return typeof this.config.data !== 'undefined';
+  }
 }
 
 function uncompressResponse(res: http.IncomingMessage): Readable {
@@ -344,110 +479,12 @@ function uncompressResponse(res: http.IncomingMessage): Readable {
   return respStream;
 }
 
-function handleResponse(
-  res: http.IncomingMessage,
-  req: http.ClientRequest,
-  config: HttpRequestConfig,
-  resolve: (_: any) => void,
-  reject: (_: any) => void,
-  ) {
-
-  if (req.aborted) {
-    return;
-  }
-
-  const respStream: Readable = uncompressResponse(res);
-  const response: LowLevelResponse = {
-    status: res.statusCode,
-    headers: res.headers,
-    request: req,
-    data: undefined,
-    config,
-  };
-  const responseBuffer: Buffer[] = [];
-  const boundary = getMultipartBoundary(res.headers);
-  if (boundary) {
-    const dicer = require('dicer');
-    const multipartParser = new dicer({boundary});
-    multipartParser.on('part', (part: any) => {
-      const tempBuffers: Buffer[] = [];
-
-      part.on('data', (partData: Buffer) => {
-        tempBuffers.push(partData);
-      });
-
-      part.on('end', () => {
-        responseBuffer.push(Buffer.concat(tempBuffers));
-      });
-    });
-
-    multipartParser.on('finish', () => {
-      response.data = null;
-      response.multipart = responseBuffer;
-      finalizeRequest(resolve, reject, response);
-    });
-
-    respStream.pipe(multipartParser);
-
-  } else {
-    respStream.on('data', (chunk: Buffer) => {
-      responseBuffer.push(chunk);
-    });
-
-    respStream.on('error', (err) => {
-      if (req.aborted) {
-        return;
-      }
-      reject(enhanceError(err, config, null, req));
-    });
-
-    respStream.on('end', () => {
-      const responseData = Buffer.concat(responseBuffer).toString();
-      response.data = responseData;
-      finalizeRequest(resolve, reject, response);
-    });
-  }
-}
-
 /**
  * Sends an HTTP request based on the provided configuration. This is a wrapper around the http
  * and https packages of Node.js, providing content processing, timeouts and error handling.
  */
 function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
-  return new Promise((resolve, reject) => {
-    let options: https.RequestOptions;
-    let data: Buffer;
-    try {
-      options = buildRequestOptions(config);
-      data = buildRequestBody(config, options.headers);
-    } catch (err) {
-      return reject(createError(err.message, config));
-    }
-
-    const transport: any = options.protocol === 'https:' ? https : http;
-    const req: http.ClientRequest = transport.request(options, (res: http.IncomingMessage) => {
-      handleResponse(res, req, config, resolve, reject);
-    });
-
-    // Handle errors
-    req.on('error', (err) => {
-      if (req.aborted) {
-        return;
-      }
-      reject(enhanceError(err, config, null, req));
-    });
-
-    if (config.timeout) {
-      // Listen to timeouts and throw an error.
-      req.setTimeout(config.timeout, () => {
-        req.abort();
-        reject(createError(`timeout of ${config.timeout}ms exceeded`, config, 'ETIMEDOUT', req));
-      });
-    }
-
-    // Send the request
-    req.end(data);
-  });
+  return new AsyncHttpCall(config).execute();
 }
 
 /**
