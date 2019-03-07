@@ -190,7 +190,7 @@ export class HttpClient {
    * Sends an HTTP request, and retries it once in case of low-level network errors.
    */
   private sendWithRetry(config: HttpRequestConfig, attempts: number = 0): Promise<HttpResponse> {
-    return AsyncHttpCall.send(config)
+    return AsyncHttpCall.invoke(config)
       .then((resp) => {
         return this.createHttpResponse(resp);
       }).catch((err: LowLevelError) => {
@@ -264,6 +264,11 @@ export function parseHttpResponse(
   return new DefaultHttpResponse(lowLevelResponse);
 }
 
+/**
+ * A helper class for sending HTTP requests over the wire. This is a wrapper around the standard
+ * http and https packages of Node.js, providing content processing, timeouts and error handling.
+ * It also wraps the callback API of the Node.js standard library in a more flexible Promise API.
+ */
 class AsyncHttpCall {
 
   private readonly options: https.RequestOptions;
@@ -274,11 +279,10 @@ class AsyncHttpCall {
   private reject: (_: any) => void;
 
   /**
-   * Sends an HTTP request based on the provided configuration. This is a wrapper around the http
-   * and https packages of Node.js, providing content processing, timeouts and error handling.
+   * Sends an HTTP request based on the provided configuration.
    */
-  public static send(config: HttpRequestConfig): Promise<LowLevelResponse> {
-    return new AsyncHttpCall(config).execute();
+  public static invoke(config: HttpRequestConfig): Promise<LowLevelResponse> {
+    return new AsyncHttpCall(config).promise;
   }
 
   constructor(private readonly config: HttpRequestConfig) {
@@ -288,18 +292,14 @@ class AsyncHttpCall {
       this.promise = new Promise((resolve, reject) => {
         this.resolve = resolve;
         this.reject = reject;
-        this.doExecute();
+        this.execute();
       });
     } catch (err) {
       this.promise = Promise.reject(this.enhanceError(err, null));
     }
   }
 
-  public execute(): Promise<LowLevelResponse> {
-    return this.promise;
-  }
-
-  private doExecute() {
+  private execute() {
     const transport: any = this.options.protocol === 'https:' ? https : http;
     const req: http.ClientRequest = transport.request(this.options, (res: http.IncomingMessage) => {
       this.handleResponse(res, req);
@@ -313,11 +313,12 @@ class AsyncHttpCall {
       this.enhanceAndReject(err, null, req);
     });
 
-    if (this.config.timeout) {
+    const timeout: number = this.config.timeout;
+    if (timeout) {
       // Listen to timeouts and throw an error.
       req.setTimeout(this.config.timeout, () => {
         req.abort();
-        this.rejectWithError(`timeout of ${this.config.timeout}ms exceeded`, 'ETIMEDOUT', req);
+        this.rejectWithError(`timeout of ${timeout}ms exceeded`, 'ETIMEDOUT', req);
       });
     }
 
@@ -435,6 +436,23 @@ class AsyncHttpCall {
     });
   }
 
+  /**
+   * Finalizes the current HTTP call in-flight by either resolving or rejecting the associated
+   * promise. In the event of an error, adds additional useful information to the returned error.
+   */
+  private finalizeResponse(response: LowLevelResponse) {
+    if (response.status >= 200 && response.status < 300) {
+      this.resolve(response);
+    } else {
+      this.rejectWithError(
+        'Request failed with status code ' + response.status,
+        null,
+        response.request,
+        response,
+      );
+    }
+  }
+
   private buildRequestOptions(): https.RequestOptions {
     const parsed = this.buildUrl();
     const protocol = parsed.protocol;
@@ -479,14 +497,6 @@ class AsyncHttpCall {
     return data;
   }
 
-  private urlWithProtocol(): string {
-    const fullUrl: string = this.config.url;
-    if (fullUrl.startsWith('http://') || fullUrl.startsWith('https://')) {
-      return fullUrl;
-    }
-    return `https://${fullUrl}`;
-  }
-
   private buildUrl(): url.UrlWithStringQuery {
     const fullUrl: string = this.urlWithProtocol();
     if (!this.hasEntity() || this.isEntityEnclosingRequest()) {
@@ -509,17 +519,26 @@ class AsyncHttpCall {
     return url.parse(parsedUrl.toString());
   }
 
-  private isEntityEnclosingRequest(): boolean {
-    // GET and HEAD requests do not support body in request.
-    return this.config.method !== 'GET' && this.config.method !== 'HEAD';
+  private urlWithProtocol(): string {
+    const fullUrl: string = this.config.url;
+    if (fullUrl.startsWith('http://') || fullUrl.startsWith('https://')) {
+      return fullUrl;
+    }
+    return `https://${fullUrl}`;
   }
 
   private hasEntity(): boolean {
     return typeof this.config.data !== 'undefined';
   }
 
+  private isEntityEnclosingRequest(): boolean {
+    // GET and HEAD requests do not support entity (body) in request.
+    return this.config.method !== 'GET' && this.config.method !== 'HEAD';
+  }
+
   /**
    * Creates a new error from the given message, and enhances it with other information available.
+   * Then the promise associated with this HTTP call is rejected with the resulting error.
    */
   private rejectWithError(
     message: string,
@@ -557,23 +576,6 @@ class AsyncHttpCall {
     error.request = request;
     error.response = response;
     return error;
-  }
-
-  /**
-   * Finalizes the current request in-flight by either resolving or rejecting the associated
-   * promise. In the event of an error, adds additional useful information to the returned error.
-   */
-  private finalizeResponse(response: LowLevelResponse) {
-    if (response.status >= 200 && response.status < 300) {
-      this.resolve(response);
-    } else {
-      this.rejectWithError(
-        'Request failed with status code ' + response.status,
-        null,
-        response.request,
-        response,
-      );
-    }
   }
 }
 
