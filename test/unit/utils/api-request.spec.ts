@@ -329,6 +329,36 @@ describe('HttpClient', () => {
     });
   });
 
+  it('should use the specified content-type header for the body', () => {
+    const reqData = {request: 'data'};
+    const respData = {success: true};
+    const scope = nock('https://' + mockHost, {
+      reqheaders: {
+        'Content-Type': (header) => {
+          return header.startsWith('custom/type');
+        },
+      },
+    }).post(mockPath, reqData)
+    .reply(200, respData, {
+      'content-type': 'application/json',
+    });
+    mockedRequests.push(scope);
+    const client = new HttpClient();
+    return client.send({
+      method: 'POST',
+      url: mockUrl,
+      headers: {
+        'content-type': 'custom/type',
+      },
+      data: reqData,
+    }).then((resp) => {
+      expect(resp.status).to.equal(200);
+      expect(resp.headers['content-type']).to.equal('application/json');
+      expect(resp.data).to.deep.equal(respData);
+      expect(resp.isJson()).to.be.true;
+    });
+  });
+
   it('should not mutate the arguments', () => {
     const reqData = {request: 'data'};
     const scope = nock('https://' + mockHost, {
@@ -388,6 +418,28 @@ describe('HttpClient', () => {
       expect(resp.status).to.equal(200);
       expect(resp.headers['content-type']).to.equal('application/json');
       expect(resp.data).to.deep.equal(respData);
+      expect(resp.isJson()).to.be.true;
+    });
+  });
+
+  it('should default to https when protocol not specified', () => {
+    const respData = {foo: 'bar'};
+    const scope = nock('https://' + mockHost)
+      .get(mockPath)
+      .reply(200, respData, {
+        'content-type': 'application/json',
+      });
+    mockedRequests.push(scope);
+    const client = new HttpClient();
+    return client.send({
+      method: 'GET',
+      url: mockUrl.substring('https://'.length),
+    }).then((resp) => {
+      expect(resp.status).to.equal(200);
+      expect(resp.headers['content-type']).to.equal('application/json');
+      expect(resp.text).to.equal(JSON.stringify(respData));
+      expect(resp.data).to.deep.equal(respData);
+      expect(resp.multipart).to.be.undefined;
       expect(resp.isJson()).to.be.true;
     });
   });
