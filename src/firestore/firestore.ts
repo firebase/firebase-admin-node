@@ -115,7 +115,7 @@ function initFirestore(app: FirebaseApp): Firestore {
   let firestoreDatabase: typeof Firestore;
   try {
     // Lazy-load the Firestore implementation here, which in turns loads gRPC.
-    firestoreDatabase = require('@google-cloud/firestore');
+    firestoreDatabase = require('@google-cloud/firestore').Firestore;
   } catch (err) {
     throw new FirebaseFirestoreError({
       code: 'missing-dependencies',

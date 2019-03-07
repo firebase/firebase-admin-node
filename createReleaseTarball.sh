@@ -119,7 +119,7 @@ echo
 ############################
 #  CREATE RELEASE TARBALL  #
 ############################
-echo "[INFO] Installing all node modules..."
+echo "[INFO] Installing and building all node modules..."
 npm install
 if [[ $? -ne 0 ]]; then
   echo "Error: Failed to install all node modules."
@@ -139,14 +139,6 @@ echo "[INFO] Running unit tests..."
 npm run test:unit
 if [[ $? -ne 0 ]]; then
   echo "Error: Unit tests failed."
-  exit 1
-fi
-echo
-
-echo "[INFO] Building the release package contents..."
-npm run build
-if [[ $? -ne 0 ]]; then
-  echo "Error: Failed to build release package contents."
   exit 1
 fi
 echo
