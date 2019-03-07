@@ -528,7 +528,7 @@ class AsyncHttpCall {
   }
 
   private hasEntity(): boolean {
-    return typeof this.config.data !== 'undefined';
+    return !!this.config.data;
   }
 
   private isEntityEnclosingRequest(): boolean {
