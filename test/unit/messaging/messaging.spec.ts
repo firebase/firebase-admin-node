@@ -533,6 +533,21 @@ describe('Messaging', () => {
   describe('sendAll()', () => {
     const validMessage: Message = {token: 'a'};
 
+    function checkSendResponseSuccess(response: SendResponse, messageId: string) {
+      expect(response.success).to.be.true;
+      expect(response.messageId).to.equal(messageId);
+      expect(response.error).to.be.undefined;
+    }
+
+    function checkSendResponseFailure(response: SendResponse, code: string, msg?: string) {
+      expect(response.success).to.be.false;
+      expect(response.messageId).to.be.undefined;
+      expect(response.error).to.have.property('code', code);
+      if (msg) {
+        expect(response.error.toString()).to.contain(msg);
+      }
+    }
+
     it('should throw given no messages', () => {
       expect(() => {
         messaging.sendAll(undefined as Message[]);
@@ -737,21 +752,6 @@ describe('Messaging', () => {
         [validMessage],
       ).should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
     });
-
-    function checkSendResponseSuccess(response: SendResponse, messageId: string) {
-      expect(response.success).to.be.true;
-      expect(response.messageId).to.equal(messageId);
-      expect(response.error).to.be.undefined;
-    }
-
-    function checkSendResponseFailure(response: SendResponse, code: string, msg?: string) {
-      expect(response.success).to.be.false;
-      expect(response.messageId).to.be.undefined;
-      expect(response.error).to.have.property('code', code);
-      if (msg) {
-        expect(response.error.toString()).to.contain(msg);
-      }
-    }
   });
 
   describe('sendMulticast()', () => {

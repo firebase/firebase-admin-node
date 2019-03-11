@@ -375,7 +375,7 @@ export class FirebaseNamespace {
     const fn: FirebaseServiceNamespace<Firestore> = (app?: FirebaseApp) => {
       return this.ensureApp(app).firestore();
     };
-    return Object.assign(fn, require('@google-cloud/firestore'));
+    return Object.assign(fn, require('@google-cloud/firestore').Firestore);
   }
 
   /**

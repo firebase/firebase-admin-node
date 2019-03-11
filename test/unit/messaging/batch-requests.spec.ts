@@ -33,6 +33,46 @@ chai.use(chaiAsPromised);
 
 const expect = chai.expect;
 
+function parseHttpRequest(text: string | Buffer): any {
+  const httpMessageParser = require('http-message-parser');
+  return httpMessageParser(text);
+}
+
+function getParsedPartData(obj: object): string {
+  const json = JSON.stringify(obj);
+  return 'POST https://example.com HTTP/1.1\r\n'
+    + `Content-Length: ${json.length}\r\n`
+    + 'Content-Type: application/json; charset=UTF-8\r\n'
+    + '\r\n'
+    + `${json}`;
+}
+
+function createMultipartResponse(success: object[], failures: object[] = []): HttpResponse {
+  const multipart: Buffer[] = [];
+  success.forEach((part) => {
+    let payload: string = '';
+    payload += `HTTP/1.1 200 OK\r\n`;
+    payload += `Content-type: application/json\r\n\r\n`;
+    payload += `${JSON.stringify(part)}\r\n`;
+    multipart.push(Buffer.from(payload, 'utf-8'));
+  });
+  failures.forEach((part) => {
+    let payload: string = '';
+    payload += `HTTP/1.1 500 Internal Server Error\r\n`;
+    payload += `Content-type: application/json\r\n\r\n`;
+    payload += `${JSON.stringify(part)}\r\n`;
+    multipart.push(Buffer.from(payload, 'utf-8'));
+  });
+  return {
+    status: 200,
+    headers: {'Content-Type': 'multipart/mixed; boundary=boundary'},
+    multipart,
+    text: '',
+    data: null,
+    isJson: () => false,
+  };
+}
+
 describe('BatchRequestClient', () => {
 
   const batchUrl = 'https://batch.url';
@@ -152,8 +192,8 @@ describe('BatchRequestClient', () => {
       createMultipartResponse([responseObject]));
     stubs.push(stub);
     const requests: SubRequest[] = [
-      {url: 'https://example.com', body: {foo: 1}, headers: {'X-Custom-Header': 'value'}},
-      {url: 'https://example.com', body: {foo: 1}, headers: {'X-Custom-Header': 'value'}},
+      {url: 'https://example.com', body: {foo: 1}, headers: {'X-Custom-Header': 'overwrite'}},
+      {url: 'https://example.com', body: {foo: 1}, headers: {'X-Custom-Header': 'overwrite'}},
     ];
     const commonHeaders = {'X-Custom-Header': 'value'};
     const batch = new BatchRequestClient(httpClient, batchUrl, commonHeaders);
@@ -167,7 +207,7 @@ describe('BatchRequestClient', () => {
     expect(parsedRequest.multipart.length).to.equal(requests.length);
     parsedRequest.multipart.forEach((part: {body: Buffer}) => {
       const parsedPart: {headers: object} = parseHttpRequest(part.body.toString().trim());
-      expect(parsedPart.headers).to.have.property('X-Custom-Header', 'value');
+      expect(parsedPart.headers).to.have.property('X-Custom-Header', 'overwrite');
     });
   });
 
@@ -197,43 +237,3 @@ describe('BatchRequestClient', () => {
     }
   }
 });
-
-function parseHttpRequest(text: string | Buffer): any {
-  const httpMessageParser = require('http-message-parser');
-  return httpMessageParser(text);
-}
-
-function getParsedPartData(obj: object): string {
-  const json = JSON.stringify(obj);
-  return 'POST https://example.com HTTP/1.1\r\n'
-    + `Content-Length: ${json.length}\r\n`
-    + 'Content-Type: application/json; charset=UTF-8\r\n'
-    + '\r\n'
-    + `${json}`;
-}
-
-function createMultipartResponse(success: object[], failures: object[] = []): HttpResponse {
-  const multipart: Buffer[] = [];
-  success.forEach((part) => {
-    let payload: string = '';
-    payload += `HTTP/1.1 200 OK\r\n`;
-    payload += `Content-type: application/json\r\n\r\n`;
-    payload += `${JSON.stringify(part)}\r\n`;
-    multipart.push(Buffer.from(payload, 'utf-8'));
-  });
-  failures.forEach((part) => {
-    let payload: string = '';
-    payload += `HTTP/1.1 500 Internal Server Error\r\n`;
-    payload += `Content-type: application/json\r\n\r\n`;
-    payload += `${JSON.stringify(part)}\r\n`;
-    multipart.push(Buffer.from(payload, 'utf-8'));
-  });
-  return {
-    status: 200,
-    headers: {'Content-Type': 'multipart/mixed; boundary=boundary'},
-    multipart,
-    text: '',
-    data: null,
-    isJson: () => false,
-  };
-}
