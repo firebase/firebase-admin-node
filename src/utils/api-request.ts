@@ -421,7 +421,7 @@ function sendRequest(config: HttpRequestConfig): Promise<LowLevelResponse> {
  * Extracts multipart boundary from the HTTP header. The content-type header of a multipart
  * response has the form 'multipart/subtype; boundary=string'.
  */
-function getMultipartBoundary(headers: http.IncomingHttpHeaders): string {
+function getMultipartBoundary(headers: http.IncomingHttpHeaders): string | null {
   const contentType = headers['content-type'];
   if (!contentType.startsWith('multipart/')) {
     return null;
