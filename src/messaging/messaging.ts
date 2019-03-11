@@ -329,7 +329,7 @@ export class Messaging implements FirebaseServiceInterface {
    * indicates a total failure -- i.e. none of the messages in the list could be sent. Partial
    * failures are indicated by a BatchResponse return value.
    *
-   * @param {MulticastMessage} message A multicast message containing up to 1000 tokens.
+   * @param {MulticastMessage} message A multicast message containing up to 100 tokens.
    * @param {boolean=} dryRun Whether to send the message in the dry-run (validation only) mode.
    *
    * @return {Promise<BatchResponse>} A Promise fulfilled with an object representing the result
