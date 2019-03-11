@@ -261,6 +261,9 @@ export function parseHttpResponse(
     config,
     request: null,
   };
+  if (!validator.isNumber(lowLevelResponse.status)) {
+    throw new FirebaseAppError(AppErrorCodes.INTERNAL_ERROR, 'Malformed HTTP status line.');
+  }
   return new DefaultHttpResponse(lowLevelResponse);
 }
 
