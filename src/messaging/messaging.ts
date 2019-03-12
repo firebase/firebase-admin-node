@@ -326,7 +326,7 @@ export class Messaging implements FirebaseServiceInterface {
    * This method uses the sendAll() API under the hood to send the given
    * message to all the target recipients. The responses list obtained from the return value
    * corresponds to the order of tokens in the MulticastMessage. An error from this method
-   * indicates a total failure -- i.e. none of the messages in the list could be sent. Partial
+   * indicates a total failure -- i.e. none of the tokens in the list could be sent to. Partial
    * failures are indicated by a BatchResponse return value.
    *
    * @param {MulticastMessage} message A multicast message containing up to 100 tokens.
@@ -352,13 +352,14 @@ export class Messaging implements FirebaseServiceInterface {
     }
 
     const messages: Message[] = copy.tokens.map((token) => {
-      const subMessage: Message = {token};
-      subMessage.android = copy.android;
-      subMessage.apns = copy.apns;
-      subMessage.data = copy.data;
-      subMessage.notification = copy.notification;
-      subMessage.webpush = copy.webpush;
-      return subMessage;
+      return {
+        token,
+        android: copy.android,
+        apns: copy.apns,
+        data: copy.data,
+        notification: copy.notification,
+        webpush: copy.webpush,
+      };
     });
     return this.sendAll(messages, dryRun);
   }
