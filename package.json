@@ -60,7 +60,7 @@
     "node-forge": "0.7.4"
   },
   "optionalDependencies": {
-    "@google-cloud/firestore": "^1.0.1",
+    "@google-cloud/firestore": "^1.1.0",
     "@google-cloud/storage": "^2.3.0"
   },
   "devDependencies": {
