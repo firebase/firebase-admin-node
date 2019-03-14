@@ -15,13 +15,16 @@
  */
 
 import {FirebaseApp} from '../firebase-app';
-import {HttpMethod, AuthorizedHttpClient, HttpRequestConfig, HttpError} from '../utils/api-request';
-import {FirebaseMessagingError, MessagingClientErrorCode} from '../utils/error';
-
-import * as validator from '../utils/validator';
+import {
+  HttpMethod, AuthorizedHttpClient, HttpRequestConfig, HttpError, HttpResponse,
+} from '../utils/api-request';
+import { createFirebaseError, getErrorCode } from './messaging-errors';
+import { SubRequest, BatchRequestClient } from './batch-request';
+import { SendResponse, BatchResponse } from './messaging-types';
 
 // FCM backend constants
 const FIREBASE_MESSAGING_TIMEOUT = 10000;
+const FIREBASE_MESSAGING_BATCH_URL = 'https://fcm.googleapis.com/batch';
 const FIREBASE_MESSAGING_HTTP_METHOD: HttpMethod = 'POST';
 const FIREBASE_MESSAGING_HEADERS = {
   'Sdk-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
@@ -34,48 +37,7 @@ const FIREBASE_MESSAGING_HEADERS = {
  */
 export class FirebaseMessagingRequestHandler {
   private readonly httpClient: AuthorizedHttpClient;
-
-  /**
-   * @param {object} response The response to check for errors.
-   * @return {string|null} The error code if present; null otherwise.
-   */
-  private static getErrorCode(response: any): string | null {
-    if (validator.isNonNullObject(response) && 'error' in response) {
-      if (validator.isString(response.error)) {
-        return response.error;
-      }
-      if (validator.isArray(response.error.details)) {
-        const fcmErrorType = 'type.googleapis.com/google.firebase.fcm.v1.FcmError';
-        for (const element of response.error.details) {
-          if (element['@type'] === fcmErrorType) {
-            return element.errorCode;
-          }
-        }
-      }
-      if ('status' in response.error) {
-        return response.error.status;
-      } else {
-        return response.error.message;
-      }
-    }
-
-    return null;
-  }
-
-  /**
-   * Extracts error message from the given response object.
-   *
-   * @param {object} response The response to check for errors.
-   * @return {string|null} The error message if present; null otherwise.
-   */
-  private static getErrorMessage(response: any): string | null {
-    if (validator.isNonNullObject(response) &&
-        'error' in response &&
-        validator.isNonEmptyString(response.error.message)) {
-      return response.error.message;
-    }
-    return null;
-  }
+  private readonly batchClient: BatchRequestClient;
 
   /**
    * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
@@ -83,6 +45,8 @@ export class FirebaseMessagingRequestHandler {
    */
   constructor(app: FirebaseApp) {
     this.httpClient = new AuthorizedHttpClient(app);
+    this.batchClient = new BatchRequestClient(
+      this.httpClient, FIREBASE_MESSAGING_BATCH_URL, FIREBASE_MESSAGING_HEADERS);
   }
 
   /**
@@ -108,7 +72,7 @@ export class FirebaseMessagingRequestHandler {
       }
 
       // Check for backend errors in the response.
-      const errorCode = FirebaseMessagingRequestHandler.getErrorCode(response.data);
+      const errorCode = getErrorCode(response.data);
       if (errorCode) {
         throw new HttpError(response);
       }
@@ -118,46 +82,51 @@ export class FirebaseMessagingRequestHandler {
     })
     .catch((err) => {
       if (err instanceof HttpError) {
-        this.handleHttpError(err);
+        throw createFirebaseError(err);
       }
       // Re-throw the error if it already has the proper format.
       throw err;
     });
   }
 
-  private handleHttpError(err: HttpError) {
-    if (err.response.isJson()) {
-      // For JSON responses, map the server response to a client-side error.
-      const json = err.response.data;
-      const errorCode = FirebaseMessagingRequestHandler.getErrorCode(json);
-      const errorMessage = FirebaseMessagingRequestHandler.getErrorMessage(json);
-      throw FirebaseMessagingError.fromServerError(errorCode, errorMessage, json);
-    }
+  /**
+   * Sends the given array of sub requests as a single batch to FCM, and parses the result into
+   * a BatchResponse object.
+   *
+   * @param {SubRequest[]} requests An array of sub requests to send.
+   * @return {Promise<BatchResponse>} A promise that resolves when the send operation is complete.
+   */
+  public sendBatchRequest(requests: SubRequest[]): Promise<BatchResponse> {
+    return this.batchClient.send(requests)
+      .then((responses: HttpResponse[]) => {
+        return responses.map((part: HttpResponse) => {
+          return this.buildSendResponse(part);
+        });
+      }).then((responses: SendResponse[]) => {
+        const successCount: number = responses.filter((resp) => resp.success).length;
+        return {
+          responses,
+          successCount,
+          failureCount: responses.length - successCount,
+        };
+      }).catch((err) => {
+        if (err instanceof HttpError) {
+          throw createFirebaseError(err);
+        }
+        // Re-throw the error if it already has the proper format.
+        throw err;
+      });
+  }
 
-    // Non-JSON response
-    let error: {code: string, message: string};
-    switch (err.response.status) {
-      case 400:
-        error = MessagingClientErrorCode.INVALID_ARGUMENT;
-        break;
-      case 401:
-      case 403:
-        error = MessagingClientErrorCode.AUTHENTICATION_ERROR;
-        break;
-      case 500:
-        error = MessagingClientErrorCode.INTERNAL_ERROR;
-        break;
-      case 503:
-        error = MessagingClientErrorCode.SERVER_UNAVAILABLE;
-        break;
-      default:
-        // Treat non-JSON responses with unexpected status codes as unknown errors.
-        error = MessagingClientErrorCode.UNKNOWN_ERROR;
+  private buildSendResponse(response: HttpResponse): SendResponse {
+    const result: SendResponse = {
+      success: response.status === 200,
+    };
+    if (result.success) {
+      result.messageId = response.data.name;
+    } else {
+      result.error = createFirebaseError(new HttpError(response));
     }
-    throw new FirebaseMessagingError({
-      code: error.code,
-      message: `${ error.message } Raw server response: "${ err.response.text }". Status code: ` +
-        `${ err.response.status }.`,
-    });
+    return result;
   }
 }

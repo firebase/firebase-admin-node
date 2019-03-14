@@ -88,6 +88,56 @@ describe('admin.messaging', () => {
       });
   });
 
+  it('sendAll()', () => {
+    const messages: admin.messaging.Message[] = [message, message, message];
+    return admin.messaging().sendAll(messages, true)
+      .then((response) => {
+        expect(response.responses.length).to.equal(messages.length);
+        expect(response.successCount).to.equal(messages.length);
+        expect(response.failureCount).to.equal(0);
+        response.responses.forEach((resp) => {
+          expect(resp.success).to.be.true;
+          expect(resp.messageId).matches(/^projects\/.*\/messages\/.*$/);
+        });
+      });
+  });
+
+  it('sendAll(100)', () => {
+    const messages: admin.messaging.Message[] = [];
+    for (let i = 0; i < 100; i++) {
+      messages.push({topic: `foo-bar-${i % 10}`});
+    }
+    return admin.messaging().sendAll(messages, true)
+      .then((response) => {
+        expect(response.responses.length).to.equal(messages.length);
+        expect(response.successCount).to.equal(messages.length);
+        expect(response.failureCount).to.equal(0);
+        response.responses.forEach((resp) => {
+          expect(resp.success).to.be.true;
+          expect(resp.messageId).matches(/^projects\/.*\/messages\/.*$/);
+        });
+      });
+  });
+
+  it('sendMulticast()', () => {
+    const multicastMessage: admin.messaging.MulticastMessage = {
+      data: message.data,
+      android: message.android,
+      tokens: ['not-a-token', 'also-not-a-token'],
+    };
+    return admin.messaging().sendMulticast(multicastMessage, true)
+      .then((response) => {
+        expect(response.responses.length).to.equal(2);
+        expect(response.successCount).to.equal(0);
+        expect(response.failureCount).to.equal(2);
+        response.responses.forEach((resp) => {
+          expect(resp.success).to.be.false;
+          expect(resp.messageId).to.be.undefined;
+          expect(resp.error).to.have.property('code', 'messaging/invalid-argument');
+        });
+      });
+  });
+
   it('sendToDevice(token) returns a response with multicast ID', () => {
     return admin.messaging().sendToDevice(registrationToken, payload, options)
       .then((response) => {

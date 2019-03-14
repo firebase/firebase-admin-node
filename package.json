@@ -56,6 +56,7 @@
     "@firebase/app": "^0.3.4",
     "@firebase/database": "^0.3.6",
     "@types/node": "^8.0.53",
+    "dicer": "^0.3.0",
     "jsonwebtoken": "8.1.0",
     "node-forge": "0.7.4"
   },
@@ -90,6 +91,7 @@
     "gulp-header": "^1.8.8",
     "gulp-replace": "^0.5.4",
     "gulp-typescript": "^3.2.4",
+    "http-message-parser": "^0.0.34",
     "lodash": "^4.17.5",
     "merge2": "^1.2.1",
     "minimist": "^1.2.0",

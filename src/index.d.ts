@@ -412,6 +412,10 @@ interface ConditionMessage extends BaseMessage {
 declare namespace admin.messaging {
   type Message = TokenMessage | TopicMessage | ConditionMessage;
 
+  interface MulticastMessage extends BaseMessage {
+    tokens: string[];
+  }
+
   type AndroidConfig = {
     collapseKey?: string;
     priority?: ('high'|'normal');
@@ -586,10 +590,30 @@ declare namespace admin.messaging {
     errors: admin.FirebaseArrayIndexError[];
   };
 
+  type BatchResponse = {
+    responses: admin.messaging.SendResponse[];
+    successCount: number;
+    failureCount: number;
+  }
+
+  type SendResponse = {
+    success: boolean;
+    messageId?: string;
+    error?: admin.FirebaseError;
+  };
+
   interface Messaging {
     app: admin.app.App;
 
     send(message: admin.messaging.Message, dryRun?: boolean): Promise<string>;
+    sendAll(
+      messages: Array<admin.messaging.Message>,
+      dryRun?: boolean
+    ): Promise<admin.messaging.BatchResponse>;
+    sendMulticast(
+      message: admin.messaging.MulticastMessage,
+      dryRun?: boolean
+    ): Promise<admin.messaging.BatchResponse>;
     sendToDevice(
       registrationToken: string | string[],
       payload: admin.messaging.MessagingPayload,
