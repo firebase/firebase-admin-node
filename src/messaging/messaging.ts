@@ -21,7 +21,7 @@ import {
   Message, validateMessage, MessagingDevicesResponse,
   MessagingDeviceGroupResponse, MessagingTopicManagementResponse,
   MessagingPayload, MessagingOptions, MessagingTopicResponse,
-  MessagingConditionResponse, BatchResponse,
+  MessagingConditionResponse, BatchResponse, MulticastMessage,
 } from './messaging-types';
 import {FirebaseMessagingRequestHandler} from './messaging-api-request';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
@@ -277,7 +277,7 @@ export class Messaging implements FirebaseServiceInterface {
 
   /**
    * Sends all the messages in the given array via Firebase Cloud Messaging. Employs batching to
-   * send the entire list as a single RPC call. Compared to the send() method, this method is
+   * send the entire list as a single RPC call. Compared to the send() method, this method is a
    * significantly more efficient way to send multiple messages.
    *
    * The responses list obtained from the return value corresponds to the order of input messages.
@@ -318,6 +318,50 @@ export class Messaging implements FirebaseServiceInterface {
       };
     });
     return this.messagingRequestHandler.sendBatchRequest(requests);
+  }
+
+  /**
+   * Sends the given multicast message to all the FCM registration tokens specified in it.
+   *
+   * This method uses the sendAll() API under the hood to send the given
+   * message to all the target recipients. The responses list obtained from the return value
+   * corresponds to the order of tokens in the MulticastMessage. An error from this method
+   * indicates a total failure -- i.e. none of the tokens in the list could be sent to. Partial
+   * failures are indicated by a BatchResponse return value.
+   *
+   * @param {MulticastMessage} message A multicast message containing up to 100 tokens.
+   * @param {boolean=} dryRun Whether to send the message in the dry-run (validation only) mode.
+   *
+   * @return {Promise<BatchResponse>} A Promise fulfilled with an object representing the result
+   *     of the send operation.
+   */
+  public sendMulticast(message: MulticastMessage, dryRun?: boolean): Promise<BatchResponse> {
+    const copy: MulticastMessage = deepCopy(message);
+    if (!validator.isNonNullObject(copy)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_ARGUMENT, 'MulticastMessage must be a non-null object');
+    }
+    if (!validator.isNonEmptyArray(copy.tokens)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_ARGUMENT, 'tokens must be a non-empty array');
+    }
+    if (copy.tokens.length > FCM_MAX_BATCH_SIZE) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_ARGUMENT,
+        `tokens list must not contain more than ${FCM_MAX_BATCH_SIZE} items`);
+    }
+
+    const messages: Message[] = copy.tokens.map((token) => {
+      return {
+        token,
+        android: copy.android,
+        apns: copy.apns,
+        data: copy.data,
+        notification: copy.notification,
+        webpush: copy.webpush,
+      };
+    });
+    return this.sendAll(messages, dryRun);
   }
 
   /**

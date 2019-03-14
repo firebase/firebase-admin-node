@@ -412,6 +412,10 @@ interface ConditionMessage extends BaseMessage {
 declare namespace admin.messaging {
   type Message = TokenMessage | TopicMessage | ConditionMessage;
 
+  interface MulticastMessage extends BaseMessage {
+    tokens: string[];
+  }
+
   type AndroidConfig = {
     collapseKey?: string;
     priority?: ('high'|'normal');
@@ -604,6 +608,10 @@ declare namespace admin.messaging {
     send(message: admin.messaging.Message, dryRun?: boolean): Promise<string>;
     sendAll(
       messages: Array<admin.messaging.Message>,
+      dryRun?: boolean
+    ): Promise<admin.messaging.BatchResponse>;
+    sendMulticast(
+      message: admin.messaging.MulticastMessage,
       dryRun?: boolean
     ): Promise<admin.messaging.BatchResponse>;
     sendToDevice(
