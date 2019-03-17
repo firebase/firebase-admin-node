@@ -306,7 +306,7 @@ export class Messaging implements FirebaseServiceInterface {
         MessagingClientErrorCode.INVALID_ARGUMENT, 'dryRun must be a boolean');
     }
 
-    const requests: SubRequest[] = messages.map((message) => {
+    const requests: SubRequest[] = copy.map((message) => {
       validateMessage(message);
       const request: {message: Message, validate_only?: boolean} = {message};
       if (dryRun) {
