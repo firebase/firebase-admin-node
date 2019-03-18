@@ -873,16 +873,22 @@ describe('Messaging', () => {
         'projects/projec_id/messages/3',
       ];
       mockedRequests.push(mockBatchRequest(messageIds));
-      return messaging.sendMulticast({tokens: ['a', 'b', 'c']})
-        .then((response: BatchResponse) => {
-          expect(response.successCount).to.equal(3);
-          expect(response.failureCount).to.equal(0);
-          response.responses.forEach((resp, idx) => {
-            expect(resp.success).to.be.true;
-            expect(resp.messageId).to.equal(messageIds[idx]);
-            expect(resp.error).to.be.undefined;
-          });
+      return messaging.sendMulticast({
+        tokens: ['a', 'b', 'c'],
+        android: {ttl: 100},
+        apns: {payload: {aps: {badge: 42}}},
+        data: {key: 'value'},
+        notification: {title: 'test title'},
+        webpush: {data: {webKey: 'webValue'}},
+      }).then((response: BatchResponse) => {
+        expect(response.successCount).to.equal(3);
+        expect(response.failureCount).to.equal(0);
+        response.responses.forEach((resp, idx) => {
+          expect(resp.success).to.be.true;
+          expect(resp.messageId).to.equal(messageIds[idx]);
+          expect(resp.error).to.be.undefined;
         });
+      });
     });
 
     it('should be fulfilled with a BatchResponse given valid message in dryRun mode', () => {
@@ -892,15 +898,21 @@ describe('Messaging', () => {
         'projects/projec_id/messages/3',
       ];
       mockedRequests.push(mockBatchRequest(messageIds));
-      return messaging.sendMulticast({tokens: ['a', 'b', 'c']}, true)
-        .then((response: BatchResponse) => {
-          expect(response.successCount).to.equal(3);
-          expect(response.failureCount).to.equal(0);
-          expect(response.responses.length).to.equal(3);
-          response.responses.forEach((resp, idx) => {
-            checkSendResponseSuccess(resp, messageIds[idx]);
-          });
+      return messaging.sendMulticast({
+        tokens: ['a', 'b', 'c'],
+        android: {ttl: 100},
+        apns: {payload: {aps: {badge: 42}}},
+        data: {key: 'value'},
+        notification: {title: 'test title'},
+        webpush: {data: {webKey: 'webValue'}},
+      }, true).then((response: BatchResponse) => {
+        expect(response.successCount).to.equal(3);
+        expect(response.failureCount).to.equal(0);
+        expect(response.responses.length).to.equal(3);
+        response.responses.forEach((resp, idx) => {
+          checkSendResponseSuccess(resp, messageIds[idx]);
         });
+      });
     });
 
     it('should be fulfilled with a BatchResponse when the response contains some errors', () => {
