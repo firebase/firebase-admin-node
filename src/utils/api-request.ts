@@ -548,9 +548,9 @@ class HttpRequestConfigImpl implements HttpRequestConfig {
       hostname: parsed.hostname,
       port,
       path: parsed.path,
-      method: this.config.method,
-      agent: this.config.httpAgent,
-      headers: Object.assign({}, this.config.headers),
+      method: this.method,
+      agent: this.httpAgent,
+      headers: Object.assign({}, this.headers),
     };
   }
 
@@ -560,15 +560,15 @@ class HttpRequestConfigImpl implements HttpRequestConfig {
       return data;
     }
 
-    if (validator.isBuffer(this.config.data)) {
-      data = this.config.data as Buffer;
-    } else if (validator.isObject(this.config.data)) {
-      data = Buffer.from(JSON.stringify(this.config.data), 'utf-8');
+    if (validator.isBuffer(this.data)) {
+      data = this.data as Buffer;
+    } else if (validator.isObject(this.data)) {
+      data = Buffer.from(JSON.stringify(this.data), 'utf-8');
       if (typeof headers['content-type'] === 'undefined') {
         headers['content-type'] = 'application/json;charset=utf-8';
       }
-    } else if (validator.isString(this.config.data)) {
-      data = Buffer.from(this.config.data as string, 'utf-8');
+    } else if (validator.isString(this.data)) {
+      data = Buffer.from(this.data as string, 'utf-8');
     } else {
       throw new Error('Request data must be a string, a Buffer or a json serializable object');
     }
@@ -584,13 +584,13 @@ class HttpRequestConfigImpl implements HttpRequestConfig {
       return url.parse(fullUrl);
     }
 
-    if (!validator.isObject(this.config.data)) {
-      throw new Error(`${this.config.method} requests cannot have a body`);
+    if (!validator.isObject(this.data)) {
+      throw new Error(`${this.method} requests cannot have a body`);
     }
 
     // Parse URL and append data to query string.
     const parsedUrl = new url.URL(fullUrl);
-    const dataObj = this.config.data as {[key: string]: string};
+    const dataObj = this.data as {[key: string]: string};
     for (const key in dataObj) {
       if (dataObj.hasOwnProperty(key)) {
         parsedUrl.searchParams.append(key, dataObj[key]);
@@ -601,7 +601,7 @@ class HttpRequestConfigImpl implements HttpRequestConfig {
   }
 
   private urlWithProtocol(): string {
-    const fullUrl: string = this.config.url;
+    const fullUrl: string = this.url;
     if (fullUrl.startsWith('http://') || fullUrl.startsWith('https://')) {
       return fullUrl;
     }
@@ -609,12 +609,12 @@ class HttpRequestConfigImpl implements HttpRequestConfig {
   }
 
   private hasEntity(): boolean {
-    return !!this.config.data;
+    return !!this.data;
   }
 
   private isEntityEnclosingRequest(): boolean {
     // GET and HEAD requests do not support entity (body) in request.
-    return this.config.method !== 'GET' && this.config.method !== 'HEAD';
+    return this.method !== 'GET' && this.method !== 'HEAD';
   }
 }
 
