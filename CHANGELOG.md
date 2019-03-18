@@ -1,9 +1,14 @@
 # Unreleased
 
+-
+
+# v7.1.0
+
 - [added] A new `messaging.sendAll()` API for sending multiple messages as a
   single batch.
 - [added] A new `messaging.sendMulticast()` API for sending a message to
   multiple device registration tokens.
+- [fixed] Upgraded Cloud Firestore client version to 1.1.0.
 - [fixed] Improved typings of `UpdateRequest` interface to support deletion of
   properties.
 

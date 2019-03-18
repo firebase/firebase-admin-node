@@ -95,6 +95,7 @@ export class BatchRequestClient {
  * @param {SubRequest} request A sub request that will be used to populate the part.
  * @param {string} boundary Multipart boundary string.
  * @param {number} idx An index number that is used to set the content-id header.
+ * @return {string} The part as a string that can be included in the HTTP body.
  */
 function createPart(request: SubRequest, boundary: string, idx: number): string {
   const serializedRequest: string = serializeSubRequest(request);
@@ -114,6 +115,7 @@ function createPart(request: SubRequest, boundary: string, idx: number): string 
  * body.
  *
  * @param request {SubRequest} The sub request to be serialized.
+ * @return {string} String representation of the SubRequest.
  */
 function serializeSubRequest(request: SubRequest): string {
   const requestBody: string = JSON.stringify(request.body);

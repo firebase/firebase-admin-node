@@ -639,7 +639,7 @@ describe('HttpClient', () => {
   it('should reject if the request payload is invalid', () => {
     const client = new HttpClient();
     const err = 'Error while making request: Request data must be a string, a Buffer '
-     + 'or a json serializable object';
+      + 'or a json serializable object';
     return client.send({
       method: 'POST',
       url: mockUrl,
@@ -956,7 +956,7 @@ describe('parseHttpResponse()', () => {
     expect(response.text).to.equal('{"foo": 1}');
   });
 
-  it('should parse a error response with json content', () => {
+  it('should parse an error response with json content', () => {
     const text = 'HTTP/1.1 400 Bad Request\r\n'
       + 'Content-type: application/json\r\n'
       + 'Date: Thu, 07 Feb 2019 19:20:34 GMT\r\n'
@@ -1019,5 +1019,15 @@ describe('parseHttpResponse()', () => {
 
     expect(response.isJson()).to.be.false;
     expect(response.text).to.equal('foo bar');
+  });
+
+  it('should throw when the header is malformed', () => {
+    const text = 'malformed http header\r\n'
+      + 'Content-type: application/json\r\n'
+      + 'Date: Thu, 07 Feb 2019 19:20:34 GMT\r\n'
+      + '\r\n'
+      + '{"foo": 1}';
+
+    expect(() => parseHttpResponse(text, config)).to.throw('Malformed HTTP status line.');
   });
 });
