@@ -274,6 +274,7 @@ export function parseHttpResponse(
  */
 class AsyncHttpCall {
 
+  private readonly config: HttpRequestConfigImpl;
   private readonly options: https.RequestOptions;
   private readonly entity: Buffer;
   private readonly promise: Promise<LowLevelResponse>;
@@ -288,10 +289,11 @@ class AsyncHttpCall {
     return new AsyncHttpCall(config).promise;
   }
 
-  constructor(private readonly config: HttpRequestConfig) {
+  constructor(config: HttpRequestConfig) {
     try {
-      this.options = this.buildRequestOptions();
-      this.entity = this.buildEntity(this.options.headers);
+      this.config = new HttpRequestConfigImpl(config);
+      this.options = this.config.buildRequestOptions();
+      this.entity = this.config.buildEntity(this.options.headers);
       this.promise = new Promise((resolve, reject) => {
         this.resolve = resolve;
         this.reject = reject;
@@ -456,7 +458,83 @@ class AsyncHttpCall {
     }
   }
 
-  private buildRequestOptions(): https.RequestOptions {
+  /**
+   * Creates a new error from the given message, and enhances it with other information available.
+   * Then the promise associated with this HTTP call is rejected with the resulting error.
+   */
+  private rejectWithError(
+    message: string,
+    code?: string,
+    request?: http.ClientRequest,
+    response?: LowLevelResponse) {
+
+    const error = new Error(message);
+    this.enhanceAndReject(error, code, request, response);
+  }
+
+  private enhanceAndReject(
+    error: any,
+    code: string,
+    request?: http.ClientRequest,
+    response?: LowLevelResponse) {
+
+    this.reject(this.enhanceError(error, code, request, response));
+  }
+
+  /**
+   * Enhances the given error by adding more information to it. Specifically, the HttpRequestConfig,
+   * the underlying request and response will be attached to the error.
+   */
+  private enhanceError(
+    error: any,
+    code: string,
+    request?: http.ClientRequest,
+    response?: LowLevelResponse): LowLevelError {
+
+    error.config = this.config;
+    if (code) {
+      error.code = code;
+    }
+    error.request = request;
+    error.response = response;
+    return error;
+  }
+}
+
+/**
+ * An adapter class for extracting options and entity data from an HttpRequestConfig.
+ */
+class HttpRequestConfigImpl implements HttpRequestConfig {
+
+  constructor(private readonly config: HttpRequestConfig) {
+
+  }
+
+  get method(): HttpMethod {
+    return this.config.method;
+  }
+
+  get url(): string {
+    return this.config.url;
+  }
+
+  get headers(): {[key: string]: string} | undefined {
+    return this.config.headers;
+  }
+
+  get data(): string | object | Buffer | undefined {
+    return this.config.data;
+  }
+
+  get timeout(): number | undefined {
+    return this.config.timeout;
+  }
+
+  get httpAgent(): http.Agent | undefined {
+    return this.config.httpAgent;
+  }
+
+  public buildRequestOptions(): https.RequestOptions {
     const parsed = this.buildUrl();
     const protocol = parsed.protocol;
     let port: string = parsed.port;
@@ -476,7 +554,7 @@ class AsyncHttpCall {
     };
   }
 
-  private buildEntity(headers: http.OutgoingHttpHeaders): Buffer {
+  public buildEntity(headers: http.OutgoingHttpHeaders): Buffer {
     let data: Buffer;
     if (!this.hasEntity() || !this.isEntityEnclosingRequest()) {
       return data;
@@ -537,48 +615,6 @@ class AsyncHttpCall {
   private isEntityEnclosingRequest(): boolean {
     // GET and HEAD requests do not support entity (body) in request.
     return this.config.method !== 'GET' && this.config.method !== 'HEAD';
-  }
-
-  /**
-   * Creates a new error from the given message, and enhances it with other information available.
-   * Then the promise associated with this HTTP call is rejected with the resulting error.
-   */
-  private rejectWithError(
-    message: string,
-    code?: string,
-    request?: http.ClientRequest,
-    response?: LowLevelResponse) {
-
-    const error = new Error(message);
-    this.enhanceAndReject(error, code, request, response);
-  }
-
-  private enhanceAndReject(
-    error: any,
-    code: string,
-    request?: http.ClientRequest,
-    response?: LowLevelResponse) {
-
-    this.reject(this.enhanceError(error, code, request, response));
-  }
-
-  /**
-   * Enhances the given error by adding more information to it. Specifically, the HttpRequestConfig,
-   * the underlying request and response will be attached to the error.
-   */
-  private enhanceError(
-    error: any,
-    code: string,
-    request?: http.ClientRequest,
-    response?: LowLevelResponse): LowLevelError {
-
-    error.config = this.config;
-    if (code) {
-      error.code = code;
-    }
-    error.request = request;
-    error.response = response;
-    return error;
   }
 }
 
