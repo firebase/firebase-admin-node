@@ -1,5 +1,9 @@
 # Unreleased
 
+-
+
+# v7.1.1
+
 - [fixed] Fixed a bug in the FCM batch APIs that prevented them from correctly
   handling some message parameters like `AndroidConfig.ttl`.
 
