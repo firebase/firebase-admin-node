@@ -661,6 +661,9 @@ declare namespace admin.storage {
 }
 
 declare namespace admin.firestore {
+  export import v1beta1 = _firestore.v1beta1;
+  export import v1 = _firestore.v1;
+
   export import CollectionReference = _firestore.CollectionReference;
   export import DocumentData = _firestore.DocumentData;
   export import DocumentReference = _firestore.DocumentReference;

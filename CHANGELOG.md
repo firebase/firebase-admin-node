@@ -2,7 +2,11 @@
 
 - [fixed] Fixed a bug in the FCM batch APIs that prevented them from correctly
   handling some message parameters like `AndroidConfig.ttl`.
-
+- [changed] Updated the Google Cloud Firestore client to v1.2.0. This update 
+  exposes the `v1beta` and `v1` clients and provides direct access to the 
+  underlying Firestore and Firestore Admin RPCs. Please note that you will have
+  to provide your Firebase credentials directly to these clients.
+    
 # v7.1.0
 
 - [added] A new `messaging.sendAll()` API for sending multiple messages as a
