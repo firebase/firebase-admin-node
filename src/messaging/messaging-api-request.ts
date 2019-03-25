@@ -27,7 +27,7 @@ const FIREBASE_MESSAGING_TIMEOUT = 10000;
 const FIREBASE_MESSAGING_BATCH_URL = 'https://fcm.googleapis.com/batch';
 const FIREBASE_MESSAGING_HTTP_METHOD: HttpMethod = 'POST';
 const FIREBASE_MESSAGING_HEADERS = {
-  'Sdk-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
+  'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
   'access_token_auth': 'true',
 };
 
