@@ -314,7 +314,7 @@ describe('Messaging', () => {
   const mockAccessToken: string = utils.generateRandomAccessToken();
   const expectedHeaders = {
     'Authorization': 'Bearer ' + mockAccessToken,
-    'Sdk-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
+    'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
     'access_token_auth': 'true',
   };
   const emptyResponse = utils.responseFrom({});
