@@ -1,5 +1,9 @@
 # Unreleased
 
+-
+
+# v7.2.0
+
 - [changed] Updated the Google Cloud Firestore client to v1.2.0. This update
   exposes the `v1beta` and `v1` clients and provides direct access to the
   underlying Firestore and Firestore Admin RPCs. Please note that you will have
