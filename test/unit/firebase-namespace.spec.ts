@@ -43,6 +43,8 @@ import {
   FieldPath,
   FieldValue,
   GeoPoint,
+  v1,
+  v1beta1,
   setLogFunction,
 } from '@google-cloud/firestore';
 import {InstanceId} from '../../src/instance-id/instance-id';
@@ -545,6 +547,14 @@ describe('FirebaseNamespace', () => {
 
     it('should return a reference to setLogFunction', () => {
       expect(firebaseNamespace.firestore.setLogFunction).to.be.deep.equal(setLogFunction);
+    });
+
+    it('should return a reference to the v1beta1 namespace', () => {
+      expect(firebaseNamespace.firestore.v1beta1).to.be.deep.equal(v1beta1);
+    });
+
+    it('should return a reference to the v1 namespace', () => {
+      expect(firebaseNamespace.firestore.v1).to.be.deep.equal(v1);
     });
   });
 
