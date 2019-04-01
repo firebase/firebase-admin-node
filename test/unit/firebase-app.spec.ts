@@ -64,6 +64,7 @@ function mockServiceFactory(app: FirebaseApp): FirebaseServiceInterface {
 
 describe('FirebaseApp', () => {
   let mockApp: FirebaseApp;
+  let clock: sinon.SinonFakeTimers;
   let getTokenStub: sinon.SinonStub;
   let firebaseNamespace: FirebaseNamespace;
   let firebaseNamespaceInternals: FirebaseNamespaceInternals;
@@ -75,7 +76,7 @@ describe('FirebaseApp', () => {
       expires_in: 3600,
     });
 
-    this.clock = sinon.useFakeTimers(1000);
+    clock = sinon.useFakeTimers(1000);
 
     mockApp = mocks.app();
 
@@ -90,7 +91,7 @@ describe('FirebaseApp', () => {
 
   afterEach(() => {
     getTokenStub.restore();
-    this.clock.restore();
+    clock.restore();
     if (firebaseConfigVar) {
       process.env[FIREBASE_CONFIG_VAR] = firebaseConfigVar;
     } else {
@@ -675,7 +676,7 @@ describe('FirebaseApp', () => {
 
     it('returns the cached token given no arguments', () => {
       return mockApp.INTERNAL.getToken(true).then((token1) => {
-        this.clock.tick(1000);
+        clock.tick(1000);
         return mockApp.INTERNAL.getToken().then((token2) => {
           expect(token1).to.deep.equal(token2);
           expect(getTokenStub).to.have.been.calledOnce;
@@ -685,7 +686,7 @@ describe('FirebaseApp', () => {
 
     it('returns a new token with force refresh', () => {
       return mockApp.INTERNAL.getToken(true).then((token1) => {
-        this.clock.tick(1000);
+        clock.tick(1000);
         return mockApp.INTERNAL.getToken(true).then((token2) => {
           expect(token1).to.not.deep.equal(token2);
           expect(getTokenStub).to.have.been.calledTwice;
@@ -698,7 +699,7 @@ describe('FirebaseApp', () => {
       return mockApp.INTERNAL.getToken(true).then((token1) => {
         // Forward the clock to five minutes and one second before expiry.
         const expiryInMilliseconds = token1.expirationTime - Date.now();
-        this.clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS) - 1000);
+        clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS) - 1000);
 
         return mockApp.INTERNAL.getToken().then((token2) => {
           // Ensure the token has not been proactively refreshed.
@@ -706,7 +707,7 @@ describe('FirebaseApp', () => {
           expect(getTokenStub).to.have.been.calledOnce;
 
           // Forward the clock to exactly five minutes before expiry.
-          this.clock.tick(1000);
+          clock.tick(1000);
 
           return mockApp.INTERNAL.getToken().then((token3) => {
             // Ensure the token was proactively refreshed.
@@ -727,10 +728,10 @@ describe('FirebaseApp', () => {
 
         // Forward the clock to exactly five minutes before expiry.
         const expiryInMilliseconds = token1.expirationTime - Date.now();
-        this.clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS));
+        clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS));
 
         // Forward the clock to exactly four minutes before expiry.
-        this.clock.tick(60 * 1000);
+        clock.tick(60 * 1000);
 
         // Restore the stubbed getAccessToken() method.
         getTokenStub.restore();
@@ -745,7 +746,7 @@ describe('FirebaseApp', () => {
           expect(getTokenStub).to.have.not.been.called;
 
           // Forward the clock to exactly three minutes before expiry.
-          this.clock.tick(60 * 1000);
+          clock.tick(60 * 1000);
 
           return mockApp.INTERNAL.getToken().then((token3) => {
             // Ensure the token was proactively refreshed.
@@ -772,7 +773,7 @@ describe('FirebaseApp', () => {
 
         // Forward the clock to exactly five minutes before expiry.
         const expiryInMilliseconds = token.expirationTime - Date.now();
-        this.clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS));
+        clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS));
 
         // Due to synchronous timing issues when the timer is mocked, make a call to getToken()
         // without forcing a refresh to ensure there is enough time for the underlying token refresh
@@ -786,7 +787,7 @@ describe('FirebaseApp', () => {
         expect(token).to.deep.equal(originalToken);
 
         // Forward the clock to four minutes before expiry.
-        this.clock.tick(ONE_MINUTE_IN_MILLISECONDS);
+        clock.tick(ONE_MINUTE_IN_MILLISECONDS);
 
         // See note above about calling getToken().
         return mockApp.INTERNAL.getToken();
@@ -798,7 +799,7 @@ describe('FirebaseApp', () => {
         expect(token).to.deep.equal(originalToken);
 
         // Forward the clock to three minutes before expiry.
-        this.clock.tick(ONE_MINUTE_IN_MILLISECONDS);
+        clock.tick(ONE_MINUTE_IN_MILLISECONDS);
 
         // See note above about calling getToken().
         return mockApp.INTERNAL.getToken();
@@ -810,7 +811,7 @@ describe('FirebaseApp', () => {
         expect(token).to.deep.equal(originalToken);
 
         // Forward the clock to two minutes before expiry.
-        this.clock.tick(ONE_MINUTE_IN_MILLISECONDS);
+        clock.tick(ONE_MINUTE_IN_MILLISECONDS);
 
         // See note above about calling getToken().
         return mockApp.INTERNAL.getToken();
@@ -822,7 +823,7 @@ describe('FirebaseApp', () => {
         expect(token).to.deep.equal(originalToken);
 
         // Forward the clock to one minute before expiry.
-        this.clock.tick(ONE_MINUTE_IN_MILLISECONDS);
+        clock.tick(ONE_MINUTE_IN_MILLISECONDS);
 
         // See note above about calling getToken().
         return mockApp.INTERNAL.getToken();
@@ -834,7 +835,7 @@ describe('FirebaseApp', () => {
         expect(token).to.deep.equal(originalToken);
 
         // Forward the clock to expiry.
-        this.clock.tick(ONE_MINUTE_IN_MILLISECONDS);
+        clock.tick(ONE_MINUTE_IN_MILLISECONDS);
 
         // See note above about calling getToken().
         return mockApp.INTERNAL.getToken();
@@ -852,7 +853,7 @@ describe('FirebaseApp', () => {
       return mockApp.INTERNAL.getToken(true).then((token1) => {
          // Forward the clock to five minutes and one second before expiry.
         let expiryInMilliseconds = token1.expirationTime - Date.now();
-        this.clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS) - 1000);
+        clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS) - 1000);
 
         // Force a token refresh.
         return mockApp.INTERNAL.getToken(true).then((token2) => {
@@ -861,7 +862,7 @@ describe('FirebaseApp', () => {
           expect(getTokenStub).to.have.been.calledTwice;
 
           // Forward the clock to exactly five minutes before the original token's expiry.
-          this.clock.tick(1000);
+          clock.tick(1000);
 
           return mockApp.INTERNAL.getToken().then((token3) => {
             // Ensure the token hasn't changed, meaning the proactive refresh was canceled.
@@ -870,7 +871,7 @@ describe('FirebaseApp', () => {
 
             // Forward the clock to exactly five minutes before the refreshed token's expiry.
             expiryInMilliseconds = token3.expirationTime - Date.now();
-            this.clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS));
+            clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS));
 
             return mockApp.INTERNAL.getToken().then((token4) => {
               // Ensure the token was proactively refreshed.
@@ -896,11 +897,11 @@ describe('FirebaseApp', () => {
       return mockApp.INTERNAL.getToken(true).then((token1) => {
 
         // Move the clock forward to three minutes and one second before expiry.
-        this.clock.tick(9 * 1000);
+        clock.tick(9 * 1000);
         expect(getTokenStub.callCount).to.equal(1);
 
         // Move the clock forward to exactly three minutes before expiry.
-        this.clock.tick(1000);
+        clock.tick(1000);
 
         // Expect the underlying getAccessToken() method to have been called once.
         expect(getTokenStub.callCount).to.equal(2);
@@ -974,7 +975,7 @@ describe('FirebaseApp', () => {
       return mockApp.INTERNAL.getToken().then((token: FirebaseAccessToken) => {
         expect(addAuthTokenListenerSpy).to.have.been.calledOnce.and.calledWith(token.accessToken);
 
-        this.clock.tick(1000);
+        clock.tick(1000);
 
         return mockApp.INTERNAL.getToken(true);
       }).then((token: FirebaseAccessToken) => {
@@ -1016,7 +1017,7 @@ describe('FirebaseApp', () => {
 
         mockApp.INTERNAL.removeAuthTokenListener(addAuthTokenListenerSpies[0]);
 
-        this.clock.tick(1000);
+        clock.tick(1000);
 
         return mockApp.INTERNAL.getToken(true);
       }).then((token: FirebaseAccessToken) => {
