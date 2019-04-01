@@ -29,6 +29,10 @@ const FIREBASE_MESSAGING_HTTP_METHOD: HttpMethod = 'POST';
 const FIREBASE_MESSAGING_HEADERS = {
   'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
 };
+const LEGACY_FIREBASE_MESSAGING_HEADERS = {
+  'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
+  'access_token_auth': 'true',
+};
 
 
 /**
@@ -61,7 +65,7 @@ export class FirebaseMessagingRequestHandler {
       method: FIREBASE_MESSAGING_HTTP_METHOD,
       url: `https://${host}${path}`,
       data: requestData,
-      headers: FIREBASE_MESSAGING_HEADERS,
+      headers: LEGACY_FIREBASE_MESSAGING_HEADERS,
       timeout: FIREBASE_MESSAGING_TIMEOUT,
     };
     return this.httpClient.send(request).then((response) => {
