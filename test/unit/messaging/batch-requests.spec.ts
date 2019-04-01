@@ -212,9 +212,9 @@ describe('BatchRequestClient', () => {
     const args: HttpRequestConfig = stub.getCall(0).args[0];
     const parsedRequest = parseHttpRequest(args.data as Buffer);
     expect(parsedRequest.multipart.length).to.equal(requests.length);
-    parsedRequest.multipart.forEach((part: {body: Buffer}) => {
-      const parsedPart: {headers: object} = parseHttpRequest(part.body.toString().trim());
-      expect(parsedPart.headers).to.have.property('X-Custom-Header', 'value');
+    parsedRequest.multipart.forEach((sub: {body: Buffer}) => {
+      const parsedSubRequest: {headers: object} = parseHttpRequest(sub.body.toString().trim());
+      expect(parsedSubRequest.headers).to.have.property('X-Custom-Header', 'value');
     });
   });
 
