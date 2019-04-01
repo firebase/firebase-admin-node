@@ -372,10 +372,27 @@ export class FirebaseNamespace {
    * `Firestore` service for the default app or an explicitly specified app.
    */
   get firestore(): FirebaseServiceNamespace<Firestore> {
-    const fn: FirebaseServiceNamespace<Firestore> = (app?: FirebaseApp) => {
+    let fn: FirebaseServiceNamespace<Firestore> = (app?: FirebaseApp) => {
       return this.ensureApp(app).firestore();
     };
-    return Object.assign(fn, require('@google-cloud/firestore').Firestore);
+    const firestore = require('@google-cloud/firestore');
+
+    fn = Object.assign(fn, firestore.Firestore);
+
+    // `v1beta1` and `v1` are lazy-loaded in the Firestore SDK. We use the same trick here
+    // to avoid triggering this lazy-loading upon initialization.
+    Object.defineProperty(fn, 'v1beta1', {
+      get: () => {
+        return firestore.v1beta1;
+      },
+    });
+    Object.defineProperty(fn, 'v1', {
+      get: () => {
+        return firestore.v1;
+      },
+    });
+
+    return fn;
   }
 
   /**

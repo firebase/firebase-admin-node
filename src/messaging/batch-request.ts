@@ -59,6 +59,10 @@ export class BatchRequestClient {
    * @return {Promise<HttpResponse[]>} A promise that resolves when the send operation is complete.
    */
   public send(requests: SubRequest[]): Promise<HttpResponse[]> {
+    requests = requests.map((req) => {
+      req.headers = Object.assign({}, this.commonHeaders, req.headers);
+      return req;
+    });
     const requestHeaders = {
       'Content-Type': `multipart/mixed; boundary=${PART_BOUNDARY}`,
     };
