@@ -1,12 +1,9 @@
-# Firebase JavaScript SDK Reference For Node.js
-The Firebase JavaScript SDK implements the client-side libraries used by
-applications using Firebase services. This SDK is distributed via:
+# Firebase Admin Node.js SDK Reference
 
-- CDN (`<script src="https://www.gstatic.com/firebasejs/{{ web_sdk_version }}/firebase.js"></script>`)
-- [npm package](https://www.npmjs.com/package/firebase)
-- [Bower package](https://github.com/firebase/firebase-bower)
+The Admin SDK lets you interact with Firebase from privileged environments.
+You can install it via our [npm package](https://www.npmjs.com/package/firebase-admin).
 
-To get started using Firebase, see
-[Add Firebase to your JavaScript Project](https://firebase.google.com/docs/web/setup).
+To get started using the Firebase Admin Node.js SDK, see
+[Add the Firebase Admin SDK to your server](https://firebase.google.com/docs/admin/setup).
 
-For source code, see the [Firebase JavaScript SDK Github repo](https://github.com/firebase/firebase-js-sdk).
+For source code, see the [Firebase Admin Node.js SDK Github repo](https://github.com/firebase/firebase-admin-node).

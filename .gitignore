@@ -16,3 +16,5 @@ test/resources/apikey.txt
 
 # Release tarballs should not be checked in
 firebase-admin-*.tgz
+
+docgen/html/
