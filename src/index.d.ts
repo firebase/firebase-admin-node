@@ -61,6 +61,13 @@ declare namespace admin {
   function database(app?: admin.app.App): admin.database.Database;
   function messaging(app?: admin.app.App): admin.messaging.Messaging;
   function storage(app?: admin.app.App): admin.storage.Storage;
+
+  /**
+   *
+   * @param app A Firebase App instance
+   * @returns A [Firestore](https://cloud.google.com/nodejs/docs/reference/firestore/latest/Firestore)
+   * instance as defined in the `@google-cloud/firestore` package.
+   */
   function firestore(app?: admin.app.App): admin.firestore.Firestore;
   function instanceId(app?: admin.app.App): admin.instanceId.InstanceId;
   function projectManagement(app?: admin.app.App): admin.projectManagement.ProjectManagement;
@@ -719,6 +726,11 @@ declare namespace admin.messaging {
 declare namespace admin.storage {
   interface Storage {
     app: admin.app.App;
+
+    /**
+     * @returns A [Bucket](https://cloud.google.com/nodejs/docs/reference/storage/latest/Bucket)
+     * instance as defined in the `@google-cloud/storage` package.
+     */
     bucket(name?: string): Bucket;
   }
 }
