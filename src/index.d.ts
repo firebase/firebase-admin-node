@@ -27,7 +27,7 @@ declare namespace admin {
     toJSON(): Object;
   }
 
-  type FirebaseArrayIndexError = {
+  interface FirebaseArrayIndexError {
     index: number;
     error: FirebaseError;
   }
@@ -479,16 +479,16 @@ declare namespace admin.messaging {
     tokens: string[];
   }
 
-  type AndroidConfig = {
+  interface AndroidConfig {
     collapseKey?: string;
     priority?: ('high'|'normal');
     ttl?: number;
     restrictedPackageName?: string;
     data?: {[key: string]: string};
     notification?: AndroidNotification;
-  };
+  }
 
-  type AndroidNotification = {
+  interface AndroidNotification {
     title?: string;
     body?: string;
     icon?: string;
@@ -501,19 +501,19 @@ declare namespace admin.messaging {
     titleLocKey?: string;
     titleLocArgs?: string[];
     channelId?: string;
-  };
+  }
 
-  type ApnsConfig = {
+  interface ApnsConfig {
     headers?: {[key: string]: string};
     payload?: ApnsPayload;
-  };
+  }
 
-  type ApnsPayload = {
+  interface ApnsPayload {
     aps: Aps;
     [customData: string]: object;
-  };
+  }
 
-  type Aps = {
+  interface Aps {
     alert?: string | ApsAlert;
     badge?: number;
     sound?: string | CriticalSound;
@@ -522,9 +522,9 @@ declare namespace admin.messaging {
     category?: string;
     threadId?: string;
     [customData: string]: any;
-  };
+  }
 
-  type ApsAlert = {
+  interface ApsAlert {
     title?: string;
     subtitle?: string;
     body?: string;
@@ -536,25 +536,25 @@ declare namespace admin.messaging {
     subtitleLocArgs?: string[];
     actionLocKey?: string;
     launchImage?: string;
-  };
+  }
 
-  type CriticalSound = {
+  interface CriticalSound {
     critical?: boolean;
     name: string;
     volume?: number;
   }
 
-  type Notification = {
+  interface Notification {
     title?: string;
     body?: string;
-  };
+  }
 
-  type WebpushConfig = {
+  interface WebpushConfig {
     headers?: {[key: string]: string};
     data?: {[key: string]: string};
     notification?: WebpushNotification;
     fcmOptions?: WebpushFcmOptions;
-  };
+  }
 
   interface WebpushFcmOptions {
     link?: string;
@@ -583,11 +583,11 @@ declare namespace admin.messaging {
     [key: string]: any;
   }
 
-  type DataMessagePayload = {
+  interface DataMessagePayload {
     [key: string]: string;
-  };
+  }
 
-  type NotificationMessagePayload = {
+  interface NotificationMessagePayload {
     tag?: string;
     body?: string;
     icon?: string;
@@ -601,14 +601,14 @@ declare namespace admin.messaging {
     titleLocKey?: string;
     titleLocArgs?: string;
     [key: string]: string | undefined;
-  };
+  }
 
-  type MessagingPayload = {
+  interface MessagingPayload {
     data?: admin.messaging.DataMessagePayload;
     notification?: admin.messaging.NotificationMessagePayload;
-  };
+  }
 
-  type MessagingOptions = {
+  interface MessagingOptions {
     dryRun?: boolean;
     priority?: string;
     timeToLive?: number;
@@ -617,53 +617,53 @@ declare namespace admin.messaging {
     contentAvailable?: boolean;
     restrictedPackageName?: string;
     [key: string]: any | undefined;
-  };
+  }
 
-  type MessagingDeviceResult = {
+  interface MessagingDeviceResult {
     error?: admin.FirebaseError;
     messageId?: string;
     canonicalRegistrationToken?: string;
-  };
+  }
 
-  type MessagingDevicesResponse = {
+  interface MessagingDevicesResponse {
     canonicalRegistrationTokenCount: number;
     failureCount: number;
     multicastId: number;
     results: admin.messaging.MessagingDeviceResult[];
     successCount: number;
-  };
+  }
 
-  type MessagingDeviceGroupResponse = {
+  interface MessagingDeviceGroupResponse {
     successCount: number;
     failureCount: number;
     failedRegistrationTokens: string[];
-  };
+  }
 
-  type MessagingTopicResponse = {
+  interface MessagingTopicResponse {
     messageId: number;
-  };
+  }
 
-  type MessagingConditionResponse = {
+  interface MessagingConditionResponse {
     messageId: number;
-  };
+  }
 
-  type MessagingTopicManagementResponse = {
+  interface MessagingTopicManagementResponse {
     failureCount: number;
     successCount: number;
     errors: admin.FirebaseArrayIndexError[];
-  };
+  }
 
-  type BatchResponse = {
+  interface BatchResponse {
     responses: admin.messaging.SendResponse[];
     successCount: number;
     failureCount: number;
   }
 
-  type SendResponse = {
+  interface SendResponse {
     success: boolean;
     messageId?: string;
     error?: admin.FirebaseError;
-  };
+  }
 
   interface Messaging {
     app: admin.app.App;
