@@ -121,13 +121,13 @@ declare namespace admin.auth {
   }
 
   interface UpdateRequest {
-    displayName?: string;
+    disabled?: boolean;
+    displayName?: string | null;
     email?: string;
     emailVerified?: boolean;
-    phoneNumber?: string;
-    photoURL?: string;
-    disabled?: boolean;
     password?: string;
+    phoneNumber?: string | null;
+    photoURL?: string | null;
   }
 
   interface CreateRequest extends UpdateRequest {
@@ -475,6 +475,10 @@ interface ConditionMessage extends BaseMessage {
 declare namespace admin.messaging {
   type Message = TokenMessage | TopicMessage | ConditionMessage;
 
+  interface MulticastMessage extends BaseMessage {
+    tokens: string[];
+  }
+
   type AndroidConfig = {
     collapseKey?: string;
     priority?: ('high'|'normal');
@@ -536,7 +540,7 @@ declare namespace admin.messaging {
 
   type CriticalSound = {
     critical?: boolean;
-    name?: string;
+    name: string;
     volume?: number;
   }
 
@@ -649,10 +653,30 @@ declare namespace admin.messaging {
     errors: admin.FirebaseArrayIndexError[];
   };
 
+  type BatchResponse = {
+    responses: admin.messaging.SendResponse[];
+    successCount: number;
+    failureCount: number;
+  }
+
+  type SendResponse = {
+    success: boolean;
+    messageId?: string;
+    error?: admin.FirebaseError;
+  };
+
   interface Messaging {
     app: admin.app.App;
 
     send(message: admin.messaging.Message, dryRun?: boolean): Promise<string>;
+    sendAll(
+      messages: Array<admin.messaging.Message>,
+      dryRun?: boolean
+    ): Promise<admin.messaging.BatchResponse>;
+    sendMulticast(
+      message: admin.messaging.MulticastMessage,
+      dryRun?: boolean
+    ): Promise<admin.messaging.BatchResponse>;
     sendToDevice(
       registrationToken: string | string[],
       payload: admin.messaging.MessagingPayload,
@@ -700,6 +724,9 @@ declare namespace admin.storage {
 }
 
 declare namespace admin.firestore {
+  export import v1beta1 = _firestore.v1beta1;
+  export import v1 = _firestore.v1;
+
   export import CollectionReference = _firestore.CollectionReference;
   export import DocumentData = _firestore.DocumentData;
   export import DocumentReference = _firestore.DocumentReference;
@@ -776,6 +803,7 @@ declare namespace admin.projectManagement {
     listIosApps(): Promise<admin.projectManagement.IosApp[]>;
     androidApp(appId: string): admin.projectManagement.AndroidApp;
     iosApp(appId: string): admin.projectManagement.IosApp;
+    shaCertificate(shaHash: string): admin.projectManagement.ShaCertificate;
     createAndroidApp(
         packageName: string, displayName?: string): Promise<admin.projectManagement.AndroidApp>;
     createIosApp(bundleId: string, displayName?: string): Promise<admin.projectManagement.IosApp>;

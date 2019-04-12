@@ -19,7 +19,6 @@
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as _ from 'lodash';
-import * as nock from 'nock';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import { FirebaseApp } from '../../../src/firebase-app';
@@ -49,18 +48,20 @@ describe('ProjectManagementRequestHandler', () => {
   const DISPLAY_NAME: string = 'test-display-name';
   const OPERATION_RESOURCE_NAME: string = 'test-operation-resource-name';
 
-  const mockedRequests: nock.Scope[] = [];
   const mockAccessToken: string = utils.generateRandomAccessToken();
   let stubs: sinon.SinonStub[] = [];
+  let getTokenStub: sinon.SinonStub;
   let mockApp: FirebaseApp;
   let expectedHeaders: object;
   let requestHandler: ProjectManagementRequestHandler;
 
-  before(() => utils.mockFetchAccessTokenRequests(mockAccessToken));
+  before(() => {
+    getTokenStub = utils.stubGetAccessToken(mockAccessToken);
+  });
 
   after(() => {
     stubs = [];
-    nock.cleanAll();
+    getTokenStub.restore();
   });
 
   beforeEach(() => {
@@ -75,7 +76,6 @@ describe('ProjectManagementRequestHandler', () => {
 
   afterEach(() => {
     _.forEach(stubs, (stub) => stub.restore());
-    _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
     return mockApp.delete();
   });
 

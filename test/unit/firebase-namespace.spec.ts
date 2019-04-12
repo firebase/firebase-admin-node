@@ -18,12 +18,10 @@
 
 import * as _ from 'lodash';
 import * as chai from 'chai';
-import * as nock from 'nock';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import * as utils from './utils';
 import * as mocks from '../resources/mocks';
 
 import {FirebaseNamespace} from '../../src/firebase-namespace';
@@ -45,6 +43,8 @@ import {
   FieldPath,
   FieldValue,
   GeoPoint,
+  v1,
+  v1beta1,
   setLogFunction,
 } from '@google-cloud/firestore';
 import {InstanceId} from '../../src/instance-id/instance-id';
@@ -63,10 +63,6 @@ const DEFAULT_APP_NOT_FOUND = 'The default Firebase app does not exist. Make sur
 
 describe('FirebaseNamespace', () => {
   let firebaseNamespace: FirebaseNamespace;
-
-  before(() => utils.mockFetchAccessTokenRequests());
-
-  after(() => nock.cleanAll());
 
   beforeEach(() => {
     firebaseNamespace = new FirebaseNamespace();
@@ -551,6 +547,14 @@ describe('FirebaseNamespace', () => {
 
     it('should return a reference to setLogFunction', () => {
       expect(firebaseNamespace.firestore.setLogFunction).to.be.deep.equal(setLogFunction);
+    });
+
+    it('should return a reference to the v1beta1 namespace', () => {
+      expect(firebaseNamespace.firestore.v1beta1).to.be.deep.equal(v1beta1);
+    });
+
+    it('should return a reference to the v1 namespace', () => {
+      expect(firebaseNamespace.firestore.v1).to.be.deep.equal(v1);
     });
   });
 

@@ -19,7 +19,7 @@ import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../
 import { FirebaseProjectManagementError } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { AndroidApp } from './android-app';
+import { AndroidApp, ShaCertificate } from './android-app';
 import { IosApp } from './ios-app';
 import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request';
 
@@ -100,6 +100,13 @@ export class ProjectManagement implements FirebaseServiceInterface {
    */
   public iosApp(appId: string): IosApp {
     return new IosApp(appId, this.requestHandler);
+  }
+
+  /**
+   * Returns a ShaCertificate object for the given shaHash. No RPC is made.
+   */
+  public shaCertificate(shaHash: string): ShaCertificate {
+    return new ShaCertificate(shaHash);
   }
 
   /**

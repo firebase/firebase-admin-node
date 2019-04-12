@@ -1,7 +1,58 @@
 # Unreleased
 
-- [fixed] Correctly parses error codes with details messages in Firebase Auth.
-- [fixed] Fixed optional fields in UserRecord types to be optional.
+-
+
+# v7.2.0
+
+- [changed] Updated the Google Cloud Firestore client to v1.2.0. This update
+  exposes the `v1beta` and `v1` clients and provides direct access to the
+  underlying Firestore and Firestore Admin RPCs. Please note that you will have
+  to provide your Firebase credentials directly to these clients.
+
+# v7.1.1
+
+- [fixed] Fixed a bug in the FCM batch APIs that prevented them from correctly
+  handling some message parameters like `AndroidConfig.ttl`.
+
+# v7.1.0
+
+- [added] A new `messaging.sendAll()` API for sending multiple messages as a
+  single batch.
+- [added] A new `messaging.sendMulticast()` API for sending a message to
+  multiple device registration tokens.
+- [fixed] Upgraded Cloud Firestore client version to 1.1.0.
+- [fixed] Improved typings of `UpdateRequest` interface to support deletion of
+  properties.
+
+# v7.0.0
+
+- [changed] Updated the Google Cloud Firestore client to v1.0.1. This contains
+  breaking changes. Refer to Cloud Firestore
+  [release notes](https://github.com/googleapis/nodejs-firestore/releases/tag/v0.20.0)
+  for more details and migration instructions.
+- [changed] Updated the Google Cloud Storage client to v2.3.0. This contains
+  breaking changes. Refer to Cloud Storage
+  [release notes](https://github.com/googleapis/nodejs-storage/releases/tag/v2.0.0)
+  for more details and migration instructions.
+- [changed] `verifyIdToken()` and `verifySessionCookie()` methods now return
+  `auth/id-token-expired` and `auth/session-cookie-expired` error codes for
+  expired JWTs.
+- [fixed] Including additional helpful details in the errors thrown due to
+  credentials-related problems.
+
+# v6.5.1
+
+- [fixed] Implemented a Node.js environment check that will be executed at
+  package import time.
+- [fixed] Setting the `GOOGLE_APPLICATION_CREDENTIALS` environment variable
+  to a refresh token instead of a service account is now supported.
+
+# v6.5.0
+
+- [fixed] Correctly parses error codes sent by Firebase Auth backend servers.
+- [fixed] Correctly marked the optional fields in `UserRecord` types.
+- [added] `admin.projectManagement().shaCertificate()` method to create an
+  instance of admin.projectManagement.ShaCertificate.
 
 # v6.4.0
 

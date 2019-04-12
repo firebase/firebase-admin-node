@@ -16,11 +16,22 @@
 
 import * as firebase from './default-namespace';
 
-// Register the Database service
-// For historical reasons, the database code is included as minified code and registers itself
-// as a side effect of requiring the file.
-/* tslint:disable:no-var-requires */
-// require('./database/database');
-/* tslint:enable:no-var-requires */
+// Only Node.js has a process variable that is of [[Class]] process
+const processGlobal = typeof process !== 'undefined' ? process : 0;
+if (Object.prototype.toString.call(processGlobal) !== '[object process]') {
+  const message = `
+======== WARNING! ========
+
+firebase-admin appears to have been installed in an unsupported environment.
+This package should only be used in server-side or backend Node.js environments,
+and should not be used in web browsers or other client-side environments.
+
+Use the Firebase JS SDK for client-side Firebase integrations:
+
+https://firebase.google.com/docs/web/setup
+`;
+  // tslint:disable-next-line:no-console
+  console.error(message);
+}
 
 export = firebase;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
+import {AuthClientErrorCode, FirebaseAuthError, ErrorInfo} from '../utils/error';
 
 import * as validator from '../utils/validator';
 import * as jwt from 'jsonwebtoken';
@@ -38,7 +38,7 @@ export const ID_TOKEN_INFO: FirebaseTokenInfo = {
   verifyApiName: 'verifyIdToken()',
   jwtName: 'Firebase ID token',
   shortName: 'ID token',
-  expiredErrorCode: 'auth/id-token-expired',
+  expiredErrorCode: AuthClientErrorCode.ID_TOKEN_EXPIRED,
 };
 
 /** User facing token information related to the Firebase session cookie. */
@@ -47,7 +47,7 @@ export const SESSION_COOKIE_INFO: FirebaseTokenInfo = {
   verifyApiName: 'verifySessionCookie()',
   jwtName: 'Firebase session cookie',
   shortName: 'session cookie',
-  expiredErrorCode: 'auth/session-cookie-expired',
+  expiredErrorCode: AuthClientErrorCode.SESSION_COOKIE_EXPIRED,
 };
 
 /** Interface that defines token related user facing information. */
@@ -61,7 +61,7 @@ export interface FirebaseTokenInfo {
   /** The JWT short name. */
   shortName: string;
   /** JWT Expiration error code. */
-  expiredErrorCode: string;
+  expiredErrorCode: ErrorInfo;
 }
 
 /**
@@ -115,10 +115,10 @@ export class FirebaseTokenVerifier {
         AuthClientErrorCode.INVALID_ARGUMENT,
         `The JWT public short name must be a non-empty string.`,
       );
-    } else if (!validator.isNonEmptyString(tokenInfo.expiredErrorCode)) {
+    } else if (!validator.isNonNullObject(tokenInfo.expiredErrorCode) || !('code' in tokenInfo.expiredErrorCode)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        `The JWT expiration error code must be a non-empty string.`,
+        `The JWT expiration error code must be a non-null ErrorInfo object.`,
       );
     }
     this.shortNameArticle = tokenInfo.shortName.charAt(0).match(/[aeiou]/i) ? 'an' : 'a';
@@ -228,22 +228,23 @@ export class FirebaseTokenVerifier {
    *     verification.
    */
   private verifyJwtSignatureWithKey(jwtToken: string, publicKey: string): Promise<object> {
-    let errorMessage: string;
     const verifyJwtTokenDocsMessage = ` See ${this.tokenInfo.url} ` +
       `for details on how to retrieve ${this.shortNameArticle} ${this.tokenInfo.shortName}.`;
     return new Promise((resolve, reject) => {
       jwt.verify(jwtToken, publicKey, {
         algorithms: [this.algorithm],
-      }, (error: any, decodedToken: any) => {
+      }, (error: jwt.VerifyErrors, decodedToken: any) => {
         if (error) {
           if (error.name === 'TokenExpiredError') {
-            errorMessage = `${this.tokenInfo.jwtName} has expired. Get a fresh token from your client ` +
-              `app and try again (${this.tokenInfo.expiredErrorCode}).` + verifyJwtTokenDocsMessage;
+            const errorMessage = `${this.tokenInfo.jwtName} has expired. Get a fresh ${this.tokenInfo.shortName}` +
+              ` from your client app and try again (auth/${this.tokenInfo.expiredErrorCode.code}).` +
+              verifyJwtTokenDocsMessage;
+            return reject(new FirebaseAuthError(this.tokenInfo.expiredErrorCode, errorMessage));
           } else if (error.name === 'JsonWebTokenError') {
-            errorMessage = `${this.tokenInfo.jwtName} has invalid signature.` + verifyJwtTokenDocsMessage;
+            const errorMessage = `${this.tokenInfo.jwtName} has invalid signature.` + verifyJwtTokenDocsMessage;
+            return reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, errorMessage));
           }
-
-          return reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, errorMessage));
+          return reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, error.message));
         } else {
           decodedToken.uid = decodedToken.sub;
           resolve(decodedToken);

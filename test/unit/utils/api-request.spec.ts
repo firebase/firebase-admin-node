@@ -16,7 +16,6 @@
 
 'use strict';
 
-import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as nock from 'nock';
 import * as sinon from 'sinon';
@@ -28,9 +27,11 @@ import * as mocks from '../../resources/mocks';
 
 import {FirebaseApp} from '../../../src/firebase-app';
 import {
-  ApiSettings, HttpClient, HttpError, AuthorizedHttpClient, ApiCallbackFunction,
+  ApiSettings, HttpClient, HttpError, AuthorizedHttpClient, ApiCallbackFunction, HttpRequestConfig, parseHttpResponse,
 } from '../../../src/utils/api-request';
+import { deepCopy } from '../../../src/utils/deep-copy';
 import {Agent} from 'http';
+import * as zlib from 'zlib';
 
 chai.should();
 chai.use(sinonChai);
@@ -94,8 +95,16 @@ describe('HttpClient', () => {
   let mockedRequests: nock.Scope[] = [];
   let transportSpy: sinon.SinonSpy = null;
 
+  const sampleMultipartData = '--boundary\r\n'
+      + 'Content-type: application/json\r\n\r\n'
+      + '{"foo": 1}\r\n'
+      + '--boundary\r\n'
+      + 'Content-type: text/plain\r\n\r\n'
+      + 'foo bar\r\n'
+      + '--boundary--\r\n';
+
   afterEach(() => {
-    _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
+    mockedRequests.forEach((mockedRequest) => mockedRequest.done());
     mockedRequests = [];
     if (transportSpy) {
       transportSpy.restore();
@@ -120,6 +129,7 @@ describe('HttpClient', () => {
       expect(resp.headers['content-type']).to.equal('application/json');
       expect(resp.text).to.equal(JSON.stringify(respData));
       expect(resp.data).to.deep.equal(respData);
+      expect(resp.multipart).to.be.undefined;
       expect(resp.isJson()).to.be.true;
     });
   });
@@ -140,6 +150,123 @@ describe('HttpClient', () => {
       expect(resp.status).to.equal(200);
       expect(resp.headers['content-type']).to.equal('text/plain');
       expect(resp.text).to.equal(respData);
+      expect(() => { resp.data; }).to.throw('Error while parsing response data');
+      expect(resp.multipart).to.be.undefined;
+      expect(resp.isJson()).to.be.false;
+    });
+  });
+
+  it('should be fulfilled for a 2xx response with an empty multipart payload', () => {
+    const scope = nock('https://' + mockHost)
+      .get(mockPath)
+      .reply(200, '--boundary--\r\n', {
+        'content-type': 'multipart/mixed; boundary=boundary',
+      });
+    mockedRequests.push(scope);
+    const client = new HttpClient();
+    return client.send({
+      method: 'GET',
+      url: mockUrl,
+    }).then((resp) => {
+      expect(resp.status).to.equal(200);
+      expect(resp.headers['content-type']).to.equal('multipart/mixed; boundary=boundary');
+      expect(resp.multipart).to.not.be.undefined;
+      expect(resp.multipart.length).to.equal(0);
+      expect(() => { resp.text; }).to.throw('Unable to parse multipart payload as text');
+      expect(() => { resp.data; }).to.throw('Unable to parse multipart payload as JSON');
+      expect(resp.isJson()).to.be.false;
+    });
+  });
+
+  it('should be fulfilled for a 2xx response with a multipart payload', () => {
+    const scope = nock('https://' + mockHost)
+      .get(mockPath)
+      .reply(200, sampleMultipartData, {
+        'content-type': 'multipart/mixed; boundary=boundary',
+      });
+    mockedRequests.push(scope);
+    const client = new HttpClient();
+    return client.send({
+      method: 'GET',
+      url: mockUrl,
+    }).then((resp) => {
+      expect(resp.status).to.equal(200);
+      expect(resp.headers['content-type']).to.equal('multipart/mixed; boundary=boundary');
+      expect(resp.multipart).to.not.be.undefined;
+      expect(resp.multipart.length).to.equal(2);
+      expect(resp.multipart[0].toString('utf-8')).to.equal('{"foo": 1}');
+      expect(resp.multipart[1].toString('utf-8')).to.equal('foo bar');
+      expect(() => { resp.text; }).to.throw('Unable to parse multipart payload as text');
+      expect(() => { resp.data; }).to.throw('Unable to parse multipart payload as JSON');
+      expect(resp.isJson()).to.be.false;
+    });
+  });
+
+  it('should be fulfilled for a 2xx response with any multipart payload', () => {
+    const scope = nock('https://' + mockHost)
+      .get(mockPath)
+      .reply(200, sampleMultipartData, {
+        'content-type': 'multipart/something; boundary=boundary',
+      });
+    mockedRequests.push(scope);
+    const client = new HttpClient();
+    return client.send({
+      method: 'GET',
+      url: mockUrl,
+    }).then((resp) => {
+      expect(resp.status).to.equal(200);
+      expect(resp.headers['content-type']).to.equal('multipart/something; boundary=boundary');
+      expect(resp.multipart).to.not.be.undefined;
+      expect(resp.multipart.length).to.equal(2);
+      expect(resp.multipart[0].toString('utf-8')).to.equal('{"foo": 1}');
+      expect(resp.multipart[1].toString('utf-8')).to.equal('foo bar');
+      expect(() => { resp.text; }).to.throw('Unable to parse multipart payload as text');
+      expect(() => { resp.data; }).to.throw('Unable to parse multipart payload as JSON');
+      expect(resp.isJson()).to.be.false;
+    });
+  });
+
+  it('should handle as a text response when boundary not present', () => {
+    const respData = 'foo bar';
+    const scope = nock('https://' + mockHost)
+      .get(mockPath)
+      .reply(200, respData, {
+        'content-type': 'multipart/mixed',
+      });
+    mockedRequests.push(scope);
+    const client = new HttpClient();
+    return client.send({
+      method: 'GET',
+      url: mockUrl,
+    }).then((resp) => {
+      expect(resp.status).to.equal(200);
+      expect(resp.headers['content-type']).to.equal('multipart/mixed');
+      expect(resp.multipart).to.be.undefined;
+      expect(resp.text).to.equal(respData);
+      expect(() => { resp.data; }).to.throw('Error while parsing response data');
+      expect(resp.isJson()).to.be.false;
+    });
+  });
+
+  it('should be fulfilled for a 2xx response with a compressed payload', () => {
+    const deflated: Buffer = zlib.deflateSync('foo bar');
+    const scope = nock('https://' + mockHost)
+      .get(mockPath)
+      .reply(200, deflated, {
+        'content-type': 'text/plain',
+        'content-encoding': 'deflate',
+      });
+    mockedRequests.push(scope);
+    const client = new HttpClient();
+    return client.send({
+      method: 'GET',
+      url: mockUrl,
+    }).then((resp) => {
+      expect(resp.status).to.equal(200);
+      expect(resp.headers['content-type']).to.equal('text/plain');
+      expect(resp.headers['content-encoding']).to.be.undefined;
+      expect(resp.multipart).to.be.undefined;
+      expect(resp.text).to.equal('foo bar');
       expect(() => { resp.data; }).to.throw('Error while parsing response data');
       expect(resp.isJson()).to.be.false;
     });
@@ -199,6 +326,38 @@ describe('HttpClient', () => {
       expect(resp.headers['content-type']).to.equal('application/json');
       expect(resp.data).to.deep.equal(respData);
       expect(resp.isJson()).to.be.true;
+    });
+  });
+
+  it('should not mutate the arguments', () => {
+    const reqData = {request: 'data'};
+    const scope = nock('https://' + mockHost, {
+      reqheaders: {
+        'Authorization': 'Bearer token',
+        'Content-Type': (header) => {
+          return header.startsWith('application/json'); // auto-inserted
+        },
+        'My-Custom-Header': 'CustomValue',
+      },
+    }).post(mockPath, reqData)
+    .reply(200, {success: true}, {
+      'content-type': 'application/json',
+    });
+    mockedRequests.push(scope);
+    const client = new HttpClient();
+    const request: HttpRequestConfig = {
+      method: 'POST',
+      url: mockUrl,
+      headers: {
+        'authorization': 'Bearer token',
+        'My-Custom-Header': 'CustomValue',
+      },
+      data: reqData,
+    };
+    const requestCopy = deepCopy(request);
+    return client.send(request).then((resp) => {
+      expect(resp.status).to.equal(200);
+      expect(request).to.deep.equal(requestCopy);
     });
   });
 
@@ -320,8 +479,33 @@ describe('HttpClient', () => {
     });
   });
 
+  it('should fail for an error response with a multipart payload', () => {
+    const scope = nock('https://' + mockHost)
+      .get(mockPath)
+      .reply(500, sampleMultipartData, {
+        'content-type': 'multipart/mixed; boundary=boundary',
+      });
+    mockedRequests.push(scope);
+    const client = new HttpClient();
+    return client.send({
+      method: 'GET',
+      url: mockUrl,
+    }).catch((err: HttpError) => {
+      expect(err.message).to.equal('Server responded with status 500.');
+      const resp = err.response;
+      expect(resp.status).to.equal(500);
+      expect(resp.headers['content-type']).to.equal('multipart/mixed; boundary=boundary');
+      expect(resp.multipart).to.not.be.undefined;
+      expect(resp.multipart.length).to.equal(2);
+      expect(resp.multipart[0].toString('utf-8')).to.equal('{"foo": 1}');
+      expect(resp.multipart[1].toString('utf-8')).to.equal('foo bar');
+      expect(() => { resp.text; }).to.throw('Unable to parse multipart payload as text');
+      expect(() => { resp.data; }).to.throw('Unable to parse multipart payload as JSON');
+      expect(resp.isJson()).to.be.false;
+    });
+  });
+
   it('should fail with a FirebaseAppError for a network error', () => {
-    const data = {foo: 'bar'};
     mockedRequests.push(mockRequestWithError({message: 'test error', code: 'AWFUL_ERROR'}));
     const client = new HttpClient();
     const err = 'Error while making request: test error. Error code: AWFUL_ERROR';
@@ -399,11 +583,57 @@ describe('HttpClient', () => {
       expect(resp.data).to.deep.equal(respData);
     });
   });
+
+  it('should reject if the request payload is invalid', () => {
+    const client = new HttpClient();
+    const err = 'Error while making request: Request data must be a string, a Buffer '
+      + 'or a json serializable object';
+    return client.send({
+      method: 'POST',
+      url: mockUrl,
+      data: 1 as any,
+    }).should.eventually.be.rejectedWith(err).and.have.property('code', 'app/network-error');
+  });
+
+  it('should use the port 80 for http URLs', () => {
+    const respData = {foo: 'bar'};
+    const scope = nock('http://' + mockHost + ':80')
+      .get('/')
+      .reply(200, respData, {
+        'content-type': 'application/json',
+      });
+    mockedRequests.push(scope);
+    const client = new HttpClient();
+    return client.send({
+      method: 'GET',
+      url: 'http://' + mockHost,
+    }).then((resp) => {
+      expect(resp.status).to.equal(200);
+    });
+  });
+
+  it('should use the port specified in the URL', () => {
+    const respData = {foo: 'bar'};
+    const scope = nock('https://' + mockHost + ':8080')
+      .get('/')
+      .reply(200, respData, {
+        'content-type': 'application/json',
+      });
+    mockedRequests.push(scope);
+    const client = new HttpClient();
+    return client.send({
+      method: 'GET',
+      url: 'https://' + mockHost + ':8080',
+    }).then((resp) => {
+      expect(resp.status).to.equal(200);
+    });
+  });
 });
 
 describe('AuthorizedHttpClient', () => {
   let mockApp: FirebaseApp;
   let mockedRequests: nock.Scope[] = [];
+  let getTokenStub: sinon.SinonStub;
 
   const mockAccessToken: string = utils.generateRandomAccessToken();
   const requestHeaders = {
@@ -412,16 +642,20 @@ describe('AuthorizedHttpClient', () => {
     },
   };
 
-  before(() => utils.mockFetchAccessTokenRequests(mockAccessToken));
+  before(() => {
+    getTokenStub = utils.stubGetAccessToken(mockAccessToken);
+  });
 
-  after(() => nock.cleanAll());
+  after(() => {
+    getTokenStub.restore();
+  });
 
   beforeEach(() => {
     mockApp = mocks.app();
   });
 
   afterEach(() => {
-    _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
+    mockedRequests.forEach((mockedRequest) => mockedRequest.done());
     mockedRequests = [];
     return mockApp.delete();
   });
@@ -482,9 +716,8 @@ describe('AuthorizedHttpClient', () => {
         httpAgent,
       }).then((resp) => {
         expect(resp.status).to.equal(200);
-        // First call is to the token server
-        expect(transportSpy.callCount).to.equal(2);
-        const options = transportSpy.args[1][0];
+        expect(transportSpy.callCount).to.equal(1);
+        const options = transportSpy.args[0][0];
         expect(options.agent).to.equal(httpAgent);
       });
     });
@@ -503,9 +736,8 @@ describe('AuthorizedHttpClient', () => {
         url: mockUrl,
       }).then((resp) => {
         expect(resp.status).to.equal(200);
-        // First call is to the token server
-        expect(transportSpy.callCount).to.equal(2);
-        const options = transportSpy.args[1][0];
+        expect(transportSpy.callCount).to.equal(1);
+        const options = transportSpy.args[0][0];
         expect(options.agent).to.equal(agentForApp);
       });
     });
@@ -516,9 +748,8 @@ describe('AuthorizedHttpClient', () => {
     const respData = {success: true};
     const options = {
       reqheaders: {
-        'Authorization': 'Bearer token',
         'Content-Type': (header: string) => {
-          return header.startsWith('application/json'); // auto-inserted by Axios
+          return header.startsWith('application/json'); // auto-inserted
         },
         'My-Custom-Header': 'CustomValue',
       },
@@ -542,6 +773,39 @@ describe('AuthorizedHttpClient', () => {
       expect(resp.status).to.equal(200);
       expect(resp.headers['content-type']).to.equal('application/json');
       expect(resp.data).to.deep.equal(respData);
+    });
+  });
+
+  it('should not mutate the arguments', () => {
+    const reqData = {request: 'data'};
+    const options = {
+      reqheaders: {
+        'Content-Type': (header: string) => {
+          return header.startsWith('application/json'); // auto-inserted
+        },
+        'My-Custom-Header': 'CustomValue',
+      },
+    };
+    Object.assign(options.reqheaders, requestHeaders.reqheaders);
+    const scope = nock('https://' + mockHost, options)
+      .post(mockPath, reqData)
+      .reply(200, {success: true}, {
+        'content-type': 'application/json',
+      });
+    mockedRequests.push(scope);
+    const client = new AuthorizedHttpClient(mockApp);
+    const request: HttpRequestConfig = {
+      method: 'POST',
+      url: mockUrl,
+      headers: {
+        'My-Custom-Header': 'CustomValue',
+      },
+      data: reqData,
+    };
+    const requestCopy = deepCopy(request);
+    return client.send(request).then((resp) => {
+      expect(resp.status).to.equal(200);
+      expect(request).to.deep.equal(requestCopy);
     });
   });
 });
@@ -613,5 +877,105 @@ describe('ApiSettings', () => {
         expect(apiSettings.getResponseValidator()).to.equal(responseValidator);
       });
     });
+  });
+});
+
+describe('parseHttpResponse()', () => {
+  const config: HttpRequestConfig = {
+    method: 'GET',
+    url: 'https://example.com',
+  };
+
+  it('should parse a successful response with json content', () => {
+    const text = 'HTTP/1.1 200 OK\r\n'
+      + 'Content-type: application/json\r\n'
+      + 'Date: Thu, 07 Feb 2019 19:20:34 GMT\r\n'
+      + '\r\n'
+      + '{"foo": 1}';
+
+    const response = parseHttpResponse(text, config);
+
+    expect(response.status).to.equal(200);
+    expect(Object.keys(response.headers).length).to.equal(2);
+    expect(response.headers).to.have.property('content-type', 'application/json');
+    expect(response.headers).to.have.property('date', 'Thu, 07 Feb 2019 19:20:34 GMT');
+    expect(response.isJson()).to.be.true;
+    expect(response.data).to.deep.equal({foo: 1});
+    expect(response.text).to.equal('{"foo": 1}');
+  });
+
+  it('should parse an error response with json content', () => {
+    const text = 'HTTP/1.1 400 Bad Request\r\n'
+      + 'Content-type: application/json\r\n'
+      + 'Date: Thu, 07 Feb 2019 19:20:34 GMT\r\n'
+      + '\r\n'
+      + '{"foo": 1}';
+
+    const response = parseHttpResponse(text, config);
+
+    expect(response.status).to.equal(400);
+    expect(Object.keys(response.headers).length).to.equal(2);
+    expect(response.headers).to.have.property('content-type', 'application/json');
+    expect(response.headers).to.have.property('date', 'Thu, 07 Feb 2019 19:20:34 GMT');
+    expect(response.isJson()).to.be.true;
+    expect(response.data).to.deep.equal({foo: 1});
+    expect(response.text).to.equal('{"foo": 1}');
+  });
+
+  it('should parse a response with text content', () => {
+    const text = 'HTTP/1.1 200 OK\r\n'
+      + 'Content-type: text/plain\r\n'
+      + 'Date: Thu, 07 Feb 2019 19:20:34 GMT\r\n'
+      + '\r\n'
+      + 'foo bar';
+
+    const response = parseHttpResponse(text, config);
+
+    expect(response.status).to.equal(200);
+    expect(Object.keys(response.headers).length).to.equal(2);
+    expect(response.headers).to.have.property('content-type', 'text/plain');
+    expect(response.headers).to.have.property('date', 'Thu, 07 Feb 2019 19:20:34 GMT');
+    expect(response.isJson()).to.be.false;
+    expect(response.text).to.equal('foo bar');
+  });
+
+  it('should parse given a buffer', () => {
+    const text = 'HTTP/1.1 200 OK\r\n'
+      + 'Content-type: text/plain\r\n'
+      + 'Date: Thu, 07 Feb 2019 19:20:34 GMT\r\n'
+      + '\r\n'
+      + 'foo bar';
+
+    const response = parseHttpResponse(Buffer.from(text), config);
+
+    expect(response.status).to.equal(200);
+    expect(Object.keys(response.headers).length).to.equal(2);
+    expect(response.headers).to.have.property('content-type', 'text/plain');
+    expect(response.headers).to.have.property('date', 'Thu, 07 Feb 2019 19:20:34 GMT');
+    expect(response.isJson()).to.be.false;
+    expect(response.text).to.equal('foo bar');
+  });
+
+  it('should remove any trailing white space in the payload', () => {
+    const text = 'HTTP/1.1 200 OK\r\n'
+      + 'Content-type: text/plain\r\n'
+      + 'Date: Thu, 07 Feb 2019 19:20:34 GMT\r\n'
+      + '\r\n'
+      + 'foo bar\r\n';
+
+    const response = parseHttpResponse(text, config);
+
+    expect(response.isJson()).to.be.false;
+    expect(response.text).to.equal('foo bar');
+  });
+
+  it('should throw when the header is malformed', () => {
+    const text = 'malformed http header\r\n'
+      + 'Content-type: application/json\r\n'
+      + 'Date: Thu, 07 Feb 2019 19:20:34 GMT\r\n'
+      + '\r\n'
+      + '{"foo": 1}';
+
+    expect(() => parseHttpResponse(text, config)).to.throw('Malformed HTTP status line.');
   });
 });

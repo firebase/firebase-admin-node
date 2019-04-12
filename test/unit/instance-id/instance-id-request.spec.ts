@@ -18,7 +18,6 @@
 
 import * as _ from 'lodash';
 import * as chai from 'chai';
-import * as nock from 'nock';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
@@ -38,17 +37,19 @@ const expect = chai.expect;
 
 describe('FirebaseInstanceIdRequestHandler', () => {
   const projectId: string = 'test-project-id';
-  const mockedRequests: nock.Scope[] = [];
   const mockAccessToken: string = utils.generateRandomAccessToken();
   let stubs: sinon.SinonStub[] = [];
+  let getTokenStub: sinon.SinonStub;
   let mockApp: FirebaseApp;
   let expectedHeaders: object;
 
-  before(() => utils.mockFetchAccessTokenRequests(mockAccessToken));
+  before(() => {
+    getTokenStub = utils.stubGetAccessToken(mockAccessToken);
+  });
 
   after(() => {
     stubs = [];
-    nock.cleanAll();
+    getTokenStub.restore();
   });
 
   beforeEach(() => {
@@ -61,7 +62,6 @@ describe('FirebaseInstanceIdRequestHandler', () => {
 
   afterEach(() => {
     _.forEach(stubs, (stub) => stub.restore());
-    _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
     return mockApp.delete();
   });
 

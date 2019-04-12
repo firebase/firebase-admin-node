@@ -21,7 +21,6 @@ import https = require('https');
 
 import * as _ from 'lodash';
 import * as chai from 'chai';
-import * as nock from 'nock';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
@@ -41,6 +40,7 @@ import {Firestore} from '@google-cloud/firestore';
 import {Database} from '@firebase/database';
 import {InstanceId} from '../../src/instance-id/instance-id';
 import {ProjectManagement} from '../../src/project-management/project-management';
+import { FirebaseAppError, AppErrorCodes } from '../../src/utils/error';
 
 chai.should();
 chai.use(sinonChai);
@@ -64,15 +64,19 @@ function mockServiceFactory(app: FirebaseApp): FirebaseServiceInterface {
 
 describe('FirebaseApp', () => {
   let mockApp: FirebaseApp;
-  let mockedRequests: nock.Scope[] = [];
+  let clock: sinon.SinonFakeTimers;
+  let getTokenStub: sinon.SinonStub;
   let firebaseNamespace: FirebaseNamespace;
   let firebaseNamespaceInternals: FirebaseNamespaceInternals;
   let firebaseConfigVar: string;
 
   beforeEach(() => {
-    utils.mockFetchAccessTokenRequests();
+    getTokenStub = sinon.stub(CertCredential.prototype, 'getAccessToken').resolves({
+      access_token: 'mock-access-token',
+      expires_in: 3600,
+    });
 
-    this.clock = sinon.useFakeTimers(1000);
+    clock = sinon.useFakeTimers(1000);
 
     mockApp = mocks.app();
 
@@ -86,7 +90,8 @@ describe('FirebaseApp', () => {
   });
 
   afterEach(() => {
-    this.clock.restore();
+    getTokenStub.restore();
+    clock.restore();
     if (firebaseConfigVar) {
       process.env[FIREBASE_CONFIG_VAR] = firebaseConfigVar;
     } else {
@@ -95,11 +100,6 @@ describe('FirebaseApp', () => {
 
     deleteSpy.resetHistory();
     (firebaseNamespaceInternals.removeApp as any).restore();
-
-    _.forEach(mockedRequests, (mockedRequest) => mockedRequest.done());
-    mockedRequests = [];
-
-    nock.cleanAll();
   });
 
   describe('#name', () => {
@@ -624,25 +624,6 @@ describe('FirebaseApp', () => {
   });
 
   describe('INTERNAL.getToken()', () => {
-    let httpsSpy: sinon.SinonSpy;
-    let getAccessTokenSpy: sinon.SinonSpy;
-    let getAccessTokenStub: sinon.SinonStub;
-
-    beforeEach(() => {
-      httpsSpy = sinon.spy(https, 'request');
-    });
-
-    afterEach(() => {
-      httpsSpy.restore();
-
-      if (typeof getAccessTokenSpy !== 'undefined') {
-        getAccessTokenSpy.restore();
-      }
-
-      if (typeof getAccessTokenStub !== 'undefined') {
-        getAccessTokenStub.restore();
-      }
-    });
 
     it('throws a custom credential implementation which returns invalid access tokens', () => {
       const credential = {
@@ -695,20 +676,20 @@ describe('FirebaseApp', () => {
 
     it('returns the cached token given no arguments', () => {
       return mockApp.INTERNAL.getToken(true).then((token1) => {
-        this.clock.tick(1000);
+        clock.tick(1000);
         return mockApp.INTERNAL.getToken().then((token2) => {
           expect(token1).to.deep.equal(token2);
-          expect(httpsSpy).to.have.been.calledOnce;
+          expect(getTokenStub).to.have.been.calledOnce;
         });
       });
     });
 
     it('returns a new token with force refresh', () => {
       return mockApp.INTERNAL.getToken(true).then((token1) => {
-        this.clock.tick(1000);
+        clock.tick(1000);
         return mockApp.INTERNAL.getToken(true).then((token2) => {
           expect(token1).to.not.deep.equal(token2);
-          expect(httpsSpy).to.have.been.calledTwice;
+          expect(getTokenStub).to.have.been.calledTwice;
         });
       });
     });
@@ -718,20 +699,20 @@ describe('FirebaseApp', () => {
       return mockApp.INTERNAL.getToken(true).then((token1) => {
         // Forward the clock to five minutes and one second before expiry.
         const expiryInMilliseconds = token1.expirationTime - Date.now();
-        this.clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS) - 1000);
+        clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS) - 1000);
 
         return mockApp.INTERNAL.getToken().then((token2) => {
           // Ensure the token has not been proactively refreshed.
           expect(token1).to.deep.equal(token2);
-          expect(httpsSpy).to.have.been.calledOnce;
+          expect(getTokenStub).to.have.been.calledOnce;
 
           // Forward the clock to exactly five minutes before expiry.
-          this.clock.tick(1000);
+          clock.tick(1000);
 
           return mockApp.INTERNAL.getToken().then((token3) => {
             // Ensure the token was proactively refreshed.
             expect(token1).to.not.deep.equal(token3);
-            expect(httpsSpy).to.have.been.calledTwice;
+            expect(getTokenStub).to.have.been.calledTwice;
           });
         });
       });
@@ -741,32 +722,36 @@ describe('FirebaseApp', () => {
       // Force a token refresh.
       return mockApp.INTERNAL.getToken(true).then((token1) => {
         // Stub the getToken() method to return a rejected promise.
-        getAccessTokenStub = sinon.stub(mockApp.options.credential, 'getAccessToken');
-        getAccessTokenStub.returns(Promise.reject(new Error('Intentionally rejected')));
+        getTokenStub.restore();
+        getTokenStub = sinon.stub(mockApp.options.credential, 'getAccessToken')
+          .rejects(new Error('Intentionally rejected'));
 
         // Forward the clock to exactly five minutes before expiry.
         const expiryInMilliseconds = token1.expirationTime - Date.now();
-        this.clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS));
+        clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS));
 
         // Forward the clock to exactly four minutes before expiry.
-        this.clock.tick(60 * 1000);
+        clock.tick(60 * 1000);
 
         // Restore the stubbed getAccessToken() method.
-        getAccessTokenStub.restore();
-        getAccessTokenStub = undefined;
+        getTokenStub.restore();
+        getTokenStub = sinon.stub(CertCredential.prototype, 'getAccessToken').resolves({
+          access_token: 'mock-access-token',
+          expires_in: 3600,
+        });
 
         return mockApp.INTERNAL.getToken().then((token2) => {
           // Ensure the token has not been proactively refreshed.
           expect(token1).to.deep.equal(token2);
-          expect(httpsSpy).to.have.been.calledOnce;
+          expect(getTokenStub).to.have.not.been.called;
 
           // Forward the clock to exactly three minutes before expiry.
-          this.clock.tick(60 * 1000);
+          clock.tick(60 * 1000);
 
           return mockApp.INTERNAL.getToken().then((token3) => {
             // Ensure the token was proactively refreshed.
             expect(token1).to.not.deep.equal(token3);
-            expect(httpsSpy).to.have.been.calledTwice;
+            expect(getTokenStub).to.have.been.calledOnce;
           });
         });
       });
@@ -779,15 +764,16 @@ describe('FirebaseApp', () => {
         originalToken = token;
 
         // Stub the credential's getAccessToken() method to always return a rejected promise.
-        getAccessTokenStub = sinon.stub(mockApp.options.credential, 'getAccessToken');
-        getAccessTokenStub.returns(Promise.reject(new Error('Intentionally rejected')));
+        getTokenStub.restore();
+        getTokenStub = sinon.stub(mockApp.options.credential, 'getAccessToken')
+          .rejects(new Error('Intentionally rejected'));
 
         // Expect the call count to initially be zero.
-        expect(getAccessTokenStub.callCount).to.equal(0);
+        expect(getTokenStub.callCount).to.equal(0);
 
         // Forward the clock to exactly five minutes before expiry.
         const expiryInMilliseconds = token.expirationTime - Date.now();
-        this.clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS));
+        clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS));
 
         // Due to synchronous timing issues when the timer is mocked, make a call to getToken()
         // without forcing a refresh to ensure there is enough time for the underlying token refresh
@@ -795,67 +781,67 @@ describe('FirebaseApp', () => {
         return mockApp.INTERNAL.getToken();
       }).then((token) => {
         // Ensure the token was attempted to be proactively refreshed one time.
-        expect(getAccessTokenStub.callCount).to.equal(1);
+        expect(getTokenStub.callCount).to.equal(1);
 
         // Ensure the proactive refresh failed.
         expect(token).to.deep.equal(originalToken);
 
         // Forward the clock to four minutes before expiry.
-        this.clock.tick(ONE_MINUTE_IN_MILLISECONDS);
+        clock.tick(ONE_MINUTE_IN_MILLISECONDS);
 
         // See note above about calling getToken().
         return mockApp.INTERNAL.getToken();
       }).then((token) => {
         // Ensure the token was attempted to be proactively refreshed two times.
-        expect(getAccessTokenStub.callCount).to.equal(2);
+        expect(getTokenStub.callCount).to.equal(2);
 
         // Ensure the proactive refresh failed.
         expect(token).to.deep.equal(originalToken);
 
         // Forward the clock to three minutes before expiry.
-        this.clock.tick(ONE_MINUTE_IN_MILLISECONDS);
+        clock.tick(ONE_MINUTE_IN_MILLISECONDS);
 
         // See note above about calling getToken().
         return mockApp.INTERNAL.getToken();
       }).then((token) => {
         // Ensure the token was attempted to be proactively refreshed three times.
-        expect(getAccessTokenStub.callCount).to.equal(3);
+        expect(getTokenStub.callCount).to.equal(3);
 
         // Ensure the proactive refresh failed.
         expect(token).to.deep.equal(originalToken);
 
         // Forward the clock to two minutes before expiry.
-        this.clock.tick(ONE_MINUTE_IN_MILLISECONDS);
+        clock.tick(ONE_MINUTE_IN_MILLISECONDS);
 
         // See note above about calling getToken().
         return mockApp.INTERNAL.getToken();
       }).then((token) => {
         // Ensure the token was attempted to be proactively refreshed four times.
-        expect(getAccessTokenStub.callCount).to.equal(4);
+        expect(getTokenStub.callCount).to.equal(4);
 
         // Ensure the proactive refresh failed.
         expect(token).to.deep.equal(originalToken);
 
         // Forward the clock to one minute before expiry.
-        this.clock.tick(ONE_MINUTE_IN_MILLISECONDS);
+        clock.tick(ONE_MINUTE_IN_MILLISECONDS);
 
         // See note above about calling getToken().
         return mockApp.INTERNAL.getToken();
       }).then((token) => {
         // Ensure the token was attempted to be proactively refreshed five times.
-        expect(getAccessTokenStub.callCount).to.equal(5);
+        expect(getTokenStub.callCount).to.equal(5);
 
         // Ensure the proactive refresh failed.
         expect(token).to.deep.equal(originalToken);
 
         // Forward the clock to expiry.
-        this.clock.tick(ONE_MINUTE_IN_MILLISECONDS);
+        clock.tick(ONE_MINUTE_IN_MILLISECONDS);
 
         // See note above about calling getToken().
         return mockApp.INTERNAL.getToken();
       }).then((token) => {
         // Ensure the token was not attempted to be proactively refreshed a sixth time.
-        expect(getAccessTokenStub.callCount).to.equal(5);
+        expect(getTokenStub.callCount).to.equal(5);
 
         // Ensure the token has never been refresh.
         expect(token).to.deep.equal(originalToken);
@@ -867,30 +853,30 @@ describe('FirebaseApp', () => {
       return mockApp.INTERNAL.getToken(true).then((token1) => {
          // Forward the clock to five minutes and one second before expiry.
         let expiryInMilliseconds = token1.expirationTime - Date.now();
-        this.clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS) - 1000);
+        clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS) - 1000);
 
         // Force a token refresh.
         return mockApp.INTERNAL.getToken(true).then((token2) => {
           // Ensure the token was force refreshed.
           expect(token1).to.not.deep.equal(token2);
-          expect(httpsSpy).to.have.been.calledTwice;
+          expect(getTokenStub).to.have.been.calledTwice;
 
           // Forward the clock to exactly five minutes before the original token's expiry.
-          this.clock.tick(1000);
+          clock.tick(1000);
 
           return mockApp.INTERNAL.getToken().then((token3) => {
             // Ensure the token hasn't changed, meaning the proactive refresh was canceled.
             expect(token2).to.deep.equal(token3);
-            expect(httpsSpy).to.have.been.calledTwice;
+            expect(getTokenStub).to.have.been.calledTwice;
 
             // Forward the clock to exactly five minutes before the refreshed token's expiry.
             expiryInMilliseconds = token3.expirationTime - Date.now();
-            this.clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS));
+            clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS));
 
             return mockApp.INTERNAL.getToken().then((token4) => {
               // Ensure the token was proactively refreshed.
               expect(token3).to.not.deep.equal(token4);
-              expect(httpsSpy).to.have.been.calledThrice;
+              expect(getTokenStub).to.have.been.calledThrice;
             });
           });
         });
@@ -899,30 +885,57 @@ describe('FirebaseApp', () => {
 
     it('proactively refreshes the token at the next full minute if it expires in five minutes or less', () => {
       // Turn off default mocking of one hour access tokens and replace it with a short-lived token.
-      nock.cleanAll();
-      utils.mockFetchAccessTokenRequests(/* token */ undefined, /* expiresIn */ 3 * 60 + 10);
+      getTokenStub.restore();
+      getTokenStub = sinon.stub(mockApp.options.credential, 'getAccessToken').resolves({
+        access_token: utils.generateRandomAccessToken(),
+        expires_in: 3 * 60 + 10,
+      });
+      // Expect the call count to initially be zero.
+      expect(getTokenStub.callCount).to.equal(0);
 
       // Force a token refresh.
       return mockApp.INTERNAL.getToken(true).then((token1) => {
-        getAccessTokenSpy = sinon.spy(mockApp.options.credential, 'getAccessToken');
 
         // Move the clock forward to three minutes and one second before expiry.
-        this.clock.tick(9 * 1000);
-
-        // Expect the call count to initially be zero.
-        expect(getAccessTokenSpy.callCount).to.equal(0);
+        clock.tick(9 * 1000);
+        expect(getTokenStub.callCount).to.equal(1);
 
         // Move the clock forward to exactly three minutes before expiry.
-        this.clock.tick(1000);
+        clock.tick(1000);
 
         // Expect the underlying getAccessToken() method to have been called once.
-        expect(getAccessTokenSpy.callCount).to.equal(1);
+        expect(getTokenStub.callCount).to.equal(2);
 
         return mockApp.INTERNAL.getToken().then((token2) => {
           // Ensure the token was proactively refreshed.
           expect(token1).to.not.deep.equal(token2);
         });
       });
+    });
+
+    it('Includes the original error in exception', () => {
+      getTokenStub.restore();
+      const mockError = new FirebaseAppError(
+        AppErrorCodes.INVALID_CREDENTIAL, 'Something went wrong');
+      getTokenStub = sinon.stub(CertCredential.prototype, 'getAccessToken').rejects(mockError);
+      const detailedMessage = 'Credential implementation provided to initializeApp() via the "credential" property'
+        + ' failed to fetch a valid Google OAuth2 access token with the following error: "Something went wrong".';
+      expect(mockApp.INTERNAL.getToken(true)).to.be.rejectedWith(detailedMessage);
+    });
+
+    it('Returns a detailed message when an error is due to an invalid_grant', () => {
+      getTokenStub.restore();
+      const mockError = new FirebaseAppError(
+        AppErrorCodes.INVALID_CREDENTIAL, 'Failed to get credentials: invalid_grant (reason)');
+      getTokenStub = sinon.stub(CertCredential.prototype, 'getAccessToken').rejects(mockError);
+      const detailedMessage = 'Credential implementation provided to initializeApp() via the "credential" property'
+        + ' failed to fetch a valid Google OAuth2 access token with the following error: "Failed to get credentials:'
+        + ' invalid_grant (reason)". There are two likely causes: (1) your server time is not properly synced or (2)'
+        + ' your certificate key file has been revoked. To solve (1), re-sync the time on your server. To solve (2),'
+        + ' make sure the key ID for your key file is still present at '
+        + 'https://console.firebase.google.com/iam-admin/serviceaccounts/project. If not, generate a new key file '
+        + 'at https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk.';
+      expect(mockApp.INTERNAL.getToken(true)).to.be.rejectedWith(detailedMessage);
     });
   });
 
@@ -962,7 +975,7 @@ describe('FirebaseApp', () => {
       return mockApp.INTERNAL.getToken().then((token: FirebaseAccessToken) => {
         expect(addAuthTokenListenerSpy).to.have.been.calledOnce.and.calledWith(token.accessToken);
 
-        this.clock.tick(1000);
+        clock.tick(1000);
 
         return mockApp.INTERNAL.getToken(true);
       }).then((token: FirebaseAccessToken) => {
@@ -1004,7 +1017,7 @@ describe('FirebaseApp', () => {
 
         mockApp.INTERNAL.removeAuthTokenListener(addAuthTokenListenerSpies[0]);
 
-        this.clock.tick(1000);
+        clock.tick(1000);
 
         return mockApp.INTERNAL.getToken(true);
       }).then((token: FirebaseAccessToken) => {
