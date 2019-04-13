@@ -17,7 +17,11 @@
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as admin from '../../lib/index';
-import { projectId } from './setup';
+import { projectId, cmdArgs } from './setup';
+
+/* tslint:disable:no-var-requires */
+const chalk = require('chalk');
+/* tslint:enable:no-var-requires */
 
 const APP_NAMESPACE_PREFIX = 'com.adminsdkintegrationtest.a';
 const APP_NAMESPACE_SUFFIX_LENGTH = 15;
@@ -26,6 +30,23 @@ const APP_DISPLAY_NAME_PREFIX = 'Created By Firebase AdminSDK Nodejs Integration
 const APP_DISPLAY_NAME_SUFFIX_LENGTH = 15;
 
 const SHA_256_HASH = 'aaaaccccaaaaccccaaaaccccaaaaccccaaaaccccaaaaccccaaaaccccaaaacccc';
+
+const DEFAULT_DATABASE_RULES = `{
+  "rules": {
+    ".read": "auth != null",
+    ".write": "auth != null"
+  }
+}`;
+
+// Equivalent to the default rules but with some added comments
+const TEST_DATABASE_RULES = `{
+  "rules": {
+    // Only allow authenticated users to read
+    ".read": "auth != null",
+    // Only allow authenticated users to write
+    ".write": "auth != null"
+  }
+}`;
 
 const expect = chai.expect;
 
@@ -43,6 +64,12 @@ describe('admin.projectManagement', () => {
     const iosPromise = ensureIosApp().then((app) => {
       iosApp = app;
     });
+
+    /* tslint:disable:no-console */
+    if (!cmdArgs.updateRules) {
+      console.log(chalk.yellow('    Not updating security rules. Some tests may fail.'));
+      console.log(chalk.yellow('    Set the --updateRules flag to force update rules.'));
+    }
 
     return Promise.all([androidPromise, iosPromise]);
   });
@@ -163,6 +190,35 @@ describe('admin.projectManagement', () => {
         expect(config).is.not.empty;
         expect(config).includes(iosApp.appId);
       });
+    });
+  });
+
+  describe('getDatabaseRules()', () => {
+    it('successfully gets the database rules', () => {
+      return admin.projectManagement().getDatabaseRules().then((rules: string) => {
+        expect(rules).to.be.a('string');
+        expect(rules[0]).to.equal('{');
+        expect(rules.length).to.be.at.least('{"rules":{}}'.length);
+      });
+    });
+  });
+
+  describe('setDatabaseRules()', () => {
+    it('successfully sets the database rules', async () => {
+      if (cmdArgs.updateRules) {
+        // We set and get the rules twice with different values each time
+        // to check that they actually change.
+
+        await admin.projectManagement().setDatabaseRules(TEST_DATABASE_RULES);
+        const testRules = await admin.projectManagement().getDatabaseRules();
+        expect(testRules).to.equal(TEST_DATABASE_RULES);
+
+        await admin.projectManagement().setDatabaseRules(DEFAULT_DATABASE_RULES);
+        const defaultRules = await admin.projectManagement().getDatabaseRules();
+        expect(defaultRules).to.equal(DEFAULT_DATABASE_RULES);
+        } else {
+          expect.fail(null, null, "Won't set database rules without --updateRules arg.");
+        }
     });
   });
 });

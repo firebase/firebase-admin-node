@@ -26,6 +26,7 @@ import { ProjectManagementRequestHandler } from '../../../src/project-management
 import { FirebaseProjectManagementError } from '../../../src/utils/error';
 import * as mocks from '../../resources/mocks';
 import { IosApp } from '../../../src/project-management/ios-app';
+import { DatabaseRequestHandler } from '../../../src/project-management/database-api-request';
 
 const expect = chai.expect;
 
@@ -35,6 +36,16 @@ const BUNDLE_ID = 'test-bundle-id';
 const EXPECTED_ERROR = new FirebaseProjectManagementError('internal-error', 'message');
 
 const VALID_SHA_256_HASH = '0123456789abcdefABCDEF01234567890123456701234567890123456789abcd';
+
+const VALID_DATABASE_RULES = `{
+  "rules": {
+    // My rules
+    "foo": {
+      ".read": true,
+      ".write": false,
+    },
+  },
+}`;
 
 describe('ProjectManagement', () => {
   // Stubs used to simulate underlying api calls.
@@ -379,6 +390,58 @@ describe('ProjectManagement', () => {
       stubs.push(stub);
       return projectManagement.createIosApp(BUNDLE_ID)
           .should.eventually.deep.equal(createdIosApp);
+    });
+  });
+
+  describe('getDatabaseRules', () => {
+    it('should propagate API errors', () => {
+      const stub = sinon
+          .stub(DatabaseRequestHandler.prototype, 'getDatabaseRules')
+          .returns(Promise.reject(EXPECTED_ERROR));
+      stubs.push(stub);
+      return projectManagement.getDatabaseRules()
+          .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+    });
+
+    it('should throw with non-empty API response', () => {
+      const stub = sinon
+          .stub(DatabaseRequestHandler.prototype, 'getDatabaseRules')
+          .returns(Promise.resolve(''));
+      stubs.push(stub);
+      return projectManagement.getDatabaseRules()
+          .should.eventually.be.rejected
+          .and.have.property(
+              'message',
+              "getDatabaseRules()'s response must be a non-empty string.");
+    });
+
+    it('should resolve with database rules string on success', () => {
+      const stub = sinon
+          .stub(DatabaseRequestHandler.prototype, 'getDatabaseRules')
+          .returns(Promise.resolve(VALID_DATABASE_RULES));
+      stubs.push(stub);
+      return projectManagement.getDatabaseRules()
+          .should.eventually.equal(VALID_DATABASE_RULES);
+    });
+  });
+
+  describe('setDatabaseRules', () => {
+    it('should propagate API errors', () => {
+      const stub = sinon
+          .stub(DatabaseRequestHandler.prototype, 'setDatabaseRules')
+          .returns(Promise.reject(EXPECTED_ERROR));
+      stubs.push(stub);
+      return projectManagement.setDatabaseRules('')
+          .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+    });
+
+    it('should resolve with undefined on success', () => {
+      const stub = sinon
+          .stub(DatabaseRequestHandler.prototype, 'setDatabaseRules')
+          .returns(Promise.resolve(undefined));
+      stubs.push(stub);
+      return projectManagement.setDatabaseRules(VALID_DATABASE_RULES)
+          .should.eventually.be.undefined;
     });
   });
 });

@@ -807,6 +807,8 @@ declare namespace admin.projectManagement {
     createAndroidApp(
         packageName: string, displayName?: string): Promise<admin.projectManagement.AndroidApp>;
     createIosApp(bundleId: string, displayName?: string): Promise<admin.projectManagement.IosApp>;
+    getDatabaseRules(): Promise<string>;
+    setDatabaseRules(rules: string): Promise<void>;
   }
 }
 

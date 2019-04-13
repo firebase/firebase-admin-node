@@ -22,6 +22,7 @@ import * as validator from '../utils/validator';
 import { AndroidApp, ShaCertificate } from './android-app';
 import { IosApp } from './ios-app';
 import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request';
+import { DatabaseRequestHandler } from './database-api-request';
 
 /**
  * Internals of a Project Management instance.
@@ -47,6 +48,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
   private readonly resourceName: string;
   private readonly projectId: string;
   private readonly requestHandler: ProjectManagementRequestHandler;
+  private readonly databaseRequestHandler: DatabaseRequestHandler;
 
   /**
    * @param {object} app The app for this ProjectManagement service.
@@ -72,6 +74,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
     this.resourceName = `projects/${this.projectId}`;
 
     this.requestHandler = new ProjectManagementRequestHandler(app);
+    this.databaseRequestHandler = new DatabaseRequestHandler(app);
   }
 
   /**
@@ -145,6 +148,30 @@ export class ProjectManagement implements FirebaseServiceInterface {
               `"responseData.appId" field must be present in createIosApp()'s response data.`);
           return new IosApp(responseData.appId, this.requestHandler);
         });
+  }
+
+  /**
+   * Returns a string with the Realtime Database Rules for the Database
+   * instance associated with this Firebase App.
+   */
+  public getDatabaseRules(): Promise<string> {
+    return this.databaseRequestHandler.getDatabaseRules().then((response) => {
+      if (!validator.isNonEmptyString(response)) {
+        throw new FirebaseProjectManagementError(
+            'invalid-server-response',
+            "getDatabaseRules()'s response must be a non-empty string.");
+      }
+
+      return response;
+    });
+  }
+
+  /**
+   * Sets the Realtime Database Rules for the Database instance associated
+   * with this Firebase App.
+   */
+  public setDatabaseRules(rules: string): Promise<void> {
+    return this.databaseRequestHandler.setDatabaseRules(rules);
   }
 
   /**
