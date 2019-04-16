@@ -34,6 +34,11 @@ import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/utils/error';
 
 import * as validator from '../../../src/utils/validator';
 import { FirebaseTokenVerifier } from '../../../src/auth/token-verifier';
+import {
+  AuthProviderConfigFilter, OIDCConfig, SAMLConfig,
+  OIDCConfigServerResponse, SAMLConfigServerResponse,
+} from '../../../src/auth/auth-config';
+import {deepCopy} from '../../../src/utils/deep-copy';
 
 chai.should();
 chai.use(sinonChai);
@@ -147,6 +152,50 @@ function getDecodedSessionCookie(uid: string, authTime: Date): DecodedIdToken {
       identities: {},
       sign_in_provider: 'custom',
     },
+  };
+}
+
+
+/**
+ * Generates a mock OIDC config server response for the corresponding provider ID.
+ *
+ * @param {string} providerId The provider ID whose sample OIDCConfigServerResponse is to be returned.
+ * @return {OIDCConfigServerResponse} The corresponding sample OIDCConfigServerResponse.
+ */
+function getOIDCConfigServerResponse(providerId: string): OIDCConfigServerResponse {
+  return {
+    name: `projects/project_id/oauthIdpConfigs/${providerId}`,
+    displayName: 'OIDC_DISPLAY_NAME',
+    enabled: true,
+    clientId: 'CLIENT_ID',
+    issuer: 'https://oidc.com/issuer',
+  };
+}
+
+/**
+ * Generates a mock SAML config server response for the corresponding provider ID.
+ *
+ * @param {string} providerId The provider ID whose sample SAMLConfigServerResponse is to be returned.
+ * @return {SAMLConfigServerResponse} The corresponding sample SAMLConfigServerResponse.
+ */
+function getSAMLConfigServerResponse(providerId: string): SAMLConfigServerResponse {
+  return {
+    name: `projects/project_id/inboundSamlConfigs/${providerId}`,
+    idpConfig: {
+      idpEntityId: 'IDP_ENTITY_ID',
+      ssoUrl: 'https://example.com/login',
+      signRequest: true,
+      idpCertificates: [
+        {x509Certificate: 'CERT1'},
+        {x509Certificate: 'CERT2'},
+      ],
+    },
+    spConfig: {
+      spEntityId: 'RP_ENTITY_ID',
+      callbackUri: 'https://projectId.firebaseapp.com/__/auth/handler',
+    },
+    displayName: 'SAML_DISPLAY_NAME',
+    enabled: true,
   };
 }
 
@@ -300,7 +349,7 @@ describe('Auth', () => {
     const stubs: sinon.SinonStub[] = [];
     beforeEach(() => {
       stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
-        .returns(Promise.resolve(decodedIdToken));
+        .resolves(decodedIdToken);
       stubs.push(stub);
       mockIdToken = mocks.generateIdToken();
       clock = sinon.useFakeTimers(validSince.getTime());
@@ -329,7 +378,7 @@ describe('Auth', () => {
       stub.restore();
       // Simulate ID token is invalid.
       stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(stub);
       return auth.verifyIdToken(mockIdToken)
         .should.eventually.be.rejectedWith('Decoding Firebase ID token failed');
@@ -375,7 +424,7 @@ describe('Auth', () => {
 
     it('should be fulfilled with checkRevoked set to true using an unrevoked ID token', () => {
       const getUserStub = sinon.stub(Auth.prototype, 'getUser')
-        .returns(Promise.resolve(expectedUserRecord));
+        .resolves(expectedUserRecord);
       stubs.push(getUserStub);
       // Verify ID token while checking if revoked.
       return auth.verifyIdToken(mockIdToken, true)
@@ -393,10 +442,10 @@ describe('Auth', () => {
       stub.restore();
       // Simulate revoked ID token returned with auth_time one second before validSince.
       stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
-        .returns(Promise.resolve(getDecodedIdToken(uid, oneSecBeforeValidSince)));
+        .resolves(getDecodedIdToken(uid, oneSecBeforeValidSince));
       stubs.push(stub);
       const getUserStub = sinon.stub(Auth.prototype, 'getUser')
-        .returns(Promise.resolve(expectedUserRecord));
+        .resolves(expectedUserRecord);
       stubs.push(getUserStub);
       // Verify ID token while checking if revoked.
       return auth.verifyIdToken(mockIdToken, true)
@@ -419,7 +468,7 @@ describe('Auth', () => {
       stub.restore();
       // Simulate revoked ID token returned with auth_time one second before validSince.
       stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
-        .returns(Promise.resolve(oneSecBeforeValidSinceDecodedIdToken));
+        .resolves(oneSecBeforeValidSinceDecodedIdToken);
       stubs.push(stub);
       // Verify ID token without checking if revoked.
       // This call should succeed.
@@ -432,7 +481,7 @@ describe('Auth', () => {
     it('should be rejected with checkRevoked set to true if underlying RPC fails', () => {
       const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
       const getUserStub = sinon.stub(Auth.prototype, 'getUser')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(getUserStub);
       // Verify ID token while checking if revoked.
       // This should fail with the underlying RPC error.
@@ -457,7 +506,7 @@ describe('Auth', () => {
       expect(noValidSinceExpectedUserRecord.tokensValidAfterTime).to.be.undefined;
       // Simulate getUser returns the expected user with no validSince.
       const getUserStub = sinon.stub(Auth.prototype, 'getUser')
-        .returns(Promise.resolve(noValidSinceExpectedUserRecord));
+        .resolves(noValidSinceExpectedUserRecord);
       stubs.push(getUserStub);
       // Verify ID token while checking if revoked.
       return auth.verifyIdToken(mockIdToken, true)
@@ -474,7 +523,7 @@ describe('Auth', () => {
       stub.restore();
       // Simulate ID token is invalid.
       stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(stub);
       // Verify ID token while checking if revoked.
       // This should fail with the underlying token generator verifyIdToken error.
@@ -504,7 +553,7 @@ describe('Auth', () => {
     const stubs: sinon.SinonStub[] = [];
     beforeEach(() => {
       stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
-        .returns(Promise.resolve(decodedSessionCookie));
+        .resolves(decodedSessionCookie);
       stubs.push(stub);
       mockSessionCookie = mocks.generateSessionCookie();
       clock = sinon.useFakeTimers(validSince.getTime());
@@ -533,7 +582,7 @@ describe('Auth', () => {
       stub.restore();
       // Simulate session cookie is invalid.
       stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(stub);
       return auth.verifySessionCookie(mockSessionCookie)
         .should.eventually.be.rejectedWith('Decoding Firebase session cookie failed');
@@ -579,7 +628,7 @@ describe('Auth', () => {
 
     it('should be fulfilled with checkRevoked set to true using an unrevoked session cookie', () => {
       const getUserStub = sinon.stub(Auth.prototype, 'getUser')
-        .returns(Promise.resolve(expectedUserRecord));
+        .resolves(expectedUserRecord);
       stubs.push(getUserStub);
       // Verify ID token while checking if revoked.
       return auth.verifySessionCookie(mockSessionCookie, true)
@@ -597,10 +646,10 @@ describe('Auth', () => {
       stub.restore();
       // Simulate revoked session cookie returned with auth_time one second before validSince.
       stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
-        .returns(Promise.resolve(getDecodedSessionCookie(uid, oneSecBeforeValidSince)));
+        .resolves(getDecodedSessionCookie(uid, oneSecBeforeValidSince));
       stubs.push(stub);
       const getUserStub = sinon.stub(Auth.prototype, 'getUser')
-        .returns(Promise.resolve(expectedUserRecord));
+        .resolves(expectedUserRecord);
       stubs.push(getUserStub);
       // Verify session cookie while checking if revoked.
       return auth.verifySessionCookie(mockSessionCookie, true)
@@ -623,7 +672,7 @@ describe('Auth', () => {
       stub.restore();
       // Simulate revoked session cookie returned with auth_time one second before validSince.
       stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
-        .returns(Promise.resolve(oneSecBeforeValidSinceDecodedSessionCookie));
+        .resolves(oneSecBeforeValidSinceDecodedSessionCookie);
       stubs.push(stub);
       // Verify session cookie without checking if revoked.
       // This call should succeed.
@@ -636,7 +685,7 @@ describe('Auth', () => {
     it('should be rejected with checkRevoked set to true if underlying RPC fails', () => {
       const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
       const getUserStub = sinon.stub(Auth.prototype, 'getUser')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(getUserStub);
       // Verify session cookie while checking if revoked.
       // This should fail with the underlying RPC error.
@@ -661,7 +710,7 @@ describe('Auth', () => {
       expect(noValidSinceExpectedUserRecord.tokensValidAfterTime).to.be.undefined;
       // Simulate getUser returns the expected user with no validSince.
       const getUserStub = sinon.stub(Auth.prototype, 'getUser')
-        .returns(Promise.resolve(noValidSinceExpectedUserRecord));
+        .resolves(noValidSinceExpectedUserRecord);
       stubs.push(getUserStub);
       // Verify session cookie while checking if revoked.
       return auth.verifySessionCookie(mockSessionCookie, true)
@@ -678,7 +727,7 @@ describe('Auth', () => {
       stub.restore();
       // Simulate session cookie is invalid.
       stub = sinon.stub(FirebaseTokenVerifier.prototype, 'verifyJWT')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(stub);
       // Verify session cookie while checking if revoked.
       // This should fail with the underlying token generator verifySessionCookie error.
@@ -742,7 +791,7 @@ describe('Auth', () => {
     it('should resolve with a UserRecord on success', () => {
       // Stub getAccountInfoByUid to return expected result.
       const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByUid')
-        .returns(Promise.resolve(expectedGetAccountInfoResult));
+        .resolves(expectedGetAccountInfoResult);
       stubs.push(stub);
       return auth.getUser(uid)
         .then((userRecord) => {
@@ -756,7 +805,7 @@ describe('Auth', () => {
     it('should throw an error when the backend returns an error', () => {
       // Stub getAccountInfoByUid to throw a backend error.
       const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByUid')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(stub);
       return auth.getUser(uid)
         .then((userRecord) => {
@@ -820,7 +869,7 @@ describe('Auth', () => {
     it('should resolve with a UserRecord on success', () => {
       // Stub getAccountInfoByEmail to return expected result.
       const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByEmail')
-        .returns(Promise.resolve(expectedGetAccountInfoResult));
+        .resolves(expectedGetAccountInfoResult);
       stubs.push(stub);
       return auth.getUserByEmail(email)
         .then((userRecord) => {
@@ -834,7 +883,7 @@ describe('Auth', () => {
     it('should throw an error when the backend returns an error', () => {
       // Stub getAccountInfoByEmail to throw a backend error.
       const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByEmail')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(stub);
       return auth.getUserByEmail(email)
         .then((userRecord) => {
@@ -899,7 +948,7 @@ describe('Auth', () => {
     it('should resolve with a UserRecord on success', () => {
       // Stub getAccountInfoByPhoneNumber to return expected result.
       const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByPhoneNumber')
-        .returns(Promise.resolve(expectedGetAccountInfoResult));
+        .resolves(expectedGetAccountInfoResult);
       stubs.push(stub);
       return auth.getUserByPhoneNumber(phoneNumber)
         .then((userRecord) => {
@@ -913,7 +962,7 @@ describe('Auth', () => {
     it('should throw an error when the backend returns an error', () => {
       // Stub getAccountInfoByPhoneNumber to throw a backend error.
       const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByPhoneNumber')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(stub);
       return auth.getUserByPhoneNumber(phoneNumber)
         .then((userRecord) => {
@@ -976,7 +1025,7 @@ describe('Auth', () => {
     it('should resolve with void on success', () => {
       // Stub deleteAccount to return expected result.
       const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'deleteAccount')
-        .returns(Promise.resolve(expectedDeleteAccountResult));
+        .resolves(expectedDeleteAccountResult);
       stubs.push(stub);
       return auth.deleteUser(uid)
         .then((result) => {
@@ -990,7 +1039,7 @@ describe('Auth', () => {
     it('should throw an error when the backend returns an error', () => {
       // Stub deleteAccount to throw a backend error.
       const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'deleteAccount')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(stub);
       return auth.deleteUser(uid)
         .then(() => {
@@ -1065,10 +1114,10 @@ describe('Auth', () => {
     it('should resolve with a UserRecord on createNewAccount request success', () => {
       // Stub createNewAccount to return expected uid.
       const createUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'createNewAccount')
-        .returns(Promise.resolve(uid));
+        .resolves(uid);
       // Stub getAccountInfoByUid to return expected result.
       const getUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByUid')
-        .returns(Promise.resolve(expectedGetAccountInfoResult));
+        .resolves(expectedGetAccountInfoResult);
       stubs.push(createUserStub);
       stubs.push(getUserStub);
       return auth.createUser(propertiesToCreate)
@@ -1084,7 +1133,7 @@ describe('Auth', () => {
     it('should throw an error when createNewAccount returns an error', () => {
       // Stub createNewAccount to throw a backend error.
       const createUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'createNewAccount')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(createUserStub);
       return auth.createUser(propertiesToCreate)
         .then((userRecord) => {
@@ -1100,11 +1149,11 @@ describe('Auth', () => {
     it('should throw an error when getUser returns a User not found error', () => {
       // Stub createNewAccount to return expected uid.
       const createUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'createNewAccount')
-        .returns(Promise.resolve(uid));
+        .resolves(uid);
       // Stub getAccountInfoByUid to throw user not found error.
       const userNotFoundError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
       const getUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByUid')
-        .returns(Promise.reject(userNotFoundError));
+        .rejects(userNotFoundError);
       stubs.push(createUserStub);
       stubs.push(getUserStub);
       return auth.createUser(propertiesToCreate)
@@ -1122,10 +1171,10 @@ describe('Auth', () => {
     it('should echo getUser error if an error occurs while retrieving the user record', () => {
       // Stub createNewAccount to return expected uid.
       const createUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'createNewAccount')
-        .returns(Promise.resolve(uid));
+        .resolves(uid);
       // Stub getAccountInfoByUid to throw expected error.
       const getUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByUid')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(createUserStub);
       stubs.push(getUserStub);
       return auth.createUser(propertiesToCreate)
@@ -1218,10 +1267,10 @@ describe('Auth', () => {
     it('should resolve with a UserRecord on updateExistingAccount request success', () => {
       // Stub updateExistingAccount to return expected uid.
       const updateUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'updateExistingAccount')
-        .returns(Promise.resolve(uid));
+        .resolves(uid);
       // Stub getAccountInfoByUid to return expected result.
       const getUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByUid')
-        .returns(Promise.resolve(expectedGetAccountInfoResult));
+        .resolves(expectedGetAccountInfoResult);
       stubs.push(updateUserStub);
       stubs.push(getUserStub);
       return auth.updateUser(uid, propertiesToEdit)
@@ -1237,7 +1286,7 @@ describe('Auth', () => {
     it('should throw an error when updateExistingAccount returns an error', () => {
       // Stub updateExistingAccount to throw a backend error.
       const updateUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'updateExistingAccount')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(updateUserStub);
       return auth.updateUser(uid, propertiesToEdit)
         .then((userRecord) => {
@@ -1253,10 +1302,10 @@ describe('Auth', () => {
     it('should echo getUser error if an error occurs while retrieving the user record', () => {
       // Stub updateExistingAccount to return expected uid.
       const updateUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'updateExistingAccount')
-        .returns(Promise.resolve(uid));
+        .resolves(uid);
       // Stub getAccountInfoByUid to throw an expected error.
       const getUserStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getAccountInfoByUid')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(updateUserStub);
       stubs.push(getUserStub);
       return auth.updateUser(uid, propertiesToEdit)
@@ -1344,7 +1393,7 @@ describe('Auth', () => {
       // Stub setCustomUserClaims to return expected uid.
       const setCustomUserClaimsStub = sinon
         .stub(FirebaseAuthRequestHandler.prototype, 'setCustomUserClaims')
-        .returns(Promise.resolve(uid));
+        .resolves(uid);
       stubs.push(setCustomUserClaimsStub);
       return auth.setCustomUserClaims(uid, customClaims)
         .then((response) => {
@@ -1359,7 +1408,7 @@ describe('Auth', () => {
       // Stub setCustomUserClaims to throw a backend error.
       const setCustomUserClaimsStub = sinon
         .stub(FirebaseAuthRequestHandler.prototype, 'setCustomUserClaims')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(setCustomUserClaimsStub);
       return auth.setCustomUserClaims(uid, customClaims)
         .then(() => {
@@ -1458,7 +1507,7 @@ describe('Auth', () => {
       // Stub downloadAccount to return expected response.
       const downloadAccountStub = sinon
         .stub(FirebaseAuthRequestHandler.prototype, 'downloadAccount')
-        .returns(Promise.resolve(downloadAccountResponse));
+        .resolves(downloadAccountResponse);
       stubs.push(downloadAccountStub);
       return auth.listUsers(maxResult, pageToken)
         .then((response) => {
@@ -1473,7 +1522,7 @@ describe('Auth', () => {
       // Stub downloadAccount to return expected response.
       const downloadAccountStub = sinon
         .stub(FirebaseAuthRequestHandler.prototype, 'downloadAccount')
-        .returns(Promise.resolve(downloadAccountResponse));
+        .resolves(downloadAccountResponse);
       stubs.push(downloadAccountStub);
       return auth.listUsers()
         .then((response) => {
@@ -1489,7 +1538,7 @@ describe('Auth', () => {
       // Stub downloadAccount to return expected response.
       const downloadAccountStub = sinon
         .stub(FirebaseAuthRequestHandler.prototype, 'downloadAccount')
-        .returns(Promise.resolve(emptyDownloadAccountResponse));
+        .resolves(emptyDownloadAccountResponse);
       stubs.push(downloadAccountStub);
       return auth.listUsers(maxResult, pageToken)
         .then((response) => {
@@ -1504,7 +1553,7 @@ describe('Auth', () => {
       // Stub downloadAccount to throw a backend error.
       const downloadAccountStub = sinon
         .stub(FirebaseAuthRequestHandler.prototype, 'downloadAccount')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(downloadAccountStub);
       return auth.listUsers(maxResult, pageToken)
         .then((results) => {
@@ -1569,7 +1618,7 @@ describe('Auth', () => {
       // Stub revokeRefreshTokens to return expected uid.
       const revokeRefreshTokensStub =
           sinon.stub(FirebaseAuthRequestHandler.prototype, 'revokeRefreshTokens')
-          .returns(Promise.resolve(uid));
+          .resolves(uid);
       stubs.push(revokeRefreshTokensStub);
       return auth.revokeRefreshTokens(uid)
         .then((result) => {
@@ -1584,7 +1633,7 @@ describe('Auth', () => {
       // Stub revokeRefreshTokens to throw a backend error.
       const revokeRefreshTokensStub =
           sinon.stub(FirebaseAuthRequestHandler.prototype, 'revokeRefreshTokens')
-          .returns(Promise.reject(expectedError));
+          .rejects(expectedError);
       stubs.push(revokeRefreshTokensStub);
       return auth.revokeRefreshTokens(uid)
         .then((result) => {
@@ -1650,7 +1699,7 @@ describe('Auth', () => {
       // Stub uploadAccount to return expected result.
       const uploadAccountStub =
           sinon.stub(FirebaseAuthRequestHandler.prototype, 'uploadAccount')
-          .returns(Promise.resolve(expectedUserImportResult));
+          .resolves(expectedUserImportResult);
       stubs.push(uploadAccountStub);
       return auth.importUsers(users, options)
         .then((result) => {
@@ -1665,7 +1714,7 @@ describe('Auth', () => {
       // Stub uploadAccount to reject with expected error.
       const uploadAccountStub =
           sinon.stub(FirebaseAuthRequestHandler.prototype, 'uploadAccount')
-          .returns(Promise.reject(expectedServerError));
+          .rejects(expectedServerError);
       stubs.push(uploadAccountStub);
       return auth.importUsers(users, options)
         .then((result) => {
@@ -1764,7 +1813,7 @@ describe('Auth', () => {
       // Stub createSessionCookie to return expected sessionCookie.
       const createSessionCookieStub =
           sinon.stub(FirebaseAuthRequestHandler.prototype, 'createSessionCookie')
-          .returns(Promise.resolve(sessionCookie));
+          .resolves(sessionCookie);
       stubs.push(createSessionCookieStub);
       return auth.createSessionCookie(idToken, options)
         .then((result) => {
@@ -1780,7 +1829,7 @@ describe('Auth', () => {
       // Stub createSessionCookie to throw a backend error.
       const createSessionCookieStub =
           sinon.stub(FirebaseAuthRequestHandler.prototype, 'createSessionCookie')
-          .returns(Promise.reject(expectedError));
+          .rejects(expectedError);
       stubs.push(createSessionCookieStub);
       return auth.createSessionCookie(idToken, options)
         .then((result) => {
@@ -1860,7 +1909,7 @@ describe('Auth', () => {
       it('should resolve when called with actionCodeSettings with a generated link on success', () => {
         // Stub getEmailActionLink to return expected link.
         const getEmailActionLinkStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getEmailActionLink')
-          .returns(Promise.resolve(expectedLink));
+          .resolves(expectedLink);
         stubs.push(getEmailActionLinkStub);
         return (auth as any)[emailActionFlow.api](email, actionCodeSettings)
           .then((actualLink: string) => {
@@ -1881,7 +1930,7 @@ describe('Auth', () => {
         it('should resolve when called without actionCodeSettings with a generated link on success', () => {
           // Stub getEmailActionLink to return expected link.
           const getEmailActionLinkStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getEmailActionLink')
-            .returns(Promise.resolve(expectedLink));
+            .resolves(expectedLink);
           stubs.push(getEmailActionLinkStub);
           return (auth as any)[emailActionFlow.api](email)
             .then((actualLink: string) => {
@@ -1897,7 +1946,7 @@ describe('Auth', () => {
       it('should throw an error when getEmailAction returns an error', () => {
         // Stub getEmailActionLink to throw a backend error.
         const getEmailActionLinkStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getEmailActionLink')
-          .returns(Promise.reject(expectedError));
+          .rejects(expectedError);
         stubs.push(getEmailActionLinkStub);
         return (auth as any)[emailActionFlow.api](email, actionCodeSettings)
           .then((actualLink: string) => {
@@ -1906,6 +1955,837 @@ describe('Auth', () => {
             // Confirm underlying API called with expected parameters.
             expect(getEmailActionLinkStub).to.have.been.calledOnce.and.calledWith(
                 emailActionFlow.requestType, email, actionCodeSettings);
+            // Confirm expected error returned.
+            expect(error).to.equal(expectedError);
+          });
+      });
+    });
+  });
+
+  describe('getProviderConfig()', () => {
+    let stubs: sinon.SinonStub[] = [];
+
+    afterEach(() => {
+      _.forEach(stubs, (stub) => stub.restore());
+      stubs = [];
+    });
+
+    it('should be rejected given no provider ID', () => {
+      return (auth as any).getProviderConfig()
+        .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-provider-id');
+    });
+
+    const invalidProviderIds = [
+        undefined, null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
+    invalidProviderIds.forEach((invalidProviderId) => {
+      it(`should be rejected given an invalid provider ID "${JSON.stringify(invalidProviderId)}"`, () => {
+        return (auth as Auth).getProviderConfig(invalidProviderId as any)
+          .then(() => {
+            throw new Error('Unexpected success');
+          })
+          .catch((error) => {
+            expect(error).to.have.property('code', 'auth/invalid-provider-id');
+          });
+      });
+    });
+
+    it('should be rejected given an app which returns null access tokens', () => {
+      const providerId = 'oidc.provider';
+      return (nullAccessTokenAuth as Auth).getProviderConfig(providerId)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which returns invalid access tokens', () => {
+      const providerId = 'oidc.provider';
+      return (malformedAccessTokenAuth as Auth).getProviderConfig(providerId)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which fails to generate access tokens', () => {
+      const providerId = 'oidc.provider';
+      return (rejectedPromiseAccessTokenAuth as Auth).getProviderConfig(providerId)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    describe('using OIDC configurations', () => {
+      const providerId = 'oidc.provider';
+      const serverResponse = {
+        name: `projects/project_id/oauthIdpConfigs/${providerId}`,
+        displayName: 'OIDC_DISPLAY_NAME',
+        enabled: true,
+        clientId: 'CLIENT_ID',
+        issuer: 'https://oidc.com/issuer',
+      };
+      const expectedConfig = new OIDCConfig(serverResponse);
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.CONFIGURATION_NOT_FOUND);
+
+      it('should resolve with an OIDCConfig on success', () => {
+        // Stub getOAuthIdpConfig to return expected result.
+        const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getOAuthIdpConfig')
+          .resolves(serverResponse);
+        stubs.push(stub);
+        return (auth as Auth).getProviderConfig(providerId)
+          .then((result) => {
+            // Confirm underlying API called with expected parameters.
+            expect(stub).to.have.been.calledOnce.and.calledWith(providerId);
+            // Confirm expected config returned.
+            expect(result).to.deep.equal(expectedConfig);
+          });
+      });
+
+      it('should throw an error when the backend returns an error', () => {
+        // Stub getOAuthIdpConfig to throw a backend error.
+        const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getOAuthIdpConfig')
+          .rejects(expectedError);
+        stubs.push(stub);
+        return (auth as Auth).getProviderConfig(providerId)
+          .then((config) => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Confirm underlying API called with expected parameters.
+            expect(stub).to.have.been.calledOnce.and.calledWith(providerId);
+            // Confirm expected error returned.
+            expect(error).to.equal(expectedError);
+          });
+      });
+    });
+
+    describe('using SAML configurations', () => {
+      const providerId = 'saml.provider';
+      const serverResponse = {
+        name: `projects/project_id/inboundSamlConfigs/${providerId}`,
+        idpConfig: {
+          idpEntityId: 'IDP_ENTITY_ID',
+          ssoUrl: 'https://example.com/login',
+          signRequest: true,
+          idpCertificates: [
+            {x509Certificate: 'CERT1'},
+            {x509Certificate: 'CERT2'},
+          ],
+        },
+        spConfig: {
+          spEntityId: 'RP_ENTITY_ID',
+          callbackUri: 'https://projectId.firebaseapp.com/__/auth/handler',
+        },
+        displayName: 'SAML_DISPLAY_NAME',
+        enabled: true,
+      };
+      const expectedConfig = new SAMLConfig(serverResponse);
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.CONFIGURATION_NOT_FOUND);
+
+      it('should resolve with a SAMLConfig on success', () => {
+        // Stub getInboundSamlConfig to return expected result.
+        const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getInboundSamlConfig')
+          .resolves(serverResponse);
+        stubs.push(stub);
+        return (auth as Auth).getProviderConfig(providerId)
+          .then((result) => {
+            // Confirm underlying API called with expected parameters.
+            expect(stub).to.have.been.calledOnce.and.calledWith(providerId);
+            // Confirm expected config returned.
+            expect(result).to.deep.equal(expectedConfig);
+          });
+      });
+
+      it('should throw an error when the backend returns an error', () => {
+        // Stub getInboundSamlConfig to throw a backend error.
+        const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'getInboundSamlConfig')
+          .rejects(expectedError);
+        stubs.push(stub);
+        return (auth as Auth).getProviderConfig(providerId)
+          .then((config) => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Confirm underlying API called with expected parameters.
+            expect(stub).to.have.been.calledOnce.and.calledWith(providerId);
+            // Confirm expected error returned.
+            expect(error).to.equal(expectedError);
+          });
+      });
+    });
+  });
+
+  describe('listProviderConfigs()', () => {
+    const options: AuthProviderConfigFilter = {
+      type: 'oidc',
+    };
+    let stubs: sinon.SinonStub[] = [];
+
+    afterEach(() => {
+      _.forEach(stubs, (stub) => stub.restore());
+      stubs = [];
+    });
+
+    it('should be rejected given no options', () => {
+      return (auth as any).listProviderConfigs()
+        .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
+    });
+
+    it('should be rejected given an invalid AuthProviderConfigFilter type', () => {
+      const invalidOptions = {
+        type: 'unsupported',
+      };
+      return (auth as Auth).listProviderConfigs(invalidOptions as any)
+        .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
+    });
+
+    it('should be rejected given an app which returns null access tokens', () => {
+      return (nullAccessTokenAuth as Auth).listProviderConfigs(options)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which returns invalid access tokens', () => {
+      return (malformedAccessTokenAuth as Auth).listProviderConfigs(options)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which fails to generate access tokens', () => {
+      return (rejectedPromiseAccessTokenAuth as Auth).listProviderConfigs(options)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    describe('using OIDC type filter', () => {
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.INTERNAL_ERROR);
+      const pageToken = 'PAGE_TOKEN';
+      const maxResults = 50;
+      const filterOptions: AuthProviderConfigFilter = {
+        type: 'oidc',
+        pageToken,
+        maxResults,
+      };
+      const listConfigsResponse: any = {
+        oauthIdpConfigs : [
+          getOIDCConfigServerResponse('oidc.provider1'),
+          getOIDCConfigServerResponse('oidc.provider2'),
+        ],
+        nextPageToken: 'NEXT_PAGE_TOKEN',
+      };
+      const expectedResult: any = {
+        providerConfigs: [
+          new OIDCConfig(listConfigsResponse.oauthIdpConfigs[0]),
+          new OIDCConfig(listConfigsResponse.oauthIdpConfigs[1]),
+        ],
+        pageToken: 'NEXT_PAGE_TOKEN',
+      };
+      const emptyListConfigsResponse: any = {
+        oauthIdpConfigs: [],
+      };
+      const emptyExpectedResult: any = {
+        providerConfigs: [],
+      };
+
+      it('should resolve on success with configs in response', () => {
+        // Stub listOAuthIdpConfigs to return expected response.
+        const listConfigsStub = sinon
+          .stub(FirebaseAuthRequestHandler.prototype, 'listOAuthIdpConfigs')
+          .resolves(listConfigsResponse);
+        stubs.push(listConfigsStub);
+        return auth.listProviderConfigs(filterOptions)
+          .then((response) => {
+            expect(response).to.deep.equal(expectedResult);
+            // Confirm underlying API called with expected parameters.
+            expect(listConfigsStub)
+              .to.have.been.calledOnce.and.calledWith(maxResults, pageToken);
+          });
+      });
+
+      it('should resolve on success with default options', () => {
+        // Stub listOAuthIdpConfigs to return expected response.
+        const listConfigsStub = sinon
+          .stub(FirebaseAuthRequestHandler.prototype, 'listOAuthIdpConfigs')
+          .resolves(listConfigsResponse);
+        stubs.push(listConfigsStub);
+        return (auth as Auth).listProviderConfigs({type: 'oidc'})
+          .then((response) => {
+            expect(response).to.deep.equal(expectedResult);
+            // Confirm underlying API called with expected parameters.
+            expect(listConfigsStub)
+              .to.have.been.calledOnce.and.calledWith(undefined, undefined);
+          });
+      });
+
+
+      it('should resolve on success with no configs in response', () => {
+        // Stub listOAuthIdpConfigs to return expected response.
+        const listConfigsStub = sinon
+          .stub(FirebaseAuthRequestHandler.prototype, 'listOAuthIdpConfigs')
+          .resolves(emptyListConfigsResponse);
+        stubs.push(listConfigsStub);
+        return auth.listProviderConfigs(filterOptions)
+          .then((response) => {
+            expect(response).to.deep.equal(emptyExpectedResult);
+            // Confirm underlying API called with expected parameters.
+            expect(listConfigsStub)
+              .to.have.been.calledOnce.and.calledWith(maxResults, pageToken);
+          });
+      });
+
+      it('should throw an error when listOAuthIdpConfigs returns an error', () => {
+        // Stub listOAuthIdpConfigs to throw a backend error.
+        const listConfigsStub = sinon
+          .stub(FirebaseAuthRequestHandler.prototype, 'listOAuthIdpConfigs')
+          .rejects(expectedError);
+        stubs.push(listConfigsStub);
+        return auth.listProviderConfigs(filterOptions)
+          .then((results) => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Confirm underlying API called with expected parameters.
+            expect(listConfigsStub)
+              .to.have.been.calledOnce.and.calledWith(maxResults, pageToken);
+            // Confirm expected error returned.
+            expect(error).to.equal(expectedError);
+          });
+      });
+    });
+
+    describe('using SAML type filter', () => {
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.INTERNAL_ERROR);
+      const pageToken = 'PAGE_TOKEN';
+      const maxResults = 50;
+      const filterOptions: AuthProviderConfigFilter = {
+        type: 'saml',
+        pageToken,
+        maxResults,
+      };
+      const listConfigsResponse: any = {
+        inboundSamlConfigs : [
+          getSAMLConfigServerResponse('saml.provider1'),
+          getSAMLConfigServerResponse('saml.provider2'),
+        ],
+        nextPageToken: 'NEXT_PAGE_TOKEN',
+      };
+      const expectedResult: any = {
+        providerConfigs: [
+          new SAMLConfig(listConfigsResponse.inboundSamlConfigs[0]),
+          new SAMLConfig(listConfigsResponse.inboundSamlConfigs[1]),
+        ],
+        pageToken: 'NEXT_PAGE_TOKEN',
+      };
+      const emptyListConfigsResponse: any = {
+        inboundSamlConfigs: [],
+      };
+      const emptyExpectedResult: any = {
+        providerConfigs: [],
+      };
+
+      it('should resolve on success with configs in response', () => {
+        // Stub listInboundSamlConfigs to return expected response.
+        const listConfigsStub = sinon
+          .stub(FirebaseAuthRequestHandler.prototype, 'listInboundSamlConfigs')
+          .resolves(listConfigsResponse);
+        stubs.push(listConfigsStub);
+        return auth.listProviderConfigs(filterOptions)
+          .then((response) => {
+            expect(response).to.deep.equal(expectedResult);
+            // Confirm underlying API called with expected parameters.
+            expect(listConfigsStub)
+              .to.have.been.calledOnce.and.calledWith(maxResults, pageToken);
+          });
+      });
+
+      it('should resolve on success with default options', () => {
+        // Stub listInboundSamlConfigs to return expected response.
+        const listConfigsStub = sinon
+          .stub(FirebaseAuthRequestHandler.prototype, 'listInboundSamlConfigs')
+          .resolves(listConfigsResponse);
+        stubs.push(listConfigsStub);
+        return (auth as Auth).listProviderConfigs({type: 'saml'})
+          .then((response) => {
+            expect(response).to.deep.equal(expectedResult);
+            // Confirm underlying API called with expected parameters.
+            expect(listConfigsStub)
+              .to.have.been.calledOnce.and.calledWith(undefined, undefined);
+          });
+      });
+
+
+      it('should resolve on success with no configs in response', () => {
+        // Stub listInboundSamlConfigs to return expected response.
+        const listConfigsStub = sinon
+          .stub(FirebaseAuthRequestHandler.prototype, 'listInboundSamlConfigs')
+          .resolves(emptyListConfigsResponse);
+        stubs.push(listConfigsStub);
+        return auth.listProviderConfigs(filterOptions)
+          .then((response) => {
+            expect(response).to.deep.equal(emptyExpectedResult);
+            // Confirm underlying API called with expected parameters.
+            expect(listConfigsStub)
+              .to.have.been.calledOnce.and.calledWith(maxResults, pageToken);
+          });
+      });
+
+      it('should throw an error when listInboundSamlConfigs returns an error', () => {
+        // Stub listInboundSamlConfigs to throw a backend error.
+        const listConfigsStub = sinon
+          .stub(FirebaseAuthRequestHandler.prototype, 'listInboundSamlConfigs')
+          .rejects(expectedError);
+        stubs.push(listConfigsStub);
+        return auth.listProviderConfigs(filterOptions)
+          .then((results) => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Confirm underlying API called with expected parameters.
+            expect(listConfigsStub)
+              .to.have.been.calledOnce.and.calledWith(maxResults, pageToken);
+            // Confirm expected error returned.
+            expect(error).to.equal(expectedError);
+          });
+      });
+    });
+  });
+
+  describe('deleteProviderConfig()', () => {
+    let stubs: sinon.SinonStub[] = [];
+
+    afterEach(() => {
+      _.forEach(stubs, (stub) => stub.restore());
+      stubs = [];
+    });
+
+    it('should be rejected given no provider ID', () => {
+      return (auth as any).deleteProviderConfig()
+        .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-provider-id');
+    });
+
+    it('should be rejected given an invalid provider ID', () => {
+      const invalidProviderId = '';
+      return (auth as Auth).deleteProviderConfig(invalidProviderId)
+        .then(() => {
+          throw new Error('Unexpected success');
+        })
+        .catch((error) => {
+          expect(error).to.have.property('code', 'auth/invalid-provider-id');
+        });
+    });
+
+    it('should be rejected given an app which returns null access tokens', () => {
+      const providerId = 'oidc.provider';
+      return (nullAccessTokenAuth as Auth).deleteProviderConfig(providerId)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which returns invalid access tokens', () => {
+      const providerId = 'oidc.provider';
+      return (malformedAccessTokenAuth as Auth).deleteProviderConfig(providerId)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which fails to generate access tokens', () => {
+      const providerId = 'oidc.provider';
+      return (rejectedPromiseAccessTokenAuth as Auth).deleteProviderConfig(providerId)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    describe('using OIDC configurations', () => {
+      const providerId = 'oidc.provider';
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.CONFIGURATION_NOT_FOUND);
+
+      it('should resolve with void on success', () => {
+        // Stub deleteOAuthIdpConfig to resolve.
+        const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'deleteOAuthIdpConfig')
+          .resolves();
+        stubs.push(stub);
+        return (auth as Auth).deleteProviderConfig(providerId)
+          .then((result) => {
+            // Confirm underlying API called with expected parameters.
+            expect(stub).to.have.been.calledOnce.and.calledWith(providerId);
+            // Confirm expected result returned.
+            expect(result).to.be.undefined;
+          });
+      });
+
+      it('should throw an error when the backend returns an error', () => {
+        // Stub deleteOAuthIdpConfig to throw a backend error.
+        const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'deleteOAuthIdpConfig')
+          .rejects(expectedError);
+        stubs.push(stub);
+        return (auth as Auth).deleteProviderConfig(providerId)
+          .then((config) => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Confirm underlying API called with expected parameters.
+            expect(stub).to.have.been.calledOnce.and.calledWith(providerId);
+            // Confirm expected error returned.
+            expect(error).to.equal(expectedError);
+          });
+      });
+    });
+
+    describe('using SAML configurations', () => {
+      const providerId = 'saml.provider';
+      const serverResponse = {};
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.CONFIGURATION_NOT_FOUND);
+
+      it('should resolve with void on success', () => {
+        // Stub deleteInboundSamlConfig to resolve.
+        const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'deleteInboundSamlConfig')
+          .resolves();
+        stubs.push(stub);
+        return (auth as Auth).deleteProviderConfig(providerId)
+          .then((result) => {
+            // Confirm underlying API called with expected parameters.
+            expect(stub).to.have.been.calledOnce.and.calledWith(providerId);
+            // Confirm expected result returned.
+            expect(result).to.be.undefined;
+          });
+      });
+
+      it('should throw an error when the backend returns an error', () => {
+        // Stub deleteInboundSamlConfig to throw a backend error.
+        const stub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'deleteInboundSamlConfig')
+          .rejects(expectedError);
+        stubs.push(stub);
+        return (auth as Auth).deleteProviderConfig(providerId)
+          .then((config) => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Confirm underlying API called with expected parameters.
+            expect(stub).to.have.been.calledOnce.and.calledWith(providerId);
+            // Confirm expected error returned.
+            expect(error).to.equal(expectedError);
+          });
+      });
+    });
+  });
+
+  describe('updateProviderConfig()', () => {
+    const oidcConfigOptions = {
+      displayName: 'OIDC_DISPLAY_NAME',
+      enabled: true,
+      clientId: 'CLIENT_ID',
+      issuer: 'https://oidc.com/issuer',
+    };
+    let stubs: sinon.SinonStub[] = [];
+
+    afterEach(() => {
+      _.forEach(stubs, (stub) => stub.restore());
+      stubs = [];
+    });
+
+    it('should be rejected given no provider ID', () => {
+      return (auth as any).updateProviderConfig(undefined, oidcConfigOptions)
+        .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-provider-id');
+    });
+
+    it('should be rejected given an invalid provider ID', () => {
+      const invalidProviderId = '';
+      return (auth as Auth).updateProviderConfig(invalidProviderId, oidcConfigOptions)
+        .then(() => {
+          throw new Error('Unexpected success');
+        })
+        .catch((error) => {
+          expect(error).to.have.property('code', 'auth/invalid-provider-id');
+        });
+    });
+
+    it('should be rejected given no options', () => {
+      const providerId = 'oidc.provider';
+      return (auth as any).updateProviderConfig(providerId)
+        .then(() => {
+          throw new Error('Unexpected success');
+        })
+        .catch((error: FirebaseAuthError) => {
+          expect(error).to.have.property('code', 'auth/invalid-config');
+        });
+    });
+
+    it('should be rejected given an app which returns null access tokens', () => {
+      const providerId = 'oidc.provider';
+      return (nullAccessTokenAuth as Auth).updateProviderConfig(providerId, oidcConfigOptions)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which returns invalid access tokens', () => {
+      const providerId = 'oidc.provider';
+      return (malformedAccessTokenAuth as Auth).updateProviderConfig(providerId, oidcConfigOptions)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which fails to generate access tokens', () => {
+      const providerId = 'oidc.provider';
+      return (rejectedPromiseAccessTokenAuth as Auth).updateProviderConfig(providerId, oidcConfigOptions)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    describe('using OIDC configurations', () => {
+      const providerId = 'oidc.provider';
+      const configOptions = {
+        displayName: 'OIDC_DISPLAY_NAME',
+        enabled: true,
+        clientId: 'CLIENT_ID',
+        issuer: 'https://oidc.com/issuer',
+      };
+      const serverResponse = {
+        name: `projects/project_id/oauthIdpConfigs/${providerId}`,
+        displayName: 'OIDC_DISPLAY_NAME',
+        enabled: true,
+        clientId: 'CLIENT_ID',
+        issuer: 'https://oidc.com/issuer',
+      };
+      const expectedConfig = new OIDCConfig(serverResponse);
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_CONFIG);
+
+      it('should resolve with an OIDCConfig on updateOAuthIdpConfig request success', () => {
+        // Stub updateOAuthIdpConfig to return expected server response.
+        const updateConfigStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'updateOAuthIdpConfig')
+          .resolves(serverResponse);
+        stubs.push(updateConfigStub);
+
+        return auth.updateProviderConfig(providerId, configOptions)
+          .then((actualConfig) => {
+            // Confirm underlying API called with expected parameters.
+            expect(updateConfigStub).to.have.been.calledOnce.and.calledWith(providerId, configOptions);
+            // Confirm expected config response returned.
+            expect(actualConfig).to.deep.equal(expectedConfig);
+          });
+      });
+
+      it('should throw an error when updateOAuthIdpConfig returns an error', () => {
+        // Stub updateOAuthIdpConfig to throw a backend error.
+        const updateConfigStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'updateOAuthIdpConfig')
+          .rejects(expectedError);
+        stubs.push(updateConfigStub);
+
+        return auth.updateProviderConfig(providerId, configOptions)
+          .then((actualConfig) => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Confirm underlying API called with expected parameters.
+            expect(updateConfigStub).to.have.been.calledOnce.and.calledWith(providerId, configOptions);
+            // Confirm expected error returned.
+            expect(error).to.equal(expectedError);
+          });
+      });
+    });
+
+    describe('using SAML configurations', () => {
+      const providerId = 'saml.provider';
+      const configOptions = {
+        displayName: 'SAML_DISPLAY_NAME',
+        enabled: true,
+        idpEntityId: 'IDP_ENTITY_ID',
+        ssoURL: 'https://example.com/login',
+        x509Certificates: ['CERT1', 'CERT2'],
+        rpEntityId: 'RP_ENTITY_ID',
+        callbackURL: 'https://projectId.firebaseapp.com/__/auth/handler',
+        enableRequestSigning: true,
+      };
+      const serverResponse = {
+        name: `projects/project_id/inboundSamlConfigs/${providerId}`,
+        idpConfig: {
+          idpEntityId: 'IDP_ENTITY_ID',
+          ssoUrl: 'https://example.com/login',
+          signRequest: true,
+          idpCertificates: [
+            {x509Certificate: 'CERT1'},
+            {x509Certificate: 'CERT2'},
+          ],
+        },
+        spConfig: {
+          spEntityId: 'RP_ENTITY_ID',
+          callbackUri: 'https://projectId.firebaseapp.com/__/auth/handler',
+        },
+        displayName: 'SAML_DISPLAY_NAME',
+        enabled: true,
+      };
+      const expectedConfig = new SAMLConfig(serverResponse);
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_CONFIG);
+
+      it('should resolve with a SAMLConfig on updateInboundSamlConfig request success', () => {
+        // Stub updateInboundSamlConfig to return expected server response.
+        const updateConfigStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'updateInboundSamlConfig')
+          .resolves(serverResponse);
+        stubs.push(updateConfigStub);
+
+        return auth.updateProviderConfig(providerId, configOptions)
+          .then((actualConfig) => {
+            // Confirm underlying API called with expected parameters.
+            expect(updateConfigStub).to.have.been.calledOnce.and.calledWith(providerId, configOptions);
+            // Confirm expected config response returned.
+            expect(actualConfig).to.deep.equal(expectedConfig);
+          });
+      });
+
+      it('should throw an error when updateInboundSamlConfig returns an error', () => {
+        // Stub updateInboundSamlConfig to throw a backend error.
+        const updateConfigStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'updateInboundSamlConfig')
+          .rejects(expectedError);
+        stubs.push(updateConfigStub);
+
+        return auth.updateProviderConfig(providerId, configOptions)
+          .then((actualConfig) => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Confirm underlying API called with expected parameters.
+            expect(updateConfigStub).to.have.been.calledOnce.and.calledWith(providerId, configOptions);
+            // Confirm expected error returned.
+            expect(error).to.equal(expectedError);
+          });
+      });
+    });
+  });
+
+  describe('createProviderConfig()', () => {
+    const oidcConfigOptions = {
+      providerId: 'oidc.provider',
+      displayName: 'OIDC_DISPLAY_NAME',
+      enabled: true,
+      clientId: 'CLIENT_ID',
+      issuer: 'https://oidc.com/issuer',
+    };
+    let stubs: sinon.SinonStub[] = [];
+
+    afterEach(() => {
+      _.forEach(stubs, (stub) => stub.restore());
+      stubs = [];
+    });
+
+    it('should be rejected given no configuration options', () => {
+      return (auth as any).createProviderConfig()
+        .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-config');
+    });
+
+    it('should be rejected given an invalid provider ID', () => {
+      const invalidConfigOptions = deepCopy(oidcConfigOptions);
+      invalidConfigOptions.providerId = 'unsupported';
+      return (auth as Auth).createProviderConfig(invalidConfigOptions)
+        .then(() => {
+          throw new Error('Unexpected success');
+        })
+        .catch((error) => {
+          expect(error).to.have.property('code', 'auth/invalid-provider-id');
+        });
+    });
+
+    it('should be rejected given an app which returns null access tokens', () => {
+      return (nullAccessTokenAuth as Auth).createProviderConfig(oidcConfigOptions)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which returns invalid access tokens', () => {
+      return (malformedAccessTokenAuth as Auth).createProviderConfig(oidcConfigOptions)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should be rejected given an app which fails to generate access tokens', () => {
+      return (rejectedPromiseAccessTokenAuth as Auth).createProviderConfig(oidcConfigOptions)
+        .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+    });
+
+    describe('using OIDC configurations', () => {
+      const providerId = 'oidc.provider';
+      const configOptions = {
+        providerId,
+        displayName: 'OIDC_DISPLAY_NAME',
+        enabled: true,
+        clientId: 'CLIENT_ID',
+        issuer: 'https://oidc.com/issuer',
+      };
+      const serverResponse = {
+        name: `projects/project_id/oauthIdpConfigs/${providerId}`,
+        displayName: 'OIDC_DISPLAY_NAME',
+        enabled: true,
+        clientId: 'CLIENT_ID',
+        issuer: 'https://oidc.com/issuer',
+      };
+      const expectedConfig = new OIDCConfig(serverResponse);
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_CONFIG);
+
+      it('should resolve with an OIDCConfig on createOAuthIdpConfig request success', () => {
+        // Stub createOAuthIdpConfig to return expected server response.
+        const createConfigStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'createOAuthIdpConfig')
+          .resolves(serverResponse);
+        stubs.push(createConfigStub);
+
+        return (auth as Auth).createProviderConfig(configOptions)
+          .then((actualConfig) => {
+            // Confirm underlying API called with expected parameters.
+            expect(createConfigStub).to.have.been.calledOnce.and.calledWith(configOptions);
+            // Confirm expected config response returned.
+            expect(actualConfig).to.deep.equal(expectedConfig);
+          });
+      });
+
+      it('should throw an error when createOAuthIdpConfig returns an error', () => {
+        // Stub createOAuthIdpConfig to throw a backend error.
+        const createConfigStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'createOAuthIdpConfig')
+          .rejects(expectedError);
+        stubs.push(createConfigStub);
+
+        return (auth as Auth).createProviderConfig(configOptions)
+          .then((actualConfig) => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Confirm underlying API called with expected parameters.
+            expect(createConfigStub).to.have.been.calledOnce.and.calledWith(configOptions);
+            // Confirm expected error returned.
+            expect(error).to.equal(expectedError);
+          });
+      });
+    });
+
+    describe('using SAML configurations', () => {
+      const providerId = 'saml.provider';
+      const configOptions = {
+        providerId,
+        displayName: 'SAML_DISPLAY_NAME',
+        enabled: true,
+        idpEntityId: 'IDP_ENTITY_ID',
+        ssoURL: 'https://example.com/login',
+        x509Certificates: ['CERT1', 'CERT2'],
+        rpEntityId: 'RP_ENTITY_ID',
+        callbackURL: 'https://projectId.firebaseapp.com/__/auth/handler',
+        enableRequestSigning: true,
+      };
+      const serverResponse = {
+        name: `projects/project_id/inboundSamlConfigs/${providerId}`,
+        idpConfig: {
+          idpEntityId: 'IDP_ENTITY_ID',
+          ssoUrl: 'https://example.com/login',
+          signRequest: true,
+          idpCertificates: [
+            {x509Certificate: 'CERT1'},
+            {x509Certificate: 'CERT2'},
+          ],
+        },
+        spConfig: {
+          spEntityId: 'RP_ENTITY_ID',
+          callbackUri: 'https://projectId.firebaseapp.com/__/auth/handler',
+        },
+        displayName: 'SAML_DISPLAY_NAME',
+        enabled: true,
+      };
+      const expectedConfig = new SAMLConfig(serverResponse);
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_CONFIG);
+
+      it('should resolve with a SAMLConfig on createInboundSamlConfig request success', () => {
+        // Stub createInboundSamlConfig to return expected server response.
+        const createConfigStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'createInboundSamlConfig')
+          .resolves(serverResponse);
+        stubs.push(createConfigStub);
+
+        return (auth as Auth).createProviderConfig(configOptions)
+          .then((actualConfig) => {
+            // Confirm underlying API called with expected parameters.
+            expect(createConfigStub).to.have.been.calledOnce.and.calledWith(configOptions);
+            // Confirm expected config response returned.
+            expect(actualConfig).to.deep.equal(expectedConfig);
+          });
+      });
+
+      it('should throw an error when createInboundSamlConfig returns an error', () => {
+        // Stub createInboundSamlConfig to throw a backend error.
+        const createConfigStub = sinon.stub(FirebaseAuthRequestHandler.prototype, 'createInboundSamlConfig')
+          .rejects(expectedError);
+        stubs.push(createConfigStub);
+
+        return (auth as Auth).createProviderConfig(configOptions)
+          .then((actualConfig) => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Confirm underlying API called with expected parameters.
+            expect(createConfigStub).to.have.been.calledOnce.and.calledWith(configOptions);
             // Confirm expected error returned.
             expect(error).to.equal(expectedError);
           });

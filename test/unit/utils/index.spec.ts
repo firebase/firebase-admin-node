@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 
+import * as _ from 'lodash';
 import {expect} from 'chai';
 
 import * as mocks from '../../resources/mocks';
 import {
-  addReadonlyGetter, getProjectId, toWebSafeBase64, formatString,
+  addReadonlyGetter, getProjectId, toWebSafeBase64, formatString, generateUpdateMask,
 } from '../../../src/utils/index';
 import {isNonEmptyString} from '../../../src/utils/validator';
 import {FirebaseApp, FirebaseAppOptions} from '../../../src/firebase-app';
@@ -174,5 +175,46 @@ describe('formatString()', () => {
       notFound: 'value',
     };
     expect(formatString(str, params)).to.equal(str);
+  });
+});
+
+describe('generateUpdateMask()', () => {
+  const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
+  nonObjects.forEach((nonObject) => {
+    it(`should return empty array for non object ${JSON.stringify(nonObject)}`, () => {
+      expect(generateUpdateMask(nonObject as any)).to.deep.equal([]);
+    });
+  });
+
+  it('should return empty array for empty object', () => {
+    expect(generateUpdateMask({})).to.deep.equal([]);
+  });
+
+  it('should return expected update mask array for nested object', () => {
+    const obj: any = {
+      a: undefined,
+      b: 'something',
+      c: ['stuff'],
+      d: false,
+      e: {},
+      f: {
+        g: 1,
+        h: 0,
+        i: {
+          j: 2,
+        },
+      },
+      k: {
+        i: null,
+        j: undefined,
+      },
+      l: {
+        m: undefined,
+      },
+    };
+    const expectedMaskArray = [
+      'b', 'c', 'd', 'e', 'f.g', 'f.h', 'f.i.j', 'k.i', 'l',
+    ];
+    expect(generateUpdateMask(obj)).to.deep.equal(expectedMaskArray);
   });
 });

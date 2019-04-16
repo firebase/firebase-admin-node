@@ -39,6 +39,10 @@ import {
 import {UserImportBuilder, UserImportRecord} from '../../../src/auth/user-import-builder';
 import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/utils/error';
 import {ActionCodeSettingsBuilder} from '../../../src/auth/action-code-settings-builder';
+import {
+  OIDCAuthProviderConfig, SAMLAuthProviderConfig, OIDCUpdateAuthProviderRequest,
+  SAMLUpdateAuthProviderRequest, SAMLConfigServerResponse,
+} from '../../../src/auth/auth-config';
 
 chai.should();
 chai.use(sinonChai);
@@ -1432,8 +1436,8 @@ describe('FirebaseAuthRequestHandler', () => {
     it('should be rejected given an invalid maxResults', () => {
       const expectedError = new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        `Required "maxResults" must be a positive non-zero number that does not ` +
-        `exceed the allowed 1000.`,
+        `Required "maxResults" must be a positive integer that does not ` +
+        `exceed 1000.`,
       );
 
       const requestHandler = new FirebaseAuthRequestHandler(mockApp);
@@ -2400,6 +2404,1041 @@ describe('FirebaseAuthRequestHandler', () => {
         }, (error) => {
           expect(error).to.deep.equal(expectedError);
           expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, requestData));
+        });
+    });
+  });
+
+  describe('getOAuthIdpConfig()', () => {
+    const providerId = 'oidc.provider';
+    const path = `/v2beta1/projects/project_id/oauthIdpConfigs/${providerId}`;
+    const expectedHttpMethod = 'GET';
+    const expectedResult = utils.responseFrom({
+      name: `projects/project1/oauthIdpConfigs/${providerId}`,
+    });
+
+    it('should be fulfilled given a valid provider ID', () => {
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.getOAuthIdpConfig(providerId)
+        .then((result) => {
+          expect(result).to.deep.equal(expectedResult.data);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, {}));
+        });
+    });
+
+    const invalidProviderIds = [
+        null, NaN, 0, 1, true, false, '', 'saml.provider', ['oidc.provider'], [], {}, { a: 1 }, _.noop];
+    invalidProviderIds.forEach((invalidProviderId) => {
+      it('should be rejected given an invalid provider ID:' + JSON.stringify(invalidProviderId), () => {
+        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
+
+        const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+        return requestHandler.getOAuthIdpConfig(invalidProviderId as any)
+          .then((result) => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            expect(error).to.deep.equal(expectedError);
+          });
+      });
+    });
+
+    it('should be rejected given a backend error', () => {
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.CONFIGURATION_NOT_FOUND);
+      const expectedServerError = utils.errorFrom({
+        error: {
+          message: 'CONFIGURATION_NOT_FOUND',
+        },
+      });
+      const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedServerError);
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.getOAuthIdpConfig(providerId)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, {}));
+        });
+    });
+  });
+
+  describe('listOAuthIdpConfigs()', () => {
+    const path = '/v2beta1/projects/project_id/oauthIdpConfigs';
+    const expectedHttpMethod = 'GET';
+    const nextPageToken = 'PAGE_TOKEN';
+    const maxResults = 50;
+    const expectedResult = utils.responseFrom({
+      oauthIdpConfigs : [
+        {name: 'projects/project1/oauthIdpConfigs/oidc.provider1'},
+        {name: 'projects/project1/oauthIdpConfigs/oidc.provider2'},
+      ],
+      nextPageToken: 'NEXT_PAGE_TOKEN',
+    });
+
+    it('should be fulfilled given a valid parameters', () => {
+      const data = {
+        pageSize: maxResults,
+        pageToken: nextPageToken,
+      };
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.listOAuthIdpConfigs(maxResults, nextPageToken)
+        .then((result) => {
+          expect(result).to.deep.equal(expectedResult.data);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, data));
+        });
+    });
+
+    it('should be fulfilled with empty configuration array when no configurations exist', () => {
+      const data = {
+        pageSize: maxResults,
+        pageToken: nextPageToken,
+      };
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.listOAuthIdpConfigs(maxResults, nextPageToken)
+        .then((result) => {
+          expect(result).to.deep.equal({oauthIdpConfigs: []});
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, data));
+        });
+    });
+
+    it('should be fulfilled given no parameters', () => {
+      // Default maxResults should be used.
+      const data = {
+        pageSize: 100,
+      };
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.listOAuthIdpConfigs()
+        .then((result) => {
+          expect(result).to.deep.equal(expectedResult.data);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, data));
+        });
+    });
+
+    it('should be rejected given an invalid maxResults', () => {
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        `Required "maxResults" must be a positive integer that does not ` +
+        `exceed 100.`,
+      );
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.listOAuthIdpConfigs(101, nextPageToken)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+        });
+    });
+
+    it('should be rejected given an invalid next page token', () => {
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_PAGE_TOKEN,
+      );
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.listOAuthIdpConfigs(maxResults, '')
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+        });
+    });
+
+    it('should be rejected when the backend returns an error', () => {
+      const expectedServerError = utils.errorFrom({
+        error: {
+          message: 'INVALID_PAGE_SELECTION',
+        },
+      });
+      const expectedError = FirebaseAuthError.fromServerError('INVALID_PAGE_SELECTION');
+      const data = {
+        pageSize: maxResults,
+        pageToken: nextPageToken,
+      };
+      const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedServerError);
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.listOAuthIdpConfigs(maxResults, nextPageToken)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, data));
+        });
+    });
+  });
+
+  describe('deleteOAuthIdpConfig()', () => {
+    const providerId = 'oidc.provider';
+    const path = `/v2beta1/projects/project_id/oauthIdpConfigs/${providerId}`;
+    const expectedHttpMethod = 'DELETE';
+    const expectedResult = utils.responseFrom({});
+
+    it('should be fulfilled given a valid provider ID', () => {
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.deleteOAuthIdpConfig(providerId)
+        .then((result) => {
+          expect(result).to.be.undefined;
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, {}));
+        });
+    });
+
+    const invalidProviderIds = [
+        null, NaN, 0, 1, true, false, '', 'saml.provider', ['oidc.provider'], [], {}, { a: 1 }, _.noop];
+    invalidProviderIds.forEach((invalidProviderId) => {
+      it('should be rejected given an invalid provider ID:' + JSON.stringify(invalidProviderId), () => {
+        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
+
+        const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+        return requestHandler.deleteOAuthIdpConfig(invalidProviderId as any)
+          .then((result) => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            expect(error).to.deep.equal(expectedError);
+          });
+      });
+    });
+
+    it('should be rejected given a backend error', () => {
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.CONFIGURATION_NOT_FOUND);
+      const expectedServerError = utils.errorFrom({
+        error: {
+          message: 'CONFIGURATION_NOT_FOUND',
+        },
+      });
+      const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedServerError);
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.deleteOAuthIdpConfig(providerId)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, {}));
+        });
+    });
+  });
+
+  describe('createOAuthIdpConfig', () => {
+    const providerId = 'oidc.provider';
+    const path = `/v2beta1/projects/project_id/oauthIdpConfigs?oauthIdpConfigId=${providerId}`;
+    const expectedHttpMethod = 'POST';
+    const configOptions = {
+      providerId,
+      displayName: 'OIDC_DISPLAY_NAME',
+      enabled: true,
+      clientId: 'CLIENT_ID',
+      issuer: 'https://oidc.com/issuer',
+    };
+    const expectedRequest = {
+      displayName: 'OIDC_DISPLAY_NAME',
+      enabled: true,
+      clientId: 'CLIENT_ID',
+      issuer: 'https://oidc.com/issuer',
+    };
+    const expectedResult = utils.responseFrom(deepExtend({
+      name: `projects/project1/oauthIdpConfigs/${providerId}`,
+    }, expectedRequest));
+
+    it('should be fulfilled given valid parameters', () => {
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.createOAuthIdpConfig(configOptions)
+        .then((response) => {
+          expect(response).to.deep.equal(expectedResult.data);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, expectedRequest));
+        });
+    });
+
+    it('should be rejected given invalid parameters', () => {
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"OIDCAuthProviderConfig.issuer" must be a valid URL string.',
+      );
+      const invalidOptions: OIDCAuthProviderConfig = deepCopy(configOptions);
+      invalidOptions.issuer = 'invalid';
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.createOAuthIdpConfig(invalidOptions)
+        .then((result) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+        });
+    });
+
+    it('should be rejected when the backend returns a response missing name', () => {
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Unable to create new OIDC configuration',
+      );
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.createOAuthIdpConfig(configOptions)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, expectedRequest));
+        });
+    });
+
+    it('should be rejected when the backend returns an error', () => {
+      const expectedServerError = utils.errorFrom({
+        error: {
+          message: 'INVALID_CONFIG',
+        },
+      });
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_CONFIG);
+      const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedServerError);
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.createOAuthIdpConfig(configOptions)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, expectedRequest));
+        });
+    });
+  });
+
+  describe('updateOAuthIdpConfig()', () => {
+    const providerId = 'oidc.provider';
+    const path = `/v2beta1/projects/project_id/oauthIdpConfigs/${providerId}`;
+    const expectedHttpMethod = 'PATCH';
+    const configOptions = {
+      displayName: 'OIDC_DISPLAY_NAME',
+      enabled: true,
+      clientId: 'CLIENT_ID',
+      issuer: 'https://oidc.com/issuer',
+    };
+    const expectedRequest = {
+      displayName: 'OIDC_DISPLAY_NAME',
+      enabled: true,
+      clientId: 'CLIENT_ID',
+      issuer: 'https://oidc.com/issuer',
+    };
+    const expectedResult = utils.responseFrom(deepExtend({
+      name: `projects/project_id/oauthIdpConfigs/${providerId}`,
+    }, expectedRequest));
+    const expectedPartialResult = utils.responseFrom(deepExtend({
+      name: `projects/project_id/oauthIdpConfigs/${providerId}`,
+    }, {
+      displayName: 'OIDC_DISPLAY_NAME',
+      enabled: false,
+      clientId: 'NEW_CLIENT_ID',
+      issuer: 'https://oidc.com/issuer2',
+    }));
+
+    it('should be fulfilled given full parameters', () => {
+      const expectedPath = path + '?updateMask=enabled,displayName,issuer,clientId';
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.updateOAuthIdpConfig(providerId, configOptions)
+        .then((response) => {
+          expect(response).to.deep.equal(expectedResult.data);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(expectedPath, expectedHttpMethod, expectedRequest));
+        });
+    });
+
+    it('should be fulfilled given partial parameters', () => {
+      const expectedPath = path + '?updateMask=enabled,clientId';
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedPartialResult);
+      const partialConfigOptions = {
+        enabled: false,
+        clientId: 'NEW_CLIENT_ID',
+      };
+      const partialRequest: OIDCUpdateAuthProviderRequest = {
+        enabled: false,
+        displayName: undefined,
+        issuer: undefined,
+        clientId: 'NEW_CLIENT_ID',
+      };
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.updateOAuthIdpConfig(providerId, partialConfigOptions)
+        .then((response) => {
+          expect(response).to.deep.equal(expectedPartialResult.data);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(expectedPath, expectedHttpMethod, partialRequest));
+        });
+    });
+
+    it('should be fulfilled given single parameter to change', () => {
+      const expectedPath = path + '?updateMask=issuer';
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedPartialResult);
+      const partialConfigOptions = {
+        issuer: 'https://oidc.com/issuer2',
+      };
+      const partialRequest: OIDCUpdateAuthProviderRequest = {
+        clientId: undefined,
+        displayName: undefined,
+        enabled: undefined,
+        issuer: 'https://oidc.com/issuer2',
+      };
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.updateOAuthIdpConfig(providerId, partialConfigOptions)
+        .then((response) => {
+          expect(response).to.deep.equal(expectedPartialResult.data);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(expectedPath, expectedHttpMethod, partialRequest));
+        });
+    });
+
+    const invalidProviderIds = [
+        null, NaN, 0, 1, true, false, '', 'saml.provider', ['oidc.provider'], [], {}, { a: 1 }, _.noop];
+    invalidProviderIds.forEach((invalidProviderId) => {
+      it('should be rejected given an invalid provider ID:' + JSON.stringify(invalidProviderId), () => {
+        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
+
+        const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+        return requestHandler.updateOAuthIdpConfig(invalidProviderId as any, configOptions)
+          .then((result) => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            expect(error).to.deep.equal(expectedError);
+          });
+      });
+    });
+
+    it('should be rejected given invalid parameters', () => {
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"OIDCAuthProviderConfig.issuer" must be a valid URL string.',
+      );
+      const invalidOptions: OIDCUpdateAuthProviderRequest = deepCopy(configOptions);
+      invalidOptions.issuer = 'invalid';
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.updateOAuthIdpConfig(providerId, invalidOptions)
+        .then((result) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+        });
+    });
+
+    it('should be rejected when the backend returns a response missing name', () => {
+      const expectedPath = path + '?updateMask=enabled,displayName,issuer,clientId';
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Unable to update OIDC configuration',
+      );
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.updateOAuthIdpConfig(providerId, configOptions)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(expectedPath, expectedHttpMethod, expectedRequest));
+        });
+    });
+
+    it('should be rejected when the backend returns an error', () => {
+      const expectedPath = path + '?updateMask=enabled,displayName,issuer,clientId';
+      const expectedServerError = utils.errorFrom({
+        error: {
+          message: 'INVALID_CONFIG',
+        },
+      });
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_CONFIG);
+      const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedServerError);
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.updateOAuthIdpConfig(providerId, configOptions)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(expectedPath, expectedHttpMethod, expectedRequest));
+        });
+    });
+  });
+
+  describe('getInboundSamlConfig()', () => {
+    const providerId = 'saml.provider';
+    const path = `/v2beta1/projects/project_id/inboundSamlConfigs/${providerId}`;
+    const expectedHttpMethod = 'GET';
+    const expectedResult = utils.responseFrom({
+      name: `projects/project1/inboundSamlConfigs/${providerId}`,
+    });
+
+    it('should be fulfilled given a valid provider ID', () => {
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.getInboundSamlConfig(providerId)
+        .then((result) => {
+          expect(result).to.deep.equal(expectedResult.data);
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, expectedHttpMethod, {}));
+        });
+    });
+
+    const invalidProviderIds = [
+        null, NaN, 0, 1, true, false, '', 'oidc.provider', ['saml.provider'], [], {}, { a: 1 }, _.noop];
+    invalidProviderIds.forEach((invalidProviderId) => {
+      it('should be rejected given an invalid provider ID:' + JSON.stringify(invalidProviderId), () => {
+        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
+
+        const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+        return requestHandler.getInboundSamlConfig(invalidProviderId as any)
+          .then((result) => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            expect(error).to.deep.equal(expectedError);
+          });
+      });
+    });
+
+    it('should be rejected given a backend error', () => {
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.CONFIGURATION_NOT_FOUND);
+      const expectedServerError = utils.errorFrom({
+        error: {
+          message: 'CONFIGURATION_NOT_FOUND',
+        },
+      });
+      const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedServerError);
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.getInboundSamlConfig(providerId)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, expectedHttpMethod, {}));
+        });
+    });
+  });
+
+  describe('listInboundSamlConfigs()', () => {
+    const path = '/v2beta1/projects/project_id/inboundSamlConfigs';
+    const expectedHttpMethod = 'GET';
+    const nextPageToken = 'PAGE_TOKEN';
+    const maxResults = 50;
+    const expectedResult = utils.responseFrom({
+      inboundSamlConfigs : [
+        {name: 'projects/project1/inboundSamlConfigs/saml.provider1'},
+        {name: 'projects/project1/inboundSamlConfigs/saml.provider2'},
+      ],
+      nextPageToken: 'NEXT_PAGE_TOKEN',
+    });
+
+    it('should be fulfilled given a valid parameters', () => {
+      const data = {
+        pageSize: maxResults,
+        pageToken: nextPageToken,
+      };
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.listInboundSamlConfigs(maxResults, nextPageToken)
+        .then((result) => {
+          expect(result).to.deep.equal(expectedResult.data);
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, expectedHttpMethod, data));
+        });
+    });
+
+    it('should be fulfilled with empty configuration array when no configurations exist', () => {
+      const data = {
+        pageSize: maxResults,
+        pageToken: nextPageToken,
+      };
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.listInboundSamlConfigs(maxResults, nextPageToken)
+        .then((result) => {
+          expect(result).to.deep.equal({inboundSamlConfigs: []});
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, expectedHttpMethod, data));
+        });
+    });
+
+    it('should be fulfilled given no parameters', () => {
+      // Default maxResults should be used.
+      const data = {
+        pageSize: 100,
+      };
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.listInboundSamlConfigs()
+        .then((result) => {
+          expect(result).to.deep.equal(expectedResult.data);
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, expectedHttpMethod, data));
+        });
+    });
+
+    it('should be rejected given an invalid maxResults', () => {
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        `Required "maxResults" must be a positive integer that does not ` +
+        `exceed 100.`,
+      );
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.listInboundSamlConfigs(101, nextPageToken)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+        });
+    });
+
+    it('should be rejected given an invalid next page token', () => {
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_PAGE_TOKEN,
+      );
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.listInboundSamlConfigs(maxResults, '')
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+        });
+    });
+
+    it('should be rejected when the backend returns an error', () => {
+      const expectedServerError = utils.errorFrom({
+        error: {
+          message: 'INVALID_PAGE_SELECTION',
+        },
+      });
+      const expectedError = FirebaseAuthError.fromServerError('INVALID_PAGE_SELECTION');
+      const data = {
+        pageSize: maxResults,
+        pageToken: nextPageToken,
+      };
+      const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedServerError);
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.listInboundSamlConfigs(maxResults, nextPageToken)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, expectedHttpMethod, data));
+        });
+    });
+  });
+
+  describe('deleteInboundSamlConfig()', () => {
+    const providerId = 'saml.provider';
+    const path = `/v2beta1/projects/project_id/inboundSamlConfigs/${providerId}`;
+    const expectedHttpMethod = 'DELETE';
+    const expectedResult = utils.responseFrom({});
+
+    it('should be fulfilled given a valid provider ID', () => {
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.deleteInboundSamlConfig(providerId)
+        .then((result) => {
+          expect(result).to.be.undefined;
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, expectedHttpMethod, {}));
+        });
+    });
+
+    const invalidProviderIds = [
+        null, NaN, 0, 1, true, false, '', 'oidc.provider', ['saml.provider'], [], {}, { a: 1 }, _.noop];
+    invalidProviderIds.forEach((invalidProviderId) => {
+      it('should be rejected given an invalid provider ID:' + JSON.stringify(invalidProviderId), () => {
+        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
+
+        const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+        return requestHandler.deleteInboundSamlConfig(invalidProviderId as any)
+          .then((result) => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            expect(error).to.deep.equal(expectedError);
+          });
+      });
+    });
+
+    it('should be rejected given a backend error', () => {
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.CONFIGURATION_NOT_FOUND);
+      const expectedServerError = utils.errorFrom({
+        error: {
+          message: 'CONFIGURATION_NOT_FOUND',
+        },
+      });
+      const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedServerError);
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.deleteInboundSamlConfig(providerId)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+          expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, expectedHttpMethod, {}));
+        });
+    });
+  });
+
+  describe('createInboundSamlConfig', () => {
+    const providerId = 'saml.provider';
+    const path = `/v2beta1/projects/project_id/inboundSamlConfigs?inboundSamlConfigId=${providerId}`;
+    const expectedHttpMethod = 'POST';
+    const configOptions = {
+      providerId,
+      displayName: 'SAML_DISPLAY_NAME',
+      enabled: true,
+      idpEntityId: 'IDP_ENTITY_ID',
+      ssoURL: 'https://example.com/login',
+      x509Certificates: ['CERT1', 'CERT2'],
+      rpEntityId: 'RP_ENTITY_ID',
+      callbackURL: 'https://projectId.firebaseapp.com/__/auth/handler',
+      enableRequestSigning: true,
+    };
+    const expectedRequest = {
+      idpConfig: {
+        idpEntityId: 'IDP_ENTITY_ID',
+        ssoUrl: 'https://example.com/login',
+        signRequest: true,
+        idpCertificates: [
+          {x509Certificate: 'CERT1'},
+          {x509Certificate: 'CERT2'},
+        ],
+      },
+      spConfig: {
+        spEntityId: 'RP_ENTITY_ID',
+        callbackUri: 'https://projectId.firebaseapp.com/__/auth/handler',
+      },
+      displayName: 'SAML_DISPLAY_NAME',
+      enabled: true,
+    };
+    const expectedResult = utils.responseFrom(deepExtend({
+      name: 'projects/project1/inboundSamlConfigs/saml.provider',
+    }, expectedRequest));
+
+    it('should be fulfilled given valid parameters', () => {
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.createInboundSamlConfig(configOptions)
+        .then((response) => {
+          expect(response).to.deep.equal(expectedResult.data);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, expectedRequest));
+        });
+    });
+
+    it('should be rejected given invalid parameters', () => {
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"SAMLAuthProviderConfig.callbackURL" must be a valid URL string.',
+      );
+      const invalidOptions: SAMLAuthProviderConfig = deepCopy(configOptions);
+      invalidOptions.callbackURL = 'invalid';
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.createInboundSamlConfig(invalidOptions)
+        .then((result) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+        });
+    });
+
+    it('should be rejected when the backend returns a response missing name', () => {
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Unable to create new SAML configuration',
+      );
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.createInboundSamlConfig(configOptions)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, expectedRequest));
+        });
+    });
+
+    it('should be rejected when the backend returns an error', () => {
+      const expectedServerError = utils.errorFrom({
+        error: {
+          message: 'INVALID_CONFIG',
+        },
+      });
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_CONFIG);
+      const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedServerError);
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.createInboundSamlConfig(configOptions)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, expectedHttpMethod, expectedRequest));
+        });
+    });
+  });
+
+  describe('updateInboundSamlConfig()', () => {
+    const providerId = 'saml.provider';
+    const path = `/v2beta1/projects/project_id/inboundSamlConfigs/${providerId}`;
+    const expectedHttpMethod = 'PATCH';
+    const configOptions = {
+      idpEntityId: 'IDP_ENTITY_ID',
+      ssoURL: 'https://example.com/login',
+      x509Certificates: ['CERT1', 'CERT2'],
+      rpEntityId: 'RP_ENTITY_ID',
+      callbackURL: 'https://projectId.firebaseapp.com/__/auth/handler',
+      enableRequestSigning: true,
+      enabled: true,
+      displayName: 'samlProviderName',
+    };
+    const expectedRequest = {
+      idpConfig: {
+        idpEntityId: 'IDP_ENTITY_ID',
+        ssoUrl: 'https://example.com/login',
+        signRequest: true,
+        idpCertificates: [
+          {x509Certificate: 'CERT1'},
+          {x509Certificate: 'CERT2'},
+        ],
+      },
+      spConfig: {
+        spEntityId: 'RP_ENTITY_ID',
+        callbackUri: 'https://projectId.firebaseapp.com/__/auth/handler',
+      },
+      displayName: 'samlProviderName',
+      enabled: true,
+    };
+    const expectedResult = utils.responseFrom(deepExtend({
+      name: `projects/project_id/inboundSamlConfigs/${providerId}`,
+    }, expectedRequest));
+    const expectedPartialResult = utils.responseFrom(deepExtend({
+      name: `projects/project_id/inboundSamlConfigs/${providerId}`,
+    }, {
+      idpConfig: {
+        idpEntityId: 'IDP_ENTITY_ID',
+        ssoUrl: 'https://example.com/login2',
+        signRequest: true,
+        idpCertificates: [
+          {x509Certificate: 'CERT1'},
+          {x509Certificate: 'CERT2'},
+        ],
+      },
+      spConfig: {
+        spEntityId: 'RP_ENTITY_ID2',
+        callbackUri: 'https://projectId.firebaseapp.com/__/auth/handler',
+      },
+      displayName: 'samlProviderName',
+      enabled: false,
+    }));
+    const fullUpadateMask =
+        'enabled,displayName,idpConfig.idpEntityId,idpConfig.ssoUrl,' +
+        'idpConfig.signRequest,idpConfig.idpCertificates,spConfig.spEntityId,spConfig.callbackUri';
+
+    it('should be fulfilled given full parameters', () => {
+      const expectedPath = path + `?updateMask=${fullUpadateMask}`;
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.updateInboundSamlConfig(providerId, configOptions)
+        .then((response) => {
+          expect(response).to.deep.equal(expectedResult.data);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(expectedPath, expectedHttpMethod, expectedRequest));
+        });
+    });
+
+    it('should be fulfilled given partial parameters', () => {
+      const expectedPath = path + '?updateMask=enabled,idpConfig.ssoUrl,spConfig.spEntityId';
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedPartialResult);
+      const partialConfigOptions = {
+        ssoURL: 'https://example.com/login2',
+        rpEntityId: 'RP_ENTITY_ID2',
+        enabled: false,
+      };
+      const partialRequest: SAMLConfigServerResponse = {
+        idpConfig: {
+          idpEntityId: undefined,
+          ssoUrl: 'https://example.com/login2',
+          signRequest: undefined,
+          idpCertificates: undefined,
+        },
+        spConfig: {
+          spEntityId: 'RP_ENTITY_ID2',
+          callbackUri: undefined,
+        },
+        displayName: undefined,
+        enabled: false,
+      };
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.updateInboundSamlConfig(providerId, partialConfigOptions)
+        .then((response) => {
+          expect(response).to.deep.equal(expectedPartialResult.data);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(expectedPath, expectedHttpMethod, partialRequest));
+        });
+    });
+
+    it('should be fulfilled given single parameter to change', () => {
+      const expectedPath = path + '?updateMask=idpConfig.ssoUrl';
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedPartialResult);
+      const partialConfigOptions = {
+        ssoURL: 'https://example.com/login2',
+      };
+      const partialRequest: SAMLConfigServerResponse = {
+        idpConfig: {
+          idpEntityId: undefined,
+          ssoUrl: 'https://example.com/login2',
+          signRequest: undefined,
+          idpCertificates: undefined,
+        },
+        displayName: undefined,
+        enabled: undefined,
+      };
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.updateInboundSamlConfig(providerId, partialConfigOptions)
+        .then((response) => {
+          expect(response).to.deep.equal(expectedPartialResult.data);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(expectedPath, expectedHttpMethod, partialRequest));
+        });
+    });
+
+    const invalidProviderIds = [
+        null, NaN, 0, 1, true, false, '', 'oidc.provider', ['saml.provider'], [], {}, { a: 1 }, _.noop];
+    invalidProviderIds.forEach((invalidProviderId) => {
+      it('should be rejected given an invalid provider ID:' + JSON.stringify(invalidProviderId), () => {
+        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
+
+        const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+        return requestHandler.updateInboundSamlConfig(invalidProviderId as any, configOptions)
+          .then((result) => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            expect(error).to.deep.equal(expectedError);
+          });
+      });
+    });
+
+    it('should be rejected given invalid parameters', () => {
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"SAMLAuthProviderConfig.ssoURL" must be a valid URL string.',
+      );
+      const invalidOptions: SAMLUpdateAuthProviderRequest = deepCopy(configOptions);
+      invalidOptions.ssoURL = 'invalid';
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.updateInboundSamlConfig(providerId, invalidOptions)
+        .then((result) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+        });
+    });
+
+    it('should be rejected when the backend returns a response missing name', () => {
+      const expectedPath = path + `?updateMask=${fullUpadateMask}`;
+      const expectedError = new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Unable to update SAML configuration',
+      );
+      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.updateInboundSamlConfig(providerId, configOptions)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(expectedPath, expectedHttpMethod, expectedRequest));
+        });
+    });
+
+    it('should be rejected when the backend returns an error', () => {
+      const expectedPath = path + `?updateMask=${fullUpadateMask}`;
+      const expectedServerError = utils.errorFrom({
+        error: {
+          message: 'INVALID_CONFIG',
+        },
+      });
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_CONFIG);
+      const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedServerError);
+      stubs.push(stub);
+
+      const requestHandler = new FirebaseAuthRequestHandler(mockApp);
+      return requestHandler.updateInboundSamlConfig(providerId, configOptions)
+        .then((resp) => {
+          throw new Error('Unexpected success');
+        }, (error) => {
+          expect(error).to.deep.equal(expectedError);
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(expectedPath, expectedHttpMethod, expectedRequest));
         });
     });
   });
