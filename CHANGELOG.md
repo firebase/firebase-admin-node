@@ -1,10 +1,6 @@
 # Unreleased
 
--
-
-# v7.3.0
-
-- [added] Added the provider config management APIs for managing OIDC and SAML
+- [feature] Added the provider config management APIs for managing OIDC and SAML
   provider configurations (CRUD) via
   `auth.listProviderConfigs()`, `auth.getProviderConfig()`,
   `auth.deleteProviderConfig()`, `auth.updateProviderConfig()` and
