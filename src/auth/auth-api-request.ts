@@ -29,6 +29,11 @@ import {
 } from './user-import-builder';
 import * as utils from '../utils/index';
 import {ActionCodeSettings, ActionCodeSettingsBuilder} from './action-code-settings-builder';
+import {
+  SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
+  OIDCConfigServerRequest, SAMLConfigServerRequest, AuthProviderConfig,
+  OIDCUpdateAuthProviderRequest, SAMLUpdateAuthProviderRequest,
+} from './auth-config';
 
 
 /** Firebase Auth backend host. */
@@ -70,6 +75,9 @@ const MIN_SESSION_COOKIE_DURATION_SECS = 5 * 60;
 
 /** Maximum allowed session cookie duration in seconds (2 weeks). */
 const MAX_SESSION_COOKIE_DURATION_SECS = 14 * 24 * 60 * 60;
+
+/** Maximum allowed number of provider configurations to batch download at one time. */
+const MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE = 100;
 
 /** The Firebase Auth backend URL format. */
 const FIREBASE_AUTH_BASE_URL_FORMAT =
@@ -383,8 +391,8 @@ export const FIREBASE_AUTH_DOWNLOAD_ACCOUNT = new ApiSettings('/accounts:batchGe
         request.maxResults > MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        `Required "maxResults" must be a positive non-zero number that does not exceed ` +
-        `the allowed ${MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE}.`,
+        `Required "maxResults" must be a positive integer that does not exceed ` +
+        `${MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE}.`,
       );
     }
   });
@@ -496,12 +504,139 @@ const FIREBASE_AUTH_GET_OOB_CODE = new ApiSettings('/accounts:sendOobCode', 'POS
     }
   });
 
+/** Instantiates the retrieve OIDC configuration endpoint settings. */
+const GET_OAUTH_IDP_CONFIG = new ApiSettings('/oauthIdpConfigs/{providerId}', 'GET')
+  // Set response validator.
+  .setResponseValidator((response: any) => {
+    // Response should always contain the OIDC provider resource name.
+    if (!validator.isNonEmptyString(response.name)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Unable to get OIDC configuration',
+      );
+    }
+  });
+
+/** Instantiates the delete OIDC configuration endpoint settings. */
+const DELETE_OAUTH_IDP_CONFIG = new ApiSettings('/oauthIdpConfigs/{providerId}', 'DELETE');
+
+/** Instantiates the create OIDC configuration endpoint settings. */
+const CREATE_OAUTH_IDP_CONFIG = new ApiSettings('/oauthIdpConfigs?oauthIdpConfigId={providerId}', 'POST')
+  // Set response validator.
+  .setResponseValidator((response: any) => {
+    // Response should always contain the OIDC provider resource name.
+    if (!validator.isNonEmptyString(response.name)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Unable to create new OIDC configuration',
+      );
+    }
+  });
+
+/** Instantiates the update OIDC configuration endpoint settings. */
+const UPDATE_OAUTH_IDP_CONFIG = new ApiSettings('/oauthIdpConfigs/{providerId}?updateMask={updateMask}', 'PATCH')
+  // Set response validator.
+  .setResponseValidator((response: any) => {
+    // Response should always contain the configuration resource name.
+    if (!validator.isNonEmptyString(response.name)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Unable to update OIDC configuration',
+      );
+    }
+  });
+
+/** Instantiates the list OIDC configuration endpoint settings. */
+const LIST_OAUTH_IDP_CONFIGS = new ApiSettings('/oauthIdpConfigs', 'GET')
+  // Set request validator.
+  .setRequestValidator((request: any) => {
+    // Validate next page token.
+    if (typeof request.pageToken !== 'undefined' &&
+        !validator.isNonEmptyString(request.pageToken)) {
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PAGE_TOKEN);
+    }
+    // Validate max results.
+    if (!validator.isNumber(request.pageSize) ||
+        request.pageSize <= 0 ||
+        request.pageSize > MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        `Required "maxResults" must be a positive integer that does not exceed ` +
+        `${MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE}.`,
+      );
+    }
+  });
+
+/** Instantiates the retrieve SAML configuration endpoint settings. */
+const GET_INBOUND_SAML_CONFIG = new ApiSettings('/inboundSamlConfigs/{providerId}', 'GET')
+  // Set response validator.
+  .setResponseValidator((response: any) => {
+    // Response should always contain the SAML provider resource name.
+    if (!validator.isNonEmptyString(response.name)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Unable to get SAML configuration',
+      );
+    }
+  });
+
+/** Instantiates the delete SAML configuration endpoint settings. */
+const DELETE_INBOUND_SAML_CONFIG = new ApiSettings('/inboundSamlConfigs/{providerId}', 'DELETE');
+
+/** Instantiates the create SAML configuration endpoint settings. */
+const CREATE_INBOUND_SAML_CONFIG = new ApiSettings('/inboundSamlConfigs?inboundSamlConfigId={providerId}', 'POST')
+  // Set response validator.
+  .setResponseValidator((response: any) => {
+    // Response should always contain the SAML provider resource name.
+    if (!validator.isNonEmptyString(response.name)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Unable to create new SAML configuration',
+      );
+    }
+  });
+
+/** Instantiates the update SAML configuration endpoint settings. */
+const UPDATE_INBOUND_SAML_CONFIG = new ApiSettings('/inboundSamlConfigs/{providerId}?updateMask={updateMask}', 'PATCH')
+  // Set response validator.
+  .setResponseValidator((response: any) => {
+    // Response should always contain the configuration resource name.
+    if (!validator.isNonEmptyString(response.name)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Unable to update SAML configuration',
+      );
+    }
+  });
+
+/** Instantiates the list SAML configuration endpoint settings. */
+const LIST_INBOUND_SAML_CONFIGS = new ApiSettings('/inboundSamlConfigs', 'GET')
+  // Set request validator.
+  .setRequestValidator((request: any) => {
+    // Validate next page token.
+    if (typeof request.pageToken !== 'undefined' &&
+        !validator.isNonEmptyString(request.pageToken)) {
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PAGE_TOKEN);
+    }
+    // Validate max results.
+    if (!validator.isNumber(request.pageSize) ||
+        request.pageSize <= 0 ||
+        request.pageSize > MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        `Required "maxResults" must be a positive integer that does not exceed ` +
+        `${MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE}.`,
+      );
+    }
+  });
+
 /**
  * Class that provides the mechanism to send requests to the Firebase Auth backend endpoints.
  */
 export class FirebaseAuthRequestHandler {
-  private httpClient: AuthorizedHttpClient;
-  private authUrlBuilder: AuthResourceUrlBuilder;
+  private readonly httpClient: AuthorizedHttpClient;
+  private readonly authUrlBuilder: AuthResourceUrlBuilder;
+  private readonly projectConfigUrlBuilder: AuthResourceUrlBuilder;
 
   /**
    * @param {any} response The response to check for errors.
@@ -516,8 +651,10 @@ export class FirebaseAuthRequestHandler {
    * @constructor
    */
   constructor(app: FirebaseApp) {
+    const projectId = utils.getProjectId(app);
     this.httpClient = new AuthorizedHttpClient(app);
-    this.authUrlBuilder = new AuthResourceUrlBuilder(utils.getProjectId(app), 'v1');
+    this.authUrlBuilder = new AuthResourceUrlBuilder(projectId, 'v1');
+    this.projectConfigUrlBuilder = new AuthResourceUrlBuilder(projectId, 'v2beta1');
   }
 
   /**
@@ -895,6 +1032,250 @@ export class FirebaseAuthRequestHandler {
       .then((response: any) => {
         // Return the link.
         return response.oobLink as string;
+      });
+  }
+
+  /**
+   * Looks up an OIDC provider configuration by provider ID.
+   *
+   * @param {string} providerId The provider identifier of the configuration to lookup.
+   * @return {Promise<OIDCConfigServerResponse>} A promise that resolves with the provider configuration information.
+   */
+  public getOAuthIdpConfig(providerId: string): Promise<OIDCConfigServerResponse> {
+    if (!OIDCConfig.isProviderId(providerId)) {
+      return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
+    }
+    return this.invokeRequestHandler(this.projectConfigUrlBuilder, GET_OAUTH_IDP_CONFIG, {}, {providerId});
+  }
+
+  /**
+   * Lists the OIDC configurations (single batch only) with a size of maxResults and starting from
+   * the offset as specified by pageToken.
+   *
+   * @param {number=} maxResults The page size, 100 if undefined. This is also the maximum
+   *     allowed limit.
+   * @param {string=} pageToken The next page token. If not specified, returns OIDC configurations
+   *     without any offset. Configurations are returned in the order they were created from oldest to
+   *     newest, relative to the page token offset.
+   * @return {Promise<object>} A promise that resolves with the current batch of downloaded
+   *     OIDC configurations and the next page token if available. For the last page, an empty list of provider
+   *     configuration and no page token are returned.
+   */
+  public listOAuthIdpConfigs(
+      maxResults: number = MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE,
+      pageToken?: string): Promise<object> {
+    const request: {pageSize: number, pageToken?: string} = {
+      pageSize: maxResults,
+    };
+    // Add next page token if provided.
+    if (typeof pageToken !== 'undefined') {
+      request.pageToken = pageToken;
+    }
+    return this.invokeRequestHandler(this.projectConfigUrlBuilder, LIST_OAUTH_IDP_CONFIGS, request)
+        .then((response: any) => {
+          if (!response.oauthIdpConfigs) {
+            response.oauthIdpConfigs = [];
+            delete response.nextPageToken;
+          }
+          return response as {oauthIdpConfigs: object[], nextPageToken?: string};
+        });
+  }
+
+  /**
+   * Deletes an OIDC configuration identified by a providerId.
+   *
+   * @param {string} providerId The identifier of the OIDC configuration to delete.
+   * @return {Promise<void>} A promise that resolves when the OIDC provider is deleted.
+   */
+  public deleteOAuthIdpConfig(providerId: string): Promise<void> {
+    if (!OIDCConfig.isProviderId(providerId)) {
+      return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
+    }
+    return this.invokeRequestHandler(this.projectConfigUrlBuilder, DELETE_OAUTH_IDP_CONFIG, {}, {providerId})
+      .then((response: any) => {
+        // Return nothing.
+      });
+  }
+
+  /**
+   * Creates a new OIDC provider configuration with the properties provided.
+   *
+   * @param {AuthProviderConfig} options The properties to set on the new OIDC provider configuration to be created.
+   * @return {Promise<OIDCConfigServerResponse>} A promise that resolves with the newly created OIDC
+   *     configuration.
+   */
+  public createOAuthIdpConfig(options: AuthProviderConfig): Promise<OIDCConfigServerResponse> {
+    // Construct backend request.
+    let request;
+    try {
+      request = OIDCConfig.buildServerRequest(options);
+    } catch (e) {
+      return Promise.reject(e);
+    }
+    const providerId = options.providerId;
+    return this.invokeRequestHandler(this.projectConfigUrlBuilder, CREATE_OAUTH_IDP_CONFIG, request, {providerId})
+      .then((response: any) => {
+        if (!OIDCConfig.getProviderIdFromResourceName(response.name)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INTERNAL_ERROR,
+            'INTERNAL ASSERT FAILED: Unable to create new OIDC provider configuration');
+        }
+        return response as OIDCConfigServerResponse;
+      });
+  }
+
+  /**
+   * Updates an existing OIDC provider configuration with the properties provided.
+   *
+   * @param {string} providerId The provider identifier of the OIDC configuration to update.
+   * @param {OIDCUpdateAuthProviderRequest} options The properties to update on the existing configuration.
+   * @return {Promise<OIDCConfigServerResponse>} A promise that resolves with the modified provider
+   *     configuration.
+   */
+  public updateOAuthIdpConfig(
+      providerId: string, options: OIDCUpdateAuthProviderRequest): Promise<OIDCConfigServerResponse> {
+    if (!OIDCConfig.isProviderId(providerId)) {
+      return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
+    }
+    // Construct backend request.
+    let request: OIDCConfigServerRequest;
+    try {
+      request = OIDCConfig.buildServerRequest(options, true) || {};
+    } catch (e) {
+      return Promise.reject(e);
+    }
+    const updateMask = utils.generateUpdateMask(request);
+    return this.invokeRequestHandler(this.projectConfigUrlBuilder, UPDATE_OAUTH_IDP_CONFIG, request,
+      {providerId, updateMask: updateMask.join(',')})
+      .then((response: any) => {
+        if (!OIDCConfig.getProviderIdFromResourceName(response.name)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INTERNAL_ERROR,
+            'INTERNAL ASSERT FAILED: Unable to update OIDC provider configuration');
+        }
+        return response as OIDCConfigServerResponse;
+      });
+  }
+
+  /**
+   * Looks up an SAML provider configuration by provider ID.
+   *
+   * @param {string} providerId The provider identifier of the configuration to lookup.
+   * @return {Promise<SAMLConfigServerResponse>} A promise that resolves with the provider configuration information.
+   */
+  public getInboundSamlConfig(providerId: string): Promise<SAMLConfigServerResponse> {
+    if (!SAMLConfig.isProviderId(providerId)) {
+      return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
+    }
+    return this.invokeRequestHandler(this.projectConfigUrlBuilder, GET_INBOUND_SAML_CONFIG, {}, {providerId});
+  }
+
+  /**
+   * Lists the SAML configurations (single batch only) with a size of maxResults and starting from
+   * the offset as specified by pageToken.
+   *
+   * @param {number=} maxResults The page size, 100 if undefined. This is also the maximum
+   *     allowed limit.
+   * @param {string=} pageToken The next page token. If not specified, returns SAML configurations starting
+   *     without any offset. Configurations are returned in the order they were created from oldest to
+   *     newest, relative to the page token offset.
+   * @return {Promise<object>} A promise that resolves with the current batch of downloaded
+   *     SAML configurations and the next page token if available. For the last page, an empty list of provider
+   *     configuration and no page token are returned.
+   */
+  public listInboundSamlConfigs(
+      maxResults: number = MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE,
+      pageToken?: string): Promise<object> {
+    const request: {pageSize: number, pageToken?: string} = {
+      pageSize: maxResults,
+    };
+    // Add next page token if provided.
+    if (typeof pageToken !== 'undefined') {
+      request.pageToken = pageToken;
+    }
+    return this.invokeRequestHandler(this.projectConfigUrlBuilder, LIST_INBOUND_SAML_CONFIGS, request)
+        .then((response: any) => {
+          if (!response.inboundSamlConfigs) {
+            response.inboundSamlConfigs = [];
+            delete response.nextPageToken;
+          }
+          return response as {inboundSamlConfigs: object[], nextPageToken?: string};
+        });
+  }
+
+  /**
+   * Deletes a SAML configuration identified by a providerId.
+   *
+   * @param {string} providerId The identifier of the SAML configuration to delete.
+   * @return {Promise<void>} A promise that resolves when the SAML provider is deleted.
+   */
+  public deleteInboundSamlConfig(providerId: string): Promise<void> {
+    if (!SAMLConfig.isProviderId(providerId)) {
+      return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
+    }
+    return this.invokeRequestHandler(this.projectConfigUrlBuilder, DELETE_INBOUND_SAML_CONFIG, {}, {providerId})
+      .then((response: any) => {
+        // Return nothing.
+      });
+  }
+
+  /**
+   * Creates a new SAML provider configuration with the properties provided.
+   *
+   * @param {AuthProviderConfig} options The properties to set on the new SAML provider configuration to be created.
+   * @return {Promise<SAMLConfigServerResponse>} A promise that resolves with the newly created SAML
+   *     configuration.
+   */
+  public createInboundSamlConfig(options: AuthProviderConfig): Promise<SAMLConfigServerResponse> {
+    // Construct backend request.
+    let request;
+    try {
+      request = SAMLConfig.buildServerRequest(options);
+    } catch (e) {
+      return Promise.reject(e);
+    }
+    const providerId = options.providerId;
+    return this.invokeRequestHandler(this.projectConfigUrlBuilder, CREATE_INBOUND_SAML_CONFIG, request, {providerId})
+      .then((response: any) => {
+        if (!SAMLConfig.getProviderIdFromResourceName(response.name)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INTERNAL_ERROR,
+            'INTERNAL ASSERT FAILED: Unable to create new SAML provider configuration');
+        }
+        return response as SAMLConfigServerResponse;
+      });
+  }
+
+  /**
+   * Updates an existing SAML provider configuration with the properties provided.
+   *
+   * @param {string} providerId The provider identifier of the SAML configuration to update.
+   * @param {SAMLUpdateAuthProviderRequest} options The properties to update on the existing configuration.
+   * @return {Promise<SAMLConfigServerResponse>} A promise that resolves with the modified provider
+   *     configuration.
+   */
+  public updateInboundSamlConfig(
+      providerId: string, options: SAMLUpdateAuthProviderRequest): Promise<SAMLConfigServerResponse> {
+    if (!SAMLConfig.isProviderId(providerId)) {
+      return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
+    }
+    // Construct backend request.
+    let request: SAMLConfigServerRequest;
+    try {
+      request = SAMLConfig.buildServerRequest(options, true);
+    } catch (e) {
+      return Promise.reject(e);
+    }
+    const updateMask = utils.generateUpdateMask(request);
+    return this.invokeRequestHandler(this.projectConfigUrlBuilder, UPDATE_INBOUND_SAML_CONFIG, request,
+      {providerId, updateMask: updateMask.join(',')})
+      .then((response: any) => {
+        if (!SAMLConfig.getProviderIdFromResourceName(response.name)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INTERNAL_ERROR,
+            'INTERNAL ASSERT FAILED: Unable to update SAML provider configuration');
+        }
+        return response as SAMLConfigServerResponse;
       });
   }
 
