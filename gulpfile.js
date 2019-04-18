@@ -23,14 +23,11 @@ var fs = require('fs');
 var _ = require('lodash');
 var gulp = require('gulp');
 var pkg = require('./package.json');
-var runSequence = require('run-sequence');
 
 // File I/O
 var fs = require('fs');
-var exit = require('gulp-exit');
 var ts = require('gulp-typescript');
 var del = require('del');
-var merge = require('merge2');
 var header = require('gulp-header');
 var replace = require('gulp-replace');
 
@@ -107,15 +104,7 @@ gulp.task('watch', function() {
 });
 
 // Build task
-gulp.task('build', function(done) {
-  runSequence('cleanup', 'compile', 'copyDatabase', 'copyTypings', function(error) {
-    done(error && error.err);
-  });
-});
+gulp.task('build', gulp.series('cleanup', 'compile', 'copyDatabase', 'copyTypings'));
 
 // Default task
-gulp.task('default', function(done) {
-  runSequence('build', function(error) {
-    done(error && error.err);
-  });
-});
+gulp.task('default', gulp.series('build'));

@@ -223,6 +223,58 @@ declare namespace admin.auth {
     dynamicLinkDomain?: string;
   }
 
+  interface AuthProviderConfigFilter {
+    type: 'saml' | 'oidc';
+    maxResults?: number;
+    pageToken?: string;
+  }
+
+  interface AuthProviderConfig {
+    providerId: string;
+    displayName: string;
+    enabled: boolean;
+  }
+
+  interface SAMLAuthProviderConfig extends admin.auth.AuthProviderConfig {
+    idpEntityId: string;
+    ssoURL: string;
+    x509Certificates: string[];
+    rpEntityId: string;
+    callbackURL?: string;
+    enableRequestSigning?: boolean;
+  }
+  
+  interface OIDCAuthProviderConfig extends admin.auth.AuthProviderConfig {
+    clientId: string;
+    issuer: string;
+  }
+
+  interface SAMLUpdateAuthProviderRequest {
+    displayName?: string;
+    enabled?: boolean;
+    idpEntityId?: string;
+    ssoURL?: string;
+    x509Certificates?: string[];
+    rpEntityId?: string;
+    callbackURL?: string;
+    enableRequestSigning?: boolean;
+  }
+
+  interface OIDCUpdateAuthProviderRequest {
+    displayName?: string;
+    enabled?: boolean;
+    clientId?: string;
+    issuer?: string;
+  }
+
+  interface ListProviderConfigResults {
+    providerConfigs: admin.auth.AuthProviderConfig[];
+    pageToken?: string;
+  }
+
+  type UpdateAuthProviderRequest =
+      admin.auth.SAMLUpdateAuthProviderRequest | admin.auth.OIDCUpdateAuthProviderRequest;
+
   interface BaseAuth {
     createCustomToken(uid: string, developerClaims?: Object): Promise<string>;
     createUser(properties: admin.auth.CreateRequest): Promise<admin.auth.UserRecord>;
@@ -259,6 +311,17 @@ declare namespace admin.auth {
       email: string,
       actionCodeSettings: admin.auth.ActionCodeSettings,
     ): Promise<string>;
+    listProviderConfigs(
+      options: admin.auth.AuthProviderConfigFilter
+    ): Promise<admin.auth.ListProviderConfigResults>;
+    getProviderConfig(providerId: string): Promise<admin.auth.AuthProviderConfig>
+    deleteProviderConfig(providerId: string): Promise<void>;
+    updateProviderConfig(
+      providerId: string, updatedConfig: admin.auth.UpdateAuthProviderRequest
+    ): Promise<admin.auth.AuthProviderConfig>;
+    createProviderConfig(
+      config: admin.auth.AuthProviderConfig
+    ): Promise<admin.auth.AuthProviderConfig>;
   }
 
   interface Auth extends admin.auth.BaseAuth {
