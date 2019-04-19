@@ -21,7 +21,7 @@ import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { AndroidApp, ShaCertificate } from './android-app';
 import { IosApp } from './ios-app';
-import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request';
+import { ProjectManagementRequestHandler } from './project-management-api-request';
 import { DatabaseRequestHandler } from './database-api-request';
 
 /**
@@ -118,12 +118,12 @@ export class ProjectManagement implements FirebaseServiceInterface {
   public createAndroidApp(packageName: string, displayName?: string): Promise<AndroidApp> {
     return this.requestHandler.createAndroidApp(this.resourceName, packageName, displayName)
         .then((responseData: any) => {
-          assertServerResponse(
+          ProjectManagementRequestHandler.assertServerResponse(
               validator.isNonNullObject(responseData),
               responseData,
               'createAndroidApp()\'s responseData must be a non-null object.');
 
-          assertServerResponse(
+          ProjectManagementRequestHandler.assertServerResponse(
               validator.isNonEmptyString(responseData.appId),
               responseData,
               `"responseData.appId" field must be present in createAndroidApp()'s response data.`);
@@ -137,12 +137,12 @@ export class ProjectManagement implements FirebaseServiceInterface {
   public createIosApp(bundleId: string, displayName?: string): Promise<IosApp> {
     return this.requestHandler.createIosApp(this.resourceName, bundleId, displayName)
         .then((responseData: any) => {
-          assertServerResponse(
+          ProjectManagementRequestHandler.assertServerResponse(
               validator.isNonNullObject(responseData),
               responseData,
               'createIosApp()\'s responseData must be a non-null object.');
 
-          assertServerResponse(
+          ProjectManagementRequestHandler.assertServerResponse(
               validator.isNonEmptyString(responseData.appId),
               responseData,
               `"responseData.appId" field must be present in createIosApp()'s response data.`);
@@ -150,29 +150,144 @@ export class ProjectManagement implements FirebaseServiceInterface {
         });
   }
 
-  /**
-   * Returns a string with the Realtime Database Rules for the Database
-   * instance associated with this Firebase App.
-   */
-  public getDatabaseRules(): Promise<string> {
-    return this.databaseRequestHandler.getDatabaseRules().then((response) => {
-      if (!validator.isNonEmptyString(response)) {
-        throw new FirebaseProjectManagementError(
-            'invalid-server-response',
-            "getDatabaseRules()'s response must be a non-empty string.");
-      }
+  // ************************************************ //
 
-      return response;
-    });
+  // /**
+  //  * Returns a string with the Realtime Database Rules for the Database
+  //  * instance associated with this Firebase App.
+  //  */
+  // public getDatabaseRules(): Promise<string> {
+  //   return this.databaseRequestHandler.getRules().then((response) => {
+  //     if (!validator.isNonEmptyString(response)) {
+  //       throw new FirebaseProjectManagementError(
+  //           'invalid-server-response',
+  //           "getDatabaseRules()'s response must be a non-empty string.");
+  //     }
+
+  //     return response;
+  //   });
+  // }
+
+  // /**
+  //  * Sets the Realtime Database Rules for the Database instance associated
+  //  * with this Firebase App.
+  //  */
+  // public setDatabaseRules(rules: string): Promise<void> {
+  //   return this.databaseRequestHandler.setRules(rules);
+  // }
+
+
+  public async getRules(service: Service): Promise<string> {
+    // ...
   }
 
   /**
-   * Sets the Realtime Database Rules for the Database instance associated
-   * with this Firebase App.
+   * Sets the new rules to be used with the service:
+   *   - For RTDB it PUTs them to `.settings/rules.json`.
+   *   - For Firestore/Storage it creates a new ruleset with the specified
+   *     content and updates/creates the appropriate release for the
+   *     service with that ruleset.
    */
-  public setDatabaseRules(rules: string): Promise<void> {
-    return this.databaseRequestHandler.setDatabaseRules(rules);
+  public async setRules(service: Service, content: string): Promise<void> {
+    // ...
   }
+
+  /**
+   * Like `setRules()` but reads the rules content from a file.
+   * (Just for convenience for the user, but this one could be skiped)
+   */
+  public async setRulesFromFile(service: Service, filePath: string): Promise<void> {
+    // ...
+  }
+
+  /**
+   * Gets the list of rules releases for the project.
+   *
+   * It optionally accepts an object specifying filters to use.
+   *
+   * The maximum number of rulesets to return is determined by the optional
+   * `maxResults` argument. Defaults to 10, maximum is 100 (according to API docs).
+   */
+  public async listRulesReleases(
+    filter?: ListRulesReleasesFilter,
+    maxResults?: number,
+    pageToken?: string,
+  ): Promise<ListRulesReleasesResult> {
+    // ...
+  }
+
+  /**
+   * Gets the named rules release.
+   */
+  public async getRulesRelease(name: string): Promise<RulesRelease> {
+    // ...
+  }
+
+  /**
+   * Creates a new rules release with the given name and associated to
+   * the given ruleset name.
+   */
+  public async createRulesRelease(
+    name: string,
+    rulesetName: string,
+  ): Promise<RulesRelease> {
+    // ...
+  }
+
+  /**
+   * Deletes the named rules release.
+   * Note: I'm not sure what happens when you do this. For example, if you
+   * delete the release for Firestore rules, does Firestore stop working?
+   * This method's behavior should be properly documented if it's included.
+   */
+  public async deleteRulesRelease(name: string): Promise<void> {
+    // ...
+  }
+
+  /**
+   * Gets the list of rulesets for the project. The Rulesets only contain
+   * metadata (`name` and `createTime`), not the actual files.
+   *
+   * The maximum number of rulesets to return is determined by the optional
+   * `maxResults` argument. Defaults to 10, maximum is 100 (according to API docs).
+   *
+   * It optionally accepts a pageToken returned from a previous call, in order
+   * to get the next set of results if there's more.
+   */
+  public async listRulesets(
+    maxResults?: number,
+    pageToken?: string,
+  ): Promise<ListRulesetsResult> {
+    // ...
+  }
+
+  /**
+   * Gets the named ruleset. The returned Ruleset contains its files.
+   */
+  public async getRuleset(name: string): Promise<RulesetWithFiles> {
+    // ...
+  }
+
+  /**
+   * Creates a new ruleset with the given files.
+   */
+  public async createRuleset(files: RulesetFile[]): Promise<RulesetWithFiles> {
+    // ...
+  }
+
+  /**
+   * Deletes the named rules ruleset.
+   * Note: I'm not sure what happens when you do this. For example, if you
+   * delete the ruleset currently associated with the release for Firestore
+   * rules, does Firestore stop working? Is the release automatically
+   * associated with the most recent previous ruleset? No idea.
+   * This method's behavior should be properly documented if it's included.
+   */
+  public async deleteRuleset(name: string): Promise<void> {
+    // ...
+  }
+
+  // ************************************************ //
 
   /**
    * Lists up to 100 Firebase apps for a specified platform, associated with this Firebase project.
@@ -184,7 +299,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
 
     return listPromise
         .then((responseData: any) => {
-          assertServerResponse(
+          ProjectManagementRequestHandler.assertServerResponse(
               validator.isNonNullObject(responseData),
               responseData,
               `${callerName}\'s responseData must be a non-null object.`);
@@ -193,13 +308,13 @@ export class ProjectManagement implements FirebaseServiceInterface {
             return [];
           }
 
-          assertServerResponse(
+          ProjectManagementRequestHandler.assertServerResponse(
               validator.isArray(responseData.apps),
               responseData,
               `"apps" field must be present in the ${callerName} response data.`);
 
           return responseData.apps.map((appJson: any) => {
-            assertServerResponse(
+            ProjectManagementRequestHandler.assertServerResponse(
                 validator.isNonEmptyString(appJson.appId),
                 responseData,
                 `"apps[].appId" field must be present in the ${callerName} response data.`);

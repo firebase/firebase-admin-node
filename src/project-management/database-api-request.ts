@@ -15,83 +15,38 @@
  */
 
 import { FirebaseApp } from '../firebase-app';
-import {
-  AuthorizedHttpClient,
-  HttpError,
-  HttpMethod,
-  HttpRequestConfig,
-} from '../utils/api-request';
-import {
-  FirebaseProjectManagementError,
-  ProjectManagementErrorCode,
-} from '../utils/error';
+import { FirebaseProjectManagementError } from '../utils/error';
 import * as validator from '../utils/validator';
+import { RequestHandlerBase } from './request-handler-base';
 
 /** Database REST API security rules path. */
 const DATABASE_RULES_PATH = '/.settings/rules.json';
-/** Database REST API request header. */
-const DATABASE_REST_HEADERS = {
-  'X-Client-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
-};
-/** Database REST API request timeout duration in milliseconds. */
-const DATABASE_REST_TIMEOUT_MILLIS = 10000;
 /** Database URL field in the Firebase App options */
 const DATABASE_URL_OPTION = 'databaseURL';
 
 /**
- * Class that provides mechanism to send requests to the Firebase project management backend
+ * Class that provides a mechanism to send requests to the Firebase Rules backend
  * endpoints.
  *
  * @private
  */
-export class DatabaseRequestHandler {
-  private readonly baseUrl: string;
-  private readonly httpClient: AuthorizedHttpClient;
+export class DatabaseRequestHandler extends RequestHandlerBase {
+  protected readonly baseUrl: string;
 
-  private static wrapAndRethrowHttpError(
+  protected static wrapAndRethrowHttpError(
     errStatusCode: number,
     errText: string,
   ) {
-    let errorCode: ProjectManagementErrorCode;
-    let errorMessage: string;
-
-    switch (errStatusCode) {
-      case 400:
-        errorCode = 'invalid-argument';
-        errorMessage = 'Invalid argument provided.';
-        break;
-      case 401:
-      case 403:
-        errorCode = 'authentication-error';
-        errorMessage =
-          'An error occurred when trying to authenticate. Make sure the credential ' +
-          'used to authenticate this SDK has the proper permissions. See ' +
-          'https://firebase.google.com/docs/admin/setup for setup instructions.';
-        break;
-      case 423:
-        errorCode = 'service-unavailable';
-        errorMessage = 'The database has been locked.';
-        break;
-      case 500:
-        errorCode = 'internal-error';
-        errorMessage =
-          'An internal error has occurred. Please retry the request.';
-        break;
-      case 503:
-        errorCode = 'service-unavailable';
-        errorMessage =
-          'The server could not process the request in time. See the error ' +
-          'documentation for more details.';
-        break;
-      default:
-        errorCode = 'unknown-error';
-        errorMessage = 'An unknown server error was returned.';
+    if (errStatusCode === 423) {
+      const errorCode = 'service-unavailable';
+      const errorMessage = 'The database has been locked.';
+      throw new FirebaseProjectManagementError(
+        errorCode,
+        `${errorMessage} Status code: ${errStatusCode}. Raw server response: "${errText}".`,
+      );
+    } else {
+      return super.wrapAndRethrowHttpError(errStatusCode, errText);
     }
-
-    throw new FirebaseProjectManagementError(
-      errorCode,
-      `${errorMessage} Status code: ${errStatusCode}. Raw server response: "${errText}".`,
-    );
   }
 
   /**
@@ -99,19 +54,21 @@ export class DatabaseRequestHandler {
    * @constructor
    */
   constructor(app: FirebaseApp) {
-    this.httpClient = new AuthorizedHttpClient(app);
+    super(app);
     this.baseUrl = app.options[DATABASE_URL_OPTION];
   }
 
-  public getDatabaseRules(): Promise<string> {
+  public getRules(): Promise<string> {
     this.assertDatabaseURL();
-    return this.invokeRequestHandler('GET', DATABASE_RULES_PATH);
+    return this.invokeRequestHandler<string>('GET', DATABASE_RULES_PATH, null, {
+      isJSONData: false,
+    });
   }
 
   /**
    * @param {string} rules The Database Security Rules to deploy.
    */
-  public setDatabaseRules(rules: string): Promise<void> {
+  public setRules(rules: string): Promise<void> {
     this.assertDatabaseURL();
 
     if (!validator.isNonEmptyString(rules)) {
@@ -121,9 +78,12 @@ export class DatabaseRequestHandler {
       );
     }
 
-    return this.invokeRequestHandler('PUT', DATABASE_RULES_PATH, rules).then(
-      () => undefined,
-    );
+    return this.invokeRequestHandler<string>(
+      'PUT',
+      DATABASE_RULES_PATH,
+      rules,
+      { isJSONData: false },
+    ).then(() => undefined);
   }
 
   private assertDatabaseURL() {
@@ -133,41 +93,5 @@ export class DatabaseRequestHandler {
         "Can't determine Firebase Database URL.",
       );
     }
-  }
-
-  /**
-   * Invokes the request handler with the provided request data.
-   */
-  private invokeRequestHandler(
-    method: HttpMethod,
-    path: string,
-    requestData?: string | object,
-  ): Promise<string> {
-    const request: HttpRequestConfig = {
-      method,
-      url: `${this.baseUrl}${path}`,
-      headers: DATABASE_REST_HEADERS,
-      data: requestData,
-      timeout: DATABASE_REST_TIMEOUT_MILLIS,
-    };
-
-    return this.httpClient
-      .send(request)
-      .then((response) => {
-        // Send error responses to the catch() below.
-        if (response.status >= 400) {
-          throw new HttpError(response);
-        }
-        return response.text;
-      })
-      .catch((err) => {
-        if (err instanceof HttpError) {
-          DatabaseRequestHandler.wrapAndRethrowHttpError(
-            err.response.status,
-            err.response.text,
-          );
-        }
-        throw err;
-      });
   }
 }
