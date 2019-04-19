@@ -289,7 +289,7 @@ class AsyncHttpCall {
     return new AsyncHttpCall(config).promise;
   }
 
-  constructor(config: HttpRequestConfig) {
+  private constructor(config: HttpRequestConfig) {
     try {
       this.config = new HttpRequestConfigImpl(config);
       this.options = this.config.buildRequestOptions();
@@ -573,7 +573,7 @@ class HttpRequestConfigImpl implements HttpRequestConfig {
       throw new Error('Request data must be a string, a Buffer or a json serializable object');
     }
 
-    // Add Content-Length header if data exists
+    // Add Content-Length header if data exists.
     headers['Content-Length'] = data.length.toString();
     return data;
   }
