@@ -38,8 +38,8 @@ export class DatabaseRequestHandler extends RequestHandlerBase {
     errText: string,
   ) {
     if (errStatusCode === 423) {
-      const errorCode = 'service-unavailable';
-      const errorMessage = 'The database has been locked.';
+      const errorCode = 'failed-precondition';
+      const errorMessage = 'The database has been manually locked by an owner.';
       throw new FirebaseProjectManagementError(
         errorCode,
         `${errorMessage} Status code: ${errStatusCode}. Raw server response: "${errText}".`,
