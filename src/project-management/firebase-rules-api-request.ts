@@ -95,7 +95,6 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
     errStatusCode: number,
     errText: string,
   ) {
-    console.log(errStatusCode, errText);
     if (errStatusCode === 429) {
       const errorCode = 'resource-exhausted';
       const errorMessage = 'Quota exceeded for the requested resource.';

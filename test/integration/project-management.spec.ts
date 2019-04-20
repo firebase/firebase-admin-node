@@ -193,34 +193,34 @@ describe('admin.projectManagement', () => {
     });
   });
 
-  describe('getDatabaseRules()', () => {
-    it('successfully gets the database rules', () => {
-      return admin.projectManagement().getDatabaseRules().then((rules: string) => {
-        expect(rules).to.be.a('string');
-        expect(rules[0]).to.equal('{');
-        expect(rules.length).to.be.at.least('{"rules":{}}'.length);
-      });
-    });
-  });
+  // describe('getDatabaseRules()', () => {
+  //   it('successfully gets the database rules', () => {
+  //     return admin.projectManagement().getDatabaseRules().then((rules: string) => {
+  //       expect(rules).to.be.a('string');
+  //       expect(rules[0]).to.equal('{');
+  //       expect(rules.length).to.be.at.least('{"rules":{}}'.length);
+  //     });
+  //   });
+  // });
 
-  describe('setDatabaseRules()', () => {
-    it('successfully sets the database rules', async () => {
-      if (cmdArgs.updateRules) {
-        // We set and get the rules twice with different values each time
-        // to check that they actually change.
+  // describe('setDatabaseRules()', () => {
+  //   it('successfully sets the database rules', async () => {
+  //     if (cmdArgs.updateRules) {
+  //       // We set and get the rules twice with different values each time
+  //       // to check that they actually change.
 
-        await admin.projectManagement().setDatabaseRules(TEST_DATABASE_RULES);
-        const testRules = await admin.projectManagement().getDatabaseRules();
-        expect(testRules).to.equal(TEST_DATABASE_RULES);
+  //       await admin.projectManagement().setDatabaseRules(TEST_DATABASE_RULES);
+  //       const testRules = await admin.projectManagement().getDatabaseRules();
+  //       expect(testRules).to.equal(TEST_DATABASE_RULES);
 
-        await admin.projectManagement().setDatabaseRules(DEFAULT_DATABASE_RULES);
-        const defaultRules = await admin.projectManagement().getDatabaseRules();
-        expect(defaultRules).to.equal(DEFAULT_DATABASE_RULES);
-        } else {
-          expect.fail(null, null, "Won't set database rules without --updateRules arg.");
-        }
-    });
-  });
+  //       await admin.projectManagement().setDatabaseRules(DEFAULT_DATABASE_RULES);
+  //       const defaultRules = await admin.projectManagement().getDatabaseRules();
+  //       expect(defaultRules).to.equal(DEFAULT_DATABASE_RULES);
+  //       } else {
+  //         expect.fail(null, null, "Won't set database rules without --updateRules arg.");
+  //       }
+  //   });
+  // });
 });
 
 /**
