@@ -727,6 +727,8 @@ export type ProjectManagementErrorCode =
     | 'invalid-server-response'
     | 'not-found'
     | 'service-unavailable'
+    | 'failed-precondition'
+    | 'resource-exhausted'
     | 'unknown-error';
 
 /** @const {ServerToClientCode} Auth server to client enum error codes. */

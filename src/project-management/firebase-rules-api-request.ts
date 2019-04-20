@@ -30,6 +30,7 @@ import {
   RulesetWithFiles,
   RulesetFile,
 } from './rules';
+import { FirebaseProjectManagementError } from '../utils/error';
 
 /** Project management backend host and port. */
 const FIREBASE_RULES_HOST_AND_PORT = 'firebaserules.googleapis.com:443';
@@ -73,6 +74,22 @@ function assertResponseIsRulesetWithFiles(
  */
 export class FirebaseRulesRequestHandler extends RequestHandlerBase {
   protected readonly baseUrl: string = `https://${FIREBASE_RULES_HOST_AND_PORT}${FIREBASE_RULES_PATH}`;
+
+  protected static wrapAndRethrowHttpError(
+    errStatusCode: number,
+    errText: string,
+  ) {
+    if (errStatusCode === 429) {
+      const errorCode = 'resource-exhausted';
+      const errorMessage = 'Quota exceeded for the requested resource.';
+      throw new FirebaseProjectManagementError(
+        errorCode,
+        `${errorMessage} Status code: ${errStatusCode}. Raw server response: "${errText}".`,
+      );
+    } else {
+      return super.wrapAndRethrowHttpError(errStatusCode, errText);
+    }
+  }
 
   /**
    * @param app The app used to fetch access tokens to sign API requests.
