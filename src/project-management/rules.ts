@@ -90,7 +90,7 @@ export interface RulesRelease {
    * TODO: this might only be present if the release has been updated, I'm
    * not sure. Should check.
    */
-  updateTime: string;
+  updateTime?: string;
 }
 
 /**

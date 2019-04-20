@@ -19,9 +19,11 @@ import * as validator from '../utils/validator';
 import {
   RequestHandlerBase,
   assertServerResponse,
+  InvokeRequestHandlerOptions,
 } from './request-handler-base';
 import { RulesRelease, RulesetFile } from './rules';
 import { FirebaseProjectManagementError } from '../utils/error';
+import { HttpMethod } from '../utils/api-request';
 
 /** Project management backend host and port. */
 const FIREBASE_RULES_HOST_AND_PORT = 'firebaserules.googleapis.com:443';
@@ -93,6 +95,7 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
     errStatusCode: number,
     errText: string,
   ) {
+    console.log(errStatusCode, errText);
     if (errStatusCode === 429) {
       const errorCode = 'resource-exhausted';
       const errorMessage = 'Quota exceeded for the requested resource.';
@@ -299,5 +302,20 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
       'DELETE',
       isFullName ? rulesetId : `${this.resourceName}/rulesets/${rulesetId}`,
     ).then(() => undefined);
+  }
+
+  protected invokeRequestHandler<T = object>(
+    method: HttpMethod,
+    path: string,
+    requestData: object | string | null = null,
+    options?: InvokeRequestHandlerOptions,
+  ): Promise<T> {
+    return super.invokeRequestHandler(
+      method,
+      path,
+      requestData,
+      options,
+      FirebaseRulesRequestHandler.wrapAndRethrowHttpError,
+    );
   }
 }

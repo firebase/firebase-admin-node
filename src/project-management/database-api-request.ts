@@ -17,7 +17,11 @@
 import { FirebaseApp } from '../firebase-app';
 import { FirebaseProjectManagementError } from '../utils/error';
 import * as validator from '../utils/validator';
-import { RequestHandlerBase } from './request-handler-base';
+import {
+  RequestHandlerBase,
+  InvokeRequestHandlerOptions,
+} from './request-handler-base';
+import { HttpMethod } from '../utils/api-request';
 
 /** Database REST API security rules path. */
 const DATABASE_RULES_PATH = '/.settings/rules.json';
@@ -93,6 +97,21 @@ export class DatabaseRequestHandler extends RequestHandlerBase {
       rules,
       { isJSONData: false },
     ).then(() => undefined);
+  }
+
+  protected invokeRequestHandler<T = object>(
+    method: HttpMethod,
+    path: string,
+    requestData: object | string | null = null,
+    options?: InvokeRequestHandlerOptions,
+  ): Promise<T> {
+    return super.invokeRequestHandler(
+      method,
+      path,
+      requestData,
+      options,
+      DatabaseRequestHandler.wrapAndRethrowHttpError,
+    );
   }
 
   private assertDatabaseURL() {

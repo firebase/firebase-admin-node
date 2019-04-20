@@ -827,7 +827,7 @@ declare namespace admin.projectManagement {
     name: string;
     rulesetName: string;
     createTime: string;
-    updateTime: string;
+    updateTime?: string;
   }
 
   interface ListRulesetsResult {

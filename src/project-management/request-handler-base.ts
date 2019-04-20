@@ -120,6 +120,7 @@ export abstract class RequestHandlerBase {
 
   protected pollRemoteOperationWithExponentialBackoff(
     operationResourceName: string,
+    wrapAndRethrowHttpError = RequestHandlerBase.wrapAndRethrowHttpError,
   ): Promise<object> {
     const poller = new ExponentialBackoffPoller();
 
@@ -133,7 +134,7 @@ export abstract class RequestHandlerBase {
           const errStatusCode: number = responseData.error.code || 500;
           const errText: string =
             responseData.error.message || JSON.stringify(responseData.error);
-          RequestHandlerBase.wrapAndRethrowHttpError(errStatusCode, errText);
+          wrapAndRethrowHttpError(errStatusCode, errText);
         }
 
         if (!responseData.done) {
@@ -155,6 +156,7 @@ export abstract class RequestHandlerBase {
     path: string,
     requestData: object | string | null = null,
     { useBetaUrl = false, isJSONData = true }: InvokeRequestHandlerOptions = {},
+    wrapAndRethrowHttpError = RequestHandlerBase.wrapAndRethrowHttpError,
   ): Promise<T> {
     const baseUrlToUse = useBetaUrl ? this.baseBetaUrl : this.baseUrl;
     const request: HttpRequestConfig = {
@@ -184,10 +186,7 @@ export abstract class RequestHandlerBase {
       })
       .catch((err) => {
         if (err instanceof HttpError) {
-          RequestHandlerBase.wrapAndRethrowHttpError(
-            err.response.status,
-            err.response.text,
-          );
+          wrapAndRethrowHttpError(err.response.status, err.response.text);
         }
         throw err;
       });
