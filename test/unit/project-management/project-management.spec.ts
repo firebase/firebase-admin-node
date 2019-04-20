@@ -26,7 +26,9 @@ import { ProjectManagementRequestHandler } from '../../../src/project-management
 import { FirebaseProjectManagementError } from '../../../src/utils/error';
 import * as mocks from '../../resources/mocks';
 import { IosApp } from '../../../src/project-management/ios-app';
-// import { DatabaseRequestHandler } from '../../../src/project-management/database-api-request';
+import { DatabaseRequestHandler } from '../../../src/project-management/database-api-request';
+import { FirebaseRulesRequestHandler, RulesReleaseResponse, RulesetResponse, RulesetWithFilesResponse } from '../../../src/project-management/firebase-rules-api-request';
+import { RulesetFile, RulesService } from '../../../src/project-management/rules';
 
 const expect = chai.expect;
 
@@ -46,6 +48,43 @@ const VALID_DATABASE_RULES = `{
     },
   },
 }`;
+
+const PROJECT_RESOURCE_NAME = 'projects/test-project-id';
+const RELEASE_NAME = 'cloud.firestore';
+const RULESET_UUID = '00000000-0000-0000-0000-000000000000';
+const RULESET_NAME = `${PROJECT_RESOURCE_NAME}/rulesets/${RULESET_UUID}`;
+const PAGE_TOKEN = 'PAGE_TOKEN';
+const NEXT_PAGE_TOKEN = 'NEXT_PAGE_TOKEN';
+const TIMESTAMP_CREATE = '2012-04-13T02:00:00.000000Z';
+const TIMESTAMP_UPDATE = '2014-10-21T16:00:00.000000Z';
+
+const VALID_RULES_CONTENT = 'Ruleset file content';
+
+const VALID_RULESET_FILES: RulesetFile[] = [
+  {
+    name: 'ruleset.file',
+    content: VALID_RULES_CONTENT,
+  },
+];
+
+const VALID_RELEASE_RESPONSE: RulesReleaseResponse = {
+  name: `${PROJECT_RESOURCE_NAME}/releases/${RELEASE_NAME}`,
+  rulesetName: RULESET_NAME,
+  createTime: TIMESTAMP_CREATE,
+};
+
+const VALID_RULESET_RESPONSE: RulesetResponse = {
+  name: RULESET_NAME,
+  createTime: TIMESTAMP_CREATE,
+};
+
+const VALID_RULESET_WITH_FILES_RESPONSE: RulesetWithFilesResponse = {
+  name: RULESET_NAME,
+  createTime: TIMESTAMP_CREATE,
+  source: {
+    files: VALID_RULESET_FILES,
+  },
+};
 
 describe('ProjectManagement', () => {
   // Stubs used to simulate underlying api calls.
@@ -391,6 +430,184 @@ describe('ProjectManagement', () => {
       return projectManagement.createIosApp(BUNDLE_ID)
           .should.eventually.deep.equal(createdIosApp);
     });
+  });
+
+  describe('getRules', () => {
+    it('should throw with invalid service name', () => {
+      return projectManagement
+        .getRules('invalid' as any)
+        .should.eventually.be.rejected.and.have.property('message')
+        .and.match(
+          /^The service name passed to getRules\(\) must be one of /,
+        );
+    });
+
+    it('should propagate RTDB API errors', () => {
+      const stub = sinon
+        .stub(DatabaseRequestHandler.prototype, 'getRules')
+        .returns(Promise.reject(EXPECTED_ERROR));
+      stubs.push(stub);
+      return projectManagement
+        .getRules('database')
+        .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+    });
+
+    it('should propagate Rules API errors', () => {
+      const stub = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'getRulesRelease')
+        .returns(Promise.reject(EXPECTED_ERROR));
+      stubs.push(stub);
+      return projectManagement
+        .getRules('firestore')
+        .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+    });
+
+    // TODO: these 2 test shoudl be in the request handler spec
+
+    // it('should throw with empty RTDB API response', () => {
+    //   const stub = sinon
+    //     .stub(DatabaseRequestHandler.prototype, 'getRules')
+    //     .returns(Promise.resolve(''));
+    //   stubs.push(stub);
+    //   return projectManagement
+    //     .getRules('database')
+    //     .should.eventually.be.rejected.and.have.property(
+    //       'message',
+    //       "getRules()'s response must be a non-empty string.",
+    //     );
+    // });
+
+    // it('should throw with empty Rules API response', () => {
+    //   const stub = sinon
+    //     .stub(FirebaseRulesRequestHandler.prototype, 'getRulesRelease')
+    //     .returns(Promise.resolve(''));
+    //   stubs.push(stub);
+    //   return projectManagement
+    //     .getRules('firestore')
+    //     .should.eventually.be.rejected.and.have.property(
+    //       'message',
+    //       "getRulesRelease()'s responseData must be a non-null object.",
+    //     );
+    // });
+
+    it('should resolve with RTDB rules string on success', () => {
+      const stub = sinon
+        .stub(DatabaseRequestHandler.prototype, 'getRules')
+        .returns(Promise.resolve(VALID_DATABASE_RULES));
+      stubs.push(stub);
+      return projectManagement
+        .getRules('database')
+        .should.eventually.equal(VALID_DATABASE_RULES);
+    });
+
+    const successfulRules = (service: RulesService) => {
+      const stub1 = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'getRulesRelease')
+        .returns(Promise.resolve(VALID_RELEASE_RESPONSE));
+      stubs.push(stub1);
+
+      const stub2 = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'getRuleset')
+        .returns(Promise.resolve(VALID_RULESET_WITH_FILES_RESPONSE));
+      stubs.push(stub2);
+
+      return projectManagement
+        .getRules(service)
+        .should.eventually.equal(VALID_RULES_CONTENT);
+    };
+
+    it('should resolve with Firestore rules string on success', () =>
+      successfulRules('firestore'));
+
+    it('should resolve with Storage rules string on success', () =>
+      successfulRules('storage'));
+  });
+
+  describe('setRules', () => {
+    it('should throw with invalid service name', () => {
+      return projectManagement
+        .setRules('invalid' as any, '')
+        .should.eventually.be.rejected.and.have.property('message')
+        .and.match(
+          /^The service name passed to setRules\(\) must be one of /,
+        );
+    });
+
+    it('should propagate RTDB API errors', () => {
+      const stub = sinon
+        .stub(DatabaseRequestHandler.prototype, 'setRules')
+        .returns(Promise.reject(EXPECTED_ERROR));
+      stubs.push(stub);
+      return projectManagement
+        .setRules('database', '')
+        .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+    });
+
+    it('should propagate Rules API errors', () => {
+      const stub = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'createRuleset')
+        .returns(Promise.reject(EXPECTED_ERROR));
+      stubs.push(stub);
+      return projectManagement
+        .setRules('firestore', '')
+        .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+    });
+
+    it("should create a release if one doesn't exist", () => {
+      const stubRuleset = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'createRuleset')
+        .returns(Promise.resolve(VALID_RULESET_WITH_FILES_RESPONSE));
+      stubs.push(stubRuleset);
+
+      const stubUpdate = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'updateRulesRelease')
+        .returns(Promise.reject(EXPECTED_ERROR));
+      stubs.push(stubUpdate);
+
+      const stubCreate = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'createRulesRelease')
+        .returns(Promise.resolve(VALID_RELEASE_RESPONSE));
+      stubs.push(stubCreate);
+
+      return projectManagement.setRules('firestore', '').then((result) => {
+        // tslint:disable-next-line: no-unused-expression
+        expect(stubCreate).to.have.been.calledOnce;
+      });
+    });
+
+    // TODO: finish
+
+    // it('should resolve with RTDB rules string on success', () => {
+    //   const stub = sinon
+    //     .stub(DatabaseRequestHandler.prototype, 'setRules')
+    //     .returns(Promise.resolve(VALID_DATABASE_RULES));
+    //   stubs.push(stub);
+    //   return projectManagement
+    //     .setRules('database')
+    //     .should.eventually.equal(VALID_DATABASE_RULES);
+    // });
+
+    // const successfulRules = (service: RulesService) => {
+    //   const stub1 = sinon
+    //     .stub(FirebaseRulesRequestHandler.prototype, 'setRulesRelease')
+    //     .returns(Promise.resolve(VALID_RELEASE_RESPONSE));
+    //   stubs.push(stub1);
+
+    //   const stub2 = sinon
+    //     .stub(FirebaseRulesRequestHandler.prototype, 'setRuleset')
+    //     .returns(Promise.resolve(VALID_RULESET_WITH_FILES_RESPONSE));
+    //   stubs.push(stub2);
+
+    //   return projectManagement
+    //     .setRules(service)
+    //     .should.eventually.equal(VALID_RULES_CONTENT);
+    // };
+
+    // it('should resolve with Firestore rules string on success', () =>
+    //   successfulRules('firestore'));
+
+    // it('should resolve with Storage rules string on success', () =>
+    //   successfulRules('storage'));
   });
 
   // describe('getDatabaseRules', () => {

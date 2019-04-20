@@ -27,7 +27,6 @@ import {
   ListRulesReleasesResponse,
   RulesReleaseResponse,
   ListRulesetsResponse,
-  RulesetResponse,
   RulesetWithFilesResponse,
 } from '../../../src/project-management/firebase-rules-api-request';
 import { HttpClient } from '../../../src/utils/api-request';

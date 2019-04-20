@@ -70,7 +70,7 @@ export class DatabaseRequestHandler extends RequestHandlerBase {
       if (!validator.isNonEmptyString(response)) {
         throw new FirebaseProjectManagementError(
           'invalid-server-response',
-          "getDatabaseRules()'s response must be a non-empty string.",
+          "getRules()'s response must be a non-empty string.",
         );
       }
 

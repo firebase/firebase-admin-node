@@ -175,7 +175,11 @@ export class ProjectManagement implements FirebaseServiceInterface {
    *     associated with that service.
    */
   public getRules(service: RulesService): Promise<string> {
-    assertValidRulesService(service, 'getRules');
+    try {
+      assertValidRulesService(service, 'getRules');
+    } catch (err) {
+      return Promise.reject(err);
+    }
 
     if (service === 'database') {
       return this.databaseRequestHandler.getRules();
@@ -217,7 +221,11 @@ export class ProjectManagement implements FirebaseServiceInterface {
    *     service with that ruleset.
    */
   public setRules(service: RulesService, content: string): Promise<void> {
-    assertValidRulesService(service, 'setRules');
+    try {
+      assertValidRulesService(service, 'setRules');
+    } catch (err) {
+      return Promise.reject(err);
+    }
 
     if (service === 'database') {
       return this.databaseRequestHandler.setRules(content);
