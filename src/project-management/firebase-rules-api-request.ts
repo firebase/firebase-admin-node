@@ -228,11 +228,11 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
     });
   }
 
-  public deleteRulesRelease(name: string): Promise<void> {
+  public deleteRulesRelease(name: string): Promise<any> {
     return this.invokeRequestHandler(
       'DELETE',
       `${this.resourceName}/releases/${name}`,
-    ).then(() => undefined);
+    );
   }
 
   public listRulesets(
@@ -296,11 +296,11 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
   public deleteRuleset(
     rulesetId: string,
     { isFullName = false }: { isFullName?: boolean } = {},
-  ): Promise<void> {
+  ): Promise<any> {
     return this.invokeRequestHandler(
       'DELETE',
       isFullName ? rulesetId : `${this.resourceName}/rulesets/${rulesetId}`,
-    ).then(() => undefined);
+    );
   }
 
   protected invokeRequestHandler<T = object>(

@@ -280,7 +280,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
       );
     }
 
-    return this.setRules(service, content);
+    return this.setRules(service, content).then(() => undefined);
   }
 
   /**
@@ -367,7 +367,9 @@ export class ProjectManagement implements FirebaseServiceInterface {
    * This method's behavior should be properly documented if it's included.
    */
   public deleteRulesRelease(name: string): Promise<void> {
-    return this.rulesRequestHandler.deleteRulesRelease(name);
+    return this.rulesRequestHandler
+      .deleteRulesRelease(name)
+      .then(() => undefined);
   }
 
   /**
@@ -429,7 +431,9 @@ export class ProjectManagement implements FirebaseServiceInterface {
    * This method's behavior should be properly documented if it's included.
    */
   public deleteRuleset(name: string): Promise<void> {
-    return this.rulesRequestHandler.deleteRuleset(name);
+    return this.rulesRequestHandler
+      .deleteRuleset(name)
+      .then(() => undefined);
   }
 
   /**

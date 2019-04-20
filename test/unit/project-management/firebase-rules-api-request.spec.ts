@@ -167,7 +167,11 @@ describe('FirebaseRulesRequestHandler', () => {
         expect(stub).to.have.been.calledOnce.and.calledWith({
           method: 'GET',
           url: `${BASE_URL}/${PROJECT_RESOURCE_NAME}/releases`,
-          data: null,
+          data: {
+            filter: undefined,
+            maxResults: undefined,
+            nextPageToken: undefined,
+          },
           headers: expectedHeaders,
           timeout: 10000,
         });
@@ -268,7 +272,7 @@ describe('FirebaseRulesRequestHandler', () => {
           expect(result).to.deep.equal(expectedResult);
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
-            url: `${BASE_URL}/${releaseName}`,
+            url: `${BASE_URL}/${PROJECT_RESOURCE_NAME}/releases`,
             data: {
               name: releaseName,
               rulesetName: RULESET_NAME,
@@ -308,8 +312,10 @@ describe('FirebaseRulesRequestHandler', () => {
             method: 'PATCH',
             url: `${BASE_URL}/${releaseName}`,
             data: {
-              name: releaseName,
-              rulesetName: RULESET_NAME,
+              release: {
+                name: releaseName,
+                rulesetName: RULESET_NAME,
+              },
             },
             headers: expectedHeaders,
             timeout: 10000,
@@ -323,7 +329,7 @@ describe('FirebaseRulesRequestHandler', () => {
 
     it('should succeed', () => {
       const releaseName = `${PROJECT_RESOURCE_NAME}/releases/${RELEASE_NAME}`;
-      const expectedResult = undefined;
+      const expectedResult = {};
 
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
@@ -367,7 +373,10 @@ describe('FirebaseRulesRequestHandler', () => {
         expect(stub).to.have.been.calledOnce.and.calledWith({
           method: 'GET',
           url: `${BASE_URL}/${PROJECT_RESOURCE_NAME}/rulesets`,
-          data: null,
+          data: {
+            maxResults: undefined,
+            nextPageToken: undefined,
+          },
           headers: expectedHeaders,
           timeout: 10000,
         });
@@ -415,9 +424,12 @@ describe('FirebaseRulesRequestHandler', () => {
     testHttpErrors(() => requestHandler.getRuleset(RULESET_UUID));
 
     it('should succeed', () => {
-      const expectedResult: RulesetResponse = {
+      const expectedResult: RulesetWithFilesResponse = {
         name: RULESET_NAME,
         createTime: TIMESTAMP_CREATE,
+        source: {
+          files: RULESET_FILES,
+        },
       };
 
       const stub = sinon
@@ -474,7 +486,7 @@ describe('FirebaseRulesRequestHandler', () => {
     testHttpErrors(() => requestHandler.deleteRuleset(RULESET_UUID));
 
     it('should succeed', () => {
-      const expectedResult = undefined;
+      const expectedResult = {};
 
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
