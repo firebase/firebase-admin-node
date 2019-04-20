@@ -1,15 +1,19 @@
 import { FirebaseProjectManagementError } from '../utils/error';
+import {
+  RulesetResponse,
+  RulesetWithFilesResponse,
+  RulesReleaseResponse,
+} from './firebase-rules-api-request';
 
 const RELEASE_NAME_REGEX = /^projects\/([^\/]+)\/releases\/([^\/]+)$/;
 const RULESET_NAME_REGEX = /^projects\/([^\/]+)\/rulesets\/([^\/]+)$/;
-
-export const VALID_SERVICES: RulesService[] = [
+const VALID_SERVICES: RulesService[] = [
   'firestore',
   'storage',
   'database',
 ];
 
-export const RELEASE_NAME_FOR_SERVICE = {
+export const RULES_RELEASE_NAME_FOR_SERVICE = {
   firestore: 'cloud.firestore',
   storage: 'firebase.storage',
 };
@@ -18,9 +22,9 @@ export type RulesService = 'firestore' | 'storage' | 'database';
 
 export interface Ruleset {
   /**
-   * The name of the ruleset.
+   * The UUID of the ruleset.
    */
-  name: string;
+  id: string;
 
   /**
    * Timestamp in ISO 8601 format.
@@ -114,20 +118,52 @@ export function assertValidRulesService(
   }
 }
 
-/**
- * Returns the release object with its name shortened.
- */
-export function shortenReleaseName(release: RulesRelease): RulesRelease {
-  const nameMatch = release.name.match(RELEASE_NAME_REGEX);
-  return { ...release, name: nameMatch[2] };
+function shortenReleaseName(name: string): string {
+  const nameMatch = name.match(RELEASE_NAME_REGEX);
+  return nameMatch[2];
+}
+
+function shortenRulesetName(name: string): string {
+  const nameMatch = name.match(RULESET_NAME_REGEX);
+  return nameMatch[2];
 }
 
 /**
- * Returns the ruleset object with its name shortened.
+ * Takes a release response and returns it with a shortened name.
  */
-export function shortenRulesetName<T extends Ruleset | RulesetWithFiles>(
-  ruleset: T,
-): T {
-  const nameMatch = ruleset.name.match(RULESET_NAME_REGEX);
-  return { ...ruleset, name: nameMatch[2] };
+export function processReleaseResponse(
+  releaseResponse: RulesReleaseResponse,
+): RulesRelease {
+  return {
+    ...releaseResponse,
+    name: shortenReleaseName(releaseResponse.name),
+  };
+}
+
+/**
+ * Takes a ruleset response and returns it replacing its name with its id.
+ */
+export function processRulesetResponse(
+  rulesetResponse: RulesetResponse,
+): Ruleset;
+export function processRulesetResponse(
+  rulesetResponse: RulesetWithFilesResponse,
+  withFiles: boolean,
+): RulesetWithFiles;
+export function processRulesetResponse(
+  rulesetResponse: RulesetResponse | RulesetWithFilesResponse,
+  withFiles = false,
+): Ruleset | RulesetWithFiles {
+  const { name, ...restRelease } = rulesetResponse;
+  const ruleset: any = {
+    ...restRelease,
+    id: shortenRulesetName(name),
+  };
+
+  if (withFiles) {
+    ruleset.files = (ruleset as RulesetWithFilesResponse).source.files;
+    delete ruleset.source;
+  }
+
+  return ruleset;
 }

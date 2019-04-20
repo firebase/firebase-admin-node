@@ -799,7 +799,7 @@ declare namespace admin.projectManagement {
   type RulesService = 'firestore' | 'storage' | 'database';
 
   interface Ruleset {
-    name: string;
+    id: string;
     createTime: string;
   }
 
@@ -874,11 +874,11 @@ declare namespace admin.projectManagement {
       maxResults?: number,
       pageToken?: string,
     ): Promise<admin.projectManagement.ListRulesetsResult>;
-    getRuleset(name: string): Promise<admin.projectManagement.RulesetWithFiles>;
+    getRuleset(rulesetId: string): Promise<admin.projectManagement.RulesetWithFiles>;
     createRuleset(
       files: RulesetFile[],
     ): Promise<admin.projectManagement.RulesetWithFiles>;
-    deleteRuleset(name: string): Promise<void>;
+    deleteRuleset(rulesetId: string): Promise<void>;
   }
 }
 

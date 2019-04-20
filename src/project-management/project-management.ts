@@ -35,7 +35,9 @@ import {
   ListRulesetsResult,
   RulesetWithFiles,
   RulesetFile,
-  RELEASE_NAME_FOR_SERVICE,
+  processRulesetResponse,
+  processReleaseResponse,
+  RULES_RELEASE_NAME_FOR_SERVICE,
 } from './rules';
 
 /**
@@ -178,31 +180,31 @@ export class ProjectManagement implements FirebaseServiceInterface {
     if (service === 'database') {
       return this.databaseRequestHandler.getRules();
     } else {
-      const releaseName = RELEASE_NAME_FOR_SERVICE[service];
+      const releaseName = RULES_RELEASE_NAME_FOR_SERVICE[service];
       return this.rulesRequestHandler
         .getRulesRelease(releaseName)
         .then((release) =>
           this.rulesRequestHandler.getRuleset(release.rulesetName, {
-            withFullName: true,
+            isFullName: true,
           }),
         )
-        .then((ruleset) => {
+        .then((response) => {
           assertServerResponse(
-            ruleset.files.length >= 1,
-            ruleset,
+            response.source.files.length >= 1,
+            response,
             `The current rules release for service "${service}" has no source files.`,
           );
 
-          const file = ruleset.files[0];
+          const file = response.source.files[0];
 
           assertServerResponse(
             validator.isNonNullObject(file) &&
               validator.isNonEmptyString(file.content),
-            ruleset,
+            response,
             'ruleset.files[].content must be a non-empty string in getRules() response data',
           );
 
-          return ruleset.files[0].content;
+          return file.content;
         });
     }
   }
@@ -229,23 +231,26 @@ export class ProjectManagement implements FirebaseServiceInterface {
 
       return this.rulesRequestHandler
         .createRuleset(files)
-        .then((ruleset) => {
-          const releaseName = RELEASE_NAME_FOR_SERVICE[service];
+        .then((rulesetResponse) => {
+          const releaseName = RULES_RELEASE_NAME_FOR_SERVICE[service];
           return this.rulesRequestHandler
-            .updateRulesRelease(releaseName, ruleset.name)
+            .updateRulesRelease(releaseName, rulesetResponse.name, {
+              isFullRulesetName: true,
+            })
             .catch(() => {
               // Updating the release fails if it doesn't exist. In that case we
               // create a new one.
-              return this.rulesRequestHandler.createRulesRelease(
-                releaseName,
-                ruleset.name,
-              );
+              return this.rulesRequestHandler
+                .createRulesRelease(releaseName, rulesetResponse.name, {
+                  isFullRulesetName: true,
+                })
+                .then((response) => processReleaseResponse(response));
             })
             .catch((err) => {
-              // Creating the release also failed, so let's clean up the
+              // Creating the release also failed, so let's delete the
               // ruleset that we just created.
               return this.rulesRequestHandler
-                .deleteRuleset(ruleset.name)
+                .deleteRuleset(rulesetResponse.name)
                 .catch(() => {
                   // Deleting the ruleset failed. Since this is not relevant to
                   // the original operation, let's hide this error from the user.
@@ -309,18 +314,25 @@ export class ProjectManagement implements FirebaseServiceInterface {
     const requestFilter =
       filters.length > 0 ? filters.join('; ') : undefined;
 
-    return this.rulesRequestHandler.listRulesReleases(
-      requestFilter,
-      maxResults,
-      pageToken,
-    );
+    return this.rulesRequestHandler
+      .listRulesReleases(requestFilter, maxResults, pageToken)
+      .then((response) => {
+        return {
+          releases: response.releases.map((release) =>
+            processReleaseResponse(release),
+          ),
+          pageToken: response.nextPageToken,
+        };
+      });
   }
 
   /**
    * Gets the named rules release.
    */
   public getRulesRelease(name: string): Promise<RulesRelease> {
-    return this.rulesRequestHandler.getRulesRelease(name);
+    return this.rulesRequestHandler
+      .getRulesRelease(name)
+      .then((release) => processReleaseResponse(release));
   }
 
   /**
@@ -329,9 +341,11 @@ export class ProjectManagement implements FirebaseServiceInterface {
    */
   public createRulesRelease(
     name: string,
-    rulesetName: string,
+    rulesetId: string,
   ): Promise<RulesRelease> {
-    return this.rulesRequestHandler.createRulesRelease(name, rulesetName);
+    return this.rulesRequestHandler
+      .createRulesRelease(name, rulesetId)
+      .then((release) => processReleaseResponse(release));
   }
 
   /**
@@ -341,7 +355,9 @@ export class ProjectManagement implements FirebaseServiceInterface {
     name: string,
     rulesetName: string,
   ): Promise<RulesRelease> {
-    return this.rulesRequestHandler.updateRulesRelease(name, rulesetName);
+    return this.rulesRequestHandler
+      .updateRulesRelease(name, rulesetName)
+      .then((release) => processReleaseResponse(release));
   }
 
   /**
@@ -368,14 +384,25 @@ export class ProjectManagement implements FirebaseServiceInterface {
     maxResults?: number,
     pageToken?: string,
   ): Promise<ListRulesetsResult> {
-    return this.rulesRequestHandler.listRulesets(maxResults, pageToken);
+    return this.rulesRequestHandler
+      .listRulesets(maxResults, pageToken)
+      .then((response) => {
+        return {
+          rulesets: response.rulesets.map((ruleset) =>
+            processRulesetResponse(ruleset),
+          ),
+          pageToken: response.nextPageToken,
+        };
+      });
   }
 
   /**
-   * Gets the named ruleset. The returned Ruleset contains its files.
+   * Gets the ruleset by its id. The returned Ruleset contains its files.
    */
-  public getRuleset(name: string): Promise<RulesetWithFiles> {
-    return this.rulesRequestHandler.getRuleset(name);
+  public getRuleset(id: string): Promise<RulesetWithFiles> {
+    return this.rulesRequestHandler.getRuleset(id).then((response) => {
+      return processRulesetResponse(response, true);
+    });
   }
 
   /**
@@ -388,7 +415,9 @@ export class ProjectManagement implements FirebaseServiceInterface {
         'First argument passed to createRuleset() must be a non-empty array',
       );
     }
-    return this.rulesRequestHandler.createRuleset(files);
+    return this.rulesRequestHandler.createRuleset(files).then((response) => {
+      return processRulesetResponse(response, true);
+    });
   }
 
   /**
