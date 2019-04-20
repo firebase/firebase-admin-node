@@ -16,7 +16,10 @@
 
 import * as validator from '../utils/validator';
 import { ShaCertificate } from './android-app';
-import { RequestHandlerBase } from './request-handler-base';
+import {
+  RequestHandlerBase,
+  assertServerResponse,
+} from './request-handler-base';
 
 /** Project management backend host and port. */
 const PROJECT_MANAGEMENT_HOST_AND_PORT = 'firebase.googleapis.com:443';
@@ -83,11 +86,11 @@ export class ProjectManagementRequestHandler extends RequestHandlerBase {
     return this
         .invokeRequestHandler('POST', `${parentResourceName}/androidApps`, requestData, { useBetaUrl: true })
         .then((responseData: any) => {
-          RequestHandlerBase.assertServerResponse(
+          assertServerResponse(
               validator.isNonNullObject(responseData),
               responseData,
               `createAndroidApp's responseData must be a non-null object.`);
-          RequestHandlerBase.assertServerResponse(
+          assertServerResponse(
               validator.isNonEmptyString(responseData.name),
               responseData,
               `createAndroidApp's responseData.name must be a non-empty string.`);
@@ -110,11 +113,11 @@ export class ProjectManagementRequestHandler extends RequestHandlerBase {
     return this
         .invokeRequestHandler('POST', `${parentResourceName}/iosApps`, requestData, { useBetaUrl: true })
         .then((responseData: any) => {
-          RequestHandlerBase.assertServerResponse(
+          assertServerResponse(
               validator.isNonNullObject(responseData),
               responseData,
               `createIosApp's responseData must be a non-null object.`);
-          RequestHandlerBase.assertServerResponse(
+          assertServerResponse(
               validator.isNonEmptyString(responseData.name),
               responseData,
               `createIosApp's responseData.name must be a non-empty string.`);

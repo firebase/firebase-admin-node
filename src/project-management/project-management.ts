@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import fs = require('fs');
 import { FirebaseApp } from '../firebase-app';
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { FirebaseProjectManagementError } from '../utils/error';
@@ -23,6 +24,20 @@ import { AndroidApp, ShaCertificate } from './android-app';
 import { IosApp } from './ios-app';
 import { ProjectManagementRequestHandler } from './project-management-api-request';
 import { DatabaseRequestHandler } from './database-api-request';
+import { FirebaseRulesRequestHandler } from './firebase-rules-api-request';
+import { assertServerResponse } from './request-handler-base';
+import {
+  assertValidRulesService,
+  Service,
+  ListRulesReleasesFilter,
+  ListRulesReleasesResult,
+  RulesRelease,
+  ListRulesetsResult,
+  RulesetWithFiles,
+  RulesetFile,
+  shortenReleaseName,
+  expandReleaseName,
+} from './rules';
 
 /**
  * Internals of a Project Management instance.
@@ -49,6 +64,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
   private readonly projectId: string;
   private readonly requestHandler: ProjectManagementRequestHandler;
   private readonly databaseRequestHandler: DatabaseRequestHandler;
+  private readonly rulesRequestHandler: FirebaseRulesRequestHandler;
 
   /**
    * @param {object} app The app for this ProjectManagement service.
@@ -75,6 +91,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
 
     this.requestHandler = new ProjectManagementRequestHandler(app);
     this.databaseRequestHandler = new DatabaseRequestHandler(app);
+    this.rulesRequestHandler = new FirebaseRulesRequestHandler(app, this.resourceName);
   }
 
   /**
@@ -118,12 +135,12 @@ export class ProjectManagement implements FirebaseServiceInterface {
   public createAndroidApp(packageName: string, displayName?: string): Promise<AndroidApp> {
     return this.requestHandler.createAndroidApp(this.resourceName, packageName, displayName)
         .then((responseData: any) => {
-          ProjectManagementRequestHandler.assertServerResponse(
+          assertServerResponse(
               validator.isNonNullObject(responseData),
               responseData,
               'createAndroidApp()\'s responseData must be a non-null object.');
 
-          ProjectManagementRequestHandler.assertServerResponse(
+          assertServerResponse(
               validator.isNonEmptyString(responseData.appId),
               responseData,
               `"responseData.appId" field must be present in createAndroidApp()'s response data.`);
@@ -137,12 +154,12 @@ export class ProjectManagement implements FirebaseServiceInterface {
   public createIosApp(bundleId: string, displayName?: string): Promise<IosApp> {
     return this.requestHandler.createIosApp(this.resourceName, bundleId, displayName)
         .then((responseData: any) => {
-          ProjectManagementRequestHandler.assertServerResponse(
+          assertServerResponse(
               validator.isNonNullObject(responseData),
               responseData,
               'createIosApp()\'s responseData must be a non-null object.');
 
-          ProjectManagementRequestHandler.assertServerResponse(
+          assertServerResponse(
               validator.isNonEmptyString(responseData.appId),
               responseData,
               `"responseData.appId" field must be present in createIosApp()'s response data.`);
@@ -152,33 +169,23 @@ export class ProjectManagement implements FirebaseServiceInterface {
 
   // ************************************************ //
 
-  // /**
-  //  * Returns a string with the Realtime Database Rules for the Database
-  //  * instance associated with this Firebase App.
-  //  */
-  // public getDatabaseRules(): Promise<string> {
-  //   return this.databaseRequestHandler.getRules().then((response) => {
-  //     if (!validator.isNonEmptyString(response)) {
-  //       throw new FirebaseProjectManagementError(
-  //           'invalid-server-response',
-  //           "getDatabaseRules()'s response must be a non-empty string.");
-  //     }
+  public getRules(service: Service): Promise<string> {
+    assertValidRulesService(service, 'getRules');
 
-  //     return response;
-  //   });
-  // }
+    if (service === 'database') {
+      return this.databaseRequestHandler.getRules().then((response) => {
+        if (!validator.isNonEmptyString(response)) {
+          throw new FirebaseProjectManagementError(
+            'invalid-server-response',
+            "getDatabaseRules()'s response must be a non-empty string.",
+          );
+        }
 
-  // /**
-  //  * Sets the Realtime Database Rules for the Database instance associated
-  //  * with this Firebase App.
-  //  */
-  // public setDatabaseRules(rules: string): Promise<void> {
-  //   return this.databaseRequestHandler.setRules(rules);
-  // }
-
-
-  public async getRules(service: Service): Promise<string> {
-    // ...
+        return response;
+      });
+    } else {
+      // TODO
+    }
   }
 
   /**
@@ -188,16 +195,39 @@ export class ProjectManagement implements FirebaseServiceInterface {
    *     content and updates/creates the appropriate release for the
    *     service with that ruleset.
    */
-  public async setRules(service: Service, content: string): Promise<void> {
-    // ...
+  public setRules(service: Service, content: string): Promise<void> {
+    assertValidRulesService(service, 'setRules');
+
+    if (service === 'database') {
+      return this.databaseRequestHandler.setRules(content);
+    } else {
+      // TODO
+    }
   }
 
   /**
    * Like `setRules()` but reads the rules content from a file.
    * (Just for convenience for the user, but this one could be skiped)
    */
-  public async setRulesFromFile(service: Service, filePath: string): Promise<void> {
-    // ...
+  public setRulesFromFile(service: Service, filePath: string): Promise<void> {
+    assertValidRulesService(service, 'setRulesFromFile');
+
+    let content: string;
+
+    try {
+      content = fs.readFileSync(filePath, 'utf8');
+    } catch (err) {
+      throw new FirebaseProjectManagementError(
+        'invalid-argument',
+        'Failed to read rules file: ' + filePath,
+      );
+    }
+
+    if (service === 'database') {
+      return this.databaseRequestHandler.setRules(content);
+    } else {
+      // TODO
+    }
   }
 
   /**
@@ -208,40 +238,62 @@ export class ProjectManagement implements FirebaseServiceInterface {
    * The maximum number of rulesets to return is determined by the optional
    * `maxResults` argument. Defaults to 10, maximum is 100 (according to API docs).
    */
-  public async listRulesReleases(
-    filter?: ListRulesReleasesFilter,
+  public listRulesReleases(
+    filter: ListRulesReleasesFilter = {},
     maxResults?: number,
     pageToken?: string,
   ): Promise<ListRulesReleasesResult> {
-    // ...
+    const filters: string[] = [];
+
+    if (validator.isNonEmptyString(filter.releaseName)) {
+      filters.push('name=' + filter.releaseName);
+    }
+
+    if (validator.isNonEmptyString(filter.rulesetName)) {
+      filters.push('ruleset_name=' + filter.rulesetName);
+    }
+
+    if (validator.isNonEmptyString(filter.testSuiteName)) {
+      filters.push('test_suite_name=' + filter.testSuiteName);
+    }
+
+    // TODO: check how the filters are supposed to be concatenated
+    const requestFilter =
+      filters.length > 0 ? filters.join('; ') : undefined;
+
+    return this.rulesRequestHandler.listRulesReleases(
+      requestFilter,
+      maxResults,
+      pageToken,
+    );
   }
 
   /**
    * Gets the named rules release.
    */
-  public async getRulesRelease(name: string): Promise<RulesRelease> {
-    // ...
+  public getRulesRelease(name: string): Promise<RulesRelease> {
+    return this.rulesRequestHandler.getRulesRelease(name);
   }
 
   /**
    * Creates a new rules release with the given name and associated to
    * the given ruleset name.
    */
-  public async createRulesRelease(
+  public createRulesRelease(
     name: string,
     rulesetName: string,
   ): Promise<RulesRelease> {
-    // ...
+    return this.rulesRequestHandler.createRulesRelease(name, rulesetName);
   }
 
   /**
    * Deletes the named rules release.
-   * Note: I'm not sure what happens when you do this. For example, if you
+   * TODO: I'm not sure what happens when you do this. For example, if you
    * delete the release for Firestore rules, does Firestore stop working?
    * This method's behavior should be properly documented if it's included.
    */
-  public async deleteRulesRelease(name: string): Promise<void> {
-    // ...
+  public deleteRulesRelease(name: string): Promise<void> {
+    return this.rulesRequestHandler.deleteRulesRelease(name);
   }
 
   /**
@@ -254,40 +306,44 @@ export class ProjectManagement implements FirebaseServiceInterface {
    * It optionally accepts a pageToken returned from a previous call, in order
    * to get the next set of results if there's more.
    */
-  public async listRulesets(
+  public listRulesets(
     maxResults?: number,
     pageToken?: string,
   ): Promise<ListRulesetsResult> {
-    // ...
+    return this.rulesRequestHandler.listRulesets(maxResults, pageToken);
   }
 
   /**
    * Gets the named ruleset. The returned Ruleset contains its files.
    */
-  public async getRuleset(name: string): Promise<RulesetWithFiles> {
-    // ...
+  public getRuleset(name: string): Promise<RulesetWithFiles> {
+    return this.rulesRequestHandler.getRuleset(name);
   }
 
   /**
    * Creates a new ruleset with the given files.
    */
-  public async createRuleset(files: RulesetFile[]): Promise<RulesetWithFiles> {
-    // ...
+  public createRuleset(files: RulesetFile[]): Promise<RulesetWithFiles> {
+    if (!Array.isArray(files) || files.length === 0) {
+      throw new FirebaseProjectManagementError(
+        'invalid-argument',
+        'First argument passed to createRuleset() must be a non-empty array',
+      );
+    }
+    return this.rulesRequestHandler.createRuleset(files);
   }
 
   /**
    * Deletes the named rules ruleset.
-   * Note: I'm not sure what happens when you do this. For example, if you
+   * TODO: I'm not sure what happens when you do this. For example, if you
    * delete the ruleset currently associated with the release for Firestore
    * rules, does Firestore stop working? Is the release automatically
    * associated with the most recent previous ruleset? No idea.
    * This method's behavior should be properly documented if it's included.
    */
-  public async deleteRuleset(name: string): Promise<void> {
-    // ...
+  public deleteRuleset(name: string): Promise<void> {
+    return this.rulesRequestHandler.deleteRuleset(name);
   }
-
-  // ************************************************ //
 
   /**
    * Lists up to 100 Firebase apps for a specified platform, associated with this Firebase project.
@@ -299,7 +355,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
 
     return listPromise
         .then((responseData: any) => {
-          ProjectManagementRequestHandler.assertServerResponse(
+          assertServerResponse(
               validator.isNonNullObject(responseData),
               responseData,
               `${callerName}\'s responseData must be a non-null object.`);
@@ -308,13 +364,13 @@ export class ProjectManagement implements FirebaseServiceInterface {
             return [];
           }
 
-          ProjectManagementRequestHandler.assertServerResponse(
+          assertServerResponse(
               validator.isArray(responseData.apps),
               responseData,
               `"apps" field must be present in the ${callerName} response data.`);
 
           return responseData.apps.map((appJson: any) => {
-            ProjectManagementRequestHandler.assertServerResponse(
+            assertServerResponse(
                 validator.isNonEmptyString(appJson.appId),
                 responseData,
                 `"apps[].appId" field must be present in the ${callerName} response data.`);

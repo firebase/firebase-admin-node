@@ -27,6 +27,23 @@ import {
   ProjectManagementErrorCode,
 } from '../utils/error';
 
+export function assertServerResponse(
+  condition: boolean,
+  responseData: object | string,
+  message: string,
+): void {
+  if (!condition) {
+    const stringData =
+      typeof responseData === 'string'
+        ? responseData
+        : JSON.stringify(responseData, null, 2);
+    throw new FirebaseProjectManagementError(
+      'invalid-server-response',
+      `${message} Response data: ${stringData}`,
+    );
+  }
+}
+
 /**
  * Abstract class that classes related to project management backend endpoints.
  *
@@ -42,23 +59,6 @@ export abstract class RequestHandlerBase {
   protected abstract readonly baseUrl: string;
   protected readonly baseBetaUrl?: string | undefined;
   protected readonly httpClient: AuthorizedHttpClient;
-
-  public static assertServerResponse(
-    condition: boolean,
-    responseData: object | string,
-    message: string,
-  ): void {
-    if (!condition) {
-      const stringData =
-        typeof responseData === 'string'
-          ? responseData
-          : JSON.stringify(responseData, null, 2);
-      throw new FirebaseProjectManagementError(
-        'invalid-server-response',
-        `${message} Response data: ${stringData}`,
-      );
-    }
-  }
 
   protected static wrapAndRethrowHttpError(
     errStatusCode: number,
@@ -153,7 +153,7 @@ export abstract class RequestHandlerBase {
   protected invokeRequestHandler<T = object>(
     method: HttpMethod,
     path: string,
-    requestData: object | string | null,
+    requestData: object | string | null = null,
     { useBetaUrl = false, isJSONData = true }: InvokeRequestHandlerOptions = {},
   ): Promise<T> {
     const baseUrlToUse = useBetaUrl ? this.baseUrl : this.baseBetaUrl;
