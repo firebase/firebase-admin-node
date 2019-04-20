@@ -36,6 +36,35 @@ const FIREBASE_RULES_HOST_AND_PORT = 'firebaserules.googleapis.com:443';
 /** Project management backend path. */
 const FIREBASE_RULES_PATH = '/v1/';
 
+function assertResponseIsRulesetWithFiles(
+  responseData: any,
+  method: string,
+): void {
+  assertServerResponse(
+    validator.isNonNullObject(responseData),
+    responseData,
+    `${method}()'s responseData must be a non-null object.`,
+  );
+
+  assertServerResponse(
+    validator.isNonEmptyString(responseData.name),
+    responseData,
+    `"responseData.name" field must be a non-empty string in ${method}()'s response data.`,
+  );
+
+  assertServerResponse(
+    validator.isNonNullObject(responseData.source),
+    responseData,
+    `"responseData.source" field  must be a non-null object in ${method}()'s response data.`,
+  );
+
+  assertServerResponse(
+    validator.isArray(responseData.source.files),
+    responseData,
+    `"responseData.source.files" field  must be an array in ${method}()'s response data.`,
+  );
+}
+
 /**
  * Class that provides a mechanism to send requests to the Firebase Rules backend
  * endpoints.
@@ -131,6 +160,36 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
     });
   }
 
+  public updateRulesRelease(
+    name: string,
+    rulesetName: string,
+  ): Promise<RulesRelease> {
+    return this.invokeRequestHandler(
+      'PATCH',
+      `${this.resourceName}/releases/${name}`,
+      {
+        release: {
+          name: `${this.resourceName}/releases/${name}`,
+          rulesetName: `${this.resourceName}/rulesets/${rulesetName}`,
+        },
+      },
+    ).then((responseData: RulesRelease) => {
+      assertServerResponse(
+        validator.isNonNullObject(responseData),
+        responseData,
+        "createRulesRelease()'s responseData must be a non-null object.",
+      );
+
+      assertServerResponse(
+        validator.isNonEmptyString(responseData.name),
+        responseData,
+        `"responseData.name" field must be a non-empty string in createRulesRelease()'s response data.`,
+      );
+
+      return shortenReleaseName(responseData);
+    });
+  }
+
   public deleteRulesRelease(name: string): Promise<void> {
     return this.invokeRequestHandler(
       'DELETE',
@@ -166,24 +225,23 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
     });
   }
 
-  public getRuleset(name: string): Promise<RulesetWithFiles> {
+  public getRuleset(
+    name: string,
+    { withFullName = false }: { withFullName?: boolean } = {},
+  ): Promise<RulesetWithFiles> {
     return this.invokeRequestHandler(
       'GET',
-      `${this.resourceName}/rulesets/${name}`,
-    ).then((responseData: RulesetWithFiles) => {
-      assertServerResponse(
-        validator.isNonNullObject(responseData),
-        responseData,
-        "getRuleset()'s responseData must be a non-null object.",
-      );
+      withFullName ? name : `${this.resourceName}/rulesets/${name}`,
+    ).then((responseData: any) => {
+      assertResponseIsRulesetWithFiles(responseData, 'getRuleset');
 
-      assertServerResponse(
-        validator.isNonEmptyString(responseData.name),
-        responseData,
-        `"responseData.name" field must be a non-empty string in getRuleset()'s response data.`,
-      );
+      const ruleset: RulesetWithFiles = {
+        name: responseData.name,
+        createTime: responseData.createTime,
+        files: responseData.source.files,
+      };
 
-      return shortenRulesetName(responseData);
+      return withFullName ? ruleset : shortenRulesetName(ruleset);
     });
   }
 
@@ -191,31 +249,15 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
     return this.invokeRequestHandler('POST', `${this.resourceName}/rulesets`, {
       source: { files },
     }).then((responseData: any) => {
-      assertServerResponse(
-        validator.isNonNullObject(responseData),
-        responseData,
-        "createRulesRelease()'s responseData must be a non-null object.",
-      );
+      assertResponseIsRulesetWithFiles(responseData, 'createRuleset');
 
-      assertServerResponse(
-        validator.isNonEmptyString(responseData.name),
-        responseData,
-        `"responseData.name" field must be a non-empty string in createRuleset()'s response data.`,
-      );
+      const ruleset: RulesetWithFiles = {
+        name: responseData.name,
+        createTime: responseData.createTime,
+        files: responseData.source.files,
+      };
 
-      assertServerResponse(
-        validator.isNonNullObject(responseData.source),
-        responseData,
-        `"responseData.source" field  must be a non-null object in createRuleset()'s response data.`,
-      );
-
-      assertServerResponse(
-        validator.isArray(responseData.source.files),
-        responseData,
-        `"responseData.source.files" field  must be an array in createRuleset()'s response data.`,
-      );
-
-      return shortenRulesetName(responseData);
+      return shortenRulesetName(ruleset);
     });
   }
 

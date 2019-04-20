@@ -62,6 +62,15 @@ export class DatabaseRequestHandler extends RequestHandlerBase {
     this.assertDatabaseURL();
     return this.invokeRequestHandler<string>('GET', DATABASE_RULES_PATH, null, {
       isJSONData: false,
+    }).then((response) => {
+      if (!validator.isNonEmptyString(response)) {
+        throw new FirebaseProjectManagementError(
+          'invalid-server-response',
+          "getDatabaseRules()'s response must be a non-empty string.",
+        );
+      }
+
+      return response;
     });
   }
 

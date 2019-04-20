@@ -28,15 +28,14 @@ import { FirebaseRulesRequestHandler } from './firebase-rules-api-request';
 import { assertServerResponse } from './request-handler-base';
 import {
   assertValidRulesService,
-  Service,
+  RulesService,
   ListRulesReleasesFilter,
   ListRulesReleasesResult,
   RulesRelease,
   ListRulesetsResult,
   RulesetWithFiles,
   RulesetFile,
-  shortenReleaseName,
-  expandReleaseName,
+  RELEASE_NAME_FOR_SERVICE,
 } from './rules';
 
 /**
@@ -167,24 +166,44 @@ export class ProjectManagement implements FirebaseServiceInterface {
         });
   }
 
-  // ************************************************ //
-
-  public getRules(service: Service): Promise<string> {
+  /**
+   * Gets the current rules for the service:
+   *   - For RTDB that's whatever `.settings/rules.json` returns.
+   *   - For Firestore/Storage it's the contents of the ruleset for the release
+   *     associated with that service.
+   */
+  public getRules(service: RulesService): Promise<string> {
     assertValidRulesService(service, 'getRules');
 
     if (service === 'database') {
-      return this.databaseRequestHandler.getRules().then((response) => {
-        if (!validator.isNonEmptyString(response)) {
-          throw new FirebaseProjectManagementError(
-            'invalid-server-response',
-            "getDatabaseRules()'s response must be a non-empty string.",
-          );
-        }
-
-        return response;
-      });
+      return this.databaseRequestHandler.getRules();
     } else {
-      // TODO
+      const releaseName = RELEASE_NAME_FOR_SERVICE[service];
+      return this.rulesRequestHandler
+        .getRulesRelease(releaseName)
+        .then((release) =>
+          this.rulesRequestHandler.getRuleset(release.rulesetName, {
+            withFullName: true,
+          }),
+        )
+        .then((ruleset) => {
+          assertServerResponse(
+            ruleset.files.length >= 1,
+            ruleset,
+            `The current rules release for service "${service}" has no source files.`,
+          );
+
+          const file = ruleset.files[0];
+
+          assertServerResponse(
+            validator.isNonNullObject(file) &&
+              validator.isNonEmptyString(file.content),
+            ruleset,
+            'ruleset.files[].content must be a non-empty string in getRules() response data',
+          );
+
+          return ruleset.files[0].content;
+        });
     }
   }
 
@@ -195,23 +214,56 @@ export class ProjectManagement implements FirebaseServiceInterface {
    *     content and updates/creates the appropriate release for the
    *     service with that ruleset.
    */
-  public setRules(service: Service, content: string): Promise<void> {
+  public setRules(service: RulesService, content: string): Promise<void> {
     assertValidRulesService(service, 'setRules');
 
     if (service === 'database') {
       return this.databaseRequestHandler.setRules(content);
     } else {
-      // TODO
+      const files: RulesetFile[] = [
+        {
+          name: service + '.rules',
+          content,
+        },
+      ];
+
+      return this.rulesRequestHandler
+        .createRuleset(files)
+        .then((ruleset) => {
+          const releaseName = RELEASE_NAME_FOR_SERVICE[service];
+          return this.rulesRequestHandler
+            .updateRulesRelease(releaseName, ruleset.name)
+            .catch(() => {
+              // Updating the release fails if it doesn't exist. In that case we
+              // create a new one.
+              return this.rulesRequestHandler.createRulesRelease(
+                releaseName,
+                ruleset.name,
+              );
+            })
+            .catch((err) => {
+              // Creating the release also failed, so let's clean up the
+              // ruleset that we just created.
+              return this.rulesRequestHandler
+                .deleteRuleset(ruleset.name)
+                .catch(() => {
+                  // Deleting the ruleset failed. Since this is not relevant to
+                  // the original operation, let's hide this error from the user.
+                  return;
+                })
+                .then(() => {
+                  throw err;
+                });
+            });
+        })
+        .then(() => undefined);
     }
   }
 
   /**
    * Like `setRules()` but reads the rules content from a file.
-   * (Just for convenience for the user, but this one could be skiped)
    */
-  public setRulesFromFile(service: Service, filePath: string): Promise<void> {
-    assertValidRulesService(service, 'setRulesFromFile');
-
+  public setRulesFromFile(service: RulesService, filePath: string): Promise<void> {
     let content: string;
 
     try {
@@ -223,11 +275,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
       );
     }
 
-    if (service === 'database') {
-      return this.databaseRequestHandler.setRules(content);
-    } else {
-      // TODO
-    }
+    return this.setRules(service, content);
   }
 
   /**
@@ -284,6 +332,16 @@ export class ProjectManagement implements FirebaseServiceInterface {
     rulesetName: string,
   ): Promise<RulesRelease> {
     return this.rulesRequestHandler.createRulesRelease(name, rulesetName);
+  }
+
+  /**
+   * Updates the ruleset name associated with an existing rules release.
+   */
+  public updateRulesRelease(
+    name: string,
+    rulesetName: string,
+  ): Promise<RulesRelease> {
+    return this.rulesRequestHandler.updateRulesRelease(name, rulesetName);
   }
 
   /**

@@ -796,6 +796,45 @@ declare namespace admin.projectManagement {
     getConfig(): Promise<string>;
   }
 
+  type RulesService = 'firestore' | 'storage' | 'database';
+
+  interface Ruleset {
+    name: string;
+    createTime: string;
+  }
+
+  interface RulesetWithFiles extends Ruleset {
+    files: RulesetFile[];
+  }
+
+  interface RulesetFile {
+    name: string;
+    content: string;
+  }
+
+  interface ListRulesReleasesFilter {
+    releaseName?: string;
+    rulesetName?: string;
+    testSuiteName?: string;
+  }
+
+  interface ListRulesReleasesResult {
+    releases: RulesRelease[];
+    pageToken?: string;
+  }
+
+  interface RulesRelease {
+    name: string;
+    rulesetName: string;
+    createTime: string;
+    updateTime: string;
+  }
+
+  interface ListRulesetsResult {
+    rulesets: Ruleset[];
+    pageToken?: string;
+  }
+
   interface ProjectManagement {
     app: admin.app.App;
 
@@ -807,8 +846,39 @@ declare namespace admin.projectManagement {
     createAndroidApp(
         packageName: string, displayName?: string): Promise<admin.projectManagement.AndroidApp>;
     createIosApp(bundleId: string, displayName?: string): Promise<admin.projectManagement.IosApp>;
-    getDatabaseRules(): Promise<string>;
-    setDatabaseRules(rules: string): Promise<void>;
+    getRules(service: admin.projectManagement.RulesService): Promise<string>;
+    setRules(
+      service: admin.projectManagement.RulesService,
+      content: string,
+    ): Promise<void>;
+    setRulesFromFile(
+      service: admin.projectManagement.RulesService,
+      filePath: string,
+    ): Promise<void>;
+    listRulesReleases(
+      filter?: admin.projectManagement.ListRulesReleasesFilter,
+      maxResults?: number,
+      pageToken?: string,
+    ): Promise<admin.projectManagement.ListRulesReleasesResult>;
+    getRulesRelease(name: string): Promise<admin.projectManagement.RulesRelease>;
+    createRulesRelease(
+      name: string,
+      rulesetName: string,
+    ): Promise<admin.projectManagement.RulesRelease>;
+    updateRulesRelease(
+      name: string,
+      rulesetName: string,
+    ): Promise<admin.projectManagement.RulesRelease>;
+    deleteRulesRelease(name: string): Promise<void>;
+    listRulesets(
+      maxResults?: number,
+      pageToken?: string,
+    ): Promise<admin.projectManagement.ListRulesetsResult>;
+    getRuleset(name: string): Promise<admin.projectManagement.RulesetWithFiles>;
+    createRuleset(
+      files: RulesetFile[],
+    ): Promise<admin.projectManagement.RulesetWithFiles>;
+    deleteRuleset(name: string): Promise<void>;
   }
 }
 

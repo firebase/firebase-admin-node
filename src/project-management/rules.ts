@@ -1,12 +1,20 @@
 import { FirebaseProjectManagementError } from '../utils/error';
 
-const VALID_SERVICES: Service[] = ['firestore', 'storage', 'database'];
-const RELEASE_NAME_FIRESTORE = 'cloud.firestore';
-const RELEASE_NAME_STORAGE = 'firebase.storage';
 const REGEX_RELEASE_NAME = /^projects\/([^\/]+)\/releases\/([^\/]+)$/;
 const REGEX_RULESET_NAME = /^projects\/([^\/]+)\/rulesets\/([^\/]+)$/;
 
-export type Service = 'firestore' | 'storage' | 'database';
+export const VALID_SERVICES: RulesService[] = [
+  'firestore',
+  'storage',
+  'database',
+];
+
+export const RELEASE_NAME_FOR_SERVICE = {
+  firestore: 'cloud.firestore',
+  storage: 'firebase.storage',
+};
+
+export type RulesService = 'firestore' | 'storage' | 'database';
 
 export interface Ruleset {
   /**
@@ -94,7 +102,10 @@ export interface ListRulesetsResult {
   pageToken?: string;
 }
 
-export function assertValidRulesService(service: Service, methodName: string) {
+export function assertValidRulesService(
+  service: RulesService,
+  methodName: string,
+) {
   if (VALID_SERVICES.indexOf(service) < 0) {
     throw new FirebaseProjectManagementError(
       'invalid-argument',
@@ -110,21 +121,7 @@ export function shortenReleaseName(release: RulesRelease): RulesRelease {
   return { ...release, name: nameMatch[2] };
 }
 
-export function expandReleaseName<T extends RulesRelease | string>(
-  release: T,
-  resourceName: string,
-): T {
-  if (typeof release === 'string') {
-    return `${resourceName}/releases/${release}` as any;
-  } else {
-    return {
-      ...release,
-      name: `${resourceName}/releases/${(release as any).name}`,
-    };
-  }
-}
-
-export function shortenRulesetName<T extends Ruleset | RulesetFile>(
+export function shortenRulesetName<T extends Ruleset | RulesetWithFiles>(
   ruleset: T,
 ): T {
   const nameMatch = ruleset.name.match(REGEX_RULESET_NAME);

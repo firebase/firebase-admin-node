@@ -16,7 +16,8 @@
 
 import { FirebaseProjectManagementError } from '../utils/error';
 import * as validator from '../utils/validator';
-import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request';
+import { ProjectManagementRequestHandler } from './project-management-api-request';
+import { assertServerResponse } from './request-handler-base';
 
 export class AndroidApp {
   private readonly resourceName: string;

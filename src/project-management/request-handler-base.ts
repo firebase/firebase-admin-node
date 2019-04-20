@@ -156,7 +156,7 @@ export abstract class RequestHandlerBase {
     requestData: object | string | null = null,
     { useBetaUrl = false, isJSONData = true }: InvokeRequestHandlerOptions = {},
   ): Promise<T> {
-    const baseUrlToUse = useBetaUrl ? this.baseUrl : this.baseBetaUrl;
+    const baseUrlToUse = useBetaUrl ? this.baseBetaUrl : this.baseUrl;
     const request: HttpRequestConfig = {
       method,
       url: baseUrlToUse + path,
