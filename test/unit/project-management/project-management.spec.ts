@@ -805,9 +805,66 @@ describe('ProjectManagement', () => {
     });
   });
 
-  // describe('getRulesRelease', () => {
+  describe('getRulesRelease', () => {
+    it('should propagate API errors', () => {
+      const stub = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'getRulesRelease')
+        .returns(Promise.reject(EXPECTED_ERROR));
+      stubs.push(stub);
 
-  // });
+      return projectManagement
+        .getRulesRelease(RELEASE_NAME)
+        .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+    });
+
+    it('should throw with null API response', () => {
+      const stub = sinon
+        .stub(
+          FirebaseRulesRequestHandler.prototype as any,
+          'invokeRequestHandler',
+        )
+        .returns(Promise.resolve(null));
+      stubs.push(stub);
+
+      return projectManagement
+        .getRulesRelease(RELEASE_NAME)
+        .should.eventually.be.rejected.and.have.property(
+          'message',
+          "getRulesRelease()'s responseData must be a non-null object. Response data: null",
+        );
+    });
+
+    it('should throw when API response missing "name" field', () => {
+      const partialApiResponse = {};
+
+      const stub = sinon
+        .stub(
+          FirebaseRulesRequestHandler.prototype as any,
+          'invokeRequestHandler',
+        )
+        .returns(Promise.resolve(partialApiResponse));
+      stubs.push(stub);
+
+      return projectManagement
+        .getRulesRelease(RELEASE_NAME)
+        .should.eventually.be.rejected.and.have.property(
+          'message',
+          `"name" field must be a non-empty string in getRulesRelease()'s response data. Response data: ` +
+            JSON.stringify(partialApiResponse, null, 2),
+        );
+    });
+
+    it('should resolve with release object on successs', () => {
+      const stub = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'getRulesRelease')
+        .returns(Promise.resolve(VALID_RELEASE_RESPONSE));
+      stubs.push(stub);
+
+      return projectManagement
+        .getRulesRelease(RELEASE_NAME)
+        .should.eventually.deep.equal(VALID_RELEASE);
+    });
+  });
 
   // describe('createRulesRelease', () => {
 
