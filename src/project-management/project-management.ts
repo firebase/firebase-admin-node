@@ -299,24 +299,24 @@ export class ProjectManagement implements FirebaseServiceInterface {
    * It optionally accepts an object specifying filters to use.
    *
    * The maximum number of rulesets to return is determined by the optional
-   * `maxResults` argument. Defaults to 10, maximum is 100 (according to API docs).
+   * `pageSize` argument. Defaults to 10, maximum is 100 (according to API docs).
    */
   public listRulesReleases(
     filter: ListRulesReleasesFilter = {},
-    maxResults?: number,
+    pageSize?: number,
     pageToken?: string,
   ): Promise<ListRulesReleasesResult> {
     const filters: string[] = [];
 
-    if (validator.isNonEmptyString(filter.releaseName)) {
+    if (filter && validator.isNonEmptyString(filter.releaseName)) {
       filters.push('name=' + filter.releaseName);
     }
 
-    if (validator.isNonEmptyString(filter.rulesetName)) {
+    if (filter && validator.isNonEmptyString(filter.rulesetName)) {
       filters.push('ruleset_name=' + filter.rulesetName);
     }
 
-    if (validator.isNonEmptyString(filter.testSuiteName)) {
+    if (filter && validator.isNonEmptyString(filter.testSuiteName)) {
       filters.push('test_suite_name=' + filter.testSuiteName);
     }
 
@@ -325,7 +325,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
       filters.length > 0 ? filters.join('; ') : undefined;
 
     return this.rulesRequestHandler
-      .listRulesReleases(requestFilter, maxResults, pageToken)
+      .listRulesReleases(requestFilter, pageSize, pageToken)
       .then((response) => {
         const releases: RulesRelease[] = [];
 
@@ -396,17 +396,17 @@ export class ProjectManagement implements FirebaseServiceInterface {
    * metadata (`name` and `createTime`), not the actual files.
    *
    * The maximum number of rulesets to return is determined by the optional
-   * `maxResults` argument. Defaults to 10, maximum is 100 (according to API docs).
+   * `pageSize` argument. Defaults to 10, maximum is 100 (according to API docs).
    *
    * It optionally accepts a pageToken returned from a previous call, in order
    * to get the next set of results if there's more.
    */
   public listRulesets(
-    maxResults?: number,
+    pageSize?: number,
     pageToken?: string,
   ): Promise<ListRulesetsResult> {
     return this.rulesRequestHandler
-      .listRulesets(maxResults, pageToken)
+      .listRulesets(pageSize, pageToken)
       .then((response) => {
         const rulesets: Ruleset[] = [];
 

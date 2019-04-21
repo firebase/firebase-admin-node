@@ -141,14 +141,26 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
 
   public listRulesReleases(
     filter?: string,
-    maxResults?: number,
-    nextPageToken?: string,
+    pageSize?: number,
+    pageToken?: string,
   ): Promise<ListRulesReleasesResponse> {
-    return this.invokeRequestHandler('GET', `${this.resourceName}/releases`, {
-      filter,
-      maxResults,
-      nextPageToken,
-    }).then((responseData: ListRulesReleasesResponse) => {
+    const options: { [k: string]: any } = {};
+
+    if (typeof filter === 'string') {
+      options.filter = filter;
+    }
+    if (typeof pageSize === 'number') {
+      options.pageSize = pageSize;
+    }
+    if (typeof pageToken === 'string') {
+      options.pageToken = pageToken;
+    }
+
+    return this.invokeRequestHandler(
+      'GET',
+      `${this.resourceName}/releases`,
+      options,
+    ).then((responseData: ListRulesReleasesResponse) => {
       assertServerResponse(
         validator.isNonNullObject(responseData),
         responseData,
@@ -226,16 +238,22 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
   }
 
   public listRulesets(
-    maxResults?: number,
-    nextPageToken?: string,
+    pageSize?: number,
+    pageToken?: string,
   ): Promise<ListRulesetsResponse> {
+    const options: { [k: string]: any } = {};
+
+    if (typeof pageSize === 'number') {
+      options.pageSize = pageSize;
+    }
+    if (typeof pageToken === 'string') {
+      options.pageToken = pageToken;
+    }
+
     return this.invokeRequestHandler<ListRulesetsResponse>(
       'GET',
       `${this.resourceName}/rulesets`,
-      {
-        maxResults,
-        nextPageToken,
-      },
+      options,
     ).then((responseData) => {
       assertServerResponse(
         validator.isNonNullObject(responseData),

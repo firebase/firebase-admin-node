@@ -5,13 +5,9 @@ import {
   RulesReleaseResponse,
 } from './firebase-rules-api-request';
 
-const RELEASE_NAME_REGEX = /^projects\/([^\/]+)\/releases\/([^\/]+)$/;
-const RULESET_NAME_REGEX = /^projects\/([^\/]+)\/rulesets\/([^\/]+)$/;
-const VALID_SERVICES: RulesService[] = [
-  'firestore',
-  'storage',
-  'database',
-];
+const RELEASE_NAME_REGEX = /^projects\/([^\/]+)\/releases\/(.+)$/;
+const RULESET_NAME_REGEX = /^projects\/([^\/]+)\/rulesets\/(.+)$/;
+const VALID_SERVICES: RulesService[] = ['firestore', 'storage', 'database'];
 
 export const RULES_RELEASE_NAME_FOR_SERVICE = {
   firestore: 'cloud.firestore',
@@ -118,13 +114,28 @@ export function assertValidRulesService(
   }
 }
 
-function shortenReleaseName(name: string): string {
+export function shortenReleaseName(name: string): string {
   const nameMatch = name.match(RELEASE_NAME_REGEX);
+
+  if (!nameMatch) {
+    throw new FirebaseProjectManagementError(
+      'internal-error',
+      'The rules release name has an unknown format: ' + name,
+    );
+  }
+
   return nameMatch[2];
 }
 
-function shortenRulesetName(name: string): string {
+export function shortenRulesetName(name: string): string {
   const nameMatch = name.match(RULESET_NAME_REGEX);
+
+  if (!nameMatch) {
+    throw new FirebaseProjectManagementError(
+      'internal-error',
+      'The ruleset name has an unknown format: ' + name,
+    );
+  }
   return nameMatch[2];
 }
 
