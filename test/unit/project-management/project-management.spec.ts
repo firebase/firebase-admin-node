@@ -16,6 +16,7 @@
 
 'use strict';
 
+import * as fs from 'fs';
 import * as chai from 'chai';
 import * as _ from 'lodash';
 import * as sinon from 'sinon';
@@ -27,7 +28,12 @@ import { FirebaseProjectManagementError } from '../../../src/utils/error';
 import * as mocks from '../../resources/mocks';
 import { IosApp } from '../../../src/project-management/ios-app';
 import { DatabaseRequestHandler } from '../../../src/project-management/database-api-request';
-import { FirebaseRulesRequestHandler, RulesReleaseResponse, RulesetResponse, RulesetWithFilesResponse } from '../../../src/project-management/firebase-rules-api-request';
+import {
+  FirebaseRulesRequestHandler,
+  RulesReleaseResponse,
+  RulesetResponse,
+  RulesetWithFilesResponse,
+} from '../../../src/project-management/firebase-rules-api-request';
 import { RulesetFile, RulesService } from '../../../src/project-management/rules';
 
 const expect = chai.expect;
@@ -595,6 +601,72 @@ describe('ProjectManagement', () => {
 
       return projectManagement
         .setRules('storage', VALID_RULES_CONTENT)
+        .should.eventually.equal(undefined);
+    });
+  });
+
+  describe('setRulesFromFile', () => {
+    const stubReadFileSync = () => {
+      const stub = sinon.stub(fs, 'readFileSync').returns('content');
+      stubs.push(stub);
+    };
+
+    it('should resolve with void on success for RTDB rules', () => {
+      stubReadFileSync();
+
+      const stub = sinon
+        .stub(DatabaseRequestHandler.prototype, 'setRules')
+        .returns(Promise.resolve(undefined));
+      stubs.push(stub);
+
+      return projectManagement
+        .setRulesFromFile('database', 'file.rules')
+        .should.eventually.equal(undefined);
+    });
+
+    it('should resolve with void on success for Firestore rules', () => {
+      stubReadFileSync();
+
+      const stubRuleset = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'createRuleset')
+        .returns(Promise.resolve(VALID_RULESET_WITH_FILES_RESPONSE));
+      stubs.push(stubRuleset);
+
+      const stubUpdate = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'updateRulesRelease')
+        .returns(Promise.reject(EXPECTED_ERROR));
+      stubs.push(stubUpdate);
+
+      const stubCreate = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'createRulesRelease')
+        .returns(Promise.resolve(VALID_RELEASE_RESPONSE));
+      stubs.push(stubCreate);
+
+      return projectManagement
+        .setRulesFromFile('firestore', 'file.rules')
+        .should.eventually.equal(undefined);
+    });
+
+    it('should resolve with void on success for Storage rules', () => {
+      stubReadFileSync();
+
+      const stubRuleset = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'createRuleset')
+        .returns(Promise.resolve(VALID_RULESET_WITH_FILES_RESPONSE));
+      stubs.push(stubRuleset);
+
+      const stubUpdate = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'updateRulesRelease')
+        .returns(Promise.reject(EXPECTED_ERROR));
+      stubs.push(stubUpdate);
+
+      const stubCreate = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'createRulesRelease')
+        .returns(Promise.resolve(VALID_RELEASE_RESPONSE));
+      stubs.push(stubCreate);
+
+      return projectManagement
+        .setRulesFromFile('storage', 'file.rules')
         .should.eventually.equal(undefined);
     });
   });
