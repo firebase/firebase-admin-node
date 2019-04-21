@@ -177,6 +177,7 @@ describe('FirebaseRulesRequestHandler', () => {
             name: RELEASE_NAME,
             rulesetName: RULESET_UUID,
             createTime: TIMESTAMP_CREATE,
+            updateTime: TIMESTAMP_UPDATE,
           },
         ],
         nextPageToken: NEXT_PAGE_TOKEN,
@@ -296,6 +297,7 @@ describe('FirebaseRulesRequestHandler', () => {
         name: RELEASE_NAME,
         rulesetName: RULESET_NAME,
         createTime: TIMESTAMP_CREATE,
+        updateTime: TIMESTAMP_UPDATE,
       };
 
       const stub = sinon
@@ -376,6 +378,7 @@ describe('FirebaseRulesRequestHandler', () => {
         name: RELEASE_NAME,
         rulesetName: RULESET_NAME,
         createTime: TIMESTAMP_CREATE,
+        updateTime: TIMESTAMP_UPDATE,
       };
 
       const stub = sinon

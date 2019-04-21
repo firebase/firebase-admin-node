@@ -87,6 +87,7 @@ const VALID_RELEASE_RESPONSE: RulesReleaseResponse = {
   name: `${PROJECT_RESOURCE_NAME}/releases/${RELEASE_NAME}`,
   rulesetName: RULESET_NAME,
   createTime: TIMESTAMP_CREATE,
+  updateTime: TIMESTAMP_UPDATE,
 };
 
 const VALID_RULESET_RESPONSE: RulesetResponse = {
@@ -117,6 +118,7 @@ const VALID_RELEASE: RulesRelease = {
   name: RELEASE_NAME,
   rulesetId: RULESET_UUID,
   createTime: TIMESTAMP_CREATE,
+  updateTime: TIMESTAMP_UPDATE,
 };
 
 describe('ProjectManagement', () => {
