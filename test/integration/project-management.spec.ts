@@ -16,7 +16,7 @@
 
 import * as _ from 'lodash';
 import * as chai from 'chai';
-import * as admin from '../../lib/index';
+import * as admin from '../../';
 import { projectId, cmdArgs } from './setup';
 
 /* tslint:disable:no-var-requires */
@@ -31,22 +31,69 @@ const APP_DISPLAY_NAME_SUFFIX_LENGTH = 15;
 
 const SHA_256_HASH = 'aaaaccccaaaaccccaaaaccccaaaaccccaaaaccccaaaaccccaaaaccccaaaacccc';
 
-const DEFAULT_DATABASE_RULES = `{
+const DEFAULT_DATABASE_RULES = `
+{
   "rules": {
     ".read": "auth != null",
     ".write": "auth != null"
   }
-}`;
+}
+`.trim();
 
-// Equivalent to the default rules but with some added comments
-const TEST_DATABASE_RULES = `{
+const DEFAULT_FIRESTORE_RULES = `
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+`.trim();
+
+const DEFAULT_STORAGE_RULES = `
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+`.trim();
+
+const TEST_DATABASE_RULES = `
+{
   "rules": {
-    // Only allow authenticated users to read
+    // These rules are like the default ones
     ".read": "auth != null",
-    // Only allow authenticated users to write
+    // But with some comments added
     ".write": "auth != null"
   }
-}`;
+}
+`.trim();
+
+const TEST_FIRESTORE_RULES = `
+service cloud.firestore {
+  // These rules are like the default ones
+  match /databases/{database}/documents {
+    // But with some comments added
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+`.trim();
+
+const TEST_STORAGE_RULES = `
+service firebase.storage {
+  // These rules are like the default ones
+  match /b/{bucket}/o {
+    // But with some comments added
+    match /{allPaths=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+`.trim();
 
 const expect = chai.expect;
 
@@ -193,34 +240,115 @@ describe('admin.projectManagement', () => {
     });
   });
 
-  // describe('getDatabaseRules()', () => {
-  //   it('successfully gets the database rules', () => {
-  //     return admin.projectManagement().getDatabaseRules().then((rules: string) => {
-  //       expect(rules).to.be.a('string');
-  //       expect(rules[0]).to.equal('{');
-  //       expect(rules.length).to.be.at.least('{"rules":{}}'.length);
-  //     });
-  //   });
-  // });
+  describe('getRules()', () => {
+    it('successfully gets the database rules', async () => {
+      const rules = await admin.projectManagement().getRules('database');
+      expect(rules).to.be.a('string');
+      expect(rules[0]).to.equal('{');
+      expect(rules.length).to.be.at.least('{"rules":{}}'.length);
+    });
 
-  // describe('setDatabaseRules()', () => {
-  //   it('successfully sets the database rules', async () => {
-  //     if (cmdArgs.updateRules) {
-  //       // We set and get the rules twice with different values each time
-  //       // to check that they actually change.
+    it('successfully gets the Firestore rules', async () => {
+      const rules = await admin.projectManagement().getRules('firestore');
+      expect(rules).to.be.a('string');
+      expect(rules).to.match(/^service cloud\.firestore \{/);
+    });
 
-  //       await admin.projectManagement().setDatabaseRules(TEST_DATABASE_RULES);
-  //       const testRules = await admin.projectManagement().getDatabaseRules();
-  //       expect(testRules).to.equal(TEST_DATABASE_RULES);
+    it('successfully gets the Storage rules', async () => {
+      const rules = await admin.projectManagement().getRules('storage');
+      expect(rules).to.be.a('string');
+      expect(rules).to.match(/^service firebase\.storage \{/);
+    });
+  });
 
-  //       await admin.projectManagement().setDatabaseRules(DEFAULT_DATABASE_RULES);
-  //       const defaultRules = await admin.projectManagement().getDatabaseRules();
-  //       expect(defaultRules).to.equal(DEFAULT_DATABASE_RULES);
-  //       } else {
-  //         expect.fail(null, null, "Won't set database rules without --updateRules arg.");
-  //       }
-  //   });
-  // });
+  describe('setRules()', () => {
+    it('successfully sets the database rules', async () => {
+      if (!cmdArgs.updateRules) {
+        expect.fail(
+          null,
+          null,
+          "Won't set RTDB rules without --updateRules arg.",
+        );
+      } else {
+        // We set and get the rules twice, with different values each time
+        // to check that they actually change.
+
+        await admin
+          .projectManagement()
+          .setRules('database', TEST_DATABASE_RULES);
+        const testRules = await admin
+          .projectManagement()
+          .getRules('database');
+        expect(testRules).to.equal(TEST_DATABASE_RULES);
+
+        await admin
+          .projectManagement()
+          .setRules('database', DEFAULT_DATABASE_RULES);
+        const defaultRules = await admin
+          .projectManagement()
+          .getRules('database');
+        expect(defaultRules).to.equal(DEFAULT_DATABASE_RULES);
+      }
+    });
+
+    it('successfully sets the Firestore rules', async () => {
+      if (!cmdArgs.updateRules) {
+        expect.fail(
+          null,
+          null,
+          "Won't set Firestore rules without --updateRules arg.",
+        );
+      } else {
+        // We set and get the rules twice, with different values each time
+        // to check that they actually change.
+
+        await admin
+          .projectManagement()
+          .setRules('firestore', TEST_FIRESTORE_RULES);
+        const testRules = await admin
+          .projectManagement()
+          .getRules('firestore');
+        expect(testRules).to.equal(TEST_FIRESTORE_RULES);
+
+        await admin
+          .projectManagement()
+          .setRules('firestore', DEFAULT_FIRESTORE_RULES);
+        const defaultRules = await admin
+          .projectManagement()
+          .getRules('firestore');
+        expect(defaultRules).to.equal(DEFAULT_FIRESTORE_RULES);
+      }
+    });
+
+    it('successfully sets the Storage rules', async () => {
+      if (!cmdArgs.updateRules) {
+        expect.fail(
+          null,
+          null,
+          "Won't set Storage rules without --updateRules arg.",
+        );
+      } else {
+        // We set and get the rules twice, with different values each time
+        // to check that they actually change.
+
+        await admin
+          .projectManagement()
+          .setRules('storage', TEST_STORAGE_RULES);
+        const testRules = await admin
+          .projectManagement()
+          .getRules('storage');
+        expect(testRules).to.equal(TEST_STORAGE_RULES);
+
+        await admin
+          .projectManagement()
+          .setRules('storage', DEFAULT_STORAGE_RULES);
+        const defaultRules = await admin
+          .projectManagement()
+          .getRules('storage');
+        expect(defaultRules).to.equal(DEFAULT_STORAGE_RULES);
+      }
+    });
+  });
 });
 
 /**

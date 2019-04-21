@@ -242,7 +242,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
       return this.rulesRequestHandler
         .createRuleset(files)
         .then((rulesetResponse) => {
-          const releaseName = RULES_RELEASE_NAME_FOR_SERVICE[service];
+          const releaseName = this.getRulesReleaseNameForService(service);
           return this.rulesRequestHandler
             .updateRulesRelease(releaseName, rulesetResponse.name, {
               isFullRulesetName: true,
