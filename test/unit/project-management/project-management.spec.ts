@@ -1107,9 +1107,46 @@ describe('ProjectManagement', () => {
     });
   });
 
-  // describe('createRuleset', () => {
+  describe('createRuleset', () => {
+    it('should propagate API errors', () => {
+      const stub = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'createRuleset')
+        .returns(Promise.reject(EXPECTED_ERROR));
+      stubs.push(stub);
 
-  // });
+      return projectManagement
+        .createRuleset(VALID_RULESET_FILES)
+        .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+    });
+
+    it('should throw when null API response', () => {
+      const stub = sinon
+        .stub(
+          FirebaseRulesRequestHandler.prototype as any,
+          'invokeRequestHandler',
+        )
+        .returns(Promise.resolve(null));
+      stubs.push(stub);
+
+      return projectManagement
+        .createRuleset(VALID_RULESET_FILES)
+        .should.eventually.be.rejected.and.have.property(
+          'message',
+          "createRuleset()'s responseData must be a non-null object. Response data: null",
+        );
+    });
+
+    it('should resolve with ruleset object on successs', () => {
+      const stub = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'createRuleset')
+        .returns(Promise.resolve(VALID_RULESET_WITH_FILES_RESPONSE));
+      stubs.push(stub);
+
+      return projectManagement
+        .createRuleset(VALID_RULESET_FILES)
+        .should.eventually.deep.equal(VALID_RULESET_WITH_FILES);
+    });
+  });
 
   // describe('deleteRuleset', () => {
 
