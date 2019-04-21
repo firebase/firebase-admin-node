@@ -34,12 +34,15 @@ import {
   RulesetResponse,
   RulesetWithFilesResponse,
   ListRulesReleasesResponse,
+  ListRulesetsResponse,
 } from '../../../src/project-management/firebase-rules-api-request';
 import {
   RulesetFile,
   RulesService,
   ListRulesReleasesResult,
   RulesRelease,
+  ListRulesetsResult,
+  Ruleset,
 } from '../../../src/project-management/rules';
 
 const expect = chai.expect;
@@ -88,6 +91,11 @@ const VALID_RELEASE_RESPONSE: RulesReleaseResponse = {
 const VALID_RULESET_RESPONSE: RulesetResponse = {
   name: RULESET_NAME,
   createTime: TIMESTAMP_CREATE,
+};
+
+const VALID_RULESET: Ruleset = {
+  createTime: VALID_RULESET_RESPONSE.createTime,
+  id: RULESET_UUID,
 };
 
 const VALID_RULESET_WITH_FILES_RESPONSE: RulesetWithFilesResponse = {
@@ -750,7 +758,7 @@ describe('ProjectManagement', () => {
         );
     });
 
-    it('should resolve with list of releases on success', () => {
+    it('should resolve with list of releases on success without arguments', () => {
       const validReleaseListResponse: ListRulesReleasesResponse = {
         releases: [VALID_RELEASE_RESPONSE],
         nextPageToken: NEXT_PAGE_TOKEN,
@@ -765,8 +773,34 @@ describe('ProjectManagement', () => {
         .stub(FirebaseRulesRequestHandler.prototype, 'listRulesReleases')
         .returns(Promise.resolve(validReleaseListResponse));
       stubs.push(stub);
+
       return projectManagement
         .listRulesReleases()
+        .should.eventually.deep.equal(validReleaseListResult);
+    });
+
+    it('should resolve with list of releases on success with arguments', () => {
+      const filter = { releaseName: 'prod*' };
+      const maxResults = 20;
+      const nextPageToken = PAGE_TOKEN;
+
+      const validReleaseListResponse: ListRulesReleasesResponse = {
+        releases: [VALID_RELEASE_RESPONSE],
+        nextPageToken: NEXT_PAGE_TOKEN,
+      };
+
+      const validReleaseListResult: ListRulesReleasesResult = {
+        releases: [VALID_RELEASE],
+        pageToken: NEXT_PAGE_TOKEN,
+      };
+
+      const stub = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'listRulesReleases')
+        .returns(Promise.resolve(validReleaseListResponse));
+      stubs.push(stub);
+
+      return projectManagement
+        .listRulesReleases(filter, maxResults, nextPageToken)
         .should.eventually.deep.equal(validReleaseListResult);
     });
   });
@@ -787,9 +821,123 @@ describe('ProjectManagement', () => {
 
   // });
 
-  // describe('listRulesets', () => {
+  describe('listRulesets', () => {
+    it('should propagate API errors', () => {
+      const stub = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'listRulesets')
+        .returns(Promise.reject(EXPECTED_ERROR));
+      stubs.push(stub);
 
-  // });
+      return projectManagement
+        .listRulesets()
+        .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+    });
+
+    it('should throw with null API response', () => {
+      const stub = sinon
+        .stub(
+          FirebaseRulesRequestHandler.prototype as any,
+          'invokeRequestHandler',
+        )
+        .returns(Promise.resolve(null));
+      stubs.push(stub);
+
+      return projectManagement
+        .listRulesets()
+        .should.eventually.be.rejected.and.have.property(
+          'message',
+          "listRulesets()'s responseData must be a non-null object. Response data: null",
+        );
+    });
+
+    it('should throw when API response has non-array "rulesets" field', () => {
+      const partialApiResponse = { rulesets: 'none' };
+
+      const stub = sinon
+        .stub(
+          FirebaseRulesRequestHandler.prototype as any,
+          'invokeRequestHandler',
+        )
+        .returns(Promise.resolve(partialApiResponse));
+      stubs.push(stub);
+
+      return projectManagement
+        .listRulesets()
+        .should.eventually.be.rejected.and.have.property(
+          'message',
+          `"rulesets" field must be an array in listRulesets()'s response data. Response data: ` +
+            JSON.stringify(partialApiResponse, null, 2),
+        );
+    });
+
+    it('should throw with API response missing "rulesets[].name" field', () => {
+      const partialApiResponse = {
+        rulesets: [{}],
+      };
+
+      const stub = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'listRulesets')
+        .returns(Promise.resolve(partialApiResponse));
+      stubs.push(stub);
+
+      return projectManagement
+        .listRulesets()
+        .should.eventually.be.rejected.and.have.property(
+          'message',
+          '"ruleset[].name" field must be present in the listRulesets() response data. ' +
+            `Response data: ${JSON.stringify(
+              partialApiResponse,
+              null,
+              2,
+            )}`,
+        );
+    });
+
+    it('should resolve with list of rulesets on success without arguments', () => {
+      const validRulesetListResponse: ListRulesetsResponse = {
+        rulesets: [VALID_RULESET_RESPONSE],
+        nextPageToken: NEXT_PAGE_TOKEN,
+      };
+
+      const validRulesetListResult: ListRulesetsResult = {
+        rulesets: [VALID_RULESET],
+        pageToken: NEXT_PAGE_TOKEN,
+      };
+
+      const stub = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'listRulesets')
+        .returns(Promise.resolve(validRulesetListResponse));
+      stubs.push(stub);
+
+      return projectManagement
+        .listRulesets()
+        .should.eventually.deep.equal(validRulesetListResult);
+    });
+
+    it('should resolve with list of rulesets on success with arguments', () => {
+      const maxResults = 20;
+      const nextPageToken = PAGE_TOKEN;
+
+      const validRulesetListResponse: ListRulesetsResponse = {
+        rulesets: [VALID_RULESET_RESPONSE],
+        nextPageToken: NEXT_PAGE_TOKEN,
+      };
+
+      const validRulesetListResult: ListRulesetsResult = {
+        rulesets: [VALID_RULESET],
+        pageToken: NEXT_PAGE_TOKEN,
+      };
+
+      const stub = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'listRulesets')
+        .returns(Promise.resolve(validRulesetListResponse));
+      stubs.push(stub);
+
+      return projectManagement
+        .listRulesets(maxResults, nextPageToken)
+        .should.eventually.deep.equal(validRulesetListResult);
+    });
+  });
 
   // describe('getRuleset', () => {
 

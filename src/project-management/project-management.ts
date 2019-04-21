@@ -38,6 +38,7 @@ import {
   processRulesetResponse,
   processReleaseResponse,
   RULES_RELEASE_NAME_FOR_SERVICE,
+  Ruleset,
 } from './rules';
 
 /**
@@ -406,10 +407,19 @@ export class ProjectManagement implements FirebaseServiceInterface {
     return this.rulesRequestHandler
       .listRulesets(maxResults, pageToken)
       .then((response) => {
+        const rulesets: Ruleset[] = [];
+
+        response.rulesets.forEach((ruleset) => {
+          assertServerResponse(
+            validator.isNonEmptyString(ruleset.name),
+            response,
+            '"ruleset[].name" field must be present in the listRulesets() response data.',
+          );
+          rulesets.push(processRulesetResponse(ruleset));
+        });
+
         return {
-          rulesets: response.rulesets.map((ruleset) =>
-            processRulesetResponse(ruleset),
-          ),
+          rulesets,
           pageToken: response.nextPageToken,
         };
       });
