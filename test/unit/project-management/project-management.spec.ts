@@ -33,8 +33,14 @@ import {
   RulesReleaseResponse,
   RulesetResponse,
   RulesetWithFilesResponse,
+  ListRulesReleasesResponse,
 } from '../../../src/project-management/firebase-rules-api-request';
-import { RulesetFile, RulesService } from '../../../src/project-management/rules';
+import {
+  RulesetFile,
+  RulesService,
+  ListRulesReleasesResult,
+  RulesRelease,
+} from '../../../src/project-management/rules';
 
 const expect = chai.expect;
 
@@ -90,6 +96,11 @@ const VALID_RULESET_WITH_FILES_RESPONSE: RulesetWithFilesResponse = {
   source: {
     files: VALID_RULESET_FILES,
   },
+};
+
+const VALID_RELEASE: RulesRelease = {
+  ...VALID_RELEASE_RESPONSE,
+  name: RELEASE_NAME,
 };
 
 describe('ProjectManagement', () => {
@@ -607,7 +618,7 @@ describe('ProjectManagement', () => {
 
   describe('setRulesFromFile', () => {
     const stubReadFileSync = () => {
-      const stub = sinon.stub(fs, 'readFileSync').returns('content');
+      const stub = sinon.stub(fs, 'readFileSync').returns('file content');
       stubs.push(stub);
     };
 
@@ -670,4 +681,126 @@ describe('ProjectManagement', () => {
         .should.eventually.equal(undefined);
     });
   });
+
+  describe('listRulesReleases', () => {
+    it('should propagate API errors', () => {
+      const stub = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'listRulesReleases')
+        .returns(Promise.reject(EXPECTED_ERROR));
+      stubs.push(stub);
+
+      return projectManagement
+        .listRulesReleases()
+        .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+    });
+
+    it('should throw with null API response', () => {
+      const stub = sinon
+        .stub(
+          FirebaseRulesRequestHandler.prototype as any,
+          'invokeRequestHandler',
+        )
+        .returns(Promise.resolve(null));
+      stubs.push(stub);
+
+      return projectManagement
+        .listRulesReleases()
+        .should.eventually.be.rejected.and.have.property(
+          'message',
+          "listRulesReleases()'s responseData must be a non-null object. Response data: null",
+        );
+    });
+
+    it('should throw when API response has non-array "releases" field', () => {
+      const partialApiResponse = { releases: 'none' };
+
+      const stub = sinon
+        .stub(
+          FirebaseRulesRequestHandler.prototype as any,
+          'invokeRequestHandler',
+        )
+        .returns(Promise.resolve(partialApiResponse));
+      stubs.push(stub);
+
+      return projectManagement
+        .listRulesReleases()
+        .should.eventually.be.rejected.and.have.property(
+          'message',
+          `"releases" field must be an array in listRulesReleases()'s response data. Response data: ` +
+            JSON.stringify(partialApiResponse, null, 2),
+        );
+    });
+
+    it('should throw with API response missing "releases[].rulesetName" field', () => {
+      const partialApiResponse = {
+        releases: [{}],
+      };
+
+      const stub = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'listRulesReleases')
+        .returns(Promise.resolve(partialApiResponse));
+      stubs.push(stub);
+
+      return projectManagement
+        .listRulesReleases()
+        .should.eventually.be.rejected.and.have.property(
+          'message',
+          '"releases[].rulesetName" field must be present in the listRulesReleases() response data. ' +
+            `Response data: ${JSON.stringify(partialApiResponse, null, 2)}`,
+        );
+    });
+
+    it('should resolve with list of releases on success', () => {
+      const validReleaseListResponse: ListRulesReleasesResponse = {
+        releases: [VALID_RELEASE_RESPONSE],
+        nextPageToken: NEXT_PAGE_TOKEN,
+      };
+
+      const validReleaseListResult: ListRulesReleasesResult = {
+        releases: [VALID_RELEASE],
+        pageToken: NEXT_PAGE_TOKEN,
+      };
+
+      const stub = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'listRulesReleases')
+        .returns(Promise.resolve(validReleaseListResponse));
+      stubs.push(stub);
+      return projectManagement
+        .listRulesReleases()
+        .should.eventually.deep.equal(validReleaseListResult);
+    });
+  });
+
+  // describe('getRulesRelease', () => {
+
+  // });
+
+  // describe('createRulesRelease', () => {
+
+  // });
+
+  // describe('updateRulesRelease', () => {
+
+  // });
+
+  // describe('deleteRulesRelease', () => {
+
+  // });
+
+  // describe('listRulesets', () => {
+
+  // });
+
+  // describe('getRuleset', () => {
+
+  // });
+
+  // describe('createRuleset', () => {
+
+  // });
+
+  // describe('deleteRuleset', () => {
+
+  // });
+
 });

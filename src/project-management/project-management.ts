@@ -205,7 +205,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
             validator.isNonNullObject(file) &&
               validator.isNonEmptyString(file.content),
             response,
-            'ruleset.files[].content must be a non-empty string in getRules() response data',
+            'ruleset.files[].content must be present in the getRules() response data',
           );
 
           return file.content;
@@ -325,10 +325,19 @@ export class ProjectManagement implements FirebaseServiceInterface {
     return this.rulesRequestHandler
       .listRulesReleases(requestFilter, maxResults, pageToken)
       .then((response) => {
+        const releases: RulesRelease[] = [];
+
+        response.releases.forEach((release) => {
+          assertServerResponse(
+            validator.isNonEmptyString(release.rulesetName),
+            response,
+            '"releases[].rulesetName" field must be present in the listRulesReleases() response data.',
+          );
+          releases.push(processReleaseResponse(release));
+        });
+
         return {
-          releases: response.releases.map((release) =>
-            processReleaseResponse(release),
-          ),
+          releases,
           pageToken: response.nextPageToken,
         };
       });

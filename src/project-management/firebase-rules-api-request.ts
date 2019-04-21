@@ -43,19 +43,19 @@ function assertResponseIsRulesetWithFiles(
   assertServerResponse(
     validator.isNonEmptyString(responseData.name),
     responseData,
-    `"responseData.name" field must be a non-empty string in ${method}()'s response data.`,
+    `"name" field must be a non-empty string in ${method}()'s response data.`,
   );
 
   assertServerResponse(
     validator.isNonNullObject(responseData.source),
     responseData,
-    `"responseData.source" field must be a non-null object in ${method}()'s response data.`,
+    `"source" field must be a non-null object in ${method}()'s response data.`,
   );
 
   assertServerResponse(
     validator.isArray(responseData.source.files),
     responseData,
-    `"responseData.source.files" field must be an array in ${method}()'s response data.`,
+    `"source.files" field must be an array in ${method}()'s response data.`,
   );
 }
 
@@ -136,7 +136,7 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
       assertServerResponse(
         validator.isArray(responseData.releases),
         responseData,
-        `"responseData.releases" field must be an array in listRulesReleases()'s response data.`,
+        `"releases" field must be an array in listRulesReleases()'s response data.`,
       );
 
       return responseData;
@@ -157,7 +157,7 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
       assertServerResponse(
         validator.isNonEmptyString(responseData.name),
         responseData,
-        `"responseData.name" field must be a non-empty string in getRulesRelease()'s response data.`,
+        `"name" field must be a non-empty string in getRulesRelease()'s response data.`,
       );
 
       return responseData;
@@ -188,7 +188,7 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
       assertServerResponse(
         validator.isNonEmptyString(responseData.name),
         responseData,
-        `"responseData.name" field must be a non-empty string in createRulesRelease()'s response data.`,
+        `"name" field must be a non-empty string in createRulesRelease()'s response data.`,
       );
 
       return responseData;
@@ -221,7 +221,7 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
       assertServerResponse(
         validator.isNonEmptyString(responseData.name),
         responseData,
-        `"responseData.name" field must be a non-empty string in updateRulesRelease()'s response data.`,
+        `"name" field must be a non-empty string in updateRulesRelease()'s response data.`,
       );
 
       return responseData;
@@ -257,7 +257,7 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
       assertServerResponse(
         validator.isArray(responseData.rulesets),
         responseData,
-        `"responseData.rulesets" field must be an array in listRulesets()'s response data.`,
+        `"rulesets" field must be an array in listRulesets()'s response data.`,
       );
 
       return responseData;

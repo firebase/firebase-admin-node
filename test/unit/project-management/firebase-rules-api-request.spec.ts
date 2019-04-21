@@ -166,7 +166,7 @@ describe('FirebaseRulesRequestHandler', () => {
         .listRulesReleases()
         .should.eventually.be.rejected.and.have.property('message')
         .to.match(
-          /^"responseData\.releases" field must be an array in listRulesReleases\(\)'s response data/,
+          /^"releases" field must be an array in listRulesReleases\(\)'s response data/,
         );
     });
 
@@ -270,7 +270,7 @@ describe('FirebaseRulesRequestHandler', () => {
         .getRulesRelease(RELEASE_NAME)
         .should.eventually.be.rejected.and.have.property('message')
         .to.match(
-          /^"responseData\.name" field must be a non-empty string in getRulesRelease\(\)'s response data/,
+          /^"name" field must be a non-empty string in getRulesRelease\(\)'s response data/,
         );
     });
 
@@ -327,7 +327,7 @@ describe('FirebaseRulesRequestHandler', () => {
         .createRulesRelease(RELEASE_NAME, RULESET_UUID)
         .should.eventually.be.rejected.and.have.property('message')
         .to.match(
-          /^"responseData\.name" field must be a non-empty string in createRulesRelease\(\)'s response data/,
+          /^"name" field must be a non-empty string in createRulesRelease\(\)'s response data/,
         );
     });
 
@@ -391,7 +391,7 @@ describe('FirebaseRulesRequestHandler', () => {
         .updateRulesRelease(RELEASE_NAME, RULESET_UUID)
         .should.eventually.be.rejected.and.have.property('message')
         .to.match(
-          /^"responseData\.name" field must be a non-empty string in updateRulesRelease\(\)'s response data/,
+          /^"name" field must be a non-empty string in updateRulesRelease\(\)'s response data/,
         );
     });
 
@@ -480,7 +480,7 @@ describe('FirebaseRulesRequestHandler', () => {
         .listRulesets()
         .should.eventually.be.rejected.and.have.property('message')
         .to.match(
-          /^"responseData\.rulesets" field must be an array in listRulesets\(\)'s response data/,
+          /^"rulesets" field must be an array in listRulesets\(\)'s response data/,
         );
     });
 
@@ -578,7 +578,7 @@ describe('FirebaseRulesRequestHandler', () => {
         .getRuleset(RULESET_UUID)
         .should.eventually.be.rejected.and.have.property('message')
         .to.match(
-          /^"responseData\.name" field must be a non-empty string in getRuleset\(\)'s response data/,
+          /^"name" field must be a non-empty string in getRuleset\(\)'s response data/,
         );
     });
 
@@ -599,7 +599,7 @@ describe('FirebaseRulesRequestHandler', () => {
         .getRuleset(RULESET_UUID)
         .should.eventually.be.rejected.and.have.property('message')
         .to.match(
-          /^"responseData\.source\.files" field must be an array in getRuleset\(\)'s response data/,
+          /^"source\.files" field must be an array in getRuleset\(\)'s response data/,
         );
     });
 
@@ -656,7 +656,7 @@ describe('FirebaseRulesRequestHandler', () => {
         .createRuleset(RULESET_FILES)
         .should.eventually.be.rejected.and.have.property('message')
         .to.match(
-          /^"responseData\.name" field must be a non-empty string in createRuleset\(\)'s response data/,
+          /^"name" field must be a non-empty string in createRuleset\(\)'s response data/,
         );
     });
 
@@ -677,7 +677,7 @@ describe('FirebaseRulesRequestHandler', () => {
         .createRuleset(RULESET_FILES)
         .should.eventually.be.rejected.and.have.property('message')
         .to.match(
-          /^"responseData\.source\.files" field must be an array in createRuleset\(\)'s response data/,
+          /^"source\.files" field must be an array in createRuleset\(\)'s response data/,
         );
     });
 
