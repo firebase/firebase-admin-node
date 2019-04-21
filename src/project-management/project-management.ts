@@ -346,7 +346,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
   }
 
   /**
-   * Gets the named rules release.
+   * Gets the given rules release.
    */
   public getRulesRelease(name: string): Promise<RulesRelease> {
     return this.rulesRequestHandler
@@ -380,7 +380,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
   }
 
   /**
-   * Deletes the named rules release.
+   * Deletes the given rules release.
    */
   public deleteRulesRelease(name: string): Promise<void> {
     return this.rulesRequestHandler
@@ -448,7 +448,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
   }
 
   /**
-   * Deletes the named rules ruleset.
+   * Deletes the given rules ruleset.
    */
   public deleteRuleset(name: string): Promise<void> {
     return this.rulesRequestHandler
