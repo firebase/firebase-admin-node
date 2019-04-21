@@ -30,7 +30,7 @@ const FIREBASE_RULES_HOST_AND_PORT = 'firebaserules.googleapis.com:443';
 /** Project management backend path. */
 const FIREBASE_RULES_PATH = '/v1/';
 
-function assertResponseIsRulesetWithFiles(
+function assertValidIsRulesetWithFilesResponse(
   responseData: any,
   method: string,
 ): void {
@@ -56,6 +56,29 @@ function assertResponseIsRulesetWithFiles(
     validator.isArray(responseData.source.files),
     responseData,
     `"source.files" field must be an array in ${method}()'s response data.`,
+  );
+}
+
+function assertValidRulesReleaseResponse(
+  responseData: RulesReleaseResponse,
+  method: string,
+): void {
+  assertServerResponse(
+    validator.isNonNullObject(responseData),
+    responseData,
+    `${method}()'s responseData must be a non-null object.`,
+  );
+
+  assertServerResponse(
+    validator.isNonEmptyString(responseData.name),
+    responseData,
+    `"name" field must be a non-empty string in ${method}()'s response data.`,
+  );
+
+  assertServerResponse(
+    validator.isNonEmptyString(responseData.rulesetName),
+    responseData,
+    `"rulesetName" field must be a non-empty string in ${method}()'s response data.`,
   );
 }
 
@@ -148,24 +171,7 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
       'GET',
       `${this.resourceName}/releases/${name}`,
     ).then((responseData) => {
-      assertServerResponse(
-        validator.isNonNullObject(responseData),
-        responseData,
-        "getRulesRelease()'s responseData must be a non-null object.",
-      );
-
-      assertServerResponse(
-        validator.isNonEmptyString(responseData.name),
-        responseData,
-        `"name" field must be a non-empty string in getRulesRelease()'s response data.`,
-      );
-
-      assertServerResponse(
-        validator.isNonEmptyString(responseData.rulesetName),
-        responseData,
-        `"rulesetName" field must be a non-empty string in getRulesRelease()'s response data.`,
-      );
-
+      assertValidRulesReleaseResponse(responseData, 'getRulesRelease');
       return responseData;
     });
   }
@@ -185,24 +191,7 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
           : `${this.resourceName}/rulesets/${rulesetId}`,
       },
     ).then((responseData) => {
-      assertServerResponse(
-        validator.isNonNullObject(responseData),
-        responseData,
-        "createRulesRelease()'s responseData must be a non-null object.",
-      );
-
-      assertServerResponse(
-        validator.isNonEmptyString(responseData.name),
-        responseData,
-        `"name" field must be a non-empty string in createRulesRelease()'s response data.`,
-      );
-
-      assertServerResponse(
-        validator.isNonEmptyString(responseData.rulesetName),
-        responseData,
-        `"rulesetName" field must be a non-empty string in createRulesRelease()'s response data.`,
-      );
-
+      assertValidRulesReleaseResponse(responseData, 'createRulesRelease');
       return responseData;
     });
   }
@@ -224,18 +213,7 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
         },
       },
     ).then((responseData) => {
-      assertServerResponse(
-        validator.isNonNullObject(responseData),
-        responseData,
-        "updateRulesRelease()'s responseData must be a non-null object.",
-      );
-
-      assertServerResponse(
-        validator.isNonEmptyString(responseData.name),
-        responseData,
-        `"name" field must be a non-empty string in updateRulesRelease()'s response data.`,
-      );
-
+      assertValidRulesReleaseResponse(responseData, 'updateRulesRelease');
       return responseData;
     });
   }
@@ -284,8 +262,7 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
       'GET',
       isFullName ? rulesetId : `${this.resourceName}/rulesets/${rulesetId}`,
     ).then((responseData) => {
-      assertResponseIsRulesetWithFiles(responseData, 'getRuleset');
-
+      assertValidIsRulesetWithFilesResponse(responseData, 'getRuleset');
       return responseData;
     });
   }
@@ -300,7 +277,7 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
         source: { files },
       },
     ).then((responseData) => {
-      assertResponseIsRulesetWithFiles(responseData, 'createRuleset');
+      assertValidIsRulesetWithFilesResponse(responseData, 'createRuleset');
       return responseData;
     });
   }

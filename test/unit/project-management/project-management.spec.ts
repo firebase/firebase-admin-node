@@ -876,16 +876,19 @@ describe('ProjectManagement', () => {
     });
   });
 
-  describe('createRulesRelease', () => {
+  const createOrUpdateRelease = (
+    methodName: 'createRulesRelease' | 'updateRulesRelease',
+  ) => {
     it('should propagate API errors', () => {
       const stub = sinon
-        .stub(FirebaseRulesRequestHandler.prototype, 'createRulesRelease')
+        .stub(FirebaseRulesRequestHandler.prototype, methodName)
         .returns(Promise.reject(EXPECTED_ERROR));
       stubs.push(stub);
 
-      return projectManagement
-        .createRulesRelease(RELEASE_NAME, RULESET_UUID)
-        .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+      return projectManagement[methodName](
+        RELEASE_NAME,
+        RULESET_UUID,
+      ).should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
     });
 
     it('should throw when null API response', () => {
@@ -897,12 +900,13 @@ describe('ProjectManagement', () => {
         .returns(Promise.resolve(null));
       stubs.push(stub);
 
-      return projectManagement
-        .createRulesRelease(RELEASE_NAME, RULESET_UUID)
-        .should.eventually.be.rejected.and.have.property(
-          'message',
-          "createRulesRelease()'s responseData must be a non-null object. Response data: null",
-        );
+      return projectManagement[methodName](
+        RELEASE_NAME,
+        RULESET_UUID,
+      ).should.eventually.be.rejected.and.have.property(
+        'message',
+        `${methodName}()'s responseData must be a non-null object. Response data: null`,
+      );
     });
 
     it('should throw when API response missing "rulesetName" field', () => {
@@ -919,30 +923,36 @@ describe('ProjectManagement', () => {
         .returns(Promise.resolve(partialApiResponse));
       stubs.push(stub);
 
-      return projectManagement
-        .createRulesRelease(RELEASE_NAME, RULESET_UUID)
-        .should.eventually.be.rejected.and.have.property(
-          'message',
-          `"rulesetName" field must be a non-empty string in createRulesRelease()'s response data. Response data: ` +
-            JSON.stringify(partialApiResponse, null, 2),
-        );
+      return projectManagement[methodName](
+        RELEASE_NAME,
+        RULESET_UUID,
+      ).should.eventually.be.rejected.and.have.property(
+        'message',
+        `"rulesetName" field must be a non-empty string in ${methodName}()'s response data. Response data: ` +
+          JSON.stringify(partialApiResponse, null, 2),
+      );
     });
 
     it('should resolve with release object on successs', () => {
       const stub = sinon
-        .stub(FirebaseRulesRequestHandler.prototype, 'createRulesRelease')
+        .stub(FirebaseRulesRequestHandler.prototype, methodName)
         .returns(Promise.resolve(VALID_RELEASE_RESPONSE));
       stubs.push(stub);
 
-      return projectManagement
-        .createRulesRelease(RELEASE_NAME, RULESET_UUID)
-        .should.eventually.deep.equal(VALID_RELEASE);
+      return projectManagement[methodName](
+        RELEASE_NAME,
+        RULESET_UUID,
+      ).should.eventually.deep.equal(VALID_RELEASE);
     });
+  };
+
+  describe('createRulesRelease', () => {
+    return createOrUpdateRelease('createRulesRelease');
   });
 
-  // describe('updateRulesRelease', () => {
-
-  // });
+  describe('updateRulesRelease', () => {
+    return createOrUpdateRelease('updateRulesRelease');
+  });
 
   // describe('deleteRulesRelease', () => {
 
