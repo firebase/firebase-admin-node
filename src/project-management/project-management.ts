@@ -185,7 +185,8 @@ export class ProjectManagement implements FirebaseServiceInterface {
     if (service === 'database') {
       return this.databaseRequestHandler.getRules();
     } else {
-      const releaseName = RULES_RELEASE_NAME_FOR_SERVICE[service];
+      // const releaseName = RULES_RELEASE_NAME_FOR_SERVICE[service];
+      const releaseName = this.getRulesReleaseNameForService(service);
       return this.rulesRequestHandler
         .getRulesRelease(releaseName)
         .then((release) =>
@@ -193,19 +194,19 @@ export class ProjectManagement implements FirebaseServiceInterface {
             isFullName: true,
           }),
         )
-        .then((response) => {
+        .then((ruleset) => {
           assertServerResponse(
-            response.source.files.length >= 1,
-            response,
+            ruleset.source.files.length >= 1,
+            ruleset,
             `The current rules release for service "${service}" has no source files.`,
           );
 
-          const file = response.source.files[0];
+          const file = ruleset.source.files[0];
 
           assertServerResponse(
             validator.isNonNullObject(file) &&
               validator.isNonEmptyString(file.content),
-            response,
+            ruleset,
             'ruleset.files[].content must be present in the getRules() response data',
           );
 
@@ -499,5 +500,24 @@ export class ProjectManagement implements FirebaseServiceInterface {
             }
           });
         });
+  }
+
+  private getRulesReleaseNameForService(service: 'firestore' | 'storage') {
+    const baseName = RULES_RELEASE_NAME_FOR_SERVICE[service];
+
+    if (service === 'storage') {
+      const storageBucket = this.app.options.storageBucket;
+      if (typeof storageBucket !== 'string') {
+        throw new FirebaseProjectManagementError(
+          'failed-precondition',
+          'Unable to determine the storage bucket to use. ' +
+            'Make sure to pass the "storageBucket" option to admin.initializeApp().',
+        );
+      } else {
+        return `${baseName}/${storageBucket}`;
+      }
+    } else {
+      return baseName;
+    }
   }
 }
