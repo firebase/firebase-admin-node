@@ -954,9 +954,29 @@ describe('ProjectManagement', () => {
     return createOrUpdateRelease('updateRulesRelease');
   });
 
-  // describe('deleteRulesRelease', () => {
+  describe('deleteRulesRelease', () => {
+    it('should propagate API errors', () => {
+      const stub = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'deleteRulesRelease')
+        .returns(Promise.reject(EXPECTED_ERROR));
+      stubs.push(stub);
 
-  // });
+      return projectManagement
+        .deleteRulesRelease(RELEASE_NAME)
+        .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+    });
+
+    it('should resolve with void on successs', () => {
+      const stub = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'deleteRulesRelease')
+        .returns(Promise.resolve(undefined));
+      stubs.push(stub);
+
+      return projectManagement
+        .deleteRulesRelease(RELEASE_NAME)
+        .should.eventually.equal(undefined);
+    });
+  });
 
   describe('listRulesets', () => {
     it('should propagate API errors', () => {
@@ -1158,8 +1178,27 @@ describe('ProjectManagement', () => {
     });
   });
 
-  // describe('deleteRuleset', () => {
+  describe('deleteRuleset', () => {
+    it('should propagate API errors', () => {
+      const stub = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'deleteRuleset')
+        .returns(Promise.reject(EXPECTED_ERROR));
+      stubs.push(stub);
 
-  // });
+      return projectManagement
+        .deleteRuleset(RULESET_UUID)
+        .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+    });
 
+    it('should resolve with void on successs', () => {
+      const stub = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'deleteRuleset')
+        .returns(Promise.resolve(undefined));
+      stubs.push(stub);
+
+      return projectManagement
+        .deleteRuleset(RULESET_UUID)
+        .should.eventually.equal(undefined);
+    });
+  });
 });
