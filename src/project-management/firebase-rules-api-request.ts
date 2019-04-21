@@ -49,13 +49,13 @@ function assertResponseIsRulesetWithFiles(
   assertServerResponse(
     validator.isNonNullObject(responseData.source),
     responseData,
-    `"responseData.source" field  must be a non-null object in ${method}()'s response data.`,
+    `"responseData.source" field must be a non-null object in ${method}()'s response data.`,
   );
 
   assertServerResponse(
     validator.isArray(responseData.source.files),
     responseData,
-    `"responseData.source.files" field  must be an array in ${method}()'s response data.`,
+    `"responseData.source.files" field must be an array in ${method}()'s response data.`,
   );
 }
 
@@ -215,13 +215,13 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
       assertServerResponse(
         validator.isNonNullObject(responseData),
         responseData,
-        "createRulesRelease()'s responseData must be a non-null object.",
+        "updateRulesRelease()'s responseData must be a non-null object.",
       );
 
       assertServerResponse(
         validator.isNonEmptyString(responseData.name),
         responseData,
-        `"responseData.name" field must be a non-empty string in createRulesRelease()'s response data.`,
+        `"responseData.name" field must be a non-empty string in updateRulesRelease()'s response data.`,
       );
 
       return responseData;

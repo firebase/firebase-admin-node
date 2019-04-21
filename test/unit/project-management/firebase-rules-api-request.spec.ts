@@ -144,6 +144,32 @@ describe('FirebaseRulesRequestHandler', () => {
   describe('listRulesReleases', () => {
     testHttpErrors(() => requestHandler.listRulesReleases());
 
+    it('should throw with empty response', () => {
+      const invalidResult: any = null;
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(invalidResult));
+      stubs.push(stub);
+
+      return requestHandler.listRulesReleases().should.eventually.be.rejected;
+    });
+
+    it('should throw when responseData.releases is not an array', () => {
+      const invalidResult: any = { releases: null };
+
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(invalidResult));
+      stubs.push(stub);
+
+      return requestHandler
+        .listRulesReleases()
+        .should.eventually.be.rejected.and.have.property('message')
+        .to.match(
+          /^"responseData\.releases" field must be an array in listRulesReleases\(\)'s response data/,
+        );
+    });
+
     it('should succeed without arguments', () => {
       const expectedResult: ListRulesReleasesResponse = {
         releases: [
@@ -221,6 +247,33 @@ describe('FirebaseRulesRequestHandler', () => {
   describe('getRulesRelease', () => {
     testHttpErrors(() => requestHandler.getRulesRelease(RELEASE_NAME));
 
+    it('should throw with empty response', () => {
+      const invalidResult: any = null;
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(invalidResult));
+      stubs.push(stub);
+
+      return requestHandler.getRulesRelease(RELEASE_NAME).should.eventually.be
+        .rejected;
+    });
+
+    it('should throw when responseData.name is not a non-empty string', () => {
+      const invalidResult: any = { name: null };
+
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(invalidResult));
+      stubs.push(stub);
+
+      return requestHandler
+        .getRulesRelease(RELEASE_NAME)
+        .should.eventually.be.rejected.and.have.property('message')
+        .to.match(
+          /^"responseData\.name" field must be a non-empty string in getRulesRelease\(\)'s response data/,
+        );
+    });
+
     it('should succeed', () => {
       const expectedResult: RulesReleaseResponse = {
         name: RELEASE_NAME,
@@ -250,6 +303,33 @@ describe('FirebaseRulesRequestHandler', () => {
     testHttpErrors(() =>
       requestHandler.createRulesRelease(RELEASE_NAME, RULESET_UUID),
     );
+
+    it('should throw with empty response', () => {
+      const invalidResult: any = null;
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(invalidResult));
+      stubs.push(stub);
+
+      return requestHandler.createRulesRelease(RELEASE_NAME, RULESET_UUID)
+        .should.eventually.be.rejected;
+    });
+
+    it('should throw when responseData.name is not a non-empty string', () => {
+      const invalidResult: any = { name: null };
+
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(invalidResult));
+      stubs.push(stub);
+
+      return requestHandler
+        .createRulesRelease(RELEASE_NAME, RULESET_UUID)
+        .should.eventually.be.rejected.and.have.property('message')
+        .to.match(
+          /^"responseData\.name" field must be a non-empty string in createRulesRelease\(\)'s response data/,
+        );
+    });
 
     it('should succeed', () => {
       const releaseName = `${PROJECT_RESOURCE_NAME}/releases/${RELEASE_NAME}`;
@@ -287,6 +367,33 @@ describe('FirebaseRulesRequestHandler', () => {
     testHttpErrors(() =>
       requestHandler.updateRulesRelease(RELEASE_NAME, RULESET_UUID),
     );
+
+    it('should throw with empty response', () => {
+      const invalidResult: any = null;
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(invalidResult));
+      stubs.push(stub);
+
+      return requestHandler.updateRulesRelease(RELEASE_NAME, RULESET_UUID)
+        .should.eventually.be.rejected;
+    });
+
+    it('should throw when responseData.name is not a non-empty string', () => {
+      const invalidResult: any = { name: null };
+
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(invalidResult));
+      stubs.push(stub);
+
+      return requestHandler
+        .updateRulesRelease(RELEASE_NAME, RULESET_UUID)
+        .should.eventually.be.rejected.and.have.property('message')
+        .to.match(
+          /^"responseData\.name" field must be a non-empty string in updateRulesRelease\(\)'s response data/,
+        );
+    });
 
     it('should succeed', () => {
       const releaseName = `${PROJECT_RESOURCE_NAME}/releases/${RELEASE_NAME}`;
@@ -350,6 +457,32 @@ describe('FirebaseRulesRequestHandler', () => {
 
   describe('listRulesets', () => {
     testHttpErrors(() => requestHandler.listRulesets());
+
+    it('should throw with empty response', () => {
+      const invalidResult: any = null;
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(invalidResult));
+      stubs.push(stub);
+
+      return requestHandler.listRulesets().should.eventually.be.rejected;
+    });
+
+    it('should throw when responseData.rulesets is not an array', () => {
+      const invalidResult: any = { rulesets: null };
+
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(invalidResult));
+      stubs.push(stub);
+
+      return requestHandler
+        .listRulesets()
+        .should.eventually.be.rejected.and.have.property('message')
+        .to.match(
+          /^"responseData\.rulesets" field must be an array in listRulesets\(\)'s response data/,
+        );
+    });
 
     it('should succeed without arguments', () => {
       const expectedResult: ListRulesetsResponse = {
@@ -422,6 +555,54 @@ describe('FirebaseRulesRequestHandler', () => {
   describe('getRuleset', () => {
     testHttpErrors(() => requestHandler.getRuleset(RULESET_UUID));
 
+    it('should throw with empty response', () => {
+      const invalidResult: any = null;
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(invalidResult));
+      stubs.push(stub);
+
+      return requestHandler.getRuleset(RULESET_UUID).should.eventually.be
+        .rejected;
+    });
+
+    it('should throw when responseData.name is not a non-empty string', () => {
+      const invalidResult: any = { name: null };
+
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(invalidResult));
+      stubs.push(stub);
+
+      return requestHandler
+        .getRuleset(RULESET_UUID)
+        .should.eventually.be.rejected.and.have.property('message')
+        .to.match(
+          /^"responseData\.name" field must be a non-empty string in getRuleset\(\)'s response data/,
+        );
+    });
+
+    it('should throw when responseData.source.files is not an array', () => {
+      const invalidResult: any = {
+        name: RULESET_NAME,
+        source: {
+          files: null,
+        },
+      };
+
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(invalidResult));
+      stubs.push(stub);
+
+      return requestHandler
+        .getRuleset(RULESET_UUID)
+        .should.eventually.be.rejected.and.have.property('message')
+        .to.match(
+          /^"responseData\.source\.files" field must be an array in getRuleset\(\)'s response data/,
+        );
+    });
+
     it('should succeed', () => {
       const expectedResult: RulesetWithFilesResponse = {
         name: RULESET_NAME,
@@ -451,6 +632,54 @@ describe('FirebaseRulesRequestHandler', () => {
 
   describe('createRuleset', () => {
     testHttpErrors(() => requestHandler.createRuleset(RULESET_FILES));
+
+    it('should throw with empty response', () => {
+      const invalidResult: any = null;
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(invalidResult));
+      stubs.push(stub);
+
+      return requestHandler.createRuleset(RULESET_FILES).should.eventually.be
+        .rejected;
+    });
+
+    it('should throw when responseData.name is not a non-empty string', () => {
+      const invalidResult: any = { name: null };
+
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(invalidResult));
+      stubs.push(stub);
+
+      return requestHandler
+        .createRuleset(RULESET_FILES)
+        .should.eventually.be.rejected.and.have.property('message')
+        .to.match(
+          /^"responseData\.name" field must be a non-empty string in createRuleset\(\)'s response data/,
+        );
+    });
+
+    it('should throw when responseData.source.files is not an array', () => {
+      const invalidResult: any = {
+        name: RULESET_NAME,
+        source: {
+          files: null,
+        },
+      };
+
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(invalidResult));
+      stubs.push(stub);
+
+      return requestHandler
+        .createRuleset(RULESET_FILES)
+        .should.eventually.be.rejected.and.have.property('message')
+        .to.match(
+          /^"responseData\.source\.files" field must be an array in createRuleset\(\)'s response data/,
+        );
+    });
 
     it('should succeed', () => {
       const expectedResult: RulesetWithFilesResponse = {
