@@ -18,6 +18,10 @@ import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as admin from '../../';
 import { projectId, cmdArgs } from './setup';
+import {
+  Ruleset,
+  RulesRelease,
+} from '../../src/project-management/rules';
 
 /* tslint:disable:no-var-requires */
 const chalk = require('chalk');
@@ -30,6 +34,10 @@ const APP_DISPLAY_NAME_PREFIX = 'Created By Firebase AdminSDK Nodejs Integration
 const APP_DISPLAY_NAME_SUFFIX_LENGTH = 15;
 
 const SHA_256_HASH = 'aaaaccccaaaaccccaaaaccccaaaaccccaaaaccccaaaaccccaaaaccccaaaacccc';
+
+const RULESET_ID_REGEX = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
+let RELEASE_NAME_REGEX: RegExp;
+let RULESET_NAME_REGEX: RegExp;
 
 const DEFAULT_DATABASE_RULES = `
 {
@@ -112,13 +120,21 @@ describe('admin.projectManagement', () => {
       iosApp = app;
     });
 
-    /* tslint:disable:no-console */
-    if (!cmdArgs.updateRules) {
+    let rulesPromise: Promise<any>;
+
+    if (cmdArgs.updateRules) {
+      rulesPromise = deleteUnusedRulesets();
+    } else {
+      /* tslint:disable:no-console */
       console.log(chalk.yellow('    Not updating security rules. Some tests may fail.'));
       console.log(chalk.yellow('    Set the --updateRules flag to force update rules.'));
+      rulesPromise = Promise.resolve();
     }
 
-    return Promise.all([androidPromise, iosPromise]);
+    RELEASE_NAME_REGEX = new RegExp(`^projects/${projectId}/releases/(.+)$`);
+    RULESET_NAME_REGEX = new RegExp(`^projects/${projectId}/rulesets/(.+)$`);
+
+    return Promise.all([androidPromise, iosPromise, rulesPromise]);
   });
 
   describe('listAndroidApps()', () => {
@@ -349,6 +365,121 @@ describe('admin.projectManagement', () => {
       }
     });
   });
+
+  describe('listRulesReleases()', () => {
+    it('successfully lists the rules releases', async () => {
+      const result = await admin.projectManagement().listRulesReleases();
+      // tslint:disable-next-line: no-unused-expression
+      expect(result).to.exist;
+      expect(result.releases).to.be.an('array');
+      result.releases.forEach((release) => {
+        expect(release.name).to.be.a('string');
+        expect(release.rulesetName).to.be.a('string');
+        expect(release.createTime).to.be.a('string');
+      });
+    });
+
+    it('successfully lists the rules releases with pageSize argument', async () => {
+      const pageSize = 1;
+      const result = await admin.projectManagement().listRulesReleases(null, pageSize);
+      // tslint:disable-next-line: no-unused-expression
+      expect(result).to.exist;
+      expect(result.releases).to.be.an('array');
+      expect(result.releases.length).to.be.at.most(pageSize);
+      expect(result.pageToken).to.be.a('string');
+    });
+
+  });
+
+  describe('getRulesRelease()', () => {
+    it('successfully gets a rules release', async () => {
+      // First we need to get the name of 1 ruleset from the list
+      const releasesResult = await admin
+        .projectManagement()
+        .listRulesReleases(null, 1);
+      // tslint:disable-next-line: no-unused-expression
+      expect(releasesResult).to.exist;
+      expect(releasesResult.releases).to.have.lengthOf(
+        1,
+        "Couldn't find any releases",
+      );
+
+      // Get the ruleset data
+      const releaseName = releasesResult.releases[0].name;
+      const release = await admin
+        .projectManagement()
+        .getRulesRelease(releaseName);
+      expect(release.name).to.be.a('string');
+      expect(release.name).to.equal(releaseName);
+      expect(release.rulesetName).to.be.a('string');
+      expect(release.createTime).to.be.a('string');
+    });
+  });
+
+  // describe('createRulesRelease()', () => {
+  // });
+
+  // describe('updateRulesRelease()', () => {
+  // });
+
+  // describe('deleteRulesRelease()', () => {
+  // });
+
+  describe('listRulesets()', () => {
+    it('successfully lists the rulesets', async () => {
+      const result = await admin.projectManagement().listRulesets();
+      // tslint:disable-next-line: no-unused-expression
+      expect(result).to.exist;
+      expect(result.rulesets).to.be.an('array');
+      result.rulesets.forEach((ruleset) => {
+        expect(ruleset.id).to.match(RULESET_ID_REGEX);
+        expect(ruleset.createTime).to.be.a('string');
+      });
+    });
+
+    it('successfully lists the rulesets with pageSize argument', async () => {
+      const pageSize = 1;
+      const result = await admin.projectManagement().listRulesets(pageSize);
+      // tslint:disable-next-line: no-unused-expression
+      expect(result).to.exist;
+      expect(result.rulesets).to.be.an('array');
+      expect(result.rulesets.length).to.be.at.most(pageSize);
+      expect(result.pageToken).to.be.a('string');
+    });
+  });
+
+  describe('getRuleset()', () => {
+    it('successfully gets a rules release', async () => {
+      // First we need to get the name of 1 ruleset from the list
+      const rulesetsResult = await admin
+        .projectManagement()
+        .listRulesets(1);
+      // tslint:disable-next-line: no-unused-expression
+      expect(rulesetsResult).to.exist;
+      expect(rulesetsResult.rulesets).to.have.lengthOf(
+        1,
+        "Couldn't find any rulesets",
+      );
+
+      // Get the ruleset data
+      const rulesetId = rulesetsResult.rulesets[0].id;
+      const ruleset = await admin.projectManagement().getRuleset(rulesetId);
+      expect(ruleset.id).to.equal(rulesetId);
+      expect(ruleset.createTime).to.be.a('string');
+      expect(ruleset.files).to.be.an('array');
+      ruleset.files.forEach((file) => {
+        expect(file.name).to.be.a('string');
+        expect(file.content).to.be.a('string');
+        expect(file.content).to.be.a('string');
+      });
+    });
+  });
+
+  // describe('createRuleset()', () => {
+  // });
+
+  // describe('deleteRuleset()', () => {
+  // });
 });
 
 /**
@@ -430,4 +561,82 @@ function isIntegrationTestApp(appNamespace: string): boolean {
  */
 function generateRandomString(stringLength: number): string {
   return _.times(stringLength, () => _.random(35).toString(36)).join('');
+}
+
+/**
+ * Deletes unused rulesets to ensure we don't
+ * hit the quota limit while running tests.
+ */
+async function deleteUnusedRulesets(maxToDelete = 10) {
+  const releases = await listAllReleases();
+  const usedRulesets = new Set<string>();
+  releases.forEach((release) => {
+    const rulesetId = release.rulesetName.match(RULESET_NAME_REGEX);
+    if (rulesetId) {
+      usedRulesets.add(rulesetId[1]);
+    }
+  });
+
+  const rulesets = await listAllRulesets();
+  const promises: Array<Promise<any>> = [];
+  const length = rulesets.length;
+  let deletedCount = 0;
+
+  for (let i = 0; i < length && deletedCount < maxToDelete; i++) {
+    const ruleset = rulesets[i];
+    if (!usedRulesets.has(ruleset.id)) {
+      promises.push(admin.projectManagement().deleteRuleset(ruleset.id));
+      deletedCount += 1;
+    }
+  }
+
+  await Promise.all(promises);
+}
+
+/**
+ * Lists all releases and returns them in ascending order by createTime.
+ */
+async function listAllReleases(): Promise<RulesRelease[]> {
+  let pageToken: string | undefined;
+  let releases: RulesRelease[] = [];
+
+  do {
+    const result = await admin
+      .projectManagement()
+      .listRulesReleases(null, 100, pageToken);
+
+    if (result.releases) {
+      releases = releases.concat(result.releases);
+    }
+
+    pageToken = result.pageToken;
+  } while (pageToken);
+
+  return releases.sort((releaseA, releaseB) =>
+    releaseA.createTime > releaseB.createTime ? 1 : -1,
+  );
+}
+
+/**
+ * Lists all rulesets and returns them in ascending order by createTime.
+ */
+async function listAllRulesets(): Promise<Ruleset[]> {
+  let pageToken: string | undefined;
+  let rulesets: Ruleset[] = [];
+
+  do {
+    const result = await admin
+      .projectManagement()
+      .listRulesets(100, pageToken);
+
+    if (result.rulesets) {
+      rulesets = rulesets.concat(result.rulesets);
+    }
+
+    pageToken = result.pageToken;
+  } while (pageToken);
+
+  return rulesets.sort((rulesetA, rulesetB) =>
+    rulesetA.createTime > rulesetB.createTime ? 1 : -1,
+  );
 }
