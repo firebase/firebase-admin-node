@@ -160,6 +160,12 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
         `"name" field must be a non-empty string in getRulesRelease()'s response data.`,
       );
 
+      assertServerResponse(
+        validator.isNonEmptyString(responseData.rulesetName),
+        responseData,
+        `"rulesetName" field must be a non-empty string in getRulesRelease()'s response data.`,
+      );
+
       return responseData;
     });
   }
@@ -189,6 +195,12 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
         validator.isNonEmptyString(responseData.name),
         responseData,
         `"name" field must be a non-empty string in createRulesRelease()'s response data.`,
+      );
+
+      assertServerResponse(
+        validator.isNonEmptyString(responseData.rulesetName),
+        responseData,
+        `"rulesetName" field must be a non-empty string in createRulesRelease()'s response data.`,
       );
 
       return responseData;

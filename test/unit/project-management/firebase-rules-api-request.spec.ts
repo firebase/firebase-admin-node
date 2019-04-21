@@ -268,9 +268,30 @@ describe('FirebaseRulesRequestHandler', () => {
 
       return requestHandler
         .getRulesRelease(RELEASE_NAME)
-        .should.eventually.be.rejected.and.have.property('message')
-        .to.match(
-          /^"name" field must be a non-empty string in getRulesRelease\(\)'s response data/,
+        .should.eventually.be.rejected.and.have.property(
+          'message',
+          `"name" field must be a non-empty string in getRulesRelease()'s response data. Response data: ` +
+            JSON.stringify(invalidResult, null, 2),
+        );
+    });
+
+    it('should throw when responseData.rulesetName is not a non-empty string', () => {
+      const invalidResult: any = {
+        name: RELEASE_NAME,
+        rulesetName: null,
+      };
+
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(invalidResult));
+      stubs.push(stub);
+
+      return requestHandler
+        .getRulesRelease(RELEASE_NAME)
+        .should.eventually.be.rejected.and.have.property(
+          'message',
+          `"rulesetName" field must be a non-empty string in getRulesRelease()'s response data. Response data: ` +
+            JSON.stringify(invalidResult, null, 2),
         );
     });
 
@@ -325,9 +346,30 @@ describe('FirebaseRulesRequestHandler', () => {
 
       return requestHandler
         .createRulesRelease(RELEASE_NAME, RULESET_UUID)
-        .should.eventually.be.rejected.and.have.property('message')
-        .to.match(
-          /^"name" field must be a non-empty string in createRulesRelease\(\)'s response data/,
+        .should.eventually.be.rejected.and.have.property(
+          'message',
+          `"name" field must be a non-empty string in createRulesRelease()'s response data. Response data: ` +
+            JSON.stringify(invalidResult, null, 2),
+        );
+    });
+
+    it('should throw when responseData.rulesetName is not a non-empty string', () => {
+      const invalidResult: any = {
+        name: RELEASE_NAME,
+        rulesetName: null,
+      };
+
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(invalidResult));
+      stubs.push(stub);
+
+      return requestHandler
+        .createRulesRelease(RELEASE_NAME, RULESET_UUID)
+        .should.eventually.be.rejected.and.have.property(
+          'message',
+          `"rulesetName" field must be a non-empty string in createRulesRelease()'s response data. Response data: ` +
+            JSON.stringify(invalidResult, null, 2),
         );
     });
 

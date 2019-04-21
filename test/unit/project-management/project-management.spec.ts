@@ -55,6 +55,15 @@ const EXPECTED_ERROR = new FirebaseProjectManagementError('internal-error', 'mes
 
 const VALID_SHA_256_HASH = '0123456789abcdefABCDEF01234567890123456701234567890123456789abcd';
 
+const PROJECT_RESOURCE_NAME = 'projects/test-project-id';
+const RELEASE_NAME = 'cloud.firestore';
+const RULESET_UUID = '00000000-0000-0000-0000-000000000000';
+const RULESET_NAME = `${PROJECT_RESOURCE_NAME}/rulesets/${RULESET_UUID}`;
+const PAGE_TOKEN = 'PAGE_TOKEN';
+const NEXT_PAGE_TOKEN = 'NEXT_PAGE_TOKEN';
+const TIMESTAMP_CREATE = '2012-04-13T02:00:00.000000Z';
+const TIMESTAMP_UPDATE = '2014-10-21T16:00:00.000000Z';
+
 const VALID_DATABASE_RULES = `{
   "rules": {
     // My rules
@@ -64,15 +73,6 @@ const VALID_DATABASE_RULES = `{
     },
   },
 }`;
-
-const PROJECT_RESOURCE_NAME = 'projects/test-project-id';
-const RELEASE_NAME = 'cloud.firestore';
-const RULESET_UUID = '00000000-0000-0000-0000-000000000000';
-const RULESET_NAME = `${PROJECT_RESOURCE_NAME}/rulesets/${RULESET_UUID}`;
-const PAGE_TOKEN = 'PAGE_TOKEN';
-const NEXT_PAGE_TOKEN = 'NEXT_PAGE_TOKEN';
-const TIMESTAMP_CREATE = '2012-04-13T02:00:00.000000Z';
-const TIMESTAMP_UPDATE = '2014-10-21T16:00:00.000000Z';
 
 const VALID_RULES_CONTENT = 'Ruleset file content';
 
@@ -841,8 +841,11 @@ describe('ProjectManagement', () => {
         );
     });
 
-    it('should throw when API response missing "name" field', () => {
-      const partialApiResponse = {};
+    it('should throw when API response missing "rulesetName" field', () => {
+      const partialApiResponse: any = {
+        name: RELEASE_NAME,
+        rulesetName: null,
+      };
 
       const stub = sinon
         .stub(
@@ -856,7 +859,7 @@ describe('ProjectManagement', () => {
         .getRulesRelease(RELEASE_NAME)
         .should.eventually.be.rejected.and.have.property(
           'message',
-          `"name" field must be a non-empty string in getRulesRelease()'s response data. Response data: ` +
+          `"rulesetName" field must be a non-empty string in getRulesRelease()'s response data. Response data: ` +
             JSON.stringify(partialApiResponse, null, 2),
         );
     });
