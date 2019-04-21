@@ -58,5 +58,5 @@ import './project-management/project-management.spec';
 import './project-management/project-management-api-request.spec';
 import './project-management/android-app.spec';
 import './project-management/ios-app.spec';
-// import './project-management/database-api-request.spec';
+import './project-management/database-api-request.spec';
 import './project-management/firebase-rules-api-request.spec';

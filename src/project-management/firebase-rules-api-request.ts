@@ -21,7 +21,7 @@ import {
   assertServerResponse,
   InvokeRequestHandlerOptions,
 } from './request-handler-base';
-import { RulesRelease, RulesetFile } from './rules';
+import { RulesetFile } from './rules';
 import { FirebaseProjectManagementError } from '../utils/error';
 import { HttpMethod } from '../utils/api-request';
 
@@ -87,7 +87,12 @@ export interface ListRulesReleasesResponse {
   nextPageToken?: string;
 }
 
-export type RulesReleaseResponse = RulesRelease;
+export interface RulesReleaseResponse {
+  name: string;
+  rulesetName: string;
+  createTime: string;
+  updateTime: string;
+}
 
 export interface ListRulesetsResponse {
   rulesets: RulesetResponse[];
@@ -167,7 +172,10 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
         "listRulesReleases()'s responseData must be a non-null object.",
       );
 
-      // TODO: when there are no releases, is this an empty array or is the field missing?
+      if (!Object.prototype.hasOwnProperty.call(responseData, 'releases')) {
+        responseData.releases = [];
+      }
+
       assertServerResponse(
         validator.isArray(responseData.releases),
         responseData,
@@ -191,14 +199,14 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
   public createRulesRelease(
     name: string,
     rulesetId: string,
-    { isFullRulesetName = false }: { isFullRulesetName?: boolean } = {},
+    { isRulesetName = false }: { isRulesetName?: boolean } = {},
   ): Promise<RulesReleaseResponse> {
     return this.invokeRequestHandler<RulesReleaseResponse>(
       'POST',
       `${this.resourceName}/releases`,
       {
         name: `${this.resourceName}/releases/${name}`,
-        rulesetName: isFullRulesetName
+        rulesetName: isRulesetName
           ? rulesetId
           : `${this.resourceName}/rulesets/${rulesetId}`,
       },
@@ -211,7 +219,7 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
   public updateRulesRelease(
     name: string,
     rulesetId: string,
-    { isFullRulesetName = false }: { isFullRulesetName?: boolean } = {},
+    { isRulesetName = false }: { isRulesetName?: boolean } = {},
   ): Promise<RulesReleaseResponse> {
     return this.invokeRequestHandler<RulesReleaseResponse>(
       'PATCH',
@@ -219,7 +227,7 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
       {
         release: {
           name: `${this.resourceName}/releases/${name}`,
-          rulesetName: isFullRulesetName
+          rulesetName: isRulesetName
             ? rulesetId
             : `${this.resourceName}/rulesets/${rulesetId}`,
         },
@@ -261,7 +269,10 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
         "listRulesets()'s responseData must be a non-null object.",
       );
 
-      // TODO: when there are no rulesets, is this an empty array or is the field missing?
+      if (!Object.prototype.hasOwnProperty.call(responseData, 'rulesets')) {
+        responseData.rulesets = [];
+      }
+
       assertServerResponse(
         validator.isArray(responseData.rulesets),
         responseData,

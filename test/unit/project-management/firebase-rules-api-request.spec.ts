@@ -192,11 +192,7 @@ describe('FirebaseRulesRequestHandler', () => {
         expect(stub).to.have.been.calledOnce.and.calledWith({
           method: 'GET',
           url: `${BASE_URL}/${PROJECT_RESOURCE_NAME}/releases`,
-          data: {
-            filter: undefined,
-            maxResults: undefined,
-            nextPageToken: undefined,
-          },
+          data: {},
           headers: expectedHeaders,
           timeout: 10000,
         });
@@ -205,8 +201,8 @@ describe('FirebaseRulesRequestHandler', () => {
 
     it('should succeed with arguments', () => {
       const filter = 'name=prod*';
-      const maxResults = 20;
-      const nextPageToken = PAGE_TOKEN;
+      const pageSize = 20;
+      const pageToken = PAGE_TOKEN;
 
       const expectedResult: ListRulesReleasesResponse = {
         releases: [
@@ -226,7 +222,7 @@ describe('FirebaseRulesRequestHandler', () => {
       stubs.push(stub);
 
       return requestHandler
-        .listRulesReleases(filter, maxResults, nextPageToken)
+        .listRulesReleases(filter, pageSize, pageToken)
         .then((result) => {
           expect(result).to.deep.equal(expectedResult);
           expect(stub).to.have.been.calledOnce.and.calledWith({
@@ -234,8 +230,8 @@ describe('FirebaseRulesRequestHandler', () => {
             url: `${BASE_URL}/${PROJECT_RESOURCE_NAME}/releases`,
             data: {
               filter,
-              maxResults,
-              nextPageToken,
+              pageSize,
+              pageToken,
             },
             headers: expectedHeaders,
             timeout: 10000,
@@ -547,10 +543,7 @@ describe('FirebaseRulesRequestHandler', () => {
         expect(stub).to.have.been.calledOnce.and.calledWith({
           method: 'GET',
           url: `${BASE_URL}/${PROJECT_RESOURCE_NAME}/rulesets`,
-          data: {
-            maxResults: undefined,
-            nextPageToken: undefined,
-          },
+          data: {},
           headers: expectedHeaders,
           timeout: 10000,
         });
@@ -558,8 +551,8 @@ describe('FirebaseRulesRequestHandler', () => {
     });
 
     it('should succeed with arguments', () => {
-      const maxResults = 20;
-      const nextPageToken = PAGE_TOKEN;
+      const pageSize = 20;
+      const pageToken = PAGE_TOKEN;
 
       const expectedResult: ListRulesetsResponse = {
         rulesets: [
@@ -577,15 +570,15 @@ describe('FirebaseRulesRequestHandler', () => {
       stubs.push(stub);
 
       return requestHandler
-        .listRulesets(maxResults, nextPageToken)
+        .listRulesets(pageSize, pageToken)
         .then((result) => {
           expect(result).to.deep.equal(expectedResult);
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'GET',
             url: `${BASE_URL}/${PROJECT_RESOURCE_NAME}/rulesets`,
             data: {
-              maxResults,
-              nextPageToken,
+              pageSize,
+              pageToken,
             },
             headers: expectedHeaders,
             timeout: 10000,

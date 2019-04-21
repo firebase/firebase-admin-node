@@ -34,7 +34,8 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 const DATABASE_RULES_URL = mocks.databaseURL + '/.settings/rules.json';
-const VALID_DATABASE_RULES = `{
+const VALID_DATABASE_RULES = `
+{
   "rules": {
     // My rules
     "foo": {
@@ -42,7 +43,8 @@ const VALID_DATABASE_RULES = `{
       ".write": false,
     },
   },
-}`;
+}
+`.trim();
 
 describe('DatabaseRequestHandler', () => {
   const mockAccessToken: string = utils.generateRandomAccessToken();
@@ -81,7 +83,7 @@ describe('DatabaseRequestHandler', () => {
       400: 'project-management/invalid-argument',
       401: 'project-management/authentication-error',
       403: 'project-management/authentication-error',
-      423: 'project-management/service-unavailable',
+      423: 'project-management/failed-precondition',
       500: 'project-management/internal-error',
       503: 'project-management/service-unavailable',
     };
@@ -90,24 +92,28 @@ describe('DatabaseRequestHandler', () => {
         return;
       }
       it(`should throw for HTTP ${errorCode} errors`, () => {
-          const stub = sinon.stub(HttpClient.prototype, 'send')
-              .rejects(utils.errorFrom({}, parseInt(errorCode, 10)));
-          stubs.push(stub);
+        const stub = sinon
+          .stub(HttpClient.prototype, 'send')
+          .rejects(utils.errorFrom({}, parseInt(errorCode, 10)));
+        stubs.push(stub);
 
-          return callback()
-              .should.eventually.be.rejected
-              .and.have.property('code', errorCodeMap[errorCode]);
+        return callback().should.eventually.be.rejected.and.have.property(
+          'code',
+          errorCodeMap[errorCode],
+        );
       });
     });
 
     it('should throw for HTTP unknown errors', () => {
-        const stub = sinon.stub(HttpClient.prototype, 'send')
-            .rejects(utils.errorFrom({}, 1337));
-        stubs.push(stub);
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom({}, 1337));
+      stubs.push(stub);
 
-        return callback()
-            .should.eventually.be.rejected
-            .and.have.property('code', 'project-management/unknown-error');
+      return callback().should.eventually.be.rejected.and.have.property(
+        'code',
+        'project-management/unknown-error',
+      );
     });
   }
 
@@ -120,48 +126,49 @@ describe('DatabaseRequestHandler', () => {
   });
 
   describe('getDatabaseRules', () => {
-    testHttpErrors(() => requestHandler.getDatabaseRules());
+    testHttpErrors(() => requestHandler.getRules());
 
     it('should succeed', () => {
       const expectedResult = VALID_DATABASE_RULES;
 
-      const stub = sinon.stub(HttpClient.prototype, 'send')
-          .resolves(utils.responseFrom(expectedResult));
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(expectedResult));
       stubs.push(stub);
 
-      return requestHandler.getDatabaseRules()
-          .then((result) => {
-            expect(result).to.deep.equal(expectedResult);
-            expect(stub).to.have.been.calledOnce.and.calledWith({
-              method: 'GET',
-              url: DATABASE_RULES_URL,
-              data: undefined,
-              headers: expectedHeaders,
-              timeout: 10000,
-            });
-          });
+      return requestHandler.getRules().then((result) => {
+        expect(result).to.deep.equal(expectedResult);
+        expect(stub).to.have.been.calledOnce.and.calledWith({
+          method: 'GET',
+          url: DATABASE_RULES_URL,
+          data: null,
+          headers: expectedHeaders,
+          timeout: 10000,
+        });
+      });
     });
   });
 
   describe('setDatabaseRules', () => {
-    testHttpErrors(() => requestHandler.setDatabaseRules(VALID_DATABASE_RULES));
+    testHttpErrors(() => requestHandler.setRules(VALID_DATABASE_RULES));
 
     it('should succeed', () => {
-      const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom(''));
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(''));
       stubs.push(stub);
 
       const requestData = VALID_DATABASE_RULES;
-      return requestHandler.setDatabaseRules(VALID_DATABASE_RULES)
-          .then((result) => {
-            expect(result).to.equal(undefined);
-            expect(stub).to.have.been.calledOnce.and.calledWith({
-              method: 'PUT',
-              url: DATABASE_RULES_URL,
-              data: requestData,
-              headers: expectedHeaders,
-              timeout: 10000,
-            });
-          });
+      return requestHandler.setRules(VALID_DATABASE_RULES).then((result) => {
+        expect(result).to.equal(undefined);
+        expect(stub).to.have.been.calledOnce.and.calledWith({
+          method: 'PUT',
+          url: DATABASE_RULES_URL,
+          data: requestData,
+          headers: expectedHeaders,
+          timeout: 10000,
+        });
+      });
     });
   });
 });

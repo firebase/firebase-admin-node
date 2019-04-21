@@ -825,9 +825,9 @@ declare namespace admin.projectManagement {
 
   interface RulesRelease {
     name: string;
-    rulesetName: string;
+    rulesetId: string;
     createTime: string;
-    updateTime?: string;
+    updateTime: string;
   }
 
   interface ListRulesetsResult {
@@ -863,11 +863,11 @@ declare namespace admin.projectManagement {
     getRulesRelease(name: string): Promise<admin.projectManagement.RulesRelease>;
     createRulesRelease(
       name: string,
-      rulesetName: string,
+      rulesetId: string,
     ): Promise<admin.projectManagement.RulesRelease>;
     updateRulesRelease(
       name: string,
-      rulesetName: string,
+      rulesetId: string,
     ): Promise<admin.projectManagement.RulesRelease>;
     deleteRulesRelease(name: string): Promise<void>;
     listRulesets(

@@ -72,9 +72,9 @@ export interface RulesRelease {
   name: string;
 
   /**
-   * Name of the ruleset associated with the release.
+   * ID of the ruleset associated with the release.
    */
-  rulesetName: string;
+  rulesetId: string;
 
   /**
    * Timestamp in ISO 8601 format.
@@ -83,10 +83,8 @@ export interface RulesRelease {
 
   /**
    * Timestamp in ISO 8601 format.
-   * TODO: this might only be present if the release has been updated, I'm
-   * not sure. Should check.
    */
-  updateTime?: string;
+  updateTime: string;
 }
 
 /**
@@ -145,9 +143,11 @@ export function shortenRulesetName(name: string): string {
 export function processReleaseResponse(
   releaseResponse: RulesReleaseResponse,
 ): RulesRelease {
+  const { name, rulesetName, ...restRelease } = releaseResponse;
   return {
-    ...releaseResponse,
-    name: shortenReleaseName(releaseResponse.name),
+    name: shortenReleaseName(name),
+    rulesetId: shortenRulesetName(rulesetName),
+    ...restRelease,
   };
 }
 
@@ -165,10 +165,10 @@ export function processRulesetResponse(
   rulesetResponse: RulesetResponse | RulesetWithFilesResponse,
   withFiles = false,
 ): Ruleset | RulesetWithFiles {
-  const { name, ...restRelease } = rulesetResponse;
+  const { name, ...restResponse } = rulesetResponse;
   const ruleset: any = {
-    ...restRelease,
     id: shortenRulesetName(name),
+    ...restResponse,
   };
 
   if (withFiles) {

@@ -114,8 +114,9 @@ const VALID_RULESET_WITH_FILES: RulesetWithFiles = {
 };
 
 const VALID_RELEASE: RulesRelease = {
-  ...VALID_RELEASE_RESPONSE,
   name: RELEASE_NAME,
+  rulesetId: RULESET_UUID,
+  createTime: TIMESTAMP_CREATE,
 };
 
 describe('ProjectManagement', () => {
@@ -788,7 +789,7 @@ describe('ProjectManagement', () => {
 
     it('should resolve with list of releases on success with arguments', () => {
       const filter = { releaseName: 'prod*' };
-      const maxResults = 20;
+      const pageSize = 20;
       const nextPageToken = PAGE_TOKEN;
 
       const validReleaseListResponse: ListRulesReleasesResponse = {
@@ -807,7 +808,7 @@ describe('ProjectManagement', () => {
       stubs.push(stub);
 
       return projectManagement
-        .listRulesReleases(filter, maxResults, nextPageToken)
+        .listRulesReleases(filter, pageSize, nextPageToken)
         .should.eventually.deep.equal(validReleaseListResult);
     });
   });
@@ -1072,7 +1073,7 @@ describe('ProjectManagement', () => {
     });
 
     it('should resolve with list of rulesets on success with arguments', () => {
-      const maxResults = 20;
+      const pageSize = 20;
       const nextPageToken = PAGE_TOKEN;
 
       const validRulesetListResponse: ListRulesetsResponse = {
@@ -1091,7 +1092,7 @@ describe('ProjectManagement', () => {
       stubs.push(stub);
 
       return projectManagement
-        .listRulesets(maxResults, nextPageToken)
+        .listRulesets(pageSize, nextPageToken)
         .should.eventually.deep.equal(validRulesetListResult);
     });
   });

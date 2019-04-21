@@ -245,14 +245,14 @@ export class ProjectManagement implements FirebaseServiceInterface {
           const releaseName = this.getRulesReleaseNameForService(service);
           return this.rulesRequestHandler
             .updateRulesRelease(releaseName, rulesetResponse.name, {
-              isFullRulesetName: true,
+              isRulesetName: true,
             })
             .catch(() => {
               // Updating the release fails if it doesn't exist. In that case we
               // create a new one.
               return this.rulesRequestHandler
                 .createRulesRelease(releaseName, rulesetResponse.name, {
-                  isFullRulesetName: true,
+                  isRulesetName: true,
                 })
                 .then((response) => processReleaseResponse(response));
             })
@@ -322,7 +322,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
 
     // TODO: check how the filters are supposed to be concatenated
     const requestFilter =
-      filters.length > 0 ? filters.join('; ') : undefined;
+      filters.length > 0 ? filters.join(' ') : undefined;
 
     return this.rulesRequestHandler
       .listRulesReleases(requestFilter, pageSize, pageToken)
@@ -381,9 +381,6 @@ export class ProjectManagement implements FirebaseServiceInterface {
 
   /**
    * Deletes the named rules release.
-   * TODO: I'm not sure what happens when you do this. For example, if you
-   * delete the release for Firestore rules, does Firestore stop working?
-   * This method's behavior should be properly documented if it's included.
    */
   public deleteRulesRelease(name: string): Promise<void> {
     return this.rulesRequestHandler
@@ -452,11 +449,6 @@ export class ProjectManagement implements FirebaseServiceInterface {
 
   /**
    * Deletes the named rules ruleset.
-   * TODO: I'm not sure what happens when you do this. For example, if you
-   * delete the ruleset currently associated with the release for Firestore
-   * rules, does Firestore stop working? Is the release automatically
-   * associated with the most recent previous ruleset? No idea.
-   * This method's behavior should be properly documented if it's included.
    */
   public deleteRuleset(name: string): Promise<void> {
     return this.rulesRequestHandler

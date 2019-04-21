@@ -21,6 +21,7 @@ import { projectId, cmdArgs } from './setup';
 import {
   Ruleset,
   RulesRelease,
+  RulesetFile,
 } from '../../src/project-management/rules';
 
 /* tslint:disable:no-var-requires */
@@ -35,9 +36,8 @@ const APP_DISPLAY_NAME_SUFFIX_LENGTH = 15;
 
 const SHA_256_HASH = 'aaaaccccaaaaccccaaaaccccaaaaccccaaaaccccaaaaccccaaaaccccaaaacccc';
 
+const TEST_RELEASE_NAME = 'adminsdk.integration.test';
 const RULESET_ID_REGEX = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
-let RELEASE_NAME_REGEX: RegExp;
-let RULESET_NAME_REGEX: RegExp;
 
 const DEFAULT_DATABASE_RULES = `
 {
@@ -52,7 +52,7 @@ const DEFAULT_FIRESTORE_RULES = `
 service cloud.firestore {
   match /databases/{database}/documents {
     match /{document=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if false;
     }
   }
 }
@@ -62,7 +62,7 @@ const DEFAULT_STORAGE_RULES = `
 service firebase.storage {
   match /b/{bucket}/o {
     match /{allPaths=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if false;
     }
   }
 }
@@ -85,7 +85,7 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // But with some comments added
     match /{document=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if false;
     }
   }
 }
@@ -97,11 +97,18 @@ service firebase.storage {
   match /b/{bucket}/o {
     // But with some comments added
     match /{allPaths=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if false;
     }
   }
 }
 `.trim();
+
+const RULESET_FILES: RulesetFile[] = [
+  {
+    name: 'ruleset.file',
+    content: DEFAULT_FIRESTORE_RULES,
+  },
+];
 
 const expect = chai.expect;
 
@@ -122,17 +129,16 @@ describe('admin.projectManagement', () => {
 
     let rulesPromise: Promise<any>;
 
+    /* tslint:disable:no-console */
     if (cmdArgs.updateRules) {
+      console.log(chalk.yellow('    Security rules for RTDB, Firestore, and Storage will be updated to defaults.'));
       rulesPromise = deleteUnusedRulesets();
     } else {
-      /* tslint:disable:no-console */
       console.log(chalk.yellow('    Not updating security rules. Some tests may fail.'));
       console.log(chalk.yellow('    Set the --updateRules flag to force update rules.'));
       rulesPromise = Promise.resolve();
     }
-
-    RELEASE_NAME_REGEX = new RegExp(`^projects/${projectId}/releases/(.+)$`);
-    RULESET_NAME_REGEX = new RegExp(`^projects/${projectId}/rulesets/(.+)$`);
+    /* tslint:enable:no-console */
 
     return Promise.all([androidPromise, iosPromise, rulesPromise]);
   });
@@ -280,11 +286,7 @@ describe('admin.projectManagement', () => {
   describe('setRules()', () => {
     it('successfully sets the database rules', async () => {
       if (!cmdArgs.updateRules) {
-        expect.fail(
-          null,
-          null,
-          "Won't set RTDB rules without --updateRules arg.",
-        );
+        failBecauseRulesUpdate('set RTDB rules');
       } else {
         // We set and get the rules twice, with different values each time
         // to check that they actually change.
@@ -309,11 +311,7 @@ describe('admin.projectManagement', () => {
 
     it('successfully sets the Firestore rules', async () => {
       if (!cmdArgs.updateRules) {
-        expect.fail(
-          null,
-          null,
-          "Won't set Firestore rules without --updateRules arg.",
-        );
+        failBecauseRulesUpdate('set Firestore rules');
       } else {
         // We set and get the rules twice, with different values each time
         // to check that they actually change.
@@ -338,11 +336,7 @@ describe('admin.projectManagement', () => {
 
     it('successfully sets the Storage rules', async () => {
       if (!cmdArgs.updateRules) {
-        expect.fail(
-          null,
-          null,
-          "Won't set Storage rules without --updateRules arg.",
-        );
+        failBecauseRulesUpdate('set Storage rules');
       } else {
         // We set and get the rules twice, with different values each time
         // to check that they actually change.
@@ -374,7 +368,7 @@ describe('admin.projectManagement', () => {
       expect(result.releases).to.be.an('array');
       result.releases.forEach((release) => {
         expect(release.name).to.be.a('string');
-        expect(release.rulesetName).to.be.a('string');
+        expect(release.rulesetId).to.be.a('string');
         expect(release.createTime).to.be.a('string');
       });
     });
@@ -393,7 +387,7 @@ describe('admin.projectManagement', () => {
 
   describe('getRulesRelease()', () => {
     it('successfully gets a rules release', async () => {
-      // First we need to get the name of 1 ruleset from the list
+      // First we need to get the name of one ruleset from the list
       const releasesResult = await admin
         .projectManagement()
         .listRulesReleases(null, 1);
@@ -409,21 +403,116 @@ describe('admin.projectManagement', () => {
       const release = await admin
         .projectManagement()
         .getRulesRelease(releaseName);
+      // tslint:disable-next-line: no-unused-expression
+      expect(release).to.exist;
       expect(release.name).to.be.a('string');
       expect(release.name).to.equal(releaseName);
-      expect(release.rulesetName).to.be.a('string');
+      expect(release.rulesetId).to.be.a('string');
       expect(release.createTime).to.be.a('string');
     });
   });
 
-  // describe('createRulesRelease()', () => {
-  // });
+  describe('createRulesRelease()', () => {
+    it('successfully creates a rules release', async () => {
+      // First we need to create a ruleset
+      const ruleset = await admin.projectManagement().createRuleset(RULESET_FILES);
+      // tslint:disable-next-line: no-unused-expression
+      expect(ruleset).to.exist;
 
-  // describe('updateRulesRelease()', () => {
-  // });
+      // Then we create a release for the ruleset
+      const release = await admin
+        .projectManagement()
+        .createRulesRelease(TEST_RELEASE_NAME, ruleset.id);
+      // tslint:disable-next-line: no-unused-expression
+      expect(release).to.exist;
+      expect(release.name).to.equal(TEST_RELEASE_NAME);
+      expect(release.rulesetId).to.equal(ruleset.id);
+      expect(release.createTime).to.be.a('string');
+    });
 
-  // describe('deleteRulesRelease()', () => {
-  // });
+    after(async () => {
+        try {
+          return admin
+            .projectManagement()
+            .deleteRulesRelease(TEST_RELEASE_NAME);
+        } catch (e) {
+          return;
+        }
+    });
+  });
+
+  describe('updateRulesRelease()', () => {
+    it('successfully updates a rules release', async () => {
+      // First we need to create a ruleset
+      const rulesetCreate = await admin
+        .projectManagement()
+        .createRuleset(RULESET_FILES);
+      // tslint:disable-next-line: no-unused-expression
+      expect(rulesetCreate).to.exist;
+
+      // Then we create a release for the ruleset
+      const releaseCreate = await admin
+        .projectManagement()
+        .createRulesRelease(TEST_RELEASE_NAME, rulesetCreate.id);
+      // tslint:disable-next-line: no-unused-expression
+      expect(releaseCreate).to.exist;
+
+      // Then we create another ruleset
+      const rulesetUpdate = await admin.projectManagement().createRuleset([
+        {
+          name: 'ruleset2.file',
+          content: DEFAULT_STORAGE_RULES,
+        },
+      ]);
+      // tslint:disable-next-line: no-unused-expression
+      expect(rulesetUpdate).to.exist;
+
+      // Then we update the release with the new ruleset
+      const releaseUpdate = await admin
+        .projectManagement()
+        .updateRulesRelease(TEST_RELEASE_NAME, rulesetUpdate.id);
+      // tslint:disable-next-line: no-unused-expression
+      expect(releaseUpdate).to.exist;
+      expect(releaseUpdate.name).to.equal(TEST_RELEASE_NAME);
+      expect(releaseUpdate.rulesetId).to.equal(rulesetUpdate.id);
+      expect(releaseUpdate.createTime).to.be.a('string');
+    });
+
+    after(async () => {
+      try {
+        return admin
+          .projectManagement()
+          .deleteRulesRelease(TEST_RELEASE_NAME);
+      } catch (e) {
+        return;
+      }
+  });
+});
+
+  describe('deleteRulesRelease()', () => {
+    it('successfully deletes a rules release', async () => {
+      // First we need to create a ruleset
+      const ruleset = await admin
+        .projectManagement()
+        .createRuleset(RULESET_FILES);
+      // tslint:disable-next-line: no-unused-expression
+      expect(ruleset).to.exist;
+
+      // Then we create a release for the ruleset
+      const release = await admin
+        .projectManagement()
+        .createRulesRelease(TEST_RELEASE_NAME, ruleset.id);
+      // tslint:disable-next-line: no-unused-expression
+      expect(release).to.exist;
+
+      // Then we delete the release
+      const deletePromise = admin
+        .projectManagement()
+        .deleteRulesRelease(release.name);
+      // tslint:disable-next-line: no-unused-expression
+      return expect(deletePromise).to.be.fulfilled;
+    });
+  });
 
   describe('listRulesets()', () => {
     it('successfully lists the rulesets', async () => {
@@ -464,6 +553,8 @@ describe('admin.projectManagement', () => {
       // Get the ruleset data
       const rulesetId = rulesetsResult.rulesets[0].id;
       const ruleset = await admin.projectManagement().getRuleset(rulesetId);
+      // tslint:disable-next-line: no-unused-expression
+      expect(ruleset).to.exist;
       expect(ruleset.id).to.equal(rulesetId);
       expect(ruleset.createTime).to.be.a('string');
       expect(ruleset.files).to.be.an('array');
@@ -475,11 +566,29 @@ describe('admin.projectManagement', () => {
     });
   });
 
-  // describe('createRuleset()', () => {
-  // });
+  describe('createRuleset()', () => {
+    it('successfully creates a ruleset', async () => {
+      const ruleset = await admin.projectManagement().createRuleset(RULESET_FILES);
+      // tslint:disable-next-line: no-unused-expression
+      expect(ruleset).to.exist;
+      expect(ruleset.id).to.match(RULESET_ID_REGEX);
+      expect(ruleset.createTime).to.be.a('string');
+      expect(ruleset.files).to.be.an('array');
+      expect(ruleset.files).to.deep.equal(RULESET_FILES);
+    });
+  });
 
-  // describe('deleteRuleset()', () => {
-  // });
+  describe('deleteRuleset()', () => {
+    it('successfully deletes a ruleset', async () => {
+      const ruleset = await admin.projectManagement().createRuleset(RULESET_FILES);
+      // tslint:disable-next-line: no-unused-expression
+      expect(ruleset).to.exist;
+
+      const deletePromise = admin.projectManagement().deleteRuleset(ruleset.id);
+      // tslint:disable-next-line: no-unused-expression
+      return expect(deletePromise).to.be.fulfilled;
+    });
+  });
 });
 
 /**
@@ -563,6 +672,15 @@ function generateRandomString(stringLength: number): string {
   return _.times(stringLength, () => _.random(35).toString(36)).join('');
 }
 
+function failBecauseRulesUpdate(action: string) {
+  expect.fail(
+    null,
+    null,
+    `Won't ${action} without --updateRules arg.`,
+  );
+}
+
+
 /**
  * Deletes unused rulesets to ensure we don't
  * hit the quota limit while running tests.
@@ -571,10 +689,7 @@ async function deleteUnusedRulesets(maxToDelete = 10) {
   const releases = await listAllReleases();
   const usedRulesets = new Set<string>();
   releases.forEach((release) => {
-    const rulesetId = release.rulesetName.match(RULESET_NAME_REGEX);
-    if (rulesetId) {
-      usedRulesets.add(rulesetId[1]);
-    }
+    usedRulesets.add(release.rulesetId);
   });
 
   const rulesets = await listAllRulesets();
