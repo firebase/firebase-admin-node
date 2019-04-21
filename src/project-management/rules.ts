@@ -53,7 +53,7 @@ export interface RulesetFile {
 export interface ListRulesReleasesFilter {
   releaseName?: string;
   rulesetName?: string;
-  testSuiteName?: string; // TODO: Maybe not? Totally undocumented AFAIK.
+  testSuiteName?: string;
 }
 
 /**
