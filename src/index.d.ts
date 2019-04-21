@@ -857,7 +857,7 @@ declare namespace admin.projectManagement {
     ): Promise<void>;
     listRulesReleases(
       filter?: admin.projectManagement.ListRulesReleasesFilter,
-      maxResults?: number,
+      pageSize?: number,
       pageToken?: string,
     ): Promise<admin.projectManagement.ListRulesReleasesResult>;
     getRulesRelease(name: string): Promise<admin.projectManagement.RulesRelease>;
@@ -871,7 +871,7 @@ declare namespace admin.projectManagement {
     ): Promise<admin.projectManagement.RulesRelease>;
     deleteRulesRelease(name: string): Promise<void>;
     listRulesets(
-      maxResults?: number,
+      pageSize?: number,
       pageToken?: string,
     ): Promise<admin.projectManagement.ListRulesetsResult>;
     getRuleset(rulesetId: string): Promise<admin.projectManagement.RulesetWithFiles>;
