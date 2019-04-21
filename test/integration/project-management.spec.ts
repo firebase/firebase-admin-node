@@ -103,10 +103,17 @@ service firebase.storage {
 }
 `.trim();
 
-const RULESET_FILES: RulesetFile[] = [
+const FIRESTORE_RULESET_FILES: RulesetFile[] = [
   {
-    name: 'ruleset.file',
+    name: 'firestore.rules',
     content: DEFAULT_FIRESTORE_RULES,
+  },
+];
+
+const STORAGE_RULESET_FILES: RulesetFile[] = [
+  {
+    name: 'storage.rules',
+    content: DEFAULT_STORAGE_RULES,
   },
 ];
 
@@ -132,7 +139,9 @@ describe('admin.projectManagement', () => {
     /* tslint:disable:no-console */
     if (cmdArgs.updateRules) {
       console.log(chalk.yellow('    Security rules for RTDB, Firestore, and Storage will be updated to defaults.'));
-      rulesPromise = deleteUnusedRulesets();
+      rulesPromise = deleteUnusedRulesets().then(() =>
+        Promise.all([ensureFirestoreRules(), ensureStorageRules()]),
+      );
     } else {
       console.log(chalk.yellow('    Not updating security rules. Some tests may fail.'));
       console.log(chalk.yellow('    Set the --updateRules flag to force update rules.'));
@@ -415,7 +424,7 @@ describe('admin.projectManagement', () => {
   describe('createRulesRelease()', () => {
     it('successfully creates a rules release', async () => {
       // First we need to create a ruleset
-      const ruleset = await admin.projectManagement().createRuleset(RULESET_FILES);
+      const ruleset = await admin.projectManagement().createRuleset(FIRESTORE_RULESET_FILES);
       // tslint:disable-next-line: no-unused-expression
       expect(ruleset).to.exist;
 
@@ -446,7 +455,7 @@ describe('admin.projectManagement', () => {
       // First we need to create a ruleset
       const rulesetCreate = await admin
         .projectManagement()
-        .createRuleset(RULESET_FILES);
+        .createRuleset(FIRESTORE_RULESET_FILES);
       // tslint:disable-next-line: no-unused-expression
       expect(rulesetCreate).to.exist;
 
@@ -458,12 +467,9 @@ describe('admin.projectManagement', () => {
       expect(releaseCreate).to.exist;
 
       // Then we create another ruleset
-      const rulesetUpdate = await admin.projectManagement().createRuleset([
-        {
-          name: 'ruleset2.file',
-          content: DEFAULT_STORAGE_RULES,
-        },
-      ]);
+      const rulesetUpdate = await admin
+        .projectManagement()
+        .createRuleset(STORAGE_RULESET_FILES);
       // tslint:disable-next-line: no-unused-expression
       expect(rulesetUpdate).to.exist;
 
@@ -494,7 +500,7 @@ describe('admin.projectManagement', () => {
       // First we need to create a ruleset
       const ruleset = await admin
         .projectManagement()
-        .createRuleset(RULESET_FILES);
+        .createRuleset(FIRESTORE_RULESET_FILES);
       // tslint:disable-next-line: no-unused-expression
       expect(ruleset).to.exist;
 
@@ -568,19 +574,19 @@ describe('admin.projectManagement', () => {
 
   describe('createRuleset()', () => {
     it('successfully creates a ruleset', async () => {
-      const ruleset = await admin.projectManagement().createRuleset(RULESET_FILES);
+      const ruleset = await admin.projectManagement().createRuleset(FIRESTORE_RULESET_FILES);
       // tslint:disable-next-line: no-unused-expression
       expect(ruleset).to.exist;
       expect(ruleset.id).to.match(RULESET_ID_REGEX);
       expect(ruleset.createTime).to.be.a('string');
       expect(ruleset.files).to.be.an('array');
-      expect(ruleset.files).to.deep.equal(RULESET_FILES);
+      expect(ruleset.files).to.deep.equal(FIRESTORE_RULESET_FILES);
     });
   });
 
   describe('deleteRuleset()', () => {
     it('successfully deletes a ruleset', async () => {
-      const ruleset = await admin.projectManagement().createRuleset(RULESET_FILES);
+      const ruleset = await admin.projectManagement().createRuleset(FIRESTORE_RULESET_FILES);
       // tslint:disable-next-line: no-unused-expression
       expect(ruleset).to.exist;
 
@@ -680,6 +686,35 @@ function failBecauseRulesUpdate(action: string) {
   );
 }
 
+/**
+ * Ensures that the rules release for Firestore exists
+ */
+async function ensureFirestoreRules(): Promise<admin.projectManagement.RulesRelease> {
+  try {
+    // Check if the release exists for Firestore rules
+    const release = await admin.projectManagement().getRulesRelease('cloud.firestore');
+    return release;
+  } catch (err) {
+    // It doesn't exists, let's create it
+    const ruleset = await admin.projectManagement().createRuleset(FIRESTORE_RULESET_FILES);
+    return admin.projectManagement().createRulesRelease('cloud.firestore', ruleset.id);
+  }
+}
+
+/**
+ * Ensures that the rules release for Storage exists
+ */
+async function ensureStorageRules(): Promise<admin.projectManagement.RulesRelease> {
+  try {
+    // Check if the release exists for Firestore rules
+    const release = await admin.projectManagement().getRulesRelease('firebase.storage');
+    return release;
+  } catch (err) {
+    // It doesn't exists, let's create it
+    const ruleset = await admin.projectManagement().createRuleset(STORAGE_RULESET_FILES);
+    return admin.projectManagement().createRulesRelease('firebase.storage', ruleset.id);
+  }
+}
 
 /**
  * Deletes unused rulesets to ensure we don't

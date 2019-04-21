@@ -39,6 +39,7 @@ import {
   processReleaseResponse,
   RULES_RELEASE_NAME_FOR_SERVICE,
   Ruleset,
+  shortenRulesetName,
 } from './rules';
 
 /**
@@ -185,7 +186,6 @@ export class ProjectManagement implements FirebaseServiceInterface {
     if (service === 'database') {
       return this.databaseRequestHandler.getRules();
     } else {
-      // const releaseName = RULES_RELEASE_NAME_FOR_SERVICE[service];
       const releaseName = this.getRulesReleaseNameForService(service);
       return this.rulesRequestHandler
         .getRulesRelease(releaseName)
