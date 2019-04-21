@@ -43,6 +43,7 @@ import {
   RulesRelease,
   ListRulesetsResult,
   Ruleset,
+  RulesetWithFiles,
 } from '../../../src/project-management/rules';
 
 const expect = chai.expect;
@@ -94,8 +95,8 @@ const VALID_RULESET_RESPONSE: RulesetResponse = {
 };
 
 const VALID_RULESET: Ruleset = {
-  createTime: VALID_RULESET_RESPONSE.createTime,
   id: RULESET_UUID,
+  createTime: VALID_RULESET_RESPONSE.createTime,
 };
 
 const VALID_RULESET_WITH_FILES_RESPONSE: RulesetWithFilesResponse = {
@@ -104,6 +105,12 @@ const VALID_RULESET_WITH_FILES_RESPONSE: RulesetWithFilesResponse = {
   source: {
     files: VALID_RULESET_FILES,
   },
+};
+
+const VALID_RULESET_WITH_FILES: RulesetWithFiles = {
+  id: RULESET_UUID,
+  createTime: VALID_RULESET_RESPONSE.createTime,
+  files: VALID_RULESET_FILES,
 };
 
 const VALID_RELEASE: RulesRelease = {
@@ -190,7 +197,7 @@ describe('ProjectManagement', () => {
           .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
     });
 
-    it('should throw with null API response', () => {
+    it('should throw when null API response', () => {
       const stub = sinon
           .stub(ProjectManagementRequestHandler.prototype, 'listAndroidApps')
           .returns(Promise.resolve(null));
@@ -274,7 +281,7 @@ describe('ProjectManagement', () => {
           .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
     });
 
-    it('should throw with null API response', () => {
+    it('should throw when null API response', () => {
       const stub = sinon
           .stub(ProjectManagementRequestHandler.prototype, 'listIosApps')
           .returns(Promise.resolve(null));
@@ -702,7 +709,7 @@ describe('ProjectManagement', () => {
         .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
     });
 
-    it('should throw with null API response', () => {
+    it('should throw when null API response', () => {
       const stub = sinon
         .stub(
           FirebaseRulesRequestHandler.prototype as any,
@@ -817,7 +824,7 @@ describe('ProjectManagement', () => {
         .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
     });
 
-    it('should throw with null API response', () => {
+    it('should throw when null API response', () => {
       const stub = sinon
         .stub(
           FirebaseRulesRequestHandler.prototype as any,
@@ -890,7 +897,7 @@ describe('ProjectManagement', () => {
         .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
     });
 
-    it('should throw with null API response', () => {
+    it('should throw when null API response', () => {
       const stub = sinon
         .stub(
           FirebaseRulesRequestHandler.prototype as any,
@@ -996,9 +1003,46 @@ describe('ProjectManagement', () => {
     });
   });
 
-  // describe('getRuleset', () => {
+  describe('getRuleset', () => {
+    it('should propagate API errors', () => {
+      const stub = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'getRuleset')
+        .returns(Promise.reject(EXPECTED_ERROR));
+      stubs.push(stub);
 
-  // });
+      return projectManagement
+        .getRuleset(RULESET_UUID)
+        .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+    });
+
+    it('should throw when null API response', () => {
+      const stub = sinon
+        .stub(
+          FirebaseRulesRequestHandler.prototype as any,
+          'invokeRequestHandler',
+        )
+        .returns(Promise.resolve(null));
+      stubs.push(stub);
+
+      return projectManagement
+        .getRuleset(RULESET_UUID)
+        .should.eventually.be.rejected.and.have.property(
+          'message',
+          "getRuleset()'s responseData must be a non-null object. Response data: null",
+        );
+    });
+
+    it('should resolve with ruleset object on successs', () => {
+      const stub = sinon
+        .stub(FirebaseRulesRequestHandler.prototype, 'getRuleset')
+        .returns(Promise.resolve(VALID_RULESET_WITH_FILES_RESPONSE));
+      stubs.push(stub);
+
+      return projectManagement
+        .getRuleset(RULESET_UUID)
+        .should.eventually.deep.equal(VALID_RULESET_WITH_FILES);
+    });
+  });
 
   // describe('createRuleset', () => {
 
