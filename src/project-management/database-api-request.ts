@@ -29,7 +29,7 @@ const DATABASE_RULES_PATH = '/.settings/rules.json';
 const DATABASE_URL_OPTION = 'databaseURL';
 
 /**
- * Class that provides a mechanism to send requests to the Firebase Rules backend
+ * Class that provides a mechanism to send requests to the RTDB rules backend
  * endpoints.
  *
  * @private

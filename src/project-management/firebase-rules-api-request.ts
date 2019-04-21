@@ -30,7 +30,7 @@ const FIREBASE_RULES_HOST_AND_PORT = 'firebaserules.googleapis.com:443';
 /** Project management backend path. */
 const FIREBASE_RULES_PATH = '/v1/';
 
-function assertValidIsRulesetWithFilesResponse(
+function assertValidRulesetWithFilesResponse(
   responseData: any,
   method: string,
 ): void {
@@ -291,7 +291,7 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
       'GET',
       isFullName ? rulesetId : `${this.resourceName}/rulesets/${rulesetId}`,
     ).then((responseData) => {
-      assertValidIsRulesetWithFilesResponse(responseData, 'getRuleset');
+      assertValidRulesetWithFilesResponse(responseData, 'getRuleset');
       return responseData;
     });
   }
@@ -306,7 +306,7 @@ export class FirebaseRulesRequestHandler extends RequestHandlerBase {
         source: { files },
       },
     ).then((responseData) => {
-      assertValidIsRulesetWithFilesResponse(responseData, 'createRuleset');
+      assertValidRulesetWithFilesResponse(responseData, 'createRuleset');
       return responseData;
     });
   }

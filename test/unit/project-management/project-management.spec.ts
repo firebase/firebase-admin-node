@@ -198,7 +198,7 @@ describe('ProjectManagement', () => {
           .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
     });
 
-    it('should throw when null API response', () => {
+    it('should throw with null API response', () => {
       const stub = sinon
           .stub(ProjectManagementRequestHandler.prototype, 'listAndroidApps')
           .returns(Promise.resolve(null));
@@ -282,7 +282,7 @@ describe('ProjectManagement', () => {
           .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
     });
 
-    it('should throw when null API response', () => {
+    it('should throw with null API response', () => {
       const stub = sinon
           .stub(ProjectManagementRequestHandler.prototype, 'listIosApps')
           .returns(Promise.resolve(null));
