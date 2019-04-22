@@ -18,17 +18,82 @@ import {Bucket} from '@google-cloud/storage';
 import * as _firestore from '@google-cloud/firestore';
 import {Agent} from 'http';
 
+/**
+ * `admin` is a global namespace from which all Firebase Admin
+ * services are accessed.
+ */
 declare namespace admin {
-  interface FirebaseError {
-    code: string;
-    message: string;
-    stack: string;
 
+  /**
+  * `FirebaseError` is a subclass of the standard JavaScript `Error` object. In
+  * addition to a message string and stack trace, it contains a string code.
+  */
+  interface FirebaseError {
+    /**
+     * Error codes are strings using the following format: `"service/string-code"`.
+     * Some examples include `"auth/invalid-uid"` and
+     * `"messaging/invalid-recipient"`.
+     *
+     * While the message for a given error can change, the code will remain the same
+     * between backward-compatible versions of the Firebase SDK.
+     */
+    code: string;
+    /**
+     * An explanatory message for the error that just occurred.
+     *
+     * This message is designed to be helpful to you, the developer. Because
+     * it generally does not convey meaningful information to end users,
+     * this message should not be displayed in your application.
+     */
+    message: string;
+        /**
+     * A string value containing the execution backtrace when the error originally
+     * occurred.
+     *
+     * This information can be useful to you and can be sent to
+     * {@link https://firebase.google.com/support/ Firebase Support} to help
+     * explain the cause of an error.
+     */
+    stack: string;
+    /**
+     * Returns a JSON-serializable representation of this object.
+     */
     toJSON(): Object;
   }
 
+  /**
+   * Composite type which includes both a `FirebaseError` object and an index
+   * which can be used to get the errored item.
+   *
+   * @example
+   * ```javascript
+   * var registrationTokens = [token1, token2, token3];
+   * admin.messaging().subscribeToTopic(registrationTokens, 'topic-name')
+   *   .then(function(response) {
+   *     if (response.failureCount > 0) {
+   *       console.log("Following devices unsucessfully subscribed to topic:");
+   *       response.errors.forEach(function(error) {
+   *         var invalidToken = registrationTokens[error.index];
+   *         console.log(invalidToken, error.error);
+   *       });
+   *     } else {
+   *       console.log("All devices successfully subscribed to topic:", response);
+   *     }
+   *   })
+   *   .catch(function(error) {
+   *     console.log("Error subscribing to topic:", error);
+   *   });
+   *```
+  */
   interface FirebaseArrayIndexError {
+    /**
+     * The index of the errored item within the original array passed as part of the
+     * called API method.
+     */
     index: number;
+    /**
+     * The error object.
+     */
     error: FirebaseError;
   }
 
@@ -43,13 +108,60 @@ declare namespace admin {
     expires_in: number;
   }
 
+  /**
+  * Available options to pass to [`initializeApp()`](admin#.initializeApp).
+  */
   interface AppOptions {
+    /**
+     * A {@link admin.credential.Credential `Credential`} object used to
+     * authenticate the Admin SDK.
+     *
+     * See [Initialize the SDK](/docs/admin/setup#initialize_the_sdk) for detailed
+     * documentation and code samples.
+     */
     credential?: admin.credential.Credential;
+    /**
+     * The object to use as the [`auth`](/docs/reference/security/database/#auth)
+     * variable in your Realtime Database Rules when the Admin SDK reads from or
+     * writes to the Realtime Database. This allows you to downscope the Admin SDK
+     * from its default full read and write privileges.
+     *
+     * You can pass `null` to act as an unauthenticated client.
+     *
+     * See
+     * [Authenticate with limited privileges](/docs/database/admin/start#authenticate-with-limited-privileges)
+     * for detailed documentation and code samples.
+     */
     databaseAuthVariableOverride?: Object;
+    /**
+     * The URL of the Realtime Database from which to read and write data.
+     */
     databaseURL?: string;
+    /**
+     * The ID of the service account to be used for signing custom tokens. This
+     * can be found in the `client_email` field of a service account JSON file.
+     */
     serviceAccountId?: string;
+    /**
+     * The ID of the service account to be used for signing custom tokens. This
+     * can be found in the `client_email` field of a service account JSON file.
+     */
     storageBucket?: string;
+    /**
+     * The ID of the Google Cloud project associated with the App.
+     */
     projectId?: string;
+    /**
+     * An [HTTP Agent](https://nodejs.org/api/http.html#http_class_http_agent)
+     * to be used when making outgoing HTTP calls. This Agent instance is used
+     * by all services that make REST calls (e.g. `auth`, `messaging`,
+     * `projectManagement`).
+     *
+     * Realtime Database and Firestore use other means of communicating with
+     * the backend servers, so they do not use this HTTP Agent. `Credential`
+     * instances also do not use this HTTP Agent, but instead support
+     * specifying an HTTP Agent in the corresponding factory methods.
+     */
     httpAgent?: Agent;
   }
 
@@ -60,8 +172,29 @@ declare namespace admin {
   function auth(app?: admin.app.App): admin.auth.Auth;
   function database(app?: admin.app.App): admin.database.Database;
   function messaging(app?: admin.app.App): admin.messaging.Messaging;
+    /**
+   * Gets the {@link admin.storage.Storage `Storage`} service for the
+   * default app or a given app.
+   *
+   * `admin.storage()` can be called with no arguments to access the default
+   * app's {@link admin.storage.Storage `Storage`} service or as
+   * `admin.storage(app)` to access the
+   * {@link admin.storage.Storage `Storage`} service associated with a
+   * specific app.
+   *
+   * @example
+   * ```javascript
+   * // Get the Storage service for the default app
+   * var defaultStorage = admin.storage();
+   * ```
+   * 
+   * @example
+   * ```javascript
+   * // Get the Storage service for a given app
+   * var otherStorage = admin.storage(otherApp);
+   * ```
+   */
   function storage(app?: admin.app.App): admin.storage.Storage;
-
   /**
    *
    * @param app A Firebase App instance
@@ -75,8 +208,51 @@ declare namespace admin {
 }
 
 declare namespace admin.app {
+  /**
+  * A Firebase app holds the initialization information for a collection of
+  * services.
+  *
+  * Do not call this constructor directly. Instead, use
+  * {@link
+  *   https://firebase.google.com/docs/reference/admin/node/admin#.initializeApp
+  *   `admin.initializeApp()`}
+  * to create an app.
+  */
   interface App {
+    /**
+     * The (read-only) name for this app.
+     *
+     * The default app's name is `"[DEFAULT]"`.
+     *
+     * @example
+     * ```javascript
+     * // The default app's name is "[DEFAULT]"
+     * admin.initializeApp(defaultAppConfig);
+     * console.log(admin.app().name);  // "[DEFAULT]"
+     * ```
+     *
+     * @example
+     * ```javascript
+     * // A named app's name is what you provide to initializeApp()
+     * var otherApp = admin.initializeApp(otherAppConfig, "other");
+     * console.log(otherApp.name);  // "other"
+     * ```
+     */
     name: string;
+    /**
+     * The (read-only) configuration options for this app. These are the original
+     * parameters given in
+     * {@link
+     *   https://firebase.google.com/docs/reference/admin/node/admin#.initializeApp
+     *   `admin.initializeApp()`}.
+     *
+     * @example
+     * ```javascript
+     * var app = admin.initializeApp(config);
+     * console.log(app.options.credential === config.credential);  // true
+     * console.log(app.options.databaseURL === config.databaseURL);  // true
+     * ```
+     */
     options: admin.AppOptions;
 
     auth(): admin.auth.Auth;
@@ -86,6 +262,21 @@ declare namespace admin.app {
     messaging(): admin.messaging.Messaging;
     projectManagement(): admin.projectManagement.ProjectManagement;
     storage(): admin.storage.Storage;
+    /**
+     * Renders this app unusable and frees the resources of all associated
+     * services.
+     *
+     * @example
+     * ```javascript
+     * app.delete()
+     *   .then(function() {
+     *     console.log("App deleted successfully");
+     *   })
+     *   .catch(function(error) {
+     *     console.log("Error deleting app:", error);
+     *   });
+     * ```
+     */
     delete(): Promise<void>;
   }
 }
@@ -661,9 +852,17 @@ declare namespace admin.messaging {
 }
 
 declare namespace admin.storage {
+  /**
+   * The default `Storage` service if no
+   * app is provided or the `Storage` service associated with the provided
+   * app.
+   */
   interface Storage {
+    /**
+     * Optional app whose `Storage` service to
+     * return. If not provided, the default `Storage` service will be returned.
+     */
     app: admin.app.App;
-
     /**
      * @returns A [Bucket](https://cloud.google.com/nodejs/docs/reference/storage/latest/Bucket)
      * instance as defined in the `@google-cloud/storage` package.
@@ -703,6 +902,35 @@ declare namespace admin.instanceId {
   }
 }
 
+/**
+* Gets the {@link admin.projectManagement.ProjectManagement
+* `ProjectManagement`} service for the default app or a given app.
+*
+* `admin.projectManagement()` can be called with no arguments to access the
+* default app's {@link admin.projectManagement.ProjectManagement
+* `ProjectManagement`} service, or as `admin.projectManagement(app)` to access
+* the {@link admin.projectManagement.ProjectManagement `ProjectManagement`}
+* service associated with a specific app.
+*
+* @example
+* ```javascript
+* // Get the ProjectManagement service for the default app
+* var defaultProjectManagement = admin.projectManagement();
+* ```
+*
+* @example
+* ```javascript
+* // Get the ProjectManagement service for a given app
+* var otherProjectManagement = admin.projectManagement(otherApp);
+* ```
+*
+* @param {!admin.app.App=} app Optional app whose `ProjectManagement` service
+*     to return. If not provided, the default `ProjectManagement` service will
+*     be returned. *
+* @return {!admin.projectManagement.ProjectManagement} The default
+*     `ProjectManagement` service if no app is provided or the
+*     `ProjectManagement` service associated with the provided app.
+*/
 declare namespace admin.projectManagement {
   interface ShaCertificate {
     certType: ('sha1' | 'sha256');
@@ -717,10 +945,9 @@ declare namespace admin.projectManagement {
     projectId: string;
     packageName: string;
   }
-
+  
   interface AndroidApp {
     appId: string;
-
     getMetadata(): Promise<admin.projectManagement.AndroidAppMetadata>;
     setDisplayName(newDisplayName: string): Promise<void>;
     getShaCertificates(): Promise<admin.projectManagement.ShaCertificate[]>;
