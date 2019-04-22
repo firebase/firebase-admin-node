@@ -39,7 +39,6 @@ import {
   processReleaseResponse,
   RULES_RELEASE_NAME_FOR_SERVICE,
   Ruleset,
-  shortenRulesetName,
 } from './rules';
 
 /**
