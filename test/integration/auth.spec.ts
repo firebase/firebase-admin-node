@@ -25,6 +25,9 @@ import '@firebase/auth';
 import {clone} from 'lodash';
 import {generateRandomString, projectId, apiKey, noServiceAccountApp} from './setup';
 import url = require('url');
+import * as mocks from '../resources/mocks';
+import { AuthProviderConfig } from '../../src/auth/auth-config';
+import { deepExtend } from '../../src/utils/deep-copy';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -422,6 +425,266 @@ describe('admin.auth', () => {
           expect(result.user.email).to.equal(email);
           expect(result.user.emailVerified).to.be.true;
         });
+    });
+  });
+
+  describe('SAML configuration operations', () => {
+    const authProviderConfig1 = {
+      providerId: 'saml.' + generateRandomString(5),
+      displayName: 'SAML_DISPLAY_NAME1',
+      enabled: true,
+      idpEntityId: 'IDP_ENTITY_ID1',
+      ssoURL: 'https://example.com/login1',
+      x509Certificates: [mocks.x509CertPairs[0].public],
+      rpEntityId: 'RP_ENTITY_ID1',
+      callbackURL: 'https://projectId.firebaseapp.com/__/auth/handler',
+      enableRequestSigning: true,
+    };
+    const authProviderConfig2 = {
+      providerId: 'saml.' + generateRandomString(5),
+      displayName: 'SAML_DISPLAY_NAME2',
+      enabled: true,
+      idpEntityId: 'IDP_ENTITY_ID2',
+      ssoURL: 'https://example.com/login2',
+      x509Certificates: [mocks.x509CertPairs[1].public],
+      rpEntityId: 'RP_ENTITY_ID2',
+      callbackURL: 'https://projectId.firebaseapp.com/__/auth/handler',
+      enableRequestSigning: true,
+    };
+
+    const removeTempConfigs = () => {
+      return Promise.all([
+        admin.auth().deleteProviderConfig(authProviderConfig1.providerId).catch((error) => {/* empty */}),
+        admin.auth().deleteProviderConfig(authProviderConfig2.providerId).catch((error) => {/* empty */}),
+      ]);
+    };
+
+    // Clean up temp configurations used for test.
+    before(() => {
+      return removeTempConfigs().then(() => admin.auth().createProviderConfig(authProviderConfig1));
+    });
+
+    after(() => {
+      return removeTempConfigs();
+    });
+
+    it('createProviderConfig() successfully creates a SAML config', () => {
+      return admin.auth().createProviderConfig(authProviderConfig2)
+        .then((config) => {
+          assertDeepEqualUnordered(authProviderConfig2, config);
+        });
+    });
+
+    it('getProviderConfig() successfully returns the expected SAML config', () => {
+      return admin.auth().getProviderConfig(authProviderConfig1.providerId)
+        .then((config) => {
+          assertDeepEqualUnordered(authProviderConfig1, config);
+        });
+    });
+
+    it('listProviderConfig() successfully returns the list of SAML providers', () => {
+      const configs: AuthProviderConfig[] = [];
+      const listProviders: any = (type: 'saml' | 'oidc', maxResults?: number, pageToken?: string) => {
+        return admin.auth().listProviderConfigs({type, maxResults, pageToken})
+          .then((result) => {
+            result.providerConfigs.forEach((config: AuthProviderConfig) => {
+              configs.push(config);
+            });
+            if (result.pageToken) {
+              return listProviders(type, maxResults, result.pageToken);
+            }
+          });
+      };
+      // In case the project already has existing providers, list all configurations and then
+      // check the 2 test configs are available.
+      return listProviders('saml', 1)
+        .then(() => {
+          let index1 = 0;
+          let index2 = 0;
+          for (let i = 0; i < configs.length; i++) {
+            if (configs[i].providerId === authProviderConfig1.providerId) {
+              index1 = i;
+            } else if (configs[i].providerId === authProviderConfig2.providerId) {
+              index2 = i;
+            }
+          }
+          assertDeepEqualUnordered(authProviderConfig1, configs[index1]);
+          assertDeepEqualUnordered(authProviderConfig2, configs[index2]);
+        });
+    });
+
+    it('updateProviderConfig() successfully overwrites a SAML config', () => {
+      const modifiedConfigOptions = {
+        displayName: 'SAML_DISPLAY_NAME3',
+        enabled: false,
+        idpEntityId: 'IDP_ENTITY_ID3',
+        ssoURL: 'https://example.com/login3',
+        x509Certificates: [mocks.x509CertPairs[1].public],
+        rpEntityId: 'RP_ENTITY_ID3',
+        callbackURL: 'https://projectId3.firebaseapp.com/__/auth/handler',
+        enableRequestSigning: false,
+      };
+      return admin.auth().updateProviderConfig(authProviderConfig1.providerId, modifiedConfigOptions)
+        .then((config) => {
+          const modifiedConfig = deepExtend(
+              {providerId: authProviderConfig1.providerId}, modifiedConfigOptions);
+          assertDeepEqualUnordered(modifiedConfig, config);
+        });
+    });
+
+    it('updateProviderConfig() successfully partially modifies a SAML config', () => {
+      const deltaChanges = {
+        displayName: 'SAML_DISPLAY_NAME4',
+        x509Certificates: [mocks.x509CertPairs[0].public],
+        // Note, currently backend has a bug where error is thrown when callbackURL is not
+        // passed event though it is not required. Fix is on the way.
+        callbackURL: 'https://projectId3.firebaseapp.com/__/auth/handler',
+        rpEntityId: 'RP_ENTITY_ID4',
+      };
+      // Only above fields should be modified.
+      const modifiedConfigOptions = {
+        displayName: 'SAML_DISPLAY_NAME4',
+        enabled: false,
+        idpEntityId: 'IDP_ENTITY_ID3',
+        ssoURL: 'https://example.com/login3',
+        x509Certificates: [mocks.x509CertPairs[0].public],
+        rpEntityId: 'RP_ENTITY_ID4',
+        callbackURL: 'https://projectId3.firebaseapp.com/__/auth/handler',
+        enableRequestSigning: false,
+      };
+      return admin.auth().updateProviderConfig(authProviderConfig1.providerId, deltaChanges)
+        .then((config) => {
+          const modifiedConfig = deepExtend(
+              {providerId: authProviderConfig1.providerId}, modifiedConfigOptions);
+          assertDeepEqualUnordered(modifiedConfig, config);
+        });
+    });
+
+    it('deleteProviderConfig() successfully deletes an existing SAML config', () => {
+      return admin.auth().deleteProviderConfig(authProviderConfig1.providerId).then(() => {
+        return admin.auth().getProviderConfig(authProviderConfig1.providerId)
+          .should.eventually.be.rejected.and.have.property('code', 'auth/configuration-not-found');
+      });
+    });
+  });
+
+  describe('OIDC configuration operations', () => {
+    const authProviderConfig1 = {
+      providerId: 'oidc.' + generateRandomString(5),
+      displayName: 'OIDC_DISPLAY_NAME1',
+      enabled: true,
+      issuer: 'https://oidc.com/issuer1',
+      clientId: 'CLIENT_ID1',
+    };
+    const authProviderConfig2 = {
+      providerId: 'oidc.' + generateRandomString(5),
+      displayName: 'OIDC_DISPLAY_NAME2',
+      enabled: true,
+      issuer: 'https://oidc.com/issuer2',
+      clientId: 'CLIENT_ID2',
+    };
+
+    const removeTempConfigs = () => {
+      return Promise.all([
+        admin.auth().deleteProviderConfig(authProviderConfig1.providerId).catch((error) => {/* empty */}),
+        admin.auth().deleteProviderConfig(authProviderConfig2.providerId).catch((error) => {/* empty */}),
+      ]);
+    };
+
+    // Clean up temp configurations used for test.
+    before(() => {
+      return removeTempConfigs().then(() => admin.auth().createProviderConfig(authProviderConfig1));
+    });
+
+    after(() => {
+      return removeTempConfigs();
+    });
+
+    it('createProviderConfig() successfully creates an OIDC config', () => {
+      return admin.auth().createProviderConfig(authProviderConfig2)
+        .then((config) => {
+          assertDeepEqualUnordered(authProviderConfig2, config);
+        });
+    });
+
+    it('getProviderConfig() successfully returns the expected OIDC config', () => {
+      return admin.auth().getProviderConfig(authProviderConfig1.providerId)
+        .then((config) => {
+          assertDeepEqualUnordered(authProviderConfig1, config);
+        });
+    });
+
+    it('listProviderConfig() successfully returns the list of OIDC providers', () => {
+      const configs: AuthProviderConfig[] = [];
+      const listProviders: any = (type: 'saml' | 'oidc', maxResults?: number, pageToken?: string) => {
+        return admin.auth().listProviderConfigs({type, maxResults, pageToken})
+          .then((result) => {
+            result.providerConfigs.forEach((config: AuthProviderConfig) => {
+              configs.push(config);
+            });
+            if (result.pageToken) {
+              return listProviders(type, maxResults, result.pageToken);
+            }
+          });
+      };
+      // In case the project already has existing providers, list all configurations and then
+      // check the 2 test configs are available.
+      return listProviders('oidc', 1)
+        .then(() => {
+          let index1 = 0;
+          let index2 = 0;
+          for (let i = 0; i < configs.length; i++) {
+            if (configs[i].providerId === authProviderConfig1.providerId) {
+              index1 = i;
+            } else if (configs[i].providerId === authProviderConfig2.providerId) {
+              index2 = i;
+            }
+          }
+          assertDeepEqualUnordered(authProviderConfig1, configs[index1]);
+          assertDeepEqualUnordered(authProviderConfig2, configs[index2]);
+        });
+    });
+
+    it('updateProviderConfig() successfully overwrites an OIDC config', () => {
+      const modifiedConfigOptions = {
+        displayName: 'OIDC_DISPLAY_NAME3',
+        enabled: false,
+        issuer: 'https://oidc.com/issuer3',
+        clientId: 'CLIENT_ID3',
+      };
+      return admin.auth().updateProviderConfig(authProviderConfig1.providerId, modifiedConfigOptions)
+        .then((config) => {
+          const modifiedConfig = deepExtend(
+            {providerId: authProviderConfig1.providerId}, modifiedConfigOptions);
+          assertDeepEqualUnordered(modifiedConfig, config);
+        });
+    });
+
+    it('updateProviderConfig() successfully partially modifies an OIDC config', () => {
+      const deltaChanges = {
+        displayName: 'OIDC_DISPLAY_NAME4',
+        issuer: 'https://oidc.com/issuer4',
+      };
+      // Only above fields should be modified.
+      const modifiedConfigOptions = {
+        displayName: 'OIDC_DISPLAY_NAME4',
+        enabled: false,
+        issuer: 'https://oidc.com/issuer4',
+        clientId: 'CLIENT_ID3',
+      };
+      return admin.auth().updateProviderConfig(authProviderConfig1.providerId, deltaChanges)
+        .then((config) => {
+          const modifiedConfig = deepExtend(
+            {providerId: authProviderConfig1.providerId}, modifiedConfigOptions);
+          assertDeepEqualUnordered(modifiedConfig, config);
+        });
+    });
+
+    it('deleteProviderConfig() successfully deletes an existing OIDC config', () => {
+      return admin.auth().deleteProviderConfig(authProviderConfig1.providerId).then(() => {
+        return admin.auth().getProviderConfig(authProviderConfig1.providerId)
+          .should.eventually.be.rejected.and.have.property('code', 'auth/configuration-not-found');
+      });
     });
   });
 
@@ -895,4 +1158,21 @@ function safeDelete(uid: string): Promise<void> {
     // Do nothing.
   });
   return deletePromise;
+}
+
+/**
+ * Asserts actual object is equal to expected object while ignoring key order.
+ * This is useful since to.deep.equal fails when order differs.
+ *
+ * @param {[key: string]: any} expected object.
+ * @param {[key: string]: any} actual object.
+ */
+function assertDeepEqualUnordered(expected: {[key: string]: any}, actual: {[key: string]: any}) {
+  for (const key in expected) {
+    if (expected.hasOwnProperty(key)) {
+      expect(actual[key])
+        .to.deep.equal(expected[key]);
+    }
+  }
+  expect(Object.keys(actual).length).to.be.equal(Object.keys(expected).length);
 }
