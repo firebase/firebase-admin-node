@@ -335,9 +335,17 @@ export class AppErrorCodes {
  * Auth client error codes and their default messages.
  */
 export class AuthClientErrorCode {
+  public static BILLING_NOT_ENABLED = {
+    code: 'billing-not-enabled',
+    message: 'Feature requires billing to be enabled.',
+  };
   public static CLAIMS_TOO_LARGE = {
     code: 'claims-too-large',
     message: 'Developer claims maximum payload size exceeded.',
+  };
+  public static CONFIGURATION_EXISTS = {
+    code: 'configuration-exists',
+    message: 'A configuration already exists with the provided identifier.',
   };
   public static CONFIGURATION_NOT_FOUND = {
     code: 'configuration-not-found',
@@ -350,6 +358,10 @@ export class AuthClientErrorCode {
   public static INVALID_ARGUMENT = {
     code: 'argument-error',
     message: 'Invalid argument provided.',
+  };
+  public static INVALID_CONFIG = {
+    code: 'invalid-config',
+    message: 'The provided configuration is invalid.',
   };
   public static EMAIL_ALREADY_EXISTS = {
     code: 'email-already-exists',
@@ -445,6 +457,10 @@ export class AuthClientErrorCode {
     code: 'invalid-last-sign-in-time',
     message: 'The last sign-in time must be a valid UTC date string.',
   };
+  public static INVALID_OAUTH_CLIENT_ID = {
+    code: 'invalid-oauth-client-id',
+    message: 'The provided OAuth client ID is invalid.',
+  };
   public static INVALID_PAGE_TOKEN = {
     code: 'invalid-page-token',
     message: 'The page token must be a valid non-empty string.',
@@ -500,6 +516,10 @@ export class AuthClientErrorCode {
     message: 'An Android Package Name must be provided if the Android App is ' +
              'required to be installed.',
   };
+  public static MISSING_CONFIG = {
+    code: 'missing-config',
+    message: 'The provided configuration is missing required attributes.',
+  };
   public static MISSING_CONTINUE_URI = {
     code: 'missing-continue-uri',
     message: 'A valid continue URL must be provided in the request.',
@@ -508,10 +528,26 @@ export class AuthClientErrorCode {
     code: 'missing-ios-bundle-id',
     message: 'The request is missing an iOS Bundle ID.',
   };
+  public static MISSING_ISSUER = {
+    code: 'missing-issuer',
+    message: 'The OAuth/OIDC configuration issuer must not be empty.',
+  };
   public static MISSING_HASH_ALGORITHM = {
     code: 'missing-hash-algorithm',
     message: 'Importing users with password hashes requires that the hashing ' +
              'algorithm and its parameters be provided.',
+  };
+  public static MISSING_OAUTH_CLIENT_ID = {
+    code: 'missing-oauth-client-id',
+    message: 'The OAuth/OIDC configuration client ID must not be empty.',
+  };
+  public static MISSING_PROVIDER_ID = {
+    code: 'missing-provider-id',
+    message: 'A valid provider ID must be provided in the request.',
+  };
+  public static MISSING_SAML_RELYING_PARTY_CONFIG = {
+    code: 'missing-saml-relying-party-config',
+    message: 'The SAML configuration provided is missing a relying party configuration.',
   };
   public static MAXIMUM_USER_COUNT_EXCEEDED = {
     code: 'maximum-user-count-exceeded',
@@ -695,12 +731,20 @@ export type ProjectManagementErrorCode =
 
 /** @const {ServerToClientCode} Auth server to client enum error codes. */
 const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
+  // Feature being configured or used requires a billing account.
+  BILLING_NOT_ENABLED: 'BILLING_NOT_ENABLED',
   // Claims payload is too large.
   CLAIMS_TOO_LARGE: 'CLAIMS_TOO_LARGE',
+  // Configuration being added already exists.
+  CONFIGURATION_EXISTS: 'CONFIGURATION_EXISTS',
   // Configuration not found.
   CONFIGURATION_NOT_FOUND: 'CONFIGURATION_NOT_FOUND',
   // Provided credential has insufficient permissions.
   INSUFFICIENT_PERMISSION: 'INSUFFICIENT_PERMISSION',
+  // Provided configuration has invalid fields.
+  INVALID_CONFIG: 'INVALID_CONFIG',
+  // Provided configuration identifier is invalid.
+  INVALID_CONFIG_ID: 'INVALID_PROVIDER_ID',
   // ActionCodeSettings missing continue URL.
   INVALID_CONTINUE_URI: 'INVALID_CONTINUE_URI',
   // Dynamic link domain in provided ActionCodeSettings is not authorized.
@@ -721,18 +765,34 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   INVALID_EMAIL: 'INVALID_EMAIL',
   // Invalid ID token provided.
   INVALID_ID_TOKEN: 'INVALID_ID_TOKEN',
+  // OIDC configuration has an invalid OAuth client ID.
+  INVALID_OAUTH_CLIENT_ID: 'INVALID_OAUTH_CLIENT_ID',
   // Invalid page token.
   INVALID_PAGE_SELECTION: 'INVALID_PAGE_TOKEN',
   // Invalid phone number.
   INVALID_PHONE_NUMBER: 'INVALID_PHONE_NUMBER',
+  // Invalid provider ID.
+  INVALID_PROVIDER_ID: 'INVALID_PROVIDER_ID',
   // Invalid service account.
   INVALID_SERVICE_ACCOUNT: 'INVALID_SERVICE_ACCOUNT',
   // Missing Android package name.
   MISSING_ANDROID_PACKAGE_NAME: 'MISSING_ANDROID_PACKAGE_NAME',
+  // Missing configuration.
+  MISSING_CONFIG: 'MISSING_CONFIG',
+  // Missing configuration identifier.
+  MISSING_CONFIG_ID: 'MISSING_PROVIDER_ID',
   // Missing iOS bundle ID.
   MISSING_IOS_BUNDLE_ID: 'MISSING_IOS_BUNDLE_ID',
+  // Missing OIDC issuer.
+  MISSING_ISSUER: 'MISSING_ISSUER',
   // No localId provided (deleteAccount missing localId).
   MISSING_LOCAL_ID: 'MISSING_UID',
+  // OIDC configuration is missing an OAuth client ID.
+  MISSING_OAUTH_CLIENT_ID: 'MISSING_OAUTH_CLIENT_ID',
+  // Missing provider ID.
+  MISSING_PROVIDER_ID: 'MISSING_PROVIDER_ID',
+  // Missing SAML RP config.
+  MISSING_SAML_RELYING_PARTY_CONFIG: 'MISSING_SAML_RELYING_PARTY_CONFIG',
   // Empty user list in uploadAccount.
   MISSING_USER_ACCOUNT: 'MISSING_UID',
   // Password auth disabled in console.

@@ -111,3 +111,30 @@ export function formatString(str: string, params?: object): string {
   });
   return formatted;
 }
+
+/**
+ * Generates the update mask for the provided object.
+ * Note this will ignore the last key with value undefined.
+ *
+ * @param {[key: string]: any} obj The object to generate the update mask for.
+ * @return {Array<string>} The computed update mask list.
+ */
+export function generateUpdateMask(obj: {[key: string]: any}): string[] {
+  const updateMask: string[] = [];
+  if (!validator.isNonNullObject(obj)) {
+    return updateMask;
+  }
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key) && typeof obj[key] !== 'undefined') {
+      const maskList = generateUpdateMask(obj[key]);
+      if (maskList.length > 0) {
+        maskList.forEach((mask) => {
+          updateMask.push(`${key}.${mask}`);
+        });
+      } else {
+        updateMask.push(key);
+      }
+    }
+  }
+  return updateMask;
+}
