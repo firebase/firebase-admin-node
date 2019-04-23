@@ -25,10 +25,11 @@ import {Agent} from 'http';
 declare namespace admin {
 
   /**
-  * `FirebaseError` is a subclass of the standard JavaScript `Error` object. In
-  * addition to a message string and stack trace, it contains a string code.
-  */
+    * `FirebaseError` is a subclass of the standard JavaScript `Error` object. In
+    * addition to a message string and stack trace, it contains a string code.
+    */
   interface FirebaseError {
+
     /**
      * Error codes are strings using the following format: `"service/string-code"`.
      * Some examples include `"auth/invalid-uid"` and
@@ -38,6 +39,7 @@ declare namespace admin {
      * between backward-compatible versions of the Firebase SDK.
      */
     code: string;
+
     /**
      * An explanatory message for the error that just occurred.
      *
@@ -46,7 +48,8 @@ declare namespace admin {
      * this message should not be displayed in your application.
      */
     message: string;
-        /**
+
+    /**
      * A string value containing the execution backtrace when the error originally
      * occurred.
      *
@@ -55,6 +58,7 @@ declare namespace admin {
      * explain the cause of an error.
      */
     stack: string;
+
     /**
      * Returns a JSON-serializable representation of this object.
      */
@@ -84,13 +88,15 @@ declare namespace admin {
    *     console.log("Error subscribing to topic:", error);
    *   });
    *```
-  */
+   */
   interface FirebaseArrayIndexError {
+
     /**
      * The index of the errored item within the original array passed as part of the
      * called API method.
      */
     index: number;
+
     /**
      * The error object.
      */
@@ -109,9 +115,10 @@ declare namespace admin {
   }
 
   /**
-  * Available options to pass to [`initializeApp()`](admin#.initializeApp).
-  */
+   * Available options to pass to [`initializeApp()`](admin#.initializeApp).
+   */
   interface AppOptions {
+
     /**
      * A {@link admin.credential.Credential `Credential`} object used to
      * authenticate the Admin SDK.
@@ -120,6 +127,7 @@ declare namespace admin {
      * documentation and code samples.
      */
     credential?: admin.credential.Credential;
+
     /**
      * The object to use as the [`auth`](/docs/reference/security/database/#auth)
      * variable in your Realtime Database Rules when the Admin SDK reads from or
@@ -133,24 +141,29 @@ declare namespace admin {
      * for detailed documentation and code samples.
      */
     databaseAuthVariableOverride?: Object;
+
     /**
      * The URL of the Realtime Database from which to read and write data.
      */
     databaseURL?: string;
+
     /**
      * The ID of the service account to be used for signing custom tokens. This
      * can be found in the `client_email` field of a service account JSON file.
      */
     serviceAccountId?: string;
+
     /**
      * The ID of the service account to be used for signing custom tokens. This
      * can be found in the `client_email` field of a service account JSON file.
      */
     storageBucket?: string;
+
     /**
      * The ID of the Google Cloud project associated with the App.
      */
     projectId?: string;
+
     /**
      * An [HTTP Agent](https://nodejs.org/api/http.html#http_class_http_agent)
      * to be used when making outgoing HTTP calls. This Agent instance is used
@@ -172,7 +185,8 @@ declare namespace admin {
   function auth(app?: admin.app.App): admin.auth.Auth;
   function database(app?: admin.app.App): admin.database.Database;
   function messaging(app?: admin.app.App): admin.messaging.Messaging;
-    /**
+
+  /**
    * Gets the {@link admin.storage.Storage `Storage`} service for the
    * default app or a given app.
    *
@@ -195,6 +209,7 @@ declare namespace admin {
    * ```
    */
   function storage(app?: admin.app.App): admin.storage.Storage;
+
   /**
    *
    * @param app A Firebase App instance
@@ -203,6 +218,36 @@ declare namespace admin {
    */
   function firestore(app?: admin.app.App): admin.firestore.Firestore;
   function instanceId(app?: admin.app.App): admin.instanceId.InstanceId;
+
+  /**
+  * Gets the {@link admin.projectManagement.ProjectManagement
+  * `ProjectManagement`} service for the default app or a given app.
+  *
+  * `admin.projectManagement()` can be called with no arguments to access the
+  * default app's {@link admin.projectManagement.ProjectManagement
+  * `ProjectManagement`} service, or as `admin.projectManagement(app)` to access
+  * the {@link admin.projectManagement.ProjectManagement `ProjectManagement`}
+  * service associated with a specific app.
+  *
+  * @example
+  * ```javascript
+  * // Get the ProjectManagement service for the default app
+  * var defaultProjectManagement = admin.projectManagement();
+  * ```
+  *
+  * @example
+  * ```javascript
+  * // Get the ProjectManagement service for a given app
+  * var otherProjectManagement = admin.projectManagement(otherApp);
+  * ```
+  *
+  * @param {!admin.app.App=} app Optional app whose `ProjectManagement` service
+  *     to return. If not provided, the default `ProjectManagement` service will
+  *     be returned. *
+  * @return {!admin.projectManagement.ProjectManagement} The default
+  *     `ProjectManagement` service if no app is provided or the
+  *     `ProjectManagement` service associated with the provided app.
+  */
   function projectManagement(app?: admin.app.App): admin.projectManagement.ProjectManagement;
   function initializeApp(options?: admin.AppOptions, name?: string): admin.app.App;
 }
@@ -219,6 +264,7 @@ declare namespace admin.app {
   * to create an app.
   */
   interface App {
+
     /**
      * The (read-only) name for this app.
      *
@@ -239,6 +285,7 @@ declare namespace admin.app {
      * ```
      */
     name: string;
+
     /**
      * The (read-only) configuration options for this app. These are the original
      * parameters given in
@@ -255,6 +302,7 @@ declare namespace admin.app {
      */
     options: admin.AppOptions;
 
+
     auth(): admin.auth.Auth;
     database(url?: string): admin.database.Database;
     firestore(): admin.firestore.Firestore;
@@ -262,9 +310,12 @@ declare namespace admin.app {
     messaging(): admin.messaging.Messaging;
     projectManagement(): admin.projectManagement.ProjectManagement;
     storage(): admin.storage.Storage;
+
     /**
-     * Renders this app unusable and frees the resources of all associated
-     * services.
+     * Renders this local `FirebaseApp` unusable and frees the resources of
+     * all associated services (though it does *not* clean up any backend
+     * resources). When running the SDK locally, this method
+     * must be called to ensure graceful termination of the process. 
      *
      * @example
      * ```javascript
@@ -852,6 +903,7 @@ declare namespace admin.messaging {
 }
 
 declare namespace admin.storage {
+
   /**
    * The default `Storage` service if no
    * app is provided or the `Storage` service associated with the provided
@@ -902,35 +954,6 @@ declare namespace admin.instanceId {
   }
 }
 
-/**
-* Gets the {@link admin.projectManagement.ProjectManagement
-* `ProjectManagement`} service for the default app or a given app.
-*
-* `admin.projectManagement()` can be called with no arguments to access the
-* default app's {@link admin.projectManagement.ProjectManagement
-* `ProjectManagement`} service, or as `admin.projectManagement(app)` to access
-* the {@link admin.projectManagement.ProjectManagement `ProjectManagement`}
-* service associated with a specific app.
-*
-* @example
-* ```javascript
-* // Get the ProjectManagement service for the default app
-* var defaultProjectManagement = admin.projectManagement();
-* ```
-*
-* @example
-* ```javascript
-* // Get the ProjectManagement service for a given app
-* var otherProjectManagement = admin.projectManagement(otherApp);
-* ```
-*
-* @param {!admin.app.App=} app Optional app whose `ProjectManagement` service
-*     to return. If not provided, the default `ProjectManagement` service will
-*     be returned. *
-* @return {!admin.projectManagement.ProjectManagement} The default
-*     `ProjectManagement` service if no app is provided or the
-*     `ProjectManagement` service associated with the provided app.
-*/
 declare namespace admin.projectManagement {
   interface ShaCertificate {
     certType: ('sha1' | 'sha256');
