@@ -443,7 +443,7 @@ declare namespace admin.database {
     update(values: Object, onComplete?: (a: Error|null) => any): Promise<void>;
   }
 
-  interface ThenableReference extends admin.database.Reference, PromiseLike<any> {}
+  interface ThenableReference extends admin.database.Reference, Promise<admin.database.Reference> {}
 
   function enableLogging(logger?: boolean|((message: string) => any), persistent?: boolean): any;
 }
