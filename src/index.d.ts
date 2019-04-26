@@ -184,6 +184,36 @@ declare namespace admin {
   function app(name?: string): admin.app.App;
   function auth(app?: admin.app.App): admin.auth.Auth;
   function database(app?: admin.app.App): admin.database.Database;
+
+  /**
+   * Gets the {@link admin.messaging.Messaging `Messaging`} service for the
+   * default app or a given app.
+   *
+   * `admin.messaging()` can be called with no arguments to access the default
+   * app's {@link admin.messaging.Messaging `Messaging`} service or as
+   * `admin.messaging(app)` to access the
+   * {@link admin.messaging.Messaging `Messaging`} service associated with a
+   * specific app.
+   *
+   * @example
+   * ```javascript
+   * // Get the Messaging service for the default app
+   * var defaultMessaging = admin.messaging();
+   * ```
+   *
+   * @example
+   * ```javascript
+   * // Get the Messaging service for a given app
+   * var otherMessaging = admin.messaging(otherApp);
+   * ```
+   *
+   * @param {!admin.app.App=} app Optional app whose `Messaging` service to
+   *   return. If not provided, the default `Messaging` service will be returned.
+   *
+   * @return {!admin.messaging.Messaging} The default `Messaging` service if no
+   *   app is provided or the `Messaging` service associated with the provided
+   *   app.
+   */
   function messaging(app?: admin.app.App): admin.messaging.Messaging;
 
   /**
@@ -217,6 +247,37 @@ declare namespace admin {
    * instance as defined in the `@google-cloud/firestore` package.
    */
   function firestore(app?: admin.app.App): admin.firestore.Firestore;
+
+  /**
+   * Gets the {@link admin.instanceId.InstanceId `InstanceId`} service for the
+   * default app or a given app.
+   *
+   * `admin.instanceId()` can be called with no arguments to access the default
+   * app's {@link admin.instanceId.InstanceId `InstanceId`} service or as
+   * `admin.instanceId(app)` to access the
+   * {@link admin.instanceId.InstanceId `InstanceId`} service associated with a
+   * specific app.
+   *
+   * @example
+   * ```javascript
+   * // Get the Instance ID service for the default app
+   * var defaultInstanceId = admin.instanceId();
+   * ```
+   * 
+   * @example
+   * ```javascript
+   * // Get the Instance ID service for a given app
+   * var otherInstanceId = admin.instanceId(otherApp);
+   *```
+   *
+   * @param {!admin.app.App=} app Optional app whose `InstanceId` service to
+   *   return. If not provided, the default `InstanceId` service will be
+   *   returned.
+   *
+   * @return {!admin.instanceId.InstanceId} The default `InstanceId` service if
+   *   no app is provided or the `InstanceId` service associated with the
+   *   provided app.
+   */
   function instanceId(app?: admin.app.App): admin.instanceId.InstanceId;
 
   /**
@@ -728,47 +789,204 @@ declare namespace admin.messaging {
     tokens: string[];
   }
 
+  /**
+   * Represents the Android-specific options that can be included in an
+   * {@link admin.messaging.Message}.
+   */
   interface AndroidConfig {
+
+    /**
+     * Collapse key for the message. Collapse key serves as an identifier for a
+     * group of messages that can be collapsed, so that only the last message gets
+     * sent when delivery can be resumed. A maximum of four different collapse keys
+     * may be active at any given time.
+     */
     collapseKey?: string;
+
+    /**
+     * Priority of the message. Must be either `normal` or `high`.
+     */
     priority?: ('high'|'normal');
+
+    /**
+     * Time-to-live duration of the message in milliseconds.
+     */
     ttl?: number;
+
+    /**
+     * Package name of the application where the registration tokens must match
+     * in order to receive the message.
+     */
     restrictedPackageName?: string;
+
+    /**
+     * A collection of data fields to be included in the message. All values must
+     * be strings. When provided, overrides any data fields set on the top-level
+     * `admin.messaging.Message`.}
+     */
     data?: {[key: string]: string};
+
+    /**
+     * Android notification to be included in the message.
+     */
     notification?: AndroidNotification;
   }
 
+  /**
+   * Represents the Android-specific notification options that can be included in
+   * {@link admin.messaging.AndroidConfig}.
+   */
   interface AndroidNotification {
+
+    /**
+     * Title of the Android notification. When provided, overrides the title set via
+     * `admin.messaging.Notification`.
+     */
     title?: string;
+
+    /**
+     * Body of the Android notification. When provided, overrides the body set via
+     * `admin.messaging.Notification`.
+     */
     body?: string;
+
+    /**
+     * Icon resource for the Android notification.
+     */
     icon?: string;
+
+    /**
+     * Notification icon color in `#rrggbb` format.
+     */
     color?: string;
+
+    /**
+     * File name of the sound to be played when the device receives the
+     * notification.
+     */ 
     sound?: string;
+
+    /**
+     * Notification tag. This is an identifier used to replace existing
+     * notifications in the notification drawer. If not specified, each request
+     * creates a new notification.
+     */ 
     tag?: string;
+
+    /**
+     * Action associated with a user click on the notification. If specified, an
+     * activity with a matching Intent Filter is launched when a user clicks on the
+     * notification.
+     */
     clickAction?: string;
+
+    /**
+     * Key of the body string in the app's string resource to use to localize the
+     * body text.
+     *
+     */
     bodyLocKey?: string;
+
+    /**
+     * An array of resource keys that will be used in place of the format
+     * specifiers in `bodyLocKey`.
+     */
     bodyLocArgs?: string[];
+
+    /**
+     * Key of the title string in the app's string resource to use to localize the
+     * title text.
+     */
     titleLocKey?: string;
+
+    /**
+     * An array of resource keys that will be used in place of the format
+     * specifiers in `titleLocKey`.
+     */
     titleLocArgs?: string[];
+
+    /**
+     * The Android notification channel ID (new in Android O). The app must create
+     * a channel with this channel ID before any notification with this channel ID
+     * can be received. If you don't send this channel ID in the request, or if the
+     * channel ID provided has not yet been created by the app, FCM uses the channel
+     * ID specified in the app manifest.
+     */
     channelId?: string;
   }
 
+  /**
+   * Represents the APNs-specific options that can be included in an
+   * {@link admin.messaging.Message}. Refer to
+   * [Apple documentation](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CommunicatingwithAPNs.html)
+   * for various headers and payload fields supported by APNs.
+   */
   interface ApnsConfig {
+
+    /**
+     * A collection of APNs headers. Header values must be strings.
+     */
     headers?: {[key: string]: string};
+
+    /**
+     * An APNs payload to be included in the message.
+     */
     payload?: ApnsPayload;
   }
-
+  /**
+   * Represents the payload of an APNs message. Mainly consists of the `aps`
+   * dictionary. But may also contain other arbitrary custom keys.
+   */
   interface ApnsPayload {
+
+    /**
+     * The `aps` dictionary to be included in the message.
+     */
     aps: Aps;
     [customData: string]: object;
   }
-
+  /**
+   * Represents the [aps dictionary](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/PayloadKeyReference.html)
+   * that is part of APNs messages.
+   */
   interface Aps {
+
+    /**
+     * Alert to be included in the message. This may be a string or an object of
+     * type `admin.messaging.ApsAlert`.
+     */
     alert?: string | ApsAlert;
+
+    /**
+     * Badge to be displayed with the message. Set to 0 to remove the badge. When
+     * not specified, the badge will remain unchanged.
+     */
     badge?: number;
+
+    /**
+     * Sound to be played with the message.
+     */
     sound?: string | CriticalSound;
+
+    /**
+     * Specifies whether to configure a background update notification.
+     */
     contentAvailable?: boolean;
+
+    /**
+     * Specifies whether to set the `mutable-content` property on the message
+     * so the clients can modify the notification via app extensions.
+     */
     mutableContent?: boolean;
+
+    /**
+     * Type of the notification.
+     */ 
     category?: string;
+
+    /**
+     * An app-specific identifier for grouping notifications.
+     */
     threadId?: string;
     [customData: string]: any;
   }
@@ -787,165 +1005,885 @@ declare namespace admin.messaging {
     launchImage?: string;
   }
 
+  /**
+   * Represents a critical sound configuration that can be included in the
+   * `aps` dictionary of an APNs payload.
+   */
   interface CriticalSound {
+
+    /**
+     * The critical alert flag. Set to `true` to enable the critical alert.
+     */
     critical?: boolean;
+
+    /**
+     * The name of a sound file in the app's main bundle or in the `Library/Sounds`
+     * folder of the app's container directory. Specify the string "default" to play
+     * the system sound.
+     */ 
     name: string;
+
+    /**
+     * The volume for the critical alert's sound. Must be a value between 0.0
+     * (silent) and 1.0 (full volume).
+     */ 
     volume?: number;
   }
 
+
+  /**
+   * A notification that can be included in {@link admin.messaging.Message}.
+   */
   interface Notification {
+    /**
+     * The title of the notification.
+     */
     title?: string;
+    /**
+     * The notification body
+     */
     body?: string;
   }
-
+  /**
+   * Represents the WebPush protocol options that can be included in an
+   * {@link admin.messaging.Message}.
+   */ 
   interface WebpushConfig {
+
+    /**
+     * A collection of WebPush headers. Header values must be strings.
+     *
+     * See [WebPush specification](https://tools.ietf.org/html/rfc8030#section-5)
+     * for supported headers.
+     */
     headers?: {[key: string]: string};
+
+    /**
+     * A collection of data fields.
+     */
     data?: {[key: string]: string};
+
+    /**
+     * A WebPush notification payload to be included in the message.
+     */
     notification?: WebpushNotification;
+
+    /**
+     * Options for features provided by the FCM SDK for Web.
+     */
     fcmOptions?: WebpushFcmOptions;
   }
 
+  /** Represents options for features provided by the FCM SDK for Web
+   * (which are not part of the Webpush standard).
+   */
   interface WebpushFcmOptions {
     link?: string;
   }
 
+  /**
+   * Represents the WebPush-specific notification options that can be included in
+   * {@link admin.messaging.WebpushConfig}. This supports most of the standard
+   * options as defined in the Web Notification
+   * [specification](https://developer.mozilla.org/en-US/docs/Web/API/notification/Notification).
+   */ 
   interface WebpushNotification {
+
+    /**
+     * Title text of the notification.
+     */
     title?: string;
+
+    /**
+     * An array of notification actions representing the actions
+     * available to the user when the notification is presented.
+     */
     actions?: Array<{
       action: string;
       icon?: string;
       title: string;
     }>;
+
+    /**
+     * URL of the image used to represent the notification when there is
+     * not enough space to display the notification itself.
+     */ 
     badge?: string;
+
+    /**
+     * Body text of the notification.
+     */
     body?: string;
+
+    /**
+     * Arbitrary data that you want associated with the notification.
+     * This can be of any data type.
+     */
     data?: any;
+
+    /**
+     * The direction in which to display the notification. Must be one
+     * of `auto`, `ltr` or `rtl`.
+     */
     dir?: 'auto' | 'ltr' | 'rtl';
+
+    /**
+     * URL to the notification icon.
+     */
     icon?: string;
+
+    /**
+     * URL of an image to be displayed in the notification.
+     */
     image?: string;
+
+    /**
+     * The notification's language as a BCP 47 language tag.
+     */
     lang?: string;
+
+    /**
+     * A boolean specifying whether the user should be notified after a
+     * new notification replaces an old one. Defaults to false.
+     */
     renotify?: boolean;
+
+    /**
+     * Indicates that a notification should remain active until the user
+     * clicks or dismisses it, rather than closing automatically.
+     * Defaults to false.
+     */
     requireInteraction?: boolean;
+
+    /**
+     * A boolean specifying whether the notification should be silent.
+     * Defaults to false.
+     */
     silent?: boolean;
+
+    /**
+     * An identifying tag for the notification.
+     */
     tag?: string;
+
+    /**
+     * Timestamp of the notification. Refer to
+     * https://developer.mozilla.org/en-US/docs/Web/API/notification/timestamp
+     * for details.
+     */
     timestamp?: number;
+
+    /**
+     * A vibration pattern for the device's vibration hardware to emit
+     * when the notification fires.
+     */
     vibrate?: number | number[];
     [key: string]: any;
   }
-
+  /**
+   * Interface representing an FCM legacy API data message payload. Data
+   * messages let developers send up to 4KB of custom key-value pairs. The
+   * keys and values must both be strings. Keys can be any custom string,
+   * except for the following reserved strings:
+   *
+   *   * `"from"`
+   *   * Anything starting with `"google."`.
+   *
+   * See [Build send requests](/docs/cloud-messaging/send-message)
+   * for code samples and detailed documentation.
+   */
   interface DataMessagePayload {
     [key: string]: string;
   }
 
+  /**
+   * Interface representing an FCM legacy API notification message payload.
+   * Notification messages let developers send up to 4KB of predefined
+   * key-value pairs. Accepted keys are outlined below.
+   *
+   * See [Build send requests](/docs/cloud-messaging/send-message)
+   * for code samples and detailed documentation.
+   */
   interface NotificationMessagePayload {
     tag?: string;
+
+    /**
+     * The notification's body text.
+     *
+     * **Platforms:** iOS, Android, Web
+     */
     body?: string;
+
+    /**
+     * The notification's icon.
+     *
+     * **Android:** Sets the notification icon to `myicon` for drawable resource
+     * `myicon`. If you don't send this key in the request, FCM displays the
+     * launcher icon specified in your app manifest.
+     *
+     * **Web:** The URL to use for the notification's icon.
+     *
+     * **Platforms:** Android, Web
+     */
     icon?: string;
+
+    /**
+     * The value of the badge on the home screen app icon.
+     *
+     * If not specified, the badge is not changed.
+     *
+     * If set to `0`, the badge is removed.
+     *
+     * **Platforms:** iOS
+     */
     badge?: string;
+
+    /**
+     * The notification icon's color, expressed in `#rrggbb` format.
+     *
+     * **Platforms:** Android
+     */
     color?: string;
+
+    /**
+     * Identifier used to replace existing notifications in the notification drawer.
+     *
+     * If not specified, each request creates a new notification.
+     *
+     * If specified and a notification with the same tag is already being shown,
+     * the new notification replaces the existing one in the notification drawer.
+     *
+     * **Platforms:** Android
+     */
     sound?: string;
+
+    /**
+     * The notification's title.
+     *
+     * **Platforms:** iOS, Android, Web
+     */
     title?: string;
+
+    /**
+     * The key to the body string in the app's string resources to use to localize
+     * the body text to the user's current localization.
+     *
+     * **iOS:** Corresponds to `loc-key` in the APNs payload. See
+     * [Payload Key Reference](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/PayloadKeyReference.html)
+     * and
+     * [Localizing the Content of Your Remote Notifications](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CreatingtheNotificationPayload.html#//apple_ref/doc/uid/TP40008194-CH10-SW9)
+     * for more information.
+     *
+     * **Android:** See
+     * [String Resources](http://developer.android.com/guide/topics/resources/string-resource.html)      * for more information.
+     *
+     * **Platforms:** iOS, Android
+     */
     bodyLocKey?: string;
+
+    /**
+     * Variable string values to be used in place of the format specifiers in
+     * `body_loc_key` to use to localize the body text to the user's current
+     * localization.
+     *
+     * The value should be a stringified JSON array.
+     *
+     * **iOS:** Corresponds to `loc-args` in the APNs payload. See
+     * [Payload Key Reference](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/PayloadKeyReference.html)
+     * and
+     * [Localizing the Content of Your Remote Notifications](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CreatingtheNotificationPayload.html#//apple_ref/doc/uid/TP40008194-CH10-SW9)
+     * for more information.
+     *
+     * **Android:** See
+     * [Formatting and Styling](http://developer.android.com/guide/topics/resources/string-resource.html#FormattingAndStyling)
+     * for more information.
+     *
+     * **Platforms:** iOS, Android
+     */
     bodyLocArgs?: string;
+
+    /**
+     * Action associated with a user click on the notification. If specified, an
+     * activity with a matching Intent Filter is launched when a user clicks on the
+     * notification.
+     * 
+     *   * **Platforms:** Android
+     */ 
     clickAction?: string;
+
+    /**
+     * The key to the title string in the app's string resources to use to localize
+     * the title text to the user's current localization.
+     *
+     * **iOS:** Corresponds to `title-loc-key` in the APNs payload. See
+     * [Payload Key Reference](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/PayloadKeyReference.html)
+     * and
+     * [Localizing the Content of Your Remote Notifications](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CreatingtheNotificationPayload.html#//apple_ref/doc/uid/TP40008194-CH10-SW9)
+     * for more information.
+     *
+     * **Android:** See
+     * [String Resources](http://developer.android.com/guide/topics/resources/string-resource.html)
+     * for more information.
+     *
+     * **Platforms:** iOS, Android
+     */
     titleLocKey?: string;
+
+    /**
+     * Variable string values to be used in place of the format specifiers in
+     * `title_loc_key` to use to localize the title text to the user's current
+     * localization.
+     *
+     * The value should be a stringified JSON array.
+     *
+     * **iOS:** Corresponds to `title-loc-args` in the APNs payload. See
+     * [Payload Key Reference](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/PayloadKeyReference.html)
+     * and
+     * [Localizing the Content of Your Remote Notifications](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CreatingtheNotificationPayload.html#//apple_ref/doc/uid/TP40008194-CH10-SW9)
+     * for more information.
+     *
+     * **Android:** See
+     * [Formatting and Styling](http://developer.android.com/guide/topics/resources/string-resource.html#FormattingAndStyling)
+     * for more information.
+     *
+     * **Platforms:** iOS, Android
+     */
     titleLocArgs?: string;
     [key: string]: string | undefined;
   }
 
+  /**
+   * Interface representing a Firebase Cloud Messaging message payload. One or
+   * both of the `data` and `notification` keys are required.
+   *
+   * See
+   * [Build send requests](/docs/cloud-messaging/send-message)
+   * for code samples and detailed documentation.
+   */
   interface MessagingPayload {
+
+    /**
+     * The data message payload.
+     */
     data?: admin.messaging.DataMessagePayload;
+
+    /**
+     * The notification message payload.
+     */
     notification?: admin.messaging.NotificationMessagePayload;
   }
-
+  /**
+   * Interface representing the options that can be provided when sending a
+   * message via the FCM legacy APIs.
+   *
+   * See [Build send requests](/docs/cloud-messaging/send-message)
+   * for code samples and detailed documentation.
+   */
   interface MessagingOptions {
+
+    /**
+     * Whether or not the message should actually be sent. When set to `true`,
+     * allows developers to test a request without actually sending a message. When
+     * set to `false`, the message will be sent.
+     *
+     * **Default value:** `false`
+     */
     dryRun?: boolean;
+
+    /**
+     * The priority of the message. Valid values are `"normal"` and `"high".` On
+     * iOS, these correspond to APNs priorities `5` and `10`.
+     *
+     * By default, notification messages are sent with high priority, and data
+     * messages are sent with normal priority. Normal priority optimizes the client
+     * app's battery consumption and should be used unless immediate delivery is
+     * required. For messages with normal priority, the app may receive the message
+     * with unspecified delay.
+     *
+     * When a message is sent with high priority, it is sent immediately, and the
+     * app can wake a sleeping device and open a network connection to your server.
+     *
+     * For more information, see
+     * [Setting the priority of a message](/docs/cloud-messaging/concept-options#setting-the-priority-of-a-message).
+     *
+     * **Default value:** `"high"` for notification messages, `"normal"` for data
+     * messages
+     */
     priority?: string;
+
+    /**
+     * How long (in seconds) the message should be kept in FCM storage if the device
+     * is offline. The maximum time to live supported is four weeks, and the default
+     * value is also four weeks. For more information, see
+     * [Setting the lifespan of a message](/docs/cloud-messaging/concept-options#ttl).
+     *
+     * **Default value:** `2419200` (representing four weeks, in seconds)
+     */
     timeToLive?: number;
+
+    /**
+     * String identifying a group of messages (for example, "Updates Available")
+     * that can be collapsed, so that only the last message gets sent when delivery
+     * can be resumed. This is used to avoid sending too many of the same messages
+     * when the device comes back online or becomes active.
+     *
+     * There is no guarantee of the order in which messages get sent.
+     *
+     * A maximum of four different collapse keys is allowed at any given time. This
+     * means FCM server can simultaneously store four different
+     * send-to-sync messages per client app. If you exceed this number, there is no
+     * guarantee which four collapse keys the FCM server will keep.
+     *
+     * **Default value:** None
+     */
     collapseKey?: string;
+
+    /**
+     * On iOS, use this field to represent `mutable-content` in the APNs payload.
+     * When a notification is sent and this is set to `true`, the content of the
+     * notification can be modified before it is displayed, using a
+     * [Notification Service app extension](https://developer.apple.com/reference/usernotifications/unnotificationserviceextension)
+     *
+     * On Android and Web, this parameter will be ignored.
+     *
+     * **Default value:** `false`
+     */ 
     mutableContent?: boolean;
+
+    /**
+     * On iOS, use this field to represent `content-available` in the APNs payload.
+     * When a notification or data message is sent and this is set to `true`, an
+     * inactive client app is awoken. On Android, data messages wake the app by
+     * default. On Chrome, this flag is currently not supported.
+     *
+     * **Default value:** `false`
+     */
     contentAvailable?: boolean;
+
+    /**
+     * The package name of the application which the registration tokens must match
+     * in order to receive the message.
+     *
+     * **Default value:** None
+     */
     restrictedPackageName?: string;
     [key: string]: any | undefined;
   }
-
+  
+  /**
+   * Interface representing the status of a message sent to an individual device
+   * via the FCM legacy APIs.
+   *
+   * See
+   * [Send to individual devices](/docs/cloud-messaging/admin/send-messages#send_to_individual_devices)
+   * for code samples and detailed documentation.
+   */
   interface MessagingDeviceResult {
+
+    /**
+     * The error that occurred when processing the message for the recipient.
+     */
     error?: admin.FirebaseError;
+
+    /**
+     * A unique ID for the successfully processed message.
+     */
     messageId?: string;
+
+    /**
+     * The canonical registration token for the client app that the message was
+     * processed and sent to. You should use this value as the registration token
+     * for future requests. Otherwise, future messages might be rejected.
+     */
     canonicalRegistrationToken?: string;
   }
 
+  /**
+   * Interface representing the server response from the legacy
+   * {@link https://firebase.google.com/docs/reference/admin/node/admin.messaging.Messaging#sendToDevice `sendToDevice()`} method.
+   *
+   * See
+   * [Send to individual devices](/docs/cloud-messaging/admin/send-messages#send_to_individual_devices)
+   * for code samples and detailed documentation.
+   */
   interface MessagingDevicesResponse {
+
+    /**
+     * The number of results that contain a canonical registration token. A
+     * canonical registration token is the registration token corresponding to the
+     * last registration requested by the client app. This is the token that you
+     * should use when sending future messages to the device.
+     *
+     * You can access the canonical registration tokens within the
+     * [`results`](#results) property.
+     */
     canonicalRegistrationTokenCount: number;
+
+    /**
+     * The number of messages that could not be processed and resulted in an error.
+     */
     failureCount: number;
+
+    /**
+     * The unique ID number identifying this multicast message.
+     */
     multicastId: number;
+
+    /**
+     * An array of `MessagingDeviceResult` objects representing the status of the
+     * processed messages. The objects are listed in the same order as in the
+     * request. That is, for each registration token in the request, its result has
+     * the same index in this array. If only a single registration token is
+     * provided, this array will contain a single object.
+     */
     results: admin.messaging.MessagingDeviceResult[];
+
+    /**
+     * The number of messages that were successfully processed and sent.
+     */
     successCount: number;
   }
-
+  /**
+   * Interface representing the server response from the
+   * {@link https://firebase.google.com/docs/reference/admin/node/admin.messaging.Messaging#sendToDeviceGroup `sendToDeviceGroup()`}
+   * method.
+   *
+   * See
+   * [Send messages to device groups](/docs/cloud-messaging/send-message?authuser=0#send_messages_to_device_groups)
+   * for code samples and detailed documentation.
+   */
   interface MessagingDeviceGroupResponse {
+
+    /**
+     * The number of messages that could not be processed and resulted in an error.
+     */
     successCount: number;
+
+    /**
+     * The number of messages that could not be processed and resulted in an error.
+     */
     failureCount: number;
+
+     /**
+     * An array of registration tokens that failed to receive the message.
+     */
     failedRegistrationTokens: string[];
   }
 
+  /**
+   * Interface representing the server response from the legacy
+   * {@link https://firebase.google.com/docs/reference/admin/node/admin.messaging.Messaging#sendToTopic `sendToTopic()`} method.
+   *
+   * See
+   * [Send to a topic](/docs/cloud-messaging/admin/send-messages#send_to_a_topic)
+   * for code samples and detailed documentation.
+   */
   interface MessagingTopicResponse {
+
+    /**
+     * The message ID for a successfully received request which FCM will attempt to
+     * deliver to all subscribed devices.
+     */
     messageId: number;
   }
 
+  /**
+   * Interface representing the server response from the legacy
+   * {@link https://firebase.google.com/docs/reference/admin/node/admin.messaging.Messaging#sendToCondition `sendToCondition()`} method.
+   *
+   * See
+   * [Send to a condition](/docs/cloud-messaging/admin/send-messages#send_to_a_condition)
+   * for code samples and detailed documentation.
+   */
   interface MessagingConditionResponse {
+
+    /**
+     * The message ID for a successfully received request which FCM will attempt to
+     * deliver to all subscribed devices.
+     */
     messageId: number;
   }
 
+  /**
+   * Interface representing the server response from the
+   * {@link https://firebase.google.com/docs/reference/admin/node/admin.messaging.Messaging#subscribeToTopic `subscribeToTopic()`} and
+   * {@link
+   *   admin.messaging.Messaging#unsubscribeFromTopic
+   *   `unsubscribeFromTopic()`}
+   * methods.
+   *
+   * See
+   * [Manage topics from the server](/docs/cloud-messaging/manage-topics)
+   * for code samples and detailed documentation.
+   */
   interface MessagingTopicManagementResponse {
+
+    /**
+     * The number of registration tokens that could not be subscribed to the topic
+     * and resulted in an error.
+     */
     failureCount: number;
+
+    /**
+     * The number of registration tokens that were successfully subscribed to the
+     * topic.
+     */
     successCount: number;
+
+    /**
+     * An array of errors corresponding to the provided registration token(s). The
+     * length of this array will be equal to [`failureCount`](#failureCount).
+     */
     errors: admin.FirebaseArrayIndexError[];
   }
 
+  /**
+   * Interface representing the server response from the
+   * {@link https://firebase.google.com/docs/reference/admin/node/admin.messaging.Messaging#sendAll `sendAll()`} and
+   * {@link https://firebase.google.com/docs/reference/admin/node/admin.messaging.Messaging#sendMulticast `sendMulticast()`} methods.
+   */
   interface BatchResponse {
+
+    /**
+     * An array of responses, each corresponding to a message.
+     */
     responses: admin.messaging.SendResponse[];
+
+    /**
+     * The number of messages that were successfully handed off for sending.
+     */
     successCount: number;
+
+    /**
+     * The number of messages that resulted in errors when sending.
+     */
     failureCount: number;
   }
-
+  /**
+   * Interface representing the status of an individual message that was sent as
+   * part of a batch request.
+   */
   interface SendResponse {
+
+    /**
+     * A boolean indicating if the message was successfully handed off to FCM or
+     * not. When true, the `messageId` attribute is guaranteed to be set. When
+     * false, the `error` attribute is guaranteed to be set.
+     */
     success: boolean;
+
+    /**
+     * A unique message ID string, if the message was handed off to FCM for
+     * delivery.
+     *
+     */
     messageId?: string;
+
+    /**
+     * An error, if the message was not handed off to FCM successfully.
+     */
     error?: admin.FirebaseError;
   }
 
+  /**
+   * Gets the {@link admin.messaging.Messaging `Messaging`} service for the
+   * current app.
+   *
+   * @example
+   * ```javascript
+   * var messaging = app.messaging();
+   * // The above is shorthand for:
+   * // var messaging = admin.messaging(app);
+   * ```
+   *
+   * @return {!admin.messaging.Messaging} The `Messaging` service for the current
+   *   app.
+   */
   interface Messaging {
+    /**
+     * The {@link admin.app.App app} associated with the current `Messaging` service
+     * instance.
+     *
+     * @example
+     * ```javascript
+     * var app = messaging.app;
+     * ```
+     *
+     * @type {!admin.app.App}
+     */
     app: admin.app.App;
 
+    /**
+     * Sends the given message via FCM.
+     *
+     * @param {!admin.messaging.Message} message The message payload.
+     * @param {boolean=} dryRun Whether to send the message in the dry-run
+     *   (validation only) mode.
+     * @return {!Promise<string>} A promise fulfilled with a unique message ID
+     *   string after the message has been successfully handed off to the FCM
+     *   service for delivery.
+     */
     send(message: admin.messaging.Message, dryRun?: boolean): Promise<string>;
+
+    /**
+     * Sends all the messages in the given array via Firebase Cloud Messaging.
+     * Employs batching to send the entire list as a single RPC call. Compared
+     * to the `send()` method, this method is a significantly more efficient way
+     * to send multiple messages.
+     *
+     * The responses list obtained from the return value
+     * corresponds to the order of tokens in the `MulticastMessage`. An error
+     * from this method indicates a total failure -- i.e. none of the messages in
+     * the list could be sent. Partial failures are indicated by a `BatchResponse`
+     * return value.
+     *
+     * @param {!Array<!admin.messaging.Message>} messages A non-empty array
+     *   containing up to 100 messages.
+     * @param {boolean=} dryRun Whether to send the messages in the dry-run
+     *   (validation only) mode.
+     * @return {!Promise<!admin.messaging.BatchResponse>} A Promise fulfilled
+     *   with an object representing the result of the send operation.
+     */
     sendAll(
       messages: Array<admin.messaging.Message>,
       dryRun?: boolean
     ): Promise<admin.messaging.BatchResponse>;
+
+    /**
+     * Sends the given multicast message to all the FCM registration tokens
+     * specified in it.
+     *
+     * This method uses the `sendAll()` API under the hood to send the given
+     * message to all the target recipients. The responses list obtained from the
+     * return value corresponds to the order of tokens in the `MulticastMessage`.
+     * An error from this method indicates a total failure -- i.e. the message was
+     * not sent to any of the tokens in the list. Partial failures are indicated by
+     * a `BatchResponse` return value.
+     *
+     * @param {!admin.messaging.MulticastMessage} message A multicast message
+     *   containing up to 100 tokens.
+     * @param {boolean=} dryRun Whether to send the message in the dry-run
+     *   (validation only) mode.
+     * @return {!Promise<!admin.messaging.BatchResponse>} A Promise fulfilled
+     *   with an object representing the result of the send operation.
+     */
     sendMulticast(
       message: admin.messaging.MulticastMessage,
       dryRun?: boolean
     ): Promise<admin.messaging.BatchResponse>;
+
+    /**
+     * Sends an FCM message to a single device corresponding to the provided
+     * registration token.
+     *
+     * See
+     * [Send to individual devices](/docs/cloud-messaging/admin/legacy-fcm#send_to_individual_devices)
+     * for code samples and detailed documentation. Takes either a 
+     * `registrationToken` to send to a single device or a
+     * `registrationTokens` parameter containing an array of tokens to send
+     * to multiple devices.
+     *
+     * @param {string} registrationToken The registration token for the device to
+     *   which to send the message.
+     * @param {!Array<string>} registrationTokens An array of registration tokens
+     *   for the devices to which to send the message.
+     * @param {!admin.messaging.MessagingPayload} payload The message payload.
+     * @param {!admin.messaging.MessagingOptions=} options Optional options to
+     *   alter the message.
+     *
+     * @return {!Promise<!admin.messaging.MessagingDevicesResponse>} A promise
+     *   fulfilled with the server's response after the message has been sent.
+     */
     sendToDevice(
       registrationToken: string | string[],
       payload: admin.messaging.MessagingPayload,
       options?: admin.messaging.MessagingOptions
     ): Promise<admin.messaging.MessagingDevicesResponse>;
+
+    /**
+     * Sends an FCM message to a device group corresponding to the provided
+     * notification key.
+     *
+     * See
+     * [Send to a device group](/docs/cloud-messaging/admin/legacy-fcm#send_to_a_device_group)
+     * for code samples and detailed documentation.
+     *
+     * @param {string} notificationKey The notification key for the device group to
+     *   which to send the message.
+     * @param {!admin.messaging.MessagingPayload} payload The message payload.
+     * @param {!admin.messaging.MessagingOptions=} options Optional options to
+     *   alter the message.
+     *
+     * @return {!Promise<!admin.messaging.MessagingDeviceGroupResponse>} A promise
+     *   fulfilled with the server's response after the message has been sent.
+     */
     sendToDeviceGroup(
       notificationKey: string,
       payload: admin.messaging.MessagingPayload,
       options?: admin.messaging.MessagingOptions
     ): Promise<admin.messaging.MessagingDeviceGroupResponse>;
+
+    /**
+     * Sends an FCM message to a topic.
+     *
+     * See
+     * [Send to a topic](/docs/cloud-messaging/admin/legacy-fcm#send_to_a_topic)
+     * for code samples and detailed documentation.
+     *
+     * @param {string} topic The topic to which to send the message.
+     * @param {!admin.messaging.MessagingPayload} payload The message payload.
+     * @param {!admin.messaging.MessagingOptions=} options Optional options to
+     *   alter the message.
+     *
+     * @return {!Promise<!admin.messaging.MessagingTopicResponse>} A promise
+     *   fulfilled with the server's response after the message has been sent.
+     */
     sendToTopic(
       topic: string,
       payload: admin.messaging.MessagingPayload,
       options?: admin.messaging.MessagingOptions
     ): Promise<admin.messaging.MessagingTopicResponse>;
+
+    /**
+     * Sends an FCM message to a condition.
+     *
+     * See
+     * [Send to a condition](/docs/cloud-messaging/admin/legacy-fcm#send_to_a_condition)
+     * for code samples and detailed documentation.
+     *
+     * @param {string} condition The condition determining to which topics to send
+     *   the message.
+     * @param {!admin.messaging.MessagingPayload} payload The message payload.
+     * @param {!admin.messaging.MessagingOptions=} options Optional options to
+     *   alter the message.
+     *
+     * @return {!Promise<!admin.messaging.MessagingConditionResponse>} A promise
+     *   fulfilled with the server's response after the message has been sent.
+     */
     sendToCondition(
       condition: string,
       payload: admin.messaging.MessagingPayload,
       options?: admin.messaging.MessagingOptions
     ): Promise<admin.messaging.MessagingConditionResponse>;
+
+    /**
+     * Subscribes a device to an FCM topic.
+     *
+     * See [Subscribe to a
+     * topic](/docs/cloud-messaging/manage-topics#suscribe_and_unsubscribe_using_the)
+     * for code samples and detailed documentation. Optionally, you can provide an
+     * array of tokens to subscribe multiple devices.
+     *
+     * @param {string} registrationToken The registration token for the device for
+     *   which to subscribe to the topic.
+     * @param {!Array<string>} registrationTokens An array of registration tokens
+     *   for the devices for which to subscribe to the topic.
+     * @param {string} topic The topic to which to subscribe.
+     *
+     * @return {!Promise<!admin.messaging.MessagingTopicManagementResponse>} A
+     *   promise fulfilled with the server's response after the device has been
+     *   subscribed to the topic.
+     */
     subscribeToTopic(
       registrationToken: string,
       topic: string
@@ -954,6 +1892,25 @@ declare namespace admin.messaging {
       registrationTokens: string[],
       topic: string
     ): Promise<admin.messaging.MessagingTopicManagementResponse>;
+
+    /**
+     * Unsubscribes a device from an FCM topic.
+     *
+     * See [Unsubscribe from a
+     * topic](/docs/cloud-messaging/admin/manage-topic-subscriptions#unsubscribe_from_a_topic)
+     * for code samples and detailed documentation.  Optionally, you can provide an
+     * array of tokens to unsubscribe multiple devices.
+     *
+     * @param {string} registrationToken The registration token for the device for
+     *   which to unsubscribe from the topic.
+     * @param {!Array<string>} registrationTokens An array of registration tokens
+     *   for the devices for which to unsubscribe from the topic.
+     * @param {string} topic The topic from which to unsubscribe.
+     *
+     * @return {!Promise<!admin.messaging.MessagingTopicManagementResponse>} A
+     *   promise fulfilled with the server's response after the device has been
+     *   unsubscribed from the topic.
+     */
     unsubscribeFromTopic(
       registrationToken: string,
       topic: string
@@ -1010,9 +1967,35 @@ declare namespace admin.firestore {
 }
 
 declare namespace admin.instanceId {
+  /**
+   * Gets the {@link admin.instanceId.InstanceId `InstanceId`} service for the
+   * current app.
+   *
+   * @example
+   * var instanceId = app.instanceId();
+   * // The above is shorthand for:
+   * // var instanceId = admin.instanceId(app);
+   *
+   * @return {!admin.instanceId.InstanceId} The `InstanceId` service for the
+   *   current app.
+   */
   interface InstanceId {
     app: admin.app.App;
-
+    
+    /**
+     * Deletes the specified instance ID and the associated data from Firebase.
+     *
+     * Note that Google Analytics for Firebase uses its own form of Instance ID to
+     * keep track of analytics data. Therefore deleting a Firebase Instance ID does
+     * not delete Analytics data. See
+     * [Delete an Instance ID](/support/privacy/manage-iids#delete_an_instance_id)
+     * for more information.
+     *
+     * @param {string} instanceId The instance ID to be deleted.
+     *
+     * @return {!Promise<void>} A promise fulfilled when the instance ID is
+     *   deleted.
+     */
     deleteInstanceId(instanceId: string): Promise<void>;
   }
 }
