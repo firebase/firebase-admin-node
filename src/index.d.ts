@@ -1906,7 +1906,7 @@ declare namespace admin.messaging {
      * array of tokens to unsubscribe multiple devices.
      *
      * @param registrationTokens A device registration token or an array of
-     * device registration tokens to unsubscribe from the topic.
+     *   device registration tokens to unsubscribe from the topic.
      * @param topic The topic from which to unsubscribe.
      *
      * @return A promise fulfilled with the server's response after the device has been
