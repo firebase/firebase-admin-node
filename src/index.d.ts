@@ -207,10 +207,10 @@ declare namespace admin {
    * var otherMessaging = admin.messaging(otherApp);
    * ```
    *
-   * @param {!admin.app.App=} app Optional app whose `Messaging` service to
+   * @param app Optional app whose `Messaging` service to
    *   return. If not provided, the default `Messaging` service will be returned.
    *
-   * @return {!admin.messaging.Messaging} The default `Messaging` service if no
+   * @return The default `Messaging` service if no
    *   app is provided or the `Messaging` service associated with the provided
    *   app.
    */
@@ -270,11 +270,11 @@ declare namespace admin {
    * var otherInstanceId = admin.instanceId(otherApp);
    *```
    *
-   * @param {!admin.app.App=} app Optional app whose `InstanceId` service to
+   * @param app Optional app whose `InstanceId` service to
    *   return. If not provided, the default `InstanceId` service will be
    *   returned.
    *
-   * @return {!admin.instanceId.InstanceId} The default `InstanceId` service if
+   * @return The default `InstanceId` service if
    *   no app is provided or the `InstanceId` service associated with the
    *   provided app.
    */
@@ -302,12 +302,11 @@ declare namespace admin {
   * var otherProjectManagement = admin.projectManagement(otherApp);
   * ```
   *
-  * @param {!admin.app.App=} app Optional app whose `ProjectManagement` service
+  * @param app Optional app whose `ProjectManagement` service
   *     to return. If not provided, the default `ProjectManagement` service will
   *     be returned. *
-  * @return {!admin.projectManagement.ProjectManagement} The default
-  *     `ProjectManagement` service if no app is provided or the
-  *     `ProjectManagement` service associated with the provided app.
+  * @return The default `ProjectManagement` service if no app is provided or the
+  *   `ProjectManagement` service associated with the provided app.
   */
   function projectManagement(app?: admin.app.App): admin.projectManagement.ProjectManagement;
   function initializeApp(options?: admin.AppOptions, name?: string): admin.app.App;
@@ -1078,6 +1077,11 @@ declare namespace admin.messaging {
    * (which are not part of the Webpush standard).
    */
   interface WebpushFcmOptions {
+
+    /**
+     * The link to open when the user clicks on the notification.
+     * For all URL values, HTTPS is required.
+     */
     link?: string;
   }
 
@@ -1099,8 +1103,20 @@ declare namespace admin.messaging {
      * available to the user when the notification is presented.
      */
     actions?: Array<{
+
+      /** 
+       * An action available to the user when the notification is presented
+       */
       action: string;
+
+      /** 
+       * Optional icon for a notification action.
+       */
       icon?: string;
+
+      /**
+       * Title of the notification action.
+       */
       title: string;
     }>;
 
@@ -1696,8 +1712,7 @@ declare namespace admin.messaging {
    * // var messaging = admin.messaging(app);
    * ```
    *
-   * @return {!admin.messaging.Messaging} The `Messaging` service for the current
-   *   app.
+   * @return The `Messaging` service for the current app.
    */
   interface Messaging {
     /**
@@ -1708,18 +1723,16 @@ declare namespace admin.messaging {
      * ```javascript
      * var app = messaging.app;
      * ```
-     *
-     * @type {!admin.app.App}
      */
     app: admin.app.App;
 
     /**
      * Sends the given message via FCM.
      *
-     * @param {!admin.messaging.Message} message The message payload.
-     * @param {boolean=} dryRun Whether to send the message in the dry-run
+     * @param message The message payload.
+     * @param dryRun Whether to send the message in the dry-run
      *   (validation only) mode.
-     * @return {!Promise<string>} A promise fulfilled with a unique message ID
+     * @return A promise fulfilled with a unique message ID
      *   string after the message has been successfully handed off to the FCM
      *   service for delivery.
      */
@@ -1737,12 +1750,12 @@ declare namespace admin.messaging {
      * the list could be sent. Partial failures are indicated by a `BatchResponse`
      * return value.
      *
-     * @param {!Array<!admin.messaging.Message>} messages A non-empty array
+     * @param messages A non-empty array
      *   containing up to 100 messages.
-     * @param {boolean=} dryRun Whether to send the messages in the dry-run
+     * @param dryRun Whether to send the messages in the dry-run
      *   (validation only) mode.
-     * @return {!Promise<!admin.messaging.BatchResponse>} A Promise fulfilled
-     *   with an object representing the result of the send operation.
+     * @return A Promise fulfilled with an object representing the result of the
+     *   send operation.
      */
     sendAll(
       messages: Array<admin.messaging.Message>,
@@ -1760,12 +1773,12 @@ declare namespace admin.messaging {
      * not sent to any of the tokens in the list. Partial failures are indicated by
      * a `BatchResponse` return value.
      *
-     * @param {!admin.messaging.MulticastMessage} message A multicast message
+     * @param message A multicast message
      *   containing up to 100 tokens.
-     * @param {boolean=} dryRun Whether to send the message in the dry-run
+     * @param dryRun Whether to send the message in the dry-run
      *   (validation only) mode.
-     * @return {!Promise<!admin.messaging.BatchResponse>} A Promise fulfilled
-     *   with an object representing the result of the send operation.
+     * @return A Promise fulfilled with an object representing the result of the
+     *   send operation.
      */
     sendMulticast(
       message: admin.messaging.MulticastMessage,
@@ -1783,16 +1796,14 @@ declare namespace admin.messaging {
      * `registrationTokens` parameter containing an array of tokens to send
      * to multiple devices.
      *
-     * @param {string} registrationToken The registration token for the device to
-     *   which to send the message.
-     * @param {!Array<string>} registrationTokens An array of registration tokens
-     *   for the devices to which to send the message.
-     * @param {!admin.messaging.MessagingPayload} payload The message payload.
-     * @param {!admin.messaging.MessagingOptions=} options Optional options to
+     * @param registrationToken A device registration token or an array of
+     *   device registration tokens to which the message should be sent.
+     * @param payload The message payload.
+     * @param options Optional options to
      *   alter the message.
      *
-     * @return {!Promise<!admin.messaging.MessagingDevicesResponse>} A promise
-     *   fulfilled with the server's response after the message has been sent.
+     * @return A promise fulfilled with the server's response after the message
+     *   has been sent.
      */
     sendToDevice(
       registrationToken: string | string[],
@@ -1808,14 +1819,14 @@ declare namespace admin.messaging {
      * [Send to a device group](/docs/cloud-messaging/admin/legacy-fcm#send_to_a_device_group)
      * for code samples and detailed documentation.
      *
-     * @param {string} notificationKey The notification key for the device group to
+     * @param notificationKey The notification key for the device group to
      *   which to send the message.
-     * @param {!admin.messaging.MessagingPayload} payload The message payload.
-     * @param {!admin.messaging.MessagingOptions=} options Optional options to
+     * @param payload The message payload.
+     * @param options Optional options to
      *   alter the message.
      *
-     * @return {!Promise<!admin.messaging.MessagingDeviceGroupResponse>} A promise
-     *   fulfilled with the server's response after the message has been sent.
+     * @return A promise fulfilled with the server's response after the message
+     *   has been sent.
      */
     sendToDeviceGroup(
       notificationKey: string,
@@ -1830,13 +1841,13 @@ declare namespace admin.messaging {
      * [Send to a topic](/docs/cloud-messaging/admin/legacy-fcm#send_to_a_topic)
      * for code samples and detailed documentation.
      *
-     * @param {string} topic The topic to which to send the message.
-     * @param {!admin.messaging.MessagingPayload} payload The message payload.
-     * @param {!admin.messaging.MessagingOptions=} options Optional options to
+     * @param topic The topic to which to send the message.
+     * @param payload The message payload.
+     * @param options Optional options to
      *   alter the message.
      *
-     * @return {!Promise<!admin.messaging.MessagingTopicResponse>} A promise
-     *   fulfilled with the server's response after the message has been sent.
+     * @return A promise fulfilled with the server's response after the message
+     *   has been sent.
      */
     sendToTopic(
       topic: string,
@@ -1851,14 +1862,14 @@ declare namespace admin.messaging {
      * [Send to a condition](/docs/cloud-messaging/admin/legacy-fcm#send_to_a_condition)
      * for code samples and detailed documentation.
      *
-     * @param {string} condition The condition determining to which topics to send
+     * @param condition The condition determining to which topics to send
      *   the message.
-     * @param {!admin.messaging.MessagingPayload} payload The message payload.
-     * @param {!admin.messaging.MessagingOptions=} options Optional options to
+     * @param payload The message payload.
+     * @param options Optional options to
      *   alter the message.
      *
-     * @return {!Promise<!admin.messaging.MessagingConditionResponse>} A promise
-     *   fulfilled with the server's response after the message has been sent.
+     * @return A promise fulfilled with the server's response after the message
+     *   has been sent.
      */
     sendToCondition(
       condition: string,
@@ -1874,22 +1885,15 @@ declare namespace admin.messaging {
      * for code samples and detailed documentation. Optionally, you can provide an
      * array of tokens to subscribe multiple devices.
      *
-     * @param {string} registrationToken The registration token for the device for
-     *   which to subscribe to the topic.
-     * @param {!Array<string>} registrationTokens An array of registration tokens
-     *   for the devices for which to subscribe to the topic.
-     * @param {string} topic The topic to which to subscribe.
+     * @param registrationTokens A token or array of registration tokens
+     *   for the devices to subscribe to the topic.
+     * @param topic The topic to which to subscribe.
      *
-     * @return {!Promise<!admin.messaging.MessagingTopicManagementResponse>} A
-     *   promise fulfilled with the server's response after the device has been
+     * @return A promise fulfilled with the server's response after the device has been
      *   subscribed to the topic.
      */
     subscribeToTopic(
-      registrationToken: string,
-      topic: string
-    ): Promise<admin.messaging.MessagingTopicManagementResponse>;
-    subscribeToTopic(
-      registrationTokens: string[],
+      registrationTokens: string | string[],
       topic: string
     ): Promise<admin.messaging.MessagingTopicManagementResponse>;
 
@@ -1901,22 +1905,15 @@ declare namespace admin.messaging {
      * for code samples and detailed documentation.  Optionally, you can provide an
      * array of tokens to unsubscribe multiple devices.
      *
-     * @param {string} registrationToken The registration token for the device for
-     *   which to unsubscribe from the topic.
-     * @param {!Array<string>} registrationTokens An array of registration tokens
-     *   for the devices for which to unsubscribe from the topic.
-     * @param {string} topic The topic from which to unsubscribe.
+     * @param registrationTokens A device registration token or an array of
+     * device registration tokens to unsubscribe from the topic.
+     * @param topic The topic from which to unsubscribe.
      *
-     * @return {!Promise<!admin.messaging.MessagingTopicManagementResponse>} A
-     *   promise fulfilled with the server's response after the device has been
+     * @return A promise fulfilled with the server's response after the device has been
      *   unsubscribed from the topic.
      */
     unsubscribeFromTopic(
-      registrationToken: string,
-      topic: string
-    ): Promise<admin.messaging.MessagingTopicManagementResponse>;
-    unsubscribeFromTopic(
-      registrationTokens: string[],
+      registrationTokens: string | string[],
       topic: string
     ): Promise<admin.messaging.MessagingTopicManagementResponse>;
   }
@@ -1976,7 +1973,7 @@ declare namespace admin.instanceId {
    * // The above is shorthand for:
    * // var instanceId = admin.instanceId(app);
    *
-   * @return {!admin.instanceId.InstanceId} The `InstanceId` service for the
+   * @return The `InstanceId` service for the
    *   current app.
    */
   interface InstanceId {
@@ -1991,10 +1988,9 @@ declare namespace admin.instanceId {
      * [Delete an Instance ID](/support/privacy/manage-iids#delete_an_instance_id)
      * for more information.
      *
-     * @param {string} instanceId The instance ID to be deleted.
+     * @param instanceId The instance ID to be deleted.
      *
-     * @return {!Promise<void>} A promise fulfilled when the instance ID is
-     *   deleted.
+     * @return A promise fulfilled when the instance ID is deleted.
      */
     deleteInstanceId(instanceId: string): Promise<void>;
   }
