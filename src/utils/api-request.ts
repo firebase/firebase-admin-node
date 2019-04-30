@@ -79,6 +79,14 @@ interface LowLevelError extends Error {
   response?: LowLevelResponse;
 }
 
+export interface RetryConfig {
+  maxRetries: number;
+  statusCodes?: number[];
+  ioErrorCodes?: string[];
+  backOffFactor?: number;
+  maxDelayInMillis: number;
+}
+
 class DefaultHttpResponse implements HttpResponse {
 
   public readonly status: number;
@@ -166,7 +174,61 @@ export class HttpError extends Error {
   }
 }
 
+/**
+ * Default retry configuration for HTTP requests.
+ */
+const DEFAULT_RETRY_CONFIG: RetryConfig = {
+  maxRetries: 1,
+  ioErrorCodes: ['ECONNRESET', 'ETIMEDOUT'],
+  maxDelayInMillis: 60 * 1000,
+};
+
+/**
+ * Ensures that the given RetryConfig object is valid.
+ *
+ * @param retry The configuration to be validated.
+ */
+function validateRetryConfig(retry: RetryConfig) {
+  if (!validator.isNumber(retry.maxRetries) || retry.maxRetries < 0) {
+    throw new FirebaseAppError(
+      AppErrorCodes.INVALID_ARGUMENT,
+      'maxRetries must be a non-negative integer');
+  }
+
+  if (typeof retry.backOffFactor !== 'undefined') {
+    if (!validator.isNumber(retry.backOffFactor) || retry.backOffFactor < 0) {
+      throw new FirebaseAppError(
+        AppErrorCodes.INVALID_ARGUMENT,
+        'backOffFactor must be a non-negative number');
+    }
+  }
+
+  if (!validator.isNumber(retry.maxDelayInMillis) || retry.maxDelayInMillis < 0) {
+    throw new FirebaseAppError(
+      AppErrorCodes.INVALID_ARGUMENT,
+      'maxDelayInMillis must be a non-negative number');
+  }
+
+  if (typeof retry.statusCodes !== 'undefined' && !validator.isArray(retry.statusCodes)) {
+    throw new FirebaseAppError(
+      AppErrorCodes.INVALID_ARGUMENT,
+      'statusCodes must be an array');
+  }
+
+  if (typeof retry.ioErrorCodes !== 'undefined' && !validator.isArray(retry.ioErrorCodes)) {
+    throw new FirebaseAppError(
+      AppErrorCodes.INVALID_ARGUMENT,
+      'ioErrorCodes must be an array');
+  }
+}
+
 export class HttpClient {
+
+  constructor(private readonly retry: RetryConfig = DEFAULT_RETRY_CONFIG) {
+    if (this.retry) {
+      validateRetryConfig(this.retry);
+    }
+  }
 
   /**
    * Sends an HTTP request to a remote server. If the server responds with a successful response (2xx), the returned
@@ -193,14 +255,19 @@ export class HttpClient {
     return AsyncHttpCall.invoke(config)
       .then((resp) => {
         return this.createHttpResponse(resp);
-      }).catch((err: LowLevelError) => {
-        const retryCodes = ['ECONNRESET', 'ETIMEDOUT'];
-        if (retryCodes.indexOf(err.code) !== -1 && attempts === 0) {
-          return this.sendWithRetry(config, attempts + 1);
+      })
+      .catch((err: LowLevelError) => {
+        const [delayMillis, canRetry] = this.getRetryDelayMillis(attempts, err);
+        if (canRetry && delayMillis <= this.retry.maxDelayInMillis) {
+          return this.waitForRetry(delayMillis).then(() => {
+            return this.sendWithRetry(config, attempts + 1);
+          });
         }
+
         if (err.response) {
           throw new HttpError(this.createHttpResponse(err.response));
         }
+
         if (err.code === 'ETIMEDOUT') {
           throw new FirebaseAppError(
             AppErrorCodes.NETWORK_TIMEOUT,
@@ -217,6 +284,75 @@ export class HttpClient {
       return new MultipartHttpResponse(resp);
     }
     return new DefaultHttpResponse(resp);
+  }
+
+  private getRetryDelayMillis(retryAttempts: number, err: LowLevelError): [number, boolean] {
+    if (!this.isRetryEligible(retryAttempts, err)) {
+      return [0, false];
+    }
+    const response = err.response;
+    if (response && response.headers['retry-after']) {
+      const delayMillis = this.parseRetryAfterIntoMillis(response.headers['retry-after']);
+      if (delayMillis > 0) {
+        return [delayMillis, true];
+      }
+    }
+
+    return [this.backOffDelayMillis(retryAttempts), true];
+  }
+
+  private waitForRetry(delayMillis: number): Promise<void> {
+    if (delayMillis > 0) {
+      return new Promise((resolve) => {
+        setTimeout(resolve, delayMillis);
+      });
+    }
+    return Promise.resolve();
+  }
+
+  private isRetryEligible(retryAttempts: number, err: LowLevelError): boolean {
+    if (!this.retry) {
+      return false;
+    }
+
+    if (retryAttempts >= this.retry.maxRetries) {
+      return false;
+    }
+
+    if (err.response) {
+      const statusCodes = this.retry.statusCodes || [];
+      return statusCodes.indexOf(err.response.status) !== -1;
+    }
+
+    const retryCodes = this.retry.ioErrorCodes || [];
+    return retryCodes.indexOf(err.code) !== -1;
+  }
+
+  /**
+   * Parses the Retry-After HTTP header as a milliseconds value. Return value is negative if the Retry-After header
+   * contains an expired timestamp or otherwise malformed.
+   */
+  private parseRetryAfterIntoMillis(retryAfter: string): number {
+    const delaySeconds: number = parseInt(retryAfter, 10);
+    if (!isNaN(delaySeconds)) {
+      return delaySeconds * 1000;
+    }
+
+    const date = new Date(retryAfter);
+    if (!isNaN(date.getTime())) {
+      return date.getTime() - Date.now();
+    }
+    return -1;
+  }
+
+  private backOffDelayMillis(retryAttempts: number): number {
+    if (retryAttempts === 0) {
+      return 0;
+    }
+
+    const backOffFactor = this.retry.backOffFactor || 0;
+    const delayInSeconds = (2 ** retryAttempts) * backOffFactor;
+    return Math.min(delayInSeconds * 1000, this.retry.maxDelayInMillis);
   }
 }
 
