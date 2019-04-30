@@ -118,11 +118,48 @@ describe('HttpClient', () => {
     }
   });
 
-  ['string', null, undefined, {}, true, false, NaN, -1].forEach((maxRetries: any) => {
+  const invalidNumbers: any[] = ['string', null, undefined, {}, [], true, false, NaN, -1];
+  const invalidArrays: any[] = ['string', null, {}, true, false, NaN, 0, 1];
+
+  invalidNumbers.forEach((maxRetries: any) => {
     it(`should throw when maxRetries is: ${maxRetries}`, () => {
       expect(() => {
         new HttpClient({maxRetries} as any);
       }).to.throw('maxRetries must be a non-negative integer');
+    });
+  });
+
+  invalidNumbers.forEach((backOffFactor: any) => {
+    if (typeof backOffFactor !== 'undefined') {
+      it(`should throw when backOffFactor is: ${backOffFactor}`, () => {
+        expect(() => {
+          new HttpClient({maxRetries: 1, backOffFactor} as any);
+        }).to.throw('backOffFactor must be a non-negative number');
+      });
+    }
+  });
+
+  invalidNumbers.forEach((maxDelayInMillis: any) => {
+    it(`should throw when maxDelayInMillis is: ${maxDelayInMillis}`, () => {
+      expect(() => {
+        new HttpClient({maxRetries: 1, maxDelayInMillis} as any);
+      }).to.throw('maxDelayInMillis must be a non-negative integer');
+    });
+  });
+
+  invalidArrays.forEach((ioErrorCodes: any) => {
+    it(`should throw when ioErrorCodes is: ${ioErrorCodes}`, () => {
+      expect(() => {
+        new HttpClient({maxRetries: 1, maxDelayInMillis: 10000, ioErrorCodes} as any);
+      }).to.throw('ioErrorCodes must be an array');
+    });
+  });
+
+  invalidArrays.forEach((statusCodes: any) => {
+    it(`should throw when statusCodes is: ${statusCodes}`, () => {
+      expect(() => {
+        new HttpClient({maxRetries: 1, maxDelayInMillis: 10000, statusCodes} as any);
+      }).to.throw('statusCodes must be an array');
     });
   });
 
