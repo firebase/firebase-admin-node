@@ -26,8 +26,22 @@ toc:
     path: /docs/reference/admin/node/admin.auth.Auth
   - title: "ActionCodeSettings"
     path: /docs/reference/admin/node/admin.auth.ActionCodeSettings
+  - title: "AuthProviderConfig"
+    path: /docs/reference/admin/node/admin.auth.AuthProviderConfig
+  - title: "AuthProviderConfigFilter"
+    path: /docs/reference/admin/node/admin.auth.AuthProviderConfigFilter
   - title: "CreateRequest"
     path: /docs/reference/admin/node/admin.auth.CreateRequest
+  - title: "ListProviderConfigResults"
+    path: /docs/reference/admin/node/admin.auth.ListProviderConfigResults
+  - title: "OIDCAuthProviderConfig"
+    path: /docs/reference/admin/node/admin.auth.OIDCAuthProviderConfig
+  - title: "OIDCUpdateAuthProviderRequest"
+    path: /docs/reference/admin/node/admin.auth.OIDCUpdateAuthProviderRequest
+  - title: "SAMLAuthProviderConfig"
+    path: /docs/reference/admin/node/admin.auth.SAMLAuthProviderConfig
+  - title: "SAMLUpdateAuthProviderRequest"
+    path: /docs/reference/admin/node/admin.auth.SAMLUpdateAuthProviderRequests
   - title: "UpdateRequest"
     path: /docs/reference/admin/node/admin.auth.UpdateRequest
   - title: "UserImportOptions"
