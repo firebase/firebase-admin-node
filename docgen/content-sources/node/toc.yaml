@@ -77,13 +77,6 @@ toc:
 
 - title: "admin.firestore"
   path: /docs/reference/admin/node/admin.firestore
-  section:
-  - title: "FieldPath"
-    path: /docs/reference/admin/node/admin.firestore.FieldPath
-  - title: "FieldValue"
-    path: /docs/reference/admin/node/admin.firestore.FieldValue
-  - title: "GeoPoint"
-    path: /docs/reference/admin/node/admin.firestore.GeoPoint
 
 - title: "admin.instanceId"
   path: /docs/reference/admin/node/admin.instanceId
