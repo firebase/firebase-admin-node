@@ -135,9 +135,9 @@ If you wish to skip the linter, and only run the unit tests:
 $ npm run test:unit
 ```
 
-The integratin tests run against an actual Firebase project. Create a new
+The integration tests run against an actual Firebase project. Create a new
 project in the [Firebase Console](https://console.firebase.google.com), if you
-do not already have one suitable for running the tests aginst. Then obtain the
+do not already have one suitable for running the tests against. Then obtain the
 following credentials from the project:
 
 1. *Service account certificate*: This can be downloaded as a JSON file from
