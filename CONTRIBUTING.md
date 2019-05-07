@@ -85,6 +85,12 @@ information on using pull requests.
 
 ## <a name="local-setup"></a>Need to get set up locally?
 
+### Prerequisites
+
+1. Node.js 8 or higher.
+2. NPM 5 or higher (NPM 6 recommended).
+3. Google Cloud SDK ([`gcloud`](https://cloud.google.com/sdk/downloads) utility)
+
 ### Initial Setup
 
 Run the following commands from the command line to get your local environment set up:
@@ -95,9 +101,8 @@ $ cd firebase-admin-node    # go to the firebase-admin-node directory
 $ npm install               # install local npm build / test dependencies
 ```
 
-In order to run the tests, you also need to
-[download the `gcloud` CLI](https://cloud.google.com/sdk/downloads), run the following command, and
-follow the prompts:
+In order to run the tests, you also need to authorize the `gcloud` utility with
+Google application default credentials:
 
 ```bash
 $ gcloud beta auth application-default login
@@ -130,19 +135,31 @@ If you wish to skip the linter, and only run the unit tests:
 $ npm run test:unit
 ```
 
-The integration test suite requires a service account JSON key file, and an API key for a Firebase
-project. Create a new project in the [Firebase console](https://console.firebase.google.com) if
-you do not already have one. Use a separate, dedicated project for integration tests since the
-test suite makes a large number of writes to the Firebase realtime database. Download the service
-account key file from the "Settings > Service Accounts" page of the project, and copy it to
-`test/resources/key.json`. Also obtain the API key for the same project from "Settings > General",
-and save it to `test/resources/apikey.txt`.
+The integration tests run against an actual Firebase project. Create a new
+project in the [Firebase Console](https://console.firebase.google.com), if you
+do not already have one suitable for running the tests against. Then obtain the
+following credentials from the project:
 
-Some Auth integration tests require that you enable the IAM API for your Firebase/GCP project,
-and grant your service account ID the "Service Account Token Creator" role. These must be done
-via the Google Cloud Console. Refer to the
-[troubleshooting instructions](https://firebase.google.com/docs/auth/admin/create-custom-tokens#troubleshooting)
-in the official documentation for more details on how to achieve this.
+1. *Service account certificate*: This can be downloaded as a JSON file from
+   the "Settings > Service Accounts" tab of the Firebase console. Copy the
+   file into the repo so it's available at `test/resources/key.json`.
+2. *Web API key*: This is displayed in the "Settings > General" tab of the
+   console. Copy it and save to a new text file at `test/resources/apikey.txt`.
+
+Then set up your Firebase/GCP project as follows:
+
+1. Enable Firestore: Go to the Firebase Console, and select "Database" from
+   the "Develop" menu. Click on the "Create database" button. You may choose
+   to set up Firestore either in the locked mode or in the test mode.
+2. Enable password auth: Select "Authentication" from the "Develop" menu in
+   Firebase Console. Select the "Sign-in method" tab, and enable the
+   "Email/Password" sign-in method.
+3. Enable the IAM API: Go to the
+   [Google Cloud Platform Console](https://console.cloud.google.com) and make
+   sure your Firebase/GCP project is selected. Select "APIs & Services >
+   Dashboard" from the main menu, and click the "ENABLE APIS AND SERVICES"
+   button. Search for and enable the "Identity and Access Management (IAM)
+   API".
 
 Finally, to run the integration test suite:
 
