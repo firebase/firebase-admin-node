@@ -66,6 +66,7 @@
     "@google-cloud/storage": "^2.5.0"
   },
   "devDependencies": {
+    "@firebase/auth": "0.5.2",
     "@types/bcrypt": "^2.0.0",
     "@types/chai": "^3.4.34",
     "@types/chai-as-promised": "0.0.29",
@@ -86,13 +87,13 @@
     "chalk": "^1.1.3",
     "child-process-promise": "^2.2.1",
     "del": "^2.2.1",
-    "@firebase/auth": "0.5.2",
     "firebase-token-generator": "^2.0.0",
     "gulp": "^4.0.0",
     "gulp-header": "^1.8.8",
     "gulp-replace": "^0.5.4",
     "gulp-typescript": "^5.0.1",
     "http-message-parser": "^0.0.34",
+    "jsdom": "^15.0.0",
     "lodash": "^4.17.5",
     "minimist": "^1.2.0",
     "mocha": "^5.2.0",
@@ -108,8 +109,8 @@
     "sinon-chai": "^2.14.0",
     "ts-node": "^3.3.0",
     "tslint": "^5.14.0",
-    "typescript": "^3.1.0",
     "typedoc": "^0.14.2",
+    "typescript": "^3.1.0",
     "yargs": "^13.2.2"
   }
 }
