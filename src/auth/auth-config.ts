@@ -155,7 +155,7 @@ export interface EmailSignInProviderConfig {
   passwordRequired?: boolean; // In the backend API, default is true if not provided
 }
 
-/** The server side Email configuration request interface. */
+/** The server side email configuration request interface. */
 export interface EmailSignInConfigServerRequest {
   allowPasswordSignup?: boolean;
   enableEmailLinkSignin?: boolean;
@@ -163,15 +163,15 @@ export interface EmailSignInConfigServerRequest {
 
 
 /**
- * Defines the Email sign-in config class used to convert client side EmailSignInConfig
- * to a format that is understand by the Auth server.
+ * Defines the email sign-in config class used to convert client side EmailSignInConfig
+ * to a format that is understood by the Auth server.
  */
 export class EmailSignInConfig implements EmailSignInProviderConfig {
   public readonly enabled?: boolean;
   public readonly passwordRequired?: boolean;
 
   /**
-   * Static method convert a client side request to a EmailSignInConfigServerRequest.
+   * Static method to convert a client side request to a EmailSignInConfigServerRequest.
    * Throws an error if validation fails.
    *
    * @param {any} options The options object to convert to a server request.

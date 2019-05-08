@@ -775,7 +775,7 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   INVALID_DURATION: 'INVALID_SESSION_COOKIE_DURATION',
   // Invalid email provided.
   INVALID_EMAIL: 'INVALID_EMAIL',
-  // Invalid tenant display name: CreateTenant and UpdateTenant.
+  // Invalid tenant display name. This can be thrown on CreateTenant and UpdateTenant.
   INVALID_DISPLAY_NAME: 'INVALID_DISPLAY_NAME',
   // Invalid ID token provided.
   INVALID_ID_TOKEN: 'INVALID_ID_TOKEN',
@@ -795,7 +795,7 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   MISSING_CONFIG: 'MISSING_CONFIG',
   // Missing configuration identifier.
   MISSING_CONFIG_ID: 'MISSING_PROVIDER_ID',
-  // Missing tenant display name: CreateTenant and UpdateTenant.
+  // Missing tenant display name: This can be thrown on CreateTenant and UpdateTenant.
   MISSING_DISPLAY_NAME: 'MISSING_DISPLAY_NAME',
   // Missing iOS bundle ID.
   MISSING_IOS_BUNDLE_ID: 'MISSING_IOS_BUNDLE_ID',

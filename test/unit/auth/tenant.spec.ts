@@ -57,7 +57,7 @@ describe('Tenant', () => {
   };
 
   describe('buildServerRequest()', () => {
-    describe('for update request', () => {
+    describe('for an update request', () => {
       it('should return the expected server request', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest);
         const tenantOptionsServerRequest = deepCopy(serverRequest);
@@ -88,7 +88,7 @@ describe('Tenant', () => {
       });
     });
 
-    describe('for create request', () => {
+    describe('for a create request', () => {
       it('should return the expected server request', () => {
         const tenantOptionsClientRequest: TenantOptions = deepCopy(clientRequest);
         tenantOptionsClientRequest.type = 'lightweight';
@@ -156,29 +156,51 @@ describe('Tenant', () => {
 
     const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
     nonObjects.forEach((request) => {
-      it('should throw on non-null Tenant object:' + JSON.stringify(request), () => {
+      it('should throw on invalid UpdateTenantRequest:' + JSON.stringify(request), () => {
         expect(() => {
           Tenant.validate(request, false);
         }).to.throw('"UpdateTenantRequest" must be a valid non-null object.');
       });
+
+      it('should throw on invalid CreateTenantRequest:' + JSON.stringify(request), () => {
+        expect(() => {
+          Tenant.validate(request, true);
+        }).to.throw('"CreateTenantRequest" must be a valid non-null object.');
+      });
     });
 
-    it('should throw on unsupported attribute', () => {
+    it('should throw on unsupported attribute for update request', () => {
       const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
       tenantOptionsClientRequest.unsupported = 'value';
       expect(() => {
         Tenant.validate(tenantOptionsClientRequest, false);
-       }).to.throw(`"unsupported" is not a valid UpdateTenantRequest parameter.`);
+      }).to.throw(`"unsupported" is not a valid UpdateTenantRequest parameter.`);
+    });
+
+    it('should throw on unsupported attribute for create request', () => {
+      const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+      tenantOptionsClientRequest.unsupported = 'value';
+      expect(() => {
+        Tenant.validate(tenantOptionsClientRequest, true);
+      }).to.throw(`"unsupported" is not a valid CreateTenantRequest parameter.`);
     });
 
     const invalidTenantNames = [null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
     invalidTenantNames.forEach((displayName) => {
-      it('should throw on invalid displayName:' + JSON.stringify(displayName), () => {
+      it('should throw on invalid UpdateTenantRequest displayName:' + JSON.stringify(displayName), () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
         tenantOptionsClientRequest.displayName = displayName;
         expect(() => {
           Tenant.validate(tenantOptionsClientRequest, false);
         }).to.throw('"UpdateTenantRequest.displayName" must be a valid non-empty string.');
+      });
+
+      it('should throw on invalid CreateTenantRequest displayName:' + JSON.stringify(displayName), () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.displayName = displayName;
+        expect(() => {
+          Tenant.validate(tenantOptionsClientRequest, true);
+        }).to.throw('"CreateTenantRequest.displayName" must be a valid non-empty string.');
       });
     });
 
@@ -190,7 +212,7 @@ describe('Tenant', () => {
       }).to.throw('"EmailSignInConfig.enabled" must be a boolean.');
     });
 
-    const invalidTypes = ['invalid', null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
+    const invalidTypes = [undefined, 'invalid', null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
     invalidTypes.forEach((invalidType) => {
       it('should throw on creation with invalid type ' + JSON.stringify(invalidType), () => {
         const tenantOptionsClientRequest: TenantOptions = deepCopy(tenantOptions);
