@@ -16,9 +16,11 @@
  */
 
 const { exec } = require('child-process-promise');
-const yargs = require('yargs');
 const fs = require('mz/fs');
+const jsdom = require('jsdom');
 const path = require('path');
+const readline = require('readline');
+const yargs = require('yargs');
 const yaml = require('js-yaml');
 
 const repoPath = path.resolve(`${__dirname}/..`);
@@ -37,6 +39,17 @@ const docPath = path.resolve(`${__dirname}/html/node`);
 const contentPath = path.resolve(`${__dirname}/content-sources/node`);
 const tempHomePath = path.resolve(`${contentPath}/HOME_TEMP.md`);
 const devsitePath = `/docs/reference/admin/node/`;
+
+const firestoreExcludes = ['v1', 'v1beta1', 'setLogFunction'];
+const firestoreHtmlPath = `${docPath}/admin.firestore.html`;
+const firestoreHeader = `<section class="tsd-panel-group tsd-member-group ">
+  <h2>Type aliases</h2>
+  <div class="tsd-panel">
+    <p>Following types are defined in the <code>@google-cloud/firestore</code> package
+    and re-exported from this namespace for convenience.</p>
+  </div>
+  <ul>`;
+const firestoreFooter = '\n  </ul>\n</section>\n';
 
 /**
  * Strips path prefix and returns only filename.
@@ -107,7 +120,8 @@ function generateTempHomeMdFile(tocRaw, homeRaw) {
   let tocPageLines = [homeRaw, '# API Reference'];
   toc.forEach(group => {
     tocPageLines.push(`\n## [${group.title}](${stripPath(group.path)})`);
-    group.section.forEach(item => {
+    const section = group.section || [];
+    section.forEach(item => {
       tocPageLines.push(`- [${item.title}](${stripPath(item.path)}.html)`);
     });
   });
@@ -236,6 +250,63 @@ function fixAllLinks(htmlFiles) {
 }
 
 /**
+ * Updates the auto-generated Firestore API references page, by appending
+ * the specified HTML content block.
+ *
+ * @param {string} contentBlock The HTML content block to be added to the Firestore docs.
+ */
+function updateFirestoreHtml(contentBlock) {
+  const dom = new jsdom.JSDOM(fs.readFileSync(firestoreHtmlPath));
+  const contentNode = dom.window.document.body.querySelector('.col-12');
+
+  const newSection = new jsdom.JSDOM(contentBlock);
+  contentNode.appendChild(newSection.window.document.body.firstChild);
+  fs.writeFileSync(firestoreHtmlPath, dom.window.document.documentElement.outerHTML);
+}
+
+/**
+ * Adds Firestore type aliases to the auto-generated API docs. These are the
+ * types that are imported from the @google-cloud/firestore package, and
+ * then re-exported from the admin.firestore namespace. Typedoc currently
+ * does not handle these correctly, so we need this solution instead.
+ */
+function addFirestoreTypeAliases() {
+  return new Promise((resolve, reject) => {
+    const fileStream = fs.createReadStream(`${repoPath}/src/index.d.ts`);
+    fileStream.on('error', (err) => {
+      reject(err);
+    });
+    const lineReader = readline.createInterface({
+      input: fileStream,
+    });
+
+    let contentBlock = firestoreHeader;
+    lineReader.on('line', (line) => {
+      line = line.trim();
+      if (line.startsWith('export import') && line.indexOf('_firestore.')) {
+        const typeName = line.split(' ')[2];
+        if (firestoreExcludes.indexOf(typeName) === -1) {
+          contentBlock += `
+          <li>
+            <a href="https://cloud.google.com/nodejs/docs/reference/firestore/latest/${typeName}">${typeName}</a>
+          </li>`;
+        }
+      }
+    });
+
+    lineReader.on('close', () => {
+      try {
+        contentBlock += firestoreFooter;
+        updateFirestoreHtml(contentBlock);
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
+    });
+  });
+}
+
+/**
  * Main document generation process.
  *
  * Steps for generating documentation:
@@ -295,6 +366,7 @@ Promise.all([
   .then(fixAllLinks)
   // Add local variable include line to index.html (to access current SDK
   // version number).
+  .then(addFirestoreTypeAliases)
   .then(() => {
     fs.readFile(`${docPath}/index.html`, 'utf8').then(data => {
       // String to include devsite local variables.
