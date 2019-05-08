@@ -66,6 +66,7 @@ describe('UserImportBuilder', () => {
         },
       ],
       customClaims: {admin: true},
+      tenantId: 'TENANT_ID',
     },
     {
       uid: '9012',
@@ -96,6 +97,7 @@ describe('UserImportBuilder', () => {
         },
       ],
       customAttributes: JSON.stringify({admin: true}),
+      tenantId: 'TENANT_ID',
     },
     {
       localId: '9012',

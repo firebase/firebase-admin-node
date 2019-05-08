@@ -1,0 +1,199 @@
+/*!
+ * Copyright 2019 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import * as utils from '../utils';
+import * as validator from '../utils/validator';
+import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
+import {
+  EmailSignInConfig, EmailSignInConfigServerRequest, EmailSignInProviderConfig,
+} from './auth-config';
+
+/** The server side tenant type enum. */
+export type TenantServerType = 'LIGHTWEIGHT' | 'FULL_SERVICE' | 'TYPE_UNSPECIFIED';
+
+/** The client side tenant type enum. */
+export type TenantType = 'lightweight' | 'full_service' | 'type_unspecified';
+
+/** The TenantOptions interface used for create/read/update tenant operations. */
+export interface TenantOptions {
+  displayName?: string;
+  type?: TenantType;
+  emailSignInConfig?: EmailSignInProviderConfig;
+}
+
+/** The corresponding server side representation of a TenantOptions object. */
+export interface TenantOptionsServerRequest extends EmailSignInConfigServerRequest {
+  displayName?: string;
+  type?: TenantServerType;
+}
+
+/** The tenant server response interface. */
+export interface TenantServerResponse {
+  name: string;
+  type?: TenantServerType;
+  displayName?: string;
+  allowPasswordSignup: boolean;
+  enableEmailLinkSignin: boolean;
+}
+
+/** The interface representing the listTenant API response. */
+export interface ListTenantsResult {
+  tenants: Tenant[];
+  pageToken?: string;
+}
+
+
+/**
+ * Tenant class that defines a Firebase Auth tenant.
+ */
+export class Tenant {
+  public readonly tenantId: string;
+  public readonly type?: TenantType;
+  public readonly displayName?: string;
+  public readonly emailSignInConfig?: EmailSignInConfig | null;
+
+  /**
+   * Builds the corresponding server request for a TenantOptions object.
+   *
+   * @param {TenantOptions} tenantOptions The properties to convert to a server request.
+   * @param {boolean} createRequest Whether this is a create request.
+   * @return {object} The equivalent server request.
+   */
+  public static buildServerRequest(
+      tenantOptions: TenantOptions, createRequest: boolean): TenantOptionsServerRequest {
+    Tenant.validate(tenantOptions, createRequest);
+    let request: TenantOptionsServerRequest = {};
+    if (typeof tenantOptions.emailSignInConfig !== 'undefined') {
+      request = EmailSignInConfig.buildServerRequest(tenantOptions.emailSignInConfig);
+    }
+    if (typeof tenantOptions.displayName !== 'undefined') {
+      request.displayName = tenantOptions.displayName;
+    }
+    if (typeof tenantOptions.type !== 'undefined') {
+      request.type = tenantOptions.type.toUpperCase() as TenantServerType;
+    }
+    return request;
+  }
+
+  /**
+   * Returns the tenant ID corresponding to the resource name if available.
+   *
+   * @param {string} resourceName The server side resource name
+   * @return {?string} The tenant ID corresponding to the resource, null otherwise.
+   */
+  public static getTenantIdFromResourceName(resourceName: string): string | null {
+    // name is of form projects/project1/tenants/tenant1
+    const matchTenantRes = resourceName.match(/\/tenants\/(.*)$/);
+    if (!matchTenantRes || matchTenantRes.length < 2) {
+      return null;
+    }
+    return matchTenantRes[1];
+  }
+
+  /**
+   * Validates a tenant options object. Throws an error on failure.
+   *
+   * @param {any} request The tenant options object to validate.
+   * @param {boolean} createRequest Whether this is a create request.
+   */
+  public static validate(request: any, createRequest: boolean) {
+    const validKeys = {
+      displayName: true,
+      type: true,
+      emailSignInConfig: true,
+    };
+    const label = createRequest ? 'CreateTenantRequest' : 'UpdateTenantRequest';
+    if (!validator.isNonNullObject(request)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        `"${label}" must be a valid non-null object.`,
+      );
+    }
+    // Check for unsupported top level attributes.
+    for (const key in request) {
+      if (!(key in validKeys)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          `"${key}" is not a valid ${label} parameter.`,
+        );
+      }
+    }
+    // Validate displayName type if provided.
+    if (typeof request.displayName !== 'undefined' &&
+        !validator.isNonEmptyString(request.displayName)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        `"${label}.displayName" must be a valid non-empty string.`,
+      );
+    }
+    // Validate type type if provided.
+    if (typeof request.type !== 'undefined' && !createRequest) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        '"Tenant.type" is an immutable property.',
+      );
+    }
+    if (createRequest &&
+        request.type !== 'full_service' &&
+        request.type !== 'lightweight') {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        `"${label}.type" must be either "full_service" or "lightweight".`,
+      );
+    }
+    // Validate emailSignInConfig type if provided.
+    if (typeof request.emailSignInConfig !== 'undefined') {
+      EmailSignInConfig.validate(request.emailSignInConfig);
+    }
+  }
+
+  /**
+   * The Tenant object constructor.
+   *
+   * @param {any} response The server side response used to initialize the Tenant object.
+   * @constructor
+   */
+  constructor(response: any) {
+    const tenantId = Tenant.getTenantIdFromResourceName(response.name);
+    if (!tenantId) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Invalid tenant response',
+      );
+    }
+    utils.addReadonlyGetter(this, 'tenantId', tenantId);
+    utils.addReadonlyGetter(this, 'displayName', response.displayName);
+    utils.addReadonlyGetter(
+        this, 'type', (response.type && response.type.toLowerCase()) || undefined);
+    try {
+      utils.addReadonlyGetter(this, 'emailSignInConfig', new EmailSignInConfig(response));
+    } catch (e) {
+      utils.addReadonlyGetter(this, 'emailSignInConfig', undefined);
+    }
+  }
+
+  /** @return {object} The plain object representation of the tenant. */
+  public toJSON(): object {
+    const json: any = {
+      tenantId: this.tenantId,
+      displayName: this.displayName,
+      type: this.type,
+      emailSignInConfig: this.emailSignInConfig && this.emailSignInConfig.toJSON(),
+    };
+    return json;
+  }
+}
+

@@ -149,6 +149,115 @@ export interface OIDCAuthProviderRequest extends OIDCUpdateAuthProviderRequest {
 /** The public API request interface for updating a generic Auth provider. */
 export type UpdateAuthProviderRequest = SAMLUpdateAuthProviderRequest | OIDCUpdateAuthProviderRequest;
 
+/** The email provider configuration interface. */
+export interface EmailSignInProviderConfig {
+  enabled?: boolean;
+  passwordRequired?: boolean; // In the backend API, default is true if not provided
+}
+
+/** The server side Email configuration request interface. */
+export interface EmailSignInConfigServerRequest {
+  allowPasswordSignup?: boolean;
+  enableEmailLinkSignin?: boolean;
+}
+
+
+/**
+ * Defines the Email sign-in config class used to convert client side EmailSignInConfig
+ * to a format that is understand by the Auth server.
+ */
+export class EmailSignInConfig implements EmailSignInProviderConfig {
+  public readonly enabled?: boolean;
+  public readonly passwordRequired?: boolean;
+
+  /**
+   * Static method convert a client side request to a EmailSignInConfigServerRequest.
+   * Throws an error if validation fails.
+   *
+   * @param {any} options The options object to convert to a server request.
+   * @return {EmailSignInConfigServerRequest} The resulting server request.
+   */
+  public static buildServerRequest(options: any): EmailSignInConfigServerRequest {
+    const request: EmailSignInConfigServerRequest = {};
+    EmailSignInConfig.validate(options);
+    if (typeof options !== 'undefined' && options.hasOwnProperty('enabled')) {
+      request.allowPasswordSignup = options.enabled;
+    }
+    if (typeof options !== 'undefined' && options.hasOwnProperty('passwordRequired')) {
+      request.enableEmailLinkSignin = !options.passwordRequired;
+    }
+    return request;
+  }
+
+  /**
+   * Validates the EmailSignInConfig options object. Throws an error on failure.
+   *
+   * @param {any} options The options object to validate.
+   */
+  public static validate(options: any) {
+    // TODO: Validate the request.
+    const validKeys = {
+      enabled: true,
+      passwordRequired: true,
+    };
+    if (!validator.isNonNullObject(options)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        '"EmailSignInConfig" must be a non-null object.',
+      );
+    }
+    // Check for unsupported top level attributes.
+    for (const key in options) {
+      if (!(key in validKeys)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          `"${key}" is not a valid EmailSignInConfig parameter.`,
+        );
+      }
+    }
+    // Validate content.
+    if (typeof options.enabled !== 'undefined' &&
+        !validator.isBoolean(options.enabled)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        '"EmailSignInConfig.enabled" must be a boolean.',
+      );
+    }
+    if (typeof options.passwordRequired !== 'undefined' &&
+        !validator.isBoolean(options.passwordRequired)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        '"EmailSignInConfig.passwordRequired" must be a boolean.',
+      );
+    }
+  }
+
+  /**
+   * The EmailSignInConfig constructor.
+   *
+   * @param {any} response The server side response used to initialize the
+   *     EmailSignInConfig object.
+   * @constructor
+   */
+  constructor(response: any) {
+    if (typeof response.allowPasswordSignup === 'undefined') {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Invalid email sign-in configuration response');
+    }
+    utils.addReadonlyGetter(this, 'enabled', response.allowPasswordSignup);
+    utils.addReadonlyGetter(this, 'passwordRequired', !response.enableEmailLinkSignin);
+  }
+
+  /** @return {object} The plain object representation of the email sign-in config. */
+  public toJSON(): object {
+    return {
+      enabled: this.enabled,
+      passwordRequired: this.passwordRequired,
+    };
+  }
+}
+
 
 /**
  * Defines the SAMLConfig class used to convert a client side configuration to its

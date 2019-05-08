@@ -116,6 +116,7 @@ declare namespace admin.auth {
     passwordSalt?: string;
     customClaims?: Object;
     tokensValidAfterTime?: string;
+    tenantId?: string | null;
 
     toJSON(): Object;
   }
@@ -143,6 +144,7 @@ declare namespace admin.auth {
         [key: string]: any;
       };
       sign_in_provider: string;
+      tenant?: string;
       [key: string]: any;
     };
     iat: number;
@@ -203,6 +205,7 @@ declare namespace admin.auth {
     customClaims?: Object;
     passwordHash?: Buffer;
     passwordSalt?: Buffer;
+    tenantId?: string | null;
   }
 
   interface SessionCookieOptions {
@@ -221,6 +224,36 @@ declare namespace admin.auth {
       minimumVersion?: string;
     };
     dynamicLinkDomain?: string;
+  }
+
+  type TenantType = 'lightweight' | 'full_service';
+
+  interface Tenant {
+    tenantId: string;
+    type?: admin.auth.TenantType;
+    displayName?: string;
+    emailSignInConfig?: {
+      enabled: boolean;
+      passwordRequired?: boolean
+    };
+    toJSON(): Object;
+  }
+
+  interface UpdateTenantRequest {
+    displayName: string;
+    emailSignInConfig?: {
+      enabled: boolean;
+      passwordRequired?: boolean;
+    };
+  }
+
+  interface CreateTenantRequest extends UpdateTenantRequest {
+    type: admin.auth.TenantType;
+  }
+
+  interface ListTenantsResult {
+    tenants: admin.auth.Tenant[];
+    pageToken?: string;
   }
 
   interface AuthProviderConfigFilter {
@@ -324,8 +357,19 @@ declare namespace admin.auth {
     ): Promise<admin.auth.AuthProviderConfig>;
   }
 
+  interface TenantAwareAuth extends BaseAuth {
+    tenantId: string;
+  }
+
   interface Auth extends admin.auth.BaseAuth {
     app: admin.app.App;
+
+    forTenant(tenantId: string): admin.auth.TenantAwareAuth;
+    getTenant(tenantId: string): Promise<admin.auth.Tenant>;
+    listTenants(maxResults?: number, pageToken?: string): Promise<admin.auth.ListTenantsResult>;
+    deleteTenant(tenantId: string): Promise<void>;
+    createTenant(tenantOptions: admin.auth.CreateTenantRequest): Promise<admin.auth.Tenant>;
+    updateTenant(tenantId: string, tenantOptions: admin.auth.UpdateTenantRequest): Promise<admin.auth.Tenant>;
   }
 }
 
