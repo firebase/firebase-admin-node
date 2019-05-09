@@ -1,6 +1,6 @@
 # Unreleased
 
--
+- [changed] Upgraded Cloud Firestore client to v1.3.0.
 
 # v7.3.0
 
