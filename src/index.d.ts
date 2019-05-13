@@ -503,7 +503,7 @@ declare namespace admin.auth {
     displayName?: string;
 
     /**
-     * The user's primary phone number, if set..
+     * The user's primary phone number, if set.
      */ 
     phoneNumber?: string;
 
@@ -579,7 +579,7 @@ declare namespace admin.auth {
   interface UpdateRequest {
 
     /**
-     * Whether or not Whether or not the user is disabled: `true` for disabled;
+     * Whether or not the user is disabled: `true` for disabled;
      * `false` for enabled.
      */
     disabled?: boolean;
@@ -651,7 +651,7 @@ declare namespace admin.auth {
      * Time, in seconds since the Unix epoch, when the end-user authentication
      * occurred.
      *
-     * This value is not when this particular ID token was created, but when the
+     * This value is not set when this particular ID token was created, but when the
      * user initially logged in to this session. In a single session, the Firebase
      * SDKs will refresh a user's ID tokens every hour. Each ID token will have a
      * different [`iat`](#iat) value, but the same `auth_time` value.
@@ -690,7 +690,7 @@ declare namespace admin.auth {
        *   `"google.com"`, `"twitter.com"`, or `"custom"`.
        */ 
       sign_in_provider: string;
-        [key: string]: any;
+      [key: string]: any;
     };
 
     /**
@@ -728,7 +728,7 @@ declare namespace admin.auth {
      * convenience, and is set as the value of the [`sub`](#sub) property.
      */
     uid: string;
-     [key: string]: any;
+    [key: string]: any;
   }
   
   /**
@@ -894,13 +894,7 @@ declare namespace admin.auth {
     /**
      * An array of providers (for example, Google, Facebook) linked to the user.
      */ 
-    providerData?: {
-      uid: string,
-      displayName?: string,
-      email?: string,
-      photoURL?: string,
-      providerId: string,
-    }[];
+    providerData?: admin.auth.UserInfo[];
     
     /**
      * The user's custom claims object if available, typically used to define
@@ -1260,7 +1254,7 @@ declare namespace admin.auth {
   
   type UpdateAuthProviderRequest =
       admin.auth.SAMLUpdateAuthProviderRequest | admin.auth.OIDCUpdateAuthProviderRequest;
-     
+    
   interface BaseAuth {
     createCustomToken(uid: string, developerClaims?: Object): Promise<string>;
     createUser(properties: admin.auth.CreateRequest): Promise<admin.auth.UserRecord>;
@@ -1310,9 +1304,6 @@ declare namespace admin.auth {
     ): Promise<admin.auth.AuthProviderConfig>;
   }
 
-  /**
-   * 
-   */
   interface Auth extends admin.auth.BaseAuth {
     app: admin.app.App;
   }
