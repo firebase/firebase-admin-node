@@ -685,9 +685,9 @@ declare namespace admin.auth {
       };
 
       /**
-       * The ID of the provider used to sign in the
-       *   user. One of `"anonymous"`, `"password"`, `"facebook.com"`, `"github.com"`,
-       *   `"google.com"`, `"twitter.com"`, or `"custom"`.
+       * The ID of the provider used to sign in the user. 
+       * One of `"anonymous"`, `"password"`, `"facebook.com"`, `"github.com"`,
+       * `"google.com"`, `"twitter.com"`, or `"custom"`.
        */ 
       sign_in_provider: string;
       [key: string]: any;
