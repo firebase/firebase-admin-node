@@ -1,6 +1,8 @@
 # Unreleased
 
--
+- [changed] Dropped support for Node 6. Developers must use Node 8.13.0 or
+  higher.
+- [changed] Upgraded Cloud Firestore client to v2.0.0.
 
 # v7.4.0
 
