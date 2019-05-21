@@ -60,7 +60,7 @@ declare namespace admin {
     stack: string;
 
     /**
-     * Returns a JSON-serializable representation of this object.
+     * @return A JSON-serializable representation of this object.
      */
     toJSON(): Object;
   }
@@ -432,6 +432,9 @@ declare namespace admin.auth {
      */ 
     creationTime: string;
 
+    /**
+     * @return A JSON-serializable representation of this object.
+     */
     toJSON(): Object;
   }
 
@@ -472,7 +475,7 @@ declare namespace admin.auth {
     providerId: string;
     
     /**
-     * Returns a JSON-serializable representation of this object.
+     * @return A JSON-serializable representation of this object.
      */
     toJSON(): Object;
   }
@@ -568,7 +571,7 @@ declare namespace admin.auth {
     tokensValidAfterTime?: string;
 
     /**
-     * Returns a JSON-serializable representation of this object.
+     * @return A JSON-serializable representation of this object.
      */
     toJSON(): Object;
   }
@@ -871,7 +874,7 @@ declare namespace admin.auth {
     displayName?: string;
 
     /**
-     * The user's primary phone number, if set..
+     * The user's primary phone number, if set.
      */ 
     phoneNumber?: string;
 
@@ -1003,7 +1006,7 @@ declare namespace admin.auth {
     /**
      * Defines the dynamic link domain to use for the current link if it is to be
      * opened using Firebase Dynamic Links, as multiple dynamic link domains can be
-     * configured per project. This fields provides the ability explicitly choose
+     * configured per project. This field provides the ability explicitly choose
      * one. If none is provided, the oldest domain is used by default.
      */ 
     dynamicLinkDomain?: string;
@@ -1105,11 +1108,6 @@ declare namespace admin.auth {
      * configuration.
      */
     callbackURL?: string;
-
-    /**
-     * 
-     */
-    enableRequestSigning?: boolean;
   }
 
   /**
@@ -1194,11 +1192,6 @@ declare namespace admin.auth {
      * configuration's value is not modified.
      */
     callbackURL?: string;
-
-    /**
-     * 
-     */
-    enableRequestSigning?: boolean;
   }
 
   /**
@@ -1679,8 +1672,7 @@ declare namespace admin.auth {
 
     /**
      * Returns the list of existing provider configurations matching the filter
-     * provided.
-     * At most, 100 provider configs can be listed at a time.
+     * provided. At most, 100 provider configs can be listed at a time.
      *
      * SAML and OIDC provider support requires Google Cloud's Identity Platform
      * (GCIP). To learn more about GCIP, including pricing and features,
@@ -1800,7 +1792,7 @@ declare namespace admin.database {
     numChildren(): number;
 
     /**
-     * Returns a JSON-serializable representation of this object.
+     * @return A JSON-serializable representation of this object.
      */
     toJSON(): Object | null;
     val(): any;
@@ -1852,7 +1844,7 @@ declare namespace admin.database {
     startAt(value: number|string|boolean|null, key?: string): admin.database.Query;
 
     /**
-     * Returns a JSON-serializable representation of this object.
+     * @return A JSON-serializable representation of this object.
      */
     toJSON(): Object;
     toString(): string;
