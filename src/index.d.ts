@@ -1253,7 +1253,7 @@ declare namespace admin.auth {
 
   
   type UpdateAuthProviderRequest =
-      admin.auth.SAMLUpdateAuthProviderRequest | admin.auth.OIDCUpdateAuthProviderRequest;
+    admin.auth.SAMLUpdateAuthProviderRequest | admin.auth.OIDCUpdateAuthProviderRequest;
     
   interface BaseAuth {
 
@@ -1281,7 +1281,7 @@ declare namespace admin.auth {
      * samples and detailed documentation.
      *
      * @param properties The properties to set on the
-     * new user record to be created.
+     *   new user record to be created.
      *
      * @return A promise fulfilled with the user
      *   data corresponding to the newly created user.
@@ -1368,7 +1368,7 @@ declare namespace admin.auth {
      *
      * @param uid The `uid` corresponding to the user to delete.
      * @param properties The properties to update on
-     * the provided user.
+     *   the provided user.
      *
      * @return A promise fulfilled with the
      *   updated user data.
@@ -1562,6 +1562,7 @@ declare namespace admin.auth {
      *     and accepts the Firebase Dynamic Links terms of service.
      *     The Android package name and iOS bundle ID are respected only if they
      *     are configured in the same Firebase Auth project.
+     * @return A promise that resolves with the generated link.
      */
     generatePasswordResetLink(
       email: string,
@@ -1669,7 +1670,7 @@ declare namespace admin.auth {
       *     and accepts the Firebase Dynamic Links terms of service.
       *     The Android package name and iOS bundle ID are respected only if they
       *     are configured in the same Firebase Auth project.
-      * @return
+      * @return A promise that resolves with the generated link.
      */
     generateSignInWithEmailLink(
       email: string,
@@ -1685,11 +1686,9 @@ declare namespace admin.auth {
      * (GCIP). To learn more about GCIP, including pricing and features,
      * see the [GCIP documentation](https://cloud.google.com/identity-cp).
      *
-     * @param options The provider config
-     *     filter to apply.
-     * @return A promise that
-     *     resolves with the list of provider configs meeting the filter
-     *     requirements.
+     * @param options The provider config filter to apply.
+     * @return A promise that resolves with the list of provider configs meeting the
+     *   filter requirements.
      */
     listProviderConfigs(
       options: admin.auth.AuthProviderConfigFilter
