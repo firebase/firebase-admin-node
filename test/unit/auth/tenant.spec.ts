@@ -66,21 +66,64 @@ describe('Tenant', () => {
           .to.deep.equal(tenantOptionsServerRequest);
       });
 
-      it('should throw on invalid input', () => {
-        const tenantOptionsClientRequest = deepCopy(clientRequest);
-        tenantOptionsClientRequest.displayName = null;
-        expect(() => Tenant.buildServerRequest(tenantOptionsClientRequest, false))
-          .to.throw('"UpdateTenantRequest.displayName" must be a valid non-empty string.');
-      });
-
-      it('should throw on invalid EmailSignInConfig', () => {
+      it('should throw on invalid EmailSignInConfig object', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest);
         tenantOptionsClientRequest.emailSignInConfig = null;
         expect(() => Tenant.buildServerRequest(tenantOptionsClientRequest, false))
           .to.throw('"EmailSignInConfig" must be a non-null object.');
       });
 
+      it('should throw on invalid EmailSignInConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.emailSignInConfig.enabled = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, false);
+        }).to.throw('"EmailSignInConfig.enabled" must be a boolean.');
+      });
+
       it('should throw when type is specified', () => {
+        const tenantOptionsClientRequest: TenantOptions = deepCopy(tenantOptions);
+        tenantOptionsClientRequest.type = 'lightweight';
+        expect(() => Tenant.buildServerRequest(tenantOptionsClientRequest, false))
+          .to.throw('"Tenant.type" is an immutable property.');
+      });
+
+      it('should not throw on valid client request object', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest);
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, false);
+        }).not.to.throw;
+      });
+
+      const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
+      nonObjects.forEach((request) => {
+        it('should throw on invalid UpdateTenantRequest:' + JSON.stringify(request), () => {
+          expect(() => {
+            Tenant.buildServerRequest(request as any, false);
+          }).to.throw('"UpdateTenantRequest" must be a valid non-null object.');
+        });
+      });
+
+      it('should throw on unsupported attribute for update request', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.unsupported = 'value';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, false);
+        }).to.throw(`"unsupported" is not a valid UpdateTenantRequest parameter.`);
+      });
+
+      const invalidTenantNames = [null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
+      invalidTenantNames.forEach((displayName) => {
+        it('should throw on invalid UpdateTenantRequest displayName:' + JSON.stringify(displayName), () => {
+          const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+          tenantOptionsClientRequest.displayName = displayName;
+          expect(() => {
+            Tenant.buildServerRequest(tenantOptionsClientRequest, false);
+          }).to.throw('"UpdateTenantRequest.displayName" must be a valid non-empty string.');
+        });
+      });
+
+      it('should throw on update with specified type', () => {
         const tenantOptionsClientRequest: TenantOptions = deepCopy(tenantOptions);
         tenantOptionsClientRequest.type = 'lightweight';
         expect(() => Tenant.buildServerRequest(tenantOptionsClientRequest, false))
@@ -100,13 +143,14 @@ describe('Tenant', () => {
           .to.deep.equal(tenantOptionsServerRequest);
       });
 
-      it('should throw on invalid input', () => {
-        const tenantOptionsClientRequest: TenantOptions = deepCopy(clientRequest);
-        tenantOptionsClientRequest.displayName = null;
-        tenantOptionsClientRequest.type = 'full_service';
-
-        expect(() => Tenant.buildServerRequest(tenantOptionsClientRequest, true))
-          .to.throw('"CreateTenantRequest.displayName" must be a valid non-empty string.');
+      const invalidTypes = [undefined, 'invalid', null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
+      invalidTypes.forEach((invalidType) => {
+        it('should throw on invalid type ' + JSON.stringify(invalidType), () => {
+          const tenantOptionsClientRequest: TenantOptions = deepCopy(tenantOptions);
+          tenantOptionsClientRequest.type = invalidType as any;
+          expect(() => Tenant.buildServerRequest(tenantOptionsClientRequest, true))
+            .to.throw(`"CreateTenantRequest.type" must be either "full_service" or "lightweight".`);
+        });
       });
 
       it('should throw on invalid EmailSignInConfig', () => {
@@ -118,9 +162,36 @@ describe('Tenant', () => {
           .to.throw('"EmailSignInConfig" must be a non-null object.');
       });
 
-      const invalidTypes = ['invalid', null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
+      const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
+      nonObjects.forEach((request) => {
+        it('should throw on invalid CreateTenantRequest:' + JSON.stringify(request), () => {
+          expect(() => {
+            Tenant.buildServerRequest(request as any, true);
+          }).to.throw('"CreateTenantRequest" must be a valid non-null object.');
+        });
+      });
+
+      it('should throw on unsupported attribute for create request', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.unsupported = 'value';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, true);
+        }).to.throw(`"unsupported" is not a valid CreateTenantRequest parameter.`);
+      });
+
+      const invalidTenantNames = [null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
+      invalidTenantNames.forEach((displayName) => {
+        it('should throw on invalid CreateTenantRequest displayName:' + JSON.stringify(displayName), () => {
+          const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+          tenantOptionsClientRequest.displayName = displayName;
+          expect(() => {
+            Tenant.buildServerRequest(tenantOptionsClientRequest, true);
+          }).to.throw('"CreateTenantRequest.displayName" must be a valid non-empty string.');
+        });
+      });
+
       invalidTypes.forEach((invalidType) => {
-        it('should throw on invalid type ' + JSON.stringify(invalidType), () => {
+        it('should throw on creation with invalid type ' + JSON.stringify(invalidType), () => {
           const tenantOptionsClientRequest: TenantOptions = deepCopy(tenantOptions);
           tenantOptionsClientRequest.type = invalidType as any;
           expect(() => Tenant.buildServerRequest(tenantOptionsClientRequest, true))
@@ -143,90 +214,6 @@ describe('Tenant', () => {
 
     it('should return null when no tenant ID is found', () => {
       expect(Tenant.getTenantIdFromResourceName('projects/project1')).to.be.null;
-    });
-  });
-
-  describe('validate()', () => {
-    it('should not throw on valid client request object', () => {
-      const tenantOptionsClientRequest = deepCopy(clientRequest);
-      expect(() => {
-        Tenant.validate(tenantOptionsClientRequest, false);
-      }).not.to.throw;
-    });
-
-    const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
-    nonObjects.forEach((request) => {
-      it('should throw on invalid UpdateTenantRequest:' + JSON.stringify(request), () => {
-        expect(() => {
-          Tenant.validate(request, false);
-        }).to.throw('"UpdateTenantRequest" must be a valid non-null object.');
-      });
-
-      it('should throw on invalid CreateTenantRequest:' + JSON.stringify(request), () => {
-        expect(() => {
-          Tenant.validate(request, true);
-        }).to.throw('"CreateTenantRequest" must be a valid non-null object.');
-      });
-    });
-
-    it('should throw on unsupported attribute for update request', () => {
-      const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-      tenantOptionsClientRequest.unsupported = 'value';
-      expect(() => {
-        Tenant.validate(tenantOptionsClientRequest, false);
-      }).to.throw(`"unsupported" is not a valid UpdateTenantRequest parameter.`);
-    });
-
-    it('should throw on unsupported attribute for create request', () => {
-      const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-      tenantOptionsClientRequest.unsupported = 'value';
-      expect(() => {
-        Tenant.validate(tenantOptionsClientRequest, true);
-      }).to.throw(`"unsupported" is not a valid CreateTenantRequest parameter.`);
-    });
-
-    const invalidTenantNames = [null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
-    invalidTenantNames.forEach((displayName) => {
-      it('should throw on invalid UpdateTenantRequest displayName:' + JSON.stringify(displayName), () => {
-        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.displayName = displayName;
-        expect(() => {
-          Tenant.validate(tenantOptionsClientRequest, false);
-        }).to.throw('"UpdateTenantRequest.displayName" must be a valid non-empty string.');
-      });
-
-      it('should throw on invalid CreateTenantRequest displayName:' + JSON.stringify(displayName), () => {
-        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-        tenantOptionsClientRequest.displayName = displayName;
-        expect(() => {
-          Tenant.validate(tenantOptionsClientRequest, true);
-        }).to.throw('"CreateTenantRequest.displayName" must be a valid non-empty string.');
-      });
-    });
-
-    it('should throw on invalid emailSignInConfig', () => {
-      const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
-      tenantOptionsClientRequest.emailSignInConfig.enabled = 'invalid';
-      expect(() => {
-        Tenant.validate(tenantOptionsClientRequest, false);
-      }).to.throw('"EmailSignInConfig.enabled" must be a boolean.');
-    });
-
-    const invalidTypes = [undefined, 'invalid', null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
-    invalidTypes.forEach((invalidType) => {
-      it('should throw on creation with invalid type ' + JSON.stringify(invalidType), () => {
-        const tenantOptionsClientRequest: TenantOptions = deepCopy(tenantOptions);
-        tenantOptionsClientRequest.type = invalidType as any;
-        expect(() => Tenant.validate(tenantOptionsClientRequest, true))
-          .to.throw(`"CreateTenantRequest.type" must be either "full_service" or "lightweight".`);
-      });
-    });
-
-    it('should throw on update with specified type', () => {
-      const tenantOptionsClientRequest: TenantOptions = deepCopy(tenantOptions);
-      tenantOptionsClientRequest.type = 'lightweight';
-      expect(() => Tenant.validate(tenantOptionsClientRequest, false))
-        .to.throw('"Tenant.type" is an immutable property.');
     });
   });
 

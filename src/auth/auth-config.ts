@@ -177,13 +177,13 @@ export class EmailSignInConfig implements EmailSignInProviderConfig {
    * @param {any} options The options object to convert to a server request.
    * @return {EmailSignInConfigServerRequest} The resulting server request.
    */
-  public static buildServerRequest(options: any): EmailSignInConfigServerRequest {
+  public static buildServerRequest(options: EmailSignInProviderConfig): EmailSignInConfigServerRequest {
     const request: EmailSignInConfigServerRequest = {};
     EmailSignInConfig.validate(options);
-    if (typeof options !== 'undefined' && options.hasOwnProperty('enabled')) {
+    if (options.hasOwnProperty('enabled')) {
       request.allowPasswordSignup = options.enabled;
     }
-    if (typeof options !== 'undefined' && options.hasOwnProperty('passwordRequired')) {
+    if (options.hasOwnProperty('passwordRequired')) {
       request.enableEmailLinkSignin = !options.passwordRequired;
     }
     return request;
@@ -194,7 +194,7 @@ export class EmailSignInConfig implements EmailSignInProviderConfig {
    *
    * @param {any} options The options object to validate.
    */
-  public static validate(options: any) {
+  private static validate(options: {[key: string]: any}) {
     // TODO: Validate the request.
     const validKeys = {
       enabled: true,
@@ -239,14 +239,14 @@ export class EmailSignInConfig implements EmailSignInProviderConfig {
    *     EmailSignInConfig object.
    * @constructor
    */
-  constructor(response: any) {
+  constructor(response: {[key: string]: any}) {
     if (typeof response.allowPasswordSignup === 'undefined') {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Invalid email sign-in configuration response');
     }
-    utils.addReadonlyGetter(this, 'enabled', response.allowPasswordSignup);
-    utils.addReadonlyGetter(this, 'passwordRequired', !response.enableEmailLinkSignin);
+    this.enabled = response.allowPasswordSignup;
+    this.passwordRequired = !response.enableEmailLinkSignin;
   }
 
   /** @return {object} The plain object representation of the email sign-in config. */
@@ -476,24 +476,24 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
         AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Invalid SAML configuration response');
     }
-    utils.addReadonlyGetter(this, 'providerId', SAMLConfig.getProviderIdFromResourceName(response.name));
+    this.providerId = SAMLConfig.getProviderIdFromResourceName(response.name);
     // RP config.
-    utils.addReadonlyGetter(this, 'rpEntityId', response.spConfig.spEntityId);
-    utils.addReadonlyGetter(this, 'callbackURL', response.spConfig.callbackUri);
+    this.rpEntityId = response.spConfig.spEntityId;
+    this.callbackURL = response.spConfig.callbackUri;
     // IdP config.
-    utils.addReadonlyGetter(this, 'idpEntityId', response.idpConfig.idpEntityId);
-    utils.addReadonlyGetter(this, 'ssoURL', response.idpConfig.ssoUrl);
-    utils.addReadonlyGetter(this, 'enableRequestSigning', !!response.idpConfig.signRequest);
+    this.idpEntityId = response.idpConfig.idpEntityId;
+    this.ssoURL = response.idpConfig.ssoUrl;
+    this.enableRequestSigning = !!response.idpConfig.signRequest;
     const x509Certificates: string[] = [];
     for (const cert of (response.idpConfig.idpCertificates || [])) {
       if (cert.x509Certificate) {
         x509Certificates.push(cert.x509Certificate);
       }
     }
-    utils.addReadonlyGetter(this, 'x509Certificates', x509Certificates);
+    this.x509Certificates = x509Certificates;
     // When enabled is undefined, it takes its default value of false.
-    utils.addReadonlyGetter(this, 'enabled', !!response.enabled);
-    utils.addReadonlyGetter(this, 'displayName', response.displayName);
+    this.enabled = !!response.enabled;
+    this.displayName = response.displayName;
   }
 
   /** @return {SAMLAuthProviderConfig} The plain object representation of the SAMLConfig. */
@@ -664,12 +664,12 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
         AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Invalid OIDC configuration response');
     }
-    utils.addReadonlyGetter(this, 'providerId', OIDCConfig.getProviderIdFromResourceName(response.name));
-    utils.addReadonlyGetter(this, 'clientId', response.clientId);
-    utils.addReadonlyGetter(this, 'issuer', response.issuer);
+    this.providerId = OIDCConfig.getProviderIdFromResourceName(response.name);
+    this.clientId = response.clientId;
+    this.issuer = response.issuer;
     // When enabled is undefined, it takes its default value of false.
-    utils.addReadonlyGetter(this, 'enabled', !!response.enabled);
-    utils.addReadonlyGetter(this, 'displayName', response.displayName);
+    this.enabled = !!response.enabled;
+    this.displayName = response.displayName;
   }
 
   /** @return {OIDCAuthProviderConfig} The plain object representation of the OIDCConfig. */

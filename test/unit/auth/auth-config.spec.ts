@@ -114,27 +114,18 @@ describe('EmailSignInConfig', () => {
       });
     });
 
-    it('should throw on invalid input', () => {
-      expect(() => EmailSignInConfig.buildServerRequest({
-        enabled: 'invalid',
-        passwordRequired: true,
-      })).to.throw('"EmailSignInConfig.enabled" must be a boolean.');
-    });
-  });
-
-  describe('validate()', () => {
     const invalidOptions = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
     invalidOptions.forEach((options) => {
       it('should throw on invalid EmailSignInConfig:' + JSON.stringify(options), () => {
         expect(() => {
-          EmailSignInConfig.validate(options as any);
+          EmailSignInConfig.buildServerRequest(options as any);
         }).to.throw('"EmailSignInConfig" must be a non-null object.');
       });
     });
 
     it('should throw on EmailSignInConfig with unsupported attribute', () => {
       expect(() => {
-        EmailSignInConfig.validate({
+        EmailSignInConfig.buildServerRequest({
           unsupported: true,
           enabled: true,
           passwordRequired: false,
@@ -146,7 +137,7 @@ describe('EmailSignInConfig', () => {
     invalidEnabled.forEach((enabled) => {
       it('should throw on invalid EmailSignInConfig.enabled:' + JSON.stringify(enabled), () => {
         expect(() => {
-          EmailSignInConfig.validate({
+          EmailSignInConfig.buildServerRequest({
             enabled,
             passwordRequired: false,
           } as any);
@@ -158,7 +149,7 @@ describe('EmailSignInConfig', () => {
     invalidEnabled.forEach((passwordRequired) => {
       it('should throw on invalid EmailSignInConfig.passwordRequired:' + JSON.stringify(passwordRequired), () => {
         expect(() => {
-          EmailSignInConfig.validate({
+          EmailSignInConfig.buildServerRequest({
             enabled: true,
             passwordRequired,
           } as any);
@@ -169,7 +160,7 @@ describe('EmailSignInConfig', () => {
 
   it('should not throw on valid EmailSignInConfig', () => {
     expect(() => {
-      EmailSignInConfig.validate({
+      EmailSignInConfig.buildServerRequest({
         enabled: true,
         passwordRequired: false,
       } as any);

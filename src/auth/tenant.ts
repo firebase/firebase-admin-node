@@ -109,7 +109,7 @@ export class Tenant {
    * @param {any} request The tenant options object to validate.
    * @param {boolean} createRequest Whether this is a create request.
    */
-  public static validate(request: any, createRequest: boolean) {
+  private static validate(request: any, createRequest: boolean) {
     const validKeys = {
       displayName: true,
       type: true,
@@ -156,7 +156,8 @@ export class Tenant {
     }
     // Validate emailSignInConfig type if provided.
     if (typeof request.emailSignInConfig !== 'undefined') {
-      EmailSignInConfig.validate(request.emailSignInConfig);
+      // This will throw an error if invalid.
+      EmailSignInConfig.buildServerRequest(request.emailSignInConfig);
     }
   }
 
@@ -174,26 +175,24 @@ export class Tenant {
         'INTERNAL ASSERT FAILED: Invalid tenant response',
       );
     }
-    utils.addReadonlyGetter(this, 'tenantId', tenantId);
-    utils.addReadonlyGetter(this, 'displayName', response.displayName);
-    utils.addReadonlyGetter(
-        this, 'type', (response.type && response.type.toLowerCase()) || undefined);
+    this.tenantId = tenantId;
+    this.displayName = response.displayName;
+    this.type = (response.type && response.type.toLowerCase()) || undefined;
     try {
-      utils.addReadonlyGetter(this, 'emailSignInConfig', new EmailSignInConfig(response));
+      this.emailSignInConfig = new EmailSignInConfig(response);
     } catch (e) {
-      utils.addReadonlyGetter(this, 'emailSignInConfig', undefined);
+      this.emailSignInConfig = undefined;
     }
   }
 
   /** @return {object} The plain object representation of the tenant. */
   public toJSON(): object {
-    const json: any = {
+    return {
       tenantId: this.tenantId,
       displayName: this.displayName,
       type: this.type,
       emailSignInConfig: this.emailSignInConfig && this.emailSignInConfig.toJSON(),
     };
-    return json;
   }
 }
 
