@@ -170,10 +170,23 @@ export class HttpError extends Error {
  * Specifies how failing HTTP requests should be retried.
  */
 export interface RetryConfig {
+  /** Maximum number of times to retry a given request. */
   maxRetries: number;
+
+  /** HTTP status codes taht should be retried. */
   statusCodes?: number[];
+
+  /** Low-level I/O error codes that should be retried. */
   ioErrorCodes?: string[];
+
+  /**
+   * The multiplier for exponential back off. The retry delay is calculated using the formula `(2^n) * backOffFactor`,
+   * where n is the number of retries performed so far. When the backOffFactor is set to 0 retries are not delayed.
+   * When the backOffFactor is 1, retry duration is doubled each iteration.
+   */
   backOffFactor?: number;
+
+  /** Maximum duration to wait before initiating a retry. */
   maxDelayInMillis: number;
 }
 
@@ -296,10 +309,20 @@ export class HttpClient {
     return Promise.resolve();
   }
 
+  /**
+   * Checks if a failed request is eligible for a retry, and if so returns the duration to wait before initiating
+   * the retry.
+   *
+   * @param {number} retryAttempts Number of retries completed up to now.
+   * @param {LowLevelError} err The last encountered error.
+   * @returns {[number, boolean]} A 2-tuple where the 1st element is the duration to wait before another retry, and the
+   *     2nd element is a boolean indicating whether the request is eligible for a retry or not.
+   */
   private getRetryDelayMillis(retryAttempts: number, err: LowLevelError): [number, boolean] {
     if (!this.isRetryEligible(retryAttempts, err)) {
       return [0, false];
     }
+
     const response = err.response;
     if (response && response.headers['retry-after']) {
       const delayMillis = this.parseRetryAfterIntoMillis(response.headers['retry-after']);

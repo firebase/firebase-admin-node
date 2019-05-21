@@ -96,6 +96,7 @@ describe('HttpClient', () => {
   let mockedRequests: nock.Scope[] = [];
   let transportSpy: sinon.SinonSpy = null;
   let delayStub: sinon.SinonStub = null;
+  let clock: sinon.SinonFakeTimers = null;
 
   const sampleMultipartData = '--boundary\r\n'
       + 'Content-type: application/json\r\n\r\n'
@@ -115,6 +116,10 @@ describe('HttpClient', () => {
     if (delayStub) {
       delayStub.restore();
       delayStub = null;
+    }
+    if (clock) {
+      clock.restore();
+      clock = null;
     }
   });
 
@@ -711,7 +716,7 @@ describe('HttpClient', () => {
     }).should.eventually.be.rejectedWith(err).and.have.property('code', 'app/network-error');
   });
 
-  it('should not retry when for error codes that are not configured', () => {
+  it('should not retry when error codes are not configured', () => {
     mockedRequests.push(mockRequestWithError({message: 'connection reset 1', code: 'ECONNRESET'}));
     const client = new HttpClient({
       maxRetries: 1,
@@ -963,7 +968,9 @@ describe('HttpClient', () => {
   });
 
   it('should wait when retry-after expressed as a timestamp', () => {
-    const timestamp = new Date(Date.now() + 30 * 1000);
+    clock = sinon.useFakeTimers();
+    clock.setSystemTime(1000);
+    const timestamp = new Date(clock.now + 30 * 1000);
 
     const scope1 = nock('https://' + mockHost)
       .get(mockPath)
@@ -996,7 +1003,7 @@ describe('HttpClient', () => {
       expect(resp.data).to.deep.equal(respData);
       expect(resp.isJson()).to.be.true;
       expect(delayStub.callCount).to.equal(1);
-      expect(delayStub.args[0][0]).to.be.gt(27 * 1000).and.to.be.lte(30 * 1000);
+      expect(delayStub.args[0][0]).to.equal(30 * 1000);
     });
   });
 
