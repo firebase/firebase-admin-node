@@ -1244,10 +1244,9 @@ declare namespace admin.auth {
     pageToken?: string;
   }
 
-  
   type UpdateAuthProviderRequest =
     admin.auth.SAMLUpdateAuthProviderRequest | admin.auth.OIDCUpdateAuthProviderRequest;
-    
+
   interface BaseAuth {
 
     /**
@@ -1609,7 +1608,7 @@ declare namespace admin.auth {
       *     and accepts the Firebase Dynamic Links terms of service.
       *     The Android package name and iOS bundle ID are respected only if they
       *     are configured in the same Firebase Auth project.
-      * @return 
+      * @return A promise that resolves with the generated link.
      */
     generateEmailVerificationLink(
       email: string,
