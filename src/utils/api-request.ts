@@ -173,16 +173,16 @@ export interface RetryConfig {
   /** Maximum number of times to retry a given request. */
   maxRetries: number;
 
-  /** HTTP status codes taht should be retried. */
+  /** HTTP status codes that should be retried. */
   statusCodes?: number[];
 
   /** Low-level I/O error codes that should be retried. */
   ioErrorCodes?: string[];
 
   /**
-   * The multiplier for exponential back off. The retry delay is calculated using the formula `(2^n) * backOffFactor`,
-   * where n is the number of retries performed so far. When the backOffFactor is set to 0 retries are not delayed.
-   * When the backOffFactor is 1, retry duration is doubled each iteration.
+   * The multiplier for exponential back off. The retry delay is calculated in seconds using the formula
+   * `(2^n) * backOffFactor`, where n is the number of retries performed so far. When the backOffFactor is set
+   * to 0, retries are not delayed. When the backOffFactor is 1, retry duration is doubled each iteration.
    */
   backOffFactor?: number;
 
