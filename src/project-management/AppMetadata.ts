@@ -25,3 +25,17 @@ export enum AppPlatform {
   IOS = 'IOS',
   ANDROID = 'ANDROID',
 }
+
+export interface AndroidAppMetadata extends AppMetadata {
+  readonly platform: AppPlatform.ANDROID;
+  readonly resourceName: string;
+  readonly projectId: string;
+  readonly packageName: string;
+}
+
+export interface IosAppMetadata extends AppMetadata {
+  readonly platform: AppPlatform.IOS;
+  readonly resourceName: string;
+  readonly projectId: string;
+  readonly bundleId: string;
+}
