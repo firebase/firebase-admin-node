@@ -63,7 +63,7 @@ export class Tenant {
   public readonly tenantId: string;
   public readonly type?: TenantType;
   public readonly displayName?: string;
-  public readonly emailSignInConfig?: EmailSignInConfig | null;
+  public readonly emailSignInConfig?: EmailSignInConfig;
 
   /**
    * Builds the corresponding server request for a TenantOptions object.
@@ -139,7 +139,7 @@ export class Tenant {
         `"${label}.displayName" must be a valid non-empty string.`,
       );
     }
-    // Validate type type if provided.
+    // Validate type if provided.
     if (typeof request.type !== 'undefined' && !createRequest) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,

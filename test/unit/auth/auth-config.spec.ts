@@ -53,11 +53,11 @@ describe('EmailSignInConfig', () => {
     });
 
     it('should set readonly property "enabled" to false on allowPasswordSignup disabled', () => {
-      const validConfig2 = new EmailSignInConfig({
+      const passwordSignupDisabledConfig = new EmailSignInConfig({
         allowPasswordSignup: false,
         enableEmailLinkSignin: false,
       });
-      expect(validConfig2.enabled).to.be.false;
+      expect(passwordSignupDisabledConfig.enabled).to.be.false;
     });
 
     it('should set readonly property "passwordRequired" to false on email link sign in enabled', () => {
@@ -65,18 +65,11 @@ describe('EmailSignInConfig', () => {
     });
 
     it('should set readonly property "passwordRequired" to true on email link sign in disabled', () => {
-      const validConfig2 = new EmailSignInConfig({
+      const passwordSignupEnabledConfig = new EmailSignInConfig({
         allowPasswordSignup: true,
         enableEmailLinkSignin: false,
       });
-      expect(validConfig2.passwordRequired).to.be.true;
-    });
-
-    it('should not throw on valid response', () => {
-      expect(() => new EmailSignInConfig({
-        allowPasswordSignup: true,
-        enableEmailLinkSignin: true,
-      })).not.to.throw();
+      expect(passwordSignupEnabledConfig.passwordRequired).to.be.true;
     });
   });
 
@@ -156,15 +149,6 @@ describe('EmailSignInConfig', () => {
         }).to.throw('"EmailSignInConfig.passwordRequired" must be a boolean.');
       });
     });
-  });
-
-  it('should not throw on valid EmailSignInConfig', () => {
-    expect(() => {
-      EmailSignInConfig.buildServerRequest({
-        enabled: true,
-        passwordRequired: false,
-      } as any);
-    }).not.to.throw;
   });
 });
 

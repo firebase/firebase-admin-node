@@ -33,7 +33,7 @@ const expect = chai.expect;
  * @return {object} A sample valid user response as returned from getAccountInfo
  *     endpoint.
  */
-function getValidUserResponse(tenantId?: string): any {
+function getValidUserResponse(tenantId?: string): {[key: string]: any} {
   const response: any = {
     localId: 'abcdefghijklmnopqrstuvwxyz',
     email: 'user@gmail.com',
