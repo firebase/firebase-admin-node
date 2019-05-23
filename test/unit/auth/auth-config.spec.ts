@@ -25,6 +25,7 @@ import {
   SAMLConfigServerResponse, OIDCConfigServerRequest,
   OIDCConfigServerResponse, SAMLUpdateAuthProviderRequest,
   OIDCUpdateAuthProviderRequest, SAMLAuthProviderConfig, OIDCAuthProviderConfig,
+  EmailSignInConfig,
 } from '../../../src/auth/auth-config';
 
 
@@ -33,6 +34,123 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
 const expect = chai.expect;
+
+describe('EmailSignInConfig', () => {
+  describe('constructor', () => {
+    const validConfig = new EmailSignInConfig({
+      allowPasswordSignup: true,
+      enableEmailLinkSignin: true,
+    });
+
+    it('should throw on missing allowPasswordSignup', () => {
+      expect(() => new EmailSignInConfig({
+        enableEmailLinkSignin: false,
+      })).to.throw('INTERNAL ASSERT FAILED: Invalid email sign-in configuration response');
+    });
+
+    it('should set readonly property "enabled" to true on allowPasswordSignup enabled', () => {
+      expect(validConfig.enabled).to.be.true;
+    });
+
+    it('should set readonly property "enabled" to false on allowPasswordSignup disabled', () => {
+      const passwordSignupDisabledConfig = new EmailSignInConfig({
+        allowPasswordSignup: false,
+        enableEmailLinkSignin: false,
+      });
+      expect(passwordSignupDisabledConfig.enabled).to.be.false;
+    });
+
+    it('should set readonly property "passwordRequired" to false on email link sign in enabled', () => {
+      expect(validConfig.passwordRequired).to.be.false;
+    });
+
+    it('should set readonly property "passwordRequired" to true on email link sign in disabled', () => {
+      const passwordSignupEnabledConfig = new EmailSignInConfig({
+        allowPasswordSignup: true,
+        enableEmailLinkSignin: false,
+      });
+      expect(passwordSignupEnabledConfig.passwordRequired).to.be.true;
+    });
+  });
+
+  describe('toJSON()', () => {
+    it('should return expected JSON representation', () => {
+      const config = new EmailSignInConfig({
+        allowPasswordSignup: true,
+        enableEmailLinkSignin: true,
+      });
+      expect(config.toJSON()).to.deep.equal({
+        enabled: true,
+        passwordRequired: false,
+      });
+    });
+  });
+
+  describe('buildServerRequest()', () => {
+    it('should return expected server request on valid input with email link sign-in', () => {
+      expect(EmailSignInConfig.buildServerRequest({
+        enabled: true,
+        passwordRequired: false,
+      })).to.deep.equal({
+        allowPasswordSignup: true,
+        enableEmailLinkSignin: true,
+      });
+    });
+
+    it('should return expected server request on valid input without email link sign-in', () => {
+      expect(EmailSignInConfig.buildServerRequest({
+        enabled: true,
+        passwordRequired: true,
+      })).to.deep.equal({
+        allowPasswordSignup: true,
+        enableEmailLinkSignin: false,
+      });
+    });
+
+    const invalidOptions = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
+    invalidOptions.forEach((options) => {
+      it('should throw on invalid EmailSignInConfig:' + JSON.stringify(options), () => {
+        expect(() => {
+          EmailSignInConfig.buildServerRequest(options as any);
+        }).to.throw('"EmailSignInConfig" must be a non-null object.');
+      });
+    });
+
+    it('should throw on EmailSignInConfig with unsupported attribute', () => {
+      expect(() => {
+        EmailSignInConfig.buildServerRequest({
+          unsupported: true,
+          enabled: true,
+          passwordRequired: false,
+        } as any);
+      }).to.throw('"unsupported" is not a valid EmailSignInConfig parameter.');
+    });
+
+    const invalidEnabled = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
+    invalidEnabled.forEach((enabled) => {
+      it('should throw on invalid EmailSignInConfig.enabled:' + JSON.stringify(enabled), () => {
+        expect(() => {
+          EmailSignInConfig.buildServerRequest({
+            enabled,
+            passwordRequired: false,
+          } as any);
+        }).to.throw('"EmailSignInConfig.enabled" must be a boolean.');
+      });
+    });
+
+    const invalidPasswordRequired = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
+    invalidEnabled.forEach((passwordRequired) => {
+      it('should throw on invalid EmailSignInConfig.passwordRequired:' + JSON.stringify(passwordRequired), () => {
+        expect(() => {
+          EmailSignInConfig.buildServerRequest({
+            enabled: true,
+            passwordRequired,
+          } as any);
+        }).to.throw('"EmailSignInConfig.passwordRequired" must be a boolean.');
+      });
+    });
+  });
+});
 
 describe('SAMLConfig', () => {
   const serverRequest: SAMLConfigServerRequest = {

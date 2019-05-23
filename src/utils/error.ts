@@ -499,6 +499,10 @@ export class AuthClientErrorCode {
     message: 'The session cookie duration must be a valid number in milliseconds ' +
       'between 5 minutes and 2 weeks.',
   };
+  public static INVALID_TENANT_ID = {
+    code: 'invalid-tenant-id',
+    message: 'The tenant ID must be a valid non-empty string.',
+  };
   public static INVALID_UID = {
     code: 'invalid-uid',
     message: 'The uid must be a non-empty string with at most 128 characters.',
@@ -510,6 +514,10 @@ export class AuthClientErrorCode {
   public static INVALID_TOKENS_VALID_AFTER_TIME = {
     code: 'invalid-tokens-valid-after-time',
     message: 'The tokensValidAfterTime must be a valid UTC number in seconds.',
+  };
+  public static MISMATCHING_TENANT_ID = {
+    code: 'mismatching-tenant-id',
+    message: 'User tenant ID does not match with the current TenantAwareAuth tenant ID.',
   };
   public static MISSING_ANDROID_PACKAGE_NAME = {
     code: 'missing-android-pkg-name',
@@ -585,6 +593,10 @@ export class AuthClientErrorCode {
   public static SESSION_COOKIE_REVOKED = {
     code: 'session-cookie-revoked',
     message: 'The Firebase session cookie has been revoked.',
+  };
+  public static TENANT_NOT_FOUND = {
+    code: 'tenant-not-found',
+    message: 'There is no tenant corresponding to the provided identifier.',
   };
   public static UID_ALREADY_EXISTS = {
     code: 'uid-already-exists',
@@ -763,6 +775,8 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   INVALID_DURATION: 'INVALID_SESSION_COOKIE_DURATION',
   // Invalid email provided.
   INVALID_EMAIL: 'INVALID_EMAIL',
+  // Invalid tenant display name. This can be thrown on CreateTenant and UpdateTenant.
+  INVALID_DISPLAY_NAME: 'INVALID_DISPLAY_NAME',
   // Invalid ID token provided.
   INVALID_ID_TOKEN: 'INVALID_ID_TOKEN',
   // OIDC configuration has an invalid OAuth client ID.
@@ -781,6 +795,8 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   MISSING_CONFIG: 'MISSING_CONFIG',
   // Missing configuration identifier.
   MISSING_CONFIG_ID: 'MISSING_PROVIDER_ID',
+  // Missing tenant display name: This can be thrown on CreateTenant and UpdateTenant.
+  MISSING_DISPLAY_NAME: 'MISSING_DISPLAY_NAME',
   // Missing iOS bundle ID.
   MISSING_IOS_BUNDLE_ID: 'MISSING_IOS_BUNDLE_ID',
   // Missing OIDC issuer.
@@ -803,6 +819,8 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   PHONE_NUMBER_EXISTS: 'PHONE_NUMBER_ALREADY_EXISTS',
   // Project not found.
   PROJECT_NOT_FOUND: 'PROJECT_NOT_FOUND',
+  // Tenant not found.
+  TENANT_NOT_FOUND: 'TENANT_NOT_FOUND',
   // Token expired error.
   TOKEN_EXPIRED: 'ID_TOKEN_EXPIRED',
   // Continue URL provided in ActionCodeSettings has a domain that is not whitelisted.
