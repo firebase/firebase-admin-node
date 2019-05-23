@@ -1006,7 +1006,7 @@ declare namespace admin.auth {
     /**
      * Defines the dynamic link domain to use for the current link if it is to be
      * opened using Firebase Dynamic Links, as multiple dynamic link domains can be
-     * configured per project. This field provides the ability explicitly choose
+     * configured per project. This field provides the ability to explicitly choose
      * one. If none is provided, the oldest domain is used by default.
      */ 
     dynamicLinkDomain?: string;
