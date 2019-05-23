@@ -140,6 +140,18 @@ export class ProjectManagementRequestHandler {
   }
 
   /**
+   * @param {string} parentResourceName Fully-qualified resource name of the project whose iOS apps
+   *     you want to list.
+   */
+  public listAppMetadata(parentResourceName: string): Promise<object> {
+    return this.invokeRequestHandler(
+        'GET',
+        `${parentResourceName}:searchApps?page_size=${LIST_APPS_MAX_PAGE_SIZE}`,
+        /* requestData */ null,
+        'v1beta1');
+  }
+
+  /**
    * @param {string} parentResourceName Fully-qualified resource name of the project that you want
    *     to create the Android app within.
    */
