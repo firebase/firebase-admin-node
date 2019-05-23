@@ -41,7 +41,7 @@ toc:
   - title: "SAMLAuthProviderConfig"
     path: /docs/reference/admin/node/admin.auth.SAMLAuthProviderConfig
   - title: "SAMLUpdateAuthProviderRequest"
-    path: /docs/reference/admin/node/admin.auth.SAMLUpdateAuthProviderRequests
+    path: /docs/reference/admin/node/admin.auth.SAMLUpdateAuthProviderRequest
   - title: "UpdateRequest"
     path: /docs/reference/admin/node/admin.auth.UpdateRequest
   - title: "UserImportOptions"
