@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-export class AppMetadata {
-  public readonly appId: string;
-  public readonly displayName: string;
-  public readonly platform: AppPlatform;
+export interface AppMetadata {
+  readonly appId: string;
+  readonly displayName: string;
+  readonly platform: AppPlatform;
 }
 
 export enum AppPlatform {

@@ -761,10 +761,10 @@ declare namespace admin.projectManagement {
     resourceName?: string;
   }
 
-  class AppMetadata {
-    public appId: string;
-    public displayName: string;
-    public platform: AppPlatform;
+  interface AppMetadata {
+    appId: string;
+    displayName?: string;
+    platform: AppPlatform;
   }
 
   enum AppPlatform {
