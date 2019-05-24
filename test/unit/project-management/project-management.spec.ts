@@ -26,12 +26,17 @@ import { ProjectManagementRequestHandler } from '../../../src/project-management
 import { FirebaseProjectManagementError } from '../../../src/utils/error';
 import * as mocks from '../../resources/mocks';
 import { IosApp } from '../../../src/project-management/ios-app';
+import { AppPlatform, AppMetadata } from '../../../src/project-management/AppMetadata';
 
 const expect = chai.expect;
 
 const APP_ID = 'test-app-id';
+const APP_ID_ANDROID: string = 'test-app-id-android-';
+const APP_ID_IOS: string = 'test-app-id-ios';
 const PACKAGE_NAME = 'test-package-name';
 const BUNDLE_ID = 'test-bundle-id';
+const DISPLAY_NAME_ANDROID: string = 'test-display-name-android';
+const DISPLAY_NAME_IOS: string = 'test-display-name-ios';
 const EXPECTED_ERROR = new FirebaseProjectManagementError('internal-error', 'message');
 
 const VALID_SHA_256_HASH = '0123456789abcdefABCDEF01234567890123456701234567890123456789abcd';
@@ -380,19 +385,116 @@ describe('ProjectManagement', () => {
       return projectManagement.createIosApp(BUNDLE_ID)
           .should.eventually.deep.equal(createdIosApp);
     });
+  });
 
-    describe('listAppMetadata', () => {
-      it('should throw service-unavailable error', () => {
-        expect(() => projectManagement.listAppMetadata())
-            .to.throw('This service is not available');
-      });
+  describe('listAppMetadata', () => {
+    const VALID_LIST_APP_METADATA_API_RESPONSE = {
+      apps: [
+        { appId: APP_ID_ANDROID, displayName: DISPLAY_NAME_ANDROID, platform: AppPlatform.ANDROID},
+        { appId: APP_ID_IOS, displayName: DISPLAY_NAME_IOS, platform: AppPlatform.IOS},
+      ],
+    };
+
+    it('should propagate API errors', () => {
+      const stub = sinon
+          .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
+          .returns(Promise.reject(EXPECTED_ERROR));
+      stubs.push(stub);
+      return projectManagement.listAppMetadata()
+          .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
     });
 
-    describe('setDisplayName', () => {
-      it('should throw service-unavailable error', () => {
-        expect(() => projectManagement.setDisplayName('new project name'))
-            .to.throw('This service is not available');
-      });
+    it('should throw with null API response', () => {
+      const stub = sinon
+          .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
+          .returns(Promise.resolve(null));
+      stubs.push(stub);
+      return projectManagement.listAppMetadata()
+          .should.eventually.be.rejected
+          .and.have.property(
+              'message',
+              'listAppMetadata()\'s responseData must be a non-null object. Response data: null');
+    });
+
+    it('should return empty array when API response missing "apps" field', () => {
+      const partialApiResponse = {};
+
+      const stub = sinon
+          .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
+          .returns(Promise.resolve(partialApiResponse));
+      stubs.push(stub);
+      return projectManagement.listAppMetadata()
+          .should.eventually.deep.equal([]);
+    });
+
+    it('should throw when API response has non-array "apps" field', () => {
+      const partialApiResponse = { apps: 'none' };
+
+      const stub = sinon
+          .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
+          .returns(Promise.resolve(partialApiResponse));
+      stubs.push(stub);
+      return projectManagement.listAppMetadata()
+          .should.eventually.be.rejected
+          .and.have.property(
+              'message',
+              '"apps" field must be present in the listAppMetadata() response data. Response data: '
+                  + JSON.stringify(partialApiResponse, null, 2));
+    });
+
+    it('should throw with API response missing "apps[].appId" field', () => {
+      const partialApiResponse = {
+        apps: [{}],
+      };
+
+      const stub = sinon
+          .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
+          .returns(Promise.resolve(partialApiResponse));
+      stubs.push(stub);
+      return projectManagement.listAppMetadata()
+          .should.eventually.be.rejected
+          .and.have.property(
+              'message',
+              '"apps[].appId" field must be present in the listAppMetadata() response data. '
+                  + `Response data: ${JSON.stringify(partialApiResponse, null, 2)}`);
+    });
+
+    it('should throw with API response with invalid "apps[].platform" field', () => {
+      const invalidPlatformApiResponse = {
+        apps: [{
+          appId: APP_ID,
+          platform: 'INVALID',
+        }],
+      };
+
+      const stub = sinon
+          .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
+          .returns(Promise.resolve(invalidPlatformApiResponse));
+      stubs.push(stub);
+      return projectManagement.listAppMetadata()
+          .should.eventually.be.rejected
+          .and.have.property(
+              'message',
+              '"apps[].platform" field must be one of [PLATFORM_UNKNOWN, IOS, ANDROID]. '
+                  + `Response data: ${JSON.stringify(invalidPlatformApiResponse, null, 2)}`);
+    });
+
+    it('should resolve with list of apps metadata on success', () => {
+      const validAppMetadata: AppMetadata[] = VALID_LIST_APP_METADATA_API_RESPONSE.apps;
+
+      const stub = sinon
+          .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
+          .returns(Promise.resolve(VALID_LIST_APP_METADATA_API_RESPONSE));
+      stubs.push(stub);
+      return projectManagement.listAppMetadata()
+          .should.eventually.deep.equal(validAppMetadata);
+    });
+  });
+
+  describe('setDisplayName', () => {
+    it('should throw service-unavailable error', () => {
+      expect(() => projectManagement.setDisplayName('new project name'))
+          .to.throw('This service is not available');
     });
   });
 });

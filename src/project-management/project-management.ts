@@ -22,7 +22,7 @@ import * as validator from '../utils/validator';
 import { AndroidApp, ShaCertificate } from './android-app';
 import { IosApp } from './ios-app';
 import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request';
-import { AppMetadata } from './AppMetadata';
+import { AppMetadata, AppPlatform } from './AppMetadata';
 
 /**
  * Internals of a Project Management instance.
@@ -152,8 +152,8 @@ export class ProjectManagement implements FirebaseServiceInterface {
    * Lists summary of all apps in the project
    */
   public listAppMetadata(): Promise<AppMetadata[]> {
-    throw new FirebaseProjectManagementError(
-      'service-unavailable', 'This service is not available');
+    return this.requestHandler.listAppMetadata(this.resourceName)
+      .then((responseData) => this.transformResponseToAppMetadata(responseData));
   }
 
   /**
@@ -162,6 +162,30 @@ export class ProjectManagement implements FirebaseServiceInterface {
   public setDisplayName(displayName: string): Promise<void> {
     throw new FirebaseProjectManagementError(
       'service-unavailable', 'This service is not available');
+  }
+
+  private transformResponseToAppMetadata(responseData: any): AppMetadata[] {
+    this.assertListAppsResponseData(responseData, 'listAppMetadata()');
+
+    if (!responseData.apps) {
+      return [];
+    }
+
+    return responseData.apps.map((appJson: any) => {
+      assertServerResponse(
+          validator.isNonEmptyString(appJson.appId),
+          responseData,
+          `"apps[].appId" field must be present in the listAppMetadata() response data.`);
+      assertServerResponse(
+          this.validateAppPlatform(appJson.platform),
+          responseData,
+          `"apps[].platform" field must be one of [${Object.keys(AppPlatform).join(', ')}].`);
+      return appJson as AppMetadata;
+    });
+  }
+
+  private validateAppPlatform(platform: any): boolean {
+    return platform && (AppPlatform[platform] !== undefined);
   }
 
   /**
@@ -174,19 +198,11 @@ export class ProjectManagement implements FirebaseServiceInterface {
 
     return listPromise
         .then((responseData: any) => {
-          assertServerResponse(
-              validator.isNonNullObject(responseData),
-              responseData,
-              `${callerName}\'s responseData must be a non-null object.`);
+          this.assertListAppsResponseData(responseData, callerName);
 
           if (!responseData.apps) {
             return [];
           }
-
-          assertServerResponse(
-              validator.isArray(responseData.apps),
-              responseData,
-              `"apps" field must be present in the ${callerName} response data.`);
 
           return responseData.apps.map((appJson: any) => {
             assertServerResponse(
@@ -200,5 +216,19 @@ export class ProjectManagement implements FirebaseServiceInterface {
             }
           });
         });
+  }
+
+  private assertListAppsResponseData(responseData: any, callerName: string): void {
+    assertServerResponse(
+        validator.isNonNullObject(responseData),
+        responseData,
+        `${callerName}\'s responseData must be a non-null object.`);
+
+    if (responseData.apps) {
+      assertServerResponse(
+          validator.isArray(responseData.apps),
+          responseData,
+          `"apps" field must be present in the ${callerName} response data.`);
+      }
   }
 }
