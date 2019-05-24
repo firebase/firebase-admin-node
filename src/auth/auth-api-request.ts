@@ -120,6 +120,37 @@ class AuthResourceUrlBuilder {
 }
 
 
+/** Tenant aware resource builder utility. */
+class TenantAwareAuthResourceUrlBuilder extends AuthResourceUrlBuilder {
+  /**
+   * The tenant aware resource URL builder constructor.
+   *
+   * @param {string} projectId The resource project ID.
+   * @param {string} version The endpoint API version.
+   * @param {string} tenantId The tenant ID.
+   * @constructor
+   */
+  constructor(protected projectId: string, protected version: string, protected tenantId: string) {
+    super(projectId, version);
+    // Inject tenant path in URL.
+    this.urlFormat = this.urlFormat.replace(
+        'projects/{projectId}', 'projects/{projectId}/tenants/{tenantId}');
+  }
+
+  /**
+   * Returns the resource URL corresponding to the provided parameters.
+   *
+   * @param {string=} api The backend API name.
+   * @param {object=} params The optional additional parameters to substitute in the
+   *     URL path.
+   * @return {string} The corresponding resource URL.
+   */
+  public getUrl(api?: string, params?: object) {
+    return utils.formatString(super.getUrl(api, params), {tenantId: this.tenantId});
+  }
+}
+
+
 /**
  * Validates a providerUserInfo object. All unsupported parameters
  * are removed from the original request. If an invalid field is passed
@@ -205,6 +236,7 @@ function validateCreateEditRequest(request: any, uploadAccountRequest: boolean =
     phoneNumber: true,
     customAttributes: true,
     validSince: true,
+    tenantId: true,
     passwordHash: uploadAccountRequest,
     salt: uploadAccountRequest,
     createdAt: uploadAccountRequest,
@@ -216,6 +248,10 @@ function validateCreateEditRequest(request: any, uploadAccountRequest: boolean =
     if (!(key in validKeys)) {
       delete request[key];
     }
+  }
+  if (typeof request.tenantId !== 'undefined' &&
+      !validator.isNonEmptyString(request.tenantId)) {
+    throw new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID);
   }
   // For any invalid parameter, use the external key name in the error description.
   // displayName should be a string.
@@ -633,10 +669,10 @@ const LIST_INBOUND_SAML_CONFIGS = new ApiSettings('/inboundSamlConfigs', 'GET')
 /**
  * Class that provides the mechanism to send requests to the Firebase Auth backend endpoints.
  */
-export class FirebaseAuthRequestHandler {
-  private readonly httpClient: AuthorizedHttpClient;
-  private readonly authUrlBuilder: AuthResourceUrlBuilder;
-  private readonly projectConfigUrlBuilder: AuthResourceUrlBuilder;
+export class BaseFirebaseAuthRequestHandler {
+  protected readonly httpClient: AuthorizedHttpClient;
+  protected authUrlBuilder: AuthResourceUrlBuilder;
+  protected projectConfigUrlBuilder: AuthResourceUrlBuilder;
 
   /**
    * @param {any} response The response to check for errors.
@@ -876,6 +912,15 @@ export class FirebaseAuthRequestHandler {
         new FirebaseAuthError(
           AuthClientErrorCode.INVALID_ARGUMENT,
           'Properties argument must be a non-null object.',
+        ),
+      );
+    }
+
+    if (properties.hasOwnProperty('tenantId')) {
+      return Promise.reject(
+        new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          'Tenant ID cannot be modified on an existing user.',
         ),
       );
     }
@@ -1321,5 +1366,51 @@ export class FirebaseAuthRequestHandler {
         }
         throw err;
       });
+  }
+}
+
+
+/**
+ * Utility for sending requests to Auth server that are Auth instance related. This includes user and
+ * tenant management related APIs. This extends the BaseFirebaseAuthRequestHandler class and defines
+ * additional tenant management related APIs.
+ */
+export class FirebaseAuthRequestHandler extends BaseFirebaseAuthRequestHandler {
+
+  protected readonly tenantMgmtResourceBuilder: AuthResourceUrlBuilder;
+
+  /**
+   * The FirebaseAuthRequestHandler constructor used to initialize an instance using a FirebaseApp.
+   *
+   * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
+   * @constructor.
+   */
+  constructor(app: FirebaseApp) {
+    super(app);
+    this.tenantMgmtResourceBuilder =  new AuthResourceUrlBuilder(utils.getProjectId(app), 'v2beta1');
+  }
+
+  // TODO: add tenant management APIs.
+}
+
+/**
+ * Utility for sending requests to Auth server that are tenant Auth instance related. This includes user
+ * management related APIs for specified tenants.
+ * This extends the BaseFirebaseAuthRequestHandler class.
+ */
+export class FirebaseTenantRequestHandler extends BaseFirebaseAuthRequestHandler {
+  /**
+   * The FirebaseTenantRequestHandler constructor used to initialize an instance using a
+   * FirebaseApp and a tenant ID.
+   *
+   * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
+   * @param {string} tenantId The request handler's tenant ID.
+   * @constructor
+   */
+  constructor(app: FirebaseApp, tenantId: string) {
+    super(app);
+    // Overwrite authUrlBuilder to use TenantAwareAuthResourceUrlBuilder.
+    this.authUrlBuilder = new TenantAwareAuthResourceUrlBuilder(utils.getProjectId(app), 'v1', tenantId);
+    this.projectConfigUrlBuilder = new TenantAwareAuthResourceUrlBuilder(utils.getProjectId(app), 'v2beta1', tenantId);
   }
 }
