@@ -177,15 +177,12 @@ export class ProjectManagement implements FirebaseServiceInterface {
           responseData,
           `"apps[].appId" field must be present in the listAppMetadata() response data.`);
       assertServerResponse(
-          this.validateAppPlatform(appJson.platform),
+          validator.isNonEmptyString(appJson.platform),
           responseData,
-          `"apps[].platform" field must be one of [${Object.keys(AppPlatform).join(', ')}].`);
+          `"apps[].platform" field must be present in the listAppMetadata() response data.`);
+      appJson.platform = AppPlatform[appJson.platform] || AppPlatform.PLATFORM_UNKNOWN;
       return appJson as AppMetadata;
     });
-  }
-
-  private validateAppPlatform(platform: any): boolean {
-    return platform && (AppPlatform[platform] !== undefined);
   }
 
   /**

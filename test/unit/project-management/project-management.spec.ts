@@ -459,24 +459,23 @@ describe('ProjectManagement', () => {
                   + `Response data: ${JSON.stringify(partialApiResponse, null, 2)}`);
     });
 
-    it('should throw with API response with invalid "apps[].platform" field', () => {
-      const invalidPlatformApiResponse = {
+    it('should throw with API response missing "apps[].platform" field', () => {
+      const missingPlatformApiResponse = {
         apps: [{
           appId: APP_ID,
-          platform: 'INVALID',
         }],
       };
 
       const stub = sinon
           .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
-          .returns(Promise.resolve(invalidPlatformApiResponse));
+          .returns(Promise.resolve(missingPlatformApiResponse));
       stubs.push(stub);
       return projectManagement.listAppMetadata()
           .should.eventually.be.rejected
           .and.have.property(
               'message',
-              '"apps[].platform" field must be one of [PLATFORM_UNKNOWN, IOS, ANDROID]. '
-                  + `Response data: ${JSON.stringify(invalidPlatformApiResponse, null, 2)}`);
+              '"apps[].platform" field must be present in the listAppMetadata() response data. '
+                  + `Response data: ${JSON.stringify(missingPlatformApiResponse, null, 2)}`);
     });
 
     it('should resolve with list of apps metadata on success', () => {
@@ -488,6 +487,26 @@ describe('ProjectManagement', () => {
       stubs.push(stub);
       return projectManagement.listAppMetadata()
           .should.eventually.deep.equal(validAppMetadata);
+    });
+
+    it('should resolve with "apps[].platform" to be "PLATFORM_UNKNOWN" for web app', () => {
+      const webPlatformApiResponse = {
+        apps: [{
+          appId: APP_ID,
+          platform: 'WEB',
+        }],
+      };
+      const expectedAppMetadata: AppMetadata[] = [{
+        appId: APP_ID,
+        platform: AppPlatform.PLATFORM_UNKNOWN,
+      }];
+
+      const stub = sinon
+          .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
+          .returns(Promise.resolve(webPlatformApiResponse));
+      stubs.push(stub);
+      return projectManagement.listAppMetadata()
+          .should.eventually.deep.equal(expectedAppMetadata);
     });
   });
 
