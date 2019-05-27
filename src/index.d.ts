@@ -33,9 +33,9 @@ declare namespace admin {
   }
 
   interface ServiceAccount {
-    readonly projectId?: string;
-    readonly clientEmail?: string;
-    readonly privateKey?: string;
+    projectId?: string;
+    clientEmail?: string;
+    privateKey?: string;
   }
 
   interface GoogleOAuthAccessToken {
@@ -44,13 +44,13 @@ declare namespace admin {
   }
 
   interface AppOptions {
-    readonly credential?: admin.credential.Credential;
-    readonly databaseAuthVariableOverride?: Object;
-    readonly databaseURL?: string;
-    readonly serviceAccountId?: string;
-    readonly storageBucket?: string;
-    readonly projectId?: string;
-    readonly httpAgent?: Agent;
+    credential?: admin.credential.Credential;
+    databaseAuthVariableOverride?: Object;
+    databaseURL?: string;
+    serviceAccountId?: string;
+    storageBucket?: string;
+    projectId?: string;
+    httpAgent?: Agent;
   }
 
   var SDK_VERSION: string;
@@ -121,17 +121,17 @@ declare namespace admin.auth {
   }
 
   interface UpdateRequest {
-    readonly disabled?: boolean;
-    readonly displayName?: string | null;
-    readonly email?: string;
-    readonly emailVerified?: boolean;
-    readonly password?: string;
-    readonly phoneNumber?: string | null;
-    readonly photoURL?: string | null;
+    disabled?: boolean;
+    displayName?: string | null;
+    email?: string;
+    emailVerified?: boolean;
+    password?: string;
+    phoneNumber?: string | null;
+    photoURL?: string | null;
   }
 
   interface CreateRequest extends UpdateRequest {
-    readonly uid?: string;
+    uid?: string;
   }
 
   interface DecodedIdToken {
@@ -163,15 +163,15 @@ declare namespace admin.auth {
 
 
   interface UserImportOptions {
-    readonly hash: {
-      readonly algorithm: HashAlgorithmType;
-      readonly key?: Buffer;
-      readonly saltSeparator?: string;
-      readonly rounds?: number;
-      readonly memoryCost?: number;
-      readonly parallelization?: number;
-      readonly blockSize?: number;
-      readonly derivedKeyLength?: number;
+    hash: {
+      algorithm: HashAlgorithmType;
+      key?: Buffer;
+      saltSeparator?: string;
+      rounds?: number;
+      memoryCost?: number;
+      parallelization?: number;
+      blockSize?: number;
+      derivedKeyLength?: number;
     };
   }
 
@@ -182,57 +182,57 @@ declare namespace admin.auth {
   }
 
   interface UserImportRecord {
-    readonly uid: string;
-    readonly email?: string;
-    readonly emailVerified?: boolean;
-    readonly displayName?: string;
-    readonly phoneNumber?: string;
-    readonly photoURL?: string;
-    readonly disabled?: boolean;
-    readonly metadata?: {
-      readonly lastSignInTime?: string;
-      readonly creationTime?: string;
+    uid: string;
+    email?: string;
+    emailVerified?: boolean;
+    displayName?: string;
+    phoneNumber?: string;
+    photoURL?: string;
+    disabled?: boolean;
+    metadata?: {
+      lastSignInTime?: string;
+      creationTime?: string;
     };
-    readonly providerData?: {
-      readonly uid: string,
-      readonly displayName?: string,
-      readonly email?: string,
-      readonly photoURL?: string,
-      readonly providerId: string,
+    providerData?: {
+      uid: string,
+      displayName?: string,
+      email?: string,
+      photoURL?: string,
+      providerId: string,
     }[];
-    readonly customClaims?: Object;
-    readonly passwordHash?: Buffer;
-    readonly passwordSalt?: Buffer;
+    customClaims?: Object;
+    passwordHash?: Buffer;
+    passwordSalt?: Buffer;
   }
 
   interface SessionCookieOptions {
-    readonly expiresIn: number;
+    expiresIn: number;
   }
 
   interface ActionCodeSettings {
-    readonly url: string;
-    readonly handleCodeInApp?: boolean;
-    readonly iOS?: {
-      readonly bundleId: string;
+    url: string;
+    handleCodeInApp?: boolean;
+    iOS?: {
+      bundleId: string;
     };
-    readonly android?: {
-      readonly packageName: string;
-      readonly installApp?: boolean;
-      readonly minimumVersion?: string;
+    android?: {
+      packageName: string;
+      installApp?: boolean;
+      minimumVersion?: string;
     };
-    readonly dynamicLinkDomain?: string;
+    dynamicLinkDomain?: string;
   }
 
   interface AuthProviderConfigFilter {
-    readonly type: 'saml' | 'oidc';
-    readonly maxResults?: number;
-    readonly pageToken?: string;
+    type: 'saml' | 'oidc';
+    maxResults?: number;
+    pageToken?: string;
   }
 
   interface AuthProviderConfig {
-    readonly providerId: string;
-    readonly displayName: string;
-    readonly enabled: boolean;
+    providerId: string;
+    displayName: string;
+    enabled: boolean;
   }
 
   interface SAMLAuthProviderConfig extends admin.auth.AuthProviderConfig {
@@ -250,21 +250,21 @@ declare namespace admin.auth {
   }
 
   interface SAMLUpdateAuthProviderRequest {
-    readonly displayName?: string;
-    readonly enabled?: boolean;
-    readonly idpEntityId?: string;
-    readonly ssoURL?: string;
-    readonly x509Certificates?: string[];
-    readonly rpEntityId?: string;
-    readonly callbackURL?: string;
-    readonly enableRequestSigning?: boolean;
+    displayName?: string;
+    enabled?: boolean;
+    idpEntityId?: string;
+    ssoURL?: string;
+    x509Certificates?: string[];
+    rpEntityId?: string;
+    callbackURL?: string;
+    enableRequestSigning?: boolean;
   }
 
   interface OIDCUpdateAuthProviderRequest {
-    readonly displayName?: string;
-    readonly enabled?: boolean;
-    readonly clientId?: string;
-    readonly issuer?: string;
+    displayName?: string;
+    enabled?: boolean;
+    clientId?: string;
+    issuer?: string;
   }
 
   interface ListProviderConfigResults {
@@ -453,176 +453,176 @@ declare namespace admin.database.ServerValue {
 }
 
 type BaseMessage = {
-  readonly data?: {[key: string]: string};
-  readonly notification?: admin.messaging.Notification;
-  readonly android?: admin.messaging.AndroidConfig;
-  readonly webpush?: admin.messaging.WebpushConfig;
-  readonly apns?: admin.messaging.ApnsConfig;
+  data?: {[key: string]: string};
+  notification?: admin.messaging.Notification;
+  android?: admin.messaging.AndroidConfig;
+  webpush?: admin.messaging.WebpushConfig;
+  apns?: admin.messaging.ApnsConfig;
 };
 
 interface TokenMessage extends BaseMessage {
-  readonly token: string;
+  token: string;
 }
 
 interface TopicMessage extends BaseMessage {
-  readonly topic: string;
+  topic: string;
 }
 
 interface ConditionMessage extends BaseMessage {
-  readonly condition: string;
+  condition: string;
 }
 
 declare namespace admin.messaging {
   type Message = TokenMessage | TopicMessage | ConditionMessage;
 
   interface MulticastMessage extends BaseMessage {
-    readonly tokens: string[];
+    tokens: string[];
   }
 
   type AndroidConfig = {
-    readonly collapseKey?: string;
-    readonly priority?: ('high'|'normal');
-    readonly ttl?: number;
-    readonly restrictedPackageName?: string;
-    readonly data?: {[key: string]: string};
-    readonly notification?: AndroidNotification;
+    collapseKey?: string;
+    priority?: ('high'|'normal');
+    ttl?: number;
+    restrictedPackageName?: string;
+    data?: {[key: string]: string};
+    notification?: AndroidNotification;
   };
 
   type AndroidNotification = {
-    readonly title?: string;
-    readonly body?: string;
-    readonly icon?: string;
-    readonly color?: string;
-    readonly sound?: string;
-    readonly tag?: string;
-    readonly clickAction?: string;
-    readonly bodyLocKey?: string;
-    readonly bodyLocArgs?: string[];
-    readonly titleLocKey?: string;
-    readonly titleLocArgs?: string[];
-    readonly channelId?: string;
+    title?: string;
+    body?: string;
+    icon?: string;
+    color?: string;
+    sound?: string;
+    tag?: string;
+    clickAction?: string;
+    bodyLocKey?: string;
+    bodyLocArgs?: string[];
+    titleLocKey?: string;
+    titleLocArgs?: string[];
+    channelId?: string;
   };
 
   type ApnsConfig = {
-    readonly headers?: {[key: string]: string};
-    readonly payload?: ApnsPayload;
+    headers?: {[key: string]: string};
+    payload?: ApnsPayload;
   };
 
   type ApnsPayload = {
-    readonly aps: Aps;
-    readonly [customData: string]: object;
+    aps: Aps;
+    [customData: string]: object;
   };
 
   type Aps = {
-    readonly alert?: string | ApsAlert;
-    readonly badge?: number;
-    readonly sound?: string | CriticalSound;
-    readonly contentAvailable?: boolean;
-    readonly mutableContent?: boolean;
-    readonly category?: string;
-    readonly threadId?: string;
-    readonly [customData: string]: any;
+    alert?: string | ApsAlert;
+    badge?: number;
+    sound?: string | CriticalSound;
+    contentAvailable?: boolean;
+    mutableContent?: boolean;
+    category?: string;
+    threadId?: string;
+    [customData: string]: any;
   };
 
   type ApsAlert = {
-    readonly title?: string;
-    readonly subtitle?: string;
-    readonly body?: string;
-    readonly locKey?: string;
-    readonly locArgs?: string[];
-    readonly titleLocKey?: string;
-    readonly titleLocArgs?: string[];
-    readonly subtitleLocKey?: string;
-    readonly subtitleLocArgs?: string[];
-    readonly actionLocKey?: string;
-    readonly launchImage?: string;
+    title?: string;
+    subtitle?: string;
+    body?: string;
+    locKey?: string;
+    locArgs?: string[];
+    titleLocKey?: string;
+    titleLocArgs?: string[];
+    subtitleLocKey?: string;
+    subtitleLocArgs?: string[];
+    actionLocKey?: string;
+    launchImage?: string;
   };
 
   type CriticalSound = {
-    readonly critical?: boolean;
-    readonly name: string;
-    readonly volume?: number;
+    critical?: boolean;
+    name: string;
+    volume?: number;
   }
 
   type Notification = {
-    readonly title?: string;
-    readonly body?: string;
+    title?: string;
+    body?: string;
   };
 
   type WebpushConfig = {
-    readonly headers?: {[key: string]: string};
-    readonly data?: {[key: string]: string};
-    readonly notification?: WebpushNotification;
-    readonly fcmOptions?: WebpushFcmOptions;
+    headers?: {[key: string]: string};
+    data?: {[key: string]: string};
+    notification?: WebpushNotification;
+    fcmOptions?: WebpushFcmOptions;
   };
 
   interface WebpushFcmOptions {
-    readonly link?: string;
+    link?: string;
   }
 
   interface WebpushNotification {
-    readonly title?: string;
-    readonly actions?: Array<{
-      readonly action: string;
-      readonly icon?: string;
-      readonly title: string;
+    title?: string;
+    actions?: Array<{
+      action: string;
+      icon?: string;
+      title: string;
     }>;
-    readonly badge?: string;
-    readonly body?: string;
-    readonly data?: any;
-    readonly dir?: 'auto' | 'ltr' | 'rtl';
-    readonly icon?: string;
-    readonly image?: string;
-    readonly lang?: string;
-    readonly renotify?: boolean;
-    readonly requireInteraction?: boolean;
-    readonly silent?: boolean;
-    readonly tag?: string;
-    readonly timestamp?: number;
-    readonly vibrate?: number | number[];
-    readonly [key: string]: any;
+    badge?: string;
+    body?: string;
+    data?: any;
+    dir?: 'auto' | 'ltr' | 'rtl';
+    icon?: string;
+    image?: string;
+    lang?: string;
+    renotify?: boolean;
+    requireInteraction?: boolean;
+    silent?: boolean;
+    tag?: string;
+    timestamp?: number;
+    vibrate?: number | number[];
+    [key: string]: any;
   }
 
   type DataMessagePayload = {
-    readonly [key: string]: string;
+    [key: string]: string;
   };
 
   type NotificationMessagePayload = {
-    readonly tag?: string;
-    readonly body?: string;
-    readonly icon?: string;
-    readonly badge?: string;
-    readonly color?: string;
-    readonly sound?: string;
-    readonly title?: string;
-    readonly bodyLocKey?: string;
-    readonly bodyLocArgs?: string;
-    readonly clickAction?: string;
-    readonly titleLocKey?: string;
-    readonly titleLocArgs?: string;
-    readonly [key: string]: string | undefined;
+    tag?: string;
+    body?: string;
+    icon?: string;
+    badge?: string;
+    color?: string;
+    sound?: string;
+    title?: string;
+    bodyLocKey?: string;
+    bodyLocArgs?: string;
+    clickAction?: string;
+    titleLocKey?: string;
+    titleLocArgs?: string;
+    [key: string]: string | undefined;
   };
 
   type MessagingPayload = {
-    readonly data?: admin.messaging.DataMessagePayload;
-    readonly notification?: admin.messaging.NotificationMessagePayload;
+    data?: admin.messaging.DataMessagePayload;
+    notification?: admin.messaging.NotificationMessagePayload;
   };
 
   type MessagingOptions = {
-    readonly dryRun?: boolean;
-    readonly priority?: string;
-    readonly timeToLive?: number;
-    readonly collapseKey?: string;
-    readonly mutableContent?: boolean;
-    readonly contentAvailable?: boolean;
-    readonly restrictedPackageName?: string;
-    readonly [key: string]: any | undefined;
+    dryRun?: boolean;
+    priority?: string;
+    timeToLive?: number;
+    collapseKey?: string;
+    mutableContent?: boolean;
+    contentAvailable?: boolean;
+    restrictedPackageName?: string;
+    [key: string]: any | undefined;
   };
 
   type MessagingDeviceResult = {
-    readonly error?: admin.FirebaseError;
-    readonly messageId?: string;
-    readonly canonicalRegistrationToken?: string;
+    error?: admin.FirebaseError;
+    messageId?: string;
+    canonicalRegistrationToken?: string;
   };
 
   type MessagingDevicesResponse = {
