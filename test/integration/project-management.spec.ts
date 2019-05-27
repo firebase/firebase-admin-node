@@ -75,6 +75,19 @@ describe('admin.projectManagement', () => {
     });
   });
 
+  describe('listAppMetadata()', () => {
+    it('successfully lists metadata of all apps', () => {
+      return admin.projectManagement().listAppMetadata()
+        .then((metadatas) => {
+            expect(metadatas.length).to.be.at.least(2);
+            const testAppMetadatas = metadatas.filter((metadata) =>
+                isIntegrationTestAppDisplayName(metadata.displayName) &&
+                (metadata.appId === androidApp.appId || metadata.appId === iosApp.appId));
+            expect(testAppMetadatas).to.have.length(2);
+        });
+    });
+  });
+
   describe('androidApp.getMetadata()', () => {
     it('successfully sets Android app\'s display name', () => {
       return androidApp.getMetadata().then((appMetadata) => {
@@ -239,6 +252,13 @@ function generateUniqueAppDisplayName() {
  */
 function isIntegrationTestApp(appNamespace: string): boolean {
   return (appNamespace.indexOf(APP_NAMESPACE_PREFIX) > -1);
+}
+
+/**
+ * @return {boolean} True if the specified appDisplayName belongs to these integration tests.
+ */
+function isIntegrationTestAppDisplayName(appDisplayName: string): boolean {
+  return (appDisplayName.indexOf(APP_DISPLAY_NAME_PREFIX) > -1);
 }
 
 /**

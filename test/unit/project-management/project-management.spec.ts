@@ -31,7 +31,7 @@ import { AppPlatform, AppMetadata } from '../../../src/project-management/AppMet
 const expect = chai.expect;
 
 const APP_ID = 'test-app-id';
-const APP_ID_ANDROID: string = 'test-app-id-android-';
+const APP_ID_ANDROID: string = 'test-app-id-android';
 const APP_ID_IOS: string = 'test-app-id-ios';
 const PACKAGE_NAME = 'test-package-name';
 const BUNDLE_ID = 'test-bundle-id';

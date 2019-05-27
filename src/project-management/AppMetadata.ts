@@ -16,7 +16,7 @@
 
 export interface AppMetadata {
   readonly appId: string;
-  readonly displayName: string;
+  readonly displayName?: string;
   readonly platform: AppPlatform;
 }
 

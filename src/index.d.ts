@@ -811,6 +811,7 @@ declare namespace admin.projectManagement {
 
     listAndroidApps(): Promise<admin.projectManagement.AndroidApp[]>;
     listIosApps(): Promise<admin.projectManagement.IosApp[]>;
+    listAppMetadata(): Promise<admin.projectManagement.AppMetadata[]>;
     androidApp(appId: string): admin.projectManagement.AndroidApp;
     iosApp(appId: string): admin.projectManagement.IosApp;
     shaCertificate(shaHash: string): admin.projectManagement.ShaCertificate;
