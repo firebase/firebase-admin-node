@@ -511,9 +511,21 @@ describe('ProjectManagement', () => {
   });
 
   describe('setDisplayName', () => {
-    it('should throw service-unavailable error', () => {
-      expect(() => projectManagement.setDisplayName('new project name'))
-          .to.throw('This service is not available');
+    it('should propagate API errors', () => {
+      const stub = sinon
+          .stub(ProjectManagementRequestHandler.prototype, 'setDisplayName')
+          .returns(Promise.reject(EXPECTED_ERROR));
+      stubs.push(stub);
+      return projectManagement.setDisplayName(DISPLAY_NAME_ANDROID)
+          .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+    });
+
+    it('should resolve on success', () => {
+      const stub = sinon
+          .stub(ProjectManagementRequestHandler.prototype, 'setDisplayName')
+          .returns(Promise.resolve());
+      stubs.push(stub);
+      return projectManagement.setDisplayName(DISPLAY_NAME_ANDROID).should.eventually.be.fulfilled;
     });
   });
 });

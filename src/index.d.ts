@@ -813,6 +813,7 @@ declare namespace admin.projectManagement {
     listIosApps(): Promise<admin.projectManagement.IosApp[]>;
     listAppMetadata(): Promise<admin.projectManagement.AppMetadata[]>;
     androidApp(appId: string): admin.projectManagement.AndroidApp;
+    setDisplayName(newDisplayName: string): Promise<void>;
     iosApp(appId: string): admin.projectManagement.IosApp;
     shaCertificate(shaHash: string): admin.projectManagement.ShaCertificate;
     createAndroidApp(

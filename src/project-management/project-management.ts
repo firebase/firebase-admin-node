@@ -159,9 +159,8 @@ export class ProjectManagement implements FirebaseServiceInterface {
   /**
    * Update display name of the project
    */
-  public setDisplayName(displayName: string): Promise<void> {
-    throw new FirebaseProjectManagementError(
-      'service-unavailable', 'This service is not available');
+  public setDisplayName(newDisplayName: string): Promise<void> {
+    return this.requestHandler.setDisplayName(this.resourceName, newDisplayName);
   }
 
   private transformResponseToAppMetadata(responseData: any): AppMetadata[] {
