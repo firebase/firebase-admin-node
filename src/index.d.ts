@@ -229,7 +229,7 @@ declare namespace admin {
    * ```javascript
    * // Get the Database service for a specific app
    * var otherDatabase = admin.database(app);
-   * ``
+   * ```
    *
    * @param App whose `Database` service to
    *   return. If not provided, the default `Database` service will be returned.
