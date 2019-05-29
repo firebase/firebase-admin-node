@@ -17,7 +17,7 @@
 import { FirebaseProjectManagementError } from '../utils/error';
 import * as validator from '../utils/validator';
 import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request';
-import { IosAppMetadata, AppPlatform } from './AppMetadata';
+import { IosAppMetadata, AppPlatform } from './app-metadata';
 
 export class IosApp {
   private readonly resourceName: string;

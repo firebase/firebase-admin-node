@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-export interface AppMetadata {
-  readonly appId: string;
-  readonly displayName: string;
-  readonly platform: AppPlatform;
-}
-
 export enum AppPlatform {
   PLATFORM_UNKNOWN = 'PLATFORM_UNKNOWN',
   IOS = 'IOS',
   ANDROID = 'ANDROID',
+}
+
+export interface AppMetadata {
+  readonly appId: string;
+  readonly displayName: string;
+  readonly platform: AppPlatform;
 }
 
 export interface AndroidAppMetadata extends AppMetadata {

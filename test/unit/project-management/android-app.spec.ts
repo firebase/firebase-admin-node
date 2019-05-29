@@ -25,7 +25,7 @@ import { ProjectManagementRequestHandler } from '../../../src/project-management
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { FirebaseProjectManagementError } from '../../../src/utils/error';
 import * as mocks from '../../resources/mocks';
-import { AndroidAppMetadata, AppPlatform } from '../../../src/project-management/AppMetadata';
+import { AndroidAppMetadata, AppPlatform } from '../../../src/project-management/app-metadata';
 
 const expect = chai.expect;
 

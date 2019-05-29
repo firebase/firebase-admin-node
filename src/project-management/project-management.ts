@@ -22,7 +22,7 @@ import * as validator from '../utils/validator';
 import { AndroidApp, ShaCertificate } from './android-app';
 import { IosApp } from './ios-app';
 import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request';
-import { AppMetadata } from './AppMetadata';
+import { AppMetadata } from './app-metadata';
 
 /**
  * Internals of a Project Management instance.
