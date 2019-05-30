@@ -1833,12 +1833,6 @@ declare namespace admin.credential {
     * Google Application Default Credentials are available on any Google
     * infrastructure, such as Google App Engine and Google Compute Engine.
     *
-    * The Google Application Default Credential does not grant access to every
-    * admin API. Certain methods, such as
-    * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#createCustomToken `createCustomToken()`} and
-    * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#verifyIdToken `verifyIdToken()`},
-    * will not work.
-    *
     * See
     * {@link
     *   https://firebase.google.com/docs/admin/setup#initialize_the_sdk
@@ -1915,12 +1909,6 @@ declare namespace admin.credential {
    * {@link
     *   https://firebase.google.com/docs/reference/admin/node/admin#.initializeApp
     *   `admin.initializeApp()`}.
-    *
-    * The refresh token credential does not grant access to every admin API.
-    * Certain methods, such as
-    * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#createCustomToken `createCustomToken()`} and
-    * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#verifyIdToken `verifyIdToken()`},
-    * will not work.
     *
     * See
     * {@link
@@ -3259,7 +3247,7 @@ declare namespace admin.database {
      * var messageListRef = admin.database().ref('message_list');
      * var newMessageRef = messageListRef.push();
      * newMessageRef.set({
-     *   'user_id': 'ada',
+     *   user_id: ada,
      *   'text': 'The Analytical Engine weaves algebraical patterns just as the Jacquard loom weaves flowers and leaves.'
      * });
      * // We've appended a new message to the message_list location.
@@ -3550,7 +3538,6 @@ declare namespace admin.database {
 
   /**
    * @extends {admin.database.Reference}
-   * @extends {admin.Thenable<void>}
    */
   interface ThenableReference extends admin.database.Reference, PromiseLike<any> {}
 
