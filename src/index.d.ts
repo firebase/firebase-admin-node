@@ -765,6 +765,8 @@ declare namespace admin.projectManagement {
     appId: string;
     displayName?: string;
     platform: AppPlatform;
+    projectId: string;
+    resourceName: string;
   }
 
   enum AppPlatform {
@@ -775,9 +777,12 @@ declare namespace admin.projectManagement {
 
   interface AndroidAppMetadata extends AppMetadata {
     platform: AppPlatform.ANDROID;
-    resourceName: string;
-    projectId: string;
     packageName: string;
+  }
+
+  interface IosAppMetadata extends AppMetadata {
+    platform: AppPlatform.IOS;
+    bundleId: string;
   }
 
   interface AndroidApp {
@@ -789,13 +794,6 @@ declare namespace admin.projectManagement {
     addShaCertificate(certificateToAdd: ShaCertificate): Promise<void>;
     deleteShaCertificate(certificateToRemove: ShaCertificate): Promise<void>;
     getConfig(): Promise<string>;
-  }
-
-  interface IosAppMetadata extends AppMetadata {
-    platform: AppPlatform.IOS;
-    resourceName: string;
-    projectId: string;
-    bundleId: string;
   }
 
   interface IosApp {
