@@ -243,7 +243,7 @@ declare namespace admin.auth {
     callbackURL?: string;
     enableRequestSigning?: boolean;
   }
-  
+
   interface OIDCAuthProviderConfig extends admin.auth.AuthProviderConfig {
     clientId: string;
     issuer: string;
@@ -761,12 +761,28 @@ declare namespace admin.projectManagement {
     resourceName?: string;
   }
 
-  interface AndroidAppMetadata {
-    resourceName: string;
+  interface AppMetadata {
     appId: string;
-    displayName: string | null;
+    displayName?: string;
+    platform: AppPlatform;
     projectId: string;
+    resourceName: string;
+  }
+
+  enum AppPlatform {
+    PLATFORM_UNKNOWN = 'PLATFORM_UNKNOWN',
+    IOS = 'IOS',
+    ANDROID = 'ANDROID',
+  }
+
+  interface AndroidAppMetadata extends AppMetadata {
+    platform: AppPlatform.ANDROID;
     packageName: string;
+  }
+
+  interface IosAppMetadata extends AppMetadata {
+    platform: AppPlatform.IOS;
+    bundleId: string;
   }
 
   interface AndroidApp {
@@ -778,14 +794,6 @@ declare namespace admin.projectManagement {
     addShaCertificate(certificateToAdd: ShaCertificate): Promise<void>;
     deleteShaCertificate(certificateToRemove: ShaCertificate): Promise<void>;
     getConfig(): Promise<string>;
-  }
-
-  interface IosAppMetadata {
-    resourceName: string;
-    appId: string;
-    displayName: string;
-    projectId: string;
-    bundleId: string;
   }
 
   interface IosApp {

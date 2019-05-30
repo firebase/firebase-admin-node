@@ -22,6 +22,7 @@ import * as validator from '../utils/validator';
 import { AndroidApp, ShaCertificate } from './android-app';
 import { IosApp } from './ios-app';
 import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request';
+import { AppMetadata } from './app-metadata';
 
 /**
  * Internals of a Project Management instance.
@@ -145,6 +146,22 @@ export class ProjectManagement implements FirebaseServiceInterface {
               `"responseData.appId" field must be present in createIosApp()'s response data.`);
           return new IosApp(responseData.appId, this.requestHandler);
         });
+  }
+
+  /**
+   * Lists summary of all apps in the project
+   */
+  public listAppMetadata(): Promise<AppMetadata[]> {
+    throw new FirebaseProjectManagementError(
+      'service-unavailable', 'This service is not available');
+  }
+
+  /**
+   * Update display name of the project
+   */
+  public setDisplayName(displayName: string): Promise<void> {
+    throw new FirebaseProjectManagementError(
+      'service-unavailable', 'This service is not available');
   }
 
   /**
