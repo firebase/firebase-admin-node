@@ -3248,7 +3248,7 @@ declare namespace admin.database {
      * var newMessageRef = messageListRef.push();
      * newMessageRef.set({
      *   user_id: ada,
-     *   'text': 'The Analytical Engine weaves algebraical patterns just as the Jacquard loom weaves flowers and leaves.'
+     *   text: `The Analytical Engine weaves algebraical patterns just as the Jacquard loom weaves flowers and leaves.`
      * });
      * // We've appended a new message to the message_list location.
      * var path = newMessageRef.toString();
