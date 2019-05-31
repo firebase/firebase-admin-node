@@ -27,7 +27,7 @@ import { HttpClient } from '../../../src/utils/api-request';
 import * as mocks from '../../resources/mocks';
 import * as utils from '../utils';
 import { ShaCertificate } from '../../../src/project-management/android-app';
-import { AppPlatform } from '../../../src/project-management/AppMetadata';
+import { AppPlatform } from '../../../src/project-management/app-metadata';
 
 chai.should();
 chai.use(sinonChai);

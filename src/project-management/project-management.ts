@@ -24,6 +24,11 @@ import { IosApp } from './ios-app';
 import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request';
 import { AppMetadata, AppPlatform } from './app-metadata';
 
+const APP_PLATFORM_MAP: {[key: string]: AppPlatform} = {
+  ANDROID: AppPlatform.ANDROID,
+  IOS: AppPlatform.IOS,
+};
+
 /**
  * Internals of a Project Management instance.
  */
@@ -179,8 +184,13 @@ export class ProjectManagement implements FirebaseServiceInterface {
           validator.isNonEmptyString(appJson.platform),
           responseData,
           `"apps[].platform" field must be present in the listAppMetadata() response data.`);
-      appJson.platform = AppPlatform[appJson.platform] || AppPlatform.PLATFORM_UNKNOWN;
-      return appJson as AppMetadata;
+      return {
+        appId: appJson.appId,
+        displayName: appJson.displayName,
+        platform: APP_PLATFORM_MAP[appJson.platform] || AppPlatform.PLATFORM_UNKNOWN,
+        projectId: this.projectId,
+        resourceName: appJson.name,
+      };
     });
   }
 

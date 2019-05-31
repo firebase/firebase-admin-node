@@ -26,7 +26,7 @@ import { ProjectManagementRequestHandler } from '../../../src/project-management
 import { FirebaseProjectManagementError } from '../../../src/utils/error';
 import * as mocks from '../../resources/mocks';
 import { IosApp } from '../../../src/project-management/ios-app';
-import { AppPlatform, AppMetadata } from '../../../src/project-management/AppMetadata';
+import { AppPlatform, AppMetadata } from '../../../src/project-management/app-metadata';
 
 const expect = chai.expect;
 
@@ -38,6 +38,9 @@ const BUNDLE_ID = 'test-bundle-id';
 const DISPLAY_NAME_ANDROID: string = 'test-display-name-android';
 const DISPLAY_NAME_IOS: string = 'test-display-name-ios';
 const EXPECTED_ERROR = new FirebaseProjectManagementError('internal-error', 'message');
+const RESOURCE_NAME = 'projects/test/resources-name';
+const RESOURCE_NAME_ANDROID = 'projects/test/resources-name:android';
+const RESOURCE_NAME_IOS = 'projects/test/resources-name:ios';
 
 const VALID_SHA_256_HASH = '0123456789abcdefABCDEF01234567890123456701234567890123456789abcd';
 
@@ -385,27 +388,23 @@ describe('ProjectManagement', () => {
       return projectManagement.createIosApp(BUNDLE_ID)
           .should.eventually.deep.equal(createdIosApp);
     });
-
-    describe('listAppMetadata', () => {
-      it('should throw service-unavailable error', () => {
-        expect(() => projectManagement.listAppMetadata())
-            .to.throw('This service is not available');
-      });
-    });
-
-    describe('setDisplayName', () => {
-      it('should throw service-unavailable error', () => {
-        expect(() => projectManagement.setDisplayName('new project name'))
-            .to.throw('This service is not available');
-      });
-    });
   });
 
   describe('listAppMetadata', () => {
     const VALID_LIST_APP_METADATA_API_RESPONSE = {
       apps: [
-        { appId: APP_ID_ANDROID, displayName: DISPLAY_NAME_ANDROID, platform: AppPlatform.ANDROID},
-        { appId: APP_ID_IOS, displayName: DISPLAY_NAME_IOS, platform: AppPlatform.IOS},
+        {
+          appId: APP_ID_ANDROID,
+          displayName: DISPLAY_NAME_ANDROID,
+          platform: 'ANDROID',
+          name: RESOURCE_NAME_ANDROID,
+        },
+        {
+          appId: APP_ID_IOS,
+          displayName: DISPLAY_NAME_IOS,
+          platform: 'IOS',
+          name: RESOURCE_NAME_IOS,
+        },
       ],
     };
 
@@ -493,14 +492,28 @@ describe('ProjectManagement', () => {
     });
 
     it('should resolve with list of apps metadata on success', () => {
-      const validAppMetadata: AppMetadata[] = VALID_LIST_APP_METADATA_API_RESPONSE.apps;
-
+      const expectedAppMetadata: AppMetadata[] = [
+        {
+          appId: VALID_LIST_APP_METADATA_API_RESPONSE.apps[0].appId,
+          displayName: VALID_LIST_APP_METADATA_API_RESPONSE.apps[0].displayName,
+          platform: AppPlatform.ANDROID,
+          projectId: mocks.projectId,
+          resourceName: RESOURCE_NAME_ANDROID,
+        },
+        {
+          appId: VALID_LIST_APP_METADATA_API_RESPONSE.apps[1].appId,
+          displayName: VALID_LIST_APP_METADATA_API_RESPONSE.apps[1].displayName,
+          platform: AppPlatform.IOS,
+          projectId: mocks.projectId,
+          resourceName: RESOURCE_NAME_IOS,
+        },
+      ];
       const stub = sinon
           .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
           .returns(Promise.resolve(VALID_LIST_APP_METADATA_API_RESPONSE));
       stubs.push(stub);
       return projectManagement.listAppMetadata()
-          .should.eventually.deep.equal(validAppMetadata);
+          .should.eventually.deep.equal(expectedAppMetadata);
     });
 
     it('should resolve with "apps[].platform" to be "PLATFORM_UNKNOWN" for web app', () => {
@@ -508,11 +521,15 @@ describe('ProjectManagement', () => {
         apps: [{
           appId: APP_ID,
           platform: 'WEB',
+          name: RESOURCE_NAME,
         }],
       };
       const expectedAppMetadata: AppMetadata[] = [{
         appId: APP_ID,
+        displayName: undefined,
         platform: AppPlatform.PLATFORM_UNKNOWN,
+        projectId: mocks.projectId,
+        resourceName: RESOURCE_NAME,
       }];
 
       const stub = sinon

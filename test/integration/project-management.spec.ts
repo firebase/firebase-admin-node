@@ -280,7 +280,7 @@ function isIntegrationTestApp(appNamespace: string): boolean {
  * @return {boolean} True if the specified appDisplayName belongs to these integration tests.
  */
 function isIntegrationTestAppDisplayName(appDisplayName: string): boolean {
-  return (appDisplayName.indexOf(APP_DISPLAY_NAME_PREFIX) > -1);
+  return appDisplayName && (appDisplayName.indexOf(APP_DISPLAY_NAME_PREFIX) > -1);
 }
 
 /**
