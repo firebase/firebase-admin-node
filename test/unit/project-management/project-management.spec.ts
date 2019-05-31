@@ -385,6 +385,20 @@ describe('ProjectManagement', () => {
       return projectManagement.createIosApp(BUNDLE_ID)
           .should.eventually.deep.equal(createdIosApp);
     });
+
+    describe('listAppMetadata', () => {
+      it('should throw service-unavailable error', () => {
+        expect(() => projectManagement.listAppMetadata())
+            .to.throw('This service is not available');
+      });
+    });
+
+    describe('setDisplayName', () => {
+      it('should throw service-unavailable error', () => {
+        expect(() => projectManagement.setDisplayName('new project name'))
+            .to.throw('This service is not available');
+      });
+    });
   });
 
   describe('listAppMetadata', () => {
