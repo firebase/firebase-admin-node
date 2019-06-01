@@ -821,6 +821,8 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   PROJECT_NOT_FOUND: 'PROJECT_NOT_FOUND',
   // Tenant not found.
   TENANT_NOT_FOUND: 'TENANT_NOT_FOUND',
+  // Tenant ID mismatch.
+  TENANT_ID_MISMATCH: 'MISMATCHING_TENANT_ID',
   // Token expired error.
   TOKEN_EXPIRED: 'ID_TOKEN_EXPIRED',
   // Continue URL provided in ActionCodeSettings has a domain that is not whitelisted.

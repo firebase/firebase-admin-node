@@ -79,9 +79,13 @@ const MAX_SESSION_COOKIE_DURATION_SECS = 14 * 24 * 60 * 60;
 /** Maximum allowed number of provider configurations to batch download at one time. */
 const MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE = 100;
 
-/** The Firebase Auth backend URL format. */
+/** The Firebase Auth backend base URL format. */
 const FIREBASE_AUTH_BASE_URL_FORMAT =
     'https://identitytoolkit.googleapis.com/{version}/projects/{projectId}{api}';
+
+/** The Firebase Auth backend multi-tenancy base URL format. */
+const FIREBASE_AUTH_TENANT_URL_FORMAT = FIREBASE_AUTH_BASE_URL_FORMAT.replace(
+  'projects/{projectId}', 'projects/{projectId}/tenants/{tenantId}');
 
 
 /** Defines a base utility to help with resource URL construction. */
@@ -133,8 +137,7 @@ class TenantAwareAuthResourceUrlBuilder extends AuthResourceUrlBuilder {
   constructor(protected projectId: string, protected version: string, protected tenantId: string) {
     super(projectId, version);
     // Inject tenant path in URL.
-    this.urlFormat = this.urlFormat.replace(
-        'projects/{projectId}', 'projects/{projectId}/tenants/{tenantId}');
+    this.urlFormat = FIREBASE_AUTH_TENANT_URL_FORMAT;
   }
 
   /**
@@ -669,7 +672,8 @@ const LIST_INBOUND_SAML_CONFIGS = new ApiSettings('/inboundSamlConfigs', 'GET')
 /**
  * Class that provides the mechanism to send requests to the Firebase Auth backend endpoints.
  */
-export class BaseFirebaseAuthRequestHandler {
+export abstract class AbstractAuthRequestHandler {
+  protected readonly projectId: string;
   protected readonly httpClient: AuthorizedHttpClient;
   protected authUrlBuilder: AuthResourceUrlBuilder;
   protected projectConfigUrlBuilder: AuthResourceUrlBuilder;
@@ -683,14 +687,22 @@ export class BaseFirebaseAuthRequestHandler {
   }
 
   /**
+   * @return {AuthResourceUrlBuilder} THe Auth user management resource URL builder.
+   */
+  protected abstract getAuthUrlBuilder(): AuthResourceUrlBuilder;
+
+  /**
+   * @return {AuthResourceUrlBuilder} THe project config resource URL builder.
+   */
+  protected abstract getProjectConfigUrlBuilder(): AuthResourceUrlBuilder;
+
+  /**
    * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
    * @constructor
    */
   constructor(app: FirebaseApp) {
-    const projectId = utils.getProjectId(app);
+    this.projectId = utils.getProjectId(app);
     this.httpClient = new AuthorizedHttpClient(app);
-    this.authUrlBuilder = new AuthResourceUrlBuilder(projectId, 'v1');
-    this.projectConfigUrlBuilder = new AuthResourceUrlBuilder(projectId, 'v2beta1');
   }
 
   /**
@@ -709,7 +721,7 @@ export class BaseFirebaseAuthRequestHandler {
       // Convert to seconds.
       validDuration: expiresIn / 1000,
     };
-    return this.invokeRequestHandler(this.authUrlBuilder, FIREBASE_AUTH_CREATE_SESSION_COOKIE, request)
+    return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_CREATE_SESSION_COOKIE, request)
         .then((response: any) => response.sessionCookie);
   }
 
@@ -727,7 +739,7 @@ export class BaseFirebaseAuthRequestHandler {
     const request = {
       localId: [uid],
     };
-    return this.invokeRequestHandler(this.authUrlBuilder, FIREBASE_AUTH_GET_ACCOUNT_INFO, request);
+    return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_GET_ACCOUNT_INFO, request);
   }
 
   /**
@@ -744,7 +756,7 @@ export class BaseFirebaseAuthRequestHandler {
     const request = {
       email: [email],
     };
-    return this.invokeRequestHandler(this.authUrlBuilder, FIREBASE_AUTH_GET_ACCOUNT_INFO, request);
+    return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_GET_ACCOUNT_INFO, request);
   }
 
   /**
@@ -761,7 +773,7 @@ export class BaseFirebaseAuthRequestHandler {
     const request = {
       phoneNumber: [phoneNumber],
     };
-    return this.invokeRequestHandler(this.authUrlBuilder, FIREBASE_AUTH_GET_ACCOUNT_INFO, request);
+    return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_GET_ACCOUNT_INFO, request);
   }
 
   /**
@@ -789,7 +801,7 @@ export class BaseFirebaseAuthRequestHandler {
     if (typeof request.nextPageToken === 'undefined') {
       delete request.nextPageToken;
     }
-    return this.invokeRequestHandler(this.authUrlBuilder, FIREBASE_AUTH_DOWNLOAD_ACCOUNT, request)
+    return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_DOWNLOAD_ACCOUNT, request)
         .then((response: any) => {
           // No more users available.
           if (!response.users) {
@@ -835,7 +847,7 @@ export class BaseFirebaseAuthRequestHandler {
     if (request.users.length === 0) {
       return Promise.resolve(userImportBuilder.buildResponse([]));
     }
-    return this.invokeRequestHandler(this.authUrlBuilder, FIREBASE_AUTH_UPLOAD_ACCOUNT, request)
+    return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_UPLOAD_ACCOUNT, request)
       .then((response: any) => {
         // No error object is returned if no error encountered.
         const failedUploads = (response.error || []) as Array<{index: number, message: string}>;
@@ -858,7 +870,7 @@ export class BaseFirebaseAuthRequestHandler {
     const request = {
       localId: uid,
     };
-    return this.invokeRequestHandler(this.authUrlBuilder, FIREBASE_AUTH_DELETE_ACCOUNT, request);
+    return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_DELETE_ACCOUNT, request);
   }
 
   /**
@@ -890,7 +902,7 @@ export class BaseFirebaseAuthRequestHandler {
       localId: uid,
       customAttributes: JSON.stringify(customUserClaims),
     };
-    return this.invokeRequestHandler(this.authUrlBuilder, FIREBASE_AUTH_SET_ACCOUNT_INFO, request)
+    return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_SET_ACCOUNT_INFO, request)
         .then((response: any) => {
           return response.localId as string;
         });
@@ -976,7 +988,7 @@ export class BaseFirebaseAuthRequestHandler {
       request.disableUser = request.disabled;
       delete request.disabled;
     }
-    return this.invokeRequestHandler(this.authUrlBuilder, FIREBASE_AUTH_SET_ACCOUNT_INFO, request)
+    return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_SET_ACCOUNT_INFO, request)
         .then((response: any) => {
           return response.localId as string;
         });
@@ -1005,7 +1017,7 @@ export class BaseFirebaseAuthRequestHandler {
       // validSince is in UTC seconds.
       validSince: Math.ceil(new Date().getTime() / 1000),
     };
-    return this.invokeRequestHandler(this.authUrlBuilder, FIREBASE_AUTH_SET_ACCOUNT_INFO, request)
+    return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_SET_ACCOUNT_INFO, request)
         .then((response: any) => {
           return response.localId as string;
         });
@@ -1040,7 +1052,7 @@ export class BaseFirebaseAuthRequestHandler {
       request.localId = request.uid;
       delete request.uid;
     }
-    return this.invokeRequestHandler(this.authUrlBuilder, FIREBASE_AUTH_SIGN_UP_NEW_USER, request)
+    return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_SIGN_UP_NEW_USER, request)
       .then((response: any) => {
         // Return the user id.
         return response.localId as string;
@@ -1073,7 +1085,7 @@ export class BaseFirebaseAuthRequestHandler {
         return Promise.reject(e);
       }
     }
-    return this.invokeRequestHandler(this.authUrlBuilder, FIREBASE_AUTH_GET_OOB_CODE, request)
+    return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_GET_OOB_CODE, request)
       .then((response: any) => {
         // Return the link.
         return response.oobLink as string;
@@ -1090,7 +1102,7 @@ export class BaseFirebaseAuthRequestHandler {
     if (!OIDCConfig.isProviderId(providerId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
     }
-    return this.invokeRequestHandler(this.projectConfigUrlBuilder, GET_OAUTH_IDP_CONFIG, {}, {providerId});
+    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), GET_OAUTH_IDP_CONFIG, {}, {providerId});
   }
 
   /**
@@ -1116,7 +1128,7 @@ export class BaseFirebaseAuthRequestHandler {
     if (typeof pageToken !== 'undefined') {
       request.pageToken = pageToken;
     }
-    return this.invokeRequestHandler(this.projectConfigUrlBuilder, LIST_OAUTH_IDP_CONFIGS, request)
+    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), LIST_OAUTH_IDP_CONFIGS, request)
         .then((response: any) => {
           if (!response.oauthIdpConfigs) {
             response.oauthIdpConfigs = [];
@@ -1136,7 +1148,7 @@ export class BaseFirebaseAuthRequestHandler {
     if (!OIDCConfig.isProviderId(providerId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
     }
-    return this.invokeRequestHandler(this.projectConfigUrlBuilder, DELETE_OAUTH_IDP_CONFIG, {}, {providerId})
+    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), DELETE_OAUTH_IDP_CONFIG, {}, {providerId})
       .then((response: any) => {
         // Return nothing.
       });
@@ -1158,7 +1170,7 @@ export class BaseFirebaseAuthRequestHandler {
       return Promise.reject(e);
     }
     const providerId = options.providerId;
-    return this.invokeRequestHandler(this.projectConfigUrlBuilder, CREATE_OAUTH_IDP_CONFIG, request, {providerId})
+    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), CREATE_OAUTH_IDP_CONFIG, request, {providerId})
       .then((response: any) => {
         if (!OIDCConfig.getProviderIdFromResourceName(response.name)) {
           throw new FirebaseAuthError(
@@ -1190,7 +1202,7 @@ export class BaseFirebaseAuthRequestHandler {
       return Promise.reject(e);
     }
     const updateMask = utils.generateUpdateMask(request);
-    return this.invokeRequestHandler(this.projectConfigUrlBuilder, UPDATE_OAUTH_IDP_CONFIG, request,
+    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), UPDATE_OAUTH_IDP_CONFIG, request,
       {providerId, updateMask: updateMask.join(',')})
       .then((response: any) => {
         if (!OIDCConfig.getProviderIdFromResourceName(response.name)) {
@@ -1212,7 +1224,7 @@ export class BaseFirebaseAuthRequestHandler {
     if (!SAMLConfig.isProviderId(providerId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
     }
-    return this.invokeRequestHandler(this.projectConfigUrlBuilder, GET_INBOUND_SAML_CONFIG, {}, {providerId});
+    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), GET_INBOUND_SAML_CONFIG, {}, {providerId});
   }
 
   /**
@@ -1238,7 +1250,7 @@ export class BaseFirebaseAuthRequestHandler {
     if (typeof pageToken !== 'undefined') {
       request.pageToken = pageToken;
     }
-    return this.invokeRequestHandler(this.projectConfigUrlBuilder, LIST_INBOUND_SAML_CONFIGS, request)
+    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), LIST_INBOUND_SAML_CONFIGS, request)
         .then((response: any) => {
           if (!response.inboundSamlConfigs) {
             response.inboundSamlConfigs = [];
@@ -1258,7 +1270,7 @@ export class BaseFirebaseAuthRequestHandler {
     if (!SAMLConfig.isProviderId(providerId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
     }
-    return this.invokeRequestHandler(this.projectConfigUrlBuilder, DELETE_INBOUND_SAML_CONFIG, {}, {providerId})
+    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), DELETE_INBOUND_SAML_CONFIG, {}, {providerId})
       .then((response: any) => {
         // Return nothing.
       });
@@ -1280,7 +1292,8 @@ export class BaseFirebaseAuthRequestHandler {
       return Promise.reject(e);
     }
     const providerId = options.providerId;
-    return this.invokeRequestHandler(this.projectConfigUrlBuilder, CREATE_INBOUND_SAML_CONFIG, request, {providerId})
+    return this.invokeRequestHandler(
+      this.getProjectConfigUrlBuilder(), CREATE_INBOUND_SAML_CONFIG, request, {providerId})
       .then((response: any) => {
         if (!SAMLConfig.getProviderIdFromResourceName(response.name)) {
           throw new FirebaseAuthError(
@@ -1312,7 +1325,7 @@ export class BaseFirebaseAuthRequestHandler {
       return Promise.reject(e);
     }
     const updateMask = utils.generateUpdateMask(request);
-    return this.invokeRequestHandler(this.projectConfigUrlBuilder, UPDATE_INBOUND_SAML_CONFIG, request,
+    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), UPDATE_INBOUND_SAML_CONFIG, request,
       {providerId, updateMask: updateMask.join(',')})
       .then((response: any) => {
         if (!SAMLConfig.getProviderIdFromResourceName(response.name)) {
@@ -1361,7 +1374,7 @@ export class BaseFirebaseAuthRequestHandler {
       .catch((err) => {
         if (err instanceof HttpError) {
           const error = err.response.data;
-          const errorCode = FirebaseAuthRequestHandler.getErrorCode(error);
+          const errorCode = AbstractAuthRequestHandler.getErrorCode(error);
           throw FirebaseAuthError.fromServerError(errorCode, /* message */ undefined, error);
         }
         throw err;
@@ -1375,7 +1388,7 @@ export class BaseFirebaseAuthRequestHandler {
  * tenant management related APIs. This extends the BaseFirebaseAuthRequestHandler class and defines
  * additional tenant management related APIs.
  */
-export class FirebaseAuthRequestHandler extends BaseFirebaseAuthRequestHandler {
+export class AuthRequestHandler extends AbstractAuthRequestHandler {
 
   protected readonly tenantMgmtResourceBuilder: AuthResourceUrlBuilder;
 
@@ -1385,9 +1398,29 @@ export class FirebaseAuthRequestHandler extends BaseFirebaseAuthRequestHandler {
    * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
    * @constructor.
    */
-  constructor(app: FirebaseApp) {
+  constructor(private readonly app: FirebaseApp) {
     super(app);
     this.tenantMgmtResourceBuilder =  new AuthResourceUrlBuilder(utils.getProjectId(app), 'v2beta1');
+  }
+
+  /**
+   * @return {AuthResourceUrlBuilder} THe Auth user management resource URL builder.
+   */
+  protected getAuthUrlBuilder(): AuthResourceUrlBuilder {
+    if (!this.authUrlBuilder) {
+      this.authUrlBuilder = new AuthResourceUrlBuilder(this.projectId, 'v1');
+    }
+    return this.authUrlBuilder;
+  }
+
+  /**
+   * @return {AuthResourceUrlBuilder} THe project config resource URL builder.
+   */
+  protected getProjectConfigUrlBuilder(): AuthResourceUrlBuilder {
+    if (!this.projectConfigUrlBuilder) {
+      this.projectConfigUrlBuilder = new AuthResourceUrlBuilder(this.projectId, 'v2beta1');
+    }
+    return this.projectConfigUrlBuilder;
   }
 
   // TODO: add tenant management APIs.
@@ -1398,7 +1431,7 @@ export class FirebaseAuthRequestHandler extends BaseFirebaseAuthRequestHandler {
  * management related APIs for specified tenants.
  * This extends the BaseFirebaseAuthRequestHandler class.
  */
-export class FirebaseTenantRequestHandler extends BaseFirebaseAuthRequestHandler {
+export class TenantAwareAuthRequestHandler extends AbstractAuthRequestHandler {
   /**
    * The FirebaseTenantRequestHandler constructor used to initialize an instance using a
    * FirebaseApp and a tenant ID.
@@ -1407,10 +1440,28 @@ export class FirebaseTenantRequestHandler extends BaseFirebaseAuthRequestHandler
    * @param {string} tenantId The request handler's tenant ID.
    * @constructor
    */
-  constructor(app: FirebaseApp, tenantId: string) {
+  constructor(app: FirebaseApp, private readonly tenantId: string) {
     super(app);
-    // Overwrite authUrlBuilder to use TenantAwareAuthResourceUrlBuilder.
-    this.authUrlBuilder = new TenantAwareAuthResourceUrlBuilder(utils.getProjectId(app), 'v1', tenantId);
-    this.projectConfigUrlBuilder = new TenantAwareAuthResourceUrlBuilder(utils.getProjectId(app), 'v2beta1', tenantId);
+  }
+
+  /**
+   * @return {AuthResourceUrlBuilder} THe Auth user management resource URL builder.
+   */
+  protected getAuthUrlBuilder(): AuthResourceUrlBuilder {
+    if (!this.authUrlBuilder) {
+      this.authUrlBuilder = new TenantAwareAuthResourceUrlBuilder(this.projectId, 'v1', this.tenantId);
+    }
+    return this.authUrlBuilder;
+  }
+
+  /**
+   * @return {AuthResourceUrlBuilder} THe project config resource URL builder.
+   */
+  protected getProjectConfigUrlBuilder(): AuthResourceUrlBuilder {
+    if (!this.projectConfigUrlBuilder) {
+      this.projectConfigUrlBuilder =
+          new TenantAwareAuthResourceUrlBuilder(this.projectId, 'v2beta1', this.tenantId);
+    }
+    return this.projectConfigUrlBuilder;
   }
 }

@@ -17,7 +17,7 @@
 import {UserRecord, CreateRequest, UpdateRequest} from './user-record';
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseTokenGenerator, CryptoSigner, cryptoSignerFromApp} from './token-generator';
-import {FirebaseAuthRequestHandler} from './auth-api-request';
+import {AuthRequestHandler} from './auth-api-request';
 import {AuthClientErrorCode, FirebaseAuthError, ErrorInfo} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
 import {
@@ -101,7 +101,7 @@ class BaseAuth {
    * @constructor
    */
   constructor(protected readonly projectId: string,
-              protected readonly authRequestHandler: FirebaseAuthRequestHandler,
+              protected readonly authRequestHandler: AuthRequestHandler,
               cryptoSigner: CryptoSigner) {
     this.tokenGenerator = new FirebaseTokenGenerator(cryptoSigner);
     this.sessionCookieVerifier = createSessionCookieVerifier(projectId);
@@ -629,7 +629,7 @@ export class Auth extends BaseAuth implements FirebaseServiceInterface {
   constructor(app: FirebaseApp) {
     super(
         Auth.getProjectId(app),
-        new FirebaseAuthRequestHandler(app),
+        new AuthRequestHandler(app),
         cryptoSignerFromApp(app));
     this.app_ = app;
   }

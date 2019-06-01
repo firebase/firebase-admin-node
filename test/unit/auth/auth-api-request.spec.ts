@@ -30,11 +30,11 @@ import {FirebaseApp} from '../../../src/firebase-app';
 import {HttpClient, HttpRequestConfig} from '../../../src/utils/api-request';
 import * as validator from '../../../src/utils/validator';
 import {
-  FirebaseAuthRequestHandler, FIREBASE_AUTH_GET_ACCOUNT_INFO,
+  AuthRequestHandler, FIREBASE_AUTH_GET_ACCOUNT_INFO,
   FIREBASE_AUTH_DELETE_ACCOUNT, FIREBASE_AUTH_SET_ACCOUNT_INFO,
   FIREBASE_AUTH_SIGN_UP_NEW_USER, FIREBASE_AUTH_DOWNLOAD_ACCOUNT,
   RESERVED_CLAIMS, FIREBASE_AUTH_UPLOAD_ACCOUNT, FIREBASE_AUTH_CREATE_SESSION_COOKIE,
-  EMAIL_ACTION_REQUEST_TYPES, FirebaseTenantRequestHandler, BaseFirebaseAuthRequestHandler,
+  EMAIL_ACTION_REQUEST_TYPES, TenantAwareAuthRequestHandler, AbstractAuthRequestHandler,
 } from '../../../src/auth/auth-api-request';
 import {UserImportBuilder, UserImportRecord} from '../../../src/auth/user-import-builder';
 import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/utils/error';
@@ -56,7 +56,7 @@ const timeout = 25000;
 interface HandlerTest {
   name: string;
   supportsTenantManagement: boolean;
-  init(app: FirebaseApp): BaseFirebaseAuthRequestHandler;
+  init(app: FirebaseApp): AbstractAuthRequestHandler;
   path(version: string, api: string, projectId: string): string;
 }
 
@@ -736,7 +736,7 @@ const AUTH_REQUEST_HANDLER_TESTS: HandlerTest[] = [
   {
     name: 'FirebaseAuthRequestHandler',
     init: (app: FirebaseApp) => {
-      return new FirebaseAuthRequestHandler(app);
+      return new AuthRequestHandler(app);
     },
     path: (version: string, api: string, projectId: string) => {
       return `/${version}/projects/${projectId}${api}`;
@@ -746,7 +746,7 @@ const AUTH_REQUEST_HANDLER_TESTS: HandlerTest[] = [
   {
     name: 'FirebaseTenantRequestHandler',
     init: (app: FirebaseApp) => {
-      return new FirebaseTenantRequestHandler(app, TENANT_ID);
+      return new TenantAwareAuthRequestHandler(app, TENANT_ID);
     },
     path: (version: string, api: string, projectId: string) => {
       return `/${version}/projects/${projectId}/tenants/${TENANT_ID}${api}`;
