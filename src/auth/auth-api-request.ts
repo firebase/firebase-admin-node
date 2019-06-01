@@ -136,7 +136,6 @@ class TenantAwareAuthResourceUrlBuilder extends AuthResourceUrlBuilder {
    */
   constructor(protected projectId: string, protected version: string, protected tenantId: string) {
     super(projectId, version);
-    // Inject tenant path in URL.
     this.urlFormat = FIREBASE_AUTH_TENANT_URL_FORMAT;
   }
 
@@ -687,12 +686,12 @@ export abstract class AbstractAuthRequestHandler {
   }
 
   /**
-   * @return {AuthResourceUrlBuilder} THe Auth user management resource URL builder.
+   * @return {AuthResourceUrlBuilder} The Auth user management resource URL builder.
    */
   protected abstract getAuthUrlBuilder(): AuthResourceUrlBuilder;
 
   /**
-   * @return {AuthResourceUrlBuilder} THe project config resource URL builder.
+   * @return {AuthResourceUrlBuilder} The project config resource URL builder.
    */
   protected abstract getProjectConfigUrlBuilder(): AuthResourceUrlBuilder;
 
@@ -1404,7 +1403,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
   }
 
   /**
-   * @return {AuthResourceUrlBuilder} THe Auth user management resource URL builder.
+   * @return {AuthResourceUrlBuilder} The Auth user management resource URL builder.
    */
   protected getAuthUrlBuilder(): AuthResourceUrlBuilder {
     if (!this.authUrlBuilder) {
@@ -1414,7 +1413,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
   }
 
   /**
-   * @return {AuthResourceUrlBuilder} THe project config resource URL builder.
+   * @return {AuthResourceUrlBuilder} The project config resource URL builder.
    */
   protected getProjectConfigUrlBuilder(): AuthResourceUrlBuilder {
     if (!this.projectConfigUrlBuilder) {
@@ -1445,7 +1444,7 @@ export class TenantAwareAuthRequestHandler extends AbstractAuthRequestHandler {
   }
 
   /**
-   * @return {AuthResourceUrlBuilder} THe Auth user management resource URL builder.
+   * @return {AuthResourceUrlBuilder} The Auth user management resource URL builder.
    */
   protected getAuthUrlBuilder(): AuthResourceUrlBuilder {
     if (!this.authUrlBuilder) {
@@ -1455,7 +1454,7 @@ export class TenantAwareAuthRequestHandler extends AbstractAuthRequestHandler {
   }
 
   /**
-   * @return {AuthResourceUrlBuilder} THe project config resource URL builder.
+   * @return {AuthResourceUrlBuilder} The project config resource URL builder.
    */
   protected getProjectConfigUrlBuilder(): AuthResourceUrlBuilder {
     if (!this.projectConfigUrlBuilder) {
