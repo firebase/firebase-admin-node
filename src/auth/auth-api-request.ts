@@ -674,8 +674,8 @@ const LIST_INBOUND_SAML_CONFIGS = new ApiSettings('/inboundSamlConfigs', 'GET')
 export abstract class AbstractAuthRequestHandler {
   protected readonly projectId: string;
   protected readonly httpClient: AuthorizedHttpClient;
-  protected authUrlBuilder: AuthResourceUrlBuilder;
-  protected projectConfigUrlBuilder: AuthResourceUrlBuilder;
+  private authUrlBuilder: AuthResourceUrlBuilder;
+  private projectConfigUrlBuilder: AuthResourceUrlBuilder;
 
   /**
    * @param {any} response The response to check for errors.
@@ -684,16 +684,6 @@ export abstract class AbstractAuthRequestHandler {
   private static getErrorCode(response: any): string | null {
     return (validator.isNonNullObject(response) && response.error && (response.error as any).message) || null;
   }
-
-  /**
-   * @return {AuthResourceUrlBuilder} The Auth user management resource URL builder.
-   */
-  protected abstract getAuthUrlBuilder(): AuthResourceUrlBuilder;
-
-  /**
-   * @return {AuthResourceUrlBuilder} The project config resource URL builder.
-   */
-  protected abstract getProjectConfigUrlBuilder(): AuthResourceUrlBuilder;
 
   /**
    * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
@@ -1379,6 +1369,36 @@ export abstract class AbstractAuthRequestHandler {
         throw err;
       });
   }
+
+  /**
+   * @return {AuthResourceUrlBuilder} A new Auth user management resource URL builder instance.
+   */
+  protected abstract newAuthUrlBuilder(): AuthResourceUrlBuilder;
+
+  /**
+   * @return {AuthResourceUrlBuilder} A new project config resource URL builder instance.
+   */
+  protected abstract newProjectConfigUrlBuilder(): AuthResourceUrlBuilder;
+
+  /**
+   * @return {AuthResourceUrlBuilder} The current Auth user management resource URL builder.
+   */
+  private getAuthUrlBuilder(): AuthResourceUrlBuilder {
+    if (!this.authUrlBuilder) {
+      this.authUrlBuilder = this.newAuthUrlBuilder();
+    }
+    return this.authUrlBuilder;
+  }
+
+  /**
+   * @return {AuthResourceUrlBuilder} The current project config resource URL builder.
+   */
+  private getProjectConfigUrlBuilder(): AuthResourceUrlBuilder {
+    if (!this.projectConfigUrlBuilder) {
+      this.projectConfigUrlBuilder = this.newProjectConfigUrlBuilder();
+    }
+    return this.projectConfigUrlBuilder;
+  }
 }
 
 
@@ -1403,23 +1423,17 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
   }
 
   /**
-   * @return {AuthResourceUrlBuilder} The Auth user management resource URL builder.
+   * @return {AuthResourceUrlBuilder} A new Auth user management resource URL builder instance.
    */
-  protected getAuthUrlBuilder(): AuthResourceUrlBuilder {
-    if (!this.authUrlBuilder) {
-      this.authUrlBuilder = new AuthResourceUrlBuilder(this.projectId, 'v1');
-    }
-    return this.authUrlBuilder;
+  protected newAuthUrlBuilder(): AuthResourceUrlBuilder {
+    return new AuthResourceUrlBuilder(this.projectId, 'v1');
   }
 
   /**
-   * @return {AuthResourceUrlBuilder} The project config resource URL builder.
+   * @return {AuthResourceUrlBuilder} A new project config resource URL builder instance.
    */
-  protected getProjectConfigUrlBuilder(): AuthResourceUrlBuilder {
-    if (!this.projectConfigUrlBuilder) {
-      this.projectConfigUrlBuilder = new AuthResourceUrlBuilder(this.projectId, 'v2beta1');
-    }
-    return this.projectConfigUrlBuilder;
+  protected newProjectConfigUrlBuilder(): AuthResourceUrlBuilder {
+    return new AuthResourceUrlBuilder(this.projectId, 'v2beta1');
   }
 
   // TODO: add tenant management APIs.
@@ -1444,23 +1458,16 @@ export class TenantAwareAuthRequestHandler extends AbstractAuthRequestHandler {
   }
 
   /**
-   * @return {AuthResourceUrlBuilder} The Auth user management resource URL builder.
+   * @return {AuthResourceUrlBuilder} A new Auth user management resource URL builder instance.
    */
-  protected getAuthUrlBuilder(): AuthResourceUrlBuilder {
-    if (!this.authUrlBuilder) {
-      this.authUrlBuilder = new TenantAwareAuthResourceUrlBuilder(this.projectId, 'v1', this.tenantId);
-    }
-    return this.authUrlBuilder;
+  protected newAuthUrlBuilder(): AuthResourceUrlBuilder {
+    return new TenantAwareAuthResourceUrlBuilder(this.projectId, 'v1', this.tenantId);
   }
 
   /**
-   * @return {AuthResourceUrlBuilder} The project config resource URL builder.
+   * @return {AuthResourceUrlBuilder} A new project config resource URL builder instance.
    */
-  protected getProjectConfigUrlBuilder(): AuthResourceUrlBuilder {
-    if (!this.projectConfigUrlBuilder) {
-      this.projectConfigUrlBuilder =
-          new TenantAwareAuthResourceUrlBuilder(this.projectId, 'v2beta1', this.tenantId);
-    }
-    return this.projectConfigUrlBuilder;
+  protected newProjectConfigUrlBuilder(): AuthResourceUrlBuilder {
+    return new TenantAwareAuthResourceUrlBuilder(this.projectId, 'v2beta1', this.tenantId);
   }
 }
