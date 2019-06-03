@@ -21,19 +21,19 @@ export enum AppPlatform {
 }
 
 export interface AppMetadata {
-  readonly appId: string;
-  readonly displayName?: string;
-  readonly platform: AppPlatform;
-  readonly projectId: string;
-  readonly resourceName: string;
+  appId: string;
+  displayName?: string;
+  platform: AppPlatform;
+  projectId: string;
+  resourceName: string;
 }
 
 export interface AndroidAppMetadata extends AppMetadata {
-  readonly platform: AppPlatform.ANDROID;
-  readonly packageName: string;
+  platform: AppPlatform.ANDROID;
+  packageName: string;
 }
 
 export interface IosAppMetadata extends AppMetadata {
-  readonly platform: AppPlatform.IOS;
-  readonly bundleId: string;
+  platform: AppPlatform.IOS;
+  bundleId: string;
 }

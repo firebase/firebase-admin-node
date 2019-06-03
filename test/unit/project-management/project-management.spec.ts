@@ -526,7 +526,6 @@ describe('ProjectManagement', () => {
       };
       const expectedAppMetadata: AppMetadata[] = [{
         appId: APP_ID,
-        displayName: undefined,
         platform: AppPlatform.PLATFORM_UNKNOWN,
         projectId: mocks.projectId,
         resourceName: RESOURCE_NAME,
