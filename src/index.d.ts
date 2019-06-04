@@ -4846,11 +4846,11 @@ declare namespace admin.projectManagement {
     resourceName: string;
 
     /**
-     * The optional user-assigned display name of the app.
+     * The globally unique, Firebase-assigned identifier of the app.
      *
      * @example
      * ```javascript
-     * var displayName = androidAppMetadata.displayName;
+     * var appId = androidAppMetadata.appId;
      * ```
      */
     appId: string;
@@ -4908,14 +4908,12 @@ declare namespace admin.projectManagement {
      *
      * @param newDisplayName The new display name to set.
      *
-     * @return A promise that resolves when the display name has
-     *     been set.
+     * @return A promise that resolves when the display name has been set.
      */
     setDisplayName(newDisplayName: string): Promise<void>;
 
     /**
-     * Gets the list of SHA certificates associated with this Android app in
-     * Firebase.
+     * Gets the list of SHA certificates associated with this Android app in Firebase.
      *
      * @return The list of SHA-1 and SHA-256 certificates associated with this Android app in
      *     Firebase.
@@ -4971,12 +4969,12 @@ declare namespace admin.projectManagement {
     resourceName: string;
 
     /**
-     * The optional user-assigned display name of the app.
+     * The globally unique, Firebase-assigned identifier of the app.
      *
      * @example
      * ```javascript
-     * var displayName = iOSAppMetadata.displayName;
-     * ```
+     * var appId = androidAppMetadata.appId;
+     * ``
      */
     appId: string;
 
