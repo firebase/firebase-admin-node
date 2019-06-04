@@ -405,6 +405,11 @@ describe('ProjectManagement', () => {
           platform: 'IOS',
           name: RESOURCE_NAME_IOS,
         },
+        {
+          appId: APP_ID,
+          platform: 'WEB',
+          name: RESOURCE_NAME,
+        },
       ],
     };
 
@@ -506,6 +511,12 @@ describe('ProjectManagement', () => {
           platform: AppPlatform.IOS,
           projectId: mocks.projectId,
           resourceName: RESOURCE_NAME_IOS,
+        },
+        {
+          appId: VALID_LIST_APP_METADATA_API_RESPONSE.apps[2].appId,
+          platform: AppPlatform.PLATFORM_UNKNOWN,
+          projectId: mocks.projectId,
+          resourceName: RESOURCE_NAME,
         },
       ];
       const stub = sinon
