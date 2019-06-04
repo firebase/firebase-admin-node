@@ -149,7 +149,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
   }
 
   /**
-   * Lists summary of all apps in the project
+   * Lists up to 100 Firebase apps associated with this Firebase project.
    */
   public listAppMetadata(): Promise<AppMetadata[]> {
     return this.requestHandler.listAppMetadata(this.resourceName)

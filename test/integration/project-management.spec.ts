@@ -84,7 +84,8 @@ describe('admin.projectManagement', () => {
   describe('setDisplayName()', () => {
     it('successfully set project\'s display name', () => {
       const newDisplayName = generateUniqueProjectDisplayName();
-      // TODO(caot): verify that project name has been renamed successfully
+      // TODO(caot): verify that project name has been renamed successfully after adding the ability
+      //     to get project metadata.
       return admin.projectManagement().setDisplayName(newDisplayName)
         .should.eventually.be.fulfilled;
     });
