@@ -607,6 +607,10 @@ export class AuthClientErrorCode {
     message: 'The domain of the continue URL is not whitelisted. Whitelist the domain in the ' +
              'Firebase console.',
   };
+  public static UNSUPPORTED_TENANT_OPERATION = {
+    code: 'unsupported-tenant-operation',
+    message: 'This operation is not supported in a multi-tenant context.',
+  };
   public static USER_NOT_FOUND = {
     code: 'user-not-found',
     message: 'There is no user record corresponding to the provided identifier.',
@@ -827,6 +831,8 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   TOKEN_EXPIRED: 'ID_TOKEN_EXPIRED',
   // Continue URL provided in ActionCodeSettings has a domain that is not whitelisted.
   UNAUTHORIZED_DOMAIN: 'UNAUTHORIZED_DOMAIN',
+  // Operation is not supported in a multi-tenant context.
+  UNSUPPORTED_TENANT_OPERATION: 'UNSUPPORTED_TENANT_OPERATION',
   // User on which action is to be performed is not found.
   USER_NOT_FOUND: 'USER_NOT_FOUND',
   // Password provided is too weak.
