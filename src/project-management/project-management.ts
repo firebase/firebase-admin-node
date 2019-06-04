@@ -22,7 +22,7 @@ import * as validator from '../utils/validator';
 import { AndroidApp, ShaCertificate } from './android-app';
 import { IosApp } from './ios-app';
 import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request';
-import { AppMetadata } from './app-metadata';
+import { AppMetadata, AppPlatform } from './app-metadata';
 
 /**
  * Internals of a Project Management instance.
@@ -152,16 +152,44 @@ export class ProjectManagement implements FirebaseServiceInterface {
    * Lists summary of all apps in the project
    */
   public listAppMetadata(): Promise<AppMetadata[]> {
-    throw new FirebaseProjectManagementError(
-      'service-unavailable', 'This service is not available');
+    return this.requestHandler.listAppMetadata(this.resourceName)
+      .then((responseData) => this.transformResponseToAppMetadata(responseData));
   }
 
   /**
    * Update display name of the project
    */
-  public setDisplayName(displayName: string): Promise<void> {
-    throw new FirebaseProjectManagementError(
-      'service-unavailable', 'This service is not available');
+  public setDisplayName(newDisplayName: string): Promise<void> {
+    return this.requestHandler.setDisplayName(this.resourceName, newDisplayName);
+  }
+
+  private transformResponseToAppMetadata(responseData: any): AppMetadata[] {
+    this.assertListAppsResponseData(responseData, 'listAppMetadata()');
+
+    if (!responseData.apps) {
+      return [];
+    }
+
+    return responseData.apps.map((appJson: any) => {
+      assertServerResponse(
+          validator.isNonEmptyString(appJson.appId),
+          responseData,
+          `"apps[].appId" field must be present in the listAppMetadata() response data.`);
+      assertServerResponse(
+          validator.isNonEmptyString(appJson.platform),
+          responseData,
+          `"apps[].platform" field must be present in the listAppMetadata() response data.`);
+      const metadata: AppMetadata = {
+        appId: appJson.appId,
+        platform: (AppPlatform as any)[appJson.platform] || AppPlatform.PLATFORM_UNKNOWN,
+        projectId: this.projectId,
+        resourceName: appJson.name,
+      };
+      if (appJson.displayName) {
+        metadata.displayName = appJson.displayName;
+      }
+      return metadata;
+    });
   }
 
   /**
@@ -174,19 +202,11 @@ export class ProjectManagement implements FirebaseServiceInterface {
 
     return listPromise
         .then((responseData: any) => {
-          assertServerResponse(
-              validator.isNonNullObject(responseData),
-              responseData,
-              `${callerName}\'s responseData must be a non-null object.`);
+          this.assertListAppsResponseData(responseData, callerName);
 
           if (!responseData.apps) {
             return [];
           }
-
-          assertServerResponse(
-              validator.isArray(responseData.apps),
-              responseData,
-              `"apps" field must be present in the ${callerName} response data.`);
 
           return responseData.apps.map((appJson: any) => {
             assertServerResponse(
@@ -200,5 +220,19 @@ export class ProjectManagement implements FirebaseServiceInterface {
             }
           });
         });
+  }
+
+  private assertListAppsResponseData(responseData: any, callerName: string): void {
+    assertServerResponse(
+        validator.isNonNullObject(responseData),
+        responseData,
+        `${callerName}\'s responseData must be a non-null object.`);
+
+    if (responseData.apps) {
+      assertServerResponse(
+          validator.isArray(responseData.apps),
+          responseData,
+          `"apps" field must be present in the ${callerName} response data.`);
+      }
   }
 }

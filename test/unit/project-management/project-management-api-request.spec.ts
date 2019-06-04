@@ -27,6 +27,7 @@ import { HttpClient } from '../../../src/utils/api-request';
 import * as mocks from '../../resources/mocks';
 import * as utils from '../utils';
 import { ShaCertificate } from '../../../src/project-management/android-app';
+import { AppPlatform } from '../../../src/project-management/app-metadata';
 
 chai.should();
 chai.use(sinonChai);
@@ -41,11 +42,15 @@ describe('ProjectManagementRequestHandler', () => {
   const PORT = 443;
   const PROJECT_RESOURCE_NAME: string = 'projects/test-project-id';
   const APP_ID: string = 'test-app-id';
+  const APP_ID_ANDROID: string = 'test-android-app-id';
+  const APP_ID_IOS: string = 'test-ios-app-id';
   const ANDROID_APP_RESOURCE_NAME: string = `projects/-/androidApp/${APP_ID}`;
   const IOS_APP_RESOURCE_NAME: string = `projects/-/iosApp/${APP_ID}`;
   const PACKAGE_NAME: string = 'test-package-name';
   const BUNDLE_ID: string = 'test-bundle-id';
   const DISPLAY_NAME: string = 'test-display-name';
+  const DISPLAY_NAME_ANDROID: string = 'test-display-name-android';
+  const DISPLAY_NAME_IOS: string = 'test-display-name-ios';
   const OPERATION_RESOURCE_NAME: string = 'test-operation-resource-name';
 
   const mockAccessToken: string = utils.generateRandomAccessToken();
@@ -170,6 +175,44 @@ describe('ProjectManagementRequestHandler', () => {
 
       const url = `https://${HOST}:${PORT}/v1beta1/${PROJECT_RESOURCE_NAME}/iosApps?page_size=100`;
       return requestHandler.listIosApps(PROJECT_RESOURCE_NAME)
+          .then((result) => {
+            expect(result).to.deep.equal(expectedResult);
+            expect(stub).to.have.been.calledOnce.and.calledWith({
+              method: 'GET',
+              url,
+              data: null,
+              headers: expectedHeaders,
+              timeout: 10000,
+            });
+          });
+    });
+  });
+
+  describe('listAppMetadata', () => {
+    testHttpErrors(() => requestHandler.listAppMetadata(PROJECT_RESOURCE_NAME));
+
+    it('should succeed', () => {
+      const expectedResult = {
+        apps: [
+          {
+            appId: APP_ID_ANDROID,
+            displayName: DISPLAY_NAME_ANDROID,
+            platform: AppPlatform.ANDROID,
+          },
+          {
+            appId: APP_ID_IOS,
+            displayName: DISPLAY_NAME_IOS,
+            platform: AppPlatform.IOS,
+          }],
+      };
+
+      const stub = sinon.stub(HttpClient.prototype, 'send')
+          .resolves(utils.responseFrom(expectedResult));
+      stubs.push(stub);
+
+      const url =
+        `https://${HOST}:${PORT}/v1beta1/${PROJECT_RESOURCE_NAME}:searchApps?page_size=100`;
+      return requestHandler.listAppMetadata(PROJECT_RESOURCE_NAME)
           .then((result) => {
             expect(result).to.deep.equal(expectedResult);
             expect(stub).to.have.been.calledOnce.and.calledWith({
