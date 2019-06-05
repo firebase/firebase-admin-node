@@ -274,14 +274,14 @@ function generateUniqueProjectDisplayName() {
  * @return {boolean} True if the specified appNamespace belongs to these integration tests.
  */
 function isIntegrationTestApp(appNamespace: string): boolean {
-  return (appNamespace.indexOf(APP_NAMESPACE_PREFIX) > -1);
+  return appNamespace && appNamespace.startsWith(APP_NAMESPACE_PREFIX);
 }
 
 /**
  * @return {boolean} True if the specified appDisplayName belongs to these integration tests.
  */
 function isIntegrationTestAppDisplayName(appDisplayName: string): boolean {
-  return appDisplayName && (appDisplayName.indexOf(APP_DISPLAY_NAME_PREFIX) > -1);
+  return appDisplayName  && appDisplayName.startsWith(APP_DISPLAY_NAME_PREFIX);
 }
 
 /**
