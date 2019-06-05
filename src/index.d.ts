@@ -3539,7 +3539,7 @@ declare namespace admin.database {
   /**
    * @extends {admin.database.Reference}
    */
-  interface ThenableReference extends admin.database.Reference, PromiseLike<any> {}
+  interface ThenableReference extends admin.database.Reference, Promise<admin.database.Reference> {}
 
   function enableLogging(logger?: boolean|((message: string) => any), persistent?: boolean): any;
 }
