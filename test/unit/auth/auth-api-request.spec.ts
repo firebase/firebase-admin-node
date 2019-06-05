@@ -1112,6 +1112,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
     describe('uploadAccount', () => {
       const path = handler.path('v1', '/accounts:batchCreate', 'project_id');
+      const tenantId = handler.supportsTenantManagement ? undefined : TENANT_ID;
       const method = 'POST';
       const nowString = new Date().toUTCString();
       const users = [
@@ -1138,7 +1139,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           ],
           customClaims: {admin: true},
           // Tenant ID accepted on user batch upload.
-          tenantId: 'TENANT_ID',
+          tenantId,
         },
         {
           uid: '9012',
@@ -1197,6 +1198,35 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         }).to.throw(expectedError.message);
         expect(stub).to.have.not.been.called;
       });
+
+      if (handler.name === 'FirebaseTenantRequestHandler') {
+        it('should throw when a user record with mismatching tenant ID is provided', () => {
+          const mismatchIndex = 34;
+          const mismatchTenantId = 'MISMATCHING_TENANT_ID';
+          const expectedError = new FirebaseAuthError(
+            AuthClientErrorCode.MISMATCHING_TENANT_ID,
+            `UserRecord of index "${mismatchIndex}" has mismatching tenant ID "${mismatchTenantId}"`,
+          );
+          const stub = sinon.stub(HttpClient.prototype, 'send');
+          stubs.push(stub);
+
+          const testUsers: UserImportRecord[] = [];
+          for (let i = 0; i < 100; i++) {
+            testUsers.push({
+              uid: 'USER' + i.toString(),
+              email: 'user' + i.toString() + '@example.com',
+              passwordHash: Buffer.from('password'),
+              tenantId: i === mismatchIndex ? mismatchTenantId : undefined,
+            });
+          }
+
+          const requestHandler = handler.init(mockApp);
+          expect(() => {
+            requestHandler.uploadAccount(testUsers, options);
+          }).to.throw(expectedError.message);
+          expect(stub).to.have.not.been.called;
+        });
+      }
 
       it('should resolve successfully when 1000 UserImportRecords are provided', () => {
         const expectedResult = utils.responseFrom({});
@@ -1728,7 +1758,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         // Expected error when a tenant ID is provided.
         const expectedError = new FirebaseAuthError(
           AuthClientErrorCode.INVALID_ARGUMENT,
-          'Tenant ID cannot be modified on an existing user.',
+          '"tenantId" is an invalid "UpdateRequest" property.',
         );
         const requestHandler = handler.init(mockApp);
         // Send update request with tenant ID.
@@ -1996,8 +2026,6 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           password: 'password',
           phoneNumber: '+11234567890',
           ignoredProperty: 'value',
-          // Tenant ID accepted on creation and relayed to Auth server.
-          tenantId: 'TENANT_ID',
         };
         const expectedValidData = {
           localId: uid,
@@ -2008,7 +2036,6 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           photoUrl: 'http://localhost/1234/photo.png',
           password: 'password',
           phoneNumber: '+11234567890',
-          tenantId: 'TENANT_ID',
         };
         const invalidData = {
           uid,
@@ -2071,6 +2098,25 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Expected invalid email error should be thrown.
+              expect(error).to.deep.equal(expectedError);
+            });
+        });
+
+        it('should be rejected given tenantId in CreateRequest', () => {
+          // Expected error when a tenantId is provided.
+          const expectedError = new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_ARGUMENT,
+            '"tenantId" is an invalid "CreateRequest" property.');
+          const validDataWithTenantId = deepCopy(validData);
+          (validDataWithTenantId as any).tenantId = TENANT_ID;
+
+          const requestHandler = handler.init(mockApp);
+          // Create new account with tenantId.
+          return requestHandler.createNewAccount(validDataWithTenantId)
+            .then((returnedUid: string) => {
+              throw new Error('Unexpected success');
+            }, (error) => {
+              // Expected invalid argument error should be thrown.
               expect(error).to.deep.equal(expectedError);
             });
         });

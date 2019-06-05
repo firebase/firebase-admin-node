@@ -1919,13 +1919,12 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
       if (testConfig.Auth === TenantAwareAuth) {
         it('should throw and fail quickly when users provided have mismatching tenant IDs', () => {
-          const expectedError = new FirebaseAuthError(AuthClientErrorCode.MISMATCHING_TENANT_ID);
           const usersCopy = deepCopy(users);
           // Simulate one user with mismatching tenant ID.
           (usersCopy[0] as any).tenantId = 'otherTenantId';
           expect(() => {
             return auth.importUsers(usersCopy, options);
-          }).to.throw('User tenant ID does not match with the current TenantAwareAuth tenant ID.');
+          }).to.throw('UserRecord of index "0" has mismatching tenant ID "otherTenantId"');
         });
 
         it('should resolve when users provided have matching tenant IDs', () => {
