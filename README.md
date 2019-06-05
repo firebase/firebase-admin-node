@@ -55,7 +55,9 @@ requests, code review feedback, and also pull requests.
 
 ## Supported Environments
 
-We support Node.js 6.0 and higher. Please note that the Admin SDK should only
+We support Node.js 8.13.0 and higher.
+
+Please also note that the Admin SDK should only
 be used in server-side/back-end environments controlled by the app developer.
 This includes most server and serverless platforms (both on-premise and in
 the cloud). It is not recommended to use the Admin SDK in client-side
