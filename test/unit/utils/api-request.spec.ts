@@ -623,18 +623,21 @@ describe('HttpClient', () => {
     }).should.eventually.be.rejectedWith(err).and.have.property('code', 'app/network-error');
   });
 
-  it('should timeout when the response is delayed', () => {
+  it('should timeout when the response is repeatedly delayed', () => {
     const respData = {foo: 'bar'};
     const scope = nock('https://' + mockHost)
       .get(mockPath)
-      .twice()
+      .times(5)
       .delay(1000)
       .reply(200, respData, {
         'content-type': 'application/json',
       });
     mockedRequests.push(scope);
+
     const err = 'Error while making request: timeout of 50ms exceeded.';
     const client = new HttpClient();
+    (client as any).retry.backOffFactor = 0;
+
     return client.send({
       method: 'GET',
       url: mockUrl,
@@ -642,18 +645,21 @@ describe('HttpClient', () => {
     }).should.eventually.be.rejectedWith(err).and.have.property('code', 'app/network-timeout');
   });
 
-  it('should timeout when a socket timeout is encountered', () => {
+  it('should timeout when multiple socket timeouts encountered', () => {
     const respData = {foo: 'bar timeout'};
     const scope = nock('https://' + mockHost)
       .get(mockPath)
-      .twice()
+      .times(5)
       .socketDelay(2000)
       .reply(200, respData, {
         'content-type': 'application/json',
       });
     mockedRequests.push(scope);
+
     const err = 'Error while making request: timeout of 50ms exceeded.';
     const client = new HttpClient();
+    (client as any).retry.backOffFactor = 0;
+
     return client.send({
       method: 'GET',
       url: mockUrl,
@@ -661,16 +667,45 @@ describe('HttpClient', () => {
     }).should.eventually.be.rejectedWith(err).and.have.property('code', 'app/network-timeout');
   });
 
-  it('should be rejected, after 1 retry, on multiple network errors', () => {
-    mockedRequests.push(mockRequestWithError({message: 'connection reset 1', code: 'ECONNRESET'}));
-    mockedRequests.push(mockRequestWithError({message: 'connection reset 2', code: 'ECONNRESET'}));
+  it('should be rejected, after 4 retries, on multiple network errors', () => {
+    for (let i = 0; i < 5; i++) {
+      mockedRequests.push(mockRequestWithError({message: `connection reset ${i + 1}`, code: 'ECONNRESET'}));
+    }
+
     const client = new HttpClient();
-    const err = 'Error while making request: connection reset 2';
+    (client as any).retry.backOffFactor = 0;
+    const err = 'Error while making request: connection reset 5';
+
     return client.send({
       method: 'GET',
       url: mockUrl,
       timeout: 50,
     }).should.eventually.be.rejectedWith(err).and.have.property('code', 'app/network-error');
+  });
+
+  it('should be rejected, after 4 retries, on multiple 503 errors', () => {
+    const scope = nock('https://' + mockHost)
+      .get(mockPath)
+      .times(5)
+      .reply(503, {}, {
+        'content-type': 'application/json',
+      });
+    mockedRequests.push(scope);
+
+    const client = new HttpClient();
+    (client as any).retry.backOffFactor = 0;
+
+    return client.send({
+      method: 'GET',
+      url: mockUrl,
+    }).catch((err: HttpError) => {
+      expect(err.message).to.equal('Server responded with status 503.');
+      const resp = err.response;
+      expect(resp.status).to.equal(503);
+      expect(resp.headers['content-type']).to.equal('application/json');
+      expect(resp.data).to.deep.equal({});
+      expect(resp.isJson()).to.be.true;
+    });
   });
 
   it('should succeed, after 1 retry, on a single network error', () => {
@@ -766,11 +801,7 @@ describe('HttpClient', () => {
         'content-type': 'application/json',
       });
     mockedRequests.push(scope2);
-    const client = new HttpClient({
-      maxRetries: 1,
-      maxDelayInMillis: 1000,
-      statusCodes: [503],
-    });
+    const client = new HttpClient();
     return client.send({
       method: 'GET',
       url: mockUrl,
@@ -794,12 +825,9 @@ describe('HttpClient', () => {
       });
     mockedRequests.push(scope);
 
-    const client = new HttpClient({
-      maxRetries: 4,
-      maxDelayInMillis: 10 * 1000,
-      ioErrorCodes: ['ECONNRESET'],
-      statusCodes: [503],
-    });
+    const client = new HttpClient();
+    (client as any).retry.backOffFactor = 0;
+
     return client.send({
       method: 'GET',
       url: mockUrl,
@@ -847,13 +875,9 @@ describe('HttpClient', () => {
         'content-type': 'application/json',
       });
     mockedRequests.push(scope);
-    const client = new HttpClient({
-      maxRetries: 4,
-      backOffFactor: 0.5,
-      maxDelayInMillis: 60 * 1000,
-      statusCodes: [503],
-    });
+    const client = new HttpClient();
     delayStub = sinon.stub(client as any, 'waitForRetry').resolves();
+
     return client.send({
       method: 'GET',
       url: mockUrl,
@@ -947,13 +971,9 @@ describe('HttpClient', () => {
       });
     mockedRequests.push(scope2);
 
-    const client = new HttpClient({
-      maxRetries: 4,
-      backOffFactor: 0.5,
-      maxDelayInMillis: 60 * 1000,
-      statusCodes: [503],
-    });
+    const client = new HttpClient();
     delayStub = sinon.stub(client as any, 'waitForRetry').resolves();
+
     return client.send({
       method: 'GET',
       url: mockUrl,
@@ -987,13 +1007,9 @@ describe('HttpClient', () => {
       });
     mockedRequests.push(scope2);
 
-    const client = new HttpClient({
-      maxRetries: 4,
-      backOffFactor: 0.5,
-      maxDelayInMillis: 60 * 1000,
-      statusCodes: [503],
-    });
+    const client = new HttpClient();
     delayStub = sinon.stub(client as any, 'waitForRetry').resolves();
+
     return client.send({
       method: 'GET',
       url: mockUrl,
@@ -1025,13 +1041,9 @@ describe('HttpClient', () => {
       });
     mockedRequests.push(scope2);
 
-    const client = new HttpClient({
-      maxRetries: 4,
-      backOffFactor: 0.5,
-      maxDelayInMillis: 60 * 1000,
-      statusCodes: [503],
-    });
+    const client = new HttpClient();
     delayStub = sinon.stub(client as any, 'waitForRetry').resolves();
+
     return client.send({
       method: 'GET',
       url: mockUrl,
@@ -1061,13 +1073,9 @@ describe('HttpClient', () => {
       });
     mockedRequests.push(scope2);
 
-    const client = new HttpClient({
-      maxRetries: 4,
-      backOffFactor: 0.5,
-      maxDelayInMillis: 60 * 1000,
-      statusCodes: [503],
-    });
+    const client = new HttpClient();
     delayStub = sinon.stub(client as any, 'waitForRetry').resolves();
+
     return client.send({
       method: 'GET',
       url: mockUrl,

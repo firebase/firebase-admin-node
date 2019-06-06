@@ -4,6 +4,7 @@
   apps in a Firebase project
 - [added] `admin.projectManagement().setDisplayName()` method to update the display name of a
   Firebase project
+- [fixed] The SDK now automatically retries HTTP calls failing due to 503 errors.
 
 # v8.0.0
 
