@@ -761,17 +761,82 @@ declare namespace admin.projectManagement {
     resourceName?: string;
   }
 
+  /**
+   * Metadata about a Firebase app.
+   */
   interface AppMetadata {
+
+    /**
+     * The globally unique, Firebase-assigned identifier of the app.
+     *
+     * @example
+     * ```javascript
+     * var appId = appMetadata.appId;
+     * ```
+     */
     appId: string;
+
+    /**
+     * The optional user-assigned display name of the app.
+     *
+     * @example
+     * ```javascript
+     * var displayName = appMetadata.displayName;
+     * ```
+     */
     displayName?: string;
+
+    /**
+     * The development platform of the app. Supporting Android and iOS app platform.
+     *
+     * @example
+     * ```javascript
+     * var platform = AppPlatform.ANDROID;
+     * ```
+     */
     platform: AppPlatform;
+
+    /**
+     * The globally unique, user-assigned ID of the parent project for the app.
+     *
+     * @example
+     * ```javascript
+     * var projectId = appMetadata.projectId;
+     * ```
+     */
     projectId: string;
+
+    /**
+     * The fully-qualified resource name that identifies this app.
+     *
+     * This is useful when manually constructing requests for Firebase's public API
+     *
+     * @example
+     * ```javascript
+     * var resourceName = androidAppMetadata.resourceName;
+     * ```
+     */
     resourceName: string;
   }
 
+  /**
+   * Platforms with which a Firebase App can be associated.
+   */
   enum AppPlatform {
+
+    /**
+     * Unknown state. This is only used for distinguishing unset values.
+     */
     PLATFORM_UNKNOWN = 'PLATFORM_UNKNOWN',
+
+    /**
+     * The Firebase App is associated with iOS.
+     */
     IOS = 'IOS',
+
+    /**
+     * The Firebase App is associated with Android.
+     */
     ANDROID = 'ANDROID',
   }
 
@@ -807,11 +872,27 @@ declare namespace admin.projectManagement {
   interface ProjectManagement {
     app: admin.app.App;
 
+    /**
+     * Lists up to 100 Firebase apps associated with this Firebase project.
+     *
+     * @return A promise that resolves to the app metadata list of up to 100 apps of the current
+     *     project
+     */
+    listAppMetadata(): Promise<admin.projectManagement.AppMetadata[]>;
+
     listAndroidApps(): Promise<admin.projectManagement.AndroidApp[]>;
     listIosApps(): Promise<admin.projectManagement.IosApp[]>;
-    listAppMetadata(): Promise<admin.projectManagement.AppMetadata[]>;
     androidApp(appId: string): admin.projectManagement.AndroidApp;
+
+    /**
+     * Update the display name of this Firebase project
+     *
+     * @param newDisplayName The new display name to be updated
+     *
+     * @return A promise that resolves when the project display name has been updated
+     */
     setDisplayName(newDisplayName: string): Promise<void>;
+
     iosApp(appId: string): admin.projectManagement.IosApp;
     shaCertificate(shaHash: string): admin.projectManagement.ShaCertificate;
     createAndroidApp(
