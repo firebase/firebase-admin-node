@@ -4854,7 +4854,7 @@ declare namespace admin.projectManagement {
     displayName?: string;
 
     /**
-     * The development platform of the app. Supporting Android and iOS app platform.
+     * The development platform of the app. Supporting Android and iOS app platforms.
      *
      * @example
      * ```javascript
