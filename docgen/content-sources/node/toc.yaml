@@ -1,0 +1,181 @@
+toc:
+- title: "admin"
+  path: /docs/reference/admin/node/admin
+  section:
+  - title: "AppOptions"
+    path: /docs/reference/admin/node/admin.AppOptions
+  - title: "FirebaseArrayIndexError"
+    path: /docs/reference/admin/node/admin.FirebaseArrayIndexError
+  - title: "FirebaseError"
+    path: /docs/reference/admin/node/admin.FirebaseError
+  - title: "GoogleOAuthAccessToken"
+    path: /docs/reference/admin/node/admin.GoogleOAuthAccessToken
+  - title: "ServiceAccount"
+    path: /docs/reference/admin/node/admin.ServiceAccount
+
+- title: "admin.app"
+  path: /docs/reference/admin/node/admin.app
+  section:
+  - title: "App"
+    path: /docs/reference/admin/node/admin.app.App
+
+- title: "admin.auth"
+  path: /docs/reference/admin/node/admin.auth
+  section:
+  - title: "Auth"
+    path: /docs/reference/admin/node/admin.auth.Auth
+  - title: "ActionCodeSettings"
+    path: /docs/reference/admin/node/admin.auth.ActionCodeSettings
+  - title: "AuthProviderConfig"
+    path: /docs/reference/admin/node/admin.auth.AuthProviderConfig
+  - title: "AuthProviderConfigFilter"
+    path: /docs/reference/admin/node/admin.auth.AuthProviderConfigFilter
+  - title: "CreateRequest"
+    path: /docs/reference/admin/node/admin.auth.CreateRequest
+  - title: "ListProviderConfigResults"
+    path: /docs/reference/admin/node/admin.auth.ListProviderConfigResults
+  - title: "OIDCAuthProviderConfig"
+    path: /docs/reference/admin/node/admin.auth.OIDCAuthProviderConfig
+  - title: "OIDCUpdateAuthProviderRequest"
+    path: /docs/reference/admin/node/admin.auth.OIDCUpdateAuthProviderRequest
+  - title: "SAMLAuthProviderConfig"
+    path: /docs/reference/admin/node/admin.auth.SAMLAuthProviderConfig
+  - title: "SAMLUpdateAuthProviderRequest"
+    path: /docs/reference/admin/node/admin.auth.SAMLUpdateAuthProviderRequest
+  - title: "UpdateRequest"
+    path: /docs/reference/admin/node/admin.auth.UpdateRequest
+  - title: "UserImportOptions"
+    path: /docs/reference/admin/node/admin.auth.UserImportOptions
+  - title: "UserImportRecord"
+    path: /docs/reference/admin/node/admin.auth.UserImportRecord
+  - title: "UserImportResult"
+    path: /docs/reference/admin/node/admin.auth.UserImportResult
+  - title: "DecodedIdToken"
+    path: /docs/reference/admin/node/admin.auth.DecodedIdToken
+  - title: "UserInfo"
+    path: /docs/reference/admin/node/admin.auth.UserInfo
+  - title: "UserMetadata"
+    path: /docs/reference/admin/node/admin.auth.UserMetadata
+  - title: "UserRecord"
+    path: /docs/reference/admin/node/admin.auth.UserRecord
+  - title: "SessionCookieOptions"
+    path: /docs/reference/admin/node/admin.auth.SessionCookieOptions
+  - title: "BaseAuth"
+    path: /docs/reference/admin/node/admin.auth.BaseAuth
+  - title: "ListUsersResult"
+    path: /docs/reference/admin/node/admin.auth.ListUsersResult
+
+- title: "admin.credential"
+  path: /docs/reference/admin/node/admin.credential
+  section:
+  - title: "Credential"
+    path: /docs/reference/admin/node/admin.credential.Credential
+
+- title: "admin.database"
+  path: /docs/reference/admin/node/admin.database
+  section:
+  - title: "Database"
+    path: /docs/reference/admin/node/admin.database.Database
+  - title: "DataSnapshot"
+    path: /docs/reference/admin/node/admin.database.DataSnapshot
+  - title: "OnDisconnect"
+    path: /docs/reference/admin/node/admin.database.OnDisconnect
+  - title: "Query"
+    path: /docs/reference/admin/node/admin.database.Query
+  - title: "Reference"
+    path: /docs/reference/admin/node/admin.database.Reference
+  - title: "ServerValue"
+    path: /docs/reference/admin/node/admin.database.ServerValue
+  - title: "ThenableReference"
+    path: /docs/reference/admin/node/admin.database.ThenableReference
+
+- title: "admin.firestore"
+  path: /docs/reference/admin/node/admin.firestore
+
+- title: "admin.instanceId"
+  path: /docs/reference/admin/node/admin.instanceId
+  section:
+  - title: "InstanceId"
+    path: /docs/reference/admin/node/admin.instanceId.InstanceId
+
+- title: "admin.messaging"
+  path: /docs/reference/admin/node/admin.messaging
+  section:
+  - title: "TopicMessage"
+    path: /docs/reference/admin/node/TopicMessage
+  - title: "TokenMessage"
+    path: /docs/reference/admin/node/TokenMessage
+  - title: "ConditionMessage"
+    path: /docs/reference/admin/node/ConditionMessage
+  - title: "AndroidConfig"
+    path: /docs/reference/admin/node/admin.messaging.AndroidConfig
+  - title: "AndroidNotification"
+    path: /docs/reference/admin/node/admin.messaging.AndroidNotification
+  - title: "Messaging"
+    path: /docs/reference/admin/node/admin.messaging.Messaging
+  - title: "MessagingConditionResponse"
+    path: /docs/reference/admin/node/admin.messaging.MessagingConditionResponse
+  - title: "MessagingDeviceGroupResponse"
+    path: /docs/reference/admin/node/admin.messaging.MessagingDeviceGroupResponse
+  - title: "MessagingDeviceResult"
+    path: /docs/reference/admin/node/admin.messaging.MessagingDeviceResult
+  - title: "MessagingDevicesResponse"
+    path: /docs/reference/admin/node/admin.messaging.MessagingDevicesResponse
+  - title: "MessagingOptions"
+    path: /docs/reference/admin/node/admin.messaging.MessagingOptions
+  - title: "MessagingPayload"
+    path: /docs/reference/admin/node/admin.messaging.MessagingPayload
+  - title: "MessagingTopicResponse"
+    path: /docs/reference/admin/node/admin.messaging.MessagingTopicResponse
+  - title: "MessagingTopicManagementResponse"
+    path: /docs/reference/admin/node/admin.messaging.MessagingTopicManagementResponse
+  - title: "NotificationMessagePayload"
+    path: /docs/reference/admin/node/admin.messaging.NotificationMessagePayload
+  - title: "MulticastMessage"
+    path: /docs/reference/admin/node/admin.messaging.MulticastMessage
+  - title: "WebpushNotification"
+    path: /docs/reference/admin/node/admin.messaging.WebpushNotification
+  - title: "WebpushFcmOptions"
+    path: /docs/reference/admin/node/admin.messaging.WebpushFcmOptions
+  - title: "DataMessagePayload"
+    path: /docs/reference/admin/node/admin.messaging.DataMessagePayload
+  - title: "BatchResponse"
+    path: /docs/reference/admin/node/admin.messaging.BatchResponse
+  - title: "SendResponse"
+    path: /docs/reference/admin/node/admin.messaging.SendResponse
+  - title: "ApnsConfig"
+    path: /docs/reference/admin/node/admin.messaging.ApnsConfig
+  - title: "ApnsPayload"
+    path: /docs/reference/admin/node/admin.messaging.ApnsPayload
+  - title: "Aps"
+    path: /docs/reference/admin/node/admin.messaging.Aps
+  - title: "ApsAlert"
+    path: /docs/reference/admin/node/admin.messaging.ApsAlert
+  - title: "CriticalSound"
+    path: /docs/reference/admin/node/admin.messaging.CriticalSound
+  - title: "Notification"
+    path: /docs/reference/admin/node/admin.messaging.Notification
+  - title: "WebpushConfig"
+    path: /docs/reference/admin/node/admin.messaging.WebpushConfig
+
+- title: "admin.projectManagement"
+  path: /docs/reference/admin/node/admin.projectManagement
+  section:
+  - title: "AndroidApp"
+    path: /docs/reference/admin/node/admin.projectManagement.AndroidApp
+  - title: "AndroidAppMetadata"
+    path: /docs/reference/admin/node/admin.projectManagement.AndroidAppMetadata
+  - title: "IosApp"
+    path: /docs/reference/admin/node/admin.projectManagement.IosApp
+  - title: "IosAppMetadata"
+    path: /docs/reference/admin/node/admin.projectManagement.IosAppMetadata
+  - title: "ProjectManagement"
+    path: /docs/reference/admin/node/admin.projectManagement.ProjectManagement
+  - title: "ShaCertificate"
+    path: /docs/reference/admin/node/admin.projectManagement.ShaCertificate
+
+- title: "admin.storage"
+  path: /docs/reference/admin/node/admin.storage
+  section:
+  - title: "Storage"
+    path: /docs/reference/admin/node/admin.storage.Storage
