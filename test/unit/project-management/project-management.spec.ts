@@ -26,13 +26,21 @@ import { ProjectManagementRequestHandler } from '../../../src/project-management
 import { FirebaseProjectManagementError } from '../../../src/utils/error';
 import * as mocks from '../../resources/mocks';
 import { IosApp } from '../../../src/project-management/ios-app';
+import { AppPlatform, AppMetadata } from '../../../src/project-management/app-metadata';
 
 const expect = chai.expect;
 
 const APP_ID = 'test-app-id';
+const APP_ID_ANDROID: string = 'test-app-id-android';
+const APP_ID_IOS: string = 'test-app-id-ios';
 const PACKAGE_NAME = 'test-package-name';
 const BUNDLE_ID = 'test-bundle-id';
+const DISPLAY_NAME_ANDROID: string = 'test-display-name-android';
+const DISPLAY_NAME_IOS: string = 'test-display-name-ios';
 const EXPECTED_ERROR = new FirebaseProjectManagementError('internal-error', 'message');
+const RESOURCE_NAME = 'projects/test/resources-name';
+const RESOURCE_NAME_ANDROID = 'projects/test/resources-name:android';
+const RESOURCE_NAME_IOS = 'projects/test/resources-name:ios';
 
 const VALID_SHA_256_HASH = '0123456789abcdefABCDEF01234567890123456701234567890123456789abcd';
 
@@ -379,6 +387,186 @@ describe('ProjectManagement', () => {
       stubs.push(stub);
       return projectManagement.createIosApp(BUNDLE_ID)
           .should.eventually.deep.equal(createdIosApp);
+    });
+  });
+
+  describe('listAppMetadata', () => {
+    const VALID_LIST_APP_METADATA_API_RESPONSE = {
+      apps: [
+        {
+          appId: APP_ID_ANDROID,
+          displayName: DISPLAY_NAME_ANDROID,
+          platform: 'ANDROID',
+          name: RESOURCE_NAME_ANDROID,
+        },
+        {
+          appId: APP_ID_IOS,
+          displayName: DISPLAY_NAME_IOS,
+          platform: 'IOS',
+          name: RESOURCE_NAME_IOS,
+        },
+        {
+          appId: APP_ID,
+          platform: 'WEB',
+          name: RESOURCE_NAME,
+        },
+      ],
+    };
+
+    it('should propagate API errors', () => {
+      const stub = sinon
+          .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
+          .returns(Promise.reject(EXPECTED_ERROR));
+      stubs.push(stub);
+      return projectManagement.listAppMetadata()
+          .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+    });
+
+    it('should throw with null API response', () => {
+      const stub = sinon
+          .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
+          .returns(Promise.resolve(null));
+      stubs.push(stub);
+      return projectManagement.listAppMetadata()
+          .should.eventually.be.rejected
+          .and.have.property(
+              'message',
+              'listAppMetadata()\'s responseData must be a non-null object. Response data: null');
+    });
+
+    it('should return empty array when API response missing "apps" field', () => {
+      const partialApiResponse = {};
+
+      const stub = sinon
+          .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
+          .returns(Promise.resolve(partialApiResponse));
+      stubs.push(stub);
+      return projectManagement.listAppMetadata()
+          .should.eventually.deep.equal([]);
+    });
+
+    it('should throw when API response has non-array "apps" field', () => {
+      const partialApiResponse = { apps: 'none' };
+
+      const stub = sinon
+          .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
+          .returns(Promise.resolve(partialApiResponse));
+      stubs.push(stub);
+      return projectManagement.listAppMetadata()
+          .should.eventually.be.rejected
+          .and.have.property(
+              'message',
+              '"apps" field must be present in the listAppMetadata() response data. Response data: '
+                  + JSON.stringify(partialApiResponse, null, 2));
+    });
+
+    it('should throw with API response missing "apps[].appId" field', () => {
+      const partialApiResponse = {
+        apps: [{}],
+      };
+
+      const stub = sinon
+          .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
+          .returns(Promise.resolve(partialApiResponse));
+      stubs.push(stub);
+      return projectManagement.listAppMetadata()
+          .should.eventually.be.rejected
+          .and.have.property(
+              'message',
+              '"apps[].appId" field must be present in the listAppMetadata() response data. '
+                  + `Response data: ${JSON.stringify(partialApiResponse, null, 2)}`);
+    });
+
+    it('should throw with API response missing "apps[].platform" field', () => {
+      const missingPlatformApiResponse = {
+        apps: [{
+          appId: APP_ID,
+        }],
+      };
+
+      const stub = sinon
+          .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
+          .returns(Promise.resolve(missingPlatformApiResponse));
+      stubs.push(stub);
+      return projectManagement.listAppMetadata()
+          .should.eventually.be.rejected
+          .and.have.property(
+              'message',
+              '"apps[].platform" field must be present in the listAppMetadata() response data. '
+                  + `Response data: ${JSON.stringify(missingPlatformApiResponse, null, 2)}`);
+    });
+
+    it('should resolve with list of apps metadata on success', () => {
+      const expectedAppMetadata: AppMetadata[] = [
+        {
+          appId: VALID_LIST_APP_METADATA_API_RESPONSE.apps[0].appId,
+          displayName: VALID_LIST_APP_METADATA_API_RESPONSE.apps[0].displayName,
+          platform: AppPlatform.ANDROID,
+          projectId: mocks.projectId,
+          resourceName: RESOURCE_NAME_ANDROID,
+        },
+        {
+          appId: VALID_LIST_APP_METADATA_API_RESPONSE.apps[1].appId,
+          displayName: VALID_LIST_APP_METADATA_API_RESPONSE.apps[1].displayName,
+          platform: AppPlatform.IOS,
+          projectId: mocks.projectId,
+          resourceName: RESOURCE_NAME_IOS,
+        },
+        {
+          appId: VALID_LIST_APP_METADATA_API_RESPONSE.apps[2].appId,
+          platform: AppPlatform.PLATFORM_UNKNOWN,
+          projectId: mocks.projectId,
+          resourceName: RESOURCE_NAME,
+        },
+      ];
+      const stub = sinon
+          .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
+          .returns(Promise.resolve(VALID_LIST_APP_METADATA_API_RESPONSE));
+      stubs.push(stub);
+      return projectManagement.listAppMetadata()
+          .should.eventually.deep.equal(expectedAppMetadata);
+    });
+
+    it('should resolve with "apps[].platform" to be "PLATFORM_UNKNOWN" for web app', () => {
+      const webPlatformApiResponse = {
+        apps: [{
+          appId: APP_ID,
+          platform: 'WEB',
+          name: RESOURCE_NAME,
+        }],
+      };
+      const expectedAppMetadata: AppMetadata[] = [{
+        appId: APP_ID,
+        platform: AppPlatform.PLATFORM_UNKNOWN,
+        projectId: mocks.projectId,
+        resourceName: RESOURCE_NAME,
+      }];
+
+      const stub = sinon
+          .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
+          .returns(Promise.resolve(webPlatformApiResponse));
+      stubs.push(stub);
+      return projectManagement.listAppMetadata()
+          .should.eventually.deep.equal(expectedAppMetadata);
+    });
+  });
+
+  describe('setDisplayName', () => {
+    it('should propagate API errors', () => {
+      const stub = sinon
+          .stub(ProjectManagementRequestHandler.prototype, 'setDisplayName')
+          .returns(Promise.reject(EXPECTED_ERROR));
+      stubs.push(stub);
+      return projectManagement.setDisplayName(DISPLAY_NAME_ANDROID)
+          .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+    });
+
+    it('should resolve on success', () => {
+      const stub = sinon
+          .stub(ProjectManagementRequestHandler.prototype, 'setDisplayName')
+          .returns(Promise.resolve());
+      stubs.push(stub);
+      return projectManagement.setDisplayName(DISPLAY_NAME_ANDROID).should.eventually.be.fulfilled;
     });
   });
 });

@@ -1,6 +1,9 @@
 # Unreleased
 
--
+- [added] `admin.projectManagement().listAppMetadata()` method to list the app summary of up to 100
+  apps in a Firebase project
+- [added] `admin.projectManagement().setDisplayName()` method to update the display name of a
+  Firebase project
 
 # v8.0.0
 

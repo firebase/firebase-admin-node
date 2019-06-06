@@ -4829,9 +4829,49 @@ declare namespace admin.projectManagement {
   }
 
   /**
-   * Metadata about a Firebase Android app.
+   * Metadata about a Firebase app.
    */
-  interface AndroidAppMetadata {
+  interface AppMetadata {
+
+    /**
+     * The globally unique, Firebase-assigned identifier of the app.
+     *
+     * @example
+     * ```javascript
+     * var appId = appMetadata.appId;
+     * ```
+     */
+    appId: string;
+
+    /**
+     * The optional user-assigned display name of the app.
+     *
+     * @example
+     * ```javascript
+     * var displayName = appMetadata.displayName;
+     * ```
+     */
+    displayName?: string;
+
+    /**
+     * The development platform of the app. Supporting Android and iOS app platforms.
+     *
+     * @example
+     * ```javascript
+     * var platform = AppPlatform.ANDROID;
+     * ```
+     */
+    platform: AppPlatform;
+
+    /**
+     * The globally unique, user-assigned ID of the parent project for the app.
+     *
+     * @example
+     * ```javascript
+     * var projectId = appMetadata.projectId;
+     * ```
+     */
+    projectId: string;
 
     /**
      * The fully-qualified resource name that identifies this app.
@@ -4844,40 +4884,39 @@ declare namespace admin.projectManagement {
      * ```
      */
     resourceName: string;
+  }
+
+  /**
+   * Platforms with which a Firebase App can be associated.
+   */
+  enum AppPlatform {
 
     /**
-     * The globally unique, Firebase-assigned identifier of the app.
-     *
-     * @example
-     * ```javascript
-     * var appId = androidAppMetadata.appId;
-     * ```
+     * Unknown state. This is only used for distinguishing unset values.
      */
-    appId: string;
+    PLATFORM_UNKNOWN = 'PLATFORM_UNKNOWN',
 
     /**
-     * The optional user-assigned display name of the app.
-     *
-     * @example
-     * ```javascript
-     * var displayName = androidAppMetadata.displayName;
-     * ```
+     * The Firebase App is associated with iOS.
      */
-    displayName: string | null;
+    IOS = 'IOS',
 
     /**
-     * The globally unique, user-assigned ID of the parent project for the app.
-     *
-     * @example
-     * ```javascript
-     * var projectId = androidAppMetadata.projectId;
-     * ```
+     * The Firebase App is associated with Android.
      */
-    projectId: string;
+    ANDROID = 'ANDROID',
+  }
+
+  /**
+   * Metadata about a Firebase Android App.
+   */
+  interface AndroidAppMetadata extends AppMetadata {
+
+    platform: AppPlatform.ANDROID;
 
     /**
-     * The canonical package name of the Android App, as would appear in the Google
-     * Play Developer Console.
+     * The canonical package name of the Android App, as would appear in the Google Play Developer
+     * Console.
      *
      * @example
      * ```javascript
@@ -4885,6 +4924,23 @@ declare namespace admin.projectManagement {
      * ```
      */
     packageName: string;
+  }
+
+  /**
+   * Metadata about a Firebase iOS App.
+   */
+  interface IosAppMetadata extends AppMetadata {
+    platform: AppPlatform.IOS;
+
+    /**
+     * The canonical bundle ID of the iOS App as it would appear in the iOS App Store.
+     *
+     * @example
+     * ```javascript
+     * var bundleId = iosAppMetadata.bundleId;
+     *```
+     */
+    bundleId: string;
   }
 
   /**
@@ -4952,65 +5008,6 @@ declare namespace admin.projectManagement {
   }
 
   /**
-   * Metadata about a Firebase iOS app.
-   */
-  interface IosAppMetadata {
-
-    /**
-     * The fully-qualified resource name that identifies this app.
-     *
-     * This is useful when manually constructing requests for Firebase's public API.
-     *
-     * @example
-     * ```javascript
-     * var resourceName = iOSAppMetadata.resourceName;
-     * ```
-     */
-    resourceName: string;
-
-    /**
-     * The globally unique, Firebase-assigned identifier of the app.
-     *
-     * @example
-     * ```javascript
-     * var appId = androidAppMetadata.appId;
-     * ``
-     */
-    appId: string;
-
-    /**
-     * The optional user-assigned display name of the app.
-     *
-     * @example
-     * ```javascript
-     * var displayName = iOSAppMetadata.displayName;
-     * ```
-     */
-    displayName: string;
-
-    /**
-     * The globally unique, user-assigned ID of the parent project for the app.
-     *
-     * @example
-     * ```javascript
-     * var projectId = iOSAppMetadata.projectId;
-     * ```
-     */
-    projectId: string;
-
-    /**
-     * The canonical bundle ID of the iOS App as it would appear in the iOS App
-     * Store.
-     *
-     * @example
-     * ```javascript
-     * var bundleId = iosAppMetadata.bundleId;
-     *```
-     */
-    bundleId: string;
-  }
-
-  /**
    * A reference to a Firebase iOS app.
    *
    * Do not call this constructor directly. Instead, use
@@ -5057,6 +5054,13 @@ declare namespace admin.projectManagement {
     app: admin.app.App;
 
     /**
+     * Lists up to 100 Firebase apps associated with this Firebase project.
+     *
+     * @return A promise that resolves to the metadata list of the apps.
+     */
+    listAppMetadata(): Promise<admin.projectManagement.AppMetadata[]>;
+
+    /**
      * Lists up to 100 Firebase Android apps associated with this Firebase project.
      *
      * @return The list of Android apps.
@@ -5081,6 +5085,15 @@ declare namespace admin.projectManagement {
      * @return An `AndroidApp` object that references the specified Firebase Android app.
      */
     androidApp(appId: string): admin.projectManagement.AndroidApp;
+
+    /**
+     * Update the display name of this Firebase project.
+     *
+     * @param newDisplayName The new display name to be updated.
+     *
+     * @return A promise that resolves when the project display name has been updated.
+     */
+    setDisplayName(newDisplayName: string): Promise<void>;
 
     /**
      * Creates an `iOSApp` object, referencing the specified iOS app within

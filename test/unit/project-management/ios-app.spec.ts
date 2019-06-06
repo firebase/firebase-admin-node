@@ -20,11 +20,12 @@ import * as chai from 'chai';
 import * as _ from 'lodash';
 import * as sinon from 'sinon';
 import { FirebaseApp } from '../../../src/firebase-app';
-import { IosApp, IosAppMetadata } from '../../../src/project-management/ios-app';
+import { IosApp } from '../../../src/project-management/ios-app';
 import { ProjectManagementRequestHandler } from '../../../src/project-management/project-management-api-request';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { FirebaseProjectManagementError } from '../../../src/utils/error';
 import * as mocks from '../../resources/mocks';
+import { IosAppMetadata, AppPlatform } from '../../../src/project-management/app-metadata';
 
 const expect = chai.expect;
 
@@ -88,6 +89,7 @@ describe('IosApp', () => {
     };
 
     const VALID_IOS_APP_METADATA: IosAppMetadata = {
+      platform: AppPlatform.IOS,
       resourceName: VALID_IOS_APP_METADATA_API_RESPONSE.name,
       appId: APP_ID,
       displayName: VALID_IOS_APP_METADATA_API_RESPONSE.displayName,

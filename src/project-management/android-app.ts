@@ -17,6 +17,7 @@
 import { FirebaseProjectManagementError } from '../utils/error';
 import * as validator from '../utils/validator';
 import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request';
+import { AndroidAppMetadata, AppPlatform } from './app-metadata';
 
 export class AndroidApp {
   private readonly resourceName: string;
@@ -49,6 +50,7 @@ export class AndroidApp {
           });
 
           const metadata: AndroidAppMetadata = {
+            platform: AppPlatform.ANDROID,
             resourceName: responseData.name,
             appId: responseData.appId,
             displayName: responseData.displayName || null,
@@ -125,14 +127,6 @@ export class AndroidApp {
           return Buffer.from(base64ConfigFileContents, 'base64').toString('utf8');
         });
   }
-}
-
-export interface AndroidAppMetadata {
-  readonly resourceName: string;
-  readonly appId: string;
-  readonly displayName: string | null;
-  readonly projectId: string;
-  readonly packageName: string;
 }
 
 export class ShaCertificate {
