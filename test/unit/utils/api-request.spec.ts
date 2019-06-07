@@ -28,7 +28,7 @@ import * as mocks from '../../resources/mocks';
 import {FirebaseApp} from '../../../src/firebase-app';
 import {
   ApiSettings, HttpClient, HttpError, AuthorizedHttpClient, ApiCallbackFunction, HttpRequestConfig,
-  HttpResponse, parseHttpResponse,
+  HttpResponse, parseHttpResponse, RetryConfig, defaultRetryConfig,
 } from '../../../src/utils/api-request';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import {Agent} from 'http';
@@ -90,6 +90,18 @@ function mockRequestWithError(err: any) {
   return nock('https://' + mockHost)
     .get(mockPath)
     .replyWithError(err);
+}
+
+/**
+ * Returns a new RetryConfig instance for testing. This is same as the default
+ * RetryConfig, with the backOffFactor set to 0 to avoid delays.
+ *
+ * @return {RetryConfig} A new RetryConfig instance.
+ */
+function testRetryConfig(): RetryConfig {
+  const config = defaultRetryConfig();
+  config.backOffFactor = 0;
+  return config;
 }
 
 describe('HttpClient', () => {
@@ -635,8 +647,7 @@ describe('HttpClient', () => {
     mockedRequests.push(scope);
 
     const err = 'Error while making request: timeout of 50ms exceeded.';
-    const client = new HttpClient();
-    (client as any).retry.backOffFactor = 0;
+    const client = new HttpClient(testRetryConfig());
 
     return client.send({
       method: 'GET',
@@ -657,8 +668,7 @@ describe('HttpClient', () => {
     mockedRequests.push(scope);
 
     const err = 'Error while making request: timeout of 50ms exceeded.';
-    const client = new HttpClient();
-    (client as any).retry.backOffFactor = 0;
+    const client = new HttpClient(testRetryConfig());
 
     return client.send({
       method: 'GET',
@@ -672,8 +682,7 @@ describe('HttpClient', () => {
       mockedRequests.push(mockRequestWithError({message: `connection reset ${i + 1}`, code: 'ECONNRESET'}));
     }
 
-    const client = new HttpClient();
-    (client as any).retry.backOffFactor = 0;
+    const client = new HttpClient(testRetryConfig());
     const err = 'Error while making request: connection reset 5';
 
     return client.send({
@@ -692,8 +701,7 @@ describe('HttpClient', () => {
       });
     mockedRequests.push(scope);
 
-    const client = new HttpClient();
-    (client as any).retry.backOffFactor = 0;
+    const client = new HttpClient(testRetryConfig());
 
     return client.send({
       method: 'GET',
@@ -825,8 +833,7 @@ describe('HttpClient', () => {
       });
     mockedRequests.push(scope);
 
-    const client = new HttpClient();
-    (client as any).retry.backOffFactor = 0;
+    const client = new HttpClient(testRetryConfig());
 
     return client.send({
       method: 'GET',

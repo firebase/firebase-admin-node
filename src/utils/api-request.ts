@@ -195,7 +195,7 @@ export interface RetryConfig {
  * as well as HTTP 503 errors. Exposed as a function to ensure that every HttpClient gets its own RetryConfig
  * instance.
  */
-function defaultRetryConfig(): RetryConfig {
+export function defaultRetryConfig(): RetryConfig {
   return {
     maxRetries: 4,
     statusCodes: [503],
