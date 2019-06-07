@@ -364,6 +364,12 @@ describe('HttpClient', () => {
     });
   });
 
+  it('should use the default RetryConfig', () => {
+    const client = new HttpClient();
+    const config = (client as any).retry as RetryConfig;
+    expect(defaultRetryConfig()).to.deep.equal(config);
+  });
+
   it('should make a POST request with the provided headers and data', () => {
     const reqData = {request: 'data'};
     const respData = {success: true};
@@ -1489,5 +1495,22 @@ describe('parseHttpResponse()', () => {
       + '{"foo": 1}';
 
     expect(() => parseHttpResponse(text, config)).to.throw('Malformed HTTP status line.');
+  });
+});
+
+describe('defaultRetryConfig()', () => {
+  it('should return a RetryConfig with default settings', () => {
+    const config = defaultRetryConfig();
+    expect(config.maxRetries).to.equal(4);
+    expect(config.ioErrorCodes).to.deep.equal(['ECONNRESET', 'ETIMEDOUT']);
+    expect(config.statusCodes).to.deep.equal([503]);
+    expect(config.maxDelayInMillis).to.equal(60000);
+    expect(config.backOffFactor).to.equal(0.5);
+  });
+
+  it('should return a new instance on each invocation', () => {
+    const config1 = defaultRetryConfig();
+    const config2 = defaultRetryConfig();
+    expect(config1).to.not.equal(config2);
   });
 });
