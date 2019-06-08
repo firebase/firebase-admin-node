@@ -236,7 +236,7 @@ const AUTH_CONFIGS: AuthTest[] = [
     supportsTenantManagement: false,
     RequestHandler: TenantAwareAuthRequestHandler,
     init: (app: FirebaseApp) => {
-      return new TenantAwareAuth(app.auth(), TENANT_ID);
+      return new TenantAwareAuth(app, TENANT_ID);
     },
   },
 ];
@@ -333,13 +333,6 @@ AUTH_CONFIGS.forEach((testConfig) => {
               return testAuth.forTenant(invalidTenantId as any);
             }).to.throw('The tenant ID must be a valid non-empty string.');
           });
-        });
-
-        it('should not throw on valid tenant ID', () => {
-          expect(() => {
-            const testAuth = new Auth(mockApp);
-            return testAuth.forTenant(TENANT_ID);
-          }).not.to.throw();
         });
 
         it('should return a TenantAwareAuth with the expected tenant ID', () => {

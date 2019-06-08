@@ -612,15 +612,15 @@ export class TenantAwareAuth extends BaseAuth {
   /**
    * The TenantAwareAuth class constructor.
    *
-   * @param {Auth} auth The Auth instance that created this tenant.
+   * @param {object} app The app that created this tenant.
    * @param tenantId The corresponding tenant ID.
    * @constructor
    */
-  constructor(private readonly auth: Auth, tenantId: string) {
+  constructor(private readonly app: FirebaseApp, tenantId: string) {
     super(
-        utils.getProjectId(auth.app),
-        new TenantAwareAuthRequestHandler(auth.app, tenantId),
-        cryptoSignerFromApp(auth.app));
+        utils.getProjectId(app),
+        new TenantAwareAuthRequestHandler(app, tenantId),
+        cryptoSignerFromApp(app));
     utils.addReadonlyGetter(this, 'tenantId', tenantId);
   }
 
@@ -722,7 +722,7 @@ export class TenantAwareAuth extends BaseAuth {
  */
 export class Auth extends BaseAuth implements FirebaseServiceInterface {
   public INTERNAL: AuthInternals = new AuthInternals();
-  private tenantsMap: {[key: string]: TenantAwareAuth};
+  private readonly tenantsMap: {[key: string]: TenantAwareAuth};
   private readonly app_: FirebaseApp;
 
   /**
@@ -774,7 +774,7 @@ export class Auth extends BaseAuth implements FirebaseServiceInterface {
       throw new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID);
     }
     if (typeof this.tenantsMap[tenantId] === 'undefined') {
-      this.tenantsMap[tenantId] = new TenantAwareAuth(this, tenantId);
+      this.tenantsMap[tenantId] = new TenantAwareAuth(this.app, tenantId);
     }
     return this.tenantsMap[tenantId];
   }
