@@ -532,6 +532,10 @@ export class AuthClientErrorCode {
     code: 'missing-continue-uri',
     message: 'A valid continue URL must be provided in the request.',
   };
+  public static MISSING_DISPLAY_NAME = {
+    code: 'missing-display-name',
+    message: 'The resource being created or edited is missing a valid display name.',
+  };
   public static MISSING_IOS_BUNDLE_ID = {
     code: 'missing-ios-bundle-id',
     message: 'The request is missing an iOS Bundle ID.',
