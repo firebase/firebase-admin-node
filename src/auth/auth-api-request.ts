@@ -34,6 +34,7 @@ import {
   OIDCConfigServerRequest, SAMLConfigServerRequest, AuthProviderConfig,
   OIDCUpdateAuthProviderRequest, SAMLUpdateAuthProviderRequest,
 } from './auth-config';
+import {Tenant, TenantOptions, TenantServerResponse} from './tenant';
 
 
 /** Firebase Auth backend host. */
@@ -86,6 +87,9 @@ const FIREBASE_AUTH_BASE_URL_FORMAT =
 /** The Firebase Auth backend multi-tenancy base URL format. */
 const FIREBASE_AUTH_TENANT_URL_FORMAT = FIREBASE_AUTH_BASE_URL_FORMAT.replace(
   'projects/{projectId}', 'projects/{projectId}/tenants/{tenantId}');
+
+/** Maximum allowed number of tenants to download at one time. */
+const MAX_LIST_TENANT_PAGE_SIZE = 1000;
 
 
 /** Defines a base utility to help with resource URL construction. */
@@ -1406,6 +1410,72 @@ export abstract class AbstractAuthRequestHandler {
 }
 
 
+/** Instantiates the getTenant endpoint settings. */
+const GET_TENANT = new ApiSettings('/tenants/{tenantId}', 'GET')
+    // Set response validator.
+    .setResponseValidator((response: any) => {
+      // Response should always contain at least the tenant name.
+      if (!validator.isNonEmptyString(response.name)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INTERNAL_ERROR,
+          'INTERNAL ASSERT FAILED: Unable to get tenant',
+        );
+      }
+    });
+
+/** Instantiates the deleteTenant endpoint settings. */
+const DELETE_TENANT = new ApiSettings('/tenants/{tenantId}', 'DELETE');
+
+/** Instantiates the updateTenant endpoint settings. */
+const UPDATE_TENANT = new ApiSettings('/tenants/{tenantId}?updateMask={updateMask}', 'PATCH')
+    // Set response validator.
+    .setResponseValidator((response: any) => {
+      // Response should always contain at least the tenant name.
+      if (!validator.isNonEmptyString(response.name) ||
+          !Tenant.getTenantIdFromResourceName(response.name)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INTERNAL_ERROR,
+          'INTERNAL ASSERT FAILED: Unable to update tenant',
+        );
+      }
+    });
+
+/** Instantiates the listTenants endpoint settings. */
+const LIST_TENANTS = new ApiSettings('/tenants', 'GET')
+  // Set request validator.
+  .setRequestValidator((request: any) => {
+    // Validate next page token.
+    if (typeof request.pageToken !== 'undefined' &&
+        !validator.isNonEmptyString(request.pageToken)) {
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PAGE_TOKEN);
+    }
+    // Validate max results.
+    if (!validator.isNumber(request.pageSize) ||
+        request.pageSize <= 0 ||
+        request.pageSize > MAX_LIST_TENANT_PAGE_SIZE) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        `Required "maxResults" must be a positive non-zero number that does not exceed ` +
+        `the allowed ${MAX_LIST_TENANT_PAGE_SIZE}.`,
+      );
+    }
+  });
+
+/** Instantiates the createTenant endpoint settings. */
+const CREATE_TENANT = new ApiSettings('/tenants', 'POST')
+    // Set response validator.
+    .setResponseValidator((response: any) => {
+      // Response should always contain at least the tenant name.
+      if (!validator.isNonEmptyString(response.name) ||
+          !Tenant.getTenantIdFromResourceName(response.name)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INTERNAL_ERROR,
+          'INTERNAL ASSERT FAILED: Unable to create new tenant',
+        );
+      }
+    });
+
+
 /**
  * Utility for sending requests to Auth server that are Auth instance related. This includes user and
  * tenant management related APIs. This extends the BaseFirebaseAuthRequestHandler class and defines
@@ -1440,7 +1510,118 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
     return new AuthResourceUrlBuilder(this.projectId, 'v2beta1');
   }
 
-  // TODO: add tenant management APIs.
+  /**
+   * Looks up a tenant by tenant ID.
+   *
+   * @param {string} tenantId The tenant identifier of the tenant to lookup.
+   * @return {Promise<TenantServerResponse>} A promise that resolves with the tenant information.
+   */
+  public getTenant(tenantId: string): Promise<TenantServerResponse> {
+    if (!validator.isNonEmptyString(tenantId)) {
+      return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID));
+    }
+    return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, GET_TENANT, {}, {tenantId})
+      .then((response: any) => {
+        return response as TenantServerResponse;
+      });
+  }
+
+  /**
+   * Exports the tenants (single batch only) with a size of maxResults and starting from
+   * the offset as specified by pageToken.
+   *
+   * @param {number=} maxResults The page size, 1000 if undefined. This is also the maximum
+   *     allowed limit.
+   * @param {string=} pageToken The next page token. If not specified, returns tenants starting
+   *     without any offset. Tenants are returned in the order they were created from oldest to
+   *     newest, relative to the page token offset.
+   * @return {Promise<object>} A promise that resolves with the current batch of downloaded
+   *     tenants and the next page token if available. For the last page, an empty list of tenants
+   *     and no page token are returned.
+   */
+  public listTenants(
+      maxResults: number = MAX_LIST_TENANT_PAGE_SIZE,
+      pageToken?: string): Promise<{tenants: TenantServerResponse[], nextPageToken?: string}> {
+    const request = {
+      pageSize: maxResults,
+      pageToken,
+    };
+    // Remove next page token if not provided.
+    if (typeof request.pageToken === 'undefined') {
+      delete request.pageToken;
+    }
+    return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, LIST_TENANTS, request)
+        .then((response: any) => {
+          if (!response.tenants) {
+            response.tenants = [];
+            delete response.nextPageToken;
+          }
+          return response as {tenants: TenantServerResponse[], nextPageToken?: string};
+        });
+  }
+
+  /**
+   * Deletes a tenant identified by a tenantId.
+   *
+   * @param {string} tenantId The identifier of the tenant to delete.
+   * @return {Promise<void>} A promise that resolves when the tenant is deleted.
+   */
+  public deleteTenant(tenantId: string): Promise<void> {
+    if (!validator.isNonEmptyString(tenantId)) {
+      return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID));
+    }
+    return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, DELETE_TENANT, {}, {tenantId})
+      .then((response: any) => {
+        // Return nothing.
+      });
+  }
+
+  /**
+   * Creates a new tenant with the properties provided.
+   *
+   * @param {TenantOptions} tenantOptions The properties to set on the new tenant to be created.
+   * @return {Promise<TenantServerResponse>} A promise that resolves with the newly created tenant object.
+   */
+  public createTenant(tenantOptions: TenantOptions): Promise<object> {
+    // Construct backend request.
+    let request;
+    try {
+      request = Tenant.buildServerRequest(tenantOptions, true);
+    } catch (e) {
+      return Promise.reject(e);
+    }
+    return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, CREATE_TENANT, request)
+      .then((response: any) => {
+        return response as TenantServerResponse;
+      });
+  }
+
+  /**
+   * Updates an existing tenant with the properties provided.
+   *
+   * @param {string} tenantId The tenant identifier of the tenant to update.
+   * @param {TenantOptions} tenantOptions The properties to update on the existing tenant.
+   * @return {Promise<TenantServerResponse>} A promise that resolves with the modified tenant object.
+   */
+  public updateTenant(tenantId: string, tenantOptions: TenantOptions): Promise<object> {
+    if (!validator.isNonEmptyString(tenantId)) {
+      return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID));
+    }
+    // Construct backend request.
+    let request;
+    try {
+      request = Tenant.buildServerRequest(tenantOptions, false);
+    } catch (e) {
+      return Promise.reject(e);
+    }
+    const updateMask = utils.generateUpdateMask(request);
+
+    return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, UPDATE_TENANT, request,
+      {tenantId, updateMask: updateMask.join(',')})
+      .then((response: any) => {
+        return response as TenantServerResponse;
+      });
+  }
 }
 
 /**
