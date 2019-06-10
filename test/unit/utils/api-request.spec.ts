@@ -731,7 +731,7 @@ describe('HttpClient', () => {
         'content-type': 'application/json',
       });
     mockedRequests.push(scope);
-    const client = new HttpClient();
+    const client = new HttpClient(defaultRetryConfig());
     return client.send({
       method: 'GET',
       url: mockUrl,
@@ -741,7 +741,7 @@ describe('HttpClient', () => {
     });
   });
 
-  it('should not retry when RetryConfig is not set', () => {
+  it('should not retry when RetryConfig is explicitly null', () => {
     mockedRequests.push(mockRequestWithError({message: 'connection reset 1', code: 'ECONNRESET'}));
     const client = new HttpClient(null);
     const err = 'Error while making request: connection reset 1';
@@ -815,7 +815,7 @@ describe('HttpClient', () => {
         'content-type': 'application/json',
       });
     mockedRequests.push(scope2);
-    const client = new HttpClient();
+    const client = new HttpClient(testRetryConfig());
     return client.send({
       method: 'GET',
       url: mockUrl,
@@ -888,7 +888,7 @@ describe('HttpClient', () => {
         'content-type': 'application/json',
       });
     mockedRequests.push(scope);
-    const client = new HttpClient();
+    const client = new HttpClient(defaultRetryConfig());
     delayStub = sinon.stub(client as any, 'waitForRetry').resolves();
 
     return client.send({
@@ -984,7 +984,7 @@ describe('HttpClient', () => {
       });
     mockedRequests.push(scope2);
 
-    const client = new HttpClient();
+    const client = new HttpClient(defaultRetryConfig());
     delayStub = sinon.stub(client as any, 'waitForRetry').resolves();
 
     return client.send({
@@ -1020,7 +1020,7 @@ describe('HttpClient', () => {
       });
     mockedRequests.push(scope2);
 
-    const client = new HttpClient();
+    const client = new HttpClient(defaultRetryConfig());
     delayStub = sinon.stub(client as any, 'waitForRetry').resolves();
 
     return client.send({
@@ -1054,7 +1054,7 @@ describe('HttpClient', () => {
       });
     mockedRequests.push(scope2);
 
-    const client = new HttpClient();
+    const client = new HttpClient(defaultRetryConfig());
     delayStub = sinon.stub(client as any, 'waitForRetry').resolves();
 
     return client.send({
@@ -1086,7 +1086,7 @@ describe('HttpClient', () => {
       });
     mockedRequests.push(scope2);
 
-    const client = new HttpClient();
+    const client = new HttpClient(defaultRetryConfig());
     delayStub = sinon.stub(client as any, 'waitForRetry').resolves();
 
     return client.send({
@@ -1103,7 +1103,7 @@ describe('HttpClient', () => {
   });
 
   it('should reject if the request payload is invalid', () => {
-    const client = new HttpClient();
+    const client = new HttpClient(defaultRetryConfig());
     const err = 'Error while making request: Request data must be a string, a Buffer '
       + 'or a json serializable object';
     return client.send({
@@ -1121,7 +1121,7 @@ describe('HttpClient', () => {
         'content-type': 'application/json',
       });
     mockedRequests.push(scope);
-    const client = new HttpClient();
+    const client = new HttpClient(defaultRetryConfig());
     return client.send({
       method: 'GET',
       url: 'http://' + mockHost,
@@ -1138,7 +1138,7 @@ describe('HttpClient', () => {
         'content-type': 'application/json',
       });
     mockedRequests.push(scope);
-    const client = new HttpClient();
+    const client = new HttpClient(defaultRetryConfig());
     return client.send({
       method: 'GET',
       url: 'https://' + mockHost + ':8080',
