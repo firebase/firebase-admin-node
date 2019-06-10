@@ -238,7 +238,8 @@ function validateCreateEditRequest(request: any, uploadAccountRequest: boolean =
     phoneNumber: true,
     customAttributes: true,
     validSince: true,
-    tenantId: true,
+    // Pass tenantId only for uploadAccount requests.
+    tenantId: uploadAccountRequest,
     passwordHash: uploadAccountRequest,
     salt: uploadAccountRequest,
     createdAt: uploadAccountRequest,
@@ -474,6 +475,12 @@ export const FIREBASE_AUTH_SET_ACCOUNT_INFO = new ApiSettings('/accounts:update'
         AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Server request is missing user identifier');
     }
+    // Throw error when tenantId is passed in POST body.
+    if (typeof request.tenantId !== 'undefined') {
+      throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          '"tenantId" is an invalid "UpdateRequest" property.');
+    }
     validateCreateEditRequest(request);
   })
   // Set response validator.
@@ -504,6 +511,12 @@ export const FIREBASE_AUTH_SIGN_UP_NEW_USER = new ApiSettings('/accounts', 'POST
         AuthClientErrorCode.INVALID_ARGUMENT,
         `"validSince" cannot be set when creating a new user.`,
       );
+    }
+    // Throw error when tenantId is passed in POST body.
+    if (typeof request.tenantId !== 'undefined') {
+      throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          '"tenantId" is an invalid "CreateRequest" property.');
     }
     validateCreateEditRequest(request);
   })
@@ -913,15 +926,6 @@ export abstract class AbstractAuthRequestHandler {
         new FirebaseAuthError(
           AuthClientErrorCode.INVALID_ARGUMENT,
           'Properties argument must be a non-null object.',
-        ),
-      );
-    }
-
-    if (properties.hasOwnProperty('tenantId')) {
-      return Promise.reject(
-        new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
-          'Tenant ID cannot be modified on an existing user.',
         ),
       );
     }
@@ -1469,5 +1473,35 @@ export class TenantAwareAuthRequestHandler extends AbstractAuthRequestHandler {
    */
   protected newProjectConfigUrlBuilder(): AuthResourceUrlBuilder {
     return new TenantAwareAuthResourceUrlBuilder(this.projectId, 'v2beta1', this.tenantId);
+  }
+
+  /**
+   * Imports the list of users provided to Firebase Auth. This is useful when
+   * migrating from an external authentication system without having to use the Firebase CLI SDK.
+   * At most, 1000 users are allowed to be imported one at a time.
+   * When importing a list of password users, UserImportOptions are required to be specified.
+   *
+   * Overrides the superclass methods by adding an additional check to match tenant IDs of
+   * imported user records if present.
+   *
+   * @param {UserImportRecord[]} users The list of user records to import to Firebase Auth.
+   * @param {UserImportOptions=} options The user import options, required when the users provided
+   *     include password credentials.
+   * @return {Promise<UserImportResult>} A promise that resolves when the operation completes
+   *     with the result of the import. This includes the number of successful imports, the number
+   *     of failed uploads and their corresponding errors.
+   */
+  public uploadAccount(
+      users: UserImportRecord[], options?: UserImportOptions): Promise<UserImportResult> {
+    // Add additional check to match tenant ID of imported user records.
+    users.forEach((user: UserImportRecord, index: number) => {
+      if (validator.isNonEmptyString(user.tenantId) &&
+          user.tenantId !== this.tenantId) {
+        throw new FirebaseAuthError(
+            AuthClientErrorCode.MISMATCHING_TENANT_ID,
+            `UserRecord of index "${index}" has mismatching tenant ID "${user.tenantId}"`);
+      }
+    });
+    return super.uploadAccount(users, options);
   }
 }
