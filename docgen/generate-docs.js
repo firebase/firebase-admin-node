@@ -96,7 +96,7 @@ function fixLinks(file) {
   return fs.readFile(file, 'utf8').then(data => {
     const flattenedLinks = data
       .replace(/\.\.\//g, '')
-      .replace(/(modules|interfaces|classes)\//g, '');
+      .replace(/(modules|interfaces|classes|enums)\//g, '');
     let caseFixedLinks = flattenedLinks;
     for (const lower in lowerToUpperLookup) {
       const re = new RegExp(lower, 'g');
@@ -347,7 +347,8 @@ Promise.all([
     return Promise.all([
       // moveFilesToRoot('classes'),
       moveFilesToRoot('modules'),
-      moveFilesToRoot('interfaces')
+      moveFilesToRoot('interfaces'),
+      moveFilesToRoot('enums'),
     ]);
   })
   // Check for files listed in TOC that are missing and warn if so.

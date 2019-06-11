@@ -167,6 +167,8 @@ toc:
     path: /docs/reference/admin/node/admin.projectManagement.AndroidAppMetadata
   - title: "AppMetadata"
     path: /docs/reference/admin/node/admin.projectManagement.AppMetadata
+  - title: "AppPlatform"
+    path: /docs/reference/admin/node/admin.projectManagement.AppPlatform
   - title: "IosApp"
     path: /docs/reference/admin/node/admin.projectManagement.IosApp
   - title: "IosAppMetadata"
