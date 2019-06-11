@@ -191,13 +191,19 @@ export interface RetryConfig {
 }
 
 /**
- * Default retry configuration for HTTP requests. Retries once on connection reset and timeout errors.
+ * Default retry configuration for HTTP requests. Retries up to 4 times on connection reset and timeout errors
+ * as well as HTTP 503 errors. Exposed as a function to ensure that every HttpClient gets its own RetryConfig
+ * instance.
  */
-const DEFAULT_RETRY_CONFIG: RetryConfig = {
-  maxRetries: 1,
-  ioErrorCodes: ['ECONNRESET', 'ETIMEDOUT'],
-  maxDelayInMillis: 60 * 1000,
-};
+export function defaultRetryConfig(): RetryConfig {
+  return {
+    maxRetries: 4,
+    statusCodes: [503],
+    ioErrorCodes: ['ECONNRESET', 'ETIMEDOUT'],
+    backOffFactor: 0.5,
+    maxDelayInMillis: 60 * 1000,
+  };
+}
 
 /**
  * Ensures that the given RetryConfig object is valid.
@@ -233,7 +239,7 @@ function validateRetryConfig(retry: RetryConfig) {
 
 export class HttpClient {
 
-  constructor(private readonly retry: RetryConfig = DEFAULT_RETRY_CONFIG) {
+  constructor(private readonly retry: RetryConfig = defaultRetryConfig()) {
     if (this.retry) {
       validateRetryConfig(this.retry);
     }

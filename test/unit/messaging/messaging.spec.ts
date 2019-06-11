@@ -299,6 +299,9 @@ function mockTopicSubscriptionRequestWithError(
     });
 }
 
+function disableRetries(messaging: Messaging) {
+  (messaging as any).messagingRequestHandler.httpClient.retry = null;
+}
 
 describe('Messaging', () => {
   let mockApp: FirebaseApp;
@@ -1167,6 +1170,7 @@ describe('Messaging', () => {
     _.forEach(STATUS_CODE_TO_ERROR_MAP, (expectedError, statusCode) => {
       it(`should be rejected given a ${ statusCode } text server response`, () => {
         mockedRequests.push(mockSendRequestWithError(parseInt(statusCode, 10), 'text'));
+        disableRetries(messaging);
 
         return messaging.sendToDevice(
           mocks.messaging.registrationToken,
@@ -1460,6 +1464,7 @@ describe('Messaging', () => {
     _.forEach(STATUS_CODE_TO_ERROR_MAP, (expectedError, statusCode) => {
       it(`should be rejected given a ${ statusCode } text server response`, () => {
         mockedRequests.push(mockSendRequestWithError(parseInt(statusCode, 10), 'text'));
+        disableRetries(messaging);
 
         return messaging.sendToDeviceGroup(
         mocks.messaging.notificationKey,
@@ -1710,6 +1715,7 @@ describe('Messaging', () => {
     _.forEach(STATUS_CODE_TO_ERROR_MAP, (expectedError, statusCode) => {
       it(`should be rejected given a ${ statusCode } text server response`, () => {
         mockedRequests.push(mockSendRequestWithError(parseInt(statusCode, 10), 'text'));
+        disableRetries(messaging);
 
         return messaging.sendToTopic(
         mocks.messaging.topic,
@@ -1928,6 +1934,7 @@ describe('Messaging', () => {
     _.forEach(STATUS_CODE_TO_ERROR_MAP, (expectedError, statusCode) => {
       it(`should be rejected given a ${ statusCode } text server response`, () => {
         mockedRequests.push(mockSendRequestWithError(parseInt(statusCode, 10), 'text'));
+        disableRetries(messaging);
 
         return messaging.sendToCondition(
         mocks.messaging.condition,
@@ -3398,6 +3405,7 @@ describe('Messaging', () => {
     _.forEach(STATUS_CODE_TO_ERROR_MAP, (expectedError, statusCode) => {
       it(`should be rejected given a ${ statusCode } text server response`, () => {
         mockedRequests.push(mockTopicSubscriptionRequestWithError(methodName, parseInt(statusCode, 10), 'text'));
+        disableRetries(messaging);
 
         return messagingService[methodName](
           mocks.messaging.registrationToken,
