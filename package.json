@@ -54,8 +54,8 @@
   ],
   "types": "./lib/index.d.ts",
   "dependencies": {
-    "@firebase/app": "^0.3.4",
-    "@firebase/database": "^0.3.6",
+    "@firebase/app": "^0.4.4",
+    "@firebase/database": "^0.4.4",
     "@types/node": "^8.0.53",
     "dicer": "^0.3.0",
     "jsonwebtoken": "8.1.0",
@@ -66,7 +66,7 @@
     "@google-cloud/storage": "^2.5.0"
   },
   "devDependencies": {
-    "@firebase/auth": "0.5.2",
+    "@firebase/auth": "^0.11.3",
     "@types/bcrypt": "^2.0.0",
     "@types/chai": "^3.4.34",
     "@types/chai-as-promised": "0.0.29",
