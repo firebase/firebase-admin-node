@@ -3811,6 +3811,24 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             });
         });
 
+        it('should be rejected given valid parameters with no type', () => {
+          const expectedError = new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_ARGUMENT,
+            '"CreateTenantRequest.type" must be either "full_service" or "lightweight".',
+          );
+          // Initialize CreateTenantRequest with missing type.
+          const invalidOptions = deepCopy(tenantOptions);
+          delete invalidOptions.type;
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.createTenant(invalidOptions)
+            .then((result) => {
+              throw new Error('Unexpected success');
+            }, (error) => {
+              expect(error).to.deep.equal(expectedError);
+            });
+        });
+
         it('should be rejected given invalid parameters', () => {
           const expectedError = new FirebaseAuthError(
             AuthClientErrorCode.INVALID_ARGUMENT,
