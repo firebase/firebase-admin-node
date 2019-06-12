@@ -43,6 +43,7 @@ import {
   OIDCAuthProviderConfig, SAMLAuthProviderConfig, OIDCUpdateAuthProviderRequest,
   SAMLUpdateAuthProviderRequest, SAMLConfigServerResponse,
 } from '../../../src/auth/auth-config';
+import {TenantOptions} from '../../../src/auth/tenant';
 
 chai.should();
 chai.use(sinonChai);
@@ -3548,6 +3549,558 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           });
       });
     });
+
+    if (handler.supportsTenantManagement) {
+      describe('getTenant', () => {
+        const path = '/v2beta1/projects/project_id/tenants/tenant_id';
+        const method = 'GET';
+        const tenantId = 'tenant_id';
+        const expectedResult = utils.responseFrom({
+          name: 'projects/project_id/tenants/tenant_id',
+        });
+
+        it('should be fulfilled given a valid tenant ID', () => {
+          const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+          stubs.push(stub);
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.getTenant(tenantId)
+            .then((result) => {
+              expect(result).to.deep.equal(expectedResult.data);
+              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, {}));
+            });
+        });
+
+        const invalidTenantIds = [null, NaN, 0, 1, true, false, '', ['tenant_id'], [], {}, { a: 1 }, _.noop];
+        invalidTenantIds.forEach((invalidTenantId) => {
+          it('should be rejected given an invalid tenant ID:' + JSON.stringify(invalidTenantId), () => {
+            const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID);
+
+            const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+            return requestHandler.getTenant(invalidTenantId as any)
+              .then((result) => {
+                throw new Error('Unexpected success');
+              }, (error) => {
+                expect(error).to.deep.equal(expectedError);
+              });
+          });
+        });
+
+        it('should be rejected given a backend error', () => {
+          const expectedError = new FirebaseAuthError(AuthClientErrorCode.TENANT_NOT_FOUND);
+          const expectedServerError = utils.errorFrom({
+            error: {
+              message: 'TENANT_NOT_FOUND',
+            },
+          });
+          const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedServerError);
+          stubs.push(stub);
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.getTenant(tenantId)
+            .then((resp) => {
+              throw new Error('Unexpected success');
+            }, (error) => {
+              expect(error).to.deep.equal(expectedError);
+              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, {}));
+            });
+        });
+      });
+
+      describe('listTenants', () => {
+        const path = '/v2beta1/projects/project_id/tenants';
+        const method = 'GET';
+        const nextPageToken = 'PAGE_TOKEN';
+        const maxResults = 500;
+        const expectedResult = utils.responseFrom({
+          tenants : [
+            {name: 'projects/project_id/tenants/tenant_id1'},
+            {name: 'projects/project_id/tenants/tenant_id2'},
+          ],
+          nextPageToken: 'NEXT_PAGE_TOKEN',
+        });
+
+        it('should be fulfilled given valid parameters', () => {
+          const data = {
+            pageSize: maxResults,
+            pageToken: nextPageToken,
+          };
+          const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+          stubs.push(stub);
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.listTenants(maxResults, nextPageToken)
+            .then((result) => {
+              expect(result).to.deep.equal(expectedResult.data);
+              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
+            });
+        });
+
+        it('should be fulfilled with empty tenant array when no tenants exist', () => {
+          const data = {
+            pageSize: maxResults,
+            pageToken: nextPageToken,
+          };
+          const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
+          stubs.push(stub);
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.listTenants(maxResults, nextPageToken)
+            .then((result) => {
+              expect(result).to.deep.equal({tenants: []});
+              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
+            });
+        });
+
+        it('should be fulfilled given no parameters', () => {
+          // Default maxResults should be used.
+          const data = {
+            pageSize: 1000,
+          };
+          const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+          stubs.push(stub);
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.listTenants()
+            .then((result) => {
+              expect(result).to.deep.equal(expectedResult.data);
+              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
+            });
+        });
+
+        it('should be rejected given an invalid maxResults', () => {
+          const expectedError = new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_ARGUMENT,
+            `Required "maxResults" must be a positive non-zero number that does not ` +
+            `exceed the allowed 1000.`,
+          );
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.listTenants(1001, nextPageToken)
+            .then((resp) => {
+              throw new Error('Unexpected success');
+            }, (error) => {
+              expect(error).to.deep.equal(expectedError);
+            });
+        });
+
+        it('should be rejected given an invalid next page token', () => {
+          const expectedError = new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_PAGE_TOKEN,
+          );
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.listTenants(maxResults, '')
+            .then((resp) => {
+              throw new Error('Unexpected success');
+            }, (error) => {
+              expect(error).to.deep.equal(expectedError);
+            });
+        });
+
+        it('should be rejected when the backend returns an error', () => {
+          const expectedServerError = utils.errorFrom({
+            error: {
+              message: 'INVALID_PAGE_SELECTION',
+            },
+          });
+          const expectedError = FirebaseAuthError.fromServerError('INVALID_PAGE_SELECTION');
+          const data = {
+            pageSize: maxResults,
+            pageToken: nextPageToken,
+          };
+          const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedServerError);
+          stubs.push(stub);
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.listTenants(maxResults, nextPageToken)
+            .then((resp) => {
+              throw new Error('Unexpected success');
+            }, (error) => {
+              expect(error).to.deep.equal(expectedError);
+              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
+            });
+        });
+      });
+
+      describe('deleteTenant', () => {
+        const path = '/v2beta1/projects/project_id/tenants/tenant_id';
+        const method = 'DELETE';
+        const tenantId = 'tenant_id';
+        const expectedResult = utils.responseFrom({});
+
+        it('should be fulfilled given a valid tenant ID', () => {
+          const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+          stubs.push(stub);
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.deleteTenant(tenantId)
+            .then((result) => {
+              expect(result).to.be.undefined;
+              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, {}));
+            });
+        });
+
+        const invalidTenantIds = [null, NaN, 0, 1, true, false, '', ['tenant_id'], [], {}, { a: 1 }, _.noop];
+        invalidTenantIds.forEach((invalidTenantId) => {
+          it('should be rejected given an invalid tenant ID:' + JSON.stringify(invalidTenantId), () => {
+            const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID);
+
+            const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+            return requestHandler.deleteTenant(invalidTenantId as any)
+              .then((result) => {
+                throw new Error('Unexpected success');
+              }, (error) => {
+                expect(error).to.deep.equal(expectedError);
+              });
+          });
+        });
+
+        it('should be rejected given a backend error', () => {
+          const expectedError = new FirebaseAuthError(AuthClientErrorCode.TENANT_NOT_FOUND);
+          const expectedServerError = utils.errorFrom({
+            error: {
+              message: 'TENANT_NOT_FOUND',
+            },
+          });
+          const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedServerError);
+          stubs.push(stub);
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.deleteTenant(tenantId)
+            .then((resp) => {
+              throw new Error('Unexpected success');
+            }, (error) => {
+              expect(error).to.deep.equal(expectedError);
+              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, {}));
+            });
+        });
+      });
+
+      describe('createTenant', () => {
+        const path = '/v2beta1/projects/project_id/tenants';
+        const postMethod = 'POST';
+        const tenantId = 'tenant_id';
+        const tenantOptions: TenantOptions = {
+          displayName: 'TENANT_DISPLAY_NAME',
+          type: 'lightweight',
+          emailSignInConfig: {
+            enabled: true,
+            passwordRequired: true,
+          },
+        };
+        const expectedRequest = {
+          displayName: 'TENANT_DISPLAY_NAME',
+          type: 'LIGHTWEIGHT',
+          allowPasswordSignup: true,
+          enableEmailLinkSignin: false,
+        };
+        const expectedResult = utils.responseFrom(deepExtend({
+          name: 'projects/project_id/tenants/tenant_id',
+        }, expectedRequest));
+
+        it('should be fulfilled given valid parameters', () => {
+          const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+          stubs.push(stub);
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.createTenant(tenantOptions)
+            .then((actualResult) => {
+              expect(actualResult).to.be.deep.equal(expectedResult.data);
+              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, postMethod, expectedRequest));
+            });
+        });
+
+        it('should be rejected given valid parameters with no type', () => {
+          const expectedError = new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_ARGUMENT,
+            '"CreateTenantRequest.type" must be either "full_service" or "lightweight".',
+          );
+          // Initialize CreateTenantRequest with missing type.
+          const invalidOptions = deepCopy(tenantOptions);
+          delete invalidOptions.type;
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.createTenant(invalidOptions)
+            .then((result) => {
+              throw new Error('Unexpected success');
+            }, (error) => {
+              expect(error).to.deep.equal(expectedError);
+            });
+        });
+
+        it('should be rejected given invalid parameters', () => {
+          const expectedError = new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_ARGUMENT,
+            '"EmailSignInConfig" must be a non-null object.',
+          );
+          const invalidOptions = deepCopy(tenantOptions);
+          invalidOptions.emailSignInConfig = 'invalid' as any;
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.createTenant(invalidOptions)
+            .then((result) => {
+              throw new Error('Unexpected success');
+            }, (error) => {
+              expect(error).to.deep.equal(expectedError);
+            });
+        });
+
+        it('should be rejected when the backend returns a response missing name', () => {
+          const expectedError = new FirebaseAuthError(
+            AuthClientErrorCode.INTERNAL_ERROR,
+            'INTERNAL ASSERT FAILED: Unable to create new tenant',
+          );
+          const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
+          stubs.push(stub);
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.createTenant(tenantOptions)
+            .then((resp) => {
+              throw new Error('Unexpected success');
+            }, (error) => {
+              expect(error).to.deep.equal(expectedError);
+              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, postMethod, expectedRequest));
+            });
+        });
+
+        it('should be rejected when the backend returns a response missing tenant ID in response name', () => {
+          const expectedError = new FirebaseAuthError(
+            AuthClientErrorCode.INTERNAL_ERROR,
+            'INTERNAL ASSERT FAILED: Unable to create new tenant',
+          );
+          // Resource name should have /tenants/tenant_id in path. This should throw an error.
+          const stub = sinon.stub(HttpClient.prototype, 'send')
+            .resolves(utils.responseFrom({name: 'projects/project_id'}));
+          stubs.push(stub);
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.createTenant(tenantOptions)
+            .then((resp) => {
+              throw new Error('Unexpected success');
+            }, (error) => {
+              expect(error).to.deep.equal(expectedError);
+              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, postMethod, expectedRequest));
+            });
+        });
+
+        it('should be rejected when the backend returns an error', () => {
+          const expectedServerError = utils.errorFrom({
+            error: {
+              message: 'INTERNAL_ERROR',
+            },
+          });
+          const expectedError = new FirebaseAuthError(
+            AuthClientErrorCode.INTERNAL_ERROR,
+            `An internal error has occurred. Raw server response: ` +
+            `"${JSON.stringify(expectedServerError.response.data)}"`,
+          );
+          const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedServerError);
+          stubs.push(stub);
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.createTenant(tenantOptions)
+            .then((resp) => {
+              throw new Error('Unexpected success');
+            }, (error) => {
+              expect(error).to.deep.equal(expectedError);
+              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, postMethod, expectedRequest));
+            });
+        });
+      });
+
+      describe('updateTenant', () => {
+        const path = '/v2beta1/projects/project_id/tenants/tenant_id';
+        const patchMethod = 'PATCH';
+        const tenantId = 'tenant_id';
+        const tenantOptions = {
+          displayName: 'TENANT_DISPLAY_NAME',
+          emailSignInConfig: {
+            enabled: true,
+            passwordRequired: true,
+          },
+        };
+        const expectedRequest = {
+          displayName: 'TENANT_DISPLAY_NAME',
+          allowPasswordSignup: true,
+          enableEmailLinkSignin: false,
+        };
+        const expectedResult = utils.responseFrom(deepExtend({
+          name: 'projects/project_id/tenants/tenant_id',
+        }, expectedRequest));
+
+        it('should be fulfilled given full parameters', () => {
+          const expectedPath = path + '?updateMask=allowPasswordSignup,enableEmailLinkSignin,displayName';
+          const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+          stubs.push(stub);
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.updateTenant(tenantId, tenantOptions)
+            .then((actualResult) => {
+              expect(actualResult).to.deep.equal(expectedResult.data);
+              expect(stub).to.have.been.calledOnce.and.calledWith(
+                  callParams(expectedPath, patchMethod, expectedRequest));
+            });
+        });
+
+        it('should be fulfilled given partial parameters', () => {
+          const expectedPath = path + '?updateMask=allowPasswordSignup';
+          const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+          const partialRequest = {
+            allowPasswordSignup: true,
+          };
+          const partialTenantOptions = {
+            emailSignInConfig: {enabled: true},
+          };
+          stubs.push(stub);
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.updateTenant(tenantId, partialTenantOptions)
+            .then((actualResult) => {
+              expect(actualResult).to.deep.equal(expectedResult.data);
+              expect(stub).to.have.been.calledOnce.and.calledWith(
+                  callParams(expectedPath, patchMethod, partialRequest));
+            });
+        });
+
+        it('should be fulfilled given a single parameter to change', () => {
+          const expectedPath = path + '?updateMask=displayName';
+          const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+          const partialRequest = {
+            displayName: 'TENANT_DISPLAY_NAME',
+          };
+          const partialTenantOptions = {
+            displayName: 'TENANT_DISPLAY_NAME',
+          };
+          stubs.push(stub);
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.updateTenant(tenantId, partialTenantOptions)
+            .then((actualResult) => {
+              expect(actualResult).to.deep.equal(expectedResult.data);
+              expect(stub).to.have.been.calledOnce.and.calledWith(
+                  callParams(expectedPath, patchMethod, partialRequest));
+            });
+        });
+
+        const invalidTenantIds = [null, NaN, 0, 1, true, false, '', ['tenant_id'], [], {}, { a: 1 }, _.noop];
+        invalidTenantIds.forEach((invalidTenantId) => {
+          it('should be rejected given an invalid tenant ID:' + JSON.stringify(invalidTenantId), () => {
+            const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID);
+
+            const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+            return requestHandler.updateTenant(invalidTenantId as any, tenantOptions)
+              .then((result) => {
+                throw new Error('Unexpected success');
+              }, (error) => {
+                expect(error).to.deep.equal(expectedError);
+              });
+          });
+        });
+
+        it('should be rejected given invalid parameters', () => {
+          const expectedError = new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_ARGUMENT,
+            '"EmailSignInConfig" must be a non-null object.',
+          );
+          const invalidOptions = deepCopy(tenantOptions);
+          invalidOptions.emailSignInConfig = 'invalid' as any;
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.updateTenant(tenantId, invalidOptions)
+            .then((result) => {
+              throw new Error('Unexpected success');
+            }, (error) => {
+              expect(error).to.deep.equal(expectedError);
+            });
+        });
+
+        it('should be rejected given an unmodifiable property', () => {
+          const expectedError = new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_ARGUMENT,
+            '"Tenant.type" is an immutable property.',
+          );
+          const invalidOptions = deepCopy(tenantOptions);
+          (invalidOptions as TenantOptions).type = 'full_service';
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.updateTenant(tenantId, invalidOptions)
+            .then((result) => {
+              throw new Error('Unexpected success');
+            }, (error) => {
+              expect(error).to.deep.equal(expectedError);
+            });
+        });
+
+        it('should be rejected when the backend returns a response missing name', () => {
+          const expectedPath = path + '?updateMask=allowPasswordSignup,enableEmailLinkSignin,displayName';
+          const expectedError = new FirebaseAuthError(
+            AuthClientErrorCode.INTERNAL_ERROR,
+            'INTERNAL ASSERT FAILED: Unable to update tenant',
+          );
+          const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
+          stubs.push(stub);
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.updateTenant(tenantId, tenantOptions)
+            .then((resp) => {
+              throw new Error('Unexpected success');
+            }, (error) => {
+              expect(error).to.deep.equal(expectedError);
+              expect(stub).to.have.been.calledOnce.and.calledWith(
+                  callParams(expectedPath, patchMethod, expectedRequest));
+            });
+        });
+
+        it('should be rejected when the backend returns a response missing tenant ID in response name', () => {
+          const expectedPath = path + '?updateMask=allowPasswordSignup,enableEmailLinkSignin,displayName';
+          const expectedError = new FirebaseAuthError(
+            AuthClientErrorCode.INTERNAL_ERROR,
+            'INTERNAL ASSERT FAILED: Unable to update tenant',
+          );
+          // Resource name should have /tenants/tenant_id in path. This should throw an error.
+          const stub = sinon.stub(HttpClient.prototype, 'send')
+            .resolves(utils.responseFrom({name: 'projects/project_id'}));
+          stubs.push(stub);
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.updateTenant(tenantId, tenantOptions)
+            .then((resp) => {
+              throw new Error('Unexpected success');
+            }, (error) => {
+              expect(error).to.deep.equal(expectedError);
+              expect(stub).to.have.been.calledOnce.and.calledWith(
+                  callParams(expectedPath, patchMethod, expectedRequest));
+            });
+        });
+
+        it('should be rejected when the backend returns an error', () => {
+          const expectedPath = path + '?updateMask=allowPasswordSignup,enableEmailLinkSignin,displayName';
+          const expectedServerError = utils.errorFrom({
+            error: {
+              message: 'INTERNAL_ERROR',
+            },
+          });
+          const expectedError = new FirebaseAuthError(
+            AuthClientErrorCode.INTERNAL_ERROR,
+            `An internal error has occurred. Raw server response: ` +
+            `"${JSON.stringify(expectedServerError.response.data)}"`,
+          );
+          const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedServerError);
+          stubs.push(stub);
+
+          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
+          return requestHandler.updateTenant(tenantId, tenantOptions)
+            .then((resp) => {
+              throw new Error('Unexpected success');
+            }, (error) => {
+              expect(error).to.deep.equal(expectedError);
+              expect(stub).to.have.been.calledOnce.and.calledWith(
+                  callParams(expectedPath, patchMethod, expectedRequest));
+            });
+        });
+      });
+    }
 
     describe('non-2xx responses', () => {
       it('should be rejected given a simulated non-2xx response with a known error code', () => {
