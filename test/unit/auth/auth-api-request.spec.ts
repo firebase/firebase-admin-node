@@ -3779,7 +3779,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       describe('createTenant', () => {
         const path = '/v2beta1/projects/project_id/tenants';
-        const method = 'POST';
+        const postMethod = 'POST';
         const tenantId = 'tenant_id';
         const tenantOptions: TenantOptions = {
           displayName: 'TENANT_DISPLAY_NAME',
@@ -3807,7 +3807,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           return requestHandler.createTenant(tenantOptions)
             .then((actualResult) => {
               expect(actualResult).to.be.deep.equal(expectedResult.data);
-              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, expectedRequest));
+              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, postMethod, expectedRequest));
             });
         });
 
@@ -3860,7 +3860,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
-              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, expectedRequest));
+              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, postMethod, expectedRequest));
             });
         });
 
@@ -3880,7 +3880,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
-              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, expectedRequest));
+              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, postMethod, expectedRequest));
             });
         });
 
@@ -3904,14 +3904,14 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
-              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, expectedRequest));
+              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, postMethod, expectedRequest));
             });
         });
       });
 
       describe('updateTenant', () => {
         const path = '/v2beta1/projects/project_id/tenants/tenant_id';
-        const method = 'PATCH';
+        const patchMethod = 'PATCH';
         const tenantId = 'tenant_id';
         const tenantOptions = {
           displayName: 'TENANT_DISPLAY_NAME',
@@ -3938,7 +3938,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           return requestHandler.updateTenant(tenantId, tenantOptions)
             .then((actualResult) => {
               expect(actualResult).to.deep.equal(expectedResult.data);
-              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(expectedPath, method, expectedRequest));
+              expect(stub).to.have.been.calledOnce.and.calledWith(
+                  callParams(expectedPath, patchMethod, expectedRequest));
             });
         });
 
@@ -3957,7 +3958,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           return requestHandler.updateTenant(tenantId, partialTenantOptions)
             .then((actualResult) => {
               expect(actualResult).to.deep.equal(expectedResult.data);
-              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(expectedPath, method, partialRequest));
+              expect(stub).to.have.been.calledOnce.and.calledWith(
+                  callParams(expectedPath, patchMethod, partialRequest));
             });
         });
 
@@ -3976,7 +3978,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           return requestHandler.updateTenant(tenantId, partialTenantOptions)
             .then((actualResult) => {
               expect(actualResult).to.deep.equal(expectedResult.data);
-              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(expectedPath, method, partialRequest));
+              expect(stub).to.have.been.calledOnce.and.calledWith(
+                  callParams(expectedPath, patchMethod, partialRequest));
             });
         });
 
@@ -4044,7 +4047,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
-              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(expectedPath, method, expectedRequest));
+              expect(stub).to.have.been.calledOnce.and.calledWith(
+                  callParams(expectedPath, patchMethod, expectedRequest));
             });
         });
 
@@ -4065,7 +4069,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
-              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(expectedPath, method, expectedRequest));
+              expect(stub).to.have.been.calledOnce.and.calledWith(
+                  callParams(expectedPath, patchMethod, expectedRequest));
             });
         });
 
@@ -4090,7 +4095,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
-              expect(stub).to.have.been.calledOnce.and.calledWith(callParams(expectedPath, method, expectedRequest));
+              expect(stub).to.have.been.calledOnce.and.calledWith(
+                  callParams(expectedPath, patchMethod, expectedRequest));
             });
         });
       });

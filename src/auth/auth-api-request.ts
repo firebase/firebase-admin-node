@@ -1582,18 +1582,17 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
    * @param {TenantOptions} tenantOptions The properties to set on the new tenant to be created.
    * @return {Promise<TenantServerResponse>} A promise that resolves with the newly created tenant object.
    */
-  public createTenant(tenantOptions: TenantOptions): Promise<object> {
-    // Construct backend request.
-    let request;
+  public createTenant(tenantOptions: TenantOptions): Promise<TenantServerResponse> {
     try {
-      request = Tenant.buildServerRequest(tenantOptions, true);
+      // Construct backend request.
+      const request = Tenant.buildServerRequest(tenantOptions, true);
+      return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, CREATE_TENANT, request)
+        .then((response: any) => {
+          return response as TenantServerResponse;
+        });
     } catch (e) {
       return Promise.reject(e);
     }
-    return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, CREATE_TENANT, request)
-      .then((response: any) => {
-        return response as TenantServerResponse;
-      });
   }
 
   /**
@@ -1603,24 +1602,22 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
    * @param {TenantOptions} tenantOptions The properties to update on the existing tenant.
    * @return {Promise<TenantServerResponse>} A promise that resolves with the modified tenant object.
    */
-  public updateTenant(tenantId: string, tenantOptions: TenantOptions): Promise<object> {
+  public updateTenant(tenantId: string, tenantOptions: TenantOptions): Promise<TenantServerResponse> {
     if (!validator.isNonEmptyString(tenantId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID));
     }
-    // Construct backend request.
-    let request;
     try {
-      request = Tenant.buildServerRequest(tenantOptions, false);
+      // Construct backend request.
+      const request = Tenant.buildServerRequest(tenantOptions, false);
+      const updateMask = utils.generateUpdateMask(request);
+      return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, UPDATE_TENANT, request,
+        {tenantId, updateMask: updateMask.join(',')})
+        .then((response: any) => {
+          return response as TenantServerResponse;
+        });
     } catch (e) {
       return Promise.reject(e);
     }
-    const updateMask = utils.generateUpdateMask(request);
-
-    return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, UPDATE_TENANT, request,
-      {tenantId, updateMask: updateMask.join(',')})
-      .then((response: any) => {
-        return response as TenantServerResponse;
-      });
   }
 }
 
