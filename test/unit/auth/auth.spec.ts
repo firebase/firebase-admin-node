@@ -41,6 +41,7 @@ import {
   OIDCConfigServerResponse, SAMLConfigServerResponse,
 } from '../../../src/auth/auth-config';
 import {deepCopy} from '../../../src/utils/deep-copy';
+import {Tenant, TenantOptions, TenantServerResponse, ListTenantsResult} from '../../../src/auth/tenant';
 
 chai.should();
 chai.use(sinonChai);
@@ -3051,6 +3052,506 @@ AUTH_CONFIGS.forEach((testConfig) => {
         });
       });
     });
+
+    if (testConfig.supportsTenantManagement) {
+      describe('getTenant()', () => {
+        const tenantId = 'tenant_id';
+        const serverResponse: TenantServerResponse = {
+          name: 'projects/project_id/tenants/tenant_id',
+          type: 'FULL_SERVICE',
+          displayName: 'TENANT_DISPLAY_NAME',
+          allowPasswordSignup: true,
+          enableEmailLinkSignin: false,
+        };
+        const expectedTenant = new Tenant(serverResponse);
+        const expectedError = new FirebaseAuthError(AuthClientErrorCode.TENANT_NOT_FOUND);
+        // Stubs used to simulate underlying API calls.
+        let stubs: sinon.SinonStub[] = [];
+        afterEach(() => {
+          _.forEach(stubs, (stub) => stub.restore());
+          stubs = [];
+        });
+
+        it('should be rejected given no tenant ID', () => {
+          return (auth as any).getTenant()
+            .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-tenant-id');
+        });
+
+        it('should be rejected given an invalid tenant ID', () => {
+          const invalidTenantId = '';
+          return (auth as Auth).getTenant(invalidTenantId)
+            .then(() => {
+              throw new Error('Unexpected success');
+            })
+            .catch((error) => {
+              expect(error).to.have.property('code', 'auth/invalid-tenant-id');
+            });
+        });
+
+        it('should be rejected given an app which returns null access tokens', () => {
+          return (nullAccessTokenAuth as Auth).getTenant(tenantId)
+            .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+        });
+
+        it('should be rejected given an app which returns invalid access tokens', () => {
+          return (malformedAccessTokenAuth as Auth).getTenant(tenantId)
+            .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+        });
+
+        it('should be rejected given an app which fails to generate access tokens', () => {
+          return (rejectedPromiseAccessTokenAuth as Auth).getTenant(tenantId)
+            .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+        });
+
+        it('should resolve with a Tenant on success', () => {
+          // Stub getTenant to return expected result.
+          const stub = sinon.stub(testConfig.RequestHandler.prototype, 'getTenant')
+            .returns(Promise.resolve(serverResponse));
+          stubs.push(stub);
+          return (auth as Auth).getTenant(tenantId)
+            .then((result) => {
+              // Confirm underlying API called with expected parameters.
+              expect(stub).to.have.been.calledOnce.and.calledWith(tenantId);
+              // Confirm expected tenant returned.
+              expect(result).to.deep.equal(expectedTenant);
+            });
+        });
+
+        it('should throw an error when the backend returns an error', () => {
+          // Stub getTenant to throw a backend error.
+          const stub = sinon.stub(testConfig.RequestHandler.prototype, 'getTenant')
+            .returns(Promise.reject(expectedError));
+          stubs.push(stub);
+          return (auth as Auth).getTenant(tenantId)
+            .then((userRecord) => {
+              throw new Error('Unexpected success');
+            }, (error) => {
+              // Confirm underlying API called with expected parameters.
+              expect(stub).to.have.been.calledOnce.and.calledWith(tenantId);
+              // Confirm expected error returned.
+              expect(error).to.equal(expectedError);
+            });
+        });
+      });
+
+      describe('listTenants()', () => {
+        const expectedError = new FirebaseAuthError(AuthClientErrorCode.INTERNAL_ERROR);
+        const pageToken = 'PAGE_TOKEN';
+        const maxResult = 500;
+        const listTenantsResponse: any = {
+          tenants : [
+            {name: 'projects/project_id/tenants/tenant_id1'},
+            {name: 'projects/project_id/tenants/tenant_id2'},
+          ],
+          nextPageToken: 'NEXT_PAGE_TOKEN',
+        };
+        const expectedResult: ListTenantsResult = {
+          tenants: [
+            new Tenant({name: 'projects/project_id/tenants/tenant_id1'}),
+            new Tenant({name: 'projects/project_id/tenants/tenant_id2'}),
+          ],
+          pageToken: 'NEXT_PAGE_TOKEN',
+        };
+        const emptyListTenantsResponse: any = {
+          tenants: [],
+        };
+        const emptyExpectedResult: any = {
+          tenants: [],
+        };
+        // Stubs used to simulate underlying API calls.
+        let stubs: sinon.SinonStub[] = [];
+        afterEach(() => {
+          _.forEach(stubs, (stub) => stub.restore());
+          stubs = [];
+        });
+
+        it('should be rejected given an invalid page token', () => {
+          const invalidToken = {};
+          return (auth as Auth).listTenants(undefined, invalidToken as any)
+            .then(() => {
+              throw new Error('Unexpected success');
+            })
+            .catch((error) => {
+              expect(error).to.have.property('code', 'auth/invalid-page-token');
+            });
+        });
+
+        it('should be rejected given an invalid max result', () => {
+          const invalidResults = 5000;
+          return (auth as Auth).listTenants(invalidResults)
+            .then(() => {
+              throw new Error('Unexpected success');
+            })
+            .catch((error) => {
+              expect(error).to.have.property('code', 'auth/argument-error');
+            });
+        });
+
+        it('should be rejected given an app which returns null access tokens', () => {
+          return (nullAccessTokenAuth as Auth).listTenants(maxResult)
+            .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+        });
+
+        it('should be rejected given an app which returns invalid access tokens', () => {
+          return (malformedAccessTokenAuth as Auth).listTenants(maxResult)
+            .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+        });
+
+        it('should be rejected given an app which fails to generate access tokens', () => {
+          return (rejectedPromiseAccessTokenAuth as Auth).listTenants(maxResult)
+            .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+        });
+
+        it('should resolve on listTenants request success with tenants in response', () => {
+          // Stub listTenants to return expected response.
+          const listTenantsStub = sinon
+            .stub(testConfig.RequestHandler.prototype, 'listTenants')
+            .returns(Promise.resolve(listTenantsResponse));
+          stubs.push(listTenantsStub);
+          return (auth as Auth).listTenants(maxResult, pageToken)
+            .then((response) => {
+              expect(response).to.deep.equal(expectedResult);
+              // Confirm underlying API called with expected parameters.
+              expect(listTenantsStub)
+                .to.have.been.calledOnce.and.calledWith(maxResult, pageToken);
+            });
+        });
+
+        it('should resolve on listTenants request success with default options', () => {
+          // Stub listTenants to return expected response.
+          const listTenantsStub = sinon
+            .stub(testConfig.RequestHandler.prototype, 'listTenants')
+            .returns(Promise.resolve(listTenantsResponse));
+          stubs.push(listTenantsStub);
+          return (auth as Auth).listTenants()
+            .then((response) => {
+              expect(response).to.deep.equal(expectedResult);
+              // Confirm underlying API called with expected parameters.
+              expect(listTenantsStub)
+                .to.have.been.calledOnce.and.calledWith(undefined, undefined);
+            });
+        });
+
+
+        it('should resolve on listTenants request success with no tenants in response', () => {
+          // Stub listTenants to return expected response.
+          const listTenantsStub = sinon
+            .stub(testConfig.RequestHandler.prototype, 'listTenants')
+            .returns(Promise.resolve(emptyListTenantsResponse));
+          stubs.push(listTenantsStub);
+          return (auth as Auth).listTenants(maxResult, pageToken)
+            .then((response) => {
+              expect(response).to.deep.equal(emptyExpectedResult);
+              // Confirm underlying API called with expected parameters.
+              expect(listTenantsStub)
+                .to.have.been.calledOnce.and.calledWith(maxResult, pageToken);
+            });
+        });
+
+        it('should throw an error when listTenants returns an error', () => {
+          // Stub listTenants to throw a backend error.
+          const listTenantsStub = sinon
+            .stub(testConfig.RequestHandler.prototype, 'listTenants')
+            .returns(Promise.reject(expectedError));
+          stubs.push(listTenantsStub);
+          return (auth as Auth).listTenants(maxResult, pageToken)
+            .then((results) => {
+              throw new Error('Unexpected success');
+            }, (error) => {
+              // Confirm underlying API called with expected parameters.
+              expect(listTenantsStub)
+                .to.have.been.calledOnce.and.calledWith(maxResult, pageToken);
+              // Confirm expected error returned.
+              expect(error).to.equal(expectedError);
+            });
+        });
+      });
+
+      describe('deleteTenant()', () => {
+        const tenantId = 'tenant_id';
+        const expectedError = new FirebaseAuthError(AuthClientErrorCode.TENANT_NOT_FOUND);
+        // Stubs used to simulate underlying API calls.
+        let stubs: sinon.SinonStub[] = [];
+        afterEach(() => {
+          _.forEach(stubs, (stub) => stub.restore());
+          stubs = [];
+        });
+
+        it('should be rejected given no tenant ID', () => {
+          return (auth as any).deleteTenant()
+            .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-tenant-id');
+        });
+
+        it('should be rejected given an invalid tenant ID', () => {
+          const invalidTenantId = '';
+          return (auth as Auth).deleteTenant(invalidTenantId)
+            .then(() => {
+              throw new Error('Unexpected success');
+            })
+            .catch((error) => {
+              expect(error).to.have.property('code', 'auth/invalid-tenant-id');
+            });
+        });
+
+        it('should be rejected given an app which returns null access tokens', () => {
+          return (nullAccessTokenAuth as Auth).deleteTenant(tenantId)
+            .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+        });
+
+        it('should be rejected given an app which returns invalid access tokens', () => {
+          return (malformedAccessTokenAuth as Auth).deleteTenant(tenantId)
+            .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+        });
+
+        it('should be rejected given an app which fails to generate access tokens', () => {
+          return (rejectedPromiseAccessTokenAuth as Auth).deleteTenant(tenantId)
+            .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+        });
+
+        it('should resolve with void on success', () => {
+          // Stub deleteTenant to return expected result.
+          const stub = sinon.stub(testConfig.RequestHandler.prototype, 'deleteTenant')
+            .returns(Promise.resolve());
+          stubs.push(stub);
+          return (auth as Auth).deleteTenant(tenantId)
+            .then((result) => {
+              // Confirm underlying API called with expected parameters.
+              expect(stub).to.have.been.calledOnce.and.calledWith(tenantId);
+              // Confirm expected result is undefined.
+              expect(result).to.be.undefined;
+            });
+        });
+
+        it('should throw an error when the backend returns an error', () => {
+          // Stub deleteTenant to throw a backend error.
+          const stub = sinon.stub(testConfig.RequestHandler.prototype, 'deleteTenant')
+            .returns(Promise.reject(expectedError));
+          stubs.push(stub);
+          return (auth as Auth).deleteTenant(tenantId)
+            .then((userRecord) => {
+              throw new Error('Unexpected success');
+            }, (error) => {
+              // Confirm underlying API called with expected parameters.
+              expect(stub).to.have.been.calledOnce.and.calledWith(tenantId);
+              // Confirm expected error returned.
+              expect(error).to.equal(expectedError);
+            });
+        });
+      });
+
+      describe('createTenant()', () => {
+        const tenantId = 'tenant_id';
+        const tenantOptions: TenantOptions = {
+          displayName: 'TENANT_DISPLAY_NAME',
+          type: 'lightweight',
+          emailSignInConfig: {
+            enabled: true,
+            passwordRequired: true,
+          },
+        };
+        const serverResponse: TenantServerResponse = {
+          name: 'projects/project_id/tenants/tenant_id',
+          displayName: 'TENANT_DISPLAY_NAME',
+          allowPasswordSignup: true,
+          enableEmailLinkSignin: false,
+          type: 'LIGHTWEIGHT',
+        };
+        const expectedTenant = new Tenant(serverResponse);
+        const expectedError = new FirebaseAuthError(
+          AuthClientErrorCode.INTERNAL_ERROR,
+          'Unable to create the tenant provided.');
+        // Stubs used to simulate underlying API calls.
+        let stubs: sinon.SinonStub[] = [];
+        afterEach(() => {
+          _.forEach(stubs, (stub) => stub.restore());
+          stubs = [];
+        });
+
+        it('should be rejected given no properties', () => {
+          return (auth as any).createTenant()
+            .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
+        });
+
+        it('should be rejected given invalid TenantOptions', () => {
+          return (auth as Auth).createTenant(null)
+            .then(() => {
+              throw new Error('Unexpected success');
+            })
+            .catch((error) => {
+              expect(error).to.have.property('code', 'auth/argument-error');
+            });
+        });
+
+        it('should be rejected given TenantOptions with invalid property', () => {
+          return (auth as Auth).createTenant({type: 'invalid'} as any)
+            .then(() => {
+              throw new Error('Unexpected success');
+            })
+            .catch((error) => {
+              expect(error).to.have.property('code', 'auth/argument-error');
+            });
+        });
+
+        it('should be rejected given an app which returns null access tokens', () => {
+          return (nullAccessTokenAuth as Auth).createTenant(tenantOptions)
+            .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+        });
+
+        it('should be rejected given an app which returns invalid access tokens', () => {
+          return (malformedAccessTokenAuth as Auth).createTenant(tenantOptions)
+            .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+        });
+
+        it('should be rejected given an app which fails to generate access tokens', () => {
+          return (rejectedPromiseAccessTokenAuth as Auth).createTenant(tenantOptions)
+            .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+        });
+
+        it('should resolve with a Tenant on createTenant request success', () => {
+          // Stub createTenant to return expected result.
+          const createTenantStub = sinon.stub(testConfig.RequestHandler.prototype, 'createTenant')
+            .returns(Promise.resolve(serverResponse));
+          stubs.push(createTenantStub);
+          return (auth as Auth).createTenant(tenantOptions)
+            .then((actualTenant) => {
+              // Confirm underlying API called with expected parameters.
+              expect(createTenantStub).to.have.been.calledOnce.and.calledWith(tenantOptions);
+              // Confirm expected Tenant object returned.
+              expect(actualTenant).to.deep.equal(expectedTenant);
+            });
+        });
+
+        it('should throw an error when createTenant returns an error', () => {
+          // Stub createTenant to throw a backend error.
+          const createTenantStub = sinon.stub(testConfig.RequestHandler.prototype, 'createTenant')
+            .returns(Promise.reject(expectedError));
+          stubs.push(createTenantStub);
+          return (auth as Auth).createTenant(tenantOptions)
+            .then((actualTenant) => {
+              throw new Error('Unexpected success');
+            }, (error) => {
+              // Confirm underlying API called with expected parameters.
+              expect(createTenantStub).to.have.been.calledOnce.and.calledWith(tenantOptions);
+              // Confirm expected error returned.
+              expect(error).to.equal(expectedError);
+            });
+        });
+      });
+
+      describe('updateTenant()', () => {
+        const tenantId = 'tenant_id';
+        const tenantOptions: TenantOptions = {
+          displayName: 'TENANT_DISPLAY_NAME',
+          emailSignInConfig: {
+            enabled: true,
+            passwordRequired: true,
+          },
+        };
+        const serverResponse: TenantServerResponse = {
+          name: 'projects/project_id/tenants/tenant_id',
+          type: 'FULL_SERVICE',
+          displayName: 'TENANT_DISPLAY_NAME',
+          allowPasswordSignup: true,
+          enableEmailLinkSignin: false,
+        };
+        const expectedTenant = new Tenant(serverResponse);
+        const expectedError = new FirebaseAuthError(
+          AuthClientErrorCode.INTERNAL_ERROR,
+          'Unable to update the tenant provided.');
+        // Stubs used to simulate underlying API calls.
+        let stubs: sinon.SinonStub[] = [];
+        afterEach(() => {
+          _.forEach(stubs, (stub) => stub.restore());
+          stubs = [];
+        });
+
+        it('should be rejected given no tenant ID', () => {
+          return (auth as any).updateTenant(undefined, tenantOptions)
+            .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-tenant-id');
+        });
+
+        it('should be rejected given an invalid tenant ID', () => {
+          const invalidTenantId = '';
+          return (auth as Auth).updateTenant(invalidTenantId, tenantOptions)
+            .then(() => {
+              throw new Error('Unexpected success');
+            })
+            .catch((error) => {
+              expect(error).to.have.property('code', 'auth/invalid-tenant-id');
+            });
+        });
+
+        it('should be rejected given no TenantOptions', () => {
+          return (auth as any).updateTenant(tenantId)
+            .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
+        });
+
+        it('should be rejected given invalid TenantOptions', () => {
+          return (auth as Auth).updateTenant(tenantId, null)
+            .then(() => {
+              throw new Error('Unexpected success');
+            })
+            .catch((error) => {
+              expect(error).to.have.property('code', 'auth/argument-error');
+            });
+        });
+
+        it('should be rejected given TenantOptions with invalid property', () => {
+          return (auth as Auth).updateTenant(tenantId, {type: 'lightweight'})
+            .then(() => {
+              throw new Error('Unexpected success');
+            })
+            .catch((error) => {
+              expect(error).to.have.property('code', 'auth/argument-error');
+            });
+        });
+
+        it('should be rejected given an app which returns null access tokens', () => {
+          return (nullAccessTokenAuth as Auth).updateTenant(tenantId, tenantOptions)
+            .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+        });
+
+        it('should be rejected given an app which returns invalid access tokens', () => {
+          return (malformedAccessTokenAuth as Auth).updateTenant(tenantId, tenantOptions)
+            .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+        });
+
+        it('should be rejected given an app which fails to generate access tokens', () => {
+          return (rejectedPromiseAccessTokenAuth as Auth).updateTenant(tenantId, tenantOptions)
+            .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+        });
+
+        it('should resolve with a Tenant on updateTenant request success', () => {
+          // Stub updateTenant to return expected result.
+          const updateTenantStub = sinon.stub(testConfig.RequestHandler.prototype, 'updateTenant')
+            .returns(Promise.resolve(serverResponse));
+          stubs.push(updateTenantStub);
+          return (auth as Auth).updateTenant(tenantId, tenantOptions)
+            .then((actualTenant) => {
+              // Confirm underlying API called with expected parameters.
+              expect(updateTenantStub).to.have.been.calledOnce.and.calledWith(tenantId, tenantOptions);
+              // Confirm expected Tenant object returned.
+              expect(actualTenant).to.deep.equal(expectedTenant);
+            });
+        });
+
+        it('should throw an error when updateTenant returns an error', () => {
+          // Stub updateTenant to throw a backend error.
+          const updateTenantStub = sinon.stub(testConfig.RequestHandler.prototype, 'updateTenant')
+            .returns(Promise.reject(expectedError));
+          stubs.push(updateTenantStub);
+          return (auth as Auth).updateTenant(tenantId, tenantOptions)
+            .then((actualTenant) => {
+              throw new Error('Unexpected success');
+            }, (error) => {
+              // Confirm underlying API called with expected parameters.
+              expect(updateTenantStub).to.have.been.calledOnce.and.calledWith(tenantId, tenantOptions);
+              // Confirm expected error returned.
+              expect(error).to.equal(expectedError);
+            });
+        });
+      });
+    }
 
     if (testConfig.Auth === Auth) {
       describe('INTERNAL.delete()', () => {

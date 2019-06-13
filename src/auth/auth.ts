@@ -34,7 +34,7 @@ import {
   AuthProviderConfig, AuthProviderConfigFilter, ListProviderConfigResults, UpdateAuthProviderRequest,
   SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
 } from './auth-config';
-import {deepCopy, deepExtend} from '../utils/deep-copy';
+import {Tenant, TenantOptions, ListTenantsResult, TenantServerResponse} from './tenant';
 
 
 /**
@@ -777,5 +777,96 @@ export class Auth extends BaseAuth implements FirebaseServiceInterface {
       this.tenantsMap[tenantId] = new TenantAwareAuth(this.app, tenantId);
     }
     return this.tenantsMap[tenantId];
+  }
+
+  /**
+   * Looks up the tenant identified by the provided tenant ID and returns a promise that is
+   * fulfilled with the corresponding tenant if it is found.
+   *
+   * @param {string} tenantId The tenant ID of the tenant to look up.
+   * @return {Promise<Tenant>} A promise that resolves with the corresponding tenant.
+   */
+  public getTenant(tenantId: string): Promise<Tenant> {
+    return (this.authRequestHandler as AuthRequestHandler).getTenant(tenantId)
+      .then((response: TenantServerResponse) => {
+        return new Tenant(response);
+      });
+  }
+
+  /**
+   * Exports a batch of tenant accounts. Batch size is determined by the maxResults argument.
+   * Starting point of the batch is determined by the pageToken argument.
+   *
+   * @param {number=} maxResults The page size, 1000 if undefined. This is also the maximum
+   *     allowed limit.
+   * @param {string=} pageToken The next page token. If not specified, returns users starting
+   *     without any offset.
+   * @return {Promise<{users: Tenant[], pageToken?: string}>} A promise that resolves with
+   *     the current batch of downloaded tenants and the next page token. For the last page, an
+   *     empty list of tenants and no page token are returned.
+   */
+  public listTenants(
+      maxResults?: number,
+      pageToken?: string): Promise<ListTenantsResult> {
+    return (this.authRequestHandler as AuthRequestHandler)
+      .listTenants(maxResults, pageToken)
+      .then((response: {tenants: TenantServerResponse[], nextPageToken?: string}) => {
+        // List of tenants to return.
+        const tenants: Tenant[] = [];
+        // Convert each user response to a Tenant.
+        response.tenants.forEach((tenantResponse: TenantServerResponse) => {
+          tenants.push(new Tenant(tenantResponse));
+        });
+        // Return list of tenants and the next page token if available.
+        const result = {
+          tenants,
+          pageToken: response.nextPageToken,
+        };
+        // Delete result.pageToken if undefined.
+        if (typeof result.pageToken === 'undefined') {
+          delete result.pageToken;
+        }
+        return result;
+      });
+  }
+
+  /**
+   * Deletes the tenant identified by the provided tenant ID and returns a promise that is
+   * fulfilled when the tenant is found and successfully deleted.
+   *
+   * @param {string} tenantId The tenant ID of the tenant to delete.
+   * @return {Promise<void>} A promise that resolves when the tenant is successfully deleted.
+   */
+  public deleteTenant(tenantId: string): Promise<void> {
+    return (this.authRequestHandler as AuthRequestHandler).deleteTenant(tenantId);
+  }
+
+  /**
+   * Creates a new tenant with the properties provided.
+   *
+   * @param {TenantOptions} tenantOptions The properties to set on the new tenant to be created.
+   * @return {Promise<Tenant>} A promise that resolves with the newly created tenant.
+   */
+  public createTenant(tenantOptions: TenantOptions): Promise<Tenant> {
+    return (this.authRequestHandler as AuthRequestHandler)
+      .createTenant(tenantOptions)
+      .then((response: TenantServerResponse) => {
+        return new Tenant(response);
+      });
+  }
+
+  /**
+   * Updates an existing tenant identified by the tenant ID with the properties provided.
+   *
+   * @param {string} tenantId The tenant identifier of the tenant to update.
+   * @param {TenantOptions} tenantOptions The properties to update on the existing tenant.
+   * @return {Promise<Tenant>} A promise that resolves with the modified tenant.
+   */
+  public updateTenant(tenantId: string, tenantOptions: TenantOptions): Promise<Tenant> {
+    return (this.authRequestHandler as AuthRequestHandler)
+      .updateTenant(tenantId, tenantOptions)
+      .then((response: TenantServerResponse) => {
+        return new Tenant(response);
+      });
   }
 }
