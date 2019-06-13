@@ -351,6 +351,9 @@ export class MetadataServiceCredential implements Credential {
     const request: HttpRequestConfig = {
       method: 'GET',
       url: `http://${GOOGLE_METADATA_SERVICE_HOST}${GOOGLE_METADATA_SERVICE_PATH}`,
+      headers: {
+        'Metadata-Flavor': 'Google',
+      },
       httpAgent: this.httpAgent,
     };
     return requestAccessToken(this.httpClient, request);
