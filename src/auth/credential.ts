@@ -29,7 +29,7 @@ const GOOGLE_AUTH_TOKEN_PATH = '/o/oauth2/token';
 
 // NOTE: the Google Metadata Service uses HTTP over a vlan
 const GOOGLE_METADATA_SERVICE_HOST = 'metadata.google.internal';
-const GOOGLE_METADATA_SERVICE_PATH = '/computeMetadata/v1beta1/instance/service-accounts/default/token';
+const GOOGLE_METADATA_SERVICE_PATH = '/computeMetadata/v1/instance/service-accounts/default/token';
 
 const configDir = (() => {
   // Windows has a dedicated low-rights location for apps at ~/Application Data
