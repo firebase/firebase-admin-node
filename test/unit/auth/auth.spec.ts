@@ -3160,6 +3160,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         };
         // Stubs used to simulate underlying API calls.
         let stubs: sinon.SinonStub[] = [];
+
         afterEach(() => {
           _.forEach(stubs, (stub) => stub.restore());
           stubs = [];
@@ -3231,7 +3232,6 @@ AUTH_CONFIGS.forEach((testConfig) => {
                 .to.have.been.calledOnce.and.calledWith(undefined, undefined);
             });
         });
-
 
         it('should resolve on listTenants request success with no tenants in response', () => {
           // Stub listTenants to return expected response.
@@ -3382,7 +3382,8 @@ AUTH_CONFIGS.forEach((testConfig) => {
             });
         });
 
-        it('should be rejected given TenantOptions with invalid property', () => {
+        it('should be rejected given TenantOptions with invalid type property', () => {
+          // Create tenant using invalid type. This should throw an argument error.
           return (auth as Auth).createTenant({type: 'invalid'} as any)
             .then(() => {
               throw new Error('Unexpected success');
@@ -3496,7 +3497,9 @@ AUTH_CONFIGS.forEach((testConfig) => {
             });
         });
 
-        it('should be rejected given TenantOptions with invalid property', () => {
+        it('should be rejected given TenantOptions with invalid update property', () => {
+          // Updating the type of an existing tenant will throw an error as type is
+          // an immutable property.
           return (auth as Auth).updateTenant(tenantId, {type: 'lightweight'})
             .then(() => {
               throw new Error('Unexpected success');
