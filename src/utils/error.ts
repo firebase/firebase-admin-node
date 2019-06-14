@@ -321,6 +321,7 @@ export class FirebaseProjectManagementError extends PrefixedFirebaseError {
 export class AppErrorCodes {
   public static APP_DELETED = 'app-deleted';
   public static DUPLICATE_APP = 'duplicate-app';
+  public static INVALID_ARGUMENT = 'invalid-argument';
   public static INTERNAL_ERROR = 'internal-error';
   public static INVALID_APP_NAME = 'invalid-app-name';
   public static INVALID_APP_OPTIONS = 'invalid-app-options';

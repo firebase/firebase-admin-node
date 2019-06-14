@@ -2,6 +2,24 @@
 
 -
 
+# v8.1.0
+
+- [added] `admin.projectManagement().listAppMetadata()` method to list the app summary of up to 100
+  apps in a Firebase project
+- [added] `admin.projectManagement().setDisplayName()` method to update the display name of a
+  Firebase project
+- [fixed] The SDK now automatically retries HTTP calls failing due to 503 errors.
+
+# v8.0.0
+
+- [changed] Dropped support for Node 6. Developers must use Node 8.13.0 or
+  higher.
+- [changed] Upgraded Cloud Firestore client to v2.0.0.
+
+# v7.4.0
+
+- [changed] Upgraded Cloud Firestore client to v1.3.0.
+
 # v7.3.0
 
 - [feature] Added the provider config management APIs for managing OIDC and SAML

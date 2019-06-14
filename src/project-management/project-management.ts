@@ -22,6 +22,7 @@ import * as validator from '../utils/validator';
 import { AndroidApp, ShaCertificate } from './android-app';
 import { IosApp } from './ios-app';
 import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request';
+import { AppMetadata, AppPlatform } from './app-metadata';
 
 /**
  * Internals of a Project Management instance.
@@ -148,6 +149,50 @@ export class ProjectManagement implements FirebaseServiceInterface {
   }
 
   /**
+   * Lists up to 100 Firebase apps associated with this Firebase project.
+   */
+  public listAppMetadata(): Promise<AppMetadata[]> {
+    return this.requestHandler.listAppMetadata(this.resourceName)
+      .then((responseData) => this.transformResponseToAppMetadata(responseData));
+  }
+
+  /**
+   * Update display name of the project
+   */
+  public setDisplayName(newDisplayName: string): Promise<void> {
+    return this.requestHandler.setDisplayName(this.resourceName, newDisplayName);
+  }
+
+  private transformResponseToAppMetadata(responseData: any): AppMetadata[] {
+    this.assertListAppsResponseData(responseData, 'listAppMetadata()');
+
+    if (!responseData.apps) {
+      return [];
+    }
+
+    return responseData.apps.map((appJson: any) => {
+      assertServerResponse(
+          validator.isNonEmptyString(appJson.appId),
+          responseData,
+          `"apps[].appId" field must be present in the listAppMetadata() response data.`);
+      assertServerResponse(
+          validator.isNonEmptyString(appJson.platform),
+          responseData,
+          `"apps[].platform" field must be present in the listAppMetadata() response data.`);
+      const metadata: AppMetadata = {
+        appId: appJson.appId,
+        platform: (AppPlatform as any)[appJson.platform] || AppPlatform.PLATFORM_UNKNOWN,
+        projectId: this.projectId,
+        resourceName: appJson.name,
+      };
+      if (appJson.displayName) {
+        metadata.displayName = appJson.displayName;
+      }
+      return metadata;
+    });
+  }
+
+  /**
    * Lists up to 100 Firebase apps for a specified platform, associated with this Firebase project.
    */
   private listPlatformApps<T>(platform: 'android' | 'ios', callerName: string): Promise<T[]> {
@@ -157,19 +202,11 @@ export class ProjectManagement implements FirebaseServiceInterface {
 
     return listPromise
         .then((responseData: any) => {
-          assertServerResponse(
-              validator.isNonNullObject(responseData),
-              responseData,
-              `${callerName}\'s responseData must be a non-null object.`);
+          this.assertListAppsResponseData(responseData, callerName);
 
           if (!responseData.apps) {
             return [];
           }
-
-          assertServerResponse(
-              validator.isArray(responseData.apps),
-              responseData,
-              `"apps" field must be present in the ${callerName} response data.`);
 
           return responseData.apps.map((appJson: any) => {
             assertServerResponse(
@@ -183,5 +220,19 @@ export class ProjectManagement implements FirebaseServiceInterface {
             }
           });
         });
+  }
+
+  private assertListAppsResponseData(responseData: any, callerName: string): void {
+    assertServerResponse(
+        validator.isNonNullObject(responseData),
+        responseData,
+        `${callerName}\'s responseData must be a non-null object.`);
+
+    if (responseData.apps) {
+      assertServerResponse(
+          validator.isArray(responseData.apps),
+          responseData,
+          `"apps" field must be present in the ${callerName} response data.`);
+      }
   }
 }

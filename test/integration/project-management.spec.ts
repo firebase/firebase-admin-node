@@ -16,6 +16,7 @@
 
 import * as _ from 'lodash';
 import * as chai from 'chai';
+import * as chaiAsPromised from 'chai-as-promised';
 import * as admin from '../../lib/index';
 import { projectId } from './setup';
 
@@ -23,11 +24,16 @@ const APP_NAMESPACE_PREFIX = 'com.adminsdkintegrationtest.a';
 const APP_NAMESPACE_SUFFIX_LENGTH = 15;
 
 const APP_DISPLAY_NAME_PREFIX = 'Created By Firebase AdminSDK Nodejs Integration Testing ';
+const PROJECT_DISPLAY_NAME_PREFIX = 'Nodejs AdminSDK Testing ';
 const APP_DISPLAY_NAME_SUFFIX_LENGTH = 15;
+const PROJECT_DISPLAY_NAME_SUFFIX_LENGTH = 6;
 
 const SHA_256_HASH = 'aaaaccccaaaaccccaaaaccccaaaaccccaaaaccccaaaaccccaaaaccccaaaacccc';
 
 const expect = chai.expect;
+
+chai.should();
+chai.use(chaiAsPromised);
 
 describe('admin.projectManagement', () => {
 
@@ -72,6 +78,29 @@ describe('admin.projectManagement', () => {
             expect(metadataOwnedByTest).to.exist;
             expect(metadataOwnedByTest.appId).to.equal(iosApp.appId);
           });
+    });
+  });
+
+  describe('setDisplayName()', () => {
+    it('successfully set project\'s display name', () => {
+      const newDisplayName = generateUniqueProjectDisplayName();
+      // TODO(caot): verify that project name has been renamed successfully after adding the ability
+      //     to get project metadata.
+      return admin.projectManagement().setDisplayName(newDisplayName)
+        .should.eventually.be.fulfilled;
+    });
+  });
+
+  describe('listAppMetadata()', () => {
+    it('successfully lists metadata of all apps', () => {
+      return admin.projectManagement().listAppMetadata()
+        .then((metadatas) => {
+            expect(metadatas.length).to.be.at.least(2);
+            const testAppMetadatas = metadatas.filter((metadata) =>
+                isIntegrationTestAppDisplayName(metadata.displayName) &&
+                (metadata.appId === androidApp.appId || metadata.appId === iosApp.appId));
+            expect(testAppMetadatas).to.have.length(2);
+        });
     });
   });
 
@@ -235,10 +264,24 @@ function generateUniqueAppDisplayName() {
 }
 
 /**
+ * @return {string} string that can be used as a unique project display name.
+ */
+function generateUniqueProjectDisplayName() {
+  return PROJECT_DISPLAY_NAME_PREFIX + generateRandomString(PROJECT_DISPLAY_NAME_SUFFIX_LENGTH);
+}
+
+/**
  * @return {boolean} True if the specified appNamespace belongs to these integration tests.
  */
 function isIntegrationTestApp(appNamespace: string): boolean {
-  return (appNamespace.indexOf(APP_NAMESPACE_PREFIX) > -1);
+  return appNamespace && appNamespace.startsWith(APP_NAMESPACE_PREFIX);
+}
+
+/**
+ * @return {boolean} True if the specified appDisplayName belongs to these integration tests.
+ */
+function isIntegrationTestAppDisplayName(appDisplayName: string): boolean {
+  return appDisplayName  && appDisplayName.startsWith(APP_DISPLAY_NAME_PREFIX);
 }
 
 /**

@@ -17,6 +17,7 @@
 import { FirebaseProjectManagementError } from '../utils/error';
 import * as validator from '../utils/validator';
 import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request';
+import { IosAppMetadata, AppPlatform } from './app-metadata';
 
 export class IosApp {
   private readonly resourceName: string;
@@ -49,6 +50,7 @@ export class IosApp {
           });
 
           const metadata: IosAppMetadata = {
+            platform: AppPlatform.IOS,
             resourceName: responseData.name,
             appId: responseData.appId,
             displayName: responseData.displayName || null,
@@ -84,12 +86,4 @@ export class IosApp {
           return Buffer.from(base64ConfigFileContents, 'base64').toString('utf8');
         });
   }
-}
-
-export interface IosAppMetadata {
-  readonly resourceName: string;
-  readonly appId: string;
-  readonly displayName: string;
-  readonly projectId: string;
-  readonly bundleId: string;
 }

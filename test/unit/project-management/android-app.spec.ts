@@ -20,11 +20,12 @@ import * as chai from 'chai';
 import * as _ from 'lodash';
 import * as sinon from 'sinon';
 import { FirebaseApp } from '../../../src/firebase-app';
-import { AndroidApp, AndroidAppMetadata, ShaCertificate } from '../../../src/project-management/android-app';
+import { AndroidApp, ShaCertificate } from '../../../src/project-management/android-app';
 import { ProjectManagementRequestHandler } from '../../../src/project-management/project-management-api-request';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { FirebaseProjectManagementError } from '../../../src/utils/error';
 import * as mocks from '../../resources/mocks';
+import { AndroidAppMetadata, AppPlatform } from '../../../src/project-management/app-metadata';
 
 const expect = chai.expect;
 
@@ -89,6 +90,7 @@ describe('AndroidApp', () => {
     };
 
     const VALID_ANDROID_APP_METADATA: AndroidAppMetadata = {
+      platform: AppPlatform.ANDROID,
       resourceName: VALID_ANDROID_APP_METADATA_API_RESPONSE.name,
       appId: APP_ID,
       displayName: VALID_ANDROID_APP_METADATA_API_RESPONSE.displayName,
