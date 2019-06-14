@@ -457,6 +457,10 @@ export class AuthClientErrorCode {
     code: 'invalid-last-sign-in-time',
     message: 'The last sign-in time must be a valid UTC date string.',
   };
+  public static INVALID_NAME = {
+    code: 'invalid-name',
+    message: 'The resource name provided is invalid.',
+  };
   public static INVALID_OAUTH_CLIENT_ID = {
     code: 'invalid-oauth-client-id',
     message: 'The provided OAuth client ID is invalid.',
@@ -486,6 +490,10 @@ export class AuthClientErrorCode {
     code: 'invalid-photo-url',
     message: 'The photoURL field must be a valid URL.',
   };
+  public static INVALID_PROJECT_ID = {
+    code: 'invalid-project-id',
+    message: 'Invalid parent project. Either parent project doesn\'t exist or didn\'t enable multi-tenancy.',
+  };
   public static INVALID_PROVIDER_DATA = {
     code: 'invalid-provider-data',
     message: 'The providerData must be a valid array of UserInfo objects.',
@@ -502,6 +510,10 @@ export class AuthClientErrorCode {
   public static INVALID_TENANT_ID = {
     code: 'invalid-tenant-id',
     message: 'The tenant ID must be a valid non-empty string.',
+  };
+  public static INVALID_TENANT_TYPE = {
+    code: 'invalid-tenant-type',
+    message: 'Tenant type must be either "full_service" or "lightweight".',
   };
   public static INVALID_UID = {
     code: 'invalid-uid',
@@ -589,6 +601,10 @@ export class AuthClientErrorCode {
       'has insufficient permission to access the requested resource. See ' +
       'https://firebase.google.com/docs/admin/setup for details on how to authenticate this SDK ' +
       'with appropriate permissions.',
+  };
+  public static QUOTA_EXCEEDED = {
+    code: 'quota-exceeded',
+    message: 'The project quota for the specified operation has been exceeded.',
   };
   public static SESSION_COOKIE_EXPIRED = {
     code: 'session-cookie-expired',
@@ -787,16 +803,22 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   INVALID_DISPLAY_NAME: 'INVALID_DISPLAY_NAME',
   // Invalid ID token provided.
   INVALID_ID_TOKEN: 'INVALID_ID_TOKEN',
+  // Invalid tenant/parent resource name.
+  INVALID_NAME: 'INVALID_NAME',
   // OIDC configuration has an invalid OAuth client ID.
   INVALID_OAUTH_CLIENT_ID: 'INVALID_OAUTH_CLIENT_ID',
   // Invalid page token.
   INVALID_PAGE_SELECTION: 'INVALID_PAGE_TOKEN',
   // Invalid phone number.
   INVALID_PHONE_NUMBER: 'INVALID_PHONE_NUMBER',
+  // Invalid agent project. Either agent project doesn't exist or didn't enable multi-tenancy.
+  INVALID_PROJECT_ID: 'INVALID_PROJECT_ID',
   // Invalid provider ID.
   INVALID_PROVIDER_ID: 'INVALID_PROVIDER_ID',
   // Invalid service account.
   INVALID_SERVICE_ACCOUNT: 'INVALID_SERVICE_ACCOUNT',
+  // Invalid tenant type.
+  INVALID_TENANT_TYPE: 'INVALID_TENANT_TYPE',
   // Missing Android package name.
   MISSING_ANDROID_PACKAGE_NAME: 'MISSING_ANDROID_PACKAGE_NAME',
   // Missing configuration.
@@ -827,6 +849,8 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   PHONE_NUMBER_EXISTS: 'PHONE_NUMBER_ALREADY_EXISTS',
   // Project not found.
   PROJECT_NOT_FOUND: 'PROJECT_NOT_FOUND',
+  // In multi-tenancy context: project creation quota exceeded.
+  QUOTA_EXCEEDED: 'QUOTA_EXCEEDED',
   // Tenant not found.
   TENANT_NOT_FOUND: 'TENANT_NOT_FOUND',
   // Tenant ID mismatch.
