@@ -89,7 +89,7 @@ export interface SessionCookieOptions {
 /**
  * Base Auth class. Mainly used for user management APIs.
  */
-export class BaseAuth {
+export class BaseAuth<T extends AbstractAuthRequestHandler> {
   protected readonly tokenGenerator: FirebaseTokenGenerator;
   protected readonly idTokenVerifier: FirebaseTokenVerifier;
   protected readonly sessionCookieVerifier: FirebaseTokenVerifier;
@@ -98,14 +98,14 @@ export class BaseAuth {
    * The BaseAuth class constructor.
    *
    * @param {string} projectId The corresponding project ID.
-   * @param {AbstractAuthRequestHandler} authRequestHandler The RPC request handler
+   * @param {T} authRequestHandler The RPC request handler
    *     for this instance.
    * @param {CryptoSigner} cryptoSigner The instance crypto signer used for custom token
    *     minting.
    * @constructor
    */
   constructor(protected readonly projectId: string,
-              protected readonly authRequestHandler: AbstractAuthRequestHandler,
+              protected readonly authRequestHandler: T,
               cryptoSigner: CryptoSigner) {
     this.tokenGenerator = new FirebaseTokenGenerator(cryptoSigner);
     this.sessionCookieVerifier = createSessionCookieVerifier(projectId);
@@ -606,7 +606,7 @@ export class BaseAuth {
 /**
  * The tenant aware Auth class.
  */
-export class TenantAwareAuth extends BaseAuth {
+export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
   public readonly tenantId: string;
 
   /**
@@ -720,7 +720,7 @@ export class TenantAwareAuth extends BaseAuth {
  * Auth service bound to the provided app.
  * An Auth instance can have multiple tenants.
  */
-export class Auth extends BaseAuth implements FirebaseServiceInterface {
+export class Auth extends BaseAuth<AuthRequestHandler> implements FirebaseServiceInterface {
   public INTERNAL: AuthInternals = new AuthInternals();
   private readonly tenantsMap: {[key: string]: TenantAwareAuth};
   private readonly app_: FirebaseApp;
@@ -787,7 +787,7 @@ export class Auth extends BaseAuth implements FirebaseServiceInterface {
    * @return {Promise<Tenant>} A promise that resolves with the corresponding tenant.
    */
   public getTenant(tenantId: string): Promise<Tenant> {
-    return (this.authRequestHandler as AuthRequestHandler).getTenant(tenantId)
+    return this.authRequestHandler.getTenant(tenantId)
       .then((response: TenantServerResponse) => {
         return new Tenant(response);
       });
@@ -808,8 +808,7 @@ export class Auth extends BaseAuth implements FirebaseServiceInterface {
   public listTenants(
       maxResults?: number,
       pageToken?: string): Promise<ListTenantsResult> {
-    return (this.authRequestHandler as AuthRequestHandler)
-      .listTenants(maxResults, pageToken)
+    return this.authRequestHandler.listTenants(maxResults, pageToken)
       .then((response: {tenants: TenantServerResponse[], nextPageToken?: string}) => {
         // List of tenants to return.
         const tenants: Tenant[] = [];
@@ -838,7 +837,7 @@ export class Auth extends BaseAuth implements FirebaseServiceInterface {
    * @return {Promise<void>} A promise that resolves when the tenant is successfully deleted.
    */
   public deleteTenant(tenantId: string): Promise<void> {
-    return (this.authRequestHandler as AuthRequestHandler).deleteTenant(tenantId);
+    return this.authRequestHandler.deleteTenant(tenantId);
   }
 
   /**
@@ -848,8 +847,7 @@ export class Auth extends BaseAuth implements FirebaseServiceInterface {
    * @return {Promise<Tenant>} A promise that resolves with the newly created tenant.
    */
   public createTenant(tenantOptions: TenantOptions): Promise<Tenant> {
-    return (this.authRequestHandler as AuthRequestHandler)
-      .createTenant(tenantOptions)
+    return this.authRequestHandler.createTenant(tenantOptions)
       .then((response: TenantServerResponse) => {
         return new Tenant(response);
       });
@@ -863,8 +861,7 @@ export class Auth extends BaseAuth implements FirebaseServiceInterface {
    * @return {Promise<Tenant>} A promise that resolves with the modified tenant.
    */
   public updateTenant(tenantId: string, tenantOptions: TenantOptions): Promise<Tenant> {
-    return (this.authRequestHandler as AuthRequestHandler)
-      .updateTenant(tenantId, tenantOptions)
+    return this.authRequestHandler.updateTenant(tenantId, tenantOptions)
       .then((response: TenantServerResponse) => {
         return new Tenant(response);
       });
