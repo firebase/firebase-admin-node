@@ -1067,6 +1067,10 @@ declare namespace admin.auth {
   /**
    * Interface representing a tenant configuration.
    * 
+   * Multi-tenancy support requires Google Cloud's Identity Platform
+   * (GCIP). To learn more about GCIP, including pricing and features,
+   * see the [GCIP documentation](https://cloud.google.com/identity-platform)
+   * 
    * Before multi-tenancy can be used on a Google Cloud Identity Platform project,
    * tenants must be allowed on that project via the Cloud Console UI.
    * 
@@ -1090,7 +1094,7 @@ declare namespace admin.auth {
      * The current tenant type: `lightweight` or `full_service`.
      * Tenants that use separare billing and quota will require their own project and
      * must be defined as `full_service`.
-     * Note that `full_service` tenants may be subject to quota creation limits.
+     * `full_service` tenants may be subject to quota creation limits.
      * For additional project quota increases, refer to
      * [project quota requests](https://support.google.com/cloud/answer/6330231?hl=en).
      * In addition, deleted `full_service` tenants may take 30 days after deletion
@@ -1160,7 +1164,7 @@ declare namespace admin.auth {
   interface CreateTenantRequest extends UpdateTenantRequest {
 
     /**
-     * The newly create tenant type. This can be `lightweight` or `full_service`.
+     * The newly created tenant type. This can be `lightweight` or `full_service`.
      */
     type: admin.auth.TenantType;
   }
@@ -1849,7 +1853,7 @@ declare namespace admin.auth {
      *
      * SAML and OIDC provider support requires Google Cloud's Identity Platform
      * (GCIP). To learn more about GCIP, including pricing and features,
-     * see the [GCIP documentation](https://cloud.google.com/identity-cp).
+     * see the [GCIP documentation](https://cloud.google.com/identity-platform).
      *
      * @param options The provider config filter to apply.
      * @return A promise that resolves with the list of provider configs meeting the
@@ -1867,7 +1871,7 @@ declare namespace admin.auth {
      *
      * SAML and OIDC provider support requires Google Cloud's Identity Platform
      * (GCIP). To learn more about GCIP, including pricing and features,
-     * see the [GCIP documentation](https://cloud.google.com/identity-cp).
+     * see the [GCIP documentation](https://cloud.google.com/identity-platform).
      *
      * @param providerId The provider ID corresponding to the provider
      *     config to return.
@@ -1883,7 +1887,7 @@ declare namespace admin.auth {
      *
      * SAML and OIDC provider support requires Google Cloud's Identity Platform
      * (GCIP). To learn more about GCIP, including pricing and features,
-     * see the [GCIP documentation](https://cloud.google.com/identity-cp).
+     * see the [GCIP documentation](https://cloud.google.com/identity-platform).
      *
      * @param providerId The provider ID corresponding to the provider
      *     config to delete.
@@ -1899,7 +1903,7 @@ declare namespace admin.auth {
      *
      * SAML and OIDC provider support requires Google Cloud's Identity Platform
      * (GCIP). To learn more about GCIP, including pricing and features,
-     * see the [GCIP documentation](https://cloud.google.com/identity-cp).
+     * see the [GCIP documentation](https://cloud.google.com/identity-platform).
      *
      * @param providerId The provider ID corresponding to the provider
      *     config to update.
@@ -1916,7 +1920,7 @@ declare namespace admin.auth {
      *
      * SAML and OIDC provider support requires Google Cloud's Identity Platform
      * (GCIP). To learn more about GCIP, including pricing and features,
-     * see the [GCIP documentation](https://cloud.google.com/identity-cp).
+     * see the [GCIP documentation](https://cloud.google.com/identity-platform).
      *
      * @param config The provider configuration to create.
      * @return A promise that resolves with the created provider configuration.
@@ -1930,11 +1934,15 @@ declare namespace admin.auth {
    * Tenant aware `Auth` interface used for managing user, configuring SAML/OIDC providers,
    * generating email links for password reset, email verification, etc for specific tenants.
    *
+   * Multi-tenancy support requires Google Cloud's Identity Platform
+   * (GCIP). To learn more about GCIP, including pricing and features,
+   * see the [GCIP documentation](https://cloud.google.com/identity-platform)
+   *
    * Each tenant contains its own identity providers, settings and sets of users.
    * Using `TenantAwareAuth`, users for a specific tenant and corresponding OIDC/SAML
    * configurations can also be managed, ID tokens for users signed in to a specific tenant
    * can be verified, and email action links can also be generated for users belonging the
-   * corresponding tenant.
+   * current tenant.
    *
    * `TenantAwareAuth` instances for a specific `tenantId` can be instantiated by calling
    * `auth.forTenant(tenantId)`.
@@ -1982,12 +1990,11 @@ declare namespace admin.auth {
     listTenants(maxResults?: number, pageToken?: string): Promise<admin.auth.ListTenantsResult>;
 
      /**
-     * Deletes an existing tenant.n.
+     * Deletes an existing tenant.
      *
      * @param tenantId The `tenantId` corresponding to the tenant to delete.
      *
-     * @return An empty promise fulfilled once the tenant has been
-     *   deleted.
+     * @return An empty promise fulfilled once the tenant has been deleted.
      */
     deleteTenant(tenantId: string): Promise<void>;
 
@@ -2005,6 +2012,11 @@ declare namespace admin.auth {
 
     /**
      * Updates an existing tenant configuration.
+     * 
+     * Tenant types cannot be modified after creation.
+     * If a tenant type needs to be changed after creation, a new tenant with the expected
+     * type needs to be created and the users/configurations of existing tenant copied to the
+     * new tenant.
      *
      * @param tenantId The `tenantId` corresponding to the tenant to delete.
      * @param tenantOptions The properties to update on the provided tenant.
