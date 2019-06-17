@@ -539,26 +539,31 @@ describe('admin.auth', () => {
     });
 
     it('listTenants() should resolve with expected number of tenants', () => {
+      const allTenantIds: string[] = [];
       const tenantOptions2 = deepCopy(tenantOptions);
       tenantOptions2.displayName = 'testTenant2';
+      const listAllTenantIds = (tenantIds: string[], nextPageToken?: string): Promise<void> => {
+        return admin.auth().listTenants(100, nextPageToken)
+          .then((result) => {
+            result.tenants.forEach((tenant) => {
+              tenantIds.push(tenant.tenantId);
+            });
+            if (result.pageToken) {
+              return listAllTenantIds(tenantIds, result.pageToken);
+            }
+          });
+      };
       return admin.auth().createTenant(tenantOptions2)
         .then((actualTenant) => {
           createdTenants.push(actualTenant.tenantId);
-          // Test listTenant pagination.
-          return admin.auth().listTenants(1);
+          // Test listTenants returns the expected tenants.
+          return listAllTenantIds(allTenantIds);
         })
-        .then((result) => {
-          expect(result.tenants.length).to.equal(1);
-          expect(result.tenants[0].tenantId).to.not.be.undefined;
-          expect(result.tenants[0].displayName).to.not.be.undefined;
-          expect(result.tenants[0].emailSignInConfig).to.not.be.undefined;
-          return admin.auth().listTenants(1, result.pageToken);
-        })
-        .then((result) => {
-          expect(result.tenants.length).to.equal(1);
-          expect(result.tenants[0].tenantId).to.not.be.undefined;
-          expect(result.tenants[0].displayName).to.not.be.undefined;
-          expect(result.tenants[0].emailSignInConfig).to.not.be.undefined;
+        .then(() => {
+          // All created tenants should be in the list of tenants.
+          createdTenants.forEach((tenantId) => {
+            expect(allTenantIds).to.contain(tenantId);
+          });
         });
     });
 
