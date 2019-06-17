@@ -45,8 +45,8 @@ export interface TenantServerResponse {
   name: string;
   type?: TenantServerType;
   displayName?: string;
-  allowPasswordSignup: boolean;
-  enableEmailLinkSignin: boolean;
+  allowPasswordSignup?: boolean;
+  enableEmailLinkSignin?: boolean;
 }
 
 /** The interface representing the listTenant API response. */
@@ -181,7 +181,10 @@ export class Tenant {
     try {
       this.emailSignInConfig = new EmailSignInConfig(response);
     } catch (e) {
-      this.emailSignInConfig = undefined;
+      // If allowPasswordSignup is undefined, it is disabled by default.
+      this.emailSignInConfig = new EmailSignInConfig({
+        allowPasswordSignup: false,
+      });
     }
   }
 

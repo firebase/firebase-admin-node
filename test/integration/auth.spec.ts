@@ -23,11 +23,17 @@ import * as scrypt from 'scrypt';
 import firebase from '@firebase/app';
 import '@firebase/auth';
 import {clone} from 'lodash';
-import {generateRandomString, projectId, apiKey, noServiceAccountApp} from './setup';
+import {
+  generateRandomString, projectId, apiKey, noServiceAccountApp, cmdArgs,
+} from './setup';
 import url = require('url');
 import * as mocks from '../resources/mocks';
 import { AuthProviderConfig } from '../../src/auth/auth-config';
-import { deepExtend } from '../../src/utils/deep-copy';
+import { deepExtend, deepCopy } from '../../src/utils/deep-copy';
+
+/* tslint:disable:no-var-requires */
+const chalk = require('chalk');
+/* tslint:enable:no-var-requires */
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -424,6 +430,148 @@ describe('admin.auth', () => {
         .then((result) => {
           expect(result.user.email).to.equal(email);
           expect(result.user.emailVerified).to.be.true;
+        });
+    });
+  });
+
+  describe('Tenant management operations', () => {
+    // TODO: Add basic user management tests for multi-tenancy when Auth client SDK starts supporting it.
+    let createdTenantId: string;
+    const createdTenants: string[] = [];
+    const tenantOptions: admin.auth.CreateTenantRequest = {
+      displayName: 'testTenant1',
+      type: 'lightweight',
+      emailSignInConfig: {
+        enabled: true,
+        passwordRequired: true,
+      },
+    };
+    const expectedCreatedTenant: any = {
+      displayName: 'testTenant1',
+      emailSignInConfig: {
+        enabled: true,
+        passwordRequired: true,
+      },
+      type: 'lightweight',
+    };
+    const expectedUpdatedTenant: any = {
+      displayName: 'testTenantUpdated',
+      emailSignInConfig: {
+        enabled: false,
+        passwordRequired: true,
+      },
+      type: 'lightweight',
+    };
+    const expectedUpdatedTenant2: any = {
+      displayName: 'testTenantUpdated',
+      emailSignInConfig: {
+        enabled: true,
+        passwordRequired: false,
+      },
+      type: 'lightweight',
+    };
+
+    // https://mochajs.org/
+    // Passing arrow functions (aka "lambdas") to Mocha is discouraged.
+    // Lambdas lexically bind this and cannot access the Mocha context.
+    before(function() {
+      /* tslint:disable:no-console */
+      if (!cmdArgs.testMultiTenancy) {
+        // To enable, run: npm run test:integration -- --testMultiTenancy
+        // By default we skip multi-tenancy as it is a Google Cloud Identity Platform
+        // feature only and requires to be enabled via the Cloud Console.
+        console.log(chalk.yellow('    Skipping multi-tenancy tests.'));
+        this.skip();
+      }
+      /* tslint:enable:no-console */
+    });
+
+    // Delete test tenants at the end of test suite.
+    after(() => {
+      const promises: Array<Promise<any>> = [];
+      createdTenants.forEach((tenantId) => {
+        promises.push(
+            admin.auth().deleteTenant(tenantId).catch((error) => {/** Ignore. */}));
+      });
+      return Promise.all(promises);
+    });
+
+    it('createTenant() should resolve with a new tenant', () => {
+      return admin.auth().createTenant(tenantOptions)
+        .then((actualTenant) => {
+          createdTenantId = actualTenant.tenantId;
+          createdTenants.push(createdTenantId);
+          expectedCreatedTenant.tenantId = createdTenantId;
+          expect(actualTenant.toJSON()).to.deep.equal(expectedCreatedTenant);
+        });
+    });
+
+    it('getTenant() should resolve with expected tenant', () => {
+      return admin.auth().getTenant(createdTenantId)
+        .then((actualTenant) => {
+          expect(actualTenant.toJSON()).to.deep.equal(expectedCreatedTenant);
+        });
+    });
+
+    it('updateTenant() should resolve with the updated tenant', () => {
+      expectedUpdatedTenant.tenantId = createdTenantId;
+      expectedUpdatedTenant2.tenantId = createdTenantId;
+      const updatedOptions: admin.auth.UpdateTenantRequest = {
+        displayName: expectedUpdatedTenant.displayName,
+        emailSignInConfig: {
+          enabled: false,
+        },
+      };
+      const updatedOptions2: admin.auth.UpdateTenantRequest = {
+        emailSignInConfig: {
+          enabled: true,
+          passwordRequired: false,
+        },
+      };
+      return admin.auth().updateTenant(createdTenantId, updatedOptions)
+        .then((actualTenant) => {
+          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant);
+          return admin.auth().updateTenant(createdTenantId, updatedOptions2);
+        })
+        .then((actualTenant) => {
+          expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant2);
+        });
+    });
+
+    it('listTenants() should resolve with expected number of tenants', () => {
+      const tenantOptions2 = deepCopy(tenantOptions);
+      tenantOptions2.displayName = 'testTenant2';
+      return admin.auth().createTenant(tenantOptions2)
+        .then((actualTenant) => {
+          createdTenants.push(actualTenant.tenantId);
+          // Test listTenant pagination.
+          return admin.auth().listTenants(1);
+        })
+        .then((result) => {
+          expect(result.tenants.length).to.equal(1);
+          expect(result.tenants[0].tenantId).to.not.be.undefined;
+          expect(result.tenants[0].displayName).to.not.be.undefined;
+          expect(result.tenants[0].emailSignInConfig).to.not.be.undefined;
+          return admin.auth().listTenants(1, result.pageToken);
+        })
+        .then((result) => {
+          expect(result.tenants.length).to.equal(1);
+          expect(result.tenants[0].tenantId).to.not.be.undefined;
+          expect(result.tenants[0].displayName).to.not.be.undefined;
+          expect(result.tenants[0].emailSignInConfig).to.not.be.undefined;
+        });
+    });
+
+    it('deleteTenant() should successfully delete the provided tenant', () => {
+      return admin.auth().deleteTenant(createdTenantId)
+        .then(() => {
+          return admin.auth().getTenant(createdTenantId);
+        })
+        .then((result) => {
+          throw new Error('unexpected success');
+        })
+        .catch((error) => {
+          expect(error.code).to.equal('auth/tenant-not-found');
         });
     });
   });
