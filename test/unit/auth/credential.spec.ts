@@ -337,6 +337,12 @@ describe('Credential', () => {
       return c.getAccessToken().then((token) => {
         expect(token.access_token).to.equal('anAccessToken');
         expect(token.expires_in).to.equal(42);
+        expect(httpStub).to.have.been.calledOnce.and.calledWith({
+          method: 'GET',
+          url: 'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token',
+          headers: {'Metadata-Flavor': 'Google'},
+          httpAgent: undefined,
+        });
       });
     });
   });

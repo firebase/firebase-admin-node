@@ -291,6 +291,13 @@ export class Messaging implements FirebaseServiceInterface {
    *     of the send operation.
    */
   public sendAll(messages: Message[], dryRun?: boolean): Promise<BatchResponse> {
+    if (validator.isArray(messages) && messages.constructor !== Array) {
+      // In more recent JS specs, an array-like object might have a constructor that is not of
+      // Array type. Our deepCopy() method doesn't handle them properly. Convert such objects to
+      // a regular array here before calling deepCopy(). See issue #566 for details.
+      messages = Array.from(messages);
+    }
+
     const copy: Message[] = deepCopy(messages);
     if (!validator.isNonEmptyArray(copy)) {
       throw new FirebaseMessagingError(
