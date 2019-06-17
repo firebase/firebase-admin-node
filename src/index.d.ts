@@ -1989,7 +1989,7 @@ declare namespace admin.auth {
      */
     listTenants(maxResults?: number, pageToken?: string): Promise<admin.auth.ListTenantsResult>;
 
-     /**
+    /**
      * Deletes an existing tenant.
      *
      * @param tenantId The `tenantId` corresponding to the tenant to delete.
