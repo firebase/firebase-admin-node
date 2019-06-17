@@ -303,6 +303,8 @@ function disableRetries(messaging: Messaging) {
   (messaging as any).messagingRequestHandler.httpClient.retry = null;
 }
 
+class CustomArray extends Array { }
+
 describe('Messaging', () => {
   let mockApp: FirebaseApp;
   let messaging: Messaging;
@@ -597,6 +599,40 @@ describe('Messaging', () => {
       ];
       mockedRequests.push(mockBatchRequest(messageIds));
       return messaging.sendAll([validMessage, validMessage, validMessage])
+        .then((response: BatchResponse) => {
+          expect(response.successCount).to.equal(3);
+          expect(response.failureCount).to.equal(0);
+          response.responses.forEach((resp, idx) => {
+            expect(resp.success).to.be.true;
+            expect(resp.messageId).to.equal(messageIds[idx]);
+            expect(resp.error).to.be.undefined;
+          });
+        });
+    });
+
+    it('should be fulfilled with a BatchResponse given array-like (issue #566)', () => {
+      const messageIds = [
+        'projects/projec_id/messages/1',
+        'projects/projec_id/messages/2',
+        'projects/projec_id/messages/3',
+      ];
+      mockedRequests.push(mockBatchRequest(messageIds));
+      const message = {
+        token: 'a',
+        android: {
+          ttl: 3600,
+        },
+      };
+      const arrayLike = new CustomArray();
+      arrayLike.push(message);
+      arrayLike.push(message);
+      arrayLike.push(message);
+      // Explicitly patch the constructor so that down compiling to ES5 doesn't affect the test.
+      // See https://github.com/firebase/firebase-admin-node/issues/566#issuecomment-501974238
+      // for more context.
+      arrayLike.constructor = CustomArray;
+
+      return messaging.sendAll(arrayLike)
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(3);
           expect(response.failureCount).to.equal(0);

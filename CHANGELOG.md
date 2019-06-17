@@ -1,6 +1,9 @@
 # Unreleased
 
--
+- [fixed] Gracefully handling array-like objects in `messaging.sendAll()` and
+  `messaging.sendMulticast()` APIs.
+- [fixed] Updated the metadata server URL (used by the application default credentials)
+  to the `v1` endpoint.
 
 # v8.1.0
 
