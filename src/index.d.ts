@@ -507,7 +507,6 @@ declare namespace admin.auth {
     providerId: string;
 
     /**
-
      * @return A JSON-serializable representation of this object.
      */
     toJSON(): Object;

@@ -247,6 +247,21 @@ describe('Tenant', () => {
       expect(() => new Tenant(invalidOptions))
         .to.throw('INTERNAL ASSERT FAILED: Invalid tenant response');
     });
+
+    it('should set default EmailSignInConfig when allowPasswordSignup is undefined', () => {
+      const serverResponse: TenantServerResponse = {
+        name: 'projects/project1/tenants/TENANT_ID',
+        displayName: 'TENANT_DISPLAY_NAME',
+      };
+      expect(() => {
+        const tenantWithoutAllowPasswordSignup = new Tenant(serverResponse);
+
+        expect(tenantWithoutAllowPasswordSignup.displayName).to.equal(serverResponse.displayName);
+        expect(tenantWithoutAllowPasswordSignup.tenantId).to.equal('TENANT_ID');
+        expect(tenantWithoutAllowPasswordSignup.emailSignInConfig.enabled).to.be.false;
+        expect(tenantWithoutAllowPasswordSignup.emailSignInConfig.passwordRequired).to.be.true;
+      }).not.to.throw();
+    });
   });
 
   describe('toJSON()', () => {
