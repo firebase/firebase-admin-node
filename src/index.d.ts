@@ -1795,6 +1795,15 @@ declare namespace admin.auth {
 declare namespace admin.credential {
 
   /**
+   * TODO: Docs
+   */
+  interface Certificate {
+    projectId: string;
+    privateKey: string;
+    clientEmail: string;
+  }
+
+  /**
    * Interface that provides Google OAuth2 access tokens used to authenticate
    * with Firebase services.
    *
@@ -1816,6 +1825,11 @@ declare namespace admin.credential {
      * @return A Google OAuth2 access token object.
      */
     getAccessToken(): Promise<admin.GoogleOAuthAccessToken>;
+
+    /**
+     * TODO: Docs
+     */
+    getCertificate(): Certificate | null;
   }
 
 
