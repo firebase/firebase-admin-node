@@ -963,7 +963,10 @@ declare namespace admin.auth {
   
     /**
      * The identifier of the tenant where user is to be imported to.
-     * When not provided, the user is uploaded to the default parent project.
+     * When not provided in an `admin.auth.Auth` context, the user is uploaded to
+     * the default parent project.
+     * When not provided in an `admin.auth.TenantAwareAuth` context, the user is uploaded
+     * to the tenant corresponding to that `TenantAwareAuth` instance's tenant ID.
      */
     tenantId?: string | null;
   }
@@ -1951,6 +1954,8 @@ declare namespace admin.auth {
 
     /**
      * The current tenant identifier corresponding to this `TenantAwareAuth` instance.
+     * All calls to the user management APIs, OIDC/SAML provider management APIs, email link
+     * generation APIs, etc will only be applied within the scope of this tenant.
      */
     tenantId: string;
   }
