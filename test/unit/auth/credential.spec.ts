@@ -32,7 +32,7 @@ import * as mocks from '../../resources/mocks';
 
 import {
   ApplicationDefaultCredential, CertCredential, Certificate, GoogleOAuthAccessToken,
-  MetadataServiceCredential, RefreshTokenCredential,
+  MetadataServiceCredential, RefreshTokenCredential, tryGetCertificate,
 } from '../../../src/auth/credential';
 import { HttpClient } from '../../../src/utils/api-request';
 import {Agent} from 'https';
@@ -255,6 +255,15 @@ describe('Credential', () => {
       });
     });
 
+    it('should return a certificate', () => {
+      const c = new CertCredential(mockCertificateObject);
+      expect(tryGetCertificate(c)).to.deep.equal({
+        projectId: mockCertificateObject.project_id,
+        clientEmail: mockCertificateObject.client_email,
+        privateKey: mockCertificateObject.private_key,
+      });
+    });
+
     it('should create access tokens', () => {
       const c = new CertCredential(mockCertificateObject);
       return c.getAccessToken().then((token) => {
@@ -292,7 +301,7 @@ describe('Credential', () => {
   describe('RefreshTokenCredential', () => {
     it('should not return a certificate', () => {
       const c = new RefreshTokenCredential(MOCK_REFRESH_TOKEN_CONFIG);
-      expect(c.getCertificate()).to.be.null;
+      expect(tryGetCertificate(c)).to.be.null;
     });
 
     it('should create access tokens', () => {
@@ -322,7 +331,7 @@ describe('Credential', () => {
 
     it('should not return a certificate', () => {
       const c = new MetadataServiceCredential();
-      expect(c.getCertificate()).to.be.null;
+      expect(tryGetCertificate(c)).to.be.null;
     });
 
     it('should create access tokens', () => {
@@ -422,6 +431,16 @@ describe('Credential', () => {
       process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../../resources/mock.key.json');
       const c = new ApplicationDefaultCredential();
       expect(c.getCertificate()).to.deep.equal({
+        projectId: mockCertificateObject.project_id,
+        clientEmail: mockCertificateObject.client_email,
+        privateKey: mockCertificateObject.private_key,
+      });
+    });
+
+    it('should return a Certificate', () => {
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../../resources/mock.key.json');
+      const c = new ApplicationDefaultCredential();
+      expect(tryGetCertificate(c)).to.deep.equal({
         projectId: mockCertificateObject.project_id,
         clientEmail: mockCertificateObject.client_email,
         privateKey: mockCertificateObject.private_key,
