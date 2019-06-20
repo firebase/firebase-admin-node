@@ -604,7 +604,7 @@ declare namespace admin.auth {
     tokensValidAfterTime?: string;
   
     /**
-     * The user's tenant identifier if available.
+     * The ID of the tenant the user belongs to, if available.
      */
     tenantId?: string | null;
 
@@ -733,7 +733,7 @@ declare namespace admin.auth {
       sign_in_provider: string;
 
       /**
-       * The user's tenant ID if available.
+       * The ID of the tenant the user belongs to, if available.
        */
       tenant?: string;
       [key: string]: any;
@@ -1080,7 +1080,8 @@ declare namespace admin.auth {
    * A tenant configuration provides information such as the type of tenant (lightweight or
    * full service), display name, tenant identifier and email authentication configuration.
    * For OIDC/SAML provider configuration management, `TenantAwareAuth` instances should
-   * be used instead. When configuring these providers, note that tenants will inherit
+   * be used instead of a `Tenant` to retrieve the list of configured IdPs on a tenant.
+   * When configuring these providers, note that tenants will inherit
    * whitelisted domains and authenticated redirect URIs of their parent project.
    *
    * All other settings of a tenant will also be inherited. These will need to be managed
@@ -1089,13 +1090,13 @@ declare namespace admin.auth {
   interface Tenant {
 
     /**
-     * The current tenant identifier.
+     * The tenant identifier.
      */
     tenantId: string;
 
     /**
-     * The current tenant type: `lightweight` or `full_service`.
-     * Tenants that use separare billing and quota will require their own project and
+     * The tenant type: `lightweight` or `full_service`.
+     * Tenants that use separate billing and quota will require their own project and
      * must be defined as `full_service`.
      * `full_service` tenants may be subject to quota creation limits.
      * For additional project quota increases, refer to
@@ -1106,12 +1107,12 @@ declare namespace admin.auth {
     type?: admin.auth.TenantType;
 
     /**
-     * The current tenant display name.
+     * The tenant display name.
      */
     displayName?: string;
 
     /**
-     * The current email sign in provider configuration.
+     * The email sign in provider configuration.
      */
     emailSignInConfig?: {
 
@@ -1162,7 +1163,7 @@ declare namespace admin.auth {
   }
 
   /**
-   * Interface representing the properties to set on a new tenant to be created.
+   * Interface representing the properties to set on a new tenant.
    */
   interface CreateTenantRequest extends UpdateTenantRequest {
 
@@ -1181,8 +1182,7 @@ declare namespace admin.auth {
   interface ListTenantsResult {
 
     /**
-     * The list of {@link admin.auth.Tenant `Tenant`} objects for the
-     * current downloaded batch.
+     * The list of {@link admin.auth.Tenant `Tenant`} objects for the downloaded batch.
      */
     tenants: admin.auth.Tenant[];
 
@@ -1238,7 +1238,7 @@ declare namespace admin.auth {
     displayName: string;
 
     /**
-     * Whether the current provider configuration is enabled or disabled. A user
+     * Whether the provider configuration is enabled or disabled. A user
      * cannot sign in using a disabled provider.
      */
     enabled: boolean;
@@ -1934,7 +1934,7 @@ declare namespace admin.auth {
   }
 
   /**
-   * Tenant aware `Auth` interface used for managing user, configuring SAML/OIDC providers,
+   * Tenant-aware `Auth` interface used for managing users, configuring SAML/OIDC providers,
    * generating email links for password reset, email verification, etc for specific tenants.
    *
    * Multi-tenancy support requires Google Cloud's Identity Platform
@@ -1944,8 +1944,8 @@ declare namespace admin.auth {
    * Each tenant contains its own identity providers, settings and sets of users.
    * Using `TenantAwareAuth`, users for a specific tenant and corresponding OIDC/SAML
    * configurations can also be managed, ID tokens for users signed in to a specific tenant
-   * can be verified, and email action links can also be generated for users belonging the
-   * current tenant.
+   * can be verified, and email action links can also be generated for users belonging to the
+   * tenant.
    *
    * `TenantAwareAuth` instances for a specific `tenantId` can be instantiated by calling
    * `auth.forTenant(tenantId)`.
@@ -1953,7 +1953,7 @@ declare namespace admin.auth {
   interface TenantAwareAuth extends BaseAuth {
 
     /**
-     * The current tenant identifier corresponding to this `TenantAwareAuth` instance.
+     * The tenant identifier corresponding to this `TenantAwareAuth` instance.
      * All calls to the user management APIs, OIDC/SAML provider management APIs, email link
      * generation APIs, etc will only be applied within the scope of this tenant.
      */
@@ -1990,7 +1990,7 @@ declare namespace admin.auth {
      *   tenants starting without any offset.
      *
      * @return A promise that resolves with
-     *   the current batch of downloaded tenants and the next page token.
+     *   a batch of downloaded tenants and the next page token.
      */
     listTenants(maxResults?: number, pageToken?: string): Promise<admin.auth.ListTenantsResult>;
 
@@ -2005,7 +2005,7 @@ declare namespace admin.auth {
 
     /** 
      * Creates a new tenant.
-     * When creating new tenants, tenants that use separare billing and quota will require their
+     * When creating new tenants, tenants that use separate billing and quota will require their
      * own project and must be defined as `full_service`.
      *
      * @param tenantOptions The properties to set on the new tenant configuration to be created.
