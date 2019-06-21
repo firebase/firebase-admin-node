@@ -601,6 +601,10 @@ declare namespace admin.auth {
      * resets, password or email updates, etc).
      */
     tokensValidAfterTime?: string;
+  
+    /**
+     * The ID of the tenant the user belongs to, if available.
+     */
     tenantId?: string | null;
 
     /**
@@ -726,6 +730,10 @@ declare namespace admin.auth {
        * `"google.com"`, `"twitter.com"`, or `"custom"`.
        */
       sign_in_provider: string;
+
+      /**
+       * The ID of the tenant the user belongs to, if available.
+       */
       tenant?: string;
       [key: string]: any;
     };
@@ -951,6 +959,14 @@ declare namespace admin.auth {
      * The buffer of bytes representing the user’s password salt.
      */
     passwordSalt?: Buffer;
+  
+    /**
+     * The identifier of the tenant where user is to be imported to.
+     * When not provided in an `admin.auth.Auth` context, the user is uploaded to
+     * the default parent project.
+     * When not provided in an `admin.auth.TenantAwareAuth` context, the user is uploaded
+     * to the tenant corresponding to that `TenantAwareAuth` instance's tenant ID.
+     */
     tenantId?: string | null;
   }
 
@@ -1050,31 +1066,128 @@ declare namespace admin.auth {
 
   type TenantType = 'lightweight' | 'full_service';
 
+  /**
+   * Interface representing a tenant configuration.
+   * 
+   * Multi-tenancy support requires Google Cloud's Identity Platform
+   * (GCIP). To learn more about GCIP, including pricing and features,
+   * see the [GCIP documentation](https://cloud.google.com/identity-platform)
+   * 
+   * Before multi-tenancy can be used on a Google Cloud Identity Platform project,
+   * tenants must be allowed on that project via the Cloud Console UI.
+   * 
+   * A tenant configuration provides information such as the type of tenant (lightweight or
+   * full service), display name, tenant identifier and email authentication configuration.
+   * For OIDC/SAML provider configuration management, `TenantAwareAuth` instances should
+   * be used instead of a `Tenant` to retrieve the list of configured IdPs on a tenant.
+   * When configuring these providers, note that tenants will inherit
+   * whitelisted domains and authenticated redirect URIs of their parent project.
+   *
+   * All other settings of a tenant will also be inherited. These will need to be managed
+   * from the Cloud Console UI.
+   */
   interface Tenant {
+
+    /**
+     * The tenant identifier.
+     */
     tenantId: string;
+
+    /**
+     * The tenant type: `lightweight` or `full_service`.
+     * Tenants that use separate billing and quota will require their own project and
+     * must be defined as `full_service`.
+     * `full_service` tenants may be subject to quota creation limits.
+     * For additional project quota increases, refer to
+     * [project quota requests](https://support.google.com/cloud/answer/6330231?hl=en).
+     * In addition, deleted `full_service` tenants may take 30 days after deletion
+     * before they are completely removed.
+     */
     type?: admin.auth.TenantType;
+
+    /**
+     * The tenant display name.
+     */
     displayName?: string;
+
+    /**
+     * The email sign in provider configuration.
+     */
     emailSignInConfig?: {
+
+      /**
+       * Whether email provider is enabled.
+       */
       enabled: boolean;
+
+      /**
+       * Whether password is required for email sign-in. When not required,
+       * email sign-in can be performed with password or via email link sign-in.
+       */
       passwordRequired?: boolean
     };
+
+    /**
+     * @return A JSON-serializable representation of this object.
+     */
     toJSON(): Object;
   }
 
+  /**
+   * Interface representing the properties to update on the provided tenant.
+   */
   interface UpdateTenantRequest {
-    displayName: string;
+
+    /**
+     * The tenant display name.
+     */
+    displayName?: string;
+
+    /**
+     * The email sign in configuration.
+     */
     emailSignInConfig?: {
+
+      /**
+       * Whether email provider is enabled.
+       */
       enabled: boolean;
+
+      /**
+       * Whether password is required for email sign-in. When not required,
+       * email sign-in can be performed with password or via email link sign-in.
+       */
       passwordRequired?: boolean;
     };
   }
 
+  /**
+   * Interface representing the properties to set on a new tenant.
+   */
   interface CreateTenantRequest extends UpdateTenantRequest {
+
+    /**
+     * The newly created tenant type. This can be `lightweight` or `full_service`.
+     */
     type: admin.auth.TenantType;
   }
 
+  /**
+   * Interface representing the object returned from a
+   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#listTenants `listTenants()`}
+   * operation. 
+   * Contains the list of tenants for the current batch and the next page token if available.
+   */
   interface ListTenantsResult {
+
+    /**
+     * The list of {@link admin.auth.Tenant `Tenant`} objects for the downloaded batch.
+     */
     tenants: admin.auth.Tenant[];
+
+    /**
+     * The next page token if available. This is needed for the next batch download.
+     */
     pageToken?: string;
   }
 
@@ -1124,7 +1237,7 @@ declare namespace admin.auth {
     displayName: string;
 
     /**
-     * Whether the current provider configuration is enabled or disabled. A user
+     * Whether the provider configuration is enabled or disabled. A user
      * cannot sign in using a disabled provider.
      */
     enabled: boolean;
@@ -1742,7 +1855,7 @@ declare namespace admin.auth {
      *
      * SAML and OIDC provider support requires Google Cloud's Identity Platform
      * (GCIP). To learn more about GCIP, including pricing and features,
-     * see the [GCIP documentation](https://cloud.google.com/identity-cp).
+     * see the [GCIP documentation](https://cloud.google.com/identity-platform).
      *
      * @param options The provider config filter to apply.
      * @return A promise that resolves with the list of provider configs meeting the
@@ -1760,7 +1873,7 @@ declare namespace admin.auth {
      *
      * SAML and OIDC provider support requires Google Cloud's Identity Platform
      * (GCIP). To learn more about GCIP, including pricing and features,
-     * see the [GCIP documentation](https://cloud.google.com/identity-cp).
+     * see the [GCIP documentation](https://cloud.google.com/identity-platform).
      *
      * @param providerId The provider ID corresponding to the provider
      *     config to return.
@@ -1776,7 +1889,7 @@ declare namespace admin.auth {
      *
      * SAML and OIDC provider support requires Google Cloud's Identity Platform
      * (GCIP). To learn more about GCIP, including pricing and features,
-     * see the [GCIP documentation](https://cloud.google.com/identity-cp).
+     * see the [GCIP documentation](https://cloud.google.com/identity-platform).
      *
      * @param providerId The provider ID corresponding to the provider
      *     config to delete.
@@ -1792,7 +1905,7 @@ declare namespace admin.auth {
      *
      * SAML and OIDC provider support requires Google Cloud's Identity Platform
      * (GCIP). To learn more about GCIP, including pricing and features,
-     * see the [GCIP documentation](https://cloud.google.com/identity-cp).
+     * see the [GCIP documentation](https://cloud.google.com/identity-platform).
      *
      * @param providerId The provider ID corresponding to the provider
      *     config to update.
@@ -1809,7 +1922,7 @@ declare namespace admin.auth {
      *
      * SAML and OIDC provider support requires Google Cloud's Identity Platform
      * (GCIP). To learn more about GCIP, including pricing and features,
-     * see the [GCIP documentation](https://cloud.google.com/identity-cp).
+     * see the [GCIP documentation](https://cloud.google.com/identity-platform).
      *
      * @param config The provider configuration to create.
      * @return A promise that resolves with the created provider configuration.
@@ -1819,18 +1932,101 @@ declare namespace admin.auth {
     ): Promise<admin.auth.AuthProviderConfig>;
   }
 
+  /**
+   * Tenant-aware `Auth` interface used for managing users, configuring SAML/OIDC providers,
+   * generating email links for password reset, email verification, etc for specific tenants.
+   *
+   * Multi-tenancy support requires Google Cloud's Identity Platform
+   * (GCIP). To learn more about GCIP, including pricing and features,
+   * see the [GCIP documentation](https://cloud.google.com/identity-platform)
+   *
+   * Each tenant contains its own identity providers, settings and sets of users.
+   * Using `TenantAwareAuth`, users for a specific tenant and corresponding OIDC/SAML
+   * configurations can also be managed, ID tokens for users signed in to a specific tenant
+   * can be verified, and email action links can also be generated for users belonging to the
+   * tenant.
+   *
+   * `TenantAwareAuth` instances for a specific `tenantId` can be instantiated by calling
+   * `auth.forTenant(tenantId)`.
+   */
   interface TenantAwareAuth extends BaseAuth {
+
+    /**
+     * The tenant identifier corresponding to this `TenantAwareAuth` instance.
+     * All calls to the user management APIs, OIDC/SAML provider management APIs, email link
+     * generation APIs, etc will only be applied within the scope of this tenant.
+     */
     tenantId: string;
   }
 
   interface Auth extends admin.auth.BaseAuth {
     app: admin.app.App;
 
+    /** 
+     * @param tenantId The tenant ID whose `TenantAwareAuth` instance is to be returned.
+     *
+     * @return The `TenantAwareAuth` instance corresponding to this tenant identifier.
+     */
     forTenant(tenantId: string): admin.auth.TenantAwareAuth;
+
+    /**
+     * Gets the tenant configuration for the tenant corresponding to a given `tenantId`.
+     *
+     * @param tenantId The tenant identifier corresponding to the tenant whose data to fetch.
+     *
+     * @return A promise fulfilled with the tenant configuration to the provided `tenantId`.
+     */
     getTenant(tenantId: string): Promise<admin.auth.Tenant>;
+
+    /**
+     * Retrieves a list of tenants (single batch only) with a size of `maxResults`
+     * starting from the offset as specified by `pageToken`. This is used to
+     * retrieve all the tenants of a specified project in batches.
+     *
+     * @param maxResults The page size, 1000 if undefined. This is also
+     *   the maximum allowed limit.
+     * @param pageToken The next page token. If not specified, returns
+     *   tenants starting without any offset.
+     *
+     * @return A promise that resolves with
+     *   a batch of downloaded tenants and the next page token.
+     */
     listTenants(maxResults?: number, pageToken?: string): Promise<admin.auth.ListTenantsResult>;
+
+    /**
+     * Deletes an existing tenant.
+     *
+     * @param tenantId The `tenantId` corresponding to the tenant to delete.
+     *
+     * @return An empty promise fulfilled once the tenant has been deleted.
+     */
     deleteTenant(tenantId: string): Promise<void>;
+
+    /** 
+     * Creates a new tenant.
+     * When creating new tenants, tenants that use separate billing and quota will require their
+     * own project and must be defined as `full_service`.
+     *
+     * @param tenantOptions The properties to set on the new tenant configuration to be created.
+     *
+     * @return A promise fulfilled with the tenant configuration corresponding to the newly
+     *   created tenant.
+     */
     createTenant(tenantOptions: admin.auth.CreateTenantRequest): Promise<admin.auth.Tenant>;
+
+    /**
+     * Updates an existing tenant configuration.
+     * 
+     * Tenant types cannot be modified after creation.
+     * If a tenant type needs to be changed after creation, a new tenant with the expected
+     * type needs to be created and the users/configurations of existing tenant copied to the
+     * new tenant.
+     *
+     * @param tenantId The `tenantId` corresponding to the tenant to delete.
+     * @param tenantOptions The properties to update on the provided tenant.
+     *
+     * @return A promise fulfilled with the update tenant data.
+     */
     updateTenant(tenantId: string, tenantOptions: admin.auth.UpdateTenantRequest): Promise<admin.auth.Tenant>;
   }
 }
