@@ -124,7 +124,7 @@ describe('UserImportBuilder', () => {
       it(`should throw when non-object ${JSON.stringify(invalidOption)} UserImportOptions is provided`, () => {
         const expectedError = new FirebaseAuthError(
           AuthClientErrorCode.INVALID_ARGUMENT,
-          'Invalid or no "UserImportOptions" argument provided.',
+          '"UserImportOptions" are required when importing users with passwords.',
         );
         expect(() =>  {
           return new UserImportBuilder(users, invalidOption as any, userRequestValidator);

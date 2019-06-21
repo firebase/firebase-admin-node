@@ -301,7 +301,7 @@ export class UserImportBuilder {
     if (!validator.isNonNullObject(options)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        'Invalid or no "UserImportOptions" argument provided.',
+        '"UserImportOptions" are required when importing users with passwords.',
       );
     }
     if (!validator.isNonNullObject(options.hash)) {
