@@ -298,6 +298,12 @@ export class UserImportBuilder {
     if (!requiresHashOptions) {
       return {};
     }
+    if (!validator.isNonNullObject(options)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        '"UserImportOptions" are required when importing users with passwords.',
+      );
+    }
     if (!validator.isNonNullObject(options.hash)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.MISSING_HASH_ALGORITHM,

@@ -119,6 +119,19 @@ describe('UserImportBuilder', () => {
     'MD5', 'SHA1', 'SHA256', 'SHA512', 'PBKDF_SHA1', 'PBKDF2_SHA256',
   ];
   describe('constructor', () =>  {
+    const invalidUserImportOptions = [10, 'invalid', undefined, null, true, ['a']];
+    invalidUserImportOptions.forEach((invalidOption) => {
+      it(`should throw when non-object ${JSON.stringify(invalidOption)} UserImportOptions is provided`, () => {
+        const expectedError = new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          '"UserImportOptions" are required when importing users with passwords.',
+        );
+        expect(() =>  {
+          return new UserImportBuilder(users, invalidOption as any, userRequestValidator);
+        }).to.throw(expectedError.message);
+      });
+    });
+
     it('should throw when an empty hash algorithm is provided', () => {
       const expectedError = new FirebaseAuthError(
         AuthClientErrorCode.MISSING_HASH_ALGORITHM,
