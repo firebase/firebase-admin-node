@@ -288,7 +288,7 @@ function addFirestoreTypeAliases() {
         if (firestoreExcludes.indexOf(typeName) === -1) {
           contentBlock += `
           <li>
-            <a href="https://cloud.google.com/nodejs/docs/reference/firestore/latest/${typeName}">${typeName}</a>
+            <a href="https://googleapis.dev/nodejs/firestore/latest/${typeName}.html">${typeName}</a>
           </li>`;
         }
       }
