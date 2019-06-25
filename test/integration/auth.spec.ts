@@ -30,7 +30,6 @@ import url = require('url');
 import * as mocks from '../resources/mocks';
 import { AuthProviderConfig } from '../../src/auth/auth-config';
 import { deepExtend, deepCopy } from '../../src/utils/deep-copy';
-import { TenantAwareAuth } from '../../src/auth/auth';
 
 /* tslint:disable:no-var-requires */
 const chalk = require('chalk');
@@ -591,16 +590,6 @@ describe('admin.auth', () => {
         // Generate password reset link to confirm it is generated in the expected
         // tenant context.
         return tenantAwareAuth.generatePasswordResetLink(updatedEmail, actionCodeSettings)
-          .then((link) => {
-            // Confirm tenant ID set in link.
-            expect(getTenantId(link)).equal(createdTenantId);
-          });
-      });
-
-      xit('generateSignInWithEmailLink() should generate the link for tenant specific user', () => {
-        // Generate email link for sign-in to confirm it is generated in the expected
-        // tenant context.
-        return tenantAwareAuth.generateSignInWithEmailLink(updatedEmail, actionCodeSettings)
           .then((link) => {
             // Confirm tenant ID set in link.
             expect(getTenantId(link)).equal(createdTenantId);
