@@ -50,7 +50,7 @@ const sessionCookieUids = [
 const testPhoneNumber = '+11234567890';
 const testPhoneNumber2 = '+16505550101';
 const nonexistentPhoneNumber = '+18888888888';
-const updatedEmail = generateRandomString(20) + '@example.com';
+const updatedEmail = generateRandomString(20).toLowerCase() + '@example.com';
 const updatedPhone = '+16505550102';
 const customClaims: {[key: string]: any} = {
   admin: true,
@@ -58,7 +58,7 @@ const customClaims: {[key: string]: any} = {
 };
 const uids = [newUserUid + '-1', newUserUid + '-2', newUserUid + '-3'];
 const mockUserData = {
-  email: newUserUid + '@example.com',
+  email: newUserUid.toLowerCase() + '@example.com',
   emailVerified: false,
   phoneNumber: testPhoneNumber,
   password: 'password',
@@ -99,14 +99,14 @@ describe('admin.auth', () => {
 
   it('createUser() creates a new user when called without a UID', () => {
     const newUserData = clone(mockUserData);
-    newUserData.email = generateRandomString(20) + '@example.com';
+    newUserData.email = generateRandomString(20).toLowerCase() + '@example.com';
     newUserData.phoneNumber = testPhoneNumber2;
     return admin.auth().createUser(newUserData)
       .then((userRecord) => {
         uidFromCreateUserWithoutUid = userRecord.uid;
         expect(typeof userRecord.uid).to.equal('string');
         // Confirm expected email.
-        expect(userRecord.email).to.equal(newUserData.email.toLowerCase());
+        expect(userRecord.email).to.equal(newUserData.email);
         // Confirm expected phone number.
         expect(userRecord.phoneNumber).to.equal(newUserData.phoneNumber);
       });
@@ -119,7 +119,7 @@ describe('admin.auth', () => {
       .then((userRecord) => {
         expect(userRecord.uid).to.equal(newUserUid);
         // Confirm expected email.
-        expect(userRecord.email).to.equal(newUserData.email.toLowerCase());
+        expect(userRecord.email).to.equal(newUserData.email);
         // Confirm expected phone number.
         expect(userRecord.phoneNumber).to.equal(newUserData.phoneNumber);
       });
@@ -278,7 +278,7 @@ describe('admin.auth', () => {
         expect(userRecord.emailVerified).to.be.true;
         expect(userRecord.displayName).to.equal(updatedDisplayName);
         // Confirm expected email.
-        expect(userRecord.email).to.equal(updatedEmail.toLowerCase());
+        expect(userRecord.email).to.equal(updatedEmail);
         // Confirm expected phone number.
         expect(userRecord.phoneNumber).to.equal(updatedPhone);
       });
@@ -510,9 +510,9 @@ describe('admin.auth', () => {
     describe('supports user management, email link generation, custom attribute and token revocation APIs', () => {
       let tenantAwareAuth: admin.auth.TenantAwareAuth;
       let createdUserUid: string;
-      let currentTime: number;
+      let lastValidSinceTime: number;
       const newUserData = clone(mockUserData);
-      newUserData.email = generateRandomString(20) + '@example.com';
+      newUserData.email = generateRandomString(20).toLowerCase() + '@example.com';
       newUserData.phoneNumber = testPhoneNumber;
       const importOptions: any = {
         hash: {
@@ -543,7 +543,7 @@ describe('admin.auth', () => {
           .then((userRecord) => {
             createdUserUid = userRecord.uid;
             expect(userRecord.tenantId).to.equal(createdTenantId);
-            expect(userRecord.email.toLowerCase()).to.equal(newUserData.email.toLowerCase());
+            expect(userRecord.email).to.equal(newUserData.email);
             expect(userRecord.phoneNumber).to.equal(newUserData.phoneNumber);
           });
       });
@@ -569,7 +569,7 @@ describe('admin.auth', () => {
         .then((userRecord) => {
           expect(userRecord.uid).to.equal(createdUserUid);
           expect(userRecord.tenantId).to.equal(createdTenantId);
-          expect(userRecord.email.toLowerCase()).to.equal(updatedEmail.toLowerCase());
+          expect(userRecord.email).to.equal(updatedEmail);
           expect(userRecord.phoneNumber).to.equal(updatedPhone);
         });
       });
@@ -598,29 +598,31 @@ describe('admin.auth', () => {
 
       it('revokeRefreshTokens() should revoke the tokens for the tenant specific user', () => {
         // Revoke refresh tokens.
-        currentTime = new Date().getTime() - 1;
+        // On revocation, tokensValidAfterTime will be updated to current time. All tokens issued
+        // before that time will be rejected. As the underlying backend field is rounded to the nearest
+        // second, we are subtracting one second.
+        lastValidSinceTime = new Date().getTime() - 1000;
         return tenantAwareAuth.revokeRefreshTokens(createdUserUid)
           .then(() => {
             return tenantAwareAuth.getUser(createdUserUid);
           })
           .then((userRecord) => {
-            expect(new Date(userRecord.tokensValidAfterTime).getTime()).to.be.greaterThan(currentTime);
+            expect(new Date(userRecord.tokensValidAfterTime).getTime())
+              .to.be.greaterThan(lastValidSinceTime);
           });
       });
 
       it('listUsers() should list tenant specific users', () => {
         return tenantAwareAuth.listUsers(100)
           .then((listUsersResult) => {
-            // Confirm expected user returned in the list.
-            let expectedUserFound = false;
-            listUsersResult.users.forEach((user) => {
-              // All users should belong to expected tenant.
-              expect(user.tenantId).to.equal(createdTenantId);
-              if (user.uid === createdUserUid) {
-                expectedUserFound = true;
-              }
-            });
-            expect(expectedUserFound).to.be.true;
+            // Confirm expected user returned in the list and all users returned
+            // belong to the expected tenant.
+            const allUsersBelongToTenant =
+                listUsersResult.users.every((user) => user.tenantId === createdTenantId);
+            expect(allUsersBelongToTenant).to.be.true;
+            const knownUserInTenant =
+                listUsersResult.users.some((user) => user.uid === createdUserUid);
+            expect(knownUserInTenant).to.be.true;
           });
       });
 
