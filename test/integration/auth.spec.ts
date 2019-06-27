@@ -50,7 +50,7 @@ const sessionCookieUids = [
 const testPhoneNumber = '+11234567890';
 const testPhoneNumber2 = '+16505550101';
 const nonexistentPhoneNumber = '+18888888888';
-const updatedEmail = generateRandomString(20) + '@example.com';
+const updatedEmail = generateRandomString(20).toLowerCase() + '@example.com';
 const updatedPhone = '+16505550102';
 const customClaims: {[key: string]: any} = {
   admin: true,
@@ -58,7 +58,7 @@ const customClaims: {[key: string]: any} = {
 };
 const uids = [newUserUid + '-1', newUserUid + '-2', newUserUid + '-3'];
 const mockUserData = {
-  email: newUserUid + '@example.com',
+  email: newUserUid.toLowerCase() + '@example.com',
   emailVerified: false,
   phoneNumber: testPhoneNumber,
   password: 'password',
@@ -99,14 +99,14 @@ describe('admin.auth', () => {
 
   it('createUser() creates a new user when called without a UID', () => {
     const newUserData = clone(mockUserData);
-    newUserData.email = generateRandomString(20) + '@example.com';
+    newUserData.email = generateRandomString(20).toLowerCase() + '@example.com';
     newUserData.phoneNumber = testPhoneNumber2;
     return admin.auth().createUser(newUserData)
       .then((userRecord) => {
         uidFromCreateUserWithoutUid = userRecord.uid;
         expect(typeof userRecord.uid).to.equal('string');
         // Confirm expected email.
-        expect(userRecord.email).to.equal(newUserData.email.toLowerCase());
+        expect(userRecord.email).to.equal(newUserData.email);
         // Confirm expected phone number.
         expect(userRecord.phoneNumber).to.equal(newUserData.phoneNumber);
       });
@@ -119,7 +119,7 @@ describe('admin.auth', () => {
       .then((userRecord) => {
         expect(userRecord.uid).to.equal(newUserUid);
         // Confirm expected email.
-        expect(userRecord.email).to.equal(newUserData.email.toLowerCase());
+        expect(userRecord.email).to.equal(newUserData.email);
         // Confirm expected phone number.
         expect(userRecord.phoneNumber).to.equal(newUserData.phoneNumber);
       });
@@ -278,7 +278,7 @@ describe('admin.auth', () => {
         expect(userRecord.emailVerified).to.be.true;
         expect(userRecord.displayName).to.equal(updatedDisplayName);
         // Confirm expected email.
-        expect(userRecord.email).to.equal(updatedEmail.toLowerCase());
+        expect(userRecord.email).to.equal(updatedEmail);
         // Confirm expected phone number.
         expect(userRecord.phoneNumber).to.equal(updatedPhone);
       });
@@ -435,7 +435,6 @@ describe('admin.auth', () => {
   });
 
   describe('Tenant management operations', () => {
-    // TODO: Add basic user management tests for multi-tenancy when Auth client SDK starts supporting it.
     let createdTenantId: string;
     const createdTenants: string[] = [];
     const tenantOptions: admin.auth.CreateTenantRequest = {
@@ -503,6 +502,270 @@ describe('admin.auth', () => {
           createdTenants.push(createdTenantId);
           expectedCreatedTenant.tenantId = createdTenantId;
           expect(actualTenant.toJSON()).to.deep.equal(expectedCreatedTenant);
+        });
+    });
+
+    // Sanity check user management + email link generation + custom attribute APIs.
+    // TODO: Confirm behavior in client SDK when it starts supporting it.
+    describe('supports user management, email link generation, custom attribute and token revocation APIs', () => {
+      let tenantAwareAuth: admin.auth.TenantAwareAuth;
+      let createdUserUid: string;
+      let lastValidSinceTime: number;
+      const newUserData = clone(mockUserData);
+      newUserData.email = generateRandomString(20).toLowerCase() + '@example.com';
+      newUserData.phoneNumber = testPhoneNumber;
+      const importOptions: any = {
+        hash: {
+          algorithm: 'HMAC_SHA256',
+          key: Buffer.from('secret'),
+        },
+      };
+      const rawPassword = 'password';
+      const rawSalt = 'NaCl';
+
+      before(() => {
+        tenantAwareAuth = admin.auth().forTenant(createdTenantId);
+      });
+
+      // Delete test user at the end of test suite.
+      after(() => {
+        // If user successfully created, make sure it is deleted at the end of the test suite.
+        if (createdUserUid) {
+          return tenantAwareAuth.deleteUser(createdUserUid)
+            .catch((error) => {
+              // Ignore error.
+            });
+        }
+      });
+
+      it('createUser() should create a user in the expected tenant', () => {
+        return tenantAwareAuth.createUser(newUserData)
+          .then((userRecord) => {
+            createdUserUid = userRecord.uid;
+            expect(userRecord.tenantId).to.equal(createdTenantId);
+            expect(userRecord.email).to.equal(newUserData.email);
+            expect(userRecord.phoneNumber).to.equal(newUserData.phoneNumber);
+          });
+      });
+
+      it('setCustomUserClaims() should set custom attributes on the tenant specific user', () => {
+        return tenantAwareAuth.setCustomUserClaims(createdUserUid, customClaims)
+          .then(() => {
+            return tenantAwareAuth.getUser(createdUserUid);
+          })
+          .then((userRecord) => {
+            expect(userRecord.uid).to.equal(createdUserUid);
+            expect(userRecord.tenantId).to.equal(createdTenantId);
+            // Confirm custom claims set on the UserRecord.
+            expect(userRecord.customClaims).to.deep.equal(customClaims);
+          });
+      });
+
+      it('updateUser() should update the tenant specific user', () => {
+        return tenantAwareAuth.updateUser(createdUserUid, {
+          email: updatedEmail,
+          phoneNumber: updatedPhone,
+        })
+        .then((userRecord) => {
+          expect(userRecord.uid).to.equal(createdUserUid);
+          expect(userRecord.tenantId).to.equal(createdTenantId);
+          expect(userRecord.email).to.equal(updatedEmail);
+          expect(userRecord.phoneNumber).to.equal(updatedPhone);
+        });
+      });
+
+      // Ignore email action link tests for now as there is a bug for lightweight tenants:
+      // expected '1085102361755-testTenant1-6rjsn' to equal 'testTenant1-6rjsn'
+      xit('generateEmailVerificationLink() should generate the link for tenant specific user', () => {
+        // Generate email verification link to confirm it is generated in the expected
+        // tenant context.
+        return tenantAwareAuth.generateEmailVerificationLink(updatedEmail, actionCodeSettings)
+          .then((link) => {
+            // Confirm tenant ID set in link.
+            expect(getTenantId(link)).equal(createdTenantId);
+          });
+      });
+
+      xit('generatePasswordResetLink() should generate the link for tenant specific user', () => {
+        // Generate password reset link to confirm it is generated in the expected
+        // tenant context.
+        return tenantAwareAuth.generatePasswordResetLink(updatedEmail, actionCodeSettings)
+          .then((link) => {
+            // Confirm tenant ID set in link.
+            expect(getTenantId(link)).equal(createdTenantId);
+          });
+      });
+
+      it('revokeRefreshTokens() should revoke the tokens for the tenant specific user', () => {
+        // Revoke refresh tokens.
+        // On revocation, tokensValidAfterTime will be updated to current time. All tokens issued
+        // before that time will be rejected. As the underlying backend field is rounded to the nearest
+        // second, we are subtracting one second.
+        lastValidSinceTime = new Date().getTime() - 1000;
+        return tenantAwareAuth.revokeRefreshTokens(createdUserUid)
+          .then(() => {
+            return tenantAwareAuth.getUser(createdUserUid);
+          })
+          .then((userRecord) => {
+            expect(new Date(userRecord.tokensValidAfterTime).getTime())
+              .to.be.greaterThan(lastValidSinceTime);
+          });
+      });
+
+      it('listUsers() should list tenant specific users', () => {
+        return tenantAwareAuth.listUsers(100)
+          .then((listUsersResult) => {
+            // Confirm expected user returned in the list and all users returned
+            // belong to the expected tenant.
+            const allUsersBelongToTenant =
+                listUsersResult.users.every((user) => user.tenantId === createdTenantId);
+            expect(allUsersBelongToTenant).to.be.true;
+            const knownUserInTenant =
+                listUsersResult.users.some((user) => user.uid === createdUserUid);
+            expect(knownUserInTenant).to.be.true;
+          });
+      });
+
+      it('deleteUser() should delete the tenant specific user', () => {
+        return tenantAwareAuth.deleteUser(createdUserUid)
+          .then(() => {
+            return tenantAwareAuth.getUser(createdUserUid)
+              .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
+          });
+      });
+
+      it('importUsers() should upload a user to the specified tenant', () => {
+        const currentHashKey = importOptions.hash.key.toString('utf8');
+        const passwordHash =
+            crypto.createHmac('sha256', currentHashKey).update(rawPassword + rawSalt).digest();
+        const importUserRecord: any = {
+          uid: createdUserUid,
+          email: createdUserUid + '@example.com',
+          passwordHash,
+          passwordSalt: Buffer.from(rawSalt),
+        };
+        return tenantAwareAuth.importUsers([importUserRecord], importOptions)
+          .then(() => {
+            return tenantAwareAuth.getUser(createdUserUid);
+          })
+          .then((userRecord) => {
+            // Confirm user uploaded successfully.
+            expect(userRecord.tenantId).to.equal(createdTenantId);
+            expect(userRecord.uid).to.equal(createdUserUid);
+          });
+      });
+    });
+
+    // Sanity check OIDC/SAML config management API.
+    describe('SAML management APIs', () => {
+      let tenantAwareAuth: admin.auth.TenantAwareAuth;
+      const authProviderConfig = {
+        providerId: 'saml.' + generateRandomString(5),
+        displayName: 'SAML_DISPLAY_NAME1',
+        enabled: true,
+        idpEntityId: 'IDP_ENTITY_ID1',
+        ssoURL: 'https://example.com/login1',
+        x509Certificates: [mocks.x509CertPairs[0].public],
+        rpEntityId: 'RP_ENTITY_ID1',
+        callbackURL: 'https://projectId.firebaseapp.com/__/auth/handler',
+        enableRequestSigning: true,
+      };
+      const modifiedConfigOptions = {
+        displayName: 'SAML_DISPLAY_NAME3',
+        enabled: false,
+        idpEntityId: 'IDP_ENTITY_ID3',
+        ssoURL: 'https://example.com/login3',
+        x509Certificates: [mocks.x509CertPairs[1].public],
+        rpEntityId: 'RP_ENTITY_ID3',
+        callbackURL: 'https://projectId3.firebaseapp.com/__/auth/handler',
+        enableRequestSigning: false,
+      };
+
+      before(() => {
+        tenantAwareAuth = admin.auth().forTenant(createdTenantId);
+      });
+
+      // Delete SAML configuration at the end of test suite.
+      after(() => {
+        return tenantAwareAuth.deleteProviderConfig(authProviderConfig.providerId)
+          .catch((error) => {
+            // Ignore error.
+          });
+      });
+
+      it('should support CRUD operations', () => {
+        return tenantAwareAuth.createProviderConfig(authProviderConfig)
+          .then((config) => {
+            assertDeepEqualUnordered(authProviderConfig, config);
+            return tenantAwareAuth.getProviderConfig(authProviderConfig.providerId);
+          })
+          .then((config) => {
+            assertDeepEqualUnordered(authProviderConfig, config);
+            return tenantAwareAuth.updateProviderConfig(
+              authProviderConfig.providerId, modifiedConfigOptions);
+          })
+          .then((config) => {
+            const modifiedConfig = deepExtend(
+                {providerId: authProviderConfig.providerId}, modifiedConfigOptions);
+            assertDeepEqualUnordered(modifiedConfig, config);
+            return tenantAwareAuth.deleteProviderConfig(authProviderConfig.providerId);
+          })
+          .then(() => {
+            return tenantAwareAuth.getProviderConfig(authProviderConfig.providerId)
+              .should.eventually.be.rejected.and.have.property('code', 'auth/configuration-not-found');
+          });
+        });
+    });
+
+    describe('OIDC management APIs', () => {
+      let tenantAwareAuth: admin.auth.TenantAwareAuth;
+      const authProviderConfig = {
+        providerId: 'oidc.' + generateRandomString(5),
+        displayName: 'OIDC_DISPLAY_NAME1',
+        enabled: true,
+        issuer: 'https://oidc.com/issuer1',
+        clientId: 'CLIENT_ID1',
+      };
+      const modifiedConfigOptions = {
+        displayName: 'OIDC_DISPLAY_NAME3',
+        enabled: false,
+        issuer: 'https://oidc.com/issuer3',
+        clientId: 'CLIENT_ID3',
+      };
+
+      before(() => {
+        tenantAwareAuth = admin.auth().forTenant(createdTenantId);
+      });
+
+      // Delete OIDC configuration at the end of test suite.
+      after(() => {
+        return tenantAwareAuth.deleteProviderConfig(authProviderConfig.providerId)
+          .catch((error) => {
+            // Ignore error.
+          });
+      });
+
+      it('should support CRUD operations', () => {
+        return tenantAwareAuth.createProviderConfig(authProviderConfig)
+          .then((config) => {
+            assertDeepEqualUnordered(authProviderConfig, config);
+            return tenantAwareAuth.getProviderConfig(authProviderConfig.providerId);
+          })
+          .then((config) => {
+            assertDeepEqualUnordered(authProviderConfig, config);
+            return tenantAwareAuth.updateProviderConfig(
+              authProviderConfig.providerId, modifiedConfigOptions);
+          })
+          .then((config) => {
+            const modifiedConfig = deepExtend(
+                {providerId: authProviderConfig.providerId}, modifiedConfigOptions);
+            assertDeepEqualUnordered(modifiedConfig, config);
+            return tenantAwareAuth.deleteProviderConfig(authProviderConfig.providerId);
+          })
+          .then(() => {
+            return tenantAwareAuth.getProviderConfig(authProviderConfig.providerId)
+              .should.eventually.be.rejected.and.have.property('code', 'auth/configuration-not-found');
+          });
         });
     });
 
@@ -1284,6 +1547,17 @@ function getActionCode(link: string): string {
 function getContinueUrl(link: string): string {
   const parsedUrl = new url.URL(link);
   return parsedUrl.searchParams.get('continueUrl');
+}
+
+/**
+ * Returns the tenant ID corresponding to the link.
+ *
+ * @param {string} link The link to parse for the tenant ID.
+ * @return {string} The link's corresponding tenant ID.
+ */
+function getTenantId(link: string): string {
+  const parsedUrl = new url.URL(link);
+  return parsedUrl.searchParams.get('tenantId');
 }
 
 /**
