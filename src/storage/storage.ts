@@ -17,7 +17,7 @@
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {ApplicationDefaultCredential, Certificate} from '../auth/credential';
+import {ApplicationDefaultCredential, Certificate, tryGetCertificate} from '../auth/credential';
 import {Bucket, Storage as StorageClient} from '@google-cloud/storage';
 
 import * as validator from '../utils/validator';
@@ -70,7 +70,7 @@ export class Storage implements FirebaseServiceInterface {
       });
     }
 
-    const cert: Certificate = app.options.credential.getCertificate();
+    const cert: Certificate = tryGetCertificate(app.options.credential);
     if (cert != null) {
       // cert is available when the SDK has been initialized with a service account JSON file,
       // or by setting the GOOGLE_APPLICATION_CREDENTIALS envrionment variable.

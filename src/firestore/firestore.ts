@@ -17,7 +17,7 @@
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseFirestoreError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {ApplicationDefaultCredential, Certificate} from '../auth/credential';
+import {ApplicationDefaultCredential, Certificate, tryGetCertificate} from '../auth/credential';
 import {Firestore, Settings} from '@google-cloud/firestore';
 
 import * as validator from '../utils/validator';
@@ -72,7 +72,7 @@ export function getFirestoreOptions(app: FirebaseApp): Settings {
   }
 
   const projectId: string = utils.getProjectId(app);
-  const cert: Certificate = app.options.credential.getCertificate();
+  const cert: Certificate = tryGetCertificate(app.options.credential);
   const { version: firebaseVersion } = require('../../package.json');
   if (cert != null) {
     // cert is available when the SDK has been initialized with a service account JSON file,

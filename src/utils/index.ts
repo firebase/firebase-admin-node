@@ -15,7 +15,7 @@
  */
 
 import {FirebaseApp, FirebaseAppOptions} from '../firebase-app';
-import {Certificate} from '../auth/credential';
+import {Certificate, tryGetCertificate} from '../auth/credential';
 
 import * as validator from './validator';
 
@@ -69,7 +69,7 @@ export function getProjectId(app: FirebaseApp): string {
     return options.projectId;
   }
 
-  const cert: Certificate = options.credential.getCertificate();
+  const cert: Certificate = tryGetCertificate(options.credential);
   if (cert != null && validator.isNonEmptyString(cert.projectId)) {
     return cert.projectId;
   }
