@@ -419,6 +419,23 @@ export class ApplicationDefaultCredential implements FirebaseCredential {
   }
 }
 
+export class DatabaseEmulatorCredential implements FirebaseCredential {
+  public getAccessToken(): Promise<GoogleOAuthAccessToken> {
+    return Promise.resolve({
+      expires_in: 1000000,
+      access_token: 'owner',
+    });
+  }
+
+  public getCertificate(): Certificate {
+    return {
+      clientEmail: '',
+      projectId: '',
+      privateKey: '',
+    };
+  }
+}
+
 function credentialFromFile(filePath: string, httpAgent?: Agent): Credential {
   const credentialsFile = readCredentialFile(filePath);
   if (typeof credentialsFile !== 'object') {

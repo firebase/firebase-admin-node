@@ -24,6 +24,7 @@ import {
   Credential,
   CertCredential,
   RefreshTokenCredential,
+  DatabaseEmulatorCredential,
   ApplicationDefaultCredential,
 } from './auth/credential';
 
@@ -45,6 +46,13 @@ const DEFAULT_APP_NAME = '[DEFAULT]';
  * otherwise it will be assumed to be pointing to a file.
  */
 export const FIREBASE_CONFIG_VAR: string = 'FIREBASE_CONFIG';
+
+/**
+ * Constant holding the fully-qualified domain URI for a database emulator
+ * instance. If specified, the contents of this variable will be used to
+ * set `databaseURL` in FirebaseAppOptions.
+ */
+const FIREBASE_DATABASE_EMULATOR_HOST_VAR: string = 'FIREBASE_DATABASE_EMULATOR_HOST';
 
 
 let globalAppDefaultCred: ApplicationDefaultCredential;
@@ -84,7 +92,9 @@ export class FirebaseNamespaceInternals {
   public initializeApp(options?: FirebaseAppOptions, appName = DEFAULT_APP_NAME): FirebaseApp {
     if (typeof options === 'undefined') {
       options = this.loadOptionsFromEnvVar();
-      options.credential = new ApplicationDefaultCredential();
+      if (!('credential' in options)) {
+        options.credential = new ApplicationDefaultCredential();
+      }
     }
     if (typeof appName !== 'string' || appName === '') {
       throw new FirebaseAppError(
@@ -253,12 +263,24 @@ export class FirebaseNamespaceInternals {
    */
   private loadOptionsFromEnvVar(): FirebaseAppOptions {
     const config = process.env[FIREBASE_CONFIG_VAR];
+    const dbEmulatorHost = process.env[FIREBASE_DATABASE_EMULATOR_HOST_VAR];
     if (!validator.isNonEmptyString(config)) {
+      if (validator.isNonEmptyString(dbEmulatorHost)) {
+        return {
+          credential: new DatabaseEmulatorCredential(),
+          databaseURL: dbEmulatorHost,
+        };
+      }
       return {};
     }
     try {
       const contents = config.startsWith('{') ? config : fs.readFileSync(config, 'utf8');
-      return JSON.parse(contents) as FirebaseAppOptions;
+      const options = JSON.parse(contents) as FirebaseAppOptions;
+      if (validator.isNonEmptyString(dbEmulatorHost)) {
+        options.credential = new DatabaseEmulatorCredential();
+        options.databaseURL = `${dbEmulatorHost}` + (('projectId' in options) ? `?ns=${options.projectId}` : ``);
+      }
+      return options;
     } catch (error) {
       // Throw a nicely formed error message if the file contents cannot be parsed
       throw new FirebaseAppError(
