@@ -428,11 +428,7 @@ export class DatabaseEmulatorCredential implements FirebaseCredential {
   }
 
   public getCertificate(): Certificate {
-    return {
-      clientEmail: '',
-      projectId: '',
-      privateKey: '',
-    };
+    return null;
   }
 }
 
