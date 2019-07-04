@@ -50,7 +50,18 @@ export const FIREBASE_CONFIG_VAR: string = 'FIREBASE_CONFIG';
 /**
  * Constant holding the fully-qualified domain URI for a database emulator
  * instance. If specified, the contents of this variable will be used to
- * set `databaseURL` in FirebaseAppOptions.
+ * set `databaseURL` in FirebaseAppOptions. The varaible should be a complete
+ * URI specifying a transfer protocol, hostname, and port number:
+ *
+ * FIREBASE_DATABASE_EMULATOR_HOST=http://localhost:9000
+ *
+ *
+ * If a `projectId` is specified in FirebaseAppOptions, the database url will
+ * include the `ns=${projectId}` query parameter to identify the appropriate
+ * namespace within the emulator. The final `databaseURL` for a firebase project
+ * called "test" would be:
+ *
+ * http://localhost:9000?ns=test
  */
 const FIREBASE_DATABASE_EMULATOR_HOST_VAR: string = 'FIREBASE_DATABASE_EMULATOR_HOST';
 
