@@ -426,10 +426,6 @@ export class DatabaseEmulatorCredential implements FirebaseCredential {
       access_token: 'owner',
     });
   }
-
-  public getCertificate(): Certificate {
-    return null;
-  }
 }
 
 function credentialFromFile(filePath: string, httpAgent?: Agent): Credential {
