@@ -15,8 +15,8 @@
  */
 
 import { FirebaseApp } from '../firebase-app';
-import {Certificate} from './credential';
-import {AuthClientErrorCode, FirebaseAuthError, FirebaseError} from '../utils/error';
+import {Certificate, tryGetCertificate} from './credential';
+import {AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import { AuthorizedHttpClient, HttpError, HttpRequestConfig, HttpClient } from '../utils/api-request';
 
 import * as validator from '../utils/validator';
@@ -220,7 +220,7 @@ export class IAMSigner implements CryptoSigner {
  * @return {CryptoSigner} A CryptoSigner instance.
  */
 export function cryptoSignerFromApp(app: FirebaseApp): CryptoSigner {
-  const cert = app.options.credential.getCertificate();
+  const cert = tryGetCertificate(app.options.credential);
   if (cert != null && validator.isNonEmptyString(cert.privateKey) && validator.isNonEmptyString(cert.clientEmail)) {
     return new ServiceAccountSigner(cert);
   }

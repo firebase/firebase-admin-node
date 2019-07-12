@@ -230,7 +230,7 @@ function getDetailFromResponse(response: HttpResponse): string {
 /**
  * Implementation of Credential that uses a service account certificate.
  */
-export class CertCredential implements Credential {
+export class CertCredential implements FirebaseCredential {
 
   private readonly certificate: Certificate;
   private readonly httpClient: HttpClient;
@@ -290,7 +290,32 @@ export class CertCredential implements Credential {
  */
 export interface Credential {
   getAccessToken(): Promise<GoogleOAuthAccessToken>;
-  getCertificate(): Certificate;
+}
+
+/**
+ * Internal interface for credentials that can both generate access tokens and may have a Certificate
+ * associated with them.
+ */
+export interface FirebaseCredential extends Credential {
+  getCertificate(): Certificate | null;
+}
+
+/**
+ * Attempts to extract a Certificate from the given credential.
+ *
+ * @param {Credential} credential A Credential instance.
+ * @return {Certificate} A Certificate instance or null.
+ */
+export function tryGetCertificate(credential: Credential): Certificate | null {
+  if (isFirebaseCredential(credential)) {
+    return credential.getCertificate();
+  }
+
+  return null;
+}
+
+function isFirebaseCredential(credential: Credential): credential is FirebaseCredential {
+  return 'getCertificate' in credential;
 }
 
 /**
@@ -326,10 +351,6 @@ export class RefreshTokenCredential implements Credential {
     };
     return requestAccessToken(this.httpClient, request);
   }
-
-  public getCertificate(): Certificate {
-    return null;
-  }
 }
 
 
@@ -358,10 +379,6 @@ export class MetadataServiceCredential implements Credential {
     };
     return requestAccessToken(this.httpClient, request);
   }
-
-  public getCertificate(): Certificate {
-    return null;
-  }
 }
 
 
@@ -369,7 +386,7 @@ export class MetadataServiceCredential implements Credential {
  * ApplicationDefaultCredential implements the process for loading credentials as
  * described in https://developers.google.com/identity/protocols/application-default-credentials
  */
-export class ApplicationDefaultCredential implements Credential {
+export class ApplicationDefaultCredential implements FirebaseCredential {
   private credential_: Credential;
 
   constructor(httpAgent?: Agent) {
@@ -393,7 +410,7 @@ export class ApplicationDefaultCredential implements Credential {
   }
 
   public getCertificate(): Certificate {
-    return this.credential_.getCertificate();
+    return tryGetCertificate(this.credential_);
   }
 
   // Used in testing to verify we are delegating to the correct implementation.
