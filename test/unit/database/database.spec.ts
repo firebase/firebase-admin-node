@@ -17,12 +17,23 @@
 'use strict';
 
 import * as _ from 'lodash';
-import {expect} from 'chai';
+import * as chai from 'chai';
+import * as sinon from 'sinon';
+import * as sinonChai from 'sinon-chai';
+import * as chaiAsPromised from 'chai-as-promised';
 
 import * as mocks from '../../resources/mocks';
 import {FirebaseApp} from '../../../src/firebase-app';
 import {DatabaseService} from '../../../src/database/database';
 import {Database} from '@firebase/database';
+import * as utils from '../utils';
+import { HttpClient } from '../../../src/utils/api-request';
+
+chai.should();
+chai.use(sinonChai);
+chai.use(chaiAsPromised);
+
+const expect = chai.expect;
 
 describe('Database', () => {
   let mockApp: FirebaseApp;
@@ -108,6 +119,115 @@ describe('Database', () => {
         expect(() => {
           (database as any).getDatabase(url);
         }).to.throw('Database URL must be a valid, non-empty URL string.');
+      });
+    });
+  });
+
+  describe('Rules', () => {
+    const mockAccessToken: string = utils.generateRandomAccessToken();
+    let getTokenStub: sinon.SinonStub;
+    let stubs: sinon.SinonStub[] = [];
+
+    before(() => {
+      getTokenStub = utils.stubGetAccessToken(mockAccessToken);
+    });
+
+    after(() => {
+      getTokenStub.restore();
+    });
+
+    beforeEach(() => {
+      return mockApp.INTERNAL.getToken();
+    });
+
+    afterEach(() => {
+      _.forEach(stubs, (stub) => stub.restore());
+      stubs = [];
+    });
+
+    describe('getRules', () => {
+      it('should return the rules fetched from the database', () => {
+        const rules = {
+          rules: {
+            '.read': true,
+          },
+        };
+        const db: Database = database.getDatabase();
+        const expectedResult = utils.responseFrom(rules);
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+        return db.getRules().then((result) => {
+          expect(result).to.equal(JSON.stringify(rules));
+        });
+      });
+
+      it('should return the rules fetched from the database including comments', () => {
+        const rules = `{
+          // Some comments
+          rules: {
+            '.read': true,
+          },
+        }`;
+        const db: Database = database.getDatabase();
+        const expectedResult = utils.responseFrom(rules);
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+        return db.getRules().then((result) => {
+          expect(result).to.equal(rules);
+        });
+      });
+
+      it('should throw if the server responds with a well-formed error', () => {
+        const db: Database = database.getDatabase();
+        const expectedResult = utils.errorFrom({error: 'test error'});
+        const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedResult);
+        stubs.push(stub);
+        return db.getRules().should.eventually.be.rejectedWith(
+          'Error while accessing security rules: test error');
+      });
+
+      it('should throw if the server responds with an error', () => {
+        const db: Database = database.getDatabase();
+        const expectedResult = utils.errorFrom('error text');
+        const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedResult);
+        stubs.push(stub);
+        return db.getRules().should.eventually.be.rejectedWith(
+          'Error while accessing security rules: error text');
+      });
+    });
+
+    describe('getRulesWithJSON', () => {
+      it('should return the rules fetched from the database', () => {
+        const rules = {
+          rules: {
+            '.read': true,
+          },
+        };
+        const db: Database = database.getDatabase();
+        const expectedResult = utils.responseFrom(rules);
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+        return db.getRulesJSON().then((result) => {
+          expect(result).to.deep.equal(rules);
+        });
+      });
+
+      it('should throw if the server responds with a well-formed error', () => {
+        const db: Database = database.getDatabase();
+        const expectedResult = utils.errorFrom({error: 'test error'});
+        const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedResult);
+        stubs.push(stub);
+        return db.getRulesJSON().should.eventually.be.rejectedWith(
+          'Error while accessing security rules: test error');
+      });
+
+      it('should throw if the server responds with an error', () => {
+        const db: Database = database.getDatabase();
+        const expectedResult = utils.errorFrom('error text');
+        const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedResult);
+        stubs.push(stub);
+        return db.getRulesJSON().should.eventually.be.rejectedWith(
+          'Error while accessing security rules: error text');
       });
     });
   });

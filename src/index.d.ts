@@ -2064,6 +2064,12 @@ declare namespace admin.database {
      * @return  A `Reference` pointing to the provided Firebase URL.
      */
     refFromURL(url: string): admin.database.Reference;
+
+    getRules(): Promise<string>;
+
+    getRulesJSON(): Promise<object>;
+
+    setRules(source: string | Buffer | object): Promise<void>;
   }
 
   /**
