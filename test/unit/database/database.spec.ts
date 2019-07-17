@@ -27,7 +27,7 @@ import {FirebaseApp} from '../../../src/firebase-app';
 import {DatabaseService} from '../../../src/database/database';
 import {Database} from '@firebase/database';
 import * as utils from '../utils';
-import { HttpClient } from '../../../src/utils/api-request';
+import { HttpClient, HttpRequestConfig } from '../../../src/utils/api-request';
 
 chai.should();
 chai.use(sinonChai);
@@ -145,35 +145,61 @@ describe('Database', () => {
       stubs = [];
     });
 
+    const rules = {
+      rules: {
+        '.read': true,
+      },
+    };
+    const rulesString = JSON.stringify(rules);
+
+    const callParams = (method: 'GET' | 'PUT', data?: any, strict: boolean = false): HttpRequestConfig => {
+      const params: HttpRequestConfig = {
+        method,
+        url: `https://databasename.firebaseio.com/.settings/rules.json`,
+        headers: {
+          Authorization: 'Bearer ' + mockAccessToken,
+        },
+      };
+
+      if (data) {
+        params.data = data;
+        params.headers['content-type'] = 'application/json; charset=utf-8';
+      }
+      if (strict) {
+        params.url += '?format=strict';
+      }
+
+      return params;
+    };
+
     describe('getRules', () => {
       it('should return the rules fetched from the database', () => {
-        const rules = {
-          rules: {
-            '.read': true,
-          },
-        };
         const db: Database = database.getDatabase();
         const expectedResult = utils.responseFrom(rules);
         const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
         stubs.push(stub);
         return db.getRules().then((result) => {
-          expect(result).to.equal(JSON.stringify(rules));
+          expect(result).to.equal(rulesString);
+          return expect(stub).to.have.been.calledOnce.and.calledWith(
+            callParams('GET'));
         });
       });
 
       it('should return the rules fetched from the database including comments', () => {
-        const rules = `{
+        const rulesWithComments = `{
           // Some comments
           rules: {
             '.read': true,
           },
         }`;
         const db: Database = database.getDatabase();
-        const expectedResult = utils.responseFrom(rules);
+        const expectedResult = utils.responseFrom(rulesWithComments);
         const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
         stubs.push(stub);
         return db.getRules().then((result) => {
-          expect(result).to.equal(rules);
+          expect(result).to.equal(rulesWithComments);
+          return expect(stub).to.have.been.calledOnce.and.calledWith(
+            callParams('GET'));
         });
       });
 
@@ -198,17 +224,14 @@ describe('Database', () => {
 
     describe('getRulesWithJSON', () => {
       it('should return the rules fetched from the database', () => {
-        const rules = {
-          rules: {
-            '.read': true,
-          },
-        };
         const db: Database = database.getDatabase();
         const expectedResult = utils.responseFrom(rules);
         const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
         stubs.push(stub);
         return db.getRulesJSON().then((result) => {
           expect(result).to.deep.equal(rules);
+          return expect(stub).to.have.been.calledOnce.and.calledWith(
+            callParams('GET', undefined, true));
         });
       });
 
@@ -227,6 +250,62 @@ describe('Database', () => {
         const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedResult);
         stubs.push(stub);
         return db.getRulesJSON().should.eventually.be.rejectedWith(
+          'Error while accessing security rules: error text');
+      });
+    });
+
+    describe('setRules', () => {
+      it('should set the rules when specified as a string', () => {
+        const db: Database = database.getDatabase();
+        const expectedResult = utils.responseFrom({});
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+        return db.setRules(rulesString).then(() => {
+          return expect(stub).to.have.been.calledOnce.and.calledWith(
+            callParams('PUT', rulesString));
+        });
+      });
+
+      it('should set the rules when specified as a Buffer', () => {
+        const db: Database = database.getDatabase();
+        const expectedResult = utils.responseFrom({});
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+
+        const buffer = Buffer.from(rulesString);
+        return db.setRules(buffer).then(() => {
+          return expect(stub).to.have.been.calledOnce.and.calledWith(
+            callParams('PUT', buffer));
+        });
+      });
+
+      it('should set the rules when specified as an object', () => {
+        const db: Database = database.getDatabase();
+        const expectedResult = utils.responseFrom({});
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+
+        return db.setRules(rules).then(() => {
+          return expect(stub).to.have.been.calledOnce.and.calledWith(
+            callParams('PUT', rules));
+        });
+      });
+
+      it('should throw if the server responds with a well-formed error', () => {
+        const db: Database = database.getDatabase();
+        const expectedResult = utils.errorFrom({error: 'test error'});
+        const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedResult);
+        stubs.push(stub);
+        return db.setRules(rules).should.eventually.be.rejectedWith(
+          'Error while accessing security rules: test error');
+      });
+
+      it('should throw if the server responds with an error', () => {
+        const db: Database = database.getDatabase();
+        const expectedResult = utils.errorFrom('error text');
+        const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedResult);
+        stubs.push(stub);
+        return db.setRules(rules).should.eventually.be.rejectedWith(
           'Error while accessing security rules: error text');
       });
     });
