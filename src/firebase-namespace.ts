@@ -47,25 +47,6 @@ const DEFAULT_APP_NAME = '[DEFAULT]';
  */
 export const FIREBASE_CONFIG_VAR: string = 'FIREBASE_CONFIG';
 
-/**
- * Constant holding the fully-qualified domain URI for a database emulator
- * instance. If specified, the contents of this variable will be used to
- * set `databaseURL` in FirebaseAppOptions. The varaible should be a complete
- * URI specifying a transfer protocol, hostname, and port number:
- *
- * FIREBASE_DATABASE_EMULATOR_HOST=http://localhost:9000
- *
- *
- * If a `projectId` is specified in FirebaseAppOptions, the database url will
- * include the `ns=${projectId}` query parameter to identify the appropriate
- * namespace within the emulator. The final `databaseURL` for a firebase project
- * called "test" would be:
- *
- * http://localhost:9000?ns=test
- */
-const FIREBASE_DATABASE_EMULATOR_HOST_VAR: string = 'FIREBASE_DATABASE_EMULATOR_HOST';
-
-
 let globalAppDefaultCred: ApplicationDefaultCredential;
 const globalCertCreds: { [key: string]: CertCredential } = {};
 const globalRefreshTokenCreds: { [key: string]: RefreshTokenCredential } = {};
@@ -274,23 +255,12 @@ export class FirebaseNamespaceInternals {
    */
   private loadOptionsFromEnvVar(): FirebaseAppOptions {
     const config = process.env[FIREBASE_CONFIG_VAR];
-    const dbEmulatorHost = process.env[FIREBASE_DATABASE_EMULATOR_HOST_VAR];
     if (!validator.isNonEmptyString(config)) {
-      if (validator.isNonEmptyString(dbEmulatorHost)) {
-        return {
-          credential: new DatabaseEmulatorCredential(),
-          databaseURL: dbEmulatorHost,
-        };
-      }
       return {};
     }
     try {
       const contents = config.startsWith('{') ? config : fs.readFileSync(config, 'utf8');
       const options = JSON.parse(contents) as FirebaseAppOptions;
-      if (validator.isNonEmptyString(dbEmulatorHost)) {
-        options.credential = new DatabaseEmulatorCredential();
-        options.databaseURL = `${dbEmulatorHost}` + (('projectId' in options) ? `?ns=${options.projectId}` : ``);
-      }
       return options;
     } catch (error) {
       // Throw a nicely formed error message if the file contents cannot be parsed

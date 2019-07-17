@@ -5,6 +5,26 @@ import {Database} from '@firebase/database';
 
 import * as validator from '../utils/validator';
 
+const APP_OPTIONS_PROJECT_ID = 'projectId';
+
+/**
+ * Constant holding the fully-qualified domain URI for a database emulator
+ * instance. If specified, the contents of this variable will be used to
+ * set `databaseURL` in FirebaseAppOptions. The varaible should be a complete
+ * URI specifying a transfer protocol, hostname, and port number:
+ *
+ * FIREBASE_DATABASE_EMULATOR_HOST=http://localhost:9000
+ *
+ *
+ * If a `projectId` is specified in FirebaseAppOptions, the database url will
+ * include the `ns=${projectId}` query parameter to identify the appropriate
+ * namespace within the emulator. The final `databaseURL` for a firebase project
+ * called "test" would be:
+ *
+ * http://localhost:9000?ns=test
+ */
+const FIREBASE_DATABASE_EMULATOR_HOST_VAR = 'FIREBASE_DATABASE_EMULATOR_HOST';
+const DEFAULT_DATABASE_EMULATOR_PROJECT_ID = 'fake-server';
 
 /**
  * Internals of a Database instance.
@@ -55,6 +75,10 @@ export class DatabaseService implements FirebaseServiceInterface {
   }
 
   public getDatabase(url?: string): Database {
+    const emulatorUrl = process.env[FIREBASE_DATABASE_EMULATOR_HOST_VAR]
+    if (emulatorUrl) {
+      url = `${emulatorUrl}?ns=${this.appInternal.options[APP_OPTIONS_PROJECT_ID] || DEFAULT_DATABASE_EMULATOR_PROJECT_ID }`;
+    }
     const dbUrl: string = this.ensureUrl(url);
     if (!validator.isNonEmptyString(dbUrl)) {
       throw new FirebaseDatabaseError({
