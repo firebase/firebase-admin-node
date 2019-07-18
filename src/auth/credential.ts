@@ -419,7 +419,7 @@ export class ApplicationDefaultCredential implements FirebaseCredential {
   }
 }
 
-export class DatabaseEmulatorCredential implements FirebaseCredential {
+export class DatabaseEmulatorCredential implements Credential {
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
     return Promise.resolve({
       expires_in: 1000000,
