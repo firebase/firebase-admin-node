@@ -24,7 +24,6 @@ import {
   Credential,
   CertCredential,
   RefreshTokenCredential,
-  DatabaseEmulatorCredential,
   ApplicationDefaultCredential,
 } from './auth/credential';
 

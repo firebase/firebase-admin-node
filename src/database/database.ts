@@ -1,3 +1,4 @@
+import {DatabaseEmulatorCredential} from '../auth/credential';
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseDatabaseError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
@@ -6,6 +7,7 @@ import {Database} from '@firebase/database';
 import * as validator from '../utils/validator';
 
 const APP_OPTIONS_PROJECT_ID = 'projectId';
+const APP_OPTIONS_CREDENTIAL = 'credential';
 
 /**
  * Constant holding the fully-qualified domain URI for a database emulator
@@ -75,9 +77,11 @@ export class DatabaseService implements FirebaseServiceInterface {
   }
 
   public getDatabase(url?: string): Database {
-    const emulatorUrl = process.env[FIREBASE_DATABASE_EMULATOR_HOST_VAR]
+    const emulatorUrl = process.env[FIREBASE_DATABASE_EMULATOR_HOST_VAR];
     if (emulatorUrl) {
-      url = `${emulatorUrl}?ns=${this.appInternal.options[APP_OPTIONS_PROJECT_ID] || DEFAULT_DATABASE_EMULATOR_PROJECT_ID }`;
+      url = `${emulatorUrl}?ns=${this.appInternal.options[APP_OPTIONS_PROJECT_ID] ||
+        DEFAULT_DATABASE_EMULATOR_PROJECT_ID }`;
+      this.appInternal.options[APP_OPTIONS_CREDENTIAL] = new DatabaseEmulatorCredential();
     }
     const dbUrl: string = this.ensureUrl(url);
     if (!validator.isNonEmptyString(dbUrl)) {
