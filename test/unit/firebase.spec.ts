@@ -167,7 +167,8 @@ describe('Firebase', () => {
       }).to.throw('The default Firebase app does not exist.');
     });
 
-    it('should throw given no databaseURL key when initializing the app', () => {
+    it('should throw given no databaseURL key when initializing the app,' +
+      ' will fail if FIREBASE_DATABASE_EMULATOR_HOST is set', () => {
       firebaseAdmin.initializeApp(mocks.appOptionsNoDatabaseUrl);
 
       expect(() => {

@@ -433,7 +433,8 @@ describe('FirebaseApp', () => {
       return app2.delete();
     });
 
-    it('should throw when databaseURL is not set', () => {
+    it('should throw when databaseURL is not set, will fail if ' +
+      'FIREBASE_DATABASE_EMULATOR_HOST is set', () => {
       const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
       expect(() => {
         app.database();
