@@ -220,6 +220,13 @@ describe('Database', () => {
         return db.getRules().should.eventually.be.rejectedWith(
           'Error while accessing security rules: error text');
       });
+
+      it('should throw in the event of an I/O error', () => {
+        const db: Database = database.getDatabase();
+        const stub = sinon.stub(HttpClient.prototype, 'send').rejects(new Error('network error'));
+        stubs.push(stub);
+        return db.getRules().should.eventually.be.rejectedWith('network error');
+      });
     });
 
     describe('getRulesWithJSON', () => {
@@ -251,6 +258,13 @@ describe('Database', () => {
         stubs.push(stub);
         return db.getRulesJSON().should.eventually.be.rejectedWith(
           'Error while accessing security rules: error text');
+      });
+
+      it('should throw in the event of an I/O error', () => {
+        const db: Database = database.getDatabase();
+        const stub = sinon.stub(HttpClient.prototype, 'send').rejects(new Error('network error'));
+        stubs.push(stub);
+        return db.getRulesJSON().should.eventually.be.rejectedWith('network error');
       });
     });
 
@@ -307,6 +321,13 @@ describe('Database', () => {
         stubs.push(stub);
         return db.setRules(rules).should.eventually.be.rejectedWith(
           'Error while accessing security rules: error text');
+      });
+
+      it('should throw in the event of an I/O error', () => {
+        const db: Database = database.getDatabase();
+        const stub = sinon.stub(HttpClient.prototype, 'send').rejects(new Error('network error'));
+        stubs.push(stub);
+        return db.setRules(rules).should.eventually.be.rejectedWith('network error');
       });
     });
   });
