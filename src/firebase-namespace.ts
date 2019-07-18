@@ -46,6 +46,7 @@ const DEFAULT_APP_NAME = '[DEFAULT]';
  */
 export const FIREBASE_CONFIG_VAR: string = 'FIREBASE_CONFIG';
 
+
 let globalAppDefaultCred: ApplicationDefaultCredential;
 const globalCertCreds: { [key: string]: CertCredential } = {};
 const globalRefreshTokenCreds: { [key: string]: RefreshTokenCredential } = {};
@@ -83,9 +84,7 @@ export class FirebaseNamespaceInternals {
   public initializeApp(options?: FirebaseAppOptions, appName = DEFAULT_APP_NAME): FirebaseApp {
     if (typeof options === 'undefined') {
       options = this.loadOptionsFromEnvVar();
-      if (!('credential' in options)) {
-        options.credential = new ApplicationDefaultCredential();
-      }
+      options.credential = new ApplicationDefaultCredential();
     }
     if (typeof appName !== 'string' || appName === '') {
       throw new FirebaseAppError(
@@ -259,8 +258,7 @@ export class FirebaseNamespaceInternals {
     }
     try {
       const contents = config.startsWith('{') ? config : fs.readFileSync(config, 'utf8');
-      const options = JSON.parse(contents) as FirebaseAppOptions;
-      return options;
+      return JSON.parse(contents) as FirebaseAppOptions;
     } catch (error) {
       // Throw a nicely formed error message if the file contents cannot be parsed
       throw new FirebaseAppError(
