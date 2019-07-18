@@ -152,25 +152,37 @@ describe('Database', () => {
     };
     const rulesString = JSON.stringify(rules);
 
-    const callParams = (method: 'GET' | 'PUT', data?: any, strict: boolean = false): HttpRequestConfig => {
+    function callParamsForGet(
+      strict: boolean = false, host: string = 'databasename.firebaseio.com'): HttpRequestConfig {
       const params: HttpRequestConfig = {
-        method,
-        url: `https://databasename.firebaseio.com/.settings/rules.json`,
+        method: 'GET',
+        url: `https://${host}/.settings/rules.json`,
         headers: {
           Authorization: 'Bearer ' + mockAccessToken,
         },
       };
 
-      if (data) {
-        params.data = data;
-        params.headers['content-type'] = 'application/json; charset=utf-8';
-      }
       if (strict) {
         params.url += '?format=strict';
       }
 
       return params;
-    };
+    }
+
+    function callParamsForPut(
+      data: string | Buffer | object,
+      host: string = 'databasename.firebaseio.com'): HttpRequestConfig {
+
+      return {
+        method: 'PUT',
+        url: `https://${host}/.settings/rules.json`,
+        headers: {
+          'Authorization': 'Bearer ' + mockAccessToken,
+          'content-type': 'application/json; charset=utf-8',
+        },
+        data,
+      };
+    }
 
     describe('getRules', () => {
       it('should return the rules fetched from the database', () => {
@@ -181,7 +193,7 @@ describe('Database', () => {
         return db.getRules().then((result) => {
           expect(result).to.equal(rulesString);
           return expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParams('GET'));
+            callParamsForGet());
         });
       });
 
@@ -199,7 +211,19 @@ describe('Database', () => {
         return db.getRules().then((result) => {
           expect(result).to.equal(rulesWithComments);
           return expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParams('GET'));
+            callParamsForGet());
+        });
+      });
+
+      it('should return the rules fetched from the explicitly specified database', () => {
+        const db: Database = database.getDatabase('https://custom.firebaseio.com');
+        const expectedResult = utils.responseFrom(rules);
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+        return db.getRules().then((result) => {
+          expect(result).to.equal(rulesString);
+          return expect(stub).to.have.been.calledOnce.and.calledWith(
+            callParamsForGet(false, 'custom.firebaseio.com'));
         });
       });
 
@@ -238,7 +262,7 @@ describe('Database', () => {
         return db.getRulesJSON().then((result) => {
           expect(result).to.deep.equal(rules);
           return expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParams('GET', undefined, true));
+            callParamsForGet(true));
         });
       });
 
@@ -249,6 +273,18 @@ describe('Database', () => {
         stubs.push(stub);
         return db.getRulesJSON().should.eventually.be.rejectedWith(
           'Error while accessing security rules: test error');
+      });
+
+      it('should return the rules fetched from the explicitly specified database', () => {
+        const db: Database = database.getDatabase('https://custom.firebaseio.com');
+        const expectedResult = utils.responseFrom(rules);
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+        return db.getRulesJSON().then((result) => {
+          expect(result).to.deep.equal(rules);
+          return expect(stub).to.have.been.calledOnce.and.calledWith(
+            callParamsForGet(true, 'custom.firebaseio.com'));
+        });
       });
 
       it('should throw if the server responds with an error', () => {
@@ -276,7 +312,7 @@ describe('Database', () => {
         stubs.push(stub);
         return db.setRules(rulesString).then(() => {
           return expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParams('PUT', rulesString));
+            callParamsForPut(rulesString));
         });
       });
 
@@ -289,7 +325,7 @@ describe('Database', () => {
         const buffer = Buffer.from(rulesString);
         return db.setRules(buffer).then(() => {
           return expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParams('PUT', buffer));
+            callParamsForPut(buffer));
         });
       });
 
@@ -301,7 +337,40 @@ describe('Database', () => {
 
         return db.setRules(rules).then(() => {
           return expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParams('PUT', rules));
+            callParamsForPut(rules));
+        });
+      });
+
+      it('should set the rules with comments when specified as a string', () => {
+        const db: Database = database.getDatabase();
+        const expectedResult = utils.responseFrom({});
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+        const rulesWithComments = `// Some comment\n${rulesString}`;
+        return db.setRules(rulesWithComments).then(() => {
+          return expect(stub).to.have.been.calledOnce.and.calledWith(
+            callParamsForPut(rulesWithComments));
+        });
+      });
+
+      it('should set the rules in the explicitly specified database', () => {
+        const db: Database = database.getDatabase('https://custom.firebaseio.com');
+        const expectedResult = utils.responseFrom({});
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+        return db.setRules(rulesString).then(() => {
+          return expect(stub).to.have.been.calledOnce.and.calledWith(
+            callParamsForPut(rulesString, 'custom.firebaseio.com'));
+        });
+      });
+
+      const invalidSources: any[] = [null, '', undefined, true, false, 1];
+      invalidSources.forEach((invalidSource) => {
+        it(`should throw if the source is ${JSON.stringify(invalidSource)}`, () => {
+          const db: Database = database.getDatabase();
+          return expect(() => {
+            db.setRules(invalidSource);
+          }).to.throw('Source must be a non-empty string, Buffer or an object.');
         });
       });
 

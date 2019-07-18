@@ -113,6 +113,9 @@ export class DatabaseService implements FirebaseServiceInterface {
 
 const RULES_URL_PATH = '.settings/rules.json';
 
+/**
+ * A helper client for managing RTDB security rules.
+ */
 class DatabaseRulesClient {
 
   private readonly httpClient: AuthorizedHttpClient;
@@ -123,6 +126,12 @@ class DatabaseRulesClient {
     this.dbUrl = dbUrl;
   }
 
+  /**
+   * Gets the currently applied security rules as a string. The return value consists of
+   * the rules source including comments.
+   *
+   * @return {Promise<string>} A promise fulfilled with the rules as a raw string.
+   */
   public getRules(): Promise<string> {
     const req: HttpRequestConfig = {
       method: 'GET',
@@ -137,6 +146,12 @@ class DatabaseRulesClient {
       });
   }
 
+  /**
+   * Gets the currently applied security rules as a parsed JSON object. Any comments in
+   * the original source are stripped away.
+   *
+   * @return {Promise<object>} A promise fulfilled with the parsed rules source.
+   */
   public getRulesJSON(): Promise<object> {
     const req: HttpRequestConfig = {
       method: 'GET',
@@ -151,7 +166,24 @@ class DatabaseRulesClient {
       });
   }
 
+  /**
+   * Sets the specified rules on the Firebase Database instance. If the rules source is
+   * specified as a string or a Buffer, it may include comments.
+   *
+   * @param {string|Buffer|object} source Source of the rules to apply. Must not be `null`
+   *  or empty.
+   * @return {Promise<void>} Resolves when the rules are set on the Database.
+   */
   public setRules(source: string | Buffer | object): Promise<void> {
+    if (!validator.isNonEmptyString(source) &&
+      !validator.isBuffer(source)  &&
+      !validator.isNonNullObject(source)) {
+        throw new FirebaseDatabaseError({
+          code: 'invalid-argument',
+          message: 'Source must be a non-empty string, Buffer or an object.',
+        });
+    }
+
     const req: HttpRequestConfig = {
       method: 'PUT',
       url: this.getRulesUrl(),
