@@ -5,6 +5,13 @@ import {Database} from '@firebase/database';
 
 import * as validator from '../utils/validator';
 
+/**
+ * This variable is re-defined in the firebase-js-sdk. Before modifying this
+ * definition, please consult the definition in firebase-js-sdk and ensure that
+ * they are consistent.
+ *
+ * https://github.com/firebase/firebase-js-sdk
+ */
 export const FIREBASE_DATABASE_EMULATOR_HOST_VAR = 'FIREBASE_DATABASE_EMULATOR_HOST';
 
 /**
