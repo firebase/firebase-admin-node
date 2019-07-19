@@ -29,6 +29,8 @@ import * as mocks from '../resources/mocks';
 import * as firebaseAdmin from '../../src/index';
 import {ApplicationDefaultCredential, CertCredential, RefreshTokenCredential} from '../../src/auth/credential';
 
+import {FIREBASE_DATABASE_EMULATOR_HOST_VAR} from '../../src/database/database';
+
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -168,6 +170,7 @@ describe('Firebase', () => {
     });
 
     it('should throw given no databaseURL key when initializing the app', () => {
+      delete process.env[FIREBASE_DATABASE_EMULATOR_HOST_VAR];
       firebaseAdmin.initializeApp(mocks.appOptionsNoDatabaseUrl);
 
       expect(() => {
