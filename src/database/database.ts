@@ -6,7 +6,7 @@ import {Database} from '@firebase/database';
 import * as validator from '../utils/validator';
 
 /**
- * This variable is re-defined in the firebase-js-sdk. Before modifying this
+ * This variable is redefined in the firebase-js-sdk. Before modifying this
  * definition, please consult the definition in firebase-js-sdk and ensure that
  * they are consistent.
  *
