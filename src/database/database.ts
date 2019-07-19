@@ -5,6 +5,14 @@ import {Database} from '@firebase/database';
 
 import * as validator from '../utils/validator';
 
+/**
+ * This variable is redefined in the firebase-js-sdk. Before modifying this
+ * definition, please consult the definition in firebase-js-sdk and ensure that
+ * they are consistent.
+ *
+ * https://github.com/firebase/firebase-js-sdk
+ */
+export const FIREBASE_DATABASE_EMULATOR_HOST_VAR = 'FIREBASE_DATABASE_EMULATOR_HOST';
 
 /**
  * Internals of a Database instance.
@@ -78,6 +86,10 @@ export class DatabaseService implements FirebaseServiceInterface {
       return url;
     } else if (typeof this.appInternal.options.databaseURL !== 'undefined') {
       return this.appInternal.options.databaseURL;
+    }
+    const dbEmulatorUrl = process.env[FIREBASE_DATABASE_EMULATOR_HOST_VAR];
+    if (dbEmulatorUrl) {
+      return 'http://' + dbEmulatorUrl;
     }
     throw new FirebaseDatabaseError({
       code: 'invalid-argument',

@@ -41,6 +41,7 @@ import {Database} from '@firebase/database';
 import {InstanceId} from '../../src/instance-id/instance-id';
 import {ProjectManagement} from '../../src/project-management/project-management';
 import { FirebaseAppError, AppErrorCodes } from '../../src/utils/error';
+import { FIREBASE_DATABASE_EMULATOR_HOST_VAR } from '../../src/database/database';
 
 chai.should();
 chai.use(sinonChai);
@@ -434,10 +435,27 @@ describe('FirebaseApp', () => {
     });
 
     it('should throw when databaseURL is not set', () => {
+      delete process.env[FIREBASE_DATABASE_EMULATOR_HOST_VAR];
       const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
       expect(() => {
         app.database();
       }).to.throw('Can\'t determine Firebase Database URL.');
+    });
+
+    it('should use FIREBASE_DATABASE_EMULATOR_HOST when databaseURL not set', () => {
+      const url = 'localhost.com:9000?ns=test';
+      process.env[FIREBASE_DATABASE_EMULATOR_HOST_VAR] = url;
+      const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
+      const db: Database = app.database();
+      expect(db.ref().toString()).to.equal('http://localhost.com:9000/');
+    });
+
+    it('should prefer databaseURL when FIREBASE_DATABASE_EMULATOR_HOST set', () => {
+      const url = 'localhost.com:9000?ns=test';
+      process.env[FIREBASE_DATABASE_EMULATOR_HOST_VAR] = url;
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+      const db: Database = app.database();
+      expect(db.ref().toString()).to.equal('https://databasename.firebaseio.com/');
     });
 
     it('should return a cached version of Database on subsequent calls', () => {
