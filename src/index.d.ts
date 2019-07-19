@@ -2082,11 +2082,11 @@ declare namespace admin.database {
     getRulesJSON(): Promise<object>;
 
     /**
-     * Sets the specified rules on the Firebase Database instance. If the rules source is
+     * Sets the specified rules on the Firebase Realtime Database instance. If the rules source is
      * specified as a string or a Buffer, it may include comments.
      *
      * @param source Source of the rules to apply. Must not be `null` or empty.
-     * @return Resolves when the rules are set on the Database.
+     * @return Resolves when the rules are set on the Realtime Database.
      */
     setRules(source: string | Buffer | object): Promise<void>;
   }
