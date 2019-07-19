@@ -123,7 +123,7 @@ describe('Database', () => {
     });
   });
 
-  describe('Rules', () => {
+  describe.only('Rules', () => {
     const mockAccessToken: string = utils.generateRandomAccessToken();
     let getTokenStub: sinon.SinonStub;
     let stubs: sinon.SinonStub[] = [];
@@ -151,19 +151,23 @@ describe('Database', () => {
       },
     };
     const rulesString = JSON.stringify(rules);
+    const rulesPath = '.settings/rules.json'
 
     function callParamsForGet(
-      strict: boolean = false, host: string = 'databasename.firebaseio.com'): HttpRequestConfig {
+      strict: boolean = false,
+      url: string = `https://databasename.firebaseio.com/${rulesPath}`,
+    ): HttpRequestConfig {
+
       const params: HttpRequestConfig = {
         method: 'GET',
-        url: `https://${host}/.settings/rules.json`,
+        url,
         headers: {
           Authorization: 'Bearer ' + mockAccessToken,
         },
       };
 
       if (strict) {
-        params.url += '?format=strict';
+        params.data = {format: 'strict'};
       }
 
       return params;
@@ -171,11 +175,12 @@ describe('Database', () => {
 
     function callParamsForPut(
       data: string | Buffer | object,
-      host: string = 'databasename.firebaseio.com'): HttpRequestConfig {
+      url: string = `https://databasename.firebaseio.com/${rulesPath}`,
+    ): HttpRequestConfig {
 
       return {
         method: 'PUT',
-        url: `https://${host}/.settings/rules.json`,
+        url,
         headers: {
           'Authorization': 'Bearer ' + mockAccessToken,
           'content-type': 'application/json; charset=utf-8',
@@ -223,7 +228,19 @@ describe('Database', () => {
         return db.getRules().then((result) => {
           expect(result).to.equal(rulesString);
           return expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParamsForGet(false, 'custom.firebaseio.com'));
+            callParamsForGet(false, `https://custom.firebaseio.com/${rulesPath}`));
+        });
+      });
+
+      it('should return the rules fetched from the custom URL with query params', () => {
+        const db: Database = database.getDatabase('http://localhost:9000?ns=foo');
+        const expectedResult = utils.responseFrom(rules);
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+        return db.getRules().then((result) => {
+          expect(result).to.equal(rulesString);
+          return expect(stub).to.have.been.calledOnce.and.calledWith(
+            callParamsForGet(false, `http://localhost:9000/${rulesPath}?ns=foo`));
         });
       });
 
@@ -266,15 +283,6 @@ describe('Database', () => {
         });
       });
 
-      it('should throw if the server responds with a well-formed error', () => {
-        const db: Database = database.getDatabase();
-        const expectedResult = utils.errorFrom({error: 'test error'});
-        const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedResult);
-        stubs.push(stub);
-        return db.getRulesJSON().should.eventually.be.rejectedWith(
-          'Error while accessing security rules: test error');
-      });
-
       it('should return the rules fetched from the explicitly specified database', () => {
         const db: Database = database.getDatabase('https://custom.firebaseio.com');
         const expectedResult = utils.responseFrom(rules);
@@ -283,8 +291,29 @@ describe('Database', () => {
         return db.getRulesJSON().then((result) => {
           expect(result).to.deep.equal(rules);
           return expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParamsForGet(true, 'custom.firebaseio.com'));
+            callParamsForGet(true, `https://custom.firebaseio.com/${rulesPath}`));
         });
+      });
+
+      it('should return the rules fetched from the custom URL with query params', () => {
+        const db: Database = database.getDatabase('http://localhost:9000?ns=foo');
+        const expectedResult = utils.responseFrom(rules);
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+        return db.getRulesJSON().then((result) => {
+          expect(result).to.deep.equal(rules);
+          return expect(stub).to.have.been.calledOnce.and.calledWith(
+            callParamsForGet(true, `http://localhost:9000/${rulesPath}?ns=foo`));
+        });
+      });
+
+      it('should throw if the server responds with a well-formed error', () => {
+        const db: Database = database.getDatabase();
+        const expectedResult = utils.errorFrom({error: 'test error'});
+        const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedResult);
+        stubs.push(stub);
+        return db.getRulesJSON().should.eventually.be.rejectedWith(
+          'Error while accessing security rules: test error');
       });
 
       it('should throw if the server responds with an error', () => {
@@ -360,7 +389,18 @@ describe('Database', () => {
         stubs.push(stub);
         return db.setRules(rulesString).then(() => {
           return expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParamsForPut(rulesString, 'custom.firebaseio.com'));
+            callParamsForPut(rulesString, `https://custom.firebaseio.com/${rulesPath}`));
+        });
+      });
+
+      it('should set the rules using the custom URL with query params', () => {
+        const db: Database = database.getDatabase('http://localhost:9000?ns=foo');
+        const expectedResult = utils.responseFrom({});
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+        return db.setRules(rulesString).then(() => {
+          return expect(stub).to.have.been.calledOnce.and.calledWith(
+            callParamsForPut(rulesString, `http://localhost:9000/${rulesPath}?ns=foo`));
         });
       });
 

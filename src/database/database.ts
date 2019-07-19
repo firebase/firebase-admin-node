@@ -1,4 +1,5 @@
-import {resolve} from 'url';
+import {URL} from 'url';
+import * as path from 'path';
 
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseDatabaseError, AppErrorCodes} from '../utils/error';
@@ -118,12 +119,14 @@ const RULES_URL_PATH = '.settings/rules.json';
  */
 class DatabaseRulesClient {
 
-  private readonly httpClient: AuthorizedHttpClient;
   private readonly dbUrl: string;
+  private readonly httpClient: AuthorizedHttpClient;
 
   constructor(app: FirebaseApp, dbUrl: string) {
+    const parsedUrl = new URL(dbUrl);
+    parsedUrl.pathname = path.join(parsedUrl.pathname, RULES_URL_PATH);
+    this.dbUrl = parsedUrl.toString();
     this.httpClient = new AuthorizedHttpClient(app);
-    this.dbUrl = dbUrl;
   }
 
   /**
@@ -135,7 +138,7 @@ class DatabaseRulesClient {
   public getRules(): Promise<string> {
     const req: HttpRequestConfig = {
       method: 'GET',
-      url: this.getRulesUrl(),
+      url: this.dbUrl,
     };
     return this.httpClient.send(req)
       .then((resp) => {
@@ -155,7 +158,8 @@ class DatabaseRulesClient {
   public getRulesJSON(): Promise<object> {
     const req: HttpRequestConfig = {
       method: 'GET',
-      url: `${this.getRulesUrl()}?format=strict`,
+      url: this.dbUrl,
+      data: {format: 'strict'},
     };
     return this.httpClient.send(req)
       .then((resp) => {
@@ -186,7 +190,7 @@ class DatabaseRulesClient {
 
     const req: HttpRequestConfig = {
       method: 'PUT',
-      url: this.getRulesUrl(),
+      url: this.dbUrl,
       data: source,
       headers: {
         'content-type': 'application/json; charset=utf-8',
@@ -199,10 +203,6 @@ class DatabaseRulesClient {
       .catch((err) => {
         throw this.handleError(err);
       });
-  }
-
-  private getRulesUrl(): string {
-    return resolve(this.dbUrl, RULES_URL_PATH);
   }
 
   private handleError(err: Error): Error {
