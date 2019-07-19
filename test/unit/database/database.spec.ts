@@ -17,10 +17,8 @@
 'use strict';
 
 import * as _ from 'lodash';
-import * as chai from 'chai';
+import {expect} from 'chai';
 import * as sinon from 'sinon';
-import * as sinonChai from 'sinon-chai';
-import * as chaiAsPromised from 'chai-as-promised';
 
 import * as mocks from '../../resources/mocks';
 import {FirebaseApp} from '../../../src/firebase-app';
@@ -28,12 +26,6 @@ import {DatabaseService} from '../../../src/database/database';
 import {Database} from '@firebase/database';
 import * as utils from '../utils';
 import { HttpClient, HttpRequestConfig } from '../../../src/utils/api-request';
-
-chai.should();
-chai.use(sinonChai);
-chai.use(chaiAsPromised);
-
-const expect = chai.expect;
 
 describe('Database', () => {
   let mockApp: FirebaseApp;
@@ -151,7 +143,7 @@ describe('Database', () => {
       },
     };
     const rulesString = JSON.stringify(rules);
-    const rulesPath = '.settings/rules.json'
+    const rulesPath = '.settings/rules.json';
 
     function callParamsForGet(
       strict: boolean = false,
@@ -409,7 +401,7 @@ describe('Database', () => {
         it(`should throw if the source is ${JSON.stringify(invalidSource)}`, () => {
           const db: Database = database.getDatabase();
           return db.setRules(invalidSource).should.eventually.be.rejectedWith(
-            'Source must be a non-empty string, Buffer or an object.')
+            'Source must be a non-empty string, Buffer or an object.');
         });
       });
 
