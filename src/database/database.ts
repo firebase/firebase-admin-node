@@ -1,9 +1,11 @@
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseDatabaseError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {Database, FIREBASE_DATABASE_EMULATOR_HOST_VAR} from '@firebase/database';
+import {Database} from '@firebase/database';
 
 import * as validator from '../utils/validator';
+
+export const FIREBASE_DATABASE_EMULATOR_HOST_VAR = 'FIREBASE_DATABASE_EMULATOR_HOST';
 
 /**
  * Internals of a Database instance.

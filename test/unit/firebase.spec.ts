@@ -29,7 +29,7 @@ import * as mocks from '../resources/mocks';
 import * as firebaseAdmin from '../../src/index';
 import {ApplicationDefaultCredential, CertCredential, RefreshTokenCredential} from '../../src/auth/credential';
 
-import {FIREBASE_DATABASE_EMULATOR_HOST_VAR} from '@firebase/database';
+import {FIREBASE_DATABASE_EMULATOR_HOST_VAR} from '../../src/database/database';
 
 chai.should();
 chai.use(chaiAsPromised);

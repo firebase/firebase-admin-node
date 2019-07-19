@@ -37,10 +37,11 @@ import {Auth} from '../../src/auth/auth';
 import {Messaging} from '../../src/messaging/messaging';
 import {Storage} from '../../src/storage/storage';
 import {Firestore} from '@google-cloud/firestore';
-import {Database, FIREBASE_DATABASE_EMULATOR_HOST_VAR} from '@firebase/database';
+import {Database} from '@firebase/database';
 import {InstanceId} from '../../src/instance-id/instance-id';
 import {ProjectManagement} from '../../src/project-management/project-management';
 import { FirebaseAppError, AppErrorCodes } from '../../src/utils/error';
+import { FIREBASE_DATABASE_EMULATOR_HOST_VAR } from '../../src/database/database';
 
 chai.should();
 chai.use(sinonChai);
