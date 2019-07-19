@@ -46,7 +46,6 @@ export class DatabaseService implements FirebaseServiceInterface {
   public readonly INTERNAL: DatabaseInternals = new DatabaseInternals();
 
   private readonly appInternal: FirebaseApp;
-  private readonly httpClient: AuthorizedHttpClient;
 
   constructor(app: FirebaseApp) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
@@ -56,7 +55,6 @@ export class DatabaseService implements FirebaseServiceInterface {
       });
     }
     this.appInternal = app;
-    this.httpClient = new AuthorizedHttpClient(app);
   }
 
   /**
