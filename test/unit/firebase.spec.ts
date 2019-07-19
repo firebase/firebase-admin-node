@@ -29,6 +29,8 @@ import * as mocks from '../resources/mocks';
 import * as firebaseAdmin from '../../src/index';
 import {ApplicationDefaultCredential, CertCredential, RefreshTokenCredential} from '../../src/auth/credential';
 
+import {FIREBASE_DATABASE_EMULATOR_HOST_VAR} from '@firebase/database';
+
 chai.should();
 chai.use(chaiAsPromised);
 
@@ -167,8 +169,8 @@ describe('Firebase', () => {
       }).to.throw('The default Firebase app does not exist.');
     });
 
-    it('should throw given no databaseURL key when initializing the app,' +
-      ' will fail if FIREBASE_DATABASE_EMULATOR_HOST is set', () => {
+    it('should throw given no databaseURL key when initializing the app', () => {
+      delete process.env[FIREBASE_DATABASE_EMULATOR_HOST_VAR];
       firebaseAdmin.initializeApp(mocks.appOptionsNoDatabaseUrl);
 
       expect(() => {

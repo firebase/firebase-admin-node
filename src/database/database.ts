@@ -1,11 +1,9 @@
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseDatabaseError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {Database} from '@firebase/database';
+import {Database, FIREBASE_DATABASE_EMULATOR_HOST_VAR} from '@firebase/database';
 
 import * as validator from '../utils/validator';
-
-const FIREBASE_DATABASE_EMULATOR_HOST_VAR = 'FIREBASE_DATABASE_EMULATOR_HOST';
 
 /**
  * Internals of a Database instance.
@@ -82,7 +80,7 @@ export class DatabaseService implements FirebaseServiceInterface {
     }
     const dbEmulatorUrl = process.env[FIREBASE_DATABASE_EMULATOR_HOST_VAR];
     if (dbEmulatorUrl) {
-      return dbEmulatorUrl;
+      return 'http://' + dbEmulatorUrl;
     }
     throw new FirebaseDatabaseError({
       code: 'invalid-argument',
