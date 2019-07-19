@@ -123,7 +123,7 @@ describe('Database', () => {
     });
   });
 
-  describe.only('Rules', () => {
+  describe('Rules', () => {
     const mockAccessToken: string = utils.generateRandomAccessToken();
     let getTokenStub: sinon.SinonStub;
     let stubs: sinon.SinonStub[] = [];
@@ -408,9 +408,8 @@ describe('Database', () => {
       invalidSources.forEach((invalidSource) => {
         it(`should throw if the source is ${JSON.stringify(invalidSource)}`, () => {
           const db: Database = database.getDatabase();
-          return expect(() => {
-            db.setRules(invalidSource);
-          }).to.throw('Source must be a non-empty string, Buffer or an object.');
+          return db.setRules(invalidSource).should.eventually.be.rejectedWith(
+            'Source must be a non-empty string, Buffer or an object.')
         });
       });
 
