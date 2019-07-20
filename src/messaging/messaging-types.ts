@@ -27,6 +27,7 @@ interface BaseMessage {
   android?: AndroidConfig;
   webpush?: WebpushConfig;
   apns?: ApnsConfig;
+  fcmOptions?: FcmOptions;
 }
 
 interface TokenMessage extends BaseMessage {
@@ -58,6 +59,10 @@ export interface MulticastMessage extends BaseMessage {
 export interface Notification {
   title?: string;
   body?: string;
+}
+
+export interface FcmOptions {
+  analyticsLabel?: string;
 }
 
 export interface WebpushConfig {
@@ -97,6 +102,7 @@ export interface WebpushNotification {
 export interface ApnsConfig {
   headers?: {[key: string]: string};
   payload?: ApnsPayload;
+  fcmOptions?: ApnsFcmOptions;
 }
 
 export interface ApnsPayload {
@@ -135,6 +141,10 @@ export interface ApsAlert {
   launchImage?: string;
 }
 
+export interface ApnsFcmOptions {
+  analyticsLabel?: string;
+}
+
 export interface AndroidConfig {
   collapseKey?: string;
   priority?: ('high' | 'normal');
@@ -142,6 +152,7 @@ export interface AndroidConfig {
   restrictedPackageName?: string;
   data?: {[key: string]: string};
   notification?: AndroidNotification;
+  fcmOptions?: AndroidFcmOptions;
 }
 
 export interface AndroidNotification {
@@ -157,6 +168,10 @@ export interface AndroidNotification {
   titleLocKey?: string;
   titleLocArgs?: string[];
   channelId?: string;
+}
+
+export interface AndroidFcmOptions {
+  analyticsLabel?: string;
 }
 
 /* Payload for data messages */
