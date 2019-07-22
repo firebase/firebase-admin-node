@@ -1,9 +1,13 @@
+import {URL} from 'url';
+import * as path from 'path';
+
 import {FirebaseApp} from '../firebase-app';
-import {FirebaseDatabaseError} from '../utils/error';
+import {FirebaseDatabaseError, AppErrorCodes} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
 import {Database} from '@firebase/database';
 
 import * as validator from '../utils/validator';
+import { AuthorizedHttpClient, HttpRequestConfig, HttpError } from '../utils/api-request';
 
 /**
  * This variable is redefined in the firebase-js-sdk. Before modifying this
@@ -37,11 +41,19 @@ class DatabaseInternals implements FirebaseServiceInternalsInterface {
   }
 }
 
+declare module '@firebase/database' {
+  interface Database {
+    getRules(): Promise<string>;
+    getRulesJSON(): Promise<object>;
+    setRules(source: string | Buffer | object): Promise<void>;
+  }
+}
+
 export class DatabaseService implements FirebaseServiceInterface {
 
-  public INTERNAL: DatabaseInternals = new DatabaseInternals();
+  public readonly INTERNAL: DatabaseInternals = new DatabaseInternals();
 
-  private appInternal: FirebaseApp;
+  private readonly appInternal: FirebaseApp;
 
   constructor(app: FirebaseApp) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
@@ -76,6 +88,18 @@ export class DatabaseService implements FirebaseServiceInterface {
       const rtdb = require('@firebase/database');
       const { version } = require('../../package.json');
       db = rtdb.initStandalone(this.appInternal, dbUrl, version).instance;
+
+      const rulesClient = new DatabaseRulesClient(this.app, dbUrl);
+      db.getRules = () => {
+        return rulesClient.getRules();
+      };
+      db.getRulesJSON = () => {
+        return rulesClient.getRulesJSON();
+      };
+      db.setRules = (source) => {
+        return rulesClient.setRules(source);
+      };
+
       this.INTERNAL.databases[dbUrl] = db;
     }
     return db;
@@ -95,5 +119,124 @@ export class DatabaseService implements FirebaseServiceInterface {
       code: 'invalid-argument',
       message: 'Can\'t determine Firebase Database URL.',
     });
+  }
+}
+
+const RULES_URL_PATH = '.settings/rules.json';
+
+/**
+ * A helper client for managing RTDB security rules.
+ */
+class DatabaseRulesClient {
+
+  private readonly dbUrl: string;
+  private readonly httpClient: AuthorizedHttpClient;
+
+  constructor(app: FirebaseApp, dbUrl: string) {
+    const parsedUrl = new URL(dbUrl);
+    parsedUrl.pathname = path.join(parsedUrl.pathname, RULES_URL_PATH);
+    this.dbUrl = parsedUrl.toString();
+    this.httpClient = new AuthorizedHttpClient(app);
+  }
+
+  /**
+   * Gets the currently applied security rules as a string. The return value consists of
+   * the rules source including comments.
+   *
+   * @return {Promise<string>} A promise fulfilled with the rules as a raw string.
+   */
+  public getRules(): Promise<string> {
+    const req: HttpRequestConfig = {
+      method: 'GET',
+      url: this.dbUrl,
+    };
+    return this.httpClient.send(req)
+      .then((resp) => {
+        return resp.text;
+      })
+      .catch((err) => {
+        throw this.handleError(err);
+      });
+  }
+
+  /**
+   * Gets the currently applied security rules as a parsed JSON object. Any comments in
+   * the original source are stripped away.
+   *
+   * @return {Promise<object>} A promise fulfilled with the parsed rules source.
+   */
+  public getRulesJSON(): Promise<object> {
+    const req: HttpRequestConfig = {
+      method: 'GET',
+      url: this.dbUrl,
+      data: {format: 'strict'},
+    };
+    return this.httpClient.send(req)
+      .then((resp) => {
+        return resp.data;
+      })
+      .catch((err) => {
+        throw this.handleError(err);
+      });
+  }
+
+  /**
+   * Sets the specified rules on the Firebase Database instance. If the rules source is
+   * specified as a string or a Buffer, it may include comments.
+   *
+   * @param {string|Buffer|object} source Source of the rules to apply. Must not be `null`
+   *  or empty.
+   * @return {Promise<void>} Resolves when the rules are set on the Database.
+   */
+  public setRules(source: string | Buffer | object): Promise<void> {
+    if (!validator.isNonEmptyString(source) &&
+      !validator.isBuffer(source)  &&
+      !validator.isNonNullObject(source)) {
+        const error = new FirebaseDatabaseError({
+          code: 'invalid-argument',
+          message: 'Source must be a non-empty string, Buffer or an object.',
+        });
+        return Promise.reject(error);
+    }
+
+    const req: HttpRequestConfig = {
+      method: 'PUT',
+      url: this.dbUrl,
+      data: source,
+      headers: {
+        'content-type': 'application/json; charset=utf-8',
+      },
+    };
+    return this.httpClient.send(req)
+      .then(() => {
+        return;
+      })
+      .catch((err) => {
+        throw this.handleError(err);
+      });
+  }
+
+  private handleError(err: Error): Error {
+    if (err instanceof HttpError) {
+      return new FirebaseDatabaseError({
+        code: AppErrorCodes.INTERNAL_ERROR,
+        message: this.getErrorMessage(err),
+      });
+    }
+    return err;
+  }
+
+  private getErrorMessage(err: HttpError): string {
+    const intro = 'Error while accessing security rules';
+    try {
+      const body: {error?: string} = err.response.data;
+      if (body && body.error) {
+        return `${intro}: ${body.error.trim()}`;
+      }
+    } catch {
+      // Ignore parsing errors
+    }
+
+    return `${intro}: ${err.response.text}`;
   }
 }

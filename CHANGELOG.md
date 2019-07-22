@@ -1,6 +1,10 @@
 # Unreleased
 
--
+- [added] `admin.database().getRules()` method to retrieve the currently
+  applied RTDB rules text.
+- [added] `admin.database().getRulesJSON()` method to retrieve the currently
+  applied RTDB rules as a parsed JSON object.
+- [added] `admin.database().setRules()` method to update the RTDB rules.
 
 # v8.2.0
 
