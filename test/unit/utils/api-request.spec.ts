@@ -496,6 +496,30 @@ describe('HttpClient', () => {
     });
   });
 
+  it('should merge query parameters in URL with data', () => {
+    const reqData = {key1: 'value1', key2: 'value2'};
+    const mergedData = {...reqData, key3: 'value3'};
+    const respData = {success: true};
+    const scope = nock('https://' + mockHost)
+      .get(mockPath)
+      .query(mergedData)
+      .reply(200, respData, {
+        'content-type': 'application/json',
+      });
+    mockedRequests.push(scope);
+    const client = new HttpClient();
+    return client.send({
+      method: 'GET',
+      url: mockUrl + '?key3=value3',
+      data: reqData,
+    }).then((resp) => {
+      expect(resp.status).to.equal(200);
+      expect(resp.headers['content-type']).to.equal('application/json');
+      expect(resp.data).to.deep.equal(respData);
+      expect(resp.isJson()).to.be.true;
+    });
+  });
+
   it('should default to https when protocol not specified', () => {
     const respData = {foo: 'bar'};
     const scope = nock('https://' + mockHost)
