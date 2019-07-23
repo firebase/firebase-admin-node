@@ -3708,12 +3708,12 @@ declare namespace admin.messaging {
   }
 
   /**
-   * Represents Options for features provided by the FCM SDK for Android.
+   * Represents options for features provided by the FCM SDK for Android.
    */
   interface AndroidFcmOptions {
 
     /**
-     * The Label associated with the message's analytics data..
+     * The label associated with the message's analytics data.
      */
     analyticsLabel?: string;
   }
@@ -3839,23 +3839,23 @@ declare namespace admin.messaging {
   }
 
   /**
-   * Represents Options for features provided by the FCM SDK for iOS..
+   * Represents options for features provided by the FCM SDK for iOS.
    */
   interface ApnsFcmOptions {
 
     /**
-     * The Label associated with the message's analytics data..
+     * The label associated with the message's analytics data.
      */
     analyticsLabel?: string;
   }
 
   /**
-   * Represents Platform independent options for features provided by the FCM SDKs.
+   * Represents platform-independent options for features provided by the FCM SDKs.
    */
   interface FcmOptions {
 
     /**
-     * The Label associated with the message's analytics data..
+     * The label associated with the message's analytics data.
      */
     analyticsLabel?: string;
   }
