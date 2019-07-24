@@ -48,15 +48,28 @@ describe('SecurityRulesApiClient', () => {
   });
 
   describe('getResource', () => {
+    const RESOURCE_ID = 'projects/test-project/rulesets/ruleset-id';
+
     it('should resolve with the requested resource on success', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom({foo: 'bar'}));
       stubs.push(stub);
-      return apiClient.getResource<{foo: string}>('foo')
+      return apiClient.getResource<{foo: string}>(RESOURCE_ID)
         .then((resp) => {
           expect(resp.foo).to.equal('bar');
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url: 'https://firebaserules.googleapis.com/v1/projects/test-project/rulesets/ruleset-id',
+          });
         });
+    });
+
+    it('should reject when the resource name is unqualified', () => {
+      const expected = new FirebaseSecurityRulesError(
+        'invalid-argument', 'Resource name must have a project ID prefix.');
+      return apiClient.getResource('rulesets/ruleset-id')
+        .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
     it('should throw when a full platform error response is received', () => {
@@ -65,7 +78,7 @@ describe('SecurityRulesApiClient', () => {
         .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found');
-      return apiClient.getResource('foo')
+      return apiClient.getResource(RESOURCE_ID)
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
@@ -75,7 +88,7 @@ describe('SecurityRulesApiClient', () => {
         .rejects(utils.errorFrom({}, 404));
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}');
-      return apiClient.getResource('foo')
+      return apiClient.getResource(RESOURCE_ID)
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
@@ -86,7 +99,7 @@ describe('SecurityRulesApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError(
         'unknown-error', 'Unexpected response with status: 404 and body: not json');
-      return apiClient.getResource('foo')
+      return apiClient.getResource(RESOURCE_ID)
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
@@ -96,7 +109,7 @@ describe('SecurityRulesApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .rejects(expected);
       stubs.push(stub);
-      return apiClient.getResource('foo')
+      return apiClient.getResource(RESOURCE_ID)
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
   });

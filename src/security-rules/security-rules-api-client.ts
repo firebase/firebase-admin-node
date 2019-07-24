@@ -37,6 +37,12 @@ export class SecurityRulesApiClient {
    * @returns {Promise<T>} A promise that fulfills with the resource.
    */
   public getResource<T>(name: string): Promise<T> {
+    if (!name.startsWith('projects/')) {
+      const err = new FirebaseSecurityRulesError(
+        'invalid-argument', 'Resource name must have a project ID prefix.');
+      return Promise.reject(err);
+    }
+
     const request: HttpRequestConfig = {
       method: 'GET',
       url: `${RULES_API_URL}${name}`,
