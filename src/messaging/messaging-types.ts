@@ -306,6 +306,7 @@ export function validateMessage(message: Message) {
   validateAndroidConfig(message.android);
   validateWebpushConfig(message.webpush);
   validateApnsConfig(message.apns);
+  validateFcmOptions(message.fcmOptions);
 }
 
 /**
@@ -360,7 +361,48 @@ function validateApnsConfig(config: ApnsConfig) {
   }
   validateStringMap(config.headers, 'apns.headers');
   validateApnsPayload(config.payload);
+  validateApnsFcmOptions(config.fcmOptions);
 }
+
+/**
+ * Checks if the given ApnsFcmOptions object is valid.
+ *
+ * @param {ApnsFcmOptions} fcmOptions An object to be validated.
+ */
+function validateApnsFcmOptions(fcmOptions: ApnsFcmOptions) {
+  if (typeof fcmOptions === 'undefined') {
+    return;
+  } else if (!validator.isNonNullObject(fcmOptions)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'fcmOptions must be a non-null object');
+  }
+
+  if (typeof fcmOptions.analyticsLabel !== 'undefined' && !validator.isString(fcmOptions.analyticsLabel)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'analyticsLabel must be a string value');
+  }
+}
+
+/**
+ * Checks if the given FcmOptions object is valid.
+ *
+ * @param {FcmOptions} fcmOptions An object to be validated.
+ */
+function validateFcmOptions(fcmOptions: FcmOptions) {
+  if (typeof fcmOptions === 'undefined') {
+    return;
+  } else if (!validator.isNonNullObject(fcmOptions)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'fcmOptions must be a non-null object');
+  }
+
+  if (typeof fcmOptions.analyticsLabel !== 'undefined' && !validator.isString(fcmOptions.analyticsLabel)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'analyticsLabel must be a string value');
+  }
+}
+
+
 
 /**
  * Checks if the given ApnsPayload object is valid. The object must have a valid aps value.
@@ -550,6 +592,7 @@ function validateAndroidConfig(config: AndroidConfig) {
   }
   validateStringMap(config.data, 'android.data');
   validateAndroidNotification(config.notification);
+  validateAndroidFcmOptions(config.fcmOptions);
 
   const propertyMappings = {
     collapseKey: 'collapse_key',
@@ -599,4 +642,23 @@ function validateAndroidNotification(notification: AndroidNotification) {
     channelId: 'channel_id',
   };
   renameProperties(notification, propertyMappings);
+}
+
+/**
+ * Checks if the given AndroidFcmOptions object is valid.
+ *
+ * @param {AndroidFcmOptions} fcmOptions An object to be validated.
+ */
+function validateAndroidFcmOptions(fcmOptions: AndroidFcmOptions) {
+  if (typeof fcmOptions === 'undefined') {
+    return;
+  } else if (!validator.isNonNullObject(fcmOptions)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'fcmOptions must be a non-null object');
+  }
+
+  if (typeof fcmOptions.analyticsLabel !== 'undefined' && !validator.isString(fcmOptions.analyticsLabel)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'analyticsLabel must be a string value');
+  }
 }
