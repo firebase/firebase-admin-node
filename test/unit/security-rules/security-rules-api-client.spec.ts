@@ -32,6 +32,7 @@ describe('SecurityRulesApiClient', () => {
   const NO_PROJECT_ID = 'Failed to determine project ID. Initialize the SDK with service '
     + 'account credentials, or set project ID as an app option. Alternatively, set the '
     + 'GOOGLE_CLOUD_PROJECT environment variable.';
+  const RESOURCE_ID = 'rulesets/ruleset-id';
   const ERROR_RESPONSE = {
     error: {
       code: 404,
@@ -67,8 +68,6 @@ describe('SecurityRulesApiClient', () => {
   });
 
   describe('getResource', () => {
-    const RESOURCE_ID = 'rulesets/ruleset-id';
-
     it('should resolve with the requested resource on success', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
@@ -122,6 +121,125 @@ describe('SecurityRulesApiClient', () => {
         .rejects(expected);
       stubs.push(stub);
       return apiClient.getResource(RESOURCE_ID)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+  });
+
+  describe('createResource', () => {
+    const data = {foo: 'bar'};
+
+    it('should resolve with the created resource on success', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom({name: 'some-name', ...data}));
+      stubs.push(stub);
+      return apiClient.createResource<{name: string, foo: string}>('rulesets', data)
+        .then((resp) => {
+          expect(resp.name).to.equal('some-name');
+          expect(resp.foo).to.equal('bar');
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'POST',
+            url: 'https://firebaserules.googleapis.com/v1/projects/test-project/rulesets',
+            data,
+          });
+        });
+    });
+
+    it('should throw when a full platform error response is received', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+      stubs.push(stub);
+      const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found');
+      return apiClient.createResource(RESOURCE_ID, data)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should throw unknown-error when error code is not present', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom({}, 404));
+      stubs.push(stub);
+      const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}');
+      return apiClient.createResource(RESOURCE_ID, data)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should throw unknown-error for non-json response', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom('not json', 404));
+      stubs.push(stub);
+      const expected = new FirebaseSecurityRulesError(
+        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+      return apiClient.createResource(RESOURCE_ID, data)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should throw when rejected with a FirebaseAppError', () => {
+      const expected = new FirebaseAppError('network-error', 'socket hang up');
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(expected);
+      stubs.push(stub);
+      return apiClient.createResource(RESOURCE_ID, data)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+  });
+
+  describe('deleteResource', () => {
+    it('should resolve on success', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom({}));
+      stubs.push(stub);
+      return apiClient.deleteResource(RESOURCE_ID)
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'DELETE',
+            url: 'https://firebaserules.googleapis.com/v1/projects/test-project/rulesets/ruleset-id',
+          });
+        });
+    });
+
+    it('should throw when a full platform error response is received', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+      stubs.push(stub);
+      const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found');
+      return apiClient.deleteResource(RESOURCE_ID)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should throw unknown-error when error code is not present', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom({}, 404));
+      stubs.push(stub);
+      const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}');
+      return apiClient.deleteResource(RESOURCE_ID)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should throw unknown-error for non-json response', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom('not json', 404));
+      stubs.push(stub);
+      const expected = new FirebaseSecurityRulesError(
+        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+      return apiClient.deleteResource(RESOURCE_ID)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should throw when rejected with a FirebaseAppError', () => {
+      const expected = new FirebaseAppError('network-error', 'socket hang up');
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(expected);
+      stubs.push(stub);
+      return apiClient.deleteResource(RESOURCE_ID)
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
   });

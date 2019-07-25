@@ -19,7 +19,7 @@ import { PrefixedFirebaseError } from '../utils/error';
 import { FirebaseSecurityRulesError, SecurityRulesErrorCode } from './security-rules-utils';
 import * as validator from '../utils/validator';
 
-const RULES_API_URL = 'https://firebaserules.googleapis.com/v1';
+const RULES_V1_API = 'https://firebaserules.googleapis.com/v1';
 
 /**
  * Class that facilitates sending requests to the Firebase security rules backend API.
@@ -44,7 +44,7 @@ export class SecurityRulesApiClient {
           + 'environment variable.');
     }
 
-    this.url = `${RULES_API_URL}/projects/${projectId}`;
+    this.url = `${RULES_V1_API}/projects/${projectId}`;
   }
 
   /**

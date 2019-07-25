@@ -110,7 +110,8 @@ export class SecurityRules implements FirebaseServiceInterface {
 
   /**
    * Gets the Ruleset identified by the given name. The input name should be the short name string without
-   * the project ID prefix. Rejects with a `not-found` error if the specified Ruleset cannot be found.
+   * the project ID prefix. For example, to retrieve the `projects/project-id/rulesets/my-ruleset`, pass the
+   * short name "my-ruleset". Rejects with a `not-found` error if the specified Ruleset cannot be found.
    *
    * @param {string} name Name of the Ruleset to retrieve.
    * @returns {Promise<Ruleset>} A promise that fulfills with the specified Ruleset.
@@ -205,14 +206,14 @@ export class SecurityRules implements FirebaseServiceInterface {
     return Promise.resolve(`rulesets/${name}`);
   }
 
-  private getRulesetForService(name: string): Promise<Ruleset> {
-    const resource = `releases/${name}`;
+  private getRulesetForService(serviceName: string): Promise<Ruleset> {
+    const resource = `releases/${serviceName}`;
     return this.client.getResource<Release>(resource)
       .then((release) => {
         const rulesetName = release.rulesetName;
         if (!validator.isNonEmptyString(rulesetName)) {
           throw new FirebaseSecurityRulesError(
-            'not-found', `Ruleset name not found for ${name}.`);
+            'not-found', `Ruleset name not found for ${serviceName}.`);
         }
 
         return this.getRuleset(stripProjectIdPrefix(rulesetName));
