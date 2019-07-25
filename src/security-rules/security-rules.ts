@@ -140,17 +140,17 @@ export class SecurityRules implements FirebaseServiceInterface {
    * @returns {Promise<Ruleset>} A promise that fulfills with the Firestore Ruleset.
    */
   public getFirestoreRuleset(): Promise<Ruleset> {
-    return this.getRulesetForService(SecurityRules.CLOUD_FIRESTORE);
+    return this.getRulesetForRelease(SecurityRules.CLOUD_FIRESTORE);
   }
 
-  private getRulesetForService(serviceName: string): Promise<Ruleset> {
-    const resource = `releases/${serviceName}`;
+  private getRulesetForRelease(releaseName: string): Promise<Ruleset> {
+    const resource = `releases/${releaseName}`;
     return this.client.getResource<Release>(resource)
       .then((release) => {
         const rulesetName = release.rulesetName;
         if (!validator.isNonEmptyString(rulesetName)) {
           throw new FirebaseSecurityRulesError(
-            'not-found', `Ruleset name not found for ${serviceName}.`);
+            'not-found', `Ruleset name not found for ${releaseName}.`);
         }
 
         return this.getRuleset(stripProjectIdPrefix(rulesetName));
