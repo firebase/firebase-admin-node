@@ -29,6 +29,9 @@ const expect = chai.expect;
 
 describe('SecurityRulesApiClient', () => {
 
+  const NO_PROJECT_ID = 'Failed to determine project ID. Initialize the SDK with service '
+    + 'account credentials, or set project ID as an app option. Alternatively, set the '
+    + 'GOOGLE_CLOUD_PROJECT environment variable.';
   const ERROR_RESPONSE = {
     error: {
       code: 404,
@@ -37,7 +40,8 @@ describe('SecurityRulesApiClient', () => {
     },
   };
 
-  const apiClient: SecurityRulesApiClient = new SecurityRulesApiClient(new HttpClient());
+  const apiClient: SecurityRulesApiClient = new SecurityRulesApiClient(
+    new HttpClient(), 'test-project');
 
   // Stubs used to simulate underlying api calls.
   let stubs: sinon.SinonStub[] = [];
@@ -47,8 +51,23 @@ describe('SecurityRulesApiClient', () => {
     stubs = [];
   });
 
+  describe('Constructor', () => {
+    it('should throw when the HttpClient is null', () => {
+      expect(() => new SecurityRulesApiClient(null, 'test'))
+        .to.throw('HttpClient must be a non-null object.');
+    });
+
+    const invalidProjectIds: any[] = [null, undefined, '', {}, [], true, 1];
+    invalidProjectIds.forEach((invalidProjectId) => {
+      it(`should throw when the projectId is: ${invalidProjectId}`, () => {
+        expect(() => new SecurityRulesApiClient(new HttpClient(), invalidProjectId))
+          .to.throw(NO_PROJECT_ID);
+      });
+    });
+  });
+
   describe('getResource', () => {
-    const RESOURCE_ID = 'projects/test-project/rulesets/ruleset-id';
+    const RESOURCE_ID = 'rulesets/ruleset-id';
 
     it('should resolve with the requested resource on success', () => {
       const stub = sinon
@@ -63,13 +82,6 @@ describe('SecurityRulesApiClient', () => {
             url: 'https://firebaserules.googleapis.com/v1/projects/test-project/rulesets/ruleset-id',
           });
         });
-    });
-
-    it('should reject when the resource name is unqualified', () => {
-      const expected = new FirebaseSecurityRulesError(
-        'invalid-argument', 'Resource name must have a project ID prefix.');
-      return apiClient.getResource('rulesets/ruleset-id')
-        .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
     it('should throw when a full platform error response is received', () => {

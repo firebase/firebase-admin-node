@@ -45,12 +45,15 @@ interface Release {
   readonly updateTime: string;
 }
 
-interface RulesetResponse {
-  readonly name: string;
-  readonly createTime: string;
+interface RulesetContent {
   readonly source: {
     readonly files: RulesFile[];
   };
+}
+
+interface RulesetResponse extends RulesetContent {
+  readonly name: string;
+  readonly createTime: string;
 }
 
 /**
@@ -88,7 +91,6 @@ export class SecurityRules implements FirebaseServiceInterface {
   public readonly INTERNAL = new SecurityRulesInternals();
 
   private readonly client: SecurityRulesApiClient;
-  private readonly projectId: string;
 
   /**
    * @param {object} app The app for this SecurityRules service.
@@ -103,16 +105,7 @@ export class SecurityRules implements FirebaseServiceInterface {
     }
 
     const projectId = utils.getProjectId(app);
-    if (!validator.isNonEmptyString(projectId)) {
-      throw new FirebaseSecurityRulesError(
-        'invalid-argument',
-        'Failed to determine project ID. Initialize the SDK with service account credentials, or '
-          + 'set project ID as an app option. Alternatively, set the GOOGLE_CLOUD_PROJECT '
-          + 'environment variable.');
-    }
-
-    this.projectId = projectId;
-    this.client = new SecurityRulesApiClient(new AuthorizedHttpClient(app));
+    this.client = new SecurityRulesApiClient(new AuthorizedHttpClient(app), projectId);
   }
 
   /**
@@ -123,20 +116,10 @@ export class SecurityRules implements FirebaseServiceInterface {
    * @returns {Promise<Ruleset>} A promise that fulfills with the specified Ruleset.
    */
   public getRuleset(name: string): Promise<Ruleset> {
-    if (!validator.isNonEmptyString(name)) {
-      const err = new FirebaseSecurityRulesError(
-        'invalid-argument', 'Ruleset name must be a non-empty string.');
-      return Promise.reject(err);
-    }
-
-    if (name.indexOf('/') !== -1) {
-      const err = new FirebaseSecurityRulesError(
-        'invalid-argument', 'Ruleset name must not contain any "/" characters.');
-      return Promise.reject(err);
-    }
-
-    const resource = `projects/${this.projectId}/rulesets/${name}`;
-    return this.client.getResource<RulesetResponse>(resource)
+    return this.getRulesetName(name)
+      .then((resource) => {
+        return this.client.getResource<RulesetResponse>(resource);
+      })
       .then((rulesetResponse) => {
         return new Ruleset(rulesetResponse);
       });
@@ -152,8 +135,78 @@ export class SecurityRules implements FirebaseServiceInterface {
     return this.getRulesetForService(SecurityRules.CLOUD_FIRESTORE);
   }
 
+  public createRulesFileFromSource(name: string, source: string | Buffer): RulesFile {
+    if (!validator.isNonEmptyString(name)) {
+      throw new FirebaseSecurityRulesError(
+        'invalid-argument', 'Name must be a non-empty string.');
+    }
+
+    let content: string;
+    if (validator.isNonEmptyString(source)) {
+      content = source;
+    } else if (validator.isBuffer(source)) {
+      content = source.toString('utf-8');
+    } else {
+      throw new FirebaseSecurityRulesError(
+        'invalid-argument', 'Source must be a non-empty string or a Buffer.');
+    }
+
+    return {
+      name,
+      content,
+    };
+  }
+
+  public createRuleset(file: RulesFile, ...additionalFiles: RulesFile[]): Promise<Ruleset> {
+    const files = [file, ...additionalFiles];
+    for (const rf of files) {
+      if (!validator.isNonNullObject(rf) ||
+        !validator.isNonEmptyString(rf.name) ||
+        !validator.isNonEmptyString(rf.content)) {
+
+        const err = new FirebaseSecurityRulesError(
+          'invalid-argument', `Invalid rules file argument: ${JSON.stringify(rf)}`);
+        return Promise.reject(err);
+      }
+    }
+
+    const ruleset: RulesetContent = {
+      source: {
+        files,
+      },
+    };
+
+    return this.client.createResource<RulesetResponse>('rulesets', ruleset)
+      .then((rulesetResponse) => {
+        return new Ruleset(rulesetResponse);
+      });
+  }
+
+  public deleteRuleset(name: string): Promise<void> {
+    return this.getRulesetName(name)
+      .then((resource) => {
+        return this.client.deleteResource(resource);
+      });
+  }
+
+  private getRulesetName(name: string): Promise<string> {
+    if (!validator.isNonEmptyString(name)) {
+      const err = new FirebaseSecurityRulesError(
+        'invalid-argument', 'Ruleset name must be a non-empty string.');
+      return Promise.reject(err);
+    }
+
+    if (name.indexOf('/') !== -1) {
+      const err = new FirebaseSecurityRulesError(
+        'invalid-argument', 'Ruleset name must not contain any "/" characters.');
+      return Promise.reject(err);
+    }
+
+    return Promise.resolve(`rulesets/${name}`);
+  }
+
   private getRulesetForService(name: string): Promise<Ruleset> {
-    const resource = `projects/${this.projectId}/releases/${name}`;
+    const resource = `releases/${name}`;
     return this.client.getResource<Release>(resource)
       .then((release) => {
         const rulesetName = release.rulesetName;
