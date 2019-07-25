@@ -17,8 +17,9 @@
 import { HttpRequestConfig, HttpClient, HttpError } from '../utils/api-request';
 import { PrefixedFirebaseError } from '../utils/error';
 import { FirebaseSecurityRulesError, SecurityRulesErrorCode } from './security-rules-utils';
+import * as validator from '../utils/validator';
 
-const RULES_API_URL = 'https://firebaserules.googleapis.com/v1/';
+const RULES_API_URL = 'https://firebaserules.googleapis.com/v1';
 
 /**
  * Class that facilitates sending requests to the Firebase security rules backend API.
@@ -27,25 +28,31 @@ const RULES_API_URL = 'https://firebaserules.googleapis.com/v1/';
  */
 export class SecurityRulesApiClient {
 
-  constructor(private readonly httpClient: HttpClient) { }
+  private readonly url: string;
+
+  constructor(private readonly httpClient: HttpClient, projectId: string) {
+    if (!validator.isNonEmptyString(projectId)) {
+      throw new FirebaseSecurityRulesError(
+        'invalid-argument',
+        'Failed to determine project ID. Initialize the SDK with service account credentials, or '
+          + 'set project ID as an app option. Alternatively, set the GOOGLE_CLOUD_PROJECT '
+          + 'environment variable.');
+    }
+
+    this.url = `${RULES_API_URL}/projects/${projectId}`;
+  }
 
   /**
-   * Gets the specified resource from the rules API. Resource name must be full qualified names with project
-   * ID prefix (e.g. `projects/project-id/rulesets/ruleset-name`).
+   * Gets the specified resource from the rules API. Resource names must be the short names without project
+   * ID prefix (e.g. `rulesets/ruleset-name`).
    *
    * @param {string} name Full qualified name of the resource to get.
    * @returns {Promise<T>} A promise that fulfills with the resource.
    */
   public getResource<T>(name: string): Promise<T> {
-    if (!name.startsWith('projects/')) {
-      const err = new FirebaseSecurityRulesError(
-        'invalid-argument', 'Resource name must have a project ID prefix.');
-      return Promise.reject(err);
-    }
-
     const request: HttpRequestConfig = {
       method: 'GET',
-      url: `${RULES_API_URL}${name}`,
+      url: `${this.url}/${name}`,
     };
     return this.httpClient.send(request)
       .then((resp) => {

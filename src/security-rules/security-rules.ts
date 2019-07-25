@@ -88,7 +88,6 @@ export class SecurityRules implements FirebaseServiceInterface {
   public readonly INTERNAL = new SecurityRulesInternals();
 
   private readonly client: SecurityRulesApiClient;
-  private readonly projectId: string;
 
   /**
    * @param {object} app The app for this SecurityRules service.
@@ -103,21 +102,13 @@ export class SecurityRules implements FirebaseServiceInterface {
     }
 
     const projectId = utils.getProjectId(app);
-    if (!validator.isNonEmptyString(projectId)) {
-      throw new FirebaseSecurityRulesError(
-        'invalid-argument',
-        'Failed to determine project ID. Initialize the SDK with service account credentials, or '
-          + 'set project ID as an app option. Alternatively, set the GOOGLE_CLOUD_PROJECT '
-          + 'environment variable.');
-    }
-
-    this.projectId = projectId;
-    this.client = new SecurityRulesApiClient(new AuthorizedHttpClient(app));
+    this.client = new SecurityRulesApiClient(new AuthorizedHttpClient(app), projectId);
   }
 
   /**
    * Gets the Ruleset identified by the given name. The input name should be the short name string without
-   * the project ID prefix. Rejects with a `not-found` error if the specified Ruleset cannot be found.
+   * the project ID prefix. For example, to retrieve the `projects/project-id/rulesets/my-ruleset`, pass the
+   * short name "my-ruleset". Rejects with a `not-found` error if the specified Ruleset cannot be found.
    *
    * @param {string} name Name of the Ruleset to retrieve.
    * @returns {Promise<Ruleset>} A promise that fulfills with the specified Ruleset.
@@ -135,7 +126,7 @@ export class SecurityRules implements FirebaseServiceInterface {
       return Promise.reject(err);
     }
 
-    const resource = `projects/${this.projectId}/rulesets/${name}`;
+    const resource = `rulesets/${name}`;
     return this.client.getResource<RulesetResponse>(resource)
       .then((rulesetResponse) => {
         return new Ruleset(rulesetResponse);
@@ -152,14 +143,14 @@ export class SecurityRules implements FirebaseServiceInterface {
     return this.getRulesetForService(SecurityRules.CLOUD_FIRESTORE);
   }
 
-  private getRulesetForService(name: string): Promise<Ruleset> {
-    const resource = `projects/${this.projectId}/releases/${name}`;
+  private getRulesetForService(serviceName: string): Promise<Ruleset> {
+    const resource = `releases/${serviceName}`;
     return this.client.getResource<Release>(resource)
       .then((release) => {
         const rulesetName = release.rulesetName;
         if (!validator.isNonEmptyString(rulesetName)) {
           throw new FirebaseSecurityRulesError(
-            'not-found', `Ruleset name not found for ${name}.`);
+            'not-found', `Ruleset name not found for ${serviceName}.`);
         }
 
         return this.getRuleset(stripProjectIdPrefix(rulesetName));

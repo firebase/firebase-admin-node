@@ -37,7 +37,8 @@ describe('SecurityRulesApiClient', () => {
     },
   };
 
-  const apiClient: SecurityRulesApiClient = new SecurityRulesApiClient(new HttpClient());
+  const apiClient: SecurityRulesApiClient = new SecurityRulesApiClient(
+    new HttpClient(), 'test-project');
 
   // Stubs used to simulate underlying api calls.
   let stubs: sinon.SinonStub[] = [];
@@ -48,7 +49,7 @@ describe('SecurityRulesApiClient', () => {
   });
 
   describe('getResource', () => {
-    const RESOURCE_ID = 'projects/test-project/rulesets/ruleset-id';
+    const RESOURCE_ID = 'rulesets/ruleset-id';
 
     it('should resolve with the requested resource on success', () => {
       const stub = sinon
@@ -63,13 +64,6 @@ describe('SecurityRulesApiClient', () => {
             url: 'https://firebaserules.googleapis.com/v1/projects/test-project/rulesets/ruleset-id',
           });
         });
-    });
-
-    it('should reject when the resource name is unqualified', () => {
-      const expected = new FirebaseSecurityRulesError(
-        'invalid-argument', 'Resource name must have a project ID prefix.');
-      return apiClient.getResource('rulesets/ruleset-id')
-        .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
     it('should throw when a full platform error response is received', () => {
