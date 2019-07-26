@@ -2469,6 +2469,24 @@ describe('Messaging', () => {
           messaging.send({data: arg, topic: 'test'});
         }).to.throw('data must be a non-null object');
       });
+
+      it(`should throw given invalid fcmOptions: ${JSON.stringify(arg)}`, () => {
+        expect(() => {
+          messaging.send({fcmOptions: arg, topic: 'test'});
+        }).to.throw('fcmOptions must be a non-null object');
+      });
+
+      it(`should throw given invalid AndroidFcmOptions: ${JSON.stringify(arg)}`, () => {
+        expect(() => {
+          messaging.send({android: {fcmOptions: arg}, topic: 'test'});
+        }).to.throw('fcmOptions must be a non-null object');
+      });
+
+      it(`should throw given invalid ApnsFcmOptions: ${JSON.stringify(arg)}`, () => {
+        expect(() => {
+          messaging.send({apns: {fcmOptions: arg}, topic: 'test'});
+        }).to.throw('fcmOptions must be a non-null object');
+      });
     });
 
     const invalidDataMessages: any[] = [
