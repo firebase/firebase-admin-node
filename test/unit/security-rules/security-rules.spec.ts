@@ -22,7 +22,7 @@ import * as sinon from 'sinon';
 import { SecurityRules } from '../../../src/security-rules/security-rules';
 import { FirebaseApp } from '../../../src/firebase-app';
 import * as mocks from '../../resources/mocks';
-import { SecurityRulesApiClient } from '../../../src/security-rules/security-rules-api-client';
+import { SecurityRulesApiClient, RulesetContent } from '../../../src/security-rules/security-rules-api-client';
 import { FirebaseSecurityRulesError } from '../../../src/security-rules/security-rules-utils';
 import { deepCopy } from '../../../src/utils/deep-copy';
 
@@ -30,10 +30,6 @@ const expect = chai.expect;
 
 describe('SecurityRules', () => {
 
-  const INVALID_NAMES: any[] = [null, undefined, '', 1, true, {}, []];
-  const NO_PROJECT_ID = 'Failed to determine project ID. Initialize the SDK with service '
-      + 'account credentials, or set project ID as an app option. Alternatively, set the '
-      + 'GOOGLE_CLOUD_PROJECT environment variable.';
   const EXPECTED_ERROR = new FirebaseSecurityRulesError('internal-error', 'message');
   const FIRESTORE_RULESET_RESPONSE = {
     name: 'projects/test-project/rulesets/foo',
@@ -97,9 +93,12 @@ describe('SecurityRules', () => {
       // Project ID not set in the environment.
       delete process.env.GOOGLE_CLOUD_PROJECT;
       delete process.env.GCLOUD_PROJECT;
+      const noProjectId = 'Failed to determine project ID. Initialize the SDK with service '
+        + 'account credentials, or set project ID as an app option. Alternatively, set the '
+        + 'GOOGLE_CLOUD_PROJECT environment variable.';
       expect(() => {
         return new SecurityRules(mockCredentialApp);
-      }).to.throw(NO_PROJECT_ID);
+      }).to.throw(noProjectId);
     });
 
     it('should not throw given a valid app', () => {
@@ -117,23 +116,9 @@ describe('SecurityRules', () => {
   });
 
   describe('getRuleset', () => {
-    INVALID_NAMES.forEach((invalidName) => {
-      it(`should reject when called with: ${JSON.stringify(invalidName)}`, () => {
-        return securityRules.getRuleset(invalidName)
-          .should.eventually.be.rejected.and.have.property(
-            'message', 'Ruleset name must be a non-empty string.');
-      });
-    });
-
-    it(`should reject when called with prefixed name`, () => {
-      return securityRules.getRuleset('projects/foo/rulesets/bar')
-        .should.eventually.be.rejected.and.have.property(
-          'message', 'Ruleset name must not contain any "/" characters.');
-    });
-
     it('should propagate API errors', () => {
       const stub = sinon
-        .stub(SecurityRulesApiClient.prototype, 'getResource')
+        .stub(SecurityRulesApiClient.prototype, 'getRuleset')
         .rejects(EXPECTED_ERROR);
       stubs.push(stub);
       return securityRules.getRuleset('foo')
@@ -142,7 +127,7 @@ describe('SecurityRules', () => {
 
     it('should reject when API response is invalid', () => {
       const stub = sinon
-        .stub(SecurityRulesApiClient.prototype, 'getResource')
+        .stub(SecurityRulesApiClient.prototype, 'getRuleset')
         .resolves(null);
       stubs.push(stub);
       return securityRules.getRuleset('foo')
@@ -154,7 +139,7 @@ describe('SecurityRules', () => {
       const response = deepCopy(FIRESTORE_RULESET_RESPONSE);
       response.name = '';
       const stub = sinon
-        .stub(SecurityRulesApiClient.prototype, 'getResource')
+        .stub(SecurityRulesApiClient.prototype, 'getRuleset')
         .resolves(response);
       stubs.push(stub);
       return securityRules.getRuleset('foo')
@@ -166,7 +151,7 @@ describe('SecurityRules', () => {
       const response = deepCopy(FIRESTORE_RULESET_RESPONSE);
       response.createTime = '';
       const stub = sinon
-        .stub(SecurityRulesApiClient.prototype, 'getResource')
+        .stub(SecurityRulesApiClient.prototype, 'getRuleset')
         .resolves(response);
       stubs.push(stub);
       return securityRules.getRuleset('foo')
@@ -178,7 +163,7 @@ describe('SecurityRules', () => {
       const response = deepCopy(FIRESTORE_RULESET_RESPONSE);
       response.source = null;
       const stub = sinon
-          .stub(SecurityRulesApiClient.prototype, 'getResource')
+          .stub(SecurityRulesApiClient.prototype, 'getRuleset')
           .resolves(response);
       stubs.push(stub);
       return securityRules.getRuleset('foo')
@@ -188,7 +173,7 @@ describe('SecurityRules', () => {
 
     it('should resolve with Ruleset on success', () => {
       const stub = sinon
-        .stub(SecurityRulesApiClient.prototype, 'getResource')
+        .stub(SecurityRulesApiClient.prototype, 'getRuleset')
         .resolves(FIRESTORE_RULESET_RESPONSE);
       stubs.push(stub);
 
@@ -208,7 +193,7 @@ describe('SecurityRules', () => {
   describe('getFirestoreRuleset', () => {
     it('should propagate API errors', () => {
       const stub = sinon
-        .stub(SecurityRulesApiClient.prototype, 'getResource')
+        .stub(SecurityRulesApiClient.prototype, 'getRelease')
         .rejects(EXPECTED_ERROR);
       stubs.push(stub);
       return securityRules.getFirestoreRuleset()
@@ -217,7 +202,7 @@ describe('SecurityRules', () => {
 
     it('should reject when getRelease response is invalid', () => {
       const stub = sinon
-        .stub(SecurityRulesApiClient.prototype, 'getResource')
+        .stub(SecurityRulesApiClient.prototype, 'getRelease')
         .resolves({});
       stubs.push(stub);
 
@@ -227,17 +212,20 @@ describe('SecurityRules', () => {
     });
 
     it('should resolve with Ruleset on success', () => {
-      const stub = sinon.stub(SecurityRulesApiClient.prototype, 'getResource');
-      stub.onCall(0).resolves({
-        rulesetName: 'projects/test-project/rulesets/foo',
-      });
-      stub.onCall(1).resolves(FIRESTORE_RULESET_RESPONSE);
-      stubs.push(stub);
+      const getRelease = sinon
+        .stub(SecurityRulesApiClient.prototype, 'getRelease')
+        .resolves({
+          rulesetName: 'projects/test-project/rulesets/foo',
+        });
+      const getRuleset = sinon
+        .stub(SecurityRulesApiClient.prototype, 'getRuleset')
+        .resolves(FIRESTORE_RULESET_RESPONSE);
+      stubs.push(getRelease, getRuleset);
 
       return securityRules.getFirestoreRuleset()
         .then((ruleset) => {
           expect(ruleset.name).to.equal('foo');
-          expect(ruleset.createTime).to.equal('Fri, 08 Mar 2019 23:45:23 GMT');
+          expect(ruleset.createTime).to.equal(CREATE_TIME_UTC);
           expect(ruleset.source.length).to.equal(1);
 
           const file = ruleset.source[0];
@@ -248,14 +236,16 @@ describe('SecurityRules', () => {
   });
 
   describe('createRulesFileFromSource', () => {
-    INVALID_NAMES.forEach((invalidName) => {
+    const INVALID_STRINGS: any[] = [null, undefined, '', 1, true, {}, []];
+
+    INVALID_STRINGS.forEach((invalidName) => {
       it(`should throw if the name is ${JSON.stringify(invalidName)}`, () => {
         expect(() => securityRules.createRulesFileFromSource(invalidName, 'test'))
           .to.throw('Name must be a non-empty string.');
       });
     });
 
-    const invalidSources = [...INVALID_NAMES];
+    const invalidSources = [...INVALID_STRINGS];
     invalidSources.forEach((invalidSource) => {
       it(`should throw if the source is ${JSON.stringify(invalidSource)}`, () => {
         expect(() => securityRules.createRulesFileFromSource('test.rules', invalidSource))
@@ -282,30 +272,9 @@ describe('SecurityRules', () => {
       content: 'test source {}',
     };
 
-    it(`should reject when called with no files`, () => {
-      return (securityRules as any).createRuleset()
-        .should.eventually.be.rejected.and.have.property(
-          'message', `Invalid rules file argument: ${JSON.stringify(undefined)}`);
-    });
-
-    const invalidFiles: any[] = [null, undefined, 'test', {}, {name: 'test'}, {content: 'test'}];
-    invalidFiles.forEach((file) => {
-      it(`should reject when called with: ${JSON.stringify(file)}`, () => {
-        return securityRules.createRuleset(file)
-          .should.eventually.be.rejected.and.have.property(
-            'message', `Invalid rules file argument: ${JSON.stringify(file)}`);
-      });
-
-      it(`should reject when called with extra argument: ${JSON.stringify(file)}`, () => {
-        return securityRules.createRuleset(RULES_FILE, file)
-          .should.eventually.be.rejected.and.have.property(
-            'message', `Invalid rules file argument: ${JSON.stringify(file)}`);
-      });
-    });
-
     it('should propagate API errors', () => {
       const stub = sinon
-        .stub(SecurityRulesApiClient.prototype, 'createResource')
+        .stub(SecurityRulesApiClient.prototype, 'createRuleset')
         .rejects(EXPECTED_ERROR);
       stubs.push(stub);
       return securityRules.createRuleset(RULES_FILE)
@@ -314,7 +283,7 @@ describe('SecurityRules', () => {
 
     it('should reject when API response is invalid', () => {
       const stub = sinon
-        .stub(SecurityRulesApiClient.prototype, 'createResource')
+        .stub(SecurityRulesApiClient.prototype, 'createRuleset')
         .resolves(null);
       stubs.push(stub);
       return securityRules.createRuleset(RULES_FILE)
@@ -326,7 +295,7 @@ describe('SecurityRules', () => {
       const response = deepCopy(FIRESTORE_RULESET_RESPONSE);
       response.name = '';
       const stub = sinon
-        .stub(SecurityRulesApiClient.prototype, 'createResource')
+        .stub(SecurityRulesApiClient.prototype, 'createRuleset')
         .resolves(response);
       stubs.push(stub);
       return securityRules.createRuleset(RULES_FILE)
@@ -338,7 +307,7 @@ describe('SecurityRules', () => {
       const response = deepCopy(FIRESTORE_RULESET_RESPONSE);
       response.createTime = '';
       const stub = sinon
-        .stub(SecurityRulesApiClient.prototype, 'createResource')
+        .stub(SecurityRulesApiClient.prototype, 'createRuleset')
         .resolves(response);
       stubs.push(stub);
       return securityRules.createRuleset(RULES_FILE)
@@ -348,7 +317,7 @@ describe('SecurityRules', () => {
 
     it('should resolve with Ruleset on success', () => {
       const stub = sinon
-        .stub(SecurityRulesApiClient.prototype, 'createResource')
+        .stub(SecurityRulesApiClient.prototype, 'createRuleset')
         .resolves(FIRESTORE_RULESET_RESPONSE);
       stubs.push(stub);
 
@@ -362,20 +331,20 @@ describe('SecurityRules', () => {
           expect(file.name).equals('firestore.rules');
           expect(file.content).equals('service cloud.firestore{\n}\n');
 
-          const request = {
+          const request: RulesetContent = {
             source: {
               files: [
                 RULES_FILE,
               ],
             },
           };
-          expect(stub).to.have.been.called.calledOnce.and.calledWith('rulesets', request);
+          expect(stub).to.have.been.called.calledOnce.and.calledWith(request);
         });
     });
 
     it('should resolve with Ruleset when called with multiple files', () => {
       const stub = sinon
-        .stub(SecurityRulesApiClient.prototype, 'createResource')
+        .stub(SecurityRulesApiClient.prototype, 'createRuleset')
         .resolves(FIRESTORE_RULESET_RESPONSE);
       stubs.push(stub);
 
@@ -389,7 +358,7 @@ describe('SecurityRules', () => {
           expect(file.name).equals('firestore.rules');
           expect(file.content).equals('service cloud.firestore{\n}\n');
 
-          const request = {
+          const request: RulesetContent = {
             source: {
               files: [
                 RULES_FILE,
@@ -397,41 +366,8 @@ describe('SecurityRules', () => {
               ],
             },
           };
-          expect(stub).to.have.been.called.calledOnce.and.calledWith('rulesets', request);
+          expect(stub).to.have.been.called.calledOnce.and.calledWith(request);
         });
-    });
-  });
-
-  describe('deleteRuleset', () => {
-    INVALID_NAMES.forEach((invalidName) => {
-      it(`should reject when called with: ${JSON.stringify(invalidName)}`, () => {
-        return securityRules.deleteRuleset(invalidName)
-          .should.eventually.be.rejected.and.have.property(
-            'message', 'Ruleset name must be a non-empty string.');
-      });
-    });
-
-    it(`should reject when called with prefixed name`, () => {
-      return securityRules.deleteRuleset('projects/foo/rulesets/bar')
-        .should.eventually.be.rejected.and.have.property(
-          'message', 'Ruleset name must not contain any "/" characters.');
-    });
-
-    it('should propagate API errors', () => {
-      const stub = sinon
-        .stub(SecurityRulesApiClient.prototype, 'deleteResource')
-        .rejects(EXPECTED_ERROR);
-      stubs.push(stub);
-      return securityRules.deleteRuleset('foo')
-        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
-    });
-
-    it('should resolve on success', () => {
-      const stub = sinon
-        .stub(SecurityRulesApiClient.prototype, 'deleteResource')
-        .resolves();
-      stubs.push(stub);
-      return securityRules.deleteRuleset('foo');
     });
   });
 });

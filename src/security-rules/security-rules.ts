@@ -18,7 +18,7 @@ import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../
 import { FirebaseApp } from '../firebase-app';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { SecurityRulesApiClient } from './security-rules-api-client';
+import { SecurityRulesApiClient, RulesetResponse, RulesetContent } from './security-rules-api-client';
 import { AuthorizedHttpClient } from '../utils/api-request';
 import { FirebaseSecurityRulesError } from './security-rules-utils';
 
@@ -34,24 +34,6 @@ export interface RulesFile {
  * Additional metadata associated with a Ruleset.
  */
 export interface RulesetMetadata {
-  readonly name: string;
-  readonly createTime: string;
-}
-
-interface Release {
-  readonly name: string;
-  readonly rulesetName: string;
-  readonly createTime: string;
-  readonly updateTime: string;
-}
-
-interface RulesetContent {
-  readonly source: {
-    readonly files: RulesFile[];
-  };
-}
-
-interface RulesetResponse extends RulesetContent {
   readonly name: string;
   readonly createTime: string;
 }
@@ -117,10 +99,7 @@ export class SecurityRules implements FirebaseServiceInterface {
    * @returns {Promise<Ruleset>} A promise that fulfills with the specified Ruleset.
    */
   public getRuleset(name: string): Promise<Ruleset> {
-    return this.getRulesetName(name)
-      .then((resource) => {
-        return this.client.getResource<RulesetResponse>(resource);
-      })
+    return this.client.getRuleset(name)
       .then((rulesetResponse) => {
         return new Ruleset(rulesetResponse);
       });
@@ -133,7 +112,7 @@ export class SecurityRules implements FirebaseServiceInterface {
    * @returns {Promise<Ruleset>} A promise that fulfills with the Firestore Ruleset.
    */
   public getFirestoreRuleset(): Promise<Ruleset> {
-    return this.getRulesetForService(SecurityRules.CLOUD_FIRESTORE);
+    return this.getRulesetForRelease(SecurityRules.CLOUD_FIRESTORE);
   }
 
   public createRulesFileFromSource(name: string, source: string | Buffer): RulesFile {
@@ -160,60 +139,25 @@ export class SecurityRules implements FirebaseServiceInterface {
 
   public createRuleset(file: RulesFile, ...additionalFiles: RulesFile[]): Promise<Ruleset> {
     const files = [file, ...additionalFiles];
-    for (const rf of files) {
-      if (!validator.isNonNullObject(rf) ||
-        !validator.isNonEmptyString(rf.name) ||
-        !validator.isNonEmptyString(rf.content)) {
-
-        const err = new FirebaseSecurityRulesError(
-          'invalid-argument', `Invalid rules file argument: ${JSON.stringify(rf)}`);
-        return Promise.reject(err);
-      }
-    }
-
     const ruleset: RulesetContent = {
       source: {
         files,
       },
     };
 
-    return this.client.createResource<RulesetResponse>('rulesets', ruleset)
+    return this.client.createRuleset(ruleset)
       .then((rulesetResponse) => {
         return new Ruleset(rulesetResponse);
       });
   }
 
-  public deleteRuleset(name: string): Promise<void> {
-    return this.getRulesetName(name)
-      .then((resource) => {
-        return this.client.deleteResource(resource);
-      });
-  }
-
-  private getRulesetName(name: string): Promise<string> {
-    if (!validator.isNonEmptyString(name)) {
-      const err = new FirebaseSecurityRulesError(
-        'invalid-argument', 'Ruleset name must be a non-empty string.');
-      return Promise.reject(err);
-    }
-
-    if (name.indexOf('/') !== -1) {
-      const err = new FirebaseSecurityRulesError(
-        'invalid-argument', 'Ruleset name must not contain any "/" characters.');
-      return Promise.reject(err);
-    }
-
-    return Promise.resolve(`rulesets/${name}`);
-  }
-
-  private getRulesetForService(serviceName: string): Promise<Ruleset> {
-    const resource = `releases/${serviceName}`;
-    return this.client.getResource<Release>(resource)
+  private getRulesetForRelease(releaseName: string): Promise<Ruleset> {
+    return this.client.getRelease(releaseName)
       .then((release) => {
         const rulesetName = release.rulesetName;
         if (!validator.isNonEmptyString(rulesetName)) {
           throw new FirebaseSecurityRulesError(
-            'not-found', `Ruleset name not found for ${serviceName}.`);
+            'not-found', `Ruleset name not found for ${releaseName}.`);
         }
 
         return this.getRuleset(stripProjectIdPrefix(rulesetName));

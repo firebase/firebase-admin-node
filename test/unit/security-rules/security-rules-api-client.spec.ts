@@ -19,7 +19,7 @@
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
-import { SecurityRulesApiClient } from '../../../src/security-rules/security-rules-api-client';
+import { SecurityRulesApiClient, RulesetContent } from '../../../src/security-rules/security-rules-api-client';
 import { FirebaseSecurityRulesError } from '../../../src/security-rules/security-rules-utils';
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';
@@ -29,10 +29,7 @@ const expect = chai.expect;
 
 describe('SecurityRulesApiClient', () => {
 
-  const NO_PROJECT_ID = 'Failed to determine project ID. Initialize the SDK with service '
-    + 'account credentials, or set project ID as an app option. Alternatively, set the '
-    + 'GOOGLE_CLOUD_PROJECT environment variable.';
-  const RESOURCE_ID = 'rulesets/ruleset-id';
+  const RULESET_NAME = 'ruleset-id';
   const ERROR_RESPONSE = {
     error: {
       code: 404,
@@ -59,23 +56,41 @@ describe('SecurityRulesApiClient', () => {
     });
 
     const invalidProjectIds: any[] = [null, undefined, '', {}, [], true, 1];
+    const noProjectId = 'Failed to determine project ID. Initialize the SDK with service '
+      + 'account credentials, or set project ID as an app option. Alternatively, set the '
+      + 'GOOGLE_CLOUD_PROJECT environment variable.';
     invalidProjectIds.forEach((invalidProjectId) => {
       it(`should throw when the projectId is: ${invalidProjectId}`, () => {
         expect(() => new SecurityRulesApiClient(new HttpClient(), invalidProjectId))
-          .to.throw(NO_PROJECT_ID);
+          .to.throw(noProjectId);
       });
     });
   });
 
-  describe('getResource', () => {
-    it('should resolve with the requested resource on success', () => {
+  describe('getRuleset', () => {
+    const INVALID_NAMES: any[] = [null, undefined, '', 1, true, {}, []];
+    INVALID_NAMES.forEach((invalidName) => {
+      it(`should reject when called with: ${JSON.stringify(invalidName)}`, () => {
+        return apiClient.getRuleset(invalidName)
+          .should.eventually.be.rejected.and.have.property(
+            'message', 'Ruleset name must be a non-empty string.');
+      });
+    });
+
+    it(`should reject when called with prefixed name`, () => {
+      return apiClient.getRuleset('projects/foo/rulesets/bar')
+        .should.eventually.be.rejected.and.have.property(
+          'message', 'Ruleset name must not contain any "/" characters.');
+    });
+
+    it('should resolve with the requested ruleset on success', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .resolves(utils.responseFrom({foo: 'bar'}));
+        .resolves(utils.responseFrom({name: 'bar'}));
       stubs.push(stub);
-      return apiClient.getResource<{foo: string}>(RESOURCE_ID)
+      return apiClient.getRuleset(RULESET_NAME)
         .then((resp) => {
-          expect(resp.foo).to.equal('bar');
+          expect(resp.name).to.equal('bar');
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'GET',
             url: 'https://firebaserules.googleapis.com/v1/projects/test-project/rulesets/ruleset-id',
@@ -89,7 +104,7 @@ describe('SecurityRulesApiClient', () => {
         .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found');
-      return apiClient.getResource(RESOURCE_ID)
+      return apiClient.getRuleset(RULESET_NAME)
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
@@ -99,7 +114,7 @@ describe('SecurityRulesApiClient', () => {
         .rejects(utils.errorFrom({}, 404));
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}');
-      return apiClient.getResource(RESOURCE_ID)
+      return apiClient.getRuleset(RULESET_NAME)
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
@@ -110,7 +125,7 @@ describe('SecurityRulesApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError(
         'unknown-error', 'Unexpected response with status: 404 and body: not json');
-      return apiClient.getResource(RESOURCE_ID)
+      return apiClient.getRuleset(RULESET_NAME)
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
@@ -120,27 +135,70 @@ describe('SecurityRulesApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .rejects(expected);
       stubs.push(stub);
-      return apiClient.getResource(RESOURCE_ID)
+      return apiClient.getRuleset(RULESET_NAME)
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
   });
 
-  describe('createResource', () => {
-    const data = {foo: 'bar'};
+  describe('createRuleset', () => {
+    const RULES_FILE = {
+      name: 'test.rules',
+      content: 'test source {}',
+    };
+
+    const RULES_CONTENT: RulesetContent = {
+      source: {
+        files: [RULES_FILE],
+      },
+    };
+
+    const invalidContent: any[] = [null, undefined, {}, {source: {}}];
+    invalidContent.forEach((content) => {
+      it(`should reject when called with: ${JSON.stringify(content)}`, () => {
+        return apiClient.createRuleset(content)
+          .should.eventually.be.rejected.and.have.property(
+            'message', 'Invalid rules content.');
+      });
+    });
+
+    const invalidFiles: any[] = [null, undefined, 'test', {}, {name: 'test'}, {content: 'test'}];
+    invalidFiles.forEach((file) => {
+      it(`should reject when called with: ${JSON.stringify(file)}`, () => {
+        const ruleset: RulesetContent = {
+          source: {
+            files: [file],
+          },
+        };
+        return apiClient.createRuleset(ruleset)
+          .should.eventually.be.rejected.and.have.property(
+            'message', `Invalid rules file argument: ${JSON.stringify(file)}`);
+      });
+
+      it(`should reject when called with extra argument: ${JSON.stringify(file)}`, () => {
+        const ruleset: RulesetContent = {
+          source: {
+            files: [RULES_FILE, file],
+          },
+        };
+        return apiClient.createRuleset(ruleset)
+          .should.eventually.be.rejected.and.have.property(
+            'message', `Invalid rules file argument: ${JSON.stringify(file)}`);
+      });
+    });
 
     it('should resolve with the created resource on success', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .resolves(utils.responseFrom({name: 'some-name', ...data}));
+        .resolves(utils.responseFrom({name: 'some-name', ...RULES_CONTENT}));
       stubs.push(stub);
-      return apiClient.createResource<{name: string, foo: string}>('rulesets', data)
+      return apiClient.createRuleset(RULES_CONTENT)
         .then((resp) => {
           expect(resp.name).to.equal('some-name');
-          expect(resp.foo).to.equal('bar');
+          expect(resp.source).to.not.be.undefined;
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
             url: 'https://firebaserules.googleapis.com/v1/projects/test-project/rulesets',
-            data,
+            data: RULES_CONTENT,
           });
         });
     });
@@ -151,7 +209,7 @@ describe('SecurityRulesApiClient', () => {
         .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found');
-      return apiClient.createResource(RESOURCE_ID, data)
+      return apiClient.createRuleset(RULES_CONTENT)
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
@@ -161,7 +219,7 @@ describe('SecurityRulesApiClient', () => {
         .rejects(utils.errorFrom({}, 404));
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}');
-      return apiClient.createResource(RESOURCE_ID, data)
+      return apiClient.createRuleset(RULES_CONTENT)
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
@@ -172,7 +230,7 @@ describe('SecurityRulesApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError(
         'unknown-error', 'Unexpected response with status: 404 and body: not json');
-      return apiClient.createResource(RESOURCE_ID, data)
+      return apiClient.createRuleset(RULES_CONTENT)
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
@@ -182,22 +240,25 @@ describe('SecurityRulesApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .rejects(expected);
       stubs.push(stub);
-      return apiClient.createResource(RESOURCE_ID, data)
+      return apiClient.createRuleset(RULES_CONTENT)
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
   });
 
-  describe('deleteResource', () => {
-    it('should resolve on success', () => {
+  describe('getRelease', () => {
+    const RELEASE_NAME = 'test.service';
+
+    it('should resolve with the requested release on success', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .resolves(utils.responseFrom({}));
+        .resolves(utils.responseFrom({name: 'bar'}));
       stubs.push(stub);
-      return apiClient.deleteResource(RESOURCE_ID)
-        .then(() => {
+      return apiClient.getRelease(RELEASE_NAME)
+        .then((resp) => {
+          expect(resp.name).to.equal('bar');
           expect(stub).to.have.been.calledOnce.and.calledWith({
-            method: 'DELETE',
-            url: 'https://firebaserules.googleapis.com/v1/projects/test-project/rulesets/ruleset-id',
+            method: 'GET',
+            url: 'https://firebaserules.googleapis.com/v1/projects/test-project/releases/test.service',
           });
         });
     });
@@ -208,7 +269,7 @@ describe('SecurityRulesApiClient', () => {
         .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found');
-      return apiClient.deleteResource(RESOURCE_ID)
+      return apiClient.getRelease(RELEASE_NAME)
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
@@ -218,7 +279,7 @@ describe('SecurityRulesApiClient', () => {
         .rejects(utils.errorFrom({}, 404));
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}');
-      return apiClient.deleteResource(RESOURCE_ID)
+      return apiClient.getRelease(RELEASE_NAME)
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
@@ -229,7 +290,7 @@ describe('SecurityRulesApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError(
         'unknown-error', 'Unexpected response with status: 404 and body: not json');
-      return apiClient.deleteResource(RESOURCE_ID)
+      return apiClient.getRelease(RELEASE_NAME)
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
@@ -239,7 +300,7 @@ describe('SecurityRulesApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .rejects(expected);
       stubs.push(stub);
-      return apiClient.deleteResource(RESOURCE_ID)
+      return apiClient.getRelease(RELEASE_NAME)
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
   });
