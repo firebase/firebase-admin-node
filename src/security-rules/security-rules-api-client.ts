@@ -103,6 +103,17 @@ export class SecurityRulesApiClient {
     return this.sendRequest<RulesetResponse>(request);
   }
 
+  public deleteRuleset(name: string): Promise<void> {
+    return this.getRulesetName(name)
+      .then((rulesetName) => {
+        const request: HttpRequestConfig = {
+          method: 'DELETE',
+          url: `${this.url}/${rulesetName}`,
+        };
+        return this.sendRequest<void>(request);
+      });
+  }
+
   public getRelease(name: string): Promise<Release> {
     return this.getResource<Release>(`releases/${name}`);
   }

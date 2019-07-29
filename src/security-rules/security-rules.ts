@@ -164,6 +164,18 @@ export class SecurityRules implements FirebaseServiceInterface {
       });
   }
 
+  /**
+   * Deletes the Ruleset identified by the given name. The input name should be the short name string without
+   * the project ID prefix. For example, to delete the `projects/project-id/rulesets/my-ruleset`, pass the
+   * short name "my-ruleset". Rejects with a `not-found` error if the specified Ruleset cannot be found.
+   *
+   * @param {string} name Name of the Ruleset to delete.
+   * @returns {Promise<Ruleset>} A promise that fulfills when the Ruleset is deleted.
+   */
+  public deleteRuleset(name: string): Promise<void> {
+    return this.client.deleteRuleset(name);
+  }
+
   private getRulesetForRelease(releaseName: string): Promise<Ruleset> {
     return this.client.getRelease(releaseName)
       .then((release) => {
