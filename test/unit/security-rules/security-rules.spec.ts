@@ -341,33 +341,5 @@ describe('SecurityRules', () => {
           expect(stub).to.have.been.called.calledOnce.and.calledWith(request);
         });
     });
-
-    it('should resolve with Ruleset when called with multiple files', () => {
-      const stub = sinon
-        .stub(SecurityRulesApiClient.prototype, 'createRuleset')
-        .resolves(FIRESTORE_RULESET_RESPONSE);
-      stubs.push(stub);
-
-      return securityRules.createRuleset(RULES_FILE, RULES_FILE)
-        .then((ruleset) => {
-          expect(ruleset.name).to.equal('foo');
-          expect(ruleset.createTime).to.equal(CREATE_TIME_UTC);
-          expect(ruleset.source.length).to.equal(1);
-
-          const file = ruleset.source[0];
-          expect(file.name).equals('firestore.rules');
-          expect(file.content).equals('service cloud.firestore{\n}\n');
-
-          const request: RulesetContent = {
-            source: {
-              files: [
-                RULES_FILE,
-                RULES_FILE,
-              ],
-            },
-          };
-          expect(stub).to.have.been.called.calledOnce.and.calledWith(request);
-        });
-    });
   });
 });

@@ -66,7 +66,10 @@ export class SecurityRulesApiClient {
   }
 
   public getRuleset(name: string): Promise<RulesetResponse> {
-    return this.getRulesetName(name)
+    return Promise.resolve()
+      .then(() => {
+        return this.getRulesetName(name);
+      })
       .then((rulesetName) => {
         return this.getResource<RulesetResponse>(rulesetName);
       });
@@ -119,20 +122,18 @@ export class SecurityRulesApiClient {
     return this.sendRequest<T>(request);
   }
 
-  private getRulesetName(name: string): Promise<string> {
+  private getRulesetName(name: string): string {
     if (!validator.isNonEmptyString(name)) {
-      const err = new FirebaseSecurityRulesError(
+      throw new FirebaseSecurityRulesError(
         'invalid-argument', 'Ruleset name must be a non-empty string.');
-      return Promise.reject(err);
     }
 
     if (name.indexOf('/') !== -1) {
-      const err = new FirebaseSecurityRulesError(
+      throw new FirebaseSecurityRulesError(
         'invalid-argument', 'Ruleset name must not contain any "/" characters.');
-      return Promise.reject(err);
     }
 
-    return Promise.resolve(`rulesets/${name}`);
+    return `rulesets/${name}`;
   }
 
   private sendRequest<T>(request: HttpRequestConfig): Promise<T> {

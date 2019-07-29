@@ -146,17 +146,15 @@ export class SecurityRules implements FirebaseServiceInterface {
   }
 
   /**
-   * Creates a new `Ruleset` with one or more rules files.
+   * Creates a new `Ruleset` from the given `RulesFile`.
    *
    * @param {RulesFile} file Rules file to include in the new Ruleset.
-   * @param {RulesFile[]} additionalFiles Additional rules files to be included in the new Ruleset.
    * @returns {Promise<Ruleset>} A promise that fulfills with the newly created Ruleset.
    */
-  public createRuleset(file: RulesFile, ...additionalFiles: RulesFile[]): Promise<Ruleset> {
-    const files = [file, ...additionalFiles];
+  public createRuleset(file: RulesFile): Promise<Ruleset> {
     const ruleset: RulesetContent = {
       source: {
-        files,
+        files: [ file ],
       },
     };
 
