@@ -115,6 +115,14 @@ export class SecurityRules implements FirebaseServiceInterface {
     return this.getRulesetForRelease(SecurityRules.CLOUD_FIRESTORE);
   }
 
+  /**
+   * Creates a `RulesFile` with the given name and source. Throws if any of the arguments are invalid. This is a
+   * local operation, and does not involve any network API calls.
+   *
+   * @param {string} name Name to assign to the rules file.
+   * @param {string|Buffer} source Contents of the rules file.
+   * @returns {RulesFile} A new rules file instance.
+   */
   public createRulesFileFromSource(name: string, source: string | Buffer): RulesFile {
     if (!validator.isNonEmptyString(name)) {
       throw new FirebaseSecurityRulesError(
@@ -137,6 +145,13 @@ export class SecurityRules implements FirebaseServiceInterface {
     };
   }
 
+  /**
+   * Creates a new `Ruleset` with one or more rules files.
+   *
+   * @param {RulesFile} file Rules file to include in the new Ruleset.
+   * @param {RulesFile[]} additionalFiles Additional rules files to be included in the new Ruleset.
+   * @returns {Promise<Ruleset>} A promise that fulfills with the newly created Ruleset.
+   */
   public createRuleset(file: RulesFile, ...additionalFiles: RulesFile[]): Promise<Ruleset> {
     const files = [file, ...additionalFiles];
     const ruleset: RulesetContent = {
