@@ -104,7 +104,10 @@ export class SecurityRulesApiClient {
   }
 
   public deleteRuleset(name: string): Promise<void> {
-    return this.getRulesetName(name)
+    return Promise.resolve()
+      .then(() => {
+        return this.getRulesetName(name);
+      })
       .then((rulesetName) => {
         const request: HttpRequestConfig = {
           method: 'DELETE',
