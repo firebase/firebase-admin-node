@@ -54,7 +54,7 @@ interface RulesetResponse {
 }
 
 /**
- * Representa a set of Firebase security rules.
+ * Represents a set of Firebase security rules.
  */
 export class Ruleset implements RulesetMetadata {
 
