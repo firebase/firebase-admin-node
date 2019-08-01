@@ -18,7 +18,7 @@ import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../
 import { FirebaseApp } from '../firebase-app';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { SecurityRulesApiClient } from './security-rules-api-client';
+import { SecurityRulesApiClient, RulesetResponse, RulesetContent } from './security-rules-api-client';
 import { AuthorizedHttpClient } from '../utils/api-request';
 import { FirebaseSecurityRulesError } from './security-rules-utils';
 
@@ -36,21 +36,6 @@ export interface RulesFile {
 export interface RulesetMetadata {
   readonly name: string;
   readonly createTime: string;
-}
-
-interface Release {
-  readonly name: string;
-  readonly rulesetName: string;
-  readonly createTime: string;
-  readonly updateTime: string;
-}
-
-interface RulesetResponse {
-  readonly name: string;
-  readonly createTime: string;
-  readonly source: {
-    readonly files: RulesFile[];
-  };
 }
 
 /**
@@ -114,20 +99,7 @@ export class SecurityRules implements FirebaseServiceInterface {
    * @returns {Promise<Ruleset>} A promise that fulfills with the specified Ruleset.
    */
   public getRuleset(name: string): Promise<Ruleset> {
-    if (!validator.isNonEmptyString(name)) {
-      const err = new FirebaseSecurityRulesError(
-        'invalid-argument', 'Ruleset name must be a non-empty string.');
-      return Promise.reject(err);
-    }
-
-    if (name.indexOf('/') !== -1) {
-      const err = new FirebaseSecurityRulesError(
-        'invalid-argument', 'Ruleset name must not contain any "/" characters.');
-      return Promise.reject(err);
-    }
-
-    const resource = `rulesets/${name}`;
-    return this.client.getResource<RulesetResponse>(resource)
+    return this.client.getRuleset(name)
       .then((rulesetResponse) => {
         return new Ruleset(rulesetResponse);
       });
@@ -143,9 +115,57 @@ export class SecurityRules implements FirebaseServiceInterface {
     return this.getRulesetForRelease(SecurityRules.CLOUD_FIRESTORE);
   }
 
+  /**
+   * Creates a `RulesFile` with the given name and source. Throws if any of the arguments are invalid. This is a
+   * local operation, and does not involve any network API calls.
+   *
+   * @param {string} name Name to assign to the rules file.
+   * @param {string|Buffer} source Contents of the rules file.
+   * @returns {RulesFile} A new rules file instance.
+   */
+  public createRulesFileFromSource(name: string, source: string | Buffer): RulesFile {
+    if (!validator.isNonEmptyString(name)) {
+      throw new FirebaseSecurityRulesError(
+        'invalid-argument', 'Name must be a non-empty string.');
+    }
+
+    let content: string;
+    if (validator.isNonEmptyString(source)) {
+      content = source;
+    } else if (validator.isBuffer(source)) {
+      content = source.toString('utf-8');
+    } else {
+      throw new FirebaseSecurityRulesError(
+        'invalid-argument', 'Source must be a non-empty string or a Buffer.');
+    }
+
+    return {
+      name,
+      content,
+    };
+  }
+
+  /**
+   * Creates a new `Ruleset` from the given `RulesFile`.
+   *
+   * @param {RulesFile} file Rules file to include in the new Ruleset.
+   * @returns {Promise<Ruleset>} A promise that fulfills with the newly created Ruleset.
+   */
+  public createRuleset(file: RulesFile): Promise<Ruleset> {
+    const ruleset: RulesetContent = {
+      source: {
+        files: [ file ],
+      },
+    };
+
+    return this.client.createRuleset(ruleset)
+      .then((rulesetResponse) => {
+        return new Ruleset(rulesetResponse);
+      });
+  }
+
   private getRulesetForRelease(releaseName: string): Promise<Ruleset> {
-    const resource = `releases/${releaseName}`;
-    return this.client.getResource<Release>(resource)
+    return this.client.getRelease(releaseName)
       .then((release) => {
         const rulesetName = release.rulesetName;
         if (!validator.isNonEmptyString(rulesetName)) {

@@ -19,7 +19,25 @@ import { PrefixedFirebaseError } from '../utils/error';
 import { FirebaseSecurityRulesError, SecurityRulesErrorCode } from './security-rules-utils';
 import * as validator from '../utils/validator';
 
-const RULES_API_URL = 'https://firebaserules.googleapis.com/v1';
+const RULES_V1_API = 'https://firebaserules.googleapis.com/v1';
+
+export interface Release {
+  readonly name: string;
+  readonly rulesetName: string;
+  readonly createTime: string;
+  readonly updateTime: string;
+}
+
+export interface RulesetContent {
+  readonly source: {
+    readonly files: Array<{name: string, content: string}>;
+  };
+}
+
+export interface RulesetResponse extends RulesetContent {
+  readonly name: string;
+  readonly createTime: string;
+}
 
 /**
  * Class that facilitates sending requests to the Firebase security rules backend API.
@@ -31,6 +49,11 @@ export class SecurityRulesApiClient {
   private readonly url: string;
 
   constructor(private readonly httpClient: HttpClient, projectId: string) {
+    if (!validator.isNonNullObject(httpClient)) {
+      throw new FirebaseSecurityRulesError(
+        'invalid-argument', 'HttpClient must be a non-null object.');
+    }
+
     if (!validator.isNonEmptyString(projectId)) {
       throw new FirebaseSecurityRulesError(
         'invalid-argument',
@@ -39,7 +62,49 @@ export class SecurityRulesApiClient {
           + 'environment variable.');
     }
 
-    this.url = `${RULES_API_URL}/projects/${projectId}`;
+    this.url = `${RULES_V1_API}/projects/${projectId}`;
+  }
+
+  public getRuleset(name: string): Promise<RulesetResponse> {
+    return Promise.resolve()
+      .then(() => {
+        return this.getRulesetName(name);
+      })
+      .then((rulesetName) => {
+        return this.getResource<RulesetResponse>(rulesetName);
+      });
+  }
+
+  public createRuleset(ruleset: RulesetContent): Promise<RulesetResponse> {
+    if (!validator.isNonNullObject(ruleset) ||
+      !validator.isNonNullObject(ruleset.source) ||
+      !validator.isNonEmptyArray(ruleset.source.files)) {
+
+      const err = new FirebaseSecurityRulesError('invalid-argument', 'Invalid rules content.');
+      return Promise.reject(err);
+    }
+
+    for (const rf of ruleset.source.files) {
+      if (!validator.isNonNullObject(rf) ||
+        !validator.isNonEmptyString(rf.name) ||
+        !validator.isNonEmptyString(rf.content)) {
+
+        const err = new FirebaseSecurityRulesError(
+          'invalid-argument', `Invalid rules file argument: ${JSON.stringify(rf)}`);
+        return Promise.reject(err);
+      }
+    }
+
+    const request: HttpRequestConfig = {
+      method: 'POST',
+      url: `${this.url}/rulesets`,
+      data: ruleset,
+    };
+    return this.sendRequest<RulesetResponse>(request);
+  }
+
+  public getRelease(name: string): Promise<Release> {
+    return this.getResource<Release>(`releases/${name}`);
   }
 
   /**
@@ -49,11 +114,29 @@ export class SecurityRulesApiClient {
    * @param {string} name Full qualified name of the resource to get.
    * @returns {Promise<T>} A promise that fulfills with the resource.
    */
-  public getResource<T>(name: string): Promise<T> {
+  private getResource<T>(name: string): Promise<T> {
     const request: HttpRequestConfig = {
       method: 'GET',
       url: `${this.url}/${name}`,
     };
+    return this.sendRequest<T>(request);
+  }
+
+  private getRulesetName(name: string): string {
+    if (!validator.isNonEmptyString(name)) {
+      throw new FirebaseSecurityRulesError(
+        'invalid-argument', 'Ruleset name must be a non-empty string.');
+    }
+
+    if (name.indexOf('/') !== -1) {
+      throw new FirebaseSecurityRulesError(
+        'invalid-argument', 'Ruleset name must not contain any "/" characters.');
+    }
+
+    return `rulesets/${name}`;
+  }
+
+  private sendRequest<T>(request: HttpRequestConfig): Promise<T> {
     return this.httpClient.send(request)
       .then((resp) => {
         return resp.data as T;
