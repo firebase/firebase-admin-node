@@ -304,4 +304,76 @@ describe('SecurityRulesApiClient', () => {
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
   });
+
+  describe('deleteRuleset', () => {
+    const INVALID_NAMES: any[] = [null, undefined, '', 1, true, {}, []];
+    INVALID_NAMES.forEach((invalidName) => {
+      it(`should reject when called with: ${JSON.stringify(invalidName)}`, () => {
+        return apiClient.deleteRuleset(invalidName)
+          .should.eventually.be.rejected.and.have.property(
+            'message', 'Ruleset name must be a non-empty string.');
+      });
+    });
+
+    it(`should reject when called with prefixed name`, () => {
+      return apiClient.deleteRuleset('projects/foo/rulesets/bar')
+        .should.eventually.be.rejected.and.have.property(
+          'message', 'Ruleset name must not contain any "/" characters.');
+    });
+
+    it('should resolve on success', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom({}));
+      stubs.push(stub);
+      return apiClient.deleteRuleset(RULESET_NAME)
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'DELETE',
+            url: 'https://firebaserules.googleapis.com/v1/projects/test-project/rulesets/ruleset-id',
+          });
+        });
+    });
+
+    it('should throw when a full platform error response is received', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+      stubs.push(stub);
+      const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found');
+      return apiClient.deleteRuleset(RULESET_NAME)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should throw unknown-error when error code is not present', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom({}, 404));
+      stubs.push(stub);
+      const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}');
+      return apiClient.deleteRuleset(RULESET_NAME)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should throw unknown-error for non-json response', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom('not json', 404));
+      stubs.push(stub);
+      const expected = new FirebaseSecurityRulesError(
+        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+      return apiClient.deleteRuleset(RULESET_NAME)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should throw when rejected with a FirebaseAppError', () => {
+      const expected = new FirebaseAppError('network-error', 'socket hang up');
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(expected);
+      stubs.push(stub);
+      return apiClient.deleteRuleset(RULESET_NAME)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+  });
 });

@@ -342,4 +342,24 @@ describe('SecurityRules', () => {
         });
     });
   });
+
+  describe('deleteRuleset', () => {
+    it('should propagate API errors', () => {
+      const stub = sinon
+        .stub(SecurityRulesApiClient.prototype, 'deleteRuleset')
+        .rejects(EXPECTED_ERROR);
+      stubs.push(stub);
+      return securityRules.deleteRuleset('foo')
+        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+    });
+
+    it('should resolve on success', () => {
+      const stub = sinon
+        .stub(SecurityRulesApiClient.prototype, 'deleteRuleset')
+        .resolves({});
+      stubs.push(stub);
+
+      return securityRules.deleteRuleset('foo');
+    });
+  });
 });
