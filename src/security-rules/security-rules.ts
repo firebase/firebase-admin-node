@@ -18,7 +18,7 @@ import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../
 import { FirebaseApp } from '../firebase-app';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { SecurityRulesApiClient, RulesetResponse, RulesetContent } from './security-rules-api-client';
+import { SecurityRulesApiClient, RulesetResponse, RulesetContent, Release } from './security-rules-api-client';
 import { AuthorizedHttpClient } from '../utils/api-request';
 import { FirebaseSecurityRulesError } from './security-rules-utils';
 
@@ -116,6 +116,18 @@ export class SecurityRules implements FirebaseServiceInterface {
   }
 
   /**
+   * Releases the specified ruleset as the current Cloud Firestore ruleset. This makes the specified ruleset
+   * the currently applied ruleset for Cloud Firestore.
+   *
+   * @param {string|RulesetMetadata} ruleset Name of the ruleset to release or a RulesetMetadata object containing
+   *   the name.
+   * @returns {Promise<void>} A promise that fulfills when the ruleset is released.
+   */
+  public releaseFirestoreRuleset(ruleset: string | RulesetMetadata): Promise<void> {
+    return this.releaseRuleset(ruleset, SecurityRules.CLOUD_FIRESTORE);
+  }
+
+  /**
    * Creates a `RulesFile` with the given name and source. Throws if any of the arguments are invalid. This is a
    * local operation, and does not involve any network API calls.
    *
@@ -186,6 +198,28 @@ export class SecurityRules implements FirebaseServiceInterface {
         }
 
         return this.getRuleset(stripProjectIdPrefix(rulesetName));
+      });
+  }
+
+  private releaseRuleset(ruleset: string | RulesetMetadata, releaseName: string): Promise<void> {
+    if (!validator.isNonEmptyString(ruleset) &&
+      (!validator.isNonNullObject(ruleset) || !validator.isNonEmptyString(ruleset.name))) {
+      const err = new FirebaseSecurityRulesError(
+        'invalid-argument', 'ruleset must be a non-empty name or a RulesetMetadata object.');
+      return Promise.reject(err);
+    }
+
+    const rulesetName = validator.isString(ruleset) ? ruleset : ruleset.name;
+    return this.client.updateRelease(releaseName, rulesetName)
+      .catch((err: FirebaseSecurityRulesError) => {
+        if (err.code === 'security-rules/not-found') {
+          return this.client.createRelease(releaseName, rulesetName);
+        }
+
+        throw err;
+      })
+      .then(() => {
+        return;
       });
   }
 }

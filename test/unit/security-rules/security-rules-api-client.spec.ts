@@ -30,6 +30,7 @@ const expect = chai.expect;
 describe('SecurityRulesApiClient', () => {
 
   const RULESET_NAME = 'ruleset-id';
+  const RELEASE_NAME = 'test.service';
   const ERROR_RESPONSE = {
     error: {
       code: 404,
@@ -246,8 +247,6 @@ describe('SecurityRulesApiClient', () => {
   });
 
   describe('getRelease', () => {
-    const RELEASE_NAME = 'test.service';
-
     it('should resolve with the requested release on success', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
@@ -301,6 +300,132 @@ describe('SecurityRulesApiClient', () => {
         .rejects(expected);
       stubs.push(stub);
       return apiClient.getRelease(RELEASE_NAME)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+  });
+
+  describe('updateRelease', () => {
+    it('should resolve with the updated release on success', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom({name: 'bar'}));
+      stubs.push(stub);
+      return apiClient.updateRelease(RELEASE_NAME, RULESET_NAME)
+        .then((resp) => {
+          expect(resp.name).to.equal('bar');
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'PATCH',
+            url: 'https://firebaserules.googleapis.com/v1/projects/test-project/releases/test.service',
+            data: {
+              release: {
+                name: 'projects/test-project/releases/test.service',
+                rulesetName: 'projects/test-project/rulesets/ruleset-id',
+              },
+            },
+          });
+        });
+    });
+
+    it('should throw when a full platform error response is received', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+      stubs.push(stub);
+      const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found');
+      return apiClient.updateRelease(RELEASE_NAME, RULESET_NAME)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should throw unknown-error when error code is not present', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom({}, 404));
+      stubs.push(stub);
+      const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}');
+      return apiClient.updateRelease(RELEASE_NAME, RULESET_NAME)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should throw unknown-error for non-json response', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom('not json', 404));
+      stubs.push(stub);
+      const expected = new FirebaseSecurityRulesError(
+        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+      return apiClient.updateRelease(RELEASE_NAME, RULESET_NAME)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should throw when rejected with a FirebaseAppError', () => {
+      const expected = new FirebaseAppError('network-error', 'socket hang up');
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(expected);
+      stubs.push(stub);
+      return apiClient.updateRelease(RELEASE_NAME, RULESET_NAME)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+  });
+
+  describe('createRelease', () => {
+    it('should resolve with the new release on success', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom({name: 'bar'}));
+      stubs.push(stub);
+      return apiClient.createRelease(RELEASE_NAME, RULESET_NAME)
+        .then((resp) => {
+          expect(resp.name).to.equal('bar');
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'POST',
+            url: 'https://firebaserules.googleapis.com/v1/projects/test-project/releases',
+            data: {
+              name: 'projects/test-project/releases/test.service',
+              rulesetName: 'projects/test-project/rulesets/ruleset-id',
+            },
+          });
+        });
+    });
+
+    it('should throw when a full platform error response is received', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+      stubs.push(stub);
+      const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found');
+      return apiClient.createRelease(RELEASE_NAME, RULESET_NAME)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should throw unknown-error when error code is not present', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom({}, 404));
+      stubs.push(stub);
+      const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}');
+      return apiClient.createRelease(RELEASE_NAME, RULESET_NAME)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should throw unknown-error for non-json response', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom('not json', 404));
+      stubs.push(stub);
+      const expected = new FirebaseSecurityRulesError(
+        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+      return apiClient.createRelease(RELEASE_NAME, RULESET_NAME)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should throw when rejected with a FirebaseAppError', () => {
+      const expected = new FirebaseAppError('network-error', 'socket hang up');
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(expected);
+      stubs.push(stub);
+      return apiClient.createRelease(RELEASE_NAME, RULESET_NAME)
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
   });
