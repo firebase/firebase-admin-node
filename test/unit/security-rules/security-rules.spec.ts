@@ -284,24 +284,6 @@ describe('SecurityRules', () => {
           expect(stub).to.have.been.calledOnce.and.calledWith('cloud.firestore', 'foo');
         });
     });
-
-    it('should resolve by creating the non existing release', () => {
-      const updateRelease = sinon
-        .stub(SecurityRulesApiClient.prototype, 'updateRelease')
-        .rejects(new FirebaseSecurityRulesError('not-found', 'error message'));
-      const createRelease = sinon
-        .stub(SecurityRulesApiClient.prototype, 'createRelease')
-        .resolves({
-          rulesetName: 'projects/test-project/rulesets/foo',
-        });
-      stubs.push(updateRelease, createRelease);
-
-      return securityRules.releaseFirestoreRuleset('foo')
-        .then(() => {
-          expect(updateRelease).to.have.been.calledOnce.and.calledWith('cloud.firestore', 'foo');
-          expect(createRelease).to.have.been.calledOnce.and.calledWith('cloud.firestore', 'foo');
-        });
-    });
   });
 
   describe('createRulesFileFromSource', () => {

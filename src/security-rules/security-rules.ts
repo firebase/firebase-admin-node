@@ -211,13 +211,6 @@ export class SecurityRules implements FirebaseServiceInterface {
 
     const rulesetName = validator.isString(ruleset) ? ruleset : ruleset.name;
     return this.client.updateRelease(releaseName, rulesetName)
-      .catch((err: FirebaseSecurityRulesError) => {
-        if (err.code === 'security-rules/not-found') {
-          return this.client.createRelease(releaseName, rulesetName);
-        }
-
-        throw err;
-      })
       .then(() => {
         return;
       });

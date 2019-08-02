@@ -123,15 +123,6 @@ export class SecurityRulesApiClient {
     return this.getResource<Release>(`releases/${name}`);
   }
 
-  public createRelease(name: string, rulesetName: string): Promise<Release> {
-    const request: HttpRequestConfig = {
-      method: 'POST',
-      url: `${this.url}/releases`,
-      data: this.getReleaseDescription(name, rulesetName),
-    };
-    return this.sendRequest<Release>(request);
-  }
-
   public updateRelease(name: string, rulesetName: string): Promise<Release> {
     const data = {
       release: this.getReleaseDescription(name, rulesetName),
