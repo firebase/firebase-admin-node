@@ -69,6 +69,7 @@ export class Ruleset implements RulesetMetadata {
 export class SecurityRules implements FirebaseServiceInterface {
 
   private static readonly CLOUD_FIRESTORE = 'cloud.firestore';
+  private static readonly FIREBASE_STORAGE = 'firebase.storage';
 
   public readonly INTERNAL = new SecurityRulesInternals();
 
@@ -125,6 +126,16 @@ export class SecurityRules implements FirebaseServiceInterface {
    */
   public releaseFirestoreRuleset(ruleset: string | RulesetMetadata): Promise<void> {
     return this.releaseRuleset(ruleset, SecurityRules.CLOUD_FIRESTORE);
+  }
+
+  public getStorageRuleset(bucket?: string): Promise<Ruleset> {
+    return Promise.resolve()
+      .then(() => {
+        return this.getBucketName(bucket);
+      })
+      .then((bucketName) => {
+        return this.getRulesetForRelease(`${SecurityRules.FIREBASE_STORAGE}/${bucketName}`);
+      });
   }
 
   /**
@@ -214,6 +225,20 @@ export class SecurityRules implements FirebaseServiceInterface {
       .then(() => {
         return;
       });
+  }
+
+  private getBucketName(bucket?: string): string {
+    const bucketName = (typeof bucket !== 'undefined') ? bucket :  this.app.options.storageBucket;
+    if (!validator.isNonEmptyString(bucketName)) {
+      throw new FirebaseSecurityRulesError(
+        'invalid-argument',
+        'Bucket name not specified or invalid. Specify a default bucket name via the ' +
+        'storageBucket option when initializing the app, or specify the bucket name ' +
+        'explicitly when calling the rules API.',
+      );
+    }
+
+    return bucketName;
   }
 }
 

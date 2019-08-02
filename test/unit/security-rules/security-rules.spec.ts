@@ -231,6 +231,9 @@ describe('SecurityRules', () => {
           const file = ruleset.source[0];
           expect(file.name).equals('firestore.rules');
           expect(file.content).equals('service cloud.firestore{\n}\n');
+
+          expect(getRelease).to.have.been.calledOnce.and.calledWith(
+            'cloud.firestore');
         });
     });
   });
@@ -282,6 +285,94 @@ describe('SecurityRules', () => {
       return securityRules.releaseFirestoreRuleset({name: 'foo', createTime: 'time'})
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith('cloud.firestore', 'foo');
+        });
+    });
+  });
+
+  describe('getStorageRuleset', () => {
+    const invalidBucketNames: any[] = [null, '', true, false, 1, 0, {}, []];
+    const invalidBucketError = new FirebaseSecurityRulesError(
+      'invalid-argument',
+      'Bucket name not specified or invalid. Specify a default bucket name via the ' +
+      'storageBucket option when initializing the app, or specify the bucket name ' +
+      'explicitly when calling the rules API.',
+    );
+    invalidBucketNames.forEach((bucketName) => {
+      it(`should reject when called with: ${JSON.stringify(bucketName)}`, () => {
+        return securityRules.getStorageRuleset(bucketName)
+          .should.eventually.be.rejected.and.deep.equal(invalidBucketError);
+      });
+    });
+
+    it('should propagate API errors', () => {
+      const stub = sinon
+        .stub(SecurityRulesApiClient.prototype, 'getRelease')
+        .rejects(EXPECTED_ERROR);
+      stubs.push(stub);
+      return securityRules.getStorageRuleset()
+        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+    });
+
+    it('should reject when getRelease response is invalid', () => {
+      const stub = sinon
+        .stub(SecurityRulesApiClient.prototype, 'getRelease')
+        .resolves({});
+      stubs.push(stub);
+
+      return securityRules.getStorageRuleset()
+        .should.eventually.be.rejected.and.have.property(
+          'message', 'Ruleset name not found for firebase.storage/bucketName.appspot.com.');
+    });
+
+    it('should resolve with Ruleset for default bucket on success', () => {
+      const getRelease = sinon
+        .stub(SecurityRulesApiClient.prototype, 'getRelease')
+        .resolves({
+          rulesetName: 'projects/test-project/rulesets/foo',
+        });
+      const getRuleset = sinon
+        .stub(SecurityRulesApiClient.prototype, 'getRuleset')
+        .resolves(FIRESTORE_RULESET_RESPONSE);
+      stubs.push(getRelease, getRuleset);
+
+      return securityRules.getStorageRuleset()
+        .then((ruleset) => {
+          expect(ruleset.name).to.equal('foo');
+          expect(ruleset.createTime).to.equal(CREATE_TIME_UTC);
+          expect(ruleset.source.length).to.equal(1);
+
+          const file = ruleset.source[0];
+          expect(file.name).equals('firestore.rules');
+          expect(file.content).equals('service cloud.firestore{\n}\n');
+
+          expect(getRelease).to.have.been.calledOnce.and.calledWith(
+            'firebase.storage/bucketName.appspot.com');
+        });
+    });
+
+    it('should resolve with Ruleset for specified bucket on success', () => {
+      const getRelease = sinon
+        .stub(SecurityRulesApiClient.prototype, 'getRelease')
+        .resolves({
+          rulesetName: 'projects/test-project/rulesets/foo',
+        });
+      const getRuleset = sinon
+        .stub(SecurityRulesApiClient.prototype, 'getRuleset')
+        .resolves(FIRESTORE_RULESET_RESPONSE);
+      stubs.push(getRelease, getRuleset);
+
+      return securityRules.getStorageRuleset('other.appspot.com')
+        .then((ruleset) => {
+          expect(ruleset.name).to.equal('foo');
+          expect(ruleset.createTime).to.equal(CREATE_TIME_UTC);
+          expect(ruleset.source.length).to.equal(1);
+
+          const file = ruleset.source[0];
+          expect(file.name).equals('firestore.rules');
+          expect(file.content).equals('service cloud.firestore{\n}\n');
+
+          expect(getRelease).to.have.been.calledOnce.and.calledWith(
+            'firebase.storage/other.appspot.com');
         });
     });
   });
