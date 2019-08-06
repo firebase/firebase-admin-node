@@ -439,7 +439,6 @@ describe('admin.auth', () => {
     const createdTenants: string[] = [];
     const tenantOptions: admin.auth.CreateTenantRequest = {
       displayName: 'testTenant1',
-      type: 'lightweight',
       emailSignInConfig: {
         enabled: true,
         passwordRequired: true,
@@ -451,7 +450,6 @@ describe('admin.auth', () => {
         enabled: true,
         passwordRequired: true,
       },
-      type: 'lightweight',
     };
     const expectedUpdatedTenant: any = {
       displayName: 'testTenantUpdated',
@@ -459,7 +457,6 @@ describe('admin.auth', () => {
         enabled: false,
         passwordRequired: true,
       },
-      type: 'lightweight',
     };
     const expectedUpdatedTenant2: any = {
       displayName: 'testTenantUpdated',
@@ -467,7 +464,6 @@ describe('admin.auth', () => {
         enabled: true,
         passwordRequired: false,
       },
-      type: 'lightweight',
     };
 
     // https://mochajs.org/
@@ -574,7 +570,7 @@ describe('admin.auth', () => {
         });
       });
 
-      // Ignore email action link tests for now as there is a bug for lightweight tenants:
+      // Ignore email action link tests for now as there is a bug in the returned tenant ID:
       // expected '1085102361755-testTenant1-6rjsn' to equal 'testTenant1-6rjsn'
       xit('generateEmailVerificationLink() should generate the link for tenant specific user', () => {
         // Generate email verification link to confirm it is generated in the expected

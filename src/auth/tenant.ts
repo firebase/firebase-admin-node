@@ -21,29 +21,20 @@ import {
   EmailSignInConfig, EmailSignInConfigServerRequest, EmailSignInProviderConfig,
 } from './auth-config';
 
-/** The server side tenant type enum. */
-export type TenantServerType = 'LIGHTWEIGHT' | 'FULL_SERVICE' | 'TYPE_UNSPECIFIED';
-
-/** The client side tenant type enum. */
-export type TenantType = 'lightweight' | 'full_service' | 'type_unspecified';
-
 /** The TenantOptions interface used for create/read/update tenant operations. */
 export interface TenantOptions {
   displayName?: string;
-  type?: TenantType;
   emailSignInConfig?: EmailSignInProviderConfig;
 }
 
 /** The corresponding server side representation of a TenantOptions object. */
 export interface TenantOptionsServerRequest extends EmailSignInConfigServerRequest {
   displayName?: string;
-  type?: TenantServerType;
 }
 
 /** The tenant server response interface. */
 export interface TenantServerResponse {
   name: string;
-  type?: TenantServerType;
   displayName?: string;
   allowPasswordSignup?: boolean;
   enableEmailLinkSignin?: boolean;
@@ -61,7 +52,6 @@ export interface ListTenantsResult {
  */
 export class Tenant {
   public readonly tenantId: string;
-  public readonly type?: TenantType;
   public readonly displayName?: string;
   public readonly emailSignInConfig?: EmailSignInConfig;
 
@@ -81,9 +71,6 @@ export class Tenant {
     }
     if (typeof tenantOptions.displayName !== 'undefined') {
       request.displayName = tenantOptions.displayName;
-    }
-    if (typeof tenantOptions.type !== 'undefined') {
-      request.type = tenantOptions.type.toUpperCase() as TenantServerType;
     }
     return request;
   }
@@ -112,7 +99,6 @@ export class Tenant {
   private static validate(request: any, createRequest: boolean) {
     const validKeys = {
       displayName: true,
-      type: true,
       emailSignInConfig: true,
     };
     const label = createRequest ? 'CreateTenantRequest' : 'UpdateTenantRequest';
@@ -139,21 +125,6 @@ export class Tenant {
         `"${label}.displayName" must be a valid non-empty string.`,
       );
     }
-    // Validate type if provided.
-    if (typeof request.type !== 'undefined' && !createRequest) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_ARGUMENT,
-        '"Tenant.type" is an immutable property.',
-      );
-    }
-    if (createRequest &&
-        request.type !== 'full_service' &&
-        request.type !== 'lightweight') {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_ARGUMENT,
-        `"${label}.type" must be either "full_service" or "lightweight".`,
-      );
-    }
     // Validate emailSignInConfig type if provided.
     if (typeof request.emailSignInConfig !== 'undefined') {
       // This will throw an error if invalid.
@@ -177,7 +148,6 @@ export class Tenant {
     }
     this.tenantId = tenantId;
     this.displayName = response.displayName;
-    this.type = (response.type && response.type.toLowerCase()) || undefined;
     try {
       this.emailSignInConfig = new EmailSignInConfig(response);
     } catch (e) {
@@ -193,7 +163,6 @@ export class Tenant {
     return {
       tenantId: this.tenantId,
       displayName: this.displayName,
-      type: this.type,
       emailSignInConfig: this.emailSignInConfig && this.emailSignInConfig.toJSON(),
     };
   }

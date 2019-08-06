@@ -3783,7 +3783,6 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const tenantId = 'tenant_id';
         const tenantOptions: TenantOptions = {
           displayName: 'TENANT_DISPLAY_NAME',
-          type: 'lightweight',
           emailSignInConfig: {
             enabled: true,
             passwordRequired: true,
@@ -3791,7 +3790,6 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         };
         const expectedRequest = {
           displayName: 'TENANT_DISPLAY_NAME',
-          type: 'LIGHTWEIGHT',
           allowPasswordSignup: true,
           enableEmailLinkSignin: false,
         };
@@ -3808,24 +3806,6 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then((actualResult) => {
               expect(actualResult).to.be.deep.equal(expectedResult.data);
               expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, postMethod, expectedRequest));
-            });
-        });
-
-        it('should be rejected given valid parameters with no type', () => {
-          const expectedError = new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_ARGUMENT,
-            '"CreateTenantRequest.type" must be either "full_service" or "lightweight".',
-          );
-          // Initialize CreateTenantRequest with missing type.
-          const invalidOptions = deepCopy(tenantOptions);
-          delete invalidOptions.type;
-
-          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
-          return requestHandler.createTenant(invalidOptions)
-            .then((result) => {
-              throw new Error('Unexpected success');
-            }, (error) => {
-              expect(error).to.deep.equal(expectedError);
             });
         });
 
@@ -4005,23 +3985,6 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           );
           const invalidOptions = deepCopy(tenantOptions);
           invalidOptions.emailSignInConfig = 'invalid' as any;
-
-          const requestHandler = handler.init(mockApp) as AuthRequestHandler;
-          return requestHandler.updateTenant(tenantId, invalidOptions)
-            .then((result) => {
-              throw new Error('Unexpected success');
-            }, (error) => {
-              expect(error).to.deep.equal(expectedError);
-            });
-        });
-
-        it('should be rejected given an unmodifiable property', () => {
-          const expectedError = new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_ARGUMENT,
-            '"Tenant.type" is an immutable property.',
-          );
-          const invalidOptions = deepCopy(tenantOptions);
-          (invalidOptions as TenantOptions).type = 'full_service';
 
           const requestHandler = handler.init(mockApp) as AuthRequestHandler;
           return requestHandler.updateTenant(tenantId, invalidOptions)

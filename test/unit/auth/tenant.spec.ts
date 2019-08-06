@@ -83,13 +83,6 @@ describe('Tenant', () => {
         }).to.throw('"EmailSignInConfig.enabled" must be a boolean.');
       });
 
-      it('should throw when type is specified in an update request', () => {
-        const tenantOptionsClientRequest: TenantOptions = deepCopy(tenantOptions);
-        tenantOptionsClientRequest.type = 'lightweight';
-        expect(() => Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest))
-          .to.throw('"Tenant.type" is an immutable property.');
-      });
-
       it('should not throw on valid client request object', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest);
         expect(() => {
@@ -129,29 +122,16 @@ describe('Tenant', () => {
     describe('for a create request', () => {
       it('should return the expected server request', () => {
         const tenantOptionsClientRequest: TenantOptions = deepCopy(clientRequest);
-        tenantOptionsClientRequest.type = 'lightweight';
         const tenantOptionsServerRequest: TenantServerResponse = deepCopy(serverRequest);
         delete tenantOptionsServerRequest.name;
-        tenantOptionsServerRequest.type = 'LIGHTWEIGHT';
 
         expect(Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest))
           .to.deep.equal(tenantOptionsServerRequest);
       });
 
-      const invalidTypes = [undefined, 'invalid', null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
-      invalidTypes.forEach((invalidType) => {
-        it('should throw on invalid type ' + JSON.stringify(invalidType), () => {
-          const tenantOptionsClientRequest: TenantOptions = deepCopy(tenantOptions);
-          tenantOptionsClientRequest.type = invalidType as any;
-          expect(() => Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest))
-            .to.throw(`"CreateTenantRequest.type" must be either "full_service" or "lightweight".`);
-        });
-      });
-
       it('should throw on invalid EmailSignInConfig', () => {
         const tenantOptionsClientRequest: TenantOptions = deepCopy(clientRequest);
         tenantOptionsClientRequest.emailSignInConfig = null;
-        tenantOptionsClientRequest.type = 'full_service';
 
         expect(() => Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest))
           .to.throw('"EmailSignInConfig" must be a non-null object.');
@@ -184,15 +164,6 @@ describe('Tenant', () => {
           }).to.throw('"CreateTenantRequest.displayName" must be a valid non-empty string.');
         });
       });
-
-      invalidTypes.forEach((invalidType) => {
-        it('should throw on creation with invalid type ' + JSON.stringify(invalidType), () => {
-          const tenantOptionsClientRequest: TenantOptions = deepCopy(tenantOptions);
-          tenantOptionsClientRequest.type = invalidType as any;
-          expect(() => Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest))
-            .to.throw(`"CreateTenantRequest.type" must be either "full_service" or "lightweight".`);
-        });
-      });
     });
   });
 
@@ -214,7 +185,6 @@ describe('Tenant', () => {
 
   describe('constructor', () => {
     const serverRequestCopy: TenantServerResponse = deepCopy(serverRequest);
-    serverRequestCopy.type = 'LIGHTWEIGHT';
     const tenant = new Tenant(serverRequestCopy);
     it('should not throw on valid initialization', () => {
       expect(() => new Tenant(serverRequest)).not.to.throw();
@@ -226,10 +196,6 @@ describe('Tenant', () => {
 
     it('should set readonly property displayName', () => {
       expect(tenant.displayName).to.equal('TENANT_DISPLAY_NAME');
-    });
-
-    it('should set readonly property type', () => {
-      expect(tenant.type).to.equal('lightweight');
     });
 
     it('should set readonly property emailSignInConfig', () => {
@@ -266,11 +232,9 @@ describe('Tenant', () => {
 
   describe('toJSON()', () => {
     const serverRequestCopy: TenantServerResponse = deepCopy(serverRequest);
-    serverRequestCopy.type = 'LIGHTWEIGHT';
     it('should return the expected object representation of a tenant', () => {
       expect(new Tenant(serverRequestCopy).toJSON()).to.deep.equal({
         tenantId: 'TENANT_ID',
-        type: 'lightweight',
         displayName: 'TENANT_DISPLAY_NAME',
         emailSignInConfig: {
           enabled: true,
