@@ -117,8 +117,7 @@ export class SecurityRules implements FirebaseServiceInterface {
   }
 
   /**
-   * Releases the specified ruleset as the current Cloud Firestore ruleset. This makes the specified ruleset
-   * the currently applied ruleset for Cloud Firestore.
+   * Makes the specified ruleset the currently applied ruleset for Cloud Firestore.
    *
    * @param {string|RulesetMetadata} ruleset Name of the ruleset to release or a RulesetMetadata object containing
    *   the name.
@@ -128,6 +127,14 @@ export class SecurityRules implements FirebaseServiceInterface {
     return this.releaseRuleset(ruleset, SecurityRules.CLOUD_FIRESTORE);
   }
 
+  /**
+   * Gets the Ruleset currently applied to a Cloud Storage bucket. Rejects with a `not-found` error if no Ruleset is
+   * applied on the bucket.
+   *
+   * @param {string=} bucket Optional name of the Cloud Storage bucket to be retrieved. If name is not specified,
+   *   retrieves the ruleset applied on the default bucket configured via `AppOptions`.
+   * @returns {Promise<Ruleset>} A promise that fulfills with the Cloud Storage Ruleset.
+   */
   public getStorageRuleset(bucket?: string): Promise<Ruleset> {
     return Promise.resolve()
       .then(() => {

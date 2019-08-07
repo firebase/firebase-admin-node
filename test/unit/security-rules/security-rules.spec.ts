@@ -377,6 +377,57 @@ describe('SecurityRules', () => {
     });
   });
 
+  describe('releaseFirestoreRuleset', () => {
+    const invalidRulesetError = new FirebaseSecurityRulesError(
+      'invalid-argument',
+      'ruleset must be a non-empty name or a RulesetMetadata object.',
+    );
+    const invalidRulesets: any[] = [null, undefined, '', 1, true, {}, [], {name: ''}];
+    invalidRulesets.forEach((invalidRuleset) => {
+      it(`should reject when called with: ${JSON.stringify(invalidRuleset)}`, () => {
+        return securityRules.releaseFirestoreRuleset(invalidRuleset)
+          .should.eventually.be.rejected.and.deep.equal(invalidRulesetError);
+      });
+    });
+
+    it('should propagate API errors', () => {
+      const stub = sinon
+        .stub(SecurityRulesApiClient.prototype, 'updateRelease')
+        .rejects(EXPECTED_ERROR);
+      stubs.push(stub);
+      return securityRules.releaseFirestoreRuleset('foo')
+        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+    });
+
+    it('should resolve on success when the ruleset specified by name', () => {
+      const stub = sinon
+        .stub(SecurityRulesApiClient.prototype, 'updateRelease')
+        .resolves({
+          rulesetName: 'projects/test-project/rulesets/foo',
+        });
+      stubs.push(stub);
+
+      return securityRules.releaseFirestoreRuleset('foo')
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith('cloud.firestore', 'foo');
+        });
+    });
+
+    it('should resolve on success when the ruleset specified as an object', () => {
+      const stub = sinon
+        .stub(SecurityRulesApiClient.prototype, 'updateRelease')
+        .resolves({
+          rulesetName: 'projects/test-project/rulesets/foo',
+        });
+      stubs.push(stub);
+
+      return securityRules.releaseFirestoreRuleset({name: 'foo', createTime: 'time'})
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith('cloud.firestore', 'foo');
+        });
+    });
+  });
+
   describe('createRulesFileFromSource', () => {
     const INVALID_STRINGS: any[] = [null, undefined, '', 1, true, {}, []];
 
