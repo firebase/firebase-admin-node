@@ -1064,8 +1064,6 @@ declare namespace admin.auth {
     dynamicLinkDomain?: string;
   }
 
-  type TenantType = 'lightweight' | 'full_service';
-
   /**
    * Interface representing a tenant configuration.
    * 
@@ -1076,8 +1074,8 @@ declare namespace admin.auth {
    * Before multi-tenancy can be used on a Google Cloud Identity Platform project,
    * tenants must be allowed on that project via the Cloud Console UI.
    * 
-   * A tenant configuration provides information such as the type of tenant (lightweight or
-   * full service), display name, tenant identifier and email authentication configuration.
+   * A tenant configuration provides information such as the display name, tenant
+   * identifier and email authentication configuration.
    * For OIDC/SAML provider configuration management, `TenantAwareAuth` instances should
    * be used instead of a `Tenant` to retrieve the list of configured IdPs on a tenant.
    * When configuring these providers, note that tenants will inherit
@@ -1092,18 +1090,6 @@ declare namespace admin.auth {
      * The tenant identifier.
      */
     tenantId: string;
-
-    /**
-     * The tenant type: `lightweight` or `full_service`.
-     * Tenants that use separate billing and quota will require their own project and
-     * must be defined as `full_service`.
-     * `full_service` tenants may be subject to quota creation limits.
-     * For additional project quota increases, refer to
-     * [project quota requests](https://support.google.com/cloud/answer/6330231?hl=en).
-     * In addition, deleted `full_service` tenants may take 30 days after deletion
-     * before they are completely removed.
-     */
-    type?: admin.auth.TenantType;
 
     /**
      * The tenant display name.
@@ -1165,11 +1151,6 @@ declare namespace admin.auth {
    * Interface representing the properties to set on a new tenant.
    */
   interface CreateTenantRequest extends UpdateTenantRequest {
-
-    /**
-     * The newly created tenant type. This can be `lightweight` or `full_service`.
-     */
-    type: admin.auth.TenantType;
   }
 
   /**
@@ -2016,11 +1997,6 @@ declare namespace admin.auth {
 
     /**
      * Updates an existing tenant configuration.
-     * 
-     * Tenant types cannot be modified after creation.
-     * If a tenant type needs to be changed after creation, a new tenant with the expected
-     * type needs to be created and the users/configurations of existing tenant copied to the
-     * new tenant.
      *
      * @param tenantId The `tenantId` corresponding to the tenant to delete.
      * @param tenantOptions The properties to update on the provided tenant.

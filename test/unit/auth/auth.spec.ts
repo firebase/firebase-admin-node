@@ -3058,7 +3058,6 @@ AUTH_CONFIGS.forEach((testConfig) => {
         const tenantId = 'tenant_id';
         const serverResponse: TenantServerResponse = {
           name: 'projects/project_id/tenants/tenant_id',
-          type: 'FULL_SERVICE',
           displayName: 'TENANT_DISPLAY_NAME',
           allowPasswordSignup: true,
           enableEmailLinkSignin: false,
@@ -3343,7 +3342,6 @@ AUTH_CONFIGS.forEach((testConfig) => {
         const tenantId = 'tenant_id';
         const tenantOptions: TenantOptions = {
           displayName: 'TENANT_DISPLAY_NAME',
-          type: 'lightweight',
           emailSignInConfig: {
             enabled: true,
             passwordRequired: true,
@@ -3354,7 +3352,6 @@ AUTH_CONFIGS.forEach((testConfig) => {
           displayName: 'TENANT_DISPLAY_NAME',
           allowPasswordSignup: true,
           enableEmailLinkSignin: false,
-          type: 'LIGHTWEIGHT',
         };
         const expectedTenant = new Tenant(serverResponse);
         const expectedError = new FirebaseAuthError(
@@ -3450,7 +3447,6 @@ AUTH_CONFIGS.forEach((testConfig) => {
         };
         const serverResponse: TenantServerResponse = {
           name: 'projects/project_id/tenants/tenant_id',
-          type: 'FULL_SERVICE',
           displayName: 'TENANT_DISPLAY_NAME',
           allowPasswordSignup: true,
           enableEmailLinkSignin: false,
@@ -3498,9 +3494,9 @@ AUTH_CONFIGS.forEach((testConfig) => {
         });
 
         it('should be rejected given TenantOptions with invalid update property', () => {
-          // Updating the type of an existing tenant will throw an error as type is
+          // Updating the tenantId of an existing tenant will throw an error as tenantId is
           // an immutable property.
-          return (auth as Auth).updateTenant(tenantId, {type: 'lightweight'})
+          return (auth as Auth).updateTenant(tenantId, {tenantId: 'unmodifiable'} as any)
             .then(() => {
               throw new Error('Unexpected success');
             })
