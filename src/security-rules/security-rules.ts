@@ -69,6 +69,7 @@ export class Ruleset implements RulesetMetadata {
 export class SecurityRules implements FirebaseServiceInterface {
 
   private static readonly CLOUD_FIRESTORE = 'cloud.firestore';
+  private static readonly FIREBASE_STORAGE = 'firebase.storage';
 
   public readonly INTERNAL = new SecurityRulesInternals();
 
@@ -124,6 +125,24 @@ export class SecurityRules implements FirebaseServiceInterface {
    */
   public releaseFirestoreRuleset(ruleset: string | RulesetMetadata): Promise<void> {
     return this.releaseRuleset(ruleset, SecurityRules.CLOUD_FIRESTORE);
+  }
+
+  /**
+   * Gets the Ruleset currently applied to a Cloud Storage bucket. Rejects with a `not-found` error if no Ruleset is
+   * applied on the bucket.
+   *
+   * @param {string=} bucket Optional name of the Cloud Storage bucket to be retrieved. If name is not specified,
+   *   retrieves the ruleset applied on the default bucket configured via `AppOptions`.
+   * @returns {Promise<Ruleset>} A promise that fulfills with the Cloud Storage Ruleset.
+   */
+  public getStorageRuleset(bucket?: string): Promise<Ruleset> {
+    return Promise.resolve()
+      .then(() => {
+        return this.getBucketName(bucket);
+      })
+      .then((bucketName) => {
+        return this.getRulesetForRelease(`${SecurityRules.FIREBASE_STORAGE}/${bucketName}`);
+      });
   }
 
   /**
@@ -213,6 +232,20 @@ export class SecurityRules implements FirebaseServiceInterface {
       .then(() => {
         return;
       });
+  }
+
+  private getBucketName(bucket?: string): string {
+    const bucketName = (typeof bucket !== 'undefined') ? bucket :  this.app.options.storageBucket;
+    if (!validator.isNonEmptyString(bucketName)) {
+      throw new FirebaseSecurityRulesError(
+        'invalid-argument',
+        'Bucket name not specified or invalid. Specify a default bucket name via the ' +
+        'storageBucket option when initializing the app, or specify the bucket name ' +
+        'explicitly when calling the rules API.',
+      );
+    }
+
+    return bucketName;
   }
 }
 
