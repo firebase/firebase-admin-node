@@ -117,9 +117,29 @@ export class SecurityRules implements FirebaseServiceInterface {
   }
 
   /**
+   * Creates a new ruleset from the given source, and applies it to Cloud Firestore.
+   *
+   * @param {string|Buffer} source Rules source to apply.
+   * @returns {Promise<Ruleset>} A promise that fulfills when the ruleset is created and released.
+   */
+  public releaseFirestoreRulesetFromSource(source: string | Buffer): Promise<Ruleset> {
+    return Promise.resolve()
+      .then(() => {
+        const rulesFile = this.createRulesFileFromSource('firestore.rules', source);
+        return this.createRuleset(rulesFile);
+      })
+      .then((ruleset) => {
+        return this.releaseFirestoreRuleset(ruleset)
+          .then(() => {
+            return ruleset;
+          });
+      });
+  }
+
+  /**
    * Makes the specified ruleset the currently applied ruleset for Cloud Firestore.
    *
-   * @param {string|RulesetMetadata} ruleset Name of the ruleset to release or a RulesetMetadata object containing
+   * @param {string|RulesetMetadata} ruleset Name of the ruleset to apply or a RulesetMetadata object containing
    *   the name.
    * @returns {Promise<void>} A promise that fulfills when the ruleset is released.
    */
@@ -131,7 +151,7 @@ export class SecurityRules implements FirebaseServiceInterface {
    * Gets the Ruleset currently applied to a Cloud Storage bucket. Rejects with a `not-found` error if no Ruleset is
    * applied on the bucket.
    *
-   * @param {string=} bucket Optional name of the Cloud Storage bucket to be retrieved. If name is not specified,
+   * @param {string=} bucket Optional name of the Cloud Storage bucket to be retrieved. If not specified,
    *   retrieves the ruleset applied on the default bucket configured via `AppOptions`.
    * @returns {Promise<Ruleset>} A promise that fulfills with the Cloud Storage Ruleset.
    */
@@ -142,6 +162,50 @@ export class SecurityRules implements FirebaseServiceInterface {
       })
       .then((bucketName) => {
         return this.getRulesetForRelease(`${SecurityRules.FIREBASE_STORAGE}/${bucketName}`);
+      });
+  }
+
+  /**
+   * Creates a new ruleset from the given source, and applies it to a Cloud Storage bucket.
+   *
+   * @param {string|Buffer} source Rules source to apply.
+   * @param {string=} bucket Optional name of the Cloud Storage bucket to apply the rules on. If not specified,
+   *   applies the ruleset on the default bucket configured via `AppOptions`.
+   * @returns {Promise<Ruleset>} A promise that fulfills when the ruleset is created and released.
+   */
+  public releaseStorageRulesetFromSource(source: string | Buffer, bucket?: string): Promise<Ruleset> {
+    return Promise.resolve()
+      .then(() => {
+        // Bucket name is not required until the last step. But since there's a createRuleset step
+        // before then, make sure to run this check and fail early if the bucket name is invalid.
+        this.getBucketName(bucket);
+        const rulesFile = this.createRulesFileFromSource('storage.rules', source);
+        return this.createRuleset(rulesFile);
+      })
+      .then((ruleset) => {
+        return this.releaseStorageRuleset(ruleset, bucket)
+          .then(() => {
+            return ruleset;
+          });
+      });
+  }
+
+  /**
+   * Makes the specified ruleset the currently applied ruleset for a Cloud Storage bucket.
+   *
+   * @param {string|RulesetMetadata} ruleset Name of the ruleset to apply or a RulesetMetadata object containing
+   *   the name.
+   * @param {string=} bucket Optional name of the Cloud Storage bucket to apply the rules on. If not specified,
+   *   applies the ruleset on the default bucket configured via `AppOptions`.
+   * @returns {Promise<void>} A promise that fulfills when the ruleset is released.
+   */
+  public releaseStorageRuleset(ruleset: string | RulesetMetadata, bucket?: string): Promise<void> {
+    return Promise.resolve()
+      .then(() => {
+        return this.getBucketName(bucket);
+      })
+      .then((bucketName) => {
+        return this.releaseRuleset(ruleset, `${SecurityRules.FIREBASE_STORAGE}/${bucketName}`);
       });
   }
 
