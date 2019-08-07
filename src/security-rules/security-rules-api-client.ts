@@ -24,8 +24,8 @@ const RULES_V1_API = 'https://firebaserules.googleapis.com/v1';
 export interface Release {
   readonly name: string;
   readonly rulesetName: string;
-  readonly createTime: string;
-  readonly updateTime: string;
+  readonly createTime?: string;
+  readonly updateTime?: string;
 }
 
 export interface RulesetContent {
@@ -46,6 +46,7 @@ export interface RulesetResponse extends RulesetContent {
  */
 export class SecurityRulesApiClient {
 
+  private readonly projectIdPrefix: string;
   private readonly url: string;
 
   constructor(private readonly httpClient: HttpClient, projectId: string) {
@@ -62,7 +63,8 @@ export class SecurityRulesApiClient {
           + 'environment variable.');
     }
 
-    this.url = `${RULES_V1_API}/projects/${projectId}`;
+    this.projectIdPrefix = `projects/${projectId}`;
+    this.url = `${RULES_V1_API}/${this.projectIdPrefix}`;
   }
 
   public getRuleset(name: string): Promise<RulesetResponse> {
@@ -121,6 +123,18 @@ export class SecurityRulesApiClient {
     return this.getResource<Release>(`releases/${name}`);
   }
 
+  public updateRelease(name: string, rulesetName: string): Promise<Release> {
+    const data = {
+      release: this.getReleaseDescription(name, rulesetName),
+    };
+    const request: HttpRequestConfig = {
+      method: 'PATCH',
+      url: `${this.url}/releases/${name}`,
+      data,
+    };
+    return this.sendRequest<Release>(request);
+  }
+
   /**
    * Gets the specified resource from the rules API. Resource names must be the short names without project
    * ID prefix (e.g. `rulesets/ruleset-name`).
@@ -134,6 +148,13 @@ export class SecurityRulesApiClient {
       url: `${this.url}/${name}`,
     };
     return this.sendRequest<T>(request);
+  }
+
+  private getReleaseDescription(name: string, rulesetName: string): Release {
+    return {
+      name: `${this.projectIdPrefix}/releases/${name}`,
+      rulesetName: `${this.projectIdPrefix}/${this.getRulesetName(rulesetName)}`,
+    };
   }
 
   private getRulesetName(name: string): string {
