@@ -116,8 +116,7 @@ export class SecurityRules implements FirebaseServiceInterface {
   }
 
   /**
-   * Releases the specified ruleset as the current Cloud Firestore ruleset. This makes the specified ruleset
-   * the currently applied ruleset for Cloud Firestore.
+   * Makes the specified ruleset the currently applied ruleset for Cloud Firestore.
    *
    * @param {string|RulesetMetadata} ruleset Name of the ruleset to release or a RulesetMetadata object containing
    *   the name.
