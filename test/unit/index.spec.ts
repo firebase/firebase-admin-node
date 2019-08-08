@@ -36,6 +36,7 @@ import './auth/user-import-builder.spec';
 import './auth/action-code-settings-builder.spec';
 import './auth/auth-config.spec';
 import './auth/tenant.spec';
+import './auth/tenant-manager.spec';
 
 // Database
 import './database/database.spec';
