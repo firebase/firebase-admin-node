@@ -42,9 +42,14 @@ describe('TenantManager', () => {
   let nullAccessTokenTenantManager: TenantManager;
   let malformedAccessTokenTenantManager: TenantManager;
   let rejectedPromiseAccessTokenTenantManager: TenantManager;
+  const GET_TENANT_RESPONSE: TenantServerResponse = {
+    name: 'projects/project_id/tenants/tenant_id',
+    displayName: 'TENANT-DISPLAY-NAME',
+    allowPasswordSignup: true,
+    enableEmailLinkSignin: false,
+  };
 
-
-  beforeEach(() => {
+  before(() => {
     mockApp = mocks.app();
     tenantManager = new TenantManager(mockApp);
     nullAccessTokenTenantManager = new TenantManager(
@@ -56,7 +61,7 @@ describe('TenantManager', () => {
 
   });
 
-  afterEach(() => {
+  after(() => {
     return mockApp.delete();
   });
 
@@ -93,13 +98,7 @@ describe('TenantManager', () => {
 
   describe('getTenant()', () => {
     const tenantId = 'tenant_id';
-    const serverResponse: TenantServerResponse = {
-      name: 'projects/project_id/tenants/tenant_id',
-      displayName: 'TENANT-DISPLAY-NAME',
-      allowPasswordSignup: true,
-      enableEmailLinkSignin: false,
-    };
-    const expectedTenant = new Tenant(serverResponse);
+    const expectedTenant = new Tenant(GET_TENANT_RESPONSE);
     const expectedError = new FirebaseAuthError(AuthClientErrorCode.TENANT_NOT_FOUND);
     // Stubs used to simulate underlying API calls.
     let stubs: sinon.SinonStub[] = [];
@@ -142,7 +141,7 @@ describe('TenantManager', () => {
     it('should resolve with a Tenant on success', () => {
       // Stub getTenant to return expected result.
       const stub = sinon.stub(AuthRequestHandler.prototype, 'getTenant')
-        .returns(Promise.resolve(serverResponse));
+        .returns(Promise.resolve(GET_TENANT_RESPONSE));
       stubs.push(stub);
       return tenantManager.getTenant(tenantId)
         .then((result) => {
@@ -213,9 +212,9 @@ describe('TenantManager', () => {
         });
     });
 
-    it('should be rejected given an invalid max result', () => {
-      const invalidResults = 5000;
-      return tenantManager.listTenants(invalidResults)
+    it('should be rejected given a maxResults greater than the allowed max', () => {
+      const moreThanMax = 1000 + 1;
+      return tenantManager.listTenants(moreThanMax)
         .then(() => {
           throw new Error('Unexpected success');
         })
@@ -318,15 +317,17 @@ describe('TenantManager', () => {
         .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-tenant-id');
     });
 
-    it('should be rejected given an invalid tenant ID', () => {
-      const invalidTenantId = '';
-      return tenantManager.deleteTenant(invalidTenantId)
-        .then(() => {
-          throw new Error('Unexpected success');
-        })
-        .catch((error) => {
-          expect(error).to.have.property('code', 'auth/invalid-tenant-id');
-        });
+    const invalidTenantIds = [null, NaN, 0, 1, true, false, '', ['tenant_id'], [], {}, { a: 1 }, _.noop];
+    invalidTenantIds.forEach((invalidTenantId) => {
+      it('should be rejected given an invalid tenant ID:' + JSON.stringify(invalidTenantId), () => {
+        return tenantManager.deleteTenant(invalidTenantId as any)
+          .then(() => {
+            throw new Error('Unexpected success');
+          })
+          .catch((error) => {
+            expect(error).to.have.property('code', 'auth/invalid-tenant-id');
+          });
+      });
     });
 
     it('should be rejected given an app which returns null access tokens', () => {
@@ -384,13 +385,7 @@ describe('TenantManager', () => {
         passwordRequired: true,
       },
     };
-    const serverResponse: TenantServerResponse = {
-      name: 'projects/project_id/tenants/tenant_id',
-      displayName: 'TENANT-DISPLAY-NAME',
-      allowPasswordSignup: true,
-      enableEmailLinkSignin: false,
-    };
-    const expectedTenant = new Tenant(serverResponse);
+    const expectedTenant = new Tenant(GET_TENANT_RESPONSE);
     const expectedError = new FirebaseAuthError(
       AuthClientErrorCode.INTERNAL_ERROR,
       'Unable to create the tenant provided.');
@@ -445,7 +440,7 @@ describe('TenantManager', () => {
     it('should resolve with a Tenant on createTenant request success', () => {
       // Stub createTenant to return expected result.
       const createTenantStub = sinon.stub(AuthRequestHandler.prototype, 'createTenant')
-        .returns(Promise.resolve(serverResponse));
+        .returns(Promise.resolve(GET_TENANT_RESPONSE));
       stubs.push(createTenantStub);
       return tenantManager.createTenant(tenantOptions)
         .then((actualTenant) => {
@@ -482,13 +477,7 @@ describe('TenantManager', () => {
         passwordRequired: true,
       },
     };
-    const serverResponse: TenantServerResponse = {
-      name: 'projects/project_id/tenants/tenant_id',
-      displayName: 'TENANT-DISPLAY-NAME',
-      allowPasswordSignup: true,
-      enableEmailLinkSignin: false,
-    };
-    const expectedTenant = new Tenant(serverResponse);
+    const expectedTenant = new Tenant(GET_TENANT_RESPONSE);
     const expectedError = new FirebaseAuthError(
       AuthClientErrorCode.INTERNAL_ERROR,
       'Unable to update the tenant provided.');
@@ -560,7 +549,7 @@ describe('TenantManager', () => {
     it('should resolve with a Tenant on updateTenant request success', () => {
       // Stub updateTenant to return expected result.
       const updateTenantStub = sinon.stub(AuthRequestHandler.prototype, 'updateTenant')
-        .returns(Promise.resolve(serverResponse));
+        .returns(Promise.resolve(GET_TENANT_RESPONSE));
       stubs.push(updateTenantStub);
       return tenantManager.updateTenant(tenantId, tenantOptions)
         .then((actualTenant) => {
