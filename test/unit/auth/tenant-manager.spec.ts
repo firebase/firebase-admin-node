@@ -95,7 +95,7 @@ describe('TenantManager', () => {
     const tenantId = 'tenant_id';
     const serverResponse: TenantServerResponse = {
       name: 'projects/project_id/tenants/tenant_id',
-      displayName: 'TENANT_DISPLAY_NAME',
+      displayName: 'TENANT-DISPLAY-NAME',
       allowPasswordSignup: true,
       enableEmailLinkSignin: false,
     };
@@ -378,7 +378,7 @@ describe('TenantManager', () => {
   describe('createTenant()', () => {
     const tenantId = 'tenant_id';
     const tenantOptions: TenantOptions = {
-      displayName: 'TENANT_DISPLAY_NAME',
+      displayName: 'TENANT-DISPLAY-NAME',
       emailSignInConfig: {
         enabled: true,
         passwordRequired: true,
@@ -386,7 +386,7 @@ describe('TenantManager', () => {
     };
     const serverResponse: TenantServerResponse = {
       name: 'projects/project_id/tenants/tenant_id',
-      displayName: 'TENANT_DISPLAY_NAME',
+      displayName: 'TENANT-DISPLAY-NAME',
       allowPasswordSignup: true,
       enableEmailLinkSignin: false,
     };
@@ -476,7 +476,7 @@ describe('TenantManager', () => {
   describe('updateTenant()', () => {
     const tenantId = 'tenant_id';
     const tenantOptions: TenantOptions = {
-      displayName: 'TENANT_DISPLAY_NAME',
+      displayName: 'TENANT-DISPLAY-NAME',
       emailSignInConfig: {
         enabled: true,
         passwordRequired: true,
@@ -484,7 +484,7 @@ describe('TenantManager', () => {
     };
     const serverResponse: TenantServerResponse = {
       name: 'projects/project_id/tenants/tenant_id',
-      displayName: 'TENANT_DISPLAY_NAME',
+      displayName: 'TENANT-DISPLAY-NAME',
       allowPasswordSignup: true,
       enableEmailLinkSignin: false,
     };
