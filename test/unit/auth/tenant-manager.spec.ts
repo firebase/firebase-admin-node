@@ -36,14 +36,14 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 describe('TenantManager', () => {
-  const TENANT_ID = 'tenantId';
+  const TENANT_ID = 'tenant-id';
   let mockApp: FirebaseApp;
   let tenantManager: TenantManager;
   let nullAccessTokenTenantManager: TenantManager;
   let malformedAccessTokenTenantManager: TenantManager;
   let rejectedPromiseAccessTokenTenantManager: TenantManager;
   const GET_TENANT_RESPONSE: TenantServerResponse = {
-    name: 'projects/project_id/tenants/tenant_id',
+    name: 'projects/project-id/tenants/tenant-id',
     displayName: 'TENANT-DISPLAY-NAME',
     allowPasswordSignup: true,
     enableEmailLinkSignin: false,
@@ -81,7 +81,7 @@ describe('TenantManager', () => {
 
     it('should return a TenantAwareAuth with read-only tenant ID', () => {
       expect(() => {
-        (tenantManager.authForTenant(TENANT_ID) as any).tenantId = 'OTHER_TENANT_ID';
+        (tenantManager.authForTenant(TENANT_ID) as any).tenantId = 'OTHER-TENANT-ID';
       }).to.throw('Cannot assign to read only property \'tenantId\' of object \'#<TenantAwareAuth>\'');
     });
 
@@ -97,7 +97,7 @@ describe('TenantManager', () => {
   });
 
   describe('getTenant()', () => {
-    const tenantId = 'tenant_id';
+    const tenantId = 'tenant-id';
     const expectedTenant = new Tenant(GET_TENANT_RESPONSE);
     const expectedError = new FirebaseAuthError(AuthClientErrorCode.TENANT_NOT_FOUND);
     // Stubs used to simulate underlying API calls.
@@ -175,15 +175,15 @@ describe('TenantManager', () => {
     const maxResult = 500;
     const listTenantsResponse: any = {
       tenants : [
-        {name: 'projects/project_id/tenants/tenant_id1'},
-        {name: 'projects/project_id/tenants/tenant_id2'},
+        {name: 'projects/project-id/tenants/tenant-id1'},
+        {name: 'projects/project-id/tenants/tenant-id2'},
       ],
       nextPageToken: 'NEXT_PAGE_TOKEN',
     };
     const expectedResult: ListTenantsResult = {
       tenants: [
-        new Tenant({name: 'projects/project_id/tenants/tenant_id1'}),
-        new Tenant({name: 'projects/project_id/tenants/tenant_id2'}),
+        new Tenant({name: 'projects/project-id/tenants/tenant-id1'}),
+        new Tenant({name: 'projects/project-id/tenants/tenant-id2'}),
       ],
       pageToken: 'NEXT_PAGE_TOKEN',
     };
@@ -303,7 +303,7 @@ describe('TenantManager', () => {
   });
 
   describe('deleteTenant()', () => {
-    const tenantId = 'tenant_id';
+    const tenantId = 'tenant-id';
     const expectedError = new FirebaseAuthError(AuthClientErrorCode.TENANT_NOT_FOUND);
     // Stubs used to simulate underlying API calls.
     let stubs: sinon.SinonStub[] = [];
@@ -317,7 +317,7 @@ describe('TenantManager', () => {
         .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-tenant-id');
     });
 
-    const invalidTenantIds = [null, NaN, 0, 1, true, false, '', ['tenant_id'], [], {}, { a: 1 }, _.noop];
+    const invalidTenantIds = [null, NaN, 0, 1, true, false, '', ['tenant-id'], [], {}, { a: 1 }, _.noop];
     invalidTenantIds.forEach((invalidTenantId) => {
       it('should be rejected given an invalid tenant ID:' + JSON.stringify(invalidTenantId), () => {
         return tenantManager.deleteTenant(invalidTenantId as any)
@@ -377,7 +377,7 @@ describe('TenantManager', () => {
   });
 
   describe('createTenant()', () => {
-    const tenantId = 'tenant_id';
+    const tenantId = 'tenant-id';
     const tenantOptions: TenantOptions = {
       displayName: 'TENANT-DISPLAY-NAME',
       emailSignInConfig: {
@@ -469,7 +469,7 @@ describe('TenantManager', () => {
   });
 
   describe('updateTenant()', () => {
-    const tenantId = 'tenant_id';
+    const tenantId = 'tenant-id';
     const tenantOptions: TenantOptions = {
       displayName: 'TENANT-DISPLAY-NAME',
       emailSignInConfig: {
