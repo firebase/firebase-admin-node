@@ -313,7 +313,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
 
       describe('tenantManager()', () => {
-        it('should return the expect tenant manager instance', () => {
+        it('should return the expected tenant manager instance', () => {
           const tenantManager1 = (auth as Auth).tenantManager();
           const tenantManager2 = new TenantManager(mockApp);
           expect(tenantManager1).to.deep.equal(tenantManager2);
