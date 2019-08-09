@@ -486,13 +486,14 @@ describe('admin.auth', () => {
       const promises: Array<Promise<any>> = [];
       createdTenants.forEach((tenantId) => {
         promises.push(
-            admin.auth().deleteTenant(tenantId).catch((error) => {/** Ignore. */}));
+            admin.auth().tenantManager().deleteTenant(tenantId)
+                .catch((error) => {/** Ignore. */}));
       });
       return Promise.all(promises);
     });
 
     it('createTenant() should resolve with a new tenant', () => {
-      return admin.auth().createTenant(tenantOptions)
+      return admin.auth().tenantManager().createTenant(tenantOptions)
         .then((actualTenant) => {
           createdTenantId = actualTenant.tenantId;
           createdTenants.push(createdTenantId);
@@ -520,7 +521,7 @@ describe('admin.auth', () => {
       const rawSalt = 'NaCl';
 
       before(() => {
-        tenantAwareAuth = admin.auth().forTenant(createdTenantId);
+        tenantAwareAuth = admin.auth().tenantManager().authForTenant(createdTenantId);
       });
 
       // Delete test user at the end of test suite.
@@ -678,7 +679,7 @@ describe('admin.auth', () => {
       };
 
       before(() => {
-        tenantAwareAuth = admin.auth().forTenant(createdTenantId);
+        tenantAwareAuth = admin.auth().tenantManager().authForTenant(createdTenantId);
       });
 
       // Delete SAML configuration at the end of test suite.
@@ -730,7 +731,7 @@ describe('admin.auth', () => {
       };
 
       before(() => {
-        tenantAwareAuth = admin.auth().forTenant(createdTenantId);
+        tenantAwareAuth = admin.auth().tenantManager().authForTenant(createdTenantId);
       });
 
       // Delete OIDC configuration at the end of test suite.
@@ -766,7 +767,7 @@ describe('admin.auth', () => {
     });
 
     it('getTenant() should resolve with expected tenant', () => {
-      return admin.auth().getTenant(createdTenantId)
+      return admin.auth().tenantManager().getTenant(createdTenantId)
         .then((actualTenant) => {
           expect(actualTenant.toJSON()).to.deep.equal(expectedCreatedTenant);
         });
@@ -787,10 +788,10 @@ describe('admin.auth', () => {
           passwordRequired: false,
         },
       };
-      return admin.auth().updateTenant(createdTenantId, updatedOptions)
+      return admin.auth().tenantManager().updateTenant(createdTenantId, updatedOptions)
         .then((actualTenant) => {
           expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant);
-          return admin.auth().updateTenant(createdTenantId, updatedOptions2);
+          return admin.auth().tenantManager().updateTenant(createdTenantId, updatedOptions2);
         })
         .then((actualTenant) => {
           expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant2);
@@ -802,7 +803,7 @@ describe('admin.auth', () => {
       const tenantOptions2 = deepCopy(tenantOptions);
       tenantOptions2.displayName = 'testTenant2';
       const listAllTenantIds = (tenantIds: string[], nextPageToken?: string): Promise<void> => {
-        return admin.auth().listTenants(100, nextPageToken)
+        return admin.auth().tenantManager().listTenants(100, nextPageToken)
           .then((result) => {
             result.tenants.forEach((tenant) => {
               tenantIds.push(tenant.tenantId);
@@ -812,7 +813,7 @@ describe('admin.auth', () => {
             }
           });
       };
-      return admin.auth().createTenant(tenantOptions2)
+      return admin.auth().tenantManager().createTenant(tenantOptions2)
         .then((actualTenant) => {
           createdTenants.push(actualTenant.tenantId);
           // Test listTenants returns the expected tenants.
@@ -827,9 +828,9 @@ describe('admin.auth', () => {
     });
 
     it('deleteTenant() should successfully delete the provided tenant', () => {
-      return admin.auth().deleteTenant(createdTenantId)
+      return admin.auth().tenantManager().deleteTenant(createdTenantId)
         .then(() => {
-          return admin.auth().getTenant(createdTenantId);
+          return admin.auth().tenantManager().getTenant(createdTenantId);
         })
         .then((result) => {
           throw new Error('unexpected success');
