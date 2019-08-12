@@ -3579,6 +3579,7 @@ type BaseMessage = {
   android?: admin.messaging.AndroidConfig;
   webpush?: admin.messaging.WebpushConfig;
   apns?: admin.messaging.ApnsConfig;
+  fcmOptions?: admin.messaging.FcmOptions;
 };
 
 interface TokenMessage extends BaseMessage {
@@ -3641,6 +3642,11 @@ declare namespace admin.messaging {
      * Android notification to be included in the message.
      */
     notification?: AndroidNotification;
+
+    /**
+     * Options for features provided by the FCM SDK for Android.
+     */
+    fcmOptions?: AndroidFcmOptions;
   }
 
   /**
@@ -3727,6 +3733,17 @@ declare namespace admin.messaging {
   }
 
   /**
+   * Represents options for features provided by the FCM SDK for Android.
+   */
+  interface AndroidFcmOptions {
+
+    /**
+     * The label associated with the message's analytics data.
+     */
+    analyticsLabel?: string;
+  }
+
+  /**
    * Represents the APNs-specific options that can be included in an
    * {@link admin.messaging.Message}. Refer to
    * [Apple documentation](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CommunicatingwithAPNs.html)
@@ -3743,6 +3760,11 @@ declare namespace admin.messaging {
      * An APNs payload to be included in the message.
      */
     payload?: ApnsPayload;
+
+    /**
+     * Options for features provided by the FCM SDK for iOS.
+     */
+    fcmOptions?: ApnsFcmOptions;
   }
   /**
    * Represents the payload of an APNs message. Mainly consists of the `aps`
@@ -3839,6 +3861,28 @@ declare namespace admin.messaging {
      * (silent) and 1.0 (full volume).
      */
     volume?: number;
+  }
+
+  /**
+   * Represents options for features provided by the FCM SDK for iOS.
+   */
+  interface ApnsFcmOptions {
+
+    /**
+     * The label associated with the message's analytics data.
+     */
+    analyticsLabel?: string;
+  }
+
+  /**
+   * Represents platform-independent options for features provided by the FCM SDKs.
+   */
+  interface FcmOptions {
+
+    /**
+     * The label associated with the message's analytics data.
+     */
+    analyticsLabel?: string;
   }
 
 
