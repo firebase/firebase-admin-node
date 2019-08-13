@@ -49,6 +49,7 @@ import {
 } from '@google-cloud/firestore';
 import {InstanceId} from '../../src/instance-id/instance-id';
 import {ProjectManagement} from '../../src/project-management/project-management';
+import { SecurityRules } from '../../src/security-rules/security-rules';
 
 chai.should();
 chai.use(sinonChai);
@@ -622,6 +623,40 @@ describe('FirebaseNamespace', () => {
     it('should return a reference to ProjectManagement type', () => {
       expect(firebaseNamespace.projectManagement.ProjectManagement)
           .to.be.deep.equal(ProjectManagement);
+    });
+  });
+
+  describe('#securityRules()', () => {
+    it('should throw when called before initializing an app', () => {
+      expect(() => {
+        firebaseNamespace.securityRules();
+      }).to.throw(DEFAULT_APP_NOT_FOUND);
+    });
+
+    it('should throw when default app is not initialized', () => {
+      firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
+      expect(() => {
+        firebaseNamespace.securityRules();
+      }).to.throw(DEFAULT_APP_NOT_FOUND);
+    });
+
+    it('should return a valid namespace when the default app is initialized', () => {
+      const app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions);
+      const securityRules: SecurityRules = firebaseNamespace.securityRules();
+      expect(securityRules).to.not.be.null;
+      expect(securityRules.app).to.be.deep.equal(app);
+    });
+
+    it('should return a valid namespace when the named app is initialized', () => {
+      const app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
+      const securityRules: SecurityRules = firebaseNamespace.securityRules(app);
+      expect(securityRules).to.not.be.null;
+      expect(securityRules.app).to.be.deep.equal(app);
+    });
+
+    it('should return a reference to SecurityRules type', () => {
+      expect(firebaseNamespace.securityRules.SecurityRules)
+          .to.be.deep.equal(SecurityRules);
     });
   });
 });
