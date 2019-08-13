@@ -1928,7 +1928,7 @@ declare namespace admin.auth {
    * tenant.
    *
    * `TenantAwareAuth` instances for a specific `tenantId` can be instantiated by calling
-   * `auth.forTenant(tenantId)`.
+   * `auth.tenantManager().authForTenant(tenantId)`.
    */
   interface TenantAwareAuth extends BaseAuth {
 
@@ -1943,12 +1943,30 @@ declare namespace admin.auth {
   interface Auth extends admin.auth.BaseAuth {
     app: admin.app.App;
 
+    /**
+     * @return The tenant manager instance associated with the current project.
+     */
+    tenantManager(): admin.auth.TenantManager;
+  }
+
+  /**
+   * Defines the tenant manager used to help manage tenant related operations.
+   * This includes:
+   * <ul>
+   * <li>The ability to create, update, list, get and delete tenants for the underlying
+   *     project.</li>
+   * <li>Getting a `TenantAwareAuth` instance for running Auth related operations
+   *     (user management, provider configuration management, token verification,
+   *     email link generation, etc) in the context of a specified tenant.</li>
+   * </ul>
+   */
+  interface TenantManager {
     /** 
      * @param tenantId The tenant ID whose `TenantAwareAuth` instance is to be returned.
      *
      * @return The `TenantAwareAuth` instance corresponding to this tenant identifier.
      */
-    forTenant(tenantId: string): admin.auth.TenantAwareAuth;
+    authForTenant(tenantId: string): admin.auth.TenantAwareAuth;
 
     /**
      * Gets the tenant configuration for the tenant corresponding to a given `tenantId`.
