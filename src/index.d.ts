@@ -5262,7 +5262,15 @@ declare namespace admin.securityRules {
      * and source. Throws if any of the arguments are invalid. This is a local operation,
      * and does not involve any network API calls.
      *
-     * @param name Name to assign to the rules file.
+     *  @example
+     * ```javascript
+     * const source = '// Some rules source';
+     * const rulesFile = admin.securityRules().createRulesFileFromSource(
+     *   'firestore.rules', source);
+     * ```
+     *
+     * @param name Name to assign to the rules file. This is usually a short file name that
+     *   helps identify the file in a Ruleset.
      * @param source Contents of the rules file.
      * @return A new rules file instance.
      */
