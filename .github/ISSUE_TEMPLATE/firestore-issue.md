@@ -38,6 +38,14 @@ If you still think the problem is related to the code in this repository read on
 What happened? How can we make the problem occur?
 This could be a description, log/console output, etc.
 
+You can enable logging for Firestore by including the following line in your code:
+
+```
+admin.firestore.setLogFunction(console.log);
+```
+
+This will print Firestore logs to the console.
+
 #### Relevant Code:
 
 ```
