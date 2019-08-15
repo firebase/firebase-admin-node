@@ -9,9 +9,13 @@ assignees: schmidt-sebastian
 
 ### [READ] Step 1: Are you in the right place?
 
-**Cloud Firestore support is provided by the [`@google-cloud/firestore`](https://npmjs.com/package/@google-cloud/firestore) library. Therefore the easiest and most efficient way to get Firestore issues resolved is by reporting them at the [nodejs-firestore](https://github.com/googleapis/nodejs-firestore) GitHub repo.**
+**Cloud Firestore support is provided by the
+[`@google-cloud/firestore`](https://npmjs.com/package/@google-cloud/firestore) library. 
+Therefore the easiest and most efficient way to get Firestore issues resolved
+is by directly reporting them at the
+[nodejs-firestore](https://github.com/googleapis/nodejs-firestore) GitHub repo.**
 
-If you still think the problem is related to the code in this repository read on.
+If you still think the problem is related to the code in this repository, then read on.
 
   * For issues or feature requests related to __the code in this repository__
     file a Github issue.
