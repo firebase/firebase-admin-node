@@ -45,6 +45,24 @@ describe('SecurityRules', () => {
   };
   const CREATE_TIME_UTC = 'Fri, 08 Mar 2019 23:45:23 GMT';
 
+  const INVALID_RULESET_ERROR = new FirebaseSecurityRulesError(
+    'invalid-argument',
+    'ruleset must be a non-empty name or a RulesetMetadata object.',
+  );
+  const INVALID_RULESETS: any[] = [null, undefined, '', 1, true, {}, [], {name: ''}];
+
+  const INVALID_BUCKET_ERROR = new FirebaseSecurityRulesError(
+    'invalid-argument',
+    'Bucket name not specified or invalid. Specify a default bucket name via the ' +
+    'storageBucket option when initializing the app, or specify the bucket name ' +
+    'explicitly when calling the rules API.',
+    );
+  const INVALID_BUCKET_NAMES: any[] = [null, '', true, false, 1, 0, {}, []];
+
+  const INVALID_SOURCES: any[] = [null, undefined, '', 1, true, {}, []];
+  const INVALID_SOURCE_ERROR = new FirebaseSecurityRulesError(
+    'invalid-argument', 'Source must be a non-empty string or a Buffer.');
+
   let securityRules: SecurityRules;
   let mockApp: FirebaseApp;
   let mockCredentialApp: FirebaseApp;
@@ -66,6 +84,19 @@ describe('SecurityRules', () => {
     _.forEach(stubs, (stub) => stub.restore());
     stubs = [];
   });
+
+  function stubReleaseFromSource(): [sinon.SinonStub, sinon.SinonStub] {
+    const createRuleset = sinon
+      .stub(SecurityRulesApiClient.prototype, 'createRuleset')
+      .resolves(FIRESTORE_RULESET_RESPONSE);
+    const updateRelease = sinon
+      .stub(SecurityRulesApiClient.prototype, 'updateRelease')
+      .resolves({
+        rulesetName: 'projects/test-project/rulesets/foo',
+      });
+    stubs.push(createRuleset, updateRelease);
+    return [createRuleset, updateRelease];
+  }
 
   describe('Constructor', () => {
     const invalidApps = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
@@ -239,17 +270,10 @@ describe('SecurityRules', () => {
   });
 
   describe('getStorageRuleset', () => {
-    const invalidBucketNames: any[] = [null, '', true, false, 1, 0, {}, []];
-    const invalidBucketError = new FirebaseSecurityRulesError(
-      'invalid-argument',
-      'Bucket name not specified or invalid. Specify a default bucket name via the ' +
-      'storageBucket option when initializing the app, or specify the bucket name ' +
-      'explicitly when calling the rules API.',
-    );
-    invalidBucketNames.forEach((bucketName) => {
+    INVALID_BUCKET_NAMES.forEach((bucketName) => {
       it(`should reject when called with: ${JSON.stringify(bucketName)}`, () => {
         return securityRules.getStorageRuleset(bucketName)
-          .should.eventually.be.rejected.and.deep.equal(invalidBucketError);
+          .should.eventually.be.rejected.and.deep.equal(INVALID_BUCKET_ERROR);
       });
     });
 
@@ -327,15 +351,10 @@ describe('SecurityRules', () => {
   });
 
   describe('releaseFirestoreRuleset', () => {
-    const invalidRulesetError = new FirebaseSecurityRulesError(
-      'invalid-argument',
-      'ruleset must be a non-empty name or a RulesetMetadata object.',
-    );
-    const invalidRulesets: any[] = [null, undefined, '', 1, true, {}, [], {name: ''}];
-    invalidRulesets.forEach((invalidRuleset) => {
+    INVALID_RULESETS.forEach((invalidRuleset) => {
       it(`should reject when called with: ${JSON.stringify(invalidRuleset)}`, () => {
         return securityRules.releaseFirestoreRuleset(invalidRuleset)
-          .should.eventually.be.rejected.and.deep.equal(invalidRulesetError);
+          .should.eventually.be.rejected.and.deep.equal(INVALID_RULESET_ERROR);
       });
     });
 
@@ -374,6 +393,213 @@ describe('SecurityRules', () => {
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith('cloud.firestore', 'foo');
         });
+    });
+  });
+
+  describe('releaseFirestoreRulesetFromSource', () => {
+    const RULES_FILE = {
+      name: 'firestore.rules',
+      content: 'test source {}',
+    };
+
+    INVALID_SOURCES.forEach((invalidSource) => {
+      it(`should reject when called with: ${JSON.stringify(invalidSource)}`, () => {
+        return securityRules.releaseFirestoreRulesetFromSource(invalidSource)
+          .should.eventually.be.rejected.and.deep.equal(INVALID_SOURCE_ERROR);
+      });
+    });
+
+    it('should propagate API errors', () => {
+      const stub = sinon
+        .stub(SecurityRulesApiClient.prototype, 'createRuleset')
+        .rejects(EXPECTED_ERROR);
+      stubs.push(stub);
+      return securityRules.releaseFirestoreRulesetFromSource('foo')
+        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+    });
+
+    const sources: {[key: string]: string | Buffer} = {
+      string: RULES_FILE.content,
+      buffer: Buffer.from(RULES_FILE.content),
+    };
+    Object.keys(sources).forEach((key) => {
+      it(`should resolve on success when source specified as a ${key}`, () => {
+        const [createRuleset, updateRelease] = stubReleaseFromSource();
+
+        return securityRules.releaseFirestoreRulesetFromSource(sources[key])
+          .then((ruleset) => {
+            expect(ruleset.name).to.equal('foo');
+            expect(ruleset.createTime).to.equal(CREATE_TIME_UTC);
+            expect(ruleset.source.length).to.equal(1);
+
+            const file = ruleset.source[0];
+            expect(file.name).equals('firestore.rules');
+            expect(file.content).equals('service cloud.firestore{\n}\n');
+
+            const request: RulesetContent = {
+              source: {
+                files: [
+                  RULES_FILE,
+                ],
+              },
+            };
+            expect(createRuleset).to.have.been.called.calledOnce.and.calledWith(request);
+            expect(updateRelease).to.have.been.calledOnce.and.calledWith('cloud.firestore', ruleset.name);
+          });
+      });
+    });
+  });
+
+  describe('releaseStorageRuleset', () => {
+    INVALID_RULESETS.forEach((invalidRuleset) => {
+      it(`should reject when called with: ${JSON.stringify(invalidRuleset)}`, () => {
+        return securityRules.releaseStorageRuleset(invalidRuleset)
+          .should.eventually.be.rejected.and.deep.equal(INVALID_RULESET_ERROR);
+      });
+    });
+
+    INVALID_BUCKET_NAMES.forEach((bucketName) => {
+      it(`should reject when called with: ${JSON.stringify(bucketName)}`, () => {
+        return securityRules.releaseStorageRuleset('foo', bucketName)
+          .should.eventually.be.rejected.and.deep.equal(INVALID_BUCKET_ERROR);
+      });
+    });
+
+    it('should propagate API errors', () => {
+      const stub = sinon
+        .stub(SecurityRulesApiClient.prototype, 'updateRelease')
+        .rejects(EXPECTED_ERROR);
+      stubs.push(stub);
+      return securityRules.releaseStorageRuleset('foo')
+        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+    });
+
+    it('should resolve on success when the ruleset specified by name', () => {
+      const stub = sinon
+        .stub(SecurityRulesApiClient.prototype, 'updateRelease')
+        .resolves({
+          rulesetName: 'projects/test-project/rulesets/foo',
+        });
+      stubs.push(stub);
+
+      return securityRules.releaseStorageRuleset('foo')
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+            'firebase.storage/bucketName.appspot.com', 'foo');
+        });
+    });
+
+    it('should resolve on success when a custom bucket name is specified', () => {
+      const stub = sinon
+        .stub(SecurityRulesApiClient.prototype, 'updateRelease')
+        .resolves({
+          rulesetName: 'projects/test-project/rulesets/foo',
+        });
+      stubs.push(stub);
+
+      return securityRules.releaseStorageRuleset('foo', 'other.appspot.com')
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+            'firebase.storage/other.appspot.com', 'foo');
+        });
+    });
+
+    it('should resolve on success when the ruleset specified as an object', () => {
+      const stub = sinon
+        .stub(SecurityRulesApiClient.prototype, 'updateRelease')
+        .resolves({
+          rulesetName: 'projects/test-project/rulesets/foo',
+        });
+      stubs.push(stub);
+
+      return securityRules.releaseStorageRuleset({name: 'foo', createTime: 'time'})
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith(
+            'firebase.storage/bucketName.appspot.com', 'foo');
+        });
+    });
+  });
+
+  describe('releaseStorageRulesetFromSource', () => {
+    const RULES_FILE = {
+      name: 'storage.rules',
+      content: 'test source {}',
+    };
+    const RULES_CONTENT: RulesetContent = {
+      source: {
+        files: [
+          RULES_FILE,
+        ],
+      },
+    };
+
+    INVALID_SOURCES.forEach((invalidSource) => {
+      it(`should reject when called with source: ${JSON.stringify(invalidSource)}`, () => {
+        return securityRules.releaseStorageRulesetFromSource(invalidSource)
+          .should.eventually.be.rejected.and.deep.equal(INVALID_SOURCE_ERROR);
+      });
+    });
+
+    INVALID_BUCKET_NAMES.forEach((invalidBucket) => {
+      it(`should reject when called with bucket: ${JSON.stringify(invalidBucket)}`, () => {
+        return securityRules.releaseStorageRulesetFromSource(RULES_FILE.content, invalidBucket)
+          .should.eventually.be.rejected.and.deep.equal(INVALID_BUCKET_ERROR);
+      });
+    });
+
+    it('should propagate API errors', () => {
+      const stub = sinon
+        .stub(SecurityRulesApiClient.prototype, 'createRuleset')
+        .rejects(EXPECTED_ERROR);
+      stubs.push(stub);
+      return securityRules.releaseStorageRulesetFromSource('foo')
+        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+    });
+
+    const sources: {[key: string]: string | Buffer} = {
+      string: RULES_FILE.content,
+      buffer: Buffer.from(RULES_FILE.content),
+    };
+    Object.keys(sources).forEach((key) => {
+      it(`should resolve on success when source specified as a ${key} for default bucket`, () => {
+        const [createRuleset, updateRelease] = stubReleaseFromSource();
+
+        return securityRules.releaseStorageRulesetFromSource(sources[key])
+          .then((ruleset) => {
+            expect(ruleset.name).to.equal('foo');
+            expect(ruleset.createTime).to.equal(CREATE_TIME_UTC);
+            expect(ruleset.source.length).to.equal(1);
+
+            const file = ruleset.source[0];
+            expect(file.name).equals('firestore.rules');
+            expect(file.content).equals('service cloud.firestore{\n}\n');
+
+            expect(createRuleset).to.have.been.called.calledOnce.and.calledWith(RULES_CONTENT);
+            expect(updateRelease).to.have.been.calledOnce.and.calledWith(
+              'firebase.storage/bucketName.appspot.com', ruleset.name);
+          });
+      });
+    });
+
+    Object.keys(sources).forEach((key) => {
+      it(`should resolve on success when source specified as a ${key} for a custom bucket`, () => {
+        const [createRuleset, updateRelease] = stubReleaseFromSource();
+
+        return securityRules.releaseStorageRulesetFromSource(sources[key], 'other.appspot.com')
+          .then((ruleset) => {
+            expect(ruleset.name).to.equal('foo');
+            expect(ruleset.createTime).to.equal(CREATE_TIME_UTC);
+            expect(ruleset.source.length).to.equal(1);
+
+            const file = ruleset.source[0];
+            expect(file.name).equals('firestore.rules');
+            expect(file.content).equals('service cloud.firestore{\n}\n');
+
+            expect(createRuleset).to.have.been.called.calledOnce.and.calledWith(RULES_CONTENT);
+            expect(updateRelease).to.have.been.calledOnce.and.calledWith(
+              'firebase.storage/other.appspot.com', ruleset.name);
+          });
+      });
     });
   });
 
