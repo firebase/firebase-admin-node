@@ -386,10 +386,10 @@ declare namespace admin {
   * var otherSecurityRules = admin.securityRules(otherApp);
   * ```
   *
-  * @param app Optional app whose `SecurityRules` service
-  *     to return. If not provided, the default `SecurityRules` service will
+  * @param app Optional app to return the `SecurityRules` service
+  *     for. If not provided, the default `SecurityRules` service will
   *     be returned.
-  * @return The default `SecurityRules` service if no app is provided or the
+  * @return The default `SecurityRules` service if no app is provided, or the
   *   `SecurityRules` service associated with the provided app.
   */
   function securityRules(app?: admin.app.App): admin.securityRules.SecurityRules;
@@ -5213,7 +5213,7 @@ declare namespace admin.securityRules {
   }
 
   /**
-   * Required metadata associated with a Ruleset.
+   * Required metadata associated with a ruleset.
    */
   interface RulesetMetadata {
     /**
@@ -5249,7 +5249,7 @@ declare namespace admin.securityRules {
   }
 
   /**
-   * The Firebase SecurityRules service interface.
+   * The Firebase `SecurityRules` service interface.
    *
    * Do not call this constructor directly. Instead, use
    * [`admin.securityRules()`](admin.securityRules#securityRules).
@@ -5259,8 +5259,8 @@ declare namespace admin.securityRules {
 
     /**
      * Creates a {@link admin.securityRules.RulesFile `RuleFile`} with the given name
-     * and source. Throws if any of the arguments are invalid. This is a local operation,
-     * and does not involve any network API calls.
+     * and source. Throws an error if any of the arguments are invalid. This is a local
+     * operation, and does not involve any network API calls.
      *
      *  @example
      * ```javascript
@@ -5270,7 +5270,7 @@ declare namespace admin.securityRules {
      * ```
      *
      * @param name Name to assign to the rules file. This is usually a short file name that
-     *   helps identify the file in a Ruleset.
+     *   helps identify the file in a ruleset.
      * @param source Contents of the rules file.
      * @return A new rules file instance.
      */
@@ -5280,8 +5280,8 @@ declare namespace admin.securityRules {
      * Creates a new {@link admin.securityRules.Ruleset `Ruleset`} from the given
      * {@link admin.securityRules.RulesFile `RuleFile`}.
      *
-     * @param file Rules file to include in the new Ruleset.
-     * @returns A promise that fulfills with the newly created Ruleset.
+     * @param file Rules file to include in the new `Ruleset`.
+     * @returns A promise that fulfills with the newly created `Ruleset`.
      */
     createRuleset(file: RulesFile): Promise<Ruleset>;
 
@@ -5290,10 +5290,10 @@ declare namespace admin.securityRules {
      * name. The input name should be the short name string without the project ID
      * prefix. For example, to retrieve the `projects/project-id/rulesets/my-ruleset`,
      * pass the short name "my-ruleset". Rejects with a `not-found` error if the
-     * specified Ruleset cannot be found.
+     * specified `Ruleset` cannot be found.
      *
-     * @param name Name of the Ruleset to retrieve.
-     * @return A promise that fulfills with the specified Ruleset.
+     * @param name Name of the `Ruleset` to retrieve.
+     * @return A promise that fulfills with the specified `Ruleset`.
      */
     getRuleset(name: string): Promise<Ruleset>;
 
@@ -5302,10 +5302,10 @@ declare namespace admin.securityRules {
      * name. The input name should be the short name string without the project ID
      * prefix. For example, to delete the `projects/project-id/rulesets/my-ruleset`,
      * pass the  short name "my-ruleset". Rejects with a `not-found` error if the
-     * specified Ruleset cannot be found.
+     * specified `Ruleset` cannot be found.
      *
-     * @param name Name of the Ruleset to delete.
-     * @return A promise that fulfills when the Ruleset is deleted.
+     * @param name Name of the `Ruleset` to delete.
+     * @return A promise that fulfills when the `Ruleset` is deleted.
      */
     deleteRuleset(name: string): Promise<void>;
 
@@ -5323,10 +5323,10 @@ declare namespace admin.securityRules {
 
     /**
      * Gets the {@link admin.securityRules.Ruleset `Ruleset`} currently applied to
-     * Cloud Firestore. Rejects with a `not-found` error if no Ruleset is applied
+     * Cloud Firestore. Rejects with a `not-found` error if no ruleset is applied
      * on Firestore.
      *
-     * @return A promise that fulfills with the Firestore Ruleset.
+     * @return A promise that fulfills with the Firestore ruleset.
      */
     getFirestoreRuleset(): Promise<Ruleset>;
 
@@ -5340,8 +5340,8 @@ declare namespace admin.securityRules {
     releaseFirestoreRulesetFromSource(source: string | Buffer): Promise<Ruleset>;
 
     /**
-     * Makes the specified {@link admin.securityRules.Ruleset `Ruleset`} the currently
-     * applied ruleset for Cloud Firestore.
+     * Applies the specified {@link admin.securityRules.Ruleset `Ruleset`} ruleset
+     * to Cloud Firestore.
      *
      * @param ruleset Name of the ruleset to apply or a `RulesetMetadata` object
      *   containing the name.
@@ -5351,13 +5351,13 @@ declare namespace admin.securityRules {
 
     /**
      * Gets the {@link admin.securityRules.Ruleset `Ruleset`} currently applied to a
-     * Cloud Storage bucket. Rejects with a `not-found` error if no Ruleset is applied
+     * Cloud Storage bucket. Rejects with a `not-found` error if no ruleset is applied
      * on the bucket.
      *
      * @param bucket Optional name of the Cloud Storage bucket to be retrieved. If not
      *   specified, retrieves the ruleset applied on the default bucket configured via
      *   `AppOptions`.
-     * @return A promise that fulfills with the Cloud Storage Ruleset.
+     * @return A promise that fulfills with the Cloud Storage ruleset.
      */
     getStorageRuleset(bucket?: string): Promise<Ruleset>;
 
@@ -5375,8 +5375,8 @@ declare namespace admin.securityRules {
       source: string | Buffer, bucket?: string): Promise<Ruleset>;
 
     /**
-     * Makes the specified {@link admin.securityRules.Ruleset `Ruleset`} the currently
-     * applied ruleset for a Cloud Storage bucket.
+     * Applies the specified {@link admin.securityRules.Ruleset `Ruleset`} ruleset
+     * to a Cloud Storage bucket.
      *
      * @param ruleset Name of the ruleset to apply or a `RulesetMetadata` object
      *   containing the name.
