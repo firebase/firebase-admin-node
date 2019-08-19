@@ -109,8 +109,12 @@ toc:
     path: /docs/reference/admin/node/ConditionMessage
   - title: "AndroidConfig"
     path: /docs/reference/admin/node/admin.messaging.AndroidConfig
+  - title: "AndroidFcmOptions"
+    path: /docs/reference/admin/node/admin.messaging.AndroidFcmOptions
   - title: "AndroidNotification"
     path: /docs/reference/admin/node/admin.messaging.AndroidNotification
+  - title: "FcmOptions"
+    path: /docs/reference/admin/node/admin.messaging.FcmOptions
   - title: "Messaging"
     path: /docs/reference/admin/node/admin.messaging.Messaging
   - title: "MessagingConditionResponse"
@@ -145,6 +149,8 @@ toc:
     path: /docs/reference/admin/node/admin.messaging.SendResponse
   - title: "ApnsConfig"
     path: /docs/reference/admin/node/admin.messaging.ApnsConfig
+  - title: "ApnsFcmOptions"
+    path: /docs/reference/admin/node/admin.messaging.ApnsFcmOptions
   - title: "ApnsPayload"
     path: /docs/reference/admin/node/admin.messaging.ApnsPayload
   - title: "Aps"
