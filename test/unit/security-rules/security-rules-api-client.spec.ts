@@ -246,6 +246,134 @@ describe('SecurityRulesApiClient', () => {
     });
   });
 
+  describe('listRulesets', () => {
+    const LIST_RESPONSE = {
+      rulesets: [
+        {
+          name: 'rs1',
+          createTime: 'date1',
+        },
+      ],
+      nextPageToken: 'next',
+    };
+
+    const invalidPageSizes: any[] = [null, '', '10', true, {}, []];
+    invalidPageSizes.forEach((invalidPageSize) => {
+      it(`should reject when called with invalid page size: ${JSON.stringify(invalidPageSize)}`, () => {
+        return apiClient.listRulesets(invalidPageSize)
+          .should.eventually.be.rejected.and.have.property(
+            'message', 'Invalid page size.');
+      });
+    });
+
+    const outOfRangePageSizes: number[] = [-1, 0, 101];
+    outOfRangePageSizes.forEach((invalidPageSize) => {
+      it(`should reject when called with invalid page size: ${invalidPageSize}`, () => {
+        return apiClient.listRulesets(invalidPageSize)
+          .should.eventually.be.rejected.and.have.property(
+            'message', 'Page size must be between 1 and 100.');
+      });
+    });
+
+    const invalidPageTokens: any[] = [null, 0, '', true, {}, []];
+    invalidPageTokens.forEach((invalidPageToken) => {
+      it(`should reject when called with invalid page token: ${JSON.stringify(invalidPageToken)}`, () => {
+        return apiClient.listRulesets(10, invalidPageToken)
+          .should.eventually.be.rejected.and.have.property(
+            'message', 'Next page token must be a non-empty string.');
+      });
+    });
+
+    it('should resolve on success when called without any arguments', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(LIST_RESPONSE));
+      stubs.push(stub);
+      return apiClient.listRulesets()
+        .then((resp) => {
+          expect(resp).to.deep.equal(LIST_RESPONSE);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url: 'https://firebaserules.googleapis.com/v1/projects/test-project/rulesets',
+            data: {pageSize: 100},
+          });
+        });
+    });
+
+    it('should resolve on success when called with a page size', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(LIST_RESPONSE));
+      stubs.push(stub);
+      return apiClient.listRulesets(50)
+        .then((resp) => {
+          expect(resp).to.deep.equal(LIST_RESPONSE);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url: 'https://firebaserules.googleapis.com/v1/projects/test-project/rulesets',
+            data: {pageSize: 50},
+          });
+        });
+    });
+
+    it('should resolve on success when called with a page token', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(LIST_RESPONSE));
+      stubs.push(stub);
+      return apiClient.listRulesets(50, 'next')
+        .then((resp) => {
+          expect(resp).to.deep.equal(LIST_RESPONSE);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url: 'https://firebaserules.googleapis.com/v1/projects/test-project/rulesets',
+            data: {pageSize: 50, pageToken: 'next'},
+          });
+        });
+    });
+
+    it('should throw when a full platform error response is received', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+      stubs.push(stub);
+      const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found');
+      return apiClient.listRulesets()
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should throw unknown-error when error code is not present', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom({}, 404));
+      stubs.push(stub);
+      const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}');
+      return apiClient.listRulesets()
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should throw unknown-error for non-json response', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom('not json', 404));
+      stubs.push(stub);
+      const expected = new FirebaseSecurityRulesError(
+        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+      return apiClient.listRulesets()
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should throw when rejected with a FirebaseAppError', () => {
+      const expected = new FirebaseAppError('network-error', 'socket hang up');
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(expected);
+      stubs.push(stub);
+      return apiClient.listRulesets()
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+  });
+
   describe('getRelease', () => {
     it('should resolve with the requested release on success', () => {
       const stub = sinon

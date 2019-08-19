@@ -730,4 +730,133 @@ describe('SecurityRules', () => {
       return securityRules.deleteRuleset('foo');
     });
   });
+
+  describe('listRulesetMetadata', () => {
+    const LIST_RULESETS_RESPONSE = {
+      rulesets: [
+        {
+          name: 'projects/test-project/rulesets/rs1',
+          createTime: '2019-03-08T23:45:23.288047Z',
+        },
+        {
+          name: 'projects/test-project/rulesets/rs2',
+          createTime: '2019-03-08T23:45:23.288047Z',
+        },
+      ],
+      nextPageToken: 'next',
+    };
+
+    it('should propagate API errors', () => {
+      const stub = sinon
+        .stub(SecurityRulesApiClient.prototype, 'listRulesets')
+        .rejects(EXPECTED_ERROR);
+      stubs.push(stub);
+      return securityRules.listRulesetMetadata()
+        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+    });
+
+    it('should reject when API response is invalid', () => {
+      const stub = sinon
+        .stub(SecurityRulesApiClient.prototype, 'listRulesets')
+        .resolves(null);
+      stubs.push(stub);
+      return securityRules.listRulesetMetadata()
+        .should.eventually.be.rejected.and.have.property(
+          'message', 'Invalid ListRulesets response: null');
+    });
+
+    it('should reject when API response does not contain rulesets', () => {
+      const response: any = deepCopy(LIST_RULESETS_RESPONSE);
+      response.rulesets = '';
+      const stub = sinon
+        .stub(SecurityRulesApiClient.prototype, 'listRulesets')
+        .resolves(response);
+      stubs.push(stub);
+      return securityRules.listRulesetMetadata()
+        .should.eventually.be.rejected.and.have.property(
+          'message', `Invalid ListRulesets response: ${JSON.stringify(response)}`);
+    });
+
+    it('should resolve with RulesetMetadataList on success', () => {
+      const stub = sinon
+        .stub(SecurityRulesApiClient.prototype, 'listRulesets')
+        .resolves(LIST_RULESETS_RESPONSE);
+      stubs.push(stub);
+
+      return securityRules.listRulesetMetadata()
+        .then((result) => {
+          expect(result.rulesets.length).equals(2);
+          expect(result.rulesets[0].name).equals('rs1');
+          expect(result.rulesets[0].createTime).equals(CREATE_TIME_UTC);
+          expect(result.rulesets[1].name).equals('rs2');
+          expect(result.rulesets[1].createTime).equals(CREATE_TIME_UTC);
+
+          expect(result.nextPageToken).equals('next');
+
+          expect(stub).to.have.been.calledOnce.and.calledWith(100);
+        });
+    });
+
+    it('should resolve with RulesetMetadataList on success when called with page size', () => {
+      const stub = sinon
+        .stub(SecurityRulesApiClient.prototype, 'listRulesets')
+        .resolves(LIST_RULESETS_RESPONSE);
+      stubs.push(stub);
+
+      return securityRules.listRulesetMetadata(10)
+        .then((result) => {
+          expect(result.rulesets.length).equals(2);
+          expect(result.rulesets[0].name).equals('rs1');
+          expect(result.rulesets[0].createTime).equals(CREATE_TIME_UTC);
+          expect(result.rulesets[1].name).equals('rs2');
+          expect(result.rulesets[1].createTime).equals(CREATE_TIME_UTC);
+
+          expect(result.nextPageToken).equals('next');
+
+          expect(stub).to.have.been.calledOnce.and.calledWith(10);
+        });
+    });
+
+    it('should resolve with RulesetMetadataList on success when called with page token', () => {
+      const stub = sinon
+        .stub(SecurityRulesApiClient.prototype, 'listRulesets')
+        .resolves(LIST_RULESETS_RESPONSE);
+      stubs.push(stub);
+
+      return securityRules.listRulesetMetadata(10, 'next')
+        .then((result) => {
+          expect(result.rulesets.length).equals(2);
+          expect(result.rulesets[0].name).equals('rs1');
+          expect(result.rulesets[0].createTime).equals(CREATE_TIME_UTC);
+          expect(result.rulesets[1].name).equals('rs2');
+          expect(result.rulesets[1].createTime).equals(CREATE_TIME_UTC);
+
+          expect(result.nextPageToken).equals('next');
+
+          expect(stub).to.have.been.calledOnce.and.calledWith(10, 'next');
+        });
+    });
+
+    it('should resolve with RulesetMetadataList when the response contains no page token', () => {
+      const response = deepCopy(LIST_RULESETS_RESPONSE);
+      delete response.nextPageToken;
+      const stub = sinon
+        .stub(SecurityRulesApiClient.prototype, 'listRulesets')
+        .resolves(response);
+      stubs.push(stub);
+
+      return securityRules.listRulesetMetadata(10, 'next')
+        .then((result) => {
+          expect(result.rulesets.length).equals(2);
+          expect(result.rulesets[0].name).equals('rs1');
+          expect(result.rulesets[0].createTime).equals(CREATE_TIME_UTC);
+          expect(result.rulesets[1].name).equals('rs2');
+          expect(result.rulesets[1].createTime).equals(CREATE_TIME_UTC);
+
+          expect(result.nextPageToken).to.be.undefined;
+
+          expect(stub).to.have.been.calledOnce.and.calledWith(10, 'next');
+        });
+    });
+  });
 });

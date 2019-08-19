@@ -18,7 +18,9 @@ import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../
 import { FirebaseApp } from '../firebase-app';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { SecurityRulesApiClient, RulesetResponse, RulesetContent, Release } from './security-rules-api-client';
+import {
+  SecurityRulesApiClient, RulesetResponse, RulesetContent, ListRulesetsResponse,
+} from './security-rules-api-client';
 import { AuthorizedHttpClient } from '../utils/api-request';
 import { FirebaseSecurityRulesError } from './security-rules-utils';
 
@@ -36,6 +38,39 @@ export interface RulesFile {
 export interface RulesetMetadata {
   readonly name: string;
   readonly createTime: string;
+}
+
+/**
+ * A page of ruleset metadata.
+ */
+export interface RulesetMetadataList {
+  readonly rulesets: RulesetMetadata[];
+  readonly nextPageToken?: string;
+}
+
+class RulesetMetadataListImpl implements RulesetMetadataList {
+
+  public readonly rulesets: RulesetMetadata[];
+  public readonly nextPageToken?: string;
+
+  constructor(response: ListRulesetsResponse) {
+    if (!validator.isNonNullObject(response) || !validator.isArray(response.rulesets)) {
+      throw new FirebaseSecurityRulesError(
+        'invalid-argument',
+        `Invalid ListRulesets response: ${JSON.stringify(response)}`);
+    }
+
+    this.rulesets = response.rulesets.map((rs) => {
+      return {
+        name: stripProjectIdPrefix(rs.name),
+        createTime: new Date(rs.createTime).toUTCString(),
+      };
+    });
+
+    if (response.nextPageToken) {
+      this.nextPageToken = response.nextPageToken;
+    }
+  }
 }
 
 /**
@@ -268,6 +303,21 @@ export class SecurityRules implements FirebaseServiceInterface {
    */
   public deleteRuleset(name: string): Promise<void> {
     return this.client.deleteRuleset(name);
+  }
+
+  /**
+   * Retrieves a page of rulesets.
+   *
+   * @param {number=} pageSize The page size, 100 if undefined. This is also the maximum allowed limit.
+   * @param {string=} nextPageToken The next page token. If not specified, returns rulesets starting
+   *   without any offset.
+   * @returns {Promise<RulesetMetadataList>} A promise that fulfills a page of rulesets.
+   */
+  public listRulesetMetadata(pageSize: number = 100, nextPageToken?: string): Promise<RulesetMetadataList> {
+    return this.client.listRulesets(pageSize, nextPageToken)
+      .then((response) => {
+        return new RulesetMetadataListImpl(response);
+      });
   }
 
   private getRulesetForRelease(releaseName: string): Promise<Ruleset> {

@@ -39,6 +39,11 @@ export interface RulesetResponse extends RulesetContent {
   readonly createTime: string;
 }
 
+export interface ListRulesetsResponse {
+  readonly rulesets: Array<{name: string, createTime: string}>;
+  readonly nextPageToken?: string;
+}
+
 /**
  * Class that facilitates sending requests to the Firebase security rules backend API.
  *
@@ -117,6 +122,38 @@ export class SecurityRulesApiClient {
         };
         return this.sendRequest<void>(request);
       });
+  }
+
+  public listRulesets(pageSize: number = 100, pageToken?: string): Promise<ListRulesetsResponse> {
+    if (!validator.isNumber(pageSize)) {
+      const err = new FirebaseSecurityRulesError('invalid-argument', 'Invalid page size.');
+      return Promise.reject(err);
+    }
+    if (pageSize < 1 || pageSize > 100) {
+      const err = new FirebaseSecurityRulesError(
+        'invalid-argument', 'Page size must be between 1 and 100.');
+      return Promise.reject(err);
+    }
+    if (typeof pageToken !== 'undefined' && !validator.isNonEmptyString(pageToken)) {
+      const err = new FirebaseSecurityRulesError(
+        'invalid-argument', 'Next page token must be a non-empty string.');
+      return Promise.reject(err);
+    }
+
+    const data = {
+      pageSize,
+      pageToken,
+    };
+    if (!pageToken) {
+      delete data.pageToken;
+    }
+
+    const request: HttpRequestConfig = {
+      method: 'GET',
+      url: `${this.url}/rulesets`,
+      data,
+    };
+    return this.sendRequest<ListRulesetsResponse>(request);
   }
 
   public getRelease(name: string): Promise<Release> {
