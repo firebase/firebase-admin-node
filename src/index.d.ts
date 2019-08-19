@@ -454,6 +454,7 @@ declare namespace admin.app {
     instanceId(): admin.instanceId.InstanceId;
     messaging(): admin.messaging.Messaging;
     projectManagement(): admin.projectManagement.ProjectManagement;
+    securityRules(): admin.securityRules.SecurityRules;
     storage(): admin.storage.Storage;
 
     /**
