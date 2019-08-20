@@ -520,8 +520,12 @@ describe('admin.auth', () => {
       const rawPassword = 'password';
       const rawSalt = 'NaCl';
 
-      before(() => {
-        tenantAwareAuth = admin.auth().tenantManager().authForTenant(createdTenantId);
+      before(function() {
+        if (!createdTenantId) {
+          this.skip();
+        } else {
+          tenantAwareAuth = admin.auth().tenantManager().authForTenant(createdTenantId);
+        }
       });
 
       // Delete test user at the end of test suite.
@@ -571,9 +575,7 @@ describe('admin.auth', () => {
         });
       });
 
-      // Ignore email action link tests for now as there is a bug in the returned tenant ID:
-      // expected '1085102361755-testTenant1-6rjsn' to equal 'testTenant1-6rjsn'
-      xit('generateEmailVerificationLink() should generate the link for tenant specific user', () => {
+      it('generateEmailVerificationLink() should generate the link for tenant specific user', () => {
         // Generate email verification link to confirm it is generated in the expected
         // tenant context.
         return tenantAwareAuth.generateEmailVerificationLink(updatedEmail, actionCodeSettings)
@@ -583,10 +585,20 @@ describe('admin.auth', () => {
           });
       });
 
-      xit('generatePasswordResetLink() should generate the link for tenant specific user', () => {
+      it('generatePasswordResetLink() should generate the link for tenant specific user', () => {
         // Generate password reset link to confirm it is generated in the expected
         // tenant context.
         return tenantAwareAuth.generatePasswordResetLink(updatedEmail, actionCodeSettings)
+          .then((link) => {
+            // Confirm tenant ID set in link.
+            expect(getTenantId(link)).equal(createdTenantId);
+          });
+      });
+
+      it('generateSignInWithEmailLink() should generate the link for tenant specific user', () => {
+        // Generate link for sign-in to confirm it is generated in the expected
+        // tenant context.
+        return tenantAwareAuth.generateSignInWithEmailLink(updatedEmail, actionCodeSettings)
           .then((link) => {
             // Confirm tenant ID set in link.
             expect(getTenantId(link)).equal(createdTenantId);
@@ -678,16 +690,22 @@ describe('admin.auth', () => {
         enableRequestSigning: false,
       };
 
-      before(() => {
-        tenantAwareAuth = admin.auth().tenantManager().authForTenant(createdTenantId);
+      before(function() {
+        if (!createdTenantId) {
+          this.skip();
+        } else {
+          tenantAwareAuth = admin.auth().tenantManager().authForTenant(createdTenantId);
+        }
       });
 
       // Delete SAML configuration at the end of test suite.
       after(() => {
-        return tenantAwareAuth.deleteProviderConfig(authProviderConfig.providerId)
-          .catch((error) => {
-            // Ignore error.
-          });
+        if (tenantAwareAuth) {
+          return tenantAwareAuth.deleteProviderConfig(authProviderConfig.providerId)
+            .catch((error) => {
+              // Ignore error.
+            });
+        }
       });
 
       it('should support CRUD operations', () => {
@@ -730,16 +748,22 @@ describe('admin.auth', () => {
         clientId: 'CLIENT_ID3',
       };
 
-      before(() => {
-        tenantAwareAuth = admin.auth().tenantManager().authForTenant(createdTenantId);
+      before(function() {
+        if (!createdTenantId) {
+          this.skip();
+        } else {
+          tenantAwareAuth = admin.auth().tenantManager().authForTenant(createdTenantId);
+        }
       });
 
       // Delete OIDC configuration at the end of test suite.
       after(() => {
-        return tenantAwareAuth.deleteProviderConfig(authProviderConfig.providerId)
-          .catch((error) => {
-            // Ignore error.
-          });
+        if (tenantAwareAuth) {
+          return tenantAwareAuth.deleteProviderConfig(authProviderConfig.providerId)
+            .catch((error) => {
+              // Ignore error.
+            });
+        }
       });
 
       it('should support CRUD operations', () => {
