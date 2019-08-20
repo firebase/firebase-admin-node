@@ -21,7 +21,6 @@ import url = require('url');
 import {defaultApp, nullApp, nonNullApp, cmdArgs, databaseUrl} from './setup';
 
 /* tslint:disable:no-var-requires */
-const apiRequest = require('../../lib/utils/api-request');
 const chalk = require('chalk');
 /* tslint:enable:no-var-requires */
 
@@ -43,20 +42,13 @@ describe('admin.database', () => {
     }
     console.log(chalk.yellow('    Updating security rules to defaults.'));
     /* tslint:enable:no-console */
-    const client = new apiRequest.AuthorizedHttpClient(defaultApp);
-    const dbUrl =  url.parse(databaseUrl);
     const defaultRules = {
       rules : {
         '.read': 'auth != null',
         '.write': 'auth != null',
       },
     };
-    return client.send({
-      url: `https://${dbUrl.host}/.settings/rules.json`,
-      method: 'PUT',
-      data: defaultRules,
-      timeout: 10000,
-    });
+    return admin.database().setRules(defaultRules);
   });
 
   it('admin.database() returns a database client', () => {
@@ -164,6 +156,18 @@ describe('admin.database', () => {
 
     it('remove() completes successfully', () => {
       return refWithUrl.remove().should.eventually.be.fulfilled;
+    });
+  });
+
+  it('admin.database().getRules() returns currently defined rules as a string', () => {
+    return admin.database().getRules().then((result) => {
+      return expect(result).to.be.not.empty;
+    });
+  });
+
+  it('admin.database().getRulesJSON() returns currently defined rules as an object', () => {
+    return admin.database().getRulesJSON().then((result) => {
+      return expect(result).to.be.not.undefined;
     });
   });
 });

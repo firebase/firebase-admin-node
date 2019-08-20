@@ -2297,6 +2297,31 @@ declare namespace admin.database {
      * @return  A `Reference` pointing to the provided Firebase URL.
      */
     refFromURL(url: string): admin.database.Reference;
+
+    /**
+     * Gets the currently applied security rules as a string. The return value consists of
+     * the rules source including comments.
+     *
+     * @return A promise fulfilled with the rules as a raw string.
+     */
+    getRules(): Promise<string>;
+
+    /**
+     * Gets the currently applied security rules as a parsed JSON object. Any comments in
+     * the original source are stripped away.
+     *
+     * @return A promise fulfilled with the parsed rules object.
+     */
+    getRulesJSON(): Promise<object>;
+
+    /**
+     * Sets the specified rules on the Firebase Realtime Database instance. If the rules source is
+     * specified as a string or a Buffer, it may include comments.
+     *
+     * @param source Source of the rules to apply. Must not be `null` or empty.
+     * @return Resolves when the rules are set on the Realtime Database.
+     */
+    setRules(source: string | Buffer | object): Promise<void>;
   }
 
   /**
@@ -3787,6 +3812,7 @@ type BaseMessage = {
   android?: admin.messaging.AndroidConfig;
   webpush?: admin.messaging.WebpushConfig;
   apns?: admin.messaging.ApnsConfig;
+  fcmOptions?: admin.messaging.FcmOptions;
 };
 
 interface TokenMessage extends BaseMessage {
@@ -3849,6 +3875,11 @@ declare namespace admin.messaging {
      * Android notification to be included in the message.
      */
     notification?: AndroidNotification;
+
+    /**
+     * Options for features provided by the FCM SDK for Android.
+     */
+    fcmOptions?: AndroidFcmOptions;
   }
 
   /**
@@ -3935,6 +3966,17 @@ declare namespace admin.messaging {
   }
 
   /**
+   * Represents options for features provided by the FCM SDK for Android.
+   */
+  interface AndroidFcmOptions {
+
+    /**
+     * The label associated with the message's analytics data.
+     */
+    analyticsLabel?: string;
+  }
+
+  /**
    * Represents the APNs-specific options that can be included in an
    * {@link admin.messaging.Message}. Refer to
    * [Apple documentation](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CommunicatingwithAPNs.html)
@@ -3951,6 +3993,11 @@ declare namespace admin.messaging {
      * An APNs payload to be included in the message.
      */
     payload?: ApnsPayload;
+
+    /**
+     * Options for features provided by the FCM SDK for iOS.
+     */
+    fcmOptions?: ApnsFcmOptions;
   }
   /**
    * Represents the payload of an APNs message. Mainly consists of the `aps`
@@ -4047,6 +4094,28 @@ declare namespace admin.messaging {
      * (silent) and 1.0 (full volume).
      */
     volume?: number;
+  }
+
+  /**
+   * Represents options for features provided by the FCM SDK for iOS.
+   */
+  interface ApnsFcmOptions {
+
+    /**
+     * The label associated with the message's analytics data.
+     */
+    analyticsLabel?: string;
+  }
+
+  /**
+   * Represents platform-independent options for features provided by the FCM SDKs.
+   */
+  interface FcmOptions {
+
+    /**
+     * The label associated with the message's analytics data.
+     */
+    analyticsLabel?: string;
   }
 
 

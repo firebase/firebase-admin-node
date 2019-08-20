@@ -2,6 +2,21 @@
 
 -
 
+# v8.3.0
+
+- [added] `admin.database().getRules()` method to retrieve the currently
+  applied RTDB rules text.
+- [added] `admin.database().getRulesJSON()` method to retrieve the currently
+  applied RTDB rules as a parsed JSON object.
+- [added] `admin.database().setRules()` method to update the RTDB rules.
+
+# v8.2.0
+
+- [fixed] Gracefully handling array-like objects in `messaging.sendAll()` and
+  `messaging.sendMulticast()` APIs.
+- [fixed] Updated the metadata server URL (used by the application default credentials)
+  to the `v1` endpoint.
+
 # v8.1.0
 
 - [added] `admin.projectManagement().listAppMetadata()` method to list the app summary of up to 100
