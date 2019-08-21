@@ -735,7 +735,7 @@ export class Messaging implements FirebaseServiceInterface {
     const payloadCopy: MessagingPayload = deepCopy(payload);
 
     const payloadKeys = Object.keys(payloadCopy);
-    const validPayloadKeys = ['data', 'notification'];
+    const validPayloadKeys = ['data', 'fcmOptions', 'notification'];
 
     let containsDataOrNotificationKey = false;
     payloadKeys.forEach((payloadKey) => {
