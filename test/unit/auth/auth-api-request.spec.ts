@@ -1203,7 +1203,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       if (handler.name === 'FirebaseTenantRequestHandler') {
         it('should throw when a user record with mismatching tenant ID is provided', () => {
           const mismatchIndex = 34;
-          const mismatchTenantId = 'MISMATCHING_TENANT_ID';
+          const mismatchTenantId = 'MISMATCHING-TENANT-ID';
           const expectedError = new FirebaseAuthError(
             AuthClientErrorCode.MISMATCHING_TENANT_ID,
             `UserRecord of index "${mismatchIndex}" has mismatching tenant ID "${mismatchTenantId}"`,
@@ -1755,7 +1755,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       it('should be rejected given a tenant ID to modify', () => {
         const dataWithModifiedTenantId = deepCopy(validData);
-        (dataWithModifiedTenantId as any).tenantId = 'MODIFIED_TENANT_ID';
+        (dataWithModifiedTenantId as any).tenantId = 'MODIFIED-TENANT-ID';
         // Expected error when a tenant ID is provided.
         const expectedError = new FirebaseAuthError(
           AuthClientErrorCode.INVALID_ARGUMENT,
@@ -3552,11 +3552,11 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
     if (handler.supportsTenantManagement) {
       describe('getTenant', () => {
-        const path = '/v2beta1/projects/project_id/tenants/tenant_id';
+        const path = '/v2beta1/projects/project_id/tenants/tenant-id';
         const method = 'GET';
-        const tenantId = 'tenant_id';
+        const tenantId = 'tenant-id';
         const expectedResult = utils.responseFrom({
-          name: 'projects/project_id/tenants/tenant_id',
+          name: 'projects/project_id/tenants/tenant-id',
         });
 
         it('should be fulfilled given a valid tenant ID', () => {
@@ -3571,7 +3571,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             });
         });
 
-        const invalidTenantIds = [null, NaN, 0, 1, true, false, '', ['tenant_id'], [], {}, { a: 1 }, _.noop];
+        const invalidTenantIds = [null, NaN, 0, 1, true, false, '', ['tenant-id'], [], {}, { a: 1 }, _.noop];
         invalidTenantIds.forEach((invalidTenantId) => {
           it('should be rejected given an invalid tenant ID:' + JSON.stringify(invalidTenantId), () => {
             const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID);
@@ -3614,8 +3614,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const maxResults = 500;
         const expectedResult = utils.responseFrom({
           tenants : [
-            {name: 'projects/project_id/tenants/tenant_id1'},
-            {name: 'projects/project_id/tenants/tenant_id2'},
+            {name: 'projects/project_id/tenants/tenant-id1'},
+            {name: 'projects/project_id/tenants/tenant-id2'},
           ],
           nextPageToken: 'NEXT_PAGE_TOKEN',
         });
@@ -3724,9 +3724,9 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
 
       describe('deleteTenant', () => {
-        const path = '/v2beta1/projects/project_id/tenants/tenant_id';
+        const path = '/v2beta1/projects/project_id/tenants/tenant-id';
         const method = 'DELETE';
-        const tenantId = 'tenant_id';
+        const tenantId = 'tenant-id';
         const expectedResult = utils.responseFrom({});
 
         it('should be fulfilled given a valid tenant ID', () => {
@@ -3741,7 +3741,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             });
         });
 
-        const invalidTenantIds = [null, NaN, 0, 1, true, false, '', ['tenant_id'], [], {}, { a: 1 }, _.noop];
+        const invalidTenantIds = [null, NaN, 0, 1, true, false, '', ['tenant-id'], [], {}, { a: 1 }, _.noop];
         invalidTenantIds.forEach((invalidTenantId) => {
           it('should be rejected given an invalid tenant ID:' + JSON.stringify(invalidTenantId), () => {
             const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID);
@@ -3780,21 +3780,21 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       describe('createTenant', () => {
         const path = '/v2beta1/projects/project_id/tenants';
         const postMethod = 'POST';
-        const tenantId = 'tenant_id';
+        const tenantId = 'tenant-id';
         const tenantOptions: TenantOptions = {
-          displayName: 'TENANT_DISPLAY_NAME',
+          displayName: 'TENANT-DISPLAY-NAME',
           emailSignInConfig: {
             enabled: true,
             passwordRequired: true,
           },
         };
         const expectedRequest = {
-          displayName: 'TENANT_DISPLAY_NAME',
+          displayName: 'TENANT-DISPLAY-NAME',
           allowPasswordSignup: true,
           enableEmailLinkSignin: false,
         };
         const expectedResult = utils.responseFrom(deepExtend({
-          name: 'projects/project_id/tenants/tenant_id',
+          name: 'projects/project_id/tenants/tenant-id',
         }, expectedRequest));
 
         it('should be fulfilled given valid parameters', () => {
@@ -3849,7 +3849,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             AuthClientErrorCode.INTERNAL_ERROR,
             'INTERNAL ASSERT FAILED: Unable to create new tenant',
           );
-          // Resource name should have /tenants/tenant_id in path. This should throw an error.
+          // Resource name should have /tenants/tenant-id in path. This should throw an error.
           const stub = sinon.stub(HttpClient.prototype, 'send')
             .resolves(utils.responseFrom({name: 'projects/project_id'}));
           stubs.push(stub);
@@ -3890,23 +3890,23 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
 
       describe('updateTenant', () => {
-        const path = '/v2beta1/projects/project_id/tenants/tenant_id';
+        const path = '/v2beta1/projects/project_id/tenants/tenant-id';
         const patchMethod = 'PATCH';
-        const tenantId = 'tenant_id';
+        const tenantId = 'tenant-id';
         const tenantOptions = {
-          displayName: 'TENANT_DISPLAY_NAME',
+          displayName: 'TENANT-DISPLAY-NAME',
           emailSignInConfig: {
             enabled: true,
             passwordRequired: true,
           },
         };
         const expectedRequest = {
-          displayName: 'TENANT_DISPLAY_NAME',
+          displayName: 'TENANT-DISPLAY-NAME',
           allowPasswordSignup: true,
           enableEmailLinkSignin: false,
         };
         const expectedResult = utils.responseFrom(deepExtend({
-          name: 'projects/project_id/tenants/tenant_id',
+          name: 'projects/project_id/tenants/tenant-id',
         }, expectedRequest));
 
         it('should be fulfilled given full parameters', () => {
@@ -3963,7 +3963,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             });
         });
 
-        const invalidTenantIds = [null, NaN, 0, 1, true, false, '', ['tenant_id'], [], {}, { a: 1 }, _.noop];
+        const invalidTenantIds = [null, NaN, 0, 1, true, false, '', ['tenant-id'], [], {}, { a: 1 }, _.noop];
         invalidTenantIds.forEach((invalidTenantId) => {
           it('should be rejected given an invalid tenant ID:' + JSON.stringify(invalidTenantId), () => {
             const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID);
@@ -4021,7 +4021,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             AuthClientErrorCode.INTERNAL_ERROR,
             'INTERNAL ASSERT FAILED: Unable to update tenant',
           );
-          // Resource name should have /tenants/tenant_id in path. This should throw an error.
+          // Resource name should have /tenants/tenant-id in path. This should throw an error.
           const stub = sinon.stub(HttpClient.prototype, 'send')
             .resolves(utils.responseFrom({name: 'projects/project_id'}));
           stubs.push(stub);

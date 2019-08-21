@@ -639,16 +639,16 @@ describe('UserRecord', () => {
     });
 
     it('should return expected tenantId', () => {
-      const resp = deepCopy(getValidUserResponse('TENANT_ID'));
+      const resp = deepCopy(getValidUserResponse('TENANT-ID'));
       const tenantUserRecord = new UserRecord(resp);
-      expect(tenantUserRecord.tenantId).to.equal('TENANT_ID');
+      expect(tenantUserRecord.tenantId).to.equal('TENANT-ID');
     });
 
     it('should throw when modifying readonly tenantId property', () => {
       expect(() => {
-        const resp = deepCopy(getValidUserResponse('TENANT_ID'));
+        const resp = deepCopy(getValidUserResponse('TENANT-ID'));
         const tenantUserRecord = new UserRecord(resp);
-        (tenantUserRecord as any).tenantId = 'OTHER_TENANT_ID';
+        (tenantUserRecord as any).tenantId = 'OTHER-TENANT-ID';
       }).to.throw(Error);
     });
   });
@@ -667,9 +667,9 @@ describe('UserRecord', () => {
     });
 
     it('should return expected JSON object with tenant ID when available', () => {
-      const resp = deepCopy(getValidUserResponse('TENANT_ID'));
+      const resp = deepCopy(getValidUserResponse('TENANT-ID'));
       const tenantUserRecord = new UserRecord(resp);
-      expect(tenantUserRecord.toJSON()).to.deep.equal(getUserJSON('TENANT_ID'));
+      expect(tenantUserRecord.toJSON()).to.deep.equal(getUserJSON('TENANT-ID'));
     });
   });
 });

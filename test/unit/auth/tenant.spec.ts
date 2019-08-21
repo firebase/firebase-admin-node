@@ -34,14 +34,14 @@ const expect = chai.expect;
 
 describe('Tenant', () => {
   const serverRequest = {
-    name: 'projects/project1/tenants/TENANT_ID',
-    displayName: 'TENANT_DISPLAY_NAME',
+    name: 'projects/project1/tenants/TENANT-ID',
+    displayName: 'TENANT-DISPLAY-NAME',
     allowPasswordSignup: true,
     enableEmailLinkSignin: true,
   };
 
   const clientRequest = {
-    displayName: 'TENANT_DISPLAY_NAME',
+    displayName: 'TENANT-DISPLAY-NAME',
     emailSignInConfig: {
       enabled: true,
       passwordRequired: false,
@@ -49,7 +49,7 @@ describe('Tenant', () => {
   };
 
   const tenantOptions: TenantOptions = {
-    displayName: 'TENANT_DISPLAY_NAME',
+    displayName: 'TENANT-DISPLAY-NAME',
     emailSignInConfig: {
       enabled: true,
       passwordRequired: false,
@@ -169,13 +169,13 @@ describe('Tenant', () => {
 
   describe('getTenantIdFromResourceName()', () => {
     it('should return the expected tenant ID from resource name', () => {
-      expect(Tenant.getTenantIdFromResourceName('projects/project1/tenants/TENANT_ID'))
-        .to.equal('TENANT_ID');
+      expect(Tenant.getTenantIdFromResourceName('projects/project1/tenants/TENANT-ID'))
+        .to.equal('TENANT-ID');
     });
 
     it('should return the expected tenant ID from resource name whose project ID contains "tenants" substring', () => {
-      expect(Tenant.getTenantIdFromResourceName('projects/projecttenants/tenants/TENANT_ID'))
-        .to.equal('TENANT_ID');
+      expect(Tenant.getTenantIdFromResourceName('projects/projecttenants/tenants/TENANT-ID'))
+        .to.equal('TENANT-ID');
     });
 
     it('should return null when no tenant ID is found', () => {
@@ -191,11 +191,11 @@ describe('Tenant', () => {
     });
 
     it('should set readonly property tenantId', () => {
-      expect(tenant.tenantId).to.equal('TENANT_ID');
+      expect(tenant.tenantId).to.equal('TENANT-ID');
     });
 
     it('should set readonly property displayName', () => {
-      expect(tenant.displayName).to.equal('TENANT_DISPLAY_NAME');
+      expect(tenant.displayName).to.equal('TENANT-DISPLAY-NAME');
     });
 
     it('should set readonly property emailSignInConfig', () => {
@@ -216,14 +216,14 @@ describe('Tenant', () => {
 
     it('should set default EmailSignInConfig when allowPasswordSignup is undefined', () => {
       const serverResponse: TenantServerResponse = {
-        name: 'projects/project1/tenants/TENANT_ID',
-        displayName: 'TENANT_DISPLAY_NAME',
+        name: 'projects/project1/tenants/TENANT-ID',
+        displayName: 'TENANT-DISPLAY-NAME',
       };
       expect(() => {
         const tenantWithoutAllowPasswordSignup = new Tenant(serverResponse);
 
         expect(tenantWithoutAllowPasswordSignup.displayName).to.equal(serverResponse.displayName);
-        expect(tenantWithoutAllowPasswordSignup.tenantId).to.equal('TENANT_ID');
+        expect(tenantWithoutAllowPasswordSignup.tenantId).to.equal('TENANT-ID');
         expect(tenantWithoutAllowPasswordSignup.emailSignInConfig.enabled).to.be.false;
         expect(tenantWithoutAllowPasswordSignup.emailSignInConfig.passwordRequired).to.be.true;
       }).not.to.throw();
@@ -234,8 +234,8 @@ describe('Tenant', () => {
     const serverRequestCopy: TenantServerResponse = deepCopy(serverRequest);
     it('should return the expected object representation of a tenant', () => {
       expect(new Tenant(serverRequestCopy).toJSON()).to.deep.equal({
-        tenantId: 'TENANT_ID',
-        displayName: 'TENANT_DISPLAY_NAME',
+        tenantId: 'TENANT-ID',
+        displayName: 'TENANT-DISPLAY-NAME',
         emailSignInConfig: {
           enabled: true,
           passwordRequired: false,
