@@ -182,6 +182,7 @@ export interface DataMessagePayload {
 /* Payload for fcmOptions messages */
 export interface FcmOptionsPayload {
   analyticsLabel?: string;
+  [key: string]: string;
 }
 
 /* Payload for notification messages */
