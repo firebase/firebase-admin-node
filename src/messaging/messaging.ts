@@ -744,7 +744,7 @@ export class Messaging implements FirebaseServiceInterface {
         throw new FirebaseMessagingError(
           MessagingClientErrorCode.INVALID_PAYLOAD,
           `Messaging payload contains an invalid "${ payloadKey }" property. Valid properties are ` +
-          `"data" and "notification".`,
+          `"data", "fcmOptions", and "notification".`,
         );
       } else {
         containsDataOrNotificationKey = true;
