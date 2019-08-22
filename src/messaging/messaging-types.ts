@@ -179,6 +179,11 @@ export interface DataMessagePayload {
   [key: string]: string;
 }
 
+/* Payload for fcmOptions messages */
+export interface FcmOptionsPayload {
+  analyticsLabel?: string;
+}
+
 /* Payload for notification messages */
 export interface NotificationMessagePayload {
   tag?: string;
@@ -196,9 +201,10 @@ export interface NotificationMessagePayload {
   [other: string]: string;
 }
 
-/* Composite messaging payload (data and notification payloads are both optional) */
+/* Composite messaging payload (data, fcmOptions, and notification payloads are all optional) */
 export interface MessagingPayload {
   data?: DataMessagePayload;
+  fcmOptions?: FcmOptionsPayload;
   notification?: NotificationMessagePayload;
 }
 

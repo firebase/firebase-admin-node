@@ -258,6 +258,11 @@ const mockPayloadNotificationValue = {
   body: 'Mock body.',
 };
 
+const payload = {
+  data: mockPayloadDataValue,
+  notification: mockPayloadNotificationValue,
+};
+
 export const messaging = {
   topic: 'mock-topic',
   topicWithPrefix: '/topics/mock-topic',
@@ -273,9 +278,12 @@ export const messaging = {
   payloadNotificationOnly: {
     notification: mockPayloadNotificationValue,
   },
-  payload: {
-    data: mockPayloadDataValue,
-    notification: mockPayloadNotificationValue,
+  payload,
+  payloadWithFcmOptions: {
+    ...payload,
+    fcmOptions: {
+      analyticsLabel: 'test.analytics',
+    },
   },
   options: {
     collapseKey: 'foo',

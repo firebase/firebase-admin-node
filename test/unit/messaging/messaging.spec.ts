@@ -2710,6 +2710,16 @@ describe('Messaging', () => {
       );
     });
 
+    it('should be fulfilled given an options object containing only whitelisted properties with fcmOptions', () => {
+      mockedRequests.push(mockSendToDeviceStringRequest());
+
+      return messaging.sendToTopic(
+        mocks.messaging.topic,
+        mocks.messaging.payloadWithFcmOptions,
+        mocks.messaging.options,
+      );
+    });
+
     it('should be fulfilled given an options object containing non-whitelisted properties', () => {
       mockedRequests.push(mockSendToDeviceStringRequest());
 
