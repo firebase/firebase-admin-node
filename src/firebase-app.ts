@@ -30,6 +30,7 @@ import {Firestore} from '@google-cloud/firestore';
 import {FirestoreService} from './firestore/firestore';
 import {InstanceId} from './instance-id/instance-id';
 import {ProjectManagement} from './project-management/project-management';
+import {SecurityRules} from './security-rules/security-rules';
 
 import {Agent} from 'http';
 
@@ -363,6 +364,19 @@ export class FirebaseApp {
       const projectManagementService: typeof ProjectManagement =
           require('./project-management/project-management').ProjectManagement;
       return new projectManagementService(this);
+    });
+  }
+
+  /**
+   * Returns the SecurityRules service instance associated with this app.
+   *
+   * @return {SecurityRules} The SecurityRules service instance of this app.
+   */
+  public securityRules(): SecurityRules {
+    return this.ensureService_('security-rules', () => {
+      const securityRulesService: typeof SecurityRules =
+          require('./security-rules/security-rules').SecurityRules;
+      return new securityRulesService(this);
     });
   }
 
