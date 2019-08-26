@@ -46,22 +46,22 @@ const RULESET_NAME_PATTERN = /[0-9a-zA-Z-]+/;
 describe('admin.securityRules', () => {
 
   let testRuleset: admin.securityRules.Ruleset = null;
-  const tempRulesets: string[] = [];
+  const rulesetsToDelete: string[] = [];
 
   function scheduleForDelete(ruleset: admin.securityRules.Ruleset) {
-    tempRulesets.push(ruleset.name);
+    rulesetsToDelete.push(ruleset.name);
   }
 
   function unscheduleForDelete(ruleset: admin.securityRules.Ruleset) {
-    tempRulesets.splice(tempRulesets.indexOf(ruleset.name), 1);
+    rulesetsToDelete.splice(rulesetsToDelete.indexOf(ruleset.name), 1);
   }
 
   function deleteTempRulesets(): Promise<void[]> {
     const promises: Array<Promise<void>> = [];
-    tempRulesets.forEach((rs) => {
+    rulesetsToDelete.forEach((rs) => {
       promises.push(admin.securityRules().deleteRuleset(rs));
     });
-    tempRulesets.splice(0, tempRulesets.length); // Clear out the array.
+    rulesetsToDelete.splice(0, rulesetsToDelete.length); // Clear out the array.
     return Promise.all(promises);
   }
 
