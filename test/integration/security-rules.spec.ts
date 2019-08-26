@@ -270,6 +270,10 @@ describe('admin.securityRules', () => {
     it('deletes existing Ruleset', () => {
       return admin.securityRules().deleteRuleset(testRuleset.name)
         .then(() => {
+          return admin.securityRules().getRuleset(testRuleset.name)
+            .should.eventually.be.rejected.and.have.property('code', 'security-rules/not-found');
+        })
+        .then(() => {
           unscheduleForDelete(testRuleset); // Already deleted.
           testRuleset = null;
         });
