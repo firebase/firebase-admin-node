@@ -48,13 +48,25 @@ describe('admin.securityRules', () => {
   let testRuleset: admin.securityRules.Ruleset = null;
   const tempRulesets: string[] = [];
 
-  after(() => {
+  function scheduleForDelete(ruleset: admin.securityRules.Ruleset) {
+    tempRulesets.push(ruleset.name);
+  }
+
+  function unscheduleForDelete(ruleset: admin.securityRules.Ruleset) {
+    tempRulesets.splice(tempRulesets.indexOf(ruleset.name), 1);
+  }
+
+  function deleteTempRulesets(): Promise<void[]> {
     const promises: Array<Promise<void>> = [];
     tempRulesets.forEach((rs) => {
       promises.push(admin.securityRules().deleteRuleset(rs));
     });
-
+    tempRulesets.splice(0, tempRulesets.length); // Clear out the array.
     return Promise.all(promises);
+  }
+
+  after(() => {
+    return deleteTempRulesets();
   });
 
   describe('createRulesFileFromSource()', () => {
@@ -80,7 +92,7 @@ describe('admin.securityRules', () => {
       return admin.securityRules().createRuleset(rulesFile)
         .then((ruleset) => {
           testRuleset = ruleset;
-          tempRulesets.push(ruleset.name);
+          scheduleForDelete(ruleset);
           verifyFirestoreRuleset(ruleset);
         });
     });
@@ -117,15 +129,16 @@ describe('admin.securityRules', () => {
     let oldRuleset: admin.securityRules.Ruleset = null;
     let newRuleset: admin.securityRules.Ruleset = null;
 
-    after(() => {
+    function revertFirestoreRuleset(): Promise<void> {
       if (newRuleset) {
-        // Set it up to be deleted at the end.
-        tempRulesets.push(newRuleset.name);
-        // Revert back to the original Ruleset.
         return admin.securityRules().releaseFirestoreRuleset(oldRuleset);
       }
 
       return Promise.resolve();
+    }
+
+    after(() => {
+      return revertFirestoreRuleset();
     });
 
     it('getFirestoreRuleset() returns the Ruleset currently in effect', () => {
@@ -146,7 +159,9 @@ describe('admin.securityRules', () => {
           return admin.securityRules().releaseFirestoreRulesetFromSource(SAMPLE_FIRESTORE_RULES);
         })
         .then((ruleset) => {
+          scheduleForDelete(ruleset);
           newRuleset = ruleset;
+
           expect(ruleset.name).to.not.equal(oldRuleset.name);
           verifyFirestoreRuleset(ruleset);
           return admin.securityRules().getFirestoreRuleset();
@@ -162,15 +177,16 @@ describe('admin.securityRules', () => {
     let oldRuleset: admin.securityRules.Ruleset = null;
     let newRuleset: admin.securityRules.Ruleset = null;
 
-    after(() => {
+    function revertStorageRuleset(): Promise<void> {
       if (newRuleset) {
-        // Set it up to be deleted at the end.
-        tempRulesets.push(newRuleset.name);
-        // Revert back to the original Ruleset.
         return admin.securityRules().releaseStorageRuleset(oldRuleset);
       }
 
       return Promise.resolve();
+    }
+
+    after(() => {
+      return revertStorageRuleset();
     });
 
     it('getStorageRuleset() returns the currently applied Storage rules', () => {
@@ -191,7 +207,9 @@ describe('admin.securityRules', () => {
           return admin.securityRules().releaseStorageRulesetFromSource(SAMPLE_STORAGE_RULES);
         })
         .then((ruleset) => {
+          scheduleForDelete(ruleset);
           newRuleset = ruleset;
+
           expect(ruleset.name).to.not.equal(oldRuleset.name);
           expect(ruleset.name).to.match(RULESET_NAME_PATTERN);
           const createTime = new Date(ruleset.createTime);
@@ -252,7 +270,7 @@ describe('admin.securityRules', () => {
     it('deletes existing Ruleset', () => {
       return admin.securityRules().deleteRuleset(testRuleset.name)
         .then(() => {
-          tempRulesets.splice(tempRulesets.indexOf(testRuleset.name), 1);
+          unscheduleForDelete(testRuleset); // Already deleted.
           testRuleset = null;
         });
     });
