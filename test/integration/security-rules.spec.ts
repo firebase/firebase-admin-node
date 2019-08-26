@@ -130,11 +130,11 @@ describe('admin.securityRules', () => {
     let newRuleset: admin.securityRules.Ruleset = null;
 
     function revertFirestoreRuleset(): Promise<void> {
-      if (newRuleset) {
-        return admin.securityRules().releaseFirestoreRuleset(oldRuleset);
+      if (!newRuleset) {
+        return Promise.resolve();
       }
 
-      return Promise.resolve();
+      return admin.securityRules().releaseFirestoreRuleset(oldRuleset);
     }
 
     after(() => {
@@ -178,11 +178,11 @@ describe('admin.securityRules', () => {
     let newRuleset: admin.securityRules.Ruleset = null;
 
     function revertStorageRuleset(): Promise<void> {
-      if (newRuleset) {
-        return admin.securityRules().releaseStorageRuleset(oldRuleset);
+      if (!newRuleset) {
+        return Promise.resolve();
       }
 
-      return Promise.resolve();
+      return admin.securityRules().releaseStorageRuleset(oldRuleset);
     }
 
     after(() => {
