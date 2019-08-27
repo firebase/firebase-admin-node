@@ -248,6 +248,7 @@ interface Error {
 }
 
 const ERROR_CODE_MAPPING: {[key: string]: SecurityRulesErrorCode} = {
+  INVALID_ARGUMENT: 'invalid-argument',
   NOT_FOUND: 'not-found',
   UNAUTHENTICATED: 'authentication-error',
   UNKNOWN: 'unknown-error',
