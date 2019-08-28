@@ -23,6 +23,7 @@ export type SecurityRulesErrorCode =
   | 'invalid-argument'
   | 'invalid-server-response'
   | 'not-found'
+  | 'resource-exhausted'
   | 'service-unavailable'
   | 'unknown-error';
 

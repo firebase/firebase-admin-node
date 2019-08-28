@@ -214,6 +214,23 @@ describe('SecurityRulesApiClient', () => {
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
+    it('should throw when the rulesets limit reached', () => {
+      const resourceExhaustedError = {
+        error: {
+          code: 429,
+          message: 'The maximum number of Rulesets (2500) have already been created for the project.',
+          status: 'RESOURCE_EXHAUSTED',
+        },
+      };
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom(resourceExhaustedError, 429));
+      stubs.push(stub);
+      const expected = new FirebaseSecurityRulesError('resource-exhausted', resourceExhaustedError.error.message);
+      return apiClient.createRuleset(RULES_CONTENT)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
     it('should throw unknown-error when error code is not present', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
