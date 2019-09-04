@@ -32,8 +32,12 @@ toc:
     path: /docs/reference/admin/node/admin.auth.AuthProviderConfigFilter
   - title: "CreateRequest"
     path: /docs/reference/admin/node/admin.auth.CreateRequest
+  - title: "CreateTenantRequest"
+    path: /docs/reference/admin/node/admin.auth.CreateTenantRequest
   - title: "ListProviderConfigResults"
     path: /docs/reference/admin/node/admin.auth.ListProviderConfigResults
+  - title: "ListTenantsResult"
+    path: /docs/reference/admin/node/admin.auth.ListTenantsResult
   - title: "OIDCAuthProviderConfig"
     path: /docs/reference/admin/node/admin.auth.OIDCAuthProviderConfig
   - title: "OIDCUpdateAuthProviderRequest"
@@ -42,8 +46,16 @@ toc:
     path: /docs/reference/admin/node/admin.auth.SAMLAuthProviderConfig
   - title: "SAMLUpdateAuthProviderRequest"
     path: /docs/reference/admin/node/admin.auth.SAMLUpdateAuthProviderRequest
+  - title: "Tenant"
+    path: /docs/reference/admin/node/admin.auth.Tenant
+  - title: "TenantAwareAuth"
+    path: /docs/reference/admin/node/admin.auth.TenantAwareAuth
+  - title: "TenantManager"
+    path: /docs/reference/admin/node/admin.auth.TenantManager
   - title: "UpdateRequest"
     path: /docs/reference/admin/node/admin.auth.UpdateRequest
+  - title: "UpdateTenantRequest"
+    path: /docs/reference/admin/node/admin.auth.UpdateTenantRequest
   - title: "UserImportOptions"
     path: /docs/reference/admin/node/admin.auth.UserImportOptions
   - title: "UserImportRecord"
