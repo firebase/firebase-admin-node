@@ -148,6 +148,7 @@ export class UserRecord {
   public readonly passwordHash?: string;
   public readonly passwordSalt?: string;
   public readonly customClaims: object;
+  public readonly tenantId?: string | null;
   public readonly tokensValidAfterTime?: string;
 
   constructor(response: any) {
@@ -187,6 +188,7 @@ export class UserRecord {
       validAfterTime = parseDate(response.validSince * 1000);
     }
     utils.addReadonlyGetter(this, 'tokensValidAfterTime', validAfterTime || undefined);
+    utils.addReadonlyGetter(this, 'tenantId', response.tenantId);
   }
 
   /** @return {object} The plain object representation of the user record. */
@@ -205,6 +207,7 @@ export class UserRecord {
       passwordSalt: this.passwordSalt,
       customClaims: deepCopy(this.customClaims),
       tokensValidAfterTime: this.tokensValidAfterTime,
+      tenantId: this.tenantId,
     };
     json.providerData = [];
     for (const entry of this.providerData) {
