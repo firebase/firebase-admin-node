@@ -2,6 +2,11 @@
 
 -
 
+# v8.4.0
+
+- [added] Added support for specifying the analytics label for
+  notifications
+
 # v8.3.0
 
 - [added] `admin.database().getRules()` method to retrieve the currently
