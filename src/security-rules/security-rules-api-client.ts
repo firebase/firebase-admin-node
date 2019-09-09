@@ -250,6 +250,7 @@ interface Error {
 const ERROR_CODE_MAPPING: {[key: string]: SecurityRulesErrorCode} = {
   INVALID_ARGUMENT: 'invalid-argument',
   NOT_FOUND: 'not-found',
+  RESOURCE_EXHAUSTED: 'resource-exhausted',
   UNAUTHENTICATED: 'authentication-error',
   UNKNOWN: 'unknown-error',
 };
