@@ -63,6 +63,7 @@ export interface UserImportRecord {
   customClaims?: object;
   passwordHash?: Buffer;
   passwordSalt?: Buffer;
+  tenantId?: string;
 }
 
 
@@ -87,6 +88,7 @@ interface UploadAccountUser {
   lastLoginAt?: number;
   createdAt?: number;
   customAttributes?: string;
+  tenantId?: string;
 }
 
 
@@ -153,6 +155,7 @@ function populateUploadAccountUser(
     photoUrl: user.photoURL,
     phoneNumber: user.phoneNumber,
     providerUserInfo: [],
+    tenantId: user.tenantId,
     customAttributes: user.customClaims && JSON.stringify(user.customClaims),
   };
   if (typeof user.passwordHash !== 'undefined') {

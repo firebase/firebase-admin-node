@@ -458,6 +458,10 @@ export class AuthClientErrorCode {
     code: 'invalid-last-sign-in-time',
     message: 'The last sign-in time must be a valid UTC date string.',
   };
+  public static INVALID_NAME = {
+    code: 'invalid-name',
+    message: 'The resource name provided is invalid.',
+  };
   public static INVALID_OAUTH_CLIENT_ID = {
     code: 'invalid-oauth-client-id',
     message: 'The provided OAuth client ID is invalid.',
@@ -487,6 +491,10 @@ export class AuthClientErrorCode {
     code: 'invalid-photo-url',
     message: 'The photoURL field must be a valid URL.',
   };
+  public static INVALID_PROJECT_ID = {
+    code: 'invalid-project-id',
+    message: 'Invalid parent project. Either parent project doesn\'t exist or didn\'t enable multi-tenancy.',
+  };
   public static INVALID_PROVIDER_DATA = {
     code: 'invalid-provider-data',
     message: 'The providerData must be a valid array of UserInfo objects.',
@@ -500,6 +508,14 @@ export class AuthClientErrorCode {
     message: 'The session cookie duration must be a valid number in milliseconds ' +
       'between 5 minutes and 2 weeks.',
   };
+  public static INVALID_TENANT_ID = {
+    code: 'invalid-tenant-id',
+    message: 'The tenant ID must be a valid non-empty string.',
+  };
+  public static INVALID_TENANT_TYPE = {
+    code: 'invalid-tenant-type',
+    message: 'Tenant type must be either "full_service" or "lightweight".',
+  };
   public static INVALID_UID = {
     code: 'invalid-uid',
     message: 'The uid must be a non-empty string with at most 128 characters.',
@@ -511,6 +527,10 @@ export class AuthClientErrorCode {
   public static INVALID_TOKENS_VALID_AFTER_TIME = {
     code: 'invalid-tokens-valid-after-time',
     message: 'The tokensValidAfterTime must be a valid UTC number in seconds.',
+  };
+  public static MISMATCHING_TENANT_ID = {
+    code: 'mismatching-tenant-id',
+    message: 'User tenant ID does not match with the current TenantAwareAuth tenant ID.',
   };
   public static MISSING_ANDROID_PACKAGE_NAME = {
     code: 'missing-android-pkg-name',
@@ -524,6 +544,10 @@ export class AuthClientErrorCode {
   public static MISSING_CONTINUE_URI = {
     code: 'missing-continue-uri',
     message: 'A valid continue URL must be provided in the request.',
+  };
+  public static MISSING_DISPLAY_NAME = {
+    code: 'missing-display-name',
+    message: 'The resource being created or edited is missing a valid display name.',
   };
   public static MISSING_IOS_BUNDLE_ID = {
     code: 'missing-ios-bundle-id',
@@ -579,6 +603,10 @@ export class AuthClientErrorCode {
       'https://firebase.google.com/docs/admin/setup for details on how to authenticate this SDK ' +
       'with appropriate permissions.',
   };
+  public static QUOTA_EXCEEDED = {
+    code: 'quota-exceeded',
+    message: 'The project quota for the specified operation has been exceeded.',
+  };
   public static SESSION_COOKIE_EXPIRED = {
     code: 'session-cookie-expired',
     message: 'The Firebase session cookie is expired.',
@@ -586,6 +614,10 @@ export class AuthClientErrorCode {
   public static SESSION_COOKIE_REVOKED = {
     code: 'session-cookie-revoked',
     message: 'The Firebase session cookie has been revoked.',
+  };
+  public static TENANT_NOT_FOUND = {
+    code: 'tenant-not-found',
+    message: 'There is no tenant corresponding to the provided identifier.',
   };
   public static UID_ALREADY_EXISTS = {
     code: 'uid-already-exists',
@@ -595,6 +627,10 @@ export class AuthClientErrorCode {
     code: 'unauthorized-continue-uri',
     message: 'The domain of the continue URL is not whitelisted. Whitelist the domain in the ' +
              'Firebase console.',
+  };
+  public static UNSUPPORTED_TENANT_OPERATION = {
+    code: 'unsupported-tenant-operation',
+    message: 'This operation is not supported in a multi-tenant context.',
   };
   public static USER_NOT_FOUND = {
     code: 'user-not-found',
@@ -764,24 +800,34 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   INVALID_DURATION: 'INVALID_SESSION_COOKIE_DURATION',
   // Invalid email provided.
   INVALID_EMAIL: 'INVALID_EMAIL',
+  // Invalid tenant display name. This can be thrown on CreateTenant and UpdateTenant.
+  INVALID_DISPLAY_NAME: 'INVALID_DISPLAY_NAME',
   // Invalid ID token provided.
   INVALID_ID_TOKEN: 'INVALID_ID_TOKEN',
+  // Invalid tenant/parent resource name.
+  INVALID_NAME: 'INVALID_NAME',
   // OIDC configuration has an invalid OAuth client ID.
   INVALID_OAUTH_CLIENT_ID: 'INVALID_OAUTH_CLIENT_ID',
   // Invalid page token.
   INVALID_PAGE_SELECTION: 'INVALID_PAGE_TOKEN',
   // Invalid phone number.
   INVALID_PHONE_NUMBER: 'INVALID_PHONE_NUMBER',
+  // Invalid agent project. Either agent project doesn't exist or didn't enable multi-tenancy.
+  INVALID_PROJECT_ID: 'INVALID_PROJECT_ID',
   // Invalid provider ID.
   INVALID_PROVIDER_ID: 'INVALID_PROVIDER_ID',
   // Invalid service account.
   INVALID_SERVICE_ACCOUNT: 'INVALID_SERVICE_ACCOUNT',
+  // Invalid tenant type.
+  INVALID_TENANT_TYPE: 'INVALID_TENANT_TYPE',
   // Missing Android package name.
   MISSING_ANDROID_PACKAGE_NAME: 'MISSING_ANDROID_PACKAGE_NAME',
   // Missing configuration.
   MISSING_CONFIG: 'MISSING_CONFIG',
   // Missing configuration identifier.
   MISSING_CONFIG_ID: 'MISSING_PROVIDER_ID',
+  // Missing tenant display name: This can be thrown on CreateTenant and UpdateTenant.
+  MISSING_DISPLAY_NAME: 'MISSING_DISPLAY_NAME',
   // Missing iOS bundle ID.
   MISSING_IOS_BUNDLE_ID: 'MISSING_IOS_BUNDLE_ID',
   // Missing OIDC issuer.
@@ -804,10 +850,18 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   PHONE_NUMBER_EXISTS: 'PHONE_NUMBER_ALREADY_EXISTS',
   // Project not found.
   PROJECT_NOT_FOUND: 'PROJECT_NOT_FOUND',
+  // In multi-tenancy context: project creation quota exceeded.
+  QUOTA_EXCEEDED: 'QUOTA_EXCEEDED',
+  // Tenant not found.
+  TENANT_NOT_FOUND: 'TENANT_NOT_FOUND',
+  // Tenant ID mismatch.
+  TENANT_ID_MISMATCH: 'MISMATCHING_TENANT_ID',
   // Token expired error.
   TOKEN_EXPIRED: 'ID_TOKEN_EXPIRED',
   // Continue URL provided in ActionCodeSettings has a domain that is not whitelisted.
   UNAUTHORIZED_DOMAIN: 'UNAUTHORIZED_DOMAIN',
+  // Operation is not supported in a multi-tenant context.
+  UNSUPPORTED_TENANT_OPERATION: 'UNSUPPORTED_TENANT_OPERATION',
   // User on which action is to be performed is not found.
   USER_NOT_FOUND: 'USER_NOT_FOUND',
   // Password provided is too weak.

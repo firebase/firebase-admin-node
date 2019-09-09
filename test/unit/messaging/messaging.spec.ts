@@ -2469,6 +2469,24 @@ describe('Messaging', () => {
           messaging.send({data: arg, topic: 'test'});
         }).to.throw('data must be a non-null object');
       });
+
+      it(`should throw given invalid fcmOptions: ${JSON.stringify(arg)}`, () => {
+        expect(() => {
+          messaging.send({fcmOptions: arg, topic: 'test'});
+        }).to.throw('fcmOptions must be a non-null object');
+      });
+
+      it(`should throw given invalid AndroidFcmOptions: ${JSON.stringify(arg)}`, () => {
+        expect(() => {
+          messaging.send({android: {fcmOptions: arg}, topic: 'test'});
+        }).to.throw('fcmOptions must be a non-null object');
+      });
+
+      it(`should throw given invalid ApnsFcmOptions: ${JSON.stringify(arg)}`, () => {
+        expect(() => {
+          messaging.send({apns: {fcmOptions: arg}, topic: 'test'});
+        }).to.throw('fcmOptions must be a non-null object');
+      });
     });
 
     const invalidDataMessages: any[] = [
@@ -2751,6 +2769,14 @@ describe('Messaging', () => {
         },
       },
       {
+        label: 'Generic fcmOptions message',
+        req: {
+          fcmOptions: {
+            analyticsLabel: 'test.analytics',
+          },
+        },
+      },
+      {
         label: 'Android data message',
         req: {
           android: {
@@ -2852,6 +2878,9 @@ describe('Messaging', () => {
               bodyLocArgs: ['arg1', 'arg2'],
               channelId: 'test.channel',
             },
+            fcmOptions: {
+              analyticsLabel: 'test.analytics',
+            },
           },
         },
         expectedReq: {
@@ -2877,6 +2906,9 @@ describe('Messaging', () => {
               body_loc_key: 'body.loc.key',
               body_loc_args: ['arg1', 'arg2'],
               channel_id: 'test.channel',
+            },
+            fcmOptions: {
+              analyticsLabel: 'test.analytics',
             },
           },
         },
@@ -2999,6 +3031,9 @@ describe('Messaging', () => {
               customKey1: 'custom.value',
               customKey2: {nested: 'value'},
             },
+            fcmOptions: {
+              analyticsLabel: 'test.analytics',
+            },
           },
         },
         expectedReq: {
@@ -3031,6 +3066,9 @@ describe('Messaging', () => {
               },
               customKey1: 'custom.value',
               customKey2: {nested: 'value'},
+            },
+            fcmOptions: {
+              analyticsLabel: 'test.analytics',
             },
           },
         },

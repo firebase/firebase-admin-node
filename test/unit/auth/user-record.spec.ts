@@ -29,11 +29,12 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 /**
+ * @param {string=} tenantId The optional tenant ID to add to the response.
  * @return {object} A sample valid user response as returned from getAccountInfo
  *     endpoint.
  */
-function getValidUserResponse(): object {
-  return {
+function getValidUserResponse(tenantId?: string): {[key: string]: any} {
+  const response: any = {
     localId: 'abcdefghijklmnopqrstuvwxyz',
     email: 'user@gmail.com',
     emailVerified: true,
@@ -79,13 +80,18 @@ function getValidUserResponse(): object {
       admin: true,
     }),
   };
+  if (typeof tenantId !== 'undefined') {
+    response.tenantId = tenantId;
+  }
+  return response;
 }
 
 /**
+ * @param {string=} tenantId The optional tenant ID to add to the user.
  * @return {object} The expected user JSON representation for the above user
  *     server response.
  */
-function getUserJSON(): object {
+function getUserJSON(tenantId?: string): object {
   return {
     uid: 'abcdefghijklmnopqrstuvwxyz',
     email: 'user@gmail.com',
@@ -138,6 +144,7 @@ function getUserJSON(): object {
       admin: true,
     },
     tokensValidAfterTime: new Date(1476136676000).toUTCString(),
+    tenantId,
   };
 }
 
@@ -626,6 +633,24 @@ describe('UserRecord', () => {
         (userRecord.providerData[0] as any).displayName = 'John Smith';
       }).to.throw(Error);
     });
+
+    it('should return undefined tenantId when not available', () => {
+      expect(userRecord.tenantId).to.be.undefined;
+    });
+
+    it('should return expected tenantId', () => {
+      const resp = deepCopy(getValidUserResponse('TENANT-ID'));
+      const tenantUserRecord = new UserRecord(resp);
+      expect(tenantUserRecord.tenantId).to.equal('TENANT-ID');
+    });
+
+    it('should throw when modifying readonly tenantId property', () => {
+      expect(() => {
+        const resp = deepCopy(getValidUserResponse('TENANT-ID'));
+        const tenantUserRecord = new UserRecord(resp);
+        (tenantUserRecord as any).tenantId = 'OTHER-TENANT-ID';
+      }).to.throw(Error);
+    });
   });
 
   describe('toJSON', () => {
@@ -639,6 +664,12 @@ describe('UserRecord', () => {
 
     it('should return undefined tokensValidAfterTime when not available', () => {
       expect((userRecordNoValidSince.toJSON() as any).tokensValidAfterTime).to.be.undefined;
+    });
+
+    it('should return expected JSON object with tenant ID when available', () => {
+      const resp = deepCopy(getValidUserResponse('TENANT-ID'));
+      const tenantUserRecord = new UserRecord(resp);
+      expect(tenantUserRecord.toJSON()).to.deep.equal(getUserJSON('TENANT-ID'));
     });
   });
 });

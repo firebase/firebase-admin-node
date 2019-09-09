@@ -17,7 +17,9 @@
 import {UserRecord, CreateRequest, UpdateRequest} from './user-record';
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseTokenGenerator, CryptoSigner, cryptoSignerFromApp} from './token-generator';
-import {FirebaseAuthRequestHandler} from './auth-api-request';
+import {
+  AbstractAuthRequestHandler, AuthRequestHandler, TenantAwareAuthRequestHandler,
+} from './auth-api-request';
 import {AuthClientErrorCode, FirebaseAuthError, ErrorInfo} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
 import {
@@ -32,6 +34,7 @@ import {
   AuthProviderConfig, AuthProviderConfigFilter, ListProviderConfigResults, UpdateAuthProviderRequest,
   SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
 } from './auth-config';
+import {TenantManager} from './tenant-manager';
 
 
 /**
@@ -72,6 +75,7 @@ export interface DecodedIdToken {
   iat: number;
   iss: string;
   sub: string;
+  tenant?: string;
   [key: string]: any;
 }
 
@@ -85,7 +89,7 @@ export interface SessionCookieOptions {
 /**
  * Base Auth class. Mainly used for user management APIs.
  */
-class BaseAuth {
+export class BaseAuth<T extends AbstractAuthRequestHandler> {
   protected readonly tokenGenerator: FirebaseTokenGenerator;
   protected readonly idTokenVerifier: FirebaseTokenVerifier;
   protected readonly sessionCookieVerifier: FirebaseTokenVerifier;
@@ -94,14 +98,14 @@ class BaseAuth {
    * The BaseAuth class constructor.
    *
    * @param {string} projectId The corresponding project ID.
-   * @param {FirebaseAuthRequestHandler} authRequestHandler The RPC request handler
+   * @param {T} authRequestHandler The RPC request handler
    *     for this instance.
    * @param {CryptoSigner} cryptoSigner The instance crypto signer used for custom token
    *     minting.
    * @constructor
    */
   constructor(protected readonly projectId: string,
-              protected readonly authRequestHandler: FirebaseAuthRequestHandler,
+              protected readonly authRequestHandler: T,
               cryptoSigner: CryptoSigner) {
     this.tokenGenerator = new FirebaseTokenGenerator(cryptoSigner);
     this.sessionCookieVerifier = createSessionCookieVerifier(projectId);
@@ -600,10 +604,125 @@ class BaseAuth {
 
 
 /**
- * Auth service bound to the provided app.
+ * The tenant aware Auth class.
  */
-export class Auth extends BaseAuth implements FirebaseServiceInterface {
+export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
+  public readonly tenantId: string;
+
+  /**
+   * The TenantAwareAuth class constructor.
+   *
+   * @param {object} app The app that created this tenant.
+   * @param tenantId The corresponding tenant ID.
+   * @constructor
+   */
+  constructor(private readonly app: FirebaseApp, tenantId: string) {
+    super(
+        utils.getProjectId(app),
+        new TenantAwareAuthRequestHandler(app, tenantId),
+        cryptoSignerFromApp(app));
+    utils.addReadonlyGetter(this, 'tenantId', tenantId);
+  }
+
+  /**
+   * Creates a new custom token that can be sent back to a client to use with
+   * signInWithCustomToken().
+   *
+   * @param {string} uid The uid to use as the JWT subject.
+   * @param {object=} developerClaims Optional additional claims to include in the JWT payload.
+   *
+   * @return {Promise<string>} A JWT for the provided payload.
+   */
+  public createCustomToken(uid: string, developerClaims?: object): Promise<string> {
+    // This is not yet supported by the Auth server. It is also not yet determined how this will be
+    // supported.
+    return Promise.reject(
+        new FirebaseAuthError(AuthClientErrorCode.UNSUPPORTED_TENANT_OPERATION));
+  }
+
+  /**
+   * Verifies a JWT auth token. Returns a Promise with the tokens claims. Rejects
+   * the promise if the token could not be verified. If checkRevoked is set to true,
+   * verifies if the session corresponding to the ID token was revoked. If the corresponding
+   * user's session was invalidated, an auth/id-token-revoked error is thrown. If not specified
+   * the check is not applied.
+   *
+   * @param {string} idToken The JWT to verify.
+   * @param {boolean=} checkRevoked Whether to check if the ID token is revoked.
+   * @return {Promise<DecodedIdToken>} A Promise that will be fulfilled after a successful
+   *     verification.
+   */
+  public verifyIdToken(idToken: string, checkRevoked: boolean = false): Promise<DecodedIdToken> {
+    return super.verifyIdToken(idToken, checkRevoked)
+      .then((decodedClaims) => {
+        // Validate tenant ID.
+        if (decodedClaims.firebase.tenant !== this.tenantId) {
+          throw new FirebaseAuthError(AuthClientErrorCode.MISMATCHING_TENANT_ID);
+        }
+        return decodedClaims;
+      });
+  }
+
+  /**
+   * Creates a new Firebase session cookie with the specified options that can be used for
+   * session management (set as a server side session cookie with custom cookie policy).
+   * The session cookie JWT will have the same payload claims as the provided ID token.
+   *
+   * @param {string} idToken The Firebase ID token to exchange for a session cookie.
+   * @param {SessionCookieOptions} sessionCookieOptions The session cookie options which includes
+   *     custom session duration.
+   *
+   * @return {Promise<string>} A promise that resolves on success with the created session cookie.
+   */
+  public createSessionCookie(
+      idToken: string, sessionCookieOptions: SessionCookieOptions): Promise<string> {
+    // Validate arguments before processing.
+    if (!validator.isNonEmptyString(idToken)) {
+      return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_ID_TOKEN));
+    }
+    if (!validator.isNonNullObject(sessionCookieOptions) ||
+        !validator.isNumber(sessionCookieOptions.expiresIn)) {
+      return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_SESSION_COOKIE_DURATION));
+    }
+    // This will verify the ID token and then match the tenant ID before creating the session cookie.
+    return this.verifyIdToken(idToken)
+      .then((decodedIdTokenClaims) => {
+        return super.createSessionCookie(idToken, sessionCookieOptions);
+      });
+  }
+
+  /**
+   * Verifies a Firebase session cookie. Returns a Promise with the tokens claims. Rejects
+   * the promise if the token could not be verified. If checkRevoked is set to true,
+   * verifies if the session corresponding to the session cookie was revoked. If the corresponding
+   * user's session was invalidated, an auth/session-cookie-revoked error is thrown. If not
+   * specified the check is not performed.
+   *
+   * @param {string} sessionCookie The session cookie to verify.
+   * @param {boolean=} checkRevoked Whether to check if the session cookie is revoked.
+   * @return {Promise<DecodedIdToken>} A Promise that will be fulfilled after a successful
+   *     verification.
+   */
+  public verifySessionCookie(
+      sessionCookie: string, checkRevoked: boolean = false): Promise<DecodedIdToken> {
+    return super.verifySessionCookie(sessionCookie, checkRevoked)
+      .then((decodedClaims) => {
+        if (decodedClaims.firebase.tenant !== this.tenantId) {
+          throw new FirebaseAuthError(AuthClientErrorCode.MISMATCHING_TENANT_ID);
+        }
+        return decodedClaims;
+      });
+  }
+}
+
+
+/**
+ * Auth service bound to the provided app.
+ * An Auth instance can have multiple tenants.
+ */
+export class Auth extends BaseAuth<AuthRequestHandler> implements FirebaseServiceInterface {
   public INTERNAL: AuthInternals = new AuthInternals();
+  private readonly tenantManager_: TenantManager;
   private readonly app_: FirebaseApp;
 
   /**
@@ -629,9 +748,10 @@ export class Auth extends BaseAuth implements FirebaseServiceInterface {
   constructor(app: FirebaseApp) {
     super(
         Auth.getProjectId(app),
-        new FirebaseAuthRequestHandler(app),
+        new AuthRequestHandler(app),
         cryptoSignerFromApp(app));
     this.app_ = app;
+    this.tenantManager_ = new TenantManager(app);
   }
 
   /**
@@ -641,5 +761,10 @@ export class Auth extends BaseAuth implements FirebaseServiceInterface {
    */
   get app(): FirebaseApp {
     return this.app_;
+  }
+
+  /** @return The current Auth instance's tenant manager. */
+  public tenantManager(): TenantManager {
+    return this.tenantManager_;
   }
 }
