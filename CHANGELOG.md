@@ -2,6 +2,13 @@
 
 -
 
+# v8.5.0
+
+- [added] Added multi-tenancy support to the authentication service (Google Cloud Identity Platform project required). Tenant related APIs are exposed via [`tenantManager()`](https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#tenantManager) on the [`admin.auth`](https://firebase.google.com/docs/reference/admin/node/admin.auth) interface.
+- [added] Added tenant management APIs `authForTenant()`, `getTenant()`, `listTenants()`, `deleteTenant()`, `createTenant()` and `updateTenant()` to the newly defined TenantManager.
+- [added] Defined `TenantAwareAuth` interface retrieved via `TenantManager#authForTenant()` for managing users, configuring SAML/OIDC providers, generating email links for password reset, email verification, etc for specific tenants.
+- [fixed] Upgraded `@firebase/database` dependency version to 0.5.1. This helps avoid some peer dependency warnings that were observed during package installation.
+
 # v8.4.0
 
 - [added] Added support for specifying the analytics label for
