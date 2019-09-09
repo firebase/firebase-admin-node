@@ -5540,7 +5540,7 @@ declare namespace admin.securityRules {
      * and source. Throws an error if any of the arguments are invalid. This is a local
      * operation, and does not involve any network API calls.
      *
-     *  @example
+     * @example
      * ```javascript
      * const source = '// Some rules source';
      * const rulesFile = admin.securityRules().createRulesFileFromSource(
