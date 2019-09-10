@@ -387,8 +387,8 @@ declare namespace admin {
   * ```
   *
   * @param app Optional app to return the `SecurityRules` service
-  *     for. If not provided, the default `SecurityRules` service will
-  *     be returned.
+  *     for. If not provided, the default `SecurityRules` service
+  *     is returned.
   * @return The default `SecurityRules` service if no app is provided, or the
   *   `SecurityRules` service associated with the provided app.
   */
@@ -5594,7 +5594,7 @@ declare namespace admin.securityRules {
      *   limit.
      * @param nextPageToken The next page token. If not specified, returns rulesets
      *   starting without any offset.
-     * @return A promise that fulfills a page of rulesets.
+     * @return A promise that fulfills with a page of rulesets.
      */
     listRulesetMetadata(
       pageSize?: number, nextPageToken?: string): Promise<RulesetMetadataList>;
