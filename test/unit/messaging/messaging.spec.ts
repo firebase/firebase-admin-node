@@ -2334,6 +2334,37 @@ describe('Messaging', () => {
       });
     });
 
+    const invalidImages = ['a', 'foo', 'image.jpg'];
+    invalidImages.forEach((image) => {
+      it(`should throw given an invalid image: ${ image }`, () => {
+        const message: Message = {
+          condition: 'topic-name',
+          android: {
+            notification: {
+              image,
+            },
+          },
+        };
+        expect(() => {
+          messaging.send(message);
+        }).to.throw('android.notification.image must be a valid URL string');
+      });
+    });
+
+    invalidImages.forEach((image) => {
+      it(`should throw given an invalid image: ${image}`, () => {
+        const message: Message = {
+          condition: 'topic-name',
+          notification: {
+            image,
+          },
+        };
+        expect(() => {
+          messaging.send(message);
+        }).to.throw('notification.image must be a valid URL string');
+      });
+    });
+
     it('should throw given android titleLocArgs without titleLocKey', () => {
       const message: Message = {
         condition: 'topic-name',
@@ -2486,6 +2517,14 @@ describe('Messaging', () => {
         expect(() => {
           messaging.send({apns: {fcmOptions: arg}, topic: 'test'});
         }).to.throw('fcmOptions must be a non-null object');
+      });
+    });
+
+    invalidImages.forEach((image) => {
+      it(`should throw given invalid URL string for image`, () => {
+        expect(() => {
+          messaging.send({apns: {fcmOptions: {image}}, topic: 'test'});
+        }).to.throw('image must be a valid URL string');
       });
     });
 
@@ -2765,6 +2804,7 @@ describe('Messaging', () => {
           notification: {
             title: 'test.title',
             body: 'test.body',
+            image: 'https://example.com/image.png',
           },
         },
       },
@@ -2798,6 +2838,7 @@ describe('Messaging', () => {
               color: '#112233',
               sound: 'test.sound',
               tag: 'test.tag',
+              image: 'https://example.com/image.png',
             },
           },
         },
@@ -2871,6 +2912,7 @@ describe('Messaging', () => {
               color: '#112233',
               sound: 'test.sound',
               tag: 'test.tag',
+              image: 'https://example.com/image.png',
               clickAction: 'test.click.action',
               titleLocKey: 'title.loc.key',
               titleLocArgs: ['arg1', 'arg2'],
@@ -2900,6 +2942,7 @@ describe('Messaging', () => {
               color: '#112233',
               sound: 'test.sound',
               tag: 'test.tag',
+              image: 'https://example.com/image.png',
               click_action: 'test.click.action',
               title_loc_key: 'title.loc.key',
               title_loc_args: ['arg1', 'arg2'],
@@ -3033,6 +3076,7 @@ describe('Messaging', () => {
             },
             fcmOptions: {
               analyticsLabel: 'test.analytics',
+              image: 'https://example.com/image.png',
             },
           },
         },
@@ -3069,6 +3113,7 @@ describe('Messaging', () => {
             },
             fcmOptions: {
               analyticsLabel: 'test.analytics',
+              image: 'https://example.com/image.png',
             },
           },
         },

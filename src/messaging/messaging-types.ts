@@ -59,6 +59,7 @@ export interface MulticastMessage extends BaseMessage {
 export interface Notification {
   title?: string;
   body?: string;
+  image?: string;
 }
 
 export interface FcmOptions {
@@ -143,6 +144,7 @@ export interface ApsAlert {
 
 export interface ApnsFcmOptions {
   analyticsLabel?: string;
+  image?: string;
 }
 
 export interface AndroidConfig {
@@ -162,6 +164,7 @@ export interface AndroidNotification {
   color?: string;
   sound?: string;
   tag?: string;
+  image?: string;
   clickAction?: string;
   bodyLocKey?: string;
   bodyLocArgs?: string[];
@@ -307,6 +310,7 @@ export function validateMessage(message: Message) {
   validateWebpushConfig(message.webpush);
   validateApnsConfig(message.apns);
   validateFcmOptions(message.fcmOptions);
+  validateNotification(message.notification);
 }
 
 /**
@@ -377,6 +381,13 @@ function validateApnsFcmOptions(fcmOptions: ApnsFcmOptions) {
       MessagingClientErrorCode.INVALID_PAYLOAD, 'fcmOptions must be a non-null object');
   }
 
+  if (typeof fcmOptions.image !== 'undefined' &&
+      !validator.isURL(fcmOptions.image)) {
+    throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_PAYLOAD,
+        'image must be a valid URL string');
+  }
+
   if (typeof fcmOptions.analyticsLabel !== 'undefined' && !validator.isString(fcmOptions.analyticsLabel)) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD, 'analyticsLabel must be a string value');
@@ -402,7 +413,24 @@ function validateFcmOptions(fcmOptions: FcmOptions) {
   }
 }
 
+/**
+ * Checks if the given Notification object is valid.
+ *
+ * @param {Notification} notification An object to be validated.
+ */
+function validateNotification(notification: Notification) {
+  if (typeof notification === 'undefined') {
+    return;
+  } else if (!validator.isNonNullObject(notification)) {
+    throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_PAYLOAD, 'notification must be a non-null object');
+  }
 
+  if (typeof notification.image !== 'undefined' && !validator.isURL(notification.image)) {
+    throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_PAYLOAD, 'notification.image must be a valid URL string');
+  }
+}
 
 /**
  * Checks if the given ApnsPayload object is valid. The object must have a valid aps value.
@@ -631,6 +659,12 @@ function validateAndroidNotification(notification: AndroidNotification) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD,
       'android.notification.titleLocKey is required when specifying titleLocArgs');
+  }
+  if (typeof notification.image !== 'undefined' &&
+      !validator.isURL(notification.image)) {
+    throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_PAYLOAD,
+        'android.notification.image must be a valid URL string');
   }
 
   const propertyMappings = {
