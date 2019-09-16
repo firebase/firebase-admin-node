@@ -127,7 +127,7 @@ class CertificatelessCredential implements Credential {
  * Generate a random string of the specified length, optionally using the specified alphabet.
  *
  * @param length The length of the string to generate.
- * @param allowNumbers Whether to allow numbers in the generate string;
+ * @param allowNumbers Whether to allow numbers in the generated string. The default is true.
  * @return A random string of the provided length.
  */
 export function generateRandomString(length: number, allowNumbers: boolean = true): string {
