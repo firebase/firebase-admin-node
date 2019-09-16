@@ -3924,6 +3924,11 @@ declare namespace admin.messaging {
     tag?: string;
 
     /**
+     * URL of an image to be displayed in the notification.
+     */
+    imageUrl?: string;
+
+    /**
      * Action associated with a user click on the notification. If specified, an
      * activity with a matching Intent Filter is launched when a user clicks on the
      * notification.
@@ -4105,6 +4110,11 @@ declare namespace admin.messaging {
      * The label associated with the message's analytics data.
      */
     analyticsLabel?: string;
+
+    /**
+     * URL of an image to be displayed in the notification.
+     */
+    imageUrl?: string;
   }
 
   /**
@@ -4131,6 +4141,10 @@ declare namespace admin.messaging {
      * The notification body
      */
     body?: string;
+    /**
+     * URL of an image to be displayed in the notification.
+     */
+    imageUrl?: string;
   }
   /**
    * Represents the WebPush protocol options that can be included in an
