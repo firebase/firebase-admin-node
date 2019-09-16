@@ -2302,6 +2302,21 @@ describe('Messaging', () => {
       });
     });
 
+    const invalidImages = ['', 'a', 'foo', 'image.jpg'];
+    invalidImages.forEach((imageUrl) => {
+      it(`should throw given an invalid imageUrl: ${imageUrl}`, () => {
+        const message: Message = {
+          condition: 'topic-name',
+          notification: {
+            imageUrl,
+          },
+        };
+        expect(() => {
+          messaging.send(message);
+        }).to.throw('notification.imageUrl must be a valid URL string');
+      });
+    });
+
     const invalidTtls = ['', 'abc', '123', '-123s', '1.2.3s', 'As', 's', '1s', -1];
     invalidTtls.forEach((ttl) => {
       it(`should throw given an invalid ttl: ${ ttl }`, () => {
@@ -2334,34 +2349,19 @@ describe('Messaging', () => {
       });
     });
 
-    const invalidImages = ['a', 'foo', 'image.jpg'];
-    invalidImages.forEach((image) => {
-      it(`should throw given an invalid image: ${ image }`, () => {
+    invalidImages.forEach((imageUrl) => {
+      it(`should throw given an invalid imageUrl: ${ imageUrl }`, () => {
         const message: Message = {
           condition: 'topic-name',
           android: {
             notification: {
-              image,
+              imageUrl,
             },
           },
         };
         expect(() => {
           messaging.send(message);
-        }).to.throw('android.notification.image must be a valid URL string');
-      });
-    });
-
-    invalidImages.forEach((image) => {
-      it(`should throw given an invalid image: ${image}`, () => {
-        const message: Message = {
-          condition: 'topic-name',
-          notification: {
-            image,
-          },
-        };
-        expect(() => {
-          messaging.send(message);
-        }).to.throw('notification.image must be a valid URL string');
+        }).to.throw('android.notification.imageUrl must be a valid URL string');
       });
     });
 
@@ -2520,11 +2520,11 @@ describe('Messaging', () => {
       });
     });
 
-    invalidImages.forEach((image) => {
-      it(`should throw given invalid URL string for image`, () => {
+    invalidImages.forEach((imageUrl) => {
+      it(`should throw given invalid URL string for imageUrl`, () => {
         expect(() => {
-          messaging.send({apns: {fcmOptions: {image}}, topic: 'test'});
-        }).to.throw('image must be a valid URL string');
+          messaging.send({apns: {fcmOptions: {imageUrl}}, topic: 'test'});
+        }).to.throw('imageUrl must be a valid URL string');
       });
     });
 

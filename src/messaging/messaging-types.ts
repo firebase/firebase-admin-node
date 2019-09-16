@@ -59,7 +59,7 @@ export interface MulticastMessage extends BaseMessage {
 export interface Notification {
   title?: string;
   body?: string;
-  image?: string;
+  imageUrl?: string;
 }
 
 export interface FcmOptions {
@@ -144,7 +144,7 @@ export interface ApsAlert {
 
 export interface ApnsFcmOptions {
   analyticsLabel?: string;
-  image?: string;
+  imageUrl?: string;
 }
 
 export interface AndroidConfig {
@@ -164,7 +164,7 @@ export interface AndroidNotification {
   color?: string;
   sound?: string;
   tag?: string;
-  image?: string;
+  imageUrl?: string;
   clickAction?: string;
   bodyLocKey?: string;
   bodyLocArgs?: string[];
@@ -381,11 +381,11 @@ function validateApnsFcmOptions(fcmOptions: ApnsFcmOptions) {
       MessagingClientErrorCode.INVALID_PAYLOAD, 'fcmOptions must be a non-null object');
   }
 
-  if (typeof fcmOptions.image !== 'undefined' &&
-      !validator.isURL(fcmOptions.image)) {
+  if (typeof fcmOptions.imageUrl !== 'undefined' &&
+      !validator.isURL(fcmOptions.imageUrl)) {
     throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_PAYLOAD,
-        'image must be a valid URL string');
+        'imageUrl must be a valid URL string');
   }
 
   if (typeof fcmOptions.analyticsLabel !== 'undefined' && !validator.isString(fcmOptions.analyticsLabel)) {
@@ -426,9 +426,9 @@ function validateNotification(notification: Notification) {
         MessagingClientErrorCode.INVALID_PAYLOAD, 'notification must be a non-null object');
   }
 
-  if (typeof notification.image !== 'undefined' && !validator.isURL(notification.image)) {
+  if (typeof notification.imageUrl !== 'undefined' && !validator.isURL(notification.imageUrl)) {
     throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_PAYLOAD, 'notification.image must be a valid URL string');
+        MessagingClientErrorCode.INVALID_PAYLOAD, 'notification.imageUrl must be a valid URL string');
   }
 }
 
@@ -660,11 +660,11 @@ function validateAndroidNotification(notification: AndroidNotification) {
       MessagingClientErrorCode.INVALID_PAYLOAD,
       'android.notification.titleLocKey is required when specifying titleLocArgs');
   }
-  if (typeof notification.image !== 'undefined' &&
-      !validator.isURL(notification.image)) {
+  if (typeof notification.imageUrl !== 'undefined' &&
+      !validator.isURL(notification.imageUrl)) {
     throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_PAYLOAD,
-        'android.notification.image must be a valid URL string');
+        'android.notification.imageUrl must be a valid URL string');
   }
 
   const propertyMappings = {

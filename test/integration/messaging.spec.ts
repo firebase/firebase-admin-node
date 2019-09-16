@@ -45,7 +45,7 @@ const message: admin.messaging.Message = {
   notification: {
     title: 'Message title',
     body: 'Message body',
-    image: 'https://example.com/image.png',
+    imageUrl: 'https://example.com/image.png',
   },
   android: {
     restrictedPackageName: 'com.google.firebase.testing',
