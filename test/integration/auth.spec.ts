@@ -669,7 +669,7 @@ describe('admin.auth', () => {
     describe('SAML management APIs', () => {
       let tenantAwareAuth: admin.auth.TenantAwareAuth;
       const authProviderConfig = {
-        providerId: 'saml.' + generateRandomString(5),
+        providerId: 'saml.' + generateRandomString(10, false).toLowerCase(),
         displayName: 'SAML_DISPLAY_NAME1',
         enabled: true,
         idpEntityId: 'IDP_ENTITY_ID1',
@@ -735,7 +735,7 @@ describe('admin.auth', () => {
     describe('OIDC management APIs', () => {
       let tenantAwareAuth: admin.auth.TenantAwareAuth;
       const authProviderConfig = {
-        providerId: 'oidc.' + generateRandomString(5),
+        providerId: 'oidc.' + generateRandomString(10, false).toLowerCase(),
         displayName: 'OIDC_DISPLAY_NAME1',
         enabled: true,
         issuer: 'https://oidc.com/issuer1',
@@ -867,7 +867,7 @@ describe('admin.auth', () => {
 
   describe('SAML configuration operations', () => {
     const authProviderConfig1 = {
-      providerId: 'saml.' + generateRandomString(5),
+      providerId: 'saml.' + generateRandomString(10, false).toLowerCase(),
       displayName: 'SAML_DISPLAY_NAME1',
       enabled: true,
       idpEntityId: 'IDP_ENTITY_ID1',
@@ -878,7 +878,7 @@ describe('admin.auth', () => {
       enableRequestSigning: true,
     };
     const authProviderConfig2 = {
-      providerId: 'saml.' + generateRandomString(5),
+      providerId: 'saml.' + generateRandomString(10, false).toLowerCase(),
       displayName: 'SAML_DISPLAY_NAME2',
       enabled: true,
       idpEntityId: 'IDP_ENTITY_ID2',
@@ -1007,14 +1007,14 @@ describe('admin.auth', () => {
 
   describe('OIDC configuration operations', () => {
     const authProviderConfig1 = {
-      providerId: 'oidc.' + generateRandomString(5),
+      providerId: 'oidc.' + generateRandomString(10, false).toLowerCase(),
       displayName: 'OIDC_DISPLAY_NAME1',
       enabled: true,
       issuer: 'https://oidc.com/issuer1',
       clientId: 'CLIENT_ID1',
     };
     const authProviderConfig2 = {
-      providerId: 'oidc.' + generateRandomString(5),
+      providerId: 'oidc.' + generateRandomString(10, false).toLowerCase(),
       displayName: 'OIDC_DISPLAY_NAME2',
       enabled: true,
       issuer: 'https://oidc.com/issuer2',
