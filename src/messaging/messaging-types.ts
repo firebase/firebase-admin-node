@@ -392,6 +392,18 @@ function validateApnsFcmOptions(fcmOptions: ApnsFcmOptions) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD, 'analyticsLabel must be a string value');
   }
+
+  const propertyMappings: {[key: string]: string} = {
+    imageUrl: 'image',
+  };
+  Object.keys(propertyMappings).forEach((key) => {
+    if (key in fcmOptions && propertyMappings[key] in fcmOptions) {
+      throw new FirebaseMessagingError(
+          MessagingClientErrorCode.INVALID_PAYLOAD,
+          `Multiple specifications for ${key} in ApnsFcmOptions`);
+    }
+  });
+  renameProperties(fcmOptions, propertyMappings);
 }
 
 /**
@@ -430,6 +442,18 @@ function validateNotification(notification: Notification) {
     throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_PAYLOAD, 'notification.imageUrl must be a valid URL string');
   }
+
+  const propertyMappings: {[key: string]: string} = {
+    imageUrl: 'image',
+  };
+  Object.keys(propertyMappings).forEach((key) => {
+    if (key in notification && propertyMappings[key] in notification) {
+      throw new FirebaseMessagingError(
+          MessagingClientErrorCode.INVALID_PAYLOAD,
+          `Multiple specifications for ${key} in Notification`);
+    }
+  });
+  renameProperties(notification, propertyMappings);
 }
 
 /**
@@ -674,6 +698,7 @@ function validateAndroidNotification(notification: AndroidNotification) {
     titleLocKey: 'title_loc_key',
     titleLocArgs: 'title_loc_args',
     channelId: 'channel_id',
+    imageUrl: 'image',
   };
   renameProperties(notification, propertyMappings);
 }
