@@ -2804,6 +2804,13 @@ describe('Messaging', () => {
           notification: {
             title: 'test.title',
             body: 'test.body',
+            imageUrl: 'https://example.com/image.png',
+          },
+        },
+        expectedReq: {
+          notification: {
+            title: 'test.title',
+            body: 'test.body',
             image: 'https://example.com/image.png',
           },
         },
@@ -2830,6 +2837,19 @@ describe('Messaging', () => {
       {
         label: 'Android notification message',
         req: {
+          android: {
+            notification: {
+              title: 'test.title',
+              body: 'test.body',
+              icon: 'test.icon',
+              color: '#112233',
+              sound: 'test.sound',
+              tag: 'test.tag',
+              imageUrl: 'https://example.com/image.png',
+            },
+          },
+        },
+        expectedReq: {
           android: {
             notification: {
               title: 'test.title',
@@ -2912,7 +2932,7 @@ describe('Messaging', () => {
               color: '#112233',
               sound: 'test.sound',
               tag: 'test.tag',
-              image: 'https://example.com/image.png',
+              imageUrl: 'https://example.com/image.png',
               clickAction: 'test.click.action',
               titleLocKey: 'title.loc.key',
               titleLocArgs: ['arg1', 'arg2'],
@@ -3076,7 +3096,7 @@ describe('Messaging', () => {
             },
             fcmOptions: {
               analyticsLabel: 'test.analytics',
-              image: 'https://example.com/image.png',
+              imageUrl: 'https://example.com/image.png',
             },
           },
         },
