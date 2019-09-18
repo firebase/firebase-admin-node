@@ -2,6 +2,10 @@
 
 -
 
+# v8.6.0
+
+-
+
 # v8.4.0
 
 - [added] Added support for specifying the analytics label for
