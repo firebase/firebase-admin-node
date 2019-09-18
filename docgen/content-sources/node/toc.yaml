@@ -196,6 +196,20 @@ toc:
   - title: "ShaCertificate"
     path: /docs/reference/admin/node/admin.projectManagement.ShaCertificate
 
+- title: "admin.securityRules"
+  path: /docs/reference/admin/node/admin.securityRules
+  section:
+  - title: "RulesFile"
+    path: /docs/reference/admin/node/admin.securityRules.RulesFile
+  - title: "Ruleset"
+    path: /docs/reference/admin/node/admin.securityRules.Ruleset
+  - title: "RulesetMetadata"
+    path: /docs/reference/admin/node/admin.securityRules.RulesetMetadata
+  - title: "RulesetMetadataList"
+    path: /docs/reference/admin/node/admin.securityRules.RulesetMetadataList
+  - title: "SecurityRules"
+    path: /docs/reference/admin/node/admin.securityRules.SecurityRules
+
 - title: "admin.storage"
   path: /docs/reference/admin/node/admin.storage
   section:

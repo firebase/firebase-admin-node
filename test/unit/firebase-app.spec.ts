@@ -40,6 +40,7 @@ import {Firestore} from '@google-cloud/firestore';
 import {Database} from '@firebase/database';
 import {InstanceId} from '../../src/instance-id/instance-id';
 import {ProjectManagement} from '../../src/project-management/project-management';
+import { SecurityRules } from '../../src/security-rules/security-rules';
 import { FirebaseAppError, AppErrorCodes } from '../../src/utils/error';
 
 chai.should();
@@ -580,6 +581,32 @@ describe('FirebaseApp', () => {
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
       const service1: ProjectManagement = app.projectManagement();
       const service2: ProjectManagement = app.projectManagement();
+      expect(service1).to.equal(service2);
+    });
+  });
+
+  describe('securityRules()', () => {
+    it('should throw if the app has already been deleted', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      return app.delete().then(() => {
+        expect(() => {
+          return app.securityRules();
+        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
+      });
+    });
+
+    it('should return the securityRules client', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      const securityRules: SecurityRules = app.securityRules();
+      expect(securityRules).to.not.be.null;
+    });
+
+    it('should return a cached version of SecurityRules on subsequent calls', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+      const service1: SecurityRules = app.securityRules();
+      const service2: SecurityRules = app.securityRules();
       expect(service1).to.equal(service2);
     });
   });

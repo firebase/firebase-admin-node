@@ -80,7 +80,7 @@ export class FirebaseError extends Error {
  * @param {string} message The error message.
  * @constructor
  */
-class PrefixedFirebaseError extends FirebaseError {
+export class PrefixedFirebaseError extends FirebaseError {
   constructor(private codePrefix: string, code: string, message: string) {
     super({
       code: `${codePrefix}/${code}`,
