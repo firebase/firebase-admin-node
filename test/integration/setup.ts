@@ -126,11 +126,13 @@ class CertificatelessCredential implements Credential {
 /**
  * Generate a random string of the specified length, optionally using the specified alphabet.
  *
- * @param {number} length The length of the string to generate.
- * @return {string} A random string of the provided length.
+ * @param length The length of the string to generate.
+ * @param allowNumbers Whether to allow numbers in the generated string. The default is true.
+ * @return A random string of the provided length.
  */
-export function generateRandomString(length: number): string {
-  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+export function generateRandomString(length: number, allowNumbers: boolean = true): string {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' +
+      (allowNumbers ? '0123456789' : '');
   let text = '';
   for (let i = 0; i < length; i++) {
     text += alphabet.charAt(random(alphabet.length - 1));

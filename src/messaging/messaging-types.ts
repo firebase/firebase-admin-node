@@ -59,6 +59,7 @@ export interface MulticastMessage extends BaseMessage {
 export interface Notification {
   title?: string;
   body?: string;
+  imageUrl?: string;
 }
 
 export interface FcmOptions {
@@ -143,6 +144,7 @@ export interface ApsAlert {
 
 export interface ApnsFcmOptions {
   analyticsLabel?: string;
+  imageUrl?: string;
 }
 
 export interface AndroidConfig {
@@ -162,6 +164,7 @@ export interface AndroidNotification {
   color?: string;
   sound?: string;
   tag?: string;
+  imageUrl?: string;
   clickAction?: string;
   bodyLocKey?: string;
   bodyLocArgs?: string[];
@@ -307,6 +310,7 @@ export function validateMessage(message: Message) {
   validateWebpushConfig(message.webpush);
   validateApnsConfig(message.apns);
   validateFcmOptions(message.fcmOptions);
+  validateNotification(message.notification);
 }
 
 /**
@@ -377,10 +381,29 @@ function validateApnsFcmOptions(fcmOptions: ApnsFcmOptions) {
       MessagingClientErrorCode.INVALID_PAYLOAD, 'fcmOptions must be a non-null object');
   }
 
+  if (typeof fcmOptions.imageUrl !== 'undefined' &&
+      !validator.isURL(fcmOptions.imageUrl)) {
+    throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_PAYLOAD,
+        'imageUrl must be a valid URL string');
+  }
+
   if (typeof fcmOptions.analyticsLabel !== 'undefined' && !validator.isString(fcmOptions.analyticsLabel)) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD, 'analyticsLabel must be a string value');
   }
+
+  const propertyMappings: {[key: string]: string} = {
+    imageUrl: 'image',
+  };
+  Object.keys(propertyMappings).forEach((key) => {
+    if (key in fcmOptions && propertyMappings[key] in fcmOptions) {
+      throw new FirebaseMessagingError(
+          MessagingClientErrorCode.INVALID_PAYLOAD,
+          `Multiple specifications for ${key} in ApnsFcmOptions`);
+    }
+  });
+  renameProperties(fcmOptions, propertyMappings);
 }
 
 /**
@@ -402,7 +425,36 @@ function validateFcmOptions(fcmOptions: FcmOptions) {
   }
 }
 
+/**
+ * Checks if the given Notification object is valid.
+ *
+ * @param {Notification} notification An object to be validated.
+ */
+function validateNotification(notification: Notification) {
+  if (typeof notification === 'undefined') {
+    return;
+  } else if (!validator.isNonNullObject(notification)) {
+    throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_PAYLOAD, 'notification must be a non-null object');
+  }
 
+  if (typeof notification.imageUrl !== 'undefined' && !validator.isURL(notification.imageUrl)) {
+    throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_PAYLOAD, 'notification.imageUrl must be a valid URL string');
+  }
+
+  const propertyMappings: {[key: string]: string} = {
+    imageUrl: 'image',
+  };
+  Object.keys(propertyMappings).forEach((key) => {
+    if (key in notification && propertyMappings[key] in notification) {
+      throw new FirebaseMessagingError(
+          MessagingClientErrorCode.INVALID_PAYLOAD,
+          `Multiple specifications for ${key} in Notification`);
+    }
+  });
+  renameProperties(notification, propertyMappings);
+}
 
 /**
  * Checks if the given ApnsPayload object is valid. The object must have a valid aps value.
@@ -632,6 +684,12 @@ function validateAndroidNotification(notification: AndroidNotification) {
       MessagingClientErrorCode.INVALID_PAYLOAD,
       'android.notification.titleLocKey is required when specifying titleLocArgs');
   }
+  if (typeof notification.imageUrl !== 'undefined' &&
+      !validator.isURL(notification.imageUrl)) {
+    throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_PAYLOAD,
+        'android.notification.imageUrl must be a valid URL string');
+  }
 
   const propertyMappings = {
     clickAction: 'click_action',
@@ -640,6 +698,7 @@ function validateAndroidNotification(notification: AndroidNotification) {
     titleLocKey: 'title_loc_key',
     titleLocArgs: 'title_loc_args',
     channelId: 'channel_id',
+    imageUrl: 'image',
   };
   renameProperties(notification, propertyMappings);
 }
