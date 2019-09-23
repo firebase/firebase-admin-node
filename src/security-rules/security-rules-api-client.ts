@@ -20,6 +20,9 @@ import { FirebaseSecurityRulesError, SecurityRulesErrorCode } from './security-r
 import * as validator from '../utils/validator';
 
 const RULES_V1_API = 'https://firebaserules.googleapis.com/v1';
+const FIREBASE_VERSION_HEADER = {
+  'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
+};
 
 export interface Release {
   readonly name: string;
@@ -30,7 +33,7 @@ export interface Release {
 
 export interface RulesetContent {
   readonly source: {
-    readonly files: Array<{name: string, content: string}>;
+    readonly files: Array<{ name: string, content: string }>;
   };
 }
 
@@ -40,7 +43,7 @@ export interface RulesetResponse extends RulesetContent {
 }
 
 export interface ListRulesetsResponse {
-  readonly rulesets: Array<{name: string, createTime: string}>;
+  readonly rulesets: Array<{ name: string, createTime: string }>;
   readonly nextPageToken?: string;
 }
 
@@ -64,8 +67,8 @@ export class SecurityRulesApiClient {
       throw new FirebaseSecurityRulesError(
         'invalid-argument',
         'Failed to determine project ID. Initialize the SDK with service account credentials, or '
-          + 'set project ID as an app option. Alternatively, set the GOOGLE_CLOUD_PROJECT '
-          + 'environment variable.');
+        + 'set project ID as an app option. Alternatively, set the GOOGLE_CLOUD_PROJECT '
+        + 'environment variable.');
     }
 
     this.projectIdPrefix = `projects/${projectId}`;
@@ -209,6 +212,7 @@ export class SecurityRulesApiClient {
   }
 
   private sendRequest<T>(request: HttpRequestConfig): Promise<T> {
+    request.headers = FIREBASE_VERSION_HEADER;
     return this.httpClient.send(request)
       .then((resp) => {
         return resp.data as T;
@@ -247,7 +251,7 @@ interface Error {
   status?: string;
 }
 
-const ERROR_CODE_MAPPING: {[key: string]: SecurityRulesErrorCode} = {
+const ERROR_CODE_MAPPING: { [key: string]: SecurityRulesErrorCode } = {
   INVALID_ARGUMENT: 'invalid-argument',
   NOT_FOUND: 'not-found',
   RESOURCE_EXHAUSTED: 'resource-exhausted',

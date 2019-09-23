@@ -38,6 +38,9 @@ describe('SecurityRulesApiClient', () => {
       status: 'NOT_FOUND',
     },
   };
+  const EXPECTED_HEADERS = {
+    'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
+  };
 
   const apiClient: SecurityRulesApiClient = new SecurityRulesApiClient(
     new HttpClient(), 'test-project');
@@ -87,7 +90,7 @@ describe('SecurityRulesApiClient', () => {
     it('should resolve with the requested ruleset on success', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .resolves(utils.responseFrom({name: 'bar'}));
+        .resolves(utils.responseFrom({ name: 'bar' }));
       stubs.push(stub);
       return apiClient.getRuleset(RULESET_NAME)
         .then((resp) => {
@@ -95,6 +98,7 @@ describe('SecurityRulesApiClient', () => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'GET',
             url: 'https://firebaserules.googleapis.com/v1/projects/test-project/rulesets/ruleset-id',
+            headers: EXPECTED_HEADERS,
           });
         });
     });
@@ -153,7 +157,7 @@ describe('SecurityRulesApiClient', () => {
       },
     };
 
-    const invalidContent: any[] = [null, undefined, {}, {source: {}}];
+    const invalidContent: any[] = [null, undefined, {}, { source: {} }];
     invalidContent.forEach((content) => {
       it(`should reject when called with: ${JSON.stringify(content)}`, () => {
         return apiClient.createRuleset(content)
@@ -162,7 +166,7 @@ describe('SecurityRulesApiClient', () => {
       });
     });
 
-    const invalidFiles: any[] = [null, undefined, 'test', {}, {name: 'test'}, {content: 'test'}];
+    const invalidFiles: any[] = [null, undefined, 'test', {}, { name: 'test' }, { content: 'test' }];
     invalidFiles.forEach((file) => {
       it(`should reject when called with: ${JSON.stringify(file)}`, () => {
         const ruleset: RulesetContent = {
@@ -190,7 +194,7 @@ describe('SecurityRulesApiClient', () => {
     it('should resolve with the created resource on success', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .resolves(utils.responseFrom({name: 'some-name', ...RULES_CONTENT}));
+        .resolves(utils.responseFrom({ name: 'some-name', ...RULES_CONTENT }));
       stubs.push(stub);
       return apiClient.createRuleset(RULES_CONTENT)
         .then((resp) => {
@@ -200,6 +204,7 @@ describe('SecurityRulesApiClient', () => {
             method: 'POST',
             url: 'https://firebaserules.googleapis.com/v1/projects/test-project/rulesets',
             data: RULES_CONTENT,
+            headers: EXPECTED_HEADERS,
           });
         });
     });
@@ -312,7 +317,8 @@ describe('SecurityRulesApiClient', () => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'GET',
             url: 'https://firebaserules.googleapis.com/v1/projects/test-project/rulesets',
-            data: {pageSize: 100},
+            data: { pageSize: 100 },
+            headers: EXPECTED_HEADERS,
           });
         });
     });
@@ -328,7 +334,8 @@ describe('SecurityRulesApiClient', () => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'GET',
             url: 'https://firebaserules.googleapis.com/v1/projects/test-project/rulesets',
-            data: {pageSize: 50},
+            data: { pageSize: 50 },
+            headers: EXPECTED_HEADERS,
           });
         });
     });
@@ -344,7 +351,8 @@ describe('SecurityRulesApiClient', () => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'GET',
             url: 'https://firebaserules.googleapis.com/v1/projects/test-project/rulesets',
-            data: {pageSize: 50, pageToken: 'next'},
+            data: { pageSize: 50, pageToken: 'next' },
+            headers: EXPECTED_HEADERS,
           });
         });
     });
@@ -395,7 +403,7 @@ describe('SecurityRulesApiClient', () => {
     it('should resolve with the requested release on success', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .resolves(utils.responseFrom({name: 'bar'}));
+        .resolves(utils.responseFrom({ name: 'bar' }));
       stubs.push(stub);
       return apiClient.getRelease(RELEASE_NAME)
         .then((resp) => {
@@ -403,6 +411,7 @@ describe('SecurityRulesApiClient', () => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'GET',
             url: 'https://firebaserules.googleapis.com/v1/projects/test-project/releases/test.service',
+            headers: EXPECTED_HEADERS,
           });
         });
     });
@@ -453,7 +462,7 @@ describe('SecurityRulesApiClient', () => {
     it('should resolve with the updated release on success', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .resolves(utils.responseFrom({name: 'bar'}));
+        .resolves(utils.responseFrom({ name: 'bar' }));
       stubs.push(stub);
       return apiClient.updateRelease(RELEASE_NAME, RULESET_NAME)
         .then((resp) => {
@@ -467,6 +476,7 @@ describe('SecurityRulesApiClient', () => {
                 rulesetName: 'projects/test-project/rulesets/ruleset-id',
               },
             },
+            headers: EXPECTED_HEADERS,
           });
         });
     });
@@ -539,6 +549,7 @@ describe('SecurityRulesApiClient', () => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'DELETE',
             url: 'https://firebaserules.googleapis.com/v1/projects/test-project/rulesets/ruleset-id',
+            headers: EXPECTED_HEADERS,
           });
         });
     });
