@@ -24,8 +24,6 @@ import * as validator from '../utils/validator';
 
 /** Firebase IID backend host. */
 const FIREBASE_IID_HOST = 'console.firebase.google.com';
-/** Firebase IID backend port number. */
-const FIREBASE_IID_PORT = 443;
 /** Firebase IID backend path. */
 const FIREBASE_IID_PATH = '/v1/';
 /** Firebase IID request timeout duration in milliseconds. */
@@ -49,7 +47,6 @@ const ERROR_CODES: {[key: number]: string} = {
 export class FirebaseInstanceIdRequestHandler {
 
   private readonly host: string = FIREBASE_IID_HOST;
-  private readonly port: number = FIREBASE_IID_PORT;
   private readonly timeout: number = FIREBASE_IID_TIMEOUT;
   private readonly httpClient: AuthorizedHttpClient;
   private readonly path: string;

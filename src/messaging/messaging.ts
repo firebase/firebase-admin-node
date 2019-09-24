@@ -26,7 +26,7 @@ import {
 import {FirebaseMessagingRequestHandler} from './messaging-api-request';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
 import {
-  ErrorInfo, FirebaseArrayIndexError, MessagingClientErrorCode, FirebaseMessagingError,
+  ErrorInfo, MessagingClientErrorCode, FirebaseMessagingError,
 } from '../utils/error';
 
 import * as utils from '../utils';
@@ -160,7 +160,6 @@ function mapRawResponseToTopicManagementResponse(response: object): MessagingTop
     errors: [],
   };
 
-  const errors: FirebaseArrayIndexError[] = [];
   if ('results' in response) {
     (response as any).results.forEach((tokenManagementResult: any, index: number) => {
       // Map the FCM server's error strings to actual error objects.
