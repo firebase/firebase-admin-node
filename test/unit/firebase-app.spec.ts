@@ -16,9 +16,6 @@
 
 'use strict';
 
-// Use untyped import syntax for Node built-ins
-import https = require('https');
-
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinon from 'sinon';

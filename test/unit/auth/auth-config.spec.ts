@@ -138,8 +138,8 @@ describe('EmailSignInConfig', () => {
       });
     });
 
-    const invalidPasswordRequired = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
-    invalidEnabled.forEach((passwordRequired) => {
+    const invalidPasswordRequired = invalidEnabled;
+    invalidPasswordRequired.forEach((passwordRequired) => {
       it('should throw on invalid EmailSignInConfig.passwordRequired:' + JSON.stringify(passwordRequired), () => {
         expect(() => {
           EmailSignInConfig.buildServerRequest({

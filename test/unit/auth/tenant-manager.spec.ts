@@ -377,7 +377,6 @@ describe('TenantManager', () => {
   });
 
   describe('createTenant()', () => {
-    const tenantId = 'tenant-id';
     const tenantOptions: TenantOptions = {
       displayName: 'TENANT-DISPLAY-NAME',
       emailSignInConfig: {

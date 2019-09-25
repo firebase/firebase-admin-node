@@ -2405,7 +2405,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         );
 
         const requestHandler = handler.init(mockApp);
-        return requestHandler.getEmailActionLink('EMAIL_SIGNIN', email)
+        return requestHandler.getEmailActionLink(invalidRequestType, email)
           .then((resp) => {
             throw new Error('Unexpected success');
           }, (error) => {
@@ -3780,7 +3780,6 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       describe('createTenant', () => {
         const path = '/v2beta1/projects/project_id/tenants';
         const postMethod = 'POST';
-        const tenantId = 'tenant-id';
         const tenantOptions: TenantOptions = {
           displayName: 'TENANT-DISPLAY-NAME',
           emailSignInConfig: {

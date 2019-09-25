@@ -111,11 +111,6 @@ describe('UserImportBuilder', () => {
     },
   ];
 
-  const options = {
-    hash: {
-      algorithm: 'BCRYPT' as any,
-    },
-  };
   const hmacAlgorithms = ['HMAC_SHA512', 'HMAC_SHA256', 'HMAC_SHA1', 'HMAC_MD5'];
   const md5ShaPbkdfAlgorithms = [
     'MD5', 'SHA1', 'SHA256', 'SHA512', 'PBKDF_SHA1', 'PBKDF2_SHA256',

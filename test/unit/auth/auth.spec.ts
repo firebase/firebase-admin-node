@@ -2652,7 +2652,6 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
       describe('using SAML configurations', () => {
         const providerId = 'saml.provider';
-        const serverResponse = {};
         const expectedError = new FirebaseAuthError(AuthClientErrorCode.CONFIGURATION_NOT_FOUND);
 
         it('should resolve with void on success', () => {
