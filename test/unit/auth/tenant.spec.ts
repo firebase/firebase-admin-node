@@ -48,14 +48,6 @@ describe('Tenant', () => {
     },
   };
 
-  const tenantOptions: TenantOptions = {
-    displayName: 'TENANT-DISPLAY-NAME',
-    emailSignInConfig: {
-      enabled: true,
-      passwordRequired: false,
-    },
-  };
-
   describe('buildServerRequest()', () => {
     const createRequest = true;
 

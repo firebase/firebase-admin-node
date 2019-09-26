@@ -37,12 +37,6 @@ import {
 import {Tenant, TenantOptions, TenantServerResponse} from './tenant';
 
 
-/** Firebase Auth backend host. */
-const FIREBASE_AUTH_HOST = 'www.googleapis.com';
-/** Firebase Auth backend port number. */
-const FIREBASE_AUTH_PORT = 443;
-/** Firebase Auth backend path. */
-const FIREBASE_AUTH_PATH = '/identitytoolkit/v3/relyingparty/';
 /** Firebase Auth request header. */
 const FIREBASE_AUTH_HEADER = {
   'X-Client-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
@@ -1491,7 +1485,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
    * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
    * @constructor.
    */
-  constructor(private readonly app: FirebaseApp) {
+  constructor(app: FirebaseApp) {
     super(app);
     this.tenantMgmtResourceBuilder =  new AuthResourceUrlBuilder(utils.getProjectId(app), 'v2beta1');
   }

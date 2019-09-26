@@ -616,7 +616,7 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
    * @param tenantId The corresponding tenant ID.
    * @constructor
    */
-  constructor(private readonly app: FirebaseApp, tenantId: string) {
+  constructor(app: FirebaseApp, tenantId: string) {
     super(
         utils.getProjectId(app),
         new TenantAwareAuthRequestHandler(app, tenantId),
