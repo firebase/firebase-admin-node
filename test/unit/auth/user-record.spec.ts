@@ -653,6 +653,15 @@ describe('UserRecord', () => {
     });
   });
 
+  describe('clears REDACTED passwordHash', () => {
+    const userRecord = new UserRecord({
+      localId: 'uid1',
+      passwordHash: Buffer.from('REDACTED').toString('base64'),
+    });
+
+    expect(userRecord.passwordHash).to.be.undefined;
+  });
+
   describe('toJSON', () => {
     const userRecord = new UserRecord(getValidUserResponse());
     const validUserResponseNoValidSince = getValidUserResponse();
