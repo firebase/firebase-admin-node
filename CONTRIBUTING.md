@@ -161,7 +161,9 @@ Then set up your Firebase/GCP project as follows:
    Dashboard" from the main menu, and click the "ENABLE APIS AND SERVICES"
    button. Search for and enable the "Identity and Access Management (IAM)
    API".
-4. Grant your service account the 'Firebase Authentication Admin' role:
+4. Grant your service account the 'Firebase Authentication Admin' role. This is
+   required to ensure that exported user records contain the password hashes of
+   the user accounts:
    1. Go to [Google Cloud Platform Console / IAM & admin](https://console.cloud.google.com/iam-admin).
    2. Find your service account in the list, and click the 'pencil' icon to edit it's permissions.
    3. Click 'ADD ANOTHER ROLE' and choose 'Firebase Authentication Admin'.
