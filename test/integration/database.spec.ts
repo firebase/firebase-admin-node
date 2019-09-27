@@ -17,7 +17,6 @@
 import * as admin from '../../lib/index';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import url = require('url');
 import {defaultApp, nullApp, nonNullApp, cmdArgs, databaseUrl} from './setup';
 
 /* tslint:disable:no-var-requires */
@@ -172,11 +171,14 @@ describe('admin.database', () => {
   });
 });
 
+// Check for type compilation. This method is not invoked by any
+// tests. But it will trigger a TS compilation failure if the RTDB
+// typings were not loaded correctly.
+//
+// @ts-ignore: purposely unused method.
 function addValueEventListener(
     db: admin.database.Database,
     callback: (s: admin.database.DataSnapshot) => any) {
-  // Check for type compilation. This method is not invoked by any tests. But it will
-  // trigger a TS compilation failure if the RTDB typings were not loaded correctly.
   const eventType: admin.database.EventType = 'value';
   db.ref().on(eventType, callback);
 }

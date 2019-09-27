@@ -19,7 +19,7 @@ import fs = require('fs');
 import minimist = require('minimist');
 import path = require('path');
 import {random} from 'lodash';
-import { Credential, CertCredential, GoogleOAuthAccessToken, Certificate } from '../../src/auth/credential';
+import { Credential, GoogleOAuthAccessToken, Certificate } from '../../src/auth/credential';
 
 /* tslint:disable:no-var-requires */
 const chalk = require('chalk');

@@ -3,6 +3,7 @@
     "module": "commonjs",
     "target": "es5",
     "noImplicitAny": true,
+    "noUnusedLocals": true,
     "lib": ["es2015"],
     "outDir": "lib",
     // We manually craft typings in src/index.d.ts instead of auto-generating them.

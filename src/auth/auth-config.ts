@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import * as utils from '../utils';
 import * as validator from '../utils/validator';
 import {deepCopy} from '../utils/deep-copy';
 import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';

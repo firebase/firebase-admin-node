@@ -519,7 +519,7 @@ describe('FirebaseNamespace', () => {
     });
 
     it('should return a valid namespace when the default app is initialized', () => {
-      const app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions);
+      firebaseNamespace.initializeApp(mocks.appOptions);
       const fs: Firestore = firebaseNamespace.firestore();
       expect(fs).to.not.be.null;
     });
