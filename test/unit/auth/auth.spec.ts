@@ -1684,28 +1684,6 @@ AUTH_CONFIGS.forEach((testConfig) => {
           });
       });
 
-      it('should clear "REDACTED" passwordHash values', () => {
-        const downloadAccountStub = sinon
-          .stub(testConfig.RequestHandler.prototype, 'downloadAccount')
-          .resolves({
-            users: [
-              {localId: 'UID1', passwordHash: Buffer.from('REDACTED').toString('base64') },
-              {localId: 'UID2', passwordHash: 'arbitrary value' },
-            ]});
-        stubs.push(downloadAccountStub);
-        return auth.listUsers()
-          .then((response) => {
-            expect(response).to.deep.equal({
-              users: [
-                new UserRecord({localId: 'UID1'}),
-                new UserRecord({localId: 'UID2', passwordHash: 'arbitrary value' }),
-              ]});
-            // Confirm underlying API called with expected parameters.
-            expect(downloadAccountStub)
-              .to.have.been.calledOnce.and.calledWith(undefined, undefined);
-          });
-      });
-
       it('should resolve on downloadAccount request success with no users in response', () => {
         // Stub downloadAccount to return expected response.
         const downloadAccountStub = sinon
