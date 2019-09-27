@@ -223,7 +223,7 @@ export class Messaging implements FirebaseServiceInterface {
 
     const projectId: string = utils.getProjectId(app);
     if (!validator.isNonEmptyString(projectId)) {
-      // Assert for an explicit projct ID (either via AppOptions or the cert itself).
+      // Assert for an explicit project ID (either via AppOptions or the cert itself).
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT,
         'Failed to determine project ID for Messaging. Initialize the '
