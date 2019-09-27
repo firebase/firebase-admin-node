@@ -487,12 +487,12 @@ describe('UserRecord', () => {
     });
 
     it('should clear REDACTED passwordHash', () => {
-      const userRecord = new UserRecord({
+      const user = new UserRecord({
         localId: 'uid1',
         passwordHash: Buffer.from('REDACTED').toString('base64'),
       });
 
-      expect(userRecord.passwordHash).to.be.undefined;
+      expect(user.passwordHash).to.be.undefined;
     });
 
     it('should return expected empty string passwordHash', () => {
