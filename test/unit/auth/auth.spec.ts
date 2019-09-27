@@ -1684,7 +1684,6 @@ AUTH_CONFIGS.forEach((testConfig) => {
           });
       });
 
-
       it('should resolve on downloadAccount request success with no users in response', () => {
         // Stub downloadAccount to return expected response.
         const downloadAccountStub = sinon

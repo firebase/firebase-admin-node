@@ -153,13 +153,21 @@ Then set up your Firebase/GCP project as follows:
    to set up Firestore either in the locked mode or in the test mode.
 2. Enable password auth: Select "Authentication" from the "Develop" menu in
    Firebase Console. Select the "Sign-in method" tab, and enable the
-   "Email/Password" sign-in method.
+   "Email/Password" sign-in method, including the Email link (passwordless
+   sign-in) option.
 3. Enable the IAM API: Go to the
    [Google Cloud Platform Console](https://console.cloud.google.com) and make
    sure your Firebase/GCP project is selected. Select "APIs & Services >
    Dashboard" from the main menu, and click the "ENABLE APIS AND SERVICES"
    button. Search for and enable the "Identity and Access Management (IAM)
    API".
+4. Grant your service account the 'Firebase Authentication Admin' role. This is
+   required to ensure that exported user records contain the password hashes of
+   the user accounts:
+   1. Go to [Google Cloud Platform Console / IAM & admin](https://console.cloud.google.com/iam-admin).
+   2. Find your service account in the list, and click the 'pencil' icon to edit it's permissions.
+   3. Click 'ADD ANOTHER ROLE' and choose 'Firebase Authentication Admin'.
+   4. Click 'SAVE'.
 
 Finally, to run the integration test suite:
 

@@ -185,7 +185,21 @@ describe('admin.auth', () => {
         expect(typeof listUsersResult.pageToken).to.equal('string');
         // Confirm each user's uid and the hashed passwords.
         expect(listUsersResult.users[0].uid).to.equal(uids[1]);
+
+        expect(
+            listUsersResult.users[0].passwordHash,
+            'Missing passwordHash field. A common cause would be forgetting to '
+            + 'add the "Firebase Authentication Admin" permission. See '
+            + 'instructions in CONTRIBUTING.md',
+        ).to.be.ok;
         expect(listUsersResult.users[0].passwordHash.length).greaterThan(0);
+
+        expect(
+            listUsersResult.users[0].passwordSalt,
+            'Missing passwordSalt field. A common cause would be forgetting to '
+            + 'add the "Firebase Authentication Admin" permission. See '
+            + 'instructions in CONTRIBUTING.md',
+        ).to.be.ok;
         expect(listUsersResult.users[0].passwordSalt.length).greaterThan(0);
 
         expect(listUsersResult.users[1].uid).to.equal(uids[2]);

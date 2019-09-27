@@ -19,6 +19,11 @@ import * as utils from '../utils';
 import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
 
 /**
+ * 'REDACTED', encoded as a base64 string.
+ */
+const B64_REDACTED = Buffer.from('REDACTED').toString('base64');
+
+/**
  * Parses a time stamp string or number and returns the corresponding date if valid.
  *
  * @param {any} time The unix timestamp string or number in milliseconds.
@@ -173,7 +178,16 @@ export class UserRecord {
       providerData.push(new UserInfo(entry));
     }
     utils.addReadonlyGetter(this, 'providerData', providerData);
-    utils.addReadonlyGetter(this, 'passwordHash', response.passwordHash);
+
+    // If the password hash is redacted (probably due to missing permissions)
+    // then clear it out, similar to how the salt is returned. (Otherwise, it
+    // *looks* like a b64-encoded hash is present, which is confusing.)
+    if (response.passwordHash === B64_REDACTED) {
+      utils.addReadonlyGetter(this, 'passwordHash', undefined);
+    } else {
+      utils.addReadonlyGetter(this, 'passwordHash', response.passwordHash);
+    }
+
     utils.addReadonlyGetter(this, 'passwordSalt', response.salt);
     try {
       utils.addReadonlyGetter(

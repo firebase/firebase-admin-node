@@ -486,6 +486,15 @@ describe('UserRecord', () => {
       expect((new UserRecord(resp)).passwordHash).to.be.undefined;
     });
 
+    it('should clear REDACTED passwordHash', () => {
+      const user = new UserRecord({
+        localId: 'uid1',
+        passwordHash: Buffer.from('REDACTED').toString('base64'),
+      });
+
+      expect(user.passwordHash).to.be.undefined;
+    });
+
     it('should return expected empty string passwordHash', () => {
       // This happens for users that were migrated from other Auth systems
       // using different hashing algorithms.
