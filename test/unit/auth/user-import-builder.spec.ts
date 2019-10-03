@@ -66,6 +66,7 @@ describe('UserImportBuilder', () => {
         },
       ],
       customClaims: {admin: true},
+      tenantId: 'TENANT-ID',
     },
     {
       uid: '9012',
@@ -96,6 +97,7 @@ describe('UserImportBuilder', () => {
         },
       ],
       customAttributes: JSON.stringify({admin: true}),
+      tenantId: 'TENANT-ID',
     },
     {
       localId: '9012',
@@ -109,11 +111,6 @@ describe('UserImportBuilder', () => {
     },
   ];
 
-  const options = {
-    hash: {
-      algorithm: 'BCRYPT' as any,
-    },
-  };
   const hmacAlgorithms = ['HMAC_SHA512', 'HMAC_SHA256', 'HMAC_SHA1', 'HMAC_MD5'];
   const md5ShaPbkdfAlgorithms = [
     'MD5', 'SHA1', 'SHA256', 'SHA512', 'PBKDF_SHA1', 'PBKDF2_SHA256',

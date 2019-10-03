@@ -363,6 +363,37 @@ declare namespace admin {
   *   `ProjectManagement` service associated with the provided app.
   */
   function projectManagement(app?: admin.app.App): admin.projectManagement.ProjectManagement;
+
+  /**
+  * Gets the {@link admin.securityRules.SecurityRules
+  * `SecurityRules`} service for the default app or a given app.
+  *
+  * `admin.securityRules()` can be called with no arguments to access the
+  * default app's {@link admin.securityRules.SecurityRules
+  * `SecurityRules`} service, or as `admin.securityRules(app)` to access
+  * the {@link admin.securityRules.SecurityRules `SecurityRules`}
+  * service associated with a specific app.
+  *
+  * @example
+  * ```javascript
+  * // Get the SecurityRules service for the default app
+  * var defaultSecurityRules = admin.securityRules();
+  * ```
+  *
+  * @example
+  * ```javascript
+  * // Get the SecurityRules service for a given app
+  * var otherSecurityRules = admin.securityRules(otherApp);
+  * ```
+  *
+  * @param app Optional app to return the `SecurityRules` service
+  *     for. If not provided, the default `SecurityRules` service
+  *     is returned.
+  * @return The default `SecurityRules` service if no app is provided, or the
+  *   `SecurityRules` service associated with the provided app.
+  */
+  function securityRules(app?: admin.app.App): admin.securityRules.SecurityRules;
+
   function initializeApp(options?: admin.AppOptions, name?: string): admin.app.App;
 }
 
@@ -423,6 +454,7 @@ declare namespace admin.app {
     instanceId(): admin.instanceId.InstanceId;
     messaging(): admin.messaging.Messaging;
     projectManagement(): admin.projectManagement.ProjectManagement;
+    securityRules(): admin.securityRules.SecurityRules;
     storage(): admin.storage.Storage;
 
     /**
@@ -507,7 +539,6 @@ declare namespace admin.auth {
     providerId: string;
 
     /**
-
      * @return A JSON-serializable representation of this object.
      */
     toJSON(): Object;
@@ -602,6 +633,11 @@ declare namespace admin.auth {
      * resets, password or email updates, etc).
      */
     tokensValidAfterTime?: string;
+  
+    /**
+     * The ID of the tenant the user belongs to, if available.
+     */
+    tenantId?: string | null;
 
     /**
      * @return A JSON-serializable representation of this object.
@@ -726,6 +762,11 @@ declare namespace admin.auth {
        * `"google.com"`, `"twitter.com"`, or `"custom"`.
        */
       sign_in_provider: string;
+
+      /**
+       * The ID of the tenant the user belongs to, if available.
+       */
+      tenant?: string;
       [key: string]: any;
     };
 
@@ -950,6 +991,15 @@ declare namespace admin.auth {
      * The buffer of bytes representing the user’s password salt.
      */
     passwordSalt?: Buffer;
+  
+    /**
+     * The identifier of the tenant where user is to be imported to.
+     * When not provided in an `admin.auth.Auth` context, the user is uploaded to
+     * the default parent project.
+     * When not provided in an `admin.auth.TenantAwareAuth` context, the user is uploaded
+     * to the tenant corresponding to that `TenantAwareAuth` instance's tenant ID.
+     */
+    tenantId?: string | null;
   }
 
   /**
@@ -1047,6 +1097,114 @@ declare namespace admin.auth {
   }
 
   /**
+   * Interface representing a tenant configuration.
+   * 
+   * Multi-tenancy support requires Google Cloud's Identity Platform
+   * (GCIP). To learn more about GCIP, including pricing and features,
+   * see the [GCIP documentation](https://cloud.google.com/identity-platform)
+   * 
+   * Before multi-tenancy can be used on a Google Cloud Identity Platform project,
+   * tenants must be allowed on that project via the Cloud Console UI.
+   * 
+   * A tenant configuration provides information such as the display name, tenant
+   * identifier and email authentication configuration.
+   * For OIDC/SAML provider configuration management, `TenantAwareAuth` instances should
+   * be used instead of a `Tenant` to retrieve the list of configured IdPs on a tenant.
+   * When configuring these providers, note that tenants will inherit
+   * whitelisted domains and authenticated redirect URIs of their parent project.
+   *
+   * All other settings of a tenant will also be inherited. These will need to be managed
+   * from the Cloud Console UI.
+   */
+  interface Tenant {
+
+    /**
+     * The tenant identifier.
+     */
+    tenantId: string;
+
+    /**
+     * The tenant display name.
+     */
+    displayName?: string;
+
+    /**
+     * The email sign in provider configuration.
+     */
+    emailSignInConfig?: {
+
+      /**
+       * Whether email provider is enabled.
+       */
+      enabled: boolean;
+
+      /**
+       * Whether password is required for email sign-in. When not required,
+       * email sign-in can be performed with password or via email link sign-in.
+       */
+      passwordRequired?: boolean
+    };
+
+    /**
+     * @return A JSON-serializable representation of this object.
+     */
+    toJSON(): Object;
+  }
+
+  /**
+   * Interface representing the properties to update on the provided tenant.
+   */
+  interface UpdateTenantRequest {
+
+    /**
+     * The tenant display name.
+     */
+    displayName?: string;
+
+    /**
+     * The email sign in configuration.
+     */
+    emailSignInConfig?: {
+
+      /**
+       * Whether email provider is enabled.
+       */
+      enabled: boolean;
+
+      /**
+       * Whether password is required for email sign-in. When not required,
+       * email sign-in can be performed with password or via email link sign-in.
+       */
+      passwordRequired?: boolean;
+    };
+  }
+
+  /**
+   * Interface representing the properties to set on a new tenant.
+   */
+  interface CreateTenantRequest extends UpdateTenantRequest {
+  }
+
+  /**
+   * Interface representing the object returned from a
+   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#listTenants `listTenants()`}
+   * operation. 
+   * Contains the list of tenants for the current batch and the next page token if available.
+   */
+  interface ListTenantsResult {
+
+    /**
+     * The list of {@link admin.auth.Tenant `Tenant`} objects for the downloaded batch.
+     */
+    tenants: admin.auth.Tenant[];
+
+    /**
+     * The next page token if available. This is needed for the next batch download.
+     */
+    pageToken?: string;
+  }
+
+  /**
    * The filter interface used for listing provider configurations. This is used
    * when specifying how to list configured identity providers via
    * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#listProviderConfigs `listProviderConfigs()`}.
@@ -1092,7 +1250,7 @@ declare namespace admin.auth {
     displayName: string;
 
     /**
-     * Whether the current provider configuration is enabled or disabled. A user
+     * Whether the provider configuration is enabled or disabled. A user
      * cannot sign in using a disabled provider.
      */
     enabled: boolean;
@@ -1710,7 +1868,7 @@ declare namespace admin.auth {
      *
      * SAML and OIDC provider support requires Google Cloud's Identity Platform
      * (GCIP). To learn more about GCIP, including pricing and features,
-     * see the [GCIP documentation](https://cloud.google.com/identity-cp).
+     * see the [GCIP documentation](https://cloud.google.com/identity-platform).
      *
      * @param options The provider config filter to apply.
      * @return A promise that resolves with the list of provider configs meeting the
@@ -1728,7 +1886,7 @@ declare namespace admin.auth {
      *
      * SAML and OIDC provider support requires Google Cloud's Identity Platform
      * (GCIP). To learn more about GCIP, including pricing and features,
-     * see the [GCIP documentation](https://cloud.google.com/identity-cp).
+     * see the [GCIP documentation](https://cloud.google.com/identity-platform).
      *
      * @param providerId The provider ID corresponding to the provider
      *     config to return.
@@ -1744,7 +1902,7 @@ declare namespace admin.auth {
      *
      * SAML and OIDC provider support requires Google Cloud's Identity Platform
      * (GCIP). To learn more about GCIP, including pricing and features,
-     * see the [GCIP documentation](https://cloud.google.com/identity-cp).
+     * see the [GCIP documentation](https://cloud.google.com/identity-platform).
      *
      * @param providerId The provider ID corresponding to the provider
      *     config to delete.
@@ -1760,7 +1918,7 @@ declare namespace admin.auth {
      *
      * SAML and OIDC provider support requires Google Cloud's Identity Platform
      * (GCIP). To learn more about GCIP, including pricing and features,
-     * see the [GCIP documentation](https://cloud.google.com/identity-cp).
+     * see the [GCIP documentation](https://cloud.google.com/identity-platform).
      *
      * @param providerId The provider ID corresponding to the provider
      *     config to update.
@@ -1777,7 +1935,7 @@ declare namespace admin.auth {
      *
      * SAML and OIDC provider support requires Google Cloud's Identity Platform
      * (GCIP). To learn more about GCIP, including pricing and features,
-     * see the [GCIP documentation](https://cloud.google.com/identity-cp).
+     * see the [GCIP documentation](https://cloud.google.com/identity-platform).
      *
      * @param config The provider configuration to create.
      * @return A promise that resolves with the created provider configuration.
@@ -1787,8 +1945,115 @@ declare namespace admin.auth {
     ): Promise<admin.auth.AuthProviderConfig>;
   }
 
+  /**
+   * Tenant-aware `Auth` interface used for managing users, configuring SAML/OIDC providers,
+   * generating email links for password reset, email verification, etc for specific tenants.
+   *
+   * Multi-tenancy support requires Google Cloud's Identity Platform
+   * (GCIP). To learn more about GCIP, including pricing and features,
+   * see the [GCIP documentation](https://cloud.google.com/identity-platform)
+   *
+   * Each tenant contains its own identity providers, settings and sets of users.
+   * Using `TenantAwareAuth`, users for a specific tenant and corresponding OIDC/SAML
+   * configurations can also be managed, ID tokens for users signed in to a specific tenant
+   * can be verified, and email action links can also be generated for users belonging to the
+   * tenant.
+   *
+   * `TenantAwareAuth` instances for a specific `tenantId` can be instantiated by calling
+   * `auth.tenantManager().authForTenant(tenantId)`.
+   */
+  interface TenantAwareAuth extends BaseAuth {
+
+    /**
+     * The tenant identifier corresponding to this `TenantAwareAuth` instance.
+     * All calls to the user management APIs, OIDC/SAML provider management APIs, email link
+     * generation APIs, etc will only be applied within the scope of this tenant.
+     */
+    tenantId: string;
+  }
+
   interface Auth extends admin.auth.BaseAuth {
     app: admin.app.App;
+
+    /**
+     * @return The tenant manager instance associated with the current project.
+     */
+    tenantManager(): admin.auth.TenantManager;
+  }
+
+  /**
+   * Defines the tenant manager used to help manage tenant related operations.
+   * This includes:
+   * <ul>
+   * <li>The ability to create, update, list, get and delete tenants for the underlying
+   *     project.</li>
+   * <li>Getting a `TenantAwareAuth` instance for running Auth related operations
+   *     (user management, provider configuration management, token verification,
+   *     email link generation, etc) in the context of a specified tenant.</li>
+   * </ul>
+   */
+  interface TenantManager {
+    /** 
+     * @param tenantId The tenant ID whose `TenantAwareAuth` instance is to be returned.
+     *
+     * @return The `TenantAwareAuth` instance corresponding to this tenant identifier.
+     */
+    authForTenant(tenantId: string): admin.auth.TenantAwareAuth;
+
+    /**
+     * Gets the tenant configuration for the tenant corresponding to a given `tenantId`.
+     *
+     * @param tenantId The tenant identifier corresponding to the tenant whose data to fetch.
+     *
+     * @return A promise fulfilled with the tenant configuration to the provided `tenantId`.
+     */
+    getTenant(tenantId: string): Promise<admin.auth.Tenant>;
+
+    /**
+     * Retrieves a list of tenants (single batch only) with a size of `maxResults`
+     * starting from the offset as specified by `pageToken`. This is used to
+     * retrieve all the tenants of a specified project in batches.
+     *
+     * @param maxResults The page size, 1000 if undefined. This is also
+     *   the maximum allowed limit.
+     * @param pageToken The next page token. If not specified, returns
+     *   tenants starting without any offset.
+     *
+     * @return A promise that resolves with
+     *   a batch of downloaded tenants and the next page token.
+     */
+    listTenants(maxResults?: number, pageToken?: string): Promise<admin.auth.ListTenantsResult>;
+
+    /**
+     * Deletes an existing tenant.
+     *
+     * @param tenantId The `tenantId` corresponding to the tenant to delete.
+     *
+     * @return An empty promise fulfilled once the tenant has been deleted.
+     */
+    deleteTenant(tenantId: string): Promise<void>;
+
+    /** 
+     * Creates a new tenant.
+     * When creating new tenants, tenants that use separate billing and quota will require their
+     * own project and must be defined as `full_service`.
+     *
+     * @param tenantOptions The properties to set on the new tenant configuration to be created.
+     *
+     * @return A promise fulfilled with the tenant configuration corresponding to the newly
+     *   created tenant.
+     */
+    createTenant(tenantOptions: admin.auth.CreateTenantRequest): Promise<admin.auth.Tenant>;
+
+    /**
+     * Updates an existing tenant configuration.
+     *
+     * @param tenantId The `tenantId` corresponding to the tenant to delete.
+     * @param tenantOptions The properties to update on the provided tenant.
+     *
+     * @return A promise fulfilled with the update tenant data.
+     */
+    updateTenant(tenantId: string, tenantOptions: admin.auth.UpdateTenantRequest): Promise<admin.auth.Tenant>;
   }
 }
 
@@ -3691,6 +3956,11 @@ declare namespace admin.messaging {
     tag?: string;
 
     /**
+     * URL of an image to be displayed in the notification.
+     */
+    imageUrl?: string;
+
+    /**
      * Action associated with a user click on the notification. If specified, an
      * activity with a matching Intent Filter is launched when a user clicks on the
      * notification.
@@ -3872,6 +4142,11 @@ declare namespace admin.messaging {
      * The label associated with the message's analytics data.
      */
     analyticsLabel?: string;
+
+    /**
+     * URL of an image to be displayed in the notification.
+     */
+    imageUrl?: string;
   }
 
   /**
@@ -3898,6 +4173,10 @@ declare namespace admin.messaging {
      * The notification body
      */
     body?: string;
+    /**
+     * URL of an image to be displayed in the notification.
+     */
+    imageUrl?: string;
   }
   /**
    * Represents the WebPush protocol options that can be included in an
@@ -5210,6 +5489,196 @@ declare namespace admin.projectManagement {
      * @return A promise that resolves to the newly created iOS app.
      */
     createIosApp(bundleId: string, displayName?: string): Promise<admin.projectManagement.IosApp>;
+  }
+}
+
+declare namespace admin.securityRules {
+  /**
+   * A source file containing some Firebase security rules. The content includes raw
+   * source code including text formatting, indentation and comments. Use the
+   * [`securityRules.createRulesFileFromSource()`](admin.securityRules.SecurityRules#createRulesFileFromSource)
+   * method to create new instances of this type.
+   */
+  interface RulesFile {
+    readonly name: string;
+    readonly content: string;
+  }
+
+  /**
+   * Required metadata associated with a ruleset.
+   */
+  interface RulesetMetadata {
+    /**
+     * Name of the `Ruleset` as a short string. This can be directly passed into APIs
+     * like [`securityRules.getRuleset()`](admin.securityRules.SecurityRules#getRuleset)
+     * and [`securityRules.deleteRuleset()`](admin.securityRules.SecurityRules#deleteRuleset).
+     */
+    readonly name: string;
+
+    /**
+     * Creation time of the `Ruleset` as a UTC timestamp string.
+     */
+    readonly createTime: string;
+  }
+
+  /**
+   * A set of Firebase security rules.
+   */
+  interface Ruleset extends RulesetMetadata {
+    readonly source: RulesFile[];
+  }
+
+  interface RulesetMetadataList {
+    /**
+     * A batch of ruleset metadata.
+     */
+    readonly rulesets: RulesetMetadata[];
+
+    /**
+     * The next page token if available. This is needed to retrieve the next batch.
+     */
+    readonly nextPageToken?: string;
+  }
+
+  /**
+   * The Firebase `SecurityRules` service interface.
+   *
+   * Do not call this constructor directly. Instead, use
+   * [`admin.securityRules()`](admin.securityRules#securityRules).
+   */
+  interface SecurityRules {
+    app: admin.app.App;
+
+    /**
+     * Creates a {@link admin.securityRules.RulesFile `RuleFile`} with the given name
+     * and source. Throws an error if any of the arguments are invalid. This is a local
+     * operation, and does not involve any network API calls.
+     *
+     * @example
+     * ```javascript
+     * const source = '// Some rules source';
+     * const rulesFile = admin.securityRules().createRulesFileFromSource(
+     *   'firestore.rules', source);
+     * ```
+     *
+     * @param name Name to assign to the rules file. This is usually a short file name that
+     *   helps identify the file in a ruleset.
+     * @param source Contents of the rules file.
+     * @return A new rules file instance.
+     */
+    createRulesFileFromSource(name: string, source: string | Buffer): RulesFile;
+
+    /**
+     * Creates a new {@link admin.securityRules.Ruleset `Ruleset`} from the given
+     * {@link admin.securityRules.RulesFile `RuleFile`}.
+     *
+     * @param file Rules file to include in the new `Ruleset`.
+     * @returns A promise that fulfills with the newly created `Ruleset`.
+     */
+    createRuleset(file: RulesFile): Promise<Ruleset>;
+
+    /**
+     * Gets the {@link admin.securityRules.Ruleset `Ruleset`} identified by the given
+     * name. The input name should be the short name string without the project ID
+     * prefix. For example, to retrieve the `projects/project-id/rulesets/my-ruleset`,
+     * pass the short name "my-ruleset". Rejects with a `not-found` error if the
+     * specified `Ruleset` cannot be found.
+     *
+     * @param name Name of the `Ruleset` to retrieve.
+     * @return A promise that fulfills with the specified `Ruleset`.
+     */
+    getRuleset(name: string): Promise<Ruleset>;
+
+    /**
+     * Deletes the {@link admin.securityRules.Ruleset `Ruleset`} identified by the given
+     * name. The input name should be the short name string without the project ID
+     * prefix. For example, to delete the `projects/project-id/rulesets/my-ruleset`,
+     * pass the  short name "my-ruleset". Rejects with a `not-found` error if the
+     * specified `Ruleset` cannot be found.
+     *
+     * @param name Name of the `Ruleset` to delete.
+     * @return A promise that fulfills when the `Ruleset` is deleted.
+     */
+    deleteRuleset(name: string): Promise<void>;
+
+    /**
+     * Retrieves a page of ruleset metadata.
+     *
+     * @param pageSize The page size, 100 if undefined. This is also the maximum allowed
+     *   limit.
+     * @param nextPageToken The next page token. If not specified, returns rulesets
+     *   starting without any offset.
+     * @return A promise that fulfills with a page of rulesets.
+     */
+    listRulesetMetadata(
+      pageSize?: number, nextPageToken?: string): Promise<RulesetMetadataList>;
+
+    /**
+     * Gets the {@link admin.securityRules.Ruleset `Ruleset`} currently applied to
+     * Cloud Firestore. Rejects with a `not-found` error if no ruleset is applied
+     * on Firestore.
+     *
+     * @return A promise that fulfills with the Firestore ruleset.
+     */
+    getFirestoreRuleset(): Promise<Ruleset>;
+
+    /**
+     * Creates a new {@link admin.securityRules.Ruleset `Ruleset`} from the given
+     * source, and applies it to Cloud Firestore.
+     *
+     * @param source Rules source to apply.
+     * @return A promise that fulfills when the ruleset is created and released.
+     */
+    releaseFirestoreRulesetFromSource(source: string | Buffer): Promise<Ruleset>;
+
+    /**
+     * Applies the specified {@link admin.securityRules.Ruleset `Ruleset`} ruleset
+     * to Cloud Firestore.
+     *
+     * @param ruleset Name of the ruleset to apply or a `RulesetMetadata` object
+     *   containing the name.
+     * @return A promise that fulfills when the ruleset is released.
+     */
+    releaseFirestoreRuleset(ruleset: string | RulesetMetadata): Promise<void>;
+
+    /**
+     * Gets the {@link admin.securityRules.Ruleset `Ruleset`} currently applied to a
+     * Cloud Storage bucket. Rejects with a `not-found` error if no ruleset is applied
+     * on the bucket.
+     *
+     * @param bucket Optional name of the Cloud Storage bucket to be retrieved. If not
+     *   specified, retrieves the ruleset applied on the default bucket configured via
+     *   `AppOptions`.
+     * @return A promise that fulfills with the Cloud Storage ruleset.
+     */
+    getStorageRuleset(bucket?: string): Promise<Ruleset>;
+
+    /**
+     * Creates a new {@link admin.securityRules.Ruleset `Ruleset`} from the given
+     * source, and applies it to a Cloud Storage bucket.
+     *
+     * @param source Rules source to apply.
+     * @param bucket Optional name of the Cloud Storage bucket to apply the rules on. If
+     *   not specified, applies the ruleset on the default bucket configured via
+     *   {@link admin.AppOptions `AppOptions`}.
+     * @return A promise that fulfills when the ruleset is created and released.
+     */
+    releaseStorageRulesetFromSource(
+      source: string | Buffer, bucket?: string): Promise<Ruleset>;
+
+    /**
+     * Applies the specified {@link admin.securityRules.Ruleset `Ruleset`} ruleset
+     * to a Cloud Storage bucket.
+     *
+     * @param ruleset Name of the ruleset to apply or a `RulesetMetadata` object
+     *   containing the name.
+     * @param bucket Optional name of the Cloud Storage bucket to apply the rules on. If
+     *   not specified, applies the ruleset on the default bucket configured via
+     *   {@link admin.AppOptions `AppOptions`}.
+     * @return A promise that fulfills when the ruleset is released.
+     */
+    releaseStorageRuleset(
+      ruleset: string | RulesetMetadata, bucket?: string): Promise<void>;
   }
 }
 

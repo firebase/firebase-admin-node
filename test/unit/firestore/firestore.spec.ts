@@ -19,7 +19,6 @@
 import path = require('path');
 import * as _ from 'lodash';
 import {expect} from 'chai';
-import * as utils from '../../../src/utils/index';
 
 import * as mocks from '../../resources/mocks';
 import {FirebaseApp} from '../../../src/firebase-app';

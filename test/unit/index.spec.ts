@@ -35,6 +35,8 @@ import './auth/auth-api-request.spec';
 import './auth/user-import-builder.spec';
 import './auth/action-code-settings-builder.spec';
 import './auth/auth-config.spec';
+import './auth/tenant.spec';
+import './auth/tenant-manager.spec';
 
 // Database
 import './database/database.spec';
@@ -58,3 +60,7 @@ import './project-management/project-management.spec';
 import './project-management/project-management-api-request.spec';
 import './project-management/android-app.spec';
 import './project-management/ios-app.spec';
+
+// SecurityRules
+import './security-rules/security-rules.spec';
+import './security-rules/security-rules-api-client.spec';
