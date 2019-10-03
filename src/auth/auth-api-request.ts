@@ -1501,7 +1501,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
    * @return {AuthResourceUrlBuilder} A new project config resource URL builder instance.
    */
   protected newProjectConfigUrlBuilder(): AuthResourceUrlBuilder {
-    return new AuthResourceUrlBuilder(this.projectId, 'v2beta1');
+    return new AuthResourceUrlBuilder(this.projectId, 'admin/v2');
   }
 
   /**
@@ -1644,7 +1644,7 @@ export class TenantAwareAuthRequestHandler extends AbstractAuthRequestHandler {
    * @return {AuthResourceUrlBuilder} A new project config resource URL builder instance.
    */
   protected newProjectConfigUrlBuilder(): AuthResourceUrlBuilder {
-    return new TenantAwareAuthResourceUrlBuilder(this.projectId, 'v2beta1', this.tenantId);
+    return new TenantAwareAuthResourceUrlBuilder(this.projectId, 'admin/v2', this.tenantId);
   }
 
   /**
