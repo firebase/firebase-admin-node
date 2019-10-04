@@ -203,6 +203,7 @@ export interface NotificationMessagePayload {
 export interface MessagingPayload {
   data?: DataMessagePayload;
   notification?: NotificationMessagePayload;
+  [index: string]: DataMessagePayload | NotificationMessagePayload;
 }
 
 /* Options that can passed along with messages */
