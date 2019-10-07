@@ -2394,6 +2394,117 @@ describe('Messaging', () => {
       }).to.throw('bodyLocKey is required when specifying bodyLocArgs');
     });
 
+    const invalidVibrateTimings = [[null, 500], [-100]];
+    invalidVibrateTimings.forEach((vibrateTimingsMillis) => {
+      it(`should throw given an invalid vibrateTimingsMillis: ${ vibrateTimingsMillis }`, () => {
+        const message: Message = {
+          condition: 'topic-name',
+          android: {
+            notification: {
+              vibrateTimingsMillis,
+              lightSettings: {
+                color: {
+                  red: 1,
+                  green: 1,
+                  blue: 0,
+                  alpha: 1,
+                },
+                lightOnDurationMillis: 1000,
+                lightOffDurationMillis: 800,
+              },
+            },
+          },
+        };
+        expect(() => {
+          messaging.send(message);
+        }).to.throw('android.notification.vibrateTimingsMillis must be non-negative durations in milliseconds');
+      });
+    });
+
+    const invalidLightSettingsColors = [
+      { red: -1, green: 0, blue: 1, alpha: 1 },
+      { red: 0.9, green: 1.5, blue: 1, alpha: 1 },
+      { red: 1, green: 0.1, blue: 100, alpha: 1 },
+      { red: 1, green: 1, blue: 1, alpha: 10 },
+    ];
+    invalidLightSettingsColors.forEach((color) => {
+      it(`should throw given an invalid light settings color: ${ color }`, () => {
+        const message: Message = {
+          condition: 'topic-name',
+          android: {
+            notification: {
+              lightSettings: {
+                color,
+                lightOnDurationMillis: 100,
+                lightOffDurationMillis: 800,
+              },
+            },
+          },
+        };
+        expect(() => {
+          messaging.send(message);
+        }).to.throw(/The amount of (red|green|blue|alpha) in color must be a value in the interval \[0, 1]/);
+      });
+    });
+
+    invalidColors.forEach((color) => {
+      it(`should throw given an invalid color: ${ color }`, () => {
+        const message: Message = {
+          condition: 'topic-name',
+          android: {
+            notification: {
+              lightSettings: {
+                color,
+                lightOnDurationMillis: 100,
+                lightOffDurationMillis: 800,
+              },
+            },
+          },
+        };
+        expect(() => {
+          messaging.send(message);
+        }).to.throw('android.notification.lightSettings.color must be in the form #RRGGBB or a `Color` object');
+      });
+    });
+
+    it(`should throw given an invalid light on duration`, () => {
+      const message: Message = {
+        condition: 'topic-name',
+        android: {
+          notification: {
+            lightSettings: {
+              color: '#aabbcc',
+              lightOnDurationMillis: -1,
+              lightOffDurationMillis: 800,
+            },
+          },
+        },
+      };
+      expect(() => {
+        messaging.send(message);
+      }).to.throw(
+        'android.notification.lightSettings.lightOnDurationMillis must be a non-negative duration in milliseconds');
+    });
+
+    it(`should throw given an invalid light off duration`, () => {
+      const message: Message = {
+        condition: 'topic-name',
+        android: {
+          notification: {
+            lightSettings: {
+              color: '#aabbcc',
+              lightOnDurationMillis: 100,
+              lightOffDurationMillis: -800,
+            },
+          },
+        },
+      };
+      expect(() => {
+        messaging.send(message);
+      }).to.throw(
+        'android.notification.lightSettings.lightOffDurationMillis must be a non-negative duration in milliseconds');
+    });
+
     const invalidVolumes = [-0.1, 1.1];
     invalidVolumes.forEach((volume) => {
       it(`should throw given invalid apns sound volume: ${volume}`, () => {
@@ -2847,6 +2958,9 @@ describe('Messaging', () => {
               sound: 'test.sound',
               tag: 'test.tag',
               imageUrl: 'https://example.com/image.png',
+              ticker: 'test.ticker',
+              sticky: true,
+              visibility: 'private',
             },
           },
         },
@@ -2860,6 +2974,9 @@ describe('Messaging', () => {
               sound: 'test.sound',
               tag: 'test.tag',
               image: 'https://example.com/image.png',
+              ticker: 'test.ticker',
+              sticky: true,
+              visibility: 'PRIVATE',
             },
           },
         },
@@ -2877,6 +2994,19 @@ describe('Messaging', () => {
               bodyLocKey: 'body.loc.key',
               bodyLocArgs: ['arg1', 'arg2'],
               channelId: 'test.channel',
+              eventTimestamp: new Date('2019-10-20T12:00:00-06:30'),
+              localOnly: true,
+              priority: 'high',
+              vibrateTimingsMillis: [100, 50, 250],
+              defaultVibrateTimings: false,
+              defaultSound: true,
+              lightSettings: {
+                color: '#AABBCC',
+                lightOnDurationMillis: 200,
+                lightOffDurationMillis: 300,
+              },
+              defaultLightSettings: false,
+              notificationCount: 1,
             },
           },
         },
@@ -2891,6 +3021,24 @@ describe('Messaging', () => {
               body_loc_key: 'body.loc.key',
               body_loc_args: ['arg1', 'arg2'],
               channel_id: 'test.channel',
+              event_time: '2019-10-20T18:30:00.000Z',
+              local_only: true,
+              notification_priority: 'PRIORITY_HIGH',
+              vibrate_timings: ['0.100000000s', '0.050000000s', '0.250000000s'],
+              default_vibrate_timings: false,
+              default_sound: true,
+              light_settings: {
+                color: {
+                  red: 0.6666666666666666,
+                  green: 0.7333333333333333,
+                  blue: 0.8,
+                  alpha: 1,
+                },
+                light_on_duration: '0.200000000s',
+                light_off_duration: '0.300000000s',
+              },
+              default_light_settings: false,
+              notification_count: 1,
             },
           },
         },
@@ -2940,6 +3088,22 @@ describe('Messaging', () => {
               bodyLocKey: 'body.loc.key',
               bodyLocArgs: ['arg1', 'arg2'],
               channelId: 'test.channel',
+              ticker: 'test.ticker',
+              sticky: true,
+              visibility: 'private',
+              eventTimestamp: new Date('2019-10-20T12:00:00-06:30'),
+              localOnly: true,
+              priority: 'high',
+              vibrateTimingsMillis: [100, 50, 250],
+              defaultVibrateTimings: false,
+              defaultSound: true,
+              lightSettings: {
+                color: '#AABBCC',
+                lightOnDurationMillis: 200,
+                lightOffDurationMillis: 300,
+              },
+              defaultLightSettings: false,
+              notificationCount: 1,
             },
             fcmOptions: {
               analyticsLabel: 'test.analytics',
@@ -2970,6 +3134,27 @@ describe('Messaging', () => {
               body_loc_key: 'body.loc.key',
               body_loc_args: ['arg1', 'arg2'],
               channel_id: 'test.channel',
+              ticker: 'test.ticker',
+              sticky: true,
+              visibility: 'PRIVATE',
+              event_time: '2019-10-20T18:30:00.000Z',
+              local_only: true,
+              notification_priority: 'PRIORITY_HIGH',
+              vibrate_timings: ['0.100000000s', '0.050000000s', '0.250000000s'],
+              default_vibrate_timings: false,
+              default_sound: true,
+              light_settings: {
+                color: {
+                  red: 0.6666666666666666,
+                  green: 0.7333333333333333,
+                  blue: 0.8,
+                  alpha: 1,
+                },
+                light_on_duration: '0.200000000s',
+                light_off_duration: '0.300000000s',
+              },
+              default_light_settings: false,
+              notification_count: 1,
             },
             fcmOptions: {
               analyticsLabel: 'test.analytics',

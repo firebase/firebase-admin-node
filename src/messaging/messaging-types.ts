@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {renameProperties} from '../utils/index';
+import {renameProperties, transformMillisecondsToSecondsString} from '../utils/index';
 import {
   MessagingClientErrorCode, FirebaseMessagingError, FirebaseArrayIndexError, FirebaseError,
 } from '../utils/error';
@@ -171,6 +171,32 @@ export interface AndroidNotification {
   titleLocKey?: string;
   titleLocArgs?: string[];
   channelId?: string;
+  ticker?: string;
+  sticky?: boolean;
+  eventTimestamp?: Date;
+  localOnly?: boolean;
+  priority?: ('min' | 'low' | 'default' | 'high' | 'max');
+  vibrateTimingsMillis?: number[];
+  defaultVibrateTimings?: boolean;
+  defaultSound?: boolean;
+  lightSettings?: LightSettings;
+  defaultLightSettings?: boolean;
+  visibility?: ('private' | 'public' | 'secret');
+  notificationCount?: number;
+}
+
+export interface LightSettings {
+  color: string | Color;
+  lightOnDurationMillis: number;
+  lightOffDurationMillis: number;
+}
+
+export interface Color {
+  red: number;
+  green: number;
+  blue: number;
+  alpha: number;
+  [key: string]: any;
 }
 
 export interface AndroidFcmOptions {
@@ -691,6 +717,42 @@ function validateAndroidNotification(notification: AndroidNotification) {
         'android.notification.imageUrl must be a valid URL string');
   }
 
+  if (typeof notification.eventTimestamp !== 'undefined') {
+    let zuluTimestamp: string;
+    // Convert timestamp to RFC3339 UTC "Zulu" format, example "2014-10-02T15:01:23.045123456Z"
+    zuluTimestamp = notification.eventTimestamp.toISOString();
+    (notification as any).eventTimestamp = zuluTimestamp;
+  }
+
+  if (validator.isNonEmptyArray(notification.vibrateTimingsMillis)) {
+    const vibrateTimings: string[] = [];
+    notification.vibrateTimingsMillis.forEach((value) => {
+      if (!validator.isNumber(value) || value < 0) {
+        throw new FirebaseMessagingError(
+          MessagingClientErrorCode.INVALID_PAYLOAD,
+          'android.notification.vibrateTimingsMillis must be non-negative durations in milliseconds');
+      }
+      let duration: string;
+      duration = transformMillisecondsToSecondsString(value);
+      vibrateTimings.push(duration);
+    });
+    (notification as any).vibrateTimingsMillis = vibrateTimings;
+  }
+
+  if (typeof notification.priority !== 'undefined') {
+    let priority: string;
+    priority = 'PRIORITY_' + notification.priority.toUpperCase();
+    (notification as any).priority = priority;
+  }
+
+  if (typeof notification.visibility !== 'undefined') {
+    let visibility: string;
+    visibility = notification.visibility.toUpperCase();
+    (notification as any).visibility = visibility;
+  }
+
+  validateLightSettings(notification.lightSettings);
+
   const propertyMappings = {
     clickAction: 'click_action',
     bodyLocKey: 'body_loc_key',
@@ -699,8 +761,105 @@ function validateAndroidNotification(notification: AndroidNotification) {
     titleLocArgs: 'title_loc_args',
     channelId: 'channel_id',
     imageUrl: 'image',
+    eventTimestamp: 'event_time',
+    localOnly: 'local_only',
+    priority: 'notification_priority',
+    vibrateTimingsMillis: 'vibrate_timings',
+    defaultVibrateTimings: 'default_vibrate_timings',
+    defaultSound: 'default_sound',
+    lightSettings: 'light_settings',
+    defaultLightSettings: 'default_light_settings',
+    notificationCount: 'notification_count',
   };
   renameProperties(notification, propertyMappings);
+}
+
+/**
+ * Checks if the given LightSettings object is valid. The object must have valid color and
+ * light on/off duration parameters. If successful, transforms the input object by renaming
+ * keys to valid Android keys.
+ *
+ * @param {LightSettings} lightSettings An object to be validated.
+ */
+function validateLightSettings(lightSettings: LightSettings) {
+  if (typeof lightSettings === 'undefined') {
+    return;
+  } else if (!validator.isNonNullObject(lightSettings)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'android.notification.lightSettings must be a non-null object');
+  }
+
+  if (typeof lightSettings.lightOnDurationMillis !== 'undefined') {
+    if (!validator.isNumber(lightSettings.lightOnDurationMillis) || lightSettings.lightOnDurationMillis < 0) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_PAYLOAD,
+        'android.notification.lightSettings.lightOnDurationMillis must be a non-negative duration in milliseconds');
+    }
+    let duration: string;
+    duration = transformMillisecondsToSecondsString(lightSettings.lightOnDurationMillis);
+    (lightSettings as any).lightOnDurationMillis = duration;
+  }
+
+  if (typeof lightSettings.lightOffDurationMillis !== 'undefined') {
+    if (!validator.isNumber(lightSettings.lightOffDurationMillis) || lightSettings.lightOffDurationMillis < 0) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_PAYLOAD,
+        'android.notification.lightSettings.lightOffDurationMillis must be a non-negative duration in milliseconds');
+    }
+    const duration: string = transformMillisecondsToSecondsString(lightSettings.lightOffDurationMillis);
+    (lightSettings as any).lightOffDurationMillis = duration;
+  }
+
+  if (typeof lightSettings.color !== 'undefined' && validator.isString(lightSettings.color)) {
+    if (!/^#[0-9a-fA-F]{6}$/.test(lightSettings.color)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_PAYLOAD,
+        'android.notification.lightSettings.color must be in the form #RRGGBB or a `Color` object');
+    }
+    const rgb = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(lightSettings.color);
+    const color: Color = {
+      red: parseInt(rgb[1], 16) / 255.0,
+      green: parseInt(rgb[2], 16) / 255.0,
+      blue: parseInt(rgb[3], 16) / 255.0,
+      alpha: 1.0,
+    };
+    (lightSettings as any).color = color;
+  }
+
+  validateColor(lightSettings.color as Color);
+
+  const propertyMappings = {
+    lightOnDurationMillis: 'light_on_duration',
+    lightOffDurationMillis: 'light_off_duration',
+  };
+  renameProperties(lightSettings, propertyMappings);
+}
+
+/**
+ * Checks if the given Color object is valid. The object must have valid RGB and Alpha values.
+ * The amount of red, green, and blue in the color as values in the interval [0, 1].
+ * The alpha value of the color in the interval [0, 1], where 1.0 corresponds to a solid color and
+ * 0.0 corresponds to a completely transparent color.
+ *
+ * @param {Color} color An object to be validated.
+ */
+function validateColor(color: Color) {
+  if (typeof color === 'undefined') {
+    return;
+  } else if (!validator.isNonNullObject(color)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'Color must be a non-null object');
+  }
+
+  Object.keys(color).forEach((key) => {
+    if (typeof color[key] !== 'undefined') {
+      if (!validator.isNumberInRange(color[key], 0.0, 1.0, true)) {
+        throw new FirebaseMessagingError(
+          MessagingClientErrorCode.INVALID_PAYLOAD,
+          `The amount of ${key} in color must be a value in the interval [0, 1]`);
+      }
+    }
+  });
 }
 
 /**
