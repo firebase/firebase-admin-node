@@ -287,7 +287,30 @@ describe('admin.auth', () => {
             expect(decodedIdToken[key]).to.equal(customClaims[key]);
           }
         }
-      });
+        // Test clearing of custom claims.
+        return admin.auth().setCustomUserClaims(newUserUid, null);
+      })
+      .then(() => {
+        return admin.auth().getUser(newUserUid);
+      })
+      .then((userRecord) => {
+        // Custom claims should be cleared.
+        expect(userRecord.customClaims).to.deep.equal({});
+        // Force token refresh. All claims should be cleared.
+        return firebase.auth().currentUser.getIdToken(true);
+      })
+      .then((idToken) => {
+        // Verify ID token contents.
+        return admin.auth().verifyIdToken(idToken);
+     })
+     .then((decodedIdToken: {[key: string]: any}) => {
+       // Confirm all custom claims are cleared.
+       for (const key in customClaims) {
+         if (customClaims.hasOwnProperty(key)) {
+           expect(decodedIdToken[key]).to.be.undefined;
+         }
+       }
+     });
   });
 
   it('updateUser() updates the user record with the given parameters', () => {
