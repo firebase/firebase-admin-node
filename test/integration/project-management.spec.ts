@@ -175,6 +175,14 @@ describe('admin.projectManagement', () => {
             expect(certs.length).to.equal(0);
           });
     });
+
+    it('add a cert and then remove it fails', () => {
+      const shaCertificate =
+          admin.projectManagement().shaCertificate(SHA_256_HASH);
+      return androidApp.addShaCertificate(shaCertificate)
+          .then(() => androidApp.deleteShaCertificate(shaCertificate))
+          .should.eventually.be.rejected;
+    });
   });
 
   describe('androidApp.getConfig()', () => {
