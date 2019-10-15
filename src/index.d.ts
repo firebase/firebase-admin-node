@@ -1605,7 +1605,7 @@ declare namespace admin.auth {
      * @return A promise that resolves when the operation completes
      *   successfully.
      */
-    setCustomUserClaims(uid: string, customUserClaims: Object): Promise<void>;
+    setCustomUserClaims(uid: string, customUserClaims: Object | null): Promise<void>;
 
     /**
      * Revokes all refresh tokens for an existing user.
