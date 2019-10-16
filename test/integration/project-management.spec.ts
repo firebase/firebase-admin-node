@@ -175,6 +175,18 @@ describe('admin.projectManagement', () => {
             expect(certs.length).to.equal(0);
           });
     });
+
+    it('add a cert and then remove it fails due to missing resourceName',
+       () => {
+         const shaCertificate =
+             admin.projectManagement().shaCertificate(SHA_256_HASH);
+         return androidApp.addShaCertificate(shaCertificate)
+             .then(() => androidApp.deleteShaCertificate(shaCertificate))
+             .should.eventually.be
+             .rejectedWith(
+                 'Specified certificate does not include a resourceName')
+             .with.property('code', 'project-management/invalid-argument');
+       });
   });
 
   describe('androidApp.getConfig()', () => {
