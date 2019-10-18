@@ -1331,7 +1331,7 @@ describe('admin.auth', () => {
         importOptions: {
           hash: {
             algorithm: 'SHA256',
-            rounds: 0,
+            rounds: 1,
           },
         } as any,
         computePasswordHash: (userImportTest: UserImportTest): Buffer => {
