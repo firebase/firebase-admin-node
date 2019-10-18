@@ -64,23 +64,8 @@ describe('admin.securityRules', () => {
     return Promise.all(promises);
   }
 
-  function getRandomInt(max: number) {
-    return Math.floor(Math.random() * Math.floor(max));
-  }
-
-  /**
-   * Creates a temporary ruleset with a random name that will be deleted upon
-   * completion of the test. (The random name "ensures" that if the ruleset
-   * doesn't get cleaned up for any reason, then it will be unlikely to impact
-   * other tests, including a second run of the same test.)
-   *
-   * @param prefix Optional prefix that will be prefixed to the name of the
-   *   rules file. Useful if your test creates multiple temporary rulesets and
-   *   you want to ensure that they don't collide.
-   */
-  function createTemporaryRuleset(prefix?: string): Promise<admin.securityRules.Ruleset> {
-    const name = (prefix ? prefix : '') + 'random_name_' + getRandomInt(100000) + '.rules';
-
+  function createTemporaryRuleset(): Promise<admin.securityRules.Ruleset> {
+    const name = 'firestore.rules';
     const rulesFile = admin.securityRules().createRulesFileFromSource(name, SAMPLE_FIRESTORE_RULES);
     return admin.securityRules().createRuleset(rulesFile)
       .then((ruleset) => {
@@ -203,7 +188,7 @@ describe('admin.securityRules', () => {
     let oldRuleset: admin.securityRules.Ruleset = null;
     let newRuleset: admin.securityRules.Ruleset = null;
 
-    function revertStorageRuleset(): Promise<void> {
+    function revertStorageRulesetIfModified(): Promise<void> {
       if (!newRuleset) {
         return Promise.resolve();
       }
@@ -212,7 +197,7 @@ describe('admin.securityRules', () => {
     }
 
     afterEach(() => {
-      return revertStorageRuleset();
+      return revertStorageRulesetIfModified();
     });
 
     it('getStorageRuleset() returns the currently applied Storage rules', () => {
@@ -266,7 +251,7 @@ describe('admin.securityRules', () => {
           });
       }
 
-      return Promise.all([createTemporaryRuleset('1'), createTemporaryRuleset('2')])
+      return Promise.all([createTemporaryRuleset(), createTemporaryRuleset()])
         .then((expectedRulesets) => {
           return listAllRulesets().then((actualRulesets) => {
             expectedRulesets.forEach((expectedRuleset) => {
