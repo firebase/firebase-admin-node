@@ -108,7 +108,7 @@ describe('admin.securityRules', () => {
   }
 
   function createTemporaryRuleset(): Promise<admin.securityRules.Ruleset> {
-    const name = "random_name_" + getRandomInt(100000) + ".rules";
+    const name = 'random_name_' + getRandomInt(100000) + '.rules';
     const rulesFile = admin.securityRules().createRulesFileFromSource(name, SAMPLE_FIRESTORE_RULES);
     return admin.securityRules().createRuleset(rulesFile)
       .then((ruleset) => {
@@ -135,7 +135,7 @@ describe('admin.securityRules', () => {
           admin.securityRules().getRuleset(expectedRuleset.name)
             .then((actualRuleset) => {
               expect(actualRuleset).to.deep.equal(expectedRuleset);
-            })
+            }),
         );
     });
   });
@@ -259,7 +259,7 @@ describe('admin.securityRules', () => {
         .then((expectedRulesets) => {
           return listAllRulesets().then((actualRulesets) => {
             expectedRulesets.forEach((expectedRuleset) => {
-              expect(actualRulesets.map(r => r.name)).to.deep.include(expectedRuleset.name);
+              expect(actualRulesets.map((r) => r.name)).to.deep.include(expectedRuleset.name);
             });
           });
         });
@@ -276,7 +276,7 @@ describe('admin.securityRules', () => {
 
   describe('deleteRuleset()', () => {
     it('rejects with not-found when the Ruleset does not exist', () => {
-      const uuid = '00000000-1111-2222-3333-444444444444'
+      const uuid = '00000000-1111-2222-3333-444444444444';
       return admin.securityRules().deleteRuleset(uuid)
         .should.eventually.be.rejected.and.have.property('code', 'security-rules/not-found');
     });
