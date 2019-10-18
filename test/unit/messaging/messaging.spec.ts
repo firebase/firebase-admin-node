@@ -504,6 +504,28 @@ describe('Messaging', () => {
        .and.have.property('code', 'messaging/registration-token-not-registered');
     });
 
+    ['THIRD_PARTY_AUTH_ERROR', 'APNS_AUTH_ERROR'].forEach((errorCode) => {
+      it(`should map ${errorCode} to third party auth error`, () => {
+        const resp = {
+          error: {
+            status: 'INVALID_ARGUMENT',
+            message: 'test error message',
+            details: [
+              {
+                '@type': 'type.googleapis.com/google.firebase.fcm.v1.FcmError',
+                'errorCode': errorCode,
+              },
+            ],
+          },
+        };
+        mockedRequests.push(mockSendError(404, 'json', resp));
+        return messaging.send(
+          {token: 'mock-token'},
+        ).should.eventually.be.rejectedWith('test error message')
+         .and.have.property('code', 'messaging/third-party-auth-error');
+      });
+    });
+
     it('should map server error code to client-side error', () => {
       const resp = {
         error: {
