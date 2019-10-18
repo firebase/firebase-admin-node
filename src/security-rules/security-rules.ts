@@ -370,5 +370,5 @@ class SecurityRulesInternals implements FirebaseServiceInternalsInterface {
 }
 
 function stripProjectIdPrefix(name: string): string {
-  return name.split('/').pop();
+  return name.split('/').pop()!;
 }

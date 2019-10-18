@@ -66,7 +66,7 @@ describe('FirebaseApp', () => {
   let getTokenStub: sinon.SinonStub;
   let firebaseNamespace: FirebaseNamespace;
   let firebaseNamespaceInternals: FirebaseNamespaceInternals;
-  let firebaseConfigVar: string;
+  let firebaseConfigVar: string | undefined;
 
   beforeEach(() => {
     getTokenStub = sinon.stub(CertCredential.prototype, 'getAccessToken').resolves({
@@ -747,7 +747,8 @@ describe('FirebaseApp', () => {
       return mockApp.INTERNAL.getToken(true).then((token1) => {
         // Stub the getToken() method to return a rejected promise.
         getTokenStub.restore();
-        getTokenStub = sinon.stub(mockApp.options.credential, 'getAccessToken')
+        expect(mockApp.options.credential).to.exist;
+        getTokenStub = sinon.stub(mockApp.options.credential!, 'getAccessToken')
           .rejects(new Error('Intentionally rejected'));
 
         // Forward the clock to exactly five minutes before expiry.
@@ -789,7 +790,8 @@ describe('FirebaseApp', () => {
 
         // Stub the credential's getAccessToken() method to always return a rejected promise.
         getTokenStub.restore();
-        getTokenStub = sinon.stub(mockApp.options.credential, 'getAccessToken')
+        expect(mockApp.options.credential).to.exist;
+        getTokenStub = sinon.stub(mockApp.options.credential!, 'getAccessToken')
           .rejects(new Error('Intentionally rejected'));
 
         // Expect the call count to initially be zero.
@@ -910,7 +912,8 @@ describe('FirebaseApp', () => {
     it('proactively refreshes the token at the next full minute if it expires in five minutes or less', () => {
       // Turn off default mocking of one hour access tokens and replace it with a short-lived token.
       getTokenStub.restore();
-      getTokenStub = sinon.stub(mockApp.options.credential, 'getAccessToken').resolves({
+      expect(mockApp.options.credential).to.exist;
+      getTokenStub = sinon.stub(mockApp.options.credential!, 'getAccessToken').resolves({
         access_token: utils.generateRandomAccessToken(),
         expires_in: 3 * 60 + 10,
       });

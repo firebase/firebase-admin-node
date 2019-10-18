@@ -44,6 +44,7 @@ import {
   SAMLUpdateAuthProviderRequest, SAMLConfigServerResponse,
 } from '../../../src/auth/auth-config';
 import {TenantOptions} from '../../../src/auth/tenant';
+import { UpdateRequest } from '../../../src/auth/user-record';
 
 chai.should();
 chai.use(sinonChai);
@@ -1597,7 +1598,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       const path = handler.path('v1', '/accounts:update', 'project_id');
       const method = 'POST';
       const uid = '12345678';
-      const validData = {
+      const validData: UpdateRequest = {
         displayName: 'John Doe',
         email: 'user@example.com',
         emailVerified: true,
@@ -1605,8 +1606,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         photoURL: 'http://localhost/1234/photo.png',
         password: 'password',
         phoneNumber: '+11234567890',
-        ignoredProperty: 'value',
       };
+      (validData as any).ignoredProperty = 'value';
       const expectedValidData = {
         localId: uid,
         displayName: 'John Doe',

@@ -26,7 +26,7 @@ import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
 import {Auth, TenantAwareAuth, BaseAuth, DecodedIdToken} from '../../../src/auth/auth';
-import {UserRecord} from '../../../src/auth/user-record';
+import {UserRecord, CreateRequest, UpdateRequest} from '../../../src/auth/user-record';
 import {FirebaseApp} from '../../../src/firebase-app';
 import {FirebaseTokenGenerator} from '../../../src/auth/token-generator';
 import {
@@ -411,6 +411,9 @@ AUTH_CONFIGS.forEach((testConfig) => {
       const tenantId = testConfig.supportsTenantManagement ? undefined : TENANT_ID;
       const expectedUserRecord = getValidUserRecord(getValidGetAccountInfoResponse(tenantId));
       // Set auth_time of token to expected user's tokensValidAfterTime.
+      if (!expectedUserRecord.tokensValidAfterTime) {
+        throw new Error("getValidUserRecord didn't properly set tokensValidAfterTime.");
+      }
       const validSince = new Date(expectedUserRecord.tokensValidAfterTime);
       // Set expected uid to expected user's.
       const uid = expectedUserRecord.uid;
@@ -652,6 +655,9 @@ AUTH_CONFIGS.forEach((testConfig) => {
       const tenantId = testConfig.supportsTenantManagement ? undefined : TENANT_ID;
       const expectedUserRecord = getValidUserRecord(getValidGetAccountInfoResponse(tenantId));
       // Set auth_time of token to expected user's tokensValidAfterTime.
+      if (!expectedUserRecord.tokensValidAfterTime) {
+        throw new Error("getValidUserRecord didn't properly set tokensValidAfterTime.");
+      }
       const validSince = new Date(expectedUserRecord.tokensValidAfterTime);
       // Set expected uid to expected user's.
       const uid = expectedUserRecord.uid;
@@ -1236,7 +1242,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
 
       it('should be rejected given invalid properties', () => {
-        return auth.createUser(null)
+        return auth.createUser(null as unknown as CreateRequest)
           .then(() => {
             throw new Error('Unexpected success');
           })
@@ -1390,7 +1396,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
 
       it('should be rejected given invalid properties', () => {
-        return auth.updateUser(uid, null)
+        return auth.updateUser(uid, null as unknown as UpdateRequest)
           .then(() => {
             throw new Error('Unexpected success');
           })
@@ -1927,6 +1933,9 @@ AUTH_CONFIGS.forEach((testConfig) => {
       const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_ID_TOKEN);
       const expectedUserRecord = getValidUserRecord(getValidGetAccountInfoResponse(tenantId));
       // Set auth_time of token to expected user's tokensValidAfterTime.
+      if (!expectedUserRecord.tokensValidAfterTime) {
+        throw new Error("getValidUserRecord didn't properly set tokensValidAfterTime.");
+      }
       const validSince = new Date(expectedUserRecord.tokensValidAfterTime);
       // Set expected uid to expected user's.
       const uid = expectedUserRecord.uid;

@@ -140,7 +140,7 @@ declare namespace admin {
      * [Authenticate with limited privileges](/docs/database/admin/start#authenticate-with-limited-privileges)
      * for detailed documentation and code samples.
      */
-    databaseAuthVariableOverride?: Object;
+    databaseAuthVariableOverride?: Object | null;
 
     /**
      * The URL of the Realtime Database from which to read and write data.

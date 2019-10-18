@@ -63,7 +63,7 @@ export class ActionCodeSettingsBuilder {
    *     object used to initiliaze this server request builder.
    * @constructor
    */
-  constructor(actionCodeSettings: ActionCodeSettings) {
+  constructor(actionCodeSettings?: ActionCodeSettings) {
     if (!validator.isNonNullObject(actionCodeSettings)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,

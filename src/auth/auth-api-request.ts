@@ -97,7 +97,7 @@ class AuthResourceUrlBuilder {
    * @param {string} version The endpoint API version.
    * @constructor
    */
-  constructor(protected projectId: string, protected version: string = 'v1') {
+  constructor(protected projectId: string | null, protected version: string = 'v1') {
     this.urlFormat = FIREBASE_AUTH_BASE_URL_FORMAT;
   }
 
@@ -132,7 +132,7 @@ class TenantAwareAuthResourceUrlBuilder extends AuthResourceUrlBuilder {
    * @param {string} tenantId The tenant ID.
    * @constructor
    */
-  constructor(protected projectId: string, protected version: string, protected tenantId: string) {
+  constructor(protected projectId: string | null, protected version: string, protected tenantId: string) {
     super(projectId, version);
     this.urlFormat = FIREBASE_AUTH_TENANT_URL_FORMAT;
   }
@@ -683,7 +683,7 @@ const LIST_INBOUND_SAML_CONFIGS = new ApiSettings('/inboundSamlConfigs', 'GET')
  * Class that provides the mechanism to send requests to the Firebase Auth backend endpoints.
  */
 export abstract class AbstractAuthRequestHandler {
-  protected readonly projectId: string;
+  protected readonly projectId: string | null;
   protected readonly httpClient: AuthorizedHttpClient;
   private authUrlBuilder: AuthResourceUrlBuilder;
   private projectConfigUrlBuilder: AuthResourceUrlBuilder;
@@ -693,7 +693,7 @@ export abstract class AbstractAuthRequestHandler {
    * @return {string|null} The error code if present; null otherwise.
    */
   private static getErrorCode(response: any): string | null {
-    return (validator.isNonNullObject(response) && response.error && (response.error as any).message) || null;
+    return (validator.isNonNullObject(response) && (response as any).error && (response as any).error.message) || null;
   }
 
   /**
@@ -844,7 +844,7 @@ export abstract class AbstractAuthRequestHandler {
     }
     // If no remaining user in request after client side processing, there is no need
     // to send the request to the server.
-    if (request.users.length === 0) {
+    if (!request.users || request.users.length === 0) {
       return Promise.resolve(userImportBuilder.buildResponse([]));
     }
     return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_UPLOAD_ACCOUNT, request)
@@ -881,7 +881,7 @@ export abstract class AbstractAuthRequestHandler {
    * @return {Promise<string>} A promise that resolves when the operation completes
    *     with the user id that was edited.
    */
-  public setCustomUserClaims(uid: string, customUserClaims: object): Promise<string> {
+  public setCustomUserClaims(uid: string, customUserClaims: object | null): Promise<string> {
     // Validate user UID.
     if (!validator.isUid(uid)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_UID));
@@ -1059,7 +1059,7 @@ export abstract class AbstractAuthRequestHandler {
    * @param {string} email The email of the user the link is being sent to.
    * @param {ActionCodeSettings=} actionCodeSettings The optional action code setings which defines whether
    *     the link is to be handled by a mobile app and the additional state information to be passed in the
-   *     deep link, etc.
+   *     deep link, etc. Required when requestType == 'EMAIL_SIGNIN'
    * @return {Promise<string>} A promise that resolves with the email action link.
    */
   public getEmailActionLink(
@@ -1156,7 +1156,7 @@ export abstract class AbstractAuthRequestHandler {
     // Construct backend request.
     let request;
     try {
-      request = OIDCConfig.buildServerRequest(options);
+      request = OIDCConfig.buildServerRequest(options) || {};
     } catch (e) {
       return Promise.reject(e);
     }
@@ -1278,7 +1278,7 @@ export abstract class AbstractAuthRequestHandler {
     // Construct backend request.
     let request;
     try {
-      request = SAMLConfig.buildServerRequest(options);
+      request = SAMLConfig.buildServerRequest(options) || {};
     } catch (e) {
       return Promise.reject(e);
     }
@@ -1311,7 +1311,7 @@ export abstract class AbstractAuthRequestHandler {
     // Construct backend request.
     let request: SAMLConfigServerRequest;
     try {
-      request = SAMLConfig.buildServerRequest(options, true);
+      request = SAMLConfig.buildServerRequest(options, true) || {};
     } catch (e) {
       return Promise.reject(e);
     }
@@ -1366,6 +1366,14 @@ export abstract class AbstractAuthRequestHandler {
         if (err instanceof HttpError) {
           const error = err.response.data;
           const errorCode = AbstractAuthRequestHandler.getErrorCode(error);
+          if (!errorCode) {
+            throw new FirebaseAuthError(
+              AuthClientErrorCode.INTERNAL_ERROR,
+              'Error returned from server: ' + error + '. Additionally, an ' +
+              'internal error occurred while attempting to extract the ' +
+              'errorcode from the error.',
+            );
+          }
           throw FirebaseAuthError.fromServerError(errorCode, /* message */ undefined, error);
         }
         throw err;

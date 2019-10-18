@@ -104,7 +104,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    *     minting.
    * @constructor
    */
-  constructor(protected readonly projectId: string,
+  constructor(protected readonly projectId: string | null,
               protected readonly authRequestHandler: T,
               cryptoSigner: CryptoSigner) {
     this.tokenGenerator = new FirebaseTokenGenerator(cryptoSigner);
@@ -731,7 +731,7 @@ export class Auth extends BaseAuth<AuthRequestHandler> implements FirebaseServic
    * @param {FirebaseApp} app The project ID for an app.
    * @return {string} The FirebaseApp's project ID.
    */
-  private static getProjectId(app: FirebaseApp): string {
+  private static getProjectId(app: FirebaseApp): string | null {
     if (typeof app !== 'object' || app === null || !('options' in app)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,

@@ -62,14 +62,15 @@ export class ProjectManagement implements FirebaseServiceInterface {
     }
 
     // Assert that a specific project ID was provided within the app.
-    this.projectId = utils.getProjectId(app);
-    if (!validator.isNonEmptyString(this.projectId)) {
+    const projectId = utils.getProjectId(app);
+    if (!validator.isNonEmptyString(projectId)) {
       throw new FirebaseProjectManagementError(
           'invalid-project-id',
           'Failed to determine project ID. Initialize the SDK with service account credentials, or '
               + 'set project ID as an app option. Alternatively, set the GOOGLE_CLOUD_PROJECT '
               + 'environment variable.');
     }
+    this.projectId = projectId;
     this.resourceName = `projects/${this.projectId}`;
 
     this.requestHandler = new ProjectManagementRequestHandler(app);
