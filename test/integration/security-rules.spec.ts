@@ -45,7 +45,6 @@ const RULESET_NAME_PATTERN = /[0-9a-zA-Z-]+/;
 
 describe('admin.securityRules', () => {
 
-  let testRuleset: admin.securityRules.Ruleset = null;
   const rulesetsToDelete: string[] = [];
 
   function scheduleForDelete(ruleset: admin.securityRules.Ruleset) {
@@ -65,7 +64,17 @@ describe('admin.securityRules', () => {
     return Promise.all(promises);
   }
 
-  after(() => {
+  function createTemporaryRuleset(): Promise<admin.securityRules.Ruleset> {
+    const name = 'firestore.rules';
+    const rulesFile = admin.securityRules().createRulesFileFromSource(name, SAMPLE_FIRESTORE_RULES);
+    return admin.securityRules().createRuleset(rulesFile)
+      .then((ruleset) => {
+        scheduleForDelete(ruleset);
+        return ruleset;
+      });
+  }
+
+  afterEach(() => {
     return deleteTempRulesets();
   });
 
@@ -91,7 +100,6 @@ describe('admin.securityRules', () => {
         RULES_FILE_NAME, SAMPLE_FIRESTORE_RULES);
       return admin.securityRules().createRuleset(rulesFile)
         .then((ruleset) => {
-          testRuleset = ruleset;
           scheduleForDelete(ruleset);
           verifyFirestoreRuleset(ruleset);
         });
@@ -107,21 +115,24 @@ describe('admin.securityRules', () => {
 
   describe('getRuleset()', () => {
     it('rejects with not-found when the Ruleset does not exist', () => {
-      const name = 'e1212' + testRuleset.name.substring(5);
-      return admin.securityRules().getRuleset(name)
+      const nonExistingName = '00000000-1111-2222-3333-444444444444';
+      return admin.securityRules().getRuleset(nonExistingName)
         .should.eventually.be.rejected.and.have.property('code', 'security-rules/not-found');
     });
 
     it('rejects with invalid-argument when the Ruleset name is invalid', () => {
-      return admin.securityRules().getRuleset('invalid')
+      return admin.securityRules().getRuleset('invalid uuid')
         .should.eventually.be.rejected.and.have.property('code', 'security-rules/invalid-argument');
     });
 
     it('resolves with existing Ruleset', () => {
-      return admin.securityRules().getRuleset(testRuleset.name)
-        .then((ruleset) => {
-          verifyFirestoreRuleset(ruleset);
-        });
+      return createTemporaryRuleset()
+        .then((expectedRuleset) =>
+          admin.securityRules().getRuleset(expectedRuleset.name)
+            .then((actualRuleset) => {
+              expect(actualRuleset).to.deep.equal(expectedRuleset);
+            }),
+        );
     });
   });
 
@@ -129,7 +140,7 @@ describe('admin.securityRules', () => {
     let oldRuleset: admin.securityRules.Ruleset = null;
     let newRuleset: admin.securityRules.Ruleset = null;
 
-    function revertFirestoreRuleset(): Promise<void> {
+    function revertFirestoreRulesetIfModified(): Promise<void> {
       if (!newRuleset) {
         return Promise.resolve();
       }
@@ -137,8 +148,8 @@ describe('admin.securityRules', () => {
       return admin.securityRules().releaseFirestoreRuleset(oldRuleset);
     }
 
-    after(() => {
-      return revertFirestoreRuleset();
+    afterEach(() => {
+      return revertFirestoreRulesetIfModified();
     });
 
     it('getFirestoreRuleset() returns the Ruleset currently in effect', () => {
@@ -177,7 +188,7 @@ describe('admin.securityRules', () => {
     let oldRuleset: admin.securityRules.Ruleset = null;
     let newRuleset: admin.securityRules.Ruleset = null;
 
-    function revertStorageRuleset(): Promise<void> {
+    function revertStorageRulesetIfModified(): Promise<void> {
       if (!newRuleset) {
         return Promise.resolve();
       }
@@ -185,8 +196,8 @@ describe('admin.securityRules', () => {
       return admin.securityRules().releaseStorageRuleset(oldRuleset);
     }
 
-    after(() => {
-      return revertStorageRuleset();
+    afterEach(() => {
+      return revertStorageRulesetIfModified();
     });
 
     it('getStorageRuleset() returns the currently applied Storage rules', () => {
@@ -240,9 +251,13 @@ describe('admin.securityRules', () => {
           });
       }
 
-      return listAllRulesets()
-        .then((rulesets) => {
-          expect(rulesets.some((rs) => rs.name === testRuleset.name)).to.be.true;
+      return Promise.all([createTemporaryRuleset(), createTemporaryRuleset()])
+        .then((expectedRulesets) => {
+          return listAllRulesets().then((actualRulesets) => {
+            expectedRulesets.forEach((expectedRuleset) => {
+              expect(actualRulesets.map((r) => r.name)).to.deep.include(expectedRuleset.name);
+            });
+          });
         });
     });
 
@@ -257,26 +272,27 @@ describe('admin.securityRules', () => {
 
   describe('deleteRuleset()', () => {
     it('rejects with not-found when the Ruleset does not exist', () => {
-      const name = 'e1212' + testRuleset.name.substring(5);
-      return admin.securityRules().deleteRuleset(name)
+      const nonExistingName = '00000000-1111-2222-3333-444444444444';
+      return admin.securityRules().deleteRuleset(nonExistingName)
         .should.eventually.be.rejected.and.have.property('code', 'security-rules/not-found');
     });
 
     it('rejects with invalid-argument when the Ruleset name is invalid', () => {
-      return admin.securityRules().deleteRuleset('invalid')
+      return admin.securityRules().deleteRuleset('invalid uuid')
         .should.eventually.be.rejected.and.have.property('code', 'security-rules/invalid-argument');
     });
 
     it('deletes existing Ruleset', () => {
-      return admin.securityRules().deleteRuleset(testRuleset.name)
-        .then(() => {
-          return admin.securityRules().getRuleset(testRuleset.name)
-            .should.eventually.be.rejected.and.have.property('code', 'security-rules/not-found');
-        })
-        .then(() => {
-          unscheduleForDelete(testRuleset); // Already deleted.
-          testRuleset = null;
-        });
+      return createTemporaryRuleset().then((ruleset) => {
+        return admin.securityRules().deleteRuleset(ruleset.name)
+          .then(() => {
+            return admin.securityRules().getRuleset(ruleset.name)
+              .should.eventually.be.rejected.and.have.property('code', 'security-rules/not-found');
+          })
+          .then(() => {
+            unscheduleForDelete(ruleset); // Already deleted.
+          });
+      });
     });
   });
 
