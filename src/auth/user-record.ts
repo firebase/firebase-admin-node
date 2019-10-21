@@ -27,8 +27,8 @@ const B64_REDACTED = Buffer.from('REDACTED').toString('base64');
 /**
  * Parses a time stamp string or number and returns the corresponding date if valid.
  *
- * @param {any} time The unix timestamp string or number in milliseconds.
- * @return {string} The corresponding date as a UTC string, if valid.
+ * @param time The unix timestamp string or number in milliseconds.
+ * @return The corresponding date as a UTC string, if valid.
  */
 function parseDate(time: any): string {
   try {
@@ -135,7 +135,7 @@ export abstract class MultiFactorInfo {
   }
 
   /**
-   * Initializes the MultiFactorInfo object using the server side or JWT format response.
+   * Initializes the MultiFactorInfo object using the server side response.
    *
    * @param response The server side response.
    * @constructor
@@ -197,7 +197,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
   public readonly phoneNumber: string;
 
   /**
-   * Initializes the PhoneMultiFactorInfo object using the server side or JWT format response.
+   * Initializes the PhoneMultiFactorInfo object using the server side response.
    *
    * @param response The server side response.
    * @constructor
@@ -269,7 +269,7 @@ export class MultiFactor {
  * User metadata class that provides metadata information like user account creation
  * and last sign in time.
  *
- * @param {object} response The server side response returned from the getAccountInfo
+ * @param response The server side response returned from the getAccountInfo
  *     endpoint.
  * @constructor
  */
@@ -286,7 +286,7 @@ export class UserMetadata {
     utils.addReadonlyGetter(this, 'lastSignInTime', parseDate(response.lastLoginAt));
   }
 
-  /** @return {object} The plain object representation of the user's metadata. */
+  /** @return The plain object representation of the user's metadata. */
   public toJSON(): object {
     return {
       lastSignInTime: this.lastSignInTime,
@@ -299,7 +299,7 @@ export class UserMetadata {
  * User info class that provides provider user information for different
  * Firebase providers like google.com, facebook.com, password, etc.
  *
- * @param {object} response The server side response returned from the getAccountInfo
+ * @param response The server side response returned from the getAccountInfo
  *     endpoint.
  * @constructor
  */
@@ -327,7 +327,7 @@ export class UserInfo {
     utils.addReadonlyGetter(this, 'phoneNumber', response.phoneNumber);
   }
 
-  /** @return {object} The plain object representation of the current provider data. */
+  /** @return The plain object representation of the current provider data. */
   public toJSON(): object {
     return {
       uid: this.uid,
@@ -344,7 +344,7 @@ export class UserInfo {
  * User record class that defines the Firebase user object populated from
  * the Firebase Auth getAccountInfo response.
  *
- * @param {any} response The server side response returned from the getAccountInfo
+ * @param response The server side response returned from the getAccountInfo
  *     endpoint.
  * @constructor
  */
@@ -418,7 +418,7 @@ export class UserRecord {
     }
   }
 
-  /** @return {object} The plain object representation of the user record. */
+  /** @return The plain object representation of the user record. */
   public toJSON(): object {
     const json: any = {
       uid: this.uid,

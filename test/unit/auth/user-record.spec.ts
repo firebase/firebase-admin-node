@@ -33,8 +33,8 @@ const expect = chai.expect;
 const now = new Date();
 
 /**
- * @param {string=} tenantId The optional tenant ID to add to the response.
- * @return {object} A sample valid user response as returned from getAccountInfo
+ * @param tenantId The optional tenant ID to add to the response.
+ * @return A sample valid user response as returned from getAccountInfo
  *     endpoint.
  */
 function getValidUserResponse(tenantId?: string): GetAccountInfoUserResponse {
@@ -104,8 +104,8 @@ function getValidUserResponse(tenantId?: string): GetAccountInfoUserResponse {
 }
 
 /**
- * @param {string=} tenantId The optional tenant ID to add to the user.
- * @return {object} The expected user JSON representation for the above user
+ * @param tenantId The optional tenant ID to add to the user.
+ * @return The expected user JSON representation for the above user
  *     server response.
  */
 function getUserJSON(tenantId?: string): object {
@@ -184,7 +184,7 @@ function getUserJSON(tenantId?: string): object {
 }
 
 /**
- * @return {object} A sample user info response as returned from getAccountInfo
+ * @return A sample user info response as returned from getAccountInfo
  *     endpoint.
  */
 function getUserInfoResponse(): ProviderUserInfo {
@@ -199,7 +199,7 @@ function getUserInfoResponse(): ProviderUserInfo {
 }
 
 /**
- * @return {object} The JSON representation of the above user info response.
+ * @return The JSON representation of the above user info response.
  */
 function getUserInfoJSON(): object {
   return {
@@ -213,7 +213,7 @@ function getUserInfoJSON(): object {
 }
 
 /**
- * @return {object} A sample user info response with phone number as returned
+ * @return A sample user info response with phone number as returned
  *     from getAccountInfo endpoint.
  */
 function getUserInfoWithPhoneNumberResponse(): ProviderUserInfo {
@@ -225,7 +225,7 @@ function getUserInfoWithPhoneNumberResponse(): ProviderUserInfo {
 }
 
 /**
- * @return {object} The JSON representation of the above user info response
+ * @return The JSON representation of the above user info response
  *     with a phone number.
  */
 function getUserInfoWithPhoneNumberJSON(): object {
