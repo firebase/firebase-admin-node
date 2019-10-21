@@ -4,6 +4,13 @@
     "target": "es5",
     "noImplicitAny": true,
     "noUnusedLocals": true,
+    // TODO(rsgowman): enable `"strict": true,` and remove explicit setting of: noImplicitAny, noImplicitThis, alwaysStrict, strictBindCallApply, strictNullChecks, strictFunctionTypes, strictPropertyInitialization.
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "strictBindCallApply": true,
+    //"strictNullChecks": true,
+    //"strictFunctionTypes": true,
+    //"strictPropertyInitialization": true,
     "lib": ["es2015"],
     "outDir": "lib",
     // We manually craft typings in src/index.d.ts instead of auto-generating them.
