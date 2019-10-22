@@ -2085,19 +2085,19 @@ describe('Messaging', () => {
     invalidPayloads.forEach((invalidPayload) => {
       it(`should throw given invalid type for payload argument: ${ JSON.stringify(invalidPayload) }`, () => {
         expect(() => {
-          messaging.sendToDevice(mocks.messaging.registrationToken, invalidPayload as unknown as MessagingPayload);
+          messaging.sendToDevice(mocks.messaging.registrationToken, invalidPayload as any);
         }).to.throw('Messaging payload must be an object');
 
         expect(() => {
-          messaging.sendToDeviceGroup(mocks.messaging.notificationKey, invalidPayload as unknown as MessagingPayload);
+          messaging.sendToDeviceGroup(mocks.messaging.notificationKey, invalidPayload as any);
         }).to.throw('Messaging payload must be an object');
 
         expect(() => {
-          messaging.sendToTopic(mocks.messaging.topic, invalidPayload as unknown as MessagingPayload);
+          messaging.sendToTopic(mocks.messaging.topic, invalidPayload as any);
         }).to.throw('Messaging payload must be an object');
 
         expect(() => {
-          messaging.sendToCondition(mocks.messaging.condition, invalidPayload as unknown as MessagingPayload);
+          messaging.sendToCondition(mocks.messaging.condition, invalidPayload as any);
         }).to.throw('Messaging payload must be an object');
       });
     });
