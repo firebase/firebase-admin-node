@@ -9,7 +9,7 @@
     "alwaysStrict": true,
     "strictBindCallApply": true,
     //"strictNullChecks": true,
-    //"strictFunctionTypes": true,
+    "strictFunctionTypes": true,
     //"strictPropertyInitialization": true,
     "lib": ["es2015"],
     "outDir": "lib",
