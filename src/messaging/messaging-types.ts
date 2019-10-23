@@ -797,8 +797,8 @@ function validateLightSettings(lightSettings: LightSettings) {
       MessagingClientErrorCode.INVALID_PAYLOAD,
       'android.notification.lightSettings.color must be in the form #RRGGBB or #RRGGBBAA format');
   }
-  lightSettings.color += lightSettings.color.length === 7 ? 'FF' : '';
-  const rgb = /^#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/i.exec(lightSettings.color);
+  const colorString = lightSettings.color.length === 7 ? lightSettings.color + 'FF' : lightSettings.color;
+  const rgb = /^#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/i.exec(colorString);
   const color = {
     red: parseInt(rgb[1], 16) / 255.0,
     green: parseInt(rgb[2], 16) / 255.0,
