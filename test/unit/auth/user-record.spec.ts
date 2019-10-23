@@ -21,7 +21,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import {deepCopy} from '../../../src/utils/deep-copy';
 import {
   UserInfo, UserMetadata, UserRecord, GetAccountInfoUserResponse, ProviderUserInfo,
-  MultiFactor, PhoneMultiFactorInfo, MultiFactorInfo,
+  MultiFactor, PhoneMultiFactorInfo, MultiFactorInfo, AuthFactorInfo,
 } from '../../../src/auth/user-record';
 
 
@@ -240,7 +240,7 @@ function getUserInfoWithPhoneNumberJSON(): object {
 }
 
 describe('PhoneMultiFactorInfo', () => {
-  const serverResponse: any = {
+  const serverResponse: AuthFactorInfo = {
     mfaEnrollmentId: 'enrollmentId1',
     displayName: 'displayName1',
     enrolledAt: now.toISOString(),
@@ -256,7 +256,7 @@ describe('PhoneMultiFactorInfo', () => {
     it('should throw when an empty object is provided', () => {
       expect(() =>  {
         return new PhoneMultiFactorInfo({} as any);
-      }).to.throw(Error);
+      }).to.throw('INTERNAL ASSERT FAILED: Invalid multi-factor info response');
     });
 
     it('should succeed when mfaEnrollmentId and phoneInfo are both provided', () => {
@@ -273,7 +273,7 @@ describe('PhoneMultiFactorInfo', () => {
         return new PhoneMultiFactorInfo({
           mfaEnrollmentId: 'enrollmentId1',
         } as any);
-      }).to.throw(Error);
+      }).to.throw('INTERNAL ASSERT FAILED: Invalid multi-factor info response');
     });
 
     it('should throw when only phoneInfo is provided', () => {
@@ -281,7 +281,7 @@ describe('PhoneMultiFactorInfo', () => {
         return new PhoneMultiFactorInfo({
           phoneInfo: '+16505551234',
         } as any);
-      }).to.throw(Error);
+      }).to.throw('INTERNAL ASSERT FAILED: Invalid multi-factor info response');
     });
   });
 
@@ -369,7 +369,7 @@ describe('PhoneMultiFactorInfo', () => {
 });
 
 describe('MultiFactorInfo', () => {
-  const serverResponse: any = {
+  const serverResponse: AuthFactorInfo = {
     mfaEnrollmentId: 'enrollmentId1',
     displayName: 'displayName1',
     enrolledAt: now.toISOString(),
@@ -390,6 +390,7 @@ describe('MultiFactorInfo', () => {
 
 describe('MultiFactor', () => {
   const serverResponse = {
+    localId: 'uid123',
     mfaInfo: [
       {
         mfaEnrollmentId: 'enrollmentId1',
@@ -433,11 +434,11 @@ describe('MultiFactor', () => {
     it('should throw when a non object is provided', () => {
       expect(() =>  {
         return new MultiFactor(undefined as any);
-      }).to.throw(Error);
+      }).to.throw('INTERNAL ASSERT FAILED: Invalid multi-factor response');
     });
 
     it('should populate an empty enrolledFactors array when given an empty object', () => {
-      const multiFactor = new MultiFactor({});
+      const multiFactor = new MultiFactor({} as any);
 
       expect(multiFactor.enrolledFactors.length).to.equal(0);
     });
@@ -478,7 +479,7 @@ describe('MultiFactor', () => {
 
   describe('toJSON', () => {
     it('should return expected JSON object when given an empty response', () => {
-      const multiFactor = new MultiFactor({});
+      const multiFactor = new MultiFactor({} as any);
 
       expect(multiFactor.toJSON()).to.deep.equal({
         enrolledFactors: [],
@@ -610,6 +611,7 @@ describe('UserMetadata', () => {
   const expectedLastLoginAt = 1476235905000;
   const expectedCreatedAt = 1476136676000;
   const actualMetadata: UserMetadata = new UserMetadata({
+    localId: 'uid123',
     lastLoginAt: expectedLastLoginAt.toString(),
     createdAt: expectedCreatedAt.toString(),
   });
@@ -621,12 +623,12 @@ describe('UserMetadata', () => {
   describe('constructor', () =>  {
     it('should initialize as expected when a valid creationTime is provided', () => {
       expect(() => {
-        return new UserMetadata({createdAt: '1476136676000'});
+        return new UserMetadata({createdAt: '1476136676000'} as any);
       }).not.to.throw(Error);
     });
 
     it('should set creationTime and lastSignInTime to null when not provided', () => {
-      const metadata = new UserMetadata({});
+      const metadata = new UserMetadata({} as any);
       expect(metadata.creationTime).to.be.null;
       expect(metadata.lastSignInTime).to.be.null;
     });
@@ -634,7 +636,7 @@ describe('UserMetadata', () => {
     it('should set creationTime to null when creationTime value is invalid', () => {
       const metadata = new UserMetadata({
         createdAt: 'invalid',
-      });
+      } as any);
       expect(metadata.creationTime).to.be.null;
       expect(metadata.lastSignInTime).to.be.null;
     });
@@ -643,7 +645,7 @@ describe('UserMetadata', () => {
       const metadata = new UserMetadata({
         createdAt: '1476235905000',
         lastLoginAt: 'invalid',
-      });
+      } as any);
       expect(metadata.lastSignInTime).to.be.null;
     });
   });
@@ -864,7 +866,7 @@ describe('UserRecord', () => {
       const metadata = new UserMetadata({
         createdAt: '1476136676000',
         lastLoginAt: '1476235905000',
-      });
+      } as any);
       expect(userRecord.metadata).to.deep.equal(metadata);
     });
 
@@ -873,7 +875,7 @@ describe('UserRecord', () => {
         (userRecord as any).metadata = new UserMetadata({
           createdAt: new Date().toUTCString(),
           lastLoginAt: new Date().toUTCString(),
-        });
+        } as any);
       }).to.throw(Error);
     });
 
@@ -957,6 +959,7 @@ describe('UserRecord', () => {
 
     it('should return expected multiFactor', () => {
       const multiFactor = new MultiFactor({
+        localId: 'uid123',
         mfaInfo: [
           {
             mfaEnrollmentId: 'enrollmentId1',
@@ -986,6 +989,7 @@ describe('UserRecord', () => {
     it('should throw when modifying readonly multiFactor property', () => {
       expect(() => {
         (userRecord as any).multiFactor = new MultiFactor({
+          localId: 'uid123',
           mfaInfo: [{
             mfaEnrollmentId: 'enrollmentId3',
             displayName: 'displayName3',

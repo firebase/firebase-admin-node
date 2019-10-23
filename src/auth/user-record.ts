@@ -58,12 +58,7 @@ export interface CreateRequest extends UpdateRequest {
   uid?: string;
 }
 
-export interface Metadata {
-  createdAt?: string;
-  lastLoginAt?: string;
-}
-
-export interface MfaInfo {
+export interface AuthFactorInfo {
   mfaEnrollmentId: string;
   displayName?: string;
   phoneInfo?: string;
@@ -81,11 +76,7 @@ export interface ProviderUserInfo {
   federatedId?: string;
 }
 
-export interface Mfa {
-  mfaInfo?: MfaInfo[];
-}
-
-export interface GetAccountInfoUserResponse extends Metadata, Mfa {
+export interface GetAccountInfoUserResponse {
   localId: string;
   email?: string;
   emailVerified?: boolean;
@@ -99,6 +90,9 @@ export interface GetAccountInfoUserResponse extends Metadata, Mfa {
   validSince?: string;
   tenantId?: string;
   providerUserInfo?: ProviderUserInfo[];
+  mfaInfo?: AuthFactorInfo[];
+  createdAt?: string;
+  lastLoginAt?: string;
   [key: string]: any;
 }
 
@@ -123,7 +117,7 @@ export abstract class MultiFactorInfo {
    * @param response The server side response.
    * @constructor
    */
-  public static initMultiFactorInfo(response: MfaInfo): MultiFactorInfo | null {
+  public static initMultiFactorInfo(response: AuthFactorInfo): MultiFactorInfo | null {
     let multiFactorInfo: MultiFactorInfo | null = null;
     // Only PhoneMultiFactorInfo currently available.
     try {
@@ -140,9 +134,8 @@ export abstract class MultiFactorInfo {
    * @param response The server side response.
    * @constructor
    */
-  constructor(response: MfaInfo) {
-    const factorId = this.getFactorId(response);
-    this.initFromServerResponse(response, factorId);
+  constructor(response: AuthFactorInfo) {
+    this.initFromServerResponse(response);
   }
 
   /** @return The plain object representation. */
@@ -162,32 +155,32 @@ export abstract class MultiFactorInfo {
    * @return The multi-factor ID associated with the provided response. If the response is
    *     not associated with any known multi-factor ID, null is returned.
    */
-  protected abstract getFactorId(response: MfaInfo): MultiFactorId | null;
+  protected abstract getFactorId(response: AuthFactorInfo): MultiFactorId | null;
 
   /**
    * Initializes the MultiFactorInfo object using the provided server response.
    *
    * @param response The server side response.
    */
-  private initFromServerResponse(response: MfaInfo, factorId: MultiFactorId | null) {
-    if (factorId && response && response.mfaEnrollmentId) {
-      utils.addReadonlyGetter(this, 'uid', response.mfaEnrollmentId);
-      utils.addReadonlyGetter(this, 'factorId', factorId);
-      utils.addReadonlyGetter(this, 'displayName', response.displayName || null);
-      // Encoded using [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format.
-      // For example, "2017-01-15T01:30:15.01Z".
-      // This can be parsed directly via Date constructor.
-      // This can be computed using Data.prototype.toISOString.
-      if (response.enrolledAt) {
-        utils.addReadonlyGetter(
-            this, 'enrollmentTime', new Date(response.enrolledAt).toUTCString());
-      } else {
-        utils.addReadonlyGetter(this, 'enrollmentTime', null);
-      }
-    } else {
+  private initFromServerResponse(response: AuthFactorInfo) {
+    const factorId = this.getFactorId(response);
+    if (!factorId || !response || !response.mfaEnrollmentId) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Invalid multi-factor info response');
+    }
+    utils.addReadonlyGetter(this, 'uid', response.mfaEnrollmentId);
+    utils.addReadonlyGetter(this, 'factorId', factorId);
+    utils.addReadonlyGetter(this, 'displayName', response.displayName || null);
+    // Encoded using [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format.
+    // For example, "2017-01-15T01:30:15.01Z".
+    // This can be parsed directly via Date constructor.
+    // This can be computed using Data.prototype.toISOString.
+    if (response.enrolledAt) {
+      utils.addReadonlyGetter(
+          this, 'enrollmentTime', new Date(response.enrolledAt).toUTCString());
+    } else {
+      utils.addReadonlyGetter(this, 'enrollmentTime', null);
     }
   }
 }
@@ -202,7 +195,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
    * @param response The server side response.
    * @constructor
    */
-  constructor(response: MfaInfo) {
+  constructor(response: AuthFactorInfo) {
     super(response);
     utils.addReadonlyGetter(this, 'phoneNumber', response.phoneInfo);
   }
@@ -223,7 +216,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
    * @return The multi-factor ID associated with the provided response. If the response is
    *     not associated with any known multi-factor ID, null is returned.
    */
-  protected getFactorId(response: MfaInfo): MultiFactorId | null {
+  protected getFactorId(response: AuthFactorInfo): MultiFactorId | null {
     return !!response.phoneInfo ? MultiFactorId.Phone : null;
   }
 }
@@ -238,7 +231,7 @@ export class MultiFactor {
    * @param response The server side response.
    * @constructor
    */
-  constructor(response: Mfa) {
+  constructor(response: GetAccountInfoUserResponse) {
     const parsedEnrolledFactors: MultiFactorInfo[] = [];
     if (!isNonNullObject(response)) {
       throw new FirebaseAuthError(
@@ -277,7 +270,7 @@ export class UserMetadata {
   public readonly creationTime: string;
   public readonly lastSignInTime: string;
 
-  constructor(response: Metadata) {
+  constructor(response: GetAccountInfoUserResponse) {
     // Creation date should always be available but due to some backend bugs there
     // were cases in the past where users did not have creation date properly set.
     // This included legacy Firebase migrating project users and some anonymous users.
