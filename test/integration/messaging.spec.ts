@@ -61,7 +61,7 @@ const message: admin.messaging.Message = {
       defaultVibrateTimings: false,
       defaultSound: true,
       lightSettings: {
-        color: '#AABBCC',
+        color: '#AABBCC55',
         lightOnDurationMillis: 200,
         lightOffDurationMillis: 300,
       },

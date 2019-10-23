@@ -247,19 +247,3 @@ export function isTopic(topic: any): boolean {
   const VALID_TOPIC_REGEX = /^(\/topics\/)?(private\/)?[a-zA-Z0-9-_.~%]+$/;
   return VALID_TOPIC_REGEX.test(topic);
 }
-
-/**
- * Validates that a value is a number and falls within the given range.
- *
- * @param {any} value The value to validate.
- * @param {min} lower bound of the range to validate.
- * @param {max} upper bound of the range to validate.
- * @param {inclusive} indicates whether to include or exclude lower and upper bounds in the range.
- * @return {boolean} Whether the value is a number or not and weather the value is within the range.
- */
-export function isNumberInRange(value: any, min: number, max: number, inclusive: boolean = false) {
-  if (!isNumber(value)) {
-    return false;
-  }
-  return inclusive ? (value >= min && value <= max) : (value < min && value > max);
-}

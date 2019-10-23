@@ -2396,22 +2396,12 @@ describe('Messaging', () => {
 
     const invalidVibrateTimings = [[null, 500], [-100]];
     invalidVibrateTimings.forEach((vibrateTimingsMillis) => {
-      it(`should throw given an invalid vibrateTimingsMillis: ${ vibrateTimingsMillis }`, () => {
+      it(`should throw given an null or negative vibrateTimingsMillis: ${ vibrateTimingsMillis }`, () => {
         const message: Message = {
           condition: 'topic-name',
           android: {
             notification: {
               vibrateTimingsMillis,
-              lightSettings: {
-                color: {
-                  red: 1,
-                  green: 1,
-                  blue: 0,
-                  alpha: 1,
-                },
-                lightOnDurationMillis: 1000,
-                lightOffDurationMillis: 800,
-              },
             },
           },
         };
@@ -2421,30 +2411,18 @@ describe('Messaging', () => {
       });
     });
 
-    const invalidLightSettingsColors = [
-      { red: -1, green: 0, blue: 1, alpha: 1 },
-      { red: 0.9, green: 1.5, blue: 1, alpha: 1 },
-      { red: 1, green: 0.1, blue: 100, alpha: 1 },
-      { red: 1, green: 1, blue: 1, alpha: 10 },
-    ];
-    invalidLightSettingsColors.forEach((color) => {
-      it(`should throw given an invalid light settings color: ${ color }`, () => {
-        const message: Message = {
-          condition: 'topic-name',
-          android: {
-            notification: {
-              lightSettings: {
-                color,
-                lightOnDurationMillis: 100,
-                lightOffDurationMillis: 800,
-              },
-            },
+    it(`should throw given an empty vibrateTimingsMillis array`, () => {
+      const message: Message = {
+        condition: 'topic-name',
+        android: {
+          notification: {
+            vibrateTimingsMillis: [],
           },
-        };
-        expect(() => {
-          messaging.send(message);
-        }).to.throw(/The amount of (red|green|blue|alpha) in color must be a value in the interval \[0, 1]/);
-      });
+        },
+      };
+      expect(() => {
+        messaging.send(message);
+      }).to.throw('android.notification.vibrateTimingsMillis must be a non-empty array of numbers');
     });
 
     invalidColors.forEach((color) => {
@@ -2463,11 +2441,11 @@ describe('Messaging', () => {
         };
         expect(() => {
           messaging.send(message);
-        }).to.throw('android.notification.lightSettings.color must be in the form #RRGGBB or a `Color` object');
+        }).to.throw('android.notification.lightSettings.color must be in the form #RRGGBB or #RRGGBBAA format');
       });
     });
 
-    it(`should throw given an invalid light on duration`, () => {
+    it(`should throw given a negative light on duration`, () => {
       const message: Message = {
         condition: 'topic-name',
         android: {
@@ -2486,7 +2464,7 @@ describe('Messaging', () => {
         'android.notification.lightSettings.lightOnDurationMillis must be a non-negative duration in milliseconds');
     });
 
-    it(`should throw given an invalid light off duration`, () => {
+    it(`should throw given a negative light off duration`, () => {
       const message: Message = {
         condition: 'topic-name',
         android: {
@@ -3001,7 +2979,7 @@ describe('Messaging', () => {
               defaultVibrateTimings: false,
               defaultSound: true,
               lightSettings: {
-                color: '#AABBCC',
+                color: '#AABBCCDD',
                 lightOnDurationMillis: 200,
                 lightOffDurationMillis: 300,
               },
@@ -3032,7 +3010,7 @@ describe('Messaging', () => {
                   red: 0.6666666666666666,
                   green: 0.7333333333333333,
                   blue: 0.8,
-                  alpha: 1,
+                  alpha: 0.8666666666666667,
                 },
                 light_on_duration: '0.200000000s',
                 light_off_duration: '0.300000000s',

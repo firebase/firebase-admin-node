@@ -4100,9 +4100,9 @@ declare namespace admin.messaging {
    */
   interface LightSettings {
     /**
-     * Color of the LED in `#rrggbb` format.
+     * Color of the LED in `#rrggbb` or `#rrggbbaa` format.
      */
-    color: string | Color;
+    color: string;
 
     /**
      * Along with `light_off_duration`, define the blink rate of LED flashes.
@@ -4113,33 +4113,6 @@ declare namespace admin.messaging {
      * Along with `light_on_duration`, define the blink rate of LED flashes. 
      */
     lightOffDurationMillis: number;
-  }
-
-  /**
-   * Represents a color in the RGBA color space
-   */
-  interface Color {
-    /**
-     * The amount of red in the color as a value in the interval [0, 1].
-     */
-    red: number;
-
-    /**
-     * The amount of green in the color as a value in the interval [0, 1].
-     */
-    green: number;
-
-    /**
-     * The amount of blue in the color as a value in the interval [0, 1].
-     */
-    blue: number;
-
-    /**
-     * The amount of alpha in the color as a value in the interval [0, 1].
-     * a value of 1.0 corresponds to a solid color, whereas a value of 0.0 
-     * corresponds to a completely transparent color.
-     */
-    alpha: number;
   }
 
   /**
