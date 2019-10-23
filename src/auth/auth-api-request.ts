@@ -17,6 +17,7 @@
 import * as validator from '../utils/validator';
 
 import {deepCopy, deepExtend} from '../utils/deep-copy';
+import {UserIdentifier, isUidIdentifier, isEmailIdentifier, isPhoneIdentifier} from './identifier';
 import {FirebaseApp} from '../firebase-app';
 import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
 import {
@@ -434,11 +435,16 @@ export const FIREBASE_AUTH_DOWNLOAD_ACCOUNT = new ApiSettings('/accounts:batchGe
     }
   });
 
+interface GetAccountInfoRequest {
+  localId?: string[];
+  email?: string[];
+  phoneNumber?: string[];
+}
 
 /** Instantiates the getAccountInfo endpoint settings. */
 export const FIREBASE_AUTH_GET_ACCOUNT_INFO = new ApiSettings('/accounts:lookup', 'POST')
   // Set request validator.
-  .setRequestValidator((request: any) => {
+  .setRequestValidator((request: GetAccountInfoRequest) => {
     if (!request.localId && !request.email && !request.phoneNumber) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INTERNAL_ERROR,
@@ -451,6 +457,21 @@ export const FIREBASE_AUTH_GET_ACCOUNT_INFO = new ApiSettings('/accounts:lookup'
       throw new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
     }
   });
+
+/**
+ * Instantiates the getAccountInfo endpoint settings for use when fetching info
+ * for multiple accounts.
+ */
+export const FIREBASE_AUTH_GET_ACCOUNTS_INFO = new ApiSettings('/accounts:lookup', 'POST')
+  // Set request validator.
+  .setRequestValidator((request: GetAccountInfoRequest) => {
+    if (!request.localId && !request.email && !request.phoneNumber) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Server request is missing user identifier');
+    }
+  });
+
 
 /** Instantiates the deleteAccount endpoint settings. */
 export const FIREBASE_AUTH_DELETE_ACCOUNT = new ApiSettings('/accounts:delete', 'POST')
@@ -783,6 +804,51 @@ export abstract class AbstractAuthRequestHandler {
       phoneNumber: [phoneNumber],
     };
     return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_GET_ACCOUNT_INFO, request);
+  }
+
+  /**
+   * Looks up multiple users by their identifiers (uid, email, etc).
+   *
+   * @param {UserIdentifier[]} identifiers The identifiers indicating the users
+   *     to be looked up. Must have <= 100 entries.
+   * @param {Promise<object>} A promise that resolves with the set of successfully
+   *     looked up users. Possibly empty if no users were looked up.
+   */
+  public getAccountInfoByIdentifiers(identifiers: UserIdentifier[]): Promise<object> {
+    if (identifiers.length === 0) {
+      return Promise.resolve({users: []});
+    } else if (identifiers.length > 100) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.MAXIMUM_USER_COUNT_EXCEEDED,
+        '`identifiers` parameter must have <= 100 entries.');
+    }
+
+    const request: GetAccountInfoRequest = {};
+
+    for (const id of identifiers) {
+      if (isUidIdentifier(id)) {
+        if (!validator.isUid(id.uid)) {
+          throw new FirebaseAuthError(AuthClientErrorCode.INVALID_UID);
+        }
+        request.localId ? request.localId.push(id.uid) : request.localId = [id.uid];
+      } else if (isEmailIdentifier(id)) {
+        if (!validator.isEmail(id.email)) {
+          throw new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);
+        }
+        request.email ? request.email.push(id.email) : request.email = [id.email];
+      } else if (isPhoneIdentifier(id)) {
+        if (!validator.isPhoneNumber(id.phoneNumber)) {
+          throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER);
+        }
+        request.phoneNumber ? request.phoneNumber.push(id.phoneNumber) : request.phoneNumber = [id.phoneNumber];
+      } else {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          'Unrecognized identifier: ' + id);
+      }
+    }
+
+    return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_GET_ACCOUNTS_INFO, request);
   }
 
   /**

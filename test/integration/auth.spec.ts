@@ -164,6 +164,70 @@ describe('admin.auth', () => {
       });
   });
 
+  describe('getUsers()', () => {
+    function mapUserRecordsToUidEmailPhones(values: admin.auth.UserRecord[]) {
+      return values.map((ur) => ({ uid: ur.uid, email: ur.email, phoneNumber: ur.phoneNumber }));
+    }
+
+    const testUser1 = { uid: 'uid1', email: 'user1@example.com', phoneNumber: '+15555550001' };
+    const testUser2 = { uid: 'uid2', email: 'user2@example.com', phoneNumber: '+15555550002' };
+    const testUser3 = { uid: 'uid3', email: 'user3@example.com', phoneNumber: '+15555550003' };
+    const usersToCreate = [ testUser1, testUser2, testUser3 ];
+
+    before(() => {
+      return Promise.all(
+        usersToCreate.map((user) => admin.auth().createUser(user)));
+    });
+
+    after(() => {
+      return Promise.all(
+        usersToCreate.map((user) => admin.auth().deleteUser(user.uid)));
+    });
+
+    it('returns users by various identifier types in a single call', async () => {
+      const users = await admin.auth().getUsers([
+          { uid: 'uid1' },
+          { email: 'user2@example.com' },
+          { phoneNumber: '+15555550003' },
+        ])
+        .then((getUsersResult) => getUsersResult.users)
+        .then(mapUserRecordsToUidEmailPhones);
+
+      expect(users).to.have.deep.members([testUser1, testUser2, testUser3]);
+    });
+
+    it('returns found users and ignores non-existing users', async () => {
+      const users = await admin.auth().getUsers([
+          { uid: 'uid1' },
+          { uid: 'uid_that_doesnt_exist' },
+          { uid: 'uid3' },
+        ])
+        .then((getUsersResult) => getUsersResult.users)
+        .then(mapUserRecordsToUidEmailPhones);
+
+      expect(users).to.have.deep.members([testUser1, testUser3]);
+    });
+
+    it('returns nothing when queried for only non-existing users', async () => {
+      const notFoundIds = [{uid: 'non-existing user'}];
+      const users = await admin.auth().getUsers(notFoundIds);
+
+      expect(users.users).to.be.empty;
+      expect(users.notFound).to.deep.equal(notFoundIds);
+    });
+
+    it('de-dups duplicate users', async () => {
+      const users = await admin.auth().getUsers([
+          { uid: 'uid1' },
+          { uid: 'uid1' },
+        ])
+        .then((getUsersResult) => getUsersResult.users)
+        .then(mapUserRecordsToUidEmailPhones);
+
+      expect(users).to.deep.equal([testUser1]);
+    });
+  });
+
   it('listUsers() returns up to the specified number of users', () => {
     const promises: Array<Promise<admin.auth.UserRecord>> = [];
     uids.forEach((uid) => {

@@ -27,6 +27,7 @@ import * as mocks from '../../resources/mocks';
 
 import {Auth, TenantAwareAuth, BaseAuth, DecodedIdToken} from '../../../src/auth/auth';
 import {UserRecord, UpdateRequest} from '../../../src/auth/user-record';
+import {UserIdentifier} from '../../../src/auth/identifier';
 import {FirebaseApp} from '../../../src/firebase-app';
 import {FirebaseTokenGenerator} from '../../../src/auth/token-generator';
 import {
@@ -1127,6 +1128,78 @@ AUTH_CONFIGS.forEach((testConfig) => {
             // Confirm expected error returned.
             expect(error).to.equal(expectedError);
           });
+      });
+    });
+
+    describe('getUsers()', () => {
+      let stubs: sinon.SinonStub[] = [];
+
+      afterEach(() => {
+        stubs.forEach((stub) => stub.restore());
+        stubs = [];
+      });
+
+      it('should be rejected when given more than 100 identifiers', () => {
+        const identifiers: UserIdentifier[] = [];
+        for (let i = 0; i < 101; i++) {
+          identifiers.push({uid: 'id' + i});
+        }
+
+        expect(() => auth.getUsers(identifiers))
+          .to.throw(FirebaseAuthError)
+          .with.property('code', 'auth/maximum-user-count-exceeded');
+      });
+
+      it('should return no results when given no identifiers', () => {
+        return auth.getUsers([])
+          .then((getUsersResult) => {
+            expect(getUsersResult.users).to.deep.equal([]);
+            expect(getUsersResult.notFound).to.deep.equal([]);
+          });
+      });
+
+      it('should return no users when given identifiers that do not exist', () => {
+        const stub = sinon.stub(testConfig.RequestHandler.prototype, 'getAccountInfoByIdentifiers')
+          .resolves({});
+        stubs.push(stub);
+        const notFoundIds = [{uid: 'id that doesnt exist'}];
+        return auth.getUsers(notFoundIds)
+          .then((getUsersResult) => {
+            expect(getUsersResult.users).to.deep.equal([]);
+            expect(getUsersResult.notFound).to.deep.equal(notFoundIds);
+          });
+      });
+
+      it('should be rejected when given an invalid uid', () => {
+        expect(() => auth.getUsers([{uid: 'too long ' + ('.' as any).repeat(128)}]))
+          .to.throw(FirebaseAuthError)
+          .with.property('code', 'auth/invalid-uid');
+      });
+
+      it('should be rejected when given an invalid email', () => {
+        expect(() => auth.getUsers([{email: 'invalid email addr'}]))
+          .to.throw(FirebaseAuthError)
+          .with.property('code', 'auth/invalid-email');
+      });
+
+      it('should be rejected when given an invalid phone number', () => {
+        expect(() => auth.getUsers([{phoneNumber: 'invalid phone number'}]))
+          .to.throw(FirebaseAuthError)
+          .with.property('code', 'auth/invalid-phone-number');
+      });
+
+      it('should be rejected when given a single bad identifier', () => {
+        const identifiers: UserIdentifier[] = [
+          {uid: 'valid_id1'},
+          {uid: 'valid_id2'},
+          {uid: 'invalid id; too long. ' + ('.' as any).repeat(128)},
+          {uid: 'valid_id4'},
+          {uid: 'valid_id5'},
+        ];
+
+        expect(() => auth.getUsers(identifiers))
+          .to.throw(FirebaseAuthError)
+          .with.property('code', 'auth/invalid-uid');
       });
     });
 

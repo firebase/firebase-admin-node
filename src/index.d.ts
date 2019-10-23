@@ -808,6 +808,19 @@ declare namespace admin.auth {
     [key: string]: any;
   }
 
+  /** Represents the result of the {@link admin.auth.getUsers()} API. */
+  interface GetUsersResult {
+    /**
+     * Set of user records, corresponding to the set of users that were
+     * requested. Only users that were found are listed here. The result set is
+     * unordered.
+     */
+    users: UserRecord[];
+
+    /** Set of identifiers that were requested, but not found. */
+    notFound: UserIdentifier[];
+  }
+
   /**
    * Interface representing the object returned from a
    * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#listUsers `listUsers()`} operation. Contains the list
@@ -1436,9 +1449,50 @@ declare namespace admin.auth {
     pageToken?: string;
   }
 
-
   type UpdateAuthProviderRequest =
     admin.auth.SAMLUpdateAuthProviderRequest | admin.auth.OIDCUpdateAuthProviderRequest;
+
+  /**
+   * Used for looking up an account by uid.
+   *
+   * See auth.getUsers()
+   */
+  interface UidIdentifier {
+    uid: string;
+  }
+
+  /**
+   * Used for looking up an account by email.
+   *
+   * See auth.getUsers()
+   */
+  interface EmailIdentifier {
+    email: string;
+  }
+
+  /**
+   * Used for looking up an account by phone number.
+   *
+   * See auth.getUsers()
+   */
+  interface PhoneIdentifier {
+    phoneNumber: string;
+  }
+
+  /**
+   * Used for looking up an account by federated provider.
+   *
+   * See auth.getUsers()
+   */
+  interface ProviderIdentifier {
+    providerId: string;
+    providerUid: string;
+  }
+
+  /**
+   * Identifies a user to be looked up.
+   */
+  type UserIdentifier = UidIdentifier | EmailIdentifier | PhoneIdentifier | ProviderIdentifier;
 
   interface BaseAuth {
 
@@ -1527,6 +1581,23 @@ declare namespace admin.auth {
      *   data corresponding to the provided phone number.
      */
     getUserByPhoneNumber(phoneNumber: string): Promise<admin.auth.UserRecord>;
+
+    /**
+     * Gets the user data corresponding to the specified identifiers.
+     *
+     * There are no ordering guarantees; in particular, the nth entry in the result list is not
+     * guaranteed to correspond to the nth entry in the input parameters list.
+     *
+     * Only a maximum of 100 identifiers may be supplied. If more than 100 identifiers are supplied,
+     * this method will immediately throw a FirebaseAuthError.
+     *
+     * @param identifiers The identifiers used to indicate which user records should be returned.
+     *     Must have <= 100 entries.
+     * @return {Promise<GetUsersResult>} A promise that resolves to the corresponding user records.
+     * @throws FirebaseAuthError If any of the identifiers are invalid or if more than 100
+     *     identifiers are specified.
+     */
+    getUsers(identifiers: admin.auth.UserIdentifier[]): Promise<GetUsersResult>;
 
     /**
      * Retrieves a list of users (single batch only) with a size of `maxResults`

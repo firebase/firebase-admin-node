@@ -15,6 +15,7 @@
  */
 
 import {UserRecord, CreateRequest, UpdateRequest} from './user-record';
+import {UserIdentifier, isUidIdentifier, isEmailIdentifier, isPhoneIdentifier} from './identifier';
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseTokenGenerator, cryptoSignerFromApp} from './token-generator';
 import {
@@ -50,6 +51,20 @@ class AuthInternals implements FirebaseServiceInternalsInterface {
     // There are no resources to clean up
     return Promise.resolve(undefined);
   }
+}
+
+
+/** Represents the result of the {@link admin.auth.getUsers()} API. */
+export interface GetUsersResult {
+  /**
+   * Set of user records, corresponding to the set of users that were
+   * requested. Only users that were found are listed here. The result set is
+   * unordered.
+   */
+  users: UserRecord[];
+
+  /** Set of identifiers that were requested, but not found. */
+  notFound: UserIdentifier[];
 }
 
 
@@ -189,6 +204,52 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
       .then((response: any) => {
         // Returns the user record populated with server response.
         return new UserRecord(response.users[0]);
+      });
+  }
+
+  /**
+   * Gets the user data corresponding to the specified identifiers.
+   *
+   * There are no ordering guarantees; in particular, the nth entry in the result list is not
+   * guaranteed to correspond to the nth entry in the input parameters list.
+   *
+   * Only a maximum of 100 identifiers may be supplied. If more than 100 identifiers are supplied,
+   * this method will immediately throw a FirebaseAuthError.
+   *
+   * @param identifiers The identifiers used to indicate which user records should be returned. Must
+   *     have <= 100 entries.
+   * @return {Promise<GetUsersResult>} A promise that resolves to the corresponding user records.
+   * @throws FirebaseAuthError If any of the identifiers are invalid or if more than 100
+   *     identifiers are specified.
+   */
+  public getUsers(identifiers: UserIdentifier[]): Promise<GetUsersResult> {
+    return this.authRequestHandler
+      .getAccountInfoByIdentifiers(identifiers)
+      .then((response: any) => {
+        /**
+         * Checks if the specified identifier is within the list of
+         * UserRecords.
+         */
+        const isUserFound = ((id: UserIdentifier, urs: UserRecord[]): boolean => {
+          return !!urs.find((ur) => {
+            if (isUidIdentifier(id)) {
+              return id.uid === ur.uid;
+            } else if (isEmailIdentifier(id)) {
+              return id.email === ur.email;
+            } else if (isPhoneIdentifier(id)) {
+              return id.phoneNumber === ur.phoneNumber;
+            } else {
+              throw new FirebaseAuthError(
+                AuthClientErrorCode.INTERNAL_ERROR,
+                'Unhandled identifier type');
+            }
+          });
+        });
+
+        const users = response.users ? response.users.map((user: any) => new UserRecord(user)) : [];
+        const notFound = identifiers.filter((id) => !isUserFound(id, users));
+
+        return { users, notFound };
       });
   }
 

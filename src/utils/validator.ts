@@ -185,8 +185,6 @@ export function isPhoneNumber(phoneNumber: any): boolean {
   return re1.test(phoneNumber) && re2.test(phoneNumber);
 }
 
-
-
 /**
  * Validates that a string is a valid web URL.
  *
