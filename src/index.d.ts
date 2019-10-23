@@ -4017,7 +4017,7 @@ declare namespace admin.messaging {
 
     /**
      * For notifications that inform users about events with an absolute time reference, sets
-     * the time that the event in the notification occurred in milliseconds. Notifications
+     * the time that the event in the notification occurred. Notifications
      * in the panel are sorted by this time.
      */
     eventTimestamp?: Date;

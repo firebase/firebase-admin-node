@@ -704,7 +704,7 @@ function validateAndroidNotification(notification: AndroidNotification) {
         MessagingClientErrorCode.INVALID_PAYLOAD, 'android.notification.eventTimestamp must be a valid `Date` object');
     }
     // Convert timestamp to RFC3339 UTC "Zulu" format, example "2014-10-02T15:01:23.045123456Z"
-    const zuluTimestamp: string = notification.eventTimestamp.toISOString();
+    const zuluTimestamp = notification.eventTimestamp.toISOString();
     (notification as any).eventTimestamp = zuluTimestamp;
   }
 
@@ -721,19 +721,19 @@ function validateAndroidNotification(notification: AndroidNotification) {
           MessagingClientErrorCode.INVALID_PAYLOAD,
           'android.notification.vibrateTimingsMillis must be non-negative durations in milliseconds');
       }
-      const duration: string = transformMillisecondsToSecondsString(value);
+      const duration = transformMillisecondsToSecondsString(value);
       vibrateTimings.push(duration);
     });
     (notification as any).vibrateTimingsMillis = vibrateTimings;
   }
 
   if (typeof notification.priority !== 'undefined') {
-    const priority: string = 'PRIORITY_' + notification.priority.toUpperCase();
+    const priority = 'PRIORITY_' + notification.priority.toUpperCase();
     (notification as any).priority = priority;
   }
 
   if (typeof notification.visibility !== 'undefined') {
-    const visibility: string = notification.visibility.toUpperCase();
+    const visibility = notification.visibility.toUpperCase();
     (notification as any).visibility = visibility;
   }
 
@@ -775,36 +775,24 @@ function validateLightSettings(lightSettings: LightSettings) {
       MessagingClientErrorCode.INVALID_PAYLOAD, 'android.notification.lightSettings must be a non-null object');
   }
 
-  if (typeof lightSettings.lightOnDurationMillis === 'undefined' || lightSettings.lightOnDurationMillis === null) {
-    throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD, 'android.notification.lightSettings.lightOnDurationMillis is required');
-  }
   if (!validator.isNumber(lightSettings.lightOnDurationMillis) || lightSettings.lightOnDurationMillis < 0) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD,
       'android.notification.lightSettings.lightOnDurationMillis must be a non-negative duration in milliseconds');
   }
-  const durationOn: string = transformMillisecondsToSecondsString(lightSettings.lightOnDurationMillis);
+  const durationOn = transformMillisecondsToSecondsString(lightSettings.lightOnDurationMillis);
   (lightSettings as any).lightOnDurationMillis = durationOn;
 
-  if (typeof lightSettings.lightOffDurationMillis === 'undefined' || lightSettings.lightOffDurationMillis === null) {
-    throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD,
-      'android.notification.lightSettings.lightOffDurationMillis is required');
-  }
   if (!validator.isNumber(lightSettings.lightOffDurationMillis) || lightSettings.lightOffDurationMillis < 0) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD,
       'android.notification.lightSettings.lightOffDurationMillis must be a non-negative duration in milliseconds');
   }
-  const durationOff: string = transformMillisecondsToSecondsString(lightSettings.lightOffDurationMillis);
+  const durationOff = transformMillisecondsToSecondsString(lightSettings.lightOffDurationMillis);
   (lightSettings as any).lightOffDurationMillis = durationOff;
 
-  if (typeof lightSettings.color === 'undefined' || lightSettings.color === null) {
-    throw new FirebaseMessagingError(
-      MessagingClientErrorCode.INVALID_PAYLOAD, 'android.notification.lightSettings.color is required');
-  }
-  if (!/^#[0-9a-fA-F]{6}$/.test(lightSettings.color) && !/^#[0-9a-fA-F]{8}$/.test(lightSettings.color)) {
+  if (!validator.isString(lightSettings.color) ||
+    (!/^#[0-9a-fA-F]{6}$/.test(lightSettings.color) && !/^#[0-9a-fA-F]{8}$/.test(lightSettings.color))) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD,
       'android.notification.lightSettings.color must be in the form #RRGGBB or #RRGGBBAA format');
@@ -854,7 +842,7 @@ function validateAndroidFcmOptions(fcmOptions: AndroidFcmOptions) {
  * @return {string} The resulting formatted string in seconds with up to nine fractional
  * digits, terminated by 's'.
  */
-export function transformMillisecondsToSecondsString(milliseconds: number): string {
+function transformMillisecondsToSecondsString(milliseconds: number): string {
   let duration: string;
   const seconds = Math.floor(milliseconds / 1000);
   const nanos = (milliseconds - seconds * 1000) * 1000000;
