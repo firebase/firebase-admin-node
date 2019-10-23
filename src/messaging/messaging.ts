@@ -21,7 +21,7 @@ import {
   Message, validateMessage, MessagingDevicesResponse,
   MessagingDeviceGroupResponse, MessagingTopicManagementResponse,
   MessagingPayload, MessagingOptions, MessagingTopicResponse,
-  MessagingConditionResponse, BatchResponse, MulticastMessage,
+  MessagingConditionResponse, BatchResponse, MulticastMessage, DataMessagePayload, NotificationMessagePayload,
 } from './messaging-types';
 import {FirebaseMessagingRequestHandler} from './messaging-api-request';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
@@ -758,9 +758,7 @@ export class Messaging implements FirebaseServiceInterface {
       );
     }
 
-    payloadKeys.forEach((payloadKey: keyof MessagingPayload) => {
-      const value = payloadCopy[payloadKey];
-
+    const validatePayload = (payloadKey: string, value: DataMessagePayload | NotificationMessagePayload) => {
       // Validate each top-level key in the payload is an object
       if (!validator.isNonNullObject(value)) {
         throw new FirebaseMessagingError(
@@ -786,7 +784,14 @@ export class Messaging implements FirebaseServiceInterface {
           );
         }
       });
-    });
+    };
+
+    if (payloadCopy.data !== undefined) {
+      validatePayload('data', payloadCopy.data);
+    }
+    if (payloadCopy.notification !== undefined) {
+      validatePayload('notification', payloadCopy.notification);
+    }
 
     // Validate the data payload object does not contain blacklisted properties
     if ('data' in payloadCopy) {

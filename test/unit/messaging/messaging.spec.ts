@@ -28,7 +28,7 @@ import * as mocks from '../../resources/mocks';
 
 import {FirebaseApp} from '../../../src/firebase-app';
 import {
-  Message, MessagingOptions, MessagingPayload, MessagingDevicesResponse,
+  Message, MessagingOptions, MessagingPayload, MessagingDevicesResponse, MessagingDeviceGroupResponse,
   MessagingTopicManagementResponse, BatchResponse, SendResponse, MulticastMessage,
 } from '../../../src/messaging/messaging-types';
 import {
@@ -1309,10 +1309,11 @@ describe('Messaging', () => {
           mocks.messaging.registrationToken + '2',
         ],
         mocks.messaging.payload,
-      ).then((response: MessagingDevicesResponse) => {
+      ).then((response: MessagingDevicesResponse | MessagingDeviceGroupResponse) => {
         expect(response).to.have.keys([
           'failureCount', 'successCount', 'canonicalRegistrationTokenCount', 'multicastId', 'results',
         ]);
+        response = response as MessagingDevicesResponse;
         expect(response.failureCount).to.equal(2);
         expect(response.successCount).to.equal(1);
         expect(response.canonicalRegistrationTokenCount).to.equal(1);
@@ -2084,19 +2085,19 @@ describe('Messaging', () => {
     invalidPayloads.forEach((invalidPayload) => {
       it(`should throw given invalid type for payload argument: ${ JSON.stringify(invalidPayload) }`, () => {
         expect(() => {
-          messaging.sendToDevice(mocks.messaging.registrationToken, invalidPayload as MessagingPayload);
+          messaging.sendToDevice(mocks.messaging.registrationToken, invalidPayload as any);
         }).to.throw('Messaging payload must be an object');
 
         expect(() => {
-          messaging.sendToDeviceGroup(mocks.messaging.notificationKey, invalidPayload as MessagingPayload);
+          messaging.sendToDeviceGroup(mocks.messaging.notificationKey, invalidPayload as any);
         }).to.throw('Messaging payload must be an object');
 
         expect(() => {
-          messaging.sendToTopic(mocks.messaging.topic, invalidPayload as MessagingPayload);
+          messaging.sendToTopic(mocks.messaging.topic, invalidPayload as any);
         }).to.throw('Messaging payload must be an object');
 
         expect(() => {
-          messaging.sendToCondition(mocks.messaging.condition, invalidPayload as MessagingPayload);
+          messaging.sendToCondition(mocks.messaging.condition, invalidPayload as any);
         }).to.throw('Messaging payload must be an object');
       });
     });
