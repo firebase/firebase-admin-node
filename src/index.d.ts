@@ -4016,8 +4016,9 @@ declare namespace admin.messaging {
     sticky?: boolean;
 
     /**
-     * Set the time that the event in the notification occurred. Notifications in the 
-     * panel are sorted by this time.
+     * For notifications that inform users about events with an absolute time reference, sets
+     * the time that the event in the notification occurred in milliseconds. Notifications
+     * in the panel are sorted by this time.
      */
     eventTimestamp?: Date;
 
@@ -4040,7 +4041,7 @@ declare namespace admin.messaging {
 
     /**
      * Set the vibration pattern to use. Pass in an array of milliseconds to turn 
-     * on or off the vibrator. The first value indicates the duration to wait before 
+     * turn the vibrator on or off. The first value indicates the duration to wait before 
      * turning the vibrator on. The next value indicates the duration to keep the 
      * vibrator on. Subsequent values alternate between duration to turn the vibrator 
      * off and to turn the vibrator on. If `vibrate_timings` is set and `default_vibrate_timings` 
@@ -4088,7 +4089,7 @@ declare namespace admin.messaging {
      * For example, this might be useful if you're using just one notification to
      * represent multiple new messages but you want the count here to represent
      * the number of total new messages. If zero or unspecified, the systems
-     * that support badging uses it's default behavior, which is to increment
+     * that support badging use it's default behavior, which is to increment
      * a number displayed on the long-press menu each time a new notification arrives.
      */
     notificationCount?: number;
