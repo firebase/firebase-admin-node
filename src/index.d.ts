@@ -4101,17 +4101,17 @@ declare namespace admin.messaging {
    */
   interface LightSettings {
     /**
-     * Color of the LED in `#rrggbb` or `#rrggbbaa` format.
+     * Required. Set color of the LED in `#rrggbb` or `#rrggbbaa` format.
      */
     color: string;
 
     /**
-     * Along with `light_off_duration`, define the blink rate of LED flashes.
+     * Required. Along with `light_off_duration`, define the blink rate of LED flashes.
      */
     lightOnDurationMillis: number;
 
     /**
-     * Along with `light_on_duration`, define the blink rate of LED flashes. 
+     * Required. Along with `light_on_duration`, define the blink rate of LED flashes. 
      */
     lightOffDurationMillis: number;
   }
