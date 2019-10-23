@@ -4040,7 +4040,7 @@ declare namespace admin.messaging {
     priority?: ('min' | 'low' | 'default' | 'high' | 'max');
 
     /**
-     * Set the vibration pattern to use. Pass in an array of milliseconds to turn 
+     * Set the vibration pattern to use. Pass in an array of milliseconds to 
      * turn the vibrator on or off. The first value indicates the duration to wait before 
      * turning the vibrator on. The next value indicates the duration to keep the 
      * vibrator on. Subsequent values alternate between duration to turn the vibrator 
@@ -4088,9 +4088,9 @@ declare namespace admin.messaging {
      * badge count for Launchers that support badging. See [`NotificationBadge`(https://developer.android.com/training/notify-user/badges). 
      * For example, this might be useful if you're using just one notification to
      * represent multiple new messages but you want the count here to represent
-     * the number of total new messages. If zero or unspecified, the systems
-     * that support badging use it's default behavior, which is to increment
-     * a number displayed on the long-press menu each time a new notification arrives.
+     * the number of total new messages. If zero or unspecified, systems 
+     * that support badging use the default, which is to increment a number 
+     * displayed on the long-press menu each time a new notification arrives.
      */
     notificationCount?: number;
   }
