@@ -226,7 +226,7 @@ describe('UserImportBuilder', () => {
             maxRounds = 120000;
             break;
           default:
-            throw new Error('Unexpected algorith: ' + algorithm);
+            throw new Error('Unexpected algorithm: ' + algorithm);
         }
         const invalidRounds = [minRounds - 1, maxRounds + 1, 'invalid', undefined, null];
 
