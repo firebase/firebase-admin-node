@@ -259,6 +259,12 @@ describe('PhoneMultiFactorInfo', () => {
       }).to.throw('INTERNAL ASSERT FAILED: Invalid multi-factor info response');
     });
 
+    it('should throw when an undefined response is provided', () => {
+      expect(() =>  {
+        return new PhoneMultiFactorInfo(undefined as any);
+      }).to.throw('INTERNAL ASSERT FAILED: Invalid multi-factor info response');
+    });
+
     it('should succeed when mfaEnrollmentId and phoneInfo are both provided', () => {
       expect(() => {
         return new PhoneMultiFactorInfo({

@@ -163,7 +163,7 @@ export abstract class MultiFactorInfo {
    * @param response The server side response.
    */
   private initFromServerResponse(response: AuthFactorInfo) {
-    const factorId = this.getFactorId(response);
+    const factorId = response && this.getFactorId(response);
     if (!factorId || !response || !response.mfaEnrollmentId) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INTERNAL_ERROR,
@@ -217,7 +217,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
    *     not associated with any known multi-factor ID, null is returned.
    */
   protected getFactorId(response: AuthFactorInfo): MultiFactorId | null {
-    return !!response.phoneInfo ? MultiFactorId.Phone : null;
+    return !!(response && response.phoneInfo) ? MultiFactorId.Phone : null;
   }
 }
 
