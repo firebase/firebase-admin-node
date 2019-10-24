@@ -226,6 +226,33 @@ describe('admin.auth', () => {
 
       expect(users).to.deep.equal([testUser1]);
     });
+
+    it('returns users with a lastRefreshTime', async () => {
+      const isUTCString = (s: string): boolean => {
+        return new Date(s).toUTCString() === s;
+      };
+
+      const newUserRecord = await admin.auth().createUser({
+        uid: 'lastRefreshTimeUser',
+        email: 'lastRefreshTimeUser@example.com',
+        password: 'p4ssword',
+      });
+
+      try {
+        // New users should not have a lastRefreshTime set.
+        expect(newUserRecord.metadata.lastRefreshTime).to.be.null;
+
+        // Login to cause the lastRefreshTime to be set.
+        await firebase.auth!().signInWithEmailAndPassword('lastRefreshTimeUser@example.com', 'p4ssword')
+          .then(() => admin.auth().getUser('lastRefreshTimeUser'))
+          .then((userRecord) => {
+            expect(userRecord.metadata.lastRefreshTime).to.exist;
+            expect(isUTCString(userRecord.metadata.lastRefreshTime!));
+          });
+      } finally {
+        admin.auth().deleteUser('lastRefreshTimeUser');
+      }
+    });
   });
 
   it('listUsers() returns up to the specified number of users', () => {

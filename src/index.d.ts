@@ -492,9 +492,15 @@ declare namespace admin.auth {
 
     /**
      * The date the user was created, formatted as a UTC string.
-     *
      */
     creationTime: string;
+
+    /**
+     * The time at which the user was last active (ID token refreshed), or null
+     * if the user was never active. Formatted as a UTC Date string (eg
+     * 'Sat, 03 Feb 2001 04:05:06 GMT')
+     */
+    lastRefreshTime: string|null;
 
     /**
      * @return A JSON-serializable representation of this object.
