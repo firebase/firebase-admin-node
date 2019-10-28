@@ -4023,7 +4023,7 @@ declare namespace admin.messaging {
     eventTimestamp?: Date;
 
     /**
-     * Set whether or not this notification is relevant only to the current device. 
+     * Sets whether or not this notification is relevant only to the current device. 
      * Some notifications can be bridged to other devices for remote display, such as 
      * a Wear OS watch. This hint can be set to recommend this notification not be bridged. 
      * See [Wear OS guides](https://developer.android.com/training/wearables/notifications/bridger#existing-method-of-preventing-bridging)
@@ -4031,7 +4031,7 @@ declare namespace admin.messaging {
     localOnly?: boolean;
 
     /**
-     * Set the relative priority for this notification. Low-priority notifications 
+     * Sets the relative priority for this notification. Low-priority notifications 
      * may be hidden from the user in certain situations. Note this priority differs 
      * from `AndroidMessagePriority`. This priority is processed by the client after 
      * the message has been delivered. Whereas `AndroidMessagePriority` is an FCM concept 
@@ -4040,7 +4040,7 @@ declare namespace admin.messaging {
     priority?: ('min' | 'low' | 'default' | 'high' | 'max');
 
     /**
-     * Set the vibration pattern to use. Pass in an array of milliseconds to 
+     * Sets the vibration pattern to use. Pass in an array of milliseconds to 
      * turn the vibrator on or off. The first value indicates the duration to wait before 
      * turning the vibrator on. The next value indicates the duration to keep the 
      * vibrator on. Subsequent values alternate between duration to turn the vibrator 
@@ -4078,8 +4078,8 @@ declare namespace admin.messaging {
     defaultLightSettings?: boolean;
 
     /**
-     * Set the visibility of the notification. Must be either `private`, `public`, 
-     * or `secret`. If unspecified, default to `private`.
+     * Sets the visibility of the notification. Must be either `private`, `public`, 
+     * or `secret`. If unspecified, defaults to `private`.
      */
     visibility?: ('private' | 'public' | 'secret');
 
@@ -4101,17 +4101,17 @@ declare namespace admin.messaging {
    */
   interface LightSettings {
     /**
-     * Required. Set color of the LED in `#rrggbb` or `#rrggbbaa` format.
+     * Required. Sets color of the LED in `#rrggbb` or `#rrggbbaa` format.
      */
     color: string;
 
     /**
-     * Required. Along with `light_off_duration`, define the blink rate of LED flashes.
+     * Required. Along with `light_off_duration`, defines the blink rate of LED flashes.
      */
     lightOnDurationMillis: number;
 
     /**
-     * Required. Along with `light_on_duration`, define the blink rate of LED flashes. 
+     * Required. Along with `light_on_duration`, defines the blink rate of LED flashes. 
      */
     lightOffDurationMillis: number;
   }
