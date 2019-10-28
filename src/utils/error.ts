@@ -710,8 +710,8 @@ export class MessagingClientErrorCode {
     code: 'message-rate-exceeded',
     message: 'Sending limit exceeded for the message target.',
   };
-  public static INVALID_APNS_CREDENTIALS = {
-    code: 'invalid-apns-credentials',
+  public static THIRD_PARTY_AUTH_ERROR = {
+    code: 'third-party-auth-error',
     message: 'A message targeted to an iOS device could not be sent because the required APNs ' +
       'SSL certificate was not uploaded or has expired. Check the validity of your development ' +
       'and production certificates.',
@@ -904,20 +904,21 @@ const MESSAGING_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   // Topics message rate exceeded.
   TopicsMessageRateExceeded: 'TOPICS_MESSAGE_RATE_EXCEEDED',
   // Invalid APNs credentials.
-  InvalidApnsCredential: 'INVALID_APNS_CREDENTIALS',
+  InvalidApnsCredential: 'THIRD_PARTY_AUTH_ERROR',
 
   /* FCM v1 canonical error codes */
   NOT_FOUND: 'REGISTRATION_TOKEN_NOT_REGISTERED',
   PERMISSION_DENIED: 'MISMATCHED_CREDENTIAL',
   RESOURCE_EXHAUSTED: 'MESSAGE_RATE_EXCEEDED',
-  UNAUTHENTICATED: 'INVALID_APNS_CREDENTIALS',
+  UNAUTHENTICATED: 'THIRD_PARTY_AUTH_ERROR',
 
   /* FCM v1 new error codes */
-  APNS_AUTH_ERROR: 'INVALID_APNS_CREDENTIALS',
+  APNS_AUTH_ERROR: 'THIRD_PARTY_AUTH_ERROR',
   INTERNAL: 'INTERNAL_ERROR',
   INVALID_ARGUMENT: 'INVALID_ARGUMENT',
   QUOTA_EXCEEDED: 'MESSAGE_RATE_EXCEEDED',
   SENDER_ID_MISMATCH: 'MISMATCHED_CREDENTIAL',
+  THIRD_PARTY_AUTH_ERROR: 'THIRD_PARTY_AUTH_ERROR',
   UNAVAILABLE: 'SERVER_UNAVAILABLE',
   UNREGISTERED: 'REGISTRATION_TOKEN_NOT_REGISTERED',
   UNSPECIFIED_ERROR: 'UNKNOWN_ERROR',
