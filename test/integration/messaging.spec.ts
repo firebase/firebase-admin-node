@@ -49,6 +49,25 @@ const message: admin.messaging.Message = {
   },
   android: {
     restrictedPackageName: 'com.google.firebase.testing',
+    notification: {
+      title: 'test.title',
+      ticker: 'test.ticker',
+      sticky: true,
+      visibility: 'private',
+      eventTimestamp: new Date(),
+      localOnly: true,
+      priority: 'high',
+      vibrateTimingsMillis: [100, 50, 250],
+      defaultVibrateTimings: false,
+      defaultSound: true,
+      lightSettings: {
+        color: '#AABBCC55',
+        lightOnDurationMillis: 200,
+        lightOffDurationMillis: 300,
+      },
+      defaultLightSettings: false,
+      notificationCount: 1,
+    },
   },
   apns: {
     payload: {
