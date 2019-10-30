@@ -21,7 +21,7 @@ import {FirebaseTokenGenerator, cryptoSignerFromApp} from './token-generator';
 import {
   AbstractAuthRequestHandler, AuthRequestHandler, TenantAwareAuthRequestHandler,
 } from './auth-api-request';
-import {AuthClientErrorCode, FirebaseAuthError, ErrorInfo} from '../utils/error';
+import {AuthClientErrorCode, FirebaseAuthError, ErrorInfo, FirebaseArrayIndexError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
 import {
   UserImportOptions, UserImportRecord, UserImportResult,
@@ -72,6 +72,14 @@ export interface GetUsersResult {
 export interface ListUsersResult {
   users: UserRecord[];
   pageToken?: string;
+}
+
+
+/** Response object for deleteUsers operation. */
+export interface DeleteUsersResult {
+  failureCount: number;
+  successCount: number;
+  errors: FirebaseArrayIndexError[];
 }
 
 
@@ -321,6 +329,46 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
     return this.authRequestHandler.deleteAccount(uid)
       .then((response) => {
         // Return nothing on success.
+      });
+  }
+
+  public deleteUsers(uids: string[]): Promise<DeleteUsersResult> {
+    return this.authRequestHandler.deleteAccounts(uids, /*force=*/true)
+      .then((batchDeleteAccountsResponse) => {
+        const result: DeleteUsersResult = {
+          failureCount: 0,
+          successCount: uids.length,
+          errors: [],
+        };
+
+        if (batchDeleteAccountsResponse.errors) {
+          result.failureCount = batchDeleteAccountsResponse.errors.length;
+          result.successCount = uids.length - batchDeleteAccountsResponse.errors.length;
+          result.errors = batchDeleteAccountsResponse.errors.map((batchDeleteErrorInfo) => {
+            if (batchDeleteErrorInfo.index === undefined) {
+              throw new FirebaseAuthError(
+                AuthClientErrorCode.INTERNAL_ERROR,
+                'Corrupt BatchDeleteAccountsResponse detected');
+            }
+
+            const errMsgToError = (msg?: string): FirebaseAuthError => {
+              // We unconditionally set force=true, so the 'NOT_DISABLED' error
+              // should not be possible.
+              if (msg && msg.startsWith('NOT_DISABLED :')) {
+                return new FirebaseAuthError(AuthClientErrorCode.USER_NOT_DISABLED, batchDeleteErrorInfo.message);
+              } else {
+                return new FirebaseAuthError(AuthClientErrorCode.INTERNAL_ERROR, batchDeleteErrorInfo.message);
+              }
+            };
+
+            return {
+              index: batchDeleteErrorInfo.index,
+              error: errMsgToError(batchDeleteErrorInfo.message),
+            };
+          });
+        }
+
+        return result;
       });
   }
 

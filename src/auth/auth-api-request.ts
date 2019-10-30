@@ -484,6 +484,45 @@ export const FIREBASE_AUTH_DELETE_ACCOUNT = new ApiSettings('/accounts:delete', 
     }
   });
 
+interface BatchDeleteAccountsRequest {
+  localIds?: string[];
+  force?: boolean;
+}
+interface BatchDeleteErrorInfo {
+  index?: number;
+  localId?: string;
+  message?: string;
+}
+export interface BatchDeleteAccountsResponse {
+  errors?: BatchDeleteErrorInfo[];
+}
+
+export const FIREBASE_AUTH_BATCH_DELETE_ACCOUNTS = new ApiSettings('/accounts:batchDelete', 'POST')
+  .setRequestValidator((request: BatchDeleteAccountsRequest) => {
+    if (!request.localIds) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Server request is missing user identifiers');
+    }
+  })
+  .setResponseValidator((response: BatchDeleteAccountsResponse) => {
+    if (response.errors) {
+      response.errors.forEach((batchDeleteErrorInfo) => {
+        if (batchDeleteErrorInfo.index === undefined) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INTERNAL_ERROR,
+            'INTERNAL ASSERT FAILED: Server BatchDeleteAccountResponse is missing an errors.index field');
+        }
+        if (!batchDeleteErrorInfo.localId) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INTERNAL_ERROR,
+            'INTERNAL ASSERT FAILED: Server BatchDeleteAccountResponse is missing an errors.localId field');
+        }
+        // Allow the (error) message to be missing/undef.
+      });
+    }
+  });
+
 /** Instantiates the setAccountInfo endpoint settings for updating existing accounts. */
 export const FIREBASE_AUTH_SET_ACCOUNT_INFO = new ApiSettings('/accounts:update', 'POST')
   // Set request validator.
@@ -946,6 +985,30 @@ export abstract class AbstractAuthRequestHandler {
       localId: uid,
     };
     return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_DELETE_ACCOUNT, request);
+  }
+
+  public deleteAccounts(uids: string[], force: boolean): Promise<BatchDeleteAccountsResponse> {
+    if (uids.length === 0) {
+      return Promise.resolve({});
+    } else if (uids.length > 100) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.MAXIMUM_USER_COUNT_EXCEEDED,
+        '`uids` parameter must have <= 100 entries.');
+    }
+
+    const request: BatchDeleteAccountsRequest = {
+      localIds: [],
+      force,
+    };
+
+    uids.forEach((uid) => {
+      if (!validator.isUid(uid)) {
+        throw new FirebaseAuthError(AuthClientErrorCode.INVALID_UID);
+      }
+      request.localIds!.push(uid);
+    });
+
+    return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_BATCH_DELETE_ACCOUNTS, request);
   }
 
   /**

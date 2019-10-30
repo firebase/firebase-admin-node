@@ -941,6 +941,32 @@ declare namespace admin.auth {
   }
 
   /**
+   * Represents the result of the
+   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#deleteUsers `deleteUsers()`}
+   * API.
+   */
+  interface DeleteUsersResult {
+    /**
+     * The number of user records that failed to be deleted (possibly zero).
+     */
+    failureCount: number;
+
+    /**
+     * The number of users that were deleted successfully (possibly zero).
+     * Users that did not exist prior to calling deleteUsers() will be
+     * considered to be successfully deleted.
+     */
+    successCount: number;
+
+    /**
+     * A list of FirebaseArrayIndexError instances describing the errors that
+     * were encountered during the deletion. Length of this list is equal to
+     * the return value of [`failureCount`](#failureCount).
+     */
+    errors: admin.FirebaseArrayIndexError[];
+  }
+
+  /**
    * Interface representing a user to import to Firebase Auth via the
    * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#importUsers `importUsers()`} method.
    */
@@ -1545,6 +1571,20 @@ declare namespace admin.auth {
      *   deleted.
      */
     deleteUser(uid: string): Promise<void>;
+
+    /**
+     * Deletes the users specified by the given identifiers.
+     *
+     * Deletes multiple existing users. Deleting a non-existing user won't
+     * generate an error. (i.e. this method is idempotent.)
+     *
+     * @param uids The `uids` corresponding to the users to delete.
+     *
+     * @return A Promise that resolves to the total number of successful/failed
+     *     deletions, as well as the array of errors that correspond to the
+     *     failed deletions.
+     */
+    deleteUsers(uids: string[]): Promise<admin.auth.DeleteUsersResult>;
 
     /**
      * Gets the user data for the user corresponding to a given `uid`.

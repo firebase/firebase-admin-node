@@ -1282,6 +1282,63 @@ describe('admin.auth', () => {
     ]).should.eventually.be.fulfilled;
   });
 
+  describe('deleteUsers()', () => {
+    it('deletes users', async () => {
+      const uid1 = await admin.auth().createUser({}).then((ur) => ur.uid);
+      const uid2 = await admin.auth().createUser({}).then((ur) => ur.uid);
+      const uid3 = await admin.auth().createUser({}).then((ur) => ur.uid);
+      const ids = [{uid: uid1}, {uid: uid2}, {uid: uid3}];
+
+      return admin.auth().deleteUsers([uid1, uid2, uid3])
+        .then((deleteUsersResult) => {
+          expect(deleteUsersResult.successCount).to.equal(3);
+          expect(deleteUsersResult.failureCount).to.equal(0);
+          expect(deleteUsersResult.errors).to.have.length(0);
+
+          return admin.auth().getUsers(ids);
+        })
+        .then((getUsersResult) => {
+          expect(getUsersResult.users).to.have.length(0);
+          expect(getUsersResult.notFound).to.have.deep.members(ids);
+        });
+    });
+
+    it('deletes users that exist even when non-existing users also specified', async () => {
+      const uid1 = await admin.auth().createUser({}).then((ur) => ur.uid);
+      const uid2 = 'uid-that-doesnt-exist';
+      const ids = [{uid: uid1}, {uid: uid2}];
+
+      return admin.auth().deleteUsers([uid1, uid2])
+        .then((deleteUsersResult) => {
+          expect(deleteUsersResult.successCount).to.equal(2);
+          expect(deleteUsersResult.failureCount).to.equal(0);
+          expect(deleteUsersResult.errors).to.have.length(0);
+
+          return admin.auth().getUsers(ids);
+        })
+        .then((getUsersResult) => {
+          expect(getUsersResult.users).to.have.length(0);
+          expect(getUsersResult.notFound).to.have.deep.members(ids);
+        });
+    });
+
+    it('is idempotent', async () => {
+      const uid = await admin.auth().createUser({}).then((ur) => ur.uid);
+
+      return admin.auth().deleteUsers([uid])
+        .then((deleteUsersResult) => {
+          expect(deleteUsersResult.successCount).to.equal(1);
+          expect(deleteUsersResult.failureCount).to.equal(0);
+        })
+        // Delete the user again, ensuring that everything still counts as a success.
+        .then(() => admin.auth().deleteUsers([uid]))
+        .then((deleteUsersResult) => {
+          expect(deleteUsersResult.successCount).to.equal(1);
+          expect(deleteUsersResult.failureCount).to.equal(0);
+        });
+    });
+  });
+
   describe('createSessionCookie()', () => {
     let expectedExp: number;
     let expectedIat: number;

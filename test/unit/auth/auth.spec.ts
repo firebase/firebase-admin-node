@@ -1280,6 +1280,63 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
     });
 
+    describe('deleteUsers()', () => {
+      it('should succeed given an empty list', () => {
+        return auth.deleteUsers([])
+          .then((deleteUsersResult) => {
+            expect(deleteUsersResult.successCount).to.equal(0);
+            expect(deleteUsersResult.failureCount).to.equal(0);
+            expect(deleteUsersResult.errors).to.have.length(0);
+          });
+      });
+
+      it('should be rejected when given more than 100 identifiers', () => {
+        const ids: string[] = [];
+        for (let i = 0; i < 101; i++) {
+          ids.push('id' + i);
+        }
+
+        expect(() => auth.deleteUsers(ids))
+          .to.throw(FirebaseAuthError)
+          .with.property('code', 'auth/maximum-user-count-exceeded');
+      });
+
+      it('should immediately fail given an invalid id', () => {
+        expect(() => auth.deleteUsers(['too long ' + ('.' as any).repeat(128)]))
+          .to.throw(FirebaseAuthError)
+          .with.property('code', 'auth/invalid-uid');
+      });
+
+      it('should index errors correctly in result', async () => {
+        const stub = sinon.stub(testConfig.RequestHandler.prototype, 'deleteAccounts')
+          .resolves({
+            errors: [{
+              index: 0,
+              localId: 'uid1',
+              message: 'NOT_DISABLED : Disable the account before batch deletion.',
+            }, {
+              index: 2,
+              localId: 'uid3',
+              message: 'something awful',
+            }],
+          });
+
+        try {
+          const deleteUsersResult = await auth.deleteUsers(['uid1', 'uid2', 'uid3', 'uid4']);
+
+          expect(deleteUsersResult.successCount).to.equal(2);
+          expect(deleteUsersResult.failureCount).to.equal(2);
+          expect(deleteUsersResult.errors).to.have.length(2);
+          expect(deleteUsersResult.errors[0].index).to.equal(0);
+          expect(deleteUsersResult.errors[0].error).to.have.property('code', 'auth/user-not-disabled');
+          expect(deleteUsersResult.errors[1].index).to.equal(2);
+          expect(deleteUsersResult.errors[1].error).to.have.property('code', 'auth/internal-error');
+        } finally {
+          stub.restore();
+        }
+      });
+    });
+
     describe('createUser()', () => {
       const uid = 'abcdefghijklmnopqrstuvwxyz';
       const tenantId = testConfig.supportsTenantManagement ? undefined : TENANT_ID;

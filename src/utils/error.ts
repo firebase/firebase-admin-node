@@ -649,6 +649,10 @@ export class AuthClientErrorCode {
     code: 'not-found',
     message: 'The requested resource was not found.',
   };
+  public static USER_NOT_DISABLED = {
+    code: 'user-not-disabled',
+    message: 'The user must be disabled in order to bulk delete it (or you must pass force=true).',
+  };
 }
 
 /**
