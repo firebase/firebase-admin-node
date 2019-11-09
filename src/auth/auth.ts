@@ -16,7 +16,7 @@
 
 import {UserRecord, CreateRequest, UpdateRequest} from './user-record';
 import {FirebaseApp} from '../firebase-app';
-import {FirebaseTokenGenerator, CryptoSigner, cryptoSignerFromApp} from './token-generator';
+import {FirebaseTokenGenerator, cryptoSignerFromApp} from './token-generator';
 import {
   AbstractAuthRequestHandler, AuthRequestHandler, TenantAwareAuthRequestHandler,
 } from './auth-api-request';
@@ -90,6 +90,7 @@ export interface SessionCookieOptions {
  * Base Auth class. Mainly used for user management APIs.
  */
 export class BaseAuth<T extends AbstractAuthRequestHandler> {
+
   protected readonly tokenGenerator: FirebaseTokenGenerator;
   protected readonly idTokenVerifier: FirebaseTokenVerifier;
   protected readonly sessionCookieVerifier: FirebaseTokenVerifier;
@@ -104,12 +105,14 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    *     minting.
    * @constructor
    */
-  constructor(protected readonly projectId: string,
-              protected readonly authRequestHandler: T,
-              cryptoSigner: CryptoSigner) {
+  constructor(app: FirebaseApp, protected readonly authRequestHandler: T) {
+    const cryptoSigner = cryptoSignerFromApp(app);
     this.tokenGenerator = new FirebaseTokenGenerator(cryptoSigner);
-    this.sessionCookieVerifier = createSessionCookieVerifier(projectId);
-    this.idTokenVerifier = createIdTokenVerifier(projectId);
+
+    const projectId = utils.getProjectId(app);
+    const httpAgent = app.options.httpAgent;
+    this.sessionCookieVerifier = createSessionCookieVerifier(projectId, httpAgent);
+    this.idTokenVerifier = createIdTokenVerifier(projectId, httpAgent);
   }
 
   /**
@@ -617,10 +620,7 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
    * @constructor
    */
   constructor(app: FirebaseApp, tenantId: string) {
-    super(
-        utils.getProjectId(app),
-        new TenantAwareAuthRequestHandler(app, tenantId),
-        cryptoSignerFromApp(app));
+    super(app, new TenantAwareAuthRequestHandler(app, tenantId));
     utils.addReadonlyGetter(this, 'tenantId', tenantId);
   }
 
@@ -721,35 +721,17 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
  * An Auth instance can have multiple tenants.
  */
 export class Auth extends BaseAuth<AuthRequestHandler> implements FirebaseServiceInterface {
+
   public INTERNAL: AuthInternals = new AuthInternals();
   private readonly tenantManager_: TenantManager;
   private readonly app_: FirebaseApp;
-
-  /**
-   * Returns the FirebaseApp's project ID.
-   *
-   * @param {FirebaseApp} app The project ID for an app.
-   * @return {string} The FirebaseApp's project ID.
-   */
-  private static getProjectId(app: FirebaseApp): string {
-    if (typeof app !== 'object' || app === null || !('options' in app)) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_ARGUMENT,
-        'First argument passed to admin.auth() must be a valid Firebase app instance.',
-      );
-    }
-    return utils.getProjectId(app);
-  }
 
   /**
    * @param {object} app The app for this Auth service.
    * @constructor
    */
   constructor(app: FirebaseApp) {
-    super(
-        Auth.getProjectId(app),
-        new AuthRequestHandler(app),
-        cryptoSignerFromApp(app));
+    super(app, new AuthRequestHandler(app));
     this.app_ = app;
     this.tenantManager_ = new TenantManager(app);
   }
