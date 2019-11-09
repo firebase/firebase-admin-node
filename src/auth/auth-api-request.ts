@@ -25,7 +25,7 @@ import {
 import {CreateRequest, UpdateRequest} from './user-record';
 import {
   UserImportBuilder, UserImportOptions, UserImportRecord,
-  UserImportResult,
+  UserImportResult, AuthFactorInfo,
 } from './user-import-builder';
 import * as utils from '../utils/index';
 import {ActionCodeSettings, ActionCodeSettingsBuilder} from './action-code-settings-builder';
@@ -152,6 +152,66 @@ class TenantAwareAuthResourceUrlBuilder extends AuthResourceUrlBuilder {
 
 
 /**
+ * Validates an AuthFactorInfo object. All unsupported parameters
+ * are removed from the original request. If an invalid field is passed
+ * an error is thrown.
+ *
+ * @param request The AuthFactorInfo request object.
+ */
+function validateAuthFactorInfo(request: AuthFactorInfo) {
+  const validKeys = {
+    mfaEnrollmentId: true,
+    displayName: true,
+    phoneInfo: true,
+    enrolledAt: true,
+  };
+  // Remove unsupported keys from the original request.
+  for (const key in request) {
+    if (!(key in validKeys)) {
+      delete request[key];
+    }
+  }
+  if (!validator.isNonEmptyString(request.mfaEnrollmentId)) {
+    throw new FirebaseAuthError(
+      AuthClientErrorCode.INVALID_UID,
+      `The second factor "uid" must be a valid non-empty string.`,
+    );
+  }
+  if (typeof request.displayName !== 'undefined' &&
+      typeof request.displayName !== 'string') {
+    throw new FirebaseAuthError(
+      AuthClientErrorCode.INVALID_DISPLAY_NAME,
+      `The second factor "displayName" for "${request.mfaEnrollmentId}" must be a valid string.`,
+    );
+  }
+  // enrolledAt must be a valid UTC date string.
+  if (typeof request.enrolledAt !== 'undefined' &&
+      !validator.isISODateString(request.enrolledAt)) {
+    throw new FirebaseAuthError(
+      AuthClientErrorCode.INVALID_ENROLLMENT_TIME,
+      `The second factor "enrollmentTime" for "${request.mfaEnrollmentId}" must be a valid ` +
+      `UTC date string.`);
+  }
+  // Validate required fields depending on second factor type.
+  if (typeof request.phoneInfo !== 'undefined') {
+    // phoneNumber should be a string and a valid phone number.
+    if (!validator.isPhoneNumber(request.phoneInfo)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_PHONE_NUMBER,
+        `The second factor "phoneNumber" for "${request.mfaEnrollmentId}" must be a non-empty ` +
+        `E.164 standard compliant identifier string.`);
+    }
+  } else {
+    // Invalid second factor. For example, a phone second factor may have been provided without
+    // a phone number. A TOTP based second factor may require a secret key, etc.
+    throw new FirebaseAuthError(
+      AuthClientErrorCode.INVALID_ENROLLED_FACTORS,
+      `MFAInfo object provided is invalid.`);
+  }
+}
+
+
+/**
  * Validates a providerUserInfo object. All unsupported parameters
  * are removed from the original request. If an invalid field is passed
  * an error is thrown.
@@ -243,6 +303,7 @@ function validateCreateEditRequest(request: any, uploadAccountRequest: boolean =
     createdAt: uploadAccountRequest,
     lastLoginAt: uploadAccountRequest,
     providerUserInfo: uploadAccountRequest,
+    mfaInfo: uploadAccountRequest,
   };
   // Remove invalid keys from original request.
   for (const key in request) {
@@ -379,6 +440,15 @@ function validateCreateEditRequest(request: any, uploadAccountRequest: boolean =
   } else if (validator.isArray(request.providerUserInfo)) {
     request.providerUserInfo.forEach((providerUserInfoEntry: any) => {
       validateProviderUserInfo(providerUserInfoEntry);
+    });
+  }
+  // mfaInfo has to be an array of valid AuthFactorInfo requests.
+  if (typeof request.mfaInfo !== 'undefined' &&
+      !validator.isArray(request.mfaInfo)) {
+    throw new FirebaseAuthError(AuthClientErrorCode.INVALID_ENROLLED_FACTORS);
+  } else if (validator.isArray(request.mfaInfo)) {
+    request.mfaInfo.forEach((authFactorInfoEntry: AuthFactorInfo) => {
+      validateAuthFactorInfo(authFactorInfoEntry);
     });
   }
 }

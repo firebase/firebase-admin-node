@@ -1138,6 +1138,23 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               providerId: 'google.com',
             },
           ],
+          multiFactor: {
+            enrolledFactors: [
+              {
+                uid: 'mfaUid1',
+                phoneNumber: '+16505550001',
+                displayName: 'Corp phone number',
+                factorId: 'phone',
+                enrollmentTime: new Date().toUTCString(),
+              },
+              {
+                uid: 'mfaUid2',
+                phoneNumber: '+16505550002',
+                displayName: 'Personal phone number',
+                factorId: 'phone',
+              },
+            ],
+          },
           customClaims: {admin: true},
           // Tenant ID accepted on user batch upload.
           tenantId,
@@ -1343,6 +1360,80 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           },
           {uid: 'user16', providerData: [{}]},
           {email: 'user17@example.com'},
+          {
+            uid: 'user18',
+            email: 'user18@example.com',
+            multiFactor: {
+              enrolledFactors: [
+                {
+                  // Invalid mfa enrollment ID.
+                  uid: '',
+                  factorId: 'phone',
+                  phoneNumber: '+16505550001',
+                },
+              ],
+            },
+          },
+          {
+            uid: 'user19',
+            email: 'user19@example.com',
+            multiFactor: {
+              enrolledFactors: [
+                {
+                  uid: 'mfaUid1',
+                  factorId: 'phone',
+                  // Invalid display name.
+                  displayName: false,
+                  phoneNumber: '+16505550002',
+                },
+              ],
+            },
+          },
+          {
+            uid: 'user20',
+            email: 'user20@example.com',
+            multiFactor: {
+              enrolledFactors: [
+                {
+                  uid: 'mfaUid2',
+                  factorId: 'phone',
+                  // Invalid enrollment time.
+                  enrollmentTime: 'invalid',
+                  phoneNumber: '+16505550003',
+                },
+              ],
+            },
+          },
+          {
+            uid: 'user21',
+            email: 'user21@example.com',
+            multiFactor: {
+              enrolledFactors: [
+                {
+                  uid: 'mfaUid3',
+                  factorId: 'phone',
+                  // Invalid phone number
+                  phoneNumber: 'invalid',
+                  enrollmentTime: new Date().toUTCString(),
+                },
+              ],
+            },
+          },
+          {
+            uid: 'user22',
+            email: 'user22@example.com',
+            multiFactor: {
+              enrolledFactors: [
+                {
+                  uid: 'mfaUid3',
+                  // Invalid factor ID.
+                  factorId: 'invalid',
+                  phoneNumber: '+16505550003',
+                  enrollmentTime: new Date().toUTCString(),
+                },
+              ],
+            },
+          },
         ] as any;
         const validOptions = {
           hash: {
@@ -1401,6 +1492,42 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             },
             {index: 16, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID)},
             {index: 17, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_UID)},
+            {
+              index: 18,
+              error: new FirebaseAuthError(
+                AuthClientErrorCode.INVALID_UID,
+                `The second factor "uid" must be a valid non-empty string.`,
+              ),
+            },
+            {
+              index: 19,
+              error: new FirebaseAuthError(
+                AuthClientErrorCode.INVALID_DISPLAY_NAME,
+                `The second factor "displayName" for "mfaUid1" must be a valid string.`,
+              ),
+            },
+            {
+              index: 20,
+              error: new FirebaseAuthError(
+                AuthClientErrorCode.INVALID_ENROLLMENT_TIME,
+                `The second factor "enrollmentTime" for "mfaUid2" must be a valid UTC date string.`,
+              ),
+            },
+            {
+              index: 21,
+              error: new FirebaseAuthError(
+                AuthClientErrorCode.INVALID_PHONE_NUMBER,
+                `The second factor "phoneNumber" for "mfaUid3" must be a non-empty ` +
+                `E.164 standard compliant identifier string.`,
+              ),
+            },
+            {
+              index: 22,
+              error: new FirebaseAuthError(
+                AuthClientErrorCode.INVALID_ENROLLED_FACTORS,
+                `Unsupported second factor "${JSON.stringify(testUsers[22].multiFactor.enrolledFactors[0])}" provided.`,
+              ),
+            },
           ],
         };
         const stub = sinon.stub(HttpClient.prototype, 'send');

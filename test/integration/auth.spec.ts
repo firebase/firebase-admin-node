@@ -1497,6 +1497,64 @@ describe('admin.auth', () => {
         }).should.eventually.be.fulfilled;
     });
 
+    it('successfully imports users with enrolled second factors', () => {
+      const uid = generateRandomString(20).toLowerCase();
+      const email = uid + '@example.com';
+      const now = new Date(1476235905000).toUTCString();
+      importUserRecord = {
+        uid,
+        email,
+        emailVerified: true,
+        displayName: 'Test User',
+        disabled: false,
+        metadata: {
+          lastSignInTime: now,
+          creationTime: now,
+        },
+        providerData: [
+          {
+            uid: uid + '-facebook',
+            displayName: 'Facebook User',
+            email,
+            providerId: 'facebook.com',
+          },
+        ],
+        multiFactor: {
+          enrolledFactors: [
+            {
+              uid: 'mfaUid1',
+              phoneNumber: '+16505550001',
+              displayName: 'Work phone number',
+              factorId: 'phone',
+              enrollmentTime: now,
+            },
+            {
+              uid: 'mfaUid2',
+              phoneNumber: '+16505550002',
+              displayName: 'Personal phone number',
+              factorId: 'phone',
+              enrollmentTime: now,
+            },
+          ],
+        },
+      };
+      uids.push(importUserRecord.uid);
+
+      return admin.auth().importUsers([importUserRecord])
+        .then((result) => {
+          expect(result.failureCount).to.equal(0);
+          expect(result.successCount).to.equal(1);
+          expect(result.errors.length).to.equal(0);
+          return admin.auth().getUser(uid);
+        }).then((userRecord) => {
+          // Confirm second factors added to user.
+          const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
+          expect(actualUserRecord.multiFactor.enrolledFactors.length).to.equal(2);
+          expect(actualUserRecord.multiFactor.enrolledFactors)
+            .to.deep.equal(importUserRecord.multiFactor.enrolledFactors);
+        }).should.eventually.be.fulfilled;
+    });
+
     it('fails when invalid users are provided', () => {
       const users = [
         {uid: generateRandomString(20).toLowerCase(), phoneNumber: '+1error'},

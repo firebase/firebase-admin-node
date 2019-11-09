@@ -60,10 +60,28 @@ export interface UserImportRecord {
     photoURL?: string,
     providerId: string,
   }>;
+  multiFactor?: {
+    enrolledFactors: Array<{
+      uid: string;
+      phoneNumber: string;
+      displayName?: string;
+      enrollmentTime?: string;
+      factorId: string;
+    }>;
+  };
   customClaims?: object;
   passwordHash?: Buffer;
   passwordSalt?: Buffer;
   tenantId?: string;
+}
+
+/** Interface representing an Auth second factor in Auth server format. */
+export interface AuthFactorInfo {
+  mfaEnrollmentId: string;
+  displayName?: string;
+  phoneInfo?: string;
+  enrolledAt?: string;
+  [key: string]: any;
 }
 
 
@@ -83,6 +101,7 @@ interface UploadAccountUser {
     displayName?: string;
     photoUrl?: string;
   }>;
+  mfaInfo?: AuthFactorInfo[];
   passwordHash?: string;
   salt?: string;
   lastLoginAt?: number;
@@ -155,6 +174,7 @@ function populateUploadAccountUser(
     photoUrl: user.photoURL,
     phoneNumber: user.phoneNumber,
     providerUserInfo: [],
+    mfaInfo: [],
     tenantId: user.tenantId,
     customAttributes: user.customClaims && JSON.stringify(user.customClaims),
   };
@@ -193,6 +213,47 @@ function populateUploadAccountUser(
       });
     });
   }
+
+  // Convert user.multiFactor.enrolledFactors to server format.
+  if (validator.isNonNullObject(user.multiFactor) &&
+      validator.isNonEmptyArray(user.multiFactor.enrolledFactors)) {
+    user.multiFactor.enrolledFactors.forEach((multiFactorInfo) => {
+      let enrolledAt;
+      if (typeof multiFactorInfo.enrollmentTime !== 'undefined') {
+        if (validator.isUTCDateString(multiFactorInfo.enrollmentTime)) {
+          enrolledAt = new Date(multiFactorInfo.enrollmentTime).toISOString();
+        } else {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_ENROLLMENT_TIME,
+            `The second factor "enrollmentTime" for "${multiFactorInfo.uid}" must be a valid ` +
+            `UTC date string.`);
+        }
+      }
+      // Currently only phone second factors are supported.
+      if (multiFactorInfo.factorId === 'phone') {
+        // If any required field is missing or invalid, validation will still fail later.
+        const authFactorInfo: AuthFactorInfo = {
+          mfaEnrollmentId: multiFactorInfo.uid,
+          displayName: multiFactorInfo.displayName,
+          // Required for all phone second factors.
+          phoneInfo: multiFactorInfo.phoneNumber,
+          enrolledAt,
+        };
+        for (const objKey in authFactorInfo) {
+          if (typeof authFactorInfo[objKey] === 'undefined') {
+            delete authFactorInfo[objKey];
+          }
+        }
+        result.mfaInfo.push(authFactorInfo);
+      } else {
+        // Unsupported second factor.
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ENROLLED_FACTORS,
+          `Unsupported second factor "${JSON.stringify(multiFactorInfo)}" provided.`);
+      }
+    });
+  }
+
   // Remove blank fields.
   let key: keyof UploadAccountUser;
   for (key in result) {
@@ -202,6 +263,9 @@ function populateUploadAccountUser(
   }
   if (result.providerUserInfo.length === 0) {
     delete result.providerUserInfo;
+  }
+  if (result.mfaInfo.length === 0) {
+    delete result.mfaInfo;
   }
   // Validate the constructured user individual request. This will throw if an error
   // is detected.
