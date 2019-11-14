@@ -221,6 +221,7 @@ function populateUploadAccountUser(
       let enrolledAt;
       if (typeof multiFactorInfo.enrollmentTime !== 'undefined') {
         if (validator.isUTCDateString(multiFactorInfo.enrollmentTime)) {
+          // Convert from UTC date string (client side format) to ISO date string (server side format).
           enrolledAt = new Date(multiFactorInfo.enrollmentTime).toISOString();
         } else {
           throw new FirebaseAuthError(

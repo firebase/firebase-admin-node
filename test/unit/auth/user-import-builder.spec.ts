@@ -752,7 +752,8 @@ describe('UserImportBuilder', () => {
 
       // The second and fourth users will throw a client side error.
       // The third and sixth user will throw a server side error.
-      // Seventh and eighth user will throw a client side error due to invalid type provided.
+      // Seventh, eighth and nineth user will throw a client side error due to invalid type provided.
+      // Tenth user will throw a client side error due to an unsupported second factor.
       const testUsers = [
         {uid: 'USER1'},
         {uid: 'USER2', email: 'invalid', passwordHash: Buffer.from('userpass')},
@@ -767,10 +768,36 @@ describe('UserImportBuilder', () => {
           passwordHash: Buffer.from('password'),
           passwordSalt: 'not a buffer' as any,
         },
+        {
+          uid: 'USER9',
+          multiFactor: {
+            enrolledFactors: [
+              {
+                uid: 'enrollmentId1',
+                phoneNumber: '+16505551111',
+                factorId: 'phone',
+                enrollmentTime: 'invalid',
+              },
+            ],
+          },
+        },
+        {
+          uid: 'USER10',
+          multiFactor: {
+            enrolledFactors: [
+              {
+                uid: 'enrollmentId2',
+                secret: 'SECRET',
+                displayName: 'Google Authenticator on personal phone',
+                factorId: 'totp',
+              } as any,
+            ],
+          },
+        },
       ];
       const mixedErrorUserImportResponse = {
         successCount: 2,
-        failureCount: 6,
+        failureCount: 8,
         errors: [
           // Client side detected error.
           {index: 1, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL)},
@@ -795,6 +822,19 @@ describe('UserImportBuilder', () => {
           // Client side errors.
           {index: 6, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PASSWORD_HASH)},
           {index: 7, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PASSWORD_SALT)},
+          {
+            index: 8,
+            error: new FirebaseAuthError(
+              AuthClientErrorCode.INVALID_ENROLLMENT_TIME,
+              `The second factor "enrollmentTime" for "enrollmentId1" must be a valid ` +
+              `UTC date string.`),
+          },
+          {
+            index: 9,
+            error: new FirebaseAuthError(
+              AuthClientErrorCode.INVALID_ENROLLED_FACTORS,
+              `Unsupported second factor "${JSON.stringify(testUsers[9].multiFactor.enrolledFactors[0])}" provided.`),
+          },
         ],
       };
       const userImportBuilder = new UserImportBuilder(

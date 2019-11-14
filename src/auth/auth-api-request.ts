@@ -178,7 +178,7 @@ function validateAuthFactorInfo(request: AuthFactorInfo) {
     );
   }
   if (typeof request.displayName !== 'undefined' &&
-      typeof request.displayName !== 'string') {
+      !validator.isString(request.displayName)) {
     throw new FirebaseAuthError(
       AuthClientErrorCode.INVALID_DISPLAY_NAME,
       `The second factor "displayName" for "${request.mfaEnrollmentId}" must be a valid string.`,
@@ -443,10 +443,10 @@ function validateCreateEditRequest(request: any, uploadAccountRequest: boolean =
     });
   }
   // mfaInfo has to be an array of valid AuthFactorInfo requests.
-  if (typeof request.mfaInfo !== 'undefined' &&
-      !validator.isArray(request.mfaInfo)) {
-    throw new FirebaseAuthError(AuthClientErrorCode.INVALID_ENROLLED_FACTORS);
-  } else if (validator.isArray(request.mfaInfo)) {
+  if (request.mfaInfo) {
+    if (!validator.isArray(request.mfaInfo)) {
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_ENROLLED_FACTORS);
+    }
     request.mfaInfo.forEach((authFactorInfoEntry: AuthFactorInfo) => {
       validateAuthFactorInfo(authFactorInfoEntry);
     });
