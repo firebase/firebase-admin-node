@@ -427,6 +427,14 @@ export class AuthClientErrorCode {
     code: 'invalid-email',
     message: 'The email address is improperly formatted.',
   };
+  public static INVALID_ENROLLED_FACTORS = {
+    code: 'invalid-enrolled-factors',
+    message: 'The enrolled factors must be a valid array of MultiFactorInfo objects.',
+  };
+  public static INVALID_ENROLLMENT_TIME = {
+    code: 'invalid-enrollment-time',
+    message: 'The second factor enrollment time must be a valid UTC date string.',
+  };
   public static INVALID_HASH_ALGORITHM = {
     code: 'invalid-hash-algorithm',
     message: 'The hash algorithm must match one of the strings in the list of ' +

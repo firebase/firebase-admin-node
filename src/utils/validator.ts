@@ -186,6 +186,37 @@ export function isPhoneNumber(phoneNumber: any): boolean {
 }
 
 
+/**
+ * Validates that a string is a valid ISO date string.
+ *
+ * @param dateString The string to validate.
+ * @return Whether the string is a valid ISO date string.
+ */
+export function isISODateString(dateString: any): boolean {
+  try {
+    return isNonEmptyString(dateString) &&
+        (new Date(dateString).toISOString() === dateString);
+  } catch (e) {
+    return false;
+  }
+}
+
+
+/**
+ * Validates that a string is a valid UTC date string.
+ *
+ * @param dateString The string to validate.
+ * @return Whether the string is a valid UTC date string.
+ */
+export function isUTCDateString(dateString: any): boolean {
+  try {
+    return isNonEmptyString(dateString) &&
+        (new Date(dateString).toUTCString() === dateString);
+  } catch (e) {
+    return false;
+  }
+}
+
 
 /**
  * Validates that a string is a valid web URL.
