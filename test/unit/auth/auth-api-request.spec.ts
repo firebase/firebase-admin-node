@@ -61,6 +61,12 @@ interface HandlerTest {
   path(version: string, api: string, projectId: string): string;
 }
 
+interface InvalidMultiFactorUpdateTest {
+  name: string;
+  error: FirebaseAuthError;
+  secondFactor: any;
+}
+
 
 /**
  * @param {number} numOfChars The number of random characters within the string.
@@ -1721,6 +1727,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
     });
 
     describe('updateExistingAccount', () => {
+      const now = new Date('2019-10-25T04:30:52.000Z');
       const path = handler.path('v1', '/accounts:update', 'project_id');
       const method = 'POST';
       const uid = '12345678';
@@ -1733,6 +1740,22 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         password: 'password',
         phoneNumber: '+11234567890',
         ignoredProperty: 'value',
+        multiFactor: {
+          enrolledFactors: [
+            {
+              uid: 'enrolledSecondFactor1',
+              phoneNumber: '+16505557348',
+              displayName: 'Spouse\'s phone number',
+              factorId: 'phone',
+              enrollmentTime: now.toUTCString(),
+            },
+            {
+              uid: 'enrolledSecondFactor2',
+              phoneNumber: '+16505551000',
+              factorId: 'phone',
+            },
+          ],
+        },
       };
       const expectedValidData = {
         localId: uid,
@@ -1743,11 +1766,26 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         photoUrl: 'http://localhost/1234/photo.png',
         password: 'password',
         phoneNumber: '+11234567890',
+        mfa: {
+          enrollments: [
+            {
+              mfaEnrollmentId: 'enrolledSecondFactor1',
+              phoneInfo: '+16505557348',
+              displayName: 'Spouse\'s phone number',
+              enrolledAt: now.toISOString(),
+            },
+            {
+              mfaEnrollmentId: 'enrolledSecondFactor2',
+              phoneInfo: '+16505551000',
+            },
+          ],
+        },
       };
       // Valid request to delete photoURL and displayName.
       const validDeleteData = deepCopy(validData);
       validDeleteData.displayName = null;
       validDeleteData.photoURL = null;
+      delete validDeleteData.multiFactor;
       const expectedValidDeleteData = {
         localId: uid,
         email: 'user@example.com',
@@ -1760,6 +1798,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       // Valid request to delete phoneNumber.
       const validDeletePhoneNumberData = deepCopy(validData);
       validDeletePhoneNumberData.phoneNumber = null;
+      delete validDeletePhoneNumberData.multiFactor;
       const expectedValidDeletePhoneNumberData = {
         localId: uid,
         displayName: 'John Doe',
@@ -1769,6 +1808,11 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         photoUrl: 'http://localhost/1234/photo.png',
         password: 'password',
         deleteProvider: ['phone'],
+      };
+      // Valid request to delete all second factors.
+      const expectedValidDeleteMfaData = {
+        localId: uid,
+        mfa: {},
       };
       const invalidData = {
         uid,
@@ -1866,6 +1910,50 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           });
       });
 
+      it('should be fulfilled given null enrolled factors', () => {
+        // Successful result server response.
+        const expectedResult = utils.responseFrom({
+          localId: uid,
+        });
+
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+
+        const requestHandler = handler.init(mockApp);
+        // Send update request to delete enrolled factors.
+        return requestHandler.updateExistingAccount(uid, {multiFactor: {enrolledFactors: null}})
+          .then((returnedUid: string) => {
+            // uid should be returned.
+            expect(returnedUid).to.be.equal(uid);
+            // Confirm expected rpc request parameters sent. In this case, mfa is set to
+            // an empty object.
+            expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, method, expectedValidDeleteMfaData));
+          });
+      });
+
+      it('should be fulfilled given empty enrolled factors array', () => {
+        // Successful result server response.
+        const expectedResult = utils.responseFrom({
+          localId: uid,
+        });
+
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+
+        const requestHandler = handler.init(mockApp);
+        // Send update request to delete enrolled factors.
+        return requestHandler.updateExistingAccount(uid, {multiFactor: {enrolledFactors: []}})
+          .then((returnedUid: string) => {
+            // uid should be returned.
+            expect(returnedUid).to.be.equal(uid);
+            // Confirm expected rpc request parameters sent. In this case, mfa is set to
+            // an empty object.
+            expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParams(path, method, expectedValidDeleteMfaData));
+          });
+      });
+
       it('should be rejected given invalid parameters such as email', () => {
         // Expected error when an invalid email is provided.
         const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);
@@ -1877,6 +1965,92 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           }, (error) => {
             // Invalid email error should be thrown.
             expect(error).to.deep.equal(expectedError);
+          });
+      });
+
+      const unsupportedSecondFactor = {
+        uid: 'enrolledSecondFactor1',
+        secret: 'SECRET',
+        displayName: 'Google Authenticator on personal phone',
+        factorId: 'totp',
+      };
+      const invalidSecondFactorTests: InvalidMultiFactorUpdateTest[] = [
+        {
+          name: 'invalid second factor uid',
+          error: new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_UID,
+            `The second factor "uid" must be a valid non-empty string.`,
+          ),
+          secondFactor: {
+            uid: ['enrollmentId'],
+            phoneNumber: '+16505557348',
+            displayName: 'Spouse\'s phone number',
+            factorId: 'phone',
+          },
+        },
+        {
+          name: 'invalid second factor display name',
+          error: new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_DISPLAY_NAME,
+            `The second factor "displayName" for "enrolledSecondFactor1" must be a valid string.`,
+          ),
+          secondFactor: {
+            uid: 'enrolledSecondFactor1',
+            phoneNumber: '+16505557348',
+            displayName: ['Corp phone number'],
+            factorId: 'phone',
+          },
+        },
+        {
+          name: 'invalid second factor phone number',
+          error: new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_PHONE_NUMBER,
+            `The second factor "phoneNumber" for "enrolledSecondFactor1" must be a non-empty ` +
+            `E.164 standard compliant identifier string.`),
+          secondFactor: {
+            uid: 'enrolledSecondFactor1',
+            phoneNumber: 'invalid',
+            displayName: 'Spouse\'s phone number',
+            factorId: 'phone',
+          },
+        },
+        {
+          name: 'invalid second factor enrollment time',
+          error: new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_ENROLLMENT_TIME,
+            `The second factor "enrollmentTime" for "enrolledSecondFactor1" must be a valid ` +
+            `UTC date string.`),
+          secondFactor: {
+            uid: 'enrolledSecondFactor1',
+            phoneNumber: '+16505557348',
+            displayName: 'Spouse\'s phone number',
+            factorId: 'phone',
+            enrollmentTime: 'invalid',
+          },
+        },
+        {
+          name: 'invalid second factor type',
+          error: new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_ENROLLED_FACTORS,
+            `Unsupported second factor "${JSON.stringify(unsupportedSecondFactor)}" provided.`),
+          secondFactor: unsupportedSecondFactor,
+        },
+      ];
+      invalidSecondFactorTests.forEach((invalidSecondFactorTest) => {
+        it(`should be rejected given an ${invalidSecondFactorTest.name}`, () => {
+          const invalidSecondFactorData = {
+            multiFactor: {
+              enrolledFactors: [invalidSecondFactorTest.secondFactor],
+            },
+          };
+          const requestHandler = handler.init(mockApp);
+          return requestHandler.updateExistingAccount(uid, invalidSecondFactorData as any)
+            .then((returnedUid: string) => {
+              throw new Error('Unexpected success');
+            }, (error) => {
+              // Expected error should be thrown.
+              expect(error).to.deep.equal(invalidSecondFactorTest.error);
+            });
           });
       });
 

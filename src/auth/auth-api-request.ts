@@ -25,7 +25,7 @@ import {
 import {CreateRequest, UpdateRequest} from './user-record';
 import {
   UserImportBuilder, UserImportOptions, UserImportRecord,
-  UserImportResult, AuthFactorInfo,
+  UserImportResult, AuthFactorInfo, convertMultiFactorInfoToServerFormat,
 } from './user-import-builder';
 import * as utils from '../utils/index';
 import {ActionCodeSettings, ActionCodeSettingsBuilder} from './action-code-settings-builder';
@@ -304,6 +304,8 @@ function validateCreateEditRequest(request: any, uploadAccountRequest: boolean =
     lastLoginAt: uploadAccountRequest,
     providerUserInfo: uploadAccountRequest,
     mfaInfo: uploadAccountRequest,
+    // Only for non-uploadAccount requests.
+    mfa: !uploadAccountRequest,
   };
   // Remove invalid keys from original request.
   for (const key in request) {
@@ -442,12 +444,20 @@ function validateCreateEditRequest(request: any, uploadAccountRequest: boolean =
       validateProviderUserInfo(providerUserInfoEntry);
     });
   }
-  // mfaInfo has to be an array of valid AuthFactorInfo requests.
+  // mfaInfo is used for importUsers.
+  // mfa.enrollments is used for setAccountInfo.
+  // enrollments has to be an array of valid AuthFactorInfo requests.
+  let enrollments: AuthFactorInfo[];
   if (request.mfaInfo) {
-    if (!validator.isArray(request.mfaInfo)) {
+    enrollments = request.mfaInfo;
+  } else if (request.mfa && request.mfa.enrollments) {
+    enrollments = request.mfa.enrollments;
+  }
+  if (enrollments) {
+    if (!validator.isArray(enrollments)) {
       throw new FirebaseAuthError(AuthClientErrorCode.INVALID_ENROLLED_FACTORS);
     }
-    request.mfaInfo.forEach((authFactorInfoEntry: AuthFactorInfo) => {
+    enrollments.forEach((authFactorInfoEntry: AuthFactorInfo) => {
       validateAuthFactorInfo(authFactorInfoEntry);
     });
   }
@@ -1048,6 +1058,28 @@ export abstract class AbstractAuthRequestHandler {
     if (typeof request.disabled !== 'undefined') {
       request.disableUser = request.disabled;
       delete request.disabled;
+    }
+    // Construct mfa related user data.
+    if (validator.isNonNullObject(request.multiFactor)) {
+      if (request.multiFactor.enrolledFactors === null) {
+        // Remove all second factors.
+        request.mfa = {};
+      } else if (validator.isArray(request.multiFactor.enrolledFactors)) {
+        request.mfa = {
+          enrollments: [],
+        };
+        try {
+          request.multiFactor.enrolledFactors.forEach((multiFactorInfo: any) => {
+            request.mfa.enrollments.push(convertMultiFactorInfoToServerFormat(multiFactorInfo));
+          });
+        } catch (e) {
+          return Promise.reject(e);
+        }
+        if (request.mfa.enrollments.length === 0) {
+          delete request.mfa.enrollments;
+        }
+      }
+      delete request.multiFactor;
     }
     return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_SET_ACCOUNT_INFO, request)
         .then((response: any) => {

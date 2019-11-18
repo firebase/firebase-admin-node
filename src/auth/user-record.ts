@@ -51,6 +51,15 @@ export interface UpdateRequest {
   password?: string;
   phoneNumber?: string | null;
   photoURL?: string | null;
+  multiFactor?: {
+    enrolledFactors: Array<{
+      uid: string;
+      phoneNumber: string;
+      displayName?: string;
+      enrollmentTime?: string;
+      factorId: string;
+    }> | null;
+  };
 }
 
 /** Parameters for create user operation */

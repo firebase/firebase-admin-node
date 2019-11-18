@@ -314,13 +314,34 @@ describe('admin.auth', () => {
   });
 
   it('updateUser() updates the user record with the given parameters', () => {
+    // TODO: replace all "any" types with explicit mfa related types after they are defined in d.ts file.
     const updatedDisplayName = 'Updated User ' + newUserUid;
+    const now = new Date(1476235905000).toUTCString();
+    const enrolledFactors = [
+      {
+        uid: 'mfaUid1',
+        phoneNumber: '+16505550001',
+        displayName: 'Work phone number',
+        factorId: 'phone',
+        enrollmentTime: now,
+      },
+      {
+        uid: 'mfaUid2',
+        phoneNumber: '+16505550002',
+        displayName: 'Personal phone number',
+        factorId: 'phone',
+        enrollmentTime: now,
+      },
+    ];
     return admin.auth().updateUser(newUserUid, {
       email: updatedEmail,
       phoneNumber: updatedPhone,
       emailVerified: true,
       displayName: updatedDisplayName,
-    })
+      multiFactor: {
+        enrolledFactors,
+      },
+    } as any)
       .then((userRecord) => {
         expect(userRecord.emailVerified).to.be.true;
         expect(userRecord.displayName).to.equal(updatedDisplayName);
@@ -328,6 +349,31 @@ describe('admin.auth', () => {
         expect(userRecord.email).to.equal(updatedEmail);
         // Confirm expected phone number.
         expect(userRecord.phoneNumber).to.equal(updatedPhone);
+        // Confirm second factors added to user.
+        const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
+        expect(actualUserRecord.multiFactor.enrolledFactors.length).to.equal(2);
+        expect(actualUserRecord.multiFactor.enrolledFactors).to.deep.equal(enrolledFactors);
+        // Update list of second factors.
+        return admin.auth().updateUser(newUserUid, {
+          multiFactor: {
+            enrolledFactors: [enrolledFactors[0]],
+          },
+        } as any);
+      })
+      .then((userRecord) => {
+        expect((userRecord as any).multiFactor.enrolledFactors.length).to.equal(1);
+        const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
+        expect(actualUserRecord.multiFactor.enrolledFactors[0]).to.deep.equal(enrolledFactors[0]);
+        // Remove all second factors.
+        return admin.auth().updateUser(newUserUid, {
+          multiFactor: {
+            enrolledFactors: null,
+          },
+        } as any);
+      })
+      .then((userRecord) => {
+        // Confirm all second factors removed.
+        expect((userRecord as any).multiFactor).to.be.undefined;
       });
   });
 
