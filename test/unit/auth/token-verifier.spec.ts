@@ -527,6 +527,29 @@ describe('FirebaseTokenVerifier', () => {
         });
     });
 
+    it('should use the given HTTP Agent', () => {
+      const agent = new https.Agent();
+      tokenVerifier = new verifier.FirebaseTokenVerifier(
+        'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com',
+        'RS256',
+        'https://securetoken.google.com/',
+        'project_id',
+        verifier.ID_TOKEN_INFO,
+        agent,
+      );
+      mockedRequests.push(mockFetchPublicKeys());
+
+      clock = sinon.useFakeTimers(1000);
+
+      const mockIdToken = mocks.generateIdToken();
+
+      return tokenVerifier.verifyJWT(mockIdToken)
+        .then(() => {
+          expect(https.request).to.have.been.calledOnce;
+          expect(httpsSpy.args[0][0].agent).to.equal(agent);
+        });
+    });
+
     it('should not fetch the Google cert public keys until the first time verifyJWT() is called', () => {
       mockedRequests.push(mockFetchPublicKeys());
 

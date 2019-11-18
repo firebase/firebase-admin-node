@@ -20,6 +20,7 @@ import * as validator from '../utils/validator';
 import * as jwt from 'jsonwebtoken';
 import { HttpClient, HttpRequestConfig, HttpError } from '../utils/api-request';
 import { DecodedIdToken } from './auth';
+import { Agent } from 'http';
 
 // Audience to use for Firebase Auth Custom tokens
 const FIREBASE_AUDIENCE = 'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit';
@@ -75,7 +76,8 @@ export class FirebaseTokenVerifier {
 
   constructor(private clientCertUrl: string, private algorithm: string,
               private issuer: string, private projectId: string,
-              private tokenInfo: FirebaseTokenInfo) {
+              private tokenInfo: FirebaseTokenInfo,
+              private readonly httpAgent?: Agent) {
     if (!validator.isURL(clientCertUrl)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
@@ -282,6 +284,7 @@ export class FirebaseTokenVerifier {
     const request: HttpRequestConfig = {
       method: 'GET',
       url: this.clientCertUrl,
+      httpAgent: this.httpAgent,
     };
     return client.send(request).then((resp) => {
       if (!resp.isJson() || resp.data.error) {
@@ -325,15 +328,17 @@ export class FirebaseTokenVerifier {
  * Creates a new FirebaseTokenVerifier to verify Firebase ID tokens.
  *
  * @param {string} projectId Project ID string.
+ * @param {Agent} httpAgent Optional HTTP agent.
  * @return {FirebaseTokenVerifier}
  */
-export function createIdTokenVerifier(projectId: string): FirebaseTokenVerifier {
+export function createIdTokenVerifier(projectId: string, httpAgent?: Agent): FirebaseTokenVerifier {
   return new FirebaseTokenVerifier(
       CLIENT_CERT_URL,
       ALGORITHM_RS256,
       'https://securetoken.google.com/',
       projectId,
       ID_TOKEN_INFO,
+      httpAgent,
   );
 }
 
@@ -341,14 +346,16 @@ export function createIdTokenVerifier(projectId: string): FirebaseTokenVerifier 
  * Creates a new FirebaseTokenVerifier to verify Firebase session cookies.
  *
  * @param {string} projectId Project ID string.
+ * @param {Agent} httpAgent Optional HTTP agent.
  * @return {FirebaseTokenVerifier}
  */
-export function createSessionCookieVerifier(projectId: string): FirebaseTokenVerifier {
+export function createSessionCookieVerifier(projectId: string, httpAgent?: Agent): FirebaseTokenVerifier {
   return new FirebaseTokenVerifier(
     SESSION_COOKIE_CERT_URL,
     ALGORITHM_RS256,
     'https://session.firebase.google.com/',
     projectId,
     SESSION_COOKIE_INFO,
+    httpAgent,
   );
 }
