@@ -314,7 +314,6 @@ describe('admin.auth', () => {
   });
 
   it('updateUser() updates the user record with the given parameters', () => {
-    // TODO: replace all "any" types with explicit mfa related types after they are defined in d.ts file.
     const updatedDisplayName = 'Updated User ' + newUserUid;
     const now = new Date(1476235905000).toUTCString();
     const enrolledFactors = [
@@ -341,7 +340,7 @@ describe('admin.auth', () => {
       multiFactor: {
         enrolledFactors,
       },
-    } as any)
+    })
       .then((userRecord) => {
         expect(userRecord.emailVerified).to.be.true;
         expect(userRecord.displayName).to.equal(updatedDisplayName);
@@ -358,10 +357,10 @@ describe('admin.auth', () => {
           multiFactor: {
             enrolledFactors: [enrolledFactors[0]],
           },
-        } as any);
+        });
       })
       .then((userRecord) => {
-        expect((userRecord as any).multiFactor.enrolledFactors.length).to.equal(1);
+        expect(userRecord.multiFactor.enrolledFactors.length).to.equal(1);
         const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
         expect(actualUserRecord.multiFactor.enrolledFactors[0]).to.deep.equal(enrolledFactors[0]);
         // Remove all second factors.
@@ -369,11 +368,11 @@ describe('admin.auth', () => {
           multiFactor: {
             enrolledFactors: null,
           },
-        } as any);
+        });
       })
       .then((userRecord) => {
         // Confirm all second factors removed.
-        expect((userRecord as any).multiFactor).to.be.undefined;
+        expect(userRecord.multiFactor).to.be.undefined;
       });
   });
 

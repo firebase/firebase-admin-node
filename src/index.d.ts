@@ -639,6 +639,16 @@ declare namespace admin.auth {
      */
     tenantId?: string | null;
 
+    multiFactor?: {
+      enrolledFactors: Array<{
+        uid: string;
+        phoneNumber: string;
+        displayName?: string;
+        enrollmentTime?: string;
+        factorId: string;
+      }>;
+    };
+
     /**
      * @return A JSON-serializable representation of this object.
      */
@@ -685,6 +695,16 @@ declare namespace admin.auth {
      * The user's photo URL.
      */
     photoURL?: string | null;
+
+    multiFactor?: {
+      enrolledFactors: Array<{
+        uid: string;
+        phoneNumber: string;
+        displayName?: string;
+        enrollmentTime?: string;
+        factorId: string;
+      }> | null;
+    };
   }
 
   /**
@@ -1000,6 +1020,16 @@ declare namespace admin.auth {
      * to the tenant corresponding to that `TenantAwareAuth` instance's tenant ID.
      */
     tenantId?: string | null;
+
+    multiFactor?: {
+      enrolledFactors: Array<{
+        uid: string;
+        phoneNumber: string;
+        displayName?: string;
+        enrollmentTime?: string;
+        factorId: string;
+      }>;
+    };
   }
 
   /**
