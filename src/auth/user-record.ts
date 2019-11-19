@@ -42,6 +42,14 @@ function parseDate(time: any): string {
   return null;
 }
 
+interface SecondFactor {
+  uid: string;
+  phoneNumber: string;
+  displayName?: string;
+  enrollmentTime?: string;
+  factorId: string;
+}
+
 /** Parameters for update user operation */
 export interface UpdateRequest {
   disabled?: boolean;
@@ -51,6 +59,9 @@ export interface UpdateRequest {
   password?: string;
   phoneNumber?: string | null;
   photoURL?: string | null;
+  multiFactor?: {
+    enrolledFactors: SecondFactor[] | null;
+  };
 }
 
 /** Parameters for create user operation */
