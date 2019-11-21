@@ -27,7 +27,7 @@ const ALGORITHM_RS256 = 'RS256';
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 
 // List of blacklisted claims which cannot be provided when creating a custom token
-const BLACKLISTED_CLAIMS = [
+export const BLACKLISTED_CLAIMS = [
   'acr', 'amr', 'at_hash', 'aud', 'auth_time', 'azp', 'cnf', 'c_hash', 'exp', 'iat', 'iss', 'jti',
   'nbf', 'nonce',
 ];
