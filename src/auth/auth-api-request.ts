@@ -701,6 +701,13 @@ export abstract class AbstractAuthRequestHandler {
    * @constructor
    */
   constructor(app: FirebaseApp) {
+    if (typeof app !== 'object' || app === null || !('options' in app)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        'First argument passed to admin.auth() must be a valid Firebase app instance.',
+      );
+    }
+
     this.projectId = utils.getProjectId(app);
     this.httpClient = new AuthorizedHttpClient(app);
   }

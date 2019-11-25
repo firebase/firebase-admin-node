@@ -40,7 +40,7 @@ const FCM_TOPIC_MANAGEMENT_ADD_PATH = '/iid/v1:batchAdd';
 const FCM_TOPIC_MANAGEMENT_REMOVE_PATH = '/iid/v1:batchRemove';
 
 // Maximum messages that can be included in a batch request.
-const FCM_MAX_BATCH_SIZE = 100;
+const FCM_MAX_BATCH_SIZE = 500;
 
 // Key renames for the messaging notification payload object.
 const CAMELCASED_NOTIFICATION_PAYLOAD_KEYS_MAP = {
@@ -283,7 +283,7 @@ export class Messaging implements FirebaseServiceInterface {
    * An error from this method indicates a total failure -- i.e. none of the messages in the
    * list could be sent. Partial failures are indicated by a BatchResponse return value.
    *
-   * @param {Message[]} messages A non-empty array containing up to 100 messages.
+   * @param {Message[]} messages A non-empty array containing up to 500 messages.
    * @param {boolean=} dryRun Whether to send the message in the dry-run (validation only) mode.
    *
    * @return {Promise<BatchResponse>} A Promise fulfilled with an object representing the result
@@ -335,7 +335,7 @@ export class Messaging implements FirebaseServiceInterface {
    * indicates a total failure -- i.e. none of the tokens in the list could be sent to. Partial
    * failures are indicated by a BatchResponse return value.
    *
-   * @param {MulticastMessage} message A multicast message containing up to 100 tokens.
+   * @param {MulticastMessage} message A multicast message containing up to 500 tokens.
    * @param {boolean=} dryRun Whether to send the message in the dry-run (validation only) mode.
    *
    * @return {Promise<BatchResponse>} A Promise fulfilled with an object representing the result

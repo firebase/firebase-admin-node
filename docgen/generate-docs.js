@@ -40,7 +40,7 @@ const contentPath = path.resolve(`${__dirname}/content-sources/node`);
 const tempHomePath = path.resolve(`${contentPath}/HOME_TEMP.md`);
 const devsitePath = `/docs/reference/admin/node/`;
 
-const firestoreExcludes = ['v1', 'v1beta1', 'setLogFunction'];
+const firestoreExcludes = ['v1', 'v1beta1', 'setLogFunction','DocumentData'];
 const firestoreHtmlPath = `${docPath}/admin.firestore.html`;
 const firestoreHeader = `<section class="tsd-panel-group tsd-member-group ">
   <h2>Type aliases</h2>
