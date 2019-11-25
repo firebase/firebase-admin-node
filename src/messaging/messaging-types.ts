@@ -767,7 +767,7 @@ function validateAndroidNotification(notification: AndroidNotification | undefin
  *
  * @param {LightSettings} lightSettings An object to be validated.
  */
-function validateLightSettings(lightSettings: LightSettings) {
+function validateLightSettings(lightSettings?: LightSettings) {
   if (typeof lightSettings === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(lightSettings)) {
@@ -799,6 +799,11 @@ function validateLightSettings(lightSettings: LightSettings) {
   }
   const colorString = lightSettings.color.length === 7 ? lightSettings.color + 'FF' : lightSettings.color;
   const rgb = /^#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/i.exec(colorString);
+  if (!rgb || rgb.length < 4) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INTERNAL_ERROR,
+      'regex to extract rgba values from ' + colorString + ' failed.');
+  }
   const color = {
     red: parseInt(rgb[1], 16) / 255.0,
     green: parseInt(rgb[2], 16) / 255.0,

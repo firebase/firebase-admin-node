@@ -2417,7 +2417,8 @@ describe('Messaging', () => {
     });
 
     const invalidVibrateTimings = [[null, 500], [-100]];
-    invalidVibrateTimings.forEach((vibrateTimingsMillis) => {
+    invalidVibrateTimings.forEach((vibrateTimingsMillisMaybeNull) => {
+      const vibrateTimingsMillis = vibrateTimingsMillisMaybeNull as number[];
       it(`should throw given an null or negative vibrateTimingsMillis: ${ vibrateTimingsMillis }`, () => {
         const message: Message = {
           condition: 'topic-name',
