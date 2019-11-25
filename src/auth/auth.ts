@@ -569,7 +569,6 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
     return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
   }
 
-
   /**
    * Verifies the decoded Firebase issued JWT is not revoked. Returns a promise that resolves
    * with the decoded claims on success. Rejects the promise with revocation error if revoked.

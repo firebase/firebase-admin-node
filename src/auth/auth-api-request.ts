@@ -693,7 +693,7 @@ export abstract class AbstractAuthRequestHandler {
    * @return {string|null} The error code if present; null otherwise.
    */
   private static getErrorCode(response: any): string | null {
-    return (validator.isNonNullObject(response) && (response as any).error && (response as any).error.message) || null;
+    return (validator.isNonNullObject(response) && response.error && response.error.message) || null;
   }
 
   /**
@@ -1068,9 +1068,15 @@ export abstract class AbstractAuthRequestHandler {
     let request = {requestType, email, returnOobLink: true};
     // ActionCodeSettings required for email link sign-in to determine the url where the sign-in will
     // be completed.
+    if (typeof actionCodeSettings === 'undefined' && requestType === 'EMAIL_SIGNIN') {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        "`actionCodeSettings` is required when `requestType` === 'EMAIL_SIGNIN'",
+      );
+    }
     if (typeof actionCodeSettings !== 'undefined' || requestType === 'EMAIL_SIGNIN') {
       try {
-        const builder = new ActionCodeSettingsBuilder(actionCodeSettings);
+        const builder = new ActionCodeSettingsBuilder(actionCodeSettings!);
         request = deepExtend(request, builder.buildRequest());
       } catch (e) {
         return Promise.reject(e);

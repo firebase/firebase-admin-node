@@ -224,7 +224,7 @@ function getDetailFromResponse(response: HttpResponse): string {
     }
     return detail;
   }
-  return response.text || 'Missing Error Payload';
+  return response.text || 'Missing error payload';
 }
 
 /**
@@ -306,7 +306,7 @@ export interface FirebaseCredential extends Credential {
  * @param {Credential} credential A Credential instance.
  * @return {Certificate} A Certificate instance or null.
  */
-export function tryGetCertificate(credential?: Credential): Certificate | null {
+export function tryGetCertificate(credential: Credential | null | undefined): Certificate | null {
   if (credential && isFirebaseCredential(credential)) {
     return credential.getCertificate();
   }
@@ -329,15 +329,15 @@ export class RefreshTokenCredential implements Credential {
 
   constructor(refreshTokenPathOrObject: string | object, httpAgent?: Agent) {
     if (typeof refreshTokenPathOrObject === 'string') {
-      const refreshTokenOrNull = RefreshToken.fromPath(refreshTokenPathOrObject);
-      if (!refreshTokenOrNull) {
+      const refreshToken = RefreshToken.fromPath(refreshTokenPathOrObject);
+      if (!refreshToken) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.NOT_FOUND,
           'The file refered to by the refreshTokenPathOrObject parameter (' +
           refreshTokenPathOrObject + ') was not found.',
         );
       }
-      this.refreshToken = refreshTokenOrNull;
+      this.refreshToken = refreshToken;
     } else {
       this.refreshToken = new RefreshToken(refreshTokenPathOrObject);
     }

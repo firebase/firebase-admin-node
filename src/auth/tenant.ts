@@ -117,17 +117,17 @@ export class Tenant {
       }
     }
     // Validate displayName type if provided.
-    if (typeof (request as any).displayName !== 'undefined' &&
-        !validator.isNonEmptyString((request as any).displayName)) {
+    if (typeof request.displayName !== 'undefined' &&
+        !validator.isNonEmptyString(request.displayName)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
         `"${label}.displayName" must be a valid non-empty string.`,
       );
     }
     // Validate emailSignInConfig type if provided.
-    if (typeof (request as any).emailSignInConfig !== 'undefined') {
+    if (typeof request.emailSignInConfig !== 'undefined') {
       // This will throw an error if invalid.
-      EmailSignInConfig.buildServerRequest((request as any).emailSignInConfig);
+      EmailSignInConfig.buildServerRequest(request.emailSignInConfig);
     }
   }
 

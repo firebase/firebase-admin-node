@@ -1409,16 +1409,22 @@ describe('admin.auth', () => {
         } as any,
         computePasswordHash: (userImportTest: UserImportTest): Buffer => {
           const currentRawPassword = userImportTest.rawPassword;
-          expect(userImportTest.rawSalt);
+
+          expect(userImportTest.rawSalt).to.exist;
           const currentRawSalt = userImportTest.rawSalt!;
+
           expect(userImportTest.importOptions.hash.memoryCost).to.exist;
           const N = userImportTest.importOptions.hash.memoryCost!;
+
           expect(userImportTest.importOptions.hash.blockSize).to.exist;
           const r = userImportTest.importOptions.hash.blockSize!;
+
           expect(userImportTest.importOptions.hash.parallelization).to.exist;
           const p = userImportTest.importOptions.hash.parallelization!;
+
           expect(userImportTest.importOptions.hash.derivedKeyLength).to.exist;
           const dkLen = userImportTest.importOptions.hash.derivedKeyLength!;
+
           return Buffer.from(scrypt.hashSync(
               currentRawPassword, {N, r, p}, dkLen, Buffer.from(currentRawSalt)));
         },

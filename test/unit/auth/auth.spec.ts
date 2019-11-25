@@ -411,10 +411,11 @@ AUTH_CONFIGS.forEach((testConfig) => {
       const tenantId = testConfig.supportsTenantManagement ? undefined : TENANT_ID;
       const expectedUserRecord = getValidUserRecord(getValidGetAccountInfoResponse(tenantId));
       // Set auth_time of token to expected user's tokensValidAfterTime.
-      if (!expectedUserRecord.tokensValidAfterTime) {
-        throw new Error("getValidUserRecord didn't properly set tokensValidAfterTime.");
-      }
-      const validSince = new Date(expectedUserRecord.tokensValidAfterTime);
+      expect(
+        expectedUserRecord.tokensValidAfterTime,
+        "getValidUserRecord didn't properly set tokensValueAfterTime",
+      ).to.exist;
+      const validSince = new Date(expectedUserRecord.tokensValidAfterTime!);
       // Set expected uid to expected user's.
       const uid = expectedUserRecord.uid;
       // Set expected decoded ID token with expected UID and auth time.
@@ -2169,8 +2170,9 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
         if (emailActionFlow.requiresSettings) {
           it('should reject when called without actionCodeSettings', () => {
-            return (auth as any)[emailActionFlow.api](email, undefined)
-              .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
+            expect(() => {
+              (auth as any)[emailActionFlow.api](email, undefined);
+            }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
           });
         } else {
           it('should resolve when called without actionCodeSettings with a generated link on success', () => {

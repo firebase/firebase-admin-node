@@ -2400,19 +2400,11 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       it('should be rejected given requestType:EMAIL_SIGNIN and no ActionCodeSettings', () => {
         const invalidRequestType = 'EMAIL_SIGNIN';
-        const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
-          `"ActionCodeSettings" must be a non-null object.`,
-        );
-
         const requestHandler = handler.init(mockApp);
-        return requestHandler.getEmailActionLink(invalidRequestType, email)
-          .then((resp) => {
-            throw new Error('Unexpected success');
-          }, (error) => {
-            // Invalid argument error should be thrown.
-            expect(error).to.deep.equal(expectedError);
-          });
+
+        expect(() => {
+          requestHandler.getEmailActionLink(invalidRequestType, email);
+        }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
       });
 
       it('should be rejected given an invalid email', () => {

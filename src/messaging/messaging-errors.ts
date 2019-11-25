@@ -67,7 +67,7 @@ export function createFirebaseError(err: HttpError): FirebaseMessagingError {
  */
 export function getErrorCode(response: any): string | null {
   if (validator.isNonNullObject(response) && 'error' in response) {
-    const error = (response as any).error;
+    const error = response.error;
     if (validator.isString(error)) {
       return error;
     }

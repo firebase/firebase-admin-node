@@ -169,13 +169,11 @@ export class IAMSigner implements CryptoSigner {
     }).catch((err) => {
       if (err instanceof HttpError) {
         const error = err.response.data;
-        let errorCode: string;
-        let errorMsg: string | undefined;
-        if (validator.isNonNullObject(error) && (error as any).error) {
-          errorCode = (error as any).error.status;
+        if (validator.isNonNullObject(error) && error.error) {
+          const errorCode = error.error.status;
           const description = 'Please refer to https://firebase.google.com/docs/auth/admin/create-custom-tokens ' +
             'for more details on how to use and troubleshoot this feature.';
-          errorMsg = `${(error as any).error.message}; ${description}`;
+          const errorMsg = `${error.error.message}; ${description}`;
 
           throw FirebaseAuthError.fromServerError(errorCode, errorMsg, error);
         }
