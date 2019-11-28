@@ -626,7 +626,8 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
 
   /**
    * Creates a new custom token that can be sent back to a client to use with
-   * signInWithCustomToken().
+   * signInWithCustomToken(). The tenant id will be embedded in the token and
+   * will be verified during the call to signInWithCustomToken().
    *
    * @param {string} uid The uid to use as the JWT subject.
    * @param {object=} developerClaims Optional additional claims to include in the JWT payload.
@@ -634,10 +635,7 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
    * @return {Promise<string>} A JWT for the provided payload.
    */
   public createCustomToken(uid: string, developerClaims?: object): Promise<string> {
-    // This is not yet supported by the Auth server. It is also not yet determined how this will be
-    // supported.
-    return Promise.reject(
-        new FirebaseAuthError(AuthClientErrorCode.UNSUPPORTED_TENANT_OPERATION));
+    return this.tokenGenerator.createCustomTokenWithTenantId(uid, this.tenantId, developerClaims);
   }
 
   /**

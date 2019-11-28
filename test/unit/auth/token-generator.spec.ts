@@ -30,6 +30,7 @@ import {Certificate} from '../../../src/auth/credential';
 import { AuthorizedHttpClient, HttpClient } from '../../../src/utils/api-request';
 import { FirebaseApp } from '../../../src/firebase-app';
 import * as utils from '../utils';
+import { FirebaseAuthError } from '../../../src/utils/error';
 
 chai.should();
 chai.use(sinonChai);
@@ -293,7 +294,7 @@ describe('FirebaseTokenGenerator', () => {
     it('should throw given no uid', () => {
       expect(() => {
         (tokenGenerator as any).createCustomToken();
-      }).to.throw('First argument to createCustomToken() must be a non-empty string uid');
+      }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
     });
 
     const invalidUids = [null, NaN, 0, 1, true, false, [], {}, { a: 1 }, _.noop];
@@ -301,14 +302,14 @@ describe('FirebaseTokenGenerator', () => {
       it('should throw given a non-string uid: ' + JSON.stringify(invalidUid), () => {
         expect(() => {
           tokenGenerator.createCustomToken(invalidUid as any);
-        }).to.throw('First argument to createCustomToken() must be a non-empty string uid');
+        }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
       });
     });
 
     it('should throw given an empty string uid', () => {
       expect(() => {
         tokenGenerator.createCustomToken('');
-      }).to.throw('First argument to createCustomToken() must be a non-empty string uid');
+      }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
     });
 
     it('should throw given a uid with a length greater than 128 characters', () => {
@@ -324,7 +325,7 @@ describe('FirebaseTokenGenerator', () => {
       expect(uid).to.have.length(129);
       expect(() => {
         tokenGenerator.createCustomToken(uid);
-      }).to.throw('First argument to createCustomToken() must a uid with less than or equal to 128 characters');
+      }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
     });
 
     it('should throw given a non-object developer claims', () => {
@@ -332,7 +333,7 @@ describe('FirebaseTokenGenerator', () => {
       invalidDeveloperClaims.forEach((invalidDevClaims) => {
         expect(() => {
           tokenGenerator.createCustomToken(mocks.uid, invalidDevClaims);
-        }).to.throw('Second argument to createCustomToken() must be an object containing the developer claims');
+        }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
       });
     });
 
@@ -342,7 +343,7 @@ describe('FirebaseTokenGenerator', () => {
         blacklistedDeveloperClaims[blacklistedClaim] = true;
         expect(() => {
           tokenGenerator.createCustomToken(mocks.uid, blacklistedDeveloperClaims);
-        }).to.throw('Developer claim "' + blacklistedClaim + '" is reserved and cannot be specified');
+        }).to.throw(FirebaseAuthError, blacklistedClaim).with.property('code', 'auth/argument-error');
       });
     });
 
@@ -461,6 +462,217 @@ describe('FirebaseTokenGenerator', () => {
       };
       const clonedClaims = _.clone(originalClaims);
       return tokenGenerator.createCustomToken(mocks.uid, clonedClaims)
+        .then(() => {
+          expect(originalClaims).to.deep.equal(clonedClaims);
+        });
+    });
+  });
+
+  describe('createCustomTokenWithTenantId()', () => {
+    it('should throw given no uid', () => {
+      expect(() => {
+        (tokenGenerator as any).createCustomTokenWithTenantId();
+      }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
+    });
+
+    it('should throw given no tenantId', () => {
+      expect(() => {
+        (tokenGenerator as any).createCustomTokenWithTenantId('uid1');
+      }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
+    });
+
+    const invalidUids = [null, NaN, 0, 1, true, false, [], {}, { a: 1 }, _.noop];
+    invalidUids.forEach((invalidUid) => {
+      it('should throw given a non-string uid: ' + JSON.stringify(invalidUid), () => {
+        expect(() => {
+          tokenGenerator.createCustomTokenWithTenantId(invalidUid as any, 'tenantid1');
+        }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
+      });
+    });
+    invalidUids.forEach((invalidUid) => {
+      it('should throw given a non-string tenantId: ' + JSON.stringify(invalidUid), () => {
+        expect(() => {
+          tokenGenerator.createCustomTokenWithTenantId('uid1', invalidUid as any);
+        }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
+      });
+    });
+
+    it('should throw given an empty string uid', () => {
+      expect(() => {
+        tokenGenerator.createCustomTokenWithTenantId ('', 'tenantid1');
+      }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
+    });
+
+    it('should throw given an empty string tenantId', () => {
+      expect(() => {
+        tokenGenerator.createCustomTokenWithTenantId('uid1', '');
+      }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
+    });
+
+    it('should throw given a uid with a length greater than 128 characters', () => {
+      // uid of length 128 should be allowed
+      let uid = Array(129).join('a');
+      expect(uid).to.have.length(128);
+      expect(() => {
+        tokenGenerator.createCustomTokenWithTenantId(uid, 'tenantid1');
+      }).not.to.throw();
+
+      // uid of length 129 should throw
+      uid = Array(130).join('a');
+      expect(uid).to.have.length(129);
+      expect(() => {
+        tokenGenerator.createCustomTokenWithTenantId(uid, 'tenantid1');
+      }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
+    });
+
+    // Note: We don't enforce a max length on tenantid.
+
+    it('should throw given a non-object developer claims', () => {
+      const invalidDeveloperClaims: any[] = [null, NaN, [], true, false, '', 'a', 0, 1, Infinity, _.noop];
+      invalidDeveloperClaims.forEach((invalidDevClaims) => {
+        expect(() => {
+          tokenGenerator.createCustomTokenWithTenantId('uid1', 'tenantid1', invalidDevClaims);
+        }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
+      });
+    });
+
+    BLACKLISTED_CLAIMS.forEach((blacklistedClaim) => {
+      it('should throw given a developer claims object with a blacklisted claim: ' + blacklistedClaim, () => {
+        const blacklistedDeveloperClaims: {[key: string]: any} = _.clone(mocks.developerClaims);
+        blacklistedDeveloperClaims[blacklistedClaim] = true;
+        expect(() => {
+          tokenGenerator.createCustomToken(mocks.uid, blacklistedDeveloperClaims);
+        }).to.throw(FirebaseAuthError, blacklistedClaim).with.property('code', 'auth/argument-error');
+      });
+    });
+
+    BLACKLISTED_CLAIMS.forEach((blacklistedClaim) => {
+      it('should throw given a developer claims object with a blacklisted claim: ' + blacklistedClaim, () => {
+        const blacklistedDeveloperClaims: {[key: string]: any} = _.clone(mocks.developerClaims);
+        blacklistedDeveloperClaims[blacklistedClaim] = true;
+        expect(() => {
+          tokenGenerator.createCustomTokenWithTenantId('uid1', 'tenantid1', blacklistedDeveloperClaims);
+        }).to.throw(FirebaseAuthError, blacklistedClaim).with.property('code', 'auth/argument-error');
+      });
+    });
+
+    it('should be fulfilled given a valid uid, tenantId and no developer claims', () => {
+      return tokenGenerator.createCustomTokenWithTenantId('uid1', 'tenantid1');
+    });
+
+    it('should be fulfilled given a valid uid, tenantId empty object developer claims', () => {
+       return tokenGenerator.createCustomTokenWithTenantId('uid1', 'tenantid1', {});
+    });
+
+    it('should be fulfilled given a valid uid, tenantId and valid developer claims', () => {
+      return tokenGenerator.createCustomTokenWithTenantId('uid1', 'tenantid1', mocks.developerClaims);
+    });
+
+    it('should be fulfilled with a Firebase Custom JWT', () => {
+      return tokenGenerator.createCustomTokenWithTenantId('uid1', 'tenantid1')
+        .should.eventually.be.a('string').and.not.be.empty;
+    });
+
+    it('should be fulfilled with a JWT with the correct decoded payload', () => {
+      clock = sinon.useFakeTimers(1000);
+
+      return tokenGenerator.createCustomTokenWithTenantId('uid1', 'tenantid1')
+        .then((token) => {
+          const decoded = jwt.decode(token);
+
+          expect(decoded).to.deep.equal({
+            uid: 'uid1',
+            iat: 1,
+            exp: ONE_HOUR_IN_SECONDS + 1,
+            aud: FIREBASE_AUDIENCE,
+            iss: mocks.certificateObject.client_email,
+            sub: mocks.certificateObject.client_email,
+            tenant_id: 'tenantid1',
+          });
+        });
+    });
+
+    it('should be fulfilled with a JWT with the developer claims in its decoded payload', () => {
+      clock = sinon.useFakeTimers(1000);
+
+      return tokenGenerator.createCustomTokenWithTenantId('uid1', 'tenantid1', mocks.developerClaims)
+        .then((token) => {
+          const decoded = jwt.decode(token);
+
+          expect(decoded).to.deep.equal({
+            uid: 'uid1',
+            iat: 1,
+            exp: ONE_HOUR_IN_SECONDS + 1,
+            aud: FIREBASE_AUDIENCE,
+            iss: mocks.certificateObject.client_email,
+            sub: mocks.certificateObject.client_email,
+            tenant_id: 'tenantid1',
+            claims: {
+              one: 'uno',
+              two: 'dos',
+            },
+          });
+        });
+    });
+
+    it('should be fulfilled with a JWT with the correct header', () => {
+      clock = sinon.useFakeTimers(1000);
+
+      return tokenGenerator.createCustomTokenWithTenantId('uid1', 'tenantid')
+        .then((token) => {
+          const decoded: any = jwt.decode(token, {
+            complete: true,
+          });
+          expect(decoded.header).to.deep.equal({
+            alg: ALGORITHM,
+            typ: 'JWT',
+          });
+        });
+    });
+
+    it('should be fulfilled with a JWT which can be verified by the service account public key', () => {
+      return tokenGenerator.createCustomTokenWithTenantId('uid1', 'tenantid1')
+        .then((token) => {
+          return verifyToken(token, mocks.keyPairs[0].public);
+        });
+    });
+
+    it('should be fulfilled with a JWT which cannot be verified by a random public key', () => {
+      return tokenGenerator.createCustomTokenWithTenantId('uid1', 'tenantid1')
+        .then((token) => {
+          return verifyToken(token, mocks.keyPairs[1].public)
+            .should.eventually.be.rejectedWith('invalid signature');
+        });
+    });
+
+    it('should be fulfilled with a JWT which expires after one hour', () => {
+      clock = sinon.useFakeTimers(1000);
+
+      let token: string;
+      return tokenGenerator.createCustomTokenWithTenantId('uid1', 'tenantid1')
+        .then((result) => {
+          token = result;
+
+          clock.tick((ONE_HOUR_IN_SECONDS * 1000) - 1);
+
+          // Token should still be valid
+          return verifyToken(token, mocks.keyPairs[0].public);
+        })
+        .then(() => {
+          clock.tick(1);
+
+          // Token should now be invalid
+          return verifyToken(token, mocks.keyPairs[0].public)
+            .should.eventually.be.rejectedWith('jwt expired');
+        });
+    });
+
+    it('should not mutate the passed in developer claims', () => {
+      const originalClaims = {
+        foo: 'bar',
+      };
+      const clonedClaims = _.clone(originalClaims);
+      return tokenGenerator.createCustomTokenWithTenantId('uid1', 'tenantid1', clonedClaims)
         .then(() => {
           expect(originalClaims).to.deep.equal(clonedClaims);
         });

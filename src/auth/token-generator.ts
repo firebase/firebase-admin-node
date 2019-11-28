@@ -74,6 +74,7 @@ interface JWTBody {
   exp: number;
   iss: string;
   sub: string;
+  tenant_id?: string;
 }
 
 /**
@@ -254,13 +255,38 @@ export class FirebaseTokenGenerator {
    *                           service account key and containing the provided payload.
    */
   public createCustomToken(uid: string, developerClaims?: {[key: string]: any}): Promise<string> {
+    return this.createCustomTokenInternal(uid, null, developerClaims);
+  }
+
+  /**
+   * Creates a new Firebase Auth Custom token.
+   *
+   * @param {string} uid The user ID to use for the generated Firebase Auth Custom token.
+   * @param {string} tenantId The tenant ID to use for the generated Firebase Auth Custom token.
+   * @param {object} [developerClaims] Optional developer claims to include in the generated Firebase
+   *                 Auth Custom token.
+   * @return {Promise<string>} A Promise fulfilled with a Firebase Auth Custom token signed with a
+   *                           service account key and containing the provided payload.
+   */
+  public createCustomTokenWithTenantId(
+      uid: string, tenantId: string, developerClaims?: {[key: string]: any}): Promise<string> {
+    if (!validator.isNonEmptyString(tenantId)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        '`tenantId` argument must be a non-empty string uid.');
+    }
+    return this.createCustomTokenInternal(uid, tenantId, developerClaims);
+  }
+
+  private createCustomTokenInternal(
+      uid: string, tenantId: string | null, developerClaims?: {[key: string]: any}): Promise<string> {
     let errorMessage: string;
-    if (typeof uid !== 'string' || uid === '') {
-      errorMessage = 'First argument to createCustomToken() must be a non-empty string uid.';
+    if (!validator.isNonEmptyString(uid)) {
+      errorMessage = '`uid` argument must be a non-empty string uid.';
     } else if (uid.length > 128) {
-      errorMessage = 'First argument to createCustomToken() must a uid with less than or equal to 128 characters.';
+      errorMessage = '`uid` argument must a uid with less than or equal to 128 characters.';
     } else if (!this.isDeveloperClaimsValid_(developerClaims)) {
-      errorMessage = 'Second argument to createCustomToken() must be an object containing the developer claims.';
+      errorMessage = '`developerClaims` argument must be a valid, non-null object containing the developer claims.';
     }
 
     if (typeof errorMessage !== 'undefined') {
@@ -296,6 +322,9 @@ export class FirebaseTokenGenerator {
         sub: account,
         uid,
       };
+      if (tenantId) {
+        body.tenant_id = tenantId;
+      }
       if (Object.keys(claims).length > 0) {
         body.claims = claims;
       }
