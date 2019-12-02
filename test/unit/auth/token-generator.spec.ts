@@ -24,7 +24,9 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import * as mocks from '../../resources/mocks';
-import {BLACKLISTED_CLAIMS, FirebaseTokenGenerator, ServiceAccountSigner, IAMSigner} from '../../../src/auth/token-generator';
+import {
+  BLACKLISTED_CLAIMS, FirebaseTokenGenerator, ServiceAccountSigner, IAMSigner,
+} from '../../../src/auth/token-generator';
 
 import {Certificate} from '../../../src/auth/credential';
 import { AuthorizedHttpClient, HttpClient } from '../../../src/utils/api-request';
