@@ -24,7 +24,9 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import * as mocks from '../../resources/mocks';
-import {FirebaseTokenGenerator, ServiceAccountSigner, IAMSigner} from '../../../src/auth/token-generator';
+import {
+  BLACKLISTED_CLAIMS, FirebaseTokenGenerator, ServiceAccountSigner, IAMSigner,
+} from '../../../src/auth/token-generator';
 
 import {Certificate} from '../../../src/auth/credential';
 import { AuthorizedHttpClient, HttpClient } from '../../../src/utils/api-request';
@@ -40,10 +42,6 @@ const expect = chai.expect;
 const ALGORITHM = 'RS256';
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 const FIREBASE_AUDIENCE = 'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit';
-const BLACKLISTED_CLAIMS = [
-  'acr', 'amr', 'at_hash', 'aud', 'auth_time', 'azp', 'cnf', 'c_hash', 'exp', 'iat', 'iss', 'jti',
-  'nbf', 'nonce',
-];
 
 /**
  * Verifies a token is signed with the private key corresponding to the provided public key.
