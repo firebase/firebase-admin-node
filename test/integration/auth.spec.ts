@@ -750,7 +750,7 @@ describe('admin.auth', () => {
           // return a better error code, and then add the above statement to
           // the expect statement (with the new error code.)
         } finally {
-          admin.auth().tenantManager().deleteTenant(aDifferentTenant.tenantId);
+          await admin.auth().tenantManager().deleteTenant(aDifferentTenant.tenantId);
         }
       });
     });
