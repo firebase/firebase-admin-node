@@ -470,12 +470,7 @@ class AsyncHttpCall {
     try {
       this.config = new HttpRequestConfigImpl(config);
       this.options = this.config.buildRequestOptions();
-      if (!this.options.headers) {
-        throw new FirebaseAppError(
-            AppErrorCodes.INTERNAL_ERROR,
-            'Expected headers to be present in built request options object');
-      }
-      this.entity = this.config.buildEntity(this.options.headers);
+      this.entity = this.config.buildEntity(this.options.headers!);
       this.promise = new Promise((resolve, reject) => {
         this.resolve = resolve;
         this.reject = reject;

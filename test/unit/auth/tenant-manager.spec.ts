@@ -401,7 +401,7 @@ describe('TenantManager', () => {
     });
 
     it('should be rejected given invalid TenantOptions', () => {
-      return tenantManager.createTenant(null as unknown as TenantOptions)
+      return tenantManager.createTenant(null as any as TenantOptions)
         .then(() => {
           throw new Error('Unexpected success');
         })

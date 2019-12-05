@@ -1243,7 +1243,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
 
       it('should be rejected given invalid properties', () => {
-        return auth.createUser(null as unknown as CreateRequest)
+        return auth.createUser(null as any as CreateRequest)
           .then(() => {
             throw new Error('Unexpected success');
           })
@@ -2170,9 +2170,8 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
         if (emailActionFlow.requiresSettings) {
           it('should reject when called without actionCodeSettings', () => {
-            expect(() => {
-              (auth as any)[emailActionFlow.api](email, undefined);
-            }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
+            return (auth as any)[emailActionFlow.api](email, undefined)
+              .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
           });
         } else {
           it('should resolve when called without actionCodeSettings with a generated link on success', () => {

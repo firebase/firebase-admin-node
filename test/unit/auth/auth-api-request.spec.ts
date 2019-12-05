@@ -2402,9 +2402,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const invalidRequestType = 'EMAIL_SIGNIN';
         const requestHandler = handler.init(mockApp);
 
-        expect(() => {
-          requestHandler.getEmailActionLink(invalidRequestType, email);
-        }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
+        return requestHandler.getEmailActionLink(invalidRequestType, email)
+          .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
       });
 
       it('should be rejected given an invalid email', () => {

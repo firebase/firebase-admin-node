@@ -708,6 +708,8 @@ export abstract class AbstractAuthRequestHandler {
       );
     }
 
+    // TODO(rsgowman): Trace utils.getProjectId() throughout and figure out where a null return
+    // value will cause troubles. (Such as AuthResourceUrlBuilder::getUrl()).
     this.projectId = utils.getProjectId(app);
     this.httpClient = new AuthorizedHttpClient(app);
   }
@@ -1076,9 +1078,11 @@ export abstract class AbstractAuthRequestHandler {
     // ActionCodeSettings required for email link sign-in to determine the url where the sign-in will
     // be completed.
     if (typeof actionCodeSettings === 'undefined' && requestType === 'EMAIL_SIGNIN') {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_ARGUMENT,
-        "`actionCodeSettings` is required when `requestType` === 'EMAIL_SIGNIN'",
+      return Promise.reject(
+        new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          "`actionCodeSettings` is required when `requestType` === 'EMAIL_SIGNIN'",
+        ),
       );
     }
     if (typeof actionCodeSettings !== 'undefined' || requestType === 'EMAIL_SIGNIN') {
