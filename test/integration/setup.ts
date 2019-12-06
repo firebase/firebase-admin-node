@@ -118,7 +118,7 @@ class CertificatelessCredential implements Credential {
     return this.delegate.getAccessToken();
   }
 
-  public getCertificate(): Certificate {
+  public getCertificate(): Certificate | null {
     return null;
   }
 }

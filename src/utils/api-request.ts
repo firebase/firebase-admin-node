@@ -38,7 +38,7 @@ export interface HttpRequestConfig {
   /** Target URL of the request. Should be a well-formed URL including protocol, hostname, port and path. */
   url: string;
   headers?: {[key: string]: string};
-  data?: string | object | Buffer;
+  data?: string | object | Buffer | null;
   /** Connect and read timeout (in milliseconds) for the outgoing request. */
   timeout?: number;
   httpAgent?: http.Agent;
@@ -51,9 +51,9 @@ export interface HttpResponse {
   readonly status: number;
   readonly headers: any;
   /** Response data as a raw string. */
-  readonly text: string;
+  readonly text?: string;
   /** Response data as a parsed JSON object. */
-  readonly data: any;
+  readonly data?: any;
   /** For multipart responses, the payloads of individual parts. */
   readonly multipart?: Buffer[];
   /**
@@ -66,8 +66,8 @@ export interface HttpResponse {
 interface LowLevelResponse {
   status: number;
   headers: http.IncomingHttpHeaders;
-  request: http.ClientRequest;
-  data: string;
+  request: http.ClientRequest | null;
+  data?: string;
   multipart?: Buffer[];
   config: HttpRequestConfig;
 }
@@ -83,7 +83,7 @@ class DefaultHttpResponse implements HttpResponse {
 
   public readonly status: number;
   public readonly headers: any;
-  public readonly text: string;
+  public readonly text?: string;
 
   private readonly parsedData: any;
   private readonly parseError: Error;
@@ -97,6 +97,9 @@ class DefaultHttpResponse implements HttpResponse {
     this.headers = resp.headers;
     this.text = resp.data;
     try {
+      if (!resp.data) {
+        throw new FirebaseAppError(AppErrorCodes.INTERNAL_ERROR, 'HTTP response missing data.');
+      }
       this.parsedData = JSON.parse(resp.data);
     } catch (err) {
       this.parsedData = undefined;
@@ -130,7 +133,7 @@ class MultipartHttpResponse implements HttpResponse {
 
   public readonly status: number;
   public readonly headers: any;
-  public readonly multipart: Buffer[];
+  public readonly multipart?: Buffer[];
 
   constructor(resp: LowLevelResponse) {
     this.status = resp.status;
@@ -239,7 +242,7 @@ function validateRetryConfig(retry: RetryConfig) {
 
 export class HttpClient {
 
-  constructor(private readonly retry: RetryConfig = defaultRetryConfig()) {
+  constructor(private readonly retry: RetryConfig | null = defaultRetryConfig()) {
     if (this.retry) {
       validateRetryConfig(this.retry);
     }
@@ -278,7 +281,7 @@ export class HttpClient {
       })
       .catch((err: LowLevelError) => {
         const [delayMillis, canRetry] = this.getRetryDelayMillis(retryAttempts, err);
-        if (canRetry && delayMillis <= this.retry.maxDelayInMillis) {
+        if (canRetry && this.retry && delayMillis <= this.retry.maxDelayInMillis) {
           return this.waitForRetry(delayMillis).then(() => {
             return this.sendWithRetry(config, retryAttempts + 1);
           });
@@ -354,8 +357,12 @@ export class HttpClient {
       return statusCodes.indexOf(err.response.status) !== -1;
     }
 
-    const retryCodes = this.retry.ioErrorCodes || [];
-    return retryCodes.indexOf(err.code) !== -1;
+    if (err.code) {
+      const retryCodes = this.retry.ioErrorCodes || [];
+      return retryCodes.indexOf(err.code) !== -1;
+    }
+
+    return false;
   }
 
   /**
@@ -378,6 +385,10 @@ export class HttpClient {
   private backOffDelayMillis(retryAttempts: number): number {
     if (retryAttempts === 0) {
       return 0;
+    }
+
+    if (!this.retry) {
+      throw new FirebaseAppError(AppErrorCodes.INTERNAL_ERROR, 'Expected this.retry to exist.');
     }
 
     const backOffFactor = this.retry.backOffFactor || 0;
@@ -442,7 +453,7 @@ class AsyncHttpCall {
 
   private readonly config: HttpRequestConfigImpl;
   private readonly options: https.RequestOptions;
-  private readonly entity: Buffer;
+  private readonly entity: Buffer | undefined;
   private readonly promise: Promise<LowLevelResponse>;
 
   private resolve: (_: any) => void;
@@ -459,7 +470,7 @@ class AsyncHttpCall {
     try {
       this.config = new HttpRequestConfigImpl(config);
       this.options = this.config.buildRequestOptions();
-      this.entity = this.config.buildEntity(this.options.headers);
+      this.entity = this.config.buildEntity(this.options.headers!);
       this.promise = new Promise((resolve, reject) => {
         this.resolve = resolve;
         this.reject = reject;
@@ -484,10 +495,10 @@ class AsyncHttpCall {
       this.enhanceAndReject(err, null, req);
     });
 
-    const timeout: number = this.config.timeout;
+    const timeout: number | undefined = this.config.timeout;
     if (timeout) {
       // Listen to timeouts and throw an error.
-      req.setTimeout(this.config.timeout, () => {
+      req.setTimeout(timeout, () => {
         req.abort();
         this.rejectWithError(`timeout of ${timeout}ms exceeded`, 'ETIMEDOUT', req);
       });
@@ -500,6 +511,12 @@ class AsyncHttpCall {
   private handleResponse(res: http.IncomingMessage, req: http.ClientRequest) {
     if (req.aborted) {
       return;
+    }
+
+    if (!res.statusCode) {
+      throw new FirebaseAppError(
+          AppErrorCodes.INTERNAL_ERROR,
+          'Expected a statusCode on the response from a ClientRequest');
     }
 
     const response: LowLevelResponse = {
@@ -522,10 +539,13 @@ class AsyncHttpCall {
   /**
    * Extracts multipart boundary from the HTTP header. The content-type header of a multipart
    * response has the form 'multipart/subtype; boundary=string'.
+   *
+   * If the content-type header does not exist, or does not start with
+   * 'multipart/', then null will be returned.
    */
-  private getMultipartBoundary(headers: http.IncomingHttpHeaders): string {
+  private getMultipartBoundary(headers: http.IncomingHttpHeaders): string | null {
     const contentType = headers['content-type'];
-    if (!contentType.startsWith('multipart/')) {
+    if (!contentType || !contentType.startsWith('multipart/')) {
       return null;
     }
 
@@ -550,7 +570,7 @@ class AsyncHttpCall {
     // Uncompress the response body transparently if required.
     let respStream: Readable = res;
     const encodings = ['gzip', 'compress', 'deflate'];
-    if (encodings.indexOf(res.headers['content-encoding']) !== -1) {
+    if (res.headers['content-encoding'] && encodings.indexOf(res.headers['content-encoding']) !== -1) {
       // Add the unzipper to the body stream processing pipeline.
       const zlib: typeof zlibmod = require('zlib');
       respStream = respStream.pipe(zlib.createUnzip());
@@ -579,7 +599,7 @@ class AsyncHttpCall {
     });
 
     multipartParser.on('finish', () => {
-      response.data = null;
+      response.data = undefined;
       response.multipart = responseBuffer;
       this.finalizeResponse(response);
     });
@@ -594,8 +614,8 @@ class AsyncHttpCall {
     });
 
     respStream.on('error', (err) => {
-      const req: http.ClientRequest = response.request;
-      if (req.aborted) {
+      const req: http.ClientRequest | null = response.request;
+      if (req && req.aborted) {
         return;
       }
       this.enhanceAndReject(err, null, req);
@@ -630,8 +650,8 @@ class AsyncHttpCall {
    */
   private rejectWithError(
     message: string,
-    code?: string,
-    request?: http.ClientRequest,
+    code?: string | null,
+    request?: http.ClientRequest | null,
     response?: LowLevelResponse) {
 
     const error = new Error(message);
@@ -640,8 +660,8 @@ class AsyncHttpCall {
 
   private enhanceAndReject(
     error: any,
-    code: string,
-    request?: http.ClientRequest,
+    code?: string | null,
+    request?: http.ClientRequest | null,
     response?: LowLevelResponse) {
 
     this.reject(this.enhanceError(error, code, request, response));
@@ -653,8 +673,8 @@ class AsyncHttpCall {
    */
   private enhanceError(
     error: any,
-    code: string,
-    request?: http.ClientRequest,
+    code?: string | null,
+    request?: http.ClientRequest | null,
     response?: LowLevelResponse): LowLevelError {
 
     error.config = this.config;
@@ -688,7 +708,7 @@ class HttpRequestConfigImpl implements HttpRequestConfig {
     return this.config.headers;
   }
 
-  get data(): string | object | Buffer | undefined {
+  get data(): string | object | Buffer | undefined | null {
     return this.config.data;
   }
 
@@ -703,7 +723,7 @@ class HttpRequestConfigImpl implements HttpRequestConfig {
   public buildRequestOptions(): https.RequestOptions {
     const parsed = this.buildUrl();
     const protocol = parsed.protocol;
-    let port: string = parsed.port;
+    let port: string | undefined = parsed.port;
     if (!port) {
       const isHttps = protocol === 'https:';
       port = isHttps ? '443' : '80';
@@ -720,8 +740,8 @@ class HttpRequestConfigImpl implements HttpRequestConfig {
     };
   }
 
-  public buildEntity(headers: http.OutgoingHttpHeaders): Buffer {
-    let data: Buffer;
+  public buildEntity(headers: http.OutgoingHttpHeaders): Buffer | undefined {
+    let data: Buffer | undefined;
     if (!this.hasEntity() || !this.isEntityEnclosingRequest()) {
       return data;
     }
@@ -834,7 +854,7 @@ export class ApiSettings {
    * @param {ApiCallbackFunction} requestValidator The request validator.
    * @return {ApiSettings} The current API settings instance.
    */
-  public setRequestValidator(requestValidator: ApiCallbackFunction): ApiSettings {
+  public setRequestValidator(requestValidator: ApiCallbackFunction | null): ApiSettings {
     const nullFunction: (_: object) => void = (_: object) => undefined;
     this.requestValidator = requestValidator || nullFunction;
     return this;
@@ -849,7 +869,7 @@ export class ApiSettings {
    * @param {ApiCallbackFunction} responseValidator The response validator.
    * @return {ApiSettings} The current API settings instance.
    */
-  public setResponseValidator(responseValidator: ApiCallbackFunction): ApiSettings {
+  public setResponseValidator(responseValidator: ApiCallbackFunction | null): ApiSettings {
     const nullFunction: (_: object) => void = (_: object) => undefined;
     this.responseValidator = responseValidator || nullFunction;
     return this;

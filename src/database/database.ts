@@ -2,7 +2,7 @@ import {URL} from 'url';
 import * as path from 'path';
 
 import {FirebaseApp} from '../firebase-app';
-import {FirebaseDatabaseError, AppErrorCodes} from '../utils/error';
+import {FirebaseDatabaseError, AppErrorCodes, FirebaseAppError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
 import {Database} from '@firebase/database';
 
@@ -140,6 +140,9 @@ class DatabaseRulesClient {
     };
     return this.httpClient.send(req)
       .then((resp) => {
+        if (!resp.text) {
+          throw new FirebaseAppError(AppErrorCodes.INTERNAL_ERROR, 'HTTP response missing data.');
+        }
         return resp.text;
       })
       .catch((err) => {

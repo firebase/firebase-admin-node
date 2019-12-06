@@ -64,7 +64,7 @@ export class ProjectManagementRequestHandler {
       `https://${PROJECT_MANAGEMENT_HOST_AND_PORT}${PROJECT_MANAGEMENT_BETA_PATH}`;
   private readonly httpClient: AuthorizedHttpClient;
 
-  private static wrapAndRethrowHttpError(errStatusCode: number, errText: string) {
+  private static wrapAndRethrowHttpError(errStatusCode: number, errText?: string) {
     let errorCode: ProjectManagementErrorCode;
     let errorMessage: string;
 
@@ -102,6 +102,9 @@ export class ProjectManagementRequestHandler {
         errorMessage = 'An unknown server error was returned.';
     }
 
+    if (!errText) {
+      errText = '<missing>';
+    }
     throw new FirebaseProjectManagementError(
         errorCode,
         `${ errorMessage } Status code: ${ errStatusCode }. Raw server response: "${ errText }".`);
@@ -216,7 +219,7 @@ export class ProjectManagementRequestHandler {
     return this
         .invokeRequestHandler(
             'PATCH', `${resourceName}?update_mask=display_name`, requestData, 'v1beta1')
-        .then(() => null);
+        .then(() => undefined);
   }
 
   /**
@@ -240,7 +243,7 @@ export class ProjectManagementRequestHandler {
     };
     return this
         .invokeRequestHandler('POST', `${parentResourceName}/sha`, requestData, 'v1beta1')
-        .then(() => null);
+        .then(() => undefined);
   }
 
   /**
@@ -267,7 +270,7 @@ export class ProjectManagementRequestHandler {
   public deleteResource(resourceName: string): Promise<void> {
     return this
         .invokeRequestHandler('DELETE', resourceName, /* requestData */ null, 'v1beta1')
-        .then(() => null);
+        .then(() => undefined);
   }
 
   private pollRemoteOperationWithExponentialBackoff(
@@ -301,7 +304,7 @@ export class ProjectManagementRequestHandler {
   private invokeRequestHandler(
       method: HttpMethod,
       path: string,
-      requestData: object,
+      requestData: object | null,
       apiVersion: ('v1' | 'v1beta1') = 'v1'): Promise<object> {
     const baseUrlToUse = (apiVersion === 'v1') ? this.baseUrl : this.baseBetaUrl;
     const request: HttpRequestConfig = {

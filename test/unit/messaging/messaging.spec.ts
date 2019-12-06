@@ -398,10 +398,10 @@ describe('Messaging', () => {
   describe('send()', () => {
     it('should throw given no message', () => {
       expect(() => {
-        messaging.send(undefined as Message);
+        messaging.send(undefined as any);
       }).to.throw('Message must be a non-null object');
       expect(() => {
-        messaging.send(null);
+        messaging.send(null as any);
       }).to.throw('Message must be a non-null object');
     });
 
@@ -571,16 +571,16 @@ describe('Messaging', () => {
       expect(response.messageId).to.be.undefined;
       expect(response.error).to.have.property('code', code);
       if (msg) {
-        expect(response.error.toString()).to.contain(msg);
+        expect(response.error!.toString()).to.contain(msg);
       }
     }
 
     it('should throw given no messages', () => {
       expect(() => {
-        messaging.sendAll(undefined as Message[]);
+        messaging.sendAll(undefined as any);
       }).to.throw('messages must be a non-empty array');
       expect(() => {
-        messaging.sendAll(null);
+        messaging.sendAll(null as any);
       }).to.throw('messages must be a non-empty array');
       expect(() => {
         messaging.sendAll([]);
@@ -826,7 +826,7 @@ describe('Messaging', () => {
       ],
     };
 
-    let stub: sinon.SinonStub;
+    let stub: sinon.SinonStub | null;
 
     afterEach(() => {
       if (stub) {
@@ -837,7 +837,7 @@ describe('Messaging', () => {
 
     it('should throw given no messages', () => {
       expect(() => {
-        messaging.sendMulticast(undefined as MulticastMessage);
+        messaging.sendMulticast(undefined as any);
       }).to.throw('MulticastMessage must be a non-null object');
       expect(() => {
         messaging.sendMulticast({} as any);
@@ -873,9 +873,9 @@ describe('Messaging', () => {
         .then((response: BatchResponse) => {
           expect(response).to.deep.equal(mockResponse);
           expect(stub).to.have.been.calledOnce;
-          const messages: Message[] = stub.args[0][0];
+          const messages: Message[] = stub!.args[0][0];
           expect(messages.length).to.equal(3);
-          expect(stub.args[0][1]).to.be.undefined;
+          expect(stub!.args[0][1]).to.be.undefined;
           messages.forEach((message, idx) => {
             expect((message as any).token).to.equal(tokens[idx]);
             expect(message.android).to.be.undefined;
@@ -902,9 +902,9 @@ describe('Messaging', () => {
         .then((response: BatchResponse) => {
           expect(response).to.deep.equal(mockResponse);
           expect(stub).to.have.been.calledOnce;
-          const messages: Message[] = stub.args[0][0];
+          const messages: Message[] = stub!.args[0][0];
           expect(messages.length).to.equal(3);
-          expect(stub.args[0][1]).to.be.undefined;
+          expect(stub!.args[0][1]).to.be.undefined;
           messages.forEach((message, idx) => {
             expect((message as any).token).to.equal(tokens[idx]);
             expect(message.android).to.deep.equal(multicast.android);
@@ -923,7 +923,7 @@ describe('Messaging', () => {
         .then((response: BatchResponse) => {
           expect(response).to.deep.equal(mockResponse);
           expect(stub).to.have.been.calledOnce;
-          expect(stub.args[0][1]).to.be.true;
+          expect(stub!.args[0][1]).to.be.true;
         });
     });
 
@@ -1117,7 +1117,7 @@ describe('Messaging', () => {
       expect(response.messageId).to.be.undefined;
       expect(response.error).to.have.property('code', code);
       if (msg) {
-        expect(response.error.toString()).to.contain(msg);
+        expect(response.error!.toString()).to.contain(msg);
       }
     }
   });
@@ -1138,7 +1138,7 @@ describe('Messaging', () => {
 
     it('should throw given no registration token(s) argument', () => {
       expect(() => {
-        messaging.sendToDevice(undefined as string, mocks.messaging.payloadDataOnly);
+        messaging.sendToDevice(undefined as any, mocks.messaging.payloadDataOnly);
       }).to.throw(invalidArgumentError);
     });
 
@@ -1460,7 +1460,7 @@ describe('Messaging', () => {
 
     it('should throw given no notification key argument', () => {
       expect(() => {
-        messaging.sendToDeviceGroup(undefined as string, mocks.messaging.payloadDataOnly);
+        messaging.sendToDeviceGroup(undefined as any, mocks.messaging.payloadDataOnly);
       }).to.throw(invalidArgumentError);
     });
 
@@ -1708,7 +1708,7 @@ describe('Messaging', () => {
 
     it('should throw given no topic argument', () => {
       expect(() => {
-        messaging.sendToTopic(undefined as string, mocks.messaging.payload);
+        messaging.sendToTopic(undefined as any, mocks.messaging.payload);
       }).to.throw(invalidArgumentError);
     });
 
@@ -1935,7 +1935,7 @@ describe('Messaging', () => {
 
     it('should throw given no condition argument', () => {
       expect(() => {
-        messaging.sendToCondition(undefined as string, mocks.messaging.payloadDataOnly);
+        messaging.sendToCondition(undefined as any, mocks.messaging.payloadDataOnly);
       }).to.throw(invalidArgumentError);
     });
 
@@ -2417,7 +2417,8 @@ describe('Messaging', () => {
     });
 
     const invalidVibrateTimings = [[null, 500], [-100]];
-    invalidVibrateTimings.forEach((vibrateTimingsMillis) => {
+    invalidVibrateTimings.forEach((vibrateTimingsMillisMaybeNull) => {
+      const vibrateTimingsMillis = vibrateTimingsMillisMaybeNull as number[];
       it(`should throw given an null or negative vibrateTimingsMillis: ${ vibrateTimingsMillis }`, () => {
         const message: Message = {
           condition: 'topic-name',
@@ -3609,7 +3610,7 @@ describe('Messaging', () => {
 
     it('should throw given no registration token(s) argument', () => {
       expect(() => {
-        messagingService[methodName](undefined as string, mocks.messaging.topic);
+        messagingService[methodName](undefined as any, mocks.messaging.topic);
       }).to.throw(invalidRegistrationTokensArgumentError);
     });
 
@@ -3664,7 +3665,7 @@ describe('Messaging', () => {
 
     it('should throw given no topic argument', () => {
       expect(() => {
-        messagingService[methodName](mocks.messaging.registrationToken, undefined as string);
+        messagingService[methodName](mocks.messaging.registrationToken, undefined as any);
       }).to.throw(invalidTopicArgumentError);
     });
 

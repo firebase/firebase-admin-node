@@ -63,13 +63,13 @@ export function addReadonlyGetter(obj: object, prop: string, value: any): void {
  *
  * @return {string} A project ID string or null.
  */
-export function getProjectId(app: FirebaseApp): string {
+export function getProjectId(app: FirebaseApp): string | null {
   const options: FirebaseAppOptions = app.options;
   if (validator.isNonEmptyString(options.projectId)) {
     return options.projectId;
   }
 
-  const cert: Certificate = tryGetCertificate(options.credential);
+  const cert: Certificate | null = tryGetCertificate(options.credential);
   if (cert != null && validator.isNonEmptyString(cert.projectId)) {
     return cert.projectId;
   }

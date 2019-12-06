@@ -214,7 +214,7 @@ export interface NotificationMessagePayload {
   clickAction?: string;
   titleLocKey?: string;
   titleLocArgs?: string;
-  [other: string]: string;
+  [other: string]: string | undefined;
 }
 
 /* Composite messaging payload (data and notification payloads are both optional) */
@@ -337,7 +337,7 @@ export function validateMessage(message: Message) {
  * @param {object} map An object to be validated.
  * @param {string} label A label to be included in the errors thrown.
  */
-function validateStringMap(map: {[key: string]: any}, label: string) {
+function validateStringMap(map: {[key: string]: any} | undefined, label: string) {
   if (typeof map === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(map)) {
@@ -357,7 +357,7 @@ function validateStringMap(map: {[key: string]: any}, label: string) {
  *
  * @param {WebpushConfig} config An object to be validated.
  */
-function validateWebpushConfig(config: WebpushConfig) {
+function validateWebpushConfig(config: WebpushConfig | undefined) {
   if (typeof config === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(config)) {
@@ -374,7 +374,7 @@ function validateWebpushConfig(config: WebpushConfig) {
  *
  * @param {ApnsConfig} config An object to be validated.
  */
-function validateApnsConfig(config: ApnsConfig) {
+function validateApnsConfig(config: ApnsConfig | undefined) {
   if (typeof config === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(config)) {
@@ -391,7 +391,7 @@ function validateApnsConfig(config: ApnsConfig) {
  *
  * @param {ApnsFcmOptions} fcmOptions An object to be validated.
  */
-function validateApnsFcmOptions(fcmOptions: ApnsFcmOptions) {
+function validateApnsFcmOptions(fcmOptions: ApnsFcmOptions | undefined) {
   if (typeof fcmOptions === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(fcmOptions)) {
@@ -429,7 +429,7 @@ function validateApnsFcmOptions(fcmOptions: ApnsFcmOptions) {
  *
  * @param {FcmOptions} fcmOptions An object to be validated.
  */
-function validateFcmOptions(fcmOptions: FcmOptions) {
+function validateFcmOptions(fcmOptions: FcmOptions | undefined) {
   if (typeof fcmOptions === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(fcmOptions)) {
@@ -448,7 +448,7 @@ function validateFcmOptions(fcmOptions: FcmOptions) {
  *
  * @param {Notification} notification An object to be validated.
  */
-function validateNotification(notification: Notification) {
+function validateNotification(notification: Notification | undefined) {
   if (typeof notification === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(notification)) {
@@ -479,7 +479,7 @@ function validateNotification(notification: Notification) {
  *
  * @param {ApnsPayload} payload An object to be validated.
  */
-function validateApnsPayload(payload: ApnsPayload) {
+function validateApnsPayload(payload: ApnsPayload | undefined) {
   if (typeof payload === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(payload)) {
@@ -537,7 +537,7 @@ function validateAps(aps: Aps) {
   }
 }
 
-function validateApsSound(sound: string | CriticalSound) {
+function validateApsSound(sound: string | CriticalSound | undefined) {
   if (typeof sound === 'undefined' || validator.isNonEmptyString(sound)) {
     return;
   } else if (!validator.isNonNullObject(sound)) {
@@ -583,7 +583,7 @@ function validateApsSound(sound: string | CriticalSound) {
  *
  * @param {string | ApsAlert} alert An alert string or an object to be validated.
  */
-function validateApsAlert(alert: string | ApsAlert) {
+function validateApsAlert(alert: string | ApsAlert | undefined) {
   if (typeof alert === 'undefined' || validator.isString(alert)) {
     return;
   } else if (!validator.isNonNullObject(alert)) {
@@ -632,7 +632,7 @@ function validateApsAlert(alert: string | ApsAlert) {
  *
  * @param {AndroidConfig} config An object to be validated.
  */
-function validateAndroidConfig(config: AndroidConfig) {
+function validateAndroidConfig(config: AndroidConfig | undefined) {
   if (typeof config === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(config)) {
@@ -667,7 +667,7 @@ function validateAndroidConfig(config: AndroidConfig) {
  *
  * @param {AndroidNotification} notification An object to be validated.
  */
-function validateAndroidNotification(notification: AndroidNotification) {
+function validateAndroidNotification(notification: AndroidNotification | undefined) {
   if (typeof notification === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(notification)) {
@@ -767,7 +767,7 @@ function validateAndroidNotification(notification: AndroidNotification) {
  *
  * @param {LightSettings} lightSettings An object to be validated.
  */
-function validateLightSettings(lightSettings: LightSettings) {
+function validateLightSettings(lightSettings?: LightSettings) {
   if (typeof lightSettings === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(lightSettings)) {
@@ -799,6 +799,11 @@ function validateLightSettings(lightSettings: LightSettings) {
   }
   const colorString = lightSettings.color.length === 7 ? lightSettings.color + 'FF' : lightSettings.color;
   const rgb = /^#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/i.exec(colorString);
+  if (!rgb || rgb.length < 4) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INTERNAL_ERROR,
+      'regex to extract rgba values from ' + colorString + ' failed.');
+  }
   const color = {
     red: parseInt(rgb[1], 16) / 255.0,
     green: parseInt(rgb[2], 16) / 255.0,
@@ -819,7 +824,7 @@ function validateLightSettings(lightSettings: LightSettings) {
  *
  * @param {AndroidFcmOptions} fcmOptions An object to be validated.
  */
-function validateAndroidFcmOptions(fcmOptions: AndroidFcmOptions) {
+function validateAndroidFcmOptions(fcmOptions: AndroidFcmOptions | undefined) {
   if (typeof fcmOptions === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(fcmOptions)) {

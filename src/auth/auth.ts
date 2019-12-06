@@ -98,11 +98,8 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   /**
    * The BaseAuth class constructor.
    *
-   * @param {string} projectId The corresponding project ID.
    * @param {T} authRequestHandler The RPC request handler
    *     for this instance.
-   * @param {CryptoSigner} cryptoSigner The instance crypto signer used for custom token
-   *     minting.
    * @constructor
    */
   constructor(app: FirebaseApp, protected readonly authRequestHandler: T) {
@@ -571,7 +568,6 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
     }
     return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
   }
-
 
   /**
    * Verifies the decoded Firebase issued JWT is not revoked. Returns a promise that resolves

@@ -133,7 +133,7 @@ export class ServiceAccountSigner implements CryptoSigner {
  */
 export class IAMSigner implements CryptoSigner {
   private readonly httpClient: AuthorizedHttpClient;
-  private serviceAccountId: string;
+  private serviceAccountId?: string;
 
   constructor(httpClient: AuthorizedHttpClient, serviceAccountId?: string) {
     if (!httpClient) {
@@ -169,15 +169,20 @@ export class IAMSigner implements CryptoSigner {
     }).catch((err) => {
       if (err instanceof HttpError) {
         const error = err.response.data;
-        let errorCode: string;
-        let errorMsg: string;
         if (validator.isNonNullObject(error) && error.error) {
-          errorCode = error.error.status || null;
+          const errorCode = error.error.status;
           const description = 'Please refer to https://firebase.google.com/docs/auth/admin/create-custom-tokens ' +
             'for more details on how to use and troubleshoot this feature.';
-          errorMsg = `${error.error.message}; ${description}` || null;
+          const errorMsg = `${error.error.message}; ${description}`;
+
+          throw FirebaseAuthError.fromServerError(errorCode, errorMsg, error);
         }
-        throw FirebaseAuthError.fromServerError(errorCode, errorMsg, error);
+        throw new FirebaseAuthError(
+            AuthClientErrorCode.INTERNAL_ERROR,
+            'Error returned from server: ' + error + '. Additionally, an ' +
+            'internal error occurred while attempting to extract the ' +
+            'errorcode from the error.',
+        );
       }
       throw err;
     });
@@ -199,8 +204,14 @@ export class IAMSigner implements CryptoSigner {
     };
     const client = new HttpClient();
     return client.send(request).then((response) => {
+      if (!response.text) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INTERNAL_ERROR,
+          'HTTP Response missing payload',
+        );
+      }
       this.serviceAccountId = response.text;
-      return this.serviceAccountId;
+      return response.text;
     }).catch((err) => {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_CREDENTIAL,
@@ -220,9 +231,11 @@ export class IAMSigner implements CryptoSigner {
  * @return {CryptoSigner} A CryptoSigner instance.
  */
 export function cryptoSignerFromApp(app: FirebaseApp): CryptoSigner {
-  const cert = tryGetCertificate(app.options.credential);
-  if (cert != null && validator.isNonEmptyString(cert.privateKey) && validator.isNonEmptyString(cert.clientEmail)) {
-    return new ServiceAccountSigner(cert);
+  if (app.options.credential) {
+    const cert = tryGetCertificate(app.options.credential);
+    if (cert != null && validator.isNonEmptyString(cert.privateKey) && validator.isNonEmptyString(cert.clientEmail)) {
+      return new ServiceAccountSigner(cert);
+    }
   }
   return new IAMSigner(new AuthorizedHttpClient(app), app.options.serviceAccountId);
 }
@@ -254,7 +267,7 @@ export class FirebaseTokenGenerator {
    *                           service account key and containing the provided payload.
    */
   public createCustomToken(uid: string, developerClaims?: {[key: string]: any}): Promise<string> {
-    let errorMessage: string;
+    let errorMessage: string | undefined;
     if (typeof uid !== 'string' || uid === '') {
       errorMessage = 'First argument to createCustomToken() must be a non-empty string uid.';
     } else if (uid.length > 128) {
@@ -263,7 +276,7 @@ export class FirebaseTokenGenerator {
       errorMessage = 'Second argument to createCustomToken() must be an object containing the developer claims.';
     }
 
-    if (typeof errorMessage !== 'undefined') {
+    if (errorMessage) {
       throw new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, errorMessage);
     }
 

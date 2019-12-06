@@ -22,7 +22,7 @@ import url = require('url');
  * @param {any} value The value to validate.
  * @return {boolean} Whether the value is byte buffer or not.
  */
-export function isBuffer(value: any): boolean {
+export function isBuffer(value: any): value is Buffer {
   return value instanceof Buffer;
 }
 
@@ -32,7 +32,7 @@ export function isBuffer(value: any): boolean {
  * @param {any} value The value to validate.
  * @return {boolean} Whether the value is an array or not.
  */
-export function isArray(value: any): boolean {
+export function isArray<T>(value: any): value is T[] {
   return Array.isArray(value);
 }
 
@@ -122,7 +122,7 @@ export function isObject(value: any): boolean {
  * @param {any} value The value to validate.
  * @return {boolean} Whether the value is a non-null object or not.
  */
-export function isNonNullObject(value: any): boolean {
+export function isNonNullObject<T>(value: T | null | undefined): value is T {
   return isObject(value) && value !== null;
 }
 
@@ -213,7 +213,7 @@ export function isURL(urlStr: any): boolean {
     }
     // Validate hostname: Can contain letters, numbers, underscore and dashes separated by a dot.
     // Each zone must not start with a hyphen or underscore.
-    if (!/^[a-zA-Z0-9]+[\w\-]*([\.]?[a-zA-Z0-9]+[\w\-]*)*$/.test(hostname)) {
+    if (!hostname || !/^[a-zA-Z0-9]+[\w\-]*([\.]?[a-zA-Z0-9]+[\w\-]*)*$/.test(hostname)) {
       return false;
     }
     // Allow for pathnames: (/chars+)*/?

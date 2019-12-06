@@ -107,7 +107,7 @@ function mockFailedFetchPublicKeys(): nock.Scope {
 describe('FirebaseTokenVerifier', () => {
   let tokenVerifier: verifier.FirebaseTokenVerifier;
   let tokenGenerator: FirebaseTokenGenerator;
-  let clock: sinon.SinonFakeTimers;
+  let clock: sinon.SinonFakeTimers | undefined;
   let httpsSpy: sinon.SinonSpy;
   beforeEach(() => {
     // Needed to generate custom token for testing.
@@ -408,7 +408,7 @@ describe('FirebaseTokenVerifier', () => {
 
       // Token should still be valid
       return tokenVerifier.verifyJWT(mockIdToken).then(() => {
-        clock.tick(1);
+        clock!.tick(1);
 
         // Token should now be invalid
         return tokenVerifier.verifyJWT(mockIdToken)
@@ -436,7 +436,7 @@ describe('FirebaseTokenVerifier', () => {
 
       // Cookie should still be valid
       return tokenVerifierSessionCookie.verifyJWT(mockSessionCookie).then(() => {
-        clock.tick(1);
+        clock!.tick(1);
 
         // Cookie should now be invalid
         return tokenVerifierSessionCookie.verifyJWT(mockSessionCookie)
@@ -590,20 +590,20 @@ describe('FirebaseTokenVerifier', () => {
 
       return tokenVerifier.verifyJWT(mockIdToken).then(() => {
         expect(https.request).to.have.been.calledOnce;
-        clock.tick(999);
+        clock!.tick(999);
         return tokenVerifier.verifyJWT(mockIdToken);
       }).then(() => {
         expect(https.request).to.have.been.calledOnce;
-        clock.tick(1);
+        clock!.tick(1);
         return tokenVerifier.verifyJWT(mockIdToken);
       }).then(() => {
         // One second has passed
         expect(https.request).to.have.been.calledTwice;
-        clock.tick(999);
+        clock!.tick(999);
         return tokenVerifier.verifyJWT(mockIdToken);
       }).then(() => {
         expect(https.request).to.have.been.calledTwice;
-        clock.tick(1);
+        clock!.tick(1);
         return tokenVerifier.verifyJWT(mockIdToken);
       }).then(() => {
         // Two seconds have passed
