@@ -365,6 +365,7 @@ export class Messaging implements FirebaseServiceInterface {
         data: copy.data,
         notification: copy.notification,
         webpush: copy.webpush,
+        fcmOptions: copy.fcmOptions,
       };
     });
     return this.sendAll(messages, dryRun);
