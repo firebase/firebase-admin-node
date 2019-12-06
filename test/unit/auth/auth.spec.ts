@@ -26,7 +26,7 @@ import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
 import {Auth, TenantAwareAuth, BaseAuth, DecodedIdToken} from '../../../src/auth/auth';
-import {UserRecord, CreateRequest, UpdateRequest} from '../../../src/auth/user-record';
+import {UserRecord, UpdateRequest} from '../../../src/auth/user-record';
 import {FirebaseApp} from '../../../src/firebase-app';
 import {FirebaseTokenGenerator} from '../../../src/auth/token-generator';
 import {
@@ -1243,7 +1243,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
 
       it('should be rejected given invalid properties', () => {
-        return auth.createUser(null as any as CreateRequest)
+        return auth.createUser(null as any)
           .then(() => {
             throw new Error('Unexpected success');
           })

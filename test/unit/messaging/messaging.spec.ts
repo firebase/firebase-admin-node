@@ -398,10 +398,10 @@ describe('Messaging', () => {
   describe('send()', () => {
     it('should throw given no message', () => {
       expect(() => {
-        messaging.send(undefined as any as Message);
+        messaging.send(undefined as any);
       }).to.throw('Message must be a non-null object');
       expect(() => {
-        messaging.send(null as any as Message);
+        messaging.send(null as any);
       }).to.throw('Message must be a non-null object');
     });
 
@@ -577,10 +577,10 @@ describe('Messaging', () => {
 
     it('should throw given no messages', () => {
       expect(() => {
-        messaging.sendAll(undefined as any as Message[]);
+        messaging.sendAll(undefined as any);
       }).to.throw('messages must be a non-empty array');
       expect(() => {
-        messaging.sendAll(null as any as Message[]);
+        messaging.sendAll(null as any);
       }).to.throw('messages must be a non-empty array');
       expect(() => {
         messaging.sendAll([]);
@@ -837,7 +837,7 @@ describe('Messaging', () => {
 
     it('should throw given no messages', () => {
       expect(() => {
-        messaging.sendMulticast(undefined as any as MulticastMessage);
+        messaging.sendMulticast(undefined as any);
       }).to.throw('MulticastMessage must be a non-null object');
       expect(() => {
         messaging.sendMulticast({} as any);
@@ -1138,7 +1138,7 @@ describe('Messaging', () => {
 
     it('should throw given no registration token(s) argument', () => {
       expect(() => {
-        messaging.sendToDevice(undefined as any as string, mocks.messaging.payloadDataOnly);
+        messaging.sendToDevice(undefined as any, mocks.messaging.payloadDataOnly);
       }).to.throw(invalidArgumentError);
     });
 
@@ -1460,7 +1460,7 @@ describe('Messaging', () => {
 
     it('should throw given no notification key argument', () => {
       expect(() => {
-        messaging.sendToDeviceGroup(undefined as any as string, mocks.messaging.payloadDataOnly);
+        messaging.sendToDeviceGroup(undefined as any, mocks.messaging.payloadDataOnly);
       }).to.throw(invalidArgumentError);
     });
 
@@ -1708,7 +1708,7 @@ describe('Messaging', () => {
 
     it('should throw given no topic argument', () => {
       expect(() => {
-        messaging.sendToTopic(undefined as any as string, mocks.messaging.payload);
+        messaging.sendToTopic(undefined as any, mocks.messaging.payload);
       }).to.throw(invalidArgumentError);
     });
 
@@ -1935,7 +1935,7 @@ describe('Messaging', () => {
 
     it('should throw given no condition argument', () => {
       expect(() => {
-        messaging.sendToCondition(undefined as any as string, mocks.messaging.payloadDataOnly);
+        messaging.sendToCondition(undefined as any, mocks.messaging.payloadDataOnly);
       }).to.throw(invalidArgumentError);
     });
 
@@ -3610,7 +3610,7 @@ describe('Messaging', () => {
 
     it('should throw given no registration token(s) argument', () => {
       expect(() => {
-        messagingService[methodName](undefined as any as string, mocks.messaging.topic);
+        messagingService[methodName](undefined as any, mocks.messaging.topic);
       }).to.throw(invalidRegistrationTokensArgumentError);
     });
 
@@ -3665,7 +3665,7 @@ describe('Messaging', () => {
 
     it('should throw given no topic argument', () => {
       expect(() => {
-        messagingService[methodName](mocks.messaging.registrationToken, undefined as any as string);
+        messagingService[methodName](mocks.messaging.registrationToken, undefined as any);
       }).to.throw(invalidTopicArgumentError);
     });
 
