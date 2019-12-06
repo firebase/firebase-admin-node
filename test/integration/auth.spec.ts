@@ -728,31 +728,6 @@ describe('admin.auth', () => {
             expect(token.firebase.tenant).to.equal(createdTenantId);
           });
       });
-
-      it('createCustomToken() should fail if tenantIds mismatch', async () => {
-        const aDifferentTenant = await admin.auth().tenantManager().createTenant({displayName: 'A-Different-Tenant'});
-        try {
-          const customToken = await tenantAwareAuth.createCustomToken('uid1');
-
-          firebase.auth().tenantId = aDifferentTenant.tenantId;
-
-          await expect(firebase.auth().signInWithCustomToken(customToken))
-            .to.be.rejectedWith('Specified tenant ID does not match the custom token.');
-
-          // TODO(rsgowman): Currently, the above error has a code of
-          // 'auth/internal-error', i.e. you could add the following chain onto
-          // it:
-          //
-          //     .and.eventually.have.property('code', 'auth/internal-error');
-          //
-          // However, this doesn't strike me as an internal error, implying
-          // that the client sdk is slightly "wrong". Fix the client sdk to
-          // return a better error code, and then add the above statement to
-          // the expect statement (with the new error code.)
-        } finally {
-          await admin.auth().tenantManager().deleteTenant(aDifferentTenant.tenantId);
-        }
-      });
     });
 
     // Sanity check OIDC/SAML config management API.
