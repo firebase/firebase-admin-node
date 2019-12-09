@@ -182,7 +182,7 @@ function validateAuthFactorInfo(request: AuthFactorInfo, writeOperationType: Wri
       delete request[key];
     }
   }
-  // No enrollment ID is available for signupNewUser. User another identifier.
+  // No enrollment ID is available for signupNewUser. Use another identifier.
   const authFactorInfoIdentifier =
       request.mfaEnrollmentId || request.phoneInfo || JSON.stringify(request);
   const uidRequired = writeOperationType !== WriteOperationType.Create;

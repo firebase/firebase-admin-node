@@ -165,7 +165,7 @@ describe('admin.auth', () => {
         expect(userRecord.email).to.equal(newUserData.email);
         // Confirm second factors added to user.
         expect(userRecord.multiFactor.enrolledFactors.length).to.equal(2);
-        // Confirm first factor.
+        // Confirm first enrolled second factor.
         expect(userRecord.multiFactor.enrolledFactors[0].uid).not.to.be.undefined;
         expect(userRecord.multiFactor.enrolledFactors[0].enrollmentTime)
           .not.to.be.undefined;
@@ -175,7 +175,7 @@ describe('admin.auth', () => {
           .to.equal(enrolledFactors[0].displayName);
         expect(userRecord.multiFactor.enrolledFactors[0].factorId)
           .to.equal(enrolledFactors[0].factorId);
-        // Confirm second factor.
+        // Confirm second enrolled second factor.
         expect(userRecord.multiFactor.enrolledFactors[1].uid).not.to.be.undefined;
         expect(userRecord.multiFactor.enrolledFactors[1].enrollmentTime)
           .not.to.be.undefined;
