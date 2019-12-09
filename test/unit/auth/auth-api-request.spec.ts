@@ -2328,6 +2328,19 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           password: 'password',
           phoneNumber: '+11234567890',
           ignoredProperty: 'value',
+          multiFactor: {
+            enrolledFactors: [
+              {
+                phoneNumber: '+16505557348',
+                displayName: 'Spouse\'s phone number',
+                factorId: 'phone',
+              },
+              {
+                phoneNumber: '+16505551000',
+                factorId: 'phone',
+              },
+            ],
+          },
         };
         const expectedValidData = {
           localId: uid,
@@ -2338,6 +2351,15 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           photoUrl: 'http://localhost/1234/photo.png',
           password: 'password',
           phoneNumber: '+11234567890',
+          mfaInfo: [
+            {
+              phoneInfo: '+16505557348',
+              displayName: 'Spouse\'s phone number',
+            },
+            {
+              phoneInfo: '+16505551000',
+            },
+          ],
         };
         const invalidData = {
           uid,
@@ -2401,6 +2423,135 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             }, (error) => {
               // Expected invalid email error should be thrown.
               expect(error).to.deep.equal(expectedError);
+            });
+        });
+
+        it('should be fulfilled given null enrolled factors', () => {
+          // Successful result server response.
+          const expectedResult = utils.responseFrom({
+            localId: uid,
+          });
+
+          const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+          stubs.push(stub);
+
+          const requestHandler = handler.init(mockApp);
+          // Send create new account request with null enrolled factors.
+          return requestHandler.createNewAccount({uid, multiFactor: {enrolledFactors: null}})
+            .then((returnedUid: string) => {
+              // uid should be returned.
+              expect(returnedUid).to.be.equal(uid);
+              // Confirm expected rpc request parameters sent. In this case, no mfa info should
+              // be sent.
+              expect(stub).to.have.been.calledOnce.and.calledWith(
+                callParams(path, method, emptyRequest));
+            });
+        });
+
+        it('should be fulfilled given empty enrolled factors array', () => {
+          // Successful result server response.
+          const expectedResult = utils.responseFrom({
+            localId: uid,
+          });
+
+          const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+          stubs.push(stub);
+
+          const requestHandler = handler.init(mockApp);
+          // Send create new account request with empty enrolled factors.
+          return requestHandler.createNewAccount({uid, multiFactor: {enrolledFactors: []}})
+            .then((returnedUid: string) => {
+              // uid should be returned.
+              expect(returnedUid).to.be.equal(uid);
+              // Confirm expected rpc request parameters sent. In this case, no mfa info should
+              // be sent.
+              expect(stub).to.have.been.calledOnce.and.calledWith(
+                callParams(path, method, emptyRequest));
+            });
+        });
+
+        const unsupportedSecondFactor = {
+          secret: 'SECRET',
+          displayName: 'Google Authenticator on personal phone',
+          factorId: 'totp',
+        };
+        const invalidSecondFactorTests: InvalidMultiFactorUpdateTest[] = [
+          {
+            name: 'unsupported second factor uid',
+            error: new FirebaseAuthError(
+              AuthClientErrorCode.INVALID_ARGUMENT,
+              '"uid" is not supported when adding second factors via "createUser()"',
+            ),
+            secondFactor: {
+              uid: 'enrollmentId',
+              phoneNumber: '+16505557348',
+              displayName: 'Spouse\'s phone number',
+              factorId: 'phone',
+            },
+          },
+          {
+            name: 'invalid second factor display name',
+            error: new FirebaseAuthError(
+              AuthClientErrorCode.INVALID_DISPLAY_NAME,
+              `The second factor "displayName" for "+16505557348" must be a valid string.`,
+            ),
+            secondFactor: {
+              phoneNumber: '+16505557348',
+              displayName: ['Corp phone number'],
+              factorId: 'phone',
+            },
+          },
+          {
+            name: 'invalid second factor phone number',
+            error: new FirebaseAuthError(
+              AuthClientErrorCode.INVALID_PHONE_NUMBER,
+              `The second factor "phoneNumber" for "invalid" must be a non-empty ` +
+              `E.164 standard compliant identifier string.`),
+            secondFactor: {
+              phoneNumber: 'invalid',
+              displayName: 'Spouse\'s phone number',
+              factorId: 'phone',
+            },
+          },
+          {
+            name: 'unsupported second factor enrollment time',
+            error: new FirebaseAuthError(
+              AuthClientErrorCode.INVALID_ARGUMENT,
+              '"enrollmentTime" is not supported when adding second factors via "createUser()"'),
+            secondFactor: {
+              phoneNumber: '+16505557348',
+              displayName: 'Spouse\'s phone number',
+              factorId: 'phone',
+              enrollmentTime: new Date().toUTCString(),
+            },
+          },
+          {
+            name: 'invalid second factor type',
+            error: new FirebaseAuthError(
+              AuthClientErrorCode.INVALID_ENROLLED_FACTORS,
+              `Unsupported second factor "${JSON.stringify(unsupportedSecondFactor)}" provided.`),
+            secondFactor: unsupportedSecondFactor,
+          },
+        ];
+        invalidSecondFactorTests.forEach((invalidSecondFactorTest) => {
+          it(`should be rejected given an ${invalidSecondFactorTest.name}`, () => {
+            const invalidSecondFactorData = {
+              uid,
+              email: 'user@example.com',
+              emailVerified: true,
+              password: 'secretpassword',
+              multiFactor: {
+                enrolledFactors: [invalidSecondFactorTest.secondFactor],
+              },
+            };
+            const requestHandler = handler.init(mockApp);
+            return requestHandler.createNewAccount(invalidSecondFactorData as any)
+              .then((returnedUid: string) => {
+                throw new Error('Unexpected success');
+              }, (error) => {
+                // Expected error should be thrown.
+                expect(error).to.deep.equal(invalidSecondFactorTest.error);
+              });
             });
         });
 

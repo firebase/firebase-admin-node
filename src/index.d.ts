@@ -698,7 +698,7 @@ declare namespace admin.auth {
 
     multiFactor?: {
       enrolledFactors: Array<{
-        uid: string;
+        uid?: string;
         phoneNumber: string;
         displayName?: string;
         enrollmentTime?: string;
@@ -717,6 +717,14 @@ declare namespace admin.auth {
      * The user's `uid`.
      */
     uid?: string;
+
+    multiFactor?: {
+      enrolledFactors: Array<{
+        phoneNumber: string;
+        displayName?: string;
+        factorId: string;
+      }>;
+    };
   }
 
   /**
