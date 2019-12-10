@@ -43,7 +43,7 @@ function parseDate(time: any): string {
 }
 
 interface SecondFactor {
-  uid: string;
+  uid?: string;
   phoneNumber: string;
   displayName?: string;
   enrollmentTime?: string;
@@ -67,6 +67,9 @@ export interface UpdateRequest {
 /** Parameters for create user operation */
 export interface CreateRequest extends UpdateRequest {
   uid?: string;
+  multiFactor?: {
+    enrolledFactors: SecondFactor[];
+  };
 }
 
 export interface AuthFactorInfo {

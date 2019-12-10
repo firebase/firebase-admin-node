@@ -79,7 +79,8 @@ export interface UserImportRecord {
 
 /** Interface representing an Auth second factor in Auth server format. */
 export interface AuthFactorInfo {
-  mfaEnrollmentId: string;
+  // Not required for signupNewUser endpoint.
+  mfaEnrollmentId?: string;
   displayName?: string;
   phoneInfo?: string;
   enrolledAt?: string;
