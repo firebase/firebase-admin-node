@@ -651,13 +651,13 @@ describe('FirebaseTokenGenerator', () => {
         .then((result) => {
           token = result;
 
-          clock.tick((ONE_HOUR_IN_SECONDS * 1000) - 1);
+          clock!.tick((ONE_HOUR_IN_SECONDS * 1000) - 1);
 
           // Token should still be valid
           return verifyToken(token, mocks.keyPairs[0].public);
         })
         .then(() => {
-          clock.tick(1);
+          clock!.tick(1);
 
           // Token should now be invalid
           return verifyToken(token, mocks.keyPairs[0].public)
