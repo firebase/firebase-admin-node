@@ -933,7 +933,7 @@ export class ExponentialBackoffPoller extends EventEmitter {
    *     callback when polling is complete.
    */
   public poll(callback: () => Promise<object>): Promise<object> {
-    if (this.pollCallback) {
+    if (typeof this.pollCallback !== 'undefined') {
       throw new Error('poll() can only be called once per instance of ExponentialBackoffPoller');
     }
 

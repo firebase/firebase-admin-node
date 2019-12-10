@@ -55,7 +55,7 @@
   "types": "./lib/index.d.ts",
   "dependencies": {
     "@firebase/database": "^0.5.11",
-    "@types/node": "^8.0.53",
+    "@types/node": "^8.10.59",
     "dicer": "^0.3.0",
     "jsonwebtoken": "8.1.0",
     "node-forge": "0.7.4"
@@ -111,7 +111,7 @@
     "ts-node": "^3.3.0",
     "tslint": "^5.17.0",
     "typedoc": "^0.15.0",
-    "typescript": "^3.1.0",
+    "typescript": "^3.7.3",
     "yargs": "^13.2.2"
   }
 }
