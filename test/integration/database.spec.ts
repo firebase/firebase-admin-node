@@ -178,7 +178,7 @@ describe('admin.database', () => {
 // @ts-ignore: purposely unused method.
 function addValueEventListener(
     db: admin.database.Database,
-    callback: (s: admin.database.DataSnapshot) => any) {
+    callback: (s: admin.database.DataSnapshot | null) => any) {
   const eventType: admin.database.EventType = 'value';
   db.ref().on(eventType, callback);
 }

@@ -55,7 +55,7 @@
   "types": "./lib/index.d.ts",
   "dependencies": {
     "@firebase/database": "^0.5.11",
-    "@types/node": "^8.0.53",
+    "@types/node": "^8.10.59",
     "dicer": "^0.3.0",
     "jsonwebtoken": "8.1.0",
     "node-forge": "0.7.4"
@@ -67,6 +67,7 @@
   "devDependencies": {
     "@firebase/app": "^0.4.23",
     "@firebase/auth": "^0.12.4",
+    "@firebase/auth-types": "^0.8.2",
     "@types/bcrypt": "^2.0.0",
     "@types/chai": "^3.4.34",
     "@types/chai-as-promised": "0.0.29",
@@ -110,7 +111,7 @@
     "ts-node": "^3.3.0",
     "tslint": "^5.17.0",
     "typedoc": "^0.15.0",
-    "typescript": "^3.1.0",
+    "typescript": "^3.7.3",
     "yargs": "^13.2.2"
   }
 }

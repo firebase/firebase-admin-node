@@ -67,8 +67,8 @@ describe('toWebSafeBase64()', () => {
 });
 
 describe('getProjectId()', () => {
-  let googleCloudProject: string;
-  let gcloudProject: string;
+  let googleCloudProject: string | undefined;
+  let gcloudProject: string | undefined;
 
   before(() => {
     googleCloudProject = process.env.GOOGLE_CLOUD_PROJECT;

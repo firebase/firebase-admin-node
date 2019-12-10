@@ -221,7 +221,7 @@ export class Messaging implements FirebaseServiceInterface {
       );
     }
 
-    const projectId: string = utils.getProjectId(app);
+    const projectId: string | null = utils.getProjectId(app);
     if (!validator.isNonEmptyString(projectId)) {
       // Assert for an explicit project ID (either via AppOptions or the cert itself).
       throw new FirebaseMessagingError(
@@ -365,6 +365,7 @@ export class Messaging implements FirebaseServiceInterface {
         data: copy.data,
         notification: copy.notification,
         webpush: copy.webpush,
+        fcmOptions: copy.fcmOptions,
       };
     });
     return this.sendAll(messages, dryRun);
@@ -796,7 +797,7 @@ export class Messaging implements FirebaseServiceInterface {
     // Validate the data payload object does not contain blacklisted properties
     if ('data' in payloadCopy) {
       BLACKLISTED_DATA_PAYLOAD_KEYS.forEach((blacklistedKey) => {
-        if (blacklistedKey in payloadCopy.data) {
+        if (blacklistedKey in payloadCopy.data!) {
           throw new FirebaseMessagingError(
             MessagingClientErrorCode.INVALID_PAYLOAD,
             `Messaging payload contains the blacklisted "data.${ blacklistedKey }" property.`,
@@ -806,7 +807,7 @@ export class Messaging implements FirebaseServiceInterface {
     }
 
     // Convert whitelisted camelCase keys to underscore_case
-    if ('notification' in payloadCopy) {
+    if (payloadCopy.notification) {
       utils.renameProperties(payloadCopy.notification, CAMELCASED_NOTIFICATION_PAYLOAD_KEYS_MAP);
     }
 

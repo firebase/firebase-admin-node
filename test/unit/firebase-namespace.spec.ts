@@ -320,7 +320,7 @@ describe('FirebaseNamespace', () => {
 
     it('should throw given no service name', () => {
       expect(() => {
-        firebaseNamespace.INTERNAL.registerService(undefined, mocks.firebaseServiceFactory);
+        firebaseNamespace.INTERNAL.registerService(undefined as unknown as string, mocks.firebaseServiceFactory);
       }).to.throw(`No service name provided. Service name must be a non-empty string.`);
     });
 

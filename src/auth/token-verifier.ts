@@ -75,7 +75,7 @@ export class FirebaseTokenVerifier {
   private readonly shortNameArticle: string;
 
   constructor(private clientCertUrl: string, private algorithm: string,
-              private issuer: string, private projectId: string,
+              private issuer: string, private projectId: string | null,
               private tokenInfo: FirebaseTokenInfo,
               private readonly httpAgent?: Agent) {
     if (!validator.isURL(clientCertUrl)) {
@@ -164,7 +164,7 @@ export class FirebaseTokenVerifier {
     const verifyJwtTokenDocsMessage = ` See ${this.tokenInfo.url} ` +
       `for details on how to retrieve ${this.shortNameArticle} ${this.tokenInfo.shortName}.`;
 
-    let errorMessage: string;
+    let errorMessage: string | undefined;
     if (!fullDecodedToken) {
       errorMessage = `Decoding ${this.tokenInfo.jwtName} failed. Make sure you passed the entire string JWT ` +
         `which represents ${this.shortNameArticle} ${this.tokenInfo.shortName}.` + verifyJwtTokenDocsMessage;
@@ -202,7 +202,7 @@ export class FirebaseTokenVerifier {
       errorMessage = `${this.tokenInfo.jwtName} has "sub" (subject) claim longer than 128 characters.` +
         verifyJwtTokenDocsMessage;
     }
-    if (typeof errorMessage !== 'undefined') {
+    if (errorMessage) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, errorMessage));
     }
 
@@ -331,7 +331,7 @@ export class FirebaseTokenVerifier {
  * @param {Agent} httpAgent Optional HTTP agent.
  * @return {FirebaseTokenVerifier}
  */
-export function createIdTokenVerifier(projectId: string, httpAgent?: Agent): FirebaseTokenVerifier {
+export function createIdTokenVerifier(projectId: string | null, httpAgent?: Agent): FirebaseTokenVerifier {
   return new FirebaseTokenVerifier(
       CLIENT_CERT_URL,
       ALGORITHM_RS256,
@@ -349,7 +349,7 @@ export function createIdTokenVerifier(projectId: string, httpAgent?: Agent): Fir
  * @param {Agent} httpAgent Optional HTTP agent.
  * @return {FirebaseTokenVerifier}
  */
-export function createSessionCookieVerifier(projectId: string, httpAgent?: Agent): FirebaseTokenVerifier {
+export function createSessionCookieVerifier(projectId: string | null, httpAgent?: Agent): FirebaseTokenVerifier {
   return new FirebaseTokenVerifier(
     SESSION_COOKIE_CERT_URL,
     ALGORITHM_RS256,

@@ -31,7 +31,15 @@ const expect = chai.expect;
 describe('SecurityRules', () => {
 
   const EXPECTED_ERROR = new FirebaseSecurityRulesError('internal-error', 'message');
-  const FIRESTORE_RULESET_RESPONSE = {
+  const FIRESTORE_RULESET_RESPONSE: {
+    // This type is effectively a RulesetResponse, but with non-readonly fields
+    // to allow easier use from within the tests. An improvement would be to
+    // alter this into a helper that creates customized RulesetResponses based
+    // on the needs of the test, as that would ensure type-safety.
+    name: string,
+    createTime: string,
+    source: object | null,
+  } = {
     name: 'projects/test-project/rulesets/foo',
     createTime: '2019-03-08T23:45:23.288047Z',
     source: {

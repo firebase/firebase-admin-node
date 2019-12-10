@@ -8,7 +8,7 @@
     "noImplicitThis": true,
     "alwaysStrict": true,
     "strictBindCallApply": true,
-    //"strictNullChecks": true,
+    "strictNullChecks": true,
     "strictFunctionTypes": true,
     //"strictPropertyInitialization": true,
     "lib": ["es2015"],

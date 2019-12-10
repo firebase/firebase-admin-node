@@ -55,7 +55,7 @@ describe('SecurityRulesApiClient', () => {
 
   describe('Constructor', () => {
     it('should throw when the HttpClient is null', () => {
-      expect(() => new SecurityRulesApiClient(null, 'test'))
+      expect(() => new SecurityRulesApiClient(null as unknown as HttpClient, 'test'))
         .to.throw('HttpClient must be a non-null object.');
     });
 
