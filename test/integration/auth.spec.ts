@@ -166,25 +166,19 @@ describe('admin.auth', () => {
         // Confirm second factors added to user.
         expect(userRecord.multiFactor.enrolledFactors.length).to.equal(2);
         // Confirm first enrolled second factor.
-        expect(userRecord.multiFactor.enrolledFactors[0].uid).not.to.be.undefined;
-        expect(userRecord.multiFactor.enrolledFactors[0].enrollmentTime)
-          .not.to.be.undefined;
-        expect(userRecord.multiFactor.enrolledFactors[0].phoneNumber)
-          .to.equal(enrolledFactors[0].phoneNumber);
-        expect(userRecord.multiFactor.enrolledFactors[0].displayName)
-          .to.equal(enrolledFactors[0].displayName);
-        expect(userRecord.multiFactor.enrolledFactors[0].factorId)
-          .to.equal(enrolledFactors[0].factorId);
+        const firstMultiFactor = userRecord.multiFactor.enrolledFactors[0];
+        expect(firstMultiFactor.uid).not.to.be.undefined;
+        expect(firstMultiFactor.enrollmentTime).not.to.be.undefined;
+        expect(firstMultiFactor.phoneNumber).to.equal(enrolledFactors[0].phoneNumber);
+        expect(firstMultiFactor.displayName).to.equal(enrolledFactors[0].displayName);
+        expect(firstMultiFactor.factorId).to.equal(enrolledFactors[0].factorId);
         // Confirm second enrolled second factor.
-        expect(userRecord.multiFactor.enrolledFactors[1].uid).not.to.be.undefined;
-        expect(userRecord.multiFactor.enrolledFactors[1].enrollmentTime)
-          .not.to.be.undefined;
-        expect(userRecord.multiFactor.enrolledFactors[1].phoneNumber)
-          .to.equal(enrolledFactors[1].phoneNumber);
-        expect(userRecord.multiFactor.enrolledFactors[1].displayName)
-          .to.equal(enrolledFactors[1].displayName);
-        expect(userRecord.multiFactor.enrolledFactors[1].factorId)
-          .to.equal(enrolledFactors[1].factorId);
+        const secondMultiFactor = userRecord.multiFactor.enrolledFactors[1];
+        expect(secondMultiFactor.uid).not.to.be.undefined;
+        expect(secondMultiFactor.enrollmentTime).not.to.be.undefined;
+        expect(secondMultiFactor.phoneNumber).to.equal(enrolledFactors[1].phoneNumber);
+        expect(secondMultiFactor.displayName).to.equal(enrolledFactors[1].displayName);
+        expect(secondMultiFactor.factorId).to.equal(enrolledFactors[1].factorId);
       });
   });
 

@@ -2426,53 +2426,35 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             });
         });
 
-        it('should be fulfilled given null enrolled factors', () => {
-          // Successful result server response.
-          const expectedResult = utils.responseFrom({
-            localId: uid,
-          });
-
-          const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
-          stubs.push(stub);
-
-          const requestHandler = handler.init(mockApp);
-          // Send create new account request with null enrolled factors.
-          return requestHandler.createNewAccount({uid, multiFactor: {enrolledFactors: null}})
-            .then((returnedUid: string) => {
-              // uid should be returned.
-              expect(returnedUid).to.be.equal(uid);
-              // Confirm expected rpc request parameters sent. In this case, no mfa info should
-              // be sent.
-              expect(stub).to.have.been.calledOnce.and.calledWith(
-                callParams(path, method, emptyRequest));
+        const noEnrolledFactors: any[] = [[], null];
+        noEnrolledFactors.forEach((arg) => {
+          it(`should be fulfilled given "${JSON.stringify(arg)}" enrolled factors`, () => {
+            // Successful result server response.
+            const expectedResult = utils.responseFrom({
+              localId: uid,
             });
-        });
 
-        it('should be fulfilled given empty enrolled factors array', () => {
-          // Successful result server response.
-          const expectedResult = utils.responseFrom({
-            localId: uid,
+            const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+            stubs.push(stub);
+
+            const requestHandler = handler.init(mockApp);
+            // Send create new account request with no enrolled factors.
+            return requestHandler.createNewAccount({uid, multiFactor: {enrolledFactors: null}})
+              .then((returnedUid: string) => {
+                // uid should be returned.
+                expect(returnedUid).to.be.equal(uid);
+                // Confirm expected rpc request parameters sent. In this case, no mfa info should
+                // be sent.
+                expect(stub).to.have.been.calledOnce.and.calledWith(
+                  callParams(path, method, emptyRequest));
+              });
           });
-
-          const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
-          stubs.push(stub);
-
-          const requestHandler = handler.init(mockApp);
-          // Send create new account request with empty enrolled factors.
-          return requestHandler.createNewAccount({uid, multiFactor: {enrolledFactors: []}})
-            .then((returnedUid: string) => {
-              // uid should be returned.
-              expect(returnedUid).to.be.equal(uid);
-              // Confirm expected rpc request parameters sent. In this case, no mfa info should
-              // be sent.
-              expect(stub).to.have.been.calledOnce.and.calledWith(
-                callParams(path, method, emptyRequest));
-            });
         });
 
         const unsupportedSecondFactor = {
           secret: 'SECRET',
           displayName: 'Google Authenticator on personal phone',
+          // TOTP is not yet supported.
           factorId: 'totp',
         };
         const invalidSecondFactorTests: InvalidMultiFactorUpdateTest[] = [

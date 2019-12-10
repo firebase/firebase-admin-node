@@ -1164,8 +1164,8 @@ export abstract class AbstractAuthRequestHandler {
     }
     // Construct mfa related user data.
     if (validator.isNonNullObject(request.multiFactor)) {
-      if (validator.isArray(request.multiFactor.enrolledFactors)) {
-        request.mfaInfo = [];
+      if (validator.isNonEmptyArray(request.multiFactor.enrolledFactors)) {
+        const mfaInfo: AuthFactorInfo[] = [];
         try {
           request.multiFactor.enrolledFactors.forEach((multiFactorInfo: any) => {
             // Enrollment time and uid are not allowed for signupNewUser endpoint.
@@ -1179,14 +1179,12 @@ export abstract class AbstractAuthRequestHandler {
                 AuthClientErrorCode.INVALID_ARGUMENT,
                 '"uid" is not supported when adding second factors via "createUser()"');
             }
-            request.mfaInfo.push(convertMultiFactorInfoToServerFormat(multiFactorInfo));
+            mfaInfo.push(convertMultiFactorInfoToServerFormat(multiFactorInfo));
           });
         } catch (e) {
           return Promise.reject(e);
         }
-        if (request.mfaInfo.length === 0) {
-          delete request.mfaInfo;
-        }
+        request.mfaInfo = mfaInfo;
       }
       delete request.multiFactor;
     }
