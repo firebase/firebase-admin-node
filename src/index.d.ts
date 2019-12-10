@@ -863,7 +863,7 @@ declare namespace admin.auth {
        * The salt separator in buffer bytes which is appended to salt when
        * verifying a password. This is only used by the `SCRYPT` algorithm.
        */
-      saltSeparator?: string;
+      saltSeparator?: Buffer;
 
       /**
        * The number of rounds for hashing calculation.
