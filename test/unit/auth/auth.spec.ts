@@ -346,12 +346,11 @@ AUTH_CONFIGS.forEach((testConfig) => {
         });
       }
 
-      it('should throw if a cert credential is not specified', () => {
+      it('should be fulfilled even if a cert credential is not specified', () => {
         const mockCredentialAuth = testConfig.init(mocks.mockCredentialApp());
 
-        expect(() => {
-          mockCredentialAuth.createCustomToken(mocks.uid, mocks.developerClaims);
-        }).not.to.throw;
+        return mockCredentialAuth.createCustomToken(mocks.uid, mocks.developerClaims)
+          .should.eventually.be.fulfilled;
       });
 
       it('should be fulfilled given an app which returns null access tokens', () => {

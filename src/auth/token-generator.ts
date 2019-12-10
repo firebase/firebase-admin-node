@@ -261,11 +261,11 @@ export class FirebaseTokenGenerator {
   /**
    * Creates a new Firebase Auth Custom token.
    *
-   * @param {string} uid The user ID to use for the generated Firebase Auth Custom token.
-   * @param {object} [developerClaims] Optional developer claims to include in the generated Firebase
-   *                 Auth Custom token.
-   * @return {Promise<string>} A Promise fulfilled with a Firebase Auth Custom token signed with a
-   *                           service account key and containing the provided payload.
+   * @param uid The user ID to use for the generated Firebase Auth Custom token.
+   * @param developerClaims Optional developer claims to include in the generated Firebase
+   *     Auth Custom token.
+   * @return A Promise fulfilled with a Firebase Auth Custom token signed with a
+   *     service account key and containing the provided payload.
    */
   public createCustomToken(uid: string, developerClaims?: {[key: string]: any}): Promise<string> {
     return this.createCustomTokenInternal(uid, null, developerClaims);
@@ -274,12 +274,12 @@ export class FirebaseTokenGenerator {
   /**
    * Creates a new Firebase Auth Custom token.
    *
-   * @param {string} uid The user ID to use for the generated Firebase Auth Custom token.
-   * @param {string} tenantId The tenant ID to use for the generated Firebase Auth Custom token.
-   * @param {object} [developerClaims] Optional developer claims to include in the generated Firebase
-   *                 Auth Custom token.
-   * @return {Promise<string>} A Promise fulfilled with a Firebase Auth Custom token signed with a
-   *                           service account key and containing the provided payload.
+   * @param uid The user ID to use for the generated Firebase Auth Custom token.
+   * @param tenantId The tenant ID to use for the generated Firebase Auth Custom token.
+   * @param developerClaims Optional developer claims to include in the generated Firebase
+   *     Auth Custom token.
+   * @return A Promise fulfilled with a Firebase Auth Custom token signed with
+   *     a service account key and containing the provided payload.
    */
   public createCustomTokenWithTenantId(
       uid: string, tenantId: string, developerClaims?: {[key: string]: any}): Promise<string> {
