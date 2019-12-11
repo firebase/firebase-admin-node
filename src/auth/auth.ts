@@ -110,10 +110,8 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
       this.tokenGenerator = new FirebaseTokenGenerator(cryptoSigner);
     }
 
-    const projectId = utils.getProjectId(app);
-    const httpAgent = app.options.httpAgent;
-    this.sessionCookieVerifier = createSessionCookieVerifier(projectId, httpAgent);
-    this.idTokenVerifier = createIdTokenVerifier(projectId, httpAgent);
+    this.sessionCookieVerifier = createSessionCookieVerifier(app);
+    this.idTokenVerifier = createIdTokenVerifier(app);
   }
 
   /**
