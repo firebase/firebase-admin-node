@@ -723,22 +723,21 @@ describe('admin.auth', () => {
           });
       });
 
-      it('createCustomToken() mints a JWT that can be used to sign in tenant users', () => {
-        return tenantAwareAuth.createCustomToken('uid1')
-          .then((customToken) => {
-            firebase.auth().tenantId = createdTenantId;
-            return firebase.auth().signInWithCustomToken(customToken);
-          })
-          .then(({user}) => {
-            return user.getIdToken();
-          })
-          .then((idToken) => {
-            return tenantAwareAuth.verifyIdToken(idToken);
-          })
-          .then((token) => {
-            expect(token.uid).to.equal('uid1');
-            expect(token.firebase.tenant).to.equal(createdTenantId);
-          });
+      it('createCustomToken() mints a JWT that can be used to sign in tenant users', async () => {
+        try {
+          firebase.auth!().tenantId = createdTenantId;
+
+          const customToken = await tenantAwareAuth.createCustomToken('uid1');
+          const {user} = await firebase.auth!().signInWithCustomToken(customToken);
+          expect(user).to.not.be.null;
+          const idToken = await user!.getIdToken();
+          const token = await tenantAwareAuth.verifyIdToken(idToken);
+
+          expect(token.uid).to.equal('uid1');
+          expect(token.firebase.tenant).to.equal(createdTenantId);
+        } finally {
+          firebase.auth!().tenantId = null;
+        }
       });
     });
 

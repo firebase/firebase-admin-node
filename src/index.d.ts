@@ -1445,7 +1445,8 @@ declare namespace admin.auth {
     /**
      * Creates a new Firebase custom token (JWT) that can be sent back to a client
      * device to use to sign in with the client SDKs' `signInWithCustomToken()`
-     * methods.
+     * methods. (Tenant-aware instances will also embed the tenant ID in the
+     * token.)
      *
      * See [Create Custom Tokens](/docs/auth/admin/create-custom-tokens) for code
      * samples and detailed documentation.

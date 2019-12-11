@@ -248,12 +248,22 @@ export class FirebaseTokenGenerator {
 
   private readonly signer: CryptoSigner;
 
-  constructor(signer: CryptoSigner) {
+  /**
+   * @param tenantId The tenant ID to use for the generated Firebase Auth
+   *     Custom token. If absent, then no tenant ID claim will be set in the
+   *     resulting JWT.
+   */
+  constructor(signer: CryptoSigner, public readonly tenantId?: string) {
     if (!validator.isNonNullObject(signer)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_CREDENTIAL,
         'INTERNAL ASSERT: Must provide a CryptoSigner to use FirebaseTokenGenerator.',
       );
+    }
+    if (tenantId !== undefined && !validator.isNonEmptyString(tenantId)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        '`tenantId` argument must be a non-empty string uid.');
     }
     this.signer = signer;
   }
@@ -268,31 +278,6 @@ export class FirebaseTokenGenerator {
    *     service account key and containing the provided payload.
    */
   public createCustomToken(uid: string, developerClaims?: {[key: string]: any}): Promise<string> {
-    return this.createCustomTokenInternal(uid, null, developerClaims);
-  }
-
-  /**
-   * Creates a new Firebase Auth Custom token.
-   *
-   * @param uid The user ID to use for the generated Firebase Auth Custom token.
-   * @param tenantId The tenant ID to use for the generated Firebase Auth Custom token.
-   * @param developerClaims Optional developer claims to include in the generated Firebase
-   *     Auth Custom token.
-   * @return A Promise fulfilled with a Firebase Auth Custom token signed with
-   *     a service account key and containing the provided payload.
-   */
-  public createCustomTokenWithTenantId(
-      uid: string, tenantId: string, developerClaims?: {[key: string]: any}): Promise<string> {
-    if (!validator.isNonEmptyString(tenantId)) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_ARGUMENT,
-        '`tenantId` argument must be a non-empty string uid.');
-    }
-    return this.createCustomTokenInternal(uid, tenantId, developerClaims);
-  }
-
-  private createCustomTokenInternal(
-      uid: string, tenantId: string | null, developerClaims?: {[key: string]: any}): Promise<string> {
     let errorMessage: string | undefined;
     if (!validator.isNonEmptyString(uid)) {
       errorMessage = '`uid` argument must be a non-empty string uid.';
@@ -335,8 +320,8 @@ export class FirebaseTokenGenerator {
         sub: account,
         uid,
       };
-      if (tenantId) {
-        body.tenant_id = tenantId;
+      if (this.tenantId) {
+        body.tenant_id = this.tenantId;
       }
       if (Object.keys(claims).length > 0) {
         body.claims = claims;
