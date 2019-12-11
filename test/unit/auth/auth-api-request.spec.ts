@@ -2515,7 +2515,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
     describe('getOAuthIdpConfig()', () => {
       const providerId = 'oidc.provider';
-      const path = handler.path('admin/v2', `/oauthIdpConfigs/${providerId}`, 'project_id');
+      const path = handler.path('v2', `/oauthIdpConfigs/${providerId}`, 'project_id');
       const expectedHttpMethod = 'GET';
       const expectedResult = utils.responseFrom({
         name: `projects/project1/oauthIdpConfigs/${providerId}`,
@@ -2573,7 +2573,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
     });
 
     describe('listOAuthIdpConfigs()', () => {
-      const path = handler.path('admin/v2', '/oauthIdpConfigs', 'project_id');
+      const path = handler.path('v2', '/oauthIdpConfigs', 'project_id');
       const expectedHttpMethod = 'GET';
       const nextPageToken = 'PAGE_TOKEN';
       const maxResults = 50;
@@ -2694,7 +2694,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
     describe('deleteOAuthIdpConfig()', () => {
       const providerId = 'oidc.provider';
-      const path = handler.path('admin/v2', `/oauthIdpConfigs/${providerId}`, 'project_id');
+      const path = handler.path('v2', `/oauthIdpConfigs/${providerId}`, 'project_id');
       const expectedHttpMethod = 'DELETE';
       const expectedResult = utils.responseFrom({});
 
@@ -2751,7 +2751,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
     describe('createOAuthIdpConfig', () => {
       const providerId = 'oidc.provider';
-      const path = handler.path('admin/v2', `/oauthIdpConfigs?oauthIdpConfigId=${providerId}`, 'project_id');
+      const path = handler.path('v2', `/oauthIdpConfigs?oauthIdpConfigId=${providerId}`, 'project_id');
       const expectedHttpMethod = 'POST';
       const configOptions = {
         providerId,
@@ -2843,7 +2843,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
     describe('updateOAuthIdpConfig()', () => {
       const providerId = 'oidc.provider';
-      const path = handler.path('admin/v2', `/oauthIdpConfigs/${providerId}`, 'project_id');
+      const path = handler.path('v2', `/oauthIdpConfigs/${providerId}`, 'project_id');
       const expectedHttpMethod = 'PATCH';
       const configOptions = {
         displayName: 'OIDC_DISPLAY_NAME',
@@ -3008,7 +3008,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
     describe('getInboundSamlConfig()', () => {
       const providerId = 'saml.provider';
-      const path = handler.path('admin/v2', `/inboundSamlConfigs/${providerId}`, 'project_id');
+      const path = handler.path('v2', `/inboundSamlConfigs/${providerId}`, 'project_id');
 
       const expectedHttpMethod = 'GET';
       const expectedResult = utils.responseFrom({
@@ -3065,7 +3065,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
     });
 
     describe('listInboundSamlConfigs()', () => {
-      const path = handler.path('admin/v2', '/inboundSamlConfigs', 'project_id');
+      const path = handler.path('v2', '/inboundSamlConfigs', 'project_id');
       const expectedHttpMethod = 'GET';
       const nextPageToken = 'PAGE_TOKEN';
       const maxResults = 50;
@@ -3182,7 +3182,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
     describe('deleteInboundSamlConfig()', () => {
       const providerId = 'saml.provider';
-      const path = handler.path('admin/v2', `/inboundSamlConfigs/${providerId}`, 'project_id');
+      const path = handler.path('v2', `/inboundSamlConfigs/${providerId}`, 'project_id');
       const expectedHttpMethod = 'DELETE';
       const expectedResult = utils.responseFrom({});
 
@@ -3237,7 +3237,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
     describe('createInboundSamlConfig', () => {
       const providerId = 'saml.provider';
-      const path = handler.path('admin/v2', `/inboundSamlConfigs?inboundSamlConfigId=${providerId}`, 'project_id');
+      const path = handler.path('v2', `/inboundSamlConfigs?inboundSamlConfigId=${providerId}`, 'project_id');
       const expectedHttpMethod = 'POST';
       const configOptions = {
         providerId,
@@ -3344,7 +3344,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
     describe('updateInboundSamlConfig()', () => {
       const providerId = 'saml.provider';
-      const path = handler.path('admin/v2', `/inboundSamlConfigs/${providerId}`, 'project_id');
+      const path = handler.path('v2', `/inboundSamlConfigs/${providerId}`, 'project_id');
 
       const expectedHttpMethod = 'PATCH';
       const configOptions = {
