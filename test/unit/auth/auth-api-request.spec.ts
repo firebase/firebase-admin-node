@@ -3544,7 +3544,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
     if (handler.supportsTenantManagement) {
       describe('getTenant', () => {
-        const path = '/v2beta1/projects/project_id/tenants/tenant-id';
+        const path = '/v2/projects/project_id/tenants/tenant-id';
         const method = 'GET';
         const tenantId = 'tenant-id';
         const expectedResult = utils.responseFrom({
@@ -3600,7 +3600,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
 
       describe('listTenants', () => {
-        const path = '/v2beta1/projects/project_id/tenants';
+        const path = '/v2/projects/project_id/tenants';
         const method = 'GET';
         const nextPageToken = 'PAGE_TOKEN';
         const maxResults = 500;
@@ -3716,7 +3716,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
 
       describe('deleteTenant', () => {
-        const path = '/v2beta1/projects/project_id/tenants/tenant-id';
+        const path = '/v2/projects/project_id/tenants/tenant-id';
         const method = 'DELETE';
         const tenantId = 'tenant-id';
         const expectedResult = utils.responseFrom({});
@@ -3770,7 +3770,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
 
       describe('createTenant', () => {
-        const path = '/v2beta1/projects/project_id/tenants';
+        const path = '/v2/projects/project_id/tenants';
         const postMethod = 'POST';
         const tenantOptions: TenantOptions = {
           displayName: 'TENANT-DISPLAY-NAME',
@@ -3881,7 +3881,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
 
       describe('updateTenant', () => {
-        const path = '/v2beta1/projects/project_id/tenants/tenant-id';
+        const path = '/v2/projects/project_id/tenants/tenant-id';
         const patchMethod = 'PATCH';
         const tenantId = 'tenant-id';
         const tenantOptions = {

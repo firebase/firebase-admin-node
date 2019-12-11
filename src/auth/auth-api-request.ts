@@ -1538,7 +1538,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
    */
   constructor(app: FirebaseApp) {
     super(app);
-    this.tenantMgmtResourceBuilder =  new AuthResourceUrlBuilder(app, 'v2beta1');
+    this.tenantMgmtResourceBuilder =  new AuthResourceUrlBuilder(app, 'v2');
   }
 
   /**
