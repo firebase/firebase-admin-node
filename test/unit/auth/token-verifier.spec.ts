@@ -33,6 +33,7 @@ import * as verifier from '../../../src/auth/token-verifier';
 
 import {Certificate} from '../../../src/auth/credential';
 import { AuthClientErrorCode } from '../../../src/utils/error';
+import { FirebaseApp } from '../../../src/firebase-app';
 
 chai.should();
 chai.use(sinonChai);
@@ -105,20 +106,22 @@ function mockFailedFetchPublicKeys(): nock.Scope {
 
 
 describe('FirebaseTokenVerifier', () => {
+  let app: FirebaseApp;
   let tokenVerifier: verifier.FirebaseTokenVerifier;
   let tokenGenerator: FirebaseTokenGenerator;
   let clock: sinon.SinonFakeTimers | undefined;
   let httpsSpy: sinon.SinonSpy;
   beforeEach(() => {
     // Needed to generate custom token for testing.
+    app = mocks.app();
     const cert: Certificate = new Certificate(mocks.certificateObject);
     tokenGenerator = new FirebaseTokenGenerator(new ServiceAccountSigner(cert));
     tokenVerifier = new verifier.FirebaseTokenVerifier(
       'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com',
       'RS256',
       'https://securetoken.google.com/',
-      'project_id',
       verifier.ID_TOKEN_INFO,
+      app,
     );
     httpsSpy = sinon.spy(https, 'request');
   });
@@ -142,7 +145,6 @@ describe('FirebaseTokenVerifier', () => {
           'https://www.example.com/publicKeys',
           'RS256',
           'https://www.example.com/issuer/',
-          'project_id',
           {
             url: 'https://docs.example.com/verify-tokens',
             verifyApiName: 'verifyToken()',
@@ -150,6 +152,7 @@ describe('FirebaseTokenVerifier', () => {
             shortName: 'token',
             expiredErrorCode: AuthClientErrorCode.INVALID_ARGUMENT,
           },
+          app,
        );
       }).not.to.throw();
     });
@@ -162,8 +165,9 @@ describe('FirebaseTokenVerifier', () => {
             invalidCertUrl as any,
             'RS256',
             'https://www.example.com/issuer/',
-            'project_id',
-            verifier.ID_TOKEN_INFO);
+            verifier.ID_TOKEN_INFO,
+            app,
+          );
         }).to.throw('The provided public client certificate URL is an invalid URL.');
       });
     });
@@ -176,8 +180,8 @@ describe('FirebaseTokenVerifier', () => {
             'https://www.example.com/publicKeys',
             invalidAlgorithm as any,
             'https://www.example.com/issuer/',
-            'project_id',
-            verifier.ID_TOKEN_INFO);
+            verifier.ID_TOKEN_INFO,
+            app);
         }).to.throw('The provided JWT algorithm is an empty string.');
       });
     });
@@ -190,8 +194,9 @@ describe('FirebaseTokenVerifier', () => {
             'https://www.example.com/publicKeys',
             'RS256',
             invalidIssuer as any,
-            'project_id',
-            verifier.ID_TOKEN_INFO);
+            verifier.ID_TOKEN_INFO,
+            app,
+          );
         }).to.throw('The provided JWT issuer is an invalid URL.');
       });
     });
@@ -204,14 +209,15 @@ describe('FirebaseTokenVerifier', () => {
             'https://www.example.com/publicKeys',
             'RS256',
             'https://www.example.com/issuer/',
-            'project_id',
             {
               url: 'https://docs.example.com/verify-tokens',
               verifyApiName: invalidVerifyApiName as any,
               jwtName: 'Important Token',
               shortName: 'token',
               expiredErrorCode: AuthClientErrorCode.INVALID_ARGUMENT,
-            });
+            },
+            app,
+          );
         }).to.throw('The JWT verify API name must be a non-empty string.');
       });
     });
@@ -224,14 +230,15 @@ describe('FirebaseTokenVerifier', () => {
             'https://www.example.com/publicKeys',
             'RS256',
             'https://www.example.com/issuer/',
-            'project_id',
             {
               url: 'https://docs.example.com/verify-tokens',
               verifyApiName: 'verifyToken()',
               jwtName: invalidJwtName as any,
               shortName: 'token',
               expiredErrorCode: AuthClientErrorCode.INVALID_ARGUMENT,
-            });
+            },
+            app,
+          );
         }).to.throw('The JWT public full name must be a non-empty string.');
       });
     });
@@ -244,14 +251,15 @@ describe('FirebaseTokenVerifier', () => {
             'https://www.example.com/publicKeys',
             'RS256',
             'https://www.example.com/issuer/',
-            'project_id',
             {
               url: 'https://docs.example.com/verify-tokens',
               verifyApiName: 'verifyToken()',
               jwtName: 'Important Token',
               shortName: invalidShortName as any,
               expiredErrorCode: AuthClientErrorCode.INVALID_ARGUMENT,
-            });
+            },
+            app,
+          );
         }).to.throw('The JWT public short name must be a non-empty string.');
       });
     });
@@ -264,14 +272,15 @@ describe('FirebaseTokenVerifier', () => {
             'https://www.example.com/publicKeys',
             'RS256',
             'https://www.example.com/issuer/',
-            'project_id',
             {
               url: 'https://docs.example.com/verify-tokens',
               verifyApiName: 'verifyToken()',
               jwtName: 'Important Token',
               shortName: 'token',
               expiredErrorCode: invalidExpiredErrorCode as any,
-            });
+            },
+            app,
+          );
         }).to.throw('The JWT expiration error code must be a non-null ErrorInfo object.');
       });
     });
@@ -315,15 +324,14 @@ describe('FirebaseTokenVerifier', () => {
         'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com',
         'RS256',
         'https://securetoken.google.com/',
-        undefined as any,
         verifier.ID_TOKEN_INFO,
+        mocks.mockCredentialApp(),
       );
       const mockIdToken = mocks.generateIdToken();
       const expected = 'Must initialize app with a cert credential or set your Firebase project ID as ' +
         'the GOOGLE_CLOUD_PROJECT environment variable to call verifyIdToken().';
-      expect(() => {
-        tokenVerifierWithNoProjectId.verifyJWT(mockIdToken);
-      }).to.throw(expected);
+      return tokenVerifierWithNoProjectId.verifyJWT(mockIdToken)
+        .should.eventually.be.rejectedWith(expected);
     });
 
     it('should be rejected given a Firebase JWT token with no kid', () => {
@@ -423,8 +431,8 @@ describe('FirebaseTokenVerifier', () => {
         'https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys',
         'RS256',
         'https://session.firebase.google.com/',
-        'project_id',
         verifier.SESSION_COOKIE_INFO,
+        app,
       );
       mockedRequests.push(mockFetchPublicKeys('/identitytoolkit/v3/relyingparty/publicKeys'));
 
@@ -468,8 +476,8 @@ describe('FirebaseTokenVerifier', () => {
         'https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys',
         'RS256',
         'https://session.firebase.google.com/',
-        'project_id',
         verifier.SESSION_COOKIE_INFO,
+        app,
       );
       return tokenGenerator.createCustomToken(mocks.uid)
         .then((customToken) => {
@@ -494,8 +502,8 @@ describe('FirebaseTokenVerifier', () => {
         'https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys',
         'RS256',
         'https://session.firebase.google.com/',
-        'project_id',
         verifier.SESSION_COOKIE_INFO,
+        app,
       );
       const legacyTokenGenerator = new LegacyFirebaseTokenGenerator('foo');
       const legacyCustomToken = legacyTokenGenerator.createToken({
@@ -529,13 +537,16 @@ describe('FirebaseTokenVerifier', () => {
 
     it('should use the given HTTP Agent', () => {
       const agent = new https.Agent();
+      const appWithAgent = mocks.appWithOptions({
+        credential: mocks.credential,
+        httpAgent: agent,
+      });
       tokenVerifier = new verifier.FirebaseTokenVerifier(
         'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com',
         'RS256',
         'https://securetoken.google.com/',
-        'project_id',
         verifier.ID_TOKEN_INFO,
-        agent,
+        appWithAgent,
       );
       mockedRequests.push(mockFetchPublicKeys());
 
@@ -557,8 +568,8 @@ describe('FirebaseTokenVerifier', () => {
         'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com',
         'RS256',
         'https://securetoken.google.com/',
-        'project_id',
         verifier.ID_TOKEN_INFO,
+        app,
       );
       expect(https.request).not.to.have.been.called;
 
