@@ -387,22 +387,20 @@ AUTH_CONFIGS.forEach((testConfig) => {
       }
     });
 
-    it('verifyIdToken() should throw when project ID is not specified', () => {
+    it('verifyIdToken() should reject when project ID is not specified', () => {
       const mockCredentialAuth = testConfig.init(mocks.mockCredentialApp());
       const expected = 'Must initialize app with a cert credential or set your Firebase project ID ' +
         'as the GOOGLE_CLOUD_PROJECT environment variable to call verifyIdToken().';
-      expect(() => {
-        mockCredentialAuth.verifyIdToken(mocks.generateIdToken());
-      }).to.throw(expected);
+      return mockCredentialAuth.verifyIdToken(mocks.generateIdToken())
+        .should.eventually.be.rejectedWith(expected);
     });
 
-    it('verifySessionCookie() should throw when project ID is not specified', () => {
+    it('verifySessionCookie() should reject when project ID is not specified', () => {
       const mockCredentialAuth = testConfig.init(mocks.mockCredentialApp());
       const expected = 'Must initialize app with a cert credential or set your Firebase project ID ' +
         'as the GOOGLE_CLOUD_PROJECT environment variable to call verifySessionCookie().';
-      expect(() => {
-        mockCredentialAuth.verifySessionCookie(mocks.generateSessionCookie());
-      }).to.throw(expected);
+      return mockCredentialAuth.verifySessionCookie(mocks.generateSessionCookie())
+        .should.eventually.be.rejectedWith(expected);
     });
 
     describe('verifyIdToken()', () => {
