@@ -912,7 +912,7 @@ export class ExponentialBackoffPoller extends EventEmitter {
   private masterTimer: NodeJS.Timer;
   private repollTimer: NodeJS.Timer;
 
-  private pollCallback: () => Promise<object>;
+  private pollCallback?: () => Promise<object>;
   private resolve: (result: object) => void;
   private reject: (err: object) => void;
 
@@ -957,7 +957,7 @@ export class ExponentialBackoffPoller extends EventEmitter {
   }
 
   private repoll(): void {
-    this.pollCallback()
+    this.pollCallback!()
         .then((result) => {
           if (this.completed) {
             return;

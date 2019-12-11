@@ -897,6 +897,7 @@ describe('Messaging', () => {
         data: {key: 'value'},
         notification: {title: 'test title'},
         webpush: {data: {webKey: 'webValue'}},
+        fcmOptions: {analyticsLabel: 'label'},
       };
       return messaging.sendMulticast(multicast)
         .then((response: BatchResponse) => {
@@ -912,6 +913,7 @@ describe('Messaging', () => {
             expect(message.data).to.be.deep.equal(multicast.data);
             expect(message.notification).to.deep.equal(multicast.notification);
             expect(message.webpush).to.deep.equal(multicast.webpush);
+            expect(message.fcmOptions).to.deep.equal(multicast.fcmOptions);
           });
         });
     });
