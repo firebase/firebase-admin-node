@@ -98,8 +98,11 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   /**
    * The BaseAuth class constructor.
    *
-   * @param {T} authRequestHandler The RPC request handler
-   *     for this instance.
+   * @param app The FirebaseApp to associate with this Auth instance.
+   * @param authRequestHandler The RPC request handler for this instance.
+   * @param tokenGenerator Optional token generator. If not specified, a
+   *     (non-tenant-aware) instance will be created. Use this paramter to
+   *     specify a tenant-aware tokenGenerator.
    * @constructor
    */
   constructor(app: FirebaseApp, protected readonly authRequestHandler: T, tokenGenerator?: FirebaseTokenGenerator) {

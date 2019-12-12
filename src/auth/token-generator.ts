@@ -260,10 +260,10 @@ export class FirebaseTokenGenerator {
         'INTERNAL ASSERT: Must provide a CryptoSigner to use FirebaseTokenGenerator.',
       );
     }
-    if (tenantId !== undefined && !validator.isNonEmptyString(tenantId)) {
+    if (typeof tenantId !== 'undefined' && !validator.isNonEmptyString(tenantId)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        '`tenantId` argument must be a non-empty string uid.');
+        '`tenantId` argument must be a non-empty string.');
     }
     this.signer = signer;
   }
