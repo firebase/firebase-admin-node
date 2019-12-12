@@ -30,7 +30,7 @@ import url = require('url');
 import * as mocks from '../resources/mocks';
 import { AuthProviderConfig } from '../../src/auth/auth-config';
 import { deepExtend, deepCopy } from '../../src/utils/deep-copy';
-import { User } from '@firebase/auth-types';
+import { User, FirebaseAuth } from '@firebase/auth-types';
 
 /* tslint:disable:no-var-requires */
 const chalk = require('chalk');
@@ -91,6 +91,10 @@ function randomOidcProviderId(): string {
   return 'oidc.' + generateRandomString(10, false).toLowerCase();
 }
 
+function client_auth(): FirebaseAuth {
+  expect(firebase.auth).to.be.ok;
+  return firebase.auth!();
+}
 
 describe('admin.auth', () => {
 
@@ -213,7 +217,7 @@ describe('admin.auth', () => {
     let currentIdToken: string;
     let currentUser: User;
     // Sign in with an email and password account.
-    return firebase.auth!().signInWithEmailAndPassword(mockUserData.email, mockUserData.password)
+    return client_auth().signInWithEmailAndPassword(mockUserData.email, mockUserData.password)
       .then(({user}) => {
         expect(user).to.exist;
         currentUser = user!;
@@ -248,7 +252,7 @@ describe('admin.auth', () => {
       })
       .then(() => {
         // New sign-in should succeed.
-        return firebase.auth!().signInWithEmailAndPassword(
+        return client_auth().signInWithEmailAndPassword(
             mockUserData.email, mockUserData.password);
       })
       .then(({user}) => {
@@ -273,7 +277,7 @@ describe('admin.auth', () => {
         // Confirm custom claims set on the UserRecord.
         expect(userRecord.customClaims).to.deep.equal(customClaims);
         expect(userRecord.email).to.exist;
-        return firebase.auth!().signInWithEmailAndPassword(
+        return client_auth().signInWithEmailAndPassword(
           userRecord.email!, mockUserData.password);
       })
       .then(({user}) => {
@@ -302,8 +306,8 @@ describe('admin.auth', () => {
         // Custom claims should be cleared.
         expect(userRecord.customClaims).to.deep.equal({});
         // Force token refresh. All claims should be cleared.
-        expect(firebase.auth!().currentUser).to.exist;
-        return firebase.auth!().currentUser!.getIdToken(true);
+        expect(client_auth().currentUser).to.exist;
+        return client_auth().currentUser!.getIdToken(true);
       })
       .then((idToken) => {
         // Verify ID token contents.
@@ -368,7 +372,7 @@ describe('admin.auth', () => {
       isAdmin: true,
     })
     .then((customToken) => {
-      return firebase.auth!().signInWithCustomToken(customToken);
+      return client_auth().signInWithCustomToken(customToken);
     })
     .then(({user}) => {
       expect(user).to.exist;
@@ -388,7 +392,7 @@ describe('admin.auth', () => {
       isAdmin: true,
     })
     .then((customToken) => {
-      return firebase.auth!().signInWithCustomToken(customToken);
+      return client_auth().signInWithCustomToken(customToken);
     })
     .then(({user}) => {
       expect(user).to.exist;
@@ -426,7 +430,7 @@ describe('admin.auth', () => {
 
     // Sign out after each test.
     afterEach(() => {
-      return firebase.auth!().signOut();
+      return client_auth().signOut();
     });
 
     // Delete test user at the end of test suite.
@@ -443,10 +447,10 @@ describe('admin.auth', () => {
         .then((link) => {
           const code = getActionCode(link);
           expect(getContinueUrl(link)).equal(actionCodeSettings.url);
-          return firebase.auth!().confirmPasswordReset(code, newPassword);
+          return client_auth().confirmPasswordReset(code, newPassword);
         })
         .then(() => {
-          return firebase.auth!().signInWithEmailAndPassword(email, newPassword);
+          return client_auth().signInWithEmailAndPassword(email, newPassword);
         })
         .then((result) => {
           expect(result.user).to.exist;
@@ -466,10 +470,10 @@ describe('admin.auth', () => {
         .then((link) => {
           const code = getActionCode(link);
           expect(getContinueUrl(link)).equal(actionCodeSettings.url);
-          return firebase.auth!().applyActionCode(code);
+          return client_auth().applyActionCode(code);
         })
         .then(() => {
-          return firebase.auth!().signInWithEmailAndPassword(email, userData.password);
+          return client_auth().signInWithEmailAndPassword(email, userData.password);
         })
         .then((result) => {
           expect(result.user).to.exist;
@@ -482,7 +486,7 @@ describe('admin.auth', () => {
       return admin.auth().generateSignInWithEmailLink(email, actionCodeSettings)
         .then((link) => {
           expect(getContinueUrl(link)).equal(actionCodeSettings.url);
-          return firebase.auth!().signInWithEmailLink(email, link);
+          return client_auth().signInWithEmailLink(email, link);
         })
         .then((result) => {
           expect(result.user).to.exist;
@@ -725,10 +729,10 @@ describe('admin.auth', () => {
 
       it('createCustomToken() mints a JWT that can be used to sign in tenant users', async () => {
         try {
-          firebase.auth!().tenantId = createdTenantId;
+          client_auth().tenantId = createdTenantId;
 
           const customToken = await tenantAwareAuth.createCustomToken('uid1');
-          const {user} = await firebase.auth!().signInWithCustomToken(customToken);
+          const {user} = await client_auth().signInWithCustomToken(customToken);
           expect(user).to.not.be.null;
           const idToken = await user!.getIdToken();
           const token = await tenantAwareAuth.verifyIdToken(idToken);
@@ -736,7 +740,7 @@ describe('admin.auth', () => {
           expect(token.uid).to.equal('uid1');
           expect(token.firebase.tenant).to.equal(createdTenantId);
         } finally {
-          firebase.auth!().tenantId = null;
+          client_auth().tenantId = null;
         }
       });
     });
@@ -1220,7 +1224,7 @@ describe('admin.auth', () => {
 
     it('creates a valid Firebase session cookie', () => {
       return admin.auth().createCustomToken(uid, {admin: true, groupId: '1234'})
-        .then((customToken) => firebase.auth!().signInWithCustomToken(customToken))
+        .then((customToken) => client_auth().signInWithCustomToken(customToken))
         .then(({user}) => {
           expect(user).to.exist;
           return user!.getIdToken();
@@ -1256,7 +1260,7 @@ describe('admin.auth', () => {
     it('creates a revocable session cookie', () => {
       let currentSessionCookie: string;
       return admin.auth().createCustomToken(uid2)
-        .then((customToken) => firebase.auth!().signInWithCustomToken(customToken))
+        .then((customToken) => client_auth().signInWithCustomToken(customToken))
         .then(({user}) => {
           expect(user).to.exist;
           return user!.getIdToken();
@@ -1283,7 +1287,7 @@ describe('admin.auth', () => {
 
     it('fails when called with a revoked ID token', () => {
       return admin.auth().createCustomToken(uid3, {admin: true, groupId: '1234'})
-        .then((customToken) => firebase.auth!().signInWithCustomToken(customToken))
+        .then((customToken) => client_auth().signInWithCustomToken(customToken))
         .then(({user}) => {
           expect(user).to.exist;
           return user!.getIdToken();
@@ -1311,7 +1315,7 @@ describe('admin.auth', () => {
 
     it('fails when called with a Firebase ID token', () => {
       return admin.auth().createCustomToken(uid)
-        .then((customToken) => firebase.auth!().signInWithCustomToken(customToken))
+        .then((customToken) => client_auth().signInWithCustomToken(customToken))
         .then(({user}) => {
           expect(user).to.exist;
           return user!.getIdToken();
@@ -1597,7 +1601,7 @@ function testImportAndSignInUser(
       expect(result.successCount).to.equal(1);
       expect(result.errors.length).to.equal(0);
       // Sign in with an email and password to the imported account.
-      return firebase.auth!().signInWithEmailAndPassword(users[0].email, rawPassword);
+      return client_auth().signInWithEmailAndPassword(users[0].email, rawPassword);
     })
     .then(({user}) => {
       // Confirm successful sign-in.
