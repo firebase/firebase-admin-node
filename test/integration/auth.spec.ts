@@ -204,21 +204,22 @@ describe('admin.auth', () => {
 
     const testUser4 = mapUserRecordsToUidEmailPhones([importUser1])[0];
 
-    before(() => {
-      return Promise.all(
-        usersToCreate.map((user) => admin.auth().createUser(user)),
-      ).then(() => admin.auth().importUsers([importUser1]))
-      .then((userImportResult) => {
-        if (userImportResult.failureCount > 0) {
-          throw userImportResult.errors[0].error;
-        }
-      });
+    before(async () => {
+      // Delete all the users that we're about to create (in case they were
+      // left over from a prior run).
+      const uidsToDelete = usersToCreate.map((user) => user.uid);
+      uidsToDelete.push(importUser1.uid);
+      await admin.auth().deleteUsers(uidsToDelete);
+
+      // Create/import users required by these tests
+      await Promise.all(usersToCreate.map((user) => admin.auth().createUser(user)));
+      await admin.auth().importUsers([importUser1]);
     });
 
-    after(() => {
-      return Promise.all(
-        usersToCreate.map((user) => admin.auth().deleteUser(user.uid)),
-      ).then(() => admin.auth().deleteUser('uid4'));
+    after(async () => {
+      const uidsToDelete = usersToCreate.map((user) => user.uid);
+      uidsToDelete.push(importUser1.uid);
+      await admin.auth().deleteUsers(uidsToDelete);
     });
 
     it('returns users by various identifier types in a single call', async () => {
