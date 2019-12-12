@@ -20,6 +20,7 @@ import {
   ApiSettings, AuthorizedHttpClient, HttpRequestConfig, HttpError,
 } from '../utils/api-request';
 
+import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 
 /** Firebase IID backend host. */
@@ -49,17 +50,15 @@ export class FirebaseInstanceIdRequestHandler {
   private readonly host: string = FIREBASE_IID_HOST;
   private readonly timeout: number = FIREBASE_IID_TIMEOUT;
   private readonly httpClient: AuthorizedHttpClient;
-  private readonly path: string;
+  private path: string;
 
   /**
    * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
-   * @param {string} projectId A Firebase project ID string.
    *
    * @constructor
    */
-  constructor(app: FirebaseApp, projectId: string) {
+  constructor(private readonly app: FirebaseApp) {
     this.httpClient = new AuthorizedHttpClient(app);
-    this.path = FIREBASE_IID_PATH + `project/${projectId}/instanceId/`;
   }
 
   public deleteInstanceId(instanceId: string): Promise<void> {
@@ -79,11 +78,10 @@ export class FirebaseInstanceIdRequestHandler {
    * @return {Promise<void>} A promise that resolves when the request is complete.
    */
   private invokeRequestHandler(apiSettings: ApiSettings): Promise<void> {
-    const path: string = this.path + apiSettings.getEndpoint();
-    return Promise.resolve()
-      .then(() => {
+    return this.getPathPrefix()
+      .then((path) => {
         const req: HttpRequestConfig = {
-          url: `https://${this.host}${path}`,
+          url: `https://${this.host}${path}${apiSettings.getEndpoint()}`,
           method: apiSettings.getHttpMethod(),
           timeout: this.timeout,
         };
@@ -105,6 +103,28 @@ export class FirebaseInstanceIdRequestHandler {
         // In case of timeouts and other network errors, the HttpClient returns a
         // FirebaseError wrapped in the response. Simply throw it here.
         throw err;
+      });
+  }
+
+  private getPathPrefix(): Promise<string> {
+    if (this.path) {
+      return Promise.resolve(this.path);
+    }
+
+    return utils.findProjectId(this.app)
+      .then((projectId) => {
+        if (!validator.isNonEmptyString(projectId)) {
+          // Assert for an explicit projct ID (either via AppOptions or the cert itself).
+          throw new FirebaseInstanceIdError(
+            InstanceIdClientErrorCode.INVALID_PROJECT_ID,
+            'Failed to determine project ID for InstanceId. Initialize the '
+            + 'SDK with service account credentials or set project ID as an app option. '
+            + 'Alternatively set the GOOGLE_CLOUD_PROJECT environment variable.',
+          );
+        }
+
+        this.path = FIREBASE_IID_PATH + `project/${projectId}/instanceId/`;
+        return this.path;
       });
   }
 }

@@ -19,7 +19,6 @@ import {FirebaseInstanceIdError, InstanceIdClientErrorCode} from '../utils/error
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
 import {FirebaseInstanceIdRequestHandler} from './instance-id-request';
 
-import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 
 /**
@@ -55,19 +54,8 @@ export class InstanceId implements FirebaseServiceInterface {
       );
     }
 
-    const projectId: string | null = utils.getProjectId(app);
-    if (!validator.isNonEmptyString(projectId)) {
-      // Assert for an explicit projct ID (either via AppOptions or the cert itself).
-      throw new FirebaseInstanceIdError(
-        InstanceIdClientErrorCode.INVALID_PROJECT_ID,
-        'Failed to determine project ID for InstanceId. Initialize the '
-        + 'SDK with service account credentials or set project ID as an app option. '
-        + 'Alternatively set the GOOGLE_CLOUD_PROJECT environment variable.',
-      );
-    }
-
     this.app_ = app;
-    this.requestHandler = new FirebaseInstanceIdRequestHandler(app, projectId);
+    this.requestHandler = new FirebaseInstanceIdRequestHandler(app);
   }
 
   /**
