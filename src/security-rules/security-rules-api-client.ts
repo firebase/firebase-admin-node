@@ -57,7 +57,7 @@ export class SecurityRulesApiClient {
   private readonly projectIdPrefix: string;
   private readonly url: string;
 
-  constructor(private readonly httpClient: HttpClient, projectId: string) {
+  constructor(private readonly httpClient: HttpClient, projectId: string | null) {
     if (!validator.isNonNullObject(httpClient)) {
       throw new FirebaseSecurityRulesError(
         'invalid-argument', 'HttpClient must be a non-null object.');
@@ -235,7 +235,10 @@ export class SecurityRulesApiClient {
     }
 
     const error: Error = (response.data as ErrorResponse).error || {};
-    const code = ERROR_CODE_MAPPING[error.status] || 'unknown-error';
+    let code: SecurityRulesErrorCode = 'unknown-error';
+    if (error.status && error.status in ERROR_CODE_MAPPING) {
+      code = ERROR_CODE_MAPPING[error.status];
+    }
     const message = error.message || `Unknown server error: ${response.text}`;
     return new FirebaseSecurityRulesError(code, message);
   }

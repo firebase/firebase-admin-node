@@ -71,8 +71,8 @@ export function getFirestoreOptions(app: FirebaseApp): Settings {
     });
   }
 
-  const projectId: string = utils.getProjectId(app);
-  const cert: Certificate = tryGetCertificate(app.options.credential);
+  const projectId: string | null = utils.getProjectId(app);
+  const cert: Certificate | null = tryGetCertificate(app.options.credential);
   const { version: firebaseVersion } = require('../../package.json');
   if (cert != null) {
     // cert is available when the SDK has been initialized with a service account JSON file,

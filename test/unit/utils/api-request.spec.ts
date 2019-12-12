@@ -106,9 +106,9 @@ function testRetryConfig(): RetryConfig {
 
 describe('HttpClient', () => {
   let mockedRequests: nock.Scope[] = [];
-  let transportSpy: sinon.SinonSpy = null;
-  let delayStub: sinon.SinonStub = null;
-  let clock: sinon.SinonFakeTimers = null;
+  let transportSpy: sinon.SinonSpy | null = null;
+  let delayStub: sinon.SinonStub | null = null;
+  let clock: sinon.SinonFakeTimers | null = null;
 
   const sampleMultipartData = '--boundary\r\n'
       + 'Content-type: application/json\r\n\r\n'
@@ -239,7 +239,7 @@ describe('HttpClient', () => {
       expect(resp.status).to.equal(200);
       expect(resp.headers['content-type']).to.equal('multipart/mixed; boundary=boundary');
       expect(resp.multipart).to.not.be.undefined;
-      expect(resp.multipart.length).to.equal(0);
+      expect(resp.multipart!.length).to.equal(0);
       expect(() => { resp.text; }).to.throw('Unable to parse multipart payload as text');
       expect(() => { resp.data; }).to.throw('Unable to parse multipart payload as JSON');
       expect(resp.isJson()).to.be.false;
@@ -260,10 +260,8 @@ describe('HttpClient', () => {
     }).then((resp) => {
       expect(resp.status).to.equal(200);
       expect(resp.headers['content-type']).to.equal('multipart/mixed; boundary=boundary');
-      expect(resp.multipart).to.not.be.undefined;
-      expect(resp.multipart.length).to.equal(2);
-      expect(resp.multipart[0].toString('utf-8')).to.equal('{"foo": 1}');
-      expect(resp.multipart[1].toString('utf-8')).to.equal('foo bar');
+      expect(resp.multipart).to.exist;
+      expect(resp.multipart!.map((buffer) => buffer.toString('utf-8'))).to.deep.equal(['{"foo": 1}', 'foo bar']);
       expect(() => { resp.text; }).to.throw('Unable to parse multipart payload as text');
       expect(() => { resp.data; }).to.throw('Unable to parse multipart payload as JSON');
       expect(resp.isJson()).to.be.false;
@@ -284,10 +282,8 @@ describe('HttpClient', () => {
     }).then((resp) => {
       expect(resp.status).to.equal(200);
       expect(resp.headers['content-type']).to.equal('multipart/something; boundary=boundary');
-      expect(resp.multipart).to.not.be.undefined;
-      expect(resp.multipart.length).to.equal(2);
-      expect(resp.multipart[0].toString('utf-8')).to.equal('{"foo": 1}');
-      expect(resp.multipart[1].toString('utf-8')).to.equal('foo bar');
+      expect(resp.multipart).to.exist;
+      expect(resp.multipart!.map((buffer) => buffer.toString('utf-8'))).to.deep.equal(['{"foo": 1}', 'foo bar']);
       expect(() => { resp.text; }).to.throw('Unable to parse multipart payload as text');
       expect(() => { resp.data; }).to.throw('Unable to parse multipart payload as JSON');
       expect(resp.isJson()).to.be.false;
@@ -358,8 +354,8 @@ describe('HttpClient', () => {
       httpAgent,
     }).then((resp) => {
       expect(resp.status).to.equal(200);
-      expect(transportSpy.callCount).to.equal(1);
-      const options = transportSpy.args[0][0];
+      expect(transportSpy!.callCount).to.equal(1);
+      const options = transportSpy!.args[0][0];
       expect(options.agent).to.equal(httpAgent);
     });
   });
@@ -645,10 +641,8 @@ describe('HttpClient', () => {
       const resp = err.response;
       expect(resp.status).to.equal(500);
       expect(resp.headers['content-type']).to.equal('multipart/mixed; boundary=boundary');
-      expect(resp.multipart).to.not.be.undefined;
-      expect(resp.multipart.length).to.equal(2);
-      expect(resp.multipart[0].toString('utf-8')).to.equal('{"foo": 1}');
-      expect(resp.multipart[1].toString('utf-8')).to.equal('foo bar');
+      expect(resp.multipart).to.exist;
+      expect(resp.multipart!.map((buffer) => buffer.toString('utf-8'))).to.deep.equal(['{"foo": 1}', 'foo bar']);
       expect(() => { resp.text; }).to.throw('Unable to parse multipart payload as text');
       expect(() => { resp.data; }).to.throw('Unable to parse multipart payload as JSON');
       expect(resp.isJson()).to.be.false;
@@ -925,8 +919,8 @@ describe('HttpClient', () => {
       expect(resp.headers['content-type']).to.equal('application/json');
       expect(resp.data).to.deep.equal({});
       expect(resp.isJson()).to.be.true;
-      expect(delayStub.callCount).to.equal(4);
-      const delays = delayStub.args.map((args) => args[0]);
+      expect(delayStub!.callCount).to.equal(4);
+      const delays = delayStub!.args.map((args) => args[0]);
       expect(delays).to.deep.equal([0, 1000, 2000, 4000]);
     });
   });
@@ -956,8 +950,8 @@ describe('HttpClient', () => {
       expect(resp.headers['content-type']).to.equal('application/json');
       expect(resp.data).to.deep.equal({});
       expect(resp.isJson()).to.be.true;
-      expect(delayStub.callCount).to.equal(4);
-      const delays = delayStub.args.map((args) => args[0]);
+      expect(delayStub!.callCount).to.equal(4);
+      const delays = delayStub!.args.map((args) => args[0]);
       expect(delays).to.deep.equal([0, 2000, 4000, 4000]);
     });
   });
@@ -986,8 +980,8 @@ describe('HttpClient', () => {
       expect(resp.headers['content-type']).to.equal('application/json');
       expect(resp.data).to.deep.equal({});
       expect(resp.isJson()).to.be.true;
-      expect(delayStub.callCount).to.equal(4);
-      const delays = delayStub.args.map((args) => args[0]);
+      expect(delayStub!.callCount).to.equal(4);
+      const delays = delayStub!.args.map((args) => args[0]);
       expect(delays).to.deep.equal([0, 0, 0, 0]);
     });
   });
@@ -1019,8 +1013,8 @@ describe('HttpClient', () => {
       expect(resp.headers['content-type']).to.equal('application/json');
       expect(resp.data).to.deep.equal(respData);
       expect(resp.isJson()).to.be.true;
-      expect(delayStub.callCount).to.equal(1);
-      expect(delayStub.args[0][0]).to.equal(30 * 1000);
+      expect(delayStub!.callCount).to.equal(1);
+      expect(delayStub!.args[0][0]).to.equal(30 * 1000);
     });
   });
 
@@ -1055,8 +1049,8 @@ describe('HttpClient', () => {
       expect(resp.headers['content-type']).to.equal('application/json');
       expect(resp.data).to.deep.equal(respData);
       expect(resp.isJson()).to.be.true;
-      expect(delayStub.callCount).to.equal(1);
-      expect(delayStub.args[0][0]).to.equal(30 * 1000);
+      expect(delayStub!.callCount).to.equal(1);
+      expect(delayStub!.args[0][0]).to.equal(30 * 1000);
     });
   });
 
@@ -1089,8 +1083,8 @@ describe('HttpClient', () => {
       expect(resp.headers['content-type']).to.equal('application/json');
       expect(resp.data).to.deep.equal(respData);
       expect(resp.isJson()).to.be.true;
-      expect(delayStub.callCount).to.equal(1);
-      expect(delayStub.args[0][0]).to.equal(0);
+      expect(delayStub!.callCount).to.equal(1);
+      expect(delayStub!.args[0][0]).to.equal(0);
     });
   });
 
@@ -1121,8 +1115,8 @@ describe('HttpClient', () => {
       expect(resp.headers['content-type']).to.equal('application/json');
       expect(resp.data).to.deep.equal(respData);
       expect(resp.isJson()).to.be.true;
-      expect(delayStub.callCount).to.equal(1);
-      expect(delayStub.args[0][0]).to.equal(0);
+      expect(delayStub!.callCount).to.equal(1);
+      expect(delayStub!.args[0][0]).to.equal(0);
     });
   });
 
@@ -1223,7 +1217,7 @@ describe('AuthorizedHttpClient', () => {
   });
 
   describe('HTTP Agent', () => {
-    let transportSpy: sinon.SinonSpy = null;
+    let transportSpy: sinon.SinonSpy | null = null;
     let mockAppWithAgent: FirebaseApp;
     let agentForApp: Agent;
 
@@ -1237,7 +1231,7 @@ describe('AuthorizedHttpClient', () => {
     });
 
     afterEach(() => {
-      transportSpy.restore();
+      transportSpy!.restore();
       transportSpy = null;
       return mockAppWithAgent.delete();
     });
@@ -1258,8 +1252,8 @@ describe('AuthorizedHttpClient', () => {
         httpAgent,
       }).then((resp) => {
         expect(resp.status).to.equal(200);
-        expect(transportSpy.callCount).to.equal(1);
-        const options = transportSpy.args[0][0];
+        expect(transportSpy!.callCount).to.equal(1);
+        const options = transportSpy!.args[0][0];
         expect(options.agent).to.equal(httpAgent);
       });
     });
@@ -1278,8 +1272,8 @@ describe('AuthorizedHttpClient', () => {
         url: mockUrl,
       }).then((resp) => {
         expect(resp.status).to.equal(200);
-        expect(transportSpy.callCount).to.equal(1);
-        const options = transportSpy.args[0][0];
+        expect(transportSpy!.callCount).to.equal(1);
+        const options = transportSpy!.args[0][0];
         expect(options.agent).to.equal(agentForApp);
       });
     });

@@ -19,7 +19,7 @@ import fs = require('fs');
 import os = require('os');
 import path = require('path');
 
-import {AppErrorCodes, FirebaseAppError} from '../utils/error';
+import {AppErrorCodes, FirebaseAppError, FirebaseAuthError, AuthClientErrorCode} from '../utils/error';
 import {HttpClient, HttpRequestConfig, HttpError, HttpResponse} from '../utils/api-request';
 import {Agent} from 'http';
 
@@ -69,7 +69,7 @@ export class RefreshToken {
    * Tries to load a RefreshToken from a path. If the path is not present, returns null.
    * Throws if data at the path is invalid.
    */
-  public static fromPath(filePath: string): RefreshToken {
+  public static fromPath(filePath: string): RefreshToken | null {
     let jsonString: string;
 
     try {
@@ -224,7 +224,7 @@ function getDetailFromResponse(response: HttpResponse): string {
     }
     return detail;
   }
-  return response.text;
+  return response.text || 'Missing error payload';
 }
 
 /**
@@ -234,7 +234,7 @@ export class CertCredential implements FirebaseCredential {
 
   private readonly certificate: Certificate;
   private readonly httpClient: HttpClient;
-  private readonly httpAgent: Agent;
+  private readonly httpAgent?: Agent;
 
   constructor(serviceAccountPathOrObject: string | object, httpAgent?: Agent) {
     this.certificate = (typeof serviceAccountPathOrObject === 'string') ?
@@ -306,8 +306,8 @@ export interface FirebaseCredential extends Credential {
  * @param {Credential} credential A Credential instance.
  * @return {Certificate} A Certificate instance or null.
  */
-export function tryGetCertificate(credential: Credential): Certificate | null {
-  if (isFirebaseCredential(credential)) {
+export function tryGetCertificate(credential: Credential | null | undefined): Certificate | null {
+  if (credential && isFirebaseCredential(credential)) {
     return credential.getCertificate();
   }
 
@@ -325,11 +325,22 @@ export class RefreshTokenCredential implements Credential {
 
   private readonly refreshToken: RefreshToken;
   private readonly httpClient: HttpClient;
-  private readonly httpAgent: Agent;
+  private readonly httpAgent?: Agent;
 
   constructor(refreshTokenPathOrObject: string | object, httpAgent?: Agent) {
-    this.refreshToken = (typeof refreshTokenPathOrObject === 'string') ?
-      RefreshToken.fromPath(refreshTokenPathOrObject) : new RefreshToken(refreshTokenPathOrObject);
+    if (typeof refreshTokenPathOrObject === 'string') {
+      const refreshToken = RefreshToken.fromPath(refreshTokenPathOrObject);
+      if (!refreshToken) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.NOT_FOUND,
+          'The file refered to by the refreshTokenPathOrObject parameter (' +
+          refreshTokenPathOrObject + ') was not found.',
+        );
+      }
+      this.refreshToken = refreshToken;
+    } else {
+      this.refreshToken = new RefreshToken(refreshTokenPathOrObject);
+    }
     this.httpClient = new HttpClient();
     this.httpAgent = httpAgent;
   }
@@ -362,7 +373,7 @@ export class RefreshTokenCredential implements Credential {
 export class MetadataServiceCredential implements Credential {
 
   private readonly httpClient = new HttpClient();
-  private readonly httpAgent: Agent;
+  private readonly httpAgent?: Agent;
 
   constructor(httpAgent?: Agent) {
     this.httpAgent = httpAgent;
@@ -396,10 +407,12 @@ export class ApplicationDefaultCredential implements FirebaseCredential {
     }
 
     // It is OK to not have this file. If it is present, it must be valid.
-    const refreshToken = RefreshToken.fromPath(GCLOUD_CREDENTIAL_PATH);
-    if (refreshToken) {
-      this.credential_ = new RefreshTokenCredential(refreshToken, httpAgent);
-      return;
+    if (GCLOUD_CREDENTIAL_PATH) {
+      const refreshToken = RefreshToken.fromPath(GCLOUD_CREDENTIAL_PATH);
+      if (refreshToken) {
+        this.credential_ = new RefreshTokenCredential(refreshToken, httpAgent);
+        return;
+      }
     }
 
     this.credential_ = new MetadataServiceCredential(httpAgent);
@@ -409,7 +422,7 @@ export class ApplicationDefaultCredential implements FirebaseCredential {
     return this.credential_.getAccessToken();
   }
 
-  public getCertificate(): Certificate {
+  public getCertificate(): Certificate | null {
     return tryGetCertificate(this.credential_);
   }
 

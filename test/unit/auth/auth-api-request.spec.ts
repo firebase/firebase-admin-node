@@ -44,6 +44,7 @@ import {
   SAMLUpdateAuthProviderRequest, SAMLConfigServerResponse,
 } from '../../../src/auth/auth-config';
 import {TenantOptions} from '../../../src/auth/tenant';
+import { UpdateRequest } from '../../../src/auth/user-record';
 
 chai.should();
 chai.use(sinonChai);
@@ -1597,7 +1598,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       const path = handler.path('v1', '/accounts:update', 'project_id');
       const method = 'POST';
       const uid = '12345678';
-      const validData = {
+      const validData: UpdateRequest = {
         displayName: 'John Doe',
         email: 'user@example.com',
         emailVerified: true,
@@ -1605,8 +1606,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         photoURL: 'http://localhost/1234/photo.png',
         password: 'password',
         phoneNumber: '+11234567890',
-        ignoredProperty: 'value',
       };
+      (validData as any).ignoredProperty = 'value';
       const expectedValidData = {
         localId: uid,
         displayName: 'John Doe',
@@ -2399,19 +2400,10 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       it('should be rejected given requestType:EMAIL_SIGNIN and no ActionCodeSettings', () => {
         const invalidRequestType = 'EMAIL_SIGNIN';
-        const expectedError = new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
-          `"ActionCodeSettings" must be a non-null object.`,
-        );
-
         const requestHandler = handler.init(mockApp);
+
         return requestHandler.getEmailActionLink(invalidRequestType, email)
-          .then((resp) => {
-            throw new Error('Unexpected success');
-          }, (error) => {
-            // Invalid argument error should be thrown.
-            expect(error).to.deep.equal(expectedError);
-          });
+          .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
       });
 
       it('should be rejected given an invalid email', () => {
@@ -3552,7 +3544,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
     if (handler.supportsTenantManagement) {
       describe('getTenant', () => {
-        const path = '/v2beta1/projects/project_id/tenants/tenant-id';
+        const path = '/v2/projects/project_id/tenants/tenant-id';
         const method = 'GET';
         const tenantId = 'tenant-id';
         const expectedResult = utils.responseFrom({
@@ -3608,7 +3600,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
 
       describe('listTenants', () => {
-        const path = '/v2beta1/projects/project_id/tenants';
+        const path = '/v2/projects/project_id/tenants';
         const method = 'GET';
         const nextPageToken = 'PAGE_TOKEN';
         const maxResults = 500;
@@ -3724,7 +3716,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
 
       describe('deleteTenant', () => {
-        const path = '/v2beta1/projects/project_id/tenants/tenant-id';
+        const path = '/v2/projects/project_id/tenants/tenant-id';
         const method = 'DELETE';
         const tenantId = 'tenant-id';
         const expectedResult = utils.responseFrom({});
@@ -3778,7 +3770,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
 
       describe('createTenant', () => {
-        const path = '/v2beta1/projects/project_id/tenants';
+        const path = '/v2/projects/project_id/tenants';
         const postMethod = 'POST';
         const tenantOptions: TenantOptions = {
           displayName: 'TENANT-DISPLAY-NAME',
@@ -3889,7 +3881,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
 
       describe('updateTenant', () => {
-        const path = '/v2beta1/projects/project_id/tenants/tenant-id';
+        const path = '/v2/projects/project_id/tenants/tenant-id';
         const patchMethod = 'PATCH';
         const tenantId = 'tenant-id';
         const tenantOptions = {

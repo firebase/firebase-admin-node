@@ -289,14 +289,23 @@ describe('AndroidApp', () => {
 
   describe('deleteShaCertificate', () => {
     const certificateToDelete = new ShaCertificate(VALID_SHA_1_HASH);
+    const certificateToDeleteWithResourceName =
+        new ShaCertificate(VALID_SHA_1_HASH, 'resource/name');
 
     it('should propagate API errors', () => {
       const stub = sinon
           .stub(ProjectManagementRequestHandler.prototype, 'deleteResource')
           .returns(Promise.reject(EXPECTED_ERROR));
       stubs.push(stub);
-      return androidApp.deleteShaCertificate(certificateToDelete)
+      return androidApp
+          .deleteShaCertificate(certificateToDeleteWithResourceName)
           .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+    });
+
+    it('should fail on certificate without resourceName', () => {
+      expect(() => androidApp.deleteShaCertificate(certificateToDelete))
+          .to.throw(FirebaseProjectManagementError)
+          .with.property('code', 'project-management/invalid-argument');
     });
 
     it('should resolve on success', () => {
@@ -304,7 +313,9 @@ describe('AndroidApp', () => {
           .stub(ProjectManagementRequestHandler.prototype, 'deleteResource')
           .returns(Promise.resolve());
       stubs.push(stub);
-      return androidApp.deleteShaCertificate(certificateToDelete).should.eventually.be.fulfilled;
+      return androidApp
+          .deleteShaCertificate(certificateToDeleteWithResourceName)
+          .should.eventually.be.fulfilled;
     });
   });
 

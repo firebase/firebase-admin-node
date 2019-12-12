@@ -21,7 +21,7 @@ import {
   Message, validateMessage, MessagingDevicesResponse,
   MessagingDeviceGroupResponse, MessagingTopicManagementResponse,
   MessagingPayload, MessagingOptions, MessagingTopicResponse,
-  MessagingConditionResponse, BatchResponse, MulticastMessage,
+  MessagingConditionResponse, BatchResponse, MulticastMessage, DataMessagePayload, NotificationMessagePayload,
 } from './messaging-types';
 import {FirebaseMessagingRequestHandler} from './messaging-api-request';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
@@ -40,7 +40,7 @@ const FCM_TOPIC_MANAGEMENT_ADD_PATH = '/iid/v1:batchAdd';
 const FCM_TOPIC_MANAGEMENT_REMOVE_PATH = '/iid/v1:batchRemove';
 
 // Maximum messages that can be included in a batch request.
-const FCM_MAX_BATCH_SIZE = 100;
+const FCM_MAX_BATCH_SIZE = 500;
 
 // Key renames for the messaging notification payload object.
 const CAMELCASED_NOTIFICATION_PAYLOAD_KEYS_MAP = {
@@ -221,7 +221,7 @@ export class Messaging implements FirebaseServiceInterface {
       );
     }
 
-    const projectId: string = utils.getProjectId(app);
+    const projectId: string | null = utils.getProjectId(app);
     if (!validator.isNonEmptyString(projectId)) {
       // Assert for an explicit project ID (either via AppOptions or the cert itself).
       throw new FirebaseMessagingError(
@@ -283,7 +283,7 @@ export class Messaging implements FirebaseServiceInterface {
    * An error from this method indicates a total failure -- i.e. none of the messages in the
    * list could be sent. Partial failures are indicated by a BatchResponse return value.
    *
-   * @param {Message[]} messages A non-empty array containing up to 100 messages.
+   * @param {Message[]} messages A non-empty array containing up to 500 messages.
    * @param {boolean=} dryRun Whether to send the message in the dry-run (validation only) mode.
    *
    * @return {Promise<BatchResponse>} A Promise fulfilled with an object representing the result
@@ -335,7 +335,7 @@ export class Messaging implements FirebaseServiceInterface {
    * indicates a total failure -- i.e. none of the tokens in the list could be sent to. Partial
    * failures are indicated by a BatchResponse return value.
    *
-   * @param {MulticastMessage} message A multicast message containing up to 100 tokens.
+   * @param {MulticastMessage} message A multicast message containing up to 500 tokens.
    * @param {boolean=} dryRun Whether to send the message in the dry-run (validation only) mode.
    *
    * @return {Promise<BatchResponse>} A Promise fulfilled with an object representing the result
@@ -365,6 +365,7 @@ export class Messaging implements FirebaseServiceInterface {
         data: copy.data,
         notification: copy.notification,
         webpush: copy.webpush,
+        fcmOptions: copy.fcmOptions,
       };
     });
     return this.sendAll(messages, dryRun);
@@ -758,9 +759,7 @@ export class Messaging implements FirebaseServiceInterface {
       );
     }
 
-    payloadKeys.forEach((payloadKey: keyof MessagingPayload) => {
-      const value = payloadCopy[payloadKey];
-
+    const validatePayload = (payloadKey: string, value: DataMessagePayload | NotificationMessagePayload) => {
       // Validate each top-level key in the payload is an object
       if (!validator.isNonNullObject(value)) {
         throw new FirebaseMessagingError(
@@ -786,12 +785,19 @@ export class Messaging implements FirebaseServiceInterface {
           );
         }
       });
-    });
+    };
+
+    if (payloadCopy.data !== undefined) {
+      validatePayload('data', payloadCopy.data);
+    }
+    if (payloadCopy.notification !== undefined) {
+      validatePayload('notification', payloadCopy.notification);
+    }
 
     // Validate the data payload object does not contain blacklisted properties
     if ('data' in payloadCopy) {
       BLACKLISTED_DATA_PAYLOAD_KEYS.forEach((blacklistedKey) => {
-        if (blacklistedKey in payloadCopy.data) {
+        if (blacklistedKey in payloadCopy.data!) {
           throw new FirebaseMessagingError(
             MessagingClientErrorCode.INVALID_PAYLOAD,
             `Messaging payload contains the blacklisted "data.${ blacklistedKey }" property.`,
@@ -801,7 +807,7 @@ export class Messaging implements FirebaseServiceInterface {
     }
 
     // Convert whitelisted camelCase keys to underscore_case
-    if ('notification' in payloadCopy) {
+    if (payloadCopy.notification) {
       utils.renameProperties(payloadCopy.notification, CAMELCASED_NOTIFICATION_PAYLOAD_KEYS_MAP);
     }
 

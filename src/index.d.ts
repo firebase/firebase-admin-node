@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import {Bucket} from '@google-cloud/storage';
+import { Bucket } from '@google-cloud/storage';
 import * as _firestore from '@google-cloud/firestore';
-import {Agent} from 'http';
+import { Agent } from 'http';
 
 /**
  * `admin` is a global namespace from which all Firebase Admin
@@ -140,7 +140,7 @@ declare namespace admin {
      * [Authenticate with limited privileges](/docs/database/admin/start#authenticate-with-limited-privileges)
      * for detailed documentation and code samples.
      */
-    databaseAuthVariableOverride?: Object;
+    databaseAuthVariableOverride?: Object | null;
 
     /**
      * The URL of the Realtime Database from which to read and write data.
@@ -179,7 +179,7 @@ declare namespace admin {
   }
 
   var SDK_VERSION: string;
-  var apps: (admin.app.App|null)[];
+  var apps: (admin.app.App | null)[];
 
   function app(name?: string): admin.app.App;
 
@@ -596,7 +596,7 @@ declare namespace admin.auth {
     providerData: admin.auth.UserInfo[];
 
     /**
-     * The user’s hashed password (base64-encoded), only if Firebase Auth hashing
+     * The user's hashed password (base64-encoded), only if Firebase Auth hashing
      * algorithm (SCRYPT) is used. If a different hashing algorithm had been used
      * when uploading this user, as is typical when migrating from another Auth
      * system, this will be an empty string. If no password is set, this is
@@ -607,7 +607,7 @@ declare namespace admin.auth {
     passwordHash?: string;
 
     /**
-     * The user’s password salt (base64-encoded), only if Firebase Auth hashing
+     * The user's password salt (base64-encoded), only if Firebase Auth hashing
      * algorithm (SCRYPT) is used. If a different hashing algorithm had been used to
      * upload this user, typical when migrating from another Auth system, this will
      * be an empty string. If no password is set, this is null. This is only
@@ -633,7 +633,7 @@ declare namespace admin.auth {
      * resets, password or email updates, etc).
      */
     tokensValidAfterTime?: string;
-  
+
     /**
      * The ID of the tenant the user belongs to, if available.
      */
@@ -828,8 +828,8 @@ declare namespace admin.auth {
   }
 
   type HashAlgorithmType = 'SCRYPT' | 'STANDARD_SCRYPT' | 'HMAC_SHA512' |
-      'HMAC_SHA256' | 'HMAC_SHA1' | 'HMAC_MD5' | 'MD5' | 'PBKDF_SHA1' | 'BCRYPT' |
-      'PBKDF2_SHA256' | 'SHA512' | 'SHA256' | 'SHA1';
+    'HMAC_SHA256' | 'HMAC_SHA1' | 'HMAC_MD5' | 'MD5' | 'PBKDF_SHA1' | 'BCRYPT' |
+    'PBKDF2_SHA256' | 'SHA512' | 'SHA256' | 'SHA1';
 
   /**
    * Interface representing the user import options needed for
@@ -863,7 +863,7 @@ declare namespace admin.auth {
        * The salt separator in buffer bytes which is appended to salt when
        * verifying a password. This is only used by the `SCRYPT` algorithm.
        */
-      saltSeparator?: string;
+      saltSeparator?: Buffer;
 
       /**
        * The number of rounds for hashing calculation.
@@ -980,7 +980,7 @@ declare namespace admin.auth {
     customClaims?: Object;
 
     /**
-     * The buffer of bytes representing the user’s hashed password.
+     * The buffer of bytes representing the user's hashed password.
      * When a user is to be imported with a password hash,
      * {@link admin.auth.UserImportOptions `UserImportOptions`} are required to be
      * specified to identify the hashing algorithm used to generate this hash.
@@ -988,10 +988,10 @@ declare namespace admin.auth {
     passwordHash?: Buffer;
 
     /**
-     * The buffer of bytes representing the user’s password salt.
+     * The buffer of bytes representing the user's password salt.
      */
     passwordSalt?: Buffer;
-  
+
     /**
      * The identifier of the tenant where user is to be imported to.
      * When not provided in an `admin.auth.Auth` context, the user is uploaded to
@@ -1605,7 +1605,7 @@ declare namespace admin.auth {
      * @return A promise that resolves when the operation completes
      *   successfully.
      */
-    setCustomUserClaims(uid: string, customUserClaims: Object): Promise<void>;
+    setCustomUserClaims(uid: string, customUserClaims: Object | null): Promise<void>;
 
     /**
      * Revokes all refresh tokens for an existing user.
@@ -2165,7 +2165,7 @@ declare namespace admin.credential {
     * @return A credential authenticated via the
     *   provided service account that can be used to initialize an app.
    */
-  function cert(serviceAccountPathOrObject: string|admin.ServiceAccount, httpAgent?: Agent): admin.credential.Credential;
+  function cert(serviceAccountPathOrObject: string | admin.ServiceAccount, httpAgent?: Agent): admin.credential.Credential;
 
   /**
    * Returns a credential created from the provided refresh token that grants
@@ -2200,7 +2200,7 @@ declare namespace admin.credential {
     * @return A credential authenticated via the
     *   provided service account that can be used to initialize an app.
    */
-  function refreshToken(refreshTokenPathOrObject: string|Object, httpAgent?: Agent): admin.credential.Credential;
+  function refreshToken(refreshTokenPathOrObject: string | Object, httpAgent?: Agent): admin.credential.Credential;
 }
 
 declare namespace admin.database {
@@ -2371,7 +2371,7 @@ declare namespace admin.database {
    * data, you always call the `set()` method on a `Reference` directly).
    */
   interface DataSnapshot {
-    key: string|null;
+    key: string | null;
     ref: admin.database.Reference;
 
     /**
@@ -2531,7 +2531,7 @@ declare namespace admin.database {
       *
       * @return The the priority value of the data in this `DataSnapshot`.
       */
-    getPriority(): string|number|null;
+    getPriority(): string | number | null;
 
     /**
      * Returns true if the specified child path has (non-null) data.
@@ -2710,7 +2710,7 @@ declare namespace admin.database {
      *   indicating a failure.
      * @return Resolves when synchronization to the server is complete.
      */
-    cancel(onComplete?: (a: Error|null) => any): Promise<void>;
+    cancel(onComplete?: (a: Error | null) => any): Promise<void>;
 
     /**
      * Ensures the data at this location is deleted when the client is disconnected
@@ -2722,7 +2722,7 @@ declare namespace admin.database {
      *   indicating a failure.
      * @return Resolves when synchronization to the server is complete.
      */
-    remove(onComplete?: (a: Error|null) => any): Promise<void>;
+    remove(onComplete?: (a: Error | null) => any): Promise<void>;
 
     /**
      * Ensures the data at this location is set to the specified value when the
@@ -2754,7 +2754,7 @@ declare namespace admin.database {
       *   `Error` object indicating a failure.
       * @return A promise that resolves when synchronization to the database is complete.
       */
-    set(value: any, onComplete?: (a: Error|null) => any): Promise<void>;
+    set(value: any, onComplete?: (a: Error | null) => any): Promise<void>;
 
     /**
      * Ensures the data at this location is set to the specified value and priority
@@ -2772,8 +2772,8 @@ declare namespace admin.database {
      */
     setWithPriority(
       value: any,
-      priority: number|string|null,
-      onComplete?: (a: Error|null) => any
+      priority: number | string | null,
+      onComplete?: (a: Error | null) => any
     ): Promise<void>;
 
     /**
@@ -2813,7 +2813,7 @@ declare namespace admin.database {
      * @return Resolves when synchronization to the
      *   Database is complete.
      */
-    update(values: Object, onComplete?: (a: Error|null) => any): Promise<void>;
+    update(values: Object, onComplete?: (a: Error | null) => any): Promise<void>;
   }
 
   type EventType = 'value' | 'child_added' | 'child_changed' | 'child_moved' | 'child_removed';
@@ -2873,7 +2873,7 @@ declare namespace admin.database {
      *   priority.
      * @return A new `Query` object.
      */
-    endAt(value: number|string|boolean|null, key?: string): admin.database.Query;
+    endAt(value: number | string | boolean | null, key?: string): admin.database.Query;
 
     /**
      * Creates a `Query` that includes children that match the specified value.
@@ -2907,7 +2907,7 @@ declare namespace admin.database {
      *   priority.
      * @return A new `Query` object.
      */
-    equalTo(value: number|string|boolean|null, key?: string): admin.database.Query;
+    equalTo(value: number | string | boolean | null, key?: string): admin.database.Query;
 
     /**
      * Returns whether or not the current and provided queries represent the same
@@ -2948,7 +2948,7 @@ declare namespace admin.database {
      * @return Whether or not the current and provided queries are
      *   equivalent.
      */
-    isEqual(other: admin.database.Query|null): boolean;
+    isEqual(other: admin.database.Query | null): boolean;
 
     /**
      * Generates a new `Query` limited to the first specific number of children.
@@ -3065,8 +3065,8 @@ declare namespace admin.database {
      */
     off(
       eventType?: admin.database.EventType,
-      callback?: (a: admin.database.DataSnapshot, b?: string|null) => any,
-      context?: Object|null
+      callback?: (a: admin.database.DataSnapshot, b?: string | null) => any,
+      context?: Object | null
     ): void;
 
     /**
@@ -3187,10 +3187,10 @@ declare namespace admin.database {
       */
     on(
       eventType: admin.database.EventType,
-      callback: (a: admin.database.DataSnapshot|null, b?: string) => any,
-      cancelCallbackOrContext?: Object|null,
-      context?: Object|null
-    ): (a: admin.database.DataSnapshot|null, b?: string) => any;
+      callback: (a: admin.database.DataSnapshot | null, b?: string) => any,
+      cancelCallbackOrContext?: Object | null,
+      context?: Object | null
+    ): (a: admin.database.DataSnapshot | null, b?: string) => any;
 
     /**
      * Listens for exactly one event of the specified event type, and then stops
@@ -3226,8 +3226,8 @@ declare namespace admin.database {
     once(
       eventType: admin.database.EventType,
       successCallback?: (a: admin.database.DataSnapshot, b?: string) => any,
-      failureCallbackOrContext?: Object|null,
-      context?: Object|null
+      failureCallbackOrContext?: Object | null,
+      context?: Object | null
     ): Promise<admin.database.DataSnapshot>;
 
     /**
@@ -3354,7 +3354,7 @@ declare namespace admin.database {
      *   ordering by child, value, or priority.
      * @return A new `Query` object.
      */
-    startAt(value: number|string|boolean|null, key?: string): admin.database.Query;
+    startAt(value: number | string | boolean | null, key?: string): admin.database.Query;
 
     /**
      * @return A JSON-serializable representation of this object.
@@ -3431,7 +3431,7 @@ declare namespace admin.database {
      * key = adaRef.child("name/last").key;  // key === "last"
      * ```
      */
-    key: string|null;
+    key: string | null;
 
     /**
      * The parent location of a `Reference`.
@@ -3453,7 +3453,7 @@ declare namespace admin.database {
      * // usersRef and adaRef.parent represent the same location
      * ```
      */
-    parent: admin.database.Reference|null;
+    parent: admin.database.Reference | null;
 
     /**
      * The root `Reference` of the Database.
@@ -3553,7 +3553,7 @@ declare namespace admin.database {
      *   `Reference`; resolves when write is complete, but can be used immediately
      *   as the `Reference` to the child location.
      */
-    push(value?: any, onComplete?: (a: Error|null) => any): admin.database.ThenableReference;
+    push(value?: any, onComplete?: (a: Error | null) => any): admin.database.ThenableReference;
 
     /**
      * Removes the data at this Database location.
@@ -3582,7 +3582,7 @@ declare namespace admin.database {
      *   complete.
      * @return Resolves when remove on server is complete.
      */
-    remove(onComplete?: (a: Error|null) => any): Promise<void>;
+    remove(onComplete?: (a: Error | null) => any): Promise<void>;
 
     /**
      * Writes data to this Database location.
@@ -3643,7 +3643,7 @@ declare namespace admin.database {
      *   complete.
      * @return Resolves when write to server is complete.
      */
-    set(value: any, onComplete?: (a: Error|null) => any): Promise<void>;
+    set(value: any, onComplete?: (a: Error | null) => any): Promise<void>;
 
     /**
      * Sets a priority for the data at this Database location.
@@ -3659,8 +3659,8 @@ declare namespace admin.database {
      * @return
      */
     setPriority(
-      priority: string|number|null,
-      onComplete: (a: Error|null) => any
+      priority: string | number | null,
+      onComplete: (a: Error | null) => any
     ): Promise<void>;
 
     /**
@@ -3679,8 +3679,8 @@ declare namespace admin.database {
      * @return
      */
     setWithPriority(
-      newVal: any, newPriority: string|number|null,
-      onComplete?: (a: Error|null) => any
+      newVal: any, newPriority: string | number | null,
+      onComplete?: (a: Error | null) => any
     ): Promise<void>;
 
     /**
@@ -3770,11 +3770,11 @@ declare namespace admin.database {
      */
     transaction(
       transactionUpdate: (a: any) => any,
-      onComplete?: (a: Error|null, b: boolean, c: admin.database.DataSnapshot|null) => any,
+      onComplete?: (a: Error | null, b: boolean, c: admin.database.DataSnapshot | null) => any,
       applyLocally?: boolean
     ): Promise<{
       committed: boolean,
-      snapshot: admin.database.DataSnapshot|null
+      snapshot: admin.database.DataSnapshot | null
     }>;
 
     /**
@@ -3823,15 +3823,15 @@ declare namespace admin.database {
      *   complete.
      * @return Resolves when update on server is complete.
      */
-    update(values: Object, onComplete?: (a: Error|null) => any): Promise<void>;
+    update(values: Object, onComplete?: (a: Error | null) => any): Promise<void>;
   }
 
   /**
    * @extends {admin.database.Reference}
    */
-  interface ThenableReference extends admin.database.Reference, Promise<admin.database.Reference> {}
+  interface ThenableReference extends admin.database.Reference, Promise<admin.database.Reference> { }
 
-  function enableLogging(logger?: boolean|((message: string) => any), persistent?: boolean): any;
+  function enableLogging(logger?: boolean | ((message: string) => any), persistent?: boolean): any;
 }
 
 declare namespace admin.database.ServerValue {
@@ -3839,7 +3839,7 @@ declare namespace admin.database.ServerValue {
 }
 
 type BaseMessage = {
-  data?: {[key: string]: string};
+  data?: { [key: string]: string };
   notification?: admin.messaging.Notification;
   android?: admin.messaging.AndroidConfig;
   webpush?: admin.messaging.WebpushConfig;
@@ -3883,7 +3883,7 @@ declare namespace admin.messaging {
     /**
      * Priority of the message. Must be either `normal` or `high`.
      */
-    priority?: ('high'|'normal');
+    priority?: ('high' | 'normal');
 
     /**
      * Time-to-live duration of the message in milliseconds.
@@ -3901,7 +3901,7 @@ declare namespace admin.messaging {
      * be strings. When provided, overrides any data fields set on the top-level
      * `admin.messaging.Message`.}
      */
-    data?: {[key: string]: string};
+    data?: { [key: string]: string };
 
     /**
      * Android notification to be included in the message.
@@ -4000,6 +4000,120 @@ declare namespace admin.messaging {
      * ID specified in the app manifest.
      */
     channelId?: string;
+
+    /**
+     * Sets the "ticker" text, which is sent to accessibility services. Prior to 
+     * API level 21 (Lollipop), sets the text that is displayed in the status bar 
+     * when the notification first arrives.
+     */
+    ticker?: string;
+
+    /**
+     * When set to `false` or unset, the notification is automatically dismissed when 
+     * the user clicks it in the panel. When set to `true`, the notification persists 
+     * even when the user clicks it.
+     */
+    sticky?: boolean;
+
+    /**
+     * For notifications that inform users about events with an absolute time reference, sets
+     * the time that the event in the notification occurred. Notifications
+     * in the panel are sorted by this time.
+     */
+    eventTimestamp?: Date;
+
+    /**
+     * Sets whether or not this notification is relevant only to the current device. 
+     * Some notifications can be bridged to other devices for remote display, such as 
+     * a Wear OS watch. This hint can be set to recommend this notification not be bridged. 
+     * See [Wear OS guides](https://developer.android.com/training/wearables/notifications/bridger#existing-method-of-preventing-bridging)
+     */
+    localOnly?: boolean;
+
+    /**
+     * Sets the relative priority for this notification. Low-priority notifications 
+     * may be hidden from the user in certain situations. Note this priority differs 
+     * from `AndroidMessagePriority`. This priority is processed by the client after 
+     * the message has been delivered. Whereas `AndroidMessagePriority` is an FCM concept 
+     * that controls when the message is delivered.
+     */
+    priority?: ('min' | 'low' | 'default' | 'high' | 'max');
+
+    /**
+     * Sets the vibration pattern to use. Pass in an array of milliseconds to 
+     * turn the vibrator on or off. The first value indicates the duration to wait before 
+     * turning the vibrator on. The next value indicates the duration to keep the 
+     * vibrator on. Subsequent values alternate between duration to turn the vibrator 
+     * off and to turn the vibrator on. If `vibrate_timings` is set and `default_vibrate_timings` 
+     * is set to `true`, the default value is used instead of the user-specified `vibrate_timings`.
+     */
+    vibrateTimingsMillis?: number[];
+
+    /**
+     * If set to `true`, use the Android framework's default vibrate pattern for the 
+     * notification. Default values are specified in [`config.xml`](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml). 
+     * If `default_vibrate_timings` is set to `true` and `vibrate_timings` is also set, 
+     * the default value is used instead of the user-specified `vibrate_timings`.
+     */
+    defaultVibrateTimings?: boolean;
+
+    /**
+     * If set to `true`, use the Android framework's default sound for the notification. 
+     * Default values are specified in [`config.xml`](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml).
+     */
+    defaultSound?: boolean;
+
+    /**
+     * Settings to control the notification's LED blinking rate and color if LED is 
+     * available on the device. The total blinking time is controlled by the OS.
+     */
+    lightSettings?: LightSettings;
+
+    /**
+     * If set to `true`, use the Android framework's default LED light settings 
+     * for the notification. Default values are specified in [`config.xml`](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml). 
+     * If `default_light_settings` is set to `true` and `light_settings` is also set, 
+     * the user-specified `light_settings` is used instead of the default value.
+     */
+    defaultLightSettings?: boolean;
+
+    /**
+     * Sets the visibility of the notification. Must be either `private`, `public`, 
+     * or `secret`. If unspecified, defaults to `private`.
+     */
+    visibility?: ('private' | 'public' | 'secret');
+
+    /**
+     * Sets the number of items this notification represents. May be displayed as a 
+     * badge count for Launchers that support badging. See [`NotificationBadge`(https://developer.android.com/training/notify-user/badges). 
+     * For example, this might be useful if you're using just one notification to
+     * represent multiple new messages but you want the count here to represent
+     * the number of total new messages. If zero or unspecified, systems 
+     * that support badging use the default, which is to increment a number 
+     * displayed on the long-press menu each time a new notification arrives.
+     */
+    notificationCount?: number;
+  }
+
+  /**
+   * Represents settings to control notification LED that can be included in
+   * {@link admin.messaging.AndroidNotification}.
+   */
+  interface LightSettings {
+    /**
+     * Required. Sets color of the LED in `#rrggbb` or `#rrggbbaa` format.
+     */
+    color: string;
+
+    /**
+     * Required. Along with `light_off_duration`, defines the blink rate of LED flashes.
+     */
+    lightOnDurationMillis: number;
+
+    /**
+     * Required. Along with `light_on_duration`, defines the blink rate of LED flashes. 
+     */
+    lightOffDurationMillis: number;
   }
 
   /**
@@ -4024,7 +4138,7 @@ declare namespace admin.messaging {
     /**
      * A collection of APNs headers. Header values must be strings.
      */
-    headers?: {[key: string]: string};
+    headers?: { [key: string]: string };
 
     /**
      * An APNs payload to be included in the message.
@@ -4190,12 +4304,12 @@ declare namespace admin.messaging {
      * See [WebPush specification](https://tools.ietf.org/html/rfc8030#section-5)
      * for supported headers.
      */
-    headers?: {[key: string]: string};
+    headers?: { [key: string]: string };
 
     /**
      * A collection of data fields.
      */
-    data?: {[key: string]: string};
+    data?: { [key: string]: string };
 
     /**
      * A WebPush notification payload to be included in the message.
@@ -4715,9 +4829,9 @@ declare namespace admin.messaging {
      */
     failureCount: number;
 
-     /**
-     * An array of registration tokens that failed to receive the message.
-     */
+    /**
+    * An array of registration tokens that failed to receive the message.
+    */
     failedRegistrationTokens: string[];
   }
 
@@ -4886,7 +5000,7 @@ declare namespace admin.messaging {
      * return value.
      *
      * @param messages A non-empty array
-     *   containing up to 100 messages.
+     *   containing up to 500 messages.
      * @param dryRun Whether to send the messages in the dry-run
      *   (validation only) mode.
      * @return A Promise fulfilled with an object representing the result of the
@@ -4909,7 +5023,7 @@ declare namespace admin.messaging {
      * a `BatchResponse` return value.
      *
      * @param message A multicast message
-     *   containing up to 100 tokens.
+     *   containing up to 500 tokens.
      * @param dryRun Whether to send the message in the dry-run
      *   (validation only) mode.
      * @return A Promise fulfilled with an object representing the result of the
@@ -5477,7 +5591,7 @@ declare namespace admin.projectManagement {
      * @return A promise that resolves to the newly created Android app.
      */
     createAndroidApp(
-        packageName: string, displayName?: string): Promise<admin.projectManagement.AndroidApp>;
+      packageName: string, displayName?: string): Promise<admin.projectManagement.AndroidApp>;
 
     /**
      * Creates a new Firebase iOS app associated with this Firebase project.

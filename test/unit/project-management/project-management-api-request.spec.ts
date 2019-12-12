@@ -435,8 +435,7 @@ describe('ProjectManagementRequestHandler', () => {
         displayName: newDisplayName,
       };
       return requestHandler.setDisplayName(ANDROID_APP_RESOURCE_NAME, newDisplayName)
-          .then((result) => {
-            expect(result).to.deep.equal(null);
+          .then(() => {
             expect(stub).to.have.been.calledOnce.and.calledWith({
               method: 'PATCH',
               url,
@@ -489,8 +488,7 @@ describe('ProjectManagementRequestHandler', () => {
         certType: 'SHA_1',
       };
       return requestHandler.addAndroidShaCertificate(ANDROID_APP_RESOURCE_NAME, certificateToAdd)
-          .then((result) => {
-            expect(result).to.deep.equal(null);
+          .then(() => {
             expect(stub).to.have.been.calledOnce.and.calledWith({
               method: 'POST',
               url,
@@ -567,8 +565,7 @@ describe('ProjectManagementRequestHandler', () => {
 
       const url = `https://${HOST}:${PORT}/v1beta1/${resourceName}`;
       return requestHandler.deleteResource(resourceName)
-          .then((result) => {
-            expect(result).to.deep.equal(null);
+          .then(() => {
             expect(stub).to.have.been.calledOnce.and.calledWith({
               method: 'DELETE',
               url,

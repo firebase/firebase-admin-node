@@ -28,7 +28,7 @@ import * as mocks from '../../resources/mocks';
 
 import {FirebaseApp} from '../../../src/firebase-app';
 import {
-  Message, MessagingOptions, MessagingPayload, MessagingDevicesResponse,
+  Message, MessagingOptions, MessagingPayload, MessagingDevicesResponse, MessagingDeviceGroupResponse,
   MessagingTopicManagementResponse, BatchResponse, SendResponse, MulticastMessage,
 } from '../../../src/messaging/messaging-types';
 import {
@@ -398,10 +398,10 @@ describe('Messaging', () => {
   describe('send()', () => {
     it('should throw given no message', () => {
       expect(() => {
-        messaging.send(undefined as Message);
+        messaging.send(undefined as any);
       }).to.throw('Message must be a non-null object');
       expect(() => {
-        messaging.send(null);
+        messaging.send(null as any);
       }).to.throw('Message must be a non-null object');
     });
 
@@ -504,6 +504,28 @@ describe('Messaging', () => {
        .and.have.property('code', 'messaging/registration-token-not-registered');
     });
 
+    ['THIRD_PARTY_AUTH_ERROR', 'APNS_AUTH_ERROR'].forEach((errorCode) => {
+      it(`should map ${errorCode} to third party auth error`, () => {
+        const resp = {
+          error: {
+            status: 'INVALID_ARGUMENT',
+            message: 'test error message',
+            details: [
+              {
+                '@type': 'type.googleapis.com/google.firebase.fcm.v1.FcmError',
+                'errorCode': errorCode,
+              },
+            ],
+          },
+        };
+        mockedRequests.push(mockSendError(404, 'json', resp));
+        return messaging.send(
+          {token: 'mock-token'},
+        ).should.eventually.be.rejectedWith('test error message')
+         .and.have.property('code', 'messaging/third-party-auth-error');
+      });
+    });
+
     it('should map server error code to client-side error', () => {
       const resp = {
         error: {
@@ -549,30 +571,30 @@ describe('Messaging', () => {
       expect(response.messageId).to.be.undefined;
       expect(response.error).to.have.property('code', code);
       if (msg) {
-        expect(response.error.toString()).to.contain(msg);
+        expect(response.error!.toString()).to.contain(msg);
       }
     }
 
     it('should throw given no messages', () => {
       expect(() => {
-        messaging.sendAll(undefined as Message[]);
+        messaging.sendAll(undefined as any);
       }).to.throw('messages must be a non-empty array');
       expect(() => {
-        messaging.sendAll(null);
+        messaging.sendAll(null as any);
       }).to.throw('messages must be a non-empty array');
       expect(() => {
         messaging.sendAll([]);
       }).to.throw('messages must be a non-empty array');
     });
 
-    it('should throw when called with more than 100 messages', () => {
+    it('should throw when called with more than 500 messages', () => {
       const messages: Message[] = [];
-      for (let i = 0; i < 101; i++) {
+      for (let i = 0; i < 501; i++) {
         messages.push(validMessage);
       }
       expect(() => {
         messaging.sendAll(messages);
-      }).to.throw('messages list must not contain more than 100 items');
+      }).to.throw('messages list must not contain more than 500 items');
     });
 
     it('should throw when a message is invalid', () => {
@@ -804,7 +826,7 @@ describe('Messaging', () => {
       ],
     };
 
-    let stub: sinon.SinonStub;
+    let stub: sinon.SinonStub | null;
 
     afterEach(() => {
       if (stub) {
@@ -815,7 +837,7 @@ describe('Messaging', () => {
 
     it('should throw given no messages', () => {
       expect(() => {
-        messaging.sendMulticast(undefined as MulticastMessage);
+        messaging.sendMulticast(undefined as any);
       }).to.throw('MulticastMessage must be a non-null object');
       expect(() => {
         messaging.sendMulticast({} as any);
@@ -825,14 +847,14 @@ describe('Messaging', () => {
       }).to.throw('tokens must be a non-empty array');
     });
 
-    it('should throw when called with more than 100 messages', () => {
+    it('should throw when called with more than 500 messages', () => {
       const tokens: string[] = [];
-      for (let i = 0; i < 101; i++) {
+      for (let i = 0; i < 501; i++) {
         tokens.push(`token${i}`);
       }
       expect(() => {
         messaging.sendMulticast({tokens});
-      }).to.throw('tokens list must not contain more than 100 items');
+      }).to.throw('tokens list must not contain more than 500 items');
     });
 
     const invalidDryRun = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
@@ -851,9 +873,9 @@ describe('Messaging', () => {
         .then((response: BatchResponse) => {
           expect(response).to.deep.equal(mockResponse);
           expect(stub).to.have.been.calledOnce;
-          const messages: Message[] = stub.args[0][0];
+          const messages: Message[] = stub!.args[0][0];
           expect(messages.length).to.equal(3);
-          expect(stub.args[0][1]).to.be.undefined;
+          expect(stub!.args[0][1]).to.be.undefined;
           messages.forEach((message, idx) => {
             expect((message as any).token).to.equal(tokens[idx]);
             expect(message.android).to.be.undefined;
@@ -875,14 +897,15 @@ describe('Messaging', () => {
         data: {key: 'value'},
         notification: {title: 'test title'},
         webpush: {data: {webKey: 'webValue'}},
+        fcmOptions: {analyticsLabel: 'label'},
       };
       return messaging.sendMulticast(multicast)
         .then((response: BatchResponse) => {
           expect(response).to.deep.equal(mockResponse);
           expect(stub).to.have.been.calledOnce;
-          const messages: Message[] = stub.args[0][0];
+          const messages: Message[] = stub!.args[0][0];
           expect(messages.length).to.equal(3);
-          expect(stub.args[0][1]).to.be.undefined;
+          expect(stub!.args[0][1]).to.be.undefined;
           messages.forEach((message, idx) => {
             expect((message as any).token).to.equal(tokens[idx]);
             expect(message.android).to.deep.equal(multicast.android);
@@ -890,6 +913,7 @@ describe('Messaging', () => {
             expect(message.data).to.be.deep.equal(multicast.data);
             expect(message.notification).to.deep.equal(multicast.notification);
             expect(message.webpush).to.deep.equal(multicast.webpush);
+            expect(message.fcmOptions).to.deep.equal(multicast.fcmOptions);
           });
         });
     });
@@ -901,7 +925,7 @@ describe('Messaging', () => {
         .then((response: BatchResponse) => {
           expect(response).to.deep.equal(mockResponse);
           expect(stub).to.have.been.calledOnce;
-          expect(stub.args[0][1]).to.be.true;
+          expect(stub!.args[0][1]).to.be.true;
         });
     });
 
@@ -1095,7 +1119,7 @@ describe('Messaging', () => {
       expect(response.messageId).to.be.undefined;
       expect(response.error).to.have.property('code', code);
       if (msg) {
-        expect(response.error.toString()).to.contain(msg);
+        expect(response.error!.toString()).to.contain(msg);
       }
     }
   });
@@ -1116,7 +1140,7 @@ describe('Messaging', () => {
 
     it('should throw given no registration token(s) argument', () => {
       expect(() => {
-        messaging.sendToDevice(undefined as string, mocks.messaging.payloadDataOnly);
+        messaging.sendToDevice(undefined as any, mocks.messaging.payloadDataOnly);
       }).to.throw(invalidArgumentError);
     });
 
@@ -1309,10 +1333,11 @@ describe('Messaging', () => {
           mocks.messaging.registrationToken + '2',
         ],
         mocks.messaging.payload,
-      ).then((response: MessagingDevicesResponse) => {
+      ).then((response: MessagingDevicesResponse | MessagingDeviceGroupResponse) => {
         expect(response).to.have.keys([
           'failureCount', 'successCount', 'canonicalRegistrationTokenCount', 'multicastId', 'results',
         ]);
+        response = response as MessagingDevicesResponse;
         expect(response.failureCount).to.equal(2);
         expect(response.successCount).to.equal(1);
         expect(response.canonicalRegistrationTokenCount).to.equal(1);
@@ -1437,7 +1462,7 @@ describe('Messaging', () => {
 
     it('should throw given no notification key argument', () => {
       expect(() => {
-        messaging.sendToDeviceGroup(undefined as string, mocks.messaging.payloadDataOnly);
+        messaging.sendToDeviceGroup(undefined as any, mocks.messaging.payloadDataOnly);
       }).to.throw(invalidArgumentError);
     });
 
@@ -1685,7 +1710,7 @@ describe('Messaging', () => {
 
     it('should throw given no topic argument', () => {
       expect(() => {
-        messaging.sendToTopic(undefined as string, mocks.messaging.payload);
+        messaging.sendToTopic(undefined as any, mocks.messaging.payload);
       }).to.throw(invalidArgumentError);
     });
 
@@ -1912,7 +1937,7 @@ describe('Messaging', () => {
 
     it('should throw given no condition argument', () => {
       expect(() => {
-        messaging.sendToCondition(undefined as string, mocks.messaging.payloadDataOnly);
+        messaging.sendToCondition(undefined as any, mocks.messaging.payloadDataOnly);
       }).to.throw(invalidArgumentError);
     });
 
@@ -2084,19 +2109,19 @@ describe('Messaging', () => {
     invalidPayloads.forEach((invalidPayload) => {
       it(`should throw given invalid type for payload argument: ${ JSON.stringify(invalidPayload) }`, () => {
         expect(() => {
-          messaging.sendToDevice(mocks.messaging.registrationToken, invalidPayload as MessagingPayload);
+          messaging.sendToDevice(mocks.messaging.registrationToken, invalidPayload as any);
         }).to.throw('Messaging payload must be an object');
 
         expect(() => {
-          messaging.sendToDeviceGroup(mocks.messaging.notificationKey, invalidPayload as MessagingPayload);
+          messaging.sendToDeviceGroup(mocks.messaging.notificationKey, invalidPayload as any);
         }).to.throw('Messaging payload must be an object');
 
         expect(() => {
-          messaging.sendToTopic(mocks.messaging.topic, invalidPayload as MessagingPayload);
+          messaging.sendToTopic(mocks.messaging.topic, invalidPayload as any);
         }).to.throw('Messaging payload must be an object');
 
         expect(() => {
-          messaging.sendToCondition(mocks.messaging.condition, invalidPayload as MessagingPayload);
+          messaging.sendToCondition(mocks.messaging.condition, invalidPayload as any);
         }).to.throw('Messaging payload must be an object');
       });
     });
@@ -2391,6 +2416,96 @@ describe('Messaging', () => {
       expect(() => {
         messaging.send(message);
       }).to.throw('bodyLocKey is required when specifying bodyLocArgs');
+    });
+
+    const invalidVibrateTimings = [[null, 500], [-100]];
+    invalidVibrateTimings.forEach((vibrateTimingsMillisMaybeNull) => {
+      const vibrateTimingsMillis = vibrateTimingsMillisMaybeNull as number[];
+      it(`should throw given an null or negative vibrateTimingsMillis: ${ vibrateTimingsMillis }`, () => {
+        const message: Message = {
+          condition: 'topic-name',
+          android: {
+            notification: {
+              vibrateTimingsMillis,
+            },
+          },
+        };
+        expect(() => {
+          messaging.send(message);
+        }).to.throw('android.notification.vibrateTimingsMillis must be non-negative durations in milliseconds');
+      });
+    });
+
+    it(`should throw given an empty vibrateTimingsMillis array`, () => {
+      const message: Message = {
+        condition: 'topic-name',
+        android: {
+          notification: {
+            vibrateTimingsMillis: [],
+          },
+        },
+      };
+      expect(() => {
+        messaging.send(message);
+      }).to.throw('android.notification.vibrateTimingsMillis must be a non-empty array of numbers');
+    });
+
+    invalidColors.forEach((color) => {
+      it(`should throw given an invalid color: ${ color }`, () => {
+        const message: Message = {
+          condition: 'topic-name',
+          android: {
+            notification: {
+              lightSettings: {
+                color,
+                lightOnDurationMillis: 100,
+                lightOffDurationMillis: 800,
+              },
+            },
+          },
+        };
+        expect(() => {
+          messaging.send(message);
+        }).to.throw('android.notification.lightSettings.color must be in the form #RRGGBB or #RRGGBBAA format');
+      });
+    });
+
+    it(`should throw given a negative light on duration`, () => {
+      const message: Message = {
+        condition: 'topic-name',
+        android: {
+          notification: {
+            lightSettings: {
+              color: '#aabbcc',
+              lightOnDurationMillis: -1,
+              lightOffDurationMillis: 800,
+            },
+          },
+        },
+      };
+      expect(() => {
+        messaging.send(message);
+      }).to.throw(
+        'android.notification.lightSettings.lightOnDurationMillis must be a non-negative duration in milliseconds');
+    });
+
+    it(`should throw given a negative light off duration`, () => {
+      const message: Message = {
+        condition: 'topic-name',
+        android: {
+          notification: {
+            lightSettings: {
+              color: '#aabbcc',
+              lightOnDurationMillis: 100,
+              lightOffDurationMillis: -800,
+            },
+          },
+        },
+      };
+      expect(() => {
+        messaging.send(message);
+      }).to.throw(
+        'android.notification.lightSettings.lightOffDurationMillis must be a non-negative duration in milliseconds');
     });
 
     const invalidVolumes = [-0.1, 1.1];
@@ -2846,6 +2961,9 @@ describe('Messaging', () => {
               sound: 'test.sound',
               tag: 'test.tag',
               imageUrl: 'https://example.com/image.png',
+              ticker: 'test.ticker',
+              sticky: true,
+              visibility: 'private',
             },
           },
         },
@@ -2859,6 +2977,9 @@ describe('Messaging', () => {
               sound: 'test.sound',
               tag: 'test.tag',
               image: 'https://example.com/image.png',
+              ticker: 'test.ticker',
+              sticky: true,
+              visibility: 'PRIVATE',
             },
           },
         },
@@ -2876,6 +2997,19 @@ describe('Messaging', () => {
               bodyLocKey: 'body.loc.key',
               bodyLocArgs: ['arg1', 'arg2'],
               channelId: 'test.channel',
+              eventTimestamp: new Date('2019-10-20T12:00:00-06:30'),
+              localOnly: true,
+              priority: 'high',
+              vibrateTimingsMillis: [100, 50, 250],
+              defaultVibrateTimings: false,
+              defaultSound: true,
+              lightSettings: {
+                color: '#AABBCCDD',
+                lightOnDurationMillis: 200,
+                lightOffDurationMillis: 300,
+              },
+              defaultLightSettings: false,
+              notificationCount: 1,
             },
           },
         },
@@ -2890,6 +3024,24 @@ describe('Messaging', () => {
               body_loc_key: 'body.loc.key',
               body_loc_args: ['arg1', 'arg2'],
               channel_id: 'test.channel',
+              event_time: '2019-10-20T18:30:00.000Z',
+              local_only: true,
+              notification_priority: 'PRIORITY_HIGH',
+              vibrate_timings: ['0.100000000s', '0.050000000s', '0.250000000s'],
+              default_vibrate_timings: false,
+              default_sound: true,
+              light_settings: {
+                color: {
+                  red: 0.6666666666666666,
+                  green: 0.7333333333333333,
+                  blue: 0.8,
+                  alpha: 0.8666666666666667,
+                },
+                light_on_duration: '0.200000000s',
+                light_off_duration: '0.300000000s',
+              },
+              default_light_settings: false,
+              notification_count: 1,
             },
           },
         },
@@ -2939,6 +3091,22 @@ describe('Messaging', () => {
               bodyLocKey: 'body.loc.key',
               bodyLocArgs: ['arg1', 'arg2'],
               channelId: 'test.channel',
+              ticker: 'test.ticker',
+              sticky: true,
+              visibility: 'private',
+              eventTimestamp: new Date('2019-10-20T12:00:00-06:30'),
+              localOnly: true,
+              priority: 'high',
+              vibrateTimingsMillis: [100, 50, 250],
+              defaultVibrateTimings: false,
+              defaultSound: true,
+              lightSettings: {
+                color: '#AABBCC',
+                lightOnDurationMillis: 200,
+                lightOffDurationMillis: 300,
+              },
+              defaultLightSettings: false,
+              notificationCount: 1,
             },
             fcmOptions: {
               analyticsLabel: 'test.analytics',
@@ -2969,6 +3137,27 @@ describe('Messaging', () => {
               body_loc_key: 'body.loc.key',
               body_loc_args: ['arg1', 'arg2'],
               channel_id: 'test.channel',
+              ticker: 'test.ticker',
+              sticky: true,
+              visibility: 'PRIVATE',
+              event_time: '2019-10-20T18:30:00.000Z',
+              local_only: true,
+              notification_priority: 'PRIORITY_HIGH',
+              vibrate_timings: ['0.100000000s', '0.050000000s', '0.250000000s'],
+              default_vibrate_timings: false,
+              default_sound: true,
+              light_settings: {
+                color: {
+                  red: 0.6666666666666666,
+                  green: 0.7333333333333333,
+                  blue: 0.8,
+                  alpha: 1,
+                },
+                light_on_duration: '0.200000000s',
+                light_off_duration: '0.300000000s',
+              },
+              default_light_settings: false,
+              notification_count: 1,
             },
             fcmOptions: {
               analyticsLabel: 'test.analytics',
@@ -3423,7 +3612,7 @@ describe('Messaging', () => {
 
     it('should throw given no registration token(s) argument', () => {
       expect(() => {
-        messagingService[methodName](undefined as string, mocks.messaging.topic);
+        messagingService[methodName](undefined as any, mocks.messaging.topic);
       }).to.throw(invalidRegistrationTokensArgumentError);
     });
 
@@ -3478,7 +3667,7 @@ describe('Messaging', () => {
 
     it('should throw given no topic argument', () => {
       expect(() => {
-        messagingService[methodName](mocks.messaging.registrationToken, undefined as string);
+        messagingService[methodName](mocks.messaging.registrationToken, undefined as any);
       }).to.throw(invalidTopicArgumentError);
     });
 

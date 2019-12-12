@@ -193,7 +193,7 @@ export class EmailSignInConfig implements EmailSignInProviderConfig {
    *
    * @param {any} options The options object to validate.
    */
-  private static validate(options: {[key: string]: any}) {
+  private static validate(options: EmailSignInProviderConfig) {
     // TODO: Validate the request.
     const validKeys = {
       enabled: true,
@@ -306,7 +306,7 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
       };
       if (options.x509Certificates) {
         for (const cert of (options.x509Certificates || [])) {
-          request.idpConfig.idpCertificates.push({x509Certificate: cert});
+          request.idpConfig!.idpCertificates!.push({x509Certificate: cert});
         }
       }
     }
@@ -467,7 +467,10 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
   constructor(response: SAMLConfigServerResponse) {
     if (!response ||
         !response.idpConfig ||
+        !response.idpConfig.idpEntityId ||
+        !response.idpConfig.ssoUrl ||
         !response.spConfig ||
+        !response.spConfig.spEntityId ||
         !response.name ||
         !(validator.isString(response.name) &&
           SAMLConfig.getProviderIdFromResourceName(response.name))) {
@@ -475,7 +478,15 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
         AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Invalid SAML configuration response');
     }
-    this.providerId = SAMLConfig.getProviderIdFromResourceName(response.name);
+
+    const providerId = SAMLConfig.getProviderIdFromResourceName(response.name);
+    if (!providerId) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Invalid SAML configuration response');
+    }
+    this.providerId = providerId;
+
     // RP config.
     this.rpEntityId = response.spConfig.spEntityId;
     this.callbackURL = response.spConfig.callbackUri;
@@ -663,7 +674,15 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
         AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Invalid OIDC configuration response');
     }
-    this.providerId = OIDCConfig.getProviderIdFromResourceName(response.name);
+
+    const providerId = OIDCConfig.getProviderIdFromResourceName(response.name);
+    if (!providerId) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Invalid SAML configuration response');
+    }
+    this.providerId = providerId;
+
     this.clientId = response.clientId;
     this.issuer = response.issuer;
     // When enabled is undefined, it takes its default value of false.

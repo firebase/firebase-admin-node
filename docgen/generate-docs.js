@@ -40,7 +40,7 @@ const contentPath = path.resolve(`${__dirname}/content-sources/node`);
 const tempHomePath = path.resolve(`${contentPath}/HOME_TEMP.md`);
 const devsitePath = `/docs/reference/admin/node/`;
 
-const firestoreExcludes = ['v1', 'v1beta1', 'setLogFunction'];
+const firestoreExcludes = ['v1', 'v1beta1', 'setLogFunction','DocumentData'];
 const firestoreHtmlPath = `${docPath}/admin.firestore.html`;
 const firestoreHeader = `<section class="tsd-panel-group tsd-member-group ">
   <h2>Type aliases</h2>
@@ -334,9 +334,7 @@ Promise.all([
     // Typedoc output.
     console.log(output.stdout);
     // Clean up temp home markdown file. (Nothing needs to wait for this.)
-    fs.unlink(tempHomePath);
-    // Devsite doesn't like css.map files.
-    return fs.unlink(`${docPath}/assets/css/main.css.map`);
+    return fs.unlink(tempHomePath);
   })
   // Write out TOC file.  Do this after Typedoc step to prevent Typedoc
   // erroring when it finds an unexpected file in the target dir.

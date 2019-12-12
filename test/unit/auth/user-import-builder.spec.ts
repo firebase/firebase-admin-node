@@ -207,12 +207,34 @@ describe('UserImportBuilder', () => {
 
     md5ShaPbkdfAlgorithms.forEach((algorithm) => {
       describe(`${algorithm}`, () => {
-        const invalidRounds = [-1, 120001, 'invalid', undefined, null];
+        let minRounds: number;
+        let maxRounds: number;
+        switch (algorithm) {
+          case 'MD5':
+            minRounds = 0;
+            maxRounds = 8192;
+            break;
+          case 'SHA1':
+          case 'SHA256':
+          case 'SHA512':
+            minRounds = 1;
+            maxRounds = 8192;
+            break;
+          case 'PBKDF_SHA1':
+          case 'PBKDF2_SHA256':
+            minRounds = 0;
+            maxRounds = 120000;
+            break;
+          default:
+            throw new Error('Unexpected algorithm: ' + algorithm);
+        }
+        const invalidRounds = [minRounds - 1, maxRounds + 1, 'invalid', undefined, null];
+
         invalidRounds.forEach((rounds) => {
           it(`should throw when ${JSON.stringify(rounds)} rounds provided`, () => {
             const expectedError = new FirebaseAuthError(
               AuthClientErrorCode.INVALID_HASH_ROUNDS,
-              `A valid "hash.rounds" number between 0 and 120000 must be provided for ` +
+              `A valid "hash.rounds" number between ${minRounds} and ${maxRounds} must be provided for ` +
               `hash algorithm ${algorithm}.`,
             );
             const invalidOptions = {
@@ -231,12 +253,12 @@ describe('UserImportBuilder', () => {
           const validOptions = {
             hash: {
               algorithm,
-              rounds: 120000,
+              rounds: maxRounds,
             },
           };
           const expectedRequest = {
             hashAlgorithm: algorithm,
-            rounds: 120000,
+            rounds: maxRounds,
             users: expectedUsersRequest,
           };
           const userImportBuilder =
