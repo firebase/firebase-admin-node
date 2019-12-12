@@ -15,7 +15,9 @@
  */
 
 import {UserRecord, CreateRequest, UpdateRequest} from './user-record';
-import {UserIdentifier, isUidIdentifier, isEmailIdentifier, isPhoneIdentifier} from './identifier';
+import {
+  UserIdentifier, isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, isProviderIdentifier,
+} from './identifier';
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseTokenGenerator, cryptoSignerFromApp} from './token-generator';
 import {
@@ -246,6 +248,11 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
               return id.email === ur.email;
             } else if (isPhoneIdentifier(id)) {
               return id.phoneNumber === ur.phoneNumber;
+            } else if (isProviderIdentifier(id)) {
+              const matchingUserInfo = ur.providerData.find((userInfo) => {
+                return id.providerId === userInfo.providerId;
+              });
+              return !!matchingUserInfo && id.providerUid === matchingUserInfo.uid;
             } else {
               throw new FirebaseAuthError(
                 AuthClientErrorCode.INTERNAL_ERROR,

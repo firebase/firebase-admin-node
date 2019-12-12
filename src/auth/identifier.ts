@@ -71,3 +71,8 @@ export function isEmailIdentifier(id: UserIdentifier): id is EmailIdentifier {
 export function isPhoneIdentifier(id: UserIdentifier): id is PhoneIdentifier {
   return (id as PhoneIdentifier).phoneNumber !== undefined;
 }
+
+export function isProviderIdentifier(id: ProviderIdentifier): id is ProviderIdentifier {
+  const pid = id as ProviderIdentifier;
+  return pid.providerId !== undefined && pid.providerUid !== undefined;
+}

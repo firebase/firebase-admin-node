@@ -17,7 +17,9 @@
 import * as validator from '../utils/validator';
 
 import {deepCopy, deepExtend} from '../utils/deep-copy';
-import {UserIdentifier, isUidIdentifier, isEmailIdentifier, isPhoneIdentifier} from './identifier';
+import {
+  UserIdentifier, isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, isProviderIdentifier,
+} from './identifier';
 import {FirebaseApp} from '../firebase-app';
 import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
 import {
@@ -439,13 +441,17 @@ interface GetAccountInfoRequest {
   localId?: string[];
   email?: string[];
   phoneNumber?: string[];
+  federatedUserId?: Array<{
+    providerId: string,
+    rawId: string,
+  }>;
 }
 
 /** Instantiates the getAccountInfo endpoint settings. */
 export const FIREBASE_AUTH_GET_ACCOUNT_INFO = new ApiSettings('/accounts:lookup', 'POST')
   // Set request validator.
   .setRequestValidator((request: GetAccountInfoRequest) => {
-    if (!request.localId && !request.email && !request.phoneNumber) {
+    if (!request.localId && !request.email && !request.phoneNumber && !request.federatedUserId) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Server request is missing user identifier');
@@ -465,7 +471,7 @@ export const FIREBASE_AUTH_GET_ACCOUNT_INFO = new ApiSettings('/accounts:lookup'
 export const FIREBASE_AUTH_GET_ACCOUNTS_INFO = new ApiSettings('/accounts:lookup', 'POST')
   // Set request validator.
   .setRequestValidator((request: GetAccountInfoRequest) => {
-    if (!request.localId && !request.email && !request.phoneNumber) {
+    if (!request.localId && !request.email && !request.phoneNumber && !request.federatedUserId) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Server request is missing user identifier');
@@ -880,6 +886,17 @@ export abstract class AbstractAuthRequestHandler {
           throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER);
         }
         request.phoneNumber ? request.phoneNumber.push(id.phoneNumber) : request.phoneNumber = [id.phoneNumber];
+      } else if (isProviderIdentifier(id)) {
+        if (!validator.isNonEmptyString(id.providerUid) || !validator.isNonEmptyString(id.providerId)) {
+          throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
+        }
+        const federatedUserId = {
+          providerId: id.providerId,
+          rawId: id.providerUid,
+        };
+        request.federatedUserId
+          ? request.federatedUserId.push(federatedUserId)
+          : request.federatedUserId = [federatedUserId];
       } else {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_ARGUMENT,

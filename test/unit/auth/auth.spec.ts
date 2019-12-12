@@ -1188,6 +1188,12 @@ AUTH_CONFIGS.forEach((testConfig) => {
           .with.property('code', 'auth/invalid-phone-number');
       });
 
+      it('should be rejected when given an invalid provider', () => {
+        expect(() => auth.getUsers([{providerUid: '', providerId: ''}]))
+          .to.throw(FirebaseAuthError)
+          .with.property('code', 'auth/invalid-provider-id');
+      });
+
       it('should be rejected when given a single bad identifier', () => {
         const identifiers: UserIdentifier[] = [
           {uid: 'valid_id1'},

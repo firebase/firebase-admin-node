@@ -165,7 +165,12 @@ describe('admin.auth', () => {
   });
 
   describe('getUsers()', () => {
-    function mapUserRecordsToUidEmailPhones(values: admin.auth.UserRecord[]) {
+    /**
+     * Filters a list of object to another list of objects that only contains
+     * the uid, email, and phoneNumber fields. Works with at least UserRecord
+     * and UserImportRecord instances.
+     */
+    function mapUserRecordsToUidEmailPhones(values: Array<{ uid: string, email?: string, phoneNumber?: string}>) {
       return values.map((ur) => ({ uid: ur.uid, email: ur.email, phoneNumber: ur.phoneNumber }));
     }
 
@@ -174,14 +179,46 @@ describe('admin.auth', () => {
     const testUser3 = { uid: 'uid3', email: 'user3@example.com', phoneNumber: '+15555550003' };
     const usersToCreate = [ testUser1, testUser2, testUser3 ];
 
+    const importUser1: admin.auth.UserImportRecord = {
+      uid: 'uid4',
+      email: 'user4@example.com',
+      phoneNumber: '+15555550004',
+      emailVerified: true,
+      disabled: false,
+      metadata: {
+        lastSignInTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
+        creationTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
+        lastRefreshTime: null,
+        toJSON: () => { throw new Error('Unimplemented'); },
+      },
+      providerData: [{
+        displayName: 'User Four',
+        email: 'user4@example.com',
+        phoneNumber: '+15555550004',
+        photoURL: 'http://example.com/user4',
+        toJSON: () => { throw new Error('Unimplemented'); },
+        providerId: 'google.com',
+        uid: 'google_uid4',
+      }],
+    };
+
+    const testUser4 = mapUserRecordsToUidEmailPhones([importUser1])[0];
+
     before(() => {
       return Promise.all(
-        usersToCreate.map((user) => admin.auth().createUser(user)));
+        usersToCreate.map((user) => admin.auth().createUser(user)),
+      ).then(() => admin.auth().importUsers([importUser1]))
+      .then((userImportResult) => {
+        if (userImportResult.failureCount > 0) {
+          throw userImportResult.errors[0].error;
+        }
+      });
     });
 
     after(() => {
       return Promise.all(
-        usersToCreate.map((user) => admin.auth().deleteUser(user.uid)));
+        usersToCreate.map((user) => admin.auth().deleteUser(user.uid)),
+      ).then(() => admin.auth().deleteUser('uid4'));
     });
 
     it('returns users by various identifier types in a single call', async () => {
@@ -189,11 +226,12 @@ describe('admin.auth', () => {
           { uid: 'uid1' },
           { email: 'user2@example.com' },
           { phoneNumber: '+15555550003' },
+          { providerId: 'google.com', providerUid: 'google_uid4' },
         ])
         .then((getUsersResult) => getUsersResult.users)
         .then(mapUserRecordsToUidEmailPhones);
 
-      expect(users).to.have.deep.members([testUser1, testUser2, testUser3]);
+      expect(users).to.have.deep.members([testUser1, testUser2, testUser3, testUser4]);
     });
 
     it('returns found users and ignores non-existing users', async () => {
