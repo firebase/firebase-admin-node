@@ -80,15 +80,13 @@ describe('FirebaseInstanceIdRequestHandler', () => {
     const timeout = 10000;
 
     it('should be fulfilled given a valid instance ID', () => {
-      const expectedResult = {};
       const stub = sinon.stub(HttpClient.prototype, 'send')
-        .resolves(utils.responseFrom(expectedResult));
+        .resolves(utils.responseFrom(''));
       stubs.push(stub);
 
       const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp, projectId);
       return requestHandler.deleteInstanceId('test-iid')
-        .then((result) => {
-          expect(result).to.deep.equal(expectedResult);
+        .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: httpMethod,
             url: `https://${host}${path}`,

@@ -37,7 +37,12 @@ var replace = require('gulp-replace');
 /****************/
 var paths = {
   src: [
-    'src/**/*.ts'
+    'src/**/*.ts',
+  ],
+
+  test: [
+    'test/**/*.ts',
+    '!test/integration/typescript/src/example*.ts',
   ],
 
   databaseSrc: [
@@ -51,6 +56,8 @@ var paths = {
 // This ensures that the generated production files are in their own root
 // rather than including both src and test in the lib dir.
 var buildProject = ts.createProject('tsconfig.json', {rootDir: 'src'});
+
+var buildTest = ts.createProject('tsconfig.json');
 
 var banner = `/*! firebase-admin v${pkg.version} */\n`;
 
@@ -79,6 +86,16 @@ gulp.task('compile', function() {
     .pipe(gulp.dest(paths.build))
 });
 
+/**
+ * Task only used to capture typescript compilation errors in the test suite.
+ * Output is discarded.
+ */
+gulp.task('compile_test', function() {
+  return gulp.src(paths.test)
+    // Compile Typescript into .js and .d.ts files
+    .pipe(buildTest())
+});
+
 gulp.task('copyDatabase', function() {
   return gulp.src(paths.databaseSrc)
     // Add headers
@@ -98,9 +115,11 @@ gulp.task('copyTypings', function() {
     .pipe(gulp.dest(paths.build))
 });
 
+gulp.task('compile_all', gulp.series('compile', 'copyDatabase', 'copyTypings', 'compile_test'));
+
 // Regenerates js every time a source file changes
 gulp.task('watch', function() {
-  gulp.watch(paths.src, ['compile']);
+  gulp.watch(paths.src.concat(paths.test), {ignoreInitial: false}, gulp.series('compile_all'));
 });
 
 // Build task

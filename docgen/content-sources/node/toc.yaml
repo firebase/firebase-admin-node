@@ -127,6 +127,8 @@ toc:
     path: /docs/reference/admin/node/admin.messaging.AndroidNotification
   - title: "FcmOptions"
     path: /docs/reference/admin/node/admin.messaging.FcmOptions
+  - title: "LightSettings"
+    path: /docs/reference/admin/node/admin.messaging.LightSettings
   - title: "Messaging"
     path: /docs/reference/admin/node/admin.messaging.Messaging
   - title: "MessagingConditionResponse"

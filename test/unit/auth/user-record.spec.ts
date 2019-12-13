@@ -981,7 +981,7 @@ describe('UserRecord', () => {
         ],
       });
       expect(userRecord.multiFactor).to.deep.equal(multiFactor);
-      expect(userRecord.multiFactor.enrolledFactors.length).to.equal(2);
+      expect(userRecord.multiFactor!.enrolledFactors.length).to.equal(2);
     });
 
     it('should return undefined multiFactor when not available', () => {
@@ -1008,11 +1008,11 @@ describe('UserRecord', () => {
 
     it('should throw when modifying readonly multiFactor internals', () => {
       expect(() => {
-        (userRecord.multiFactor.enrolledFactors[0] as any).displayName = 'Modified';
+        (userRecord.multiFactor!.enrolledFactors[0] as any).displayName = 'Modified';
       }).to.throw(Error);
 
       expect(() => {
-        (userRecord.multiFactor.enrolledFactors as any)[0] = new PhoneMultiFactorInfo({
+        (userRecord.multiFactor!.enrolledFactors as any)[0] = new PhoneMultiFactorInfo({
           mfaEnrollmentId: 'enrollmentId3',
           displayName: 'displayName3',
           enrolledAt: now.toISOString(),

@@ -98,7 +98,9 @@ enum WriteOperationType {
 
 /** Defines a base utility to help with resource URL construction. */
 class AuthResourceUrlBuilder {
+
   protected urlFormat: string;
+  private projectId: string;
 
   /**
    * The resource URL builder constructor.
@@ -107,7 +109,7 @@ class AuthResourceUrlBuilder {
    * @param {string} version The endpoint API version.
    * @constructor
    */
-  constructor(protected projectId: string, protected version: string = 'v1') {
+  constructor(protected app: FirebaseApp, protected version: string = 'v1') {
     this.urlFormat = FIREBASE_AUTH_BASE_URL_FORMAT;
   }
 
@@ -117,17 +119,41 @@ class AuthResourceUrlBuilder {
    * @param {string=} api The backend API name.
    * @param {object=} params The optional additional parameters to substitute in the
    *     URL path.
-   * @return {string} The corresponding resource URL.
+   * @return {Promise<string>} The corresponding resource URL.
    */
-  public getUrl(api?: string, params?: object): string {
-    const baseParams = {
-      version: this.version,
-      projectId: this.projectId,
-      api: api || '',
-    };
-    const baseUrl = utils.formatString(this.urlFormat, baseParams);
-    // Substitute additional api related parameters.
-    return utils.formatString(baseUrl, params || {});
+  public getUrl(api?: string, params?: object): Promise<string> {
+    return this.getProjectId()
+      .then((projectId) => {
+        const baseParams = {
+          version: this.version,
+          projectId,
+          api: api || '',
+        };
+        const baseUrl = utils.formatString(this.urlFormat, baseParams);
+        // Substitute additional api related parameters.
+        return utils.formatString(baseUrl, params || {});
+      });
+  }
+
+  private getProjectId(): Promise<string> {
+    if (this.projectId) {
+      return Promise.resolve(this.projectId);
+    }
+
+    return utils.findProjectId(this.app)
+      .then((projectId) => {
+        if (!validator.isNonEmptyString(projectId)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CREDENTIAL,
+              'Failed to determine project ID for Auth. Initialize the '
+              + 'SDK with service account credentials or set project ID as an app option. '
+              + 'Alternatively set the GOOGLE_CLOUD_PROJECT environment variable.',
+          );
+        }
+
+        this.projectId = projectId;
+        return projectId;
+      });
   }
 }
 
@@ -142,8 +168,8 @@ class TenantAwareAuthResourceUrlBuilder extends AuthResourceUrlBuilder {
    * @param {string} tenantId The tenant ID.
    * @constructor
    */
-  constructor(protected projectId: string, protected version: string, protected tenantId: string) {
-    super(projectId, version);
+  constructor(protected app: FirebaseApp, protected version: string, protected tenantId: string) {
+    super(app, version);
     this.urlFormat = FIREBASE_AUTH_TENANT_URL_FORMAT;
   }
 
@@ -153,10 +179,13 @@ class TenantAwareAuthResourceUrlBuilder extends AuthResourceUrlBuilder {
    * @param {string=} api The backend API name.
    * @param {object=} params The optional additional parameters to substitute in the
    *     URL path.
-   * @return {string} The corresponding resource URL.
+   * @return {Promise<string>} The corresponding resource URL.
    */
-  public getUrl(api?: string, params?: object) {
-    return utils.formatString(super.getUrl(api, params), {tenantId: this.tenantId});
+  public getUrl(api?: string, params?: object): Promise<string> {
+    return super.getUrl(api, params)
+      .then((url) => {
+        return utils.formatString(url, {tenantId: this.tenantId});
+      });
   }
 }
 
@@ -464,7 +493,7 @@ function validateCreateEditRequest(request: any, writeOperationType: WriteOperat
   // mfaInfo is used for importUsers.
   // mfa.enrollments is used for setAccountInfo.
   // enrollments has to be an array of valid AuthFactorInfo requests.
-  let enrollments: AuthFactorInfo[];
+  let enrollments: AuthFactorInfo[] | null = null;
   if (request.mfaInfo) {
     enrollments = request.mfaInfo;
   } else if (request.mfa && request.mfa.enrollments) {
@@ -780,7 +809,7 @@ const LIST_INBOUND_SAML_CONFIGS = new ApiSettings('/inboundSamlConfigs', 'GET')
  * Class that provides the mechanism to send requests to the Firebase Auth backend endpoints.
  */
 export abstract class AbstractAuthRequestHandler {
-  protected readonly projectId: string;
+
   protected readonly httpClient: AuthorizedHttpClient;
   private authUrlBuilder: AuthResourceUrlBuilder;
   private projectConfigUrlBuilder: AuthResourceUrlBuilder;
@@ -790,15 +819,21 @@ export abstract class AbstractAuthRequestHandler {
    * @return {string|null} The error code if present; null otherwise.
    */
   private static getErrorCode(response: any): string | null {
-    return (validator.isNonNullObject(response) && response.error && (response.error as any).message) || null;
+    return (validator.isNonNullObject(response) && response.error && response.error.message) || null;
   }
 
   /**
    * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
    * @constructor
    */
-  constructor(app: FirebaseApp) {
-    this.projectId = utils.getProjectId(app);
+  constructor(protected readonly app: FirebaseApp) {
+    if (typeof app !== 'object' || app === null || !('options' in app)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        'First argument passed to admin.auth() must be a valid Firebase app instance.',
+      );
+    }
+
     this.httpClient = new AuthorizedHttpClient(app);
   }
 
@@ -941,7 +976,7 @@ export abstract class AbstractAuthRequestHandler {
     }
     // If no remaining user in request after client side processing, there is no need
     // to send the request to the server.
-    if (request.users.length === 0) {
+    if (!request.users || request.users.length === 0) {
       return Promise.resolve(userImportBuilder.buildResponse([]));
     }
     return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_UPLOAD_ACCOUNT, request)
@@ -978,7 +1013,7 @@ export abstract class AbstractAuthRequestHandler {
    * @return {Promise<string>} A promise that resolves when the operation completes
    *     with the user id that was edited.
    */
-  public setCustomUserClaims(uid: string, customUserClaims: object): Promise<string> {
+  public setCustomUserClaims(uid: string, customUserClaims: object | null): Promise<string> {
     // Validate user UID.
     if (!validator.isUid(uid)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_UID));
@@ -1204,7 +1239,7 @@ export abstract class AbstractAuthRequestHandler {
    * @param {string} email The email of the user the link is being sent to.
    * @param {ActionCodeSettings=} actionCodeSettings The optional action code setings which defines whether
    *     the link is to be handled by a mobile app and the additional state information to be passed in the
-   *     deep link, etc.
+   *     deep link, etc. Required when requestType == 'EMAIL_SIGNIN'
    * @return {Promise<string>} A promise that resolves with the email action link.
    */
   public getEmailActionLink(
@@ -1213,9 +1248,17 @@ export abstract class AbstractAuthRequestHandler {
     let request = {requestType, email, returnOobLink: true};
     // ActionCodeSettings required for email link sign-in to determine the url where the sign-in will
     // be completed.
+    if (typeof actionCodeSettings === 'undefined' && requestType === 'EMAIL_SIGNIN') {
+      return Promise.reject(
+        new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          "`actionCodeSettings` is required when `requestType` === 'EMAIL_SIGNIN'",
+        ),
+      );
+    }
     if (typeof actionCodeSettings !== 'undefined' || requestType === 'EMAIL_SIGNIN') {
       try {
-        const builder = new ActionCodeSettingsBuilder(actionCodeSettings);
+        const builder = new ActionCodeSettingsBuilder(actionCodeSettings!);
         request = deepExtend(request, builder.buildRequest());
       } catch (e) {
         return Promise.reject(e);
@@ -1301,7 +1344,7 @@ export abstract class AbstractAuthRequestHandler {
     // Construct backend request.
     let request;
     try {
-      request = OIDCConfig.buildServerRequest(options);
+      request = OIDCConfig.buildServerRequest(options) || {};
     } catch (e) {
       return Promise.reject(e);
     }
@@ -1423,7 +1466,7 @@ export abstract class AbstractAuthRequestHandler {
     // Construct backend request.
     let request;
     try {
-      request = SAMLConfig.buildServerRequest(options);
+      request = SAMLConfig.buildServerRequest(options) || {};
     } catch (e) {
       return Promise.reject(e);
     }
@@ -1456,7 +1499,7 @@ export abstract class AbstractAuthRequestHandler {
     // Construct backend request.
     let request: SAMLConfigServerRequest;
     try {
-      request = SAMLConfig.buildServerRequest(options, true);
+      request = SAMLConfig.buildServerRequest(options, true) || {};
     } catch (e) {
       return Promise.reject(e);
     }
@@ -1485,15 +1528,15 @@ export abstract class AbstractAuthRequestHandler {
   protected invokeRequestHandler(
       urlBuilder: AuthResourceUrlBuilder, apiSettings: ApiSettings,
       requestData: object, additionalResourceParams?: object): Promise<object> {
-    return Promise.resolve()
-      .then(() => {
+    return urlBuilder.getUrl(apiSettings.getEndpoint(), additionalResourceParams)
+      .then((url) => {
         // Validate request.
         const requestValidator = apiSettings.getRequestValidator();
         requestValidator(requestData);
         // Process request.
         const req: HttpRequestConfig = {
           method: apiSettings.getHttpMethod(),
-          url: urlBuilder.getUrl(apiSettings.getEndpoint(), additionalResourceParams),
+          url,
           headers: FIREBASE_AUTH_HEADER,
           data: requestData,
           timeout: FIREBASE_AUTH_TIMEOUT,
@@ -1511,6 +1554,14 @@ export abstract class AbstractAuthRequestHandler {
         if (err instanceof HttpError) {
           const error = err.response.data;
           const errorCode = AbstractAuthRequestHandler.getErrorCode(error);
+          if (!errorCode) {
+            throw new FirebaseAuthError(
+              AuthClientErrorCode.INTERNAL_ERROR,
+              'Error returned from server: ' + error + '. Additionally, an ' +
+              'internal error occurred while attempting to extract the ' +
+              'errorcode from the error.',
+            );
+          }
           throw FirebaseAuthError.fromServerError(errorCode, /* message */ undefined, error);
         }
         throw err;
@@ -1632,21 +1683,21 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
    */
   constructor(app: FirebaseApp) {
     super(app);
-    this.tenantMgmtResourceBuilder =  new AuthResourceUrlBuilder(utils.getProjectId(app), 'v2beta1');
+    this.tenantMgmtResourceBuilder =  new AuthResourceUrlBuilder(app, 'v2');
   }
 
   /**
    * @return {AuthResourceUrlBuilder} A new Auth user management resource URL builder instance.
    */
   protected newAuthUrlBuilder(): AuthResourceUrlBuilder {
-    return new AuthResourceUrlBuilder(this.projectId, 'v1');
+    return new AuthResourceUrlBuilder(this.app, 'v1');
   }
 
   /**
    * @return {AuthResourceUrlBuilder} A new project config resource URL builder instance.
    */
   protected newProjectConfigUrlBuilder(): AuthResourceUrlBuilder {
-    return new AuthResourceUrlBuilder(this.projectId, 'v2beta1');
+    return new AuthResourceUrlBuilder(this.app, 'v2');
   }
 
   /**
@@ -1782,14 +1833,14 @@ export class TenantAwareAuthRequestHandler extends AbstractAuthRequestHandler {
    * @return {AuthResourceUrlBuilder} A new Auth user management resource URL builder instance.
    */
   protected newAuthUrlBuilder(): AuthResourceUrlBuilder {
-    return new TenantAwareAuthResourceUrlBuilder(this.projectId, 'v1', this.tenantId);
+    return new TenantAwareAuthResourceUrlBuilder(this.app, 'v1', this.tenantId);
   }
 
   /**
    * @return {AuthResourceUrlBuilder} A new project config resource URL builder instance.
    */
   protected newProjectConfigUrlBuilder(): AuthResourceUrlBuilder {
-    return new TenantAwareAuthResourceUrlBuilder(this.projectId, 'v2beta1', this.tenantId);
+    return new TenantAwareAuthResourceUrlBuilder(this.app, 'v2', this.tenantId);
   }
 
   /**

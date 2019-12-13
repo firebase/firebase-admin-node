@@ -62,7 +62,7 @@ export class FirebaseInstanceIdRequestHandler {
     this.path = FIREBASE_IID_PATH + `project/${projectId}/instanceId/`;
   }
 
-  public deleteInstanceId(instanceId: string): Promise<object> {
+  public deleteInstanceId(instanceId: string): Promise<void> {
     if (!validator.isNonEmptyString(instanceId)) {
       return Promise.reject(new FirebaseInstanceIdError(
         InstanceIdClientErrorCode.INVALID_INSTANCE_ID,
@@ -76,9 +76,9 @@ export class FirebaseInstanceIdRequestHandler {
    * Invokes the request handler based on the API settings object passed.
    *
    * @param {ApiSettings} apiSettings The API endpoint settings to apply to request and response.
-   * @return {Promise<object>} A promise that resolves with the response.
+   * @return {Promise<void>} A promise that resolves when the request is complete.
    */
-  private invokeRequestHandler(apiSettings: ApiSettings): Promise<object> {
+  private invokeRequestHandler(apiSettings: ApiSettings): Promise<void> {
     const path: string = this.path + apiSettings.getEndpoint();
     return Promise.resolve()
       .then(() => {
@@ -90,7 +90,7 @@ export class FirebaseInstanceIdRequestHandler {
         return this.httpClient.send(req);
       })
       .then((response) => {
-        return response.data;
+        // return nothing on success
       })
       .catch((err) => {
         if (err instanceof HttpError) {

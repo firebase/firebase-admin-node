@@ -20,7 +20,7 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import {deepCopy} from '../../../src/utils/deep-copy';
-import {EmailSignInConfig} from '../../../src/auth/auth-config';
+import {EmailSignInConfig, EmailSignInProviderConfig} from '../../../src/auth/auth-config';
 import {
   Tenant, TenantOptions, TenantServerResponse,
 } from '../../../src/auth/tenant';
@@ -33,14 +33,14 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 describe('Tenant', () => {
-  const serverRequest = {
+  const serverRequest: TenantServerResponse = {
     name: 'projects/project1/tenants/TENANT-ID',
     displayName: 'TENANT-DISPLAY-NAME',
     allowPasswordSignup: true,
     enableEmailLinkSignin: true,
   };
 
-  const clientRequest = {
+  const clientRequest: TenantOptions = {
     displayName: 'TENANT-DISPLAY-NAME',
     emailSignInConfig: {
       enabled: true,
@@ -62,7 +62,7 @@ describe('Tenant', () => {
 
       it('should throw on invalid EmailSignInConfig object', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest);
-        tenantOptionsClientRequest.emailSignInConfig = null;
+        tenantOptionsClientRequest.emailSignInConfig = null as unknown as EmailSignInProviderConfig;
         expect(() => Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest))
           .to.throw('"EmailSignInConfig" must be a non-null object.');
       });
@@ -123,7 +123,7 @@ describe('Tenant', () => {
 
       it('should throw on invalid EmailSignInConfig', () => {
         const tenantOptionsClientRequest: TenantOptions = deepCopy(clientRequest);
-        tenantOptionsClientRequest.emailSignInConfig = null;
+        tenantOptionsClientRequest.emailSignInConfig = null as unknown as EmailSignInProviderConfig;
 
         expect(() => Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest))
           .to.throw('"EmailSignInConfig" must be a non-null object.');
@@ -216,8 +216,9 @@ describe('Tenant', () => {
 
         expect(tenantWithoutAllowPasswordSignup.displayName).to.equal(serverResponse.displayName);
         expect(tenantWithoutAllowPasswordSignup.tenantId).to.equal('TENANT-ID');
-        expect(tenantWithoutAllowPasswordSignup.emailSignInConfig.enabled).to.be.false;
-        expect(tenantWithoutAllowPasswordSignup.emailSignInConfig.passwordRequired).to.be.true;
+        expect(tenantWithoutAllowPasswordSignup.emailSignInConfig).to.exist;
+        expect(tenantWithoutAllowPasswordSignup.emailSignInConfig!.enabled).to.be.false;
+        expect(tenantWithoutAllowPasswordSignup.emailSignInConfig!.passwordRequired).to.be.true;
       }).not.to.throw();
     });
   });
