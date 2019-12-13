@@ -292,6 +292,15 @@ AUTH_CONFIGS.forEach((testConfig) => {
           }).to.throw('First argument passed to admin.auth() must be a valid Firebase app instance.');
         });
 
+        it('should reject given no project ID', () => {
+          const authWithoutProjectId = new Auth(mocks.mockCredentialApp());
+          authWithoutProjectId.getUser('uid')
+            .should.eventually.be.rejectedWith(
+              'Failed to determine project ID for Auth. Initialize the SDK with service '
+              + 'account credentials or set project ID as an app option. Alternatively set the '
+              + 'GOOGLE_CLOUD_PROJECT environment variable.');
+        });
+
         it('should not throw given a valid app', () => {
           expect(() => {
             return new Auth(mockApp);
@@ -1626,8 +1635,6 @@ AUTH_CONFIGS.forEach((testConfig) => {
           })
           .catch((error) => {
             expect(error).to.have.property('code', 'auth/invalid-page-token');
-            expect(validator.isNonEmptyString)
-              .to.have.been.calledOnce.and.calledWith(invalidToken);
           });
       });
 
@@ -1968,7 +1975,6 @@ AUTH_CONFIGS.forEach((testConfig) => {
           })
           .catch((error) => {
             expect(error).to.have.property('code', 'auth/invalid-id-token');
-            expect(validator.isNonEmptyString).to.have.been.calledOnce.and.calledWith(invalidIdToken);
           });
       });
 

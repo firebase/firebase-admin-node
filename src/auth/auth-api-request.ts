@@ -88,7 +88,9 @@ const MAX_LIST_TENANT_PAGE_SIZE = 1000;
 
 /** Defines a base utility to help with resource URL construction. */
 class AuthResourceUrlBuilder {
+
   protected urlFormat: string;
+  private projectId: string;
 
   /**
    * The resource URL builder constructor.
@@ -97,7 +99,7 @@ class AuthResourceUrlBuilder {
    * @param {string} version The endpoint API version.
    * @constructor
    */
-  constructor(protected projectId: string | null, protected version: string = 'v1') {
+  constructor(protected app: FirebaseApp, protected version: string = 'v1') {
     this.urlFormat = FIREBASE_AUTH_BASE_URL_FORMAT;
   }
 
@@ -107,17 +109,41 @@ class AuthResourceUrlBuilder {
    * @param {string=} api The backend API name.
    * @param {object=} params The optional additional parameters to substitute in the
    *     URL path.
-   * @return {string} The corresponding resource URL.
+   * @return {Promise<string>} The corresponding resource URL.
    */
-  public getUrl(api?: string, params?: object): string {
-    const baseParams = {
-      version: this.version,
-      projectId: this.projectId,
-      api: api || '',
-    };
-    const baseUrl = utils.formatString(this.urlFormat, baseParams);
-    // Substitute additional api related parameters.
-    return utils.formatString(baseUrl, params || {});
+  public getUrl(api?: string, params?: object): Promise<string> {
+    return this.getProjectId()
+      .then((projectId) => {
+        const baseParams = {
+          version: this.version,
+          projectId,
+          api: api || '',
+        };
+        const baseUrl = utils.formatString(this.urlFormat, baseParams);
+        // Substitute additional api related parameters.
+        return utils.formatString(baseUrl, params || {});
+      });
+  }
+
+  private getProjectId(): Promise<string> {
+    if (this.projectId) {
+      return Promise.resolve(this.projectId);
+    }
+
+    return utils.findProjectId(this.app)
+      .then((projectId) => {
+        if (!validator.isNonEmptyString(projectId)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CREDENTIAL,
+              'Failed to determine project ID for Auth. Initialize the '
+              + 'SDK with service account credentials or set project ID as an app option. '
+              + 'Alternatively set the GOOGLE_CLOUD_PROJECT environment variable.',
+          );
+        }
+
+        this.projectId = projectId;
+        return projectId;
+      });
   }
 }
 
@@ -132,8 +158,8 @@ class TenantAwareAuthResourceUrlBuilder extends AuthResourceUrlBuilder {
    * @param {string} tenantId The tenant ID.
    * @constructor
    */
-  constructor(protected projectId: string | null, protected version: string, protected tenantId: string) {
-    super(projectId, version);
+  constructor(protected app: FirebaseApp, protected version: string, protected tenantId: string) {
+    super(app, version);
     this.urlFormat = FIREBASE_AUTH_TENANT_URL_FORMAT;
   }
 
@@ -143,10 +169,13 @@ class TenantAwareAuthResourceUrlBuilder extends AuthResourceUrlBuilder {
    * @param {string=} api The backend API name.
    * @param {object=} params The optional additional parameters to substitute in the
    *     URL path.
-   * @return {string} The corresponding resource URL.
+   * @return {Promise<string>} The corresponding resource URL.
    */
-  public getUrl(api?: string, params?: object) {
-    return utils.formatString(super.getUrl(api, params), {tenantId: this.tenantId});
+  public getUrl(api?: string, params?: object): Promise<string> {
+    return super.getUrl(api, params)
+      .then((url) => {
+        return utils.formatString(url, {tenantId: this.tenantId});
+      });
   }
 }
 
@@ -683,7 +712,7 @@ const LIST_INBOUND_SAML_CONFIGS = new ApiSettings('/inboundSamlConfigs', 'GET')
  * Class that provides the mechanism to send requests to the Firebase Auth backend endpoints.
  */
 export abstract class AbstractAuthRequestHandler {
-  protected readonly projectId: string | null;
+
   protected readonly httpClient: AuthorizedHttpClient;
   private authUrlBuilder: AuthResourceUrlBuilder;
   private projectConfigUrlBuilder: AuthResourceUrlBuilder;
@@ -700,7 +729,7 @@ export abstract class AbstractAuthRequestHandler {
    * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
    * @constructor
    */
-  constructor(app: FirebaseApp) {
+  constructor(protected readonly app: FirebaseApp) {
     if (typeof app !== 'object' || app === null || !('options' in app)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
@@ -708,9 +737,6 @@ export abstract class AbstractAuthRequestHandler {
       );
     }
 
-    // TODO(rsgowman): Trace utils.getProjectId() throughout and figure out where a null return
-    // value will cause troubles. (Such as AuthResourceUrlBuilder::getUrl()).
-    this.projectId = utils.getProjectId(app);
     this.httpClient = new AuthorizedHttpClient(app);
   }
 
@@ -1357,15 +1383,15 @@ export abstract class AbstractAuthRequestHandler {
   protected invokeRequestHandler(
       urlBuilder: AuthResourceUrlBuilder, apiSettings: ApiSettings,
       requestData: object, additionalResourceParams?: object): Promise<object> {
-    return Promise.resolve()
-      .then(() => {
+    return urlBuilder.getUrl(apiSettings.getEndpoint(), additionalResourceParams)
+      .then((url) => {
         // Validate request.
         const requestValidator = apiSettings.getRequestValidator();
         requestValidator(requestData);
         // Process request.
         const req: HttpRequestConfig = {
           method: apiSettings.getHttpMethod(),
-          url: urlBuilder.getUrl(apiSettings.getEndpoint(), additionalResourceParams),
+          url,
           headers: FIREBASE_AUTH_HEADER,
           data: requestData,
           timeout: FIREBASE_AUTH_TIMEOUT,
@@ -1512,21 +1538,21 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
    */
   constructor(app: FirebaseApp) {
     super(app);
-    this.tenantMgmtResourceBuilder =  new AuthResourceUrlBuilder(utils.getProjectId(app), 'v2');
+    this.tenantMgmtResourceBuilder =  new AuthResourceUrlBuilder(app, 'v2');
   }
 
   /**
    * @return {AuthResourceUrlBuilder} A new Auth user management resource URL builder instance.
    */
   protected newAuthUrlBuilder(): AuthResourceUrlBuilder {
-    return new AuthResourceUrlBuilder(this.projectId, 'v1');
+    return new AuthResourceUrlBuilder(this.app, 'v1');
   }
 
   /**
    * @return {AuthResourceUrlBuilder} A new project config resource URL builder instance.
    */
   protected newProjectConfigUrlBuilder(): AuthResourceUrlBuilder {
-    return new AuthResourceUrlBuilder(this.projectId, 'v2');
+    return new AuthResourceUrlBuilder(this.app, 'v2');
   }
 
   /**
@@ -1662,14 +1688,14 @@ export class TenantAwareAuthRequestHandler extends AbstractAuthRequestHandler {
    * @return {AuthResourceUrlBuilder} A new Auth user management resource URL builder instance.
    */
   protected newAuthUrlBuilder(): AuthResourceUrlBuilder {
-    return new TenantAwareAuthResourceUrlBuilder(this.projectId, 'v1', this.tenantId);
+    return new TenantAwareAuthResourceUrlBuilder(this.app, 'v1', this.tenantId);
   }
 
   /**
    * @return {AuthResourceUrlBuilder} A new project config resource URL builder instance.
    */
   protected newProjectConfigUrlBuilder(): AuthResourceUrlBuilder {
-    return new TenantAwareAuthResourceUrlBuilder(this.projectId, 'v2', this.tenantId);
+    return new TenantAwareAuthResourceUrlBuilder(this.app, 'v2', this.tenantId);
   }
 
   /**
