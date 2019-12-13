@@ -22,9 +22,9 @@ import {AppHook, FirebaseApp, FirebaseAppOptions} from './firebase-app';
 import {FirebaseServiceFactory, FirebaseServiceInterface} from './firebase-service';
 import {
   Credential,
-  CertCredential,
   RefreshTokenCredential,
-  ApplicationDefaultCredential,
+  ServiceAccountCredential,
+  getApplicationDefault,
 } from './auth/credential';
 
 import {Auth} from './auth/auth';
@@ -48,8 +48,8 @@ const DEFAULT_APP_NAME = '[DEFAULT]';
 export const FIREBASE_CONFIG_VAR: string = 'FIREBASE_CONFIG';
 
 
-let globalAppDefaultCred: ApplicationDefaultCredential;
-const globalCertCreds: { [key: string]: CertCredential } = {};
+let globalAppDefaultCred: Credential;
+const globalCertCreds: { [key: string]: ServiceAccountCredential } = {};
 const globalRefreshTokenCreds: { [key: string]: RefreshTokenCredential } = {};
 
 
@@ -85,7 +85,7 @@ export class FirebaseNamespaceInternals {
   public initializeApp(options?: FirebaseAppOptions, appName = DEFAULT_APP_NAME): FirebaseApp {
     if (typeof options === 'undefined') {
       options = this.loadOptionsFromEnvVar();
-      options.credential = new ApplicationDefaultCredential();
+      options.credential = getApplicationDefault();
     }
     if (typeof appName !== 'string' || appName === '') {
       throw new FirebaseAppError(
@@ -275,7 +275,7 @@ const firebaseCredential = {
   cert: (serviceAccountPathOrObject: string | object, httpAgent?: Agent): Credential => {
     const stringifiedServiceAccount = JSON.stringify(serviceAccountPathOrObject);
     if (!(stringifiedServiceAccount in globalCertCreds)) {
-      globalCertCreds[stringifiedServiceAccount] = new CertCredential(serviceAccountPathOrObject, httpAgent);
+      globalCertCreds[stringifiedServiceAccount] = new ServiceAccountCredential(serviceAccountPathOrObject, httpAgent);
     }
     return globalCertCreds[stringifiedServiceAccount];
   },
@@ -291,7 +291,7 @@ const firebaseCredential = {
 
   applicationDefault: (httpAgent?: Agent): Credential => {
     if (typeof globalAppDefaultCred === 'undefined') {
-      globalAppDefaultCred = new ApplicationDefaultCredential(httpAgent);
+      globalAppDefaultCred = getApplicationDefault(httpAgent);
     }
     return globalAppDefaultCred;
   },

@@ -29,7 +29,8 @@ const GOOGLE_AUTH_TOKEN_PATH = '/o/oauth2/token';
 
 // NOTE: the Google Metadata Service uses HTTP over a vlan
 const GOOGLE_METADATA_SERVICE_HOST = 'metadata.google.internal';
-const GOOGLE_METADATA_SERVICE_PATH = '/computeMetadata/v1/instance/service-accounts/default/token';
+const GOOGLE_METADATA_SERVICE_TOKEN_PATH = '/computeMetadata/v1/instance/service-accounts/default/token';
+const GOOGLE_METADATA_SERVICE_PROJECT_ID_PATH = '/computeMetadata/v1/project/project-id';
 
 const configDir = (() => {
   // Windows has a dedicated low-rights location for apps at ~/Application Data
@@ -51,19 +52,240 @@ const REFRESH_TOKEN_PATH = '/oauth2/v4/token';
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 const JWT_ALGORITHM = 'RS256';
 
+/**
+ * Interface for Google OAuth 2.0 access tokens.
+ */
+export interface GoogleOAuthAccessToken {
+  /* tslint:disable:variable-name */
+  access_token: string;
+  expires_in: number;
+  /* tslint:enable:variable-name */
+}
 
-function copyAttr(to: {[key: string]: any}, from: {[key: string]: any}, key: string, alt: string) {
-  const tmp = from[key] || from[alt];
-  if (typeof tmp !== 'undefined') {
-    to[key] = tmp;
+/**
+ * Interface for things that generate access tokens.
+ */
+export interface Credential {
+  getAccessToken(): Promise<GoogleOAuthAccessToken>;
+}
+
+/**
+ * Implementation of Credential that uses a service account certificate.
+ */
+export class ServiceAccountCredential implements Credential {
+
+  public readonly projectId: string;
+  public readonly privateKey: string;
+  public readonly clientEmail: string;
+
+
+  private readonly httpClient: HttpClient;
+  private readonly httpAgent?: Agent;
+
+  constructor(serviceAccountPathOrObject: string | object, httpAgent?: Agent) {
+    const serviceAccount = (typeof serviceAccountPathOrObject === 'string') ?
+      ServiceAccount.fromPath(serviceAccountPathOrObject)
+      : new ServiceAccount(serviceAccountPathOrObject);
+    this.projectId = serviceAccount.projectId;
+    this.privateKey = serviceAccount.privateKey;
+    this.clientEmail = serviceAccount.clientEmail;
+    this.httpClient = new HttpClient();
+    this.httpAgent = httpAgent;
+  }
+
+  public getAccessToken(): Promise<GoogleOAuthAccessToken> {
+    const token = this.createAuthJwt_();
+    const postData = 'grant_type=urn%3Aietf%3Aparams%3Aoauth%3A' +
+      'grant-type%3Ajwt-bearer&assertion=' + token;
+    const request: HttpRequestConfig = {
+      method: 'POST',
+      url: `https://${GOOGLE_AUTH_TOKEN_HOST}${GOOGLE_AUTH_TOKEN_PATH}`,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      data: postData,
+      httpAgent: this.httpAgent,
+    };
+    return requestAccessToken(this.httpClient, request);
+  }
+
+  private createAuthJwt_(): string {
+    const claims = {
+      scope: [
+        'https://www.googleapis.com/auth/cloud-platform',
+        'https://www.googleapis.com/auth/firebase.database',
+        'https://www.googleapis.com/auth/firebase.messaging',
+        'https://www.googleapis.com/auth/identitytoolkit',
+        'https://www.googleapis.com/auth/userinfo.email',
+      ].join(' '),
+    };
+
+    const jwt = require('jsonwebtoken');
+    // This method is actually synchronous so we can capture and return the buffer.
+    return jwt.sign(claims, this.privateKey, {
+      audience: GOOGLE_TOKEN_AUDIENCE,
+      expiresIn: ONE_HOUR_IN_SECONDS,
+      issuer: this.clientEmail,
+      algorithm: JWT_ALGORITHM,
+    });
   }
 }
 
-export class RefreshToken {
-  public clientId: string;
-  public clientSecret: string;
-  public refreshToken: string;
-  public type: string;
+/**
+ * A struct containing the properties necessary to use service-account JSON credentials.
+ */
+class ServiceAccount {
+
+  public readonly projectId: string;
+  public readonly privateKey: string;
+  public readonly clientEmail: string;
+
+  public static fromPath(filePath: string): ServiceAccount {
+    // Node bug encountered in v6.x. fs.readFileSync hangs when path is a 0 or 1.
+    if (typeof filePath !== 'string') {
+      throw new FirebaseAppError(
+        AppErrorCodes.INVALID_CREDENTIAL,
+        'Failed to parse service account json file: TypeError: path must be a string',
+      );
+    }
+    try {
+      return new ServiceAccount(JSON.parse(fs.readFileSync(filePath, 'utf8')));
+    } catch (error) {
+      // Throw a nicely formed error message if the file contents cannot be parsed
+      throw new FirebaseAppError(
+        AppErrorCodes.INVALID_CREDENTIAL,
+        'Failed to parse service account json file: ' + error,
+      );
+    }
+  }
+
+  constructor(json: object) {
+    if (typeof json !== 'object' || json === null) {
+      throw new FirebaseAppError(
+        AppErrorCodes.INVALID_CREDENTIAL,
+        'Service account must be an object.',
+      );
+    }
+
+    copyAttr(this, json, 'projectId', 'project_id');
+    copyAttr(this, json, 'privateKey', 'private_key');
+    copyAttr(this, json, 'clientEmail', 'client_email');
+
+    let errorMessage;
+    if (typeof this.projectId !== 'string' || !this.projectId) {
+      errorMessage = 'Service account object must contain a string "project_id" property.';
+    } else if (typeof this.privateKey !== 'string' || !this.privateKey) {
+      errorMessage = 'Service account object must contain a string "private_key" property.';
+    } else if (typeof this.clientEmail !== 'string' || !this.clientEmail) {
+      errorMessage = 'Service account object must contain a string "client_email" property.';
+    }
+
+    if (typeof errorMessage !== 'undefined') {
+      throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
+    }
+
+    const forge = require('node-forge');
+    try {
+      forge.pki.privateKeyFromPem(this.privateKey);
+    } catch (error) {
+      throw new FirebaseAppError(
+        AppErrorCodes.INVALID_CREDENTIAL,
+        'Failed to parse private key: ' + error);
+    }
+  }
+}
+
+/**
+ * Implementation of Credential that gets access tokens from the metadata service available
+ * in the Google Cloud Platform. This authenticates the process as the default service account
+ * of an App Engine instance or Google Compute Engine machine.
+ */
+export class ComputeEngineCredential implements Credential {
+
+  private readonly httpClient = new HttpClient();
+  private readonly httpAgent?: Agent;
+
+  constructor(httpAgent?: Agent) {
+    this.httpAgent = httpAgent;
+  }
+
+  public getAccessToken(): Promise<GoogleOAuthAccessToken> {
+    const request = this.buildRequest(GOOGLE_METADATA_SERVICE_TOKEN_PATH);
+    return requestAccessToken(this.httpClient, request);
+  }
+
+  public getProjectId(): Promise<string> {
+    const request = this.buildRequest(GOOGLE_METADATA_SERVICE_PROJECT_ID_PATH);
+    return this.httpClient.send(request)
+      .then((resp) => {
+        return resp.text!;
+      });
+  }
+
+  private buildRequest(urlPath: string): HttpRequestConfig {
+    return {
+      method: 'GET',
+      url: `http://${GOOGLE_METADATA_SERVICE_HOST}${urlPath}`,
+      headers: {
+        'Metadata-Flavor': 'Google',
+      },
+      httpAgent: this.httpAgent,
+    };
+  }
+}
+
+/**
+ * Implementation of Credential that gets access tokens from refresh tokens.
+ */
+export class RefreshTokenCredential implements Credential {
+
+  private readonly refreshToken: RefreshToken;
+  private readonly httpClient: HttpClient;
+  private readonly httpAgent?: Agent;
+
+  constructor(refreshTokenPathOrObject: string | object, httpAgent?: Agent) {
+    if (typeof refreshTokenPathOrObject === 'string') {
+      const refreshToken = RefreshToken.fromPath(refreshTokenPathOrObject);
+      if (!refreshToken) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.NOT_FOUND,
+          'The file refered to by the refreshTokenPathOrObject parameter (' +
+          refreshTokenPathOrObject + ') was not found.',
+        );
+      }
+      this.refreshToken = refreshToken;
+    } else {
+      this.refreshToken = new RefreshToken(refreshTokenPathOrObject);
+    }
+    this.httpClient = new HttpClient();
+    this.httpAgent = httpAgent;
+  }
+
+  public getAccessToken(): Promise<GoogleOAuthAccessToken> {
+    const postData =
+      'client_id=' + this.refreshToken.clientId + '&' +
+      'client_secret=' + this.refreshToken.clientSecret + '&' +
+      'refresh_token=' + this.refreshToken.refreshToken + '&' +
+      'grant_type=refresh_token';
+    const request: HttpRequestConfig = {
+      method: 'POST',
+      url: `https://${REFRESH_TOKEN_HOST}${REFRESH_TOKEN_PATH}`,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      data: postData,
+      httpAgent: this.httpAgent,
+    };
+    return requestAccessToken(this.httpClient, request);
+  }
+}
+
+class RefreshToken {
+
+  public readonly clientId: string;
+  public readonly clientSecret: string;
+  public readonly refreshToken: string;
+  public readonly type: string;
 
   /*
    * Tries to load a RefreshToken from a path. If the path is not present, returns null.
@@ -113,75 +335,27 @@ export class RefreshToken {
   }
 }
 
-/**
- * A struct containing the properties necessary to use service-account JSON credentials.
- */
-export class Certificate {
-  public projectId: string;
-  public privateKey: string;
-  public clientEmail: string;
+export function getApplicationDefault(httpAgent?: Agent): Credential {
+  if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+    return credentialFromFile(process.env.GOOGLE_APPLICATION_CREDENTIALS, httpAgent);
+  }
 
-  public static fromPath(filePath: string): Certificate {
-    // Node bug encountered in v6.x. fs.readFileSync hangs when path is a 0 or 1.
-    if (typeof filePath !== 'string') {
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_CREDENTIAL,
-        'Failed to parse certificate key file: TypeError: path must be a string',
-      );
-    }
-    try {
-      return new Certificate(JSON.parse(fs.readFileSync(filePath, 'utf8')));
-    } catch (error) {
-      // Throw a nicely formed error message if the file contents cannot be parsed
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_CREDENTIAL,
-        'Failed to parse certificate key file: ' + error,
-      );
+  // It is OK to not have this file. If it is present, it must be valid.
+  if (GCLOUD_CREDENTIAL_PATH) {
+    const refreshToken = RefreshToken.fromPath(GCLOUD_CREDENTIAL_PATH);
+    if (refreshToken) {
+      return new RefreshTokenCredential(refreshToken, httpAgent);
     }
   }
 
-  constructor(json: object) {
-    if (typeof json !== 'object' || json === null) {
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_CREDENTIAL,
-        'Certificate object must be an object.',
-      );
-    }
-
-    copyAttr(this, json, 'projectId', 'project_id');
-    copyAttr(this, json, 'privateKey', 'private_key');
-    copyAttr(this, json, 'clientEmail', 'client_email');
-
-    let errorMessage;
-    if (typeof this.privateKey !== 'string' || !this.privateKey) {
-      errorMessage = 'Certificate object must contain a string "private_key" property.';
-    } else if (typeof this.clientEmail !== 'string' || !this.clientEmail) {
-      errorMessage = 'Certificate object must contain a string "client_email" property.';
-    }
-
-    if (typeof errorMessage !== 'undefined') {
-      throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
-    }
-
-    const forge = require('node-forge');
-    try {
-      forge.pki.privateKeyFromPem(this.privateKey);
-    } catch (error) {
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_CREDENTIAL,
-        'Failed to parse private key: ' + error);
-    }
-  }
+  return new ComputeEngineCredential(httpAgent);
 }
 
-/**
- * Interface for Google OAuth 2.0 access tokens.
- */
-export interface GoogleOAuthAccessToken {
-  /* tslint:disable:variable-name */
-  access_token: string;
-  expires_in: number;
-  /* tslint:enable:variable-name */
+function copyAttr(to: {[key: string]: any}, from: {[key: string]: any}, key: string, alt: string) {
+  const tmp = from[key] || from[alt];
+  if (typeof tmp !== 'undefined') {
+    to[key] = tmp;
+  }
 }
 
 /**
@@ -227,253 +401,53 @@ function getDetailFromResponse(response: HttpResponse): string {
   return response.text || 'Missing error payload';
 }
 
-/**
- * Implementation of Credential that uses a service account certificate.
- */
-export class CertCredential implements FirebaseCredential {
-
-  private readonly certificate: Certificate;
-  private readonly httpClient: HttpClient;
-  private readonly httpAgent?: Agent;
-
-  constructor(serviceAccountPathOrObject: string | object, httpAgent?: Agent) {
-    this.certificate = (typeof serviceAccountPathOrObject === 'string') ?
-      Certificate.fromPath(serviceAccountPathOrObject) : new Certificate(serviceAccountPathOrObject);
-    this.httpClient = new HttpClient();
-    this.httpAgent = httpAgent;
-  }
-
-  public getAccessToken(): Promise<GoogleOAuthAccessToken> {
-    const token = this.createAuthJwt_();
-    const postData = 'grant_type=urn%3Aietf%3Aparams%3Aoauth%3A' +
-      'grant-type%3Ajwt-bearer&assertion=' + token;
-    const request: HttpRequestConfig = {
-      method: 'POST',
-      url: `https://${GOOGLE_AUTH_TOKEN_HOST}${GOOGLE_AUTH_TOKEN_PATH}`,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      data: postData,
-      httpAgent: this.httpAgent,
-    };
-    return requestAccessToken(this.httpClient, request);
-  }
-
-  public getCertificate(): Certificate {
-    return this.certificate;
-  }
-
-  private createAuthJwt_(): string {
-    const claims = {
-      scope: [
-        'https://www.googleapis.com/auth/cloud-platform',
-        'https://www.googleapis.com/auth/firebase.database',
-        'https://www.googleapis.com/auth/firebase.messaging',
-        'https://www.googleapis.com/auth/identitytoolkit',
-        'https://www.googleapis.com/auth/userinfo.email',
-      ].join(' '),
-    };
-
-    const jwt = require('jsonwebtoken');
-    // This method is actually synchronous so we can capture and return the buffer.
-    return jwt.sign(claims, this.certificate.privateKey, {
-      audience: GOOGLE_TOKEN_AUDIENCE,
-      expiresIn: ONE_HOUR_IN_SECONDS,
-      issuer: this.certificate.clientEmail,
-      algorithm: JWT_ALGORITHM,
-    });
-  }
-}
-
-/**
- * Interface for things that generate access tokens.
- */
-export interface Credential {
-  getAccessToken(): Promise<GoogleOAuthAccessToken>;
-}
-
-/**
- * Internal interface for credentials that can both generate access tokens and may have a Certificate
- * associated with them.
- */
-export interface FirebaseCredential extends Credential {
-  getCertificate(): Certificate | null;
-}
-
-/**
- * Attempts to extract a Certificate from the given credential.
- *
- * @param {Credential} credential A Credential instance.
- * @return {Certificate} A Certificate instance or null.
- */
-export function tryGetCertificate(credential: Credential | null | undefined): Certificate | null {
-  if (credential && isFirebaseCredential(credential)) {
-    return credential.getCertificate();
-  }
-
-  return null;
-}
-
-function isFirebaseCredential(credential: Credential): credential is FirebaseCredential {
-  return 'getCertificate' in credential;
-}
-
-/**
- * Implementation of Credential that gets access tokens from refresh tokens.
- */
-export class RefreshTokenCredential implements Credential {
-
-  private readonly refreshToken: RefreshToken;
-  private readonly httpClient: HttpClient;
-  private readonly httpAgent?: Agent;
-
-  constructor(refreshTokenPathOrObject: string | object, httpAgent?: Agent) {
-    if (typeof refreshTokenPathOrObject === 'string') {
-      const refreshToken = RefreshToken.fromPath(refreshTokenPathOrObject);
-      if (!refreshToken) {
-        throw new FirebaseAuthError(
-          AuthClientErrorCode.NOT_FOUND,
-          'The file refered to by the refreshTokenPathOrObject parameter (' +
-          refreshTokenPathOrObject + ') was not found.',
-        );
-      }
-      this.refreshToken = refreshToken;
-    } else {
-      this.refreshToken = new RefreshToken(refreshTokenPathOrObject);
-    }
-    this.httpClient = new HttpClient();
-    this.httpAgent = httpAgent;
-  }
-
-  public getAccessToken(): Promise<GoogleOAuthAccessToken> {
-    const postData =
-      'client_id=' + this.refreshToken.clientId + '&' +
-      'client_secret=' + this.refreshToken.clientSecret + '&' +
-      'refresh_token=' + this.refreshToken.refreshToken + '&' +
-      'grant_type=refresh_token';
-    const request: HttpRequestConfig = {
-      method: 'POST',
-      url: `https://${REFRESH_TOKEN_HOST}${REFRESH_TOKEN_PATH}`,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      data: postData,
-      httpAgent: this.httpAgent,
-    };
-    return requestAccessToken(this.httpClient, request);
-  }
-}
-
-
-/**
- * Implementation of Credential that gets access tokens from the metadata service available
- * in the Google Cloud Platform. This authenticates the process as the default service account
- * of an App Engine instance or Google Compute Engine machine.
- */
-export class MetadataServiceCredential implements Credential {
-
-  private readonly httpClient = new HttpClient();
-  private readonly httpAgent?: Agent;
-
-  constructor(httpAgent?: Agent) {
-    this.httpAgent = httpAgent;
-  }
-
-  public getAccessToken(): Promise<GoogleOAuthAccessToken> {
-    const request: HttpRequestConfig = {
-      method: 'GET',
-      url: `http://${GOOGLE_METADATA_SERVICE_HOST}${GOOGLE_METADATA_SERVICE_PATH}`,
-      headers: {
-        'Metadata-Flavor': 'Google',
-      },
-      httpAgent: this.httpAgent,
-    };
-    return requestAccessToken(this.httpClient, request);
-  }
-}
-
-
-/**
- * ApplicationDefaultCredential implements the process for loading credentials as
- * described in https://developers.google.com/identity/protocols/application-default-credentials
- */
-export class ApplicationDefaultCredential implements FirebaseCredential {
-  private credential_: Credential;
-
-  constructor(httpAgent?: Agent) {
-    if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-      this.credential_ = credentialFromFile(process.env.GOOGLE_APPLICATION_CREDENTIALS, httpAgent);
-      return;
-    }
-
-    // It is OK to not have this file. If it is present, it must be valid.
-    if (GCLOUD_CREDENTIAL_PATH) {
-      const refreshToken = RefreshToken.fromPath(GCLOUD_CREDENTIAL_PATH);
-      if (refreshToken) {
-        this.credential_ = new RefreshTokenCredential(refreshToken, httpAgent);
-        return;
-      }
-    }
-
-    this.credential_ = new MetadataServiceCredential(httpAgent);
-  }
-
-  public getAccessToken(): Promise<GoogleOAuthAccessToken> {
-    return this.credential_.getAccessToken();
-  }
-
-  public getCertificate(): Certificate | null {
-    return tryGetCertificate(this.credential_);
-  }
-
-  // Used in testing to verify we are delegating to the correct implementation.
-  public getCredential(): Credential {
-    return this.credential_;
-  }
-}
-
 function credentialFromFile(filePath: string, httpAgent?: Agent): Credential {
   const credentialsFile = readCredentialFile(filePath);
   if (typeof credentialsFile !== 'object') {
     throw new FirebaseAppError(
-        AppErrorCodes.INVALID_CREDENTIAL,
-        'Failed to parse contents of the credentials file as an object',
+      AppErrorCodes.INVALID_CREDENTIAL,
+      'Failed to parse contents of the credentials file as an object',
     );
   }
+
   if (credentialsFile.type === 'service_account') {
-    return new CertCredential(credentialsFile, httpAgent);
+    return new ServiceAccountCredential(credentialsFile, httpAgent);
   }
+
   if (credentialsFile.type === 'authorized_user') {
     return new RefreshTokenCredential(credentialsFile, httpAgent);
   }
+
   throw new FirebaseAppError(
-      AppErrorCodes.INVALID_CREDENTIAL,
-      'Invalid contents in the credentials file',
+    AppErrorCodes.INVALID_CREDENTIAL,
+    'Invalid contents in the credentials file',
   );
 }
 
 function readCredentialFile(filePath: string): {[key: string]: any} {
   if (typeof filePath !== 'string') {
     throw new FirebaseAppError(
-        AppErrorCodes.INVALID_CREDENTIAL,
-        'Failed to parse credentials file: TypeError: path must be a string',
+      AppErrorCodes.INVALID_CREDENTIAL,
+      'Failed to parse credentials file: TypeError: path must be a string',
     );
   }
+
   let fileText: string;
   try {
     fileText = fs.readFileSync(filePath, 'utf8');
   } catch (error) {
     throw new FirebaseAppError(
-        AppErrorCodes.INVALID_CREDENTIAL,
-        `Failed to read credentials from file ${filePath}: ` + error,
+      AppErrorCodes.INVALID_CREDENTIAL,
+      `Failed to read credentials from file ${filePath}: ` + error,
     );
   }
+
   try {
     return JSON.parse(fileText);
   } catch (error) {
     throw new FirebaseAppError(
-        AppErrorCodes.INVALID_CREDENTIAL,
-        'Failed to parse contents of the credentials file as an object: ' + error,
+      AppErrorCodes.INVALID_CREDENTIAL,
+      'Failed to parse contents of the credentials file as an object: ' + error,
     );
   }
 }
