@@ -306,7 +306,7 @@ export class Messaging implements FirebaseServiceInterface {
           validateMessage(message);
           const request: {message: Message, validate_only?: boolean} = {message};
           if (dryRun) {
-                  request.validate_only = true;
+            request.validate_only = true;
           }
           return {
             url: `https://${FCM_SEND_HOST}${urlPath}`,
