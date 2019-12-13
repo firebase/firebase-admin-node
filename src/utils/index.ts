@@ -63,13 +63,13 @@ export function addReadonlyGetter(obj: object, prop: string, value: any): void {
  *
  * @return {string} A project ID string or null.
  */
-export function getProjectId(app: FirebaseApp): string {
+export function getProjectId(app: FirebaseApp): string | null {
   const options: FirebaseAppOptions = app.options;
   if (validator.isNonEmptyString(options.projectId)) {
     return options.projectId;
   }
 
-  const cert: Certificate = tryGetCertificate(options.credential);
+  const cert: Certificate | null = tryGetCertificate(options.credential);
   if (cert != null && validator.isNonEmptyString(cert.projectId)) {
     return cert.projectId;
   }
@@ -79,6 +79,20 @@ export function getProjectId(app: FirebaseApp): string {
     return projectId;
   }
   return null;
+}
+
+/**
+ * Determines the Google Cloud project ID associated with a Firebase app by examining
+ * the Firebase app options, credentials and the local environment in that order. This
+ * is an async wrapper of the getProjectId method. This enables us to migrate the rest
+ * of the SDK into asynchronously determining the current project ID. See b/143090254.
+ *
+ * @param {FirebaseApp} app A Firebase app to get the project ID from.
+ *
+ * @return {Promise<string | null>} A project ID string or null.
+ */
+export function findProjectId(app: FirebaseApp): Promise<string | null> {
+  return Promise.resolve(getProjectId(app));
 }
 
 /**

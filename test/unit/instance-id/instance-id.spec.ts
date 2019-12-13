@@ -46,8 +46,8 @@ describe('InstanceId', () => {
   let malformedAccessTokenClient: InstanceId;
   let rejectedPromiseAccessTokenClient: InstanceId;
 
-  let googleCloudProject: string;
-  let gcloudProject: string;
+  let googleCloudProject: string | undefined;
+  let gcloudProject: string | undefined;
 
   const noProjectIdError = 'Failed to determine project ID for InstanceId. Initialize the SDK '
   + 'with service account credentials or set project ID as an app option. Alternatively set the '

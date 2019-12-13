@@ -67,7 +67,7 @@ export interface FirebaseAccessToken {
 export class FirebaseAppInternals {
   private isDeleted_ = false;
   private cachedToken_: FirebaseAccessToken;
-  private cachedTokenPromise_: Promise<FirebaseAccessToken>;
+  private cachedTokenPromise_: Promise<FirebaseAccessToken> | null;
   private tokenListeners_: Array<(token: string) => void>;
   private tokenRefreshTimeout_: NodeJS.Timer;
 
@@ -282,7 +282,7 @@ export class FirebaseApp {
       (this as {[key: string]: any})[serviceName] = this.getService_.bind(this, serviceName);
     });
 
-    this.INTERNAL = new FirebaseAppInternals(this.options_.credential);
+    this.INTERNAL = new FirebaseAppInternals(credential);
   }
 
   /**

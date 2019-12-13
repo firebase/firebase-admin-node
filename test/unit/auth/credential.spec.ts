@@ -44,7 +44,10 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 const GCLOUD_CREDENTIAL_SUFFIX = 'gcloud/application_default_credentials.json';
-const GCLOUD_CREDENTIAL_PATH = path.resolve(process.env.HOME, '.config', GCLOUD_CREDENTIAL_SUFFIX);
+if (!process.env.HOME) {
+  throw new Error('$HOME environment variable must be set to run the tests.');
+}
+const GCLOUD_CREDENTIAL_PATH = path.resolve(process.env.HOME!, '.config', GCLOUD_CREDENTIAL_SUFFIX);
 const MOCK_REFRESH_TOKEN_CONFIG = {
   client_id: 'test_client_id',
   client_secret: 'test_client_secret',

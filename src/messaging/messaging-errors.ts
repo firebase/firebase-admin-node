@@ -67,21 +67,22 @@ export function createFirebaseError(err: HttpError): FirebaseMessagingError {
  */
 export function getErrorCode(response: any): string | null {
   if (validator.isNonNullObject(response) && 'error' in response) {
-    if (validator.isString(response.error)) {
-      return response.error;
+    const error = response.error;
+    if (validator.isString(error)) {
+      return error;
     }
-    if (validator.isArray(response.error.details)) {
+    if (validator.isArray(error.details)) {
       const fcmErrorType = 'type.googleapis.com/google.firebase.fcm.v1.FcmError';
-      for (const element of response.error.details) {
+      for (const element of error.details) {
         if (element['@type'] === fcmErrorType) {
           return element.errorCode;
         }
       }
     }
-    if ('status' in response.error) {
-      return response.error.status;
+    if ('status' in error) {
+      return error.status;
     } else {
-      return response.error.message;
+      return error.message;
     }
   }
 
@@ -97,8 +98,8 @@ export function getErrorCode(response: any): string | null {
 function getErrorMessage(response: any): string | null {
   if (validator.isNonNullObject(response) &&
       'error' in response &&
-      validator.isNonEmptyString(response.error.message)) {
-    return response.error.message;
+      validator.isNonEmptyString((response as any).error.message)) {
+    return (response as any).error.message;
   }
   return null;
 }

@@ -192,13 +192,13 @@ export function convertMultiFactorInfoToServerFormat(multiFactorInfo: SecondFact
 /**
  * @param {any} obj The object to check for number field within.
  * @param {string} key The entry key.
- * @return {number|undefined} The corresponding number if available.
+ * @return {number} The corresponding number if available. Otherwise, NaN.
  */
-function getNumberField(obj: any, key: string): number | undefined {
+function getNumberField(obj: any, key: string): number {
   if (typeof obj[key] !== 'undefined' && obj[key] !== null) {
     return parseInt(obj[key].toString(), 10);
   }
-  return undefined;
+  return NaN;
 }
 
 
@@ -250,7 +250,7 @@ function populateUploadAccountUser(
   }
   if (validator.isArray(user.providerData)) {
     user.providerData.forEach((providerData) => {
-      result.providerUserInfo.push({
+      result.providerUserInfo!.push({
         providerId: providerData.providerId,
         rawId: providerData.uid,
         email: providerData.email,
@@ -264,7 +264,7 @@ function populateUploadAccountUser(
   if (validator.isNonNullObject(user.multiFactor) &&
       validator.isNonEmptyArray(user.multiFactor.enrolledFactors)) {
     user.multiFactor.enrolledFactors.forEach((multiFactorInfo) => {
-      result.mfaInfo.push(convertMultiFactorInfoToServerFormat(multiFactorInfo));
+      result.mfaInfo!.push(convertMultiFactorInfoToServerFormat(multiFactorInfo));
     });
   }
 
@@ -275,10 +275,10 @@ function populateUploadAccountUser(
       delete result[key];
     }
   }
-  if (result.providerUserInfo.length === 0) {
+  if (result.providerUserInfo!.length === 0) {
     delete result.providerUserInfo;
   }
-  if (result.mfaInfo.length === 0) {
+  if (result.mfaInfo!.length === 0) {
     delete result.mfaInfo;
   }
   // Validate the constructured user individual request. This will throw if an error
@@ -309,16 +309,16 @@ export class UserImportBuilder {
    * @constructor
    */
   constructor(
-      private users: UserImportRecord[],
-      private options?: UserImportOptions,
-      private userRequestValidator?: ValidatorFunction) {
+      users: UserImportRecord[],
+      options?: UserImportOptions,
+      userRequestValidator?: ValidatorFunction) {
     this.requiresHashOptions = false;
     this.validatedUsers = [];
     this.userImportResultErrors = [];
     this.indexMap = {};
 
-    this.validatedUsers = this.populateUsers(this.users, this.userRequestValidator);
-    this.validatedOptions = this.populateOptions(this.options, this.requiresHashOptions);
+    this.validatedUsers = this.populateUsers(users, userRequestValidator);
+    this.validatedOptions = this.populateOptions(options, this.requiresHashOptions);
   }
 
   /**
@@ -342,7 +342,7 @@ export class UserImportBuilder {
       failedUploads: Array<{index: number, message: string}>): UserImportResult {
     // Initialize user import result.
     const importResult: UserImportResult = {
-      successCount: this.users.length - this.userImportResultErrors.length,
+      successCount: this.validatedUsers.length,
       failureCount: this.userImportResultErrors.length,
       errors: deepCopy(this.userImportResultErrors),
     };
@@ -374,7 +374,7 @@ export class UserImportBuilder {
    * @return {UploadAccountOptions} The populated UploadAccount options.
    */
   private populateOptions(
-      options: UserImportOptions, requiresHashOptions: boolean): UploadAccountOptions {
+      options: UserImportOptions | undefined, requiresHashOptions: boolean): UploadAccountOptions {
     let populatedOptions: UploadAccountOptions;
     if (!requiresHashOptions) {
       return {};
@@ -422,6 +422,22 @@ export class UserImportBuilder {
       case 'SHA1':
       case 'SHA256':
       case 'SHA512':
+        // MD5 is [0,8192] but SHA1, SHA256, and SHA512 are [1,8192]
+        rounds = getNumberField(options.hash, 'rounds');
+        const minRounds = options.hash.algorithm === 'MD5' ? 0 : 1;
+        if (isNaN(rounds) || rounds < minRounds || rounds > 8192) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_HASH_ROUNDS,
+            `A valid "hash.rounds" number between ${minRounds} and 8192 must be provided for ` +
+            `hash algorithm ${options.hash.algorithm}.`,
+          );
+        }
+        populatedOptions = {
+          hashAlgorithm: options.hash.algorithm,
+          rounds,
+        };
+        break;
+
       case 'PBKDF_SHA1':
       case 'PBKDF2_SHA256':
         rounds = getNumberField(options.hash, 'rounds');

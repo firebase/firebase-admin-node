@@ -55,7 +55,7 @@ export class InstanceId implements FirebaseServiceInterface {
       );
     }
 
-    const projectId: string = utils.getProjectId(app);
+    const projectId: string | null = utils.getProjectId(app);
     if (!validator.isNonEmptyString(projectId)) {
       // Assert for an explicit projct ID (either via AppOptions or the cert itself).
       throw new FirebaseInstanceIdError(

@@ -70,7 +70,7 @@ export class Storage implements FirebaseServiceInterface {
       });
     }
 
-    const cert: Certificate = tryGetCertificate(app.options.credential);
+    const cert: Certificate | null = tryGetCertificate(app.options.credential);
     if (cert != null) {
       // cert is available when the SDK has been initialized with a service account JSON file,
       // or by setting the GOOGLE_APPLICATION_CREDENTIALS envrionment variable.

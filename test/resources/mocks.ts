@@ -86,7 +86,7 @@ export class MockCredential implements Credential {
     });
   }
 
-  public getCertificate(): Certificate {
+  public getCertificate(): Certificate | null {
     return null;
   }
 }
@@ -111,7 +111,7 @@ export function appWithOptions(options: FirebaseAppOptions): FirebaseApp {
 }
 
 export function appReturningNullAccessToken(): FirebaseApp {
-  const nullFn: () => Promise<GoogleOAuthAccessToken> = () => null;
+  const nullFn: () => Promise<GoogleOAuthAccessToken>|null = () => null;
   return new FirebaseApp({
     credential: {
       getAccessToken: nullFn,
@@ -226,7 +226,7 @@ export function generateSessionCookie(overrides?: object, expiresIn?: number): s
 
 export function firebaseServiceFactory(
   firebaseApp: FirebaseApp,
-  extendApp: (props: object) => void,
+  extendApp?: (props: object) => void,
 ): FirebaseServiceInterface {
   const result = {
     app: firebaseApp,

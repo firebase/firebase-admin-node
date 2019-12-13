@@ -62,7 +62,7 @@ describe('admin.projectManagement', () => {
             const metadataOwnedByTest =
                 metadatas.find((metadata) => isIntegrationTestApp(metadata.packageName));
             expect(metadataOwnedByTest).to.exist;
-            expect(metadataOwnedByTest.appId).to.equal(androidApp.appId);
+            expect(metadataOwnedByTest!.appId).to.equal(androidApp.appId);
           });
     });
   });
@@ -76,7 +76,7 @@ describe('admin.projectManagement', () => {
             const metadataOwnedByTest =
                 metadatas.find((metadata) => isIntegrationTestApp(metadata.bundleId));
             expect(metadataOwnedByTest).to.exist;
-            expect(metadataOwnedByTest.appId).to.equal(iosApp.appId);
+            expect(metadataOwnedByTest!.appId).to.equal(iosApp.appId);
           });
     });
   });
@@ -258,7 +258,7 @@ function deleteAllShaCertificates(androidApp: admin.projectManagement.AndroidApp
       .then((shaCertificates: admin.projectManagement.ShaCertificate[]) => {
         return Promise.all(shaCertificates.map((cert) => androidApp.deleteShaCertificate(cert)));
       })
-      .then(() => null);
+      .then(() => undefined);
 }
 
 /**
@@ -286,14 +286,14 @@ function generateUniqueProjectDisplayName() {
  * @return {boolean} True if the specified appNamespace belongs to these integration tests.
  */
 function isIntegrationTestApp(appNamespace: string): boolean {
-  return appNamespace && appNamespace.startsWith(APP_NAMESPACE_PREFIX);
+  return appNamespace ? appNamespace.startsWith(APP_NAMESPACE_PREFIX) : false;
 }
 
 /**
  * @return {boolean} True if the specified appDisplayName belongs to these integration tests.
  */
-function isIntegrationTestAppDisplayName(appDisplayName: string): boolean {
-  return appDisplayName  && appDisplayName.startsWith(APP_DISPLAY_NAME_PREFIX);
+function isIntegrationTestAppDisplayName(appDisplayName: string | undefined): boolean {
+  return appDisplayName ? appDisplayName.startsWith(APP_DISPLAY_NAME_PREFIX) : false;
 }
 
 /**

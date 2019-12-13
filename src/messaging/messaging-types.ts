@@ -171,6 +171,24 @@ export interface AndroidNotification {
   titleLocKey?: string;
   titleLocArgs?: string[];
   channelId?: string;
+  ticker?: string;
+  sticky?: boolean;
+  eventTimestamp?: Date;
+  localOnly?: boolean;
+  priority?: ('min' | 'low' | 'default' | 'high' | 'max');
+  vibrateTimingsMillis?: number[];
+  defaultVibrateTimings?: boolean;
+  defaultSound?: boolean;
+  lightSettings?: LightSettings;
+  defaultLightSettings?: boolean;
+  visibility?: ('private' | 'public' | 'secret');
+  notificationCount?: number;
+}
+
+export interface LightSettings {
+  color: string;
+  lightOnDurationMillis: number;
+  lightOffDurationMillis: number;
 }
 
 export interface AndroidFcmOptions {
@@ -196,7 +214,7 @@ export interface NotificationMessagePayload {
   clickAction?: string;
   titleLocKey?: string;
   titleLocArgs?: string;
-  [other: string]: string;
+  [other: string]: string | undefined;
 }
 
 /* Composite messaging payload (data and notification payloads are both optional) */
@@ -319,7 +337,7 @@ export function validateMessage(message: Message) {
  * @param {object} map An object to be validated.
  * @param {string} label A label to be included in the errors thrown.
  */
-function validateStringMap(map: {[key: string]: any}, label: string) {
+function validateStringMap(map: {[key: string]: any} | undefined, label: string) {
   if (typeof map === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(map)) {
@@ -339,7 +357,7 @@ function validateStringMap(map: {[key: string]: any}, label: string) {
  *
  * @param {WebpushConfig} config An object to be validated.
  */
-function validateWebpushConfig(config: WebpushConfig) {
+function validateWebpushConfig(config: WebpushConfig | undefined) {
   if (typeof config === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(config)) {
@@ -356,7 +374,7 @@ function validateWebpushConfig(config: WebpushConfig) {
  *
  * @param {ApnsConfig} config An object to be validated.
  */
-function validateApnsConfig(config: ApnsConfig) {
+function validateApnsConfig(config: ApnsConfig | undefined) {
   if (typeof config === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(config)) {
@@ -373,7 +391,7 @@ function validateApnsConfig(config: ApnsConfig) {
  *
  * @param {ApnsFcmOptions} fcmOptions An object to be validated.
  */
-function validateApnsFcmOptions(fcmOptions: ApnsFcmOptions) {
+function validateApnsFcmOptions(fcmOptions: ApnsFcmOptions | undefined) {
   if (typeof fcmOptions === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(fcmOptions)) {
@@ -411,7 +429,7 @@ function validateApnsFcmOptions(fcmOptions: ApnsFcmOptions) {
  *
  * @param {FcmOptions} fcmOptions An object to be validated.
  */
-function validateFcmOptions(fcmOptions: FcmOptions) {
+function validateFcmOptions(fcmOptions: FcmOptions | undefined) {
   if (typeof fcmOptions === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(fcmOptions)) {
@@ -430,7 +448,7 @@ function validateFcmOptions(fcmOptions: FcmOptions) {
  *
  * @param {Notification} notification An object to be validated.
  */
-function validateNotification(notification: Notification) {
+function validateNotification(notification: Notification | undefined) {
   if (typeof notification === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(notification)) {
@@ -461,7 +479,7 @@ function validateNotification(notification: Notification) {
  *
  * @param {ApnsPayload} payload An object to be validated.
  */
-function validateApnsPayload(payload: ApnsPayload) {
+function validateApnsPayload(payload: ApnsPayload | undefined) {
   if (typeof payload === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(payload)) {
@@ -519,7 +537,7 @@ function validateAps(aps: Aps) {
   }
 }
 
-function validateApsSound(sound: string | CriticalSound) {
+function validateApsSound(sound: string | CriticalSound | undefined) {
   if (typeof sound === 'undefined' || validator.isNonEmptyString(sound)) {
     return;
   } else if (!validator.isNonNullObject(sound)) {
@@ -565,7 +583,7 @@ function validateApsSound(sound: string | CriticalSound) {
  *
  * @param {string | ApsAlert} alert An alert string or an object to be validated.
  */
-function validateApsAlert(alert: string | ApsAlert) {
+function validateApsAlert(alert: string | ApsAlert | undefined) {
   if (typeof alert === 'undefined' || validator.isString(alert)) {
     return;
   } else if (!validator.isNonNullObject(alert)) {
@@ -614,7 +632,7 @@ function validateApsAlert(alert: string | ApsAlert) {
  *
  * @param {AndroidConfig} config An object to be validated.
  */
-function validateAndroidConfig(config: AndroidConfig) {
+function validateAndroidConfig(config: AndroidConfig | undefined) {
   if (typeof config === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(config)) {
@@ -628,18 +646,7 @@ function validateAndroidConfig(config: AndroidConfig) {
         MessagingClientErrorCode.INVALID_PAYLOAD,
         'TTL must be a non-negative duration in milliseconds');
     }
-    const seconds = Math.floor(config.ttl / 1000);
-    const nanos = (config.ttl - seconds * 1000) * 1000000;
-    let duration: string;
-    if (nanos > 0) {
-      let nanoString = nanos.toString();
-      while (nanoString.length < 9) {
-        nanoString = '0' + nanoString;
-      }
-      duration = `${seconds}.${nanoString}s`;
-    } else {
-      duration = `${seconds}s`;
-    }
+    const duration: string = transformMillisecondsToSecondsString(config.ttl);
     (config as any).ttl = duration;
   }
   validateStringMap(config.data, 'android.data');
@@ -660,7 +667,7 @@ function validateAndroidConfig(config: AndroidConfig) {
  *
  * @param {AndroidNotification} notification An object to be validated.
  */
-function validateAndroidNotification(notification: AndroidNotification) {
+function validateAndroidNotification(notification: AndroidNotification | undefined) {
   if (typeof notification === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(notification)) {
@@ -691,6 +698,47 @@ function validateAndroidNotification(notification: AndroidNotification) {
         'android.notification.imageUrl must be a valid URL string');
   }
 
+  if (typeof notification.eventTimestamp !== 'undefined') {
+    if (!(notification.eventTimestamp instanceof Date)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_PAYLOAD, 'android.notification.eventTimestamp must be a valid `Date` object');
+    }
+    // Convert timestamp to RFC3339 UTC "Zulu" format, example "2014-10-02T15:01:23.045123456Z"
+    const zuluTimestamp = notification.eventTimestamp.toISOString();
+    (notification as any).eventTimestamp = zuluTimestamp;
+  }
+
+  if (typeof notification.vibrateTimingsMillis !== 'undefined') {
+    if (!validator.isNonEmptyArray(notification.vibrateTimingsMillis)) {
+      throw new FirebaseMessagingError(
+        MessagingClientErrorCode.INVALID_PAYLOAD,
+        'android.notification.vibrateTimingsMillis must be a non-empty array of numbers');
+    }
+    const vibrateTimings: string[] = [];
+    notification.vibrateTimingsMillis.forEach((value) => {
+      if (!validator.isNumber(value) || value < 0) {
+        throw new FirebaseMessagingError(
+          MessagingClientErrorCode.INVALID_PAYLOAD,
+          'android.notification.vibrateTimingsMillis must be non-negative durations in milliseconds');
+      }
+      const duration = transformMillisecondsToSecondsString(value);
+      vibrateTimings.push(duration);
+    });
+    (notification as any).vibrateTimingsMillis = vibrateTimings;
+  }
+
+  if (typeof notification.priority !== 'undefined') {
+    const priority = 'PRIORITY_' + notification.priority.toUpperCase();
+    (notification as any).priority = priority;
+  }
+
+  if (typeof notification.visibility !== 'undefined') {
+    const visibility = notification.visibility.toUpperCase();
+    (notification as any).visibility = visibility;
+  }
+
+  validateLightSettings(notification.lightSettings);
+
   const propertyMappings = {
     clickAction: 'click_action',
     bodyLocKey: 'body_loc_key',
@@ -699,8 +747,76 @@ function validateAndroidNotification(notification: AndroidNotification) {
     titleLocArgs: 'title_loc_args',
     channelId: 'channel_id',
     imageUrl: 'image',
+    eventTimestamp: 'event_time',
+    localOnly: 'local_only',
+    priority: 'notification_priority',
+    vibrateTimingsMillis: 'vibrate_timings',
+    defaultVibrateTimings: 'default_vibrate_timings',
+    defaultSound: 'default_sound',
+    lightSettings: 'light_settings',
+    defaultLightSettings: 'default_light_settings',
+    notificationCount: 'notification_count',
   };
   renameProperties(notification, propertyMappings);
+}
+
+/**
+ * Checks if the given LightSettings object is valid. The object must have valid color and
+ * light on/off duration parameters. If successful, transforms the input object by renaming
+ * keys to valid Android keys.
+ *
+ * @param {LightSettings} lightSettings An object to be validated.
+ */
+function validateLightSettings(lightSettings?: LightSettings) {
+  if (typeof lightSettings === 'undefined') {
+    return;
+  } else if (!validator.isNonNullObject(lightSettings)) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'android.notification.lightSettings must be a non-null object');
+  }
+
+  if (!validator.isNumber(lightSettings.lightOnDurationMillis) || lightSettings.lightOnDurationMillis < 0) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD,
+      'android.notification.lightSettings.lightOnDurationMillis must be a non-negative duration in milliseconds');
+  }
+  const durationOn = transformMillisecondsToSecondsString(lightSettings.lightOnDurationMillis);
+  (lightSettings as any).lightOnDurationMillis = durationOn;
+
+  if (!validator.isNumber(lightSettings.lightOffDurationMillis) || lightSettings.lightOffDurationMillis < 0) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD,
+      'android.notification.lightSettings.lightOffDurationMillis must be a non-negative duration in milliseconds');
+  }
+  const durationOff = transformMillisecondsToSecondsString(lightSettings.lightOffDurationMillis);
+  (lightSettings as any).lightOffDurationMillis = durationOff;
+
+  if (!validator.isString(lightSettings.color) ||
+    (!/^#[0-9a-fA-F]{6}$/.test(lightSettings.color) && !/^#[0-9a-fA-F]{8}$/.test(lightSettings.color))) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INVALID_PAYLOAD,
+      'android.notification.lightSettings.color must be in the form #RRGGBB or #RRGGBBAA format');
+  }
+  const colorString = lightSettings.color.length === 7 ? lightSettings.color + 'FF' : lightSettings.color;
+  const rgb = /^#?([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})$/i.exec(colorString);
+  if (!rgb || rgb.length < 4) {
+    throw new FirebaseMessagingError(
+      MessagingClientErrorCode.INTERNAL_ERROR,
+      'regex to extract rgba values from ' + colorString + ' failed.');
+  }
+  const color = {
+    red: parseInt(rgb[1], 16) / 255.0,
+    green: parseInt(rgb[2], 16) / 255.0,
+    blue: parseInt(rgb[3], 16) / 255.0,
+    alpha: parseInt(rgb[4], 16) / 255.0,
+  };
+  (lightSettings as any).color = color;
+
+  const propertyMappings = {
+    lightOnDurationMillis: 'light_on_duration',
+    lightOffDurationMillis: 'light_off_duration',
+  };
+  renameProperties(lightSettings, propertyMappings);
 }
 
 /**
@@ -708,7 +824,7 @@ function validateAndroidNotification(notification: AndroidNotification) {
  *
  * @param {AndroidFcmOptions} fcmOptions An object to be validated.
  */
-function validateAndroidFcmOptions(fcmOptions: AndroidFcmOptions) {
+function validateAndroidFcmOptions(fcmOptions: AndroidFcmOptions | undefined) {
   if (typeof fcmOptions === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(fcmOptions)) {
@@ -720,4 +836,29 @@ function validateAndroidFcmOptions(fcmOptions: AndroidFcmOptions) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD, 'analyticsLabel must be a string value');
   }
+}
+
+/**
+ * Transforms milliseconds to the format expected by FCM service.
+ * Returns the duration in seconds with up to nine fractional
+ * digits, terminated by 's'. Example: "3.5s".
+ *
+ * @param {number} milliseconds The duration in milliseconds.
+ * @return {string} The resulting formatted string in seconds with up to nine fractional
+ * digits, terminated by 's'.
+ */
+function transformMillisecondsToSecondsString(milliseconds: number): string {
+  let duration: string;
+  const seconds = Math.floor(milliseconds / 1000);
+  const nanos = (milliseconds - seconds * 1000) * 1000000;
+  if (nanos > 0) {
+    let nanoString = nanos.toString();
+    while (nanoString.length < 9) {
+      nanoString = '0' + nanoString;
+    }
+    duration = `${seconds}.${nanoString}s`;
+  } else {
+    duration = `${seconds}s`;
+  }
+  return duration;
 }
