@@ -19,7 +19,7 @@ import fs = require('fs');
 import os = require('os');
 import path = require('path');
 
-import {AppErrorCodes, FirebaseAppError, FirebaseAuthError, AuthClientErrorCode} from '../utils/error';
+import {AppErrorCodes, FirebaseAppError} from '../utils/error';
 import {HttpClient, HttpRequestConfig, HttpError, HttpResponse} from '../utils/api-request';
 import {Agent} from 'http';
 
@@ -148,6 +148,7 @@ class ServiceAccount {
         'Failed to parse service account json file: TypeError: path must be a string',
       );
     }
+
     try {
       return new ServiceAccount(JSON.parse(fs.readFileSync(filePath, 'utf8')));
     } catch (error) {
@@ -244,19 +245,9 @@ export class RefreshTokenCredential implements Credential {
   private readonly httpAgent?: Agent;
 
   constructor(refreshTokenPathOrObject: string | object, httpAgent?: Agent) {
-    if (typeof refreshTokenPathOrObject === 'string') {
-      const refreshToken = RefreshToken.fromPath(refreshTokenPathOrObject);
-      if (!refreshToken) {
-        throw new FirebaseAuthError(
-          AuthClientErrorCode.NOT_FOUND,
-          'The file refered to by the refreshTokenPathOrObject parameter (' +
-          refreshTokenPathOrObject + ') was not found.',
-        );
-      }
-      this.refreshToken = refreshToken;
-    } else {
-      this.refreshToken = new RefreshToken(refreshTokenPathOrObject);
-    }
+    this.refreshToken = (typeof refreshTokenPathOrObject === 'string') ?
+      RefreshToken.fromPath(refreshTokenPathOrObject)
+      : new RefreshToken(refreshTokenPathOrObject);
     this.httpClient = new HttpClient();
     this.httpAgent = httpAgent;
   }
@@ -288,21 +279,20 @@ class RefreshToken {
   public readonly type: string;
 
   /*
-   * Tries to load a RefreshToken from a path. If the path is not present, returns null.
-   * Throws if data at the path is invalid.
+   * Tries to load a RefreshToken from a path. Throws if the path doesn't exist or the
+   * data at the path is invalid.
    */
-  public static fromPath(filePath: string): RefreshToken | null {
-    let jsonString: string;
-
-    try {
-      jsonString = fs.readFileSync(filePath, 'utf8');
-    } catch (ignored) {
-      // Ignore errors if the file is not present, as this is sometimes an expected condition
-      return null;
+  public static fromPath(filePath: string): RefreshToken {
+    // Node bug encountered in v6.x. fs.readFileSync hangs when path is a 0 or 1.
+    if (typeof filePath !== 'string') {
+      throw new FirebaseAppError(
+        AppErrorCodes.INVALID_CREDENTIAL,
+        'Failed to parse service account json file: TypeError: path must be a string',
+      );
     }
 
     try {
-      return new RefreshToken(JSON.parse(jsonString));
+      return new RefreshToken(JSON.parse(fs.readFileSync(filePath, 'utf8')));
     } catch (error) {
       // Throw a nicely formed error message if the file contents cannot be parsed
       throw new FirebaseAppError(
@@ -342,7 +332,7 @@ export function getApplicationDefault(httpAgent?: Agent): Credential {
 
   // It is OK to not have this file. If it is present, it must be valid.
   if (GCLOUD_CREDENTIAL_PATH) {
-    const refreshToken = RefreshToken.fromPath(GCLOUD_CREDENTIAL_PATH);
+    const refreshToken = readCredentialFile(GCLOUD_CREDENTIAL_PATH, true);
     if (refreshToken) {
       return new RefreshTokenCredential(refreshToken, httpAgent);
     }
@@ -403,7 +393,7 @@ function getDetailFromResponse(response: HttpResponse): string {
 
 function credentialFromFile(filePath: string, httpAgent?: Agent): Credential {
   const credentialsFile = readCredentialFile(filePath);
-  if (typeof credentialsFile !== 'object') {
+  if (typeof credentialsFile !== 'object' || credentialsFile === null) {
     throw new FirebaseAppError(
       AppErrorCodes.INVALID_CREDENTIAL,
       'Failed to parse contents of the credentials file as an object',
@@ -424,7 +414,7 @@ function credentialFromFile(filePath: string, httpAgent?: Agent): Credential {
   );
 }
 
-function readCredentialFile(filePath: string): {[key: string]: any} {
+function readCredentialFile(filePath: string, ignoreMissing?: boolean): {[key: string]: any} | null {
   if (typeof filePath !== 'string') {
     throw new FirebaseAppError(
       AppErrorCodes.INVALID_CREDENTIAL,
@@ -436,6 +426,10 @@ function readCredentialFile(filePath: string): {[key: string]: any} {
   try {
     fileText = fs.readFileSync(filePath, 'utf8');
   } catch (error) {
+    if (ignoreMissing) {
+      return null;
+    }
+
     throw new FirebaseAppError(
       AppErrorCodes.INVALID_CREDENTIAL,
       `Failed to read credentials from file ${filePath}: ` + error,
