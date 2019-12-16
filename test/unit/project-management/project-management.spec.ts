@@ -90,13 +90,13 @@ describe('ProjectManagement', () => {
               + 'instance.');
     });
 
-    it('should throw given an invalid credential without project ID', () => {
+    it('should reject given an invalid credential without project ID', () => {
       // Project ID not set in the environment.
       delete process.env.GOOGLE_CLOUD_PROJECT;
       delete process.env.GCLOUD_PROJECT;
-      expect(() => {
-        return new ProjectManagement(mockCredentialApp);
-      }).to.throw(noProjectIdErrorMessage);
+      const projectMgt = new ProjectManagement(mockCredentialApp);
+      return projectMgt.listIosApps()
+        .should.eventually.rejectedWith(noProjectIdErrorMessage);
     });
 
     it('should not throw given a valid app', () => {
