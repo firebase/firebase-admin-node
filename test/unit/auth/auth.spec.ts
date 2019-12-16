@@ -357,7 +357,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       }
 
       it('should be eventually rejected if a cert credential is not specified', () => {
-        const mockCredentialAuth = testConfig.init(mocks.mockCredentialApp());
+        const mockCredentialAuth = testConfig.init(mocks.appRejectedWhileFetchingAccessToken());
         return mockCredentialAuth.createCustomToken(mocks.uid, mocks.developerClaims)
           .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-credential');
       });
