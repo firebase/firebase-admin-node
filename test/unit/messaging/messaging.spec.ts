@@ -366,13 +366,14 @@ describe('Messaging', () => {
       }).to.throw('First argument passed to admin.messaging() must be a valid Firebase app instance.');
     });
 
-    it('should throw given app without project ID', () => {
-      expect(() => {
-        const appWithoutProhectId = mocks.mockCredentialApp();
-        return new Messaging(appWithoutProhectId);
-      }).to.throw('Failed to determine project ID for Messaging. Initialize the SDK with service '
-        + 'account credentials or set project ID as an app option. Alternatively set the '
-        + 'GOOGLE_CLOUD_PROJECT environment variable.');
+    it('should reject given app without project ID', () => {
+      const appWithoutProjectId = mocks.mockCredentialApp();
+      const messagingWithoutProjectId = new Messaging(appWithoutProjectId);
+      messagingWithoutProjectId.send({topic: 'test'})
+        .should.eventually.be.rejectedWith(
+          'Failed to determine project ID for Messaging. Initialize the SDK with service '
+          + 'account credentials or set project ID as an app option. Alternatively set the '
+          + 'GOOGLE_CLOUD_PROJECT environment variable.');
     });
 
     it('should not throw given a valid app', () => {
@@ -597,11 +598,10 @@ describe('Messaging', () => {
       }).to.throw('messages list must not contain more than 500 items');
     });
 
-    it('should throw when a message is invalid', () => {
+    it('should reject when a message is invalid', () => {
       const invalidMessage: Message = {} as any;
-      expect(() => {
-        messaging.sendAll([validMessage, invalidMessage]);
-      }).to.throw('Exactly one of topic, token or condition is required');
+      messaging.sendAll([validMessage, invalidMessage])
+        .should.eventually.be.rejectedWith('Exactly one of topic, token or condition is required');
     });
 
     const invalidDryRun = [null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];

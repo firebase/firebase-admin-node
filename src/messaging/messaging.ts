@@ -206,8 +206,8 @@ export class Messaging implements FirebaseServiceInterface {
   public INTERNAL: MessagingInternals = new MessagingInternals();
 
   private urlPath: string;
-  private appInternal: FirebaseApp;
-  private messagingRequestHandler: FirebaseMessagingRequestHandler;
+  private readonly appInternal: FirebaseApp;
+  private readonly messagingRequestHandler: FirebaseMessagingRequestHandler;
 
   /**
    * @param {FirebaseApp} app The app for this Messaging service.
@@ -221,18 +221,6 @@ export class Messaging implements FirebaseServiceInterface {
       );
     }
 
-    const projectId: string | null = utils.getProjectId(app);
-    if (!validator.isNonEmptyString(projectId)) {
-      // Assert for an explicit project ID (either via AppOptions or the cert itself).
-      throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_ARGUMENT,
-        'Failed to determine project ID for Messaging. Initialize the '
-        + 'SDK with service account credentials or set project ID as an app option. '
-        + 'Alternatively set the GOOGLE_CLOUD_PROJECT environment variable.',
-      );
-    }
-
-    this.urlPath = `/v1/projects/${projectId}/messages:send`;
     this.appInternal = app;
     this.messagingRequestHandler = new FirebaseMessagingRequestHandler(app);
   }
@@ -261,13 +249,13 @@ export class Messaging implements FirebaseServiceInterface {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT, 'dryRun must be a boolean');
     }
-    return Promise.resolve()
-      .then(() => {
+    return this.getUrlPath()
+      .then((urlPath) => {
         const request: {message: Message, validate_only?: boolean} = {message: copy};
         if (dryRun) {
           request.validate_only = true;
         }
-        return this.messagingRequestHandler.invokeRequestHandler(FCM_SEND_HOST, this.urlPath, request);
+        return this.messagingRequestHandler.invokeRequestHandler(FCM_SEND_HOST, urlPath, request);
       })
       .then((response) => {
         return (response as any).name;
@@ -312,18 +300,21 @@ export class Messaging implements FirebaseServiceInterface {
         MessagingClientErrorCode.INVALID_ARGUMENT, 'dryRun must be a boolean');
     }
 
-    const requests: SubRequest[] = copy.map((message) => {
-      validateMessage(message);
-      const request: {message: Message, validate_only?: boolean} = {message};
-      if (dryRun) {
-        request.validate_only = true;
-      }
-      return {
-        url: `https://${FCM_SEND_HOST}${this.urlPath}`,
-        body: request,
-      };
-    });
-    return this.messagingRequestHandler.sendBatchRequest(requests);
+    return this.getUrlPath()
+      .then((urlPath) => {
+        const requests: SubRequest[] = copy.map((message) => {
+          validateMessage(message);
+          const request: {message: Message, validate_only?: boolean} = {message};
+          if (dryRun) {
+            request.validate_only = true;
+          }
+          return {
+            url: `https://${FCM_SEND_HOST}${urlPath}`,
+            body: request,
+          };
+        });
+        return this.messagingRequestHandler.sendBatchRequest(requests);
+      });
   }
 
   /**
@@ -643,6 +634,28 @@ export class Messaging implements FirebaseServiceInterface {
       'unsubscribeFromTopic',
       FCM_TOPIC_MANAGEMENT_REMOVE_PATH,
     );
+  }
+
+  private getUrlPath(): Promise<string> {
+    if (this.urlPath) {
+      return Promise.resolve(this.urlPath);
+    }
+
+    return utils.findProjectId(this.app)
+      .then((projectId) => {
+        if (!validator.isNonEmptyString(projectId)) {
+          // Assert for an explicit project ID (either via AppOptions or the cert itself).
+          throw new FirebaseMessagingError(
+            MessagingClientErrorCode.INVALID_ARGUMENT,
+            'Failed to determine project ID for Messaging. Initialize the '
+              + 'SDK with service account credentials or set project ID as an app option. '
+              + 'Alternatively set the GOOGLE_CLOUD_PROJECT environment variable.',
+          );
+        }
+
+        this.urlPath = `/v1/projects/${projectId}/messages:send`;
+        return this.urlPath;
+      });
   }
 
   /**

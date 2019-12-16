@@ -43,11 +43,11 @@ class ProjectManagementInternals implements FirebaseServiceInternalsInterface {
  * ProjectManagement service bound to the provided app.
  */
 export class ProjectManagement implements FirebaseServiceInterface {
+
   public readonly INTERNAL: ProjectManagementInternals = new ProjectManagementInternals();
 
-  private readonly resourceName: string;
-  private readonly projectId: string;
   private readonly requestHandler: ProjectManagementRequestHandler;
+  private projectId: string;
 
   /**
    * @param {object} app The app for this ProjectManagement service.
@@ -60,18 +60,6 @@ export class ProjectManagement implements FirebaseServiceInterface {
           'First argument passed to admin.projectManagement() must be a valid Firebase app '
               + 'instance.');
     }
-
-    // Assert that a specific project ID was provided within the app.
-    const projectId = utils.getProjectId(app);
-    if (!validator.isNonEmptyString(projectId)) {
-      throw new FirebaseProjectManagementError(
-          'invalid-project-id',
-          'Failed to determine project ID. Initialize the SDK with service account credentials, or '
-              + 'set project ID as an app option. Alternatively, set the GOOGLE_CLOUD_PROJECT '
-              + 'environment variable.');
-    }
-    this.projectId = projectId;
-    this.resourceName = `projects/${this.projectId}`;
 
     this.requestHandler = new ProjectManagementRequestHandler(app);
   }
@@ -115,56 +103,73 @@ export class ProjectManagement implements FirebaseServiceInterface {
    * Creates a new Firebase Android app, associated with this Firebase project.
    */
   public createAndroidApp(packageName: string, displayName?: string): Promise<AndroidApp> {
-    return this.requestHandler.createAndroidApp(this.resourceName, packageName, displayName)
-        .then((responseData: any) => {
-          assertServerResponse(
-              validator.isNonNullObject(responseData),
-              responseData,
-              'createAndroidApp()\'s responseData must be a non-null object.');
+    return this.getResourceName()
+      .then((resourceName) => {
+        return this.requestHandler.createAndroidApp(resourceName, packageName, displayName);
+      })
+      .then((responseData: any) => {
+        assertServerResponse(
+            validator.isNonNullObject(responseData),
+            responseData,
+            'createAndroidApp()\'s responseData must be a non-null object.');
 
-          assertServerResponse(
-              validator.isNonEmptyString(responseData.appId),
-              responseData,
-              `"responseData.appId" field must be present in createAndroidApp()'s response data.`);
-          return new AndroidApp(responseData.appId, this.requestHandler);
-        });
+        assertServerResponse(
+            validator.isNonEmptyString(responseData.appId),
+            responseData,
+            `"responseData.appId" field must be present in createAndroidApp()'s response data.`);
+        return new AndroidApp(responseData.appId, this.requestHandler);
+      });
   }
 
   /**
    * Creates a new Firebase iOS app, associated with this Firebase project.
    */
   public createIosApp(bundleId: string, displayName?: string): Promise<IosApp> {
-    return this.requestHandler.createIosApp(this.resourceName, bundleId, displayName)
-        .then((responseData: any) => {
-          assertServerResponse(
-              validator.isNonNullObject(responseData),
-              responseData,
-              'createIosApp()\'s responseData must be a non-null object.');
+    return this.getResourceName()
+      .then((resourceName) => {
+        return this.requestHandler.createIosApp(resourceName, bundleId, displayName);
+      })
+      .then((responseData: any) => {
+        assertServerResponse(
+            validator.isNonNullObject(responseData),
+            responseData,
+            'createIosApp()\'s responseData must be a non-null object.');
 
-          assertServerResponse(
-              validator.isNonEmptyString(responseData.appId),
-              responseData,
-              `"responseData.appId" field must be present in createIosApp()'s response data.`);
-          return new IosApp(responseData.appId, this.requestHandler);
-        });
+        assertServerResponse(
+            validator.isNonEmptyString(responseData.appId),
+            responseData,
+            `"responseData.appId" field must be present in createIosApp()'s response data.`);
+        return new IosApp(responseData.appId, this.requestHandler);
+      });
   }
 
   /**
    * Lists up to 100 Firebase apps associated with this Firebase project.
    */
   public listAppMetadata(): Promise<AppMetadata[]> {
-    return this.requestHandler.listAppMetadata(this.resourceName)
-      .then((responseData) => this.transformResponseToAppMetadata(responseData));
+    return this.getResourceName()
+      .then((resourceName) => {
+        return this.requestHandler.listAppMetadata(resourceName);
+      })
+      .then((responseData) => {
+        return this.getProjectId()
+          .then((projectId) => {
+            return this.transformResponseToAppMetadata(responseData, projectId);
+          });
+      });
   }
 
   /**
    * Update display name of the project
    */
   public setDisplayName(newDisplayName: string): Promise<void> {
-    return this.requestHandler.setDisplayName(this.resourceName, newDisplayName);
+    return this.getResourceName()
+      .then((resourceName) => {
+        return this.requestHandler.setDisplayName(resourceName, newDisplayName);
+      });
   }
 
-  private transformResponseToAppMetadata(responseData: any): AppMetadata[] {
+  private transformResponseToAppMetadata(responseData: any, projectId: string): AppMetadata[] {
     this.assertListAppsResponseData(responseData, 'listAppMetadata()');
 
     if (!responseData.apps) {
@@ -183,7 +188,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
       const metadata: AppMetadata = {
         appId: appJson.appId,
         platform: (AppPlatform as any)[appJson.platform] || AppPlatform.PLATFORM_UNKNOWN,
-        projectId: this.projectId,
+        projectId,
         resourceName: appJson.name,
       };
       if (appJson.displayName) {
@@ -193,34 +198,63 @@ export class ProjectManagement implements FirebaseServiceInterface {
     });
   }
 
+  private getResourceName(): Promise<string> {
+    return this.getProjectId()
+      .then((projectId) => {
+        return `projects/${projectId}`;
+      });
+  }
+
+  private getProjectId(): Promise<string> {
+    if (this.projectId) {
+      return Promise.resolve(this.projectId);
+    }
+
+    return utils.findProjectId(this.app)
+      .then((projectId) => {
+        // Assert that a specific project ID was provided within the app.
+        if (!validator.isNonEmptyString(projectId)) {
+          throw new FirebaseProjectManagementError(
+              'invalid-project-id',
+              'Failed to determine project ID. Initialize the SDK with service account credentials, or '
+                + 'set project ID as an app option. Alternatively, set the GOOGLE_CLOUD_PROJECT '
+                + 'environment variable.');
+        }
+
+        this.projectId = projectId;
+        return this.projectId;
+      });
+  }
+
   /**
    * Lists up to 100 Firebase apps for a specified platform, associated with this Firebase project.
    */
   private listPlatformApps<T>(platform: 'android' | 'ios', callerName: string): Promise<T[]> {
-    const listPromise: Promise<object> = (platform === 'android') ?
-        this.requestHandler.listAndroidApps(this.resourceName)
-        : this.requestHandler.listIosApps(this.resourceName);
+    return this.getResourceName()
+      .then((resourceName) => {
+        return (platform === 'android') ?
+          this.requestHandler.listAndroidApps(resourceName)
+          : this.requestHandler.listIosApps(resourceName);
+      })
+      .then((responseData: any) => {
+        this.assertListAppsResponseData(responseData, callerName);
 
-    return listPromise
-        .then((responseData: any) => {
-          this.assertListAppsResponseData(responseData, callerName);
+        if (!responseData.apps) {
+          return [];
+        }
 
-          if (!responseData.apps) {
-            return [];
+        return responseData.apps.map((appJson: any) => {
+          assertServerResponse(
+              validator.isNonEmptyString(appJson.appId),
+              responseData,
+              `"apps[].appId" field must be present in the ${callerName} response data.`);
+          if (platform === 'android') {
+            return new AndroidApp(appJson.appId, this.requestHandler);
+          } else {
+            return new IosApp(appJson.appId, this.requestHandler);
           }
-
-          return responseData.apps.map((appJson: any) => {
-            assertServerResponse(
-                validator.isNonEmptyString(appJson.appId),
-                responseData,
-                `"apps[].appId" field must be present in the ${callerName} response data.`);
-            if (platform === 'android') {
-              return new AndroidApp(appJson.appId, this.requestHandler);
-            } else {
-              return new IosApp(appJson.appId, this.requestHandler);
-            }
-          });
         });
+      });
   }
 
   private assertListAppsResponseData(responseData: any, callerName: string): void {
