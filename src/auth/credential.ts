@@ -141,14 +141,6 @@ class ServiceAccount {
   public readonly clientEmail: string;
 
   public static fromPath(filePath: string): ServiceAccount {
-    // Node bug encountered in v6.x. fs.readFileSync hangs when path is a 0 or 1.
-    if (typeof filePath !== 'string') {
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_CREDENTIAL,
-        'Failed to parse service account json file: TypeError: path must be a string',
-      );
-    }
-
     try {
       return new ServiceAccount(JSON.parse(fs.readFileSync(filePath, 'utf8')));
     } catch (error) {
@@ -283,14 +275,6 @@ class RefreshToken {
    * data at the path is invalid.
    */
   public static fromPath(filePath: string): RefreshToken {
-    // Node bug encountered in v6.x. fs.readFileSync hangs when path is a 0 or 1.
-    if (typeof filePath !== 'string') {
-      throw new FirebaseAppError(
-        AppErrorCodes.INVALID_CREDENTIAL,
-        'Failed to parse service account json file: TypeError: path must be a string',
-      );
-    }
-
     try {
       return new RefreshToken(JSON.parse(fs.readFileSync(filePath, 'utf8')));
     } catch (error) {
@@ -415,13 +399,6 @@ function credentialFromFile(filePath: string, httpAgent?: Agent): Credential {
 }
 
 function readCredentialFile(filePath: string, ignoreMissing?: boolean): {[key: string]: any} | null {
-  if (typeof filePath !== 'string') {
-    throw new FirebaseAppError(
-      AppErrorCodes.INVALID_CREDENTIAL,
-      'Failed to parse credentials file: TypeError: path must be a string',
-    );
-  }
-
   let fileText: string;
   try {
     fileText = fs.readFileSync(filePath, 'utf8');

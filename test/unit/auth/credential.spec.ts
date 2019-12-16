@@ -106,14 +106,20 @@ describe('Credential', () => {
     });
 
     it('should throw if called with the path to an invalid file', () => {
-      const invalidPath = path.resolve(__dirname, '../../resources/unparesable.json');
+      const invalidPath = path.resolve(__dirname, '../../resources/unparsable.key.json');
       expect(() => new ServiceAccountCredential(invalidPath))
-        .to.throw('Failed to parse service account json file: Error: ENOENT: no such file or directory');
+        .to.throw('Failed to parse service account json file: SyntaxError');
     });
 
     it('should throw if called with an empty string path', () => {
       expect(() => new ServiceAccountCredential(''))
         .to.throw('Failed to parse service account json file: Error: ENOENT: no such file or directory');
+    });
+
+    it('should throw given an object without a "project_id" property', () => {
+      const invalidCertificate = _.omit(mocks.certificateObject, 'project_id');
+      expect(() => new ServiceAccountCredential(invalidCertificate as any))
+        .to.throw('Service account object must contain a string "project_id" property');
     });
 
     it('should throw given an object without a "private_key" property', () => {
@@ -140,6 +146,13 @@ describe('Credential', () => {
       invalidCertificate.client_email = '';
       expect(() => new ServiceAccountCredential(invalidCertificate as any))
         .to.throw('Service account object must contain a string "client_email" property');
+    });
+
+    it('should throw given an object with a malformed "private_key" property', () => {
+      const invalidCertificate = _.clone(mocks.certificateObject);
+      invalidCertificate.private_key = 'malformed';
+      expect(() => new ServiceAccountCredential(invalidCertificate as any))
+        .to.throw('Failed to parse private key');
     });
 
     it('should not throw given a valid path to a key file', () => {
@@ -212,10 +225,47 @@ describe('Credential', () => {
         return expect(c.getAccessToken()).to.be
           .rejectedWith('Error fetching access token: not json');
       });
+
+      it('should throw when the success response is malformed', () => {
+        httpStub.resolves(utils.responseFrom({}));
+        const c = new ServiceAccountCredential(mockCertificateObject);
+        return expect(c.getAccessToken()).to.be
+          .rejectedWith('Unexpected response while fetching access token');
+      });
     });
   });
 
   describe('RefreshTokenCredential', () => {
+    it('should throw if called with the path to an invalid file', () => {
+      const invalidPath = path.resolve(__dirname, '../../resources/unparsable.key.json');
+      expect(() => new RefreshTokenCredential(invalidPath))
+        .to.throw('Failed to parse refresh token file');
+    });
+
+    it('should throw given an object without a "clientId" property', () => {
+      const invalidCredential = _.omit(mocks.refreshToken, 'clientId');
+      expect(() => new RefreshTokenCredential(invalidCredential as any))
+        .to.throw('Refresh token must contain a "client_id" property');
+    });
+
+    it('should throw given an object without a "clientSecret" property', () => {
+      const invalidCredential = _.omit(mocks.refreshToken, 'clientSecret');
+      expect(() => new RefreshTokenCredential(invalidCredential as any))
+        .to.throw('Refresh token must contain a "client_secret" property');
+    });
+
+    it('should throw given an object without a "refreshToken" property', () => {
+      const invalidCredential = _.omit(mocks.refreshToken, 'refreshToken');
+      expect(() => new RefreshTokenCredential(invalidCredential as any))
+        .to.throw('Refresh token must contain a "refresh_token" property');
+    });
+
+    it('should throw given an object without a "type" property', () => {
+      const invalidCredential = _.omit(mocks.refreshToken, 'type');
+      expect(() => new RefreshTokenCredential(invalidCredential as any))
+        .to.throw('Refresh token must contain a "type" property');
+    });
+
     it('should create access tokens', () => {
       const scope = nock('https://www.googleapis.com')
         .post('/oauth2/v4/token')
@@ -333,6 +383,12 @@ describe('Credential', () => {
     it('should throw if a the gcloud login cache is invalid', () => {
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
       fsStub = sinon.stub(fs, 'readFileSync').returns('invalidjson');
+      expect(() => getApplicationDefault()).to.throw(Error);
+    });
+
+    it('should throw if a the credentials file content is not an object', () => {
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../../resources/mock.key.json');
+      fsStub = sinon.stub(fs, 'readFileSync').returns('2');
       expect(() => getApplicationDefault()).to.throw(Error);
     });
 
