@@ -74,9 +74,9 @@ export class Storage implements FirebaseServiceInterface {
     const projectId: string | null = utils.getProjectId(app);
     const credential = app.options.credential;
     if (credential instanceof ServiceAccountCredential) {
-      // cert is available when the SDK has been initialized with a service account JSON file,
-      // or by setting the GOOGLE_APPLICATION_CREDENTIALS envrionment variable.
       this.storageClient = new storage({
+        // When the SDK is initialized with ServiceAccountCredentials projectId is guaranteed to
+        // be available.
         projectId: projectId!,
         credentials: {
           private_key: credential.privateKey,

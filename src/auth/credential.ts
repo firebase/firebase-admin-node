@@ -70,7 +70,7 @@ export interface Credential {
 }
 
 /**
- * Implementation of Credential that uses a service account certificate.
+ * Implementation of Credential that uses a service account.
  */
 export class ServiceAccountCredential implements Credential {
 
@@ -132,7 +132,7 @@ export class ServiceAccountCredential implements Credential {
 }
 
 /**
- * A struct containing the properties necessary to use service-account JSON credentials.
+ * A struct containing the properties necessary to use service account JSON credentials.
  */
 class ServiceAccount {
 

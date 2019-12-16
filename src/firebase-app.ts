@@ -264,7 +264,7 @@ export class FirebaseApp {
 
     const hasCredential = ('credential' in this.options_);
     if (!hasCredential) {
-      this.options_.credential = getApplicationDefault(this.options.httpAgent);
+      this.options_.credential = getApplicationDefault(this.options_.httpAgent);
     }
 
     const credential = this.options_.credential;

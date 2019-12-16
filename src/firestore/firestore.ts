@@ -75,14 +75,13 @@ export function getFirestoreOptions(app: FirebaseApp): Settings {
   const credential = app.options.credential;
   const { version: firebaseVersion } = require('../../package.json');
   if (credential instanceof ServiceAccountCredential) {
-    // cert is available when the SDK has been initialized with a service account JSON file,
-    // or by setting the GOOGLE_APPLICATION_CREDENTIALS envrionment variable.
-
     return {
       credentials: {
         private_key: credential.privateKey,
         client_email: credential.clientEmail,
       },
+      // When the SDK is initialized with ServiceAccountCredentials projectId is guaranteed to
+      // be available.
       projectId: projectId!,
       firebaseVersion,
     };
