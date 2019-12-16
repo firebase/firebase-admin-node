@@ -98,13 +98,21 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   /**
    * The BaseAuth class constructor.
    *
-   * @param {T} authRequestHandler The RPC request handler
-   *     for this instance.
+   * @param app The FirebaseApp to associate with this Auth instance.
+   * @param authRequestHandler The RPC request handler for this instance.
+   * @param tokenGenerator Optional token generator. If not specified, a
+   *     (non-tenant-aware) instance will be created. Use this paramter to
+   *     specify a tenant-aware tokenGenerator.
    * @constructor
    */
-  constructor(app: FirebaseApp, protected readonly authRequestHandler: T) {
-    const cryptoSigner = cryptoSignerFromApp(app);
-    this.tokenGenerator = new FirebaseTokenGenerator(cryptoSigner);
+  constructor(app: FirebaseApp, protected readonly authRequestHandler: T, tokenGenerator?: FirebaseTokenGenerator) {
+    if (tokenGenerator) {
+      this.tokenGenerator = tokenGenerator;
+    } else {
+      const cryptoSigner = cryptoSignerFromApp(app);
+      this.tokenGenerator = new FirebaseTokenGenerator(cryptoSigner);
+    }
+
     this.sessionCookieVerifier = createSessionCookieVerifier(app);
     this.idTokenVerifier = createIdTokenVerifier(app);
   }
@@ -613,24 +621,10 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
    * @constructor
    */
   constructor(app: FirebaseApp, tenantId: string) {
-    super(app, new TenantAwareAuthRequestHandler(app, tenantId));
+    const cryptoSigner = cryptoSignerFromApp(app);
+    const tokenGenerator = new FirebaseTokenGenerator(cryptoSigner, tenantId);
+    super(app, new TenantAwareAuthRequestHandler(app, tenantId), tokenGenerator);
     utils.addReadonlyGetter(this, 'tenantId', tenantId);
-  }
-
-  /**
-   * Creates a new custom token that can be sent back to a client to use with
-   * signInWithCustomToken().
-   *
-   * @param {string} uid The uid to use as the JWT subject.
-   * @param {object=} developerClaims Optional additional claims to include in the JWT payload.
-   *
-   * @return {Promise<string>} A JWT for the provided payload.
-   */
-  public createCustomToken(uid: string, developerClaims?: object): Promise<string> {
-    // This is not yet supported by the Auth server. It is also not yet determined how this will be
-    // supported.
-    return Promise.reject(
-        new FirebaseAuthError(AuthClientErrorCode.UNSUPPORTED_TENANT_OPERATION));
   }
 
   /**
