@@ -16,12 +16,10 @@
 
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { FirebaseApp } from '../firebase-app';
-import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import {
   SecurityRulesApiClient, RulesetResponse, RulesetContent, ListRulesetsResponse,
 } from './security-rules-api-client';
-import { AuthorizedHttpClient } from '../utils/api-request';
 import { FirebaseSecurityRulesError } from './security-rules-utils';
 
 /**
@@ -115,15 +113,7 @@ export class SecurityRules implements FirebaseServiceInterface {
    * @constructor
    */
   constructor(readonly app: FirebaseApp) {
-    if (!validator.isNonNullObject(app) || !('options' in app)) {
-      throw new FirebaseSecurityRulesError(
-        'invalid-argument',
-        'First argument passed to admin.securityRules() must be a valid Firebase app '
-          + 'instance.');
-    }
-
-    const projectId = utils.getProjectId(app);
-    this.client = new SecurityRulesApiClient(new AuthorizedHttpClient(app), projectId);
+    this.client = new SecurityRulesApiClient(app);
   }
 
   /**
