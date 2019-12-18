@@ -42,6 +42,7 @@ import {
 } from '../../../src/auth/auth-config';
 import {deepCopy} from '../../../src/utils/deep-copy';
 import { TenantManager } from '../../../src/auth/tenant-manager';
+import { HttpClient } from '../../../src/utils/api-request';
 
 chai.should();
 chai.use(sinonChai);
@@ -357,7 +358,8 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
       it('should be eventually rejected if a cert credential is not specified', () => {
         const mockCredentialAuth = testConfig.init(mocks.mockCredentialApp());
-
+        // Force the service account ID discovery to fail.
+        getTokenStub = sinon.stub(HttpClient.prototype, 'send').rejects(utils.errorFrom({}));
         return mockCredentialAuth.createCustomToken(mocks.uid, mocks.developerClaims)
           .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-credential');
       });
