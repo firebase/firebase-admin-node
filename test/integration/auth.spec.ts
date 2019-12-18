@@ -179,6 +179,8 @@ describe('admin.auth', () => {
     const testUser3 = { uid: 'uid3', email: 'user3@example.com', phoneNumber: '+15555550003' };
     const usersToCreate = [ testUser1, testUser2, testUser3 ];
 
+    // Also create a user with a provider config. (You can't create a user with
+    // a provider config. But you *can* import one.)
     const importUser1: admin.auth.UserImportRecord = {
       uid: 'uid4',
       email: 'user4@example.com',
@@ -240,11 +242,11 @@ describe('admin.auth', () => {
           { uid: 'uid1' },
           { uid: 'uid_that_doesnt_exist' },
           { uid: 'uid3' },
-        ])
-        .then((getUsersResult) => getUsersResult.users)
-        .then(mapUserRecordsToUidEmailPhones);
+        ]);
+      expect(users.notFound).to.have.deep.members([{uid: 'uid_that_doesnt_exist_deleteme'}]);
 
-      expect(users).to.have.deep.members([testUser1, testUser3]);
+      const foundUsers = mapUserRecordsToUidEmailPhones(users.users);
+      expect(foundUsers).to.have.deep.members([testUser1, testUser3]);
     });
 
     it('returns nothing when queried for only non-existing users', async () => {

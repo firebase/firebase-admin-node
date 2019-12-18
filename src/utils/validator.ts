@@ -42,7 +42,7 @@ export function isArray<T>(value: any): value is T[] {
  * @param {any} value The value to validate.
  * @return {boolean} Whether the value is a non-empty array or not.
  */
-export function isNonEmptyArray(value: any): boolean {
+export function isNonEmptyArray<T>(value: any): value is T[] {
   return isArray(value) && value.length !== 0;
 }
 

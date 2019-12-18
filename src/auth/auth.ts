@@ -233,6 +233,10 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    *     identifiers are specified.
    */
   public getUsers(identifiers: UserIdentifier[]): Promise<GetUsersResult> {
+    if (!validator.isArray(identifiers)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT, '`identifiers` parameter must be an array');
+    }
     return this.authRequestHandler
       .getAccountInfoByIdentifiers(identifiers)
       .then((response: any) => {
@@ -340,6 +344,10 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   }
 
   public deleteUsers(uids: string[]): Promise<DeleteUsersResult> {
+    if (!validator.isArray(uids)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT, '`uids` parameter must be an array');
+    }
     return this.authRequestHandler.deleteAccounts(uids, /*force=*/true)
       .then((batchDeleteAccountsResponse) => {
         const result: DeleteUsersResult = {
@@ -348,32 +356,34 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
           errors: [],
         };
 
-        if (batchDeleteAccountsResponse.errors) {
-          result.failureCount = batchDeleteAccountsResponse.errors.length;
-          result.successCount = uids.length - batchDeleteAccountsResponse.errors.length;
-          result.errors = batchDeleteAccountsResponse.errors.map((batchDeleteErrorInfo) => {
-            if (batchDeleteErrorInfo.index === undefined) {
-              throw new FirebaseAuthError(
-                AuthClientErrorCode.INTERNAL_ERROR,
-                'Corrupt BatchDeleteAccountsResponse detected');
-            }
-
-            const errMsgToError = (msg?: string): FirebaseAuthError => {
-              // We unconditionally set force=true, so the 'NOT_DISABLED' error
-              // should not be possible.
-              if (msg && msg.startsWith('NOT_DISABLED :')) {
-                return new FirebaseAuthError(AuthClientErrorCode.USER_NOT_DISABLED, batchDeleteErrorInfo.message);
-              } else {
-                return new FirebaseAuthError(AuthClientErrorCode.INTERNAL_ERROR, batchDeleteErrorInfo.message);
-              }
-            };
-
-            return {
-              index: batchDeleteErrorInfo.index,
-              error: errMsgToError(batchDeleteErrorInfo.message),
-            };
-          });
+        if (!validator.isNonEmptyArray(batchDeleteAccountsResponse.errors)) {
+          return result;
         }
+
+        result.failureCount = batchDeleteAccountsResponse.errors.length;
+        result.successCount = uids.length - batchDeleteAccountsResponse.errors.length;
+        result.errors = batchDeleteAccountsResponse.errors.map((batchDeleteErrorInfo) => {
+          if (batchDeleteErrorInfo.index === undefined) {
+            throw new FirebaseAuthError(
+              AuthClientErrorCode.INTERNAL_ERROR,
+              'Corrupt BatchDeleteAccountsResponse detected');
+          }
+
+          const errMsgToError = (msg?: string): FirebaseAuthError => {
+            // We unconditionally set force=true, so the 'NOT_DISABLED' error
+            // should not be possible.
+            if (msg && msg.startsWith('NOT_DISABLED :')) {
+              return new FirebaseAuthError(AuthClientErrorCode.USER_NOT_DISABLED, batchDeleteErrorInfo.message);
+            } else {
+              return new FirebaseAuthError(AuthClientErrorCode.INTERNAL_ERROR, batchDeleteErrorInfo.message);
+            }
+          };
+
+          return {
+            index: batchDeleteErrorInfo.index,
+            error: errMsgToError(batchDeleteErrorInfo.message),
+          };
+        });
 
         return result;
       });

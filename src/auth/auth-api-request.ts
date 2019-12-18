@@ -18,7 +18,9 @@ import * as validator from '../utils/validator';
 
 import {deepCopy, deepExtend} from '../utils/deep-copy';
 import {
-  UserIdentifier, isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, isProviderIdentifier,
+  UserIdentifier, isUidIdentifier, isEmailIdentifier, isPhoneIdentifier,
+  isProviderIdentifier, UidIdentifier, EmailIdentifier, PhoneIdentifier,
+  ProviderIdentifier,
 } from './identifier';
 import {FirebaseApp} from '../firebase-app';
 import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
@@ -494,11 +496,13 @@ interface BatchDeleteAccountsRequest {
   localIds?: string[];
   force?: boolean;
 }
+
 interface BatchDeleteErrorInfo {
   index?: number;
   localId?: string;
   message?: string;
 }
+
 export interface BatchDeleteAccountsResponse {
   errors?: BatchDeleteErrorInfo[];
 }
@@ -512,21 +516,20 @@ export const FIREBASE_AUTH_BATCH_DELETE_ACCOUNTS = new ApiSettings('/accounts:ba
     }
   })
   .setResponseValidator((response: BatchDeleteAccountsResponse) => {
-    if (response.errors) {
-      response.errors.forEach((batchDeleteErrorInfo) => {
-        if (batchDeleteErrorInfo.index === undefined) {
-          throw new FirebaseAuthError(
-            AuthClientErrorCode.INTERNAL_ERROR,
-            'INTERNAL ASSERT FAILED: Server BatchDeleteAccountResponse is missing an errors.index field');
-        }
-        if (!batchDeleteErrorInfo.localId) {
-          throw new FirebaseAuthError(
-            AuthClientErrorCode.INTERNAL_ERROR,
-            'INTERNAL ASSERT FAILED: Server BatchDeleteAccountResponse is missing an errors.localId field');
-        }
-        // Allow the (error) message to be missing/undef.
-      });
-    }
+    const errors = response.errors || [];
+    errors.forEach((batchDeleteErrorInfo) => {
+      if (batchDeleteErrorInfo.index === undefined) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INTERNAL_ERROR,
+          'INTERNAL ASSERT FAILED: Server BatchDeleteAccountResponse is missing an errors.index field');
+      }
+      if (!batchDeleteErrorInfo.localId) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INTERNAL_ERROR,
+          'INTERNAL ASSERT FAILED: Server BatchDeleteAccountResponse is missing an errors.localId field');
+      }
+      // Allow the (error) message to be missing/undef.
+    });
   });
 
 /** Instantiates the setAccountInfo endpoint settings for updating existing accounts. */
@@ -762,6 +765,44 @@ export abstract class AbstractAuthRequestHandler {
     return (validator.isNonNullObject(response) && response.error && response.error.message) || null;
   }
 
+  private static addUidToRequest(id: UidIdentifier, request: GetAccountInfoRequest): GetAccountInfoRequest {
+    if (!validator.isUid(id.uid)) {
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_UID);
+    }
+    request.localId ? request.localId.push(id.uid) : request.localId = [id.uid];
+    return request;
+  }
+
+  private static addEmailToRequest(id: EmailIdentifier, request: GetAccountInfoRequest): GetAccountInfoRequest {
+    if (!validator.isEmail(id.email)) {
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);
+    }
+    request.email ? request.email.push(id.email) : request.email = [id.email];
+    return request;
+  }
+
+  private static addPhoneToRequest(id: PhoneIdentifier, request: GetAccountInfoRequest): GetAccountInfoRequest {
+    if (!validator.isPhoneNumber(id.phoneNumber)) {
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER);
+    }
+    request.phoneNumber ? request.phoneNumber.push(id.phoneNumber) : request.phoneNumber = [id.phoneNumber];
+    return request;
+  }
+
+  private static addProviderToRequest(id: ProviderIdentifier, request: GetAccountInfoRequest): GetAccountInfoRequest {
+    if (!validator.isNonEmptyString(id.providerUid) || !validator.isNonEmptyString(id.providerId)) {
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
+    }
+    const federatedUserId = {
+      providerId: id.providerId,
+      rawId: id.providerUid,
+    };
+    request.federatedUserId
+      ? request.federatedUserId.push(federatedUserId)
+      : request.federatedUserId = [federatedUserId];
+    return request;
+  }
+
   /**
    * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
    * @constructor
@@ -868,35 +909,17 @@ export abstract class AbstractAuthRequestHandler {
         '`identifiers` parameter must have <= 100 entries.');
     }
 
-    const request: GetAccountInfoRequest = {};
+    let request: GetAccountInfoRequest = {};
 
     for (const id of identifiers) {
       if (isUidIdentifier(id)) {
-        if (!validator.isUid(id.uid)) {
-          throw new FirebaseAuthError(AuthClientErrorCode.INVALID_UID);
-        }
-        request.localId ? request.localId.push(id.uid) : request.localId = [id.uid];
+        request = AbstractAuthRequestHandler.addUidToRequest(id, request);
       } else if (isEmailIdentifier(id)) {
-        if (!validator.isEmail(id.email)) {
-          throw new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);
-        }
-        request.email ? request.email.push(id.email) : request.email = [id.email];
+        request = AbstractAuthRequestHandler.addEmailToRequest(id, request);
       } else if (isPhoneIdentifier(id)) {
-        if (!validator.isPhoneNumber(id.phoneNumber)) {
-          throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER);
-        }
-        request.phoneNumber ? request.phoneNumber.push(id.phoneNumber) : request.phoneNumber = [id.phoneNumber];
+        request = AbstractAuthRequestHandler.addPhoneToRequest(id, request);
       } else if (isProviderIdentifier(id)) {
-        if (!validator.isNonEmptyString(id.providerUid) || !validator.isNonEmptyString(id.providerId)) {
-          throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
-        }
-        const federatedUserId = {
-          providerId: id.providerId,
-          rawId: id.providerUid,
-        };
-        request.federatedUserId
-          ? request.federatedUserId.push(federatedUserId)
-          : request.federatedUserId = [federatedUserId];
+        request = AbstractAuthRequestHandler.addProviderToRequest(id, request);
       } else {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_ARGUMENT,

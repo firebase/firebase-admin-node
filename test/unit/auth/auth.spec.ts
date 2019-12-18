@@ -1150,6 +1150,15 @@ AUTH_CONFIGS.forEach((testConfig) => {
           .with.property('code', 'auth/maximum-user-count-exceeded');
       });
 
+      it('should be rejected when given a non array parameter', () => {
+        const nonArrayValues = [ null, undefined, 42, 3.14, "i'm not an array", {} ];
+        nonArrayValues.forEach((v) => {
+          expect(() => auth.getUsers(v as any))
+            .to.throw(FirebaseAuthError)
+            .with.property('code', 'auth/argument-error');
+        });
+      });
+
       it('should return no results when given no identifiers', () => {
         return auth.getUsers([])
           .then((getUsersResult) => {
@@ -1206,6 +1215,45 @@ AUTH_CONFIGS.forEach((testConfig) => {
         expect(() => auth.getUsers(identifiers))
           .to.throw(FirebaseAuthError)
           .with.property('code', 'auth/invalid-uid');
+      });
+
+      it('returns users by various identifier types in a single call', async () => {
+        const mockUsers = [{
+            localId: 'uid1',
+            email: 'user1@example.com',
+            phoneNumber: '+15555550001',
+          }, {
+            localId: 'uid2',
+            email: 'user2@example.com',
+            phoneNumber: '+15555550002',
+          }, {
+            localId: 'uid3',
+            email: 'user3@example.com',
+            phoneNumber: '+15555550003',
+          }, {
+            localId: 'uid4',
+            email: 'user4@example.com',
+            phoneNumber: '+15555550004',
+            providerUserInfo: [{
+              providerId: 'google.com',
+              rawId: 'google_uid4',
+            }],
+          }];
+
+        const stub = sinon.stub(testConfig.RequestHandler.prototype, 'getAccountInfoByIdentifiers')
+          .resolves({users: mockUsers});
+        stubs.push(stub);
+
+        const users = await auth.getUsers([
+            { uid: 'uid1' },
+            { email: 'user2@example.com' },
+            { phoneNumber: '+15555550003' },
+            { providerId: 'google.com', providerUid: 'google_uid4' },
+            { uid: 'this-user-doesnt-exist' },
+          ]);
+
+        expect(users.users).to.have.deep.members(mockUsers.map((u) => new UserRecord(u)));
+        expect(users.notFound).to.have.deep.members([{uid: 'this-user-doesnt-exist'}]);
       });
     });
 
@@ -1337,6 +1385,24 @@ AUTH_CONFIGS.forEach((testConfig) => {
           expect(deleteUsersResult.errors[0].error).to.have.property('code', 'auth/user-not-disabled');
           expect(deleteUsersResult.errors[1].index).to.equal(2);
           expect(deleteUsersResult.errors[1].error).to.have.property('code', 'auth/internal-error');
+        } finally {
+          stub.restore();
+        }
+      });
+
+      it('should resolve with void on success', async () => {
+        const stub = sinon.stub(testConfig.RequestHandler.prototype, 'deleteAccounts')
+          .resolves({});
+        try {
+          await auth.deleteUsers(['uid1', 'uid2', 'uid3'])
+            .then((result) => {
+              // Confirm underlying API called with expected parameters.
+              expect(stub).to.have.been.calledOnce.and.calledWith(['uid1', 'uid2', 'uid3']);
+
+              expect(result.failureCount).to.equal(0);
+              expect(result.successCount).to.equal(3);
+              expect(result.errors).to.be.empty;
+            });
         } finally {
           stub.restore();
         }
