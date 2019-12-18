@@ -243,7 +243,7 @@ describe('admin.auth', () => {
           { uid: 'uid_that_doesnt_exist' },
           { uid: 'uid3' },
         ]);
-      expect(users.notFound).to.have.deep.members([{uid: 'uid_that_doesnt_exist_deleteme'}]);
+      expect(users.notFound).to.have.deep.members([{uid: 'uid_that_doesnt_exist'}]);
 
       const foundUsers = mapUserRecordsToUidEmailPhones(users.users);
       expect(foundUsers).to.have.deep.members([testUser1, testUser3]);
