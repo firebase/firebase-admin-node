@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-import { HttpRequestConfig, HttpClient, HttpError } from '../utils/api-request';
+import { HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient } from '../utils/api-request';
 import { PrefixedFirebaseError } from '../utils/error';
 import { FirebaseSecurityRulesError, SecurityRulesErrorCode } from './security-rules-utils';
+import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
+import { FirebaseApp } from '../firebase-app';
 
 const RULES_V1_API = 'https://firebaserules.googleapis.com/v1';
 const FIREBASE_VERSION_HEADER = {
@@ -54,25 +56,18 @@ export interface ListRulesetsResponse {
  */
 export class SecurityRulesApiClient {
 
-  private readonly projectIdPrefix: string;
-  private readonly url: string;
+  private readonly httpClient: HttpClient;
+  private projectIdPrefix?: string;
 
-  constructor(private readonly httpClient: HttpClient, projectId: string | null) {
-    if (!validator.isNonNullObject(httpClient)) {
-      throw new FirebaseSecurityRulesError(
-        'invalid-argument', 'HttpClient must be a non-null object.');
-    }
-
-    if (!validator.isNonEmptyString(projectId)) {
+  constructor(private readonly app: FirebaseApp) {
+    if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseSecurityRulesError(
         'invalid-argument',
-        'Failed to determine project ID. Initialize the SDK with service account credentials, or '
-        + 'set project ID as an app option. Alternatively, set the GOOGLE_CLOUD_PROJECT '
-        + 'environment variable.');
+        'First argument passed to admin.securityRules() must be a valid Firebase app '
+          + 'instance.');
     }
 
-    this.projectIdPrefix = `projects/${projectId}`;
-    this.url = `${RULES_V1_API}/${this.projectIdPrefix}`;
+    this.httpClient = new AuthorizedHttpClient(app);
   }
 
   public getRuleset(name: string): Promise<RulesetResponse> {
@@ -105,23 +100,24 @@ export class SecurityRulesApiClient {
       }
     }
 
-    const request: HttpRequestConfig = {
-      method: 'POST',
-      url: `${this.url}/rulesets`,
-      data: ruleset,
-    };
-    return this.sendRequest<RulesetResponse>(request);
+    return this.getUrl()
+      .then((url) => {
+        const request: HttpRequestConfig = {
+          method: 'POST',
+          url: `${url}/rulesets`,
+          data: ruleset,
+        };
+        return this.sendRequest<RulesetResponse>(request);
+      });
   }
 
   public deleteRuleset(name: string): Promise<void> {
-    return Promise.resolve()
-      .then(() => {
-        return this.getRulesetName(name);
-      })
-      .then((rulesetName) => {
+    return this.getUrl()
+      .then((url) => {
+        const rulesetName = this.getRulesetName(name);
         const request: HttpRequestConfig = {
           method: 'DELETE',
-          url: `${this.url}/${rulesetName}`,
+          url: `${url}/${rulesetName}`,
         };
         return this.sendRequest<void>(request);
       });
@@ -151,12 +147,15 @@ export class SecurityRulesApiClient {
       delete data.pageToken;
     }
 
-    const request: HttpRequestConfig = {
-      method: 'GET',
-      url: `${this.url}/rulesets`,
-      data,
-    };
-    return this.sendRequest<ListRulesetsResponse>(request);
+    return this.getUrl()
+      .then((url) => {
+        const request: HttpRequestConfig = {
+          method: 'GET',
+          url: `${url}/rulesets`,
+          data,
+        };
+        return this.sendRequest<ListRulesetsResponse>(request);
+      });
   }
 
   public getRelease(name: string): Promise<Release> {
@@ -164,15 +163,45 @@ export class SecurityRulesApiClient {
   }
 
   public updateRelease(name: string, rulesetName: string): Promise<Release> {
-    const data = {
-      release: this.getReleaseDescription(name, rulesetName),
-    };
-    const request: HttpRequestConfig = {
-      method: 'PATCH',
-      url: `${this.url}/releases/${name}`,
-      data,
-    };
-    return this.sendRequest<Release>(request);
+    return this.getUrl()
+      .then((url) => {
+        return this.getReleaseDescription(name, rulesetName)
+          .then((release) => {
+            const request: HttpRequestConfig = {
+              method: 'PATCH',
+              url: `${url}/releases/${name}`,
+              data: {release},
+            };
+            return this.sendRequest<Release>(request);
+          });
+      });
+  }
+
+  private getUrl(): Promise<string> {
+    return this.getProjectIdPrefix()
+      .then((projectIdPrefix) => {
+        return `${RULES_V1_API}/${projectIdPrefix}`;
+      });
+  }
+
+  private getProjectIdPrefix(): Promise<string> {
+    if (this.projectIdPrefix) {
+      return Promise.resolve(this.projectIdPrefix);
+    }
+
+    return utils.findProjectId(this.app)
+      .then((projectId) => {
+        if (!validator.isNonEmptyString(projectId)) {
+          throw new FirebaseSecurityRulesError(
+            'invalid-argument',
+            'Failed to determine project ID. Initialize the SDK with service account credentials, or '
+            + 'set project ID as an app option. Alternatively, set the GOOGLE_CLOUD_PROJECT '
+            + 'environment variable.');
+        }
+
+        this.projectIdPrefix = `projects/${projectId}`;
+        return this.projectIdPrefix;
+      });
   }
 
   /**
@@ -183,18 +212,24 @@ export class SecurityRulesApiClient {
    * @returns {Promise<T>} A promise that fulfills with the resource.
    */
   private getResource<T>(name: string): Promise<T> {
-    const request: HttpRequestConfig = {
-      method: 'GET',
-      url: `${this.url}/${name}`,
-    };
-    return this.sendRequest<T>(request);
+    return this.getUrl()
+      .then((url) => {
+        const request: HttpRequestConfig = {
+          method: 'GET',
+          url: `${url}/${name}`,
+        };
+        return this.sendRequest<T>(request);
+      });
   }
 
-  private getReleaseDescription(name: string, rulesetName: string): Release {
-    return {
-      name: `${this.projectIdPrefix}/releases/${name}`,
-      rulesetName: `${this.projectIdPrefix}/${this.getRulesetName(rulesetName)}`,
-    };
+  private getReleaseDescription(name: string, rulesetName: string): Promise<Release> {
+    return this.getProjectIdPrefix()
+      .then((projectIdPrefix) => {
+        return {
+          name: `${projectIdPrefix}/releases/${name}`,
+          rulesetName: `${projectIdPrefix}/${this.getRulesetName(rulesetName)}`,
+        };
+      });
   }
 
   private getRulesetName(name: string): string {
