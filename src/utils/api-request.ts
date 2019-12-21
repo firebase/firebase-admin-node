@@ -496,11 +496,15 @@ class AsyncHttpCall {
     });
 
     const timeout: number | undefined = this.config.timeout;
+    const timeoutCallback = () => {
+      req.abort();
+      this.rejectWithError(`timeout of ${timeout}ms exceeded`, 'ETIMEDOUT', req);
+    };
     if (timeout) {
       // Listen to timeouts and throw an error.
-      req.setTimeout(timeout, () => {
-        req.abort();
-        this.rejectWithError(`timeout of ${timeout}ms exceeded`, 'ETIMEDOUT', req);
+      req.setTimeout(timeout, timeoutCallback);
+      req.on('socket', (socket) => {
+        socket.setTimeout(timeout, timeoutCallback);
       });
     }
 
