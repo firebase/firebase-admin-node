@@ -137,7 +137,7 @@ fi
 echo
 
 echo "[INFO] Running integration tests..."
-npm run test:integration -- --updateRules
+npm run test:integration -- --updateRules --testMultiTenancy
 if [[ $? -ne 0 ]]; then
   echo "Error: Integration tests failed."
   exit 1
