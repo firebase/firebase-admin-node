@@ -128,16 +128,16 @@ describe('SecurityRules', () => {
               + 'instance.');
     });
 
-    it('should throw when initialized without project ID', () => {
+    it('should reject when initialized without project ID', () => {
       // Project ID not set in the environment.
       delete process.env.GOOGLE_CLOUD_PROJECT;
       delete process.env.GCLOUD_PROJECT;
       const noProjectId = 'Failed to determine project ID. Initialize the SDK with service '
         + 'account credentials, or set project ID as an app option. Alternatively, set the '
         + 'GOOGLE_CLOUD_PROJECT environment variable.';
-      expect(() => {
-        return new SecurityRules(mockCredentialApp);
-      }).to.throw(noProjectId);
+      const rulesWithoutProjectId = new SecurityRules(mockCredentialApp);
+      return rulesWithoutProjectId.getRuleset('test')
+        .should.eventually.rejectedWith(noProjectId);
     });
 
     it('should not throw given a valid app', () => {
