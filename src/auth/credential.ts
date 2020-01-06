@@ -22,6 +22,7 @@ import path = require('path');
 import {AppErrorCodes, FirebaseAppError} from '../utils/error';
 import {HttpClient, HttpRequestConfig, HttpError, HttpResponse} from '../utils/api-request';
 import {Agent} from 'http';
+import * as util from '../utils/validator';
 
 const GOOGLE_TOKEN_AUDIENCE = 'https://accounts.google.com/o/oauth2/token';
 const GOOGLE_AUTH_TOKEN_HOST = 'accounts.google.com';
@@ -153,7 +154,7 @@ class ServiceAccount {
   }
 
   constructor(json: object) {
-    if (typeof json !== 'object' || json === null) {
+    if (!util.isNonNullObject(json)) {
       throw new FirebaseAppError(
         AppErrorCodes.INVALID_CREDENTIAL,
         'Service account must be an object.',
@@ -165,11 +166,11 @@ class ServiceAccount {
     copyAttr(this, json, 'clientEmail', 'client_email');
 
     let errorMessage;
-    if (typeof this.projectId !== 'string' || !this.projectId) {
+    if (!util.isNonEmptyString(this.projectId)) {
       errorMessage = 'Service account object must contain a string "project_id" property.';
-    } else if (typeof this.privateKey !== 'string' || !this.privateKey) {
+    } else if (!util.isNonEmptyString(this.privateKey)) {
       errorMessage = 'Service account object must contain a string "private_key" property.';
-    } else if (typeof this.clientEmail !== 'string' || !this.clientEmail) {
+    } else if (!util.isNonEmptyString(this.clientEmail)) {
       errorMessage = 'Service account object must contain a string "client_email" property.';
     }
 
@@ -293,13 +294,13 @@ class RefreshToken {
     copyAttr(this, json, 'type', 'type');
 
     let errorMessage;
-    if (typeof this.clientId !== 'string' || !this.clientId) {
+    if (!util.isNonEmptyString(this.clientId)) {
       errorMessage = 'Refresh token must contain a "client_id" property.';
-    } else if (typeof this.clientSecret !== 'string' || !this.clientSecret) {
+    } else if (!util.isNonEmptyString(this.clientSecret)) {
       errorMessage = 'Refresh token must contain a "client_secret" property.';
-    } else if (typeof this.refreshToken !== 'string' || !this.refreshToken) {
+    } else if (!util.isNonEmptyString(this.refreshToken)) {
       errorMessage = 'Refresh token must contain a "refresh_token" property.';
-    } else if (typeof this.type !== 'string' || !this.type) {
+    } else if (!util.isNonEmptyString(this.type)) {
       errorMessage = 'Refresh token must contain a "type" property.';
     }
 
@@ -325,6 +326,17 @@ export function getApplicationDefault(httpAgent?: Agent): Credential {
   return new ComputeEngineCredential(httpAgent);
 }
 
+/**
+ * Copies the specified property from one object to another.
+ *
+ * If no property exists by the given "key", looks for a property identified by "alt", and copies it instead.
+ * This can be used to implement behaviors such as "copy property myKey or my_key".
+ *
+ * @param to Target object to copy the property into.
+ * @param from Source object to copy the property from.
+ * @param key Name of the property to copy.
+ * @param alt Alternative name of the property to copy.
+ */
 function copyAttr(to: {[key: string]: any}, from: {[key: string]: any}, key: string, alt: string) {
   const tmp = from[key] || from[alt];
   if (typeof tmp !== 'undefined') {

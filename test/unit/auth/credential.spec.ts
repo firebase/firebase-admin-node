@@ -386,7 +386,7 @@ describe('Credential', () => {
       expect(() => getApplicationDefault()).to.throw(Error);
     });
 
-    it('should throw if a the credentials file content is not an object', () => {
+    it('should throw if the credentials file content is not an object', () => {
       process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../../resources/mock.key.json');
       fsStub = sinon.stub(fs, 'readFileSync').returns('2');
       expect(() => getApplicationDefault()).to.throw(Error);
