@@ -42,6 +42,7 @@ import {
 } from '../../../src/auth/auth-config';
 import {deepCopy} from '../../../src/utils/deep-copy';
 import { TenantManager } from '../../../src/auth/tenant-manager';
+import { ServiceAccountCredential } from '../../../src/auth/credential';
 import { HttpClient } from '../../../src/utils/api-request';
 
 chai.should();
@@ -365,20 +366,23 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
 
       it('should be fulfilled given an app which returns null access tokens', () => {
+        getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken').resolves(null);
         // createCustomToken() does not rely on an access token and therefore works in this scenario.
-        return nullAccessTokenAuth.createCustomToken(mocks.uid, mocks.developerClaims)
+        return auth.createCustomToken(mocks.uid, mocks.developerClaims)
           .should.eventually.be.fulfilled;
       });
 
       it('should be fulfilled given an app which returns invalid access tokens', () => {
+        getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken').resolves('malformed');
         // createCustomToken() does not rely on an access token and therefore works in this scenario.
-        return malformedAccessTokenAuth.createCustomToken(mocks.uid, mocks.developerClaims)
+        return auth.createCustomToken(mocks.uid, mocks.developerClaims)
           .should.eventually.be.fulfilled;
       });
 
       it('should be fulfilled given an app which fails to generate access tokens', () => {
+        getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken').rejects('error');
         // createCustomToken() does not rely on an access token and therefore works in this scenario.
-        return rejectedPromiseAccessTokenAuth.createCustomToken(mocks.uid, mocks.developerClaims)
+        return auth.createCustomToken(mocks.uid, mocks.developerClaims)
           .should.eventually.be.fulfilled;
       });
     });

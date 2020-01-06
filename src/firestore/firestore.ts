@@ -17,7 +17,7 @@
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseFirestoreError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {ApplicationDefaultCredential, Certificate, tryGetCertificate} from '../auth/credential';
+import {ServiceAccountCredential, ComputeEngineCredential} from '../auth/credential';
 import {Firestore, Settings} from '@google-cloud/firestore';
 
 import * as validator from '../utils/validator';
@@ -72,30 +72,20 @@ export function getFirestoreOptions(app: FirebaseApp): Settings {
   }
 
   const projectId: string | null = utils.getProjectId(app);
-  const cert: Certificate | null = tryGetCertificate(app.options.credential);
+  const credential = app.options.credential;
   const { version: firebaseVersion } = require('../../package.json');
-  if (cert != null) {
-    // cert is available when the SDK has been initialized with a service account JSON file,
-    // or by setting the GOOGLE_APPLICATION_CREDENTIALS envrionment variable.
-
-    if (!validator.isNonEmptyString(projectId)) {
-      // Assert for an explicit projct ID (either via AppOptions or the cert itself).
-      throw new FirebaseFirestoreError({
-        code: 'no-project-id',
-        message: 'Failed to determine project ID for Firestore. Initialize the '
-          + 'SDK with service account credentials or set project ID as an app option. '
-          + 'Alternatively set the GOOGLE_CLOUD_PROJECT environment variable.',
-      });
-    }
+  if (credential instanceof ServiceAccountCredential) {
     return {
       credentials: {
-        private_key: cert.privateKey,
-        client_email: cert.clientEmail,
+        private_key: credential.privateKey,
+        client_email: credential.clientEmail,
       },
-      projectId,
+      // When the SDK is initialized with ServiceAccountCredentials projectId is guaranteed to
+      // be available.
+      projectId: projectId!,
       firebaseVersion,
     };
-  } else if (app.options.credential instanceof ApplicationDefaultCredential) {
+  } else if (app.options.credential instanceof ComputeEngineCredential) {
     // Try to use the Google application default credentials.
     // If an explicit project ID is not available, let Firestore client discover one from the
     // environment. This prevents the users from having to set GOOGLE_CLOUD_PROJECT in GCP runtimes.

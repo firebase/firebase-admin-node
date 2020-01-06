@@ -31,8 +31,8 @@ import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
 import {
-  ApplicationDefaultCredential, CertCredential, Certificate, GoogleOAuthAccessToken,
-  MetadataServiceCredential, RefreshTokenCredential, tryGetCertificate,
+  GoogleOAuthAccessToken, RefreshTokenCredential, ServiceAccountCredential,
+  ComputeEngineCredential, getApplicationDefault,
 } from '../../../src/auth/credential';
 import { HttpClient } from '../../../src/utils/api-request';
 import {Agent} from 'https';
@@ -91,167 +91,94 @@ describe('Credential', () => {
     process.env = oldProcessEnv;
   });
 
-
-  describe('Certificate', () => {
-    describe('fromPath', () => {
-      const invalidFilePaths = [null, NaN, 0, 1, true, false, {}, [], { a: 1 }, [1, 'a'], _.noop];
-      invalidFilePaths.forEach((invalidFilePath) => {
-        it('should throw if called with non-string argument: ' + JSON.stringify(invalidFilePath), () => {
-          expect(() => {
-            Certificate.fromPath(invalidFilePath as any);
-          }).to.throw('Failed to parse certificate key file: TypeError: path must be a string');
-        });
-      });
-
-      it('should throw if called with no argument', () => {
-        expect(() => {
-          (Certificate as any).fromPath();
-        }).to.throw('Failed to parse certificate key file: TypeError: path must be a string');
-      });
-
-      it('should throw if called with the path to a non-existent file', () => {
-        expect(() => Certificate.fromPath('invalid-file'))
-          .to.throw('Failed to parse certificate key file: Error: ENOENT: no such file or directory');
-      });
-
-      it('should throw if called with the path to an invalid file', () => {
-        const invalidPath = path.resolve(__dirname, '../../resources/unparesable.json');
-        expect(() => Certificate.fromPath(invalidPath))
-          .to.throw('Failed to parse certificate key file: Error: ENOENT: no such file or directory');
-      });
-
-      it('should throw if called with an empty string path', () => {
-        expect(() => Certificate.fromPath(''))
-          .to.throw('Failed to parse certificate key file: Error: ENOENT: no such file or directory');
-      });
-
-      it('should not throw given a valid path to a key file', () => {
-        const validPath = path.resolve(__dirname, '../../resources/mock.key.json');
-        expect(() => Certificate.fromPath(validPath)).not.to.throw();
-      });
-
-      it('should throw given an object without a "private_key" property', () => {
-        const invalidCertificate = _.omit(mocks.certificateObject, 'private_key');
-        expect(() => {
-          return new Certificate(invalidCertificate as any);
-        }).to.throw('Certificate object must contain a string "private_key" property');
-      });
-
-      it('should throw given an object with an empty string "private_key" property', () => {
-        const invalidCertificate = _.clone(mocks.certificateObject);
-        invalidCertificate.private_key = '';
-        expect(() => {
-          return new Certificate(invalidCertificate as any);
-        }).to.throw('Certificate object must contain a string "private_key" property');
-      });
-
-      it('should throw given an object without a "client_email" property', () => {
-        const invalidCertificate = _.omit(mocks.certificateObject, 'client_email');
-        expect(() => {
-          return new Certificate(invalidCertificate as any);
-        }).to.throw('Certificate object must contain a string "client_email" property');
-      });
-
-      it('should throw given an object with an empty string "client_email" property', () => {
-        const invalidCertificate = _.clone(mocks.certificateObject);
-        invalidCertificate.client_email = '';
-        expect(() => {
-          return new Certificate(invalidCertificate as any);
-        }).to.throw('Certificate object must contain a string "client_email" property');
-      });
-
-      const invalidCredentials = [null, NaN, 0, 1, true, false, '', 'a', [], {}, { a: 1 }, _.noop];
-      invalidCredentials.forEach((invalidCredential) => {
-        it('should throw given invalid Credential: ' + JSON.stringify(invalidCredential), () => {
-          expect(() => {
-            return new Certificate(invalidCredential as any);
-          }).to.throw(Error);
-        });
+  describe('ServiceAccountCredential', () => {
+    const invalidFilePaths = [null, NaN, 0, 1, true, false, undefined, _.noop];
+    invalidFilePaths.forEach((invalidFilePath) => {
+      it('should throw if called with non-string argument: ' + JSON.stringify(invalidFilePath), () => {
+        expect(() => new ServiceAccountCredential(invalidFilePath as any))
+          .to.throw('Service account must be an object');
       });
     });
 
-    describe('constructor', () => {
-      const invalidCertificateObjects = [null, NaN, 0, 1, true, false, _.noop];
-      invalidCertificateObjects.forEach((invalidCertificateObject) => {
-        it('should throw if called with non-object argument: ' + JSON.stringify(invalidCertificateObject), () => {
-          expect(() => {
-            return new Certificate(invalidCertificateObject as any);
-          }).to.throw('Certificate object must be an object.');
-        });
-      });
-
-      it('should throw if called with no argument', () => {
-        expect(() => {
-          return new (Certificate as any)();
-        }).to.throw('Certificate object must be an object.');
-      });
-
-      it('should throw if certificate object does not contain a valid "client_email"', () => {
-        mockCertificateObject.client_email = '';
-
-        expect(() => {
-          return new Certificate(mockCertificateObject);
-        }).to.throw('Certificate object must contain a string "client_email" property');
-
-        delete mockCertificateObject.client_email;
-
-        expect(() => {
-          return new Certificate(mockCertificateObject);
-        }).to.throw('Certificate object must contain a string "client_email" property');
-      });
-
-      it('should throw if certificate object does not contain a "private_key"', () => {
-        mockCertificateObject.private_key = '';
-
-        expect(() => {
-          return new Certificate(mockCertificateObject);
-        }).to.throw('Certificate object must contain a string "private_key" property');
-
-        delete mockCertificateObject.private_key;
-
-        expect(() => {
-          return new Certificate(mockCertificateObject);
-        }).to.throw('Certificate object must contain a string "private_key" property');
-      });
-
-      it('should throw if certificate object does not contain a valid "private_key"', () => {
-        mockCertificateObject.private_key = 'invalid.key';
-
-        expect(() => {
-          return new Certificate(mockCertificateObject);
-        }).to.throw('Failed to parse private key: Error: Invalid PEM formatted message.');
-      });
-
-      it('should not throw given a valid certificate object', () => {
-        expect(() => {
-          return new Certificate(mockCertificateObject);
-        }).not.to.throw();
-      });
-
-      it('should accept "clientEmail" in place of "client_email" for the certificate object', () => {
-        mockCertificateObject.clientEmail = mockCertificateObject.client_email;
-        delete mockCertificateObject.client_email;
-
-        expect(() => {
-          return new Certificate(mockCertificateObject);
-        }).not.to.throw();
-      });
-
-      it('should accept "privateKey" in place of "private_key" for the certificate object', () => {
-        mockCertificateObject.privateKey = mockCertificateObject.private_key;
-        delete mockCertificateObject.private_key;
-
-        expect(() => {
-          return new Certificate(mockCertificateObject);
-        }).not.to.throw();
-      });
+    it('should throw if called with the path to a non-existent file', () => {
+      expect(() => new ServiceAccountCredential('invalid-file'))
+        .to.throw('Failed to parse service account json file: Error: ENOENT: no such file or directory');
     });
-  });
 
-  describe('CertCredential', () => {
+    it('should throw if called with the path to an invalid file', () => {
+      const invalidPath = path.resolve(__dirname, '../../resources/unparsable.key.json');
+      expect(() => new ServiceAccountCredential(invalidPath))
+        .to.throw('Failed to parse service account json file: SyntaxError');
+    });
+
+    it('should throw if called with an empty string path', () => {
+      expect(() => new ServiceAccountCredential(''))
+        .to.throw('Failed to parse service account json file: Error: ENOENT: no such file or directory');
+    });
+
+    it('should throw given an object without a "project_id" property', () => {
+      const invalidCertificate = _.omit(mocks.certificateObject, 'project_id');
+      expect(() => new ServiceAccountCredential(invalidCertificate as any))
+        .to.throw('Service account object must contain a string "project_id" property');
+    });
+
+    it('should throw given an object without a "private_key" property', () => {
+      const invalidCertificate = _.omit(mocks.certificateObject, 'private_key');
+      expect(() => new ServiceAccountCredential(invalidCertificate as any))
+        .to.throw('Service account object must contain a string "private_key" property');
+    });
+
+    it('should throw given an object with an empty string "private_key" property', () => {
+      const invalidCertificate = _.clone(mocks.certificateObject);
+      invalidCertificate.private_key = '';
+      expect(() => new ServiceAccountCredential(invalidCertificate as any))
+        .to.throw('Service account object must contain a string "private_key" property');
+    });
+
+    it('should throw given an object without a "client_email" property', () => {
+      const invalidCertificate = _.omit(mocks.certificateObject, 'client_email');
+      expect(() => new ServiceAccountCredential(invalidCertificate as any))
+        .to.throw('Service account object must contain a string "client_email" property');
+    });
+
+    it('should throw given an object with an empty string "client_email" property', () => {
+      const invalidCertificate = _.clone(mocks.certificateObject);
+      invalidCertificate.client_email = '';
+      expect(() => new ServiceAccountCredential(invalidCertificate as any))
+        .to.throw('Service account object must contain a string "client_email" property');
+    });
+
+    it('should throw given an object with a malformed "private_key" property', () => {
+      const invalidCertificate = _.clone(mocks.certificateObject);
+      invalidCertificate.private_key = 'malformed';
+      expect(() => new ServiceAccountCredential(invalidCertificate as any))
+        .to.throw('Failed to parse private key');
+    });
+
+    it('should not throw given a valid path to a key file', () => {
+      const validPath = path.resolve(__dirname, '../../resources/mock.key.json');
+      expect(() => new ServiceAccountCredential(validPath)).not.to.throw();
+    });
+
+    it('should accept "clientEmail" in place of "client_email" for the certificate object', () => {
+      mockCertificateObject.clientEmail = mockCertificateObject.client_email;
+      delete mockCertificateObject.client_email;
+
+      expect(() => new ServiceAccountCredential(mockCertificateObject))
+        .not.to.throw();
+    });
+
+    it('should accept "privateKey" in place of "private_key" for the certificate object', () => {
+      mockCertificateObject.privateKey = mockCertificateObject.private_key;
+      delete mockCertificateObject.private_key;
+
+      expect(() => new ServiceAccountCredential(mockCertificateObject))
+        .not.to.throw();
+    });
+
     it('should return a Credential', () => {
-      const c = new CertCredential(mockCertificateObject);
-      expect(c.getCertificate()).to.deep.equal({
+      const c = new ServiceAccountCredential(mockCertificateObject);
+      expect(c).to.deep.include({
         projectId: mockCertificateObject.project_id,
         clientEmail: mockCertificateObject.client_email,
         privateKey: mockCertificateObject.private_key,
@@ -259,8 +186,8 @@ describe('Credential', () => {
     });
 
     it('should return a certificate', () => {
-      const c = new CertCredential(mockCertificateObject);
-      expect(tryGetCertificate(c)).to.deep.equal({
+      const c = new ServiceAccountCredential(mockCertificateObject);
+      expect(c).to.deep.include({
         projectId: mockCertificateObject.project_id,
         clientEmail: mockCertificateObject.client_email,
         privateKey: mockCertificateObject.private_key,
@@ -268,7 +195,7 @@ describe('Credential', () => {
     });
 
     it('should create access tokens', () => {
-      const c = new CertCredential(mockCertificateObject);
+      const c = new ServiceAccountCredential(mockCertificateObject);
       return c.getAccessToken().then((token) => {
         expect(token.access_token).to.be.a('string').and.to.not.be.empty;
         expect(token.expires_in).to.equal(ONE_HOUR_IN_SECONDS);
@@ -287,24 +214,56 @@ describe('Credential', () => {
           error: 'invalid_grant',
           error_description: 'reason',
         }));
-        const c = new CertCredential(mockCertificateObject);
+        const c = new ServiceAccountCredential(mockCertificateObject);
         return expect(c.getAccessToken()).to.be
           .rejectedWith('Error fetching access token: invalid_grant (reason)');
       });
 
       it('should throw an error including error text payload', () => {
         httpStub.rejects(utils.errorFrom('not json'));
-        const c = new CertCredential(mockCertificateObject);
+        const c = new ServiceAccountCredential(mockCertificateObject);
         return expect(c.getAccessToken()).to.be
           .rejectedWith('Error fetching access token: not json');
+      });
+
+      it('should throw when the success response is malformed', () => {
+        httpStub.resolves(utils.responseFrom({}));
+        const c = new ServiceAccountCredential(mockCertificateObject);
+        return expect(c.getAccessToken()).to.be
+          .rejectedWith('Unexpected response while fetching access token');
       });
     });
   });
 
   describe('RefreshTokenCredential', () => {
-    it('should not return a certificate', () => {
-      const c = new RefreshTokenCredential(MOCK_REFRESH_TOKEN_CONFIG);
-      expect(tryGetCertificate(c)).to.be.null;
+    it('should throw if called with the path to an invalid file', () => {
+      const invalidPath = path.resolve(__dirname, '../../resources/unparsable.key.json');
+      expect(() => new RefreshTokenCredential(invalidPath))
+        .to.throw('Failed to parse refresh token file');
+    });
+
+    it('should throw given an object without a "clientId" property', () => {
+      const invalidCredential = _.omit(mocks.refreshToken, 'clientId');
+      expect(() => new RefreshTokenCredential(invalidCredential as any))
+        .to.throw('Refresh token must contain a "client_id" property');
+    });
+
+    it('should throw given an object without a "clientSecret" property', () => {
+      const invalidCredential = _.omit(mocks.refreshToken, 'clientSecret');
+      expect(() => new RefreshTokenCredential(invalidCredential as any))
+        .to.throw('Refresh token must contain a "client_secret" property');
+    });
+
+    it('should throw given an object without a "refreshToken" property', () => {
+      const invalidCredential = _.omit(mocks.refreshToken, 'refreshToken');
+      expect(() => new RefreshTokenCredential(invalidCredential as any))
+        .to.throw('Refresh token must contain a "refresh_token" property');
+    });
+
+    it('should throw given an object without a "type" property', () => {
+      const invalidCredential = _.omit(mocks.refreshToken, 'type');
+      expect(() => new RefreshTokenCredential(invalidCredential as any))
+        .to.throw('Refresh token must contain a "type" property');
     });
 
     it('should create access tokens', () => {
@@ -327,15 +286,10 @@ describe('Credential', () => {
     });
   });
 
-  describe('MetadataServiceCredential', () => {
+  describe('ComputeEngineCredential', () => {
     let httpStub: sinon.SinonStub;
-    before(() => httpStub = sinon.stub(HttpClient.prototype, 'send'));
-    after(() => httpStub.restore());
-
-    it('should not return a certificate', () => {
-      const c = new MetadataServiceCredential();
-      expect(tryGetCertificate(c)).to.be.null;
-    });
+    beforeEach(() => httpStub = sinon.stub(HttpClient.prototype, 'send'));
+    afterEach(() => httpStub.restore());
 
     it('should create access tokens', () => {
       const expected: GoogleOAuthAccessToken = {
@@ -345,7 +299,7 @@ describe('Credential', () => {
       const response = utils.responseFrom(expected);
       httpStub.resolves(response);
 
-      const c = new MetadataServiceCredential();
+      const c = new ComputeEngineCredential();
       return c.getAccessToken().then((token) => {
         expect(token.access_token).to.equal('anAccessToken');
         expect(token.expires_in).to.equal(42);
@@ -357,9 +311,26 @@ describe('Credential', () => {
         });
       });
     });
+
+    it('should discover project id', () => {
+      const expected = 'test-project-id';
+      const response = utils.responseFrom(expected);
+      httpStub.resolves(response);
+
+      const c = new ComputeEngineCredential();
+      return c.getProjectId().then((projectId) => {
+        expect(projectId).to.equal(expected);
+        expect(httpStub).to.have.been.calledOnce.and.calledWith({
+          method: 'GET',
+          url: 'http://metadata.google.internal/computeMetadata/v1/project/project-id',
+          headers: {'Metadata-Flavor': 'Google'},
+          httpAgent: undefined,
+        });
+      });
+    });
   });
 
-  describe('ApplicationDefaultCredential', () => {
+  describe('getApplicationDefault()', () => {
     let fsStub: sinon.SinonStub;
 
     afterEach(() => {
@@ -370,23 +341,23 @@ describe('Credential', () => {
 
     it('should return a CertCredential with GOOGLE_APPLICATION_CREDENTIALS set', () => {
       process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../../resources/mock.key.json');
-      const c = new ApplicationDefaultCredential();
-      expect(c.getCredential()).to.be.an.instanceof(CertCredential);
+      const c = getApplicationDefault();
+      expect(c).to.be.an.instanceof(ServiceAccountCredential);
     });
 
     it('should throw if explicitly pointing to an invalid path', () => {
       process.env.GOOGLE_APPLICATION_CREDENTIALS = 'invalidpath';
-      expect(() => new ApplicationDefaultCredential()).to.throw(Error);
+      expect(() => getApplicationDefault()).to.throw(Error);
     });
 
     it('should throw if explicitly pointing to an invalid cert file', () => {
       fsStub = sinon.stub(fs, 'readFileSync').returns('invalidjson');
-      expect(() => new ApplicationDefaultCredential()).to.throw(Error);
+      expect(() => getApplicationDefault()).to.throw(Error);
     });
 
     it('should throw error if type not specified on cert file', () => {
       fsStub = sinon.stub(fs, 'readFileSync').returns(JSON.stringify({}));
-      expect(() => new ApplicationDefaultCredential())
+      expect(() => getApplicationDefault())
           .to.throw(Error, 'Invalid contents in the credentials file');
     });
 
@@ -394,7 +365,7 @@ describe('Credential', () => {
       fsStub = sinon.stub(fs, 'readFileSync').returns(JSON.stringify({
         type: 'foo',
       }));
-      expect(() => new ApplicationDefaultCredential()).to.throw(Error, 'Invalid contents in the credentials file');
+      expect(() => getApplicationDefault()).to.throw(Error, 'Invalid contents in the credentials file');
     });
 
     it('should return a RefreshTokenCredential with gcloud login', () => {
@@ -406,24 +377,30 @@ describe('Credential', () => {
         return;
       }
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
-      expect((new ApplicationDefaultCredential()).getCredential()).to.be.an.instanceof(RefreshTokenCredential);
+      expect((getApplicationDefault())).to.be.an.instanceof(RefreshTokenCredential);
     });
 
     it('should throw if a the gcloud login cache is invalid', () => {
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
       fsStub = sinon.stub(fs, 'readFileSync').returns('invalidjson');
-      expect(() => new ApplicationDefaultCredential()).to.throw(Error);
+      expect(() => getApplicationDefault()).to.throw(Error);
+    });
+
+    it('should throw if the credentials file content is not an object', () => {
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../../resources/mock.key.json');
+      fsStub = sinon.stub(fs, 'readFileSync').returns('2');
+      expect(() => getApplicationDefault()).to.throw(Error);
     });
 
     it('should return a MetadataServiceCredential as a last resort', () => {
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
       fsStub = sinon.stub(fs, 'readFileSync').throws(new Error('no gcloud credential file'));
-      expect((new ApplicationDefaultCredential()).getCredential()).to.be.an.instanceof(MetadataServiceCredential);
+      expect(getApplicationDefault()).to.be.an.instanceof(ComputeEngineCredential);
     });
 
     it('should create access tokens', () => {
       process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../../resources/mock.key.json');
-      const c = new ApplicationDefaultCredential();
+      const c = getApplicationDefault();
       return c.getAccessToken().then((token) => {
         expect(token.access_token).to.be.a('string').and.to.not.be.empty;
         expect(token.expires_in).to.equal(ONE_HOUR_IN_SECONDS);
@@ -432,18 +409,8 @@ describe('Credential', () => {
 
     it('should return a Credential', () => {
       process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../../resources/mock.key.json');
-      const c = new ApplicationDefaultCredential();
-      expect(c.getCertificate()).to.deep.equal({
-        projectId: mockCertificateObject.project_id,
-        clientEmail: mockCertificateObject.client_email,
-        privateKey: mockCertificateObject.private_key,
-      });
-    });
-
-    it('should return a Certificate', () => {
-      process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../../resources/mock.key.json');
-      const c = new ApplicationDefaultCredential();
-      expect(tryGetCertificate(c)).to.deep.equal({
+      const c = getApplicationDefault();
+      expect(c).to.deep.include({
         projectId: mockCertificateObject.project_id,
         clientEmail: mockCertificateObject.client_email,
         privateKey: mockCertificateObject.private_key,
@@ -456,8 +423,7 @@ describe('Credential', () => {
 
       fsStub = sinon.stub(fs, 'readFileSync').returns(JSON.stringify(MOCK_REFRESH_TOKEN_CONFIG));
 
-      const adc = new ApplicationDefaultCredential();
-      const c = adc.getCredential();
+      const c = getApplicationDefault();
       expect(c).is.instanceOf(RefreshTokenCredential);
       expect(c).to.have.property('refreshToken').that.includes({
         clientId: MOCK_REFRESH_TOKEN_CONFIG.client_id,
@@ -485,9 +451,9 @@ describe('Credential', () => {
       stub.restore();
     });
 
-    it('CertCredential should use the provided HTTP Agent', () => {
+    it('ServiceAccountCredential should use the provided HTTP Agent', () => {
       const agent = new Agent();
-      const c = new CertCredential(mockCertificateObject, agent);
+      const c = new ServiceAccountCredential(mockCertificateObject, agent);
       return c.getAccessToken().then((token) => {
         expect(token.access_token).to.equal(expectedToken);
         expect(stub).to.have.been.calledOnce;
@@ -505,9 +471,9 @@ describe('Credential', () => {
       });
     });
 
-    it('MetadataServiceCredential should use the provided HTTP Agent', () => {
+    it('ComputeEngineCredential should use the provided HTTP Agent', () => {
       const agent = new Agent();
-      const c = new MetadataServiceCredential(agent);
+      const c = new ComputeEngineCredential(agent);
       return c.getAccessToken().then((token) => {
         expect(token.access_token).to.equal(expectedToken);
         expect(stub).to.have.been.calledOnce;
@@ -518,7 +484,7 @@ describe('Credential', () => {
     it('ApplicationDefaultCredential should use the provided HTTP Agent', () => {
       process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../../resources/mock.key.json');
       const agent = new Agent();
-      const c = new ApplicationDefaultCredential(agent);
+      const c = getApplicationDefault(agent);
       return c.getAccessToken().then((token) => {
         expect(token.access_token).to.equal(expectedToken);
         expect(stub).to.have.been.calledOnce;

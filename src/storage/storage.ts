@@ -17,9 +17,10 @@
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {ApplicationDefaultCredential, Certificate, tryGetCertificate} from '../auth/credential';
+import {ServiceAccountCredential, ComputeEngineCredential} from '../auth/credential';
 import {Bucket, Storage as StorageClient} from '@google-cloud/storage';
 
+import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 
 /**
@@ -70,18 +71,19 @@ export class Storage implements FirebaseServiceInterface {
       });
     }
 
-    const cert: Certificate | null = tryGetCertificate(app.options.credential);
-    if (cert != null) {
-      // cert is available when the SDK has been initialized with a service account JSON file,
-      // or by setting the GOOGLE_APPLICATION_CREDENTIALS envrionment variable.
+    const projectId: string | null = utils.getProjectId(app);
+    const credential = app.options.credential;
+    if (credential instanceof ServiceAccountCredential) {
       this.storageClient = new storage({
-        projectId: cert.projectId,
+        // When the SDK is initialized with ServiceAccountCredentials projectId is guaranteed to
+        // be available.
+        projectId: projectId!,
         credentials: {
-          private_key: cert.privateKey,
-          client_email: cert.clientEmail,
+          private_key: credential.privateKey,
+          client_email: credential.clientEmail,
         },
       });
-    } else if (app.options.credential instanceof ApplicationDefaultCredential) {
+    } else if (app.options.credential instanceof ComputeEngineCredential) {
       // Try to use the Google application default credentials.
       this.storageClient = new storage();
     } else {

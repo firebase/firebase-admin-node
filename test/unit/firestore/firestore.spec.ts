@@ -22,7 +22,7 @@ import {expect} from 'chai';
 
 import * as mocks from '../../resources/mocks';
 import {FirebaseApp} from '../../../src/firebase-app';
-import {ApplicationDefaultCredential} from '../../../src/auth/credential';
+import { ComputeEngineCredential } from '../../../src/auth/credential';
 import {FirestoreService, getFirestoreOptions} from '../../../src/firestore/firestore';
 
 describe('Firestore', () => {
@@ -52,7 +52,7 @@ describe('Firestore', () => {
     mockApp = mocks.app();
     mockCredentialApp = mocks.mockCredentialApp();
     defaultCredentialApp = mocks.appWithOptions({
-      credential: new ApplicationDefaultCredential(),
+      credential: new ComputeEngineCredential(),
     });
     projectIdApp = mocks.appWithOptions({
       credential: mocks.credential,
