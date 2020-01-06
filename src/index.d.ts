@@ -456,7 +456,7 @@ declare namespace admin.app {
 
 
     auth(): admin.auth.Auth;
-    database(url?: string): _database.admin.database.Database;
+    database(url?: string): admin.database.Database;
     firestore(): admin.firestore.Firestore;
     instanceId(): admin.instanceId.InstanceId;
     messaging(): admin.messaging.Messaging;
