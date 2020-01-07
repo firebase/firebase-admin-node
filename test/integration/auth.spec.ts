@@ -165,16 +165,16 @@ describe('admin.auth', () => {
         // Confirm expected email.
         expect(userRecord.email).to.equal(newUserData.email);
         // Confirm second factors added to user.
-        expect(userRecord.multiFactor.enrolledFactors.length).to.equal(2);
+        expect(userRecord.multiFactor!.enrolledFactors.length).to.equal(2);
         // Confirm first enrolled second factor.
-        const firstMultiFactor = userRecord.multiFactor.enrolledFactors[0];
+        const firstMultiFactor = userRecord.multiFactor!.enrolledFactors[0];
         expect(firstMultiFactor.uid).not.to.be.undefined;
         expect(firstMultiFactor.enrollmentTime).not.to.be.undefined;
         expect(firstMultiFactor.phoneNumber).to.equal(enrolledFactors[0].phoneNumber);
         expect(firstMultiFactor.displayName).to.equal(enrolledFactors[0].displayName);
         expect(firstMultiFactor.factorId).to.equal(enrolledFactors[0].factorId);
         // Confirm second enrolled second factor.
-        const secondMultiFactor = userRecord.multiFactor.enrolledFactors[1];
+        const secondMultiFactor = userRecord.multiFactor!.enrolledFactors[1];
         expect(secondMultiFactor.uid).not.to.be.undefined;
         expect(secondMultiFactor.enrollmentTime).not.to.be.undefined;
         expect(secondMultiFactor.phoneNumber).to.equal(enrolledFactors[1].phoneNumber);
@@ -413,7 +413,7 @@ describe('admin.auth', () => {
         });
       })
       .then((userRecord) => {
-        expect(userRecord.multiFactor.enrolledFactors.length).to.equal(1);
+        expect(userRecord.multiFactor!.enrolledFactors.length).to.equal(1);
         const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
         expect(actualUserRecord.multiFactor.enrolledFactors[0]).to.deep.equal(enrolledFactors[0]);
         // Remove all second factors.

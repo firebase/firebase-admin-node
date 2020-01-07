@@ -854,7 +854,7 @@ describe('UserImportBuilder', () => {
           {
             index: 9,
             error: new FirebaseAuthError(
-              AuthClientErrorCode.INVALID_ENROLLED_FACTORS,
+              AuthClientErrorCode.UNSUPPORTED_SECOND_FACTOR,
               `Unsupported second factor "${JSON.stringify(testUsers[9].multiFactor!.enrolledFactors[0])}" provided.`),
           },
         ],

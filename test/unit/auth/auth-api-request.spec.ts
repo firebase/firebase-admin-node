@@ -1530,7 +1530,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             {
               index: 22,
               error: new FirebaseAuthError(
-                AuthClientErrorCode.INVALID_ENROLLED_FACTORS,
+                AuthClientErrorCode.UNSUPPORTED_SECOND_FACTOR,
                 `Unsupported second factor "${JSON.stringify(testUsers[22].multiFactor.enrolledFactors[0])}" provided.`,
               ),
             },
@@ -2032,7 +2032,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         {
           name: 'invalid second factor type',
           error: new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_ENROLLED_FACTORS,
+            AuthClientErrorCode.UNSUPPORTED_SECOND_FACTOR,
             `Unsupported second factor "${JSON.stringify(unsupportedSecondFactor)}" provided.`),
           secondFactor: unsupportedSecondFactor,
         },
@@ -2512,7 +2512,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           {
             name: 'invalid second factor type',
             error: new FirebaseAuthError(
-              AuthClientErrorCode.INVALID_ENROLLED_FACTORS,
+              AuthClientErrorCode.UNSUPPORTED_SECOND_FACTOR,
               `Unsupported second factor "${JSON.stringify(unsupportedSecondFactor)}" provided.`),
             secondFactor: unsupportedSecondFactor,
           },

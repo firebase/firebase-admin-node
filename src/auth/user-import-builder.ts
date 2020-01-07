@@ -183,7 +183,7 @@ export function convertMultiFactorInfoToServerFormat(multiFactorInfo: SecondFact
   } else {
     // Unsupported second factor.
     throw new FirebaseAuthError(
-      AuthClientErrorCode.INVALID_ENROLLED_FACTORS,
+      AuthClientErrorCode.UNSUPPORTED_SECOND_FACTOR,
       `Unsupported second factor "${JSON.stringify(multiFactorInfo)}" provided.`);
   }
 }
