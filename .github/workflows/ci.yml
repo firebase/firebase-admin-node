@@ -1,4 +1,4 @@
-name: Node CI
+name: Node.js Continous Integration
 
 on: [push, pull_request]
 
@@ -13,11 +13,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    - name: Use Node.js ${{ matrix.node-version }}
+    - name: Set up Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    - name: npm install, build, and test
+    - name: Install, build and test
       run: |
         npm ci
         npm run build
