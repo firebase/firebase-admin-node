@@ -15,7 +15,7 @@
  */
 
 import {FirebaseApp, FirebaseAppOptions} from '../firebase-app';
-import {ServiceAccountCredential} from '../auth/credential';
+import {ServiceAccountCredential, ComputeEngineCredential} from '../auth/credential';
 
 import * as validator from './validator';
 
@@ -56,14 +56,15 @@ export function addReadonlyGetter(obj: object, prop: string, value: any): void {
 }
 
 /**
- * Determines the Google Cloud project ID associated with a Firebase app by examining
- * the Firebase app options, credentials and the local environment in that order.
+ * Returns the Google Cloud project ID associated with a Firebase app, if it's explicitly
+ * specified in either the Firebase app options, credentials or the local environment.
+ * Otherwise returns null.
  *
  * @param {FirebaseApp} app A Firebase app to get the project ID from.
  *
  * @return {string} A project ID string or null.
  */
-export function getProjectId(app: FirebaseApp): string | null {
+export function getExplicitProjectId(app: FirebaseApp): string | null {
   const options: FirebaseAppOptions = app.options;
   if (validator.isNonEmptyString(options.projectId)) {
     return options.projectId;
@@ -82,17 +83,28 @@ export function getProjectId(app: FirebaseApp): string | null {
 }
 
 /**
- * Determines the Google Cloud project ID associated with a Firebase app by examining
- * the Firebase app options, credentials and the local environment in that order. This
- * is an async wrapper of the getProjectId method. This enables us to migrate the rest
- * of the SDK into asynchronously determining the current project ID. See b/143090254.
+ * Determines the Google Cloud project ID associated with a Firebase app. This method
+ * first checks if a project ID is explicitly specified in either the Firebase app options,
+ * credentials or the local environment in that order. If no explicit project ID is
+ * configured, but the SDK has been initialized with ComputeEngineCredentials, this
+ * method attempts to discover the project ID from the local metadata service.
  *
  * @param {FirebaseApp} app A Firebase app to get the project ID from.
  *
  * @return {Promise<string | null>} A project ID string or null.
  */
 export function findProjectId(app: FirebaseApp): Promise<string | null> {
-  return Promise.resolve(getProjectId(app));
+  const projectId = getExplicitProjectId(app);
+  if (projectId) {
+    return Promise.resolve(projectId);
+  }
+
+  const credential = app.options.credential;
+  if (credential instanceof ComputeEngineCredential) {
+    return credential.getProjectId();
+  }
+
+  return Promise.resolve(null);
 }
 
 /**

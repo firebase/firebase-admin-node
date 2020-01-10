@@ -71,7 +71,7 @@ export function getFirestoreOptions(app: FirebaseApp): Settings {
     });
   }
 
-  const projectId: string | null = utils.getProjectId(app);
+  const projectId: string | null = utils.getExplicitProjectId(app);
   const credential = app.options.credential;
   const { version: firebaseVersion } = require('../../package.json');
   if (credential instanceof ServiceAccountCredential) {
@@ -80,8 +80,8 @@ export function getFirestoreOptions(app: FirebaseApp): Settings {
         private_key: credential.privateKey,
         client_email: credential.clientEmail,
       },
-      // When the SDK is initialized with ServiceAccountCredentials projectId is guaranteed to
-      // be available.
+      // When the SDK is initialized with ServiceAccountCredentials an explicit projectId is
+      // guaranteed to be available.
       projectId: projectId!,
       firebaseVersion,
     };

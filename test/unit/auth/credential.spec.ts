@@ -36,6 +36,7 @@ import {
 } from '../../../src/auth/credential';
 import { HttpClient } from '../../../src/utils/api-request';
 import {Agent} from 'https';
+import { FirebaseAppError } from '../../../src/utils/error';
 
 chai.should();
 chai.use(sinonChai);
@@ -313,13 +314,13 @@ describe('Credential', () => {
     });
 
     it('should discover project id', () => {
-      const expected = 'test-project-id';
-      const response = utils.responseFrom(expected);
+      const expectedProjectId = 'test-project-id';
+      const response = utils.responseFrom(expectedProjectId);
       httpStub.resolves(response);
 
       const c = new ComputeEngineCredential();
       return c.getProjectId().then((projectId) => {
-        expect(projectId).to.equal(expected);
+        expect(projectId).to.equal(expectedProjectId);
         expect(httpStub).to.have.been.calledOnce.and.calledWith({
           method: 'GET',
           url: 'http://metadata.google.internal/computeMetadata/v1/project/project-id',
@@ -327,6 +328,47 @@ describe('Credential', () => {
           httpAgent: undefined,
         });
       });
+    });
+
+    it('should cache discovered project id', () => {
+      const expectedProjectId = 'test-project-id';
+      const response = utils.responseFrom(expectedProjectId);
+      httpStub.resolves(response);
+
+      const c = new ComputeEngineCredential();
+      return c.getProjectId()
+        .then((projectId) => {
+          expect(projectId).to.equal(expectedProjectId);
+          return c.getProjectId();
+        })
+        .then((projectId) => {
+          expect(projectId).to.equal(expectedProjectId);
+          expect(httpStub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url: 'http://metadata.google.internal/computeMetadata/v1/project/project-id',
+            headers: {'Metadata-Flavor': 'Google'},
+            httpAgent: undefined,
+          });
+        });
+    });
+
+    it('should reject when the metadata service is not available', () => {
+      httpStub.rejects(new FirebaseAppError('network-error', 'Failed to connect'));
+
+      const c = new ComputeEngineCredential();
+      return c.getProjectId().should.eventually
+        .rejectedWith('Failed to determine project ID: Failed to connect')
+        .and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should reject when the metadata service responds with an error', () => {
+      const response = utils.errorFrom('Unexpected error');
+      httpStub.rejects(response);
+
+      const c = new ComputeEngineCredential();
+      return c.getProjectId().should.eventually
+        .rejectedWith('Failed to determine project ID: Unexpected error')
+        .and.have.property('code', 'app/invalid-credential');
     });
   });
 
