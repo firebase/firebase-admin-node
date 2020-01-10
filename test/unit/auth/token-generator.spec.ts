@@ -28,7 +28,7 @@ import {
   BLACKLISTED_CLAIMS, FirebaseTokenGenerator, ServiceAccountSigner, IAMSigner,
 } from '../../../src/auth/token-generator';
 
-import {Certificate} from '../../../src/auth/credential';
+import { ServiceAccountCredential } from '../../../src/auth/credential';
 import { AuthorizedHttpClient, HttpClient } from '../../../src/utils/api-request';
 import { FirebaseApp } from '../../../src/firebase-app';
 import * as utils from '../utils';
@@ -71,18 +71,18 @@ describe('CryptoSigner', () => {
       expect(() => {
         const anyServiceAccountSigner: any = ServiceAccountSigner;
         return new anyServiceAccountSigner();
-      }).to.throw('Must provide a certificate to initialize ServiceAccountSigner');
+      }).to.throw('Must provide a service account credential to initialize ServiceAccountSigner');
     });
 
     it('should not throw given a valid certificate', () => {
       expect(() => {
-        return new ServiceAccountSigner(new Certificate(mocks.certificateObject));
+        return new ServiceAccountSigner(new ServiceAccountCredential(mocks.certificateObject));
       }).not.to.throw();
     });
 
     it('should sign using the private_key in the certificate', () => {
       const payload = Buffer.from('test');
-      const cert = new Certificate(mocks.certificateObject);
+      const cert = new ServiceAccountCredential(mocks.certificateObject);
 
       const crypto = require('crypto');
       const rsa = crypto.createSign('RSA-SHA256');
@@ -96,7 +96,7 @@ describe('CryptoSigner', () => {
     });
 
     it('should return the client_email from the certificate', () => {
-      const cert = new Certificate(mocks.certificateObject);
+      const cert = new ServiceAccountCredential(mocks.certificateObject);
       const signer = new ServiceAccountSigner(cert);
       return signer.getAccountId().should.eventually.equal(cert.clientEmail);
     });
@@ -255,7 +255,7 @@ describe('CryptoSigner', () => {
 
 describe('FirebaseTokenGenerator', () => {
   const tenantId = 'tenantId1';
-  const cert = new Certificate(mocks.certificateObject);
+  const cert = new ServiceAccountCredential(mocks.certificateObject);
 
   let clock: sinon.SinonFakeTimers | undefined;
   afterEach(() => {

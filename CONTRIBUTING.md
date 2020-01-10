@@ -183,6 +183,21 @@ integration tests can pass, launch the tests as follows:
 $ npm run test:integration -- --updateRules
 ```
 
+The integration test suite skips the multi-tenancy Auth tests by default.
+If you want to run these tests, an
+[Identity Platform](https://cloud.google.com/identity-platform/) project with multi-tenancy
+[enabled](https://cloud.google.com/identity-platform/docs/multi-tenancy-quickstart#enabling_multi-tenancy)
+will be required.
+An existing Firebase project can be upgraded to an Identity Platform project without
+losing any functionality via the
+[Identity Platform Marketplace Page](https://console.cloud.google.com/customer-identity).
+Note that charges may be incurred for active users beyond the Identity Platform free tier.
+The integration tests can be launched with these tests enabled as follows:
+
+```bash
+$ npm run test:integration -- --testMultiTenancy
+```
+
 ### Repo Organization
 
 Here are some highlights of the directory structure and notable source files

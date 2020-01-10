@@ -15,7 +15,7 @@
  */
 
 import { FirebaseApp } from '../firebase-app';
-import {Certificate, tryGetCertificate} from './credential';
+import {ServiceAccountCredential} from './credential';
 import {AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import { AuthorizedHttpClient, HttpError, HttpRequestConfig, HttpClient } from '../utils/api-request';
 
@@ -82,28 +82,19 @@ interface JWTBody {
  * sign data. Performs all operations locally, and does not make any RPC calls.
  */
 export class ServiceAccountSigner implements CryptoSigner {
-  private readonly certificate: Certificate;
 
   /**
-   * Creates a new CryptoSigner instance from the given service account certificate.
+   * Creates a new CryptoSigner instance from the given service account credential.
    *
-   * @param {Certificate} certificate A service account certificate.
+   * @param {ServiceAccountCredential} credential A service account credential.
    */
-  constructor(certificate: Certificate) {
-    if (!certificate) {
+  constructor(private readonly credential: ServiceAccountCredential) {
+    if (!credential) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_CREDENTIAL,
-        'INTERNAL ASSERT: Must provide a certificate to initialize ServiceAccountSigner.',
+        'INTERNAL ASSERT: Must provide a service account credential to initialize ServiceAccountSigner.',
       );
     }
-    if (!validator.isNonEmptyString(certificate.clientEmail) || !validator.isNonEmptyString(certificate.privateKey)) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CREDENTIAL,
-        'INTERNAL ASSERT: Must provide a certificate with validate clientEmail and privateKey to ' +
-        'initialize ServiceAccountSigner.',
-      );
-    }
-    this.certificate = certificate;
   }
 
   /**
@@ -113,14 +104,14 @@ export class ServiceAccountSigner implements CryptoSigner {
     const crypto = require('crypto');
     const sign = crypto.createSign('RSA-SHA256');
     sign.update(buffer);
-    return Promise.resolve(sign.sign(this.certificate.privateKey));
+    return Promise.resolve(sign.sign(this.credential.privateKey));
   }
 
   /**
    * @inheritDoc
    */
   public getAccountId(): Promise<string> {
-    return Promise.resolve(this.certificate.clientEmail);
+    return Promise.resolve(this.credential.clientEmail);
   }
 }
 
@@ -232,12 +223,11 @@ export class IAMSigner implements CryptoSigner {
  * @return {CryptoSigner} A CryptoSigner instance.
  */
 export function cryptoSignerFromApp(app: FirebaseApp): CryptoSigner {
-  if (app.options.credential) {
-    const cert = tryGetCertificate(app.options.credential);
-    if (cert != null && validator.isNonEmptyString(cert.privateKey) && validator.isNonEmptyString(cert.clientEmail)) {
-      return new ServiceAccountSigner(cert);
-    }
+  const credential = app.options.credential;
+  if (credential instanceof ServiceAccountCredential) {
+    return new ServiceAccountSigner(credential);
   }
+
   return new IAMSigner(new AuthorizedHttpClient(app), app.options.serviceAccountId);
 }
 

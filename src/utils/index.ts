@@ -15,7 +15,7 @@
  */
 
 import {FirebaseApp, FirebaseAppOptions} from '../firebase-app';
-import {Certificate, tryGetCertificate} from '../auth/credential';
+import {ServiceAccountCredential} from '../auth/credential';
 
 import * as validator from './validator';
 
@@ -69,9 +69,9 @@ export function getProjectId(app: FirebaseApp): string | null {
     return options.projectId;
   }
 
-  const cert: Certificate | null = tryGetCertificate(options.credential);
-  if (cert != null && validator.isNonEmptyString(cert.projectId)) {
-    return cert.projectId;
+  const credential = app.options.credential;
+  if (credential instanceof ServiceAccountCredential) {
+    return credential.projectId;
   }
 
   const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT;

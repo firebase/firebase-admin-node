@@ -23,7 +23,9 @@ import { SecurityRulesApiClient, RulesetContent } from '../../../src/security-ru
 import { FirebaseSecurityRulesError } from '../../../src/security-rules/security-rules-utils';
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';
+import * as mocks from '../../resources/mocks';
 import { FirebaseAppError } from '../../../src/utils/error';
+import { FirebaseApp } from '../../../src/firebase-app';
 
 const expect = chai.expect;
 
@@ -39,35 +41,41 @@ describe('SecurityRulesApiClient', () => {
     },
   };
   const EXPECTED_HEADERS = {
+    'Authorization': 'Bearer mock-token',
     'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
   };
+  const noProjectId = 'Failed to determine project ID. Initialize the SDK with service '
+    + 'account credentials, or set project ID as an app option. Alternatively, set the '
+    + 'GOOGLE_CLOUD_PROJECT environment variable.';
 
-  const apiClient: SecurityRulesApiClient = new SecurityRulesApiClient(
-    new HttpClient(), 'test-project');
+  const mockOptions = {
+    credential: new mocks.MockCredential(),
+    projectId: 'test-project',
+  };
+
+  const clientWithoutProjectId = new SecurityRulesApiClient(
+    mocks.mockCredentialApp());
 
   // Stubs used to simulate underlying api calls.
   let stubs: sinon.SinonStub[] = [];
+  let app: FirebaseApp;
+  let apiClient: SecurityRulesApiClient;
+
+  beforeEach(() => {
+    app = mocks.appWithOptions(mockOptions);
+    apiClient = new SecurityRulesApiClient(app);
+  });
 
   afterEach(() => {
     _.forEach(stubs, (stub) => stub.restore());
     stubs = [];
+    return app.delete();
   });
 
   describe('Constructor', () => {
-    it('should throw when the HttpClient is null', () => {
-      expect(() => new SecurityRulesApiClient(null as unknown as HttpClient, 'test'))
-        .to.throw('HttpClient must be a non-null object.');
-    });
-
-    const invalidProjectIds: any[] = [null, undefined, '', {}, [], true, 1];
-    const noProjectId = 'Failed to determine project ID. Initialize the SDK with service '
-      + 'account credentials, or set project ID as an app option. Alternatively, set the '
-      + 'GOOGLE_CLOUD_PROJECT environment variable.';
-    invalidProjectIds.forEach((invalidProjectId) => {
-      it(`should throw when the projectId is: ${invalidProjectId}`, () => {
-        expect(() => new SecurityRulesApiClient(new HttpClient(), invalidProjectId))
-          .to.throw(noProjectId);
-      });
+    it('should throw when the app is null', () => {
+      expect(() => new SecurityRulesApiClient(null as unknown as FirebaseApp))
+        .to.throw('First argument passed to admin.securityRules() must be a valid Firebase app');
     });
   });
 
@@ -85,6 +93,11 @@ describe('SecurityRulesApiClient', () => {
       return apiClient.getRuleset('projects/foo/rulesets/bar')
         .should.eventually.be.rejected.and.have.property(
           'message', 'Ruleset name must not contain any "/" characters.');
+    });
+
+    it(`should reject when project id is not available`, () => {
+      return clientWithoutProjectId.getRuleset(RULESET_NAME)
+        .should.eventually.be.rejectedWith(noProjectId);
     });
 
     it('should resolve with the requested ruleset on success', () => {
@@ -164,6 +177,14 @@ describe('SecurityRulesApiClient', () => {
           .should.eventually.be.rejected.and.have.property(
             'message', 'Invalid rules content.');
       });
+    });
+
+    it(`should reject when project id is not available`, () => {
+      return clientWithoutProjectId.createRuleset({
+        source: {
+          files: [RULES_FILE],
+        },
+      }).should.eventually.be.rejectedWith(noProjectId);
     });
 
     const invalidFiles: any[] = [null, undefined, 'test', {}, { name: 'test' }, { content: 'test' }];
@@ -306,6 +327,11 @@ describe('SecurityRulesApiClient', () => {
       });
     });
 
+    it(`should reject when project id is not available`, () => {
+      return clientWithoutProjectId.listRulesets()
+        .should.eventually.be.rejectedWith(noProjectId);
+    });
+
     it('should resolve on success when called without any arguments', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
@@ -400,6 +426,11 @@ describe('SecurityRulesApiClient', () => {
   });
 
   describe('getRelease', () => {
+    it(`should reject when project id is not available`, () => {
+      return clientWithoutProjectId.getRelease(RELEASE_NAME)
+        .should.eventually.be.rejectedWith(noProjectId);
+    });
+
     it('should resolve with the requested release on success', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
@@ -459,6 +490,11 @@ describe('SecurityRulesApiClient', () => {
   });
 
   describe('updateRelease', () => {
+    it(`should reject when project id is not available`, () => {
+      return clientWithoutProjectId.updateRelease(RELEASE_NAME, RULESET_NAME)
+        .should.eventually.be.rejectedWith(noProjectId);
+    });
+
     it('should resolve with the updated release on success', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
@@ -537,6 +573,11 @@ describe('SecurityRulesApiClient', () => {
       return apiClient.deleteRuleset('projects/foo/rulesets/bar')
         .should.eventually.be.rejected.and.have.property(
           'message', 'Ruleset name must not contain any "/" characters.');
+    });
+
+    it(`should reject when project id is not available`, () => {
+      return clientWithoutProjectId.deleteRuleset(RULESET_NAME)
+        .should.eventually.be.rejectedWith(noProjectId);
     });
 
     it('should resolve on success', () => {
