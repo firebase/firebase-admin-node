@@ -72,7 +72,7 @@ describe('toWebSafeBase64()', () => {
   });
 });
 
-describe('getProjectId()', () => {
+describe('getExplicitProjectId()', () => {
   let googleCloudProject: string | undefined;
   let gcloudProject: string | undefined;
 
@@ -190,13 +190,13 @@ describe('findProjectId()', () => {
   });
 
   it('should return the project ID discovered from the metadata service', () => {
-    const expected = 'test-project-id';
-    const response = utils.responseFrom(expected);
+    const expectedProjectId = 'test-project-id';
+    const response = utils.responseFrom(expectedProjectId);
     httpStub.resolves(response);
     const app: FirebaseApp = mocks.appWithOptions({
       credential: new ComputeEngineCredential(),
     });
-    return findProjectId(app).should.eventually.equal(expected);
+    return findProjectId(app).should.eventually.equal(expectedProjectId);
   });
 
   it('should reject when the metadata service is not available', () => {

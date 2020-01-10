@@ -314,13 +314,13 @@ describe('Credential', () => {
     });
 
     it('should discover project id', () => {
-      const expected = 'test-project-id';
-      const response = utils.responseFrom(expected);
+      const expectedProjectId = 'test-project-id';
+      const response = utils.responseFrom(expectedProjectId);
       httpStub.resolves(response);
 
       const c = new ComputeEngineCredential();
       return c.getProjectId().then((projectId) => {
-        expect(projectId).to.equal(expected);
+        expect(projectId).to.equal(expectedProjectId);
         expect(httpStub).to.have.been.calledOnce.and.calledWith({
           method: 'GET',
           url: 'http://metadata.google.internal/computeMetadata/v1/project/project-id',
@@ -331,18 +331,18 @@ describe('Credential', () => {
     });
 
     it('should cache discovered project id', () => {
-      const expected = 'test-project-id';
-      const response = utils.responseFrom(expected);
+      const expectedProjectId = 'test-project-id';
+      const response = utils.responseFrom(expectedProjectId);
       httpStub.resolves(response);
 
       const c = new ComputeEngineCredential();
       return c.getProjectId()
         .then((projectId) => {
-          expect(projectId).to.equal(expected);
+          expect(projectId).to.equal(expectedProjectId);
           return c.getProjectId();
         })
         .then((projectId) => {
-          expect(projectId).to.equal(expected);
+          expect(projectId).to.equal(expectedProjectId);
           expect(httpStub).to.have.been.calledOnce.and.calledWith({
             method: 'GET',
             url: 'http://metadata.google.internal/computeMetadata/v1/project/project-id',
