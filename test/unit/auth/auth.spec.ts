@@ -1340,9 +1340,9 @@ AUTH_CONFIGS.forEach((testConfig) => {
           });
       });
 
-      it('should be rejected when given more than 100 identifiers', () => {
+      it('should be rejected when given more than 1000 identifiers', () => {
         const ids: string[] = [];
-        for (let i = 0; i < 101; i++) {
+        for (let i = 0; i < 1001; i++) {
           ids.push('id' + i);
         }
 

@@ -512,6 +512,10 @@ export class AuthClientErrorCode {
     code: 'invalid-provider-id',
     message: 'The providerId must be a valid supported provider identifier string.',
   };
+  public static INVALID_PROVIDER_UID = {
+    code: 'invalid-provider-uid',
+    message: 'The providerUid must be a valid provider uid string.',
+  };
   public static INVALID_SESSION_COOKIE_DURATION = {
     code: 'invalid-session-cookie-duration',
     message: 'The session cookie duration must be a valid number in milliseconds ' +

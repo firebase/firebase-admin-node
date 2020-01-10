@@ -70,6 +70,12 @@ const MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE = 1000;
 /** Maximum allowed number of users to batch upload at one time. */
 const MAX_UPLOAD_ACCOUNT_BATCH_SIZE = 1000;
 
+/** Maximum allowed number of users to batch get at one time. */
+const MAX_GET_ACCOUNTS_BATCH_SIZE = 100;
+
+/** Maximum allowed numberof users to batch delete at one time. */
+const MAX_DELETE_ACCOUNTS_BATCH_SIZE = 1000;
+
 /** Minimum allowed session cookie duration in seconds (5 minutes). */
 const MIN_SESSION_COOKIE_DURATION_SECS = 5 * 60;
 
@@ -543,11 +549,16 @@ export const FIREBASE_AUTH_BATCH_DELETE_ACCOUNTS = new ApiSettings('/accounts:ba
         AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Server request is missing user identifiers');
     }
+    if (typeof request.force === 'undefined' || request.force !== true) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Server request is missing force=true field');
+    }
   })
   .setResponseValidator((response: BatchDeleteAccountsResponse) => {
     const errors = response.errors || [];
     errors.forEach((batchDeleteErrorInfo) => {
-      if (batchDeleteErrorInfo.index === undefined) {
+      if (typeof batchDeleteErrorInfo.index === 'undefined') {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INTERNAL_ERROR,
           'INTERNAL ASSERT FAILED: Server BatchDeleteAccountResponse is missing an errors.index field');
@@ -819,8 +830,11 @@ export abstract class AbstractAuthRequestHandler {
   }
 
   private static addProviderToRequest(id: ProviderIdentifier, request: GetAccountInfoRequest): GetAccountInfoRequest {
-    if (!validator.isNonEmptyString(id.providerUid) || !validator.isNonEmptyString(id.providerId)) {
+    if (!validator.isNonEmptyString(id.providerId)) {
       throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
+    }
+    if (!validator.isNonEmptyString(id.providerUid)) {
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_UID);
     }
     const federatedUserId = {
       providerId: id.providerId,
@@ -929,10 +943,10 @@ export abstract class AbstractAuthRequestHandler {
   public getAccountInfoByIdentifiers(identifiers: UserIdentifier[]): Promise<object> {
     if (identifiers.length === 0) {
       return Promise.resolve({users: []});
-    } else if (identifiers.length > 100) {
+    } else if (identifiers.length > MAX_GET_ACCOUNTS_BATCH_SIZE) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.MAXIMUM_USER_COUNT_EXCEEDED,
-        '`identifiers` parameter must have <= 100 entries.');
+        '`identifiers` parameter must have <= ' + MAX_GET_ACCOUNTS_BATCH_SIZE + ' entries.');
     }
 
     let request: GetAccountInfoRequest = {};
@@ -1056,10 +1070,10 @@ export abstract class AbstractAuthRequestHandler {
   public deleteAccounts(uids: string[], force: boolean): Promise<BatchDeleteAccountsResponse> {
     if (uids.length === 0) {
       return Promise.resolve({});
-    } else if (uids.length > 100) {
+    } else if (uids.length > MAX_DELETE_ACCOUNTS_BATCH_SIZE) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.MAXIMUM_USER_COUNT_EXCEEDED,
-        '`uids` parameter must have <= 100 entries.');
+        '`uids` parameter must have <= ' + MAX_DELETE_ACCOUNTS_BATCH_SIZE + ' entries.');
     }
 
     const request: BatchDeleteAccountsRequest = {

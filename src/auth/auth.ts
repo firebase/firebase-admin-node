@@ -252,16 +252,16 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
          * Checks if the specified identifier is within the list of
          * UserRecords.
          */
-        const isUserFound = ((id: UserIdentifier, urs: UserRecord[]): boolean => {
-          return !!urs.find((ur) => {
+        const isUserFound = ((id: UserIdentifier, userRecords: UserRecord[]): boolean => {
+          return !!userRecords.find((userRecord) => {
             if (isUidIdentifier(id)) {
-              return id.uid === ur.uid;
+              return id.uid === userRecord.uid;
             } else if (isEmailIdentifier(id)) {
-              return id.email === ur.email;
+              return id.email === userRecord.email;
             } else if (isPhoneIdentifier(id)) {
-              return id.phoneNumber === ur.phoneNumber;
+              return id.phoneNumber === userRecord.phoneNumber;
             } else if (isProviderIdentifier(id)) {
-              const matchingUserInfo = ur.providerData.find((userInfo) => {
+              const matchingUserInfo = userRecord.providerData.find((userInfo) => {
                 return id.providerId === userInfo.providerId;
               });
               return !!matchingUserInfo && id.providerUid === matchingUserInfo.uid;

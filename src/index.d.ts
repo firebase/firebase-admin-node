@@ -1574,7 +1574,7 @@ declare namespace admin.auth {
     deleteUser(uid: string): Promise<void>;
 
     /**
-     * Deletes the users specified by the given identifiers.
+     * Deletes the users specified by the given uids.
      *
      * Deletes multiple existing users. Deleting a non-existing user won't
      * generate an error. (i.e. this method is idempotent.)
@@ -1582,7 +1582,7 @@ declare namespace admin.auth {
      * @param uids The `uids` corresponding to the users to delete.
      *
      * @return A Promise that resolves to the total number of successful/failed
-     *     deletions, as well as the array of errors that correspond to the
+     *     deletions, as well as the array of errors that corresponds to the
      *     failed deletions.
      */
     deleteUsers(uids: string[]): Promise<admin.auth.DeleteUsersResult>;
