@@ -198,6 +198,7 @@ export class ComputeEngineCredential implements Credential {
 
   private readonly httpClient = new HttpClient();
   private readonly httpAgent?: Agent;
+  private projectId?: string;
 
   constructor(httpAgent?: Agent) {
     this.httpAgent = httpAgent;
@@ -209,10 +210,21 @@ export class ComputeEngineCredential implements Credential {
   }
 
   public getProjectId(): Promise<string> {
+    if (this.projectId) {
+      return Promise.resolve(this.projectId);
+    }
+
     const request = this.buildRequest(GOOGLE_METADATA_SERVICE_PROJECT_ID_PATH);
     return this.httpClient.send(request)
       .then((resp) => {
-        return resp.text!;
+        this.projectId = resp.text!;
+        return this.projectId;
+      })
+      .catch((err) => {
+        const detail: string = (err instanceof HttpError) ? getDetailFromResponse(err.response) : err.message;
+        throw new FirebaseAppError(
+          AppErrorCodes.INVALID_CREDENTIAL,
+          `Failed to determine project ID: ${detail}`);
       });
   }
 

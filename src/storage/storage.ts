@@ -71,12 +71,12 @@ export class Storage implements FirebaseServiceInterface {
       });
     }
 
-    const projectId: string | null = utils.getProjectId(app);
+    const projectId: string | null = utils.getExplicitProjectId(app);
     const credential = app.options.credential;
     if (credential instanceof ServiceAccountCredential) {
       this.storageClient = new storage({
-        // When the SDK is initialized with ServiceAccountCredentials projectId is guaranteed to
-        // be available.
+        // When the SDK is initialized with ServiceAccountCredentials an explicit projectId is
+        // guaranteed to be available.
         projectId: projectId!,
         credentials: {
           private_key: credential.privateKey,
