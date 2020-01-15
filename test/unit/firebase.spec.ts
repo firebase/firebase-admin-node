@@ -27,7 +27,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as mocks from '../resources/mocks';
 
 import * as firebaseAdmin from '../../src/index';
-import {ApplicationDefaultCredential, CertCredential, RefreshTokenCredential} from '../../src/auth/credential';
+import {RefreshTokenCredential, ServiceAccountCredential} from '../../src/auth/credential';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -39,7 +39,7 @@ describe('Firebase', () => {
   let getTokenStub: sinon.SinonStub;
 
   before(() => {
-    getTokenStub = sinon.stub(CertCredential.prototype, 'getAccessToken').resolves({
+    getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken').resolves({
       access_token: 'mock-access-token',
       expires_in: 3600,
     });
@@ -71,7 +71,7 @@ describe('Firebase', () => {
     it('should use application default credentials when no credentials are explicitly specified', () => {
       const app = firebaseAdmin.initializeApp(mocks.appOptionsNoAuth);
       expect(app.options).to.have.property('credential');
-      expect(app.options.credential).to.be.instanceOf(ApplicationDefaultCredential);
+      expect(app.options.credential).to.not.be.undefined;
     });
 
     it('should not modify the provided options object', () => {
@@ -127,7 +127,7 @@ describe('Firebase', () => {
     });
 
     it('should initialize SDK given an application default credential', () => {
-      let credPath: string;
+      let credPath: string | undefined;
       credPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
       process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../resources/mock.key.json');
       firebaseAdmin.initializeApp({

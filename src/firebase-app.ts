@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {ApplicationDefaultCredential, Credential, GoogleOAuthAccessToken} from './auth/credential';
+import {Credential, GoogleOAuthAccessToken, getApplicationDefault} from './auth/credential';
 import * as validator from './utils/validator';
 import {deepCopy, deepExtend} from './utils/deep-copy';
 import {FirebaseServiceInterface} from './firebase-service';
@@ -67,7 +67,7 @@ export interface FirebaseAccessToken {
 export class FirebaseAppInternals {
   private isDeleted_ = false;
   private cachedToken_: FirebaseAccessToken;
-  private cachedTokenPromise_: Promise<FirebaseAccessToken>;
+  private cachedTokenPromise_: Promise<FirebaseAccessToken> | null;
   private tokenListeners_: Array<(token: string) => void>;
   private tokenRefreshTimeout_: NodeJS.Timer;
 
@@ -264,7 +264,7 @@ export class FirebaseApp {
 
     const hasCredential = ('credential' in this.options_);
     if (!hasCredential) {
-      this.options_.credential = new ApplicationDefaultCredential();
+      this.options_.credential = getApplicationDefault(this.options_.httpAgent);
     }
 
     const credential = this.options_.credential;
@@ -282,7 +282,7 @@ export class FirebaseApp {
       (this as {[key: string]: any})[serviceName] = this.getService_.bind(this, serviceName);
     });
 
-    this.INTERNAL = new FirebaseAppInternals(this.options_.credential);
+    this.INTERNAL = new FirebaseAppInternals(credential);
   }
 
   /**

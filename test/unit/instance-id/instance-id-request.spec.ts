@@ -36,7 +36,7 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 describe('FirebaseInstanceIdRequestHandler', () => {
-  const projectId: string = 'test-project-id';
+  const projectId: string = 'project_id';
   const mockAccessToken: string = utils.generateRandomAccessToken();
   let stubs: sinon.SinonStub[] = [];
   let getTokenStub: sinon.SinonStub;
@@ -68,7 +68,7 @@ describe('FirebaseInstanceIdRequestHandler', () => {
   describe('Constructor', () => {
     it('should succeed with a FirebaseApp instance', () => {
       expect(() => {
-        return new FirebaseInstanceIdRequestHandler(mockApp, projectId);
+        return new FirebaseInstanceIdRequestHandler(mockApp);
       }).not.to.throw(Error);
     });
   });
@@ -80,15 +80,13 @@ describe('FirebaseInstanceIdRequestHandler', () => {
     const timeout = 10000;
 
     it('should be fulfilled given a valid instance ID', () => {
-      const expectedResult = {};
       const stub = sinon.stub(HttpClient.prototype, 'send')
-        .resolves(utils.responseFrom(expectedResult));
+        .resolves(utils.responseFrom(''));
       stubs.push(stub);
 
-      const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp, projectId);
+      const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp);
       return requestHandler.deleteInstanceId('test-iid')
-        .then((result) => {
-          expect(result).to.deep.equal(expectedResult);
+        .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: httpMethod,
             url: `https://${host}${path}`,
@@ -103,7 +101,7 @@ describe('FirebaseInstanceIdRequestHandler', () => {
           .rejects(utils.errorFrom({}, 404));
         stubs.push(stub);
 
-        const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp, projectId);
+        const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp);
         return requestHandler.deleteInstanceId('test-iid')
           .then(() => {
             throw new Error('Unexpected success');
@@ -119,7 +117,7 @@ describe('FirebaseInstanceIdRequestHandler', () => {
           .rejects(utils.errorFrom({}, 409));
         stubs.push(stub);
 
-        const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp, projectId);
+        const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp);
         return requestHandler.deleteInstanceId('test-iid')
           .then(() => {
             throw new Error('Unexpected success');
@@ -136,7 +134,7 @@ describe('FirebaseInstanceIdRequestHandler', () => {
           .rejects(utils.errorFrom(expectedResult, 511));
         stubs.push(stub);
 
-        const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp, projectId);
+        const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp);
         return requestHandler.deleteInstanceId('test-iid')
           .then(() => {
             throw new Error('Unexpected success');

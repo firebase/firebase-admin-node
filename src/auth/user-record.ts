@@ -27,9 +27,9 @@ const B64_REDACTED = Buffer.from('REDACTED').toString('base64');
  * Parses a time stamp string or number and returns the corresponding date if valid.
  *
  * @param {any} time The unix timestamp string or number in milliseconds.
- * @return {string} The corresponding date as a UTC string, if valid.
+ * @return {string} The corresponding date as a UTC string, if valid. Otherwise, null.
  */
-function parseDate(time: any): string {
+function parseDate(time: any): string | null {
   try {
     const date = new Date(parseInt(time, 10));
     if (!isNaN(date.getTime())) {
@@ -196,7 +196,7 @@ export class UserRecord {
       // Ignore error.
       utils.addReadonlyGetter(this, 'customClaims', undefined);
     }
-    let validAfterTime: string = null;
+    let validAfterTime: string | null = null;
     // Convert validSince first to UTC milliseconds and then to UTC date string.
     if (typeof response.validSince !== 'undefined') {
       validAfterTime = parseDate(response.validSince * 1000);

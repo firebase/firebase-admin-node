@@ -22,7 +22,7 @@ import {expect} from 'chai';
 
 import * as mocks from '../../resources/mocks';
 import {FirebaseApp} from '../../../src/firebase-app';
-import {ApplicationDefaultCredential} from '../../../src/auth/credential';
+import { ComputeEngineCredential } from '../../../src/auth/credential';
 import {FirestoreService, getFirestoreOptions} from '../../../src/firestore/firestore';
 
 describe('Firestore', () => {
@@ -32,9 +32,9 @@ describe('Firestore', () => {
   let projectIdApp: FirebaseApp;
   let firestore: any;
 
-  let appCredentials: string;
-  let googleCloudProject: string;
-  let gcloudProject: string;
+  let appCredentials: string | undefined;
+  let googleCloudProject: string | undefined;
+  let gcloudProject: string | undefined;
 
   const invalidCredError = 'Failed to initialize Google Cloud Firestore client with the available '
     + 'credentials. Must initialize the SDK with a certificate credential or application default '
@@ -52,7 +52,7 @@ describe('Firestore', () => {
     mockApp = mocks.app();
     mockCredentialApp = mocks.mockCredentialApp();
     defaultCredentialApp = mocks.appWithOptions({
-      credential: new ApplicationDefaultCredential(),
+      credential: new ComputeEngineCredential(),
     });
     projectIdApp = mocks.appWithOptions({
       credential: mocks.credential,
@@ -62,7 +62,11 @@ describe('Firestore', () => {
   });
 
   afterEach(() => {
-    process.env.GOOGLE_APPLICATION_CREDENTIALS = appCredentials;
+    if (appCredentials) {
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = appCredentials;
+    } else {
+      delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+    }
     if (googleCloudProject) {
       process.env.GOOGLE_CLOUD_PROJECT = googleCloudProject;
     } else {

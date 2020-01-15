@@ -40,7 +40,7 @@ const FCM_TOPIC_MANAGEMENT_ADD_PATH = '/iid/v1:batchAdd';
 const FCM_TOPIC_MANAGEMENT_REMOVE_PATH = '/iid/v1:batchRemove';
 
 // Maximum messages that can be included in a batch request.
-const FCM_MAX_BATCH_SIZE = 100;
+const FCM_MAX_BATCH_SIZE = 500;
 
 // Key renames for the messaging notification payload object.
 const CAMELCASED_NOTIFICATION_PAYLOAD_KEYS_MAP = {
@@ -206,8 +206,8 @@ export class Messaging implements FirebaseServiceInterface {
   public INTERNAL: MessagingInternals = new MessagingInternals();
 
   private urlPath: string;
-  private appInternal: FirebaseApp;
-  private messagingRequestHandler: FirebaseMessagingRequestHandler;
+  private readonly appInternal: FirebaseApp;
+  private readonly messagingRequestHandler: FirebaseMessagingRequestHandler;
 
   /**
    * @param {FirebaseApp} app The app for this Messaging service.
@@ -221,18 +221,6 @@ export class Messaging implements FirebaseServiceInterface {
       );
     }
 
-    const projectId: string = utils.getProjectId(app);
-    if (!validator.isNonEmptyString(projectId)) {
-      // Assert for an explicit project ID (either via AppOptions or the cert itself).
-      throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_ARGUMENT,
-        'Failed to determine project ID for Messaging. Initialize the '
-        + 'SDK with service account credentials or set project ID as an app option. '
-        + 'Alternatively set the GOOGLE_CLOUD_PROJECT environment variable.',
-      );
-    }
-
-    this.urlPath = `/v1/projects/${projectId}/messages:send`;
     this.appInternal = app;
     this.messagingRequestHandler = new FirebaseMessagingRequestHandler(app);
   }
@@ -261,13 +249,13 @@ export class Messaging implements FirebaseServiceInterface {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT, 'dryRun must be a boolean');
     }
-    return Promise.resolve()
-      .then(() => {
+    return this.getUrlPath()
+      .then((urlPath) => {
         const request: {message: Message, validate_only?: boolean} = {message: copy};
         if (dryRun) {
           request.validate_only = true;
         }
-        return this.messagingRequestHandler.invokeRequestHandler(FCM_SEND_HOST, this.urlPath, request);
+        return this.messagingRequestHandler.invokeRequestHandler(FCM_SEND_HOST, urlPath, request);
       })
       .then((response) => {
         return (response as any).name;
@@ -283,7 +271,7 @@ export class Messaging implements FirebaseServiceInterface {
    * An error from this method indicates a total failure -- i.e. none of the messages in the
    * list could be sent. Partial failures are indicated by a BatchResponse return value.
    *
-   * @param {Message[]} messages A non-empty array containing up to 100 messages.
+   * @param {Message[]} messages A non-empty array containing up to 500 messages.
    * @param {boolean=} dryRun Whether to send the message in the dry-run (validation only) mode.
    *
    * @return {Promise<BatchResponse>} A Promise fulfilled with an object representing the result
@@ -312,18 +300,21 @@ export class Messaging implements FirebaseServiceInterface {
         MessagingClientErrorCode.INVALID_ARGUMENT, 'dryRun must be a boolean');
     }
 
-    const requests: SubRequest[] = copy.map((message) => {
-      validateMessage(message);
-      const request: {message: Message, validate_only?: boolean} = {message};
-      if (dryRun) {
-        request.validate_only = true;
-      }
-      return {
-        url: `https://${FCM_SEND_HOST}${this.urlPath}`,
-        body: request,
-      };
-    });
-    return this.messagingRequestHandler.sendBatchRequest(requests);
+    return this.getUrlPath()
+      .then((urlPath) => {
+        const requests: SubRequest[] = copy.map((message) => {
+          validateMessage(message);
+          const request: {message: Message, validate_only?: boolean} = {message};
+          if (dryRun) {
+            request.validate_only = true;
+          }
+          return {
+            url: `https://${FCM_SEND_HOST}${urlPath}`,
+            body: request,
+          };
+        });
+        return this.messagingRequestHandler.sendBatchRequest(requests);
+      });
   }
 
   /**
@@ -335,7 +326,7 @@ export class Messaging implements FirebaseServiceInterface {
    * indicates a total failure -- i.e. none of the tokens in the list could be sent to. Partial
    * failures are indicated by a BatchResponse return value.
    *
-   * @param {MulticastMessage} message A multicast message containing up to 100 tokens.
+   * @param {MulticastMessage} message A multicast message containing up to 500 tokens.
    * @param {boolean=} dryRun Whether to send the message in the dry-run (validation only) mode.
    *
    * @return {Promise<BatchResponse>} A Promise fulfilled with an object representing the result
@@ -365,6 +356,7 @@ export class Messaging implements FirebaseServiceInterface {
         data: copy.data,
         notification: copy.notification,
         webpush: copy.webpush,
+        fcmOptions: copy.fcmOptions,
       };
     });
     return this.sendAll(messages, dryRun);
@@ -644,6 +636,28 @@ export class Messaging implements FirebaseServiceInterface {
     );
   }
 
+  private getUrlPath(): Promise<string> {
+    if (this.urlPath) {
+      return Promise.resolve(this.urlPath);
+    }
+
+    return utils.findProjectId(this.app)
+      .then((projectId) => {
+        if (!validator.isNonEmptyString(projectId)) {
+          // Assert for an explicit project ID (either via AppOptions or the cert itself).
+          throw new FirebaseMessagingError(
+            MessagingClientErrorCode.INVALID_ARGUMENT,
+            'Failed to determine project ID for Messaging. Initialize the '
+              + 'SDK with service account credentials or set project ID as an app option. '
+              + 'Alternatively set the GOOGLE_CLOUD_PROJECT environment variable.',
+          );
+        }
+
+        this.urlPath = `/v1/projects/${projectId}/messages:send`;
+        return this.urlPath;
+      });
+  }
+
   /**
    * Helper method which sends and handles topic subscription management requests.
    *
@@ -796,7 +810,7 @@ export class Messaging implements FirebaseServiceInterface {
     // Validate the data payload object does not contain blacklisted properties
     if ('data' in payloadCopy) {
       BLACKLISTED_DATA_PAYLOAD_KEYS.forEach((blacklistedKey) => {
-        if (blacklistedKey in payloadCopy.data) {
+        if (blacklistedKey in payloadCopy.data!) {
           throw new FirebaseMessagingError(
             MessagingClientErrorCode.INVALID_PAYLOAD,
             `Messaging payload contains the blacklisted "data.${ blacklistedKey }" property.`,
@@ -806,7 +820,7 @@ export class Messaging implements FirebaseServiceInterface {
     }
 
     // Convert whitelisted camelCase keys to underscore_case
-    if ('notification' in payloadCopy) {
+    if (payloadCopy.notification) {
       utils.renameProperties(payloadCopy.notification, CAMELCASED_NOTIFICATION_PAYLOAD_KEYS_MAP);
     }
 

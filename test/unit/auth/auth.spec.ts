@@ -16,6 +16,7 @@
 
 'use strict';
 
+import * as jwt from 'jsonwebtoken';
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
@@ -26,9 +27,8 @@ import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
 import {Auth, TenantAwareAuth, BaseAuth, DecodedIdToken} from '../../../src/auth/auth';
-import {UserRecord} from '../../../src/auth/user-record';
+import {UserRecord, UpdateRequest} from '../../../src/auth/user-record';
 import {FirebaseApp} from '../../../src/firebase-app';
-import {FirebaseTokenGenerator} from '../../../src/auth/token-generator';
 import {
   AuthRequestHandler, TenantAwareAuthRequestHandler, AbstractAuthRequestHandler,
 } from '../../../src/auth/auth-api-request';
@@ -42,6 +42,8 @@ import {
 } from '../../../src/auth/auth-config';
 import {deepCopy} from '../../../src/utils/deep-copy';
 import { TenantManager } from '../../../src/auth/tenant-manager';
+import { ServiceAccountCredential } from '../../../src/auth/credential';
+import { HttpClient } from '../../../src/utils/api-request';
 
 chai.should();
 chai.use(sinonChai);
@@ -292,6 +294,15 @@ AUTH_CONFIGS.forEach((testConfig) => {
           }).to.throw('First argument passed to admin.auth() must be a valid Firebase app instance.');
         });
 
+        it('should reject given no project ID', () => {
+          const authWithoutProjectId = new Auth(mocks.mockCredentialApp());
+          authWithoutProjectId.getUser('uid')
+            .should.eventually.be.rejectedWith(
+              'Failed to determine project ID for Auth. Initialize the SDK with service '
+              + 'account credentials or set project ID as an app option. Alternatively set the '
+              + 'GOOGLE_CLOUD_PROJECT environment variable.');
+        });
+
         it('should not throw given a valid app', () => {
           expect(() => {
             return new Auth(mockApp);
@@ -328,81 +339,68 @@ AUTH_CONFIGS.forEach((testConfig) => {
     }
 
     describe('createCustomToken()', () => {
-      let spy: sinon.SinonSpy;
-      beforeEach(() => {
-        spy = sinon.spy(FirebaseTokenGenerator.prototype, 'createCustomToken');
-      });
-
-      afterEach(() => {
-        spy.restore();
+      it('should return a jwt', async () => {
+        const token = await auth.createCustomToken('uid1');
+        const decodedToken = jwt.decode(token, {complete: true});
+        expect(decodedToken).to.have.property('header').that.has.property('typ', 'JWT');
       });
 
       if (testConfig.Auth === TenantAwareAuth) {
-        it('should reject with an unsupported tenant operation error', () => {
-          const expectedError = new FirebaseAuthError(AuthClientErrorCode.UNSUPPORTED_TENANT_OPERATION);
-          return auth.createCustomToken(mocks.uid)
-            .then(() => {
-              throw new Error('Unexpected success');
-            })
-            .catch((error) => {
-              expect(error).to.deep.equal(expectedError);
-            });
+        it('should contain tenant_id', async () => {
+          const token = await auth.createCustomToken('uid1');
+          expect(jwt.decode(token)).to.have.property('tenant_id', TENANT_ID);
         });
       } else {
-        it('should throw if a cert credential is not specified', () => {
-          const mockCredentialAuth = testConfig.init(mocks.mockCredentialApp());
-
-          expect(() => {
-            mockCredentialAuth.createCustomToken(mocks.uid, mocks.developerClaims);
-          }).not.to.throw;
-        });
-
-        it('should forward on the call to the token generator\'s createCustomToken() method', () => {
-          const developerClaimsCopy = deepCopy(mocks.developerClaims);
-          return auth.createCustomToken(mocks.uid, mocks.developerClaims)
-            .then(() => {
-              expect(spy)
-                .to.have.been.calledOnce
-                .and.calledWith(mocks.uid, developerClaimsCopy);
-            });
-        });
-
-        it('should be fulfilled given an app which returns null access tokens', () => {
-          // createCustomToken() does not rely on an access token and therefore works in this scenario.
-          return nullAccessTokenAuth.createCustomToken(mocks.uid, mocks.developerClaims)
-            .should.eventually.be.fulfilled;
-        });
-
-        it('should be fulfilled given an app which returns invalid access tokens', () => {
-          // createCustomToken() does not rely on an access token and therefore works in this scenario.
-          return malformedAccessTokenAuth.createCustomToken(mocks.uid, mocks.developerClaims)
-            .should.eventually.be.fulfilled;
-        });
-
-        it('should be fulfilled given an app which fails to generate access tokens', () => {
-          // createCustomToken() does not rely on an access token and therefore works in this scenario.
-          return rejectedPromiseAccessTokenAuth.createCustomToken(mocks.uid, mocks.developerClaims)
-            .should.eventually.be.fulfilled;
+        it('should not contain tenant_id', async () => {
+          const token = await auth.createCustomToken('uid1');
+          expect(jwt.decode(token)).to.not.have.property('tenant_id');
         });
       }
+
+      it('should be eventually rejected if a cert credential is not specified', () => {
+        const mockCredentialAuth = testConfig.init(mocks.mockCredentialApp());
+        // Force the service account ID discovery to fail.
+        getTokenStub = sinon.stub(HttpClient.prototype, 'send').rejects(utils.errorFrom({}));
+        return mockCredentialAuth.createCustomToken(mocks.uid, mocks.developerClaims)
+          .should.eventually.be.rejected.and.have.property('code', 'auth/invalid-credential');
+      });
+
+      it('should be fulfilled given an app which returns null access tokens', () => {
+        getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken').resolves(null);
+        // createCustomToken() does not rely on an access token and therefore works in this scenario.
+        return auth.createCustomToken(mocks.uid, mocks.developerClaims)
+          .should.eventually.be.fulfilled;
+      });
+
+      it('should be fulfilled given an app which returns invalid access tokens', () => {
+        getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken').resolves('malformed');
+        // createCustomToken() does not rely on an access token and therefore works in this scenario.
+        return auth.createCustomToken(mocks.uid, mocks.developerClaims)
+          .should.eventually.be.fulfilled;
+      });
+
+      it('should be fulfilled given an app which fails to generate access tokens', () => {
+        getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken').rejects('error');
+        // createCustomToken() does not rely on an access token and therefore works in this scenario.
+        return auth.createCustomToken(mocks.uid, mocks.developerClaims)
+          .should.eventually.be.fulfilled;
+      });
     });
 
-    it('verifyIdToken() should throw when project ID is not specified', () => {
+    it('verifyIdToken() should reject when project ID is not specified', () => {
       const mockCredentialAuth = testConfig.init(mocks.mockCredentialApp());
       const expected = 'Must initialize app with a cert credential or set your Firebase project ID ' +
         'as the GOOGLE_CLOUD_PROJECT environment variable to call verifyIdToken().';
-      expect(() => {
-        mockCredentialAuth.verifyIdToken(mocks.generateIdToken());
-      }).to.throw(expected);
+      return mockCredentialAuth.verifyIdToken(mocks.generateIdToken())
+        .should.eventually.be.rejectedWith(expected);
     });
 
-    it('verifySessionCookie() should throw when project ID is not specified', () => {
+    it('verifySessionCookie() should reject when project ID is not specified', () => {
       const mockCredentialAuth = testConfig.init(mocks.mockCredentialApp());
       const expected = 'Must initialize app with a cert credential or set your Firebase project ID ' +
         'as the GOOGLE_CLOUD_PROJECT environment variable to call verifySessionCookie().';
-      expect(() => {
-        mockCredentialAuth.verifySessionCookie(mocks.generateSessionCookie());
-      }).to.throw(expected);
+      return mockCredentialAuth.verifySessionCookie(mocks.generateSessionCookie())
+        .should.eventually.be.rejectedWith(expected);
     });
 
     describe('verifyIdToken()', () => {
@@ -411,7 +409,11 @@ AUTH_CONFIGS.forEach((testConfig) => {
       const tenantId = testConfig.supportsTenantManagement ? undefined : TENANT_ID;
       const expectedUserRecord = getValidUserRecord(getValidGetAccountInfoResponse(tenantId));
       // Set auth_time of token to expected user's tokensValidAfterTime.
-      const validSince = new Date(expectedUserRecord.tokensValidAfterTime);
+      expect(
+        expectedUserRecord.tokensValidAfterTime,
+        "getValidUserRecord didn't properly set tokensValueAfterTime",
+      ).to.exist;
+      const validSince = new Date(expectedUserRecord.tokensValidAfterTime!);
       // Set expected uid to expected user's.
       const uid = expectedUserRecord.uid;
       // Set expected decoded ID token with expected UID and auth time.
@@ -652,6 +654,9 @@ AUTH_CONFIGS.forEach((testConfig) => {
       const tenantId = testConfig.supportsTenantManagement ? undefined : TENANT_ID;
       const expectedUserRecord = getValidUserRecord(getValidGetAccountInfoResponse(tenantId));
       // Set auth_time of token to expected user's tokensValidAfterTime.
+      if (!expectedUserRecord.tokensValidAfterTime) {
+        throw new Error("getValidUserRecord didn't properly set tokensValidAfterTime.");
+      }
       const validSince = new Date(expectedUserRecord.tokensValidAfterTime);
       // Set expected uid to expected user's.
       const uid = expectedUserRecord.uid;
@@ -1236,7 +1241,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
 
       it('should be rejected given invalid properties', () => {
-        return auth.createUser(null)
+        return auth.createUser(null as any)
           .then(() => {
             throw new Error('Unexpected success');
           })
@@ -1390,7 +1395,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
 
       it('should be rejected given invalid properties', () => {
-        return auth.updateUser(uid, null)
+        return auth.updateUser(uid, null as unknown as UpdateRequest)
           .then(() => {
             throw new Error('Unexpected success');
           })
@@ -1621,8 +1626,6 @@ AUTH_CONFIGS.forEach((testConfig) => {
           })
           .catch((error) => {
             expect(error).to.have.property('code', 'auth/invalid-page-token');
-            expect(validator.isNonEmptyString)
-              .to.have.been.calledOnce.and.calledWith(invalidToken);
           });
       });
 
@@ -1927,6 +1930,9 @@ AUTH_CONFIGS.forEach((testConfig) => {
       const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_ID_TOKEN);
       const expectedUserRecord = getValidUserRecord(getValidGetAccountInfoResponse(tenantId));
       // Set auth_time of token to expected user's tokensValidAfterTime.
+      if (!expectedUserRecord.tokensValidAfterTime) {
+        throw new Error("getValidUserRecord didn't properly set tokensValidAfterTime.");
+      }
       const validSince = new Date(expectedUserRecord.tokensValidAfterTime);
       // Set expected uid to expected user's.
       const uid = expectedUserRecord.uid;
@@ -1960,7 +1966,6 @@ AUTH_CONFIGS.forEach((testConfig) => {
           })
           .catch((error) => {
             expect(error).to.have.property('code', 'auth/invalid-id-token');
-            expect(validator.isNonEmptyString).to.have.been.calledOnce.and.calledWith(invalidIdToken);
           });
       });
 

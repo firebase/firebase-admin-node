@@ -16,13 +16,19 @@
 
 import * as _ from 'lodash';
 import {expect} from 'chai';
+import * as sinon from 'sinon';
 
 import * as mocks from '../../resources/mocks';
 import {
-  addReadonlyGetter, getProjectId, toWebSafeBase64, formatString, generateUpdateMask,
+  addReadonlyGetter, getExplicitProjectId, findProjectId,
+  toWebSafeBase64, formatString, generateUpdateMask,
 } from '../../../src/utils/index';
 import {isNonEmptyString} from '../../../src/utils/validator';
 import {FirebaseApp, FirebaseAppOptions} from '../../../src/firebase-app';
+import { ComputeEngineCredential } from '../../../src/auth/credential';
+import { HttpClient } from '../../../src/utils/api-request';
+import * as utils from '../utils';
+import { FirebaseAppError } from '../../../src/utils/error';
 
 interface Obj {
   [key: string]: any;
@@ -66,9 +72,9 @@ describe('toWebSafeBase64()', () => {
   });
 });
 
-describe('getProjectId()', () => {
-  let googleCloudProject: string;
-  let gcloudProject: string;
+describe('getExplicitProjectId()', () => {
+  let googleCloudProject: string | undefined;
+  let gcloudProject: string | undefined;
 
   before(() => {
     googleCloudProject = process.env.GOOGLE_CLOUD_PROJECT;
@@ -95,31 +101,116 @@ describe('getProjectId()', () => {
       projectId: 'explicit-project-id',
     };
     const app: FirebaseApp = mocks.appWithOptions(options);
-    expect(getProjectId(app)).to.equal(options.projectId);
+    expect(getExplicitProjectId(app)).to.equal(options.projectId);
   });
 
   it('should return the project ID from service account', () => {
     const app: FirebaseApp = mocks.app();
-    expect(getProjectId(app)).to.equal('project_id');
+    expect(getExplicitProjectId(app)).to.equal('project_id');
   });
 
   it('should return the project ID set in GOOGLE_CLOUD_PROJECT environment variable', () => {
     process.env.GOOGLE_CLOUD_PROJECT = 'env-var-project-id';
     const app: FirebaseApp = mocks.mockCredentialApp();
-    expect(getProjectId(app)).to.equal('env-var-project-id');
+    expect(getExplicitProjectId(app)).to.equal('env-var-project-id');
   });
 
   it('should return the project ID set in GCLOUD_PROJECT environment variable', () => {
     process.env.GCLOUD_PROJECT = 'env-var-project-id';
     const app: FirebaseApp = mocks.mockCredentialApp();
-    expect(getProjectId(app)).to.equal('env-var-project-id');
+    expect(getExplicitProjectId(app)).to.equal('env-var-project-id');
   });
 
   it('should return null when project ID is not set', () => {
     delete process.env.GOOGLE_CLOUD_PROJECT;
     delete process.env.GCLOUD_PROJECT;
     const app: FirebaseApp = mocks.mockCredentialApp();
-    expect(getProjectId(app)).to.be.null;
+    expect(getExplicitProjectId(app)).to.be.null;
+  });
+});
+
+describe('findProjectId()', () => {
+  let googleCloudProject: string | undefined;
+  let gcloudProject: string | undefined;
+  let httpStub: sinon.SinonStub;
+
+  before(() => {
+    googleCloudProject = process.env.GOOGLE_CLOUD_PROJECT;
+    gcloudProject = process.env.GCLOUD_PROJECT;
+  });
+
+  after(() => {
+    if (isNonEmptyString(googleCloudProject)) {
+      process.env.GOOGLE_CLOUD_PROJECT = googleCloudProject;
+    } else {
+      delete process.env.GOOGLE_CLOUD_PROJECT;
+    }
+
+    if (isNonEmptyString(gcloudProject)) {
+      process.env.GCLOUD_PROJECT = gcloudProject;
+    } else {
+      delete process.env.GCLOUD_PROJECT;
+    }
+  });
+
+  beforeEach(() => {
+    delete process.env.GOOGLE_CLOUD_PROJECT;
+    delete process.env.GCLOUD_PROJECT;
+    httpStub = sinon.stub(HttpClient.prototype, 'send');
+  });
+
+  afterEach(() => {
+    httpStub.restore();
+  });
+
+  it('should return the explicitly specified project ID from app options', () => {
+    const options: FirebaseAppOptions = {
+      credential: new mocks.MockCredential(),
+      projectId: 'explicit-project-id',
+    };
+    const app: FirebaseApp = mocks.appWithOptions(options);
+    return findProjectId(app).should.eventually.equal(options.projectId);
+  });
+
+  it('should return the project ID from service account', () => {
+    const app: FirebaseApp = mocks.app();
+    return findProjectId(app).should.eventually.equal('project_id');
+  });
+
+  it('should return the project ID set in GOOGLE_CLOUD_PROJECT environment variable', () => {
+    process.env.GOOGLE_CLOUD_PROJECT = 'env-var-project-id';
+    const app: FirebaseApp = mocks.mockCredentialApp();
+    return findProjectId(app).should.eventually.equal('env-var-project-id');
+  });
+
+  it('should return the project ID set in GCLOUD_PROJECT environment variable', () => {
+    process.env.GCLOUD_PROJECT = 'env-var-project-id';
+    const app: FirebaseApp = mocks.mockCredentialApp();
+    return findProjectId(app).should.eventually.equal('env-var-project-id');
+  });
+
+  it('should return the project ID discovered from the metadata service', () => {
+    const expectedProjectId = 'test-project-id';
+    const response = utils.responseFrom(expectedProjectId);
+    httpStub.resolves(response);
+    const app: FirebaseApp = mocks.appWithOptions({
+      credential: new ComputeEngineCredential(),
+    });
+    return findProjectId(app).should.eventually.equal(expectedProjectId);
+  });
+
+  it('should reject when the metadata service is not available', () => {
+    httpStub.rejects(new FirebaseAppError('network-error', 'Failed to connect'));
+    const app: FirebaseApp = mocks.appWithOptions({
+      credential: new ComputeEngineCredential(),
+    });
+    return findProjectId(app).should.eventually
+      .rejectedWith('Failed to determine project ID: Failed to connect');
+  });
+
+  it('should return null when project ID is not set and discoverable', () => {
+    const app: FirebaseApp = mocks.mockCredentialApp();
+    return findProjectId(app).should.eventually.be.null;
   });
 });
 

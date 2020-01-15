@@ -249,12 +249,15 @@ export class FirebaseMessagingError extends PrefixedFirebaseError {
    * @return {FirebaseMessagingError} The corresponding developer-facing error.
    */
   public static fromServerError(
-    serverErrorCode: string,
-    message?: string,
+    serverErrorCode: string | null,
+    message?: string | null,
     rawServerResponse?: object,
   ): FirebaseMessagingError {
     // If not found, default to unknown error.
-    const clientCodeKey = MESSAGING_SERVER_TO_CLIENT_CODE[serverErrorCode] || 'UNKNOWN_ERROR';
+    let clientCodeKey = 'UNKNOWN_ERROR';
+    if (serverErrorCode && serverErrorCode in MESSAGING_SERVER_TO_CLIENT_CODE) {
+      clientCodeKey = MESSAGING_SERVER_TO_CLIENT_CODE[serverErrorCode];
+    }
     const error: ErrorInfo = deepCopy((MessagingClientErrorCode as any)[clientCodeKey]);
     error.message = message || error.message;
 
@@ -641,6 +644,10 @@ export class AuthClientErrorCode {
   public static USER_NOT_FOUND = {
     code: 'user-not-found',
     message: 'There is no user record corresponding to the provided identifier.',
+  };
+  public static NOT_FOUND = {
+    code: 'not-found',
+    message: 'The requested resource was not found.',
   };
 }
 

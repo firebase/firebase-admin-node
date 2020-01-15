@@ -75,8 +75,9 @@ describe('admin.firestore', () => {
       })
       .then((snapshot) => {
         const data = snapshot.data();
-        expect(data.timestamp).is.not.null;
-        expect(data.timestamp).to.be.instanceOf(admin.firestore.Timestamp);
+        expect(data).to.exist;
+        expect(data!.timestamp).is.not.null;
+        expect(data!.timestamp).to.be.instanceOf(admin.firestore.Timestamp);
         return reference.delete();
       })
       .should.eventually.be.fulfilled;
@@ -124,7 +125,8 @@ describe('admin.firestore', () => {
       })
       .then((snapshot) => {
         const data = snapshot.data();
-        expect(data.sisterCity.path).to.deep.equal(source.path);
+        expect(data).to.exist;
+        expect(data!.sisterCity.path).to.deep.equal(source.path);
         const promises = [];
         promises.push(source.delete());
         promises.push(target.delete());

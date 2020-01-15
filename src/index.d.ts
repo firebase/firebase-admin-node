@@ -140,7 +140,7 @@ declare namespace admin {
      * [Authenticate with limited privileges](/docs/database/admin/start#authenticate-with-limited-privileges)
      * for detailed documentation and code samples.
      */
-    databaseAuthVariableOverride?: Object;
+    databaseAuthVariableOverride?: Object | null;
 
     /**
      * The URL of the Realtime Database from which to read and write data.
@@ -863,7 +863,7 @@ declare namespace admin.auth {
        * The salt separator in buffer bytes which is appended to salt when
        * verifying a password. This is only used by the `SCRYPT` algorithm.
        */
-      saltSeparator?: string;
+      saltSeparator?: Buffer;
 
       /**
        * The number of rounds for hashing calculation.
@@ -1445,7 +1445,8 @@ declare namespace admin.auth {
     /**
      * Creates a new Firebase custom token (JWT) that can be sent back to a client
      * device to use to sign in with the client SDKs' `signInWithCustomToken()`
-     * methods.
+     * methods. (Tenant-aware instances will also embed the tenant ID in the
+     * token.)
      *
      * See [Create Custom Tokens](/docs/auth/admin/create-custom-tokens) for code
      * samples and detailed documentation.
@@ -5000,7 +5001,7 @@ declare namespace admin.messaging {
      * return value.
      *
      * @param messages A non-empty array
-     *   containing up to 100 messages.
+     *   containing up to 500 messages.
      * @param dryRun Whether to send the messages in the dry-run
      *   (validation only) mode.
      * @return A Promise fulfilled with an object representing the result of the
@@ -5023,7 +5024,7 @@ declare namespace admin.messaging {
      * a `BatchResponse` return value.
      *
      * @param message A multicast message
-     *   containing up to 100 tokens.
+     *   containing up to 500 tokens.
      * @param dryRun Whether to send the message in the dry-run
      *   (validation only) mode.
      * @return A Promise fulfilled with an object representing the result of the

@@ -17,6 +17,7 @@
 import {
   HttpClient, HttpRequestConfig, HttpResponse, parseHttpResponse,
 } from '../utils/api-request';
+import { FirebaseAppError, AppErrorCodes } from '../utils/error';
 
 const PART_BOUNDARY: string = '__END_OF_PART__';
 const TEN_SECONDS_IN_MILLIS = 10000;
@@ -74,6 +75,9 @@ export class BatchRequestClient {
       timeout: TEN_SECONDS_IN_MILLIS,
     };
     return this.httpClient.send(request).then((response) => {
+      if (!response.multipart) {
+        throw new FirebaseAppError(AppErrorCodes.INTERNAL_ERROR, 'Expected a multipart response.');
+      }
       return response.multipart.map((buff) => {
         return parseHttpResponse(buff, request);
       });
@@ -128,7 +132,7 @@ function serializeSubRequest(request: SubRequest): string {
   messagePayload += 'Content-Type: application/json; charset=UTF-8\r\n';
   if (request.headers) {
     Object.keys(request.headers).forEach((key) => {
-      messagePayload += `${key}: ${request.headers[key]}\r\n`;
+      messagePayload += `${key}: ${request.headers![key]}\r\n`;
     });
   }
   messagePayload += '\r\n';

@@ -137,11 +137,11 @@ describe('admin.securityRules', () => {
   });
 
   describe('Cloud Firestore', () => {
-    let oldRuleset: admin.securityRules.Ruleset = null;
-    let newRuleset: admin.securityRules.Ruleset = null;
+    let oldRuleset: admin.securityRules.Ruleset | null = null;
+    let newRuleset: admin.securityRules.Ruleset | null = null;
 
     function revertFirestoreRulesetIfModified(): Promise<void> {
-      if (!newRuleset) {
+      if (!newRuleset || !oldRuleset) {
         return Promise.resolve();
       }
 
@@ -173,23 +173,23 @@ describe('admin.securityRules', () => {
           scheduleForDelete(ruleset);
           newRuleset = ruleset;
 
-          expect(ruleset.name).to.not.equal(oldRuleset.name);
+          expect(ruleset.name).to.not.equal(oldRuleset!.name);
           verifyFirestoreRuleset(ruleset);
           return admin.securityRules().getFirestoreRuleset();
         })
         .then((ruleset) => {
-          expect(ruleset.name).to.equal(newRuleset.name);
+          expect(ruleset.name).to.equal(newRuleset!.name);
           verifyFirestoreRuleset(ruleset);
         });
     });
   });
 
   describe('Cloud Storage', () => {
-    let oldRuleset: admin.securityRules.Ruleset = null;
-    let newRuleset: admin.securityRules.Ruleset = null;
+    let oldRuleset: admin.securityRules.Ruleset | null = null;
+    let newRuleset: admin.securityRules.Ruleset | null = null;
 
     function revertStorageRulesetIfModified(): Promise<void> {
-      if (!newRuleset) {
+      if (!newRuleset || !oldRuleset) {
         return Promise.resolve();
       }
 
@@ -221,14 +221,14 @@ describe('admin.securityRules', () => {
           scheduleForDelete(ruleset);
           newRuleset = ruleset;
 
-          expect(ruleset.name).to.not.equal(oldRuleset.name);
+          expect(ruleset.name).to.not.equal(oldRuleset!.name);
           expect(ruleset.name).to.match(RULESET_NAME_PATTERN);
           const createTime = new Date(ruleset.createTime);
           expect(ruleset.createTime).equals(createTime.toUTCString());
           return admin.securityRules().getStorageRuleset();
         })
         .then((ruleset) => {
-          expect(ruleset.name).to.equal(newRuleset.name);
+          expect(ruleset.name).to.equal(newRuleset!.name);
         });
     });
   });
