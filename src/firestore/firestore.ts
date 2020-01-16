@@ -17,7 +17,7 @@
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseFirestoreError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {ServiceAccountCredential, ComputeEngineCredential} from '../auth/credential';
+import {ServiceAccountCredential, isApplicationDefault} from '../auth/credential';
 import {Firestore, Settings} from '@google-cloud/firestore';
 
 import * as validator from '../utils/validator';
@@ -85,7 +85,7 @@ export function getFirestoreOptions(app: FirebaseApp): Settings {
       projectId: projectId!,
       firebaseVersion,
     };
-  } else if (app.options.credential instanceof ComputeEngineCredential) {
+  } else if (isApplicationDefault(app.options.credential)) {
     // Try to use the Google application default credentials.
     // If an explicit project ID is not available, let Firestore client discover one from the
     // environment. This prevents the users from having to set GOOGLE_CLOUD_PROJECT in GCP runtimes.
