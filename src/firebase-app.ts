@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {ApplicationDefaultCredential, Credential, GoogleOAuthAccessToken} from './auth/credential';
+import {Credential, GoogleOAuthAccessToken, getApplicationDefault} from './auth/credential';
 import * as validator from './utils/validator';
 import {deepCopy, deepExtend} from './utils/deep-copy';
 import {FirebaseServiceInterface} from './firebase-service';
@@ -264,7 +264,7 @@ export class FirebaseApp {
 
     const hasCredential = ('credential' in this.options_);
     if (!hasCredential) {
-      this.options_.credential = new ApplicationDefaultCredential();
+      this.options_.credential = getApplicationDefault(this.options_.httpAgent);
     }
 
     const credential = this.options_.credential;

@@ -31,7 +31,7 @@ import * as mocks from '../../resources/mocks';
 import {FirebaseTokenGenerator, ServiceAccountSigner} from '../../../src/auth/token-generator';
 import * as verifier from '../../../src/auth/token-verifier';
 
-import {Certificate} from '../../../src/auth/credential';
+import {ServiceAccountCredential} from '../../../src/auth/credential';
 import { AuthClientErrorCode } from '../../../src/utils/error';
 import { FirebaseApp } from '../../../src/firebase-app';
 
@@ -114,7 +114,7 @@ describe('FirebaseTokenVerifier', () => {
   beforeEach(() => {
     // Needed to generate custom token for testing.
     app = mocks.app();
-    const cert: Certificate = new Certificate(mocks.certificateObject);
+    const cert = new ServiceAccountCredential(mocks.certificateObject);
     tokenGenerator = new FirebaseTokenGenerator(new ServiceAccountSigner(cert));
     tokenVerifier = new verifier.FirebaseTokenVerifier(
       'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com',
