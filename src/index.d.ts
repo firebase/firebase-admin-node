@@ -550,7 +550,7 @@ declare namespace admin.auth {
   interface MultiFactorInfo {
   
     /**
-     * The unique identifier of the enrolled second factor.
+     * The user's unique ID of the enrolled second factor.
      */
     uid: string;
 
@@ -711,7 +711,8 @@ declare namespace admin.auth {
   interface UpdateMultiFactorInfoRequest {
   
     /**
-     * The unique identifier of the enrolled second factor.
+     * The user's unique ID of the enrolled second factor. When not provided,
+     * a new one is provisioned by the Auth server.
      */
     uid?: string;
 
