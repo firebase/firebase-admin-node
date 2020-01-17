@@ -154,8 +154,9 @@ declare namespace admin {
     serviceAccountId?: string;
 
     /**
-     * The ID of the service account to be used for signing custom tokens. This
-     * can be found in the `client_email` field of a service account JSON file.
+     * The name of the Google Cloud Storage bucket used for storing application data.
+     * Use only the bucket name without any prefixes or additions (do *not* prefix
+     * the name with "gs://").
      */
     storageBucket?: string;
 
