@@ -548,18 +548,22 @@ declare namespace admin.auth {
    * Interface representing the common properties of a user enrolled second factor.
    */
   interface MultiFactorInfo {
+  
     /**
      * The unique identifier of the enrolled second factor.
      */
     uid: string;
+
     /**
      * The optional display name for an enrolled second factor.
      */
     displayName?: string;
+
     /**
-     * The date the second factor was enrolled, formatted as a UTC string.
+     * The optional date the second factor was enrolled, formatted as a UTC string.
      */
     enrollmentTime?: string;
+
     /**
      * The second factor type identifier. For SMS second factor, this is `"phone"`.
      */
@@ -575,6 +579,7 @@ declare namespace admin.auth {
    * Interface representing a phone specific user enrolled second factor.
    */
   interface PhoneMultiFactorInfo extends MultiFactorInfo {
+
     /**
      * The phone number associated with a phone second factor.
      */
@@ -680,6 +685,7 @@ declare namespace admin.auth {
      * The multi-factor related properties for the current user if available.
      */
     multiFactor?: {
+
       /**
        * List of enrolled second factors on the current user record.
        * Currently only phone second factors are supported.
@@ -699,22 +705,26 @@ declare namespace admin.auth {
   }
 
   /**
-   * Interface representing base properties of a user enrolled second factor
+   * Interface representing common properties of a user enrolled second factor
    * for an `UpdateRequest`.
    */
   interface UpdateMultiFactorInfoRequest {
+  
     /**
      * The unique identifier of the enrolled second factor.
      */
     uid?: string;
+
     /**
      * The optional display name for an enrolled second factor.
      */
     displayName?: string;
+
     /**
      * The optional date the second factor was enrolled, formatted as a UTC string.
      */
     enrollmentTime?: string;
+
     /**
      * The second factor type identifier. For SMS second factor, this is `"phone"`.
      */
@@ -726,6 +736,7 @@ declare namespace admin.auth {
    * for an `UpdateRequest`.
    */
   interface UpdatePhoneMultiFactorInfoRequest extends UpdateMultiFactorInfoRequest {
+
     /**
      * The phone number associated with a phone second factor.
      */
@@ -777,6 +788,7 @@ declare namespace admin.auth {
      * The user's updated multi-factor related properties.
      */
     multiFactor?: {
+
       /**
        * The user's updated list of enrolled second factors. The provided list will always
        * overwrite any existing list of enrolled second factors on the user.
@@ -791,10 +803,12 @@ declare namespace admin.auth {
    * `CreateRequest`.
    */
   interface CreateMultiFactorInfoRequest {
+
     /**
      * The optional display name for an enrolled second factor.
      */
     displayName?: string;
+
     /**
      * The second factor type identifier. For SMS second factor, this is `"phone"`.
      */
@@ -806,6 +820,7 @@ declare namespace admin.auth {
    * `CreateRequest`.
    */
   interface CreatePhoneMultiFactorInfoRequest extends CreateMultiFactorInfoRequest {
+
     /**
      * The phone number associated with a phone second factor.
      */
@@ -827,6 +842,7 @@ declare namespace admin.auth {
      * The user's multi-factor related properties.
      */
     multiFactor?: {
+
       /**
        * The user's list of enrolled second factors.
        */
@@ -1153,6 +1169,7 @@ declare namespace admin.auth {
      * The multi-factor related properties for the imported user if available.
      */
     multiFactor?: {
+    
       /**
        * List of enrolled second factors on the user to import.
        */
