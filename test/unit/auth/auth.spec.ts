@@ -1130,6 +1130,87 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
     });
 
+    describe('getUserByFederatedId()', () => {
+      const federatedId = 'google.com';
+      const federatedUid = 'google_uid';
+      const tenantId = testConfig.supportsTenantManagement ? undefined : TENANT_ID;
+      const expectedGetAccountInfoResult = getValidGetAccountInfoResponse(tenantId);
+      const expectedUserRecord = getValidUserRecord(expectedGetAccountInfoResult);
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
+
+      // Stubs used to simulate underlying api calls.
+      let stubs: sinon.SinonStub[] = [];
+      beforeEach(() => sinon.spy(validator, 'isEmail'));
+      afterEach(() => {
+        (validator.isEmail as any).restore();
+        _.forEach(stubs, (stub) => stub.restore());
+        stubs = [];
+      });
+
+      it('should be rejected given no federated id', () => {
+        expect(() => (auth as any).getUserByFederatedId())
+          .to.throw(FirebaseAuthError)
+          .with.property('code', 'auth/invalid-provider-id');
+      });
+
+      it('should be rejected given an invalid federated id', () => {
+        expect(() => auth.getUserByFederatedId('', 'uid'))
+          .to.throw(FirebaseAuthError)
+          .with.property('code', 'auth/invalid-provider-id');
+      });
+
+      it('should be rejected given an invalid federated uid', () => {
+        expect(() => auth.getUserByFederatedId('id', ''))
+          .to.throw(FirebaseAuthError)
+          .with.property('code', 'auth/invalid-provider-id');
+      });
+
+      it('should be rejected given an app which returns null access tokens', () => {
+        return nullAccessTokenAuth.getUserByFederatedId(federatedId, federatedUid)
+          .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+      });
+
+      it('should be rejected given an app which returns invalid access tokens', () => {
+        return malformedAccessTokenAuth.getUserByFederatedId(federatedId, federatedUid)
+          .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+      });
+
+      it('should be rejected given an app which fails to generate access tokens', () => {
+        return rejectedPromiseAccessTokenAuth.getUserByFederatedId(federatedId, federatedUid)
+          .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+      });
+
+      it('should resolve with a UserRecord on success', () => {
+        // Stub getAccountInfoByEmail to return expected result.
+        const stub = sinon.stub(testConfig.RequestHandler.prototype, 'getAccountInfoByFederatedId')
+          .resolves(expectedGetAccountInfoResult);
+        stubs.push(stub);
+        return auth.getUserByFederatedId(federatedId, federatedUid)
+          .then((userRecord) => {
+            // Confirm underlying API called with expected parameters.
+            expect(stub).to.have.been.calledOnce.and.calledWith(federatedId, federatedUid);
+            // Confirm expected user record response returned.
+            expect(userRecord).to.deep.equal(expectedUserRecord);
+          });
+      });
+
+      it('should throw an error when the backend returns an error', () => {
+        // Stub getAccountInfoByFederatedId to throw a backend error.
+        const stub = sinon.stub(testConfig.RequestHandler.prototype, 'getAccountInfoByFederatedId')
+          .rejects(expectedError);
+        stubs.push(stub);
+        return auth.getUserByFederatedId(federatedId, federatedUid)
+          .then((userRecord) => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Confirm underlying API called with expected parameters.
+            expect(stub).to.have.been.calledOnce.and.calledWith(federatedId, federatedUid);
+            // Confirm expected error returned.
+            expect(error).to.equal(expectedError);
+          });
+      });
+    });
+
     describe('deleteUser()', () => {
       const uid = 'abcdefghijklmnopqrstuvwxyz';
       const expectedDeleteAccountResult = {kind: 'identitytoolkit#DeleteAccountResponse'};

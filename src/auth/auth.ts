@@ -201,6 +201,27 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   }
 
   /**
+   * Gets the user data for the user corresponding to a given federated id.
+   *
+   * See [Retrieve user data](/docs/auth/admin/manage-users#retrieve_user_data)
+   * for code samples and detailed documentation.
+   *
+   * @param federatedId The provider ID, for example, "google.com" for the
+   *   Google provider.
+   * @param federatedUid The user identifier for the given provider.
+   *
+   * @return A promise fulfilled with the user data corresponding to the
+   *   provided federated id.
+   */
+  public getUserByFederatedId(federatedId: string, federatedUid: string): Promise<UserRecord> {
+    return this.authRequestHandler.getAccountInfoByFederatedId(federatedId, federatedUid)
+      .then((response: any) => {
+        // Returns the user record populated with server response.
+        return new UserRecord(response.users[0]);
+      });
+  }
+
+  /**
    * Exports a batch of user accounts. Batch size is determined by the maxResults argument.
    * Starting point of the batch is determined by the pageToken argument.
    *

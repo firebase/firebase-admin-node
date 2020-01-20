@@ -468,7 +468,7 @@ export const FIREBASE_AUTH_DOWNLOAD_ACCOUNT = new ApiSettings('/accounts:batchGe
 export const FIREBASE_AUTH_GET_ACCOUNT_INFO = new ApiSettings('/accounts:lookup', 'POST')
   // Set request validator.
   .setRequestValidator((request: any) => {
-    if (!request.localId && !request.email && !request.phoneNumber) {
+    if (!request.localId && !request.email && !request.phoneNumber && !request.federatedUserId) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Server request is missing user identifier');
@@ -808,6 +808,21 @@ export abstract class AbstractAuthRequestHandler {
     const request = {
       phoneNumber: [phoneNumber],
     };
+    return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_GET_ACCOUNT_INFO, request);
+  }
+
+  public getAccountInfoByFederatedId(federatedId: string, federatedUid: string): Promise<object> {
+    if (!validator.isNonEmptyString(federatedId) || !validator.isNonEmptyString(federatedUid)) {
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
+    }
+
+    const request = {
+      federatedUserId: [{
+        providerId: federatedId,
+        rawId: federatedUid,
+      }],
+    };
+
     return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_GET_ACCOUNT_INFO, request);
   }
 

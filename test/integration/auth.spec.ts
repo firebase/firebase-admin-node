@@ -66,6 +66,7 @@ const mockUserData = {
   displayName: 'Random User ' + newUserUid,
   photoURL: 'http://www.example.com/' + newUserUid + '/photo.png',
   disabled: false,
+
 };
 const actionCodeSettings = {
   url: 'http://localhost/?a=1&b=2#c=3',
@@ -166,6 +167,44 @@ describe('admin.auth', () => {
       .then((userRecord) => {
         expect(userRecord.uid).to.equal(newUserUid);
       });
+  });
+
+  it('getUserByFederatedId() returns a user record with the matching federated id', async () => {
+    // TODO(rsgowman): Once we can link a provider id with a user, just do that
+    // here instead of creating a new user.
+    const importUser: admin.auth.UserImportRecord = {
+      uid: 'uid',
+      email: 'user@example.com',
+      phoneNumber: '+15555550000',
+      emailVerified: true,
+      disabled: false,
+      metadata: {
+        lastSignInTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
+        creationTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
+        toJSON: () => { throw new Error('Unimplemented'); },
+      },
+      providerData: [{
+        displayName: 'User Name',
+        email: 'user@example.com',
+        phoneNumber: '+15555550000',
+        photoURL: 'http://example.com/user',
+        toJSON: () => { throw new Error('Unimplemented'); },
+        providerId: 'google.com',
+        uid: 'google_uid',
+      }],
+    };
+
+    await safeDelete(importUser.uid);
+    await admin.auth().importUsers([importUser]);
+
+    try {
+      await admin.auth().getUserByFederatedId('google.com', 'google_uid')
+        .then((userRecord) => {
+          expect(userRecord.uid).to.equal(importUser.uid);
+        });
+    } finally {
+      await safeDelete(importUser.uid);
+    }
   });
 
   it('listUsers() returns up to the specified number of users', () => {
@@ -353,6 +392,11 @@ describe('admin.auth', () => {
 
   it('getUserByPhoneNumber() fails when called with a non-existing phone number', () => {
     return admin.auth().getUserByPhoneNumber(nonexistentPhoneNumber)
+      .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
+  });
+
+  it('getUserByFederatedId() fails when called with a non-existing federated id', () => {
+    return admin.auth().getUserByFederatedId('google.com', nonexistentUid)
       .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
   });
 
