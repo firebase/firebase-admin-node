@@ -380,11 +380,9 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
           const errMsgToError = (msg?: string): FirebaseAuthError => {
             // We unconditionally set force=true, so the 'NOT_DISABLED' error
             // should not be possible.
-            if (msg && msg.startsWith('NOT_DISABLED :')) {
-              return new FirebaseAuthError(AuthClientErrorCode.USER_NOT_DISABLED, batchDeleteErrorInfo.message);
-            } else {
-              return new FirebaseAuthError(AuthClientErrorCode.INTERNAL_ERROR, batchDeleteErrorInfo.message);
-            }
+            const code = msg && msg.startsWith('NOT_DISABLED') ?
+              AuthClientErrorCode.USER_NOT_DISABLED : AuthClientErrorCode.INTERNAL_ERROR;
+            return new FirebaseAuthError(code, batchDeleteErrorInfo.message);
           };
 
           return {

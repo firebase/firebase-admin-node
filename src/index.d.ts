@@ -1576,8 +1576,19 @@ declare namespace admin.auth {
     /**
      * Deletes the users specified by the given uids.
      *
-     * Deletes multiple existing users. Deleting a non-existing user won't
-     * generate an error. (i.e. this method is idempotent.)
+     * Deleting a non-existing user won't generate an error. (i.e. this method
+     * is idempotent.) Non-existing users will be considered to be successfully
+     * deleted, and will therefore be counted in the
+     * DeleteUsersResult.successCount value.
+     *
+     * Only a maximum of 1000 identifiers may be supplied. If more than 1000
+     * identifiers are supplied, this method will immediately throw a
+     * FirebaseAuthError.
+     *
+     * This API is currently rate limited at the server to 1 QPS. If you exceed
+     * this, you may get a quota exceeded error. Therefore, if you want to
+     * delete more than 1000 users, you may need to add a delay to ensure you
+     * don't go over this limit.
      *
      * @param uids The `uids` corresponding to the users to delete.
      *
