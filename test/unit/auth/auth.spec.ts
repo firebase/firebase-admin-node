@@ -1130,7 +1130,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
     });
 
-    describe('getUserByFederatedId()', () => {
+    describe('getUserByProviderId()', () => {
       const federatedId = 'google.com';
       const federatedUid = 'google_uid';
       const tenantId = testConfig.supportsTenantManagement ? undefined : TENANT_ID;
@@ -1148,35 +1148,35 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
 
       it('should be rejected given no federated id', () => {
-        expect(() => (auth as any).getUserByFederatedId())
+        expect(() => (auth as any).getUserByProviderId())
           .to.throw(FirebaseAuthError)
           .with.property('code', 'auth/invalid-provider-id');
       });
 
       it('should be rejected given an invalid federated id', () => {
-        expect(() => auth.getUserByFederatedId('', 'uid'))
+        expect(() => auth.getUserByProviderId('', 'uid'))
           .to.throw(FirebaseAuthError)
           .with.property('code', 'auth/invalid-provider-id');
       });
 
       it('should be rejected given an invalid federated uid', () => {
-        expect(() => auth.getUserByFederatedId('id', ''))
+        expect(() => auth.getUserByProviderId('id', ''))
           .to.throw(FirebaseAuthError)
           .with.property('code', 'auth/invalid-provider-id');
       });
 
       it('should be rejected given an app which returns null access tokens', () => {
-        return nullAccessTokenAuth.getUserByFederatedId(federatedId, federatedUid)
+        return nullAccessTokenAuth.getUserByProviderId(federatedId, federatedUid)
           .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
       });
 
       it('should be rejected given an app which returns invalid access tokens', () => {
-        return malformedAccessTokenAuth.getUserByFederatedId(federatedId, federatedUid)
+        return malformedAccessTokenAuth.getUserByProviderId(federatedId, federatedUid)
           .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
       });
 
       it('should be rejected given an app which fails to generate access tokens', () => {
-        return rejectedPromiseAccessTokenAuth.getUserByFederatedId(federatedId, federatedUid)
+        return rejectedPromiseAccessTokenAuth.getUserByProviderId(federatedId, federatedUid)
           .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
       });
 
@@ -1185,7 +1185,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         const stub = sinon.stub(testConfig.RequestHandler.prototype, 'getAccountInfoByFederatedId')
           .resolves(expectedGetAccountInfoResult);
         stubs.push(stub);
-        return auth.getUserByFederatedId(federatedId, federatedUid)
+        return auth.getUserByProviderId(federatedId, federatedUid)
           .then((userRecord) => {
             // Confirm underlying API called with expected parameters.
             expect(stub).to.have.been.calledOnce.and.calledWith(federatedId, federatedUid);
@@ -1194,12 +1194,45 @@ AUTH_CONFIGS.forEach((testConfig) => {
           });
       });
 
+      describe('non-federated providers', () => {
+        let invokeRequestHandlerStub: sinon.SinonStub;
+        beforeEach(() => {
+          invokeRequestHandlerStub = sinon.stub(testConfig.RequestHandler.prototype, 'invokeRequestHandler')
+            .resolves({
+              // nothing here is checked; we just need enough to not crash.
+              users: [{
+                localId: 1,
+              }],
+            });
+
+        });
+        afterEach(() => {
+          invokeRequestHandlerStub.restore();
+        });
+
+        it('phone lookups should use phoneNumber field', async () => {
+          await auth.getUserByProviderId('phone', '+15555550001');
+          expect(invokeRequestHandlerStub).to.have.been.calledOnce.and.calledWith(
+            sinon.match.any, sinon.match.any, {
+              phoneNumber: ['+15555550001'],
+            });
+        });
+
+        it('email lookups should use email field', async () => {
+          await auth.getUserByProviderId('email', 'user@example.com');
+          expect(invokeRequestHandlerStub).to.have.been.calledOnce.and.calledWith(
+            sinon.match.any, sinon.match.any, {
+              email: ['user@example.com'],
+            });
+        });
+      });
+
       it('should throw an error when the backend returns an error', () => {
         // Stub getAccountInfoByFederatedId to throw a backend error.
         const stub = sinon.stub(testConfig.RequestHandler.prototype, 'getAccountInfoByFederatedId')
           .rejects(expectedError);
         stubs.push(stub);
-        return auth.getUserByFederatedId(federatedId, federatedUid)
+        return auth.getUserByProviderId(federatedId, federatedUid)
           .then((userRecord) => {
             throw new Error('Unexpected success');
           }, (error) => {

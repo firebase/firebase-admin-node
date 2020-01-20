@@ -1531,19 +1531,19 @@ declare namespace admin.auth {
     getUserByPhoneNumber(phoneNumber: string): Promise<admin.auth.UserRecord>;
 
     /**
-     * Gets the user data for the user corresponding to a given federated id.
+     * Gets the user data for the user corresponding to a given provider id.
      *
      * See [Retrieve user data](/docs/auth/admin/manage-users#retrieve_user_data)
      * for code samples and detailed documentation.
      *
-     * @param federatedId The provider ID, for example, "google.com" for the
+     * @param providerId The provider ID, for example, "google.com" for the
      *   Google provider.
-     * @param federatedUid The user identifier for the given provider.
+     * @param providerUid The user identifier for the given provider.
      *
      * @return A promise fulfilled with the user data corresponding to the
-     *   provided federated id.
+     *   given provider id.
      */
-    getUserByFederatedId(federatedId: string, federatedUid: string): Promise<admin.auth.UserRecord>;
+    getUserByProviderId(providerId: string, providerUid: string): Promise<admin.auth.UserRecord>;
 
     /**
      * Retrieves a list of users (single batch only) with a size of `maxResults`

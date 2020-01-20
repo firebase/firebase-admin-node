@@ -169,7 +169,7 @@ describe('admin.auth', () => {
       });
   });
 
-  it('getUserByFederatedId() returns a user record with the matching federated id', async () => {
+  it('getUserByProviderId() returns a user record with the matching provider id', async () => {
     // TODO(rsgowman): Once we can link a provider id with a user, just do that
     // here instead of creating a new user.
     const importUser: admin.auth.UserImportRecord = {
@@ -198,7 +198,7 @@ describe('admin.auth', () => {
     await admin.auth().importUsers([importUser]);
 
     try {
-      await admin.auth().getUserByFederatedId('google.com', 'google_uid')
+      await admin.auth().getUserByProviderId('google.com', 'google_uid')
         .then((userRecord) => {
           expect(userRecord.uid).to.equal(importUser.uid);
         });
@@ -395,8 +395,8 @@ describe('admin.auth', () => {
       .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
   });
 
-  it('getUserByFederatedId() fails when called with a non-existing federated id', () => {
-    return admin.auth().getUserByFederatedId('google.com', nonexistentUid)
+  it('getUserByProviderId() fails when called with a non-existing federated id', () => {
+    return admin.auth().getUserByProviderId('google.com', nonexistentUid)
       .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
   });
 
