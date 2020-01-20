@@ -546,6 +546,42 @@ declare namespace admin.auth {
   }
 
   /**
+   * Represents a user identity provider that can be associated with a Firebase user.
+   */
+  interface UserProvider {
+
+    /**
+     * The user identifier for the linked provider.
+     */
+    uid?: string;
+
+    /**
+     * The display name for the linked provider.
+     */
+    displayName?: string;
+
+    /**
+     * The email for the linked provider.
+     */
+    email?: string;
+
+    /**
+     * The phone number for the linked provider.
+     */
+    phoneNumber?: string;
+
+    /**
+     * The photo URL for the linked provider.
+     */
+    photoURL?: string;
+
+    /**
+     * The linked provider ID (for example, "google.com" for the Google provider).
+     */
+    providerId?: string;
+  }
+
+  /**
    * Interface representing a user.
    */
   interface UserRecord {
@@ -686,6 +722,16 @@ declare namespace admin.auth {
      * The user's photo URL.
      */
     photoURL?: string | null;
+
+    /**
+     * Links this user to the specified federated provider.
+     */
+    providerToLink?: UserProvider;
+
+    /**
+     * Unlinks this user from the specified federated providers.
+     */
+    providersToDelete?: string[];
   }
 
   /**

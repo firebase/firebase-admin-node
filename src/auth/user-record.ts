@@ -50,6 +50,8 @@ export interface UpdateRequest {
   password?: string;
   phoneNumber?: string | null;
   photoURL?: string | null;
+  providerToLink?: UserProvider;
+  providersToDelete?: string[];
 }
 
 /** Parameters for create user operation */
@@ -130,6 +132,41 @@ export class UserInfo {
       phoneNumber: this.phoneNumber,
     };
   }
+}
+
+/**
+ * Represents a user identity provider that can be associated with a Firebase user.
+ */
+interface UserProvider {
+  /**
+   * The user identifier for the linked provider.
+   */
+  uid?: string;
+
+  /**
+   * The display name for the linked provider.
+   */
+  displayName?: string;
+
+  /**
+   * The email for the linked provider.
+   */
+  email?: string;
+
+  /**
+   * The phone number for the linked provider.
+   */
+  phoneNumber?: string;
+
+  /**
+   * The photo URL for the linked provider.
+   */
+  photoURL?: string;
+
+  /**
+   * The linked provider ID (for example, "google.com" for the Google provider).
+   */
+  providerId?: string;
 }
 
 /**

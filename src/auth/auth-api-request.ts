@@ -265,6 +265,8 @@ function validateCreateEditRequest(request: any, uploadAccountRequest: boolean =
     phoneNumber: true,
     customAttributes: true,
     validSince: true,
+    // Pass linkProviderUserInfo only for updates (i.e. not for uploads.)
+    linkProviderUserInfo: !uploadAccountRequest,
     // Pass tenantId only for uploadAccount requests.
     tenantId: uploadAccountRequest,
     passwordHash: uploadAccountRequest,
@@ -409,6 +411,11 @@ function validateCreateEditRequest(request: any, uploadAccountRequest: boolean =
     request.providerUserInfo.forEach((providerUserInfoEntry: any) => {
       validateProviderUserInfo(providerUserInfoEntry);
     });
+  }
+
+  // linkProviderUserInfo must be a (single) UserInfo value.
+  if (typeof request.linkProviderUserInfo !== 'undefined') {
+    validateProviderUserInfo(request.linkProviderUserInfo);
   }
 }
 
@@ -961,6 +968,31 @@ export abstract class AbstractAuthRequestHandler {
           'Properties argument must be a non-null object.',
         ),
       );
+    } else if (validator.isNonNullObject(properties.providerToLink)) {
+      if (!validator.isNonEmptyString(properties.providerToLink.providerId)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          'providerToLink.providerId of properties argument must be a non-empty string.');
+      }
+      if (!validator.isNonEmptyString(properties.providerToLink.uid)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          'providerToLink.uid of properties argument must be a non-empty string.');
+      }
+    } else if (typeof properties.providersToDelete !== 'undefined') {
+      if (!validator.isNonEmptyArray(properties.providersToDelete)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          'providersToDelete of properties argument must be a non-empty array of strings.');
+      }
+
+      properties.providersToDelete.forEach((providerId) => {
+        if (!validator.isNonEmptyString(providerId)) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_ARGUMENT,
+            'providersToDelete of properties argument must be a non-empty array of strings.');
+        }
+      });
     }
 
     // Build the setAccountInfo request.
@@ -995,13 +1027,25 @@ export abstract class AbstractAuthRequestHandler {
     // It will be removed from the backend request and an additional parameter
     // deleteProvider: ['phone'] with an array of providerIds (phone in this case),
     // will be passed.
-    // Currently this applies to phone provider only.
     if (request.phoneNumber === null) {
-      request.deleteProvider = ['phone'];
+      request.deleteProvider ? request.deleteProvider.push('phone') : request.deleteProvider = ['phone'];
       delete request.phoneNumber;
-    } else {
-      // Doesn't apply to other providers in admin SDK.
-      delete request.deleteProvider;
+    }
+
+    if (typeof(request.providerToLink) !== 'undefined') {
+      request.linkProviderUserInfo = deepCopy(request.providerToLink);
+      delete request.providerToLink;
+
+      request.linkProviderUserInfo.rawId = request.linkProviderUserInfo.uid;
+      delete request.linkProviderUserInfo.uid;
+    }
+
+    if (typeof(request.providersToDelete) !== 'undefined') {
+      if (!validator.isArray(request.deleteProvider)) {
+        request.deleteProvider = [];
+      }
+      request.deleteProvider = request.deleteProvider.concat(request.providersToDelete);
+      delete request.providersToDelete;
     }
 
     // Rewrite photoURL to photoUrl.

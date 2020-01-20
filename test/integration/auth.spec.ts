@@ -323,22 +323,106 @@ describe('admin.auth', () => {
      });
   });
 
-  it('updateUser() updates the user record with the given parameters', () => {
-    const updatedDisplayName = 'Updated User ' + newUserUid;
-    return admin.auth().updateUser(newUserUid, {
-      email: updatedEmail,
-      phoneNumber: updatedPhone,
-      emailVerified: true,
-      displayName: updatedDisplayName,
-    })
-      .then((userRecord) => {
-        expect(userRecord.emailVerified).to.be.true;
-        expect(userRecord.displayName).to.equal(updatedDisplayName);
-        // Confirm expected email.
-        expect(userRecord.email).to.equal(updatedEmail);
-        // Confirm expected phone number.
-        expect(userRecord.phoneNumber).to.equal(updatedPhone);
+  describe('updateUser()', () => {
+    /**
+     * Creates a new user for testing purposes. The user's uid will be
+     * '$name_$tenRandomChars' and email will be
+     * '$name_$tenRandomChars@example.com'.
+     */
+    // TODO(rsgowman): This function could usefully be employed throughout this file.
+    function createTestUser(name: string): Promise<admin.auth.UserRecord> {
+      const tenRandomChars = generateRandomString(10);
+      return admin.auth().createUser({
+        uid: name + '_' + tenRandomChars,
+        displayName: name,
+        email: name + '_' + tenRandomChars + '@example.com',
       });
+    }
+
+    let updateUser: admin.auth.UserRecord;
+    before(async () => {
+      updateUser = await createTestUser('UpdateUser');
+    });
+
+    after(() => {
+      return safeDelete(updateUser.uid);
+    });
+
+    it('updates the user record with the given parameters', async () => {
+      const updatedDisplayName = 'Updated User ' + updateUser.uid;
+      const userRecord = await admin.auth().updateUser(updateUser.uid, {
+        email: updatedEmail,
+        phoneNumber: updatedPhone,
+        emailVerified: true,
+        displayName: updatedDisplayName,
+      });
+
+      expect(userRecord.emailVerified).to.be.true;
+      expect(userRecord.displayName).to.equal(updatedDisplayName);
+      // Confirm expected email.
+      expect(userRecord.email).to.equal(updatedEmail);
+      // Confirm expected phone number.
+      expect(userRecord.phoneNumber).to.equal(updatedPhone);
+    });
+
+    it('can link/unlink with a federated provider', async () => {
+      const federatedUid = 'google_uid_' + generateRandomString(10);
+      let userRecord = await admin.auth().updateUser(updateUser.uid, {
+        providerToLink: {
+          providerId: 'google.com',
+          uid: federatedUid,
+        },
+      });
+
+      let providerUids = userRecord.providerData.map((userInfo) => userInfo.uid);
+      let providerIds = userRecord.providerData.map((userInfo) => userInfo.providerId);
+      expect(providerUids).to.deep.include(federatedUid);
+      expect(providerIds).to.deep.include('google.com');
+
+      userRecord = await admin.auth().updateUser(updateUser.uid, {
+        providersToDelete: ['google.com'],
+      });
+
+      providerUids = userRecord.providerData.map((userInfo) => userInfo.uid);
+      providerIds = userRecord.providerData.map((userInfo) => userInfo.providerId);
+      expect(providerUids).to.not.deep.include(federatedUid);
+      expect(providerIds).to.not.deep.include('google.com');
+    });
+
+    it('can unlink multiple providers at once, incl a non-federated provider', async () => {
+      await deletePhoneNumberUser('+15555550001');
+
+      const googleFederatedUid = 'google_uid_' + generateRandomString(10);
+      const facebookFederatedUid = 'facebook_uid_' + generateRandomString(10);
+
+      let userRecord = await admin.auth().updateUser(updateUser.uid, {
+        phoneNumber: '+15555550001',
+        providerToLink: {
+          providerId: 'google.com',
+          uid: googleFederatedUid,
+        },
+      });
+      userRecord = await admin.auth().updateUser(updateUser.uid, {
+        providerToLink: {
+          providerId: 'facebook.com',
+          uid: facebookFederatedUid,
+        },
+      });
+
+      let providerUids = userRecord.providerData.map((userInfo) => userInfo.uid);
+      let providerIds = userRecord.providerData.map((userInfo) => userInfo.providerId);
+      expect(providerUids).to.deep.include.members([googleFederatedUid, facebookFederatedUid, '+15555550001']);
+      expect(providerIds).to.deep.include.members(['google.com', 'facebook.com', 'phone']);
+
+      userRecord = await admin.auth().updateUser(updateUser.uid, {
+        providersToDelete: ['google.com', 'facebook.com', 'phone'],
+      });
+
+      providerUids = userRecord.providerData.map((userInfo) => userInfo.uid);
+      providerIds = userRecord.providerData.map((userInfo) => userInfo.providerId);
+      expect(providerUids).to.not.deep.include.members([googleFederatedUid, facebookFederatedUid, '+15555550001']);
+      expect(providerIds).to.not.deep.include.members(['google.com', 'facebook.com', 'phone']);
+    });
   });
 
   it('getUser() fails when called with a non-existing UID', () => {
@@ -1615,11 +1699,11 @@ function testImportAndSignInUser(
 /**
  * Helper function that deletes the user with the specified phone number
  * if it exists.
- * @param {string} phoneNumber The phone number of the user to delete.
- * @return {Promise} A promise that resolves when the user is deleted
+ * @param phoneNumber The phone number of the user to delete.
+ * @return A promise that resolves when the user is deleted
  *     or is found not to exist.
  */
-function deletePhoneNumberUser(phoneNumber: string) {
+function deletePhoneNumberUser(phoneNumber: string): Promise<void> {
   return admin.auth().getUserByPhoneNumber(phoneNumber)
     .then((userRecord) => {
       return safeDelete(userRecord.uid);
