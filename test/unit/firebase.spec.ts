@@ -27,7 +27,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as mocks from '../resources/mocks';
 
 import * as firebaseAdmin from '../../src/index';
-import {RefreshTokenCredential, ServiceAccountCredential} from '../../src/auth/credential';
+import {RefreshTokenCredential, ServiceAccountCredential, isApplicationDefault} from '../../src/auth/credential';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -112,6 +112,7 @@ describe('Firebase', () => {
         credential: firebaseAdmin.credential.cert(mocks.certificateObject),
       });
 
+      expect(isApplicationDefault(firebaseAdmin.app().options.credential)).to.be.false;
       return firebaseAdmin.app().INTERNAL.getToken()
         .should.eventually.have.keys(['accessToken', 'expirationTime']);
     });
@@ -122,6 +123,7 @@ describe('Firebase', () => {
         credential: firebaseAdmin.credential.cert(keyPath),
       });
 
+      expect(isApplicationDefault(firebaseAdmin.app().options.credential)).to.be.false;
       return firebaseAdmin.app().INTERNAL.getToken()
         .should.eventually.have.keys(['accessToken', 'expirationTime']);
     });
@@ -134,6 +136,7 @@ describe('Firebase', () => {
         credential: firebaseAdmin.credential.applicationDefault(),
       });
 
+      expect(isApplicationDefault(firebaseAdmin.app().options.credential)).to.be.true;
       return firebaseAdmin.app().INTERNAL.getToken().then((token) => {
         if (typeof credPath === 'undefined') {
           delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
@@ -155,6 +158,7 @@ describe('Firebase', () => {
         credential: firebaseAdmin.credential.refreshToken(mocks.refreshToken),
       });
 
+      expect(isApplicationDefault(firebaseAdmin.app().options.credential)).to.be.false;
       return firebaseAdmin.app().INTERNAL.getToken()
         .should.eventually.have.keys(['accessToken', 'expirationTime']);
     });
