@@ -81,6 +81,16 @@ export class ServiceAccountCredential implements Credential {
 
   private readonly httpClient: HttpClient;
 
+  /**
+   * Creates a new ServiceAccountCredential from the given parameters.
+   *
+   * @param serviceAccountPathOrObject Service account json object or path to a service account json file.
+   * @param httpAgent Optional http.Agent to use when calling the remote token server.
+   * @param implicit An optinal boolean indicating whether this credential was implicitly discovered from the
+   *   environment, as opposed to being explicitly specified by the developer.
+   *
+   * @constructor
+   */
   constructor(
     serviceAccountPathOrObject: string | object,
     private readonly httpAgent?: Agent,
@@ -249,6 +259,16 @@ export class RefreshTokenCredential implements Credential {
   private readonly refreshToken: RefreshToken;
   private readonly httpClient: HttpClient;
 
+  /**
+   * Creates a new RefreshTokenCredential from the given parameters.
+   *
+   * @param refreshTokenPathOrObject Refresh token json object or path to a refresh token (user credentials) json file.
+   * @param httpAgent Optional http.Agent to use when calling the remote token server.
+   * @param implicit An optinal boolean indicating whether this credential was implicitly discovered from the
+   *   environment, as opposed to being explicitly specified by the developer.
+   *
+   * @constructor
+   */
   constructor(
     refreshTokenPathOrObject: string | object,
     private readonly httpAgent?: Agent,
