@@ -66,7 +66,6 @@ const mockUserData = {
   displayName: 'Random User ' + newUserUid,
   photoURL: 'http://www.example.com/' + newUserUid + '/photo.png',
   disabled: false,
-
 };
 const actionCodeSettings = {
   url: 'http://localhost/?a=1&b=2#c=3',
@@ -169,7 +168,7 @@ describe('admin.auth', () => {
       });
   });
 
-  it('getUserByProviderId() returns a user record with the matching provider id', async () => {
+  it('getUserByProviderUid() returns a user record with the matching provider id', async () => {
     // TODO(rsgowman): Once we can link a provider id with a user, just do that
     // here instead of creating a new user.
     const importUser: admin.auth.UserImportRecord = {
@@ -198,7 +197,7 @@ describe('admin.auth', () => {
     await admin.auth().importUsers([importUser]);
 
     try {
-      await admin.auth().getUserByProviderId('google.com', 'google_uid')
+      await admin.auth().getUserByProviderUid('google.com', 'google_uid')
         .then((userRecord) => {
           expect(userRecord.uid).to.equal(importUser.uid);
         });
@@ -395,8 +394,8 @@ describe('admin.auth', () => {
       .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
   });
 
-  it('getUserByProviderId() fails when called with a non-existing federated id', () => {
-    return admin.auth().getUserByProviderId('google.com', nonexistentUid)
+  it('getUserByProviderUid() fails when called with a non-existing federated id', () => {
+    return admin.auth().getUserByProviderUid('google.com', nonexistentUid)
       .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
   });
 

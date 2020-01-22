@@ -213,7 +213,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    * @return A promise fulfilled with the user data corresponding to the
    *   given provider id.
    */
-  public getUserByProviderId(providerId: string, providerUid: string): Promise<UserRecord> {
+  public getUserByProviderUid(providerId: string, providerUid: string): Promise<UserRecord> {
     // Although we don't really advertise it, we want to also handle
     // non-federated idps with this call. So if we detect one of them, we'll
     // reroute this request appropriately.
@@ -223,7 +223,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
       return this.getUserByEmail(providerUid);
     }
 
-    return this.authRequestHandler.getAccountInfoByFederatedId(providerId, providerUid)
+    return this.authRequestHandler.getAccountInfoByFederatedUid(providerId, providerUid)
       .then((response: any) => {
         // Returns the user record populated with server response.
         return new UserRecord(response.users[0]);

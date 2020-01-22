@@ -1543,7 +1543,7 @@ declare namespace admin.auth {
      * @return A promise fulfilled with the user data corresponding to the
      *   given provider id.
      */
-    getUserByProviderId(providerId: string, providerUid: string): Promise<admin.auth.UserRecord>;
+    getUserByProviderUid(providerId: string, providerUid: string): Promise<admin.auth.UserRecord>;
 
     /**
      * Retrieves a list of users (single batch only) with a size of `maxResults`

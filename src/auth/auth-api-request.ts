@@ -811,7 +811,7 @@ export abstract class AbstractAuthRequestHandler {
     return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_GET_ACCOUNT_INFO, request);
   }
 
-  public getAccountInfoByFederatedId(federatedId: string, federatedUid: string): Promise<object> {
+  public getAccountInfoByFederatedUid(federatedId: string, federatedUid: string): Promise<object> {
     if (!validator.isNonEmptyString(federatedId) || !validator.isNonEmptyString(federatedUid)) {
       throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
     }
