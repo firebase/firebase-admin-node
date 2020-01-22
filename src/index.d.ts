@@ -550,12 +550,12 @@ declare namespace admin.auth {
   interface MultiFactorInfo {
   
     /**
-     * The user's unique ID of the enrolled second factor.
+     * The ID of the enrolled second factor. This ID is unique to the user.
      */
     uid: string;
 
     /**
-     * The optional display name for an enrolled second factor.
+     * The optional display name of the enrolled second factor.
      */
     displayName?: string;
 
@@ -565,7 +565,7 @@ declare namespace admin.auth {
     enrollmentTime?: string;
 
     /**
-     * The second factor type identifier. For SMS second factor, this is `"phone"`.
+     * The type identifier of the second factor. For SMS second factors, this is `phone`.
      */
     factorId: string;
 
@@ -682,12 +682,12 @@ declare namespace admin.auth {
     tenantId?: string | null;
 
     /**
-     * The multi-factor related properties for the current user if available.
+     * The multi-factor related properties for the current user, if available.
      */
     multiFactor?: {
 
       /**
-       * List of enrolled second factors on the current user record.
+       * List of second factors enrolled with the current user.
        * Currently only phone second factors are supported.
        */
       enrolledFactors: PhoneMultiFactorInfo[];
@@ -711,7 +711,7 @@ declare namespace admin.auth {
   interface UpdateMultiFactorInfoRequest {
   
     /**
-     * The user's unique ID of the enrolled second factor. When not provided,
+     * The ID of the enrolled second factor. This ID is unique to the user. When not provided,
      * a new one is provisioned by the Auth server.
      */
     uid?: string;
@@ -727,7 +727,7 @@ declare namespace admin.auth {
     enrollmentTime?: string;
 
     /**
-     * The second factor type identifier. For SMS second factor, this is `"phone"`.
+     * The type identifier of the second factor. For SMS second factors, this is `phone`.
      */
     factorId: string;
   }
@@ -791,9 +791,9 @@ declare namespace admin.auth {
     multiFactor?: {
 
       /**
-       * The user's updated list of enrolled second factors. The provided list will always
-       * overwrite any existing list of enrolled second factors on the user.
-       * When null is passed, all existing enrolled second factors on the user will be removed.
+       * The updated list of enrolled second factors. The provided list overwrites the user's
+       * existing list of second factors.
+       * When null is passed, all of the user's existing second factors are removed.
        */
       enrolledFactors: UpdatePhoneMultiFactorInfoRequest[] | null;
     };
@@ -811,7 +811,7 @@ declare namespace admin.auth {
     displayName?: string;
 
     /**
-     * The second factor type identifier. For SMS second factor, this is `"phone"`.
+     * The type identifier of the second factor. For SMS second factors, this is `phone`.
      */
     factorId: string;
   }
@@ -916,14 +916,14 @@ declare namespace admin.auth {
       sign_in_provider: string;
 
       /**
-       * This is the type identifier or `factorId` of the second factor, provided the
+       * The type identifier or `factorId` of the second factor, provided the
        * ID token was obtained from a multi-factor authenticated user.
        * For phone, this is `“phone”`.
        */
       sign_in_second_factor?: string;
 
       /**
-       * This is the `uid` of the second factor used to sign in, provided the
+       * The `uid` of the second factor used to sign in, provided the
        * ID token was obtained from a multi-factor authenticated user.
        */
       second_factor_identifier?: string;
