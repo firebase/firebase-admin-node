@@ -366,17 +366,17 @@ describe('admin.auth', () => {
     });
 
     it('can link/unlink with a federated provider', async () => {
-      const federatedUid = 'google_uid_' + generateRandomString(10);
+      const googleFederatedUid = 'google_uid_' + generateRandomString(10);
       let userRecord = await admin.auth().updateUser(updateUser.uid, {
         providerToLink: {
           providerId: 'google.com',
-          uid: federatedUid,
+          uid: googleFederatedUid,
         },
       });
 
       let providerUids = userRecord.providerData.map((userInfo) => userInfo.uid);
       let providerIds = userRecord.providerData.map((userInfo) => userInfo.providerId);
-      expect(providerUids).to.deep.include(federatedUid);
+      expect(providerUids).to.deep.include(googleFederatedUid);
       expect(providerIds).to.deep.include('google.com');
 
       userRecord = await admin.auth().updateUser(updateUser.uid, {
@@ -385,7 +385,7 @@ describe('admin.auth', () => {
 
       providerUids = userRecord.providerData.map((userInfo) => userInfo.uid);
       providerIds = userRecord.providerData.map((userInfo) => userInfo.providerId);
-      expect(providerUids).to.not.deep.include(federatedUid);
+      expect(providerUids).to.not.deep.include(googleFederatedUid);
       expect(providerIds).to.not.deep.include('google.com');
     });
 
@@ -422,6 +422,19 @@ describe('admin.auth', () => {
       providerIds = userRecord.providerData.map((userInfo) => userInfo.providerId);
       expect(providerUids).to.not.deep.include.members([googleFederatedUid, facebookFederatedUid, '+15555550001']);
       expect(providerIds).to.not.deep.include.members(['google.com', 'facebook.com', 'phone']);
+    });
+
+    it('noops successfully when given an empty providersToDelete list', async () => {
+      const userRecord = await createTestUser('NoopWithEmptyProvidersToDeleteUser');
+      try {
+        const updatedUserRecord = await admin.auth().updateUser(userRecord.uid, {
+          providersToDelete: [],
+        });
+
+        expect(updatedUserRecord).to.deep.equal(userRecord);
+      } finally {
+        safeDelete(userRecord.uid);
+      }
     });
   });
 

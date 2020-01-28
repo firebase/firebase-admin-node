@@ -1456,14 +1456,6 @@ AUTH_CONFIGS.forEach((testConfig) => {
           });
       });
 
-      it('should be rejected given an empty providersToDelete list', () => {
-        expect(() => {
-          auth.updateUser(uid, {
-            providersToDelete: [],
-          });
-        }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
-      });
-
       INVALID_PROVIDER_IDS.forEach((invalidProviderId) => {
         it('should be rejected given a deleteProvider list with an invalid provider ID '
             + JSON.stringify(invalidProviderId), () => {

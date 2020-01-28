@@ -724,12 +724,12 @@ declare namespace admin.auth {
     photoURL?: string | null;
 
     /**
-     * Links this user to the specified federated provider.
+     * Links this user to the specified provider.
      */
     providerToLink?: UserProvider;
 
     /**
-     * Unlinks this user from the specified federated providers.
+     * Unlinks this user from the specified providers.
      */
     providersToDelete?: string[];
   }

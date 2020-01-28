@@ -413,7 +413,7 @@ function validateCreateEditRequest(request: any, uploadAccountRequest: boolean =
     });
   }
 
-  // linkProviderUserInfo must be a (single) UserInfo value.
+  // linkProviderUserInfo must be a (single) UserProvider value.
   if (typeof request.linkProviderUserInfo !== 'undefined') {
     validateProviderUserInfo(request.linkProviderUserInfo);
   }
@@ -980,17 +980,17 @@ export abstract class AbstractAuthRequestHandler {
           'providerToLink.uid of properties argument must be a non-empty string.');
       }
     } else if (typeof properties.providersToDelete !== 'undefined') {
-      if (!validator.isNonEmptyArray(properties.providersToDelete)) {
+      if (!validator.isArray(properties.providersToDelete)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_ARGUMENT,
-          'providersToDelete of properties argument must be a non-empty array of strings.');
+          'providersToDelete of properties argument must be an array of strings.');
       }
 
       properties.providersToDelete.forEach((providerId) => {
         if (!validator.isNonEmptyString(providerId)) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_ARGUMENT,
-            'providersToDelete of properties argument must be a non-empty array of strings.');
+            'providersToDelete of properties argument must be an array of strings.');
         }
       });
     }
