@@ -26,7 +26,7 @@ import * as validator from '../utils/validator';
 /**
  * Internals of an ML instance.
  */
-class MlInternals implements FirebaseServiceInternalsInterface {
+class MachineLearningInternals implements FirebaseServiceInternalsInterface {
   /**
    * Deletes the service and its associated resources.
    *
@@ -56,7 +56,7 @@ export interface ListModelsResult {
  * The Firebase Machine Learning class
  */
 export class MachineLearning implements FirebaseServiceInterface {
-  public readonly INTERNAL = new MlInternals();
+  public readonly INTERNAL = new MachineLearningInternals();
 
   private readonly appInternal: FirebaseApp;
 
@@ -200,7 +200,7 @@ export class Model {
 export interface TFLiteModel {
   readonly sizeBytes: number;
 
-  readonly gcsTfliteUri?: string;
+  readonly gcsTfliteUri: string;
 }
 
 
@@ -211,7 +211,7 @@ export class ModelOptions {
   public displayName?: string;
   public tags?: string[];
 
-  public tfLiteModel?: { gcsTFLiteUri?: string; };
+  public tfLiteModel?: { gcsTFLiteUri: string; };
 
   protected toJSON(forUpload?: boolean): object {
     throw new Error('NotImplemented');

@@ -5204,136 +5204,136 @@ declare namespace admin.messaging {
 }
 
 declare namespace admin.machineLearning {
-    /**
-     * Interface representing options for listing Models.
-     */
-    interface ListModelOptions {
-      listFilter?: string;
-      pageSize?: number;
-      pageToken?: string;
-    }
-
-    /** Response object for a listModels operation. */
-    interface ListModelsResult {
-      readonly models: Model[];
-      readonly pageToken?: string;
-    }
-
-    /**
-     * A TFLite Model output object
-     */
-    interface TFLiteModel {
-      readonly sizeBytes: number;
-
-      readonly gcsTfliteUri?: string;
-    }
-
-    /**
-     * A Firebase ML Model input object
-     */
-    interface ModelOptions {
-      displayName?: string;
-      tags?: string[];
-
-      tfLiteModel?: {gcsTFLiteUri?: string;};
-
-      toJSON(forUpload?: boolean): object;
-    }
-
-    /**
-     * A Firebase ML Model output object
-     */
-    interface Model {
-      readonly modelId: string;
-      readonly displayName: string;
-      readonly tags?: string[];
-      readonly createTime: number;
-      readonly updateTime: number;
-      readonly validationError?: string;
-      readonly published: boolean;
-      readonly etag: string;
-      readonly modelHash: string;
-      readonly locked: boolean;
-      waitForUnlocked(maxTimeSeconds?: number): Promise<void>;
-
-      readonly tfLiteModel?: TFLiteModel;
-    }
-
-    /**
-     * The Firebase `MachineLearning` service interface.
-     *
-     * Do not call this constructor directly. Instead, use
-     * [`admin.machineLearning()`](admin.machineLearning#machineLearning).
-     */
-    interface MachineLearning {
-      app: admin.app.App;
-
-      /**
-       * Creates a model in Firebase ML.
-       *
-       * @param {ModelOptions} model The model to create.
-       *
-       * @return {Promise<Model>} A Promise fulfilled with the created model.
-       */
-      createModel(model: ModelOptions): Promise<Model>;
-
-      /**
-       * Updates a model in Firebase ML.
-       *
-       * @param {string} modelId The id of the model to update.
-       * @param {ModelOptions} model The model fields to update.
-       *
-       * @return {Promise<Model>} A Promise fulfilled with the updated model.
-       */
-      updateModel(modelId: string, model: ModelOptions): Promise<Model>;
-
-      /**
-       * Publishes a model in Firebase ML.
-       *
-       * @param {string} modelId The id of the model to publish.
-       *
-       * @return {Promise<Model>} A Promise fulfilled with the published model.
-       */
-      publishModel(modelId: string): Promise<Model>;
-
-      /**
-       * Unpublishes a model in Firebase ML.
-       *
-       * @param {string} modelId The id of the model to unpublish.
-       *
-       * @return {Promise<Model>} A Promise fulfilled with the unpublished model.
-       */
-      unpublishModel(modelId: string): Promise<Model>;
-
-      /**
-       * Gets a model from Firebase ML.
-       *
-       * @param {string} modelId The id of the model to get.
-       *
-       * @return {Promise<Model>} A Promise fulfilled with the unpublished model.
-       */
-      getModel(modelId: string): Promise<Model>;
-
-      /**
-       * Lists models from Firebase ML.
-       *
-       * @param {ListModelsOptions} options The listing options.
-       *
-       * @return {Promise<{models: Model[], pageToken?: string}>} A promise that
-       *     resolves with the current (filtered) list of models and the next page
-       *     token. For the last page, an empty list of models and no page token
-       * are returned.
-       */
-      listModels(options: ListModelOptions): Promise<ListModelsResult>;
-
-      /**
-       * Deletes a model from Firebase ML.
-       *
-       * @param {string} modelId The id of the model to delete.
-       */
-      deleteModel(modelId: string): Promise<void>;
-    }
+  /**
+   * Interface representing options for listing Models.
+   */
+  interface ListModelOptions {
+    listFilter?: string;
+    pageSize?: number;
+    pageToken?: string;
   }
+
+  /** Response object for a listModels operation. */
+  interface ListModelsResult {
+    readonly models: Model[];
+    readonly pageToken?: string;
+  }
+
+  /**
+   * A TFLite Model output object
+   */
+  interface TFLiteModel {
+    readonly sizeBytes: number;
+
+    readonly gcsTfliteUri?: string;
+  }
+
+  /**
+   * A Firebase ML Model input object
+   */
+  interface ModelOptions {
+    displayName?: string;
+    tags?: string[];
+
+    tfLiteModel?: {gcsTFLiteUri: string;};
+
+    toJSON(forUpload?: boolean): object;
+  }
+
+  /**
+   * A Firebase ML Model output object
+   */
+  interface Model {
+    readonly modelId: string;
+    readonly displayName: string;
+    readonly tags?: string[];
+    readonly createTime: number;
+    readonly updateTime: number;
+    readonly validationError?: string;
+    readonly published: boolean;
+    readonly etag: string;
+    readonly modelHash: string;
+    readonly locked: boolean;
+    waitForUnlocked(maxTimeSeconds?: number): Promise<void>;
+
+    readonly tfLiteModel?: TFLiteModel;
+  }
+
+  /**
+   * The Firebase `MachineLearning` service interface.
+   *
+   * Do not call this constructor directly. Instead, use
+   * [`admin.machineLearning()`](admin.machineLearning#machineLearning).
+   */
+  interface MachineLearning {
+    app: admin.app.App;
+
+    /**
+     * Creates a model in Firebase ML.
+     *
+     * @param {ModelOptions} model The model to create.
+     *
+     * @return {Promise<Model>} A Promise fulfilled with the created model.
+     */
+    createModel(model: ModelOptions): Promise<Model>;
+
+    /**
+     * Updates a model in Firebase ML.
+     *
+     * @param {string} modelId The id of the model to update.
+     * @param {ModelOptions} model The model fields to update.
+     *
+     * @return {Promise<Model>} A Promise fulfilled with the updated model.
+     */
+    updateModel(modelId: string, model: ModelOptions): Promise<Model>;
+
+    /**
+     * Publishes a model in Firebase ML.
+     *
+     * @param {string} modelId The id of the model to publish.
+     *
+     * @return {Promise<Model>} A Promise fulfilled with the published model.
+     */
+    publishModel(modelId: string): Promise<Model>;
+
+    /**
+     * Unpublishes a model in Firebase ML.
+     *
+     * @param {string} modelId The id of the model to unpublish.
+     *
+     * @return {Promise<Model>} A Promise fulfilled with the unpublished model.
+     */
+    unpublishModel(modelId: string): Promise<Model>;
+
+    /**
+     * Gets a model from Firebase ML.
+     *
+     * @param {string} modelId The id of the model to get.
+     *
+     * @return {Promise<Model>} A Promise fulfilled with the unpublished model.
+     */
+    getModel(modelId: string): Promise<Model>;
+
+    /**
+     * Lists models from Firebase ML.
+     *
+     * @param {ListModelsOptions} options The listing options.
+     *
+     * @return {Promise<{models: Model[], pageToken?: string}>} A promise that
+     *     resolves with the current (filtered) list of models and the next page
+     *     token. For the last page, an empty list of models and no page token
+     * are returned.
+     */
+    listModels(options: ListModelOptions): Promise<ListModelsResult>;
+
+    /**
+     * Deletes a model from Firebase ML.
+     *
+     * @param {string} modelId The id of the model to delete.
+     */
+    deleteModel(modelId: string): Promise<void>;
+  }
+}
 
 declare namespace admin.storage {
 
