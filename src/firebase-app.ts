@@ -22,6 +22,7 @@ import {FirebaseNamespaceInternals} from './firebase-namespace';
 import {AppErrorCodes, FirebaseAppError} from './utils/error';
 
 import {Auth} from './auth/auth';
+import {MachineLearning} from './machine-learning/machine-learning';
 import {Messaging} from './messaging/messaging';
 import {Storage} from './storage/storage';
 import {Database} from '@firebase/database';
@@ -29,6 +30,7 @@ import {DatabaseService} from './database/database';
 import {Firestore} from '@google-cloud/firestore';
 import {FirestoreService} from './firestore/firestore';
 import {InstanceId} from './instance-id/instance-id';
+
 import {ProjectManagement} from './project-management/project-management';
 import {SecurityRules} from './security-rules/security-rules';
 
@@ -351,6 +353,19 @@ export class FirebaseApp {
     return this.ensureService_('iid', () => {
       const iidService: typeof InstanceId = require('./instance-id/instance-id').InstanceId;
       return new iidService(this);
+    });
+  }
+
+  /**
+   * Returns the MachineLearning service instance associated with this app.
+   *
+   * @return {MachineLearning} The Machine Learning service instance of this app
+   */
+  public machineLearning(): MachineLearning {
+    return this.ensureService_('machine-learning', () => {
+      const machineLearningService: typeof MachineLearning =
+          require('./machine-learning/machine-learning').MachineLearning;
+      return new machineLearningService(this);
     });
   }
 

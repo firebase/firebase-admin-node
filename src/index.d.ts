@@ -272,6 +272,38 @@ declare namespace admin {
   function messaging(app?: admin.app.App): admin.messaging.Messaging;
 
   /**
+   * Gets the {@link admin.ml.MachineLearning `MachineLearning`} service for the
+   * default app or a given app.
+   *
+   * `admin.machineLearning()` can be called with no arguments to access the
+   * default app's {@link admin.machineLearing.MachineLearning
+    * `MachineLearning`} service or as `admin.machineLearning(app)` to access
+    * the {@link admin.machineLearning.MachineLearning `MachineLearning`}
+    * service associated with a specific app.
+    *
+    * @example
+    * ```javascript
+    * // Get the MachineLearning service for the default app
+    * var defaultMachineLearning = admin.machineLearning();
+    * ```
+    *
+    * @example
+    * ```javascript
+    * // Get the MachineLearning service for a given app
+    * var otherMachineLearning = admin.machineLearning(otherApp);
+    * ```
+    *
+    * @param app Optional app whose `MachineLearning` service to
+    *   return. If not provided, the default `MachineLearning` service
+    *   will be returned.
+    *
+    * @return The default `MachineLearning` service if no app is provided or the
+    *   `MachineLearning` service associated with the provided app.
+    */
+   function machineLearning(app?: admin.app.App):
+       admin.machineLearning.MachineLearning;
+
+  /**
    * Gets the {@link admin.storage.Storage `Storage`} service for the
    * default app or a given app.
    *
@@ -454,6 +486,7 @@ declare namespace admin.app {
     firestore(): admin.firestore.Firestore;
     instanceId(): admin.instanceId.InstanceId;
     messaging(): admin.messaging.Messaging;
+    machineLearning(): admin.machineLearning.MachineLearning;
     projectManagement(): admin.projectManagement.ProjectManagement;
     securityRules(): admin.securityRules.SecurityRules;
     storage(): admin.storage.Storage;
@@ -1099,14 +1132,14 @@ declare namespace admin.auth {
 
   /**
    * Interface representing a tenant configuration.
-   * 
+   *
    * Multi-tenancy support requires Google Cloud's Identity Platform
    * (GCIP). To learn more about GCIP, including pricing and features,
    * see the [GCIP documentation](https://cloud.google.com/identity-platform)
-   * 
+   *
    * Before multi-tenancy can be used on a Google Cloud Identity Platform project,
    * tenants must be allowed on that project via the Cloud Console UI.
-   * 
+   *
    * A tenant configuration provides information such as the display name, tenant
    * identifier and email authentication configuration.
    * For OIDC/SAML provider configuration management, `TenantAwareAuth` instances should
@@ -1189,7 +1222,7 @@ declare namespace admin.auth {
   /**
    * Interface representing the object returned from a
    * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#listTenants `listTenants()`}
-   * operation. 
+   * operation.
    * Contains the list of tenants for the current batch and the next page token if available.
    */
   interface ListTenantsResult {
@@ -1995,7 +2028,7 @@ declare namespace admin.auth {
    * </ul>
    */
   interface TenantManager {
-    /** 
+    /**
      * @param tenantId The tenant ID whose `TenantAwareAuth` instance is to be returned.
      *
      * @return The `TenantAwareAuth` instance corresponding to this tenant identifier.
@@ -2035,7 +2068,7 @@ declare namespace admin.auth {
      */
     deleteTenant(tenantId: string): Promise<void>;
 
-    /** 
+    /**
      * Creates a new tenant.
      * When creating new tenants, tenants that use separate billing and quota will require their
      * own project and must be defined as `full_service`.
@@ -4004,15 +4037,15 @@ declare namespace admin.messaging {
     channelId?: string;
 
     /**
-     * Sets the "ticker" text, which is sent to accessibility services. Prior to 
-     * API level 21 (Lollipop), sets the text that is displayed in the status bar 
+     * Sets the "ticker" text, which is sent to accessibility services. Prior to
+     * API level 21 (Lollipop), sets the text that is displayed in the status bar
      * when the notification first arrives.
      */
     ticker?: string;
 
     /**
-     * When set to `false` or unset, the notification is automatically dismissed when 
-     * the user clicks it in the panel. When set to `true`, the notification persists 
+     * When set to `false` or unset, the notification is automatically dismissed when
+     * the user clicks it in the panel. When set to `true`, the notification persists
      * even when the user clicks it.
      */
     sticky?: boolean;
@@ -4025,73 +4058,73 @@ declare namespace admin.messaging {
     eventTimestamp?: Date;
 
     /**
-     * Sets whether or not this notification is relevant only to the current device. 
-     * Some notifications can be bridged to other devices for remote display, such as 
-     * a Wear OS watch. This hint can be set to recommend this notification not be bridged. 
+     * Sets whether or not this notification is relevant only to the current device.
+     * Some notifications can be bridged to other devices for remote display, such as
+     * a Wear OS watch. This hint can be set to recommend this notification not be bridged.
      * See [Wear OS guides](https://developer.android.com/training/wearables/notifications/bridger#existing-method-of-preventing-bridging)
      */
     localOnly?: boolean;
 
     /**
-     * Sets the relative priority for this notification. Low-priority notifications 
-     * may be hidden from the user in certain situations. Note this priority differs 
-     * from `AndroidMessagePriority`. This priority is processed by the client after 
-     * the message has been delivered. Whereas `AndroidMessagePriority` is an FCM concept 
+     * Sets the relative priority for this notification. Low-priority notifications
+     * may be hidden from the user in certain situations. Note this priority differs
+     * from `AndroidMessagePriority`. This priority is processed by the client after
+     * the message has been delivered. Whereas `AndroidMessagePriority` is an FCM concept
      * that controls when the message is delivered.
      */
     priority?: ('min' | 'low' | 'default' | 'high' | 'max');
 
     /**
-     * Sets the vibration pattern to use. Pass in an array of milliseconds to 
-     * turn the vibrator on or off. The first value indicates the duration to wait before 
-     * turning the vibrator on. The next value indicates the duration to keep the 
-     * vibrator on. Subsequent values alternate between duration to turn the vibrator 
-     * off and to turn the vibrator on. If `vibrate_timings` is set and `default_vibrate_timings` 
+     * Sets the vibration pattern to use. Pass in an array of milliseconds to
+     * turn the vibrator on or off. The first value indicates the duration to wait before
+     * turning the vibrator on. The next value indicates the duration to keep the
+     * vibrator on. Subsequent values alternate between duration to turn the vibrator
+     * off and to turn the vibrator on. If `vibrate_timings` is set and `default_vibrate_timings`
      * is set to `true`, the default value is used instead of the user-specified `vibrate_timings`.
      */
     vibrateTimingsMillis?: number[];
 
     /**
-     * If set to `true`, use the Android framework's default vibrate pattern for the 
-     * notification. Default values are specified in [`config.xml`](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml). 
-     * If `default_vibrate_timings` is set to `true` and `vibrate_timings` is also set, 
+     * If set to `true`, use the Android framework's default vibrate pattern for the
+     * notification. Default values are specified in [`config.xml`](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml).
+     * If `default_vibrate_timings` is set to `true` and `vibrate_timings` is also set,
      * the default value is used instead of the user-specified `vibrate_timings`.
      */
     defaultVibrateTimings?: boolean;
 
     /**
-     * If set to `true`, use the Android framework's default sound for the notification. 
+     * If set to `true`, use the Android framework's default sound for the notification.
      * Default values are specified in [`config.xml`](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml).
      */
     defaultSound?: boolean;
 
     /**
-     * Settings to control the notification's LED blinking rate and color if LED is 
+     * Settings to control the notification's LED blinking rate and color if LED is
      * available on the device. The total blinking time is controlled by the OS.
      */
     lightSettings?: LightSettings;
 
     /**
-     * If set to `true`, use the Android framework's default LED light settings 
-     * for the notification. Default values are specified in [`config.xml`](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml). 
-     * If `default_light_settings` is set to `true` and `light_settings` is also set, 
+     * If set to `true`, use the Android framework's default LED light settings
+     * for the notification. Default values are specified in [`config.xml`](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml).
+     * If `default_light_settings` is set to `true` and `light_settings` is also set,
      * the user-specified `light_settings` is used instead of the default value.
      */
     defaultLightSettings?: boolean;
 
     /**
-     * Sets the visibility of the notification. Must be either `private`, `public`, 
+     * Sets the visibility of the notification. Must be either `private`, `public`,
      * or `secret`. If unspecified, defaults to `private`.
      */
     visibility?: ('private' | 'public' | 'secret');
 
     /**
-     * Sets the number of items this notification represents. May be displayed as a 
-     * badge count for Launchers that support badging. See [`NotificationBadge`(https://developer.android.com/training/notify-user/badges). 
+     * Sets the number of items this notification represents. May be displayed as a
+     * badge count for Launchers that support badging. See [`NotificationBadge`(https://developer.android.com/training/notify-user/badges).
      * For example, this might be useful if you're using just one notification to
      * represent multiple new messages but you want the count here to represent
-     * the number of total new messages. If zero or unspecified, systems 
-     * that support badging use the default, which is to increment a number 
+     * the number of total new messages. If zero or unspecified, systems
+     * that support badging use the default, which is to increment a number
      * displayed on the long-press menu each time a new notification arrives.
      */
     notificationCount?: number;
@@ -4113,7 +4146,7 @@ declare namespace admin.messaging {
     lightOnDurationMillis: number;
 
     /**
-     * Required. Along with `light_on_duration`, defines the blink rate of LED flashes. 
+     * Required. Along with `light_on_duration`, defines the blink rate of LED flashes.
      */
     lightOffDurationMillis: number;
   }
@@ -5169,6 +5202,138 @@ declare namespace admin.messaging {
     ): Promise<admin.messaging.MessagingTopicManagementResponse>;
   }
 }
+
+declare namespace admin.machineLearning {
+    /**
+     * Interface representing options for listing Models.
+     */
+    interface ListModelOptions {
+      listFilter?: string;
+      pageSize?: number;
+      pageToken?: string;
+    }
+
+    /** Response object for a listModels operation. */
+    interface ListModelsResult {
+      readonly models: Model[];
+      readonly pageToken?: string;
+    }
+
+    /**
+     * A TFLite Model output object
+     */
+    interface TFLiteModel {
+      readonly sizeBytes: number;
+
+      readonly gcsTfliteUri?: string;
+    }
+
+    /**
+     * A Firebase ML Model input object
+     */
+    interface ModelOptions {
+      displayName?: string;
+      tags?: string[];
+
+      tfLiteModel?: {gcsTFLiteUri?: string;};
+
+      toJSON(forUpload?: boolean): object;
+    }
+
+    /**
+     * A Firebase ML Model output object
+     */
+    interface Model {
+      readonly modelId: string;
+      readonly displayName: string;
+      readonly tags?: string[];
+      readonly createTime: number;
+      readonly updateTime: number;
+      readonly validationError?: string;
+      readonly published: boolean;
+      readonly etag: string;
+      readonly modelHash: string;
+      readonly locked: boolean;
+      waitForUnlocked(maxTimeSeconds?: number): Promise<void>;
+
+      readonly tfLiteModel?: TFLiteModel;
+    }
+
+    /**
+     * The Firebase `MachineLearning` service interface.
+     *
+     * Do not call this constructor directly. Instead, use
+     * [`admin.machineLearning()`](admin.machineLearning#machineLearning).
+     */
+    interface MachineLearning {
+      app: admin.app.App;
+
+      /**
+       * Creates a model in Firebase ML.
+       *
+       * @param {ModelOptions} model The model to create.
+       *
+       * @return {Promise<Model>} A Promise fulfilled with the created model.
+       */
+      createModel(model: ModelOptions): Promise<Model>;
+
+      /**
+       * Updates a model in Firebase ML.
+       *
+       * @param {string} modelId The id of the model to update.
+       * @param {ModelOptions} model The model fields to update.
+       *
+       * @return {Promise<Model>} A Promise fulfilled with the updated model.
+       */
+      updateModel(modelId: string, model: ModelOptions): Promise<Model>;
+
+      /**
+       * Publishes a model in Firebase ML.
+       *
+       * @param {string} modelId The id of the model to publish.
+       *
+       * @return {Promise<Model>} A Promise fulfilled with the published model.
+       */
+      publishModel(modelId: string): Promise<Model>;
+
+      /**
+       * Unpublishes a model in Firebase ML.
+       *
+       * @param {string} modelId The id of the model to unpublish.
+       *
+       * @return {Promise<Model>} A Promise fulfilled with the unpublished model.
+       */
+      unpublishModel(modelId: string): Promise<Model>;
+
+      /**
+       * Gets a model from Firebase ML.
+       *
+       * @param {string} modelId The id of the model to get.
+       *
+       * @return {Promise<Model>} A Promise fulfilled with the unpublished model.
+       */
+      getModel(modelId: string): Promise<Model>;
+
+      /**
+       * Lists models from Firebase ML.
+       *
+       * @param {ListModelsOptions} options The listing options.
+       *
+       * @return {Promise<{models: Model[], pageToken?: string}>} A promise that
+       *     resolves with the current (filtered) list of models and the next page
+       *     token. For the last page, an empty list of models and no page token
+       * are returned.
+       */
+      listModels(options: ListModelOptions): Promise<ListModelsResult>;
+
+      /**
+       * Deletes a model from Firebase ML.
+       *
+       * @param {string} modelId The id of the model to delete.
+       */
+      deleteModel(modelId: string): Promise<void>;
+    }
+  }
 
 declare namespace admin.storage {
 
