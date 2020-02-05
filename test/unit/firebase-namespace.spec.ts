@@ -481,7 +481,7 @@ describe('FirebaseNamespace', () => {
       }).to.throw(DEFAULT_APP_NOT_FOUND);
     });
 
-    it('shoudl throw when default app is not initialized', () => {
+    it('should throw when default app is not initialized', () => {
       firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
       expect(() => {
         firebaseNamespace.machineLearning();
