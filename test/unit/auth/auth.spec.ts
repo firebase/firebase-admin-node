@@ -1131,8 +1131,8 @@ AUTH_CONFIGS.forEach((testConfig) => {
     });
 
     describe('getUserByProviderUid()', () => {
-      const federatedId = 'google.com';
-      const federatedUid = 'google_uid';
+      const providerId = 'google.com';
+      const providerUid = 'google_uid';
       const tenantId = testConfig.supportsTenantManagement ? undefined : TENANT_ID;
       const expectedGetAccountInfoResult = getValidGetAccountInfoResponse(tenantId);
       const expectedUserRecord = getValidUserRecord(expectedGetAccountInfoResult);
@@ -1147,36 +1147,36 @@ AUTH_CONFIGS.forEach((testConfig) => {
         stubs = [];
       });
 
-      it('should be rejected given no federated id', () => {
+      it('should be rejected given no provider id', () => {
         expect(() => (auth as any).getUserByProviderUid())
           .to.throw(FirebaseAuthError)
           .with.property('code', 'auth/invalid-provider-id');
       });
 
-      it('should be rejected given an invalid federated id', () => {
+      it('should be rejected given an invalid provider id', () => {
         expect(() => auth.getUserByProviderUid('', 'uid'))
           .to.throw(FirebaseAuthError)
           .with.property('code', 'auth/invalid-provider-id');
       });
 
-      it('should be rejected given an invalid federated uid', () => {
+      it('should be rejected given an invalid provider uid', () => {
         expect(() => auth.getUserByProviderUid('id', ''))
           .to.throw(FirebaseAuthError)
           .with.property('code', 'auth/invalid-provider-id');
       });
 
       it('should be rejected given an app which returns null access tokens', () => {
-        return nullAccessTokenAuth.getUserByProviderUid(federatedId, federatedUid)
+        return nullAccessTokenAuth.getUserByProviderUid(providerId, providerUid)
           .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
       });
 
       it('should be rejected given an app which returns invalid access tokens', () => {
-        return malformedAccessTokenAuth.getUserByProviderUid(federatedId, federatedUid)
+        return malformedAccessTokenAuth.getUserByProviderUid(providerId, providerUid)
           .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
       });
 
       it('should be rejected given an app which fails to generate access tokens', () => {
-        return rejectedPromiseAccessTokenAuth.getUserByProviderUid(federatedId, federatedUid)
+        return rejectedPromiseAccessTokenAuth.getUserByProviderUid(providerId, providerUid)
           .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
       });
 
@@ -1185,10 +1185,10 @@ AUTH_CONFIGS.forEach((testConfig) => {
         const stub = sinon.stub(testConfig.RequestHandler.prototype, 'getAccountInfoByFederatedUid')
           .resolves(expectedGetAccountInfoResult);
         stubs.push(stub);
-        return auth.getUserByProviderUid(federatedId, federatedUid)
+        return auth.getUserByProviderUid(providerId, providerUid)
           .then((userRecord) => {
             // Confirm underlying API called with expected parameters.
-            expect(stub).to.have.been.calledOnce.and.calledWith(federatedId, federatedUid);
+            expect(stub).to.have.been.calledOnce.and.calledWith(providerId, providerUid);
             // Confirm expected user record response returned.
             expect(userRecord).to.deep.equal(expectedUserRecord);
           });
@@ -1232,12 +1232,12 @@ AUTH_CONFIGS.forEach((testConfig) => {
         const stub = sinon.stub(testConfig.RequestHandler.prototype, 'getAccountInfoByFederatedUid')
           .rejects(expectedError);
         stubs.push(stub);
-        return auth.getUserByProviderUid(federatedId, federatedUid)
+        return auth.getUserByProviderUid(providerId, providerUid)
           .then((userRecord) => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
-            expect(stub).to.have.been.calledOnce.and.calledWith(federatedId, federatedUid);
+            expect(stub).to.have.been.calledOnce.and.calledWith(providerId, providerUid);
             // Confirm expected error returned.
             expect(error).to.equal(expectedError);
           });

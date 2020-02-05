@@ -171,8 +171,9 @@ describe('admin.auth', () => {
   it('getUserByProviderUid() returns a user record with the matching provider id', async () => {
     // TODO(rsgowman): Once we can link a provider id with a user, just do that
     // here instead of creating a new user.
+    const randomUid = 'import_' + generateRandomString(20).toLowerCase();
     const importUser: admin.auth.UserImportRecord = {
-      uid: 'uid',
+      uid: randomUid,
       email: 'user@example.com',
       phoneNumber: '+15555550000',
       emailVerified: true,
@@ -193,7 +194,6 @@ describe('admin.auth', () => {
       }],
     };
 
-    await safeDelete(importUser.uid);
     await admin.auth().importUsers([importUser]);
 
     try {
