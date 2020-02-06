@@ -69,6 +69,11 @@ jobs:
         name: dist
         path: dist
 
+    - name: Verify tarball
+      run: |
+        PACKAGE_TARBALL=`ls *.tgz`
+        ./verifyReleaseTarball.sh $PACKAGE_TARBALL
+
     # Check whether the release should be published. We publish only when the trigger PR is
     #   1. merged
     #   2. to the master branch
