@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Release
+name: Release Candidate
 
 on:
-  # Only run the workflow when a PR is closed, or when a developer explicitly requests
+  # Only run the workflow when a PR is updated or when a developer explicitly requests
   # a build by sending a 'firebase_build' event.
   pull_request:
     types: [opened, synchronize, closed]
@@ -74,24 +74,43 @@ jobs:
         PACKAGE_TARBALL=`ls *.tgz`
         ./verifyReleaseTarball.sh $PACKAGE_TARBALL
 
+  publish_release:
+    needs: stage_release
+
     # Check whether the release should be published. We publish only when the trigger PR is
     #   1. merged
     #   2. to the master branch
     #   3. with the title prefix '[chore] Release '.
-    - name: Publish preflight check
-      if: success() && github.event.pull_request.merged &&
+    if: success() && github.event.pull_request.merged &&
         github.ref == 'master' &&
         startsWith(github.event.pull_request.title, '[chore] Release ')
-      id: preflight
-      run: |
-        ./.github/scripts/publish_preflight_check.sh
-        echo ::set-env name=FIREBASE_PUBLISH::true
 
-    # Tag the release if not executing in the dryrun mode. We pull this action froma
-    # custom fork of a contributor until https://github.com/actions/create-release/pull/32
-    # is merged. Also note that v1 of this action does not support the "body" parameter.
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout source for publish
+      uses: actions/checkout@v2
+
+    # Download the artifacts created by the stage_release job.
+    - name: Download release candidates
+      uses: actions/download-artifact@v1
+      with:
+        name: dist
+
+    # Node.js and NPM are needed to complete the publish.
+    - name: Set up Node.js
+      uses: actions/setup-node@v1
+      with:
+        node-version: 8.x
+
+    - name: Publish preflight check
+      id: preflight
+      run: ./.github/scripts/publish_preflight_check.sh
+
+    # We pull this action from a custom fork of a contributor until
+    # https://github.com/actions/create-release/pull/32 is merged. Also note that v1 of
+    # this action does not support the "body" parameter.
     - name: Create release tag
-      if: success() && env.FIREBASE_PUBLISH
       uses: fleskesvor/create-release@1a72e235c178bf2ae6c51a8ae36febc24568c5fe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -103,12 +122,11 @@ jobs:
         prerelease: false
 
     - name: Publish to NPM
-      if: success() && env.FIREBASE_PUBLISH
       run: echo Publishing to NPM
 
     # Post to Twitter if explicitly opted-in by adding the label 'release:tweet'.
     - name: Post to Twitter
-      if: success() && env.FIREBASE_PUBLISH &&
+      if: success() &&
         contains(github.event.pull_request.labels.*.name, 'release:tweet')
       run: echo Posting Tweet
       continue-on-error: true

@@ -61,6 +61,26 @@ echo "::set-output name=version::v${RELEASE_VERSION}"
 
 echo_info ""
 echo_info "--------------------------------------------"
+echo_info "Check release artifacts"
+echo_info "--------------------------------------------"
+echo_info ""
+
+if [[ ! -d dist ]]; then
+  echo_warn "dist directory does not exist."
+  terminate
+fi
+
+readonly RELEASE_ARTIFACT="dist/firebase-admin-${RELEASE_VERSION}.tgz"
+if [[ -f "${RELEASE_ARTIFACT}" ]]; then
+  echo_info "Found release artifact: ${RELEASE_ARTIFACT}"
+else
+  echo_warn "Release artifact ${RELEASE_ARTIFACT} not found."
+  terminate
+fi
+
+
+echo_info ""
+echo_info "--------------------------------------------"
 echo_info "Checking previous releases"
 echo_info "--------------------------------------------"
 echo_info ""
