@@ -1139,7 +1139,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         stubs = [];
       });
 
-      it('should be rejected when given more than 100 identifiers', () => {
+      it('should throw when given more than 100 identifiers', () => {
         const identifiers: UserIdentifier[] = [];
         for (let i = 0; i < 101; i++) {
           identifiers.push({uid: 'id' + i});
@@ -1150,7 +1150,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           .with.property('code', 'auth/maximum-user-count-exceeded');
       });
 
-      it('should be rejected when given a non array parameter', () => {
+      it('should throw when given a non array parameter', () => {
         const nonArrayValues = [ null, undefined, 42, 3.14, "i'm not an array", {} ];
         nonArrayValues.forEach((v) => {
           expect(() => auth.getUsers(v as any))
@@ -1179,31 +1179,31 @@ AUTH_CONFIGS.forEach((testConfig) => {
           });
       });
 
-      it('should be rejected when given an invalid uid', () => {
+      it('should throw when given an invalid uid', () => {
         expect(() => auth.getUsers([{uid: 'too long ' + ('.' as any).repeat(128)}]))
           .to.throw(FirebaseAuthError)
           .with.property('code', 'auth/invalid-uid');
       });
 
-      it('should be rejected when given an invalid email', () => {
+      it('should throw when given an invalid email', () => {
         expect(() => auth.getUsers([{email: 'invalid email addr'}]))
           .to.throw(FirebaseAuthError)
           .with.property('code', 'auth/invalid-email');
       });
 
-      it('should be rejected when given an invalid phone number', () => {
+      it('should throw when given an invalid phone number', () => {
         expect(() => auth.getUsers([{phoneNumber: 'invalid phone number'}]))
           .to.throw(FirebaseAuthError)
           .with.property('code', 'auth/invalid-phone-number');
       });
 
-      it('should be rejected when given an invalid provider', () => {
+      it('should throw when given an invalid provider', () => {
         expect(() => auth.getUsers([{providerUid: '', providerId: ''}]))
           .to.throw(FirebaseAuthError)
           .with.property('code', 'auth/invalid-provider-id');
       });
 
-      it('should be rejected when given a single bad identifier', () => {
+      it('should throw when given a single bad identifier', () => {
         const identifiers: UserIdentifier[] = [
           {uid: 'valid_id1'},
           {uid: 'valid_id2'},
