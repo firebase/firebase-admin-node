@@ -49,20 +49,9 @@ export interface ModelResponse extends ModelContent {
   readonly createTime: string;
   readonly updateTime: string;
   readonly etag: string;
-  readonly modelHash: string;
+  readonly modelHash?: string;
 }
 
-export interface ListModelsResponse {
-  readonly models: ModelResponse[];
-  readonly nextPageToken?: string;
-}
-
-interface OperationResponse {
-  readonly name?: string;
-  readonly done: boolean;
-  readonly error?: StatusErrorResponse;
-  readonly response?: ModelResponse;
-}
 
 /**
  * Class that facilitates sending requests to the Firebase ML backend API.
@@ -84,14 +73,6 @@ export class MachineLearningApiClient {
     this.httpClient = new AuthorizedHttpClient(app);
   }
 
-  public createModel(model: ModelContent): Promise<OperationResponse> {
-    throw new Error('NotImplemented');
-  }
-
-  public updateModel(modelId: string, model: ModelContent): Promise<OperationResponse> {
-    throw new Error('NotImplemented');
-  }
-
   public getModel(modelId: string): Promise<ModelResponse> {
     return Promise.resolve()
       .then(() => {
@@ -102,9 +83,6 @@ export class MachineLearningApiClient {
       });
   }
 
-  public listModels(options: {listFilter?: string, pageSize?: number, pageToken?: string}) {
-    throw new Error('NotImplemented');
-  }
 
   private getUrl(): Promise<string> {
     return this.getProjectIdPrefix()

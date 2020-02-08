@@ -184,7 +184,7 @@ export class Model {
   public readonly validationError?: string;
   public readonly published: boolean;
   public readonly etag: string;
-  public readonly modelHash: string;
+  public readonly modelHash?: string;
 
   public readonly tfliteModel?: TFLiteModel;
 
@@ -252,7 +252,7 @@ export class ModelOptions {
   public displayName?: string;
   public tags?: string[];
 
-  public tfLiteModel?: { gcsTFLiteUri: string; };
+  public tfliteModel?: { gcsTFLiteUri: string; };
 
   protected toJSON(forUpload?: boolean): object {
     throw new Error('NotImplemented');

@@ -47,6 +47,7 @@ import './messaging/batch-requests.spec';
 
 // Machine Learning
 import './machine-learning/machine-learning.spec';
+import './machine-learning/machine-learning-api-client.spec';
 
 // Storage
 import './storage/storage.spec';

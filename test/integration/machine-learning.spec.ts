@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-
 import * as admin from '../../lib/index';
 
 describe('admin.machineLearning', () => {
   describe('getModel()', () => {
-    it('rejects with not-found when the Ruleset does not exist', () => {
+    it('rejects with not-found when the Model does not exist', () => {
       const nonExistingName = '00000000';
       return admin.machineLearning().getModel(nonExistingName)
         .should.eventually.be.rejected.and.have.property(
@@ -27,13 +26,9 @@ describe('admin.machineLearning', () => {
     });
 
     it('rejects with invalid-argument when the ModelId is invalid', () => {
-      return admin.machineLearning().getModel('abc')
+      return admin.machineLearning().getModel('invalid-model-id')
         .should.eventually.be.rejected.and.have.property(
           'code', 'machine-learning/invalid-argument');
-    });
-
-    it('resolves with existing Model', () => {
-      // TODO(ifielker): implement this when we have create/delete.
     });
   });
 });

@@ -5252,7 +5252,7 @@ declare namespace admin.machineLearning {
     readonly validationError?: string;
     readonly published: boolean;
     readonly etag: string;
-    readonly modelHash: string;
+    readonly modelHash?: string;
     readonly locked: boolean;
     waitForUnlocked(maxTimeSeconds?: number): Promise<void>;
 
