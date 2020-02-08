@@ -5256,7 +5256,7 @@ declare namespace admin.machineLearning {
     readonly locked: boolean;
     waitForUnlocked(maxTimeSeconds?: number): Promise<void>;
 
-    readonly tfLiteModel?: TFLiteModel;
+    readonly tfliteModel?: TFLiteModel;
   }
 
   /**

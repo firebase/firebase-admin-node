@@ -45,6 +45,9 @@ import './database/database.spec';
 import './messaging/messaging.spec';
 import './messaging/batch-requests.spec';
 
+// Machine Learning
+import './machine-learning/machine-learning.spec';
+
 // Storage
 import './storage/storage.spec';
 
