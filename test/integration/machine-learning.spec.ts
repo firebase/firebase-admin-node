@@ -31,4 +31,21 @@ describe('admin.machineLearning', () => {
           'code', 'machine-learning/invalid-argument');
     });
   });
+
+  describe('deleteModel()', () => {
+    it('rejects with not-found when the Model does not exist', () => {
+      const nonExistingName = '00000000';
+      return admin.machineLearning().deleteModel(nonExistingName)
+        .should.eventually.be.rejected.and.have.property(
+          'code', 'machine-learning/not-found');
+    });
+
+    it('rejects with invalid-argument when the Model ID is invalid', () => {
+      return admin.machineLearning().deleteModel('invalid-model-id')
+      .should.eventually.be.rejected.and.have.property(
+        'code', 'machine-learning/invalid-argument');
+    });
+
+
+  });
 });

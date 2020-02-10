@@ -156,4 +156,82 @@ describe('MachineLearningApiClient', () => {
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
   });
+
+  describe('deleteModel', () => {
+    const INVALID_NAMES: any[] = [null, undefined, '', 1, true, {}, []];
+    INVALID_NAMES.forEach((invalidName) => {
+      it(`should reject when called with: ${JSON.stringify(invalidName)}`, () => {
+        return apiClient.deleteModel(invalidName)
+          .should.eventually.be.rejected.and.have.property(
+            'message', 'Model ID must be a non-empty string.');
+      });
+    });
+
+    it(`should reject when called with prefixed name`, () => {
+      return apiClient.deleteModel('projects/foo/rulesets/bar')
+        .should.eventually.be.rejected.and.have.property(
+          'message', 'Model ID must not contain any "/" characters.');
+    });
+
+    it(`should reject when project id is not available`, () => {
+      return clientWithoutProjectId.deleteModel(MODEL_ID)
+        .should.eventually.be.rejectedWith(noProjectId);
+    });
+
+    it('should resolve on success', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom({}));
+      stubs.push(stub);
+      return apiClient.deleteModel(MODEL_ID)
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'DELETE',
+            url: 'https://mlkit.googleapis.com/v1beta1/projects/test-project/models/1234567',
+            headers: EXPECTED_HEADERS,
+          });
+        });
+    });
+
+    it('should reject when a full platform error response is received', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+      stubs.push(stub);
+      const expected = new FirebaseMachineLearningError('not-found', 'Requested entity not found');
+      return apiClient.deleteModel(MODEL_ID)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should reject unknown-error when error code is not present', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom({}, 404));
+      stubs.push(stub);
+      const expected = new FirebaseMachineLearningError('unknown-error', 'Unknown server error: {}');
+      return apiClient.deleteModel(MODEL_ID)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should reject unknown-error for non-json response', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom('not json', 404));
+      stubs.push(stub);
+      const expected = new FirebaseMachineLearningError(
+        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+      return apiClient.deleteModel(MODEL_ID)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should reject when rejected with a FirebaseAppError', () => {
+      const expected = new FirebaseAppError('network-error', 'socket hang up');
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(expected);
+      stubs.push(stub);
+      return apiClient.deleteModel(MODEL_ID)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+  });
 });

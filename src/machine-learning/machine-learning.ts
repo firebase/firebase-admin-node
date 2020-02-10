@@ -168,7 +168,7 @@ export class MachineLearning implements FirebaseServiceInterface {
    * @param {string} modelId The id of the model to delete.
    */
   public deleteModel(modelId: string): Promise<void> {
-    throw new Error('NotImplemented');
+    return this.client.deleteModel(modelId);
   }
 }
 
