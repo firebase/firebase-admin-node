@@ -17,9 +17,11 @@
 
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
+import {MachineLearningApiClient, ModelResponse} from './machine-learning-api-client';
 import {FirebaseError} from '../utils/error';
 
 import * as validator from '../utils/validator';
+import {FirebaseMachineLearningError} from './machine-learning-utils';
 
 // const ML_HOST = 'mlkit.googleapis.com';
 
@@ -58,6 +60,7 @@ export interface ListModelsResult {
 export class MachineLearning implements FirebaseServiceInterface {
   public readonly INTERNAL = new MachineLearningInternals();
 
+  private readonly client: MachineLearningApiClient;
   private readonly appInternal: FirebaseApp;
 
   /**
@@ -68,12 +71,13 @@ export class MachineLearning implements FirebaseServiceInterface {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseError({
         code: 'machine-learning/invalid-argument',
-        message: 'First argument passed to admin.MachineLearning() must be a ' +
+        message: 'First argument passed to admin.machineLearning() must be a ' +
             'valid Firebase app instance.',
       });
     }
 
     this.appInternal = app;
+    this.client = new MachineLearningApiClient(app);
   }
 
   /**
@@ -138,7 +142,10 @@ export class MachineLearning implements FirebaseServiceInterface {
    * @return {Promise<Model>} A Promise fulfilled with the unpublished model.
    */
   public getModel(modelId: string): Promise<Model> {
-    throw new Error('NotImplemented');
+    return this.client.getModel(modelId)
+      .then((modelResponse) => {
+         return new Model(modelResponse);
+      });
   }
 
   /**
@@ -172,14 +179,48 @@ export class Model {
   public readonly modelId: string;
   public readonly displayName: string;
   public readonly tags?: string[];
-  public readonly createTime: number;
-  public readonly updateTime: number;
+  public readonly createTime: string;
+  public readonly updateTime: string;
   public readonly validationError?: string;
   public readonly published: boolean;
   public readonly etag: string;
-  public readonly modelHash: string;
+  public readonly modelHash?: string;
 
-  public readonly tfLiteModel?: TFLiteModel;
+  public readonly tfliteModel?: TFLiteModel;
+
+  constructor(model: ModelResponse) {
+    if (!validator.isNonNullObject(model) ||
+      !validator.isNonEmptyString(model.name) ||
+      !validator.isNonEmptyString(model.createTime) ||
+      !validator.isNonEmptyString(model.updateTime) ||
+      !validator.isNonEmptyString(model.displayName) ||
+      !validator.isNonEmptyString(model.etag)) {
+        throw new FirebaseMachineLearningError(
+          'invalid-argument',
+          `Invalid Model response: ${JSON.stringify(model)}`);
+    }
+
+    this.modelId = extractModelId(model.name);
+    this.displayName = model.displayName;
+    this.tags = model.tags || [];
+    this.createTime = new Date(model.createTime).toUTCString();
+    this.updateTime = new Date(model.updateTime).toUTCString();
+    if (model.state?.validationError?.message) {
+      this.validationError = model.state?.validationError?.message;
+    }
+    this.published = model.state?.published || false;
+    this.etag = model.etag;
+    if (model.modelHash) {
+      this.modelHash = model.modelHash;
+    }
+    if (model.tfliteModel) {
+      this.tfliteModel = {
+        gcsTfliteUri: model.tfliteModel.gcsTfliteUri,
+        sizeBytes: model.tfliteModel.sizeBytes,
+      };
+    }
+
+  }
 
   public get locked(): boolean {
     // Backend does not currently return locked models.
@@ -211,9 +252,13 @@ export class ModelOptions {
   public displayName?: string;
   public tags?: string[];
 
-  public tfLiteModel?: { gcsTFLiteUri: string; };
+  public tfliteModel?: { gcsTFLiteUri: string; };
 
   protected toJSON(forUpload?: boolean): object {
     throw new Error('NotImplemented');
   }
+}
+
+function extractModelId(resourceName: string): string {
+  return resourceName.split('/').pop()!;
 }
