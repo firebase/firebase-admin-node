@@ -45,7 +45,5 @@ describe('admin.machineLearning', () => {
       .should.eventually.be.rejected.and.have.property(
         'code', 'machine-learning/invalid-argument');
     });
-
-
   });
 });
