@@ -83,48 +83,6 @@ export class MachineLearningApiClient {
       });
   }
 
-
-  private getUrl(): Promise<string> {
-    return this.getProjectIdPrefix()
-      .then((projectIdPrefix) => {
-        return `${ML_V1BETA1_API}/${this.projectIdPrefix}`;
-      });
-  }
-
-  private getProjectIdPrefix(): Promise<string> {
-    if (this.projectIdPrefix) {
-      return Promise.resolve(this.projectIdPrefix);
-    }
-
-    return utils.findProjectId(this.app)
-      .then((projectId) => {
-        if (!validator.isNonEmptyString(projectId)) {
-          throw new FirebaseMachineLearningError(
-            'invalid-argument',
-            'Failed to determine project ID. Initialize the SDK with service account credentials, or '
-            + 'set project ID as an app option. Alternatively, set the GOOGLE_CLOUD_PROJECT '
-            + 'environment variable.');
-        }
-
-        this.projectIdPrefix = `projects/${projectId}`;
-        return this.projectIdPrefix;
-      });
-  }
-
-  private getModelName(modelId: string): string {
-    if (!validator.isNonEmptyString(modelId)) {
-      throw new FirebaseMachineLearningError(
-        'invalid-argument', 'Model ID must be a non-empty string.');
-    }
-
-    if (modelId.indexOf('/') !== -1) {
-      throw new FirebaseMachineLearningError(
-        'invalid-argument', 'Model ID must not contain any "/" characters.');
-    }
-
-    return `models/${modelId}`;
-  }
-
   /**
    * Gets the specified resource from the ML API. Resource names must be the short names without project
    * ID prefix (e.g. `models/123456789`).
@@ -173,6 +131,47 @@ export class MachineLearningApiClient {
     }
     const message = error.message || `Unknown server error: ${response.text}`;
     return new FirebaseMachineLearningError(code, message);
+  }
+
+  private getUrl(): Promise<string> {
+    return this.getProjectIdPrefix()
+      .then((projectIdPrefix) => {
+        return `${ML_V1BETA1_API}/${this.projectIdPrefix}`;
+      });
+  }
+
+  private getProjectIdPrefix(): Promise<string> {
+    if (this.projectIdPrefix) {
+      return Promise.resolve(this.projectIdPrefix);
+    }
+
+    return utils.findProjectId(this.app)
+      .then((projectId) => {
+        if (!validator.isNonEmptyString(projectId)) {
+          throw new FirebaseMachineLearningError(
+            'invalid-argument',
+            'Failed to determine project ID. Initialize the SDK with service account credentials, or '
+            + 'set project ID as an app option. Alternatively, set the GOOGLE_CLOUD_PROJECT '
+            + 'environment variable.');
+        }
+
+        this.projectIdPrefix = `projects/${projectId}`;
+        return this.projectIdPrefix;
+      });
+  }
+
+  private getModelName(modelId: string): string {
+    if (!validator.isNonEmptyString(modelId)) {
+      throw new FirebaseMachineLearningError(
+        'invalid-argument', 'Model ID must be a non-empty string.');
+    }
+
+    if (modelId.indexOf('/') !== -1) {
+      throw new FirebaseMachineLearningError(
+        'invalid-argument', 'Model ID must not contain any "/" characters.');
+    }
+
+    return `models/${modelId}`;
   }
 }
 
