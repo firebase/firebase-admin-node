@@ -241,4 +241,24 @@ describe('MachineLearning', () => {
         });
     });
   });
+
+  describe('deleteModel', () => {
+    it('should propagate API errors', () => {
+      const stub = sinon
+        .stub(MachineLearningApiClient.prototype, 'deleteModel')
+        .rejects(EXPECTED_ERROR);
+      stubs.push(stub);
+      return machineLearning.deleteModel('1234567')
+        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+    });
+
+    it('should resolve on success', () => {
+      const stub = sinon
+        .stub(MachineLearningApiClient.prototype, 'deleteModel')
+        .resolves({});
+      stubs.push(stub);
+
+      return machineLearning.deleteModel('1234567');
+    });
+  });
 });

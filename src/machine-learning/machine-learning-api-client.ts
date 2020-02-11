@@ -83,6 +83,18 @@ export class MachineLearningApiClient {
       });
   }
 
+  public deleteModel(modelId: string): Promise<void> {
+    return this.getUrl()
+      .then((url) => {
+        const modelName = this.getModelName(modelId);
+        const request: HttpRequestConfig = {
+          method: 'DELETE',
+          url: `${url}/${modelName}`,
+        };
+        return this.sendRequest<void>(request);
+      });
+  }
+
   /**
    * Gets the specified resource from the ML API. Resource names must be the short names without project
    * ID prefix (e.g. `models/123456789`).
