@@ -1,0 +1,21 @@
+name: 'Send Tweet Action'
+description: 'Announce a Firebase release via Twitter.'
+inputs:
+  repo:
+    status: Status (Tweet) to be posted
+    required: true
+  consumer-key:
+    description: Consumer API key.
+    required: true
+  consumer-secret:
+    description: Consumer API secret key.
+    required: true
+  access-token:
+    description: Application access token.
+    required: true
+  access-token-secret:
+    description: Application access token secret.
+    required: true
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
