@@ -1,7 +1,7 @@
 {
   "name": "send-tweet",
   "version": "1.0.0",
-  "description": "Announces Firebase releases via Twitter",
+  "description": "Send Tweets from GitHub Actions workflows.",
   "main": "index.js",
   "scripts": {
     "pack": "ncc build"
