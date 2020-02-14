@@ -624,7 +624,9 @@ declare namespace admin.auth {
      * This is set via
      * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#setCustomUserClaims `setCustomUserClaims()`}
      */
-    customClaims?: Object;
+    customClaims?: {
+      [key: string]: any;
+    };
 
     /**
      * The date the user's tokens are valid after, formatted as a UTC string.
