@@ -17,7 +17,7 @@
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {ServiceAccountCredential, ComputeEngineCredential} from '../auth/credential';
+import {ServiceAccountCredential, isApplicationDefault} from '../auth/credential';
 import {Bucket, Storage as StorageClient} from '@google-cloud/storage';
 
 import * as utils from '../utils/index';
@@ -83,7 +83,7 @@ export class Storage implements FirebaseServiceInterface {
           client_email: credential.clientEmail,
         },
       });
-    } else if (app.options.credential instanceof ComputeEngineCredential) {
+    } else if (isApplicationDefault(app.options.credential)) {
       // Try to use the Google application default credentials.
       this.storageClient = new storage();
     } else {
