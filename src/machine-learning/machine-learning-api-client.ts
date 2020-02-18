@@ -52,6 +52,13 @@ export interface ModelResponse extends ModelContent {
   readonly modelHash?: string;
 }
 
+export interface OperationResponse {
+  readonly name?: string;
+  readonly done: boolean;
+  readonly error?: StatusErrorResponse;
+  readonly response?: ModelResponse;
+}
+
 
 /**
  * Class that facilitates sending requests to the Firebase ML backend API.
@@ -72,6 +79,24 @@ export class MachineLearningApiClient {
 
     this.httpClient = new AuthorizedHttpClient(app);
   }
+
+  public createModel(model: ModelContent): Promise<OperationResponse> {
+    if (!validator.isNonNullObject(model) ||
+        !validator.isNonEmptyString(model.displayName)) {
+      const err = new FirebaseMachineLearningError('invalid-argument', 'Invalid model content.');
+      return Promise.reject(err);
+    }
+    return this.getUrl()
+        .then((url) => {
+          const request: HttpRequestConfig = {
+            method: 'POST',
+            url: `${url}/models`,
+            data: model,
+          };
+          return this.sendRequest<OperationResponse>(request);
+        });
+  }
+
 
   public getModel(modelId: string): Promise<ModelResponse> {
     return Promise.resolve()

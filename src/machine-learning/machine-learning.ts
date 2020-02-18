@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-
+import {Storage as StorageClient} from '@google-cloud/storage';
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {MachineLearningApiClient, ModelResponse} from './machine-learning-api-client';
+import {ServiceAccountCredential, isApplicationDefault} from '../auth/credential';
+import {MachineLearningApiClient,
+  ModelResponse, OperationResponse, StatusErrorResponse} from './machine-learning-api-client';
 import {FirebaseError} from '../utils/error';
 
+import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import {FirebaseMachineLearningError} from './machine-learning-utils';
-
-// const ML_HOST = 'mlkit.googleapis.com';
+import { deepCopy } from '../utils/deep-copy';
 
 /**
  * Internals of an ML instance.
@@ -62,6 +64,7 @@ export class MachineLearning implements FirebaseServiceInterface {
 
   private readonly client: MachineLearningApiClient;
   private readonly appInternal: FirebaseApp;
+  private readonly storageClient: StorageClient;
 
   /**
    * @param {FirebaseApp} app The app for this ML service.
@@ -73,6 +76,44 @@ export class MachineLearning implements FirebaseServiceInterface {
         code: 'machine-learning/invalid-argument',
         message: 'First argument passed to admin.machineLearning() must be a ' +
             'valid Firebase app instance.',
+      });
+    }
+
+    let storage: typeof StorageClient;
+    try {
+      storage = require('@google-cloud/storage').Storage;
+    } catch (err) {
+      throw new FirebaseError({
+        code: 'ml/missing-dependencies',
+        message:
+            'Failed to import the Cloud Storage client library for Node.js. ' +
+            'Make sure to install the "@google-cloud/storage" npm package. ' +
+            `Original error: ${err}`,
+      });
+    }
+
+    const projectId: string | null = utils.getExplicitProjectId(app);
+    const credential = app.options.credential;
+    if (credential instanceof ServiceAccountCredential) {
+      this.storageClient = new storage({
+        // When the SDK is initialized with ServiceAccountCredentials an
+        // explicit projectId is guaranteed to be available.
+        projectId: projectId!,
+        credentials: {
+          private_key: credential.privateKey,
+          client_email: credential.clientEmail,
+        },
+      });
+    } else if (isApplicationDefault(app.options.credential)) {
+      // Try to use the Google application default credentials.
+      this.storageClient = new storage();
+    } else {
+      throw new FirebaseError({
+        code: 'ml/invalid-credential',
+        message:
+            'Failed to initialize ML client with the available credential. ' +
+            'Must initialize the SDK with a certificate credential or ' +
+            'application default credentials to use Firebase ML API.',
       });
     }
 
@@ -97,7 +138,9 @@ export class MachineLearning implements FirebaseServiceInterface {
    * @return {Promise<Model>} A Promise fulfilled with the created model.
    */
   public createModel(model: ModelOptions): Promise<Model> {
-    throw new Error('NotImplemented');
+    return convertOptionstoContent(model, true, this.storageClient)
+      .then((modelContent) => this.client.createModel(modelContent))
+      .then((operation) => handleOperation(operation));
   }
 
   /**
@@ -173,7 +216,7 @@ export class MachineLearning implements FirebaseServiceInterface {
 }
 
 /**
- * A Firebase ML Model output object
+ * A Firebase ML Model output object.
  */
 export class Model {
   public readonly modelId: string;
@@ -196,7 +239,7 @@ export class Model {
       !validator.isNonEmptyString(model.displayName) ||
       !validator.isNonEmptyString(model.etag)) {
         throw new FirebaseMachineLearningError(
-          'invalid-argument',
+          'invalid-server-response',
           `Invalid Model response: ${JSON.stringify(model)}`);
     }
 
@@ -252,13 +295,73 @@ export class ModelOptions {
   public displayName?: string;
   public tags?: string[];
 
-  public tfliteModel?: { gcsTFLiteUri: string; };
+  public tfliteModel?: { gcsTfliteUri: string; };
+}
 
-  protected toJSON(forUpload?: boolean): object {
-    throw new Error('NotImplemented');
+async function convertOptionstoContent(
+    options: ModelOptions, forUpload?: boolean,
+    storageClient?: StorageClient): Promise<object> {
+  const modelContent = deepCopy(options);
+  if (forUpload && modelContent.tfliteModel?.gcsTfliteUri) {
+    if (!storageClient) {
+      throw new FirebaseMachineLearningError(
+        'invalid-argument',
+        'Must specify storage client if forUpload and gcs Uri are specified.',
+      );
+    }
+    modelContent.tfliteModel.gcsTfliteUri = await signUrl(modelContent.tfliteModel.gcsTfliteUri, storageClient!);
+  }
+  return modelContent;
+}
+
+async function signUrl(unsignedUrl: string, storageClient: StorageClient): Promise<string> {
+  const MINUTES = 60 * 1000; // A minute in milliseconds.
+  const URL_VALID_DURATION = 10 * MINUTES;
+
+  const gcsRegex = /^gs:\/\/([a-z0-9_.-]{3,63})\/(.+)$/;
+  const matches = gcsRegex.exec(unsignedUrl);
+  if (!matches) {
+    throw new FirebaseMachineLearningError(
+      'invalid-argument',
+      `Invalid unsigned url: ${unsignedUrl}`);
+  }
+  const bucketName = matches[1];
+  const blobName = matches[2];
+  const bucket = storageClient.bucket(bucketName);
+  const blob = bucket.file(blobName);
+
+  try {
+    const signedUrl = blob.getSignedUrl({
+      action: 'read',
+      expires: Date.now() + URL_VALID_DURATION,
+    }).then((x) => x[0]);
+    return signedUrl;
+  } catch (err) {
+    throw new FirebaseMachineLearningError(
+      'internal-error',
+      `Error during signing upload url: ${err.message}`,
+    );
   }
 }
 
 function extractModelId(resourceName: string): string {
   return resourceName.split('/').pop()!;
+}
+
+
+function handleOperation(op: OperationResponse): Model {
+  if (op.done) {
+    if (op.response) {
+      return new Model(op.response);
+    } else if (op.error) {
+      handleOperationError(op.error);
+    }
+  }
+  throw new FirebaseMachineLearningError(
+    'invalid-server-response',
+    `Invalid Operation response: ${JSON.stringify(op)}`);
+}
+
+function handleOperationError(err: StatusErrorResponse) {
+  throw FirebaseMachineLearningError.fromOperationError(err.code, err.message);
 }

@@ -5235,9 +5235,7 @@ declare namespace admin.machineLearning {
     displayName?: string;
     tags?: string[];
 
-    tfLiteModel?: {gcsTFLiteUri: string;};
-
-    toJSON(forUpload?: boolean): object;
+    tfliteModel?: {gcsTfliteUri: string;};
   }
 
   /**
@@ -5247,8 +5245,8 @@ declare namespace admin.machineLearning {
     readonly modelId: string;
     readonly displayName: string;
     readonly tags?: string[];
-    readonly createTime: number;
-    readonly updateTime: number;
+    readonly createTime: string;
+    readonly updateTime: string;
     readonly validationError?: string;
     readonly published: boolean;
     readonly etag: string;
