@@ -109,13 +109,16 @@ export class MachineLearningApiClient {
   }
 
   public deleteModel(modelId: string): Promise<void> {
+    console.log(`DEBUGG: API going to delete ${modelId}`);
     return this.getUrl()
       .then((url) => {
         const modelName = this.getModelName(modelId);
+        console.log(`DEBUGG: Model Name is: ${modelName}`);
         const request: HttpRequestConfig = {
           method: 'DELETE',
           url: `${url}/${modelName}`,
         };
+        console.log(`DEBUGG: sending request: ${JSON.stringify(request)}`);
         return this.sendRequest<void>(request);
       });
   }
@@ -139,12 +142,16 @@ export class MachineLearningApiClient {
   }
 
   private sendRequest<T>(request: HttpRequestConfig): Promise<T> {
+    console.log('DEBUGG: sendREquest');
     request.headers = FIREBASE_VERSION_HEADER;
     return this.httpClient.send(request)
       .then((resp) => {
+        console.log(`DEBUGG: Response is: ${JSON.stringify(resp)}`);
+        console.log(`DEBUGG: Response as T: ${JSON.stringify(resp.data as T)}`);
         return resp.data as T;
       })
       .catch((err) => {
+        console.log(`DEBUGG: Error in sendREquest: ${JSON.stringify(err)}`);
         throw this.toFirebaseError(err);
       });
   }

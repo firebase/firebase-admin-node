@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-import {Storage as StorageClient} from '@google-cloud/storage';
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {ServiceAccountCredential, isApplicationDefault} from '../auth/credential';
-import {MachineLearningApiClient,
-  ModelResponse, OperationResponse, StatusErrorResponse} from './machine-learning-api-client';
+import {Storage} from '../storage/storage';
+import {MachineLearningApiClient, ModelResponse, OperationResponse,
+  StatusErrorResponse} from './machine-learning-api-client';
 import {FirebaseError} from '../utils/error';
 
-import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import {FirebaseMachineLearningError} from './machine-learning-utils';
 import { deepCopy } from '../utils/deep-copy';
@@ -64,7 +62,7 @@ export class MachineLearning implements FirebaseServiceInterface {
 
   private readonly client: MachineLearningApiClient;
   private readonly appInternal: FirebaseApp;
-  private readonly storageClient: StorageClient;
+  private readonly storage: Storage;
 
   /**
    * @param {FirebaseApp} app The app for this ML service.
@@ -79,44 +77,7 @@ export class MachineLearning implements FirebaseServiceInterface {
       });
     }
 
-    let storage: typeof StorageClient;
-    try {
-      storage = require('@google-cloud/storage').Storage;
-    } catch (err) {
-      throw new FirebaseError({
-        code: 'ml/missing-dependencies',
-        message:
-            'Failed to import the Cloud Storage client library for Node.js. ' +
-            'Make sure to install the "@google-cloud/storage" npm package. ' +
-            `Original error: ${err}`,
-      });
-    }
-
-    const projectId: string | null = utils.getExplicitProjectId(app);
-    const credential = app.options.credential;
-    if (credential instanceof ServiceAccountCredential) {
-      this.storageClient = new storage({
-        // When the SDK is initialized with ServiceAccountCredentials an
-        // explicit projectId is guaranteed to be available.
-        projectId: projectId!,
-        credentials: {
-          private_key: credential.privateKey,
-          client_email: credential.clientEmail,
-        },
-      });
-    } else if (isApplicationDefault(app.options.credential)) {
-      // Try to use the Google application default credentials.
-      this.storageClient = new storage();
-    } else {
-      throw new FirebaseError({
-        code: 'ml/invalid-credential',
-        message:
-            'Failed to initialize ML client with the available credential. ' +
-            'Must initialize the SDK with a certificate credential or ' +
-            'application default credentials to use Firebase ML API.',
-      });
-    }
-
+    this.storage = app.storage();
     this.appInternal = app;
     this.client = new MachineLearningApiClient(app);
   }
@@ -138,7 +99,7 @@ export class MachineLearning implements FirebaseServiceInterface {
    * @return {Promise<Model>} A Promise fulfilled with the created model.
    */
   public createModel(model: ModelOptions): Promise<Model> {
-    return convertOptionstoContent(model, true, this.storageClient)
+    return this.convertOptionstoContent(model, true)
       .then((modelContent) => this.client.createModel(modelContent))
       .then((operation) => handleOperation(operation));
   }
@@ -211,9 +172,54 @@ export class MachineLearning implements FirebaseServiceInterface {
    * @param {string} modelId The id of the model to delete.
    */
   public deleteModel(modelId: string): Promise<void> {
+    console.log(`DEBUGG: going to delete ${modelId}`);
     return this.client.deleteModel(modelId);
   }
+
+  private convertOptionstoContent(options: ModelOptions, forUpload?: boolean): Promise<object> {
+    const modelContent = deepCopy(options);
+
+    if (forUpload && modelContent.tfliteModel?.gcsTfliteUri) {
+      return this.signUrl(modelContent.tfliteModel.gcsTfliteUri)
+        .then ((uri: string) => {
+          modelContent.tfliteModel!.gcsTfliteUri = uri;
+          return modelContent;
+        })
+        .catch((err: Error) => {
+          throw new FirebaseMachineLearningError(
+            'internal-error',
+            `Error during signing upload url: ${err.message}`);
+
+        });
+    }
+
+    return Promise.resolve(modelContent);
+  }
+
+  private signUrl(unsignedUrl: string): Promise<string> {
+    const MINUTES_IN_MILLIS = 60 * 1000;
+    const URL_VALID_DURATION = 10 * MINUTES_IN_MILLIS;
+
+    const gcsRegex = /^gs:\/\/([a-z0-9_.-]{3,63})\/(.+)$/;
+    const matches = gcsRegex.exec(unsignedUrl);
+    if (!matches) {
+      throw new FirebaseMachineLearningError(
+        'invalid-argument',
+        `Invalid unsigned url: ${unsignedUrl}`);
+    }
+    const bucketName = matches[1];
+    const blobName = matches[2];
+    const bucket = this.storage.bucket(bucketName);
+    const blob = bucket.file(blobName);
+    return blob.getSignedUrl({
+      action: 'read',
+      expires: Date.now() + URL_VALID_DURATION,
+    }).then((x) => {
+      return x[0]
+    });
+  }
 }
+
 
 /**
  * A Firebase ML Model output object.
@@ -298,51 +304,6 @@ export class ModelOptions {
   public tfliteModel?: { gcsTfliteUri: string; };
 }
 
-async function convertOptionstoContent(
-    options: ModelOptions, forUpload?: boolean,
-    storageClient?: StorageClient): Promise<object> {
-  const modelContent = deepCopy(options);
-  if (forUpload && modelContent.tfliteModel?.gcsTfliteUri) {
-    if (!storageClient) {
-      throw new FirebaseMachineLearningError(
-        'invalid-argument',
-        'Must specify storage client if forUpload and gcs Uri are specified.',
-      );
-    }
-    modelContent.tfliteModel.gcsTfliteUri = await signUrl(modelContent.tfliteModel.gcsTfliteUri, storageClient!);
-  }
-  return modelContent;
-}
-
-async function signUrl(unsignedUrl: string, storageClient: StorageClient): Promise<string> {
-  const MINUTES = 60 * 1000; // A minute in milliseconds.
-  const URL_VALID_DURATION = 10 * MINUTES;
-
-  const gcsRegex = /^gs:\/\/([a-z0-9_.-]{3,63})\/(.+)$/;
-  const matches = gcsRegex.exec(unsignedUrl);
-  if (!matches) {
-    throw new FirebaseMachineLearningError(
-      'invalid-argument',
-      `Invalid unsigned url: ${unsignedUrl}`);
-  }
-  const bucketName = matches[1];
-  const blobName = matches[2];
-  const bucket = storageClient.bucket(bucketName);
-  const blob = bucket.file(blobName);
-
-  try {
-    const signedUrl = blob.getSignedUrl({
-      action: 'read',
-      expires: Date.now() + URL_VALID_DURATION,
-    }).then((x) => x[0]);
-    return signedUrl;
-  } catch (err) {
-    throw new FirebaseMachineLearningError(
-      'internal-error',
-      `Error during signing upload url: ${err.message}`,
-    );
-  }
-}
 
 function extractModelId(resourceName: string): string {
   return resourceName.split('/').pop()!;

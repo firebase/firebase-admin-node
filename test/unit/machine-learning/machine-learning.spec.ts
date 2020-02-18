@@ -162,9 +162,9 @@ describe('MachineLearning', () => {
     });
 
     it('should throw given invalid credential', () => {
-      const expectedError = 'Failed to initialize ML client with the available ' +
-          'credential. Must initialize the SDK with a certificate credential or application default ' +
-          'credentials to use Firebase ML API.';
+      const expectedError = 'Failed to initialize Google Cloud Storage client with ' +
+          'the available credential. Must initialize the SDK with a certificate credential ' +
+          'or application default credentials to use Cloud Storage API.';
       expect(() => {
         const machineLearningAny: any = MachineLearning;
         return new machineLearningAny(mockCredentialApp);

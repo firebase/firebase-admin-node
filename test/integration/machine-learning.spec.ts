@@ -58,14 +58,17 @@ describe('admin.machineLearning', () => {
       });
   }
 
-  function uploadModelToGcs(localFileName: string, gcsFileName: string): string {
+  function uploadModelToGcs(localFileName: string, gcsFileName: string): Promise<string> {
     const bucket: Bucket = admin.storage().bucket();
     const tfliteFileName = path.join(__dirname, `../resources/${localFileName}`);
-    bucket.upload(tfliteFileName, {destination: gcsFileName});
-    return `gs://${bucket.name}/${gcsFileName}`;
+    return bucket.upload(tfliteFileName, {destination: gcsFileName})
+      .then(() => {
+      return `gs://${bucket.name}/${gcsFileName}`;
+    });
   }
 
   afterEach(() => {
+    console.log('DEBUGG: Cleaning up.');
     return deleteTempModels();
   });
 
@@ -82,36 +85,37 @@ describe('admin.machineLearning', () => {
     });
 
     it('creates a new Model with valid ModelFormat', () => {
-      // Upload a file to default gcs bucket
-      const gcsFileName = uploadModelToGcs('model1.tflite', 'valid_model.tflite');
       const modelOptions: admin.machineLearning.ModelOptions = {
         displayName: 'node-integration-test-create-2',
         tags: ['tag234', 'tag456'],
-        tfliteModel: {
-          gcsTfliteUri: gcsFileName,
-        },
+        tfliteModel: {gcsTfliteUri: 'this will be replaced below'},
       };
-      return admin.machineLearning().createModel(modelOptions)
-        .then((model) => {
-          scheduleForDelete(model);
-          verifyModel(model, modelOptions);
-        });
+      return uploadModelToGcs('model1.tflite', 'valid_model.tflite')
+        .then((fileName: string) => {
+          modelOptions.tfliteModel!.gcsTfliteUri = fileName;
+          return admin.machineLearning().createModel(modelOptions)
+          .then((model) => {
+            scheduleForDelete(model);
+            verifyModel(model, modelOptions);
+          });
+        })
     });
 
     it('creates a new Model with invalid ModelFormat', () => {
       // Upload a file to default gcs bucket
-      const gcsFileName = uploadModelToGcs('invalid_model.tflite', 'invalid_model.tflite');
       const modelOptions: admin.machineLearning.ModelOptions = {
         displayName: 'node-integration-test-create-3',
         tags: ['tag234', 'tag456'],
-        tfliteModel: {
-          gcsTfliteUri: gcsFileName,
-        },
+        tfliteModel: {gcsTfliteUri: 'this will be replaced below'},
       };
-      return admin.machineLearning().createModel(modelOptions)
-        .then((model) => {
-          scheduleForDelete(model);
-          verifyModel(model, modelOptions);
+      return uploadModelToGcs('invalid_model.tflite', 'invalid_model.tflite')
+        .then((fileName: string) => {
+          modelOptions.tfliteModel!.gcsTfliteUri = fileName;
+          return admin.machineLearning().createModel(modelOptions)
+          .then((model) => {
+            scheduleForDelete(model);
+            verifyModel(model, modelOptions);
+          });
         });
     });
 
