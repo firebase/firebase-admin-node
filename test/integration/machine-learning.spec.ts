@@ -63,8 +63,8 @@ describe('admin.machineLearning', () => {
     const tfliteFileName = path.join(__dirname, `../resources/${localFileName}`);
     return bucket.upload(tfliteFileName, {destination: gcsFileName})
       .then(() => {
-      return `gs://${bucket.name}/${gcsFileName}`;
-    });
+        return `gs://${bucket.name}/${gcsFileName}`;
+      });
   }
 
   afterEach(() => {
@@ -93,10 +93,10 @@ describe('admin.machineLearning', () => {
         .then((fileName: string) => {
           modelOptions.tfliteModel!.gcsTfliteUri = fileName;
           return admin.machineLearning().createModel(modelOptions)
-          .then((model) => {
-            scheduleForDelete(model);
-            verifyModel(model, modelOptions);
-          });
+            .then((model) => {
+              scheduleForDelete(model);
+              verifyModel(model, modelOptions);
+            });
         });
     });
 

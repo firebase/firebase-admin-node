@@ -157,7 +157,7 @@ describe('MachineLearningApiClient', () => {
         });
     });
 
-    it('should throw unknown-error when error code is not present', () => {
+    it('should reject with unknown-error when error code is not present', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .rejects(utils.errorFrom({}, 404));
@@ -167,7 +167,7 @@ describe('MachineLearningApiClient', () => {
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
-    it('should throw unknown-error for non-json response', () => {
+    it('should reject with unknown-error for non-json response', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .rejects(utils.errorFrom('not json', 404));
@@ -178,7 +178,7 @@ describe('MachineLearningApiClient', () => {
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
-    it('should throw when rejected with a FirebaseAppError', () => {
+    it('should reject with when failed with a FirebaseAppError', () => {
       const expected = new FirebaseAppError('network-error', 'socket hang up');
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
@@ -257,7 +257,7 @@ describe('MachineLearningApiClient', () => {
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
-    it('should reject when rejected with a FirebaseAppError', () => {
+    it('should reject when failed with a FirebaseAppError', () => {
       const expected = new FirebaseAppError('network-error', 'socket hang up');
       const stub = sinon
         .stub(HttpClient.prototype, 'send')

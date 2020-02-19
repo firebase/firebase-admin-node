@@ -16,8 +16,7 @@
 
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {Storage} from '../storage/storage';
-import {MachineLearningApiClient, ModelResponse, OperationResponse} from './machine-learning-api-client';
+import {MachineLearningApiClient, ModelResponse, OperationResponse, ModelContent} from './machine-learning-api-client';
 import {FirebaseError} from '../utils/error';
 
 import * as validator from '../utils/validator';
@@ -61,7 +60,6 @@ export class MachineLearning implements FirebaseServiceInterface {
 
   private readonly client: MachineLearningApiClient;
   private readonly appInternal: FirebaseApp;
-  private readonly storage: Storage;
 
   /**
    * @param {FirebaseApp} app The app for this ML service.
@@ -76,7 +74,6 @@ export class MachineLearning implements FirebaseServiceInterface {
       });
     }
 
-    this.storage = app.storage();
     this.appInternal = app;
     this.client = new MachineLearningApiClient(app);
   }
@@ -174,7 +171,7 @@ export class MachineLearning implements FirebaseServiceInterface {
     return this.client.deleteModel(modelId);
   }
 
-  private convertOptionstoContent(options: ModelOptions, forUpload?: boolean): Promise<object> {
+  private convertOptionstoContent(options: ModelOptions, forUpload?: boolean): Promise<ModelContent> {
     const modelContent = deepCopy(options);
 
     if (forUpload && modelContent.tfliteModel?.gcsTfliteUri) {
@@ -187,11 +184,10 @@ export class MachineLearning implements FirebaseServiceInterface {
           throw new FirebaseMachineLearningError(
             'internal-error',
             `Error during signing upload url: ${err.message}`);
-
-        });
+        }) as Promise<ModelContent>;
     }
 
-    return Promise.resolve(modelContent);
+    return Promise.resolve(modelContent) as Promise<ModelContent>;
   }
 
   private signUrl(unsignedUrl: string): Promise<string> {
@@ -207,7 +203,7 @@ export class MachineLearning implements FirebaseServiceInterface {
     }
     const bucketName = matches[1];
     const blobName = matches[2];
-    const bucket = this.storage.bucket(bucketName);
+    const bucket = this.appInternal.storage().bucket(bucketName);
     const blob = bucket.file(blobName);
     return blob.getSignedUrl({
       action: 'read',

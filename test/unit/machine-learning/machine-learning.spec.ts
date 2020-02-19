@@ -121,13 +121,11 @@ describe('MachineLearning', () => {
 
   let machineLearning: MachineLearning;
   let mockApp: FirebaseApp;
-  let mockCredentialApp: FirebaseApp;
 
   const stubs: sinon.SinonStub[] = [];
 
   before(() => {
     mockApp = mocks.app();
-    mockCredentialApp = mocks.mockCredentialApp();
     machineLearning = new MachineLearning(mockApp);
   });
 
@@ -159,16 +157,6 @@ describe('MachineLearning', () => {
       }).to.throw(
           'First argument passed to admin.machineLearning() must be a valid Firebase app '
               + 'instance.');
-    });
-
-    it('should throw given invalid credential', () => {
-      const expectedError = 'Failed to initialize Google Cloud Storage client with ' +
-          'the available credential. Must initialize the SDK with a certificate credential ' +
-          'or application default credentials to use Cloud Storage API.';
-      expect(() => {
-        const machineLearningAny: any = MachineLearning;
-        return new machineLearningAny(mockCredentialApp);
-      }).to.throw(expectedError);
     });
 
     it('should not throw given a valid app', () => {
