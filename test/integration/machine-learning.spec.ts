@@ -68,11 +68,10 @@ describe('admin.machineLearning', () => {
   }
 
   afterEach(() => {
-    console.log('DEBUGG: Cleaning up.');
     return deleteTempModels();
   });
 
-  describe('createModel', () => {
+  describe('createModel()', () => {
     it('creates a new Model without ModelFormat', () => {
       const modelOptions: admin.machineLearning.ModelOptions = {
         displayName: 'node-integration-test-create-1',
@@ -98,7 +97,7 @@ describe('admin.machineLearning', () => {
             scheduleForDelete(model);
             verifyModel(model, modelOptions);
           });
-        })
+        });
     });
 
     it('creates a new Model with invalid ModelFormat', () => {
@@ -126,7 +125,6 @@ describe('admin.machineLearning', () => {
       return admin.machineLearning().createModel(modelOptions)
         .should.eventually.be.rejected.and.have.property('code', 'machine-learning/invalid-argument');
     });
-
   });
 
   describe('getModel()', () => {
@@ -182,29 +180,32 @@ describe('admin.machineLearning', () => {
     });
   });
 
-  function verifyModel(model: admin.machineLearning.Model, modelOptions: admin.machineLearning.ModelOptions) {
-    expect(model.displayName).to.equal(modelOptions.displayName);
+  function verifyModel(model: admin.machineLearning.Model, expectedOptions: admin.machineLearning.ModelOptions) {
+    expect(model.displayName).to.equal(expectedOptions.displayName);
     expect(model.createTime).to.not.be.empty;
     expect(model.updateTime).to.not.be.empty;
     expect(model.etag).to.not.be.empty;
-    if (modelOptions.tags) {
-      expect(model.tags).to.deep.equal(modelOptions.tags);
+    if (expectedOptions.tags) {
+      expect(model.tags).to.deep.equal(expectedOptions.tags);
     } else {
       expect(model.tags).to.be.empty;
     }
-    if (modelOptions.tfliteModel) {
-      expect(model.tfliteModel!.gcsTfliteUri).to.equal(modelOptions.tfliteModel.gcsTfliteUri);
-      if (modelOptions.tfliteModel.gcsTfliteUri.endsWith('invalid_model.tflite')) {
-        expect(model.modelHash).to.be.empty;
-        expect(model.validationError).to.equal('Invalid flatbuffer format');
-      } else {
-        expect(model.modelHash).to.not.be.empty;
-        expect(model.validationError).to.be.empty;
-      }
+    if (expectedOptions.tfliteModel) {
+      verifyTfliteModel(model, expectedOptions.tfliteModel.gcsTfliteUri);
     } else {
       expect(model.validationError).to.equal('No model file has been uploaded.');
     }
     expect(model.locked).to.be.false;
-
   }
 });
+
+function verifyTfliteModel(model: admin.machineLearning.Model, expectedGcsTfliteUri: string) {
+  expect(model.tfliteModel!.gcsTfliteUri).to.equal(expectedGcsTfliteUri);
+  if (expectedGcsTfliteUri.endsWith('invalid_model.tflite')) {
+    expect(model.modelHash).to.be.empty;
+    expect(model.validationError).to.equal('Invalid flatbuffer format');
+  } else {
+    expect(model.modelHash).to.not.be.empty;
+    expect(model.validationError).to.be.empty;
+  }
+}

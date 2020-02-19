@@ -17,8 +17,7 @@
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
 import {Storage} from '../storage/storage';
-import {MachineLearningApiClient, ModelResponse, OperationResponse,
-  StatusErrorResponse} from './machine-learning-api-client';
+import {MachineLearningApiClient, ModelResponse, OperationResponse} from './machine-learning-api-client';
 import {FirebaseError} from '../utils/error';
 
 import * as validator from '../utils/validator';
@@ -172,7 +171,6 @@ export class MachineLearning implements FirebaseServiceInterface {
    * @param {string} modelId The id of the model to delete.
    */
   public deleteModel(modelId: string): Promise<void> {
-    console.log(`DEBUGG: going to delete ${modelId}`);
     return this.client.deleteModel(modelId);
   }
 
@@ -215,7 +213,7 @@ export class MachineLearning implements FirebaseServiceInterface {
       action: 'read',
       expires: Date.now() + URL_VALID_DURATION,
     }).then((x) => {
-      return x[0]
+      return x[0];
     });
   }
 }
@@ -311,18 +309,17 @@ function extractModelId(resourceName: string): string {
 
 
 function handleOperation(op: OperationResponse): Model {
+  // Backend currently does not return operations that are not done.
   if (op.done) {
+    // Done operations must have either a response or an error.
     if (op.response) {
       return new Model(op.response);
     } else if (op.error) {
-      handleOperationError(op.error);
+      throw FirebaseMachineLearningError.fromOperationError(
+        op.error.code, op.error.message);
     }
   }
   throw new FirebaseMachineLearningError(
     'invalid-server-response',
     `Invalid Operation response: ${JSON.stringify(op)}`);
-}
-
-function handleOperationError(err: StatusErrorResponse) {
-  throw FirebaseMachineLearningError.fromOperationError(err.code, err.message);
 }
