@@ -372,7 +372,7 @@ describe('FirebaseTokenGenerator', () => {
       });
 
       it('should be fulfilled given a valid uid and empty object developer claims', () => {
-         return tokenGenerator.createCustomToken(mocks.uid, {});
+        return tokenGenerator.createCustomToken(mocks.uid, {});
       });
 
       it('should be fulfilled given a valid uid and valid developer claims', () => {

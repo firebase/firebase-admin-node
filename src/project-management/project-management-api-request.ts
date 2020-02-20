@@ -43,11 +43,11 @@ const CERT_TYPE_API_MAP = {
 };
 
 export function assertServerResponse(
-    condition: boolean, responseData: object, message: string): void {
+  condition: boolean, responseData: object, message: string): void {
   if (!condition) {
     throw new FirebaseProjectManagementError(
-        'invalid-server-response',
-        `${message} Response data: ${JSON.stringify(responseData, null, 2)}`);
+      'invalid-server-response',
+      `${message} Response data: ${JSON.stringify(responseData, null, 2)}`);
   }
 }
 
@@ -69,45 +69,45 @@ export class ProjectManagementRequestHandler {
     let errorMessage: string;
 
     switch (errStatusCode) {
-      case 400:
-        errorCode = 'invalid-argument';
-        errorMessage = 'Invalid argument provided.';
-        break;
-      case 401:
-      case 403:
-        errorCode = 'authentication-error';
-        errorMessage = 'An error occurred when trying to authenticate. Make sure the credential '
+    case 400:
+      errorCode = 'invalid-argument';
+      errorMessage = 'Invalid argument provided.';
+      break;
+    case 401:
+    case 403:
+      errorCode = 'authentication-error';
+      errorMessage = 'An error occurred when trying to authenticate. Make sure the credential '
             + 'used to authenticate this SDK has the proper permissions. See '
             + 'https://firebase.google.com/docs/admin/setup for setup instructions.';
-        break;
-      case 404:
-        errorCode = 'not-found';
-        errorMessage = 'The specified entity could not be found.';
-        break;
-      case 409:
-        errorCode = 'already-exists';
-        errorMessage = 'The specified entity already exists.';
-        break;
-      case 500:
-        errorCode = 'internal-error';
-        errorMessage = 'An internal error has occurred. Please retry the request.';
-        break;
-      case 503:
-        errorCode = 'service-unavailable';
-        errorMessage = 'The server could not process the request in time. See the error '
+      break;
+    case 404:
+      errorCode = 'not-found';
+      errorMessage = 'The specified entity could not be found.';
+      break;
+    case 409:
+      errorCode = 'already-exists';
+      errorMessage = 'The specified entity already exists.';
+      break;
+    case 500:
+      errorCode = 'internal-error';
+      errorMessage = 'An internal error has occurred. Please retry the request.';
+      break;
+    case 503:
+      errorCode = 'service-unavailable';
+      errorMessage = 'The server could not process the request in time. See the error '
             + 'documentation for more details.';
-        break;
-      default:
-        errorCode = 'unknown-error';
-        errorMessage = 'An unknown server error was returned.';
+      break;
+    default:
+      errorCode = 'unknown-error';
+      errorMessage = 'An unknown server error was returned.';
     }
 
     if (!errText) {
       errText = '<missing>';
     }
     throw new FirebaseProjectManagementError(
-        errorCode,
-        `${ errorMessage } Status code: ${ errStatusCode }. Raw server response: "${ errText }".`);
+      errorCode,
+      `${ errorMessage } Status code: ${ errStatusCode }. Raw server response: "${ errText }".`);
   }
 
   /**
@@ -124,10 +124,10 @@ export class ProjectManagementRequestHandler {
    */
   public listAndroidApps(parentResourceName: string): Promise<object> {
     return this.invokeRequestHandler(
-        'GET',
-        `${parentResourceName}/androidApps?page_size=${LIST_APPS_MAX_PAGE_SIZE}`,
-        /* requestData */ null,
-        'v1beta1');
+      'GET',
+      `${parentResourceName}/androidApps?page_size=${LIST_APPS_MAX_PAGE_SIZE}`,
+      /* requestData */ null,
+      'v1beta1');
   }
 
   /**
@@ -136,10 +136,10 @@ export class ProjectManagementRequestHandler {
    */
   public listIosApps(parentResourceName: string): Promise<object> {
     return this.invokeRequestHandler(
-        'GET',
-        `${parentResourceName}/iosApps?page_size=${LIST_APPS_MAX_PAGE_SIZE}`,
-        /* requestData */ null,
-        'v1beta1');
+      'GET',
+      `${parentResourceName}/iosApps?page_size=${LIST_APPS_MAX_PAGE_SIZE}`,
+      /* requestData */ null,
+      'v1beta1');
   }
 
   /**
@@ -148,10 +148,10 @@ export class ProjectManagementRequestHandler {
    */
   public listAppMetadata(parentResourceName: string): Promise<object> {
     return this.invokeRequestHandler(
-        'GET',
-        `${parentResourceName}:searchApps?page_size=${LIST_APPS_MAX_PAGE_SIZE}`,
-        /* requestData */ null,
-        'v1beta1');
+      'GET',
+      `${parentResourceName}:searchApps?page_size=${LIST_APPS_MAX_PAGE_SIZE}`,
+      /* requestData */ null,
+      'v1beta1');
   }
 
   /**
@@ -159,7 +159,7 @@ export class ProjectManagementRequestHandler {
    *     to create the Android app within.
    */
   public createAndroidApp(
-      parentResourceName: string, packageName: string, displayName?: string): Promise<object> {
+    parentResourceName: string, packageName: string, displayName?: string): Promise<object> {
     const requestData: any = {
       packageName,
     };
@@ -167,18 +167,18 @@ export class ProjectManagementRequestHandler {
       requestData.displayName = displayName;
     }
     return this
-        .invokeRequestHandler('POST', `${parentResourceName}/androidApps`, requestData, 'v1beta1')
-        .then((responseData: any) => {
-          assertServerResponse(
-              validator.isNonNullObject(responseData),
-              responseData,
-              `createAndroidApp's responseData must be a non-null object.`);
-          assertServerResponse(
-              validator.isNonEmptyString(responseData.name),
-              responseData,
-              `createAndroidApp's responseData.name must be a non-empty string.`);
-          return this.pollRemoteOperationWithExponentialBackoff(responseData.name);
-        });
+      .invokeRequestHandler('POST', `${parentResourceName}/androidApps`, requestData, 'v1beta1')
+      .then((responseData: any) => {
+        assertServerResponse(
+          validator.isNonNullObject(responseData),
+          responseData,
+          `createAndroidApp's responseData must be a non-null object.`);
+        assertServerResponse(
+          validator.isNonEmptyString(responseData.name),
+          responseData,
+          `createAndroidApp's responseData.name must be a non-empty string.`);
+        return this.pollRemoteOperationWithExponentialBackoff(responseData.name);
+      });
   }
 
   /**
@@ -186,7 +186,7 @@ export class ProjectManagementRequestHandler {
    *     to create the iOS app within.
    */
   public createIosApp(
-      parentResourceName: string, bundleId: string, displayName?: string): Promise<object> {
+    parentResourceName: string, bundleId: string, displayName?: string): Promise<object> {
     const requestData: any = {
       bundleId,
     };
@@ -194,18 +194,18 @@ export class ProjectManagementRequestHandler {
       requestData.displayName = displayName;
     }
     return this
-        .invokeRequestHandler('POST', `${parentResourceName}/iosApps`, requestData, 'v1beta1')
-        .then((responseData: any) => {
-          assertServerResponse(
-              validator.isNonNullObject(responseData),
-              responseData,
-              `createIosApp's responseData must be a non-null object.`);
-          assertServerResponse(
-              validator.isNonEmptyString(responseData.name),
-              responseData,
-              `createIosApp's responseData.name must be a non-empty string.`);
-          return this.pollRemoteOperationWithExponentialBackoff(responseData.name);
-        });
+      .invokeRequestHandler('POST', `${parentResourceName}/iosApps`, requestData, 'v1beta1')
+      .then((responseData: any) => {
+        assertServerResponse(
+          validator.isNonNullObject(responseData),
+          responseData,
+          `createIosApp's responseData must be a non-null object.`);
+        assertServerResponse(
+          validator.isNonEmptyString(responseData.name),
+          responseData,
+          `createIosApp's responseData.name must be a non-empty string.`);
+        return this.pollRemoteOperationWithExponentialBackoff(responseData.name);
+      });
   }
 
   /**
@@ -217,9 +217,9 @@ export class ProjectManagementRequestHandler {
       displayName: newDisplayName,
     };
     return this
-        .invokeRequestHandler(
-            'PATCH', `${resourceName}?update_mask=display_name`, requestData, 'v1beta1')
-        .then(() => undefined);
+      .invokeRequestHandler(
+        'PATCH', `${resourceName}?update_mask=display_name`, requestData, 'v1beta1')
+      .then(() => undefined);
   }
 
   /**
@@ -228,7 +228,7 @@ export class ProjectManagementRequestHandler {
    */
   public getAndroidShaCertificates(parentResourceName: string): Promise<object> {
     return this.invokeRequestHandler(
-        'GET', `${parentResourceName}/sha`, /* requestData */ null, 'v1beta1');
+      'GET', `${parentResourceName}/sha`, /* requestData */ null, 'v1beta1');
   }
 
   /**
@@ -236,14 +236,14 @@ export class ProjectManagementRequestHandler {
    *     want to add the given SHA certificate to.
    */
   public addAndroidShaCertificate(
-      parentResourceName: string, certificate: ShaCertificate): Promise<void> {
+    parentResourceName: string, certificate: ShaCertificate): Promise<void> {
     const requestData = {
       shaHash: certificate.shaHash,
       certType: CERT_TYPE_API_MAP[certificate.certType],
     };
     return this
-        .invokeRequestHandler('POST', `${parentResourceName}/sha`, requestData, 'v1beta1')
-        .then(() => undefined);
+      .invokeRequestHandler('POST', `${parentResourceName}/sha`, requestData, 'v1beta1')
+      .then(() => undefined);
   }
 
   /**
@@ -252,7 +252,7 @@ export class ProjectManagementRequestHandler {
    */
   public getConfig(parentResourceName: string): Promise<object> {
     return this.invokeRequestHandler(
-        'GET', `${parentResourceName}/config`, /* requestData */ null, 'v1beta1');
+      'GET', `${parentResourceName}/config`, /* requestData */ null, 'v1beta1');
   }
 
   /**
@@ -269,32 +269,32 @@ export class ProjectManagementRequestHandler {
    */
   public deleteResource(resourceName: string): Promise<void> {
     return this
-        .invokeRequestHandler('DELETE', resourceName, /* requestData */ null, 'v1beta1')
-        .then(() => undefined);
+      .invokeRequestHandler('DELETE', resourceName, /* requestData */ null, 'v1beta1')
+      .then(() => undefined);
   }
 
   private pollRemoteOperationWithExponentialBackoff(
-      operationResourceName: string): Promise<object> {
+    operationResourceName: string): Promise<object> {
     const poller = new ExponentialBackoffPoller();
 
     return poller.poll(() => {
       return this.invokeRequestHandler('GET', operationResourceName, /* requestData */ null)
-          .then((responseData: any) => {
-            if (responseData.error) {
-              const errStatusCode: number = responseData.error.code || 500;
-              const errText: string =
+        .then((responseData: any) => {
+          if (responseData.error) {
+            const errStatusCode: number = responseData.error.code || 500;
+            const errText: string =
                   responseData.error.message || JSON.stringify(responseData.error);
-              ProjectManagementRequestHandler.wrapAndRethrowHttpError(errStatusCode, errText);
-            }
+            ProjectManagementRequestHandler.wrapAndRethrowHttpError(errStatusCode, errText);
+          }
 
-            if (!responseData.done) {
-              // Continue polling.
-              return null;
-            }
+          if (!responseData.done) {
+            // Continue polling.
+            return null;
+          }
 
-            // Polling complete. Resolve with operation response JSON.
-            return responseData.response;
-          });
+          // Polling complete. Resolve with operation response JSON.
+          return responseData.response;
+        });
     });
   }
 
@@ -302,10 +302,10 @@ export class ProjectManagementRequestHandler {
    * Invokes the request handler with the provided request data.
    */
   private invokeRequestHandler(
-      method: HttpMethod,
-      path: string,
-      requestData: object | null,
-      apiVersion: ('v1' | 'v1beta1') = 'v1'): Promise<object> {
+    method: HttpMethod,
+    path: string,
+    requestData: object | null,
+    apiVersion: ('v1' | 'v1beta1') = 'v1'): Promise<object> {
     const baseUrlToUse = (apiVersion === 'v1') ? this.baseUrl : this.baseBetaUrl;
     const request: HttpRequestConfig = {
       method,
@@ -316,20 +316,20 @@ export class ProjectManagementRequestHandler {
     };
 
     return this.httpClient.send(request)
-        .then((response) => {
-          // Send non-JSON responses to the catch() below, where they will be treated as errors.
-          if (!response.isJson()) {
-            throw new HttpError(response);
-          }
+      .then((response) => {
+        // Send non-JSON responses to the catch() below, where they will be treated as errors.
+        if (!response.isJson()) {
+          throw new HttpError(response);
+        }
 
-          return response.data;
-        })
-        .catch((err) => {
-          if (err instanceof HttpError) {
-            ProjectManagementRequestHandler.wrapAndRethrowHttpError(
-                err.response.status, err.response.text);
-          }
-          throw err;
-        });
+        return response.data;
+      })
+      .catch((err) => {
+        if (err instanceof HttpError) {
+          ProjectManagementRequestHandler.wrapAndRethrowHttpError(
+            err.response.status, err.response.text);
+        }
+        throw err;
+      });
   }
 }

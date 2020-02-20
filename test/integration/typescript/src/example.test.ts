@@ -24,53 +24,53 @@ import * as admin from 'firebase-admin';
 const serviceAccount = require('../mock.key.json');
 
 describe('Init App', () => {
-    const app: admin.app.App = initApp(serviceAccount, 'TestApp');
+  const app: admin.app.App = initApp(serviceAccount, 'TestApp');
 
-    after(() => {
-        return app.delete();
-    });
+  after(() => {
+    return app.delete();
+  });
 
-    it('Should return an initialized App', () => {
-        expect(app.name).to.equal('TestApp');
-    });
+  it('Should return an initialized App', () => {
+    expect(app.name).to.equal('TestApp');
+  });
 
-    it('Should return a Database client', () => {
-        const db = admin.database(app);
-        expect(db).to.be.instanceOf((admin.database as any).Database);
-    });
+  it('Should return a Database client', () => {
+    const db = admin.database(app);
+    expect(db).to.be.instanceOf((admin.database as any).Database);
+  });
 
-    it('Should return a Database client for URL', () => {
-        const db = app.database('https://other-mock.firebaseio.com');
-        expect(db).to.be.instanceOf((admin.database as any).Database);
-    });
+  it('Should return a Database client for URL', () => {
+    const db = app.database('https://other-mock.firebaseio.com');
+    expect(db).to.be.instanceOf((admin.database as any).Database);
+  });
 
-    it('Should return a Database ServerValue', () => {
-        const serverValue = admin.database.ServerValue;
-        expect(serverValue).to.not.be.null;
-    });
+  it('Should return a Database ServerValue', () => {
+    const serverValue = admin.database.ServerValue;
+    expect(serverValue).to.not.be.null;
+  });
 
-    it('Should return a Cloud Storage client', () => {
-        const bucket: Bucket = app.storage().bucket('TestBucket');
-        expect(bucket.name).to.equal('TestBucket')
-    });
+  it('Should return a Cloud Storage client', () => {
+    const bucket: Bucket = app.storage().bucket('TestBucket');
+    expect(bucket.name).to.equal('TestBucket')
+  });
 
-    it('Should return a Firestore client from the app', () => {
-        const firestore: Firestore = app.firestore();
-        expect(firestore).to.be.instanceOf(admin.firestore.Firestore);
-    });
+  it('Should return a Firestore client from the app', () => {
+    const firestore: Firestore = app.firestore();
+    expect(firestore).to.be.instanceOf(admin.firestore.Firestore);
+  });
 
-    it('Should return a Firestore client', () => {
-        const firestore: Firestore = admin.firestore(app);
-        expect(firestore).to.be.instanceOf(admin.firestore.Firestore);
-    });
+  it('Should return a Firestore client', () => {
+    const firestore: Firestore = admin.firestore(app);
+    expect(firestore).to.be.instanceOf(admin.firestore.Firestore);
+  });
 
-    it('Should return a Firestore FieldValue', () => {
-        const fieldValue = admin.firestore.FieldValue;
-        expect(fieldValue).to.not.be.null;
-    });
+  it('Should return a Firestore FieldValue', () => {
+    const fieldValue = admin.firestore.FieldValue;
+    expect(fieldValue).to.not.be.null;
+  });
 
-    it('Should return a DocumentReference', () => {
-        const ref: admin.firestore.DocumentReference = admin.firestore(app).collection('test').doc();
-        expect(ref).to.not.be.null;
-    });
+  it('Should return a DocumentReference', () => {
+    const ref: admin.firestore.DocumentReference = admin.firestore(app).collection('test').doc();
+    expect(ref).to.not.be.null;
+  });
 });

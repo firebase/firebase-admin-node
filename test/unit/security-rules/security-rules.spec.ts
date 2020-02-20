@@ -64,7 +64,7 @@ describe('SecurityRules', () => {
     'Bucket name not specified or invalid. Specify a default bucket name via the ' +
     'storageBucket option when initializing the app, or specify the bucket name ' +
     'explicitly when calling the rules API.',
-    );
+  );
   const INVALID_BUCKET_NAMES: any[] = [null, '', true, false, 1, 0, {}, []];
 
   const INVALID_SOURCES: any[] = [null, undefined, '', 1, true, {}, []];
@@ -114,7 +114,7 @@ describe('SecurityRules', () => {
           const securityRulesAny: any = SecurityRules;
           return new securityRulesAny(invalidApp);
         }).to.throw(
-            'First argument passed to admin.securityRules() must be a valid Firebase app '
+          'First argument passed to admin.securityRules() must be a valid Firebase app '
                 + 'instance.');
       });
     });
@@ -124,7 +124,7 @@ describe('SecurityRules', () => {
         const securityRulesAny: any = SecurityRules;
         return new securityRulesAny();
       }).to.throw(
-          'First argument passed to admin.securityRules() must be a valid Firebase app '
+        'First argument passed to admin.securityRules() must be a valid Firebase app '
               + 'instance.');
     });
 
@@ -202,8 +202,8 @@ describe('SecurityRules', () => {
       const response = deepCopy(FIRESTORE_RULESET_RESPONSE);
       response.source = null;
       const stub = sinon
-          .stub(SecurityRulesApiClient.prototype, 'getRuleset')
-          .resolves(response);
+        .stub(SecurityRulesApiClient.prototype, 'getRuleset')
+        .resolves(response);
       stubs.push(stub);
       return securityRules.getRuleset('foo')
         .should.eventually.be.rejected.and.have.property(

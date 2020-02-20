@@ -515,8 +515,8 @@ class AsyncHttpCall {
 
     if (!res.statusCode) {
       throw new FirebaseAppError(
-          AppErrorCodes.INTERNAL_ERROR,
-          'Expected a statusCode on the response from a ClientRequest');
+        AppErrorCodes.INTERNAL_ERROR,
+        'Expected a statusCode on the response from a ClientRequest');
     }
 
     const response: LowLevelResponse = {
@@ -837,7 +837,7 @@ export class ApiSettings {
 
   constructor(private endpoint: string, private httpMethod: HttpMethod = 'POST') {
     this.setRequestValidator(null)
-        .setResponseValidator(null);
+      .setResponseValidator(null);
   }
 
   /** @return {string} The backend API endpoint. */
@@ -958,29 +958,29 @@ export class ExponentialBackoffPoller extends EventEmitter {
 
   private repoll(): void {
     this.pollCallback!()
-        .then((result) => {
-          if (this.completed) {
-            return;
-          }
+      .then((result) => {
+        if (this.completed) {
+          return;
+        }
 
-          if (!result) {
-            this.repollTimer =
+        if (!result) {
+          this.repollTimer =
                 setTimeout(() => this.emit('poll'), this.getPollingDelayMillis());
-            this.numTries++;
-            return;
-          }
+          this.numTries++;
+          return;
+        }
 
-          this.markCompleted();
-          this.resolve(result);
-        })
-        .catch((err) => {
-          if (this.completed) {
-            return;
-          }
+        this.markCompleted();
+        this.resolve(result);
+      })
+      .catch((err) => {
+        if (this.completed) {
+          return;
+        }
 
-          this.markCompleted();
-          this.reject(err);
-        });
+        this.markCompleted();
+        this.reject(err);
+      });
   }
 
   private getPollingDelayMillis(): number {

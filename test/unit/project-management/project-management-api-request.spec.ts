@@ -98,24 +98,24 @@ describe('ProjectManagementRequestHandler', () => {
         return;
       }
       it(`should throw for HTTP ${errorCode} errors`, () => {
-          const stub = sinon.stub(HttpClient.prototype, 'send')
-              .rejects(utils.errorFrom({}, parseInt(errorCode, 10)));
-          stubs.push(stub);
+        const stub = sinon.stub(HttpClient.prototype, 'send')
+          .rejects(utils.errorFrom({}, parseInt(errorCode, 10)));
+        stubs.push(stub);
 
-          return callback()
-              .should.eventually.be.rejected
-              .and.have.property('code', errorCodeMap[errorCode]);
+        return callback()
+          .should.eventually.be.rejected
+          .and.have.property('code', errorCodeMap[errorCode]);
       });
     });
 
     it('should throw for HTTP unknown errors', () => {
-        const stub = sinon.stub(HttpClient.prototype, 'send')
-            .rejects(utils.errorFrom({}, 1337));
-        stubs.push(stub);
+      const stub = sinon.stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom({}, 1337));
+      stubs.push(stub);
 
-        return callback()
-            .should.eventually.be.rejected
-            .and.have.property('code', 'project-management/unknown-error');
+      return callback()
+        .should.eventually.be.rejected
+        .and.have.property('code', 'project-management/unknown-error');
     });
   }
 
@@ -139,22 +139,22 @@ describe('ProjectManagementRequestHandler', () => {
       };
 
       const stub = sinon.stub(HttpClient.prototype, 'send')
-          .resolves(utils.responseFrom(expectedResult));
+        .resolves(utils.responseFrom(expectedResult));
       stubs.push(stub);
 
       const url =
           `https://${HOST}:${PORT}/v1beta1/${PROJECT_RESOURCE_NAME}/androidApps?page_size=100`;
       return requestHandler.listAndroidApps(PROJECT_RESOURCE_NAME)
-          .then((result) => {
-            expect(result).to.deep.equal(expectedResult);
-            expect(stub).to.have.been.calledOnce.and.calledWith({
-              method: 'GET',
-              url,
-              data: null,
-              headers: expectedHeaders,
-              timeout: 10000,
-            });
+        .then((result) => {
+          expect(result).to.deep.equal(expectedResult);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url,
+            data: null,
+            headers: expectedHeaders,
+            timeout: 10000,
           });
+        });
     });
   });
 
@@ -170,21 +170,21 @@ describe('ProjectManagementRequestHandler', () => {
       };
 
       const stub = sinon.stub(HttpClient.prototype, 'send')
-          .resolves(utils.responseFrom(expectedResult));
+        .resolves(utils.responseFrom(expectedResult));
       stubs.push(stub);
 
       const url = `https://${HOST}:${PORT}/v1beta1/${PROJECT_RESOURCE_NAME}/iosApps?page_size=100`;
       return requestHandler.listIosApps(PROJECT_RESOURCE_NAME)
-          .then((result) => {
-            expect(result).to.deep.equal(expectedResult);
-            expect(stub).to.have.been.calledOnce.and.calledWith({
-              method: 'GET',
-              url,
-              data: null,
-              headers: expectedHeaders,
-              timeout: 10000,
-            });
+        .then((result) => {
+          expect(result).to.deep.equal(expectedResult);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url,
+            data: null,
+            headers: expectedHeaders,
+            timeout: 10000,
           });
+        });
     });
   });
 
@@ -207,22 +207,22 @@ describe('ProjectManagementRequestHandler', () => {
       };
 
       const stub = sinon.stub(HttpClient.prototype, 'send')
-          .resolves(utils.responseFrom(expectedResult));
+        .resolves(utils.responseFrom(expectedResult));
       stubs.push(stub);
 
       const url =
         `https://${HOST}:${PORT}/v1beta1/${PROJECT_RESOURCE_NAME}:searchApps?page_size=100`;
       return requestHandler.listAppMetadata(PROJECT_RESOURCE_NAME)
-          .then((result) => {
-            expect(result).to.deep.equal(expectedResult);
-            expect(stub).to.have.been.calledOnce.and.calledWith({
-              method: 'GET',
-              url,
-              data: null,
-              headers: expectedHeaders,
-              timeout: 10000,
-            });
+        .then((result) => {
+          expect(result).to.deep.equal(expectedResult);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url,
+            data: null,
+            headers: expectedHeaders,
+            timeout: 10000,
           });
+        });
     });
   });
 
@@ -234,10 +234,10 @@ describe('ProjectManagementRequestHandler', () => {
       stubs.push(stub);
 
       return requestHandler.createAndroidApp(PROJECT_RESOURCE_NAME, PACKAGE_NAME, DISPLAY_NAME)
-          .should.eventually.be.rejected
-          .and.have.property(
-              'message',
-              'createAndroidApp\'s responseData.name must be a non-empty string. Response data: '
+        .should.eventually.be.rejected
+        .and.have.property(
+          'message',
+          'createAndroidApp\'s responseData.name must be a non-empty string. Response data: '
                   + '{}');
     });
 
@@ -253,13 +253,13 @@ describe('ProjectManagementRequestHandler', () => {
       };
 
       const stub = sinon.stub(HttpClient.prototype, 'send')
-          .onFirstCall().resolves(utils.responseFrom(initialResult))
-          .onSecondCall().resolves(utils.responseFrom(pollErrorResult));
+        .onFirstCall().resolves(utils.responseFrom(initialResult))
+        .onSecondCall().resolves(utils.responseFrom(pollErrorResult));
       stubs.push(stub);
 
       return requestHandler.createAndroidApp(PROJECT_RESOURCE_NAME, PACKAGE_NAME, DISPLAY_NAME)
-          .should.eventually.be.rejected
-          .and.have.property('code', 'project-management/already-exists');
+        .should.eventually.be.rejected
+        .and.have.property('code', 'project-management/already-exists');
     });
 
     it('should propagate polling API response thrown errors', () => {
@@ -267,13 +267,13 @@ describe('ProjectManagementRequestHandler', () => {
       const pollError = 'second-poll-error';
 
       const stub = sinon.stub(HttpClient.prototype, 'send')
-          .onFirstCall().resolves(utils.responseFrom(initialResult))
-          .onSecondCall().returns(Promise.reject(pollError));
+        .onFirstCall().resolves(utils.responseFrom(initialResult))
+        .onSecondCall().returns(Promise.reject(pollError));
       stubs.push(stub);
 
       return requestHandler.createAndroidApp(PROJECT_RESOURCE_NAME, PACKAGE_NAME, DISPLAY_NAME)
-          .should.eventually.be.rejected
-          .and.equal(pollError);
+        .should.eventually.be.rejected
+        .and.equal(pollError);
     });
 
     it('should succeed after multiple polls', () => {
@@ -287,9 +287,9 @@ describe('ProjectManagementRequestHandler', () => {
       };
 
       const stub = sinon.stub(HttpClient.prototype, 'send')
-          .onFirstCall().resolves(utils.responseFrom(initialResult))
-          .onSecondCall().resolves(utils.responseFrom(firstPollResult))
-          .onThirdCall().resolves(utils.responseFrom(secondPollResult));
+        .onFirstCall().resolves(utils.responseFrom(initialResult))
+        .onSecondCall().resolves(utils.responseFrom(firstPollResult))
+        .onThirdCall().resolves(utils.responseFrom(secondPollResult));
       stubs.push(stub);
 
       const initialUrl = `https://${HOST}:${PORT}/v1beta1/${PROJECT_RESOURCE_NAME}/androidApps`;
@@ -301,25 +301,25 @@ describe('ProjectManagementRequestHandler', () => {
       const pollingUrl = `https://${HOST}:${PORT}/v1/${OPERATION_RESOURCE_NAME}`;
 
       return requestHandler.createAndroidApp(PROJECT_RESOURCE_NAME, PACKAGE_NAME, DISPLAY_NAME)
-          .then((result) => {
-            expect(result).to.equal(expectedJsonResponse);
-            expect(stub)
-                .to.have.been.calledThrice
-                .and.calledWith({
-                  method: 'POST',
-                  url: initialUrl,
-                  data: initialData,
-                  headers: expectedHeaders,
-                  timeout: 10000,
-                })
-                .and.calledWith({
-                  method: 'GET',
-                  url: pollingUrl,
-                  data: null,
-                  headers: expectedHeaders,
-                  timeout: 10000,
-                });
-          });
+        .then((result) => {
+          expect(result).to.equal(expectedJsonResponse);
+          expect(stub)
+            .to.have.been.calledThrice
+            .and.calledWith({
+              method: 'POST',
+              url: initialUrl,
+              data: initialData,
+              headers: expectedHeaders,
+              timeout: 10000,
+            })
+            .and.calledWith({
+              method: 'GET',
+              url: pollingUrl,
+              data: null,
+              headers: expectedHeaders,
+              timeout: 10000,
+            });
+        });
     });
   });
 
@@ -331,10 +331,10 @@ describe('ProjectManagementRequestHandler', () => {
       stubs.push(stub);
 
       return requestHandler.createIosApp(PROJECT_RESOURCE_NAME, BUNDLE_ID, DISPLAY_NAME)
-          .should.eventually.be.rejected
-          .and.have.property(
-              'message',
-              'createIosApp\'s responseData.name must be a non-empty string. Response data: {}');
+        .should.eventually.be.rejected
+        .and.have.property(
+          'message',
+          'createIosApp\'s responseData.name must be a non-empty string. Response data: {}');
     });
 
     it('should propagate polling API response returned errors', () => {
@@ -349,13 +349,13 @@ describe('ProjectManagementRequestHandler', () => {
       };
 
       const stub = sinon.stub(HttpClient.prototype, 'send')
-          .onFirstCall().resolves(utils.responseFrom(initialResult))
-          .onSecondCall().resolves(utils.responseFrom(pollErrorResult));
+        .onFirstCall().resolves(utils.responseFrom(initialResult))
+        .onSecondCall().resolves(utils.responseFrom(pollErrorResult));
       stubs.push(stub);
 
       return requestHandler.createIosApp(PROJECT_RESOURCE_NAME, BUNDLE_ID, DISPLAY_NAME)
-          .should.eventually.be.rejected
-          .and.have.property('code', 'project-management/already-exists');
+        .should.eventually.be.rejected
+        .and.have.property('code', 'project-management/already-exists');
     });
 
     it('should propagate polling API response thrown errors', () => {
@@ -363,13 +363,13 @@ describe('ProjectManagementRequestHandler', () => {
       const pollError = 'second-poll-error';
 
       const stub = sinon.stub(HttpClient.prototype, 'send')
-          .onFirstCall().resolves(utils.responseFrom(initialResult))
-          .onSecondCall().returns(Promise.reject(pollError));
+        .onFirstCall().resolves(utils.responseFrom(initialResult))
+        .onSecondCall().returns(Promise.reject(pollError));
       stubs.push(stub);
 
       return requestHandler.createIosApp(PROJECT_RESOURCE_NAME, BUNDLE_ID, DISPLAY_NAME)
-          .should.eventually.be.rejected
-          .and.equal(pollError);
+        .should.eventually.be.rejected
+        .and.equal(pollError);
     });
 
     it('should succeed after multiple polls', () => {
@@ -383,9 +383,9 @@ describe('ProjectManagementRequestHandler', () => {
       };
 
       const stub = sinon.stub(HttpClient.prototype, 'send')
-          .onFirstCall().resolves(utils.responseFrom(initialResult))
-          .onSecondCall().resolves(utils.responseFrom(firstPollResult))
-          .onThirdCall().resolves(utils.responseFrom(secondPollResult));
+        .onFirstCall().resolves(utils.responseFrom(initialResult))
+        .onSecondCall().resolves(utils.responseFrom(firstPollResult))
+        .onThirdCall().resolves(utils.responseFrom(secondPollResult));
       stubs.push(stub);
 
       const initialUrl = `https://${HOST}:${PORT}/v1beta1/${PROJECT_RESOURCE_NAME}/iosApps`;
@@ -397,25 +397,25 @@ describe('ProjectManagementRequestHandler', () => {
       const pollingUrl = `https://${HOST}:${PORT}/v1/${OPERATION_RESOURCE_NAME}`;
 
       return requestHandler.createIosApp(PROJECT_RESOURCE_NAME, BUNDLE_ID, DISPLAY_NAME)
-          .then((result) => {
-            expect(result).to.equal(expectedJsonResponse);
-            expect(stub)
-                .to.have.been.calledThrice
-                .and.calledWith({
-                  method: 'POST',
-                  url: initialUrl,
-                  data: initialData,
-                  headers: expectedHeaders,
-                  timeout: 10000,
-                })
-                .and.calledWith({
-                  method: 'GET',
-                  url: pollingUrl,
-                  data: null,
-                  headers: expectedHeaders,
-                  timeout: 10000,
-                });
-          });
+        .then((result) => {
+          expect(result).to.equal(expectedJsonResponse);
+          expect(stub)
+            .to.have.been.calledThrice
+            .and.calledWith({
+              method: 'POST',
+              url: initialUrl,
+              data: initialData,
+              headers: expectedHeaders,
+              timeout: 10000,
+            })
+            .and.calledWith({
+              method: 'GET',
+              url: pollingUrl,
+              data: null,
+              headers: expectedHeaders,
+              timeout: 10000,
+            });
+        });
     });
   });
 
@@ -423,7 +423,7 @@ describe('ProjectManagementRequestHandler', () => {
     const newDisplayName = 'test-new-display-name';
 
     testHttpErrors(
-        () => requestHandler.setDisplayName(ANDROID_APP_RESOURCE_NAME, newDisplayName));
+      () => requestHandler.setDisplayName(ANDROID_APP_RESOURCE_NAME, newDisplayName));
 
     it('should succeed', () => {
       const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
@@ -435,15 +435,15 @@ describe('ProjectManagementRequestHandler', () => {
         displayName: newDisplayName,
       };
       return requestHandler.setDisplayName(ANDROID_APP_RESOURCE_NAME, newDisplayName)
-          .then(() => {
-            expect(stub).to.have.been.calledOnce.and.calledWith({
-              method: 'PATCH',
-              url,
-              data: requestData,
-              headers: expectedHeaders,
-              timeout: 10000,
-            });
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'PATCH',
+            url,
+            data: requestData,
+            headers: expectedHeaders,
+            timeout: 10000,
           });
+        });
     });
   });
 
@@ -454,21 +454,21 @@ describe('ProjectManagementRequestHandler', () => {
       const expectedResult: any = { certificates: [] };
 
       const stub = sinon.stub(HttpClient.prototype, 'send')
-          .resolves(utils.responseFrom(expectedResult));
+        .resolves(utils.responseFrom(expectedResult));
       stubs.push(stub);
 
       const url = `https://${HOST}:${PORT}/v1beta1/${ANDROID_APP_RESOURCE_NAME}/sha`;
       return requestHandler.getAndroidShaCertificates(ANDROID_APP_RESOURCE_NAME)
-          .then((result) => {
-            expect(result).to.deep.equal(expectedResult);
-            expect(stub).to.have.been.calledOnce.and.calledWith({
-              method: 'GET',
-              url,
-              data: null,
-              headers: expectedHeaders,
-              timeout: 10000,
-            });
+        .then((result) => {
+          expect(result).to.deep.equal(expectedResult);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url,
+            data: null,
+            headers: expectedHeaders,
+            timeout: 10000,
           });
+        });
     });
   });
 
@@ -476,7 +476,7 @@ describe('ProjectManagementRequestHandler', () => {
     const certificateToAdd = new ShaCertificate(VALID_SHA_1_HASH);
 
     testHttpErrors(
-        () => requestHandler.addAndroidShaCertificate(ANDROID_APP_RESOURCE_NAME, certificateToAdd));
+      () => requestHandler.addAndroidShaCertificate(ANDROID_APP_RESOURCE_NAME, certificateToAdd));
 
     it('should succeed', () => {
       const stub = sinon.stub(HttpClient.prototype, 'send').resolves(utils.responseFrom({}));
@@ -488,15 +488,15 @@ describe('ProjectManagementRequestHandler', () => {
         certType: 'SHA_1',
       };
       return requestHandler.addAndroidShaCertificate(ANDROID_APP_RESOURCE_NAME, certificateToAdd)
-          .then(() => {
-            expect(stub).to.have.been.calledOnce.and.calledWith({
-              method: 'POST',
-              url,
-              data: requestData,
-              headers: expectedHeaders,
-              timeout: 10000,
-            });
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'POST',
+            url,
+            data: requestData,
+            headers: expectedHeaders,
+            timeout: 10000,
           });
+        });
     });
   });
 
@@ -509,21 +509,21 @@ describe('ProjectManagementRequestHandler', () => {
       };
 
       const stub = sinon.stub(HttpClient.prototype, 'send')
-          .resolves(utils.responseFrom(expectedResult));
+        .resolves(utils.responseFrom(expectedResult));
       stubs.push(stub);
 
       const url = `https://${HOST}:${PORT}/v1beta1/${ANDROID_APP_RESOURCE_NAME}/config`;
       return requestHandler.getConfig(ANDROID_APP_RESOURCE_NAME)
-          .then((result) => {
-            expect(result).to.deep.equal(expectedResult);
-            expect(stub).to.have.been.calledOnce.and.calledWith({
-              method: 'GET',
-              url,
-              data: null,
-              headers: expectedHeaders,
-              timeout: 10000,
-            });
+        .then((result) => {
+          expect(result).to.deep.equal(expectedResult);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url,
+            data: null,
+            headers: expectedHeaders,
+            timeout: 10000,
           });
+        });
     });
   });
 
@@ -536,21 +536,21 @@ describe('ProjectManagementRequestHandler', () => {
       const expectedResult = { success: true };
 
       const stub = sinon.stub(HttpClient.prototype, 'send')
-          .resolves(utils.responseFrom(expectedResult));
+        .resolves(utils.responseFrom(expectedResult));
       stubs.push(stub);
 
       const url = `https://${HOST}:${PORT}/v1beta1/${resourceName}`;
       return requestHandler.getResource(resourceName)
-          .then((result) => {
-            expect(result).to.deep.equal(expectedResult);
-            expect(stub).to.have.been.calledOnce.and.calledWith({
-              method: 'GET',
-              url,
-              data: null,
-              headers: expectedHeaders,
-              timeout: 10000,
-            });
+        .then((result) => {
+          expect(result).to.deep.equal(expectedResult);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url,
+            data: null,
+            headers: expectedHeaders,
+            timeout: 10000,
           });
+        });
     });
   });
 
@@ -565,15 +565,15 @@ describe('ProjectManagementRequestHandler', () => {
 
       const url = `https://${HOST}:${PORT}/v1beta1/${resourceName}`;
       return requestHandler.deleteResource(resourceName)
-          .then(() => {
-            expect(stub).to.have.been.calledOnce.and.calledWith({
-              method: 'DELETE',
-              url,
-              data: null,
-              headers: expectedHeaders,
-              timeout: 10000,
-            });
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'DELETE',
+            url,
+            data: null,
+            headers: expectedHeaders,
+            timeout: 10000,
           });
+        });
     });
   });
 });

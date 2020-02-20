@@ -92,12 +92,12 @@ describe('Storage', () => {
         'explicitly when calling the getBucket() method.';
     const invalidNames = [null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1}, _.noop];
     invalidNames.forEach((invalidName) => {
-        it(`should throw given invalid bucket name: ${ JSON.stringify(invalidName) }`, () => {
-            expect(() => {
-                const bucketAny: any = storage.bucket;
-                bucketAny(invalidName);
-            }).to.throw(expectedError);
-        });
+      it(`should throw given invalid bucket name: ${ JSON.stringify(invalidName) }`, () => {
+        expect(() => {
+          const bucketAny: any = storage.bucket;
+          bucketAny(invalidName);
+        }).to.throw(expectedError);
+      });
     });
   });
 

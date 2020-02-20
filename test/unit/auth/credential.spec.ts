@@ -416,7 +416,7 @@ describe('Credential', () => {
     it('should throw error if type not specified on cert file', () => {
       fsStub = sinon.stub(fs, 'readFileSync').returns(JSON.stringify({}));
       expect(() => getApplicationDefault())
-          .to.throw(Error, 'Invalid contents in the credentials file');
+        .to.throw(Error, 'Invalid contents in the credentials file');
     });
 
     it('should throw error if type is unknown on cert file', () => {

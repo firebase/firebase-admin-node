@@ -2456,8 +2456,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       it('should be rejected when the response does not contain a link', () => {
         const expectedError = new FirebaseAuthError(
-            AuthClientErrorCode.INTERNAL_ERROR,
-            'INTERNAL ASSERT FAILED: Unable to create the email action link');
+          AuthClientErrorCode.INTERNAL_ERROR,
+          'INTERNAL ASSERT FAILED: Unable to create the email action link');
         const requestData = deepExtend({
           requestType: 'VERIFY_EMAIL',
           email,
@@ -2522,12 +2522,12 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then((result) => {
             expect(result).to.deep.equal(expectedResult.data);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                callParams(path, expectedHttpMethod, {}));
+              callParams(path, expectedHttpMethod, {}));
           });
       });
 
       const invalidProviderIds = [
-          null, NaN, 0, 1, true, false, '', 'saml.provider', ['oidc.provider'], [], {}, { a: 1 }, _.noop];
+        null, NaN, 0, 1, true, false, '', 'saml.provider', ['oidc.provider'], [], {}, { a: 1 }, _.noop];
       invalidProviderIds.forEach((invalidProviderId) => {
         it('should be rejected given an invalid provider ID:' + JSON.stringify(invalidProviderId), () => {
           const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
@@ -2559,7 +2559,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                callParams(path, expectedHttpMethod, {}));
+              callParams(path, expectedHttpMethod, {}));
           });
       });
     });
@@ -2590,7 +2590,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then((result) => {
             expect(result).to.deep.equal(expectedResult.data);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                callParams(path, expectedHttpMethod, data));
+              callParams(path, expectedHttpMethod, data));
           });
       });
 
@@ -2607,7 +2607,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then((result) => {
             expect(result).to.deep.equal({oauthIdpConfigs: []});
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                callParams(path, expectedHttpMethod, data));
+              callParams(path, expectedHttpMethod, data));
           });
       });
 
@@ -2624,7 +2624,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then((result) => {
             expect(result).to.deep.equal(expectedResult.data);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                callParams(path, expectedHttpMethod, data));
+              callParams(path, expectedHttpMethod, data));
           });
       });
 
@@ -2679,7 +2679,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                callParams(path, expectedHttpMethod, data));
+              callParams(path, expectedHttpMethod, data));
           });
       });
     });
@@ -2699,12 +2699,12 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then((result) => {
             expect(result).to.be.undefined;
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                callParams(path, expectedHttpMethod, {}));
+              callParams(path, expectedHttpMethod, {}));
           });
       });
 
       const invalidProviderIds = [
-          null, NaN, 0, 1, true, false, '', 'saml.provider', ['oidc.provider'], [], {}, { a: 1 }, _.noop];
+        null, NaN, 0, 1, true, false, '', 'saml.provider', ['oidc.provider'], [], {}, { a: 1 }, _.noop];
       invalidProviderIds.forEach((invalidProviderId) => {
         it('should be rejected given an invalid provider ID:' + JSON.stringify(invalidProviderId), () => {
           const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
@@ -2736,7 +2736,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                callParams(path, expectedHttpMethod, {}));
+              callParams(path, expectedHttpMethod, {}));
           });
       });
     });
@@ -2771,7 +2771,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then((response) => {
             expect(response).to.deep.equal(expectedResult.data);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                callParams(path, expectedHttpMethod, expectedRequest));
+              callParams(path, expectedHttpMethod, expectedRequest));
           });
       });
 
@@ -2807,7 +2807,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                callParams(path, expectedHttpMethod, expectedRequest));
+              callParams(path, expectedHttpMethod, expectedRequest));
           });
       });
 
@@ -2828,7 +2828,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                callParams(path, expectedHttpMethod, expectedRequest));
+              callParams(path, expectedHttpMethod, expectedRequest));
           });
       });
     });
@@ -2871,7 +2871,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then((response) => {
             expect(response).to.deep.equal(expectedResult.data);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                callParams(expectedPath, expectedHttpMethod, expectedRequest));
+              callParams(expectedPath, expectedHttpMethod, expectedRequest));
           });
       });
 
@@ -2895,7 +2895,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then((response) => {
             expect(response).to.deep.equal(expectedPartialResult.data);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                callParams(expectedPath, expectedHttpMethod, partialRequest));
+              callParams(expectedPath, expectedHttpMethod, partialRequest));
           });
       });
 
@@ -2918,12 +2918,12 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then((response) => {
             expect(response).to.deep.equal(expectedPartialResult.data);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                callParams(expectedPath, expectedHttpMethod, partialRequest));
+              callParams(expectedPath, expectedHttpMethod, partialRequest));
           });
       });
 
       const invalidProviderIds = [
-          null, NaN, 0, 1, true, false, '', 'saml.provider', ['oidc.provider'], [], {}, { a: 1 }, _.noop];
+        null, NaN, 0, 1, true, false, '', 'saml.provider', ['oidc.provider'], [], {}, { a: 1 }, _.noop];
       invalidProviderIds.forEach((invalidProviderId) => {
         it('should be rejected given an invalid provider ID:' + JSON.stringify(invalidProviderId), () => {
           const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
@@ -2971,7 +2971,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                callParams(expectedPath, expectedHttpMethod, expectedRequest));
+              callParams(expectedPath, expectedHttpMethod, expectedRequest));
           });
       });
 
@@ -2993,7 +2993,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                callParams(expectedPath, expectedHttpMethod, expectedRequest));
+              callParams(expectedPath, expectedHttpMethod, expectedRequest));
           });
       });
     });
@@ -3020,7 +3020,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
 
       const invalidProviderIds = [
-          null, NaN, 0, 1, true, false, '', 'oidc.provider', ['saml.provider'], [], {}, { a: 1 }, _.noop];
+        null, NaN, 0, 1, true, false, '', 'oidc.provider', ['saml.provider'], [], {}, { a: 1 }, _.noop];
       invalidProviderIds.forEach((invalidProviderId) => {
         it('should be rejected given an invalid provider ID:' + JSON.stringify(invalidProviderId), () => {
           const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
@@ -3191,7 +3191,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
 
       const invalidProviderIds = [
-          null, NaN, 0, 1, true, false, '', 'oidc.provider', ['saml.provider'], [], {}, { a: 1 }, _.noop];
+        null, NaN, 0, 1, true, false, '', 'oidc.provider', ['saml.provider'], [], {}, { a: 1 }, _.noop];
       invalidProviderIds.forEach((invalidProviderId) => {
         it('should be rejected given an invalid provider ID:' + JSON.stringify(invalidProviderId), () => {
           const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
@@ -3272,7 +3272,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then((response) => {
             expect(response).to.deep.equal(expectedResult.data);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                callParams(path, expectedHttpMethod, expectedRequest));
+              callParams(path, expectedHttpMethod, expectedRequest));
           });
       });
 
@@ -3308,7 +3308,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                callParams(path, expectedHttpMethod, expectedRequest));
+              callParams(path, expectedHttpMethod, expectedRequest));
           });
       });
 
@@ -3329,7 +3329,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                callParams(path, expectedHttpMethod, expectedRequest));
+              callParams(path, expectedHttpMethod, expectedRequest));
           });
       });
     });
@@ -3402,7 +3402,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then((response) => {
             expect(response).to.deep.equal(expectedResult.data);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                callParams(expectedPath, expectedHttpMethod, expectedRequest));
+              callParams(expectedPath, expectedHttpMethod, expectedRequest));
           });
       });
 
@@ -3435,7 +3435,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then((response) => {
             expect(response).to.deep.equal(expectedPartialResult.data);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                callParams(expectedPath, expectedHttpMethod, partialRequest));
+              callParams(expectedPath, expectedHttpMethod, partialRequest));
           });
       });
 
@@ -3462,12 +3462,12 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then((response) => {
             expect(response).to.deep.equal(expectedPartialResult.data);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                callParams(expectedPath, expectedHttpMethod, partialRequest));
+              callParams(expectedPath, expectedHttpMethod, partialRequest));
           });
       });
 
       const invalidProviderIds = [
-          null, NaN, 0, 1, true, false, '', 'oidc.provider', ['saml.provider'], [], {}, { a: 1 }, _.noop];
+        null, NaN, 0, 1, true, false, '', 'oidc.provider', ['saml.provider'], [], {}, { a: 1 }, _.noop];
       invalidProviderIds.forEach((invalidProviderId) => {
         it('should be rejected given an invalid provider ID:' + JSON.stringify(invalidProviderId), () => {
           const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
@@ -3515,7 +3515,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                callParams(expectedPath, expectedHttpMethod, expectedRequest));
+              callParams(expectedPath, expectedHttpMethod, expectedRequest));
           });
       });
 
@@ -3537,7 +3537,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
-                callParams(expectedPath, expectedHttpMethod, expectedRequest));
+              callParams(expectedPath, expectedHttpMethod, expectedRequest));
           });
       });
     });
@@ -3910,7 +3910,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then((actualResult) => {
               expect(actualResult).to.deep.equal(expectedResult.data);
               expect(stub).to.have.been.calledOnce.and.calledWith(
-                  callParams(expectedPath, patchMethod, expectedRequest));
+                callParams(expectedPath, patchMethod, expectedRequest));
             });
         });
 
@@ -3930,7 +3930,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then((actualResult) => {
               expect(actualResult).to.deep.equal(expectedResult.data);
               expect(stub).to.have.been.calledOnce.and.calledWith(
-                  callParams(expectedPath, patchMethod, partialRequest));
+                callParams(expectedPath, patchMethod, partialRequest));
             });
         });
 
@@ -3950,7 +3950,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then((actualResult) => {
               expect(actualResult).to.deep.equal(expectedResult.data);
               expect(stub).to.have.been.calledOnce.and.calledWith(
-                  callParams(expectedPath, patchMethod, partialRequest));
+                callParams(expectedPath, patchMethod, partialRequest));
             });
         });
 
@@ -4002,7 +4002,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
               expect(stub).to.have.been.calledOnce.and.calledWith(
-                  callParams(expectedPath, patchMethod, expectedRequest));
+                callParams(expectedPath, patchMethod, expectedRequest));
             });
         });
 
@@ -4024,7 +4024,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
               expect(stub).to.have.been.calledOnce.and.calledWith(
-                  callParams(expectedPath, patchMethod, expectedRequest));
+                callParams(expectedPath, patchMethod, expectedRequest));
             });
         });
 
@@ -4050,7 +4050,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
               expect(stub).to.have.been.calledOnce.and.calledWith(
-                  callParams(expectedPath, patchMethod, expectedRequest));
+                callParams(expectedPath, patchMethod, expectedRequest));
             });
         });
       });

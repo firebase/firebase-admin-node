@@ -402,8 +402,8 @@ function validateApnsFcmOptions(fcmOptions: ApnsFcmOptions | undefined) {
   if (typeof fcmOptions.imageUrl !== 'undefined' &&
       !validator.isURL(fcmOptions.imageUrl)) {
     throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_PAYLOAD,
-        'imageUrl must be a valid URL string');
+      MessagingClientErrorCode.INVALID_PAYLOAD,
+      'imageUrl must be a valid URL string');
   }
 
   if (typeof fcmOptions.analyticsLabel !== 'undefined' && !validator.isString(fcmOptions.analyticsLabel)) {
@@ -417,8 +417,8 @@ function validateApnsFcmOptions(fcmOptions: ApnsFcmOptions | undefined) {
   Object.keys(propertyMappings).forEach((key) => {
     if (key in fcmOptions && propertyMappings[key] in fcmOptions) {
       throw new FirebaseMessagingError(
-          MessagingClientErrorCode.INVALID_PAYLOAD,
-          `Multiple specifications for ${key} in ApnsFcmOptions`);
+        MessagingClientErrorCode.INVALID_PAYLOAD,
+        `Multiple specifications for ${key} in ApnsFcmOptions`);
     }
   });
   renameProperties(fcmOptions, propertyMappings);
@@ -453,12 +453,12 @@ function validateNotification(notification: Notification | undefined) {
     return;
   } else if (!validator.isNonNullObject(notification)) {
     throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_PAYLOAD, 'notification must be a non-null object');
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'notification must be a non-null object');
   }
 
   if (typeof notification.imageUrl !== 'undefined' && !validator.isURL(notification.imageUrl)) {
     throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_PAYLOAD, 'notification.imageUrl must be a valid URL string');
+      MessagingClientErrorCode.INVALID_PAYLOAD, 'notification.imageUrl must be a valid URL string');
   }
 
   const propertyMappings: {[key: string]: string} = {
@@ -467,8 +467,8 @@ function validateNotification(notification: Notification | undefined) {
   Object.keys(propertyMappings).forEach((key) => {
     if (key in notification && propertyMappings[key] in notification) {
       throw new FirebaseMessagingError(
-          MessagingClientErrorCode.INVALID_PAYLOAD,
-          `Multiple specifications for ${key} in Notification`);
+        MessagingClientErrorCode.INVALID_PAYLOAD,
+        `Multiple specifications for ${key} in Notification`);
     }
   });
   renameProperties(notification, propertyMappings);
@@ -694,8 +694,8 @@ function validateAndroidNotification(notification: AndroidNotification | undefin
   if (typeof notification.imageUrl !== 'undefined' &&
       !validator.isURL(notification.imageUrl)) {
     throw new FirebaseMessagingError(
-        MessagingClientErrorCode.INVALID_PAYLOAD,
-        'android.notification.imageUrl must be a valid URL string');
+      MessagingClientErrorCode.INVALID_PAYLOAD,
+      'android.notification.imageUrl must be a valid URL string');
   }
 
   if (typeof notification.eventTimestamp !== 'undefined') {

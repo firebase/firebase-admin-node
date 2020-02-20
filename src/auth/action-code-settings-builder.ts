@@ -68,7 +68,7 @@ export class ActionCodeSettingsBuilder {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
         '"ActionCodeSettings" must be a non-null object.',
-     );
+      );
     }
     if (typeof actionCodeSettings.url === 'undefined') {
       throw new FirebaseAuthError(
@@ -84,8 +84,8 @@ export class ActionCodeSettingsBuilder {
     if (typeof actionCodeSettings.handleCodeInApp !== 'undefined' &&
         !validator.isBoolean(actionCodeSettings.handleCodeInApp)) {
       throw new FirebaseAuthError(
-         AuthClientErrorCode.INVALID_ARGUMENT,
-         '"ActionCodeSettings.handleCodeInApp" must be a boolean.',
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        '"ActionCodeSettings.handleCodeInApp" must be a boolean.',
       );
     }
     this.canHandleCodeInApp = actionCodeSettings.handleCodeInApp || false;

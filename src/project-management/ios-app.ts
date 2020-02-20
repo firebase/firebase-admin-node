@@ -27,7 +27,7 @@ export class IosApp {
       private readonly requestHandler: ProjectManagementRequestHandler) {
     if (!validator.isNonEmptyString(appId)) {
       throw new FirebaseProjectManagementError(
-          'invalid-argument', 'appId must be a non-empty string.');
+        'invalid-argument', 'appId must be a non-empty string.');
     }
 
     this.resourceName = `projects/-/iosApps/${appId}`;
@@ -35,30 +35,30 @@ export class IosApp {
 
   public getMetadata(): Promise<IosAppMetadata> {
     return this.requestHandler.getResource(this.resourceName)
-        .then((responseData: any) => {
+      .then((responseData: any) => {
+        assertServerResponse(
+          validator.isNonNullObject(responseData),
+          responseData,
+          'getMetadata()\'s responseData must be a non-null object.');
+
+        const requiredFieldsList = ['name', 'appId', 'projectId', 'bundleId'];
+        requiredFieldsList.forEach((requiredField) => {
           assertServerResponse(
-              validator.isNonNullObject(responseData),
-              responseData,
-              'getMetadata()\'s responseData must be a non-null object.');
-
-          const requiredFieldsList = ['name', 'appId', 'projectId', 'bundleId'];
-          requiredFieldsList.forEach((requiredField) => {
-            assertServerResponse(
-                validator.isNonEmptyString(responseData[requiredField]),
-                responseData,
-                `getMetadata()\'s responseData.${requiredField} must be a non-empty string.`);
-          });
-
-          const metadata: IosAppMetadata = {
-            platform: AppPlatform.IOS,
-            resourceName: responseData.name,
-            appId: responseData.appId,
-            displayName: responseData.displayName || null,
-            projectId: responseData.projectId,
-            bundleId: responseData.bundleId,
-          };
-          return metadata;
+            validator.isNonEmptyString(responseData[requiredField]),
+            responseData,
+            `getMetadata()\'s responseData.${requiredField} must be a non-empty string.`);
         });
+
+        const metadata: IosAppMetadata = {
+          platform: AppPlatform.IOS,
+          resourceName: responseData.name,
+          appId: responseData.appId,
+          displayName: responseData.displayName || null,
+          projectId: responseData.projectId,
+          bundleId: responseData.bundleId,
+        };
+        return metadata;
+      });
   }
 
   public setDisplayName(newDisplayName: string): Promise<void> {
@@ -71,19 +71,19 @@ export class IosApp {
    */
   public getConfig(): Promise<string> {
     return this.requestHandler.getConfig(this.resourceName)
-        .then((responseData: any) => {
-          assertServerResponse(
-              validator.isNonNullObject(responseData),
-              responseData,
-              'getConfig()\'s responseData must be a non-null object.');
+      .then((responseData: any) => {
+        assertServerResponse(
+          validator.isNonNullObject(responseData),
+          responseData,
+          'getConfig()\'s responseData must be a non-null object.');
 
-          const base64ConfigFileContents = responseData.configFileContents;
-          assertServerResponse(
-              validator.isBase64String(base64ConfigFileContents),
-              responseData,
-              `getConfig()\'s responseData.configFileContents must be a base64 string.`);
+        const base64ConfigFileContents = responseData.configFileContents;
+        assertServerResponse(
+          validator.isBase64String(base64ConfigFileContents),
+          responseData,
+          `getConfig()\'s responseData.configFileContents must be a base64 string.`);
 
-          return Buffer.from(base64ConfigFileContents, 'base64').toString('utf8');
-        });
+        return Buffer.from(base64ConfigFileContents, 'base64').toString('utf8');
+      });
   }
 }

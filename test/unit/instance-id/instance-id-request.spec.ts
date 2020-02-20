@@ -97,52 +97,52 @@ describe('FirebaseInstanceIdRequestHandler', () => {
     });
 
     it('should throw for HTTP 404 errors', () => {
-        const stub = sinon.stub(HttpClient.prototype, 'send')
-          .rejects(utils.errorFrom({}, 404));
-        stubs.push(stub);
+      const stub = sinon.stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom({}, 404));
+      stubs.push(stub);
 
-        const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp);
-        return requestHandler.deleteInstanceId('test-iid')
-          .then(() => {
-            throw new Error('Unexpected success');
-          })
-          .catch((error) => {
-            expect(error.code).to.equal('instance-id/api-error');
-            expect(error.message).to.equal('Instance ID "test-iid": Failed to find the instance ID.');
-          });
+      const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp);
+      return requestHandler.deleteInstanceId('test-iid')
+        .then(() => {
+          throw new Error('Unexpected success');
+        })
+        .catch((error) => {
+          expect(error.code).to.equal('instance-id/api-error');
+          expect(error.message).to.equal('Instance ID "test-iid": Failed to find the instance ID.');
+        });
     });
 
     it('should throw for HTTP 409 errors', () => {
-        const stub = sinon.stub(HttpClient.prototype, 'send')
-          .rejects(utils.errorFrom({}, 409));
-        stubs.push(stub);
+      const stub = sinon.stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom({}, 409));
+      stubs.push(stub);
 
-        const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp);
-        return requestHandler.deleteInstanceId('test-iid')
-          .then(() => {
-            throw new Error('Unexpected success');
-          })
-          .catch((error) => {
-            expect(error.code).to.equal('instance-id/api-error');
-            expect(error.message).to.equal('Instance ID "test-iid": Already deleted.');
-          });
+      const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp);
+      return requestHandler.deleteInstanceId('test-iid')
+        .then(() => {
+          throw new Error('Unexpected success');
+        })
+        .catch((error) => {
+          expect(error.code).to.equal('instance-id/api-error');
+          expect(error.message).to.equal('Instance ID "test-iid": Already deleted.');
+        });
     });
 
     it('should throw for unexpected HTTP errors', () => {
-        const expectedResult = {error: 'test error'};
-        const stub = sinon.stub(HttpClient.prototype, 'send')
-          .rejects(utils.errorFrom(expectedResult, 511));
-        stubs.push(stub);
+      const expectedResult = {error: 'test error'};
+      const stub = sinon.stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom(expectedResult, 511));
+      stubs.push(stub);
 
-        const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp);
-        return requestHandler.deleteInstanceId('test-iid')
-          .then(() => {
-            throw new Error('Unexpected success');
-          })
-          .catch((error) => {
-            expect(error.code).to.equal('instance-id/api-error');
-            expect(error.message).to.equal('test error');
-          });
+      const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp);
+      return requestHandler.deleteInstanceId('test-iid')
+        .then(() => {
+          throw new Error('Unexpected success');
+        })
+        .catch((error) => {
+          expect(error.code).to.equal('instance-id/api-error');
+          expect(error.message).to.equal('test error');
+        });
     });
   });
 });
