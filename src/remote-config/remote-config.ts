@@ -16,14 +16,12 @@
 
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { FirebaseApp } from '../firebase-app';
-import * as validator from '../utils/validator';
 import {
   RemoteConfigCondition, RemoteConfigParameter
 } from './remote-config-types';
 import {
   RemoteConfigApiClient
 } from './remote-config-api-client';
-import { FirebaseRemoteConfigError } from './remote-config-utils';
 
 /**
  * Internals of an RemoteConfig service instance.
@@ -63,6 +61,7 @@ export class RemoteConfig implements FirebaseServiceInterface {
    */
   public getTemplate(): Promise<RemoteConfigTemplate> {
     //TODO(lahirumaramba): implement the functionality
+    this.requestHandler.getTemplate();
     return Promise.resolve<RemoteConfigTemplate>(new RemoteConfigTemplate());
   }
 
@@ -120,7 +119,7 @@ export class RemoteConfigTemplate {
    *
    * @return {RemoteConfigParameter} The Remote Config parameter with the provided key.
    */
-  public getParameter(key: string): RemoteConfigParameter {
+  public getParameter(key: string): RemoteConfigParameter | undefined {
     return this.parameters.find( (p) => p.key === key );
   }
 
@@ -131,7 +130,7 @@ export class RemoteConfigTemplate {
    *
    * @return {RemoteConfigCondition} The Remote Config condition with the provided name.
    */
-  public getCondition(name: string): RemoteConfigCondition {
+  public getCondition(name: string): RemoteConfigCondition | undefined {
     return this.conditions.find( (c) => c.name === name );
   }
 

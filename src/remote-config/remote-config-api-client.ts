@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { HttpClient, AuthorizedHttpClient } from '../utils/api-request';
 import { FirebaseRemoteConfigError } from './remote-config-utils';
 import { FirebaseApp } from '../firebase-app';
 import * as validator from '../utils/validator';
@@ -26,16 +25,16 @@ import * as validator from '../utils/validator';
  */
 export class RemoteConfigApiClient {
 
-	private readonly httpClient: HttpClient;
-  
-	constructor(private readonly app: FirebaseApp) {
-	  if (!validator.isNonNullObject(app) || !('options' in app)) {
-		throw new FirebaseRemoteConfigError(
-		  'invalid-argument',
-		  'First argument passed to admin.RemoteConfig() must be a valid Firebase app '
-			+ 'instance.');
-	  }
-  
-	  this.httpClient = new AuthorizedHttpClient(app);
+	constructor(app: FirebaseApp) {
+		if (!validator.isNonNullObject(app) || !('options' in app)) {
+			throw new FirebaseRemoteConfigError(
+				'invalid-argument',
+				'First argument passed to admin.RemoteConfig() must be a valid Firebase app '
+				+ 'instance.');
+		}
 	}
+
+	// Just a placeholder for now
+	//TODO(lahirumaramba): implement the functionality
+	public getTemplate() {}
 }
