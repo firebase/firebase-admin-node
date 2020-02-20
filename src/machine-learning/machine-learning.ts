@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {MachineLearningApiClient, ModelResponse} from './machine-learning-api-client';
+import {MachineLearningApiClient, ModelResponse, OperationResponse, ModelContent} from './machine-learning-api-client';
 import {FirebaseError} from '../utils/error';
 
 import * as validator from '../utils/validator';
 import {FirebaseMachineLearningError} from './machine-learning-utils';
-
-// const ML_HOST = 'mlkit.googleapis.com';
+import { deepCopy } from '../utils/deep-copy';
 
 /**
  * Internals of an ML instance.
@@ -97,7 +95,9 @@ export class MachineLearning implements FirebaseServiceInterface {
    * @return {Promise<Model>} A Promise fulfilled with the created model.
    */
   public createModel(model: ModelOptions): Promise<Model> {
-    throw new Error('NotImplemented');
+    return this.convertOptionstoContent(model, true)
+      .then((modelContent) => this.client.createModel(modelContent))
+      .then((operation) => handleOperation(operation));
   }
 
   /**
@@ -170,10 +170,53 @@ export class MachineLearning implements FirebaseServiceInterface {
   public deleteModel(modelId: string): Promise<void> {
     return this.client.deleteModel(modelId);
   }
+
+  private convertOptionstoContent(options: ModelOptions, forUpload?: boolean): Promise<ModelContent> {
+    const modelContent = deepCopy(options);
+
+    if (forUpload && modelContent.tfliteModel?.gcsTfliteUri) {
+      return this.signUrl(modelContent.tfliteModel.gcsTfliteUri)
+        .then ((uri: string) => {
+          modelContent.tfliteModel!.gcsTfliteUri = uri;
+          return modelContent;
+        })
+        .catch((err: Error) => {
+          throw new FirebaseMachineLearningError(
+            'internal-error',
+            `Error during signing upload url: ${err.message}`);
+        }) as Promise<ModelContent>;
+    }
+
+    return Promise.resolve(modelContent) as Promise<ModelContent>;
+  }
+
+  private signUrl(unsignedUrl: string): Promise<string> {
+    const MINUTES_IN_MILLIS = 60 * 1000;
+    const URL_VALID_DURATION = 10 * MINUTES_IN_MILLIS;
+
+    const gcsRegex = /^gs:\/\/([a-z0-9_.-]{3,63})\/(.+)$/;
+    const matches = gcsRegex.exec(unsignedUrl);
+    if (!matches) {
+      throw new FirebaseMachineLearningError(
+        'invalid-argument',
+        `Invalid unsigned url: ${unsignedUrl}`);
+    }
+    const bucketName = matches[1];
+    const blobName = matches[2];
+    const bucket = this.appInternal.storage().bucket(bucketName);
+    const blob = bucket.file(blobName);
+    return blob.getSignedUrl({
+      action: 'read',
+      expires: Date.now() + URL_VALID_DURATION,
+    }).then((x) => {
+      return x[0];
+    });
+  }
 }
 
+
 /**
- * A Firebase ML Model output object
+ * A Firebase ML Model output object.
  */
 export class Model {
   public readonly modelId: string;
@@ -196,7 +239,7 @@ export class Model {
       !validator.isNonEmptyString(model.displayName) ||
       !validator.isNonEmptyString(model.etag)) {
         throw new FirebaseMachineLearningError(
-          'invalid-argument',
+          'invalid-server-response',
           `Invalid Model response: ${JSON.stringify(model)}`);
     }
 
@@ -252,13 +295,27 @@ export class ModelOptions {
   public displayName?: string;
   public tags?: string[];
 
-  public tfliteModel?: { gcsTFLiteUri: string; };
-
-  protected toJSON(forUpload?: boolean): object {
-    throw new Error('NotImplemented');
-  }
+  public tfliteModel?: { gcsTfliteUri: string; };
 }
+
 
 function extractModelId(resourceName: string): string {
   return resourceName.split('/').pop()!;
+}
+
+
+function handleOperation(op: OperationResponse): Model {
+  // Backend currently does not return operations that are not done.
+  if (op.done) {
+    // Done operations must have either a response or an error.
+    if (op.response) {
+      return new Model(op.response);
+    } else if (op.error) {
+      throw FirebaseMachineLearningError.fromOperationError(
+        op.error.code, op.error.message);
+    }
+  }
+  throw new FirebaseMachineLearningError(
+    'invalid-server-response',
+    `Invalid Operation response: ${JSON.stringify(op)}`);
 }
