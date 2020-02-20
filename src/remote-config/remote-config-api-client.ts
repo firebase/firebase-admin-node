@@ -18,6 +18,7 @@ import { HttpClient, AuthorizedHttpClient } from '../utils/api-request';
 import { FirebaseRemoteConfigError } from './remote-config-utils';
 import { FirebaseApp } from '../firebase-app';
 import * as validator from '../utils/validator';
+
 /**
  * Class that facilitates sending requests to the Firebase Remote Config backend API.
  *
