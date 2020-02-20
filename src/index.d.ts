@@ -953,13 +953,13 @@ declare namespace admin.auth {
 
     /**
      * The number of users that were deleted successfully (possibly zero).
-     * Users that did not exist prior to calling deleteUsers() will be
+     * Users that did not exist prior to calling deleteUsers() are
      * considered to be successfully deleted.
      */
     successCount: number;
 
     /**
-     * A list of FirebaseArrayIndexError instances describing the errors that
+     * A list of `FirebaseArrayIndexError` instances describing the errors that
      * were encountered during the deletion. Length of this list is equal to
      * the return value of [`failureCount`](#failureCount).
      */
@@ -1577,13 +1577,12 @@ declare namespace admin.auth {
      * Deletes the users specified by the given uids.
      *
      * Deleting a non-existing user won't generate an error. (i.e. this method
-     * is idempotent.) Non-existing users will be considered to be successfully
-     * deleted, and will therefore be counted in the
-     * DeleteUsersResult.successCount value.
+     * is idempotent.) Non-existing users are considered to be successfully
+     * deleted, and are therefore counted in the
+     * `DeleteUsersResult.successCount` value.
      *
      * Only a maximum of 1000 identifiers may be supplied. If more than 1000
-     * identifiers are supplied, this method will immediately throw a
-     * FirebaseAuthError.
+     * identifiers are supplied, this method throws a FirebaseAuthError.
      *
      * This API is currently rate limited at the server to 1 QPS. If you exceed
      * this, you may get a quota exceeded error. Therefore, if you want to
@@ -1647,7 +1646,7 @@ declare namespace admin.auth {
      * guaranteed to correspond to the nth entry in the input parameters list.
      *
      * Only a maximum of 100 identifiers may be supplied. If more than 100 identifiers are supplied,
-     * this method will immediately throw a FirebaseAuthError.
+     * this method throws a FirebaseAuthError.
      *
      * @param identifiers The identifiers used to indicate which user records should be returned.
      *     Must have <= 100 entries.
