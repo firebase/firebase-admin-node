@@ -85,7 +85,7 @@ export class RemoteConfig implements FirebaseServiceInterface {
    *
    * @return {Promise<RemoteConfigTemplate>} A Promise that fulfills when a template is published.
    */
-  public publishTemplate(template: RemoteConfigTemplate, options?: {force: boolean}): Promise<RemoteConfigTemplate> {
+  public publishTemplate(template: RemoteConfigTemplate, options?: { force: boolean }): Promise<RemoteConfigTemplate> {
     //TODO(lahirumaramba): implement the functionality
     return Promise.resolve<RemoteConfigTemplate>(new RemoteConfigTemplate());
   }
@@ -120,7 +120,7 @@ export class RemoteConfigTemplate {
    * @return {RemoteConfigParameter} The Remote Config parameter with the provided key.
    */
   public getParameter(key: string): RemoteConfigParameter | undefined {
-    return this.parameters.find( (p) => p.key === key );
+    return this.parameters.find((p) => p.key === key);
   }
 
   /**
@@ -131,7 +131,7 @@ export class RemoteConfigTemplate {
    * @return {RemoteConfigCondition} The Remote Config condition with the provided name.
    */
   public getCondition(name: string): RemoteConfigCondition | undefined {
-    return this.conditions.find( (c) => c.name === name );
+    return this.conditions.find((c) => c.name === name);
   }
 
   /** @return {object} The plain object representation of the current template data. */

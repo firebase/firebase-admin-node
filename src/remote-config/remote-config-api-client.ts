@@ -36,5 +36,5 @@ export class RemoteConfigApiClient {
 
 	// Just a placeholder for now
 	//TODO(lahirumaramba): implement the functionality
-	public getTemplate() {}
+	public getTemplate() { }
 }
