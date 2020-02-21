@@ -25,7 +25,7 @@ export type RemoteConfigErrorCode =
   | 'invalid-template'
   | 'obsolete-etag'
   | 'permission-denied'
-  | 'un-authentication'
+  | 'unauthenticated'
   | 'unknown-error';
 
 /**

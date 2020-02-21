@@ -25,16 +25,12 @@ import * as validator from '../utils/validator';
  */
 export class RemoteConfigApiClient {
 
-	constructor(app: FirebaseApp) {
-		if (!validator.isNonNullObject(app) || !('options' in app)) {
-			throw new FirebaseRemoteConfigError(
-				'invalid-argument',
-				'First argument passed to admin.RemoteConfig() must be a valid Firebase app '
-				+ 'instance.');
-		}
-	}
-
-	// Just a placeholder for now
-	//TODO(lahirumaramba): implement the functionality
-	public getTemplate() { }
+  constructor(app: FirebaseApp) {
+    if (!validator.isNonNullObject(app) || !('options' in app)) {
+      throw new FirebaseRemoteConfigError(
+        'invalid-argument',
+        'First argument passed to admin.RemoteConfig() must be a valid Firebase app '
+        + 'instance.');
+    }
+  }
 }

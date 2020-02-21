@@ -16,12 +16,24 @@
 
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { FirebaseApp } from '../firebase-app';
-import {
-  RemoteConfigCondition, RemoteConfigParameter
-} from './remote-config-types';
-import {
-  RemoteConfigApiClient
-} from './remote-config-api-client';
+
+/** Interface representing a Remote Config parameter. */
+export interface RemoteConfigParameter {
+  key: string;
+  defaultValue?: string; // If `undefined`, the parameter uses the in-app default value
+  description?: string;
+
+  // A dictionary of {conditionName: value}
+  // `undefined` value sets `useInAppDefault` to `true` (equivalent to `No Value`)
+  conditionalValues?: { [name: string]: string | undefined };
+}
+
+/** Interface representing a Remote Config condition. */
+export interface RemoteConfigCondition {
+  name: string;
+  expression: string;
+  color?: string;
+}
 
 /**
  * Internals of an RemoteConfig service instance.
@@ -44,63 +56,11 @@ class RemoteConfigInternals implements FirebaseServiceInternalsInterface {
 export class RemoteConfig implements FirebaseServiceInterface {
   public readonly INTERNAL: RemoteConfigInternals = new RemoteConfigInternals();
 
-  private readonly requestHandler: RemoteConfigApiClient;
-
   /**
    * @param {FirebaseApp} app The app for this RemoteConfig service.
    * @constructor
    */
-  constructor(readonly app: FirebaseApp) {
-    this.requestHandler = new RemoteConfigApiClient(app);
-  }
-
-  /**
-   * Gets the current active version of the Remote Config template of the project.
-   *
-   * @return {Promise<RemoteConfigTemplate>} A Promise that fulfills when the template is available.
-   */
-  public getTemplate(): Promise<RemoteConfigTemplate> {
-    //TODO(lahirumaramba): implement the functionality
-    this.requestHandler.getTemplate();
-    return Promise.resolve<RemoteConfigTemplate>(new RemoteConfigTemplate());
-  }
-
-  /**
-   * Validates a Remote Config template.
-   *
-   * @param {RemoteConfigTemplate} template The Remote Config template to be validated.
-   *
-   * @return {Promise<RemoteConfigTemplate>} A Promise that fulfills when a template is validated.
-   */
-  public validateTemplate(template: RemoteConfigTemplate): Promise<RemoteConfigTemplate> {
-    //TODO(lahirumaramba): implement the functionality
-    return Promise.resolve<RemoteConfigTemplate>(new RemoteConfigTemplate());
-  }
-
-  /**
-   * Publishes a Remote Config template.
-   *
-   * @param {RemoteConfigTemplate} template The Remote Config template to be validated.
-   * @param {any=} options Optional options object when publishing a Remote Config template.
-   *
-   * @return {Promise<RemoteConfigTemplate>} A Promise that fulfills when a template is published.
-   */
-  public publishTemplate(template: RemoteConfigTemplate, options?: { force: boolean }): Promise<RemoteConfigTemplate> {
-    //TODO(lahirumaramba): implement the functionality
-    return Promise.resolve<RemoteConfigTemplate>(new RemoteConfigTemplate());
-  }
-
-  /**
-   * Creates and returns a new Remote Config template from a JSON string.
-   *
-   * @param {string} json The JSON string to populate a Remote Config template.
-   *
-   * @return {RemoteConfigTemplate} A new template instance.
-   */
-  public createTemplateFromJSON(json: string): RemoteConfigTemplate {
-    //TODO(lahirumaramba): implement the functionality
-    return new RemoteConfigTemplate();
-  }
+  constructor(readonly app: FirebaseApp) { }
 }
 
 /**
@@ -110,7 +70,16 @@ export class RemoteConfigTemplate {
 
   public parameters: RemoteConfigParameter[];
   public conditions: RemoteConfigCondition[];
-  private readonly eTag: string;
+  private readonly eTagInternal: string;
+
+  /**
+   * Gets the ETag of the template.
+   *
+   * @return {string} The ETag of the Remote Config template.
+   */
+  get eTag(): string {
+    return this.eTagInternal;
+  }
 
   /**
    * Find an existing Remote Config parameter by key.
