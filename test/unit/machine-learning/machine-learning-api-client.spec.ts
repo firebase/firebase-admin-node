@@ -189,6 +189,124 @@ describe('MachineLearningApiClient', () => {
     });
   });
 
+  describe('updateModel', () => {
+    const NAME_ONLY_CONTENT: ModelContent = {displayName: 'name1'};
+    const NAME_ONLY_MASK = ['display_name'];
+    const MODEL_RESPONSE = {
+      name: 'projects/test-project/models/1234567',
+      createTime: '2020-02-07T23:45:23.288047Z',
+      updateTime: '2020-02-08T23:45:23.288047Z',
+      etag: 'etag123',
+      modelHash: 'modelHash123',
+      displayName: 'model_1',
+      tags: ['tag_1', 'tag_2'],
+      state: {published: true},
+      tfliteModel: {
+        gcsTfliteUri: 'gs://test-project-bucket/Firebase/ML/Models/model1.tflite',
+        sizeBytes: 16900988,
+      },
+    };
+    const STATUS_ERROR_RESPONSE = {
+      code: 3,
+      message: 'Invalid Argument message',
+    };
+    const OPERATION_SUCCESS_RESPONSE = {
+      done: true,
+      response: MODEL_RESPONSE,
+    };
+    const OPERATION_ERROR_RESPONSE = {
+      done: true,
+      error: STATUS_ERROR_RESPONSE,
+    };
+
+    const invalidContent: any[] = [null, undefined];
+    invalidContent.forEach((content) => {
+      it(`should reject when called with: ${JSON.stringify(content)}`, () => {
+        return apiClient.updateModel(MODEL_ID, content, NAME_ONLY_MASK)
+          .should.eventually.be.rejected.and.have.property(
+            'message', 'Invalid model or mask content.');
+      });
+    });
+
+    it('should reject when called with empty mask', () => {
+      return apiClient.updateModel(MODEL_ID, {}, [])
+        .should.eventually.be.rejected.and.have.property(
+          'message', 'Invalid model or mask content.');
+    });
+
+    it('should reject when project id is not available', () => {
+      return clientWithoutProjectId.updateModel(MODEL_ID, NAME_ONLY_CONTENT, NAME_ONLY_MASK)
+        .should.eventually.be.rejectedWith(noProjectId);
+    });
+
+    it('should throw when an error response is received', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+      stubs.push(stub);
+      const expected = new FirebaseMachineLearningError('not-found', 'Requested entity not found');
+      return apiClient.updateModel(MODEL_ID, NAME_ONLY_CONTENT, NAME_ONLY_MASK)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should resolve with the created resource on success', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(OPERATION_SUCCESS_RESPONSE));
+      stubs.push(stub);
+      return apiClient.updateModel(MODEL_ID, NAME_ONLY_CONTENT, NAME_ONLY_MASK)
+        .then((resp) => {
+          expect(resp.done).to.be.true;
+          expect(resp.name).to.be.empty;
+          expect(resp.response).to.deep.equal(MODEL_RESPONSE);
+        });
+    });
+
+    it('should resolve with error when the operation fails', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(OPERATION_ERROR_RESPONSE));
+      stubs.push(stub);
+      return apiClient.updateModel(MODEL_ID, NAME_ONLY_CONTENT, NAME_ONLY_MASK)
+        .then((resp) => {
+          expect(resp.done).to.be.true;
+          expect(resp.name).to.be.empty;
+          expect(resp.error).to.deep.equal(STATUS_ERROR_RESPONSE);
+        });
+    });
+
+    it('should reject with unknown-error when error code is not present', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom({}, 404));
+      stubs.push(stub);
+      const expected = new FirebaseMachineLearningError('unknown-error', 'Unknown server error: {}');
+      return apiClient.updateModel(MODEL_ID, NAME_ONLY_CONTENT, NAME_ONLY_MASK)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should reject with unknown-error for non-json response', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom('not json', 404));
+      stubs.push(stub);
+      const expected = new FirebaseMachineLearningError(
+        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+      return apiClient.updateModel(MODEL_ID, NAME_ONLY_CONTENT, NAME_ONLY_MASK)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should reject with when failed with a FirebaseAppError', () => {
+      const expected = new FirebaseAppError('network-error', 'socket hang up');
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(expected);
+      stubs.push(stub);
+      return apiClient.updateModel(MODEL_ID, NAME_ONLY_CONTENT, NAME_ONLY_MASK)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+  });
+
   describe('getModel', () => {
     const INVALID_NAMES: any[] = [null, undefined, '', 1, true, {}, []];
     INVALID_NAMES.forEach((invalidName) => {
