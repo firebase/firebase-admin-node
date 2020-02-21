@@ -16,6 +16,9 @@
 
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { FirebaseApp } from '../firebase-app';
+import {
+  RemoteConfigApiClient
+} from './remote-config-api-client';
 
 /** Interface representing a Remote Config parameter. */
 export interface RemoteConfigParameter {
@@ -56,11 +59,24 @@ class RemoteConfigInternals implements FirebaseServiceInternalsInterface {
 export class RemoteConfig implements FirebaseServiceInterface {
   public readonly INTERNAL: RemoteConfigInternals = new RemoteConfigInternals();
 
+  private readonly client: RemoteConfigApiClient;
+
   /**
    * @param {FirebaseApp} app The app for this RemoteConfig service.
    * @constructor
    */
-  constructor(readonly app: FirebaseApp) { }
+  constructor(readonly app: FirebaseApp) {
+    this.client = new RemoteConfigApiClient(app);
+  }
+
+  /**
+  * Gets the current active version of the Remote Config template of the project.
+  *
+  * @return {Promise<RemoteConfigTemplate>} A Promise that fulfills when the template is available.
+  */
+  public getTemplate(): Promise<RemoteConfigTemplate> {
+    return Promise.resolve<RemoteConfigTemplate>(new RemoteConfigTemplate());
+  }
 }
 
 /**
