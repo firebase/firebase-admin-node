@@ -303,7 +303,7 @@ export class SecurityRules implements FirebaseServiceInterface {
    *   without any offset.
    * @returns {Promise<RulesetMetadataList>} A promise that fulfills a page of rulesets.
    */
-  public listRulesetMetadata(pageSize: number = 100, nextPageToken?: string): Promise<RulesetMetadataList> {
+  public listRulesetMetadata(pageSize = 100, nextPageToken?: string): Promise<RulesetMetadataList> {
     return this.client.listRulesets(pageSize, nextPageToken)
       .then((response) => {
         return new RulesetMetadataListImpl(response);

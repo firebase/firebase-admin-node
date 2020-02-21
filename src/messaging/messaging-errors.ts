@@ -35,7 +35,7 @@ export function createFirebaseError(err: HttpError): FirebaseMessagingError {
   }
 
   // Non-JSON response
-  let error: {code: string, message: string};
+  let error: {code: string; message: string};
   switch (err.response.status) {
   case 400:
     error = MessagingClientErrorCode.INVALID_ARGUMENT;

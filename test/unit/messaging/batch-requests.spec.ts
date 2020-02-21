@@ -16,7 +16,6 @@
 
 'use strict';
 
-import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
@@ -50,14 +49,14 @@ function getParsedPartData(obj: object): string {
 function createMultipartResponse(success: object[], failures: object[] = []): HttpResponse {
   const multipart: Buffer[] = [];
   success.forEach((part) => {
-    let payload: string = '';
+    let payload = '';
     payload += `HTTP/1.1 200 OK\r\n`;
     payload += `Content-type: application/json\r\n\r\n`;
     payload += `${JSON.stringify(part)}\r\n`;
     multipart.push(Buffer.from(payload, 'utf-8'));
   });
   failures.forEach((part) => {
-    let payload: string = '';
+    let payload = '';
     payload += `HTTP/1.1 500 Internal Server Error\r\n`;
     payload += `Content-type: application/json\r\n\r\n`;
     payload += `${JSON.stringify(part)}\r\n`;

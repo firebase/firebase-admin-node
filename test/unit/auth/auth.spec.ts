@@ -524,7 +524,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         stubs.push(getUserStub);
         // Verify ID token while checking if revoked.
         return auth.verifyIdToken(mockIdToken, true)
-          .then((result) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -561,7 +561,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         // Verify ID token while checking if revoked.
         // This should fail with the underlying RPC error.
         return auth.verifyIdToken(mockIdToken, true)
-          .then((result) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -603,7 +603,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         // Verify ID token while checking if revoked.
         // This should fail with the underlying token generator verifyIdToken error.
         return auth.verifyIdToken(mockIdToken, true)
-          .then((result) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm expected error returned.
@@ -621,7 +621,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .returns(Promise.resolve(getDecodedIdToken(uid, validSince)));
           // Verify ID token.
           return auth.verifyIdToken(mockIdToken)
-            .then((result) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm expected error returned.
@@ -638,7 +638,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .returns(Promise.resolve(getDecodedIdToken(uid, validSince, 'otherTenantId')));
           // Verify ID token.
           return auth.verifyIdToken(mockIdToken)
-            .then((result) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm expected error returned.
@@ -768,7 +768,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         stubs.push(getUserStub);
         // Verify session cookie while checking if revoked.
         return auth.verifySessionCookie(mockSessionCookie, true)
-          .then((result) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -805,7 +805,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         // Verify session cookie while checking if revoked.
         // This should fail with the underlying RPC error.
         return auth.verifySessionCookie(mockSessionCookie, true)
-          .then((result) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -847,7 +847,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         // Verify session cookie while checking if revoked.
         // This should fail with the underlying token generator verifySessionCookie error.
         return auth.verifySessionCookie(mockSessionCookie, true)
-          .then((result) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm expected error returned.
@@ -865,7 +865,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .returns(Promise.resolve(getDecodedSessionCookie(uid, validSince)));
           // Verify session cookie token.
           return auth.verifySessionCookie(mockSessionCookie)
-            .then((result) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm expected error returned.
@@ -882,7 +882,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .returns(Promise.resolve(getDecodedSessionCookie(uid, validSince, 'otherTenantId')));
           // Verify session cookie token.
           return auth.verifySessionCookie(mockSessionCookie)
-            .then((result) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm expected error returned.
@@ -960,7 +960,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           .rejects(expectedError);
         stubs.push(stub);
         return auth.getUser(uid)
-          .then((userRecord) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -1039,7 +1039,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           .rejects(expectedError);
         stubs.push(stub);
         return auth.getUserByEmail(email)
-          .then((userRecord) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -1119,7 +1119,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           .rejects(expectedError);
         stubs.push(stub);
         return auth.getUserByPhoneNumber(phoneNumber)
-          .then((userRecord) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -1291,7 +1291,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           .rejects(expectedError);
         stubs.push(createUserStub);
         return auth.createUser(propertiesToCreate)
-          .then((userRecord) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -1312,7 +1312,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         stubs.push(createUserStub);
         stubs.push(getUserStub);
         return auth.createUser(propertiesToCreate)
-          .then((userRecord) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -1333,7 +1333,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         stubs.push(createUserStub);
         stubs.push(getUserStub);
         return auth.createUser(propertiesToCreate)
-          .then((userRecord) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -1445,7 +1445,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           .rejects(expectedError);
         stubs.push(updateUserStub);
         return auth.updateUser(uid, propertiesToEdit)
-          .then((userRecord) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -1465,7 +1465,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         stubs.push(updateUserStub);
         stubs.push(getUserStub);
         return auth.updateUser(uid, propertiesToEdit)
-          .then((userRecord) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -1709,7 +1709,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           .rejects(expectedError);
         stubs.push(downloadAccountStub);
         return auth.listUsers(maxResult, pageToken)
-          .then((results) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -1789,7 +1789,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
               .rejects(expectedError);
         stubs.push(revokeRefreshTokensStub);
         return auth.revokeRefreshTokens(uid)
-          .then((result) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -1870,7 +1870,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
               .rejects(expectedServerError);
         stubs.push(uploadAccountStub);
         return auth.importUsers(users, options)
-          .then((result) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -2055,7 +2055,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
               .rejects(expectedError);
         stubs.push(createSessionCookieStub);
         return auth.createSessionCookie(idToken, options)
-          .then((result) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -2073,7 +2073,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .returns(Promise.reject(expectedError));
           stubs.push(verifyIdTokenStub);
           return auth.createSessionCookie(idToken, options)
-            .then((result) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm underlying API called with expected parameters.
@@ -2191,7 +2191,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .rejects(expectedError);
           stubs.push(getEmailActionLinkStub);
           return (auth as any)[emailActionFlow.api](email, actionCodeSettings)
-            .then((actualLink: string) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error: any) => {
               // Confirm underlying API called with expected parameters.
@@ -2281,7 +2281,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .rejects(expectedError);
           stubs.push(stub);
           return (auth as Auth).getProviderConfig(providerId)
-            .then((config) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm underlying API called with expected parameters.
@@ -2335,7 +2335,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .rejects(expectedError);
           stubs.push(stub);
           return (auth as Auth).getProviderConfig(providerId)
-            .then((config) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm underlying API called with expected parameters.
@@ -2469,7 +2469,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .rejects(expectedError);
           stubs.push(listConfigsStub);
           return auth.listProviderConfigs(filterOptions)
-            .then((results) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm underlying API called with expected parameters.
@@ -2564,7 +2564,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .rejects(expectedError);
           stubs.push(listConfigsStub);
           return auth.listProviderConfigs(filterOptions)
-            .then((results) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm underlying API called with expected parameters.
@@ -2643,7 +2643,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .rejects(expectedError);
           stubs.push(stub);
           return (auth as Auth).deleteProviderConfig(providerId)
-            .then((config) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm underlying API called with expected parameters.
@@ -2678,7 +2678,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .rejects(expectedError);
           stubs.push(stub);
           return (auth as Auth).deleteProviderConfig(providerId)
-            .then((config) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm underlying API called with expected parameters.
@@ -2789,7 +2789,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           stubs.push(updateConfigStub);
 
           return auth.updateProviderConfig(providerId, configOptions)
-            .then((actualConfig) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm underlying API called with expected parameters.
@@ -2855,7 +2855,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           stubs.push(updateConfigStub);
 
           return auth.updateProviderConfig(providerId, configOptions)
-            .then((actualConfig) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm underlying API called with expected parameters.
@@ -2955,7 +2955,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           stubs.push(createConfigStub);
 
           return (auth as Auth).createProviderConfig(configOptions)
-            .then((actualConfig) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm underlying API called with expected parameters.
@@ -3022,7 +3022,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           stubs.push(createConfigStub);
 
           return (auth as Auth).createProviderConfig(configOptions)
-            .then((actualConfig) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm underlying API called with expected parameters.

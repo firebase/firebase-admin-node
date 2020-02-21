@@ -142,7 +142,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    * @return {Promise<DecodedIdToken>} A Promise that will be fulfilled after a successful
    *     verification.
    */
-  public verifyIdToken(idToken: string, checkRevoked: boolean = false): Promise<DecodedIdToken> {
+  public verifyIdToken(idToken: string, checkRevoked = false): Promise<DecodedIdToken> {
     return this.idTokenVerifier.verifyJWT(idToken)
       .then((decodedIdToken: DecodedIdToken) => {
         // Whether to check if the token was revoked.
@@ -266,7 +266,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    */
   public deleteUser(uid: string): Promise<void> {
     return this.authRequestHandler.deleteAccount(uid)
-      .then((response) => {
+      .then(() => {
         // Return nothing on success.
       });
   }
@@ -296,7 +296,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    */
   public setCustomUserClaims(uid: string, customUserClaims: object): Promise<void> {
     return this.authRequestHandler.setCustomUserClaims(uid, customUserClaims)
-      .then((existingUid) => {
+      .then(() => {
         // Return nothing on success.
       });
   }
@@ -313,7 +313,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    */
   public revokeRefreshTokens(uid: string): Promise<void> {
     return this.authRequestHandler.revokeRefreshTokens(uid)
-      .then((existingUid) => {
+      .then(() => {
         // Return nothing on success.
       });
   }
@@ -371,7 +371,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    *     verification.
    */
   public verifySessionCookie(
-    sessionCookie: string, checkRevoked: boolean = false): Promise<DecodedIdToken> {
+    sessionCookie: string, checkRevoked = false): Promise<DecodedIdToken> {
     return this.sessionCookieVerifier.verifyJWT(sessionCookie)
       .then((decodedIdToken: DecodedIdToken) => {
         // Whether to check if the token was revoked.
@@ -639,7 +639,7 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
    * @return {Promise<DecodedIdToken>} A Promise that will be fulfilled after a successful
    *     verification.
    */
-  public verifyIdToken(idToken: string, checkRevoked: boolean = false): Promise<DecodedIdToken> {
+  public verifyIdToken(idToken: string, checkRevoked = false): Promise<DecodedIdToken> {
     return super.verifyIdToken(idToken, checkRevoked)
       .then((decodedClaims) => {
         // Validate tenant ID.
@@ -673,7 +673,7 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
     }
     // This will verify the ID token and then match the tenant ID before creating the session cookie.
     return this.verifyIdToken(idToken)
-      .then((decodedIdTokenClaims) => {
+      .then(() => {
         return super.createSessionCookie(idToken, sessionCookieOptions);
       });
   }
@@ -691,7 +691,7 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
    *     verification.
    */
   public verifySessionCookie(
-    sessionCookie: string, checkRevoked: boolean = false): Promise<DecodedIdToken> {
+    sessionCookie: string, checkRevoked = false): Promise<DecodedIdToken> {
     return super.verifySessionCookie(sessionCookie, checkRevoked)
       .then((decodedClaims) => {
         if (decodedClaims.firebase.tenant !== this.tenantId) {

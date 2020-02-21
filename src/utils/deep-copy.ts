@@ -46,12 +46,12 @@ export function deepExtend(target: any, source: any): any {
   }
 
   switch (source.constructor) {
-  case Date:
+  case Date: {
     // Treat Dates like scalars; if the target date object had any child
     // properties - they will be lost!
     const dateValue = (source as any) as Date;
     return new Date(dateValue.getTime());
-
+  }
   case Object:
     if (target === undefined) {
       target = {};

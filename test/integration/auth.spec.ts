@@ -441,7 +441,7 @@ describe('admin.auth', () => {
     it('generatePasswordResetLink() should return a password reset link', () => {
       // Ensure old password set on created user.
       return admin.auth().updateUser(uid, {password: 'password'})
-        .then((userRecord) => {
+        .then(() => {
           return admin.auth().generatePasswordResetLink(email, actionCodeSettings);
         })
         .then((link) => {
@@ -549,7 +549,7 @@ describe('admin.auth', () => {
       createdTenants.forEach((tenantId) => {
         promises.push(
           admin.auth().tenantManager().deleteTenant(tenantId)
-            .catch((error) => {/** Ignore. */}));
+            .catch(() => {/** Ignore. */}));
       });
       return Promise.all(promises);
     });
@@ -595,7 +595,7 @@ describe('admin.auth', () => {
         // If user successfully created, make sure it is deleted at the end of the test suite.
         if (createdUserUid) {
           return tenantAwareAuth.deleteUser(createdUserUid)
-            .catch((error) => {
+            .catch(() => {
               // Ignore error.
             });
         }
@@ -782,7 +782,7 @@ describe('admin.auth', () => {
       after(() => {
         if (tenantAwareAuth) {
           return tenantAwareAuth.deleteProviderConfig(authProviderConfig.providerId)
-            .catch((error) => {
+            .catch(() => {
               // Ignore error.
             });
         }
@@ -840,7 +840,7 @@ describe('admin.auth', () => {
       after(() => {
         if (tenantAwareAuth) {
           return tenantAwareAuth.deleteProviderConfig(authProviderConfig.providerId)
-            .catch((error) => {
+            .catch(() => {
               // Ignore error.
             });
         }
@@ -936,7 +936,7 @@ describe('admin.auth', () => {
         .then(() => {
           return admin.auth().tenantManager().getTenant(createdTenantId);
         })
-        .then((result) => {
+        .then(() => {
           throw new Error('unexpected success');
         })
         .catch((error) => {
@@ -971,8 +971,8 @@ describe('admin.auth', () => {
 
     const removeTempConfigs = () => {
       return Promise.all([
-        admin.auth().deleteProviderConfig(authProviderConfig1.providerId).catch((error) => {/* empty */}),
-        admin.auth().deleteProviderConfig(authProviderConfig2.providerId).catch((error) => {/* empty */}),
+        admin.auth().deleteProviderConfig(authProviderConfig1.providerId).catch(() => {/* empty */}),
+        admin.auth().deleteProviderConfig(authProviderConfig2.providerId).catch(() => {/* empty */}),
       ]);
     };
 
@@ -1103,8 +1103,8 @@ describe('admin.auth', () => {
 
     const removeTempConfigs = () => {
       return Promise.all([
-        admin.auth().deleteProviderConfig(authProviderConfig1.providerId).catch((error) => {/* empty */}),
-        admin.auth().deleteProviderConfig(authProviderConfig2.providerId).catch((error) => {/* empty */}),
+        admin.auth().deleteProviderConfig(authProviderConfig1.providerId).catch(() => {/* empty */}),
+        admin.auth().deleteProviderConfig(authProviderConfig2.providerId).catch(() => {/* empty */}),
       ]);
     };
 
@@ -1475,7 +1475,7 @@ describe('admin.auth', () => {
       {
         name: 'SCRYPT',
         importOptions: scryptHashOptions as any,
-        computePasswordHash: (userImportTest: UserImportTest): Buffer => {
+        computePasswordHash: (): Buffer => {
           return Buffer.from(scryptPasswordHash, 'base64');
         },
         rawPassword,
@@ -1716,7 +1716,7 @@ function safeDelete(uid: string): Promise<void> {
       }
     });
   // Suppress errors in delete queue to not spill over to next item in queue.
-  deleteQueue = deletePromise.catch((error) => {
+  deleteQueue = deletePromise.catch(() => {
     // Do nothing.
   });
   return deletePromise;

@@ -89,7 +89,7 @@ export class TenantManager {
     maxResults?: number,
     pageToken?: string): Promise<ListTenantsResult> {
     return this.authRequestHandler.listTenants(maxResults, pageToken)
-      .then((response: {tenants: TenantServerResponse[], nextPageToken?: string}) => {
+      .then((response: {tenants: TenantServerResponse[]; nextPageToken?: string}) => {
         // List of tenants to return.
         const tenants: Tenant[] = [];
         // Convert each user response to a Tenant.

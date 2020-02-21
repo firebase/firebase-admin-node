@@ -274,7 +274,7 @@ export class HttpClient {
    * @param {number} retryAttempts Number of retries performed up to now.
    * @return {Promise<HttpResponse>} A promise that resolves with the response details.
    */
-  private sendWithRetry(config: HttpRequestConfig, retryAttempts: number = 0): Promise<HttpResponse> {
+  private sendWithRetry(config: HttpRequestConfig, retryAttempts = 0): Promise<HttpResponse> {
     return AsyncHttpCall.invoke(config)
       .then((resp) => {
         return this.createHttpResponse(resp);
@@ -855,7 +855,7 @@ export class ApiSettings {
    * @return {ApiSettings} The current API settings instance.
    */
   public setRequestValidator(requestValidator: ApiCallbackFunction | null): ApiSettings {
-    const nullFunction: (_: object) => void = (_: object) => undefined;
+    const nullFunction: ApiCallbackFunction = () => undefined;
     this.requestValidator = requestValidator || nullFunction;
     return this;
   }
@@ -870,7 +870,7 @@ export class ApiSettings {
    * @return {ApiSettings} The current API settings instance.
    */
   public setResponseValidator(responseValidator: ApiCallbackFunction | null): ApiSettings {
-    const nullFunction: (_: object) => void = (_: object) => undefined;
+    const nullFunction: ApiCallbackFunction = () => undefined;
     this.responseValidator = responseValidator || nullFunction;
     return this;
   }

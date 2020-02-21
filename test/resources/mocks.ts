@@ -222,7 +222,7 @@ export function generateSessionCookie(overrides?: object, expiresIn?: number): s
 
 export function firebaseServiceFactory(
   firebaseApp: FirebaseApp,
-  extendApp?: (props: object) => void,
+  extendApp?: (props: object) => void, // eslint-disable-line @typescript-eslint/no-unused-vars
 ): FirebaseServiceInterface {
   const result = {
     app: firebaseApp,
@@ -233,7 +233,7 @@ export function firebaseServiceFactory(
 
 /** Mock socket emitter class. */
 export class MockSocketEmitter extends events.EventEmitter {
-  public setTimeout: (_: number) => void = (timeout: number) => undefined;
+  public setTimeout: (_: number) => void = () => undefined;
 }
 
 /** Mock stream passthrough class with dummy abort method. */

@@ -179,8 +179,8 @@ declare namespace admin {
     httpAgent?: Agent;
   }
 
-  var SDK_VERSION: string;
-  var apps: (admin.app.App | null)[];
+  const SDK_VERSION: string;
+  const apps: (admin.app.App | null)[];
 
   function app(name?: string): admin.app.App;
 
@@ -1101,14 +1101,14 @@ declare namespace admin.auth {
 
   /**
    * Interface representing a tenant configuration.
-   * 
+   *
    * Multi-tenancy support requires Google Cloud's Identity Platform
    * (GCIP). To learn more about GCIP, including pricing and features,
    * see the [GCIP documentation](https://cloud.google.com/identity-platform)
-   * 
+   *
    * Before multi-tenancy can be used on a Google Cloud Identity Platform project,
    * tenants must be allowed on that project via the Cloud Console UI.
-   * 
+   *
    * A tenant configuration provides information such as the display name, tenant
    * identifier and email authentication configuration.
    * For OIDC/SAML provider configuration management, `TenantAwareAuth` instances should
@@ -1145,7 +1145,7 @@ declare namespace admin.auth {
        * Whether password is required for email sign-in. When not required,
        * email sign-in can be performed with password or via email link sign-in.
        */
-      passwordRequired?: boolean
+      passwordRequired?: boolean;
     };
 
     /**
@@ -1185,13 +1185,12 @@ declare namespace admin.auth {
   /**
    * Interface representing the properties to set on a new tenant.
    */
-  interface CreateTenantRequest extends UpdateTenantRequest {
-  }
+  type CreateTenantRequest = UpdateTenantRequest
 
   /**
    * Interface representing the object returned from a
    * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#listTenants `listTenants()`}
-   * operation. 
+   * operation.
    * Contains the list of tenants for the current batch and the next page token if available.
    */
   interface ListTenantsResult {
@@ -1654,7 +1653,7 @@ declare namespace admin.auth {
     importUsers(
       users: admin.auth.UserImportRecord[],
       options?: admin.auth.UserImportOptions,
-    ): Promise<admin.auth.UserImportResult>
+    ): Promise<admin.auth.UserImportResult>;
 
     /**
      * Creates a new Firebase session cookie with the specified options. The created
@@ -1997,7 +1996,7 @@ declare namespace admin.auth {
    * </ul>
    */
   interface TenantManager {
-    /** 
+    /**
      * @param tenantId The tenant ID whose `TenantAwareAuth` instance is to be returned.
      *
      * @return The `TenantAwareAuth` instance corresponding to this tenant identifier.
@@ -2037,7 +2036,7 @@ declare namespace admin.auth {
      */
     deleteTenant(tenantId: string): Promise<void>;
 
-    /** 
+    /**
      * Creates a new tenant.
      * When creating new tenants, tenants that use separate billing and quota will require their
      * own project and must be defined as `full_service`.
@@ -3777,8 +3776,8 @@ declare namespace admin.database {
       onComplete?: (a: Error | null, b: boolean, c: admin.database.DataSnapshot | null) => any,
       applyLocally?: boolean
     ): Promise<{
-      committed: boolean,
-      snapshot: admin.database.DataSnapshot | null
+      committed: boolean;
+      snapshot: admin.database.DataSnapshot | null;
     }>;
 
     /**
@@ -3839,7 +3838,7 @@ declare namespace admin.database {
 }
 
 declare namespace admin.database.ServerValue {
-  var TIMESTAMP: number;
+  const TIMESTAMP: number;
 }
 
 type BaseMessage = {
@@ -4006,15 +4005,15 @@ declare namespace admin.messaging {
     channelId?: string;
 
     /**
-     * Sets the "ticker" text, which is sent to accessibility services. Prior to 
-     * API level 21 (Lollipop), sets the text that is displayed in the status bar 
+     * Sets the "ticker" text, which is sent to accessibility services. Prior to
+     * API level 21 (Lollipop), sets the text that is displayed in the status bar
      * when the notification first arrives.
      */
     ticker?: string;
 
     /**
-     * When set to `false` or unset, the notification is automatically dismissed when 
-     * the user clicks it in the panel. When set to `true`, the notification persists 
+     * When set to `false` or unset, the notification is automatically dismissed when
+     * the user clicks it in the panel. When set to `true`, the notification persists
      * even when the user clicks it.
      */
     sticky?: boolean;
@@ -4027,73 +4026,73 @@ declare namespace admin.messaging {
     eventTimestamp?: Date;
 
     /**
-     * Sets whether or not this notification is relevant only to the current device. 
-     * Some notifications can be bridged to other devices for remote display, such as 
-     * a Wear OS watch. This hint can be set to recommend this notification not be bridged. 
+     * Sets whether or not this notification is relevant only to the current device.
+     * Some notifications can be bridged to other devices for remote display, such as
+     * a Wear OS watch. This hint can be set to recommend this notification not be bridged.
      * See [Wear OS guides](https://developer.android.com/training/wearables/notifications/bridger#existing-method-of-preventing-bridging)
      */
     localOnly?: boolean;
 
     /**
-     * Sets the relative priority for this notification. Low-priority notifications 
-     * may be hidden from the user in certain situations. Note this priority differs 
-     * from `AndroidMessagePriority`. This priority is processed by the client after 
-     * the message has been delivered. Whereas `AndroidMessagePriority` is an FCM concept 
+     * Sets the relative priority for this notification. Low-priority notifications
+     * may be hidden from the user in certain situations. Note this priority differs
+     * from `AndroidMessagePriority`. This priority is processed by the client after
+     * the message has been delivered. Whereas `AndroidMessagePriority` is an FCM concept
      * that controls when the message is delivered.
      */
     priority?: ('min' | 'low' | 'default' | 'high' | 'max');
 
     /**
-     * Sets the vibration pattern to use. Pass in an array of milliseconds to 
-     * turn the vibrator on or off. The first value indicates the duration to wait before 
-     * turning the vibrator on. The next value indicates the duration to keep the 
-     * vibrator on. Subsequent values alternate between duration to turn the vibrator 
-     * off and to turn the vibrator on. If `vibrate_timings` is set and `default_vibrate_timings` 
+     * Sets the vibration pattern to use. Pass in an array of milliseconds to
+     * turn the vibrator on or off. The first value indicates the duration to wait before
+     * turning the vibrator on. The next value indicates the duration to keep the
+     * vibrator on. Subsequent values alternate between duration to turn the vibrator
+     * off and to turn the vibrator on. If `vibrate_timings` is set and `default_vibrate_timings`
      * is set to `true`, the default value is used instead of the user-specified `vibrate_timings`.
      */
     vibrateTimingsMillis?: number[];
 
     /**
-     * If set to `true`, use the Android framework's default vibrate pattern for the 
-     * notification. Default values are specified in [`config.xml`](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml). 
-     * If `default_vibrate_timings` is set to `true` and `vibrate_timings` is also set, 
+     * If set to `true`, use the Android framework's default vibrate pattern for the
+     * notification. Default values are specified in [`config.xml`](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml).
+     * If `default_vibrate_timings` is set to `true` and `vibrate_timings` is also set,
      * the default value is used instead of the user-specified `vibrate_timings`.
      */
     defaultVibrateTimings?: boolean;
 
     /**
-     * If set to `true`, use the Android framework's default sound for the notification. 
+     * If set to `true`, use the Android framework's default sound for the notification.
      * Default values are specified in [`config.xml`](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml).
      */
     defaultSound?: boolean;
 
     /**
-     * Settings to control the notification's LED blinking rate and color if LED is 
+     * Settings to control the notification's LED blinking rate and color if LED is
      * available on the device. The total blinking time is controlled by the OS.
      */
     lightSettings?: LightSettings;
 
     /**
-     * If set to `true`, use the Android framework's default LED light settings 
-     * for the notification. Default values are specified in [`config.xml`](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml). 
-     * If `default_light_settings` is set to `true` and `light_settings` is also set, 
+     * If set to `true`, use the Android framework's default LED light settings
+     * for the notification. Default values are specified in [`config.xml`](https://android.googlesource.com/platform/frameworks/base/+/master/core/res/res/values/config.xml).
+     * If `default_light_settings` is set to `true` and `light_settings` is also set,
      * the user-specified `light_settings` is used instead of the default value.
      */
     defaultLightSettings?: boolean;
 
     /**
-     * Sets the visibility of the notification. Must be either `private`, `public`, 
+     * Sets the visibility of the notification. Must be either `private`, `public`,
      * or `secret`. If unspecified, defaults to `private`.
      */
     visibility?: ('private' | 'public' | 'secret');
 
     /**
-     * Sets the number of items this notification represents. May be displayed as a 
-     * badge count for Launchers that support badging. See [`NotificationBadge`(https://developer.android.com/training/notify-user/badges). 
+     * Sets the number of items this notification represents. May be displayed as a
+     * badge count for Launchers that support badging. See [`NotificationBadge`(https://developer.android.com/training/notify-user/badges).
      * For example, this might be useful if you're using just one notification to
      * represent multiple new messages but you want the count here to represent
-     * the number of total new messages. If zero or unspecified, systems 
-     * that support badging use the default, which is to increment a number 
+     * the number of total new messages. If zero or unspecified, systems
+     * that support badging use the default, which is to increment a number
      * displayed on the long-press menu each time a new notification arrives.
      */
     notificationCount?: number;
@@ -4115,7 +4114,7 @@ declare namespace admin.messaging {
     lightOnDurationMillis: number;
 
     /**
-     * Required. Along with `light_on_duration`, defines the blink rate of LED flashes. 
+     * Required. Along with `light_on_duration`, defines the blink rate of LED flashes.
      */
     lightOffDurationMillis: number;
   }

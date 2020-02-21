@@ -32,7 +32,7 @@ const expect = chai.expect;
 
 describe('UserImportBuilder', () => {
   const nowString = new Date().toUTCString();
-  const userRequestValidator: ValidatorFunction = (request) => {
+  const userRequestValidator: ValidatorFunction = () => {
     // Do not throw an error.
   };
   const userRequestValidatorWithError: ValidatorFunction = (request) => {

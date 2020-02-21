@@ -54,11 +54,11 @@ export interface UserImportRecord {
     creationTime?: string;
   };
   providerData?: Array<{
-    uid: string,
-    displayName?: string,
-    email?: string,
-    photoURL?: string,
-    providerId: string,
+    uid: string;
+    displayName?: string;
+    email?: string;
+    photoURL?: string;
+    providerId: string;
   }>;
   customClaims?: object;
   passwordHash?: Buffer;
@@ -261,7 +261,7 @@ export class UserImportBuilder {
    *     uploadAccount response.
    */
   public buildResponse(
-    failedUploads: Array<{index: number, message: string}>): UserImportResult {
+    failedUploads: Array<{index: number; message: string}>): UserImportResult {
     // Initialize user import result.
     const importResult: UserImportResult = {
       successCount: this.validatedUsers.length,
@@ -343,7 +343,7 @@ export class UserImportBuilder {
     case 'MD5':
     case 'SHA1':
     case 'SHA256':
-    case 'SHA512':
+    case 'SHA512': {
       // MD5 is [0,8192] but SHA1, SHA256, and SHA512 are [1,8192]
       rounds = getNumberField(options.hash, 'rounds');
       const minRounds = options.hash.algorithm === 'MD5' ? 0 : 1;
@@ -359,7 +359,7 @@ export class UserImportBuilder {
         rounds,
       };
       break;
-
+    }
     case 'PBKDF_SHA1':
     case 'PBKDF2_SHA256':
       rounds = getNumberField(options.hash, 'rounds');
@@ -376,7 +376,7 @@ export class UserImportBuilder {
       };
       break;
 
-    case 'SCRYPT':
+    case 'SCRYPT': {
       if (!validator.isBuffer(options.hash.key)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_KEY,
@@ -415,14 +415,14 @@ export class UserImportBuilder {
         saltSeparator: utils.toWebSafeBase64(options.hash.saltSeparator || Buffer.from('')),
       };
       break;
-
+    }
     case 'BCRYPT':
       populatedOptions = {
         hashAlgorithm: options.hash.algorithm,
       };
       break;
 
-    case 'STANDARD_SCRYPT':
+    case 'STANDARD_SCRYPT': {
       const cpuMemCost = getNumberField(options.hash, 'memoryCost');
       if (isNaN(cpuMemCost)) {
         throw new FirebaseAuthError(
@@ -463,7 +463,7 @@ export class UserImportBuilder {
         dkLen,
       };
       break;
-
+    }
     default:
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_HASH_ALGORITHM,

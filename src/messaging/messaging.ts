@@ -251,7 +251,7 @@ export class Messaging implements FirebaseServiceInterface {
     }
     return this.getUrlPath()
       .then((urlPath) => {
-        const request: {message: Message, validate_only?: boolean} = {message: copy};
+        const request: {message: Message; validate_only?: boolean} = {message: copy};
         if (dryRun) {
           request.validate_only = true;
         }
@@ -304,7 +304,7 @@ export class Messaging implements FirebaseServiceInterface {
       .then((urlPath) => {
         const requests: SubRequest[] = copy.map((message) => {
           validateMessage(message);
-          const request: {message: Message, validate_only?: boolean} = {message};
+          const request: {message: Message; validate_only?: boolean} = {message};
           if (dryRun) {
             request.validate_only = true;
           }

@@ -36,9 +36,9 @@ describe('SecurityRules', () => {
     // to allow easier use from within the tests. An improvement would be to
     // alter this into a helper that creates customized RulesetResponses based
     // on the needs of the test, as that would ensure type-safety.
-    name: string,
-    createTime: string,
-    source: object | null,
+    name: string;
+    createTime: string;
+    source: object | null;
   } = {
     name: 'projects/test-project/rulesets/foo',
     createTime: '2019-03-08T23:45:23.288047Z',

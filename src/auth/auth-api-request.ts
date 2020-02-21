@@ -247,7 +247,7 @@ function validateProviderUserInfo(request: any) {
  * @param {any} request The create/edit request object.
  * @param {boolean=} uploadAccountRequest Whether to validate as an uploadAccount request.
  */
-function validateCreateEditRequest(request: any, uploadAccountRequest: boolean = false) {
+function validateCreateEditRequest(request: any, uploadAccountRequest = false) {
   // Hash set of whitelisted parameters.
   const validKeys = {
     displayName: true,
@@ -826,7 +826,7 @@ export abstract class AbstractAuthRequestHandler {
    */
   public downloadAccount(
     maxResults: number = MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE,
-    pageToken?: string): Promise<{users: object[], nextPageToken?: string}> {
+    pageToken?: string): Promise<{users: object[]; nextPageToken?: string}> {
     // Construct request.
     const request = {
       maxResults,
@@ -842,7 +842,7 @@ export abstract class AbstractAuthRequestHandler {
         if (!response.users) {
           response.users = [];
         }
-        return response as {users: object[], nextPageToken?: string};
+        return response as {users: object[]; nextPageToken?: string};
       });
   }
 
@@ -885,7 +885,7 @@ export abstract class AbstractAuthRequestHandler {
     return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_UPLOAD_ACCOUNT, request)
       .then((response: any) => {
         // No error object is returned if no error encountered.
-        const failedUploads = (response.error || []) as Array<{index: number, message: string}>;
+        const failedUploads = (response.error || []) as Array<{index: number; message: string}>;
         // Rewrite response as UserImportResult and re-insert client previously detected errors.
         return userImportBuilder.buildResponse(failedUploads);
       });
@@ -1155,7 +1155,7 @@ export abstract class AbstractAuthRequestHandler {
   public listOAuthIdpConfigs(
     maxResults: number = MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE,
     pageToken?: string): Promise<object> {
-    const request: {pageSize: number, pageToken?: string} = {
+    const request: {pageSize: number; pageToken?: string} = {
       pageSize: maxResults,
     };
     // Add next page token if provided.
@@ -1168,7 +1168,7 @@ export abstract class AbstractAuthRequestHandler {
           response.oauthIdpConfigs = [];
           delete response.nextPageToken;
         }
-        return response as {oauthIdpConfigs: object[], nextPageToken?: string};
+        return response as {oauthIdpConfigs: object[]; nextPageToken?: string};
       });
   }
 
@@ -1183,7 +1183,7 @@ export abstract class AbstractAuthRequestHandler {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
     }
     return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), DELETE_OAUTH_IDP_CONFIG, {}, {providerId})
-      .then((response: any) => {
+      .then(() => {
         // Return nothing.
       });
   }
@@ -1277,7 +1277,7 @@ export abstract class AbstractAuthRequestHandler {
   public listInboundSamlConfigs(
     maxResults: number = MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE,
     pageToken?: string): Promise<object> {
-    const request: {pageSize: number, pageToken?: string} = {
+    const request: {pageSize: number; pageToken?: string} = {
       pageSize: maxResults,
     };
     // Add next page token if provided.
@@ -1290,7 +1290,7 @@ export abstract class AbstractAuthRequestHandler {
           response.inboundSamlConfigs = [];
           delete response.nextPageToken;
         }
-        return response as {inboundSamlConfigs: object[], nextPageToken?: string};
+        return response as {inboundSamlConfigs: object[]; nextPageToken?: string};
       });
   }
 
@@ -1305,7 +1305,7 @@ export abstract class AbstractAuthRequestHandler {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
     }
     return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), DELETE_INBOUND_SAML_CONFIG, {}, {providerId})
-      .then((response: any) => {
+      .then(() => {
         // Return nothing.
       });
   }
@@ -1586,7 +1586,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
    */
   public listTenants(
     maxResults: number = MAX_LIST_TENANT_PAGE_SIZE,
-    pageToken?: string): Promise<{tenants: TenantServerResponse[], nextPageToken?: string}> {
+    pageToken?: string): Promise<{tenants: TenantServerResponse[]; nextPageToken?: string}> {
     const request = {
       pageSize: maxResults,
       pageToken,
@@ -1601,7 +1601,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
           response.tenants = [];
           delete response.nextPageToken;
         }
-        return response as {tenants: TenantServerResponse[], nextPageToken?: string};
+        return response as {tenants: TenantServerResponse[]; nextPageToken?: string};
       });
   }
 
@@ -1616,7 +1616,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID));
     }
     return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, DELETE_TENANT, {}, {tenantId})
-      .then((response: any) => {
+      .then(() => {
         // Return nothing.
       });
   }

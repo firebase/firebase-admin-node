@@ -1402,8 +1402,8 @@ describe('ApiSettings', () => {
     describe('with set properties', () => {
       const apiSettings: ApiSettings = new ApiSettings('getAccountInfo', 'GET');
       // Set all apiSettings properties.
-      const requestValidator: ApiCallbackFunction = (request) => undefined;
-      const responseValidator: ApiCallbackFunction = (response) => undefined;
+      const requestValidator: ApiCallbackFunction = () => undefined;
+      const responseValidator: ApiCallbackFunction = () => undefined;
       apiSettings.setRequestValidator(requestValidator);
       apiSettings.setResponseValidator(responseValidator);
       it('should return the correct requestValidator', () => {
