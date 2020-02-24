@@ -23,6 +23,7 @@ import {FirebaseError} from '../utils/error';
 import * as validator from '../utils/validator';
 import {FirebaseMachineLearningError} from './machine-learning-utils';
 import { deepCopy } from '../utils/deep-copy';
+import * as utils from '../utils';
 
 /**
  * Internals of an ML instance.
@@ -110,7 +111,7 @@ export class MachineLearning implements FirebaseServiceInterface {
    * @return {Promise<Model>} A Promise fulfilled with the updated model.
    */
   public updateModel(modelId: string, model: ModelOptions): Promise<Model> {
-     const updateMask = getMaskFromOptions(model);
+     const updateMask = utils.generateUpdateMask(model);
      return this.signUrlIfPresent(model)
       .then((modelContent) => this.client.updateModel(modelId, modelContent, updateMask))
       .then((operation) => handleOperation(operation));
@@ -290,20 +291,6 @@ export interface TFLiteModel {
   readonly sizeBytes: number;
 
   readonly gcsTfliteUri: string;
-}
-
-function getMaskFromOptions(options: ModelOptions): string[] {
-  const mask: string[] = [];
-  if (options.displayName) {
-    mask.push('display_name');
-  }
-  if (options.tags) {
-    mask.push('tags');
-  }
-  if (options.tfliteModel) {
-    mask.push('tflite_model.gcs_tflite_uri');
-  }
-  return mask;
 }
 
 function extractModelId(resourceName: string): string {
