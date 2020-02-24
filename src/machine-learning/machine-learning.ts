@@ -96,7 +96,7 @@ export class MachineLearning implements FirebaseServiceInterface {
    * @return {Promise<Model>} A Promise fulfilled with the created model.
    */
   public createModel(model: ModelOptions): Promise<Model> {
-    return this.maybeSignUrl(model, true)
+    return this.signUrlIfPresent(model)
       .then((modelContent) => this.client.createModel(modelContent))
       .then((operation) => handleOperation(operation));
   }
@@ -111,11 +111,9 @@ export class MachineLearning implements FirebaseServiceInterface {
    */
   public updateModel(modelId: string, model: ModelOptions): Promise<Model> {
      const updateMask = getMaskFromOptions(model);
-     return this.maybeSignUrl(model, true)
+     return this.signUrlIfPresent(model)
       .then((modelContent) => this.client.updateModel(modelId, modelContent, updateMask))
-      .then((operation) => {
-        return handleOperation(operation);
-      });
+      .then((operation) => handleOperation(operation));
    }
 
   /**
@@ -126,12 +124,7 @@ export class MachineLearning implements FirebaseServiceInterface {
    * @return {Promise<Model>} A Promise fulfilled with the published model.
    */
   public publishModel(modelId: string): Promise<Model> {
-    const updateMask = ['state.published'];
-    const options: ModelUpdateOptions = {state: {published: true}};
-    return this.client.updateModel(modelId, options, updateMask)
-      .then((operation) => {
-        return handleOperation(operation);
-      });
+    return this.setPublishStatus(modelId, true);
   }
 
   /**
@@ -142,12 +135,7 @@ export class MachineLearning implements FirebaseServiceInterface {
    * @return {Promise<Model>} A Promise fulfilled with the unpublished model.
    */
   public unpublishModel(modelId: string): Promise<Model> {
-    const updateMask = ['state.published'];
-    const options: ModelUpdateOptions = {state: {published: false}};
-    return this.client.updateModel(modelId, options, updateMask)
-      .then((operation) => {
-        return handleOperation(operation);
-      });
+    return this.setPublishStatus(modelId, false);
   }
 
   /**
@@ -159,9 +147,7 @@ export class MachineLearning implements FirebaseServiceInterface {
    */
   public getModel(modelId: string): Promise<Model> {
     return this.client.getModel(modelId)
-      .then((modelResponse) => {
-         return new Model(modelResponse);
-      });
+      .then((modelResponse) => new Model(modelResponse));
   }
 
   /**
@@ -187,10 +173,16 @@ export class MachineLearning implements FirebaseServiceInterface {
     return this.client.deleteModel(modelId);
   }
 
-  private maybeSignUrl(options: ModelOptions, forUpload?: boolean): Promise<ModelOptions> {
-    const modelOptions = deepCopy(options);
+  private setPublishStatus(modelId: string, publish: boolean): Promise<Model> {
+    const updateMask = ['state.published'];
+    const options: ModelUpdateOptions = {state: {published: publish}};
+    return this.client.updateModel(modelId, options, updateMask)
+      .then((operation) => handleOperation(operation));
+  }
 
-    if (forUpload && modelOptions.tfliteModel?.gcsTfliteUri) {
+  private signUrlIfPresent(options: ModelOptions): Promise<ModelOptions> {
+    const modelOptions = deepCopy(options);
+    if (modelOptions.tfliteModel?.gcsTfliteUri) {
       return this.signUrl(modelOptions.tfliteModel.gcsTfliteUri)
         .then ((uri: string) => {
           modelOptions.tfliteModel!.gcsTfliteUri = uri;
@@ -202,7 +194,6 @@ export class MachineLearning implements FirebaseServiceInterface {
             `Error during signing upload url: ${err.message}`);
         });
     }
-
     return Promise.resolve(modelOptions);
   }
 
@@ -224,9 +215,7 @@ export class MachineLearning implements FirebaseServiceInterface {
     return blob.getSignedUrl({
       action: 'read',
       expires: Date.now() + URL_VALID_DURATION,
-    }).then((x) => {
-      return x[0];
-    });
+    }).then((x) => x[0]);
   }
 }
 
@@ -302,9 +291,6 @@ export interface TFLiteModel {
 
   readonly gcsTfliteUri: string;
 }
-
-
-
 
 function getMaskFromOptions(options: ModelOptions): string[] {
   const mask: string[] = [];

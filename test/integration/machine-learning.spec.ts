@@ -128,9 +128,11 @@ describe('admin.machineLearning', () => {
   });
 
   describe('updateModel()', () => {
+
     const UPDATE_NAME: admin.machineLearning.ModelOptions = {
       displayName: 'update-model-new-name',
     };
+
     it('rejects with not-found when the Model does not exist', () => {
       const nonExistingId = '00000000';
       return admin.machineLearning().updateModel(nonExistingId, UPDATE_NAME)
@@ -167,7 +169,6 @@ describe('admin.machineLearning', () => {
             });
         });
     });
-
 
     it('sets tags for a model', () => {
       // TODO(ifielker): Uncomment & replace when BE change lands.

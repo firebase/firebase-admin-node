@@ -34,15 +34,15 @@ export interface StatusErrorResponse {
 /**
  * A Firebase ML Model input object
  */
-export class ModelOptions {
-  public displayName?: string;
-  public tags?: string[];
+export interface ModelOptions {
+  displayName?: string;
+  tags?: string[];
 
-  public tfliteModel?: { gcsTfliteUri: string; };
+  tfliteModel?: { gcsTfliteUri: string; };
 }
 
-export class ModelUpdateOptions extends ModelOptions {
-  public state?: { published?: boolean; };
+export interface ModelUpdateOptions extends ModelOptions {
+  state?: { published?: boolean; };
 }
 
 export interface ModelContent {
