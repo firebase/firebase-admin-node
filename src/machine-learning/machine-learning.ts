@@ -216,7 +216,7 @@ export class MachineLearning implements FirebaseServiceInterface {
     return blob.getSignedUrl({
       action: 'read',
       expires: Date.now() + URL_VALID_DURATION,
-    }).then((x) => x[0]);
+    }).then((signUrl) => signUrl[0]);
   }
 }
 

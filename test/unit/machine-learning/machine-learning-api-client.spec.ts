@@ -191,7 +191,7 @@ describe('MachineLearningApiClient', () => {
 
   describe('updateModel', () => {
     const NAME_ONLY_CONTENT: ModelContent = {displayName: 'name1'};
-    const NAME_ONLY_MASK = ['display_name'];
+    const NAME_ONLY_MASK = ['displayName'];
     const MODEL_RESPONSE = {
       name: 'projects/test-project/models/1234567',
       createTime: '2020-02-07T23:45:23.288047Z',
@@ -249,7 +249,7 @@ describe('MachineLearningApiClient', () => {
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
-    it('should resolve with the created resource on success', () => {
+    it('should resolve with the updated resource on success', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(OPERATION_SUCCESS_RESPONSE));
@@ -259,6 +259,12 @@ describe('MachineLearningApiClient', () => {
           expect(resp.done).to.be.true;
           expect(resp.name).to.be.empty;
           expect(resp.response).to.deep.equal(MODEL_RESPONSE);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'PATCH',
+            headers: EXPECTED_HEADERS,
+            url: `https://mlkit.googleapis.com/v1beta1/projects/test-project/models/${MODEL_ID}?updateMask=displayName`,
+            data: NAME_ONLY_CONTENT,
+          });
         });
     });
 
