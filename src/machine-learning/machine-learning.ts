@@ -16,12 +16,14 @@
 
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {MachineLearningApiClient, ModelResponse, OperationResponse, ModelContent} from './machine-learning-api-client';
+import {MachineLearningApiClient, ModelResponse, OperationResponse,
+  ModelOptions, ModelUpdateOptions} from './machine-learning-api-client';
 import {FirebaseError} from '../utils/error';
 
 import * as validator from '../utils/validator';
 import {FirebaseMachineLearningError} from './machine-learning-utils';
 import { deepCopy } from '../utils/deep-copy';
+import * as utils from '../utils';
 
 /**
  * Internals of an ML instance.
@@ -95,7 +97,7 @@ export class MachineLearning implements FirebaseServiceInterface {
    * @return {Promise<Model>} A Promise fulfilled with the created model.
    */
   public createModel(model: ModelOptions): Promise<Model> {
-    return this.convertOptionstoContent(model, true)
+    return this.signUrlIfPresent(model)
       .then((modelContent) => this.client.createModel(modelContent))
       .then((operation) => handleOperation(operation));
   }
@@ -109,8 +111,11 @@ export class MachineLearning implements FirebaseServiceInterface {
    * @return {Promise<Model>} A Promise fulfilled with the updated model.
    */
   public updateModel(modelId: string, model: ModelOptions): Promise<Model> {
-    throw new Error('NotImplemented');
-  }
+     const updateMask = utils.generateUpdateMask(model);
+     return this.signUrlIfPresent(model)
+      .then((modelContent) => this.client.updateModel(modelId, modelContent, updateMask))
+      .then((operation) => handleOperation(operation));
+   }
 
   /**
    * Publishes a model in Firebase ML.
@@ -120,7 +125,7 @@ export class MachineLearning implements FirebaseServiceInterface {
    * @return {Promise<Model>} A Promise fulfilled with the published model.
    */
   public publishModel(modelId: string): Promise<Model> {
-    throw new Error('NotImplemented');
+    return this.setPublishStatus(modelId, true);
   }
 
   /**
@@ -131,7 +136,7 @@ export class MachineLearning implements FirebaseServiceInterface {
    * @return {Promise<Model>} A Promise fulfilled with the unpublished model.
    */
   public unpublishModel(modelId: string): Promise<Model> {
-    throw new Error('NotImplemented');
+    return this.setPublishStatus(modelId, false);
   }
 
   /**
@@ -143,9 +148,7 @@ export class MachineLearning implements FirebaseServiceInterface {
    */
   public getModel(modelId: string): Promise<Model> {
     return this.client.getModel(modelId)
-      .then((modelResponse) => {
-         return new Model(modelResponse);
-      });
+      .then((modelResponse) => new Model(modelResponse));
   }
 
   /**
@@ -171,23 +174,28 @@ export class MachineLearning implements FirebaseServiceInterface {
     return this.client.deleteModel(modelId);
   }
 
-  private convertOptionstoContent(options: ModelOptions, forUpload?: boolean): Promise<ModelContent> {
-    const modelContent = deepCopy(options);
+  private setPublishStatus(modelId: string, publish: boolean): Promise<Model> {
+    const updateMask = ['state.published'];
+    const options: ModelUpdateOptions = {state: {published: publish}};
+    return this.client.updateModel(modelId, options, updateMask)
+      .then((operation) => handleOperation(operation));
+  }
 
-    if (forUpload && modelContent.tfliteModel?.gcsTfliteUri) {
-      return this.signUrl(modelContent.tfliteModel.gcsTfliteUri)
+  private signUrlIfPresent(options: ModelOptions): Promise<ModelOptions> {
+    const modelOptions = deepCopy(options);
+    if (modelOptions.tfliteModel?.gcsTfliteUri) {
+      return this.signUrl(modelOptions.tfliteModel.gcsTfliteUri)
         .then ((uri: string) => {
-          modelContent.tfliteModel!.gcsTfliteUri = uri;
-          return modelContent;
+          modelOptions.tfliteModel!.gcsTfliteUri = uri;
+          return modelOptions;
         })
         .catch((err: Error) => {
           throw new FirebaseMachineLearningError(
             'internal-error',
             `Error during signing upload url: ${err.message}`);
-        }) as Promise<ModelContent>;
+        });
     }
-
-    return Promise.resolve(modelContent) as Promise<ModelContent>;
+    return Promise.resolve(modelOptions);
   }
 
   private signUrl(unsignedUrl: string): Promise<string> {
@@ -208,9 +216,7 @@ export class MachineLearning implements FirebaseServiceInterface {
     return blob.getSignedUrl({
       action: 'read',
       expires: Date.now() + URL_VALID_DURATION,
-    }).then((x) => {
-      return x[0];
-    });
+    }).then((signUrl) => signUrl[0]);
   }
 }
 
@@ -287,22 +293,9 @@ export interface TFLiteModel {
   readonly gcsTfliteUri: string;
 }
 
-
-/**
- * A Firebase ML Model input object
- */
-export class ModelOptions {
-  public displayName?: string;
-  public tags?: string[];
-
-  public tfliteModel?: { gcsTfliteUri: string; };
-}
-
-
 function extractModelId(resourceName: string): string {
   return resourceName.split('/').pop()!;
 }
-
 
 function handleOperation(op: OperationResponse): Model {
   // Backend currently does not return operations that are not done.

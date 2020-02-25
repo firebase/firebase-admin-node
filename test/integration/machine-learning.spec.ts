@@ -127,6 +127,178 @@ describe('admin.machineLearning', () => {
     });
   });
 
+  describe('updateModel()', () => {
+
+    const UPDATE_NAME: admin.machineLearning.ModelOptions = {
+      displayName: 'update-model-new-name',
+    };
+
+    it('rejects with not-found when the Model does not exist', () => {
+      const nonExistingId = '00000000';
+      return admin.machineLearning().updateModel(nonExistingId, UPDATE_NAME)
+        .should.eventually.be.rejected.and.have.property(
+          'code', 'machine-learning/not-found');
+    });
+
+    it('rejects with invalid-argument when the ModelId is invalid', () => {
+      return admin.machineLearning().updateModel('invalid-model-id', UPDATE_NAME)
+        .should.eventually.be.rejected.and.have.property(
+          'code', 'machine-learning/invalid-argument');
+    });
+
+    it ('rejects with invalid-argument when modelOptions are invalid', () => {
+      const modelOptions: admin.machineLearning.ModelOptions = {
+        displayName: 'Invalid Name#*^!',
+      };
+      return createTemporaryModel({displayName: 'node-integration-invalid-argument'})
+        .then((model) => admin.machineLearning().updateModel(model.modelId, modelOptions)
+            .should.eventually.be.rejected.and.have.property(
+                'code', 'machine-learning/invalid-argument'));
+    });
+
+    it('updates the displayName', () => {
+      const DISPLAY_NAME = 'node-integration-test-update-1b';
+      return createTemporaryModel({displayName: 'node-integration-test-update-1a'})
+        .then((model) => {
+          const modelOptions: admin.machineLearning.ModelOptions = {
+            displayName: DISPLAY_NAME,
+          };
+          return admin.machineLearning().updateModel(model.modelId, modelOptions)
+            .then((updatedModel) => {
+              verifyModel(updatedModel, modelOptions);
+            });
+        });
+    });
+
+    it('sets tags for a model', () => {
+      // TODO(ifielker): Uncomment & replace when BE change lands.
+      // const ORIGINAL_TAGS = ['tag-node-update-1'];
+      const ORIGINAL_TAGS: string[] = [];
+      const NEW_TAGS = ['tag-node-update-2', 'tag-node-update-3'];
+
+      return createTemporaryModel({
+        displayName: 'node-integration-test-update-2',
+        tags: ORIGINAL_TAGS,
+      }).then((expectedModel) => {
+        const modelOptions: admin.machineLearning.ModelOptions = {
+          tags: NEW_TAGS,
+        };
+        return admin.machineLearning().updateModel(expectedModel.modelId, modelOptions)
+          .then((actualModel) => {
+            expect(actualModel.tags!.length).to.equal(2);
+            expect(actualModel.tags).to.have.same.members(NEW_TAGS);
+          });
+      });
+    });
+
+    it('updates the tflite file', () => {
+      Promise.all([
+          createTemporaryModel(),
+          uploadModelToGcs('model1.tflite', 'valid_model.tflite')])
+        .then(([model, fileName]) => {
+          const modelOptions: admin.machineLearning.ModelOptions = {
+            tfliteModel: {gcsTfliteUri: fileName},
+          };
+          return admin.machineLearning().updateModel(model.modelId, modelOptions)
+            .then((updatedModel) => {
+              verifyModel(updatedModel, modelOptions);
+            });
+        });
+    });
+
+    it('can update more than 1 field', () => {
+      const DISPLAY_NAME = 'node-integration-test-update-3b';
+      const TAGS = ['node-integration-tag-1', 'node-integration-tag-2'];
+      return createTemporaryModel({displayName: 'node-integration-test-update-3a'})
+        .then((model) => {
+          const modelOptions: admin.machineLearning.ModelOptions = {
+            displayName: DISPLAY_NAME,
+            tags: TAGS,
+          };
+          return admin.machineLearning().updateModel(model.modelId, modelOptions)
+            .then((updatedModel) => {
+              expect(updatedModel.displayName).to.equal(DISPLAY_NAME);
+              expect(updatedModel.tags).to.have.same.members(TAGS);
+            });
+        });
+    });
+  });
+
+  describe('publishModel()', () => {
+    it('should reject when model does not exist', () => {
+      const nonExistingName = '00000000';
+      return admin.machineLearning().publishModel(nonExistingName)
+        .should.eventually.be.rejected.and.have.property(
+          'code', 'machine-learning/not-found');
+    });
+
+    it('rejects with invalid-argument when the ModelId is invalid', () => {
+      return admin.machineLearning().publishModel('invalid-model-id')
+          .should.eventually.be.rejected.and.have.property(
+            'code', 'machine-learning/invalid-argument');
+    });
+
+    it('publishes the model successfully', () => {
+      const modelOptions: admin.machineLearning.ModelOptions = {
+        displayName: 'node-integration-test-publish-1',
+        tfliteModel: {gcsTfliteUri: 'this will be replaced below'},
+      };
+      return uploadModelToGcs('model1.tflite', 'valid_model.tflite')
+        .then((fileName: string) => {
+          modelOptions.tfliteModel!.gcsTfliteUri = fileName;
+          createTemporaryModel(modelOptions)
+            .then((createdModel) => {
+              expect(createdModel.validationError).to.be.empty;
+              expect(createdModel.published).to.be.false;
+              admin.machineLearning().publishModel(createdModel.modelId)
+                .then((publishedModel) => {
+                  expect(publishedModel.published).to.be.true;
+                });
+            });
+        });
+    });
+  });
+
+  describe('unpublishModel()', () => {
+    it('should reject when model does not exist', () => {
+      const nonExistingName = '00000000';
+      return admin.machineLearning().unpublishModel(nonExistingName)
+        .should.eventually.be.rejected.and.have.property(
+          'code', 'machine-learning/not-found');
+    });
+
+    it('rejects with invalid-argument when the ModelId is invalid', () => {
+      return admin.machineLearning().unpublishModel('invalid-model-id')
+          .should.eventually.be.rejected.and.have.property(
+            'code', 'machine-learning/invalid-argument');
+    });
+
+    it('unpublishes the model successfully', () => {
+      const modelOptions: admin.machineLearning.ModelOptions = {
+        displayName: 'node-integration-test-unpublish-1',
+        tfliteModel: {gcsTfliteUri: 'this will be replaced below'},
+      };
+      return uploadModelToGcs('model1.tflite', 'valid_model.tflite')
+        .then((fileName: string) => {
+          modelOptions.tfliteModel!.gcsTfliteUri = fileName;
+          createTemporaryModel(modelOptions)
+            .then((createdModel) => {
+              expect(createdModel.validationError).to.be.empty;
+              expect(createdModel.published).to.be.false;
+              admin.machineLearning().publishModel(createdModel.modelId)
+                .then((publishedModel) => {
+                  expect(publishedModel.published).to.be.true;
+                  admin.machineLearning().unpublishModel(publishedModel.modelId)
+                    .then((unpublishedModel) => {
+                      expect(unpublishedModel.published).to.be.false;
+                    });
+                });
+            });
+        });
+    });
+  });
+
+
   describe('getModel()', () => {
     it('rejects with not-found when the Model does not exist', () => {
       const nonExistingName = '00000000';
@@ -181,7 +353,11 @@ describe('admin.machineLearning', () => {
   });
 
   function verifyModel(model: admin.machineLearning.Model, expectedOptions: admin.machineLearning.ModelOptions) {
-    expect(model.displayName).to.equal(expectedOptions.displayName);
+    if (expectedOptions.displayName) {
+      expect(model.displayName).to.equal(expectedOptions.displayName);
+    } else {
+      expect(model.displayName).not.to.be.empty;
+    }
     expect(model.createTime).to.not.be.empty;
     expect(model.updateTime).to.not.be.empty;
     expect(model.etag).to.not.be.empty;

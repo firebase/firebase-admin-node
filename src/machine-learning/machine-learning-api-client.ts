@@ -31,6 +31,20 @@ export interface StatusErrorResponse {
     readonly message: string;
 }
 
+/**
+ * A Firebase ML Model input object
+ */
+export interface ModelOptions {
+  displayName?: string;
+  tags?: string[];
+
+  tfliteModel?: { gcsTfliteUri: string; };
+}
+
+export interface ModelUpdateOptions extends ModelOptions {
+  state?: { published?: boolean; };
+}
+
 export interface ModelContent {
   readonly displayName?: string;
   readonly tags?: string[];
@@ -80,7 +94,7 @@ export class MachineLearningApiClient {
     this.httpClient = new AuthorizedHttpClient(app);
   }
 
-  public createModel(model: ModelContent): Promise<OperationResponse> {
+  public createModel(model: ModelOptions): Promise<OperationResponse> {
     if (!validator.isNonNullObject(model) ||
         !validator.isNonEmptyString(model.displayName)) {
       const err = new FirebaseMachineLearningError('invalid-argument', 'Invalid model content.');
@@ -91,6 +105,24 @@ export class MachineLearningApiClient {
           const request: HttpRequestConfig = {
             method: 'POST',
             url: `${url}/models`,
+            data: model,
+          };
+          return this.sendRequest<OperationResponse>(request);
+        });
+  }
+
+  public updateModel(modelId: string, model: ModelUpdateOptions, updateMask: string[]): Promise<OperationResponse> {
+    if (!validator.isNonEmptyString(modelId) ||
+        !validator.isNonNullObject(model) ||
+        !validator.isNonEmptyArray(updateMask)) {
+      const err = new FirebaseMachineLearningError('invalid-argument', 'Invalid model or mask content.');
+      return Promise.reject(err);
+    }
+    return this.getUrl()
+        .then((url) => {
+          const request: HttpRequestConfig = {
+            method: 'PATCH',
+            url: `${url}/models/${modelId}?updateMask=${updateMask.join()}`,
             data: model,
           };
           return this.sendRequest<OperationResponse>(request);
