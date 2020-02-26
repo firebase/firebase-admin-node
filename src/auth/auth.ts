@@ -332,7 +332,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    *     of failed uploads and their corresponding errors.
    */
   public importUsers(
-      users: UserImportRecord[], options?: UserImportOptions): Promise<UserImportResult> {
+    users: UserImportRecord[], options?: UserImportOptions): Promise<UserImportResult> {
     return this.authRequestHandler.uploadAccount(users, options);
   }
 
@@ -348,7 +348,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    * @return {Promise<string>} A promise that resolves on success with the created session cookie.
    */
   public createSessionCookie(
-      idToken: string, sessionCookieOptions: SessionCookieOptions): Promise<string> {
+    idToken: string, sessionCookieOptions: SessionCookieOptions): Promise<string> {
     // Return rejected promise if expiresIn is not available.
     if (!validator.isNonNullObject(sessionCookieOptions) ||
         !validator.isNumber(sessionCookieOptions.expiresIn)) {
@@ -371,7 +371,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    *     verification.
    */
   public verifySessionCookie(
-      sessionCookie: string, checkRevoked: boolean = false): Promise<DecodedIdToken> {
+    sessionCookie: string, checkRevoked: boolean = false): Promise<DecodedIdToken> {
     return this.sessionCookieVerifier.verifyJWT(sessionCookie)
       .then((decodedIdToken: DecodedIdToken) => {
         // Whether to check if the token was revoked.
@@ -475,9 +475,9 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
         });
     }
     return Promise.reject(
-        new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
-          `"AuthProviderConfigFilter.type" must be either "saml' or "oidc"`));
+      new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        `"AuthProviderConfigFilter.type" must be either "saml' or "oidc"`));
   }
 
   /**
@@ -526,7 +526,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    * @return {Promise<AuthProviderConfig>} A promise that resolves with the updated provider configuration.
    */
   public updateProviderConfig(
-      providerId: string, updatedConfig: UpdateAuthProviderRequest): Promise<AuthProviderConfig> {
+    providerId: string, updatedConfig: UpdateAuthProviderRequest): Promise<AuthProviderConfig> {
     if (!validator.isNonNullObject(updatedConfig)) {
       return Promise.reject(new FirebaseAuthError(
         AuthClientErrorCode.INVALID_CONFIG,
@@ -585,7 +585,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    *     verification.
    */
   private verifyDecodedJWTNotRevoked(
-      decodedIdToken: DecodedIdToken, revocationErrorInfo: ErrorInfo): Promise<DecodedIdToken> {
+    decodedIdToken: DecodedIdToken, revocationErrorInfo: ErrorInfo): Promise<DecodedIdToken> {
     // Get tokens valid after time for the corresponding user.
     return this.getUser(decodedIdToken.sub)
       .then((user: UserRecord) => {
@@ -662,7 +662,7 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
    * @return {Promise<string>} A promise that resolves on success with the created session cookie.
    */
   public createSessionCookie(
-      idToken: string, sessionCookieOptions: SessionCookieOptions): Promise<string> {
+    idToken: string, sessionCookieOptions: SessionCookieOptions): Promise<string> {
     // Validate arguments before processing.
     if (!validator.isNonEmptyString(idToken)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_ID_TOKEN));
@@ -691,7 +691,7 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
    *     verification.
    */
   public verifySessionCookie(
-      sessionCookie: string, checkRevoked: boolean = false): Promise<DecodedIdToken> {
+    sessionCookie: string, checkRevoked: boolean = false): Promise<DecodedIdToken> {
     return super.verifySessionCookie(sessionCookie, checkRevoked)
       .then((decodedClaims) => {
         if (decodedClaims.firebase.tenant !== this.tenantId) {

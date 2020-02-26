@@ -877,7 +877,7 @@ describe('FirebaseApp', () => {
     it('resets the proactive refresh timeout upon a force refresh', () => {
       // Force a token refresh.
       return mockApp.INTERNAL.getToken(true).then((token1) => {
-         // Forward the clock to five minutes and one second before expiry.
+        // Forward the clock to five minutes and one second before expiry.
         let expiryInMilliseconds = token1.expirationTime - Date.now();
         clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS) - 1000);
 

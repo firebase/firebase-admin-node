@@ -182,10 +182,11 @@ export class FirebaseNamespaceInternals {
    * @param {AppHook} [appHook] Optional callback that handles app-related events like app creation and deletion.
    * @return {FirebaseServiceNamespace<FirebaseServiceInterface>} The Firebase service's namespace.
    */
-  public registerService(serviceName: string,
-                         createService: FirebaseServiceFactory,
-                         serviceProperties?: object,
-                         appHook?: AppHook): FirebaseServiceNamespace<FirebaseServiceInterface> {
+  public registerService(
+    serviceName: string,
+    createService: FirebaseServiceFactory,
+    serviceProperties?: object,
+    appHook?: AppHook): FirebaseServiceNamespace<FirebaseServiceInterface> {
     let errorMessage;
     if (typeof serviceName === 'undefined') {
       errorMessage = `No service name provided. Service name must be a non-empty string.`;
@@ -207,11 +208,9 @@ export class FirebaseNamespaceInternals {
       this.appHooks_[serviceName] = appHook;
     }
 
-    let serviceNamespace: FirebaseServiceNamespace<FirebaseServiceInterface>;
-
     // The service namespace is an accessor function which takes a FirebaseApp instance
     // or uses the default app if no FirebaseApp instance is provided
-    serviceNamespace = (appArg?: FirebaseApp) => {
+    const serviceNamespace: FirebaseServiceNamespace<FirebaseServiceInterface> = (appArg?: FirebaseApp) => {
       if (typeof appArg === 'undefined') {
         appArg = this.app();
       }

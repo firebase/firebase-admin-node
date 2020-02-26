@@ -183,11 +183,11 @@ class DatabaseRulesClient {
     if (!validator.isNonEmptyString(source) &&
       !validator.isBuffer(source)  &&
       !validator.isNonNullObject(source)) {
-        const error = new FirebaseDatabaseError({
-          code: 'invalid-argument',
-          message: 'Source must be a non-empty string, Buffer or an object.',
-        });
-        return Promise.reject(error);
+      const error = new FirebaseDatabaseError({
+        code: 'invalid-argument',
+        message: 'Source must be a non-empty string, Buffer or an object.',
+      });
+      return Promise.reject(error);
     }
 
     const req: HttpRequestConfig = {

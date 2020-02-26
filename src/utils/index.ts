@@ -132,8 +132,8 @@ export function formatString(str: string, params?: object): string {
   let formatted = str;
   Object.keys(params || {}).forEach((key) => {
     formatted = formatted.replace(
-        new RegExp('{' + key + '}', 'g'),
-        (params as {[key: string]: string})[key]);
+      new RegExp('{' + key + '}', 'g'),
+      (params as {[key: string]: string})[key]);
   });
   return formatted;
 }

@@ -482,7 +482,7 @@ describe('Messaging', () => {
       return messaging.send(
         {token: 'mock-token'},
       ).should.eventually.be.rejectedWith('test error message')
-       .and.have.property('code', 'messaging/invalid-argument');
+        .and.have.property('code', 'messaging/invalid-argument');
     });
 
     it('should fail when the backend server returns a detailed error with FCM error code', () => {
@@ -502,7 +502,7 @@ describe('Messaging', () => {
       return messaging.send(
         {token: 'mock-token'},
       ).should.eventually.be.rejectedWith('test error message')
-       .and.have.property('code', 'messaging/registration-token-not-registered');
+        .and.have.property('code', 'messaging/registration-token-not-registered');
     });
 
     ['THIRD_PARTY_AUTH_ERROR', 'APNS_AUTH_ERROR'].forEach((errorCode) => {
@@ -523,7 +523,7 @@ describe('Messaging', () => {
         return messaging.send(
           {token: 'mock-token'},
         ).should.eventually.be.rejectedWith('test error message')
-         .and.have.property('code', 'messaging/third-party-auth-error');
+          .and.have.property('code', 'messaging/third-party-auth-error');
       });
     });
 
@@ -538,7 +538,7 @@ describe('Messaging', () => {
       return messaging.send(
         {token: 'mock-token'},
       ).should.eventually.be.rejectedWith('test error message')
-       .and.have.property('code', 'messaging/registration-token-not-registered');
+        .and.have.property('code', 'messaging/registration-token-not-registered');
     });
 
     it('should fail when the backend server returns an unknown error', () => {
@@ -755,7 +755,7 @@ describe('Messaging', () => {
       return messaging.sendAll(
         [validMessage],
       ).should.eventually.be.rejectedWith('test error message')
-       .and.have.property('code', 'messaging/invalid-argument');
+        .and.have.property('code', 'messaging/invalid-argument');
     });
 
     it('should fail when the backend server returns a detailed error with FCM error code', () => {
@@ -775,7 +775,7 @@ describe('Messaging', () => {
       return messaging.sendAll(
         [validMessage],
       ).should.eventually.be.rejectedWith('test error message')
-       .and.have.property('code', 'messaging/registration-token-not-registered');
+        .and.have.property('code', 'messaging/registration-token-not-registered');
     });
 
     it('should map server error code to client-side error', () => {
@@ -789,7 +789,7 @@ describe('Messaging', () => {
       return messaging.sendAll(
         [validMessage],
       ).should.eventually.be.rejectedWith('test error message')
-       .and.have.property('code', 'messaging/registration-token-not-registered');
+        .and.have.property('code', 'messaging/registration-token-not-registered');
     });
 
     it('should fail when the backend server returns an unknown error', () => {
@@ -1049,7 +1049,7 @@ describe('Messaging', () => {
       return messaging.sendMulticast(
         {tokens: ['a']},
       ).should.eventually.be.rejectedWith('test error message')
-       .and.have.property('code', 'messaging/invalid-argument');
+        .and.have.property('code', 'messaging/invalid-argument');
     });
 
     it('should fail when the backend server returns a detailed error with FCM error code', () => {
@@ -1069,7 +1069,7 @@ describe('Messaging', () => {
       return messaging.sendMulticast(
         {tokens: ['a']},
       ).should.eventually.be.rejectedWith('test error message')
-       .and.have.property('code', 'messaging/registration-token-not-registered');
+        .and.have.property('code', 'messaging/registration-token-not-registered');
     });
 
     it('should map server error code to client-side error', () => {
@@ -1083,7 +1083,7 @@ describe('Messaging', () => {
       return messaging.sendMulticast(
         {tokens: ['a']},
       ).should.eventually.be.rejectedWith('test error message')
-       .and.have.property('code', 'messaging/registration-token-not-registered');
+        .and.have.property('code', 'messaging/registration-token-not-registered');
     });
 
     it('should fail when the backend server returns an unknown error', () => {
@@ -1528,7 +1528,7 @@ describe('Messaging', () => {
         disableRetries(messaging);
 
         return messaging.sendToDeviceGroup(
-        mocks.messaging.notificationKey,
+          mocks.messaging.notificationKey,
           mocks.messaging.payload,
         ).should.eventually.be.rejected.and.have.property('code', expectedError);
       });
@@ -1779,7 +1779,7 @@ describe('Messaging', () => {
         disableRetries(messaging);
 
         return messaging.sendToTopic(
-        mocks.messaging.topic,
+          mocks.messaging.topic,
           mocks.messaging.payload,
         ).should.eventually.be.rejected.and.have.property('code', expectedError);
       });
@@ -1998,7 +1998,7 @@ describe('Messaging', () => {
         disableRetries(messaging);
 
         return messaging.sendToCondition(
-        mocks.messaging.condition,
+          mocks.messaging.condition,
           mocks.messaging.payload,
         ).should.eventually.be.rejected.and.have.property('code', expectedError);
       });

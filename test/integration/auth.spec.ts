@@ -192,16 +192,16 @@ describe('admin.auth', () => {
         expect(listUsersResult.users[0].uid).to.equal(uids[1]);
 
         expect(
-            listUsersResult.users[0].passwordHash,
-            'Missing passwordHash field. A common cause would be forgetting to '
+          listUsersResult.users[0].passwordHash,
+          'Missing passwordHash field. A common cause would be forgetting to '
             + 'add the "Firebase Authentication Admin" permission. See '
             + 'instructions in CONTRIBUTING.md',
         ).to.be.ok;
         expect(listUsersResult.users[0].passwordHash!.length).greaterThan(0);
 
         expect(
-            listUsersResult.users[0].passwordSalt,
-            'Missing passwordSalt field. A common cause would be forgetting to '
+          listUsersResult.users[0].passwordSalt,
+          'Missing passwordSalt field. A common cause would be forgetting to '
             + 'add the "Firebase Authentication Admin" permission. See '
             + 'instructions in CONTRIBUTING.md',
         ).to.be.ok;
@@ -253,7 +253,7 @@ describe('admin.auth', () => {
       .then(() => {
         // New sign-in should succeed.
         return clientAuth().signInWithEmailAndPassword(
-            mockUserData.email, mockUserData.password);
+          mockUserData.email, mockUserData.password);
       })
       .then(({user}) => {
         // Get new session's ID token.
@@ -286,8 +286,8 @@ describe('admin.auth', () => {
         return user!.getIdToken();
       })
       .then((idToken) => {
-         // Verify ID token contents.
-         return admin.auth().verifyIdToken(idToken);
+        // Verify ID token contents.
+        return admin.auth().verifyIdToken(idToken);
       })
       .then((decodedIdToken: {[key: string]: any}) => {
         // Confirm expected claims set on the user's ID token.
@@ -312,15 +312,15 @@ describe('admin.auth', () => {
       .then((idToken) => {
         // Verify ID token contents.
         return admin.auth().verifyIdToken(idToken);
-     })
-     .then((decodedIdToken: {[key: string]: any}) => {
-       // Confirm all custom claims are cleared.
-       for (const key in customClaims) {
-         if (customClaims.hasOwnProperty(key)) {
-           expect(decodedIdToken[key]).to.be.undefined;
-         }
-       }
-     });
+      })
+      .then((decodedIdToken: {[key: string]: any}) => {
+        // Confirm all custom claims are cleared.
+        for (const key in customClaims) {
+          if (customClaims.hasOwnProperty(key)) {
+            expect(decodedIdToken[key]).to.be.undefined;
+          }
+        }
+      });
   });
 
   it('updateUser() updates the user record with the given parameters', () => {
@@ -371,40 +371,40 @@ describe('admin.auth', () => {
     return admin.auth().createCustomToken(newUserUid, {
       isAdmin: true,
     })
-    .then((customToken) => {
-      return clientAuth().signInWithCustomToken(customToken);
-    })
-    .then(({user}) => {
-      expect(user).to.exist;
-      return user!.getIdToken();
-    })
-    .then((idToken) => {
-      return admin.auth().verifyIdToken(idToken);
-    })
-    .then((token) => {
-      expect(token.uid).to.equal(newUserUid);
-      expect(token.isAdmin).to.be.true;
-    });
+      .then((customToken) => {
+        return clientAuth().signInWithCustomToken(customToken);
+      })
+      .then(({user}) => {
+        expect(user).to.exist;
+        return user!.getIdToken();
+      })
+      .then((idToken) => {
+        return admin.auth().verifyIdToken(idToken);
+      })
+      .then((token) => {
+        expect(token.uid).to.equal(newUserUid);
+        expect(token.isAdmin).to.be.true;
+      });
   });
 
   it('createCustomToken() can mint JWTs without a service account', () => {
     return admin.auth(noServiceAccountApp).createCustomToken(newUserUid, {
       isAdmin: true,
     })
-    .then((customToken) => {
-      return clientAuth().signInWithCustomToken(customToken);
-    })
-    .then(({user}) => {
-      expect(user).to.exist;
-      return user!.getIdToken();
-    })
-    .then((idToken) => {
-      return admin.auth(noServiceAccountApp).verifyIdToken(idToken);
-    })
-    .then((token) => {
-      expect(token.uid).to.equal(newUserUid);
-      expect(token.isAdmin).to.be.true;
-    });
+      .then((customToken) => {
+        return clientAuth().signInWithCustomToken(customToken);
+      })
+      .then(({user}) => {
+        expect(user).to.exist;
+        return user!.getIdToken();
+      })
+      .then((idToken) => {
+        return admin.auth(noServiceAccountApp).verifyIdToken(idToken);
+      })
+      .then((token) => {
+        expect(token.uid).to.equal(newUserUid);
+        expect(token.isAdmin).to.be.true;
+      });
   });
 
   it('verifyIdToken() fails when called with an invalid token', () => {
@@ -548,8 +548,8 @@ describe('admin.auth', () => {
       const promises: Array<Promise<any>> = [];
       createdTenants.forEach((tenantId) => {
         promises.push(
-            admin.auth().tenantManager().deleteTenant(tenantId)
-                .catch((error) => {/** Ignore. */}));
+          admin.auth().tenantManager().deleteTenant(tenantId)
+            .catch((error) => {/** Ignore. */}));
       });
       return Promise.all(promises);
     });
@@ -629,12 +629,12 @@ describe('admin.auth', () => {
           email: updatedEmail,
           phoneNumber: updatedPhone,
         })
-        .then((userRecord) => {
-          expect(userRecord.uid).to.equal(createdUserUid);
-          expect(userRecord.tenantId).to.equal(createdTenantId);
-          expect(userRecord.email).to.equal(updatedEmail);
-          expect(userRecord.phoneNumber).to.equal(updatedPhone);
-        });
+          .then((userRecord) => {
+            expect(userRecord.uid).to.equal(createdUserUid);
+            expect(userRecord.tenantId).to.equal(createdTenantId);
+            expect(userRecord.email).to.equal(updatedEmail);
+            expect(userRecord.phoneNumber).to.equal(updatedPhone);
+          });
       });
 
       it('generateEmailVerificationLink() should generate the link for tenant specific user', () => {
@@ -801,7 +801,7 @@ describe('admin.auth', () => {
           })
           .then((config) => {
             const modifiedConfig = deepExtend(
-                {providerId: authProviderConfig.providerId}, modifiedConfigOptions);
+              {providerId: authProviderConfig.providerId}, modifiedConfigOptions);
             assertDeepEqualUnordered(modifiedConfig, config);
             return tenantAwareAuth.deleteProviderConfig(authProviderConfig.providerId);
           })
@@ -809,7 +809,7 @@ describe('admin.auth', () => {
             return tenantAwareAuth.getProviderConfig(authProviderConfig.providerId)
               .should.eventually.be.rejected.and.have.property('code', 'auth/configuration-not-found');
           });
-        });
+      });
     });
 
     describe('OIDC management APIs', () => {
@@ -859,7 +859,7 @@ describe('admin.auth', () => {
           })
           .then((config) => {
             const modifiedConfig = deepExtend(
-                {providerId: authProviderConfig.providerId}, modifiedConfigOptions);
+              {providerId: authProviderConfig.providerId}, modifiedConfigOptions);
             assertDeepEqualUnordered(modifiedConfig, config);
             return tenantAwareAuth.deleteProviderConfig(authProviderConfig.providerId);
           })
@@ -867,7 +867,7 @@ describe('admin.auth', () => {
             return tenantAwareAuth.getProviderConfig(authProviderConfig.providerId)
               .should.eventually.be.rejected.and.have.property('code', 'auth/configuration-not-found');
           });
-        });
+      });
     });
 
     it('getTenant() should resolve with expected tenant', () => {
@@ -1044,7 +1044,7 @@ describe('admin.auth', () => {
       return admin.auth().updateProviderConfig(authProviderConfig1.providerId, modifiedConfigOptions)
         .then((config) => {
           const modifiedConfig = deepExtend(
-              {providerId: authProviderConfig1.providerId}, modifiedConfigOptions);
+            {providerId: authProviderConfig1.providerId}, modifiedConfigOptions);
           assertDeepEqualUnordered(modifiedConfig, config);
         });
     });
@@ -1072,7 +1072,7 @@ describe('admin.auth', () => {
       return admin.auth().updateProviderConfig(authProviderConfig1.providerId, deltaChanges)
         .then((config) => {
           const modifiedConfig = deepExtend(
-              {providerId: authProviderConfig1.providerId}, modifiedConfigOptions);
+            {providerId: authProviderConfig1.providerId}, modifiedConfigOptions);
           assertDeepEqualUnordered(modifiedConfig, config);
         });
     });
@@ -1236,7 +1236,7 @@ describe('admin.auth', () => {
           expectedExp = Math.floor((new Date().getTime() + expiresIn) / 1000);
           payloadClaims = decodedIdTokenClaims;
           payloadClaims.iss = payloadClaims.iss.replace(
-              'securetoken.google.com', 'session.firebase.google.com');
+            'securetoken.google.com', 'session.firebase.google.com');
           delete payloadClaims.exp;
           delete payloadClaims.iat;
           expectedIat = Math.floor(new Date().getTime() / 1000);
@@ -1367,7 +1367,7 @@ describe('admin.auth', () => {
           const currentRawPassword = userImportTest.rawPassword;
           const currentRawSalt = userImportTest.rawSalt;
           return crypto.createHmac('sha256', currentHashKey)
-                       .update(currentRawPassword + currentRawSalt).digest();
+            .update(currentRawPassword + currentRawSalt).digest();
         },
         rawPassword,
         rawSalt,
@@ -1400,7 +1400,7 @@ describe('admin.auth', () => {
           const currentRawPassword = userImportTest.rawPassword;
           const currentRawSalt = userImportTest.rawSalt;
           return Buffer.from(crypto.createHash('md5')
-                                   .update(currentRawSalt + currentRawPassword).digest('hex'));
+            .update(currentRawSalt + currentRawPassword).digest('hex'));
         },
         rawPassword,
         rawSalt,
@@ -1447,7 +1447,7 @@ describe('admin.auth', () => {
           const dkLen = userImportTest.importOptions.hash.derivedKeyLength!;
 
           return Buffer.from(scrypt.hashSync(
-              currentRawPassword, {N, r, p}, dkLen, Buffer.from(currentRawSalt)));
+            currentRawPassword, {N, r, p}, dkLen, Buffer.from(currentRawSalt)));
         },
         rawPassword,
         rawSalt,
@@ -1467,7 +1467,7 @@ describe('admin.auth', () => {
           expect(userImportTest.importOptions.hash.rounds).to.exist;
           const currentRounds = userImportTest.importOptions.hash.rounds!;
           return crypto.pbkdf2Sync(
-              currentRawPassword, currentRawSalt, currentRounds, 64, 'sha256');
+            currentRawPassword, currentRawSalt, currentRounds, 64, 'sha256');
         },
         rawPassword,
         rawSalt,
@@ -1591,7 +1591,7 @@ describe('admin.auth', () => {
  * @retunr {Promise<void>} A promise that resolved on success.
  */
 function testImportAndSignInUser(
-    importUserRecord: any, importOptions: any, rawPassword: string): Promise<void> {
+  importUserRecord: any, importOptions: any, rawPassword: string): Promise<void> {
   const users = [importUserRecord];
   // Import the user record.
   return admin.auth().importUsers(users, importOptions)

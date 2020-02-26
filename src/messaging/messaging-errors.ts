@@ -37,22 +37,22 @@ export function createFirebaseError(err: HttpError): FirebaseMessagingError {
   // Non-JSON response
   let error: {code: string, message: string};
   switch (err.response.status) {
-    case 400:
-      error = MessagingClientErrorCode.INVALID_ARGUMENT;
-      break;
-    case 401:
-    case 403:
-      error = MessagingClientErrorCode.AUTHENTICATION_ERROR;
-      break;
-    case 500:
-      error = MessagingClientErrorCode.INTERNAL_ERROR;
-      break;
-    case 503:
-      error = MessagingClientErrorCode.SERVER_UNAVAILABLE;
-      break;
-    default:
-      // Treat non-JSON responses with unexpected status codes as unknown errors.
-      error = MessagingClientErrorCode.UNKNOWN_ERROR;
+  case 400:
+    error = MessagingClientErrorCode.INVALID_ARGUMENT;
+    break;
+  case 401:
+  case 403:
+    error = MessagingClientErrorCode.AUTHENTICATION_ERROR;
+    break;
+  case 500:
+    error = MessagingClientErrorCode.INTERNAL_ERROR;
+    break;
+  case 503:
+    error = MessagingClientErrorCode.SERVER_UNAVAILABLE;
+    break;
+  default:
+    // Treat non-JSON responses with unexpected status codes as unknown errors.
+    error = MessagingClientErrorCode.UNKNOWN_ERROR;
   }
   return new FirebaseMessagingError({
     code: error.code,

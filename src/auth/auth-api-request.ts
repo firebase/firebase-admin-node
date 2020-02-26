@@ -135,7 +135,7 @@ class AuthResourceUrlBuilder {
         if (!validator.isNonEmptyString(projectId)) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_CREDENTIAL,
-              'Failed to determine project ID for Auth. Initialize the '
+            'Failed to determine project ID for Auth. Initialize the '
               + 'SDK with service account credentials or set project ID as an app option. '
               + 'Alternatively set the GOOGLE_CLOUD_PROJECT environment variable.',
           );
@@ -379,8 +379,8 @@ function validateCreateEditRequest(request: any, uploadAccountRequest: boolean =
       throw new FirebaseAuthError(
         AuthClientErrorCode.FORBIDDEN_CLAIM,
         invalidClaims.length > 1 ?
-        `Developer claims "${invalidClaims.join('", "')}" are reserved and cannot be specified.` :
-        `Developer claim "${invalidClaims[0]}" is reserved and cannot be specified.`,
+          `Developer claims "${invalidClaims.join('", "')}" are reserved and cannot be specified.` :
+          `Developer claim "${invalidClaims[0]}" is reserved and cannot be specified.`,
       );
     }
     // Check claims payload does not exceed maxmimum size.
@@ -416,26 +416,26 @@ function validateCreateEditRequest(request: any, uploadAccountRequest: boolean =
 /** Instantiates the createSessionCookie endpoint settings. */
 export const FIREBASE_AUTH_CREATE_SESSION_COOKIE =
     new ApiSettings(':createSessionCookie', 'POST')
-        // Set request validator.
-        .setRequestValidator((request: any) => {
-          // Validate the ID token is a non-empty string.
-          if (!validator.isNonEmptyString(request.idToken)) {
-            throw new FirebaseAuthError(AuthClientErrorCode.INVALID_ID_TOKEN);
-          }
-          // Validate the custom session cookie duration.
-          if (!validator.isNumber(request.validDuration) ||
+    // Set request validator.
+      .setRequestValidator((request: any) => {
+        // Validate the ID token is a non-empty string.
+        if (!validator.isNonEmptyString(request.idToken)) {
+          throw new FirebaseAuthError(AuthClientErrorCode.INVALID_ID_TOKEN);
+        }
+        // Validate the custom session cookie duration.
+        if (!validator.isNumber(request.validDuration) ||
               request.validDuration < MIN_SESSION_COOKIE_DURATION_SECS ||
               request.validDuration > MAX_SESSION_COOKIE_DURATION_SECS) {
-            throw new FirebaseAuthError(AuthClientErrorCode.INVALID_SESSION_COOKIE_DURATION);
-          }
-        })
-        // Set response validator.
-        .setResponseValidator((response: any) => {
-          // Response should always contain the session cookie.
-          if (!validator.isNonEmptyString(response.sessionCookie)) {
-            throw new FirebaseAuthError(AuthClientErrorCode.INTERNAL_ERROR);
-          }
-        });
+          throw new FirebaseAuthError(AuthClientErrorCode.INVALID_SESSION_COOKIE_DURATION);
+        }
+      })
+    // Set response validator.
+      .setResponseValidator((response: any) => {
+        // Response should always contain the session cookie.
+        if (!validator.isNonEmptyString(response.sessionCookie)) {
+          throw new FirebaseAuthError(AuthClientErrorCode.INTERNAL_ERROR);
+        }
+      });
 
 
 /** Instantiates the uploadAccount endpoint settings. */
@@ -505,8 +505,8 @@ export const FIREBASE_AUTH_SET_ACCOUNT_INFO = new ApiSettings('/accounts:update'
     // Throw error when tenantId is passed in POST body.
     if (typeof request.tenantId !== 'undefined') {
       throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
-          '"tenantId" is an invalid "UpdateRequest" property.');
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        '"tenantId" is an invalid "UpdateRequest" property.');
     }
     validateCreateEditRequest(request);
   })
@@ -542,8 +542,8 @@ export const FIREBASE_AUTH_SIGN_UP_NEW_USER = new ApiSettings('/accounts', 'POST
     // Throw error when tenantId is passed in POST body.
     if (typeof request.tenantId !== 'undefined') {
       throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
-          '"tenantId" is an invalid "CreateRequest" property.');
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        '"tenantId" is an invalid "CreateRequest" property.');
     }
     validateCreateEditRequest(request);
   })
@@ -757,7 +757,7 @@ export abstract class AbstractAuthRequestHandler {
       validDuration: expiresIn / 1000,
     };
     return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_CREATE_SESSION_COOKIE, request)
-        .then((response: any) => response.sessionCookie);
+      .then((response: any) => response.sessionCookie);
   }
 
   /**
@@ -825,8 +825,8 @@ export abstract class AbstractAuthRequestHandler {
    *     and no page token are returned.
    */
   public downloadAccount(
-      maxResults: number = MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE,
-      pageToken?: string): Promise<{users: object[], nextPageToken?: string}> {
+    maxResults: number = MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE,
+    pageToken?: string): Promise<{users: object[], nextPageToken?: string}> {
     // Construct request.
     const request = {
       maxResults,
@@ -837,13 +837,13 @@ export abstract class AbstractAuthRequestHandler {
       delete request.nextPageToken;
     }
     return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_DOWNLOAD_ACCOUNT, request)
-        .then((response: any) => {
-          // No more users available.
-          if (!response.users) {
-            response.users = [];
-          }
-          return response as {users: object[], nextPageToken?: string};
-        });
+      .then((response: any) => {
+        // No more users available.
+        if (!response.users) {
+          response.users = [];
+        }
+        return response as {users: object[], nextPageToken?: string};
+      });
   }
 
   /**
@@ -860,7 +860,7 @@ export abstract class AbstractAuthRequestHandler {
    *     of failed uploads and their corresponding errors.
    */
   public uploadAccount(
-      users: UserImportRecord[], options?: UserImportOptions): Promise<UserImportResult> {
+    users: UserImportRecord[], options?: UserImportOptions): Promise<UserImportResult> {
     // This will throw if any error is detected in the hash options.
     // For errors in the list of users, this will not throw and will report the errors and the
     // corresponding user index in the user import generated response below.
@@ -938,9 +938,9 @@ export abstract class AbstractAuthRequestHandler {
       customAttributes: JSON.stringify(customUserClaims),
     };
     return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_SET_ACCOUNT_INFO, request)
-        .then((response: any) => {
-          return response.localId as string;
-        });
+      .then((response: any) => {
+        return response.localId as string;
+      });
   }
 
   /**
@@ -1015,9 +1015,9 @@ export abstract class AbstractAuthRequestHandler {
       delete request.disabled;
     }
     return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_SET_ACCOUNT_INFO, request)
-        .then((response: any) => {
-          return response.localId as string;
-        });
+      .then((response: any) => {
+        return response.localId as string;
+      });
   }
 
   /**
@@ -1044,9 +1044,9 @@ export abstract class AbstractAuthRequestHandler {
       validSince: Math.ceil(new Date().getTime() / 1000),
     };
     return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_SET_ACCOUNT_INFO, request)
-        .then((response: any) => {
-          return response.localId as string;
-        });
+      .then((response: any) => {
+        return response.localId as string;
+      });
   }
 
   /**
@@ -1098,8 +1098,8 @@ export abstract class AbstractAuthRequestHandler {
    * @return {Promise<string>} A promise that resolves with the email action link.
    */
   public getEmailActionLink(
-      requestType: string, email: string,
-      actionCodeSettings?: ActionCodeSettings): Promise<string> {
+    requestType: string, email: string,
+    actionCodeSettings?: ActionCodeSettings): Promise<string> {
     let request = {requestType, email, returnOobLink: true};
     // ActionCodeSettings required for email link sign-in to determine the url where the sign-in will
     // be completed.
@@ -1153,8 +1153,8 @@ export abstract class AbstractAuthRequestHandler {
    *     configuration and no page token are returned.
    */
   public listOAuthIdpConfigs(
-      maxResults: number = MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE,
-      pageToken?: string): Promise<object> {
+    maxResults: number = MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE,
+    pageToken?: string): Promise<object> {
     const request: {pageSize: number, pageToken?: string} = {
       pageSize: maxResults,
     };
@@ -1163,13 +1163,13 @@ export abstract class AbstractAuthRequestHandler {
       request.pageToken = pageToken;
     }
     return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), LIST_OAUTH_IDP_CONFIGS, request)
-        .then((response: any) => {
-          if (!response.oauthIdpConfigs) {
-            response.oauthIdpConfigs = [];
-            delete response.nextPageToken;
-          }
-          return response as {oauthIdpConfigs: object[], nextPageToken?: string};
-        });
+      .then((response: any) => {
+        if (!response.oauthIdpConfigs) {
+          response.oauthIdpConfigs = [];
+          delete response.nextPageToken;
+        }
+        return response as {oauthIdpConfigs: object[], nextPageToken?: string};
+      });
   }
 
   /**
@@ -1224,7 +1224,7 @@ export abstract class AbstractAuthRequestHandler {
    *     configuration.
    */
   public updateOAuthIdpConfig(
-      providerId: string, options: OIDCUpdateAuthProviderRequest): Promise<OIDCConfigServerResponse> {
+    providerId: string, options: OIDCUpdateAuthProviderRequest): Promise<OIDCConfigServerResponse> {
     if (!OIDCConfig.isProviderId(providerId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
     }
@@ -1275,8 +1275,8 @@ export abstract class AbstractAuthRequestHandler {
    *     configuration and no page token are returned.
    */
   public listInboundSamlConfigs(
-      maxResults: number = MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE,
-      pageToken?: string): Promise<object> {
+    maxResults: number = MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE,
+    pageToken?: string): Promise<object> {
     const request: {pageSize: number, pageToken?: string} = {
       pageSize: maxResults,
     };
@@ -1285,13 +1285,13 @@ export abstract class AbstractAuthRequestHandler {
       request.pageToken = pageToken;
     }
     return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), LIST_INBOUND_SAML_CONFIGS, request)
-        .then((response: any) => {
-          if (!response.inboundSamlConfigs) {
-            response.inboundSamlConfigs = [];
-            delete response.nextPageToken;
-          }
-          return response as {inboundSamlConfigs: object[], nextPageToken?: string};
-        });
+      .then((response: any) => {
+        if (!response.inboundSamlConfigs) {
+          response.inboundSamlConfigs = [];
+          delete response.nextPageToken;
+        }
+        return response as {inboundSamlConfigs: object[], nextPageToken?: string};
+      });
   }
 
   /**
@@ -1347,7 +1347,7 @@ export abstract class AbstractAuthRequestHandler {
    *     configuration.
    */
   public updateInboundSamlConfig(
-      providerId: string, options: SAMLUpdateAuthProviderRequest): Promise<SAMLConfigServerResponse> {
+    providerId: string, options: SAMLUpdateAuthProviderRequest): Promise<SAMLConfigServerResponse> {
     if (!SAMLConfig.isProviderId(providerId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
     }
@@ -1381,8 +1381,8 @@ export abstract class AbstractAuthRequestHandler {
    * @return {Promise<object>} A promise that resolves with the response.
    */
   protected invokeRequestHandler(
-      urlBuilder: AuthResourceUrlBuilder, apiSettings: ApiSettings,
-      requestData: object, additionalResourceParams?: object): Promise<object> {
+    urlBuilder: AuthResourceUrlBuilder, apiSettings: ApiSettings,
+    requestData: object, additionalResourceParams?: object): Promise<object> {
     return urlBuilder.getUrl(apiSettings.getEndpoint(), additionalResourceParams)
       .then((url) => {
         // Validate request.
@@ -1457,33 +1457,33 @@ export abstract class AbstractAuthRequestHandler {
 
 /** Instantiates the getTenant endpoint settings. */
 const GET_TENANT = new ApiSettings('/tenants/{tenantId}', 'GET')
-    // Set response validator.
-    .setResponseValidator((response: any) => {
-      // Response should always contain at least the tenant name.
-      if (!validator.isNonEmptyString(response.name)) {
-        throw new FirebaseAuthError(
-          AuthClientErrorCode.INTERNAL_ERROR,
-          'INTERNAL ASSERT FAILED: Unable to get tenant',
-        );
-      }
-    });
+// Set response validator.
+  .setResponseValidator((response: any) => {
+    // Response should always contain at least the tenant name.
+    if (!validator.isNonEmptyString(response.name)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Unable to get tenant',
+      );
+    }
+  });
 
 /** Instantiates the deleteTenant endpoint settings. */
 const DELETE_TENANT = new ApiSettings('/tenants/{tenantId}', 'DELETE');
 
 /** Instantiates the updateTenant endpoint settings. */
 const UPDATE_TENANT = new ApiSettings('/tenants/{tenantId}?updateMask={updateMask}', 'PATCH')
-    // Set response validator.
-    .setResponseValidator((response: any) => {
-      // Response should always contain at least the tenant name.
-      if (!validator.isNonEmptyString(response.name) ||
+// Set response validator.
+  .setResponseValidator((response: any) => {
+    // Response should always contain at least the tenant name.
+    if (!validator.isNonEmptyString(response.name) ||
           !Tenant.getTenantIdFromResourceName(response.name)) {
-        throw new FirebaseAuthError(
-          AuthClientErrorCode.INTERNAL_ERROR,
-          'INTERNAL ASSERT FAILED: Unable to update tenant',
-        );
-      }
-    });
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Unable to update tenant',
+      );
+    }
+  });
 
 /** Instantiates the listTenants endpoint settings. */
 const LIST_TENANTS = new ApiSettings('/tenants', 'GET')
@@ -1508,17 +1508,17 @@ const LIST_TENANTS = new ApiSettings('/tenants', 'GET')
 
 /** Instantiates the createTenant endpoint settings. */
 const CREATE_TENANT = new ApiSettings('/tenants', 'POST')
-    // Set response validator.
-    .setResponseValidator((response: any) => {
-      // Response should always contain at least the tenant name.
-      if (!validator.isNonEmptyString(response.name) ||
+// Set response validator.
+  .setResponseValidator((response: any) => {
+    // Response should always contain at least the tenant name.
+    if (!validator.isNonEmptyString(response.name) ||
           !Tenant.getTenantIdFromResourceName(response.name)) {
-        throw new FirebaseAuthError(
-          AuthClientErrorCode.INTERNAL_ERROR,
-          'INTERNAL ASSERT FAILED: Unable to create new tenant',
-        );
-      }
-    });
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Unable to create new tenant',
+      );
+    }
+  });
 
 
 /**
@@ -1585,8 +1585,8 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
    *     and no page token are returned.
    */
   public listTenants(
-      maxResults: number = MAX_LIST_TENANT_PAGE_SIZE,
-      pageToken?: string): Promise<{tenants: TenantServerResponse[], nextPageToken?: string}> {
+    maxResults: number = MAX_LIST_TENANT_PAGE_SIZE,
+    pageToken?: string): Promise<{tenants: TenantServerResponse[], nextPageToken?: string}> {
     const request = {
       pageSize: maxResults,
       pageToken,
@@ -1596,13 +1596,13 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
       delete request.pageToken;
     }
     return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, LIST_TENANTS, request)
-        .then((response: any) => {
-          if (!response.tenants) {
-            response.tenants = [];
-            delete response.nextPageToken;
-          }
-          return response as {tenants: TenantServerResponse[], nextPageToken?: string};
-        });
+      .then((response: any) => {
+        if (!response.tenants) {
+          response.tenants = [];
+          delete response.nextPageToken;
+        }
+        return response as {tenants: TenantServerResponse[], nextPageToken?: string};
+      });
   }
 
   /**
@@ -1715,14 +1715,14 @@ export class TenantAwareAuthRequestHandler extends AbstractAuthRequestHandler {
    *     of failed uploads and their corresponding errors.
    */
   public uploadAccount(
-      users: UserImportRecord[], options?: UserImportOptions): Promise<UserImportResult> {
+    users: UserImportRecord[], options?: UserImportOptions): Promise<UserImportResult> {
     // Add additional check to match tenant ID of imported user records.
     users.forEach((user: UserImportRecord, index: number) => {
       if (validator.isNonEmptyString(user.tenantId) &&
           user.tenantId !== this.tenantId) {
         throw new FirebaseAuthError(
-            AuthClientErrorCode.MISMATCHING_TENANT_ID,
-            `UserRecord of index "${index}" has mismatching tenant ID "${user.tenantId}"`);
+          AuthClientErrorCode.MISMATCHING_TENANT_ID,
+          `UserRecord of index "${index}" has mismatching tenant ID "${user.tenantId}"`);
       }
     });
     return super.uploadAccount(users, options);

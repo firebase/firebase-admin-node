@@ -210,23 +210,23 @@ describe('UserImportBuilder', () => {
         let minRounds: number;
         let maxRounds: number;
         switch (algorithm) {
-          case 'MD5':
-            minRounds = 0;
-            maxRounds = 8192;
-            break;
-          case 'SHA1':
-          case 'SHA256':
-          case 'SHA512':
-            minRounds = 1;
-            maxRounds = 8192;
-            break;
-          case 'PBKDF_SHA1':
-          case 'PBKDF2_SHA256':
-            minRounds = 0;
-            maxRounds = 120000;
-            break;
-          default:
-            throw new Error('Unexpected algorithm: ' + algorithm);
+        case 'MD5':
+          minRounds = 0;
+          maxRounds = 8192;
+          break;
+        case 'SHA1':
+        case 'SHA256':
+        case 'SHA512':
+          minRounds = 1;
+          maxRounds = 8192;
+          break;
+        case 'PBKDF_SHA1':
+        case 'PBKDF2_SHA256':
+          minRounds = 0;
+          maxRounds = 120000;
+          break;
+        default:
+          throw new Error('Unexpected algorithm: ' + algorithm);
         }
         const invalidRounds = [minRounds - 1, maxRounds + 1, 'invalid', undefined, null];
 
@@ -611,8 +611,8 @@ describe('UserImportBuilder', () => {
             // Index should match server error index.
             index: 1,
             error: new FirebaseAuthError(
-                AuthClientErrorCode.INVALID_USER_IMPORT,
-                'Some error occurred!',
+              AuthClientErrorCode.INVALID_USER_IMPORT,
+              'Some error occurred!',
             ),
           },
         ],
@@ -682,8 +682,8 @@ describe('UserImportBuilder', () => {
           {
             index: 2,
             error: new FirebaseAuthError(
-                AuthClientErrorCode.INVALID_USER_IMPORT,
-                'Some error occurred in USER3!',
+              AuthClientErrorCode.INVALID_USER_IMPORT,
+              'Some error occurred in USER3!',
             ),
           },
           // Client side detected error.
@@ -692,8 +692,8 @@ describe('UserImportBuilder', () => {
           {
             index: 5,
             error: new FirebaseAuthError(
-                AuthClientErrorCode.INVALID_USER_IMPORT,
-                'Another error occurred in USER6!',
+              AuthClientErrorCode.INVALID_USER_IMPORT,
+              'Another error occurred in USER6!',
             ),
           },
           // Client side errors.
@@ -702,7 +702,7 @@ describe('UserImportBuilder', () => {
         ],
       };
       const userImportBuilder = new UserImportBuilder(
-          testUsers, validOptions as any, userRequestValidatorWithMultipleErrors);
+        testUsers, validOptions as any, userRequestValidatorWithMultipleErrors);
       expect(userImportBuilder.buildResponse(failingServerResponse))
         .to.deep.equal(mixedErrorUserImportResponse);
     });

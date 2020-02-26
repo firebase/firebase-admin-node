@@ -17,18 +17,18 @@
 import * as firebase from 'firebase-admin';
 
 export function initApp(serviceAcct: any, name: string) {
-    return firebase.initializeApp({
-        credential: firebase.credential.cert(serviceAcct),
-        databaseURL: 'https://mock.firebaseio.com'
-    }, name);
+  return firebase.initializeApp({
+    credential: firebase.credential.cert(serviceAcct),
+    databaseURL: 'https://mock.firebaseio.com'
+  }, name);
 }
 
 export function addValueEventListener(
-    // Check for type compilation
-    db: firebase.database.Database,
-    callback: (s: firebase.database.DataSnapshot) => any) {
-    let eventType: firebase.database.EventType = 'value';
-    db.ref().on(eventType, callback);
+  // Check for type compilation
+  db: firebase.database.Database,
+  callback: (s: firebase.database.DataSnapshot) => any) {
+  const eventType: firebase.database.EventType = 'value';
+  db.ref().on(eventType, callback);
 }
 
 export default initApp;

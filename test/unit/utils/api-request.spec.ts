@@ -378,9 +378,9 @@ describe('HttpClient', () => {
         'My-Custom-Header': 'CustomValue',
       },
     }).post(mockPath, reqData)
-    .reply(200, respData, {
-      'content-type': 'application/json',
-    });
+      .reply(200, respData, {
+        'content-type': 'application/json',
+      });
     mockedRequests.push(scope);
     const client = new HttpClient();
     return client.send({
@@ -409,9 +409,9 @@ describe('HttpClient', () => {
         },
       },
     }).post(mockPath, reqData)
-    .reply(200, respData, {
-      'content-type': 'application/json',
-    });
+      .reply(200, respData, {
+        'content-type': 'application/json',
+      });
     mockedRequests.push(scope);
     const client = new HttpClient();
     return client.send({
@@ -440,9 +440,9 @@ describe('HttpClient', () => {
         'My-Custom-Header': 'CustomValue',
       },
     }).post(mockPath, reqData)
-    .reply(200, {success: true}, {
-      'content-type': 'application/json',
-    });
+      .reply(200, {success: true}, {
+        'content-type': 'application/json',
+      });
     mockedRequests.push(scope);
     const client = new HttpClient();
     const request: HttpRequestConfig = {
@@ -470,10 +470,10 @@ describe('HttpClient', () => {
         'My-Custom-Header': 'CustomValue',
       },
     }).get(mockPath)
-    .query(reqData)
-    .reply(200, respData, {
-      'content-type': 'application/json',
-    });
+      .query(reqData)
+      .reply(200, respData, {
+        'content-type': 'application/json',
+      });
     mockedRequests.push(scope);
     const client = new HttpClient();
     return client.send({
@@ -558,10 +558,10 @@ describe('HttpClient', () => {
         'My-Custom-Header': 'CustomValue',
       },
     }).head(mockPath)
-    .query(reqData)
-    .reply(200, respData, {
-      'content-type': 'application/json',
-    });
+      .query(reqData)
+      .reply(200, respData, {
+        'content-type': 'application/json',
+      });
     mockedRequests.push(scope);
     const client = new HttpClient();
     return client.send({

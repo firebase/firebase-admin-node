@@ -129,8 +129,7 @@ describe('Firebase', () => {
     });
 
     it('should initialize SDK given an application default credential', () => {
-      let credPath: string | undefined;
-      credPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+      const credPath: string | undefined = process.env.GOOGLE_APPLICATION_CREDENTIALS;
       process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../resources/mock.key.json');
       firebaseAdmin.initializeApp({
         credential: firebaseAdmin.credential.applicationDefault(),

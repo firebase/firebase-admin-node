@@ -170,8 +170,8 @@ export class IAMSigner implements CryptoSigner {
           throw FirebaseAuthError.fromServerError(errorCode, errorMsg, error);
         }
         throw new FirebaseAuthError(
-            AuthClientErrorCode.INTERNAL_ERROR,
-            'Error returned from server: ' + error + '. Additionally, an ' +
+          AuthClientErrorCode.INTERNAL_ERROR,
+          'Error returned from server: ' + error + '. Additionally, an ' +
             'internal error occurred while attempting to extract the ' +
             'errorcode from the error.',
         );

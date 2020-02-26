@@ -1771,7 +1771,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         // Stub revokeRefreshTokens to return expected uid.
         const revokeRefreshTokensStub =
             sinon.stub(testConfig.RequestHandler.prototype, 'revokeRefreshTokens')
-            .resolves(uid);
+              .resolves(uid);
         stubs.push(revokeRefreshTokensStub);
         return auth.revokeRefreshTokens(uid)
           .then((result) => {
@@ -1786,7 +1786,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         // Stub revokeRefreshTokens to throw a backend error.
         const revokeRefreshTokensStub =
             sinon.stub(testConfig.RequestHandler.prototype, 'revokeRefreshTokens')
-            .rejects(expectedError);
+              .rejects(expectedError);
         stubs.push(revokeRefreshTokensStub);
         return auth.revokeRefreshTokens(uid)
           .then((result) => {
@@ -1852,7 +1852,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         // Stub uploadAccount to return expected result.
         const uploadAccountStub =
             sinon.stub(testConfig.RequestHandler.prototype, 'uploadAccount')
-            .resolves(expectedUserImportResult);
+              .resolves(expectedUserImportResult);
         stubs.push(uploadAccountStub);
         return auth.importUsers(users, options)
           .then((result) => {
@@ -1867,7 +1867,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         // Stub uploadAccount to reject with expected error.
         const uploadAccountStub =
             sinon.stub(testConfig.RequestHandler.prototype, 'uploadAccount')
-            .rejects(expectedServerError);
+              .rejects(expectedServerError);
         stubs.push(uploadAccountStub);
         return auth.importUsers(users, options)
           .then((result) => {
@@ -1884,7 +1884,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         // Stub uploadAccount to throw with expected error.
         const uploadAccountStub =
             sinon.stub(testConfig.RequestHandler.prototype, 'uploadAccount')
-            .throws(expectedOptionsError);
+              .throws(expectedOptionsError);
         stubs.push(uploadAccountStub);
         expect(() => {
           return auth.importUsers(users, {hash: {algorithm: 'invalid' as any}});
@@ -1905,7 +1905,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           // Stub uploadAccount to return expected result.
           const uploadAccountStub =
               sinon.stub(testConfig.RequestHandler.prototype, 'uploadAccount')
-              .returns(Promise.resolve(expectedUserImportResult));
+                .returns(Promise.resolve(expectedUserImportResult));
           const usersCopy = deepCopy(users);
           usersCopy.forEach((user) => {
             (user as any).tenantId = TENANT_ID;
@@ -2026,7 +2026,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         // Stub createSessionCookie to return expected sessionCookie.
         const createSessionCookieStub =
             sinon.stub(testConfig.RequestHandler.prototype, 'createSessionCookie')
-            .resolves(sessionCookie);
+              .resolves(sessionCookie);
         stubs.push(createSessionCookieStub);
         return auth.createSessionCookie(idToken, options)
           .then((result) => {
@@ -2052,7 +2052,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         // Stub createSessionCookie to throw a backend error.
         const createSessionCookieStub =
             sinon.stub(testConfig.RequestHandler.prototype, 'createSessionCookie')
-            .rejects(expectedError);
+              .rejects(expectedError);
         stubs.push(createSessionCookieStub);
         return auth.createSessionCookie(idToken, options)
           .then((result) => {
@@ -2157,7 +2157,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .then((actualLink: string) => {
               // Confirm underlying API called with expected parameters.
               expect(getEmailActionLinkStub).to.have.been.calledOnce.and.calledWith(
-                  emailActionFlow.requestType, email, actionCodeSettings);
+                emailActionFlow.requestType, email, actionCodeSettings);
               // Confirm expected user record response returned.
               expect(actualLink).to.equal(expectedLink);
             });
@@ -2178,7 +2178,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
               .then((actualLink: string) => {
                 // Confirm underlying API called with expected parameters.
                 expect(getEmailActionLinkStub).to.have.been.calledOnce.and.calledWith(
-                    emailActionFlow.requestType, email, undefined);
+                  emailActionFlow.requestType, email, undefined);
                 // Confirm expected user record response returned.
                 expect(actualLink).to.equal(expectedLink);
               });
@@ -2196,7 +2196,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             }, (error: any) => {
               // Confirm underlying API called with expected parameters.
               expect(getEmailActionLinkStub).to.have.been.calledOnce.and.calledWith(
-                  emailActionFlow.requestType, email, actionCodeSettings);
+                emailActionFlow.requestType, email, actionCodeSettings);
               // Confirm expected error returned.
               expect(error).to.equal(expectedError);
             });
@@ -2218,7 +2218,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
 
       const invalidProviderIds = [
-          undefined, null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
+        undefined, null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
       invalidProviderIds.forEach((invalidProviderId) => {
         it(`should be rejected given an invalid provider ID "${JSON.stringify(invalidProviderId)}"`, () => {
           return (auth as Auth).getProviderConfig(invalidProviderId as any)

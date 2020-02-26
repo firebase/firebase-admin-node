@@ -27,7 +27,7 @@ export class AndroidApp {
       private readonly requestHandler: ProjectManagementRequestHandler) {
     if (!validator.isNonEmptyString(appId)) {
       throw new FirebaseProjectManagementError(
-          'invalid-argument', 'appId must be a non-empty string.');
+        'invalid-argument', 'appId must be a non-empty string.');
     }
 
     this.resourceName = `projects/-/androidApps/${appId}`;
@@ -35,30 +35,30 @@ export class AndroidApp {
 
   public getMetadata(): Promise<AndroidAppMetadata> {
     return this.requestHandler.getResource(this.resourceName)
-        .then((responseData: any) => {
+      .then((responseData: any) => {
+        assertServerResponse(
+          validator.isNonNullObject(responseData),
+          responseData,
+          'getMetadata()\'s responseData must be a non-null object.');
+
+        const requiredFieldsList = ['name', 'appId', 'projectId', 'packageName'];
+        requiredFieldsList.forEach((requiredField) => {
           assertServerResponse(
-              validator.isNonNullObject(responseData),
-              responseData,
-              'getMetadata()\'s responseData must be a non-null object.');
-
-          const requiredFieldsList = ['name', 'appId', 'projectId', 'packageName'];
-          requiredFieldsList.forEach((requiredField) => {
-            assertServerResponse(
-                validator.isNonEmptyString(responseData[requiredField]),
-                responseData,
-                `getMetadata()\'s responseData.${requiredField} must be a non-empty string.`);
-          });
-
-          const metadata: AndroidAppMetadata = {
-            platform: AppPlatform.ANDROID,
-            resourceName: responseData.name,
-            appId: responseData.appId,
-            displayName: responseData.displayName || null,
-            projectId: responseData.projectId,
-            packageName: responseData.packageName,
-          };
-          return metadata;
+            validator.isNonEmptyString(responseData[requiredField]),
+            responseData,
+            `getMetadata()\'s responseData.${requiredField} must be a non-empty string.`);
         });
+
+        const metadata: AndroidAppMetadata = {
+          platform: AppPlatform.ANDROID,
+          resourceName: responseData.name,
+          appId: responseData.appId,
+          displayName: responseData.displayName || null,
+          projectId: responseData.projectId,
+          packageName: responseData.packageName,
+        };
+        return metadata;
+      });
   }
 
   public setDisplayName(newDisplayName: string): Promise<void> {
@@ -67,35 +67,35 @@ export class AndroidApp {
 
   public getShaCertificates(): Promise<ShaCertificate[]> {
     return this.requestHandler.getAndroidShaCertificates(this.resourceName)
-        .then((responseData: any) => {
-          assertServerResponse(
-              validator.isNonNullObject(responseData),
+      .then((responseData: any) => {
+        assertServerResponse(
+          validator.isNonNullObject(responseData),
+          responseData,
+          'getShaCertificates()\'s responseData must be a non-null object.');
+
+        if (!responseData.certificates) {
+          return [];
+        }
+
+        assertServerResponse(
+          validator.isArray(responseData.certificates),
+          responseData,
+          '"certificates" field must be present in the getShaCertificates() response data.');
+
+        const requiredFieldsList = ['name', 'shaHash'];
+
+        return responseData.certificates.map((certificateJson: any) => {
+          requiredFieldsList.forEach((requiredField) => {
+            assertServerResponse(
+              validator.isNonEmptyString(certificateJson[requiredField]),
               responseData,
-              'getShaCertificates()\'s responseData must be a non-null object.');
-
-          if (!responseData.certificates) {
-            return [];
-          }
-
-          assertServerResponse(
-              validator.isArray(responseData.certificates),
-              responseData,
-              '"certificates" field must be present in the getShaCertificates() response data.');
-
-          const requiredFieldsList = ['name', 'shaHash'];
-
-          return responseData.certificates.map((certificateJson: any) => {
-            requiredFieldsList.forEach((requiredField) => {
-              assertServerResponse(
-                  validator.isNonEmptyString(certificateJson[requiredField]),
-                  responseData,
-                  `getShaCertificates()\'s responseData.certificates[].${requiredField} must be a `
+              `getShaCertificates()\'s responseData.certificates[].${requiredField} must be a `
                       + `non-empty string.`);
-            });
-
-            return new ShaCertificate(certificateJson.shaHash, certificateJson.name);
           });
+
+          return new ShaCertificate(certificateJson.shaHash, certificateJson.name);
         });
+      });
   }
 
   public addShaCertificate(certificateToAdd: ShaCertificate): Promise<void> {
@@ -105,8 +105,8 @@ export class AndroidApp {
   public deleteShaCertificate(certificateToDelete: ShaCertificate): Promise<void> {
     if (!certificateToDelete.resourceName) {
       throw new FirebaseProjectManagementError(
-          'invalid-argument',
-          'Specified certificate does not include a resourceName. (Use AndroidApp.getShaCertificates() to retrieve ' +
+        'invalid-argument',
+        'Specified certificate does not include a resourceName. (Use AndroidApp.getShaCertificates() to retrieve ' +
               'certificates with a resourceName.');
     }
     return this.requestHandler.deleteResource(certificateToDelete.resourceName);
@@ -118,20 +118,20 @@ export class AndroidApp {
    */
   public getConfig(): Promise<string> {
     return this.requestHandler.getConfig(this.resourceName)
-        .then((responseData: any) => {
-          assertServerResponse(
-              validator.isNonNullObject(responseData),
-              responseData,
-              'getConfig()\'s responseData must be a non-null object.');
+      .then((responseData: any) => {
+        assertServerResponse(
+          validator.isNonNullObject(responseData),
+          responseData,
+          'getConfig()\'s responseData must be a non-null object.');
 
-          const base64ConfigFileContents = responseData.configFileContents;
-          assertServerResponse(
-              validator.isBase64String(base64ConfigFileContents),
-              responseData,
-              `getConfig()\'s responseData.configFileContents must be a base64 string.`);
+        const base64ConfigFileContents = responseData.configFileContents;
+        assertServerResponse(
+          validator.isBase64String(base64ConfigFileContents),
+          responseData,
+          `getConfig()\'s responseData.configFileContents must be a base64 string.`);
 
-          return Buffer.from(base64ConfigFileContents, 'base64').toString('utf8');
-        });
+        return Buffer.from(base64ConfigFileContents, 'base64').toString('utf8');
+      });
   }
 }
 
@@ -153,7 +153,7 @@ export class ShaCertificate {
       this.certType = 'sha256';
     } else {
       throw new FirebaseProjectManagementError(
-          'invalid-argument', 'shaHash must be either a sha256 hash or a sha1 hash.');
+        'invalid-argument', 'shaHash must be either a sha256 hash or a sha1 hash.');
     }
   }
 }

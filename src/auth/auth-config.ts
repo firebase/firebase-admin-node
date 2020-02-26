@@ -284,8 +284,8 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
    * @return {?SAMLConfigServerRequest} The resulting server request or null if not valid.
    */
   public static buildServerRequest(
-      options: SAMLAuthProviderRequest,
-      ignoreMissingFields: boolean = false): SAMLConfigServerRequest | null {
+    options: SAMLAuthProviderRequest,
+    ignoreMissingFields: boolean = false): SAMLConfigServerRequest | null {
     const makeRequest = validator.isNonNullObject(options) &&
         (options.providerId || ignoreMissingFields);
     if (!makeRequest) {
@@ -409,7 +409,7 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
         !validator.isNonEmptyString(options.rpEntityId)) {
       throw new FirebaseAuthError(
         !options.rpEntityId ? AuthClientErrorCode.MISSING_SAML_RELYING_PARTY_CONFIG :
-            AuthClientErrorCode.INVALID_CONFIG,
+          AuthClientErrorCode.INVALID_CONFIG,
         '"SAMLAuthProviderConfig.rpEntityId" must be a valid non-empty string.',
       );
     }
@@ -544,8 +544,8 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
    * @return {?OIDCConfigServerRequest} The resulting server request or null if not valid.
    */
   public static buildServerRequest(
-      options: OIDCAuthProviderRequest,
-      ignoreMissingFields: boolean = false): OIDCConfigServerRequest | null {
+    options: OIDCAuthProviderRequest,
+    ignoreMissingFields: boolean = false): OIDCConfigServerRequest | null {
     const makeRequest = validator.isNonNullObject(options) &&
         (options.providerId || ignoreMissingFields);
     if (!makeRequest) {

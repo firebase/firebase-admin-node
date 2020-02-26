@@ -191,7 +191,7 @@ export class UserRecord {
     utils.addReadonlyGetter(this, 'passwordSalt', response.salt);
     try {
       utils.addReadonlyGetter(
-          this, 'customClaims', JSON.parse(response.customAttributes));
+        this, 'customClaims', JSON.parse(response.customAttributes));
     } catch (e) {
       // Ignore error.
       utils.addReadonlyGetter(this, 'customClaims', undefined);
@@ -225,8 +225,8 @@ export class UserRecord {
     };
     json.providerData = [];
     for (const entry of this.providerData) {
-       // Convert each provider data to json.
-       json.providerData.push(entry.toJSON());
+      // Convert each provider data to json.
+      json.providerData.push(entry.toJSON());
     }
     return json;
   }

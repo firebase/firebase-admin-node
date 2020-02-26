@@ -56,8 +56,8 @@ export class ProjectManagement implements FirebaseServiceInterface {
   constructor(readonly app: FirebaseApp) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseProjectManagementError(
-          'invalid-argument',
-          'First argument passed to admin.projectManagement() must be a valid Firebase app '
+        'invalid-argument',
+        'First argument passed to admin.projectManagement() must be a valid Firebase app '
               + 'instance.');
     }
 
@@ -109,14 +109,14 @@ export class ProjectManagement implements FirebaseServiceInterface {
       })
       .then((responseData: any) => {
         assertServerResponse(
-            validator.isNonNullObject(responseData),
-            responseData,
-            'createAndroidApp()\'s responseData must be a non-null object.');
+          validator.isNonNullObject(responseData),
+          responseData,
+          'createAndroidApp()\'s responseData must be a non-null object.');
 
         assertServerResponse(
-            validator.isNonEmptyString(responseData.appId),
-            responseData,
-            `"responseData.appId" field must be present in createAndroidApp()'s response data.`);
+          validator.isNonEmptyString(responseData.appId),
+          responseData,
+          `"responseData.appId" field must be present in createAndroidApp()'s response data.`);
         return new AndroidApp(responseData.appId, this.requestHandler);
       });
   }
@@ -131,14 +131,14 @@ export class ProjectManagement implements FirebaseServiceInterface {
       })
       .then((responseData: any) => {
         assertServerResponse(
-            validator.isNonNullObject(responseData),
-            responseData,
-            'createIosApp()\'s responseData must be a non-null object.');
+          validator.isNonNullObject(responseData),
+          responseData,
+          'createIosApp()\'s responseData must be a non-null object.');
 
         assertServerResponse(
-            validator.isNonEmptyString(responseData.appId),
-            responseData,
-            `"responseData.appId" field must be present in createIosApp()'s response data.`);
+          validator.isNonEmptyString(responseData.appId),
+          responseData,
+          `"responseData.appId" field must be present in createIosApp()'s response data.`);
         return new IosApp(responseData.appId, this.requestHandler);
       });
   }
@@ -178,13 +178,13 @@ export class ProjectManagement implements FirebaseServiceInterface {
 
     return responseData.apps.map((appJson: any) => {
       assertServerResponse(
-          validator.isNonEmptyString(appJson.appId),
-          responseData,
-          `"apps[].appId" field must be present in the listAppMetadata() response data.`);
+        validator.isNonEmptyString(appJson.appId),
+        responseData,
+        `"apps[].appId" field must be present in the listAppMetadata() response data.`);
       assertServerResponse(
-          validator.isNonEmptyString(appJson.platform),
-          responseData,
-          `"apps[].platform" field must be present in the listAppMetadata() response data.`);
+        validator.isNonEmptyString(appJson.platform),
+        responseData,
+        `"apps[].platform" field must be present in the listAppMetadata() response data.`);
       const metadata: AppMetadata = {
         appId: appJson.appId,
         platform: (AppPlatform as any)[appJson.platform] || AppPlatform.PLATFORM_UNKNOWN,
@@ -215,8 +215,8 @@ export class ProjectManagement implements FirebaseServiceInterface {
         // Assert that a specific project ID was provided within the app.
         if (!validator.isNonEmptyString(projectId)) {
           throw new FirebaseProjectManagementError(
-              'invalid-project-id',
-              'Failed to determine project ID. Initialize the SDK with service account credentials, or '
+            'invalid-project-id',
+            'Failed to determine project ID. Initialize the SDK with service account credentials, or '
                 + 'set project ID as an app option. Alternatively, set the GOOGLE_CLOUD_PROJECT '
                 + 'environment variable.');
         }
@@ -245,9 +245,9 @@ export class ProjectManagement implements FirebaseServiceInterface {
 
         return responseData.apps.map((appJson: any) => {
           assertServerResponse(
-              validator.isNonEmptyString(appJson.appId),
-              responseData,
-              `"apps[].appId" field must be present in the ${callerName} response data.`);
+            validator.isNonEmptyString(appJson.appId),
+            responseData,
+            `"apps[].appId" field must be present in the ${callerName} response data.`);
           if (platform === 'android') {
             return new AndroidApp(appJson.appId, this.requestHandler);
           } else {
@@ -259,15 +259,15 @@ export class ProjectManagement implements FirebaseServiceInterface {
 
   private assertListAppsResponseData(responseData: any, callerName: string): void {
     assertServerResponse(
-        validator.isNonNullObject(responseData),
-        responseData,
-        `${callerName}\'s responseData must be a non-null object.`);
+      validator.isNonNullObject(responseData),
+      responseData,
+      `${callerName}\'s responseData must be a non-null object.`);
 
     if (responseData.apps) {
       assertServerResponse(
-          validator.isArray(responseData.apps),
-          responseData,
-          `"apps" field must be present in the ${callerName} response data.`);
-      }
+        validator.isArray(responseData.apps),
+        responseData,
+        `"apps" field must be present in the ${callerName} response data.`);
+    }
   }
 }

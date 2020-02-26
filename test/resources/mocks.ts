@@ -32,32 +32,32 @@ import {Credential, GoogleOAuthAccessToken, ServiceAccountCredential} from '../.
 const ALGORITHM = 'RS256';
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 
-export let uid = 'someUid';
-export let projectId = 'project_id';
-export let developerClaims = {
+export const uid = 'someUid';
+export const projectId = 'project_id';
+export const developerClaims = {
   one: 'uno',
   two: 'dos',
 };
 
-export let appName = 'mock-app-name';
+export const appName = 'mock-app-name';
 
-export let serviceName = 'mock-service-name';
+export const serviceName = 'mock-service-name';
 
-export let databaseURL = 'https://databaseName.firebaseio.com';
+export const databaseURL = 'https://databaseName.firebaseio.com';
 
-export let databaseAuthVariableOverride = { 'some#string': 'some#val' };
+export const databaseAuthVariableOverride = { 'some#string': 'some#val' };
 
-export let storageBucket = 'bucketName.appspot.com';
+export const storageBucket = 'bucketName.appspot.com';
 
-export let credential = new ServiceAccountCredential(path.resolve(__dirname, './mock.key.json'));
+export const credential = new ServiceAccountCredential(path.resolve(__dirname, './mock.key.json'));
 
-export let appOptions: FirebaseAppOptions = {
+export const appOptions: FirebaseAppOptions = {
   credential,
   databaseURL,
   storageBucket,
 };
 
-export let appOptionsWithOverride: FirebaseAppOptions = {
+export const appOptionsWithOverride: FirebaseAppOptions = {
   credential,
   databaseAuthVariableOverride,
   databaseURL,
@@ -65,15 +65,15 @@ export let appOptionsWithOverride: FirebaseAppOptions = {
   projectId,
 };
 
-export let appOptionsNoAuth: FirebaseAppOptions = {
+export const appOptionsNoAuth: FirebaseAppOptions = {
   databaseURL,
 };
 
-export let appOptionsNoDatabaseUrl: FirebaseAppOptions = {
+export const appOptionsNoDatabaseUrl: FirebaseAppOptions = {
   credential,
 };
 
-export let appOptionsAuthDB: FirebaseAppOptions = {
+export const appOptionsAuthDB: FirebaseAppOptions = {
   credential,
   databaseURL,
 };
@@ -137,7 +137,7 @@ export function appRejectedWhileFetchingAccessToken(): FirebaseApp {
   }, appName, new FirebaseNamespace().INTERNAL);
 }
 
-export let refreshToken = {
+export const refreshToken = {
   clientId: 'mock-client-id',
   clientSecret: 'mock-client-secret',
   refreshToken: 'mock-refresh-token',
@@ -145,11 +145,11 @@ export let refreshToken = {
 };
 
 /* tslint:disable:no-var-requires */
-export let certificateObject = require('./mock.key.json');
+export const certificateObject = require('./mock.key.json');
 /* tslint:enable:no-var-requires */
 
 // Randomly generated key pairs that don't correspond to anything related to Firebase or GCP
-export let keyPairs = [
+export const keyPairs = [
   /* tslint:disable:max-line-length */
   // The private key for this key pair is identical to the one used in ./mock.key.json
   {

@@ -261,8 +261,8 @@ export class FirebaseTokenVerifier {
           // is actually correct.
           if (typeof decodedToken === 'string') {
             return reject(new FirebaseAuthError(
-                AuthClientErrorCode.INTERNAL_ERROR,
-                "Unexpected decodedToken. Expected an object but got a string: '" + decodedToken + "'",
+              AuthClientErrorCode.INTERNAL_ERROR,
+              "Unexpected decodedToken. Expected an object but got a string: '" + decodedToken + "'",
             ));
           } else {
             const decodedIdToken = (decodedToken as DecodedIdToken);

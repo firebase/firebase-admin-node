@@ -153,7 +153,7 @@ describe('FirebaseTokenVerifier', () => {
             expiredErrorCode: AuthClientErrorCode.INVALID_ARGUMENT,
           },
           app,
-       );
+        );
       }).not.to.throw();
     });
 

@@ -53,11 +53,11 @@ describe('TenantManager', () => {
     mockApp = mocks.app();
     tenantManager = new TenantManager(mockApp);
     nullAccessTokenTenantManager = new TenantManager(
-        mocks.appReturningNullAccessToken());
+      mocks.appReturningNullAccessToken());
     malformedAccessTokenTenantManager = new TenantManager(
-        mocks.appReturningMalformedAccessToken());
+      mocks.appReturningMalformedAccessToken());
     rejectedPromiseAccessTokenTenantManager = new TenantManager(
-        mocks.appRejectedWhileFetchingAccessToken());
+      mocks.appRejectedWhileFetchingAccessToken());
 
   });
 

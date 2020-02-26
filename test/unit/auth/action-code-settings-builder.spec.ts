@@ -164,8 +164,8 @@ describe('ActionCodeSettingsBuilder', () => {
           url: 'https://www.example.com/path/file?a=1&b=2',
           handleCodeInApp: true,
           android: {},
-         } as any);
-       }).to.throw(AuthClientErrorCode.MISSING_ANDROID_PACKAGE_NAME.message);
+        } as any);
+      }).to.throw(AuthClientErrorCode.MISSING_ANDROID_PACKAGE_NAME.message);
     });
 
     const invalidPackageNames = [null, NaN, 0, 1, true, false, '', ['com.example.android'], _.noop];
