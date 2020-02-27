@@ -227,7 +227,7 @@ describe('MachineLearning', () => {
     });
   });
 
-  describe('model', () => {
+  describe('Model', () => {
     it('should successfully construct a model', () => {
       const model = new Model(MODEL_RESPONSE);
       expect(model.modelId).to.equal(MODEL_ID);
