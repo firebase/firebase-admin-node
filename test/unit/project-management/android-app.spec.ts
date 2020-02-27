@@ -132,7 +132,7 @@ describe('AndroidApp', () => {
           .should.eventually.be.rejected
           .and.have.property(
             'message',
-            `getMetadata()\'s responseData.${requiredField} must be a non-empty string. `
+            `getMetadata()'s responseData.${requiredField} must be a non-empty string. `
                     + `Response data: ${JSON.stringify(partialApiResponse, null, 2)}`);
       });
     });
@@ -250,7 +250,7 @@ describe('AndroidApp', () => {
           .should.eventually.be.rejected
           .and.have.property(
             'message',
-            `getShaCertificates()\'s responseData.certificates[].${requiredField} must be a `
+            `getShaCertificates()'s responseData.certificates[].${requiredField} must be a `
                     + 'non-empty string. Response data: '
                     + JSON.stringify(partialApiResponse, null, 2));
       });
@@ -357,7 +357,7 @@ describe('AndroidApp', () => {
         .should.eventually.be.rejected
         .and.have.property(
           'message',
-          `getConfig()\'s responseData.configFileContents must be a base64 string. `
+          `getConfig()'s responseData.configFileContents must be a base64 string. `
                   + `Response data: ${JSON.stringify(apiResponse, null, 2)}`);
     });
 

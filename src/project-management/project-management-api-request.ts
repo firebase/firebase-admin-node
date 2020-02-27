@@ -64,7 +64,7 @@ export class ProjectManagementRequestHandler {
       `https://${PROJECT_MANAGEMENT_HOST_AND_PORT}${PROJECT_MANAGEMENT_BETA_PATH}`;
   private readonly httpClient: AuthorizedHttpClient;
 
-  private static wrapAndRethrowHttpError(errStatusCode: number, errText?: string) {
+  private static wrapAndRethrowHttpError(errStatusCode: number, errText?: string): void {
     let errorCode: ProjectManagementErrorCode;
     let errorMessage: string;
 

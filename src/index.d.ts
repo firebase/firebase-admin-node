@@ -18,6 +18,8 @@ import { Bucket } from '@google-cloud/storage';
 import * as _firestore from '@google-cloud/firestore';
 import { Agent } from 'http';
 
+/* eslint-disable @typescript-eslint/ban-types */
+
 /**
  * `admin` is a global namespace from which all Firebase Admin
  * services are accessed.

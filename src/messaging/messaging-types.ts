@@ -297,7 +297,7 @@ export interface SendResponse {
  *
  * @param {Message} Message An object to be validated.
  */
-export function validateMessage(message: Message) {
+export function validateMessage(message: Message): void {
   if (!validator.isNonNullObject(message)) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD, 'Message must be a non-null object');
@@ -337,7 +337,7 @@ export function validateMessage(message: Message) {
  * @param {object} map An object to be validated.
  * @param {string} label A label to be included in the errors thrown.
  */
-function validateStringMap(map: {[key: string]: any} | undefined, label: string) {
+function validateStringMap(map: {[key: string]: any} | undefined, label: string): void {
   if (typeof map === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(map)) {
@@ -357,7 +357,7 @@ function validateStringMap(map: {[key: string]: any} | undefined, label: string)
  *
  * @param {WebpushConfig} config An object to be validated.
  */
-function validateWebpushConfig(config: WebpushConfig | undefined) {
+function validateWebpushConfig(config: WebpushConfig | undefined): void {
   if (typeof config === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(config)) {
@@ -374,7 +374,7 @@ function validateWebpushConfig(config: WebpushConfig | undefined) {
  *
  * @param {ApnsConfig} config An object to be validated.
  */
-function validateApnsConfig(config: ApnsConfig | undefined) {
+function validateApnsConfig(config: ApnsConfig | undefined): void {
   if (typeof config === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(config)) {
@@ -391,7 +391,7 @@ function validateApnsConfig(config: ApnsConfig | undefined) {
  *
  * @param {ApnsFcmOptions} fcmOptions An object to be validated.
  */
-function validateApnsFcmOptions(fcmOptions: ApnsFcmOptions | undefined) {
+function validateApnsFcmOptions(fcmOptions: ApnsFcmOptions | undefined): void {
   if (typeof fcmOptions === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(fcmOptions)) {
@@ -429,7 +429,7 @@ function validateApnsFcmOptions(fcmOptions: ApnsFcmOptions | undefined) {
  *
  * @param {FcmOptions} fcmOptions An object to be validated.
  */
-function validateFcmOptions(fcmOptions: FcmOptions | undefined) {
+function validateFcmOptions(fcmOptions: FcmOptions | undefined): void {
   if (typeof fcmOptions === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(fcmOptions)) {
@@ -448,7 +448,7 @@ function validateFcmOptions(fcmOptions: FcmOptions | undefined) {
  *
  * @param {Notification} notification An object to be validated.
  */
-function validateNotification(notification: Notification | undefined) {
+function validateNotification(notification: Notification | undefined): void {
   if (typeof notification === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(notification)) {
@@ -479,7 +479,7 @@ function validateNotification(notification: Notification | undefined) {
  *
  * @param {ApnsPayload} payload An object to be validated.
  */
-function validateApnsPayload(payload: ApnsPayload | undefined) {
+function validateApnsPayload(payload: ApnsPayload | undefined): void {
   if (typeof payload === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(payload)) {
@@ -495,7 +495,7 @@ function validateApnsPayload(payload: ApnsPayload | undefined) {
  *
  * @param {Aps} aps An object to be validated.
  */
-function validateAps(aps: Aps) {
+function validateAps(aps: Aps): void {
   if (typeof aps === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(aps)) {
@@ -537,7 +537,7 @@ function validateAps(aps: Aps) {
   }
 }
 
-function validateApsSound(sound: string | CriticalSound | undefined) {
+function validateApsSound(sound: string | CriticalSound | undefined): void {
   if (typeof sound === 'undefined' || validator.isNonEmptyString(sound)) {
     return;
   } else if (!validator.isNonNullObject(sound)) {
@@ -583,7 +583,7 @@ function validateApsSound(sound: string | CriticalSound | undefined) {
  *
  * @param {string | ApsAlert} alert An alert string or an object to be validated.
  */
-function validateApsAlert(alert: string | ApsAlert | undefined) {
+function validateApsAlert(alert: string | ApsAlert | undefined): void {
   if (typeof alert === 'undefined' || validator.isString(alert)) {
     return;
   } else if (!validator.isNonNullObject(alert)) {
@@ -632,7 +632,7 @@ function validateApsAlert(alert: string | ApsAlert | undefined) {
  *
  * @param {AndroidConfig} config An object to be validated.
  */
-function validateAndroidConfig(config: AndroidConfig | undefined) {
+function validateAndroidConfig(config: AndroidConfig | undefined): void {
   if (typeof config === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(config)) {
@@ -667,7 +667,7 @@ function validateAndroidConfig(config: AndroidConfig | undefined) {
  *
  * @param {AndroidNotification} notification An object to be validated.
  */
-function validateAndroidNotification(notification: AndroidNotification | undefined) {
+function validateAndroidNotification(notification: AndroidNotification | undefined): void {
   if (typeof notification === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(notification)) {
@@ -767,7 +767,7 @@ function validateAndroidNotification(notification: AndroidNotification | undefin
  *
  * @param {LightSettings} lightSettings An object to be validated.
  */
-function validateLightSettings(lightSettings?: LightSettings) {
+function validateLightSettings(lightSettings?: LightSettings): void {
   if (typeof lightSettings === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(lightSettings)) {
@@ -824,7 +824,7 @@ function validateLightSettings(lightSettings?: LightSettings) {
  *
  * @param {AndroidFcmOptions} fcmOptions An object to be validated.
  */
-function validateAndroidFcmOptions(fcmOptions: AndroidFcmOptions | undefined) {
+function validateAndroidFcmOptions(fcmOptions: AndroidFcmOptions | undefined): void {
   if (typeof fcmOptions === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(fcmOptions)) {

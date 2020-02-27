@@ -101,7 +101,7 @@ export class ServiceAccountSigner implements CryptoSigner {
    * @inheritDoc
    */
   public sign(buffer: Buffer): Promise<Buffer> {
-    const crypto = require('crypto');
+    const crypto = require('crypto'); // eslint-disable-line @typescript-eslint/no-var-requires
     const sign = crypto.createSign('RSA-SHA256');
     sign.update(buffer);
     return Promise.resolve(sign.sign(this.credential.privateKey));
@@ -285,7 +285,7 @@ export class FirebaseTokenGenerator {
     if (typeof developerClaims !== 'undefined') {
       for (const key in developerClaims) {
         /* istanbul ignore else */
-        if (developerClaims.hasOwnProperty(key)) {
+        if (Object.prototype.hasOwnProperty.call(developerClaims, key)) {
           if (BLACKLISTED_CLAIMS.indexOf(key) !== -1) {
             throw new FirebaseAuthError(
               AuthClientErrorCode.INVALID_ARGUMENT,
@@ -311,6 +311,7 @@ export class FirebaseTokenGenerator {
         uid,
       };
       if (this.tenantId) {
+        // eslint-disable-next-line @typescript-eslint/camelcase
         body.tenant_id = this.tenantId;
       }
       if (Object.keys(claims).length > 0) {
@@ -324,9 +325,9 @@ export class FirebaseTokenGenerator {
     });
   }
 
-  private encodeSegment(segment: object | Buffer) {
+  private encodeSegment(segment: object | Buffer): string {
     const buffer: Buffer = (segment instanceof Buffer) ? segment : Buffer.from(JSON.stringify(segment));
-    return toWebSafeBase64(buffer).replace(/\=+$/, '');
+    return toWebSafeBase64(buffer).replace(/=+$/, '');
   }
 
   /**

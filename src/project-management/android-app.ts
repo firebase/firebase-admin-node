@@ -46,7 +46,7 @@ export class AndroidApp {
           assertServerResponse(
             validator.isNonEmptyString(responseData[requiredField]),
             responseData,
-            `getMetadata()\'s responseData.${requiredField} must be a non-empty string.`);
+            `getMetadata()'s responseData.${requiredField} must be a non-empty string.`);
         });
 
         const metadata: AndroidAppMetadata = {
@@ -89,7 +89,7 @@ export class AndroidApp {
             assertServerResponse(
               validator.isNonEmptyString(certificateJson[requiredField]),
               responseData,
-              `getShaCertificates()\'s responseData.certificates[].${requiredField} must be a `
+              `getShaCertificates()'s responseData.certificates[].${requiredField} must be a `
                       + `non-empty string.`);
           });
 
@@ -128,7 +128,7 @@ export class AndroidApp {
         assertServerResponse(
           validator.isBase64String(base64ConfigFileContents),
           responseData,
-          `getConfig()\'s responseData.configFileContents must be a base64 string.`);
+          `getConfig()'s responseData.configFileContents must be a base64 string.`);
 
         return Buffer.from(base64ConfigFileContents, 'base64').toString('utf8');
       });

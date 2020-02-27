@@ -213,7 +213,7 @@ export function defaultRetryConfig(): RetryConfig {
  *
  * @param retry The configuration to be validated.
  */
-function validateRetryConfig(retry: RetryConfig) {
+function validateRetryConfig(retry: RetryConfig): void {
   if (!validator.isNumber(retry.maxRetries) || retry.maxRetries < 0) {
     throw new FirebaseAppError(
       AppErrorCodes.INVALID_ARGUMENT, 'maxRetries must be a non-negative integer');
@@ -481,7 +481,7 @@ class AsyncHttpCall {
     }
   }
 
-  private execute() {
+  private execute(): void {
     const transport: any = this.options.protocol === 'https:' ? https : http;
     const req: http.ClientRequest = transport.request(this.options, (res: http.IncomingMessage) => {
       this.handleResponse(res, req);
@@ -508,7 +508,7 @@ class AsyncHttpCall {
     req.end(this.entity);
   }
 
-  private handleResponse(res: http.IncomingMessage, req: http.ClientRequest) {
+  private handleResponse(res: http.IncomingMessage, req: http.ClientRequest): void {
     if (req.aborted) {
       return;
     }
@@ -572,7 +572,7 @@ class AsyncHttpCall {
     const encodings = ['gzip', 'compress', 'deflate'];
     if (res.headers['content-encoding'] && encodings.indexOf(res.headers['content-encoding']) !== -1) {
       // Add the unzipper to the body stream processing pipeline.
-      const zlib: typeof zlibmod = require('zlib');
+      const zlib: typeof zlibmod = require('zlib'); // eslint-disable-line @typescript-eslint/no-var-requires
       respStream = respStream.pipe(zlib.createUnzip());
       // Remove the content-encoding in order to not confuse downstream operations.
       delete res.headers['content-encoding'];
@@ -581,9 +581,9 @@ class AsyncHttpCall {
   }
 
   private handleMultipartResponse(
-    response: LowLevelResponse, respStream: Readable, boundary: string) {
+    response: LowLevelResponse, respStream: Readable, boundary: string): void {
 
-    const dicer = require('dicer');
+    const dicer = require('dicer'); // eslint-disable-line @typescript-eslint/no-var-requires
     const multipartParser = new dicer({boundary});
     const responseBuffer: Buffer[] = [];
     multipartParser.on('part', (part: any) => {
@@ -607,7 +607,7 @@ class AsyncHttpCall {
     respStream.pipe(multipartParser);
   }
 
-  private handleRegularResponse(response: LowLevelResponse, respStream: Readable) {
+  private handleRegularResponse(response: LowLevelResponse, respStream: Readable): void {
     const responseBuffer: Buffer[] = [];
     respStream.on('data', (chunk: Buffer) => {
       responseBuffer.push(chunk);
@@ -631,7 +631,7 @@ class AsyncHttpCall {
    * Finalizes the current HTTP call in-flight by either resolving or rejecting the associated
    * promise. In the event of an error, adds additional useful information to the returned error.
    */
-  private finalizeResponse(response: LowLevelResponse) {
+  private finalizeResponse(response: LowLevelResponse): void {
     if (response.status >= 200 && response.status < 300) {
       this.resolve(response);
     } else {
@@ -652,7 +652,7 @@ class AsyncHttpCall {
     message: string,
     code?: string | null,
     request?: http.ClientRequest | null,
-    response?: LowLevelResponse) {
+    response?: LowLevelResponse): void {
 
     const error = new Error(message);
     this.enhanceAndReject(error, code, request, response);
@@ -662,7 +662,7 @@ class AsyncHttpCall {
     error: any,
     code?: string | null,
     request?: http.ClientRequest | null,
-    response?: LowLevelResponse) {
+    response?: LowLevelResponse): void {
 
     this.reject(this.enhanceError(error, code, request, response));
   }
@@ -778,7 +778,7 @@ class HttpRequestConfigImpl implements HttpRequestConfig {
     const parsedUrl = new url.URL(fullUrl);
     const dataObj = this.data as {[key: string]: string};
     for (const key in dataObj) {
-      if (dataObj.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(dataObj, key)) {
         parsedUrl.searchParams.append(key, dataObj[key]);
       }
     }

@@ -81,8 +81,8 @@ export const appOptionsAuthDB: FirebaseAppOptions = {
 export class MockCredential implements Credential {
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
     return Promise.resolve({
-      access_token: 'mock-token',
-      expires_in: 3600,
+      access_token: 'mock-token', // eslint-disable-line @typescript-eslint/camelcase
+      expires_in: 3600, // eslint-disable-line @typescript-eslint/camelcase
     });
   }
 }
@@ -144,9 +144,8 @@ export const refreshToken = {
   type: 'refreshToken',
 };
 
-/* tslint:disable:no-var-requires */
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 export const certificateObject = require('./mock.key.json');
-/* tslint:enable:no-var-requires */
 
 // Randomly generated key pairs that don't correspond to anything related to Firebase or GCP
 export const keyPairs = [

@@ -69,7 +69,7 @@ export function deepExtend(target: any, source: any): any {
   }
 
   for (const prop in source) {
-    if (!source.hasOwnProperty(prop)) {
+    if (!Object.prototype.hasOwnProperty.call(source, prop)) {
       continue;
     }
     target[prop] = deepExtend(target[prop], source[prop]);

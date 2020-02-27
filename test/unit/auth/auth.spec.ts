@@ -73,7 +73,7 @@ interface EmailActionTest {
  * @return {object} A sample valid server response as returned from getAccountInfo
  *     endpoint.
  */
-function getValidGetAccountInfoResponse(tenantId?: string) {
+function getValidGetAccountInfoResponse(tenantId?: string): {kind: string; users: any[]} {
   const userResponse: any = {
     localId: 'abcdefghijklmnopqrstuvwxyz',
     email: 'user@gmail.com',
@@ -123,7 +123,7 @@ function getValidGetAccountInfoResponse(tenantId?: string) {
  * @param {any} serverResponse Raw getAccountInfo response.
  * @return {Object} The corresponding user record.
  */
-function getValidUserRecord(serverResponse: any) {
+function getValidUserRecord(serverResponse: any): UserRecord {
   return new UserRecord(serverResponse.users[0]);
 }
 
@@ -140,13 +140,13 @@ function getDecodedIdToken(uid: string, authTime: Date, tenantId?: string): Deco
   return {
     iss: 'https://securetoken.google.com/project123456789',
     aud: 'project123456789',
-    auth_time: Math.floor(authTime.getTime() / 1000),
+    auth_time: Math.floor(authTime.getTime() / 1000), // eslint-disable-line @typescript-eslint/camelcase
     sub: uid,
     iat: Math.floor(authTime.getTime() / 1000),
     exp: Math.floor(authTime.getTime() / 1000 + 3600),
     firebase: {
       identities: {},
-      sign_in_provider: 'custom',
+      sign_in_provider: 'custom', // eslint-disable-line @typescript-eslint/camelcase
       tenant: tenantId,
     },
   };
@@ -165,13 +165,13 @@ function getDecodedSessionCookie(uid: string, authTime: Date, tenantId?: string)
   return {
     iss: 'https://session.firebase.google.com/project123456789',
     aud: 'project123456789',
-    auth_time: Math.floor(authTime.getTime() / 1000),
+    auth_time: Math.floor(authTime.getTime() / 1000), // eslint-disable-line @typescript-eslint/camelcase
     sub: uid,
     iat: Math.floor(authTime.getTime() / 1000),
     exp: Math.floor(authTime.getTime() / 1000 + 3600),
     firebase: {
       identities: {},
-      sign_in_provider: 'custom',
+      sign_in_provider: 'custom', // eslint-disable-line @typescript-eslint/camelcase
       tenant: tenantId,
     },
   };

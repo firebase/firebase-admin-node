@@ -84,7 +84,7 @@ describe('ProjectManagementRequestHandler', () => {
     return mockApp.delete();
   });
 
-  function testHttpErrors(callback: () => Promise<any>) {
+  function testHttpErrors(callback: () => Promise<any>): void {
     const errorCodeMap: any = {
       400: 'project-management/invalid-argument',
       401: 'project-management/authentication-error',
@@ -94,7 +94,7 @@ describe('ProjectManagementRequestHandler', () => {
       503: 'project-management/service-unavailable',
     };
     Object.keys(errorCodeMap).forEach((errorCode) => {
-      if (!errorCodeMap.hasOwnProperty(errorCode)) {
+      if (!Object.prototype.hasOwnProperty.call(errorCodeMap, errorCode)) {
         return;
       }
       it(`should throw for HTTP ${errorCode} errors`, () => {

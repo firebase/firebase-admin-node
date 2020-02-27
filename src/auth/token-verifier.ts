@@ -214,7 +214,7 @@ export class FirebaseTokenVerifier {
     }
 
     return this.fetchPublicKeys().then((publicKeys) => {
-      if (!publicKeys.hasOwnProperty(header.kid)) {
+      if (!Object.prototype.hasOwnProperty.call(publicKeys, header.kid)) {
         return Promise.reject(
           new FirebaseAuthError(
             AuthClientErrorCode.INVALID_ARGUMENT,
@@ -299,7 +299,7 @@ export class FirebaseTokenVerifier {
         // error responses.
         throw new HttpError(resp);
       }
-      if (resp.headers.hasOwnProperty('cache-control')) {
+      if (Object.prototype.hasOwnProperty.call(resp.headers, 'cache-control')) {
         const cacheControlHeader: string = resp.headers['cache-control'];
         const parts = cacheControlHeader.split(',');
         parts.forEach((part) => {

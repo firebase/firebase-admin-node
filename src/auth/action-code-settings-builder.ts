@@ -169,7 +169,7 @@ export class ActionCodeSettingsBuilder {
     };
     // Remove all null and undefined fields from request.
     for (const key in request) {
-      if (request.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(request, key)) {
         if (typeof request[key] === 'undefined' || request[key] === null) {
           delete request[key];
         }

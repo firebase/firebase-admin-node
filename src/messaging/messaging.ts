@@ -32,6 +32,8 @@ import {
 import * as utils from '../utils';
 import * as validator from '../utils/validator';
 
+/* eslint-disable @typescript-eslint/camelcase */
+
 // FCM endpoints
 const FCM_SEND_HOST = 'fcm.googleapis.com';
 const FCM_SEND_PATH = '/fcm/send';
@@ -718,7 +720,7 @@ export class Messaging implements FirebaseServiceInterface {
   private validateMessagingPayloadAndOptionsTypes(
     payload: MessagingPayload,
     options: MessagingOptions,
-  ) {
+  ): void {
     // Validate the payload is an object
     if (!validator.isNonNullObject(payload)) {
       throw new FirebaseMessagingError(
@@ -744,7 +746,7 @@ export class Messaging implements FirebaseServiceInterface {
    * @return {MessagingPayload} A copy of the provided payload with whitelisted properties switched
    *     from camelCase to underscore_case.
    */
-  private validateMessagingPayload(payload: MessagingPayload) {
+  private validateMessagingPayload(payload: MessagingPayload): MessagingPayload {
     const payloadCopy: MessagingPayload = deepCopy(payload);
 
     const payloadKeys = Object.keys(payloadCopy);
@@ -772,7 +774,7 @@ export class Messaging implements FirebaseServiceInterface {
       );
     }
 
-    const validatePayload = (payloadKey: string, value: DataMessagePayload | NotificationMessagePayload) => {
+    const validatePayload = (payloadKey: string, value: DataMessagePayload | NotificationMessagePayload): void => {
       // Validate each top-level key in the payload is an object
       if (!validator.isNonNullObject(value)) {
         throw new FirebaseMessagingError(
@@ -835,7 +837,7 @@ export class Messaging implements FirebaseServiceInterface {
    * @return {MessagingOptions} A copy of the provided options with whitelisted properties switched
    *   from camelCase to underscore_case.
    */
-  private validateMessagingOptions(options: MessagingOptions) {
+  private validateMessagingOptions(options: MessagingOptions): MessagingOptions {
     const optionsCopy: MessagingOptions = deepCopy(options);
 
     // Validate the options object does not contain blacklisted properties
@@ -917,7 +919,7 @@ export class Messaging implements FirebaseServiceInterface {
     registrationTokenOrTokens: string | string[],
     methodName: string,
     errorInfo: ErrorInfo = MessagingClientErrorCode.INVALID_ARGUMENT,
-  ) {
+  ): void {
     if (!validator.isNonEmptyArray(registrationTokenOrTokens) &&
         !validator.isNonEmptyString(registrationTokenOrTokens)) {
       throw new FirebaseMessagingError(
@@ -940,7 +942,7 @@ export class Messaging implements FirebaseServiceInterface {
     registrationTokenOrTokens: string | string[],
     methodName: string,
     errorInfo: ErrorInfo = MessagingClientErrorCode.INVALID_ARGUMENT,
-  ) {
+  ): void {
     if (validator.isArray(registrationTokenOrTokens)) {
       // Validate the array contains no more than 1,000 registration tokens.
       if (registrationTokenOrTokens.length > 1000) {
@@ -975,7 +977,7 @@ export class Messaging implements FirebaseServiceInterface {
     topic: string | string[],
     methodName: string,
     errorInfo: ErrorInfo = MessagingClientErrorCode.INVALID_ARGUMENT,
-  ) {
+  ): void {
     if (!validator.isNonEmptyString(topic)) {
       throw new FirebaseMessagingError(
         errorInfo,
@@ -996,7 +998,7 @@ export class Messaging implements FirebaseServiceInterface {
     topic: string,
     methodName: string,
     errorInfo: ErrorInfo = MessagingClientErrorCode.INVALID_ARGUMENT,
-  ) {
+  ): void {
     if (!validator.isTopic(topic)) {
       throw new FirebaseMessagingError(
         errorInfo,
@@ -1013,7 +1015,7 @@ export class Messaging implements FirebaseServiceInterface {
    *
    * @return {string} The normalized topic name.
    */
-  private normalizeTopic(topic: string) {
+  private normalizeTopic(topic: string): string {
     if (!/^\/topics\//.test(topic)) {
       topic = `/topics/${ topic }`;
     }

@@ -32,9 +32,7 @@ import { AuthProviderConfig } from '../../src/auth/auth-config';
 import { deepExtend, deepCopy } from '../../src/utils/deep-copy';
 import { User, FirebaseAuth } from '@firebase/auth-types';
 
-/* tslint:disable:no-var-requires */
-const chalk = require('chalk');
-/* tslint:enable:no-var-requires */
+const chalk = require('chalk'); // eslint-disable-line @typescript-eslint/no-var-requires
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -292,7 +290,7 @@ describe('admin.auth', () => {
       .then((decodedIdToken: {[key: string]: any}) => {
         // Confirm expected claims set on the user's ID token.
         for (const key in customClaims) {
-          if (customClaims.hasOwnProperty(key)) {
+          if (Object.prototype.hasOwnProperty.call(customClaims, key)) {
             expect(decodedIdToken[key]).to.equal(customClaims[key]);
           }
         }
@@ -316,7 +314,7 @@ describe('admin.auth', () => {
       .then((decodedIdToken: {[key: string]: any}) => {
         // Confirm all custom claims are cleared.
         for (const key in customClaims) {
-          if (customClaims.hasOwnProperty(key)) {
+          if (Object.prototype.hasOwnProperty.call(customClaims, key)) {
             expect(decodedIdToken[key]).to.be.undefined;
           }
         }
@@ -969,7 +967,7 @@ describe('admin.auth', () => {
       enableRequestSigning: true,
     };
 
-    const removeTempConfigs = () => {
+    const removeTempConfigs = (): Promise<any> => {
       return Promise.all([
         admin.auth().deleteProviderConfig(authProviderConfig1.providerId).catch(() => {/* empty */}),
         admin.auth().deleteProviderConfig(authProviderConfig2.providerId).catch(() => {/* empty */}),
@@ -1101,7 +1099,7 @@ describe('admin.auth', () => {
       clientId: 'CLIENT_ID2',
     };
 
-    const removeTempConfigs = () => {
+    const removeTempConfigs = (): Promise<any> => {
       return Promise.all([
         admin.auth().deleteProviderConfig(authProviderConfig1.providerId).catch(() => {/* empty */}),
         admin.auth().deleteProviderConfig(authProviderConfig2.providerId).catch(() => {/* empty */}),
@@ -1619,7 +1617,7 @@ function testImportAndSignInUser(
  * @return {Promise} A promise that resolves when the user is deleted
  *     or is found not to exist.
  */
-function deletePhoneNumberUser(phoneNumber: string) {
+function deletePhoneNumberUser(phoneNumber: string): Promise<void> {
   return admin.auth().getUserByPhoneNumber(phoneNumber)
     .then((userRecord) => {
       return safeDelete(userRecord.uid);
@@ -1638,7 +1636,7 @@ function deletePhoneNumberUser(phoneNumber: string) {
  *
  * @return {Promise} A promise that resolves when test preparations are ready.
  */
-function cleanup() {
+function cleanup(): Promise<any> {
   // Delete any existing users that could affect the test outcome.
   const promises: Array<Promise<void>> = [
     deletePhoneNumberUser(testPhoneNumber),
@@ -1729,9 +1727,9 @@ function safeDelete(uid: string): Promise<void> {
  * @param {[key: string]: any} expected object.
  * @param {[key: string]: any} actual object.
  */
-function assertDeepEqualUnordered(expected: {[key: string]: any}, actual: {[key: string]: any}) {
+function assertDeepEqualUnordered(expected: {[key: string]: any}, actual: {[key: string]: any}): void {
   for (const key in expected) {
-    if (expected.hasOwnProperty(key)) {
+    if (Object.prototype.hasOwnProperty.call(expected, key)) {
       expect(actual[key])
         .to.deep.equal(expected[key]);
     }

@@ -79,8 +79,8 @@ export class Storage implements FirebaseServiceInterface {
         // guaranteed to be available.
         projectId: projectId!,
         credentials: {
-          private_key: credential.privateKey,
-          client_email: credential.clientEmail,
+          private_key: credential.privateKey, // eslint-disable-line @typescript-eslint/camelcase
+          client_email: credential.clientEmail, // eslint-disable-line @typescript-eslint/camelcase
         },
       });
     } else if (isApplicationDefault(app.options.credential)) {

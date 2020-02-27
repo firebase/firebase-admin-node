@@ -84,6 +84,7 @@ describe('CryptoSigner', () => {
       const payload = Buffer.from('test');
       const cert = new ServiceAccountCredential(mocks.certificateObject);
 
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const crypto = require('crypto');
       const rsa = crypto.createSign('RSA-SHA256');
       rsa.update(payload);
@@ -400,6 +401,7 @@ describe('FirebaseTokenGenerator', () => {
             };
 
             if (tokenGenerator.tenantId) {
+              // eslint-disable-next-line @typescript-eslint/camelcase
               expected.tenant_id = tokenGenerator.tenantId;
             }
 
@@ -428,6 +430,7 @@ describe('FirebaseTokenGenerator', () => {
             };
 
             if (tokenGenerator.tenantId) {
+              // eslint-disable-next-line @typescript-eslint/camelcase
               expected.tenant_id = tokenGenerator.tenantId;
             }
 
