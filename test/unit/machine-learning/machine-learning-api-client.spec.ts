@@ -19,7 +19,8 @@
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
-import { MachineLearningApiClient, ModelContent } from '../../../src/machine-learning/machine-learning-api-client';
+import { MachineLearningApiClient, ModelContent,
+  ListModelsOptions } from '../../../src/machine-learning/machine-learning-api-client';
 import { FirebaseMachineLearningError } from '../../../src/machine-learning/machine-learning-utils';
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';
@@ -31,7 +32,51 @@ const expect = chai.expect;
 
 describe('MachineLearningApiClient', () => {
 
+  const BASE_URL = 'https://mlkit.googleapis.com/v1beta1';
+
   const MODEL_ID = '1234567';
+  const MODEL_RESPONSE = {
+    name: 'projects/test-project/models/1234567',
+    createTime: '2020-02-07T23:45:23.288047Z',
+    updateTime: '2020-02-08T23:45:23.288047Z',
+    etag: 'etag123',
+    modelHash: 'modelHash123',
+    displayName: 'model_1',
+    tags: ['tag_1', 'tag_2'],
+    state: {published: true},
+    tfliteModel: {
+      gcsTfliteUri: 'gs://test-project-bucket/Firebase/ML/Models/model1.tflite',
+      sizeBytes: 16900988,
+    },
+  };
+  const MODEL_RESPONSE2 = {
+    name: 'projects/test-project/models/2345678',
+    createTime: '2020-02-07T23:45:22.288047Z',
+    updateTime: '2020-02-08T23:45:22.288047Z',
+    etag: 'etag234',
+    modelHash: 'modelHash234',
+    displayName: 'model_2',
+    tags: ['tag_2', 'tag_3'],
+    state: {published: true},
+    tfliteModel: {
+      gcsTfliteUri: 'gs://test-project-bucket/Firebase/ML/Models/model2.tflite',
+      sizeBytes: 2220022,
+    },
+  };
+
+  const STATUS_ERROR_RESPONSE = {
+    code: 3,
+    message: 'Invalid Argument message',
+  };
+  const OPERATION_SUCCESS_RESPONSE = {
+    done: true,
+    response: MODEL_RESPONSE,
+  };
+  const OPERATION_ERROR_RESPONSE = {
+    done: true,
+    error: STATUS_ERROR_RESPONSE,
+  };
+
   const ERROR_RESPONSE = {
     error: {
       code: 404,
@@ -80,32 +125,7 @@ describe('MachineLearningApiClient', () => {
 
   describe('createModel', () => {
     const NAME_ONLY_CONTENT: ModelContent = {displayName: 'name1'};
-    const MODEL_RESPONSE = {
-      name: 'projects/test-project/models/1234567',
-      createTime: '2020-02-07T23:45:23.288047Z',
-      updateTime: '2020-02-08T23:45:23.288047Z',
-      etag: 'etag123',
-      modelHash: 'modelHash123',
-      displayName: 'model_1',
-      tags: ['tag_1', 'tag_2'],
-      state: {published: true},
-      tfliteModel: {
-        gcsTfliteUri: 'gs://test-project-bucket/Firebase/ML/Models/model1.tflite',
-        sizeBytes: 16900988,
-      },
-    };
-    const STATUS_ERROR_RESPONSE = {
-      code: 3,
-      message: 'Invalid Argument message',
-    };
-    const OPERATION_SUCCESS_RESPONSE = {
-      done: true,
-      response: MODEL_RESPONSE,
-    };
-    const OPERATION_ERROR_RESPONSE = {
-      done: true,
-      error: STATUS_ERROR_RESPONSE,
-    };
+
 
     const invalidContent: any[] = [null, undefined, {}, { tags: []}];
     invalidContent.forEach((content) => {
@@ -192,32 +212,6 @@ describe('MachineLearningApiClient', () => {
   describe('updateModel', () => {
     const NAME_ONLY_CONTENT: ModelContent = {displayName: 'name1'};
     const NAME_ONLY_MASK = ['displayName'];
-    const MODEL_RESPONSE = {
-      name: 'projects/test-project/models/1234567',
-      createTime: '2020-02-07T23:45:23.288047Z',
-      updateTime: '2020-02-08T23:45:23.288047Z',
-      etag: 'etag123',
-      modelHash: 'modelHash123',
-      displayName: 'model_1',
-      tags: ['tag_1', 'tag_2'],
-      state: {published: true},
-      tfliteModel: {
-        gcsTfliteUri: 'gs://test-project-bucket/Firebase/ML/Models/model1.tflite',
-        sizeBytes: 16900988,
-      },
-    };
-    const STATUS_ERROR_RESPONSE = {
-      code: 3,
-      message: 'Invalid Argument message',
-    };
-    const OPERATION_SUCCESS_RESPONSE = {
-      done: true,
-      response: MODEL_RESPONSE,
-    };
-    const OPERATION_ERROR_RESPONSE = {
-      done: true,
-      error: STATUS_ERROR_RESPONSE,
-    };
 
     const invalidContent: any[] = [null, undefined];
     invalidContent.forEach((content) => {
@@ -262,7 +256,7 @@ describe('MachineLearningApiClient', () => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'PATCH',
             headers: EXPECTED_HEADERS,
-            url: `https://mlkit.googleapis.com/v1beta1/projects/test-project/models/${MODEL_ID}?updateMask=displayName`,
+            url: `${BASE_URL}/projects/test-project/models/${MODEL_ID}?updateMask=displayName`,
             data: NAME_ONLY_CONTENT,
           });
         });
@@ -344,7 +338,7 @@ describe('MachineLearningApiClient', () => {
           expect(resp.name).to.equal('bar');
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'GET',
-            url: 'https://mlkit.googleapis.com/v1beta1/projects/test-project/models/1234567',
+            url: `${BASE_URL}/projects/test-project/models/1234567`,
             headers: EXPECTED_HEADERS,
           });
         });
@@ -392,6 +386,129 @@ describe('MachineLearningApiClient', () => {
     });
   });
 
+  describe('listModels', () => {
+    const LIST_RESPONSE = {
+      models: [MODEL_RESPONSE, MODEL_RESPONSE2],
+      nextPageToken: 'next',
+    };
+
+    const invalidListFilters: any[] = [null, 0, '', true, {}, []];
+    invalidListFilters.forEach((invalidFilter) => {
+      it(`should reject when called with invalid pageToken: ${JSON.stringify(invalidFilter)}`, () => {
+        return apiClient.listModels({filter: invalidFilter})
+          .should.eventually.be.rejected.and.have.property(
+            'message', 'Invalid list filter.');
+      });
+    });
+
+    const invalidPageSizes: any[] = [null, '', '10', true, {}, []];
+    invalidPageSizes.forEach((invalidPageSize) => {
+      it(`should reject when called with invalid page size: ${JSON.stringify(invalidPageSize)}`, () => {
+        return apiClient.listModels({pageSize: invalidPageSize})
+          .should.eventually.be.rejected.and.have.property(
+            'message', 'Invalid page size.');
+      });
+    });
+
+    const invalidPageTokens: any[] = [null, 0, '', true, {}, []];
+    invalidPageTokens.forEach((invalidToken) => {
+      it(`should reject when called with invalid pageToken: ${JSON.stringify(invalidToken)}`, () => {
+        return apiClient.listModels({pageToken: invalidToken})
+          .should.eventually.be.rejected.and.have.property(
+            'message', 'Next page token must be a non-empty string.');
+      });
+    });
+
+    it('should resolve on success when called without any arguments', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(LIST_RESPONSE));
+      stubs.push(stub);
+      return apiClient.listModels()
+        .then((resp) => {
+          expect(resp).to.deep.equal(LIST_RESPONSE);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url: `${BASE_URL}/projects/test-project/models`,
+            headers: EXPECTED_HEADERS,
+            data: {},
+          });
+        });
+    });
+
+    const validOptions: ListModelsOptions[] = [
+      {pageSize: 5},
+      {pageToken: 'next'},
+      {filter: 'displayName=name1'},
+      {
+        filter: 'displayName=name1',
+        pageSize: 5,
+        pageToken: 'next',
+      },
+    ];
+    validOptions.forEach((options) => {
+      it(`should resolve on success when called with options: ${JSON.stringify(options)}`, () => {
+        const stub = sinon
+          .stub(HttpClient.prototype, 'send')
+          .resolves(utils.responseFrom(LIST_RESPONSE));
+        stubs.push(stub);
+        return apiClient.listModels(options)
+          .then((resp) => {
+            expect(resp.models.length).to.equal(2);
+            expect(resp.models[0]).to.deep.equal(MODEL_RESPONSE);
+            expect(resp.models[1]).to.deep.equal(MODEL_RESPONSE2);
+            expect(stub).to.have.been.calledOnce.and.calledWith({
+              method: 'GET',
+              url: `${BASE_URL}/projects/test-project/models`,
+              headers: EXPECTED_HEADERS,
+              data: options,
+            });
+          });
+      });
+    });
+
+    it('should throw when a full platform error response is received', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+      stubs.push(stub);
+      const expected = new FirebaseMachineLearningError('not-found', 'Requested entity not found');
+      return apiClient.listModels()
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should throw unknown-error when error code is not present', () => {
+      const stub = sinon
+      .stub(HttpClient.prototype, 'send')
+      .rejects(utils.errorFrom({}, 404));
+      stubs.push(stub);
+      const expected = new FirebaseMachineLearningError('unknown-error', 'Unknown server error: {}');
+      return apiClient.listModels()
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should throw unknown-error for non-json response', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom('not json', 404));
+      stubs.push(stub);
+      const expected = new FirebaseMachineLearningError(
+        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+      return apiClient.listModels()
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should throw when rejected with a FirebaseAppError', () => {
+      const expected = new FirebaseAppError('network-error', 'socket hang up');
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(expected);
+      stubs.push(stub);
+      return apiClient.listModels()
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+  });
+
   describe('deleteModel', () => {
     const INVALID_NAMES: any[] = [null, undefined, '', 1, true, {}, []];
     INVALID_NAMES.forEach((invalidName) => {
@@ -422,7 +539,7 @@ describe('MachineLearningApiClient', () => {
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'DELETE',
-            url: 'https://mlkit.googleapis.com/v1beta1/projects/test-project/models/1234567',
+            url: `${BASE_URL}/projects/test-project/models/1234567`,
             headers: EXPECTED_HEADERS,
           });
         });

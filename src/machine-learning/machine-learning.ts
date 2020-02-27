@@ -17,7 +17,7 @@
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
 import {MachineLearningApiClient, ModelResponse, OperationResponse,
-  ModelOptions, ModelUpdateOptions} from './machine-learning-api-client';
+  ModelOptions, ModelUpdateOptions, ListModelsOptions} from './machine-learning-api-client';
 import {FirebaseError} from '../utils/error';
 
 import * as validator from '../utils/validator';
@@ -39,13 +39,6 @@ class MachineLearningInternals implements FirebaseServiceInternalsInterface {
     // There are no resources to clean up.
     return Promise.resolve();
   }
-}
-
-/** Interface representing listModels options. */
-export interface ListModelsOptions {
-  listFilter?: string;
-  pageSize?: number;
-  pageToken?: string;
 }
 
 /** Response object for a listModels operation. */
@@ -162,7 +155,18 @@ export class MachineLearning implements FirebaseServiceInterface {
    *     returned.
    */
   public listModels(options: ListModelsOptions): Promise<ListModelsResult> {
-    throw new Error('NotImplemented');
+     return this.client.listModels(options)
+      .then((resp) => {
+        let models: Model[] = [];
+        if (resp.models) {
+          models = resp.models.map((rs) =>  new Model(rs));
+        }
+        const result: ListModelsResult = {models};
+        if (resp.nextPageToken) {
+          result.pageToken = resp.nextPageToken;
+        }
+        return result;
+      });
   }
 
   /**
@@ -268,7 +272,6 @@ export class Model {
         sizeBytes: model.tfliteModel.sizeBytes,
       };
     }
-
   }
 
   public get locked(): boolean {

@@ -324,6 +324,136 @@ describe('admin.machineLearning', () => {
     });
   });
 
+  describe('listModels()', () => {
+    it('resolves with a list of models', () => {
+      Promise.all([
+        createTemporaryModel({displayName: 'node-integration-list1a'}),
+        createTemporaryModel({displayName: 'node-integration-list1b'}),
+      ])
+      .then(([model1, model2]) => {
+        return admin.machineLearning().listModels({pageSize: 100})
+          .then((modelList) => {
+            expect(modelList.models.length).to.be.at.least(2);
+            expect(modelList.models).to.deep.include(model1);
+            expect(modelList.models).to.deep.include(model2);
+            expect(modelList.pageToken).to.be.empty;
+          });
+      })
+      .catch((err) => {
+        throw err;
+      });
+    });
+
+    it('respects page size', () => {
+      Promise.all([
+        createTemporaryModel({displayName: 'node-integration-list2a'}),
+        createTemporaryModel({displayName: 'node-integration-list2b'}),
+        createTemporaryModel({displayName: 'node-integration-list2c'}),
+      ])
+      .then(([]) => {
+        return admin.machineLearning().listModels({pageSize: 2})
+          .then((modelList) => {
+            expect(modelList.models.length).to.equal(2);
+            expect(modelList.pageToken).not.to.be.empty;
+          });
+      })
+      .catch((err) => {
+        throw err;
+      });
+    });
+
+    it('filters by exact displayName', () => {
+      return createTemporaryModel({displayName: 'node-integration-list3'})
+        .then((model) => {
+          return admin.machineLearning().listModels({filter: 'displayName=node-integration-list3'})
+            .then((modelList) => {
+              expect(modelList.models.length).to.equal(1);
+              expect(modelList.models[0]).to.deep.equal(model);
+              expect(modelList.pageToken).to.be.empty;
+            });
+        });
+    });
+
+    it('filters by displayName prefix', () => {
+      Promise.all([
+        createTemporaryModel({displayName: 'node-integration-list4a'}),
+        createTemporaryModel({displayName: 'node-integration-list4b'}),
+        createTemporaryModel({displayName: 'node-integration-list4c'}),
+      ])
+      .then(([model1, model2, model3]) => {
+        return admin.machineLearning().listModels({filter: 'displayName:node-integration-list4*', pageSize: 100})
+          .then((modelList) => {
+            expect(modelList.models.length).to.be.at.least(3);
+            expect(modelList.models).to.deep.include(model1);
+            expect(modelList.models).to.deep.include(model2);
+            expect(modelList.models).to.deep.include(model3);
+            expect(modelList.pageToken).to.be.empty;
+          });
+      })
+      .catch((err) => {
+        throw err;
+      });
+    });
+
+    it('filters by tag', () => {
+      Promise.all([
+        createTemporaryModel({displayName: 'node-integration-list5a', tags: ['node-integration-tag5']}),
+        createTemporaryModel({displayName: 'node-integration-list5b', tags: ['node-integration-tag5']}),
+        createTemporaryModel({displayName: 'node-integration-list5c', tags: ['node-integration-tag5']}),
+      ])
+      .then(([model1, model2, model3]) => {
+        return admin.machineLearning().listModels({filter: 'tags:node-integration-tag5', pageSize: 100})
+          .then((modelList) => {
+            expect(modelList.models.length).to.be.at.least(3);
+            expect(modelList.models).to.deep.include(model1);
+            expect(modelList.models).to.deep.include(model2);
+            expect(modelList.models).to.deep.include(model3);
+            expect(modelList.pageToken).to.be.empty;
+          });
+      })
+      .catch((err) => {
+        throw err;
+      });
+    });
+
+    it('handles pageTokens properly', () => {
+      Promise.all([
+        createTemporaryModel({displayName: 'node-integration-list6a'}),
+        createTemporaryModel({displayName: 'node-integration-list6b'}),
+        createTemporaryModel({displayName: 'node-integration-list6c'}),
+      ])
+      .then(([]) => {
+        return admin.machineLearning().listModels({filter: 'displayName:node-integration-list6*', pageSize: 2})
+          .then((modelList) => {
+            expect(modelList.models.length).to.equal(2);
+            expect(modelList.pageToken).not.to.be.empty;
+            return admin.machineLearning().listModels({pageToken: modelList.pageToken, pageSize: 10})
+              .then((modelList2) => {
+                expect(modelList2.models.length).to.be.at.least(1);
+                expect(modelList2.pageToken).to.be.empty;
+              })
+              .catch((err) => {
+                throw err;
+              });
+          });
+      })
+      .catch((err) => {
+        throw err;
+      });
+    });
+
+    it('successfully returns an empty list of models', () => {
+      return admin.machineLearning().listModels({filter: 'displayName=non-existing-node-integration-model'})
+        .then((modelList) => {
+          expect(modelList.models.length).to.equal(0);
+          expect(modelList.pageToken).to.be.empty;
+        })
+        .catch((err) => {
+          throw err;
+        });
+    });
+  });
+
   describe('deleteModel()', () => {
     it('rejects with not-found when the Model does not exist', () => {
       const nonExistingName = '00000000';

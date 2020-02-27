@@ -5208,7 +5208,7 @@ declare namespace admin.machineLearning {
    * Interface representing options for listing Models.
    */
   interface ListModelOptions {
-    listFilter?: string;
+    filter?: string;
     pageSize?: number;
     pageToken?: string;
   }

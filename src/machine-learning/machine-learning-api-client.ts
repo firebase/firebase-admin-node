@@ -45,6 +45,13 @@ export interface ModelUpdateOptions extends ModelOptions {
   state?: { published?: boolean; };
 }
 
+/** Interface representing listModels options. */
+export interface ListModelsOptions {
+  filter?: string;
+  pageSize?: number;
+  pageToken?: string;
+}
+
 export interface ModelContent {
   readonly displayName?: string;
   readonly tags?: string[];
@@ -64,6 +71,11 @@ export interface ModelResponse extends ModelContent {
   readonly updateTime: string;
   readonly etag: string;
   readonly modelHash?: string;
+}
+
+export interface ListModelsResponse {
+  readonly models?: ModelResponse[];
+  readonly nextPageToken?: string;
 }
 
 export interface OperationResponse {
@@ -140,6 +152,31 @@ export class MachineLearningApiClient {
       });
   }
 
+  public listModels(options: ListModelsOptions = {}): Promise<ListModelsResponse> {
+    if (typeof options.filter !== 'undefined' && !validator.isNonEmptyString(options.filter)) {
+      const err = new FirebaseMachineLearningError('invalid-argument', 'Invalid list filter.');
+      return Promise.reject(err);
+    }
+    if (typeof options.pageSize !== 'undefined' && !validator.isNumber(options.pageSize)) {
+      const err = new FirebaseMachineLearningError('invalid-argument', 'Invalid page size.');
+      return Promise.reject(err);
+    }
+    if (typeof options.pageToken !== 'undefined' && !validator.isNonEmptyString(options.pageToken)) {
+      const err = new FirebaseMachineLearningError(
+        'invalid-argument', 'Next page token must be a non-empty string.');
+      return Promise.reject(err);
+    }
+    return this.getUrl()
+      .then((url) => {
+        const request: HttpRequestConfig = {
+          method: 'GET',
+          url: `${url}/models`,
+          data: options,
+        };
+        return this.sendRequest<ListModelsResponse>(request);
+      });
+  }
+
   public deleteModel(modelId: string): Promise<void> {
     return this.getUrl()
       .then((url) => {
@@ -177,6 +214,7 @@ export class MachineLearningApiClient {
         return resp.data as T;
       })
       .catch((err) => {
+        //console.log(`SendRequest got error: ${JSON.stringify(err)}`);
         throw this.toFirebaseError(err);
       });
   }
