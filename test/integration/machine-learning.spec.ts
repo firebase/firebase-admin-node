@@ -192,7 +192,7 @@ describe('admin.machineLearning', () => {
     });
 
     it('updates the tflite file', () => {
-      Promise.all([
+      return Promise.all([
           createTemporaryModel(),
           uploadModelToGcs('model1.tflite', 'valid_model.tflite')])
         .then(([model, fileName]) => {
@@ -326,7 +326,7 @@ describe('admin.machineLearning', () => {
 
   describe('listModels()', () => {
     it('resolves with a list of models', () => {
-      Promise.all([
+      return Promise.all([
         createTemporaryModel({displayName: 'node-integration-list1a'}),
         createTemporaryModel({displayName: 'node-integration-list1b'}),
       ])
@@ -338,14 +338,11 @@ describe('admin.machineLearning', () => {
             expect(modelList.models).to.deep.include(model2);
             expect(modelList.pageToken).to.be.empty;
           });
-      })
-      .catch((err) => {
-        throw err;
       });
     });
 
     it('respects page size', () => {
-      Promise.all([
+      return Promise.all([
         createTemporaryModel({displayName: 'node-integration-list2a'}),
         createTemporaryModel({displayName: 'node-integration-list2b'}),
         createTemporaryModel({displayName: 'node-integration-list2c'}),
@@ -356,9 +353,6 @@ describe('admin.machineLearning', () => {
             expect(modelList.models.length).to.equal(2);
             expect(modelList.pageToken).not.to.be.empty;
           });
-      })
-      .catch((err) => {
-        throw err;
       });
     });
 
@@ -375,7 +369,7 @@ describe('admin.machineLearning', () => {
     });
 
     it('filters by displayName prefix', () => {
-      Promise.all([
+      return Promise.all([
         createTemporaryModel({displayName: 'node-integration-list4a'}),
         createTemporaryModel({displayName: 'node-integration-list4b'}),
         createTemporaryModel({displayName: 'node-integration-list4c'}),
@@ -389,14 +383,11 @@ describe('admin.machineLearning', () => {
             expect(modelList.models).to.deep.include(model3);
             expect(modelList.pageToken).to.be.empty;
           });
-      })
-      .catch((err) => {
-        throw err;
       });
     });
 
     it('filters by tag', () => {
-      Promise.all([
+      return Promise.all([
         createTemporaryModel({displayName: 'node-integration-list5a', tags: ['node-integration-tag5']}),
         createTemporaryModel({displayName: 'node-integration-list5b', tags: ['node-integration-tag5']}),
         createTemporaryModel({displayName: 'node-integration-list5c', tags: ['node-integration-tag5']}),
@@ -410,14 +401,11 @@ describe('admin.machineLearning', () => {
             expect(modelList.models).to.deep.include(model3);
             expect(modelList.pageToken).to.be.empty;
           });
-      })
-      .catch((err) => {
-        throw err;
       });
     });
 
     it('handles pageTokens properly', () => {
-      Promise.all([
+      return Promise.all([
         createTemporaryModel({displayName: 'node-integration-list6a'}),
         createTemporaryModel({displayName: 'node-integration-list6b'}),
         createTemporaryModel({displayName: 'node-integration-list6c'}),
@@ -427,30 +415,30 @@ describe('admin.machineLearning', () => {
           .then((modelList) => {
             expect(modelList.models.length).to.equal(2);
             expect(modelList.pageToken).not.to.be.empty;
-            return admin.machineLearning().listModels({pageToken: modelList.pageToken, pageSize: 10})
+            return admin.machineLearning().listModels({
+              filter: 'displayName:node-integration-list6*',
+              pageSize: 2,
+              pageToken: modelList.pageToken})
               .then((modelList2) => {
                 expect(modelList2.models.length).to.be.at.least(1);
                 expect(modelList2.pageToken).to.be.empty;
-              })
-              .catch((err) => {
-                throw err;
               });
           });
-      })
-      .catch((err) => {
-        throw err;
       });
     });
 
     it('successfully returns an empty list of models', () => {
-      return admin.machineLearning().listModels({filter: 'displayName=non-existing-node-integration-model'})
+      return admin.machineLearning().listModels({filter: 'displayName=non-existing-model'})
         .then((modelList) => {
           expect(modelList.models.length).to.equal(0);
           expect(modelList.pageToken).to.be.empty;
-        })
-        .catch((err) => {
-          throw err;
         });
+    });
+
+    it('rejects with invalid argument if the filter is invalid', () => {
+      return admin.machineLearning().listModels({filter: 'invalidFilterItem=foo'})
+        .should.eventually.be.rejected.and.have.property(
+          'code', 'machine-learning/invalid-argument');
     });
   });
 

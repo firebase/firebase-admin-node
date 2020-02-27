@@ -214,7 +214,6 @@ export class MachineLearningApiClient {
         return resp.data as T;
       })
       .catch((err) => {
-        //console.log(`SendRequest got error: ${JSON.stringify(err)}`);
         throw this.toFirebaseError(err);
       });
   }

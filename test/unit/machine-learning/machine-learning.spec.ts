@@ -364,21 +364,9 @@ describe('MachineLearning', () => {
         .stub(MachineLearningApiClient.prototype, 'listModels')
         .resolves(null);
       stubs.push(stub);
-      return machineLearning.listModels({})
+      return machineLearning.listModels()
         .should.eventually.be.rejected.and.have.property(
           'message', 'Invalid ListModels response: null');
-    });
-
-    it('should reject when API response does not contain models', () => {
-      const response: any = deepCopy(LIST_MODELS_RESPONSE);
-      response.models = '';
-      const stub = sinon
-        .stub(MachineLearningApiClient.prototype, 'listModels')
-        .resolves(response);
-      stubs.push(stub);
-      return machineLearning.listModels({})
-        .should.eventually.be.rejected.and.have.property(
-          'message', `Invalid ListModels response: ${JSON.stringify(response)}`);
     });
 
     it('should resolve with Models on success', () => {
@@ -386,7 +374,7 @@ describe('MachineLearning', () => {
         .stub(MachineLearningApiClient.prototype, 'listModels')
         .resolves(LIST_MODELS_RESPONSE);
       stubs.push(stub);
-      return machineLearning.listModels({})
+      return machineLearning.listModels()
         .then((result) => {
           expect(result.models.length).equals(2);
           expect(result.models[0]).to.deep.equal(MODEL1);

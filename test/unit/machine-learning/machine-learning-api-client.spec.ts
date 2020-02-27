@@ -454,9 +454,10 @@ describe('MachineLearningApiClient', () => {
         stubs.push(stub);
         return apiClient.listModels(options)
           .then((resp) => {
-            expect(resp.models.length).to.equal(2);
-            expect(resp.models[0]).to.deep.equal(MODEL_RESPONSE);
-            expect(resp.models[1]).to.deep.equal(MODEL_RESPONSE2);
+            expect(resp.models).not.to.be.empty;
+            expect(resp.models!.length).to.equal(2);
+            expect(resp.models![0]).to.deep.equal(MODEL_RESPONSE);
+            expect(resp.models![1]).to.deep.equal(MODEL_RESPONSE2);
             expect(stub).to.have.been.calledOnce.and.calledWith({
               method: 'GET',
               url: `${BASE_URL}/projects/test-project/models`,

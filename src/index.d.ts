@@ -5322,7 +5322,7 @@ declare namespace admin.machineLearning {
      *     token. For the last page, an empty list of models and no page token
      * are returned.
      */
-    listModels(options: ListModelOptions): Promise<ListModelsResult>;
+    listModels(options?: ListModelOptions): Promise<ListModelsResult>;
 
     /**
      * Deletes a model from Firebase ML.

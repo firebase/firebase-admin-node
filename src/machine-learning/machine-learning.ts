@@ -154,15 +154,20 @@ export class MachineLearning implements FirebaseServiceInterface {
    *     token. For the last page, an empty list of models and no page token are
    *     returned.
    */
-  public listModels(options: ListModelsOptions): Promise<ListModelsResult> {
+  public listModels(options: ListModelsOptions = {}): Promise<ListModelsResult> {
      return this.client.listModels(options)
       .then((resp) => {
+        if (resp == null) {
+          throw new FirebaseMachineLearningError(
+            'invalid-argument',
+            `Invalid ListModels response: ${JSON.stringify(resp)}`);
+        }
         let models: Model[] = [];
-        if (resp.models) {
+        if (resp && resp.models) {
           models = resp.models.map((rs) =>  new Model(rs));
         }
         const result: ListModelsResult = {models};
-        if (resp.nextPageToken) {
+        if (resp && resp.nextPageToken) {
           result.pageToken = resp.nextPageToken;
         }
         return result;
