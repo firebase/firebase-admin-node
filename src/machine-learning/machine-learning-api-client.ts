@@ -153,6 +153,10 @@ export class MachineLearningApiClient {
   }
 
   public listModels(options: ListModelsOptions = {}): Promise<ListModelsResponse> {
+    if (!validator.isNonNullObject(options)) {
+      const err = new FirebaseMachineLearningError('invalid-argument', 'Invalid ListModelsOptions');
+      return Promise.reject(err);
+    }
     if (typeof options.filter !== 'undefined' && !validator.isNonEmptyString(options.filter)) {
       const err = new FirebaseMachineLearningError('invalid-argument', 'Invalid list filter.');
       return Promise.reject(err);
@@ -161,6 +165,7 @@ export class MachineLearningApiClient {
       const err = new FirebaseMachineLearningError('invalid-argument', 'Invalid page size.');
       return Promise.reject(err);
     }
+
     if (typeof options.pageToken !== 'undefined' && !validator.isNonEmptyString(options.pageToken)) {
       const err = new FirebaseMachineLearningError(
         'invalid-argument', 'Next page token must be a non-empty string.');

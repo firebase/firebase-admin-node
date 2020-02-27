@@ -155,19 +155,19 @@ export class MachineLearning implements FirebaseServiceInterface {
    *     returned.
    */
   public listModels(options: ListModelsOptions = {}): Promise<ListModelsResult> {
-     return this.client.listModels(options)
+    return this.client.listModels(options)
       .then((resp) => {
-        if (resp == null) {
+        if (!validator.isNonNullObject(resp)) {
           throw new FirebaseMachineLearningError(
             'invalid-argument',
             `Invalid ListModels response: ${JSON.stringify(resp)}`);
         }
         let models: Model[] = [];
-        if (resp && resp.models) {
+        if (resp.models) {
           models = resp.models.map((rs) =>  new Model(rs));
         }
         const result: ListModelsResult = {models};
-        if (resp && resp.nextPageToken) {
+        if (resp.nextPageToken) {
           result.pageToken = resp.nextPageToken;
         }
         return result;

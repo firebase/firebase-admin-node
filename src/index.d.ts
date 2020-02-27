@@ -5207,7 +5207,7 @@ declare namespace admin.machineLearning {
   /**
    * Interface representing options for listing Models.
    */
-  interface ListModelOptions {
+  interface ListModelsOptions {
     filter?: string;
     pageSize?: number;
     pageToken?: string;
@@ -5322,7 +5322,7 @@ declare namespace admin.machineLearning {
      *     token. For the last page, an empty list of models and no page token
      * are returned.
      */
-    listModels(options?: ListModelOptions): Promise<ListModelsResult>;
+    listModels(options?: ListModelsOptions): Promise<ListModelsResult>;
 
     /**
      * Deletes a model from Firebase ML.
