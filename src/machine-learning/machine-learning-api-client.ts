@@ -117,6 +117,14 @@ export class MachineLearningApiClient {
       const err = new FirebaseMachineLearningError('invalid-argument', 'Invalid model content.');
       return Promise.reject(err);
     }
+    if (validator.isNonNullObject(model.tfliteModel) &&
+        validator.isNonEmptyString(model.tfliteModel.gcsTfliteUri) &&
+        validator.isNonEmptyString(model.tfliteModel.automlModelId)) {
+          const err = new FirebaseMachineLearningError(
+            'invalid-argument',
+            'A maximum of one source may be specified for a TFLite Model.');
+          return Promise.reject(err);
+    }
     return this.getUrl()
         .then((url) => {
           const request: HttpRequestConfig = {

@@ -126,7 +126,6 @@ describe('MachineLearningApiClient', () => {
   describe('createModel', () => {
     const NAME_ONLY_CONTENT: ModelContent = {displayName: 'name1'};
 
-
     const invalidContent: any[] = [null, undefined, {}, { tags: []}];
     invalidContent.forEach((content) => {
       it(`should reject when called with: ${JSON.stringify(content)}`, () => {
@@ -136,10 +135,19 @@ describe('MachineLearningApiClient', () => {
       });
     });
 
+    it('should reject when too many sources specified', () => {
+      return apiClient.createModel({
+        displayName: 'name1',
+        tfliteModel: {gcsTfliteUri: 'uri', automlModelId: 'modelId'}})
+        .should.eventually.be.rejected.and.have.property(
+          'message', 'A maximum of one source may be specified for a TFLite Model.');
+    });
+
     it('should reject when project id is not available', () => {
       return clientWithoutProjectId.createModel(NAME_ONLY_CONTENT)
         .should.eventually.be.rejectedWith(noProjectId);
     });
+
 
     it('should throw when an error response is received', () => {
       const stub = sinon
