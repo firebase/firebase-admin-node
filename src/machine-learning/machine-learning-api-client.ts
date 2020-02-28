@@ -161,11 +161,17 @@ export class MachineLearningApiClient {
       const err = new FirebaseMachineLearningError('invalid-argument', 'Invalid list filter.');
       return Promise.reject(err);
     }
-    if (typeof options.pageSize !== 'undefined' && !validator.isNumber(options.pageSize)) {
-      const err = new FirebaseMachineLearningError('invalid-argument', 'Invalid page size.');
-      return Promise.reject(err);
+    if (typeof options.pageSize !== 'undefined') {
+      if (!validator.isNumber(options.pageSize)) {
+        const err = new FirebaseMachineLearningError('invalid-argument', 'Invalid page size.');
+        return Promise.reject(err);
+      }
+      if (options.pageSize < 1 || options.pageSize > 100) {
+        const err = new FirebaseMachineLearningError(
+          'invalid-argument', 'Page size must be between 1 and 100.');
+        return Promise.reject(err);
+      }
     }
-
     if (typeof options.pageToken !== 'undefined' && !validator.isNonEmptyString(options.pageToken)) {
       const err = new FirebaseMachineLearningError(
         'invalid-argument', 'Next page token must be a non-empty string.');

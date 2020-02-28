@@ -410,6 +410,15 @@ describe('MachineLearningApiClient', () => {
       });
     });
 
+    const outOfRangePageSizes: number[] = [-1, 0, 101];
+    outOfRangePageSizes.forEach((invalidPageSize) => {
+      it(`should reject when called with invalid page size: ${invalidPageSize}`, () => {
+        return apiClient.listModels({pageSize: invalidPageSize})
+          .should.eventually.be.rejected.and.have.property(
+            'message', 'Page size must be between 1 and 100.');
+      });
+    });
+
     const invalidPageTokens: any[] = [null, 0, '', true, {}, []];
     invalidPageTokens.forEach((invalidToken) => {
       it(`should reject when called with invalid pageToken: ${JSON.stringify(invalidToken)}`, () => {
