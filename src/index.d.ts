@@ -5226,6 +5226,7 @@ declare namespace admin.machineLearning {
     readonly sizeBytes: number;
 
     readonly gcsTfliteUri?: string;
+    readonly automlModelId?: string;
   }
 
   /**

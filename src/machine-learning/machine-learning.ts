@@ -272,10 +272,15 @@ export class Model {
       this.modelHash = model.modelHash;
     }
     if (model.tfliteModel) {
-      this.tfliteModel = {
-        gcsTfliteUri: model.tfliteModel.gcsTfliteUri,
-        sizeBytes: model.tfliteModel.sizeBytes,
-      };
+      // If tflite Model is specified, it must have a source consisting of
+      // oneof {gcsTfliteUri, automlModelId}
+      if (!validator.isNonEmptyString(model.tfliteModel.gcsTfliteUri) &&
+          !validator.isNonEmptyString(model.tfliteModel.automlModelId)) {
+            throw new FirebaseMachineLearningError(
+              'invalid-server-response',
+              `Invalid Model response: ${JSON.stringify(model)}`);
+      }
+      this.tfliteModel = model.tfliteModel;
     }
   }
 
@@ -298,7 +303,9 @@ export class Model {
 export interface TFLiteModel {
   readonly sizeBytes: number;
 
-  readonly gcsTfliteUri: string;
+  // Oneof these two
+  readonly gcsTfliteUri?: string;
+  readonly automlModelId?: string;
 }
 
 function extractModelId(resourceName: string): string {

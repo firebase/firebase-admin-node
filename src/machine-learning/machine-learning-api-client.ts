@@ -38,7 +38,10 @@ export interface ModelOptions {
   displayName?: string;
   tags?: string[];
 
-  tfliteModel?: { gcsTfliteUri: string; };
+  tfliteModel?: {
+    gcsTfliteUri?: string;
+    automlModelId?: string;
+  };
 }
 
 export interface ModelUpdateOptions extends ModelOptions {
@@ -60,7 +63,9 @@ export interface ModelContent {
     readonly published?: boolean;
   };
   readonly tfliteModel?: {
-    readonly gcsTfliteUri: string;
+    readonly gcsTfliteUri?: string;
+    readonly automlModelId?: string;
+
     readonly sizeBytes: number;
   };
 }

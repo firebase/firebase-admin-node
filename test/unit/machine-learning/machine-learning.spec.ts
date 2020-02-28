@@ -32,10 +32,15 @@ const expect = chai.expect;
 describe('MachineLearning', () => {
 
   const MODEL_ID = '1234567';
+  const MODEL_ID3 = '3456789';
+  const AUTOML_MODEL_ID = 'automlModelId123';
   const EXPECTED_ERROR = new FirebaseMachineLearningError('internal-error', 'message');
   const CREATE_TIME_UTC = 'Fri, 07 Feb 2020 23:45:23 GMT';
   const UPDATE_TIME_UTC = 'Sat, 08 Feb 2020 23:45:23 GMT';
-  const MODEL_RESPONSE: {
+  const CREATE_TIME_UTC3 = 'Fri, 07 Feb 2020 23:45:19 GMT';
+  const UPDATE_TIME_UTC3 = 'Sat, 08 Feb 2020 23:45:19 GMT';
+
+  const GCS_TFLITE_MODEL_RESPONSE: {
     name: string;
     createTime: string;
     updateTime: string;
@@ -68,9 +73,9 @@ describe('MachineLearning', () => {
       sizeBytes: 16900988,
     },
   };
-  const MODEL1 = new Model(MODEL_RESPONSE);
+  const GCS_TFLITE_MODEL = new Model(GCS_TFLITE_MODEL_RESPONSE);
 
-  const MODEL_RESPONSE2: {
+  const GCS_TFLITE_MODEL_RESPONSE2: {
     name: string;
     createTime: string;
     updateTime: string;
@@ -103,7 +108,42 @@ describe('MachineLearning', () => {
       sizeBytes: 22200222,
     },
   };
-  const MODEL2 = new Model(MODEL_RESPONSE2);
+  const GCS_TFLITE_MODEL2 = new Model(GCS_TFLITE_MODEL_RESPONSE2);
+
+  const AUTOML_MODEL_RESPONSE: {
+    name: string;
+    createTime: string;
+    updateTime: string;
+    etag: string;
+    modelHash: string;
+    displayName?: string;
+    tags?: string[];
+    state?: {
+      validationError?: {
+        code: number;
+        message: string;
+      };
+      published?: boolean;
+    };
+    tfliteModel?: {
+      automlModelId?: string;
+      sizeBytes: number;
+    };
+  } = {
+    name: 'projects/test-project/models/3456789',
+    createTime: '2020-02-07T23:45:19.288047Z',
+    updateTime: '2020-02-08T23:45:19.288047Z',
+    etag: 'etag345',
+    modelHash: 'modelHash345',
+    displayName: 'model_3',
+    tags: ['tag_3', 'tag_4'],
+    state: {published: false},
+    tfliteModel: {
+      automlModelId: 'automlModelId123',
+      sizeBytes: 33300333,
+    },
+  };
+  const AUTOML_MODEL = new Model(AUTOML_MODEL_RESPONSE);
 
   const STATUS_ERROR_RESPONSE: {
     code: number;
@@ -113,7 +153,7 @@ describe('MachineLearning', () => {
     message: 'Invalid Argument message',
   };
 
-  const OPERATION_RESPONSE: {
+  const GCS_TFLITE_OPERATION_RESPONSE: {
     name?: string;
     done: boolean;
     error?: StatusErrorResponse;
@@ -139,7 +179,36 @@ describe('MachineLearning', () => {
     }
   } = {
     done: true,
-    response: MODEL_RESPONSE,
+    response: GCS_TFLITE_MODEL_RESPONSE,
+  };
+
+  const AUTOML_OPERATION_RESPONSE: {
+    name?: string;
+    done: boolean;
+    error?: StatusErrorResponse;
+    response?: {
+      name: string;
+      createTime: string;
+      updateTime: string;
+      etag: string;
+      modelHash: string;
+      displayName?: string;
+      tags?: string[];
+      state?: {
+        validationError?: {
+          code: number;
+          message: string;
+        };
+        published?: boolean;
+      };
+      tfliteModel?: {
+        automlModelId?: string;
+        sizeBytes: number;
+      };
+    }
+  } = {
+    done: true,
+    response: AUTOML_MODEL_RESPONSE,
   };
 
   const OPERATION_RESPONSE_ERROR: {
@@ -154,8 +223,6 @@ describe('MachineLearning', () => {
     done: true,
     error: STATUS_ERROR_RESPONSE,
   };
-
-
 
   let machineLearning: MachineLearning;
   let mockApp: FirebaseApp;
@@ -228,8 +295,8 @@ describe('MachineLearning', () => {
   });
 
   describe('Model', () => {
-    it('should successfully construct a model', () => {
-      const model = new Model(MODEL_RESPONSE);
+    it('should successfully construct a gcs tflite model', () => {
+      const model = new Model(GCS_TFLITE_MODEL_RESPONSE);
       expect(model.modelId).to.equal(MODEL_ID);
       expect(model.displayName).to.equal('model_1');
       expect(model.tags).to.deep.equal(['tag_1', 'tag_2']);
@@ -241,9 +308,28 @@ describe('MachineLearning', () => {
       expect(model.modelHash).to.equal('modelHash123');
 
       const tflite = model.tfliteModel!;
+      expect(tflite.automlModelId).not.to.exist;
       expect(tflite.gcsTfliteUri).to.be.equal(
         'gs://test-project-bucket/Firebase/ML/Models/model1.tflite');
       expect(tflite.sizeBytes).to.be.equal(16900988);
+    });
+
+    it('should successfully construct an autoML model', () => {
+      const model = new Model(AUTOML_MODEL_RESPONSE);
+      expect(model.modelId).to.equal(MODEL_ID3);
+      expect(model.displayName).to.equal('model_3');
+      expect(model.tags).to.deep.equal(['tag_3', 'tag_4']);
+      expect(model.createTime).to.equal(CREATE_TIME_UTC3);
+      expect(model.updateTime).to.equal(UPDATE_TIME_UTC3);
+      expect(model.validationError).to.be.empty;
+      expect(model.published).to.be.false;
+      expect(model.etag).to.equal('etag345');
+      expect(model.modelHash).to.equal('modelHash345');
+
+      const tflite = model.tfliteModel!;
+      expect(tflite.gcsTfliteUri).not.to.exist;
+      expect(tflite.automlModelId).to.be.equal('automlModelId123');
+      expect(tflite.sizeBytes).to.be.equal(33300333);
     });
   });
 
@@ -268,7 +354,7 @@ describe('MachineLearning', () => {
     });
 
     it('should reject when API response does not contain a name', () => {
-      const response = deepCopy(MODEL_RESPONSE);
+      const response = deepCopy(GCS_TFLITE_MODEL_RESPONSE);
       response.name = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'getModel')
@@ -280,7 +366,7 @@ describe('MachineLearning', () => {
     });
 
     it('should reject when API response does not contain a createTime', () => {
-      const response = deepCopy(MODEL_RESPONSE);
+      const response = deepCopy(GCS_TFLITE_MODEL_RESPONSE);
       response.createTime = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'getModel')
@@ -292,7 +378,7 @@ describe('MachineLearning', () => {
     });
 
     it('should reject when API response does not contain a updateTime', () => {
-      const response = deepCopy(MODEL_RESPONSE);
+      const response = deepCopy(GCS_TFLITE_MODEL_RESPONSE);
       response.updateTime = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'getModel')
@@ -304,7 +390,7 @@ describe('MachineLearning', () => {
     });
 
     it('should reject when API response does not contain a displayName', () => {
-      const response = deepCopy(MODEL_RESPONSE);
+      const response = deepCopy(GCS_TFLITE_MODEL_RESPONSE);
       response.displayName = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'getModel')
@@ -316,7 +402,7 @@ describe('MachineLearning', () => {
     });
 
     it('should reject when API response does not contain an etag', () => {
-      const response = deepCopy(MODEL_RESPONSE);
+      const response = deepCopy(GCS_TFLITE_MODEL_RESPONSE);
       response.etag = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'getModel')
@@ -327,15 +413,39 @@ describe('MachineLearning', () => {
           'message', `Invalid Model response: ${JSON.stringify(response)}`);
     });
 
-    it('should resolve with Model on success', () => {
+    it('should reject when API response has tflite model but no source', () => {
+      const response = deepCopy(GCS_TFLITE_MODEL_RESPONSE);
+      response.tfliteModel!.gcsTfliteUri = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'getModel')
-        .resolves(MODEL_RESPONSE);
+        .resolves(response);
+      stubs.push(stub);
+      return machineLearning.getModel(MODEL_ID)
+        .should.eventually.be.rejected.and.have.property(
+          'message', `Invalid Model response: ${JSON.stringify(response)}`);
+    });
+
+    it('should resolve with gcsTFLite Model on success', () => {
+      const stub = sinon
+        .stub(MachineLearningApiClient.prototype, 'getModel')
+        .resolves(GCS_TFLITE_MODEL_RESPONSE);
       stubs.push(stub);
 
       return machineLearning.getModel(MODEL_ID)
         .then((model) => {
-          expect(model).to.deep.equal(MODEL1);
+          expect(model).to.deep.equal(GCS_TFLITE_MODEL);
+        });
+    });
+
+    it('should resolve with automl Model on success', () => {
+      const stub = sinon
+        .stub(MachineLearningApiClient.prototype, 'getModel')
+        .resolves(AUTOML_MODEL_RESPONSE);
+      stubs.push(stub);
+
+      return machineLearning.getModel(MODEL_ID)
+        .then((model) => {
+          expect(model).to.deep.equal(AUTOML_MODEL);
         });
     });
   });
@@ -344,8 +454,9 @@ describe('MachineLearning', () => {
 
     const LIST_MODELS_RESPONSE = {
       models: [
-        MODEL_RESPONSE,
-        MODEL_RESPONSE2,
+        GCS_TFLITE_MODEL_RESPONSE,
+        GCS_TFLITE_MODEL_RESPONSE2,
+        AUTOML_MODEL_RESPONSE,
       ],
       nextPageToken: 'next',
     };
@@ -355,7 +466,7 @@ describe('MachineLearning', () => {
         .stub(MachineLearningApiClient.prototype, 'listModels')
         .rejects(EXPECTED_ERROR);
       stubs.push(stub);
-      return machineLearning.listModels({})
+      return machineLearning.listModels()
         .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
     });
 
@@ -376,9 +487,10 @@ describe('MachineLearning', () => {
       stubs.push(stub);
       return machineLearning.listModels()
         .then((result) => {
-          expect(result.models.length).equals(2);
-          expect(result.models[0]).to.deep.equal(MODEL1);
-          expect(result.models[1]).to.deep.equal(MODEL2);
+          expect(result.models.length).equals(3);
+          expect(result.models[0]).to.deep.equal(GCS_TFLITE_MODEL);
+          expect(result.models[1]).to.deep.equal(GCS_TFLITE_MODEL2);
+          expect(result.models[2]).to.deep.equal(AUTOML_MODEL);
           expect(result.pageToken).to.equal(LIST_MODELS_RESPONSE.nextPageToken);
         });
     });
@@ -406,7 +518,7 @@ describe('MachineLearning', () => {
 
   describe('createModel', () => {
     const GCS_TFLITE_URI = 'gs://test-bucket/Firebase/ML/Models/model1.tflite';
-    const MODEL_OPTIONS_NO_GCS: ModelOptions = {
+    const MODEL_OPTIONS_NAME_TAGS: ModelOptions = {
       displayName: 'display_name',
       tags: ['tag1', 'tag2'],
     };
@@ -417,13 +529,20 @@ describe('MachineLearning', () => {
         gcsTfliteUri: GCS_TFLITE_URI,
       },
     };
+    const MODEL_OPTIONS_WITH_AUTOML: ModelOptions = {
+      displayName: 'display_name_3',
+      tags: ['tag5', 'tag6'],
+      tfliteModel: {
+        automlModelId: AUTOML_MODEL_ID,
+      },
+    };
 
     it('should propagate API errors', () => {
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'createModel')
         .rejects(EXPECTED_ERROR);
       stubs.push(stub);
-      return machineLearning.createModel(MODEL_OPTIONS_NO_GCS)
+      return machineLearning.createModel(MODEL_OPTIONS_NAME_TAGS)
         .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
     });
 
@@ -432,80 +551,104 @@ describe('MachineLearning', () => {
         .stub(MachineLearningApiClient.prototype, 'createModel')
         .resolves(null);
       stubs.push(stub);
-      return machineLearning.createModel(MODEL_OPTIONS_WITH_GCS)
+      return machineLearning.createModel(MODEL_OPTIONS_NAME_TAGS)
       .should.eventually.be.rejected.and.have.property(
         'message', 'Cannot read property \'done\' of null');
     });
 
     it('should reject when API response does not contain a name', () => {
-      const op = deepCopy(OPERATION_RESPONSE);
+      const op = deepCopy(GCS_TFLITE_OPERATION_RESPONSE);
       op.response!.name = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'createModel')
         .resolves(op);
       stubs.push(stub);
-      return machineLearning.createModel(MODEL_OPTIONS_NO_GCS)
+      return machineLearning.createModel(MODEL_OPTIONS_NAME_TAGS)
         .should.eventually.be.rejected.and.have.property(
           'message', `Invalid Model response: ${JSON.stringify(op.response)}`);
     });
 
     it('should reject when API response does not contain a createTime', () => {
-      const op = deepCopy(OPERATION_RESPONSE);
+      const op = deepCopy(GCS_TFLITE_OPERATION_RESPONSE);
       op.response!.createTime = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'createModel')
         .resolves(op);
       stubs.push(stub);
-      return machineLearning.createModel(MODEL_OPTIONS_NO_GCS)
+      return machineLearning.createModel(MODEL_OPTIONS_NAME_TAGS)
         .should.eventually.be.rejected.and.have.property(
           'message', `Invalid Model response: ${JSON.stringify(op.response)}`);
     });
 
     it('should reject when API response does not contain a updateTime', () => {
-      const op = deepCopy(OPERATION_RESPONSE);
+      const op = deepCopy(GCS_TFLITE_OPERATION_RESPONSE);
       op.response!.updateTime = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'createModel')
         .resolves(op);
       stubs.push(stub);
-      return machineLearning.createModel(MODEL_OPTIONS_NO_GCS)
+      return machineLearning.createModel(MODEL_OPTIONS_NAME_TAGS)
         .should.eventually.be.rejected.and.have.property(
           'message', `Invalid Model response: ${JSON.stringify(op.response)}`);
     });
 
     it('should reject when API response does not contain a displayName', () => {
-      const op = deepCopy(OPERATION_RESPONSE);
+      const op = deepCopy(GCS_TFLITE_OPERATION_RESPONSE);
       op.response!.displayName = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'createModel')
         .resolves(op);
       stubs.push(stub);
-      return machineLearning.createModel(MODEL_OPTIONS_NO_GCS)
+      return machineLearning.createModel(MODEL_OPTIONS_NAME_TAGS)
         .should.eventually.be.rejected.and.have.property(
           'message', `Invalid Model response: ${JSON.stringify(op.response)}`);
     });
 
     it('should reject when API response does not contain an etag', () => {
-      const op = deepCopy(OPERATION_RESPONSE);
+      const op = deepCopy(GCS_TFLITE_OPERATION_RESPONSE);
       op.response!.etag = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'createModel')
         .resolves(op);
       stubs.push(stub);
-      return machineLearning.createModel(MODEL_OPTIONS_NO_GCS)
+      return machineLearning.createModel(MODEL_OPTIONS_NAME_TAGS)
         .should.eventually.be.rejected.and.have.property(
           'message', `Invalid Model response: ${JSON.stringify(op.response)}`);
     });
 
-    it('should resolve with Model on success', () => {
+    it('should reject when API response has tflite model but no source', () => {
+      const op = deepCopy(GCS_TFLITE_OPERATION_RESPONSE);
+      op.response!.tfliteModel!.gcsTfliteUri = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'createModel')
-        .resolves(OPERATION_RESPONSE);
+        .resolves(op);
+      stubs.push(stub);
+      return machineLearning.createModel(MODEL_OPTIONS_NAME_TAGS)
+        .should.eventually.be.rejected.and.have.property(
+          'message', `Invalid Model response: ${JSON.stringify(op.response)}`);
+    });
+
+    it('should resolve with gcsTFLite Model on success', () => {
+      const stub = sinon
+        .stub(MachineLearningApiClient.prototype, 'createModel')
+        .resolves(GCS_TFLITE_OPERATION_RESPONSE);
       stubs.push(stub);
 
       return machineLearning.createModel(MODEL_OPTIONS_WITH_GCS)
         .then((model) => {
-          expect(model).to.deep.equal(MODEL1);
+          expect(model).to.deep.equal(GCS_TFLITE_MODEL);
+        });
+    });
+
+    it('should resolve with autoML Model on success', () => {
+      const stub = sinon
+        .stub(MachineLearningApiClient.prototype, 'createModel')
+        .resolves(AUTOML_OPERATION_RESPONSE);
+      stubs.push(stub);
+
+      return machineLearning.createModel(MODEL_OPTIONS_WITH_AUTOML)
+        .then((model) => {
+          expect(model).to.deep.equal(AUTOML_MODEL);
         });
     });
 
@@ -515,7 +658,7 @@ describe('MachineLearning', () => {
         .resolves(OPERATION_RESPONSE_ERROR);
       stubs.push(stub);
 
-      return machineLearning.createModel(MODEL_OPTIONS_WITH_GCS)
+      return machineLearning.createModel(MODEL_OPTIONS_NAME_TAGS)
         .should.eventually.be.rejected.and.have.property(
           'message', 'Invalid Argument message');
     });
@@ -523,7 +666,7 @@ describe('MachineLearning', () => {
 
   describe('updateModel', () => {
     const GCS_TFLITE_URI = 'gs://test-bucket/Firebase/ML/Models/model1.tflite';
-    const MODEL_OPTIONS_NO_GCS: ModelOptions = {
+    const MODEL_OPTIONS_NAME_TAGS: ModelOptions = {
       displayName: 'display_name',
       tags: ['tag1', 'tag2'],
     };
@@ -534,13 +677,20 @@ describe('MachineLearning', () => {
         gcsTfliteUri: GCS_TFLITE_URI,
       },
     };
+    const MODEL_OPTIONS_WITH_AUTOML: ModelOptions = {
+      displayName: 'display_name_3',
+      tags: ['tag5', 'tag6'],
+      tfliteModel: {
+        automlModelId: AUTOML_MODEL_ID,
+      },
+    };
 
     it('should propagate API errors', () => {
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'updateModel')
         .rejects(EXPECTED_ERROR);
       stubs.push(stub);
-      return machineLearning.updateModel(MODEL_ID, MODEL_OPTIONS_NO_GCS)
+      return machineLearning.updateModel(MODEL_ID, MODEL_OPTIONS_NAME_TAGS)
         .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
     });
 
@@ -549,80 +699,104 @@ describe('MachineLearning', () => {
         .stub(MachineLearningApiClient.prototype, 'updateModel')
         .resolves(null);
       stubs.push(stub);
-      return machineLearning.updateModel(MODEL_ID, MODEL_OPTIONS_WITH_GCS)
+      return machineLearning.updateModel(MODEL_ID, MODEL_OPTIONS_NAME_TAGS)
       .should.eventually.be.rejected.and.have.property(
         'message', 'Cannot read property \'done\' of null');
     });
 
     it('should reject when API response does not contain a name', () => {
-      const op = deepCopy(OPERATION_RESPONSE);
+      const op = deepCopy(GCS_TFLITE_OPERATION_RESPONSE);
       op.response!.name = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'updateModel')
         .resolves(op);
       stubs.push(stub);
-      return machineLearning.updateModel(MODEL_ID, MODEL_OPTIONS_NO_GCS)
+      return machineLearning.updateModel(MODEL_ID, MODEL_OPTIONS_NAME_TAGS)
         .should.eventually.be.rejected.and.have.property(
           'message', `Invalid Model response: ${JSON.stringify(op.response)}`);
     });
 
     it('should reject when API response does not contain a createTime', () => {
-      const op = deepCopy(OPERATION_RESPONSE);
+      const op = deepCopy(GCS_TFLITE_OPERATION_RESPONSE);
       op.response!.createTime = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'updateModel')
         .resolves(op);
       stubs.push(stub);
-      return machineLearning.updateModel(MODEL_ID, MODEL_OPTIONS_NO_GCS)
+      return machineLearning.updateModel(MODEL_ID, MODEL_OPTIONS_NAME_TAGS)
         .should.eventually.be.rejected.and.have.property(
           'message', `Invalid Model response: ${JSON.stringify(op.response)}`);
     });
 
     it('should reject when API response does not contain a updateTime', () => {
-      const op = deepCopy(OPERATION_RESPONSE);
+      const op = deepCopy(GCS_TFLITE_OPERATION_RESPONSE);
       op.response!.updateTime = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'updateModel')
         .resolves(op);
       stubs.push(stub);
-      return machineLearning.updateModel(MODEL_ID, MODEL_OPTIONS_NO_GCS)
+      return machineLearning.updateModel(MODEL_ID, MODEL_OPTIONS_NAME_TAGS)
         .should.eventually.be.rejected.and.have.property(
           'message', `Invalid Model response: ${JSON.stringify(op.response)}`);
     });
 
     it('should reject when API response does not contain a displayName', () => {
-      const op = deepCopy(OPERATION_RESPONSE);
+      const op = deepCopy(GCS_TFLITE_OPERATION_RESPONSE);
       op.response!.displayName = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'updateModel')
         .resolves(op);
       stubs.push(stub);
-      return machineLearning.updateModel(MODEL_ID, MODEL_OPTIONS_NO_GCS)
+      return machineLearning.updateModel(MODEL_ID, MODEL_OPTIONS_NAME_TAGS)
         .should.eventually.be.rejected.and.have.property(
           'message', `Invalid Model response: ${JSON.stringify(op.response)}`);
     });
 
     it('should reject when API response does not contain an etag', () => {
-      const op = deepCopy(OPERATION_RESPONSE);
+      const op = deepCopy(GCS_TFLITE_OPERATION_RESPONSE);
       op.response!.etag = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'updateModel')
         .resolves(op);
       stubs.push(stub);
-      return machineLearning.updateModel(MODEL_ID, MODEL_OPTIONS_NO_GCS)
+      return machineLearning.updateModel(MODEL_ID, MODEL_OPTIONS_NAME_TAGS)
         .should.eventually.be.rejected.and.have.property(
           'message', `Invalid Model response: ${JSON.stringify(op.response)}`);
     });
 
-    it('should resolve with Model on success', () => {
+    it('should reject when API response has tflite model but no source', () => {
+      const op = deepCopy(GCS_TFLITE_OPERATION_RESPONSE);
+      op.response!.tfliteModel!.gcsTfliteUri = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'updateModel')
-        .resolves(OPERATION_RESPONSE);
+        .resolves(op);
+      stubs.push(stub);
+      return machineLearning.updateModel(MODEL_ID, MODEL_OPTIONS_NAME_TAGS)
+        .should.eventually.be.rejected.and.have.property(
+          'message', `Invalid Model response: ${JSON.stringify(op.response)}`);
+    });
+
+    it('should resolve with gcsTFlite Model on success', () => {
+      const stub = sinon
+        .stub(MachineLearningApiClient.prototype, 'updateModel')
+        .resolves(GCS_TFLITE_OPERATION_RESPONSE);
       stubs.push(stub);
 
       return machineLearning.updateModel(MODEL_ID, MODEL_OPTIONS_WITH_GCS)
         .then((model) => {
-          expect(model).to.deep.equal(MODEL1);
+          expect(model).to.deep.equal(GCS_TFLITE_MODEL);
+        });
+    });
+
+    it('should resolve with autoML Model on success', () => {
+      const stub = sinon
+        .stub(MachineLearningApiClient.prototype, 'updateModel')
+        .resolves(AUTOML_OPERATION_RESPONSE);
+      stubs.push(stub);
+
+      return machineLearning.updateModel(MODEL_ID, MODEL_OPTIONS_WITH_AUTOML)
+        .then((model) => {
+          expect(model).to.deep.equal(AUTOML_MODEL);
         });
     });
 
@@ -632,7 +806,7 @@ describe('MachineLearning', () => {
         .resolves(OPERATION_RESPONSE_ERROR);
       stubs.push(stub);
 
-      return machineLearning.updateModel(MODEL_ID, MODEL_OPTIONS_WITH_GCS)
+      return machineLearning.updateModel(MODEL_ID, MODEL_OPTIONS_NAME_TAGS)
         .should.eventually.be.rejected.and.have.property(
           'message', 'Invalid Argument message');
     });
@@ -659,7 +833,7 @@ describe('MachineLearning', () => {
     });
 
     it('should reject when API response does not contain a name', () => {
-      const op = deepCopy(OPERATION_RESPONSE);
+      const op = deepCopy(GCS_TFLITE_OPERATION_RESPONSE);
       op.response!.name = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'updateModel')
@@ -671,7 +845,7 @@ describe('MachineLearning', () => {
     });
 
     it('should reject when API response does not contain a createTime', () => {
-      const op = deepCopy(OPERATION_RESPONSE);
+      const op = deepCopy(GCS_TFLITE_OPERATION_RESPONSE);
       op.response!.createTime = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'updateModel')
@@ -683,7 +857,7 @@ describe('MachineLearning', () => {
     });
 
     it('should reject when API response does not contain a updateTime', () => {
-      const op = deepCopy(OPERATION_RESPONSE);
+      const op = deepCopy(GCS_TFLITE_OPERATION_RESPONSE);
       op.response!.updateTime = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'updateModel')
@@ -695,7 +869,7 @@ describe('MachineLearning', () => {
     });
 
     it('should reject when API response does not contain a displayName', () => {
-      const op = deepCopy(OPERATION_RESPONSE);
+      const op = deepCopy(GCS_TFLITE_OPERATION_RESPONSE);
       op.response!.displayName = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'updateModel')
@@ -707,7 +881,7 @@ describe('MachineLearning', () => {
     });
 
     it('should reject when API response does not contain an etag', () => {
-      const op = deepCopy(OPERATION_RESPONSE);
+      const op = deepCopy(GCS_TFLITE_OPERATION_RESPONSE);
       op.response!.etag = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'updateModel')
@@ -718,15 +892,39 @@ describe('MachineLearning', () => {
           'message', `Invalid Model response: ${JSON.stringify(op.response)}`);
     });
 
-    it('should resolve with Model on success', () => {
+    it('should reject when API response has tflite model but no source', () => {
+      const op = deepCopy(GCS_TFLITE_OPERATION_RESPONSE);
+      op.response!.tfliteModel!.gcsTfliteUri = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'updateModel')
-        .resolves(OPERATION_RESPONSE);
+        .resolves(op);
+      stubs.push(stub);
+      return machineLearning.publishModel(MODEL_ID)
+        .should.eventually.be.rejected.and.have.property(
+          'message', `Invalid Model response: ${JSON.stringify(op.response)}`);
+    });
+
+    it('should resolve with gcs TFLite Model on success', () => {
+      const stub = sinon
+        .stub(MachineLearningApiClient.prototype, 'updateModel')
+        .resolves(GCS_TFLITE_OPERATION_RESPONSE);
       stubs.push(stub);
 
       return machineLearning.publishModel(MODEL_ID)
         .then((model) => {
-          expect(model).to.deep.equal(MODEL1);
+          expect(model).to.deep.equal(GCS_TFLITE_MODEL);
+        });
+    });
+
+    it('should resolve with autoML Model on success', () => {
+      const stub = sinon
+        .stub(MachineLearningApiClient.prototype, 'updateModel')
+        .resolves(AUTOML_OPERATION_RESPONSE);
+      stubs.push(stub);
+
+      return machineLearning.publishModel(MODEL_ID)
+        .then((model) => {
+          expect(model).to.deep.equal(AUTOML_MODEL);
         });
     });
 
@@ -763,7 +961,7 @@ describe('MachineLearning', () => {
     });
 
     it('should reject when API response does not contain a name', () => {
-      const op = deepCopy(OPERATION_RESPONSE);
+      const op = deepCopy(GCS_TFLITE_OPERATION_RESPONSE);
       op.response!.name = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'updateModel')
@@ -775,7 +973,7 @@ describe('MachineLearning', () => {
     });
 
     it('should reject when API response does not contain a createTime', () => {
-      const op = deepCopy(OPERATION_RESPONSE);
+      const op = deepCopy(GCS_TFLITE_OPERATION_RESPONSE);
       op.response!.createTime = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'updateModel')
@@ -787,7 +985,7 @@ describe('MachineLearning', () => {
     });
 
     it('should reject when API response does not contain a updateTime', () => {
-      const op = deepCopy(OPERATION_RESPONSE);
+      const op = deepCopy(GCS_TFLITE_OPERATION_RESPONSE);
       op.response!.updateTime = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'updateModel')
@@ -799,7 +997,7 @@ describe('MachineLearning', () => {
     });
 
     it('should reject when API response does not contain a displayName', () => {
-      const op = deepCopy(OPERATION_RESPONSE);
+      const op = deepCopy(GCS_TFLITE_OPERATION_RESPONSE);
       op.response!.displayName = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'updateModel')
@@ -811,7 +1009,7 @@ describe('MachineLearning', () => {
     });
 
     it('should reject when API response does not contain an etag', () => {
-      const op = deepCopy(OPERATION_RESPONSE);
+      const op = deepCopy(GCS_TFLITE_OPERATION_RESPONSE);
       op.response!.etag = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'updateModel')
@@ -822,15 +1020,39 @@ describe('MachineLearning', () => {
           'message', `Invalid Model response: ${JSON.stringify(op.response)}`);
     });
 
-    it('should resolve with Model on success', () => {
+    it('should reject when API response has tflite model but no source', () => {
+      const op = deepCopy(GCS_TFLITE_OPERATION_RESPONSE);
+      op.response!.tfliteModel!.gcsTfliteUri = '';
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'updateModel')
-        .resolves(OPERATION_RESPONSE);
+        .resolves(op);
+      stubs.push(stub);
+      return machineLearning.unpublishModel(MODEL_ID)
+        .should.eventually.be.rejected.and.have.property(
+          'message', `Invalid Model response: ${JSON.stringify(op.response)}`);
+    });
+
+    it('should resolve with gcs tflite Model on success', () => {
+      const stub = sinon
+        .stub(MachineLearningApiClient.prototype, 'updateModel')
+        .resolves(GCS_TFLITE_OPERATION_RESPONSE);
       stubs.push(stub);
 
       return machineLearning.unpublishModel(MODEL_ID)
         .then((model) => {
-          expect(model).to.deep.equal(MODEL1);
+          expect(model).to.deep.equal(GCS_TFLITE_MODEL);
+        });
+    });
+
+    it('should resolve with autoML Model on success', () => {
+      const stub = sinon
+        .stub(MachineLearningApiClient.prototype, 'updateModel')
+        .resolves(AUTOML_OPERATION_RESPONSE);
+      stubs.push(stub);
+
+      return machineLearning.publishModel(MODEL_ID)
+        .then((model) => {
+          expect(model).to.deep.equal(AUTOML_MODEL);
         });
     });
 
