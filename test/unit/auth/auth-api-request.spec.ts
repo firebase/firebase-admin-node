@@ -864,7 +864,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.createSessionCookie('', durationInMs)
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -877,7 +877,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.createSessionCookie('ID_TOKEN', 'invalid' as any)
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -891,7 +891,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.createSessionCookie('ID_TOKEN', outOfBoundDuration)
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -905,7 +905,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.createSessionCookie('ID_TOKEN', outOfBoundDuration)
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -924,7 +924,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.createSessionCookie('invalid-token', durationInMs)
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -970,7 +970,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.getAccountInfoByEmail('user@example.com')
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -1010,7 +1010,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.getAccountInfoByUid('uid')
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -1031,7 +1031,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.getAccountInfoByUid('uid')
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -1081,7 +1081,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         stubs.push(stub);
         const requestHandler = handler.init(mockApp);
         return requestHandler.getAccountInfoByPhoneNumber('invalid')
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -1103,7 +1103,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.getAccountInfoByPhoneNumber('+11234567890')
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -1432,7 +1432,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const requestHandler = handler.init(mockApp);
         const userImportBuilder = new UserImportBuilder(users, options);
         return requestHandler.uploadAccount(users, options)
-          .then((result) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -1510,7 +1510,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.downloadAccount(1001, nextPageToken)
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -1523,7 +1523,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.downloadAccount(maxResults, '')
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -1545,7 +1545,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.downloadAccount(maxResults, nextPageToken)
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -1585,7 +1585,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         stubs.push(stub);
         const requestHandler = handler.init(mockApp);
         return requestHandler.deleteAccount('uid')
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -1746,7 +1746,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const requestHandler = handler.init(mockApp);
         // Send update request with invalid email.
         return requestHandler.updateExistingAccount(uid, invalidData)
-          .then((returnedUid: string) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Invalid email error should be thrown.
@@ -1765,7 +1765,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const requestHandler = handler.init(mockApp);
         // Send update request with tenant ID.
         return requestHandler.updateExistingAccount(uid, dataWithModifiedTenantId)
-          .then((returnedUid: string) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Invalid argument error should be thrown.
@@ -1779,7 +1779,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const requestHandler = handler.init(mockApp);
         // Send update request with invalid phone number.
         return requestHandler.updateExistingAccount(uid, invalidPhoneNumberData)
-          .then((returnedUid: string) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Invalid phone number error should be thrown.
@@ -1801,7 +1801,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.updateExistingAccount(uid, validData)
-          .then((returnedUid: string) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -1868,7 +1868,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const requestHandler = handler.init(mockApp);
         // Send request with invalid uid.
         return requestHandler.setCustomUserClaims('', claims)
-          .then((returnedUid: string) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Invalid uid error should be thrown.
@@ -1885,7 +1885,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const requestHandler = handler.init(mockApp);
         // Send request with invalid claims.
         return requestHandler.setCustomUserClaims(uid, 'invalid' as any)
-          .then((returnedUid: string) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Invalid argument error should be thrown.
@@ -1903,7 +1903,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const blacklistedClaims = {admin: true, aud: 'bla'};
         // Send request with blacklisted claims.
         return requestHandler.setCustomUserClaims(uid, blacklistedClaims)
-          .then((returnedUid: string) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Forbidden claims error should be thrown.
@@ -1924,7 +1924,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.setCustomUserClaims(uid, claims)
-          .then((returnedUid: string) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -1977,7 +1977,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.revokeRefreshTokens(invalidUid as any)
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Invalid uid error should be thrown.
@@ -2004,7 +2004,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         // Simulate 5 seconds passed.
         clock.tick(5000);
         return requestHandler.revokeRefreshTokens(uid)
-          .then((returnedUid: string) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -2096,7 +2096,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           const requestHandler = handler.init(mockApp);
           // Create new account with invalid email.
           return requestHandler.createNewAccount(invalidData)
-            .then((returnedUid: string) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Expected invalid email error should be thrown.
@@ -2115,7 +2115,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           const requestHandler = handler.init(mockApp);
           // Create new account with tenantId.
           return requestHandler.createNewAccount(validDataWithTenantId)
-            .then((returnedUid: string) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Expected invalid argument error should be thrown.
@@ -2129,7 +2129,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           const requestHandler = handler.init(mockApp);
           // Create new account with invalid phone number.
           return requestHandler.createNewAccount(invalidPhoneNumberData)
-            .then((returnedUid: string) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Expected invalid phone number error should be thrown.
@@ -2152,7 +2152,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           // Send create new account request and simulate a backend error that the user
           // already exists.
           return requestHandler.createNewAccount(validData)
-            .then((returnedUid: string) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
@@ -2176,7 +2176,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           // Send create new account request and simulate a backend error that the email
           // already exists.
           return requestHandler.createNewAccount(validData)
-            .then((returnedUid: string) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
@@ -2199,7 +2199,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           const requestHandler = handler.init(mockApp);
           // Send create new account request with valid data but simulate backend error.
           return requestHandler.createNewAccount(validData)
-            .then((returnedUid: string) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
@@ -2268,7 +2268,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           const requestHandler = handler.init(mockApp);
           // Send create new account request with invalid data.
           return requestHandler.createNewAccount(invalidData)
-            .then((returnedUid: string) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
@@ -2282,7 +2282,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           const requestHandler = handler.init(mockApp);
           // Send create new account request with invalid data.
           return requestHandler.createNewAccount(invalidPhoneNumberData)
-            .then((returnedUid: string) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
@@ -2303,7 +2303,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           const requestHandler = handler.init(mockApp);
           // Send valid create new account request and simulate backend error.
           return requestHandler.createNewAccount(validData)
-            .then((returnedUid: string) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
@@ -2412,7 +2412,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.getEmailActionLink('PASSWORD_RESET', invalidEmail, actionCodeSettings)
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Invalid email error should be thrown.
@@ -2429,7 +2429,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.getEmailActionLink(invalidRequestType, email, actionCodeSettings)
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Invalid argument error should be thrown.
@@ -2446,7 +2446,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.getEmailActionLink('EMAIL_SIGNIN', email, invalidActionCodeSettings)
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Invalid argument error should be thrown.
@@ -2470,7 +2470,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.getEmailActionLink('VERIFY_EMAIL', email, actionCodeSettings)
-          .then((returnedUid: string) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -2496,7 +2496,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.getEmailActionLink('VERIFY_EMAIL', email, actionCodeSettings)
-          .then((returnedUid: string) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -2534,7 +2534,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
           const requestHandler = handler.init(mockApp);
           return requestHandler.getOAuthIdpConfig(invalidProviderId as any)
-            .then((result) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
@@ -2554,7 +2554,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.getOAuthIdpConfig(providerId)
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -2637,7 +2637,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.listOAuthIdpConfigs(101, nextPageToken)
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -2651,7 +2651,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.listOAuthIdpConfigs(maxResults, '')
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -2674,7 +2674,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.listOAuthIdpConfigs(maxResults, nextPageToken)
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -2711,7 +2711,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
           const requestHandler = handler.init(mockApp);
           return requestHandler.deleteOAuthIdpConfig(invalidProviderId as any)
-            .then((result) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
@@ -2731,7 +2731,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.deleteOAuthIdpConfig(providerId)
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -2785,7 +2785,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.createOAuthIdpConfig(invalidOptions)
-          .then((result) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -2802,7 +2802,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.createOAuthIdpConfig(configOptions)
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -2823,7 +2823,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.createOAuthIdpConfig(configOptions)
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -2930,7 +2930,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
           const requestHandler = handler.init(mockApp);
           return requestHandler.updateOAuthIdpConfig(invalidProviderId as any, configOptions)
-            .then((result) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
@@ -2948,7 +2948,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.updateOAuthIdpConfig(providerId, invalidOptions)
-          .then((result) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -2966,7 +2966,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.updateOAuthIdpConfig(providerId, configOptions)
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -2988,7 +2988,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.updateOAuthIdpConfig(providerId, configOptions)
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -3027,7 +3027,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
           const requestHandler = handler.init(mockApp);
           return requestHandler.getInboundSamlConfig(invalidProviderId as any)
-            .then((result) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
@@ -3047,7 +3047,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.getInboundSamlConfig(providerId)
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -3126,7 +3126,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.listInboundSamlConfigs(101, nextPageToken)
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -3140,7 +3140,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.listInboundSamlConfigs(maxResults, '')
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -3163,7 +3163,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.listInboundSamlConfigs(maxResults, nextPageToken)
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -3198,7 +3198,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
           const requestHandler = handler.init(mockApp);
           return requestHandler.deleteInboundSamlConfig(invalidProviderId as any)
-            .then((result) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
@@ -3218,7 +3218,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.deleteInboundSamlConfig(providerId)
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -3286,7 +3286,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.createInboundSamlConfig(invalidOptions)
-          .then((result) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -3303,7 +3303,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.createInboundSamlConfig(configOptions)
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -3324,7 +3324,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.createInboundSamlConfig(configOptions)
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -3474,7 +3474,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
           const requestHandler = handler.init(mockApp);
           return requestHandler.updateInboundSamlConfig(invalidProviderId as any, configOptions)
-            .then((result) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
@@ -3492,7 +3492,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.updateInboundSamlConfig(providerId, invalidOptions)
-          .then((result) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -3510,7 +3510,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.updateInboundSamlConfig(providerId, configOptions)
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -3532,7 +3532,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.updateInboundSamlConfig(providerId, configOptions)
-          .then((resp) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
@@ -3570,7 +3570,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
             const requestHandler = handler.init(mockApp) as AuthRequestHandler;
             return requestHandler.getTenant(invalidTenantId as any)
-              .then((result) => {
+              .then(() => {
                 throw new Error('Unexpected success');
               }, (error) => {
                 expect(error).to.deep.equal(expectedError);
@@ -3590,7 +3590,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
           const requestHandler = handler.init(mockApp) as AuthRequestHandler;
           return requestHandler.getTenant(tenantId)
-            .then((resp) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
@@ -3669,7 +3669,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
           const requestHandler = handler.init(mockApp) as AuthRequestHandler;
           return requestHandler.listTenants(1001, nextPageToken)
-            .then((resp) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
@@ -3683,7 +3683,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
           const requestHandler = handler.init(mockApp) as AuthRequestHandler;
           return requestHandler.listTenants(maxResults, '')
-            .then((resp) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
@@ -3706,7 +3706,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
           const requestHandler = handler.init(mockApp) as AuthRequestHandler;
           return requestHandler.listTenants(maxResults, nextPageToken)
-            .then((resp) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
@@ -3740,7 +3740,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
             const requestHandler = handler.init(mockApp) as AuthRequestHandler;
             return requestHandler.deleteTenant(invalidTenantId as any)
-              .then((result) => {
+              .then(() => {
                 throw new Error('Unexpected success');
               }, (error) => {
                 expect(error).to.deep.equal(expectedError);
@@ -3760,7 +3760,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
           const requestHandler = handler.init(mockApp) as AuthRequestHandler;
           return requestHandler.deleteTenant(tenantId)
-            .then((resp) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
@@ -3810,7 +3810,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
           const requestHandler = handler.init(mockApp) as AuthRequestHandler;
           return requestHandler.createTenant(invalidOptions)
-            .then((result) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
@@ -3827,7 +3827,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
           const requestHandler = handler.init(mockApp) as AuthRequestHandler;
           return requestHandler.createTenant(tenantOptions)
-            .then((resp) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
@@ -3847,7 +3847,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
           const requestHandler = handler.init(mockApp) as AuthRequestHandler;
           return requestHandler.createTenant(tenantOptions)
-            .then((resp) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
@@ -3871,7 +3871,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
           const requestHandler = handler.init(mockApp) as AuthRequestHandler;
           return requestHandler.createTenant(tenantOptions)
-            .then((resp) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
@@ -3961,7 +3961,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
             const requestHandler = handler.init(mockApp) as AuthRequestHandler;
             return requestHandler.updateTenant(invalidTenantId as any, tenantOptions)
-              .then((result) => {
+              .then(() => {
                 throw new Error('Unexpected success');
               }, (error) => {
                 expect(error).to.deep.equal(expectedError);
@@ -3979,7 +3979,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
           const requestHandler = handler.init(mockApp) as AuthRequestHandler;
           return requestHandler.updateTenant(tenantId, invalidOptions)
-            .then((result) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
@@ -3997,7 +3997,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
           const requestHandler = handler.init(mockApp) as AuthRequestHandler;
           return requestHandler.updateTenant(tenantId, tenantOptions)
-            .then((resp) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
@@ -4019,7 +4019,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
           const requestHandler = handler.init(mockApp) as AuthRequestHandler;
           return requestHandler.updateTenant(tenantId, tenantOptions)
-            .then((resp) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);
@@ -4045,7 +4045,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
           const requestHandler = handler.init(mockApp) as AuthRequestHandler;
           return requestHandler.updateTenant(tenantId, tenantOptions)
-            .then((resp) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               expect(error).to.deep.equal(expectedError);

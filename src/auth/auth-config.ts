@@ -285,7 +285,7 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
    */
   public static buildServerRequest(
     options: SAMLAuthProviderRequest,
-    ignoreMissingFields: boolean = false): SAMLConfigServerRequest | null {
+    ignoreMissingFields = false): SAMLConfigServerRequest | null {
     const makeRequest = validator.isNonNullObject(options) &&
         (options.providerId || ignoreMissingFields);
     if (!makeRequest) {
@@ -349,7 +349,7 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
    * @param {SAMLAuthProviderRequest} options The options object to validate.
    * @param {boolean=} ignoreMissingFields Whether to ignore missing fields.
    */
-  public static validate(options: SAMLAuthProviderRequest, ignoreMissingFields: boolean = false) {
+  public static validate(options: SAMLAuthProviderRequest, ignoreMissingFields = false) {
     const validKeys = {
       enabled: true,
       displayName: true,
@@ -545,7 +545,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
    */
   public static buildServerRequest(
     options: OIDCAuthProviderRequest,
-    ignoreMissingFields: boolean = false): OIDCConfigServerRequest | null {
+    ignoreMissingFields = false): OIDCConfigServerRequest | null {
     const makeRequest = validator.isNonNullObject(options) &&
         (options.providerId || ignoreMissingFields);
     if (!makeRequest) {
@@ -590,7 +590,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
    * @param {OIDCAuthProviderRequest} options The options object to validate.
    * @param {boolean=} ignoreMissingFields Whether to ignore missing fields.
    */
-  public static validate(options: OIDCAuthProviderRequest, ignoreMissingFields: boolean = false) {
+  public static validate(options: OIDCAuthProviderRequest, ignoreMissingFields = false) {
     const validKeys = {
       enabled: true,
       displayName: true,

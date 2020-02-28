@@ -31,12 +31,12 @@ import { AppPlatform, AppMetadata } from '../../../src/project-management/app-me
 const expect = chai.expect;
 
 const APP_ID = 'test-app-id';
-const APP_ID_ANDROID: string = 'test-app-id-android';
-const APP_ID_IOS: string = 'test-app-id-ios';
+const APP_ID_ANDROID = 'test-app-id-android';
+const APP_ID_IOS = 'test-app-id-ios';
 const PACKAGE_NAME = 'test-package-name';
 const BUNDLE_ID = 'test-bundle-id';
-const DISPLAY_NAME_ANDROID: string = 'test-display-name-android';
-const DISPLAY_NAME_IOS: string = 'test-display-name-ios';
+const DISPLAY_NAME_ANDROID = 'test-display-name-android';
+const DISPLAY_NAME_IOS = 'test-display-name-ios';
 const EXPECTED_ERROR = new FirebaseProjectManagementError('internal-error', 'message');
 const RESOURCE_NAME = 'projects/test/resources-name';
 const RESOURCE_NAME_ANDROID = 'projects/test/resources-name:android';

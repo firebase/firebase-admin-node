@@ -45,7 +45,7 @@ const DEFAULT_APP_NAME = '[DEFAULT]';
  * If the environment variable contains a string that starts with '{' it will be parsed as JSON,
  * otherwise it will be assumed to be pointing to a file.
  */
-export const FIREBASE_CONFIG_VAR: string = 'FIREBASE_CONFIG';
+export const FIREBASE_CONFIG_VAR = 'FIREBASE_CONFIG';
 
 
 let globalAppDefaultCred: Credential;

@@ -158,7 +158,7 @@ describe('TenantManager', () => {
         .returns(Promise.reject(expectedError));
       stubs.push(stub);
       return tenantManager.getTenant(tenantId)
-        .then((tenant) => {
+        .then(() => {
           throw new Error('Unexpected success');
         }, (error) => {
           // Confirm underlying API called with expected parameters.
@@ -290,7 +290,7 @@ describe('TenantManager', () => {
         .returns(Promise.reject(expectedError));
       stubs.push(listTenantsStub);
       return tenantManager.listTenants(maxResult, pageToken)
-        .then((results) => {
+        .then(() => {
           throw new Error('Unexpected success');
         }, (error) => {
           // Confirm underlying API called with expected parameters.
@@ -365,7 +365,7 @@ describe('TenantManager', () => {
         .returns(Promise.reject(expectedError));
       stubs.push(stub);
       return tenantManager.deleteTenant(tenantId)
-        .then((userRecord) => {
+        .then(() => {
           throw new Error('Unexpected success');
         }, (error) => {
           // Confirm underlying API called with expected parameters.
@@ -456,7 +456,7 @@ describe('TenantManager', () => {
         .returns(Promise.reject(expectedError));
       stubs.push(createTenantStub);
       return tenantManager.createTenant(tenantOptions)
-        .then((actualTenant) => {
+        .then(() => {
           throw new Error('Unexpected success');
         }, (error) => {
           // Confirm underlying API called with expected parameters.
@@ -565,7 +565,7 @@ describe('TenantManager', () => {
         .returns(Promise.reject(expectedError));
       stubs.push(updateTenantStub);
       return tenantManager.updateTenant(tenantId, tenantOptions)
-        .then((actualTenant) => {
+        .then(() => {
           throw new Error('Unexpected success');
         }, (error) => {
           // Confirm underlying API called with expected parameters.

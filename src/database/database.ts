@@ -16,7 +16,7 @@ import { AuthorizedHttpClient, HttpRequestConfig, HttpError } from '../utils/api
 class DatabaseInternals implements FirebaseServiceInternalsInterface {
 
   public databases: {
-    [dbUrl: string]: Database,
+    [dbUrl: string]: Database;
   } = {};
 
   /**

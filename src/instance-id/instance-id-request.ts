@@ -87,7 +87,7 @@ export class FirebaseInstanceIdRequestHandler {
         };
         return this.httpClient.send(req);
       })
-      .then((response) => {
+      .then(() => {
         // return nothing on success
       })
       .catch((err) => {

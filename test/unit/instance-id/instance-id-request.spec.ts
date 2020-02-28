@@ -36,7 +36,7 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 describe('FirebaseInstanceIdRequestHandler', () => {
-  const projectId: string = 'project_id';
+  const projectId = 'project_id';
   const mockAccessToken: string = utils.generateRandomAccessToken();
   let stubs: sinon.SinonStub[] = [];
   let getTokenStub: sinon.SinonStub;

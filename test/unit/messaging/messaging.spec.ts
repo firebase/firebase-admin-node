@@ -2776,9 +2776,9 @@ describe('Messaging', () => {
 
     const whitelistedOptionsKeys: {
       [name: string]: {
-        type: string,
-        underscoreCasedKey?: string,
-      },
+        type: string;
+        underscoreCasedKey?: string;
+      };
     } = {
       dryRun: { type: 'boolean', underscoreCasedKey: 'dry_run' },
       priority: { type: 'string' },
@@ -2791,7 +2791,7 @@ describe('Messaging', () => {
 
     _.forEach(whitelistedOptionsKeys, ({ type, underscoreCasedKey }, camelCasedKey) => {
       let validValue: any;
-      let invalidValues: Array<{value: any, text: string}>;
+      let invalidValues: Array<{value: any; text: string}>;
       if (type === 'string') {
         invalidValues = [
           { value: true, text: 'non-string' },
