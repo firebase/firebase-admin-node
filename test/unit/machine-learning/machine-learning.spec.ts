@@ -19,7 +19,7 @@
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
-import { MachineLearning } from '../../../src/machine-learning/machine-learning';
+import { MachineLearning, Model } from '../../../src/machine-learning/machine-learning';
 import { FirebaseApp } from '../../../src/firebase-app';
 import * as mocks from '../../resources/mocks';
 import { MachineLearningApiClient, StatusErrorResponse,
@@ -33,6 +33,8 @@ describe('MachineLearning', () => {
 
   const MODEL_ID = '1234567';
   const EXPECTED_ERROR = new FirebaseMachineLearningError('internal-error', 'message');
+  const CREATE_TIME_UTC = 'Fri, 07 Feb 2020 23:45:23 GMT';
+  const UPDATE_TIME_UTC = 'Sat, 08 Feb 2020 23:45:23 GMT';
   const MODEL_RESPONSE: {
     name: string;
     createTime: string;
@@ -66,6 +68,42 @@ describe('MachineLearning', () => {
       sizeBytes: 16900988,
     },
   };
+  const MODEL1 = new Model(MODEL_RESPONSE);
+
+  const MODEL_RESPONSE2: {
+    name: string;
+    createTime: string;
+    updateTime: string;
+    etag: string;
+    modelHash: string;
+    displayName?: string;
+    tags?: string[];
+    state?: {
+      validationError?: {
+        code: number;
+        message: string;
+      };
+      published?: boolean;
+    };
+    tfliteModel?: {
+      gcsTfliteUri: string;
+      sizeBytes: number;
+    };
+  } = {
+    name: 'projects/test-project/models/2345678',
+    createTime: '2020-02-07T23:45:22.288047Z',
+    updateTime: '2020-02-08T23:45:22.288047Z',
+    etag: 'etag234',
+    modelHash: 'modelHash234',
+    displayName: 'model_2',
+    tags: ['tag_2', 'tag_3'],
+    state: {published: false},
+    tfliteModel: {
+      gcsTfliteUri: 'gs://test-project-bucket/Firebase/ML/Models/model2.tflite',
+      sizeBytes: 22200222,
+    },
+  };
+  const MODEL2 = new Model(MODEL_RESPONSE2);
 
   const STATUS_ERROR_RESPONSE: {
     code: number;
@@ -117,8 +155,7 @@ describe('MachineLearning', () => {
     error: STATUS_ERROR_RESPONSE,
   };
 
-  const CREATE_TIME_UTC = 'Fri, 07 Feb 2020 23:45:23 GMT';
-  const UPDATE_TIME_UTC = 'Sat, 08 Feb 2020 23:45:23 GMT';
+
 
   let machineLearning: MachineLearning;
   let mockApp: FirebaseApp;
@@ -187,6 +224,26 @@ describe('MachineLearning', () => {
     it('returns the app from the constructor', () => {
       // We expect referential equality here
       expect(machineLearning.app).to.equal(mockApp);
+    });
+  });
+
+  describe('Model', () => {
+    it('should successfully construct a model', () => {
+      const model = new Model(MODEL_RESPONSE);
+      expect(model.modelId).to.equal(MODEL_ID);
+      expect(model.displayName).to.equal('model_1');
+      expect(model.tags).to.deep.equal(['tag_1', 'tag_2']);
+      expect(model.createTime).to.equal(CREATE_TIME_UTC);
+      expect(model.updateTime).to.equal(UPDATE_TIME_UTC);
+      expect(model.validationError).to.be.empty;
+      expect(model.published).to.be.true;
+      expect(model.etag).to.equal('etag123');
+      expect(model.modelHash).to.equal('modelHash123');
+
+      const tflite = model.tfliteModel!;
+      expect(tflite.gcsTfliteUri).to.be.equal(
+        'gs://test-project-bucket/Firebase/ML/Models/model1.tflite');
+      expect(tflite.sizeBytes).to.be.equal(16900988);
     });
   });
 
@@ -278,20 +335,51 @@ describe('MachineLearning', () => {
 
       return machineLearning.getModel(MODEL_ID)
         .then((model) => {
-          expect(model.modelId).to.equal(MODEL_ID);
-          expect(model.displayName).to.equal('model_1');
-          expect(model.tags).to.deep.equal(['tag_1', 'tag_2']);
-          expect(model.createTime).to.equal(CREATE_TIME_UTC);
-          expect(model.updateTime).to.equal(UPDATE_TIME_UTC);
-          expect(model.validationError).to.be.empty;
-          expect(model.published).to.be.true;
-          expect(model.etag).to.equal('etag123');
-          expect(model.modelHash).to.equal('modelHash123');
+          expect(model).to.deep.equal(MODEL1);
+        });
+    });
+  });
 
-          const tflite = model.tfliteModel!;
-          expect(tflite.gcsTfliteUri).to.be.equal(
-            'gs://test-project-bucket/Firebase/ML/Models/model1.tflite');
-          expect(tflite.sizeBytes).to.be.equal(16900988);
+  describe('listModels', () => {
+
+    const LIST_MODELS_RESPONSE = {
+      models: [
+        MODEL_RESPONSE,
+        MODEL_RESPONSE2,
+      ],
+      nextPageToken: 'next',
+    };
+
+    it('should propagate API errors', () => {
+      const stub = sinon
+        .stub(MachineLearningApiClient.prototype, 'listModels')
+        .rejects(EXPECTED_ERROR);
+      stubs.push(stub);
+      return machineLearning.listModels({})
+        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+    });
+
+    it('should reject when API response is invalid', () => {
+      const stub = sinon
+        .stub(MachineLearningApiClient.prototype, 'listModels')
+        .resolves(null);
+      stubs.push(stub);
+      return machineLearning.listModels()
+        .should.eventually.be.rejected.and.have.property(
+          'message', 'Invalid ListModels response: null');
+    });
+
+    it('should resolve with Models on success', () => {
+      const stub = sinon
+        .stub(MachineLearningApiClient.prototype, 'listModels')
+        .resolves(LIST_MODELS_RESPONSE);
+      stubs.push(stub);
+      return machineLearning.listModels()
+        .then((result) => {
+          expect(result.models.length).equals(2);
+          expect(result.models[0]).to.deep.equal(MODEL1);
+          expect(result.models[1]).to.deep.equal(MODEL2);
+          expect(result.pageToken).to.equal(LIST_MODELS_RESPONSE.nextPageToken);
         });
     });
   });
@@ -417,20 +505,7 @@ describe('MachineLearning', () => {
 
       return machineLearning.createModel(MODEL_OPTIONS_WITH_GCS)
         .then((model) => {
-          expect(model.modelId).to.equal(MODEL_ID);
-          expect(model.displayName).to.equal('model_1');
-          expect(model.tags).to.deep.equal(['tag_1', 'tag_2']);
-          expect(model.createTime).to.equal(CREATE_TIME_UTC);
-          expect(model.updateTime).to.equal(UPDATE_TIME_UTC);
-          expect(model.validationError).to.be.empty;
-          expect(model.published).to.be.true;
-          expect(model.etag).to.equal('etag123');
-          expect(model.modelHash).to.equal('modelHash123');
-
-          const tflite = model.tfliteModel!;
-          expect(tflite.gcsTfliteUri).to.be.equal(
-            'gs://test-project-bucket/Firebase/ML/Models/model1.tflite');
-          expect(tflite.sizeBytes).to.be.equal(16900988);
+          expect(model).to.deep.equal(MODEL1);
         });
     });
 
@@ -547,20 +622,7 @@ describe('MachineLearning', () => {
 
       return machineLearning.updateModel(MODEL_ID, MODEL_OPTIONS_WITH_GCS)
         .then((model) => {
-          expect(model.modelId).to.equal(MODEL_ID);
-          expect(model.displayName).to.equal('model_1');
-          expect(model.tags).to.deep.equal(['tag_1', 'tag_2']);
-          expect(model.createTime).to.equal(CREATE_TIME_UTC);
-          expect(model.updateTime).to.equal(UPDATE_TIME_UTC);
-          expect(model.validationError).to.be.empty;
-          expect(model.published).to.be.true;
-          expect(model.etag).to.equal('etag123');
-          expect(model.modelHash).to.equal('modelHash123');
-
-          const tflite = model.tfliteModel!;
-          expect(tflite.gcsTfliteUri).to.be.equal(
-            'gs://test-project-bucket/Firebase/ML/Models/model1.tflite');
-          expect(tflite.sizeBytes).to.be.equal(16900988);
+          expect(model).to.deep.equal(MODEL1);
         });
     });
 
@@ -664,20 +726,7 @@ describe('MachineLearning', () => {
 
       return machineLearning.publishModel(MODEL_ID)
         .then((model) => {
-          expect(model.modelId).to.equal(MODEL_ID);
-          expect(model.displayName).to.equal('model_1');
-          expect(model.tags).to.deep.equal(['tag_1', 'tag_2']);
-          expect(model.createTime).to.equal(CREATE_TIME_UTC);
-          expect(model.updateTime).to.equal(UPDATE_TIME_UTC);
-          expect(model.validationError).to.be.empty;
-          expect(model.published).to.be.true;
-          expect(model.etag).to.equal('etag123');
-          expect(model.modelHash).to.equal('modelHash123');
-
-          const tflite = model.tfliteModel!;
-          expect(tflite.gcsTfliteUri).to.be.equal(
-            'gs://test-project-bucket/Firebase/ML/Models/model1.tflite');
-          expect(tflite.sizeBytes).to.be.equal(16900988);
+          expect(model).to.deep.equal(MODEL1);
         });
     });
 
@@ -781,20 +830,7 @@ describe('MachineLearning', () => {
 
       return machineLearning.unpublishModel(MODEL_ID)
         .then((model) => {
-          expect(model.modelId).to.equal(MODEL_ID);
-          expect(model.displayName).to.equal('model_1');
-          expect(model.tags).to.deep.equal(['tag_1', 'tag_2']);
-          expect(model.createTime).to.equal(CREATE_TIME_UTC);
-          expect(model.updateTime).to.equal(UPDATE_TIME_UTC);
-          expect(model.validationError).to.be.empty;
-          expect(model.published).to.be.true;
-          expect(model.etag).to.equal('etag123');
-          expect(model.modelHash).to.equal('modelHash123');
-
-          const tflite = model.tfliteModel!;
-          expect(tflite.gcsTfliteUri).to.be.equal(
-            'gs://test-project-bucket/Firebase/ML/Models/model1.tflite');
-          expect(tflite.sizeBytes).to.be.equal(16900988);
+          expect(model).to.deep.equal(MODEL1);
         });
     });
 
