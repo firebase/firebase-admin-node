@@ -23,8 +23,10 @@ export type RemoteConfigErrorCode =
   | 'invalid-argument'
   | 'invalid-etag'
   | 'invalid-template'
+  | 'not-found'
   | 'obsolete-etag'
   | 'permission-denied'
+  | 'resource-exhausted'
   | 'unauthenticated'
   | 'unknown-error';
 

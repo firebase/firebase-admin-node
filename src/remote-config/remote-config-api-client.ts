@@ -14,9 +14,74 @@
  * limitations under the License.
  */
 
-import { FirebaseRemoteConfigError } from './remote-config-utils';
+import { HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient } from '../utils/api-request';
+import { PrefixedFirebaseError } from '../utils/error';
+import { FirebaseRemoteConfigError, RemoteConfigErrorCode } from './remote-config-utils';
 import { FirebaseApp } from '../firebase-app';
+import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
+
+const REMOTECONFIG_V1_API = 'https://firebaseremoteconfig.googleapis.com/v1';
+const FIREBASE_REMOTE_CONFIG_HEADERS = {
+  'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
+  // There is a known issue in which the ETag is not properly returned in cases where the request
+  // does not specify a compression type. Currently, it is required to include the header
+  // `Accept-Encoding: gzip` or equivalent in all requests.
+  // https://firebase.google.com/docs/remote-config/use-config-rest#etag_usage_and_forced_updates
+  'Accept-Encoding': 'gzip',
+};
+
+enum ConditionDisplayColor {
+  CONDITION_DISPLAY_COLOR_UNSPECIFIED = "Unspecified",
+  BLUE = "Blue",
+  BROWN = "Brown",
+  CYAN = "Cyan",
+  DEEP_ORANGE = "Red Orange",
+  GREEN = "Green",
+  INDIGO = "Indigo",
+  LIME = "Lime",
+  ORANGE = "Orange",
+  PINK = "Pink",
+  PURPLE = "Purple",
+  TEAL = "Teal",
+}
+
+interface Version {
+  readonly versionNumber: string;
+  readonly updateTime: string;
+  readonly updateUser: { readonly name?: string; readonly email?: string; readonly imageUrl?: string };
+  readonly updateOrigin: string;
+  readonly updateType: string;
+  readonly description?: string;
+  readonly rollbackSource?: string;
+  readonly isLegacy?: boolean;
+}
+
+/** Interface representing a Remote Config parameter value. */
+export interface RemoteConfigParameterValue {
+  readonly value?: string;
+  readonly useInAppDefault?: boolean;
+}
+
+/** Interface representing a Remote Config parameter. */
+export interface RemoteConfigParameter {
+  readonly defaultValue?: RemoteConfigParameterValue;
+  readonly conditionalValues?: { [key: string]: RemoteConfigParameterValue };
+  readonly description?: string;
+}
+
+interface RemoteConfigCondition {
+  name: string;
+  expression: string;
+  tagColor?: ConditionDisplayColor;
+}
+
+export interface RemoteConfigResponse {
+  readonly conditions?: RemoteConfigCondition[];
+  readonly parameters?: { [key: string]: RemoteConfigParameter };
+  readonly version?: Version; //only undefined when there is no active template in the project
+  readonly eTag: string;
+}
 
 /**
  * Class that facilitates sending requests to the Firebase Remote Config backend API.
@@ -25,12 +90,108 @@ import * as validator from '../utils/validator';
  */
 export class RemoteConfigApiClient {
 
-  constructor(app: FirebaseApp) {
+  private readonly httpClient: HttpClient;
+  private projectIdPrefix?: string;
+
+  constructor(private readonly app: FirebaseApp) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseRemoteConfigError(
         'invalid-argument',
-        'First argument passed to admin.RemoteConfig() must be a valid Firebase app '
-        + 'instance.');
+        'First argument passed to admin.remoteConfig() must be a valid Firebase app instance.');
     }
+
+    this.httpClient = new AuthorizedHttpClient(app);
+  }
+
+  public getTemplate(): Promise<RemoteConfigResponse> {
+    return this.getUrl()
+      .then((url) => {
+        const request: HttpRequestConfig = {
+          method: 'GET',
+          url: `${url}/remoteConfig`,
+          headers: FIREBASE_REMOTE_CONFIG_HEADERS
+        };
+        return this.httpClient.send(request);
+      })
+      .then((resp) => {
+        if (!Object.prototype.hasOwnProperty.call(resp.headers, 'etag')) {
+          throw new FirebaseRemoteConfigError(
+            'invalid-argument',
+            'ETag is unavailable');
+        }
+        const remoteConfigResponse = resp.data as RemoteConfigResponse;
+        // Include the eTag in RemoteConfigResponse
+        (remoteConfigResponse as any).eTag = resp.headers['etag'];
+        return remoteConfigResponse;
+      })
+      .catch((err) => {
+        throw this.toFirebaseError(err);
+      });
+  }
+
+  private getUrl(): Promise<string> {
+    return this.getProjectIdPrefix()
+      .then((projectIdPrefix) => {
+        return `${REMOTECONFIG_V1_API}/${projectIdPrefix}`;
+      });
+  }
+
+  private getProjectIdPrefix(): Promise<string> {
+    if (this.projectIdPrefix) {
+      return Promise.resolve(this.projectIdPrefix);
+    }
+
+    return utils.findProjectId(this.app)
+      .then((projectId) => {
+        if (!validator.isNonEmptyString(projectId)) {
+          throw new FirebaseRemoteConfigError(
+            'invalid-argument',
+            'Failed to determine project ID. Initialize the SDK with service account credentials, or '
+            + 'set project ID as an app option. Alternatively, set the GOOGLE_CLOUD_PROJECT '
+            + 'environment variable.');
+        }
+
+        this.projectIdPrefix = `projects/${projectId}`;
+        return this.projectIdPrefix;
+      });
+  }
+
+  private toFirebaseError(err: HttpError): PrefixedFirebaseError {
+    if (err instanceof PrefixedFirebaseError) {
+      return err;
+    }
+
+    const response = err.response;
+    if (!response.isJson()) {
+      return new FirebaseRemoteConfigError(
+        'unknown-error',
+        `Unexpected response with status: ${response.status} and body: ${response.text}`);
+    }
+
+    const error: Error = (response.data as ErrorResponse).error || {};
+    let code: RemoteConfigErrorCode = 'unknown-error';
+    if (error.status && error.status in ERROR_CODE_MAPPING) {
+      code = ERROR_CODE_MAPPING[error.status];
+    }
+    const message = error.message || `Unknown server error: ${response.text}`;
+    return new FirebaseRemoteConfigError(code, message);
   }
 }
+
+interface ErrorResponse {
+  error?: Error;
+}
+
+interface Error {
+  code?: number;
+  message?: string;
+  status?: string;
+}
+
+const ERROR_CODE_MAPPING: { [key: string]: RemoteConfigErrorCode } = {
+  INVALID_ARGUMENT: 'invalid-argument',
+  NOT_FOUND: 'not-found',
+  RESOURCE_EXHAUSTED: 'resource-exhausted',
+  UNAUTHENTICATED: 'authentication-error',
+  UNKNOWN: 'unknown-error',
+};

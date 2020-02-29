@@ -16,20 +16,13 @@
 
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { FirebaseApp } from '../firebase-app';
+import * as validator from '../utils/validator';
+import { FirebaseRemoteConfigError } from './remote-config-utils';
 import {
-  RemoteConfigApiClient
+  RemoteConfigApiClient,
+  RemoteConfigResponse,
+  RemoteConfigParameter
 } from './remote-config-api-client';
-
-/** Interface representing a Remote Config parameter. */
-export interface RemoteConfigParameter {
-  key: string;
-  defaultValue?: string; // If `undefined`, the parameter uses the in-app default value
-  description?: string;
-
-  // A dictionary of {conditionName: value}
-  // `undefined` value sets `useInAppDefault` to `true` (equivalent to `No Value`)
-  conditionalValues?: { [name: string]: string | undefined };
-}
 
 /** Interface representing a Remote Config condition. */
 export interface RemoteConfigCondition {
@@ -75,7 +68,10 @@ export class RemoteConfig implements FirebaseServiceInterface {
   * @return {Promise<RemoteConfigTemplate>} A Promise that fulfills when the template is available.
   */
   public getTemplate(): Promise<RemoteConfigTemplate> {
-    return Promise.resolve<RemoteConfigTemplate>(new RemoteConfigTemplate());
+    return this.client.getTemplate()
+      .then((templateResponse) => {
+        return new RemoteConfigTemplate(templateResponse);
+      });
   }
 }
 
@@ -84,9 +80,40 @@ export class RemoteConfig implements FirebaseServiceInterface {
  */
 export class RemoteConfigTemplate {
 
-  public parameters: RemoteConfigParameter[];
+  public parameters: { [key: string]: RemoteConfigParameter };
   public conditions: RemoteConfigCondition[];
   private readonly eTagInternal: string;
+
+  constructor(config: RemoteConfigResponse) {
+    if (!validator.isNonNullObject(config) ||
+      !validator.isNonEmptyString(config.eTag)) {
+      throw new FirebaseRemoteConfigError(
+        'invalid-argument',
+        `Invalid Remote Config template response: ${JSON.stringify(config)}`);
+    }
+
+    this.parameters = {};
+    this.conditions = [];
+    this.eTagInternal = config.eTag;
+
+    if (typeof config.parameters !== 'undefined') {
+      if (!validator.isNonNullObject(config.parameters)) {
+        throw new FirebaseRemoteConfigError(
+          'invalid-argument',
+          `Remote Config parameters must be a non-null object`);
+      }
+      this.parameters = config.parameters;
+    }
+
+    if (typeof config.conditions !== 'undefined') {
+      if (!validator.isArray(config.conditions)) {
+        throw new FirebaseRemoteConfigError(
+          'invalid-argument',
+          `Remote Config conditions must be an array`);
+      }
+      this.conditions = this.parseConditions(config.conditions);
+    }
+  }
 
   /**
    * Gets the ETag of the template.
@@ -105,7 +132,7 @@ export class RemoteConfigTemplate {
    * @return {RemoteConfigParameter} The Remote Config parameter with the provided key.
    */
   public getParameter(key: string): RemoteConfigParameter | undefined {
-    return this.parameters.find((p) => p.key === key);
+    return this.parameters[key];
   }
 
   /**
@@ -126,5 +153,13 @@ export class RemoteConfigTemplate {
       conditions: this.conditions,
       eTag: this.eTag,
     };
+  }
+
+  private parseConditions(conditions: any[]): RemoteConfigCondition[] {
+    return conditions.map(p => ({
+      name: p.name,
+      expression: p.expression,
+      color: p.tagColor
+    }));
   }
 }
