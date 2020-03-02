@@ -187,7 +187,7 @@ class TenantAwareAuthResourceUrlBuilder extends AuthResourceUrlBuilder {
  *
  * @param {any} request The providerUserInfo request object.
  */
-function validateProviderUserInfo(request: any) {
+function validateProviderUserInfo(request: any): void {
   const validKeys = {
     rawId: true,
     providerId: true,
@@ -247,7 +247,7 @@ function validateProviderUserInfo(request: any) {
  * @param {any} request The create/edit request object.
  * @param {boolean=} uploadAccountRequest Whether to validate as an uploadAccount request.
  */
-function validateCreateEditRequest(request: any, uploadAccountRequest = false) {
+function validateCreateEditRequest(request: any, uploadAccountRequest = false): void {
   // Hash set of whitelisted parameters.
   const validKeys = {
     displayName: true,
@@ -370,7 +370,7 @@ function validateCreateEditRequest(request: any, uploadAccountRequest = false) {
     const invalidClaims: string[] = [];
     // Check for any invalid claims.
     RESERVED_CLAIMS.forEach((blacklistedClaim) => {
-      if (developerClaims.hasOwnProperty(blacklistedClaim)) {
+      if (Object.prototype.hasOwnProperty.call(developerClaims, blacklistedClaim)) {
         invalidClaims.push(blacklistedClaim);
       }
     });

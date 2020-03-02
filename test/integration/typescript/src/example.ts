@@ -16,7 +16,7 @@
 
 import * as firebase from 'firebase-admin';
 
-export function initApp(serviceAcct: any, name: string) {
+export function initApp(serviceAcct: any, name: string): firebase.app.App {
   return firebase.initializeApp({
     credential: firebase.credential.cert(serviceAcct),
     databaseURL: 'https://mock.firebaseio.com'
@@ -26,7 +26,7 @@ export function initApp(serviceAcct: any, name: string) {
 export function addValueEventListener(
   // Check for type compilation
   db: firebase.database.Database,
-  callback: (s: firebase.database.DataSnapshot) => any) {
+  callback: (s: firebase.database.DataSnapshot) => any): void {
   const eventType: firebase.database.EventType = 'value';
   db.ref().on(eventType, callback);
 }

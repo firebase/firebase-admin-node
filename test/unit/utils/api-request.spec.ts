@@ -66,7 +66,7 @@ function mockRequestWithHttpError(
   statusCode = 400,
   responseContentType = 'application/json',
   response: any = mockErrorResponse,
-) {
+): nock.Scope {
   if (responseContentType === 'text/html') {
     response = mockTextErrorResponse;
   }
@@ -86,7 +86,7 @@ function mockRequestWithHttpError(
  *
  * @return {Object} A nock response object.
  */
-function mockRequestWithError(err: any) {
+function mockRequestWithError(err: any): nock.Scope {
   return nock('https://' + mockHost)
     .get(mockPath)
     .replyWithError(err);
@@ -346,6 +346,8 @@ describe('HttpClient', () => {
     mockedRequests.push(scope);
     const client = new HttpClient();
     const httpAgent = new Agent();
+
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const https = require('https');
     transportSpy = sinon.spy(https, 'request');
     return client.send({
@@ -1224,6 +1226,8 @@ describe('AuthorizedHttpClient', () => {
     beforeEach(() => {
       const options = mockApp.options;
       options.httpAgent = new Agent();
+
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const https = require('https');
       transportSpy = sinon.spy(https, 'request');
       mockAppWithAgent = mocks.appWithOptions(options);

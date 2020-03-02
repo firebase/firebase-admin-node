@@ -261,7 +261,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
     assertServerResponse(
       validator.isNonNullObject(responseData),
       responseData,
-      `${callerName}\'s responseData must be a non-null object.`);
+      `${callerName}'s responseData must be a non-null object.`);
 
     if (responseData.apps) {
       assertServerResponse(

@@ -264,21 +264,21 @@ function deleteAllShaCertificates(androidApp: admin.projectManagement.AndroidApp
 /**
  * @return {string} Dot-separated string that can be used as a unique package name or bundle ID.
  */
-function generateUniqueAppNamespace() {
+function generateUniqueAppNamespace(): string {
   return APP_NAMESPACE_PREFIX + generateRandomString(APP_NAMESPACE_SUFFIX_LENGTH);
 }
 
 /**
  * @return {string} Dot-separated string that can be used as a unique app display name.
  */
-function generateUniqueAppDisplayName() {
+function generateUniqueAppDisplayName(): string {
   return APP_DISPLAY_NAME_PREFIX + generateRandomString(APP_DISPLAY_NAME_SUFFIX_LENGTH);
 }
 
 /**
  * @return {string} string that can be used as a unique project display name.
  */
-function generateUniqueProjectDisplayName() {
+function generateUniqueProjectDisplayName(): string {
   return PROJECT_DISPLAY_NAME_PREFIX + generateRandomString(PROJECT_DISPLAY_NAME_SUFFIX_LENGTH);
 }
 

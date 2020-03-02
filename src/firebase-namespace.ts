@@ -237,7 +237,7 @@ export class FirebaseNamespaceInternals {
    * @param {FirebaseApp} app The FirebaseApp instance whose app hooks to call.
    * @param {string} eventName The event name representing which app hooks to call.
    */
-  private callAppHooks_(app: FirebaseApp, eventName: string) {
+  private callAppHooks_(app: FirebaseApp, eventName: string): void {
     Object.keys(this.serviceFactories).forEach((serviceName) => {
       if (this.appHooks_[serviceName]) {
         this.appHooks_[serviceName](eventName, app);
@@ -340,6 +340,8 @@ export class FirebaseNamespace {
     const fn: FirebaseServiceNamespace<Database> = (app?: FirebaseApp) => {
       return this.ensureApp(app).database();
     };
+
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     return Object.assign(fn, require('@firebase/database'));
   }
 
@@ -375,6 +377,8 @@ export class FirebaseNamespace {
     let fn: FirebaseServiceNamespace<Firestore> = (app?: FirebaseApp) => {
       return this.ensureApp(app).firestore();
     };
+
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const firestore = require('@google-cloud/firestore');
 
     fn = Object.assign(fn, firestore.Firestore);

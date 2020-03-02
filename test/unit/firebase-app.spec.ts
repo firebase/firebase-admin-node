@@ -70,8 +70,8 @@ describe('FirebaseApp', () => {
 
   beforeEach(() => {
     getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken').resolves({
-      access_token: 'mock-access-token',
-      expires_in: 3600,
+      access_token: 'mock-access-token', // eslint-disable-line @typescript-eslint/camelcase
+      expires_in: 3600, // eslint-disable-line @typescript-eslint/camelcase
     });
 
     clock = sinon.useFakeTimers(1000);
@@ -667,8 +667,8 @@ describe('FirebaseApp', () => {
 
     it('returns a valid token given a well-formed custom credential implementation', () => {
       const oracle: GoogleOAuthAccessToken = {
-        access_token: 'This is a custom token',
-        expires_in: ONE_HOUR_IN_SECONDS,
+        access_token: 'This is a custom token', // eslint-disable-line @typescript-eslint/camelcase
+        expires_in: ONE_HOUR_IN_SECONDS, // eslint-disable-line @typescript-eslint/camelcase
       };
       const credential = {
         getAccessToken: () => Promise.resolve(oracle),
@@ -761,8 +761,8 @@ describe('FirebaseApp', () => {
         // Restore the stubbed getAccessToken() method.
         getTokenStub.restore();
         getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken').resolves({
-          access_token: 'mock-access-token',
-          expires_in: 3600,
+          access_token: 'mock-access-token', // eslint-disable-line @typescript-eslint/camelcase
+          expires_in: 3600, // eslint-disable-line @typescript-eslint/camelcase
         });
 
         return mockApp.INTERNAL.getToken().then((token2) => {
@@ -914,8 +914,8 @@ describe('FirebaseApp', () => {
       getTokenStub.restore();
       expect(mockApp.options.credential).to.exist;
       getTokenStub = sinon.stub(mockApp.options.credential!, 'getAccessToken').resolves({
-        access_token: utils.generateRandomAccessToken(),
-        expires_in: 3 * 60 + 10,
+        access_token: utils.generateRandomAccessToken(), // eslint-disable-line @typescript-eslint/camelcase
+        expires_in: 3 * 60 + 10, // eslint-disable-line @typescript-eslint/camelcase
       });
       // Expect the call count to initially be zero.
       expect(getTokenStub.callCount).to.equal(0);

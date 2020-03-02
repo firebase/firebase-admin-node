@@ -151,7 +151,7 @@ export function generateUpdateMask(obj: {[key: string]: any}): string[] {
     return updateMask;
   }
   for (const key in obj) {
-    if (obj.hasOwnProperty(key) && typeof obj[key] !== 'undefined') {
+    if (Object.prototype.hasOwnProperty.call(obj, key) && typeof obj[key] !== 'undefined') {
       const maskList = generateUpdateMask(obj[key]);
       if (maskList.length > 0) {
         maskList.forEach((mask) => {

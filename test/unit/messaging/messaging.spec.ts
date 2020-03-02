@@ -158,6 +158,8 @@ function mockErrorResponse(
     });
 }
 
+/* eslint-disable @typescript-eslint/camelcase */
+
 function mockSendToDeviceStringRequest(mockFailure = false): nock.Scope {
   let deviceResult: object = { message_id: `0:${ mocks.messaging.messageId }` };
   if (mockFailure) {
@@ -299,7 +301,7 @@ function mockTopicSubscriptionRequestWithError(
     });
 }
 
-function disableRetries(messaging: Messaging) {
+function disableRetries(messaging: Messaging): void {
   (messaging as any).messagingRequestHandler.httpClient.retry = null;
 }
 
@@ -561,13 +563,13 @@ describe('Messaging', () => {
   describe('sendAll()', () => {
     const validMessage: Message = {token: 'a'};
 
-    function checkSendResponseSuccess(response: SendResponse, messageId: string) {
+    function checkSendResponseSuccess(response: SendResponse, messageId: string): void {
       expect(response.success).to.be.true;
       expect(response.messageId).to.equal(messageId);
       expect(response.error).to.be.undefined;
     }
 
-    function checkSendResponseFailure(response: SendResponse, code: string, msg?: string) {
+    function checkSendResponseFailure(response: SendResponse, code: string, msg?: string): void {
       expect(response.success).to.be.false;
       expect(response.messageId).to.be.undefined;
       expect(response.error).to.have.property('code', code);
@@ -1108,13 +1110,13 @@ describe('Messaging', () => {
       ).should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
     });
 
-    function checkSendResponseSuccess(response: SendResponse, messageId: string) {
+    function checkSendResponseSuccess(response: SendResponse, messageId: string): void {
       expect(response.success).to.be.true;
       expect(response.messageId).to.equal(messageId);
       expect(response.error).to.be.undefined;
     }
 
-    function checkSendResponseFailure(response: SendResponse, code: string, msg?: string) {
+    function checkSendResponseFailure(response: SendResponse, code: string, msg?: string): void {
       expect(response.success).to.be.false;
       expect(response.messageId).to.be.undefined;
       expect(response.error).to.have.property('code', code);
@@ -3596,7 +3598,7 @@ describe('Messaging', () => {
     });
   });
 
-  function tokenSubscriptionTests(methodName: string) {
+  function tokenSubscriptionTests(methodName: string): void {
     const invalidRegistrationTokensArgumentError = 'Registration token(s) provided to ' +
       `${methodName}() must be a non-empty string or a non-empty array`;
 

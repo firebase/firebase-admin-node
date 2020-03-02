@@ -189,7 +189,7 @@ export class FirebaseAppInternals {
    *
    * @param {function(string)} listener The listener that will be called with each new token.
    */
-  public addAuthTokenListener(listener: (token: string) => void) {
+  public addAuthTokenListener(listener: (token: string) => void): void {
     this.tokenListeners_.push(listener);
     if (this.cachedToken_) {
       listener(this.cachedToken_.accessToken);
@@ -201,7 +201,7 @@ export class FirebaseAppInternals {
    *
    * @param {function(string)} listener The listener to remove.
    */
-  public removeAuthTokenListener(listener: (token: string) => void) {
+  public removeAuthTokenListener(listener: (token: string) => void): void {
     this.tokenListeners_ = this.tokenListeners_.filter((other) => other !== listener);
   }
 

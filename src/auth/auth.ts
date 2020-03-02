@@ -444,7 +444,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
         providerConfigs,
       };
       // Delete result.pageToken if undefined.
-      if (response.hasOwnProperty('nextPageToken')) {
+      if (Object.prototype.hasOwnProperty.call(response, 'nextPageToken')) {
         result.pageToken = response.nextPageToken;
       }
       return result;

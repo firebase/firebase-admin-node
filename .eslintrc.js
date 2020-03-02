@@ -28,17 +28,21 @@ module.exports = {
   rules: {
     // Following checks are temporarily disabled. We shall incrementally enable them in the
     // future, fixing any violations as we go.
-    "@typescript-eslint/no-explicit-any": 0,
-    "@typescript-eslint/no-use-before-define": 0,
-    "@typescript-eslint/explicit-function-return-type": 0,
-    "@typescript-eslint/camelcase": 0,
-    "@typescript-eslint/no-non-null-assertion": 0,
-    "@typescript-eslint/no-var-requires": 0,
-    "@typescript-eslint/ban-types": 0,
-    "no-useless-escape": 0,
-    "no-prototype-builtins": 0,
+    '@typescript-eslint/no-non-null-assertion': 0,
+
+    // Disabled checks
+    '@typescript-eslint/no-explicit-any': 0,
+    '@typescript-eslint/no-use-before-define': 0,
 
     // Required checks
-    "indent": ["error", 2]
+    'indent': ['error', 2],
+    '@typescript-eslint/explicit-function-return-type': [
+      'error',
+      {
+        'allowExpressions': true,
+        'allowTypedFunctionExpressions': true,
+        'allowHigherOrderFunctions': true
+      }
+    ],
   }
 };

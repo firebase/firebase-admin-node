@@ -40,8 +40,8 @@ describe('Firebase', () => {
 
   before(() => {
     getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken').resolves({
-      access_token: 'mock-access-token',
-      expires_in: 3600,
+      access_token: 'mock-access-token', // eslint-disable-line @typescript-eslint/camelcase
+      expires_in: 3600, // eslint-disable-line @typescript-eslint/camelcase
     });
   });
 
@@ -150,8 +150,8 @@ describe('Firebase', () => {
       getTokenStub.restore();
       getTokenStub = sinon.stub(RefreshTokenCredential.prototype, 'getAccessToken')
         .resolves({
-          access_token: 'mock-access-token',
-          expires_in: 3600,
+          access_token: 'mock-access-token', // eslint-disable-line @typescript-eslint/camelcase
+          expires_in: 3600, // eslint-disable-line @typescript-eslint/camelcase
         });
       firebaseAdmin.initializeApp({
         credential: firebaseAdmin.credential.refreshToken(mocks.refreshToken),

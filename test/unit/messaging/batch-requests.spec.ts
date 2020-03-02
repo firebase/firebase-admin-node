@@ -33,6 +33,7 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 function parseHttpRequest(text: string | Buffer): any {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const httpMessageParser = require('http-message-parser');
   return httpMessageParser(text);
 }
@@ -241,7 +242,7 @@ describe('BatchRequestClient', () => {
     });
   });
 
-  function checkOutgoingRequest(stub: sinon.SinonStub, requests: SubRequest[]) {
+  function checkOutgoingRequest(stub: sinon.SinonStub, requests: SubRequest[]): void {
     expect(stub).to.have.been.calledOnce;
     const args: HttpRequestConfig = stub.getCall(0).args[0];
     expect(args.method).to.equal('POST');

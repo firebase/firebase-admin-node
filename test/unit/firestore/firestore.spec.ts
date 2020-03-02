@@ -38,6 +38,7 @@ describe('Firestore', () => {
     + 'credentials. Must initialize the SDK with a certificate credential or application default '
     + 'credentials to use Cloud Firestore API.';
 
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { version: firebaseVersion } = require('../../../package.json');
   const defaultCredentialApps = [
     {
