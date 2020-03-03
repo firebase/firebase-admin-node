@@ -31,6 +31,9 @@ import * as mocks from '../resources/mocks';
 import { AuthProviderConfig } from '../../src/auth/auth-config';
 import { deepExtend, deepCopy } from '../../src/utils/deep-copy';
 import { User, FirebaseAuth } from '@firebase/auth-types';
+import * as zzz from '../this/doesnt/exist';
+
+export const ThisIsACompilationError = zzz.Anything;
 
 const chalk = require('chalk'); // eslint-disable-line @typescript-eslint/no-var-requires
 
