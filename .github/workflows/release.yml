@@ -53,6 +53,7 @@ jobs:
       run: |
         npm ci
         npm run build
+        npm run build:tests
 
     - name: Run unit tests
       run: npm test
