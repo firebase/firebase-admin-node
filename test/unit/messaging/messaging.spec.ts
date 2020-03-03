@@ -158,6 +158,8 @@ function mockErrorResponse(
     });
 }
 
+/* eslint-disable @typescript-eslint/camelcase */
+
 function mockSendToDeviceStringRequest(mockFailure = false): nock.Scope {
   let deviceResult: object = { message_id: `0:${ mocks.messaging.messageId }` };
   if (mockFailure) {
@@ -299,7 +301,7 @@ function mockTopicSubscriptionRequestWithError(
     });
 }
 
-function disableRetries(messaging: Messaging) {
+function disableRetries(messaging: Messaging): void {
   (messaging as any).messagingRequestHandler.httpClient.retry = null;
 }
 
@@ -482,7 +484,7 @@ describe('Messaging', () => {
       return messaging.send(
         {token: 'mock-token'},
       ).should.eventually.be.rejectedWith('test error message')
-       .and.have.property('code', 'messaging/invalid-argument');
+        .and.have.property('code', 'messaging/invalid-argument');
     });
 
     it('should fail when the backend server returns a detailed error with FCM error code', () => {
@@ -502,7 +504,7 @@ describe('Messaging', () => {
       return messaging.send(
         {token: 'mock-token'},
       ).should.eventually.be.rejectedWith('test error message')
-       .and.have.property('code', 'messaging/registration-token-not-registered');
+        .and.have.property('code', 'messaging/registration-token-not-registered');
     });
 
     ['THIRD_PARTY_AUTH_ERROR', 'APNS_AUTH_ERROR'].forEach((errorCode) => {
@@ -523,7 +525,7 @@ describe('Messaging', () => {
         return messaging.send(
           {token: 'mock-token'},
         ).should.eventually.be.rejectedWith('test error message')
-         .and.have.property('code', 'messaging/third-party-auth-error');
+          .and.have.property('code', 'messaging/third-party-auth-error');
       });
     });
 
@@ -538,7 +540,7 @@ describe('Messaging', () => {
       return messaging.send(
         {token: 'mock-token'},
       ).should.eventually.be.rejectedWith('test error message')
-       .and.have.property('code', 'messaging/registration-token-not-registered');
+        .and.have.property('code', 'messaging/registration-token-not-registered');
     });
 
     it('should fail when the backend server returns an unknown error', () => {
@@ -561,13 +563,13 @@ describe('Messaging', () => {
   describe('sendAll()', () => {
     const validMessage: Message = {token: 'a'};
 
-    function checkSendResponseSuccess(response: SendResponse, messageId: string) {
+    function checkSendResponseSuccess(response: SendResponse, messageId: string): void {
       expect(response.success).to.be.true;
       expect(response.messageId).to.equal(messageId);
       expect(response.error).to.be.undefined;
     }
 
-    function checkSendResponseFailure(response: SendResponse, code: string, msg?: string) {
+    function checkSendResponseFailure(response: SendResponse, code: string, msg?: string): void {
       expect(response.success).to.be.false;
       expect(response.messageId).to.be.undefined;
       expect(response.error).to.have.property('code', code);
@@ -755,7 +757,7 @@ describe('Messaging', () => {
       return messaging.sendAll(
         [validMessage],
       ).should.eventually.be.rejectedWith('test error message')
-       .and.have.property('code', 'messaging/invalid-argument');
+        .and.have.property('code', 'messaging/invalid-argument');
     });
 
     it('should fail when the backend server returns a detailed error with FCM error code', () => {
@@ -775,7 +777,7 @@ describe('Messaging', () => {
       return messaging.sendAll(
         [validMessage],
       ).should.eventually.be.rejectedWith('test error message')
-       .and.have.property('code', 'messaging/registration-token-not-registered');
+        .and.have.property('code', 'messaging/registration-token-not-registered');
     });
 
     it('should map server error code to client-side error', () => {
@@ -789,7 +791,7 @@ describe('Messaging', () => {
       return messaging.sendAll(
         [validMessage],
       ).should.eventually.be.rejectedWith('test error message')
-       .and.have.property('code', 'messaging/registration-token-not-registered');
+        .and.have.property('code', 'messaging/registration-token-not-registered');
     });
 
     it('should fail when the backend server returns an unknown error', () => {
@@ -1049,7 +1051,7 @@ describe('Messaging', () => {
       return messaging.sendMulticast(
         {tokens: ['a']},
       ).should.eventually.be.rejectedWith('test error message')
-       .and.have.property('code', 'messaging/invalid-argument');
+        .and.have.property('code', 'messaging/invalid-argument');
     });
 
     it('should fail when the backend server returns a detailed error with FCM error code', () => {
@@ -1069,7 +1071,7 @@ describe('Messaging', () => {
       return messaging.sendMulticast(
         {tokens: ['a']},
       ).should.eventually.be.rejectedWith('test error message')
-       .and.have.property('code', 'messaging/registration-token-not-registered');
+        .and.have.property('code', 'messaging/registration-token-not-registered');
     });
 
     it('should map server error code to client-side error', () => {
@@ -1083,7 +1085,7 @@ describe('Messaging', () => {
       return messaging.sendMulticast(
         {tokens: ['a']},
       ).should.eventually.be.rejectedWith('test error message')
-       .and.have.property('code', 'messaging/registration-token-not-registered');
+        .and.have.property('code', 'messaging/registration-token-not-registered');
     });
 
     it('should fail when the backend server returns an unknown error', () => {
@@ -1108,13 +1110,13 @@ describe('Messaging', () => {
       ).should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
     });
 
-    function checkSendResponseSuccess(response: SendResponse, messageId: string) {
+    function checkSendResponseSuccess(response: SendResponse, messageId: string): void {
       expect(response.success).to.be.true;
       expect(response.messageId).to.equal(messageId);
       expect(response.error).to.be.undefined;
     }
 
-    function checkSendResponseFailure(response: SendResponse, code: string, msg?: string) {
+    function checkSendResponseFailure(response: SendResponse, code: string, msg?: string): void {
       expect(response.success).to.be.false;
       expect(response.messageId).to.be.undefined;
       expect(response.error).to.have.property('code', code);
@@ -1528,7 +1530,7 @@ describe('Messaging', () => {
         disableRetries(messaging);
 
         return messaging.sendToDeviceGroup(
-        mocks.messaging.notificationKey,
+          mocks.messaging.notificationKey,
           mocks.messaging.payload,
         ).should.eventually.be.rejected.and.have.property('code', expectedError);
       });
@@ -1779,7 +1781,7 @@ describe('Messaging', () => {
         disableRetries(messaging);
 
         return messaging.sendToTopic(
-        mocks.messaging.topic,
+          mocks.messaging.topic,
           mocks.messaging.payload,
         ).should.eventually.be.rejected.and.have.property('code', expectedError);
       });
@@ -1998,7 +2000,7 @@ describe('Messaging', () => {
         disableRetries(messaging);
 
         return messaging.sendToCondition(
-        mocks.messaging.condition,
+          mocks.messaging.condition,
           mocks.messaging.payload,
         ).should.eventually.be.rejected.and.have.property('code', expectedError);
       });
@@ -2776,9 +2778,9 @@ describe('Messaging', () => {
 
     const whitelistedOptionsKeys: {
       [name: string]: {
-        type: string,
-        underscoreCasedKey?: string,
-      },
+        type: string;
+        underscoreCasedKey?: string;
+      };
     } = {
       dryRun: { type: 'boolean', underscoreCasedKey: 'dry_run' },
       priority: { type: 'string' },
@@ -2791,7 +2793,7 @@ describe('Messaging', () => {
 
     _.forEach(whitelistedOptionsKeys, ({ type, underscoreCasedKey }, camelCasedKey) => {
       let validValue: any;
-      let invalidValues: Array<{value: any, text: string}>;
+      let invalidValues: Array<{value: any; text: string}>;
       if (type === 'string') {
         invalidValues = [
           { value: true, text: 'non-string' },
@@ -3596,7 +3598,7 @@ describe('Messaging', () => {
     });
   });
 
-  function tokenSubscriptionTests(methodName: string) {
+  function tokenSubscriptionTests(methodName: string): void {
     const invalidRegistrationTokensArgumentError = 'Registration token(s) provided to ' +
       `${methodName}() must be a non-empty string or a non-empty array`;
 

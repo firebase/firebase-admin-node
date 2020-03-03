@@ -19,9 +19,8 @@ import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import {defaultApp, nullApp, nonNullApp, cmdArgs, databaseUrl} from './setup';
 
-/* tslint:disable:no-var-requires */
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const chalk = require('chalk');
-/* tslint:enable:no-var-requires */
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -175,10 +174,10 @@ describe('admin.database', () => {
 // tests. But it will trigger a TS compilation failure if the RTDB
 // typings were not loaded correctly.
 //
-// @ts-ignore: purposely unused method.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function addValueEventListener(
-    db: admin.database.Database,
-    callback: (s: admin.database.DataSnapshot | null) => any) {
+  db: admin.database.Database,
+  callback: (s: admin.database.DataSnapshot | null) => any): void {
   const eventType: admin.database.EventType = 'value';
   db.ref().on(eventType, callback);
 }

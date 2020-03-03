@@ -48,7 +48,7 @@ describe('addReadonlyGetter()', () => {
 
     expect(() => {
       obj.foo = false;
-    }).to.throw(/Cannot assign to read only property \'foo\' of/);
+    }).to.throw(/Cannot assign to read only property 'foo' of/);
   });
 
   it('should make the new property enumerable', () => {

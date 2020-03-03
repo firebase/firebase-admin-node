@@ -198,7 +198,7 @@ export function isURL(urlStr: any): boolean {
     return false;
   }
   // Lookup illegal characters.
-  const re = /[^a-z0-9\:\/\?\#\[\]\@\!\$\&\'\(\)\*\+\,\;\=\.\-\_\~\%]/i;
+  const re = /[^a-z0-9:/?#[\]@!$&'()*+,;=.\-_~%]/i;
   if (re.test(urlStr)) {
     return false;
   }
@@ -213,12 +213,12 @@ export function isURL(urlStr: any): boolean {
     }
     // Validate hostname: Can contain letters, numbers, underscore and dashes separated by a dot.
     // Each zone must not start with a hyphen or underscore.
-    if (!hostname || !/^[a-zA-Z0-9]+[\w\-]*([\.]?[a-zA-Z0-9]+[\w\-]*)*$/.test(hostname)) {
+    if (!hostname || !/^[a-zA-Z0-9]+[\w-]*([.]?[a-zA-Z0-9]+[\w-]*)*$/.test(hostname)) {
       return false;
     }
     // Allow for pathnames: (/chars+)*/?
     // Where chars can be a combination of: a-z A-Z 0-9 - _ . ~ ! $ & ' ( ) * + , ; = : @ %
-    const pathnameRe = /^(\/[\w\-\.\~\!\$\'\(\)\*\+\,\;\=\:\@\%]+)*\/?$/;
+    const pathnameRe = /^(\/[\w\-.~!$'()*+,;=:@%]+)*\/?$/;
     // Validate pathname.
     if (pathname &&
         pathname !== '/' &&

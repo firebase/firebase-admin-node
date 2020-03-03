@@ -132,6 +132,7 @@ export class ServiceAccountCredential implements Credential {
       ].join(' '),
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const jwt = require('jsonwebtoken');
     // This method is actually synchronous so we can capture and return the buffer.
     return jwt.sign(claims, this.privateKey, {
@@ -189,6 +190,7 @@ class ServiceAccount {
       throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const forge = require('node-forge');
     try {
       forge.pki.privateKeyFromPem(this.privateKey);
@@ -386,7 +388,7 @@ export function isApplicationDefault(credential?: Credential): boolean {
  * @param key Name of the property to copy.
  * @param alt Alternative name of the property to copy.
  */
-function copyAttr(to: {[key: string]: any}, from: {[key: string]: any}, key: string, alt: string) {
+function copyAttr(to: {[key: string]: any}, from: {[key: string]: any}, key: string, alt: string): void {
   const tmp = from[key] || from[alt];
   if (typeof tmp !== 'undefined') {
     to[key] = tmp;

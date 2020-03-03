@@ -447,7 +447,7 @@ describe('UserRecord', () => {
 
     it('should return expected photoURL', () => {
       expect(userRecord.photoURL).to.equal(
-          'https://lh3.googleusercontent.com/1234567890/photo.jpg');
+        'https://lh3.googleusercontent.com/1234567890/photo.jpg');
     });
 
     it('should throw when modifying readonly photoURL property', () => {
@@ -626,13 +626,13 @@ describe('UserRecord', () => {
     it('should throw when modifying readonly providerData property', () => {
       expect(() => {
         (userRecord as any).providerData = [
-           new UserInfo({
-             providerId: 'google.com',
-             displayName: 'Jane Doe',
-             photoUrl: 'https://lh3.googleusercontent.com/00000000/photo.jpg',
-             email: 'janedoe@gmail.com',
-             rawId: '00000000',
-           }),
+          new UserInfo({
+            providerId: 'google.com',
+            displayName: 'Jane Doe',
+            photoUrl: 'https://lh3.googleusercontent.com/00000000/photo.jpg',
+            email: 'janedoe@gmail.com',
+            rawId: '00000000',
+          }),
         ];
       }).to.throw(Error);
     });

@@ -1,6 +1,6 @@
 name: Continuous Integration
 
-on: [push, pull_request]
+on: push
 
 jobs:
   build:
@@ -22,5 +22,3 @@ jobs:
         npm ci
         npm run build
         npm test
-      env:
-        CI: true

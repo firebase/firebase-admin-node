@@ -83,13 +83,13 @@ export class FirebaseMessagingRequestHandler {
       // Return entire response.
       return response.data;
     })
-    .catch((err) => {
-      if (err instanceof HttpError) {
-        throw createFirebaseError(err);
-      }
-      // Re-throw the error if it already has the proper format.
-      throw err;
-    });
+      .catch((err) => {
+        if (err instanceof HttpError) {
+          throw createFirebaseError(err);
+        }
+        // Re-throw the error if it already has the proper format.
+        throw err;
+      });
   }
 
   /**

@@ -66,7 +66,7 @@ function mockRequestWithHttpError(
   statusCode = 400,
   responseContentType = 'application/json',
   response: any = mockErrorResponse,
-) {
+): nock.Scope {
   if (responseContentType === 'text/html') {
     response = mockTextErrorResponse;
   }
@@ -86,7 +86,7 @@ function mockRequestWithHttpError(
  *
  * @return {Object} A nock response object.
  */
-function mockRequestWithError(err: any) {
+function mockRequestWithError(err: any): nock.Scope {
   return nock('https://' + mockHost)
     .get(mockPath)
     .replyWithError(err);
@@ -346,6 +346,8 @@ describe('HttpClient', () => {
     mockedRequests.push(scope);
     const client = new HttpClient();
     const httpAgent = new Agent();
+
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const https = require('https');
     transportSpy = sinon.spy(https, 'request');
     return client.send({
@@ -378,9 +380,9 @@ describe('HttpClient', () => {
         'My-Custom-Header': 'CustomValue',
       },
     }).post(mockPath, reqData)
-    .reply(200, respData, {
-      'content-type': 'application/json',
-    });
+      .reply(200, respData, {
+        'content-type': 'application/json',
+      });
     mockedRequests.push(scope);
     const client = new HttpClient();
     return client.send({
@@ -409,9 +411,9 @@ describe('HttpClient', () => {
         },
       },
     }).post(mockPath, reqData)
-    .reply(200, respData, {
-      'content-type': 'application/json',
-    });
+      .reply(200, respData, {
+        'content-type': 'application/json',
+      });
     mockedRequests.push(scope);
     const client = new HttpClient();
     return client.send({
@@ -440,9 +442,9 @@ describe('HttpClient', () => {
         'My-Custom-Header': 'CustomValue',
       },
     }).post(mockPath, reqData)
-    .reply(200, {success: true}, {
-      'content-type': 'application/json',
-    });
+      .reply(200, {success: true}, {
+        'content-type': 'application/json',
+      });
     mockedRequests.push(scope);
     const client = new HttpClient();
     const request: HttpRequestConfig = {
@@ -470,10 +472,10 @@ describe('HttpClient', () => {
         'My-Custom-Header': 'CustomValue',
       },
     }).get(mockPath)
-    .query(reqData)
-    .reply(200, respData, {
-      'content-type': 'application/json',
-    });
+      .query(reqData)
+      .reply(200, respData, {
+        'content-type': 'application/json',
+      });
     mockedRequests.push(scope);
     const client = new HttpClient();
     return client.send({
@@ -558,10 +560,10 @@ describe('HttpClient', () => {
         'My-Custom-Header': 'CustomValue',
       },
     }).head(mockPath)
-    .query(reqData)
-    .reply(200, respData, {
-      'content-type': 'application/json',
-    });
+      .query(reqData)
+      .reply(200, respData, {
+        'content-type': 'application/json',
+      });
     mockedRequests.push(scope);
     const client = new HttpClient();
     return client.send({
@@ -1224,6 +1226,8 @@ describe('AuthorizedHttpClient', () => {
     beforeEach(() => {
       const options = mockApp.options;
       options.httpAgent = new Agent();
+
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const https = require('https');
       transportSpy = sinon.spy(https, 'request');
       mockAppWithAgent = mocks.appWithOptions(options);
@@ -1402,8 +1406,8 @@ describe('ApiSettings', () => {
     describe('with set properties', () => {
       const apiSettings: ApiSettings = new ApiSettings('getAccountInfo', 'GET');
       // Set all apiSettings properties.
-      const requestValidator: ApiCallbackFunction = (request) => undefined;
-      const responseValidator: ApiCallbackFunction = (response) => undefined;
+      const requestValidator: ApiCallbackFunction = () => undefined;
+      const responseValidator: ApiCallbackFunction = () => undefined;
       apiSettings.setRequestValidator(requestValidator);
       apiSettings.setResponseValidator(responseValidator);
       it('should return the correct requestValidator', () => {
