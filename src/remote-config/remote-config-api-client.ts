@@ -21,7 +21,8 @@ import { FirebaseApp } from '../firebase-app';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 
-const REMOTE_CONFIG_V1_API = 'https://firebaseremoteconfig.googleapis.com/v1';
+// Remote Config backend constants
+const FIREBASE_REMOTE_CONFIG_V1_API = 'https://firebaseremoteconfig.googleapis.com/v1';
 const FIREBASE_REMOTE_CONFIG_HEADERS = {
   'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
   // There is a known issue in which the ETag is not properly returned in cases where the request
@@ -128,7 +129,7 @@ export class RemoteConfigApiClient {
   private getUrl(): Promise<string> {
     return this.getProjectIdPrefix()
       .then((projectIdPrefix) => {
-        return `${REMOTE_CONFIG_V1_API}/${projectIdPrefix}`;
+        return `${FIREBASE_REMOTE_CONFIG_V1_API}/${projectIdPrefix}`;
       });
   }
 
