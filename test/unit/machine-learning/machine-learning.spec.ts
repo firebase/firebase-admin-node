@@ -33,7 +33,7 @@ describe('MachineLearning', () => {
 
   const MODEL_ID = '1234567';
   const MODEL_ID3 = '3456789';
-  const AUTOML_MODEL_ID = 'automlModelId123';
+  const AUTOML_MODEL_NAME = 'automlModelName123';
   const EXPECTED_ERROR = new FirebaseMachineLearningError('internal-error', 'message');
   const CREATE_TIME_UTC = 'Fri, 07 Feb 2020 23:45:23 GMT';
   const UPDATE_TIME_UTC = 'Sat, 08 Feb 2020 23:45:23 GMT';
@@ -126,7 +126,7 @@ describe('MachineLearning', () => {
       published?: boolean;
     };
     tfliteModel?: {
-      automlModelId?: string;
+      automlModelName?: string;
       sizeBytes: number;
     };
   } = {
@@ -139,7 +139,7 @@ describe('MachineLearning', () => {
     tags: ['tag_3', 'tag_4'],
     state: {published: false},
     tfliteModel: {
-      automlModelId: 'automlModelId123',
+      automlModelName: 'automlModelName123',
       sizeBytes: 33300333,
     },
   };
@@ -202,7 +202,7 @@ describe('MachineLearning', () => {
         published?: boolean;
       };
       tfliteModel?: {
-        automlModelId?: string;
+        automlModelName?: string;
         sizeBytes: number;
       };
     }
@@ -308,7 +308,7 @@ describe('MachineLearning', () => {
       expect(model.modelHash).to.equal('modelHash123');
 
       const tflite = model.tfliteModel!;
-      expect(tflite.automlModelId).not.to.exist;
+      expect(tflite.automlModelName).not.to.exist;
       expect(tflite.gcsTfliteUri).to.be.equal(
         'gs://test-project-bucket/Firebase/ML/Models/model1.tflite');
       expect(tflite.sizeBytes).to.be.equal(16900988);
@@ -328,7 +328,7 @@ describe('MachineLearning', () => {
 
       const tflite = model.tfliteModel!;
       expect(tflite.gcsTfliteUri).not.to.exist;
-      expect(tflite.automlModelId).to.be.equal('automlModelId123');
+      expect(tflite.automlModelName).to.be.equal('automlModelName123');
       expect(tflite.sizeBytes).to.be.equal(33300333);
     });
   });
@@ -533,7 +533,7 @@ describe('MachineLearning', () => {
       displayName: 'display_name_3',
       tags: ['tag5', 'tag6'],
       tfliteModel: {
-        automlModelId: AUTOML_MODEL_ID,
+        automlModelName: AUTOML_MODEL_NAME,
       },
     };
 
@@ -681,7 +681,7 @@ describe('MachineLearning', () => {
       displayName: 'display_name_3',
       tags: ['tag5', 'tag6'],
       tfliteModel: {
-        automlModelId: AUTOML_MODEL_ID,
+        automlModelName: AUTOML_MODEL_NAME,
       },
     };
 

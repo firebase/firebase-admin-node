@@ -32,21 +32,30 @@ export interface StatusErrorResponse {
 }
 
 /**
- * A Firebase ML Model input object
+ * Firebase ML Model input objects
  */
-export interface ModelOptions {
+export interface ModelOptionsBase {
   displayName?: string;
   tags?: string[];
-
-  tfliteModel?: {
-    gcsTfliteUri?: string;
-    automlModelId?: string;
+}
+export interface GcsTfliteModelOptions extends ModelOptionsBase {
+  tfliteModel: {
+    gcsTfliteUri: string;
   };
 }
-
-export interface ModelUpdateOptions extends ModelOptions {
-  state?: { published?: boolean; };
+export interface AutoMLTfliteModelOptions extends ModelOptionsBase {
+  tfliteModel: {
+    automlModelName: string;
+  };
 }
+export type ModelOptions = ModelOptionsBase | GcsTfliteModelOptions | AutoMLTfliteModelOptions;
+export type ModelUpdateOptions = ModelOptions & {state?: { published?: boolean; }};
+
+export function isGcsTfliteModelOptions(options: ModelOptions): options is GcsTfliteModelOptions {
+  return (options as GcsTfliteModelOptions).tfliteModel !== undefined &&
+         (options as GcsTfliteModelOptions).tfliteModel.gcsTfliteUri !== undefined;
+}
+
 
 /** Interface representing listModels options. */
 export interface ListModelsOptions {
@@ -64,7 +73,7 @@ export interface ModelContent {
   };
   readonly tfliteModel?: {
     readonly gcsTfliteUri?: string;
-    readonly automlModelId?: string;
+    readonly automlModelName?: string;
 
     readonly sizeBytes: number;
   };
@@ -117,14 +126,7 @@ export class MachineLearningApiClient {
       const err = new FirebaseMachineLearningError('invalid-argument', 'Invalid model content.');
       return Promise.reject(err);
     }
-    if (validator.isNonNullObject(model.tfliteModel) &&
-        validator.isNonEmptyString(model.tfliteModel.gcsTfliteUri) &&
-        validator.isNonEmptyString(model.tfliteModel.automlModelId)) {
-          const err = new FirebaseMachineLearningError(
-            'invalid-argument',
-            'A maximum of one source may be specified for a TFLite Model.');
-          return Promise.reject(err);
-    }
+
     return this.getUrl()
         .then((url) => {
           const request: HttpRequestConfig = {

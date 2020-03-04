@@ -5205,38 +5205,33 @@ declare namespace admin.messaging {
 
 declare namespace admin.machineLearning {
   /**
-   * Interface representing options for listing Models.
+   * Firebase ML Model input objects
    */
-  interface ListModelsOptions {
-    filter?: string;
-    pageSize?: number;
-    pageToken?: string;
+  interface ModelOptionsBase {
+    displayName?: string;
+    tags?: string[];
   }
-
-  /** Response object for a listModels operation. */
-  interface ListModelsResult {
-    readonly models: Model[];
-    readonly pageToken?: string;
+  interface GcsTfliteModelOptions extends ModelOptionsBase {
+    tfliteModel: {
+      gcsTfliteUri: string;
+    }
   }
+  interface AutoMLTfliteModelOptions extends ModelOptionsBase {
+    tfliteModel: {
+      automlModelName: string;
+    }
+  }
+  type ModelOptions = ModelOptionsBase | GcsTfliteModelOptions | AutoMLTfliteModelOptions;
 
   /**
    * A TFLite Model output object
    */
-  interface TFLiteModel {
+  interface TfliteModel {
     readonly sizeBytes: number;
 
+    // One of these two will be specified
     readonly gcsTfliteUri?: string;
-    readonly automlModelId?: string;
-  }
-
-  /**
-   * A Firebase ML Model input object
-   */
-  interface ModelOptions {
-    displayName?: string;
-    tags?: string[];
-
-    tfliteModel?: {gcsTfliteUri: string;};
+    readonly automlModelName?: string;
   }
 
   /**
@@ -5255,7 +5250,22 @@ declare namespace admin.machineLearning {
     readonly locked: boolean;
     waitForUnlocked(maxTimeSeconds?: number): Promise<void>;
 
-    readonly tfliteModel?: TFLiteModel;
+    readonly tfliteModel?: TfliteModel;
+  }
+
+  /**
+   * Interface representing options for listing Models.
+   */
+  interface ListModelsOptions {
+    filter?: string;
+    pageSize?: number;
+    pageToken?: string;
+  }
+
+  /** Response object for a listModels operation. */
+  interface ListModelsResult {
+    readonly models: Model[];
+    readonly pageToken?: string;
   }
 
   /**

@@ -17,7 +17,7 @@
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
 import {MachineLearningApiClient, ModelResponse, OperationResponse,
-  ModelOptions, ModelUpdateOptions, ListModelsOptions} from './machine-learning-api-client';
+  ModelOptions, ModelUpdateOptions, ListModelsOptions, isGcsTfliteModelOptions} from './machine-learning-api-client';
 import {FirebaseError} from '../utils/error';
 
 import * as validator from '../utils/validator';
@@ -192,10 +192,10 @@ export class MachineLearning implements FirebaseServiceInterface {
 
   private signUrlIfPresent(options: ModelOptions): Promise<ModelOptions> {
     const modelOptions = deepCopy(options);
-    if (modelOptions.tfliteModel?.gcsTfliteUri) {
+    if (isGcsTfliteModelOptions(modelOptions)) {
       return this.signUrl(modelOptions.tfliteModel.gcsTfliteUri)
         .then ((uri: string) => {
-          modelOptions.tfliteModel!.gcsTfliteUri = uri;
+          modelOptions.tfliteModel.gcsTfliteUri = uri;
           return modelOptions;
         })
         .catch((err: Error) => {
@@ -244,7 +244,7 @@ export class Model {
   public readonly etag: string;
   public readonly modelHash?: string;
 
-  public readonly tfliteModel?: TFLiteModel;
+  public readonly tfliteModel?: TfliteModel;
 
   constructor(model: ModelResponse) {
     if (!validator.isNonNullObject(model) ||
@@ -273,9 +273,9 @@ export class Model {
     }
     if (model.tfliteModel) {
       // If tflite Model is specified, it must have a source consisting of
-      // oneof {gcsTfliteUri, automlModelId}
+      // oneof {gcsTfliteUri, automlModelName}
       if (!validator.isNonEmptyString(model.tfliteModel.gcsTfliteUri) &&
-          !validator.isNonEmptyString(model.tfliteModel.automlModelId)) {
+          !validator.isNonEmptyString(model.tfliteModel.automlModelName)) {
             throw new FirebaseMachineLearningError(
               'invalid-server-response',
               `Invalid Model response: ${JSON.stringify(model)}`);
@@ -300,12 +300,12 @@ export class Model {
 /**
  * A TFLite Model output object
  */
-export interface TFLiteModel {
+export interface TfliteModel {
   readonly sizeBytes: number;
 
   // Oneof these two
   readonly gcsTfliteUri?: string;
-  readonly automlModelId?: string;
+  readonly automlModelName?: string;
 }
 
 function extractModelId(resourceName: string): string {
