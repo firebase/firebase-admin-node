@@ -1041,7 +1041,7 @@ export abstract class AbstractAuthRequestHandler {
     const request: any = {
       localId: uid,
       // validSince is in UTC seconds.
-      validSince: Math.ceil(new Date().getTime() / 1000),
+      validSince: Math.floor(new Date().getTime() / 1000),
     };
     return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_SET_ACCOUNT_INFO, request)
       .then((response: any) => {

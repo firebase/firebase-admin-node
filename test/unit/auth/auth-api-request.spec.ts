@@ -1955,8 +1955,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       it('should be fulfilled given a valid uid', () => {
         const requestData = {
           localId: uid,
-          // Current time should be passed, rounded up.
-          validSince: Math.ceil((now.getTime() + 5000) / 1000),
+          // Current time should be passed, rounded down.
+          validSince: Math.floor((now.getTime() + 5000) / 1000),
         };
         const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
         stubs.push(stub);
@@ -1995,7 +1995,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         });
         const requestData = {
           localId: uid,
-          validSince: Math.ceil((now.getTime() + 5000) / 1000),
+          validSince: Math.floor((now.getTime() + 5000) / 1000),
         };
         const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedServerError);
         stubs.push(stub);
