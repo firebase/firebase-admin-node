@@ -54,13 +54,6 @@ describe('RemoteConfig', () => {
         description: 'this is a promo',
       },
     },
-    version: {
-      versionNumber: '5',
-      updateTime: '2020-02-26T20:33:43.300Z',
-      updateUser: { email: 'user@user.com' },
-      updateOrigin: 'CONSOLE',
-      updateType: 'INCREMENTAL_UPDATE',
-    },
     eTag: 'etag-123456789012-5',
   };
 
@@ -212,14 +205,8 @@ describe('RemoteConfig', () => {
           expect(p1.conditionalValues).deep.equals({ ios: { useInAppDefault: true } });
           expect(p1.description).equals('this is a promo');
 
-          const p2 = template.getParameter(key);
-          if (p2) {
-            expect(p2.defaultValue).deep.equals({ value: 'true' });
-            expect(p2.conditionalValues).deep.equals({ ios: { useInAppDefault: true } });
-            expect(p2.description).equals('this is a promo');
-          }
-
           const c = template.getCondition('ios');
+          expect(c).to.be.not.undefined;
           if (c) {
             expect(c.name).to.equal('ios');
             expect(c.expression).to.equal('device.os == \'ios\'');

@@ -21,7 +21,7 @@ import { FirebaseApp } from '../firebase-app';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 
-const REMOTECONFIG_V1_API = 'https://firebaseremoteconfig.googleapis.com/v1';
+const REMOTE_CONFIG_V1_API = 'https://firebaseremoteconfig.googleapis.com/v1';
 const FIREBASE_REMOTE_CONFIG_HEADERS = {
   'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
   // There is a known issue in which the ETag is not properly returned in cases where the request
@@ -32,7 +32,7 @@ const FIREBASE_REMOTE_CONFIG_HEADERS = {
 };
 
 enum ConditionDisplayColor {
-  CONDITION_DISPLAY_COLOR_UNSPECIFIED = "Unspecified",
+  UNSPECIFIED = "Unspecified",
   BLUE = "Blue",
   BROWN = "Brown",
   CYAN = "Cyan",
@@ -46,22 +46,17 @@ enum ConditionDisplayColor {
   TEAL = "Teal",
 }
 
-interface Version {
-  readonly versionNumber: string;
-  readonly updateTime: string;
-  readonly updateUser: { readonly name?: string; readonly email?: string; readonly imageUrl?: string };
-  readonly updateOrigin: string;
-  readonly updateType: string;
-  readonly description?: string;
-  readonly rollbackSource?: string;
-  readonly isLegacy?: boolean;
+/** Interface representing a Remote Config parameter `value` in value options. */
+export interface ExplicitParameterValue {
+  readonly value: string;
 }
 
-/** Interface representing a Remote Config parameter value. */
-export interface RemoteConfigParameterValue {
-  readonly value?: string;
-  readonly useInAppDefault?: boolean;
+/** Interface representing a Remote Config parameter `useInAppDefault` in value options. */
+export interface InAppDefaultValue {
+  readonly useInAppDefault: boolean;
 }
+
+export type RemoteConfigParameterValue = ExplicitParameterValue | InAppDefaultValue;
 
 /** Interface representing a Remote Config parameter. */
 export interface RemoteConfigParameter {
@@ -79,7 +74,6 @@ interface RemoteConfigCondition {
 export interface RemoteConfigResponse {
   readonly conditions?: RemoteConfigCondition[];
   readonly parameters?: { [key: string]: RemoteConfigParameter };
-  readonly version?: Version; //only undefined when there is no active template in the project
   readonly eTag: string;
 }
 
@@ -117,11 +111,13 @@ export class RemoteConfigApiClient {
         if (!Object.prototype.hasOwnProperty.call(resp.headers, 'etag')) {
           throw new FirebaseRemoteConfigError(
             'invalid-argument',
-            'ETag is unavailable');
+            'ETag header is not present in the server response.');
         }
-        const remoteConfigResponse = resp.data as RemoteConfigResponse;
-        // Include the eTag in RemoteConfigResponse
-        (remoteConfigResponse as any).eTag = resp.headers['etag'];
+        const remoteConfigResponse: RemoteConfigResponse = {
+          conditions: resp.data.conditions,
+          parameters: resp.data.parameters,
+          eTag: resp.headers['etag'],
+        }
         return remoteConfigResponse;
       })
       .catch((err) => {
@@ -132,7 +128,7 @@ export class RemoteConfigApiClient {
   private getUrl(): Promise<string> {
     return this.getProjectIdPrefix()
       .then((projectIdPrefix) => {
-        return `${REMOTECONFIG_V1_API}/${projectIdPrefix}`;
+        return `${REMOTE_CONFIG_V1_API}/${projectIdPrefix}`;
       });
   }
 
@@ -145,7 +141,7 @@ export class RemoteConfigApiClient {
       .then((projectId) => {
         if (!validator.isNonEmptyString(projectId)) {
           throw new FirebaseRemoteConfigError(
-            'invalid-argument',
+            'unknown-error',
             'Failed to determine project ID. Initialize the SDK with service account credentials, or '
             + 'set project ID as an app option. Alternatively, set the GOOGLE_CLOUD_PROJECT '
             + 'environment variable.');

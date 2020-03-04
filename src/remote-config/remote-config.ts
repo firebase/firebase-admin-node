@@ -111,7 +111,11 @@ export class RemoteConfigTemplate {
           'invalid-argument',
           `Remote Config conditions must be an array`);
       }
-      this.conditions = this.parseConditions(config.conditions);
+      this.conditions = config.conditions.map(p => ({
+        name: p.name,
+        expression: p.expression,
+        color: p.tagColor
+      }));
     }
   }
 
@@ -122,17 +126,6 @@ export class RemoteConfigTemplate {
    */
   get eTag(): string {
     return this.eTagInternal;
-  }
-
-  /**
-   * Find an existing Remote Config parameter by key.
-   *
-   * @param {string} key The key of the Remote Config parameter.
-   *
-   * @return {RemoteConfigParameter} The Remote Config parameter with the provided key.
-   */
-  public getParameter(key: string): RemoteConfigParameter | undefined {
-    return this.parameters[key];
   }
 
   /**
@@ -153,13 +146,5 @@ export class RemoteConfigTemplate {
       conditions: this.conditions,
       eTag: this.eTag,
     };
-  }
-
-  private parseConditions(conditions: any[]): RemoteConfigCondition[] {
-    return conditions.map(p => ({
-      name: p.name,
-      expression: p.expression,
-      color: p.tagColor
-    }));
   }
 }

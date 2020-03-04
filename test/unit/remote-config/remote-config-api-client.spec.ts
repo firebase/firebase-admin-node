@@ -72,13 +72,19 @@ describe('RemoteConfigApiClient', () => {
   });
 
   describe('Constructor', () => {
-    it('should throw when the app is null', () => {
+    it('should reject when the app is null', () => {
       expect(() => new RemoteConfigApiClient(null as unknown as FirebaseApp))
         .to.throw('First argument passed to admin.remoteConfig() must be a valid Firebase app instance.');
     });
   });
 
   describe('getTemplate', () => {
+    const testResponse = {
+      conditions: [{ name: 'ios', expression: 'exp' }],
+      parameters: { param: { defaultValue: { value: 'true' } } },
+      version: {},
+    };
+
     it(`should reject when project id is not available`, () => {
       return clientWithoutProjectId.getTemplate()
         .should.eventually.be.rejectedWith(noProjectId);
@@ -87,16 +93,13 @@ describe('RemoteConfigApiClient', () => {
     it('should resolve with the requested template on success', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .resolves(utils.responseFrom({
-          conditions: [{ name: 'ios', expression: 'exp' }],
-          parameters: { param: { defaultValue: { value: 'true' } } },
-          version: {},
-        }, 200, { etag: 'etag-123456789012-1' }));
+        .resolves(utils.responseFrom(testResponse, 200, { etag: 'etag-123456789012-1' }));
       stubs.push(stub);
       return apiClient.getTemplate()
         .then((resp) => {
-          expect(resp.conditions).to.deep.equal([{ name: 'ios', expression: 'exp' }]);
-          expect(resp.parameters).to.deep.equal({ param: { defaultValue: { value: 'true' } } });
+          expect(resp.conditions).to.deep.equal(testResponse.conditions);
+          expect(resp.parameters).to.deep.equal(testResponse.parameters);
+          expect(resp.eTag).to.equal('etag-123456789012-1');
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'GET',
             url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig',
@@ -105,19 +108,17 @@ describe('RemoteConfigApiClient', () => {
         });
     });
 
-    it('should throw when the etag does not present in the headers', () => {
+    it('should reject when the etag is not present', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .resolves(utils.responseFrom({
-          conditions: [], parameters: {}, version: {},
-        }));
+        .resolves(utils.responseFrom(testResponse));
       stubs.push(stub);
-      const expected = new FirebaseRemoteConfigError('invalid-argument', 'ETag is unavailable');
+      const expected = new FirebaseRemoteConfigError('invalid-argument', 'ETag header is not present in the server response.');
       return apiClient.getTemplate()
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
-    it('should throw when a full platform error response is received', () => {
+    it('should reject when a full platform error response is received', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
@@ -127,7 +128,7 @@ describe('RemoteConfigApiClient', () => {
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
-    it('should throw unknown-error when error code is not present', () => {
+    it('should reject unknown-error when error code is not present', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .rejects(utils.errorFrom({}, 404));
@@ -137,7 +138,7 @@ describe('RemoteConfigApiClient', () => {
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
-    it('should throw unknown-error for non-json response', () => {
+    it('should reject unknown-error for non-json response', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .rejects(utils.errorFrom('not json', 404));
@@ -148,7 +149,7 @@ describe('RemoteConfigApiClient', () => {
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
-    it('should throw when rejected with a FirebaseAppError', () => {
+    it('should reject when rejected with a FirebaseAppError', () => {
       const expected = new FirebaseAppError('network-error', 'socket hang up');
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
