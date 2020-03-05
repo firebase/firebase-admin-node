@@ -75,7 +75,7 @@ interface RemoteConfigCondition {
 export interface RemoteConfigResponse {
   readonly conditions?: RemoteConfigCondition[];
   readonly parameters?: { [key: string]: RemoteConfigParameter };
-  readonly eTag: string;
+  readonly etag: string;
 }
 
 /**
@@ -117,7 +117,7 @@ export class RemoteConfigApiClient {
         const remoteConfigResponse: RemoteConfigResponse = {
           conditions: resp.data.conditions,
           parameters: resp.data.parameters,
-          eTag: resp.headers['etag'],
+          etag: resp.headers['etag'],
         }
         return remoteConfigResponse;
       })

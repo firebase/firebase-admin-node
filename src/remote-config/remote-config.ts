@@ -82,11 +82,11 @@ export class RemoteConfigTemplate {
 
   public parameters: { [key: string]: RemoteConfigParameter };
   public conditions: RemoteConfigCondition[];
-  private readonly eTagInternal: string;
+  private readonly etagInternal: string;
 
   constructor(config: RemoteConfigResponse) {
     if (!validator.isNonNullObject(config) ||
-      !validator.isNonEmptyString(config.eTag)) {
+      !validator.isNonEmptyString(config.etag)) {
       throw new FirebaseRemoteConfigError(
         'invalid-argument',
         `Invalid Remote Config template response: ${JSON.stringify(config)}`);
@@ -94,7 +94,7 @@ export class RemoteConfigTemplate {
 
     this.parameters = {};
     this.conditions = [];
-    this.eTagInternal = config.eTag;
+    this.etagInternal = config.etag;
 
     if (typeof config.parameters !== 'undefined') {
       if (!validator.isNonNullObject(config.parameters)) {
@@ -124,8 +124,8 @@ export class RemoteConfigTemplate {
    *
    * @return {string} The ETag of the Remote Config template.
    */
-  get eTag(): string {
-    return this.eTagInternal;
+  get etag(): string {
+    return this.etagInternal;
   }
 
   /**
@@ -144,7 +144,7 @@ export class RemoteConfigTemplate {
     return {
       parameters: this.parameters,
       conditions: this.conditions,
-      eTag: this.eTag,
+      etag: this.etag,
     };
   }
 }

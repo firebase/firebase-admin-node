@@ -99,7 +99,7 @@ describe('RemoteConfigApiClient', () => {
         .then((resp) => {
           expect(resp.conditions).to.deep.equal(testResponse.conditions);
           expect(resp.parameters).to.deep.equal(testResponse.parameters);
-          expect(resp.eTag).to.equal('etag-123456789012-1');
+          expect(resp.etag).to.equal('etag-123456789012-1');
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'GET',
             url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig',

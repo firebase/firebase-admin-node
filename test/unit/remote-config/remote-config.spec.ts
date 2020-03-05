@@ -19,7 +19,7 @@
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
-import { RemoteConfig } from '../../../src/remote-config/remote-config';
+import { RemoteConfig, RemoteConfigCondition } from '../../../src/remote-config/remote-config';
 import { FirebaseApp } from '../../../src/firebase-app';
 import * as mocks from '../../resources/mocks';
 import { RemoteConfigApiClient } from '../../../src/remote-config/remote-config-api-client';
@@ -39,7 +39,7 @@ describe('RemoteConfig', () => {
     conditions?: Array<{ name: string; expression: string; tagColor: string }>;
     parameters?: object | null;
     version?: object;
-    eTag: string;
+    etag: string;
   } = {
     conditions: [{
       name: 'ios',
@@ -54,7 +54,7 @@ describe('RemoteConfig', () => {
         description: 'this is a promo',
       },
     },
-    eTag: 'etag-123456789012-5',
+    etag: 'etag-123456789012-5',
   };
 
   let remoteConfig: RemoteConfig;
@@ -149,7 +149,7 @@ describe('RemoteConfig', () => {
 
     it('should reject when API response does not contain an ETag', () => {
       const response = deepCopy(REMOTE_CONFIG_RESPONSE);
-      response.eTag = '';
+      response.etag = '';
       const stub = sinon
         .stub(RemoteConfigApiClient.prototype, 'getTemplate')
         .resolves(response);
@@ -197,7 +197,11 @@ describe('RemoteConfig', () => {
           // verify the property mapping in RemoteConfigCondition from `tagColor` to `color`
           expect(template.conditions[0].color).to.equal('BLUE');
 
-          expect(template.eTag).to.equal('etag-123456789012-5');
+          expect(template.etag).to.equal('etag-123456789012-5');
+          // verify that etag is read-only
+          expect(() => {
+            (template as any).etag = "new-etag";
+          }).to.throw('Cannot set property etag of #<RemoteConfigTemplate> which has only a getter');
 
           const key = 'holiday_promo_enabled';
           const p1 = template.parameters[key];
@@ -207,11 +211,10 @@ describe('RemoteConfig', () => {
 
           const c = template.getCondition('ios');
           expect(c).to.be.not.undefined;
-          if (c) {
-            expect(c.name).to.equal('ios');
-            expect(c.expression).to.equal('device.os == \'ios\'');
-            expect(c.color).to.equal('BLUE');
-          }
+          const cond = c as RemoteConfigCondition;
+          expect(cond.name).to.equal('ios');
+          expect(cond.expression).to.equal('device.os == \'ios\'');
+          expect(cond.color).to.equal('BLUE');
         });
     });
   });
