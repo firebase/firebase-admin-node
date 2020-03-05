@@ -24,11 +24,13 @@ import {
 export interface TenantOptions {
   displayName?: string;
   emailSignInConfig?: EmailSignInProviderConfig;
+  anonymousSignInEnabled?: boolean;
 }
 
 /** The corresponding server side representation of a TenantOptions object. */
 export interface TenantOptionsServerRequest extends EmailSignInConfigServerRequest {
   displayName?: string;
+  enableAnonymousUser?: boolean;
 }
 
 /** The tenant server response interface. */
@@ -37,6 +39,7 @@ export interface TenantServerResponse {
   displayName?: string;
   allowPasswordSignup?: boolean;
   enableEmailLinkSignin?: boolean;
+  enableAnonymousUser?: boolean;
 }
 
 /** The interface representing the listTenant API response. */
@@ -53,6 +56,7 @@ export class Tenant {
   public readonly tenantId: string;
   public readonly displayName?: string;
   public readonly emailSignInConfig?: EmailSignInConfig;
+  public readonly anonymousSignInEnabled?: boolean;
 
   /**
    * Builds the corresponding server request for a TenantOptions object.
@@ -70,6 +74,9 @@ export class Tenant {
     }
     if (typeof tenantOptions.displayName !== 'undefined') {
       request.displayName = tenantOptions.displayName;
+    }
+    if (typeof tenantOptions.anonymousSignInEnabled !== 'undefined') {
+      request.enableAnonymousUser = tenantOptions.anonymousSignInEnabled;
     }
     return request;
   }
@@ -99,6 +106,7 @@ export class Tenant {
     const validKeys = {
       displayName: true,
       emailSignInConfig: true,
+      anonymousSignInEnabled: true,
     };
     const label = createRequest ? 'CreateTenantRequest' : 'UpdateTenantRequest';
     if (!validator.isNonNullObject(request)) {
@@ -155,6 +163,7 @@ export class Tenant {
         allowPasswordSignup: false,
       });
     }
+    this.anonymousSignInEnabled = !!response.enableAnonymousUser;
   }
 
   /** @return {object} The plain object representation of the tenant. */
@@ -163,6 +172,7 @@ export class Tenant {
       tenantId: this.tenantId,
       displayName: this.displayName,
       emailSignInConfig: this.emailSignInConfig && this.emailSignInConfig.toJSON(),
+      anonymousSignInEnabled: this.anonymousSignInEnabled,
     };
   }
 }

@@ -1151,6 +1151,11 @@ declare namespace admin.auth {
     };
 
     /**
+     * Whether anonymous provider is enabled.
+     */
+    anonymousSignInEnabled?: boolean;
+
+    /**
      * @return A JSON-serializable representation of this object.
      */
     toJSON(): Object;
@@ -1182,6 +1187,11 @@ declare namespace admin.auth {
        */
       passwordRequired?: boolean;
     };
+
+    /**
+     * Whether anonymous provider is enabled.
+     */
+    anonymousSignInEnabled?: boolean;
   }
 
   /**

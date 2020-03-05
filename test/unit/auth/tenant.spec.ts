@@ -233,6 +233,7 @@ describe('Tenant', () => {
           enabled: true,
           passwordRequired: false,
         },
+        anonymousSignInEnabled: false,
       });
     });
   });

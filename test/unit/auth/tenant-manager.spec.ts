@@ -47,6 +47,7 @@ describe('TenantManager', () => {
     displayName: 'TENANT-DISPLAY-NAME',
     allowPasswordSignup: true,
     enableEmailLinkSignin: false,
+    enableAnonymousUser: true,
   };
 
   before(() => {
@@ -383,6 +384,7 @@ describe('TenantManager', () => {
         enabled: true,
         passwordRequired: true,
       },
+      anonymousSignInEnabled: true,
     };
     const expectedTenant = new Tenant(GET_TENANT_RESPONSE);
     const expectedError = new FirebaseAuthError(
@@ -475,6 +477,7 @@ describe('TenantManager', () => {
         enabled: true,
         passwordRequired: true,
       },
+      anonymousSignInEnabled: true,
     };
     const expectedTenant = new Tenant(GET_TENANT_RESPONSE);
     const expectedError = new FirebaseAuthError(
