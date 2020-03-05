@@ -92,8 +92,6 @@ export class RemoteConfigTemplate {
         `Invalid Remote Config template response: ${JSON.stringify(config)}`);
     }
 
-    this.parameters = {};
-    this.conditions = [];
     this.etagInternal = config.etag;
 
     if (typeof config.parameters !== 'undefined') {
@@ -103,6 +101,8 @@ export class RemoteConfigTemplate {
           `Remote Config parameters must be a non-null object`);
       }
       this.parameters = config.parameters;
+    } else {
+      this.parameters = {};
     }
 
     if (typeof config.conditions !== 'undefined') {
@@ -116,6 +116,8 @@ export class RemoteConfigTemplate {
         expression: p.expression,
         color: p.tagColor
       }));
+    } else {
+      this.conditions = [];
     }
   }
 
