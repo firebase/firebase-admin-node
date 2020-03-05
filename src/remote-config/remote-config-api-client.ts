@@ -114,12 +114,11 @@ export class RemoteConfigApiClient {
             'invalid-argument',
             'ETag header is not present in the server response.');
         }
-        const remoteConfigResponse: RemoteConfigResponse = {
+        return {
           conditions: resp.data.conditions,
           parameters: resp.data.parameters,
           etag: resp.headers['etag'],
-        }
-        return remoteConfigResponse;
+        };
       })
       .catch((err) => {
         throw this.toFirebaseError(err);
