@@ -16,17 +16,13 @@
 
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { FirebaseApp } from '../firebase-app';
-
-/** Interface representing a Remote Config parameter. */
-export interface RemoteConfigParameter {
-  key: string;
-  defaultValue?: string; // If `undefined`, the parameter uses the in-app default value
-  description?: string;
-
-  // A dictionary of {conditionName: value}
-  // `undefined` value sets `useInAppDefault` to `true` (equivalent to `No Value`)
-  conditionalValues?: { [name: string]: string | undefined };
-}
+import * as validator from '../utils/validator';
+import { FirebaseRemoteConfigError } from './remote-config-utils';
+import {
+  RemoteConfigApiClient,
+  RemoteConfigResponse,
+  RemoteConfigParameter
+} from './remote-config-api-client';
 
 /** Interface representing a Remote Config condition. */
 export interface RemoteConfigCondition {
@@ -56,11 +52,27 @@ class RemoteConfigInternals implements FirebaseServiceInternalsInterface {
 export class RemoteConfig implements FirebaseServiceInterface {
   public readonly INTERNAL: RemoteConfigInternals = new RemoteConfigInternals();
 
+  private readonly client: RemoteConfigApiClient;
+
   /**
    * @param {FirebaseApp} app The app for this RemoteConfig service.
    * @constructor
    */
-  constructor(readonly app: FirebaseApp) { }
+  constructor(readonly app: FirebaseApp) {
+    this.client = new RemoteConfigApiClient(app);
+  }
+
+  /**
+  * Gets the current active version of the Remote Config template of the project.
+  *
+  * @return {Promise<RemoteConfigTemplate>} A Promise that fulfills when the template is available.
+  */
+  public getTemplate(): Promise<RemoteConfigTemplate> {
+    return this.client.getTemplate()
+      .then((templateResponse) => {
+        return new RemoteConfigTemplate(templateResponse);
+      });
+  }
 }
 
 /**
@@ -68,28 +80,54 @@ export class RemoteConfig implements FirebaseServiceInterface {
  */
 export class RemoteConfigTemplate {
 
-  public parameters: RemoteConfigParameter[];
+  public parameters: { [key: string]: RemoteConfigParameter };
   public conditions: RemoteConfigCondition[];
-  private readonly eTagInternal: string;
+  private readonly etagInternal: string;
+
+  constructor(config: RemoteConfigResponse) {
+    if (!validator.isNonNullObject(config) ||
+      !validator.isNonEmptyString(config.etag)) {
+      throw new FirebaseRemoteConfigError(
+        'invalid-argument',
+        `Invalid Remote Config template response: ${JSON.stringify(config)}`);
+    }
+
+    this.etagInternal = config.etag;
+
+    if (typeof config.parameters !== 'undefined') {
+      if (!validator.isNonNullObject(config.parameters)) {
+        throw new FirebaseRemoteConfigError(
+          'invalid-argument',
+          `Remote Config parameters must be a non-null object`);
+      }
+      this.parameters = config.parameters;
+    } else {
+      this.parameters = {};
+    }
+
+    if (typeof config.conditions !== 'undefined') {
+      if (!validator.isArray(config.conditions)) {
+        throw new FirebaseRemoteConfigError(
+          'invalid-argument',
+          `Remote Config conditions must be an array`);
+      }
+      this.conditions = config.conditions.map(p => ({
+        name: p.name,
+        expression: p.expression,
+        color: p.tagColor
+      }));
+    } else {
+      this.conditions = [];
+    }
+  }
 
   /**
    * Gets the ETag of the template.
    *
    * @return {string} The ETag of the Remote Config template.
    */
-  get eTag(): string {
-    return this.eTagInternal;
-  }
-
-  /**
-   * Find an existing Remote Config parameter by key.
-   *
-   * @param {string} key The key of the Remote Config parameter.
-   *
-   * @return {RemoteConfigParameter} The Remote Config parameter with the provided key.
-   */
-  public getParameter(key: string): RemoteConfigParameter | undefined {
-    return this.parameters.find((p) => p.key === key);
+  get etag(): string {
+    return this.etagInternal;
   }
 
   /**
@@ -108,7 +146,7 @@ export class RemoteConfigTemplate {
     return {
       parameters: this.parameters,
       conditions: this.conditions,
-      eTag: this.eTag,
+      etag: this.etag,
     };
   }
 }
