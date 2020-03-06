@@ -66,8 +66,8 @@ export interface CreateRequest extends UpdateRequest {
  * @constructor
  */
 export class UserMetadata {
-  public readonly creationTime?: string | null;
-  public readonly lastSignInTime?: string | null;
+  public readonly creationTime: string | null;
+  public readonly lastSignInTime: string | null;
 
   constructor(response: any) {
     // Creation date should always be available but due to some backend bugs there

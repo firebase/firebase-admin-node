@@ -491,12 +491,12 @@ declare namespace admin.auth {
     /**
      * The date the user last signed in, formatted as a UTC string.
      */
-    lastSignInTime?: string | null;
+    lastSignInTime: string | null;
 
     /**
      * The date the user was created, formatted as a UTC string.
      */
-    creationTime?: string | null;
+    creationTime: string | null;
 
     /**
      * @return A JSON-serializable representation of this object.
