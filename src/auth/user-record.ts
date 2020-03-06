@@ -66,16 +66,19 @@ export interface CreateRequest extends UpdateRequest {
  * @constructor
  */
 export class UserMetadata {
-  public readonly creationTime: string;
-  public readonly lastSignInTime: string;
+  public readonly creationTime?: string | null;
+  public readonly lastSignInTime?: string | null;
 
   constructor(response: any) {
     // Creation date should always be available but due to some backend bugs there
     // were cases in the past where users did not have creation date properly set.
     // This included legacy Firebase migrating project users and some anonymous users.
     // These bugs have already been addressed since then.
-    utils.addReadonlyGetter(this, 'creationTime', parseDate(response.createdAt));
-    utils.addReadonlyGetter(this, 'lastSignInTime', parseDate(response.lastLoginAt));
+    this.creationTime = parseDate(response.createdAt);
+    utils.enforceReadonly(this, 'creationTime');
+
+    this.lastSignInTime = parseDate(response.lastLoginAt);
+    utils.enforceReadonly(this, 'lastSignInTime');
   }
 
   /** @return {object} The plain object representation of the user's metadata. */
