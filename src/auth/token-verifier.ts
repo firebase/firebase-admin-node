@@ -214,7 +214,7 @@ export class FirebaseTokenVerifier {
     }
 
     return this.fetchPublicKeys().then((publicKeys) => {
-      if (!publicKeys.hasOwnProperty(header.kid)) {
+      if (!Object.prototype.hasOwnProperty.call(publicKeys, header.kid)) {
         return Promise.reject(
           new FirebaseAuthError(
             AuthClientErrorCode.INVALID_ARGUMENT,
@@ -261,8 +261,8 @@ export class FirebaseTokenVerifier {
           // is actually correct.
           if (typeof decodedToken === 'string') {
             return reject(new FirebaseAuthError(
-                AuthClientErrorCode.INTERNAL_ERROR,
-                "Unexpected decodedToken. Expected an object but got a string: '" + decodedToken + "'",
+              AuthClientErrorCode.INTERNAL_ERROR,
+              "Unexpected decodedToken. Expected an object but got a string: '" + decodedToken + "'",
             ));
           } else {
             const decodedIdToken = (decodedToken as DecodedIdToken);
@@ -299,7 +299,7 @@ export class FirebaseTokenVerifier {
         // error responses.
         throw new HttpError(resp);
       }
-      if (resp.headers.hasOwnProperty('cache-control')) {
+      if (Object.prototype.hasOwnProperty.call(resp.headers, 'cache-control')) {
         const cacheControlHeader: string = resp.headers['cache-control'];
         const parts = cacheControlHeader.split(',');
         parts.forEach((part) => {

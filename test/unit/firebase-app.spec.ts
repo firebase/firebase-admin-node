@@ -25,7 +25,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from './utils';
 import * as mocks from '../resources/mocks';
 
-import {ApplicationDefaultCredential, CertCredential, GoogleOAuthAccessToken} from '../../src/auth/credential';
+import {GoogleOAuthAccessToken, ServiceAccountCredential} from '../../src/auth/credential';
 import {FirebaseServiceInterface} from '../../src/firebase-service';
 import {FirebaseApp, FirebaseAccessToken} from '../../src/firebase-app';
 import {FirebaseNamespace, FirebaseNamespaceInternals, FIREBASE_CONFIG_VAR} from '../../src/firebase-namespace';
@@ -69,9 +69,9 @@ describe('FirebaseApp', () => {
   let firebaseConfigVar: string | undefined;
 
   beforeEach(() => {
-    getTokenStub = sinon.stub(CertCredential.prototype, 'getAccessToken').resolves({
-      access_token: 'mock-access-token',
-      expires_in: 3600,
+    getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken').resolves({
+      access_token: 'mock-access-token', // eslint-disable-line @typescript-eslint/camelcase
+      expires_in: 3600, // eslint-disable-line @typescript-eslint/camelcase
     });
 
     clock = sinon.useFakeTimers(1000);
@@ -243,7 +243,7 @@ describe('FirebaseApp', () => {
     it('should use explicitly specified options when available and ignore the config file', () => {
       process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config.json';
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-      expect(app.options.credential).to.be.instanceOf(CertCredential);
+      expect(app.options.credential).to.be.instanceOf(ServiceAccountCredential);
       expect(app.options.databaseAuthVariableOverride).to.be.undefined;
       expect(app.options.databaseURL).to.equal('https://databaseName.firebaseio.com');
       expect(app.options.projectId).to.be.undefined;
@@ -260,7 +260,7 @@ describe('FirebaseApp', () => {
 
     it('should not throw when the config environment variable is not set, and some options are present', () => {
       const app = firebaseNamespace.initializeApp(mocks.appOptionsNoDatabaseUrl, mocks.appName);
-      expect(app.options.credential).to.be.instanceOf(CertCredential);
+      expect(app.options.credential).to.be.instanceOf(ServiceAccountCredential);
       expect(app.options.databaseURL).to.be.undefined;
       expect(app.options.projectId).to.be.undefined;
       expect(app.options.storageBucket).to.be.undefined;
@@ -268,7 +268,7 @@ describe('FirebaseApp', () => {
 
     it('should init with application default creds when no options provided and env variable is not set', () => {
       const app = firebaseNamespace.initializeApp();
-      expect(app.options.credential).to.be.instanceOf(ApplicationDefaultCredential);
+      expect(app.options.credential).to.not.be.undefined;
       expect(app.options.databaseURL).to.be.undefined;
       expect(app.options.projectId).to.be.undefined;
       expect(app.options.storageBucket).to.be.undefined;
@@ -277,7 +277,7 @@ describe('FirebaseApp', () => {
     it('should init with application default creds when no options provided and env variable is an empty json', () => {
       process.env[FIREBASE_CONFIG_VAR] = '{}';
       const app = firebaseNamespace.initializeApp();
-      expect(app.options.credential).to.be.instanceOf(ApplicationDefaultCredential);
+      expect(app.options.credential).to.not.be.undefined;
       expect(app.options.databaseURL).to.be.undefined;
       expect(app.options.projectId).to.be.undefined;
       expect(app.options.storageBucket).to.be.undefined;
@@ -286,7 +286,7 @@ describe('FirebaseApp', () => {
     it('should init when no init arguments are provided and config var points to a file', () => {
       process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config.json';
       const app = firebaseNamespace.initializeApp();
-      expect(app.options.credential).to.be.instanceOf(ApplicationDefaultCredential);
+      expect(app.options.credential).to.not.be.undefined;
       expect(app.options.databaseAuthVariableOverride).to.deep.equal({ 'some#key': 'some#val' });
       expect(app.options.databaseURL).to.equal('https://hipster-chat.firebaseio.mock');
       expect(app.options.projectId).to.equal('hipster-chat-mock');
@@ -301,7 +301,7 @@ describe('FirebaseApp', () => {
         "storageBucket": "hipster-chat.appspot.mock"
       }`;
       const app = firebaseNamespace.initializeApp();
-      expect(app.options.credential).to.be.instanceOf(ApplicationDefaultCredential);
+      expect(app.options.credential).to.not.be.undefined;
       expect(app.options.databaseAuthVariableOverride).to.deep.equal({ 'some#key': 'some#val' });
       expect(app.options.databaseURL).to.equal('https://hipster-chat.firebaseio.mock');
       expect(app.options.projectId).to.equal('hipster-chat-mock');
@@ -667,8 +667,8 @@ describe('FirebaseApp', () => {
 
     it('returns a valid token given a well-formed custom credential implementation', () => {
       const oracle: GoogleOAuthAccessToken = {
-        access_token: 'This is a custom token',
-        expires_in: ONE_HOUR_IN_SECONDS,
+        access_token: 'This is a custom token', // eslint-disable-line @typescript-eslint/camelcase
+        expires_in: ONE_HOUR_IN_SECONDS, // eslint-disable-line @typescript-eslint/camelcase
       };
       const credential = {
         getAccessToken: () => Promise.resolve(oracle),
@@ -760,9 +760,9 @@ describe('FirebaseApp', () => {
 
         // Restore the stubbed getAccessToken() method.
         getTokenStub.restore();
-        getTokenStub = sinon.stub(CertCredential.prototype, 'getAccessToken').resolves({
-          access_token: 'mock-access-token',
-          expires_in: 3600,
+        getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken').resolves({
+          access_token: 'mock-access-token', // eslint-disable-line @typescript-eslint/camelcase
+          expires_in: 3600, // eslint-disable-line @typescript-eslint/camelcase
         });
 
         return mockApp.INTERNAL.getToken().then((token2) => {
@@ -877,7 +877,7 @@ describe('FirebaseApp', () => {
     it('resets the proactive refresh timeout upon a force refresh', () => {
       // Force a token refresh.
       return mockApp.INTERNAL.getToken(true).then((token1) => {
-         // Forward the clock to five minutes and one second before expiry.
+        // Forward the clock to five minutes and one second before expiry.
         let expiryInMilliseconds = token1.expirationTime - Date.now();
         clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS) - 1000);
 
@@ -914,8 +914,8 @@ describe('FirebaseApp', () => {
       getTokenStub.restore();
       expect(mockApp.options.credential).to.exist;
       getTokenStub = sinon.stub(mockApp.options.credential!, 'getAccessToken').resolves({
-        access_token: utils.generateRandomAccessToken(),
-        expires_in: 3 * 60 + 10,
+        access_token: utils.generateRandomAccessToken(), // eslint-disable-line @typescript-eslint/camelcase
+        expires_in: 3 * 60 + 10, // eslint-disable-line @typescript-eslint/camelcase
       });
       // Expect the call count to initially be zero.
       expect(getTokenStub.callCount).to.equal(0);
@@ -944,7 +944,7 @@ describe('FirebaseApp', () => {
       getTokenStub.restore();
       const mockError = new FirebaseAppError(
         AppErrorCodes.INVALID_CREDENTIAL, 'Something went wrong');
-      getTokenStub = sinon.stub(CertCredential.prototype, 'getAccessToken').rejects(mockError);
+      getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken').rejects(mockError);
       const detailedMessage = 'Credential implementation provided to initializeApp() via the "credential" property'
         + ' failed to fetch a valid Google OAuth2 access token with the following error: "Something went wrong".';
       expect(mockApp.INTERNAL.getToken(true)).to.be.rejectedWith(detailedMessage);
@@ -954,7 +954,7 @@ describe('FirebaseApp', () => {
       getTokenStub.restore();
       const mockError = new FirebaseAppError(
         AppErrorCodes.INVALID_CREDENTIAL, 'Failed to get credentials: invalid_grant (reason)');
-      getTokenStub = sinon.stub(CertCredential.prototype, 'getAccessToken').rejects(mockError);
+      getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken').rejects(mockError);
       const detailedMessage = 'Credential implementation provided to initializeApp() via the "credential" property'
         + ' failed to fetch a valid Google OAuth2 access token with the following error: "Failed to get credentials:'
         + ' invalid_grant (reason)". There are two likely causes: (1) your server time is not properly synced or (2)'

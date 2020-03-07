@@ -176,7 +176,7 @@ export abstract class MultiFactorInfo {
    *
    * @param response The server side response.
    */
-  private initFromServerResponse(response: AuthFactorInfo) {
+  private initFromServerResponse(response: AuthFactorInfo): void {
     const factorId = response && this.getFactorId(response);
     if (!factorId || !response || !response.mfaEnrollmentId) {
       throw new FirebaseAuthError(
@@ -192,7 +192,7 @@ export abstract class MultiFactorInfo {
     // This can be computed using Data.prototype.toISOString.
     if (response.enrolledAt) {
       utils.addReadonlyGetter(
-          this, 'enrollmentTime', new Date(response.enrolledAt).toUTCString());
+        this, 'enrollmentTime', new Date(response.enrolledAt).toUTCString());
     } else {
       utils.addReadonlyGetter(this, 'enrollmentTime', null);
     }
@@ -217,10 +217,10 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
   /** @return The plain object representation. */
   public toJSON(): any {
     return Object.assign(
-        super.toJSON(),
-        {
-          phoneNumber: this.phoneNumber,
-        });
+      super.toJSON(),
+      {
+        phoneNumber: this.phoneNumber,
+      });
   }
 
   /**
@@ -231,7 +231,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
    *     not associated with any known multi-factor ID, null is returned.
    */
   protected getFactorId(response: AuthFactorInfo): MultiFactorId | null {
-    return !!(response && response.phoneInfo) ? MultiFactorId.Phone : null;
+    return (response && response.phoneInfo) ? MultiFactorId.Phone : null;
   }
 }
 
@@ -261,7 +261,7 @@ export class MultiFactor {
     }
     // Make enrolled factors immutable.
     utils.addReadonlyGetter(
-        this, 'enrolledFactors', Object.freeze(parsedEnrolledFactors));
+      this, 'enrolledFactors', Object.freeze(parsedEnrolledFactors));
   }
 
   /** @return The plain object representation. */
@@ -446,8 +446,8 @@ export class UserRecord {
     }
     json.providerData = [];
     for (const entry of this.providerData) {
-       // Convert each provider data to json.
-       json.providerData.push(entry.toJSON());
+      // Convert each provider data to json.
+      json.providerData.push(entry.toJSON());
     }
     return json;
   }

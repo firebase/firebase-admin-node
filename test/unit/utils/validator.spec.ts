@@ -68,10 +68,12 @@ describe('isArray()', () => {
   });
 
   it('should return true given an empty array created from Array constructor', () => {
+    // eslint-disable-next-line @typescript-eslint/no-array-constructor
     expect(isArray(new Array())).to.be.true;
   });
 
   it('should return true given a non-empty array created from Array constructor', () => {
+    // eslint-disable-next-line @typescript-eslint/no-array-constructor
     expect(isArray(new Array(1, 2, 3))).to.be.true;
   });
 });
@@ -97,10 +99,12 @@ describe('isNonEmptyArray()', () => {
   });
 
   it('should return false given an empty array created from Array constructor', () => {
+    // eslint-disable-next-line @typescript-eslint/no-array-constructor
     expect(isNonEmptyArray(new Array())).to.be.false;
   });
 
   it('should return true given a non-empty array created from Array constructor', () => {
+    // eslint-disable-next-line @typescript-eslint/no-array-constructor
     expect(isNonEmptyArray(new Array(1, 2, 3))).to.be.true;
   });
 });

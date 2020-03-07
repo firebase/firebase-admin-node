@@ -93,13 +93,13 @@ describe('InstanceId', () => {
       }).to.throw('First argument passed to admin.instanceId() must be a valid Firebase app instance.');
     });
 
-    it('should throw given an invalid credential without project ID', () => {
+    it('should reject given an invalid credential without project ID', () => {
       // Project ID not set in the environment.
       delete process.env.GOOGLE_CLOUD_PROJECT;
       delete process.env.GCLOUD_PROJECT;
-      expect(() => {
-        return new InstanceId(mockCredentialApp);
-      }).to.throw(noProjectIdError);
+      const instanceId = new InstanceId(mockCredentialApp);
+      return instanceId.deleteInstanceId('iid')
+        .should.eventually.rejectedWith(noProjectIdError);
     });
 
     it('should not throw given a valid app', () => {
@@ -164,7 +164,7 @@ describe('InstanceId', () => {
         .returns(Promise.resolve(null));
       stubs.push(stub);
       return iid.deleteInstanceId(testInstanceId)
-        .then((result) => {
+        .then(() => {
           // Confirm underlying API called with expected parameters.
           expect(stub).to.have.been.calledOnce.and.calledWith(testInstanceId);
         });
@@ -176,7 +176,7 @@ describe('InstanceId', () => {
         .returns(Promise.reject(expectedError));
       stubs.push(stub);
       return iid.deleteInstanceId(testInstanceId)
-        .then((result) => {
+        .then(() => {
           throw new Error('Unexpected success');
         }, (error) => {
           // Confirm underlying API called with expected parameters.

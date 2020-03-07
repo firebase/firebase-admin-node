@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {ApplicationDefaultCredential, Credential, GoogleOAuthAccessToken} from './auth/credential';
+import {Credential, GoogleOAuthAccessToken, getApplicationDefault} from './auth/credential';
 import * as validator from './utils/validator';
 import {deepCopy, deepExtend} from './utils/deep-copy';
 import {FirebaseServiceInterface} from './firebase-service';
@@ -189,7 +189,7 @@ export class FirebaseAppInternals {
    *
    * @param {function(string)} listener The listener that will be called with each new token.
    */
-  public addAuthTokenListener(listener: (token: string) => void) {
+  public addAuthTokenListener(listener: (token: string) => void): void {
     this.tokenListeners_.push(listener);
     if (this.cachedToken_) {
       listener(this.cachedToken_.accessToken);
@@ -201,7 +201,7 @@ export class FirebaseAppInternals {
    *
    * @param {function(string)} listener The listener to remove.
    */
-  public removeAuthTokenListener(listener: (token: string) => void) {
+  public removeAuthTokenListener(listener: (token: string) => void): void {
     this.tokenListeners_ = this.tokenListeners_.filter((other) => other !== listener);
   }
 
@@ -225,7 +225,7 @@ export class FirebaseAppInternals {
   private setTokenRefreshTimeout(delayInMilliseconds: number, numRetries: number): void {
     this.tokenRefreshTimeout_ = setTimeout(() => {
       this.getToken(/* forceRefresh */ true)
-        .catch((error) => {
+        .catch(() => {
           // Ignore the error since this might just be an intermittent failure. If we really cannot
           // refresh the token, an error will be logged once the existing token expires and we try
           // to fetch a fresh one.
@@ -264,7 +264,7 @@ export class FirebaseApp {
 
     const hasCredential = ('credential' in this.options_);
     if (!hasCredential) {
-      this.options_.credential = new ApplicationDefaultCredential();
+      this.options_.credential = getApplicationDefault(this.options_.httpAgent);
     }
 
     const credential = this.options_.credential;

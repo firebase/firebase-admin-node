@@ -36,9 +36,9 @@ describe('SecurityRules', () => {
     // to allow easier use from within the tests. An improvement would be to
     // alter this into a helper that creates customized RulesetResponses based
     // on the needs of the test, as that would ensure type-safety.
-    name: string,
-    createTime: string,
-    source: object | null,
+    name: string;
+    createTime: string;
+    source: object | null;
   } = {
     name: 'projects/test-project/rulesets/foo',
     createTime: '2019-03-08T23:45:23.288047Z',
@@ -64,7 +64,7 @@ describe('SecurityRules', () => {
     'Bucket name not specified or invalid. Specify a default bucket name via the ' +
     'storageBucket option when initializing the app, or specify the bucket name ' +
     'explicitly when calling the rules API.',
-    );
+  );
   const INVALID_BUCKET_NAMES: any[] = [null, '', true, false, 1, 0, {}, []];
 
   const INVALID_SOURCES: any[] = [null, undefined, '', 1, true, {}, []];
@@ -114,7 +114,7 @@ describe('SecurityRules', () => {
           const securityRulesAny: any = SecurityRules;
           return new securityRulesAny(invalidApp);
         }).to.throw(
-            'First argument passed to admin.securityRules() must be a valid Firebase app '
+          'First argument passed to admin.securityRules() must be a valid Firebase app '
                 + 'instance.');
       });
     });
@@ -124,20 +124,20 @@ describe('SecurityRules', () => {
         const securityRulesAny: any = SecurityRules;
         return new securityRulesAny();
       }).to.throw(
-          'First argument passed to admin.securityRules() must be a valid Firebase app '
+        'First argument passed to admin.securityRules() must be a valid Firebase app '
               + 'instance.');
     });
 
-    it('should throw when initialized without project ID', () => {
+    it('should reject when initialized without project ID', () => {
       // Project ID not set in the environment.
       delete process.env.GOOGLE_CLOUD_PROJECT;
       delete process.env.GCLOUD_PROJECT;
       const noProjectId = 'Failed to determine project ID. Initialize the SDK with service '
         + 'account credentials, or set project ID as an app option. Alternatively, set the '
         + 'GOOGLE_CLOUD_PROJECT environment variable.';
-      expect(() => {
-        return new SecurityRules(mockCredentialApp);
-      }).to.throw(noProjectId);
+      const rulesWithoutProjectId = new SecurityRules(mockCredentialApp);
+      return rulesWithoutProjectId.getRuleset('test')
+        .should.eventually.rejectedWith(noProjectId);
     });
 
     it('should not throw given a valid app', () => {
@@ -202,8 +202,8 @@ describe('SecurityRules', () => {
       const response = deepCopy(FIRESTORE_RULESET_RESPONSE);
       response.source = null;
       const stub = sinon
-          .stub(SecurityRulesApiClient.prototype, 'getRuleset')
-          .resolves(response);
+        .stub(SecurityRulesApiClient.prototype, 'getRuleset')
+        .resolves(response);
       stubs.push(stub);
       return securityRules.getRuleset('foo')
         .should.eventually.be.rejected.and.have.property(

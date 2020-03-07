@@ -27,37 +27,37 @@ import * as jwt from 'jsonwebtoken';
 import {FirebaseNamespace} from '../../src/firebase-namespace';
 import {FirebaseServiceInterface} from '../../src/firebase-service';
 import {FirebaseApp, FirebaseAppOptions} from '../../src/firebase-app';
-import {Certificate, Credential, CertCredential, GoogleOAuthAccessToken} from '../../src/auth/credential';
+import {Credential, GoogleOAuthAccessToken, ServiceAccountCredential} from '../../src/auth/credential';
 
 const ALGORITHM = 'RS256';
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 
-export let uid = 'someUid';
-export let projectId = 'project_id';
-export let developerClaims = {
+export const uid = 'someUid';
+export const projectId = 'project_id';
+export const developerClaims = {
   one: 'uno',
   two: 'dos',
 };
 
-export let appName = 'mock-app-name';
+export const appName = 'mock-app-name';
 
-export let serviceName = 'mock-service-name';
+export const serviceName = 'mock-service-name';
 
-export let databaseURL = 'https://databaseName.firebaseio.com';
+export const databaseURL = 'https://databaseName.firebaseio.com';
 
-export let databaseAuthVariableOverride = { 'some#string': 'some#val' };
+export const databaseAuthVariableOverride = { 'some#string': 'some#val' };
 
-export let storageBucket = 'bucketName.appspot.com';
+export const storageBucket = 'bucketName.appspot.com';
 
-export let credential = new CertCredential(path.resolve(__dirname, './mock.key.json'));
+export const credential = new ServiceAccountCredential(path.resolve(__dirname, './mock.key.json'));
 
-export let appOptions: FirebaseAppOptions = {
+export const appOptions: FirebaseAppOptions = {
   credential,
   databaseURL,
   storageBucket,
 };
 
-export let appOptionsWithOverride: FirebaseAppOptions = {
+export const appOptionsWithOverride: FirebaseAppOptions = {
   credential,
   databaseAuthVariableOverride,
   databaseURL,
@@ -65,15 +65,15 @@ export let appOptionsWithOverride: FirebaseAppOptions = {
   projectId,
 };
 
-export let appOptionsNoAuth: FirebaseAppOptions = {
+export const appOptionsNoAuth: FirebaseAppOptions = {
   databaseURL,
 };
 
-export let appOptionsNoDatabaseUrl: FirebaseAppOptions = {
+export const appOptionsNoDatabaseUrl: FirebaseAppOptions = {
   credential,
 };
 
-export let appOptionsAuthDB: FirebaseAppOptions = {
+export const appOptionsAuthDB: FirebaseAppOptions = {
   credential,
   databaseURL,
 };
@@ -81,13 +81,9 @@ export let appOptionsAuthDB: FirebaseAppOptions = {
 export class MockCredential implements Credential {
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
     return Promise.resolve({
-      access_token: 'mock-token',
-      expires_in: 3600,
+      access_token: 'mock-token', // eslint-disable-line @typescript-eslint/camelcase
+      expires_in: 3600, // eslint-disable-line @typescript-eslint/camelcase
     });
-  }
-
-  public getCertificate(): Certificate | null {
-    return null;
   }
 }
 
@@ -111,13 +107,13 @@ export function appWithOptions(options: FirebaseAppOptions): FirebaseApp {
 }
 
 export function appReturningNullAccessToken(): FirebaseApp {
-  const nullFn: () => Promise<GoogleOAuthAccessToken>|null = () => null;
+  const nullFn: () => Promise<GoogleOAuthAccessToken> | null = () => null;
   return new FirebaseApp({
     credential: {
       getAccessToken: nullFn,
-      getCertificate: () => credential.getCertificate(),
     } as any,
     databaseURL,
+    projectId,
   }, appName, new FirebaseNamespace().INTERNAL);
 }
 
@@ -125,9 +121,9 @@ export function appReturningMalformedAccessToken(): FirebaseApp {
   return new FirebaseApp({
     credential: {
       getAccessToken: () => 5,
-      getCertificate: () => credential.getCertificate(),
     } as any,
     databaseURL,
+    projectId,
   }, appName, new FirebaseNamespace().INTERNAL);
 }
 
@@ -135,25 +131,24 @@ export function appRejectedWhileFetchingAccessToken(): FirebaseApp {
   return new FirebaseApp({
     credential: {
       getAccessToken: () => Promise.reject(new Error('Promise intentionally rejected.')),
-      getCertificate: () => credential.getCertificate(),
     } as any,
     databaseURL,
+    projectId,
   }, appName, new FirebaseNamespace().INTERNAL);
 }
 
-export let refreshToken = {
+export const refreshToken = {
   clientId: 'mock-client-id',
   clientSecret: 'mock-client-secret',
   refreshToken: 'mock-refresh-token',
   type: 'refreshToken',
 };
 
-/* tslint:disable:no-var-requires */
-export let certificateObject = require('./mock.key.json');
-/* tslint:enable:no-var-requires */
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+export const certificateObject = require('./mock.key.json');
 
 // Randomly generated key pairs that don't correspond to anything related to Firebase or GCP
-export let keyPairs = [
+export const keyPairs = [
   /* tslint:disable:max-line-length */
   // The private key for this key pair is identical to the one used in ./mock.key.json
   {
@@ -226,7 +221,7 @@ export function generateSessionCookie(overrides?: object, expiresIn?: number): s
 
 export function firebaseServiceFactory(
   firebaseApp: FirebaseApp,
-  extendApp?: (props: object) => void,
+  extendApp?: (props: object) => void, // eslint-disable-line @typescript-eslint/no-unused-vars
 ): FirebaseServiceInterface {
   const result = {
     app: firebaseApp,
@@ -237,7 +232,7 @@ export function firebaseServiceFactory(
 
 /** Mock socket emitter class. */
 export class MockSocketEmitter extends events.EventEmitter {
-  public setTimeout: (_: number) => void = (timeout: number) => undefined;
+  public setTimeout: (_: number) => void = () => undefined;
 }
 
 /** Mock stream passthrough class with dummy abort method. */
