@@ -371,6 +371,7 @@ describe('admin.auth', () => {
   it('updateUser() updates the user record with the given parameters', () => {
     const updatedDisplayName = 'Updated User ' + newUserUid;
     const now = new Date(1476235905000).toUTCString();
+    // Update user with enrolled second factors.
     const enrolledFactors = [
       {
         uid: 'mfaUid1',
