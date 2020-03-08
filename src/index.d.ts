@@ -800,7 +800,7 @@ declare namespace admin.auth {
        * existing list of second factors.
        * When null is passed, all of the user's existing second factors are removed.
        */
-      enrolledFactors: UpdatePhoneMultiFactorInfoRequest[] | null;
+      enrolledFactors: UpdateMultiFactorInfoRequest[] | null;
     };
   }
 
@@ -852,7 +852,7 @@ declare namespace admin.auth {
       /**
        * The user's list of enrolled second factors.
        */
-      enrolledFactors: CreatePhoneMultiFactorInfoRequest[];
+      enrolledFactors: CreateMultiFactorInfoRequest[];
     };
   }
 
@@ -1179,7 +1179,7 @@ declare namespace admin.auth {
       /**
        * List of enrolled second factors on the user to import.
        */
-      enrolledFactors: PhoneMultiFactorInfo[];
+      enrolledFactors: MultiFactorInfo[];
     };
   }
 

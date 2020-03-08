@@ -44,7 +44,7 @@ import {
   SAMLUpdateAuthProviderRequest, SAMLConfigServerResponse,
 } from '../../../src/auth/auth-config';
 import {TenantOptions} from '../../../src/auth/tenant';
-import { UpdateRequest } from '../../../src/auth/user-record';
+import { UpdateRequest, UpdateMultiFactorInfoRequest } from '../../../src/auth/user-record';
 
 chai.should();
 chai.use(sinonChai);
@@ -1748,12 +1748,12 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               displayName: 'Spouse\'s phone number',
               factorId: 'phone',
               enrollmentTime: now.toUTCString(),
-            },
+            } as UpdateMultiFactorInfoRequest,
             {
               uid: 'enrolledSecondFactor2',
               phoneNumber: '+16505551000',
               factorId: 'phone',
-            },
+            } as UpdateMultiFactorInfoRequest,
           ],
         },
       };

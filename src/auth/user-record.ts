@@ -42,12 +42,40 @@ function parseDate(time: any): string | null {
   return null;
 }
 
-interface SecondFactor {
-  uid?: string;
+/**
+ * Interface representing base properties of a user enrolled second factor for a
+ * `CreateRequest`.
+ */
+export interface CreateMultiFactorInfoRequest {
+  displayName?: string;
+  factorId: string;
+}
+
+/**
+ * Interface representing a phone specific user enrolled second factor for a
+ * `CreateRequest`.
+ */
+export interface CreatePhoneMultiFactorInfoRequest extends CreateMultiFactorInfoRequest {
   phoneNumber: string;
+}
+
+/**
+ * Interface representing common properties of a user enrolled second factor
+ * for an `UpdateRequest`.
+ */
+export interface UpdateMultiFactorInfoRequest {
+  uid?: string;
   displayName?: string;
   enrollmentTime?: string;
   factorId: string;
+}
+
+/**
+ * Interface representing a phone specific user enrolled second factor
+ * for an `UpdateRequest`.
+ */
+export interface UpdatePhoneMultiFactorInfoRequest extends UpdateMultiFactorInfoRequest {
+  phoneNumber: string;
 }
 
 /** Parameters for update user operation */
@@ -60,7 +88,7 @@ export interface UpdateRequest {
   phoneNumber?: string | null;
   photoURL?: string | null;
   multiFactor?: {
-    enrolledFactors: SecondFactor[] | null;
+    enrolledFactors: UpdateMultiFactorInfoRequest[] | null;
   };
 }
 
@@ -68,11 +96,11 @@ export interface UpdateRequest {
 export interface CreateRequest extends UpdateRequest {
   uid?: string;
   multiFactor?: {
-    enrolledFactors: SecondFactor[];
+    enrolledFactors: CreateMultiFactorInfoRequest[];
   };
 }
 
-export interface AuthFactorInfo {
+export interface MultiFactorInfoResponse {
   mfaEnrollmentId: string;
   displayName?: string;
   phoneInfo?: string;
@@ -80,7 +108,7 @@ export interface AuthFactorInfo {
   [key: string]: any;
 }
 
-export interface ProviderUserInfo {
+export interface ProviderUserInfoResponse {
   rawId: string;
   displayName?: string;
   email?: string;
@@ -103,8 +131,8 @@ export interface GetAccountInfoUserResponse {
   customAttributes?: string;
   validSince?: string;
   tenantId?: string;
-  providerUserInfo?: ProviderUserInfo[];
-  mfaInfo?: AuthFactorInfo[];
+  providerUserInfo?: ProviderUserInfoResponse[];
+  mfaInfo?: MultiFactorInfoResponse[];
   createdAt?: string;
   lastLoginAt?: string;
   [key: string]: any;
@@ -131,7 +159,7 @@ export abstract class MultiFactorInfo {
    * @param response The server side response.
    * @constructor
    */
-  public static initMultiFactorInfo(response: AuthFactorInfo): MultiFactorInfo | null {
+  public static initMultiFactorInfo(response: MultiFactorInfoResponse): MultiFactorInfo | null {
     let multiFactorInfo: MultiFactorInfo | null = null;
     // Only PhoneMultiFactorInfo currently available.
     try {
@@ -148,7 +176,7 @@ export abstract class MultiFactorInfo {
    * @param response The server side response.
    * @constructor
    */
-  constructor(response: AuthFactorInfo) {
+  constructor(response: MultiFactorInfoResponse) {
     this.initFromServerResponse(response);
   }
 
@@ -169,14 +197,14 @@ export abstract class MultiFactorInfo {
    * @return The multi-factor ID associated with the provided response. If the response is
    *     not associated with any known multi-factor ID, null is returned.
    */
-  protected abstract getFactorId(response: AuthFactorInfo): MultiFactorId | null;
+  protected abstract getFactorId(response: MultiFactorInfoResponse): MultiFactorId | null;
 
   /**
    * Initializes the MultiFactorInfo object using the provided server response.
    *
    * @param response The server side response.
    */
-  private initFromServerResponse(response: AuthFactorInfo): void {
+  private initFromServerResponse(response: MultiFactorInfoResponse): void {
     const factorId = response && this.getFactorId(response);
     if (!factorId || !response || !response.mfaEnrollmentId) {
       throw new FirebaseAuthError(
@@ -209,7 +237,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
    * @param response The server side response.
    * @constructor
    */
-  constructor(response: AuthFactorInfo) {
+  constructor(response: MultiFactorInfoResponse) {
     super(response);
     utils.addReadonlyGetter(this, 'phoneNumber', response.phoneInfo);
   }
@@ -230,7 +258,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
    * @return The multi-factor ID associated with the provided response. If the response is
    *     not associated with any known multi-factor ID, null is returned.
    */
-  protected getFactorId(response: AuthFactorInfo): MultiFactorId | null {
+  protected getFactorId(response: MultiFactorInfoResponse): MultiFactorId | null {
     return (response && response.phoneInfo) ? MultiFactorId.Phone : null;
   }
 }
@@ -318,7 +346,7 @@ export class UserInfo {
   public readonly providerId: string;
   public readonly phoneNumber: string;
 
-  constructor(response: ProviderUserInfo) {
+  constructor(response: ProviderUserInfoResponse) {
     // Provider user id and provider id are required.
     if (!response.rawId || !response.providerId) {
       throw new FirebaseAuthError(
