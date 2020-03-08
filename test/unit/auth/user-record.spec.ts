@@ -20,8 +20,8 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import {deepCopy} from '../../../src/utils/deep-copy';
 import {
-  UserInfo, UserMetadata, UserRecord, GetAccountInfoUserResponse, ProviderUserInfo,
-  MultiFactor, PhoneMultiFactorInfo, MultiFactorInfo, AuthFactorInfo,
+  UserInfo, UserMetadata, UserRecord, GetAccountInfoUserResponse, ProviderUserInfoResponse,
+  MultiFactor, PhoneMultiFactorInfo, MultiFactorInfo, MultiFactorInfoResponse,
 } from '../../../src/auth/user-record';
 
 
@@ -187,7 +187,7 @@ function getUserJSON(tenantId?: string): object {
  * @return A sample user info response as returned from getAccountInfo
  *     endpoint.
  */
-function getUserInfoResponse(): ProviderUserInfo {
+function getUserInfoResponse(): ProviderUserInfoResponse {
   return {
     providerId: 'google.com',
     displayName: 'John Doe',
@@ -216,7 +216,7 @@ function getUserInfoJSON(): object {
  * @return A sample user info response with phone number as returned
  *     from getAccountInfo endpoint.
  */
-function getUserInfoWithPhoneNumberResponse(): ProviderUserInfo {
+function getUserInfoWithPhoneNumberResponse(): ProviderUserInfoResponse {
   return {
     providerId: 'phone',
     phoneNumber: '+11234567890',
@@ -240,7 +240,7 @@ function getUserInfoWithPhoneNumberJSON(): object {
 }
 
 describe('PhoneMultiFactorInfo', () => {
-  const serverResponse: AuthFactorInfo = {
+  const serverResponse: MultiFactorInfoResponse = {
     mfaEnrollmentId: 'enrollmentId1',
     displayName: 'displayName1',
     enrolledAt: now.toISOString(),
@@ -375,7 +375,7 @@ describe('PhoneMultiFactorInfo', () => {
 });
 
 describe('MultiFactorInfo', () => {
-  const serverResponse: AuthFactorInfo = {
+  const serverResponse: MultiFactorInfoResponse = {
     mfaEnrollmentId: 'enrollmentId1',
     displayName: 'displayName1',
     enrolledAt: now.toISOString(),
