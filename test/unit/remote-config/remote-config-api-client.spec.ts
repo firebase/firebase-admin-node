@@ -270,29 +270,38 @@ describe('RemoteConfigApiClient', () => {
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
-    it('should reject with invalid-argument when a validation error occurres', () => {
+    it('should reject with failed-precondition when a validation error occurres', () => {
       const invalidTemplateError = {
         error: {
           code: 400,
-          message: "[VALIDATION_ERROR]: [androidw] are not valid condition names. All keys in all conditional value maps must be valid condition names.",
-          status: "INVALID_ARGUMENT"
+          message: "[VALIDATION_ERROR]: [foo] are not valid condition names. All keys in all conditional value maps must be valid condition names.",
+          status: "FAILED_PRECONDITION"
         }
       };
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .rejects(utils.errorFrom(invalidTemplateError, 400));
       stubs.push(stub);
-      const expected = new FirebaseRemoteConfigError('invalid-argument', '[VALIDATION_ERROR]: [androidw] are not valid condition names. All keys in all conditional value maps must be valid condition names.');
+      const expected = new FirebaseRemoteConfigError('failed-precondition',
+        '[VALIDATION_ERROR]: [foo] are not valid condition names. All keys in all conditional value maps must be valid condition names.');
       return apiClient.validateTemplate(remoteConfigTemplate)
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
-    it('should reject when rejected with a FirebaseAppError', () => {
-      const expected = new FirebaseAppError('network-error', 'socket hang up');
+    it('should reject with failed-precondition when a validation error occurres', () => {
+      const invalidTemplateError = {
+        error: {
+          code: 400,
+          message: "[VERSION_MISMATCH]: Expected version 6, found 8 for project: 123456789012",
+          status: "FAILED_PRECONDITION"
+        }
+      };
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(expected);
+        .rejects(utils.errorFrom(invalidTemplateError, 400));
       stubs.push(stub);
+      const expected = new FirebaseRemoteConfigError('failed-precondition',
+        '[VERSION_MISMATCH]: Expected version 6, found 8 for project: 123456789012');
       return apiClient.validateTemplate(remoteConfigTemplate)
         .should.eventually.be.rejected.and.deep.equal(expected);
     });

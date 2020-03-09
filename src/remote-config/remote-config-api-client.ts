@@ -230,8 +230,13 @@ interface Error {
 }
 
 const ERROR_CODE_MAPPING: { [key: string]: RemoteConfigErrorCode } = {
+  ABORTED: 'aborted',
+  ALREADY_EXISTS: `already-exists`,
   INVALID_ARGUMENT: 'invalid-argument',
+  FAILED_PRECONDITION: 'failed-precondition',
   NOT_FOUND: 'not-found',
+  OUT_OF_RANGE: 'out-of-range',
+  PERMISSION_DENIED: 'permission-denied',
   RESOURCE_EXHAUSTED: 'resource-exhausted',
   UNAUTHENTICATED: 'authentication-error',
   UNKNOWN: 'unknown-error',
