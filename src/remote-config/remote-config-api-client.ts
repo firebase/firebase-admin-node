@@ -23,7 +23,7 @@ import * as validator from '../utils/validator';
 
 // Remote Config backend constants
 const FIREBASE_REMOTE_CONFIG_V1_API = 'https://firebaseremoteconfig.googleapis.com/v1';
-const FIREBASE_REMOTE_CONFIG_HEADERS = {
+const FIREBASE_REMOTE_CONFIG_GET_HEADERS = {
   'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
   // There is a known issue in which the ETag is not properly returned in cases where the request
   // does not specify a compression type. Currently, it is required to include the header
@@ -31,9 +31,18 @@ const FIREBASE_REMOTE_CONFIG_HEADERS = {
   // https://firebase.google.com/docs/remote-config/use-config-rest#etag_usage_and_forced_updates
   'Accept-Encoding': 'gzip',
 };
+const FIREBASE_REMOTE_CONFIG_PUT_HEADERS = {
+  'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
+  // There is a known issue in which the ETag is not properly returned in cases where the request
+  // does not specify a compression type. Currently, it is required to include the header
+  // `Accept-Encoding: gzip` or equivalent in all requests.
+  // https://firebase.google.com/docs/remote-config/use-config-rest#etag_usage_and_forced_updates
+  'Accept-Encoding': 'gzip',
+  'If-Match': '',
+  'content-type': 'application/json; charset=utf-8',
+};
 
-enum ConditionDisplayColor {
-  UNSPECIFIED = "Unspecified",
+export enum RemoteConfigConditionDisplayColor {
   BLUE = "Blue",
   BROWN = "Brown",
   CYAN = "Cyan",
@@ -69,10 +78,10 @@ export interface RemoteConfigParameter {
 interface RemoteConfigCondition {
   name: string;
   expression: string;
-  tagColor?: ConditionDisplayColor;
+  tagColor?: RemoteConfigConditionDisplayColor;
 }
 
-export interface RemoteConfigResponse {
+export interface RemoteConfigContent {
   readonly conditions?: RemoteConfigCondition[];
   readonly parameters?: { [key: string]: RemoteConfigParameter };
   readonly etag: string;
@@ -98,13 +107,13 @@ export class RemoteConfigApiClient {
     this.httpClient = new AuthorizedHttpClient(app);
   }
 
-  public getTemplate(): Promise<RemoteConfigResponse> {
+  public getTemplate(): Promise<RemoteConfigContent> {
     return this.getUrl()
       .then((url) => {
         const request: HttpRequestConfig = {
           method: 'GET',
           url: `${url}/remoteConfig`,
-          headers: FIREBASE_REMOTE_CONFIG_HEADERS
+          headers: FIREBASE_REMOTE_CONFIG_GET_HEADERS
         };
         return this.httpClient.send(request);
       })
@@ -118,6 +127,42 @@ export class RemoteConfigApiClient {
           conditions: resp.data.conditions,
           parameters: resp.data.parameters,
           etag: resp.headers['etag'],
+        };
+      })
+      .catch((err) => {
+        throw this.toFirebaseError(err);
+      });
+  }
+
+  public validateTemplate(template: RemoteConfigContent): Promise<RemoteConfigContent> {
+    return this.getUrl()
+      .then((url) => {
+        const headers = FIREBASE_REMOTE_CONFIG_PUT_HEADERS;
+        headers["If-Match"] = template.etag;
+        const request: HttpRequestConfig = {
+          method: 'PUT',
+          url: `${url}/remoteConfig?validate_only=true`,
+          headers: headers,
+          data: {
+            conditions: template.conditions,
+            parameters: template.parameters,
+          }
+        };
+        return this.httpClient.send(request);
+      })
+      .then((resp) => {
+        if (!Object.prototype.hasOwnProperty.call(resp.headers, 'etag')) {
+          throw new FirebaseRemoteConfigError(
+            'invalid-argument',
+            'ETag header is not present in the server response.');
+        }
+        return {
+          conditions: resp.data.conditions,
+          parameters: resp.data.parameters,
+          // validating a template returns an etag with the suffix -0 means that your update 
+          // was successfully validated. We set the etag back to the original etag of the template
+          // to allow future operations.
+          etag: template.etag,
         };
       })
       .catch((err) => {

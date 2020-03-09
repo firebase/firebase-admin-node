@@ -20,15 +20,16 @@ import * as validator from '../utils/validator';
 import { FirebaseRemoteConfigError } from './remote-config-utils';
 import {
   RemoteConfigApiClient,
-  RemoteConfigResponse,
-  RemoteConfigParameter
+  RemoteConfigContent,
+  RemoteConfigParameter,
+  RemoteConfigConditionDisplayColor,
 } from './remote-config-api-client';
 
 /** Interface representing a Remote Config condition. */
 export interface RemoteConfigCondition {
   name: string;
   expression: string;
-  color?: string;
+  color?: RemoteConfigConditionDisplayColor;
 }
 
 /**
@@ -73,6 +74,30 @@ export class RemoteConfig implements FirebaseServiceInterface {
         return new RemoteConfigTemplate(templateResponse);
       });
   }
+
+  /**
+   * Validates a Remote Config template.
+   *
+   * @param {RemoteConfigTemplate} template The Remote Config template to be validated.
+   *
+   * @return {Promise<RemoteConfigTemplate>} A Promise that fulfills when a template is validated.
+   */
+  public validateTemplate(template: RemoteConfigTemplate): Promise<RemoteConfigTemplate> {
+    const content: RemoteConfigContent = {
+      conditions: template.conditions.map(p => ({
+        name: p.name,
+        expression: p.expression,
+        tagColor: p.color,
+      })),
+      parameters: template.parameters,
+      etag: template.etag,
+    };
+
+    return this.client.validateTemplate(content)
+      .then((templateResponse) => {
+        return new RemoteConfigTemplate(templateResponse);
+      });
+  }
 }
 
 /**
@@ -84,7 +109,7 @@ export class RemoteConfigTemplate {
   public conditions: RemoteConfigCondition[];
   private readonly etagInternal: string;
 
-  constructor(config: RemoteConfigResponse) {
+  constructor(config: RemoteConfigContent) {
     if (!validator.isNonNullObject(config) ||
       !validator.isNonEmptyString(config.etag)) {
       throw new FirebaseRemoteConfigError(

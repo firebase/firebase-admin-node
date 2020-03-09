@@ -19,13 +19,18 @@
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
-import { RemoteConfigApiClient } from '../../../src/remote-config/remote-config-api-client';
+import {
+  RemoteConfigApiClient,
+  RemoteConfigContent,
+  RemoteConfigConditionDisplayColor
+} from '../../../src/remote-config/remote-config-api-client';
 import { FirebaseRemoteConfigError } from '../../../src/remote-config/remote-config-utils';
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 import { FirebaseAppError } from '../../../src/utils/error';
 import { FirebaseApp } from '../../../src/firebase-app';
+import { RemoteConfigTemplate } from '../../../src/remote-config/remote-config';
 
 const expect = chai.expect;
 
@@ -38,10 +43,17 @@ describe('RemoteConfigApiClient', () => {
       status: 'NOT_FOUND',
     },
   };
-  const EXPECTED_HEADERS = {
+  const EXPECTED_GET_HEADERS = {
     'Authorization': 'Bearer mock-token',
     'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
     'Accept-Encoding': 'gzip',
+  };
+  const EXPECTED_PUT_HEADERS = {
+    'Authorization': 'Bearer mock-token',
+    'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
+    'Accept-Encoding': 'gzip',
+    'If-Match': '',
+    'content-type': 'application/json; charset=utf-8',
   };
   const noProjectId = 'Failed to determine project ID. Initialize the SDK with service '
     + 'account credentials, or set project ID as an app option. Alternatively, set the '
@@ -55,14 +67,33 @@ describe('RemoteConfigApiClient', () => {
   const clientWithoutProjectId = new RemoteConfigApiClient(
     mocks.mockCredentialApp());
 
+  const REMOTE_CONFIG_CONTENT: RemoteConfigContent = {
+    conditions: [{
+      name: 'ios',
+      expression: 'device.os == \'ios\'',
+      tagColor: RemoteConfigConditionDisplayColor.PINK,
+    }],
+    parameters: {
+      // eslint-disable-next-line @typescript-eslint/camelcase
+      holiday_promo_enabled: {
+        defaultValue: { value: 'true' },
+        conditionalValues: { ios: { useInAppDefault: true } },
+        description: 'this is a promo',
+      },
+    },
+    etag: 'etag-123456789012-6',
+  };
+
   // Stubs used to simulate underlying api calls.
   let stubs: sinon.SinonStub[] = [];
   let app: FirebaseApp;
   let apiClient: RemoteConfigApiClient;
+  let remoteConfigTemplate: RemoteConfigTemplate;
 
   beforeEach(() => {
     app = mocks.appWithOptions(mockOptions);
     apiClient = new RemoteConfigApiClient(app);
+    remoteConfigTemplate = new RemoteConfigTemplate(REMOTE_CONFIG_CONTENT);
   });
 
   afterEach(() => {
@@ -103,7 +134,7 @@ describe('RemoteConfigApiClient', () => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'GET',
             url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig',
-            headers: EXPECTED_HEADERS,
+            headers: EXPECTED_GET_HEADERS,
           });
         });
     });
@@ -156,6 +187,100 @@ describe('RemoteConfigApiClient', () => {
         .rejects(expected);
       stubs.push(stub);
       return apiClient.getTemplate()
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+  });
+
+  describe('validateTemplate', () => {
+    const testResponse = {
+      conditions: [{ name: 'ios', expression: 'exp' }],
+      parameters: { param: { defaultValue: { value: 'true' } } },
+      version: {},
+    };
+
+    it(`should reject when project id is not available`, () => {
+      return clientWithoutProjectId.validateTemplate(remoteConfigTemplate)
+        .should.eventually.be.rejectedWith(noProjectId);
+    });
+
+    it('should resolve with the requested template on success', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(testResponse, 200, { etag: 'etag-123456789012-0' }));
+      stubs.push(stub);
+      return apiClient.validateTemplate(remoteConfigTemplate)
+        .then((resp) => {
+          expect(resp.conditions).to.deep.equal(testResponse.conditions);
+          expect(resp.parameters).to.deep.equal(testResponse.parameters);
+          // validate template returns an etag with the suffix -0 when successful.
+          // verify that the etag matches the original template etag.
+          expect(resp.etag).to.equal('etag-123456789012-6');
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'PUT',
+            url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig?validate_only=true',
+            headers: EXPECTED_PUT_HEADERS,
+          });
+        });
+    });
+
+    it('should reject when the etag is not present', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(testResponse));
+      stubs.push(stub);
+      const expected = new FirebaseRemoteConfigError('invalid-argument', 'ETag header is not present in the server response.');
+      return apiClient.validateTemplate(remoteConfigTemplate)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should reject when a full platform error response is received', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+      stubs.push(stub);
+      const expected = new FirebaseRemoteConfigError('not-found', 'Requested entity not found');
+      return apiClient.validateTemplate(remoteConfigTemplate)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should reject unknown-error when error code is not present', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom({}, 404));
+      stubs.push(stub);
+      const expected = new FirebaseRemoteConfigError('unknown-error', 'Unknown server error: {}');
+      return apiClient.validateTemplate(remoteConfigTemplate)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should reject unknown-error for non-json response', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom('not json', 404));
+      stubs.push(stub);
+      const expected = new FirebaseRemoteConfigError(
+        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+      return apiClient.validateTemplate(remoteConfigTemplate)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should reject with invalid-argument when a validation error occurres', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom({ code: 400, message: "[VALIDATION_ERROR]: [androidw] are not valid condition names. All keys in all conditional value maps must be valid condition names.", status: "INVALID_ARGUMENT" }, 400));
+      stubs.push(stub);
+      const expected = new FirebaseRemoteConfigError('invalid-argument', '[VALIDATION_ERROR]: [androidw] are not valid condition names. All keys in all conditional value maps must be valid condition names.');
+      return apiClient.validateTemplate(remoteConfigTemplate)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should reject when rejected with a FirebaseAppError', () => {
+      const expected = new FirebaseAppError('network-error', 'socket hang up');
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(expected);
+      stubs.push(stub);
+      return apiClient.validateTemplate(remoteConfigTemplate)
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
   });
