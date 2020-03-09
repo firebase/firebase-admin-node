@@ -304,7 +304,7 @@ describe('RemoteConfig', () => {
     it('should resolve with Remote Config template on success', () => {
       const stub = sinon
         .stub(RemoteConfigApiClient.prototype, 'validateTemplate')
-        .resolves(REMOTE_CONFIG_RESPONSE);
+        .resolves(REMOTE_CONFIG_CONTENT);
       stubs.push(stub);
 
       return remoteConfig.validateTemplate(remoteConfigTemplate)
@@ -313,7 +313,7 @@ describe('RemoteConfig', () => {
           expect(template.conditions[0].name).to.equal('ios');
           expect(template.conditions[0].expression).to.equal('device.os == \'ios\'');
           // verify the property mapping in RemoteConfigCondition from `tagColor` to `color`
-          expect(template.conditions[0].color).to.equal('PINK');
+          expect(template.conditions[0].color).to.equal('Pink');
           // verify that the etag is unmodified
           expect(template.etag).to.equal('etag-123456789012-6');
           // verify that the etag is read-only
@@ -332,7 +332,7 @@ describe('RemoteConfig', () => {
           const cond = c as RemoteConfigCondition;
           expect(cond.name).to.equal('ios');
           expect(cond.expression).to.equal('device.os == \'ios\'');
-          expect(cond.color).to.equal('PINK');
+          expect(cond.color).to.equal('Pink');
         });
     });
   });

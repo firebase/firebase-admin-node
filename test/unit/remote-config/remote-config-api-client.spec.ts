@@ -215,10 +215,16 @@ describe('RemoteConfigApiClient', () => {
           // validate template returns an etag with the suffix -0 when successful.
           // verify that the etag matches the original template etag.
           expect(resp.etag).to.equal('etag-123456789012-6');
+          const headers = EXPECTED_PUT_HEADERS;
+          headers["If-Match"] = remoteConfigTemplate.etag;
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'PUT',
             url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig?validate_only=true',
-            headers: EXPECTED_PUT_HEADERS,
+            headers: headers,
+            data: {
+              conditions: remoteConfigTemplate.conditions,
+              parameters: remoteConfigTemplate.parameters,
+            }
           });
         });
     });
@@ -265,9 +271,16 @@ describe('RemoteConfigApiClient', () => {
     });
 
     it('should reject with invalid-argument when a validation error occurres', () => {
+      const invalidTemplateError = {
+        error: {
+          code: 400,
+          message: "[VALIDATION_ERROR]: [androidw] are not valid condition names. All keys in all conditional value maps must be valid condition names.",
+          status: "INVALID_ARGUMENT"
+        }
+      };
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom({ code: 400, message: "[VALIDATION_ERROR]: [androidw] are not valid condition names. All keys in all conditional value maps must be valid condition names.", status: "INVALID_ARGUMENT" }, 400));
+        .rejects(utils.errorFrom(invalidTemplateError, 400));
       stubs.push(stub);
       const expected = new FirebaseRemoteConfigError('invalid-argument', '[VALIDATION_ERROR]: [androidw] are not valid condition names. All keys in all conditional value maps must be valid condition names.');
       return apiClient.validateTemplate(remoteConfigTemplate)
