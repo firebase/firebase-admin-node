@@ -548,6 +548,48 @@ declare namespace admin.auth {
   }
 
   /**
+   * Interface representing the common properties of a user enrolled second factor.
+   */
+  interface MultiFactorInfo {
+  
+    /**
+     * The ID of the enrolled second factor. This ID is unique to the user.
+     */
+    uid: string;
+
+    /**
+     * The optional display name of the enrolled second factor.
+     */
+    displayName?: string;
+
+    /**
+     * The optional date the second factor was enrolled, formatted as a UTC string.
+     */
+    enrollmentTime?: string;
+
+    /**
+     * The type identifier of the second factor. For SMS second factors, this is `phone`.
+     */
+    factorId: string;
+
+    /**
+     * @return A JSON-serializable representation of this object.
+     */
+    toJSON(): Object;
+  }
+
+  /**
+   * Interface representing a phone specific user enrolled second factor.
+   */
+  interface PhoneMultiFactorInfo extends MultiFactorInfo {
+
+    /**
+     * The phone number associated with a phone second factor.
+     */
+    phoneNumber: string;
+  }
+
+  /**
    * Interface representing a user.
    */
   interface UserRecord {
@@ -645,9 +687,66 @@ declare namespace admin.auth {
     tenantId?: string | null;
 
     /**
+     * The multi-factor related properties for the current user, if available.
+     */
+    multiFactor?: {
+
+      /**
+       * List of second factors enrolled with the current user.
+       * Currently only phone second factors are supported.
+       */
+      enrolledFactors: MultiFactorInfo[];
+
+      /**
+       * @return A JSON-serializable representation of this multi-factor object.
+       */
+      toJSON(): Object;
+    };
+
+    /**
      * @return A JSON-serializable representation of this object.
      */
     toJSON(): Object;
+  }
+
+  /**
+   * Interface representing common properties of a user enrolled second factor
+   * for an `UpdateRequest`.
+   */
+  interface UpdateMultiFactorInfoRequest {
+  
+    /**
+     * The ID of the enrolled second factor. This ID is unique to the user. When not provided,
+     * a new one is provisioned by the Auth server.
+     */
+    uid?: string;
+
+    /**
+     * The optional display name for an enrolled second factor.
+     */
+    displayName?: string;
+
+    /**
+     * The optional date the second factor was enrolled, formatted as a UTC string.
+     */
+    enrollmentTime?: string;
+
+    /**
+     * The type identifier of the second factor. For SMS second factors, this is `phone`.
+     */
+    factorId: string;
+  }
+
+  /**
+   * Interface representing a phone specific user enrolled second factor
+   * for an `UpdateRequest`.
+   */
+  interface UpdatePhoneMultiFactorInfoRequest extends UpdateMultiFactorInfoRequest {
+
+    /**
+     * The phone number associated with a phone second factor.
+     */
+    phoneNumber: string;
   }
 
   /**
@@ -690,6 +789,48 @@ declare namespace admin.auth {
      * The user's photo URL.
      */
     photoURL?: string | null;
+
+    /**
+     * The user's updated multi-factor related properties.
+     */
+    multiFactor?: {
+
+      /**
+       * The updated list of enrolled second factors. The provided list overwrites the user's
+       * existing list of second factors.
+       * When null is passed, all of the user's existing second factors are removed.
+       */
+      enrolledFactors: UpdateMultiFactorInfoRequest[] | null;
+    };
+  }
+
+  /**
+   * Interface representing base properties of a user enrolled second factor for a
+   * `CreateRequest`.
+   */
+  interface CreateMultiFactorInfoRequest {
+
+    /**
+     * The optional display name for an enrolled second factor.
+     */
+    displayName?: string;
+
+    /**
+     * The type identifier of the second factor. For SMS second factors, this is `phone`.
+     */
+    factorId: string;
+  }
+
+  /**
+   * Interface representing a phone specific user enrolled second factor for a
+   * `CreateRequest`.
+   */
+  interface CreatePhoneMultiFactorInfoRequest extends CreateMultiFactorInfoRequest {
+
+    /**
+     * The phone number associated with a phone second factor.
+     */
+    phoneNumber: string;
   }
 
   /**
@@ -702,6 +843,17 @@ declare namespace admin.auth {
      * The user's `uid`.
      */
     uid?: string;
+
+    /**
+     * The user's multi-factor related properties.
+     */
+    multiFactor?: {
+
+      /**
+       * The user's list of enrolled second factors.
+       */
+      enrolledFactors: CreateMultiFactorInfoRequest[];
+    };
   }
 
   /**
@@ -768,6 +920,19 @@ declare namespace admin.auth {
        */
       sign_in_provider: string;
 
+      /**
+       * The type identifier or `factorId` of the second factor, provided the
+       * ID token was obtained from a multi-factor authenticated user.
+       * For phone, this is `“phone”`.
+       */
+      sign_in_second_factor?: string;
+
+      /**
+       * The `uid` of the second factor used to sign in, provided the
+       * ID token was obtained from a multi-factor authenticated user.
+       */
+      second_factor_identifier?: string;
+  
       /**
        * The ID of the tenant the user belongs to, if available.
        */
@@ -1005,6 +1170,17 @@ declare namespace admin.auth {
      * to the tenant corresponding to that `TenantAwareAuth` instance's tenant ID.
      */
     tenantId?: string | null;
+
+    /**
+     * The multi-factor related properties for the imported user if available.
+     */
+    multiFactor?: {
+    
+      /**
+       * List of enrolled second factors on the user to import.
+       */
+      enrolledFactors: MultiFactorInfo[];
+    };
   }
 
   /**

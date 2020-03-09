@@ -41,6 +41,7 @@ const expect = chai.expect;
 
 const newUserUid = generateRandomString(20);
 const nonexistentUid = generateRandomString(20);
+const newMultiFactorUserUid = generateRandomString(20);
 const sessionCookieUids = [
   generateRandomString(20),
   generateRandomString(20),
@@ -135,6 +136,52 @@ describe('admin.auth', () => {
         expect(userRecord.email).to.equal(newUserData.email);
         // Confirm expected phone number.
         expect(userRecord.phoneNumber).to.equal(newUserData.phoneNumber);
+      });
+  });
+
+  it('createUser() creates a new user with enrolled second factors', () => {
+    const enrolledFactors = [
+      {
+        phoneNumber: '+16505550001',
+        displayName: 'Work phone number',
+        factorId: 'phone',
+      },
+      {
+        phoneNumber: '+16505550002',
+        displayName: 'Personal phone number',
+        factorId: 'phone',
+      },
+    ];
+    const newUserData: any = {
+      uid: newMultiFactorUserUid,
+      email: generateRandomString(20).toLowerCase() + '@example.com',
+      emailVerified: true,
+      password: 'password',
+      multiFactor: {
+        enrolledFactors,
+      },
+    };
+    return admin.auth().createUser(newUserData)
+      .then((userRecord) => {
+        expect(userRecord.uid).to.equal(newMultiFactorUserUid);
+        // Confirm expected email.
+        expect(userRecord.email).to.equal(newUserData.email);
+        // Confirm second factors added to user.
+        expect(userRecord.multiFactor!.enrolledFactors.length).to.equal(2);
+        // Confirm first enrolled second factor.
+        const firstMultiFactor = userRecord.multiFactor!.enrolledFactors[0];
+        expect(firstMultiFactor.uid).not.to.be.undefined;
+        expect(firstMultiFactor.enrollmentTime).not.to.be.undefined;
+        expect((firstMultiFactor as admin.auth.PhoneMultiFactorInfo).phoneNumber).to.equal(enrolledFactors[0].phoneNumber);
+        expect(firstMultiFactor.displayName).to.equal(enrolledFactors[0].displayName);
+        expect(firstMultiFactor.factorId).to.equal(enrolledFactors[0].factorId);
+        // Confirm second enrolled second factor.
+        const secondMultiFactor = userRecord.multiFactor!.enrolledFactors[1];
+        expect(secondMultiFactor.uid).not.to.be.undefined;
+        expect(secondMultiFactor.enrollmentTime).not.to.be.undefined;
+        expect((secondMultiFactor as admin.auth.PhoneMultiFactorInfo).phoneNumber).to.equal(enrolledFactors[1].phoneNumber);
+        expect(secondMultiFactor.displayName).to.equal(enrolledFactors[1].displayName);
+        expect(secondMultiFactor.factorId).to.equal(enrolledFactors[1].factorId);
       });
   });
 
@@ -323,11 +370,32 @@ describe('admin.auth', () => {
 
   it('updateUser() updates the user record with the given parameters', () => {
     const updatedDisplayName = 'Updated User ' + newUserUid;
+    const now = new Date(1476235905000).toUTCString();
+    // Update user with enrolled second factors.
+    const enrolledFactors = [
+      {
+        uid: 'mfaUid1',
+        phoneNumber: '+16505550001',
+        displayName: 'Work phone number',
+        factorId: 'phone',
+        enrollmentTime: now,
+      },
+      {
+        uid: 'mfaUid2',
+        phoneNumber: '+16505550002',
+        displayName: 'Personal phone number',
+        factorId: 'phone',
+        enrollmentTime: now,
+      },
+    ];
     return admin.auth().updateUser(newUserUid, {
       email: updatedEmail,
       phoneNumber: updatedPhone,
       emailVerified: true,
       displayName: updatedDisplayName,
+      multiFactor: {
+        enrolledFactors,
+      },
     })
       .then((userRecord) => {
         expect(userRecord.emailVerified).to.be.true;
@@ -336,6 +404,31 @@ describe('admin.auth', () => {
         expect(userRecord.email).to.equal(updatedEmail);
         // Confirm expected phone number.
         expect(userRecord.phoneNumber).to.equal(updatedPhone);
+        // Confirm second factors added to user.
+        const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
+        expect(actualUserRecord.multiFactor.enrolledFactors.length).to.equal(2);
+        expect(actualUserRecord.multiFactor.enrolledFactors).to.deep.equal(enrolledFactors);
+        // Update list of second factors.
+        return admin.auth().updateUser(newUserUid, {
+          multiFactor: {
+            enrolledFactors: [enrolledFactors[0]],
+          },
+        });
+      })
+      .then((userRecord) => {
+        expect(userRecord.multiFactor!.enrolledFactors.length).to.equal(1);
+        const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
+        expect(actualUserRecord.multiFactor.enrolledFactors[0]).to.deep.equal(enrolledFactors[0]);
+        // Remove all second factors.
+        return admin.auth().updateUser(newUserUid, {
+          multiFactor: {
+            enrolledFactors: null,
+          },
+        });
+      })
+      .then((userRecord) => {
+        // Confirm all second factors removed.
+        expect(userRecord.multiFactor).to.be.undefined;
       });
   });
 
@@ -1206,6 +1299,7 @@ describe('admin.auth', () => {
   it('deleteUser() deletes the user with the given UID', () => {
     return Promise.all([
       admin.auth().deleteUser(newUserUid),
+      admin.auth().deleteUser(newMultiFactorUserUid),
       admin.auth().deleteUser(uidFromCreateUserWithoutUid),
     ]).should.eventually.be.fulfilled;
   });
@@ -1551,6 +1645,64 @@ describe('admin.auth', () => {
             expect(JSON.stringify(actualUserRecord[key]))
               .to.be.equal(JSON.stringify(importUserRecord[key]));
           }
+        }).should.eventually.be.fulfilled;
+    });
+
+    it('successfully imports users with enrolled second factors', () => {
+      const uid = generateRandomString(20).toLowerCase();
+      const email = uid + '@example.com';
+      const now = new Date(1476235905000).toUTCString();
+      importUserRecord = {
+        uid,
+        email,
+        emailVerified: true,
+        displayName: 'Test User',
+        disabled: false,
+        metadata: {
+          lastSignInTime: now,
+          creationTime: now,
+        },
+        providerData: [
+          {
+            uid: uid + '-facebook',
+            displayName: 'Facebook User',
+            email,
+            providerId: 'facebook.com',
+          },
+        ],
+        multiFactor: {
+          enrolledFactors: [
+            {
+              uid: 'mfaUid1',
+              phoneNumber: '+16505550001',
+              displayName: 'Work phone number',
+              factorId: 'phone',
+              enrollmentTime: now,
+            },
+            {
+              uid: 'mfaUid2',
+              phoneNumber: '+16505550002',
+              displayName: 'Personal phone number',
+              factorId: 'phone',
+              enrollmentTime: now,
+            },
+          ],
+        },
+      };
+      uids.push(importUserRecord.uid);
+
+      return admin.auth().importUsers([importUserRecord])
+        .then((result) => {
+          expect(result.failureCount).to.equal(0);
+          expect(result.successCount).to.equal(1);
+          expect(result.errors.length).to.equal(0);
+          return admin.auth().getUser(uid);
+        }).then((userRecord) => {
+          // Confirm second factors added to user.
+          const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
+          expect(actualUserRecord.multiFactor.enrolledFactors.length).to.equal(2);
+          expect(actualUserRecord.multiFactor.enrolledFactors)
+            .to.deep.equal(importUserRecord.multiFactor.enrolledFactors);
         }).should.eventually.be.fulfilled;
     });
 

@@ -25,7 +25,7 @@ import {
 import {CreateRequest, UpdateRequest} from './user-record';
 import {
   UserImportBuilder, UserImportOptions, UserImportRecord,
-  UserImportResult,
+  UserImportResult, AuthFactorInfo, convertMultiFactorInfoToServerFormat,
 } from './user-import-builder';
 import * as utils from '../utils/index';
 import {ActionCodeSettings, ActionCodeSettingsBuilder} from './action-code-settings-builder';
@@ -84,6 +84,16 @@ const FIREBASE_AUTH_TENANT_URL_FORMAT = FIREBASE_AUTH_BASE_URL_FORMAT.replace(
 
 /** Maximum allowed number of tenants to download at one time. */
 const MAX_LIST_TENANT_PAGE_SIZE = 1000;
+
+
+/**
+ * Enum for the user write operation type.
+ */
+enum WriteOperationType {
+  Create = 'create',
+  Update = 'update',
+  Upload = 'upload',
+}
 
 
 /** Defines a base utility to help with resource URL construction. */
@@ -181,6 +191,72 @@ class TenantAwareAuthResourceUrlBuilder extends AuthResourceUrlBuilder {
 
 
 /**
+ * Validates an AuthFactorInfo object. All unsupported parameters
+ * are removed from the original request. If an invalid field is passed
+ * an error is thrown.
+ *
+ * @param request The AuthFactorInfo request object.
+ * @param writeOperationType The write operation type.
+ */
+function validateAuthFactorInfo(request: AuthFactorInfo, writeOperationType: WriteOperationType): void {
+  const validKeys = {
+    mfaEnrollmentId: true,
+    displayName: true,
+    phoneInfo: true,
+    enrolledAt: true,
+  };
+  // Remove unsupported keys from the original request.
+  for (const key in request) {
+    if (!(key in validKeys)) {
+      delete request[key];
+    }
+  }
+  // No enrollment ID is available for signupNewUser. Use another identifier.
+  const authFactorInfoIdentifier =
+      request.mfaEnrollmentId || request.phoneInfo || JSON.stringify(request);
+  const uidRequired = writeOperationType !== WriteOperationType.Create;
+  if ((typeof request.mfaEnrollmentId !== 'undefined' || uidRequired) &&
+      !validator.isNonEmptyString(request.mfaEnrollmentId)) {
+    throw new FirebaseAuthError(
+      AuthClientErrorCode.INVALID_UID,
+      `The second factor "uid" must be a valid non-empty string.`,
+    );
+  }
+  if (typeof request.displayName !== 'undefined' &&
+      !validator.isString(request.displayName)) {
+    throw new FirebaseAuthError(
+      AuthClientErrorCode.INVALID_DISPLAY_NAME,
+      `The second factor "displayName" for "${authFactorInfoIdentifier}" must be a valid string.`,
+    );
+  }
+  // enrolledAt must be a valid UTC date string.
+  if (typeof request.enrolledAt !== 'undefined' &&
+      !validator.isISODateString(request.enrolledAt)) {
+    throw new FirebaseAuthError(
+      AuthClientErrorCode.INVALID_ENROLLMENT_TIME,
+      `The second factor "enrollmentTime" for "${authFactorInfoIdentifier}" must be a valid ` +
+      `UTC date string.`);
+  }
+  // Validate required fields depending on second factor type.
+  if (typeof request.phoneInfo !== 'undefined') {
+    // phoneNumber should be a string and a valid phone number.
+    if (!validator.isPhoneNumber(request.phoneInfo)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_PHONE_NUMBER,
+        `The second factor "phoneNumber" for "${authFactorInfoIdentifier}" must be a non-empty ` +
+        `E.164 standard compliant identifier string.`);
+    }
+  } else {
+    // Invalid second factor. For example, a phone second factor may have been provided without
+    // a phone number. A TOTP based second factor may require a secret key, etc.
+    throw new FirebaseAuthError(
+      AuthClientErrorCode.INVALID_ENROLLED_FACTORS,
+      `MFAInfo object provided is invalid.`);
+  }
+}
+
+
+/**
  * Validates a providerUserInfo object. All unsupported parameters
  * are removed from the original request. If an invalid field is passed
  * an error is thrown.
@@ -244,10 +320,11 @@ function validateProviderUserInfo(request: any): void {
  * are removed from the original request. If an invalid field is passed
  * an error is thrown.
  *
- * @param {any} request The create/edit request object.
- * @param {boolean=} uploadAccountRequest Whether to validate as an uploadAccount request.
+ * @param request The create/edit request object.
+ * @param writeOperationType The write operation type.
  */
-function validateCreateEditRequest(request: any, uploadAccountRequest = false): void {
+function validateCreateEditRequest(request: any, writeOperationType: WriteOperationType): void {
+  const uploadAccountRequest = writeOperationType === WriteOperationType.Upload;
   // Hash set of whitelisted parameters.
   const validKeys = {
     displayName: true,
@@ -272,6 +349,9 @@ function validateCreateEditRequest(request: any, uploadAccountRequest = false): 
     createdAt: uploadAccountRequest,
     lastLoginAt: uploadAccountRequest,
     providerUserInfo: uploadAccountRequest,
+    mfaInfo: uploadAccountRequest,
+    // Only for non-uploadAccount requests.
+    mfa: !uploadAccountRequest,
   };
   // Remove invalid keys from original request.
   for (const key in request) {
@@ -410,6 +490,23 @@ function validateCreateEditRequest(request: any, uploadAccountRequest = false): 
       validateProviderUserInfo(providerUserInfoEntry);
     });
   }
+  // mfaInfo is used for importUsers.
+  // mfa.enrollments is used for setAccountInfo.
+  // enrollments has to be an array of valid AuthFactorInfo requests.
+  let enrollments: AuthFactorInfo[] | null = null;
+  if (request.mfaInfo) {
+    enrollments = request.mfaInfo;
+  } else if (request.mfa && request.mfa.enrollments) {
+    enrollments = request.mfa.enrollments;
+  }
+  if (enrollments) {
+    if (!validator.isArray(enrollments)) {
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_ENROLLED_FACTORS);
+    }
+    enrollments.forEach((authFactorInfoEntry: AuthFactorInfo) => {
+      validateAuthFactorInfo(authFactorInfoEntry, writeOperationType);
+    });
+  }
 }
 
 
@@ -508,7 +605,7 @@ export const FIREBASE_AUTH_SET_ACCOUNT_INFO = new ApiSettings('/accounts:update'
         AuthClientErrorCode.INVALID_ARGUMENT,
         '"tenantId" is an invalid "UpdateRequest" property.');
     }
-    validateCreateEditRequest(request);
+    validateCreateEditRequest(request, WriteOperationType.Update);
   })
   // Set response validator.
   .setResponseValidator((response: any) => {
@@ -545,7 +642,7 @@ export const FIREBASE_AUTH_SIGN_UP_NEW_USER = new ApiSettings('/accounts', 'POST
         AuthClientErrorCode.INVALID_ARGUMENT,
         '"tenantId" is an invalid "CreateRequest" property.');
     }
-    validateCreateEditRequest(request);
+    validateCreateEditRequest(request, WriteOperationType.Create);
   })
   // Set response validator.
   .setResponseValidator((response: any) => {
@@ -867,7 +964,7 @@ export abstract class AbstractAuthRequestHandler {
     // No need to validate raw request or raw response as this is done in UserImportBuilder.
     const userImportBuilder = new UserImportBuilder(users, options, (userRequest: any) => {
       // Pass true to validate the uploadAccount specific fields.
-      validateCreateEditRequest(userRequest, true);
+      validateCreateEditRequest(userRequest, WriteOperationType.Upload);
     });
     const request = userImportBuilder.buildRequest();
     // Fail quickly if more users than allowed are to be imported.
@@ -1014,6 +1111,28 @@ export abstract class AbstractAuthRequestHandler {
       request.disableUser = request.disabled;
       delete request.disabled;
     }
+    // Construct mfa related user data.
+    if (validator.isNonNullObject(request.multiFactor)) {
+      if (request.multiFactor.enrolledFactors === null) {
+        // Remove all second factors.
+        request.mfa = {};
+      } else if (validator.isArray(request.multiFactor.enrolledFactors)) {
+        request.mfa = {
+          enrollments: [],
+        };
+        try {
+          request.multiFactor.enrolledFactors.forEach((multiFactorInfo: any) => {
+            request.mfa.enrollments.push(convertMultiFactorInfoToServerFormat(multiFactorInfo));
+          });
+        } catch (e) {
+          return Promise.reject(e);
+        }
+        if (request.mfa.enrollments.length === 0) {
+          delete request.mfa.enrollments;
+        }
+      }
+      delete request.multiFactor;
+    }
     return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_SET_ACCOUNT_INFO, request)
       .then((response: any) => {
         return response.localId as string;
@@ -1077,6 +1196,32 @@ export abstract class AbstractAuthRequestHandler {
     if (typeof request.uid !== 'undefined') {
       request.localId = request.uid;
       delete request.uid;
+    }
+    // Construct mfa related user data.
+    if (validator.isNonNullObject(request.multiFactor)) {
+      if (validator.isNonEmptyArray(request.multiFactor.enrolledFactors)) {
+        const mfaInfo: AuthFactorInfo[] = [];
+        try {
+          request.multiFactor.enrolledFactors.forEach((multiFactorInfo: any) => {
+            // Enrollment time and uid are not allowed for signupNewUser endpoint.
+            // They will automatically be provisioned server side.
+            if (multiFactorInfo.enrollmentTime) {
+              throw new FirebaseAuthError(
+                AuthClientErrorCode.INVALID_ARGUMENT,
+                '"enrollmentTime" is not supported when adding second factors via "createUser()"');
+            } else if (multiFactorInfo.uid) {
+              throw new FirebaseAuthError(
+                AuthClientErrorCode.INVALID_ARGUMENT,
+                '"uid" is not supported when adding second factors via "createUser()"');
+            }
+            mfaInfo.push(convertMultiFactorInfoToServerFormat(multiFactorInfo));
+          });
+        } catch (e) {
+          return Promise.reject(e);
+        }
+        request.mfaInfo = mfaInfo;
+      }
+      delete request.multiFactor;
     }
     return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_SIGN_UP_NEW_USER, request)
       .then((response: any) => {
