@@ -214,6 +214,63 @@ describe('findProjectId()', () => {
   });
 });
 
+describe('findProjectId()', () => {
+  let googleCloudProject: string | undefined;
+  let gcloudProject: string | undefined;
+
+  before(() => {
+    googleCloudProject = process.env.GOOGLE_CLOUD_PROJECT;
+    gcloudProject = process.env.GCLOUD_PROJECT;
+  });
+
+  after(() => {
+    if (isNonEmptyString(googleCloudProject)) {
+      process.env.GOOGLE_CLOUD_PROJECT = googleCloudProject;
+    } else {
+      delete process.env.GOOGLE_CLOUD_PROJECT;
+    }
+
+    if (isNonEmptyString(gcloudProject)) {
+      process.env.GCLOUD_PROJECT = gcloudProject;
+    } else {
+      delete process.env.GCLOUD_PROJECT;
+    }
+  });
+
+  it('should return the explicitly specified project ID from app options', () => {
+    const options: FirebaseAppOptions = {
+      credential: new mocks.MockCredential(),
+      projectId: 'explicit-project-id',
+    };
+    const app: FirebaseApp = mocks.appWithOptions(options);
+    return findProjectId(app).should.eventually.equal(options.projectId);
+  });
+
+  it('should return the project ID from service account', () => {
+    const app: FirebaseApp = mocks.app();
+    return findProjectId(app).should.eventually.equal('project_id');
+  });
+
+  it('should return the project ID set in GOOGLE_CLOUD_PROJECT environment variable', () => {
+    process.env.GOOGLE_CLOUD_PROJECT = 'env-var-project-id';
+    const app: FirebaseApp = mocks.mockCredentialApp();
+    return findProjectId(app).should.eventually.equal('env-var-project-id');
+  });
+
+  it('should return the project ID set in GCLOUD_PROJECT environment variable', () => {
+    process.env.GCLOUD_PROJECT = 'env-var-project-id';
+    const app: FirebaseApp = mocks.mockCredentialApp();
+    return findProjectId(app).should.eventually.equal('env-var-project-id');
+  });
+
+  it('should return null when project ID is not set', () => {
+    delete process.env.GOOGLE_CLOUD_PROJECT;
+    delete process.env.GCLOUD_PROJECT;
+    const app: FirebaseApp = mocks.mockCredentialApp();
+    return findProjectId(app).should.eventually.be.null;
+  });
+});
+
 describe('formatString()', () => {
   it('should keep string as is if not parameters are provided', () =>  {
     const str = 'projects/{projectId}/{api}/path/api/projectId';

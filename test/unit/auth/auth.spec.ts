@@ -103,6 +103,18 @@ function getValidGetAccountInfoResponse(tenantId?: string): {kind: string; users
         rawId: '+11234567890',
       },
     ],
+    mfaInfo: [
+      {
+        mfaEnrollmentId: 'enrolledSecondFactor1',
+        phoneInfo: '+16505557348',
+        displayName: 'Spouse\'s phone number',
+        enrolledAt: new Date().toISOString(),
+      },
+      {
+        mfaEnrollmentId: 'enrolledSecondFactor2',
+        phoneInfo: '+16505551000',
+      },
+    ],
     photoUrl: 'https://lh3.googleusercontent.com/1234567890/photo.jpg',
     validSince: '1476136676',
     lastLoginAt: '1476235905000',
