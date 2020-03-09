@@ -489,12 +489,14 @@ declare namespace admin.auth {
   interface UserMetadata {
 
     /**
-     * The date the user last signed in, formatted as a UTC string.
+     * The date the user last signed in, formatted as a UTC string, or `null`
+     * if the user has never signed in.
      */
     lastSignInTime: string | null;
 
     /**
-     * The date the user was created, formatted as a UTC string.
+     * The date the user was created, formatted as a UTC string. Should
+     * generally never be `null` except in some legacy situations.
      */
     creationTime: string | null;
 
