@@ -5218,7 +5218,7 @@ declare namespace admin.machineLearning {
   }
   interface AutoMLTfliteModelOptions extends ModelOptionsBase {
     tfliteModel: {
-      automlModelName: string;
+      automlModel: string;
     }
   }
   type ModelOptions = ModelOptionsBase | GcsTfliteModelOptions | AutoMLTfliteModelOptions;
@@ -5231,7 +5231,7 @@ declare namespace admin.machineLearning {
 
     // One of these two will be specified
     readonly gcsTfliteUri?: string;
-    readonly automlModelName?: string;
+    readonly automlModel?: string;
   }
 
   /**

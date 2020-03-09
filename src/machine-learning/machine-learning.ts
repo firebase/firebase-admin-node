@@ -273,9 +273,9 @@ export class Model {
     }
     if (model.tfliteModel) {
       // If tflite Model is specified, it must have a source consisting of
-      // oneof {gcsTfliteUri, automlModelName}
+      // oneof {gcsTfliteUri, automlModel}
       if (!validator.isNonEmptyString(model.tfliteModel.gcsTfliteUri) &&
-          !validator.isNonEmptyString(model.tfliteModel.automlModelName)) {
+          !validator.isNonEmptyString(model.tfliteModel.automlModel)) {
             throw new FirebaseMachineLearningError(
               'invalid-server-response',
               `Invalid Model response: ${JSON.stringify(model)}`);
@@ -305,7 +305,7 @@ export interface TfliteModel {
 
   // Oneof these two
   readonly gcsTfliteUri?: string;
-  readonly automlModelName?: string;
+  readonly automlModel?: string;
 }
 
 function extractModelId(resourceName: string): string {

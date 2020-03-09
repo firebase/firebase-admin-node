@@ -134,7 +134,7 @@ describe('MachineLearningApiClient', () => {
     const AUTOML_OPTIONS: ModelOptions = {
       displayName: 'name3',
       tfliteModel: {
-        automlModelName: 'automlModelName1',
+        automlModel: 'automlModel1',
       },
     };
 
@@ -257,13 +257,13 @@ describe('MachineLearningApiClient', () => {
     const AUTOML_OPTIONS: ModelOptions = {
       displayName: 'name3',
       tfliteModel: {
-        automlModelName: 'automlModelName1',
+        automlModel: 'automlModel1',
       },
     };
 
     const NAME_ONLY_MASK = ['displayName'];
     const GCS_MASK = ['displayName', 'tfliteModel.gcsTfliteUri'];
-    const AUTOML_MASK = ['displayName', 'tfliteModel.automlModelName'];
+    const AUTOML_MASK = ['displayName', 'tfliteModel.automlModel'];
 
     const invalidContent: any[] = [null, undefined];
     invalidContent.forEach((content) => {

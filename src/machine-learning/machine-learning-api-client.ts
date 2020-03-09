@@ -45,7 +45,7 @@ export interface GcsTfliteModelOptions extends ModelOptionsBase {
 }
 export interface AutoMLTfliteModelOptions extends ModelOptionsBase {
   tfliteModel: {
-    automlModelName: string;
+    automlModel: string;
   };
 }
 export type ModelOptions = ModelOptionsBase | GcsTfliteModelOptions | AutoMLTfliteModelOptions;
@@ -73,7 +73,7 @@ export interface ModelContent {
   };
   readonly tfliteModel?: {
     readonly gcsTfliteUri?: string;
-    readonly automlModelName?: string;
+    readonly automlModel?: string;
 
     readonly sizeBytes: number;
   };
