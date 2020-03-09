@@ -695,7 +695,7 @@ declare namespace admin.auth {
        * List of second factors enrolled with the current user.
        * Currently only phone second factors are supported.
        */
-      enrolledFactors: PhoneMultiFactorInfo[];
+      enrolledFactors: MultiFactorInfo[];
 
       /**
        * @return A JSON-serializable representation of this multi-factor object.
