@@ -309,7 +309,7 @@ export class MultiFactor {
  * @constructor
  */
 export class UserMetadata {
-  public readonly creationTime: string | null;
+  public readonly creationTime: string;
   public readonly lastSignInTime: string | null;
 
   constructor(response: GetAccountInfoUserResponse) {
@@ -317,7 +317,14 @@ export class UserMetadata {
     // were cases in the past where users did not have creation date properly set.
     // This included legacy Firebase migrating project users and some anonymous users.
     // These bugs have already been addressed since then.
-    this.creationTime = parseDate(response.createdAt);
+    const creationTime = parseDate(response.createdAt);
+    if (creationTime === null) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Unable to parse createdAt time: "'
+        + response.createdAt + '"');
+    }
+    this.creationTime = creationTime;
     utils.enforceReadonly(this, 'creationTime');
 
     this.lastSignInTime = parseDate(response.lastLoginAt);

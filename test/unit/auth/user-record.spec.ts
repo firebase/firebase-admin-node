@@ -23,6 +23,7 @@ import {
   UserInfo, UserMetadata, UserRecord, GetAccountInfoUserResponse, ProviderUserInfoResponse,
   MultiFactor, PhoneMultiFactorInfo, MultiFactorInfo, MultiFactorInfoResponse,
 } from '../../../src/auth/user-record';
+import {FirebaseAuthError} from '../../../src/utils/error';
 
 
 chai.should();
@@ -633,18 +634,15 @@ describe('UserMetadata', () => {
       }).not.to.throw(Error);
     });
 
-    it('should set creationTime and lastSignInTime to null when not provided', () => {
-      const metadata = new UserMetadata({} as any);
-      expect(metadata.creationTime).to.be.null;
+    it('should set lastSignInTime to null when not provided', () => {
+      const metadata = new UserMetadata({createdAt: '1234567890000'} as any);
       expect(metadata.lastSignInTime).to.be.null;
     });
 
-    it('should set creationTime to null when creationTime value is invalid', () => {
-      const metadata = new UserMetadata({
-        createdAt: 'invalid',
-      } as any);
-      expect(metadata.creationTime).to.be.null;
-      expect(metadata.lastSignInTime).to.be.null;
+    it('should throw when createdAt value is invalid', () => {
+      expect(() => {
+        new UserMetadata({createdAt: 'invalid', localId: 'uid1'});
+      }).to.throw(FirebaseAuthError).with.property('code', 'auth/internal-error');
     });
 
     it('should set lastSignInTime to null when lastLoginAt value is invalid', () => {
@@ -693,9 +691,9 @@ describe('UserRecord', () => {
       }).to.throw(Error);
     });
 
-    it('should succeed when only localId is provided', () => {
+    it('should succeed when only createdAt and localId is provided', () => {
       expect(() =>  {
-        return new UserRecord({localId: '123456789'});
+        return new UserRecord({createdAt: '1234567890000', localId: '123456789'});
       }).not.to.throw(Error);
     });
   });
@@ -791,6 +789,7 @@ describe('UserRecord', () => {
     it('should clear REDACTED passwordHash', () => {
       const user = new UserRecord({
         localId: 'uid1',
+        createdAt: '1234567890000',
         passwordHash: Buffer.from('REDACTED').toString('base64'),
       });
 

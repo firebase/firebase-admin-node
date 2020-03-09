@@ -495,10 +495,9 @@ declare namespace admin.auth {
     lastSignInTime: string | null;
 
     /**
-     * The date the user was created, formatted as a UTC string. Should
-     * generally never be `null` except in some legacy situations.
+     * The date the user was created, formatted as a UTC string.
      */
-    creationTime: string | null;
+    creationTime: string;
 
     /**
      * @return A JSON-serializable representation of this object.
