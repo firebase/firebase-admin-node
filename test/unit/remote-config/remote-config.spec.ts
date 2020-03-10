@@ -314,7 +314,7 @@ describe('RemoteConfig', () => {
           expect(template.conditions[0].expression).to.equal('device.os == \'ios\'');
           // verify the property mapping in RemoteConfigCondition from `tagColor` to `color`
           expect(template.conditions[0].color).to.equal('Pink');
-          // verify that the etag is unmodified
+          // verify that the etag is unchanged
           expect(template.etag).to.equal('etag-123456789012-6');
           // verify that the etag is read-only
           expect(() => {

@@ -53,7 +53,7 @@ describe('RemoteConfigApiClient', () => {
     'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
     'Accept-Encoding': 'gzip',
     'If-Match': '',
-    'content-type': 'application/json; charset=utf-8',
+    //'content-type': 'application/json; charset=utf-8',
   };
   const noProjectId = 'Failed to determine project ID. Initialize the SDK with service '
     + 'account credentials, or set project ID as an app option. Alternatively, set the '
@@ -159,7 +159,7 @@ describe('RemoteConfigApiClient', () => {
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
-    it('should reject unknown-error when error code is not present', () => {
+    it('should reject with unknown-error when error code is not present', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .rejects(utils.errorFrom({}, 404));
@@ -249,7 +249,7 @@ describe('RemoteConfigApiClient', () => {
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
-    it('should reject unknown-error when error code is not present', () => {
+    it('should reject with unknown-error when error code is not present', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .rejects(utils.errorFrom({}, 404));
@@ -259,7 +259,7 @@ describe('RemoteConfigApiClient', () => {
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
-    it('should reject unknown-error for non-json response', () => {
+    it('should reject with unknown-error for non-json response', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .rejects(utils.errorFrom('not json', 404));
@@ -270,40 +270,30 @@ describe('RemoteConfigApiClient', () => {
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
 
-    it('should reject with failed-precondition when a validation error occurres', () => {
-      const invalidTemplateError = {
-        error: {
-          code: 400,
-          message: "[VALIDATION_ERROR]: [foo] are not valid condition names. All keys in all conditional value maps must be valid condition names.",
-          status: "FAILED_PRECONDITION"
-        }
-      };
-      const stub = sinon
-        .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom(invalidTemplateError, 400));
-      stubs.push(stub);
-      const expected = new FirebaseRemoteConfigError('failed-precondition',
-        '[VALIDATION_ERROR]: [foo] are not valid condition names. All keys in all conditional value maps must be valid condition names.');
-      return apiClient.validateTemplate(remoteConfigTemplate)
-        .should.eventually.be.rejected.and.deep.equal(expected);
-    });
-
-    it('should reject with failed-precondition when a validation error occurres', () => {
-      const invalidTemplateError = {
-        error: {
-          code: 400,
-          message: "[VERSION_MISMATCH]: Expected version 6, found 8 for project: 123456789012",
-          status: "FAILED_PRECONDITION"
-        }
-      };
-      const stub = sinon
-        .stub(HttpClient.prototype, 'send')
-        .rejects(utils.errorFrom(invalidTemplateError, 400));
-      stubs.push(stub);
-      const expected = new FirebaseRemoteConfigError('failed-precondition',
-        '[VERSION_MISMATCH]: Expected version 6, found 8 for project: 123456789012');
-      return apiClient.validateTemplate(remoteConfigTemplate)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+    const errorMessages = [{
+      error: {
+        code: 400,
+        message: "[VALIDATION_ERROR]: [foo] are not valid condition names. All keys in all conditional value maps must be valid condition names.",
+        status: "FAILED_PRECONDITION"
+      }
+    },
+    {
+      error: {
+        code: 400,
+        message: "[VERSION_MISMATCH]: Expected version 6, found 8 for project: 123456789012",
+        status: "FAILED_PRECONDITION"
+      }
+    }];
+    errorMessages.forEach((error) => {
+      it('should reject with failed-precondition when a validation error occurres', () => {
+        const stub = sinon
+          .stub(HttpClient.prototype, 'send')
+          .rejects(utils.errorFrom(error, 400));
+        stubs.push(stub);
+        const expected = new FirebaseRemoteConfigError('failed-precondition', error.error.message);
+        return apiClient.validateTemplate(remoteConfigTemplate)
+          .should.eventually.be.rejected.and.deep.equal(expected);
+      });
     });
   });
 });
