@@ -43,17 +43,10 @@ describe('RemoteConfigApiClient', () => {
       status: 'NOT_FOUND',
     },
   };
-  const EXPECTED_GET_HEADERS = {
+  const EXPECTED_HEADERS = {
     'Authorization': 'Bearer mock-token',
     'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
     'Accept-Encoding': 'gzip',
-  };
-  const EXPECTED_PUT_HEADERS = {
-    'Authorization': 'Bearer mock-token',
-    'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
-    'Accept-Encoding': 'gzip',
-    'If-Match': '',
-    //'content-type': 'application/json; charset=utf-8',
   };
   const noProjectId = 'Failed to determine project ID. Initialize the SDK with service '
     + 'account credentials, or set project ID as an app option. Alternatively, set the '
@@ -134,7 +127,7 @@ describe('RemoteConfigApiClient', () => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'GET',
             url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig',
-            headers: EXPECTED_GET_HEADERS,
+            headers: EXPECTED_HEADERS,
           });
         });
     });
@@ -215,12 +208,10 @@ describe('RemoteConfigApiClient', () => {
           // validate template returns an etag with the suffix -0 when successful.
           // verify that the etag matches the original template etag.
           expect(resp.etag).to.equal('etag-123456789012-6');
-          const headers = EXPECTED_PUT_HEADERS;
-          headers["If-Match"] = remoteConfigTemplate.etag;
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'PUT',
             url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig?validate_only=true',
-            headers: headers,
+            headers: { ...EXPECTED_HEADERS, 'If-Match': remoteConfigTemplate.etag },
             data: {
               conditions: remoteConfigTemplate.conditions,
               parameters: remoteConfigTemplate.parameters,

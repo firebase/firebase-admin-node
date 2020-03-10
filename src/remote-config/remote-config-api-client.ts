@@ -23,7 +23,7 @@ import * as validator from '../utils/validator';
 
 // Remote Config backend constants
 const FIREBASE_REMOTE_CONFIG_V1_API = 'https://firebaseremoteconfig.googleapis.com/v1';
-const FIREBASE_REMOTE_CONFIG_GET_HEADERS = {
+const FIREBASE_REMOTE_CONFIG_HEADERS = {
   'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
   // There is a known issue in which the ETag is not properly returned in cases where the request
   // does not specify a compression type. Currently, it is required to include the header
@@ -31,15 +31,6 @@ const FIREBASE_REMOTE_CONFIG_GET_HEADERS = {
   // https://firebase.google.com/docs/remote-config/use-config-rest#etag_usage_and_forced_updates
   'Accept-Encoding': 'gzip',
 };
-/*const FIREBASE_REMOTE_CONFIG_PUT_HEADERS = {
-  'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
-  // There is a known issue in which the ETag is not properly returned in cases where the request
-  // does not specify a compression type. Currently, it is required to include the header
-  // `Accept-Encoding: gzip` or equivalent in all requests.
-  // https://firebase.google.com/docs/remote-config/use-config-rest#etag_usage_and_forced_updates
-  'Accept-Encoding': 'gzip',
-  //'If-Match': '',
-};*/
 
 export enum RemoteConfigConditionDisplayColor {
   BLUE = "Blue",
@@ -112,7 +103,7 @@ export class RemoteConfigApiClient {
         const request: HttpRequestConfig = {
           method: 'GET',
           url: `${url}/remoteConfig`,
-          headers: FIREBASE_REMOTE_CONFIG_GET_HEADERS
+          headers: FIREBASE_REMOTE_CONFIG_HEADERS
         };
         return this.httpClient.send(request);
       })
@@ -136,12 +127,10 @@ export class RemoteConfigApiClient {
   public validateTemplate(template: RemoteConfigTemplateContent): Promise<RemoteConfigTemplateContent> {
     return this.getUrl()
       .then((url) => {
-        //const headers = { ...FIREBASE_REMOTE_CONFIG_GET_HEADERS, 'If-Match': template.etag };
-        //headers['If-Match'] = template.etag;
         const request: HttpRequestConfig = {
           method: 'PUT',
           url: `${url}/remoteConfig?validate_only=true`,
-          headers: { ...FIREBASE_REMOTE_CONFIG_GET_HEADERS, 'If-Match': template.etag },
+          headers: { ...FIREBASE_REMOTE_CONFIG_HEADERS, 'If-Match': template.etag },
           data: {
             conditions: template.conditions,
             parameters: template.parameters,
