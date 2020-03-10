@@ -923,7 +923,7 @@ declare namespace admin.auth {
       /**
        * The type identifier or `factorId` of the second factor, provided the
        * ID token was obtained from a multi-factor authenticated user.
-       * For phone, this is `“phone”`.
+       * For phone, this is `"phone"`.
        */
       sign_in_second_factor?: string;
 
