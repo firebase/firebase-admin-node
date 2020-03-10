@@ -19,7 +19,6 @@ import { PrefixedFirebaseError } from '../utils/error';
 export type RemoteConfigErrorCode =
   'aborted'
   | 'already-exists'
-  | 'authentication-error'
   | 'failed-precondition'
   | 'internal-error'
   | 'invalid-argument'

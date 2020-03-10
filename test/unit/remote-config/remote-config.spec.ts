@@ -28,7 +28,7 @@ import { FirebaseApp } from '../../../src/firebase-app';
 import * as mocks from '../../resources/mocks';
 import {
   RemoteConfigApiClient,
-  RemoteConfigContent,
+  RemoteConfigTemplateContent,
   RemoteConfigConditionDisplayColor
 } from '../../../src/remote-config/remote-config-api-client';
 import { FirebaseRemoteConfigError } from '../../../src/remote-config/remote-config-utils';
@@ -40,9 +40,9 @@ describe('RemoteConfig', () => {
 
   const INTERNAL_ERROR = new FirebaseRemoteConfigError('internal-error', 'message');
   const REMOTE_CONFIG_RESPONSE: {
-    // This type is effectively a RemoteConfigContent, but with non-readonly fields
+    // This type is effectively a RemoteConfigTemplateContent, but with non-readonly fields
     // to allow easier use from within the tests. An improvement would be to
-    // alter this into a helper that creates customized RemoteConfigContent based
+    // alter this into a helper that creates customized RemoteConfigTemplateContent based
     // on the needs of the test, as that would ensure type-safety.
     conditions?: Array<{ name: string; expression: string; tagColor: string }>;
     parameters?: object | null;
@@ -64,7 +64,7 @@ describe('RemoteConfig', () => {
     etag: 'etag-123456789012-5',
   };
 
-  const REMOTE_CONFIG_CONTENT: RemoteConfigContent = {
+  const REMOTE_CONFIG_CONTENT: RemoteConfigTemplateContent = {
     conditions: [{
       name: 'ios',
       expression: 'device.os == \'ios\'',

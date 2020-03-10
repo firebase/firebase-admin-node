@@ -80,7 +80,7 @@ interface RemoteConfigCondition {
   tagColor?: RemoteConfigConditionDisplayColor;
 }
 
-export interface RemoteConfigContent {
+export interface RemoteConfigTemplateContent {
   readonly conditions?: RemoteConfigCondition[];
   readonly parameters?: { [key: string]: RemoteConfigParameter };
   readonly etag: string;
@@ -106,7 +106,7 @@ export class RemoteConfigApiClient {
     this.httpClient = new AuthorizedHttpClient(app);
   }
 
-  public getTemplate(): Promise<RemoteConfigContent> {
+  public getTemplate(): Promise<RemoteConfigTemplateContent> {
     return this.getUrl()
       .then((url) => {
         const request: HttpRequestConfig = {
@@ -133,7 +133,7 @@ export class RemoteConfigApiClient {
       });
   }
 
-  public validateTemplate(template: RemoteConfigContent): Promise<RemoteConfigContent> {
+  public validateTemplate(template: RemoteConfigTemplateContent): Promise<RemoteConfigTemplateContent> {
     return this.getUrl()
       .then((url) => {
         //const headers = { ...FIREBASE_REMOTE_CONFIG_GET_HEADERS, 'If-Match': template.etag };
@@ -237,6 +237,6 @@ const ERROR_CODE_MAPPING: { [key: string]: RemoteConfigErrorCode } = {
   OUT_OF_RANGE: 'out-of-range',
   PERMISSION_DENIED: 'permission-denied',
   RESOURCE_EXHAUSTED: 'resource-exhausted',
-  UNAUTHENTICATED: 'authentication-error',
+  UNAUTHENTICATED: 'unauthenticated',
   UNKNOWN: 'unknown-error',
 };

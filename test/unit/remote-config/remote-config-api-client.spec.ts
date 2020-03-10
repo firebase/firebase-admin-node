@@ -21,7 +21,7 @@ import * as chai from 'chai';
 import * as sinon from 'sinon';
 import {
   RemoteConfigApiClient,
-  RemoteConfigContent,
+  RemoteConfigTemplateContent,
   RemoteConfigConditionDisplayColor
 } from '../../../src/remote-config/remote-config-api-client';
 import { FirebaseRemoteConfigError } from '../../../src/remote-config/remote-config-utils';
@@ -67,7 +67,7 @@ describe('RemoteConfigApiClient', () => {
   const clientWithoutProjectId = new RemoteConfigApiClient(
     mocks.mockCredentialApp());
 
-  const REMOTE_CONFIG_CONTENT: RemoteConfigContent = {
+  const REMOTE_CONFIG_CONTENT: RemoteConfigTemplateContent = {
     conditions: [{
       name: 'ios',
       expression: 'device.os == \'ios\'',

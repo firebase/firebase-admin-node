@@ -20,7 +20,7 @@ import * as validator from '../utils/validator';
 import { FirebaseRemoteConfigError } from './remote-config-utils';
 import {
   RemoteConfigApiClient,
-  RemoteConfigContent,
+  RemoteConfigTemplateContent,
   RemoteConfigParameter,
   RemoteConfigConditionDisplayColor,
 } from './remote-config-api-client';
@@ -83,7 +83,7 @@ export class RemoteConfig implements FirebaseServiceInterface {
    * @return {Promise<RemoteConfigTemplate>} A Promise that fulfills when a template is validated.
    */
   public validateTemplate(template: RemoteConfigTemplate): Promise<RemoteConfigTemplate> {
-    const content: RemoteConfigContent = {
+    const content: RemoteConfigTemplateContent = {
       conditions: template.conditions.map(p => ({
         name: p.name,
         expression: p.expression,
@@ -109,7 +109,7 @@ export class RemoteConfigTemplate {
   public conditions: RemoteConfigCondition[];
   private readonly etagInternal: string;
 
-  constructor(config: RemoteConfigContent) {
+  constructor(config: RemoteConfigTemplateContent) {
     if (!validator.isNonNullObject(config) ||
       !validator.isNonEmptyString(config.etag)) {
       throw new FirebaseRemoteConfigError(
