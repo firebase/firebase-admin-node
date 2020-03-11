@@ -48,32 +48,34 @@ export enum RemoteConfigConditionDisplayColor {
 
 /** Interface representing a Remote Config parameter `value` in value options. */
 export interface ExplicitParameterValue {
-  readonly value: string;
+  value: string;
 }
 
 /** Interface representing a Remote Config parameter `useInAppDefault` in value options. */
 export interface InAppDefaultValue {
-  readonly useInAppDefault: boolean;
+  useInAppDefault: boolean;
 }
 
 export type RemoteConfigParameterValue = ExplicitParameterValue | InAppDefaultValue;
 
 /** Interface representing a Remote Config parameter. */
 export interface RemoteConfigParameter {
-  readonly defaultValue?: RemoteConfigParameterValue;
-  readonly conditionalValues?: { [key: string]: RemoteConfigParameterValue };
-  readonly description?: string;
+  defaultValue?: RemoteConfigParameterValue;
+  conditionalValues?: { [key: string]: RemoteConfigParameterValue };
+  description?: string;
 }
 
-interface RemoteConfigCondition {
+/** Interface representing a Remote Config condition. */
+export interface RemoteConfigCondition {
   name: string;
   expression: string;
   tagColor?: RemoteConfigConditionDisplayColor;
 }
 
-export interface RemoteConfigTemplateContent {
-  readonly conditions?: RemoteConfigCondition[];
-  readonly parameters?: { [key: string]: RemoteConfigParameter };
+/** Interface representing a Remote Config template. */
+export interface RemoteConfigTemplate {
+  conditions: RemoteConfigCondition[];
+  parameters: { [key: string]: RemoteConfigParameter };
   readonly etag: string;
 }
 
@@ -97,7 +99,7 @@ export class RemoteConfigApiClient {
     this.httpClient = new AuthorizedHttpClient(app);
   }
 
-  public getTemplate(): Promise<RemoteConfigTemplateContent> {
+  public getTemplate(): Promise<RemoteConfigTemplate> {
     return this.getUrl()
       .then((url) => {
         const request: HttpRequestConfig = {
@@ -108,7 +110,7 @@ export class RemoteConfigApiClient {
         return this.httpClient.send(request);
       })
       .then((resp) => {
-        if (!Object.prototype.hasOwnProperty.call(resp.headers, 'etag')) {
+        if (!validator.isNonEmptyString(resp.headers['etag'])) {
           throw new FirebaseRemoteConfigError(
             'invalid-argument',
             'ETag header is not present in the server response.');
@@ -124,7 +126,7 @@ export class RemoteConfigApiClient {
       });
   }
 
-  public validateTemplate(template: RemoteConfigTemplateContent): Promise<RemoteConfigTemplateContent> {
+  public validateTemplate(template: RemoteConfigTemplate): Promise<RemoteConfigTemplate> {
     return this.getUrl()
       .then((url) => {
         const request: HttpRequestConfig = {
@@ -139,7 +141,7 @@ export class RemoteConfigApiClient {
         return this.httpClient.send(request);
       })
       .then((resp) => {
-        if (!Object.prototype.hasOwnProperty.call(resp.headers, 'etag')) {
+        if (!validator.isNonEmptyString(resp.headers['etag'])) {
           throw new FirebaseRemoteConfigError(
             'invalid-argument',
             'ETag header is not present in the server response.');
