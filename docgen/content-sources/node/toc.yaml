@@ -42,8 +42,14 @@ toc:
     path: /docs/reference/admin/node/admin.auth.ListProviderConfigResults
   - title: "ListTenantsResult"
     path: /docs/reference/admin/node/admin.auth.ListTenantsResult
+  - title: "MultiFactorCreateSettings"
+    path: /docs/reference/admin/node/admin.auth.MultiFactorCreateSettings
   - title: "MultiFactorInfo"
     path: /docs/reference/admin/node/admin.auth.MultiFactorInfo
+  - title: "MultiFactorSettings"
+    path: /docs/reference/admin/node/admin.auth.MultiFactorSettings
+  - title: "MultiFactorUpdateSettings"
+    path: /docs/reference/admin/node/admin.auth.MultiFactorUpdateSettings
   - title: "OIDCAuthProviderConfig"
     path: /docs/reference/admin/node/admin.auth.OIDCAuthProviderConfig
   - title: "OIDCUpdateAuthProviderRequest"

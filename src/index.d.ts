@@ -689,24 +689,52 @@ declare namespace admin.auth {
     /**
      * The multi-factor related properties for the current user, if available.
      */
-    multiFactor?: {
-
-      /**
-       * List of second factors enrolled with the current user.
-       * Currently only phone second factors are supported.
-       */
-      enrolledFactors: MultiFactorInfo[];
-
-      /**
-       * @return A JSON-serializable representation of this multi-factor object.
-       */
-      toJSON(): Object;
-    };
+    multiFactor?: admin.auth.MultiFactorSettings;
 
     /**
      * @return A JSON-serializable representation of this object.
      */
     toJSON(): Object;
+  }
+
+  /**
+   * The multi-factor related user settings.
+   */
+  interface MultiFactorSettings {
+    /**
+     * List of second factors enrolled with the current user.
+     * Currently only phone second factors are supported.
+     */
+    enrolledFactors: admin.auth.MultiFactorInfo[];
+
+    /**
+     * @return A JSON-serializable representation of this multi-factor object.
+     */
+    toJSON(): Object;
+  }
+
+  /**
+   * The multi-factor related user settings for create operations.
+   */
+  interface MultiFactorCreateSettings {
+
+    /**
+     * The created user's list of enrolled second factors.
+     */
+    enrolledFactors: admin.auth.CreateMultiFactorInfoRequest[];
+  }
+
+  /**
+   * The multi-factor related user settings for update operations.
+   */
+  interface MultiFactorUpdateSettings {
+
+    /**
+     * The updated list of enrolled second factors. The provided list overwrites the user's
+     * existing list of second factors.
+     * When null is passed, all of the user's existing second factors are removed.
+     */
+    enrolledFactors: admin.auth.UpdateMultiFactorInfoRequest[] | null;
   }
 
   /**
@@ -793,15 +821,7 @@ declare namespace admin.auth {
     /**
      * The user's updated multi-factor related properties.
      */
-    multiFactor?: {
-
-      /**
-       * The updated list of enrolled second factors. The provided list overwrites the user's
-       * existing list of second factors.
-       * When null is passed, all of the user's existing second factors are removed.
-       */
-      enrolledFactors: UpdateMultiFactorInfoRequest[] | null;
-    };
+    multiFactor?: admin.auth.MultiFactorUpdateSettings;
   }
 
   /**
@@ -847,13 +867,7 @@ declare namespace admin.auth {
     /**
      * The user's multi-factor related properties.
      */
-    multiFactor?: {
-
-      /**
-       * The user's list of enrolled second factors.
-       */
-      enrolledFactors: CreateMultiFactorInfoRequest[];
-    };
+    multiFactor?: admin.auth.MultiFactorCreateSettings;
   }
 
   /**
@@ -1174,13 +1188,7 @@ declare namespace admin.auth {
     /**
      * The multi-factor related properties for the imported user if available.
      */
-    multiFactor?: {
-    
-      /**
-       * List of enrolled second factors on the user to import.
-       */
-      enrolledFactors: MultiFactorInfo[];
-    };
+    multiFactor?: admin.auth.MultiFactorSettings;
   }
 
   /**
