@@ -21,7 +21,7 @@ import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { FirebaseApp } from '../firebase-app';
 
-const ML_V1BETA1_API = 'https://mlkit.googleapis.com/v1beta1';
+const ML_V1BETA2_API = 'https://firebaseml.googleapis.com/v1beta2';
 const FIREBASE_VERSION_HEADER = {
   'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
 };
@@ -253,7 +253,7 @@ export class MachineLearningApiClient {
   private getUrl(): Promise<string> {
     return this.getProjectIdPrefix()
       .then((projectIdPrefix) => {
-        return `${ML_V1BETA1_API}/${this.projectIdPrefix}`;
+        return `${ML_V1BETA2_API}/${this.projectIdPrefix}`;
       });
   }
 
