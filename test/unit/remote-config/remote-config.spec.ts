@@ -19,10 +19,15 @@
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
-import { RemoteConfig, RemoteConfigCondition } from '../../../src/remote-config/remote-config';
+import { RemoteConfig } from '../../../src/remote-config/remote-config';
 import { FirebaseApp } from '../../../src/firebase-app';
 import * as mocks from '../../resources/mocks';
-import { RemoteConfigApiClient } from '../../../src/remote-config/remote-config-api-client';
+import {
+  RemoteConfigApiClient,
+  RemoteConfigTemplate,
+  RemoteConfigCondition,
+  RemoteConfigConditionDisplayColor,
+} from '../../../src/remote-config/remote-config-api-client';
 import { FirebaseRemoteConfigError } from '../../../src/remote-config/remote-config-utils';
 import { deepCopy } from '../../../src/utils/deep-copy';
 
@@ -32,13 +37,12 @@ describe('RemoteConfig', () => {
 
   const INTERNAL_ERROR = new FirebaseRemoteConfigError('internal-error', 'message');
   const REMOTE_CONFIG_RESPONSE: {
-    // This type is effectively a RemoteConfigResponse, but with non-readonly fields
+    // This type is effectively a RemoteConfigTemplate, but with non-readonly fields
     // to allow easier use from within the tests. An improvement would be to
-    // alter this into a helper that creates customized RemoteConfigResponse based
+    // alter this into a helper that creates customized RemoteConfigTemplateContent based
     // on the needs of the test, as that would ensure type-safety.
     conditions?: Array<{ name: string; expression: string; tagColor: string }>;
     parameters?: object | null;
-    version?: object;
     etag: string;
   } = {
     conditions: [{
@@ -57,7 +61,25 @@ describe('RemoteConfig', () => {
     etag: 'etag-123456789012-5',
   };
 
+  const REMOTE_CONFIG_TEMPLATE: RemoteConfigTemplate = {
+    conditions: [{
+      name: 'ios',
+      expression: 'device.os == \'ios\'',
+      tagColor: RemoteConfigConditionDisplayColor.PINK,
+    }],
+    parameters: {
+      // eslint-disable-next-line @typescript-eslint/camelcase
+      holiday_promo_enabled: {
+        defaultValue: { value: 'true' },
+        conditionalValues: { ios: { useInAppDefault: true } },
+        description: 'this is a promo',
+      },
+    },
+    etag: 'etag-123456789012-6',
+  };
+
   let remoteConfig: RemoteConfig;
+
   let mockApp: FirebaseApp;
   let mockCredentialApp: FirebaseApp;
 
@@ -194,14 +216,12 @@ describe('RemoteConfig', () => {
           expect(template.conditions.length).to.equal(1);
           expect(template.conditions[0].name).to.equal('ios');
           expect(template.conditions[0].expression).to.equal('device.os == \'ios\'');
-          // verify the property mapping in RemoteConfigCondition from `tagColor` to `color`
-          expect(template.conditions[0].color).to.equal('BLUE');
-
+          expect(template.conditions[0].tagColor).to.equal('BLUE');
           expect(template.etag).to.equal('etag-123456789012-5');
           // verify that etag is read-only
           expect(() => {
             (template as any).etag = "new-etag";
-          }).to.throw('Cannot set property etag of #<RemoteConfigTemplate> which has only a getter');
+          }).to.throw('Cannot set property etag of #<RemoteConfigTemplateImpl> which has only a getter');
 
           const key = 'holiday_promo_enabled';
           const p1 = template.parameters[key];
@@ -209,12 +229,103 @@ describe('RemoteConfig', () => {
           expect(p1.conditionalValues).deep.equals({ ios: { useInAppDefault: true } });
           expect(p1.description).equals('this is a promo');
 
-          const c = template.getCondition('ios');
+          const c = template.conditions.find((c) => c.name === 'ios');
           expect(c).to.be.not.undefined;
           const cond = c as RemoteConfigCondition;
           expect(cond.name).to.equal('ios');
           expect(cond.expression).to.equal('device.os == \'ios\'');
-          expect(cond.color).to.equal('BLUE');
+          expect(cond.tagColor).to.equal('BLUE');
+        });
+    });
+  });
+
+  describe('validateTemplate', () => {
+    it('should propagate API errors', () => {
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'validateTemplate')
+        .rejects(INTERNAL_ERROR);
+      stubs.push(stub);
+      return remoteConfig.validateTemplate(REMOTE_CONFIG_TEMPLATE)
+        .should.eventually.be.rejected.and.deep.equal(INTERNAL_ERROR);
+    });
+
+    it('should reject when API response is invalid', () => {
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'validateTemplate')
+        .resolves(null);
+      stubs.push(stub);
+      return remoteConfig.validateTemplate(REMOTE_CONFIG_TEMPLATE)
+        .should.eventually.be.rejected.and.have.property(
+          'message', 'Invalid Remote Config template response: null');
+    });
+
+    it('should reject when API response does not contain an ETag', () => {
+      const response = deepCopy(REMOTE_CONFIG_RESPONSE);
+      response.etag = '';
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'validateTemplate')
+        .resolves(response);
+      stubs.push(stub);
+      return remoteConfig.validateTemplate(REMOTE_CONFIG_TEMPLATE)
+        .should.eventually.be.rejected.and.have.property(
+          'message', `Invalid Remote Config template response: ${JSON.stringify(response)}`);
+    });
+
+    it('should reject when API response does not contain valid parameters', () => {
+      const response = deepCopy(REMOTE_CONFIG_RESPONSE);
+      response.parameters = null;
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'validateTemplate')
+        .resolves(response);
+      stubs.push(stub);
+      return remoteConfig.validateTemplate(REMOTE_CONFIG_TEMPLATE)
+        .should.eventually.be.rejected.and.have.property(
+          'message', `Remote Config parameters must be a non-null object`);
+    });
+
+    it('should reject when API response does not contain valid conditions', () => {
+      const response = deepCopy(REMOTE_CONFIG_RESPONSE);
+      response.conditions = Object();
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'validateTemplate')
+        .resolves(response);
+      stubs.push(stub);
+      return remoteConfig.validateTemplate(REMOTE_CONFIG_TEMPLATE)
+        .should.eventually.be.rejected.and.have.property(
+          'message', `Remote Config conditions must be an array`);
+    });
+
+    it('should resolve with Remote Config template on success', () => {
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'validateTemplate')
+        .resolves(REMOTE_CONFIG_TEMPLATE);
+      stubs.push(stub);
+
+      return remoteConfig.validateTemplate(REMOTE_CONFIG_TEMPLATE)
+        .then((template) => {
+          expect(template.conditions.length).to.equal(1);
+          expect(template.conditions[0].name).to.equal('ios');
+          expect(template.conditions[0].expression).to.equal('device.os == \'ios\'');
+          expect(template.conditions[0].tagColor).to.equal('Pink');
+          // verify that the etag is unchanged
+          expect(template.etag).to.equal('etag-123456789012-6');
+          // verify that the etag is read-only
+          expect(() => {
+            (template as any).etag = "new-etag";
+          }).to.throw('Cannot set property etag of #<RemoteConfigTemplateImpl> which has only a getter');
+
+          const key = 'holiday_promo_enabled';
+          const p1 = template.parameters[key];
+          expect(p1.defaultValue).deep.equals({ value: 'true' });
+          expect(p1.conditionalValues).deep.equals({ ios: { useInAppDefault: true } });
+          expect(p1.description).equals('this is a promo');
+
+          const c = template.conditions.find((c) => c.name === 'ios');
+          expect(c).to.be.not.undefined;
+          const cond = c as RemoteConfigCondition;
+          expect(cond.name).to.equal('ios');
+          expect(cond.expression).to.equal('device.os == \'ios\'');
+          expect(cond.tagColor).to.equal('Pink');
         });
     });
   });

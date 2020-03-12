@@ -17,14 +17,13 @@
 import { PrefixedFirebaseError } from '../utils/error';
 
 export type RemoteConfigErrorCode =
-  'authentication-error'
-  | 'duplicate-key'
+  'aborted'
+  | 'already-exists'
+  | 'failed-precondition'
   | 'internal-error'
   | 'invalid-argument'
-  | 'invalid-etag'
-  | 'invalid-template'
   | 'not-found'
-  | 'obsolete-etag'
+  | 'out-of-range'
   | 'permission-denied'
   | 'resource-exhausted'
   | 'unauthenticated'

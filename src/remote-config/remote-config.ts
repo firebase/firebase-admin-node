@@ -20,16 +20,10 @@ import * as validator from '../utils/validator';
 import { FirebaseRemoteConfigError } from './remote-config-utils';
 import {
   RemoteConfigApiClient,
-  RemoteConfigResponse,
-  RemoteConfigParameter
+  RemoteConfigTemplate,
+  RemoteConfigParameter,
+  RemoteConfigCondition,
 } from './remote-config-api-client';
-
-/** Interface representing a Remote Config condition. */
-export interface RemoteConfigCondition {
-  name: string;
-  expression: string;
-  color?: string;
-}
 
 /**
  * Internals of an RemoteConfig service instance.
@@ -70,21 +64,35 @@ export class RemoteConfig implements FirebaseServiceInterface {
   public getTemplate(): Promise<RemoteConfigTemplate> {
     return this.client.getTemplate()
       .then((templateResponse) => {
-        return new RemoteConfigTemplate(templateResponse);
+        return new RemoteConfigTemplateImpl(templateResponse);
+      });
+  }
+
+  /**
+   * Validates a Remote Config template.
+   *
+   * @param {RemoteConfigTemplate} template The Remote Config template to be validated.
+   *
+   * @return {Promise<RemoteConfigTemplate>} A Promise that fulfills when a template is validated.
+   */
+  public validateTemplate(template: RemoteConfigTemplate): Promise<RemoteConfigTemplate> {
+    return this.client.validateTemplate(template)
+      .then((templateResponse) => {
+        return new RemoteConfigTemplateImpl(templateResponse);
       });
   }
 }
 
 /**
- * Remote Config template class.
+ * Remote Config template internal implementation.
  */
-export class RemoteConfigTemplate {
+class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
 
   public parameters: { [key: string]: RemoteConfigParameter };
   public conditions: RemoteConfigCondition[];
   private readonly etagInternal: string;
 
-  constructor(config: RemoteConfigResponse) {
+  constructor(config: RemoteConfigTemplate) {
     if (!validator.isNonNullObject(config) ||
       !validator.isNonEmptyString(config.etag)) {
       throw new FirebaseRemoteConfigError(
@@ -111,11 +119,7 @@ export class RemoteConfigTemplate {
           'invalid-argument',
           `Remote Config conditions must be an array`);
       }
-      this.conditions = config.conditions.map(p => ({
-        name: p.name,
-        expression: p.expression,
-        color: p.tagColor
-      }));
+      this.conditions = config.conditions;
     } else {
       this.conditions = [];
     }
@@ -128,25 +132,5 @@ export class RemoteConfigTemplate {
    */
   get etag(): string {
     return this.etagInternal;
-  }
-
-  /**
-   * Find an existing Remote Config condition by name.
-   *
-   * @param {string} name The name of the Remote Config condition.
-   *
-   * @return {RemoteConfigCondition} The Remote Config condition with the provided name.
-   */
-  public getCondition(name: string): RemoteConfigCondition | undefined {
-    return this.conditions.find((c) => c.name === name);
-  }
-
-  /** @return {object} The plain object representation of the current template data. */
-  public toJSON(): object {
-    return {
-      parameters: this.parameters,
-      conditions: this.conditions,
-      etag: this.etag,
-    };
   }
 }

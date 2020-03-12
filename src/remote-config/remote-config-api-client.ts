@@ -32,8 +32,7 @@ const FIREBASE_REMOTE_CONFIG_HEADERS = {
   'Accept-Encoding': 'gzip',
 };
 
-enum ConditionDisplayColor {
-  UNSPECIFIED = "Unspecified",
+export enum RemoteConfigConditionDisplayColor {
   BLUE = "Blue",
   BROWN = "Brown",
   CYAN = "Cyan",
@@ -49,32 +48,34 @@ enum ConditionDisplayColor {
 
 /** Interface representing a Remote Config parameter `value` in value options. */
 export interface ExplicitParameterValue {
-  readonly value: string;
+  value: string;
 }
 
 /** Interface representing a Remote Config parameter `useInAppDefault` in value options. */
 export interface InAppDefaultValue {
-  readonly useInAppDefault: boolean;
+  useInAppDefault: boolean;
 }
 
 export type RemoteConfigParameterValue = ExplicitParameterValue | InAppDefaultValue;
 
 /** Interface representing a Remote Config parameter. */
 export interface RemoteConfigParameter {
-  readonly defaultValue?: RemoteConfigParameterValue;
-  readonly conditionalValues?: { [key: string]: RemoteConfigParameterValue };
-  readonly description?: string;
+  defaultValue?: RemoteConfigParameterValue;
+  conditionalValues?: { [key: string]: RemoteConfigParameterValue };
+  description?: string;
 }
 
-interface RemoteConfigCondition {
+/** Interface representing a Remote Config condition. */
+export interface RemoteConfigCondition {
   name: string;
   expression: string;
-  tagColor?: ConditionDisplayColor;
+  tagColor?: RemoteConfigConditionDisplayColor;
 }
 
-export interface RemoteConfigResponse {
-  readonly conditions?: RemoteConfigCondition[];
-  readonly parameters?: { [key: string]: RemoteConfigParameter };
+/** Interface representing a Remote Config template. */
+export interface RemoteConfigTemplate {
+  conditions: RemoteConfigCondition[];
+  parameters: { [key: string]: RemoteConfigParameter };
   readonly etag: string;
 }
 
@@ -98,7 +99,7 @@ export class RemoteConfigApiClient {
     this.httpClient = new AuthorizedHttpClient(app);
   }
 
-  public getTemplate(): Promise<RemoteConfigResponse> {
+  public getTemplate(): Promise<RemoteConfigTemplate> {
     return this.getUrl()
       .then((url) => {
         const request: HttpRequestConfig = {
@@ -109,7 +110,7 @@ export class RemoteConfigApiClient {
         return this.httpClient.send(request);
       })
       .then((resp) => {
-        if (!Object.prototype.hasOwnProperty.call(resp.headers, 'etag')) {
+        if (!validator.isNonEmptyString(resp.headers['etag'])) {
           throw new FirebaseRemoteConfigError(
             'invalid-argument',
             'ETag header is not present in the server response.');
@@ -118,6 +119,40 @@ export class RemoteConfigApiClient {
           conditions: resp.data.conditions,
           parameters: resp.data.parameters,
           etag: resp.headers['etag'],
+        };
+      })
+      .catch((err) => {
+        throw this.toFirebaseError(err);
+      });
+  }
+
+  public validateTemplate(template: RemoteConfigTemplate): Promise<RemoteConfigTemplate> {
+    return this.getUrl()
+      .then((url) => {
+        const request: HttpRequestConfig = {
+          method: 'PUT',
+          url: `${url}/remoteConfig?validate_only=true`,
+          headers: { ...FIREBASE_REMOTE_CONFIG_HEADERS, 'If-Match': template.etag },
+          data: {
+            conditions: template.conditions,
+            parameters: template.parameters,
+          }
+        };
+        return this.httpClient.send(request);
+      })
+      .then((resp) => {
+        if (!validator.isNonEmptyString(resp.headers['etag'])) {
+          throw new FirebaseRemoteConfigError(
+            'invalid-argument',
+            'ETag header is not present in the server response.');
+        }
+        return {
+          conditions: resp.data.conditions,
+          parameters: resp.data.parameters,
+          // validating a template returns an etag with the suffix -0 means that your update 
+          // was successfully validated. We set the etag back to the original etag of the template
+          // to allow future operations.
+          etag: template.etag,
         };
       })
       .catch((err) => {
@@ -185,9 +220,14 @@ interface Error {
 }
 
 const ERROR_CODE_MAPPING: { [key: string]: RemoteConfigErrorCode } = {
+  ABORTED: 'aborted',
+  ALREADY_EXISTS: `already-exists`,
   INVALID_ARGUMENT: 'invalid-argument',
+  FAILED_PRECONDITION: 'failed-precondition',
   NOT_FOUND: 'not-found',
+  OUT_OF_RANGE: 'out-of-range',
+  PERMISSION_DENIED: 'permission-denied',
   RESOURCE_EXHAUSTED: 'resource-exhausted',
-  UNAUTHENTICATED: 'authentication-error',
+  UNAUTHENTICATED: 'unauthenticated',
   UNKNOWN: 'unknown-error',
 };
