@@ -541,14 +541,15 @@ describe('HttpClient', () => {
   });
 
   it('should fail with a GET request containing non-object data', () => {
-    const err = 'GET requests cannot have a body.';
     const client = new HttpClient();
-    return client.send({
-      method: 'GET',
-      url: mockUrl,
-      timeout: 50,
-      data: 'non-object-data',
-    }).should.eventually.be.rejectedWith(err).and.have.property('code', 'app/network-error');
+    expect(() => {
+      client.send({
+        method: 'GET',
+        url: mockUrl,
+        timeout: 50,
+        data: 'non-object-data',
+      });
+    }).to.throw('GET requests cannot have a body');
   });
 
   it('should make a HEAD request with the provided headers and data', () => {
@@ -582,15 +583,16 @@ describe('HttpClient', () => {
     });
   });
 
-  it('should fail with a HEAD request containing non-object data', () => {
-    const err = 'HEAD requests cannot have a body.';
+  it('should throw with a HEAD request containing non-object data', () => {
     const client = new HttpClient();
-    return client.send({
-      method: 'HEAD',
-      url: mockUrl,
-      timeout: 50,
-      data: 'non-object-data',
-    }).should.eventually.be.rejectedWith(err).and.have.property('code', 'app/network-error');
+    expect(() => {
+      client.send({
+        method: 'HEAD',
+        url: mockUrl,
+        timeout: 50,
+        data: 'non-object-data',
+      });
+    }).to.throw('HEAD requests cannot have a body');
   });
 
   it('should fail with an HttpError for a 4xx response', () => {
@@ -1122,15 +1124,15 @@ describe('HttpClient', () => {
     });
   });
 
-  it('should reject if the request payload is invalid', () => {
+  it('should throw if the request payload is invalid', () => {
     const client = new HttpClient(defaultRetryConfig());
-    const err = 'Error while making request: Request data must be a string, a Buffer '
-      + 'or a json serializable object';
-    return client.send({
-      method: 'POST',
-      url: mockUrl,
-      data: 1 as any,
-    }).should.eventually.be.rejectedWith(err).and.have.property('code', 'app/network-error');
+    expect(() => {
+      client.send({
+        method: 'POST',
+        url: mockUrl,
+        data: 1 as any,
+      })
+    }).to.throw('Request data must be a string, a Buffer or a json serializable object');
   });
 
   it('should use the port 80 for http URLs', () => {
