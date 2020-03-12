@@ -47,7 +47,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
   public readonly INTERNAL: ProjectManagementInternals = new ProjectManagementInternals();
 
   private readonly requestHandler: ProjectManagementRequestHandler;
-  private projectId: string;
+  private projectId?: string;
 
   /**
    * @param {object} app The app for this ProjectManagement service.

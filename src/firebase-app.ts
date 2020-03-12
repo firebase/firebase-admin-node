@@ -66,13 +66,14 @@ export interface FirebaseAccessToken {
  */
 export class FirebaseAppInternals {
   private isDeleted_ = false;
-  private cachedToken_: FirebaseAccessToken;
+  private cachedToken_?: FirebaseAccessToken;
   private cachedTokenPromise_: Promise<FirebaseAccessToken> | null;
   private tokenListeners_: Array<(token: string) => void>;
-  private tokenRefreshTimeout_: NodeJS.Timer;
+  private tokenRefreshTimeout_?: NodeJS.Timer;
 
   constructor(private credential_: Credential) {
     this.tokenListeners_ = [];
+    this.cachedTokenPromise_ = null;
   }
 
   /**
@@ -103,8 +104,10 @@ export class FirebaseAppInternals {
           throw error;
         });
     } else {
-      // Clear the outstanding token refresh timeout. This is a noop if the timeout is undefined.
-      clearTimeout(this.tokenRefreshTimeout_);
+      // Clear the outstanding token refresh timeout.
+      if (this.tokenRefreshTimeout_) {
+        clearTimeout(this.tokenRefreshTimeout_);
+      }
 
       // this.credential_ may be an external class; resolving it in a promise helps us
       // protect against exceptions and upgrades the result to a promise in all cases.
@@ -212,7 +215,9 @@ export class FirebaseAppInternals {
     this.isDeleted_ = true;
 
     // Clear the token refresh timeout so it doesn't keep the Node.js process alive.
-    clearTimeout(this.tokenRefreshTimeout_);
+    if (this.tokenRefreshTimeout_) {
+      clearTimeout(this.tokenRefreshTimeout_);
+    }
   }
 
   /**

@@ -207,7 +207,7 @@ export class Messaging implements FirebaseServiceInterface {
 
   public INTERNAL: MessagingInternals = new MessagingInternals();
 
-  private urlPath: string;
+  private urlPath?: string;
   private readonly appInternal: FirebaseApp;
   private readonly messagingRequestHandler: FirebaseMessagingRequestHandler;
 
