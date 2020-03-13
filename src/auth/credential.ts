@@ -173,22 +173,26 @@ class ServiceAccount {
       );
     }
 
-    copyAttr(this, json, 'projectId', 'project_id');
-    copyAttr(this, json, 'privateKey', 'private_key');
-    copyAttr(this, json, 'clientEmail', 'client_email');
+    const projectId = getAttr(json, 'projectId', 'project_id');
+    const privateKey = getAttr(json, 'privateKey', 'private_key');
+    const clientEmail = getAttr(json, 'clientEmail', 'client_email');
 
     let errorMessage;
-    if (!util.isNonEmptyString(this.projectId)) {
+    if (!util.isNonEmptyString(projectId)) {
       errorMessage = 'Service account object must contain a string "project_id" property.';
-    } else if (!util.isNonEmptyString(this.privateKey)) {
+    } else if (!util.isNonEmptyString(privateKey)) {
       errorMessage = 'Service account object must contain a string "private_key" property.';
-    } else if (!util.isNonEmptyString(this.clientEmail)) {
+    } else if (!util.isNonEmptyString(clientEmail)) {
       errorMessage = 'Service account object must contain a string "client_email" property.';
     }
 
     if (typeof errorMessage !== 'undefined') {
       throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
     }
+
+    this.projectId = projectId;
+    this.privateKey = privateKey;
+    this.clientEmail = clientEmail;
 
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const forge = require('node-forge');
@@ -325,25 +329,30 @@ class RefreshToken {
   }
 
   constructor(json: object) {
-    copyAttr(this, json, 'clientId', 'client_id');
-    copyAttr(this, json, 'clientSecret', 'client_secret');
-    copyAttr(this, json, 'refreshToken', 'refresh_token');
-    copyAttr(this, json, 'type', 'type');
+    const clientId = getAttr(json, 'clientId', 'client_id');
+    const clientSecret = getAttr(json, 'clientSecret', 'client_secret');
+    const refreshToken = getAttr(json, 'refreshToken', 'refresh_token');
+    const type = getAttr(json, 'type', 'type');
 
     let errorMessage;
-    if (!util.isNonEmptyString(this.clientId)) {
+    if (!util.isNonEmptyString(clientId)) {
       errorMessage = 'Refresh token must contain a "client_id" property.';
-    } else if (!util.isNonEmptyString(this.clientSecret)) {
+    } else if (!util.isNonEmptyString(clientSecret)) {
       errorMessage = 'Refresh token must contain a "client_secret" property.';
-    } else if (!util.isNonEmptyString(this.refreshToken)) {
+    } else if (!util.isNonEmptyString(refreshToken)) {
       errorMessage = 'Refresh token must contain a "refresh_token" property.';
-    } else if (!util.isNonEmptyString(this.type)) {
+    } else if (!util.isNonEmptyString(type)) {
       errorMessage = 'Refresh token must contain a "type" property.';
     }
 
     if (typeof errorMessage !== 'undefined') {
       throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
     }
+
+    this.clientId = clientId;
+    this.clientSecret = clientSecret;
+    this.refreshToken = refreshToken;
+    this.type = type;
   }
 }
 
@@ -378,21 +387,19 @@ export function isApplicationDefault(credential?: Credential): boolean {
 }
 
 /**
- * Copies the specified property from one object to another.
+ * Retrieves the specified property from an object.
  *
- * If no property exists by the given "key", looks for a property identified by "alt", and copies it instead.
- * This can be used to implement behaviors such as "copy property myKey or my_key".
+ * If no property exists by the given "key", looks for a property identified by "alt", and return it instead.
+ * This can be used to implement behaviors such as "get property myKey or my_key".
  *
- * @param to Target object to copy the property into.
- * @param from Source object to copy the property from.
+ * If neither property is found, then undefined is returned.
+ *
+ * @param obj Source object to get the property from.
  * @param key Name of the property to copy.
  * @param alt Alternative name of the property to copy.
  */
-function copyAttr(to: {[key: string]: any}, from: {[key: string]: any}, key: string, alt: string): void {
-  const tmp = from[key] || from[alt];
-  if (typeof tmp !== 'undefined') {
-    to[key] = tmp;
-  }
+function getAttr(obj: {[key: string]: any}, key: string, alt: string): any {
+  return obj[key] || obj[alt];
 }
 
 /**

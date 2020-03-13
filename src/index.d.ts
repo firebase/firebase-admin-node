@@ -519,27 +519,27 @@ declare namespace admin.auth {
     /**
      * The display name for the linked provider.
      */
-    displayName: string;
+    displayName?: string;
 
     /**
      * The email for the linked provider.
      */
-    email: string;
+    email?: string;
 
     /**
      * The phone number for the linked provider.
      */
-    phoneNumber: string;
+    phoneNumber?: string;
 
     /**
      * The photo URL for the linked provider.
      */
-    photoURL: string;
+    photoURL?: string;
 
     /**
      * The linked provider ID (for example, "google.com" for the Google provider).
      */
-    providerId: string;
+    providerId?: string;
 
     /**
      * @return A JSON-serializable representation of this object.

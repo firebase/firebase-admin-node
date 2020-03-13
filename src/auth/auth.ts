@@ -626,7 +626,8 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
     const cryptoSigner = cryptoSignerFromApp(app);
     const tokenGenerator = new FirebaseTokenGenerator(cryptoSigner, tenantId);
     super(app, new TenantAwareAuthRequestHandler(app, tenantId), tokenGenerator);
-    utils.addReadonlyGetter(this, 'tenantId', tenantId);
+    this.tenantId = tenantId;
+    utils.enforceReadonly(this, 'tenantId');
   }
 
   /**

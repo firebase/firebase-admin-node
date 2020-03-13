@@ -100,7 +100,7 @@ enum WriteOperationType {
 class AuthResourceUrlBuilder {
 
   protected urlFormat: string;
-  private projectId: string;
+  private projectId?: string;
 
   /**
    * The resource URL builder constructor.
@@ -811,8 +811,8 @@ const LIST_INBOUND_SAML_CONFIGS = new ApiSettings('/inboundSamlConfigs', 'GET')
 export abstract class AbstractAuthRequestHandler {
 
   protected readonly httpClient: AuthorizedHttpClient;
-  private authUrlBuilder: AuthResourceUrlBuilder;
-  private projectConfigUrlBuilder: AuthResourceUrlBuilder;
+  private authUrlBuilder?: AuthResourceUrlBuilder;
+  private projectConfigUrlBuilder?: AuthResourceUrlBuilder;
 
   /**
    * @param {any} response The response to check for errors.

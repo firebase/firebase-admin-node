@@ -20,7 +20,7 @@ import * as sinon from 'sinon';
 
 import * as mocks from '../../resources/mocks';
 import {
-  addReadonlyGetter, getExplicitProjectId, findProjectId,
+  enforceReadonly, getExplicitProjectId, findProjectId,
   toWebSafeBase64, formatString, generateUpdateMask,
 } from '../../../src/utils/index';
 import {isNonEmptyString} from '../../../src/utils/validator';
@@ -34,17 +34,18 @@ interface Obj {
   [key: string]: any;
 }
 
-describe('addReadonlyGetter()', () => {
-  it('should add a new property to the provided object', () => {
+describe('enforceReadonly()', () => {
+  it('should not add a new property to the provided object', () => {
     const obj: Obj = {};
-    addReadonlyGetter(obj, 'foo', true);
+    enforceReadonly(obj, 'foo');
 
-    expect(obj.foo).to.be.true;
+    expect(obj.foo).to.be.undefined;
   });
 
   it('should make the new property read-only', () => {
     const obj: Obj = {};
-    addReadonlyGetter(obj, 'foo', true);
+    obj.foo = true;
+    enforceReadonly(obj, 'foo');
 
     expect(() => {
       obj.foo = false;
@@ -53,7 +54,7 @@ describe('addReadonlyGetter()', () => {
 
   it('should make the new property enumerable', () => {
     const obj: Obj = {};
-    addReadonlyGetter(obj, 'foo', true);
+    enforceReadonly(obj, 'foo');
 
     expect(obj).to.have.keys(['foo']);
   });

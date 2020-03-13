@@ -150,7 +150,7 @@ export abstract class MultiFactorInfo {
   public readonly uid: string;
   public readonly displayName: string | null;
   public readonly factorId: MultiFactorId;
-  public readonly enrollmentTime: string;
+  public readonly enrollmentTime: string | null;
 
   /**
    * Initializes the MultiFactorInfo associated subclass using the server side.
@@ -177,7 +177,32 @@ export abstract class MultiFactorInfo {
    * @constructor
    */
   constructor(response: MultiFactorInfoResponse) {
-    this.initFromServerResponse(response);
+    const factorId = response && this.getFactorId(response);
+    if (!factorId || !response || !response.mfaEnrollmentId) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Invalid multi-factor info response');
+    }
+
+    this.uid = response.mfaEnrollmentId;
+    utils.enforceReadonly(this, 'uid');
+
+    this.factorId = factorId;
+    utils.enforceReadonly(this, 'factorId');
+
+    this.displayName = response.displayName || null;
+    utils.enforceReadonly(this, 'displayName');
+
+    // Encoded using [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format.
+    // For example, "2017-01-15T01:30:15.01Z".
+    // This can be parsed directly via Date constructor.
+    // This can be computed using Data.prototype.toISOString.
+    if (response.enrolledAt) {
+      this.enrollmentTime = new Date(response.enrolledAt).toUTCString();
+    } else {
+      this.enrollmentTime = null;
+    }
+    utils.enforceReadonly(this, 'enrollmentTime');
   }
 
   /** @return The plain object representation. */
@@ -198,33 +223,6 @@ export abstract class MultiFactorInfo {
    *     not associated with any known multi-factor ID, null is returned.
    */
   protected abstract getFactorId(response: MultiFactorInfoResponse): MultiFactorId | null;
-
-  /**
-   * Initializes the MultiFactorInfo object using the provided server response.
-   *
-   * @param response The server side response.
-   */
-  private initFromServerResponse(response: MultiFactorInfoResponse): void {
-    const factorId = response && this.getFactorId(response);
-    if (!factorId || !response || !response.mfaEnrollmentId) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
-        'INTERNAL ASSERT FAILED: Invalid multi-factor info response');
-    }
-    utils.addReadonlyGetter(this, 'uid', response.mfaEnrollmentId);
-    utils.addReadonlyGetter(this, 'factorId', factorId);
-    utils.addReadonlyGetter(this, 'displayName', response.displayName || null);
-    // Encoded using [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format.
-    // For example, "2017-01-15T01:30:15.01Z".
-    // This can be parsed directly via Date constructor.
-    // This can be computed using Data.prototype.toISOString.
-    if (response.enrolledAt) {
-      utils.addReadonlyGetter(
-        this, 'enrollmentTime', new Date(response.enrolledAt).toUTCString());
-    } else {
-      utils.addReadonlyGetter(this, 'enrollmentTime', null);
-    }
-  }
 }
 
 /** Class representing a phone MultiFactorInfo object. */
@@ -239,7 +237,13 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
    */
   constructor(response: MultiFactorInfoResponse) {
     super(response);
-    utils.addReadonlyGetter(this, 'phoneNumber', response.phoneInfo);
+    if (!response.phoneInfo) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Server MultiFactorInfoResponse missing phoneInfo field');
+    }
+    this.phoneNumber = response.phoneInfo;
+    utils.enforceReadonly(this, 'phoneNumber');
   }
 
   /** @return The plain object representation. */
@@ -288,8 +292,8 @@ export class MultiFactor {
       });
     }
     // Make enrolled factors immutable.
-    utils.addReadonlyGetter(
-      this, 'enrolledFactors', Object.freeze(parsedEnrolledFactors));
+    this.enrolledFactors = Object.freeze(parsedEnrolledFactors);
+    utils.enforceReadonly(this, 'enrolledFactors');
   }
 
   /** @return The plain object representation. */
@@ -350,11 +354,11 @@ export class UserMetadata {
  */
 export class UserInfo {
   public readonly uid: string;
-  public readonly displayName: string;
-  public readonly email: string;
-  public readonly photoURL: string;
+  public readonly displayName?: string;
+  public readonly email?: string;
+  public readonly photoURL?: string;
   public readonly providerId: string;
-  public readonly phoneNumber: string;
+  public readonly phoneNumber?: string;
 
   constructor(response: ProviderUserInfoResponse) {
     // Provider user id and provider id are required.
@@ -364,12 +368,23 @@ export class UserInfo {
         'INTERNAL ASSERT FAILED: Invalid user info response');
     }
 
-    utils.addReadonlyGetter(this, 'uid', response.rawId);
-    utils.addReadonlyGetter(this, 'displayName', response.displayName);
-    utils.addReadonlyGetter(this, 'email', response.email);
-    utils.addReadonlyGetter(this, 'photoURL', response.photoUrl);
-    utils.addReadonlyGetter(this, 'providerId', response.providerId);
-    utils.addReadonlyGetter(this, 'phoneNumber', response.phoneNumber);
+    this.uid = response.rawId;
+    utils.enforceReadonly(this, 'uid');
+
+    this.displayName = response.displayName;
+    utils.enforceReadonly(this, 'displayName');
+
+    this.email = response.email;
+    utils.enforceReadonly(this, 'email');
+
+    this.photoURL = response.photoUrl;
+    utils.enforceReadonly(this, 'photoURL');
+
+    this.providerId = response.providerId;
+    utils.enforceReadonly(this, 'providerId');
+
+    this.phoneNumber = response.phoneNumber;
+    utils.enforceReadonly(this, 'phoneNumber');
   }
 
   /** @return The plain object representation of the current provider data. */
@@ -395,17 +410,17 @@ export class UserInfo {
  */
 export class UserRecord {
   public readonly uid: string;
-  public readonly email: string;
+  public readonly email?: string;
   public readonly emailVerified: boolean;
-  public readonly displayName: string;
-  public readonly photoURL: string;
-  public readonly phoneNumber: string;
+  public readonly displayName?: string;
+  public readonly photoURL?: string;
+  public readonly phoneNumber?: string;
   public readonly disabled: boolean;
   public readonly metadata: UserMetadata;
   public readonly providerData: UserInfo[];
   public readonly passwordHash?: string;
   public readonly passwordSalt?: string;
-  public readonly customClaims: object;
+  public readonly customClaims?: object;
   public readonly tenantId?: string | null;
   public readonly tokensValidAfterTime?: string;
   public readonly multiFactor?: MultiFactor;
@@ -418,47 +433,71 @@ export class UserRecord {
         'INTERNAL ASSERT FAILED: Invalid user response');
     }
 
-    utils.addReadonlyGetter(this, 'uid', response.localId);
-    utils.addReadonlyGetter(this, 'email', response.email);
-    utils.addReadonlyGetter(this, 'emailVerified', !!response.emailVerified);
-    utils.addReadonlyGetter(this, 'displayName', response.displayName);
-    utils.addReadonlyGetter(this, 'photoURL', response.photoUrl);
-    utils.addReadonlyGetter(this, 'phoneNumber', response.phoneNumber);
+    this.uid = response.localId;
+    utils.enforceReadonly(this, 'uid');
+
+    this.email = response.email;
+    utils.enforceReadonly(this, 'email');
+
+    this.emailVerified = !!response.emailVerified;
+    utils.enforceReadonly(this, 'emailVerified');
+
+    this.displayName = response.displayName;
+    utils.enforceReadonly(this, 'displayName');
+
+    this.photoURL = response.photoUrl;
+    utils.enforceReadonly(this, 'photoURL');
+
+    this.phoneNumber = response.phoneNumber;
+    utils.enforceReadonly(this, 'phoneNumber');
+
     // If disabled is not provided, the account is enabled by default.
-    utils.addReadonlyGetter(this, 'disabled', response.disabled || false);
-    utils.addReadonlyGetter(this, 'metadata', new UserMetadata(response));
-    const providerData: UserInfo[] = [];
+    this.disabled = response.disabled || false;
+    utils.enforceReadonly(this, 'disabled');
+
+    this.metadata = new UserMetadata(response);
+    utils.enforceReadonly(this, 'metadata');
+
+    this.providerData = [];
     for (const entry of (response.providerUserInfo || [])) {
-      providerData.push(new UserInfo(entry));
+      this.providerData.push(new UserInfo(entry));
     }
-    utils.addReadonlyGetter(this, 'providerData', providerData);
+    utils.enforceReadonly(this, 'providerData');
 
     // If the password hash is redacted (probably due to missing permissions)
     // then clear it out, similar to how the salt is returned. (Otherwise, it
     // *looks* like a b64-encoded hash is present, which is confusing.)
     if (response.passwordHash === B64_REDACTED) {
-      utils.addReadonlyGetter(this, 'passwordHash', undefined);
+      this.passwordHash = undefined;
     } else {
-      utils.addReadonlyGetter(this, 'passwordHash', response.passwordHash);
+      this.passwordHash = response.passwordHash;
     }
+    utils.enforceReadonly(this, 'passwordHash');
 
-    utils.addReadonlyGetter(this, 'passwordSalt', response.salt);
+    this.passwordSalt = response.salt;
+    utils.enforceReadonly(this, 'passwordSalt');
+
     if (response.customAttributes) {
-      utils.addReadonlyGetter(
-        this, 'customClaims', JSON.parse(response.customAttributes));
+      this.customClaims = JSON.parse(response.customAttributes);
     }
+    utils.enforceReadonly(this, 'customClaims');
 
     let validAfterTime: string | null = null;
     // Convert validSince first to UTC milliseconds and then to UTC date string.
     if (typeof response.validSince !== 'undefined') {
       validAfterTime = parseDate(parseInt(response.validSince, 10) * 1000);
     }
-    utils.addReadonlyGetter(this, 'tokensValidAfterTime', validAfterTime || undefined);
-    utils.addReadonlyGetter(this, 'tenantId', response.tenantId);
+    this.tokensValidAfterTime = validAfterTime || undefined;
+    utils.enforceReadonly(this, 'tokensValidAfterTime');
+
+    this.tenantId = response.tenantId;
+    utils.enforceReadonly(this, 'tenantId');
+
     const multiFactor = new MultiFactor(response);
     if (multiFactor.enrolledFactors.length > 0) {
-      utils.addReadonlyGetter(this, 'multiFactor', multiFactor);
+      this.multiFactor = multiFactor;
     }
+    utils.enforceReadonly(this, 'multiFactor');
   }
 
   /** @return The plain object representation of the user record. */

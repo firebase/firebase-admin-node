@@ -39,23 +39,6 @@ export function renameProperties(obj: {[key: string]: any}, keyMap: { [key: stri
 }
 
 /**
- * Defines a new read-only property directly on an object and returns the object.
- *
- * @param {object} obj The object on which to define the property.
- * @param {string} prop The name of the property to be defined or modified.
- * @param {any} value The value associated with the property.
- */
-export function addReadonlyGetter(obj: object, prop: string, value: any): void {
-  Object.defineProperty(obj, prop, {
-    value,
-    // Make this property read-only.
-    writable: false,
-    // Include this property during enumeration of obj's properties.
-    enumerable: true,
-  });
-}
-
-/**
  * Marks an existing property as readonly. Unlike typescript's "readonly"
  * modifier, this will take effect at runtime too (generating a TypeError if
  * violated), including when called from javascript.

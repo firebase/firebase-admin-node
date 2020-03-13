@@ -71,8 +71,8 @@ export interface FirebaseTokenInfo {
  * Class for verifying general purpose Firebase JWTs. This verifies ID tokens and session cookies.
  */
 export class FirebaseTokenVerifier {
-  private publicKeys: {[key: string]: string};
-  private publicKeysExpireAt: number;
+  private publicKeys?: {[key: string]: string};
+  private publicKeysExpireAt?: number;
   private readonly shortNameArticle: string;
 
   constructor(private clientCertUrl: string, private algorithm: string,
@@ -280,10 +280,10 @@ export class FirebaseTokenVerifier {
    * @return {Promise<object>} A promise fulfilled with public keys for the Google certs.
    */
   private fetchPublicKeys(): Promise<{[key: string]: string}> {
-    const publicKeysExist = (typeof this.publicKeys !== 'undefined');
-    const publicKeysExpiredExists = (typeof this.publicKeysExpireAt !== 'undefined');
-    const publicKeysStillValid = (publicKeysExpiredExists && Date.now() < this.publicKeysExpireAt);
-    if (publicKeysExist && publicKeysStillValid) {
+    const publicKeysStillValid = (
+      typeof this.publicKeysExpireAt !== 'undefined'
+      && Date.now() < this.publicKeysExpireAt);
+    if (typeof this.publicKeys !== 'undefined' && publicKeysStillValid) {
       return Promise.resolve(this.publicKeys);
     }
 
