@@ -160,6 +160,43 @@ export class RemoteConfigApiClient {
       });
   }
 
+  public publishTemplate(template: RemoteConfigTemplate, options?: { force: boolean }): Promise<RemoteConfigTemplate> {
+    let ifMatch: string = template.etag;
+    if (options.force == true) {
+      // setting `If-Match: *` forces the Remote Config template to be updated
+      // and circumvent the ETag, and the protection from that it provides.
+      ifMatch = '*';
+    }
+    return this.getUrl()
+      .then((url) => {
+        const request: HttpRequestConfig = {
+          method: 'PUT',
+          url: `${url}/remoteConfig`,
+          headers: { ...FIREBASE_REMOTE_CONFIG_HEADERS, 'If-Match': ifMatch },
+          data: {
+            conditions: template.conditions,
+            parameters: template.parameters,
+          }
+        };
+        return this.httpClient.send(request);
+      })
+      .then((resp) => {
+        if (!validator.isNonEmptyString(resp.headers['etag'])) {
+          throw new FirebaseRemoteConfigError(
+            'invalid-argument',
+            'ETag header is not present in the server response.');
+        }
+        return {
+          conditions: resp.data.conditions,
+          parameters: resp.data.parameters,
+          etag: resp.headers['etag'],
+        };
+      })
+      .catch((err) => {
+        throw this.toFirebaseError(err);
+      });
+  }
+
   private getUrl(): Promise<string> {
     return this.getProjectIdPrefix()
       .then((projectIdPrefix) => {
