@@ -32,7 +32,7 @@ const expect = chai.expect;
 
 describe('MachineLearningApiClient', () => {
 
-  const BASE_URL = 'https://mlkit.googleapis.com/v1beta1';
+  const BASE_URL = 'https://firebaseml.googleapis.com/v1beta2';
 
   const MODEL_ID = '1234567';
   const MODEL_RESPONSE = {
