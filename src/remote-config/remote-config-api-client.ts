@@ -162,7 +162,7 @@ export class RemoteConfigApiClient {
 
   public publishTemplate(template: RemoteConfigTemplate, options?: { force: boolean }): Promise<RemoteConfigTemplate> {
     let ifMatch: string = template.etag;
-    if (options.force == true) {
+    if (options && options.force == true) {
       // setting `If-Match: *` forces the Remote Config template to be updated
       // and circumvent the ETag, and the protection from that it provides.
       ifMatch = '*';

@@ -280,4 +280,108 @@ describe('RemoteConfigApiClient', () => {
       });
     });
   });
+
+  describe('publishTemplate', () => {
+    const testResponse = {
+      conditions: [{ name: 'ios', expression: 'exp' }],
+      parameters: { param: { defaultValue: { value: 'true' } } },
+      version: {},
+    };
+
+    it(`should reject when project id is not available`, () => {
+      return clientWithoutProjectId.publishTemplate(REMOTE_CONFIG_TEMPLATE)
+        .should.eventually.be.rejectedWith(noProjectId);
+    });
+
+    const testOptions = [
+      { options: undefined, etag: 'etag-123456789012-6' },
+      { options: { force: true }, etag: '*' }
+    ];
+    testOptions.forEach((option) => {
+      it('should resolve with the requested template on success', () => {
+        const stub = sinon
+          .stub(HttpClient.prototype, 'send')
+          .resolves(utils.responseFrom(testResponse, 200, { etag: 'etag-123456789012-6' }));
+        stubs.push(stub);
+        return apiClient.publishTemplate(REMOTE_CONFIG_TEMPLATE, option.options)
+          .then((resp) => {
+            expect(resp.conditions).to.deep.equal(testResponse.conditions);
+            expect(resp.parameters).to.deep.equal(testResponse.parameters);
+            expect(resp.etag).to.equal('etag-123456789012-6');
+            expect(stub).to.have.been.calledOnce.and.calledWith({
+              method: 'PUT',
+              url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig',
+              headers: { ...EXPECTED_HEADERS, 'If-Match': option.etag },
+              data: {
+                conditions: REMOTE_CONFIG_TEMPLATE.conditions,
+                parameters: REMOTE_CONFIG_TEMPLATE.parameters,
+              }
+            });
+          });
+      });
+    });
+
+    it('should reject when the etag is not present', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(testResponse));
+      stubs.push(stub);
+      const expected = new FirebaseRemoteConfigError('invalid-argument', 'ETag header is not present in the server response.');
+      return apiClient.publishTemplate(REMOTE_CONFIG_TEMPLATE)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should reject when a full platform error response is received', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+      stubs.push(stub);
+      const expected = new FirebaseRemoteConfigError('not-found', 'Requested entity not found');
+      return apiClient.publishTemplate(REMOTE_CONFIG_TEMPLATE)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should reject with unknown-error when error code is not present', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom({}, 404));
+      stubs.push(stub);
+      const expected = new FirebaseRemoteConfigError('unknown-error', 'Unknown server error: {}');
+      return apiClient.publishTemplate(REMOTE_CONFIG_TEMPLATE)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    it('should reject with unknown-error for non-json response', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom('not json', 404));
+      stubs.push(stub);
+      const expected = new FirebaseRemoteConfigError(
+        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+      return apiClient.publishTemplate(REMOTE_CONFIG_TEMPLATE)
+        .should.eventually.be.rejected.and.deep.equal(expected);
+    });
+
+    const errorMessages = [
+      "[VALIDATION_ERROR]: [foo] are not valid condition names. All keys in all conditional value maps must be valid condition names.",
+      "[VERSION_MISMATCH]: Expected version 6, found 8 for project: 123456789012"
+    ];
+    errorMessages.forEach((message) => {
+      it('should reject with failed-precondition when a validation error occurres', () => {
+        const stub = sinon
+          .stub(HttpClient.prototype, 'send')
+          .rejects(utils.errorFrom({
+            error: {
+              code: 400,
+              message: message,
+              status: "FAILED_PRECONDITION"
+            }
+          }, 400));
+        stubs.push(stub);
+        const expected = new FirebaseRemoteConfigError('failed-precondition', message);
+        return apiClient.publishTemplate(REMOTE_CONFIG_TEMPLATE)
+          .should.eventually.be.rejected.and.deep.equal(expected);
+      });
+    });
+  });
 });
