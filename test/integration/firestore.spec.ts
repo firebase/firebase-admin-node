@@ -50,7 +50,7 @@ describe('admin.firestore', () => {
 
   it('supports basic data access', () => {
     return reference.set(mountainView)
-      .then((result) => {
+      .then(() => {
         return reference.get();
       })
       .then((snapshot) => {
@@ -58,7 +58,7 @@ describe('admin.firestore', () => {
         expect(data).to.deep.equal(mountainView);
         return reference.delete();
       })
-      .then((result) => {
+      .then(() => {
         return reference.get();
       })
       .then((snapshot) => {
@@ -70,7 +70,7 @@ describe('admin.firestore', () => {
     const expected: any = clone(mountainView);
     expected.timestamp = admin.firestore.FieldValue.serverTimestamp();
     return reference.set(expected)
-      .then((result) => {
+      .then(() => {
         return reference.get();
       })
       .then((snapshot) => {
@@ -117,10 +117,10 @@ describe('admin.firestore', () => {
     const source = admin.firestore().collection('cities').doc();
     const target = admin.firestore().collection('cities').doc();
     return source.set(mountainView)
-      .then((result) => {
+      .then(() => {
         return target.set({name: 'Palo Alto', sisterCity: source});
       })
-      .then((result) => {
+      .then(() => {
         return target.get();
       })
       .then((snapshot) => {
@@ -142,10 +142,10 @@ describe('admin.firestore', () => {
       logs.push(log);
     });
     return source.set({name: 'San Francisco'})
-      .then((result) => {
+      .then(() => {
         return source.delete();
       })
-      .then((result) => {
+      .then(() => {
         expect(logs.length).greaterThan(0);
       });
   });

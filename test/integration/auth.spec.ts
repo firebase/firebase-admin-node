@@ -32,9 +32,7 @@ import { AuthProviderConfig } from '../../src/auth/auth-config';
 import { deepExtend, deepCopy } from '../../src/utils/deep-copy';
 import { User, FirebaseAuth } from '@firebase/auth-types';
 
-/* tslint:disable:no-var-requires */
-const chalk = require('chalk');
-/* tslint:enable:no-var-requires */
+const chalk = require('chalk'); // eslint-disable-line @typescript-eslint/no-var-requires
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -43,6 +41,7 @@ const expect = chai.expect;
 
 const newUserUid = generateRandomString(20);
 const nonexistentUid = generateRandomString(20);
+const newMultiFactorUserUid = generateRandomString(20);
 const sessionCookieUids = [
   generateRandomString(20),
   generateRandomString(20),
@@ -140,6 +139,52 @@ describe('admin.auth', () => {
       });
   });
 
+  it('createUser() creates a new user with enrolled second factors', () => {
+    const enrolledFactors = [
+      {
+        phoneNumber: '+16505550001',
+        displayName: 'Work phone number',
+        factorId: 'phone',
+      },
+      {
+        phoneNumber: '+16505550002',
+        displayName: 'Personal phone number',
+        factorId: 'phone',
+      },
+    ];
+    const newUserData: any = {
+      uid: newMultiFactorUserUid,
+      email: generateRandomString(20).toLowerCase() + '@example.com',
+      emailVerified: true,
+      password: 'password',
+      multiFactor: {
+        enrolledFactors,
+      },
+    };
+    return admin.auth().createUser(newUserData)
+      .then((userRecord) => {
+        expect(userRecord.uid).to.equal(newMultiFactorUserUid);
+        // Confirm expected email.
+        expect(userRecord.email).to.equal(newUserData.email);
+        // Confirm second factors added to user.
+        expect(userRecord.multiFactor!.enrolledFactors.length).to.equal(2);
+        // Confirm first enrolled second factor.
+        const firstMultiFactor = userRecord.multiFactor!.enrolledFactors[0];
+        expect(firstMultiFactor.uid).not.to.be.undefined;
+        expect(firstMultiFactor.enrollmentTime).not.to.be.undefined;
+        expect((firstMultiFactor as admin.auth.PhoneMultiFactorInfo).phoneNumber).to.equal(enrolledFactors[0].phoneNumber);
+        expect(firstMultiFactor.displayName).to.equal(enrolledFactors[0].displayName);
+        expect(firstMultiFactor.factorId).to.equal(enrolledFactors[0].factorId);
+        // Confirm second enrolled second factor.
+        const secondMultiFactor = userRecord.multiFactor!.enrolledFactors[1];
+        expect(secondMultiFactor.uid).not.to.be.undefined;
+        expect(secondMultiFactor.enrollmentTime).not.to.be.undefined;
+        expect((secondMultiFactor as admin.auth.PhoneMultiFactorInfo).phoneNumber).to.equal(enrolledFactors[1].phoneNumber);
+        expect(secondMultiFactor.displayName).to.equal(enrolledFactors[1].displayName);
+        expect(secondMultiFactor.factorId).to.equal(enrolledFactors[1].factorId);
+      });
+  });
+
   it('createUser() fails when the UID is already in use', () => {
     const newUserData: any = clone(mockUserData);
     newUserData.uid = newUserUid;
@@ -192,16 +237,16 @@ describe('admin.auth', () => {
         expect(listUsersResult.users[0].uid).to.equal(uids[1]);
 
         expect(
-            listUsersResult.users[0].passwordHash,
-            'Missing passwordHash field. A common cause would be forgetting to '
+          listUsersResult.users[0].passwordHash,
+          'Missing passwordHash field. A common cause would be forgetting to '
             + 'add the "Firebase Authentication Admin" permission. See '
             + 'instructions in CONTRIBUTING.md',
         ).to.be.ok;
         expect(listUsersResult.users[0].passwordHash!.length).greaterThan(0);
 
         expect(
-            listUsersResult.users[0].passwordSalt,
-            'Missing passwordSalt field. A common cause would be forgetting to '
+          listUsersResult.users[0].passwordSalt,
+          'Missing passwordSalt field. A common cause would be forgetting to '
             + 'add the "Firebase Authentication Admin" permission. See '
             + 'instructions in CONTRIBUTING.md',
         ).to.be.ok;
@@ -253,7 +298,7 @@ describe('admin.auth', () => {
       .then(() => {
         // New sign-in should succeed.
         return clientAuth().signInWithEmailAndPassword(
-            mockUserData.email, mockUserData.password);
+          mockUserData.email, mockUserData.password);
       })
       .then(({user}) => {
         // Get new session's ID token.
@@ -286,13 +331,13 @@ describe('admin.auth', () => {
         return user!.getIdToken();
       })
       .then((idToken) => {
-         // Verify ID token contents.
-         return admin.auth().verifyIdToken(idToken);
+        // Verify ID token contents.
+        return admin.auth().verifyIdToken(idToken);
       })
       .then((decodedIdToken: {[key: string]: any}) => {
         // Confirm expected claims set on the user's ID token.
         for (const key in customClaims) {
-          if (customClaims.hasOwnProperty(key)) {
+          if (Object.prototype.hasOwnProperty.call(customClaims, key)) {
             expect(decodedIdToken[key]).to.equal(customClaims[key]);
           }
         }
@@ -312,24 +357,45 @@ describe('admin.auth', () => {
       .then((idToken) => {
         // Verify ID token contents.
         return admin.auth().verifyIdToken(idToken);
-     })
-     .then((decodedIdToken: {[key: string]: any}) => {
-       // Confirm all custom claims are cleared.
-       for (const key in customClaims) {
-         if (customClaims.hasOwnProperty(key)) {
-           expect(decodedIdToken[key]).to.be.undefined;
-         }
-       }
-     });
+      })
+      .then((decodedIdToken: {[key: string]: any}) => {
+        // Confirm all custom claims are cleared.
+        for (const key in customClaims) {
+          if (Object.prototype.hasOwnProperty.call(customClaims, key)) {
+            expect(decodedIdToken[key]).to.be.undefined;
+          }
+        }
+      });
   });
 
   it('updateUser() updates the user record with the given parameters', () => {
     const updatedDisplayName = 'Updated User ' + newUserUid;
+    const now = new Date(1476235905000).toUTCString();
+    // Update user with enrolled second factors.
+    const enrolledFactors = [
+      {
+        uid: 'mfaUid1',
+        phoneNumber: '+16505550001',
+        displayName: 'Work phone number',
+        factorId: 'phone',
+        enrollmentTime: now,
+      },
+      {
+        uid: 'mfaUid2',
+        phoneNumber: '+16505550002',
+        displayName: 'Personal phone number',
+        factorId: 'phone',
+        enrollmentTime: now,
+      },
+    ];
     return admin.auth().updateUser(newUserUid, {
       email: updatedEmail,
       phoneNumber: updatedPhone,
       emailVerified: true,
       displayName: updatedDisplayName,
+      multiFactor: {
+        enrolledFactors,
+      },
     })
       .then((userRecord) => {
         expect(userRecord.emailVerified).to.be.true;
@@ -338,6 +404,31 @@ describe('admin.auth', () => {
         expect(userRecord.email).to.equal(updatedEmail);
         // Confirm expected phone number.
         expect(userRecord.phoneNumber).to.equal(updatedPhone);
+        // Confirm second factors added to user.
+        const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
+        expect(actualUserRecord.multiFactor.enrolledFactors.length).to.equal(2);
+        expect(actualUserRecord.multiFactor.enrolledFactors).to.deep.equal(enrolledFactors);
+        // Update list of second factors.
+        return admin.auth().updateUser(newUserUid, {
+          multiFactor: {
+            enrolledFactors: [enrolledFactors[0]],
+          },
+        });
+      })
+      .then((userRecord) => {
+        expect(userRecord.multiFactor!.enrolledFactors.length).to.equal(1);
+        const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
+        expect(actualUserRecord.multiFactor.enrolledFactors[0]).to.deep.equal(enrolledFactors[0]);
+        // Remove all second factors.
+        return admin.auth().updateUser(newUserUid, {
+          multiFactor: {
+            enrolledFactors: null,
+          },
+        });
+      })
+      .then((userRecord) => {
+        // Confirm all second factors removed.
+        expect(userRecord.multiFactor).to.be.undefined;
       });
   });
 
@@ -371,40 +462,40 @@ describe('admin.auth', () => {
     return admin.auth().createCustomToken(newUserUid, {
       isAdmin: true,
     })
-    .then((customToken) => {
-      return clientAuth().signInWithCustomToken(customToken);
-    })
-    .then(({user}) => {
-      expect(user).to.exist;
-      return user!.getIdToken();
-    })
-    .then((idToken) => {
-      return admin.auth().verifyIdToken(idToken);
-    })
-    .then((token) => {
-      expect(token.uid).to.equal(newUserUid);
-      expect(token.isAdmin).to.be.true;
-    });
+      .then((customToken) => {
+        return clientAuth().signInWithCustomToken(customToken);
+      })
+      .then(({user}) => {
+        expect(user).to.exist;
+        return user!.getIdToken();
+      })
+      .then((idToken) => {
+        return admin.auth().verifyIdToken(idToken);
+      })
+      .then((token) => {
+        expect(token.uid).to.equal(newUserUid);
+        expect(token.isAdmin).to.be.true;
+      });
   });
 
   it('createCustomToken() can mint JWTs without a service account', () => {
     return admin.auth(noServiceAccountApp).createCustomToken(newUserUid, {
       isAdmin: true,
     })
-    .then((customToken) => {
-      return clientAuth().signInWithCustomToken(customToken);
-    })
-    .then(({user}) => {
-      expect(user).to.exist;
-      return user!.getIdToken();
-    })
-    .then((idToken) => {
-      return admin.auth(noServiceAccountApp).verifyIdToken(idToken);
-    })
-    .then((token) => {
-      expect(token.uid).to.equal(newUserUid);
-      expect(token.isAdmin).to.be.true;
-    });
+      .then((customToken) => {
+        return clientAuth().signInWithCustomToken(customToken);
+      })
+      .then(({user}) => {
+        expect(user).to.exist;
+        return user!.getIdToken();
+      })
+      .then((idToken) => {
+        return admin.auth(noServiceAccountApp).verifyIdToken(idToken);
+      })
+      .then((token) => {
+        expect(token.uid).to.equal(newUserUid);
+        expect(token.isAdmin).to.be.true;
+      });
   });
 
   it('verifyIdToken() fails when called with an invalid token', () => {
@@ -441,7 +532,7 @@ describe('admin.auth', () => {
     it('generatePasswordResetLink() should return a password reset link', () => {
       // Ensure old password set on created user.
       return admin.auth().updateUser(uid, {password: 'password'})
-        .then((userRecord) => {
+        .then(() => {
           return admin.auth().generatePasswordResetLink(email, actionCodeSettings);
         })
         .then((link) => {
@@ -548,8 +639,8 @@ describe('admin.auth', () => {
       const promises: Array<Promise<any>> = [];
       createdTenants.forEach((tenantId) => {
         promises.push(
-            admin.auth().tenantManager().deleteTenant(tenantId)
-                .catch((error) => {/** Ignore. */}));
+          admin.auth().tenantManager().deleteTenant(tenantId)
+            .catch(() => {/** Ignore. */}));
       });
       return Promise.all(promises);
     });
@@ -595,7 +686,7 @@ describe('admin.auth', () => {
         // If user successfully created, make sure it is deleted at the end of the test suite.
         if (createdUserUid) {
           return tenantAwareAuth.deleteUser(createdUserUid)
-            .catch((error) => {
+            .catch(() => {
               // Ignore error.
             });
         }
@@ -629,12 +720,12 @@ describe('admin.auth', () => {
           email: updatedEmail,
           phoneNumber: updatedPhone,
         })
-        .then((userRecord) => {
-          expect(userRecord.uid).to.equal(createdUserUid);
-          expect(userRecord.tenantId).to.equal(createdTenantId);
-          expect(userRecord.email).to.equal(updatedEmail);
-          expect(userRecord.phoneNumber).to.equal(updatedPhone);
-        });
+          .then((userRecord) => {
+            expect(userRecord.uid).to.equal(createdUserUid);
+            expect(userRecord.tenantId).to.equal(createdTenantId);
+            expect(userRecord.email).to.equal(updatedEmail);
+            expect(userRecord.phoneNumber).to.equal(updatedPhone);
+          });
       });
 
       it('generateEmailVerificationLink() should generate the link for tenant specific user', () => {
@@ -782,7 +873,7 @@ describe('admin.auth', () => {
       after(() => {
         if (tenantAwareAuth) {
           return tenantAwareAuth.deleteProviderConfig(authProviderConfig.providerId)
-            .catch((error) => {
+            .catch(() => {
               // Ignore error.
             });
         }
@@ -801,7 +892,7 @@ describe('admin.auth', () => {
           })
           .then((config) => {
             const modifiedConfig = deepExtend(
-                {providerId: authProviderConfig.providerId}, modifiedConfigOptions);
+              {providerId: authProviderConfig.providerId}, modifiedConfigOptions);
             assertDeepEqualUnordered(modifiedConfig, config);
             return tenantAwareAuth.deleteProviderConfig(authProviderConfig.providerId);
           })
@@ -809,7 +900,7 @@ describe('admin.auth', () => {
             return tenantAwareAuth.getProviderConfig(authProviderConfig.providerId)
               .should.eventually.be.rejected.and.have.property('code', 'auth/configuration-not-found');
           });
-        });
+      });
     });
 
     describe('OIDC management APIs', () => {
@@ -840,7 +931,7 @@ describe('admin.auth', () => {
       after(() => {
         if (tenantAwareAuth) {
           return tenantAwareAuth.deleteProviderConfig(authProviderConfig.providerId)
-            .catch((error) => {
+            .catch(() => {
               // Ignore error.
             });
         }
@@ -859,7 +950,7 @@ describe('admin.auth', () => {
           })
           .then((config) => {
             const modifiedConfig = deepExtend(
-                {providerId: authProviderConfig.providerId}, modifiedConfigOptions);
+              {providerId: authProviderConfig.providerId}, modifiedConfigOptions);
             assertDeepEqualUnordered(modifiedConfig, config);
             return tenantAwareAuth.deleteProviderConfig(authProviderConfig.providerId);
           })
@@ -867,7 +958,7 @@ describe('admin.auth', () => {
             return tenantAwareAuth.getProviderConfig(authProviderConfig.providerId)
               .should.eventually.be.rejected.and.have.property('code', 'auth/configuration-not-found');
           });
-        });
+      });
     });
 
     it('getTenant() should resolve with expected tenant', () => {
@@ -936,7 +1027,7 @@ describe('admin.auth', () => {
         .then(() => {
           return admin.auth().tenantManager().getTenant(createdTenantId);
         })
-        .then((result) => {
+        .then(() => {
           throw new Error('unexpected success');
         })
         .catch((error) => {
@@ -969,10 +1060,10 @@ describe('admin.auth', () => {
       enableRequestSigning: true,
     };
 
-    const removeTempConfigs = () => {
+    const removeTempConfigs = (): Promise<any> => {
       return Promise.all([
-        admin.auth().deleteProviderConfig(authProviderConfig1.providerId).catch((error) => {/* empty */}),
-        admin.auth().deleteProviderConfig(authProviderConfig2.providerId).catch((error) => {/* empty */}),
+        admin.auth().deleteProviderConfig(authProviderConfig1.providerId).catch(() => {/* empty */}),
+        admin.auth().deleteProviderConfig(authProviderConfig2.providerId).catch(() => {/* empty */}),
       ]);
     };
 
@@ -1044,7 +1135,7 @@ describe('admin.auth', () => {
       return admin.auth().updateProviderConfig(authProviderConfig1.providerId, modifiedConfigOptions)
         .then((config) => {
           const modifiedConfig = deepExtend(
-              {providerId: authProviderConfig1.providerId}, modifiedConfigOptions);
+            {providerId: authProviderConfig1.providerId}, modifiedConfigOptions);
           assertDeepEqualUnordered(modifiedConfig, config);
         });
     });
@@ -1072,7 +1163,7 @@ describe('admin.auth', () => {
       return admin.auth().updateProviderConfig(authProviderConfig1.providerId, deltaChanges)
         .then((config) => {
           const modifiedConfig = deepExtend(
-              {providerId: authProviderConfig1.providerId}, modifiedConfigOptions);
+            {providerId: authProviderConfig1.providerId}, modifiedConfigOptions);
           assertDeepEqualUnordered(modifiedConfig, config);
         });
     });
@@ -1101,10 +1192,10 @@ describe('admin.auth', () => {
       clientId: 'CLIENT_ID2',
     };
 
-    const removeTempConfigs = () => {
+    const removeTempConfigs = (): Promise<any> => {
       return Promise.all([
-        admin.auth().deleteProviderConfig(authProviderConfig1.providerId).catch((error) => {/* empty */}),
-        admin.auth().deleteProviderConfig(authProviderConfig2.providerId).catch((error) => {/* empty */}),
+        admin.auth().deleteProviderConfig(authProviderConfig1.providerId).catch(() => {/* empty */}),
+        admin.auth().deleteProviderConfig(authProviderConfig2.providerId).catch(() => {/* empty */}),
       ]);
     };
 
@@ -1208,6 +1299,7 @@ describe('admin.auth', () => {
   it('deleteUser() deletes the user with the given UID', () => {
     return Promise.all([
       admin.auth().deleteUser(newUserUid),
+      admin.auth().deleteUser(newMultiFactorUserUid),
       admin.auth().deleteUser(uidFromCreateUserWithoutUid),
     ]).should.eventually.be.fulfilled;
   });
@@ -1236,7 +1328,7 @@ describe('admin.auth', () => {
           expectedExp = Math.floor((new Date().getTime() + expiresIn) / 1000);
           payloadClaims = decodedIdTokenClaims;
           payloadClaims.iss = payloadClaims.iss.replace(
-              'securetoken.google.com', 'session.firebase.google.com');
+            'securetoken.google.com', 'session.firebase.google.com');
           delete payloadClaims.exp;
           delete payloadClaims.iat;
           expectedIat = Math.floor(new Date().getTime() / 1000);
@@ -1367,7 +1459,7 @@ describe('admin.auth', () => {
           const currentRawPassword = userImportTest.rawPassword;
           const currentRawSalt = userImportTest.rawSalt;
           return crypto.createHmac('sha256', currentHashKey)
-                       .update(currentRawPassword + currentRawSalt).digest();
+            .update(currentRawPassword + currentRawSalt).digest();
         },
         rawPassword,
         rawSalt,
@@ -1400,7 +1492,7 @@ describe('admin.auth', () => {
           const currentRawPassword = userImportTest.rawPassword;
           const currentRawSalt = userImportTest.rawSalt;
           return Buffer.from(crypto.createHash('md5')
-                                   .update(currentRawSalt + currentRawPassword).digest('hex'));
+            .update(currentRawSalt + currentRawPassword).digest('hex'));
         },
         rawPassword,
         rawSalt,
@@ -1447,7 +1539,7 @@ describe('admin.auth', () => {
           const dkLen = userImportTest.importOptions.hash.derivedKeyLength!;
 
           return Buffer.from(scrypt.hashSync(
-              currentRawPassword, {N, r, p}, dkLen, Buffer.from(currentRawSalt)));
+            currentRawPassword, {N, r, p}, dkLen, Buffer.from(currentRawSalt)));
         },
         rawPassword,
         rawSalt,
@@ -1467,7 +1559,7 @@ describe('admin.auth', () => {
           expect(userImportTest.importOptions.hash.rounds).to.exist;
           const currentRounds = userImportTest.importOptions.hash.rounds!;
           return crypto.pbkdf2Sync(
-              currentRawPassword, currentRawSalt, currentRounds, 64, 'sha256');
+            currentRawPassword, currentRawSalt, currentRounds, 64, 'sha256');
         },
         rawPassword,
         rawSalt,
@@ -1475,7 +1567,7 @@ describe('admin.auth', () => {
       {
         name: 'SCRYPT',
         importOptions: scryptHashOptions as any,
-        computePasswordHash: (userImportTest: UserImportTest): Buffer => {
+        computePasswordHash: (): Buffer => {
           return Buffer.from(scryptPasswordHash, 'base64');
         },
         rawPassword,
@@ -1556,6 +1648,64 @@ describe('admin.auth', () => {
         }).should.eventually.be.fulfilled;
     });
 
+    it('successfully imports users with enrolled second factors', () => {
+      const uid = generateRandomString(20).toLowerCase();
+      const email = uid + '@example.com';
+      const now = new Date(1476235905000).toUTCString();
+      importUserRecord = {
+        uid,
+        email,
+        emailVerified: true,
+        displayName: 'Test User',
+        disabled: false,
+        metadata: {
+          lastSignInTime: now,
+          creationTime: now,
+        },
+        providerData: [
+          {
+            uid: uid + '-facebook',
+            displayName: 'Facebook User',
+            email,
+            providerId: 'facebook.com',
+          },
+        ],
+        multiFactor: {
+          enrolledFactors: [
+            {
+              uid: 'mfaUid1',
+              phoneNumber: '+16505550001',
+              displayName: 'Work phone number',
+              factorId: 'phone',
+              enrollmentTime: now,
+            },
+            {
+              uid: 'mfaUid2',
+              phoneNumber: '+16505550002',
+              displayName: 'Personal phone number',
+              factorId: 'phone',
+              enrollmentTime: now,
+            },
+          ],
+        },
+      };
+      uids.push(importUserRecord.uid);
+
+      return admin.auth().importUsers([importUserRecord])
+        .then((result) => {
+          expect(result.failureCount).to.equal(0);
+          expect(result.successCount).to.equal(1);
+          expect(result.errors.length).to.equal(0);
+          return admin.auth().getUser(uid);
+        }).then((userRecord) => {
+          // Confirm second factors added to user.
+          const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
+          expect(actualUserRecord.multiFactor.enrolledFactors.length).to.equal(2);
+          expect(actualUserRecord.multiFactor.enrolledFactors)
+            .to.deep.equal(importUserRecord.multiFactor.enrolledFactors);
+        }).should.eventually.be.fulfilled;
+    });
+
     it('fails when invalid users are provided', () => {
       const users = [
         {uid: generateRandomString(20).toLowerCase(), phoneNumber: '+1error'},
@@ -1591,7 +1741,7 @@ describe('admin.auth', () => {
  * @retunr {Promise<void>} A promise that resolved on success.
  */
 function testImportAndSignInUser(
-    importUserRecord: any, importOptions: any, rawPassword: string): Promise<void> {
+  importUserRecord: any, importOptions: any, rawPassword: string): Promise<void> {
   const users = [importUserRecord];
   // Import the user record.
   return admin.auth().importUsers(users, importOptions)
@@ -1619,7 +1769,7 @@ function testImportAndSignInUser(
  * @return {Promise} A promise that resolves when the user is deleted
  *     or is found not to exist.
  */
-function deletePhoneNumberUser(phoneNumber: string) {
+function deletePhoneNumberUser(phoneNumber: string): Promise<void> {
   return admin.auth().getUserByPhoneNumber(phoneNumber)
     .then((userRecord) => {
       return safeDelete(userRecord.uid);
@@ -1638,7 +1788,7 @@ function deletePhoneNumberUser(phoneNumber: string) {
  *
  * @return {Promise} A promise that resolves when test preparations are ready.
  */
-function cleanup() {
+function cleanup(): Promise<any> {
   // Delete any existing users that could affect the test outcome.
   const promises: Array<Promise<void>> = [
     deletePhoneNumberUser(testPhoneNumber),
@@ -1716,7 +1866,7 @@ function safeDelete(uid: string): Promise<void> {
       }
     });
   // Suppress errors in delete queue to not spill over to next item in queue.
-  deleteQueue = deletePromise.catch((error) => {
+  deleteQueue = deletePromise.catch(() => {
     // Do nothing.
   });
   return deletePromise;
@@ -1729,9 +1879,9 @@ function safeDelete(uid: string): Promise<void> {
  * @param {[key: string]: any} expected object.
  * @param {[key: string]: any} actual object.
  */
-function assertDeepEqualUnordered(expected: {[key: string]: any}, actual: {[key: string]: any}) {
+function assertDeepEqualUnordered(expected: {[key: string]: any}, actual: {[key: string]: any}): void {
   for (const key in expected) {
-    if (expected.hasOwnProperty(key)) {
+    if (Object.prototype.hasOwnProperty.call(expected, key)) {
       expect(actual[key])
         .to.deep.equal(expected[key]);
     }

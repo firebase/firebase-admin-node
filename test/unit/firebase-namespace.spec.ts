@@ -622,7 +622,7 @@ describe('FirebaseNamespace', () => {
 
     it('should return a reference to ProjectManagement type', () => {
       expect(firebaseNamespace.projectManagement.ProjectManagement)
-          .to.be.deep.equal(ProjectManagement);
+        .to.be.deep.equal(ProjectManagement);
     });
   });
 
@@ -656,7 +656,7 @@ describe('FirebaseNamespace', () => {
 
     it('should return a reference to SecurityRules type', () => {
       expect(firebaseNamespace.securityRules.SecurityRules)
-          .to.be.deep.equal(SecurityRules);
+        .to.be.deep.equal(SecurityRules);
     });
   });
 });

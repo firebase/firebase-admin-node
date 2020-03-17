@@ -68,7 +68,7 @@ export class InstanceId implements FirebaseServiceInterface {
    */
   public deleteInstanceId(instanceId: string): Promise<void> {
     return this.requestHandler.deleteInstanceId(instanceId)
-      .then((result) => {
+      .then(() => {
         // Return nothing on success
       });
   }

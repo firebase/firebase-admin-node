@@ -1,5 +1,7 @@
 import * as _admin from './index.d';
 
+/* eslint-disable @typescript-eslint/ban-types */
+
 export namespace admin.database {
 
   /**
@@ -1570,8 +1572,8 @@ export namespace admin.database {
       onComplete?: (a: Error | null, b: boolean, c: admin.database.DataSnapshot | null) => any,
       applyLocally?: boolean
     ): Promise<{
-      committed: boolean,
-      snapshot: admin.database.DataSnapshot | null
+      committed: boolean;
+      snapshot: admin.database.DataSnapshot | null;
     }>;
 
     /**
@@ -1628,9 +1630,11 @@ export namespace admin.database {
    */
   interface ThenableReference extends admin.database.Reference, Promise<admin.database.Reference> { }
 
+  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   function enableLogging(logger?: boolean | ((message: string) => any), persistent?: boolean): any;
 }
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
 export namespace admin.database.ServerValue {
-  var TIMESTAMP: number;
+  const TIMESTAMP: number;
 }

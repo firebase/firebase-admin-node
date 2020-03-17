@@ -1,5 +1,7 @@
 import * as _admin from './index.d';
 
+/* eslint-disable @typescript-eslint/ban-types */
+
 export namespace admin.auth {
 
   /**
@@ -64,6 +66,48 @@ export namespace admin.auth {
      * @return A JSON-serializable representation of this object.
      */
     toJSON(): Object;
+  }
+
+  /**
+   * Interface representing the common properties of a user enrolled second factor.
+   */
+  interface MultiFactorInfo {
+
+    /**
+     * The ID of the enrolled second factor. This ID is unique to the user.
+     */
+    uid: string;
+
+    /**
+     * The optional display name of the enrolled second factor.
+     */
+    displayName?: string;
+
+    /**
+     * The optional date the second factor was enrolled, formatted as a UTC string.
+     */
+    enrollmentTime?: string;
+
+    /**
+     * The type identifier of the second factor. For SMS second factors, this is `phone`.
+     */
+    factorId: string;
+
+    /**
+     * @return A JSON-serializable representation of this object.
+     */
+    toJSON(): Object;
+  }
+
+  /**
+   * Interface representing a phone specific user enrolled second factor.
+   */
+  interface PhoneMultiFactorInfo extends MultiFactorInfo {
+
+    /**
+     * The phone number associated with a phone second factor.
+     */
+    phoneNumber: string;
   }
 
   /**
@@ -162,9 +206,94 @@ export namespace admin.auth {
     tenantId?: string | null;
 
     /**
+     * The multi-factor related properties for the current user, if available.
+     */
+    multiFactor?: admin.auth.MultiFactorSettings;
+
+    /**
      * @return A JSON-serializable representation of this object.
      */
     toJSON(): Object;
+  }
+
+  /**
+   * The multi-factor related user settings.
+   */
+  interface MultiFactorSettings {
+    /**
+     * List of second factors enrolled with the current user.
+     * Currently only phone second factors are supported.
+     */
+    enrolledFactors: admin.auth.MultiFactorInfo[];
+
+    /**
+     * @return A JSON-serializable representation of this multi-factor object.
+     */
+    toJSON(): Object;
+  }
+
+  /**
+   * The multi-factor related user settings for create operations.
+   */
+  interface MultiFactorCreateSettings {
+
+    /**
+     * The created user's list of enrolled second factors.
+     */
+    enrolledFactors: admin.auth.CreateMultiFactorInfoRequest[];
+  }
+
+  /**
+   * The multi-factor related user settings for update operations.
+   */
+  interface MultiFactorUpdateSettings {
+
+    /**
+     * The updated list of enrolled second factors. The provided list overwrites the user's
+     * existing list of second factors.
+     * When null is passed, all of the user's existing second factors are removed.
+     */
+    enrolledFactors: admin.auth.UpdateMultiFactorInfoRequest[] | null;
+  }
+
+  /**
+   * Interface representing common properties of a user enrolled second factor
+   * for an `UpdateRequest`.
+   */
+  interface UpdateMultiFactorInfoRequest {
+
+    /**
+     * The ID of the enrolled second factor. This ID is unique to the user. When not provided,
+     * a new one is provisioned by the Auth server.
+     */
+    uid?: string;
+
+    /**
+     * The optional display name for an enrolled second factor.
+     */
+    displayName?: string;
+
+    /**
+     * The optional date the second factor was enrolled, formatted as a UTC string.
+     */
+    enrollmentTime?: string;
+
+    /**
+     * The type identifier of the second factor. For SMS second factors, this is `phone`.
+     */
+    factorId: string;
+  }
+
+  /**
+   * Interface representing a phone specific user enrolled second factor
+   * for an `UpdateRequest`.
+   */
+  interface UpdatePhoneMultiFactorInfoRequest extends UpdateMultiFactorInfoRequest {
+
+    /**
+     * The phone number associated with a phone second factor.
+     */
+    phoneNumber: string;
   }
 
   /**
@@ -207,6 +336,40 @@ export namespace admin.auth {
      * The user's photo URL.
      */
     photoURL?: string | null;
+
+    /**
+     * The user's updated multi-factor related properties.
+     */
+    multiFactor?: admin.auth.MultiFactorUpdateSettings;
+  }
+
+  /**
+   * Interface representing base properties of a user enrolled second factor for a
+   * `CreateRequest`.
+   */
+  interface CreateMultiFactorInfoRequest {
+
+    /**
+     * The optional display name for an enrolled second factor.
+     */
+    displayName?: string;
+
+    /**
+     * The type identifier of the second factor. For SMS second factors, this is `phone`.
+     */
+    factorId: string;
+  }
+
+  /**
+   * Interface representing a phone specific user enrolled second factor for a
+   * `CreateRequest`.
+   */
+  interface CreatePhoneMultiFactorInfoRequest extends CreateMultiFactorInfoRequest {
+
+    /**
+     * The phone number associated with a phone second factor.
+     */
+    phoneNumber: string;
   }
 
   /**
@@ -219,6 +382,11 @@ export namespace admin.auth {
      * The user's `uid`.
      */
     uid?: string;
+
+    /**
+     * The user's multi-factor related properties.
+     */
+    multiFactor?: admin.auth.MultiFactorCreateSettings;
   }
 
   /**
@@ -284,6 +452,19 @@ export namespace admin.auth {
        * `"google.com"`, `"twitter.com"`, or `"custom"`.
        */
       sign_in_provider: string;
+
+      /**
+       * The type identifier or `factorId` of the second factor, provided the
+       * ID token was obtained from a multi-factor authenticated user.
+       * For phone, this is `"phone"`.
+       */
+      sign_in_second_factor?: string;
+
+      /**
+       * The `uid` of the second factor used to sign in, provided the
+       * ID token was obtained from a multi-factor authenticated user.
+       */
+      second_factor_identifier?: string;
 
       /**
        * The ID of the tenant the user belongs to, if available.
@@ -664,7 +845,7 @@ export namespace admin.auth {
        * Whether password is required for email sign-in. When not required,
        * email sign-in can be performed with password or via email link sign-in.
        */
-      passwordRequired?: boolean
+      passwordRequired?: boolean;
     };
 
     /**
@@ -704,8 +885,7 @@ export namespace admin.auth {
   /**
    * Interface representing the properties to set on a new tenant.
    */
-  interface CreateTenantRequest extends UpdateTenantRequest {
-  }
+  type CreateTenantRequest = UpdateTenantRequest;
 
   /**
    * Interface representing the object returned from a
@@ -1173,7 +1353,7 @@ export namespace admin.auth {
     importUsers(
       users: admin.auth.UserImportRecord[],
       options?: admin.auth.UserImportOptions,
-    ): Promise<admin.auth.UserImportResult>
+    ): Promise<admin.auth.UserImportResult>;
 
     /**
      * Creates a new Firebase session cookie with the specified options. The created

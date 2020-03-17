@@ -86,10 +86,10 @@ export class TenantManager {
    *     empty list of tenants and no page token are returned.
    */
   public listTenants(
-      maxResults?: number,
-      pageToken?: string): Promise<ListTenantsResult> {
+    maxResults?: number,
+    pageToken?: string): Promise<ListTenantsResult> {
     return this.authRequestHandler.listTenants(maxResults, pageToken)
-      .then((response: {tenants: TenantServerResponse[], nextPageToken?: string}) => {
+      .then((response: {tenants: TenantServerResponse[]; nextPageToken?: string}) => {
         // List of tenants to return.
         const tenants: Tenant[] = [];
         // Convert each user response to a Tenant.

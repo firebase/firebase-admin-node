@@ -33,14 +33,14 @@ export namespace admin.securityRules {
    * A set of Firebase security rules.
    */
   interface Ruleset extends RulesetMetadata {
-    readonly source: RulesFile[];
+    readonly source: admin.securityRules.RulesFile[];
   }
 
   interface RulesetMetadataList {
     /**
      * A batch of ruleset metadata.
      */
-    readonly rulesets: RulesetMetadata[];
+    readonly rulesets: admin.securityRules.RulesetMetadata[];
 
     /**
      * The next page token if available. This is needed to retrieve the next batch.
@@ -74,7 +74,7 @@ export namespace admin.securityRules {
      * @param source Contents of the rules file.
      * @return A new rules file instance.
      */
-    createRulesFileFromSource(name: string, source: string | Buffer): RulesFile;
+    createRulesFileFromSource(name: string, source: string | Buffer): admin.securityRules.RulesFile;
 
     /**
      * Creates a new {@link admin.securityRules.Ruleset `Ruleset`} from the given
@@ -83,7 +83,7 @@ export namespace admin.securityRules {
      * @param file Rules file to include in the new `Ruleset`.
      * @returns A promise that fulfills with the newly created `Ruleset`.
      */
-    createRuleset(file: RulesFile): Promise<Ruleset>;
+    createRuleset(file: admin.securityRules.RulesFile): Promise<admin.securityRules.Ruleset>;
 
     /**
      * Gets the {@link admin.securityRules.Ruleset `Ruleset`} identified by the given
@@ -95,7 +95,7 @@ export namespace admin.securityRules {
      * @param name Name of the `Ruleset` to retrieve.
      * @return A promise that fulfills with the specified `Ruleset`.
      */
-    getRuleset(name: string): Promise<Ruleset>;
+    getRuleset(name: string): Promise<admin.securityRules.Ruleset>;
 
     /**
      * Deletes the {@link admin.securityRules.Ruleset `Ruleset`} identified by the given
@@ -119,7 +119,7 @@ export namespace admin.securityRules {
      * @return A promise that fulfills with a page of rulesets.
      */
     listRulesetMetadata(
-      pageSize?: number, nextPageToken?: string): Promise<RulesetMetadataList>;
+      pageSize?: number, nextPageToken?: string): Promise<admin.securityRules.RulesetMetadataList>;
 
     /**
      * Gets the {@link admin.securityRules.Ruleset `Ruleset`} currently applied to
@@ -128,7 +128,7 @@ export namespace admin.securityRules {
      *
      * @return A promise that fulfills with the Firestore ruleset.
      */
-    getFirestoreRuleset(): Promise<Ruleset>;
+    getFirestoreRuleset(): Promise<admin.securityRules.Ruleset>;
 
     /**
      * Creates a new {@link admin.securityRules.Ruleset `Ruleset`} from the given
@@ -137,7 +137,7 @@ export namespace admin.securityRules {
      * @param source Rules source to apply.
      * @return A promise that fulfills when the ruleset is created and released.
      */
-    releaseFirestoreRulesetFromSource(source: string | Buffer): Promise<Ruleset>;
+    releaseFirestoreRulesetFromSource(source: string | Buffer): Promise<admin.securityRules.Ruleset>;
 
     /**
      * Applies the specified {@link admin.securityRules.Ruleset `Ruleset`} ruleset
@@ -147,7 +147,7 @@ export namespace admin.securityRules {
      *   containing the name.
      * @return A promise that fulfills when the ruleset is released.
      */
-    releaseFirestoreRuleset(ruleset: string | RulesetMetadata): Promise<void>;
+    releaseFirestoreRuleset(ruleset: string | admin.securityRules.RulesetMetadata): Promise<void>;
 
     /**
      * Gets the {@link admin.securityRules.Ruleset `Ruleset`} currently applied to a
@@ -159,7 +159,7 @@ export namespace admin.securityRules {
      *   `AppOptions`.
      * @return A promise that fulfills with the Cloud Storage ruleset.
      */
-    getStorageRuleset(bucket?: string): Promise<Ruleset>;
+    getStorageRuleset(bucket?: string): Promise<admin.securityRules.Ruleset>;
 
     /**
      * Creates a new {@link admin.securityRules.Ruleset `Ruleset`} from the given
@@ -172,7 +172,7 @@ export namespace admin.securityRules {
      * @return A promise that fulfills when the ruleset is created and released.
      */
     releaseStorageRulesetFromSource(
-      source: string | Buffer, bucket?: string): Promise<Ruleset>;
+      source: string | Buffer, bucket?: string): Promise<admin.securityRules.Ruleset>;
 
     /**
      * Applies the specified {@link admin.securityRules.Ruleset `Ruleset`} ruleset
@@ -186,6 +186,6 @@ export namespace admin.securityRules {
      * @return A promise that fulfills when the ruleset is released.
      */
     releaseStorageRuleset(
-      ruleset: string | RulesetMetadata, bucket?: string): Promise<void>;
+      ruleset: string | admin.securityRules.RulesetMetadata, bucket?: string): Promise<void>;
   }
 }

@@ -179,10 +179,10 @@ export class EmailSignInConfig implements EmailSignInProviderConfig {
   public static buildServerRequest(options: EmailSignInProviderConfig): EmailSignInConfigServerRequest {
     const request: EmailSignInConfigServerRequest = {};
     EmailSignInConfig.validate(options);
-    if (options.hasOwnProperty('enabled')) {
+    if (Object.prototype.hasOwnProperty.call(options, 'enabled')) {
       request.allowPasswordSignup = options.enabled;
     }
-    if (options.hasOwnProperty('passwordRequired')) {
+    if (Object.prototype.hasOwnProperty.call(options, 'passwordRequired')) {
       request.enableEmailLinkSignin = !options.passwordRequired;
     }
     return request;
@@ -193,7 +193,7 @@ export class EmailSignInConfig implements EmailSignInProviderConfig {
    *
    * @param {any} options The options object to validate.
    */
-  private static validate(options: EmailSignInProviderConfig) {
+  private static validate(options: EmailSignInProviderConfig): void {
     // TODO: Validate the request.
     const validKeys = {
       enabled: true,
@@ -284,8 +284,8 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
    * @return {?SAMLConfigServerRequest} The resulting server request or null if not valid.
    */
   public static buildServerRequest(
-      options: SAMLAuthProviderRequest,
-      ignoreMissingFields: boolean = false): SAMLConfigServerRequest | null {
+    options: SAMLAuthProviderRequest,
+    ignoreMissingFields = false): SAMLConfigServerRequest | null {
     const makeRequest = validator.isNonNullObject(options) &&
         (options.providerId || ignoreMissingFields);
     if (!makeRequest) {
@@ -349,7 +349,7 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
    * @param {SAMLAuthProviderRequest} options The options object to validate.
    * @param {boolean=} ignoreMissingFields Whether to ignore missing fields.
    */
-  public static validate(options: SAMLAuthProviderRequest, ignoreMissingFields: boolean = false) {
+  public static validate(options: SAMLAuthProviderRequest, ignoreMissingFields = false): void {
     const validKeys = {
       enabled: true,
       displayName: true,
@@ -409,7 +409,7 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
         !validator.isNonEmptyString(options.rpEntityId)) {
       throw new FirebaseAuthError(
         !options.rpEntityId ? AuthClientErrorCode.MISSING_SAML_RELYING_PARTY_CONFIG :
-            AuthClientErrorCode.INVALID_CONFIG,
+          AuthClientErrorCode.INVALID_CONFIG,
         '"SAMLAuthProviderConfig.rpEntityId" must be a valid non-empty string.',
       );
     }
@@ -544,8 +544,8 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
    * @return {?OIDCConfigServerRequest} The resulting server request or null if not valid.
    */
   public static buildServerRequest(
-      options: OIDCAuthProviderRequest,
-      ignoreMissingFields: boolean = false): OIDCConfigServerRequest | null {
+    options: OIDCAuthProviderRequest,
+    ignoreMissingFields = false): OIDCConfigServerRequest | null {
     const makeRequest = validator.isNonNullObject(options) &&
         (options.providerId || ignoreMissingFields);
     if (!makeRequest) {
@@ -590,7 +590,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
    * @param {OIDCAuthProviderRequest} options The options object to validate.
    * @param {boolean=} ignoreMissingFields Whether to ignore missing fields.
    */
-  public static validate(options: OIDCAuthProviderRequest, ignoreMissingFields: boolean = false) {
+  public static validate(options: OIDCAuthProviderRequest, ignoreMissingFields = false): void {
     const validKeys = {
       enabled: true,
       displayName: true,

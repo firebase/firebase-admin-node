@@ -25,6 +25,8 @@ import * as _instanceId from './instance-id';
 import * as _projectManagement from './project-management';
 import * as _securityRules from './security-rules';
 
+/* eslint-disable @typescript-eslint/ban-types */
+
 /**
  * `admin` is a global namespace from which all Firebase Admin
  * services are accessed.
@@ -186,8 +188,8 @@ declare namespace admin {
     httpAgent?: Agent;
   }
 
-  var SDK_VERSION: string;
-  var apps: (admin.app.App | null)[];
+  const SDK_VERSION: string;
+  const apps: (admin.app.App | null)[];
 
   function app(name?: string): admin.app.App;
 
@@ -516,6 +518,14 @@ declare namespace admin.auth {
   export import TenantAwareAuth = _auth.admin.auth.TenantAwareAuth;
   export import Auth = _auth.admin.auth.Auth;
   export import TenantManager = _auth.admin.auth.TenantManager;
+  export import MultiFactorInfo = _auth.admin.auth.MultiFactorInfo;
+  export import PhoneMultiFactorInfo = _auth.admin.auth.PhoneMultiFactorInfo;
+  export import CreateMultiFactorInfoRequest = _auth.admin.auth.CreateMultiFactorInfoRequest;
+  export import CreatePhoneMultiFactorInfoRequest = _auth.admin.auth.CreatePhoneMultiFactorInfoRequest;
+  export import UpdateMultiFactorInfoRequest = _auth.admin.auth.UpdateMultiFactorInfoRequest;
+  export import UpdatePhoneMultiFactorInfoRequest = _auth.admin.auth.UpdatePhoneMultiFactorInfoRequest;
+  export import MultiFactorCreateSettings = _auth.admin.auth.MultiFactorCreateSettings;
+  export import MultiFactorUpdateSettings = _auth.admin.auth.MultiFactorUpdateSettings;
 }
 
 declare namespace admin.credential {

@@ -62,7 +62,7 @@ export class Tenant {
    * @return {object} The equivalent server request.
    */
   public static buildServerRequest(
-      tenantOptions: TenantOptions, createRequest: boolean): TenantOptionsServerRequest {
+    tenantOptions: TenantOptions, createRequest: boolean): TenantOptionsServerRequest {
     Tenant.validate(tenantOptions, createRequest);
     let request: TenantOptionsServerRequest = {};
     if (typeof tenantOptions.emailSignInConfig !== 'undefined') {
@@ -95,7 +95,7 @@ export class Tenant {
    * @param {any} request The tenant options object to validate.
    * @param {boolean} createRequest Whether this is a create request.
    */
-  private static validate(request: any, createRequest: boolean) {
+  private static validate(request: any, createRequest: boolean): void {
     const validKeys = {
       displayName: true,
       emailSignInConfig: true,

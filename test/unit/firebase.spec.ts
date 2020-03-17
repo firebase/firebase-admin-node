@@ -27,7 +27,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as mocks from '../resources/mocks';
 
 import * as firebaseAdmin from '../../src/index';
-import {RefreshTokenCredential, ServiceAccountCredential} from '../../src/auth/credential';
+import {RefreshTokenCredential, ServiceAccountCredential, isApplicationDefault} from '../../src/auth/credential';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -40,8 +40,8 @@ describe('Firebase', () => {
 
   before(() => {
     getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken').resolves({
-      access_token: 'mock-access-token',
-      expires_in: 3600,
+      access_token: 'mock-access-token', // eslint-disable-line @typescript-eslint/camelcase
+      expires_in: 3600, // eslint-disable-line @typescript-eslint/camelcase
     });
   });
 
@@ -112,6 +112,7 @@ describe('Firebase', () => {
         credential: firebaseAdmin.credential.cert(mocks.certificateObject),
       });
 
+      expect(isApplicationDefault(firebaseAdmin.app().options.credential)).to.be.false;
       return firebaseAdmin.app().INTERNAL.getToken()
         .should.eventually.have.keys(['accessToken', 'expirationTime']);
     });
@@ -122,18 +123,19 @@ describe('Firebase', () => {
         credential: firebaseAdmin.credential.cert(keyPath),
       });
 
+      expect(isApplicationDefault(firebaseAdmin.app().options.credential)).to.be.false;
       return firebaseAdmin.app().INTERNAL.getToken()
         .should.eventually.have.keys(['accessToken', 'expirationTime']);
     });
 
     it('should initialize SDK given an application default credential', () => {
-      let credPath: string | undefined;
-      credPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+      const credPath: string | undefined = process.env.GOOGLE_APPLICATION_CREDENTIALS;
       process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../resources/mock.key.json');
       firebaseAdmin.initializeApp({
         credential: firebaseAdmin.credential.applicationDefault(),
       });
 
+      expect(isApplicationDefault(firebaseAdmin.app().options.credential)).to.be.true;
       return firebaseAdmin.app().INTERNAL.getToken().then((token) => {
         if (typeof credPath === 'undefined') {
           delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
@@ -148,13 +150,14 @@ describe('Firebase', () => {
       getTokenStub.restore();
       getTokenStub = sinon.stub(RefreshTokenCredential.prototype, 'getAccessToken')
         .resolves({
-          access_token: 'mock-access-token',
-          expires_in: 3600,
+          access_token: 'mock-access-token', // eslint-disable-line @typescript-eslint/camelcase
+          expires_in: 3600, // eslint-disable-line @typescript-eslint/camelcase
         });
       firebaseAdmin.initializeApp({
         credential: firebaseAdmin.credential.refreshToken(mocks.refreshToken),
       });
 
+      expect(isApplicationDefault(firebaseAdmin.app().options.credential)).to.be.false;
       return firebaseAdmin.app().INTERNAL.getToken()
         .should.eventually.have.keys(['accessToken', 'expirationTime']);
     });
