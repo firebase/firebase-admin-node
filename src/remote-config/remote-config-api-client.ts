@@ -127,7 +127,7 @@ export class RemoteConfigApiClient {
   }
 
   public validateTemplate(template: RemoteConfigTemplate): Promise<RemoteConfigTemplate> {
-    return this.sendPutRequest(template, template.etag, 'remoteConfig?validate_only=true')
+    return this.sendPutRequest(template, template.etag, true)
       .then((resp) => {
         if (!validator.isNonEmptyString(resp.headers['etag'])) {
           throw new FirebaseRemoteConfigError(
@@ -155,7 +155,7 @@ export class RemoteConfigApiClient {
       // and circumvent the ETag, and the protection from that it provides.
       ifMatch = '*';
     }
-    return this.sendPutRequest(template, ifMatch, 'remoteConfig')
+    return this.sendPutRequest(template, ifMatch)
       .then((resp) => {
         if (!validator.isNonEmptyString(resp.headers['etag'])) {
           throw new FirebaseRemoteConfigError(
@@ -173,12 +173,13 @@ export class RemoteConfigApiClient {
       });
   }
 
-  private sendPutRequest(template: RemoteConfigTemplate, etag: string, path: string): Promise<HttpResponse> {
+  private sendPutRequest(template: RemoteConfigTemplate, etag: string, validateOnly?: boolean): Promise<HttpResponse> {
     if (!validator.isNonEmptyString(etag)) {
       throw new FirebaseRemoteConfigError(
         'invalid-argument',
         'ETag must be a non-empty string.');
     }
+    const path = validateOnly ? 'remoteConfig?validate_only=true' : 'remoteConfig';
     return this.getUrl()
       .then((url) => {
         const request: HttpRequestConfig = {
