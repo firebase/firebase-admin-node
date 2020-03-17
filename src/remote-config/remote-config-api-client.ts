@@ -179,7 +179,10 @@ export class RemoteConfigApiClient {
         'invalid-argument',
         'ETag must be a non-empty string.');
     }
-    const path = validateOnly ? 'remoteConfig?validate_only=true' : 'remoteConfig';
+    let path = 'remoteConfig';
+    if (validateOnly) {
+      path += '?validate_only=true';
+    }
     return this.getUrl()
       .then((url) => {
         const request: HttpRequestConfig = {
