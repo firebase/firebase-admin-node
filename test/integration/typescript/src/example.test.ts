@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import initApp from './example'
+import initApp from './example';
 import {expect} from 'chai';
 import {Bucket} from '@google-cloud/storage';
 import {Firestore} from '@google-cloud/firestore';
@@ -35,6 +35,26 @@ describe('Init App', () => {
     expect(app.name).to.equal('TestApp');
   });
 
+  it('Should return an Auth client', () => {
+    const client = admin.auth(app);
+    expect(client).to.be.instanceOf((admin.auth as any).Auth);
+  });
+
+  it('Should return a Messaging client', () => {
+    const client = admin.messaging(app);
+    expect(client).to.be.instanceOf((admin.messaging as any).Messaging);
+  });
+
+  it('Should return a ProjectManagement client', () => {
+    const client = admin.projectManagement(app);
+    expect(client).to.be.instanceOf((admin.projectManagement as any).ProjectManagement);
+  });
+
+  it('Should return a SecurityRules client', () => {
+    const client = admin.securityRules(app);
+    expect(client).to.be.instanceOf((admin.securityRules as any).SecurityRules);
+  });
+
   it('Should return a Database client', () => {
     const db = admin.database(app);
     expect(db).to.be.instanceOf((admin.database as any).Database);
@@ -52,7 +72,7 @@ describe('Init App', () => {
 
   it('Should return a Cloud Storage client', () => {
     const bucket: Bucket = app.storage().bucket('TestBucket');
-    expect(bucket.name).to.equal('TestBucket')
+    expect(bucket.name).to.equal('TestBucket');
   });
 
   it('Should return a Firestore client from the app', () => {
