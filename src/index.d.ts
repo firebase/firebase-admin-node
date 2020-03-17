@@ -4616,14 +4616,7 @@ declare namespace admin.messaging {
     silent?: boolean;
 
     /**
-     * Identifier used to replace existing notifications in the notification drawer.
-     *
-     * If not specified, each request creates a new notification.
-     *
-     * If specified and a notification with the same tag is already being shown,
-     * the new notification replaces the existing one in the notification drawer.
-     *
-     * **Platforms:** Android
+     * An identifying tag for the notification.
      */
     tag?: string;
 
@@ -4666,7 +4659,6 @@ declare namespace admin.messaging {
    * for code samples and detailed documentation.
    */
   interface NotificationMessagePayload {
-    tag?: string;
 
     /**
      * The notification's body text.
@@ -4714,6 +4706,18 @@ declare namespace admin.messaging {
      * **Platforms:** Android
      */
     sound?: string;
+
+    /**
+     * Identifier used to replace existing notifications in the notification drawer.
+     *
+     * If not specified, each request creates a new notification.
+     *
+     * If specified and a notification with the same tag is already being shown,
+     * the new notification replaces the existing one in the notification drawer.
+     *
+     * **Platforms:** Android
+     */ 
+    tag?: string;
 
     /**
      * The notification's title.
