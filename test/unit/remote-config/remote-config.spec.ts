@@ -329,4 +329,94 @@ describe('RemoteConfig', () => {
         });
     });
   });
+
+  describe('publishTemplate', () => {
+    it('should propagate API errors', () => {
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'publishTemplate')
+        .rejects(INTERNAL_ERROR);
+      stubs.push(stub);
+      return remoteConfig.publishTemplate(REMOTE_CONFIG_TEMPLATE)
+        .should.eventually.be.rejected.and.deep.equal(INTERNAL_ERROR);
+    });
+
+    it('should reject when API response is invalid', () => {
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'publishTemplate')
+        .resolves(null);
+      stubs.push(stub);
+      return remoteConfig.publishTemplate(REMOTE_CONFIG_TEMPLATE)
+        .should.eventually.be.rejected.and.have.property(
+          'message', 'Invalid Remote Config template response: null');
+    });
+
+    it('should reject when API response does not contain an ETag', () => {
+      const response = deepCopy(REMOTE_CONFIG_RESPONSE);
+      response.etag = '';
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'publishTemplate')
+        .resolves(response);
+      stubs.push(stub);
+      return remoteConfig.publishTemplate(REMOTE_CONFIG_TEMPLATE)
+        .should.eventually.be.rejected.and.have.property(
+          'message', `Invalid Remote Config template response: ${JSON.stringify(response)}`);
+    });
+
+    it('should reject when API response does not contain valid parameters', () => {
+      const response = deepCopy(REMOTE_CONFIG_RESPONSE);
+      response.parameters = null;
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'publishTemplate')
+        .resolves(response);
+      stubs.push(stub);
+      return remoteConfig.publishTemplate(REMOTE_CONFIG_TEMPLATE)
+        .should.eventually.be.rejected.and.have.property(
+          'message', `Remote Config parameters must be a non-null object`);
+    });
+
+    it('should reject when API response does not contain valid conditions', () => {
+      const response = deepCopy(REMOTE_CONFIG_RESPONSE);
+      response.conditions = Object();
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'publishTemplate')
+        .resolves(response);
+      stubs.push(stub);
+      return remoteConfig.publishTemplate(REMOTE_CONFIG_TEMPLATE)
+        .should.eventually.be.rejected.and.have.property(
+          'message', `Remote Config conditions must be an array`);
+    });
+
+    it('should resolve with Remote Config template on success', () => {
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'publishTemplate')
+        .resolves(REMOTE_CONFIG_RESPONSE);
+      stubs.push(stub);
+
+      return remoteConfig.publishTemplate(REMOTE_CONFIG_TEMPLATE)
+        .then((template) => {
+          expect(template.conditions.length).to.equal(1);
+          expect(template.conditions[0].name).to.equal('ios');
+          expect(template.conditions[0].expression).to.equal('device.os == \'ios\'');
+          expect(template.conditions[0].tagColor).to.equal('BLUE');
+          expect(template.etag).to.equal('etag-123456789012-5');
+          // verify that the etag is read-only
+          expect(() => {
+            (template as any).etag = "new-etag";
+          }).to.throw('Cannot set property etag of #<RemoteConfigTemplateImpl> which has only a getter');
+
+          const key = 'holiday_promo_enabled';
+          const p1 = template.parameters[key];
+          expect(p1.defaultValue).deep.equals({ value: 'true' });
+          expect(p1.conditionalValues).deep.equals({ ios: { useInAppDefault: true } });
+          expect(p1.description).equals('this is a promo');
+
+          const c = template.conditions.find((c) => c.name === 'ios');
+          expect(c).to.be.not.undefined;
+          const cond = c as RemoteConfigCondition;
+          expect(cond.name).to.equal('ios');
+          expect(cond.expression).to.equal('device.os == \'ios\'');
+          expect(cond.tagColor).to.equal('BLUE');
+        });
+    });
+  });
 });

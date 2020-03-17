@@ -81,6 +81,21 @@ export class RemoteConfig implements FirebaseServiceInterface {
         return new RemoteConfigTemplateImpl(templateResponse);
       });
   }
+
+  /**
+   * Publishes a Remote Config template.
+   *
+   * @param {RemoteConfigTemplate} template The Remote Config template to be validated.
+   * @param {any=} options Optional options object when publishing a Remote Config template.
+   *
+   * @return {Promise<RemoteConfigTemplate>} A Promise that fulfills when a template is published.
+   */
+  public publishTemplate(template: RemoteConfigTemplate, options?: { force: boolean }): Promise<RemoteConfigTemplate> {
+    return this.client.publishTemplate(template, options)
+      .then((templateResponse) => {
+        return new RemoteConfigTemplateImpl(templateResponse);
+      });
+  }
 }
 
 /**
