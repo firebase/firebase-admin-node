@@ -1,6 +1,12 @@
 {
   "name": "firebase-admin-typescript-test",
   "version": "1.0.0",
+  "description": "Firebase Admin SDK post package test cases",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/firebase/firebase-admin-node"
+  },
   "devDependencies": {
     "@types/chai": "^3.4.35",
     "@types/mocha": "^2.2.48",
