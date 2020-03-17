@@ -21,55 +21,53 @@
 # applications.
 
 set -e
+set -u
 
 if [ -z "$1" ]; then
     echo "[ERROR] No package name provided."
-    echo "[INFO] Usage: ./verifyReleaseTarball.sh <PACKAGE_NAME>"
+    echo "[INFO] Usage: ./verify_package.sh <PACKAGE_NAME>"
     exit 1
 fi
 
-# Variables
 PKG_NAME="$1"
-ROOT="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-MOCHA_CLI="$ROOT/node_modules/.bin/mocha -r ts-node/register"
-DIR="$ROOT/test/integration/typescript"
-WORK_DIR=`mktemp -d`
-
-if [ ! -f "$ROOT/$PKG_NAME" ]; then
-  echo "Package $PKG_NAME does not exist."
+if [ ! -f "${PKG_NAME}" ]; then
+  echo "Package ${PKG_NAME} does not exist."
   exit 1
 fi
 
-# check if tmp dir was created
-if [[ ! "$WORK_DIR" || ! -d "$WORK_DIR" ]]; then
+# create a temporary directory
+WORK_DIR=`mktemp -d`
+if [[ ! "${WORK_DIR}" || ! -d "${WORK_DIR}" ]]; then
   echo "Could not create temp dir"
   exit 1
 fi
 
 # deletes the temp directory
-function cleanup {      
-  rm -rf "$WORK_DIR"
-  echo "Deleted temp working directory $WORK_DIR"
+function cleanup {
+  rm -rf "${WORK_DIR}"
+  echo "Deleted temp working directory ${WORK_DIR}"
 }
 
 # register the cleanup function to be called on the EXIT signal
 trap cleanup EXIT
 
-# Enter work dir
-pushd "$WORK_DIR"
+# Copy package and test sources into working directory
+cp "${PKG_NAME}" "${WORK_DIR}"
+cp -r test/integration/typescript/* "${WORK_DIR}"
+cp test/resources/mock.key.json "${WORK_DIR}"
 
-# Copy test sources into working directory
-cp -r $DIR/* .
-cp "$ROOT/test/resources/mock.key.json" .
+# Enter work dir
+pushd "${WORK_DIR}"
 
 # Install the test package
 npm install
 
 # Install firebase-admin package
-npm install -S "$ROOT/$PKG_NAME"
+npm install -S "${PKG_NAME}"
 
 echo "> tsc -p tsconfig.json"
-$ROOT/node_modules/.bin/tsc -p tsconfig.json
+./node_modules/.bin/tsc -p tsconfig.json
 
+MOCHA_CLI="./node_modules/.bin/mocha -r ts-node/register"
 echo "> $MOCHA_CLI src/*.test.ts"
 $MOCHA_CLI src/*.test.ts
