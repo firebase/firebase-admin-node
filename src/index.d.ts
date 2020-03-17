@@ -4659,7 +4659,6 @@ declare namespace admin.messaging {
    * for code samples and detailed documentation.
    */
   interface NotificationMessagePayload {
-    tag?: string;
 
     /**
      * The notification's body text.
@@ -4700,6 +4699,15 @@ declare namespace admin.messaging {
     color?: string;
 
     /**
+     * The sound to play when the device receives the notification. Supports
+     * "default" or the filename of a sound resource bundled in the app. Sound files
+     * must reside in `/res/raw/`.
+     * 
+     * **Platforms:** Android
+     */
+    sound?: string;
+
+    /**
      * Identifier used to replace existing notifications in the notification drawer.
      *
      * If not specified, each request creates a new notification.
@@ -4708,8 +4716,8 @@ declare namespace admin.messaging {
      * the new notification replaces the existing one in the notification drawer.
      *
      * **Platforms:** Android
-     */
-    sound?: string;
+     */ 
+    tag?: string;
 
     /**
      * The notification's title.
