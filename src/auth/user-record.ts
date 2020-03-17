@@ -310,15 +310,25 @@ export class MultiFactor {
  */
 export class UserMetadata {
   public readonly creationTime: string;
-  public readonly lastSignInTime: string;
+  public readonly lastSignInTime: string | null;
 
   constructor(response: GetAccountInfoUserResponse) {
     // Creation date should always be available but due to some backend bugs there
     // were cases in the past where users did not have creation date properly set.
     // This included legacy Firebase migrating project users and some anonymous users.
     // These bugs have already been addressed since then.
-    utils.addReadonlyGetter(this, 'creationTime', parseDate(response.createdAt));
-    utils.addReadonlyGetter(this, 'lastSignInTime', parseDate(response.lastLoginAt));
+    const creationTime = parseDate(response.createdAt);
+    if (creationTime === null) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Unable to parse createdAt time: "'
+        + response.createdAt + '"');
+    }
+    this.creationTime = creationTime;
+    utils.enforceReadonly(this, 'creationTime');
+
+    this.lastSignInTime = parseDate(response.lastLoginAt);
+    utils.enforceReadonly(this, 'lastSignInTime');
   }
 
   /** @return The plain object representation of the user's metadata. */

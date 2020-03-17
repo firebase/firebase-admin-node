@@ -56,6 +56,20 @@ export function addReadonlyGetter(obj: object, prop: string, value: any): void {
 }
 
 /**
+ * Marks an existing property as readonly. Unlike typescript's "readonly"
+ * modifier, this will take effect at runtime too (generating a TypeError if
+ * violated), including when called from javascript.
+ */
+export function enforceReadonly(obj: object, prop: string): void {
+  Object.defineProperty(obj, prop, {
+    // Make this property read-only.
+    writable: false,
+    // Include this property during enumeration of obj's properties.
+    enumerable: true,
+  });
+}
+
+/**
  * Returns the Google Cloud project ID associated with a Firebase app, if it's explicitly
  * specified in either the Firebase app options, credentials or the local environment.
  * Otherwise returns null.

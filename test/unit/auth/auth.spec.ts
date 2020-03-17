@@ -1597,17 +1597,17 @@ AUTH_CONFIGS.forEach((testConfig) => {
       const maxResult = 500;
       const downloadAccountResponse: any = {
         users: [
-          {localId: 'UID1'},
-          {localId: 'UID2'},
-          {localId: 'UID3'},
+          {createdAt: '1234567890000', localId: 'UID1'},
+          {createdAt: '1234567890000', localId: 'UID2'},
+          {createdAt: '1234567890000', localId: 'UID3'},
         ],
         nextPageToken: 'NEXT_PAGE_TOKEN',
       };
       const expectedResult: any = {
         users: [
-          new UserRecord({localId: 'UID1'}),
-          new UserRecord({localId: 'UID2'}),
-          new UserRecord({localId: 'UID3'}),
+          new UserRecord({createdAt: '1234567890000', localId: 'UID1'}),
+          new UserRecord({createdAt: '1234567890000', localId: 'UID2'}),
+          new UserRecord({createdAt: '1234567890000', localId: 'UID3'}),
         ],
         pageToken: 'NEXT_PAGE_TOKEN',
       };
