@@ -78,11 +78,10 @@ jobs:
         name: dist
         path: dist
 
-    # TODO: Move this script to .github/scripts.
     - name: Verify tarball
       run: |
         PACKAGE_TARBALL=`ls firebase-admin-*.tgz`
-        ./verifyReleaseTarball.sh $PACKAGE_TARBALL
+        ./.github/scripts/verify_package.sh $PACKAGE_TARBALL
 
   publish_release:
     needs: stage_release
