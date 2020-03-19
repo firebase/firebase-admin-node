@@ -725,6 +725,16 @@ declare namespace admin.auth {
 
     /**
      * Links this user to the specified provider.
+     *
+     * Linking a provider to an existing user account does not invalidate the
+     * refresh token of that account. In other words, the existing account
+     * would continue to be able to access resources, despite not having used
+     * the newly linked provider to login. If you wish to force the user to
+     * authenticate with this new provider, you need to (a) revoke their
+     * refresh token (see
+     * https://firebase.google.com/docs/auth/admin/manage-sessions#revoke_refresh_tokens),
+     * and (b) ensure no other authentication methods are present on this
+     * account.
      */
     providerToLink?: UserProvider;
 
