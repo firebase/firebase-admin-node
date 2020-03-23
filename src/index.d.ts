@@ -5694,7 +5694,7 @@ declare namespace admin.remoteConfig {
   /**
    * Interface representing a Remote Config condition.
    * A condition targets a specific group of users. A list of these conditions make up
-   * part of a RemoteConfig object.
+   * part of a Remote Config template.
    */
   interface RemoteConfigCondition {
 
@@ -5730,7 +5730,7 @@ declare namespace admin.remoteConfig {
   }
   
   /**
-   * Interface representing an explicit parameter value.
+   * Interface representing an in-app-default value.
    */
   interface InAppDefaultValue {
     /**
@@ -5759,7 +5759,7 @@ declare namespace admin.remoteConfig {
      * Gets the current active version of the {@link admin.remoteConfig.RemoteConfigTemplate
      * `RemoteConfigTemplate`} of the project.
      *
-     * @return A promise that fulfills with the `RemoteConfigTemplate`.
+     * @return A promise that fulfills with a `RemoteConfigTemplate`.
      */
     getTemplate(): Promise<RemoteConfigTemplate>;
 
@@ -5767,7 +5767,7 @@ declare namespace admin.remoteConfig {
      * Validates a {@link admin.remoteConfig.RemoteConfigTemplate `RemoteConfigTemplate`}.
      *
      * @param template The Remote Config template to be validated.
-     * @returns A promise that fulfills when the provided `RemoteConfigTemplate` is validated.
+     * @returns A promise that fulfills with the validated `RemoteConfigTemplate`.
      */
     validateTemplate(template: RemoteConfigTemplate): Promise<RemoteConfigTemplate>;
 
@@ -5777,7 +5777,7 @@ declare namespace admin.remoteConfig {
      * @param template The Remote Config template to be validated.
      * @param options Optional options object when publishing a Remote Config template.
      *
-     * @return A Promise that fulfills when the template is published.
+     * @return A Promise that fulfills with the published `RemoteConfigTemplate`.
      */
     publishTemplate(template: RemoteConfigTemplate, options?: { force: boolean }): Promise<RemoteConfigTemplate>;
 
