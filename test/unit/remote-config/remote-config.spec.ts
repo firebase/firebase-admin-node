@@ -419,4 +419,84 @@ describe('RemoteConfig', () => {
         });
     });
   });
+
+  describe('createTemplateFromJSON', () => {
+    const INVALID_STRINGS: any[] = [null, undefined, '', 1, true, {}, []];
+    const INVALID_JSON_STRINGS: any[] = ['abc', 'foo', 'a:a', '1:1'];
+    const INVALID_PARAMETERS: any[] = [null, '', 'abc', 1, true, []];
+    const INVALID_CONDITIONS: any[] = [null, '', 'abc', 1, true, {}];
+
+    INVALID_STRINGS.forEach((invalidJson) => {
+      it(`should throw if the json string is ${JSON.stringify(invalidJson)}`, () => {
+        expect(() => remoteConfig.createTemplateFromJSON(invalidJson))
+          .to.throw('JSON string must be a valid non-empty string');
+      });
+    });
+
+    INVALID_JSON_STRINGS.forEach((invalidJson) => {
+      it(`should throw if the json string is ${JSON.stringify(invalidJson)}`, () => {
+        expect(() => remoteConfig.createTemplateFromJSON(invalidJson))
+          .to.throw(/^Failed to parse the JSON string: ([\D\w]*)\. SyntaxError: Unexpected token ([\D\w]*) in JSON at position ([0-9]*)$/);
+      });
+    });
+
+    const invalidEtags = [...INVALID_STRINGS];
+    let sourceTemplate = deepCopy(REMOTE_CONFIG_RESPONSE);
+    invalidEtags.forEach((invalidEtag) => {
+      sourceTemplate.etag = invalidEtag;
+      const jsonString = JSON.stringify(sourceTemplate);
+      it(`should throw if the ETag is ${JSON.stringify(invalidEtag)}`, () => {
+        expect(() => remoteConfig.createTemplateFromJSON(jsonString))
+          .to.throw(`Invalid Remote Config template response: ${jsonString}`);
+      });
+    });
+
+    sourceTemplate = deepCopy(REMOTE_CONFIG_RESPONSE);
+    INVALID_PARAMETERS.forEach((invalidParameter) => {
+      sourceTemplate.parameters = invalidParameter;
+      const jsonString = JSON.stringify(sourceTemplate);
+      it(`should throw if the parameters is ${JSON.stringify(invalidParameter)}`, () => {
+        expect(() => remoteConfig.createTemplateFromJSON(jsonString))
+          .to.throw('Remote Config parameters must be a non-null object');
+      });
+    });
+
+    sourceTemplate = deepCopy(REMOTE_CONFIG_RESPONSE);
+    INVALID_CONDITIONS.forEach((invalidConditions) => {
+      sourceTemplate.conditions = invalidConditions;
+      const jsonString = JSON.stringify(sourceTemplate);
+      it(`should throw if the conditions is ${JSON.stringify(invalidConditions)}`, () => {
+        expect(() => remoteConfig.createTemplateFromJSON(jsonString))
+          .to.throw('Remote Config conditions must be an array');
+      });
+    });
+
+    it('should succeed when a valid json string is provided', () => {
+      const jsonString = JSON.stringify(REMOTE_CONFIG_RESPONSE);
+      const newTemplate = remoteConfig.createTemplateFromJSON(jsonString);
+      expect(newTemplate.conditions.length).to.equal(1);
+      expect(newTemplate.conditions[0].name).to.equal('ios');
+      expect(newTemplate.conditions[0].expression).to.equal('device.os == \'ios\'');
+      expect(newTemplate.conditions[0].tagColor).to.equal('BLUE');
+      // verify that the etag is unchanged
+      expect(newTemplate.etag).to.equal('etag-123456789012-5');
+      // verify that the etag is read-only
+      expect(() => {
+        (newTemplate as any).etag = "new-etag";
+      }).to.throw('Cannot set property etag of #<RemoteConfigTemplateImpl> which has only a getter');
+
+      const key = 'holiday_promo_enabled';
+      const p1 = newTemplate.parameters[key];
+      expect(p1.defaultValue).deep.equals({ value: 'true' });
+      expect(p1.conditionalValues).deep.equals({ ios: { useInAppDefault: true } });
+      expect(p1.description).equals('this is a promo');
+
+      const c = newTemplate.conditions.find((c) => c.name === 'ios');
+      expect(c).to.be.not.undefined;
+      const cond = c as RemoteConfigCondition;
+      expect(cond.name).to.equal('ios');
+      expect(cond.expression).to.equal('device.os == \'ios\'');
+      expect(cond.tagColor).to.equal('BLUE');
+    });
+  });
 });

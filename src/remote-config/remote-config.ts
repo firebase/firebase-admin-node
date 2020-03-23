@@ -96,6 +96,33 @@ export class RemoteConfig implements FirebaseServiceInterface {
         return new RemoteConfigTemplateImpl(templateResponse);
       });
   }
+
+  /**
+   * Creates and returns a new Remote Config template from a JSON string.
+   *
+   * @param {string} json The JSON string to populate a Remote Config template.
+   *
+   * @return {RemoteConfigTemplate} A new template instance.
+   */
+  public createTemplateFromJSON(json: string): RemoteConfigTemplate {
+    if (!validator.isNonEmptyString(json)) {
+      throw new FirebaseRemoteConfigError(
+        'invalid-argument',
+        'JSON string must be a valid non-empty string');
+    }
+
+    let template: RemoteConfigTemplate;
+    try {
+      template = JSON.parse(json);
+    } catch (e) {
+      throw new FirebaseRemoteConfigError(
+        'invalid-argument',
+        `Failed to parse the JSON string: ${json}. ` + e
+      );
+    }
+
+    return new RemoteConfigTemplateImpl(template);
+  }
 }
 
 /**
@@ -121,7 +148,7 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
       if (!validator.isNonNullObject(config.parameters)) {
         throw new FirebaseRemoteConfigError(
           'invalid-argument',
-          `Remote Config parameters must be a non-null object`);
+          'Remote Config parameters must be a non-null object');
       }
       this.parameters = config.parameters;
     } else {
@@ -132,7 +159,7 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
       if (!validator.isArray(config.conditions)) {
         throw new FirebaseRemoteConfigError(
           'invalid-argument',
-          `Remote Config conditions must be an array`);
+          'Remote Config conditions must be an array');
       }
       this.conditions = config.conditions;
     } else {
