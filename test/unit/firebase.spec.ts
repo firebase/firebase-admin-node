@@ -216,6 +216,21 @@ describe('Firebase', () => {
     });
   });
 
+  describe('#remoteConfig', () => {
+    it('should throw if the app has not be initialized', () => {
+      expect(() => {
+        return firebaseAdmin.remoteConfig();
+      }).to.throw('The default Firebase app does not exist.');
+    });
+
+    it('should return the remoteConfig service', () => {
+      firebaseAdmin.initializeApp(mocks.appOptions);
+      expect(() => {
+        return firebaseAdmin.remoteConfig();
+      }).not.to.throw();
+    });
+  });
+
   describe('#storage', () => {
     it('should throw if the app has not be initialized', () => {
       expect(() => {

@@ -35,7 +35,7 @@ import {Firestore} from '@google-cloud/firestore';
 import {InstanceId} from './instance-id/instance-id';
 import {ProjectManagement} from './project-management/project-management';
 import { SecurityRules } from './security-rules/security-rules';
-import {RemoteConfig} from './remote-config/remote-config';
+import { RemoteConfig } from './remote-config/remote-config';
 
 import * as validator from './utils/validator';
 
@@ -445,7 +445,7 @@ export class FirebaseNamespace {
       return this.ensureApp(app).remoteConfig();
     };
     const remoteConfig = require('./remote-config/remote-config').RemoteConfig;
-    return Object.assign(fn, {RemoteConfig: remoteConfig});
+    return Object.assign(fn, { RemoteConfig: remoteConfig });
   }
 
   /**

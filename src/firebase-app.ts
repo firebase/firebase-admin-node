@@ -31,7 +31,7 @@ import {FirestoreService} from './firestore/firestore';
 import {InstanceId} from './instance-id/instance-id';
 import {ProjectManagement} from './project-management/project-management';
 import {SecurityRules} from './security-rules/security-rules';
-import {RemoteConfig} from './remote-config/remote-config';
+import { RemoteConfig } from './remote-config/remote-config';
 
 import {Agent} from 'http';
 
