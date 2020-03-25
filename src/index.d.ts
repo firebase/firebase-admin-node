@@ -379,21 +379,21 @@ declare namespace admin {
    *
    * @example
    * ```javascript
-   * // Get the RemoteConfig service for the default app
+   * // Get the `RemoteConfig` service for the default app
    * var defaultRemoteConfig = admin.remoteConfig();
    * ```
    *
    * @example
    * ```javascript
-   * // Get the RemoteConfig service for a given app
+   * // Get the `RemoteConfig` service for a given app
    * var otherRemoteConfig = admin.remoteConfig(otherApp);
    * ```
    *
-   * @param app Optional app whose `RemoteConfig` service to
-   *   return. If not provided, the default `RemoteConfig` service will be returned.
+   * @param app Optional app for which to return the `RemoteConfig` service.
+   *   If not provided, the default `RemoteConfig` service is returned.
    *
    * @return The default `RemoteConfig` service if no
-   *   app is provided or the `RemoteConfig` service associated with the provided
+   *   app is provided, or the `RemoteConfig` service associated with the provided
    *   app.
    */
   function remoteConfig(app?: admin.app.App): admin.remoteConfig.RemoteConfig;
@@ -5644,7 +5644,7 @@ declare namespace admin.projectManagement {
 }
 
 declare namespace admin.remoteConfig {
-  
+
   /**
   * Interface representing a Remote Config template.
   */
@@ -5667,7 +5667,7 @@ declare namespace admin.remoteConfig {
 
   /**
    * Interface representing a Remote Config parameter.
-   * At minimum, a `defaultValue` or a `conditionalValues` entry should be present for the 
+   * At minimum, a `defaultValue` or a `conditionalValues` entry must be present for the 
    * parameter to have any effect.
    */
   interface RemoteConfigParameter {
@@ -5678,8 +5678,8 @@ declare namespace admin.remoteConfig {
     defaultValue?: RemoteConfigParameterValue;
 
     /**
-     * A `(condition name, value)` map. The `condition_name` of the highest priority
-     * (the one listed first in the `RemoteConfig`'s conditions list) determines the value of 
+     * A `(condition name, value)` map. The condition name of the highest priority
+     * (the one listed first in the Remote Config template's conditions list) determines the value of 
      * this parameter.
      */
     conditionalValues?: { [key: string]: RemoteConfigParameterValue };
@@ -5690,7 +5690,7 @@ declare namespace admin.remoteConfig {
      */
     description?: string;
   }
-  
+
   /**
    * Interface representing a Remote Config condition.
    * A condition targets a specific group of users. A list of these conditions make up
@@ -5706,14 +5706,14 @@ declare namespace admin.remoteConfig {
     /**
      * The logic of this condition.
      * See the documentation on
-     * {@link https://firebase.google.com/docs/remote-config/condition-reference Condition Expressions}
+     * {@link https://firebase.google.com/docs/remote-config/condition-reference condition expressions}
      * for the expected syntax of this field.
      */
     expression: string;
 
     /**
      * The color associated with this condition for display purposes in the Firebase Console.
-     * Not specifying this value results in the Console picking an arbitrary color to associate
+     * Not specifying this value results in the console picking an arbitrary color to associate
      * with the condition.
      */
     tagColor?: string;
@@ -5728,7 +5728,7 @@ declare namespace admin.remoteConfig {
      */
     value: string;
   }
-  
+
   /**
    * Interface representing an in-app-default value.
    */
@@ -5738,7 +5738,7 @@ declare namespace admin.remoteConfig {
      */
     useInAppDefault: boolean;
   }
-  
+
   /**
    * Type representing a Remote Config parameter value.
    * A `RemoteConfigParameterValue` could be either an `ExplicitParameterValue` or 
@@ -5774,7 +5774,7 @@ declare namespace admin.remoteConfig {
     /**
      * Publishes a Remote Config template.
      *
-     * @param template The Remote Config template to be validated.
+     * @param template The Remote Config template to be published.
      * @param options Optional options object when publishing a Remote Config template.
      *
      * @return A Promise that fulfills with the published `RemoteConfigTemplate`.
