@@ -70,6 +70,8 @@ export interface DecodedIdToken {
       [key: string]: any;
     };
     sign_in_provider: string;
+    sign_in_second_factor?: string;
+    second_factor_identifier?: string;
     [key: string]: any;
   };
   iat: number;

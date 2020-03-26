@@ -170,12 +170,12 @@ describe('admin.database', () => {
   });
 });
 
-// Check for type compilation. This method is not invoked by any
-// tests. But it will trigger a TS compilation failure if the RTDB
-// typings were not loaded correctly.
+// Check for type compilation. This method is not invoked by any tests. But it
+// will trigger a TS compilation failure if the RTDB typings were not loaded
+// correctly. (Marked as export to avoid compilation warning.)
 //
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function addValueEventListener(
+export function addValueEventListener(
   db: admin.database.Database,
   callback: (s: admin.database.DataSnapshot | null) => any): void {
   const eventType: admin.database.EventType = 'value';

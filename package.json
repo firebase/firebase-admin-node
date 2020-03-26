@@ -1,6 +1,6 @@
 {
   "name": "firebase-admin",
-  "version": "8.9.2",
+  "version": "8.10.0",
   "description": "Firebase admin SDK for Node.js",
   "author": "Firebase <firebase-support@google.com> (https://firebase.google.com/)",
   "license": "Apache-2.0",
@@ -10,6 +10,7 @@
   },
   "scripts": {
     "build": "gulp build",
+    "build:tests": "gulp compile_test",
     "prepare": "npm run build",
     "lint": "run-p lint:src lint:test",
     "test": "run-s lint test:unit",

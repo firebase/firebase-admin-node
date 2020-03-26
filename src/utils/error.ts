@@ -430,6 +430,14 @@ export class AuthClientErrorCode {
     code: 'invalid-email',
     message: 'The email address is improperly formatted.',
   };
+  public static INVALID_ENROLLED_FACTORS = {
+    code: 'invalid-enrolled-factors',
+    message: 'The enrolled factors must be a valid array of MultiFactorInfo objects.',
+  };
+  public static INVALID_ENROLLMENT_TIME = {
+    code: 'invalid-enrollment-time',
+    message: 'The second factor enrollment time must be a valid UTC date string.',
+  };
   public static INVALID_HASH_ALGORITHM = {
     code: 'invalid-hash-algorithm',
     message: 'The hash algorithm must match one of the strings in the list of ' +
@@ -558,6 +566,11 @@ export class AuthClientErrorCode {
     code: 'missing-display-name',
     message: 'The resource being created or edited is missing a valid display name.',
   };
+  public static MISSING_EMAIL = {
+    code: 'missing-email',
+    message: 'The email is required for the specified action. For example, a multi-factor user ' +
+             'requires a verified email.',
+  };
   public static MISSING_IOS_BUNDLE_ID = {
     code: 'missing-ios-bundle-id',
     message: 'The request is missing an iOS Bundle ID.',
@@ -616,6 +629,14 @@ export class AuthClientErrorCode {
     code: 'quota-exceeded',
     message: 'The project quota for the specified operation has been exceeded.',
   };
+  public static SECOND_FACTOR_LIMIT_EXCEEDED = {
+    code: 'second-factor-limit-exceeded',
+    message: 'The maximum number of allowed second factors on a user has been exceeded.',
+  };
+  public static SECOND_FACTOR_UID_ALREADY_EXISTS = {
+    code: 'second-factor-uid-already-exists',
+    message: 'The specified second factor "uid" already exists.',
+  };
   public static SESSION_COOKIE_EXPIRED = {
     code: 'session-cookie-expired',
     message: 'The Firebase session cookie is expired.',
@@ -637,9 +658,22 @@ export class AuthClientErrorCode {
     message: 'The domain of the continue URL is not whitelisted. Whitelist the domain in the ' +
              'Firebase console.',
   };
+  public static UNSUPPORTED_FIRST_FACTOR = {
+    code: 'unsupported-first-factor',
+    message: 'A multi-factor user requires a supported first factor.',
+  };
+  public static UNSUPPORTED_SECOND_FACTOR = {
+    code: 'unsupported-second-factor',
+    message: 'The request specified an unsupported type of second factor.',
+  };
   public static UNSUPPORTED_TENANT_OPERATION = {
     code: 'unsupported-tenant-operation',
     message: 'This operation is not supported in a multi-tenant context.',
+  };
+  public static UNVERIFIED_EMAIL = {
+    code: 'unverified-email',
+    message: 'A verified email is required for the specified action. For example, a multi-factor user ' +
+             'requires a verified email.',
   };
   public static USER_NOT_FOUND = {
     code: 'user-not-found',
@@ -803,6 +837,8 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   DUPLICATE_EMAIL: 'EMAIL_ALREADY_EXISTS',
   // uploadAccount provides a localId that already exists.
   DUPLICATE_LOCAL_ID: 'UID_ALREADY_EXISTS',
+  // Request specified a multi-factor enrollment ID that already exists.
+  DUPLICATE_MFA_ENROLLMENT_ID: 'SECOND_FACTOR_UID_ALREADY_EXISTS',
   // setAccountInfo email already exists.
   EMAIL_EXISTS: 'EMAIL_ALREADY_EXISTS',
   // Reserved claim name.
@@ -841,6 +877,9 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   MISSING_CONFIG_ID: 'MISSING_PROVIDER_ID',
   // Missing tenant display name: This can be thrown on CreateTenant and UpdateTenant.
   MISSING_DISPLAY_NAME: 'MISSING_DISPLAY_NAME',
+  // Email is required for the specified action. For example a multi-factor user requires
+  // a verified email.
+  MISSING_EMAIL: 'MISSING_EMAIL',
   // Missing iOS bundle ID.
   MISSING_IOS_BUNDLE_ID: 'MISSING_IOS_BUNDLE_ID',
   // Missing OIDC issuer.
@@ -865,6 +904,8 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   PROJECT_NOT_FOUND: 'PROJECT_NOT_FOUND',
   // In multi-tenancy context: project creation quota exceeded.
   QUOTA_EXCEEDED: 'QUOTA_EXCEEDED',
+  // Currently only 5 second factors can be set on the same user.
+  SECOND_FACTOR_LIMIT_EXCEEDED: 'SECOND_FACTOR_LIMIT_EXCEEDED',
   // Tenant not found.
   TENANT_NOT_FOUND: 'TENANT_NOT_FOUND',
   // Tenant ID mismatch.
@@ -873,8 +914,15 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   TOKEN_EXPIRED: 'ID_TOKEN_EXPIRED',
   // Continue URL provided in ActionCodeSettings has a domain that is not whitelisted.
   UNAUTHORIZED_DOMAIN: 'UNAUTHORIZED_DOMAIN',
+  // A multi-factor user requires a supported first factor.
+  UNSUPPORTED_FIRST_FACTOR: 'UNSUPPORTED_FIRST_FACTOR',
+  // The request specified an unsupported type of second factor.
+  UNSUPPORTED_SECOND_FACTOR: 'UNSUPPORTED_SECOND_FACTOR',
   // Operation is not supported in a multi-tenant context.
   UNSUPPORTED_TENANT_OPERATION: 'UNSUPPORTED_TENANT_OPERATION',
+  // A verified email is required for the specified action. For example a multi-factor user
+  // requires a verified email.
+  UNVERIFIED_EMAIL: 'UNVERIFIED_EMAIL',
   // User on which action is to be performed is not found.
   USER_NOT_FOUND: 'USER_NOT_FOUND',
   // Password provided is too weak.

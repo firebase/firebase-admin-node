@@ -28,7 +28,7 @@ const repoPath = path.resolve(`${__dirname}/..`);
 // Command-line options.
 const { source: sourceFile } = yargs
   .option('source', {
-    default: `${repoPath}/src/index.d.ts`,
+    default: `${repoPath}/src/*.d.ts`,
     describe: 'Typescript source file(s)',
     type: 'string'
   })
@@ -283,7 +283,7 @@ function addFirestoreTypeAliases() {
     let contentBlock = firestoreHeader;
     lineReader.on('line', (line) => {
       line = line.trim();
-      if (line.startsWith('export import') && line.indexOf('_firestore.')) {
+      if (line.startsWith('export import') && line.indexOf('_firestore.') >= 0) {
         const typeName = line.split(' ')[2];
         if (firestoreExcludes.indexOf(typeName) === -1) {
           contentBlock += `
