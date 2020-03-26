@@ -368,6 +368,37 @@ declare namespace admin {
   function projectManagement(app?: admin.app.App): admin.projectManagement.ProjectManagement;
 
   /**
+   * Gets the {@link admin.remoteConfig.RemoteConfig `RemoteConfig`} service for the
+   * default app or a given app.
+   *
+   * `admin.remoteConfig()` can be called with no arguments to access the default
+   * app's {@link admin.remoteConfig.RemoteConfig `RemoteConfig`} service or as
+   * `admin.remoteConfig(app)` to access the
+   * {@link admin.remoteConfig.RemoteConfig `RemoteConfig`} service associated with a
+   * specific app.
+   *
+   * @example
+   * ```javascript
+   * // Get the `RemoteConfig` service for the default app
+   * var defaultRemoteConfig = admin.remoteConfig();
+   * ```
+   *
+   * @example
+   * ```javascript
+   * // Get the `RemoteConfig` service for a given app
+   * var otherRemoteConfig = admin.remoteConfig(otherApp);
+   * ```
+   *
+   * @param app Optional app for which to return the `RemoteConfig` service.
+   *   If not provided, the default `RemoteConfig` service is returned.
+   *
+   * @return The default `RemoteConfig` service if no
+   *   app is provided, or the `RemoteConfig` service associated with the provided
+   *   app.
+   */
+  function remoteConfig(app?: admin.app.App): admin.remoteConfig.RemoteConfig;
+
+  /**
   * Gets the {@link admin.securityRules.SecurityRules
   * `SecurityRules`} service for the default app or a given app.
   *
@@ -457,6 +488,7 @@ declare namespace admin.app {
     instanceId(): admin.instanceId.InstanceId;
     messaging(): admin.messaging.Messaging;
     projectManagement(): admin.projectManagement.ProjectManagement;
+    remoteConfig(): admin.remoteConfig.RemoteConfig;
     securityRules(): admin.securityRules.SecurityRules;
     storage(): admin.storage.Storage;
 
@@ -5608,6 +5640,155 @@ declare namespace admin.projectManagement {
      * @return A promise that resolves to the newly created iOS app.
      */
     createIosApp(bundleId: string, displayName?: string): Promise<admin.projectManagement.IosApp>;
+  }
+}
+
+declare namespace admin.remoteConfig {
+
+  /**
+  * Interface representing a Remote Config template.
+  */
+  interface RemoteConfigTemplate {
+    /**
+     * A list of conditions in descending order by priority.
+     */
+    conditions: RemoteConfigCondition[];
+
+    /**
+     * Map of parameter keys to their optional default values and optional conditional values.
+     */
+    parameters: { [key: string]: RemoteConfigParameter };
+
+    /**
+     * ETag of the current Remote Config template (readonly).
+     */
+    readonly etag: string;
+  }
+
+  /**
+   * Interface representing a Remote Config parameter.
+   * At minimum, a `defaultValue` or a `conditionalValues` entry must be present for the 
+   * parameter to have any effect.
+   */
+  interface RemoteConfigParameter {
+
+    /**
+     * The value to set the parameter to, when none of the named conditions evaluate to `true`.
+     */
+    defaultValue?: RemoteConfigParameterValue;
+
+    /**
+     * A `(condition name, value)` map. The condition name of the highest priority
+     * (the one listed first in the Remote Config template's conditions list) determines the value of 
+     * this parameter.
+     */
+    conditionalValues?: { [key: string]: RemoteConfigParameterValue };
+
+    /**
+     * A description for this parameter. Should not be over 100 characters and may contain any
+     * Unicode characters.
+     */
+    description?: string;
+  }
+
+  /**
+   * Interface representing a Remote Config condition.
+   * A condition targets a specific group of users. A list of these conditions make up
+   * part of a Remote Config template.
+   */
+  interface RemoteConfigCondition {
+
+    /**
+     * A non-empty and unique name of this condition.
+     */
+    name: string;
+
+    /**
+     * The logic of this condition.
+     * See the documentation on
+     * {@link https://firebase.google.com/docs/remote-config/condition-reference condition expressions}
+     * for the expected syntax of this field.
+     */
+    expression: string;
+
+    /**
+     * The color associated with this condition for display purposes in the Firebase Console.
+     * Not specifying this value results in the console picking an arbitrary color to associate
+     * with the condition.
+     */
+    tagColor?: string;
+  }
+
+  /**
+   * Interface representing an explicit parameter value.
+   */
+  interface ExplicitParameterValue {
+    /**
+     * The `string` value that the parameter is set to.
+     */
+    value: string;
+  }
+
+  /**
+   * Interface representing an in-app-default value.
+   */
+  interface InAppDefaultValue {
+    /**
+     * If `true`, the parameter is omitted from the parameter values returned to a client.
+     */
+    useInAppDefault: boolean;
+  }
+
+  /**
+   * Type representing a Remote Config parameter value.
+   * A `RemoteConfigParameterValue` could be either an `ExplicitParameterValue` or 
+   * an `InAppDefaultValue`.
+   */
+  type RemoteConfigParameterValue = ExplicitParameterValue | InAppDefaultValue;
+
+  /**
+   * The Firebase `RemoteConfig` service interface.
+   *
+   * Do not call this constructor directly. Instead, use
+   * [`admin.remoteConfig()`](admin.remoteConfig#remoteConfig).
+   */
+  interface RemoteConfig {
+    app: admin.app.App;
+
+    /**
+     * Gets the current active version of the {@link admin.remoteConfig.RemoteConfigTemplate
+     * `RemoteConfigTemplate`} of the project.
+     *
+     * @return A promise that fulfills with a `RemoteConfigTemplate`.
+     */
+    getTemplate(): Promise<RemoteConfigTemplate>;
+
+    /**
+     * Validates a {@link admin.remoteConfig.RemoteConfigTemplate `RemoteConfigTemplate`}.
+     *
+     * @param template The Remote Config template to be validated.
+     * @returns A promise that fulfills with the validated `RemoteConfigTemplate`.
+     */
+    validateTemplate(template: RemoteConfigTemplate): Promise<RemoteConfigTemplate>;
+
+    /**
+     * Publishes a Remote Config template.
+     *
+     * @param template The Remote Config template to be published.
+     * @param options Optional options object when publishing a Remote Config template.
+     *
+     * @return A Promise that fulfills with the published `RemoteConfigTemplate`.
+     */
+    publishTemplate(template: RemoteConfigTemplate, options?: { force: boolean }): Promise<RemoteConfigTemplate>;
+
+    /**
+     * Creates and returns a new Remote Config template from a JSON string.
+     *
+     * @param json The JSON string to populate a Remote Config template.
+     *
+     * @return A new template instance.
+     */
+    createTemplateFromJSON(json: string): RemoteConfigTemplate;
   }
 }
 
