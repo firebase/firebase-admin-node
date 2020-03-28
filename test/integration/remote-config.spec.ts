@@ -109,7 +109,7 @@ describe('admin.remoteConfig', () => {
     });
 
     it(`should throw if the template is null`, () => {
-      expect(() => admin.remoteConfig().validateTemplate(null))
+      expect(() => admin.remoteConfig().validateTemplate(null as any))
         .to.throw(`Invalid Remote Config template: null`);
     });
 
@@ -162,7 +162,7 @@ describe('admin.remoteConfig', () => {
     });
 
     it(`should throw if the template is null`, () => {
-      expect(() => admin.remoteConfig().publishTemplate(null))
+      expect(() => admin.remoteConfig().publishTemplate(null as any))
         .to.throw(`Invalid Remote Config template: null`);
     });
 
