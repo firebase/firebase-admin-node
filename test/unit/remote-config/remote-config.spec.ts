@@ -239,6 +239,10 @@ describe('RemoteConfig', () => {
     });
   });
 
+  const INVALID_PARAMETERS: any[] = [null, '', 'abc', 1, true, []];
+  const INVALID_CONDITIONS: any[] = [null, '', 'abc', 1, true, {}];
+  const INVALID_TEMPLATES: any[] = [{ parameters: {}, conditions: [], etag: '' }, Object()];
+
   describe('validateTemplate', () => {
     it('should propagate API errors', () => {
       const stub = sinon
@@ -293,6 +297,18 @@ describe('RemoteConfig', () => {
       return remoteConfig.validateTemplate(REMOTE_CONFIG_TEMPLATE)
         .should.eventually.be.rejected.and.have.property(
           'message', `Remote Config conditions must be an array`);
+    });
+
+    INVALID_TEMPLATES.forEach((invalidTemplate) => {
+      it(`should throw if the template is ${JSON.stringify(invalidTemplate)}`, () => {
+        expect(() => remoteConfig.validateTemplate(invalidTemplate))
+          .to.throw('ETag must be a non-empty string.');
+      });
+    });
+
+    it(`should throw if the template is null`, () => {
+      expect(() => remoteConfig.validateTemplate(null as any))
+        .to.throw(`Invalid Remote Config template: null`);
     });
 
     it('should resolve with Remote Config template on success', () => {
@@ -386,6 +402,18 @@ describe('RemoteConfig', () => {
           'message', `Remote Config conditions must be an array`);
     });
 
+    INVALID_TEMPLATES.forEach((invalidTemplate) => {
+      it(`should throw if the template is ${JSON.stringify(invalidTemplate)}`, () => {
+        expect(() => remoteConfig.publishTemplate(invalidTemplate))
+          .to.throw('ETag must be a non-empty string.');
+      });
+    });
+
+    it(`should throw if the template is null`, () => {
+      expect(() => remoteConfig.publishTemplate(null as any))
+        .to.throw(`Invalid Remote Config template: null`);
+    });
+
     it('should resolve with Remote Config template on success', () => {
       const stub = sinon
         .stub(RemoteConfigApiClient.prototype, 'publishTemplate')
@@ -423,8 +451,6 @@ describe('RemoteConfig', () => {
   describe('createTemplateFromJSON', () => {
     const INVALID_STRINGS: any[] = [null, undefined, '', 1, true, {}, []];
     const INVALID_JSON_STRINGS: any[] = ['abc', 'foo', 'a:a', '1:1'];
-    const INVALID_PARAMETERS: any[] = [null, '', 'abc', 1, true, []];
-    const INVALID_CONDITIONS: any[] = [null, '', 'abc', 1, true, {}];
 
     INVALID_STRINGS.forEach((invalidJson) => {
       it(`should throw if the json string is ${JSON.stringify(invalidJson)}`, () => {
