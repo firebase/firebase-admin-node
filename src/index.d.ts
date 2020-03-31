@@ -815,6 +815,23 @@ declare namespace admin.projectManagement {
 declare namespace admin.remoteConfig {
 
   /**
+  * Colors that are associated with conditions for display purposes.
+  */
+  enum TagColor {
+    BLUE = "Blue",
+    BROWN = "Brown",
+    CYAN = "Cyan",
+    DEEP_ORANGE = "Red Orange",
+    GREEN = "Green",
+    INDIGO = "Indigo",
+    LIME = "Lime",
+    ORANGE = "Orange",
+    PINK = "Pink",
+    PURPLE = "Purple",
+    TEAL = "Teal",
+  }
+
+  /**
   * Interface representing a Remote Config template.
   */
   interface RemoteConfigTemplate {
@@ -885,7 +902,7 @@ declare namespace admin.remoteConfig {
      * Not specifying this value results in the console picking an arbitrary color to associate
      * with the condition.
      */
-    tagColor?: string;
+    tagColor?: TagColor;
   }
 
   /**

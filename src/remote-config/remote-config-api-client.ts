@@ -32,7 +32,7 @@ const FIREBASE_REMOTE_CONFIG_HEADERS = {
   'Accept-Encoding': 'gzip',
 };
 
-export enum RemoteConfigConditionDisplayColor {
+export enum TagColor {
   BLUE = "Blue",
   BROWN = "Brown",
   CYAN = "Cyan",
@@ -69,7 +69,7 @@ export interface RemoteConfigParameter {
 export interface RemoteConfigCondition {
   name: string;
   expression: string;
-  tagColor?: RemoteConfigConditionDisplayColor;
+  tagColor?: TagColor;
 }
 
 /** Interface representing a Remote Config template. */
