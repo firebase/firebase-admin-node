@@ -241,7 +241,8 @@ describe('RemoteConfig', () => {
 
   const INVALID_PARAMETERS: any[] = [null, '', 'abc', 1, true, []];
   const INVALID_CONDITIONS: any[] = [null, '', 'abc', 1, true, {}];
-  const INVALID_TEMPLATES: any[] = [{ parameters: {}, conditions: [], etag: '' }, Object()];
+  const INVALID_ETAG_TEMPLATES: any[] = [{ parameters: {}, conditions: [], etag: '' }, Object()];
+  const INVALID_TEMPLATES: any[] = [null, 'abc', 123];
 
   describe('validateTemplate', () => {
     it('should propagate API errors', () => {
@@ -299,17 +300,8 @@ describe('RemoteConfig', () => {
           'message', `Remote Config conditions must be an array`);
     });
 
-    INVALID_TEMPLATES.forEach((invalidTemplate) => {
-      it(`should throw if the template is ${JSON.stringify(invalidTemplate)}`, () => {
-        expect(() => remoteConfig.validateTemplate(invalidTemplate))
-          .to.throw('ETag must be a non-empty string.');
-      });
-    });
-
-    it(`should throw if the template is null`, () => {
-      expect(() => remoteConfig.validateTemplate(null as any))
-        .to.throw(`Invalid Remote Config template: null`);
-    });
+    // validate input template
+    testInputTemplate((t: RemoteConfigTemplate) => { remoteConfig.validateTemplate(t); });
 
     it('should resolve with Remote Config template on success', () => {
       const stub = sinon
@@ -402,17 +394,8 @@ describe('RemoteConfig', () => {
           'message', `Remote Config conditions must be an array`);
     });
 
-    INVALID_TEMPLATES.forEach((invalidTemplate) => {
-      it(`should throw if the template is ${JSON.stringify(invalidTemplate)}`, () => {
-        expect(() => remoteConfig.publishTemplate(invalidTemplate))
-          .to.throw('ETag must be a non-empty string.');
-      });
-    });
-
-    it(`should throw if the template is null`, () => {
-      expect(() => remoteConfig.publishTemplate(null as any))
-        .to.throw(`Invalid Remote Config template: null`);
-    });
+    // validate input template
+    testInputTemplate((t: RemoteConfigTemplate) => { remoteConfig.publishTemplate(t); });
 
     it('should resolve with Remote Config template on success', () => {
       const stub = sinon
@@ -525,4 +508,40 @@ describe('RemoteConfig', () => {
       expect(cond.tagColor).to.equal('BLUE');
     });
   });
+
+  function testInputTemplate(rcOperation: Function): void {
+    const inputTemplate = deepCopy(REMOTE_CONFIG_TEMPLATE);
+    INVALID_PARAMETERS.forEach((invalidParameter) => {
+      it(`should throw if the parameters is ${JSON.stringify(invalidParameter)}`, () => {
+        (inputTemplate as any).parameters = invalidParameter;
+        inputTemplate.conditions = [];
+        expect(() => rcOperation(inputTemplate))
+          .to.throw('Remote Config parameters must be a non-null object');
+      });
+    });
+
+    INVALID_CONDITIONS.forEach((invalidConditions) => {
+      console.log(inputTemplate);
+      it(`should throw if the conditions is ${JSON.stringify(invalidConditions)}`, () => {
+        (inputTemplate as any).conditions = invalidConditions;
+        inputTemplate.parameters = {};
+        expect(() => rcOperation(inputTemplate))
+          .to.throw('Remote Config conditions must be an array');
+      });
+    });
+
+    INVALID_ETAG_TEMPLATES.forEach((invalidEtagTemplate) => {
+      it(`should throw if the template is ${JSON.stringify(invalidEtagTemplate)}`, () => {
+        expect(() => rcOperation(invalidEtagTemplate))
+          .to.throw('ETag must be a non-empty string.');
+      });
+    });
+
+    INVALID_TEMPLATES.forEach((invalidTemplate) => {
+      it(`should throw if the template is ${JSON.stringify(invalidTemplate)}`, () => {
+        expect(() => rcOperation(invalidTemplate))
+          .to.throw(`Invalid Remote Config template: ${JSON.stringify(invalidTemplate)}`);
+      });
+    });
+  }
 });
