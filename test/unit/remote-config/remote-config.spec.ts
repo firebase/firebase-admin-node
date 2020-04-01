@@ -301,7 +301,7 @@ describe('RemoteConfig', () => {
     });
 
     // validate input template
-    testInputTemplate((t: RemoteConfigTemplate) => { remoteConfig.validateTemplate(t); });
+    testInvalidInputTemplates((t: RemoteConfigTemplate) => { remoteConfig.validateTemplate(t); });
 
     it('should resolve with Remote Config template on success', () => {
       const stub = sinon
@@ -395,7 +395,7 @@ describe('RemoteConfig', () => {
     });
 
     // validate input template
-    testInputTemplate((t: RemoteConfigTemplate) => { remoteConfig.publishTemplate(t); });
+    testInvalidInputTemplates((t: RemoteConfigTemplate) => { remoteConfig.publishTemplate(t); });
 
     it('should resolve with Remote Config template on success', () => {
       const stub = sinon
@@ -509,7 +509,7 @@ describe('RemoteConfig', () => {
     });
   });
 
-  function testInputTemplate(rcOperation: Function): void {
+  function testInvalidInputTemplates(rcOperation: Function): void {
     const inputTemplate = deepCopy(REMOTE_CONFIG_TEMPLATE);
     INVALID_PARAMETERS.forEach((invalidParameter) => {
       it(`should throw if the parameters is ${JSON.stringify(invalidParameter)}`, () => {
@@ -521,7 +521,6 @@ describe('RemoteConfig', () => {
     });
 
     INVALID_CONDITIONS.forEach((invalidConditions) => {
-      console.log(inputTemplate);
       it(`should throw if the conditions is ${JSON.stringify(invalidConditions)}`, () => {
         (inputTemplate as any).conditions = invalidConditions;
         inputTemplate.parameters = {};
