@@ -127,6 +127,7 @@ export class RemoteConfigApiClient {
   }
 
   public validateTemplate(template: RemoteConfigTemplate): Promise<RemoteConfigTemplate> {
+    this.validateRemoteConfigTemplate(template);
     return this.sendPutRequest(template, template.etag, true)
       .then((resp) => {
         if (!validator.isNonEmptyString(resp.headers['etag'])) {
@@ -149,6 +150,7 @@ export class RemoteConfigApiClient {
   }
 
   public publishTemplate(template: RemoteConfigTemplate, options?: { force: boolean }): Promise<RemoteConfigTemplate> {
+    this.validateRemoteConfigTemplate(template);
     let ifMatch: string = template.etag;
     if (options && options.force == true) {
       // setting `If-Match: *` forces the Remote Config template to be updated
@@ -174,11 +176,6 @@ export class RemoteConfigApiClient {
   }
 
   private sendPutRequest(template: RemoteConfigTemplate, etag: string, validateOnly?: boolean): Promise<HttpResponse> {
-    if (!validator.isNonEmptyString(etag)) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument',
-        'ETag must be a non-empty string.');
-    }
     let path = 'remoteConfig';
     if (validateOnly) {
       path += '?validate_only=true';
@@ -244,6 +241,35 @@ export class RemoteConfigApiClient {
     }
     const message = error.message || `Unknown server error: ${response.text}`;
     return new FirebaseRemoteConfigError(code, message);
+  }
+
+  /**
+   * Checks if the given RemoteConfigTemplate object is valid.
+   * The object must have valid parameters, conditions, and an etag.
+   *
+   * @param {RemoteConfigTemplate} template A RemoteConfigTemplate object to be validated.
+   */
+  private validateRemoteConfigTemplate(template: RemoteConfigTemplate): void {
+    if (!validator.isNonNullObject(template)) {
+      throw new FirebaseRemoteConfigError(
+        'invalid-argument',
+        `Invalid Remote Config template: ${JSON.stringify(template)}`);
+    }
+    if (!validator.isNonEmptyString(template.etag)) {
+      throw new FirebaseRemoteConfigError(
+        'invalid-argument',
+        'ETag must be a non-empty string.');
+    }
+    if (!validator.isNonNullObject(template.parameters)) {
+      throw new FirebaseRemoteConfigError(
+        'invalid-argument',
+        'Remote Config parameters must be a non-null object');
+    }
+    if (!validator.isArray(template.conditions)) {
+      throw new FirebaseRemoteConfigError(
+        'invalid-argument',
+        'Remote Config conditions must be an array');
+    }
   }
 }
 
