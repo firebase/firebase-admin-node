@@ -22,7 +22,7 @@ import * as sinon from 'sinon';
 import {
   RemoteConfigApiClient,
   RemoteConfigTemplate,
-  RemoteConfigConditionDisplayColor
+  TagColor,
 } from '../../../src/remote-config/remote-config-api-client';
 import { FirebaseRemoteConfigError } from '../../../src/remote-config/remote-config-utils';
 import { HttpClient } from '../../../src/utils/api-request';
@@ -76,7 +76,7 @@ describe('RemoteConfigApiClient', () => {
     conditions: [{
       name: 'ios',
       expression: 'device.os == \'ios\'',
-      tagColor: RemoteConfigConditionDisplayColor.PINK,
+      tagColor: TagColor.PINK,
     }],
     parameters: {
       // eslint-disable-next-line @typescript-eslint/camelcase

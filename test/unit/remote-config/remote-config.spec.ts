@@ -26,7 +26,7 @@ import {
   RemoteConfigApiClient,
   RemoteConfigTemplate,
   RemoteConfigCondition,
-  RemoteConfigConditionDisplayColor,
+  TagColor,
 } from '../../../src/remote-config/remote-config-api-client';
 import { FirebaseRemoteConfigError } from '../../../src/remote-config/remote-config-utils';
 import { deepCopy } from '../../../src/utils/deep-copy';
@@ -41,14 +41,14 @@ describe('RemoteConfig', () => {
     // to allow easier use from within the tests. An improvement would be to
     // alter this into a helper that creates customized RemoteConfigTemplateContent based
     // on the needs of the test, as that would ensure type-safety.
-    conditions?: Array<{ name: string; expression: string; tagColor: string }>;
+    conditions?: Array<{ name: string; expression: string; tagColor: TagColor }>;
     parameters?: object | null;
     etag: string;
   } = {
     conditions: [{
       name: 'ios',
       expression: 'device.os == \'ios\'',
-      tagColor: 'BLUE',
+      tagColor: TagColor.BLUE,
     }],
     parameters: {
       // eslint-disable-next-line @typescript-eslint/camelcase
@@ -65,7 +65,7 @@ describe('RemoteConfig', () => {
     conditions: [{
       name: 'ios',
       expression: 'device.os == \'ios\'',
-      tagColor: RemoteConfigConditionDisplayColor.PINK,
+      tagColor: TagColor.PINK,
     }],
     parameters: {
       // eslint-disable-next-line @typescript-eslint/camelcase
@@ -216,7 +216,7 @@ describe('RemoteConfig', () => {
           expect(template.conditions.length).to.equal(1);
           expect(template.conditions[0].name).to.equal('ios');
           expect(template.conditions[0].expression).to.equal('device.os == \'ios\'');
-          expect(template.conditions[0].tagColor).to.equal('BLUE');
+          expect(template.conditions[0].tagColor).to.equal(TagColor.BLUE);
           expect(template.etag).to.equal('etag-123456789012-5');
           // verify that etag is read-only
           expect(() => {
@@ -234,7 +234,7 @@ describe('RemoteConfig', () => {
           const cond = c as RemoteConfigCondition;
           expect(cond.name).to.equal('ios');
           expect(cond.expression).to.equal('device.os == \'ios\'');
-          expect(cond.tagColor).to.equal('BLUE');
+          expect(cond.tagColor).to.equal(TagColor.BLUE);
         });
     });
   });
@@ -314,7 +314,7 @@ describe('RemoteConfig', () => {
           expect(template.conditions.length).to.equal(1);
           expect(template.conditions[0].name).to.equal('ios');
           expect(template.conditions[0].expression).to.equal('device.os == \'ios\'');
-          expect(template.conditions[0].tagColor).to.equal('Pink');
+          expect(template.conditions[0].tagColor).to.equal(TagColor.PINK);
           // verify that the etag is unchanged
           expect(template.etag).to.equal('etag-123456789012-6');
           // verify that the etag is read-only
@@ -333,7 +333,7 @@ describe('RemoteConfig', () => {
           const cond = c as RemoteConfigCondition;
           expect(cond.name).to.equal('ios');
           expect(cond.expression).to.equal('device.os == \'ios\'');
-          expect(cond.tagColor).to.equal('Pink');
+          expect(cond.tagColor).to.equal(TagColor.PINK);
         });
     });
   });
@@ -408,7 +408,7 @@ describe('RemoteConfig', () => {
           expect(template.conditions.length).to.equal(1);
           expect(template.conditions[0].name).to.equal('ios');
           expect(template.conditions[0].expression).to.equal('device.os == \'ios\'');
-          expect(template.conditions[0].tagColor).to.equal('BLUE');
+          expect(template.conditions[0].tagColor).to.equal(TagColor.BLUE);
           expect(template.etag).to.equal('etag-123456789012-5');
           // verify that the etag is read-only
           expect(() => {
@@ -426,7 +426,7 @@ describe('RemoteConfig', () => {
           const cond = c as RemoteConfigCondition;
           expect(cond.name).to.equal('ios');
           expect(cond.expression).to.equal('device.os == \'ios\'');
-          expect(cond.tagColor).to.equal('BLUE');
+          expect(cond.tagColor).to.equal(TagColor.BLUE);
         });
     });
   });
@@ -486,7 +486,7 @@ describe('RemoteConfig', () => {
       expect(newTemplate.conditions.length).to.equal(1);
       expect(newTemplate.conditions[0].name).to.equal('ios');
       expect(newTemplate.conditions[0].expression).to.equal('device.os == \'ios\'');
-      expect(newTemplate.conditions[0].tagColor).to.equal('BLUE');
+      expect(newTemplate.conditions[0].tagColor).to.equal(TagColor.BLUE);
       // verify that the etag is unchanged
       expect(newTemplate.etag).to.equal('etag-123456789012-5');
       // verify that the etag is read-only
@@ -505,7 +505,7 @@ describe('RemoteConfig', () => {
       const cond = c as RemoteConfigCondition;
       expect(cond.name).to.equal('ios');
       expect(cond.expression).to.equal('device.os == \'ios\'');
-      expect(cond.tagColor).to.equal('BLUE');
+      expect(cond.tagColor).to.equal(TagColor.BLUE);
     });
   });
 
