@@ -1635,15 +1635,15 @@ describe('admin.auth', () => {
           return admin.auth().getUser(uid);
         }).then((userRecord) => {
           // The phone number provider will be appended to the list of accounts.
-          importUserRecord.providerData.push({
-            uid: importUserRecord.phoneNumber,
+          importUserRecord.providerData?.push({
+            uid: importUserRecord.phoneNumber!,
             providerId: 'phone',
-            phoneNumber: importUserRecord.phoneNumber,
+            phoneNumber: importUserRecord.phoneNumber!,
           });
           const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
           for (const key of Object.keys(importUserRecord)) {
             expect(JSON.stringify(actualUserRecord[key]))
-              .to.be.equal(JSON.stringify(importUserRecord[key]));
+              .to.be.equal(JSON.stringify((importUserRecord as any)[key]));
           }
         }).should.eventually.be.fulfilled;
     });
@@ -1704,7 +1704,7 @@ describe('admin.auth', () => {
           const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
           expect(actualUserRecord.multiFactor.enrolledFactors.length).to.equal(2);
           expect(actualUserRecord.multiFactor.enrolledFactors)
-            .to.deep.equal(importUserRecord.multiFactor.enrolledFactors);
+            .to.deep.equal(importUserRecord.multiFactor?.enrolledFactors);
         }).should.eventually.be.fulfilled;
     });
 
@@ -1755,7 +1755,7 @@ function testImportAndSignInUser(
       expect(result.successCount).to.equal(1);
       expect(result.errors.length).to.equal(0);
       // Sign in with an email and password to the imported account.
-      return clientAuth().signInWithEmailAndPassword(users[0].email, rawPassword);
+      return clientAuth().signInWithEmailAndPassword(users[0].email!, rawPassword);
     })
     .then(({user}) => {
       // Confirm successful sign-in.
