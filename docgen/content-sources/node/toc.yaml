@@ -86,6 +86,10 @@ toc:
     path: /docs/reference/admin/node/admin.auth.UserInfo
   - title: "UserMetadata"
     path: /docs/reference/admin/node/admin.auth.UserMetadata
+  - title: "UserMetadataRequest"
+    path: /docs/reference/admin/node/admin.auth.UserMetadataRequest
+  - title: "UserProviderRequest"
+    path: /docs/reference/admin/node/admin.auth.UserProviderRequest
   - title: "UserRecord"
     path: /docs/reference/admin/node/admin.auth.UserRecord
   - title: "SessionCookieOptions"

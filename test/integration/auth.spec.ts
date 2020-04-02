@@ -1421,7 +1421,7 @@ describe('admin.auth', () => {
 
   describe('importUsers()', () => {
     const randomUid = 'import_' + generateRandomString(20).toLowerCase();
-    let importUserRecord: any;
+    let importUserRecord: admin.auth.UserImportRecord;
     const rawPassword = 'password';
     const rawSalt = 'NaCl';
     // Simulate a user stored using SCRYPT being migrated to Firebase Auth via importUsers.
@@ -1652,6 +1652,23 @@ describe('admin.auth', () => {
       const uid = generateRandomString(20).toLowerCase();
       const email = uid + '@example.com';
       const now = new Date(1476235905000).toUTCString();
+      const enrolledFactors: admin.auth.UpdatePhoneMultiFactorInfoRequest[] = [
+        {
+          uid: 'mfaUid1',
+          phoneNumber: '+16505550001',
+          displayName: 'Work phone number',
+          factorId: 'phone',
+          enrollmentTime: now,
+        } ,
+        {
+          uid: 'mfaUid2',
+          phoneNumber: '+16505550002',
+          displayName: 'Personal phone number',
+          factorId: 'phone',
+          enrollmentTime: now,
+        },
+      ];
+
       importUserRecord = {
         uid,
         email,
@@ -1671,22 +1688,7 @@ describe('admin.auth', () => {
           },
         ],
         multiFactor: {
-          enrolledFactors: [
-            {
-              uid: 'mfaUid1',
-              phoneNumber: '+16505550001',
-              displayName: 'Work phone number',
-              factorId: 'phone',
-              enrollmentTime: now,
-            },
-            {
-              uid: 'mfaUid2',
-              phoneNumber: '+16505550002',
-              displayName: 'Personal phone number',
-              factorId: 'phone',
-              enrollmentTime: now,
-            },
-          ],
+          enrolledFactors,
         },
       };
       uids.push(importUserRecord.uid);
@@ -1741,7 +1743,9 @@ describe('admin.auth', () => {
  * @retunr {Promise<void>} A promise that resolved on success.
  */
 function testImportAndSignInUser(
-  importUserRecord: any, importOptions: any, rawPassword: string): Promise<void> {
+  importUserRecord: admin.auth.UserImportRecord,
+  importOptions: any,
+  rawPassword: string): Promise<void> {
   const users = [importUserRecord];
   // Import the user record.
   return admin.auth().importUsers(users, importOptions)
