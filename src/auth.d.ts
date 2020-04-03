@@ -636,7 +636,6 @@ export namespace admin.auth {
 
     /**
      * The date the user was created, formatted as a UTC string.
-     *
      */
     creationTime?: string;
   }
