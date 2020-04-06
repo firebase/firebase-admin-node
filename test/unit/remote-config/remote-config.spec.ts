@@ -237,7 +237,7 @@ describe('RemoteConfig', () => {
           'message', `Remote Config conditions must be an array`);
     });
 
-    it('should resolve with when no parameters present in the response', () => {
+    it('should resolve with parameters:{} when no parameters present in the response', () => {
       const response = deepCopy({ conditions: [], parameterGroups: {}, etag: '0-1010-2' });
       const stub = sinon
         .stub(RemoteConfigApiClient.prototype, 'getTemplate')
@@ -246,13 +246,13 @@ describe('RemoteConfig', () => {
       return remoteConfig.getTemplate()
         .then((template) => {
           expect(template.conditions).deep.equals([]);
-          // if parameters are undefined in the response, we set it to an empty object
+          // if parameters are not present in the response, we set it to an empty object.
           expect(template.parameters).deep.equals({});
           expect(template.parameterGroups).deep.equals({});
         });
     });
 
-    it('should resolve with when no parameter groups present in the response', () => {
+    it('should resolve with parameterGroups:{} when no parameter groups present in the response', () => {
       const response = deepCopy({ conditions: [], parameters: {}, etag: '0-1010-2' });
       const stub = sinon
         .stub(RemoteConfigApiClient.prototype, 'getTemplate')
@@ -262,12 +262,12 @@ describe('RemoteConfig', () => {
         .then((template) => {
           expect(template.conditions).deep.equals([]);
           expect(template.parameters).deep.equals({});
-          // if parameterGroups are undefined in the response, we set it to an empty object 
+          // if parameter groups are not present in the response, we set it to an empty object.
           expect(template.parameterGroups).deep.equals({});
         });
     });
 
-    it('should resolve with when no conditions present in the response', () => {
+    it('should resolve with conditions:[] when no conditions present in the response', () => {
       const response = deepCopy({ parameters: {}, parameterGroups: {}, etag: '0-1010-2' });
       const stub = sinon
         .stub(RemoteConfigApiClient.prototype, 'getTemplate')
@@ -275,7 +275,7 @@ describe('RemoteConfig', () => {
       stubs.push(stub);
       return remoteConfig.getTemplate()
         .then((template) => {
-          // if parameterGroups are undefined in the response, we set it to an empty array
+          // if conditions are not present in the response, we set it to an empty array.
           expect(template.conditions).deep.equals([]);
           expect(template.parameters).deep.equals({});
           expect(template.parameterGroups).deep.equals({});
@@ -395,7 +395,7 @@ describe('RemoteConfig', () => {
           'message', `Remote Config conditions must be an array`);
     });
 
-    it('should resolve with when no parameters present in the response', () => {
+    it('should resolve with parameter:{} when no parameters present in the response', () => {
       const response = deepCopy({ conditions: [], parameterGroups: {}, etag: '0-1010-2' });
       const stub = sinon
         .stub(RemoteConfigApiClient.prototype, 'validateTemplate')
@@ -404,13 +404,13 @@ describe('RemoteConfig', () => {
       return remoteConfig.validateTemplate(REMOTE_CONFIG_TEMPLATE)
         .then((template) => {
           expect(template.conditions).deep.equals([]);
-          // if parameters are undefined in the response, we set it to an empty object
+          // if parameters are not present in the response, we set it to an empty object.
           expect(template.parameters).deep.equals({});
           expect(template.parameterGroups).deep.equals({});
         });
     });
 
-    it('should resolve with when no parameter groups present in the response', () => {
+    it('should resolve with parameterGroups:{} when no parameter groups present in the response', () => {
       const response = deepCopy({ conditions: [], parameters: {}, etag: '0-1010-2' });
       const stub = sinon
         .stub(RemoteConfigApiClient.prototype, 'validateTemplate')
@@ -420,12 +420,12 @@ describe('RemoteConfig', () => {
         .then((template) => {
           expect(template.conditions).deep.equals([]);
           expect(template.parameters).deep.equals({});
-          // if parameterGroups are undefined in the response, we set it to an empty object 
+          // if parameterGroups are not present in the response, we set it to an empty object.
           expect(template.parameterGroups).deep.equals({});
         });
     });
 
-    it('should resolve with when no conditions present in the response', () => {
+    it('should resolve with conditions:[] when no conditions present in the response', () => {
       const response = deepCopy({ parameters: {}, parameterGroups: {}, etag: '0-1010-2' });
       const stub = sinon
         .stub(RemoteConfigApiClient.prototype, 'validateTemplate')
@@ -433,7 +433,7 @@ describe('RemoteConfig', () => {
       stubs.push(stub);
       return remoteConfig.validateTemplate(REMOTE_CONFIG_TEMPLATE)
         .then((template) => {
-          // if parameterGroups are undefined in the response, we set it to an empty array
+          // if conditions are not present in the response, we set it to an empty array.
           expect(template.conditions).deep.equals([]);
           expect(template.parameters).deep.equals({});
           expect(template.parameterGroups).deep.equals({});
@@ -548,7 +548,7 @@ describe('RemoteConfig', () => {
           'message', `Remote Config conditions must be an array`);
     });
 
-    it('should resolve with when no parameters present in the response', () => {
+    it('should resolve with parameters:{} when no parameters present in the response', () => {
       const response = deepCopy({ conditions: [], parameterGroups: {}, etag: '0-1010-2' });
       const stub = sinon
         .stub(RemoteConfigApiClient.prototype, 'publishTemplate')
@@ -557,13 +557,13 @@ describe('RemoteConfig', () => {
       return remoteConfig.publishTemplate(REMOTE_CONFIG_TEMPLATE)
         .then((template) => {
           expect(template.conditions).deep.equals([]);
-          // if parameters are undefined in the response, we set it to an empty object
+          // if parameters are not present in the response, we set it to an empty object.
           expect(template.parameters).deep.equals({});
           expect(template.parameterGroups).deep.equals({});
         });
     });
 
-    it('should resolve with when no parameter groups present in the response', () => {
+    it('should resolve with parameterGroups:{} when no parameter groups present in the response', () => {
       const response = deepCopy({ conditions: [], parameters: {}, etag: '0-1010-2' });
       const stub = sinon
         .stub(RemoteConfigApiClient.prototype, 'publishTemplate')
@@ -573,12 +573,12 @@ describe('RemoteConfig', () => {
         .then((template) => {
           expect(template.conditions).deep.equals([]);
           expect(template.parameters).deep.equals({});
-          // if parameterGroups are undefined in the response, we set it to an empty object 
+          // if parameterGroups are not present in the response, we set it to an empty object.
           expect(template.parameterGroups).deep.equals({});
         });
     });
 
-    it('should resolve with when no conditions present in the response', () => {
+    it('should resolve with conditions:[] when no conditions present in the response', () => {
       const response = deepCopy({ parameters: {}, parameterGroups: {}, etag: '0-1010-2' });
       const stub = sinon
         .stub(RemoteConfigApiClient.prototype, 'publishTemplate')
@@ -586,7 +586,7 @@ describe('RemoteConfig', () => {
       stubs.push(stub);
       return remoteConfig.publishTemplate(REMOTE_CONFIG_TEMPLATE)
         .then((template) => {
-          // if parameterGroups are undefined in the response, we set it to an empty array
+          // if conditions are not present in the response, we set it to an empty array.
           expect(template.conditions).deep.equals([]);
           expect(template.parameters).deep.equals({});
           expect(template.parameterGroups).deep.equals({});
