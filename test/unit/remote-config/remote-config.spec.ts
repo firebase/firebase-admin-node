@@ -237,6 +237,51 @@ describe('RemoteConfig', () => {
           'message', `Remote Config conditions must be an array`);
     });
 
+    it('should resolve with when no parameters present in the response', () => {
+      const response = deepCopy({ conditions: [], parameterGroups: {}, etag: '0-1010-2' });
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'getTemplate')
+        .resolves(response);
+      stubs.push(stub);
+      return remoteConfig.getTemplate()
+        .then((template) => {
+          expect(template.conditions).deep.equals([]);
+          // if parameters are undefined in the response, we set it to an empty object
+          expect(template.parameters).deep.equals({});
+          expect(template.parameterGroups).deep.equals({});
+        });
+    });
+
+    it('should resolve with when no parameter groups present in the response', () => {
+      const response = deepCopy({ conditions: [], parameters: {}, etag: '0-1010-2' });
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'getTemplate')
+        .resolves(response);
+      stubs.push(stub);
+      return remoteConfig.getTemplate()
+        .then((template) => {
+          expect(template.conditions).deep.equals([]);
+          expect(template.parameters).deep.equals({});
+          // if parameterGroups are undefined in the response, we set it to an empty object 
+          expect(template.parameterGroups).deep.equals({});
+        });
+    });
+
+    it('should resolve with when no conditions present in the response', () => {
+      const response = deepCopy({ parameters: {}, parameterGroups: {}, etag: '0-1010-2' });
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'getTemplate')
+        .resolves(response);
+      stubs.push(stub);
+      return remoteConfig.getTemplate()
+        .then((template) => {
+          // if parameterGroups are undefined in the response, we set it to an empty array
+          expect(template.conditions).deep.equals([]);
+          expect(template.parameters).deep.equals({});
+          expect(template.parameterGroups).deep.equals({});
+        });
+    });
+
     it('should resolve with Remote Config template on success', () => {
       const stub = sinon
         .stub(RemoteConfigApiClient.prototype, 'getTemplate')
@@ -350,6 +395,51 @@ describe('RemoteConfig', () => {
           'message', `Remote Config conditions must be an array`);
     });
 
+    it('should resolve with when no parameters present in the response', () => {
+      const response = deepCopy({ conditions: [], parameterGroups: {}, etag: '0-1010-2' });
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'validateTemplate')
+        .resolves(response);
+      stubs.push(stub);
+      return remoteConfig.validateTemplate(REMOTE_CONFIG_TEMPLATE)
+        .then((template) => {
+          expect(template.conditions).deep.equals([]);
+          // if parameters are undefined in the response, we set it to an empty object
+          expect(template.parameters).deep.equals({});
+          expect(template.parameterGroups).deep.equals({});
+        });
+    });
+
+    it('should resolve with when no parameter groups present in the response', () => {
+      const response = deepCopy({ conditions: [], parameters: {}, etag: '0-1010-2' });
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'validateTemplate')
+        .resolves(response);
+      stubs.push(stub);
+      return remoteConfig.validateTemplate(REMOTE_CONFIG_TEMPLATE)
+        .then((template) => {
+          expect(template.conditions).deep.equals([]);
+          expect(template.parameters).deep.equals({});
+          // if parameterGroups are undefined in the response, we set it to an empty object 
+          expect(template.parameterGroups).deep.equals({});
+        });
+    });
+
+    it('should resolve with when no conditions present in the response', () => {
+      const response = deepCopy({ parameters: {}, parameterGroups: {}, etag: '0-1010-2' });
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'validateTemplate')
+        .resolves(response);
+      stubs.push(stub);
+      return remoteConfig.validateTemplate(REMOTE_CONFIG_TEMPLATE)
+        .then((template) => {
+          // if parameterGroups are undefined in the response, we set it to an empty array
+          expect(template.conditions).deep.equals([]);
+          expect(template.parameters).deep.equals({});
+          expect(template.parameterGroups).deep.equals({});
+        });
+    });
+
     // validate input template
     testInvalidInputTemplates((t: RemoteConfigTemplate) => { remoteConfig.validateTemplate(t); });
 
@@ -456,6 +546,51 @@ describe('RemoteConfig', () => {
       return remoteConfig.publishTemplate(REMOTE_CONFIG_TEMPLATE)
         .should.eventually.be.rejected.and.have.property(
           'message', `Remote Config conditions must be an array`);
+    });
+
+    it('should resolve with when no parameters present in the response', () => {
+      const response = deepCopy({ conditions: [], parameterGroups: {}, etag: '0-1010-2' });
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'publishTemplate')
+        .resolves(response);
+      stubs.push(stub);
+      return remoteConfig.publishTemplate(REMOTE_CONFIG_TEMPLATE)
+        .then((template) => {
+          expect(template.conditions).deep.equals([]);
+          // if parameters are undefined in the response, we set it to an empty object
+          expect(template.parameters).deep.equals({});
+          expect(template.parameterGroups).deep.equals({});
+        });
+    });
+
+    it('should resolve with when no parameter groups present in the response', () => {
+      const response = deepCopy({ conditions: [], parameters: {}, etag: '0-1010-2' });
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'publishTemplate')
+        .resolves(response);
+      stubs.push(stub);
+      return remoteConfig.publishTemplate(REMOTE_CONFIG_TEMPLATE)
+        .then((template) => {
+          expect(template.conditions).deep.equals([]);
+          expect(template.parameters).deep.equals({});
+          // if parameterGroups are undefined in the response, we set it to an empty object 
+          expect(template.parameterGroups).deep.equals({});
+        });
+    });
+
+    it('should resolve with when no conditions present in the response', () => {
+      const response = deepCopy({ parameters: {}, parameterGroups: {}, etag: '0-1010-2' });
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'publishTemplate')
+        .resolves(response);
+      stubs.push(stub);
+      return remoteConfig.publishTemplate(REMOTE_CONFIG_TEMPLATE)
+        .then((template) => {
+          // if parameterGroups are undefined in the response, we set it to an empty array
+          expect(template.conditions).deep.equals([]);
+          expect(template.parameters).deep.equals({});
+          expect(template.parameterGroups).deep.equals({});
+        });
     });
 
     // validate input template
