@@ -57,6 +57,7 @@ describe('RemoteConfigApiClient', () => {
   const TEST_RESPONSE = {
     conditions: [{ name: 'ios', expression: 'exp' }],
     parameters: { param: { defaultValue: { value: 'true' } } },
+    parameterGroups: { group: { parameters: { paramabc: { defaultValue: { value: 'true' } } }, } },
     version: {},
   };
 
@@ -84,6 +85,22 @@ describe('RemoteConfigApiClient', () => {
         defaultValue: { value: 'true' },
         conditionalValues: { ios: { useInAppDefault: true } },
         description: 'this is a promo',
+      },
+    },
+    parameterGroups: {
+      // eslint-disable-next-line @typescript-eslint/camelcase
+      new_menu: {
+        description: 'Description of the group.',
+        parameters: {
+          // eslint-disable-next-line @typescript-eslint/camelcase
+          pumpkin_spice_season: {
+            defaultValue: { value: 'A Gryffindor must love a pumpkin spice latte.' },
+            conditionalValues: {
+              'android_en': { value: 'A Droid must love a pumpkin spice latte.' },
+            },
+            description: 'Description of the parameter.',
+          },
+        },
       },
     },
     etag: 'etag-123456789012-6',
@@ -127,6 +144,7 @@ describe('RemoteConfigApiClient', () => {
         .then((resp) => {
           expect(resp.conditions).to.deep.equal(TEST_RESPONSE.conditions);
           expect(resp.parameters).to.deep.equal(TEST_RESPONSE.parameters);
+          expect(resp.parameterGroups).to.deep.equal(TEST_RESPONSE.parameterGroups);
           expect(resp.etag).to.equal('etag-123456789012-1');
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'GET',
@@ -203,6 +221,7 @@ describe('RemoteConfigApiClient', () => {
         .then((resp) => {
           expect(resp.conditions).to.deep.equal(TEST_RESPONSE.conditions);
           expect(resp.parameters).to.deep.equal(TEST_RESPONSE.parameters);
+          expect(resp.parameterGroups).to.deep.equal(TEST_RESPONSE.parameterGroups);
           // validate template returns an etag with the suffix -0 when successful.
           // verify that the etag matches the original template etag.
           expect(resp.etag).to.equal('etag-123456789012-6');
@@ -213,6 +232,7 @@ describe('RemoteConfigApiClient', () => {
             data: {
               conditions: REMOTE_CONFIG_TEMPLATE.conditions,
               parameters: REMOTE_CONFIG_TEMPLATE.parameters,
+              parameterGroups: REMOTE_CONFIG_TEMPLATE.parameterGroups,
             }
           });
         });
@@ -230,8 +250,9 @@ describe('RemoteConfigApiClient', () => {
 
     [null, undefined, ''].forEach((etag) => {
       it('should reject when the etag in template is null, undefined, or an empty string', () => {
-        expect(() => apiClient.validateTemplate({ conditions: [], parameters: {}, etag: etag as any }))
-          .to.throw('ETag must be a non-empty string.');
+        expect(() => apiClient.validateTemplate({
+          conditions: [], parameters: {}, parameterGroups: {}, etag: etag as any
+        })).to.throw('ETag must be a non-empty string.');
       });
     });
 
@@ -305,6 +326,7 @@ describe('RemoteConfigApiClient', () => {
           .then((resp) => {
             expect(resp.conditions).to.deep.equal(TEST_RESPONSE.conditions);
             expect(resp.parameters).to.deep.equal(TEST_RESPONSE.parameters);
+            expect(resp.parameterGroups).to.deep.equal(TEST_RESPONSE.parameterGroups);
             expect(resp.etag).to.equal('etag-123456789012-6');
             expect(stub).to.have.been.calledOnce.and.calledWith({
               method: 'PUT',
@@ -313,6 +335,7 @@ describe('RemoteConfigApiClient', () => {
               data: {
                 conditions: REMOTE_CONFIG_TEMPLATE.conditions,
                 parameters: REMOTE_CONFIG_TEMPLATE.parameters,
+                parameterGroups: REMOTE_CONFIG_TEMPLATE.parameterGroups,
               }
             });
           });
@@ -331,8 +354,9 @@ describe('RemoteConfigApiClient', () => {
 
     [null, undefined, ''].forEach((etag) => {
       it('should reject when the etag in template is null, undefined, or an empty string', () => {
-        expect(() => apiClient.publishTemplate({ conditions: [], parameters: {}, etag: etag as any }))
-          .to.throw('ETag must be a non-empty string.');
+        expect(() => apiClient.publishTemplate({
+          conditions: [], parameters: {}, parameterGroups: {}, etag: etag as any
+        })).to.throw('ETag must be a non-empty string.');
       });
     });
 

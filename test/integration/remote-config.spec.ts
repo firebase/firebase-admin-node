@@ -35,9 +35,26 @@ const VALID_PARAMETERS = {
     defaultValue: { value: 'welcome text' + Date.now() },
     conditionalValues: {
       ios: { value: 'welcome ios text' },
-      andriod: { value: 'welcome andriod text' },
+      android: { value: 'welcome android text' },
     },
   }
+};
+
+const VALID_PARAMETER_GROUPS = {
+  // eslint-disable-next-line @typescript-eslint/camelcase
+  new_menu: {
+    description: 'Description of the group.',
+    parameters: {
+      // eslint-disable-next-line @typescript-eslint/camelcase
+      pumpkin_spice_season: {
+        defaultValue: { value: 'A Gryffindor must love a pumpkin spice latte.' },
+        conditionalValues: {
+          'android': { value: 'A Droid must love a pumpkin spice latte.' },
+        },
+        description: 'Description of the parameter.',
+      },
+    },
+  },
 };
 
 const VALID_CONDITIONS: admin.remoteConfig.RemoteConfigCondition[] = [{
@@ -46,7 +63,7 @@ const VALID_CONDITIONS: admin.remoteConfig.RemoteConfigCondition[] = [{
   tagColor: 'INDIGO',
 },
 {
-  name: 'andriod',
+  name: 'android',
   expression: 'device.os == \'android\'',
   tagColor: 'GREEN',
 }];
@@ -67,15 +84,17 @@ describe('admin.remoteConfig', () => {
 
   describe('validateTemplate', () => {
     it('should succeed with a vaild template', () => {
-      // set parameters and conditions
+      // set parameters, groups, and conditions
       currentTemplate.conditions = VALID_CONDITIONS;
       currentTemplate.parameters = VALID_PARAMETERS;
+      currentTemplate.parameterGroups = VALID_PARAMETER_GROUPS;
       return admin.remoteConfig().validateTemplate(currentTemplate)
         .then((template) => {
           expect(template.etag).matches(/^etag-[0-9]*-[0-9]*$/);
           expect(template.conditions.length).to.equal(2);
           expect(template.conditions).to.deep.equal(VALID_CONDITIONS);
           expect(template.parameters).to.deep.equal(VALID_PARAMETERS);
+          expect(template.parameterGroups).to.deep.equal(VALID_PARAMETER_GROUPS);
         });
     });
 
@@ -83,6 +102,7 @@ describe('admin.remoteConfig', () => {
       // rejects with invalid-argument when conditions used in parameters do not exist
       currentTemplate.conditions = [];
       currentTemplate.parameters = VALID_PARAMETERS;
+      currentTemplate.parameterGroups = VALID_PARAMETER_GROUPS;
       return admin.remoteConfig().validateTemplate(currentTemplate)
         .should.eventually.be.rejected.and.have.property('code', 'remote-config/invalid-argument');
     });
@@ -93,12 +113,14 @@ describe('admin.remoteConfig', () => {
       // set parameters and conditions
       currentTemplate.conditions = VALID_CONDITIONS;
       currentTemplate.parameters = VALID_PARAMETERS;
+      currentTemplate.parameterGroups = VALID_PARAMETER_GROUPS;
       return admin.remoteConfig().publishTemplate(currentTemplate)
         .then((template) => {
           expect(template.etag).matches(/^etag-[0-9]*-[0-9]*$/);
           expect(template.conditions.length).to.equal(2);
           expect(template.conditions).to.deep.equal(VALID_CONDITIONS);
           expect(template.parameters).to.deep.equal(VALID_PARAMETERS);
+          expect(template.parameterGroups).to.deep.equal(VALID_PARAMETER_GROUPS);
         });
     });
 
@@ -106,6 +128,7 @@ describe('admin.remoteConfig', () => {
       // rejects with invalid-argument when conditions used in parameters do not exist
       currentTemplate.conditions = [];
       currentTemplate.parameters = VALID_PARAMETERS;
+      currentTemplate.parameterGroups = VALID_PARAMETER_GROUPS;
       return admin.remoteConfig().publishTemplate(currentTemplate)
         .should.eventually.be.rejected.and.have.property('code', 'remote-config/invalid-argument');
     });
@@ -119,6 +142,7 @@ describe('admin.remoteConfig', () => {
           expect(template.conditions.length).to.equal(2);
           expect(template.conditions).to.deep.equal(VALID_CONDITIONS);
           expect(template.parameters).to.deep.equal(VALID_PARAMETERS);
+          expect(template.parameterGroups).to.deep.equal(VALID_PARAMETER_GROUPS);
         });
     });
   });
@@ -144,6 +168,7 @@ describe('admin.remoteConfig', () => {
     const invalidEtags = [...INVALID_STRINGS];
     const sourceTemplate = {
       parameters: VALID_PARAMETERS,
+      parameterGroups: VALID_PARAMETER_GROUPS,
       conditions: VALID_CONDITIONS,
       etag: 'etag-1234-1',
     };
@@ -170,6 +195,7 @@ describe('admin.remoteConfig', () => {
       expect(newTemplate.conditions.length).to.equal(2);
       expect(newTemplate.conditions).to.deep.equal(VALID_CONDITIONS);
       expect(newTemplate.parameters).to.deep.equal(VALID_PARAMETERS);
+      expect(newTemplate.parameterGroups).to.deep.equal(VALID_PARAMETER_GROUPS);
     });
   });
 });

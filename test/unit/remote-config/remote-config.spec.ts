@@ -36,6 +36,23 @@ const expect = chai.expect;
 describe('RemoteConfig', () => {
 
   const INTERNAL_ERROR = new FirebaseRemoteConfigError('internal-error', 'message');
+  const PARAMETER_GROUPS = {
+    // eslint-disable-next-line @typescript-eslint/camelcase
+    new_menu: {
+      description: 'Description of the group.',
+      parameters: {
+        // eslint-disable-next-line @typescript-eslint/camelcase
+        pumpkin_spice_season: {
+          defaultValue: { value: 'A Gryffindor must love a pumpkin spice latte.' },
+          conditionalValues: {
+            'android_en': { value: 'A Droid must love a pumpkin spice latte.' },
+          },
+          description: 'Description of the parameter.',
+        },
+      },
+    },
+  };
+
   const REMOTE_CONFIG_RESPONSE: {
     // This type is effectively a RemoteConfigTemplate, but with non-readonly fields
     // to allow easier use from within the tests. An improvement would be to
@@ -43,6 +60,7 @@ describe('RemoteConfig', () => {
     // on the needs of the test, as that would ensure type-safety.
     conditions?: Array<{ name: string; expression: string; tagColor: TagColor }>;
     parameters?: object | null;
+    parameterGroups?: object | null;
     etag: string;
   } = {
     conditions: [{
@@ -58,6 +76,7 @@ describe('RemoteConfig', () => {
         description: 'this is a promo',
       },
     },
+    parameterGroups: PARAMETER_GROUPS,
     etag: 'etag-123456789012-5',
   };
 
@@ -75,6 +94,7 @@ describe('RemoteConfig', () => {
         description: 'this is a promo',
       },
     },
+    parameterGroups: PARAMETER_GROUPS,
     etag: 'etag-123456789012-6',
   };
 
@@ -193,6 +213,18 @@ describe('RemoteConfig', () => {
           'message', `Remote Config parameters must be a non-null object`);
     });
 
+    it('should reject when API response does not contain valid parameter groups', () => {
+      const response = deepCopy(REMOTE_CONFIG_RESPONSE);
+      response.parameterGroups = null;
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'getTemplate')
+        .resolves(response);
+      stubs.push(stub);
+      return remoteConfig.getTemplate()
+        .should.eventually.be.rejected.and.have.property(
+          'message', `Remote Config parameter groups must be a non-null object`);
+    });
+
     it('should reject when API response does not contain valid conditions', () => {
       const response = deepCopy(REMOTE_CONFIG_RESPONSE);
       response.conditions = Object();
@@ -229,6 +261,8 @@ describe('RemoteConfig', () => {
           expect(p1.conditionalValues).deep.equals({ ios: { useInAppDefault: true } });
           expect(p1.description).equals('this is a promo');
 
+          expect(template.parameterGroups).deep.equals(PARAMETER_GROUPS);
+
           const c = template.conditions.find((c) => c.name === 'ios');
           expect(c).to.be.not.undefined;
           const cond = c as RemoteConfigCondition;
@@ -240,8 +274,12 @@ describe('RemoteConfig', () => {
   });
 
   const INVALID_PARAMETERS: any[] = [null, '', 'abc', 1, true, []];
+  const INVALID_PARAMETER_GROUPS: any[] = [null, '', 'abc', 1, true, []];
   const INVALID_CONDITIONS: any[] = [null, '', 'abc', 1, true, {}];
-  const INVALID_ETAG_TEMPLATES: any[] = [{ parameters: {}, conditions: [], etag: '' }, Object()];
+  const INVALID_ETAG_TEMPLATES: any[] = [
+    { parameters: {}, parameterGroups: {}, conditions: [], etag: '' },
+    Object()
+  ];
   const INVALID_TEMPLATES: any[] = [null, 'abc', 123];
 
   describe('validateTemplate', () => {
@@ -288,6 +326,18 @@ describe('RemoteConfig', () => {
           'message', `Remote Config parameters must be a non-null object`);
     });
 
+    it('should reject when API response does not contain valid parameter groups', () => {
+      const response = deepCopy(REMOTE_CONFIG_RESPONSE);
+      response.parameterGroups = null;
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'validateTemplate')
+        .resolves(response);
+      stubs.push(stub);
+      return remoteConfig.validateTemplate(REMOTE_CONFIG_TEMPLATE)
+        .should.eventually.be.rejected.and.have.property(
+          'message', `Remote Config parameter groups must be a non-null object`);
+    });
+
     it('should reject when API response does not contain valid conditions', () => {
       const response = deepCopy(REMOTE_CONFIG_RESPONSE);
       response.conditions = Object();
@@ -327,6 +377,8 @@ describe('RemoteConfig', () => {
           expect(p1.defaultValue).deep.equals({ value: 'true' });
           expect(p1.conditionalValues).deep.equals({ ios: { useInAppDefault: true } });
           expect(p1.description).equals('this is a promo');
+
+          expect(template.parameterGroups).deep.equals(PARAMETER_GROUPS);
 
           const c = template.conditions.find((c) => c.name === 'ios');
           expect(c).to.be.not.undefined;
@@ -382,6 +434,18 @@ describe('RemoteConfig', () => {
           'message', `Remote Config parameters must be a non-null object`);
     });
 
+    it('should reject when API response does not contain valid parameter groups', () => {
+      const response = deepCopy(REMOTE_CONFIG_RESPONSE);
+      response.parameterGroups = null;
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'publishTemplate')
+        .resolves(response);
+      stubs.push(stub);
+      return remoteConfig.publishTemplate(REMOTE_CONFIG_TEMPLATE)
+        .should.eventually.be.rejected.and.have.property(
+          'message', `Remote Config parameter groups must be a non-null object`);
+    });
+
     it('should reject when API response does not contain valid conditions', () => {
       const response = deepCopy(REMOTE_CONFIG_RESPONSE);
       response.conditions = Object();
@@ -420,6 +484,8 @@ describe('RemoteConfig', () => {
           expect(p1.defaultValue).deep.equals({ value: 'true' });
           expect(p1.conditionalValues).deep.equals({ ios: { useInAppDefault: true } });
           expect(p1.description).equals('this is a promo');
+
+          expect(template.parameterGroups).deep.equals(PARAMETER_GROUPS);
 
           const c = template.conditions.find((c) => c.name === 'ios');
           expect(c).to.be.not.undefined;
@@ -471,6 +537,16 @@ describe('RemoteConfig', () => {
     });
 
     sourceTemplate = deepCopy(REMOTE_CONFIG_RESPONSE);
+    INVALID_PARAMETER_GROUPS.forEach((invalidParameterGroup) => {
+      sourceTemplate.parameterGroups = invalidParameterGroup;
+      const jsonString = JSON.stringify(sourceTemplate);
+      it(`should throw if the parameter groups are ${JSON.stringify(invalidParameterGroup)}`, () => {
+        expect(() => remoteConfig.createTemplateFromJSON(jsonString))
+          .to.throw('Remote Config parameter groups must be a non-null object');
+      });
+    });
+
+    sourceTemplate = deepCopy(REMOTE_CONFIG_RESPONSE);
     INVALID_CONDITIONS.forEach((invalidConditions) => {
       sourceTemplate.conditions = invalidConditions;
       const jsonString = JSON.stringify(sourceTemplate);
@@ -500,6 +576,8 @@ describe('RemoteConfig', () => {
       expect(p1.conditionalValues).deep.equals({ ios: { useInAppDefault: true } });
       expect(p1.description).equals('this is a promo');
 
+      expect(newTemplate.parameterGroups).deep.equals(PARAMETER_GROUPS);
+
       const c = newTemplate.conditions.find((c) => c.name === 'ios');
       expect(c).to.be.not.undefined;
       const cond = c as RemoteConfigCondition;
@@ -520,10 +598,21 @@ describe('RemoteConfig', () => {
       });
     });
 
+    INVALID_PARAMETER_GROUPS.forEach((invalidParameterGroup) => {
+      it(`should throw if the parameter groups is ${JSON.stringify(invalidParameterGroup)}`, () => {
+        (inputTemplate as any).parameterGroups = invalidParameterGroup;
+        inputTemplate.conditions = [];
+        inputTemplate.parameters = {};
+        expect(() => rcOperation(inputTemplate))
+          .to.throw('Remote Config parameter groups must be a non-null object');
+      });
+    });
+
     INVALID_CONDITIONS.forEach((invalidConditions) => {
       it(`should throw if the conditions is ${JSON.stringify(invalidConditions)}`, () => {
         (inputTemplate as any).conditions = invalidConditions;
         inputTemplate.parameters = {};
+        inputTemplate.parameterGroups = {};
         expect(() => rcOperation(inputTemplate))
           .to.throw('Remote Config conditions must be an array');
       });

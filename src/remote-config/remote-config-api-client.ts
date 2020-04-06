@@ -65,6 +65,12 @@ export interface RemoteConfigParameter {
   description?: string;
 }
 
+/** Interface representing a Remote Config parameter group. */
+export interface RemoteConfigParameterGroup {
+  description?: string;
+  parameters: { [key: string]: RemoteConfigParameter };
+}
+
 /** Interface representing a Remote Config condition. */
 export interface RemoteConfigCondition {
   name: string;
@@ -76,6 +82,7 @@ export interface RemoteConfigCondition {
 export interface RemoteConfigTemplate {
   conditions: RemoteConfigCondition[];
   parameters: { [key: string]: RemoteConfigParameter };
+  parameterGroups: { [key: string]: RemoteConfigParameterGroup };
   readonly etag: string;
 }
 
@@ -118,6 +125,7 @@ export class RemoteConfigApiClient {
         return {
           conditions: resp.data.conditions,
           parameters: resp.data.parameters,
+          parameterGroups: resp.data.parameterGroups,
           etag: resp.headers['etag'],
         };
       })
@@ -138,6 +146,7 @@ export class RemoteConfigApiClient {
         return {
           conditions: resp.data.conditions,
           parameters: resp.data.parameters,
+          parameterGroups: resp.data.parameterGroups,
           // validating a template returns an etag with the suffix -0 means that your update 
           // was successfully validated. We set the etag back to the original etag of the template
           // to allow future operations.
@@ -167,6 +176,7 @@ export class RemoteConfigApiClient {
         return {
           conditions: resp.data.conditions,
           parameters: resp.data.parameters,
+          parameterGroups: resp.data.parameterGroups,
           etag: resp.headers['etag'],
         };
       })
@@ -189,6 +199,7 @@ export class RemoteConfigApiClient {
           data: {
             conditions: template.conditions,
             parameters: template.parameters,
+            parameterGroups: template.parameterGroups,
           }
         };
         return this.httpClient.send(request);
@@ -245,7 +256,7 @@ export class RemoteConfigApiClient {
 
   /**
    * Checks if the given RemoteConfigTemplate object is valid.
-   * The object must have valid parameters, conditions, and an etag.
+   * The object must have valid parameters, parameter groups, conditions, and an etag.
    *
    * @param {RemoteConfigTemplate} template A RemoteConfigTemplate object to be validated.
    */
@@ -264,6 +275,11 @@ export class RemoteConfigApiClient {
       throw new FirebaseRemoteConfigError(
         'invalid-argument',
         'Remote Config parameters must be a non-null object');
+    }
+    if (!validator.isNonNullObject(template.parameterGroups)) {
+      throw new FirebaseRemoteConfigError(
+        'invalid-argument',
+        'Remote Config parameter groups must be a non-null object');
     }
     if (!validator.isArray(template.conditions)) {
       throw new FirebaseRemoteConfigError(
