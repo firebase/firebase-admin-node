@@ -40,15 +40,15 @@ const VALID_PARAMETERS = {
   }
 };
 
-const VALID_CONDITIONS = [{
+const VALID_CONDITIONS: admin.remoteConfig.RemoteConfigCondition[] = [{
   name: 'ios',
   expression: 'device.os == \'ios\'',
-  tagColor: 'BLUE'
+  tagColor: 'INDIGO',
 },
 {
   name: 'andriod',
   expression: 'device.os == \'android\'',
-  tagColor: 'GREEN'
+  tagColor: 'GREEN',
 }];
 
 let currentTemplate: admin.remoteConfig.RemoteConfigTemplate;

@@ -817,19 +817,8 @@ declare namespace admin.remoteConfig {
   /**
   * Colors that are associated with conditions for display purposes.
   */
-  enum TagColor {
-    BLUE = "Blue",
-    BROWN = "Brown",
-    CYAN = "Cyan",
-    DEEP_ORANGE = "Red Orange",
-    GREEN = "Green",
-    INDIGO = "Indigo",
-    LIME = "Lime",
-    ORANGE = "Orange",
-    PINK = "Pink",
-    PURPLE = "Purple",
-    TEAL = "Teal",
-  }
+  type TagColor = 'BLUE' | 'BROWN' | 'CYAN' | 'DEEP_ORANGE' | 'GREEN' |
+    'INDIGO' | 'LIME' | 'ORANGE' | 'PINK' | 'PURPLE' | 'TEAL';
 
   /**
   * Interface representing a Remote Config template.
