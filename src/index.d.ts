@@ -836,7 +836,7 @@ declare namespace admin.remoteConfig {
 
     /**
      * Map of parameter group names to their parameter group objects.
-     * A group's name is mutable but must be unique among groups in the config.
+     * A group's name is mutable but must be unique among groups in the Remote Config template.
      * The name is limited to 256 characters and intended to be human-readable. Any Unicode
      * characters are allowed.
      */
@@ -888,9 +888,9 @@ declare namespace admin.remoteConfig {
 
     /**
      * Map of parameter keys to their optional default values and optional conditional values for
-     * parameters that belong to this group. A parameter only appears once per `RemoteConfig`.
-     * An ungrouped parameter appears at the top level, whereas a parameter organized within a 
-     * group appears within its group's map of parameters.
+     * parameters that belong to this group. A parameter only appears once per
+     * Remote Config template. An ungrouped parameter appears at the top level, whereas a
+     * parameter organized within a group appears within its group's map of parameters.
      */
     parameters: { [key: string]: RemoteConfigParameter };
   }
