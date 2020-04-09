@@ -979,7 +979,13 @@ declare namespace admin.remoteConfig {
      * Publishes a Remote Config template.
      *
      * @param template The Remote Config template to be published.
-     * @param options Optional options object when publishing a Remote Config template.
+     * @param options Optional options object when publishing a Remote Config template:
+     *    - {boolean} `force` Setting this to `true` forces the Remote Config template to 
+     *      be updated and circumvent the ETag. This approach is not recommended 
+     *      because it risks causing the loss of updates to your Remote Config 
+     *      template if multiple clients are updating the Remote Config template.
+     *      See {@link https://firebase.google.com/docs/remote-config/use-config-rest#etag_usage_and_forced_updates 
+     *      ETag usage and forced updates}.
      *
      * @return A Promise that fulfills with the published `RemoteConfigTemplate`.
      */
