@@ -23,6 +23,7 @@ import {
   RemoteConfigTemplate,
   RemoteConfigParameter,
   RemoteConfigCondition,
+  RemoteConfigParameterGroup,
 } from './remote-config-api-client';
 
 /**
@@ -131,6 +132,7 @@ export class RemoteConfig implements FirebaseServiceInterface {
 class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
 
   public parameters: { [key: string]: RemoteConfigParameter };
+  public parameterGroups: { [key: string]: RemoteConfigParameterGroup };
   public conditions: RemoteConfigCondition[];
   private readonly etagInternal: string;
 
@@ -153,6 +155,17 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
       this.parameters = config.parameters;
     } else {
       this.parameters = {};
+    }
+
+    if (typeof config.parameterGroups !== 'undefined') {
+      if (!validator.isNonNullObject(config.parameterGroups)) {
+        throw new FirebaseRemoteConfigError(
+          'invalid-argument',
+          'Remote Config parameter groups must be a non-null object');
+      }
+      this.parameterGroups = config.parameterGroups;
+    } else {
+      this.parameterGroups = {};
     }
 
     if (typeof config.conditions !== 'undefined') {
