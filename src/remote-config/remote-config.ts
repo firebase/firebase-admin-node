@@ -197,7 +197,7 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
       conditions: this.conditions,
       parameters: this.parameters,
       parameterGroups: this.parameterGroups,
-      etag: this.etagInternal,
+      etag: this.etag,
     }
   }
 }

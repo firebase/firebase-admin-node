@@ -315,7 +315,8 @@ describe('RemoteConfig', () => {
           expect(cond.expression).to.equal('device.os == \'ios\'');
           expect(cond.tagColor).to.equal(TagColor.BLUE);
 
-          expect(JSON.stringify(template)).equals(JSON.stringify(REMOTE_CONFIG_RESPONSE));
+          const parsed = JSON.parse(JSON.stringify(template));
+          expect(parsed).deep.equals(REMOTE_CONFIG_RESPONSE);
         });
     });
   });
