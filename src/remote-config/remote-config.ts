@@ -194,10 +194,10 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
    */
   public toJSON(): RemoteConfigTemplate {
     return {
-      etag: this.etagInternal,
+      conditions: this.conditions,
       parameters: this.parameters,
       parameterGroups: this.parameterGroups,
-      conditions: this.conditions,
+      etag: this.etagInternal,
     }
   }
 }

@@ -179,7 +179,7 @@ describe('admin.remoteConfig', () => {
       const jsonString = JSON.stringify(invalidEtagTemplate);
       it(`should throw if the ETag is ${JSON.stringify(invalidEtag)}`, () => {
         expect(() => admin.remoteConfig().createTemplateFromJSON(jsonString))
-          .to.throw(`Invalid Remote Config template response: ${jsonString}`);
+          .to.throw(`Invalid Remote Config template: ${jsonString}`);
       });
     });
 
