@@ -141,7 +141,7 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
       !validator.isNonEmptyString(config.etag)) {
       throw new FirebaseRemoteConfigError(
         'invalid-argument',
-        `Invalid Remote Config template response: ${JSON.stringify(config)}`);
+        `Invalid Remote Config template: ${JSON.stringify(config)}`);
     }
 
     this.etagInternal = config.etag;
@@ -187,5 +187,17 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
    */
   get etag(): string {
     return this.etagInternal;
+  }
+
+  /**
+   * @return {RemoteConfigTemplate} A JSON-serializable representation of this object.
+   */
+  public toJSON(): RemoteConfigTemplate {
+    return {
+      conditions: this.conditions,
+      parameters: this.parameters,
+      parameterGroups: this.parameterGroups,
+      etag: this.etag,
+    }
   }
 }

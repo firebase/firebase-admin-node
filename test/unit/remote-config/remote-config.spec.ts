@@ -186,7 +186,7 @@ describe('RemoteConfig', () => {
       stubs.push(stub);
       return remoteConfig.getTemplate()
         .should.eventually.be.rejected.and.have.property(
-          'message', 'Invalid Remote Config template response: null');
+          'message', 'Invalid Remote Config template: null');
     });
 
     it('should reject when API response does not contain an ETag', () => {
@@ -198,7 +198,7 @@ describe('RemoteConfig', () => {
       stubs.push(stub);
       return remoteConfig.getTemplate()
         .should.eventually.be.rejected.and.have.property(
-          'message', `Invalid Remote Config template response: ${JSON.stringify(response)}`);
+          'message', `Invalid Remote Config template: ${JSON.stringify(response)}`);
     });
 
     it('should reject when API response does not contain valid parameters', () => {
@@ -314,6 +314,9 @@ describe('RemoteConfig', () => {
           expect(cond.name).to.equal('ios');
           expect(cond.expression).to.equal('device.os == \'ios\'');
           expect(cond.tagColor).to.equal(TagColor.BLUE);
+
+          const parsed = JSON.parse(JSON.stringify(template));
+          expect(parsed).deep.equals(REMOTE_CONFIG_RESPONSE);
         });
     });
   });
@@ -344,7 +347,7 @@ describe('RemoteConfig', () => {
       stubs.push(stub);
       return remoteConfig.validateTemplate(REMOTE_CONFIG_TEMPLATE)
         .should.eventually.be.rejected.and.have.property(
-          'message', 'Invalid Remote Config template response: null');
+          'message', 'Invalid Remote Config template: null');
     });
 
     it('should reject when API response does not contain an ETag', () => {
@@ -356,7 +359,7 @@ describe('RemoteConfig', () => {
       stubs.push(stub);
       return remoteConfig.validateTemplate(REMOTE_CONFIG_TEMPLATE)
         .should.eventually.be.rejected.and.have.property(
-          'message', `Invalid Remote Config template response: ${JSON.stringify(response)}`);
+          'message', `Invalid Remote Config template: ${JSON.stringify(response)}`);
     });
 
     it('should reject when API response does not contain valid parameters', () => {
@@ -497,7 +500,7 @@ describe('RemoteConfig', () => {
       stubs.push(stub);
       return remoteConfig.publishTemplate(REMOTE_CONFIG_TEMPLATE)
         .should.eventually.be.rejected.and.have.property(
-          'message', 'Invalid Remote Config template response: null');
+          'message', 'Invalid Remote Config template: null');
     });
 
     it('should reject when API response does not contain an ETag', () => {
@@ -509,7 +512,7 @@ describe('RemoteConfig', () => {
       stubs.push(stub);
       return remoteConfig.publishTemplate(REMOTE_CONFIG_TEMPLATE)
         .should.eventually.be.rejected.and.have.property(
-          'message', `Invalid Remote Config template response: ${JSON.stringify(response)}`);
+          'message', `Invalid Remote Config template: ${JSON.stringify(response)}`);
     });
 
     it('should reject when API response does not contain valid parameters', () => {
@@ -657,7 +660,7 @@ describe('RemoteConfig', () => {
       const jsonString = JSON.stringify(sourceTemplate);
       it(`should throw if the ETag is ${JSON.stringify(invalidEtag)}`, () => {
         expect(() => remoteConfig.createTemplateFromJSON(jsonString))
-          .to.throw(`Invalid Remote Config template response: ${jsonString}`);
+          .to.throw(`Invalid Remote Config template: ${jsonString}`);
       });
     });
 
