@@ -625,6 +625,58 @@ export namespace admin.auth {
   }
 
   /**
+   * User metadata to include when importing a user.
+   */
+  interface UserMetadataRequest {
+
+    /**
+     * The date the user last signed in, formatted as a UTC string.
+     */
+    lastSignInTime?: string;
+
+    /**
+     * The date the user was created, formatted as a UTC string.
+     */
+    creationTime?: string;
+  }
+
+  /**
+   * User provider data to include when importing a user.
+   */
+  interface UserProviderRequest {
+
+    /**
+     * The user identifier for the linked provider.
+     */
+    uid: string;
+
+    /**
+     * The display name for the linked provider.
+     */
+    displayName?: string;
+
+    /**
+     * The email for the linked provider.
+     */
+    email?: string;
+
+    /**
+     * The phone number for the linked provider.
+     */
+    phoneNumber?: string;
+
+    /**
+     * The photo URL for the linked provider.
+     */
+    photoURL?: string;
+
+    /**
+     * The linked provider ID (for example, "google.com" for the Google provider).
+     */
+    providerId: string;
+  }
+
+  /**
    * Interface representing a user to import to Firebase Auth via the
    * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#importUsers `importUsers()`} method.
    */
@@ -643,7 +695,7 @@ export namespace admin.auth {
     /**
      * Whether or not the user's primary email is verified.
      */
-    emailVerified: boolean;
+    emailVerified?: boolean;
 
     /**
      * The user's display name.
@@ -664,17 +716,17 @@ export namespace admin.auth {
      * Whether or not the user is disabled: `true` for disabled; `false` for
      * enabled.
      */
-    disabled: boolean;
+    disabled?: boolean;
 
     /**
      * Additional metadata about the user.
      */
-    metadata: admin.auth.UserMetadata;
+    metadata?: admin.auth.UserMetadataRequest;
 
     /**
      * An array of providers (for example, Google, Facebook) linked to the user.
      */
-    providerData?: admin.auth.UserInfo[];
+    providerData?: admin.auth.UserProviderRequest[];
 
     /**
      * The user's custom claims object if available, typically used to define
@@ -703,6 +755,11 @@ export namespace admin.auth {
      * to the tenant corresponding to that `TenantAwareAuth` instance's tenant ID.
      */
     tenantId?: string | null;
+
+    /**
+     * The user's multi-factor related properties.
+     */
+    multiFactor?: admin.auth.MultiFactorUpdateSettings;
   }
 
   /**
