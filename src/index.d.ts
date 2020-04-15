@@ -5250,7 +5250,7 @@ declare namespace admin.machineLearning {
     /** The size of the model. */
     readonly sizeBytes: number;
 
-    /** The URI of the model in Cloud Storage. */
+    /** The URI from which the model was originally provided to Firebase. */
     readonly gcsTfliteUri?: string;
   }
 
@@ -5291,6 +5291,7 @@ declare namespace admin.machineLearning {
     /** The timestamp of the model's most recent update. */
     readonly updateTime: string;
 
+    /** Error message when model validation fails. */
     readonly validationError?: string;
 
     /** True if the model is published. */
@@ -5324,7 +5325,7 @@ declare namespace admin.machineLearning {
      */
     waitForUnlocked(maxTimeSeconds?: number): Promise<void>;
 
-    /** The model's TensorFlow Lite model file. */
+    /** Metadata about the model's TensorFlow Lite model file. */
     readonly tfliteModel?: TFLiteModel;
   }
 
