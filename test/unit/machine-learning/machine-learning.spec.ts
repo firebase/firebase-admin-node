@@ -136,7 +136,7 @@ describe('MachineLearning', () => {
         gcsTfliteUri: string;
         sizeBytes: number;
       };
-    }
+    };
   } = {
     done: true,
     response: MODEL_RESPONSE,
@@ -148,7 +148,7 @@ describe('MachineLearning', () => {
     error?: {
       code: number;
       message: string;
-    }
+    };
     response?: ModelResponse;
   } = {
     done: true,
@@ -185,8 +185,8 @@ describe('MachineLearning', () => {
           const machineLearningAny: any = MachineLearning;
           return new machineLearningAny(invalidApp);
         }).to.throw(
-            'First argument passed to admin.machineLearning() must be a valid Firebase app '
-                + 'instance.');
+          'First argument passed to admin.machineLearning() must be a valid Firebase app '
+              + 'instance.');
       });
     });
 
@@ -195,8 +195,8 @@ describe('MachineLearning', () => {
         const machineLearningAny: any = MachineLearning;
         return new machineLearningAny();
       }).to.throw(
-          'First argument passed to admin.machineLearning() must be a valid Firebase app '
-              + 'instance.');
+        'First argument passed to admin.machineLearning() must be a valid Firebase app '
+            + 'instance.');
     });
 
     it('should throw given invalid credential', () => {
@@ -433,8 +433,8 @@ describe('MachineLearning', () => {
         .resolves(null);
       stubs.push(stub);
       return machineLearning.createModel(MODEL_OPTIONS_WITH_GCS)
-      .should.eventually.be.rejected.and.have.property(
-        'message', 'Cannot read property \'done\' of null');
+        .should.eventually.be.rejected.and.have.property(
+          'message', 'Cannot read property \'done\' of null');
     });
 
     it('should reject when API response does not contain a name', () => {
@@ -550,8 +550,8 @@ describe('MachineLearning', () => {
         .resolves(null);
       stubs.push(stub);
       return machineLearning.updateModel(MODEL_ID, MODEL_OPTIONS_WITH_GCS)
-      .should.eventually.be.rejected.and.have.property(
-        'message', 'Cannot read property \'done\' of null');
+        .should.eventually.be.rejected.and.have.property(
+          'message', 'Cannot read property \'done\' of null');
     });
 
     it('should reject when API response does not contain a name', () => {
@@ -654,8 +654,8 @@ describe('MachineLearning', () => {
         .resolves(null);
       stubs.push(stub);
       return machineLearning.publishModel(MODEL_ID)
-      .should.eventually.be.rejected.and.have.property(
-        'message', 'Cannot read property \'done\' of null');
+        .should.eventually.be.rejected.and.have.property(
+          'message', 'Cannot read property \'done\' of null');
     });
 
     it('should reject when API response does not contain a name', () => {
@@ -758,8 +758,8 @@ describe('MachineLearning', () => {
         .resolves(null);
       stubs.push(stub);
       return machineLearning.unpublishModel(MODEL_ID)
-      .should.eventually.be.rejected.and.have.property(
-        'message', 'Cannot read property \'done\' of null');
+        .should.eventually.be.rejected.and.have.property(
+          'message', 'Cannot read property \'done\' of null');
     });
 
     it('should reject when API response does not contain a name', () => {

@@ -271,9 +271,9 @@ describe('SAMLConfig', () => {
     });
 
     const invalidResourceNames: string[] = [
-        '', 'incorrectsaml.', 'saml.provider', 'saml', 'oidc.provider',
-        'projects/project1/prefixinboundSamlConfigs/saml.provider',
-        'projects/project1/oauthIdpConfigs/saml.provider'];
+      '', 'incorrectsaml.', 'saml.provider', 'saml', 'oidc.provider',
+      'projects/project1/prefixinboundSamlConfigs/saml.provider',
+      'projects/project1/oauthIdpConfigs/saml.provider'];
     invalidResourceNames.forEach((invalidResourceName) => {
       it(`should return null for invalid resource name "${invalidResourceName}"`, () => {
         expect(SAMLConfig.getProviderIdFromResourceName(invalidResourceName)).to.be.null;
@@ -287,8 +287,8 @@ describe('SAMLConfig', () => {
     });
 
     const invalidProviderIds = [
-        null, NaN, 0, 1, true, false, '', 'incorrectsaml.', 'saml', 'oidc.provider', 'other', [], [1, 'a'],
-        {}, { a: 1 }, _.noop];
+      null, NaN, 0, 1, true, false, '', 'incorrectsaml.', 'saml', 'oidc.provider', 'other', [], [1, 'a'],
+      {}, { a: 1 }, _.noop];
     invalidProviderIds.forEach((invalidProviderId) => {
       it(`should return false on invalid SAML provider ID "${JSON.stringify(invalidProviderId)}"`, () => {
         expect(SAMLConfig.isProviderId(invalidProviderId)).to.be.false;
@@ -413,7 +413,7 @@ describe('SAMLConfig', () => {
     });
 
     const invalidProviderIds = [
-        null, NaN, 0, 1, true, false, '', 'oidc.provider', 'other', [], [1, 'a'], {}, { a: 1 }, _.noop];
+      null, NaN, 0, 1, true, false, '', 'oidc.provider', 'other', [], [1, 'a'], {}, { a: 1 }, _.noop];
     invalidProviderIds.forEach((providerId) => {
       it('should throw on invalid providerId:' + JSON.stringify(providerId), () => {
         const invalidClientRequest = deepCopy(clientRequest) as any;
@@ -582,9 +582,9 @@ describe('OIDCConfig', () => {
     });
 
     const invalidResourceNames: string[] = [
-        '', 'incorrectsaml.', 'oidc.provider', 'oidc', 'saml.provider',
-        'projects/project1/prefixoauthIdpConfigs/oidc.provider',
-        'projects/project1/inboundSamlConfigs/oidc.provider'];
+      '', 'incorrectsaml.', 'oidc.provider', 'oidc', 'saml.provider',
+      'projects/project1/prefixoauthIdpConfigs/oidc.provider',
+      'projects/project1/inboundSamlConfigs/oidc.provider'];
     invalidResourceNames.forEach((invalidResourceName) => {
       it(`should return null for invalid resource name "${invalidResourceName}"`, () => {
         expect(OIDCConfig.getProviderIdFromResourceName(invalidResourceName)).to.be.null;
@@ -598,8 +598,8 @@ describe('OIDCConfig', () => {
     });
 
     const invalidProviderIds = [
-        null, NaN, 0, 1, true, false, '', 'incorrectoidc.', 'oidc', 'saml.provider', 'other', [], [1, 'a'],
-        {}, { a: 1 }, _.noop];
+      null, NaN, 0, 1, true, false, '', 'incorrectoidc.', 'oidc', 'saml.provider', 'other', [], [1, 'a'],
+      {}, { a: 1 }, _.noop];
     invalidProviderIds.forEach((invalidProviderId) => {
       it(`should return false on invalid OIDC provider ID "${JSON.stringify(invalidProviderId)}"`, () => {
         expect(OIDCConfig.isProviderId(invalidProviderId)).to.be.false;
@@ -692,7 +692,7 @@ describe('OIDCConfig', () => {
     });
 
     const invalidProviderIds = [
-        null, NaN, 0, 1, true, false, '', 'other', 'saml.provider', [], [1, 'a'], {}, { a: 1 }, _.noop];
+      null, NaN, 0, 1, true, false, '', 'other', 'saml.provider', [], [1, 'a'], {}, { a: 1 }, _.noop];
     invalidProviderIds.forEach((providerId) => {
       it('should throw on invalid providerId:' + JSON.stringify(providerId), () => {
         const invalidClientRequest = deepCopy(clientRequest) as any;

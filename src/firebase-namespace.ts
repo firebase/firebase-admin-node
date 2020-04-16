@@ -46,7 +46,7 @@ const DEFAULT_APP_NAME = '[DEFAULT]';
  * If the environment variable contains a string that starts with '{' it will be parsed as JSON,
  * otherwise it will be assumed to be pointing to a file.
  */
-export const FIREBASE_CONFIG_VAR: string = 'FIREBASE_CONFIG';
+export const FIREBASE_CONFIG_VAR = 'FIREBASE_CONFIG';
 
 
 let globalAppDefaultCred: Credential;
@@ -183,10 +183,11 @@ export class FirebaseNamespaceInternals {
    * @param {AppHook} [appHook] Optional callback that handles app-related events like app creation and deletion.
    * @return {FirebaseServiceNamespace<FirebaseServiceInterface>} The Firebase service's namespace.
    */
-  public registerService(serviceName: string,
-                         createService: FirebaseServiceFactory,
-                         serviceProperties?: object,
-                         appHook?: AppHook): FirebaseServiceNamespace<FirebaseServiceInterface> {
+  public registerService(
+    serviceName: string,
+    createService: FirebaseServiceFactory,
+    serviceProperties?: object,
+    appHook?: AppHook): FirebaseServiceNamespace<FirebaseServiceInterface> {
     let errorMessage;
     if (typeof serviceName === 'undefined') {
       errorMessage = `No service name provided. Service name must be a non-empty string.`;
@@ -208,11 +209,9 @@ export class FirebaseNamespaceInternals {
       this.appHooks_[serviceName] = appHook;
     }
 
-    let serviceNamespace: FirebaseServiceNamespace<FirebaseServiceInterface>;
-
     // The service namespace is an accessor function which takes a FirebaseApp instance
     // or uses the default app if no FirebaseApp instance is provided
-    serviceNamespace = (appArg?: FirebaseApp) => {
+    const serviceNamespace: FirebaseServiceNamespace<FirebaseServiceInterface> = (appArg?: FirebaseApp) => {
       if (typeof appArg === 'undefined') {
         appArg = this.app();
       }
@@ -239,7 +238,7 @@ export class FirebaseNamespaceInternals {
    * @param {FirebaseApp} app The FirebaseApp instance whose app hooks to call.
    * @param {string} eventName The event name representing which app hooks to call.
    */
-  private callAppHooks_(app: FirebaseApp, eventName: string) {
+  private callAppHooks_(app: FirebaseApp, eventName: string): void {
     Object.keys(this.serviceFactories).forEach((serviceName) => {
       if (this.appHooks_[serviceName]) {
         this.appHooks_[serviceName](eventName, app);
@@ -342,6 +341,8 @@ export class FirebaseNamespace {
     const fn: FirebaseServiceNamespace<Database> = (app?: FirebaseApp) => {
       return this.ensureApp(app).database();
     };
+
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     return Object.assign(fn, require('@firebase/database'));
   }
 
@@ -377,6 +378,8 @@ export class FirebaseNamespace {
     let fn: FirebaseServiceNamespace<Firestore> = (app?: FirebaseApp) => {
       return this.ensureApp(app).firestore();
     };
+
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const firestore = require('@google-cloud/firestore');
 
     fn = Object.assign(fn, firestore.Firestore);

@@ -38,11 +38,11 @@ export interface ModelOptions {
   displayName?: string;
   tags?: string[];
 
-  tfliteModel?: { gcsTfliteUri: string; };
+  tfliteModel?: { gcsTfliteUri: string };
 }
 
 export interface ModelUpdateOptions extends ModelOptions {
-  state?: { published?: boolean; };
+  state?: { published?: boolean };
 }
 
 /** Interface representing listModels options. */
@@ -113,14 +113,14 @@ export class MachineLearningApiClient {
       return Promise.reject(err);
     }
     return this.getUrl()
-        .then((url) => {
-          const request: HttpRequestConfig = {
-            method: 'POST',
-            url: `${url}/models`,
-            data: model,
-          };
-          return this.sendRequest<OperationResponse>(request);
-        });
+      .then((url) => {
+        const request: HttpRequestConfig = {
+          method: 'POST',
+          url: `${url}/models`,
+          data: model,
+        };
+        return this.sendRequest<OperationResponse>(request);
+      });
   }
 
   public updateModel(modelId: string, model: ModelUpdateOptions, updateMask: string[]): Promise<OperationResponse> {
@@ -131,14 +131,14 @@ export class MachineLearningApiClient {
       return Promise.reject(err);
     }
     return this.getUrl()
-        .then((url) => {
-          const request: HttpRequestConfig = {
-            method: 'PATCH',
-            url: `${url}/models/${modelId}?updateMask=${updateMask.join()}`,
-            data: model,
-          };
-          return this.sendRequest<OperationResponse>(request);
-        });
+      .then((url) => {
+        const request: HttpRequestConfig = {
+          method: 'PATCH',
+          url: `${url}/models/${modelId}?updateMask=${updateMask.join()}`,
+          data: model,
+        };
+        return this.sendRequest<OperationResponse>(request);
+      });
   }
 
 

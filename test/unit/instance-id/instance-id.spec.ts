@@ -164,7 +164,7 @@ describe('InstanceId', () => {
         .returns(Promise.resolve(null));
       stubs.push(stub);
       return iid.deleteInstanceId(testInstanceId)
-        .then((result) => {
+        .then(() => {
           // Confirm underlying API called with expected parameters.
           expect(stub).to.have.been.calledOnce.and.calledWith(testInstanceId);
         });
@@ -176,7 +176,7 @@ describe('InstanceId', () => {
         .returns(Promise.reject(expectedError));
       stubs.push(stub);
       return iid.deleteInstanceId(testInstanceId)
-        .then((result) => {
+        .then(() => {
           throw new Error('Unexpected success');
         }, (error) => {
           // Confirm underlying API called with expected parameters.

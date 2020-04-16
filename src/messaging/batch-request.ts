@@ -19,7 +19,7 @@ import {
 } from '../utils/api-request';
 import { FirebaseAppError, AppErrorCodes } from '../utils/error';
 
-const PART_BOUNDARY: string = '__END_OF_PART__';
+const PART_BOUNDARY = '__END_OF_PART__';
 const TEN_SECONDS_IN_MILLIS = 10000;
 
 /**
@@ -85,7 +85,7 @@ export class BatchRequestClient {
   }
 
   private getMultipartPayload(requests: SubRequest[]): Buffer {
-    let buffer: string = '';
+    let buffer = '';
     requests.forEach((request: SubRequest, idx: number) => {
       buffer += createPart(request, PART_BOUNDARY, idx);
     });
@@ -107,7 +107,7 @@ export class BatchRequestClient {
  */
 function createPart(request: SubRequest, boundary: string, idx: number): string {
   const serializedRequest: string = serializeSubRequest(request);
-  let part: string = `--${boundary}\r\n`;
+  let part = `--${boundary}\r\n`;
   part += `Content-Length: ${serializedRequest.length}\r\n`;
   part += 'Content-Type: application/http\r\n';
   part += `content-id: ${idx + 1}\r\n`;
@@ -127,7 +127,7 @@ function createPart(request: SubRequest, boundary: string, idx: number): string 
  */
 function serializeSubRequest(request: SubRequest): string {
   const requestBody: string = JSON.stringify(request.body);
-  let messagePayload: string = `POST ${request.url} HTTP/1.1\r\n`;
+  let messagePayload = `POST ${request.url} HTTP/1.1\r\n`;
   messagePayload += `Content-Length: ${requestBody.length}\r\n`;
   messagePayload += 'Content-Type: application/json; charset=UTF-8\r\n';
   if (request.headers) {
