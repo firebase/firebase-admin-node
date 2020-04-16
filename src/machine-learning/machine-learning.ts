@@ -104,11 +104,11 @@ export class MachineLearning implements FirebaseServiceInterface {
    * @return {Promise<Model>} A Promise fulfilled with the updated model.
    */
   public updateModel(modelId: string, model: ModelOptions): Promise<Model> {
-     const updateMask = utils.generateUpdateMask(model);
-     return this.signUrlIfPresent(model)
+    const updateMask = utils.generateUpdateMask(model);
+    return this.signUrlIfPresent(model)
       .then((modelContent) => this.client.updateModel(modelId, modelContent, updateMask))
       .then((operation) => handleOperation(operation));
-   }
+  }
 
   /**
    * Publishes a model in Firebase ML.
@@ -253,9 +253,9 @@ export class Model {
       !validator.isNonEmptyString(model.updateTime) ||
       !validator.isNonEmptyString(model.displayName) ||
       !validator.isNonEmptyString(model.etag)) {
-        throw new FirebaseMachineLearningError(
-          'invalid-server-response',
-          `Invalid Model response: ${JSON.stringify(model)}`);
+      throw new FirebaseMachineLearningError(
+        'invalid-server-response',
+        `Invalid Model response: ${JSON.stringify(model)}`);
     }
 
     this.modelId = extractModelId(model.name);

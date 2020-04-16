@@ -107,7 +107,7 @@ gulp.task('copyDatabase', function() {
 });
 
 gulp.task('copyTypings', function() {
-  return gulp.src('src/index.d.ts')
+  return gulp.src('src/*.d.ts')
     // Add header
     .pipe(header(banner))
 

@@ -16,7 +16,6 @@
 
 'use strict';
 
-import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
@@ -34,6 +33,7 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 function parseHttpRequest(text: string | Buffer): any {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const httpMessageParser = require('http-message-parser');
   return httpMessageParser(text);
 }
@@ -50,14 +50,14 @@ function getParsedPartData(obj: object): string {
 function createMultipartResponse(success: object[], failures: object[] = []): HttpResponse {
   const multipart: Buffer[] = [];
   success.forEach((part) => {
-    let payload: string = '';
+    let payload = '';
     payload += `HTTP/1.1 200 OK\r\n`;
     payload += `Content-type: application/json\r\n\r\n`;
     payload += `${JSON.stringify(part)}\r\n`;
     multipart.push(Buffer.from(payload, 'utf-8'));
   });
   failures.forEach((part) => {
-    let payload: string = '';
+    let payload = '';
     payload += `HTTP/1.1 500 Internal Server Error\r\n`;
     payload += `Content-type: application/json\r\n\r\n`;
     payload += `${JSON.stringify(part)}\r\n`;
@@ -242,7 +242,7 @@ describe('BatchRequestClient', () => {
     });
   });
 
-  function checkOutgoingRequest(stub: sinon.SinonStub, requests: SubRequest[]) {
+  function checkOutgoingRequest(stub: sinon.SinonStub, requests: SubRequest[]): void {
     expect(stub).to.have.been.calledOnce;
     const args: HttpRequestConfig = stub.getCall(0).args[0];
     expect(args.method).to.equal('POST');

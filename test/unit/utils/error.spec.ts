@@ -80,7 +80,7 @@ describe('FirebaseAuthError', () => {
         const error = FirebaseAuthError.fromServerError('USER_NOT_FOUND');
         expect(error.code).to.be.equal('auth/user-not-found');
         expect(error.message).to.be.equal(
-            'There is no user record corresponding to the provided identifier.');
+          'There is no user record corresponding to the provided identifier.');
       });
 
       it('should initialize an error from an unexpected server code', () => {
@@ -100,22 +100,22 @@ describe('FirebaseAuthError', () => {
     describe('with message specified', () => {
       it('should initialize an error from an expected server code', () => {
         const error = FirebaseAuthError.fromServerError(
-            'USER_NOT_FOUND', 'Invalid uid');
+          'USER_NOT_FOUND', 'Invalid uid');
         expect(error.code).to.be.equal('auth/user-not-found');
         expect(error.message).to.be.equal('Invalid uid');
       });
 
       it('should initialize an error from an unexpected server code', () => {
         const error = FirebaseAuthError.fromServerError(
-            'UNEXPECTED_ERROR', 'An unexpected error occurred.');
+          'UNEXPECTED_ERROR', 'An unexpected error occurred.');
         expect(error.code).to.be.equal('auth/internal-error');
         expect(error.message).to.be.equal('An unexpected error occurred.');
       });
 
       it('should initialize an error from an expected server with server detailed message', () => {
         const error = FirebaseAuthError.fromServerError(
-            'CONFIGURATION_NOT_FOUND : more details',
-            'Ignored message');
+          'CONFIGURATION_NOT_FOUND : more details',
+          'Ignored message');
         expect(error.code).to.be.equal('auth/configuration-not-found');
         expect(error.message).to.be.equal('more details');
       });
@@ -131,14 +131,14 @@ describe('FirebaseAuthError', () => {
 
       it('should not include raw server response from an expected server code', () => {
         const error = FirebaseAuthError.fromServerError(
-            'USER_NOT_FOUND', 'Invalid uid', mockRawServerResponse);
+          'USER_NOT_FOUND', 'Invalid uid', mockRawServerResponse);
         expect(error.code).to.be.equal('auth/user-not-found');
         expect(error.message).to.be.equal('Invalid uid');
       });
 
       it('should include raw server response from an unexpected server code', () => {
         const error = FirebaseAuthError.fromServerError(
-            'UNEXPECTED_ERROR', 'An unexpected error occurred.', mockRawServerResponse);
+          'UNEXPECTED_ERROR', 'An unexpected error occurred.', mockRawServerResponse);
         expect(error.code).to.be.equal('auth/internal-error');
         expect(error.message).to.be.equal(
           'An unexpected error occurred. Raw server response: "' +

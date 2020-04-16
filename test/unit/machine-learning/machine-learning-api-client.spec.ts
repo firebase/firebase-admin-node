@@ -489,8 +489,8 @@ describe('MachineLearningApiClient', () => {
 
     it('should throw unknown-error when error code is not present', () => {
       const stub = sinon
-      .stub(HttpClient.prototype, 'send')
-      .rejects(utils.errorFrom({}, 404));
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom({}, 404));
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError('unknown-error', 'Unknown server error: {}');
       return apiClient.listModels()

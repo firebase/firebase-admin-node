@@ -30,6 +30,10 @@ toc:
     path: /docs/reference/admin/node/admin.auth.AuthProviderConfig
   - title: "AuthProviderConfigFilter"
     path: /docs/reference/admin/node/admin.auth.AuthProviderConfigFilter
+  - title: "CreateMultiFactorInfoRequest"
+    path: /docs/reference/admin/node/admin.auth.CreateMultiFactorInfoRequest
+  - title: "CreatePhoneMultiFactorInfoRequest"
+    path: /docs/reference/admin/node/admin.auth.CreatePhoneMultiFactorInfoRequest
   - title: "CreateRequest"
     path: /docs/reference/admin/node/admin.auth.CreateRequest
   - title: "CreateTenantRequest"
@@ -38,10 +42,20 @@ toc:
     path: /docs/reference/admin/node/admin.auth.ListProviderConfigResults
   - title: "ListTenantsResult"
     path: /docs/reference/admin/node/admin.auth.ListTenantsResult
+  - title: "MultiFactorCreateSettings"
+    path: /docs/reference/admin/node/admin.auth.MultiFactorCreateSettings
+  - title: "MultiFactorInfo"
+    path: /docs/reference/admin/node/admin.auth.MultiFactorInfo
+  - title: "MultiFactorSettings"
+    path: /docs/reference/admin/node/admin.auth.MultiFactorSettings
+  - title: "MultiFactorUpdateSettings"
+    path: /docs/reference/admin/node/admin.auth.MultiFactorUpdateSettings
   - title: "OIDCAuthProviderConfig"
     path: /docs/reference/admin/node/admin.auth.OIDCAuthProviderConfig
   - title: "OIDCUpdateAuthProviderRequest"
     path: /docs/reference/admin/node/admin.auth.OIDCUpdateAuthProviderRequest
+  - title: "PhoneMultiFactorInfo"
+    path: /docs/reference/admin/node/admin.auth.PhoneMultiFactorInfo
   - title: "SAMLAuthProviderConfig"
     path: /docs/reference/admin/node/admin.auth.SAMLAuthProviderConfig
   - title: "SAMLUpdateAuthProviderRequest"
@@ -52,6 +66,10 @@ toc:
     path: /docs/reference/admin/node/admin.auth.TenantAwareAuth
   - title: "TenantManager"
     path: /docs/reference/admin/node/admin.auth.TenantManager
+  - title: "UpdateMultiFactorInfoRequest"
+    path: /docs/reference/admin/node/admin.auth.UpdateMultiFactorInfoRequest
+  - title: "UpdatePhoneMultiFactorInfoRequest"
+    path: /docs/reference/admin/node/admin.auth.UpdatePhoneMultiFactorInfoRequest
   - title: "UpdateRequest"
     path: /docs/reference/admin/node/admin.auth.UpdateRequest
   - title: "UpdateTenantRequest"
@@ -68,6 +86,10 @@ toc:
     path: /docs/reference/admin/node/admin.auth.UserInfo
   - title: "UserMetadata"
     path: /docs/reference/admin/node/admin.auth.UserMetadata
+  - title: "UserMetadataRequest"
+    path: /docs/reference/admin/node/admin.auth.UserMetadataRequest
+  - title: "UserProviderRequest"
+    path: /docs/reference/admin/node/admin.auth.UserProviderRequest
   - title: "UserRecord"
     path: /docs/reference/admin/node/admin.auth.UserRecord
   - title: "SessionCookieOptions"

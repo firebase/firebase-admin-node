@@ -21,9 +21,8 @@ import path = require('path');
 import {random} from 'lodash';
 import { Credential, GoogleOAuthAccessToken } from '../../src/auth/credential';
 
-/* tslint:disable:no-var-requires */
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const chalk = require('chalk');
-/* tslint:enable:no-var-requires */
 
 export let databaseUrl: string;
 export let storageBucket: string;
@@ -126,7 +125,7 @@ class CertificatelessCredential implements Credential {
  * @param allowNumbers Whether to allow numbers in the generated string. The default is true.
  * @return A random string of the provided length.
  */
-export function generateRandomString(length: number, allowNumbers: boolean = true): string {
+export function generateRandomString(length: number, allowNumbers = true): string {
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' +
       (allowNumbers ? '0123456789' : '');
   let text = '';

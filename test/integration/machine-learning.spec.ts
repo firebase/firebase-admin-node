@@ -26,11 +26,11 @@ describe('admin.machineLearning', () => {
 
   const modelsToDelete: string[] = [];
 
-  function scheduleForDelete(model: admin.machineLearning.Model) {
+  function scheduleForDelete(model: admin.machineLearning.Model): void {
     modelsToDelete.push(model.modelId);
   }
 
-  function unscheduleForDelete(model: admin.machineLearning.Model) {
+  function unscheduleForDelete(model: admin.machineLearning.Model): void {
     modelsToDelete.splice(modelsToDelete.indexOf(model.modelId), 1);
   }
 
@@ -43,8 +43,8 @@ describe('admin.machineLearning', () => {
     return Promise.all(promises);
   }
 
-  function createTemporaryModel(options?: admin.machineLearning.ModelOptions)
-    : Promise<admin.machineLearning.Model> {
+  function createTemporaryModel(options?: admin.machineLearning.ModelOptions):
+    Promise<admin.machineLearning.Model> {
     let modelOptions: admin.machineLearning.ModelOptions = {
       displayName: 'nodejs_integration_temp_model',
     };
@@ -111,10 +111,10 @@ describe('admin.machineLearning', () => {
         .then((fileName: string) => {
           modelOptions.tfliteModel!.gcsTfliteUri = fileName;
           return admin.machineLearning().createModel(modelOptions)
-          .then((model) => {
-            scheduleForDelete(model);
-            verifyModel(model, modelOptions);
-          });
+            .then((model) => {
+              scheduleForDelete(model);
+              verifyModel(model, modelOptions);
+            });
         });
     });
 
@@ -152,8 +152,8 @@ describe('admin.machineLearning', () => {
       };
       return createTemporaryModel({displayName: 'node-integration-invalid-argument'})
         .then((model) => admin.machineLearning().updateModel(model.modelId, modelOptions)
-            .should.eventually.be.rejected.and.have.property(
-                'code', 'machine-learning/invalid-argument'));
+          .should.eventually.be.rejected.and.have.property(
+            'code', 'machine-learning/invalid-argument'));
     });
 
     it('updates the displayName', () => {
@@ -191,8 +191,8 @@ describe('admin.machineLearning', () => {
 
     it('updates the tflite file', () => {
       return Promise.all([
-          createTemporaryModel(),
-          uploadModelToGcs('model1.tflite', 'valid_model.tflite')])
+        createTemporaryModel(),
+        uploadModelToGcs('model1.tflite', 'valid_model.tflite')])
         .then(([model, fileName]) => {
           const modelOptions: admin.machineLearning.ModelOptions = {
             tfliteModel: {gcsTfliteUri: fileName},
@@ -232,8 +232,8 @@ describe('admin.machineLearning', () => {
 
     it('rejects with invalid-argument when the ModelId is invalid', () => {
       return admin.machineLearning().publishModel('invalid-model-id')
-          .should.eventually.be.rejected.and.have.property(
-            'code', 'machine-learning/invalid-argument');
+        .should.eventually.be.rejected.and.have.property(
+          'code', 'machine-learning/invalid-argument');
     });
 
     it('publishes the model successfully', () => {
@@ -267,8 +267,8 @@ describe('admin.machineLearning', () => {
 
     it('rejects with invalid-argument when the ModelId is invalid', () => {
       return admin.machineLearning().unpublishModel('invalid-model-id')
-          .should.eventually.be.rejected.and.have.property(
-            'code', 'machine-learning/invalid-argument');
+        .should.eventually.be.rejected.and.have.property(
+          'code', 'machine-learning/invalid-argument');
     });
 
     it('unpublishes the model successfully', () => {
@@ -446,8 +446,8 @@ describe('admin.machineLearning', () => {
 
     it('rejects with invalid-argument when the Model ID is invalid', () => {
       return admin.machineLearning().deleteModel('invalid-model-id')
-      .should.eventually.be.rejected.and.have.property(
-        'code', 'machine-learning/invalid-argument');
+        .should.eventually.be.rejected.and.have.property(
+          'code', 'machine-learning/invalid-argument');
     });
 
     it('deletes existing Model', () => {
@@ -464,7 +464,7 @@ describe('admin.machineLearning', () => {
     });
   });
 
-  function verifyModel(model: admin.machineLearning.Model, expectedOptions: admin.machineLearning.ModelOptions) {
+  function verifyModel(model: admin.machineLearning.Model, expectedOptions: admin.machineLearning.ModelOptions): void {
     if (expectedOptions.displayName) {
       expect(model.displayName).to.equal(expectedOptions.displayName);
     } else {
@@ -487,7 +487,7 @@ describe('admin.machineLearning', () => {
   }
 });
 
-function verifyTfliteModel(model: admin.machineLearning.Model, expectedGcsTfliteUri: string) {
+function verifyTfliteModel(model: admin.machineLearning.Model, expectedGcsTfliteUri: string): void {
   expect(model.tfliteModel!.gcsTfliteUri).to.equal(expectedGcsTfliteUri);
   if (expectedGcsTfliteUri.endsWith('invalid_model.tflite')) {
     expect(model.modelHash).to.be.empty;

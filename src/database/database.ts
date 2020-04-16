@@ -16,7 +16,7 @@ import { AuthorizedHttpClient, HttpRequestConfig, HttpError } from '../utils/api
 class DatabaseInternals implements FirebaseServiceInternalsInterface {
 
   public databases: {
-    [dbUrl: string]: Database,
+    [dbUrl: string]: Database;
   } = {};
 
   /**
@@ -77,8 +77,8 @@ export class DatabaseService implements FirebaseServiceInterface {
 
     let db: Database = this.INTERNAL.databases[dbUrl];
     if (typeof db === 'undefined') {
-      const rtdb = require('@firebase/database');
-      const { version } = require('../../package.json');
+      const rtdb = require('@firebase/database'); // eslint-disable-line @typescript-eslint/no-var-requires
+      const { version } = require('../../package.json'); // eslint-disable-line @typescript-eslint/no-var-requires
       db = rtdb.initStandalone(this.appInternal, dbUrl, version).instance;
 
       const rulesClient = new DatabaseRulesClient(this.app, dbUrl);
@@ -183,11 +183,11 @@ class DatabaseRulesClient {
     if (!validator.isNonEmptyString(source) &&
       !validator.isBuffer(source)  &&
       !validator.isNonNullObject(source)) {
-        const error = new FirebaseDatabaseError({
-          code: 'invalid-argument',
-          message: 'Source must be a non-empty string, Buffer or an object.',
-        });
-        return Promise.reject(error);
+      const error = new FirebaseDatabaseError({
+        code: 'invalid-argument',
+        message: 'Source must be a non-empty string, Buffer or an object.',
+      });
+      return Promise.reject(error);
     }
 
     const req: HttpRequestConfig = {

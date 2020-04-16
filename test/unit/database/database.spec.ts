@@ -152,8 +152,8 @@ describe('Database', () => {
     const rulesPath = '.settings/rules.json';
 
     function callParamsForGet(
-      strict: boolean = false,
-      url: string = `https://databasename.firebaseio.com/${rulesPath}`,
+      strict = false,
+      url = `https://databasename.firebaseio.com/${rulesPath}`,
     ): HttpRequestConfig {
 
       const params: HttpRequestConfig = {
@@ -305,7 +305,7 @@ describe('Database', () => {
 
     function callParamsForPut(
       data: string | Buffer | object,
-      url: string = `https://databasename.firebaseio.com/${rulesPath}`,
+      url = `https://databasename.firebaseio.com/${rulesPath}`,
     ): HttpRequestConfig {
 
       return {

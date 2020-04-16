@@ -59,7 +59,7 @@ function verifyBucket(bucket: Bucket, testName: string): Promise<void> {
       expect(data[0].toString()).to.equal(expected);
       return file.delete();
     })
-    .then((resp) => {
+    .then(() => {
       return file.exists();
     })
     .then((data) => {
