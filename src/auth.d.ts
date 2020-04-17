@@ -427,7 +427,7 @@ export namespace admin.auth {
 
     /**
      * Whether or not the email of the user to whom the ID token belongs is
-     * verified, provided the user has an email..
+     * verified, provided the user has an email.
      */
     email_verified?: boolean;
 
