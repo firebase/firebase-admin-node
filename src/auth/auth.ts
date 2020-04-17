@@ -64,6 +64,8 @@ export interface ListUsersResult {
 export interface DecodedIdToken {
   aud: string;
   auth_time: number;
+  email?: string;
+  email_verified?: boolean;
   exp: number;
   firebase: {
     identities: {
@@ -76,6 +78,8 @@ export interface DecodedIdToken {
   };
   iat: number;
   iss: string;
+  phone_number?: string;
+  picture?: string;
   sub: string;
   tenant?: string;
   [key: string]: any;
