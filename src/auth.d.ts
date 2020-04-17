@@ -421,13 +421,13 @@ export namespace admin.auth {
     auth_time: number;
 
     /**
-     * The email corresponding to the user who the ID token belonged to, if available.
+     * The email of the user to whom the ID token belongs, if available.
      */
     email?: string;
 
     /**
-     * Whether the email corresponding to the user who the ID token belonged to is
-     * verified or not, provided the user has an email.
+     * Whether or not the email of the user to whom the ID token belongs is
+     * verified, provided the user has an email..
      */
     email_verified?: boolean;
 
@@ -506,14 +506,12 @@ export namespace admin.auth {
     iss: string;
 
     /**
-     * The phone number corresponding to the user who the ID token belonged to,
-     * if available.
+     * The phone number of the user to whom the ID token belongs, if available.
      */
     phone_number?: string;
 
     /**
-     * The photo URL corresponding to the user who the ID token belonged to,
-     * if available.
+     * The photo URL for the user to whom the ID token belongs, if available.
      */
     picture?: string;
 
