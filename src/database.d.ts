@@ -986,8 +986,8 @@ export namespace admin.database {
       */
     on(
       eventType: admin.database.EventType,
-      callback: (a: admin.database.DataSnapshot | null, b?: string) => any,
-      cancelCallbackOrContext?: Object | null,
+      callback: (a: admin.database.DataSnapshot, b?: string | null) => any,
+      cancelCallbackOrContext?: ((a: Error) => any) | Object | null,
       context?: Object | null
     ): (a: admin.database.DataSnapshot | null, b?: string) => any;
 
@@ -1024,8 +1024,8 @@ export namespace admin.database {
      */
     once(
       eventType: admin.database.EventType,
-      successCallback?: (a: admin.database.DataSnapshot, b?: string) => any,
-      failureCallbackOrContext?: Object | null,
+      successCallback?: (a: admin.database.DataSnapshot, b?: string | null ) => any,
+      failureCallbackOrContext?: ((a: Error) => void) | Object | null,
       context?: Object | null
     ): Promise<admin.database.DataSnapshot>;
 
@@ -1272,6 +1272,7 @@ export namespace admin.database {
      * ```
      */
     root: admin.database.Reference;
+    /** @deprecated Removed in next major release to match Web SDK typings. */
     path: string;
 
     /**
