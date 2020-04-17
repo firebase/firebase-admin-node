@@ -1421,7 +1421,7 @@ describe('admin.auth', () => {
 
   describe('importUsers()', () => {
     const randomUid = 'import_' + generateRandomString(20).toLowerCase();
-    let importUserRecord: any;
+    let importUserRecord: admin.auth.UserImportRecord;
     const rawPassword = 'password';
     const rawSalt = 'NaCl';
     // Simulate a user stored using SCRYPT being migrated to Firebase Auth via importUsers.
@@ -1635,15 +1635,15 @@ describe('admin.auth', () => {
           return admin.auth().getUser(uid);
         }).then((userRecord) => {
           // The phone number provider will be appended to the list of accounts.
-          importUserRecord.providerData.push({
-            uid: importUserRecord.phoneNumber,
+          importUserRecord.providerData?.push({
+            uid: importUserRecord.phoneNumber!,
             providerId: 'phone',
-            phoneNumber: importUserRecord.phoneNumber,
+            phoneNumber: importUserRecord.phoneNumber!,
           });
           const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
           for (const key of Object.keys(importUserRecord)) {
             expect(JSON.stringify(actualUserRecord[key]))
-              .to.be.equal(JSON.stringify(importUserRecord[key]));
+              .to.be.equal(JSON.stringify((importUserRecord as any)[key]));
           }
         }).should.eventually.be.fulfilled;
     });
@@ -1652,6 +1652,23 @@ describe('admin.auth', () => {
       const uid = generateRandomString(20).toLowerCase();
       const email = uid + '@example.com';
       const now = new Date(1476235905000).toUTCString();
+      const enrolledFactors: admin.auth.UpdatePhoneMultiFactorInfoRequest[] = [
+        {
+          uid: 'mfaUid1',
+          phoneNumber: '+16505550001',
+          displayName: 'Work phone number',
+          factorId: 'phone',
+          enrollmentTime: now,
+        } ,
+        {
+          uid: 'mfaUid2',
+          phoneNumber: '+16505550002',
+          displayName: 'Personal phone number',
+          factorId: 'phone',
+          enrollmentTime: now,
+        },
+      ];
+
       importUserRecord = {
         uid,
         email,
@@ -1671,22 +1688,7 @@ describe('admin.auth', () => {
           },
         ],
         multiFactor: {
-          enrolledFactors: [
-            {
-              uid: 'mfaUid1',
-              phoneNumber: '+16505550001',
-              displayName: 'Work phone number',
-              factorId: 'phone',
-              enrollmentTime: now,
-            },
-            {
-              uid: 'mfaUid2',
-              phoneNumber: '+16505550002',
-              displayName: 'Personal phone number',
-              factorId: 'phone',
-              enrollmentTime: now,
-            },
-          ],
+          enrolledFactors,
         },
       };
       uids.push(importUserRecord.uid);
@@ -1702,7 +1704,7 @@ describe('admin.auth', () => {
           const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
           expect(actualUserRecord.multiFactor.enrolledFactors.length).to.equal(2);
           expect(actualUserRecord.multiFactor.enrolledFactors)
-            .to.deep.equal(importUserRecord.multiFactor.enrolledFactors);
+            .to.deep.equal(importUserRecord.multiFactor?.enrolledFactors);
         }).should.eventually.be.fulfilled;
     });
 
@@ -1741,7 +1743,9 @@ describe('admin.auth', () => {
  * @retunr {Promise<void>} A promise that resolved on success.
  */
 function testImportAndSignInUser(
-  importUserRecord: any, importOptions: any, rawPassword: string): Promise<void> {
+  importUserRecord: admin.auth.UserImportRecord,
+  importOptions: any,
+  rawPassword: string): Promise<void> {
   const users = [importUserRecord];
   // Import the user record.
   return admin.auth().importUsers(users, importOptions)
@@ -1751,7 +1755,7 @@ function testImportAndSignInUser(
       expect(result.successCount).to.equal(1);
       expect(result.errors.length).to.equal(0);
       // Sign in with an email and password to the imported account.
-      return clientAuth().signInWithEmailAndPassword(users[0].email, rawPassword);
+      return clientAuth().signInWithEmailAndPassword(users[0].email!, rawPassword);
     })
     .then(({user}) => {
       // Confirm successful sign-in.
