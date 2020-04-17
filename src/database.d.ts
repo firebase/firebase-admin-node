@@ -1272,6 +1272,8 @@ export namespace admin.database {
      * ```
      */
     root: admin.database.Reference;
+    /** @deprecated Removed in next major release to match Web SDK typings. */
+    path: string;
 
     /**
      * Gets a `Reference` for the location at the specified relative path.
