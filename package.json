@@ -54,7 +54,7 @@
   ],
   "types": "./lib/index.d.ts",
   "dependencies": {
-    "@firebase/database": "^0.5.17",
+    "@firebase/database": "^0.6.0",
     "@types/node": "^8.10.59",
     "dicer": "^0.3.0",
     "jsonwebtoken": "8.1.0",
@@ -65,7 +65,7 @@
     "@google-cloud/storage": "^4.1.2"
   },
   "devDependencies": {
-    "@firebase/app": "^0.5.0",
+    "@firebase/app": "^0.6.1",
     "@firebase/auth": "^0.13.3",
     "@firebase/auth-types": "^0.9.3",
     "@types/bcrypt": "^2.0.0",
