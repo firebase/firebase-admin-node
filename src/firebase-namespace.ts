@@ -28,6 +28,7 @@ import {
 } from './auth/credential';
 
 import {Auth} from './auth/auth';
+import {MachineLearning} from './machine-learning/machine-learning';
 import {Messaging} from './messaging/messaging';
 import {Storage} from './storage/storage';
 import {Database} from '@firebase/database';
@@ -397,6 +398,21 @@ export class FirebaseNamespace {
     });
 
     return fn;
+  }
+
+  /**
+   * Gets the `MachineLearning` service namespace. The returned namespace can be
+   * used to get the `MachineLearning` service for the default app or an
+   * explicityly specified app.
+   */
+  get machineLearning(): FirebaseServiceNamespace<MachineLearning> {
+    const fn: FirebaseServiceNamespace<MachineLearning> =
+        (app?: FirebaseApp) => {
+          return this.ensureApp(app).machineLearning();
+        };
+    const machineLearning =
+        require('./machine-learning/machine-learning').MachineLearning;
+    return Object.assign(fn, {MachineLearning: machineLearning});
   }
 
   /**

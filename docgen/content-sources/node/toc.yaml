@@ -132,6 +132,22 @@ toc:
   - title: "InstanceId"
     path: /docs/reference/admin/node/admin.instanceId.InstanceId
 
+- title: "machinelearning"
+  path: /docs/reference/admin/node/admin.machinelearning
+  section:
+  - title: "ListModelsOptions"
+    path: /docs/reference/admin/node/admin.machinelearning.ListModelsOptions
+  - title: "ListModelsResult"
+    path: /docs/reference/admin/node/admin.machinelearning.ListModelsResult
+  - title: "MachineLearning"
+    path: /docs/reference/admin/node/admin.machinelearning.MachineLearning
+  - title: "Model"
+    path: /docs/reference/admin/node/admin.machinelearning.Model
+  - title: "ModelOptions"
+    path: /docs/reference/admin/node/admin.machinelearning.ModelOptions
+  - title: "TFLiteModel"
+    path: /docs/reference/admin/node/admin.machinelearning.TFLiteModel
+
 - title: "admin.messaging"
   path: /docs/reference/admin/node/admin.messaging
   section:

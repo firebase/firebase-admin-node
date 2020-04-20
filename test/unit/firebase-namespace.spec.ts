@@ -37,6 +37,7 @@ import {
   ServerValue,
 } from '@firebase/database';
 import {Messaging} from '../../src/messaging/messaging';
+import {MachineLearning} from '../../src/machine-learning/machine-learning';
 import {Storage} from '../../src/storage/storage';
 import {
   Firestore,
@@ -470,6 +471,38 @@ describe('FirebaseNamespace', () => {
 
     it('should return a reference to Messaging type', () => {
       expect(firebaseNamespace.messaging.Messaging).to.be.deep.equal(Messaging);
+    });
+  });
+
+  describe('#machine-learning()', () => {
+    it('should throw when called before initializating an app', () => {
+      expect(() => {
+        firebaseNamespace.machineLearning();
+      }).to.throw(DEFAULT_APP_NOT_FOUND);
+    });
+
+    it('should throw when default app is not initialized', () => {
+      firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
+      expect(() => {
+        firebaseNamespace.machineLearning();
+      }).to.throw(DEFAULT_APP_NOT_FOUND);
+    });
+
+    it('should return a valid namespace when the default app is initialized', () => {
+      const app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions);
+      const ml: MachineLearning = firebaseNamespace.machineLearning();
+      expect(ml.app).to.be.deep.equal(app);
+    });
+
+    it('should return a valid namespace when the named app is initialized', () => {
+      const app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
+      const ml: MachineLearning = firebaseNamespace.machineLearning(app);
+      expect(ml.app).to.be.deep.equal(app);
+    });
+
+    it('should return a reference to Machine Learning type', () => {
+      expect(firebaseNamespace.machineLearning.MachineLearning)
+        .to.be.deep.equal(MachineLearning);
     });
   });
 

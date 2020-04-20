@@ -32,6 +32,7 @@ import {FirebaseNamespace, FirebaseNamespaceInternals, FIREBASE_CONFIG_VAR} from
 
 import {Auth} from '../../src/auth/auth';
 import {Messaging} from '../../src/messaging/messaging';
+import {MachineLearning} from '../../src/machine-learning/machine-learning';
 import {Storage} from '../../src/storage/storage';
 import {Firestore} from '@google-cloud/firestore';
 import {Database} from '@firebase/database';
@@ -392,6 +393,32 @@ describe('FirebaseApp', () => {
       const serviceNamespace1: Messaging = app.messaging();
       const serviceNamespace2: Messaging = app.messaging();
       expect(serviceNamespace1).to.deep.equal(serviceNamespace2);
+    });
+  });
+
+  describe('machineLearning()', () => {
+    it('should throw if the app has already been deleted', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      return app.delete().then(() => {
+        expect(() => {
+          return app.machineLearning();
+        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
+      });
+    });
+
+    it('should return the machineLearning client', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      const machineLearning: MachineLearning = app.machineLearning();
+      expect(machineLearning).to.not.be.null;
+    });
+
+    it('should return a cached version of MachineLearning on subsequent calls', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+      const service1: MachineLearning = app.machineLearning();
+      const service2: MachineLearning = app.machineLearning();
+      expect(service1).to.equal(service2);
     });
   });
 
