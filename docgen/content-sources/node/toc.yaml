@@ -132,7 +132,7 @@ toc:
   - title: "InstanceId"
     path: /docs/reference/admin/node/admin.instanceId.InstanceId
 
-- title: "machinelearning"
+- title: "admin.machineLearning"
   path: /docs/reference/admin/node/admin.machinelearning
   section:
   - title: "ListModelsOptions"
