@@ -421,6 +421,17 @@ export namespace admin.auth {
     auth_time: number;
 
     /**
+     * The email of the user to whom the ID token belongs, if available.
+     */
+    email?: string;
+
+    /**
+     * Whether or not the email of the user to whom the ID token belongs is
+     * verified, provided the user has an email.
+     */
+    email_verified?: boolean;
+
+    /**
      * The ID token's expiration time, in seconds since the Unix epoch. That is, the
      * time at which this ID token expires and should no longer be considered valid.
      *
@@ -493,6 +504,16 @@ export namespace admin.auth {
      * same project ID specified in the [`aud`](#aud) property.
      */
     iss: string;
+
+    /**
+     * The phone number of the user to whom the ID token belongs, if available.
+     */
+    phone_number?: string;
+
+    /**
+     * The photo URL for the user to whom the ID token belongs, if available.
+     */
+    picture?: string;
 
     /**
      * The `uid` corresponding to the user who the ID token belonged to.
