@@ -40,6 +40,7 @@ import {InstanceId} from '../../src/instance-id/instance-id';
 import {ProjectManagement} from '../../src/project-management/project-management';
 import { SecurityRules } from '../../src/security-rules/security-rules';
 import { FirebaseAppError, AppErrorCodes } from '../../src/utils/error';
+import { RemoteConfig } from '../../src/remote-config/remote-config';
 
 chai.should();
 chai.use(sinonChai);
@@ -523,7 +524,7 @@ describe('FirebaseApp', () => {
       expect(gcsNamespace).not.be.null;
     });
 
-    it('should return a cached version of Messaging on subsequent calls', () => {
+    it('should return a cached version of Storage on subsequent calls', () => {
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
       const serviceNamespace1: Storage = app.storage();
       const serviceNamespace2: Storage = app.storage();
@@ -631,6 +632,32 @@ describe('FirebaseApp', () => {
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
       const service1: SecurityRules = app.securityRules();
       const service2: SecurityRules = app.securityRules();
+      expect(service1).to.equal(service2);
+    });
+  });
+
+  describe('remoteConfig()', () => {
+    it('should throw if the app has already been deleted', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      return app.delete().then(() => {
+        expect(() => {
+          return app.remoteConfig();
+        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
+      });
+    });
+
+    it('should return the RemoteConfig client', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      const remoteConfig: RemoteConfig = app.remoteConfig();
+      expect(remoteConfig).to.not.be.null;
+    });
+
+    it('should return a cached version of RemoteConfig on subsequent calls', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+      const service1: RemoteConfig = app.remoteConfig();
+      const service2: RemoteConfig = app.remoteConfig();
       expect(service1).to.equal(service2);
     });
   });

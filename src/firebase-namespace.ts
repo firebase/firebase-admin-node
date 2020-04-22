@@ -36,6 +36,7 @@ import {Firestore} from '@google-cloud/firestore';
 import {InstanceId} from './instance-id/instance-id';
 import {ProjectManagement} from './project-management/project-management';
 import { SecurityRules } from './security-rules/security-rules';
+import { RemoteConfig } from './remote-config/remote-config';
 
 import * as validator from './utils/validator';
 
@@ -449,6 +450,18 @@ export class FirebaseNamespace {
     };
     const securityRules = require('./security-rules/security-rules').SecurityRules;
     return Object.assign(fn, {SecurityRules: securityRules});
+  }
+
+  /**
+   * Gets the `RemoteConfig` service namespace. The returned namespace can be used to get the
+   * `RemoteConfig` service for the default app or an explicitly specified app.
+   */
+  get remoteConfig(): FirebaseServiceNamespace<RemoteConfig> {
+    const fn: FirebaseServiceNamespace<RemoteConfig> = (app?: FirebaseApp) => {
+      return this.ensureApp(app).remoteConfig();
+    };
+    const remoteConfig = require('./remote-config/remote-config').RemoteConfig;
+    return Object.assign(fn, { RemoteConfig: remoteConfig });
   }
 
   /**

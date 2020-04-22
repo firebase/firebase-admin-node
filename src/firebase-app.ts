@@ -33,6 +33,7 @@ import {InstanceId} from './instance-id/instance-id';
 
 import {ProjectManagement} from './project-management/project-management';
 import {SecurityRules} from './security-rules/security-rules';
+import { RemoteConfig } from './remote-config/remote-config';
 
 import {Agent} from 'http';
 
@@ -392,6 +393,18 @@ export class FirebaseApp {
       const securityRulesService: typeof SecurityRules =
           require('./security-rules/security-rules').SecurityRules;
       return new securityRulesService(this);
+    });
+  }
+
+  /**
+   * Returns the RemoteConfig service instance associated with this app.
+   *
+   * @return {RemoteConfig} The RemoteConfig service instance of this app.
+   */
+  public remoteConfig(): RemoteConfig {
+    return this.ensureService_('remoteConfig', () => {
+      const remoteConfigService: typeof RemoteConfig = require('./remote-config/remote-config').RemoteConfig;
+      return new remoteConfigService(this);
     });
   }
 
