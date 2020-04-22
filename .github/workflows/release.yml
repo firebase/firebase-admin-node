@@ -145,7 +145,7 @@ jobs:
       uses: ./.github/actions/send-tweet
       with:
         status: >
-          ${{ steps.preflight.outputs.version }} of @Firebase Admin Node.js SDK is avaialble.
+          ${{ steps.preflight.outputs.version }} of @Firebase Admin Node.js SDK is available.
           https://github.com/firebase/firebase-admin-node/releases/tag/${{ steps.preflight.outputs.version }}
         consumer-key: ${{ secrets.TWITTER_CONSUMER_KEY }}
         consumer-secret: ${{ secrets.TWITTER_CONSUMER_SECRET }}
