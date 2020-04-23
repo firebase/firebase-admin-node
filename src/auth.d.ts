@@ -189,7 +189,7 @@ export namespace admin.auth {
      * This is set via
      * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#setCustomUserClaims `setCustomUserClaims()`}
      */
-    customClaims?: Object;
+    customClaims?: {[key: string]: any};
 
     /**
      * The date the user's tokens are valid after, formatted as a UTC string.
@@ -753,7 +753,7 @@ export namespace admin.auth {
      * The user's custom claims object if available, typically used to define
      * user roles and propagated to an authenticated user's ID token.
      */
-    customClaims?: Object;
+    customClaims?: {[key: string]: any};
 
     /**
      * The buffer of bytes representing the user's hashed password.
