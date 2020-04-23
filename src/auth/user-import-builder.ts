@@ -71,7 +71,7 @@ export interface UserImportRecord {
   multiFactor?: {
     enrolledFactors: SecondFactor[];
   };
-  customClaims?: object;
+  customClaims?: {[key: string]: any};
   passwordHash?: Buffer;
   passwordSalt?: Buffer;
   tenantId?: string;

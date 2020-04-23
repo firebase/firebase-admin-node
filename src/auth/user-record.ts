@@ -395,7 +395,7 @@ export class UserRecord {
   public readonly providerData: UserInfo[];
   public readonly passwordHash?: string;
   public readonly passwordSalt?: string;
-  public readonly customClaims: object;
+  public readonly customClaims: {[key: string]: any};
   public readonly tenantId?: string | null;
   public readonly tokensValidAfterTime?: string;
   public readonly multiFactor?: MultiFactor;
