@@ -253,7 +253,7 @@ export class MachineLearningApiClient {
   private getUrl(): Promise<string> {
     return this.getProjectIdPrefix()
       .then((projectIdPrefix) => {
-        return `${ML_V1BETA2_API}/${this.projectIdPrefix}`;
+        return `${ML_V1BETA2_API}/${projectIdPrefix}`;
       });
   }
 
