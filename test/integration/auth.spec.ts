@@ -287,7 +287,7 @@ describe('admin.auth', () => {
         // New users should not have a lastRefreshTime set.
         expect(newUserRecord.metadata.lastRefreshTime).to.be.null;
 
-        // Login to cause the lastRefreshTime to be set.
+        // Login to set the lastRefreshTime.
         await firebase.auth!().signInWithEmailAndPassword('lastRefreshTimeUser@example.com', 'p4ssword')
           .then(() => admin.auth().getUser('lastRefreshTimeUser'))
           .then((userRecord) => {

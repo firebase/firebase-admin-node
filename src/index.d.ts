@@ -496,9 +496,9 @@ declare namespace admin.auth {
     creationTime: string;
 
     /**
-     * The time at which the user was last active (ID token refreshed), or null
-     * if the user was never active. Formatted as a UTC Date string (eg
-     * 'Sat, 03 Feb 2001 04:05:06 GMT')
+     * The time at which the user was last active (ID token refreshed),
+     * formatted as a UTC Date string (eg 'Sat, 03 Feb 2001 04:05:06 GMT').
+     * Returns null if the user was never active.
      */
     lastRefreshTime: string|null;
 
@@ -1576,7 +1576,7 @@ declare namespace admin.auth {
     /**
      * Deletes the users specified by the given uids.
      *
-     * Deleting a non-existing user won't generate an error. (i.e. this method
+     * Deleting a non-existing user won't generate an error (i.e. this method
      * is idempotent.) Non-existing users are considered to be successfully
      * deleted, and are therefore counted in the
      * `DeleteUsersResult.successCount` value.
