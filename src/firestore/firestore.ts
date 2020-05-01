@@ -17,7 +17,7 @@
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseFirestoreError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {ServiceAccountCredential, ComputeEngineCredential} from '../auth/credential';
+import {ServiceAccountCredential, isApplicationDefault} from '../auth/credential';
 import {Firestore, Settings} from '@google-cloud/firestore';
 
 import * as validator from '../utils/validator';
@@ -71,21 +71,22 @@ export function getFirestoreOptions(app: FirebaseApp): Settings {
     });
   }
 
-  const projectId: string | null = utils.getProjectId(app);
+  const projectId: string | null = utils.getExplicitProjectId(app);
   const credential = app.options.credential;
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { version: firebaseVersion } = require('../../package.json');
   if (credential instanceof ServiceAccountCredential) {
     return {
       credentials: {
-        private_key: credential.privateKey,
-        client_email: credential.clientEmail,
+        private_key: credential.privateKey, // eslint-disable-line @typescript-eslint/camelcase
+        client_email: credential.clientEmail, // eslint-disable-line @typescript-eslint/camelcase
       },
-      // When the SDK is initialized with ServiceAccountCredentials projectId is guaranteed to
-      // be available.
+      // When the SDK is initialized with ServiceAccountCredentials an explicit projectId is
+      // guaranteed to be available.
       projectId: projectId!,
       firebaseVersion,
     };
-  } else if (app.options.credential instanceof ComputeEngineCredential) {
+  } else if (isApplicationDefault(app.options.credential)) {
     // Try to use the Google application default credentials.
     // If an explicit project ID is not available, let Firestore client discover one from the
     // environment. This prevents the users from having to set GOOGLE_CLOUD_PROJECT in GCP runtimes.

@@ -32,6 +32,7 @@ import {FirebaseNamespace, FirebaseNamespaceInternals, FIREBASE_CONFIG_VAR} from
 
 import {Auth} from '../../src/auth/auth';
 import {Messaging} from '../../src/messaging/messaging';
+import {MachineLearning} from '../../src/machine-learning/machine-learning';
 import {Storage} from '../../src/storage/storage';
 import {Firestore} from '@google-cloud/firestore';
 import {Database} from '@firebase/database';
@@ -39,6 +40,7 @@ import {InstanceId} from '../../src/instance-id/instance-id';
 import {ProjectManagement} from '../../src/project-management/project-management';
 import { SecurityRules } from '../../src/security-rules/security-rules';
 import { FirebaseAppError, AppErrorCodes } from '../../src/utils/error';
+import { RemoteConfig } from '../../src/remote-config/remote-config';
 
 chai.should();
 chai.use(sinonChai);
@@ -70,8 +72,8 @@ describe('FirebaseApp', () => {
 
   beforeEach(() => {
     getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken').resolves({
-      access_token: 'mock-access-token',
-      expires_in: 3600,
+      access_token: 'mock-access-token', // eslint-disable-line @typescript-eslint/camelcase
+      expires_in: 3600, // eslint-disable-line @typescript-eslint/camelcase
     });
 
     clock = sinon.useFakeTimers(1000);
@@ -395,6 +397,32 @@ describe('FirebaseApp', () => {
     });
   });
 
+  describe('machineLearning()', () => {
+    it('should throw if the app has already been deleted', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      return app.delete().then(() => {
+        expect(() => {
+          return app.machineLearning();
+        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
+      });
+    });
+
+    it('should return the machineLearning client', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      const machineLearning: MachineLearning = app.machineLearning();
+      expect(machineLearning).to.not.be.null;
+    });
+
+    it('should return a cached version of MachineLearning on subsequent calls', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+      const service1: MachineLearning = app.machineLearning();
+      const service2: MachineLearning = app.machineLearning();
+      expect(service1).to.equal(service2);
+    });
+  });
+
   describe('database()', () => {
     afterEach(() => {
       try {
@@ -496,7 +524,7 @@ describe('FirebaseApp', () => {
       expect(gcsNamespace).not.be.null;
     });
 
-    it('should return a cached version of Messaging on subsequent calls', () => {
+    it('should return a cached version of Storage on subsequent calls', () => {
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
       const serviceNamespace1: Storage = app.storage();
       const serviceNamespace2: Storage = app.storage();
@@ -608,6 +636,32 @@ describe('FirebaseApp', () => {
     });
   });
 
+  describe('remoteConfig()', () => {
+    it('should throw if the app has already been deleted', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      return app.delete().then(() => {
+        expect(() => {
+          return app.remoteConfig();
+        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
+      });
+    });
+
+    it('should return the RemoteConfig client', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      const remoteConfig: RemoteConfig = app.remoteConfig();
+      expect(remoteConfig).to.not.be.null;
+    });
+
+    it('should return a cached version of RemoteConfig on subsequent calls', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+      const service1: RemoteConfig = app.remoteConfig();
+      const service2: RemoteConfig = app.remoteConfig();
+      expect(service1).to.equal(service2);
+    });
+  });
+
   describe('#[service]()', () => {
     it('should throw if the app has already been deleted', () => {
       firebaseNamespace.INTERNAL.registerService(mocks.serviceName, mockServiceFactory);
@@ -667,8 +721,8 @@ describe('FirebaseApp', () => {
 
     it('returns a valid token given a well-formed custom credential implementation', () => {
       const oracle: GoogleOAuthAccessToken = {
-        access_token: 'This is a custom token',
-        expires_in: ONE_HOUR_IN_SECONDS,
+        access_token: 'This is a custom token', // eslint-disable-line @typescript-eslint/camelcase
+        expires_in: ONE_HOUR_IN_SECONDS, // eslint-disable-line @typescript-eslint/camelcase
       };
       const credential = {
         getAccessToken: () => Promise.resolve(oracle),
@@ -761,8 +815,8 @@ describe('FirebaseApp', () => {
         // Restore the stubbed getAccessToken() method.
         getTokenStub.restore();
         getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken').resolves({
-          access_token: 'mock-access-token',
-          expires_in: 3600,
+          access_token: 'mock-access-token', // eslint-disable-line @typescript-eslint/camelcase
+          expires_in: 3600, // eslint-disable-line @typescript-eslint/camelcase
         });
 
         return mockApp.INTERNAL.getToken().then((token2) => {
@@ -877,7 +931,7 @@ describe('FirebaseApp', () => {
     it('resets the proactive refresh timeout upon a force refresh', () => {
       // Force a token refresh.
       return mockApp.INTERNAL.getToken(true).then((token1) => {
-         // Forward the clock to five minutes and one second before expiry.
+        // Forward the clock to five minutes and one second before expiry.
         let expiryInMilliseconds = token1.expirationTime - Date.now();
         clock.tick(expiryInMilliseconds - (5 * ONE_MINUTE_IN_MILLISECONDS) - 1000);
 
@@ -914,8 +968,8 @@ describe('FirebaseApp', () => {
       getTokenStub.restore();
       expect(mockApp.options.credential).to.exist;
       getTokenStub = sinon.stub(mockApp.options.credential!, 'getAccessToken').resolves({
-        access_token: utils.generateRandomAccessToken(),
-        expires_in: 3 * 60 + 10,
+        access_token: utils.generateRandomAccessToken(), // eslint-disable-line @typescript-eslint/camelcase
+        expires_in: 3 * 60 + 10, // eslint-disable-line @typescript-eslint/camelcase
       });
       // Expect the call count to initially be zero.
       expect(getTokenStub.callCount).to.equal(0);

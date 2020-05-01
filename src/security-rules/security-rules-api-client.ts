@@ -35,7 +35,7 @@ export interface Release {
 
 export interface RulesetContent {
   readonly source: {
-    readonly files: Array<{ name: string, content: string }>;
+    readonly files: Array<{ name: string; content: string }>;
   };
 }
 
@@ -45,7 +45,7 @@ export interface RulesetResponse extends RulesetContent {
 }
 
 export interface ListRulesetsResponse {
-  readonly rulesets: Array<{ name: string, createTime: string }>;
+  readonly rulesets: Array<{ name: string; createTime: string }>;
   readonly nextPageToken?: string;
 }
 
@@ -123,7 +123,7 @@ export class SecurityRulesApiClient {
       });
   }
 
-  public listRulesets(pageSize: number = 100, pageToken?: string): Promise<ListRulesetsResponse> {
+  public listRulesets(pageSize = 100, pageToken?: string): Promise<ListRulesetsResponse> {
     if (!validator.isNumber(pageSize)) {
       const err = new FirebaseSecurityRulesError('invalid-argument', 'Invalid page size.');
       return Promise.reject(err);

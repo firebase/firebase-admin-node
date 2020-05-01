@@ -17,7 +17,7 @@
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {ServiceAccountCredential, ComputeEngineCredential} from '../auth/credential';
+import {ServiceAccountCredential, isApplicationDefault} from '../auth/credential';
 import {Bucket, Storage as StorageClient} from '@google-cloud/storage';
 
 import * as utils from '../utils/index';
@@ -71,19 +71,19 @@ export class Storage implements FirebaseServiceInterface {
       });
     }
 
-    const projectId: string | null = utils.getProjectId(app);
+    const projectId: string | null = utils.getExplicitProjectId(app);
     const credential = app.options.credential;
     if (credential instanceof ServiceAccountCredential) {
       this.storageClient = new storage({
-        // When the SDK is initialized with ServiceAccountCredentials projectId is guaranteed to
-        // be available.
+        // When the SDK is initialized with ServiceAccountCredentials an explicit projectId is
+        // guaranteed to be available.
         projectId: projectId!,
         credentials: {
-          private_key: credential.privateKey,
-          client_email: credential.clientEmail,
+          private_key: credential.privateKey, // eslint-disable-line @typescript-eslint/camelcase
+          client_email: credential.clientEmail, // eslint-disable-line @typescript-eslint/camelcase
         },
       });
-    } else if (app.options.credential instanceof ComputeEngineCredential) {
+    } else if (isApplicationDefault(app.options.credential)) {
       // Try to use the Google application default credentials.
       this.storageClient = new storage();
     } else {

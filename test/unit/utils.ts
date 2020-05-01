@@ -29,7 +29,7 @@ import { HttpError, HttpResponse } from '../../src/utils/api-request';
  * @param {object} options The options for the FirebaseApp instance to create.
  * @return {FirebaseApp} A new FirebaseApp instance with the provided options.
  */
-export function createAppWithOptions(options: object) {
+export function createAppWithOptions(options: object): FirebaseApp {
   const mockFirebaseNamespaceInternals = new FirebaseNamespace().INTERNAL;
   return new FirebaseApp(options as FirebaseAppOptions, mocks.appName, mockFirebaseNamespaceInternals);
 }
@@ -71,7 +71,7 @@ export function stubGetAccessToken(accessToken?: string, app?: FirebaseApp): sin
  * @param {*=} headers HTTP headers to be included in the ersponse.
  * @return {HttpResponse} An HTTP response object.
  */
-export function responseFrom(data: object | string, status: number = 200, headers: any = {}): HttpResponse {
+export function responseFrom(data: object | string, status = 200, headers: any = {}): HttpResponse {
   let responseData: any;
   let responseText: string;
   if (typeof data === 'object') {
@@ -94,6 +94,6 @@ export function responseFrom(data: object | string, status: number = 200, header
   };
 }
 
-export function errorFrom(data: any, status: number = 500): HttpError {
+export function errorFrom(data: any, status = 500): HttpError {
   return new HttpError(responseFrom(data, status));
 }

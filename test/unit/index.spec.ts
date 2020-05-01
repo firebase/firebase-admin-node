@@ -45,6 +45,10 @@ import './database/database.spec';
 import './messaging/messaging.spec';
 import './messaging/batch-requests.spec';
 
+// Machine Learning
+import './machine-learning/machine-learning.spec';
+import './machine-learning/machine-learning-api-client.spec';
+
 // Storage
 import './storage/storage.spec';
 
@@ -64,3 +68,7 @@ import './project-management/ios-app.spec';
 // SecurityRules
 import './security-rules/security-rules.spec';
 import './security-rules/security-rules-api-client.spec';
+
+// RemoteConfig
+import './remote-config/remote-config.spec';
+import './remote-config/remote-config-api-client.spec';

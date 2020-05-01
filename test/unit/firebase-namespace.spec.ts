@@ -37,6 +37,7 @@ import {
   ServerValue,
 } from '@firebase/database';
 import {Messaging} from '../../src/messaging/messaging';
+import {MachineLearning} from '../../src/machine-learning/machine-learning';
 import {Storage} from '../../src/storage/storage';
 import {
   Firestore,
@@ -50,6 +51,7 @@ import {
 import {InstanceId} from '../../src/instance-id/instance-id';
 import {ProjectManagement} from '../../src/project-management/project-management';
 import { SecurityRules } from '../../src/security-rules/security-rules';
+import { RemoteConfig } from '../../src/remote-config/remote-config';
 
 chai.should();
 chai.use(sinonChai);
@@ -473,6 +475,38 @@ describe('FirebaseNamespace', () => {
     });
   });
 
+  describe('#machine-learning()', () => {
+    it('should throw when called before initializating an app', () => {
+      expect(() => {
+        firebaseNamespace.machineLearning();
+      }).to.throw(DEFAULT_APP_NOT_FOUND);
+    });
+
+    it('should throw when default app is not initialized', () => {
+      firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
+      expect(() => {
+        firebaseNamespace.machineLearning();
+      }).to.throw(DEFAULT_APP_NOT_FOUND);
+    });
+
+    it('should return a valid namespace when the default app is initialized', () => {
+      const app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions);
+      const ml: MachineLearning = firebaseNamespace.machineLearning();
+      expect(ml.app).to.be.deep.equal(app);
+    });
+
+    it('should return a valid namespace when the named app is initialized', () => {
+      const app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
+      const ml: MachineLearning = firebaseNamespace.machineLearning(app);
+      expect(ml.app).to.be.deep.equal(app);
+    });
+
+    it('should return a reference to Machine Learning type', () => {
+      expect(firebaseNamespace.machineLearning.MachineLearning)
+        .to.be.deep.equal(MachineLearning);
+    });
+  });
+
   describe('#storage()', () => {
     it('should throw when called before initializing an app', () => {
       expect(() => {
@@ -622,7 +656,7 @@ describe('FirebaseNamespace', () => {
 
     it('should return a reference to ProjectManagement type', () => {
       expect(firebaseNamespace.projectManagement.ProjectManagement)
-          .to.be.deep.equal(ProjectManagement);
+        .to.be.deep.equal(ProjectManagement);
     });
   });
 
@@ -656,7 +690,38 @@ describe('FirebaseNamespace', () => {
 
     it('should return a reference to SecurityRules type', () => {
       expect(firebaseNamespace.securityRules.SecurityRules)
-          .to.be.deep.equal(SecurityRules);
+        .to.be.deep.equal(SecurityRules);
+    });
+  });
+
+  describe('#remoteConfig()', () => {
+    it('should throw when called before initializing an app', () => {
+      expect(() => {
+        firebaseNamespace.remoteConfig();
+      }).to.throw(DEFAULT_APP_NOT_FOUND);
+    });
+
+    it('should throw when default app is not initialized', () => {
+      firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
+      expect(() => {
+        firebaseNamespace.remoteConfig();
+      }).to.throw(DEFAULT_APP_NOT_FOUND);
+    });
+
+    it('should return a valid namespace when the default app is initialized', () => {
+      const app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions);
+      const rc: RemoteConfig = firebaseNamespace.remoteConfig();
+      expect(rc.app).to.be.deep.equal(app);
+    });
+
+    it('should return a valid namespace when the named app is initialized', () => {
+      const app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
+      const rc: RemoteConfig = firebaseNamespace.remoteConfig(app);
+      expect(rc.app).to.be.deep.equal(app);
+    });
+
+    it('should return a reference to RemoteConfig type', () => {
+      expect(firebaseNamespace.remoteConfig.RemoteConfig).to.be.deep.equal(RemoteConfig);
     });
   });
 });

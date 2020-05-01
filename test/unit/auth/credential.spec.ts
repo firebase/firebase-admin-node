@@ -32,14 +32,17 @@ import * as mocks from '../../resources/mocks';
 
 import {
   GoogleOAuthAccessToken, RefreshTokenCredential, ServiceAccountCredential,
-  ComputeEngineCredential, getApplicationDefault,
+  ComputeEngineCredential, getApplicationDefault, isApplicationDefault, Credential,
 } from '../../../src/auth/credential';
 import { HttpClient } from '../../../src/utils/api-request';
 import {Agent} from 'https';
+import { FirebaseAppError } from '../../../src/utils/error';
 
 chai.should();
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
+
+/* eslint-disable @typescript-eslint/camelcase */
 
 const expect = chai.expect;
 
@@ -182,15 +185,17 @@ describe('Credential', () => {
         projectId: mockCertificateObject.project_id,
         clientEmail: mockCertificateObject.client_email,
         privateKey: mockCertificateObject.private_key,
+        implicit: false,
       });
     });
 
-    it('should return a certificate', () => {
-      const c = new ServiceAccountCredential(mockCertificateObject);
+    it('should return an implicit Credential', () => {
+      const c = new ServiceAccountCredential(mockCertificateObject, undefined, true);
       expect(c).to.deep.include({
         projectId: mockCertificateObject.project_id,
         clientEmail: mockCertificateObject.client_email,
         privateKey: mockCertificateObject.private_key,
+        implicit: true,
       });
     });
 
@@ -266,6 +271,20 @@ describe('Credential', () => {
         .to.throw('Refresh token must contain a "type" property');
     });
 
+    it('should return a Credential', () => {
+      const c = new RefreshTokenCredential(mocks.refreshToken);
+      expect(c).to.deep.include({
+        implicit: false,
+      });
+    });
+
+    it('should return an implicit Credential', () => {
+      const c = new RefreshTokenCredential(mocks.refreshToken, undefined, true);
+      expect(c).to.deep.include({
+        implicit: true,
+      });
+    });
+
     it('should create access tokens', () => {
       const scope = nock('https://www.googleapis.com')
         .post('/oauth2/v4/token')
@@ -313,13 +332,13 @@ describe('Credential', () => {
     });
 
     it('should discover project id', () => {
-      const expected = 'test-project-id';
-      const response = utils.responseFrom(expected);
+      const expectedProjectId = 'test-project-id';
+      const response = utils.responseFrom(expectedProjectId);
       httpStub.resolves(response);
 
       const c = new ComputeEngineCredential();
       return c.getProjectId().then((projectId) => {
-        expect(projectId).to.equal(expected);
+        expect(projectId).to.equal(expectedProjectId);
         expect(httpStub).to.have.been.calledOnce.and.calledWith({
           method: 'GET',
           url: 'http://metadata.google.internal/computeMetadata/v1/project/project-id',
@@ -327,6 +346,47 @@ describe('Credential', () => {
           httpAgent: undefined,
         });
       });
+    });
+
+    it('should cache discovered project id', () => {
+      const expectedProjectId = 'test-project-id';
+      const response = utils.responseFrom(expectedProjectId);
+      httpStub.resolves(response);
+
+      const c = new ComputeEngineCredential();
+      return c.getProjectId()
+        .then((projectId) => {
+          expect(projectId).to.equal(expectedProjectId);
+          return c.getProjectId();
+        })
+        .then((projectId) => {
+          expect(projectId).to.equal(expectedProjectId);
+          expect(httpStub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url: 'http://metadata.google.internal/computeMetadata/v1/project/project-id',
+            headers: {'Metadata-Flavor': 'Google'},
+            httpAgent: undefined,
+          });
+        });
+    });
+
+    it('should reject when the metadata service is not available', () => {
+      httpStub.rejects(new FirebaseAppError('network-error', 'Failed to connect'));
+
+      const c = new ComputeEngineCredential();
+      return c.getProjectId().should.eventually
+        .rejectedWith('Failed to determine project ID: Failed to connect')
+        .and.have.property('code', 'app/invalid-credential');
+    });
+
+    it('should reject when the metadata service responds with an error', () => {
+      const response = utils.errorFrom('Unexpected error');
+      httpStub.rejects(response);
+
+      const c = new ComputeEngineCredential();
+      return c.getProjectId().should.eventually
+        .rejectedWith('Failed to determine project ID: Unexpected error')
+        .and.have.property('code', 'app/invalid-credential');
     });
   });
 
@@ -358,7 +418,7 @@ describe('Credential', () => {
     it('should throw error if type not specified on cert file', () => {
       fsStub = sinon.stub(fs, 'readFileSync').returns(JSON.stringify({}));
       expect(() => getApplicationDefault())
-          .to.throw(Error, 'Invalid contents in the credentials file');
+        .to.throw(Error, 'Invalid contents in the credentials file');
     });
 
     it('should throw error if type is unknown on cert file', () => {
@@ -432,6 +492,72 @@ describe('Credential', () => {
         type: MOCK_REFRESH_TOKEN_CONFIG.type,
       });
       expect(fsStub.alwaysCalledWith(GCLOUD_CREDENTIAL_PATH, 'utf8')).to.be.true;
+    });
+  });
+
+  describe('isApplicationDefault()', () => {
+    let fsStub: sinon.SinonStub;
+
+    afterEach(() => {
+      if (fsStub) {
+        fsStub.restore();
+      }
+    });
+
+    it('should return true for ServiceAccountCredential loaded from GOOGLE_APPLICATION_CREDENTIALS', () => {
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../../resources/mock.key.json');
+      const c = getApplicationDefault();
+      expect(c).to.be.an.instanceof(ServiceAccountCredential);
+      expect(isApplicationDefault(c)).to.be.true;
+    });
+
+    it('should return true for RefreshTokenCredential loaded from GOOGLE_APPLICATION_CREDENTIALS', () => {
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = GCLOUD_CREDENTIAL_PATH;
+      fsStub = sinon.stub(fs, 'readFileSync').returns(JSON.stringify(MOCK_REFRESH_TOKEN_CONFIG));
+      const c = getApplicationDefault();
+      expect(c).is.instanceOf(RefreshTokenCredential);
+      expect(isApplicationDefault(c)).to.be.true;
+    });
+
+    it('should return true for credential loaded from gcloud SDK', () => {
+      if (!fs.existsSync(GCLOUD_CREDENTIAL_PATH)) {
+        // tslint:disable-next-line:no-console
+        console.log(
+          'WARNING: Test being skipped because gcloud credentials not found. Run `gcloud beta auth ' +
+          'application-default login`.');
+        return;
+      }
+      delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+      const c = getApplicationDefault();
+      expect(c).to.be.an.instanceof(RefreshTokenCredential);
+      expect(isApplicationDefault(c)).to.be.true;
+    });
+
+    it('should return true for ComputeEngineCredential', () => {
+      delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+      fsStub = sinon.stub(fs, 'readFileSync').throws(new Error('no gcloud credential file'));
+      const c = getApplicationDefault();
+      expect(c).to.be.an.instanceof(ComputeEngineCredential);
+      expect(isApplicationDefault(c)).to.be.true;
+    });
+
+    it('should return false for explicitly loaded ServiceAccountCredential', () => {
+      const c = new ServiceAccountCredential(mockCertificateObject);
+      expect(isApplicationDefault(c)).to.be.false;
+    });
+
+    it('should return false for explicitly loaded RefreshTokenCredential', () => {
+      const c = new RefreshTokenCredential(mocks.refreshToken);
+      expect(isApplicationDefault(c)).to.be.false;
+    });
+
+    it('should return false for custom credential', () => {
+      const c: Credential = {
+        getAccessToken: () => {
+          throw new Error();
+        },
+      };
+      expect(isApplicationDefault(c)).to.be.false;
     });
   });
 

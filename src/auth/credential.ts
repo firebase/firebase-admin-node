@@ -79,11 +79,23 @@ export class ServiceAccountCredential implements Credential {
   public readonly privateKey: string;
   public readonly clientEmail: string;
 
-
   private readonly httpClient: HttpClient;
-  private readonly httpAgent?: Agent;
 
-  constructor(serviceAccountPathOrObject: string | object, httpAgent?: Agent) {
+  /**
+   * Creates a new ServiceAccountCredential from the given parameters.
+   *
+   * @param serviceAccountPathOrObject Service account json object or path to a service account json file.
+   * @param httpAgent Optional http.Agent to use when calling the remote token server.
+   * @param implicit An optinal boolean indicating whether this credential was implicitly discovered from the
+   *   environment, as opposed to being explicitly specified by the developer.
+   *
+   * @constructor
+   */
+  constructor(
+    serviceAccountPathOrObject: string | object,
+    private readonly httpAgent?: Agent,
+    readonly implicit: boolean = false) {
+
     const serviceAccount = (typeof serviceAccountPathOrObject === 'string') ?
       ServiceAccount.fromPath(serviceAccountPathOrObject)
       : new ServiceAccount(serviceAccountPathOrObject);
@@ -91,7 +103,6 @@ export class ServiceAccountCredential implements Credential {
     this.privateKey = serviceAccount.privateKey;
     this.clientEmail = serviceAccount.clientEmail;
     this.httpClient = new HttpClient();
-    this.httpAgent = httpAgent;
   }
 
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
@@ -121,6 +132,7 @@ export class ServiceAccountCredential implements Credential {
       ].join(' '),
     };
 
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const jwt = require('jsonwebtoken');
     // This method is actually synchronous so we can capture and return the buffer.
     return jwt.sign(claims, this.privateKey, {
@@ -178,6 +190,7 @@ class ServiceAccount {
       throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const forge = require('node-forge');
     try {
       forge.pki.privateKeyFromPem(this.privateKey);
@@ -198,6 +211,7 @@ export class ComputeEngineCredential implements Credential {
 
   private readonly httpClient = new HttpClient();
   private readonly httpAgent?: Agent;
+  private projectId?: string;
 
   constructor(httpAgent?: Agent) {
     this.httpAgent = httpAgent;
@@ -209,10 +223,21 @@ export class ComputeEngineCredential implements Credential {
   }
 
   public getProjectId(): Promise<string> {
+    if (this.projectId) {
+      return Promise.resolve(this.projectId);
+    }
+
     const request = this.buildRequest(GOOGLE_METADATA_SERVICE_PROJECT_ID_PATH);
     return this.httpClient.send(request)
       .then((resp) => {
-        return resp.text!;
+        this.projectId = resp.text!;
+        return this.projectId;
+      })
+      .catch((err) => {
+        const detail: string = (err instanceof HttpError) ? getDetailFromResponse(err.response) : err.message;
+        throw new FirebaseAppError(
+          AppErrorCodes.INVALID_CREDENTIAL,
+          `Failed to determine project ID: ${detail}`);
       });
   }
 
@@ -235,14 +260,26 @@ export class RefreshTokenCredential implements Credential {
 
   private readonly refreshToken: RefreshToken;
   private readonly httpClient: HttpClient;
-  private readonly httpAgent?: Agent;
 
-  constructor(refreshTokenPathOrObject: string | object, httpAgent?: Agent) {
+  /**
+   * Creates a new RefreshTokenCredential from the given parameters.
+   *
+   * @param refreshTokenPathOrObject Refresh token json object or path to a refresh token (user credentials) json file.
+   * @param httpAgent Optional http.Agent to use when calling the remote token server.
+   * @param implicit An optinal boolean indicating whether this credential was implicitly discovered from the
+   *   environment, as opposed to being explicitly specified by the developer.
+   *
+   * @constructor
+   */
+  constructor(
+    refreshTokenPathOrObject: string | object,
+    private readonly httpAgent?: Agent,
+    readonly implicit: boolean = false) {
+
     this.refreshToken = (typeof refreshTokenPathOrObject === 'string') ?
       RefreshToken.fromPath(refreshTokenPathOrObject)
       : new RefreshToken(refreshTokenPathOrObject);
     this.httpClient = new HttpClient();
-    this.httpAgent = httpAgent;
   }
 
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
@@ -319,11 +356,25 @@ export function getApplicationDefault(httpAgent?: Agent): Credential {
   if (GCLOUD_CREDENTIAL_PATH) {
     const refreshToken = readCredentialFile(GCLOUD_CREDENTIAL_PATH, true);
     if (refreshToken) {
-      return new RefreshTokenCredential(refreshToken, httpAgent);
+      return new RefreshTokenCredential(refreshToken, httpAgent, true);
     }
   }
 
   return new ComputeEngineCredential(httpAgent);
+}
+
+/**
+ * Checks if the given credential was loaded via the application default credentials mechanism. This
+ * includes all ComputeEngineCredential instances, and the ServiceAccountCredential and RefreshTokenCredential
+ * instances that were loaded from well-known files or environment variables, rather than being explicitly
+ * instantiated.
+ *
+ * @param credential The credential instance to check.
+ */
+export function isApplicationDefault(credential?: Credential): boolean {
+  return credential instanceof ComputeEngineCredential ||
+    (credential instanceof ServiceAccountCredential && credential.implicit) ||
+    (credential instanceof RefreshTokenCredential && credential.implicit);
 }
 
 /**
@@ -337,7 +388,7 @@ export function getApplicationDefault(httpAgent?: Agent): Credential {
  * @param key Name of the property to copy.
  * @param alt Alternative name of the property to copy.
  */
-function copyAttr(to: {[key: string]: any}, from: {[key: string]: any}, key: string, alt: string) {
+function copyAttr(to: {[key: string]: any}, from: {[key: string]: any}, key: string, alt: string): void {
   const tmp = from[key] || from[alt];
   if (typeof tmp !== 'undefined') {
     to[key] = tmp;
@@ -397,11 +448,11 @@ function credentialFromFile(filePath: string, httpAgent?: Agent): Credential {
   }
 
   if (credentialsFile.type === 'service_account') {
-    return new ServiceAccountCredential(credentialsFile, httpAgent);
+    return new ServiceAccountCredential(credentialsFile, httpAgent, true);
   }
 
   if (credentialsFile.type === 'authorized_user') {
-    return new RefreshTokenCredential(credentialsFile, httpAgent);
+    return new RefreshTokenCredential(credentialsFile, httpAgent, true);
   }
 
   throw new FirebaseAppError(

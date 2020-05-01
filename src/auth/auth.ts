@@ -89,16 +89,22 @@ export interface DeleteUsersResult {
 export interface DecodedIdToken {
   aud: string;
   auth_time: number;
+  email?: string;
+  email_verified?: boolean;
   exp: number;
   firebase: {
     identities: {
       [key: string]: any;
     };
     sign_in_provider: string;
+    sign_in_second_factor?: string;
+    second_factor_identifier?: string;
     [key: string]: any;
   };
   iat: number;
   iss: string;
+  phone_number?: string;
+  picture?: string;
   sub: string;
   tenant?: string;
   [key: string]: any;
@@ -167,7 +173,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    * @return {Promise<DecodedIdToken>} A Promise that will be fulfilled after a successful
    *     verification.
    */
-  public verifyIdToken(idToken: string, checkRevoked: boolean = false): Promise<DecodedIdToken> {
+  public verifyIdToken(idToken: string, checkRevoked = false): Promise<DecodedIdToken> {
     return this.idTokenVerifier.verifyJWT(idToken)
       .then((decodedIdToken: DecodedIdToken) => {
         // Whether to check if the token was revoked.
@@ -346,7 +352,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    */
   public deleteUser(uid: string): Promise<void> {
     return this.authRequestHandler.deleteAccount(uid)
-      .then((response) => {
+      .then(() => {
         // Return nothing on success.
       });
   }
@@ -420,7 +426,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    */
   public setCustomUserClaims(uid: string, customUserClaims: object): Promise<void> {
     return this.authRequestHandler.setCustomUserClaims(uid, customUserClaims)
-      .then((existingUid) => {
+      .then(() => {
         // Return nothing on success.
       });
   }
@@ -437,7 +443,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    */
   public revokeRefreshTokens(uid: string): Promise<void> {
     return this.authRequestHandler.revokeRefreshTokens(uid)
-      .then((existingUid) => {
+      .then(() => {
         // Return nothing on success.
       });
   }
@@ -456,7 +462,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    *     of failed uploads and their corresponding errors.
    */
   public importUsers(
-      users: UserImportRecord[], options?: UserImportOptions): Promise<UserImportResult> {
+    users: UserImportRecord[], options?: UserImportOptions): Promise<UserImportResult> {
     return this.authRequestHandler.uploadAccount(users, options);
   }
 
@@ -472,7 +478,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    * @return {Promise<string>} A promise that resolves on success with the created session cookie.
    */
   public createSessionCookie(
-      idToken: string, sessionCookieOptions: SessionCookieOptions): Promise<string> {
+    idToken: string, sessionCookieOptions: SessionCookieOptions): Promise<string> {
     // Return rejected promise if expiresIn is not available.
     if (!validator.isNonNullObject(sessionCookieOptions) ||
         !validator.isNumber(sessionCookieOptions.expiresIn)) {
@@ -495,7 +501,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    *     verification.
    */
   public verifySessionCookie(
-      sessionCookie: string, checkRevoked: boolean = false): Promise<DecodedIdToken> {
+    sessionCookie: string, checkRevoked = false): Promise<DecodedIdToken> {
     return this.sessionCookieVerifier.verifyJWT(sessionCookie)
       .then((decodedIdToken: DecodedIdToken) => {
         // Whether to check if the token was revoked.
@@ -568,7 +574,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
         providerConfigs,
       };
       // Delete result.pageToken if undefined.
-      if (response.hasOwnProperty('nextPageToken')) {
+      if (Object.prototype.hasOwnProperty.call(response, 'nextPageToken')) {
         result.pageToken = response.nextPageToken;
       }
       return result;
@@ -599,9 +605,9 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
         });
     }
     return Promise.reject(
-        new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
-          `"AuthProviderConfigFilter.type" must be either "saml' or "oidc"`));
+      new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        `"AuthProviderConfigFilter.type" must be either "saml' or "oidc"`));
   }
 
   /**
@@ -650,7 +656,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    * @return {Promise<AuthProviderConfig>} A promise that resolves with the updated provider configuration.
    */
   public updateProviderConfig(
-      providerId: string, updatedConfig: UpdateAuthProviderRequest): Promise<AuthProviderConfig> {
+    providerId: string, updatedConfig: UpdateAuthProviderRequest): Promise<AuthProviderConfig> {
     if (!validator.isNonNullObject(updatedConfig)) {
       return Promise.reject(new FirebaseAuthError(
         AuthClientErrorCode.INVALID_CONFIG,
@@ -709,7 +715,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    *     verification.
    */
   private verifyDecodedJWTNotRevoked(
-      decodedIdToken: DecodedIdToken, revocationErrorInfo: ErrorInfo): Promise<DecodedIdToken> {
+    decodedIdToken: DecodedIdToken, revocationErrorInfo: ErrorInfo): Promise<DecodedIdToken> {
     // Get tokens valid after time for the corresponding user.
     return this.getUser(decodedIdToken.sub)
       .then((user: UserRecord) => {
@@ -763,7 +769,7 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
    * @return {Promise<DecodedIdToken>} A Promise that will be fulfilled after a successful
    *     verification.
    */
-  public verifyIdToken(idToken: string, checkRevoked: boolean = false): Promise<DecodedIdToken> {
+  public verifyIdToken(idToken: string, checkRevoked = false): Promise<DecodedIdToken> {
     return super.verifyIdToken(idToken, checkRevoked)
       .then((decodedClaims) => {
         // Validate tenant ID.
@@ -786,7 +792,7 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
    * @return {Promise<string>} A promise that resolves on success with the created session cookie.
    */
   public createSessionCookie(
-      idToken: string, sessionCookieOptions: SessionCookieOptions): Promise<string> {
+    idToken: string, sessionCookieOptions: SessionCookieOptions): Promise<string> {
     // Validate arguments before processing.
     if (!validator.isNonEmptyString(idToken)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_ID_TOKEN));
@@ -797,7 +803,7 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
     }
     // This will verify the ID token and then match the tenant ID before creating the session cookie.
     return this.verifyIdToken(idToken)
-      .then((decodedIdTokenClaims) => {
+      .then(() => {
         return super.createSessionCookie(idToken, sessionCookieOptions);
       });
   }
@@ -815,7 +821,7 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
    *     verification.
    */
   public verifySessionCookie(
-      sessionCookie: string, checkRevoked: boolean = false): Promise<DecodedIdToken> {
+    sessionCookie: string, checkRevoked = false): Promise<DecodedIdToken> {
     return super.verifySessionCookie(sessionCookie, checkRevoked)
       .then((decodedClaims) => {
         if (decodedClaims.firebase.tenant !== this.tenantId) {

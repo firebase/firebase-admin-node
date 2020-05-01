@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/firebase/firebase-admin-node.svg?branch=master)](https://travis-ci.org/firebase/firebase-admin-node)
+[![Build Status](https://github.com/firebase/firebase-admin-node/workflows/Continuous%20Integration/badge.svg)](https://github.com/firebase/firebase-admin-node/actions)
 
 # Firebase Admin Node.js SDK
 

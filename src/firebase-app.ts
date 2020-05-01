@@ -22,6 +22,7 @@ import {FirebaseNamespaceInternals} from './firebase-namespace';
 import {AppErrorCodes, FirebaseAppError} from './utils/error';
 
 import {Auth} from './auth/auth';
+import {MachineLearning} from './machine-learning/machine-learning';
 import {Messaging} from './messaging/messaging';
 import {Storage} from './storage/storage';
 import {Database} from '@firebase/database';
@@ -29,8 +30,10 @@ import {DatabaseService} from './database/database';
 import {Firestore} from '@google-cloud/firestore';
 import {FirestoreService} from './firestore/firestore';
 import {InstanceId} from './instance-id/instance-id';
+
 import {ProjectManagement} from './project-management/project-management';
 import {SecurityRules} from './security-rules/security-rules';
+import { RemoteConfig } from './remote-config/remote-config';
 
 import {Agent} from 'http';
 
@@ -189,7 +192,7 @@ export class FirebaseAppInternals {
    *
    * @param {function(string)} listener The listener that will be called with each new token.
    */
-  public addAuthTokenListener(listener: (token: string) => void) {
+  public addAuthTokenListener(listener: (token: string) => void): void {
     this.tokenListeners_.push(listener);
     if (this.cachedToken_) {
       listener(this.cachedToken_.accessToken);
@@ -201,7 +204,7 @@ export class FirebaseAppInternals {
    *
    * @param {function(string)} listener The listener to remove.
    */
-  public removeAuthTokenListener(listener: (token: string) => void) {
+  public removeAuthTokenListener(listener: (token: string) => void): void {
     this.tokenListeners_ = this.tokenListeners_.filter((other) => other !== listener);
   }
 
@@ -225,7 +228,7 @@ export class FirebaseAppInternals {
   private setTokenRefreshTimeout(delayInMilliseconds: number, numRetries: number): void {
     this.tokenRefreshTimeout_ = setTimeout(() => {
       this.getToken(/* forceRefresh */ true)
-        .catch((error) => {
+        .catch(() => {
           // Ignore the error since this might just be an intermittent failure. If we really cannot
           // refresh the token, an error will be logged once the existing token expires and we try
           // to fetch a fresh one.
@@ -355,6 +358,19 @@ export class FirebaseApp {
   }
 
   /**
+   * Returns the MachineLearning service instance associated with this app.
+   *
+   * @return {MachineLearning} The Machine Learning service instance of this app
+   */
+  public machineLearning(): MachineLearning {
+    return this.ensureService_('machine-learning', () => {
+      const machineLearningService: typeof MachineLearning =
+          require('./machine-learning/machine-learning').MachineLearning;
+      return new machineLearningService(this);
+    });
+  }
+
+  /**
    * Returns the ProjectManagement service instance associated with this app.
    *
    * @return {ProjectManagement} The ProjectManagement service instance of this app.
@@ -377,6 +393,18 @@ export class FirebaseApp {
       const securityRulesService: typeof SecurityRules =
           require('./security-rules/security-rules').SecurityRules;
       return new securityRulesService(this);
+    });
+  }
+
+  /**
+   * Returns the RemoteConfig service instance associated with this app.
+   *
+   * @return {RemoteConfig} The RemoteConfig service instance of this app.
+   */
+  public remoteConfig(): RemoteConfig {
+    return this.ensureService_('remoteConfig', () => {
+      const remoteConfigService: typeof RemoteConfig = require('./remote-config/remote-config').RemoteConfig;
+      return new remoteConfigService(this);
     });
   }
 

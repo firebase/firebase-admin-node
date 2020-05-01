@@ -28,6 +28,7 @@ import {
 } from './auth/credential';
 
 import {Auth} from './auth/auth';
+import {MachineLearning} from './machine-learning/machine-learning';
 import {Messaging} from './messaging/messaging';
 import {Storage} from './storage/storage';
 import {Database} from '@firebase/database';
@@ -35,6 +36,7 @@ import {Firestore} from '@google-cloud/firestore';
 import {InstanceId} from './instance-id/instance-id';
 import {ProjectManagement} from './project-management/project-management';
 import { SecurityRules } from './security-rules/security-rules';
+import { RemoteConfig } from './remote-config/remote-config';
 
 import * as validator from './utils/validator';
 
@@ -45,7 +47,7 @@ const DEFAULT_APP_NAME = '[DEFAULT]';
  * If the environment variable contains a string that starts with '{' it will be parsed as JSON,
  * otherwise it will be assumed to be pointing to a file.
  */
-export const FIREBASE_CONFIG_VAR: string = 'FIREBASE_CONFIG';
+export const FIREBASE_CONFIG_VAR = 'FIREBASE_CONFIG';
 
 
 let globalAppDefaultCred: Credential;
@@ -182,10 +184,11 @@ export class FirebaseNamespaceInternals {
    * @param {AppHook} [appHook] Optional callback that handles app-related events like app creation and deletion.
    * @return {FirebaseServiceNamespace<FirebaseServiceInterface>} The Firebase service's namespace.
    */
-  public registerService(serviceName: string,
-                         createService: FirebaseServiceFactory,
-                         serviceProperties?: object,
-                         appHook?: AppHook): FirebaseServiceNamespace<FirebaseServiceInterface> {
+  public registerService(
+    serviceName: string,
+    createService: FirebaseServiceFactory,
+    serviceProperties?: object,
+    appHook?: AppHook): FirebaseServiceNamespace<FirebaseServiceInterface> {
     let errorMessage;
     if (typeof serviceName === 'undefined') {
       errorMessage = `No service name provided. Service name must be a non-empty string.`;
@@ -207,11 +210,9 @@ export class FirebaseNamespaceInternals {
       this.appHooks_[serviceName] = appHook;
     }
 
-    let serviceNamespace: FirebaseServiceNamespace<FirebaseServiceInterface>;
-
     // The service namespace is an accessor function which takes a FirebaseApp instance
     // or uses the default app if no FirebaseApp instance is provided
-    serviceNamespace = (appArg?: FirebaseApp) => {
+    const serviceNamespace: FirebaseServiceNamespace<FirebaseServiceInterface> = (appArg?: FirebaseApp) => {
       if (typeof appArg === 'undefined') {
         appArg = this.app();
       }
@@ -238,7 +239,7 @@ export class FirebaseNamespaceInternals {
    * @param {FirebaseApp} app The FirebaseApp instance whose app hooks to call.
    * @param {string} eventName The event name representing which app hooks to call.
    */
-  private callAppHooks_(app: FirebaseApp, eventName: string) {
+  private callAppHooks_(app: FirebaseApp, eventName: string): void {
     Object.keys(this.serviceFactories).forEach((serviceName) => {
       if (this.appHooks_[serviceName]) {
         this.appHooks_[serviceName](eventName, app);
@@ -341,6 +342,8 @@ export class FirebaseNamespace {
     const fn: FirebaseServiceNamespace<Database> = (app?: FirebaseApp) => {
       return this.ensureApp(app).database();
     };
+
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     return Object.assign(fn, require('@firebase/database'));
   }
 
@@ -376,6 +379,8 @@ export class FirebaseNamespace {
     let fn: FirebaseServiceNamespace<Firestore> = (app?: FirebaseApp) => {
       return this.ensureApp(app).firestore();
     };
+
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const firestore = require('@google-cloud/firestore');
 
     fn = Object.assign(fn, firestore.Firestore);
@@ -394,6 +399,21 @@ export class FirebaseNamespace {
     });
 
     return fn;
+  }
+
+  /**
+   * Gets the `MachineLearning` service namespace. The returned namespace can be
+   * used to get the `MachineLearning` service for the default app or an
+   * explicityly specified app.
+   */
+  get machineLearning(): FirebaseServiceNamespace<MachineLearning> {
+    const fn: FirebaseServiceNamespace<MachineLearning> =
+        (app?: FirebaseApp) => {
+          return this.ensureApp(app).machineLearning();
+        };
+    const machineLearning =
+        require('./machine-learning/machine-learning').MachineLearning;
+    return Object.assign(fn, {MachineLearning: machineLearning});
   }
 
   /**
@@ -430,6 +450,18 @@ export class FirebaseNamespace {
     };
     const securityRules = require('./security-rules/security-rules').SecurityRules;
     return Object.assign(fn, {SecurityRules: securityRules});
+  }
+
+  /**
+   * Gets the `RemoteConfig` service namespace. The returned namespace can be used to get the
+   * `RemoteConfig` service for the default app or an explicitly specified app.
+   */
+  get remoteConfig(): FirebaseServiceNamespace<RemoteConfig> {
+    const fn: FirebaseServiceNamespace<RemoteConfig> = (app?: FirebaseApp) => {
+      return this.ensureApp(app).remoteConfig();
+    };
+    const remoteConfig = require('./remote-config/remote-config').RemoteConfig;
+    return Object.assign(fn, { RemoteConfig: remoteConfig });
   }
 
   /**

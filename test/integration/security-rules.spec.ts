@@ -47,11 +47,11 @@ describe('admin.securityRules', () => {
 
   const rulesetsToDelete: string[] = [];
 
-  function scheduleForDelete(ruleset: admin.securityRules.Ruleset) {
+  function scheduleForDelete(ruleset: admin.securityRules.Ruleset): void {
     rulesetsToDelete.push(ruleset.name);
   }
 
-  function unscheduleForDelete(ruleset: admin.securityRules.Ruleset) {
+  function unscheduleForDelete(ruleset: admin.securityRules.Ruleset): void {
     rulesetsToDelete.splice(rulesetsToDelete.indexOf(ruleset.name), 1);
   }
 
@@ -296,7 +296,7 @@ describe('admin.securityRules', () => {
     });
   });
 
-  function verifyFirestoreRuleset(ruleset: admin.securityRules.Ruleset) {
+  function verifyFirestoreRuleset(ruleset: admin.securityRules.Ruleset): void {
     expect(ruleset.name).to.match(RULESET_NAME_PATTERN);
     const createTime = new Date(ruleset.createTime);
     expect(ruleset.createTime).equals(createTime.toUTCString());
