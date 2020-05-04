@@ -604,7 +604,7 @@ declare namespace admin.credential {
    */
   interface Credential {
 
-   /**
+    /**
      * Returns a Google OAuth2 access token object used to authenticate with
      * Firebase services.
      *

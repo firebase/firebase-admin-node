@@ -30,7 +30,7 @@ import {FirebaseApp} from '../../../src/firebase-app';
 import {HttpClient, HttpRequestConfig} from '../../../src/utils/api-request';
 import * as validator from '../../../src/utils/validator';
 import {
-  AuthRequestHandler, FIREBASE_AUTH_GET_ACCOUNT_INFO,
+  AuthRequestHandler, FIREBASE_AUTH_GET_ACCOUNT_INFO, FIREBASE_AUTH_GET_ACCOUNTS_INFO,
   FIREBASE_AUTH_DELETE_ACCOUNT, FIREBASE_AUTH_SET_ACCOUNT_INFO,
   FIREBASE_AUTH_SIGN_UP_NEW_USER, FIREBASE_AUTH_DOWNLOAD_ACCOUNT,
   RESERVED_CLAIMS, FIREBASE_AUTH_UPLOAD_ACCOUNT, FIREBASE_AUTH_CREATE_SESSION_COOKIE,
@@ -344,6 +344,12 @@ describe('FIREBASE_AUTH_GET_ACCOUNT_INFO', () => {
         return requestValidator(validRequest);
       }).not.to.throw();
     });
+    it('should succeed with federatedUserId passed', () => {
+      const validRequest = {federatedUserId: [{providerId: 'google.com', rawId: 'google_uid'}]};
+      expect(() => {
+        return requestValidator(validRequest);
+      }).not.to.throw();
+    });
     it('should fail when neither localId, email or phoneNumber are passed', () => {
       const invalidRequest = {bla: ['1234']};
       expect(() => {
@@ -364,6 +370,76 @@ describe('FIREBASE_AUTH_GET_ACCOUNT_INFO', () => {
       expect(() => {
         responseValidator(invalidResponse);
       }).to.throw();
+    });
+  });
+});
+
+describe('FIREBASE_AUTH_GET_ACCOUNTS_INFO', () => {
+  it('should return the correct endpoint', () => {
+    expect(FIREBASE_AUTH_GET_ACCOUNTS_INFO.getEndpoint()).to.equal('/accounts:lookup');
+  });
+  it('should return the correct http method', () => {
+    expect(FIREBASE_AUTH_GET_ACCOUNTS_INFO.getHttpMethod()).to.equal('POST');
+  });
+  describe('requestValidator', () => {
+    const requestValidator = FIREBASE_AUTH_GET_ACCOUNTS_INFO.getRequestValidator();
+    it('should succeed with localId passed', () => {
+      const validRequest = {localId: ['1234']};
+      expect(() => {
+        return requestValidator(validRequest);
+      }).not.to.throw();
+    });
+    it('should succeed with email passed', () => {
+      const validRequest = {email: ['user@example.com']};
+      expect(() => {
+        return requestValidator(validRequest);
+      }).not.to.throw();
+    });
+    it('should succeed with phoneNumber passed', () => {
+      const validRequest = {phoneNumber: ['+11234567890']};
+      expect(() => {
+        return requestValidator(validRequest);
+      }).not.to.throw();
+    });
+    it('should succeed with federatedUserId passed', () => {
+      const validRequest = {federatedUserId: [{providerId: 'google.com', rawId: 'google_uid'}]};
+      expect(() => {
+        return requestValidator(validRequest);
+      }).not.to.throw();
+    });
+    it('should fail when neither localId, email or phoneNumber are passed', () => {
+      const invalidRequest = {bla: ['1234']};
+      expect(() => {
+        return requestValidator(invalidRequest);
+      }).to.throw();
+    });
+    it('should succeed when multiple identifiers passed', () => {
+      const validRequest = {
+        localId: ['123', '456'],
+        email: ['user1@example.com', 'user2@example.com'],
+        phoneNumber: ['+15555550001', '+15555550002'],
+        federatedUserId: [
+          {providerId: 'google.com', rawId: 'google_uid1'},
+          {providerId: 'google.com', rawId: 'google_uid2'}
+        ]};
+      expect(() => {
+        return requestValidator(validRequest);
+      }).not.to.throw();
+    });
+  });
+  describe('responseValidator', () => {
+    const responseValidator = FIREBASE_AUTH_GET_ACCOUNTS_INFO.getResponseValidator();
+    it('should succeed with users returned', () => {
+      const validResponse: object = {users: []};
+      expect(() => {
+        return responseValidator(validResponse);
+      }).not.to.throw();
+    });
+    it('should succeed even if users are not returned', () => {
+      const invalidResponse = {};
+      expect(() => {
+        responseValidator(invalidResponse);
+      }).not.to.throw();
     });
   });
 });

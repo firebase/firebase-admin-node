@@ -73,7 +73,7 @@ const MAX_UPLOAD_ACCOUNT_BATCH_SIZE = 1000;
 /** Maximum allowed number of users to batch get at one time. */
 const MAX_GET_ACCOUNTS_BATCH_SIZE = 100;
 
-/** Maximum allowed numberof users to batch delete at one time. */
+/** Maximum allowed number of users to batch delete at one time. */
 const MAX_DELETE_ACCOUNTS_BATCH_SIZE = 1000;
 
 /** Minimum allowed session cookie duration in seconds (5 minutes). */
