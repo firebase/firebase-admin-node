@@ -28,7 +28,6 @@ import * as mocks from '../../resources/mocks';
 
 import {Auth, TenantAwareAuth, BaseAuth, DecodedIdToken} from '../../../src/auth/auth';
 import {UserRecord, UpdateRequest} from '../../../src/auth/user-record';
-import {UserIdentifier} from '../../../src/auth/identifier';
 import {FirebaseApp} from '../../../src/firebase-app';
 import {
   AuthRequestHandler, TenantAwareAuthRequestHandler, AbstractAuthRequestHandler,
@@ -1151,17 +1150,6 @@ AUTH_CONFIGS.forEach((testConfig) => {
         stubs = [];
       });
 
-      it('should throw when given more than 100 identifiers', () => {
-        const identifiers: UserIdentifier[] = [];
-        for (let i = 0; i < 101; i++) {
-          identifiers.push({uid: 'id' + i});
-        }
-
-        expect(() => auth.getUsers(identifiers))
-          .to.throw(FirebaseAuthError)
-          .with.property('code', 'auth/maximum-user-count-exceeded');
-      });
-
       it('should throw when given a non array parameter', () => {
         const nonArrayValues = [ null, undefined, 42, 3.14, "i'm not an array", {} ];
         nonArrayValues.forEach((v) => {
@@ -1189,44 +1177,6 @@ AUTH_CONFIGS.forEach((testConfig) => {
             expect(getUsersResult.users).to.deep.equal([]);
             expect(getUsersResult.notFound).to.deep.equal(notFoundIds);
           });
-      });
-
-      it('should throw when given an invalid uid', () => {
-        expect(() => auth.getUsers([{uid: 'too long ' + ('.' as any).repeat(128)}]))
-          .to.throw(FirebaseAuthError)
-          .with.property('code', 'auth/invalid-uid');
-      });
-
-      it('should throw when given an invalid email', () => {
-        expect(() => auth.getUsers([{email: 'invalid email addr'}]))
-          .to.throw(FirebaseAuthError)
-          .with.property('code', 'auth/invalid-email');
-      });
-
-      it('should throw when given an invalid phone number', () => {
-        expect(() => auth.getUsers([{phoneNumber: 'invalid phone number'}]))
-          .to.throw(FirebaseAuthError)
-          .with.property('code', 'auth/invalid-phone-number');
-      });
-
-      it('should throw when given an invalid provider', () => {
-        expect(() => auth.getUsers([{providerUid: '', providerId: ''}]))
-          .to.throw(FirebaseAuthError)
-          .with.property('code', 'auth/invalid-provider-id');
-      });
-
-      it('should throw when given a single bad identifier', () => {
-        const identifiers: UserIdentifier[] = [
-          {uid: 'valid_id1'},
-          {uid: 'valid_id2'},
-          {uid: 'invalid id; too long. ' + ('.' as any).repeat(128)},
-          {uid: 'valid_id4'},
-          {uid: 'valid_id5'},
-        ];
-
-        expect(() => auth.getUsers(identifiers))
-          .to.throw(FirebaseAuthError)
-          .with.property('code', 'auth/invalid-uid');
       });
 
       it('returns users by various identifier types in a single call', async () => {
