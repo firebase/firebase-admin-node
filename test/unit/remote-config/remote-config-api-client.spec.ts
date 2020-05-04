@@ -135,7 +135,7 @@ describe('RemoteConfigApiClient', () => {
         .should.eventually.be.rejectedWith(noProjectId);
     });
 
-    it('should resolve with the requested template on success', () => {
+    it('should resolve with the latest template on success', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(TEST_RESPONSE, 200, { etag: 'etag-123456789012-1' }));
@@ -149,6 +149,25 @@ describe('RemoteConfigApiClient', () => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'GET',
             url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig',
+            headers: EXPECTED_HEADERS,
+          });
+        });
+    });
+
+    it('should resolve with the requested template version on success', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200, { etag: 'etag-123456789012-60' }));
+      stubs.push(stub);
+      return apiClient.getTemplate('60')
+        .then((resp) => {
+          expect(resp.conditions).to.deep.equal(TEST_RESPONSE.conditions);
+          expect(resp.parameters).to.deep.equal(TEST_RESPONSE.parameters);
+          expect(resp.parameterGroups).to.deep.equal(TEST_RESPONSE.parameterGroups);
+          expect(resp.etag).to.equal('etag-123456789012-60');
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig?versionNumber=60',
             headers: EXPECTED_HEADERS,
           });
         });

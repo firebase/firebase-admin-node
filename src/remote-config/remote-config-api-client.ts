@@ -106,12 +106,16 @@ export class RemoteConfigApiClient {
     this.httpClient = new AuthorizedHttpClient(app);
   }
 
-  public getTemplate(): Promise<RemoteConfigTemplate> {
+  public getTemplate(versionNumber?: number | string): Promise<RemoteConfigTemplate> {
+    let path = 'remoteConfig';
+    if (versionNumber) {
+      path += '?versionNumber=' + versionNumber;
+    }
     return this.getUrl()
       .then((url) => {
         const request: HttpRequestConfig = {
           method: 'GET',
-          url: `${url}/remoteConfig`,
+          url: `${url}/${path}`,
           headers: FIREBASE_REMOTE_CONFIG_HEADERS
         };
         return this.httpClient.send(request);
@@ -303,6 +307,7 @@ const ERROR_CODE_MAPPING: { [key: string]: RemoteConfigErrorCode } = {
   ABORTED: 'aborted',
   ALREADY_EXISTS: `already-exists`,
   INVALID_ARGUMENT: 'invalid-argument',
+  INTERNAL_ERROR: 'internal-error',
   FAILED_PRECONDITION: 'failed-precondition',
   NOT_FOUND: 'not-found',
   OUT_OF_RANGE: 'out-of-range',
