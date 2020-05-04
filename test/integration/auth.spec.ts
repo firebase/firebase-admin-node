@@ -219,7 +219,7 @@ describe('admin.auth', () => {
      * the uid, email, and phoneNumber fields. Works with at least UserRecord
      * and UserImportRecord instances.
      */
-    function mapUserRecordsToUidEmailPhones(values: Array<{ uid: string, email?: string, phoneNumber?: string}>) {
+    function mapUserRecordsToUidEmailPhones(values: Array<{ uid: string; email?: string; phoneNumber?: string}>): Array<{ uid: string; email?: string; phoneNumber?: string}> {
       return values.map((ur) => ({ uid: ur.uid, email: ur.email, phoneNumber: ur.phoneNumber }));
     }
 
@@ -273,11 +273,11 @@ describe('admin.auth', () => {
 
     it('returns users by various identifier types in a single call', async () => {
       const users = await admin.auth().getUsers([
-          { uid: 'uid1' },
-          { email: 'user2@example.com' },
-          { phoneNumber: '+15555550003' },
-          { providerId: 'google.com', providerUid: 'google_uid4' },
-        ])
+        { uid: 'uid1' },
+        { email: 'user2@example.com' },
+        { phoneNumber: '+15555550003' },
+        { providerId: 'google.com', providerUid: 'google_uid4' },
+      ])
         .then((getUsersResult) => getUsersResult.users)
         .then(mapUserRecordsToUidEmailPhones);
 
@@ -286,10 +286,10 @@ describe('admin.auth', () => {
 
     it('returns found users and ignores non-existing users', async () => {
       const users = await admin.auth().getUsers([
-          { uid: 'uid1' },
-          { uid: 'uid_that_doesnt_exist' },
-          { uid: 'uid3' },
-        ]);
+        { uid: 'uid1' },
+        { uid: 'uid_that_doesnt_exist' },
+        { uid: 'uid3' },
+      ]);
       expect(users.notFound).to.have.deep.members([{uid: 'uid_that_doesnt_exist'}]);
 
       const foundUsers = mapUserRecordsToUidEmailPhones(users.users);
@@ -306,9 +306,9 @@ describe('admin.auth', () => {
 
     it('de-dups duplicate users', async () => {
       const users = await admin.auth().getUsers([
-          { uid: 'uid1' },
-          { uid: 'uid1' },
-        ])
+        { uid: 'uid1' },
+        { uid: 'uid1' },
+      ])
         .then((getUsersResult) => getUsersResult.users)
         .then(mapUserRecordsToUidEmailPhones);
 

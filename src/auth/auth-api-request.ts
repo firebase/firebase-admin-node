@@ -576,8 +576,8 @@ interface GetAccountInfoRequest {
   email?: string[];
   phoneNumber?: string[];
   federatedUserId?: Array<{
-    providerId: string,
-    rawId: string,
+    providerId: string;
+    rawId: string;
   }>;
 }
 

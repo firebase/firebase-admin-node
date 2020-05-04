@@ -1231,38 +1231,38 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
       it('returns users by various identifier types in a single call', async () => {
         const mockUsers = [{
-            localId: 'uid1',
-            email: 'user1@example.com',
-            phoneNumber: '+15555550001',
-          }, {
-            localId: 'uid2',
-            email: 'user2@example.com',
-            phoneNumber: '+15555550002',
-          }, {
-            localId: 'uid3',
-            email: 'user3@example.com',
-            phoneNumber: '+15555550003',
-          }, {
-            localId: 'uid4',
-            email: 'user4@example.com',
-            phoneNumber: '+15555550004',
-            providerUserInfo: [{
-              providerId: 'google.com',
-              rawId: 'google_uid4',
-            }],
-          }];
+          localId: 'uid1',
+          email: 'user1@example.com',
+          phoneNumber: '+15555550001',
+        }, {
+          localId: 'uid2',
+          email: 'user2@example.com',
+          phoneNumber: '+15555550002',
+        }, {
+          localId: 'uid3',
+          email: 'user3@example.com',
+          phoneNumber: '+15555550003',
+        }, {
+          localId: 'uid4',
+          email: 'user4@example.com',
+          phoneNumber: '+15555550004',
+          providerUserInfo: [{
+            providerId: 'google.com',
+            rawId: 'google_uid4',
+          }],
+        }];
 
         const stub = sinon.stub(testConfig.RequestHandler.prototype, 'getAccountInfoByIdentifiers')
           .resolves({users: mockUsers});
         stubs.push(stub);
 
         const users = await auth.getUsers([
-            { uid: 'uid1' },
-            { email: 'user2@example.com' },
-            { phoneNumber: '+15555550003' },
-            { providerId: 'google.com', providerUid: 'google_uid4' },
-            { uid: 'this-user-doesnt-exist' },
-          ]);
+          { uid: 'uid1' },
+          { email: 'user2@example.com' },
+          { phoneNumber: '+15555550003' },
+          { providerId: 'google.com', providerUid: 'google_uid4' },
+          { uid: 'this-user-doesnt-exist' },
+        ]);
 
         expect(users.users).to.have.deep.members(mockUsers.map((u) => new UserRecord(u)));
         expect(users.notFound).to.have.deep.members([{uid: 'this-user-doesnt-exist'}]);
