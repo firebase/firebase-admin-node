@@ -1306,23 +1306,6 @@ AUTH_CONFIGS.forEach((testConfig) => {
           });
       });
 
-      it('should be rejected when given more than 1000 identifiers', () => {
-        const ids: string[] = [];
-        for (let i = 0; i < 1001; i++) {
-          ids.push('id' + i);
-        }
-
-        expect(() => auth.deleteUsers(ids))
-          .to.throw(FirebaseAuthError)
-          .with.property('code', 'auth/maximum-user-count-exceeded');
-      });
-
-      it('should immediately fail given an invalid id', () => {
-        expect(() => auth.deleteUsers(['too long ' + ('.' as any).repeat(128)]))
-          .to.throw(FirebaseAuthError)
-          .with.property('code', 'auth/invalid-uid');
-      });
-
       it('should index errors correctly in result', async () => {
         const stub = sinon.stub(testConfig.RequestHandler.prototype, 'deleteAccounts')
           .resolves({

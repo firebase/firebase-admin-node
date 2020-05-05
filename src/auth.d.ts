@@ -677,7 +677,7 @@ export namespace admin.auth {
 
     /**
      * The number of users that were deleted successfully (possibly zero).
-     * Users that did not exist prior to calling deleteUsers() are
+     * Users that did not exist prior to calling `deleteUsers()` are
      * considered to be successfully deleted.
      */
     successCount: number;

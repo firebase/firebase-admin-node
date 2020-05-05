@@ -1311,7 +1311,6 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
     });
 
-
     describe('uploadAccount', () => {
       const path = handler.path('v1', '/accounts:batchCreate', 'project_id');
       const tenantId = handler.supportsTenantManagement ? undefined : TENANT_ID;
@@ -1918,6 +1917,35 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             expect(error).to.deep.equal(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
           });
+      });
+    });
+
+    describe('deleteAccounts', () => {
+      it('should succeed given an empty list', () => {
+        const requestHandler = handler.init(mockApp);
+        return requestHandler.deleteAccounts([], /*force=*/true)
+          .then((deleteUsersResult) => {
+            expect(deleteUsersResult).to.deep.equal({});
+          });
+      });
+
+      it('should be rejected when given more than 1000 identifiers', () => {
+        const ids: string[] = [];
+        for (let i = 0; i < 1001; i++) {
+          ids.push('id' + i);
+        }
+
+        const requestHandler = handler.init(mockApp);
+        expect(() => requestHandler.deleteAccounts(ids, /*force=*/true))
+          .to.throw(FirebaseAuthError)
+          .with.property('code', 'auth/maximum-user-count-exceeded');
+      });
+
+      it('should immediately fail given an invalid id', () => {
+        const requestHandler = handler.init(mockApp);
+        expect(() => requestHandler.deleteAccounts(['too long ' + ('.' as any).repeat(128)], /*force=*/true))
+          .to.throw(FirebaseAuthError)
+          .with.property('code', 'auth/invalid-uid');
       });
     });
 
