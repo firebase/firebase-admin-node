@@ -135,6 +135,13 @@ describe('RemoteConfigApiClient', () => {
         .should.eventually.be.rejectedWith(noProjectId);
     });
 
+    ['', 'abc', 'a23', 1.2, '70.2', null, NaN, true, [], {}].forEach((invalidVersion) => {
+      it(`should reject if the versionNumber is: ${invalidVersion}`, () => {
+        expect(() => apiClient.getTemplate(invalidVersion as any))
+          .to.throw(/^versionNumber must be (a non-empty string in int64 format or a number|an integer or a string in int64 format)$/);
+      });
+    });
+
     it('should resolve with the latest template on success', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
@@ -167,8 +174,9 @@ describe('RemoteConfigApiClient', () => {
           expect(resp.etag).to.equal('etag-123456789012-60');
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'GET',
-            url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig?versionNumber=60',
+            url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig',
             headers: EXPECTED_HEADERS,
+            data: { versionNumber: '60' },
           });
         });
     });

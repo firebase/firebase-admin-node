@@ -107,14 +107,20 @@ export class RemoteConfigApiClient {
   }
 
   public getTemplate(versionNumber?: number | string): Promise<RemoteConfigTemplate> {
+    let requestData: any;
+    if (typeof versionNumber !== 'undefined') {
+      this.validateVersionNumber(versionNumber);
+      requestData = { versionNumber: `${versionNumber}` };
+    }
     return this.getUrl()
       .then((url) => {
         const request: HttpRequestConfig = {
           method: 'GET',
           url: `${url}/remoteConfig`,
           headers: FIREBASE_REMOTE_CONFIG_HEADERS,
-          data: (typeof versionNumber !== 'undefined') ?
-            { versionNumber: `${versionNumber}` } : undefined
+          ...requestData
+            ? { data: requestData }
+            : {}
         };
         return this.httpClient.send(request);
       })
@@ -287,6 +293,28 @@ export class RemoteConfigApiClient {
       throw new FirebaseRemoteConfigError(
         'invalid-argument',
         'Remote Config conditions must be an array');
+    }
+  }
+
+  /**
+   * Checks if a given version number is valid.
+   * A version number must be an integer or a string in int64 format.
+   *
+   * @param {string|number} versionNumber A version number to be validated.
+   */
+  private validateVersionNumber(versionNumber: string | number): void {
+    if (!validator.isNonEmptyString(versionNumber) &&
+      !validator.isNumber(versionNumber)) {
+      throw new FirebaseRemoteConfigError(
+        'invalid-argument',
+        'versionNumber must be a non-empty string in int64 format or a number');
+    }
+    const version = validator.isNumber(versionNumber) ?
+      versionNumber : parseFloat(versionNumber as string);
+    if (!Number.isInteger(version as number)) {
+      throw new FirebaseRemoteConfigError(
+        'invalid-argument',
+        'versionNumber must be an integer or a string in int64 format');
     }
   }
 }
