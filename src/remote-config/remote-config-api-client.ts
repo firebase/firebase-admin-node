@@ -107,10 +107,10 @@ export class RemoteConfigApiClient {
   }
 
   public getTemplate(versionNumber?: number | string): Promise<RemoteConfigTemplate> {
-    let requestData: any;
+    const requestData: { [k: string]: any } = {};
     if (typeof versionNumber !== 'undefined') {
       this.validateVersionNumber(versionNumber);
-      requestData = { versionNumber: `${versionNumber}` };
+      requestData['versionNumber'] = versionNumber;
     }
     return this.getUrl()
       .then((url) => {
@@ -118,9 +118,7 @@ export class RemoteConfigApiClient {
           method: 'GET',
           url: `${url}/remoteConfig`,
           headers: FIREBASE_REMOTE_CONFIG_HEADERS,
-          ...requestData
-            ? { data: requestData }
-            : {}
+          data: requestData
         };
         return this.httpClient.send(request);
       })
@@ -309,9 +307,7 @@ export class RemoteConfigApiClient {
         'invalid-argument',
         'versionNumber must be a non-empty string in int64 format or a number');
     }
-    const version = validator.isNumber(versionNumber) ?
-      versionNumber : parseFloat(versionNumber as string);
-    if (!Number.isInteger(version as number)) {
+    if (!Number.isInteger(Number(versionNumber))) {
       throw new FirebaseRemoteConfigError(
         'invalid-argument',
         'versionNumber must be an integer or a string in int64 format');

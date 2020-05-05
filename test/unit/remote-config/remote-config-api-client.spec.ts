@@ -135,7 +135,7 @@ describe('RemoteConfigApiClient', () => {
         .should.eventually.be.rejectedWith(noProjectId);
     });
 
-    ['', 'abc', 'a23', 1.2, '70.2', null, NaN, true, [], {}].forEach((invalidVersion) => {
+    ['', 'abc', 'a123b', 'a123', '123a', 1.2, '70.2', null, NaN, true, [], {}].forEach((invalidVersion) => {
       it(`should reject if the versionNumber is: ${invalidVersion}`, () => {
         expect(() => apiClient.getTemplate(invalidVersion as any))
           .to.throw(/^versionNumber must be (a non-empty string in int64 format or a number|an integer or a string in int64 format)$/);
@@ -157,6 +157,7 @@ describe('RemoteConfigApiClient', () => {
             method: 'GET',
             url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig',
             headers: EXPECTED_HEADERS,
+            data: {},
           });
         });
     });
