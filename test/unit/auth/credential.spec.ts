@@ -448,6 +448,7 @@ describe('Credential', () => {
         refresh_token: "fakerefreshtoken",
         type: "authorized_user",
       };
+      delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
       process.env.FIREBASE_EMULATOR_CREDENTIALS = JSON.stringify(firebaseEmulatorCred);
 
       const defaultCred = getApplicationDefault();
