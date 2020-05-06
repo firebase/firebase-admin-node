@@ -110,8 +110,6 @@ toc:
     path: /docs/reference/admin/node/admin.auth.PhoneIdentifier
   - title: "ProviderIdentifier"
     path: /docs/reference/admin/node/admin.auth.ProviderIdentifier
-  - title: "UserIdentifier"
-    path: /docs/reference/admin/node/admin.auth.UserIdentifier
 
 - title: "admin.credential"
   path: /docs/reference/admin/node/admin.credential
