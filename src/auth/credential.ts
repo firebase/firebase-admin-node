@@ -258,7 +258,7 @@ export class ComputeEngineCredential implements Credential {
  */
 export class RefreshTokenCredential implements Credential {
 
-  private readonly refreshToken: RefreshToken;
+  readonly refreshToken: RefreshToken;
   private readonly httpClient: HttpClient;
 
   /**
@@ -350,6 +350,21 @@ class RefreshToken {
 export function getApplicationDefault(httpAgent?: Agent): Credential {
   if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
     return credentialFromFile(process.env.GOOGLE_APPLICATION_CREDENTIALS, httpAgent);
+  }
+
+  // Allow the Emulator Suite to pass an authorized_user credential as an environment
+  // variable. This is similar to the gcloud's application default credentials but
+  // not saved to the file system.
+  if (process.env.FIREBASE_EMULATOR_CREDENTIALS) {
+    try {
+      const creds = JSON.parse(process.env.FIREBASE_EMULATOR_CREDENTIALS);
+      return new RefreshTokenCredential(creds, httpAgent, true);
+    } catch (error) {
+      throw new FirebaseAppError(
+        AppErrorCodes.INVALID_CREDENTIAL, 
+        "FIREBASE_EMULATOR_CREDENTIALS set to an invalid JSON string"
+      );
+    }
   }
 
   // It is OK to not have this file. If it is present, it must be valid.

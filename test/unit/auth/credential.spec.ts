@@ -397,6 +397,7 @@ describe('Credential', () => {
       if (fsStub) {
         fsStub.restore();
       }
+      delete process.env.FIREBASE_EMULATOR_CREDENTIALS;
     });
 
     it('should return a CertCredential with GOOGLE_APPLICATION_CREDENTIALS set', () => {
@@ -438,6 +439,48 @@ describe('Credential', () => {
       }
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
       expect((getApplicationDefault())).to.be.an.instanceof(RefreshTokenCredential);
+    });
+
+    it('should return a RefreshTokenCredential with FIREBASE_EMULATOR_CREDENTIALS', () => {
+      const firebaseEmulatorCred = {
+        client_id: "fakeclientid",
+        client_secret: "fakeclientsecret",
+        refresh_token: "fakerefreshtoken",
+        type: "authorized_user",
+      };
+      process.env.FIREBASE_EMULATOR_CREDENTIALS = JSON.stringify(firebaseEmulatorCred);
+
+      const defaultCred = getApplicationDefault();
+      expect(defaultCred).to.be.an.instanceof(RefreshTokenCredential);
+      expect((defaultCred as RefreshTokenCredential).refreshToken.refreshToken).to.eql(firebaseEmulatorCred.refresh_token);
+    });
+
+    it('should throw if FIREBASE_EMULATOR_CREDENTIALS is invalid', () => {
+      process.env.FIREBASE_EMULATOR_CREDENTIALS = "{{}}";
+      expect(() => getApplicationDefault()).to.throw(Error);
+    });
+
+    it('should prefer FIREBASE_EMULATOR_CREDENTIALS to gcloud default', () => {
+      if (!fs.existsSync(GCLOUD_CREDENTIAL_PATH)) {
+        // tslint:disable-next-line:no-console
+        console.log(
+          'WARNING: Test being skipped because gcloud credentials not found. Run `gcloud beta auth ' +
+          'application-default login`.');
+        return;
+      }
+      delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+
+      const firebaseEmulatorCred = {
+        client_id: "fakeclientid",
+        client_secret: "fakeclientsecret",
+        refresh_token: "fakerefreshtoken",
+        type: "authorized_user",
+      };
+      process.env.FIREBASE_EMULATOR_CREDENTIALS = JSON.stringify(firebaseEmulatorCred);
+
+      const defaultCred = getApplicationDefault();
+      expect(defaultCred).to.be.an.instanceof(RefreshTokenCredential);
+      expect((defaultCred as RefreshTokenCredential).refreshToken.refreshToken).to.eql(firebaseEmulatorCred.refresh_token);
     });
 
     it('should throw if a the gcloud login cache is invalid', () => {
