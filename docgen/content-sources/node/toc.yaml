@@ -98,6 +98,18 @@ toc:
     path: /docs/reference/admin/node/admin.auth.BaseAuth
   - title: "ListUsersResult"
     path: /docs/reference/admin/node/admin.auth.ListUsersResult
+  - title: "GetUsersResult"
+    path: /docs/reference/admin/node/admin.auth.GetUsersResult
+  - title: "DeleteUsersResult"
+    path: /docs/reference/admin/node/admin.auth.DeleteUsersResult
+  - title: "UidIdentifier"
+    path: /docs/reference/admin/node/admin.auth.UidIdentifier
+  - title: "EmailIdentifier"
+    path: /docs/reference/admin/node/admin.auth.EmailIdentifier
+  - title: "PhoneIdentifier"
+    path: /docs/reference/admin/node/admin.auth.PhoneIdentifier
+  - title: "ProviderIdentifier"
+    path: /docs/reference/admin/node/admin.auth.ProviderIdentifier
 
 - title: "admin.credential"
   path: /docs/reference/admin/node/admin.credential

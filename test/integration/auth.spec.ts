@@ -213,6 +213,136 @@ describe('admin.auth', () => {
       });
   });
 
+  describe('getUsers()', () => {
+    /**
+     * Filters a list of object to another list of objects that only contains
+     * the uid, email, and phoneNumber fields. Works with at least UserRecord
+     * and UserImportRecord instances.
+     */
+    function mapUserRecordsToUidEmailPhones(values: Array<{ uid: string; email?: string; phoneNumber?: string}>): Array<{ uid: string; email?: string; phoneNumber?: string}> {
+      return values.map((ur) => ({ uid: ur.uid, email: ur.email, phoneNumber: ur.phoneNumber }));
+    }
+
+    const testUser1 = { uid: 'uid1', email: 'user1@example.com', phoneNumber: '+15555550001' };
+    const testUser2 = { uid: 'uid2', email: 'user2@example.com', phoneNumber: '+15555550002' };
+    const testUser3 = { uid: 'uid3', email: 'user3@example.com', phoneNumber: '+15555550003' };
+    const usersToCreate = [ testUser1, testUser2, testUser3 ];
+
+    // Also create a user with a provider config. (You can't create a user with
+    // a provider config. But you *can* import one.)
+    const importUser1: admin.auth.UserImportRecord = {
+      uid: 'uid4',
+      email: 'user4@example.com',
+      phoneNumber: '+15555550004',
+      emailVerified: true,
+      disabled: false,
+      metadata: {
+        lastSignInTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
+        creationTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
+        lastRefreshTime: null,
+      },
+      providerData: [{
+        displayName: 'User Four',
+        email: 'user4@example.com',
+        phoneNumber: '+15555550004',
+        photoURL: 'http://example.com/user4',
+        providerId: 'google.com',
+        uid: 'google_uid4',
+      }],
+    };
+
+    const testUser4 = mapUserRecordsToUidEmailPhones([importUser1])[0];
+
+    before(async () => {
+      // Delete all the users that we're about to create (in case they were
+      // left over from a prior run).
+      const uidsToDelete = usersToCreate.map((user) => user.uid);
+      uidsToDelete.push(importUser1.uid);
+      await admin.auth().deleteUsers(uidsToDelete);
+
+      // Create/import users required by these tests
+      await Promise.all(usersToCreate.map((user) => admin.auth().createUser(user)));
+      await admin.auth().importUsers([importUser1]);
+    });
+
+    after(async () => {
+      const uidsToDelete = usersToCreate.map((user) => user.uid);
+      uidsToDelete.push(importUser1.uid);
+      await admin.auth().deleteUsers(uidsToDelete);
+    });
+
+    it('returns users by various identifier types in a single call', async () => {
+      const users = await admin.auth().getUsers([
+        { uid: 'uid1' },
+        { email: 'user2@example.com' },
+        { phoneNumber: '+15555550003' },
+        { providerId: 'google.com', providerUid: 'google_uid4' },
+      ])
+        .then((getUsersResult) => getUsersResult.users)
+        .then(mapUserRecordsToUidEmailPhones);
+
+      expect(users).to.have.deep.members([testUser1, testUser2, testUser3, testUser4]);
+    });
+
+    it('returns found users and ignores non-existing users', async () => {
+      const users = await admin.auth().getUsers([
+        { uid: 'uid1' },
+        { uid: 'uid_that_doesnt_exist' },
+        { uid: 'uid3' },
+      ]);
+      expect(users.notFound).to.have.deep.members([{uid: 'uid_that_doesnt_exist'}]);
+
+      const foundUsers = mapUserRecordsToUidEmailPhones(users.users);
+      expect(foundUsers).to.have.deep.members([testUser1, testUser3]);
+    });
+
+    it('returns nothing when queried for only non-existing users', async () => {
+      const notFoundIds = [{uid: 'non-existing user'}];
+      const users = await admin.auth().getUsers(notFoundIds);
+
+      expect(users.users).to.be.empty;
+      expect(users.notFound).to.deep.equal(notFoundIds);
+    });
+
+    it('de-dups duplicate users', async () => {
+      const users = await admin.auth().getUsers([
+        { uid: 'uid1' },
+        { uid: 'uid1' },
+      ])
+        .then((getUsersResult) => getUsersResult.users)
+        .then(mapUserRecordsToUidEmailPhones);
+
+      expect(users).to.deep.equal([testUser1]);
+    });
+
+    it('returns users with a lastRefreshTime', async () => {
+      const isUTCString = (s: string): boolean => {
+        return new Date(s).toUTCString() === s;
+      };
+
+      const newUserRecord = await admin.auth().createUser({
+        uid: 'lastRefreshTimeUser',
+        email: 'lastRefreshTimeUser@example.com',
+        password: 'p4ssword',
+      });
+
+      try {
+        // New users should not have a lastRefreshTime set.
+        expect(newUserRecord.metadata.lastRefreshTime).to.be.null;
+
+        // Login to set the lastRefreshTime.
+        await firebase.auth!().signInWithEmailAndPassword('lastRefreshTimeUser@example.com', 'p4ssword')
+          .then(() => admin.auth().getUser('lastRefreshTimeUser'))
+          .then((userRecord) => {
+            expect(userRecord.metadata.lastRefreshTime).to.exist;
+            expect(isUTCString(userRecord.metadata.lastRefreshTime!));
+          });
+      } finally {
+        admin.auth().deleteUser('lastRefreshTimeUser');
+      }
+    });
+  });
+
   it('listUsers() returns up to the specified number of users', () => {
     const promises: Array<Promise<admin.auth.UserRecord>> = [];
     uids.forEach((uid) => {
@@ -1302,6 +1432,63 @@ describe('admin.auth', () => {
       admin.auth().deleteUser(newMultiFactorUserUid),
       admin.auth().deleteUser(uidFromCreateUserWithoutUid),
     ]).should.eventually.be.fulfilled;
+  });
+
+  describe('deleteUsers()', () => {
+    it('deletes users', async () => {
+      const uid1 = await admin.auth().createUser({}).then((ur) => ur.uid);
+      const uid2 = await admin.auth().createUser({}).then((ur) => ur.uid);
+      const uid3 = await admin.auth().createUser({}).then((ur) => ur.uid);
+      const ids = [{uid: uid1}, {uid: uid2}, {uid: uid3}];
+
+      return admin.auth().deleteUsers([uid1, uid2, uid3])
+        .then((deleteUsersResult) => {
+          expect(deleteUsersResult.successCount).to.equal(3);
+          expect(deleteUsersResult.failureCount).to.equal(0);
+          expect(deleteUsersResult.errors).to.have.length(0);
+
+          return admin.auth().getUsers(ids);
+        })
+        .then((getUsersResult) => {
+          expect(getUsersResult.users).to.have.length(0);
+          expect(getUsersResult.notFound).to.have.deep.members(ids);
+        });
+    });
+
+    it('deletes users that exist even when non-existing users also specified', async () => {
+      const uid1 = await admin.auth().createUser({}).then((ur) => ur.uid);
+      const uid2 = 'uid-that-doesnt-exist';
+      const ids = [{uid: uid1}, {uid: uid2}];
+
+      return admin.auth().deleteUsers([uid1, uid2])
+        .then((deleteUsersResult) => {
+          expect(deleteUsersResult.successCount).to.equal(2);
+          expect(deleteUsersResult.failureCount).to.equal(0);
+          expect(deleteUsersResult.errors).to.have.length(0);
+
+          return admin.auth().getUsers(ids);
+        })
+        .then((getUsersResult) => {
+          expect(getUsersResult.users).to.have.length(0);
+          expect(getUsersResult.notFound).to.have.deep.members(ids);
+        });
+    });
+
+    it('is idempotent', async () => {
+      const uid = await admin.auth().createUser({}).then((ur) => ur.uid);
+
+      return admin.auth().deleteUsers([uid])
+        .then((deleteUsersResult) => {
+          expect(deleteUsersResult.successCount).to.equal(1);
+          expect(deleteUsersResult.failureCount).to.equal(0);
+        })
+        // Delete the user again, ensuring that everything still counts as a success.
+        .then(() => admin.auth().deleteUsers([uid]))
+        .then((deleteUsersResult) => {
+          expect(deleteUsersResult.successCount).to.equal(1);
+          expect(deleteUsersResult.failureCount).to.equal(0);
+        });
+    });
   });
 
   describe('createSessionCookie()', () => {

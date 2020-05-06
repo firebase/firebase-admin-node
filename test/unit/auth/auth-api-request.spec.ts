@@ -30,7 +30,7 @@ import {FirebaseApp} from '../../../src/firebase-app';
 import {HttpClient, HttpRequestConfig} from '../../../src/utils/api-request';
 import * as validator from '../../../src/utils/validator';
 import {
-  AuthRequestHandler, FIREBASE_AUTH_GET_ACCOUNT_INFO,
+  AuthRequestHandler, FIREBASE_AUTH_GET_ACCOUNT_INFO, FIREBASE_AUTH_GET_ACCOUNTS_INFO,
   FIREBASE_AUTH_DELETE_ACCOUNT, FIREBASE_AUTH_SET_ACCOUNT_INFO,
   FIREBASE_AUTH_SIGN_UP_NEW_USER, FIREBASE_AUTH_DOWNLOAD_ACCOUNT,
   RESERVED_CLAIMS, FIREBASE_AUTH_UPLOAD_ACCOUNT, FIREBASE_AUTH_CREATE_SESSION_COOKIE,
@@ -43,6 +43,7 @@ import {
   OIDCAuthProviderConfig, SAMLAuthProviderConfig, OIDCUpdateAuthProviderRequest,
   SAMLUpdateAuthProviderRequest, SAMLConfigServerResponse,
 } from '../../../src/auth/auth-config';
+import {UserIdentifier} from '../../../src/auth/identifier';
 import {TenantOptions} from '../../../src/auth/tenant';
 import { UpdateRequest, UpdateMultiFactorInfoRequest } from '../../../src/auth/user-record';
 
@@ -344,6 +345,12 @@ describe('FIREBASE_AUTH_GET_ACCOUNT_INFO', () => {
         return requestValidator(validRequest);
       }).not.to.throw();
     });
+    it('should succeed with federatedUserId passed', () => {
+      const validRequest = {federatedUserId: [{providerId: 'google.com', rawId: 'google_uid'}]};
+      expect(() => {
+        return requestValidator(validRequest);
+      }).not.to.throw();
+    });
     it('should fail when neither localId, email or phoneNumber are passed', () => {
       const invalidRequest = {bla: ['1234']};
       expect(() => {
@@ -364,6 +371,76 @@ describe('FIREBASE_AUTH_GET_ACCOUNT_INFO', () => {
       expect(() => {
         responseValidator(invalidResponse);
       }).to.throw();
+    });
+  });
+});
+
+describe('FIREBASE_AUTH_GET_ACCOUNTS_INFO', () => {
+  it('should return the correct endpoint', () => {
+    expect(FIREBASE_AUTH_GET_ACCOUNTS_INFO.getEndpoint()).to.equal('/accounts:lookup');
+  });
+  it('should return the correct http method', () => {
+    expect(FIREBASE_AUTH_GET_ACCOUNTS_INFO.getHttpMethod()).to.equal('POST');
+  });
+  describe('requestValidator', () => {
+    const requestValidator = FIREBASE_AUTH_GET_ACCOUNTS_INFO.getRequestValidator();
+    it('should succeed with localId passed', () => {
+      const validRequest = {localId: ['1234']};
+      expect(() => {
+        return requestValidator(validRequest);
+      }).not.to.throw();
+    });
+    it('should succeed with email passed', () => {
+      const validRequest = {email: ['user@example.com']};
+      expect(() => {
+        return requestValidator(validRequest);
+      }).not.to.throw();
+    });
+    it('should succeed with phoneNumber passed', () => {
+      const validRequest = {phoneNumber: ['+11234567890']};
+      expect(() => {
+        return requestValidator(validRequest);
+      }).not.to.throw();
+    });
+    it('should succeed with federatedUserId passed', () => {
+      const validRequest = {federatedUserId: [{providerId: 'google.com', rawId: 'google_uid'}]};
+      expect(() => {
+        return requestValidator(validRequest);
+      }).not.to.throw();
+    });
+    it('should fail when neither localId, email or phoneNumber are passed', () => {
+      const invalidRequest = {bla: ['1234']};
+      expect(() => {
+        return requestValidator(invalidRequest);
+      }).to.throw();
+    });
+    it('should succeed when multiple identifiers passed', () => {
+      const validRequest = {
+        localId: ['123', '456'],
+        email: ['user1@example.com', 'user2@example.com'],
+        phoneNumber: ['+15555550001', '+15555550002'],
+        federatedUserId: [
+          {providerId: 'google.com', rawId: 'google_uid1'},
+          {providerId: 'google.com', rawId: 'google_uid2'}
+        ]};
+      expect(() => {
+        return requestValidator(validRequest);
+      }).not.to.throw();
+    });
+  });
+  describe('responseValidator', () => {
+    const responseValidator = FIREBASE_AUTH_GET_ACCOUNTS_INFO.getResponseValidator();
+    it('should succeed with users returned', () => {
+      const validResponse: object = {users: []};
+      expect(() => {
+        return responseValidator(validResponse);
+      }).not.to.throw();
+    });
+    it('should succeed even if users are not returned', () => {
+      const invalidResponse = {};
+      expect(() => {
+        responseValidator(invalidResponse);
+      }).not.to.throw();
     });
   });
 });
@@ -1118,6 +1195,122 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
     });
 
+    describe('getAccountInfoByIdentifiers', () => {
+      it('should throw when given more than 100 identifiers', () => {
+        const identifiers: UserIdentifier[] = [];
+        for (let i = 0; i < 101; i++) {
+          identifiers.push({uid: 'id' + i});
+        }
+
+        const requestHandler = handler.init(mockApp);
+        expect(() => requestHandler.getAccountInfoByIdentifiers(identifiers))
+          .to.throw(FirebaseAuthError)
+          .with.property('code', 'auth/maximum-user-count-exceeded');
+      });
+
+      it('should return no results when given no identifiers', () => {
+        const requestHandler = handler.init(mockApp);
+        return requestHandler.getAccountInfoByIdentifiers([])
+          .then((getUsersResult) => {
+            expect(getUsersResult).to.deep.equal({users: []});
+          });
+      });
+
+      it('should return no users when given identifiers that do not exist', () => {
+        const expectedResult = utils.responseFrom({ users: [] });
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+
+        const requestHandler = handler.init(mockApp);
+        const notFoundIds = [{uid: 'id that doesnt exist'}];
+        return requestHandler.getAccountInfoByIdentifiers(notFoundIds)
+          .then((getUsersResult) => {
+            expect(getUsersResult).to.deep.equal({ users: [] });
+          });
+      });
+
+      it('should throw when given an invalid uid', () => {
+        const requestHandler = handler.init(mockApp);
+        expect(() => requestHandler.getAccountInfoByIdentifiers([{uid: 'too long ' + ('.' as any).repeat(128)}]))
+          .to.throw(FirebaseAuthError)
+          .with.property('code', 'auth/invalid-uid');
+      });
+
+      it('should throw when given an invalid email', () => {
+        const requestHandler = handler.init(mockApp);
+        expect(() => requestHandler.getAccountInfoByIdentifiers([{email: 'invalid email addr'}]))
+          .to.throw(FirebaseAuthError)
+          .with.property('code', 'auth/invalid-email');
+      });
+
+      it('should throw when given an invalid phone number', () => {
+        const requestHandler = handler.init(mockApp);
+        expect(() => requestHandler.getAccountInfoByIdentifiers([{phoneNumber: 'invalid phone number'}]))
+          .to.throw(FirebaseAuthError)
+          .with.property('code', 'auth/invalid-phone-number');
+      });
+
+      it('should throw when given an invalid provider', () => {
+        const requestHandler = handler.init(mockApp);
+        expect(() => requestHandler.getAccountInfoByIdentifiers([{providerUid: '', providerId: ''}]))
+          .to.throw(FirebaseAuthError)
+          .with.property('code', 'auth/invalid-provider-id');
+      });
+
+      it('should throw when given a single bad identifier', () => {
+        const identifiers: UserIdentifier[] = [
+          {uid: 'valid_id1'},
+          {uid: 'valid_id2'},
+          {uid: 'invalid id; too long. ' + ('.' as any).repeat(128)},
+          {uid: 'valid_id4'},
+          {uid: 'valid_id5'},
+        ];
+
+        const requestHandler = handler.init(mockApp);
+        expect(() => requestHandler.getAccountInfoByIdentifiers(identifiers))
+          .to.throw(FirebaseAuthError)
+          .with.property('code', 'auth/invalid-uid');
+      });
+
+      it('returns users by various identifier types in a single call', async () => {
+        const mockUsers = [{
+          localId: 'uid1',
+          email: 'user1@example.com',
+          phoneNumber: '+15555550001',
+        }, {
+          localId: 'uid2',
+          email: 'user2@example.com',
+          phoneNumber: '+15555550002',
+        }, {
+          localId: 'uid3',
+          email: 'user3@example.com',
+          phoneNumber: '+15555550003',
+        }, {
+          localId: 'uid4',
+          email: 'user4@example.com',
+          phoneNumber: '+15555550004',
+          providerUserInfo: [{
+            providerId: 'google.com',
+            rawId: 'google_uid4',
+          }],
+        }];
+        const expectedResult = utils.responseFrom({ users: mockUsers })
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+
+        const requestHandler = handler.init(mockApp);
+        const users = await requestHandler.getAccountInfoByIdentifiers([
+          { uid: 'uid1' },
+          { email: 'user2@example.com' },
+          { phoneNumber: '+15555550003' },
+          { providerId: 'google.com', providerUid: 'google_uid4' },
+          { uid: 'this-user-doesnt-exist' },
+        ]);
+
+        expect(users).to.deep.equal({ users: mockUsers })
+      });
+    });
+
     describe('uploadAccount', () => {
       const path = handler.path('v1', '/accounts:batchCreate', 'project_id');
       const tenantId = handler.supportsTenantManagement ? undefined : TENANT_ID;
@@ -1722,6 +1915,52 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             throw new Error('Unexpected success');
           }, (error) => {
             expect(error).to.deep.equal(expectedError);
+            expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
+          });
+      });
+    });
+
+    describe('deleteAccounts', () => {
+      const path = handler.path('v1', '/accounts:batchDelete', 'project_id');
+      const method = 'POST';
+
+      it('should succeed given an empty list', () => {
+        const requestHandler = handler.init(mockApp);
+        return requestHandler.deleteAccounts([], /*force=*/true)
+          .then((deleteUsersResult) => {
+            expect(deleteUsersResult).to.deep.equal({});
+          });
+      });
+
+      it('should be rejected when given more than 1000 identifiers', () => {
+        const ids: string[] = [];
+        for (let i = 0; i < 1001; i++) {
+          ids.push('id' + i);
+        }
+
+        const requestHandler = handler.init(mockApp);
+        expect(() => requestHandler.deleteAccounts(ids, /*force=*/true))
+          .to.throw(FirebaseAuthError)
+          .with.property('code', 'auth/maximum-user-count-exceeded');
+      });
+
+      it('should immediately fail given an invalid id', () => {
+        const requestHandler = handler.init(mockApp);
+        expect(() => requestHandler.deleteAccounts(['too long ' + ('.' as any).repeat(128)], /*force=*/true))
+          .to.throw(FirebaseAuthError)
+          .with.property('code', 'auth/invalid-uid');
+      });
+
+      it('should be fulfilled given valid uids', async () => {
+        const expectedResult = utils.responseFrom({});
+        const data = {localIds: ['uid1', 'uid2', 'uid3'], force: true};
+
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+        const requestHandler = handler.init(mockApp);
+        return requestHandler.deleteAccounts(['uid1', 'uid2', 'uid3'], /*force=*/true)
+          .then((result) => {
+            expect(result).to.deep.equal({})
             expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
           });
       });

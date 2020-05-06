@@ -16,9 +16,15 @@ export namespace admin.auth {
 
     /**
      * The date the user was created, formatted as a UTC string.
-     *
      */
     creationTime: string;
+
+    /**
+     * The time at which the user was last active (ID token refreshed),
+     * formatted as a UTC Date string (eg 'Sat, 03 Feb 2001 04:05:06 GMT').
+     * Returns null if the user was never active.
+     */
+    lastRefreshTime: string|null;
 
     /**
      * @return A JSON-serializable representation of this object.
@@ -532,6 +538,19 @@ export namespace admin.auth {
     [key: string]: any;
   }
 
+  /** Represents the result of the {@link admin.auth.getUsers()} API. */
+  interface GetUsersResult {
+    /**
+     * Set of user records, corresponding to the set of users that were
+     * requested. Only users that were found are listed here. The result set is
+     * unordered.
+     */
+    users: UserRecord[];
+
+    /** Set of identifiers that were requested, but not found. */
+    notFound: UserIdentifier[];
+  }
+
   /**
    * Interface representing the object returned from a
    * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#listUsers `listUsers()`} operation. Contains the list
@@ -646,6 +665,32 @@ export namespace admin.auth {
   }
 
   /**
+   * Represents the result of the
+   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#deleteUsers `deleteUsers()`}
+   * API.
+   */
+  interface DeleteUsersResult {
+    /**
+     * The number of user records that failed to be deleted (possibly zero).
+     */
+    failureCount: number;
+
+    /**
+     * The number of users that were deleted successfully (possibly zero).
+     * Users that did not exist prior to calling `deleteUsers()` are
+     * considered to be successfully deleted.
+     */
+    successCount: number;
+
+    /**
+     * A list of `FirebaseArrayIndexError` instances describing the errors that
+     * were encountered during the deletion. Length of this list is equal to
+     * the return value of [`failureCount`](#failureCount).
+     */
+    errors: _admin.FirebaseArrayIndexError[];
+  }
+
+  /**
    * User metadata to include when importing a user.
    */
   interface UserMetadataRequest {
@@ -659,6 +704,13 @@ export namespace admin.auth {
      * The date the user was created, formatted as a UTC string.
      */
     creationTime?: string;
+
+    /**
+     * The time at which the user was last active (ID token refreshed),
+     * formatted as a UTC Date string (eg 'Sat, 03 Feb 2001 04:05:06 GMT').
+     * Null implies the user was never active.
+     */
+    lastRefreshTime?: string|null;
   }
 
   /**
@@ -1216,9 +1268,50 @@ export namespace admin.auth {
     pageToken?: string;
   }
 
-
   type UpdateAuthProviderRequest =
     admin.auth.SAMLUpdateAuthProviderRequest | admin.auth.OIDCUpdateAuthProviderRequest;
+
+  /**
+   * Used for looking up an account by uid.
+   *
+   * See auth.getUsers()
+   */
+  interface UidIdentifier {
+    uid: string;
+  }
+
+  /**
+   * Used for looking up an account by email.
+   *
+   * See auth.getUsers()
+   */
+  interface EmailIdentifier {
+    email: string;
+  }
+
+  /**
+   * Used for looking up an account by phone number.
+   *
+   * See auth.getUsers()
+   */
+  interface PhoneIdentifier {
+    phoneNumber: string;
+  }
+
+  /**
+   * Used for looking up an account by federated provider.
+   *
+   * See auth.getUsers()
+   */
+  interface ProviderIdentifier {
+    providerId: string;
+    providerUid: string;
+  }
+
+  /**
+   * Identifies a user to be looked up.
+   */
+  type UserIdentifier = UidIdentifier | EmailIdentifier | PhoneIdentifier | ProviderIdentifier;
 
   interface BaseAuth {
 
@@ -1268,6 +1361,30 @@ export namespace admin.auth {
     deleteUser(uid: string): Promise<void>;
 
     /**
+     * Deletes the users specified by the given uids.
+     *
+     * Deleting a non-existing user won't generate an error (i.e. this method
+     * is idempotent.) Non-existing users are considered to be successfully
+     * deleted, and are therefore counted in the
+     * `DeleteUsersResult.successCount` value.
+     *
+     * Only a maximum of 1000 identifiers may be supplied. If more than 1000
+     * identifiers are supplied, this method throws a FirebaseAuthError.
+     *
+     * This API is currently rate limited at the server to 1 QPS. If you exceed
+     * this, you may get a quota exceeded error. Therefore, if you want to
+     * delete more than 1000 users, you may need to add a delay to ensure you
+     * don't go over this limit.
+     *
+     * @param uids The `uids` corresponding to the users to delete.
+     *
+     * @return A Promise that resolves to the total number of successful/failed
+     *     deletions, as well as the array of errors that corresponds to the
+     *     failed deletions.
+     */
+    deleteUsers(uids: string[]): Promise<admin.auth.DeleteUsersResult>;
+
+    /**
      * Gets the user data for the user corresponding to a given `uid`.
      *
      * See [Retrieve user data](/docs/auth/admin/manage-users#retrieve_user_data)
@@ -1308,6 +1425,23 @@ export namespace admin.auth {
      *   data corresponding to the provided phone number.
      */
     getUserByPhoneNumber(phoneNumber: string): Promise<admin.auth.UserRecord>;
+
+    /**
+     * Gets the user data corresponding to the specified identifiers.
+     *
+     * There are no ordering guarantees; in particular, the nth entry in the result list is not
+     * guaranteed to correspond to the nth entry in the input parameters list.
+     *
+     * Only a maximum of 100 identifiers may be supplied. If more than 100 identifiers are supplied,
+     * this method throws a FirebaseAuthError.
+     *
+     * @param identifiers The identifiers used to indicate which user records should be returned.
+     *     Must have <= 100 entries.
+     * @return {Promise<GetUsersResult>} A promise that resolves to the corresponding user records.
+     * @throws FirebaseAuthError If any of the identifiers are invalid or if more than 100
+     *     identifiers are specified.
+     */
+    getUsers(identifiers: admin.auth.UserIdentifier[]): Promise<GetUsersResult>;
 
     /**
      * Retrieves a list of users (single batch only) with a size of `maxResults`
