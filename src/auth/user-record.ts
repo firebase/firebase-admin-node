@@ -312,6 +312,13 @@ export class UserMetadata {
   public readonly creationTime: string;
   public readonly lastSignInTime: string;
 
+  /**
+   * The time at which the user was last active (ID token refreshed), or null
+   * if the user was never active. Formatted as a UTC Date string (eg
+   * 'Sat, 03 Feb 2001 04:05:06 GMT')
+   */
+  public readonly lastRefreshTime: string | null;
+
   constructor(response: GetAccountInfoUserResponse) {
     // Creation date should always be available but due to some backend bugs there
     // were cases in the past where users did not have creation date properly set.
@@ -319,6 +326,7 @@ export class UserMetadata {
     // These bugs have already been addressed since then.
     utils.addReadonlyGetter(this, 'creationTime', parseDate(response.createdAt));
     utils.addReadonlyGetter(this, 'lastSignInTime', parseDate(response.lastLoginAt));
+    utils.addReadonlyGetter(this, 'lastRefreshTime', parseDate(response.lastRefreshAt));
   }
 
   /** @return The plain object representation of the user's metadata. */
