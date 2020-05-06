@@ -1921,6 +1921,9 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
     });
 
     describe('deleteAccounts', () => {
+      const path = handler.path('v1', '/accounts:batchDelete', 'project_id');
+      const method = 'POST';
+
       it('should succeed given an empty list', () => {
         const requestHandler = handler.init(mockApp);
         return requestHandler.deleteAccounts([], /*force=*/true)
@@ -1946,6 +1949,20 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         expect(() => requestHandler.deleteAccounts(['too long ' + ('.' as any).repeat(128)], /*force=*/true))
           .to.throw(FirebaseAuthError)
           .with.property('code', 'auth/invalid-uid');
+      });
+
+      it('should be fulfilled given a valids uids', async () => {
+        const expectedResult = utils.responseFrom({});
+        const data = {localIds: ['uid1', 'uid2', 'uid3'], force: true};
+
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+        const requestHandler = handler.init(mockApp);
+        return requestHandler.deleteAccounts(['uid1', 'uid2', 'uid3'], /*force=*/true)
+          .then((result) => {
+            expect(result).to.deep.equal({})
+            expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
+          });
       });
     });
 
