@@ -1951,7 +1951,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .with.property('code', 'auth/invalid-uid');
       });
 
-      it('should be fulfilled given a valids uids', async () => {
+      it('should be fulfilled given valid uids', async () => {
         const expectedResult = utils.responseFrom({});
         const data = {localIds: ['uid1', 'uid2', 'uid3'], force: true};
 
