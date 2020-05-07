@@ -36,8 +36,6 @@ toc:
     path: /docs/reference/admin/node/admin.auth.CreatePhoneMultiFactorInfoRequest
   - title: "CreateRequest"
     path: /docs/reference/admin/node/admin.auth.CreateRequest
-  - title: "CreateTenantRequest"
-    path: /docs/reference/admin/node/admin.auth.CreateTenantRequest
   - title: "ListProviderConfigResults"
     path: /docs/reference/admin/node/admin.auth.ListProviderConfigResults
   - title: "ListTenantsResult"
@@ -285,5 +283,3 @@ toc:
     path: /docs/reference/admin/node/admin.remoteConfig.ExplicitParameterValue
   - title: "InAppDefaultValue"
     path: /docs/reference/admin/node/admin.remoteConfig.InAppDefaultValue
-  - title: "RemoteConfigParameterValue"
-    path: /docs/reference/admin/node/admin.remoteConfig.RemoteConfigParameterValue
