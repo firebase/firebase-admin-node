@@ -60,10 +60,12 @@ export class RemoteConfig implements FirebaseServiceInterface {
   /**
   * Gets the current active version of the Remote Config template of the project.
   *
+  * @param {number | string} versionNumber Version number of the Remote Config template to look up.
+  *    If not specified, the latest Remote Config template will be returned. Optional.
   * @return {Promise<RemoteConfigTemplate>} A Promise that fulfills when the template is available.
   */
-  public getTemplate(): Promise<RemoteConfigTemplate> {
-    return this.client.getTemplate()
+  public getTemplate(versionNumber?: number | string): Promise<RemoteConfigTemplate> {
+    return this.client.getTemplate(versionNumber)
       .then((templateResponse) => {
         return new RemoteConfigTemplateImpl(templateResponse);
       });

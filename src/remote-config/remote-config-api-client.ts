@@ -106,13 +106,19 @@ export class RemoteConfigApiClient {
     this.httpClient = new AuthorizedHttpClient(app);
   }
 
-  public getTemplate(): Promise<RemoteConfigTemplate> {
+  public getTemplate(versionNumber?: number | string): Promise<RemoteConfigTemplate> {
+    const requestData: { [k: string]: any } = {};
+    if (typeof versionNumber !== 'undefined') {
+      this.validateVersionNumber(versionNumber);
+      requestData['versionNumber'] = versionNumber;
+    }
     return this.getUrl()
       .then((url) => {
         const request: HttpRequestConfig = {
           method: 'GET',
           url: `${url}/remoteConfig`,
-          headers: FIREBASE_REMOTE_CONFIG_HEADERS
+          headers: FIREBASE_REMOTE_CONFIG_HEADERS,
+          data: requestData
         };
         return this.httpClient.send(request);
       })
@@ -287,6 +293,26 @@ export class RemoteConfigApiClient {
         'Remote Config conditions must be an array');
     }
   }
+
+  /**
+   * Checks if a given version number is valid.
+   * A version number must be an integer or a string in int64 format.
+   *
+   * @param {string|number} versionNumber A version number to be validated.
+   */
+  private validateVersionNumber(versionNumber: string | number): void {
+    if (!validator.isNonEmptyString(versionNumber) &&
+      !validator.isNumber(versionNumber)) {
+      throw new FirebaseRemoteConfigError(
+        'invalid-argument',
+        'versionNumber must be a non-empty string in int64 format or a number');
+    }
+    if (!Number.isInteger(Number(versionNumber))) {
+      throw new FirebaseRemoteConfigError(
+        'invalid-argument',
+        'versionNumber must be an integer or a string in int64 format');
+    }
+  }
 }
 
 interface ErrorResponse {
@@ -303,6 +329,7 @@ const ERROR_CODE_MAPPING: { [key: string]: RemoteConfigErrorCode } = {
   ABORTED: 'aborted',
   ALREADY_EXISTS: `already-exists`,
   INVALID_ARGUMENT: 'invalid-argument',
+  INTERNAL: 'internal-error',
   FAILED_PRECONDITION: 'failed-precondition',
   NOT_FOUND: 'not-found',
   OUT_OF_RANGE: 'out-of-range',
