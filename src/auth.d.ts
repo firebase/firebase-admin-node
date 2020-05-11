@@ -24,7 +24,7 @@ export namespace admin.auth {
      * formatted as a UTC Date string (eg 'Sat, 03 Feb 2001 04:05:06 GMT').
      * Returns null if the user was never active.
      */
-    lastRefreshTime: string|null;
+    lastRefreshTime?: string|null;
 
     /**
      * @return A JSON-serializable representation of this object.
