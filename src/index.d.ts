@@ -1026,8 +1026,8 @@ declare namespace admin.remoteConfig {
     publishTemplate(template: RemoteConfigTemplate, options?: { force: boolean }): Promise<RemoteConfigTemplate>;
 
     /**
-    * Rollbacks a project's published Remote Config template to the one specified by the provided
-    * version number. A rollback is equivalent to getting a previously published Remote Config
+    * Rollbacks a project's published Remote Config template to the specified version.
+    * A rollback is equivalent to getting a previously published Remote Config
     * template, and re-publishing it using a force update.
     * 
     * @param versionNumber The version number of the Remote Config template to rollback to.

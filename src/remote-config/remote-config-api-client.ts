@@ -123,11 +123,7 @@ export class RemoteConfigApiClient {
         return this.httpClient.send(request);
       })
       .then((resp) => {
-        if (!validator.isNonEmptyString(resp.headers['etag'])) {
-          throw new FirebaseRemoteConfigError(
-            'invalid-argument',
-            'ETag header is not present in the server response.');
-        }
+        this.validateResponseEtag(resp.headers['etag']);
         return {
           conditions: resp.data.conditions,
           parameters: resp.data.parameters,
@@ -144,11 +140,7 @@ export class RemoteConfigApiClient {
     this.validateRemoteConfigTemplate(template);
     return this.sendPutRequest(template, template.etag, true)
       .then((resp) => {
-        if (!validator.isNonEmptyString(resp.headers['etag'])) {
-          throw new FirebaseRemoteConfigError(
-            'invalid-argument',
-            'ETag header is not present in the server response.');
-        }
+        this.validateResponseEtag(resp.headers['etag']);
         return {
           conditions: resp.data.conditions,
           parameters: resp.data.parameters,
@@ -174,11 +166,7 @@ export class RemoteConfigApiClient {
     }
     return this.sendPutRequest(template, ifMatch)
       .then((resp) => {
-        if (!validator.isNonEmptyString(resp.headers['etag'])) {
-          throw new FirebaseRemoteConfigError(
-            'invalid-argument',
-            'ETag header is not present in the server response.');
-        }
+        this.validateResponseEtag(resp.headers['etag']);
         return {
           conditions: resp.data.conditions,
           parameters: resp.data.parameters,
@@ -204,11 +192,7 @@ export class RemoteConfigApiClient {
         return this.httpClient.send(request);
       })
       .then((resp) => {
-        if (!validator.isNonEmptyString(resp.headers['etag'])) {
-          throw new FirebaseRemoteConfigError(
-            'invalid-argument',
-            'ETag header is not present in the server response.');
-        }
+        this.validateResponseEtag(resp.headers['etag']);
         return {
           conditions: resp.data.conditions,
           parameters: resp.data.parameters,
@@ -341,6 +325,14 @@ export class RemoteConfigApiClient {
       throw new FirebaseRemoteConfigError(
         'invalid-argument',
         'versionNumber must be an integer or a string in int64 format');
+    }
+  }
+
+  private validateResponseEtag(etag?: string): void {
+    if (!validator.isNonEmptyString(etag)) {
+      throw new FirebaseRemoteConfigError(
+        'invalid-argument',
+        'ETag header is not present in the server response.');
     }
   }
 }
