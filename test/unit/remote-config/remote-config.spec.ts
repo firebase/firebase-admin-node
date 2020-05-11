@@ -170,24 +170,22 @@ describe('RemoteConfig', () => {
   });
 
   describe('getTemplate', () => {
-    // tests for api response validations
-    runApiResponseValidationTests((): Promise<RemoteConfigTemplate> => {
-      return remoteConfig.getTemplate();
-    }, 'getTemplate');
+    runInvalidResponseTests(() => remoteConfig.getTemplate(), 'getTemplate');
+    runValidResponseTests(() => remoteConfig.getTemplate(), 'getTemplate');
   });
 
   describe('validateTemplate', () => {
-    // tests for api response validations
-    runApiResponseValidationTests((): Promise<RemoteConfigTemplate> => {
-      return remoteConfig.validateTemplate(REMOTE_CONFIG_TEMPLATE);
-    }, 'validateTemplate');
+    runInvalidResponseTests(() => remoteConfig.validateTemplate(REMOTE_CONFIG_TEMPLATE),
+      'validateTemplate');
+    runValidResponseTests(() => remoteConfig.validateTemplate(REMOTE_CONFIG_TEMPLATE),
+      'validateTemplate');
   });
 
   describe('publishTemplate', () => {
-    // tests for api response validations
-    runApiResponseValidationTests((): Promise<RemoteConfigTemplate> => {
-      return remoteConfig.publishTemplate(REMOTE_CONFIG_TEMPLATE);
-    }, 'publishTemplate');
+    runInvalidResponseTests(() => remoteConfig.publishTemplate(REMOTE_CONFIG_TEMPLATE),
+      'publishTemplate');
+    runValidResponseTests(() => remoteConfig.publishTemplate(REMOTE_CONFIG_TEMPLATE),
+      'publishTemplate');
   });
 
   const INVALID_PARAMETERS: any[] = [null, '', 'abc', 1, true, []];
@@ -212,9 +210,8 @@ describe('RemoteConfig', () => {
       });
     });
 
-    const invalidEtags = [...INVALID_STRINGS];
     let sourceTemplate = deepCopy(REMOTE_CONFIG_RESPONSE);
-    invalidEtags.forEach((invalidEtag) => {
+    INVALID_STRINGS.forEach((invalidEtag) => {
       sourceTemplate.etag = invalidEtag;
       const jsonString = JSON.stringify(sourceTemplate);
       it(`should throw if the ETag is ${JSON.stringify(invalidEtag)}`, () => {
@@ -286,7 +283,7 @@ describe('RemoteConfig', () => {
     });
   });
 
-  function runApiResponseValidationTests(rcOperation: () => Promise<RemoteConfigTemplate>,
+  function runInvalidResponseTests(rcOperation: () => Promise<RemoteConfigTemplate>,
     operationName: any): void {
     it('should propagate API errors', () => {
       const stub = sinon
@@ -354,7 +351,10 @@ describe('RemoteConfig', () => {
         .should.eventually.be.rejected.and.have.property(
           'message', `Remote Config conditions must be an array`);
     });
+  }
 
+  function runValidResponseTests(rcOperation: () => Promise<RemoteConfigTemplate>,
+    operationName: any): void {
     it('should resolve with parameters:{} when no parameters present in the response', () => {
       const response = deepCopy({ conditions: [], parameterGroups: {}, etag: '0-1010-2' });
       const stub = sinon

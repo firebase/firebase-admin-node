@@ -136,13 +136,15 @@ describe('RemoteConfigApiClient', () => {
         .should.eventually.be.rejectedWith(noProjectId);
     });
 
-    // test for version number validations
-    runTemplateVersionNumberTests((v: string | number) => { apiClient.getTemplate(v); });
+    ['', 'abc', 'a123b', 'a123', '123a', 1.2, '70.2', null, NaN, true, [], {}].forEach((invalidVersion) => {
+      it(`should reject if the versionNumber is: ${invalidVersion}`, () => {
+        expect(() => apiClient.getTemplate(invalidVersion as any))
+          .to.throw(/^versionNumber must be (a non-empty string in int64 format or a number|an integer or a string in int64 format)$/);
+      });
+    });
 
     // tests for api response validations
-    runApiResponseValidationTests((): Promise<RemoteConfigTemplate> => {
-      return apiClient.getTemplate();
-    });
+    runErrorResponseTests(() => apiClient.getTemplate());
 
     it('should resolve with the latest template on success', () => {
       const stub = sinon
@@ -192,12 +194,10 @@ describe('RemoteConfigApiClient', () => {
     });
 
     // tests for input template validations
-    testInvalidInputTemplates((t: RemoteConfigTemplate) => { apiClient.validateTemplate(t); });
+    testInvalidInputTemplates((t: RemoteConfigTemplate) => apiClient.validateTemplate(t));
 
     // tests for api response validations
-    runApiResponseValidationTests((): Promise<RemoteConfigTemplate> => {
-      return apiClient.validateTemplate(REMOTE_CONFIG_TEMPLATE);
-    });
+    runErrorResponseTests(() => apiClient.validateTemplate(REMOTE_CONFIG_TEMPLATE));
 
     it('should resolve with the requested template on success', () => {
       const stub = sinon
@@ -259,12 +259,10 @@ describe('RemoteConfigApiClient', () => {
     });
 
     // tests for input template validations
-    testInvalidInputTemplates((t: RemoteConfigTemplate) => { apiClient.publishTemplate(t); });
+    testInvalidInputTemplates((t: RemoteConfigTemplate) => apiClient.publishTemplate(t));
 
     // tests for api response validations
-    runApiResponseValidationTests((): Promise<RemoteConfigTemplate> => {
-      return apiClient.publishTemplate(REMOTE_CONFIG_TEMPLATE);
-    });
+    runErrorResponseTests(() => apiClient.publishTemplate(REMOTE_CONFIG_TEMPLATE));
 
     const testOptions = [
       { options: undefined, etag: 'etag-123456789012-6' },
@@ -323,7 +321,7 @@ describe('RemoteConfigApiClient', () => {
     });
   });
 
-  function runApiResponseValidationTests(rcOperation: () => Promise<RemoteConfigTemplate>): void {
+  function runErrorResponseTests(rcOperation: () => Promise<RemoteConfigTemplate>): void {
     it('should reject when the etag is not present in the response', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
@@ -374,15 +372,6 @@ describe('RemoteConfigApiClient', () => {
       stubs.push(stub);
       return rcOperation()
         .should.eventually.be.rejected.and.deep.equal(expected);
-    });
-  }
-
-  function runTemplateVersionNumberTests(rcOperation: Function): void {
-    ['', 'abc', 'a123b', 'a123', '123a', 1.2, '70.2', null, NaN, true, [], {}].forEach((invalidVersion) => {
-      it(`should reject if the versionNumber is: ${invalidVersion}`, () => {
-        expect(() => rcOperation(invalidVersion as any))
-          .to.throw(/^versionNumber must be (a non-empty string in int64 format or a number|an integer or a string in int64 format)$/);
-      });
     });
   }
 
