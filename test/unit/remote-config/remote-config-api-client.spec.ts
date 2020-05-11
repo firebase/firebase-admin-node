@@ -136,12 +136,8 @@ describe('RemoteConfigApiClient', () => {
         .should.eventually.be.rejectedWith(noProjectId);
     });
 
-    ['', 'abc', 'a123b', 'a123', '123a', 1.2, '70.2', null, NaN, true, [], {}].forEach((invalidVersion) => {
-      it(`should reject if the versionNumber is: ${invalidVersion}`, () => {
-        expect(() => apiClient.getTemplate(invalidVersion as any))
-          .to.throw(/^versionNumber must be (a non-empty string in int64 format or a number|an integer or a string in int64 format)$/);
-      });
-    });
+    // test for version number validations
+    runTemplateVersionNumberTests((v: string | number) => { apiClient.getTemplate(v); });
 
     // tests for api response validations
     runErrorResponseTests(() => apiClient.getTemplate());
@@ -320,6 +316,50 @@ describe('RemoteConfigApiClient', () => {
       });
     });
   });
+
+  describe('rollback', () => {
+    it(`should reject when project id is not available`, () => {
+      return clientWithoutProjectId.rollback('60')
+        .should.eventually.be.rejectedWith(noProjectId);
+    });
+
+    // test for version number validations
+    runTemplateVersionNumberTests((v: string | number) => { apiClient.rollback(v); });
+
+    // tests for api response validations
+    runErrorResponseTests(() => apiClient.rollback(60));
+
+    it('should resolve with the rollbacked template on success', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200, { etag: 'etag-123456789012-60' }));
+      stubs.push(stub);
+      return apiClient.rollback('60')
+        .then((resp) => {
+          expect(resp.conditions).to.deep.equal(TEST_RESPONSE.conditions);
+          expect(resp.parameters).to.deep.equal(TEST_RESPONSE.parameters);
+          expect(resp.parameterGroups).to.deep.equal(TEST_RESPONSE.parameterGroups);
+          expect(resp.etag).to.equal('etag-123456789012-60');
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'POST',
+            url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig:rollback',
+            headers: EXPECTED_HEADERS,
+            data: {
+              versionNumber: '60',
+            }
+          });
+        });
+    });
+  });
+
+  function runTemplateVersionNumberTests(rcOperation: Function): void {
+    ['', 'abc', 'a123b', 'a123', '123a', 1.2, '70.2', null, NaN, true, [], {}].forEach((invalidVersion) => {
+      it(`should reject if the versionNumber is: ${invalidVersion}`, () => {
+        expect(() => rcOperation(invalidVersion as any))
+          .to.throw(/^versionNumber must be (a non-empty string in int64 format or a number|an integer or a string in int64 format)$/);
+      });
+    });
+  }
 
   function runErrorResponseTests(rcOperation: () => Promise<RemoteConfigTemplate>): void {
     it('should reject when the etag is not present in the response', () => {

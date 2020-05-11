@@ -191,6 +191,36 @@ export class RemoteConfigApiClient {
       });
   }
 
+  public rollback(versionNumber: number | string): Promise<RemoteConfigTemplate> {
+    this.validateVersionNumber(versionNumber);
+    return this.getUrl()
+      .then((url) => {
+        const request: HttpRequestConfig = {
+          method: 'POST',
+          url: `${url}/remoteConfig:rollback`,
+          headers: FIREBASE_REMOTE_CONFIG_HEADERS,
+          data: { versionNumber: versionNumber }
+        };
+        return this.httpClient.send(request);
+      })
+      .then((resp) => {
+        if (!validator.isNonEmptyString(resp.headers['etag'])) {
+          throw new FirebaseRemoteConfigError(
+            'invalid-argument',
+            'ETag header is not present in the server response.');
+        }
+        return {
+          conditions: resp.data.conditions,
+          parameters: resp.data.parameters,
+          parameterGroups: resp.data.parameterGroups,
+          etag: resp.headers['etag'],
+        };
+      })
+      .catch((err) => {
+        throw this.toFirebaseError(err);
+      });
+  }
+
   private sendPutRequest(template: RemoteConfigTemplate, etag: string, validateOnly?: boolean): Promise<HttpResponse> {
     let path = 'remoteConfig';
     if (validateOnly) {
