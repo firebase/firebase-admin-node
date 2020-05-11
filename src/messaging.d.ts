@@ -684,8 +684,12 @@ export namespace admin.messaging {
     color?: string;
 
     /**
-     * The sound to be played when the device receives the
-     * notification.
+     * The sound to be played when device receives a notification. Supports
+     * "default" for default notification sounf of device or the filename of a 
+     * sound resource bundled in the app. 
+     * Sound files must reside in `/res/raw/`.
+     * 
+     * **Platforms:** Android
      */
     sound?: string;
 
