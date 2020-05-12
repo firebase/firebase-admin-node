@@ -123,13 +123,7 @@ export class RemoteConfigApiClient {
         return this.httpClient.send(request);
       })
       .then((resp) => {
-        this.validateResponseEtag(resp.headers['etag']);
-        return {
-          conditions: resp.data.conditions,
-          parameters: resp.data.parameters,
-          parameterGroups: resp.data.parameterGroups,
-          etag: resp.headers['etag'],
-        };
+        return this.toRemoteConfigTemplate(resp);
       })
       .catch((err) => {
         throw this.toFirebaseError(err);
@@ -140,16 +134,11 @@ export class RemoteConfigApiClient {
     this.validateRemoteConfigTemplate(template);
     return this.sendPutRequest(template, template.etag, true)
       .then((resp) => {
+        // validating a template returns an etag with the suffix -0 means that your update 
+        // was successfully validated. We set the etag back to the original etag of the template
+        // to allow future operations.
         this.validateResponseEtag(resp.headers['etag']);
-        return {
-          conditions: resp.data.conditions,
-          parameters: resp.data.parameters,
-          parameterGroups: resp.data.parameterGroups,
-          // validating a template returns an etag with the suffix -0 means that your update 
-          // was successfully validated. We set the etag back to the original etag of the template
-          // to allow future operations.
-          etag: template.etag,
-        };
+        return this.toRemoteConfigTemplate(resp, template.etag);
       })
       .catch((err) => {
         throw this.toFirebaseError(err);
@@ -166,13 +155,7 @@ export class RemoteConfigApiClient {
     }
     return this.sendPutRequest(template, ifMatch)
       .then((resp) => {
-        this.validateResponseEtag(resp.headers['etag']);
-        return {
-          conditions: resp.data.conditions,
-          parameters: resp.data.parameters,
-          parameterGroups: resp.data.parameterGroups,
-          etag: resp.headers['etag'],
-        };
+        return this.toRemoteConfigTemplate(resp);
       })
       .catch((err) => {
         throw this.toFirebaseError(err);
@@ -192,13 +175,7 @@ export class RemoteConfigApiClient {
         return this.httpClient.send(request);
       })
       .then((resp) => {
-        this.validateResponseEtag(resp.headers['etag']);
-        return {
-          conditions: resp.data.conditions,
-          parameters: resp.data.parameters,
-          parameterGroups: resp.data.parameterGroups,
-          etag: resp.headers['etag'],
-        };
+        return this.toRemoteConfigTemplate(resp);
       })
       .catch((err) => {
         throw this.toFirebaseError(err);
@@ -272,6 +249,24 @@ export class RemoteConfigApiClient {
     }
     const message = error.message || `Unknown server error: ${response.text}`;
     return new FirebaseRemoteConfigError(code, message);
+  }
+
+  /**
+   * Creates a RemoteConfigTemplate from the API response.
+   * If provided, customEtag is used instead of the etag returned in the API response.
+   *
+   * @param {HttpResponse} resp API response object.
+   * @param {string} customEtag A custom etag to replace the etag fom the API response (Optional).
+   */
+  private toRemoteConfigTemplate(resp: HttpResponse, customEtag?: string): RemoteConfigTemplate {
+    const etag = (typeof customEtag == 'undefined') ? resp.headers['etag'] : customEtag;
+    this.validateResponseEtag(etag);
+    return {
+      conditions: resp.data.conditions,
+      parameters: resp.data.parameters,
+      parameterGroups: resp.data.parameterGroups,
+      etag: etag,
+    };
   }
 
   /**
