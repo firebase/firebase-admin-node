@@ -326,7 +326,8 @@ export class UserMetadata {
     // These bugs have already been addressed since then.
     utils.addReadonlyGetter(this, 'creationTime', parseDate(response.createdAt));
     utils.addReadonlyGetter(this, 'lastSignInTime', parseDate(response.lastLoginAt));
-    utils.addReadonlyGetter(this, 'lastRefreshTime', parseDate(response.lastRefreshAt));
+    const lastRefreshAt = response.lastRefreshAt ? new Date(response.lastRefreshAt).toUTCString() : null;
+    utils.addReadonlyGetter(this, 'lastRefreshTime', lastRefreshAt);
   }
 
   /** @return The plain object representation of the user's metadata. */
