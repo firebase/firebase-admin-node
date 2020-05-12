@@ -336,12 +336,10 @@ describe('admin.auth', () => {
           .then((userRecord) => {
             expect(userRecord.metadata.lastRefreshTime).to.exist;
             expect(isUTCString(userRecord.metadata.lastRefreshTime!));
-            expect(new Date(userRecord.metadata.creationTime).getTime())
-              .lte(new Date(userRecord.metadata.lastRefreshTime!).getTime());
-            const creationTimePlus1Hour = new Date(userRecord.metadata.creationTime);
-            creationTimePlus1Hour.setHours(creationTimePlus1Hour.getHours()+1);
-            expect(new Date(userRecord.metadata.lastRefreshTime!).getTime())
-              .lte(creationTimePlus1Hour.getTime());
+            const creationTime = new Date(userRecord.metadata.creationTime).getTime();
+            const lastRefreshTime = new Date(userRecord.metadata.lastRefreshTime).getTime();
+            expect(creationTime).lte(lastRefreshTime);
+            expect(lastRefreshTime).lte(creationTime + 3600*1000);
           });
       } finally {
         admin.auth().deleteUser('lastRefreshTimeUser');
