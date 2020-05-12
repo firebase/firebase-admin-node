@@ -337,7 +337,7 @@ describe('admin.auth', () => {
             expect(userRecord.metadata.lastRefreshTime).to.exist;
             expect(isUTCString(userRecord.metadata.lastRefreshTime!));
             const creationTime = new Date(userRecord.metadata.creationTime).getTime();
-            const lastRefreshTime = new Date(userRecord.metadata.lastRefreshTime).getTime();
+            const lastRefreshTime = new Date(userRecord.metadata.lastRefreshTime!).getTime();
             expect(creationTime).lte(lastRefreshTime);
             expect(lastRefreshTime).lte(creationTime + 3600*1000);
           });
