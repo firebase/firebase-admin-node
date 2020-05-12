@@ -616,7 +616,7 @@ describe('UserInfo', () => {
 describe('UserMetadata', () => {
   const expectedLastLoginAt = 1476235905000;
   const expectedCreatedAt = 1476136676000;
-  const expectedLastRefreshAt = "2016-10-12T01:31:45.000Z"
+  const expectedLastRefreshAt = '2016-10-12T01:31:45.000Z';
   const actualMetadata: UserMetadata = new UserMetadata({
     localId: 'uid123',
     lastLoginAt: expectedLastLoginAt.toString(),

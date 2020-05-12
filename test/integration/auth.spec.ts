@@ -339,7 +339,7 @@ describe('admin.auth', () => {
             const creationTime = new Date(userRecord.metadata.creationTime).getTime();
             const lastRefreshTime = new Date(userRecord.metadata.lastRefreshTime!).getTime();
             expect(creationTime).lte(lastRefreshTime);
-            expect(lastRefreshTime).lte(creationTime + 3600*1000);
+            expect(lastRefreshTime).lte(creationTime + 3600 * 1000);
           });
       } finally {
         admin.auth().deleteUser('lastRefreshTimeUser');
