@@ -616,10 +616,12 @@ describe('UserInfo', () => {
 describe('UserMetadata', () => {
   const expectedLastLoginAt = 1476235905000;
   const expectedCreatedAt = 1476136676000;
+  const expectedLastRefreshAt = '2016-10-12T01:31:45.000Z';
   const actualMetadata: UserMetadata = new UserMetadata({
     localId: 'uid123',
     lastLoginAt: expectedLastLoginAt.toString(),
     createdAt: expectedCreatedAt.toString(),
+    lastRefreshAt: expectedLastRefreshAt,
   });
   const expectedMetadataJSON = {
     lastSignInTime: new Date(expectedLastLoginAt).toUTCString(),
@@ -675,6 +677,10 @@ describe('UserMetadata', () => {
       expect(() => {
         (actualMetadata as any).creationTime = new Date();
       }).to.throw(Error);
+    });
+
+    it('should return expected lastRefreshTime', () => {
+      expect(actualMetadata.lastRefreshTime).to.equal(new Date(expectedLastRefreshAt).toUTCString())
     });
   });
 
