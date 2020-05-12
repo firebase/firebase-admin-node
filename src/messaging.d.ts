@@ -632,6 +632,17 @@ export namespace admin.messaging {
    * for code samples and detailed documentation.
    */
   interface NotificationMessagePayload {
+    
+    /**
+     * Identifier used to replace existing notifications in the notification drawer.
+     *
+     * If not specified, each request creates a new notification.
+     *
+     * If specified and a notification with the same tag is already being shown,
+     * the new notification replaces the existing one in the notification drawer.
+     *
+     * **Platforms:** Android
+     */
     tag?: string;
 
     /**
@@ -673,13 +684,11 @@ export namespace admin.messaging {
     color?: string;
 
     /**
-     * Identifier used to replace existing notifications in the notification drawer.
-     *
-     * If not specified, each request creates a new notification.
-     *
-     * If specified and a notification with the same tag is already being shown,
-     * the new notification replaces the existing one in the notification drawer.
-     *
+     * The sound to be played when the device receives a notification. Supports
+     * "default" for the default notification sound of the device or the filename of a 
+     * sound resource bundled in the app. 
+     * Sound files must reside in `/res/raw/`.
+     * 
      * **Platforms:** Android
      */
     sound?: string;
