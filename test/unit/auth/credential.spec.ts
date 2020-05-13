@@ -454,10 +454,10 @@ describe('Credential', () => {
 
       it('should return a RefreshTokenCredential with FIREBASE_EMULATOR_CREDENTIALS', () => {
         const firebaseEmulatorCred = {
-          client_id: "fakeclientid",
-          client_secret: "fakeclientsecret",
-          refresh_token: "fakerefreshtoken",
-          type: "authorized_user",
+          client_id: 'fakeclientid',
+          client_secret: 'fakeclientsecret',
+          refresh_token: 'fakerefreshtoken',
+          type: 'authorized_user',
         };
 
         delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
@@ -473,7 +473,7 @@ describe('Credential', () => {
       });
   
       it('should throw if FIREBASE_EMULATOR_CREDENTIALS is invalid', () => {
-        process.env.FIREBASE_EMULATOR_CREDENTIALS = "{{}}";
+        process.env.FIREBASE_EMULATOR_CREDENTIALS = '{{}}';
         expect(() => getApplicationDefault()).to.throw(Error);
       });
   
@@ -488,10 +488,10 @@ describe('Credential', () => {
         delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
   
         const firebaseEmulatorCred = {
-          client_id: "fakeclientid",
-          client_secret: "fakeclientsecret",
-          refresh_token: "fakerefreshtoken",
-          type: "authorized_user",
+          client_id: 'fakeclientid',
+          client_secret: 'fakeclientsecret',
+          refresh_token: 'fakerefreshtoken',
+          type: 'authorized_user',
         };
         process.env.FIREBASE_EMULATOR_CREDENTIALS = JSON.stringify(firebaseEmulatorCred);
   
@@ -598,10 +598,10 @@ describe('Credential', () => {
 
       it('should return false for RefreshTokenCredential loaded from FIREBASE_EMULATOR_CREDENTIALS', () => {
         const firebaseEmulatorCred = {
-          client_id: "fakeclientid",
-          client_secret: "fakeclientsecret",
-          refresh_token: "fakerefreshtoken",
-          type: "authorized_user",
+          client_id: 'fakeclientid',
+          client_secret: 'fakeclientsecret',
+          refresh_token: 'fakerefreshtoken',
+          type: 'authorized_user',
         };
         
         delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
