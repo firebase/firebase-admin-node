@@ -681,6 +681,10 @@ describe('UserMetadata', () => {
         (actualMetadata as any).creationTime = new Date();
       }).to.throw(Error);
     });
+
+    it('should return expected lastRefreshTime', () => {
+      expect(actualMetadata.lastRefreshTime).to.equal(new Date(expectedLastRefreshAt).toUTCString())
+    });
   });
 
   describe('toJSON', () => {
