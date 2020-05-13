@@ -258,7 +258,7 @@ export class ComputeEngineCredential implements Credential {
  */
 export class RefreshTokenCredential implements Credential {
 
-  readonly refreshToken: RefreshToken;
+  private readonly refreshToken: RefreshToken;
   private readonly httpClient: HttpClient;
 
   /**
@@ -358,7 +358,7 @@ export function getApplicationDefault(httpAgent?: Agent): Credential {
   if (process.env.FIREBASE_EMULATOR_CREDENTIALS) {
     try {
       const creds = JSON.parse(process.env.FIREBASE_EMULATOR_CREDENTIALS);
-      return new RefreshTokenCredential(creds, httpAgent, true);
+      return new RefreshTokenCredential(creds, httpAgent, false);
     } catch (error) {
       throw new FirebaseAppError(
         AppErrorCodes.INVALID_CREDENTIAL, 
