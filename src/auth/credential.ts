@@ -358,7 +358,7 @@ export function getApplicationDefault(httpAgent?: Agent): Credential {
   if (process.env.FIREBASE_EMULATOR_CREDENTIALS) {
     try {
       const creds = JSON.parse(process.env.FIREBASE_EMULATOR_CREDENTIALS);
-      return new RefreshTokenCredential(creds, httpAgent, false);
+      return new RefreshTokenCredential(creds, httpAgent, true);
     } catch (error) {
       throw new FirebaseAppError(
         AppErrorCodes.INVALID_CREDENTIAL, 

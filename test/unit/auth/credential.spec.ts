@@ -584,7 +584,7 @@ describe('Credential', () => {
       expect(isApplicationDefault(c)).to.be.true;
     });
 
-    describe("FIREBASE_EMULATOR_CREDENTIALS", () => {
+    describe('FIREBASE_EMULATOR_CREDENTIALS', () => {
 
       let oldEnv: any;
 
@@ -596,7 +596,7 @@ describe('Credential', () => {
         process.env = oldEnv;
       });
 
-      it('should return false for RefreshTokenCredential loaded from FIREBASE_EMULATOR_CREDENTIALS', () => {
+      it('should return true for RefreshTokenCredential loaded from FIREBASE_EMULATOR_CREDENTIALS', () => {
         const firebaseEmulatorCred = {
           client_id: 'fakeclientid',
           client_secret: 'fakeclientsecret',
@@ -609,7 +609,7 @@ describe('Credential', () => {
 
         const c = getApplicationDefault();
         expect(c).is.instanceOf(RefreshTokenCredential);
-        expect(isApplicationDefault(c)).to.be.false;
+        expect(isApplicationDefault(c)).to.be.true;
       });
   
     });
