@@ -440,53 +440,68 @@ describe('Credential', () => {
       expect((getApplicationDefault())).to.be.an.instanceof(RefreshTokenCredential);
     });
 
-    it('should return a RefreshTokenCredential with FIREBASE_EMULATOR_CREDENTIALS', () => {
-      const firebaseEmulatorCred = {
-        client_id: "fakeclientid",
-        client_secret: "fakeclientsecret",
-        refresh_token: "fakerefreshtoken",
-        type: "authorized_user",
-      };
-      process.env.FIREBASE_EMULATOR_CREDENTIALS = JSON.stringify(firebaseEmulatorCred);
+    describe('FIREBASE_EMULATOR_CREDENTIALS', () => {
 
-      const defaultCred = getApplicationDefault();
-      expect(defaultCred).to.be.an.instanceof(RefreshTokenCredential);
-      expect(defaultCred).to.have.property('refreshToken').that.includes({ 
-        clientId: firebaseEmulatorCred.client_id,
-        clientSecret: firebaseEmulatorCred.client_secret,
-        refreshToken: firebaseEmulatorCred.refresh_token,
+      let oldEnv: any;
+
+      before(() => {
+        oldEnv = process.env;
+      })
+
+      after(() => {
+        process.env = oldEnv;
+      })
+
+      it('should return a RefreshTokenCredential with FIREBASE_EMULATOR_CREDENTIALS', () => {
+        const firebaseEmulatorCred = {
+          client_id: "fakeclientid",
+          client_secret: "fakeclientsecret",
+          refresh_token: "fakerefreshtoken",
+          type: "authorized_user",
+        };
+
+        delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+        process.env.FIREBASE_EMULATOR_CREDENTIALS = JSON.stringify(firebaseEmulatorCred);
+  
+        const defaultCred = getApplicationDefault();
+        expect(defaultCred).to.be.an.instanceof(RefreshTokenCredential);
+        expect(defaultCred).to.have.property('refreshToken').that.includes({ 
+          clientId: firebaseEmulatorCred.client_id,
+          clientSecret: firebaseEmulatorCred.client_secret,
+          refreshToken: firebaseEmulatorCred.refresh_token,
+        });
       });
-    });
-
-    it('should throw if FIREBASE_EMULATOR_CREDENTIALS is invalid', () => {
-      process.env.FIREBASE_EMULATOR_CREDENTIALS = "{{}}";
-      expect(() => getApplicationDefault()).to.throw(Error);
-    });
-
-    it('should prefer FIREBASE_EMULATOR_CREDENTIALS to gcloud default', () => {
-      if (!fs.existsSync(GCLOUD_CREDENTIAL_PATH)) {
-        // tslint:disable-next-line:no-console
-        console.log(
-          'WARNING: Test being skipped because gcloud credentials not found. Run `gcloud beta auth ' +
-          'application-default login`.');
-        return;
-      }
-      delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
-
-      const firebaseEmulatorCred = {
-        client_id: "fakeclientid",
-        client_secret: "fakeclientsecret",
-        refresh_token: "fakerefreshtoken",
-        type: "authorized_user",
-      };
-      process.env.FIREBASE_EMULATOR_CREDENTIALS = JSON.stringify(firebaseEmulatorCred);
-
-      const defaultCred = getApplicationDefault();
-      expect(defaultCred).to.be.an.instanceof(RefreshTokenCredential);
-      expect(defaultCred).to.have.property('refreshToken').that.includes({ 
-        clientId: firebaseEmulatorCred.client_id,
-        clientSecret: firebaseEmulatorCred.client_secret,
-        refreshToken: firebaseEmulatorCred.refresh_token,
+  
+      it('should throw if FIREBASE_EMULATOR_CREDENTIALS is invalid', () => {
+        process.env.FIREBASE_EMULATOR_CREDENTIALS = "{{}}";
+        expect(() => getApplicationDefault()).to.throw(Error);
+      });
+  
+      it('should prefer FIREBASE_EMULATOR_CREDENTIALS to gcloud default', () => {
+        if (!fs.existsSync(GCLOUD_CREDENTIAL_PATH)) {
+          // tslint:disable-next-line:no-console
+          console.log(
+            'WARNING: Test being skipped because gcloud credentials not found. Run `gcloud beta auth ' +
+            'application-default login`.');
+          return;
+        }
+        delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  
+        const firebaseEmulatorCred = {
+          client_id: "fakeclientid",
+          client_secret: "fakeclientsecret",
+          refresh_token: "fakerefreshtoken",
+          type: "authorized_user",
+        };
+        process.env.FIREBASE_EMULATOR_CREDENTIALS = JSON.stringify(firebaseEmulatorCred);
+  
+        const defaultCred = getApplicationDefault();
+        expect(defaultCred).to.be.an.instanceof(RefreshTokenCredential);
+        expect(defaultCred).to.have.property('refreshToken').that.includes({ 
+          clientId: firebaseEmulatorCred.client_id,
+          clientSecret: firebaseEmulatorCred.client_secret,
+          refreshToken: firebaseEmulatorCred.refresh_token,
+        });
       });
     });
 
@@ -571,16 +586,14 @@ describe('Credential', () => {
 
     describe("FIREBASE_EMULATOR_CREDENTIALS", () => {
 
-      let googleCreds: any = undefined;
+      let oldEnv: any;
 
       before(() => {
-        googleCreds = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-        delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+        oldEnv = process.env;
       });
 
       after(() => {
-        process.env.GOOGLE_APPLICATION_CREDENTIALS = googleCreds;
-        delete process.env.FIREBASE_EMULATOR_CREDENTIALS;
+        process.env = oldEnv;
       });
 
       it('should return false for RefreshTokenCredential loaded from FIREBASE_EMULATOR_CREDENTIALS', () => {
@@ -590,6 +603,8 @@ describe('Credential', () => {
           refresh_token: "fakerefreshtoken",
           type: "authorized_user",
         };
+        
+        delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
         process.env.FIREBASE_EMULATOR_CREDENTIALS = JSON.stringify(firebaseEmulatorCred);
 
         const c = getApplicationDefault();
@@ -608,6 +623,7 @@ describe('Credential', () => {
         return;
       }
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+      delete process.env.FIREBASE_EMULATOR_CREDENTIALS;
       const c = getApplicationDefault();
       expect(c).to.be.an.instanceof(RefreshTokenCredential);
       expect(isApplicationDefault(c)).to.be.true;
@@ -615,6 +631,7 @@ describe('Credential', () => {
 
     it('should return true for ComputeEngineCredential', () => {
       delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+      delete process.env.FIREBASE_EMULATOR_CREDENTIALS;
       fsStub = sinon.stub(fs, 'readFileSync').throws(new Error('no gcloud credential file'));
       const c = getApplicationDefault();
       expect(c).to.be.an.instanceof(ComputeEngineCredential);
