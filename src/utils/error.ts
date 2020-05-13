@@ -520,6 +520,10 @@ export class AuthClientErrorCode {
     code: 'invalid-provider-id',
     message: 'The providerId must be a valid supported provider identifier string.',
   };
+  public static INVALID_PROVIDER_UID = {
+    code: 'invalid-provider-uid',
+    message: 'The providerUid must be a valid provider uid string.',
+  };
   public static INVALID_SESSION_COOKIE_DURATION = {
     code: 'invalid-session-cookie-duration',
     message: 'The session cookie duration must be a valid number in milliseconds ' +
@@ -682,6 +686,10 @@ export class AuthClientErrorCode {
   public static NOT_FOUND = {
     code: 'not-found',
     message: 'The requested resource was not found.',
+  };
+  public static USER_NOT_DISABLED = {
+    code: 'user-not-disabled',
+    message: 'The user must be disabled in order to bulk delete it (or you must pass force=true).',
   };
 }
 
