@@ -137,7 +137,7 @@ export class RemoteConfigApiClient {
         // validating a template returns an etag with the suffix -0 means that your update 
         // was successfully validated. We set the etag back to the original etag of the template
         // to allow future operations.
-        this.validateResponseEtag(resp.headers['etag']);
+        this.validateEtag(resp.headers['etag']);
         return this.toRemoteConfigTemplate(resp, template.etag);
       })
       .catch((err) => {
@@ -260,12 +260,12 @@ export class RemoteConfigApiClient {
    */
   private toRemoteConfigTemplate(resp: HttpResponse, customEtag?: string): RemoteConfigTemplate {
     const etag = (typeof customEtag == 'undefined') ? resp.headers['etag'] : customEtag;
-    this.validateResponseEtag(etag);
+    this.validateEtag(etag);
     return {
       conditions: resp.data.conditions,
       parameters: resp.data.parameters,
       parameterGroups: resp.data.parameterGroups,
-      etag: etag,
+      etag,
     };
   }
 
@@ -323,7 +323,7 @@ export class RemoteConfigApiClient {
     }
   }
 
-  private validateResponseEtag(etag?: string): void {
+  private validateEtag(etag?: string): void {
     if (!validator.isNonEmptyString(etag)) {
       throw new FirebaseRemoteConfigError(
         'invalid-argument',
