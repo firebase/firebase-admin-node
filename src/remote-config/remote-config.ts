@@ -101,6 +101,22 @@ export class RemoteConfig implements FirebaseServiceInterface {
   }
 
   /**
+   * Rollbacks a project's published Remote Config template to the specified version.
+   * A rollback is equivalent to getting a previously published Remote Config
+   * template, and re-publishing it using a force update.
+   *
+   * @param {number | string} versionNumber The version number of the Remote Config template
+   *    to rollback to.
+   * @return {Promise<RemoteConfigTemplate>} A Promise that fulfills with the published template.
+   */
+  public rollback(versionNumber: number | string): Promise<RemoteConfigTemplate> {
+    return this.client.rollback(versionNumber)
+      .then((templateResponse) => {
+        return new RemoteConfigTemplateImpl(templateResponse);
+      });
+  }
+
+  /**
    * Creates and returns a new Remote Config template from a JSON string.
    *
    * @param {string} json The JSON string to populate a Remote Config template.

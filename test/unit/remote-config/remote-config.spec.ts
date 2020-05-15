@@ -188,6 +188,11 @@ describe('RemoteConfig', () => {
       'publishTemplate');
   });
 
+  describe('rollback', () => {
+    runInvalidResponseTests(() => remoteConfig.rollback('5'), 'rollback');
+    runValidResponseTests(() => remoteConfig.rollback('5'), 'rollback');
+  });
+
   const INVALID_PARAMETERS: any[] = [null, '', 'abc', 1, true, []];
   const INVALID_PARAMETER_GROUPS: any[] = [null, '', 'abc', 1, true, []];
   const INVALID_CONDITIONS: any[] = [null, '', 'abc', 1, true, {}];

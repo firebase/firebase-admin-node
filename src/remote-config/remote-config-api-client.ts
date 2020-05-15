@@ -123,17 +123,7 @@ export class RemoteConfigApiClient {
         return this.httpClient.send(request);
       })
       .then((resp) => {
-        if (!validator.isNonEmptyString(resp.headers['etag'])) {
-          throw new FirebaseRemoteConfigError(
-            'invalid-argument',
-            'ETag header is not present in the server response.');
-        }
-        return {
-          conditions: resp.data.conditions,
-          parameters: resp.data.parameters,
-          parameterGroups: resp.data.parameterGroups,
-          etag: resp.headers['etag'],
-        };
+        return this.toRemoteConfigTemplate(resp);
       })
       .catch((err) => {
         throw this.toFirebaseError(err);
@@ -144,20 +134,11 @@ export class RemoteConfigApiClient {
     this.validateRemoteConfigTemplate(template);
     return this.sendPutRequest(template, template.etag, true)
       .then((resp) => {
-        if (!validator.isNonEmptyString(resp.headers['etag'])) {
-          throw new FirebaseRemoteConfigError(
-            'invalid-argument',
-            'ETag header is not present in the server response.');
-        }
-        return {
-          conditions: resp.data.conditions,
-          parameters: resp.data.parameters,
-          parameterGroups: resp.data.parameterGroups,
-          // validating a template returns an etag with the suffix -0 means that your update 
-          // was successfully validated. We set the etag back to the original etag of the template
-          // to allow future operations.
-          etag: template.etag,
-        };
+        // validating a template returns an etag with the suffix -0 means that your update 
+        // was successfully validated. We set the etag back to the original etag of the template
+        // to allow future operations.
+        this.validateEtag(resp.headers['etag']);
+        return this.toRemoteConfigTemplate(resp, template.etag);
       })
       .catch((err) => {
         throw this.toFirebaseError(err);
@@ -174,17 +155,27 @@ export class RemoteConfigApiClient {
     }
     return this.sendPutRequest(template, ifMatch)
       .then((resp) => {
-        if (!validator.isNonEmptyString(resp.headers['etag'])) {
-          throw new FirebaseRemoteConfigError(
-            'invalid-argument',
-            'ETag header is not present in the server response.');
-        }
-        return {
-          conditions: resp.data.conditions,
-          parameters: resp.data.parameters,
-          parameterGroups: resp.data.parameterGroups,
-          etag: resp.headers['etag'],
+        return this.toRemoteConfigTemplate(resp);
+      })
+      .catch((err) => {
+        throw this.toFirebaseError(err);
+      });
+  }
+
+  public rollback(versionNumber: number | string): Promise<RemoteConfigTemplate> {
+    this.validateVersionNumber(versionNumber);
+    return this.getUrl()
+      .then((url) => {
+        const request: HttpRequestConfig = {
+          method: 'POST',
+          url: `${url}/remoteConfig:rollback`,
+          headers: FIREBASE_REMOTE_CONFIG_HEADERS,
+          data: { versionNumber: versionNumber }
         };
+        return this.httpClient.send(request);
+      })
+      .then((resp) => {
+        return this.toRemoteConfigTemplate(resp);
       })
       .catch((err) => {
         throw this.toFirebaseError(err);
@@ -261,6 +252,24 @@ export class RemoteConfigApiClient {
   }
 
   /**
+   * Creates a RemoteConfigTemplate from the API response.
+   * If provided, customEtag is used instead of the etag returned in the API response.
+   *
+   * @param {HttpResponse} resp API response object.
+   * @param {string} customEtag A custom etag to replace the etag fom the API response (Optional).
+   */
+  private toRemoteConfigTemplate(resp: HttpResponse, customEtag?: string): RemoteConfigTemplate {
+    const etag = (typeof customEtag == 'undefined') ? resp.headers['etag'] : customEtag;
+    this.validateEtag(etag);
+    return {
+      conditions: resp.data.conditions,
+      parameters: resp.data.parameters,
+      parameterGroups: resp.data.parameterGroups,
+      etag,
+    };
+  }
+
+  /**
    * Checks if the given RemoteConfigTemplate object is valid.
    * The object must have valid parameters, parameter groups, conditions, and an etag.
    *
@@ -311,6 +320,14 @@ export class RemoteConfigApiClient {
       throw new FirebaseRemoteConfigError(
         'invalid-argument',
         'versionNumber must be an integer or a string in int64 format');
+    }
+  }
+
+  private validateEtag(etag?: string): void {
+    if (!validator.isNonEmptyString(etag)) {
+      throw new FirebaseRemoteConfigError(
+        'invalid-argument',
+        'ETag header is not present in the server response.');
     }
   }
 }
