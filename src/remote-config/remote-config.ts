@@ -24,6 +24,8 @@ import {
   RemoteConfigParameter,
   RemoteConfigCondition,
   RemoteConfigParameterGroup,
+  ListVersionsOptions,
+  ListVersionsResult,
 } from './remote-config-api-client';
 
 /**
@@ -114,6 +116,28 @@ export class RemoteConfig implements FirebaseServiceInterface {
       .then((templateResponse) => {
         return new RemoteConfigTemplateImpl(templateResponse);
       });
+  }
+
+  /**
+  * Gets a list of Remote Config template versions that have been published, sorted in reverse 
+  * chronological order. Only the last 300 versions are stored.
+  * All versions that correspond to non-active Remote Config templates (i.e., all except the 
+  * template that is being fetched by clients) are also deleted if they are older than 90 days.
+  * 
+  * @param {ListVersionsOptions} options Optional options object for getting a list of versions:
+  *    - {number} `pageSize` The maximum number of items to return per page.
+  *    - {string} `pageToken` The `nextPageToken` value returned from a previous list versions
+  *      request, if any.
+  *    - {string | number} `endVersionNumber` Specify the newest version number to include in the
+  *      results. If specified, must be greater than zero. Defaults to the newest version.
+  *    - {Date} `startTime` Specify the earliest update time to include in the results. Any
+  *      entries updated before this time are omitted.
+  *    - {Date} `endTime` Specify the latest update time to include in the results. Any entries
+  *      updated on or after this time are omitted.
+  * @return A promise that fulfills with a `ListVersionsResult`.
+  */
+  public listVersions(options?: ListVersionsOptions): Promise<ListVersionsResult> {
+    return this.client.listVersions(options);
   }
 
   /**

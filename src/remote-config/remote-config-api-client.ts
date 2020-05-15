@@ -86,6 +86,42 @@ export interface RemoteConfigTemplate {
   readonly etag: string;
 }
 
+/** Interface representing a Remote Config version. */
+export interface Version {
+  versionNumber?: string | number; // int64 format
+  updateTime?: string; // in RFC3339 UTC "Zulu" format, accurate to nanoseconds
+  updateOrigin?: ('REMOTE_CONFIG_UPDATE_ORIGIN_UNSPECIFIED' | 'CONSOLE' |
+    'REST_API' | 'ADMIN_SDK_NODE');
+  updateType?: ('REMOTE_CONFIG_UPDATE_TYPE_UNSPECIFIED' |
+    'INCREMENTAL_UPDATE' | 'FORCED_UPDATE' | 'ROLLBACK');
+  updateUser?: RemoteConfigUser;
+  description?: string;
+  rollbackSource?: string;
+  isLegacy?: boolean;
+}
+
+/** Interface representing a Remote Config list version results. */
+export interface ListVersionsResult {
+  versions: Version[];
+  nextPageToken?: string;
+}
+
+/** Interface representing a Remote Config list version options. */
+export interface ListVersionsOptions {
+  pageSize?: number;
+  pageToken?: string;
+  endVersionNumber?: string | number;
+  startTime?: Date;
+  endTime?: Date;
+}
+
+/** Interface representing a Remote Config user. */
+export interface RemoteConfigUser {
+  email: string;
+  name?: string;
+  imageUrl?: string;
+}
+
 /**
  * Class that facilitates sending requests to the Firebase Remote Config backend API.
  *
@@ -109,7 +145,7 @@ export class RemoteConfigApiClient {
   public getTemplate(versionNumber?: number | string): Promise<RemoteConfigTemplate> {
     const requestData: { [k: string]: any } = {};
     if (typeof versionNumber !== 'undefined') {
-      this.validateVersionNumber(versionNumber);
+      this.validateVersionNumber(versionNumber, 'versionNumber');
       requestData['versionNumber'] = versionNumber;
     }
     return this.getUrl()
@@ -163,19 +199,42 @@ export class RemoteConfigApiClient {
   }
 
   public rollback(versionNumber: number | string): Promise<RemoteConfigTemplate> {
-    this.validateVersionNumber(versionNumber);
+    this.validateVersionNumber(versionNumber, 'versionNumber');
     return this.getUrl()
       .then((url) => {
         const request: HttpRequestConfig = {
           method: 'POST',
           url: `${url}/remoteConfig:rollback`,
           headers: FIREBASE_REMOTE_CONFIG_HEADERS,
-          data: { versionNumber: versionNumber }
+          data: { versionNumber }
         };
         return this.httpClient.send(request);
       })
       .then((resp) => {
         return this.toRemoteConfigTemplate(resp);
+      })
+      .catch((err) => {
+        throw this.toFirebaseError(err);
+      });
+  }
+
+  public listVersions(options?: ListVersionsOptions): Promise<ListVersionsResult> {
+    if (typeof options !== 'undefined') {
+      // validate options and convert Date objects to UTC strings.
+      this.validateListVersionsOptions(options);
+    }
+    return this.getUrl()
+      .then((url) => {
+        const request: HttpRequestConfig = {
+          method: 'GET',
+          url: `${url}/remoteConfig:listVersions`,
+          headers: FIREBASE_REMOTE_CONFIG_HEADERS,
+          data: options
+        };
+        return this.httpClient.send(request);
+      })
+      .then((resp) => {
+        return resp.data;
       })
       .catch((err) => {
         throw this.toFirebaseError(err);
@@ -309,17 +368,17 @@ export class RemoteConfigApiClient {
    *
    * @param {string|number} versionNumber A version number to be validated.
    */
-  private validateVersionNumber(versionNumber: string | number): void {
+  private validateVersionNumber(versionNumber: string | number, propertyName: string): void {
     if (!validator.isNonEmptyString(versionNumber) &&
       !validator.isNumber(versionNumber)) {
       throw new FirebaseRemoteConfigError(
         'invalid-argument',
-        'versionNumber must be a non-empty string in int64 format or a number');
+        `${propertyName} must be a non-empty string in int64 format or a number`);
     }
     if (!Number.isInteger(Number(versionNumber))) {
       throw new FirebaseRemoteConfigError(
         'invalid-argument',
-        'versionNumber must be an integer or a string in int64 format');
+        `${propertyName} must be an integer or a string in int64 format`);
     }
   }
 
@@ -328,6 +387,49 @@ export class RemoteConfigApiClient {
       throw new FirebaseRemoteConfigError(
         'invalid-argument',
         'ETag header is not present in the server response.');
+    }
+  }
+
+  /**
+   * Checks if a given `ListVersionsOptions` object is valid. If successful, transforms the options
+   * object in place by converting `startTime` and `endTime` to RFC3339 UTC "Zulu" format, if present.
+   * 
+   * @param {ListVersionsOptions} options An options object to be validated.
+   */
+  private validateListVersionsOptions(options: ListVersionsOptions): void {
+    if (!validator.isNonNullObject(options)) {
+      throw new FirebaseRemoteConfigError(
+        'invalid-argument',
+        'ListVersionsOptions must be a non-null object');
+    }
+    if (typeof options.pageSize !== 'undefined' && !validator.isNumber(options.pageSize)) {
+      throw new FirebaseRemoteConfigError(
+        'invalid-argument', 'pageSize must be a number');
+    }
+    if (typeof options.pageToken !== 'undefined' && !validator.isNonEmptyString(options.pageToken)) {
+      throw new FirebaseRemoteConfigError(
+        'invalid-argument', 'pageToken must be a string value');
+    }
+    if (typeof options.endVersionNumber !== 'undefined') {
+      this.validateVersionNumber(options.endVersionNumber, 'endVersionNumber');
+    }
+    if (typeof options.startTime !== 'undefined') {
+      if (!(options.startTime instanceof Date)) {
+        throw new FirebaseRemoteConfigError(
+          'invalid-argument', 'startTime must be a valid Date object');
+      }
+      // Convert startTime to RFC3339 UTC "Zulu" format.
+      const zuluStartTime = options.startTime.toISOString();
+      (options as any).startTime = zuluStartTime;
+    }
+    if (typeof options.endTime !== 'undefined') {
+      if (!(options.endTime instanceof Date)) {
+        throw new FirebaseRemoteConfigError(
+          'invalid-argument', 'endTime must be a valid Date object');
+      }
+      // Convert endTime to RFC3339 UTC "Zulu" format.
+      const zuluEndTime = options.endTime.toISOString();
+      (options as any).endTime = zuluEndTime;
     }
   }
 }

@@ -27,6 +27,7 @@ import {
   RemoteConfigTemplate,
   RemoteConfigCondition,
   TagColor,
+  ListVersionsResult,
 } from '../../../src/remote-config/remote-config-api-client';
 import { FirebaseRemoteConfigError } from '../../../src/remote-config/remote-config-utils';
 import { deepCopy } from '../../../src/utils/deep-copy';
@@ -97,6 +98,33 @@ describe('RemoteConfig', () => {
     parameterGroups: PARAMETER_GROUPS,
     etag: 'etag-123456789012-6',
   };
+
+  const REMOTE_CONFIG_VERSIONS_RESULT: ListVersionsResult = {
+    versions:
+      [{
+        versionNumber: '78',
+        updateTime: '2020-05-07T18:46:09.495Z',
+        updateUser: {
+          email: 'user@gmail.com',
+          imageUrl: 'https://photo.jpg'
+        },
+        description: 'Rollback to version 76',
+        updateOrigin: 'REST_API',
+        updateType: 'ROLLBACK',
+        rollbackSource: '76'
+      },
+      {
+        versionNumber: '77',
+        updateTime: '2020-05-07T18:44:41.555Z',
+        updateUser: {
+          email: 'user@gmail.com',
+          imageUrl: 'https://photo.jpg'
+        },
+        updateOrigin: 'REST_API',
+        updateType: 'INCREMENTAL_UPDATE',
+      }],
+    nextPageToken: '76'
+  }
 
   let remoteConfig: RemoteConfig;
 
@@ -191,6 +219,32 @@ describe('RemoteConfig', () => {
   describe('rollback', () => {
     runInvalidResponseTests(() => remoteConfig.rollback('5'), 'rollback');
     runValidResponseTests(() => remoteConfig.rollback('5'), 'rollback');
+  });
+
+  describe('listVersions', () => {
+    it('should propagate API errors', () => {
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'listVersions')
+        .rejects(INTERNAL_ERROR);
+      stubs.push(stub);
+      return remoteConfig.listVersions()
+        .should.eventually.be.rejected.and.deep.equal(INTERNAL_ERROR);
+    });
+
+    it('should resolve with template versions list on success', () => {
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'listVersions')
+        .resolves(REMOTE_CONFIG_VERSIONS_RESULT);
+      stubs.push(stub);
+
+      return remoteConfig.listVersions({
+        pageSize: 2
+      })
+        .then((response) => {
+          expect(response.versions.length).to.equal(2);
+          expect(response).deep.equal(REMOTE_CONFIG_VERSIONS_RESULT);
+        });
+    });
   });
 
   const INVALID_PARAMETERS: any[] = [null, '', 'abc', 1, true, []];

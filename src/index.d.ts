@@ -983,6 +983,121 @@ declare namespace admin.remoteConfig {
   type RemoteConfigParameterValue = ExplicitParameterValue | InAppDefaultValue;
 
   /**
+   * Interface representing a Remote Config template version.
+   * Contains all metadata about a particular version of the Remote Config template.
+   * All fields are set at the time the specified Remote Config template was written.
+   */
+  export interface Version {
+    /**
+     * The version number of the version's corresponding Remote Config template. Output only.
+     */
+    versionNumber?: string | number;
+    
+    /**
+     * The Remote Config template creation timestamp in RFC3339 UTC "Zulu" format,
+     * accurate to nanoseconds. Output only.
+     */
+    updateTime?: string;
+
+    /**
+     * The source of origin of the template update action. Output only.
+     */
+    updateOrigin?: ('REMOTE_CONFIG_UPDATE_ORIGIN_UNSPECIFIED' | 'CONSOLE' |
+      'REST_API' | 'ADMIN_SDK_NODE');
+
+    /**
+     * The type of the template update action. Output only.
+     */
+    updateType?: ('REMOTE_CONFIG_UPDATE_TYPE_UNSPECIFIED' |
+      'INCREMENTAL_UPDATE' | 'FORCED_UPDATE' | 'ROLLBACK');
+
+    /**
+     * Aggregation of all metadata fields about the account that performed the update. Output only.
+     */
+    updateUser?: RemoteConfigUser;
+
+    /**
+     * The user-provided description of the corresponding Remote Config template. Optional.
+     */
+    description?: string;
+
+    /**
+     * Only present if this version is the result of a rollback, and will be the version number of
+     * the Remote Config template that was rolled-back to. Output only.
+     */
+    rollbackSource?: string;
+    
+    /**
+     * Indicates weather this Remote Config template was published before version history was
+     * supported. Output only.
+     */
+    isLegacy?: boolean;
+  }
+
+  /** Interface representing a Remote Config list version result. */
+  export interface ListVersionsResult {
+    /**
+     * A list of version metadata objects, sorted in reverse chronological order.
+     */
+    versions: Version[];
+
+    /**
+     * Token to retrieve the next page of results, or empty if there are no more results
+     * in the list.
+     */
+    nextPageToken?: string;
+  }
+
+  /** Interface representing a Remote Config list version options. */
+  export interface ListVersionsOptions {
+    /**
+     * The maximum number of items to return per page.
+     */
+    pageSize?: number;
+
+    /**
+     * The `nextPageToken` value returned from a previous list versions request, if any.
+     */
+    pageToken?: string;
+    
+    /** 
+     * Specify the newest version number to include in the results.
+     * If specified, must be greater than zero. Defaults to the newest version.
+     */
+    endVersionNumber?: string | number;
+
+    /**
+     * Specify the earliest update time to include in the results. Any entries updated before this
+     * time are omitted.
+     */
+    startTime?: Date;
+
+    /**
+     * Specify the latest update time to include in the results. Any entries updated on or after
+     * this time are omitted.
+     */
+    endTime?: Date;
+  }
+
+  /** Interface representing a Remote Config user.*/
+  export interface RemoteConfigUser {
+    /**
+     * Email address. Output only.
+     */
+    email: string;
+
+    /**
+     * Display name. Output only.
+     */
+    name?: string;
+
+    /**
+     * Image URL. Output only.
+     */
+    imageUrl?: string;
+  }
+
+  /**
    * The Firebase `RemoteConfig` service interface.
    *
    * Do not call this constructor directly. Instead, use
@@ -1036,6 +1151,26 @@ declare namespace admin.remoteConfig {
     * @return A promise that fulfills with the published `RemoteConfigTemplate`.
     */
     rollback(versionNumber: string | number): Promise<RemoteConfigTemplate>;
+
+    /**
+    * Gets a list of Remote Config template versions that have been published, sorted in reverse 
+    * chronological order. Only the last 300 versions are stored.
+    * All versions that correspond to non-active Remote Config templates (i.e., all except the 
+    * template that is being fetched by clients) are also deleted if they are older than 90 days.
+    * 
+    * @param options Optional options object for getting a list of tempalte versions:
+    *    - {number} `pageSize` The maximum number of items to return per page.
+    *    - {string} `pageToken` The `nextPageToken` value returned from a previous list versions
+    *      request, if any.
+    *    - {string | number} `endVersionNumber` Specify the newest version number to include in the
+    *      results. If specified, must be greater than zero. Defaults to the newest version.
+    *    - {Date} `startTime` Specify the earliest update time to include in the results. Any
+    *      entries updated before this time are omitted.
+    *    - {Date} `endTime` Specify the latest update time to include in the results. Any entries
+    *      updated on or after this time are omitted.
+    * @return A promise that fulfills with a `ListVersionsResult`.
+    */
+    listVersions(options?: ListVersionsOptions): Promise<ListVersionsResult>;
 
     /**
      * Creates and returns a new Remote Config template from a JSON string.
@@ -1122,7 +1257,7 @@ declare namespace admin.machineLearning {
      *
      * Example: `tfliteModel: { gcsTfliteUri: 'gs://your-bucket/your-model.tflite' }`
      */
-    tfliteModel?: {gcsTfliteUri: string};
+    tfliteModel?: { gcsTfliteUri: string };
   }
 
   /**
