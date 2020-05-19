@@ -248,7 +248,7 @@ describe('admin.machineLearning', () => {
             .then((createdModel) => {
               expect(createdModel.validationError).to.be.empty;
               expect(createdModel.published).to.be.false;
-              admin.machineLearning().publishModel(createdModel.modelId)
+              return admin.machineLearning().publishModel(createdModel.modelId)
                 .then((publishedModel) => {
                   expect(publishedModel.published).to.be.true;
                 });
@@ -283,10 +283,10 @@ describe('admin.machineLearning', () => {
             .then((createdModel) => {
               expect(createdModel.validationError).to.be.empty;
               expect(createdModel.published).to.be.false;
-              admin.machineLearning().publishModel(createdModel.modelId)
+              return admin.machineLearning().publishModel(createdModel.modelId)
                 .then((publishedModel) => {
                   expect(publishedModel.published).to.be.true;
-                  admin.machineLearning().unpublishModel(publishedModel.modelId)
+                  return admin.machineLearning().unpublishModel(publishedModel.modelId)
                     .then((unpublishedModel) => {
                       expect(unpublishedModel.published).to.be.false;
                     });
