@@ -244,7 +244,7 @@ describe('admin.machineLearning', () => {
       return uploadModelToGcs('model1.tflite', 'valid_model.tflite')
         .then((fileName: string) => {
           modelOptions.tfliteModel!.gcsTfliteUri = fileName;
-          createTemporaryModel(modelOptions)
+          return createTemporaryModel(modelOptions)
             .then((createdModel) => {
               expect(createdModel.validationError).to.be.empty;
               expect(createdModel.published).to.be.false;
@@ -279,7 +279,7 @@ describe('admin.machineLearning', () => {
       return uploadModelToGcs('model1.tflite', 'valid_model.tflite')
         .then((fileName: string) => {
           modelOptions.tfliteModel!.gcsTfliteUri = fileName;
-          createTemporaryModel(modelOptions)
+          return createTemporaryModel(modelOptions)
             .then((createdModel) => {
               expect(createdModel.validationError).to.be.empty;
               expect(createdModel.published).to.be.false;
