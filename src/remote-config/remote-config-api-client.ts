@@ -88,8 +88,8 @@ export interface RemoteConfigTemplate {
 
 /** Interface representing a Remote Config version. */
 export interface Version {
-  versionNumber?: string | number; // int64 format
-  updateTime?: string; // in RFC3339 UTC "Zulu" format, accurate to nanoseconds
+  versionNumber?: string; // int64 format
+  updateTime?: string; // in UTC
   updateOrigin?: ('REMOTE_CONFIG_UPDATE_ORIGIN_UNSPECIFIED' | 'CONSOLE' |
     'REST_API' | 'ADMIN_SDK_NODE');
   updateType?: ('REMOTE_CONFIG_UPDATE_TYPE_UNSPECIFIED' |
@@ -100,7 +100,7 @@ export interface Version {
   isLegacy?: boolean;
 }
 
-/** Interface representing a Remote Config list version results. */
+/** Interface representing a list of Remote Config template versions. */
 export interface ListVersionsResult {
   versions: Version[];
   nextPageToken?: string;
@@ -111,8 +111,8 @@ export interface ListVersionsOptions {
   pageSize?: number;
   pageToken?: string;
   endVersionNumber?: string | number;
-  startTime?: Date;
-  endTime?: Date;
+  startTime?: Date | string;
+  endTime?: Date | string;
 }
 
 /** Interface representing a Remote Config user. */
@@ -400,36 +400,48 @@ export class RemoteConfigApiClient {
     if (!validator.isNonNullObject(options)) {
       throw new FirebaseRemoteConfigError(
         'invalid-argument',
-        'ListVersionsOptions must be a non-null object');
+        'ListVersionsOptions must be a non-null object.');
     }
     if (typeof options.pageSize !== 'undefined' && !validator.isNumber(options.pageSize)) {
       throw new FirebaseRemoteConfigError(
-        'invalid-argument', 'pageSize must be a number');
+        'invalid-argument', 'pageSize must be a number.');
+    }
+    if (typeof options.pageSize !== 'undefined' && (options.pageSize < 1 || options.pageSize > 300)) {
+      throw new FirebaseRemoteConfigError(
+        'invalid-argument', 'pageSize must be a number between 1 and 300 (inclusive).');
     }
     if (typeof options.pageToken !== 'undefined' && !validator.isNonEmptyString(options.pageToken)) {
       throw new FirebaseRemoteConfigError(
-        'invalid-argument', 'pageToken must be a string value');
+        'invalid-argument', 'pageToken must be a string value.');
     }
     if (typeof options.endVersionNumber !== 'undefined') {
       this.validateVersionNumber(options.endVersionNumber, 'endVersionNumber');
     }
     if (typeof options.startTime !== 'undefined') {
-      if (!(options.startTime instanceof Date)) {
+      if (!(options.startTime instanceof Date) && !validator.isUTCDateString(options.startTime)) {
         throw new FirebaseRemoteConfigError(
-          'invalid-argument', 'startTime must be a valid Date object');
+          'invalid-argument', 'startTime must be a valid Date object or a UTC date string.');
       }
       // Convert startTime to RFC3339 UTC "Zulu" format.
-      const zuluStartTime = options.startTime.toISOString();
-      (options as any).startTime = zuluStartTime;
+      if (options.startTime instanceof Date) {
+        options.startTime = options.startTime.toISOString();
+      }
+      else {
+        options.startTime = new Date(options.startTime).toISOString();
+      }
     }
     if (typeof options.endTime !== 'undefined') {
-      if (!(options.endTime instanceof Date)) {
+      if (!(options.endTime instanceof Date) && !validator.isUTCDateString(options.endTime)) {
         throw new FirebaseRemoteConfigError(
-          'invalid-argument', 'endTime must be a valid Date object');
+          'invalid-argument', 'endTime must be a valid Date object or a UTC date string.');
       }
       // Convert endTime to RFC3339 UTC "Zulu" format.
-      const zuluEndTime = options.endTime.toISOString();
-      (options as any).endTime = zuluEndTime;
+      if (options.endTime instanceof Date) {
+        options.endTime = options.endTime.toISOString();
+      }
+      else {
+        options.endTime = new Date(options.endTime).toISOString();
+      }
     }
   }
 }

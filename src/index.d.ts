@@ -984,57 +984,58 @@ declare namespace admin.remoteConfig {
 
   /**
    * Interface representing a Remote Config template version.
-   * Contains all metadata about a particular version of the Remote Config template.
-   * All fields are set at the time the specified Remote Config template was written.
+   * Output only, except for the version description. Contains metadata about a particular
+   * version of the Remote Config template. All fields are set at the time the specified Remote
+   * Config template was published. A version's description field may be specified in
+   * `publishTemplate` calls.
    */
   export interface Version {
     /**
-     * The version number of the version's corresponding Remote Config template. Output only.
+     * The version number of a Remote Config template.
      */
-    versionNumber?: string | number;
-    
+    versionNumber?: string;
+
     /**
-     * The Remote Config template creation timestamp in RFC3339 UTC "Zulu" format,
-     * accurate to nanoseconds. Output only.
+     * The Remote Config template creation timestamp in UTC.
      */
     updateTime?: string;
 
     /**
-     * The source of origin of the template update action. Output only.
+     * The source of origin of the template update action.
      */
     updateOrigin?: ('REMOTE_CONFIG_UPDATE_ORIGIN_UNSPECIFIED' | 'CONSOLE' |
       'REST_API' | 'ADMIN_SDK_NODE');
 
     /**
-     * The type of the template update action. Output only.
+     * The type of the template update action.
      */
     updateType?: ('REMOTE_CONFIG_UPDATE_TYPE_UNSPECIFIED' |
       'INCREMENTAL_UPDATE' | 'FORCED_UPDATE' | 'ROLLBACK');
 
     /**
-     * Aggregation of all metadata fields about the account that performed the update. Output only.
+     * Aggregation of all metadata fields about the account that performed the update.
      */
     updateUser?: RemoteConfigUser;
 
     /**
-     * The user-provided description of the corresponding Remote Config template. Optional.
+     * The user-provided description of the corresponding Remote Config template.
      */
     description?: string;
 
     /**
      * Only present if this version is the result of a rollback, and will be the version number of
-     * the Remote Config template that was rolled-back to. Output only.
+     * the Remote Config template that was rolled-back to.
      */
     rollbackSource?: string;
-    
+
     /**
      * Indicates weather this Remote Config template was published before version history was
-     * supported. Output only.
+     * supported.
      */
     isLegacy?: boolean;
   }
 
-  /** Interface representing a Remote Config list version result. */
+  /** Interface representing a list of Remote Config template versions. */
   export interface ListVersionsResult {
     /**
      * A list of version metadata objects, sorted in reverse chronological order.
@@ -1070,13 +1071,13 @@ declare namespace admin.remoteConfig {
      * Specify the earliest update time to include in the results. Any entries updated before this
      * time are omitted.
      */
-    startTime?: Date;
+    startTime?: Date | string;
 
     /**
      * Specify the latest update time to include in the results. Any entries updated on or after
      * this time are omitted.
      */
-    endTime?: Date;
+    endTime?: Date | string;
   }
 
   /** Interface representing a Remote Config user.*/
@@ -1158,16 +1159,8 @@ declare namespace admin.remoteConfig {
     * All versions that correspond to non-active Remote Config templates (i.e., all except the 
     * template that is being fetched by clients) are also deleted if they are older than 90 days.
     * 
-    * @param options Optional options object for getting a list of tempalte versions:
-    *    - {number} `pageSize` The maximum number of items to return per page.
-    *    - {string} `pageToken` The `nextPageToken` value returned from a previous list versions
-    *      request, if any.
-    *    - {string | number} `endVersionNumber` Specify the newest version number to include in the
-    *      results. If specified, must be greater than zero. Defaults to the newest version.
-    *    - {Date} `startTime` Specify the earliest update time to include in the results. Any
-    *      entries updated before this time are omitted.
-    *    - {Date} `endTime` Specify the latest update time to include in the results. Any entries
-    *      updated on or after this time are omitted.
+    * @param options Optional {@link admin.remoteConfig.ListVersionsOptions `ListVersionsOptions`}
+    *    object for getting a list of tempalte versions.
     * @return A promise that fulfills with a `ListVersionsResult`.
     */
     listVersions(options?: ListVersionsOptions): Promise<ListVersionsResult>;

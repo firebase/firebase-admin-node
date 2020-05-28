@@ -400,10 +400,10 @@ describe('RemoteConfigApiClient', () => {
       });
     });
 
-    [null, 'abc', '', [], {}, true, NaN].forEach((invalidPageSize) => {
+    [null, 'abc', '', [], {}, true, NaN, 0, -100, 301, 450].forEach((invalidPageSize) => {
       it(`should throw if pageSize is ${invalidPageSize}`, () => {
         expect(() => apiClient.listVersions({ pageSize: invalidPageSize } as any))
-          .to.throw('pageSize must be a number');
+          .to.throw(/^pageSize must be a (number.|number between 1 and 300 \(inclusive\).)$/);
       });
     });
 
@@ -426,7 +426,7 @@ describe('RemoteConfigApiClient', () => {
       (invalidStartTime) => {
         it(`should throw if startTime is ${invalidStartTime}`, () => {
           expect(() => apiClient.listVersions({ startTime: invalidStartTime } as any))
-            .to.throw('startTime must be a valid Date object');
+            .to.throw('startTime must be a valid Date object or a UTC date string.');
         });
       });
 
@@ -434,13 +434,13 @@ describe('RemoteConfigApiClient', () => {
       (invalidEndTime) => {
         it(`should throw if endTime is ${invalidEndTime}`, () => {
           expect(() => apiClient.listVersions({ endTime: invalidEndTime } as any))
-            .to.throw('endTime must be a valid Date object');
+            .to.throw('endTime must be a valid Date object or a UTC date string.');
         });
       });
 
     it('should resolve with a list of template versions on success', () => {
       const startTime = new Date(2020, 4, 2);
-      const endTime = new Date();
+      const endTime = 'Thu, 07 May 2020 18:44:41 GMT';
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(TEST_VERSIONS_RESULT, 200));
@@ -464,7 +464,7 @@ describe('RemoteConfigApiClient', () => {
               pageToken: '70',
               endVersionNumber: '78',
               startTime: startTime.toISOString(),
-              endTime: endTime.toISOString(),
+              endTime: new Date(endTime).toISOString(),
             }
           });
         });

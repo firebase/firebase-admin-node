@@ -26,6 +26,8 @@ import {
   RemoteConfigParameterGroup,
   ListVersionsOptions,
   ListVersionsResult,
+  RemoteConfigUser,
+  Version,
 } from './remote-config-api-client';
 
 /**
@@ -124,20 +126,19 @@ export class RemoteConfig implements FirebaseServiceInterface {
   * All versions that correspond to non-active Remote Config templates (i.e., all except the 
   * template that is being fetched by clients) are also deleted if they are older than 90 days.
   * 
-  * @param {ListVersionsOptions} options Optional options object for getting a list of versions:
-  *    - {number} `pageSize` The maximum number of items to return per page.
-  *    - {string} `pageToken` The `nextPageToken` value returned from a previous list versions
-  *      request, if any.
-  *    - {string | number} `endVersionNumber` Specify the newest version number to include in the
-  *      results. If specified, must be greater than zero. Defaults to the newest version.
-  *    - {Date} `startTime` Specify the earliest update time to include in the results. Any
-  *      entries updated before this time are omitted.
-  *    - {Date} `endTime` Specify the latest update time to include in the results. Any entries
-  *      updated on or after this time are omitted.
+  * @param {ListVersionsOptions} options Optional options object for getting a list of versions.
   * @return A promise that fulfills with a `ListVersionsResult`.
   */
   public listVersions(options?: ListVersionsOptions): Promise<ListVersionsResult> {
-    return this.client.listVersions(options);
+    return this.client.listVersions(options)
+      .then((listVersionsResponse) => {
+        return {
+          versions: listVersionsResponse.versions.map(version => {
+            return new VersionImpl(version);
+          }),
+          nextPageToken: listVersionsResponse.nextPageToken,
+        }
+      });
   }
 
   /**
@@ -240,6 +241,124 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
       parameters: this.parameters,
       parameterGroups: this.parameterGroups,
       etag: this.etag,
+    }
+  }
+}
+
+/**
+* Remote Config Version internal implementation.
+*/
+class VersionImpl implements Version {
+  public versionNumber?: string; // int64 format
+  public updateTime?: string; // in UTC
+  public updateOrigin?: ('REMOTE_CONFIG_UPDATE_ORIGIN_UNSPECIFIED' | 'CONSOLE' |
+    'REST_API' | 'ADMIN_SDK_NODE');
+  public updateType?: ('REMOTE_CONFIG_UPDATE_TYPE_UNSPECIFIED' |
+    'INCREMENTAL_UPDATE' | 'FORCED_UPDATE' | 'ROLLBACK');
+  public updateUser?: RemoteConfigUser;
+  public description?: string;
+  public rollbackSource?: string;
+  public isLegacy?: boolean;
+
+  constructor(version: Version) {
+    if (!validator.isNonNullObject(version)) {
+      throw new FirebaseRemoteConfigError(
+        'invalid-argument',
+        `Invalid Remote Config version instance: ${JSON.stringify(version)}`);
+    }
+
+    if (typeof version.versionNumber !== 'undefined') {
+      if (!validator.isNonEmptyString(version.versionNumber) &&
+        !validator.isNumber(version.versionNumber)) {
+        throw new FirebaseRemoteConfigError(
+          'invalid-argument',
+          'Version number must be a non-empty string in int64 format or a number');
+      }
+      if (!Number.isInteger(Number(version.versionNumber))) {
+        throw new FirebaseRemoteConfigError(
+          'invalid-argument',
+          'Version number must be an integer or a string in int64 format');
+      }
+      this.versionNumber = version.versionNumber;
+    }
+
+    if (typeof version.updateOrigin !== 'undefined') {
+      if (!validator.isNonEmptyString(version.updateOrigin)) {
+        throw new FirebaseRemoteConfigError(
+          'invalid-argument',
+          'Version update origin must be a non-empty string');
+      }
+      this.updateOrigin = version.updateOrigin;
+    }
+
+    if (typeof version.updateType !== 'undefined') {
+      if (!validator.isNonEmptyString(version.updateType)) {
+        throw new FirebaseRemoteConfigError(
+          'invalid-argument',
+          'Version update type must be a non-empty string');
+      }
+      this.updateType = version.updateType;
+    }
+
+    if (typeof version.updateUser !== 'undefined') {
+      if (!validator.isNonNullObject(version.updateUser)) {
+        throw new FirebaseRemoteConfigError(
+          'invalid-argument',
+          'Version update user must be a non-null object');
+      }
+      this.updateUser = version.updateUser;
+    }
+
+    if (typeof version.description !== 'undefined') {
+      if (!validator.isNonEmptyString(version.description)) {
+        throw new FirebaseRemoteConfigError(
+          'invalid-argument',
+          'Version description must be a non-empty string');
+      }
+      this.description = version.description;
+    }
+
+    if (typeof version.rollbackSource !== 'undefined') {
+      if (!validator.isNonEmptyString(version.rollbackSource)) {
+        throw new FirebaseRemoteConfigError(
+          'invalid-argument',
+          'Version rollback source must be a non-empty string');
+      }
+      this.rollbackSource = version.rollbackSource;
+    }
+
+    if (typeof version.isLegacy !== 'undefined') {
+      if (!validator.isBoolean(version.isLegacy)) {
+        throw new FirebaseRemoteConfigError(
+          'invalid-argument',
+          'Version.isLegacy must be a boolean');
+      }
+      this.isLegacy = version.isLegacy;
+    }
+
+    if (typeof version.updateTime !== 'undefined') {
+      if (!validator.isISODateString(version.updateTime)) {
+        throw new FirebaseRemoteConfigError(
+          'invalid-argument',
+          'Version update time must be a valid ISO date string');
+      }
+      this.updateTime = new Date(version.updateTime).toUTCString(); // in UTC
+    }
+  }
+
+  /**
+   * @return {Version} A JSON-serializable representation of this object.
+   */
+  public toJSON(): Version {
+    return {
+      versionNumber: this.versionNumber,
+      updateOrigin: this.updateOrigin,
+      updateType: this.updateType,
+      updateUser: this.updateUser,
+      description: this.description,
+      rollbackSource: this.rollbackSource,
+      isLegacy: this.isLegacy,
+      updateTime: this.updateTime,
     }
   }
 }
