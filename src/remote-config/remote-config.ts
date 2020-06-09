@@ -133,9 +133,7 @@ export class RemoteConfig implements FirebaseServiceInterface {
     return this.client.listVersions(options)
       .then((listVersionsResponse) => {
         return {
-          versions: listVersionsResponse.versions.map(version => {
-            return new VersionImpl(version);
-          }),
+          versions: listVersionsResponse.versions.map(version => new VersionImpl(version)),
           nextPageToken: listVersionsResponse.nextPageToken,
         }
       });
@@ -249,16 +247,16 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
 * Remote Config Version internal implementation.
 */
 class VersionImpl implements Version {
-  public versionNumber?: string; // int64 format
-  public updateTime?: string; // in UTC
-  public updateOrigin?: ('REMOTE_CONFIG_UPDATE_ORIGIN_UNSPECIFIED' | 'CONSOLE' |
+  public readonly versionNumber?: string; // int64 format
+  public readonly updateTime?: string; // in UTC
+  public readonly updateOrigin?: ('REMOTE_CONFIG_UPDATE_ORIGIN_UNSPECIFIED' | 'CONSOLE' |
     'REST_API' | 'ADMIN_SDK_NODE');
-  public updateType?: ('REMOTE_CONFIG_UPDATE_TYPE_UNSPECIFIED' |
+  public readonly updateType?: ('REMOTE_CONFIG_UPDATE_TYPE_UNSPECIFIED' |
     'INCREMENTAL_UPDATE' | 'FORCED_UPDATE' | 'ROLLBACK');
-  public updateUser?: RemoteConfigUser;
-  public description?: string;
-  public rollbackSource?: string;
-  public isLegacy?: boolean;
+  public readonly updateUser?: RemoteConfigUser;
+  public readonly description?: string;
+  public readonly rollbackSource?: string;
+  public readonly isLegacy?: boolean;
 
   constructor(version: Version) {
     if (!validator.isNonNullObject(version)) {

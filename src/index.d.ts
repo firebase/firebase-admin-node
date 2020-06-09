@@ -996,7 +996,8 @@ declare namespace admin.remoteConfig {
     versionNumber?: string;
 
     /**
-     * The Remote Config template creation timestamp in UTC.
+     * The timestamp of when the Remote Config template was written to the Remote Config
+     * server.
      */
     updateTime?: string;
 

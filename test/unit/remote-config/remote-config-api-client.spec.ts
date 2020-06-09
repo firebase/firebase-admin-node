@@ -64,8 +64,8 @@ describe('RemoteConfigApiClient', () => {
   };
 
   const TEST_VERSIONS_RESULT: ListVersionsResult = {
-    versions:
-      [{
+    versions: [
+      {
         versionNumber: '78',
         updateTime: '2020-05-07T18:46:09.495Z',
         updateUser: {
@@ -86,7 +86,8 @@ describe('RemoteConfigApiClient', () => {
         },
         updateOrigin: 'REST_API',
         updateType: 'INCREMENTAL_UPDATE',
-      }],
+      },
+    ],
     nextPageToken: '76'
   }
 

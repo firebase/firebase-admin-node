@@ -20,6 +20,7 @@ import { FirebaseRemoteConfigError, RemoteConfigErrorCode } from './remote-confi
 import { FirebaseApp } from '../firebase-app';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
+import { deepCopy } from '../utils/deep-copy';
 
 // Remote Config backend constants
 const FIREBASE_REMOTE_CONFIG_V1_API = 'https://firebaseremoteconfig.googleapis.com/v1';
@@ -219,9 +220,9 @@ export class RemoteConfigApiClient {
   }
 
   public listVersions(options?: ListVersionsOptions): Promise<ListVersionsResult> {
+    let optionsCopy: ListVersionsOptions;
     if (typeof options !== 'undefined') {
-      // validate options and convert Date objects to UTC strings.
-      this.validateListVersionsOptions(options);
+      optionsCopy = this.validateListVersionsOptions(options);
     }
     return this.getUrl()
       .then((url) => {
@@ -229,7 +230,7 @@ export class RemoteConfigApiClient {
           method: 'GET',
           url: `${url}/remoteConfig:listVersions`,
           headers: FIREBASE_REMOTE_CONFIG_HEADERS,
-          data: options
+          data: optionsCopy
         };
         return this.httpClient.send(request);
       })
@@ -368,7 +369,7 @@ export class RemoteConfigApiClient {
    *
    * @param {string|number} versionNumber A version number to be validated.
    */
-  private validateVersionNumber(versionNumber: string | number, propertyName: string): void {
+  private validateVersionNumber(versionNumber: string | number, propertyName = 'versionNumber'): void {
     if (!validator.isNonEmptyString(versionNumber) &&
       !validator.isNumber(versionNumber)) {
       throw new FirebaseRemoteConfigError(
@@ -391,58 +392,64 @@ export class RemoteConfigApiClient {
   }
 
   /**
-   * Checks if a given `ListVersionsOptions` object is valid. If successful, transforms the options
-   * object in place by converting `startTime` and `endTime` to RFC3339 UTC "Zulu" format, if present.
+   * Checks if a given `ListVersionsOptions` object is valid. If successful, creates a copy of the
+   * options object and convert `startTime` and `endTime` to RFC3339 UTC "Zulu" format, if present.
    * 
    * @param {ListVersionsOptions} options An options object to be validated.
+   * 
+   * @return {ListVersionsOptions} A copy of the provided options object with timestamps converted
+   * to UTC Zulu format.
    */
-  private validateListVersionsOptions(options: ListVersionsOptions): void {
-    if (!validator.isNonNullObject(options)) {
+  private validateListVersionsOptions(options: ListVersionsOptions): ListVersionsOptions {
+    const optionsCopy: ListVersionsOptions = deepCopy(options);
+    if (!validator.isNonNullObject(optionsCopy)) {
       throw new FirebaseRemoteConfigError(
         'invalid-argument',
         'ListVersionsOptions must be a non-null object.');
     }
-    if (typeof options.pageSize !== 'undefined' && !validator.isNumber(options.pageSize)) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument', 'pageSize must be a number.');
+    if (typeof optionsCopy.pageSize !== 'undefined') {
+      if (!validator.isNumber(optionsCopy.pageSize)) {
+        throw new FirebaseRemoteConfigError(
+          'invalid-argument', 'pageSize must be a number.');
+      }
+      if (optionsCopy.pageSize < 1 || optionsCopy.pageSize > 300) {
+        throw new FirebaseRemoteConfigError(
+          'invalid-argument', 'pageSize must be a number between 1 and 300 (inclusive).');
+      }
     }
-    if (typeof options.pageSize !== 'undefined' && (options.pageSize < 1 || options.pageSize > 300)) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument', 'pageSize must be a number between 1 and 300 (inclusive).');
-    }
-    if (typeof options.pageToken !== 'undefined' && !validator.isNonEmptyString(options.pageToken)) {
+    if (typeof optionsCopy.pageToken !== 'undefined' && !validator.isNonEmptyString(optionsCopy.pageToken)) {
       throw new FirebaseRemoteConfigError(
         'invalid-argument', 'pageToken must be a string value.');
     }
-    if (typeof options.endVersionNumber !== 'undefined') {
-      this.validateVersionNumber(options.endVersionNumber, 'endVersionNumber');
+    if (typeof optionsCopy.endVersionNumber !== 'undefined') {
+      this.validateVersionNumber(optionsCopy.endVersionNumber, 'endVersionNumber');
     }
-    if (typeof options.startTime !== 'undefined') {
-      if (!(options.startTime instanceof Date) && !validator.isUTCDateString(options.startTime)) {
+    if (typeof optionsCopy.startTime !== 'undefined') {
+      if (!(optionsCopy.startTime instanceof Date) && !validator.isUTCDateString(optionsCopy.startTime)) {
         throw new FirebaseRemoteConfigError(
           'invalid-argument', 'startTime must be a valid Date object or a UTC date string.');
       }
       // Convert startTime to RFC3339 UTC "Zulu" format.
-      if (options.startTime instanceof Date) {
-        options.startTime = options.startTime.toISOString();
-      }
-      else {
-        options.startTime = new Date(options.startTime).toISOString();
+      if (optionsCopy.startTime instanceof Date) {
+        optionsCopy.startTime = optionsCopy.startTime.toISOString();
+      } else {
+        optionsCopy.startTime = new Date(optionsCopy.startTime).toISOString();
       }
     }
-    if (typeof options.endTime !== 'undefined') {
-      if (!(options.endTime instanceof Date) && !validator.isUTCDateString(options.endTime)) {
+    if (typeof optionsCopy.endTime !== 'undefined') {
+      if (!(optionsCopy.endTime instanceof Date) && !validator.isUTCDateString(optionsCopy.endTime)) {
         throw new FirebaseRemoteConfigError(
           'invalid-argument', 'endTime must be a valid Date object or a UTC date string.');
       }
       // Convert endTime to RFC3339 UTC "Zulu" format.
-      if (options.endTime instanceof Date) {
-        options.endTime = options.endTime.toISOString();
-      }
-      else {
-        options.endTime = new Date(options.endTime).toISOString();
+      if (optionsCopy.endTime instanceof Date) {
+        optionsCopy.endTime = optionsCopy.endTime.toISOString();
+      } else {
+        optionsCopy.endTime = new Date(optionsCopy.endTime).toISOString();
       }
     }
+
+    return optionsCopy;
   }
 }
 
