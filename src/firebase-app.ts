@@ -22,19 +22,6 @@ import {FirebaseNamespaceInternals} from './firebase-namespace';
 import {AppErrorCodes, FirebaseAppError} from './utils/error';
 
 import {Auth} from './auth/auth';
-import {MachineLearning} from './machine-learning/machine-learning';
-import {Messaging} from './messaging/messaging';
-import {Storage} from './storage/storage';
-import {Database} from '@firebase/database';
-import {DatabaseService} from './database/database';
-import {Firestore} from '@google-cloud/firestore';
-import {FirestoreService} from './firestore/firestore';
-import {InstanceId} from './instance-id/instance-id';
-
-import {ProjectManagement} from './project-management/project-management';
-import {SecurityRules} from './security-rules/security-rules';
-import { RemoteConfig } from './remote-config/remote-config';
-
 import {Agent} from 'http';
 
 /**
@@ -300,113 +287,6 @@ export class FirebaseApp {
     });
   }
 
-  /**
-   * Returns the Database service for the specified URL, and the current app.
-   *
-   * @return {Database} The Database service instance of this app.
-   */
-  public database(url?: string): Database {
-    const service: DatabaseService = this.ensureService_('database', () => {
-      const dbService: typeof DatabaseService = require('./database/database').DatabaseService;
-      return new dbService(this);
-    });
-    return service.getDatabase(url);
-  }
-
-  /**
-   * Returns the Messaging service instance associated with this app.
-   *
-   * @return {Messaging} The Messaging service instance of this app.
-   */
-  public messaging(): Messaging {
-    return this.ensureService_('messaging', () => {
-      const messagingService: typeof Messaging = require('./messaging/messaging').Messaging;
-      return new messagingService(this);
-    });
-  }
-
-  /**
-   * Returns the Storage service instance associated with this app.
-   *
-   * @return {Storage} The Storage service instance of this app.
-   */
-  public storage(): Storage {
-    return this.ensureService_('storage', () => {
-      const storageService: typeof Storage = require('./storage/storage').Storage;
-      return new storageService(this);
-    });
-  }
-
-  public firestore(): Firestore {
-    const service: FirestoreService = this.ensureService_('firestore', () => {
-      const firestoreService: typeof FirestoreService = require('./firestore/firestore').FirestoreService;
-      return new firestoreService(this);
-    });
-    return service.client;
-  }
-
-  /**
-   * Returns the InstanceId service instance associated with this app.
-   *
-   * @return {InstanceId} The InstanceId service instance of this app.
-   */
-  public instanceId(): InstanceId {
-    return this.ensureService_('iid', () => {
-      const iidService: typeof InstanceId = require('./instance-id/instance-id').InstanceId;
-      return new iidService(this);
-    });
-  }
-
-  /**
-   * Returns the MachineLearning service instance associated with this app.
-   *
-   * @return {MachineLearning} The Machine Learning service instance of this app
-   */
-  public machineLearning(): MachineLearning {
-    return this.ensureService_('machine-learning', () => {
-      const machineLearningService: typeof MachineLearning =
-          require('./machine-learning/machine-learning').MachineLearning;
-      return new machineLearningService(this);
-    });
-  }
-
-  /**
-   * Returns the ProjectManagement service instance associated with this app.
-   *
-   * @return {ProjectManagement} The ProjectManagement service instance of this app.
-   */
-  public projectManagement(): ProjectManagement {
-    return this.ensureService_('project-management', () => {
-      const projectManagementService: typeof ProjectManagement =
-          require('./project-management/project-management').ProjectManagement;
-      return new projectManagementService(this);
-    });
-  }
-
-  /**
-   * Returns the SecurityRules service instance associated with this app.
-   *
-   * @return {SecurityRules} The SecurityRules service instance of this app.
-   */
-  public securityRules(): SecurityRules {
-    return this.ensureService_('security-rules', () => {
-      const securityRulesService: typeof SecurityRules =
-          require('./security-rules/security-rules').SecurityRules;
-      return new securityRulesService(this);
-    });
-  }
-
-  /**
-   * Returns the RemoteConfig service instance associated with this app.
-   *
-   * @return {RemoteConfig} The RemoteConfig service instance of this app.
-   */
-  public remoteConfig(): RemoteConfig {
-    return this.ensureService_('remoteConfig', () => {
-      const remoteConfigService: typeof RemoteConfig = require('./remote-config/remote-config').RemoteConfig;
-      return new remoteConfigService(this);
-    });
-  }
 
   /**
    * Returns the name of the FirebaseApp instance.

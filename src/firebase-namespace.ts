@@ -28,15 +28,6 @@ import {
 } from './auth/credential';
 
 import {Auth} from './auth/auth';
-import {MachineLearning} from './machine-learning/machine-learning';
-import {Messaging} from './messaging/messaging';
-import {Storage} from './storage/storage';
-import {Database} from '@firebase/database';
-import {Firestore} from '@google-cloud/firestore';
-import {InstanceId} from './instance-id/instance-id';
-import {ProjectManagement} from './project-management/project-management';
-import { SecurityRules } from './security-rules/security-rules';
-import { RemoteConfig } from './remote-config/remote-config';
 
 import * as validator from './utils/validator';
 
@@ -330,138 +321,9 @@ export class FirebaseNamespace {
     const fn: FirebaseServiceNamespace<Auth> = (app?: FirebaseApp) => {
       return this.ensureApp(app).auth();
     };
+    // return fn;
     const auth = require('./auth/auth').Auth;
     return Object.assign(fn, {Auth: auth});
-  }
-
-  /**
-   * Gets the `Database` service namespace. The returned namespace can be used to get the
-   * `Database` service for the default app or an explicitly specified app.
-   */
-  get database(): FirebaseServiceNamespace<Database> {
-    const fn: FirebaseServiceNamespace<Database> = (app?: FirebaseApp) => {
-      return this.ensureApp(app).database();
-    };
-
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    return Object.assign(fn, require('@firebase/database'));
-  }
-
-  /**
-   * Gets the `Messaging` service namespace. The returned namespace can be used to get the
-   * `Messaging` service for the default app or an explicitly specified app.
-   */
-  get messaging(): FirebaseServiceNamespace<Messaging> {
-    const fn: FirebaseServiceNamespace<Messaging> = (app?: FirebaseApp) => {
-      return this.ensureApp(app).messaging();
-    };
-    const messaging = require('./messaging/messaging').Messaging;
-    return Object.assign(fn, {Messaging: messaging});
-  }
-
-  /**
-   * Gets the `Storage` service namespace. The returned namespace can be used to get the
-   * `Storage` service for the default app or an explicitly specified app.
-   */
-  get storage(): FirebaseServiceNamespace<Storage> {
-    const fn: FirebaseServiceNamespace<Storage> = (app?: FirebaseApp) => {
-      return this.ensureApp(app).storage();
-    };
-    const storage = require('./storage/storage').Storage;
-    return Object.assign(fn, {Storage: storage});
-  }
-
-  /**
-   * Gets the `Firestore` service namespace. The returned namespace can be used to get the
-   * `Firestore` service for the default app or an explicitly specified app.
-   */
-  get firestore(): FirebaseServiceNamespace<Firestore> {
-    let fn: FirebaseServiceNamespace<Firestore> = (app?: FirebaseApp) => {
-      return this.ensureApp(app).firestore();
-    };
-
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const firestore = require('@google-cloud/firestore');
-
-    fn = Object.assign(fn, firestore.Firestore);
-
-    // `v1beta1` and `v1` are lazy-loaded in the Firestore SDK. We use the same trick here
-    // to avoid triggering this lazy-loading upon initialization.
-    Object.defineProperty(fn, 'v1beta1', {
-      get: () => {
-        return firestore.v1beta1;
-      },
-    });
-    Object.defineProperty(fn, 'v1', {
-      get: () => {
-        return firestore.v1;
-      },
-    });
-
-    return fn;
-  }
-
-  /**
-   * Gets the `MachineLearning` service namespace. The returned namespace can be
-   * used to get the `MachineLearning` service for the default app or an
-   * explicityly specified app.
-   */
-  get machineLearning(): FirebaseServiceNamespace<MachineLearning> {
-    const fn: FirebaseServiceNamespace<MachineLearning> =
-        (app?: FirebaseApp) => {
-          return this.ensureApp(app).machineLearning();
-        };
-    const machineLearning =
-        require('./machine-learning/machine-learning').MachineLearning;
-    return Object.assign(fn, {MachineLearning: machineLearning});
-  }
-
-  /**
-   * Gets the `InstanceId` service namespace. The returned namespace can be used to get the
-   * `Instance` service for the default app or an explicitly specified app.
-   */
-  get instanceId(): FirebaseServiceNamespace<InstanceId> {
-    const fn: FirebaseServiceNamespace<InstanceId> = (app?: FirebaseApp) => {
-      return this.ensureApp(app).instanceId();
-    };
-    const instanceId = require('./instance-id/instance-id').InstanceId;
-    return Object.assign(fn, {InstanceId: instanceId});
-  }
-
-  /**
-   * Gets the `ProjectManagement` service namespace. The returned namespace can be used to get the
-   * `ProjectManagement` service for the default app or an explicitly specified app.
-   */
-  get projectManagement(): FirebaseServiceNamespace<ProjectManagement> {
-    const fn: FirebaseServiceNamespace<ProjectManagement> = (app?: FirebaseApp) => {
-      return this.ensureApp(app).projectManagement();
-    };
-    const projectManagement = require('./project-management/project-management').ProjectManagement;
-    return Object.assign(fn, {ProjectManagement: projectManagement});
-  }
-
-  /**
-   * Gets the `SecurityRules` service namespace. The returned namespace can be used to get the
-   * `SecurityRules` service for the default app or an explicitly specified app.
-   */
-  get securityRules(): FirebaseServiceNamespace<SecurityRules> {
-    const fn: FirebaseServiceNamespace<SecurityRules> = (app?: FirebaseApp) => {
-      return this.ensureApp(app).securityRules();
-    };
-    const securityRules = require('./security-rules/security-rules').SecurityRules;
-    return Object.assign(fn, {SecurityRules: securityRules});
-  }
-
-  /**
-   * Gets the `RemoteConfig` service namespace. The returned namespace can be used to get the
-   * `RemoteConfig` service for the default app or an explicitly specified app.
-   */
-  get remoteConfig(): FirebaseServiceNamespace<RemoteConfig> {
-    const fn: FirebaseServiceNamespace<RemoteConfig> = (app?: FirebaseApp) => {
-      return this.ensureApp(app).remoteConfig();
-    };
-    const remoteConfig = require('./remote-config/remote-config').RemoteConfig;
-    return Object.assign(fn, { RemoteConfig: remoteConfig });
   }
 
   /**

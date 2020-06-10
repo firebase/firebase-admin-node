@@ -31,13 +31,6 @@ describe('admin', () => {
     const gcloud = require.cache[require.resolve('@google-cloud/firestore')];
     expect(gcloud).to.be.undefined;
   });
-
-  it('loads Firestore when calling admin.firestore', () => {
-    const firestoreNamespace = admin.firestore;
-    expect(firestoreNamespace).to.not.be.null;
-    const gcloud = require.cache[require.resolve('@google-cloud/firestore')];
-    expect(gcloud).to.not.be.undefined;
-  });
 });
 
 describe('admin.app', () => {
@@ -71,16 +64,10 @@ describe('admin.app', () => {
   it('namespace services are attached to the default App', () => {
     const app = admin.app();
     expect(admin.auth(app).app).to.deep.equal(app);
-    expect(admin.database(app).app).to.deep.equal(app);
-    expect(admin.messaging(app).app).to.deep.equal(app);
-    expect(admin.storage(app).app).to.deep.equal(app);
   });
 
   it('namespace services are attached to the named App', () => {
     const app = admin.app('null');
     expect(admin.auth(app).app).to.deep.equal(app);
-    expect(admin.database(app).app).to.deep.equal(app);
-    expect(admin.messaging(app).app).to.deep.equal(app);
-    expect(admin.storage(app).app).to.deep.equal(app);
   });
 });
