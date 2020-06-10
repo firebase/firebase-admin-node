@@ -192,6 +192,22 @@ describe('RemoteConfigApiClient', () => {
         });
     });
 
+    it('should convert version number to string', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200, { etag: 'etag-123456789012-60' }));
+      stubs.push(stub);
+      return apiClient.getTemplate(60)
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig',
+            headers: EXPECTED_HEADERS,
+            data: { versionNumber: '60' },
+          });
+        });
+    });
+
     it('should resolve with the requested template version on success', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
@@ -362,6 +378,24 @@ describe('RemoteConfigApiClient', () => {
     runEtagHeaderTests(() => apiClient.rollback(60));
     runErrorResponseTests(() => apiClient.rollback(60));
 
+    it('should convert version number to string', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200, { etag: 'etag-123456789012-55' }));
+      stubs.push(stub);
+      return apiClient.rollback(55)
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'POST',
+            url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig:rollback',
+            headers: EXPECTED_HEADERS,
+            data: {
+              versionNumber: '55',
+            }
+          });
+        });
+    });
+
     it('should resolve with the rollbacked template on success', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
@@ -438,6 +472,52 @@ describe('RemoteConfigApiClient', () => {
             .to.throw('endTime must be a valid Date object or a UTC date string.');
         });
       });
+
+    it('should convert input timestamps to ISO strings', () => {
+      const startTime = new Date(2020, 4, 2);
+      const endTime = 'Thu, 07 May 2020 18:44:41 GMT';
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_VERSIONS_RESULT, 200));
+      stubs.push(stub);
+      return apiClient.listVersions({
+        startTime,
+        endTime,
+      })
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig:listVersions',
+            headers: EXPECTED_HEADERS,
+            data: {
+              // timestamps should be converted to ISO strings
+              startTime: startTime.toISOString(),
+              endTime: new Date(endTime).toISOString(),
+            }
+          });
+        });
+    });
+
+    it('should convert endVersionNumber to string', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_VERSIONS_RESULT, 200));
+      stubs.push(stub);
+      return apiClient.listVersions({
+        endVersionNumber: 70
+      })
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig:listVersions',
+            headers: EXPECTED_HEADERS,
+            data: {
+              // endVersionNumber should be converted to string
+              endVersionNumber: '70'
+            }
+          });
+        });
+    });
 
     it('should resolve with a list of template versions on success', () => {
       const startTime = new Date(2020, 4, 2);
