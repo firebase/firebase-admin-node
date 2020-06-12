@@ -23,6 +23,7 @@ import {
   RemoteConfigApiClient,
   RemoteConfigTemplate,
   TagColor,
+  ListVersionsResult,
 } from '../../../src/remote-config/remote-config-api-client';
 import { FirebaseRemoteConfigError } from '../../../src/remote-config/remote-config-utils';
 import { HttpClient } from '../../../src/utils/api-request';
@@ -61,6 +62,34 @@ describe('RemoteConfigApiClient', () => {
     parameterGroups: { group: { parameters: { paramabc: { defaultValue: { value: 'true' } } }, } },
     version: {},
   };
+
+  const TEST_VERSIONS_RESULT: ListVersionsResult = {
+    versions: [
+      {
+        versionNumber: '78',
+        updateTime: '2020-05-07T18:46:09.495Z',
+        updateUser: {
+          email: 'user@gmail.com',
+          imageUrl: 'https://photo.jpg'
+        },
+        description: 'Rollback to version 76',
+        updateOrigin: 'REST_API',
+        updateType: 'ROLLBACK',
+        rollbackSource: '76'
+      },
+      {
+        versionNumber: '77',
+        updateTime: '2020-05-07T18:44:41.555Z',
+        updateUser: {
+          email: 'user@gmail.com',
+          imageUrl: 'https://photo.jpg'
+        },
+        updateOrigin: 'REST_API',
+        updateType: 'INCREMENTAL_UPDATE',
+      },
+    ],
+    nextPageToken: '76'
+  }
 
   const noProjectId = 'Failed to determine project ID. Initialize the SDK with service '
     + 'account credentials, or set project ID as an app option. Alternatively, set the '
@@ -140,6 +169,7 @@ describe('RemoteConfigApiClient', () => {
     runTemplateVersionNumberTests((v: string | number) => { apiClient.getTemplate(v); });
 
     // tests for api response validations
+    runEtagHeaderTests(() => apiClient.getTemplate());
     runErrorResponseTests(() => apiClient.getTemplate());
 
     it('should resolve with the latest template on success', () => {
@@ -158,6 +188,22 @@ describe('RemoteConfigApiClient', () => {
             url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig',
             headers: EXPECTED_HEADERS,
             data: {},
+          });
+        });
+    });
+
+    it('should convert version number to string', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200, { etag: 'etag-123456789012-60' }));
+      stubs.push(stub);
+      return apiClient.getTemplate(60)
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig',
+            headers: EXPECTED_HEADERS,
+            data: { versionNumber: '60' },
           });
         });
     });
@@ -193,6 +239,7 @@ describe('RemoteConfigApiClient', () => {
     testInvalidInputTemplates((t: RemoteConfigTemplate) => apiClient.validateTemplate(t));
 
     // tests for api response validations
+    runEtagHeaderTests(() => apiClient.validateTemplate(REMOTE_CONFIG_TEMPLATE));
     runErrorResponseTests(() => apiClient.validateTemplate(REMOTE_CONFIG_TEMPLATE));
 
     it('should resolve with the requested template on success', () => {
@@ -258,6 +305,7 @@ describe('RemoteConfigApiClient', () => {
     testInvalidInputTemplates((t: RemoteConfigTemplate) => apiClient.publishTemplate(t));
 
     // tests for api response validations
+    runEtagHeaderTests(() => apiClient.publishTemplate(REMOTE_CONFIG_TEMPLATE));
     runErrorResponseTests(() => apiClient.publishTemplate(REMOTE_CONFIG_TEMPLATE));
 
     const testOptions = [
@@ -327,7 +375,26 @@ describe('RemoteConfigApiClient', () => {
     runTemplateVersionNumberTests((v: string | number) => { apiClient.rollback(v); });
 
     // tests for api response validations
+    runEtagHeaderTests(() => apiClient.rollback(60));
     runErrorResponseTests(() => apiClient.rollback(60));
+
+    it('should convert version number to string', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200, { etag: 'etag-123456789012-55' }));
+      stubs.push(stub);
+      return apiClient.rollback(55)
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'POST',
+            url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig:rollback',
+            headers: EXPECTED_HEADERS,
+            data: {
+              versionNumber: '55',
+            }
+          });
+        });
+    });
 
     it('should resolve with the rollbacked template on success', () => {
       const stub = sinon
@@ -352,6 +419,139 @@ describe('RemoteConfigApiClient', () => {
     });
   });
 
+  describe('listVersions', () => {
+    it(`should reject when project id is not available`, () => {
+      return clientWithoutProjectId.listVersions()
+        .should.eventually.be.rejectedWith(noProjectId);
+    });
+
+    // tests for api response validations
+    runErrorResponseTests(() => apiClient.listVersions());
+
+    [null, 'abc', '', [], true, 102, 1.2].forEach((invalidOption) => {
+      it(`should throw if options is ${invalidOption}`, () => {
+        expect(() => apiClient.listVersions(invalidOption as any))
+          .to.throw('ListVersionsOptions must be a non-null object');
+      });
+    });
+
+    [null, 'abc', '', [], {}, true, NaN, 0, -100, 301, 450].forEach((invalidPageSize) => {
+      it(`should throw if pageSize is ${invalidPageSize}`, () => {
+        expect(() => apiClient.listVersions({ pageSize: invalidPageSize } as any))
+          .to.throw(/^pageSize must be a (number.|number between 1 and 300 \(inclusive\).)$/);
+      });
+    });
+
+    [null, '', 102, 1.2, [], {}, true, NaN].forEach((invalidPageToken) => {
+      it(`should throw if pageToken is ${invalidPageToken}`, () => {
+        expect(() => apiClient.listVersions({ pageToken: invalidPageToken } as any))
+          .to.throw('pageToken must be a string value');
+      });
+    });
+
+    ['', 'abc', 'a123b', 'a123', '123a', 1.2, '70.2', null, NaN, true, [], {}].forEach(
+      (invalidVersion) => {
+        it(`should throw if the endVersionNumber is: ${invalidVersion}`, () => {
+          expect(() => apiClient.listVersions({ endVersionNumber: invalidVersion } as any))
+            .to.throw(/^endVersionNumber must be (a non-empty string in int64 format or a number|an integer or a string in int64 format)$/);
+        });
+      });
+
+    [null, '', 'abc', '2020-05-07T18:44:41.555Z', 102, 1.2, [], {}, true, NaN].forEach(
+      (invalidStartTime) => {
+        it(`should throw if startTime is ${invalidStartTime}`, () => {
+          expect(() => apiClient.listVersions({ startTime: invalidStartTime } as any))
+            .to.throw('startTime must be a valid Date object or a UTC date string.');
+        });
+      });
+
+    [null, '', 'abc', '2020-05-07T18:44:41.555Z', 102, 1.2, [], {}, true, NaN].forEach(
+      (invalidEndTime) => {
+        it(`should throw if endTime is ${invalidEndTime}`, () => {
+          expect(() => apiClient.listVersions({ endTime: invalidEndTime } as any))
+            .to.throw('endTime must be a valid Date object or a UTC date string.');
+        });
+      });
+
+    it('should convert input timestamps to ISO strings', () => {
+      const startTime = new Date(2020, 4, 2);
+      const endTime = 'Thu, 07 May 2020 18:44:41 GMT';
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_VERSIONS_RESULT, 200));
+      stubs.push(stub);
+      return apiClient.listVersions({
+        startTime,
+        endTime,
+      })
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig:listVersions',
+            headers: EXPECTED_HEADERS,
+            data: {
+              // timestamps should be converted to ISO strings
+              startTime: startTime.toISOString(),
+              endTime: new Date(endTime).toISOString(),
+            }
+          });
+        });
+    });
+
+    it('should convert endVersionNumber to string', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_VERSIONS_RESULT, 200));
+      stubs.push(stub);
+      return apiClient.listVersions({
+        endVersionNumber: 70
+      })
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig:listVersions',
+            headers: EXPECTED_HEADERS,
+            data: {
+              // endVersionNumber should be converted to string
+              endVersionNumber: '70'
+            }
+          });
+        });
+    });
+
+    it('should resolve with a list of template versions on success', () => {
+      const startTime = new Date(2020, 4, 2);
+      const endTime = 'Thu, 07 May 2020 18:44:41 GMT';
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_VERSIONS_RESULT, 200));
+      stubs.push(stub);
+      return apiClient.listVersions({
+        pageSize: 2,
+        pageToken: '70',
+        endVersionNumber: '78',
+        startTime: startTime,
+        endTime: endTime,
+      })
+        .then((resp) => {
+          expect(resp.versions).to.deep.equal(TEST_VERSIONS_RESULT.versions);
+          expect(resp.nextPageToken).to.equal(TEST_VERSIONS_RESULT.nextPageToken);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig:listVersions',
+            headers: EXPECTED_HEADERS,
+            data: {
+              pageSize: 2,
+              pageToken: '70',
+              endVersionNumber: '78',
+              startTime: startTime.toISOString(),
+              endTime: new Date(endTime).toISOString(),
+            }
+          });
+        });
+    });
+  });
+
   function runTemplateVersionNumberTests(rcOperation: Function): void {
     ['', 'abc', 'a123b', 'a123', '123a', 1.2, '70.2', null, NaN, true, [], {}].forEach((invalidVersion) => {
       it(`should reject if the versionNumber is: ${invalidVersion}`, () => {
@@ -361,7 +561,7 @@ describe('RemoteConfigApiClient', () => {
     });
   }
 
-  function runErrorResponseTests(rcOperation: () => Promise<RemoteConfigTemplate>): void {
+  function runEtagHeaderTests(rcOperation: () => Promise<RemoteConfigTemplate>): void {
     it('should reject when the etag is not present in the response', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
@@ -372,7 +572,9 @@ describe('RemoteConfigApiClient', () => {
       return rcOperation()
         .should.eventually.be.rejected.and.deep.equal(expected);
     });
+  }
 
+  function runErrorResponseTests(rcOperation: () => Promise<RemoteConfigTemplate | ListVersionsResult>): void {
     it('should reject when a full platform error response is received', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')

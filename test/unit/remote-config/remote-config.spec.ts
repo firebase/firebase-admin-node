@@ -27,6 +27,7 @@ import {
   RemoteConfigTemplate,
   RemoteConfigCondition,
   TagColor,
+  ListVersionsResult,
 } from '../../../src/remote-config/remote-config-api-client';
 import { FirebaseRemoteConfigError } from '../../../src/remote-config/remote-config-utils';
 import { deepCopy } from '../../../src/utils/deep-copy';
@@ -97,6 +98,34 @@ describe('RemoteConfig', () => {
     parameterGroups: PARAMETER_GROUPS,
     etag: 'etag-123456789012-6',
   };
+
+  const REMOTE_CONFIG_LIST_VERSIONS_RESULT: ListVersionsResult = {
+    versions: [
+      {
+        versionNumber: '78',
+        updateTime: '2020-05-07T18:46:09.495Z',
+        updateUser: {
+          email: 'user@gmail.com',
+          imageUrl: 'https://photo.jpg'
+        },
+        description: 'Rollback to version 76',
+        updateOrigin: 'REST_API',
+        updateType: 'ROLLBACK',
+        rollbackSource: '76'
+      },
+      {
+        versionNumber: '77',
+        updateTime: '2020-05-07T18:44:41.555Z',
+        updateUser: {
+          email: 'user@gmail.com',
+          imageUrl: 'https://photo.jpg'
+        },
+        updateOrigin: 'REST_API',
+        updateType: 'INCREMENTAL_UPDATE',
+      },
+    ],
+    nextPageToken: '76'
+  }
 
   let remoteConfig: RemoteConfig;
 
@@ -191,6 +220,143 @@ describe('RemoteConfig', () => {
   describe('rollback', () => {
     runInvalidResponseTests(() => remoteConfig.rollback('5'), 'rollback');
     runValidResponseTests(() => remoteConfig.rollback('5'), 'rollback');
+  });
+
+  describe('listVersions', () => {
+    it('should propagate API errors', () => {
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'listVersions')
+        .rejects(INTERNAL_ERROR);
+      stubs.push(stub);
+      return remoteConfig.listVersions()
+        .should.eventually.be.rejected.and.deep.equal(INTERNAL_ERROR);
+    });
+
+    ['', 'abc', 'a123b', 'a123', '123a', 1.2, '70.2', null, NaN, true, [], {}].forEach((invalidVersion) => {
+      it(`should reject if the versionNumber is: ${invalidVersion}`, () => {
+        const response = deepCopy(REMOTE_CONFIG_LIST_VERSIONS_RESULT);
+        response.versions[0].versionNumber = invalidVersion as any;
+        const stub = sinon
+          .stub(RemoteConfigApiClient.prototype, 'listVersions')
+          .resolves(response);
+        stubs.push(stub);
+        return remoteConfig.listVersions()
+          .should.eventually.be.rejected.and.to.match(/^Error: Version number must be (a non-empty string in int64 format or a number|an integer or a string in int64 format)$/);
+      });
+    });
+
+    ['', 123, 1.2, null, NaN, true, [], {}].forEach((invalidUpdateOrigin) => {
+      it(`should reject if the updateOrigin is: ${invalidUpdateOrigin}`, () => {
+        const response = deepCopy(REMOTE_CONFIG_LIST_VERSIONS_RESULT);
+        response.versions[0].updateOrigin = invalidUpdateOrigin as any;
+        const stub = sinon
+          .stub(RemoteConfigApiClient.prototype, 'listVersions')
+          .resolves(response);
+        stubs.push(stub);
+        return remoteConfig.listVersions()
+          .should.eventually.be.rejected.and.have.property('message',
+            'Version update origin must be a non-empty string');
+      });
+    });
+
+    ['', 123, 1.2, null, NaN, true, [], {}].forEach((invalidUpdateType) => {
+      it(`should reject if the updateType is: ${invalidUpdateType}`, () => {
+        const response = deepCopy(REMOTE_CONFIG_LIST_VERSIONS_RESULT);
+        response.versions[0].updateType = invalidUpdateType as any;
+        const stub = sinon
+          .stub(RemoteConfigApiClient.prototype, 'listVersions')
+          .resolves(response);
+        stubs.push(stub);
+        return remoteConfig.listVersions()
+          .should.eventually.be.rejected.and.have.property('message',
+            'Version update type must be a non-empty string');
+      });
+    });
+
+    ['', 'abc', 1.2, 123, null, NaN, true, []].forEach((invalidUpdateUser) => {
+      it(`should reject if the updateUser is: ${invalidUpdateUser}`, () => {
+        const response = deepCopy(REMOTE_CONFIG_LIST_VERSIONS_RESULT);
+        response.versions[0].updateUser = invalidUpdateUser as any;
+        const stub = sinon
+          .stub(RemoteConfigApiClient.prototype, 'listVersions')
+          .resolves(response);
+        stubs.push(stub);
+        return remoteConfig.listVersions()
+          .should.eventually.be.rejected.and.have.property('message',
+            'Version update user must be a non-null object');
+      });
+    });
+
+    ['', 123, 1.2, null, NaN, true, [], {}].forEach((invalidDescription) => {
+      it(`should reject if the description is: ${invalidDescription}`, () => {
+        const response = deepCopy(REMOTE_CONFIG_LIST_VERSIONS_RESULT);
+        response.versions[0].description = invalidDescription as any;
+        const stub = sinon
+          .stub(RemoteConfigApiClient.prototype, 'listVersions')
+          .resolves(response);
+        stubs.push(stub);
+        return remoteConfig.listVersions()
+          .should.eventually.be.rejected.and.have.property('message',
+            'Version description must be a non-empty string');
+      });
+    });
+
+    ['', 123, 1.2, null, NaN, true, [], {}].forEach((invalidRollbackSource) => {
+      it(`should reject if the rollbackSource is: ${invalidRollbackSource}`, () => {
+        const response = deepCopy(REMOTE_CONFIG_LIST_VERSIONS_RESULT);
+        response.versions[0].rollbackSource = invalidRollbackSource as any;
+        const stub = sinon
+          .stub(RemoteConfigApiClient.prototype, 'listVersions')
+          .resolves(response);
+        stubs.push(stub);
+        return remoteConfig.listVersions()
+          .should.eventually.be.rejected.and.have.property('message',
+            'Version rollback source must be a non-empty string');
+      });
+    });
+
+    ['', 'abc', 123, 1.2, null, NaN, [], {}].forEach((invalidIsLegacy) => {
+      it(`should reject if the isLegacy is: ${invalidIsLegacy}`, () => {
+        const response = deepCopy(REMOTE_CONFIG_LIST_VERSIONS_RESULT);
+        response.versions[0].isLegacy = invalidIsLegacy as any;
+        const stub = sinon
+          .stub(RemoteConfigApiClient.prototype, 'listVersions')
+          .resolves(response);
+        stubs.push(stub);
+        return remoteConfig.listVersions()
+          .should.eventually.be.rejected.and.have.property('message',
+            'Version.isLegacy must be a boolean');
+      });
+    });
+
+    ['', 'abc', 123, 1.2, null, NaN, [], {}].forEach((invalidUpdateTime) => {
+      it(`should reject if the updateTime is: ${invalidUpdateTime}`, () => {
+        const response = deepCopy(REMOTE_CONFIG_LIST_VERSIONS_RESULT);
+        response.versions[0].updateTime = invalidUpdateTime as any;
+        const stub = sinon
+          .stub(RemoteConfigApiClient.prototype, 'listVersions')
+          .resolves(response);
+        stubs.push(stub);
+        return remoteConfig.listVersions()
+          .should.eventually.be.rejected.and.have.property('message',
+            'Version update time must be a valid ISO date string');
+      });
+    });
+
+    it('should resolve with template versions list on success', () => {
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'listVersions')
+        .resolves(REMOTE_CONFIG_LIST_VERSIONS_RESULT);
+      stubs.push(stub);
+      return remoteConfig.listVersions({
+        pageSize: 2
+      })
+        .then((response) => {
+          expect(response.versions.length).to.equal(2);
+          expect(response.versions[0].updateTime).equals('Thu, 07 May 2020 18:46:09 GMT');
+          expect(response.versions[1].updateTime).equals('Thu, 07 May 2020 18:44:41 GMT');
+        });
+    });
   });
 
   const INVALID_PARAMETERS: any[] = [null, '', 'abc', 1, true, []];
