@@ -1112,11 +1112,19 @@ declare namespace admin.remoteConfig {
      * Gets the current active version of the {@link admin.remoteConfig.RemoteConfigTemplate
      * `RemoteConfigTemplate`} of the project.
      * 
-     * @param versionNumber Version number of the Remote Config template to look up.
-     *    If not specified, the latest Remote Config template is returned. Optional.
      * @return A promise that fulfills with a `RemoteConfigTemplate`.
      */
-    getTemplate(versionNumber?: number | string): Promise<RemoteConfigTemplate>;
+    getTemplate(): Promise<RemoteConfigTemplate>;
+
+    /**
+     * Gets the requested version of the {@link admin.remoteConfig.RemoteConfigTemplate
+     * `RemoteConfigTemplate`} of the project.
+     * 
+     * @param versionNumber Version number of the Remote Config template to look up.
+     * 
+     * @return A promise that fulfills with a `RemoteConfigTemplate`.
+     */
+    getTemplateAtVersion(versionNumber: number | string): Promise<RemoteConfigTemplate>;
 
     /**
      * Validates a {@link admin.remoteConfig.RemoteConfigTemplate `RemoteConfigTemplate`}.
