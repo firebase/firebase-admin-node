@@ -165,9 +165,6 @@ describe('RemoteConfigApiClient', () => {
         .should.eventually.be.rejectedWith(noProjectId);
     });
 
-    // test for version number validations
-    runTemplateVersionNumberTests((v: string | number) => { apiClient.getTemplate(v); });
-
     // tests for api response validations
     runEtagHeaderTests(() => apiClient.getTemplate());
     runErrorResponseTests(() => apiClient.getTemplate());
@@ -187,17 +184,30 @@ describe('RemoteConfigApiClient', () => {
             method: 'GET',
             url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig',
             headers: EXPECTED_HEADERS,
-            data: {},
           });
         });
     });
+  });
+
+  describe('getTemplateAtVersion', () => {
+    it(`should reject when project id is not available`, () => {
+      return clientWithoutProjectId.getTemplateAtVersion(65)
+        .should.eventually.be.rejectedWith(noProjectId);
+    });
+
+    // test for version number validations
+    runTemplateVersionNumberTests((v: string | number) => { apiClient.getTemplateAtVersion(v); });
+
+    // tests for api response validations
+    runEtagHeaderTests(() => apiClient.getTemplateAtVersion(65));
+    runErrorResponseTests(() => apiClient.getTemplateAtVersion(65));
 
     it('should convert version number to string', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(TEST_RESPONSE, 200, { etag: 'etag-123456789012-60' }));
       stubs.push(stub);
-      return apiClient.getTemplate(60)
+      return apiClient.getTemplateAtVersion(60)
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'GET',
@@ -213,7 +223,7 @@ describe('RemoteConfigApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(TEST_RESPONSE, 200, { etag: 'etag-123456789012-60' }));
       stubs.push(stub);
-      return apiClient.getTemplate('60')
+      return apiClient.getTemplateAtVersion('60')
         .then((resp) => {
           expect(resp.conditions).to.deep.equal(TEST_RESPONSE.conditions);
           expect(resp.parameters).to.deep.equal(TEST_RESPONSE.parameters);

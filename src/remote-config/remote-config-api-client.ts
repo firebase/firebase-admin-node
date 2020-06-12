@@ -143,18 +143,33 @@ export class RemoteConfigApiClient {
     this.httpClient = new AuthorizedHttpClient(app);
   }
 
-  public getTemplate(versionNumber?: number | string): Promise<RemoteConfigTemplate> {
-    const requestData: { [k: string]: any } = {};
-    if (typeof versionNumber !== 'undefined') {
-      requestData['versionNumber'] = this.validateVersionNumber(versionNumber);
-    }
+  public getTemplate(): Promise<RemoteConfigTemplate> {
+    return this.getUrl()
+      .then((url) => {
+        const request: HttpRequestConfig = {
+          method: 'GET',
+          url: `${url}/remoteConfig`,
+          headers: FIREBASE_REMOTE_CONFIG_HEADERS
+        };
+        return this.httpClient.send(request);
+      })
+      .then((resp) => {
+        return this.toRemoteConfigTemplate(resp);
+      })
+      .catch((err) => {
+        throw this.toFirebaseError(err);
+      });
+  }
+
+  public getTemplateAtVersion(versionNumber: number | string): Promise<RemoteConfigTemplate> {
+    const data = { versionNumber: this.validateVersionNumber(versionNumber) };
     return this.getUrl()
       .then((url) => {
         const request: HttpRequestConfig = {
           method: 'GET',
           url: `${url}/remoteConfig`,
           headers: FIREBASE_REMOTE_CONFIG_HEADERS,
-          data: requestData
+          data
         };
         return this.httpClient.send(request);
       })

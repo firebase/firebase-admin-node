@@ -203,6 +203,11 @@ describe('RemoteConfig', () => {
     runValidResponseTests(() => remoteConfig.getTemplate(), 'getTemplate');
   });
 
+  describe('getTemplateAtVersion', () => {
+    runInvalidResponseTests(() => remoteConfig.getTemplateAtVersion(65), 'getTemplateAtVersion');
+    runValidResponseTests(() => remoteConfig.getTemplateAtVersion(65), 'getTemplateAtVersion');
+  });
+
   describe('validateTemplate', () => {
     runInvalidResponseTests(() => remoteConfig.validateTemplate(REMOTE_CONFIG_TEMPLATE),
       'validateTemplate');
