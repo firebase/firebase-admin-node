@@ -188,6 +188,7 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
   public parameterGroups: { [key: string]: RemoteConfigParameterGroup };
   public conditions: RemoteConfigCondition[];
   private readonly etagInternal: string;
+  public version?: Version;
 
   constructor(config: RemoteConfigTemplate) {
     if (!validator.isNonNullObject(config) ||
@@ -231,6 +232,10 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
     } else {
       this.conditions = [];
     }
+
+    if (typeof config.version !== 'undefined') {
+      this.version = new VersionImpl(config.version);
+    }
   }
 
   /**
@@ -251,6 +256,7 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
       parameters: this.parameters,
       parameterGroups: this.parameterGroups,
       etag: this.etag,
+      version: this.version,
     }
   }
 }
@@ -346,13 +352,20 @@ class VersionImpl implements Version {
       this.isLegacy = version.isLegacy;
     }
 
+    // The backend API provides timestamps as ISO date strings. The Admin SDK exposes timestamps
+    // as UTC date strings. If a developer uses a previously obtained template with UTC timestamps
+    // we could still validate it below.
     if (typeof version.updateTime !== 'undefined') {
-      if (!validator.isISODateString(version.updateTime)) {
+      if (!validator.isISODateString(version.updateTime) &&
+        !validator.isUTCDateString(version.updateTime)) {
         throw new FirebaseRemoteConfigError(
           'invalid-argument',
-          'Version update time must be a valid ISO date string');
+          'Version update time must be a valid date string');
       }
-      this.updateTime = new Date(version.updateTime).toUTCString(); // in UTC
+      if (validator.isISODateString(version.updateTime)) {
+        // timestamps in output `Version` obtained from the API should be in UTC.
+        this.updateTime = new Date(version.updateTime).toUTCString();
+      }
     }
   }
 

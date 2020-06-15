@@ -85,6 +85,7 @@ export interface RemoteConfigTemplate {
   parameters: { [key: string]: RemoteConfigParameter };
   parameterGroups: { [key: string]: RemoteConfigParameterGroup };
   readonly etag: string;
+  version?: Version;
 }
 
 /** Interface representing a Remote Config version. */
@@ -182,7 +183,7 @@ export class RemoteConfigApiClient {
   }
 
   public validateTemplate(template: RemoteConfigTemplate): Promise<RemoteConfigTemplate> {
-    this.validateRemoteConfigTemplate(template);
+    template = this.validateInputRemoteConfigTemplate(template);
     return this.sendPutRequest(template, template.etag, true)
       .then((resp) => {
         // validating a template returns an etag with the suffix -0 means that your update 
@@ -197,7 +198,7 @@ export class RemoteConfigApiClient {
   }
 
   public publishTemplate(template: RemoteConfigTemplate, options?: { force: boolean }): Promise<RemoteConfigTemplate> {
-    this.validateRemoteConfigTemplate(template);
+    template = this.validateInputRemoteConfigTemplate(template);
     let ifMatch: string = template.etag;
     if (options && options.force == true) {
       // setting `If-Match: *` forces the Remote Config template to be updated
@@ -270,6 +271,7 @@ export class RemoteConfigApiClient {
             conditions: template.conditions,
             parameters: template.parameters,
             parameterGroups: template.parameterGroups,
+            version: template.version,
           }
         };
         return this.httpClient.send(request);
@@ -339,41 +341,51 @@ export class RemoteConfigApiClient {
       parameters: resp.data.parameters,
       parameterGroups: resp.data.parameterGroups,
       etag,
+      version: resp.data.version,
     };
   }
 
   /**
    * Checks if the given RemoteConfigTemplate object is valid.
    * The object must have valid parameters, parameter groups, conditions, and an etag.
+   * Removes output only properties from version metadata.
    *
    * @param {RemoteConfigTemplate} template A RemoteConfigTemplate object to be validated.
+   * 
+   * @returns {RemoteConfigTemplate} The validated RemoteConfigTemplate object.
    */
-  private validateRemoteConfigTemplate(template: RemoteConfigTemplate): void {
-    if (!validator.isNonNullObject(template)) {
+  private validateInputRemoteConfigTemplate(template: RemoteConfigTemplate): RemoteConfigTemplate {
+    const templateCopy = deepCopy(template);
+    if (!validator.isNonNullObject(templateCopy)) {
       throw new FirebaseRemoteConfigError(
         'invalid-argument',
-        `Invalid Remote Config template: ${JSON.stringify(template)}`);
+        `Invalid Remote Config template: ${JSON.stringify(templateCopy)}`);
     }
-    if (!validator.isNonEmptyString(template.etag)) {
+    if (!validator.isNonEmptyString(templateCopy.etag)) {
       throw new FirebaseRemoteConfigError(
         'invalid-argument',
         'ETag must be a non-empty string.');
     }
-    if (!validator.isNonNullObject(template.parameters)) {
+    if (!validator.isNonNullObject(templateCopy.parameters)) {
       throw new FirebaseRemoteConfigError(
         'invalid-argument',
         'Remote Config parameters must be a non-null object');
     }
-    if (!validator.isNonNullObject(template.parameterGroups)) {
+    if (!validator.isNonNullObject(templateCopy.parameterGroups)) {
       throw new FirebaseRemoteConfigError(
         'invalid-argument',
         'Remote Config parameter groups must be a non-null object');
     }
-    if (!validator.isArray(template.conditions)) {
+    if (!validator.isArray(templateCopy.conditions)) {
       throw new FirebaseRemoteConfigError(
         'invalid-argument',
         'Remote Config conditions must be an array');
     }
+    if (typeof templateCopy.version !== 'undefined') {
+      // exclude output only properties and keep the only input property: description
+      templateCopy.version = { description: templateCopy.version.description };
+    }
+    return templateCopy;
   }
 
   /**
