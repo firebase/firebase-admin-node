@@ -17,6 +17,9 @@
 import { Agent } from 'http';
 
 import * as _auth from './auth';
+// import * as _FirebaseApp from './firebase-app';
+// import {FirebaseApp} from './firebase-app';
+
 
 /* eslint-disable @typescript-eslint/ban-types */
 
@@ -25,6 +28,132 @@ import * as _auth from './auth';
  * services are accessed.
  */
 declare namespace admin {
+
+ /**
+ * Type representing a Firebase OAuth access token (derived from a Google OAuth2 access token) which
+ * can be used to authenticate to Firebase services such as the Realtime Database and Auth.
+ */
+  export interface FirebaseAccessToken {
+    accessToken: string;
+    expirationTime: number;
+  }
+
+
+
+ /**
+  * Internals of a FirebaseApp instance.
+  */
+ export interface FirebaseAppInternals {
+  // constructor(private credential_: Credential);
+
+  /**
+   * Gets an auth token for the associated app.
+   *
+   * @param {boolean} forceRefresh Whether or not to force a token refresh.
+   * @return {Promise<FirebaseAccessToken>} A Promise that will be fulfilled with the current or
+   *   new token.
+   */
+  getToken(forceRefresh?: boolean): Promise<FirebaseAccessToken>;
+
+  /**
+   * Adds a listener that is called each time a token changes.
+   *
+   * @param {function(string)} listener The listener that will be called with each new token.
+   */
+  addAuthTokenListener(listener: (token: string) => void): void;
+
+  /**
+   * Removes a token listener.
+   *
+   * @param {function(string)} listener The listener to remove.
+   */
+  removeAuthTokenListener(listener: (token: string) => void): void;
+
+  /**
+   * Deletes the FirebaseAppInternals instance.
+   */
+  delete(): void;
+ }
+
+ /**
+ * Interface for Google OAuth 2.0 access tokens.
+ */
+export interface GoogleOAuthAccessToken {
+  /* tslint:disable:variable-name */
+  access_token: string;
+  expires_in: number;
+  /* tslint:enable:variable-name */
+}
+
+/**
+ * Interface for things that generate access tokens.
+ */
+export interface Credential {
+  getAccessToken(): Promise<GoogleOAuthAccessToken>;
+}
+
+
+  interface FirebaseAppOptions {
+    credential?: Credential;
+    databaseAuthVariableOverride?: object;
+    databaseURL?: string;
+    serviceAccountId?: string;
+    storageBucket?: string;
+    projectId?: string;
+    httpAgent?: Agent;
+  }
+
+  /**
+   * Internals of a FirebaseService instance.
+   */
+  export interface FirebaseServiceInternalsInterface {
+    delete(): Promise<void>;
+  }
+
+  /**
+   * Services are exposed through instances, each of which is associated with a FirebaseApp.
+   */
+  export interface FirebaseServiceInterface {
+    app: FirebaseApp;
+    INTERNAL: FirebaseServiceInternalsInterface;
+  }
+
+
+
+  interface FirebaseApp {
+    INTERNAL: FirebaseAppInternals;
+
+   //  constructor(options: FirebaseAppOptions, name: string, private firebaseInternals_: FirebaseNamespaceInternals);
+
+    /**
+     * Returns the Auth service instance associated with this app.
+     *
+     * @return {Auth} The Auth service instance of this app.
+     */
+    auth(): auth.Auth;
+
+
+    /**
+     * Returns the name of the FirebaseApp instance.
+     *
+     * @return {string} The name of the FirebaseApp instance.
+     */
+    name: string;
+
+    /**
+     * Returns the options for the FirebaseApp instance.
+     *
+     * @return {FirebaseAppOptions} The options for the FirebaseApp instance.
+     */
+    options: FirebaseAppOptions;
+
+    /**
+     * Deletes the FirebaseApp instance.
+     *
+     * @return {Promise<void>} An empty Promise fulfilled once the FirebaseApp instance is deleted.
+     */
+    delete(): Promise<void>;
+  }
 
   /**
     * `FirebaseError` is a subclass of the standard JavaScript `Error` object. In
@@ -319,7 +448,7 @@ declare namespace admin.app {
 }
 
 declare namespace admin.auth {
-  /*export import UserMetadata = _auth.admin.auth.UserMetadata;
+  export import UserMetadata = _auth.admin.auth.UserMetadata;
   export import UserInfo = _auth.admin.auth.UserInfo;
   export import UserRecord = _auth.admin.auth.UserRecord;
   export import UpdateRequest = _auth.admin.auth.UpdateRequest;
@@ -355,7 +484,8 @@ declare namespace admin.auth {
   export import UpdateMultiFactorInfoRequest = _auth.admin.auth.UpdateMultiFactorInfoRequest;
   export import UpdatePhoneMultiFactorInfoRequest = _auth.admin.auth.UpdatePhoneMultiFactorInfoRequest;
   export import MultiFactorCreateSettings = _auth.admin.auth.MultiFactorCreateSettings;
-  export import MultiFactorUpdateSettings = _auth.admin.auth.MultiFactorUpdateSettings;*/
+  export import MultiFactorUpdateSettings = _auth.admin.auth.MultiFactorUpdateSettings;
+  export import auth2 = _auth.admin.auth.auth2;
 }
 
 declare namespace admin.credential {

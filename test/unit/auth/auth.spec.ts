@@ -27,6 +27,7 @@ import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
 import {Auth, TenantAwareAuth, BaseAuth, DecodedIdToken} from '../../../src/auth/auth';
+import {auth2} from '../../../src/auth/'; // BAD!
 import {UserRecord, UpdateRequest} from '../../../src/auth/user-record';
 import {FirebaseApp} from '../../../src/firebase-app';
 import {
@@ -307,7 +308,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         });
 
         it('should reject given no project ID', () => {
-          const authWithoutProjectId = new Auth(mocks.mockCredentialApp());
+          const authWithoutProjectId = auth2(mocks.mockCredentialApp());
           authWithoutProjectId.getUser('uid')
             .should.eventually.be.rejectedWith(
               'Failed to determine project ID for Auth. Initialize the SDK with service '
@@ -317,7 +318,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
         it('should not throw given a valid app', () => {
           expect(() => {
-            return new Auth(mockApp);
+            return auth2(mockApp);
           }).not.to.throw();
         });
       });

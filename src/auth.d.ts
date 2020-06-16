@@ -2,7 +2,9 @@ import * as _admin from './index.d';
 
 /* eslint-disable @typescript-eslint/ban-types */
 
+
 export namespace admin.auth {
+  export function auth2(app: _admin.FirebaseApp): admin.auth.Auth;
 
   /**
   * Interface representing a user's metadata.

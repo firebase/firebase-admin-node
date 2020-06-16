@@ -321,7 +321,6 @@ export class FirebaseNamespace {
     const fn: FirebaseServiceNamespace<Auth> = (app?: FirebaseApp) => {
       return this.ensureApp(app).auth();
     };
-    // return fn;
     const auth = require('./auth/auth').Auth;
     return Object.assign(fn, {Auth: auth});
   }
