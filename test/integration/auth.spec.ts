@@ -341,7 +341,6 @@ describe('admin.auth', () => {
 
             for (let i = 0; i < 3; i++) {
               userRecord = await admin.auth().getUser('lastRefreshTimeUser');
-
               if (userRecord.metadata.lastRefreshTime) {
                 break;
               }
@@ -351,10 +350,11 @@ describe('admin.auth', () => {
               });
             }
 
-            expect(userRecord!.metadata.lastRefreshTime).to.exist;
-            expect(isUTCString(userRecord!.metadata.lastRefreshTime!));
-            const creationTime = new Date(userRecord!.metadata.creationTime).getTime();
-            const lastRefreshTime = new Date(userRecord!.metadata.lastRefreshTime!).getTime();
+            const metadata = userRecord!.metadata;
+            expect(metadata.lastRefreshTime).to.exist;
+            expect(isUTCString(metadata.lastRefreshTime!));
+            const creationTime = new Date(metadata.creationTime).getTime();
+            const lastRefreshTime = new Date(metadata.lastRefreshTime!).getTime();
             expect(creationTime).lte(lastRefreshTime);
             expect(lastRefreshTime).lte(creationTime + 3600 * 1000);
           });
