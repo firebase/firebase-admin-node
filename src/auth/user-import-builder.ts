@@ -56,6 +56,12 @@ interface UserProviderRequest {
   providerId: string;
 }
 
+interface UserMetadataRequest {
+  lastSignInTime?: string;
+  creationTime?: string;
+  lastRefreshTime?: string|null;
+}
+
 /** User import record as accepted from developer. */
 export interface UserImportRecord {
   uid: string;
@@ -65,10 +71,7 @@ export interface UserImportRecord {
   phoneNumber?: string;
   photoURL?: string;
   disabled?: boolean;
-  metadata?: {
-    lastSignInTime?: string;
-    creationTime?: string;
-  };
+  metadata?: UserMetadataRequest;
   providerData?: Array<UserProviderRequest>;
   multiFactor?: {
     enrolledFactors: SecondFactor[];
