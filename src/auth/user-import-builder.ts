@@ -59,7 +59,6 @@ interface UserProviderRequest {
 interface UserMetadataRequest {
   lastSignInTime?: string;
   creationTime?: string;
-  lastRefreshTime?: string|null;
 }
 
 /** User import record as accepted from developer. */
