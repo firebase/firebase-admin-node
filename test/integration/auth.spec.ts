@@ -332,12 +332,29 @@ describe('admin.auth', () => {
 
         // Login to set the lastRefreshTime.
         await firebase.auth!().signInWithEmailAndPassword('lastRefreshTimeUser@example.com', 'p4ssword')
-          .then(() => admin.auth().getUser('lastRefreshTimeUser'))
-          .then((userRecord) => {
-            expect(userRecord.metadata.lastRefreshTime).to.exist;
-            expect(isUTCString(userRecord.metadata.lastRefreshTime!));
-            const creationTime = new Date(userRecord.metadata.creationTime).getTime();
-            const lastRefreshTime = new Date(userRecord.metadata.lastRefreshTime!).getTime();
+          .then(async () => {
+            // Attempt to retrieve the user 3 times (with a small delay between
+            // each attempt). Occassionally, this call retrieves the user data
+            // without the lastLoginTime/lastRefreshTime set; possibly because
+            // it's hitting a different server than the login request uses.
+            let userRecord = null;
+
+            for (let i = 0; i < 3; i++) {
+              userRecord = await admin.auth().getUser('lastRefreshTimeUser');
+              if (userRecord.metadata.lastRefreshTime) {
+                break;
+              }
+
+              await new Promise((resolve) => {
+                setTimeout(resolve, 1000 * Math.pow(2, i));
+              });
+            }
+
+            const metadata = userRecord!.metadata;
+            expect(metadata.lastRefreshTime).to.exist;
+            expect(isUTCString(metadata.lastRefreshTime!));
+            const creationTime = new Date(metadata.creationTime).getTime();
+            const lastRefreshTime = new Date(metadata.lastRefreshTime!).getTime();
             expect(creationTime).lte(lastRefreshTime);
             expect(lastRefreshTime).lte(creationTime + 3600 * 1000);
           });

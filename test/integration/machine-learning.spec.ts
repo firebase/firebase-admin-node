@@ -150,7 +150,7 @@ describe('admin.machineLearning', () => {
       const modelOptions: admin.machineLearning.ModelOptions = {
         displayName: 'Invalid Name#*^!',
       };
-      return createTemporaryModel({displayName: 'node-integration-invalid-argument'})
+      return createTemporaryModel({displayName: 'node-integration-invalid-arg'})
         .then((model) => admin.machineLearning().updateModel(model.modelId, modelOptions)
           .should.eventually.be.rejected.and.have.property(
             'code', 'machine-learning/invalid-argument'));
@@ -273,7 +273,7 @@ describe('admin.machineLearning', () => {
 
     it('unpublishes the model successfully', () => {
       const modelOptions: admin.machineLearning.ModelOptions = {
-        displayName: 'node-integration-test-unpublish-1',
+        displayName: 'node-integration-test-unpublish1',
         tfliteModel: {gcsTfliteUri: 'this will be replaced below'},
       };
       return uploadModelToGcs('model1.tflite', 'valid_model.tflite')
