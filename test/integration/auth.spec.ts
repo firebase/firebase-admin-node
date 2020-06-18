@@ -239,7 +239,6 @@ describe('admin.auth', () => {
       metadata: {
         lastSignInTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
         creationTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
-        lastRefreshTime: null,
       },
       providerData: [{
         displayName: 'User Four',

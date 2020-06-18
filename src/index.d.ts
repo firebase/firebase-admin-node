@@ -319,7 +319,7 @@ declare namespace admin.app {
 }
 
 declare namespace admin.auth {
-  /*export import UserMetadata = _auth.admin.auth.UserMetadata;
+  export import UserMetadata = _auth.admin.auth.UserMetadata;
   export import UserInfo = _auth.admin.auth.UserInfo;
   export import UserRecord = _auth.admin.auth.UserRecord;
   export import UpdateRequest = _auth.admin.auth.UpdateRequest;
@@ -355,7 +355,7 @@ declare namespace admin.auth {
   export import UpdateMultiFactorInfoRequest = _auth.admin.auth.UpdateMultiFactorInfoRequest;
   export import UpdatePhoneMultiFactorInfoRequest = _auth.admin.auth.UpdatePhoneMultiFactorInfoRequest;
   export import MultiFactorCreateSettings = _auth.admin.auth.MultiFactorCreateSettings;
-  export import MultiFactorUpdateSettings = _auth.admin.auth.MultiFactorUpdateSettings;*/
+  export import MultiFactorUpdateSettings = _auth.admin.auth.MultiFactorUpdateSettings;
 }
 
 declare namespace admin.credential {
