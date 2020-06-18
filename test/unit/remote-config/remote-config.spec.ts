@@ -642,11 +642,11 @@ describe('RemoteConfig', () => {
           expect(cond.tagColor).to.equal(TagColor.BLUE);
 
           const parsed = JSON.parse(JSON.stringify(template));
-          const templateCopy = deepCopy(REMOTE_CONFIG_RESPONSE);
-          const versionCopy = deepCopy(VERSION_INFO);
-          versionCopy.updateTime = new Date(versionCopy.updateTime).toUTCString();
-          templateCopy.version = versionCopy;
-          expect(parsed).deep.equals(templateCopy);
+          const expectedTemplate = deepCopy(REMOTE_CONFIG_RESPONSE);
+          const expectedVersion = deepCopy(VERSION_INFO);
+          expectedVersion.updateTime = new Date(expectedVersion.updateTime).toUTCString();
+          expectedTemplate.version = expectedVersion;
+          expect(parsed).deep.equals(expectedTemplate);
         });
     });
   }
