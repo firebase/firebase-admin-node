@@ -825,7 +825,20 @@ export namespace admin.auth {
     /**
      * The user's multi-factor related properties.
      */
-    multiFactor?: admin.auth.MultiFactorUpdateSettings;
+    multiFactor?: {
+      enrolledFactors: admin.auth.SecondFactor[];
+    };
+  }
+
+  /**
+   * Interface representing user's multi-factor related properties.
+   */
+  interface SecondFactor {
+    uid: string;
+    phoneNumber: string;
+    displayName?: string;
+    enrollmentTime?: string;
+    factorId: string;
   }
 
   /**

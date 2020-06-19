@@ -64,7 +64,7 @@ export interface CreatePhoneMultiFactorInfoRequest extends CreateMultiFactorInfo
  * for an `UpdateRequest`.
  */
 export interface UpdateMultiFactorInfoRequest {
-  uid: string;
+  uid?: string;
   displayName?: string;
   enrollmentTime?: string;
   factorId: string;
@@ -78,7 +78,8 @@ export interface UpdatePhoneMultiFactorInfoRequest extends UpdateMultiFactorInfo
   phoneNumber: string;
 }
 
-interface Request {
+/** Parameters for update user operation */
+export interface UpdateRequest {
   disabled?: boolean;
   displayName?: string | null;
   email?: string;
@@ -86,18 +87,13 @@ interface Request {
   password?: string;
   phoneNumber?: string | null;
   photoURL?: string | null;
-}
-
-/** Parameters for update user operation */
-export interface UpdateRequest extends Request {
   multiFactor?: {
     enrolledFactors: UpdateMultiFactorInfoRequest[] | null;
   };
 }
 
 /** Parameters for create user operation */
-export interface CreateRequest extends Request {
-  uid: string;
+export interface CreateRequest extends UpdateRequest {
   multiFactor?: {
     enrolledFactors: CreateMultiFactorInfoRequest[];
   };
