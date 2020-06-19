@@ -30,7 +30,7 @@ import {FirebaseServiceInterface} from '../../src/firebase-service';
 import {FirebaseApp, FirebaseAccessToken} from '../../src/firebase-app';
 import {FirebaseNamespace, FirebaseNamespaceInternals, FIREBASE_CONFIG_VAR} from '../../src/firebase-namespace';
 
-import {Auth} from '../../src/auth/auth';
+// import {Auth} from '../../src/auth/auth';
 import { FirebaseAppError, AppErrorCodes } from '../../src/utils/error';
 
 chai.should();
@@ -336,7 +336,9 @@ describe('FirebaseApp', () => {
     });
   });
 
-  describe('auth()', () => {
+  /*
+    These tests should not pass.
+    describe('auth()', () => {
     it('should throw if the app has already been deleted', () => {
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
 
@@ -360,7 +362,7 @@ describe('FirebaseApp', () => {
       const serviceNamespace2: Auth = app.auth();
       expect(serviceNamespace1).to.deep.equal(serviceNamespace2);
     });
-  });
+  }); */
 
   describe('INTERNAL.getToken()', () => {
 

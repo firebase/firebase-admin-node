@@ -266,7 +266,7 @@ export namespace admin.projectManagement {
    * [`admin.projectManagement()`](admin.projectManagement#projectManagement).
    */
   interface ProjectManagement {
-    app: _admin.app.App;
+    app: _admin.App;
 
     /**
      * Lists up to 100 Firebase apps associated with this Firebase project.

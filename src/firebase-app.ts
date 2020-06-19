@@ -21,7 +21,7 @@ import {FirebaseServiceInterface} from './firebase-service';
 import {FirebaseNamespaceInternals} from './firebase-namespace';
 import {AppErrorCodes, FirebaseAppError} from './utils/error';
 
-import {Auth} from './auth/auth';
+// import {Auth} from './auth/auth';
 import {Agent} from 'http';
 
 /**
@@ -280,12 +280,12 @@ export class FirebaseApp {
    *
    * @return {Auth} The Auth service instance of this app.
    */
-  public auth(): Auth {
+  /* public auth(): Auth {
     return this.ensureService_('auth', () => {
       const authService: typeof Auth = require('./auth/auth').Auth;
       return new authService(this);
     });
-  }
+  } */
 
 
   /**
@@ -327,7 +327,7 @@ export class FirebaseApp {
     });
   }
 
-  private ensureService_<T extends FirebaseServiceInterface>(serviceName: string, initializer: () => T): T {
+  /* private ensureService_<T extends FirebaseServiceInterface>(serviceName: string, initializer: () => T): T {
     this.checkDestroyed_();
 
     let service: T;
@@ -338,7 +338,7 @@ export class FirebaseApp {
       this.services_[serviceName] = service;
     }
     return service;
-  }
+  } */
 
   /**
    * Returns the service instance associated with this FirebaseApp instance (creating it on demand

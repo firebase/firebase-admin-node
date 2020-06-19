@@ -27,7 +27,7 @@ import {
   getApplicationDefault,
 } from './auth/credential';
 
-import {Auth} from './auth/auth';
+// import {Auth} from './auth/auth';
 
 import * as validator from './utils/validator';
 
@@ -313,18 +313,19 @@ export class FirebaseNamespace {
     this.INTERNAL = new FirebaseNamespaceInternals(this);
   }
 
+  
   /**
    * Gets the `Auth` service namespace. The returned namespace can be used to get the
    * `Auth` service for the default app or an explicitly specified app.
    */
-  get auth(): FirebaseServiceNamespace<Auth> {
+  /*get auth(): FirebaseServiceNamespace<Auth> {
     const fn: FirebaseServiceNamespace<Auth> = (app?: FirebaseApp) => {
       return this.ensureApp(app).auth();
     };
     // return fn;
     const auth = require('./auth/auth').Auth;
     return Object.assign(fn, {Auth: auth});
-  }
+  } */
 
   /**
    * Initializes the FirebaseApp instance.
@@ -361,10 +362,10 @@ export class FirebaseNamespace {
     return this.INTERNAL.apps;
   }
 
-  private ensureApp(app?: FirebaseApp): FirebaseApp {
+  /*private ensureApp(app?: FirebaseApp): FirebaseApp {
     if (typeof app === 'undefined') {
       app = this.app();
     }
     return app;
-  }
+  } */
 }

@@ -39,7 +39,7 @@ export interface UserImportOptions {
   };
 }
 
-interface SecondFactor {
+export interface SecondFactor {
   uid: string;
   phoneNumber: string;
   displayName?: string;

@@ -17,7 +17,7 @@ export namespace admin.database {
    * for a full guide on how to use the Firebase Realtime Database service.
    */
   interface Database {
-    app: _admin.app.App;
+    app: _admin.App;
 
     /**
      * Disconnects from the server (all Database operations will be completed

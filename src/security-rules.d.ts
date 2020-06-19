@@ -55,7 +55,7 @@ export namespace admin.securityRules {
    * [`admin.securityRules()`](admin.securityRules#securityRules).
    */
   interface SecurityRules {
-    app: _admin.app.App;
+    app: _admin.App;
 
     /**
      * Creates a {@link admin.securityRules.RulesFile `RuleFile`} with the given name

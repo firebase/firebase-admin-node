@@ -17,7 +17,7 @@ export namespace admin.instanceId {
    *   current app.
    */
   interface InstanceId {
-    app: _admin.app.App;
+    app: _admin.App;
 
     /**
      * Deletes the specified instance ID and the associated data from Firebase.
