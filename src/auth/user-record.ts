@@ -64,7 +64,7 @@ export interface CreatePhoneMultiFactorInfoRequest extends CreateMultiFactorInfo
  * for an `UpdateRequest`.
  */
 export interface UpdateMultiFactorInfoRequest {
-  uid?: string;
+  uid: string;
   displayName?: string;
   enrollmentTime?: string;
   factorId: string;
