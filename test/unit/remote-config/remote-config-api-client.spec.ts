@@ -24,6 +24,7 @@ import {
   RemoteConfigTemplate,
   TagColor,
   ListVersionsResult,
+  Version,
 } from '../../../src/remote-config/remote-config-api-client';
 import { FirebaseRemoteConfigError } from '../../../src/remote-config/remote-config-utils';
 import { HttpClient } from '../../../src/utils/api-request';
@@ -56,11 +57,22 @@ describe('RemoteConfigApiClient', () => {
     'Accept-Encoding': 'gzip',
   };
 
+  const VERSION_INFO: Version = {
+    versionNumber: '86',
+    updateOrigin: 'ADMIN_SDK_NODE',
+    updateType: 'INCREMENTAL_UPDATE',
+    updateUser: {
+      email: 'firebase-adminsdk@gserviceaccount.com'
+    },
+    description: 'production version',
+    updateTime: '2020-06-15T16:45:03.000Z',
+  }
+
   const TEST_RESPONSE = {
     conditions: [{ name: 'ios', expression: 'exp' }],
     parameters: { param: { defaultValue: { value: 'true' } } },
     parameterGroups: { group: { parameters: { paramabc: { defaultValue: { value: 'true' } } }, } },
-    version: {},
+    version: VERSION_INFO,
   };
 
   const TEST_VERSIONS_RESULT: ListVersionsResult = {
@@ -104,11 +116,13 @@ describe('RemoteConfigApiClient', () => {
     mocks.mockCredentialApp());
 
   const REMOTE_CONFIG_TEMPLATE: RemoteConfigTemplate = {
-    conditions: [{
-      name: 'ios',
-      expression: 'device.os == \'ios\'',
-      tagColor: TagColor.PINK,
-    }],
+    conditions: [
+      {
+        name: 'ios',
+        expression: 'device.os == \'ios\'',
+        tagColor: TagColor.PINK,
+      },
+    ],
     parameters: {
       // eslint-disable-next-line @typescript-eslint/camelcase
       holiday_promo_enabled: {
@@ -134,6 +148,9 @@ describe('RemoteConfigApiClient', () => {
       },
     },
     etag: 'etag-123456789012-6',
+    version: {
+      description: 'production version'
+    }
   };
 
   // Stubs used to simulate underlying api calls.
@@ -180,6 +197,7 @@ describe('RemoteConfigApiClient', () => {
           expect(resp.parameters).to.deep.equal(TEST_RESPONSE.parameters);
           expect(resp.parameterGroups).to.deep.equal(TEST_RESPONSE.parameterGroups);
           expect(resp.etag).to.equal('etag-123456789012-1');
+          expect(resp.version).to.deep.equal(TEST_RESPONSE.version);
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'GET',
             url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig',
@@ -229,6 +247,7 @@ describe('RemoteConfigApiClient', () => {
           expect(resp.parameters).to.deep.equal(TEST_RESPONSE.parameters);
           expect(resp.parameterGroups).to.deep.equal(TEST_RESPONSE.parameterGroups);
           expect(resp.etag).to.equal('etag-123456789012-60');
+          expect(resp.version).to.deep.equal(TEST_RESPONSE.version);
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'GET',
             url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig',
@@ -252,6 +271,29 @@ describe('RemoteConfigApiClient', () => {
     runEtagHeaderTests(() => apiClient.validateTemplate(REMOTE_CONFIG_TEMPLATE));
     runErrorResponseTests(() => apiClient.validateTemplate(REMOTE_CONFIG_TEMPLATE));
 
+    it('should exclude output only parameters from version metadata', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200, { etag: 'etag-123456789012-0' }));
+      stubs.push(stub);
+      const templateCopy = deepCopy(REMOTE_CONFIG_TEMPLATE);
+      templateCopy.version = VERSION_INFO;
+      return apiClient.validateTemplate(templateCopy)
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'PUT',
+            url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig?validate_only=true',
+            headers: { ...EXPECTED_HEADERS, 'If-Match': REMOTE_CONFIG_TEMPLATE.etag },
+            data: {
+              conditions: REMOTE_CONFIG_TEMPLATE.conditions,
+              parameters: REMOTE_CONFIG_TEMPLATE.parameters,
+              parameterGroups: REMOTE_CONFIG_TEMPLATE.parameterGroups,
+              version: { description: VERSION_INFO.description },
+            }
+          });
+        });
+    });
+
     it('should resolve with the requested template on success', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
@@ -265,6 +307,7 @@ describe('RemoteConfigApiClient', () => {
           // validate template returns an etag with the suffix -0 when successful.
           // verify that the etag matches the original template etag.
           expect(resp.etag).to.equal('etag-123456789012-6');
+          expect(resp.version).to.deep.equal(TEST_RESPONSE.version);
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'PUT',
             url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig?validate_only=true',
@@ -273,6 +316,7 @@ describe('RemoteConfigApiClient', () => {
               conditions: REMOTE_CONFIG_TEMPLATE.conditions,
               parameters: REMOTE_CONFIG_TEMPLATE.parameters,
               parameterGroups: REMOTE_CONFIG_TEMPLATE.parameterGroups,
+              version: REMOTE_CONFIG_TEMPLATE.version,
             }
           });
         });
@@ -318,6 +362,29 @@ describe('RemoteConfigApiClient', () => {
     runEtagHeaderTests(() => apiClient.publishTemplate(REMOTE_CONFIG_TEMPLATE));
     runErrorResponseTests(() => apiClient.publishTemplate(REMOTE_CONFIG_TEMPLATE));
 
+    it('should exclude output only parameters from version metadata', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_RESPONSE, 200, { etag: 'etag-123456789012-6' }));
+      stubs.push(stub);
+      const templateCopy = deepCopy(REMOTE_CONFIG_TEMPLATE);
+      templateCopy.version = VERSION_INFO;
+      return apiClient.publishTemplate(templateCopy)
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'PUT',
+            url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig',
+            headers: { ...EXPECTED_HEADERS, 'If-Match': REMOTE_CONFIG_TEMPLATE.etag },
+            data: {
+              conditions: REMOTE_CONFIG_TEMPLATE.conditions,
+              parameters: REMOTE_CONFIG_TEMPLATE.parameters,
+              parameterGroups: REMOTE_CONFIG_TEMPLATE.parameterGroups,
+              version: { description: VERSION_INFO.description },
+            }
+          });
+        });
+    });
+
     const testOptions = [
       { options: undefined, etag: 'etag-123456789012-6' },
       { options: { force: true }, etag: '*' }
@@ -334,6 +401,7 @@ describe('RemoteConfigApiClient', () => {
             expect(resp.parameters).to.deep.equal(TEST_RESPONSE.parameters);
             expect(resp.parameterGroups).to.deep.equal(TEST_RESPONSE.parameterGroups);
             expect(resp.etag).to.equal('etag-123456789012-6');
+            expect(resp.version).to.deep.equal(TEST_RESPONSE.version);
             expect(stub).to.have.been.calledOnce.and.calledWith({
               method: 'PUT',
               url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig',
@@ -342,6 +410,7 @@ describe('RemoteConfigApiClient', () => {
                 conditions: REMOTE_CONFIG_TEMPLATE.conditions,
                 parameters: REMOTE_CONFIG_TEMPLATE.parameters,
                 parameterGroups: REMOTE_CONFIG_TEMPLATE.parameterGroups,
+                version: REMOTE_CONFIG_TEMPLATE.version,
               }
             });
           });
@@ -417,6 +486,7 @@ describe('RemoteConfigApiClient', () => {
           expect(resp.parameters).to.deep.equal(TEST_RESPONSE.parameters);
           expect(resp.parameterGroups).to.deep.equal(TEST_RESPONSE.parameterGroups);
           expect(resp.etag).to.equal('etag-123456789012-60');
+          expect(resp.version).to.deep.equal(TEST_RESPONSE.version);
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'POST',
             url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig:rollback',

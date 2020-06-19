@@ -54,6 +54,17 @@ describe('RemoteConfig', () => {
     },
   };
 
+  const VERSION_INFO = {
+    versionNumber: '86',
+    updateOrigin: 'ADMIN_SDK_NODE',
+    updateType: 'INCREMENTAL_UPDATE',
+    updateUser: {
+      email: 'firebase-adminsdk@gserviceaccount.com'
+    },
+    description: 'production version',
+    updateTime: '2020-06-15T16:45:03.000Z'
+  };
+
   const REMOTE_CONFIG_RESPONSE: {
     // This type is effectively a RemoteConfigTemplate, but with non-readonly fields
     // to allow easier use from within the tests. An improvement would be to
@@ -63,12 +74,15 @@ describe('RemoteConfig', () => {
     parameters?: object | null;
     parameterGroups?: object | null;
     etag: string;
+    version?: object;
   } = {
-    conditions: [{
-      name: 'ios',
-      expression: 'device.os == \'ios\'',
-      tagColor: TagColor.BLUE,
-    }],
+    conditions: [
+      {
+        name: 'ios',
+        expression: 'device.os == \'ios\'',
+        tagColor: TagColor.BLUE,
+      },
+    ],
     parameters: {
       // eslint-disable-next-line @typescript-eslint/camelcase
       holiday_promo_enabled: {
@@ -79,6 +93,7 @@ describe('RemoteConfig', () => {
     },
     parameterGroups: PARAMETER_GROUPS,
     etag: 'etag-123456789012-5',
+    version: VERSION_INFO,
   };
 
   const REMOTE_CONFIG_TEMPLATE: RemoteConfigTemplate = {
@@ -97,6 +112,9 @@ describe('RemoteConfig', () => {
     },
     parameterGroups: PARAMETER_GROUPS,
     etag: 'etag-123456789012-6',
+    version: {
+      description: 'production version',
+    }
   };
 
   const REMOTE_CONFIG_LIST_VERSIONS_RESULT: ListVersionsResult = {
@@ -344,7 +362,7 @@ describe('RemoteConfig', () => {
         stubs.push(stub);
         return remoteConfig.listVersions()
           .should.eventually.be.rejected.and.have.property('message',
-            'Version update time must be a valid ISO date string');
+            'Version update time must be a valid date string');
       });
     });
 
@@ -596,6 +614,16 @@ describe('RemoteConfig', () => {
           }).to.throw(
             'Cannot set property etag of #<RemoteConfigTemplateImpl> which has only a getter');
 
+          const version = template.version!;
+          expect(version.versionNumber).to.equal('86');
+          expect(version.updateOrigin).to.equal('ADMIN_SDK_NODE');
+          expect(version.updateType).to.equal('INCREMENTAL_UPDATE');
+          expect(version.updateUser).to.deep.equal({
+            email: 'firebase-adminsdk@gserviceaccount.com'
+          });
+          expect(version.description).to.equal('production version');
+          expect(version.updateTime).to.equal('Mon, 15 Jun 2020 16:45:03 GMT');
+
           const key = 'holiday_promo_enabled';
           const p1 = template.parameters[key];
           expect(p1.defaultValue).deep.equals({ value: 'true' });
@@ -612,7 +640,11 @@ describe('RemoteConfig', () => {
           expect(cond.tagColor).to.equal(TagColor.BLUE);
 
           const parsed = JSON.parse(JSON.stringify(template));
-          expect(parsed).deep.equals(REMOTE_CONFIG_RESPONSE);
+          const expectedTemplate = deepCopy(REMOTE_CONFIG_RESPONSE);
+          const expectedVersion = deepCopy(VERSION_INFO);
+          expectedVersion.updateTime = new Date(expectedVersion.updateTime).toUTCString();
+          expectedTemplate.version = expectedVersion;
+          expect(parsed).deep.equals(expectedTemplate);
         });
     });
   }

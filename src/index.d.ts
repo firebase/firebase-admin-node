@@ -878,6 +878,11 @@ declare namespace admin.remoteConfig {
      * ETag of the current Remote Config template (readonly).
      */
     readonly etag: string;
+
+    /**
+     * Version information of the current Remote Config template.
+     */
+    version?: Version;
   }
 
   /**
