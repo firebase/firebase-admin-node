@@ -1859,7 +1859,7 @@ describe('admin.auth', () => {
       const uid = generateRandomString(20).toLowerCase();
       const email = uid + '@example.com';
       const now = new Date(1476235905000).toUTCString();
-      const enrolledFactors: admin.auth.UpdatePhoneMultiFactorInfoRequest[] = [
+      const enrolledFactors: admin.auth.SecondFactor[] = [
         {
           uid: 'mfaUid1',
           phoneNumber: '+16505550001',

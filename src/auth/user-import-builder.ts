@@ -39,7 +39,8 @@ export interface UserImportOptions {
   };
 }
 
-interface SecondFactor {
+/** Interface representing user's multi-factor related properties */
+export interface SecondFactor {
   uid: string;
   phoneNumber: string;
   displayName?: string;

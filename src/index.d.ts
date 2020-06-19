@@ -590,6 +590,7 @@ declare namespace admin.auth {
   export import UpdatePhoneMultiFactorInfoRequest = _auth.admin.auth.UpdatePhoneMultiFactorInfoRequest;
   export import MultiFactorCreateSettings = _auth.admin.auth.MultiFactorCreateSettings;
   export import MultiFactorUpdateSettings = _auth.admin.auth.MultiFactorUpdateSettings;
+  export import SecondFactor = _auth.admin.auth.SecondFactor;
 }
 
 declare namespace admin.credential {
