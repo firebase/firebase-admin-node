@@ -94,6 +94,7 @@ export interface UpdateRequest {
 
 /** Parameters for create user operation */
 export interface CreateRequest extends UpdateRequest {
+  uid?: string;
   multiFactor?: {
     enrolledFactors: CreateMultiFactorInfoRequest[];
   };
