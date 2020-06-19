@@ -57,8 +57,8 @@
     "@firebase/database": "^0.6.0",
     "@types/node": "^8.10.59",
     "dicer": "^0.3.0",
-    "jsonwebtoken": "8.1.0",
-    "node-forge": "0.7.4"
+    "jsonwebtoken": "^8.5.1",
+    "node-forge": "^0.7.6"
   },
   "optionalDependencies": {
     "@google-cloud/firestore": "^3.0.0",
