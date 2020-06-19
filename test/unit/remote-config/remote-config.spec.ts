@@ -28,7 +28,6 @@ import {
   RemoteConfigCondition,
   TagColor,
   ListVersionsResult,
-  Version,
 } from '../../../src/remote-config/remote-config-api-client';
 import { FirebaseRemoteConfigError } from '../../../src/remote-config/remote-config-utils';
 import { deepCopy } from '../../../src/utils/deep-copy';
@@ -54,6 +53,7 @@ describe('RemoteConfig', () => {
       },
     },
   };
+
   const VERSION_INFO = {
     versionNumber: '86',
     updateOrigin: 'ADMIN_SDK_NODE',
@@ -614,9 +614,7 @@ describe('RemoteConfig', () => {
           }).to.throw(
             'Cannot set property etag of #<RemoteConfigTemplateImpl> which has only a getter');
 
-          const v = template.version;
-          expect(v).to.be.not.undefined;
-          const version = v as Version;
+          const version = template.version!;
           expect(version.versionNumber).to.equal('86');
           expect(version.updateOrigin).to.equal('ADMIN_SDK_NODE');
           expect(version.updateType).to.equal('INCREMENTAL_UPDATE');
