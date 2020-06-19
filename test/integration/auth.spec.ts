@@ -24,15 +24,16 @@ import * as scrypt from 'scrypt';
 import '@firebase/auth';
 import {clone} from 'lodash';
 import {
-  generateRandomString, projectId, apiKey, noServiceAccountApp, cmdArgs,
+  generateRandomString, noServiceAccountApp, cmdArgs,
 } from './setup';
+// projectId, apiKey, above ^^
 import url = require('url');
 import * as mocks from '../resources/mocks';
 import { AuthProviderConfig } from '../../src/auth/auth-config';
 import { deepExtend, deepCopy } from '../../src/utils/deep-copy';
 import { User, FirebaseAuth } from '@firebase/auth-types';
-import { TenantOptions, SecondFactor, UserImportOptions, PhoneMultiFactorInfo, UserImportRecord, UserRecord, TenantAwareAuth, auth, Auth } from '../../src/auth/';
-
+import { TenantOptions, SecondFactor, UserImportOptions, PhoneMultiFactorInfo, UserImportRecord, UserRecord, TenantAwareAuth, auth } from '../../src/auth/';
+// Auth above ^^
 import { initializeApp } from '../../src/';
 import {FirebaseApp as App} from '../../src/firebase-app';
 

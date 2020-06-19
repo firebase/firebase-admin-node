@@ -16,7 +16,7 @@
 
 import { Agent } from 'http';
 
-import * as _auth from './auth';
+// import * as _auth from './auth';
 
 /* eslint-disable @typescript-eslint/ban-types */
 
@@ -202,7 +202,7 @@ export function app(name?: string): App;
  * ```
  *
  */
-export function auth(app?: App): _auth.Auth;
+// export function auth(app?: App): _auth.Auth;
 
 /**
  * Gets the {@link admin.instanceId.InstanceId `InstanceId`} service for the
@@ -288,7 +288,7 @@ export interface App {
   options: AppOptions;
 
 
-  auth(): _auth.Auth;
+  // auth(): _auth.Auth;
 
   /**
    * Renders this local `FirebaseApp` unusable and frees the resources of
