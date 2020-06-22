@@ -38,6 +38,7 @@ import {
   SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
 } from './auth-config';
 import {TenantManager} from './tenant-manager';
+// import firebaseAdmin = require('../default-namespace');// TODO: 
 
 
 /**
@@ -424,7 +425,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    * @return {Promise<void>} A promise that resolves when the operation completes
    *     successfully.
    */
-  public setCustomUserClaims(uid: string, customUserClaims: object): Promise<void> {
+  public setCustomUserClaims(uid: string, customUserClaims: object|null): Promise<void> { // TODO ... | null
     return this.authRequestHandler.setCustomUserClaims(uid, customUserClaims)
       .then(() => {
         // Return nothing on success.
@@ -868,6 +869,24 @@ export class Auth extends BaseAuth<AuthRequestHandler> implements FirebaseServic
   }
 }
 
+/* 
 export function auth(app: FirebaseApp): Auth {
   return new Auth(app);
 }
+*/
+
+// export function auth(app: FirebaseApp): Auth {
+export function auth(app: FirebaseApp): Auth {
+  return new Auth(app);
+  //if (typeof app === 'undefined') {
+  //  app = initializeApp();
+  //}
+  //return ensureApp(app).auth();
+}
+
+/*function ensureApp(app?: FirebaseApp): FirebaseApp {
+  if (typeof app === 'undefined') {
+    app = FirebaseApp.apply();
+  }
+  return app;
+} */

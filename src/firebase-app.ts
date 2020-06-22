@@ -19,7 +19,8 @@ import * as validator from './utils/validator';
 import {deepCopy, deepExtend} from './utils/deep-copy';
 import {FirebaseServiceInterface} from './firebase-service';
 import {FirebaseNamespaceInternals} from './firebase-namespace';
-import {AppErrorCodes, FirebaseAppError} from './utils/error';
+import {AppErrorCodes, FirebaseAppError} from './utils/error'; // TODO: AuthClientErrorCode
+import {Auth} from './auth/';
 
 // import {Auth} from './auth/auth';
 import {Agent} from 'http';
@@ -280,12 +281,13 @@ export class FirebaseApp {
    *
    * @return {Auth} The Auth service instance of this app.
    */
-  /* public auth(): Auth {
-    return this.ensureService_('auth', () => {
+  public auth(): Auth {
+    return new Auth(this);
+    /*return this.ensureService_('auth', () => {
       const authService: typeof Auth = require('./auth/auth').Auth;
       return new authService(this);
-    });
-  } */
+    }); */
+  }
 
 
   /**

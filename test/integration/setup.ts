@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-import * as admin from '../../lib/index';
+import * as admin from '../../src/index';
 import fs = require('fs');
 import minimist = require('minimist');
 import path = require('path');
 import {random} from 'lodash';
 import { Credential, GoogleOAuthAccessToken } from '../../src/auth/credential';
 import { initializeApp } from '../../src/'; // TODO
+import { FirebaseApp } from '../../src/firebase-app';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const chalk = require('chalk');
@@ -30,10 +31,10 @@ export let storageBucket: string;
 export let projectId: string;
 export let apiKey: string;
 
-export let defaultApp: admin.App;
-export let nullApp: admin.App;
-export let nonNullApp: admin.App;
-export let noServiceAccountApp: admin.App;
+export let defaultApp: FirebaseApp;
+export let nullApp: FirebaseApp;
+export let nonNullApp: FirebaseApp;
+export let noServiceAccountApp: FirebaseApp;
 
 export let cmdArgs: any;
 
@@ -76,7 +77,7 @@ before(() => {
   nullApp = initializeApp({
     credential: admin.cert(serviceAccount),
     databaseURL: databaseUrl,
-    databaseAuthVariableOverride: null,
+    // databaseAuthVariableOverride: null, // TODO: undefined?
     storageBucket,
   }, 'null');
 

@@ -20,11 +20,11 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
 import * as scrypt from 'scrypt';
-// import firebase from '@firebase/app';
+import firebase from '@firebase/app';
 import '@firebase/auth';
 import {clone} from 'lodash';
 import {
-  generateRandomString, noServiceAccountApp, cmdArgs,
+  generateRandomString, noServiceAccountApp, cmdArgs, apiKey, projectId
 } from './setup';
 // projectId, apiKey, above ^^
 import url = require('url');
@@ -34,8 +34,9 @@ import { deepExtend, deepCopy } from '../../src/utils/deep-copy';
 import { User, FirebaseAuth } from '@firebase/auth-types';
 import { TenantOptions, SecondFactor, UserImportOptions, PhoneMultiFactorInfo, UserImportRecord, UserRecord, TenantAwareAuth, auth } from '../../src/auth/';
 // Auth above ^^
-import { initializeApp } from '../../src/';
-import {FirebaseApp as App} from '../../src/firebase-app';
+// import { initializeApp } from '../../src/';
+import { defaultApp } from './setup';
+import { FirebaseApp as App} from '../../src/firebase-app'; // TODO: sketchy
 
 const chalk = require('chalk'); // eslint-disable-line @typescript-eslint/no-var-requires
 
@@ -95,13 +96,9 @@ function randomOidcProviderId(): string {
   return 'oidc.' + generateRandomString(10, false).toLowerCase();
 }
 
-// TODO: What??
 function clientAuth(): FirebaseAuth {
-  const app: App = initializeApp();
-  return new FirebaseAuth(app);
-  /* 
   expect(firebase.auth).to.be.ok;
-  return firebase.auth!(); */
+  return firebase.auth!();
 }
 
 describe('admin.auth', () => {
@@ -110,16 +107,16 @@ describe('admin.auth', () => {
   let app: App;
 
   before(() => {
-    app = initializeApp({
-      // TODO: WHAT????
-      // apiKey,
-      // authDomain: projectId + '.firebaseapp.com',
+    firebase.initializeApp({
+      apiKey,
+      authDomain: projectId + '.firebaseapp.com',
     });
-    return cleanup();
+    app = defaultApp;
+    return cleanup(app);
   });
 
   after(() => {
-    return cleanup();
+    return cleanup(app);
   });
 
   it('createUser() creates a new user when called without a UID', () => {
@@ -342,7 +339,7 @@ describe('admin.auth', () => {
 
         // Login to set the lastRefreshTime.
         // TODO: firebase.auth!()
-        await auth(app).signInWithEmailAndPassword('lastRefreshTimeUser@example.com', 'p4ssword')
+        await firebase.auth!().signInWithEmailAndPassword('lastRefreshTimeUser@example.com', 'p4ssword')
           .then(() => auth(app).getUser('lastRefreshTimeUser'))
           .then((userRecord) => {
             expect(userRecord.metadata.lastRefreshTime).to.exist;
@@ -1840,7 +1837,7 @@ describe('admin.auth', () => {
           importUserRecord.providerData?.push({
             uid: importUserRecord.phoneNumber!,
             providerId: 'phone',
-            // phoneNumber: importUserRecord.phoneNumber!,
+            phoneNumber: importUserRecord.phoneNumber!,
           });
           const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
           for (const key of Object.keys(importUserRecord)) {
@@ -1949,7 +1946,8 @@ function testImportAndSignInUser(
   importOptions: any,
   rawPassword: string): Promise<void> {
   const users = [importUserRecord];
-  const app: App = initializeApp();
+  // const app: App = initializeApp();
+  const app: App = defaultApp;
 
   // Import the user record.
   return auth(app).importUsers(users, importOptions)
@@ -1977,7 +1975,8 @@ function testImportAndSignInUser(
  * @return {Promise} A promise that resolves when the user is deleted
  *     or is found not to exist.
  */
-function deletePhoneNumberUser(phoneNumber: string): Promise<void> {
+function deletePhoneNumberUser(app: App, phoneNumber: string): Promise<void> {
+  // const app = initializeApp({}, 'deletePhone');
   return auth(app).getUserByPhoneNumber(phoneNumber)
     .then((userRecord) => {
       return safeDelete(userRecord.uid);
@@ -1996,13 +1995,13 @@ function deletePhoneNumberUser(phoneNumber: string): Promise<void> {
  *
  * @return {Promise} A promise that resolves when test preparations are ready.
  */
-function cleanup(): Promise<any> {
+function cleanup(app: App): Promise<any> {
   // Delete any existing users that could affect the test outcome.
   const promises: Array<Promise<void>> = [
-    deletePhoneNumberUser(testPhoneNumber),
-    deletePhoneNumberUser(testPhoneNumber2),
-    deletePhoneNumberUser(nonexistentPhoneNumber),
-    deletePhoneNumberUser(updatedPhone),
+    deletePhoneNumberUser(app, testPhoneNumber),
+    deletePhoneNumberUser(app, testPhoneNumber2),
+    deletePhoneNumberUser(app, nonexistentPhoneNumber),
+    deletePhoneNumberUser(app, updatedPhone),
   ];
   // Delete users created for session cookie tests.
   sessionCookieUids.forEach((uid) => uids.push(uid));
@@ -2062,6 +2061,7 @@ function getTenantId(link: string): string {
  * @return {Promise} A promise that resolves when delete operation resolves.
  */
 function safeDelete(uid: string): Promise<void> {
+  const app = defaultApp; // TODO ... 
   // Wait for delete queue to empty.
   const deletePromise = deleteQueue
     .then(() => {

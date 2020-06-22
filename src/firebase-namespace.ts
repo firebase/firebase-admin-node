@@ -303,6 +303,8 @@ export class FirebaseNamespace {
   public SDK_VERSION = '<XXX_SDK_VERSION_XXX>';
   public INTERNAL: FirebaseNamespaceInternals;
 
+  public init = false; // TODO: REMOVE
+
   /* tslint:disable */
   // TODO(jwenger): Database is the only consumer of firebase.Promise. We should update it to use
   // use the native Promise and then remove this.
@@ -310,6 +312,7 @@ export class FirebaseNamespace {
   /* tslint:enable */
 
   constructor() {
+    console.log("constructor!!!"); // TODO
     this.INTERNAL = new FirebaseNamespaceInternals(this);
   }
 
@@ -339,6 +342,7 @@ export class FirebaseNamespace {
    * @return {FirebaseApp} A new FirebaseApp instance.
    */
   public initializeApp(options?: FirebaseAppOptions, appName?: string): FirebaseApp {
+    this.init = true;
     return this.INTERNAL.initializeApp(options, appName);
   }
 
@@ -362,10 +366,34 @@ export class FirebaseNamespace {
     return this.INTERNAL.apps;
   }
 
-  /*private ensureApp(app?: FirebaseApp): FirebaseApp {
+  public ensureApp(app?: FirebaseApp): FirebaseApp {
     if (typeof app === 'undefined') {
       app = this.app();
     }
     return app;
-  } */
+  }
+
+  public cert(serviceAccountPathOrObject: string | object, httpAgent?: Agent): Credential {
+    const stringifiedServiceAccount = JSON.stringify(serviceAccountPathOrObject);
+    if (!(stringifiedServiceAccount in globalCertCreds)) {
+      globalCertCreds[stringifiedServiceAccount] = new ServiceAccountCredential(serviceAccountPathOrObject, httpAgent);
+    }
+    return globalCertCreds[stringifiedServiceAccount];
+  }
+
+  public refreshToken(refreshTokenPathOrObject: string | object, httpAgent?: Agent): Credential {
+    const stringifiedRefreshToken = JSON.stringify(refreshTokenPathOrObject);
+    if (!(stringifiedRefreshToken in globalRefreshTokenCreds)) {
+      globalRefreshTokenCreds[stringifiedRefreshToken] = new RefreshTokenCredential(
+        refreshTokenPathOrObject, httpAgent);
+    }
+    return globalRefreshTokenCreds[stringifiedRefreshToken];
+  }
+
+  public applicationDefault(httpAgent?: Agent): Credential {
+    if (typeof globalAppDefaultCred === 'undefined') {
+      globalAppDefaultCred = getApplicationDefault(httpAgent);
+    }
+    return globalAppDefaultCred;
+  }
 }
