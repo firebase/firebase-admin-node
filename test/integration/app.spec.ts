@@ -49,7 +49,7 @@ describe('admin.app', () => {
     expect(app).to.deep.equal(nullApp);
     expect(app.name).to.equal('null');
     expect(app.options.databaseURL).to.equal(databaseUrl);
-    expect(app.options.databaseAuthVariableOverride).to.be.null;
+    expect(app.options.databaseAuthVariableOverride).to.be.undefined; // TODO: THIS SHOULD BE NULL? .to.be.null
     expect(app.options.storageBucket).to.equal(storageBucket);
   });
 

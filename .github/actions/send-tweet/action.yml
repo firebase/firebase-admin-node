@@ -15,8 +15,8 @@
 name: 'Send Tweet Action'
 description: 'Send Tweets from GitHub Actions workflows.'
 inputs:
-  repo:
-    status: Status (Tweet) to be posted
+  status:
+    description: Status (Tweet) to be posted
     required: true
   consumer-key:
     description: Consumer API key.

@@ -571,14 +571,14 @@ interface ListUsersResult {
 }
 
 type HashAlgorithmType = 'SCRYPT' | 'STANDARD_SCRYPT' | 'HMAC_SHA512' |
-  'HMAC_SHA256' | 'HMAC_SHA1' | 'HMAC_MD5' | 'MD5' | 'PBKDF_SHA1' | 'BCRYPT' |
-  'PBKDF2_SHA256' | 'SHA512' | 'SHA256' | 'SHA1';
+'HMAC_SHA256' | 'HMAC_SHA1' | 'HMAC_MD5' | 'MD5' | 'PBKDF_SHA1' | 'BCRYPT' |
+'PBKDF2_SHA256' | 'SHA512' | 'SHA256' | 'SHA1';
 
 /**
- * Interface representing the user import options needed for
- * {@link https://firebase.google.com/docs/reference/admin/node/Auth#importUsers `importUsers()`} method. This is used to
- * provide the password hashing algorithm information.
- */
+* Interface representing the user import options needed for
+* {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#importUsers `importUsers()`} method. This is used to
+* provide the password hashing algorithm information.
+*/
 interface UserImportOptions {
 
   /**
@@ -641,10 +641,10 @@ interface UserImportOptions {
 }
 
 /**
- * Interface representing the response from the
- * {@link https://firebase.google.com/docs/reference/admin/node/Auth#importUsers `importUsers()`} method for batch
- * importing users to Firebase Auth.
- */
+* Interface representing the response from the
+* {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#importUsers `importUsers()`} method for batch
+* importing users to Firebase Auth.
+*/
 interface UserImportResult {
 
   /**
@@ -665,10 +665,18 @@ interface UserImportResult {
 }
 
 /**
- * Represents the result of the
- * {@link https://firebase.google.com/docs/reference/admin/node/Auth#deleteUsers `deleteUsers()`}
- * API.
+ * Interface representing the session cookie options needed for the
+ * {@link https://firebase.google.com/docs/reference/admin/node/Auth#createSessionCookie `createSessionCookie()`} method.
  */
+interface SessionCookieOptions {
+
+  /**
+   * The session cookie custom expiration in milliseconds. The minimum allowed is
+   * 5 minutes and the maxium allowed is 2 weeks.
+   */
+  expiresIn: number;
+}
+
 interface DeleteUsersResult {
   /**
    * The number of user records that failed to be deleted (possibly zero).
@@ -704,13 +712,6 @@ interface UserMetadataRequest {
    * The date the user was created, formatted as a UTC string.
    */
   creationTime?: string;
-
-  /**
-   * The time at which the user was last active (ID token refreshed),
-   * formatted as a UTC Date string (eg 'Sat, 03 Feb 2001 04:05:06 GMT').
-   * Null implies the user was never active.
-   */
-  lastRefreshTime?: string|null;
 }
 
 /**
@@ -749,9 +750,10 @@ interface UserProviderRequest {
   providerId: string;
 }
 
+
 /**
  * Interface representing a user to import to Firebase Auth via the
- * {@link https://firebase.google.com/docs/reference/admin/node/Auth#importUsers `importUsers()`} method.
+ * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#importUsers `importUsers()`} method.
  */
 interface UserImportRecord {
 
@@ -810,7 +812,7 @@ interface UserImportRecord {
   /**
    * The buffer of bytes representing the user's hashed password.
    * When a user is to be imported with a password hash,
-   * {@link UserImportOptions `UserImportOptions`} are required to be
+   * {@link admin.auth.UserImportOptions `UserImportOptions`} are required to be
    * specified to identify the hashing algorithm used to generate this hash.
    */
   passwordHash?: Buffer;
@@ -822,9 +824,9 @@ interface UserImportRecord {
 
   /**
    * The identifier of the tenant where user is to be imported to.
-   * When not provided in an `Auth` context, the user is uploaded to
+   * When not provided in an `admin.auth.Auth` context, the user is uploaded to
    * the default parent project.
-   * When not provided in an `TenantAwareAuth` context, the user is uploaded
+   * When not provided in an `admin.auth.TenantAwareAuth` context, the user is uploaded
    * to the tenant corresponding to that `TenantAwareAuth` instance's tenant ID.
    */
   tenantId?: string | null;
@@ -833,19 +835,6 @@ interface UserImportRecord {
    * The user's multi-factor related properties.
    */
   multiFactor?: MultiFactorUpdateSettings;
-}
-
-/**
- * Interface representing the session cookie options needed for the
- * {@link https://firebase.google.com/docs/reference/admin/node/Auth#createSessionCookie `createSessionCookie()`} method.
- */
-interface SessionCookieOptions {
-
-  /**
-   * The session cookie custom expiration in milliseconds. The minimum allowed is
-   * 5 minutes and the maxium allowed is 2 weeks.
-   */
-  expiresIn: number;
 }
 
 /**
