@@ -38,7 +38,6 @@ import {
   SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
 } from './auth-config';
 import {TenantManager} from './tenant-manager';
-// import firebaseAdmin = require('../default-namespace');// TODO: 
 
 
 /**
@@ -869,24 +868,6 @@ export class Auth extends BaseAuth<AuthRequestHandler> implements FirebaseServic
   }
 }
 
-/* 
 export function auth(app: FirebaseApp): Auth {
   return new Auth(app);
 }
-*/
-
-// export function auth(app: FirebaseApp): Auth {
-export function auth(app: FirebaseApp): Auth {
-  return new Auth(app);
-  //if (typeof app === 'undefined') {
-  //  app = initializeApp();
-  //}
-  //return ensureApp(app).auth();
-}
-
-/*function ensureApp(app?: FirebaseApp): FirebaseApp {
-  if (typeof app === 'undefined') {
-    app = FirebaseApp.apply();
-  }
-  return app;
-} */

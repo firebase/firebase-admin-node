@@ -20,7 +20,7 @@ import minimist = require('minimist');
 import path = require('path');
 import {random} from 'lodash';
 import { Credential, GoogleOAuthAccessToken } from '../../src/auth/credential';
-import { initializeApp } from '../../src/'; // TODO
+import { initializeApp } from '../../src';
 import { FirebaseApp } from '../../src/firebase-app';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires

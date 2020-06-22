@@ -2,8 +2,6 @@ import * as _admin from './index.d';
 
 /* eslint-disable @typescript-eslint/ban-types */
 
-// export namespace admin.auth {
-
 /**
   * Interface representing a user's metadata.
   */
@@ -1959,6 +1957,5 @@ interface TenantManager {
    */
   updateTenant(tenantId: string, tenantOptions: UpdateTenantRequest): Promise<Tenant>;
 }
-// }
 
-export function auth(app: _admin.App): Auth; // TODO: Firebase
+export function auth(app: _admin.App): Auth;

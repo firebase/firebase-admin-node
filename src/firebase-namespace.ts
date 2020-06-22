@@ -27,8 +27,6 @@ import {
   getApplicationDefault,
 } from './auth/credential';
 
-// import {Auth} from './auth/auth';
-
 import * as validator from './utils/validator';
 
 const DEFAULT_APP_NAME = '[DEFAULT]';
@@ -303,8 +301,6 @@ export class FirebaseNamespace {
   public SDK_VERSION = '<XXX_SDK_VERSION_XXX>';
   public INTERNAL: FirebaseNamespaceInternals;
 
-  public init = false; // TODO: REMOVE
-
   /* tslint:disable */
   // TODO(jwenger): Database is the only consumer of firebase.Promise. We should update it to use
   // use the native Promise and then remove this.
@@ -312,23 +308,8 @@ export class FirebaseNamespace {
   /* tslint:enable */
 
   constructor() {
-    console.log("constructor!!!"); // TODO
     this.INTERNAL = new FirebaseNamespaceInternals(this);
   }
-
-  
-  /**
-   * Gets the `Auth` service namespace. The returned namespace can be used to get the
-   * `Auth` service for the default app or an explicitly specified app.
-   */
-  /*get auth(): FirebaseServiceNamespace<Auth> {
-    const fn: FirebaseServiceNamespace<Auth> = (app?: FirebaseApp) => {
-      return this.ensureApp(app).auth();
-    };
-    // return fn;
-    const auth = require('./auth/auth').Auth;
-    return Object.assign(fn, {Auth: auth});
-  } */
 
   /**
    * Initializes the FirebaseApp instance.
@@ -342,7 +323,6 @@ export class FirebaseNamespace {
    * @return {FirebaseApp} A new FirebaseApp instance.
    */
   public initializeApp(options?: FirebaseAppOptions, appName?: string): FirebaseApp {
-    this.init = true;
     return this.INTERNAL.initializeApp(options, appName);
   }
 

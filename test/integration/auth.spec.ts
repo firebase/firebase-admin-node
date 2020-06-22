@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-// import * as admin from '../../lib/index';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as crypto from 'crypto';
@@ -26,15 +25,12 @@ import {clone} from 'lodash';
 import {
   generateRandomString, noServiceAccountApp, cmdArgs, apiKey, projectId
 } from './setup';
-// projectId, apiKey, above ^^
 import url = require('url');
 import * as mocks from '../resources/mocks';
 import { AuthProviderConfig } from '../../src/auth/auth-config';
 import { deepExtend, deepCopy } from '../../src/utils/deep-copy';
 import { User, FirebaseAuth } from '@firebase/auth-types';
 import { TenantOptions, SecondFactor, UserImportOptions, PhoneMultiFactorInfo, UserImportRecord, UserRecord, TenantAwareAuth, auth } from '../../src/auth/';
-// Auth above ^^
-// import { initializeApp } from '../../src/';
 import { defaultApp } from './setup';
 import { FirebaseApp as App} from '../../src/firebase-app'; // TODO: sketchy
 
@@ -338,7 +334,6 @@ describe('admin.auth', () => {
         expect(newUserRecord.metadata.lastRefreshTime).to.be.null;
 
         // Login to set the lastRefreshTime.
-        // TODO: firebase.auth!()
         await firebase.auth!().signInWithEmailAndPassword('lastRefreshTimeUser@example.com', 'p4ssword')
           .then(async () => {
             // Attempt to retrieve the user 3 times (with a small delay between
@@ -1963,7 +1958,6 @@ function testImportAndSignInUser(
   importOptions: any,
   rawPassword: string): Promise<void> {
   const users = [importUserRecord];
-  // const app: App = initializeApp();
   const app: App = defaultApp;
 
   // Import the user record.
@@ -1993,7 +1987,6 @@ function testImportAndSignInUser(
  *     or is found not to exist.
  */
 function deletePhoneNumberUser(app: App, phoneNumber: string): Promise<void> {
-  // const app = initializeApp({}, 'deletePhone');
   return auth(app).getUserByPhoneNumber(phoneNumber)
     .then((userRecord) => {
       return safeDelete(userRecord.uid);

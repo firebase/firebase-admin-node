@@ -35,7 +35,6 @@ describe('admin', () => {
 
 describe('admin.app', () => {
   it('admin.app() returns the default App', () => {
-    console.log(admin.init);
     const app = admin.app();
     expect(app).to.deep.equal(defaultApp);
     expect(app.name).to.equal('[DEFAULT]');
@@ -61,14 +60,4 @@ describe('admin.app', () => {
     expect((app.options.databaseAuthVariableOverride as any).uid).to.be.ok;
     expect(app.options.storageBucket).to.equal(storageBucket);
   });
-
-  /* it('namespace services are attached to the default App', () => {
-    const app = admin.app();
-    expect(admin.auth(app).app).to.deep.equal(app);
-  });
-
-  it('namespace services are attached to the named App', () => {
-    const app = admin.app('null');
-    expect(admin.auth(app).app).to.deep.equal(app);
-  }); */
 });
