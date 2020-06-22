@@ -21,13 +21,10 @@ import * as chai from 'chai';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
-
-// import {Auth} from '../../src/auth/auth';
-
 import * as mocks from '../resources/mocks';
 
 import {FirebaseNamespace} from '../../src/firebase-namespace';
-// import {FirebaseApp} from '../../src/firebase-app';
+import {initializeApp} from '../../src';
 
 chai.should();
 chai.use(sinonChai);
@@ -332,9 +329,9 @@ describe('FirebaseNamespace', () => {
     });
   });
 
-  /*
-  These tests should not pass.
-  describe('#auth()', () => {
+  
+  // These tests should not pass.
+  /*describe('#auth()', () => {
     it('should throw when called before initializing an app', () => {
       expect(() => {
         firebaseNamespace.auth();
@@ -342,15 +339,15 @@ describe('FirebaseNamespace', () => {
     });
 
     it('should throw when default app is not initialized', () => {
-      firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
+      initializeApp(mocks.appOptions, 'testApp');
       expect(() => {
         firebaseNamespace.auth();
       }).to.throw(DEFAULT_APP_NOT_FOUND);
     });
 
     it('should return a valid namespace when the default app is initialized', () => {
-      const app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions);
-      const auth: Auth = firebaseNamespace.auth();
+      const app: FirebaseApp = initializeApp(mocks.appOptions);
+      const auth: Auth = app.INTERNAL;
       expect(auth.app).to.be.deep.equal(app);
     });
 
