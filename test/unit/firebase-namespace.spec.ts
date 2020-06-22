@@ -24,7 +24,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as mocks from '../resources/mocks';
 
 import {FirebaseNamespace} from '../../src/firebase-namespace';
-import {initializeApp} from '../../src';
+// import {initializeApp} from '../../src';
 
 chai.should();
 chai.use(sinonChai);

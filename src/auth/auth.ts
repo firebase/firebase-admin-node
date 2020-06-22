@@ -19,6 +19,7 @@ import {
   UserIdentifier, isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, isProviderIdentifier,
 } from './identifier';
 import {FirebaseApp} from '../firebase-app';
+import {FirebaseNamespace} from '../firebase-namespace';
 import {FirebaseTokenGenerator, cryptoSignerFromApp} from './token-generator';
 import {
   AbstractAuthRequestHandler, AuthRequestHandler, TenantAwareAuthRequestHandler,
@@ -868,6 +869,9 @@ export class Auth extends BaseAuth<AuthRequestHandler> implements FirebaseServic
   }
 }
 
-export function auth(app: FirebaseApp): Auth {
-  return new Auth(app);
+export function auth(app?: FirebaseApp): Auth {
+  if (app === undefined) {
+    return new FirebaseNamespace().app().auth(); // TODO: This doesn't look good; should only have one instance of FirebaseNamespace...
+  }
+  return app.auth();
 }
