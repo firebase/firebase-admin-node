@@ -14,15 +14,19 @@
  * limitations under the License.
  */
 
-import * as firebase from 'firebase-admin';
+// import * as firebase from 'firebase-admin';
+import * as admin from '../../../../src/index';
+import { initializeApp } from '../../../../src';
+import { FirebaseApp } from '../../../../src/firebase-app';
 
-export function initApp(serviceAcct: any, name: string): firebase.app.App {
-  return firebase.initializeApp({
-    credential: firebase.credential.cert(serviceAcct),
+export function initApp(serviceAcct: any, name: string): FirebaseApp {
+  return initializeApp({
+    credential: admin.cert(serviceAcct),
     databaseURL: 'https://mock.firebaseio.com'
   }, name);
 }
 
+/* 
 export function addValueEventListener(
   // Check for type compilation
   db: firebase.database.Database,
@@ -30,5 +34,6 @@ export function addValueEventListener(
   const eventType: firebase.database.EventType = 'value';
   db.ref().on(eventType, callback);
 }
+*/
 
 export default initApp;

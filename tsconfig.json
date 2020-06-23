@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "target": "es5",
+    "target": "es5",//"es5",
     "noImplicitAny": true,
     "noUnusedLocals": true,
     // TODO(rsgowman): enable `"strict": true,` and remove explicit setting of: noImplicitAny, noImplicitThis, alwaysStrict, strictBindCallApply, strictNullChecks, strictFunctionTypes, strictPropertyInitialization.
@@ -17,7 +17,10 @@
     // "declaration": true,
     "rootDir": "."
   },
-  "files": [
-    "src/index.ts"
+  "extends": "./tsconfig.typing.json",
+  "includes": [
+    "src/index.ts",
+    "src/firebase-namespace.ts"
   ]
+  // Auth public: action-code-settings-builder.ts, auth-config.ts, tenant-manager.ts, tenant.ts, user-import-builder.ts user-record.ts
 }
