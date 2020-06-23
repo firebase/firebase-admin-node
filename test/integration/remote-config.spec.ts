@@ -163,10 +163,10 @@ describe('admin.remoteConfig', () => {
     });
   });
 
-  let firstVersionNumber: string;
-  let secondVersionNumber: string;
-  const versionDescription1 = `getTemplateAtVersion test v1 ${Date.now()}`;
-  const versionDescription2 = `getTemplateAtVersion test v2 ${Date.now()}`;
+  let versionOneNumber: string;
+  let versionTwoNumber: string;
+  const versionOneDescription = `getTemplateAtVersion test v1 ${Date.now()}`;
+  const versionTwoDescription = `getTemplateAtVersion test v2 ${Date.now()}`;
 
   describe('getTemplateAtVersion', () => {
     before(async () => {
@@ -174,35 +174,35 @@ describe('admin.remoteConfig', () => {
       let activeTemplate = await admin.remoteConfig().getTemplate();
 
       // publish a new template to create a new version number
-      activeTemplate.version = { description: versionDescription1 };
+      activeTemplate.version = { description: versionOneDescription };
       activeTemplate = await admin.remoteConfig().publishTemplate(activeTemplate)
       expect(activeTemplate.version).to.be.not.undefined;
-      firstVersionNumber = activeTemplate.version!.versionNumber!;
+      versionOneNumber = activeTemplate.version!.versionNumber!;
 
       // publish another template to create a second version number
-      activeTemplate.version = { description: versionDescription2 };
+      activeTemplate.version = { description: versionTwoDescription };
       activeTemplate = await admin.remoteConfig().publishTemplate(activeTemplate)
       expect(activeTemplate.version).to.be.not.undefined;
-      secondVersionNumber = activeTemplate.version!.versionNumber!;
+      versionTwoNumber = activeTemplate.version!.versionNumber!;
     });
 
     it('verfy that getTemplateAtVersion() returns the requested template version v1', () => {
-      return admin.remoteConfig().getTemplateAtVersion(firstVersionNumber)
+      return admin.remoteConfig().getTemplateAtVersion(versionOneNumber)
         .then((template) => {
           expect(template.etag).matches(/^etag-[0-9]*-[0-9]*$/);
           expect(template.version).to.be.not.undefined;
-          expect(template.version!.versionNumber).equals(firstVersionNumber);
-          expect(template.version!.description).equals(versionDescription1);
+          expect(template.version!.versionNumber).equals(versionOneNumber);
+          expect(template.version!.description).equals(versionOneDescription);
         });
     });
 
     it('verfy that getTemplateAtVersion() returns the requested template version v2', () => {
-      return admin.remoteConfig().getTemplateAtVersion(secondVersionNumber)
+      return admin.remoteConfig().getTemplateAtVersion(versionTwoNumber)
         .then((template) => {
           expect(template.etag).matches(/^etag-[0-9]*-[0-9]*$/);
           expect(template.version).to.be.not.undefined;
-          expect(template.version!.versionNumber).equals(secondVersionNumber);
-          expect(template.version!.description).equals(versionDescription2);
+          expect(template.version!.versionNumber).equals(versionTwoNumber);
+          expect(template.version!.description).equals(versionTwoDescription);
         });
     });
   });
@@ -215,10 +215,10 @@ describe('admin.remoteConfig', () => {
         .then((response) => {
           expect(response.versions.length).to.equal(2);
           // versions should be in reverse chronological order
-          expect(response.versions[0].description).equals(versionDescription2);
-          expect(response.versions[0].versionNumber).equals(secondVersionNumber);
-          expect(response.versions[1].description).equals(versionDescription1);
-          expect(response.versions[1].versionNumber).equals(firstVersionNumber);
+          expect(response.versions[0].description).equals(versionTwoDescription);
+          expect(response.versions[0].versionNumber).equals(versionTwoNumber);
+          expect(response.versions[1].description).equals(versionOneDescription);
+          expect(response.versions[1].versionNumber).equals(versionOneNumber);
         });
     });
   });
@@ -228,16 +228,16 @@ describe('admin.remoteConfig', () => {
       return admin.remoteConfig().getTemplate()
         .then((template) => {
           expect(template.version).to.be.not.undefined;
-          expect(template.version!.versionNumber).equals(secondVersionNumber);
+          expect(template.version!.versionNumber).equals(versionTwoNumber);
         });
     });
 
     it('should rollback to the requested version', () => {
-      return admin.remoteConfig().rollback('2')
+      return admin.remoteConfig().rollback(versionOneNumber)
         .then((template) => {
           expect(template.version).to.be.not.undefined;
-          expect(template.version!.versionNumber).equals(firstVersionNumber);
-          expect(template.version!.description).equals(`Rollback to version ${firstVersionNumber}`);
+          expect(template.version!.updateType).equals('ROLLBACK');
+          expect(template.version!.description).equals(`Rollback to version ${versionOneNumber}`);
         });
     });
   });
