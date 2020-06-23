@@ -144,8 +144,10 @@ export class RemoteConfig implements FirebaseServiceInterface {
   public listVersions(options?: ListVersionsOptions): Promise<ListVersionsResult> {
     return this.client.listVersions(options)
       .then((listVersionsResponse) => {
+        const versions = (typeof listVersionsResponse.versions == 'undefined') ? [] :
+          listVersionsResponse.versions.map(version => new VersionImpl(version));
         return {
-          versions: listVersionsResponse.versions.map(version => new VersionImpl(version)),
+          versions,
           nextPageToken: listVersionsResponse.nextPageToken,
         }
       });

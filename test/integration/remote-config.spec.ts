@@ -32,7 +32,7 @@ const VALID_PARAMETERS = {
   },
   // eslint-disable-next-line @typescript-eslint/camelcase
   welcome_message: {
-    defaultValue: { value: 'welcome text' + Date.now() },
+    defaultValue: { value: `welcome text ${Date.now()}` },
     conditionalValues: {
       ios: { value: 'welcome ios text' },
       android: { value: 'welcome android text' },
@@ -57,16 +57,22 @@ const VALID_PARAMETER_GROUPS = {
   },
 };
 
-const VALID_CONDITIONS: admin.remoteConfig.RemoteConfigCondition[] = [{
-  name: 'ios',
-  expression: 'device.os == \'ios\'',
-  tagColor: 'INDIGO',
-},
-{
-  name: 'android',
-  expression: 'device.os == \'android\'',
-  tagColor: 'GREEN',
-}];
+const VALID_CONDITIONS: admin.remoteConfig.RemoteConfigCondition[] = [
+  {
+    name: 'ios',
+    expression: 'device.os == \'ios\'',
+    tagColor: 'INDIGO',
+  },
+  {
+    name: 'android',
+    expression: 'device.os == \'android\'',
+    tagColor: 'GREEN',
+  },
+];
+
+const VALID_VERSION: admin.remoteConfig.Version = {
+  description: `template description ${Date.now()}`,
+}
 
 let currentTemplate: admin.remoteConfig.RemoteConfigTemplate;
 
@@ -88,6 +94,7 @@ describe('admin.remoteConfig', () => {
       currentTemplate.conditions = VALID_CONDITIONS;
       currentTemplate.parameters = VALID_PARAMETERS;
       currentTemplate.parameterGroups = VALID_PARAMETER_GROUPS;
+      currentTemplate.version = VALID_VERSION;
       return admin.remoteConfig().validateTemplate(currentTemplate)
         .then((template) => {
           expect(template.etag).matches(/^etag-[0-9]*-[0-9]*$/);
@@ -95,6 +102,8 @@ describe('admin.remoteConfig', () => {
           expect(template.conditions).to.deep.equal(VALID_CONDITIONS);
           expect(template.parameters).to.deep.equal(VALID_PARAMETERS);
           expect(template.parameterGroups).to.deep.equal(VALID_PARAMETER_GROUPS);
+          expect(template.version).to.be.not.undefined;
+          expect(template.version!.description).equals(VALID_VERSION.description);
         });
     });
 
@@ -103,6 +112,7 @@ describe('admin.remoteConfig', () => {
       currentTemplate.conditions = [];
       currentTemplate.parameters = VALID_PARAMETERS;
       currentTemplate.parameterGroups = VALID_PARAMETER_GROUPS;
+      currentTemplate.version = VALID_VERSION;
       return admin.remoteConfig().validateTemplate(currentTemplate)
         .should.eventually.be.rejected.and.have.property('code', 'remote-config/invalid-argument');
     });
@@ -114,6 +124,7 @@ describe('admin.remoteConfig', () => {
       currentTemplate.conditions = VALID_CONDITIONS;
       currentTemplate.parameters = VALID_PARAMETERS;
       currentTemplate.parameterGroups = VALID_PARAMETER_GROUPS;
+      currentTemplate.version = VALID_VERSION;
       return admin.remoteConfig().publishTemplate(currentTemplate)
         .then((template) => {
           expect(template.etag).matches(/^etag-[0-9]*-[0-9]*$/);
@@ -121,6 +132,8 @@ describe('admin.remoteConfig', () => {
           expect(template.conditions).to.deep.equal(VALID_CONDITIONS);
           expect(template.parameters).to.deep.equal(VALID_PARAMETERS);
           expect(template.parameterGroups).to.deep.equal(VALID_PARAMETER_GROUPS);
+          expect(template.version).to.be.not.undefined;
+          expect(template.version!.description).equals(VALID_VERSION.description);
         });
     });
 
@@ -129,6 +142,7 @@ describe('admin.remoteConfig', () => {
       currentTemplate.conditions = [];
       currentTemplate.parameters = VALID_PARAMETERS;
       currentTemplate.parameterGroups = VALID_PARAMETER_GROUPS;
+      currentTemplate.version = VALID_VERSION;
       return admin.remoteConfig().publishTemplate(currentTemplate)
         .should.eventually.be.rejected.and.have.property('code', 'remote-config/invalid-argument');
     });
@@ -143,6 +157,87 @@ describe('admin.remoteConfig', () => {
           expect(template.conditions).to.deep.equal(VALID_CONDITIONS);
           expect(template.parameters).to.deep.equal(VALID_PARAMETERS);
           expect(template.parameterGroups).to.deep.equal(VALID_PARAMETER_GROUPS);
+          expect(template.version).to.be.not.undefined;
+          expect(template.version!.description).equals(VALID_VERSION.description);
+        });
+    });
+  });
+
+  let firstVersionNumber: string;
+  let secondVersionNumber: string;
+  const versionDescription1 = `getTemplateAtVersion test v1 ${Date.now()}`;
+  const versionDescription2 = `getTemplateAtVersion test v2 ${Date.now()}`;
+
+  describe('getTemplateAtVersion', () => {
+    before(async () => {
+      // obtain the current active template
+      let activeTemplate = await admin.remoteConfig().getTemplate();
+
+      // publish a new template to create a new version number
+      activeTemplate.version = { description: versionDescription1 };
+      activeTemplate = await admin.remoteConfig().publishTemplate(activeTemplate)
+      expect(activeTemplate.version).to.be.not.undefined;
+      firstVersionNumber = activeTemplate.version!.versionNumber!;
+
+      // publish another template to create a second version number
+      activeTemplate.version = { description: versionDescription2 };
+      activeTemplate = await admin.remoteConfig().publishTemplate(activeTemplate)
+      expect(activeTemplate.version).to.be.not.undefined;
+      secondVersionNumber = activeTemplate.version!.versionNumber!;
+    });
+
+    it('verfy that getTemplateAtVersion() returns the requested template version v1', () => {
+      return admin.remoteConfig().getTemplateAtVersion(firstVersionNumber)
+        .then((template) => {
+          expect(template.etag).matches(/^etag-[0-9]*-[0-9]*$/);
+          expect(template.version).to.be.not.undefined;
+          expect(template.version!.versionNumber).equals(firstVersionNumber);
+          expect(template.version!.description).equals(versionDescription1);
+        });
+    });
+
+    it('verfy that getTemplateAtVersion() returns the requested template version v2', () => {
+      return admin.remoteConfig().getTemplateAtVersion(secondVersionNumber)
+        .then((template) => {
+          expect(template.etag).matches(/^etag-[0-9]*-[0-9]*$/);
+          expect(template.version).to.be.not.undefined;
+          expect(template.version!.versionNumber).equals(secondVersionNumber);
+          expect(template.version!.description).equals(versionDescription2);
+        });
+    });
+  });
+
+  describe('listVersions', () => {
+    it('should return the most recently published 2 versions', () => {
+      return admin.remoteConfig().listVersions({
+        pageSize: 2,
+      })
+        .then((response) => {
+          expect(response.versions.length).to.equal(2);
+          // versions should be in reverse chronological order
+          expect(response.versions[0].description).equals(versionDescription2);
+          expect(response.versions[0].versionNumber).equals(secondVersionNumber);
+          expect(response.versions[1].description).equals(versionDescription1);
+          expect(response.versions[1].versionNumber).equals(firstVersionNumber);
+        });
+    });
+  });
+
+  describe('rollback', () => {
+    it('verify the most recent template version before rollback to the one prior', () => {
+      return admin.remoteConfig().getTemplate()
+        .then((template) => {
+          expect(template.version).to.be.not.undefined;
+          expect(template.version!.versionNumber).equals(secondVersionNumber);
+        });
+    });
+
+    it('should rollback to the requested version', () => {
+      return admin.remoteConfig().rollback('2')
+        .then((template) => {
+          expect(template.version).to.be.not.undefined;
+          expect(template.version!.versionNumber).equals(firstVersionNumber);
+          expect(template.version!.description).equals(`Rollback to version ${firstVersionNumber}`);
         });
     });
   });
