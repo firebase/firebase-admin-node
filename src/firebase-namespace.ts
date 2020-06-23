@@ -300,7 +300,6 @@ export class FirebaseNamespace {
   public credential = firebaseCredential;
   public SDK_VERSION = '<XXX_SDK_VERSION_XXX>';
   public INTERNAL: FirebaseNamespaceInternals;
-  public DEFAULT_APP_NAME = '[DEFAULT]';
 
   /* tslint:disable */
   // TODO(jwenger): Database is the only consumer of firebase.Promise. We should update it to use
