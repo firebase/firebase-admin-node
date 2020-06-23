@@ -20,7 +20,6 @@ import {deepCopy, deepExtend} from './utils/deep-copy';
 import {FirebaseServiceInterface} from './firebase-service';
 import {FirebaseNamespaceInternals} from './firebase-namespace';
 import {AppErrorCodes, FirebaseAppError} from './utils/error';
-import {Auth} from './auth/';
 import {Agent} from 'http';
 
 /**
@@ -279,9 +278,9 @@ export class FirebaseApp {
    *
    * @return {Auth} The Auth service instance of this app.
    */
-  public auth(): Auth {
+  /* public auth(): Auth {
     return new Auth(this);
-  }
+  } */
 
 
   /**
