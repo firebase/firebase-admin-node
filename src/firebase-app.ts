@@ -274,16 +274,6 @@ export class FirebaseApp {
   }
 
   /**
-   * Returns the Auth service instance associated with this app.
-   *
-   * @return {Auth} The Auth service instance of this app.
-   */
-  /* public auth(): Auth {
-    return new Auth(this);
-  } */
-
-
-  /**
    * Returns the name of the FirebaseApp instance.
    *
    * @return {string} The name of the FirebaseApp instance.
