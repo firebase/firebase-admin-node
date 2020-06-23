@@ -47,6 +47,19 @@ interface SecondFactor {
   factorId: string;
 }
 
+interface UserProviderRequest {
+  uid: string;
+  displayName?: string;
+  email?: string;
+  phoneNumber?: string;
+  photoURL?: string;
+  providerId: string;
+}
+
+interface UserMetadataRequest {
+  lastSignInTime?: string;
+  creationTime?: string;
+}
 
 /** User import record as accepted from developer. */
 export interface UserImportRecord {
@@ -57,17 +70,8 @@ export interface UserImportRecord {
   phoneNumber?: string;
   photoURL?: string;
   disabled?: boolean;
-  metadata?: {
-    lastSignInTime?: string;
-    creationTime?: string;
-  };
-  providerData?: Array<{
-    uid: string;
-    displayName?: string;
-    email?: string;
-    photoURL?: string;
-    providerId: string;
-  }>;
+  metadata?: UserMetadataRequest;
+  providerData?: Array<UserProviderRequest>;
   multiFactor?: {
     enrolledFactors: SecondFactor[];
   };

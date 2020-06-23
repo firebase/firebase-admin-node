@@ -704,13 +704,6 @@ export namespace admin.auth {
      * The date the user was created, formatted as a UTC string.
      */
     creationTime?: string;
-
-    /**
-     * The time at which the user was last active (ID token refreshed),
-     * formatted as a UTC Date string (eg 'Sat, 03 Feb 2001 04:05:06 GMT').
-     * Null implies the user was never active.
-     */
-    lastRefreshTime?: string|null;
   }
 
   /**
