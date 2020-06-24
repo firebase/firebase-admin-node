@@ -346,13 +346,6 @@ export class FirebaseNamespace {
     return this.INTERNAL.apps;
   }
 
-  public ensureApp(app?: FirebaseApp): FirebaseApp {
-    if (typeof app === 'undefined') {
-      app = this.app();
-    }
-    return app;
-  }
-
   public cert(serviceAccountPathOrObject: string | object, httpAgent?: Agent): Credential {
     const stringifiedServiceAccount = JSON.stringify(serviceAccountPathOrObject);
     if (!(stringifiedServiceAccount in globalCertCreds)) {
