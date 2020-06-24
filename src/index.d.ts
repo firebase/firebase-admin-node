@@ -880,7 +880,7 @@ declare namespace admin.remoteConfig {
     readonly etag: string;
 
     /**
-     * Version information of the current Remote Config template.
+     * Version information for the current Remote Config template.
      */
     version?: Version;
   }
@@ -991,7 +991,7 @@ declare namespace admin.remoteConfig {
    * Interface representing a Remote Config template version.
    * Output only, except for the version description. Contains metadata about a particular
    * version of the Remote Config template. All fields are set at the time the specified Remote
-   * Config template was published. A version's description field may be specified in
+   * Config template is published. A version's description field may be specified in
    * `publishTemplate` calls.
    */
   export interface Version {
@@ -1002,12 +1002,12 @@ declare namespace admin.remoteConfig {
 
     /**
      * The timestamp of when this version of the Remote Config template was written to the
-     * Remote Config server.
+     * Remote Config backend.
      */
     updateTime?: string;
 
     /**
-     * The source of origin of the template update action.
+     * The origin of the template update action.
      */
     updateOrigin?: ('REMOTE_CONFIG_UPDATE_ORIGIN_UNSPECIFIED' | 'CONSOLE' |
       'REST_API' | 'ADMIN_SDK_NODE');
@@ -1029,13 +1029,13 @@ declare namespace admin.remoteConfig {
     description?: string;
 
     /**
-     * Only present if this version is the result of a rollback, and will be the version number of
-     * the Remote Config template that was rolled-back to.
+     * The version number of the Remote Config template that has become the current version
+     * due to a rollback. Only present if this version is the result of a rollback.
      */
     rollbackSource?: string;
 
     /**
-     * Indicates weather this Remote Config template was published before version history was
+     * Indicates whether this Remote Config template was published before version history was
      * supported.
      */
     isLegacy?: boolean;
@@ -1055,7 +1055,7 @@ declare namespace admin.remoteConfig {
     nextPageToken?: string;
   }
 
-  /** Interface representing a Remote Config list version options. */
+  /** Interface representing options for Remote Config list versions operation. */
   export interface ListVersionsOptions {
     /**
      * The maximum number of items to return per page.
@@ -1068,19 +1068,19 @@ declare namespace admin.remoteConfig {
     pageToken?: string;
     
     /** 
-     * Specify the newest version number to include in the results.
+     * Specifies the newest version number to include in the results.
      * If specified, must be greater than zero. Defaults to the newest version.
      */
     endVersionNumber?: string | number;
 
     /**
-     * Specify the earliest update time to include in the results. Any entries updated before this
+     * Specifies the earliest update time to include in the results. Any entries updated before this
      * time are omitted.
      */
     startTime?: Date | string;
 
     /**
-     * Specify the latest update time to include in the results. Any entries updated on or after
+     * Specifies the latest update time to include in the results. Any entries updated on or after
      * this time are omitted.
      */
     endTime?: Date | string;
@@ -1116,7 +1116,7 @@ declare namespace admin.remoteConfig {
     /**
      * Gets the current active version of the {@link admin.remoteConfig.RemoteConfigTemplate
      * `RemoteConfigTemplate`} of the project.
-     * 
+     *
      * @return A promise that fulfills with a `RemoteConfigTemplate`.
      */
     getTemplate(): Promise<RemoteConfigTemplate>;
@@ -1160,9 +1160,11 @@ declare namespace admin.remoteConfig {
     * A rollback is equivalent to getting a previously published Remote Config
     * template and re-publishing it using a force update.
     * 
-    * @param versionNumber The version number of the Remote Config template to rollback to.
+    * @param versionNumber The version number of the Remote Config template to roll back to.
     *    The specified version number must be lower than the current version number, and not have
-    *    been deleted due to staleness.
+    *    been deleted due to staleness. Only the last 300 versions are stored.
+    *    All versions that correspond to non-active Remote Config templates (that is, all except the
+    *    template that is being fetched by clients) are also deleted if they are more than 90 days old.
     * @return A promise that fulfills with the published `RemoteConfigTemplate`.
     */
     rollback(versionNumber: string | number): Promise<RemoteConfigTemplate>;
@@ -1170,11 +1172,11 @@ declare namespace admin.remoteConfig {
     /**
     * Gets a list of Remote Config template versions that have been published, sorted in reverse 
     * chronological order. Only the last 300 versions are stored.
-    * All versions that correspond to non-active Remote Config templates (i.e., all except the 
-    * template that is being fetched by clients) are also deleted if they are older than 90 days.
+    * All versions that correspond to non-active Remote Config templates (that is, all except the 
+    * template that is being fetched by clients) are also deleted if they are more than 90 days old.
     * 
     * @param options Optional {@link admin.remoteConfig.ListVersionsOptions `ListVersionsOptions`}
-    *    object for getting a list of tempalte versions.
+    *    object for getting a list of template versions.
     * @return A promise that fulfills with a `ListVersionsResult`.
     */
     listVersions(options?: ListVersionsOptions): Promise<ListVersionsResult>;
