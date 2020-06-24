@@ -590,6 +590,8 @@ declare namespace admin.auth {
   export import UpdatePhoneMultiFactorInfoRequest = _auth.admin.auth.UpdatePhoneMultiFactorInfoRequest;
   export import MultiFactorCreateSettings = _auth.admin.auth.MultiFactorCreateSettings;
   export import MultiFactorUpdateSettings = _auth.admin.auth.MultiFactorUpdateSettings;
+  export import DeleteUsersResult = _auth.admin.auth.DeleteUsersResult;
+  export import GetUsersResult = _auth.admin.auth.GetUsersResult;
 }
 
 declare namespace admin.credential {
@@ -882,7 +884,7 @@ declare namespace admin.remoteConfig {
 
   /**
    * Interface representing a Remote Config parameter.
-   * At minimum, a `defaultValue` or a `conditionalValues` entry must be present for the 
+   * At minimum, a `defaultValue` or a `conditionalValues` entry must be present for the
    * parameter to have any effect.
    */
   interface RemoteConfigParameter {
@@ -894,7 +896,7 @@ declare namespace admin.remoteConfig {
 
     /**
      * A `(condition name, value)` map. The condition name of the highest priority
-     * (the one listed first in the Remote Config template's conditions list) determines the value of 
+     * (the one listed first in the Remote Config template's conditions list) determines the value of
      * this parameter.
      */
     conditionalValues?: { [key: string]: RemoteConfigParameterValue };
@@ -977,7 +979,7 @@ declare namespace admin.remoteConfig {
 
   /**
    * Type representing a Remote Config parameter value.
-   * A `RemoteConfigParameterValue` could be either an `ExplicitParameterValue` or 
+   * A `RemoteConfigParameterValue` could be either an `ExplicitParameterValue` or
    * an `InAppDefaultValue`.
    */
   type RemoteConfigParameterValue = ExplicitParameterValue | InAppDefaultValue;
@@ -1012,11 +1014,11 @@ declare namespace admin.remoteConfig {
      *
      * @param template The Remote Config template to be published.
      * @param options Optional options object when publishing a Remote Config template:
-     *    - {boolean} `force` Setting this to `true` forces the Remote Config template to 
-     *      be updated and circumvent the ETag. This approach is not recommended 
-     *      because it risks causing the loss of updates to your Remote Config 
+     *    - {boolean} `force` Setting this to `true` forces the Remote Config template to
+     *      be updated and circumvent the ETag. This approach is not recommended
+     *      because it risks causing the loss of updates to your Remote Config
      *      template if multiple clients are updating the Remote Config template.
-     *      See {@link https://firebase.google.com/docs/remote-config/use-config-rest#etag_usage_and_forced_updates 
+     *      See {@link https://firebase.google.com/docs/remote-config/use-config-rest#etag_usage_and_forced_updates
      *      ETag usage and forced updates}.
      *
      * @return A Promise that fulfills with the published `RemoteConfigTemplate`.
