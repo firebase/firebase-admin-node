@@ -871,7 +871,7 @@ export class Auth extends BaseAuth<AuthRequestHandler> implements FirebaseServic
 }
 
 export function auth(app?: FirebaseApp): Auth {
-  if (app === undefined) {
+  if (typeof(app) === 'undefined') {
     return new Auth(admin.app());
   }
   return new Auth(app);

@@ -15,25 +15,17 @@
  */
 
 // import * as firebase from 'firebase-admin';
-import * as admin from '../../../../src/index';
-import { initializeApp } from '../../../../src';
-import { FirebaseApp } from '../../../../src/firebase-app';
+import { initializeApp, cert } from '../../../../lib/';
+// import * as admin from '../../../../lib/';
+// import { initializeApp, App, cert } from '../../../../lib';
+import { FirebaseApp } from '../../../../lib/firebase-app';
+// TODO: If you use FirebaseApp, it doesn't work...
 
 export function initApp(serviceAcct: any, name: string): FirebaseApp {
   return initializeApp({
-    credential: admin.cert(serviceAcct),
+    credential: cert(serviceAcct),
     databaseURL: 'https://mock.firebaseio.com'
   }, name);
 }
-
-/* 
-export function addValueEventListener(
-  // Check for type compilation
-  db: firebase.database.Database,
-  callback: (s: firebase.database.DataSnapshot) => any): void {
-  const eventType: firebase.database.EventType = 'value';
-  db.ref().on(eventType, callback);
-}
-*/
 
 export default initApp;

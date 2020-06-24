@@ -17,6 +17,7 @@
 import { Agent } from 'http';
 
 import * as _auth from './auth';
+import { FirebaseApp } from './firebase-app';
 
 /* eslint-disable @typescript-eslint/ban-types */
 
@@ -236,7 +237,7 @@ export function auth(app?: App): _auth.Auth;
   */
 //function instanceId(app?: admin.app.App): admin.instanceId.InstanceId;
 
-export function initializeApp(options?: AppOptions, name?: string): App;
+export function initializeApp(options?: AppOptions, name?: string): FirebaseApp;
 
 /**
 * A Firebase app holds the initialization information for a collection of

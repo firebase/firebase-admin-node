@@ -27,12 +27,10 @@ import {
 } from './setup';
 import url = require('url');
 import * as mocks from '../resources/mocks';
-import { AuthProviderConfig } from '../../src/auth/auth-config';
-import { deepExtend, deepCopy } from '../../src/utils/deep-copy';
+import { AuthProviderConfig } from '../../lib/auth/auth-config';
+import { deepExtend, deepCopy } from '../../lib/utils/deep-copy';
 import { User, FirebaseAuth } from '@firebase/auth-types';
-import { TenantOptions, SecondFactor, UserImportOptions, PhoneMultiFactorInfo, UserImportRecord, UserRecord, TenantAwareAuth, auth } from '../../src/auth/';
-import { defaultApp } from './setup';
-import { FirebaseApp as App} from '../../src/firebase-app'; // TODO: sketchy
+import { TenantOptions, SecondFactor, UserImportOptions, PhoneMultiFactorInfo, UserImportRecord, UserRecord, TenantAwareAuth, auth } from '../../lib/auth/';
 
 const chalk = require('chalk'); // eslint-disable-line @typescript-eslint/no-var-requires
 
@@ -100,26 +98,24 @@ function clientAuth(): FirebaseAuth {
 describe('admin.auth', () => {
 
   let uidFromCreateUserWithoutUid: string;
-  let app: App;
 
   before(() => {
     firebase.initializeApp({
       apiKey,
       authDomain: projectId + '.firebaseapp.com',
     });
-    app = defaultApp;
-    return cleanup(app);
+    return cleanup();
   });
 
   after(() => {
-    return cleanup(app);
+    return cleanup();
   });
 
   it('createUser() creates a new user when called without a UID', () => {
     const newUserData = clone(mockUserData);
     newUserData.email = generateRandomString(20).toLowerCase() + '@example.com';
     newUserData.phoneNumber = testPhoneNumber2;
-    return auth(app).createUser(newUserData)
+    return auth().createUser(newUserData)
       .then((userRecord) => {
         uidFromCreateUserWithoutUid = userRecord.uid;
         expect(typeof userRecord.uid).to.equal('string');
@@ -133,7 +129,7 @@ describe('admin.auth', () => {
   it('createUser() creates a new user with the specified UID', () => {
     const newUserData: any = clone(mockUserData);
     newUserData.uid = newUserUid;
-    return auth(app).createUser(newUserData)
+    return auth().createUser(newUserData)
       .then((userRecord) => {
         expect(userRecord.uid).to.equal(newUserUid);
         // Confirm expected email.
@@ -165,7 +161,7 @@ describe('admin.auth', () => {
         enrolledFactors,
       },
     };
-    return auth(app).createUser(newUserData)
+    return auth().createUser(newUserData)
       .then((userRecord) => {
         expect(userRecord.uid).to.equal(newMultiFactorUserUid);
         // Confirm expected email.
@@ -192,26 +188,26 @@ describe('admin.auth', () => {
   it('createUser() fails when the UID is already in use', () => {
     const newUserData: any = clone(mockUserData);
     newUserData.uid = newUserUid;
-    return auth(app).createUser(newUserData)
+    return auth().createUser(newUserData)
       .should.eventually.be.rejected.and.have.property('code', 'auth/uid-already-exists');
   });
 
   it('getUser() returns a user record with the matching UID', () => {
-    return auth(app).getUser(newUserUid)
+    return auth().getUser(newUserUid)
       .then((userRecord) => {
         expect(userRecord.uid).to.equal(newUserUid);
       });
   });
 
   it('getUserByEmail() returns a user record with the matching email', () => {
-    return auth(app).getUserByEmail(mockUserData.email)
+    return auth().getUserByEmail(mockUserData.email)
       .then((userRecord) => {
         expect(userRecord.uid).to.equal(newUserUid);
       });
   });
 
   it('getUserByPhoneNumber() returns a user record with the matching phone number', () => {
-    return auth(app).getUserByPhoneNumber(mockUserData.phoneNumber)
+    return auth().getUserByPhoneNumber(mockUserData.phoneNumber)
       .then((userRecord) => {
         expect(userRecord.uid).to.equal(newUserUid);
       });
@@ -261,21 +257,21 @@ describe('admin.auth', () => {
       // left over from a prior run).
       const uidsToDelete = usersToCreate.map((user) => user.uid);
       uidsToDelete.push(importUser1.uid);
-      await auth(app).deleteUsers(uidsToDelete);
+      await auth().deleteUsers(uidsToDelete);
 
       // Create/import users required by these tests
-      await Promise.all(usersToCreate.map((user) => auth(app).createUser(user)));
-      await auth(app).importUsers([importUser1]);
+      await Promise.all(usersToCreate.map((user) => auth().createUser(user)));
+      await auth().importUsers([importUser1]);
     });
 
     after(async () => {
       const uidsToDelete = usersToCreate.map((user) => user.uid);
       uidsToDelete.push(importUser1.uid);
-      await auth(app).deleteUsers(uidsToDelete);
+      await auth().deleteUsers(uidsToDelete);
     });
 
     it('returns users by various identifier types in a single call', async () => {
-      const users = await auth(app).getUsers([
+      const users = await auth().getUsers([
         { uid: 'uid1' },
         { email: 'user2@example.com' },
         { phoneNumber: '+15555550003' },
@@ -288,7 +284,7 @@ describe('admin.auth', () => {
     });
 
     it('returns found users and ignores non-existing users', async () => {
-      const users = await auth(app).getUsers([
+      const users = await auth().getUsers([
         { uid: 'uid1' },
         { uid: 'uid_that_doesnt_exist' },
         { uid: 'uid3' },
@@ -301,14 +297,14 @@ describe('admin.auth', () => {
 
     it('returns nothing when queried for only non-existing users', async () => {
       const notFoundIds = [{uid: 'non-existing user'}];
-      const users = await auth(app).getUsers(notFoundIds);
+      const users = await auth().getUsers(notFoundIds);
 
       expect(users.users).to.be.empty;
       expect(users.notFound).to.deep.equal(notFoundIds);
     });
 
     it('de-dups duplicate users', async () => {
-      const users = await auth(app).getUsers([
+      const users = await auth().getUsers([
         { uid: 'uid1' },
         { uid: 'uid1' },
       ])
@@ -323,7 +319,7 @@ describe('admin.auth', () => {
         return new Date(s).toUTCString() === s;
       };
 
-      const newUserRecord = await auth(app).createUser({
+      const newUserRecord = await auth().createUser({
         uid: 'lastRefreshTimeUser',
         email: 'lastRefreshTimeUser@example.com',
         password: 'p4ssword',
@@ -343,7 +339,7 @@ describe('admin.auth', () => {
             let userRecord = null;
 
             for (let i = 0; i < 3; i++) {
-              userRecord = await auth(app).getUser('lastRefreshTimeUser');
+              userRecord = await auth().getUser('lastRefreshTimeUser');
               if (userRecord.metadata.lastRefreshTime) {
                 break;
               }
@@ -362,7 +358,7 @@ describe('admin.auth', () => {
             expect(lastRefreshTime).lte(creationTime + 3600 * 1000);
           });
       } finally {
-        auth(app).deleteUser('lastRefreshTimeUser');
+        auth().deleteUser('lastRefreshTimeUser');
       }
     });
   });
@@ -374,13 +370,13 @@ describe('admin.auth', () => {
         uid,
         password: 'password',
       };
-      promises.push(auth(app).createUser(tempUserData));
+      promises.push(auth().createUser(tempUserData));
     });
     return Promise.all(promises)
       .then(() => {
         // Return 2 users with the provided page token.
         // This test will fail if other users are created in between.
-        return auth(app).listUsers(2, uids[0]);
+        return auth().listUsers(2, uids[0]);
       })
       .then((listUsersResult) => {
         // Confirm expected number of users.
@@ -426,22 +422,22 @@ describe('admin.auth', () => {
       .then((idToken) => {
         currentIdToken = idToken;
         // Verify that user's ID token while checking for revocation.
-        return auth(app).verifyIdToken(currentIdToken, true);
+        return auth().verifyIdToken(currentIdToken, true);
       })
       .then((decodedIdToken) => {
         // Verification should succeed. Revoke that user's session.
         return new Promise((resolve) => setTimeout(() => resolve(
-          auth(app).revokeRefreshTokens(decodedIdToken.sub),
+          auth().revokeRefreshTokens(decodedIdToken.sub),
         ), 1000));
       })
       .then(() => {
         // verifyIdToken without checking revocation should still succeed.
-        return auth(app).verifyIdToken(currentIdToken)
+        return auth().verifyIdToken(currentIdToken)
           .should.eventually.be.fulfilled;
       })
       .then(() => {
         // verifyIdToken while checking for revocation should fail.
-        return auth(app).verifyIdToken(currentIdToken, true)
+        return auth().verifyIdToken(currentIdToken, true)
           .should.eventually.be.rejected.and.have.property('code', 'auth/id-token-revoked');
       })
       .then(() => {
@@ -461,16 +457,16 @@ describe('admin.auth', () => {
       })
       .then((idToken) => {
         // ID token for new session should be valid even with revocation check.
-        return auth(app).verifyIdToken(idToken, true)
+        return auth().verifyIdToken(idToken, true)
           .should.eventually.be.fulfilled;
       });
   });
 
   it('setCustomUserClaims() sets claims that are accessible via user\'s ID token', () => {
     // Set custom claims on the user.
-    return auth(app).setCustomUserClaims(newUserUid, customClaims)
+    return auth().setCustomUserClaims(newUserUid, customClaims)
       .then(() => {
-        return auth(app).getUser(newUserUid);
+        return auth().getUser(newUserUid);
       })
       .then((userRecord) => {
         // Confirm custom claims set on the UserRecord.
@@ -486,7 +482,7 @@ describe('admin.auth', () => {
       })
       .then((idToken) => {
         // Verify ID token contents.
-        return auth(app).verifyIdToken(idToken);
+        return auth().verifyIdToken(idToken);
       })
       .then((decodedIdToken: {[key: string]: any}) => {
         // Confirm expected claims set on the user's ID token.
@@ -496,10 +492,10 @@ describe('admin.auth', () => {
           }
         }
         // Test clearing of custom claims.
-        return auth(app).setCustomUserClaims(newUserUid, null);
+        return auth().setCustomUserClaims(newUserUid, null);
       })
       .then(() => {
-        return auth(app).getUser(newUserUid);
+        return auth().getUser(newUserUid);
       })
       .then((userRecord) => {
         // Custom claims should be cleared.
@@ -510,7 +506,7 @@ describe('admin.auth', () => {
       })
       .then((idToken) => {
         // Verify ID token contents.
-        return auth(app).verifyIdToken(idToken);
+        return auth().verifyIdToken(idToken);
       })
       .then((decodedIdToken: {[key: string]: any}) => {
         // Confirm all custom claims are cleared.
@@ -542,7 +538,7 @@ describe('admin.auth', () => {
         enrollmentTime: now,
       },
     ];
-    return auth(app).updateUser(newUserUid, {
+    return auth().updateUser(newUserUid, {
       email: updatedEmail,
       phoneNumber: updatedPhone,
       emailVerified: true,
@@ -563,7 +559,7 @@ describe('admin.auth', () => {
         expect(actualUserRecord.multiFactor.enrolledFactors.length).to.equal(2);
         expect(actualUserRecord.multiFactor.enrolledFactors).to.deep.equal(enrolledFactors);
         // Update list of second factors.
-        return auth(app).updateUser(newUserUid, {
+        return auth().updateUser(newUserUid, {
           multiFactor: {
             enrolledFactors: [enrolledFactors[0]],
           },
@@ -574,7 +570,7 @@ describe('admin.auth', () => {
         const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
         expect(actualUserRecord.multiFactor.enrolledFactors[0]).to.deep.equal(enrolledFactors[0]);
         // Remove all second factors.
-        return auth(app).updateUser(newUserUid, {
+        return auth().updateUser(newUserUid, {
           multiFactor: {
             enrolledFactors: null,
           },
@@ -587,33 +583,33 @@ describe('admin.auth', () => {
   });
 
   it('getUser() fails when called with a non-existing UID', () => {
-    return auth(app).getUser(nonexistentUid)
+    return auth().getUser(nonexistentUid)
       .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
   });
 
   it('getUserByEmail() fails when called with a non-existing email', () => {
-    return auth(app).getUserByEmail(nonexistentUid + '@example.com')
+    return auth().getUserByEmail(nonexistentUid + '@example.com')
       .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
   });
 
   it('getUserByPhoneNumber() fails when called with a non-existing phone number', () => {
-    return auth(app).getUserByPhoneNumber(nonexistentPhoneNumber)
+    return auth().getUserByPhoneNumber(nonexistentPhoneNumber)
       .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
   });
 
   it('updateUser() fails when called with a non-existing UID', () => {
-    return auth(app).updateUser(nonexistentUid, {
+    return auth().updateUser(nonexistentUid, {
       emailVerified: true,
     }).should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
   });
 
   it('deleteUser() fails when called with a non-existing UID', () => {
-    return auth(app).deleteUser(nonexistentUid)
+    return auth().deleteUser(nonexistentUid)
       .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
   });
 
   it('createCustomToken() mints a JWT that can be used to sign in', () => {
-    return auth(app).createCustomToken(newUserUid, {
+    return auth().createCustomToken(newUserUid, {
       isAdmin: true,
     })
       .then((customToken) => {
@@ -624,7 +620,7 @@ describe('admin.auth', () => {
         return user!.getIdToken();
       })
       .then((idToken) => {
-        return auth(app).verifyIdToken(idToken);
+        return auth().verifyIdToken(idToken);
       })
       .then((token) => {
         expect(token.uid).to.equal(newUserUid);
@@ -653,7 +649,7 @@ describe('admin.auth', () => {
   });
 
   it('verifyIdToken() fails when called with an invalid token', () => {
-    return auth(app).verifyIdToken('invalid-token')
+    return auth().verifyIdToken('invalid-token')
       .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
   });
 
@@ -670,7 +666,7 @@ describe('admin.auth', () => {
 
     // Create the test user before running this suite of tests.
     before(() => {
-      return auth(app).createUser(userData);
+      return auth().createUser(userData);
     });
 
     // Sign out after each test.
@@ -685,9 +681,9 @@ describe('admin.auth', () => {
 
     it('generatePasswordResetLink() should return a password reset link', () => {
       // Ensure old password set on created user.
-      return auth(app).updateUser(uid, {password: 'password'})
+      return auth().updateUser(uid, {password: 'password'})
         .then(() => {
-          return auth(app).generatePasswordResetLink(email, actionCodeSettings);
+          return auth().generatePasswordResetLink(email, actionCodeSettings);
         })
         .then((link) => {
           const code = getActionCode(link);
@@ -707,10 +703,10 @@ describe('admin.auth', () => {
 
     it('generateEmailVerificationLink() should return a verification link', () => {
       // Ensure the user's email is unverified.
-      return auth(app).updateUser(uid, {password: 'password', emailVerified: false})
+      return auth().updateUser(uid, {password: 'password', emailVerified: false})
         .then((userRecord) => {
           expect(userRecord.emailVerified).to.be.false;
-          return auth(app).generateEmailVerificationLink(email, actionCodeSettings);
+          return auth().generateEmailVerificationLink(email, actionCodeSettings);
         })
         .then((link) => {
           const code = getActionCode(link);
@@ -728,7 +724,7 @@ describe('admin.auth', () => {
     });
 
     it('generateSignInWithEmailLink() should return a sign-in link', () => {
-      return auth(app).generateSignInWithEmailLink(email, actionCodeSettings)
+      return auth().generateSignInWithEmailLink(email, actionCodeSettings)
         .then((link) => {
           expect(getContinueUrl(link)).equal(actionCodeSettings.url);
           return clientAuth().signInWithEmailLink(email, link);
@@ -793,14 +789,14 @@ describe('admin.auth', () => {
       const promises: Array<Promise<any>> = [];
       createdTenants.forEach((tenantId) => {
         promises.push(
-          auth(app).tenantManager().deleteTenant(tenantId)
+          auth().tenantManager().deleteTenant(tenantId)
             .catch(() => {/** Ignore. */}));
       });
       return Promise.all(promises);
     });
 
     it('createTenant() should resolve with a new tenant', () => {
-      return auth(app).tenantManager().createTenant(tenantOptions)
+      return auth().tenantManager().createTenant(tenantOptions)
         .then((actualTenant) => {
           createdTenantId = actualTenant.tenantId;
           createdTenants.push(createdTenantId);
@@ -831,7 +827,7 @@ describe('admin.auth', () => {
         if (!createdTenantId) {
           this.skip();
         } else {
-          tenantAwareAuth = auth(app).tenantManager().authForTenant(createdTenantId);
+          tenantAwareAuth = auth().tenantManager().authForTenant(createdTenantId);
         }
       });
 
@@ -1019,7 +1015,7 @@ describe('admin.auth', () => {
         if (!createdTenantId) {
           this.skip();
         } else {
-          tenantAwareAuth = auth(app).tenantManager().authForTenant(createdTenantId);
+          tenantAwareAuth = auth().tenantManager().authForTenant(createdTenantId);
         }
       });
 
@@ -1077,7 +1073,7 @@ describe('admin.auth', () => {
         if (!createdTenantId) {
           this.skip();
         } else {
-          tenantAwareAuth = auth(app).tenantManager().authForTenant(createdTenantId);
+          tenantAwareAuth = auth().tenantManager().authForTenant(createdTenantId);
         }
       });
 
@@ -1116,7 +1112,7 @@ describe('admin.auth', () => {
     });
 
     it('getTenant() should resolve with expected tenant', () => {
-      return auth(app).tenantManager().getTenant(createdTenantId)
+      return auth().tenantManager().getTenant(createdTenantId)
         .then((actualTenant) => {
           expect(actualTenant.toJSON()).to.deep.equal(expectedCreatedTenant);
         });
@@ -1137,10 +1133,10 @@ describe('admin.auth', () => {
           passwordRequired: false,
         },
       };
-      return auth(app).tenantManager().updateTenant(createdTenantId, updatedOptions)
+      return auth().tenantManager().updateTenant(createdTenantId, updatedOptions)
         .then((actualTenant) => {
           expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant);
-          return auth(app).tenantManager().updateTenant(createdTenantId, updatedOptions2);
+          return auth().tenantManager().updateTenant(createdTenantId, updatedOptions2);
         })
         .then((actualTenant) => {
           expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant2);
@@ -1152,7 +1148,7 @@ describe('admin.auth', () => {
       const tenantOptions2 = deepCopy(tenantOptions);
       tenantOptions2.displayName = 'testTenant2';
       const listAllTenantIds = (tenantIds: string[], nextPageToken?: string): Promise<void> => {
-        return auth(app).tenantManager().listTenants(100, nextPageToken)
+        return auth().tenantManager().listTenants(100, nextPageToken)
           .then((result) => {
             result.tenants.forEach((tenant) => {
               tenantIds.push(tenant.tenantId);
@@ -1162,7 +1158,7 @@ describe('admin.auth', () => {
             }
           });
       };
-      return auth(app).tenantManager().createTenant(tenantOptions2)
+      return auth().tenantManager().createTenant(tenantOptions2)
         .then((actualTenant) => {
           createdTenants.push(actualTenant.tenantId);
           // Test listTenants returns the expected tenants.
@@ -1177,9 +1173,9 @@ describe('admin.auth', () => {
     });
 
     it('deleteTenant() should successfully delete the provided tenant', () => {
-      return auth(app).tenantManager().deleteTenant(createdTenantId)
+      return auth().tenantManager().deleteTenant(createdTenantId)
         .then(() => {
-          return auth(app).tenantManager().getTenant(createdTenantId);
+          return auth().tenantManager().getTenant(createdTenantId);
         })
         .then(() => {
           throw new Error('unexpected success');
@@ -1216,14 +1212,14 @@ describe('admin.auth', () => {
 
     const removeTempConfigs = (): Promise<any> => {
       return Promise.all([
-        auth(app).deleteProviderConfig(authProviderConfig1.providerId).catch(() => {/* empty */}),
-        auth(app).deleteProviderConfig(authProviderConfig2.providerId).catch(() => {/* empty */}),
+        auth().deleteProviderConfig(authProviderConfig1.providerId).catch(() => {/* empty */}),
+        auth().deleteProviderConfig(authProviderConfig2.providerId).catch(() => {/* empty */}),
       ]);
     };
 
     // Clean up temp configurations used for test.
     before(() => {
-      return removeTempConfigs().then(() => auth(app).createProviderConfig(authProviderConfig1));
+      return removeTempConfigs().then(() => auth().createProviderConfig(authProviderConfig1));
     });
 
     after(() => {
@@ -1231,14 +1227,14 @@ describe('admin.auth', () => {
     });
 
     it('createProviderConfig() successfully creates a SAML config', () => {
-      return auth(app).createProviderConfig(authProviderConfig2)
+      return auth().createProviderConfig(authProviderConfig2)
         .then((config) => {
           assertDeepEqualUnordered(authProviderConfig2, config);
         });
     });
 
     it('getProviderConfig() successfully returns the expected SAML config', () => {
-      return auth(app).getProviderConfig(authProviderConfig1.providerId)
+      return auth().getProviderConfig(authProviderConfig1.providerId)
         .then((config) => {
           assertDeepEqualUnordered(authProviderConfig1, config);
         });
@@ -1247,7 +1243,7 @@ describe('admin.auth', () => {
     it('listProviderConfig() successfully returns the list of SAML providers', () => {
       const configs: AuthProviderConfig[] = [];
       const listProviders: any = (type: 'saml' | 'oidc', maxResults?: number, pageToken?: string) => {
-        return auth(app).listProviderConfigs({type, maxResults, pageToken})
+        return auth().listProviderConfigs({type, maxResults, pageToken})
           .then((result) => {
             result.providerConfigs.forEach((config: AuthProviderConfig) => {
               configs.push(config);
@@ -1286,7 +1282,7 @@ describe('admin.auth', () => {
         callbackURL: 'https://projectId3.firebaseapp.com/__/auth/handler',
         enableRequestSigning: false,
       };
-      return auth(app).updateProviderConfig(authProviderConfig1.providerId, modifiedConfigOptions)
+      return auth().updateProviderConfig(authProviderConfig1.providerId, modifiedConfigOptions)
         .then((config) => {
           const modifiedConfig = deepExtend(
             {providerId: authProviderConfig1.providerId}, modifiedConfigOptions);
@@ -1314,7 +1310,7 @@ describe('admin.auth', () => {
         callbackURL: 'https://projectId3.firebaseapp.com/__/auth/handler',
         enableRequestSigning: false,
       };
-      return auth(app).updateProviderConfig(authProviderConfig1.providerId, deltaChanges)
+      return auth().updateProviderConfig(authProviderConfig1.providerId, deltaChanges)
         .then((config) => {
           const modifiedConfig = deepExtend(
             {providerId: authProviderConfig1.providerId}, modifiedConfigOptions);
@@ -1323,8 +1319,8 @@ describe('admin.auth', () => {
     });
 
     it('deleteProviderConfig() successfully deletes an existing SAML config', () => {
-      return auth(app).deleteProviderConfig(authProviderConfig1.providerId).then(() => {
-        return auth(app).getProviderConfig(authProviderConfig1.providerId)
+      return auth().deleteProviderConfig(authProviderConfig1.providerId).then(() => {
+        return auth().getProviderConfig(authProviderConfig1.providerId)
           .should.eventually.be.rejected.and.have.property('code', 'auth/configuration-not-found');
       });
     });
@@ -1348,14 +1344,14 @@ describe('admin.auth', () => {
 
     const removeTempConfigs = (): Promise<any> => {
       return Promise.all([
-        auth(app).deleteProviderConfig(authProviderConfig1.providerId).catch(() => {/* empty */}),
-        auth(app).deleteProviderConfig(authProviderConfig2.providerId).catch(() => {/* empty */}),
+        auth().deleteProviderConfig(authProviderConfig1.providerId).catch(() => {/* empty */}),
+        auth().deleteProviderConfig(authProviderConfig2.providerId).catch(() => {/* empty */}),
       ]);
     };
 
     // Clean up temp configurations used for test.
     before(() => {
-      return removeTempConfigs().then(() => auth(app).createProviderConfig(authProviderConfig1));
+      return removeTempConfigs().then(() => auth().createProviderConfig(authProviderConfig1));
     });
 
     after(() => {
@@ -1363,14 +1359,14 @@ describe('admin.auth', () => {
     });
 
     it('createProviderConfig() successfully creates an OIDC config', () => {
-      return auth(app).createProviderConfig(authProviderConfig2)
+      return auth().createProviderConfig(authProviderConfig2)
         .then((config) => {
           assertDeepEqualUnordered(authProviderConfig2, config);
         });
     });
 
     it('getProviderConfig() successfully returns the expected OIDC config', () => {
-      return auth(app).getProviderConfig(authProviderConfig1.providerId)
+      return auth().getProviderConfig(authProviderConfig1.providerId)
         .then((config) => {
           assertDeepEqualUnordered(authProviderConfig1, config);
         });
@@ -1379,7 +1375,7 @@ describe('admin.auth', () => {
     it('listProviderConfig() successfully returns the list of OIDC providers', () => {
       const configs: AuthProviderConfig[] = [];
       const listProviders: any = (type: 'saml' | 'oidc', maxResults?: number, pageToken?: string) => {
-        return auth(app).listProviderConfigs({type, maxResults, pageToken})
+        return auth().listProviderConfigs({type, maxResults, pageToken})
           .then((result) => {
             result.providerConfigs.forEach((config: AuthProviderConfig) => {
               configs.push(config);
@@ -1414,7 +1410,7 @@ describe('admin.auth', () => {
         issuer: 'https://oidc.com/issuer3',
         clientId: 'CLIENT_ID3',
       };
-      return auth(app).updateProviderConfig(authProviderConfig1.providerId, modifiedConfigOptions)
+      return auth().updateProviderConfig(authProviderConfig1.providerId, modifiedConfigOptions)
         .then((config) => {
           const modifiedConfig = deepExtend(
             {providerId: authProviderConfig1.providerId}, modifiedConfigOptions);
@@ -1434,7 +1430,7 @@ describe('admin.auth', () => {
         issuer: 'https://oidc.com/issuer4',
         clientId: 'CLIENT_ID3',
       };
-      return auth(app).updateProviderConfig(authProviderConfig1.providerId, deltaChanges)
+      return auth().updateProviderConfig(authProviderConfig1.providerId, deltaChanges)
         .then((config) => {
           const modifiedConfig = deepExtend(
             {providerId: authProviderConfig1.providerId}, modifiedConfigOptions);
@@ -1443,8 +1439,8 @@ describe('admin.auth', () => {
     });
 
     it('deleteProviderConfig() successfully deletes an existing OIDC config', () => {
-      return auth(app).deleteProviderConfig(authProviderConfig1.providerId).then(() => {
-        return auth(app).getProviderConfig(authProviderConfig1.providerId)
+      return auth().deleteProviderConfig(authProviderConfig1.providerId).then(() => {
+        return auth().getProviderConfig(authProviderConfig1.providerId)
           .should.eventually.be.rejected.and.have.property('code', 'auth/configuration-not-found');
       });
     });
@@ -1452,26 +1448,26 @@ describe('admin.auth', () => {
 
   it('deleteUser() deletes the user with the given UID', () => {
     return Promise.all([
-      auth(app).deleteUser(newUserUid),
-      auth(app).deleteUser(newMultiFactorUserUid),
-      auth(app).deleteUser(uidFromCreateUserWithoutUid),
+      auth().deleteUser(newUserUid),
+      auth().deleteUser(newMultiFactorUserUid),
+      auth().deleteUser(uidFromCreateUserWithoutUid),
     ]).should.eventually.be.fulfilled;
   });
 
   describe('deleteUsers()', () => {
     it('deletes users', async () => {
-      const uid1 = await auth(app).createUser({}).then((ur) => ur.uid);
-      const uid2 = await auth(app).createUser({}).then((ur) => ur.uid);
-      const uid3 = await auth(app).createUser({}).then((ur) => ur.uid);
+      const uid1 = await auth().createUser({}).then((ur) => ur.uid);
+      const uid2 = await auth().createUser({}).then((ur) => ur.uid);
+      const uid3 = await auth().createUser({}).then((ur) => ur.uid);
       const ids = [{uid: uid1}, {uid: uid2}, {uid: uid3}];
 
-      return auth(app).deleteUsers([uid1, uid2, uid3])
+      return auth().deleteUsers([uid1, uid2, uid3])
         .then((deleteUsersResult) => {
           expect(deleteUsersResult.successCount).to.equal(3);
           expect(deleteUsersResult.failureCount).to.equal(0);
           expect(deleteUsersResult.errors).to.have.length(0);
 
-          return auth(app).getUsers(ids);
+          return auth().getUsers(ids);
         })
         .then((getUsersResult) => {
           expect(getUsersResult.users).to.have.length(0);
@@ -1480,17 +1476,17 @@ describe('admin.auth', () => {
     });
 
     it('deletes users that exist even when non-existing users also specified', async () => {
-      const uid1 = await auth(app).createUser({}).then((ur) => ur.uid);
+      const uid1 = await auth().createUser({}).then((ur) => ur.uid);
       const uid2 = 'uid-that-doesnt-exist';
       const ids = [{uid: uid1}, {uid: uid2}];
 
-      return auth(app).deleteUsers([uid1, uid2])
+      return auth().deleteUsers([uid1, uid2])
         .then((deleteUsersResult) => {
           expect(deleteUsersResult.successCount).to.equal(2);
           expect(deleteUsersResult.failureCount).to.equal(0);
           expect(deleteUsersResult.errors).to.have.length(0);
 
-          return auth(app).getUsers(ids);
+          return auth().getUsers(ids);
         })
         .then((getUsersResult) => {
           expect(getUsersResult.users).to.have.length(0);
@@ -1499,15 +1495,15 @@ describe('admin.auth', () => {
     });
 
     it('is idempotent', async () => {
-      const uid = await auth(app).createUser({}).then((ur) => ur.uid);
+      const uid = await auth().createUser({}).then((ur) => ur.uid);
 
-      return auth(app).deleteUsers([uid])
+      return auth().deleteUsers([uid])
         .then((deleteUsersResult) => {
           expect(deleteUsersResult.successCount).to.equal(1);
           expect(deleteUsersResult.failureCount).to.equal(0);
         })
         // Delete the user again, ensuring that everything still counts as a success.
-        .then(() => auth(app).deleteUsers([uid]))
+        .then(() => auth().deleteUsers([uid]))
         .then((deleteUsersResult) => {
           expect(deleteUsersResult.successCount).to.equal(1);
           expect(deleteUsersResult.failureCount).to.equal(0);
@@ -1526,7 +1522,7 @@ describe('admin.auth', () => {
     const uid3 = sessionCookieUids[2];
 
     it('creates a valid Firebase session cookie', () => {
-      return auth(app).createCustomToken(uid, {admin: true, groupId: '1234'})
+      return auth().createCustomToken(uid, {admin: true, groupId: '1234'})
         .then((customToken) => clientAuth().signInWithCustomToken(customToken))
         .then(({user}) => {
           expect(user).to.exist;
@@ -1534,7 +1530,7 @@ describe('admin.auth', () => {
         })
         .then((idToken) => {
           currentIdToken = idToken;
-          return auth(app).verifyIdToken(idToken);
+          return auth().verifyIdToken(idToken);
         }).then((decodedIdTokenClaims) => {
           expectedExp = Math.floor((new Date().getTime() + expiresIn) / 1000);
           payloadClaims = decodedIdTokenClaims;
@@ -1544,9 +1540,9 @@ describe('admin.auth', () => {
           delete payloadClaims.iat;
           expectedIat = Math.floor(new Date().getTime() / 1000);
           // One day long session cookie.
-          return auth(app).createSessionCookie(currentIdToken, {expiresIn});
+          return auth().createSessionCookie(currentIdToken, {expiresIn});
         })
-        .then((sessionCookie) => auth(app).verifySessionCookie(sessionCookie))
+        .then((sessionCookie) => auth().verifySessionCookie(sessionCookie))
         .then((decodedIdToken) => {
           // Check for expected expiration with +/-5 seconds of variation.
           expect(decodedIdToken.exp).to.be.within(expectedExp - 5, expectedExp + 5);
@@ -1562,7 +1558,7 @@ describe('admin.auth', () => {
 
     it('creates a revocable session cookie', () => {
       let currentSessionCookie: string;
-      return auth(app).createCustomToken(uid2)
+      return auth().createCustomToken(uid2)
         .then((customToken) => clientAuth().signInWithCustomToken(customToken))
         .then(({user}) => {
           expect(user).to.exist;
@@ -1570,26 +1566,26 @@ describe('admin.auth', () => {
         })
         .then((idToken) => {
           // One day long session cookie.
-          return auth(app).createSessionCookie(idToken, {expiresIn});
+          return auth().createSessionCookie(idToken, {expiresIn});
         })
         .then((sessionCookie) => {
           currentSessionCookie = sessionCookie;
           return new Promise((resolve) => setTimeout(() => resolve(
-            auth(app).revokeRefreshTokens(uid2),
+            auth().revokeRefreshTokens(uid2),
           ), 1000));
         })
         .then(() => {
-          return auth(app).verifySessionCookie(currentSessionCookie)
+          return auth().verifySessionCookie(currentSessionCookie)
             .should.eventually.be.fulfilled;
         })
         .then(() => {
-          return auth(app).verifySessionCookie(currentSessionCookie, true)
+          return auth().verifySessionCookie(currentSessionCookie, true)
             .should.eventually.be.rejected.and.have.property('code', 'auth/session-cookie-revoked');
         });
     });
 
     it('fails when called with a revoked ID token', () => {
-      return auth(app).createCustomToken(uid3, {admin: true, groupId: '1234'})
+      return auth().createCustomToken(uid3, {admin: true, groupId: '1234'})
         .then((customToken) => clientAuth().signInWithCustomToken(customToken))
         .then(({user}) => {
           expect(user).to.exist;
@@ -1598,11 +1594,11 @@ describe('admin.auth', () => {
         .then((idToken) => {
           currentIdToken = idToken;
           return new Promise((resolve) => setTimeout(() => resolve(
-            auth(app).revokeRefreshTokens(uid3),
+            auth().revokeRefreshTokens(uid3),
           ), 1000));
         })
         .then(() => {
-          return auth(app).createSessionCookie(currentIdToken, {expiresIn})
+          return auth().createSessionCookie(currentIdToken, {expiresIn})
             .should.eventually.be.rejected.and.have.property('code', 'auth/id-token-expired');
         });
     });
@@ -1612,19 +1608,19 @@ describe('admin.auth', () => {
   describe('verifySessionCookie()', () => {
     const uid = sessionCookieUids[0];
     it('fails when called with an invalid session cookie', () => {
-      return auth(app).verifySessionCookie('invalid-token')
+      return auth().verifySessionCookie('invalid-token')
         .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
     });
 
     it('fails when called with a Firebase ID token', () => {
-      return auth(app).createCustomToken(uid)
+      return auth().createCustomToken(uid)
         .then((customToken) => clientAuth().signInWithCustomToken(customToken))
         .then(({user}) => {
           expect(user).to.exist;
           return user!.getIdToken();
         })
         .then((idToken) => {
-          return auth(app).verifySessionCookie(idToken)
+          return auth().verifySessionCookie(idToken)
             .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
         });
     });
@@ -1838,12 +1834,12 @@ describe('admin.auth', () => {
         ],
       };
       uids.push(importUserRecord.uid);
-      return auth(app).importUsers([importUserRecord])
+      return auth().importUsers([importUserRecord])
         .then((result) => {
           expect(result.failureCount).to.equal(0);
           expect(result.successCount).to.equal(1);
           expect(result.errors.length).to.equal(0);
-          return auth(app).getUser(uid);
+          return auth().getUser(uid);
         }).then((userRecord) => {
           // The phone number provider will be appended to the list of accounts.
           importUserRecord.providerData?.push({
@@ -1904,12 +1900,12 @@ describe('admin.auth', () => {
       };
       uids.push(importUserRecord.uid);
 
-      return auth(app).importUsers([importUserRecord])
+      return auth().importUsers([importUserRecord])
         .then((result) => {
           expect(result.failureCount).to.equal(0);
           expect(result.successCount).to.equal(1);
           expect(result.errors.length).to.equal(0);
-          return auth(app).getUser(uid);
+          return auth().getUser(uid);
         }).then((userRecord) => {
           // Confirm second factors added to user.
           const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
@@ -1926,7 +1922,7 @@ describe('admin.auth', () => {
         {uid: generateRandomString(20).toLowerCase(), phoneNumber: '+1invalid'},
         {uid: generateRandomString(20).toLowerCase(), emailVerified: 'invalid'} as any,
       ];
-      return auth(app).importUsers(users)
+      return auth().importUsers(users)
         .then((result) => {
           expect(result.successCount).to.equal(0);
           expect(result.failureCount).to.equal(4);
@@ -1958,10 +1954,9 @@ function testImportAndSignInUser(
   importOptions: any,
   rawPassword: string): Promise<void> {
   const users = [importUserRecord];
-  const app: App = defaultApp;
 
   // Import the user record.
-  return auth(app).importUsers(users, importOptions)
+  return auth().importUsers(users, importOptions)
     .then((result) => {
       // Verify the import result.
       expect(result.failureCount).to.equal(0);
@@ -1986,8 +1981,8 @@ function testImportAndSignInUser(
  * @return {Promise} A promise that resolves when the user is deleted
  *     or is found not to exist.
  */
-function deletePhoneNumberUser(app: App, phoneNumber: string): Promise<void> {
-  return auth(app).getUserByPhoneNumber(phoneNumber)
+function deletePhoneNumberUser(phoneNumber: string): Promise<void> {
+  return auth().getUserByPhoneNumber(phoneNumber)
     .then((userRecord) => {
       return safeDelete(userRecord.uid);
     })
@@ -2005,13 +2000,13 @@ function deletePhoneNumberUser(app: App, phoneNumber: string): Promise<void> {
  *
  * @return {Promise} A promise that resolves when test preparations are ready.
  */
-function cleanup(app: App): Promise<any> {
+function cleanup(): Promise<any> {
   // Delete any existing users that could affect the test outcome.
   const promises: Array<Promise<void>> = [
-    deletePhoneNumberUser(app, testPhoneNumber),
-    deletePhoneNumberUser(app, testPhoneNumber2),
-    deletePhoneNumberUser(app, nonexistentPhoneNumber),
-    deletePhoneNumberUser(app, updatedPhone),
+    deletePhoneNumberUser(testPhoneNumber),
+    deletePhoneNumberUser(testPhoneNumber2),
+    deletePhoneNumberUser(nonexistentPhoneNumber),
+    deletePhoneNumberUser(updatedPhone),
   ];
   // Delete users created for session cookie tests.
   sessionCookieUids.forEach((uid) => uids.push(uid));
@@ -2071,11 +2066,10 @@ function getTenantId(link: string): string {
  * @return {Promise} A promise that resolves when delete operation resolves.
  */
 function safeDelete(uid: string): Promise<void> {
-  const app = defaultApp; // TODO ... 
   // Wait for delete queue to empty.
   const deletePromise = deleteQueue
     .then(() => {
-      return auth(app).deleteUser(uid);
+      return auth().deleteUser(uid);
     })
     .catch((error) => {
       // Suppress user not found error.

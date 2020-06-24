@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import * as admin from '../../src/index';
+import * as admin from '../../lib/index';
 import fs = require('fs');
 import minimist = require('minimist');
 import path = require('path');
 import {random} from 'lodash';
-import { Credential, GoogleOAuthAccessToken } from '../../src/auth/credential';
-import { initializeApp } from '../../src';
-import { FirebaseApp } from '../../src/firebase-app';
+import { Credential, GoogleOAuthAccessToken } from '../../lib/auth/';
+import { initializeApp } from '../../lib';
+import { FirebaseApp } from '../../lib/firebase-app';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const chalk = require('chalk');

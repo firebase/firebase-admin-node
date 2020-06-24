@@ -15,7 +15,6 @@
  */
 
 export * from './auth';
-export * from './auth-api-request';
 export * from './auth-config';
 export * from './credential';
 export * from './identifier';

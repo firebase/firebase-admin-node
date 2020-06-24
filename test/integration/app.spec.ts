@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import * as admin from '../../src/index';
+import * as admin from '../../lib/index';
 import {expect} from 'chai';
 import {
   defaultApp, nullApp, nonNullApp, databaseUrl, projectId, storageBucket,

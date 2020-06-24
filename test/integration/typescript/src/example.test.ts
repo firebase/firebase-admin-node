@@ -20,8 +20,8 @@ import {expect} from 'chai';
 // import {Firestore} from '@google-cloud/firestore';
 
 // import * as admin from 'firebase-admin';
-import {FirebaseApp} from '../../../../src/firebase-app';
-import {Auth, auth} from '../../../../src/auth/';
+import {FirebaseApp} from '../../../../lib/firebase-app';
+import {Auth, auth} from '../../../../lib/auth/';
 
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
