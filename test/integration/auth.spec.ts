@@ -257,7 +257,7 @@ describe('admin.auth', () => {
       // left over from a prior run).
       const uidsToDelete = usersToCreate.map((user) => user.uid);
       uidsToDelete.push(importUser1.uid);
-      await admin.auth().deleteUsers(uidsToDelete);
+      await deleteUsersWithDelay(uidsToDelete);
 
       // Create/import users required by these tests
       await Promise.all(usersToCreate.map((user) => admin.auth().createUser(user)));
@@ -267,7 +267,7 @@ describe('admin.auth', () => {
     after(async () => {
       const uidsToDelete = usersToCreate.map((user) => user.uid);
       uidsToDelete.push(importUser1.uid);
-      await admin.auth().deleteUsers(uidsToDelete);
+      await deleteUsersWithDelay(uidsToDelete);
     });
 
     it('returns users by various identifier types in a single call', async () => {
@@ -1461,7 +1461,7 @@ describe('admin.auth', () => {
       const uid3 = await admin.auth().createUser({}).then((ur) => ur.uid);
       const ids = [{uid: uid1}, {uid: uid2}, {uid: uid3}];
 
-      return admin.auth().deleteUsers([uid1, uid2, uid3])
+      return deleteUsersWithDelay([uid1, uid2, uid3])
         .then((deleteUsersResult) => {
           expect(deleteUsersResult.successCount).to.equal(3);
           expect(deleteUsersResult.failureCount).to.equal(0);
@@ -1480,7 +1480,7 @@ describe('admin.auth', () => {
       const uid2 = 'uid-that-doesnt-exist';
       const ids = [{uid: uid1}, {uid: uid2}];
 
-      return admin.auth().deleteUsers([uid1, uid2])
+      return deleteUsersWithDelay([uid1, uid2])
         .then((deleteUsersResult) => {
           expect(deleteUsersResult.successCount).to.equal(2);
           expect(deleteUsersResult.failureCount).to.equal(0);
@@ -1497,13 +1497,13 @@ describe('admin.auth', () => {
     it('is idempotent', async () => {
       const uid = await admin.auth().createUser({}).then((ur) => ur.uid);
 
-      return admin.auth().deleteUsers([uid])
+      return deleteUsersWithDelay([uid])
         .then((deleteUsersResult) => {
           expect(deleteUsersResult.successCount).to.equal(1);
           expect(deleteUsersResult.failureCount).to.equal(0);
         })
         // Delete the user again, ensuring that everything still counts as a success.
-        .then(() => admin.auth().deleteUsers([uid]))
+        .then(() => deleteUsersWithDelay([uid]))
         .then((deleteUsersResult) => {
           expect(deleteUsersResult.successCount).to.equal(1);
           expect(deleteUsersResult.failureCount).to.equal(0);
@@ -2081,6 +2081,22 @@ function safeDelete(uid: string): Promise<void> {
     // Do nothing.
   });
   return deletePromise;
+}
+
+/**
+ * Deletes the specified list of users by calling the `deleteUsers()` API. This
+ * API is rate limited at 1 QPS, and therefore this helper function staggers
+ * subsequent invocations by adding 1 second delay to each call.
+ *
+ * @param {string[]} uids The list of user identifiers to delete.
+ * @return {Promise} A promise that resolves when delete operation resolves.
+ */
+function deleteUsersWithDelay(uids: string[]): Promise<admin.auth.DeleteUsersResult> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, 1000);
+  }).then(() => {
+    return admin.auth().deleteUsers(uids);
+  });
 }
 
 /**
