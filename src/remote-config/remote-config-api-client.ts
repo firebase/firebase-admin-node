@@ -237,9 +237,6 @@ export class RemoteConfigApiClient {
   public listVersions(options?: ListVersionsOptions): Promise<ListVersionsResult> {
     if (typeof options !== 'undefined') {
       options = this.validateListVersionsOptions(options);
-      // Remove undefined fields from options
-      Object.keys(options).forEach(key =>
-        (options as any)[key] === undefined && delete (options as any)[key])
     }
     return this.getUrl()
       .then((url) => {
@@ -480,6 +477,10 @@ export class RemoteConfigApiClient {
         optionsCopy.endTime = new Date(optionsCopy.endTime).toISOString();
       }
     }
+    // Remove undefined fields from optionsCopy
+    Object.keys(optionsCopy).forEach(key =>
+      (typeof (optionsCopy as any)[key] === 'undefined') && delete (optionsCopy as any)[key]
+    );
     return optionsCopy;
   }
 }

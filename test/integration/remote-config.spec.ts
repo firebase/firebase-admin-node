@@ -70,7 +70,7 @@ const VALID_CONDITIONS: admin.remoteConfig.RemoteConfigCondition[] = [
   },
 ];
 
-const VALID_VERSION: admin.remoteConfig.Version = {
+const VALID_VERSION = {
   description: `template description ${Date.now()}`,
 }
 
@@ -149,7 +149,7 @@ describe('admin.remoteConfig', () => {
   });
 
   describe('getTemplate', () => {
-    it('verfy that getTemplate() returns the most recently published template', () => {
+    it('should return the most recently published template', () => {
       return admin.remoteConfig().getTemplate()
         .then((template) => {
           expect(template.etag).matches(/^etag-[0-9]*-[0-9]*$/);
@@ -186,23 +186,13 @@ describe('admin.remoteConfig', () => {
       versionTwoNumber = activeTemplate.version!.versionNumber!;
     });
 
-    it('verfy that getTemplateAtVersion() returns the requested template version v1', () => {
+    it('should return the requested template version v1', () => {
       return admin.remoteConfig().getTemplateAtVersion(versionOneNumber)
         .then((template) => {
           expect(template.etag).matches(/^etag-[0-9]*-[0-9]*$/);
           expect(template.version).to.be.not.undefined;
           expect(template.version!.versionNumber).equals(versionOneNumber);
           expect(template.version!.description).equals(versionOneDescription);
-        });
-    });
-
-    it('verfy that getTemplateAtVersion() returns the requested template version v2', () => {
-      return admin.remoteConfig().getTemplateAtVersion(versionTwoNumber)
-        .then((template) => {
-          expect(template.etag).matches(/^etag-[0-9]*-[0-9]*$/);
-          expect(template.version).to.be.not.undefined;
-          expect(template.version!.versionNumber).equals(versionTwoNumber);
-          expect(template.version!.description).equals(versionTwoDescription);
         });
     });
   });
