@@ -20,7 +20,5 @@ export * from './credential';
 export * from './identifier';
 export * from './tenant';
 export * from './tenant-manager';
-export * from './token-generator';
-export * from './token-verifier';
 export * from './user-import-builder';
 export * from './user-record';

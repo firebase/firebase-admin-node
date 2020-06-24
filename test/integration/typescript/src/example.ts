@@ -14,12 +14,8 @@
  * limitations under the License.
  */
 
-// import * as firebase from 'firebase-admin';
-import { initializeApp, cert } from '../../../../lib/';
-// import * as admin from '../../../../lib/';
-// import { initializeApp, App, cert } from '../../../../lib';
+import { initializeApp, cert } from '../../../../lib';
 import { FirebaseApp } from '../../../../lib/firebase-app';
-// TODO: If you use FirebaseApp, it doesn't work...
 
 export function initApp(serviceAcct: any, name: string): FirebaseApp {
   return initializeApp({

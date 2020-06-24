@@ -30,7 +30,6 @@ import {FirebaseServiceInterface} from '../../src/firebase-service';
 import {FirebaseApp, FirebaseAccessToken} from '../../src/firebase-app';
 import {FirebaseNamespace, FirebaseNamespaceInternals, FIREBASE_CONFIG_VAR} from '../../src/firebase-namespace';
 
-// import {Auth} from '../../src/auth/auth';
 import { FirebaseAppError, AppErrorCodes } from '../../src/utils/error';
 
 chai.should();

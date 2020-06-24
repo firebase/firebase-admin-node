@@ -31,6 +31,7 @@ import { AuthProviderConfig } from '../../lib/auth/auth-config';
 import { deepExtend, deepCopy } from '../../lib/utils/deep-copy';
 import { User, FirebaseAuth } from '@firebase/auth-types';
 import { TenantOptions, SecondFactor, UserImportOptions, PhoneMultiFactorInfo, UserImportRecord, UserRecord, TenantAwareAuth, auth } from '../../lib/auth/';
+import { auth as auth2 } from '../../lib/auth/';
 
 const chalk = require('chalk'); // eslint-disable-line @typescript-eslint/no-var-requires
 
@@ -211,6 +212,14 @@ describe('admin.auth', () => {
       .then((userRecord) => {
         expect(userRecord.uid).to.equal(newUserUid);
       });
+  });
+
+  it('auth() and auth2() return the same object for default', () => {
+    return expect(auth()).to.equal(auth2());
+  });
+
+  it('auth() and auth2() return the same object for noServiceAccountApp', () => {
+    return expect(auth(noServiceAccountApp)).to.equal(auth2(noServiceAccountApp));
   });
 
   describe('getUsers()', () => {

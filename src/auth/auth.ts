@@ -41,6 +41,7 @@ import {
 } from './auth-config';
 import {TenantManager} from './tenant-manager';
 
+const Auth_: {[name: string]: Auth} = {};
 
 /**
  * Internals of an Auth instance.
@@ -872,7 +873,10 @@ export class Auth extends BaseAuth<AuthRequestHandler> implements FirebaseServic
 
 export function auth(app?: FirebaseApp): Auth {
   if (typeof(app) === 'undefined') {
-    return new Auth(admin.app());
+    app = admin.app();
   }
-  return new Auth(app);
+  if (!(app.name in Auth_)) {
+    Auth_[app.name] = new Auth(app);
+  }
+  return Auth_[app.name];
 }
