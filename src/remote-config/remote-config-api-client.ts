@@ -20,6 +20,7 @@ import { FirebaseRemoteConfigError, RemoteConfigErrorCode } from './remote-confi
 import { FirebaseApp } from '../firebase-app';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
+import { deepCopy } from '../utils/deep-copy';
 
 // Remote Config backend constants
 const FIREBASE_REMOTE_CONFIG_V1_API = 'https://firebaseremoteconfig.googleapis.com/v1';
@@ -84,6 +85,43 @@ export interface RemoteConfigTemplate {
   parameters: { [key: string]: RemoteConfigParameter };
   parameterGroups: { [key: string]: RemoteConfigParameterGroup };
   readonly etag: string;
+  version?: Version;
+}
+
+/** Interface representing a Remote Config version. */
+export interface Version {
+  versionNumber?: string; // int64 format
+  updateTime?: string; // in UTC
+  updateOrigin?: ('REMOTE_CONFIG_UPDATE_ORIGIN_UNSPECIFIED' | 'CONSOLE' |
+    'REST_API' | 'ADMIN_SDK_NODE');
+  updateType?: ('REMOTE_CONFIG_UPDATE_TYPE_UNSPECIFIED' |
+    'INCREMENTAL_UPDATE' | 'FORCED_UPDATE' | 'ROLLBACK');
+  updateUser?: RemoteConfigUser;
+  description?: string;
+  rollbackSource?: string;
+  isLegacy?: boolean;
+}
+
+/** Interface representing a list of Remote Config template versions. */
+export interface ListVersionsResult {
+  versions: Version[];
+  nextPageToken?: string;
+}
+
+/** Interface representing a Remote Config list version options. */
+export interface ListVersionsOptions {
+  pageSize?: number;
+  pageToken?: string;
+  endVersionNumber?: string | number;
+  startTime?: Date | string;
+  endTime?: Date | string;
+}
+
+/** Interface representing a Remote Config user. */
+export interface RemoteConfigUser {
+  email: string;
+  name?: string;
+  imageUrl?: string;
 }
 
 /**
@@ -117,17 +155,27 @@ export class RemoteConfigApiClient {
         return this.httpClient.send(request);
       })
       .then((resp) => {
-        if (!validator.isNonEmptyString(resp.headers['etag'])) {
-          throw new FirebaseRemoteConfigError(
-            'invalid-argument',
-            'ETag header is not present in the server response.');
-        }
-        return {
-          conditions: resp.data.conditions,
-          parameters: resp.data.parameters,
-          parameterGroups: resp.data.parameterGroups,
-          etag: resp.headers['etag'],
+        return this.toRemoteConfigTemplate(resp);
+      })
+      .catch((err) => {
+        throw this.toFirebaseError(err);
+      });
+  }
+
+  public getTemplateAtVersion(versionNumber: number | string): Promise<RemoteConfigTemplate> {
+    const data = { versionNumber: this.validateVersionNumber(versionNumber) };
+    return this.getUrl()
+      .then((url) => {
+        const request: HttpRequestConfig = {
+          method: 'GET',
+          url: `${url}/remoteConfig`,
+          headers: FIREBASE_REMOTE_CONFIG_HEADERS,
+          data
         };
+        return this.httpClient.send(request);
+      })
+      .then((resp) => {
+        return this.toRemoteConfigTemplate(resp);
       })
       .catch((err) => {
         throw this.toFirebaseError(err);
@@ -135,23 +183,14 @@ export class RemoteConfigApiClient {
   }
 
   public validateTemplate(template: RemoteConfigTemplate): Promise<RemoteConfigTemplate> {
-    this.validateRemoteConfigTemplate(template);
+    template = this.validateInputRemoteConfigTemplate(template);
     return this.sendPutRequest(template, template.etag, true)
       .then((resp) => {
-        if (!validator.isNonEmptyString(resp.headers['etag'])) {
-          throw new FirebaseRemoteConfigError(
-            'invalid-argument',
-            'ETag header is not present in the server response.');
-        }
-        return {
-          conditions: resp.data.conditions,
-          parameters: resp.data.parameters,
-          parameterGroups: resp.data.parameterGroups,
-          // validating a template returns an etag with the suffix -0 means that your update 
-          // was successfully validated. We set the etag back to the original etag of the template
-          // to allow future operations.
-          etag: template.etag,
-        };
+        // validating a template returns an etag with the suffix -0 means that your update 
+        // was successfully validated. We set the etag back to the original etag of the template
+        // to allow future operations.
+        this.validateEtag(resp.headers['etag']);
+        return this.toRemoteConfigTemplate(resp, template.etag);
       })
       .catch((err) => {
         throw this.toFirebaseError(err);
@@ -159,7 +198,7 @@ export class RemoteConfigApiClient {
   }
 
   public publishTemplate(template: RemoteConfigTemplate, options?: { force: boolean }): Promise<RemoteConfigTemplate> {
-    this.validateRemoteConfigTemplate(template);
+    template = this.validateInputRemoteConfigTemplate(template);
     let ifMatch: string = template.etag;
     if (options && options.force == true) {
       // setting `If-Match: *` forces the Remote Config template to be updated
@@ -168,17 +207,49 @@ export class RemoteConfigApiClient {
     }
     return this.sendPutRequest(template, ifMatch)
       .then((resp) => {
-        if (!validator.isNonEmptyString(resp.headers['etag'])) {
-          throw new FirebaseRemoteConfigError(
-            'invalid-argument',
-            'ETag header is not present in the server response.');
-        }
-        return {
-          conditions: resp.data.conditions,
-          parameters: resp.data.parameters,
-          parameterGroups: resp.data.parameterGroups,
-          etag: resp.headers['etag'],
+        return this.toRemoteConfigTemplate(resp);
+      })
+      .catch((err) => {
+        throw this.toFirebaseError(err);
+      });
+  }
+
+  public rollback(versionNumber: number | string): Promise<RemoteConfigTemplate> {
+    const data = { versionNumber: this.validateVersionNumber(versionNumber) };
+    return this.getUrl()
+      .then((url) => {
+        const request: HttpRequestConfig = {
+          method: 'POST',
+          url: `${url}/remoteConfig:rollback`,
+          headers: FIREBASE_REMOTE_CONFIG_HEADERS,
+          data
         };
+        return this.httpClient.send(request);
+      })
+      .then((resp) => {
+        return this.toRemoteConfigTemplate(resp);
+      })
+      .catch((err) => {
+        throw this.toFirebaseError(err);
+      });
+  }
+
+  public listVersions(options?: ListVersionsOptions): Promise<ListVersionsResult> {
+    if (typeof options !== 'undefined') {
+      options = this.validateListVersionsOptions(options);
+    }
+    return this.getUrl()
+      .then((url) => {
+        const request: HttpRequestConfig = {
+          method: 'GET',
+          url: `${url}/remoteConfig:listVersions`,
+          headers: FIREBASE_REMOTE_CONFIG_HEADERS,
+          data: options
+        };
+        return this.httpClient.send(request);
+      })
+      .then((resp) => {
+        return resp.data;
       })
       .catch((err) => {
         throw this.toFirebaseError(err);
@@ -200,6 +271,7 @@ export class RemoteConfigApiClient {
             conditions: template.conditions,
             parameters: template.parameters,
             parameterGroups: template.parameterGroups,
+            version: template.version,
           }
         };
         return this.httpClient.send(request);
@@ -255,37 +327,157 @@ export class RemoteConfigApiClient {
   }
 
   /**
+   * Creates a RemoteConfigTemplate from the API response.
+   * If provided, customEtag is used instead of the etag returned in the API response.
+   *
+   * @param {HttpResponse} resp API response object.
+   * @param {string} customEtag A custom etag to replace the etag fom the API response (Optional).
+   */
+  private toRemoteConfigTemplate(resp: HttpResponse, customEtag?: string): RemoteConfigTemplate {
+    const etag = (typeof customEtag == 'undefined') ? resp.headers['etag'] : customEtag;
+    this.validateEtag(etag);
+    return {
+      conditions: resp.data.conditions,
+      parameters: resp.data.parameters,
+      parameterGroups: resp.data.parameterGroups,
+      etag,
+      version: resp.data.version,
+    };
+  }
+
+  /**
    * Checks if the given RemoteConfigTemplate object is valid.
    * The object must have valid parameters, parameter groups, conditions, and an etag.
+   * Removes output only properties from version metadata.
    *
    * @param {RemoteConfigTemplate} template A RemoteConfigTemplate object to be validated.
+   * 
+   * @returns {RemoteConfigTemplate} The validated RemoteConfigTemplate object.
    */
-  private validateRemoteConfigTemplate(template: RemoteConfigTemplate): void {
-    if (!validator.isNonNullObject(template)) {
+  private validateInputRemoteConfigTemplate(template: RemoteConfigTemplate): RemoteConfigTemplate {
+    const templateCopy = deepCopy(template);
+    if (!validator.isNonNullObject(templateCopy)) {
       throw new FirebaseRemoteConfigError(
         'invalid-argument',
-        `Invalid Remote Config template: ${JSON.stringify(template)}`);
+        `Invalid Remote Config template: ${JSON.stringify(templateCopy)}`);
     }
-    if (!validator.isNonEmptyString(template.etag)) {
+    if (!validator.isNonEmptyString(templateCopy.etag)) {
       throw new FirebaseRemoteConfigError(
         'invalid-argument',
         'ETag must be a non-empty string.');
     }
-    if (!validator.isNonNullObject(template.parameters)) {
+    if (!validator.isNonNullObject(templateCopy.parameters)) {
       throw new FirebaseRemoteConfigError(
         'invalid-argument',
         'Remote Config parameters must be a non-null object');
     }
-    if (!validator.isNonNullObject(template.parameterGroups)) {
+    if (!validator.isNonNullObject(templateCopy.parameterGroups)) {
       throw new FirebaseRemoteConfigError(
         'invalid-argument',
         'Remote Config parameter groups must be a non-null object');
     }
-    if (!validator.isArray(template.conditions)) {
+    if (!validator.isArray(templateCopy.conditions)) {
       throw new FirebaseRemoteConfigError(
         'invalid-argument',
         'Remote Config conditions must be an array');
     }
+    if (typeof templateCopy.version !== 'undefined') {
+      // exclude output only properties and keep the only input property: description
+      templateCopy.version = { description: templateCopy.version.description };
+    }
+    return templateCopy;
+  }
+
+  /**
+   * Checks if a given version number is valid.
+   * A version number must be an integer or a string in int64 format.
+   * If valid, returns the string representation of the provided version number.
+   *
+   * @param {string|number} versionNumber A version number to be validated.
+   * 
+   * @returns {string} The validated version number as a string.
+   */
+  private validateVersionNumber(versionNumber: string | number, propertyName = 'versionNumber'): string {
+    if (!validator.isNonEmptyString(versionNumber) &&
+      !validator.isNumber(versionNumber)) {
+      throw new FirebaseRemoteConfigError(
+        'invalid-argument',
+        `${propertyName} must be a non-empty string in int64 format or a number`);
+    }
+    if (!Number.isInteger(Number(versionNumber))) {
+      throw new FirebaseRemoteConfigError(
+        'invalid-argument',
+        `${propertyName} must be an integer or a string in int64 format`);
+    }
+    return versionNumber.toString();
+  }
+
+  private validateEtag(etag?: string): void {
+    if (!validator.isNonEmptyString(etag)) {
+      throw new FirebaseRemoteConfigError(
+        'invalid-argument',
+        'ETag header is not present in the server response.');
+    }
+  }
+
+  /**
+   * Checks if a given `ListVersionsOptions` object is valid. If successful, creates a copy of the
+   * options object and convert `startTime` and `endTime` to RFC3339 UTC "Zulu" format, if present.
+   * 
+   * @param {ListVersionsOptions} options An options object to be validated.
+   * 
+   * @return {ListVersionsOptions} A copy of the provided options object with timestamps converted
+   * to UTC Zulu format.
+   */
+  private validateListVersionsOptions(options: ListVersionsOptions): ListVersionsOptions {
+    const optionsCopy = deepCopy(options);
+    if (!validator.isNonNullObject(optionsCopy)) {
+      throw new FirebaseRemoteConfigError(
+        'invalid-argument',
+        'ListVersionsOptions must be a non-null object.');
+    }
+    if (typeof optionsCopy.pageSize !== 'undefined') {
+      if (!validator.isNumber(optionsCopy.pageSize)) {
+        throw new FirebaseRemoteConfigError(
+          'invalid-argument', 'pageSize must be a number.');
+      }
+      if (optionsCopy.pageSize < 1 || optionsCopy.pageSize > 300) {
+        throw new FirebaseRemoteConfigError(
+          'invalid-argument', 'pageSize must be a number between 1 and 300 (inclusive).');
+      }
+    }
+    if (typeof optionsCopy.pageToken !== 'undefined' && !validator.isNonEmptyString(optionsCopy.pageToken)) {
+      throw new FirebaseRemoteConfigError(
+        'invalid-argument', 'pageToken must be a string value.');
+    }
+    if (typeof optionsCopy.endVersionNumber !== 'undefined') {
+      optionsCopy.endVersionNumber = this.validateVersionNumber(optionsCopy.endVersionNumber, 'endVersionNumber');
+    }
+    if (typeof optionsCopy.startTime !== 'undefined') {
+      if (!(optionsCopy.startTime instanceof Date) && !validator.isUTCDateString(optionsCopy.startTime)) {
+        throw new FirebaseRemoteConfigError(
+          'invalid-argument', 'startTime must be a valid Date object or a UTC date string.');
+      }
+      // Convert startTime to RFC3339 UTC "Zulu" format.
+      if (optionsCopy.startTime instanceof Date) {
+        optionsCopy.startTime = optionsCopy.startTime.toISOString();
+      } else {
+        optionsCopy.startTime = new Date(optionsCopy.startTime).toISOString();
+      }
+    }
+    if (typeof optionsCopy.endTime !== 'undefined') {
+      if (!(optionsCopy.endTime instanceof Date) && !validator.isUTCDateString(optionsCopy.endTime)) {
+        throw new FirebaseRemoteConfigError(
+          'invalid-argument', 'endTime must be a valid Date object or a UTC date string.');
+      }
+      // Convert endTime to RFC3339 UTC "Zulu" format.
+      if (optionsCopy.endTime instanceof Date) {
+        optionsCopy.endTime = optionsCopy.endTime.toISOString();
+      } else {
+        optionsCopy.endTime = new Date(optionsCopy.endTime).toISOString();
+      }
+    }
+    return optionsCopy;
   }
 }
 
@@ -303,6 +495,7 @@ const ERROR_CODE_MAPPING: { [key: string]: RemoteConfigErrorCode } = {
   ABORTED: 'aborted',
   ALREADY_EXISTS: `already-exists`,
   INVALID_ARGUMENT: 'invalid-argument',
+  INTERNAL: 'internal-error',
   FAILED_PRECONDITION: 'failed-precondition',
   NOT_FOUND: 'not-found',
   OUT_OF_RANGE: 'out-of-range',
