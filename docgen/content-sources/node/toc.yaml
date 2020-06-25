@@ -283,3 +283,9 @@ toc:
     path: /docs/reference/admin/node/admin.remoteConfig.ExplicitParameterValue
   - title: "InAppDefaultValue"
     path: /docs/reference/admin/node/admin.remoteConfig.InAppDefaultValue
+  - title: "Version"
+    path: /docs/reference/admin/node/admin.remoteConfig.Version
+  - title: "ListVersionsOptions"
+    path: /docs/reference/admin/node/admin.remoteConfig.ListVersionsOptions
+  - title: "RemoteConfigUser"
+    path: /docs/reference/admin/node/admin.remoteConfig.RemoteConfigUser
