@@ -17,6 +17,11 @@
 import * as validator from '../utils/validator';
 
 import {deepCopy, deepExtend} from '../utils/deep-copy';
+import {
+  UserIdentifier, isUidIdentifier, isEmailIdentifier, isPhoneIdentifier,
+  isProviderIdentifier, UidIdentifier, EmailIdentifier, PhoneIdentifier,
+  ProviderIdentifier,
+} from './identifier';
 import {FirebaseApp} from '../firebase-app';
 import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
 import {
@@ -64,6 +69,12 @@ const MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE = 1000;
 
 /** Maximum allowed number of users to batch upload at one time. */
 const MAX_UPLOAD_ACCOUNT_BATCH_SIZE = 1000;
+
+/** Maximum allowed number of users to batch get at one time. */
+const MAX_GET_ACCOUNTS_BATCH_SIZE = 100;
+
+/** Maximum allowed number of users to batch delete at one time. */
+const MAX_DELETE_ACCOUNTS_BATCH_SIZE = 1000;
 
 /** Minimum allowed session cookie duration in seconds (5 minutes). */
 const MIN_SESSION_COOKIE_DURATION_SECS = 5 * 60;
@@ -560,12 +571,21 @@ export const FIREBASE_AUTH_DOWNLOAD_ACCOUNT = new ApiSettings('/accounts:batchGe
     }
   });
 
+interface GetAccountInfoRequest {
+  localId?: string[];
+  email?: string[];
+  phoneNumber?: string[];
+  federatedUserId?: Array<{
+    providerId: string;
+    rawId: string;
+  }>;
+}
 
 /** Instantiates the getAccountInfo endpoint settings. */
 export const FIREBASE_AUTH_GET_ACCOUNT_INFO = new ApiSettings('/accounts:lookup', 'POST')
   // Set request validator.
-  .setRequestValidator((request: any) => {
-    if (!request.localId && !request.email && !request.phoneNumber) {
+  .setRequestValidator((request: GetAccountInfoRequest) => {
+    if (!request.localId && !request.email && !request.phoneNumber && !request.federatedUserId) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Server request is missing user identifier');
@@ -578,6 +598,21 @@ export const FIREBASE_AUTH_GET_ACCOUNT_INFO = new ApiSettings('/accounts:lookup'
     }
   });
 
+/**
+ * Instantiates the getAccountInfo endpoint settings for use when fetching info
+ * for multiple accounts.
+ */
+export const FIREBASE_AUTH_GET_ACCOUNTS_INFO = new ApiSettings('/accounts:lookup', 'POST')
+  // Set request validator.
+  .setRequestValidator((request: GetAccountInfoRequest) => {
+    if (!request.localId && !request.email && !request.phoneNumber && !request.federatedUserId) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Server request is missing user identifier');
+    }
+  });
+
+
 /** Instantiates the deleteAccount endpoint settings. */
 export const FIREBASE_AUTH_DELETE_ACCOUNT = new ApiSettings('/accounts:delete', 'POST')
   // Set request validator.
@@ -587,6 +622,51 @@ export const FIREBASE_AUTH_DELETE_ACCOUNT = new ApiSettings('/accounts:delete', 
         AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Server request is missing user identifier');
     }
+  });
+
+interface BatchDeleteAccountsRequest {
+  localIds?: string[];
+  force?: boolean;
+}
+
+interface BatchDeleteErrorInfo {
+  index?: number;
+  localId?: string;
+  message?: string;
+}
+
+export interface BatchDeleteAccountsResponse {
+  errors?: BatchDeleteErrorInfo[];
+}
+
+export const FIREBASE_AUTH_BATCH_DELETE_ACCOUNTS = new ApiSettings('/accounts:batchDelete', 'POST')
+  .setRequestValidator((request: BatchDeleteAccountsRequest) => {
+    if (!request.localIds) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Server request is missing user identifiers');
+    }
+    if (typeof request.force === 'undefined' || request.force !== true) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Server request is missing force=true field');
+    }
+  })
+  .setResponseValidator((response: BatchDeleteAccountsResponse) => {
+    const errors = response.errors || [];
+    errors.forEach((batchDeleteErrorInfo) => {
+      if (typeof batchDeleteErrorInfo.index === 'undefined') {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INTERNAL_ERROR,
+          'INTERNAL ASSERT FAILED: Server BatchDeleteAccountResponse is missing an errors.index field');
+      }
+      if (!batchDeleteErrorInfo.localId) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INTERNAL_ERROR,
+          'INTERNAL ASSERT FAILED: Server BatchDeleteAccountResponse is missing an errors.localId field');
+      }
+      // Allow the (error) message to be missing/undef.
+    });
   });
 
 /** Instantiates the setAccountInfo endpoint settings for updating existing accounts. */
@@ -822,6 +902,47 @@ export abstract class AbstractAuthRequestHandler {
     return (validator.isNonNullObject(response) && response.error && response.error.message) || null;
   }
 
+  private static addUidToRequest(id: UidIdentifier, request: GetAccountInfoRequest): GetAccountInfoRequest {
+    if (!validator.isUid(id.uid)) {
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_UID);
+    }
+    request.localId ? request.localId.push(id.uid) : request.localId = [id.uid];
+    return request;
+  }
+
+  private static addEmailToRequest(id: EmailIdentifier, request: GetAccountInfoRequest): GetAccountInfoRequest {
+    if (!validator.isEmail(id.email)) {
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL);
+    }
+    request.email ? request.email.push(id.email) : request.email = [id.email];
+    return request;
+  }
+
+  private static addPhoneToRequest(id: PhoneIdentifier, request: GetAccountInfoRequest): GetAccountInfoRequest {
+    if (!validator.isPhoneNumber(id.phoneNumber)) {
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER);
+    }
+    request.phoneNumber ? request.phoneNumber.push(id.phoneNumber) : request.phoneNumber = [id.phoneNumber];
+    return request;
+  }
+
+  private static addProviderToRequest(id: ProviderIdentifier, request: GetAccountInfoRequest): GetAccountInfoRequest {
+    if (!validator.isNonEmptyString(id.providerId)) {
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
+    }
+    if (!validator.isNonEmptyString(id.providerUid)) {
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_UID);
+    }
+    const federatedUserId = {
+      providerId: id.providerId,
+      rawId: id.providerUid,
+    };
+    request.federatedUserId
+      ? request.federatedUserId.push(federatedUserId)
+      : request.federatedUserId = [federatedUserId];
+    return request;
+  }
+
   /**
    * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
    * @constructor
@@ -906,6 +1027,44 @@ export abstract class AbstractAuthRequestHandler {
       phoneNumber: [phoneNumber],
     };
     return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_GET_ACCOUNT_INFO, request);
+  }
+
+  /**
+   * Looks up multiple users by their identifiers (uid, email, etc).
+   *
+   * @param {UserIdentifier[]} identifiers The identifiers indicating the users
+   *     to be looked up. Must have <= 100 entries.
+   * @param {Promise<object>} A promise that resolves with the set of successfully
+   *     looked up users. Possibly empty if no users were looked up.
+   */
+  public getAccountInfoByIdentifiers(identifiers: UserIdentifier[]): Promise<object> {
+    if (identifiers.length === 0) {
+      return Promise.resolve({users: []});
+    } else if (identifiers.length > MAX_GET_ACCOUNTS_BATCH_SIZE) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.MAXIMUM_USER_COUNT_EXCEEDED,
+        '`identifiers` parameter must have <= ' + MAX_GET_ACCOUNTS_BATCH_SIZE + ' entries.');
+    }
+
+    let request: GetAccountInfoRequest = {};
+
+    for (const id of identifiers) {
+      if (isUidIdentifier(id)) {
+        request = AbstractAuthRequestHandler.addUidToRequest(id, request);
+      } else if (isEmailIdentifier(id)) {
+        request = AbstractAuthRequestHandler.addEmailToRequest(id, request);
+      } else if (isPhoneIdentifier(id)) {
+        request = AbstractAuthRequestHandler.addPhoneToRequest(id, request);
+      } else if (isProviderIdentifier(id)) {
+        request = AbstractAuthRequestHandler.addProviderToRequest(id, request);
+      } else {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          'Unrecognized identifier: ' + id);
+      }
+    }
+
+    return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_GET_ACCOUNTS_INFO, request);
   }
 
   /**
@@ -1003,6 +1162,30 @@ export abstract class AbstractAuthRequestHandler {
       localId: uid,
     };
     return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_DELETE_ACCOUNT, request);
+  }
+
+  public deleteAccounts(uids: string[], force: boolean): Promise<BatchDeleteAccountsResponse> {
+    if (uids.length === 0) {
+      return Promise.resolve({});
+    } else if (uids.length > MAX_DELETE_ACCOUNTS_BATCH_SIZE) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.MAXIMUM_USER_COUNT_EXCEEDED,
+        '`uids` parameter must have <= ' + MAX_DELETE_ACCOUNTS_BATCH_SIZE + ' entries.');
+    }
+
+    const request: BatchDeleteAccountsRequest = {
+      localIds: [],
+      force,
+    };
+
+    uids.forEach((uid) => {
+      if (!validator.isUid(uid)) {
+        throw new FirebaseAuthError(AuthClientErrorCode.INVALID_UID);
+      }
+      request.localIds!.push(uid);
+    });
+
+    return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_BATCH_DELETE_ACCOUNTS, request);
   }
 
   /**

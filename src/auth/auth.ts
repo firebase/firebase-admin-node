@@ -15,12 +15,15 @@
  */
 
 import {UserRecord, CreateRequest, UpdateRequest} from './user-record';
+import {
+  UserIdentifier, isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, isProviderIdentifier,
+} from './identifier';
 import {FirebaseApp} from '../firebase-app';
 import {FirebaseTokenGenerator, cryptoSignerFromApp} from './token-generator';
 import {
   AbstractAuthRequestHandler, AuthRequestHandler, TenantAwareAuthRequestHandler,
 } from './auth-api-request';
-import {AuthClientErrorCode, FirebaseAuthError, ErrorInfo} from '../utils/error';
+import {AuthClientErrorCode, FirebaseAuthError, ErrorInfo, FirebaseArrayIndexError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
 import {
   UserImportOptions, UserImportRecord, UserImportResult,
@@ -53,10 +56,32 @@ class AuthInternals implements FirebaseServiceInternalsInterface {
 }
 
 
+/** Represents the result of the {@link admin.auth.getUsers()} API. */
+export interface GetUsersResult {
+  /**
+   * Set of user records, corresponding to the set of users that were
+   * requested. Only users that were found are listed here. The result set is
+   * unordered.
+   */
+  users: UserRecord[];
+
+  /** Set of identifiers that were requested, but not found. */
+  notFound: UserIdentifier[];
+}
+
+
 /** Response object for a listUsers operation. */
 export interface ListUsersResult {
   users: UserRecord[];
   pageToken?: string;
+}
+
+
+/** Response object for deleteUsers operation. */
+export interface DeleteUsersResult {
+  failureCount: number;
+  successCount: number;
+  errors: FirebaseArrayIndexError[];
 }
 
 
@@ -207,6 +232,61 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   }
 
   /**
+   * Gets the user data corresponding to the specified identifiers.
+   *
+   * There are no ordering guarantees; in particular, the nth entry in the result list is not
+   * guaranteed to correspond to the nth entry in the input parameters list.
+   *
+   * Only a maximum of 100 identifiers may be supplied. If more than 100 identifiers are supplied,
+   * this method will immediately throw a FirebaseAuthError.
+   *
+   * @param identifiers The identifiers used to indicate which user records should be returned. Must
+   *     have <= 100 entries.
+   * @return {Promise<GetUsersResult>} A promise that resolves to the corresponding user records.
+   * @throws FirebaseAuthError If any of the identifiers are invalid or if more than 100
+   *     identifiers are specified.
+   */
+  public getUsers(identifiers: UserIdentifier[]): Promise<GetUsersResult> {
+    if (!validator.isArray(identifiers)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT, '`identifiers` parameter must be an array');
+    }
+    return this.authRequestHandler
+      .getAccountInfoByIdentifiers(identifiers)
+      .then((response: any) => {
+        /**
+         * Checks if the specified identifier is within the list of
+         * UserRecords.
+         */
+        const isUserFound = ((id: UserIdentifier, userRecords: UserRecord[]): boolean => {
+          return !!userRecords.find((userRecord) => {
+            if (isUidIdentifier(id)) {
+              return id.uid === userRecord.uid;
+            } else if (isEmailIdentifier(id)) {
+              return id.email === userRecord.email;
+            } else if (isPhoneIdentifier(id)) {
+              return id.phoneNumber === userRecord.phoneNumber;
+            } else if (isProviderIdentifier(id)) {
+              const matchingUserInfo = userRecord.providerData.find((userInfo) => {
+                return id.providerId === userInfo.providerId;
+              });
+              return !!matchingUserInfo && id.providerUid === matchingUserInfo.uid;
+            } else {
+              throw new FirebaseAuthError(
+                AuthClientErrorCode.INTERNAL_ERROR,
+                'Unhandled identifier type');
+            }
+          });
+        });
+
+        const users = response.users ? response.users.map((user: any) => new UserRecord(user)) : [];
+        const notFound = identifiers.filter((id) => !isUserFound(id, users));
+
+        return { users, notFound };
+      });
+  }
+
+  /**
    * Exports a batch of user accounts. Batch size is determined by the maxResults argument.
    * Starting point of the batch is determined by the pageToken argument.
    *
@@ -274,6 +354,50 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
     return this.authRequestHandler.deleteAccount(uid)
       .then(() => {
         // Return nothing on success.
+      });
+  }
+
+  public deleteUsers(uids: string[]): Promise<DeleteUsersResult> {
+    if (!validator.isArray(uids)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT, '`uids` parameter must be an array');
+    }
+    return this.authRequestHandler.deleteAccounts(uids, /*force=*/true)
+      .then((batchDeleteAccountsResponse) => {
+        const result: DeleteUsersResult = {
+          failureCount: 0,
+          successCount: uids.length,
+          errors: [],
+        };
+
+        if (!validator.isNonEmptyArray(batchDeleteAccountsResponse.errors)) {
+          return result;
+        }
+
+        result.failureCount = batchDeleteAccountsResponse.errors.length;
+        result.successCount = uids.length - batchDeleteAccountsResponse.errors.length;
+        result.errors = batchDeleteAccountsResponse.errors.map((batchDeleteErrorInfo) => {
+          if (batchDeleteErrorInfo.index === undefined) {
+            throw new FirebaseAuthError(
+              AuthClientErrorCode.INTERNAL_ERROR,
+              'Corrupt BatchDeleteAccountsResponse detected');
+          }
+
+          const errMsgToError = (msg?: string): FirebaseAuthError => {
+            // We unconditionally set force=true, so the 'NOT_DISABLED' error
+            // should not be possible.
+            const code = msg && msg.startsWith('NOT_DISABLED') ?
+              AuthClientErrorCode.USER_NOT_DISABLED : AuthClientErrorCode.INTERNAL_ERROR;
+            return new FirebaseAuthError(code, batchDeleteErrorInfo.message);
+          };
+
+          return {
+            index: batchDeleteErrorInfo.index,
+            error: errMsgToError(batchDeleteErrorInfo.message),
+          };
+        });
+
+        return result;
       });
   }
 

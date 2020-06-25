@@ -127,13 +127,13 @@ describe('CryptoSigner', () => {
     });
 
     describe('explicit service account ID', () => {
-      const response = {signature: Buffer.from('testsignature').toString('base64')};
+      const response = {signedBlob: Buffer.from('testsignature').toString('base64')};
       const input = Buffer.from('input');
       const signRequest = {
         method: 'POST',
-        url: `https://iam.googleapis.com/v1/projects/-/serviceAccounts/test-service-account:signBlob`,
+        url: `https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/test-service-account:signBlob`,
         headers: {Authorization: `Bearer ${mockAccessToken}`},
-        data: {bytesToSign: input.toString('base64')},
+        data: {payload: input.toString('base64')},
       };
       let stub: sinon.SinonStub;
 
@@ -147,7 +147,7 @@ describe('CryptoSigner', () => {
         const requestHandler = new AuthorizedHttpClient(mockApp);
         const signer = new IAMSigner(requestHandler, 'test-service-account');
         return signer.sign(input).then((signature) => {
-          expect(signature.toString('base64')).to.equal(response.signature);
+          expect(signature.toString('base64')).to.equal(response.signedBlob);
           expect(stub).to.have.been.calledOnce.and.calledWith(signRequest);
         });
       });
@@ -179,7 +179,7 @@ describe('CryptoSigner', () => {
 
     describe('auto discovered service account', () => {
       const input = Buffer.from('input');
-      const response = {signature: Buffer.from('testsignature').toString('base64')};
+      const response = {signedBlob: Buffer.from('testsignature').toString('base64')};
       const metadataRequest = {
         method: 'GET',
         url: `http://metadata/computeMetadata/v1/instance/service-accounts/default/email`,
@@ -187,9 +187,9 @@ describe('CryptoSigner', () => {
       };
       const signRequest = {
         method: 'POST',
-        url: `https://iam.googleapis.com/v1/projects/-/serviceAccounts/discovered-service-account:signBlob`,
+        url: `https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/discovered-service-account:signBlob`,
         headers: {Authorization: `Bearer ${mockAccessToken}`},
-        data: {bytesToSign: input.toString('base64')},
+        data: {payload: input.toString('base64')},
       };
       let stub: sinon.SinonStub;
 
@@ -204,7 +204,7 @@ describe('CryptoSigner', () => {
         const requestHandler = new AuthorizedHttpClient(mockApp);
         const signer = new IAMSigner(requestHandler);
         return signer.sign(input).then((signature) => {
-          expect(signature.toString('base64')).to.equal(response.signature);
+          expect(signature.toString('base64')).to.equal(response.signedBlob);
           expect(stub).to.have.been.calledTwice;
           expect(stub.getCall(0).args[0]).to.deep.equal(metadataRequest);
           expect(stub.getCall(1).args[0]).to.deep.equal(signRequest);
