@@ -11,6 +11,9 @@
   "scripts": {
     "build": "gulp build",
     "build:tests": "gulp compile_test",
+    "clean": "rm -rf lib",
+    "prebuildpackage": "npm run clean && npm run build && node lib/configure-package.js",
+    "build:dist": "npm run prebuildpackage && cd lib && rm configure-package.js && npm pack",
     "prepare": "npm run build",
     "lint": "run-p lint:src lint:test",
     "test": "run-s lint test:unit",
@@ -47,7 +50,7 @@
   },
   "main": "lib/index.js",
   "files": [
-    "lib/",
+    "lib/**/*",
     "LICENSE",
     "README.md",
     "package.json"
