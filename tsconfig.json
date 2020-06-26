@@ -19,9 +19,11 @@
     "stripInternal": true
   },
   // "extends": "./tsconfig.typing.json",
-  "includes": [
-    "src/index.ts",
-    "src/firebase-namespace.ts"
-  ]
+  "files": [
+    "src/index.ts"
+  ],
+  //"exclude": [
+  //    "test/integration/typescript/src/example.test.ts",
+  //]
   // Auth public: action-code-settings-builder.ts, auth-config.ts, tenant-manager.ts, tenant.ts, user-import-builder.ts user-record.ts
 }
