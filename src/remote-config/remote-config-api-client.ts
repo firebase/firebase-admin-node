@@ -477,6 +477,10 @@ export class RemoteConfigApiClient {
         optionsCopy.endTime = new Date(optionsCopy.endTime).toISOString();
       }
     }
+    // Remove undefined fields from optionsCopy
+    Object.keys(optionsCopy).forEach(key =>
+      (typeof (optionsCopy as any)[key] === 'undefined') && delete (optionsCopy as any)[key]
+    );
     return optionsCopy;
   }
 }

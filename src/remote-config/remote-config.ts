@@ -145,7 +145,7 @@ export class RemoteConfig implements FirebaseServiceInterface {
     return this.client.listVersions(options)
       .then((listVersionsResponse) => {
         return {
-          versions: listVersionsResponse.versions.map(version => new VersionImpl(version)),
+          versions: listVersionsResponse.versions?.map(version => new VersionImpl(version)) ?? [],
           nextPageToken: listVersionsResponse.nextPageToken,
         }
       });

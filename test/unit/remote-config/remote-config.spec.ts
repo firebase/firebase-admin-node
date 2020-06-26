@@ -366,6 +366,21 @@ describe('RemoteConfig', () => {
       });
     });
 
+    it('should resolve with an empty versions list if the no results are availble for requested list options', () => {
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, 'listVersions')
+        .resolves({});
+      stubs.push(stub);
+      return remoteConfig.listVersions({
+        pageSize: 2,
+        endVersionNumber: 10,
+      })
+        .then((response) => {
+          expect(response.versions.length).to.equal(0);
+          expect(response.nextPageToken).to.be.undefined;
+        });
+    });
+
     it('should resolve with template versions list on success', () => {
       const stub = sinon
         .stub(RemoteConfigApiClient.prototype, 'listVersions')
@@ -378,6 +393,7 @@ describe('RemoteConfig', () => {
           expect(response.versions.length).to.equal(2);
           expect(response.versions[0].updateTime).equals('Thu, 07 May 2020 18:46:09 GMT');
           expect(response.versions[1].updateTime).equals('Thu, 07 May 2020 18:44:41 GMT');
+          expect(response.nextPageToken).to.equal('76');
         });
     });
   });

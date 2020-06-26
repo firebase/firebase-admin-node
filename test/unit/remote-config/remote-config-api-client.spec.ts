@@ -599,6 +599,28 @@ describe('RemoteConfigApiClient', () => {
         });
     });
 
+    it('should remove undefined fields from options', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TEST_VERSIONS_RESULT, 200));
+      stubs.push(stub);
+      return apiClient.listVersions({
+        pageSize: undefined,
+        pageToken: undefined,
+        endVersionNumber: 70,
+      })
+        .then(() => {
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url: 'https://firebaseremoteconfig.googleapis.com/v1/projects/test-project/remoteConfig:listVersions',
+            headers: EXPECTED_HEADERS,
+            data: {
+              endVersionNumber: '70'
+            }
+          });
+        });
+    });
+
     it('should resolve with a list of template versions on success', () => {
       const startTime = new Date(2020, 4, 2);
       const endTime = 'Thu, 07 May 2020 18:44:41 GMT';
