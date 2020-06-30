@@ -46,6 +46,7 @@ interface EmailActionCodeRequest {
 /**
  * Defines the ActionCodeSettings builder class used to convert the
  * ActionCodeSettings object to its corresponding server request.
+ * @internal
  */
 export class ActionCodeSettingsBuilder {
   private continueUrl?: string;

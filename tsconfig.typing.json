@@ -15,9 +15,10 @@
       "outDir": "lib",
       // We manually craft typings in src/index.d.ts instead of auto-generating them.
       "declaration": true,
-      "rootDir": "."
+      "rootDir": ".",
+      "stripInternal": true
     },
-    "includes": [
+    "include": [
       "src/auth/action-code-setings-builder.ts",
       "src/auth/auth-config.ts",
       "src/auth/auth.ts",

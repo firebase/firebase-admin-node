@@ -14,29 +14,24 @@
  * limitations under the License.
  */
 
-const fs = require('fs');
+import * as fs from 'fs';
 
 /**
  * Used by the build system to prepare the distributable. This prevents having to
  * specify /lib within import paths by allowing npm pack to run inside the /lib folder,
  * resulting in the source files being at the top-level of the package.
  */
-function main() {
-  const source = fs.readFileSync(__dirname + "/../package.json").toString('utf-8');
-  const sourceObj = JSON.parse(source);
+function main(): void {
+  const source: any = fs.readFileSync(__dirname + "/../package.json").toString('utf-8');
+  const sourceObj: any = JSON.parse(source);
 
   sourceObj.scripts = {};
-  sourceObj.devDependencies = {};
 
-  if (sourceObj.main.startsWith("lib/")) {
-    sourceObj.main = sourceObj.main.slice(4);
-  }
-  if (sourceObj.types.startsWith("lib/")) {
-    sourceObj.types = sourceObj.types.slice(4);
-  }
+  sourceObj.main = 'index.js';
+  sourceObj.types = 'index.d.ts';
 
   sourceObj.files = sourceObj.files.map(
-    (file) => file.startsWith("lib/") ? file.slice(4) : file);
+    (file: any) => file.startsWith("lib/") ? file.slice(4) : file);
 
   fs.writeFileSync(__dirname + "/package.json",
     Buffer.from(JSON.stringify(sourceObj, null, 2), "utf-8") );
