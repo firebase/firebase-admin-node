@@ -51,7 +51,7 @@ describe('Firebase', () => {
 
   afterEach(() => {
     const deletePromises: Array<Promise<void>> = [];
-    firebaseAdmin.apps.forEach((app) => {
+    firebaseAdmin.apps().forEach((app) => {
       deletePromises.push(app.delete());
     });
 
