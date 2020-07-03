@@ -1,5 +1,5 @@
 /*!
- * Copyright 2017 Google Inc.
+ * Copyright 2020 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,9 @@
  * limitations under the License.
  */
 
-// import { initializeApp, cert } from '../../../../lib';
-import { FirebaseApp } from 'firebase-admin/firebase-app';
-
 import * as firebase from 'firebase-admin';
 
-export function initApp(serviceAcct: any, name: string): FirebaseApp {
+export function initApp(serviceAcct: any, name: string): firebase.FirebaseApp {
   return firebase.initializeApp({
     credential: firebase.cert(serviceAcct),
     databaseURL: 'https://mock.firebaseio.com'
