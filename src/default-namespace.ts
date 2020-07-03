@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import {FirebaseNamespace} from './firebase-namespace';
+// import {FirebaseNamespace} from './firebase-namespace';
 
-const firebaseAdmin = new FirebaseNamespace();
+// const firebaseAdmin = new FirebaseNamespace();
 
 // Inject a circular default export to allow users to use both:
 //
@@ -27,6 +27,9 @@ const firebaseAdmin = new FirebaseNamespace();
 //
 //   import * as firebaseAdmin from 'firebase-admin';
 //   which becomes: var firebaseAdmin = require('firebase-admin');
-(firebaseAdmin as any).default = firebaseAdmin;
+// (firebaseAdmin as any).default = firebaseAdmin;
 
-export = firebaseAdmin;
+// export = firebaseAdmin;
+
+export * from './firebase-namespace';
+export * from './firebase-app';

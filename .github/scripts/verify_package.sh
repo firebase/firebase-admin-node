@@ -41,6 +41,7 @@ if [[ ! "${WORK_DIR}" || ! -d "${WORK_DIR}" ]]; then
   echo "Could not create temp dir"
   exit 1
 fi
+echo "Created temporary directory ${WORK_DIR}"
 
 # deletes the temp directory
 function cleanup {
@@ -49,7 +50,7 @@ function cleanup {
 }
 
 # register the cleanup function to be called on the EXIT signal
-trap cleanup EXIT
+# trap cleanup EXIT
 
 # Copy package and test sources into working directory
 cp "${PKG_NAME}" "${WORK_DIR}"

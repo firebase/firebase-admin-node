@@ -16,10 +16,10 @@
 
 import fs = require('fs');
 import {Agent} from 'http';
-import {deepExtend} from './utils/deep-copy';
+// import {deepExtend} from './utils/deep-copy';
 import {AppErrorCodes, FirebaseAppError} from './utils/error';
 import {AppHook, FirebaseApp, FirebaseAppOptions} from './firebase-app';
-import {FirebaseServiceFactory, FirebaseServiceInterface} from './firebase-service';
+import {FirebaseServiceFactory} from './firebase-service'; // FirebaseServiceInterface
 import {
   Credential,
   RefreshTokenCredential,
@@ -59,7 +59,7 @@ export class FirebaseNamespaceInternals {
   private apps_: {[appName: string]: FirebaseApp} = {};
   private appHooks_: {[service: string]: AppHook} = {};
 
-  constructor(public firebase_: {[key: string]: any}) {}
+  // constructor(public firebase_: {[key: string]: any}) {}
 
   /**
    * Initializes the FirebaseApp instance.
@@ -173,7 +173,7 @@ export class FirebaseNamespaceInternals {
    * @param {AppHook} [appHook] Optional callback that handles app-related events like app creation and deletion.
    * @return {FirebaseServiceNamespace<FirebaseServiceInterface>} The Firebase service's namespace.
    */
-  public registerService(
+  /* public registerService(
     serviceName: string,
     createService: FirebaseServiceFactory,
     serviceProperties?: object,
@@ -219,7 +219,7 @@ export class FirebaseNamespaceInternals {
     this.firebase_[serviceName] = serviceNamespace;
 
     return serviceNamespace;
-  }
+  } */
 
   /**
    * Calls the app hooks corresponding to the provided event name for each service within the
@@ -287,10 +287,75 @@ const firebaseCredential = {
   },
 };
 
+// const internal = new FirebaseNamespaceInternals();
+// export internal;
+export const internal = new FirebaseNamespaceInternals();
+
+export const SDK_VERSION = '<XXX_SDK_VERSION_XXX>';
+
+/**
+   * Initializes the FirebaseApp instance.
+   *
+   * @param {FirebaseAppOptions} [options] Optional options for the FirebaseApp instance.
+   *   If none present will try to initialize from the FIREBASE_CONFIG environment variable.
+   *   If the environment variable contains a string that starts with '{' it will be parsed as JSON,
+   *   otherwise it will be assumed to be pointing to a file.
+   * @param {string} [appName] Optional name of the FirebaseApp instance.
+   *
+   * @return {FirebaseApp} A new FirebaseApp instance.
+   */
+export function initializeApp(options?: FirebaseAppOptions, appName?: string): FirebaseApp {
+  return internal.initializeApp(options, appName);
+}
+
+/**
+ * Returns the FirebaseApp instance with the provided name (or the default FirebaseApp instance
+ * if no name is provided).
+ *
+ * @param {string} [appName] Optional name of the FirebaseApp instance to return.
+ * @return {FirebaseApp} The FirebaseApp instance which has the provided name.
+ */
+export function app(appName?: string): FirebaseApp {
+  return internal.app(appName);
+}
+
+/*
+ * Returns an array of all the non-deleted FirebaseApp instances.
+ *
+ * @return {Array<FirebaseApp>} An array of all the non-deleted FirebaseApp instances
+ */
+export function apps(): FirebaseApp[] {
+  return internal.apps;
+}
+
+export function cert(serviceAccountPathOrObject: string | object, httpAgent?: Agent): Credential {
+  const stringifiedServiceAccount = JSON.stringify(serviceAccountPathOrObject);
+  if (!(stringifiedServiceAccount in globalCertCreds)) {
+    globalCertCreds[stringifiedServiceAccount] = new ServiceAccountCredential(serviceAccountPathOrObject, httpAgent);
+  }
+  return globalCertCreds[stringifiedServiceAccount];
+}
+export function refreshToken(refreshTokenPathOrObject: string | object, httpAgent?: Agent): Credential {
+  const stringifiedRefreshToken = JSON.stringify(refreshTokenPathOrObject);
+  if (!(stringifiedRefreshToken in globalRefreshTokenCreds)) {
+    globalRefreshTokenCreds[stringifiedRefreshToken] = new RefreshTokenCredential(
+      refreshTokenPathOrObject, httpAgent);
+  }
+  return globalRefreshTokenCreds[stringifiedRefreshToken];
+}
+
+export function applicationDefault(httpAgent?: Agent): Credential {
+  if (typeof globalAppDefaultCred === 'undefined') {
+    globalAppDefaultCred = getApplicationDefault(httpAgent);
+  }
+  return globalAppDefaultCred;
+}
 
 /**
  * Global Firebase context object.
  */
+// TODO: remove?
+
 export class FirebaseNamespace {
   // Hack to prevent Babel from modifying the object returned as the default admin namespace.
   /* tslint:disable:variable-name */
@@ -308,7 +373,7 @@ export class FirebaseNamespace {
   /* tslint:enable */
 
   constructor() {
-    this.INTERNAL = new FirebaseNamespaceInternals(this);
+    this.INTERNAL = new FirebaseNamespaceInternals(); // TODO: this
   }
 
   /**

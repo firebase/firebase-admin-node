@@ -26,7 +26,7 @@ import * as utils from './utils';
 import * as mocks from '../resources/mocks';
 
 import {GoogleOAuthAccessToken, ServiceAccountCredential} from '../../src/auth/credential';
-import {FirebaseServiceInterface} from '../../src/firebase-service';
+// import {FirebaseServiceInterface} from '../../src/firebase-service';
 import {FirebaseApp, FirebaseAccessToken} from '../../src/firebase-app';
 import {FirebaseNamespace, FirebaseNamespaceInternals, FIREBASE_CONFIG_VAR} from '../../src/firebase-namespace';
 
@@ -42,14 +42,14 @@ const ONE_HOUR_IN_SECONDS = 60 * 60;
 const ONE_MINUTE_IN_MILLISECONDS = 60 * 1000;
 
 const deleteSpy = sinon.spy();
-function mockServiceFactory(app: FirebaseApp): FirebaseServiceInterface {
+/*function mockServiceFactory(app: FirebaseApp): FirebaseServiceInterface {
   return {
     app,
     INTERNAL: {
       delete: deleteSpy.bind(null, app.name),
     },
   };
-}
+} */
 
 
 describe('FirebaseApp', () => {
@@ -318,7 +318,7 @@ describe('FirebaseApp', () => {
       });
     });
 
-    it('should call delete() on each service\'s internals', () => {
+    /* it('should call delete() on each service\'s internals', () => {
       firebaseNamespace.INTERNAL.registerService(mocks.serviceName, mockServiceFactory);
       firebaseNamespace.INTERNAL.registerService(mocks.serviceName + '2', mockServiceFactory);
 
@@ -332,7 +332,7 @@ describe('FirebaseApp', () => {
         expect(deleteSpy.firstCall.args).to.deep.equal([mocks.appName]);
         expect(deleteSpy.secondCall.args).to.deep.equal([mocks.appName]);
       });
-    });
+    }); */
   });
 
   /*

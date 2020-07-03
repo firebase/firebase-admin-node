@@ -20,15 +20,16 @@ import {expect} from 'chai';
 // import {Firestore} from '@google-cloud/firestore';
 
 // import * as admin from 'firebase-admin';
-import {App} from 'firebase-admin';
-// import {Auth, auth} from 'firebase-admin/auth';
+import {FirebaseApp} from 'firebase-admin/firebase-app';
+import {Auth, auth} from 'firebase-admin/auth';
+import {database, Database, ServerValue} from 'firebase-admin/database';
 
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const serviceAccount = require('../mock.key.json');
 
 describe('Init App', () => {
-  const app: App = initApp(serviceAccount, 'TestApp');
+  const app: FirebaseApp = initApp(serviceAccount, 'TestApp');
 
   after(() => {
     return app.delete();
@@ -38,10 +39,10 @@ describe('Init App', () => {
     expect(app.name).to.equal('TestApp');
   });
 
-  /* it('Should return an Auth client', () => {
+  it('Should return an Auth client', () => {
     const client = auth(app);
-    expect(client).to.be.instanceOf((Auth as any).Auth);
-  }); */
+    expect(client).to.be.instanceOf(Auth);
+  });
 
   /*it('Should return a Messaging client', () => {
     const client = admin.messaging(app);
@@ -56,24 +57,30 @@ describe('Init App', () => {
   it('Should return a SecurityRules client', () => {
     const client = admin.securityRules(app);
     expect(client).to.be.instanceOf((admin.securityRules as any).SecurityRules);
-  });
+  }); */
 
   it('Should return a Database client', () => {
-    const db = admin.database(app);
-    expect(db).to.be.instanceOf((admin.database as any).Database);
+    const db = database(app);
+    expect(db).to.be.instanceOf(Database);
   });
 
   it('Should return a Database client for URL', () => {
-    const db = app.database('https://other-mock.firebaseio.com');
-    expect(db).to.be.instanceOf((admin.database as any).Database);
+    const db = database(app, 'https://other-mock.firebaseio.com');
+    expect(db).to.be.instanceOf(Database);
+  });
+
+  it('Should return a Database client rules for URL', () => {
+    return database().getRulesJSON().then((result) => {
+      return expect(result).to.be.not.undefined;
+    });
   });
 
   it('Should return a Database ServerValue', () => {
-    const serverValue = admin.database.ServerValue;
+    const serverValue = ServerValue;
     expect(serverValue).to.not.be.null;
   });
 
-  it('Should return a Cloud Storage client', () => {
+  /*it('Should return a Cloud Storage client', () => {
     const bucket: Bucket = app.storage().bucket('TestBucket');
     expect(bucket.name).to.equal('TestBucket');
   });

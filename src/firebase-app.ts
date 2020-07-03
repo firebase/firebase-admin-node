@@ -32,7 +32,7 @@ export type AppHook = (event: string, app: FirebaseApp) => void;
  */
 export interface FirebaseAppOptions {
   credential?: Credential;
-  databaseAuthVariableOverride?: object;
+  databaseAuthVariableOverride?: object|null;
   databaseURL?: string;
   serviceAccountId?: string;
   storageBucket?: string;

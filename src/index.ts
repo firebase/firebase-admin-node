@@ -34,4 +34,7 @@ https://firebase.google.com/docs/web/setup
   console.error(message);
 }
 
+//export {FirebaseNamespace} from './firebase-namespace';
+//export {FirebaseApp} from './firebase-app';
+
 export = firebase;

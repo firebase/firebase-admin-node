@@ -21,7 +21,7 @@ import path = require('path');
 import {random} from 'lodash';
 import { Credential, GoogleOAuthAccessToken } from '../../lib/auth/';
 import { initializeApp } from '../../lib';
-import { FirebaseApp } from '../../lib/firebase-app';
+import { FirebaseApp } from '../../lib/';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const chalk = require('chalk');
@@ -77,7 +77,7 @@ before(() => {
   nullApp = initializeApp({
     credential: admin.cert(serviceAccount),
     databaseURL: databaseUrl,
-    // databaseAuthVariableOverride: null, // TODO: undefined?
+    databaseAuthVariableOverride: null, // TODO: undefined?
     storageBucket,
   }, 'null');
 
