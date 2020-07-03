@@ -287,6 +287,7 @@ const firebaseCredential = {
   },
 };
 
+export const credential = firebaseCredential;
 // const internal = new FirebaseNamespaceInternals();
 // export internal;
 export const internal = new FirebaseNamespaceInternals();
