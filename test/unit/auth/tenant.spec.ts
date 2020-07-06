@@ -20,7 +20,7 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import {deepCopy} from '../../../src/utils/deep-copy';
-import {EmailSignInConfig, EmailSignInProviderConfig} from '../../../src/auth/auth-config';
+import {EmailSignInConfig, EmailSignInProviderConfig} from '../../../src/auth/auth-config-internal';
 import {
   Tenant, TenantOptions, TenantServerResponse,
 } from '../../../src/auth/tenant';

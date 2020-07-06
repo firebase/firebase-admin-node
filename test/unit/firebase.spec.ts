@@ -27,7 +27,8 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as mocks from '../resources/mocks';
 
 import * as firebaseAdmin from '../../src/index';
-import {RefreshTokenCredential, ServiceAccountCredential, isApplicationDefault} from '../../src/auth/credential';
+import {RefreshTokenCredential, isApplicationDefault} from '../../src/auth/credential';
+import {ServiceAccountCredential} from '../../src/auth/credential-internal';
 
 chai.should();
 chai.use(chaiAsPromised);

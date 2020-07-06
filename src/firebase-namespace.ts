@@ -23,9 +23,9 @@ import {FirebaseServiceFactory} from './firebase-service'; // FirebaseServiceInt
 import {
   Credential,
   RefreshTokenCredential,
-  ServiceAccountCredential,
   getApplicationDefault,
 } from './auth/credential';
+import {ServiceAccountCredential} from './auth/credential-internal';
 
 import * as validator from './utils/validator';
 

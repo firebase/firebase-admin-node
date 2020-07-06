@@ -18,7 +18,7 @@ import * as validator from '../utils/validator';
 import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
 import {
   EmailSignInConfig, EmailSignInConfigServerRequest, EmailSignInProviderConfig,
-} from './auth-config';
+} from './auth-config-internal';
 
 /** The TenantOptions interface used for create/read/update tenant operations. */
 export interface TenantOptions {
