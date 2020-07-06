@@ -18,7 +18,7 @@ import {URL} from 'url';
 import * as admin from '../';
 import * as path from 'path';
 
-import {FirebaseApp} from '../firebase-app';
+import {FirebaseApp} from '../index';
 import {FirebaseDatabaseError, AppErrorCodes, FirebaseAppError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
 import {Database} from '@firebase/database';
