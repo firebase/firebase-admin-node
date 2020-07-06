@@ -15,13 +15,14 @@
  */
 
 import {UserRecord, CreateRequest, UpdateRequest} from './user-record';
+import { UserIdentifier } from './identifier';
 import {
-  UserIdentifier, isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, isProviderIdentifier,
-} from './identifier';
+  isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, isProviderIdentifier,
+} from './identifier-internal';
 import {FirebaseApp} from '../firebase-app';
 import * as admin from '../';
 // import {FirebaseNamespace} from '../firebase-namespace';
-import {FirebaseTokenGenerator, cryptoSignerFromApp} from './token-generator';
+import {FirebaseTokenGenerator, cryptoSignerFromApp} from './token-generator-internal';
 import {
   AbstractAuthRequestHandler, AuthRequestHandler, TenantAwareAuthRequestHandler,
 } from './auth-api-request';
@@ -33,12 +34,15 @@ import {
 
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier } from './token-verifier';
+import { createSessionCookieVerifier, createIdTokenVerifier } from './token-verifier';
+import { FirebaseTokenVerifier } from './token-verifier-internal';
 import {ActionCodeSettings} from './action-code-settings-builder';
 import {
   AuthProviderConfig, AuthProviderConfigFilter, ListProviderConfigResults, UpdateAuthProviderRequest,
-  SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
 } from './auth-config';
+import {
+  SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
+} from './auth-config-internal';
 import {TenantManager} from './tenant-manager';
 
 const Auth_: {[name: string]: Auth} = {};
