@@ -20,9 +20,10 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import {deepCopy} from '../../../src/utils/deep-copy';
 import {
-  UserInfo, UserMetadata, UserRecord, GetAccountInfoUserResponse, ProviderUserInfoResponse,
-  MultiFactor, PhoneMultiFactorInfo, MultiFactorInfo, MultiFactorInfoResponse,
+  UserInfo, UserMetadata, UserRecord, PhoneMultiFactorInfo,
 } from '../../../src/auth/user-record';
+import {GetAccountInfoUserResponse, ProviderUserInfoResponse,
+  MultiFactor, MultiFactorInfoResponse, initMultiFactorInfo} from '../../../src/auth/user-record-internal';
 
 
 chai.should();
@@ -246,8 +247,8 @@ describe('PhoneMultiFactorInfo', () => {
     enrolledAt: now.toISOString(),
     phoneInfo: '+16505551234',
   };
-  const phoneMultiFactorInfo = new PhoneMultiFactorInfo(serverResponse);
-  const phoneMultiFactorInfoMissingFields = new PhoneMultiFactorInfo({
+  const phoneMultiFactorInfo = new PhoneMultiFactorInfoImpl(serverResponse);
+  const phoneMultiFactorInfoMissingFields = new PhoneMultiFactorInfoImpl({
     mfaEnrollmentId: serverResponse.mfaEnrollmentId,
     phoneInfo: serverResponse.phoneInfo,
   });
@@ -385,11 +386,11 @@ describe('MultiFactorInfo', () => {
 
   describe('initMultiFactorInfo', () => {
     it('should return expected PhoneMultiFactorInfo', () => {
-      expect(MultiFactorInfo.initMultiFactorInfo(serverResponse)).to.deep.equal(phoneMultiFactorInfo);
+      expect(initMultiFactorInfo(serverResponse)).to.deep.equal(phoneMultiFactorInfo);
     });
 
     it('should return null for invalid MultiFactorInfo', () => {
-      expect(MultiFactorInfo.initMultiFactorInfo(undefined as any)).to.be.null;
+      expect(initMultiFactorInfo(undefined as any)).to.be.null;
     });
   });
 });
