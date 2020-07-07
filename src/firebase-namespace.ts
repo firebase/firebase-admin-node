@@ -16,10 +16,10 @@
 
 import fs = require('fs');
 import {Agent} from 'http';
-// import {deepExtend} from './utils/deep-copy';
+import {deepExtend} from './utils/deep-copy';
 import {AppErrorCodes, FirebaseAppError} from './utils/error';
 import {AppHook, FirebaseApp, FirebaseAppOptions} from './firebase-app';
-import {FirebaseServiceFactory} from './firebase-service'; // FirebaseServiceInterface
+import {FirebaseServiceFactory, FirebaseServiceInterface} from './firebase-service'; // FirebaseServiceInterface
 import {
   Credential,
   RefreshTokenCredential,
@@ -59,7 +59,7 @@ export class FirebaseNamespaceInternals {
   private apps_: {[appName: string]: FirebaseApp} = {};
   private appHooks_: {[service: string]: AppHook} = {};
 
-  // constructor(public firebase_: {[key: string]: any}) {}
+  constructor(public firebase_: {[key: string]: any}) {}
 
   /**
    * Initializes the FirebaseApp instance.
@@ -173,11 +173,13 @@ export class FirebaseNamespaceInternals {
    * @param {AppHook} [appHook] Optional callback that handles app-related events like app creation and deletion.
    * @return {FirebaseServiceNamespace<FirebaseServiceInterface>} The Firebase service's namespace.
    */
-  /* public registerService(
+  public registerService(
     serviceName: string,
     createService: FirebaseServiceFactory,
     serviceProperties?: object,
     appHook?: AppHook): FirebaseServiceNamespace<FirebaseServiceInterface> {
+    console.log('called!!');
+    
     let errorMessage;
     if (typeof serviceName === 'undefined') {
       errorMessage = `No service name provided. Service name must be a non-empty string.`;
@@ -219,7 +221,7 @@ export class FirebaseNamespaceInternals {
     this.firebase_[serviceName] = serviceNamespace;
 
     return serviceNamespace;
-  } */
+  }
 
   /**
    * Calls the app hooks corresponding to the provided event name for each service within the
@@ -290,7 +292,7 @@ const firebaseCredential = {
 export const credential = firebaseCredential;
 // const internal = new FirebaseNamespaceInternals();
 // export internal;
-export const internal = new FirebaseNamespaceInternals();
+export const internal = new FirebaseNamespaceInternals({});
 
 export const SDK_VERSION = '<XXX_SDK_VERSION_XXX>';
 
@@ -374,7 +376,7 @@ export class FirebaseNamespace {
   /* tslint:enable */
 
   constructor() {
-    this.INTERNAL = new FirebaseNamespaceInternals(); // TODO: this
+    this.INTERNAL = new FirebaseNamespaceInternals({}); // TODO: this
   }
 
   /**
