@@ -15,7 +15,7 @@
  */
 
 import {URL} from 'url';
-import * as admin from '../';
+import * as admin from '../index';
 import * as path from 'path';
 
 import {FirebaseApp} from '../index';
@@ -265,4 +265,13 @@ export function database(app?: FirebaseApp, url?: string): Database {
     Database_[app.name] = new DatabaseService(app);
   }
   return Database_[app.name].getDatabase(url);
+}
+
+export function deleteInstances(app?: FirebaseApp): void {
+  if (typeof(app) === 'undefined') {
+    app = admin.app();
+  }
+  if (typeof(Database_[app.name]) != 'undefined') {
+    Database_[app.name].INTERNAL.delete();
+  }
 }

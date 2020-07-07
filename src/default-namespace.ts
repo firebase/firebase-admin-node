@@ -31,5 +31,5 @@
 
 // export = firebaseAdmin;
 
-export * from './firebase-namespace';
-export * from './firebase-app';
+// export * from './firebase-namespace';
+// export * from './firebase-app';

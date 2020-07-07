@@ -17,8 +17,8 @@
 import * as admin from '../../lib/index';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import {defaultApp, nonNullApp, cmdArgs, databaseUrl} from './setup';
-import { database, Database, Reference, ServerValue, DataSnapshot, EventType } from '../../lib/database/';
+import { cmdArgs, defaultApp, nonNullApp, databaseUrl} from './setup'; // defaultApp, nonNullApp, databaseUrl
+import { database, Database, DataSnapshot, EventType, ServerValue, Reference } from '../../lib/database/'; // Reference
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const chalk = require('chalk');
@@ -53,6 +53,7 @@ describe('admin.database', () => {
   it('admin.database() returns a database client', () => {
     const db = database();
     expect(db).to.be.instanceOf(Database);
+
   });
 
   it('admin.database.ServerValue type is defined', () => {
@@ -64,11 +65,6 @@ describe('admin.database', () => {
     return database(defaultApp).ref('blocked').set(ServerValue.TIMESTAMP)
       .should.eventually.be.fulfilled;
   });
-
-  /*it('App with null auth overrides is blocked by security rules', () => {
-    return database(nullApp).ref('blocked').set(ServerValue.TIMESTAMP)
-      .should.eventually.be.rejectedWith('PERMISSION_DENIED: Permission denied');
-  });*/
 
   it('App with non-null auth override is not blocked by security rules', () => {
     return database(nonNullApp).ref('blocked').set(ServerValue.TIMESTAMP)
@@ -120,7 +116,7 @@ describe('admin.database', () => {
       return ref.remove().should.eventually.be.fulfilled;
     });
   });
-
+ 
   describe('app.database(url).ref()', () => {
 
     let refWithUrl: Reference;
@@ -186,4 +182,4 @@ export function addValueEventListener(
   callback: (s: DataSnapshot | null) => any): void {
   const eventType: EventType = 'value';
   db.ref().on(eventType, callback);
-}
+} 

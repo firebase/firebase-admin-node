@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import * as firebase from './default-namespace';
+// import * as firebase from './default-namespace';
 
 // Only Node.js has a process variable that is of [[Class]] process
 const processGlobal = typeof process !== 'undefined' ? process : 0;
@@ -36,5 +36,7 @@ https://firebase.google.com/docs/web/setup
 
 //export {FirebaseNamespace} from './firebase-namespace';
 //export {FirebaseApp} from './firebase-app';
+export * from './firebase-namespace';
+export * from './firebase-app';
 
-export = firebase;
+//export = firebase;

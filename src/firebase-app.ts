@@ -19,6 +19,7 @@ import * as validator from './utils/validator';
 import {deepCopy, deepExtend} from './utils/deep-copy';
 import {FirebaseServiceInterface} from './firebase-service';
 import {FirebaseNamespaceInternals} from './firebase-namespace';
+import {deleteInstances} from './database';
 import {AppErrorCodes, FirebaseAppError} from './utils/error';
 import {Agent} from 'http';
 
@@ -301,10 +302,10 @@ export class FirebaseApp {
   public delete(): Promise<void> {
     this.checkDestroyed_();
     this.firebaseInternals_.removeApp(this.name_);
-
-    this.INTERNAL.delete();
+    deleteInstances(this);
 
     return Promise.all(Object.keys(this.services_).map((serviceName) => {
+      console.log('deleting this...');
       return this.services_[serviceName].INTERNAL.delete();
     })).then(() => {
       this.services_ = {};
