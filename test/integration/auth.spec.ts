@@ -750,6 +750,7 @@ describe('admin.auth', () => {
         state: 'ENABLED',
         factorIds: ['phone'],
       },
+      // Add random phone number / code pairs.
       testPhoneNumbers: {
         '+16505551234': '019287',
         '+16505550676': '985235',

@@ -367,9 +367,9 @@ describe('generateUpdateMask()', () => {
   });
 
   it('should return expected update mask array with max paths for nested object', () => {
-    expect(generateUpdateMask(obj, {'f.i': true, 'k': true}))
+    expect(generateUpdateMask(obj, new Set(['f.i', 'k'])))
       .to.deep.equal(['b', 'c', 'd', 'e', 'f.g', 'f.h', 'f.i', 'k', 'l']);
-    expect(generateUpdateMask(obj, {notfound: true, b: true, f: true, k: true, l: true}))
+    expect(generateUpdateMask(obj, new Set(['notfound', 'b', 'f', 'k', 'l'])))
       .to.deep.equal(['b', 'c', 'd', 'e', 'f', 'k', 'l']);
   });
 });

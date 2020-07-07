@@ -87,8 +87,7 @@ export class Tenant {
     }
     if (typeof tenantOptions.testPhoneNumbers !== 'undefined') {
       // null will clear existing test phone numbers. Translate to empty object.
-      request.testPhoneNumbers =
-        (tenantOptions.testPhoneNumbers === null ? {} : tenantOptions.testPhoneNumbers);
+      request.testPhoneNumbers = tenantOptions.testPhoneNumbers ?? {};
     }
     return request;
   }
@@ -171,10 +170,10 @@ export class Tenant {
   /**
    * The Tenant object constructor.
    *
-   * @param {any} response The server side response used to initialize the Tenant object.
+   * @param response The server side response used to initialize the Tenant object.
    * @constructor
    */
-  constructor(response: any) {
+  constructor(response: TenantServerResponse) {
     const tenantId = Tenant.getTenantIdFromResourceName(response.name);
     if (!tenantId) {
       throw new FirebaseAuthError(
@@ -205,8 +204,8 @@ export class Tenant {
     const json = {
       tenantId: this.tenantId,
       displayName: this.displayName,
-      emailSignInConfig: this.emailSignInConfig && this.emailSignInConfig.toJSON(),
-      multiFactorConfig: this.multiFactorConfig && this.multiFactorConfig.toJSON(),
+      emailSignInConfig: this.emailSignInConfig?.toJSON(),
+      multiFactorConfig: this.multiFactorConfig?.toJSON(),
       testPhoneNumbers: this.testPhoneNumbers,
     };
     if (typeof json.multiFactorConfig === 'undefined') {

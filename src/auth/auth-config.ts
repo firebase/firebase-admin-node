@@ -274,13 +274,14 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
       );
     }
 
-    if (typeof options.factorIds !== 'undefined' &&
-        !validator.isArray(options.factorIds)) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_CONFIG,
-        '"MultiFactorConfig.factorIds" must be an array of valid "AuthFactorTypes".',
-      );
-    } else if (validator.isArray(options.factorIds)) {
+    if (typeof options.factorIds !== 'undefined') {
+      if(!validator.isArray(options.factorIds)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"MultiFactorConfig.factorIds" must be an array of valid "AuthFactorTypes".',
+        );
+      }
+
       // Validate content of array.
       options.factorIds.forEach((factorId) => {
         if (typeof AUTH_FACTOR_CLIENT_TO_SERVER_TYPE[factorId] === 'undefined') {
@@ -321,7 +322,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
   public toJSON(): object {
     return {
       state: this.state,
-      factorIds: this.factorIds.concat(),
+      factorIds: this.factorIds,
     };
   }
 }

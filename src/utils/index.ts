@@ -143,14 +143,14 @@ export function formatString(str: string, params?: object): string {
  * Note this will ignore the last key with value undefined.
  *
  * @param obj The object to generate the update mask for.
- * @param maxPaths The optional map of keys for maximum paths to traverse.
+ * @param terminalPaths The optional map of keys for maximum paths to traverse.
  *      Nested objects beyond that path will be ignored. This is useful for
  *      keys with variable object values.
- * @param currentPath The path so far.
+ * @param root The path so far.
  * @return The computed update mask list.
  */
 export function generateUpdateMask(
-  obj: any, maxPaths: {[key: string]: boolean} = {}, currentPath = ''
+  obj: any, terminalPaths: Set<string> = new Set(), root = ''
 ): string[] {
   const updateMask: string[] = [];
   if (!validator.isNonNullObject(obj)) {
@@ -158,14 +158,13 @@ export function generateUpdateMask(
   }
   for (const key in obj) {
     if (typeof obj[key] !== 'undefined') {
-      const nextPath = currentPath ?  currentPath + '.' + key : key;
+      const nextPath = root ? `${root}.${key}` : key;
       // We hit maximum path.
-      if (maxPaths[nextPath]) {
+      if (terminalPaths.has(nextPath)) {
         // Add key and stop traversing this branch.
         updateMask.push(key);
       } else {
-        let maskList: string[] = [];
-        maskList = generateUpdateMask(obj[key], maxPaths, nextPath);
+        const maskList = generateUpdateMask(obj[key], terminalPaths, nextPath);
         if (maskList.length > 0) {
           maskList.forEach((mask) => {
             updateMask.push(`${key}.${mask}`);
