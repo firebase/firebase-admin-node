@@ -26,7 +26,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
-import {Auth, TenantAwareAuth, BaseAuth, DecodedIdToken} from '../../../src/auth/auth';
+import {Auth, TenantAwareAuth, BaseAuth, DecodedIdToken, auth, DeleteUsersResult} from '../../../src/auth/auth';
 import {UserRecord, UpdateRequest} from '../../../src/auth/user-record';
 import {FirebaseApp} from '../../../src/firebase-app';
 import {
@@ -1298,7 +1298,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
     describe('deleteUsers()', () => {
       it('should succeed given an empty list', () => {
-        return auth.deleteUsers([])
+        return deleteUsersWithDelay([])
           .then((deleteUsersResult) => {
             expect(deleteUsersResult.successCount).to.equal(0);
             expect(deleteUsersResult.failureCount).to.equal(0);
@@ -1321,7 +1321,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           });
 
         try {
-          const deleteUsersResult = await auth.deleteUsers(['uid1', 'uid2', 'uid3', 'uid4']);
+          const deleteUsersResult = await deleteUsersWithDelay(['uid1', 'uid2', 'uid3', 'uid4']);
 
           expect(deleteUsersResult.successCount).to.equal(2);
           expect(deleteUsersResult.failureCount).to.equal(2);
@@ -1339,7 +1339,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         const stub = sinon.stub(testConfig.RequestHandler.prototype, 'deleteAccounts')
           .resolves({});
         try {
-          await auth.deleteUsers(['uid1', 'uid2', 'uid3'])
+          await deleteUsersWithDelay(['uid1', 'uid2', 'uid3'])
             .then((result) => {
               // Confirm underlying API called with expected parameters.
               expect(stub).to.have.been.calledOnce.and.calledWith(['uid1', 'uid2', 'uid3']);
@@ -3190,3 +3190,19 @@ AUTH_CONFIGS.forEach((testConfig) => {
     }
   });
 });
+
+/**
+ * Deletes the specified list of users by calling the `deleteUsers()` API. This
+ * API is rate limited at 1 QPS, and therefore this helper function staggers
+ * subsequent invocations by adding 1 second delay to each call.
+ *
+ * @param {string[]} uids The list of user identifiers to delete.
+ * @return {Promise} A promise that resolves when delete operation resolves.
+ */
+function deleteUsersWithDelay(uids: string[]): Promise<DeleteUsersResult> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, 1000);
+  }).then(() => {
+    return auth().deleteUsers(uids);
+  });
+}

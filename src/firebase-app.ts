@@ -300,9 +300,10 @@ export class FirebaseApp {
    * @return {Promise<void>} An empty Promise fulfilled once the FirebaseApp instance is deleted.
    */
   public delete(): Promise<void> {
-    deleteInstances(this);
     this.checkDestroyed_();
     this.firebaseInternals_.removeApp(this.name_);
+
+    deleteInstances(this);
 
     return Promise.all(Object.keys(this.services_).map((serviceName) => {
       console.log('deleting this...');

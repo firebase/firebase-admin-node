@@ -98,7 +98,8 @@ export class DatabaseService implements FirebaseServiceInterface {
     let db: Database = this.INTERNAL.databases[dbUrl];
     if (typeof db === 'undefined') {
       const rtdb = require('@firebase/database'); // eslint-disable-line @typescript-eslint/no-var-requires
-      const version = '<XXX_SDK_VERSION_XXX>'
+      //const { version } = require('../package.json'); // eslint-disable-line @typescript-eslint/no-var-requires
+      const version = 'XXX_SDK_VERSION_XXX';
       db = rtdb.initStandalone(this.appInternal, dbUrl, version).instance;
 
       const rulesClient = new DatabaseRulesClient(this.app, dbUrl);
