@@ -150,7 +150,7 @@ export function formatString(str: string, params?: object): string {
  * @return The computed update mask list.
  */
 export function generateUpdateMask(
-  obj: any, terminalPaths: Set<string> = new Set(), root = ''
+  obj: any, terminalPaths: string[] = [], root = ''
 ): string[] {
   const updateMask: string[] = [];
   if (!validator.isNonNullObject(obj)) {
@@ -160,7 +160,8 @@ export function generateUpdateMask(
     if (typeof obj[key] !== 'undefined') {
       const nextPath = root ? `${root}.${key}` : key;
       // We hit maximum path.
-      if (terminalPaths.has(nextPath)) {
+      // Consider switching to Set<string> if the list grows too large.
+      if (terminalPaths.indexOf(nextPath) !== -1) {
         // Add key and stop traversing this branch.
         updateMask.push(key);
       } else {

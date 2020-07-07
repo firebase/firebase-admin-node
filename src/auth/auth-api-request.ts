@@ -1984,7 +1984,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
       const request = Tenant.buildServerRequest(tenantOptions, false);
       // Do not traverse deep into testPhoneNumbers. The entire content should be replaced
       // and not just specific phone numbers.
-      const updateMask = utils.generateUpdateMask(request, new Set(['testPhoneNumbers']));
+      const updateMask = utils.generateUpdateMask(request, ['testPhoneNumbers']);
       return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, UPDATE_TENANT, request,
         {tenantId, updateMask: updateMask.join(',')})
         .then((response: any) => {
