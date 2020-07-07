@@ -327,10 +327,31 @@ describe('formatString()', () => {
 });
 
 describe('generateUpdateMask()', () => {
+  const obj: any = {
+    a: undefined,
+    b: 'something',
+    c: ['stuff'],
+    d: false,
+    e: {},
+    f: {
+      g: 1,
+      h: 0,
+      i: {
+        j: 2,
+      },
+    },
+    k: {
+      i: null,
+      j: undefined,
+    },
+    l: {
+      m: undefined,
+    },
+  };
   const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
   nonObjects.forEach((nonObject) => {
     it(`should return empty array for non object ${JSON.stringify(nonObject)}`, () => {
-      expect(generateUpdateMask(nonObject as any)).to.deep.equal([]);
+      expect(generateUpdateMask(nonObject)).to.deep.equal([]);
     });
   });
 
@@ -339,30 +360,16 @@ describe('generateUpdateMask()', () => {
   });
 
   it('should return expected update mask array for nested object', () => {
-    const obj: any = {
-      a: undefined,
-      b: 'something',
-      c: ['stuff'],
-      d: false,
-      e: {},
-      f: {
-        g: 1,
-        h: 0,
-        i: {
-          j: 2,
-        },
-      },
-      k: {
-        i: null,
-        j: undefined,
-      },
-      l: {
-        m: undefined,
-      },
-    };
     const expectedMaskArray = [
       'b', 'c', 'd', 'e', 'f.g', 'f.h', 'f.i.j', 'k.i', 'l',
     ];
     expect(generateUpdateMask(obj)).to.deep.equal(expectedMaskArray);
+  });
+
+  it('should return expected update mask array with max paths for nested object', () => {
+    expect(generateUpdateMask(obj, {'f.i': true, 'k': true}))
+      .to.deep.equal(['b', 'c', 'd', 'e', 'f.g', 'f.h', 'f.i', 'k', 'l']);
+    expect(generateUpdateMask(obj, {notfound: true, b: true, f: true, k: true, l: true}))
+      .to.deep.equal(['b', 'c', 'd', 'e', 'f', 'k', 'l']);
   });
 });

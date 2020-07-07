@@ -537,6 +537,10 @@ export class AuthClientErrorCode {
     code: 'invalid-tenant-type',
     message: 'Tenant type must be either "full_service" or "lightweight".',
   };
+  public static INVALID_TESTING_PHONE_NUMBER = {
+    code: 'invalid-testing-phone-number',
+    message: 'Invalid testing phone number or invalid test code provided.',
+  };
   public static INVALID_UID = {
     code: 'invalid-uid',
     message: 'The uid must be a non-empty string with at most 128 characters.',
@@ -599,6 +603,10 @@ export class AuthClientErrorCode {
   public static MISSING_SAML_RELYING_PARTY_CONFIG = {
     code: 'missing-saml-relying-party-config',
     message: 'The SAML configuration provided is missing a relying party configuration.',
+  };
+  public static MAXIMUM_TEST_PHONE_NUMBER_EXCEEDED = {
+    code: 'test-phone-number-limit-exceeded',
+    message: 'The maximum allowed number of test phone number / code pairs has been exceeded.',
   };
   public static MAXIMUM_USER_COUNT_EXCEEDED = {
     code: 'maximum-user-count-exceeded',
@@ -875,6 +883,8 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   INVALID_PROVIDER_ID: 'INVALID_PROVIDER_ID',
   // Invalid service account.
   INVALID_SERVICE_ACCOUNT: 'INVALID_SERVICE_ACCOUNT',
+  // Invalid testing phone number.
+  INVALID_TESTING_PHONE_NUMBER: 'INVALID_TESTING_PHONE_NUMBER',
   // Invalid tenant type.
   INVALID_TENANT_TYPE: 'INVALID_TENANT_TYPE',
   // Missing Android package name.

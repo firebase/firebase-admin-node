@@ -746,12 +746,28 @@ describe('admin.auth', () => {
         enabled: true,
         passwordRequired: true,
       },
+      multiFactorConfig: {
+        state: 'ENABLED',
+        factorIds: ['phone'],
+      },
+      testPhoneNumbers: {
+        '+16505551234': '019287',
+        '+16505550676': '985235',
+      },
     };
     const expectedCreatedTenant: any = {
       displayName: 'testTenant1',
       emailSignInConfig: {
         enabled: true,
         passwordRequired: true,
+      },
+      multiFactorConfig: {
+        state: 'ENABLED',
+        factorIds: ['phone'],
+      },
+      testPhoneNumbers: {
+        '+16505551234': '019287',
+        '+16505550676': '985235',
       },
     };
     const expectedUpdatedTenant: any = {
@@ -760,12 +776,28 @@ describe('admin.auth', () => {
         enabled: false,
         passwordRequired: true,
       },
+      multiFactorConfig: {
+        state: 'DISABLED',
+        factorIds: [],
+      },
+      // Cannot currently test clearing test phone numbers: b/160513153.
+      testPhoneNumbers: {
+        '+16505551234': '123456',
+      },
     };
     const expectedUpdatedTenant2: any = {
       displayName: 'testTenantUpdated',
       emailSignInConfig: {
         enabled: true,
         passwordRequired: false,
+      },
+      multiFactorConfig: {
+        state: 'ENABLED',
+        factorIds: ['phone'],
+      },
+      testPhoneNumbers: {
+        '+16505551234': '123456',
+        '+16505550000': '654321',
       },
     };
 
@@ -1126,12 +1158,16 @@ describe('admin.auth', () => {
         emailSignInConfig: {
           enabled: false,
         },
+        multiFactorConfig: deepCopy(expectedUpdatedTenant.multiFactorConfig),
+        testPhoneNumbers: deepCopy(expectedUpdatedTenant.testPhoneNumbers),
       };
       const updatedOptions2: admin.auth.UpdateTenantRequest = {
         emailSignInConfig: {
           enabled: true,
           passwordRequired: false,
         },
+        multiFactorConfig: deepCopy(expectedUpdatedTenant2.multiFactorConfig),
+        testPhoneNumbers: deepCopy(expectedUpdatedTenant2.testPhoneNumbers),
       };
       return admin.auth().tenantManager().updateTenant(createdTenantId, updatedOptions)
         .then((actualTenant) => {
