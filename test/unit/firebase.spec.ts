@@ -26,8 +26,8 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import * as mocks from '../resources/mocks';
 
-import * as firebaseAdmin from '../../src/index';
-import {RefreshTokenCredential, ServiceAccountCredential, isApplicationDefault} from '../../src/auth/credential';
+import { initializeApp, apps, credential, cert, app } from '../../lib/index';
+import { RefreshTokenCredential, ServiceAccountCredential, isApplicationDefault } from '../../lib/auth/credential';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -51,7 +51,7 @@ describe('Firebase', () => {
 
   afterEach(() => {
     const deletePromises: Array<Promise<void>> = [];
-    firebaseAdmin.apps().forEach((app) => {
+    apps().forEach((app) => {
       deletePromises.push(app.delete());
     });
 
@@ -63,20 +63,20 @@ describe('Firebase', () => {
     invalidOptions.forEach((invalidOption: any) => {
       it('should throw given invalid options object: ' + JSON.stringify(invalidOption), () => {
         expect(() => {
-          firebaseAdmin.initializeApp(invalidOption);
+          initializeApp(invalidOption);
         }).to.throw('Invalid Firebase app options');
       });
     });
 
     it('should use application default credentials when no credentials are explicitly specified', () => {
-      const app = firebaseAdmin.initializeApp(mocks.appOptionsNoAuth);
+      const app = initializeApp(mocks.appOptionsNoAuth);
       expect(app.options).to.have.property('credential');
       expect(app.options.credential).to.not.be.undefined;
     });
 
     it('should not modify the provided options object', () => {
       const optionsClone = _.clone(mocks.appOptions);
-      firebaseAdmin.initializeApp(mocks.appOptions);
+      initializeApp(mocks.appOptions);
       expect(optionsClone).to.deep.equal(mocks.appOptions);
     });
 
@@ -84,7 +84,7 @@ describe('Firebase', () => {
     invalidCredentials.forEach((invalidCredential) => {
       it('should throw given non-object credential: ' + JSON.stringify(invalidCredential), () => {
         expect(() => {
-          firebaseAdmin.initializeApp({
+          initializeApp({
             credential: invalidCredential as any,
           });
         }).to.throw('Invalid Firebase app options');
@@ -93,13 +93,13 @@ describe('Firebase', () => {
 
     it('should throw given a credential which doesn\'t implement the Credential interface', () => {
       expect(() => {
-        firebaseAdmin.initializeApp({
+        initializeApp({
           credential: {},
         } as any);
       }).to.throw('Invalid Firebase app options');
 
       expect(() => {
-        firebaseAdmin.initializeApp({
+        initializeApp({
           credential: {
             getAccessToken: true,
           },
@@ -108,35 +108,35 @@ describe('Firebase', () => {
     });
 
     it('should initialize SDK given a cert credential with a certificate object', () => {
-      firebaseAdmin.initializeApp({
-        credential: firebaseAdmin.credential.cert(mocks.certificateObject),
+      initializeApp({
+        credential: cert(mocks.certificateObject),
       });
 
-      expect(isApplicationDefault(firebaseAdmin.app().options.credential)).to.be.false;
-      return firebaseAdmin.app().INTERNAL.getToken()
+      expect(isApplicationDefault(app().options.credential)).to.be.false;
+      return app().INTERNAL.getToken()
         .should.eventually.have.keys(['accessToken', 'expirationTime']);
     });
 
     it('should initialize SDK given a cert credential with a valid path to a certificate key file', () => {
       const keyPath = path.resolve(__dirname, '../resources/mock.key.json');
-      firebaseAdmin.initializeApp({
-        credential: firebaseAdmin.credential.cert(keyPath),
+      initializeApp({
+        credential: cert(keyPath),
       });
 
-      expect(isApplicationDefault(firebaseAdmin.app().options.credential)).to.be.false;
-      return firebaseAdmin.app().INTERNAL.getToken()
+      expect(isApplicationDefault(app().options.credential)).to.be.false;
+      return app().INTERNAL.getToken()
         .should.eventually.have.keys(['accessToken', 'expirationTime']);
     });
 
     it('should initialize SDK given an application default credential', () => {
       const credPath: string | undefined = process.env.GOOGLE_APPLICATION_CREDENTIALS;
       process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../resources/mock.key.json');
-      firebaseAdmin.initializeApp({
-        credential: firebaseAdmin.credential.applicationDefault(),
+      initializeApp({
+        credential: credential.applicationDefault(),
       });
 
-      expect(isApplicationDefault(firebaseAdmin.app().options.credential)).to.be.true;
-      return firebaseAdmin.app().INTERNAL.getToken().then((token) => {
+      expect(isApplicationDefault(app().options.credential)).to.be.true;
+      return app().INTERNAL.getToken().then((token) => {
         if (typeof credPath === 'undefined') {
           delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
         } else {
@@ -153,12 +153,12 @@ describe('Firebase', () => {
           access_token: 'mock-access-token', // eslint-disable-line @typescript-eslint/camelcase
           expires_in: 3600, // eslint-disable-line @typescript-eslint/camelcase
         });
-      firebaseAdmin.initializeApp({
-        credential: firebaseAdmin.credential.refreshToken(mocks.refreshToken),
+      initializeApp({
+        credential: credential.refreshToken(mocks.refreshToken),
       });
 
-      expect(isApplicationDefault(firebaseAdmin.app().options.credential)).to.be.false;
-      return firebaseAdmin.app().INTERNAL.getToken()
+      expect(isApplicationDefault(app().options.credential)).to.be.false;
+      return app().INTERNAL.getToken()
         .should.eventually.have.keys(['accessToken', 'expirationTime']);
     });
   });

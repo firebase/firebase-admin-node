@@ -268,10 +268,12 @@ export function database(app?: FirebaseApp, url?: string): Database {
 }
 
 export function deleteInstances(app?: FirebaseApp): void {
+  console.log('deleting!!');
   if (typeof(app) === 'undefined') {
     app = admin.app();
   }
   if (typeof(Database_[app.name]) != 'undefined') {
     Database_[app.name].INTERNAL.delete();
+    console.log('ok deleted');
   }
 }
