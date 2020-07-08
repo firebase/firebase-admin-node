@@ -496,7 +496,7 @@ class AsyncHttpCall {
     });
 
     const timeout: number | undefined = this.config.timeout;
-    const timeoutCallback = () => {
+    const timeoutCallback: () => void = () => {
       req.abort();
       this.rejectWithError(`timeout of ${timeout}ms exceeded`, 'ETIMEDOUT', req);
     };

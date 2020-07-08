@@ -1745,13 +1745,13 @@ describe('admin.auth', () => {
           const dkLen = userImportTest.importOptions.hash.derivedKeyLength!;
 
           return Buffer.from(
-              crypto.scryptSync(
-                  currentRawPassword,
-                  Buffer.from(currentRawSalt),
-                  dkLen,
-                  {
-                    N, r, p,
-                  }));
+            crypto.scryptSync(
+              currentRawPassword,
+              Buffer.from(currentRawSalt),
+              dkLen,
+              {
+                N, r, p,
+              }));
         },
         rawPassword,
         rawSalt,
