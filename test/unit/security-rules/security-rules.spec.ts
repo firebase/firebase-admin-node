@@ -161,7 +161,7 @@ describe('SecurityRules', () => {
         .rejects(EXPECTED_ERROR);
       stubs.push(stub);
       return securityRules.getRuleset('foo')
-        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.deep.include(EXPECTED_ERROR);
     });
 
     it('should reject when API response is invalid', () => {
@@ -236,7 +236,7 @@ describe('SecurityRules', () => {
         .rejects(EXPECTED_ERROR);
       stubs.push(stub);
       return securityRules.getFirestoreRuleset()
-        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.deep.include(EXPECTED_ERROR);
     });
 
     it('should reject when getRelease response is invalid', () => {
@@ -281,7 +281,7 @@ describe('SecurityRules', () => {
     INVALID_BUCKET_NAMES.forEach((bucketName) => {
       it(`should reject when called with: ${JSON.stringify(bucketName)}`, () => {
         return securityRules.getStorageRuleset(bucketName)
-          .should.eventually.be.rejected.and.deep.equal(INVALID_BUCKET_ERROR);
+          .should.eventually.be.rejected.and.deep.include(INVALID_BUCKET_ERROR);
       });
     });
 
@@ -291,7 +291,7 @@ describe('SecurityRules', () => {
         .rejects(EXPECTED_ERROR);
       stubs.push(stub);
       return securityRules.getStorageRuleset()
-        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.deep.include(EXPECTED_ERROR);
     });
 
     it('should reject when getRelease response is invalid', () => {
@@ -362,7 +362,7 @@ describe('SecurityRules', () => {
     INVALID_RULESETS.forEach((invalidRuleset) => {
       it(`should reject when called with: ${JSON.stringify(invalidRuleset)}`, () => {
         return securityRules.releaseFirestoreRuleset(invalidRuleset)
-          .should.eventually.be.rejected.and.deep.equal(INVALID_RULESET_ERROR);
+          .should.eventually.be.rejected.and.deep.include(INVALID_RULESET_ERROR);
       });
     });
 
@@ -372,7 +372,7 @@ describe('SecurityRules', () => {
         .rejects(EXPECTED_ERROR);
       stubs.push(stub);
       return securityRules.releaseFirestoreRuleset('foo')
-        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.deep.include(EXPECTED_ERROR);
     });
 
     it('should resolve on success when the ruleset specified by name', () => {
@@ -413,7 +413,7 @@ describe('SecurityRules', () => {
     INVALID_SOURCES.forEach((invalidSource) => {
       it(`should reject when called with: ${JSON.stringify(invalidSource)}`, () => {
         return securityRules.releaseFirestoreRulesetFromSource(invalidSource)
-          .should.eventually.be.rejected.and.deep.equal(INVALID_SOURCE_ERROR);
+          .should.eventually.be.rejected.and.deep.include(INVALID_SOURCE_ERROR);
       });
     });
 
@@ -423,7 +423,7 @@ describe('SecurityRules', () => {
         .rejects(EXPECTED_ERROR);
       stubs.push(stub);
       return securityRules.releaseFirestoreRulesetFromSource('foo')
-        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.deep.include(EXPECTED_ERROR);
     });
 
     const sources: {[key: string]: string | Buffer} = {
@@ -462,14 +462,14 @@ describe('SecurityRules', () => {
     INVALID_RULESETS.forEach((invalidRuleset) => {
       it(`should reject when called with: ${JSON.stringify(invalidRuleset)}`, () => {
         return securityRules.releaseStorageRuleset(invalidRuleset)
-          .should.eventually.be.rejected.and.deep.equal(INVALID_RULESET_ERROR);
+          .should.eventually.be.rejected.and.deep.include(INVALID_RULESET_ERROR);
       });
     });
 
     INVALID_BUCKET_NAMES.forEach((bucketName) => {
       it(`should reject when called with: ${JSON.stringify(bucketName)}`, () => {
         return securityRules.releaseStorageRuleset('foo', bucketName)
-          .should.eventually.be.rejected.and.deep.equal(INVALID_BUCKET_ERROR);
+          .should.eventually.be.rejected.and.deep.include(INVALID_BUCKET_ERROR);
       });
     });
 
@@ -479,7 +479,7 @@ describe('SecurityRules', () => {
         .rejects(EXPECTED_ERROR);
       stubs.push(stub);
       return securityRules.releaseStorageRuleset('foo')
-        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.deep.include(EXPECTED_ERROR);
     });
 
     it('should resolve on success when the ruleset specified by name', () => {
@@ -544,14 +544,14 @@ describe('SecurityRules', () => {
     INVALID_SOURCES.forEach((invalidSource) => {
       it(`should reject when called with source: ${JSON.stringify(invalidSource)}`, () => {
         return securityRules.releaseStorageRulesetFromSource(invalidSource)
-          .should.eventually.be.rejected.and.deep.equal(INVALID_SOURCE_ERROR);
+          .should.eventually.be.rejected.and.deep.include(INVALID_SOURCE_ERROR);
       });
     });
 
     INVALID_BUCKET_NAMES.forEach((invalidBucket) => {
       it(`should reject when called with bucket: ${JSON.stringify(invalidBucket)}`, () => {
         return securityRules.releaseStorageRulesetFromSource(RULES_FILE.content, invalidBucket)
-          .should.eventually.be.rejected.and.deep.equal(INVALID_BUCKET_ERROR);
+          .should.eventually.be.rejected.and.deep.include(INVALID_BUCKET_ERROR);
       });
     });
 
@@ -561,7 +561,7 @@ describe('SecurityRules', () => {
         .rejects(EXPECTED_ERROR);
       stubs.push(stub);
       return securityRules.releaseStorageRulesetFromSource('foo')
-        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.deep.include(EXPECTED_ERROR);
     });
 
     const sources: {[key: string]: string | Buffer} = {
@@ -654,7 +654,7 @@ describe('SecurityRules', () => {
         .rejects(EXPECTED_ERROR);
       stubs.push(stub);
       return securityRules.createRuleset(RULES_FILE)
-        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.deep.include(EXPECTED_ERROR);
     });
 
     it('should reject when API response is invalid', () => {
@@ -726,7 +726,7 @@ describe('SecurityRules', () => {
         .rejects(EXPECTED_ERROR);
       stubs.push(stub);
       return securityRules.deleteRuleset('foo')
-        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.deep.include(EXPECTED_ERROR);
     });
 
     it('should resolve on success', () => {
@@ -760,7 +760,7 @@ describe('SecurityRules', () => {
         .rejects(EXPECTED_ERROR);
       stubs.push(stub);
       return securityRules.listRulesetMetadata()
-        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.deep.include(EXPECTED_ERROR);
     });
 
     it('should reject when API response is invalid', () => {

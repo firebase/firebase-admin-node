@@ -235,7 +235,7 @@ describe('MachineLearning', () => {
       expect(model.tags).to.deep.equal(['tag_1', 'tag_2']);
       expect(model.createTime).to.equal(CREATE_TIME_UTC);
       expect(model.updateTime).to.equal(UPDATE_TIME_UTC);
-      expect(model.validationError).to.be.empty;
+      expect(model.validationError).to.be.undefined;
       expect(model.published).to.be.true;
       expect(model.etag).to.equal('etag123');
       expect(model.modelHash).to.equal('modelHash123');
