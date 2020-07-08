@@ -19,7 +19,6 @@ import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
-import * as scrypt from 'scrypt';
 import firebase from '@firebase/app';
 import '@firebase/auth';
 import {clone} from 'lodash';
@@ -1745,8 +1744,14 @@ describe('admin.auth', () => {
           expect(userImportTest.importOptions.hash.derivedKeyLength).to.exist;
           const dkLen = userImportTest.importOptions.hash.derivedKeyLength!;
 
-          return Buffer.from(scrypt.hashSync(
-            currentRawPassword, {N, r, p}, dkLen, Buffer.from(currentRawSalt)));
+          return Buffer.from(
+            crypto.scryptSync(
+              currentRawPassword,
+              Buffer.from(currentRawSalt),
+              dkLen,
+              {
+                N, r, p,
+              }));
         },
         rawPassword,
         rawSalt,
