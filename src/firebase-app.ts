@@ -19,7 +19,6 @@ import * as validator from './utils/validator';
 import {deepCopy, deepExtend} from './utils/deep-copy';
 import {FirebaseServiceInterface} from './firebase-service';
 import {FirebaseNamespaceInternals} from './firebase-namespace';
-import {deleteInstances} from './database';
 import {AppErrorCodes, FirebaseAppError} from './utils/error';
 import {Agent} from 'http';
 
@@ -200,8 +199,6 @@ export class FirebaseAppInternals {
   public delete(): void {
     this.isDeleted_ = true;
 
-    console.log('delete invoked...');
-
     // Clear the token refresh timeout so it doesn't keep the Node.js process alive.
     clearTimeout(this.tokenRefreshTimeout_);
   }
@@ -303,19 +300,19 @@ export class FirebaseApp {
    */
   public delete(): Promise<void> {
     this.checkDestroyed_();
-    deleteInstances(this);
     this.firebaseInternals_.removeApp(this.name_);
-    console.log('deleted >_<');
     this.INTERNAL.delete();
 
     return Promise.all(Object.keys(this.services_).map((serviceName) => {
-      console.log('deleting this...');
       return this.services_[serviceName].INTERNAL.delete();
     })).then(() => {
       this.services_ = {};
       this.isDeleted_ = true;
-      console.log('doneee');
     });
+  }
+
+  public registerService(serviceName: string, service: FirebaseServiceInterface): void {
+    this.services_[serviceName] = service;
   }
 
   /**

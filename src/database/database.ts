@@ -21,7 +21,6 @@ import {FirebaseApp, app as defaultApp} from '../index';
 import {FirebaseDatabaseError, AppErrorCodes, FirebaseAppError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
 import {Database} from '@firebase/database';
-// import { FirebaseService } from '@firebase/app-types/private';
 
 import * as validator from '../utils/validator';
 import { AuthorizedHttpClient, HttpRequestConfig, HttpError } from '../utils/api-request';
@@ -98,7 +97,7 @@ export class DatabaseService implements FirebaseServiceInterface {
     let db: Database = this.INTERNAL.databases[dbUrl];
     if (typeof db === 'undefined') {
       const rtdb = require('@firebase/database'); // eslint-disable-line @typescript-eslint/no-var-requires
-      //const { version } = require('../package.json'); // eslint-disable-line @typescript-eslint/no-var-requires
+      // const { version } = require('../package.json'); // eslint-disable-line @typescript-eslint/no-var-requires
       const version = 'XXX_SDK_VERSION_XXX';
       db = rtdb.initStandalone(this.appInternal, dbUrl, version).instance;
 
@@ -265,17 +264,6 @@ export function database(app?: FirebaseApp, url?: string): Database {
   if (!(app.name in Database_)) {
     Database_[app.name] = new DatabaseService(app);
   }
+  app.registerService('database', Database_[app.name]);
   return Database_[app.name].getDatabase(url);
-}
-
-export function deleteInstances(app?: FirebaseApp): void {
-  console.log('deleting!!');
-  if (typeof(app) === 'undefined') {
-    app = defaultApp();
-  }
-  if (typeof(Database_[app.name]) != 'undefined') {
-    Database_[app.name].INTERNAL.delete();
-    console.log('ok deleted');
-  }
-  console.log('name: ' + app.name);
 }

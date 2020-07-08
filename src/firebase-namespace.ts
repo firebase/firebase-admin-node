@@ -178,7 +178,6 @@ export class FirebaseNamespaceInternals {
     createService: FirebaseServiceFactory,
     serviceProperties?: object,
     appHook?: AppHook): FirebaseServiceNamespace<FirebaseServiceInterface> {
-    console.log('called!!');
     
     let errorMessage;
     if (typeof serviceName === 'undefined') {
