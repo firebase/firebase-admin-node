@@ -17,9 +17,8 @@
 import * as admin from '../../lib/index';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import { cmdArgs, defaultApp, nonNullApp, databaseUrl} from './setup'; // defaultApp, nonNullApp, databaseUrl
-import { database, Database, DataSnapshot, EventType, ServerValue, Reference } from '../../lib/database/'; // Reference
-// const debug = require('./async-dump');
+import { cmdArgs, defaultApp, nonNullApp, databaseUrl} from './setup';
+import { database, Database, DataSnapshot, EventType, ServerValue, Reference } from '../../lib/database/';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const chalk = require('chalk');
@@ -171,13 +170,6 @@ describe('admin.database', () => {
       return expect(result).to.be.not.undefined;
     });
   });
-
-  /* after(() => {
-    setTimeout(() => {
-      debug.debug();
-    }, 2000);
-  }); */
-
 });
 
 // Check for type compilation. This method is not invoked by any tests. But it
