@@ -19,7 +19,7 @@ import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { cmdArgs, defaultApp, nonNullApp, databaseUrl} from './setup'; // defaultApp, nonNullApp, databaseUrl
 import { database, Database, DataSnapshot, EventType, ServerValue, Reference } from '../../lib/database/'; // Reference
-const debug = require('./async-dump');
+// const debug = require('./async-dump');
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const chalk = require('chalk');
@@ -172,11 +172,11 @@ describe('admin.database', () => {
     });
   });
 
-  after(() => {
+  /* after(() => {
     setTimeout(() => {
       debug.debug();
     }, 2000);
-  });
+  }); */
 
 });
 

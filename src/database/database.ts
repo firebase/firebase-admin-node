@@ -15,10 +15,9 @@
  */
 
 import {URL} from 'url';
-import * as admin from '../index';
 import * as path from 'path';
 
-import {FirebaseApp} from '../index';
+import {FirebaseApp, app as defaultApp} from '../index';
 import {FirebaseDatabaseError, AppErrorCodes, FirebaseAppError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
 import {Database} from '@firebase/database';
@@ -45,11 +44,12 @@ class DatabaseInternals implements FirebaseServiceInternalsInterface {
    * @return {Promise<()>} An empty Promise that will be fulfilled when the service is deleted.
    */
   public delete(): Promise<void> {
+    const promises = [];
     for (const dbUrl of Object.keys(this.databases)) {
       const db: Database = this.databases[dbUrl];
-      db.INTERNAL.delete();
+      promises.push(db.INTERNAL.delete());
     }
-    return Promise.resolve(undefined);
+    return Promise.all(promises).then();
   }
 }
 
@@ -260,7 +260,7 @@ export type EventType = 'value' | 'child_added' | 'child_changed' | 'child_moved
 // TODO: Fix hacky ?? 
 export function database(app?: FirebaseApp, url?: string): Database {
   if (typeof(app) === 'undefined') {
-    app = admin.app();
+    app = defaultApp();
   }
   if (!(app.name in Database_)) {
     Database_[app.name] = new DatabaseService(app);
@@ -271,10 +271,11 @@ export function database(app?: FirebaseApp, url?: string): Database {
 export function deleteInstances(app?: FirebaseApp): void {
   console.log('deleting!!');
   if (typeof(app) === 'undefined') {
-    app = admin.app();
+    app = defaultApp();
   }
   if (typeof(Database_[app.name]) != 'undefined') {
     Database_[app.name].INTERNAL.delete();
     console.log('ok deleted');
   }
+  console.log('name: ' + app.name);
 }

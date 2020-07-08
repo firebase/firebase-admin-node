@@ -200,6 +200,8 @@ export class FirebaseAppInternals {
   public delete(): void {
     this.isDeleted_ = true;
 
+    console.log('delete invoked...');
+
     // Clear the token refresh timeout so it doesn't keep the Node.js process alive.
     clearTimeout(this.tokenRefreshTimeout_);
   }
@@ -301,9 +303,10 @@ export class FirebaseApp {
    */
   public delete(): Promise<void> {
     this.checkDestroyed_();
-    this.firebaseInternals_.removeApp(this.name_);
-
     deleteInstances(this);
+    this.firebaseInternals_.removeApp(this.name_);
+    console.log('deleted >_<');
+    this.INTERNAL.delete();
 
     return Promise.all(Object.keys(this.services_).map((serviceName) => {
       console.log('deleting this...');
@@ -311,6 +314,7 @@ export class FirebaseApp {
     })).then(() => {
       this.services_ = {};
       this.isDeleted_ = true;
+      console.log('doneee');
     });
   }
 
