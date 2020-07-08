@@ -36,7 +36,9 @@ import {
   RESERVED_CLAIMS, FIREBASE_AUTH_UPLOAD_ACCOUNT, FIREBASE_AUTH_CREATE_SESSION_COOKIE,
   EMAIL_ACTION_REQUEST_TYPES, TenantAwareAuthRequestHandler, AbstractAuthRequestHandler,
 } from '../../../src/auth/auth-api-request';
-import {UserImportBuilder, UserImportRecord} from '../../../src/auth/user-import-builder';
+import {
+  UserImportBuilder, UserImportRecord, UserImportResult
+} from '../../../src/auth/user-import-builder';
 import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/utils/error';
 import {ActionCodeSettingsBuilder} from '../../../src/auth/action-code-settings-builder';
 import {
@@ -950,7 +952,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
           });
       });
       it('should be rejected given an invalid duration', () => {
@@ -963,7 +965,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
           });
       });
       it('should be rejected given a duration less than minimum allowed', () => {
@@ -977,7 +979,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
           });
       });
       it('should be rejected given a duration greater than maximum allowed', () => {
@@ -991,7 +993,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
           });
       });
       it('should be rejected when the backend returns an error', () => {
@@ -1010,7 +1012,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
           });
       });
@@ -1056,7 +1058,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
           });
       });
@@ -1096,7 +1098,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
           });
       });
@@ -1117,7 +1119,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
           });
       });
@@ -1167,7 +1169,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
             expect(stub).to.have.not.been.called;
           });
 
@@ -1189,7 +1191,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
           });
       });
@@ -1500,7 +1502,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const userImportBuilder = new UserImportBuilder(users, options);
         return requestHandler.uploadAccount(users, options)
           .then((result) => {
-            expect(result).to.deep.equal(userImportBuilder.buildResponse(expectedResult.data.error));
+            expectUserImportResult(
+              result, userImportBuilder.buildResponse(expectedResult.data.error));
             expect(stub).to.have.been.calledOnce.and.calledWith(
               callParams(path, method, userImportBuilder.buildRequest()));
           });
@@ -1526,7 +1529,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const requestHandler = handler.init(mockApp);
         return requestHandler.uploadAccount(testUsers)
           .then((result) => {
-            expect(result).to.deep.equal(expectedResult);
+            expectUserImportResult(result, expectedResult);
             expect(stub).to.have.not.been.called;
           });
       });
@@ -1736,7 +1739,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const requestHandler = handler.init(mockApp);
         return requestHandler.uploadAccount(testUsers, validOptions)
           .then((result) => {
-            expect(result).to.deep.equal(expectedResult);
+            expectUserImportResult(result, expectedResult);
             expect(stub).to.have.not.been.called;
           });
       });
@@ -1761,11 +1764,22 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
               callParams(path, method, userImportBuilder.buildRequest()));
           });
       });
+
+      function expectUserImportResult(result: UserImportResult, expected: UserImportResult): void {
+        expect(result.successCount).to.equal(expected.successCount);
+        expect(result.failureCount).to.equal(expected.failureCount);
+        expect(result.errors.length).to.equal(expected.errors.length);
+        result.errors.forEach((err, idx) => {
+          const want = expected.errors[idx];
+          expect(err.index).to.equal(want.index);
+          expect(err.error).to.deep.include(want.error);
+        });
+      }
 
     });
 
@@ -1839,7 +1853,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
           });
       });
       it('should be rejected given an invalid next page token', () => {
@@ -1852,7 +1866,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
           });
       });
       it('should be rejected when the backend returns an error', () => {
@@ -1874,7 +1888,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
           });
       });
@@ -1914,7 +1928,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
           });
       });
@@ -2204,7 +2218,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Invalid email error should be thrown.
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
           });
       });
 
@@ -2289,7 +2303,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Expected error should be thrown.
-              expect(error).to.deep.equal(invalidSecondFactorTest.error);
+              expect(error).to.deep.include(invalidSecondFactorTest.error);
             });
         });
       });
@@ -2309,7 +2323,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Invalid argument error should be thrown.
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
           });
       });
 
@@ -2323,7 +2337,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Invalid phone number error should be thrown.
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
           });
       });
 
@@ -2344,7 +2358,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
               callParams(path, method, expectedValidData));
           });
@@ -2412,7 +2426,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Invalid uid error should be thrown.
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
           });
       });
 
@@ -2429,7 +2443,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Invalid argument error should be thrown.
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
           });
       });
 
@@ -2447,7 +2461,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Forbidden claims error should be thrown.
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
           });
       });
 
@@ -2467,7 +2481,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
               callParams(path, method, expectedValidData));
           });
@@ -2521,7 +2535,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Invalid uid error should be thrown.
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
           });
       });
 
@@ -2547,7 +2561,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, requestData));
           });
       });
@@ -2662,7 +2676,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Expected invalid email error should be thrown.
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
             });
         });
 
@@ -2773,7 +2787,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
                 throw new Error('Unexpected success');
               }, (error) => {
                 // Expected error should be thrown.
-                expect(error).to.deep.equal(invalidSecondFactorTest.error);
+                expect(error).to.deep.include(invalidSecondFactorTest.error);
               });
           });
         });
@@ -2793,7 +2807,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Expected invalid argument error should be thrown.
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
             });
         });
 
@@ -2807,7 +2821,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Expected invalid phone number error should be thrown.
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
             });
         });
 
@@ -2829,7 +2843,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
               expect(stub).to.have.been.calledOnce.and.calledWith(
                 callParams(path, method, expectedValidData));
             });
@@ -2853,7 +2867,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
               expect(stub).to.have.been.calledOnce.and.calledWith(
                 callParams(path, method, expectedValidData));
             });
@@ -2876,7 +2890,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
               expect(stub).to.have.been.calledOnce.and.calledWith(
                 callParams(path, method, expectedValidData));
             });
@@ -2945,7 +2959,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
             });
         });
 
@@ -2959,7 +2973,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
             });
         });
 
@@ -2980,7 +2994,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
               expect(stub).to.have.been.calledOnce.and.calledWith(
                 callParams(path, method, expectedValidData));
             });
@@ -3090,7 +3104,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Invalid email error should be thrown.
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
           });
       });
 
@@ -3107,7 +3121,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Invalid argument error should be thrown.
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
           });
       });
 
@@ -3124,7 +3138,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Invalid argument error should be thrown.
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
           });
       });
 
@@ -3147,7 +3161,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, requestData));
           });
       });
@@ -3173,7 +3187,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, requestData));
           });
       });
@@ -3211,7 +3225,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
             });
         });
       });
@@ -3231,7 +3245,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
               callParams(path, expectedHttpMethod, {}));
           });
@@ -3314,7 +3328,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
           });
       });
 
@@ -3328,7 +3342,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
           });
       });
 
@@ -3351,7 +3365,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
               callParams(path, expectedHttpMethod, data));
           });
@@ -3388,7 +3402,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
             });
         });
       });
@@ -3408,7 +3422,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
               callParams(path, expectedHttpMethod, {}));
           });
@@ -3462,7 +3476,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
           });
       });
 
@@ -3479,7 +3493,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
               callParams(path, expectedHttpMethod, expectedRequest));
           });
@@ -3500,7 +3514,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
               callParams(path, expectedHttpMethod, expectedRequest));
           });
@@ -3607,7 +3621,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
             });
         });
       });
@@ -3625,7 +3639,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
           });
       });
 
@@ -3643,7 +3657,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
               callParams(expectedPath, expectedHttpMethod, expectedRequest));
           });
@@ -3665,7 +3679,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
               callParams(expectedPath, expectedHttpMethod, expectedRequest));
           });
@@ -3704,7 +3718,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
             });
         });
       });
@@ -3724,7 +3738,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, expectedHttpMethod, {}));
           });
       });
@@ -3803,7 +3817,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
           });
       });
 
@@ -3817,7 +3831,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
           });
       });
 
@@ -3840,7 +3854,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, expectedHttpMethod, data));
           });
       });
@@ -3875,7 +3889,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
             });
         });
       });
@@ -3895,7 +3909,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, expectedHttpMethod, {}));
           });
       });
@@ -3963,7 +3977,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
           });
       });
 
@@ -3980,7 +3994,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
               callParams(path, expectedHttpMethod, expectedRequest));
           });
@@ -4001,7 +4015,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
               callParams(path, expectedHttpMethod, expectedRequest));
           });
@@ -4151,7 +4165,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
             });
         });
       });
@@ -4169,7 +4183,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
           });
       });
 
@@ -4187,7 +4201,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
               callParams(expectedPath, expectedHttpMethod, expectedRequest));
           });
@@ -4209,7 +4223,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
-            expect(error).to.deep.equal(expectedError);
+            expect(error).to.deep.include(expectedError);
             expect(stub).to.have.been.calledOnce.and.calledWith(
               callParams(expectedPath, expectedHttpMethod, expectedRequest));
           });
@@ -4232,7 +4246,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           const requestHandler = handler.init(mockApp) as AuthRequestHandler;
           return requestHandler.getTenant(tenantId)
             .then((result) => {
-              expect(result).to.deep.equal(expectedResult.data);
+              expect(result).to.deep.include(expectedResult.data);
               expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, {}));
             });
         });
@@ -4247,7 +4261,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               .then(() => {
                 throw new Error('Unexpected success');
               }, (error) => {
-                expect(error).to.deep.equal(expectedError);
+                expect(error).to.deep.include(expectedError);
               });
           });
         });
@@ -4267,7 +4281,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
               expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, {}));
             });
         });
@@ -4346,7 +4360,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
             });
         });
 
@@ -4360,7 +4374,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
             });
         });
 
@@ -4383,7 +4397,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
               expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
             });
         });
@@ -4417,7 +4431,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               .then(() => {
                 throw new Error('Unexpected success');
               }, (error) => {
-                expect(error).to.deep.equal(expectedError);
+                expect(error).to.deep.include(expectedError);
               });
           });
         });
@@ -4437,7 +4451,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
               expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, {}));
             });
         });
@@ -4487,7 +4501,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
             });
         });
 
@@ -4504,7 +4518,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
               expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, postMethod, expectedRequest));
             });
         });
@@ -4524,7 +4538,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
               expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, postMethod, expectedRequest));
             });
         });
@@ -4548,7 +4562,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
               expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, postMethod, expectedRequest));
             });
         });
@@ -4638,7 +4652,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               .then(() => {
                 throw new Error('Unexpected success');
               }, (error) => {
-                expect(error).to.deep.equal(expectedError);
+                expect(error).to.deep.include(expectedError);
               });
           });
         });
@@ -4656,7 +4670,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
             });
         });
 
@@ -4674,7 +4688,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
               expect(stub).to.have.been.calledOnce.and.calledWith(
                 callParams(expectedPath, patchMethod, expectedRequest));
             });
@@ -4696,7 +4710,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
               expect(stub).to.have.been.calledOnce.and.calledWith(
                 callParams(expectedPath, patchMethod, expectedRequest));
             });
@@ -4722,7 +4736,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
               expect(stub).to.have.been.calledOnce.and.calledWith(
                 callParams(expectedPath, patchMethod, expectedRequest));
             });

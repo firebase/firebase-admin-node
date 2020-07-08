@@ -673,9 +673,9 @@ describe('RemoteConfigApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseRemoteConfigError('invalid-argument',
         'ETag header is not present in the server response.');
-        return rcOperation()
-          .should.eventually.be.rejectedWith(expected.message)
-          .and.have.property('code', expected.code);
+      return rcOperation()
+        .should.eventually.be.rejectedWith(expected.message)
+        .and.have.property('code', expected.code);
     });
   }
 

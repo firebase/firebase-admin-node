@@ -869,7 +869,7 @@ describe('UserImportBuilder', () => {
         mixedErrorUserImportResponse);
     });
 
-    function expectUserImportResult(result: UserImportResult, expected: UserImportResult) {
+    function expectUserImportResult(result: UserImportResult, expected: UserImportResult): void {
       expect(result.successCount).to.equal(expected.successCount);
       expect(result.failureCount).to.equal(expected.failureCount);
       expect(result.errors.length).to.equal(expected.errors.length);

@@ -637,7 +637,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm expected error returned.
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
             });
         });
 
@@ -654,7 +654,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm expected error returned.
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
             });
         });
       }
@@ -881,7 +881,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm expected error returned.
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
             });
         });
 
@@ -898,7 +898,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm expected error returned.
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
             });
         });
       }
