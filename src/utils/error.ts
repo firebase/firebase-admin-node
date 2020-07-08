@@ -373,6 +373,10 @@ export class AuthClientErrorCode {
     code: 'invalid-config',
     message: 'The provided configuration is invalid.',
   };
+  public static INVALID_HASH_INPUT_ORDER = {
+    code: 'invalid-hash-input-order',
+    message: 'The hash input order must be "SALT_FIRST" or "PASSWORD_FIRST".',
+  };
   public static EMAIL_ALREADY_EXISTS = {
     code: 'email-already-exists',
     message: 'The email address is already in use by another account.',
