@@ -15,14 +15,12 @@
  */
 
 import {URL} from 'url';
-import * as admin from '../';
 import * as path from 'path';
 
-import {FirebaseApp} from '../firebase-app';
+import {FirebaseApp, app as defaultApp} from '../index';
 import {FirebaseDatabaseError, AppErrorCodes, FirebaseAppError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
 import {Database} from '@firebase/database';
-// import { FirebaseService } from '@firebase/app-types/private';
 
 import * as validator from '../utils/validator';
 import { AuthorizedHttpClient, HttpRequestConfig, HttpError } from '../utils/api-request';
@@ -45,11 +43,12 @@ class DatabaseInternals implements FirebaseServiceInternalsInterface {
    * @return {Promise<()>} An empty Promise that will be fulfilled when the service is deleted.
    */
   public delete(): Promise<void> {
+    const promises = [];
     for (const dbUrl of Object.keys(this.databases)) {
       const db: Database = this.databases[dbUrl];
-      db.INTERNAL.delete();
+      promises.push(db.INTERNAL.delete());
     }
-    return Promise.resolve(undefined);
+    return Promise.all(promises).then();
   }
 }
 
@@ -98,7 +97,8 @@ export class DatabaseService implements FirebaseServiceInterface {
     let db: Database = this.INTERNAL.databases[dbUrl];
     if (typeof db === 'undefined') {
       const rtdb = require('@firebase/database'); // eslint-disable-line @typescript-eslint/no-var-requires
-      const version = '<XXX_SDK_VERSION_XXX>'
+      // const { version } = require('../package.json'); // eslint-disable-line @typescript-eslint/no-var-requires
+      const version = 'XXX_SDK_VERSION_XXX';
       db = rtdb.initStandalone(this.appInternal, dbUrl, version).instance;
 
       const rulesClient = new DatabaseRulesClient(this.app, dbUrl);
@@ -259,10 +259,11 @@ export type EventType = 'value' | 'child_added' | 'child_changed' | 'child_moved
 // TODO: Fix hacky ?? 
 export function database(app?: FirebaseApp, url?: string): Database {
   if (typeof(app) === 'undefined') {
-    app = admin.app();
+    app = defaultApp();
   }
   if (!(app.name in Database_)) {
     Database_[app.name] = new DatabaseService(app);
   }
+  app.registerService('database', Database_[app.name]);
   return Database_[app.name].getDatabase(url);
 }

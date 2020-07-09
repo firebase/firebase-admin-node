@@ -111,7 +111,7 @@ export function initMultiFactorInfo(response: MultiFactorInfoResponse): MultiFac
   let multiFactorInfo: MultiFactorInfo | null = null;
   // Only PhoneMultiFactorInfo currently available.
   try {
-    multiFactorInfo = new PhoneMultiFactorInfo(response);
+    multiFactorInfo = new PhoneMultiFactorInfoImpl(response);
   } catch (e) {
     // Ignore error.
   }
@@ -121,73 +121,7 @@ export function initMultiFactorInfo(response: MultiFactorInfoResponse): MultiFac
 /**
  * Abstract class representing a multi-factor info interface.
  */
-export abstract class MultiFactorInfo {
-  public readonly uid: string;
-  public readonly displayName: string | null;
-  public readonly factorId: MultiFactorId;
-  public readonly enrollmentTime: string;
-
-  /**
-   * Initializes the MultiFactorInfo object using the server side response.
-   *
-   * @param response The server side response.
-   * @constructor
-   */
-  constructor(response: MultiFactorInfoResponse) {
-    this.initFromServerResponse(response);
-  }
-
-  /** @return The plain object representation. */
-  public toJSON(): any {
-    return {
-      uid: this.uid,
-      displayName: this.displayName,
-      factorId: this.factorId,
-      enrollmentTime: this.enrollmentTime,
-    };
-  }
-
-  /**
-   * Returns the factor ID based on the response provided.
-   *
-   * @param response The server side response.
-   * @return The multi-factor ID associated with the provided response. If the response is
-   *     not associated with any known multi-factor ID, null is returned.
-   */
-  protected abstract getFactorId(response: MultiFactorInfoResponse): MultiFactorId | null;
-
-  /**
-   * Initializes the MultiFactorInfo object using the provided server response.
-   *
-   * @param response The server side response.
-   */
-  private initFromServerResponse(response: MultiFactorInfoResponse): void {
-    const factorId = response && this.getFactorId(response);
-    if (!factorId || !response || !response.mfaEnrollmentId) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
-        'INTERNAL ASSERT FAILED: Invalid multi-factor info response');
-    }
-    utils.addReadonlyGetter(this, 'uid', response.mfaEnrollmentId);
-    utils.addReadonlyGetter(this, 'factorId', factorId);
-    utils.addReadonlyGetter(this, 'displayName', response.displayName || null);
-    // Encoded using [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format.
-    // For example, "2017-01-15T01:30:15.01Z".
-    // This can be parsed directly via Date constructor.
-    // This can be computed using Data.prototype.toISOString.
-    if (response.enrolledAt) {
-      utils.addReadonlyGetter(
-        this, 'enrollmentTime', new Date(response.enrolledAt).toUTCString());
-    } else {
-      utils.addReadonlyGetter(this, 'enrollmentTime', null);
-    }
-  }
-}
-
-/**
- * Abstract class representing a multi-factor info interface.
- */
-export abstract class MultiFactorInfoImpl implements MultiFactorInfo {
+export abstract class MultiFactorInfoAbstractImpl implements MultiFactorInfo {
   public readonly uid: string;
   public readonly displayName: string | null;
   public readonly factorId: MultiFactorId;
@@ -252,7 +186,7 @@ export abstract class MultiFactorInfoImpl implements MultiFactorInfo {
 
 
 /** Class representing a phone MultiFactorInfo object. */
-export class PhoneMultiFactorInfoImpl extends MultiFactorInfoImpl {
+export class PhoneMultiFactorInfoImpl extends MultiFactorInfoAbstractImpl implements PhoneMultiFactorInfo {
   public readonly phoneNumber: string;
 
   /**

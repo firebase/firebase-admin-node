@@ -301,7 +301,6 @@ export class FirebaseApp {
   public delete(): Promise<void> {
     this.checkDestroyed_();
     this.firebaseInternals_.removeApp(this.name_);
-
     this.INTERNAL.delete();
 
     return Promise.all(Object.keys(this.services_).map((serviceName) => {
@@ -310,6 +309,10 @@ export class FirebaseApp {
       this.services_ = {};
       this.isDeleted_ = true;
     });
+  }
+
+  public registerService(serviceName: string, service: FirebaseServiceInterface): void {
+    this.services_[serviceName] = service;
   }
 
   /**

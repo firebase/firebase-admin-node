@@ -16,7 +16,7 @@
 
 import {deepCopy} from '../utils/deep-copy';
 import * as utils from '../utils';
-import {MultiFactorInfoResponse, MultiFactorId, GetAccountInfoUserResponse, 
+import {MultiFactorId, GetAccountInfoUserResponse, 
   MultiFactor, ProviderUserInfoResponse} from './user-record-internal';
 import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
 
