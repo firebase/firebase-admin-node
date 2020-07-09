@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {FirebaseApp} from '../firebase-app';
-import {FirebaseInstanceIdError, InstanceIdClientErrorCode} from '../utils/error';
+import { FirebaseApp } from '../firebase-app';
+import { FirebaseInstanceIdError, InstanceIdClientErrorCode } from '../utils/error';
 import {
   ApiSettings, AuthorizedHttpClient, HttpRequestConfig, HttpError,
 } from '../utils/api-request';

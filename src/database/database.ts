@@ -1,10 +1,10 @@
-import {URL} from 'url';
+import { URL } from 'url';
 import * as path from 'path';
 
-import {FirebaseApp} from '../firebase-app';
-import {FirebaseDatabaseError, AppErrorCodes, FirebaseAppError} from '../utils/error';
-import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {Database} from '@firebase/database';
+import { FirebaseApp } from '../firebase-app';
+import { FirebaseDatabaseError, AppErrorCodes, FirebaseAppError } from '../utils/error';
+import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
+import { Database } from '@firebase/database';
 
 import * as validator from '../utils/validator';
 import { AuthorizedHttpClient, HttpRequestConfig, HttpError } from '../utils/api-request';
@@ -160,7 +160,7 @@ class DatabaseRulesClient {
     const req: HttpRequestConfig = {
       method: 'GET',
       url: this.dbUrl,
-      data: {format: 'strict'},
+      data: { format: 'strict' },
     };
     return this.httpClient.send(req)
       .then((resp) => {

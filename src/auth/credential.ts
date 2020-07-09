@@ -19,9 +19,9 @@ import fs = require('fs');
 import os = require('os');
 import path = require('path');
 
-import {AppErrorCodes, FirebaseAppError} from '../utils/error';
-import {HttpClient, HttpRequestConfig, HttpError, HttpResponse} from '../utils/api-request';
-import {Agent} from 'http';
+import { AppErrorCodes, FirebaseAppError } from '../utils/error';
+import { HttpClient, HttpRequestConfig, HttpError, HttpResponse } from '../utils/api-request';
+import { Agent } from 'http';
 import * as util from '../utils/validator';
 
 const GOOGLE_TOKEN_AUDIENCE = 'https://accounts.google.com/o/oauth2/token';

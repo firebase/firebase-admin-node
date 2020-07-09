@@ -25,9 +25,9 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
-import {deepCopy, deepExtend} from '../../../src/utils/deep-copy';
-import {FirebaseApp} from '../../../src/firebase-app';
-import {HttpClient, HttpRequestConfig} from '../../../src/utils/api-request';
+import { deepCopy, deepExtend } from '../../../src/utils/deep-copy';
+import { FirebaseApp } from '../../../src/firebase-app';
+import { HttpClient, HttpRequestConfig } from '../../../src/utils/api-request';
 import * as validator from '../../../src/utils/validator';
 import {
   AuthRequestHandler, FIREBASE_AUTH_GET_ACCOUNT_INFO, FIREBASE_AUTH_GET_ACCOUNTS_INFO,
@@ -36,15 +36,15 @@ import {
   RESERVED_CLAIMS, FIREBASE_AUTH_UPLOAD_ACCOUNT, FIREBASE_AUTH_CREATE_SESSION_COOKIE,
   EMAIL_ACTION_REQUEST_TYPES, TenantAwareAuthRequestHandler, AbstractAuthRequestHandler,
 } from '../../../src/auth/auth-api-request';
-import {UserImportBuilder, UserImportRecord} from '../../../src/auth/user-import-builder';
-import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/utils/error';
-import {ActionCodeSettingsBuilder} from '../../../src/auth/action-code-settings-builder';
+import { UserImportBuilder, UserImportRecord } from '../../../src/auth/user-import-builder';
+import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
+import { ActionCodeSettingsBuilder } from '../../../src/auth/action-code-settings-builder';
 import {
   OIDCAuthProviderConfig, SAMLAuthProviderConfig, OIDCUpdateAuthProviderRequest,
   SAMLUpdateAuthProviderRequest, SAMLConfigServerResponse,
 } from '../../../src/auth/auth-config';
-import {UserIdentifier} from '../../../src/auth/identifier';
-import {TenantOptions} from '../../../src/auth/tenant';
+import { UserIdentifier } from '../../../src/auth/identifier';
+import { TenantOptions } from '../../../src/auth/tenant';
 import { UpdateRequest, UpdateMultiFactorInfoRequest } from '../../../src/auth/user-record';
 
 chai.should();
@@ -109,7 +109,7 @@ describe('FIREBASE_AUTH_CREATE_SESSION_COOKIE', () => {
   describe('requestValidator', () => {
     const requestValidator = FIREBASE_AUTH_CREATE_SESSION_COOKIE.getRequestValidator();
     it('should succeed with valid parameters passed', () => {
-      const validRequest = {idToken: 'ID_TOKEN', validDuration: 60 * 60};
+      const validRequest = { idToken: 'ID_TOKEN', validDuration: 60 * 60 };
       expect(() => {
         return requestValidator(validRequest);
       }).not.to.throw();
@@ -118,7 +118,7 @@ describe('FIREBASE_AUTH_CREATE_SESSION_COOKIE', () => {
     });
     it('should succeed with duration set at minimum allowed', () => {
       const validDuration = 60 * 5;
-      const validRequest = {idToken: 'ID_TOKEN', validDuration};
+      const validRequest = { idToken: 'ID_TOKEN', validDuration };
       expect(() => {
         return requestValidator(validRequest);
       }).not.to.throw();
@@ -127,7 +127,7 @@ describe('FIREBASE_AUTH_CREATE_SESSION_COOKIE', () => {
     });
     it('should succeed with duration set at maximum allowed', () => {
       const validDuration = 60 * 60 * 24 * 14;
-      const validRequest = {idToken: 'ID_TOKEN', validDuration};
+      const validRequest = { idToken: 'ID_TOKEN', validDuration };
       expect(() => {
         return requestValidator(validRequest);
       }).not.to.throw();
@@ -135,14 +135,14 @@ describe('FIREBASE_AUTH_CREATE_SESSION_COOKIE', () => {
       expect(isNumber).to.have.been.calledOnce.and.calledWith(validDuration);
     });
     it('should fail when idToken not passed', () => {
-      const invalidRequest = {validDuration: 60 * 60};
+      const invalidRequest = { validDuration: 60 * 60 };
       expect(() => {
         return requestValidator(invalidRequest);
       }).to.throw();
       expect(isNonEmptyString).to.have.been.calledOnce.and.calledWith(undefined);
     });
     it('should fail when validDuration not passed', () => {
-      const invalidRequest = {idToken: 'ID_TOKEN'};
+      const invalidRequest = { idToken: 'ID_TOKEN' };
       expect(() => {
         return requestValidator(invalidRequest);
       }).to.throw();
@@ -151,13 +151,13 @@ describe('FIREBASE_AUTH_CREATE_SESSION_COOKIE', () => {
     describe('called with invalid parameters', () => {
       it('should fail with invalid idToken', () => {
         expect(() => {
-          return requestValidator({idToken: '', validDuration: 60 * 60});
+          return requestValidator({ idToken: '', validDuration: 60 * 60 });
         }).to.throw();
         expect(isNonEmptyString).to.have.been.calledOnce.and.calledWith('');
       });
       it('should fail with invalid validDuration', () => {
         expect(() => {
-          return requestValidator({idToken: 'ID_TOKEN', validDuration: 'invalid'});
+          return requestValidator({ idToken: 'ID_TOKEN', validDuration: 'invalid' });
         }).to.throw();
         expect(isNonEmptyString).to.have.been.calledOnce.and.calledWith('ID_TOKEN');
         expect(isNumber).to.have.been.calledOnce.and.calledWith('invalid');
@@ -166,7 +166,7 @@ describe('FIREBASE_AUTH_CREATE_SESSION_COOKIE', () => {
         // Duration less 5 minutes.
         const outOfBoundDuration = 60 * 5 - 1;
         expect(() => {
-          return requestValidator({idToken: 'ID_TOKEN', validDuration: outOfBoundDuration});
+          return requestValidator({ idToken: 'ID_TOKEN', validDuration: outOfBoundDuration });
         }).to.throw();
         expect(isNonEmptyString).to.have.been.calledOnce.and.calledWith('ID_TOKEN');
         expect(isNumber).to.have.been.calledOnce.and.calledWith(outOfBoundDuration);
@@ -175,7 +175,7 @@ describe('FIREBASE_AUTH_CREATE_SESSION_COOKIE', () => {
         // Duration greater than 14 days.
         const outOfBoundDuration = 60 * 60 * 24 * 14 + 1;
         expect(() => {
-          return requestValidator({idToken: 'ID_TOKEN', validDuration: outOfBoundDuration});
+          return requestValidator({ idToken: 'ID_TOKEN', validDuration: outOfBoundDuration });
         }).to.throw();
         expect(isNonEmptyString).to.have.been.calledOnce.and.calledWith('ID_TOKEN');
         expect(isNumber).to.have.been.calledOnce.and.calledWith(outOfBoundDuration);
@@ -185,7 +185,7 @@ describe('FIREBASE_AUTH_CREATE_SESSION_COOKIE', () => {
   describe('responseValidator', () => {
     const responseValidator = FIREBASE_AUTH_CREATE_SESSION_COOKIE.getResponseValidator();
     it('should succeed with sessionCookie returned', () => {
-      const validResponse = {sessionCookie: 'SESSION_COOKIE'};
+      const validResponse = { sessionCookie: 'SESSION_COOKIE' };
       expect(() => {
         return responseValidator(validResponse);
       }).not.to.throw();
@@ -257,7 +257,7 @@ describe('FIREBASE_AUTH_DOWNLOAD_ACCOUNT', () => {
   describe('requestValidator', () => {
     const requestValidator = FIREBASE_AUTH_DOWNLOAD_ACCOUNT.getRequestValidator();
     it('should succeed with valid maxResults passed', () => {
-      const validRequest = {maxResults: 500};
+      const validRequest = { maxResults: 500 };
       expect(() => {
         return requestValidator(validRequest);
       }).not.to.throw();
@@ -286,31 +286,31 @@ describe('FIREBASE_AUTH_DOWNLOAD_ACCOUNT', () => {
     describe('called with invalid parameters', () => {
       it('should fail with invalid maxResults', () => {
         expect(() => {
-          return requestValidator({maxResults: ''});
+          return requestValidator({ maxResults: '' });
         }).to.throw();
         expect(isNumber).to.have.been.calledOnce.and.calledWith('');
       });
       it('should fail with zero maxResults', () => {
         expect(() => {
-          return requestValidator({maxResults: 0});
+          return requestValidator({ maxResults: 0 });
         }).to.throw();
         expect(isNumber).to.have.been.calledOnce.and.calledWith(0);
       });
       it('should fail with negative maxResults', () => {
         expect(() => {
-          return requestValidator({maxResults: -500});
+          return requestValidator({ maxResults: -500 });
         }).to.throw();
         expect(isNumber).to.have.been.calledOnce.and.calledWith(-500);
       });
       it('should fail with maxResults exceeding allowed limit', () => {
         expect(() => {
-          return requestValidator({maxResults: 1001});
+          return requestValidator({ maxResults: 1001 });
         }).to.throw();
         expect(isNumber).to.have.been.calledOnce.and.calledWith(1001);
       });
       it('should fail with invalid nextPageToken', () => {
         expect(() => {
-          return requestValidator({maxResults: 1000, nextPageToken: ['PAGE_TOKEN']});
+          return requestValidator({ maxResults: 1000, nextPageToken: ['PAGE_TOKEN'] });
         }).to.throw();
         expect(isNonEmptyString).to.have.been.calledOnce.and.calledWith(['PAGE_TOKEN']);
       });
@@ -328,31 +328,31 @@ describe('FIREBASE_AUTH_GET_ACCOUNT_INFO', () => {
   describe('requestValidator', () => {
     const requestValidator = FIREBASE_AUTH_GET_ACCOUNT_INFO.getRequestValidator();
     it('should succeed with localId passed', () => {
-      const validRequest = {localId: ['1234']};
+      const validRequest = { localId: ['1234'] };
       expect(() => {
         return requestValidator(validRequest);
       }).not.to.throw();
     });
     it('should succeed with email passed', () => {
-      const validRequest = {email: ['user@example.com']};
+      const validRequest = { email: ['user@example.com'] };
       expect(() => {
         return requestValidator(validRequest);
       }).not.to.throw();
     });
     it('should succeed with phoneNumber passed', () => {
-      const validRequest = {phoneNumber: ['+11234567890']};
+      const validRequest = { phoneNumber: ['+11234567890'] };
       expect(() => {
         return requestValidator(validRequest);
       }).not.to.throw();
     });
     it('should succeed with federatedUserId passed', () => {
-      const validRequest = {federatedUserId: [{providerId: 'google.com', rawId: 'google_uid'}]};
+      const validRequest = { federatedUserId: [{ providerId: 'google.com', rawId: 'google_uid' }] };
       expect(() => {
         return requestValidator(validRequest);
       }).not.to.throw();
     });
     it('should fail when neither localId, email or phoneNumber are passed', () => {
-      const invalidRequest = {bla: ['1234']};
+      const invalidRequest = { bla: ['1234'] };
       expect(() => {
         return requestValidator(invalidRequest);
       }).to.throw();
@@ -361,7 +361,7 @@ describe('FIREBASE_AUTH_GET_ACCOUNT_INFO', () => {
   describe('responseValidator', () => {
     const responseValidator = FIREBASE_AUTH_GET_ACCOUNT_INFO.getResponseValidator();
     it('should succeed with users returned', () => {
-      const validResponse: object = {users: []};
+      const validResponse: object = { users: [] };
       expect(() => {
         return responseValidator(validResponse);
       }).not.to.throw();
@@ -385,31 +385,31 @@ describe('FIREBASE_AUTH_GET_ACCOUNTS_INFO', () => {
   describe('requestValidator', () => {
     const requestValidator = FIREBASE_AUTH_GET_ACCOUNTS_INFO.getRequestValidator();
     it('should succeed with localId passed', () => {
-      const validRequest = {localId: ['1234']};
+      const validRequest = { localId: ['1234'] };
       expect(() => {
         return requestValidator(validRequest);
       }).not.to.throw();
     });
     it('should succeed with email passed', () => {
-      const validRequest = {email: ['user@example.com']};
+      const validRequest = { email: ['user@example.com'] };
       expect(() => {
         return requestValidator(validRequest);
       }).not.to.throw();
     });
     it('should succeed with phoneNumber passed', () => {
-      const validRequest = {phoneNumber: ['+11234567890']};
+      const validRequest = { phoneNumber: ['+11234567890'] };
       expect(() => {
         return requestValidator(validRequest);
       }).not.to.throw();
     });
     it('should succeed with federatedUserId passed', () => {
-      const validRequest = {federatedUserId: [{providerId: 'google.com', rawId: 'google_uid'}]};
+      const validRequest = { federatedUserId: [{ providerId: 'google.com', rawId: 'google_uid' }] };
       expect(() => {
         return requestValidator(validRequest);
       }).not.to.throw();
     });
     it('should fail when neither localId, email or phoneNumber are passed', () => {
-      const invalidRequest = {bla: ['1234']};
+      const invalidRequest = { bla: ['1234'] };
       expect(() => {
         return requestValidator(invalidRequest);
       }).to.throw();
@@ -420,9 +420,9 @@ describe('FIREBASE_AUTH_GET_ACCOUNTS_INFO', () => {
         email: ['user1@example.com', 'user2@example.com'],
         phoneNumber: ['+15555550001', '+15555550002'],
         federatedUserId: [
-          {providerId: 'google.com', rawId: 'google_uid1'},
-          {providerId: 'google.com', rawId: 'google_uid2'}
-        ]};
+          { providerId: 'google.com', rawId: 'google_uid1' },
+          { providerId: 'google.com', rawId: 'google_uid2' }
+        ] };
       expect(() => {
         return requestValidator(validRequest);
       }).not.to.throw();
@@ -431,7 +431,7 @@ describe('FIREBASE_AUTH_GET_ACCOUNTS_INFO', () => {
   describe('responseValidator', () => {
     const responseValidator = FIREBASE_AUTH_GET_ACCOUNTS_INFO.getResponseValidator();
     it('should succeed with users returned', () => {
-      const validResponse: object = {users: []};
+      const validResponse: object = { users: [] };
       expect(() => {
         return responseValidator(validResponse);
       }).not.to.throw();
@@ -463,13 +463,13 @@ describe('FIREBASE_AUTH_DELETE_ACCOUNT', () => {
   describe('requestValidator', () => {
     const requestValidator = FIREBASE_AUTH_DELETE_ACCOUNT.getRequestValidator();
     it('should succeed with localId passed', () => {
-      const validRequest = {localId: '1234'};
+      const validRequest = { localId: '1234' };
       expect(() => {
         return requestValidator(validRequest);
       }).not.to.throw();
     });
     it('should fail when localId not passed', () => {
-      const invalidRequest = {bla: '1234'};
+      const invalidRequest = { bla: '1234' };
       expect(() => {
         return requestValidator(invalidRequest);
       }).to.throw();
@@ -512,7 +512,7 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
   describe('requestValidator', () => {
     const requestValidator = FIREBASE_AUTH_SET_ACCOUNT_INFO.getRequestValidator();
     it('should succeed with valid localId passed', () => {
-      const validRequest = {localId: '1234'};
+      const validRequest = { localId: '1234' };
       expect(() => {
         return requestValidator(validRequest);
       }).not.to.throw();
@@ -528,7 +528,7 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
         photoUrl: 'http://www.example.com/1234/photo.png',
         disableUser: false,
         phoneNumber: '+11234567890',
-        customAttributes: JSON.stringify({admin: true, groupId: '123'}),
+        customAttributes: JSON.stringify({ admin: true, groupId: '123' }),
         validSince: 1476136676,
         // Pass an unsupported parameter which should be ignored.
         ignoreMe: 'bla',
@@ -546,9 +546,9 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
     });
     it('should succeed with valid localId and customAttributes with 1000 char payload', () => {
       // Test with 1000 characters.
-      const atLimitClaims = JSON.stringify({key: createRandomString(990)});
+      const atLimitClaims = JSON.stringify({ key: createRandomString(990) });
       expect(() => {
-        return requestValidator({localId: '1234', customAttributes: atLimitClaims});
+        return requestValidator({ localId: '1234', customAttributes: atLimitClaims });
       }).not.to.throw();
     });
     it('should fail when localId not passed', () => {
@@ -561,59 +561,59 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
     describe('called with invalid parameters', () => {
       it('should fail with invalid localId', () => {
         expect(() => {
-          return requestValidator({localId: ''});
+          return requestValidator({ localId: '' });
         }).to.throw();
         expect(isUidSpy).to.have.been.calledOnce.and.calledWith('');
       });
       it('should fail with invalid displayName', () => {
         expect(() => {
-          return requestValidator({localId: '1234', displayName: ['John Doe']});
+          return requestValidator({ localId: '1234', displayName: ['John Doe'] });
         }).to.throw();
       });
       it('should fail with invalid email', () => {
         expect(() => {
-          return requestValidator({localId: '1234', email: 'invalid'});
+          return requestValidator({ localId: '1234', email: 'invalid' });
         }).to.throw();
         expect(isEmailSpy).to.have.been.calledOnce.and.calledWith('invalid');
       });
       it('should fail with invalid password', () => {
         expect(() => {
-          return requestValidator({localId: '1234', password: 'short'});
+          return requestValidator({ localId: '1234', password: 'short' });
         }).to.throw();
         expect(isPasswordSpy).to.have.been.calledOnce.and.calledWith('short');
       });
       it('should fail with invalid emailVerified flag', () => {
         expect(() => {
-          return requestValidator({localId: '1234', emailVerified: 'yes'});
+          return requestValidator({ localId: '1234', emailVerified: 'yes' });
         }).to.throw();
       });
       it('should fail with invalid photoUrl', () => {
         expect(() => {
-          return requestValidator({localId: '1234', photoUrl: 'invalid url'});
+          return requestValidator({ localId: '1234', photoUrl: 'invalid url' });
         }).to.throw();
         expect(isUrlSpy).to.have.been.calledOnce.and.calledWith('invalid url');
       });
       it('should fail with invalid disableUser flag', () => {
         expect(() => {
-          return requestValidator({localId: '1234', disableUser: 'no'});
+          return requestValidator({ localId: '1234', disableUser: 'no' });
         }).to.throw();
       });
       it('should fail with invalid phoneNumber', () => {
         expect(() => {
-          return requestValidator({localId: '1234', phoneNumber: 'invalid'});
+          return requestValidator({ localId: '1234', phoneNumber: 'invalid' });
         }).to.throw();
         expect(isPhoneNumberSpy).to.have.been.calledOnce.and.calledWith('invalid');
       });
       it('should fail with invalid JSON customAttributes', () => {
         expect(() => {
-          return requestValidator({localId: '1234', customAttributes: 'invalid'});
+          return requestValidator({ localId: '1234', customAttributes: 'invalid' });
         }).to.throw();
       });
       it('should fail with customAttributes exceeding maximum allowed payload', () => {
         // Test with 1001 characters.
-        const largeClaims = JSON.stringify({key: createRandomString(991)});
+        const largeClaims = JSON.stringify({ key: createRandomString(991) });
         expect(() => {
-          return requestValidator({localId: '1234', customAttributes: largeClaims});
+          return requestValidator({ localId: '1234', customAttributes: largeClaims });
         }).to.throw(`Developer claims payload should not exceed 1000 characters.`);
       });
       RESERVED_CLAIMS.forEach((invalidClaim) => {
@@ -622,7 +622,7 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
             // Instantiate custom attributes with invalid claims.
             const claims: {[key: string]: any} = {};
             claims[invalidClaim] = 'bla';
-            return requestValidator({localId: '1234', customAttributes: JSON.stringify(claims)});
+            return requestValidator({ localId: '1234', customAttributes: JSON.stringify(claims) });
           }).to.throw(`Developer claim "${invalidClaim}" is reserved and cannot be specified.`);
         });
       });
@@ -632,12 +632,12 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
             sub: 'sub',
             auth_time: 'time', // eslint-disable-line @typescript-eslint/camelcase
           };
-          return requestValidator({localId: '1234', customAttributes: JSON.stringify(claims)});
+          return requestValidator({ localId: '1234', customAttributes: JSON.stringify(claims) });
         }).to.throw(`Developer claims "auth_time", "sub" are reserved and cannot be specified.`);
       });
       it('should fail with invalid validSince', () => {
         expect(() => {
-          return requestValidator({localId: '1234', validSince: 'invalid'});
+          return requestValidator({ localId: '1234', validSince: 'invalid' });
         }).to.throw('The tokensValidAfterTime must be a valid UTC number in seconds.');
         expect(isNumberSpy).to.have.been.calledOnce.and.calledWith('invalid');
       });
@@ -646,7 +646,7 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
   describe('responseValidator', () => {
     const responseValidator = FIREBASE_AUTH_SET_ACCOUNT_INFO.getResponseValidator();
     it('should succeed with localId returned', () => {
-      const validResponse = {localId: '1234'};
+      const validResponse = { localId: '1234' };
       expect(() => {
         return responseValidator(validResponse);
       }).not.to.throw();
@@ -744,57 +744,57 @@ describe('FIREBASE_AUTH_SIGN_UP_NEW_USER', () => {
     describe('called with invalid parameters', () => {
       it('should fail with invalid localId', () => {
         expect(() => {
-          return requestValidator({localId: ''});
+          return requestValidator({ localId: '' });
         }).to.throw();
         expect(isUidSpy).to.have.been.calledOnce.and.calledWith('');
       });
       it('should fail with invalid displayName', () => {
         expect(() => {
-          return requestValidator({displayName: ['John Doe']});
+          return requestValidator({ displayName: ['John Doe'] });
         }).to.throw();
       });
       it('should fail with invalid email', () => {
         expect(() => {
-          return requestValidator({email: 'invalid'});
+          return requestValidator({ email: 'invalid' });
         }).to.throw();
         expect(isEmailSpy).to.have.been.calledOnce.and.calledWith('invalid');
       });
       it('should fail with invalid password', () => {
         expect(() => {
-          return requestValidator({password: 'short'});
+          return requestValidator({ password: 'short' });
         }).to.throw();
         expect(isPasswordSpy).to.have.been.calledOnce.and.calledWith('short');
       });
       it('should fail with invalid emailVerified flag', () => {
         expect(() => {
-          return requestValidator({emailVerified: 'yes'});
+          return requestValidator({ emailVerified: 'yes' });
         }).to.throw();
       });
       it('should fail with invalid photoUrl', () => {
         expect(() => {
-          return requestValidator({photoUrl: 'invalid url'});
+          return requestValidator({ photoUrl: 'invalid url' });
         }).to.throw();
         expect(isUrlSpy).to.have.been.calledOnce.and.calledWith('invalid url');
       });
       it('should fail with invalid disabled flag', () => {
         expect(() => {
-          return requestValidator({disabled: 'no'});
+          return requestValidator({ disabled: 'no' });
         }).to.throw();
       });
       it('should fail with invalid phoneNumber', () => {
         expect(() => {
-          return requestValidator({phoneNumber: 'invalid'});
+          return requestValidator({ phoneNumber: 'invalid' });
         }).to.throw();
         expect(isPhoneNumberSpy).to.have.been.calledOnce.and.calledWith('invalid');
       });
       it('should fail with customAttributes', () => {
         expect(() => {
-          return requestValidator({customAttributes: JSON.stringify({admin: true})});
+          return requestValidator({ customAttributes: JSON.stringify({ admin: true }) });
         }).to.throw();
       });
       it('should fail with validSince', () => {
         expect(() => {
-          return requestValidator({validSince: 1476136676});
+          return requestValidator({ validSince: 1476136676 });
         }).to.throw();
       });
     });
@@ -802,7 +802,7 @@ describe('FIREBASE_AUTH_SIGN_UP_NEW_USER', () => {
   describe('responseValidator', () => {
     const responseValidator = FIREBASE_AUTH_SIGN_UP_NEW_USER.getResponseValidator();
     it('should succeed with localId returned', () => {
-      const validResponse = {localId: '1234'};
+      const validResponse = { localId: '1234' };
       expect(() => {
         return responseValidator(validResponse);
       }).not.to.throw();
@@ -897,7 +897,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const expectedResult = utils.responseFrom({
           sessionCookie: 'SESSION_COOKIE',
         });
-        const data = {idToken: 'ID_TOKEN', validDuration: durationInMs / 1000};
+        const data = { idToken: 'ID_TOKEN', validDuration: durationInMs / 1000 };
         const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
         stubs.push(stub);
 
@@ -913,7 +913,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           sessionCookie: 'SESSION_COOKIE',
         });
         const durationAtLimitInMs = 14 * 24 * 60 * 60 * 1000;
-        const data = {idToken: 'ID_TOKEN', validDuration: durationAtLimitInMs / 1000};
+        const data = { idToken: 'ID_TOKEN', validDuration: durationAtLimitInMs / 1000 };
         const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
         stubs.push(stub);
 
@@ -929,7 +929,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           sessionCookie: 'SESSION_COOKIE',
         });
         const durationAtLimitInMs = 5 * 60 * 1000;
-        const data = {idToken: 'ID_TOKEN', validDuration: durationAtLimitInMs / 1000};
+        const data = { idToken: 'ID_TOKEN', validDuration: durationAtLimitInMs / 1000 };
         const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
         stubs.push(stub);
 
@@ -1001,7 +1001,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           },
         });
         const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_ID_TOKEN);
-        const data = {idToken: 'invalid-token', validDuration: durationInMs / 1000};
+        const data = { idToken: 'invalid-token', validDuration: durationInMs / 1000 };
         const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedResult);
         stubs.push(stub);
 
@@ -1022,10 +1022,10 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       it('should be fulfilled given a valid email', () => {
         const expectedResult = utils.responseFrom({
           users : [
-            {email: 'user@example.com'},
+            { email: 'user@example.com' },
           ],
         });
-        const data = {email: ['user@example.com']};
+        const data = { email: ['user@example.com'] };
         const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
         stubs.push(stub);
 
@@ -1047,7 +1047,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           kind: 'identitytoolkit#GetAccountInfoResponse',
         });
         const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
-        const data = {email: ['user@example.com']};
+        const data = { email: ['user@example.com'] };
         const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
         stubs.push(stub);
 
@@ -1068,10 +1068,10 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       it('should be fulfilled given a valid localId', () => {
         const expectedResult = utils.responseFrom({
           users : [
-            {localId: 'uid'},
+            { localId: 'uid' },
           ],
         });
-        const data = {localId: ['uid']};
+        const data = { localId: ['uid'] };
         const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
         stubs.push(stub);
 
@@ -1087,7 +1087,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           kind: 'identitytoolkit#GetAccountInfoResponse',
         });
         const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
-        const data = {localId: ['uid']};
+        const data = { localId: ['uid'] };
         const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
         stubs.push(stub);
 
@@ -1107,7 +1107,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           },
         });
         const expectedError = FirebaseAuthError.fromServerError('OPERATION_NOT_ALLOWED');
-        const data = {localId: ['uid']};
+        const data = { localId: ['uid'] };
 
         const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedResult);
         stubs.push(stub);
@@ -1199,7 +1199,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       it('should throw when given more than 100 identifiers', () => {
         const identifiers: UserIdentifier[] = [];
         for (let i = 0; i < 101; i++) {
-          identifiers.push({uid: 'id' + i});
+          identifiers.push({ uid: 'id' + i });
         }
 
         const requestHandler = handler.init(mockApp);
@@ -1212,7 +1212,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const requestHandler = handler.init(mockApp);
         return requestHandler.getAccountInfoByIdentifiers([])
           .then((getUsersResult) => {
-            expect(getUsersResult).to.deep.equal({users: []});
+            expect(getUsersResult).to.deep.equal({ users: [] });
           });
       });
 
@@ -1222,7 +1222,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         stubs.push(stub);
 
         const requestHandler = handler.init(mockApp);
-        const notFoundIds = [{uid: 'id that doesnt exist'}];
+        const notFoundIds = [{ uid: 'id that doesnt exist' }];
         return requestHandler.getAccountInfoByIdentifiers(notFoundIds)
           .then((getUsersResult) => {
             expect(getUsersResult).to.deep.equal({ users: [] });
@@ -1231,39 +1231,39 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       it('should throw when given an invalid uid', () => {
         const requestHandler = handler.init(mockApp);
-        expect(() => requestHandler.getAccountInfoByIdentifiers([{uid: 'too long ' + ('.' as any).repeat(128)}]))
+        expect(() => requestHandler.getAccountInfoByIdentifiers([{ uid: 'too long ' + ('.' as any).repeat(128) }]))
           .to.throw(FirebaseAuthError)
           .with.property('code', 'auth/invalid-uid');
       });
 
       it('should throw when given an invalid email', () => {
         const requestHandler = handler.init(mockApp);
-        expect(() => requestHandler.getAccountInfoByIdentifiers([{email: 'invalid email addr'}]))
+        expect(() => requestHandler.getAccountInfoByIdentifiers([{ email: 'invalid email addr' }]))
           .to.throw(FirebaseAuthError)
           .with.property('code', 'auth/invalid-email');
       });
 
       it('should throw when given an invalid phone number', () => {
         const requestHandler = handler.init(mockApp);
-        expect(() => requestHandler.getAccountInfoByIdentifiers([{phoneNumber: 'invalid phone number'}]))
+        expect(() => requestHandler.getAccountInfoByIdentifiers([{ phoneNumber: 'invalid phone number' }]))
           .to.throw(FirebaseAuthError)
           .with.property('code', 'auth/invalid-phone-number');
       });
 
       it('should throw when given an invalid provider', () => {
         const requestHandler = handler.init(mockApp);
-        expect(() => requestHandler.getAccountInfoByIdentifiers([{providerUid: '', providerId: ''}]))
+        expect(() => requestHandler.getAccountInfoByIdentifiers([{ providerUid: '', providerId: '' }]))
           .to.throw(FirebaseAuthError)
           .with.property('code', 'auth/invalid-provider-id');
       });
 
       it('should throw when given a single bad identifier', () => {
         const identifiers: UserIdentifier[] = [
-          {uid: 'valid_id1'},
-          {uid: 'valid_id2'},
-          {uid: 'invalid id; too long. ' + ('.' as any).repeat(128)},
-          {uid: 'valid_id4'},
-          {uid: 'valid_id5'},
+          { uid: 'valid_id1' },
+          { uid: 'valid_id2' },
+          { uid: 'invalid id; too long. ' + ('.' as any).repeat(128) },
+          { uid: 'valid_id4' },
+          { uid: 'valid_id5' },
         ];
 
         const requestHandler = handler.init(mockApp);
@@ -1355,7 +1355,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               },
             ],
           },
-          customClaims: {admin: true},
+          customClaims: { admin: true },
           // Tenant ID accepted on user batch upload.
           tenantId,
         },
@@ -1365,7 +1365,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           passwordHash: Buffer.from('userpass'),
           passwordSalt: Buffer.from('NaCl'),
         },
-        {uid: '5678', phoneNumber: '+16505550101'},
+        { uid: '5678', phoneNumber: '+16505550101' },
       ];
       const options = {
         hash: {
@@ -1489,8 +1489,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       it('should resolve with expected result on underlying API partial succcess', () => {
         const expectedResult = utils.responseFrom({
           error: [
-            {index: 0, message: 'Some error occurred'},
-            {index: 1, message: 'Another error occurred'},
+            { index: 0, message: 'Some error occurred' },
+            { index: 1, message: 'Another error occurred' },
           ],
         });
         const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
@@ -1509,15 +1509,15 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       it('should resolve without underlying API call when users are processed client side', () => {
         // These users should fail to upload due to invalid phone number and email fields.
         const testUsers = [
-          {uid: '1234', phoneNumber: 'invalid'},
-          {uid: '5678', email: 'invalid'},
+          { uid: '1234', phoneNumber: 'invalid' },
+          { uid: '5678', email: 'invalid' },
         ] as any;
         const expectedResult = {
           successCount: 0,
           failureCount: 2,
           errors: [
-            {index: 0, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER)},
-            {index: 1, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL)},
+            { index: 0, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER) },
+            { index: 1, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL) },
           ],
         };
         const stub = sinon.stub(HttpClient.prototype, 'send');
@@ -1533,33 +1533,33 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       it('should validate underlying users and resolve with expected errors', () => {
         const testUsers = [
-          {uid: 'user1', displayName: false},
-          {uid: 123},
-          {uid: 'user2', email: 'invalid'},
-          {uid: 'user3', phoneNumber: 'invalid'},
-          {uid: 'user4', emailVerified: 'invalid'},
-          {uid: 'user5', photoURL: 'invalid'},
-          {uid: 'user6', disabled: 'invalid'},
-          {uid: 'user7', metadata: {creationTime: 'invalid'}},
-          {uid: 'user8', metadata: {lastSignInTime: 'invalid'}},
-          {uid: 'user9', customClaims: {admin: true, aud: 'bla'}},
-          {uid: 'user10', email: 'user10@example.com', passwordHash: 'invalid'},
-          {uid: 'user11', email: 'user11@example.com', passwordSalt: 'invalid'},
-          {uid: 'user12', providerData: [{providerId: 'google.com'}]},
+          { uid: 'user1', displayName: false },
+          { uid: 123 },
+          { uid: 'user2', email: 'invalid' },
+          { uid: 'user3', phoneNumber: 'invalid' },
+          { uid: 'user4', emailVerified: 'invalid' },
+          { uid: 'user5', photoURL: 'invalid' },
+          { uid: 'user6', disabled: 'invalid' },
+          { uid: 'user7', metadata: { creationTime: 'invalid' } },
+          { uid: 'user8', metadata: { lastSignInTime: 'invalid' } },
+          { uid: 'user9', customClaims: { admin: true, aud: 'bla' } },
+          { uid: 'user10', email: 'user10@example.com', passwordHash: 'invalid' },
+          { uid: 'user11', email: 'user11@example.com', passwordSalt: 'invalid' },
+          { uid: 'user12', providerData: [{ providerId: 'google.com' }] },
           {
             uid: 'user13',
-            providerData: [{providerId: 'google.com', uid: 'RAW_ID', displayName: false}],
+            providerData: [{ providerId: 'google.com', uid: 'RAW_ID', displayName: false }],
           },
           {
             uid: 'user14',
-            providerData: [{providerId: 'google.com', uid: 'RAW_ID', email: 'invalid'}],
+            providerData: [{ providerId: 'google.com', uid: 'RAW_ID', email: 'invalid' }],
           },
           {
             uid: 'user15',
-            providerData: [{providerId: 'google.com', uid: 'RAW_ID', photoURL: 'invalid'}],
+            providerData: [{ providerId: 'google.com', uid: 'RAW_ID', photoURL: 'invalid' }],
           },
-          {uid: 'user16', providerData: [{}]},
-          {email: 'user17@example.com'},
+          { uid: 'user16', providerData: [{}] },
+          { email: 'user17@example.com' },
           {
             uid: 'user18',
             email: 'user18@example.com',
@@ -1644,15 +1644,15 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           successCount: 0,
           failureCount: testUsers.length,
           errors: [
-            {index: 0, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_DISPLAY_NAME)},
-            {index: 1, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_UID)},
-            {index: 2, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL)},
-            {index: 3, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER)},
-            {index: 4, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL_VERIFIED)},
-            {index: 5, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PHOTO_URL)},
-            {index: 6, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_DISABLED_FIELD)},
-            {index: 7, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_CREATION_TIME)},
-            {index: 8, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_LAST_SIGN_IN_TIME)},
+            { index: 0, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_DISPLAY_NAME) },
+            { index: 1, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_UID) },
+            { index: 2, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL) },
+            { index: 3, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER) },
+            { index: 4, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL_VERIFIED) },
+            { index: 5, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PHOTO_URL) },
+            { index: 6, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_DISABLED_FIELD) },
+            { index: 7, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_CREATION_TIME) },
+            { index: 8, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_LAST_SIGN_IN_TIME) },
             {
               index: 9,
               error: new FirebaseAuthError(
@@ -1660,8 +1660,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
                 `Developer claim "aud" is reserved and cannot be specified.`,
               ),
             },
-            {index: 10, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PASSWORD_HASH)},
-            {index: 11, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PASSWORD_SALT)},
+            { index: 10, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PASSWORD_HASH) },
+            { index: 11, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PASSWORD_SALT) },
             {
               index: 12,
               error: new FirebaseAuthError(
@@ -1690,8 +1690,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
                 `The provider "photoURL" for "google.com" must be a valid URL string.`,
               ),
             },
-            {index: 16, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID)},
-            {index: 17, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_UID)},
+            { index: 16, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID) },
+            { index: 17, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_UID) },
             {
               index: 18,
               error: new FirebaseAuthError(
@@ -1776,8 +1776,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       const maxResults = 500;
       const expectedResult = utils.responseFrom({
         users : [
-          {localId: 'uid1'},
-          {localId: 'uid2'},
+          { localId: 'uid1' },
+          { localId: 'uid2' },
         ],
         nextPageToken: 'NEXT_PAGE_TOKEN',
       });
@@ -1808,7 +1808,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const requestHandler = handler.init(mockApp);
         return requestHandler.downloadAccount(maxResults, nextPageToken)
           .then((result) => {
-            expect(result).to.deep.equal({users: []});
+            expect(result).to.deep.equal({ users: [] });
             expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
           });
       });
@@ -1887,7 +1887,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const expectedResult = utils.responseFrom({
           kind: 'identitytoolkit#DeleteAccountResponse',
         });
-        const data = {localId: 'uid'};
+        const data = { localId: 'uid' };
 
         const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
         stubs.push(stub);
@@ -1905,7 +1905,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           },
         });
         const expectedError = FirebaseAuthError.fromServerError('OPERATION_NOT_ALLOWED');
-        const data = {localId: 'uid'};
+        const data = { localId: 'uid' };
 
         const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedResult);
         stubs.push(stub);
@@ -1953,7 +1953,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       it('should be fulfilled given valid uids', async () => {
         const expectedResult = utils.responseFrom({});
-        const data = {localIds: ['uid1', 'uid2', 'uid3'], force: true};
+        const data = { localIds: ['uid1', 'uid2', 'uid3'], force: true };
 
         const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
         stubs.push(stub);
@@ -2080,7 +2080,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             expect(returnedUid).to.be.equal(uid);
             // Confirm expected rpc request parameters sent.
             expect(stub).to.have.been.calledOnce.and.calledWith(
-              callParams(path, method, {localId: uid}));
+              callParams(path, method, { localId: uid }));
           });
       });
 
@@ -2161,7 +2161,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         // Send update request to delete enrolled factors.
-        return requestHandler.updateExistingAccount(uid, {multiFactor: {enrolledFactors: null}})
+        return requestHandler.updateExistingAccount(uid, { multiFactor: { enrolledFactors: null } })
           .then((returnedUid: string) => {
             // uid should be returned.
             expect(returnedUid).to.be.equal(uid);
@@ -2183,7 +2183,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
         const requestHandler = handler.init(mockApp);
         // Send update request to delete enrolled factors.
-        return requestHandler.updateExistingAccount(uid, {multiFactor: {enrolledFactors: []}})
+        return requestHandler.updateExistingAccount(uid, { multiFactor: { enrolledFactors: [] } })
           .then((returnedUid: string) => {
             // uid should be returned.
             expect(returnedUid).to.be.equal(uid);
@@ -2355,7 +2355,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       const path = handler.path('v1', '/accounts:update', 'project_id');
       const method = 'POST';
       const uid = '12345678';
-      const claims = {admin: true, groupId: '1234'};
+      const claims = { admin: true, groupId: '1234' };
       const expectedValidData = {
         localId: uid,
         customAttributes: JSON.stringify(claims),
@@ -2440,7 +2440,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           `Developer claim "aud" is reserved and cannot be specified.`,
         );
         const requestHandler = handler.init(mockApp);
-        const blacklistedClaims = {admin: true, aud: 'bla'};
+        const blacklistedClaims = { admin: true, aud: 'bla' };
         // Send request with blacklisted claims.
         return requestHandler.setCustomUserClaims(uid, blacklistedClaims)
           .then(() => {
@@ -2513,7 +2513,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
       it('should be rejected given an invalid uid', () => {
         const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_UID);
-        const invalidUid: any = {localId: uid};
+        const invalidUid: any = { localId: uid };
 
         const requestHandler = handler.init(mockApp);
         return requestHandler.revokeRefreshTokens(invalidUid as any)
@@ -2623,7 +2623,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
           const requestHandler = handler.init(mockApp);
           // Send empty create new account request with only a uid provided.
-          return requestHandler.createNewAccount({uid})
+          return requestHandler.createNewAccount({ uid })
             .then((returnedUid: string) => {
               // uid should be returned.
               expect(returnedUid).to.be.equal(uid);
@@ -2679,7 +2679,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
 
             const requestHandler = handler.init(mockApp);
             // Send create new account request with no enrolled factors.
-            const request: any = {uid, multiFactor: {enrolledFactors: null}};
+            const request: any = { uid, multiFactor: { enrolledFactors: null } };
             return requestHandler.createNewAccount(request)
               .then((returnedUid: string) => {
                 // uid should be returned.
@@ -3139,7 +3139,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         }, expectedActionCodeSettingsRequest);
         // Simulate response missing link.
         const stub = sinon.stub(HttpClient.prototype, 'send')
-          .resolves(utils.responseFrom({email}));
+          .resolves(utils.responseFrom({ email }));
         stubs.push(stub);
 
         const requestHandler = handler.init(mockApp);
@@ -3245,8 +3245,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       const maxResults = 50;
       const expectedResult = utils.responseFrom({
         oauthIdpConfigs : [
-          {name: 'projects/project1/oauthIdpConfigs/oidc.provider1'},
-          {name: 'projects/project1/oauthIdpConfigs/oidc.provider2'},
+          { name: 'projects/project1/oauthIdpConfigs/oidc.provider1' },
+          { name: 'projects/project1/oauthIdpConfigs/oidc.provider2' },
         ],
         nextPageToken: 'NEXT_PAGE_TOKEN',
       });
@@ -3279,7 +3279,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const requestHandler = handler.init(mockApp);
         return requestHandler.listOAuthIdpConfigs(maxResults, nextPageToken)
           .then((result) => {
-            expect(result).to.deep.equal({oauthIdpConfigs: []});
+            expect(result).to.deep.equal({ oauthIdpConfigs: [] });
             expect(stub).to.have.been.calledOnce.and.calledWith(
               callParams(path, expectedHttpMethod, data));
           });
@@ -3737,8 +3737,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       const maxResults = 50;
       const expectedResult = utils.responseFrom({
         inboundSamlConfigs : [
-          {name: 'projects/project1/inboundSamlConfigs/saml.provider1'},
-          {name: 'projects/project1/inboundSamlConfigs/saml.provider2'},
+          { name: 'projects/project1/inboundSamlConfigs/saml.provider1' },
+          { name: 'projects/project1/inboundSamlConfigs/saml.provider2' },
         ],
         nextPageToken: 'NEXT_PAGE_TOKEN',
       });
@@ -3770,7 +3770,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const requestHandler = handler.init(mockApp);
         return requestHandler.listInboundSamlConfigs(maxResults, nextPageToken)
           .then((result) => {
-            expect(result).to.deep.equal({inboundSamlConfigs: []});
+            expect(result).to.deep.equal({ inboundSamlConfigs: [] });
             expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, expectedHttpMethod, data));
           });
       });
@@ -3922,8 +3922,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           ssoUrl: 'https://example.com/login',
           signRequest: true,
           idpCertificates: [
-            {x509Certificate: 'CERT1'},
-            {x509Certificate: 'CERT2'},
+            { x509Certificate: 'CERT1' },
+            { x509Certificate: 'CERT2' },
           ],
         },
         spConfig: {
@@ -4029,8 +4029,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           ssoUrl: 'https://example.com/login',
           signRequest: true,
           idpCertificates: [
-            {x509Certificate: 'CERT1'},
-            {x509Certificate: 'CERT2'},
+            { x509Certificate: 'CERT1' },
+            { x509Certificate: 'CERT2' },
           ],
         },
         spConfig: {
@@ -4051,8 +4051,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           ssoUrl: 'https://example.com/login2',
           signRequest: true,
           idpCertificates: [
-            {x509Certificate: 'CERT1'},
-            {x509Certificate: 'CERT2'},
+            { x509Certificate: 'CERT1' },
+            { x509Certificate: 'CERT2' },
           ],
         },
         spConfig: {
@@ -4280,8 +4280,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const maxResults = 500;
         const expectedResult = utils.responseFrom({
           tenants : [
-            {name: 'projects/project_id/tenants/tenant-id1'},
-            {name: 'projects/project_id/tenants/tenant-id2'},
+            { name: 'projects/project_id/tenants/tenant-id1' },
+            { name: 'projects/project_id/tenants/tenant-id2' },
           ],
           nextPageToken: 'NEXT_PAGE_TOKEN',
         });
@@ -4313,7 +4313,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           const requestHandler = handler.init(mockApp) as AuthRequestHandler;
           return requestHandler.listTenants(maxResults, nextPageToken)
             .then((result) => {
-              expect(result).to.deep.equal({tenants: []});
+              expect(result).to.deep.equal({ tenants: [] });
               expect(stub).to.have.been.calledOnce.and.calledWith(callParams(path, method, data));
             });
         });
@@ -4516,7 +4516,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           );
           // Resource name should have /tenants/tenant-id in path. This should throw an error.
           const stub = sinon.stub(HttpClient.prototype, 'send')
-            .resolves(utils.responseFrom({name: 'projects/project_id'}));
+            .resolves(utils.responseFrom({ name: 'projects/project_id' }));
           stubs.push(stub);
 
           const requestHandler = handler.init(mockApp) as AuthRequestHandler;
@@ -4595,7 +4595,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             allowPasswordSignup: true,
           };
           const partialTenantOptions = {
-            emailSignInConfig: {enabled: true},
+            emailSignInConfig: { enabled: true },
           };
           stubs.push(stub);
 
@@ -4688,7 +4688,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           );
           // Resource name should have /tenants/tenant-id in path. This should throw an error.
           const stub = sinon.stub(HttpClient.prototype, 'send')
-            .resolves(utils.responseFrom({name: 'projects/project_id'}));
+            .resolves(utils.responseFrom({ name: 'projects/project_id' }));
           stubs.push(stub);
 
           const requestHandler = handler.init(mockApp) as AuthRequestHandler;

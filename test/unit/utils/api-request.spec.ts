@@ -25,13 +25,13 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
-import {FirebaseApp} from '../../../src/firebase-app';
+import { FirebaseApp } from '../../../src/firebase-app';
 import {
   ApiSettings, HttpClient, HttpError, AuthorizedHttpClient, ApiCallbackFunction, HttpRequestConfig,
   HttpResponse, parseHttpResponse, RetryConfig, defaultRetryConfig,
 } from '../../../src/utils/api-request';
 import { deepCopy } from '../../../src/utils/deep-copy';
-import {Agent} from 'http';
+import { Agent } from 'http';
 import * as zlib from 'zlib';
 
 chai.should();
@@ -141,7 +141,7 @@ describe('HttpClient', () => {
   invalidNumbers.forEach((maxRetries: any) => {
     it(`should throw when maxRetries is: ${maxRetries}`, () => {
       expect(() => {
-        new HttpClient({maxRetries} as any);
+        new HttpClient({ maxRetries } as any);
       }).to.throw('maxRetries must be a non-negative integer');
     });
   });
@@ -150,7 +150,7 @@ describe('HttpClient', () => {
     if (typeof backOffFactor !== 'undefined') {
       it(`should throw when backOffFactor is: ${backOffFactor}`, () => {
         expect(() => {
-          new HttpClient({maxRetries: 1, backOffFactor} as any);
+          new HttpClient({ maxRetries: 1, backOffFactor } as any);
         }).to.throw('backOffFactor must be a non-negative number');
       });
     }
@@ -159,7 +159,7 @@ describe('HttpClient', () => {
   invalidNumbers.forEach((maxDelayInMillis: any) => {
     it(`should throw when maxDelayInMillis is: ${maxDelayInMillis}`, () => {
       expect(() => {
-        new HttpClient({maxRetries: 1, maxDelayInMillis} as any);
+        new HttpClient({ maxRetries: 1, maxDelayInMillis } as any);
       }).to.throw('maxDelayInMillis must be a non-negative integer');
     });
   });
@@ -167,7 +167,7 @@ describe('HttpClient', () => {
   invalidArrays.forEach((ioErrorCodes: any) => {
     it(`should throw when ioErrorCodes is: ${ioErrorCodes}`, () => {
       expect(() => {
-        new HttpClient({maxRetries: 1, maxDelayInMillis: 10000, ioErrorCodes} as any);
+        new HttpClient({ maxRetries: 1, maxDelayInMillis: 10000, ioErrorCodes } as any);
       }).to.throw('ioErrorCodes must be an array');
     });
   });
@@ -175,13 +175,13 @@ describe('HttpClient', () => {
   invalidArrays.forEach((statusCodes: any) => {
     it(`should throw when statusCodes is: ${statusCodes}`, () => {
       expect(() => {
-        new HttpClient({maxRetries: 1, maxDelayInMillis: 10000, statusCodes} as any);
+        new HttpClient({ maxRetries: 1, maxDelayInMillis: 10000, statusCodes } as any);
       }).to.throw('statusCodes must be an array');
     });
   });
 
   it('should be fulfilled for a 2xx response with a json payload', () => {
-    const respData = {foo: 'bar'};
+    const respData = { foo: 'bar' };
     const scope = nock('https://' + mockHost)
       .get(mockPath)
       .reply(200, respData, {
@@ -337,7 +337,7 @@ describe('HttpClient', () => {
   });
 
   it('should use the specified HTTP agent', () => {
-    const respData = {success: true};
+    const respData = { success: true };
     const scope = nock('https://' + mockHost)
       .get(mockPath)
       .reply(200, respData, {
@@ -369,8 +369,8 @@ describe('HttpClient', () => {
   });
 
   it('should make a POST request with the provided headers and data', () => {
-    const reqData = {request: 'data'};
-    const respData = {success: true};
+    const reqData = { request: 'data' };
+    const respData = { success: true };
     const scope = nock('https://' + mockHost, {
       reqheaders: {
         'Authorization': 'Bearer token',
@@ -402,8 +402,8 @@ describe('HttpClient', () => {
   });
 
   it('should use the specified content-type header for the body', () => {
-    const reqData = {request: 'data'};
-    const respData = {success: true};
+    const reqData = { request: 'data' };
+    const respData = { success: true };
     const scope = nock('https://' + mockHost, {
       reqheaders: {
         'Content-Type': (header) => {
@@ -432,7 +432,7 @@ describe('HttpClient', () => {
   });
 
   it('should not mutate the arguments', () => {
-    const reqData = {request: 'data'};
+    const reqData = { request: 'data' };
     const scope = nock('https://' + mockHost, {
       reqheaders: {
         'Authorization': 'Bearer token',
@@ -442,7 +442,7 @@ describe('HttpClient', () => {
         'My-Custom-Header': 'CustomValue',
       },
     }).post(mockPath, reqData)
-      .reply(200, {success: true}, {
+      .reply(200, { success: true }, {
         'content-type': 'application/json',
       });
     mockedRequests.push(scope);
@@ -464,8 +464,8 @@ describe('HttpClient', () => {
   });
 
   it('should make a GET request with the provided headers and data', () => {
-    const reqData = {key1: 'value1', key2: 'value2'};
-    const respData = {success: true};
+    const reqData = { key1: 'value1', key2: 'value2' };
+    const respData = { success: true };
     const scope = nock('https://' + mockHost, {
       reqheaders: {
         'Authorization': 'Bearer token',
@@ -495,9 +495,9 @@ describe('HttpClient', () => {
   });
 
   it('should merge query parameters in URL with data', () => {
-    const reqData = {key1: 'value1', key2: 'value2'};
-    const mergedData = {...reqData, key3: 'value3'};
-    const respData = {success: true};
+    const reqData = { key1: 'value1', key2: 'value2' };
+    const mergedData = { ...reqData, key3: 'value3' };
+    const respData = { success: true };
     const scope = nock('https://' + mockHost)
       .get(mockPath)
       .query(mergedData)
@@ -519,9 +519,9 @@ describe('HttpClient', () => {
   });
 
   it('should urlEncode query parameters in URL', () => {
-    const reqData = {key1: 'value 1!', key2: 'value 2!'};
-    const mergedData = {...reqData, key3: 'value 3!'};
-    const respData = {success: true};
+    const reqData = { key1: 'value 1!', key2: 'value 2!' };
+    const mergedData = { ...reqData, key3: 'value 3!' };
+    const respData = { success: true };
     const scope = nock('https://' + mockHost)
       .get(mockPath)
       .query(mergedData)
@@ -543,7 +543,7 @@ describe('HttpClient', () => {
   });
 
   it('should default to https when protocol not specified', () => {
-    const respData = {foo: 'bar'};
+    const respData = { foo: 'bar' };
     const scope = nock('https://' + mockHost)
       .get(mockPath)
       .reply(200, respData, {
@@ -576,8 +576,8 @@ describe('HttpClient', () => {
   });
 
   it('should make a HEAD request with the provided headers and data', () => {
-    const reqData = {key1: 'value1', key2: 'value2'};
-    const respData = {success: true};
+    const reqData = { key1: 'value1', key2: 'value2' };
+    const respData = { success: true };
     const scope = nock('https://' + mockHost, {
       reqheaders: {
         'Authorization': 'Bearer token',
@@ -618,7 +618,7 @@ describe('HttpClient', () => {
   });
 
   it('should fail with an HttpError for a 4xx response', () => {
-    const data = {error: 'data'};
+    const data = { error: 'data' };
     mockedRequests.push(mockRequestWithHttpError(400, 'application/json', data));
     const client = new HttpClient();
     return client.send({
@@ -635,7 +635,7 @@ describe('HttpClient', () => {
   });
 
   it('should fail with an HttpError for a 5xx response', () => {
-    const data = {error: 'data'};
+    const data = { error: 'data' };
     mockedRequests.push(mockRequestWithHttpError(500, 'application/json', data));
     const client = new HttpClient();
     return client.send({
@@ -676,7 +676,7 @@ describe('HttpClient', () => {
   });
 
   it('should fail with a FirebaseAppError for a network error', () => {
-    mockedRequests.push(mockRequestWithError({message: 'test error', code: 'AWFUL_ERROR'}));
+    mockedRequests.push(mockRequestWithError({ message: 'test error', code: 'AWFUL_ERROR' }));
     const client = new HttpClient();
     const err = 'Error while making request: test error. Error code: AWFUL_ERROR';
     return client.send({
@@ -686,7 +686,7 @@ describe('HttpClient', () => {
   });
 
   it('should timeout when the response is repeatedly delayed', () => {
-    const respData = {foo: 'bar'};
+    const respData = { foo: 'bar' };
     const scope = nock('https://' + mockHost)
       .get(mockPath)
       .times(5)
@@ -707,7 +707,7 @@ describe('HttpClient', () => {
   });
 
   it('should timeout when multiple socket timeouts encountered', () => {
-    const respData = {foo: 'bar timeout'};
+    const respData = { foo: 'bar timeout' };
     const scope = nock('https://' + mockHost)
       .get(mockPath)
       .times(5)
@@ -729,7 +729,7 @@ describe('HttpClient', () => {
 
   it('should be rejected, after 4 retries, on multiple network errors', () => {
     for (let i = 0; i < 5; i++) {
-      mockedRequests.push(mockRequestWithError({message: `connection reset ${i + 1}`, code: 'ECONNRESET'}));
+      mockedRequests.push(mockRequestWithError({ message: `connection reset ${i + 1}`, code: 'ECONNRESET' }));
     }
 
     const client = new HttpClient(testRetryConfig());
@@ -767,8 +767,8 @@ describe('HttpClient', () => {
   });
 
   it('should succeed, after 1 retry, on a single network error', () => {
-    mockedRequests.push(mockRequestWithError({message: 'connection reset 1', code: 'ECONNRESET'}));
-    const respData = {foo: 'bar'};
+    mockedRequests.push(mockRequestWithError({ message: 'connection reset 1', code: 'ECONNRESET' }));
+    const respData = { foo: 'bar' };
     const scope = nock('https://' + mockHost)
       .get(mockPath)
       .reply(200, respData, {
@@ -786,7 +786,7 @@ describe('HttpClient', () => {
   });
 
   it('should not retry when RetryConfig is explicitly null', () => {
-    mockedRequests.push(mockRequestWithError({message: 'connection reset 1', code: 'ECONNRESET'}));
+    mockedRequests.push(mockRequestWithError({ message: 'connection reset 1', code: 'ECONNRESET' }));
     const client = new HttpClient(null);
     const err = 'Error while making request: connection reset 1';
     return client.send({
@@ -796,7 +796,7 @@ describe('HttpClient', () => {
   });
 
   it('should not retry when maxRetries is set to 0', () => {
-    mockedRequests.push(mockRequestWithError({message: 'connection reset 1', code: 'ECONNRESET'}));
+    mockedRequests.push(mockRequestWithError({ message: 'connection reset 1', code: 'ECONNRESET' }));
     const client = new HttpClient({
       maxRetries: 0,
       ioErrorCodes: ['ECONNRESET'],
@@ -810,7 +810,7 @@ describe('HttpClient', () => {
   });
 
   it('should not retry when error codes are not configured', () => {
-    mockedRequests.push(mockRequestWithError({message: 'connection reset 1', code: 'ECONNRESET'}));
+    mockedRequests.push(mockRequestWithError({ message: 'connection reset 1', code: 'ECONNRESET' }));
     const client = new HttpClient({
       maxRetries: 1,
       maxDelayInMillis: 10000,
@@ -823,8 +823,8 @@ describe('HttpClient', () => {
   });
 
   it('should succeed after a retry on a configured I/O error', () => {
-    mockedRequests.push(mockRequestWithError({message: 'connection reset 1', code: 'ETESTCODE'}));
-    const respData = {foo: 'bar'};
+    mockedRequests.push(mockRequestWithError({ message: 'connection reset 1', code: 'ETESTCODE' }));
+    const respData = { foo: 'bar' };
     const scope = nock('https://' + mockHost)
       .get(mockPath)
       .reply(200, respData, {
@@ -852,7 +852,7 @@ describe('HttpClient', () => {
         'content-type': 'application/json',
       });
     mockedRequests.push(scope1);
-    const respData = {foo: 'bar'};
+    const respData = { foo: 'bar' };
     const scope2 = nock('https://' + mockHost)
       .get(mockPath)
       .reply(200, respData, {
@@ -871,8 +871,8 @@ describe('HttpClient', () => {
 
   it('should not retry more than maxRetries', () => {
     // simulate 2 low-level errors
-    mockedRequests.push(mockRequestWithError({message: 'connection reset 1', code: 'ECONNRESET'}));
-    mockedRequests.push(mockRequestWithError({message: 'connection reset 2', code: 'ECONNRESET'}));
+    mockedRequests.push(mockRequestWithError({ message: 'connection reset 1', code: 'ECONNRESET' }));
+    mockedRequests.push(mockRequestWithError({ message: 'connection reset 2', code: 'ECONNRESET' }));
 
     // followed by 3 HTTP errors
     const scope = nock('https://' + mockHost)
@@ -1020,7 +1020,7 @@ describe('HttpClient', () => {
         'retry-after': '30',
       });
     mockedRequests.push(scope1);
-    const respData = {foo: 'bar'};
+    const respData = { foo: 'bar' };
     const scope2 = nock('https://' + mockHost)
       .get(mockPath)
       .reply(200, respData, {
@@ -1056,7 +1056,7 @@ describe('HttpClient', () => {
         'retry-after': timestamp.toUTCString(),
       });
     mockedRequests.push(scope1);
-    const respData = {foo: 'bar'};
+    const respData = { foo: 'bar' };
     const scope2 = nock('https://' + mockHost)
       .get(mockPath)
       .reply(200, respData, {
@@ -1090,7 +1090,7 @@ describe('HttpClient', () => {
         'retry-after': timestamp.toUTCString(),
       });
     mockedRequests.push(scope1);
-    const respData = {foo: 'bar'};
+    const respData = { foo: 'bar' };
     const scope2 = nock('https://' + mockHost)
       .get(mockPath)
       .reply(200, respData, {
@@ -1122,7 +1122,7 @@ describe('HttpClient', () => {
         'retry-after': 'invalid',
       });
     mockedRequests.push(scope1);
-    const respData = {foo: 'bar'};
+    const respData = { foo: 'bar' };
     const scope2 = nock('https://' + mockHost)
       .get(mockPath)
       .reply(200, respData, {
@@ -1158,7 +1158,7 @@ describe('HttpClient', () => {
   });
 
   it('should use the port 80 for http URLs', () => {
-    const respData = {foo: 'bar'};
+    const respData = { foo: 'bar' };
     const scope = nock('http://' + mockHost + ':80')
       .get('/')
       .reply(200, respData, {
@@ -1175,7 +1175,7 @@ describe('HttpClient', () => {
   });
 
   it('should use the port specified in the URL', () => {
-    const respData = {foo: 'bar'};
+    const respData = { foo: 'bar' };
     const scope = nock('https://' + mockHost + ':8080')
       .get('/')
       .reply(200, respData, {
@@ -1223,7 +1223,7 @@ describe('AuthorizedHttpClient', () => {
   });
 
   it('should be fulfilled for a 2xx response with a json payload', () => {
-    const respData = {foo: 'bar'};
+    const respData = { foo: 'bar' };
     const scope = nock('https://' + mockHost, requestHeaders)
       .get(mockPath)
       .reply(200, respData, {
@@ -1265,7 +1265,7 @@ describe('AuthorizedHttpClient', () => {
     });
 
     it('should use the HTTP agent set in request', () => {
-      const respData = {success: true};
+      const respData = { success: true };
       const scope = nock('https://' + mockHost, requestHeaders)
         .get(mockPath)
         .reply(200, respData, {
@@ -1287,7 +1287,7 @@ describe('AuthorizedHttpClient', () => {
     });
 
     it('should use the HTTP agent set in AppOptions', () => {
-      const respData = {success: true};
+      const respData = { success: true };
       const scope = nock('https://' + mockHost, requestHeaders)
         .get(mockPath)
         .reply(200, respData, {
@@ -1308,8 +1308,8 @@ describe('AuthorizedHttpClient', () => {
   });
 
   it('should make a POST request with the provided headers and data', () => {
-    const reqData = {request: 'data'};
-    const respData = {success: true};
+    const reqData = { request: 'data' };
+    const respData = { success: true };
     const options = {
       reqheaders: {
         'Content-Type': (header: string) => {
@@ -1341,7 +1341,7 @@ describe('AuthorizedHttpClient', () => {
   });
 
   it('should not mutate the arguments', () => {
-    const reqData = {request: 'data'};
+    const reqData = { request: 'data' };
     const options = {
       reqheaders: {
         'Content-Type': (header: string) => {
@@ -1353,7 +1353,7 @@ describe('AuthorizedHttpClient', () => {
     Object.assign(options.reqheaders, requestHeaders.reqheaders);
     const scope = nock('https://' + mockHost, options)
       .post(mockPath, reqData)
-      .reply(200, {success: true}, {
+      .reply(200, { success: true }, {
         'content-type': 'application/json',
       });
     mockedRequests.push(scope);
@@ -1464,7 +1464,7 @@ describe('parseHttpResponse()', () => {
     expect(response.headers).to.have.property('content-type', 'application/json');
     expect(response.headers).to.have.property('date', 'Thu, 07 Feb 2019 19:20:34 GMT');
     expect(response.isJson()).to.be.true;
-    expect(response.data).to.deep.equal({foo: 1});
+    expect(response.data).to.deep.equal({ foo: 1 });
     expect(response.text).to.equal('{"foo": 1}');
   });
 
@@ -1482,7 +1482,7 @@ describe('parseHttpResponse()', () => {
     expect(response.headers).to.have.property('content-type', 'application/json');
     expect(response.headers).to.have.property('date', 'Thu, 07 Feb 2019 19:20:34 GMT');
     expect(response.isJson()).to.be.true;
-    expect(response.data).to.deep.equal({foo: 1});
+    expect(response.data).to.deep.equal({ foo: 1 });
     expect(response.text).to.equal('{"foo": 1}');
   });
 

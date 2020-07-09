@@ -15,8 +15,8 @@
  */
 
 import { FirebaseApp } from '../firebase-app';
-import {ServiceAccountCredential} from './credential';
-import {AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
+import { ServiceAccountCredential } from './credential';
+import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import { AuthorizedHttpClient, HttpError, HttpRequestConfig, HttpClient } from '../utils/api-request';
 
 import * as validator from '../utils/validator';
@@ -152,7 +152,7 @@ export class IAMSigner implements CryptoSigner {
       const request: HttpRequestConfig = {
         method: 'POST',
         url: `https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/${serviceAccount}:signBlob`,
-        data: {payload: buffer.toString('base64')},
+        data: { payload: buffer.toString('base64') },
       };
       return this.httpClient.send(request);
     }).then((response: any) => {

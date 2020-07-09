@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import {AuthRequestHandler} from './auth-api-request';
-import {FirebaseApp} from '../firebase-app';
-import {TenantAwareAuth} from './auth';
+import { AuthRequestHandler } from './auth-api-request';
+import { FirebaseApp } from '../firebase-app';
+import { TenantAwareAuth } from './auth';
 import {
   Tenant, TenantServerResponse, ListTenantsResult, TenantOptions,
 } from './tenant';
-import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
+import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import * as validator from '../utils/validator';
 
 /**

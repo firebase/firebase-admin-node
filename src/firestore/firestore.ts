@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import {FirebaseApp} from '../firebase-app';
-import {FirebaseFirestoreError} from '../utils/error';
-import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {ServiceAccountCredential, isApplicationDefault} from '../auth/credential';
-import {Firestore, Settings} from '@google-cloud/firestore';
+import { FirebaseApp } from '../firebase-app';
+import { FirebaseFirestoreError } from '../utils/error';
+import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
+import { ServiceAccountCredential, isApplicationDefault } from '../auth/credential';
+import { Firestore, Settings } from '@google-cloud/firestore';
 
 import * as validator from '../utils/validator';
 import * as utils from '../utils/index';
@@ -90,7 +90,7 @@ export function getFirestoreOptions(app: FirebaseApp): Settings {
     // Try to use the Google application default credentials.
     // If an explicit project ID is not available, let Firestore client discover one from the
     // environment. This prevents the users from having to set GOOGLE_CLOUD_PROJECT in GCP runtimes.
-    return validator.isNonEmptyString(projectId) ? {projectId, firebaseVersion} : {firebaseVersion};
+    return validator.isNonEmptyString(projectId) ? { projectId, firebaseVersion } : { firebaseVersion };
   }
 
   throw new FirebaseFirestoreError({

@@ -25,9 +25,9 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
-import {FirebaseApp} from '../../../src/firebase-app';
-import {HttpClient} from '../../../src/utils/api-request';
-import {FirebaseInstanceIdRequestHandler} from '../../../src/instance-id/instance-id-request';
+import { FirebaseApp } from '../../../src/firebase-app';
+import { HttpClient } from '../../../src/utils/api-request';
+import { FirebaseInstanceIdRequestHandler } from '../../../src/instance-id/instance-id-request';
 
 chai.should();
 chai.use(sinonChai);
@@ -129,7 +129,7 @@ describe('FirebaseInstanceIdRequestHandler', () => {
     });
 
     it('should throw for unexpected HTTP errors', () => {
-      const expectedResult = {error: 'test error'};
+      const expectedResult = { error: 'test error' };
       const stub = sinon.stub(HttpClient.prototype, 'send')
         .rejects(utils.errorFrom(expectedResult, 511));
       stubs.push(stub);

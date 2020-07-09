@@ -24,9 +24,9 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import * as mocks from '../resources/mocks';
 
-import {FirebaseNamespace} from '../../src/firebase-namespace';
-import {FirebaseApp} from '../../src/firebase-app';
-import {Auth} from '../../src/auth/auth';
+import { FirebaseNamespace } from '../../src/firebase-namespace';
+import { FirebaseApp } from '../../src/firebase-app';
+import { Auth } from '../../src/auth/auth';
 import {
   enableLogging,
   Database,
@@ -36,9 +36,9 @@ import {
   Reference,
   ServerValue,
 } from '@firebase/database';
-import {Messaging} from '../../src/messaging/messaging';
-import {MachineLearning} from '../../src/machine-learning/machine-learning';
-import {Storage} from '../../src/storage/storage';
+import { Messaging } from '../../src/messaging/messaging';
+import { MachineLearning } from '../../src/machine-learning/machine-learning';
+import { Storage } from '../../src/storage/storage';
 import {
   Firestore,
   FieldPath,
@@ -48,8 +48,8 @@ import {
   v1beta1,
   setLogFunction,
 } from '@google-cloud/firestore';
-import {InstanceId} from '../../src/instance-id/instance-id';
-import {ProjectManagement} from '../../src/project-management/project-management';
+import { InstanceId } from '../../src/instance-id/instance-id';
+import { ProjectManagement } from '../../src/project-management/project-management';
 import { SecurityRules } from '../../src/security-rules/security-rules';
 import { RemoteConfig } from '../../src/remote-config/remote-config';
 
