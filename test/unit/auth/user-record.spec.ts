@@ -20,9 +20,10 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import {deepCopy} from '../../../src/utils/deep-copy';
 import {
-  UserInfo, UserMetadata, UserRecord, GetAccountInfoUserResponse, ProviderUserInfoResponse,
-  MultiFactor, PhoneMultiFactorInfo, MultiFactorInfo, MultiFactorInfoResponse,
+  UserInfo, UserMetadata, UserRecord
 } from '../../../src/auth/user-record';
+import {GetAccountInfoUserResponse, ProviderUserInfoResponse,
+  MultiFactor, MultiFactorInfoResponse, initMultiFactorInfo, PhoneMultiFactorInfoImpl} from '../../../src/auth/user-record-internal';
 
 
 chai.should();
@@ -246,8 +247,8 @@ describe('PhoneMultiFactorInfo', () => {
     enrolledAt: now.toISOString(),
     phoneInfo: '+16505551234',
   };
-  const phoneMultiFactorInfo = new PhoneMultiFactorInfo(serverResponse);
-  const phoneMultiFactorInfoMissingFields = new PhoneMultiFactorInfo({
+  const phoneMultiFactorInfo = new PhoneMultiFactorInfoImpl(serverResponse);
+  const phoneMultiFactorInfoMissingFields = new PhoneMultiFactorInfoImpl({
     mfaEnrollmentId: serverResponse.mfaEnrollmentId,
     phoneInfo: serverResponse.phoneInfo,
   });
@@ -255,19 +256,19 @@ describe('PhoneMultiFactorInfo', () => {
   describe('constructor', () => {
     it('should throw when an empty object is provided', () => {
       expect(() =>  {
-        return new PhoneMultiFactorInfo({} as any);
+        return new PhoneMultiFactorInfoImpl({} as any);
       }).to.throw('INTERNAL ASSERT FAILED: Invalid multi-factor info response');
     });
 
     it('should throw when an undefined response is provided', () => {
       expect(() =>  {
-        return new PhoneMultiFactorInfo(undefined as any);
+        return new PhoneMultiFactorInfoImpl(undefined as any);
       }).to.throw('INTERNAL ASSERT FAILED: Invalid multi-factor info response');
     });
 
     it('should succeed when mfaEnrollmentId and phoneInfo are both provided', () => {
       expect(() => {
-        return new PhoneMultiFactorInfo({
+        return new PhoneMultiFactorInfoImpl({
           mfaEnrollmentId: 'enrollmentId1',
           phoneInfo: '+16505551234',
         });
@@ -276,7 +277,7 @@ describe('PhoneMultiFactorInfo', () => {
 
     it('should throw when only mfaEnrollmentId is provided', () => {
       expect(() =>  {
-        return new PhoneMultiFactorInfo({
+        return new PhoneMultiFactorInfoImpl({
           mfaEnrollmentId: 'enrollmentId1',
         } as any);
       }).to.throw('INTERNAL ASSERT FAILED: Invalid multi-factor info response');
@@ -284,7 +285,7 @@ describe('PhoneMultiFactorInfo', () => {
 
     it('should throw when only phoneInfo is provided', () => {
       expect(() =>  {
-        return new PhoneMultiFactorInfo({
+        return new PhoneMultiFactorInfoImpl({
           phoneInfo: '+16505551234',
         } as any);
       }).to.throw('INTERNAL ASSERT FAILED: Invalid multi-factor info response');
@@ -381,15 +382,15 @@ describe('MultiFactorInfo', () => {
     enrolledAt: now.toISOString(),
     phoneInfo: '+16505551234',
   };
-  const phoneMultiFactorInfo = new PhoneMultiFactorInfo(serverResponse);
+  const phoneMultiFactorInfo = new PhoneMultiFactorInfoImpl(serverResponse);
 
   describe('initMultiFactorInfo', () => {
-    it('should return expected PhoneMultiFactorInfo', () => {
-      expect(MultiFactorInfo.initMultiFactorInfo(serverResponse)).to.deep.equal(phoneMultiFactorInfo);
+    it('should return expected PhoneMultiFactorInfoImpl', () => {
+      expect(initMultiFactorInfo(serverResponse)).to.deep.equal(phoneMultiFactorInfo);
     });
 
     it('should return null for invalid MultiFactorInfo', () => {
-      expect(MultiFactorInfo.initMultiFactorInfo(undefined as any)).to.be.null;
+      expect(initMultiFactorInfo(undefined as any)).to.be.null;
     });
   });
 });
@@ -423,13 +424,13 @@ describe('MultiFactor', () => {
     ],
   };
   const expectedMultiFactorInfo = [
-    new PhoneMultiFactorInfo({
+    new PhoneMultiFactorInfoImpl({
       mfaEnrollmentId: 'enrollmentId1',
       displayName: 'displayName1',
       enrolledAt: now.toISOString(),
       phoneInfo: '+16505551234',
     }),
-    new PhoneMultiFactorInfo({
+    new PhoneMultiFactorInfoImpl({
       mfaEnrollmentId: 'enrollmentId2',
       enrolledAt: now.toISOString(),
       phoneInfo: '+16505556789',
@@ -473,7 +474,7 @@ describe('MultiFactor', () => {
       const multiFactor = new MultiFactor(serverResponse);
 
       expect(() => {
-        (multiFactor.enrolledFactors as any)[0] = new PhoneMultiFactorInfo({
+        (multiFactor.enrolledFactors as any)[0] = new PhoneMultiFactorInfoImpl({
           mfaEnrollmentId: 'enrollmentId3',
           displayName: 'displayName3',
           enrolledAt: now.toISOString(),
@@ -1018,7 +1019,7 @@ describe('UserRecord', () => {
       }).to.throw(Error);
 
       expect(() => {
-        (userRecord.multiFactor!.enrolledFactors as any)[0] = new PhoneMultiFactorInfo({
+        (userRecord.multiFactor!.enrolledFactors as any)[0] = new PhoneMultiFactorInfoImpl({
           mfaEnrollmentId: 'enrollmentId3',
           displayName: 'displayName3',
           enrolledAt: now.toISOString(),

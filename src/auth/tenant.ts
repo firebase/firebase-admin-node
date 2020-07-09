@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-import * as validator from '../utils/validator';
-import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
 import {
-  EmailSignInConfig, EmailSignInConfigServerRequest, EmailSignInProviderConfig,
-} from './auth-config';
+  EmailSignInConfigServerRequest, EmailSignInProviderConfig, EmailSignInConfig
+} from './auth-config-internal';
 
 /** The TenantOptions interface used for create/read/update tenant operations. */
 export interface TenantOptions {
@@ -49,121 +47,12 @@ export interface ListTenantsResult {
 /**
  * Tenant class that defines a Firebase Auth tenant.
  */
-export class Tenant {
-  public readonly tenantId: string;
-  public readonly displayName?: string;
-  public readonly emailSignInConfig?: EmailSignInConfig;
+export interface Tenant {
+  readonly tenantId: string;
+  readonly displayName?: string;
+  readonly emailSignInConfig?: EmailSignInConfig;
 
-  /**
-   * Builds the corresponding server request for a TenantOptions object.
-   *
-   * @param {TenantOptions} tenantOptions The properties to convert to a server request.
-   * @param {boolean} createRequest Whether this is a create request.
-   * @return {object} The equivalent server request.
-   */
-  public static buildServerRequest(
-    tenantOptions: TenantOptions, createRequest: boolean): TenantOptionsServerRequest {
-    Tenant.validate(tenantOptions, createRequest);
-    let request: TenantOptionsServerRequest = {};
-    if (typeof tenantOptions.emailSignInConfig !== 'undefined') {
-      request = EmailSignInConfig.buildServerRequest(tenantOptions.emailSignInConfig);
-    }
-    if (typeof tenantOptions.displayName !== 'undefined') {
-      request.displayName = tenantOptions.displayName;
-    }
-    return request;
-  }
-
-  /**
-   * Returns the tenant ID corresponding to the resource name if available.
-   *
-   * @param {string} resourceName The server side resource name
-   * @return {?string} The tenant ID corresponding to the resource, null otherwise.
-   */
-  public static getTenantIdFromResourceName(resourceName: string): string | null {
-    // name is of form projects/project1/tenants/tenant1
-    const matchTenantRes = resourceName.match(/\/tenants\/(.*)$/);
-    if (!matchTenantRes || matchTenantRes.length < 2) {
-      return null;
-    }
-    return matchTenantRes[1];
-  }
-
-  /**
-   * Validates a tenant options object. Throws an error on failure.
-   *
-   * @param {any} request The tenant options object to validate.
-   * @param {boolean} createRequest Whether this is a create request.
-   */
-  private static validate(request: any, createRequest: boolean): void {
-    const validKeys = {
-      displayName: true,
-      emailSignInConfig: true,
-    };
-    const label = createRequest ? 'CreateTenantRequest' : 'UpdateTenantRequest';
-    if (!validator.isNonNullObject(request)) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_ARGUMENT,
-        `"${label}" must be a valid non-null object.`,
-      );
-    }
-    // Check for unsupported top level attributes.
-    for (const key in request) {
-      if (!(key in validKeys)) {
-        throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
-          `"${key}" is not a valid ${label} parameter.`,
-        );
-      }
-    }
-    // Validate displayName type if provided.
-    if (typeof request.displayName !== 'undefined' &&
-        !validator.isNonEmptyString(request.displayName)) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_ARGUMENT,
-        `"${label}.displayName" must be a valid non-empty string.`,
-      );
-    }
-    // Validate emailSignInConfig type if provided.
-    if (typeof request.emailSignInConfig !== 'undefined') {
-      // This will throw an error if invalid.
-      EmailSignInConfig.buildServerRequest(request.emailSignInConfig);
-    }
-  }
-
-  /**
-   * The Tenant object constructor.
-   *
-   * @param {any} response The server side response used to initialize the Tenant object.
-   * @constructor
-   */
-  constructor(response: any) {
-    const tenantId = Tenant.getTenantIdFromResourceName(response.name);
-    if (!tenantId) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
-        'INTERNAL ASSERT FAILED: Invalid tenant response',
-      );
-    }
-    this.tenantId = tenantId;
-    this.displayName = response.displayName;
-    try {
-      this.emailSignInConfig = new EmailSignInConfig(response);
-    } catch (e) {
-      // If allowPasswordSignup is undefined, it is disabled by default.
-      this.emailSignInConfig = new EmailSignInConfig({
-        allowPasswordSignup: false,
-      });
-    }
-  }
 
   /** @return {object} The plain object representation of the tenant. */
-  public toJSON(): object {
-    return {
-      tenantId: this.tenantId,
-      displayName: this.displayName,
-      emailSignInConfig: this.emailSignInConfig && this.emailSignInConfig.toJSON(),
-    };
-  }
+  toJSON(): object;
 }
-

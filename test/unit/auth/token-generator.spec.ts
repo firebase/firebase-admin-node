@@ -25,10 +25,11 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import * as mocks from '../../resources/mocks';
 import {
-  BLACKLISTED_CLAIMS, FirebaseTokenGenerator, ServiceAccountSigner, IAMSigner,
+  BLACKLISTED_CLAIMS,
 } from '../../../src/auth/token-generator';
+import {FirebaseTokenGenerator, ServiceAccountSigner, IAMSigner} from '../../../src/auth/token-generator-internal'; 
 
-import { ServiceAccountCredential } from '../../../src/auth/credential';
+import { ServiceAccountCredential } from '../../../src/auth/credential-internal';
 import { AuthorizedHttpClient, HttpClient } from '../../../src/utils/api-request';
 import { FirebaseApp } from '../../../src/firebase-app';
 import * as utils from '../utils';

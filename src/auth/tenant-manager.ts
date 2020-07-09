@@ -17,9 +17,11 @@
 import {AuthRequestHandler} from './auth-api-request';
 import {FirebaseApp} from '../firebase-app';
 import {TenantAwareAuth} from './auth';
+import {TenantAwareAuthImpl} from './auth-internal';
 import {
   Tenant, TenantServerResponse, ListTenantsResult, TenantOptions,
 } from './tenant';
+import {TenantImpl} from './tenant-internal';
 import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
 import * as validator from '../utils/validator';
 
@@ -54,7 +56,7 @@ export class TenantManager {
       throw new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID);
     }
     if (typeof this.tenantsMap[tenantId] === 'undefined') {
-      this.tenantsMap[tenantId] = new TenantAwareAuth(this.app, tenantId);
+      this.tenantsMap[tenantId] = new TenantAwareAuthImpl(this.app, tenantId);
     }
     return this.tenantsMap[tenantId];
   }
@@ -69,7 +71,7 @@ export class TenantManager {
   public getTenant(tenantId: string): Promise<Tenant> {
     return this.authRequestHandler.getTenant(tenantId)
       .then((response: TenantServerResponse) => {
-        return new Tenant(response);
+        return new TenantImpl(response);
       });
   }
 
@@ -94,7 +96,7 @@ export class TenantManager {
         const tenants: Tenant[] = [];
         // Convert each user response to a Tenant.
         response.tenants.forEach((tenantResponse: TenantServerResponse) => {
-          tenants.push(new Tenant(tenantResponse));
+          tenants.push(new TenantImpl(tenantResponse));
         });
         // Return list of tenants and the next page token if available.
         const result = {
@@ -129,7 +131,7 @@ export class TenantManager {
   public createTenant(tenantOptions: TenantOptions): Promise<Tenant> {
     return this.authRequestHandler.createTenant(tenantOptions)
       .then((response: TenantServerResponse) => {
-        return new Tenant(response);
+        return new TenantImpl(response);
       });
   }
 
@@ -143,7 +145,7 @@ export class TenantManager {
   public updateTenant(tenantId: string, tenantOptions: TenantOptions): Promise<Tenant> {
     return this.authRequestHandler.updateTenant(tenantId, tenantOptions)
       .then((response: TenantServerResponse) => {
-        return new Tenant(response);
+        return new TenantImpl(response);
       });
   }
 }

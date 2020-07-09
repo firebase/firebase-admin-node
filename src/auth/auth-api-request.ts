@@ -19,10 +19,11 @@ import * as validator from '../utils/validator';
 
 import {deepCopy, deepExtend} from '../utils/deep-copy';
 import {
-  UserIdentifier, isUidIdentifier, isEmailIdentifier, isPhoneIdentifier,
-  isProviderIdentifier, UidIdentifier, EmailIdentifier, PhoneIdentifier,
+  UserIdentifier, UidIdentifier, EmailIdentifier, PhoneIdentifier,
   ProviderIdentifier,
 } from './identifier';
+import { isUidIdentifier, isEmailIdentifier, isPhoneIdentifier,
+  isProviderIdentifier} from './identifier-internal';
 import {FirebaseApp} from '../firebase-app';
 import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
 import {
@@ -30,17 +31,21 @@ import {
 } from '../utils/api-request';
 import {CreateRequest, UpdateRequest} from './user-record';
 import {
-  UserImportBuilder, UserImportOptions, UserImportRecord,
-  UserImportResult, AuthFactorInfo, convertMultiFactorInfoToServerFormat,
+  UserImportOptions, UserImportRecord, UserImportResult
 } from './user-import-builder';
+import {UserImportBuilder, AuthFactorInfo, convertMultiFactorInfoToServerFormat} from './user-import-builder-internal';
 import * as utils from '../utils/index';
 import {ActionCodeSettings, ActionCodeSettingsBuilder} from './action-code-settings-builder';
 import {
-  SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
-  OIDCConfigServerRequest, SAMLConfigServerRequest, AuthProviderConfig,
+  AuthProviderConfig,
   OIDCUpdateAuthProviderRequest, SAMLUpdateAuthProviderRequest,
 } from './auth-config';
-import {Tenant, TenantOptions, TenantServerResponse} from './tenant';
+import {
+  SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
+  OIDCConfigServerRequest, SAMLConfigServerRequest
+} from './auth-config-internal';
+import {TenantOptions, TenantServerResponse} from './tenant';
+import {TenantImpl} from './tenant-internal';
 
 
 /** Firebase Auth request header. */
@@ -1806,7 +1811,7 @@ const UPDATE_TENANT = new ApiSettings('/tenants/{tenantId}?updateMask={updateMas
   .setResponseValidator((response: any) => {
     // Response should always contain at least the tenant name.
     if (!validator.isNonEmptyString(response.name) ||
-          !Tenant.getTenantIdFromResourceName(response.name)) {
+          !TenantImpl.getTenantIdFromResourceName(response.name)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Unable to update tenant',
@@ -1841,7 +1846,7 @@ const CREATE_TENANT = new ApiSettings('/tenants', 'POST')
   .setResponseValidator((response: any) => {
     // Response should always contain at least the tenant name.
     if (!validator.isNonEmptyString(response.name) ||
-          !Tenant.getTenantIdFromResourceName(response.name)) {
+          !TenantImpl.getTenantIdFromResourceName(response.name)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Unable to create new tenant',
@@ -1959,7 +1964,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
   public createTenant(tenantOptions: TenantOptions): Promise<TenantServerResponse> {
     try {
       // Construct backend request.
-      const request = Tenant.buildServerRequest(tenantOptions, true);
+      const request = TenantImpl.buildServerRequest(tenantOptions, true);
       return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, CREATE_TENANT, request)
         .then((response: any) => {
           return response as TenantServerResponse;
@@ -1982,7 +1987,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
     }
     try {
       // Construct backend request.
-      const request = Tenant.buildServerRequest(tenantOptions, false);
+      const request = TenantImpl.buildServerRequest(tenantOptions, false);
       const updateMask = utils.generateUpdateMask(request);
       return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, UPDATE_TENANT, request,
         {tenantId, updateMask: updateMask.join(',')})

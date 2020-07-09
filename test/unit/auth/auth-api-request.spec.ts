@@ -36,13 +36,17 @@ import {
   RESERVED_CLAIMS, FIREBASE_AUTH_UPLOAD_ACCOUNT, FIREBASE_AUTH_CREATE_SESSION_COOKIE,
   EMAIL_ACTION_REQUEST_TYPES, TenantAwareAuthRequestHandler, AbstractAuthRequestHandler,
 } from '../../../src/auth/auth-api-request';
-import {UserImportBuilder, UserImportRecord} from '../../../src/auth/user-import-builder';
+import {UserImportRecord} from '../../../src/auth/user-import-builder';
+import {UserImportBuilder} from '../../../src/auth/user-import-builder-internal';
 import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/utils/error';
 import {ActionCodeSettingsBuilder} from '../../../src/auth/action-code-settings-builder';
 import {
   OIDCAuthProviderConfig, SAMLAuthProviderConfig, OIDCUpdateAuthProviderRequest,
-  SAMLUpdateAuthProviderRequest, SAMLConfigServerResponse,
+  SAMLUpdateAuthProviderRequest,
 } from '../../../src/auth/auth-config';
+import {
+  SAMLConfigServerResponse,
+} from '../../../src/auth/auth-config-internal';
 import {UserIdentifier} from '../../../src/auth/identifier';
 import {TenantOptions} from '../../../src/auth/tenant';
 import { UpdateRequest, UpdateMultiFactorInfoRequest } from '../../../src/auth/user-record';
