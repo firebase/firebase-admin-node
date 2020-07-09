@@ -44,7 +44,8 @@ import {
   SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
   OIDCConfigServerRequest, SAMLConfigServerRequest
 } from './auth-config-internal';
-import {Tenant, TenantOptions, TenantServerResponse} from './tenant';
+import {TenantOptions, TenantServerResponse} from './tenant';
+import {TenantImpl} from './tenant-internal';
 
 
 /** Firebase Auth request header. */
@@ -1810,7 +1811,7 @@ const UPDATE_TENANT = new ApiSettings('/tenants/{tenantId}?updateMask={updateMas
   .setResponseValidator((response: any) => {
     // Response should always contain at least the tenant name.
     if (!validator.isNonEmptyString(response.name) ||
-          !Tenant.getTenantIdFromResourceName(response.name)) {
+          !TenantImpl.getTenantIdFromResourceName(response.name)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Unable to update tenant',
@@ -1845,7 +1846,7 @@ const CREATE_TENANT = new ApiSettings('/tenants', 'POST')
   .setResponseValidator((response: any) => {
     // Response should always contain at least the tenant name.
     if (!validator.isNonEmptyString(response.name) ||
-          !Tenant.getTenantIdFromResourceName(response.name)) {
+          !TenantImpl.getTenantIdFromResourceName(response.name)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Unable to create new tenant',
@@ -1963,7 +1964,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
   public createTenant(tenantOptions: TenantOptions): Promise<TenantServerResponse> {
     try {
       // Construct backend request.
-      const request = Tenant.buildServerRequest(tenantOptions, true);
+      const request = TenantImpl.buildServerRequest(tenantOptions, true);
       return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, CREATE_TENANT, request)
         .then((response: any) => {
           return response as TenantServerResponse;
@@ -1986,7 +1987,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
     }
     try {
       // Construct backend request.
-      const request = Tenant.buildServerRequest(tenantOptions, false);
+      const request = TenantImpl.buildServerRequest(tenantOptions, false);
       const updateMask = utils.generateUpdateMask(request);
       return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, UPDATE_TENANT, request,
         {tenantId, updateMask: updateMask.join(',')})

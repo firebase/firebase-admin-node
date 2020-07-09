@@ -26,8 +26,8 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
-import {Auth, TenantAwareAuth, BaseAuth, DecodedIdToken} from '../../../src/auth/auth';
-import {UserRecord, UpdateRequest} from '../../../src/auth/user-record';
+import {Auth, BaseAuth, DecodedIdToken, UserRecord, UpdateRequest} from '../../../src/auth';
+import {AuthImpl, TenantAwareAuthImpl} from '../../../src/auth/auth-internal';
 import {FirebaseApp} from '../../../src/firebase-app';
 import {
   AuthRequestHandler, TenantAwareAuthRequestHandler, AbstractAuthRequestHandler,
@@ -52,7 +52,6 @@ chai.use(chaiAsPromised);
 
 const expect = chai.expect;
 
-
 interface AuthTest {
   name: string;
   supportsTenantManagement: boolean;
@@ -61,13 +60,11 @@ interface AuthTest {
   init(app: FirebaseApp): BaseAuth<AbstractAuthRequestHandler>;
 }
 
-
 interface EmailActionTest {
   api: string;
   requestType: string;
   requiresSettings: boolean;
 }
-
 
 /**
  * @param {string=} tenantId The optional tenant Id.
@@ -239,20 +236,20 @@ const TENANT_ID = 'tenantId';
 const AUTH_CONFIGS: AuthTest[] = [
   {
     name: 'Auth',
-    Auth,
+    Auth: AuthImpl,
     supportsTenantManagement: true,
     RequestHandler: AuthRequestHandler,
     init: (app: FirebaseApp) => {
-      return new Auth(app);
+      return new AuthImpl(app);
     },
   },
   {
     name: 'TenantAwareAuth',
-    Auth: TenantAwareAuth,
+    Auth: TenantAwareAuthImpl,
     supportsTenantManagement: false,
     RequestHandler: TenantAwareAuthRequestHandler,
     init: (app: FirebaseApp) => {
-      return new TenantAwareAuth(app, TENANT_ID);
+      return new TenantAwareAuthImpl(app, TENANT_ID);
     },
   },
 ];
@@ -287,14 +284,14 @@ AUTH_CONFIGS.forEach((testConfig) => {
       return mockApp.delete();
     });
 
-    if (testConfig.Auth === Auth) {
+    if (testConfig.Auth === AuthImpl) {
       // Run tests for Auth.
       describe('Constructor', () => {
         const invalidApps = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop];
         invalidApps.forEach((invalidApp) => {
           it('should throw given invalid app: ' + JSON.stringify(invalidApp), () => {
             expect(() => {
-              const authAny: any = Auth;
+              const authAny: any = AuthImpl;
               return new authAny(invalidApp);
             }).to.throw('First argument passed to admin.auth() must be a valid Firebase app instance.');
           });
@@ -302,13 +299,13 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
         it('should throw given no app', () => {
           expect(() => {
-            const authAny: any = Auth;
+            const authAny: any = AuthImpl;
             return new authAny();
           }).to.throw('First argument passed to admin.auth() must be a valid Firebase app instance.');
         });
 
         it('should reject given no project ID', () => {
-          const authWithoutProjectId = new Auth(mocks.mockCredentialApp());
+          const authWithoutProjectId = new AuthImpl(mocks.mockCredentialApp());
           authWithoutProjectId.getUser('uid')
             .should.eventually.be.rejectedWith(
               'Failed to determine project ID for Auth. Initialize the SDK with service '
@@ -318,7 +315,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
         it('should not throw given a valid app', () => {
           expect(() => {
-            return new Auth(mockApp);
+            return new AuthImpl(mockApp);
           }).not.to.throw();
         });
       });
@@ -332,7 +329,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         it('is read-only', () => {
           expect(() => {
             (auth as any).app = mockApp;
-          }).to.throw('Cannot set property app of #<Auth> which has only a getter');
+          }).to.throw('Cannot set property app of #<AuthImpl> which has only a getter');
         });
       });
 
@@ -358,7 +355,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         expect(decodedToken).to.have.property('header').that.has.property('typ', 'JWT');
       });
 
-      if (testConfig.Auth === TenantAwareAuth) {
+      if (testConfig.Auth === TenantAwareAuthImpl) {
         it('should contain tenant_id', async () => {
           const token = await auth.createCustomToken('uid1');
           expect(jwt.decode(token)).to.have.property('tenant_id', TENANT_ID);
@@ -624,7 +621,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           });
       });
 
-      if (testConfig.Auth === TenantAwareAuth) {
+      if (testConfig.Auth === TenantAwareAuthImpl) {
         it('should be rejected with ID token missing tenant ID', () => {
           const expectedError = new FirebaseAuthError(AuthClientErrorCode.MISMATCHING_TENANT_ID);
           // Restore verifyIdToken stub.
@@ -868,7 +865,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           });
       });
 
-      if (testConfig.Auth === TenantAwareAuth) {
+      if (testConfig.Auth === TenantAwareAuthImpl) {
         it('should be rejected with session cookie missing tenant ID', () => {
           const expectedError = new FirebaseAuthError(AuthClientErrorCode.MISMATCHING_TENANT_ID);
           // Restore verifyIdToken stub.
@@ -2039,7 +2036,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         }).to.throw(expectedOptionsError);
       });
 
-      if (testConfig.Auth === TenantAwareAuth) {
+      if (testConfig.Auth === TenantAwareAuthImpl) {
         it('should throw and fail quickly when users provided have mismatching tenant IDs', () => {
           const usersCopy = deepCopy(users);
           // Simulate one user with mismatching tenant ID.
@@ -2182,7 +2179,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             expect(createSessionCookieStub)
               .to.have.been.calledOnce.and.calledWith(idToken, options.expiresIn);
             // TenantAwareAuth should verify the ID token first.
-            if (testConfig.Auth === TenantAwareAuth) {
+            if (testConfig.Auth === TenantAwareAuthImpl) {
               expect(verifyIdTokenStub)
                 .to.have.been.calledOnce.and.calledWith(idToken);
             } else {
@@ -2214,7 +2211,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           });
       });
 
-      if (testConfig.Auth === TenantAwareAuth) {
+      if (testConfig.Auth === TenantAwareAuthImpl) {
         it('should be rejected when ID token provided is invalid', () => {
           // Simulate auth.verifyIdToken() fails when called.
           const verifyIdTokenStub = sinon.stub(testConfig.Auth.prototype, 'verifyIdToken')
@@ -3182,7 +3179,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
     });
 
-    if (testConfig.Auth === Auth) {
+    if (testConfig.Auth === AuthImpl) {
       describe('INTERNAL.delete()', () => {
         it('should delete Auth instance', () => {
           (auth as Auth).INTERNAL.delete().should.eventually.be.fulfilled;

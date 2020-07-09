@@ -25,7 +25,8 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as mocks from '../../resources/mocks';
 import {FirebaseApp} from '../../../src/firebase-app';
 import {AuthRequestHandler} from '../../../src/auth/auth-api-request';
-import {Tenant, TenantOptions, TenantServerResponse, ListTenantsResult} from '../../../src/auth/tenant';
+import {TenantOptions, TenantServerResponse, ListTenantsResult} from '../../../src/auth/tenant';
+import {TenantImpl} from '../../../src/auth/tenant-internal';
 import {TenantManager} from '../../../src/auth/tenant-manager';
 import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/utils/error';
 
@@ -82,7 +83,7 @@ describe('TenantManager', () => {
     it('should return a TenantAwareAuth with read-only tenant ID', () => {
       expect(() => {
         (tenantManager.authForTenant(TENANT_ID) as any).tenantId = 'OTHER-TENANT-ID';
-      }).to.throw('Cannot assign to read only property \'tenantId\' of object \'#<TenantAwareAuth>\'');
+      }).to.throw('Cannot assign to read only property \'tenantId\' of object \'#<TenantAwareAuthImpl>\'');
     });
 
     it('should cache the returned TenantAwareAuth', () => {
@@ -98,7 +99,7 @@ describe('TenantManager', () => {
 
   describe('getTenant()', () => {
     const tenantId = 'tenant-id';
-    const expectedTenant = new Tenant(GET_TENANT_RESPONSE);
+    const expectedTenant = new TenantImpl(GET_TENANT_RESPONSE);
     const expectedError = new FirebaseAuthError(AuthClientErrorCode.TENANT_NOT_FOUND);
     // Stubs used to simulate underlying API calls.
     let stubs: sinon.SinonStub[] = [];
@@ -182,8 +183,8 @@ describe('TenantManager', () => {
     };
     const expectedResult: ListTenantsResult = {
       tenants: [
-        new Tenant({name: 'projects/project-id/tenants/tenant-id1'}),
-        new Tenant({name: 'projects/project-id/tenants/tenant-id2'}),
+        new TenantImpl({name: 'projects/project-id/tenants/tenant-id1'}),
+        new TenantImpl({name: 'projects/project-id/tenants/tenant-id2'}),
       ],
       pageToken: 'NEXT_PAGE_TOKEN',
     };
@@ -384,7 +385,7 @@ describe('TenantManager', () => {
         passwordRequired: true,
       },
     };
-    const expectedTenant = new Tenant(GET_TENANT_RESPONSE);
+    const expectedTenant = new TenantImpl(GET_TENANT_RESPONSE);
     const expectedError = new FirebaseAuthError(
       AuthClientErrorCode.INTERNAL_ERROR,
       'Unable to create the tenant provided.');
@@ -476,7 +477,7 @@ describe('TenantManager', () => {
         passwordRequired: true,
       },
     };
-    const expectedTenant = new Tenant(GET_TENANT_RESPONSE);
+    const expectedTenant = new TenantImpl(GET_TENANT_RESPONSE);
     const expectedError = new FirebaseAuthError(
       AuthClientErrorCode.INTERNAL_ERROR,
       'Unable to update the tenant provided.');
