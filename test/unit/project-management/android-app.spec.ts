@@ -109,7 +109,7 @@ describe('AndroidApp', () => {
     it('should throw with null API response', () => {
       const stub = sinon
         .stub(ProjectManagementRequestHandler.prototype, 'getResource')
-        .returns(Promise.resolve(null));
+        .resolves(null as any);
       stubs.push(stub);
       return androidApp.getMetadata()
         .should.eventually.be.rejected
@@ -200,7 +200,7 @@ describe('AndroidApp', () => {
     it('should throw with null API response', () => {
       const stub = sinon
         .stub(ProjectManagementRequestHandler.prototype, 'getAndroidShaCertificates')
-        .returns(Promise.resolve(null));
+        .resolves(null as any);
       stubs.push(stub);
       return androidApp.getShaCertificates()
         .should.eventually.be.rejected
@@ -336,7 +336,7 @@ describe('AndroidApp', () => {
     it('should throw with null API response', () => {
       const stub = sinon
         .stub(ProjectManagementRequestHandler.prototype, 'getConfig')
-        .returns(Promise.resolve(null));
+        .resolves(null as any);
       stubs.push(stub);
       return androidApp.getConfig()
         .should.eventually.be.rejected

@@ -378,14 +378,16 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
 
       it('should be fulfilled given an app which returns null access tokens', () => {
-        getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken').resolves(null);
+        getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken')
+          .resolves(null as any);
         // createCustomToken() does not rely on an access token and therefore works in this scenario.
         return auth.createCustomToken(mocks.uid, mocks.developerClaims)
           .should.eventually.be.fulfilled;
       });
 
       it('should be fulfilled given an app which returns invalid access tokens', () => {
-        getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken').resolves('malformed');
+        getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken')
+          .resolves('malformed' as any);
         // createCustomToken() does not rely on an access token and therefore works in this scenario.
         return auth.createCustomToken(mocks.uid, mocks.developerClaims)
           .should.eventually.be.fulfilled;

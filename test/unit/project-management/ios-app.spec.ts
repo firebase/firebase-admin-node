@@ -108,7 +108,7 @@ describe('IosApp', () => {
     it('should throw with null API response', () => {
       const stub = sinon
         .stub(ProjectManagementRequestHandler.prototype, 'getResource')
-        .returns(Promise.resolve(null));
+        .resolves(null as any);
       stubs.push(stub);
       return iosApp.getMetadata()
         .should.eventually.be.rejected
@@ -183,7 +183,7 @@ describe('IosApp', () => {
     it('should throw with null API response', () => {
       const stub = sinon
         .stub(ProjectManagementRequestHandler.prototype, 'getConfig')
-        .returns(Promise.resolve(null));
+        .resolves(null as any);
       stubs.push(stub);
       return iosApp.getConfig()
         .should.eventually.be.rejected

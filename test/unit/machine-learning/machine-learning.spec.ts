@@ -260,7 +260,7 @@ describe('MachineLearning', () => {
     it('should reject when API response is invalid', () => {
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'getModel')
-        .resolves(null);
+        .resolves(null as any);
       stubs.push(stub);
       return machineLearning.getModel(MODEL_ID)
         .should.eventually.be.rejected.and.have.property(
@@ -362,7 +362,7 @@ describe('MachineLearning', () => {
     it('should reject when API response is invalid', () => {
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'listModels')
-        .resolves(null);
+        .resolves(null as any);
       stubs.push(stub);
       return machineLearning.listModels()
         .should.eventually.be.rejected.and.have.property(
@@ -397,7 +397,7 @@ describe('MachineLearning', () => {
     it('should resolve on success', () => {
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'deleteModel')
-        .resolves({});
+        .resolves();
       stubs.push(stub);
 
       return machineLearning.deleteModel(MODEL_ID);
@@ -430,7 +430,7 @@ describe('MachineLearning', () => {
     it('should reject when API response is invalid', () => {
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'createModel')
-        .resolves(null);
+        .resolves(null as any);
       stubs.push(stub);
       return machineLearning.createModel(MODEL_OPTIONS_WITH_GCS)
         .should.eventually.be.rejected.and.have.property(
@@ -547,7 +547,7 @@ describe('MachineLearning', () => {
     it('should reject when API response is invalid', () => {
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'updateModel')
-        .resolves(null);
+        .resolves(null as any);
       stubs.push(stub);
       return machineLearning.updateModel(MODEL_ID, MODEL_OPTIONS_WITH_GCS)
         .should.eventually.be.rejected.and.have.property(
@@ -651,7 +651,7 @@ describe('MachineLearning', () => {
     it('should reject when API response is invalid', () => {
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'updateModel')
-        .resolves(null);
+        .resolves(null as any);
       stubs.push(stub);
       return machineLearning.publishModel(MODEL_ID)
         .should.eventually.be.rejected.and.have.property(
@@ -755,7 +755,7 @@ describe('MachineLearning', () => {
     it('should reject when API response is invalid', () => {
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'updateModel')
-        .resolves(null);
+        .resolves(null as any);
       stubs.push(stub);
       return machineLearning.unpublishModel(MODEL_ID)
         .should.eventually.be.rejected.and.have.property(

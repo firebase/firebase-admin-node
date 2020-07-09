@@ -161,7 +161,7 @@ describe('InstanceId', () => {
 
     it('should resolve without errors on success', () => {
       const stub = sinon.stub(FirebaseInstanceIdRequestHandler.prototype, 'deleteInstanceId')
-        .returns(Promise.resolve(null));
+        .resolves();
       stubs.push(stub);
       return iid.deleteInstanceId(testInstanceId)
         .then(() => {
