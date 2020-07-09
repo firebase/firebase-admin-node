@@ -134,21 +134,7 @@ export interface BaseAuth<T extends AbstractAuthRequestHandler> {
    * @return {Promise<DecodedIdToken>} A Promise that will be fulfilled after a successful
    *     verification.
    */
-  verifyIdToken(idToken: string, checkRevoked: boolean): Promise<DecodedIdToken>;
-
-  /**
-   * // TODO: DEFAULT IMPORT (documentation??????)
-   * Verifies a JWT auth token. Returns a Promise with the tokens claims. Rejects
-   * the promise if the token could not be verified. If checkRevoked is set to true,
-   * verifies if the session corresponding to the ID token was revoked. If the corresponding
-   * user's session was invalidated, an auth/id-token-revoked error is thrown. If not specified
-   * the check is not applied.
-   *
-   * @param {string} idToken The JWT to verify.
-   * @return {Promise<DecodedIdToken>} A Promise that will be fulfilled after a successful
-   *     verification.
-   */
-  verifyIdToken(idToken: string): Promise<DecodedIdToken>;
+  verifyIdToken(idToken: string, checkRevoked?: boolean): Promise<DecodedIdToken>;
 
   /**
    * Looks up the user identified by the provided user id and returns a promise that is
