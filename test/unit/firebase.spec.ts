@@ -27,7 +27,8 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as mocks from '../resources/mocks';
 
 import { initializeApp, apps, credential, cert, app } from '../../lib/index';
-import { RefreshTokenCredential, ServiceAccountCredential, isApplicationDefault } from '../../lib/auth/credential';
+import { RefreshTokenCredential, isApplicationDefault } from '../../lib/auth/credential';
+import { ServiceAccountCredential } from '../../lib/auth/credential-internal';
 
 chai.should();
 chai.use(chaiAsPromised);
