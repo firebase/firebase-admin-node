@@ -36,9 +36,7 @@ import {
   RESERVED_CLAIMS, FIREBASE_AUTH_UPLOAD_ACCOUNT, FIREBASE_AUTH_CREATE_SESSION_COOKIE,
   EMAIL_ACTION_REQUEST_TYPES, TenantAwareAuthRequestHandler, AbstractAuthRequestHandler,
 } from '../../../src/auth/auth-api-request';
-import {
-  UserImportBuilder, UserImportRecord, UserImportResult
-} from '../../../src/auth/user-import-builder';
+import { UserImportBuilder, UserImportRecord } from '../../../src/auth/user-import-builder';
 import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/utils/error';
 import {ActionCodeSettingsBuilder} from '../../../src/auth/action-code-settings-builder';
 import {
@@ -48,6 +46,7 @@ import {
 import {UserIdentifier} from '../../../src/auth/identifier';
 import {TenantOptions} from '../../../src/auth/tenant';
 import { UpdateRequest, UpdateMultiFactorInfoRequest } from '../../../src/auth/user-record';
+import { expectUserImportResult } from './user-import-builder.spec';
 
 chai.should();
 chai.use(sinonChai);
@@ -1769,18 +1768,6 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               callParams(path, method, userImportBuilder.buildRequest()));
           });
       });
-
-      function expectUserImportResult(result: UserImportResult, expected: UserImportResult): void {
-        expect(result.successCount).to.equal(expected.successCount);
-        expect(result.failureCount).to.equal(expected.failureCount);
-        expect(result.errors.length).to.equal(expected.errors.length);
-        result.errors.forEach((err, idx) => {
-          const want = expected.errors[idx];
-          expect(err.index).to.equal(want.index);
-          expect(err.error).to.deep.include(want.error);
-        });
-      }
-
     });
 
     describe('downloadAccount', () => {

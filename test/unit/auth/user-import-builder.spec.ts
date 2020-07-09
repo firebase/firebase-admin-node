@@ -33,6 +33,17 @@ chai.use(chaiAsPromised);
 
 const expect = chai.expect;
 
+export function expectUserImportResult(result: UserImportResult, expected: UserImportResult): void {
+  expect(result.successCount).to.equal(expected.successCount);
+  expect(result.failureCount).to.equal(expected.failureCount);
+  expect(result.errors.length).to.equal(expected.errors.length);
+  result.errors.forEach((err, idx) => {
+    const want = expected.errors[idx];
+    expect(err.index).to.equal(want.index);
+    expect(err.error).to.deep.include(want.error);
+  });
+}
+
 describe('UserImportBuilder', () => {
   const now = new Date('2019-10-25T04:30:52.000Z');
   const nowString = now.toUTCString();
@@ -868,17 +879,5 @@ describe('UserImportBuilder', () => {
         userImportBuilder.buildResponse(failingServerResponse),
         mixedErrorUserImportResponse);
     });
-
-    function expectUserImportResult(result: UserImportResult, expected: UserImportResult): void {
-      expect(result.successCount).to.equal(expected.successCount);
-      expect(result.failureCount).to.equal(expected.failureCount);
-      expect(result.errors.length).to.equal(expected.errors.length);
-      result.errors.forEach((err, idx) => {
-        const want = expected.errors[idx];
-        expect(err.index).to.equal(want.index);
-        expect(err.error).to.deep.include(want.error);
-      });
-    }
   });
-
 });
