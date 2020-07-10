@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {deepCopy} from '../utils/deep-copy';
+import { deepCopy } from '../utils/deep-copy';
 
 /**
  * Defines error info type. This includes a code and message string.
@@ -196,7 +196,7 @@ export class FirebaseAuthError extends PrefixedFirebaseError {
 export class FirebaseDatabaseError extends FirebaseError {
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
-    super({code: 'database/' + info.code, message: message || info.message});
+    super({ code: 'database/' + info.code, message: message || info.message });
   }
 }
 
@@ -211,7 +211,7 @@ export class FirebaseDatabaseError extends FirebaseError {
 export class FirebaseFirestoreError extends FirebaseError {
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
-    super({code: 'firestore/' + info.code, message: message || info.message});
+    super({ code: 'firestore/' + info.code, message: message || info.message });
   }
 }
 
@@ -226,7 +226,7 @@ export class FirebaseFirestoreError extends FirebaseError {
 export class FirebaseInstanceIdError extends FirebaseError {
   constructor(info: ErrorInfo, message?: string) {
     // Override default message if custom message provided.
-    super({code: 'instance-id/' + info.code, message: message || info.message});
+    super({ code: 'instance-id/' + info.code, message: message || info.message });
   }
 }
 

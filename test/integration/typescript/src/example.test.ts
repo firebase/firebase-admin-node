@@ -15,9 +15,9 @@
  */
 
 import initApp from './example';
-import {expect} from 'chai';
-import {Bucket} from '@google-cloud/storage';
-import {Firestore} from '@google-cloud/firestore';
+import { expect } from 'chai';
+import { Bucket } from '@google-cloud/storage';
+import { Firestore } from '@google-cloud/firestore';
 
 import * as admin from 'firebase-admin';
 

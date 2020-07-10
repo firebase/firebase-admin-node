@@ -53,7 +53,7 @@ describe('SecurityRules', () => {
     'invalid-argument',
     'ruleset must be a non-empty name or a RulesetMetadata object.',
   );
-  const INVALID_RULESETS: any[] = [null, undefined, '', 1, true, {}, [], {name: ''}];
+  const INVALID_RULESETS: any[] = [null, undefined, '', 1, true, {}, [], { name: '' }];
 
   const INVALID_BUCKET_ERROR = new FirebaseSecurityRulesError(
     'invalid-argument',
@@ -381,7 +381,7 @@ describe('SecurityRules', () => {
         .resolves(FIRESTORE_RULESET_RELEASE);
       stubs.push(stub);
 
-      return securityRules.releaseFirestoreRuleset({name: 'foo', createTime: 'time'})
+      return securityRules.releaseFirestoreRuleset({ name: 'foo', createTime: 'time' })
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith('cloud.firestore', 'foo');
         });
@@ -498,7 +498,7 @@ describe('SecurityRules', () => {
         .resolves(FIRESTORE_RULESET_RELEASE);
       stubs.push(stub);
 
-      return securityRules.releaseStorageRuleset({name: 'foo', createTime: 'time'})
+      return securityRules.releaseStorageRuleset({ name: 'foo', createTime: 'time' })
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith(
             'firebase.storage/bucketName.appspot.com', 'foo');

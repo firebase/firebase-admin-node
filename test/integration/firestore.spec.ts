@@ -17,7 +17,7 @@
 import * as admin from '../../lib/index';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import {clone} from 'lodash';
+import { clone } from 'lodash';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -118,7 +118,7 @@ describe('admin.firestore', () => {
     const target = admin.firestore().collection('cities').doc();
     return source.set(mountainView)
       .then(() => {
-        return target.set({name: 'Palo Alto', sisterCity: source});
+        return target.set({ name: 'Palo Alto', sisterCity: source });
       })
       .then(() => {
         return target.get();
@@ -141,7 +141,7 @@ describe('admin.firestore', () => {
     admin.firestore.setLogFunction((log) => {
       logs.push(log);
     });
-    return source.set({name: 'San Francisco'})
+    return source.set({ name: 'San Francisco' })
       .then(() => {
         return source.delete();
       })

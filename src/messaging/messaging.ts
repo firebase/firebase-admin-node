@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-import {FirebaseApp} from '../firebase-app';
-import {deepCopy, deepExtend} from '../utils/deep-copy';
-import {SubRequest} from './batch-request';
+import { FirebaseApp } from '../firebase-app';
+import { deepCopy, deepExtend } from '../utils/deep-copy';
+import { SubRequest } from './batch-request';
 import {
   Message, validateMessage, MessagingDevicesResponse,
   MessagingDeviceGroupResponse, MessagingTopicManagementResponse,
   MessagingPayload, MessagingOptions, MessagingTopicResponse,
   MessagingConditionResponse, BatchResponse, MulticastMessage, DataMessagePayload, NotificationMessagePayload,
 } from './messaging-types';
-import {FirebaseMessagingRequestHandler} from './messaging-api-request';
-import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
+import { FirebaseMessagingRequestHandler } from './messaging-api-request';
+import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import {
   ErrorInfo, MessagingClientErrorCode, FirebaseMessagingError,
 } from '../utils/error';
@@ -253,7 +253,7 @@ export class Messaging implements FirebaseServiceInterface {
     }
     return this.getUrlPath()
       .then((urlPath) => {
-        const request: {message: Message; validate_only?: boolean} = {message: copy};
+        const request: {message: Message; validate_only?: boolean} = { message: copy };
         if (dryRun) {
           request.validate_only = true;
         }
@@ -306,7 +306,7 @@ export class Messaging implements FirebaseServiceInterface {
       .then((urlPath) => {
         const requests: SubRequest[] = copy.map((message) => {
           validateMessage(message);
-          const request: {message: Message; validate_only?: boolean} = {message};
+          const request: {message: Message; validate_only?: boolean} = { message };
           if (dryRun) {
             request.validate_only = true;
           }

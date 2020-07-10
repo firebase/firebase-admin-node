@@ -15,11 +15,11 @@
  */
 
 import fs = require('fs');
-import {Agent} from 'http';
-import {deepExtend} from './utils/deep-copy';
-import {AppErrorCodes, FirebaseAppError} from './utils/error';
-import {AppHook, FirebaseApp, FirebaseAppOptions} from './firebase-app';
-import {FirebaseServiceFactory, FirebaseServiceInterface} from './firebase-service';
+import { Agent } from 'http';
+import { deepExtend } from './utils/deep-copy';
+import { AppErrorCodes, FirebaseAppError } from './utils/error';
+import { AppHook, FirebaseApp, FirebaseAppOptions } from './firebase-app';
+import { FirebaseServiceFactory, FirebaseServiceInterface } from './firebase-service';
 import {
   Credential,
   RefreshTokenCredential,
@@ -27,14 +27,14 @@ import {
   getApplicationDefault,
 } from './auth/credential';
 
-import {Auth} from './auth/auth';
-import {MachineLearning} from './machine-learning/machine-learning';
-import {Messaging} from './messaging/messaging';
-import {Storage} from './storage/storage';
-import {Database} from '@firebase/database';
-import {Firestore} from '@google-cloud/firestore';
-import {InstanceId} from './instance-id/instance-id';
-import {ProjectManagement} from './project-management/project-management';
+import { Auth } from './auth/auth';
+import { MachineLearning } from './machine-learning/machine-learning';
+import { Messaging } from './messaging/messaging';
+import { Storage } from './storage/storage';
+import { Database } from '@firebase/database';
+import { Firestore } from '@google-cloud/firestore';
+import { InstanceId } from './instance-id/instance-id';
+import { ProjectManagement } from './project-management/project-management';
 import { SecurityRules } from './security-rules/security-rules';
 import { RemoteConfig } from './remote-config/remote-config';
 
@@ -331,7 +331,7 @@ export class FirebaseNamespace {
       return this.ensureApp(app).auth();
     };
     const auth = require('./auth/auth').Auth;
-    return Object.assign(fn, {Auth: auth});
+    return Object.assign(fn, { Auth: auth });
   }
 
   /**
@@ -356,7 +356,7 @@ export class FirebaseNamespace {
       return this.ensureApp(app).messaging();
     };
     const messaging = require('./messaging/messaging').Messaging;
-    return Object.assign(fn, {Messaging: messaging});
+    return Object.assign(fn, { Messaging: messaging });
   }
 
   /**
@@ -368,7 +368,7 @@ export class FirebaseNamespace {
       return this.ensureApp(app).storage();
     };
     const storage = require('./storage/storage').Storage;
-    return Object.assign(fn, {Storage: storage});
+    return Object.assign(fn, { Storage: storage });
   }
 
   /**
@@ -413,7 +413,7 @@ export class FirebaseNamespace {
         };
     const machineLearning =
         require('./machine-learning/machine-learning').MachineLearning;
-    return Object.assign(fn, {MachineLearning: machineLearning});
+    return Object.assign(fn, { MachineLearning: machineLearning });
   }
 
   /**
@@ -425,7 +425,7 @@ export class FirebaseNamespace {
       return this.ensureApp(app).instanceId();
     };
     const instanceId = require('./instance-id/instance-id').InstanceId;
-    return Object.assign(fn, {InstanceId: instanceId});
+    return Object.assign(fn, { InstanceId: instanceId });
   }
 
   /**
@@ -437,7 +437,7 @@ export class FirebaseNamespace {
       return this.ensureApp(app).projectManagement();
     };
     const projectManagement = require('./project-management/project-management').ProjectManagement;
-    return Object.assign(fn, {ProjectManagement: projectManagement});
+    return Object.assign(fn, { ProjectManagement: projectManagement });
   }
 
   /**
@@ -449,7 +449,7 @@ export class FirebaseNamespace {
       return this.ensureApp(app).securityRules();
     };
     const securityRules = require('./security-rules/security-rules').SecurityRules;
-    return Object.assign(fn, {SecurityRules: securityRules});
+    return Object.assign(fn, { SecurityRules: securityRules });
   }
 
   /**

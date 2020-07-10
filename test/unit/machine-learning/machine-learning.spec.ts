@@ -62,7 +62,7 @@ describe('MachineLearning', () => {
     modelHash: 'modelHash123',
     displayName: 'model_1',
     tags: ['tag_1', 'tag_2'],
-    state: {published: true},
+    state: { published: true },
     tfliteModel: {
       gcsTfliteUri: 'gs://test-project-bucket/Firebase/ML/Models/model1.tflite',
       sizeBytes: 16900988,
@@ -97,7 +97,7 @@ describe('MachineLearning', () => {
     modelHash: 'modelHash234',
     displayName: 'model_2',
     tags: ['tag_2', 'tag_3'],
-    state: {published: false},
+    state: { published: false },
     tfliteModel: {
       gcsTfliteUri: 'gs://test-project-bucket/Firebase/ML/Models/model2.tflite',
       sizeBytes: 22200222,
@@ -209,7 +209,7 @@ describe('MachineLearning', () => {
           displayName: 'foo',
           tfliteModel: {
             gcsTfliteUri: 'gs://some-bucket/model.tflite',
-          }});
+          } });
       }).to.throw(expectedError);
     });
 

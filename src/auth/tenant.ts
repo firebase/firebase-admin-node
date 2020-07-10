@@ -15,7 +15,7 @@
  */
 
 import * as validator from '../utils/validator';
-import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
+import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
   EmailSignInConfig, EmailSignInConfigServerRequest, EmailSignInProviderConfig,
 } from './auth-config';

@@ -18,7 +18,7 @@ import * as chai from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import {deepCopy} from '../../../src/utils/deep-copy';
+import { deepCopy } from '../../../src/utils/deep-copy';
 import {
   UserInfo, UserMetadata, UserRecord, GetAccountInfoUserResponse, ProviderUserInfoResponse,
   MultiFactor, PhoneMultiFactorInfo, MultiFactorInfo, MultiFactorInfoResponse,
@@ -515,19 +515,19 @@ describe('UserInfo', () => {
 
     it('should succeed when rawId and providerId are both provided', () => {
       expect(() => {
-        return new UserInfo({providerId: 'google.com', rawId: '1234567890'});
+        return new UserInfo({ providerId: 'google.com', rawId: '1234567890' });
       }).not.to.throw(Error);
     });
 
     it('should throw when only rawId is provided', () => {
       expect(() =>  {
-        return new UserInfo({rawId: '1234567890'} as any);
+        return new UserInfo({ rawId: '1234567890' } as any);
       }).to.throw(Error);
     });
 
     it('should throw when only providerId is provided', () => {
       expect(() =>  {
-        return new UserInfo({providerId: 'google.com'} as any);
+        return new UserInfo({ providerId: 'google.com' } as any);
       }).to.throw(Error);
     });
   });
@@ -631,7 +631,7 @@ describe('UserMetadata', () => {
   describe('constructor', () =>  {
     it('should initialize as expected when a valid creationTime is provided', () => {
       expect(() => {
-        return new UserMetadata({createdAt: '1476136676000'} as any);
+        return new UserMetadata({ createdAt: '1476136676000' } as any);
       }).not.to.throw(Error);
     });
 
@@ -701,7 +701,7 @@ describe('UserRecord', () => {
 
     it('should succeed when only localId is provided', () => {
       expect(() =>  {
-        return new UserRecord({localId: '123456789'});
+        return new UserRecord({ localId: '123456789' });
       }).not.to.throw(Error);
     });
   });
@@ -849,7 +849,7 @@ describe('UserRecord', () => {
 
     it('should throw when modifying readonly customClaims property', () => {
       expect(() => {
-        (userRecord as any).customClaims = {admin: false};
+        (userRecord as any).customClaims = { admin: false };
       }).to.throw(Error);
     });
 
