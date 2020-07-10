@@ -148,7 +148,7 @@ describe('MachineLearningApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError('not-found', 'Requested entity not found');
       return apiClient.createModel(NAME_ONLY_CONTENT)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should resolve with the created resource on success', () => {
@@ -159,7 +159,7 @@ describe('MachineLearningApiClient', () => {
       return apiClient.createModel(NAME_ONLY_CONTENT)
         .then((resp) => {
           expect(resp.done).to.be.true;
-          expect(resp.name).to.be.empty;
+          expect(resp.name).to.be.undefined;
           expect(resp.response).to.deep.equal(MODEL_RESPONSE);
         });
     });
@@ -172,7 +172,7 @@ describe('MachineLearningApiClient', () => {
       return apiClient.createModel(NAME_ONLY_CONTENT)
         .then((resp) => {
           expect(resp.done).to.be.true;
-          expect(resp.name).to.be.empty;
+          expect(resp.name).to.be.undefined;
           expect(resp.error).to.deep.equal(STATUS_ERROR_RESPONSE);
         });
     });
@@ -184,7 +184,7 @@ describe('MachineLearningApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError('unknown-error', 'Unknown server error: {}');
       return apiClient.createModel(NAME_ONLY_CONTENT)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with unknown-error for non-json response', () => {
@@ -195,7 +195,7 @@ describe('MachineLearningApiClient', () => {
       const expected = new FirebaseMachineLearningError(
         'unknown-error', 'Unexpected response with status: 404 and body: not json');
       return apiClient.createModel(NAME_ONLY_CONTENT)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with when failed with a FirebaseAppError', () => {
@@ -205,7 +205,7 @@ describe('MachineLearningApiClient', () => {
         .rejects(expected);
       stubs.push(stub);
       return apiClient.createModel(NAME_ONLY_CONTENT)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
   });
 
@@ -240,7 +240,7 @@ describe('MachineLearningApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError('not-found', 'Requested entity not found');
       return apiClient.updateModel(MODEL_ID, NAME_ONLY_CONTENT, NAME_ONLY_MASK)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should resolve with the updated resource on success', () => {
@@ -251,7 +251,7 @@ describe('MachineLearningApiClient', () => {
       return apiClient.updateModel(MODEL_ID, NAME_ONLY_CONTENT, NAME_ONLY_MASK)
         .then((resp) => {
           expect(resp.done).to.be.true;
-          expect(resp.name).to.be.empty;
+          expect(resp.name).to.be.undefined;
           expect(resp.response).to.deep.equal(MODEL_RESPONSE);
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'PATCH',
@@ -270,7 +270,7 @@ describe('MachineLearningApiClient', () => {
       return apiClient.updateModel(MODEL_ID, NAME_ONLY_CONTENT, NAME_ONLY_MASK)
         .then((resp) => {
           expect(resp.done).to.be.true;
-          expect(resp.name).to.be.empty;
+          expect(resp.name).to.be.undefined;
           expect(resp.error).to.deep.equal(STATUS_ERROR_RESPONSE);
         });
     });
@@ -282,7 +282,7 @@ describe('MachineLearningApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError('unknown-error', 'Unknown server error: {}');
       return apiClient.updateModel(MODEL_ID, NAME_ONLY_CONTENT, NAME_ONLY_MASK)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with unknown-error for non-json response', () => {
@@ -293,7 +293,7 @@ describe('MachineLearningApiClient', () => {
       const expected = new FirebaseMachineLearningError(
         'unknown-error', 'Unexpected response with status: 404 and body: not json');
       return apiClient.updateModel(MODEL_ID, NAME_ONLY_CONTENT, NAME_ONLY_MASK)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with when failed with a FirebaseAppError', () => {
@@ -303,7 +303,7 @@ describe('MachineLearningApiClient', () => {
         .rejects(expected);
       stubs.push(stub);
       return apiClient.updateModel(MODEL_ID, NAME_ONLY_CONTENT, NAME_ONLY_MASK)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
   });
 
@@ -351,7 +351,7 @@ describe('MachineLearningApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError('not-found', 'Requested entity not found');
       return apiClient.getModel(MODEL_ID)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject unknown-error when error code is not present', () => {
@@ -361,7 +361,7 @@ describe('MachineLearningApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError('unknown-error', 'Unknown server error: {}');
       return apiClient.getModel(MODEL_ID)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject unknown-error for non-json response', () => {
@@ -372,7 +372,7 @@ describe('MachineLearningApiClient', () => {
       const expected = new FirebaseMachineLearningError(
         'unknown-error', 'Unexpected response with status: 404 and body: not json');
       return apiClient.getModel(MODEL_ID)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject when failed with a FirebaseAppError', () => {
@@ -382,7 +382,7 @@ describe('MachineLearningApiClient', () => {
         .rejects(expected);
       stubs.push(stub);
       return apiClient.getModel(MODEL_ID)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
   });
 
@@ -484,7 +484,7 @@ describe('MachineLearningApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError('not-found', 'Requested entity not found');
       return apiClient.listModels()
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error when error code is not present', () => {
@@ -494,7 +494,7 @@ describe('MachineLearningApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError('unknown-error', 'Unknown server error: {}');
       return apiClient.listModels()
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error for non-json response', () => {
@@ -505,7 +505,7 @@ describe('MachineLearningApiClient', () => {
       const expected = new FirebaseMachineLearningError(
         'unknown-error', 'Unexpected response with status: 404 and body: not json');
       return apiClient.listModels()
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw when rejected with a FirebaseAppError', () => {
@@ -515,7 +515,7 @@ describe('MachineLearningApiClient', () => {
         .rejects(expected);
       stubs.push(stub);
       return apiClient.listModels()
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
   });
 
@@ -562,7 +562,7 @@ describe('MachineLearningApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError('not-found', 'Requested entity not found');
       return apiClient.deleteModel(MODEL_ID)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with unknown-error when error code is not present', () => {
@@ -572,7 +572,7 @@ describe('MachineLearningApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError('unknown-error', 'Unknown server error: {}');
       return apiClient.deleteModel(MODEL_ID)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with unknown-error for non-json response', () => {
@@ -583,7 +583,7 @@ describe('MachineLearningApiClient', () => {
       const expected = new FirebaseMachineLearningError(
         'unknown-error', 'Unexpected response with status: 404 and body: not json');
       return apiClient.deleteModel(MODEL_ID)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject when failed with a FirebaseAppError', () => {
@@ -593,7 +593,7 @@ describe('MachineLearningApiClient', () => {
         .rejects(expected);
       stubs.push(stub);
       return apiClient.deleteModel(MODEL_ID)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
   });
 });
