@@ -35,7 +35,7 @@ import {
   ComputeEngineCredential, getApplicationDefault, isApplicationDefault, Credential,
 } from '../../../src/auth/credential';
 import { HttpClient } from '../../../src/utils/api-request';
-import {Agent} from 'https';
+import { Agent } from 'https';
 import { FirebaseAppError } from '../../../src/utils/error';
 
 chai.should();
@@ -325,7 +325,7 @@ describe('Credential', () => {
         expect(httpStub).to.have.been.calledOnce.and.calledWith({
           method: 'GET',
           url: 'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token',
-          headers: {'Metadata-Flavor': 'Google'},
+          headers: { 'Metadata-Flavor': 'Google' },
           httpAgent: undefined,
         });
       });
@@ -342,7 +342,7 @@ describe('Credential', () => {
         expect(httpStub).to.have.been.calledOnce.and.calledWith({
           method: 'GET',
           url: 'http://metadata.google.internal/computeMetadata/v1/project/project-id',
-          headers: {'Metadata-Flavor': 'Google'},
+          headers: { 'Metadata-Flavor': 'Google' },
           httpAgent: undefined,
         });
       });
@@ -364,7 +364,7 @@ describe('Credential', () => {
           expect(httpStub).to.have.been.calledOnce.and.calledWith({
             method: 'GET',
             url: 'http://metadata.google.internal/computeMetadata/v1/project/project-id',
-            headers: {'Metadata-Flavor': 'Google'},
+            headers: { 'Metadata-Flavor': 'Google' },
             httpAgent: undefined,
           });
         });

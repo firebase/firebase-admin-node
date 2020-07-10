@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {FirebaseNamespace} from './firebase-namespace';
+import { FirebaseNamespace } from './firebase-namespace';
 
 const firebaseAdmin = new FirebaseNamespace();
 

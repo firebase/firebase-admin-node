@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-import {FirebaseApp} from '../firebase-app';
-import {AppErrorCodes, FirebaseAppError} from './error';
+import { FirebaseApp } from '../firebase-app';
+import { AppErrorCodes, FirebaseAppError } from './error';
 import * as validator from './validator';
 
 import http = require('http');
 import https = require('https');
 import url = require('url');
-import {EventEmitter} from 'events';
-import {Readable} from 'stream';
+import { EventEmitter } from 'events';
+import { Readable } from 'stream';
 import * as zlibmod from 'zlib';
 
 /** Http method type definition. */
@@ -588,7 +588,7 @@ class AsyncHttpCall {
     response: LowLevelResponse, respStream: Readable, boundary: string): void {
 
     const dicer = require('dicer'); // eslint-disable-line @typescript-eslint/no-var-requires
-    const multipartParser = new dicer({boundary});
+    const multipartParser = new dicer({ boundary });
     const responseBuffer: Buffer[] = [];
     multipartParser.on('part', (part: any) => {
       const tempBuffers: Buffer[] = [];

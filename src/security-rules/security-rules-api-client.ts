@@ -170,7 +170,7 @@ export class SecurityRulesApiClient {
             const request: HttpRequestConfig = {
               method: 'PATCH',
               url: `${url}/releases/${name}`,
-              data: {release},
+              data: { release },
             };
             return this.sendRequest<Release>(request);
           });

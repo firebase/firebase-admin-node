@@ -21,7 +21,7 @@ import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
 import firebase from '@firebase/app';
 import '@firebase/auth';
-import {clone} from 'lodash';
+import { clone } from 'lodash';
 import {
   generateRandomString, projectId, apiKey, noServiceAccountApp, cmdArgs,
 } from './setup';
@@ -288,14 +288,14 @@ describe('admin.auth', () => {
         { uid: 'uid_that_doesnt_exist' },
         { uid: 'uid3' },
       ]);
-      expect(users.notFound).to.have.deep.members([{uid: 'uid_that_doesnt_exist'}]);
+      expect(users.notFound).to.have.deep.members([{ uid: 'uid_that_doesnt_exist' }]);
 
       const foundUsers = mapUserRecordsToUidEmailPhones(users.users);
       expect(foundUsers).to.have.deep.members([testUser1, testUser3]);
     });
 
     it('returns nothing when queried for only non-existing users', async () => {
-      const notFoundIds = [{uid: 'non-existing user'}];
+      const notFoundIds = [{ uid: 'non-existing user' }];
       const users = await admin.auth().getUsers(notFoundIds);
 
       expect(users.users).to.be.empty;
@@ -412,7 +412,7 @@ describe('admin.auth', () => {
     let currentUser: User;
     // Sign in with an email and password account.
     return clientAuth().signInWithEmailAndPassword(mockUserData.email, mockUserData.password)
-      .then(({user}) => {
+      .then(({ user }) => {
         expect(user).to.exist;
         currentUser = user!;
         // Get user's ID token.
@@ -449,7 +449,7 @@ describe('admin.auth', () => {
         return clientAuth().signInWithEmailAndPassword(
           mockUserData.email, mockUserData.password);
       })
-      .then(({user}) => {
+      .then(({ user }) => {
         // Get new session's ID token.
         expect(user).to.exist;
         return user!.getIdToken();
@@ -474,7 +474,7 @@ describe('admin.auth', () => {
         return clientAuth().signInWithEmailAndPassword(
           userRecord.email!, mockUserData.password);
       })
-      .then(({user}) => {
+      .then(({ user }) => {
         // Get the user's ID token.
         expect(user).to.exist;
         return user!.getIdToken();
@@ -614,7 +614,7 @@ describe('admin.auth', () => {
       .then((customToken) => {
         return clientAuth().signInWithCustomToken(customToken);
       })
-      .then(({user}) => {
+      .then(({ user }) => {
         expect(user).to.exist;
         return user!.getIdToken();
       })
@@ -634,7 +634,7 @@ describe('admin.auth', () => {
       .then((customToken) => {
         return clientAuth().signInWithCustomToken(customToken);
       })
-      .then(({user}) => {
+      .then(({ user }) => {
         expect(user).to.exist;
         return user!.getIdToken();
       })
@@ -680,7 +680,7 @@ describe('admin.auth', () => {
 
     it('generatePasswordResetLink() should return a password reset link', () => {
       // Ensure old password set on created user.
-      return admin.auth().updateUser(uid, {password: 'password'})
+      return admin.auth().updateUser(uid, { password: 'password' })
         .then(() => {
           return admin.auth().generatePasswordResetLink(email, actionCodeSettings);
         })
@@ -702,7 +702,7 @@ describe('admin.auth', () => {
 
     it('generateEmailVerificationLink() should return a verification link', () => {
       // Ensure the user's email is unverified.
-      return admin.auth().updateUser(uid, {password: 'password', emailVerified: false})
+      return admin.auth().updateUser(uid, { password: 'password', emailVerified: false })
         .then((userRecord) => {
           expect(userRecord.emailVerified).to.be.false;
           return admin.auth().generateEmailVerificationLink(email, actionCodeSettings);
@@ -972,7 +972,7 @@ describe('admin.auth', () => {
           clientAuth().tenantId = createdTenantId;
 
           const customToken = await tenantAwareAuth.createCustomToken('uid1');
-          const {user} = await clientAuth().signInWithCustomToken(customToken);
+          const { user } = await clientAuth().signInWithCustomToken(customToken);
           expect(user).to.not.be.null;
           const idToken = await user!.getIdToken();
           const token = await tenantAwareAuth.verifyIdToken(idToken);
@@ -1041,7 +1041,7 @@ describe('admin.auth', () => {
           })
           .then((config) => {
             const modifiedConfig = deepExtend(
-              {providerId: authProviderConfig.providerId}, modifiedConfigOptions);
+              { providerId: authProviderConfig.providerId }, modifiedConfigOptions);
             assertDeepEqualUnordered(modifiedConfig, config);
             return tenantAwareAuth.deleteProviderConfig(authProviderConfig.providerId);
           })
@@ -1099,7 +1099,7 @@ describe('admin.auth', () => {
           })
           .then((config) => {
             const modifiedConfig = deepExtend(
-              {providerId: authProviderConfig.providerId}, modifiedConfigOptions);
+              { providerId: authProviderConfig.providerId }, modifiedConfigOptions);
             assertDeepEqualUnordered(modifiedConfig, config);
             return tenantAwareAuth.deleteProviderConfig(authProviderConfig.providerId);
           })
@@ -1242,7 +1242,7 @@ describe('admin.auth', () => {
     it('listProviderConfig() successfully returns the list of SAML providers', () => {
       const configs: AuthProviderConfig[] = [];
       const listProviders: any = (type: 'saml' | 'oidc', maxResults?: number, pageToken?: string) => {
-        return admin.auth().listProviderConfigs({type, maxResults, pageToken})
+        return admin.auth().listProviderConfigs({ type, maxResults, pageToken })
           .then((result) => {
             result.providerConfigs.forEach((config: AuthProviderConfig) => {
               configs.push(config);
@@ -1284,7 +1284,7 @@ describe('admin.auth', () => {
       return admin.auth().updateProviderConfig(authProviderConfig1.providerId, modifiedConfigOptions)
         .then((config) => {
           const modifiedConfig = deepExtend(
-            {providerId: authProviderConfig1.providerId}, modifiedConfigOptions);
+            { providerId: authProviderConfig1.providerId }, modifiedConfigOptions);
           assertDeepEqualUnordered(modifiedConfig, config);
         });
     });
@@ -1312,7 +1312,7 @@ describe('admin.auth', () => {
       return admin.auth().updateProviderConfig(authProviderConfig1.providerId, deltaChanges)
         .then((config) => {
           const modifiedConfig = deepExtend(
-            {providerId: authProviderConfig1.providerId}, modifiedConfigOptions);
+            { providerId: authProviderConfig1.providerId }, modifiedConfigOptions);
           assertDeepEqualUnordered(modifiedConfig, config);
         });
     });
@@ -1374,7 +1374,7 @@ describe('admin.auth', () => {
     it('listProviderConfig() successfully returns the list of OIDC providers', () => {
       const configs: AuthProviderConfig[] = [];
       const listProviders: any = (type: 'saml' | 'oidc', maxResults?: number, pageToken?: string) => {
-        return admin.auth().listProviderConfigs({type, maxResults, pageToken})
+        return admin.auth().listProviderConfigs({ type, maxResults, pageToken })
           .then((result) => {
             result.providerConfigs.forEach((config: AuthProviderConfig) => {
               configs.push(config);
@@ -1412,7 +1412,7 @@ describe('admin.auth', () => {
       return admin.auth().updateProviderConfig(authProviderConfig1.providerId, modifiedConfigOptions)
         .then((config) => {
           const modifiedConfig = deepExtend(
-            {providerId: authProviderConfig1.providerId}, modifiedConfigOptions);
+            { providerId: authProviderConfig1.providerId }, modifiedConfigOptions);
           assertDeepEqualUnordered(modifiedConfig, config);
         });
     });
@@ -1432,7 +1432,7 @@ describe('admin.auth', () => {
       return admin.auth().updateProviderConfig(authProviderConfig1.providerId, deltaChanges)
         .then((config) => {
           const modifiedConfig = deepExtend(
-            {providerId: authProviderConfig1.providerId}, modifiedConfigOptions);
+            { providerId: authProviderConfig1.providerId }, modifiedConfigOptions);
           assertDeepEqualUnordered(modifiedConfig, config);
         });
     });
@@ -1458,7 +1458,7 @@ describe('admin.auth', () => {
       const uid1 = await admin.auth().createUser({}).then((ur) => ur.uid);
       const uid2 = await admin.auth().createUser({}).then((ur) => ur.uid);
       const uid3 = await admin.auth().createUser({}).then((ur) => ur.uid);
-      const ids = [{uid: uid1}, {uid: uid2}, {uid: uid3}];
+      const ids = [{ uid: uid1 }, { uid: uid2 }, { uid: uid3 }];
 
       return deleteUsersWithDelay([uid1, uid2, uid3])
         .then((deleteUsersResult) => {
@@ -1477,7 +1477,7 @@ describe('admin.auth', () => {
     it('deletes users that exist even when non-existing users also specified', async () => {
       const uid1 = await admin.auth().createUser({}).then((ur) => ur.uid);
       const uid2 = 'uid-that-doesnt-exist';
-      const ids = [{uid: uid1}, {uid: uid2}];
+      const ids = [{ uid: uid1 }, { uid: uid2 }];
 
       return deleteUsersWithDelay([uid1, uid2])
         .then((deleteUsersResult) => {
@@ -1521,9 +1521,9 @@ describe('admin.auth', () => {
     const uid3 = sessionCookieUids[2];
 
     it('creates a valid Firebase session cookie', () => {
-      return admin.auth().createCustomToken(uid, {admin: true, groupId: '1234'})
+      return admin.auth().createCustomToken(uid, { admin: true, groupId: '1234' })
         .then((customToken) => clientAuth().signInWithCustomToken(customToken))
-        .then(({user}) => {
+        .then(({ user }) => {
           expect(user).to.exist;
           return user!.getIdToken();
         })
@@ -1539,7 +1539,7 @@ describe('admin.auth', () => {
           delete payloadClaims.iat;
           expectedIat = Math.floor(new Date().getTime() / 1000);
           // One day long session cookie.
-          return admin.auth().createSessionCookie(currentIdToken, {expiresIn});
+          return admin.auth().createSessionCookie(currentIdToken, { expiresIn });
         })
         .then((sessionCookie) => admin.auth().verifySessionCookie(sessionCookie))
         .then((decodedIdToken) => {
@@ -1559,13 +1559,13 @@ describe('admin.auth', () => {
       let currentSessionCookie: string;
       return admin.auth().createCustomToken(uid2)
         .then((customToken) => clientAuth().signInWithCustomToken(customToken))
-        .then(({user}) => {
+        .then(({ user }) => {
           expect(user).to.exist;
           return user!.getIdToken();
         })
         .then((idToken) => {
           // One day long session cookie.
-          return admin.auth().createSessionCookie(idToken, {expiresIn});
+          return admin.auth().createSessionCookie(idToken, { expiresIn });
         })
         .then((sessionCookie) => {
           currentSessionCookie = sessionCookie;
@@ -1584,9 +1584,9 @@ describe('admin.auth', () => {
     });
 
     it('fails when called with a revoked ID token', () => {
-      return admin.auth().createCustomToken(uid3, {admin: true, groupId: '1234'})
+      return admin.auth().createCustomToken(uid3, { admin: true, groupId: '1234' })
         .then((customToken) => clientAuth().signInWithCustomToken(customToken))
-        .then(({user}) => {
+        .then(({ user }) => {
           expect(user).to.exist;
           return user!.getIdToken();
         })
@@ -1597,7 +1597,7 @@ describe('admin.auth', () => {
           ), 1000));
         })
         .then(() => {
-          return admin.auth().createSessionCookie(currentIdToken, {expiresIn})
+          return admin.auth().createSessionCookie(currentIdToken, { expiresIn })
             .should.eventually.be.rejected.and.have.property('code', 'auth/id-token-expired');
         });
     });
@@ -1614,7 +1614,7 @@ describe('admin.auth', () => {
     it('fails when called with a Firebase ID token', () => {
       return admin.auth().createCustomToken(uid)
         .then((customToken) => clientAuth().signInWithCustomToken(customToken))
-        .then(({user}) => {
+        .then(({ user }) => {
           expect(user).to.exist;
           return user!.getIdToken();
         })
@@ -1817,7 +1817,7 @@ describe('admin.auth', () => {
         photoURL,
         phoneNumber: '+15554446666',
         disabled: false,
-        customClaims: {admin: true},
+        customClaims: { admin: true },
         metadata: {
           lastSignInTime: now,
           creationTime: now,
@@ -1922,10 +1922,10 @@ describe('admin.auth', () => {
 
     it('fails when invalid users are provided', () => {
       const users = [
-        {uid: generateRandomString(20).toLowerCase(), phoneNumber: '+1error'},
-        {uid: generateRandomString(20).toLowerCase(), email: 'invalid'},
-        {uid: generateRandomString(20).toLowerCase(), phoneNumber: '+1invalid'},
-        {uid: generateRandomString(20).toLowerCase(), emailVerified: 'invalid'} as any,
+        { uid: generateRandomString(20).toLowerCase(), phoneNumber: '+1error' },
+        { uid: generateRandomString(20).toLowerCase(), email: 'invalid' },
+        { uid: generateRandomString(20).toLowerCase(), phoneNumber: '+1invalid' },
+        { uid: generateRandomString(20).toLowerCase(), emailVerified: 'invalid' } as any,
       ];
       return admin.auth().importUsers(users)
         .then((result) => {
@@ -1969,7 +1969,7 @@ function testImportAndSignInUser(
       // Sign in with an email and password to the imported account.
       return clientAuth().signInWithEmailAndPassword(users[0].email!, rawPassword);
     })
-    .then(({user}) => {
+    .then(({ user }) => {
       // Confirm successful sign-in.
       expect(user).to.exist;
       expect(user!.email).to.equal(users[0].email);

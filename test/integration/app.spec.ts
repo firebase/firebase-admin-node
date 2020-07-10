@@ -15,7 +15,7 @@
  */
 
 import * as admin from '../../lib/index';
-import {expect} from 'chai';
+import { expect } from 'chai';
 import {
   defaultApp, nullApp, nonNullApp, databaseUrl, projectId, storageBucket,
 } from './setup';

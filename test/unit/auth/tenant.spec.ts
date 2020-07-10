@@ -19,8 +19,8 @@ import * as chai from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import {deepCopy} from '../../../src/utils/deep-copy';
-import {EmailSignInConfig, EmailSignInProviderConfig} from '../../../src/auth/auth-config';
+import { deepCopy } from '../../../src/utils/deep-copy';
+import { EmailSignInConfig, EmailSignInProviderConfig } from '../../../src/auth/auth-config';
 import {
   Tenant, TenantOptions, TenantServerResponse,
 } from '../../../src/auth/tenant';

@@ -19,7 +19,7 @@ import * as chai from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import {deepCopy} from '../../../src/utils/deep-copy';
+import { deepCopy } from '../../../src/utils/deep-copy';
 import {
   OIDCConfig, SAMLConfig, SAMLConfigServerRequest,
   SAMLConfigServerResponse, OIDCConfigServerRequest,
@@ -159,8 +159,8 @@ describe('SAMLConfig', () => {
       ssoUrl: 'https://example.com/login',
       signRequest: true,
       idpCertificates: [
-        {x509Certificate: 'CERT1'},
-        {x509Certificate: 'CERT2'},
+        { x509Certificate: 'CERT1' },
+        { x509Certificate: 'CERT2' },
       ],
     },
     spConfig: {
@@ -177,8 +177,8 @@ describe('SAMLConfig', () => {
       ssoUrl: 'https://example.com/login',
       signRequest: true,
       idpCertificates: [
-        {x509Certificate: 'CERT1'},
-        {x509Certificate: 'CERT2'},
+        { x509Certificate: 'CERT1' },
+        { x509Certificate: 'CERT2' },
       ],
     },
     spConfig: {
@@ -347,7 +347,7 @@ describe('SAMLConfig', () => {
         .to.throw('"SAMLAuthProviderConfig.providerId" must be a valid non-empty string prefixed with "saml.".');
     });
 
-    const nonAuthConfigOptions = [null, undefined, {}, {other: 'value'}];
+    const nonAuthConfigOptions = [null, undefined, {}, { other: 'value' }];
     nonAuthConfigOptions.forEach((nonAuthConfig) => {
       it('should return null when no AuthConfig is provided: ' + JSON.stringify(nonAuthConfig), () => {
         expect(SAMLConfig.buildServerRequest(nonAuthConfig as any))
@@ -645,7 +645,7 @@ describe('OIDCConfig', () => {
         .to.throw('"OIDCAuthProviderConfig.providerId" must be a valid non-empty string prefixed with "oidc.".');
     });
 
-    const nonAuthConfigOptions = [null, undefined, {}, {other: 'value'}];
+    const nonAuthConfigOptions = [null, undefined, {}, { other: 'value' }];
     nonAuthConfigOptions.forEach((nonAuthConfig) => {
       it('should return null when no AuthConfig is provided: ' + JSON.stringify(nonAuthConfig), () => {
         expect(OIDCConfig.buildServerRequest(nonAuthConfig as any)).to.be.null;

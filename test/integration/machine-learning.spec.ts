@@ -18,7 +18,7 @@
 import path = require('path');
 import * as chai from 'chai';
 import * as admin from '../../lib/index';
-import {Bucket} from '@google-cloud/storage';
+import { Bucket } from '@google-cloud/storage';
 
 const expect = chai.expect;
 
@@ -61,7 +61,7 @@ describe('admin.machineLearning', () => {
   function uploadModelToGcs(localFileName: string, gcsFileName: string): Promise<string> {
     const bucket: Bucket = admin.storage().bucket();
     const tfliteFileName = path.join(__dirname, `../resources/${localFileName}`);
-    return bucket.upload(tfliteFileName, {destination: gcsFileName})
+    return bucket.upload(tfliteFileName, { destination: gcsFileName })
       .then(() => {
         return `gs://${bucket.name}/${gcsFileName}`;
       });
@@ -75,7 +75,7 @@ describe('admin.machineLearning', () => {
     it('creates a new Model without ModelFormat', () => {
       const modelOptions: admin.machineLearning.ModelOptions = {
         displayName: 'node-integration-test-create-1',
-        tags: ['tag123', 'tag345']};
+        tags: ['tag123', 'tag345'] };
       return admin.machineLearning().createModel(modelOptions)
         .then((model) => {
           scheduleForDelete(model);
@@ -87,7 +87,7 @@ describe('admin.machineLearning', () => {
       const modelOptions: admin.machineLearning.ModelOptions = {
         displayName: 'node-integration-test-create-2',
         tags: ['tag234', 'tag456'],
-        tfliteModel: {gcsTfliteUri: 'this will be replaced below'},
+        tfliteModel: { gcsTfliteUri: 'this will be replaced below' },
       };
       return uploadModelToGcs('model1.tflite', 'valid_model.tflite')
         .then((fileName: string) => {
@@ -105,7 +105,7 @@ describe('admin.machineLearning', () => {
       const modelOptions: admin.machineLearning.ModelOptions = {
         displayName: 'node-integration-test-create-3',
         tags: ['tag234', 'tag456'],
-        tfliteModel: {gcsTfliteUri: 'this will be replaced below'},
+        tfliteModel: { gcsTfliteUri: 'this will be replaced below' },
       };
       return uploadModelToGcs('invalid_model.tflite', 'invalid_model.tflite')
         .then((fileName: string) => {
@@ -150,7 +150,7 @@ describe('admin.machineLearning', () => {
       const modelOptions: admin.machineLearning.ModelOptions = {
         displayName: 'Invalid Name#*^!',
       };
-      return createTemporaryModel({displayName: 'node-integration-invalid-arg'})
+      return createTemporaryModel({ displayName: 'node-integration-invalid-arg' })
         .then((model) => admin.machineLearning().updateModel(model.modelId, modelOptions)
           .should.eventually.be.rejected.and.have.property(
             'code', 'machine-learning/invalid-argument'));
@@ -158,7 +158,7 @@ describe('admin.machineLearning', () => {
 
     it('updates the displayName', () => {
       const DISPLAY_NAME = 'node-integration-test-update-1b';
-      return createTemporaryModel({displayName: 'node-integration-test-update-1a'})
+      return createTemporaryModel({ displayName: 'node-integration-test-update-1a' })
         .then((model) => {
           const modelOptions: admin.machineLearning.ModelOptions = {
             displayName: DISPLAY_NAME,
@@ -195,7 +195,7 @@ describe('admin.machineLearning', () => {
         uploadModelToGcs('model1.tflite', 'valid_model.tflite')])
         .then(([model, fileName]) => {
           const modelOptions: admin.machineLearning.ModelOptions = {
-            tfliteModel: {gcsTfliteUri: fileName},
+            tfliteModel: { gcsTfliteUri: fileName },
           };
           return admin.machineLearning().updateModel(model.modelId, modelOptions)
             .then((updatedModel) => {
@@ -207,7 +207,7 @@ describe('admin.machineLearning', () => {
     it('can update more than 1 field', () => {
       const DISPLAY_NAME = 'node-integration-test-update-3b';
       const TAGS = ['node-integration-tag-1', 'node-integration-tag-2'];
-      return createTemporaryModel({displayName: 'node-integration-test-update-3a'})
+      return createTemporaryModel({ displayName: 'node-integration-test-update-3a' })
         .then((model) => {
           const modelOptions: admin.machineLearning.ModelOptions = {
             displayName: DISPLAY_NAME,
@@ -239,7 +239,7 @@ describe('admin.machineLearning', () => {
     it('publishes the model successfully', () => {
       const modelOptions: admin.machineLearning.ModelOptions = {
         displayName: 'node-integration-test-publish-1',
-        tfliteModel: {gcsTfliteUri: 'this will be replaced below'},
+        tfliteModel: { gcsTfliteUri: 'this will be replaced below' },
       };
       return uploadModelToGcs('model1.tflite', 'valid_model.tflite')
         .then((fileName: string) => {
@@ -274,7 +274,7 @@ describe('admin.machineLearning', () => {
     it('unpublishes the model successfully', () => {
       const modelOptions: admin.machineLearning.ModelOptions = {
         displayName: 'node-integration-test-unpublish1',
-        tfliteModel: {gcsTfliteUri: 'this will be replaced below'},
+        tfliteModel: { gcsTfliteUri: 'this will be replaced below' },
       };
       return uploadModelToGcs('model1.tflite', 'valid_model.tflite')
         .then((fileName: string) => {
@@ -357,7 +357,7 @@ describe('admin.machineLearning', () => {
     });
 
     it('resolves with a list of models', () => {
-      return admin.machineLearning().listModels({pageSize: 100})
+      return admin.machineLearning().listModels({ pageSize: 100 })
         .then((modelList) => {
           expect(modelList.models.length).to.be.at.least(2);
           expect(modelList.models).to.deep.include(model1);
@@ -367,7 +367,7 @@ describe('admin.machineLearning', () => {
     });
 
     it('respects page size', () => {
-      return admin.machineLearning().listModels({pageSize: 2})
+      return admin.machineLearning().listModels({ pageSize: 2 })
         .then((modelList) => {
           expect(modelList.models.length).to.equal(2);
           expect(modelList.pageToken).not.to.be.empty;
@@ -375,7 +375,7 @@ describe('admin.machineLearning', () => {
     });
 
     it('filters by exact displayName', () => {
-      return admin.machineLearning().listModels({filter: 'displayName=node-integration-list1'})
+      return admin.machineLearning().listModels({ filter: 'displayName=node-integration-list1' })
         .then((modelList) => {
           expect(modelList.models.length).to.equal(1);
           expect(modelList.models[0]).to.deep.equal(model1);
@@ -384,7 +384,7 @@ describe('admin.machineLearning', () => {
     });
 
     it('filters by displayName prefix', () => {
-      return admin.machineLearning().listModels({filter: 'displayName:node-integration-list*', pageSize: 100})
+      return admin.machineLearning().listModels({ filter: 'displayName:node-integration-list*', pageSize: 100 })
         .then((modelList) => {
           expect(modelList.models.length).to.be.at.least(3);
           expect(modelList.models).to.deep.include(model1);
@@ -395,7 +395,7 @@ describe('admin.machineLearning', () => {
     });
 
     it('filters by tag', () => {
-      return admin.machineLearning().listModels({filter: 'tags:node-integration-tag-1', pageSize: 100})
+      return admin.machineLearning().listModels({ filter: 'tags:node-integration-tag-1', pageSize: 100 })
         .then((modelList) => {
           expect(modelList.models.length).to.be.at.least(3);
           expect(modelList.models).to.deep.include(model1);
@@ -406,14 +406,14 @@ describe('admin.machineLearning', () => {
     });
 
     it('handles pageTokens properly', () => {
-      return admin.machineLearning().listModels({filter: 'displayName:node-integration-list*', pageSize: 2})
+      return admin.machineLearning().listModels({ filter: 'displayName:node-integration-list*', pageSize: 2 })
         .then((modelList) => {
           expect(modelList.models.length).to.equal(2);
           expect(modelList.pageToken).not.to.be.empty;
           return admin.machineLearning().listModels({
             filter: 'displayName:node-integration-list*',
             pageSize: 2,
-            pageToken: modelList.pageToken})
+            pageToken: modelList.pageToken })
             .then((modelList2) => {
               expect(modelList2.models.length).to.be.at.least(1);
               expect(modelList2.pageToken).to.be.empty;
@@ -422,7 +422,7 @@ describe('admin.machineLearning', () => {
     });
 
     it('successfully returns an empty list of models', () => {
-      return admin.machineLearning().listModels({filter: 'displayName=non-existing-model'})
+      return admin.machineLearning().listModels({ filter: 'displayName=non-existing-model' })
         .then((modelList) => {
           expect(modelList.models.length).to.equal(0);
           expect(modelList.pageToken).to.be.empty;
@@ -430,7 +430,7 @@ describe('admin.machineLearning', () => {
     });
 
     it('rejects with invalid argument if the filter is invalid', () => {
-      return admin.machineLearning().listModels({filter: 'invalidFilterItem=foo'})
+      return admin.machineLearning().listModels({ filter: 'invalidFilterItem=foo' })
         .should.eventually.be.rejected.and.have.property(
           'code', 'machine-learning/invalid-argument');
     });

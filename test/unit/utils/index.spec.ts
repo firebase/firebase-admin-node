@@ -15,7 +15,7 @@
  */
 
 import * as _ from 'lodash';
-import {expect} from 'chai';
+import { expect } from 'chai';
 import * as sinon from 'sinon';
 
 import * as mocks from '../../resources/mocks';
@@ -23,8 +23,8 @@ import {
   addReadonlyGetter, getExplicitProjectId, findProjectId,
   toWebSafeBase64, formatString, generateUpdateMask,
 } from '../../../src/utils/index';
-import {isNonEmptyString} from '../../../src/utils/validator';
-import {FirebaseApp, FirebaseAppOptions} from '../../../src/firebase-app';
+import { isNonEmptyString } from '../../../src/utils/validator';
+import { FirebaseApp, FirebaseAppOptions } from '../../../src/firebase-app';
 import { ComputeEngineCredential } from '../../../src/auth/credential';
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';

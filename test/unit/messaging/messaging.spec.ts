@@ -26,7 +26,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
-import {FirebaseApp} from '../../../src/firebase-app';
+import { FirebaseApp } from '../../../src/firebase-app';
 import {
   Message, MessagingOptions, MessagingPayload, MessagingDevicesResponse, MessagingDeviceGroupResponse,
   MessagingTopicManagementResponse, BatchResponse, SendResponse, MulticastMessage,
@@ -86,7 +86,7 @@ function mockBatchRequest(ids: string[]): nock.Scope {
 
 function mockBatchRequestWithErrors(ids: string[], errors: object[] = []): nock.Scope {
   const mockPayload = createMultipartPayloadWithErrors(ids.map((id) => {
-    return {name: id};
+    return { name: id };
   }), errors);
   return nock(`https://${FCM_SEND_HOST}:443`)
     .post('/batch')
@@ -371,7 +371,7 @@ describe('Messaging', () => {
     it('should reject given app without project ID', () => {
       const appWithoutProjectId = mocks.mockCredentialApp();
       const messagingWithoutProjectId = new Messaging(appWithoutProjectId);
-      messagingWithoutProjectId.send({topic: 'test'})
+      messagingWithoutProjectId.send({ topic: 'test' })
         .should.eventually.be.rejectedWith(
           'Failed to determine project ID for Messaging. Initialize the SDK with service '
           + 'account credentials or set project ID as an app option. Alternatively set the '
@@ -409,7 +409,7 @@ describe('Messaging', () => {
     });
 
     const noTarget = [
-      {}, {token: null}, {token: ''}, {topic: null}, {topic: ''}, {condition: null}, {condition: ''},
+      {}, { token: null }, { token: '' }, { topic: null }, { topic: '' }, { condition: null }, { condition: '' },
     ];
     noTarget.forEach((message) => {
       it(`should throw given message without target: ${ JSON.stringify(message) }`, () => {
@@ -420,10 +420,10 @@ describe('Messaging', () => {
     });
 
     const multipleTargets = [
-      {token: 'a', topic: 'b'},
-      {token: 'a', condition: 'b'},
-      {condition: 'a', topic: 'b'},
-      {token: 'a', topic: 'b', condition: 'c'},
+      { token: 'a', topic: 'b' },
+      { token: 'a', condition: 'b' },
+      { condition: 'a', topic: 'b' },
+      { token: 'a', topic: 'b', condition: 'c' },
     ];
     multipleTargets.forEach((message) => {
       it(`should throw given message without target: ${ JSON.stringify(message)}`, () => {
@@ -437,7 +437,7 @@ describe('Messaging', () => {
     invalidDryRun.forEach((dryRun) => {
       it(`should throw given invalid dryRun parameter: ${JSON.stringify(dryRun)}`, () => {
         expect(() => {
-          messaging.send({token: 'a'}, dryRun as any);
+          messaging.send({ token: 'a' }, dryRun as any);
         }).to.throw('dryRun must be a boolean');
       });
     });
@@ -446,14 +446,14 @@ describe('Messaging', () => {
     invalidTopics.forEach((topic) => {
       it(`should throw given invalid topic name: ${JSON.stringify(topic)}`, () => {
         expect(() => {
-          messaging.send({topic});
+          messaging.send({ topic });
         }).to.throw('Malformed topic name');
       });
     });
 
     const targetMessages = [
-      {token: 'mock-token'}, {topic: 'mock-topic'},
-      {topic: '/topics/mock-topic'}, {condition: '"foo" in topics'},
+      { token: 'mock-token' }, { topic: 'mock-topic' },
+      { topic: '/topics/mock-topic' }, { condition: '"foo" in topics' },
     ];
     targetMessages.forEach((message) => {
       it(`should be fulfilled with a message ID given a valid message: ${JSON.stringify(message)}`, () => {
@@ -482,7 +482,7 @@ describe('Messaging', () => {
       };
       mockedRequests.push(mockSendError(400, 'json', resp));
       return messaging.send(
-        {token: 'mock-token'},
+        { token: 'mock-token' },
       ).should.eventually.be.rejectedWith('test error message')
         .and.have.property('code', 'messaging/invalid-argument');
     });
@@ -502,7 +502,7 @@ describe('Messaging', () => {
       };
       mockedRequests.push(mockSendError(404, 'json', resp));
       return messaging.send(
-        {token: 'mock-token'},
+        { token: 'mock-token' },
       ).should.eventually.be.rejectedWith('test error message')
         .and.have.property('code', 'messaging/registration-token-not-registered');
     });
@@ -523,7 +523,7 @@ describe('Messaging', () => {
         };
         mockedRequests.push(mockSendError(404, 'json', resp));
         return messaging.send(
-          {token: 'mock-token'},
+          { token: 'mock-token' },
         ).should.eventually.be.rejectedWith('test error message')
           .and.have.property('code', 'messaging/third-party-auth-error');
       });
@@ -538,16 +538,16 @@ describe('Messaging', () => {
       };
       mockedRequests.push(mockSendError(404, 'json', resp));
       return messaging.send(
-        {token: 'mock-token'},
+        { token: 'mock-token' },
       ).should.eventually.be.rejectedWith('test error message')
         .and.have.property('code', 'messaging/registration-token-not-registered');
     });
 
     it('should fail when the backend server returns an unknown error', () => {
-      const resp = {error: 'test error message'};
+      const resp = { error: 'test error message' };
       mockedRequests.push(mockSendError(400, 'json', resp));
       return messaging.send(
-        {token: 'mock-token'},
+        { token: 'mock-token' },
       ).should.eventually.be.rejected.and.have.property('code', 'messaging/unknown-error');
     });
 
@@ -555,13 +555,13 @@ describe('Messaging', () => {
       // Error code will be determined based on the status code.
       mockedRequests.push(mockSendError(400, 'text', 'foo bar'));
       return messaging.send(
-        {token: 'mock-token'},
+        { token: 'mock-token' },
       ).should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
     });
   });
 
   describe('sendAll()', () => {
-    const validMessage: Message = {token: 'a'};
+    const validMessage: Message = { token: 'a' };
 
     function checkSendResponseSuccess(response: SendResponse, messageId: string): void {
       expect(response.success).to.be.true;
@@ -610,7 +610,7 @@ describe('Messaging', () => {
     invalidDryRun.forEach((dryRun) => {
       it(`should throw given invalid dryRun parameter: ${JSON.stringify(dryRun)}`, () => {
         expect(() => {
-          messaging.sendAll([{token: 'a'}], dryRun as any);
+          messaging.sendAll([{ token: 'a' }], dryRun as any);
         }).to.throw('dryRun must be a boolean');
       });
     });
@@ -795,7 +795,7 @@ describe('Messaging', () => {
     });
 
     it('should fail when the backend server returns an unknown error', () => {
-      const resp = {error: 'test error message'};
+      const resp = { error: 'test error message' };
       mockedRequests.push(mockBatchError(400, 'json', resp));
       return messaging.sendAll(
         [validMessage],
@@ -822,9 +822,9 @@ describe('Messaging', () => {
       successCount: 3,
       failureCount: 0,
       responses: [
-        {success: true, messageId: 'projects/projec_id/messages/1'},
-        {success: true, messageId: 'projects/projec_id/messages/2'},
-        {success: true, messageId: 'projects/projec_id/messages/3'},
+        { success: true, messageId: 'projects/projec_id/messages/1' },
+        { success: true, messageId: 'projects/projec_id/messages/2' },
+        { success: true, messageId: 'projects/projec_id/messages/3' },
       ],
     };
 
@@ -845,7 +845,7 @@ describe('Messaging', () => {
         messaging.sendMulticast({} as any);
       }).to.throw('tokens must be a non-empty array');
       expect(() => {
-        messaging.sendMulticast({tokens: []});
+        messaging.sendMulticast({ tokens: [] });
       }).to.throw('tokens must be a non-empty array');
     });
 
@@ -855,7 +855,7 @@ describe('Messaging', () => {
         tokens.push(`token${i}`);
       }
       expect(() => {
-        messaging.sendMulticast({tokens});
+        messaging.sendMulticast({ tokens });
       }).to.throw('tokens list must not contain more than 500 items');
     });
 
@@ -863,7 +863,7 @@ describe('Messaging', () => {
     invalidDryRun.forEach((dryRun) => {
       it(`should throw given invalid dryRun parameter: ${JSON.stringify(dryRun)}`, () => {
         expect(() => {
-          messaging.sendMulticast({tokens: ['a']}, dryRun as any);
+          messaging.sendMulticast({ tokens: ['a'] }, dryRun as any);
         }).to.throw('dryRun must be a boolean');
       });
     });
@@ -871,7 +871,7 @@ describe('Messaging', () => {
     it('should create multiple messages using the empty multicast payload', () => {
       stub = sinon.stub(messaging, 'sendAll').resolves(mockResponse);
       const tokens = ['a', 'b', 'c'];
-      return messaging.sendMulticast({tokens})
+      return messaging.sendMulticast({ tokens })
         .then((response: BatchResponse) => {
           expect(response).to.deep.equal(mockResponse);
           expect(stub).to.have.been.calledOnce;
@@ -894,12 +894,12 @@ describe('Messaging', () => {
       const tokens = ['a', 'b', 'c'];
       const multicast: MulticastMessage = {
         tokens,
-        android: {ttl: 100},
-        apns: {payload: {aps: {badge: 42}}},
-        data: {key: 'value'},
-        notification: {title: 'test title'},
-        webpush: {data: {webKey: 'webValue'}},
-        fcmOptions: {analyticsLabel: 'label'},
+        android: { ttl: 100 },
+        apns: { payload: { aps: { badge: 42 } } },
+        data: { key: 'value' },
+        notification: { title: 'test title' },
+        webpush: { data: { webKey: 'webValue' } },
+        fcmOptions: { analyticsLabel: 'label' },
       };
       return messaging.sendMulticast(multicast)
         .then((response: BatchResponse) => {
@@ -923,7 +923,7 @@ describe('Messaging', () => {
     it('should pass dryRun argument through', () => {
       stub = sinon.stub(messaging, 'sendAll').resolves(mockResponse);
       const tokens = ['a', 'b', 'c'];
-      return messaging.sendMulticast({tokens}, true)
+      return messaging.sendMulticast({ tokens }, true)
         .then((response: BatchResponse) => {
           expect(response).to.deep.equal(mockResponse);
           expect(stub).to.have.been.calledOnce;
@@ -940,11 +940,11 @@ describe('Messaging', () => {
       mockedRequests.push(mockBatchRequest(messageIds));
       return messaging.sendMulticast({
         tokens: ['a', 'b', 'c'],
-        android: {ttl: 100},
-        apns: {payload: {aps: {badge: 42}}},
-        data: {key: 'value'},
-        notification: {title: 'test title'},
-        webpush: {data: {webKey: 'webValue'}},
+        android: { ttl: 100 },
+        apns: { payload: { aps: { badge: 42 } } },
+        data: { key: 'value' },
+        notification: { title: 'test title' },
+        webpush: { data: { webKey: 'webValue' } },
       }).then((response: BatchResponse) => {
         expect(response.successCount).to.equal(3);
         expect(response.failureCount).to.equal(0);
@@ -965,11 +965,11 @@ describe('Messaging', () => {
       mockedRequests.push(mockBatchRequest(messageIds));
       return messaging.sendMulticast({
         tokens: ['a', 'b', 'c'],
-        android: {ttl: 100},
-        apns: {payload: {aps: {badge: 42}}},
-        data: {key: 'value'},
-        notification: {title: 'test title'},
-        webpush: {data: {webKey: 'webValue'}},
+        android: { ttl: 100 },
+        apns: { payload: { aps: { badge: 42 } } },
+        data: { key: 'value' },
+        notification: { title: 'test title' },
+        webpush: { data: { webKey: 'webValue' } },
       }, true).then((response: BatchResponse) => {
         expect(response.successCount).to.equal(3);
         expect(response.failureCount).to.equal(0);
@@ -994,7 +994,7 @@ describe('Messaging', () => {
         },
       ];
       mockedRequests.push(mockBatchRequestWithErrors(messageIds, errors));
-      return messaging.sendMulticast({tokens: ['a', 'b']})
+      return messaging.sendMulticast({ tokens: ['a', 'b'] })
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(2);
           expect(response.failureCount).to.equal(1);
@@ -1027,7 +1027,7 @@ describe('Messaging', () => {
         },
       ];
       mockedRequests.push(mockBatchRequestWithErrors(messageIds, errors));
-      return messaging.sendMulticast({tokens: ['a', 'b']})
+      return messaging.sendMulticast({ tokens: ['a', 'b'] })
         .then((response: BatchResponse) => {
           expect(response.successCount).to.equal(1);
           expect(response.failureCount).to.equal(1);
@@ -1049,7 +1049,7 @@ describe('Messaging', () => {
       };
       mockedRequests.push(mockBatchError(400, 'json', resp));
       return messaging.sendMulticast(
-        {tokens: ['a']},
+        { tokens: ['a'] },
       ).should.eventually.be.rejectedWith('test error message')
         .and.have.property('code', 'messaging/invalid-argument');
     });
@@ -1069,7 +1069,7 @@ describe('Messaging', () => {
       };
       mockedRequests.push(mockBatchError(404, 'json', resp));
       return messaging.sendMulticast(
-        {tokens: ['a']},
+        { tokens: ['a'] },
       ).should.eventually.be.rejectedWith('test error message')
         .and.have.property('code', 'messaging/registration-token-not-registered');
     });
@@ -1083,16 +1083,16 @@ describe('Messaging', () => {
       };
       mockedRequests.push(mockBatchError(404, 'json', resp));
       return messaging.sendMulticast(
-        {tokens: ['a']},
+        { tokens: ['a'] },
       ).should.eventually.be.rejectedWith('test error message')
         .and.have.property('code', 'messaging/registration-token-not-registered');
     });
 
     it('should fail when the backend server returns an unknown error', () => {
-      const resp = {error: 'test error message'};
+      const resp = { error: 'test error message' };
       mockedRequests.push(mockBatchError(400, 'json', resp));
       return messaging.sendMulticast(
-        {tokens: ['a']},
+        { tokens: ['a'] },
       ).should.eventually.be.rejected.and.have.property('code', 'messaging/unknown-error');
     });
 
@@ -1100,13 +1100,13 @@ describe('Messaging', () => {
       // Error code will be determined based on the status code.
       mockedRequests.push(mockBatchError(400, 'text', 'foo bar'));
       return messaging.sendMulticast(
-        {tokens: ['a']},
+        { tokens: ['a'] },
       ).should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
     });
 
     it('should be rejected given an app which returns null access tokens', () => {
       return nullAccessTokenMessaging.sendMulticast(
-        {tokens: ['a']},
+        { tokens: ['a'] },
       ).should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
     });
 
@@ -2590,49 +2590,49 @@ describe('Messaging', () => {
     invalidObjects.forEach((arg) => {
       it(`should throw given invalid android config: ${JSON.stringify(arg)}`, () => {
         expect(() => {
-          messaging.send({android: arg, topic: 'test'});
+          messaging.send({ android: arg, topic: 'test' });
         }).to.throw('android must be a non-null object');
       });
 
       it(`should throw given invalid android notification: ${JSON.stringify(arg)}`, () => {
         expect(() => {
-          messaging.send({android: {notification: arg}, topic: 'test'});
+          messaging.send({ android: { notification: arg }, topic: 'test' });
         }).to.throw('android.notification must be a non-null object');
       });
 
       it(`should throw given invalid apns config: ${JSON.stringify(arg)}`, () => {
         expect(() => {
-          messaging.send({apns: arg, topic: 'test'});
+          messaging.send({ apns: arg, topic: 'test' });
         }).to.throw('apns must be a non-null object');
       });
 
       it(`should throw given invalid webpush config: ${JSON.stringify(arg)}`, () => {
         expect(() => {
-          messaging.send({webpush: arg, topic: 'test'});
+          messaging.send({ webpush: arg, topic: 'test' });
         }).to.throw('webpush must be a non-null object');
       });
 
       it(`should throw given invalid data: ${JSON.stringify(arg)}`, () => {
         expect(() => {
-          messaging.send({data: arg, topic: 'test'});
+          messaging.send({ data: arg, topic: 'test' });
         }).to.throw('data must be a non-null object');
       });
 
       it(`should throw given invalid fcmOptions: ${JSON.stringify(arg)}`, () => {
         expect(() => {
-          messaging.send({fcmOptions: arg, topic: 'test'});
+          messaging.send({ fcmOptions: arg, topic: 'test' });
         }).to.throw('fcmOptions must be a non-null object');
       });
 
       it(`should throw given invalid AndroidFcmOptions: ${JSON.stringify(arg)}`, () => {
         expect(() => {
-          messaging.send({android: {fcmOptions: arg}, topic: 'test'});
+          messaging.send({ android: { fcmOptions: arg }, topic: 'test' });
         }).to.throw('fcmOptions must be a non-null object');
       });
 
       it(`should throw given invalid ApnsFcmOptions: ${JSON.stringify(arg)}`, () => {
         expect(() => {
-          messaging.send({apns: {fcmOptions: arg}, topic: 'test'});
+          messaging.send({ apns: { fcmOptions: arg }, topic: 'test' });
         }).to.throw('fcmOptions must be a non-null object');
       });
     });
@@ -2640,17 +2640,17 @@ describe('Messaging', () => {
     invalidImages.forEach((imageUrl) => {
       it(`should throw given invalid URL string for imageUrl`, () => {
         expect(() => {
-          messaging.send({apns: {fcmOptions: {imageUrl}}, topic: 'test'});
+          messaging.send({ apns: { fcmOptions: { imageUrl } }, topic: 'test' });
         }).to.throw('imageUrl must be a valid URL string');
       });
     });
 
     const invalidDataMessages: any[] = [
-      {label: 'data', message: {data: {k1: true}}},
-      {label: 'android.data', message: {android: {data: {k1: true}}}},
-      {label: 'webpush.data', message: {webpush: {data: {k1: true}}}},
-      {label: 'webpush.headers', message: {webpush: {headers: {k1: true}}}},
-      {label: 'apns.headers', message: {apns: {headers: {k1: true}}}},
+      { label: 'data', message: { data: { k1: true } } },
+      { label: 'android.data', message: { android: { data: { k1: true } } } },
+      { label: 'webpush.data', message: { webpush: { data: { k1: true } } } },
+      { label: 'webpush.headers', message: { webpush: { headers: { k1: true } } } },
+      { label: 'apns.headers', message: { apns: { headers: { k1: true } } } },
     ];
     invalidDataMessages.forEach((config) => {
       it(`should throw given data with non-string value: ${config.label}`, () => {
@@ -2666,14 +2666,14 @@ describe('Messaging', () => {
     invalidApnsPayloads.forEach((payload) => {
       it(`should throw given APNS payload with invalid object: ${JSON.stringify(payload)}`, () => {
         expect(() => {
-          messaging.send({apns: {payload}, token: 'token'});
+          messaging.send({ apns: { payload }, token: 'token' });
         }).to.throw('apns.payload must be a non-null object');
       });
     });
     invalidApnsPayloads.forEach((aps) => {
       it(`should throw given APNS payload with invalid aps object: ${JSON.stringify(aps)}`, () => {
         expect(() => {
-          messaging.send({apns: {payload: {aps}}, token: 'token'});
+          messaging.send({ apns: { payload: { aps } }, token: 'token' });
         }).to.throw('apns.payload.aps must be a non-null object');
       });
     });
@@ -2682,7 +2682,7 @@ describe('Messaging', () => {
         messaging.send({
           apns: {
             payload: {
-              aps: {'mutableContent': true, 'mutable-content': 1},
+              aps: { 'mutableContent': true, 'mutable-content': 1 },
             },
           },
           token: 'token',
@@ -2694,7 +2694,7 @@ describe('Messaging', () => {
     invalidApnsAlerts.forEach((alert) => {
       it(`should throw given APNS payload with invalid aps alert: ${JSON.stringify(alert)}`, () => {
         expect(() => {
-          messaging.send({apns: {payload: {aps: {alert}}}, token: 'token'});
+          messaging.send({ apns: { payload: { aps: { alert } } }, token: 'token' });
         }).to.throw('apns.payload.aps.alert must be a string or a non-null object');
       });
     });
@@ -2703,7 +2703,7 @@ describe('Messaging', () => {
     invalidApnsSounds.forEach((sound) => {
       it(`should throw given APNS payload with invalid aps sound: ${JSON.stringify(sound)}`, () => {
         expect(() => {
-          messaging.send({apns: {payload: {aps: {sound}}}, token: 'token'});
+          messaging.send({ apns: { payload: { aps: { sound } } }, token: 'token' });
         }).to.throw('apns.payload.aps.sound must be a non-empty string or a non-null object');
       });
     });
@@ -2714,7 +2714,7 @@ describe('Messaging', () => {
           apns: {
             payload: {
               aps: {
-                sound: {name},
+                sound: { name },
               },
             },
           },
@@ -3283,7 +3283,7 @@ describe('Messaging', () => {
                 threadId: 'thread.id',
               },
               customKey1: 'custom.value',
-              customKey2: {nested: 'value'},
+              customKey2: { nested: 'value' },
             },
             fcmOptions: {
               analyticsLabel: 'test.analytics',
@@ -3320,7 +3320,7 @@ describe('Messaging', () => {
                 'thread-id': 'thread.id',
               },
               customKey1: 'custom.value',
-              customKey2: {nested: 'value'},
+              customKey2: { nested: 'value' },
             },
             fcmOptions: {
               analyticsLabel: 'test.analytics',
@@ -3444,7 +3444,7 @@ describe('Messaging', () => {
         expectedReq: {
           apns: {
             payload: {
-              aps: {'content-available': 1},
+              aps: { 'content-available': 1 },
             },
           },
         },
@@ -3498,7 +3498,7 @@ describe('Messaging', () => {
         // Wait for the initial getToken() call to complete before stubbing https.request.
         return mockApp.INTERNAL.getToken()
           .then(() => {
-            const resp = utils.responseFrom({message: 'test'});
+            const resp = utils.responseFrom({ message: 'test' });
             httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(resp);
             const req = config.req;
             req.token = 'mock-token';
@@ -3509,7 +3509,7 @@ describe('Messaging', () => {
             expectedReq.token = 'mock-token';
             expect(httpsRequestStub).to.have.been.calledOnce.and.calledWith({
               method: 'POST',
-              data: {message: expectedReq},
+              data: { message: expectedReq },
               timeout: 10000,
               url: 'https://fcm.googleapis.com/v1/projects/project_id/messages:send',
               headers: expectedHeaders,
@@ -3521,14 +3521,14 @@ describe('Messaging', () => {
     it('should not throw when the message is addressed to the prefixed topic name', () => {
       return mockApp.INTERNAL.getToken()
         .then(() => {
-          const resp = utils.responseFrom({message: 'test'});
+          const resp = utils.responseFrom({ message: 'test' });
           httpsRequestStub = sinon.stub(HttpClient.prototype, 'send').resolves(resp);
-          return messaging.send({topic: '/topics/mock-topic'});
+          return messaging.send({ topic: '/topics/mock-topic' });
         })
         .then(() => {
           expect(httpsRequestStub).to.have.been.calledOnce;
           const requestData = httpsRequestStub.args[0][0].data;
-          const expectedReq = {topic: 'mock-topic'};
+          const expectedReq = { topic: 'mock-topic' };
           expect(requestData.message).to.deep.equal(expectedReq);
         });
     });

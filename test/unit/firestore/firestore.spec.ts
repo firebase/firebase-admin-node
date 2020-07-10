@@ -17,12 +17,12 @@
 'use strict';
 
 import * as _ from 'lodash';
-import {expect} from 'chai';
+import { expect } from 'chai';
 
 import * as mocks from '../../resources/mocks';
-import {FirebaseApp} from '../../../src/firebase-app';
+import { FirebaseApp } from '../../../src/firebase-app';
 import { ComputeEngineCredential, RefreshTokenCredential } from '../../../src/auth/credential';
-import {FirestoreService, getFirestoreOptions} from '../../../src/firestore/firestore';
+import { FirestoreService, getFirestoreOptions } from '../../../src/firestore/firestore';
 
 describe('Firestore', () => {
   let mockApp: FirebaseApp;

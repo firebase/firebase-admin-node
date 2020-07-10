@@ -15,8 +15,8 @@
  */
 
 import * as validator from '../utils/validator';
-import {deepCopy} from '../utils/deep-copy';
-import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
+import { deepCopy } from '../utils/deep-copy';
+import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 
 
 /** The filter interface used for listing provider configurations. */
@@ -306,7 +306,7 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
       };
       if (options.x509Certificates) {
         for (const cert of (options.x509Certificates || [])) {
-          request.idpConfig!.idpCertificates!.push({x509Certificate: cert});
+          request.idpConfig!.idpCertificates!.push({ x509Certificate: cert });
         }
       }
     }

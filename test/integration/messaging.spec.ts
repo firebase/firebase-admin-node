@@ -125,7 +125,7 @@ describe('admin.messaging', () => {
   it('sendAll(500)', () => {
     const messages: admin.messaging.Message[] = [];
     for (let i = 0; i < 500; i++) {
-      messages.push({topic: `foo-bar-${i % 10}`});
+      messages.push({ topic: `foo-bar-${i % 10}` });
     }
     return admin.messaging().sendAll(messages, true)
       .then((response) => {
