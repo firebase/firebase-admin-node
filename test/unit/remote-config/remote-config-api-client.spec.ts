@@ -344,8 +344,7 @@ describe('RemoteConfigApiClient', () => {
         stubs.push(stub);
         const expected = new FirebaseRemoteConfigError('failed-precondition', message);
         return apiClient.validateTemplate(REMOTE_CONFIG_TEMPLATE)
-          .should.eventually.be.rejectedWith(expected.message)
-          .and.have.property('code', expected.code);
+          .should.eventually.be.rejected.and.deep.include(expected);
       });
     });
   });
@@ -440,8 +439,7 @@ describe('RemoteConfigApiClient', () => {
         stubs.push(stub);
         const expected = new FirebaseRemoteConfigError('failed-precondition', message);
         return apiClient.publishTemplate(REMOTE_CONFIG_TEMPLATE)
-          .should.eventually.be.rejectedWith(expected.message)
-          .and.have.property('code', expected.code);
+          .should.eventually.be.rejected.and.deep.include(expected);
       });
     });
   });
@@ -674,8 +672,7 @@ describe('RemoteConfigApiClient', () => {
       const expected = new FirebaseRemoteConfigError('invalid-argument',
         'ETag header is not present in the server response.');
       return rcOperation()
-        .should.eventually.be.rejectedWith(expected.message)
-        .and.have.property('code', expected.code);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
   }
 
@@ -687,8 +684,7 @@ describe('RemoteConfigApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseRemoteConfigError('not-found', 'Requested entity not found');
       return rcOperation()
-        .should.eventually.be.rejectedWith(expected.message)
-        .and.have.property('code', expected.code);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with unknown-error when error code is not present', () => {
@@ -698,8 +694,7 @@ describe('RemoteConfigApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseRemoteConfigError('unknown-error', 'Unknown server error: {}');
       return rcOperation()
-        .should.eventually.be.rejectedWith(expected.message)
-        .and.have.property('code', expected.code);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with unknown-error for non-json response', () => {
@@ -710,8 +705,7 @@ describe('RemoteConfigApiClient', () => {
       const expected = new FirebaseRemoteConfigError(
         'unknown-error', 'Unexpected response with status: 404 and body: not json');
       return rcOperation()
-        .should.eventually.be.rejectedWith(expected.message)
-        .and.have.property('code', expected.code);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject when rejected with a FirebaseAppError', () => {
@@ -721,8 +715,7 @@ describe('RemoteConfigApiClient', () => {
         .rejects(expected);
       stubs.push(stub);
       return rcOperation()
-        .should.eventually.be.rejectedWith(expected.message)
-        .and.have.property('code', expected.code);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
   }
 
