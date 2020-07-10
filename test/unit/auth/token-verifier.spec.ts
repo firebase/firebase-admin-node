@@ -28,10 +28,10 @@ import * as chaiAsPromised from 'chai-as-promised';
 import LegacyFirebaseTokenGenerator = require('firebase-token-generator');
 
 import * as mocks from '../../resources/mocks';
-import {FirebaseTokenGenerator, ServiceAccountSigner} from '../../../src/auth/token-generator';
+import { FirebaseTokenGenerator, ServiceAccountSigner } from '../../../src/auth/token-generator';
 import * as verifier from '../../../src/auth/token-verifier';
 
-import {ServiceAccountCredential} from '../../../src/auth/credential';
+import { ServiceAccountCredential } from '../../../src/auth/credential';
 import { AuthClientErrorCode } from '../../../src/utils/error';
 import { FirebaseApp } from '../../../src/firebase-app';
 
@@ -336,7 +336,7 @@ describe('FirebaseTokenVerifier', () => {
 
     it('should be rejected given a Firebase JWT token with no kid', () => {
       const mockIdToken = mocks.generateIdToken({
-        header: {foo: 'bar'},
+        header: { foo: 'bar' },
       });
       return tokenVerifier.verifyJWT(mockIdToken)
         .should.eventually.be.rejectedWith('Firebase ID token has no "kid" claim');

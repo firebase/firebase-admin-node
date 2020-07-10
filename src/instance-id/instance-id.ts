@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import {FirebaseApp} from '../firebase-app';
-import {FirebaseInstanceIdError, InstanceIdClientErrorCode} from '../utils/error';
-import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {FirebaseInstanceIdRequestHandler} from './instance-id-request';
+import { FirebaseApp } from '../firebase-app';
+import { FirebaseInstanceIdError, InstanceIdClientErrorCode } from '../utils/error';
+import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
+import { FirebaseInstanceIdRequestHandler } from './instance-id-request';
 
 import * as validator from '../utils/validator';
 

@@ -25,19 +25,19 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from './utils';
 import * as mocks from '../resources/mocks';
 
-import {GoogleOAuthAccessToken, ServiceAccountCredential} from '../../src/auth/credential';
-import {FirebaseServiceInterface} from '../../src/firebase-service';
-import {FirebaseApp, FirebaseAccessToken} from '../../src/firebase-app';
-import {FirebaseNamespace, FirebaseNamespaceInternals, FIREBASE_CONFIG_VAR} from '../../src/firebase-namespace';
+import { GoogleOAuthAccessToken, ServiceAccountCredential } from '../../src/auth/credential';
+import { FirebaseServiceInterface } from '../../src/firebase-service';
+import { FirebaseApp, FirebaseAccessToken } from '../../src/firebase-app';
+import { FirebaseNamespace, FirebaseNamespaceInternals, FIREBASE_CONFIG_VAR } from '../../src/firebase-namespace';
 
-import {Auth} from '../../src/auth/auth';
-import {Messaging} from '../../src/messaging/messaging';
-import {MachineLearning} from '../../src/machine-learning/machine-learning';
-import {Storage} from '../../src/storage/storage';
-import {Firestore} from '@google-cloud/firestore';
-import {Database} from '@firebase/database';
-import {InstanceId} from '../../src/instance-id/instance-id';
-import {ProjectManagement} from '../../src/project-management/project-management';
+import { Auth } from '../../src/auth/auth';
+import { Messaging } from '../../src/messaging/messaging';
+import { MachineLearning } from '../../src/machine-learning/machine-learning';
+import { Storage } from '../../src/storage/storage';
+import { Firestore } from '@google-cloud/firestore';
+import { Database } from '@firebase/database';
+import { InstanceId } from '../../src/instance-id/instance-id';
+import { ProjectManagement } from '../../src/project-management/project-management';
 import { SecurityRules } from '../../src/security-rules/security-rules';
 import { FirebaseAppError, AppErrorCodes } from '../../src/utils/error';
 import { RemoteConfig } from '../../src/remote-config/remote-config';
@@ -728,7 +728,7 @@ describe('FirebaseApp', () => {
         getAccessToken: () => Promise.resolve(oracle),
       };
 
-      const app = utils.createAppWithOptions({credential});
+      const app = utils.createAppWithOptions({ credential });
 
       return app.INTERNAL.getToken().then((token) => {
         expect(token.accessToken).to.equal(oracle.access_token);

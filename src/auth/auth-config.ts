@@ -15,8 +15,8 @@
  */
 
 import * as validator from '../utils/validator';
-import {deepCopy} from '../utils/deep-copy';
-import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
+import { deepCopy } from '../utils/deep-copy';
+import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 
 /** A maximum of 10 test phone number / code pairs can be configured. */
 export const MAXIMUM_TEST_PHONE_NUMBERS = 10;
@@ -235,6 +235,10 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
         }
         request.enabledProviders.push(AUTH_FACTOR_CLIENT_TO_SERVER_TYPE[factorId]);
       });
+      // In case an empty array is passed. Ensure it gets populated so the array is cleared.
+      if (options.factorIds && options.factorIds.length === 0) {
+        request.enabledProviders = [];
+      }
     }
     return request;
   }
@@ -510,7 +514,7 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
       };
       if (options.x509Certificates) {
         for (const cert of (options.x509Certificates || [])) {
-          request.idpConfig!.idpCertificates!.push({x509Certificate: cert});
+          request.idpConfig!.idpCertificates!.push({ x509Certificate: cert });
         }
       }
     }

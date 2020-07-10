@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {renameProperties} from '../utils/index';
+import { renameProperties } from '../utils/index';
 import {
   MessagingClientErrorCode, FirebaseMessagingError, FirebaseArrayIndexError, FirebaseError,
 } from '../utils/error';

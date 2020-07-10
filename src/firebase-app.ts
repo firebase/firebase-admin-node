@@ -14,28 +14,28 @@
  * limitations under the License.
  */
 
-import {Credential, GoogleOAuthAccessToken, getApplicationDefault} from './auth/credential';
+import { Credential, GoogleOAuthAccessToken, getApplicationDefault } from './auth/credential';
 import * as validator from './utils/validator';
-import {deepCopy, deepExtend} from './utils/deep-copy';
-import {FirebaseServiceInterface} from './firebase-service';
-import {FirebaseNamespaceInternals} from './firebase-namespace';
-import {AppErrorCodes, FirebaseAppError} from './utils/error';
+import { deepCopy, deepExtend } from './utils/deep-copy';
+import { FirebaseServiceInterface } from './firebase-service';
+import { FirebaseNamespaceInternals } from './firebase-namespace';
+import { AppErrorCodes, FirebaseAppError } from './utils/error';
 
-import {Auth} from './auth/auth';
-import {MachineLearning} from './machine-learning/machine-learning';
-import {Messaging} from './messaging/messaging';
-import {Storage} from './storage/storage';
-import {Database} from '@firebase/database';
-import {DatabaseService} from './database/database';
-import {Firestore} from '@google-cloud/firestore';
-import {FirestoreService} from './firestore/firestore';
-import {InstanceId} from './instance-id/instance-id';
+import { Auth } from './auth/auth';
+import { MachineLearning } from './machine-learning/machine-learning';
+import { Messaging } from './messaging/messaging';
+import { Storage } from './storage/storage';
+import { Database } from '@firebase/database';
+import { DatabaseService } from './database/database';
+import { Firestore } from '@google-cloud/firestore';
+import { FirestoreService } from './firestore/firestore';
+import { InstanceId } from './instance-id/instance-id';
 
-import {ProjectManagement} from './project-management/project-management';
-import {SecurityRules} from './security-rules/security-rules';
+import { ProjectManagement } from './project-management/project-management';
+import { SecurityRules } from './security-rules/security-rules';
 import { RemoteConfig } from './remote-config/remote-config';
 
-import {Agent} from 'http';
+import { Agent } from 'http';
 
 /**
  * Type representing a callback which is called every time an app lifecycle event occurs.

@@ -15,7 +15,7 @@
  */
 
 import * as _ from 'lodash';
-import {expect} from 'chai';
+import { expect } from 'chai';
 import * as sinon from 'sinon';
 
 import * as mocks from '../../resources/mocks';
@@ -23,8 +23,8 @@ import {
   addReadonlyGetter, getExplicitProjectId, findProjectId,
   toWebSafeBase64, formatString, generateUpdateMask,
 } from '../../../src/utils/index';
-import {isNonEmptyString} from '../../../src/utils/validator';
-import {FirebaseApp, FirebaseAppOptions} from '../../../src/firebase-app';
+import { isNonEmptyString } from '../../../src/utils/validator';
+import { FirebaseApp, FirebaseAppOptions } from '../../../src/firebase-app';
 import { ComputeEngineCredential } from '../../../src/auth/credential';
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';
@@ -347,6 +347,7 @@ describe('generateUpdateMask()', () => {
     l: {
       m: undefined,
     },
+    n: [],
   };
   const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
   nonObjects.forEach((nonObject) => {
@@ -361,15 +362,15 @@ describe('generateUpdateMask()', () => {
 
   it('should return expected update mask array for nested object', () => {
     const expectedMaskArray = [
-      'b', 'c', 'd', 'e', 'f.g', 'f.h', 'f.i.j', 'k.i', 'l',
+      'b', 'c', 'd', 'e', 'f.g', 'f.h', 'f.i.j', 'k.i', 'l', 'n',
     ];
     expect(generateUpdateMask(obj)).to.deep.equal(expectedMaskArray);
   });
 
   it('should return expected update mask array with max paths for nested object', () => {
     expect(generateUpdateMask(obj, ['f.i', 'k']))
-      .to.deep.equal(['b', 'c', 'd', 'e', 'f.g', 'f.h', 'f.i', 'k', 'l']);
+      .to.deep.equal(['b', 'c', 'd', 'e', 'f.g', 'f.h', 'f.i', 'k', 'l', 'n']);
     expect(generateUpdateMask(obj, ['notfound', 'b', 'f', 'k', 'l']))
-      .to.deep.equal(['b', 'c', 'd', 'e', 'f', 'k', 'l']);
+      .to.deep.equal(['b', 'c', 'd', 'e', 'f', 'k', 'l', 'n']);
   });
 });

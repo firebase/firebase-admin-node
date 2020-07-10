@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import {deepCopy} from '../utils/deep-copy';
-import {isNonNullObject} from '../utils/validator';
+import { deepCopy } from '../utils/deep-copy';
+import { isNonNullObject } from '../utils/validator';
 import * as utils from '../utils';
-import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
+import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 
 /**
  * 'REDACTED', encoded as a base64 string.

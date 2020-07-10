@@ -26,13 +26,13 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
-import {Auth, TenantAwareAuth, BaseAuth, DecodedIdToken} from '../../../src/auth/auth';
-import {UserRecord, UpdateRequest} from '../../../src/auth/user-record';
-import {FirebaseApp} from '../../../src/firebase-app';
+import { Auth, TenantAwareAuth, BaseAuth, DecodedIdToken } from '../../../src/auth/auth';
+import { UserRecord, UpdateRequest } from '../../../src/auth/user-record';
+import { FirebaseApp } from '../../../src/firebase-app';
 import {
   AuthRequestHandler, TenantAwareAuthRequestHandler, AbstractAuthRequestHandler,
 } from '../../../src/auth/auth-api-request';
-import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/utils/error';
+import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
 
 import * as validator from '../../../src/utils/validator';
 import { FirebaseTokenVerifier } from '../../../src/auth/token-verifier';
@@ -40,7 +40,7 @@ import {
   AuthProviderConfigFilter, OIDCConfig, SAMLConfig,
   OIDCConfigServerResponse, SAMLConfigServerResponse,
 } from '../../../src/auth/auth-config';
-import {deepCopy} from '../../../src/utils/deep-copy';
+import { deepCopy } from '../../../src/utils/deep-copy';
 import { TenantManager } from '../../../src/auth/tenant-manager';
 import { ServiceAccountCredential } from '../../../src/auth/credential';
 import { HttpClient } from '../../../src/utils/api-request';
@@ -220,8 +220,8 @@ function getSAMLConfigServerResponse(providerId: string): SAMLConfigServerRespon
       ssoUrl: 'https://example.com/login',
       signRequest: true,
       idpCertificates: [
-        {x509Certificate: 'CERT1'},
-        {x509Certificate: 'CERT2'},
+        { x509Certificate: 'CERT1' },
+        { x509Certificate: 'CERT2' },
       ],
     },
     spConfig: {
@@ -353,7 +353,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
     describe('createCustomToken()', () => {
       it('should return a jwt', async () => {
         const token = await auth.createCustomToken('uid1');
-        const decodedToken = jwt.decode(token, {complete: true});
+        const decodedToken = jwt.decode(token, { complete: true });
         expect(decodedToken).to.have.property('header').that.has.property('typ', 'JWT');
       });
 
@@ -1171,7 +1171,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         const stub = sinon.stub(testConfig.RequestHandler.prototype, 'getAccountInfoByIdentifiers')
           .resolves({});
         stubs.push(stub);
-        const notFoundIds = [{uid: 'id that doesnt exist'}];
+        const notFoundIds = [{ uid: 'id that doesnt exist' }];
         return auth.getUsers(notFoundIds)
           .then((getUsersResult) => {
             expect(getUsersResult.users).to.deep.equal([]);
@@ -1203,7 +1203,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         }];
 
         const stub = sinon.stub(testConfig.RequestHandler.prototype, 'getAccountInfoByIdentifiers')
-          .resolves({users: mockUsers});
+          .resolves({ users: mockUsers });
         stubs.push(stub);
 
         const users = await auth.getUsers([
@@ -1215,13 +1215,13 @@ AUTH_CONFIGS.forEach((testConfig) => {
         ]);
 
         expect(users.users).to.have.deep.members(mockUsers.map((u) => new UserRecord(u)));
-        expect(users.notFound).to.have.deep.members([{uid: 'this-user-doesnt-exist'}]);
+        expect(users.notFound).to.have.deep.members([{ uid: 'this-user-doesnt-exist' }]);
       });
     });
 
     describe('deleteUser()', () => {
       const uid = 'abcdefghijklmnopqrstuvwxyz';
-      const expectedDeleteAccountResult = {kind: 'identitytoolkit#DeleteAccountResponse'};
+      const expectedDeleteAccountResult = { kind: 'identitytoolkit#DeleteAccountResponse' };
       const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
 
       // Stubs used to simulate underlying api calls.
@@ -1732,17 +1732,17 @@ AUTH_CONFIGS.forEach((testConfig) => {
       const maxResult = 500;
       const downloadAccountResponse: any = {
         users: [
-          {localId: 'UID1'},
-          {localId: 'UID2'},
-          {localId: 'UID3'},
+          { localId: 'UID1' },
+          { localId: 'UID2' },
+          { localId: 'UID3' },
         ],
         nextPageToken: 'NEXT_PAGE_TOKEN',
       };
       const expectedResult: any = {
         users: [
-          new UserRecord({localId: 'UID1'}),
-          new UserRecord({localId: 'UID2'}),
-          new UserRecord({localId: 'UID3'}),
+          new UserRecord({ localId: 'UID1' }),
+          new UserRecord({ localId: 'UID2' }),
+          new UserRecord({ localId: 'UID3' }),
         ],
         pageToken: 'NEXT_PAGE_TOKEN',
       };
@@ -1949,8 +1949,8 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
     describe('importUsers()', () => {
       const users = [
-        {uid: '1234', email: 'user@example.com', passwordHash: Buffer.from('password')},
-        {uid: '5678', phoneNumber: 'invalid'},
+        { uid: '1234', email: 'user@example.com', passwordHash: Buffer.from('password') },
+        { uid: '5678', phoneNumber: 'invalid' },
       ];
       const options = {
         hash: {
@@ -2034,7 +2034,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
               .throws(expectedOptionsError);
         stubs.push(uploadAccountStub);
         expect(() => {
-          return auth.importUsers(users, {hash: {algorithm: 'invalid' as any}});
+          return auth.importUsers(users, { hash: { algorithm: 'invalid' as any } });
         }).to.throw(expectedOptionsError);
       });
 
@@ -2072,7 +2072,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
     describe('createSessionCookie()', () => {
       const tenantId = testConfig.supportsTenantManagement ? undefined : TENANT_ID;
       const idToken = 'ID_TOKEN';
-      const options = {expiresIn: 60 * 60 * 24 * 1000};
+      const options = { expiresIn: 60 * 60 * 24 * 1000 };
       const sessionCookie = 'SESSION_COOKIE';
       const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_ID_TOKEN);
       const expectedUserRecord = getValidUserRecord(getValidGetAccountInfoResponse(tenantId));
@@ -2138,7 +2138,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         stubs.push(sinon.stub(testConfig.Auth.prototype, 'verifyIdToken')
           .returns(Promise.resolve(decodedIdToken)));
         // 1 minute duration.
-        const invalidOptions = {expiresIn: 60 * 1000};
+        const invalidOptions = { expiresIn: 60 * 1000 };
         return auth.createSessionCookie(idToken, invalidOptions)
           .should.eventually.be.rejected.and.have.property(
             'code', 'auth/invalid-session-cookie-duration');
@@ -2234,9 +2234,9 @@ AUTH_CONFIGS.forEach((testConfig) => {
     });
 
     const emailActionFlows: EmailActionTest[] = [
-      {api: 'generatePasswordResetLink', requestType: 'PASSWORD_RESET', requiresSettings: false},
-      {api: 'generateEmailVerificationLink', requestType: 'VERIFY_EMAIL', requiresSettings: false},
-      {api: 'generateSignInWithEmailLink', requestType: 'EMAIL_SIGNIN', requiresSettings: true},
+      { api: 'generatePasswordResetLink', requestType: 'PASSWORD_RESET', requiresSettings: false },
+      { api: 'generateEmailVerificationLink', requestType: 'VERIFY_EMAIL', requiresSettings: false },
+      { api: 'generateSignInWithEmailLink', requestType: 'EMAIL_SIGNIN', requiresSettings: true },
     ];
     emailActionFlows.forEach((emailActionFlow) => {
       describe(`${emailActionFlow.api}()`, () => {
@@ -2448,8 +2448,8 @@ AUTH_CONFIGS.forEach((testConfig) => {
             ssoUrl: 'https://example.com/login',
             signRequest: true,
             idpCertificates: [
-              {x509Certificate: 'CERT1'},
-              {x509Certificate: 'CERT2'},
+              { x509Certificate: 'CERT1' },
+              { x509Certificate: 'CERT2' },
             ],
           },
           spConfig: {
@@ -2584,7 +2584,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .stub(testConfig.RequestHandler.prototype, 'listOAuthIdpConfigs')
             .resolves(listConfigsResponse);
           stubs.push(listConfigsStub);
-          return (auth as Auth).listProviderConfigs({type: 'oidc'})
+          return (auth as Auth).listProviderConfigs({ type: 'oidc' })
             .then((response) => {
               expect(response).to.deep.equal(expectedResult);
               // Confirm underlying API called with expected parameters.
@@ -2679,7 +2679,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .stub(testConfig.RequestHandler.prototype, 'listInboundSamlConfigs')
             .resolves(listConfigsResponse);
           stubs.push(listConfigsStub);
-          return (auth as Auth).listProviderConfigs({type: 'saml'})
+          return (auth as Auth).listProviderConfigs({ type: 'saml' })
             .then((response) => {
               expect(response).to.deep.equal(expectedResult);
               // Confirm underlying API called with expected parameters.
@@ -2966,8 +2966,8 @@ AUTH_CONFIGS.forEach((testConfig) => {
             ssoUrl: 'https://example.com/login',
             signRequest: true,
             idpCertificates: [
-              {x509Certificate: 'CERT1'},
-              {x509Certificate: 'CERT2'},
+              { x509Certificate: 'CERT1' },
+              { x509Certificate: 'CERT2' },
             ],
           },
           spConfig: {
@@ -3133,8 +3133,8 @@ AUTH_CONFIGS.forEach((testConfig) => {
             ssoUrl: 'https://example.com/login',
             signRequest: true,
             idpCertificates: [
-              {x509Certificate: 'CERT1'},
-              {x509Certificate: 'CERT2'},
+              { x509Certificate: 'CERT1' },
+              { x509Certificate: 'CERT2' },
             ],
           },
           spConfig: {

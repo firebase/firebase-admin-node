@@ -17,7 +17,7 @@
 import * as admin from '../../lib/index';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import {defaultApp, nullApp, nonNullApp, cmdArgs, databaseUrl} from './setup';
+import { defaultApp, nullApp, nonNullApp, cmdArgs, databaseUrl } from './setup';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const chalk = require('chalk');

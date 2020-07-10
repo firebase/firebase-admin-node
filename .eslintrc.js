@@ -36,6 +36,7 @@ module.exports = {
 
     // Required checks
     'indent': ['error', 2],
+    "object-curly-spacing": [2, "always"],
     '@typescript-eslint/explicit-function-return-type': [
       'error',
       {

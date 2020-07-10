@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-import {UserRecord, CreateRequest, UpdateRequest} from './user-record';
+import { UserRecord, CreateRequest, UpdateRequest } from './user-record';
 import {
   UserIdentifier, isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, isProviderIdentifier,
 } from './identifier';
-import {FirebaseApp} from '../firebase-app';
-import {FirebaseTokenGenerator, cryptoSignerFromApp} from './token-generator';
+import { FirebaseApp } from '../firebase-app';
+import { FirebaseTokenGenerator, cryptoSignerFromApp } from './token-generator';
 import {
   AbstractAuthRequestHandler, AuthRequestHandler, TenantAwareAuthRequestHandler,
 } from './auth-api-request';
-import {AuthClientErrorCode, FirebaseAuthError, ErrorInfo, FirebaseArrayIndexError} from '../utils/error';
-import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
+import { AuthClientErrorCode, FirebaseAuthError, ErrorInfo, FirebaseArrayIndexError } from '../utils/error';
+import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import {
   UserImportOptions, UserImportRecord, UserImportResult,
 } from './user-import-builder';
@@ -32,12 +32,12 @@ import {
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier } from './token-verifier';
-import {ActionCodeSettings} from './action-code-settings-builder';
+import { ActionCodeSettings } from './action-code-settings-builder';
 import {
   AuthProviderConfig, AuthProviderConfigFilter, ListProviderConfigResults, UpdateAuthProviderRequest,
   SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
 } from './auth-config';
-import {TenantManager} from './tenant-manager';
+import { TenantManager } from './tenant-manager';
 
 
 /**

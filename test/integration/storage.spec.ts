@@ -17,9 +17,9 @@
 import * as admin from '../../lib/index';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import {Bucket, File} from '@google-cloud/storage';
+import { Bucket, File } from '@google-cloud/storage';
 
-import {projectId} from './setup';
+import { projectId } from './setup';
 
 chai.should();
 chai.use(chaiAsPromised);

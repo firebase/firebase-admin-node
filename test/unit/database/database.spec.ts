@@ -17,13 +17,13 @@
 'use strict';
 
 import * as _ from 'lodash';
-import {expect} from 'chai';
+import { expect } from 'chai';
 import * as sinon from 'sinon';
 
 import * as mocks from '../../resources/mocks';
-import {FirebaseApp} from '../../../src/firebase-app';
-import {DatabaseService} from '../../../src/database/database';
-import {Database} from '@firebase/database';
+import { FirebaseApp } from '../../../src/firebase-app';
+import { DatabaseService } from '../../../src/database/database';
+import { Database } from '@firebase/database';
 import * as utils from '../utils';
 import { HttpClient, HttpRequestConfig } from '../../../src/utils/api-request';
 
@@ -165,7 +165,7 @@ describe('Database', () => {
       };
 
       if (strict) {
-        params.data = {format: 'strict'};
+        params.data = { format: 'strict' };
       }
 
       return params;
@@ -228,7 +228,7 @@ describe('Database', () => {
 
       it('should throw if the server responds with a well-formed error', () => {
         const db: Database = database.getDatabase();
-        stubErrorResponse({error: 'test error'});
+        stubErrorResponse({ error: 'test error' });
         return db.getRules().should.eventually.be.rejectedWith(
           'Error while accessing security rules: test error');
       });
@@ -282,7 +282,7 @@ describe('Database', () => {
 
       it('should throw if the server responds with a well-formed error', () => {
         const db: Database = database.getDatabase();
-        stubErrorResponse({error: 'test error'});
+        stubErrorResponse({ error: 'test error' });
         return db.getRulesJSON().should.eventually.be.rejectedWith(
           'Error while accessing security rules: test error');
       });
@@ -386,7 +386,7 @@ describe('Database', () => {
 
       it('should throw if the server responds with a well-formed error', () => {
         const db: Database = database.getDatabase();
-        stubErrorResponse({error: 'test error'});
+        stubErrorResponse({ error: 'test error' });
         return db.setRules(rules).should.eventually.be.rejectedWith(
           'Error while accessing security rules: test error');
       });
