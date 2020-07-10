@@ -231,6 +231,16 @@ describe('MultiFactorAuthConfig', () => {
       });
     });
 
+    it('should return empty enabledProviders when an empty "options.factorIds" is provided', () => {
+      expect(MultiFactorAuthConfig.buildServerRequest({
+        state: 'DISABLED',
+        factorIds: [],
+      })).to.deep.equal({
+        state: 'DISABLED',
+        enabledProviders: [],
+      });
+    });
+
     const invalidOptions = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
     invalidOptions.forEach((options) => {
       it('should throw on invalid MultiFactorAuthConfig:' + JSON.stringify(options), () => {
