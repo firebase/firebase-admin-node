@@ -246,7 +246,7 @@ describe('admin.machineLearning', () => {
           modelOptions.tfliteModel!.gcsTfliteUri = fileName;
           return createTemporaryModel(modelOptions)
             .then((createdModel) => {
-              expect(createdModel.validationError).to.be.empty;
+              expect(createdModel.validationError).to.be.undefined;
               expect(createdModel.published).to.be.false;
               return admin.machineLearning().publishModel(createdModel.modelId)
                 .then((publishedModel) => {
@@ -281,7 +281,7 @@ describe('admin.machineLearning', () => {
           modelOptions.tfliteModel!.gcsTfliteUri = fileName;
           return createTemporaryModel(modelOptions)
             .then((createdModel) => {
-              expect(createdModel.validationError).to.be.empty;
+              expect(createdModel.validationError).to.be.undefined;
               expect(createdModel.published).to.be.false;
               return admin.machineLearning().publishModel(createdModel.modelId)
                 .then((publishedModel) => {
@@ -362,7 +362,7 @@ describe('admin.machineLearning', () => {
           expect(modelList.models.length).to.be.at.least(2);
           expect(modelList.models).to.deep.include(model1);
           expect(modelList.models).to.deep.include(model2);
-          expect(modelList.pageToken).to.be.empty;
+          expect(modelList.pageToken).to.be.undefined;
         });
     });
 
@@ -370,7 +370,7 @@ describe('admin.machineLearning', () => {
       return admin.machineLearning().listModels({ pageSize: 2 })
         .then((modelList) => {
           expect(modelList.models.length).to.equal(2);
-          expect(modelList.pageToken).not.to.be.empty;
+          expect(modelList.pageToken).not.to.be.undefined;
         });
     });
 
@@ -379,7 +379,7 @@ describe('admin.machineLearning', () => {
         .then((modelList) => {
           expect(modelList.models.length).to.equal(1);
           expect(modelList.models[0]).to.deep.equal(model1);
-          expect(modelList.pageToken).to.be.empty;
+          expect(modelList.pageToken).to.be.undefined;
         });
     });
 
@@ -390,7 +390,7 @@ describe('admin.machineLearning', () => {
           expect(modelList.models).to.deep.include(model1);
           expect(modelList.models).to.deep.include(model2);
           expect(modelList.models).to.deep.include(model3);
-          expect(modelList.pageToken).to.be.empty;
+          expect(modelList.pageToken).to.be.undefined;
         });
     });
 
@@ -401,7 +401,7 @@ describe('admin.machineLearning', () => {
           expect(modelList.models).to.deep.include(model1);
           expect(modelList.models).to.deep.include(model2);
           expect(modelList.models).to.deep.include(model3);
-          expect(modelList.pageToken).to.be.empty;
+          expect(modelList.pageToken).to.be.undefined;
         });
     });
 
@@ -416,7 +416,7 @@ describe('admin.machineLearning', () => {
             pageToken: modelList.pageToken })
             .then((modelList2) => {
               expect(modelList2.models.length).to.be.at.least(1);
-              expect(modelList2.pageToken).to.be.empty;
+              expect(modelList2.pageToken).to.be.undefined;
             });
         });
     });
@@ -425,7 +425,7 @@ describe('admin.machineLearning', () => {
       return admin.machineLearning().listModels({ filter: 'displayName=non-existing-model' })
         .then((modelList) => {
           expect(modelList.models.length).to.equal(0);
-          expect(modelList.pageToken).to.be.empty;
+          expect(modelList.pageToken).to.be.undefined;
         });
     });
 
@@ -490,10 +490,10 @@ describe('admin.machineLearning', () => {
 function verifyTfliteModel(model: admin.machineLearning.Model, expectedGcsTfliteUri: string): void {
   expect(model.tfliteModel!.gcsTfliteUri).to.equal(expectedGcsTfliteUri);
   if (expectedGcsTfliteUri.endsWith('invalid_model.tflite')) {
-    expect(model.modelHash).to.be.empty;
+    expect(model.modelHash).to.be.undefined;
     expect(model.validationError).to.equal('Invalid flatbuffer format');
   } else {
-    expect(model.modelHash).to.not.be.empty;
-    expect(model.validationError).to.be.empty;
+    expect(model.modelHash).to.not.be.undefined;
+    expect(model.validationError).to.be.undefined;
   }
 }

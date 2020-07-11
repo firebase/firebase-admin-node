@@ -123,7 +123,7 @@ describe('SecurityRulesApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found');
       return apiClient.getRuleset(RULESET_NAME)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error when error code is not present', () => {
@@ -133,7 +133,7 @@ describe('SecurityRulesApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}');
       return apiClient.getRuleset(RULESET_NAME)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error for non-json response', () => {
@@ -144,7 +144,7 @@ describe('SecurityRulesApiClient', () => {
       const expected = new FirebaseSecurityRulesError(
         'unknown-error', 'Unexpected response with status: 404 and body: not json');
       return apiClient.getRuleset(RULESET_NAME)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw when rejected with a FirebaseAppError', () => {
@@ -154,7 +154,7 @@ describe('SecurityRulesApiClient', () => {
         .rejects(expected);
       stubs.push(stub);
       return apiClient.getRuleset(RULESET_NAME)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
   });
 
@@ -237,7 +237,7 @@ describe('SecurityRulesApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found');
       return apiClient.createRuleset(RULES_CONTENT)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw when the rulesets limit reached', () => {
@@ -254,7 +254,7 @@ describe('SecurityRulesApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError('resource-exhausted', resourceExhaustedError.error.message);
       return apiClient.createRuleset(RULES_CONTENT)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error when error code is not present', () => {
@@ -264,7 +264,7 @@ describe('SecurityRulesApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}');
       return apiClient.createRuleset(RULES_CONTENT)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error for non-json response', () => {
@@ -275,7 +275,7 @@ describe('SecurityRulesApiClient', () => {
       const expected = new FirebaseSecurityRulesError(
         'unknown-error', 'Unexpected response with status: 404 and body: not json');
       return apiClient.createRuleset(RULES_CONTENT)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw when rejected with a FirebaseAppError', () => {
@@ -285,7 +285,7 @@ describe('SecurityRulesApiClient', () => {
         .rejects(expected);
       stubs.push(stub);
       return apiClient.createRuleset(RULES_CONTENT)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
   });
 
@@ -390,7 +390,7 @@ describe('SecurityRulesApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found');
       return apiClient.listRulesets()
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error when error code is not present', () => {
@@ -400,7 +400,7 @@ describe('SecurityRulesApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}');
       return apiClient.listRulesets()
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error for non-json response', () => {
@@ -411,7 +411,7 @@ describe('SecurityRulesApiClient', () => {
       const expected = new FirebaseSecurityRulesError(
         'unknown-error', 'Unexpected response with status: 404 and body: not json');
       return apiClient.listRulesets()
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw when rejected with a FirebaseAppError', () => {
@@ -421,7 +421,7 @@ describe('SecurityRulesApiClient', () => {
         .rejects(expected);
       stubs.push(stub);
       return apiClient.listRulesets()
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
   });
 
@@ -454,7 +454,7 @@ describe('SecurityRulesApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found');
       return apiClient.getRelease(RELEASE_NAME)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error when error code is not present', () => {
@@ -464,7 +464,7 @@ describe('SecurityRulesApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}');
       return apiClient.getRelease(RELEASE_NAME)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error for non-json response', () => {
@@ -475,7 +475,7 @@ describe('SecurityRulesApiClient', () => {
       const expected = new FirebaseSecurityRulesError(
         'unknown-error', 'Unexpected response with status: 404 and body: not json');
       return apiClient.getRelease(RELEASE_NAME)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw when rejected with a FirebaseAppError', () => {
@@ -485,7 +485,7 @@ describe('SecurityRulesApiClient', () => {
         .rejects(expected);
       stubs.push(stub);
       return apiClient.getRelease(RELEASE_NAME)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
   });
 
@@ -524,7 +524,7 @@ describe('SecurityRulesApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found');
       return apiClient.updateRelease(RELEASE_NAME, RULESET_NAME)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error when error code is not present', () => {
@@ -534,7 +534,7 @@ describe('SecurityRulesApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}');
       return apiClient.updateRelease(RELEASE_NAME, RULESET_NAME)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error for non-json response', () => {
@@ -545,7 +545,7 @@ describe('SecurityRulesApiClient', () => {
       const expected = new FirebaseSecurityRulesError(
         'unknown-error', 'Unexpected response with status: 404 and body: not json');
       return apiClient.updateRelease(RELEASE_NAME, RULESET_NAME)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw when rejected with a FirebaseAppError', () => {
@@ -555,7 +555,7 @@ describe('SecurityRulesApiClient', () => {
         .rejects(expected);
       stubs.push(stub);
       return apiClient.updateRelease(RELEASE_NAME, RULESET_NAME)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
   });
 
@@ -602,7 +602,7 @@ describe('SecurityRulesApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError('not-found', 'Requested entity not found');
       return apiClient.deleteRuleset(RULESET_NAME)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error when error code is not present', () => {
@@ -612,7 +612,7 @@ describe('SecurityRulesApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseSecurityRulesError('unknown-error', 'Unknown server error: {}');
       return apiClient.deleteRuleset(RULESET_NAME)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw unknown-error for non-json response', () => {
@@ -623,7 +623,7 @@ describe('SecurityRulesApiClient', () => {
       const expected = new FirebaseSecurityRulesError(
         'unknown-error', 'Unexpected response with status: 404 and body: not json');
       return apiClient.deleteRuleset(RULESET_NAME)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should throw when rejected with a FirebaseAppError', () => {
@@ -633,7 +633,7 @@ describe('SecurityRulesApiClient', () => {
         .rejects(expected);
       stubs.push(stub);
       return apiClient.deleteRuleset(RULESET_NAME)
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
   });
 });

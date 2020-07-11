@@ -33,6 +33,17 @@ chai.use(chaiAsPromised);
 
 const expect = chai.expect;
 
+export function expectUserImportResult(result: UserImportResult, expected: UserImportResult): void {
+  expect(result.successCount).to.equal(expected.successCount);
+  expect(result.failureCount).to.equal(expected.failureCount);
+  expect(result.errors.length).to.equal(expected.errors.length);
+  result.errors.forEach((err, idx) => {
+    const want = expected.errors[idx];
+    expect(err.index).to.equal(want.index);
+    expect(err.error).to.deep.include(want.error);
+  });
+}
+
 describe('UserImportBuilder', () => {
   const now = new Date('2019-10-25T04:30:52.000Z');
   const nowString = now.toUTCString();
@@ -713,8 +724,9 @@ describe('UserImportBuilder', () => {
       };
       const userImportBuilder =
           new UserImportBuilder(users, validOptions as any, userRequestValidator);
-      expect(userImportBuilder.buildResponse(successfulServerResponse))
-        .to.deep.equal(successfulUserImportResponse);
+      expectUserImportResult(
+        userImportBuilder.buildResponse(successfulServerResponse),
+        successfulUserImportResponse);
     });
 
     it('should return the expected response for import with server side errors', () => {
@@ -737,13 +749,14 @@ describe('UserImportBuilder', () => {
       };
       const userImportBuilder =
           new UserImportBuilder(users, validOptions as any, userRequestValidator);
-      expect(userImportBuilder.buildResponse(failingServerResponse))
-        .to.deep.equal(serverErrorUserImportResponse);
+      expectUserImportResult(
+        userImportBuilder.buildResponse(failingServerResponse),
+        serverErrorUserImportResponse);
     });
 
     it('should return the expected response for import with client side errors', () => {
       const successfulServerResponse: any = [];
-      const clientErrorUserImportResponse: UserImportResult = {
+      const clientErrorUserImportResponse = {
         successCount: 3,
         failureCount: 1,
         errors: [
@@ -753,8 +766,9 @@ describe('UserImportBuilder', () => {
       // userRequestValidatorWithError will throw on the 3rd user (index = 2).
       const userImportBuilder =
           new UserImportBuilder(users, validOptions as any, userRequestValidatorWithError);
-      expect(userImportBuilder.buildResponse(successfulServerResponse))
-        .to.deep.equal(clientErrorUserImportResponse);
+      expectUserImportResult(
+        userImportBuilder.buildResponse(successfulServerResponse),
+        clientErrorUserImportResponse);
     });
 
     it('should return the expected response for import with mixed client/server errors', () => {
@@ -861,9 +875,9 @@ describe('UserImportBuilder', () => {
       };
       const userImportBuilder = new UserImportBuilder(
         testUsers, validOptions as any, userRequestValidatorWithMultipleErrors);
-      expect(userImportBuilder.buildResponse(failingServerResponse))
-        .to.deep.equal(mixedErrorUserImportResponse);
+      expectUserImportResult(
+        userImportBuilder.buildResponse(failingServerResponse),
+        mixedErrorUserImportResponse);
     });
   });
-
 });

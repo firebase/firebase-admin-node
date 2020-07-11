@@ -369,7 +369,7 @@ describe('RemoteConfig', () => {
     it('should resolve with an empty versions list if the no results are availble for requested list options', () => {
       const stub = sinon
         .stub(RemoteConfigApiClient.prototype, 'listVersions')
-        .resolves({});
+        .resolves({} as any);
       stubs.push(stub);
       return remoteConfig.listVersions({
         pageSize: 2,
