@@ -156,8 +156,8 @@ describe('UserImportBuilder', () => {
   ];
 
   const hmacAlgorithms = ['HMAC_SHA512', 'HMAC_SHA256', 'HMAC_SHA1', 'HMAC_MD5'];
-  const shaAlgorithms = ['SHA1', 'SHA256', 'SHA512', 'PBKDF_SHA1', 'PBKDF2_SHA256',
-  ];
+  const md5ShaPbkdfAlgorithms = 
+  ['MD5', 'SHA1', 'SHA256', 'SHA512', 'PBKDF_SHA1', 'PBKDF2_SHA256'];
   describe('constructor', () =>  {
     const invalidUserImportOptions = [10, 'invalid', undefined, null, true, ['a']];
     invalidUserImportOptions.forEach((invalidOption) => {
@@ -284,11 +284,15 @@ describe('UserImportBuilder', () => {
       });
     });
 
-    shaAlgorithms.forEach((algorithm) => {
+    md5ShaPbkdfAlgorithms.forEach((algorithm) => {
       describe(`${algorithm}`, () => {
         let minRounds: number;
         let maxRounds: number;
         switch (algorithm) {
+        case 'MD5':
+          minRounds = 0;
+          maxRounds = 8192;
+          break;  
         case 'SHA1':
         case 'SHA256':
         case 'SHA512':
@@ -324,7 +328,7 @@ describe('UserImportBuilder', () => {
           });
         });
 
-        if (algorithm !== 'PBKDF_SHA1' && algorithm !== 'PBKDF2_SHA256') {
+        if (algorithm !== 'PBKDF_SHA1' && algorithm !== 'PBKDF2_SHA256' && algorithm !== 'MD5') {
           it('should throw when invalid hash input order options is provided', () => {
             const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_HASH_INPUT_ORDER);
             const invalidOptions = {

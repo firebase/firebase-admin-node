@@ -387,7 +387,6 @@ export class UserImportBuilder {
     case 'HMAC_SHA256':
     case 'HMAC_SHA1':
     case 'HMAC_MD5':
-    case 'MD5':
     case 'SHA512':
     case 'SHA256':
     case 'SHA1':

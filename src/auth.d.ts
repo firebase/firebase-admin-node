@@ -642,11 +642,11 @@ export namespace admin.auth {
       derivedKeyLength?: number;
 
       /**
-       * The hash input order for certain hashing algorithms. 
-       * orders supported:
+       * The hash input order for certain hashing algorithms. The following
+       * orders are supported:
        * 'SALT_FIRST', 'PASSWORD_FIRST'.
        * Optional for `HMAC_SHA512`, `HMAC_SHA256`, `HMAC_SHA1`,
-       * `HMAC_MD5`, `MD5`, `SHA512`, `SHA256` and `SHA1`.
+       * `HMAC_MD5`, `SHA512`, `SHA256` and `SHA1`.
        */
       inputOrder?: HashInputOrderType;
     };

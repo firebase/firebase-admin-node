@@ -1760,6 +1760,23 @@ describe('admin.auth', () => {
         rawSalt,
       },
       {
+        name: 'MD5',
+        importOptions: {
+          hash: {
+            algorithm: 'MD5',
+            rounds: 0,
+          },
+        } as any,
+        computePasswordHash: (userImportTest: UserImportTest): Buffer => {
+          const currentRawPassword = userImportTest.rawPassword;
+          const currentRawSalt = userImportTest.rawSalt;
+          return Buffer.from(crypto.createHash('md5')
+            .update(currentRawSalt + currentRawPassword).digest('hex'));
+        },
+        rawPassword,
+        rawSalt,
+      },
+      {
         name: 'SHA1',
         importOptions: {
           hash: {
