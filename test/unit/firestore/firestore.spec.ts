@@ -23,7 +23,10 @@ import * as mocks from '../../resources/mocks';
 import { FirebaseApp } from '../../../src/index';
 import { RefreshTokenCredential } from '../../../src/auth/';
 import { ComputeEngineCredential } from '../../../src/auth/credential-internal';
-import { firestore, getFirestoreOptions } from '../../../src/firestore/';
+import { firestore, getFirestoreOptions, FirestoreService } from '../../../src/firestore/';
+
+import * as cloudFirestore from '@google-cloud/firestore';
+import * as adminFirestore from '../../../src/firestore/';
 
 describe('Firestore', () => {
   let mockApp: FirebaseApp;
@@ -68,7 +71,7 @@ describe('Firestore', () => {
       credential: mocks.credential,
       projectId: 'explicit-project-id',
     });
-    firestoreInstance = firestore(mockApp);
+    firestoreInstance = new FirestoreService(mockApp);
   });
 
   afterEach(() => {
@@ -206,5 +209,32 @@ describe('Firestore', () => {
         expect(options.firebaseVersion).to.equal(firebaseVersion);
       });
     });
+  });
+
+  describe('options.firebaseVersion', () => {
+    it('should return firebaseVersion when using credential with service account certificate', () => {
+      const options = getFirestoreOptions(mockApp);
+      expect(options.firebaseVersion).to.equal(firebaseVersion);
+    });
+
+    defaultCredentialApps.forEach((config) => {
+      it(`should return firebaseVersion when using default ${config.name}`, () => {
+        const options = getFirestoreOptions(config.app);
+        expect(options.firebaseVersion).to.equal(firebaseVersion);
+      });
+    });
+  })
+
+  describe('typing re-exports', () => {
+    const whitelistedProps = new Set(['DocumentChange', 'default']);
+    const adminProps = new Set();
+
+    for (const key in adminFirestore) {
+      adminProps.add(key);
+    }
+
+    for (const key in cloudFirestore) {
+      expect(adminProps.has(key) || whitelistedProps.has(key.toString())).to.be.true;
+    }
   });
 });

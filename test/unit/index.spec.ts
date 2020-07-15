@@ -40,3 +40,6 @@ import './auth/tenant-manager.spec';
 
 // Database
 import './database/database.spec';
+
+// Firestore
+import './firestore/firestore.spec';
