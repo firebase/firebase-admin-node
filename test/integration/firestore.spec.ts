@@ -18,21 +18,19 @@
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-// import { DocumentReference, CollectionReference, Firestore, firestore, FieldPath, FieldValue, Timestamp, WriteBatch, GeoPoint, WriteResult, setLogFunction} from '../../lib/firestore/';
-import { DocumentReference, firestore, Firestore } from '../../lib/firestore/';
+import { DocumentReference, CollectionReference, Firestore, firestore, FieldPath, FieldValue, Timestamp, WriteBatch, GeoPoint, WriteResult, setLogFunction} from '../../lib/firestore/';
 
-// import { clone } from 'lodash';
+import { clone } from 'lodash';
 
 chai.should();
 chai.use(chaiAsPromised);
 
 const expect = chai.expect;
 
-/* 
 const mountainView = {
   name: 'Mountain View',
   population: 77846,
-}; */
+};
 
 describe('admin.firestore', () => {
 
@@ -54,9 +52,7 @@ describe('admin.firestore', () => {
     // TEMPORARY
     expect(reference).to.not.be.null;
   });
-});
 
-/*
   it('supports basic data access', () => {
     return reference.set(mountainView)
       .then(() => {
@@ -158,4 +154,4 @@ describe('admin.firestore', () => {
         expect(logs.length).greaterThan(0);
       });
   });
-});*/
+});
