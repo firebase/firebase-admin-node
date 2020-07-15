@@ -92,7 +92,8 @@ export class MachineLearning implements FirebaseServiceInterface {
   public createModel(model: ModelOptions): Promise<Model> {
     return this.signUrlIfPresent(model)
       .then((modelContent) => this.client.createModel(modelContent))
-      .then((operation) => handleOperation(operation));
+      .then((operation) => this.client.handleOperation(operation))
+      .then((modelResponse) => new Model(modelResponse, this.app));
   }
 
   /**
@@ -107,7 +108,8 @@ export class MachineLearning implements FirebaseServiceInterface {
     const updateMask = utils.generateUpdateMask(model);
     return this.signUrlIfPresent(model)
       .then((modelContent) => this.client.updateModel(modelId, modelContent, updateMask))
-      .then((operation) => handleOperation(operation));
+      .then((operation) => this.client.handleOperation(operation))
+      .then((modelResponse) => new Model(modelResponse, this.app));
   }
 
   /**
@@ -141,7 +143,7 @@ export class MachineLearning implements FirebaseServiceInterface {
    */
   public getModel(modelId: string): Promise<Model> {
     return this.client.getModel(modelId)
-      .then((modelResponse) => new Model(modelResponse));
+      .then((modelResponse) => new Model(modelResponse, this.app));
   }
 
   /**
@@ -164,7 +166,7 @@ export class MachineLearning implements FirebaseServiceInterface {
         }
         let models: Model[] = [];
         if (resp.models) {
-          models = resp.models.map((rs) =>  new Model(rs));
+          models = resp.models.map((rs) =>  new Model(rs, this.app));
         }
         const result: ListModelsResult = { models };
         if (resp.nextPageToken) {
@@ -187,7 +189,8 @@ export class MachineLearning implements FirebaseServiceInterface {
     const updateMask = ['state.published'];
     const options: ModelUpdateOptions = { state: { published: publish } };
     return this.client.updateModel(modelId, options, updateMask)
-      .then((operation) => handleOperation(operation));
+      .then((operation) => this.client.handleOperation(operation))
+      .then((modelResponse) => new Model(modelResponse, this.app));
   }
 
   private signUrlIfPresent(options: ModelOptions): Promise<ModelOptions> {
@@ -229,7 +232,6 @@ export class MachineLearning implements FirebaseServiceInterface {
   }
 }
 
-
 /**
  * A Firebase ML Model output object.
  */
@@ -246,7 +248,11 @@ export class Model {
 
   public readonly tfliteModel?: TFLiteModel;
 
-  constructor(model: ModelResponse) {
+  private readonly activeOperations?: OperationResponse[];
+  private readonly app?: FirebaseApp;
+
+
+  constructor(model: ModelResponse, app: FirebaseApp) {
     if (!validator.isNonNullObject(model) ||
       !validator.isNonEmptyString(model.name) ||
       !validator.isNonEmptyString(model.createTime) ||
@@ -257,7 +263,7 @@ export class Model {
         'invalid-server-response',
         `Invalid Model response: ${JSON.stringify(model)}`);
     }
-
+    this.app = app;
     this.modelId = extractModelId(model.name);
     this.displayName = model.displayName;
     this.tags = model.tags || [];
@@ -267,6 +273,7 @@ export class Model {
       this.validationError = model.state?.validationError?.message;
     }
     this.published = model.state?.published || false;
+    this.activeOperations = model.activeOperations;
     this.etag = model.etag;
     if (model.modelHash) {
       this.modelHash = model.modelHash;
@@ -279,17 +286,54 @@ export class Model {
     }
   }
 
+  /**
+   * Locked indicates if there are active long running operations on the model.
+   * Models may not be modified when they are locked.
+   */
   public get locked(): boolean {
     // Backend does not currently return locked models.
     // This will likely change in future.
-    return false;
+    return (this.activeOperations?.length || 0) > 0;
   }
 
-  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-  public waitForUnlocked(maxTimeSeconds?: number): Promise<void> {
+  /**
+   * Wait for the active operations on the model to complete.
+   * @param maxTimeSeconds The number of seconds to wait for the model to be unlocked. 0 for default.
+   */
+  public waitForUnlocked(maxTimeSeconds = 0): Promise<void> {
     // Backend does not currently return locked models.
     // This will likely change in future.
+    if ((this.activeOperations?.length || 0) > 0) {
+      const client = new MachineLearningApiClient(this.app!);
+      return client.handleOperation(this.activeOperations![0], true, maxTimeSeconds)
+        .then((modelResponse) => this.updateFromResponse(modelResponse));
+    }
     return Promise.resolve();
+  }
+
+  private updateFromResponse(model: ModelResponse): void {
+    // Update the readonly fields with the latest information.
+    (this.modelId as Model['modelId']) = extractModelId(model.name);
+    (this.displayName as Model['displayName']) = model.displayName!;
+    (this.tags as Model['tags']) = model.tags || [];
+
+    (this.createTime as Model['createTime']) = new Date(model.createTime).toUTCString();
+    (this.updateTime as Model['updateTime']) = new Date(model.updateTime).toUTCString();
+    if (model.state?.validationError?.message) {
+      (this.validationError as Model['validationError']) = model.state?.validationError?.message;
+    }
+    (this.published as Model['published']) = model.state?.published || false;
+    (this.activeOperations as Model['activeOperations']) = model.activeOperations;
+    (this.etag as Model['etag']) = model.etag;
+    if (model.modelHash) {
+      (this.modelHash as Model['modelHash']) = model.modelHash;
+    }
+    if (model.tfliteModel) {
+      (this.tfliteModel as Model['tfliteModel']) = {
+        gcsTfliteUri: model.tfliteModel.gcsTfliteUri,
+        sizeBytes: model.tfliteModel.sizeBytes,
+      };
+    }
   }
 }
 
@@ -304,20 +348,4 @@ export interface TFLiteModel {
 
 function extractModelId(resourceName: string): string {
   return resourceName.split('/').pop()!;
-}
-
-function handleOperation(op: OperationResponse): Model {
-  // Backend currently does not return operations that are not done.
-  if (op.done) {
-    // Done operations must have either a response or an error.
-    if (op.response) {
-      return new Model(op.response);
-    } else if (op.error) {
-      throw FirebaseMachineLearningError.fromOperationError(
-        op.error.code, op.error.message);
-    }
-  }
-  throw new FirebaseMachineLearningError(
-    'invalid-server-response',
-    `Invalid Operation response: ${JSON.stringify(op)}`);
 }
