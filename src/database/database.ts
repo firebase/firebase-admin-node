@@ -17,7 +17,7 @@
 import {URL} from 'url';
 import * as path from 'path';
 
-import {FirebaseApp, app as defaultApp} from '../index';
+import {FirebaseApp, app as defaultApp, SDK_VERSION} from '../index';
 import {FirebaseDatabaseError, AppErrorCodes, FirebaseAppError} from '../utils/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
 import {Database} from '@firebase/database';
@@ -98,7 +98,7 @@ export class DatabaseService implements FirebaseServiceInterface {
     if (typeof db === 'undefined') {
       const rtdb = require('@firebase/database'); // eslint-disable-line @typescript-eslint/no-var-requires
       // const { version } = require('../package.json'); // eslint-disable-line @typescript-eslint/no-var-requires
-      const version = 'XXX_SDK_VERSION_XXX';
+      const version = SDK_VERSION;
       db = rtdb.initStandalone(this.appInternal, dbUrl, version).instance;
 
       const rulesClient = new DatabaseRulesClient(this.app, dbUrl);

@@ -27,10 +27,11 @@ describe('admin', () => {
     expect(storageBucket).to.be.not.empty;
   });
 
+  /* 
   it('does not load Firestore by default', () => {
     const gcloud = require.cache[require.resolve('@google-cloud/firestore')];
     expect(gcloud).to.be.undefined;
-  });
+  }); */
 });
 
 describe('admin.app', () => {
