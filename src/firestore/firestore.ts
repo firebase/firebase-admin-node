@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { FirebaseApp/*, app as defaultApp*/ } from '../index';
+import { FirebaseApp, app as defaultApp } from '../index';
 import { FirebaseFirestoreError } from '../utils/error';
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { isApplicationDefault } from '../auth/credential';
@@ -122,14 +122,11 @@ function initFirestore(app: FirebaseApp): firestoreCloud.Firestore {
   return new firestoreDatabase(options);
 }
 
-export function firestore(app: FirebaseApp): firestoreCloud.Firestore {
-  /* if (typeof (app) === 'undefined') {
+export function firestore(app?: FirebaseApp): firestoreCloud.Firestore {
+  if (typeof (app) === 'undefined') {
     app = defaultApp();
-  } */
-  if (!validator.isNonNullObject(app) && !('default' in Firestore_)) {
-    Firestore_['default'] = new FirestoreService(app);
   }
-  else if (validator.isNonNullObject(app) && !(app.name in Firestore_)) {
+  if (!(app.name in Firestore_)) {
     Firestore_[app.name] = new FirestoreService(app);
   }
   app.registerService('firestore', Firestore_[app.name]);
