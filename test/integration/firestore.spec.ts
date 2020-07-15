@@ -17,7 +17,7 @@
 // import * as admin from '../../lib/index';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-
+import { defaultApp } from './setup';
 import { DocumentReference, CollectionReference, Firestore, firestore, FieldPath, FieldValue, Timestamp, WriteBatch, GeoPoint, WriteResult, setLogFunction} from '../../lib/firestore/';
 
 import { clone } from 'lodash';
@@ -37,17 +37,17 @@ describe('admin.firestore', () => {
   let reference: DocumentReference;
 
   before(() => {
-    const db = firestore();
+    const db = firestore(defaultApp);
     reference = db.collection('cities').doc();
   });
 
   it('admin.firestore() returns a Firestore client', () => {
-    const fs = firestore();
+    const fs = firestore(defaultApp);
     expect(fs).to.be.instanceOf(Firestore);
   });
 
   it('app.firestore() returns a Firestore client', () => {
-    const fs = firestore();
+    const fs = firestore(defaultApp);
     expect(fs).to.be.instanceOf(Firestore);
     // TEMPORARY
     expect(reference).to.not.be.null;
@@ -119,8 +119,8 @@ describe('admin.firestore', () => {
   });
 
   it('supports saving references in documents', () => {
-    const source = firestore().collection('cities').doc();
-    const target = firestore().collection('cities').doc();
+    const source = firestore(defaultApp).collection('cities').doc();
+    const target = firestore(defaultApp).collection('cities').doc();
     return source.set(mountainView)
       .then(() => {
         return target.set({ name: 'Palo Alto', sisterCity: source });
@@ -142,7 +142,7 @@ describe('admin.firestore', () => {
 
   it('admin.firestore.setLogFunction() enables logging for the Firestore module', () => {
     const logs: string[] = [];
-    const source = firestore().collection('cities').doc();
+    const source = firestore(defaultApp).collection('cities').doc();
     setLogFunction((log) => {
       logs.push(log);
     });

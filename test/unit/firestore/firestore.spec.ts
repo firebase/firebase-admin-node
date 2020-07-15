@@ -103,12 +103,12 @@ describe('Firestore', () => {
       });
     }); */
 
-    it('should throw given no app', () => {
+    /* it('should throw given no app', () => {
       expect(() => {
         // const firestoreAny: any = FirestoreService;
         return firestore();
       }).to.throw('First argument passed to admin.firestore() must be a valid Firebase app instance.');
-    });
+    }); */
 
     it('should throw given an invalid credential with project ID', () => {
       // Project ID is read from the environment variable, but the credential is unsupported.
