@@ -38,8 +38,8 @@ describe('SDK_VERSION', () => {
   it('utils index should retrieve the SDK_VERSION from package.json', () => {
     const mockVersionNumber = "MockVersion";
 
-    const Module = require('module'); // eslint-disable-line @typescript-eslint/no-var-requires
-    const stub = sinon.stub(Module.prototype, 'require');
+    const module = require('module'); // eslint-disable-line @typescript-eslint/no-var-requires
+    const stub = sinon.stub(module.prototype, 'require');
     stub.withArgs('../../package.json').returns({ version: mockVersionNumber });
     stub.callThrough();
 
