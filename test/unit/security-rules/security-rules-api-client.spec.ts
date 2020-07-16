@@ -26,6 +26,7 @@ import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 import { FirebaseAppError } from '../../../src/utils/error';
 import { FirebaseApp } from '../../../src/firebase-app';
+import { SDK_VERSION } from '../../../src/utils/index';
 
 const expect = chai.expect;
 
@@ -42,7 +43,7 @@ describe('SecurityRulesApiClient', () => {
   };
   const EXPECTED_HEADERS = {
     'Authorization': 'Bearer mock-token',
-    'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
+    'X-Firebase-Client': `fire-admin-node/${SDK_VERSION}`,
   };
   const noProjectId = 'Failed to determine project ID. Initialize the SDK with service '
     + 'account credentials, or set project ID as an app option. Alternatively, set the '

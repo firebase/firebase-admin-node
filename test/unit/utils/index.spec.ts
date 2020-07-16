@@ -34,6 +34,23 @@ interface Obj {
   [key: string]: any;
 }
 
+describe('SDK_VERSION', () => {
+  it('utils index should retrieve the SDK_VERSION from package.json', () => {
+    const mockVersionNumber = "MockVersion";
+
+    const Module = require('module'); // eslint-disable-line @typescript-eslint/no-var-requires
+    const stub = sinon.stub(Module.prototype, 'require');
+    stub.withArgs('../../package.json').returns({ version: mockVersionNumber });
+    stub.callThrough();
+
+    delete require.cache[require.resolve('../../../src/utils/index')];
+    const utils = require('../../../src/utils/index'); // eslint-disable-line @typescript-eslint/no-var-requires
+
+    expect(utils.SDK_VERSION).to.equal(mockVersionNumber);
+    stub.restore();
+  });
+});
+
 describe('addReadonlyGetter()', () => {
   it('should add a new property to the provided object', () => {
     const obj: Obj = {};

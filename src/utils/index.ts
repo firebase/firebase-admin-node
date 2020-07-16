@@ -19,6 +19,9 @@ import { ServiceAccountCredential, ComputeEngineCredential } from '../auth/crede
 
 import * as validator from './validator';
 
+const { version } = require('../../package.json'); // eslint-disable-line @typescript-eslint/no-var-requires
+export const SDK_VERSION = version;
+
 /**
  * Renames properties on an object given a mapping from old to new property names.
  *
