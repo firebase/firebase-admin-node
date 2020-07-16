@@ -26,7 +26,7 @@ import { ProjectManagementRequestHandler } from '../../../src/project-management
 import { HttpClient } from '../../../src/utils/api-request';
 import * as mocks from '../../resources/mocks';
 import * as utils from '../utils';
-import { SDK_VERSION } from '../../../src/utils/index';
+import { getSdkVersion } from '../../../src/utils/index';
 import { ShaCertificate } from '../../../src/project-management/android-app';
 import { AppPlatform } from '../../../src/project-management/app-metadata';
 
@@ -73,7 +73,7 @@ describe('ProjectManagementRequestHandler', () => {
   beforeEach(() => {
     mockApp = mocks.app();
     expectedHeaders = {
-      'X-Client-Version': `Node/Admin/${SDK_VERSION}`,
+      'X-Client-Version': `Node/Admin/${getSdkVersion()}`,
       'Authorization': 'Bearer ' + mockAccessToken,
     };
     requestHandler = new ProjectManagementRequestHandler(mockApp);

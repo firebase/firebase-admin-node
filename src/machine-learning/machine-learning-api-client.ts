@@ -23,7 +23,7 @@ import { FirebaseApp } from '../firebase-app';
 
 const ML_V1BETA2_API = 'https://firebaseml.googleapis.com/v1beta2';
 const FIREBASE_VERSION_HEADER = {
-  'X-Firebase-Client': `fire-admin-node/${utils.SDK_VERSION}`,
+  'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`,
 };
 
 export interface StatusErrorResponse {

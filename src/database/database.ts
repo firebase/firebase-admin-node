@@ -8,7 +8,7 @@ import { Database } from '@firebase/database';
 
 import * as validator from '../utils/validator';
 import { AuthorizedHttpClient, HttpRequestConfig, HttpError } from '../utils/api-request';
-import { SDK_VERSION } from '../utils/index';
+import { getSdkVersion } from '../utils/index';
 
 
 /**
@@ -79,7 +79,7 @@ export class DatabaseService implements FirebaseServiceInterface {
     let db: Database = this.INTERNAL.databases[dbUrl];
     if (typeof db === 'undefined') {
       const rtdb = require('@firebase/database'); // eslint-disable-line @typescript-eslint/no-var-requires
-      db = rtdb.initStandalone(this.appInternal, dbUrl, SDK_VERSION).instance;
+      db = rtdb.initStandalone(this.appInternal, dbUrl, getSdkVersion()).instance;
 
       const rulesClient = new DatabaseRulesClient(this.app, dbUrl);
       db.getRules = () => {

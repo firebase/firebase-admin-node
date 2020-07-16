@@ -29,6 +29,7 @@ import { ComputeEngineCredential } from '../../../src/auth/credential';
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import { FirebaseAppError } from '../../../src/utils/error';
+import { getSdkVersion } from '../../../src/utils/index';
 
 interface Obj {
   [key: string]: any;
@@ -36,18 +37,8 @@ interface Obj {
 
 describe('SDK_VERSION', () => {
   it('utils index should retrieve the SDK_VERSION from package.json', () => {
-    const mockVersionNumber = "MockVersion";
-
-    const module = require('module'); // eslint-disable-line @typescript-eslint/no-var-requires
-    const stub = sinon.stub(module.prototype, 'require');
-    stub.withArgs('../../package.json').returns({ version: mockVersionNumber });
-    stub.callThrough();
-
-    delete require.cache[require.resolve('../../../src/utils/index')];
-    const utils = require('../../../src/utils/index'); // eslint-disable-line @typescript-eslint/no-var-requires
-
-    expect(utils.SDK_VERSION).to.equal(mockVersionNumber);
-    stub.restore();
+    const { version } = require('../../../package.json'); // eslint-disable-line @typescript-eslint/no-var-requires
+    expect(getSdkVersion()).to.equal(version);
   });
 });
 

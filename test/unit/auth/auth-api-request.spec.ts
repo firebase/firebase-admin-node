@@ -47,7 +47,7 @@ import { UserIdentifier } from '../../../src/auth/identifier';
 import { TenantOptions } from '../../../src/auth/tenant';
 import { UpdateRequest, UpdateMultiFactorInfoRequest } from '../../../src/auth/user-record';
 import { expectUserImportResult } from './user-import-builder.spec';
-import { SDK_VERSION } from '../../../src/utils/index';
+import { getSdkVersion } from '../../../src/utils/index';
 
 chai.should();
 chai.use(sinonChai);
@@ -850,7 +850,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
     let getTokenStub: sinon.SinonStub;
     const mockAccessToken: string = utils.generateRandomAccessToken();
     const expectedHeaders: {[key: string]: string} = {
-      'X-Client-Version': `Node/Admin/${SDK_VERSION}`,
+      'X-Client-Version': `Node/Admin/${getSdkVersion()}`,
       'Authorization': 'Bearer ' + mockAccessToken,
     };
     const callParams = (path: string, method: any, data: any): HttpRequestConfig => {

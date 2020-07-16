@@ -52,7 +52,7 @@ import { InstanceId } from '../../src/instance-id/instance-id';
 import { ProjectManagement } from '../../src/project-management/project-management';
 import { SecurityRules } from '../../src/security-rules/security-rules';
 import { RemoteConfig } from '../../src/remote-config/remote-config';
-import { SDK_VERSION } from '../../src/utils/index';
+import { getSdkVersion } from '../../src/utils/index';
 
 chai.should();
 chai.use(sinonChai);
@@ -74,7 +74,7 @@ describe('FirebaseNamespace', () => {
 
   describe('#SDK_VERSION', () => {
     it('should return the SDK version', () => {
-      expect(firebaseNamespace.SDK_VERSION).to.equal(SDK_VERSION);
+      expect(firebaseNamespace.SDK_VERSION).to.equal(getSdkVersion());
     });
   });
 

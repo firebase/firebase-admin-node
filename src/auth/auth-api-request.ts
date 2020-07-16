@@ -44,7 +44,7 @@ import { Tenant, TenantOptions, TenantServerResponse } from './tenant';
 
 /** Firebase Auth request header. */
 const FIREBASE_AUTH_HEADER = {
-  'X-Client-Version': `Node/Admin/${utils.SDK_VERSION}`,
+  'X-Client-Version': `Node/Admin/${utils.getSdkVersion()}`,
 };
 /** Firebase Auth request timeout duration in milliseconds. */
 const FIREBASE_AUTH_TIMEOUT = 25000;

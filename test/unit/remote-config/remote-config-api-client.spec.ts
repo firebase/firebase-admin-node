@@ -33,7 +33,7 @@ import * as mocks from '../../resources/mocks';
 import { FirebaseAppError } from '../../../src/utils/error';
 import { FirebaseApp } from '../../../src/firebase-app';
 import { deepCopy } from '../../../src/utils/deep-copy';
-import { SDK_VERSION } from '../../../src/utils/index';
+import { getSdkVersion } from '../../../src/utils/index';
 
 const expect = chai.expect;
 
@@ -54,7 +54,7 @@ describe('RemoteConfigApiClient', () => {
 
   const EXPECTED_HEADERS = {
     'Authorization': 'Bearer mock-token',
-    'X-Firebase-Client': `fire-admin-node/${SDK_VERSION}`,
+    'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
     'Accept-Encoding': 'gzip',
   };
 

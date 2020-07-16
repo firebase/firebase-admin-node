@@ -21,17 +21,17 @@ import {
 import { createFirebaseError, getErrorCode } from './messaging-errors';
 import { SubRequest, BatchRequestClient } from './batch-request';
 import { SendResponse, BatchResponse } from './messaging-types';
-import { SDK_VERSION } from '../utils/index';
+import { getSdkVersion } from '../utils/index';
 
 // FCM backend constants
 const FIREBASE_MESSAGING_TIMEOUT = 10000;
 const FIREBASE_MESSAGING_BATCH_URL = 'https://fcm.googleapis.com/batch';
 const FIREBASE_MESSAGING_HTTP_METHOD: HttpMethod = 'POST';
 const FIREBASE_MESSAGING_HEADERS = {
-  'X-Firebase-Client': `fire-admin-node/${SDK_VERSION}`,
+  'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
 };
 const LEGACY_FIREBASE_MESSAGING_HEADERS = {
-  'X-Firebase-Client': `fire-admin-node/${SDK_VERSION}`,
+  'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
   'access_token_auth': 'true',
 };
 
