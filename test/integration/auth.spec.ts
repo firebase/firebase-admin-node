@@ -780,7 +780,6 @@ describe('admin.auth', () => {
         state: 'DISABLED',
         factorIds: [],
       },
-      // Cannot currently test clearing test phone numbers: b/160513153.
       testPhoneNumbers: {
         '+16505551234': '123456',
       },
@@ -794,10 +793,6 @@ describe('admin.auth', () => {
       multiFactorConfig: {
         state: 'ENABLED',
         factorIds: ['phone'],
-      },
-      testPhoneNumbers: {
-        '+16505551234': '123456',
-        '+16505550000': '654321',
       },
     };
 
@@ -1167,7 +1162,8 @@ describe('admin.auth', () => {
           passwordRequired: false,
         },
         multiFactorConfig: deepCopy(expectedUpdatedTenant2.multiFactorConfig),
-        testPhoneNumbers: deepCopy(expectedUpdatedTenant2.testPhoneNumbers),
+        // Test clearing of phone numbers.
+        testPhoneNumbers: null,
       };
       return admin.auth().tenantManager().updateTenant(createdTenantId, updatedOptions)
         .then((actualTenant) => {
