@@ -39,6 +39,7 @@ import { SecurityRules } from './security-rules/security-rules';
 import { RemoteConfig } from './remote-config/remote-config';
 
 import * as validator from './utils/validator';
+import { getSdkVersion } from './utils/index';
 
 const DEFAULT_APP_NAME = '[DEFAULT]';
 
@@ -309,7 +310,7 @@ export class FirebaseNamespace {
   /* tslint:enable:variable-name */
 
   public credential = firebaseCredential;
-  public SDK_VERSION = '<XXX_SDK_VERSION_XXX>';
+  public SDK_VERSION = getSdkVersion();
   public INTERNAL: FirebaseNamespaceInternals;
 
   /* tslint:disable */

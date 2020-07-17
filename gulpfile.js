@@ -76,9 +76,6 @@ gulp.task('compile', function() {
     // Compile Typescript into .js and .d.ts files
     .pipe(buildProject())
 
-    // Replace SDK version
-    .pipe(replace(/\<XXX_SDK_VERSION_XXX\>/g, pkg.version))
-
     // Add header
     .pipe(header(banner))
 

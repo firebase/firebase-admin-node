@@ -25,7 +25,7 @@ import { deepCopy } from '../utils/deep-copy';
 // Remote Config backend constants
 const FIREBASE_REMOTE_CONFIG_V1_API = 'https://firebaseremoteconfig.googleapis.com/v1';
 const FIREBASE_REMOTE_CONFIG_HEADERS = {
-  'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
+  'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`,
   // There is a known issue in which the ETag is not properly returned in cases where the request
   // does not specify a compression type. Currently, it is required to include the header
   // `Accept-Encoding: gzip` or equivalent in all requests.
