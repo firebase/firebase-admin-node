@@ -397,7 +397,7 @@ export namespace admin.auth {
 
   /**
    * Interface representing a decoded Firebase ID token, returned from the
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#verifyIdToken `verifyIdToken()`} method.
+   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#verifyidtoken `verifyIdToken()`} method.
    *
    * Firebase ID tokens are OpenID Connect spec-compliant JSON Web Tokens (JWTs).
    * See the
