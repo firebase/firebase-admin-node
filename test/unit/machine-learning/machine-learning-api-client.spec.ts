@@ -509,7 +509,11 @@ describe('MachineLearningApiClient', () => {
       stub.onCall(0).resolves(utils.responseFrom(OPERATION_NOT_DONE_RESPONSE));
       stub.onCall(1).resolves(utils.responseFrom(OPERATION_SUCCESS_RESPONSE));
       stubs.push(stub);
-      return apiClient.handleOperation(OPERATION_NOT_DONE_RESPONSE, true, 1, 2, 5)
+      return apiClient.handleOperation(OPERATION_NOT_DONE_RESPONSE, {
+        wait: true,
+        maxTimeMillis: 1000,
+        baseWaitMillis: 2,
+        maxWaitMillis: 5 })
         .then((resp) => {
           expect(resp).to.deep.equal(MODEL_RESPONSE);
           expect(stub).to.have.been.calledTwice.and.calledWith({
@@ -526,7 +530,11 @@ describe('MachineLearningApiClient', () => {
       stub.onCall(1).resolves(utils.responseFrom(OPERATION_ERROR_RESPONSE));
       stubs.push(stub);
       const expected = new FirebaseMachineLearningError('invalid-argument', STATUS_ERROR_MESSAGE);
-      return apiClient.handleOperation(OPERATION_NOT_DONE_RESPONSE, true, 1, 2, 5)
+      return apiClient.handleOperation(OPERATION_NOT_DONE_RESPONSE, {
+        wait: true,
+        maxTimeMillis: 1000,
+        baseWaitMillis: 2,
+        maxWaitMillis: 5 })
         .should.eventually.be.rejected.and.deep.include(expected)
         .then(() => {
           expect(stub).to.have.been.calledTwice.and.calledWith({
@@ -544,7 +552,11 @@ describe('MachineLearningApiClient', () => {
       stub.onCall(2).resolves(utils.responseFrom(OPERATION_NOT_DONE_RESPONSE));
       stubs.push(stub);
       const expected = new Error('ExponentialBackoffPoller dealine exceeded - Master timeout reached');
-      return apiClient.handleOperation(OPERATION_NOT_DONE_RESPONSE, true, 1, 500, 1000)
+      return apiClient.handleOperation(OPERATION_NOT_DONE_RESPONSE, {
+        wait: true,
+        maxTimeMillis: 1000,
+        baseWaitMillis: 500,
+        maxWaitMillis: 1000 })
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 

@@ -16,8 +16,8 @@
 
 import { FirebaseApp } from '../firebase-app';
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
-import { MachineLearningApiClient, ModelResponse, OperationResponse,
-  ModelOptions, ModelUpdateOptions, ListModelsOptions } from './machine-learning-api-client';
+import { MachineLearningApiClient, ModelResponse, ModelOptions,
+  ModelUpdateOptions, ListModelsOptions } from './machine-learning-api-client';
 import { FirebaseError } from '../utils/error';
 
 import * as validator from '../utils/validator';
@@ -93,7 +93,7 @@ export class MachineLearning implements FirebaseServiceInterface {
     return this.signUrlIfPresent(model)
       .then((modelContent) => this.client.createModel(modelContent))
       .then((operation) => this.client.handleOperation(operation))
-      .then((modelResponse) => new Model(modelResponse, this.app));
+      .then((modelResponse) => new Model(modelResponse, this.client));
   }
 
   /**
@@ -109,7 +109,7 @@ export class MachineLearning implements FirebaseServiceInterface {
     return this.signUrlIfPresent(model)
       .then((modelContent) => this.client.updateModel(modelId, modelContent, updateMask))
       .then((operation) => this.client.handleOperation(operation))
-      .then((modelResponse) => new Model(modelResponse, this.app));
+      .then((modelResponse) => new Model(modelResponse, this.client));
   }
 
   /**
@@ -143,7 +143,7 @@ export class MachineLearning implements FirebaseServiceInterface {
    */
   public getModel(modelId: string): Promise<Model> {
     return this.client.getModel(modelId)
-      .then((modelResponse) => new Model(modelResponse, this.app));
+      .then((modelResponse) => new Model(modelResponse, this.client));
   }
 
   /**
@@ -166,7 +166,7 @@ export class MachineLearning implements FirebaseServiceInterface {
         }
         let models: Model[] = [];
         if (resp.models) {
-          models = resp.models.map((rs) =>  new Model(rs, this.app));
+          models = resp.models.map((rs) =>  new Model(rs, this.client));
         }
         const result: ListModelsResult = { models };
         if (resp.nextPageToken) {
@@ -190,7 +190,7 @@ export class MachineLearning implements FirebaseServiceInterface {
     const options: ModelUpdateOptions = { state: { published: publish } };
     return this.client.updateModel(modelId, options, updateMask)
       .then((operation) => this.client.handleOperation(operation))
-      .then((modelResponse) => new Model(modelResponse, this.app));
+      .then((modelResponse) => new Model(modelResponse, this.client));
   }
 
   private signUrlIfPresent(options: ModelOptions): Promise<ModelOptions> {
@@ -236,23 +236,129 @@ export class MachineLearning implements FirebaseServiceInterface {
  * A Firebase ML Model output object.
  */
 export class Model {
-  public readonly modelId: string;
-  public readonly displayName: string;
-  public readonly tags?: string[];
-  public readonly createTime: string;
-  public readonly updateTime: string;
-  public readonly validationError?: string;
-  public readonly published: boolean;
-  public readonly etag: string;
-  public readonly modelHash?: string;
+  private model: ModelResponse;
+  private readonly client?: MachineLearningApiClient;
 
-  public readonly tfliteModel?: TFLiteModel;
+  constructor(model: ModelResponse, client: MachineLearningApiClient) {
+    Model.validateModel(model);
+    this.model = model;
+    // Remove '@type' field. We don't need it.
+    if ((this.model as {[key: string]: any})["@type"]) {
+      delete (this.model as {[key: string]: any})["@type"];
+    }
 
-  private readonly activeOperations?: OperationResponse[];
-  private readonly app?: FirebaseApp;
+    this.client = client;
+  }
+
+  get modelId(): string {
+    return extractModelId(this.model.name);
+  }
+
+  get displayName(): string {
+    return this.model.displayName!;
+  }
+
+  get tags(): string[] {
+    return this.model.tags || [];
+  }
+
+  get createTime(): string {
+    return new Date(this.model.createTime).toUTCString();
+  }
+
+  get updateTime(): string {
+    return new Date(this.model.updateTime).toUTCString();
+  }
+
+  get validationError(): string | undefined {
+    return this.model.state?.validationError?.message;
+  }
+
+  get published(): boolean {
+    return this.model.state?.published || false;
+  }
+
+  get etag(): string {
+    return this.model.etag;
+  }
+
+  get modelHash(): string | undefined {
+    return this.model.modelHash;
+  }
+
+  get tfliteModel(): TFLiteModel | undefined {
+    if (this.model.tfliteModel) {
+      return {
+        gcsTfliteUri: this.model.tfliteModel.gcsTfliteUri,
+        sizeBytes: this.model.tfliteModel.sizeBytes,
+      };
+    }
+    return undefined;
+  }
+
+  public equals(obj: Model): boolean {
+    // We only care about the model for equality.
+    return this.model === obj.model;
+  }
+
+  public toJSON(): string {
+    // We can't just return JSON.stringify(this.model)
+    // because it has extra fields and different formats
+    // etc. So we build the expected model object.
+    const jsonModel: {[key: string]: any}  = {
+      modelId: this.modelId,
+      displayName: this.displayName,
+      tags: this.tags,
+      createTime: this.createTime,
+      updateTime: this.updateTime,
+      published: this.published,
+      etag: this.etag,
+    };
+
+    // Also add possibly undefined fields if they exist.
+
+    if (this.validationError) {
+      jsonModel['validationError'] = this.validationError;
+    }
+
+    if(this.modelHash) {
+      jsonModel['modelHash'] = this.modelHash;
+    }
+
+    if (this.tfliteModel) {
+      jsonModel['tfliteModel'] = this.tfliteModel;
+    }
+
+    return JSON.stringify(jsonModel);
+  }
 
 
-  constructor(model: ModelResponse, app: FirebaseApp) {
+  /**
+   * Locked indicates if there are active long running operations on the model.
+   * Models may not be modified when they are locked.
+   */
+  public get locked(): boolean {
+    return (this.model.activeOperations?.length || 0) > 0;
+  }
+
+  /**
+   * Wait for the active operations on the model to complete.
+   * @param maxTimeMillis The number of milliseconds to wait for the model to be unlocked. 0 for default.
+   */
+  public waitForUnlocked(maxTimeMillis?: number): Promise<void> {
+    // Backend does not currently return locked models.
+    // This will likely change in future.
+    if ((this.model.activeOperations?.length || 0) > 0) {
+      // The client will always be defined on Models that have activeOperations
+      // because models with active operations came back from the server and
+      // were constructed with a non-empty client.
+      return this.client!.handleOperation(this.model.activeOperations![0], { wait: true, maxTimeMillis })
+        .then((modelResponse) => this.updateFromResponse(modelResponse));
+    }
+    return Promise.resolve();
+  }
+
+  private static validateModel(model: ModelResponse): void {
     if (!validator.isNonNullObject(model) ||
       !validator.isNonEmptyString(model.name) ||
       !validator.isNonEmptyString(model.createTime) ||
@@ -263,76 +369,14 @@ export class Model {
         'invalid-server-response',
         `Invalid Model response: ${JSON.stringify(model)}`);
     }
-    this.app = app;
-    this.modelId = extractModelId(model.name);
-    this.displayName = model.displayName;
-    this.tags = model.tags || [];
-    this.createTime = new Date(model.createTime).toUTCString();
-    this.updateTime = new Date(model.updateTime).toUTCString();
-    if (model.state?.validationError?.message) {
-      this.validationError = model.state?.validationError?.message;
-    }
-    this.published = model.state?.published || false;
-    this.activeOperations = model.activeOperations;
-    this.etag = model.etag;
-    if (model.modelHash) {
-      this.modelHash = model.modelHash;
-    }
-    if (model.tfliteModel) {
-      this.tfliteModel = {
-        gcsTfliteUri: model.tfliteModel.gcsTfliteUri,
-        sizeBytes: model.tfliteModel.sizeBytes,
-      };
-    }
-  }
-
-  /**
-   * Locked indicates if there are active long running operations on the model.
-   * Models may not be modified when they are locked.
-   */
-  public get locked(): boolean {
-    // Backend does not currently return locked models.
-    // This will likely change in future.
-    return (this.activeOperations?.length || 0) > 0;
-  }
-
-  /**
-   * Wait for the active operations on the model to complete.
-   * @param maxTimeSeconds The number of seconds to wait for the model to be unlocked. 0 for default.
-   */
-  public waitForUnlocked(maxTimeSeconds = 0): Promise<void> {
-    // Backend does not currently return locked models.
-    // This will likely change in future.
-    if ((this.activeOperations?.length || 0) > 0) {
-      const client = new MachineLearningApiClient(this.app!);
-      return client.handleOperation(this.activeOperations![0], true, maxTimeSeconds)
-        .then((modelResponse) => this.updateFromResponse(modelResponse));
-    }
-    return Promise.resolve();
   }
 
   private updateFromResponse(model: ModelResponse): void {
-    // Update the readonly fields with the latest information.
-    (this.modelId as Model['modelId']) = extractModelId(model.name);
-    (this.displayName as Model['displayName']) = model.displayName!;
-    (this.tags as Model['tags']) = model.tags || [];
-
-    (this.createTime as Model['createTime']) = new Date(model.createTime).toUTCString();
-    (this.updateTime as Model['updateTime']) = new Date(model.updateTime).toUTCString();
-    if (model.state?.validationError?.message) {
-      (this.validationError as Model['validationError']) = model.state?.validationError?.message;
-    }
-    (this.published as Model['published']) = model.state?.published || false;
-    (this.activeOperations as Model['activeOperations']) = model.activeOperations;
-    (this.etag as Model['etag']) = model.etag;
-    if (model.modelHash) {
-      (this.modelHash as Model['modelHash']) = model.modelHash;
-    }
-    if (model.tfliteModel) {
-      (this.tfliteModel as Model['tfliteModel']) = {
-        gcsTfliteUri: model.tfliteModel.gcsTfliteUri,
-        sizeBytes: model.tfliteModel.sizeBytes,
-      };
+    Model.validateModel(model);
+    this.model = model;
+    // Remove '@type' field. We don't need it.
+    if ((this.model as any)["@type"]) {
+      delete (this.model as any)["@type"];
     }
   }
 }

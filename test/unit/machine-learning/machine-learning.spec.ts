@@ -218,6 +218,7 @@ describe('MachineLearning', () => {
 
   let machineLearning: MachineLearning;
   let mockApp: FirebaseApp;
+  let mockClient: MachineLearningApiClient;
   let mockCredentialApp: FirebaseApp;
 
   let MODEL1: Model;
@@ -227,10 +228,11 @@ describe('MachineLearning', () => {
 
   before(() => {
     mockApp = mocks.app();
+    mockClient = new MachineLearningApiClient(mockApp);
     mockCredentialApp = mocks.mockCredentialApp();
     machineLearning = new MachineLearning(mockApp);
-    MODEL1 = new Model(MODEL_RESPONSE, mockApp);
-    MODEL2 = new Model(MODEL_RESPONSE2, mockApp);
+    MODEL1 = new Model(MODEL_RESPONSE, mockClient);
+    MODEL2 = new Model(MODEL_RESPONSE2, mockClient);
   });
 
   after(() => {
@@ -293,7 +295,7 @@ describe('MachineLearning', () => {
 
   describe('Model', () => {
     it('should successfully construct a model', () => {
-      const model = new Model(MODEL_RESPONSE, mockApp);
+      const model = new Model(MODEL_RESPONSE, mockClient);
       expect(model.modelId).to.equal(MODEL_ID);
       expect(model.displayName).to.equal('model_1');
       expect(model.tags).to.deep.equal(['tag_1', 'tag_2']);
@@ -310,18 +312,39 @@ describe('MachineLearning', () => {
       expect(tflite.sizeBytes).to.be.equal(16900988);
     });
 
+    it('should successfully serialize a model to JSON', () => {
+      const model = new Model(MODEL_RESPONSE, mockClient);
+      const expectedModel = {
+        modelId: MODEL_ID,
+        displayName: 'model_1',
+        tags: ['tag_1', 'tag_2'],
+        createTime: CREATE_TIME_UTC,
+        updateTime: UPDATE_TIME_UTC,
+        published: true,
+        etag: 'etag123',
+        modelHash: 'modelHash123',
+        tfliteModel: {
+          gcsTfliteUri: 'gs://test-project-bucket/Firebase/ML/Models/model1.tflite',
+          sizeBytes: 16900988,
+        }
+      }
+      const expectedString = JSON.stringify(expectedModel);
+      const jsonString = model.toJSON();
+      expect(jsonString).to.equal(expectedString);
+    })
+
     it('should return locked when active operations are present', () => {
-      const model = new Model(MODEL_RESPONSE_LOCKED, mockApp);
+      const model = new Model(MODEL_RESPONSE_LOCKED, mockClient);
       expect(model.locked).to.be.true;
     });
 
     it('should return locked as false when no active operations are present', () => {
-      const model = new Model(MODEL_RESPONSE, mockApp);
+      const model = new Model(MODEL_RESPONSE, mockClient);
       expect(model.locked).to.be.false;
     });
 
     it('should successfully update a model from a Response', () => {
-      const model = new Model(MODEL_RESPONSE_LOCKED, mockApp);
+      const model = new Model(MODEL_RESPONSE_LOCKED, mockClient);
       expect(model.locked).to.be.true;
 
       const stub = sinon

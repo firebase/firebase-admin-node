@@ -27,9 +27,9 @@ const FIREBASE_VERSION_HEADER = {
 };
 
 // Operation polling defaults
-const POLL_BASE_WAIT_TIME_MILLISECONDS = 3000;  // Start with 3 second delay
-const POLL_MAX_DELAY_MILLISECONDS = 30000;  // Maximum 30 second delay
 const POLL_DEFAULT_MAX_TIME_MILLISECONDS = 120000;  // Maximum overall 2 minutes
+const POLL_BASE_WAIT_TIME_MILLISECONDS = 3000;  // Start with 3 second delay
+const POLL_MAX_WAIT_TIME_MILLISECONDS = 30000;  // Maximum 30 second delay
 
 export interface StatusErrorResponse {
     readonly code: number;
@@ -86,7 +86,7 @@ export interface ListModelsResponse {
 
 export interface OperationResponse {
   readonly name?: string;
-  readonly metadata?: any;
+  readonly metadata?: {[key: string]: any};
   readonly done: boolean;
   readonly error?: StatusErrorResponse;
   readonly response?: ModelResponse;
@@ -154,14 +154,14 @@ export class MachineLearningApiClient {
         return this.getModelName(modelId);
       })
       .then((modelName) => {
-        return this.getShortNameResource<ModelResponse>(modelName);
+        return this.getResourceWithShortName<ModelResponse>(modelName);
       });
   }
 
   public getOperation(operationName: string): Promise<OperationResponse> {
     return Promise.resolve()
       .then(() => {
-        return this.getFullNameResource<OperationResponse>(operationName);
+        return this.getResourceWithFullName<OperationResponse>(operationName);
       });
   }
 
@@ -217,21 +217,29 @@ export class MachineLearningApiClient {
    * Handles a Long Running Operation coming back from the server.
    *
    * @param op The operation to handle
-   * @param wait Should we allow polling for the operation to complete.
-   *             If no polling is requested, a locked model will be returned instead.
-   * @param maxTimeSeconds The total maximum number of seconds to wait. 0 for default.
-   * @param baseWaitMillis The number of milliseconds to wait for the first request. Only used for testing.
-   * @param maxWaitMillis The maximum number of milliseconds to wait between requests. Only used for testing.
+   * @param options The options for polling
    */
   public handleOperation(
     op: OperationResponse,
-    wait = false,
-    maxTimeSeconds = 0,
-    baseWaitMillis = 0,
-    maxWaitMillis = 0):
+    options?: {
+      wait?: boolean;
+      maxTimeMillis?: number;
+      baseWaitMillis?: number;
+      maxWaitMillis?: number;
+    }):
     Promise<ModelResponse> {
     if (op.done) {
-      return this.handleDoneOperation(op);
+      if (op.response) {
+        return Promise.resolve(op.response);
+      } else if (op.error) {
+        const err = FirebaseMachineLearningError.fromOperationError(
+          op.error.code, op.error.message);
+        return Promise.reject(err);
+      }
+
+      // Done operations must have either a response or an error.
+      throw new FirebaseMachineLearningError('invalid-server-response',
+        'Invalid operation response.');
     }
 
     // Operation is not done
@@ -243,31 +251,26 @@ export class MachineLearningApiClient {
         `Unknown Metadata type: ${JSON.stringify(metadata)}`);
     }
 
-    if (!wait) {
+    if (!options || !options.wait) {
       const modelId = extractModelId(metadata.name);
       return this.getModel(modelId);
     }
 
-    return this.pollOperationWithExponentialBackoff(opName, maxTimeSeconds, baseWaitMillis, maxWaitMillis);
+    return this.pollOperationWithExponentialBackoff(opName, options);
   }
 
+  // baseWaitMillis and maxWaitMillis should only ever be modified by unit tests to run faster.
   private pollOperationWithExponentialBackoff(
     opName: string,
-    maxTimeSeconds: number,
-    baseWaitMillis: number,
-    maxWaitMillis: number): Promise<ModelResponse> {
-    let maxTimeMilliseconds = maxTimeSeconds * 1000;
-    if (maxTimeMilliseconds <= 0) {
-      maxTimeMilliseconds = POLL_DEFAULT_MAX_TIME_MILLISECONDS;
-    }
+    options?: {
+      maxTimeMillis?: number;
+      baseWaitMillis?: number;
+      maxWaitMillis?: number;
+    }): Promise<ModelResponse> {
 
-    // These should only ever be modified by unit tests to run faster.
-    if (baseWaitMillis <= 0) {
-      baseWaitMillis = POLL_BASE_WAIT_TIME_MILLISECONDS;
-    }
-    if (maxWaitMillis <= 0) {
-      maxWaitMillis = POLL_MAX_DELAY_MILLISECONDS;
-    }
+    const maxTimeMilliseconds = options?.maxTimeMillis ?? POLL_DEFAULT_MAX_TIME_MILLISECONDS;
+    const baseWaitMillis = options?.baseWaitMillis ?? POLL_BASE_WAIT_TIME_MILLISECONDS;
+    const maxWaitMillis = options?.maxWaitMillis ?? POLL_MAX_WAIT_TIME_MILLISECONDS;
 
     const poller = new ExponentialBackoffPoller<ModelResponse>(
       baseWaitMillis,
@@ -276,32 +279,18 @@ export class MachineLearningApiClient {
 
     return poller.poll(() => {
       return this.getOperation(opName)
-        .then((responseData: any) => {
-          if(!responseData.done) {
+        .then((responseData: {[key: string]: any}) => {
+          if (!responseData.done) {
             return null;
           }
-          if(responseData.error) {
+          if (responseData.error) {
             const err = FirebaseMachineLearningError.fromOperationError(
               responseData.error.code, responseData.error.message);
-            return Promise.reject(err);
+            throw err;
           }
           return responseData.response;
         });
     });
-  }
-
-  private handleDoneOperation(op: OperationResponse): Promise<ModelResponse> {
-    if (op.response) {
-      return Promise.resolve(op.response);
-    } else if (op.error) {
-      const err = FirebaseMachineLearningError.fromOperationError(
-        op.error.code, op.error.message);
-      return Promise.reject(err);
-    }
-
-    // Done operations must have either a response or an error.
-    throw new FirebaseMachineLearningError('invalid-server-response',
-      'Invalid operation response.');
   }
 
   /**
@@ -311,7 +300,7 @@ export class MachineLearningApiClient {
    * @param {string} name Short name of the resource to get. e.g. 'models/12345'
    * @returns {Promise<T>} A promise that fulfills with the resource.
    */
-  private getShortNameResource<T>(name: string): Promise<T> {
+  private getResourceWithShortName<T>(name: string): Promise<T> {
     return this.getProjectUrl()
       .then((url) => {
         const request: HttpRequestConfig = {
@@ -328,7 +317,7 @@ export class MachineLearningApiClient {
    * @param fullName Full resource name of the resource to get. e.g. projects/123465/operations/987654
    * @returns {Promise<T>} A promise that fulfulls with the resource.
    */
-  private getFullNameResource<T>(fullName: string): Promise<T> {
+  private getResourceWithFullName<T>(fullName: string): Promise<T> {
     const request: HttpRequestConfig = {
       method: 'GET',
       url: `${ML_V1BETA2_API}/${fullName}`
