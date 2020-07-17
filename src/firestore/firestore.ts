@@ -17,6 +17,7 @@
 import { FirebaseApp, app as defaultApp } from '../index';
 import { FirebaseFirestoreError } from '../internal/error';
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
+import { SDK_VERSION } from '../firebase-namespace';
 import { isApplicationDefault } from '../auth/credential';
 import { ServiceAccountCredential } from '../auth/credential-internal';
 import * as firestoreCloud from '@google-cloud/firestore';
@@ -76,8 +77,8 @@ export function getFirestoreOptions(app: FirebaseApp): firestoreCloud.Settings {
 
   const projectId: string | null = utils.getExplicitProjectId(app);
   const credential = app.options.credential;
+
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const version = 'XXX_SDK_VERISON_XXX';
   if (credential instanceof ServiceAccountCredential) {
     return {
       credentials: {
@@ -87,13 +88,13 @@ export function getFirestoreOptions(app: FirebaseApp): firestoreCloud.Settings {
       // When the SDK is initialized with ServiceAccountCredentials an explicit projectId is
       // guaranteed to be available.
       projectId: projectId!,
-      version,
+      firebaseVersion: SDK_VERSION,
     };
   } else if (isApplicationDefault(app.options.credential)) {
     // Try to use the Google application default credentials.
     // If an explicit project ID is not available, let Firestore client discover one from the
     // environment. This prevents the users from having to set GOOGLE_CLOUD_PROJECT in GCP runtimes.
-    return validator.isNonEmptyString(projectId) ? { projectId, version } : { version };
+    return validator.isNonEmptyString(projectId) ? { projectId, firebaseVersion: SDK_VERSION } : { firebaseVersion: SDK_VERSION };
   }
 
   throw new FirebaseFirestoreError({

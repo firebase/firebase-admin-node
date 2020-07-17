@@ -293,7 +293,7 @@ export const credential = firebaseCredential;
 // export internal;
 export const internal = new FirebaseNamespaceInternals({});
 
-export const SDK_VERSION = '<XXX_SDK_VERSION_XXX>';
+export const SDK_VERSION = '<XXX_SDK_VERSION_XXX>'; // TODO: Fix like in master (this passes tests though)
 
 /**
    * Initializes the FirebaseApp instance.

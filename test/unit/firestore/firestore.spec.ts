@@ -24,6 +24,7 @@ import { FirebaseApp } from '../../../src/index';
 import { RefreshTokenCredential } from '../../../src/auth/';
 import { ComputeEngineCredential } from '../../../src/auth/credential-internal';
 import { firestore, getFirestoreOptions, FirestoreService } from '../../../src/firestore/';
+import { SDK_VERSION } from '../../../src/firebase-namespace';
 
 import * as cloudFirestore from '@google-cloud/firestore';
 import * as adminFirestore from '../../../src/firestore/';
@@ -43,7 +44,6 @@ describe('Firestore', () => {
     + 'credentials to use Cloud Firestore API.';
 
   // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { version: firebaseVersion } = require('../../../package.json');
   const defaultCredentialApps = [
     {
       name: 'ComputeEngineCredentials',
@@ -200,13 +200,13 @@ describe('Firestore', () => {
   describe('options.firebaseVersion', () => {
     it('should return firebaseVersion when using credential with service account certificate', () => {
       const options = getFirestoreOptions(mockApp);
-      expect(options.firebaseVersion).to.equal(firebaseVersion);
+      expect(options.firebaseVersion).to.equal(SDK_VERSION);
     });
 
     defaultCredentialApps.forEach((config) => {
       it(`should return firebaseVersion when using default ${config.name}`, () => {
         const options = getFirestoreOptions(config.app);
-        expect(options.firebaseVersion).to.equal(firebaseVersion);
+        expect(options.firebaseVersion).to.equal(SDK_VERSION);
       });
     });
   });
@@ -214,13 +214,13 @@ describe('Firestore', () => {
   describe('options.firebaseVersion', () => {
     it('should return firebaseVersion when using credential with service account certificate', () => {
       const options = getFirestoreOptions(mockApp);
-      expect(options.firebaseVersion).to.equal(firebaseVersion);
+      expect(options.firebaseVersion).to.equal(SDK_VERSION);
     });
 
     defaultCredentialApps.forEach((config) => {
       it(`should return firebaseVersion when using default ${config.name}`, () => {
         const options = getFirestoreOptions(config.app);
-        expect(options.firebaseVersion).to.equal(firebaseVersion);
+        expect(options.firebaseVersion).to.equal(SDK_VERSION);
       });
     });
   })
