@@ -25,7 +25,7 @@ import {FirebaseApp} from '../../../src/firebase-app';
 import {DatabaseService} from '../../../src/database/database';
 import {Database} from '@firebase/database';
 import * as utils from '../utils';
-import { HttpClient, HttpRequestConfig } from '../../../src/utils/api-request';
+import { HttpClient, HttpRequestConfig } from '../../../src/internal/api-request';
 
 describe('Database', () => {
   let mockApp: FirebaseApp;

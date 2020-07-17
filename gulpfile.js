@@ -30,6 +30,7 @@ var ts = require('gulp-typescript');
 var del = require('del');
 var header = require('gulp-header');
 var replace = require('gulp-replace');
+var filter = require('gulp-filter');
 
 
 /****************/
@@ -75,6 +76,7 @@ gulp.task('compile', function() {
   return gulp.src(paths.src)
     // Compile Typescript into .js and .d.ts files
     .pipe(buildProject())
+    // .pipe(filter(['**', '!lib/**/*-internal.d.ts', '!lib/internal/*.d.ts']))
 
     // Replace SDK version
     .pipe(replace(/\<XXX_SDK_VERSION_XXX\>/g, pkg.version))
@@ -108,6 +110,7 @@ gulp.task('copyDatabase', function() {
 
 gulp.task('copyTypings', function() {
   return gulp.src('src/*.d.ts')
+    .pipe(filter(['**/*-internal.d.ts']))
     // Add header
     .pipe(header(banner))
 

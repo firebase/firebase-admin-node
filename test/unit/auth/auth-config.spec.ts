@@ -19,7 +19,7 @@ import * as chai from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import {deepCopy} from '../../../src/utils/deep-copy';
+import {deepCopy} from '../../../src/internal/deep-copy';
 
 import {
   SAMLUpdateAuthProviderRequest,

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import * as validator from '../utils/validator';
-import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
+import * as validator from '../internal/validator';
+import {AuthClientErrorCode, FirebaseAuthError} from '../internal/error';
 
 /** Defines the ActionCodeSettings interface. */
 export interface ActionCodeSettings {

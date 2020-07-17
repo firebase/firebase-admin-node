@@ -21,7 +21,7 @@ import * as mocks from '../resources/mocks';
 
 import {FirebaseNamespace} from '../../src/firebase-namespace';
 import {FirebaseApp, FirebaseAppOptions, FirebaseAppInternals, FirebaseAccessToken} from '../../src/firebase-app';
-import { HttpError, HttpResponse } from '../../src/utils/api-request';
+import { HttpError, HttpResponse } from '../../src/internal/api-request';
 
 /**
  * Returns a new FirebaseApp instance with the provided options.

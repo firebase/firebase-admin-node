@@ -15,9 +15,9 @@
  * @internal
  */
 
-import * as validator from '../utils/validator';
+import * as validator from '../internal/validator';
 
-import {deepCopy, deepExtend} from '../utils/deep-copy';
+import {deepCopy, deepExtend} from '../internal/deep-copy';
 import {
   UserIdentifier, UidIdentifier, EmailIdentifier, PhoneIdentifier,
   ProviderIdentifier,
@@ -25,16 +25,16 @@ import {
 import { isUidIdentifier, isEmailIdentifier, isPhoneIdentifier,
   isProviderIdentifier} from './identifier-internal';
 import {FirebaseApp} from '../firebase-app';
-import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
+import {AuthClientErrorCode, FirebaseAuthError} from '../internal/error';
 import {
   ApiSettings, AuthorizedHttpClient, HttpRequestConfig, HttpError,
-} from '../utils/api-request';
+} from '../internal/api-request';
 import {CreateRequest, UpdateRequest} from './user-record';
 import {
   UserImportOptions, UserImportRecord, UserImportResult
 } from './user-import-builder';
 import {UserImportBuilder, AuthFactorInfo, convertMultiFactorInfoToServerFormat} from './user-import-builder-internal';
-import * as utils from '../utils/index';
+import * as utils from '../internal/index';
 import {ActionCodeSettings, ActionCodeSettingsBuilder} from './action-code-settings-builder';
 import {
   AuthProviderConfig,

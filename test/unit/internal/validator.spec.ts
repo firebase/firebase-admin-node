@@ -23,7 +23,7 @@ import {
   isArray, isNonEmptyArray, isBoolean, isNumber, isString, isNonEmptyString, isNonNullObject,
   isEmail, isPassword, isURL, isUid, isPhoneNumber, isObject, isBuffer,
   isUTCDateString, isISODateString,
-} from '../../../src/utils/validator';
+} from '../../../src/internal/validator';
 
 
 chai.should();

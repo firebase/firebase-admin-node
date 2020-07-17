@@ -15,11 +15,11 @@
  */
 
 import {Credential, GoogleOAuthAccessToken, getApplicationDefault} from './auth/credential';
-import * as validator from './utils/validator';
-import {deepCopy, deepExtend} from './utils/deep-copy';
+import * as validator from './internal/validator';
+import {deepCopy, deepExtend} from './internal/deep-copy';
 import {FirebaseServiceInterface} from './firebase-service';
 import {FirebaseNamespaceInternals} from './firebase-namespace';
-import {AppErrorCodes, FirebaseAppError} from './utils/error';
+import {AppErrorCodes, FirebaseAppError} from './internal/error';
 import {Agent} from 'http';
 
 /**

@@ -15,11 +15,11 @@
  */
 
 import { FirebaseApp } from '../firebase-app';
-import { HttpClient, HttpRequestConfig, HttpError } from '../utils/api-request';
+import { HttpClient, HttpRequestConfig, HttpError } from '../internal/api-request';
 import { DecodedIdToken } from './auth';
-import { AuthClientErrorCode, FirebaseAuthError, ErrorInfo } from '../utils/error';
-import * as util from '../utils/index';
-import * as validator from '../utils/validator';
+import { AuthClientErrorCode, FirebaseAuthError, ErrorInfo } from '../internal/error';
+import * as util from '../internal/index';
+import * as validator from '../internal/validator';
 import * as jwt from 'jsonwebtoken';
 
 // Audience to use for Firebase Auth Custom tokens

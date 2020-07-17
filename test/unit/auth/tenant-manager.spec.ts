@@ -28,7 +28,7 @@ import {AuthRequestHandler} from '../../../src/auth/auth-api-request';
 import {TenantOptions, TenantServerResponse, ListTenantsResult} from '../../../src/auth/tenant';
 import {TenantImpl} from '../../../src/auth/tenant-internal';
 import {TenantManager} from '../../../src/auth/tenant-manager';
-import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/utils/error';
+import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/internal/error';
 
 chai.should();
 chai.use(sinonChai);

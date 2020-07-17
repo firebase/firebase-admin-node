@@ -18,12 +18,12 @@ import {URL} from 'url';
 import * as path from 'path';
 
 import {FirebaseApp, app as defaultApp, SDK_VERSION} from '../index';
-import {FirebaseDatabaseError, AppErrorCodes, FirebaseAppError} from '../utils/error';
+import {FirebaseDatabaseError, AppErrorCodes, FirebaseAppError} from '../internal/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
 import {Database} from '@firebase/database';
 
-import * as validator from '../utils/validator';
-import { AuthorizedHttpClient, HttpRequestConfig, HttpError } from '../utils/api-request';
+import * as validator from '../internal/validator';
+import { AuthorizedHttpClient, HttpRequestConfig, HttpError } from '../internal/api-request';
 
 
 const Database_: {[name: string]: DatabaseService} = {};

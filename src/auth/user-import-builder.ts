@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {FirebaseArrayIndexError} from '../utils/error';
+import {FirebaseArrayIndexError} from '../internal/error';
 import {UploadAccountUser, UploadAccountOptions} from './user-import-builder-internal';
 
 /** Firebase Auth supported hashing algorithms for import operations. */

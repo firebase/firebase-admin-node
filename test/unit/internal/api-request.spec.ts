@@ -29,8 +29,8 @@ import {FirebaseApp} from '../../../src/firebase-app';
 import {
   ApiSettings, HttpClient, HttpError, AuthorizedHttpClient, ApiCallbackFunction, HttpRequestConfig,
   HttpResponse, parseHttpResponse, RetryConfig, defaultRetryConfig,
-} from '../../../src/utils/api-request';
-import { deepCopy } from '../../../src/utils/deep-copy';
+} from '../../../src/internal/api-request';
+import { deepCopy } from '../../../src/internal/deep-copy';
 import {Agent} from 'http';
 import * as zlib from 'zlib';
 

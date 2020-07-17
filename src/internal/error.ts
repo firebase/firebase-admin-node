@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {deepCopy} from '../utils/deep-copy';
+import {deepCopy} from '../internal/deep-copy';
 
 /**
  * Defines error info type. This includes a code and message string.

@@ -17,9 +17,9 @@
 import fs = require('fs');
 import {Credential, GoogleOAuthAccessToken} from './credential';
 import {Agent} from 'http';
-import {HttpClient, HttpRequestConfig, HttpError, HttpResponse} from '../utils/api-request';
-import {AppErrorCodes, FirebaseAppError} from '../utils/error';
-import * as util from '../utils/validator';
+import {HttpClient, HttpRequestConfig, HttpError, HttpResponse} from '../internal/api-request';
+import {AppErrorCodes, FirebaseAppError} from '../internal/error';
+import * as util from '../internal/validator';
 
 const GOOGLE_TOKEN_AUDIENCE = 'https://accounts.google.com/o/oauth2/token';
 const GOOGLE_AUTH_TOKEN_HOST = 'accounts.google.com';

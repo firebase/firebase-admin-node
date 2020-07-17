@@ -31,7 +31,7 @@ import {ServiceAccountCredential} from '../../src/auth/credential-internal';
 import {FirebaseApp, FirebaseAccessToken} from '../../src/firebase-app';
 import {FirebaseNamespace, FirebaseNamespaceInternals, FIREBASE_CONFIG_VAR} from '../../src/firebase-namespace';
 
-import { FirebaseAppError, AppErrorCodes } from '../../src/utils/error';
+import { FirebaseAppError, AppErrorCodes } from '../../src/internal/error';
 
 chai.should();
 chai.use(sinonChai);

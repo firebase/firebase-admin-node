@@ -17,11 +17,11 @@
 
 import { FirebaseApp } from '../firebase-app';
 import {ServiceAccountCredential} from './credential-internal';
-import {AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
-import { AuthorizedHttpClient, HttpError, HttpRequestConfig, HttpClient } from '../utils/api-request';
+import {AuthClientErrorCode, FirebaseAuthError } from '../internal/error';
+import { AuthorizedHttpClient, HttpError, HttpRequestConfig, HttpClient } from '../internal/api-request';
 
-import * as validator from '../utils/validator';
-import { toWebSafeBase64 } from '../utils';
+import * as validator from '../internal/validator';
+import { toWebSafeBase64 } from '../internal';
 import { BLACKLISTED_CLAIMS } from './token-generator';
 
 

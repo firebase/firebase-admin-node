@@ -22,13 +22,13 @@ import * as mocks from '../../resources/mocks';
 import {
   addReadonlyGetter, getExplicitProjectId, findProjectId,
   toWebSafeBase64, formatString, generateUpdateMask,
-} from '../../../src/utils/index';
-import {isNonEmptyString} from '../../../src/utils/validator';
+} from '../../../src/internal/index';
+import {isNonEmptyString} from '../../../src/internal/validator';
 import {FirebaseApp, FirebaseAppOptions} from '../../../src/firebase-app';
 import { ComputeEngineCredential } from '../../../src/auth/credential-internal';
-import { HttpClient } from '../../../src/utils/api-request';
+import { HttpClient } from '../../../src/internal/api-request';
 import * as utils from '../utils';
-import { FirebaseAppError } from '../../../src/utils/error';
+import { FirebaseAppError } from '../../../src/internal/error';
 
 interface Obj {
   [key: string]: any;

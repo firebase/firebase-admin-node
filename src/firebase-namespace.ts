@@ -16,8 +16,8 @@
 
 import fs = require('fs');
 import {Agent} from 'http';
-import {deepExtend} from './utils/deep-copy';
-import {AppErrorCodes, FirebaseAppError} from './utils/error';
+import {deepExtend} from './internal/deep-copy';
+import {AppErrorCodes, FirebaseAppError} from './internal/error';
 import {AppHook, FirebaseApp, FirebaseAppOptions} from './firebase-app';
 import {FirebaseServiceFactory, FirebaseServiceInterface} from './firebase-service'; // FirebaseServiceInterface
 import {
@@ -27,7 +27,7 @@ import {
 } from './auth/credential';
 import {ServiceAccountCredential} from './auth/credential-internal';
 
-import * as validator from './utils/validator';
+import * as validator from './internal/validator';
 
 const DEFAULT_APP_NAME = '[DEFAULT]';
 

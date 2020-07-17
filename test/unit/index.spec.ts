@@ -19,11 +19,11 @@ import './firebase.spec';
 import './firebase-app.spec';
 import './firebase-namespace.spec';
 
-// Utilities
-import './utils/index.spec';
-import './utils/error.spec';
-import './utils/validator.spec';
-import './utils/api-request.spec';
+// Internal utilities
+import './internal/index.spec';
+import './internal/error.spec';
+import './internal/validator.spec';
+import './internal/api-request.spec';
 
 // Auth
 import './auth/auth.spec';

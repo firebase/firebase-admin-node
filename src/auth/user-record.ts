@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import {deepCopy} from '../utils/deep-copy';
-import * as utils from '../utils';
+import {deepCopy} from '../internal/deep-copy';
+import * as utils from '../internal';
 import {MultiFactorId, GetAccountInfoUserResponse, 
   MultiFactor, ProviderUserInfoResponse} from './user-record-internal';
-import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
+import {AuthClientErrorCode, FirebaseAuthError} from '../internal/error';
 
 /**
  * 'REDACTED', encoded as a base64 string.

@@ -22,8 +22,8 @@ import {
   Tenant, TenantServerResponse, ListTenantsResult, TenantOptions,
 } from './tenant';
 import {TenantImpl} from './tenant-internal';
-import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
-import * as validator from '../utils/validator';
+import {AuthClientErrorCode, FirebaseAuthError} from '../internal/error';
+import * as validator from '../internal/validator';
 
 /**
  * Data structure used to help manage tenant related operations.

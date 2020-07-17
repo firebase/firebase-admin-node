@@ -15,13 +15,13 @@
  */
 
 import initApp from './example';
-import {expect} from 'chai';
+import { expect } from 'chai';
 // import {Bucket} from '@google-cloud/storage';
-// import {Firestore} from '@google-cloud/firestore';
 
-import {FirebaseApp} from 'firebase-admin';
-import {Auth, auth} from 'firebase-admin/auth';
-import {database, Database, ServerValue} from 'firebase-admin/database';
+import { FirebaseApp } from 'firebase-admin';
+import { Auth, auth } from 'firebase-admin/auth';
+import { database, Database, ServerValue } from 'firebase-admin/database';
+import { Firestore, firestore, FieldValue, DocumentReference } from 'firebase-admin/firestore';
 
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -40,7 +40,7 @@ describe('Init App', () => {
 
   it('Should return an Auth client', () => {
     const client = auth(app);
-    expect(client).to.be.instanceOf(Auth);
+    expect(client).to.not.be.null;
   });
 
   /*it('Should return a Messaging client', () => {
@@ -69,7 +69,7 @@ describe('Init App', () => {
   });
 
   it('Should return a Database client rules for URL', () => {
-    return database().getRulesJSON().then((result) => {
+    return database(app).getRulesJSON().then((result) => {
       return expect(result).to.be.not.undefined;
     });
   });
@@ -82,25 +82,25 @@ describe('Init App', () => {
   /*it('Should return a Cloud Storage client', () => {
     const bucket: Bucket = app.storage().bucket('TestBucket');
     expect(bucket.name).to.equal('TestBucket');
-  });
+  }); */
 
   it('Should return a Firestore client from the app', () => {
-    const firestore: Firestore = app.firestore();
-    expect(firestore).to.be.instanceOf(admin.firestore.Firestore);
+    const fs: Firestore = firestore(app);
+    expect(fs).to.be.instanceOf(Firestore);
   });
 
   it('Should return a Firestore client', () => {
-    const firestore: Firestore = admin.firestore(app);
-    expect(firestore).to.be.instanceOf(admin.firestore.Firestore);
+    const fs: Firestore = firestore(app);
+    expect(fs).to.be.instanceOf(Firestore);
   });
 
   it('Should return a Firestore FieldValue', () => {
-    const fieldValue = admin.firestore.FieldValue;
+    const fieldValue = FieldValue;
     expect(fieldValue).to.not.be.null;
   });
 
   it('Should return a DocumentReference', () => {
-    const ref: admin.firestore.DocumentReference = admin.firestore(app).collection('test').doc();
+    const ref: DocumentReference = firestore(app).collection('test').doc();
     expect(ref).to.not.be.null;
-  });*/
+  });
 });

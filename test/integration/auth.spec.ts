@@ -28,7 +28,7 @@ import {
 import url = require('url');
 import * as mocks from '../resources/mocks';
 import { AuthProviderConfig } from '../../lib/auth/auth-config';
-import { deepExtend, deepCopy } from '../../lib/utils/deep-copy';
+import { deepExtend, deepCopy } from '../../lib/internal/deep-copy';
 import { User, FirebaseAuth } from '@firebase/auth-types';
 import { TenantOptions, SecondFactor, UserImportOptions, PhoneMultiFactorInfo, UserImportRecord, UserRecord, TenantAwareAuth, auth } from '../../lib/auth/';
 import { auth as auth2 } from '../../lib/auth/';

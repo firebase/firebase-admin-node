@@ -19,11 +19,11 @@ import os = require('os');
 import fs = require('fs');
 import path = require('path');
 
-import {AppErrorCodes, FirebaseAppError} from '../utils/error';
-import {HttpClient, HttpRequestConfig} from '../utils/api-request';
+import {AppErrorCodes, FirebaseAppError} from '../internal/error';
+import {HttpClient, HttpRequestConfig} from '../internal/api-request';
 import {ServiceAccountCredential, ComputeEngineCredential, requestAccessToken, copyAttr} from './credential-internal';
 import {Agent} from 'http';
-import * as util from '../utils/validator';
+import * as util from '../internal/validator';
 
 const configDir = (() => {
   // Windows has a dedicated low-rights location for apps at ~/Application Data

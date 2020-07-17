@@ -15,9 +15,9 @@
  */
 
 import {MultiFactorInfo, PhoneMultiFactorInfo} from './user-record';
-import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
-import {isNonNullObject} from '../utils/validator';
-import * as utils from '../utils';
+import {AuthClientErrorCode, FirebaseAuthError} from '../internal/error';
+import {isNonNullObject} from '../internal/validator';
+import * as utils from '../internal';
 
 export interface MultiFactorInfoResponse {
   mfaEnrollmentId: string;

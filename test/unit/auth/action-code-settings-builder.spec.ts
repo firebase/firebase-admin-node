@@ -20,7 +20,7 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import {ActionCodeSettingsBuilder} from '../../../src/auth/action-code-settings-builder';
-import {AuthClientErrorCode} from '../../../src/utils/error';
+import {AuthClientErrorCode} from '../../../src/internal/error';
 
 
 chai.should();

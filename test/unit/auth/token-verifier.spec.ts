@@ -32,7 +32,7 @@ import {FirebaseTokenGenerator, ServiceAccountSigner} from '../../../src/auth/to
 import * as verifier from '../../../src/auth/token-verifier-internal';
 
 import {ServiceAccountCredential} from '../../../src/auth/credential-internal';
-import { AuthClientErrorCode } from '../../../src/utils/error';
+import { AuthClientErrorCode } from '../../../src/internal/error';
 import { FirebaseApp } from '../../../src/firebase-app';
 
 chai.should();

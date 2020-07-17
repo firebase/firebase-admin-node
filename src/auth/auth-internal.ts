@@ -27,14 +27,14 @@ import {FirebaseTokenGenerator, cryptoSignerFromApp} from './token-generator-int
 import {
   AbstractAuthRequestHandler, AuthRequestHandler, TenantAwareAuthRequestHandler,
 } from './auth-api-request';
-import {AuthClientErrorCode, FirebaseAuthError, ErrorInfo} from '../utils/error';
+import {AuthClientErrorCode, FirebaseAuthError, ErrorInfo} from '../internal/error';
 import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
 import {
   UserImportOptions, UserImportRecord, UserImportResult,
 } from './user-import-builder';
 
-import * as utils from '../utils/index';
-import * as validator from '../utils/validator';
+import * as utils from '../internal/index';
+import * as validator from '../internal/validator';
 import { createSessionCookieVerifier, createIdTokenVerifier } from './token-verifier';
 import { FirebaseTokenVerifier } from './token-verifier-internal';
 import {ActionCodeSettings} from './action-code-settings-builder';

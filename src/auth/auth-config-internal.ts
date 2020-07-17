@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import * as validator from '../utils/validator';
-import {deepCopy} from '../utils/deep-copy';
-import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
+import * as validator from '../internal/validator';
+import {deepCopy} from '../internal/deep-copy';
+import {AuthClientErrorCode, FirebaseAuthError} from '../internal/error';
 import {SAMLAuthProviderConfig, SAMLAuthProviderRequest, OIDCAuthProviderConfig, OIDCUpdateAuthProviderRequest} from './auth-config';
 
 /** The server side SAML configuration request interface. */

@@ -24,7 +24,7 @@ import * as admin from '../';
 import {
   AbstractAuthRequestHandler, AuthRequestHandler, TenantAwareAuthRequestHandler,
 } from './auth-api-request';
-import {FirebaseArrayIndexError} from '../utils/error';
+import {FirebaseArrayIndexError} from '../internal/error';
 import {FirebaseServiceInterface} from '../firebase-service';
 import {
   UserImportOptions, UserImportRecord, UserImportResult,

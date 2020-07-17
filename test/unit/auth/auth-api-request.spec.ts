@@ -25,10 +25,10 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
-import {deepCopy, deepExtend} from '../../../src/utils/deep-copy';
+import {deepCopy, deepExtend} from '../../../src/internal/deep-copy';
 import {FirebaseApp} from '../../../src/firebase-app';
-import {HttpClient, HttpRequestConfig} from '../../../src/utils/api-request';
-import * as validator from '../../../src/utils/validator';
+import {HttpClient, HttpRequestConfig} from '../../../src/internal/api-request';
+import * as validator from '../../../src/internal/validator';
 import {
   AuthRequestHandler, FIREBASE_AUTH_GET_ACCOUNT_INFO, FIREBASE_AUTH_GET_ACCOUNTS_INFO,
   FIREBASE_AUTH_DELETE_ACCOUNT, FIREBASE_AUTH_SET_ACCOUNT_INFO,
@@ -38,7 +38,7 @@ import {
 } from '../../../src/auth/auth-api-request';
 import {UserImportRecord} from '../../../src/auth/user-import-builder';
 import {UserImportBuilder} from '../../../src/auth/user-import-builder-internal';
-import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/utils/error';
+import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/internal/error';
 import {ActionCodeSettingsBuilder} from '../../../src/auth/action-code-settings-builder';
 import {
   OIDCAuthProviderConfig, SAMLAuthProviderConfig, OIDCUpdateAuthProviderRequest,

@@ -30,10 +30,10 @@ import {
 import {FirebaseTokenGenerator, ServiceAccountSigner, IAMSigner} from '../../../src/auth/token-generator-internal'; 
 
 import { ServiceAccountCredential } from '../../../src/auth/credential-internal';
-import { AuthorizedHttpClient, HttpClient } from '../../../src/utils/api-request';
+import { AuthorizedHttpClient, HttpClient } from '../../../src/internal/api-request';
 import { FirebaseApp } from '../../../src/firebase-app';
 import * as utils from '../utils';
-import { FirebaseAuthError } from '../../../src/utils/error';
+import { FirebaseAuthError } from '../../../src/internal/error';
 
 chai.should();
 chai.use(sinonChai);

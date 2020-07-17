@@ -18,7 +18,7 @@ import * as chai from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import {deepCopy} from '../../../src/utils/deep-copy';
+import {deepCopy} from '../../../src/internal/deep-copy';
 import {
   ValidatorFunction, UserImportResult, UserImportRecord,
   UploadAccountRequest,
@@ -26,8 +26,8 @@ import {
 import {
   UserImportBuilder
 } from '../../../src/auth/user-import-builder-internal';
-import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/utils/error';
-import {toWebSafeBase64} from '../../../src/utils';
+import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/internal/error';
+import {toWebSafeBase64} from '../../../src/internal';
 
 
 chai.should();

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import {deepCopy, deepExtend} from '../utils/deep-copy';
-import * as utils from '../utils';
-import * as validator from '../utils/validator';
-import {AuthClientErrorCode, FirebaseAuthError, FirebaseArrayIndexError} from '../utils/error';
+import {deepCopy, deepExtend} from '../internal/deep-copy';
+import * as utils from '../internal';
+import * as validator from '../internal/validator';
+import {AuthClientErrorCode, FirebaseAuthError, FirebaseArrayIndexError} from '../internal/error';
 import {UserImportRecord, UserImportOptions, ValidatorFunction, 
   UploadAccountRequest, UserImportResult, SecondFactor} from './user-import-builder';
 

@@ -37,9 +37,9 @@ import {
 import {
   ServiceAccountCredential, ComputeEngineCredential
 } from '../../../src/auth/credential-internal';
-import { HttpClient } from '../../../src/utils/api-request';
+import { HttpClient } from '../../../src/internal/api-request';
 import {Agent} from 'https';
-import { FirebaseAppError } from '../../../src/utils/error';
+import { FirebaseAppError } from '../../../src/internal/error';
 
 chai.should();
 chai.use(sinonChai);
