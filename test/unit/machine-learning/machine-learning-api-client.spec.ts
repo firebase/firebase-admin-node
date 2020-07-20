@@ -442,7 +442,7 @@ describe('MachineLearningApiClient', () => {
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
-    it('should reject unknown-error when error code is not present', () => {
+    it('should reject with unknown-error when error code is not present', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .rejects(utils.errorFrom({}, 404));
@@ -452,7 +452,7 @@ describe('MachineLearningApiClient', () => {
         .should.eventually.be.rejected.and.deep.include(expected);
     });
 
-    it('should reject unknown-error for non-json response', () => {
+    it('should reject with unknown-error for non-json response', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .rejects(utils.errorFrom('not json', 404));

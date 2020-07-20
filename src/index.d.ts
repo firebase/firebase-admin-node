@@ -1068,8 +1068,8 @@ declare namespace admin.remoteConfig {
      * The `nextPageToken` value returned from a previous list versions request, if any.
      */
     pageToken?: string;
-    
-    /** 
+
+    /**
      * Specifies the newest version number to include in the results.
      * If specified, must be greater than zero. Defaults to the newest version.
      */
@@ -1126,9 +1126,9 @@ declare namespace admin.remoteConfig {
     /**
      * Gets the requested version of the {@link admin.remoteConfig.RemoteConfigTemplate
      * `RemoteConfigTemplate`} of the project.
-     * 
+     *
      * @param versionNumber Version number of the Remote Config template to look up.
-     * 
+     *
      * @return A promise that fulfills with a `RemoteConfigTemplate`.
      */
     getTemplateAtVersion(versionNumber: number | string): Promise<RemoteConfigTemplate>;
@@ -1161,7 +1161,7 @@ declare namespace admin.remoteConfig {
     * Rolls back a project's published Remote Config template to the specified version.
     * A rollback is equivalent to getting a previously published Remote Config
     * template and re-publishing it using a force update.
-    * 
+    *
     * @param versionNumber The version number of the Remote Config template to roll back to.
     *    The specified version number must be lower than the current version number, and not have
     *    been deleted due to staleness. Only the last 300 versions are stored.
@@ -1172,11 +1172,11 @@ declare namespace admin.remoteConfig {
     rollback(versionNumber: string | number): Promise<RemoteConfigTemplate>;
 
     /**
-    * Gets a list of Remote Config template versions that have been published, sorted in reverse 
+    * Gets a list of Remote Config template versions that have been published, sorted in reverse
     * chronological order. Only the last 300 versions are stored.
-    * All versions that correspond to non-active Remote Config templates (that is, all except the 
+    * All versions that correspond to non-active Remote Config templates (that is, all except the
     * template that is being fetched by clients) are also deleted if they are more than 90 days old.
-    * 
+    *
     * @param options Optional {@link admin.remoteConfig.ListVersionsOptions `ListVersionsOptions`}
     *    object for getting a list of template versions.
     * @return A promise that fulfills with a `ListVersionsResult`.
@@ -1317,12 +1317,17 @@ declare namespace admin.machineLearning {
     /**
      * Wait for the model to be unlocked.
      *
-     * @param {number} maxTimeSeconds The maximum time in seconds to wait.
+     * @param {number} maxTimeMillis The maximum time in milliseconds to wait.
      *
      * @return {Promise<void>} A promise that resolves when the model is unlocked
      *   or the maximum wait time has passed.
      */
-    waitForUnlocked(maxTimeSeconds?: number): Promise<void>;
+    waitForUnlocked(maxTimeMillis?: number): Promise<void>;
+
+    /**
+     * Return the JSON format of the model.
+     */
+    toJSON(): {[key: string]: any};
 
     /** Metadata about the model's TensorFlow Lite model file. */
     readonly tfliteModel?: TFLiteModel;

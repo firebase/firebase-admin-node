@@ -240,13 +240,8 @@ export class Model {
   private readonly client?: MachineLearningApiClient;
 
   constructor(model: ModelResponse, client: MachineLearningApiClient) {
-    Model.validateModel(model);
-    this.model = model;
-    // Remove '@type' field. We don't need it.
-    if ((this.model as {[key: string]: any})["@type"]) {
-      delete (this.model as {[key: string]: any})["@type"];
-    }
-
+    Model.validateModelResponse(model);
+    this.model = Model.cleanModelResponse(model);
     this.client = client;
   }
 
@@ -287,24 +282,16 @@ export class Model {
   }
 
   get tfliteModel(): TFLiteModel | undefined {
+    // Make a copy so people can't directly modify the private this.model object.
     if (this.model.tfliteModel) {
-      return {
-        gcsTfliteUri: this.model.tfliteModel.gcsTfliteUri,
-        sizeBytes: this.model.tfliteModel.sizeBytes,
-      };
+      return deepCopy(this.model.tfliteModel);
     }
     return undefined;
   }
 
-  public equals(obj: Model): boolean {
-    // We only care about the model for equality.
-    return this.model === obj.model;
-  }
-
-  public toJSON(): string {
-    // We can't just return JSON.stringify(this.model)
-    // because it has extra fields and different formats
-    // etc. So we build the expected model object.
+  public toJSON(): {[key: string]: any} {
+    // We can't just return this.model because it has extra fields and
+    // different formats etc. So we build the expected model object.
     const jsonModel: {[key: string]: any}  = {
       modelId: this.modelId,
       displayName: this.displayName,
@@ -321,7 +308,7 @@ export class Model {
       jsonModel['validationError'] = this.validationError;
     }
 
-    if(this.modelHash) {
+    if (this.modelHash) {
       jsonModel['modelHash'] = this.modelHash;
     }
 
@@ -329,9 +316,8 @@ export class Model {
       jsonModel['tfliteModel'] = this.tfliteModel;
     }
 
-    return JSON.stringify(jsonModel);
+    return jsonModel;
   }
-
 
   /**
    * Locked indicates if there are active long running operations on the model.
@@ -343,12 +329,13 @@ export class Model {
 
   /**
    * Wait for the active operations on the model to complete.
-   * @param maxTimeMillis The number of milliseconds to wait for the model to be unlocked. 0 for default.
+   * @param maxTimeMillis The number of milliseconds to wait for the model to be unlocked. If unspecified,
+   *     a default will be used.
    */
   public waitForUnlocked(maxTimeMillis?: number): Promise<void> {
     // Backend does not currently return locked models.
     // This will likely change in future.
-    if ((this.model.activeOperations?.length || 0) > 0) {
+    if ((this.model.activeOperations?.length ?? 0) > 0) {
       // The client will always be defined on Models that have activeOperations
       // because models with active operations came back from the server and
       // were constructed with a non-empty client.
@@ -358,7 +345,7 @@ export class Model {
     return Promise.resolve();
   }
 
-  private static validateModel(model: ModelResponse): void {
+  private static validateModelResponse(model: ModelResponse): void {
     if (!validator.isNonNullObject(model) ||
       !validator.isNonEmptyString(model.name) ||
       !validator.isNonEmptyString(model.createTime) ||
@@ -371,13 +358,18 @@ export class Model {
     }
   }
 
-  private updateFromResponse(model: ModelResponse): void {
-    Model.validateModel(model);
-    this.model = model;
+  private static cleanModelResponse(model: ModelResponse): ModelResponse {
+    const tmpModel = deepCopy(model);
     // Remove '@type' field. We don't need it.
-    if ((this.model as any)["@type"]) {
-      delete (this.model as any)["@type"];
+    if ((tmpModel as any)["@type"]) {
+      delete (tmpModel as any)["@type"];
     }
+    return tmpModel;
+  }
+
+  private updateFromResponse(model: ModelResponse): void {
+    Model.validateModelResponse(model);
+    this.model = Model.cleanModelResponse(model);
   }
 }
 

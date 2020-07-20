@@ -243,7 +243,10 @@ export class MachineLearningApiClient {
     }
 
     // Operation is not done
-    const opName = op.name!;
+    if (options?.wait) {
+      return this.pollOperationWithExponentialBackoff(op.name!, options);
+    }
+
     const metadata = op.metadata || {};
     const metadataType: string = metadata['@type'] || '';
     if (!metadataType.includes('ModelOperationMetadata')) {
@@ -251,12 +254,7 @@ export class MachineLearningApiClient {
         `Unknown Metadata type: ${JSON.stringify(metadata)}`);
     }
 
-    if (!options || !options.wait) {
-      const modelId = extractModelId(metadata.name);
-      return this.getModel(modelId);
-    }
-
-    return this.pollOperationWithExponentialBackoff(opName, options);
+    return this.getModel(extractModelId(metadata.name));
   }
 
   // baseWaitMillis and maxWaitMillis should only ever be modified by unit tests to run faster.

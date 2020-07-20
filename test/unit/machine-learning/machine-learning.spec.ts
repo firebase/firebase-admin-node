@@ -221,8 +221,8 @@ describe('MachineLearning', () => {
   let mockClient: MachineLearningApiClient;
   let mockCredentialApp: FirebaseApp;
 
-  let MODEL1: Model;
-  let MODEL2: Model;
+  let model1: Model;
+  let model2: Model;
 
   const stubs: sinon.SinonStub[] = [];
 
@@ -231,8 +231,8 @@ describe('MachineLearning', () => {
     mockClient = new MachineLearningApiClient(mockApp);
     mockCredentialApp = mocks.mockCredentialApp();
     machineLearning = new MachineLearning(mockApp);
-    MODEL1 = new Model(MODEL_RESPONSE, mockClient);
-    MODEL2 = new Model(MODEL_RESPONSE2, mockClient);
+    model1 = new Model(MODEL_RESPONSE, mockClient);
+    model2 = new Model(MODEL_RESPONSE2, mockClient);
   });
 
   after(() => {
@@ -328,9 +328,8 @@ describe('MachineLearning', () => {
           sizeBytes: 16900988,
         }
       }
-      const expectedString = JSON.stringify(expectedModel);
-      const jsonString = model.toJSON();
-      expect(jsonString).to.equal(expectedString);
+      const jsonString = JSON.stringify(model);
+      expect(JSON.parse(jsonString)).to.deep.equal(expectedModel);
     })
 
     it('should return locked when active operations are present', () => {
@@ -355,7 +354,7 @@ describe('MachineLearning', () => {
       model.waitForUnlocked()
         .then(() => {
           expect(model.locked).to.be.false;
-          expect(model).to.deep.equal(MODEL2);
+          expect(model).to.deep.equal(model2);
         });
     });
   });
@@ -448,7 +447,7 @@ describe('MachineLearning', () => {
 
       return machineLearning.getModel(MODEL_ID)
         .then((model) => {
-          expect(model).to.deep.equal(MODEL1);
+          expect(model).to.deep.equal(model1);
         });
     });
   });
@@ -490,8 +489,8 @@ describe('MachineLearning', () => {
       return machineLearning.listModels()
         .then((result) => {
           expect(result.models.length).equals(2);
-          expect(result.models[0]).to.deep.equal(MODEL1);
-          expect(result.models[1]).to.deep.equal(MODEL2);
+          expect(result.models[0]).to.deep.equal(model1);
+          expect(result.models[1]).to.deep.equal(model2);
           expect(result.pageToken).to.equal(LIST_MODELS_RESPONSE.nextPageToken);
         });
     });
@@ -618,7 +617,7 @@ describe('MachineLearning', () => {
 
       return machineLearning.createModel(MODEL_OPTIONS_WITH_GCS)
         .then((model) => {
-          expect(model).to.deep.equal(MODEL1);
+          expect(model).to.deep.equal(model1);
         });
     });
 
@@ -735,7 +734,7 @@ describe('MachineLearning', () => {
 
       return machineLearning.updateModel(MODEL_ID, MODEL_OPTIONS_WITH_GCS)
         .then((model) => {
-          expect(model).to.deep.equal(MODEL1);
+          expect(model).to.deep.equal(model1);
         });
     });
 
@@ -839,7 +838,7 @@ describe('MachineLearning', () => {
 
       return machineLearning.publishModel(MODEL_ID)
         .then((model) => {
-          expect(model).to.deep.equal(MODEL1);
+          expect(model).to.deep.equal(model1);
         });
     });
 
@@ -943,7 +942,7 @@ describe('MachineLearning', () => {
 
       return machineLearning.unpublishModel(MODEL_ID)
         .then((model) => {
-          expect(model).to.deep.equal(MODEL1);
+          expect(model).to.deep.equal(model1);
         });
     });
 
