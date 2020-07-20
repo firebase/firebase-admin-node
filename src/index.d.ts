@@ -18,7 +18,7 @@ import { Bucket } from '@google-cloud/storage';
 import * as _firestore from '@google-cloud/firestore';
 import { Agent } from 'http';
 
-import * as _auth from './auth';
+import _auth = require('./auth');
 import * as _database from './database';
 import * as _messaging from './messaging';
 import * as _instanceId from './instance-id';
@@ -214,7 +214,7 @@ declare namespace admin {
    * ```
    *
    */
-  function auth(app?: admin.app.App): admin.auth.Auth;
+  function auth(app?: admin.app.App): _auth.auth.Auth;
 
   /**
    * Gets the {@link admin.database.Database `Database`} service for the default
@@ -520,7 +520,7 @@ declare namespace admin.app {
     options: admin.AppOptions;
 
 
-    auth(): admin.auth.Auth;
+    auth(): _auth.auth.Auth;
     database(url?: string): admin.database.Database;
     firestore(): admin.firestore.Firestore;
     instanceId(): admin.instanceId.InstanceId;
@@ -552,6 +552,7 @@ declare namespace admin.app {
   }
 }
 
+/* 
 declare namespace admin.auth {
   export import UserMetadata = _auth.admin.auth.UserMetadata;
   export import UserInfo = _auth.admin.auth.UserInfo;
@@ -580,7 +581,7 @@ declare namespace admin.auth {
   export import UpdateAuthProviderRequest = _auth.admin.auth.UpdateAuthProviderRequest;
   export import BaseAuth = _auth.admin.auth.BaseAuth;
   export import TenantAwareAuth = _auth.admin.auth.TenantAwareAuth;
-  export import Auth = _auth.admin.auth.Auth;
+  export import Auth = _auth.Auth;
   export import TenantManager = _auth.admin.auth.TenantManager;
   export import MultiFactorInfo = _auth.admin.auth.MultiFactorInfo;
   export import PhoneMultiFactorInfo = _auth.admin.auth.PhoneMultiFactorInfo;
@@ -592,7 +593,7 @@ declare namespace admin.auth {
   export import MultiFactorUpdateSettings = _auth.admin.auth.MultiFactorUpdateSettings;
   export import DeleteUsersResult = _auth.admin.auth.DeleteUsersResult;
   export import GetUsersResult = _auth.admin.auth.GetUsersResult;
-}
+} */
 
 declare namespace admin.credential {
 

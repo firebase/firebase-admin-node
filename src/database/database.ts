@@ -88,7 +88,7 @@ export class DatabaseService implements FirebaseServiceInterface {
       db.getRulesJSON = () => {
         return rulesClient.getRulesJSON();
       };
-      db.setRules = (source) => {
+      db.setRules = (source: any) => {
         return rulesClient.setRules(source);
       };
 

@@ -14,10 +14,10 @@
     "lib": ["es2015"],
     "outDir": "lib",
     // We manually craft typings in src/index.d.ts instead of auto-generating them.
-    // "declaration": true,
+    "declaration": true,
     "rootDir": "."
-  },
-  "files": [
+  }
+  /* "files": [
     "src/index.ts"
-  ]
+  ] */
 }

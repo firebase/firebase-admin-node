@@ -22,6 +22,7 @@ import { FirebaseNamespaceInternals } from './firebase-namespace';
 import { AppErrorCodes, FirebaseAppError } from './utils/error';
 
 import { Auth } from './auth/auth';
+import * as authApi from './auth/';
 import { MachineLearning } from './machine-learning/machine-learning';
 import { Messaging } from './messaging/messaging';
 import { Storage } from './storage/storage';
@@ -294,10 +295,11 @@ export class FirebaseApp {
    * @return {Auth} The Auth service instance of this app.
    */
   public auth(): Auth {
-    return this.ensureService_('auth', () => {
+    return new authApi.auth.Auth(this);
+    /* return this.ensureService_('auth', () => {
       const authService: typeof Auth = require('./auth/auth').Auth;
       return new authService(this);
-    });
+    }); */
   }
 
   /**
