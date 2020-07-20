@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import * as firebase from 'firebase-admin';
+import { FirebaseApp, cert, initializeApp } from 'firebase-admin';
 
-export function initApp(serviceAcct: any, name: string): firebase.FirebaseApp {
-  return firebase.initializeApp({
-    credential: firebase.cert(serviceAcct),
+export function initApp(serviceAcct: any, name: string): FirebaseApp {
+  return initializeApp({
+    credential: cert(serviceAcct),
     databaseURL: 'https://mock.firebaseio.com'
   }, name);
 }

@@ -13,7 +13,7 @@
     "build:tests": "gulp compile_test",
     "clean": "rm -rf lib",
     "prebuildpackage": "npm run clean && npm run build && node lib/configure-package.js",
-    "build:dist": "npm run prebuildpackage && cd lib && rm configure-package.js && npm pack",
+    "build:dist": "npm run prebuildpackage && cd lib && rm configure-package.* && npm pack",
     "prepare": "npm run build",
     "lint": "run-p lint:src lint:test",
     "test": "run-s lint test:unit",

@@ -16,6 +16,10 @@
 export * from './firestore';
 
 import * as cloudFirestore from '@google-cloud/firestore';
+
+/* eslint-disable @typescript-eslint/no-unused-vars */
+// For context: github.com/typescript-eslint/typescript-eslint/issues/363
+
 export import v1beta1 = cloudFirestore.v1beta1;
 export import v1 = cloudFirestore.v1;
 export import CollectionReference = cloudFirestore.CollectionReference;
