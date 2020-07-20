@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
+import { UserIdentifier } from './identifier';
 import { deepCopy } from '../utils/deep-copy';
 import { isNonNullObject } from '../utils/validator';
 import * as utils from '../utils';
-import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
+import { AuthClientErrorCode, FirebaseAuthError, FirebaseArrayIndexError } from '../utils/error';
 
 /**
  * 'REDACTED', encoded as a base64 string.
@@ -488,4 +489,93 @@ export class UserRecord {
     }
     return json;
   }
+}
+
+/**
+ * The multi-factor related user settings for create operations.
+ */
+export interface MultiFactorCreateSettings {
+
+  /**
+   * The created user's list of enrolled second factors.
+   */
+  enrolledFactors: CreateMultiFactorInfoRequest[];
+}
+
+/**
+ * The multi-factor related user settings for update operations.
+ */
+export interface MultiFactorUpdateSettings {
+
+  /**
+   * The updated list of enrolled second factors. The provided list overwrites the user's
+   * existing list of second factors.
+   * When null is passed, all of the user's existing second factors are removed.
+   */
+  enrolledFactors: UpdateMultiFactorInfoRequest[] | null;
+}
+
+/**
+ * Represents the result of the
+ * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#deleteUsers `deleteUsers()`}
+ * API.
+ */
+export interface DeleteUsersResult {
+  /**
+   * The number of user records that failed to be deleted (possibly zero).
+   */
+  failureCount: number;
+
+  /**
+   * The number of users that were deleted successfully (possibly zero).
+   * Users that did not exist prior to calling `deleteUsers()` are
+   * considered to be successfully deleted.
+   */
+  successCount: number;
+
+  /**
+   * A list of `FirebaseArrayIndexError` instances describing the errors that
+   * were encountered during the deletion. Length of this list is equal to
+   * the return value of [`failureCount`](#failureCount).
+   */
+  errors: FirebaseArrayIndexError[];
+}
+
+/**
+ * Represents the result of the
+ * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#deleteUsers `deleteUsers()`}
+ * API.
+ */
+export interface DeleteUsersResult {
+  /**
+   * The number of user records that failed to be deleted (possibly zero).
+   */
+  failureCount: number;
+
+  /**
+   * The number of users that were deleted successfully (possibly zero).
+   * Users that did not exist prior to calling `deleteUsers()` are
+   * considered to be successfully deleted.
+   */
+  successCount: number;
+
+  /**
+   * A list of `FirebaseArrayIndexError` instances describing the errors that
+   * were encountered during the deletion. Length of this list is equal to
+   * the return value of [`failureCount`](#failureCount).
+   */
+  errors: FirebaseArrayIndexError[];
+}
+
+/** Represents the result of the {@link admin.auth.getUsers()} API. */
+export interface GetUsersResult {
+  /**
+   * Set of user records, corresponding to the set of users that were
+   * requested. Only users that were found are listed here. The result set is
+   * unordered.
+   */
+  users: UserRecord[];
+
+  /** Set of identifiers that were requested, but not found. */
+  notFound: UserIdentifier[];
 }

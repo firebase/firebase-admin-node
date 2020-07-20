@@ -33,7 +33,6 @@ export function auth(app: FirebaseApp): authApi.Auth {
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace auth {
   // See https://github.com/microsoft/TypeScript/issues/4336
-
   export import UserMetadata = userRecordApi.UserMetadata;
   export import UserInfo = userRecordApi.UserInfo;
   export import UserRecord = userRecordApi.UserRecord;
@@ -48,8 +47,8 @@ export namespace auth {
   export import SessionCookieOptions = authApi.SessionCookieOptions;
   export import ActionCodeSettings = actionCodeSettingsBuilderApi.ActionCodeSettings;
   export import Tenant = tenantApi.Tenant;
-  export import UpdateTenantRequest = tenantManagerApi.UpdateTenantRequest;
-  export import CreateTenantRequest = authApi.CreateTenantRequest;
+  export import UpdateTenantRequest = tenantApi.UpdateTenantRequest;
+  export import CreateTenantRequest = tenantApi.CreateTenantRequest;
   export import ListTenantsResult = tenantApi.ListTenantsResult;
   export import AuthProviderConfigFilter = authConfigApi.AuthProviderConfigFilter;
   export import AuthProviderConfig = authConfigApi.AuthProviderConfig;
@@ -71,6 +70,6 @@ export namespace auth {
   export import UpdatePhoneMultiFactorInfoRequest = userRecordApi.UpdatePhoneMultiFactorInfoRequest;
   export import MultiFactorCreateSettings = userRecordApi.MultiFactorCreateSettings;
   export import MultiFactorUpdateSettings = userRecordApi.MultiFactorUpdateSettings;
-  export import DeleteUsersResult = authApi.DeleteUsersResult;
-  export import GetUsersResult = authApi.GetUsersResult;
+  export import DeleteUsersResult = userRecordApi.DeleteUsersResult;
+  export import GetUsersResult = userRecordApi.GetUsersResult;
 }

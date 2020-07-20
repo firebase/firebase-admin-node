@@ -552,48 +552,47 @@ declare namespace admin.app {
   }
 }
 
-/* 
 declare namespace admin.auth {
-  export import UserMetadata = _auth.admin.auth.UserMetadata;
-  export import UserInfo = _auth.admin.auth.UserInfo;
-  export import UserRecord = _auth.admin.auth.UserRecord;
-  export import UpdateRequest = _auth.admin.auth.UpdateRequest;
-  export import CreateRequest = _auth.admin.auth.CreateRequest;
-  export import DecodedIdToken = _auth.admin.auth.DecodedIdToken;
-  export import ListUsersResult = _auth.admin.auth.ListUsersResult;
-  export import HashAlgorithmType = _auth.admin.auth.HashAlgorithmType;
-  export import UserImportOptions = _auth.admin.auth.UserImportOptions;
-  export import UserImportResult = _auth.admin.auth.UserImportResult;
-  export import UserImportRecord = _auth.admin.auth.UserImportRecord;
-  export import SessionCookieOptions = _auth.admin.auth.SessionCookieOptions;
-  export import ActionCodeSettings = _auth.admin.auth.ActionCodeSettings;
-  export import Tenant = _auth.admin.auth.Tenant;
-  export import UpdateTenantRequest = _auth.admin.auth.UpdateTenantRequest;
-  export import CreateTenantRequest = _auth.admin.auth.CreateTenantRequest;
-  export import ListTenantsResult = _auth.admin.auth.ListTenantsResult;
-  export import AuthProviderConfigFilter = _auth.admin.auth.AuthProviderConfigFilter;
-  export import AuthProviderConfig = _auth.admin.auth.AuthProviderConfig;
-  export import SAMLAuthProviderConfig = _auth.admin.auth.SAMLAuthProviderConfig;
-  export import OIDCAuthProviderConfig = _auth.admin.auth.OIDCAuthProviderConfig;
-  export import SAMLUpdateAuthProviderRequest = _auth.admin.auth.SAMLUpdateAuthProviderRequest;
-  export import OIDCUpdateAuthProviderRequest = _auth.admin.auth.OIDCUpdateAuthProviderRequest;
-  export import ListProviderConfigResults = _auth.admin.auth.ListProviderConfigResults;
-  export import UpdateAuthProviderRequest = _auth.admin.auth.UpdateAuthProviderRequest;
-  export import BaseAuth = _auth.admin.auth.BaseAuth;
-  export import TenantAwareAuth = _auth.admin.auth.TenantAwareAuth;
-  export import Auth = _auth.Auth;
-  export import TenantManager = _auth.admin.auth.TenantManager;
-  export import MultiFactorInfo = _auth.admin.auth.MultiFactorInfo;
-  export import PhoneMultiFactorInfo = _auth.admin.auth.PhoneMultiFactorInfo;
-  export import CreateMultiFactorInfoRequest = _auth.admin.auth.CreateMultiFactorInfoRequest;
-  export import CreatePhoneMultiFactorInfoRequest = _auth.admin.auth.CreatePhoneMultiFactorInfoRequest;
-  export import UpdateMultiFactorInfoRequest = _auth.admin.auth.UpdateMultiFactorInfoRequest;
-  export import UpdatePhoneMultiFactorInfoRequest = _auth.admin.auth.UpdatePhoneMultiFactorInfoRequest;
-  export import MultiFactorCreateSettings = _auth.admin.auth.MultiFactorCreateSettings;
-  export import MultiFactorUpdateSettings = _auth.admin.auth.MultiFactorUpdateSettings;
-  export import DeleteUsersResult = _auth.admin.auth.DeleteUsersResult;
-  export import GetUsersResult = _auth.admin.auth.GetUsersResult;
-} */
+  export import UserMetadata = _auth.auth.UserMetadata;
+  export import UserInfo = _auth.auth.UserInfo;
+  export import UserRecord = _auth.auth.UserRecord;
+  export import UpdateRequest = _auth.auth.UpdateRequest;
+  export import CreateRequest = _auth.auth.CreateRequest;
+  export import DecodedIdToken = _auth.auth.DecodedIdToken;
+  export import ListUsersResult = _auth.auth.ListUsersResult;
+  export import HashAlgorithmType = _auth.auth.HashAlgorithmType;
+  export import UserImportOptions = _auth.auth.UserImportOptions;
+  export import UserImportResult = _auth.auth.UserImportResult;
+  export import UserImportRecord = _auth.auth.UserImportRecord;
+  export import SessionCookieOptions = _auth.auth.SessionCookieOptions;
+  export import ActionCodeSettings = _auth.auth.ActionCodeSettings;
+  export import Tenant = _auth.auth.Tenant;
+  export import UpdateTenantRequest = _auth.auth.UpdateTenantRequest;
+  export import CreateTenantRequest = _auth.auth.CreateTenantRequest;
+  export import ListTenantsResult = _auth.auth.ListTenantsResult;
+  export import AuthProviderConfigFilter = _auth.auth.AuthProviderConfigFilter;
+  export import AuthProviderConfig = _auth.auth.AuthProviderConfig;
+  export import SAMLAuthProviderConfig = _auth.auth.SAMLAuthProviderConfig;
+  export import OIDCAuthProviderConfig = _auth.auth.OIDCAuthProviderConfig;
+  export import SAMLUpdateAuthProviderRequest = _auth.auth.SAMLUpdateAuthProviderRequest;
+  export import OIDCUpdateAuthProviderRequest = _auth.auth.OIDCUpdateAuthProviderRequest;
+  export import ListProviderConfigResults = _auth.auth.ListProviderConfigResults;
+  export import UpdateAuthProviderRequest = _auth.auth.UpdateAuthProviderRequest;
+  export import BaseAuth = _auth.auth.BaseAuth;
+  export import TenantAwareAuth = _auth.auth.TenantAwareAuth;
+  export import Auth = _auth.auth.Auth;
+  export import TenantManager = _auth.auth.TenantManager;
+  export import MultiFactorInfo = _auth.auth.MultiFactorInfo;
+  export import PhoneMultiFactorInfo = _auth.auth.PhoneMultiFactorInfo;
+  export import CreateMultiFactorInfoRequest = _auth.auth.CreateMultiFactorInfoRequest;
+  export import CreatePhoneMultiFactorInfoRequest = _auth.auth.CreatePhoneMultiFactorInfoRequest;
+  export import UpdateMultiFactorInfoRequest = _auth.auth.UpdateMultiFactorInfoRequest;
+  export import UpdatePhoneMultiFactorInfoRequest = _auth.auth.UpdatePhoneMultiFactorInfoRequest;
+  export import MultiFactorCreateSettings = _auth.auth.MultiFactorCreateSettings;
+  export import MultiFactorUpdateSettings = _auth.auth.MultiFactorUpdateSettings;
+  export import DeleteUsersResult = _auth.auth.DeleteUsersResult;
+  export import GetUsersResult = _auth.auth.GetUsersResult;
+}
 
 declare namespace admin.credential {
 

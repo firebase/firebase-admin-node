@@ -167,3 +167,36 @@ export class Tenant {
   }
 }
 
+/**
+ * Interface representing the properties to update on the provided tenant.
+ */
+export interface UpdateTenantRequest {
+
+  /**
+   * The tenant display name.
+   */
+  displayName?: string;
+
+  /**
+   * The email sign in configuration.
+   */
+  emailSignInConfig?: {
+
+    /**
+     * Whether email provider is enabled.
+     */
+    enabled: boolean;
+
+    /**
+     * Whether password is required for email sign-in. When not required,
+     * email sign-in can be performed with password or via email link sign-in.
+     */
+    passwordRequired?: boolean;
+  };
+}
+
+/**
+ * Interface representing the properties to set on a new tenant.
+ */
+export type CreateTenantRequest = UpdateTenantRequest;
+
