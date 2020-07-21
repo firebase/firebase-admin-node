@@ -252,6 +252,7 @@ export class FirebaseApp {
   private options_: FirebaseAppOptions;
   private services_: {[name: string]: FirebaseServiceInterface} = {};
   private isDeleted_ = false;
+  private authServices_: {[name: string]: authApi.auth.Auth} = {};
 
   constructor(options: FirebaseAppOptions, name: string, private firebaseInternals_: FirebaseNamespaceInternals) {
     this.name_ = name;
@@ -294,11 +295,10 @@ export class FirebaseApp {
    * @return {Auth} The Auth service instance of this app.
    */
   public auth(): authApi.auth.Auth {
-    return new authApi.auth.Auth(this);
-    /* return this.ensureService_('auth', () => {
-      const authService: typeof Auth = require('./auth/auth').Auth;
-      return new authService(this);
-    }); */
+    if (typeof(this.authServices_[this.name]) == 'undefined') {
+      this.authServices_[this.name] = new authApi.auth.Auth(this);
+    }
+    return this.authServices_[this.name];
   }
 
   /**
