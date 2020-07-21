@@ -40,7 +40,7 @@ export interface UserImportOptions {
 }
 
 interface SecondFactor {
-  uid: string;
+  uid?: string;
   phoneNumber: string;
   displayName?: string;
   enrollmentTime?: string;

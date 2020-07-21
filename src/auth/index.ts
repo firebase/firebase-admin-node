@@ -33,6 +33,8 @@ export function auth(app: FirebaseApp): authApi.Auth {
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace auth {
   // See https://github.com/microsoft/TypeScript/issues/4336
+  /* eslint-disable @typescript-eslint/no-unused-vars */
+  // For context: github.com/typescript-eslint/typescript-eslint/issues/363
   export import UserMetadata = userRecordApi.UserMetadata;
   export import UserInfo = userRecordApi.UserInfo;
   export import UserRecord = userRecordApi.UserRecord;
