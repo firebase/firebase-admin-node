@@ -2,9 +2,10 @@ import { URL } from 'url';
 import * as path from 'path';
 
 import { FirebaseApp } from '../firebase-app';
+import * as admin from '../';
 import { FirebaseDatabaseError, AppErrorCodes, FirebaseAppError } from '../utils/error';
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
-import { Database } from '@firebase/database';
+import { Database, Reference } from '@firebase/database';
 
 import * as validator from '../utils/validator';
 import { AuthorizedHttpClient, HttpRequestConfig, HttpError } from '../utils/api-request';
@@ -42,11 +43,14 @@ declare module '@firebase/database' {
   }
 }
 
+export type EventType = 'value' | 'child_added' | 'child_changed' | 'child_moved' | 'child_removed';
+export interface ThenableReference extends Reference, Promise<Reference> { }
+
 export class DatabaseService implements FirebaseServiceInterface {
 
   public readonly INTERNAL: DatabaseInternals = new DatabaseInternals();
 
-  private readonly appInternal: FirebaseApp;
+  private readonly appInternal: admin.app.App;
 
   constructor(app: FirebaseApp) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
@@ -231,3 +235,4 @@ class DatabaseRulesClient {
     return `${intro}: ${err.response.text}`;
   }
 }
+

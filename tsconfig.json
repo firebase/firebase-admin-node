@@ -14,7 +14,8 @@
     "lib": ["es2015"],
     "outDir": "lib",
     // We manually craft typings in src/index.d.ts instead of auto-generating them.
-    // "declaration": true,
+    // Currently, only RTDB has auto-generated typings, the rest default to src/index.d.ts
+    "declaration": true,
     "rootDir": "."
   },
   "files": [

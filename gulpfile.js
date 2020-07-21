@@ -30,6 +30,7 @@ var ts = require('gulp-typescript');
 var del = require('del');
 var header = require('gulp-header');
 var replace = require('gulp-replace');
+var filter = require('gulp-filter');
 
 
 /****************/
@@ -75,6 +76,23 @@ gulp.task('compile', function() {
   return gulp.src(paths.src)
     // Compile Typescript into .js and .d.ts files
     .pipe(buildProject())
+    .pipe(filter([
+        '**',
+        '!lib/default-namespace.d.ts',
+        // '!lib/firebase-namespace.d.ts', 
+        // '!lib/firebase-app.d.ts', 
+        // '!lib/firebase-service.d.ts', 
+        '!lib/**/*-internal.d.ts', 
+        '!lib/auth/*.d.ts',
+        '!lib/firestore/*.d.ts',
+        '!lib/instance-id/*.d.ts',
+        '!lib/machine-learning/*.d.ts',
+        '!lib/messaging/*.d.ts',
+        '!lib/project-management/*.d.ts',
+        '!lib/remote-config/*.d.ts',
+        '!lib/security-rules/*.d.ts',
+        '!lib/storage/*.d.ts',
+        '!lib/utils/*.d.ts']))
 
     // Add header
     .pipe(header(banner))
