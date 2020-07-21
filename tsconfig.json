@@ -16,8 +16,8 @@
     // We manually craft typings in src/index.d.ts instead of auto-generating them.
     "declaration": true,
     "rootDir": "."
-  }
-  /* "files": [
+  },
+  "files": [
     "src/index.ts"
-  ] */
+  ]
 }

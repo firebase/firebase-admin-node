@@ -21,7 +21,6 @@ import { FirebaseServiceInterface } from './firebase-service';
 import { FirebaseNamespaceInternals } from './firebase-namespace';
 import { AppErrorCodes, FirebaseAppError } from './utils/error';
 
-// import { Auth } from './auth/auth';
 import * as authApi from './auth/';
 import { MachineLearning } from './machine-learning/machine-learning';
 import { Messaging } from './messaging/messaging';
