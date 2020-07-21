@@ -422,7 +422,7 @@ export namespace admin.database {
     /**
      * @return A JSON-serializable representation of this object.
      */
-    toJSON(): Object | null;
+    toJSON(): object | null;
 
     /**
      * Extracts a JavaScript value from a `DataSnapshot`.
@@ -604,7 +604,7 @@ export namespace admin.database {
      * });
      * ```
      *
-     * @param values Object containing multiple values.
+     * @param values object containing multiple values.
      * @param onComplete An optional callback function that will
      *   be called when synchronization to the server has completed. The
      *   callback will be passed a single parameter: null for success, or an Error
@@ -612,7 +612,7 @@ export namespace admin.database {
      * @return Resolves when synchronization to the
      *   Database is complete.
      */
-    update(values: Object, onComplete?: (a: Error | null) => any): Promise<void>;
+    update(values: object, onComplete?: (a: Error | null) => any): Promise<void>;
   }
 
   type EventType = 'value' | 'child_added' | 'child_changed' | 'child_moved' | 'child_removed';
@@ -865,7 +865,7 @@ export namespace admin.database {
     off(
       eventType?: admin.database.EventType,
       callback?: (a: admin.database.DataSnapshot, b?: string | null) => any,
-      context?: Object | null
+      context?: object | null
     ): void;
 
     /**
@@ -987,8 +987,8 @@ export namespace admin.database {
     on(
       eventType: admin.database.EventType,
       callback: (a: admin.database.DataSnapshot, b?: string | null) => any,
-      cancelCallbackOrContext?: ((a: Error) => any) | Object | null,
-      context?: Object | null
+      cancelCallbackOrContext?: ((a: Error) => any) | object | null,
+      context?: object | null
     ): (a: admin.database.DataSnapshot | null, b?: string) => any;
 
     /**
@@ -1025,8 +1025,8 @@ export namespace admin.database {
     once(
       eventType: admin.database.EventType,
       successCallback?: (a: admin.database.DataSnapshot, b?: string | null ) => any,
-      failureCallbackOrContext?: ((a: Error) => void) | Object | null,
-      context?: Object | null
+      failureCallbackOrContext?: ((a: Error) => void) | object | null,
+      context?: object | null
     ): Promise<admin.database.DataSnapshot>;
 
     /**
@@ -1158,7 +1158,7 @@ export namespace admin.database {
     /**
      * @return A JSON-serializable representation of this object.
      */
-    toJSON(): Object;
+    toJSON(): object;
 
     /**
      * Gets the absolute URL for this location.
@@ -1618,12 +1618,12 @@ export namespace admin.database {
      * adaNameRef.update({ first: 'Ada', last: 'Lovelace' });
      * ```
      *
-     * @param values Object containing multiple values.
+     * @param values object containing multiple values.
      * @param onComplete Callback called when write to server is
      *   complete.
      * @return Resolves when update on server is complete.
      */
-    update(values: Object, onComplete?: (a: Error | null) => any): Promise<void>;
+    update(values: object, onComplete?: (a: Error | null) => any): Promise<void>;
   }
 
   /**
@@ -1651,7 +1651,7 @@ export namespace admin.database.ServerValue {
    * });
    * ```
    */
-  const TIMESTAMP: Object;
+  const TIMESTAMP: object;
 
   /**
    * Returns a placeholder value that can be used to atomically increment the
@@ -1660,5 +1660,5 @@ export namespace admin.database.ServerValue {
    * @param delta the amount to modify the current value atomically.
    * @return a placeholder value for modifying data atomically server-side.
    */
-  function increment(delta: number): Object;
+  function increment(delta: number): object;
 }

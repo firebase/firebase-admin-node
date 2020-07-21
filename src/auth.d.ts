@@ -29,7 +29,7 @@ export namespace admin.auth {
     /**
      * @return A JSON-serializable representation of this object.
      */
-    toJSON(): Object;
+    toJSON(): object;
   }
 
   /**
@@ -71,7 +71,7 @@ export namespace admin.auth {
     /**
      * @return A JSON-serializable representation of this object.
      */
-    toJSON(): Object;
+    toJSON(): object;
   }
 
   /**
@@ -102,7 +102,7 @@ export namespace admin.auth {
     /**
      * @return A JSON-serializable representation of this object.
      */
-    toJSON(): Object;
+    toJSON(): object;
   }
 
   /**
@@ -219,7 +219,7 @@ export namespace admin.auth {
     /**
      * @return A JSON-serializable representation of this object.
      */
-    toJSON(): Object;
+    toJSON(): object;
   }
 
   /**
@@ -235,7 +235,7 @@ export namespace admin.auth {
     /**
      * @return A JSON-serializable representation of this multi-factor object.
      */
-    toJSON(): Object;
+    toJSON(): object;
   }
 
   /**
@@ -974,7 +974,7 @@ export namespace admin.auth {
     /**
      * @return A JSON-serializable representation of this object.
      */
-    toJSON(): Object;
+    toJSON(): object;
   }
 
   /**
@@ -1324,7 +1324,7 @@ export namespace admin.auth {
      * @return A promise fulfilled with a custom token for the
      *   provided `uid` and payload.
      */
-    createCustomToken(uid: string, developerClaims?: Object): Promise<string>;
+    createCustomToken(uid: string, developerClaims?: object): Promise<string>;
 
     /**
      * Creates a new user.
@@ -1513,7 +1513,7 @@ export namespace admin.auth {
      * @return A promise that resolves when the operation completes
      *   successfully.
      */
-    setCustomUserClaims(uid: string, customUserClaims: Object | null): Promise<void>;
+    setCustomUserClaims(uid: string, customUserClaims: object | null): Promise<void>;
 
     /**
      * Revokes all refresh tokens for an existing user.
