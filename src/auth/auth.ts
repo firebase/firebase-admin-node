@@ -867,4 +867,3 @@ export class Auth extends BaseAuth<AuthRequestHandler> implements FirebaseServic
     return this.tenantManager_;
   }
 }
-
