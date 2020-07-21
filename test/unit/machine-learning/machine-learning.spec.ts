@@ -322,6 +322,7 @@ describe('MachineLearning', () => {
         updateTime: UPDATE_TIME_UTC,
         published: true,
         etag: 'etag123',
+        locked: false,
         modelHash: 'modelHash123',
         tfliteModel: {
           gcsTfliteUri: 'gs://test-project-bucket/Firebase/ML/Models/model1.tflite',

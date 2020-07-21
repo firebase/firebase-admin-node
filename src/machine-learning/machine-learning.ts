@@ -240,8 +240,7 @@ export class Model {
   private readonly client?: MachineLearningApiClient;
 
   constructor(model: ModelResponse, client: MachineLearningApiClient) {
-    Model.validateModelResponse(model);
-    this.model = Model.cleanModelResponse(model);
+    this.model = Model.validateAndClone(model);
     this.client = client;
   }
 
@@ -283,10 +282,15 @@ export class Model {
 
   get tfliteModel(): TFLiteModel | undefined {
     // Make a copy so people can't directly modify the private this.model object.
-    if (this.model.tfliteModel) {
-      return deepCopy(this.model.tfliteModel);
-    }
-    return undefined;
+    return deepCopy(this.model.tfliteModel);
+  }
+
+  /**
+   * Locked indicates if there are active long running operations on the model.
+   * Models may not be modified when they are locked.
+   */
+  public get locked(): boolean {
+    return (this.model.activeOperations?.length ?? 0) > 0;
   }
 
   public toJSON(): {[key: string]: any} {
@@ -300,6 +304,7 @@ export class Model {
       updateTime: this.updateTime,
       published: this.published,
       etag: this.etag,
+      locked: this.locked,
     };
 
     // Also add possibly undefined fields if they exist.
@@ -319,13 +324,6 @@ export class Model {
     return jsonModel;
   }
 
-  /**
-   * Locked indicates if there are active long running operations on the model.
-   * Models may not be modified when they are locked.
-   */
-  public get locked(): boolean {
-    return (this.model.activeOperations?.length || 0) > 0;
-  }
 
   /**
    * Wait for the active operations on the model to complete.
@@ -345,20 +343,18 @@ export class Model {
     return Promise.resolve();
   }
 
-  private static validateModelResponse(model: ModelResponse): void {
+  private static validateAndClone(model: ModelResponse): ModelResponse {
     if (!validator.isNonNullObject(model) ||
-      !validator.isNonEmptyString(model.name) ||
-      !validator.isNonEmptyString(model.createTime) ||
-      !validator.isNonEmptyString(model.updateTime) ||
-      !validator.isNonEmptyString(model.displayName) ||
-      !validator.isNonEmptyString(model.etag)) {
+    !validator.isNonEmptyString(model.name) ||
+    !validator.isNonEmptyString(model.createTime) ||
+    !validator.isNonEmptyString(model.updateTime) ||
+    !validator.isNonEmptyString(model.displayName) ||
+    !validator.isNonEmptyString(model.etag)) {
       throw new FirebaseMachineLearningError(
         'invalid-server-response',
         `Invalid Model response: ${JSON.stringify(model)}`);
     }
-  }
 
-  private static cleanModelResponse(model: ModelResponse): ModelResponse {
     const tmpModel = deepCopy(model);
     // Remove '@type' field. We don't need it.
     if ((tmpModel as any)["@type"]) {
@@ -368,8 +364,7 @@ export class Model {
   }
 
   private updateFromResponse(model: ModelResponse): void {
-    Model.validateModelResponse(model);
-    this.model = Model.cleanModelResponse(model);
+    this.model = Model.validateAndClone(model);
   }
 }
 
