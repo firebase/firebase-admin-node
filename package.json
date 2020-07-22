@@ -11,6 +11,7 @@
   "scripts": {
     "build": "gulp build",
     "build:tests": "gulp compile_test",
+    "build:typing": "gulp build_typings",
     "prepare": "npm run build",
     "lint": "run-p lint:src lint:test",
     "test": "run-s lint test:unit",
@@ -18,6 +19,7 @@
     "test:unit": "mocha test/unit/*.spec.ts --require ts-node/register",
     "test:integration": "mocha test/integration/*.ts --slow 5000 --timeout 20000 --require ts-node/register",
     "test:coverage": "nyc npm run test:unit",
+    "test:typing": "run-s build:typing test:unit test:integration",
     "lint:src": "eslint src/ --ext .ts",
     "lint:test": "eslint test/ --ext .ts",
     "apidocs": "node docgen/generate-docs.js --api node"
