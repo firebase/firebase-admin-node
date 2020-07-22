@@ -1318,7 +1318,7 @@ declare namespace admin.machineLearning {
      * Wait for the model to be unlocked.
      *
      * @param {number} maxTimeMillis The maximum time in milliseconds to wait.
-     *     If not specified, a default maximum of 2 minutes will be used.
+     *     If not specified, a default maximum of 2 minutes is used.
      *
      * @return {Promise<void>} A promise that resolves when the model is unlocked
      *   or the maximum wait time has passed.
@@ -1326,7 +1326,7 @@ declare namespace admin.machineLearning {
     waitForUnlocked(maxTimeMillis?: number): Promise<void>;
 
     /**
-     * Return the JSON format of the model.
+     * Return the model as a JSON object.
      */
     toJSON(): {[key: string]: any};
 
