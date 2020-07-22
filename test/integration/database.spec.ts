@@ -169,7 +169,6 @@ describe('admin.database', () => {
   });
 
   it('admin.database().getRulesJSON() returns currently defined rules as an object', () => {
-    
     return admin.database().getRulesJSON().then((result) => {
       return expect(result).to.be.not.undefined;
     });
