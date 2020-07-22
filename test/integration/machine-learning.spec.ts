@@ -74,8 +74,9 @@ describe('admin.machineLearning', () => {
   describe('createModel()', () => {
     it('creates a new Model without ModelFormat', () => {
       const modelOptions: admin.machineLearning.ModelOptions = {
-        displayName: 'node-integration-test-create-1',
-        tags: ['tag123', 'tag345'] };
+        displayName: 'node-integ-test-create-1',
+        tags: ['tag123', 'tag345']
+      };
       return admin.machineLearning().createModel(modelOptions)
         .then((model) => {
           scheduleForDelete(model);
@@ -85,7 +86,7 @@ describe('admin.machineLearning', () => {
 
     it('creates a new Model with valid ModelFormat', () => {
       const modelOptions: admin.machineLearning.ModelOptions = {
-        displayName: 'node-integration-test-create-2',
+        displayName: 'node-integ-test-create-2',
         tags: ['tag234', 'tag456'],
         tfliteModel: { gcsTfliteUri: 'this will be replaced below' },
       };
@@ -103,7 +104,7 @@ describe('admin.machineLearning', () => {
     it('creates a new Model with invalid ModelFormat', () => {
       // Upload a file to default gcs bucket
       const modelOptions: admin.machineLearning.ModelOptions = {
-        displayName: 'node-integration-test-create-3',
+        displayName: 'node-integ-test-create-3',
         tags: ['tag234', 'tag456'],
         tfliteModel: { gcsTfliteUri: 'this will be replaced below' },
       };
@@ -150,15 +151,15 @@ describe('admin.machineLearning', () => {
       const modelOptions: admin.machineLearning.ModelOptions = {
         displayName: 'Invalid Name#*^!',
       };
-      return createTemporaryModel({ displayName: 'node-integration-invalid-arg' })
+      return createTemporaryModel({ displayName: 'node-integ-invalid-argument' })
         .then((model) => admin.machineLearning().updateModel(model.modelId, modelOptions)
           .should.eventually.be.rejected.and.have.property(
             'code', 'machine-learning/invalid-argument'));
     });
 
     it('updates the displayName', () => {
-      const DISPLAY_NAME = 'node-integration-test-update-1b';
-      return createTemporaryModel({ displayName: 'node-integration-test-update-1a' })
+      const DISPLAY_NAME = 'node-integ-test-update-1b';
+      return createTemporaryModel({ displayName: 'node-integ-test-update-1a' })
         .then((model) => {
           const modelOptions: admin.machineLearning.ModelOptions = {
             displayName: DISPLAY_NAME,
@@ -175,7 +176,7 @@ describe('admin.machineLearning', () => {
       const NEW_TAGS = ['tag-node-update-2', 'tag-node-update-3'];
 
       return createTemporaryModel({
-        displayName: 'node-integration-test-update-2',
+        displayName: 'node-integ-test-update-2',
         tags: ORIGINAL_TAGS,
       }).then((expectedModel) => {
         const modelOptions: admin.machineLearning.ModelOptions = {
@@ -205,9 +206,9 @@ describe('admin.machineLearning', () => {
     });
 
     it('can update more than 1 field', () => {
-      const DISPLAY_NAME = 'node-integration-test-update-3b';
-      const TAGS = ['node-integration-tag-1', 'node-integration-tag-2'];
-      return createTemporaryModel({ displayName: 'node-integration-test-update-3a' })
+      const DISPLAY_NAME = 'node-integ-test-update-3b';
+      const TAGS = ['node-integ-tag-1', 'node-integ-tag-2'];
+      return createTemporaryModel({ displayName: 'node-integ-test-update-3a' })
         .then((model) => {
           const modelOptions: admin.machineLearning.ModelOptions = {
             displayName: DISPLAY_NAME,
@@ -238,7 +239,7 @@ describe('admin.machineLearning', () => {
 
     it('publishes the model successfully', () => {
       const modelOptions: admin.machineLearning.ModelOptions = {
-        displayName: 'node-integration-test-publish-1',
+        displayName: 'node-integ-test-publish-1',
         tfliteModel: { gcsTfliteUri: 'this will be replaced below' },
       };
       return uploadModelToGcs('model1.tflite', 'valid_model.tflite')
@@ -273,7 +274,7 @@ describe('admin.machineLearning', () => {
 
     it('unpublishes the model successfully', () => {
       const modelOptions: admin.machineLearning.ModelOptions = {
-        displayName: 'node-integration-test-unpublish1',
+        displayName: 'node-integ-test-unpublish-1',
         tfliteModel: { gcsTfliteUri: 'this will be replaced below' },
       };
       return uploadModelToGcs('model1.tflite', 'valid_model.tflite')
@@ -330,16 +331,16 @@ describe('admin.machineLearning', () => {
     before(() => {
       return Promise.all([
         admin.machineLearning().createModel({
-          displayName: 'node-integration-list1',
-          tags: ['node-integration-tag-1'],
+          displayName: 'node-integ-list1',
+          tags: ['node-integ-tag-1'],
         }),
         admin.machineLearning().createModel({
-          displayName: 'node-integration-list2',
-          tags: ['node-integration-tag-1'],
+          displayName: 'node-integ-list2',
+          tags: ['node-integ-tag-1'],
         }),
         admin.machineLearning().createModel({
-          displayName: 'node-integration-list3',
-          tags: ['node-integration-tag-1'],
+          displayName: 'node-integ-list3',
+          tags: ['node-integ-tag-1'],
         })])
         .then(([m1, m2, m3]: admin.machineLearning.Model[]) => {
           model1 = m1;
@@ -370,12 +371,12 @@ describe('admin.machineLearning', () => {
       return admin.machineLearning().listModels({ pageSize: 2 })
         .then((modelList) => {
           expect(modelList.models.length).to.equal(2);
-          expect(modelList.pageToken).not.to.be.undefined;
+          expect(modelList.pageToken).not.to.be.empty;
         });
     });
 
     it('filters by exact displayName', () => {
-      return admin.machineLearning().listModels({ filter: 'displayName=node-integration-list1' })
+      return admin.machineLearning().listModels({ filter: 'displayName=node-integ-list1' })
         .then((modelList) => {
           expect(modelList.models.length).to.equal(1);
           expect(modelList.models[0]).to.deep.equal(model1);
@@ -384,7 +385,7 @@ describe('admin.machineLearning', () => {
     });
 
     it('filters by displayName prefix', () => {
-      return admin.machineLearning().listModels({ filter: 'displayName:node-integration-list*', pageSize: 100 })
+      return admin.machineLearning().listModels({ filter: 'displayName:node-integ-list*', pageSize: 100 })
         .then((modelList) => {
           expect(modelList.models.length).to.be.at.least(3);
           expect(modelList.models).to.deep.include(model1);
@@ -395,7 +396,7 @@ describe('admin.machineLearning', () => {
     });
 
     it('filters by tag', () => {
-      return admin.machineLearning().listModels({ filter: 'tags:node-integration-tag-1', pageSize: 100 })
+      return admin.machineLearning().listModels({ filter: 'tags:node-integ-tag-1', pageSize: 100 })
         .then((modelList) => {
           expect(modelList.models.length).to.be.at.least(3);
           expect(modelList.models).to.deep.include(model1);
@@ -406,14 +407,15 @@ describe('admin.machineLearning', () => {
     });
 
     it('handles pageTokens properly', () => {
-      return admin.machineLearning().listModels({ filter: 'displayName:node-integration-list*', pageSize: 2 })
+      return admin.machineLearning().listModels({ filter: 'displayName:node-integ-list*', pageSize: 2 })
         .then((modelList) => {
           expect(modelList.models.length).to.equal(2);
-          expect(modelList.pageToken).not.to.be.empty;
+          expect(modelList.pageToken).not.to.be.undefined;
           return admin.machineLearning().listModels({
-            filter: 'displayName:node-integration-list*',
+            filter: 'displayName:node-integ-list*',
             pageSize: 2,
-            pageToken: modelList.pageToken })
+            pageToken: modelList.pageToken
+          })
             .then((modelList2) => {
               expect(modelList2.models.length).to.be.at.least(1);
               expect(modelList2.pageToken).to.be.undefined;

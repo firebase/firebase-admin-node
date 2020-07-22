@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient } from '../utils/api-request';
+import { HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient, ExponentialBackoffPoller } from '../utils/api-request';
 import { PrefixedFirebaseError } from '../utils/error';
 import { FirebaseMachineLearningError, MachineLearningErrorCode } from './machine-learning-utils';
 import * as utils from '../utils/index';
@@ -25,6 +25,11 @@ const ML_V1BETA2_API = 'https://firebaseml.googleapis.com/v1beta2';
 const FIREBASE_VERSION_HEADER = {
   'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
 };
+
+// Operation polling defaults
+const POLL_DEFAULT_MAX_TIME_MILLISECONDS = 120000;  // Maximum overall 2 minutes
+const POLL_BASE_WAIT_TIME_MILLISECONDS = 3000;  // Start with 3 second delay
+const POLL_MAX_WAIT_TIME_MILLISECONDS = 30000;  // Maximum 30 second delay
 
 export interface StatusErrorResponse {
     readonly code: number;
@@ -71,6 +76,7 @@ export interface ModelResponse extends ModelContent {
   readonly updateTime: string;
   readonly etag: string;
   readonly modelHash?: string;
+  readonly activeOperations?: OperationResponse[];
 }
 
 export interface ListModelsResponse {
@@ -80,6 +86,7 @@ export interface ListModelsResponse {
 
 export interface OperationResponse {
   readonly name?: string;
+  readonly metadata?: {[key: string]: any};
   readonly done: boolean;
   readonly error?: StatusErrorResponse;
   readonly response?: ModelResponse;
@@ -112,7 +119,7 @@ export class MachineLearningApiClient {
       const err = new FirebaseMachineLearningError('invalid-argument', 'Invalid model content.');
       return Promise.reject(err);
     }
-    return this.getUrl()
+    return this.getProjectUrl()
       .then((url) => {
         const request: HttpRequestConfig = {
           method: 'POST',
@@ -130,7 +137,7 @@ export class MachineLearningApiClient {
       const err = new FirebaseMachineLearningError('invalid-argument', 'Invalid model or mask content.');
       return Promise.reject(err);
     }
-    return this.getUrl()
+    return this.getProjectUrl()
       .then((url) => {
         const request: HttpRequestConfig = {
           method: 'PATCH',
@@ -141,14 +148,20 @@ export class MachineLearningApiClient {
       });
   }
 
-
   public getModel(modelId: string): Promise<ModelResponse> {
     return Promise.resolve()
       .then(() => {
         return this.getModelName(modelId);
       })
       .then((modelName) => {
-        return this.getResource<ModelResponse>(modelName);
+        return this.getResourceWithShortName<ModelResponse>(modelName);
+      });
+  }
+
+  public getOperation(operationName: string): Promise<OperationResponse> {
+    return Promise.resolve()
+      .then(() => {
+        return this.getResourceWithFullName<OperationResponse>(operationName);
       });
   }
 
@@ -177,7 +190,7 @@ export class MachineLearningApiClient {
         'invalid-argument', 'Next page token must be a non-empty string.');
       return Promise.reject(err);
     }
-    return this.getUrl()
+    return this.getProjectUrl()
       .then((url) => {
         const request: HttpRequestConfig = {
           method: 'GET',
@@ -189,7 +202,7 @@ export class MachineLearningApiClient {
   }
 
   public deleteModel(modelId: string): Promise<void> {
-    return this.getUrl()
+    return this.getProjectUrl()
       .then((url) => {
         const modelName = this.getModelName(modelId);
         const request: HttpRequestConfig = {
@@ -201,14 +214,92 @@ export class MachineLearningApiClient {
   }
 
   /**
+   * Handles a Long Running Operation coming back from the server.
+   *
+   * @param op The operation to handle
+   * @param options The options for polling
+   */
+  public handleOperation(
+    op: OperationResponse,
+    options?: {
+      wait?: boolean;
+      maxTimeMillis?: number;
+      baseWaitMillis?: number;
+      maxWaitMillis?: number;
+    }):
+    Promise<ModelResponse> {
+    if (op.done) {
+      if (op.response) {
+        return Promise.resolve(op.response);
+      } else if (op.error) {
+        const err = FirebaseMachineLearningError.fromOperationError(
+          op.error.code, op.error.message);
+        return Promise.reject(err);
+      }
+
+      // Done operations must have either a response or an error.
+      throw new FirebaseMachineLearningError('invalid-server-response',
+        'Invalid operation response.');
+    }
+
+    // Operation is not done
+    if (options?.wait) {
+      return this.pollOperationWithExponentialBackoff(op.name!, options);
+    }
+
+    const metadata = op.metadata || {};
+    const metadataType: string = metadata['@type'] || '';
+    if (!metadataType.includes('ModelOperationMetadata')) {
+      throw new FirebaseMachineLearningError('invalid-server-response',
+        `Unknown Metadata type: ${JSON.stringify(metadata)}`);
+    }
+
+    return this.getModel(extractModelId(metadata.name));
+  }
+
+  // baseWaitMillis and maxWaitMillis should only ever be modified by unit tests to run faster.
+  private pollOperationWithExponentialBackoff(
+    opName: string,
+    options?: {
+      maxTimeMillis?: number;
+      baseWaitMillis?: number;
+      maxWaitMillis?: number;
+    }): Promise<ModelResponse> {
+
+    const maxTimeMilliseconds = options?.maxTimeMillis ?? POLL_DEFAULT_MAX_TIME_MILLISECONDS;
+    const baseWaitMillis = options?.baseWaitMillis ?? POLL_BASE_WAIT_TIME_MILLISECONDS;
+    const maxWaitMillis = options?.maxWaitMillis ?? POLL_MAX_WAIT_TIME_MILLISECONDS;
+
+    const poller = new ExponentialBackoffPoller<ModelResponse>(
+      baseWaitMillis,
+      maxWaitMillis,
+      maxTimeMilliseconds);
+
+    return poller.poll(() => {
+      return this.getOperation(opName)
+        .then((responseData: {[key: string]: any}) => {
+          if (!responseData.done) {
+            return null;
+          }
+          if (responseData.error) {
+            const err = FirebaseMachineLearningError.fromOperationError(
+              responseData.error.code, responseData.error.message);
+            throw err;
+          }
+          return responseData.response;
+        });
+    });
+  }
+
+  /**
    * Gets the specified resource from the ML API. Resource names must be the short names without project
    * ID prefix (e.g. `models/123456789`).
    *
-   * @param {string} name Full qualified name of the resource to get.
+   * @param {string} name Short name of the resource to get. e.g. 'models/12345'
    * @returns {Promise<T>} A promise that fulfills with the resource.
    */
-  private getResource<T>(name: string): Promise<T> {
-    return this.getUrl()
+  private getResourceWithShortName<T>(name: string): Promise<T> {
+    return this.getProjectUrl()
       .then((url) => {
         const request: HttpRequestConfig = {
           method: 'GET',
@@ -216,6 +307,20 @@ export class MachineLearningApiClient {
         };
         return this.sendRequest<T>(request);
       });
+  }
+
+  /**
+   * Gets the specified resource from the ML API. Resource names must be the full names including project
+   * number prefix.
+   * @param fullName Full resource name of the resource to get. e.g. projects/123465/operations/987654
+   * @returns {Promise<T>} A promise that fulfulls with the resource.
+   */
+  private getResourceWithFullName<T>(fullName: string): Promise<T> {
+    const request: HttpRequestConfig = {
+      method: 'GET',
+      url: `${ML_V1BETA2_API}/${fullName}`
+    };
+    return this.sendRequest<T>(request);
   }
 
   private sendRequest<T>(request: HttpRequestConfig): Promise<T> {
@@ -250,7 +355,7 @@ export class MachineLearningApiClient {
     return new FirebaseMachineLearningError(code, message);
   }
 
-  private getUrl(): Promise<string> {
+  private getProjectUrl(): Promise<string> {
     return this.getProjectIdPrefix()
       .then((projectIdPrefix) => {
         return `${ML_V1BETA2_API}/${projectIdPrefix}`;
@@ -309,3 +414,7 @@ const ERROR_CODE_MAPPING: {[key: string]: MachineLearningErrorCode} = {
   UNAUTHENTICATED: 'authentication-error',
   UNKNOWN: 'unknown-error',
 };
+
+function extractModelId(resourceName: string): string {
+  return resourceName.split('/').pop()!;
+}

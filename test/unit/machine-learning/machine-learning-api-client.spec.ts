@@ -64,9 +64,14 @@ describe('MachineLearningApiClient', () => {
     },
   };
 
+  const PROJECT_ID = 'test-project';
+  const PROJECT_NUMBER = '1234567';
+  const OPERATION_ID = '987654';
+  const OPERATION_NAME = `projects/${PROJECT_NUMBER}/operations/${OPERATION_ID}`;
+  const STATUS_ERROR_MESSAGE = 'Invalid Argument message'
   const STATUS_ERROR_RESPONSE = {
     code: 3,
-    message: 'Invalid Argument message',
+    message: STATUS_ERROR_MESSAGE,
   };
   const OPERATION_SUCCESS_RESPONSE = {
     done: true,
@@ -75,6 +80,30 @@ describe('MachineLearningApiClient', () => {
   const OPERATION_ERROR_RESPONSE = {
     done: true,
     error: STATUS_ERROR_RESPONSE,
+  };
+  const OPERATION_NOT_DONE_RESPONSE = {
+    name: OPERATION_NAME,
+    metadata: {
+      '@type': 'type.googleapis.com/google.firebase.ml.v1beta2.ModelOperationMetadata',
+      name: `projects/${PROJECT_ID}/models/${MODEL_ID}`,
+      basicOperationStatus: 'BASIC_OPERATION_STATUS_UPLOADING'
+    },
+    done: false,
+  };
+  const LOCKED_MODEL_RESPONSE = {
+    name: 'projects/test-project/models/1234567',
+    createTime: '2020-02-07T23:45:23.288047Z',
+    updateTime: '2020-02-08T23:45:23.288047Z',
+    etag: 'etag123',
+    modelHash: 'modelHash123',
+    displayName: 'model_1',
+    tags: ['tag_1', 'tag_2'],
+    activeOperations: [OPERATION_NOT_DONE_RESPONSE],
+    state: { published: true },
+    tfliteModel: {
+      gcsTfliteUri: 'gs://test-project-bucket/Firebase/ML/Models/model1.tflite',
+      sizeBytes: 16900988,
+    },
   };
 
   const ERROR_RESPONSE = {
@@ -384,6 +413,153 @@ describe('MachineLearningApiClient', () => {
       return apiClient.getModel(MODEL_ID)
         .should.eventually.be.rejected.and.deep.include(expected);
     });
+  });
+
+  describe('getOperation', () => {
+    it('should resolve with the requested operation on success', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(OPERATION_SUCCESS_RESPONSE));
+      stubs.push(stub);
+      return apiClient.getOperation(OPERATION_NAME)
+        .then((resp) => {
+          expect(resp).to.deep.equal(OPERATION_SUCCESS_RESPONSE);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url: `${BASE_URL}/projects/${PROJECT_NUMBER}/operations/${OPERATION_ID}`,
+            headers: EXPECTED_HEADERS,
+          });
+        });
+    });
+
+    it('should reject when a full platform error response is received', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom(ERROR_RESPONSE, 404));
+      stubs.push(stub);
+      const expected = new FirebaseMachineLearningError('not-found', 'Requested entity not found');
+      return apiClient.getOperation(OPERATION_NAME)
+        .should.eventually.be.rejected.and.deep.include(expected);
+    });
+
+    it('should reject with unknown-error when error code is not present', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom({}, 404));
+      stubs.push(stub);
+      const expected = new FirebaseMachineLearningError('unknown-error', 'Unknown server error: {}');
+      return apiClient.getOperation(OPERATION_NAME)
+        .should.eventually.be.rejected.and.deep.include(expected);
+    });
+
+    it('should reject with unknown-error for non-json response', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(utils.errorFrom('not json', 404));
+      stubs.push(stub);
+      const expected = new FirebaseMachineLearningError(
+        'unknown-error', 'Unexpected response with status: 404 and body: not json');
+      return apiClient.getOperation(OPERATION_NAME)
+        .should.eventually.be.rejected.and.deep.include(expected);
+    });
+
+    it('should reject when failed with a FirebaseAppError', () => {
+      const expected = new FirebaseAppError('network-error', 'socket hang up');
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .rejects(expected);
+      stubs.push(stub);
+      return apiClient.getOperation(OPERATION_NAME)
+        .should.eventually.be.rejected.and.deep.include(expected);
+    });
+  });
+
+  describe('handleOperation', () => {
+    it('handles a done operation with result', () => {
+      return apiClient.handleOperation(OPERATION_SUCCESS_RESPONSE)
+        .then((resp) => {
+          expect(resp).deep.equals(MODEL_RESPONSE);
+        });
+    });
+
+    it('handles a done operation with error', () => {
+      const expected = new FirebaseMachineLearningError('invalid-argument', STATUS_ERROR_MESSAGE);
+      return apiClient.handleOperation(OPERATION_ERROR_RESPONSE)
+        .should.eventually.be.rejected.and.deep.include(expected);
+    });
+
+    it('handles a running operation with no wait', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(LOCKED_MODEL_RESPONSE));
+      stubs.push(stub);
+      return apiClient.handleOperation(OPERATION_NOT_DONE_RESPONSE)
+        .then((resp) => {
+          expect(resp).to.deep.equal(LOCKED_MODEL_RESPONSE);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url: `${BASE_URL}/projects/${PROJECT_ID}/models/${MODEL_ID}`,
+            headers: EXPECTED_HEADERS,
+          });
+        });
+    });
+
+    it('handles a running operation with wait', () => {
+      const stub = sinon.stub(HttpClient.prototype, 'send');
+      stub.onCall(0).resolves(utils.responseFrom(OPERATION_NOT_DONE_RESPONSE));
+      stub.onCall(1).resolves(utils.responseFrom(OPERATION_SUCCESS_RESPONSE));
+      stubs.push(stub);
+      return apiClient.handleOperation(OPERATION_NOT_DONE_RESPONSE, {
+        wait: true,
+        maxTimeMillis: 1000,
+        baseWaitMillis: 2,
+        maxWaitMillis: 5 })
+        .then((resp) => {
+          expect(resp).to.deep.equal(MODEL_RESPONSE);
+          expect(stub).to.have.been.calledTwice.and.calledWith({
+            method: 'GET',
+            url: `${BASE_URL}/projects/${PROJECT_NUMBER}/operations/${OPERATION_ID}`,
+            headers: EXPECTED_HEADERS,
+          });
+        });
+    });
+
+    it('handles a running operation with wait ending in error', () => {
+      const stub = sinon.stub(HttpClient.prototype, 'send');
+      stub.onCall(0).resolves(utils.responseFrom(OPERATION_NOT_DONE_RESPONSE));
+      stub.onCall(1).resolves(utils.responseFrom(OPERATION_ERROR_RESPONSE));
+      stubs.push(stub);
+      const expected = new FirebaseMachineLearningError('invalid-argument', STATUS_ERROR_MESSAGE);
+      return apiClient.handleOperation(OPERATION_NOT_DONE_RESPONSE, {
+        wait: true,
+        maxTimeMillis: 1000,
+        baseWaitMillis: 2,
+        maxWaitMillis: 5 })
+        .should.eventually.be.rejected.and.deep.include(expected)
+        .then(() => {
+          expect(stub).to.have.been.calledTwice.and.calledWith({
+            method: 'GET',
+            url: `${BASE_URL}/projects/${PROJECT_NUMBER}/operations/${OPERATION_ID}`,
+            headers: EXPECTED_HEADERS,
+          });
+        });
+    });
+
+    it('handles a running operation with wait ending in timeout', () => {
+      const stub = sinon.stub(HttpClient.prototype, 'send');
+      stub.onCall(0).resolves(utils.responseFrom(OPERATION_NOT_DONE_RESPONSE));
+      stub.onCall(1).resolves(utils.responseFrom(OPERATION_NOT_DONE_RESPONSE));
+      stub.onCall(2).resolves(utils.responseFrom(OPERATION_NOT_DONE_RESPONSE));
+      stubs.push(stub);
+      const expected = new Error('ExponentialBackoffPoller dealine exceeded - Master timeout reached');
+      return apiClient.handleOperation(OPERATION_NOT_DONE_RESPONSE, {
+        wait: true,
+        maxTimeMillis: 1000,
+        baseWaitMillis: 500,
+        maxWaitMillis: 1000 })
+        .should.eventually.be.rejected.and.deep.include(expected);
+    });
+
   });
 
   describe('listModels', () => {
