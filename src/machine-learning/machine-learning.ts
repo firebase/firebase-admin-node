@@ -338,7 +338,9 @@ export class Model {
       // because models with active operations came back from the server and
       // were constructed with a non-empty client.
       return this.client!.handleOperation(this.model.activeOperations![0], { wait: true, maxTimeMillis })
-        .then((modelResponse) => this.updateFromResponse(modelResponse));
+        .then((modelResponse) => {
+          this.model = Model.validateAndClone(modelResponse);
+        });
     }
     return Promise.resolve();
   }
@@ -361,10 +363,6 @@ export class Model {
       delete (tmpModel as any)["@type"];
     }
     return tmpModel;
-  }
-
-  private updateFromResponse(model: ModelResponse): void {
-    this.model = Model.validateAndClone(model);
   }
 }
 
