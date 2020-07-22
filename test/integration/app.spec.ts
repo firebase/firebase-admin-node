@@ -30,6 +30,8 @@ describe('admin', () => {
   it('does not load RTDB by default', () => {
     const rtdb = require.cache[require.resolve('@firebase/database')];
     expect(rtdb).to.be.undefined;
+    const rtdbInternal = require.cache[require.resolve('../../lib/database/database-internal')];
+    expect(rtdbInternal).to.be.undefined;
   });
 
   it('loads RTDB when calling admin.database', () => {
