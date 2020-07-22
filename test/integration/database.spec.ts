@@ -29,6 +29,11 @@ const expect = chai.expect;
 
 const path = 'adminNodeSdkManualTest';
 
+interface DatabaseRecord {
+  success: boolean;
+  timestamp: string;
+}
+
 describe('admin.database', () => {
 
   before(() => {
@@ -97,7 +102,7 @@ describe('admin.database', () => {
     it('once() returns the current value of the reference', () => {
       return ref.once('value')
         .then((snapshot) => {
-          const value = snapshot.val();
+          const value = snapshot.val() as DatabaseRecord;
           expect(value.success).to.be.true;
           expect(typeof value.timestamp).to.equal('number');
         });
@@ -139,7 +144,7 @@ describe('admin.database', () => {
     it('once() returns the current value of the reference', () => {
       return refWithUrl.once('value')
         .then((snapshot) => {
-          const value = snapshot.val();
+          const value = snapshot.val() as DatabaseRecord;
           expect(value.success).to.be.true;
           expect(typeof value.timestamp).to.equal('number');
         });
@@ -164,6 +169,7 @@ describe('admin.database', () => {
   });
 
   it('admin.database().getRulesJSON() returns currently defined rules as an object', () => {
+    
     return admin.database().getRulesJSON().then((result) => {
       return expect(result).to.be.not.undefined;
     });

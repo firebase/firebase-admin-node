@@ -1,5 +1,5 @@
 /*!
- * Copyright 2017 Google Inc.
+ * Copyright 2020 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Credential, GoogleOAuthAccessToken, getApplicationDefault } from './auth/credential';
+import { getApplicationDefault } from './auth/credential';
 import * as validator from './utils/validator';
 import { deepCopy, deepExtend } from './utils/deep-copy';
 import { FirebaseServiceInterface } from './firebase-service';
@@ -26,7 +26,7 @@ import { MachineLearning } from './machine-learning/machine-learning';
 import { Messaging } from './messaging/messaging';
 import { Storage } from './storage/storage';
 import { Database } from '@firebase/database';
-import { DatabaseService } from './database/database';
+import { DatabaseService } from './database/database-internal';
 import { Firestore } from '@google-cloud/firestore';
 import { FirestoreService } from './firestore/firestore';
 import { InstanceId } from './instance-id/instance-id';
@@ -35,211 +35,7 @@ import { ProjectManagement } from './project-management/project-management';
 import { SecurityRules } from './security-rules/security-rules';
 import { RemoteConfig } from './remote-config/remote-config';
 
-import { Agent } from 'http';
-
-/**
- * Type representing a callback which is called every time an app lifecycle event occurs.
- */
-export type AppHook = (event: string, app: FirebaseApp) => void;
-
-/**
- * Type representing the options object passed into initializeApp().
- */
-export interface FirebaseAppOptions {
-  credential?: Credential;
-  databaseAuthVariableOverride?: object | null;
-  databaseURL?: string;
-  serviceAccountId?: string;
-  storageBucket?: string;
-  projectId?: string;
-  httpAgent?: Agent;
-}
-
-/**
- * Type representing a Firebase OAuth access token (derived from a Google OAuth2 access token) which
- * can be used to authenticate to Firebase services such as the Realtime Database and Auth.
- */
-export interface FirebaseAccessToken {
-  accessToken: string;
-  expirationTime: number;
-}
-
-/**
- * Internals of a FirebaseApp instance.
- */
-export class FirebaseAppInternals {
-  private isDeleted_ = false;
-  private cachedToken_: FirebaseAccessToken;
-  private cachedTokenPromise_: Promise<FirebaseAccessToken> | null;
-  private tokenListeners_: Array<(token: string) => void>;
-  private tokenRefreshTimeout_: NodeJS.Timer;
-
-  constructor(private credential_: Credential) {
-    this.tokenListeners_ = [];
-  }
-
-  /**
-   * Gets an auth token for the associated app.
-   *
-   * @param {boolean} forceRefresh Whether or not to force a token refresh.
-   * @return {Promise<FirebaseAccessToken>} A Promise that will be fulfilled with the current or
-   *   new token.
-   */
-  public getToken(forceRefresh?: boolean): Promise<FirebaseAccessToken> {
-    const expired = this.cachedToken_ && this.cachedToken_.expirationTime < Date.now();
-    if (this.cachedTokenPromise_ && !forceRefresh && !expired) {
-      return this.cachedTokenPromise_
-        .catch((error) => {
-          // Update the cached token promise to avoid caching errors. Set it to resolve with the
-          // cached token if we have one (and return that promise since the token has still not
-          // expired).
-          if (this.cachedToken_) {
-            this.cachedTokenPromise_ = Promise.resolve(this.cachedToken_);
-            return this.cachedTokenPromise_;
-          }
-
-          // Otherwise, set the cached token promise to null so that it will force a refresh next
-          // time getToken() is called.
-          this.cachedTokenPromise_ = null;
-
-          // And re-throw the caught error.
-          throw error;
-        });
-    } else {
-      // Clear the outstanding token refresh timeout. This is a noop if the timeout is undefined.
-      clearTimeout(this.tokenRefreshTimeout_);
-
-      // this.credential_ may be an external class; resolving it in a promise helps us
-      // protect against exceptions and upgrades the result to a promise in all cases.
-      this.cachedTokenPromise_ = Promise.resolve(this.credential_.getAccessToken())
-        .then((result: GoogleOAuthAccessToken) => {
-          // Since the developer can provide the credential implementation, we want to weakly verify
-          // the return type until the type is properly exported.
-          if (!validator.isNonNullObject(result) ||
-            typeof result.expires_in !== 'number' ||
-            typeof result.access_token !== 'string') {
-            throw new FirebaseAppError(
-              AppErrorCodes.INVALID_CREDENTIAL,
-              `Invalid access token generated: "${JSON.stringify(result)}". Valid access ` +
-              'tokens must be an object with the "expires_in" (number) and "access_token" ' +
-              '(string) properties.',
-            );
-          }
-
-          const token: FirebaseAccessToken = {
-            accessToken: result.access_token,
-            expirationTime: Date.now() + (result.expires_in * 1000),
-          };
-
-          const hasAccessTokenChanged = (this.cachedToken_ && this.cachedToken_.accessToken !== token.accessToken);
-          const hasExpirationChanged = (this.cachedToken_ && this.cachedToken_.expirationTime !== token.expirationTime);
-          if (!this.cachedToken_ || hasAccessTokenChanged || hasExpirationChanged) {
-            this.cachedToken_ = token;
-            this.tokenListeners_.forEach((listener) => {
-              listener(token.accessToken);
-            });
-          }
-
-          // Establish a timeout to proactively refresh the token every minute starting at five
-          // minutes before it expires. Once a token refresh succeeds, no further retries are
-          // needed; if it fails, retry every minute until the token expires (resulting in a total
-          // of four retries: at 4, 3, 2, and 1 minutes).
-          let refreshTimeInSeconds = (result.expires_in - (5 * 60));
-          let numRetries = 4;
-
-          // In the rare cases the token is short-lived (that is, it expires in less than five
-          // minutes from when it was fetched), establish the timeout to refresh it after the
-          // current minute ends and update the number of retries that should be attempted before
-          // the token expires.
-          if (refreshTimeInSeconds <= 0) {
-            refreshTimeInSeconds = result.expires_in % 60;
-            numRetries = Math.floor(result.expires_in / 60) - 1;
-          }
-
-          // The token refresh timeout keeps the Node.js process alive, so only create it if this
-          // instance has not already been deleted.
-          if (numRetries && !this.isDeleted_) {
-            this.setTokenRefreshTimeout(refreshTimeInSeconds * 1000, numRetries);
-          }
-
-          return token;
-        })
-        .catch((error) => {
-          let errorMessage = (typeof error === 'string') ? error : error.message;
-
-          errorMessage = 'Credential implementation provided to initializeApp() via the ' +
-            '"credential" property failed to fetch a valid Google OAuth2 access token with the ' +
-            `following error: "${errorMessage}".`;
-
-          if (errorMessage.indexOf('invalid_grant') !== -1) {
-            errorMessage += ' There are two likely causes: (1) your server time is not properly ' +
-            'synced or (2) your certificate key file has been revoked. To solve (1), re-sync the ' +
-            'time on your server. To solve (2), make sure the key ID for your key file is still ' +
-            'present at https://console.firebase.google.com/iam-admin/serviceaccounts/project. If ' +
-            'not, generate a new key file at ' +
-            'https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk.';
-          }
-
-          throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
-        });
-
-      return this.cachedTokenPromise_;
-    }
-  }
-
-  /**
-   * Adds a listener that is called each time a token changes.
-   *
-   * @param {function(string)} listener The listener that will be called with each new token.
-   */
-  public addAuthTokenListener(listener: (token: string) => void): void {
-    this.tokenListeners_.push(listener);
-    if (this.cachedToken_) {
-      listener(this.cachedToken_.accessToken);
-    }
-  }
-
-  /**
-   * Removes a token listener.
-   *
-   * @param {function(string)} listener The listener to remove.
-   */
-  public removeAuthTokenListener(listener: (token: string) => void): void {
-    this.tokenListeners_ = this.tokenListeners_.filter((other) => other !== listener);
-  }
-
-  /**
-   * Deletes the FirebaseAppInternals instance.
-   */
-  public delete(): void {
-    this.isDeleted_ = true;
-
-    // Clear the token refresh timeout so it doesn't keep the Node.js process alive.
-    clearTimeout(this.tokenRefreshTimeout_);
-  }
-
-  /**
-   * Establishes timeout to refresh the Google OAuth2 access token used by the SDK.
-   *
-   * @param {number} delayInMilliseconds The delay to use for the timeout.
-   * @param {number} numRetries The number of times to retry fetching a new token if the prior fetch
-   *   failed.
-   */
-  private setTokenRefreshTimeout(delayInMilliseconds: number, numRetries: number): void {
-    this.tokenRefreshTimeout_ = setTimeout(() => {
-      this.getToken(/* forceRefresh */ true)
-        .catch(() => {
-          // Ignore the error since this might just be an intermittent failure. If we really cannot
-          // refresh the token, an error will be logged once the existing token expires and we try
-          // to fetch a fresh one.
-          if (numRetries > 0) {
-            this.setTokenRefreshTimeout(60 * 1000, numRetries - 1);
-          }
-        });
-    }, delayInMilliseconds);
-  }
-}
-
+import { FirebaseAppInternals, FirebaseAppOptions } from './firebase-app-internal';
 
 
 /**
@@ -307,7 +103,7 @@ export class FirebaseApp {
    */
   public database(url?: string): Database {
     const service: DatabaseService = this.ensureService_('database', () => {
-      const dbService: typeof DatabaseService = require('./database/database').DatabaseService;
+      const dbService: typeof DatabaseService = require('./database/database-internal').DatabaseService;
       return new dbService(this);
     });
     return service.getDatabase(url);

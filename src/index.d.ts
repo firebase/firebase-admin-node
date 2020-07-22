@@ -741,15 +741,15 @@ declare namespace admin.credential {
 }
 
 declare namespace admin.database {
-  export import Database = _database.Database;
-  export import DataSnapshot = _database.DataSnapshot;
-  export import OnDisconnect = _database.OnDisconnect;
-  export import EventType = _database.EventType;
-  export import Query = _database.Query;
-  export import Reference = _database.Reference;
-  export import ThenableReference = _database.ThenableReference;
-  export import enableLogging = _database.enableLogging;
-  export import ServerValue = _database.ServerValue;
+  export import Database = _database.database.Database;
+  export import DataSnapshot = _database.database.DataSnapshot;
+  export import OnDisconnect = _database.database.OnDisconnect;
+  export import EventType = _database.database.EventType;
+  export import Query = _database.database.Query;
+  export import Reference = _database.database.Reference;
+  export import ThenableReference = _database.database.ThenableReference;
+  export import enableLogging = _database.database.enableLogging;
+  export import ServerValue = _database.database.ServerValue;
 }
 
 declare namespace admin.messaging {

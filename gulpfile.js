@@ -79,9 +79,8 @@ gulp.task('compile', function() {
     .pipe(filter([
         '**',
         '!lib/default-namespace.d.ts',
-        // '!lib/firebase-namespace.d.ts', 
-        // '!lib/firebase-app.d.ts', 
-        // '!lib/firebase-service.d.ts', 
+        '!lib/firebase-namespace.d.ts', 
+       '!lib/firebase-service.d.ts', 
         '!lib/**/*-internal.d.ts', 
         '!lib/auth/*.d.ts',
         '!lib/firestore/*.d.ts',

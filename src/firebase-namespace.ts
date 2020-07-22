@@ -18,7 +18,8 @@ import fs = require('fs');
 import { Agent } from 'http';
 import { deepExtend } from './utils/deep-copy';
 import { AppErrorCodes, FirebaseAppError } from './utils/error';
-import { AppHook, FirebaseApp, FirebaseAppOptions } from './firebase-app';
+import { FirebaseApp } from './firebase-app';
+import { AppHook, FirebaseAppOptions } from './firebase-app-internal';
 import { FirebaseServiceFactory, FirebaseServiceInterface } from './firebase-service';
 import {
   Credential,
