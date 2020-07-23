@@ -29,7 +29,7 @@ export namespace admin.auth {
     /**
      * @return A JSON-serializable representation of this object.
      */
-    toJSON(): object;
+    toJSON(): Object;
   }
 
   /**
@@ -71,7 +71,7 @@ export namespace admin.auth {
     /**
      * @return A JSON-serializable representation of this object.
      */
-    toJSON(): object;
+    toJSON(): Object;
   }
 
   /**
@@ -102,7 +102,7 @@ export namespace admin.auth {
     /**
      * @return A JSON-serializable representation of this object.
      */
-    toJSON(): object;
+    toJSON(): Object;
   }
 
   /**
@@ -219,7 +219,7 @@ export namespace admin.auth {
     /**
      * @return A JSON-serializable representation of this object.
      */
-    toJSON(): object;
+    toJSON(): Object;
   }
 
   /**
@@ -974,7 +974,7 @@ export namespace admin.auth {
     /**
      * @return A JSON-serializable representation of this object.
      */
-    toJSON(): object;
+    toJSON(): Object;
   }
 
   /**

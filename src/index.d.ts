@@ -71,7 +71,7 @@ declare namespace admin {
     /**
      * @return A JSON-serializable representation of this object.
      */
-    toJSON(): object;
+    toJSON(): Object;
   }
 
   /**

@@ -422,7 +422,7 @@ export namespace admin.database {
     /**
      * @return A JSON-serializable representation of this object.
      */
-    toJSON(): object | null;
+    toJSON(): Object | null;
 
     /**
      * Extracts a JavaScript value from a `DataSnapshot`.
@@ -1158,7 +1158,7 @@ export namespace admin.database {
     /**
      * @return A JSON-serializable representation of this object.
      */
-    toJSON(): object;
+    toJSON(): Object;
 
     /**
      * Gets the absolute URL for this location.
@@ -1660,5 +1660,5 @@ export namespace admin.database.ServerValue {
    * @param delta the amount to modify the current value atomically.
    * @return a placeholder value for modifying data atomically server-side.
    */
-  function increment(delta: number): object;
+  function increment(delta: number): Object;
 }
