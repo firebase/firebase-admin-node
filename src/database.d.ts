@@ -1651,7 +1651,7 @@ export namespace admin.database.ServerValue {
    * });
    * ```
    */
-  const TIMESTAMP: object;
+  const TIMESTAMP: Object;
 
   /**
    * Returns a placeholder value that can be used to atomically increment the
