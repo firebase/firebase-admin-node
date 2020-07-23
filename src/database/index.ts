@@ -25,7 +25,7 @@ export function database(app: FirebaseApp): firebaseRtdbApi.Database {
 // We must define a namespace to make the typings work correctly. 
 // Otherwise `admin.database()` cannot be called like a function.
 /* eslint-disable @typescript-eslint/no-namespace */
-export namespace database {
+export namespace admin.database {
   // See https://github.com/microsoft/TypeScript/issues/4336
   /* eslint-disable @typescript-eslint/no-unused-vars */
   // For context: github.com/typescript-eslint/typescript-eslint/issues/363

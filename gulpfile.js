@@ -166,7 +166,6 @@ gulp.task('build', gulp.series('cleanup', 'compile', 'copyDatabase', 'copyTyping
 
 // Build typings
 gulp.task('build_typings', gulp.series('cleanup', 'compile_autogen_typing', 'copyTypings', 'removeManuallyCuratedTypings'));
-// gulp.task('build_typings', gulp.series('cleanup', 'compile_autogen_typing', 'copyTypings'));
 
 // Default task
 gulp.task('default', gulp.series('build'));
