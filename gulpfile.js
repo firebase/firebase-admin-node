@@ -110,6 +110,7 @@ gulp.task('compile_autogen_typing', function() {
     // expected to produce typings).
     .pipe(filter([
       'lib/src/**/*.js',
+      'lib/src/**/*.d.ts',
       '!lib/src/index.d.ts',
       '!lib/src/default-namespace.d.ts',
       '!lib/src/firebase-namespace.d.ts',
@@ -165,6 +166,7 @@ gulp.task('build', gulp.series('cleanup', 'compile', 'copyDatabase', 'copyTyping
 
 // Build typings
 gulp.task('build_typings', gulp.series('cleanup', 'compile_autogen_typing', 'copyTypings', 'removeManuallyCuratedTypings'));
+// gulp.task('build_typings', gulp.series('cleanup', 'compile_autogen_typing', 'copyTypings'));
 
 // Default task
 gulp.task('default', gulp.series('build'));
