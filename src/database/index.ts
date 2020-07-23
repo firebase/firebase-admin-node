@@ -26,17 +26,17 @@ export function database(app: FirebaseApp): firebaseRtdbApi.Database {
 // We must define a namespace to make the typings work correctly. 
 // Otherwise `admin.database()` cannot be called like a function.
 /* eslint-disable @typescript-eslint/no-namespace */
-export namespace admin.database {
+export namespace database {
   // See https://github.com/microsoft/TypeScript/issues/4336
   /* eslint-disable @typescript-eslint/no-unused-vars */
   // For context: github.com/typescript-eslint/typescript-eslint/issues/363
   export import Database = firebaseRtdbApi.Database;
   export import DataSnapshot = firebaseRtdbTypesApi.DataSnapshot;
   export import OnDisconnect = firebaseRtdbApi.OnDisconnect;
-  export import EventType = adminRtdbApi.EventType;
+  export import EventType = firebaseRtdbTypesApi.EventType;
   export import Query = firebaseRtdbApi.Query;
   export import Reference = firebaseRtdbApi.Reference;
   export import ThenableReference = adminRtdbApi.ThenableReference;
   export import enableLogging = firebaseRtdbApi.enableLogging;
-  export import ServerValue = firebaseRtdbApi.ServerValue;
+  export import ServerValue = firebaseRtdbTypesApi.ServerValue;
 }
