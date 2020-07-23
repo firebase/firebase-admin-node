@@ -29,11 +29,6 @@ const expect = chai.expect;
 
 const path = 'adminNodeSdkManualTest';
 
-interface DatabaseRecord {
-  success: boolean;
-  timestamp: string;
-}
-
 describe('admin.database', () => {
 
   before(() => {
@@ -102,7 +97,7 @@ describe('admin.database', () => {
     it('once() returns the current value of the reference', () => {
       return ref.once('value')
         .then((snapshot) => {
-          const value = snapshot.val() as DatabaseRecord;
+          const value = snapshot.val();
           expect(value.success).to.be.true;
           expect(typeof value.timestamp).to.equal('number');
         });
@@ -144,7 +139,7 @@ describe('admin.database', () => {
     it('once() returns the current value of the reference', () => {
       return refWithUrl.once('value')
         .then((snapshot) => {
-          const value = snapshot.val() as DatabaseRecord;
+          const value = snapshot.val();
           expect(value.success).to.be.true;
           expect(typeof value.timestamp).to.equal('number');
         });

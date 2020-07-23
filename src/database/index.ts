@@ -16,6 +16,7 @@
 
 import { FirebaseApp } from '../firebase-app';
 import * as firebaseRtdbApi from '@firebase/database';
+import * as firebaseRtdbTypesApi from '@firebase/database-types';
 import * as adminRtdbApi from './database';
 
 export function database(app: FirebaseApp): firebaseRtdbApi.Database {
@@ -30,12 +31,12 @@ export namespace admin.database {
   /* eslint-disable @typescript-eslint/no-unused-vars */
   // For context: github.com/typescript-eslint/typescript-eslint/issues/363
   export import Database = firebaseRtdbApi.Database;
-  export import DataSnapshot = firebaseRtdbApi.DataSnapshot;
+  export import DataSnapshot = firebaseRtdbTypesApi.DataSnapshot;
   export import OnDisconnect = firebaseRtdbApi.OnDisconnect;
   export import EventType = adminRtdbApi.EventType;
   export import Query = firebaseRtdbApi.Query;
   export import Reference = firebaseRtdbApi.Reference;
   export import ThenableReference = adminRtdbApi.ThenableReference;
   export import enableLogging = firebaseRtdbApi.enableLogging;
-  export import ServerValue = firebaseRtdbApi.ServerValue;
+  export import ServerValue = firebaseRtdbTypesApi.ServerValue;
 }
