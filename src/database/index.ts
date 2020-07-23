@@ -38,5 +38,5 @@ export namespace admin.database {
   export import Reference = firebaseRtdbApi.Reference;
   export import ThenableReference = adminRtdbApi.ThenableReference;
   export import enableLogging = firebaseRtdbApi.enableLogging;
-  export import ServerValue = firebaseRtdbTypesApi.ServerValue;
+  export import ServerValue = firebaseRtdbApi.ServerValue;
 }
