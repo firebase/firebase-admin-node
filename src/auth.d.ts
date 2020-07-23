@@ -235,7 +235,7 @@ export namespace admin.auth {
     /**
      * @return A JSON-serializable representation of this multi-factor object.
      */
-    toJSON(): object;
+    toJSON(): Object;
   }
 
   /**
