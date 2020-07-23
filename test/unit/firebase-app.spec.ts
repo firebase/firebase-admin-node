@@ -27,7 +27,8 @@ import * as mocks from '../resources/mocks';
 
 import { GoogleOAuthAccessToken, ServiceAccountCredential } from '../../src/auth/credential';
 import { FirebaseServiceInterface } from '../../src/firebase-service';
-import { FirebaseApp, FirebaseAccessToken } from '../../src/firebase-app';
+import { FirebaseApp } from '../../src/firebase-app';
+import { FirebaseAccessToken } from '../../src/firebase-app-internal';
 import { FirebaseNamespace, FirebaseNamespaceInternals, FIREBASE_CONFIG_VAR } from '../../src/firebase-namespace';
 
 import { Auth } from '../../src/auth/auth';
