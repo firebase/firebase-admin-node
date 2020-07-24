@@ -171,7 +171,7 @@ gulp.task('watch', function() {
 // If the environment variable TYPE_GENERATION_MODE is set to AUTO then the
 // typings are automatically generated for services that support it.
 let buildSeries;
-if (process.env.TYPE_GENERATION_MODE == 'AUTO') {
+if (process.env.TYPE_GENERATION_MODE == 'auto') {
   buildSeries = gulp.series('cleanup', 'compile_autogen_typing', 'copyTypings', 'removeCuratedTypings');
 } else {
   buildSeries = gulp.series('cleanup', 'compile', 'copyDatabase', 'copyTypings');
