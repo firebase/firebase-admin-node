@@ -15,10 +15,14 @@
  */
 
 import { FirebaseApp } from '../firebase-app';
+import * as admin from '../index';
 import * as firebaseRtdbApi from '@firebase/database';
 import * as firebaseRtdbTypesApi from '@firebase/database-types';
 
-export function database(app: FirebaseApp): firebaseRtdbApi.Database {
+export function database(app?: FirebaseApp): firebaseRtdbApi.Database {
+  if (typeof(app) === 'undefined') {
+    app = admin.app();
+  }
   return app.database();
 }
 
