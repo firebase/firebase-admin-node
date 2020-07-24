@@ -168,11 +168,17 @@ gulp.task('watch', function() {
   gulp.watch(paths.src.concat(paths.test), { ignoreInitial: false }, gulp.series('compile_all'));
 });
 
-// Build task
-gulp.task('build', gulp.series('cleanup', 'compile', 'copyDatabase', 'copyTypings'));
+// If the environment variable TYPE_GENERATION_MODE is set to AUTO then the
+// typings are automatically generated for services that support it.
+let buildSeries;
+if (process.env.TYPE_GENERATION_MODE == 'AUTO') {
+  buildSeries = gulp.series('cleanup', 'compile_autogen_typing', 'copyTypings', 'removeCuratedTypings');
+} else {
+  buildSeries = gulp.series('cleanup', 'compile', 'copyDatabase', 'copyTypings');
+}
 
-// Build typings
-gulp.task('build_typings', gulp.series('cleanup', 'compile_autogen_typing', 'copyTypings', 'removeCuratedTypings'));
+// Build task
+gulp.task('build', buildSeries);
 
 // Default task
 gulp.task('default', gulp.series('build'));
