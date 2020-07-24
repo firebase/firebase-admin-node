@@ -30,14 +30,13 @@ export function database(app?: FirebaseApp): firebaseRtdbApi.Database {
  * We must define a namespace to make the typings work correctly. Otherwise
  * `admin.database()` cannot be called like a function. Temporarily,
  * admin.database is used as the namespace name because we cannot barrel 
- * re-export the contents from @firebase/database-types. 
+ * re-export the contents from @firebase/database-types.
  */
 /* eslint-disable @typescript-eslint/no-namespace */
 export namespace admin.database {
   // See https://github.com/microsoft/TypeScript/issues/4336
   /* eslint-disable @typescript-eslint/no-unused-vars */
   // See https://github.com/typescript-eslint/typescript-eslint/issues/363
-  export import Database = firebaseRtdbTypesApi.FirebaseDatabase;
   export import DataSnapshot = firebaseRtdbTypesApi.DataSnapshot;
   export import OnDisconnect = firebaseRtdbTypesApi.OnDisconnect;
   export import EventType = firebaseRtdbTypesApi.EventType;
@@ -46,4 +45,8 @@ export namespace admin.database {
   export import ThenableReference = firebaseRtdbTypesApi.ThenableReference;
   export import enableLogging = firebaseRtdbTypesApi.enableLogging;
   export import ServerValue = firebaseRtdbTypesApi.ServerValue;
+  // There is a known bug where @firebase/database-types FirebaseDatabase
+  // cannot be used as an interface for @firebase/database Database.
+  // See https://github.com/firebase/firebase-js-sdk/issues/3476
+  export import Database = firebaseRtdbTypesApi.FirebaseDatabase;
 }
