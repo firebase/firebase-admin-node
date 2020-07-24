@@ -103,7 +103,7 @@ gulp.task('compile_test', function() {
  * the project generating both *.js and *.d.ts files. After, it removes
  * declarations for all files terminating in -internal.d.ts because we do not
  * want to expose internally exposed types to developers. As auto-generated
- * typings are a work-in-progress, we remove the *.d.ts files for classes
+ * typings are a work-in-progress, we remove the *.d.ts files for modules
  * which we do not intend to auto-generate typings for yet.
  */
 gulp.task('compile_autogen_typing', function() {
@@ -119,7 +119,6 @@ gulp.task('compile_autogen_typing', function() {
       'lib/**/*.js',
       'lib/**/*.d.ts',
       '!lib/*-internal.d.ts',
-      '!lib/index.d.ts',
       '!lib/default-namespace.d.ts',
       '!lib/firebase-namespace.d.ts',
       '!lib/firebase-app.d.ts',
@@ -158,7 +157,7 @@ gulp.task('copyTypings', function() {
     .pipe(gulp.dest(paths.build))
 });
 
-gulp.task('removeManuallyCuratedTypings', function() {
+gulp.task('removeCuratedTypings', function() {
   return del(paths.curatedTypings);
 });
 
@@ -173,7 +172,7 @@ gulp.task('watch', function() {
 gulp.task('build', gulp.series('cleanup', 'compile', 'copyDatabase', 'copyTypings'));
 
 // Build typings
-gulp.task('build_typings', gulp.series('cleanup', 'compile_autogen_typing', 'copyTypings', 'removeManuallyCuratedTypings'));
+gulp.task('build_typings', gulp.series('cleanup', 'compile_autogen_typing', 'copyTypings', 'removeCuratedTypings'));
 
 // Default task
 gulp.task('default', gulp.series('build'));
