@@ -16,9 +16,10 @@
 
 import { FirebaseApp } from '../firebase-app';
 import * as firebaseAdmin from '../index';
+import * as firebaseRtdbApi from '@firebase/database';
 import * as firebaseRtdbTypesApi from '@firebase/database-types';
 
-export function database(app?: FirebaseApp): firebaseRtdbTypesApi.FirebaseDatabase {
+export function database(app?: FirebaseApp): firebaseRtdbApi.Database {
   if (typeof(app) === 'undefined') {
     app = firebaseAdmin.app();
   }
