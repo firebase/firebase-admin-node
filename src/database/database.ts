@@ -14,15 +14,6 @@
  * limitations under the License.
  */
 
-import { Reference } from '@firebase/database';
-
-export type EventType = 'value' | 'child_added' | 'child_changed' | 'child_moved' | 'child_removed';
-
-/**
- * @extends {Reference}
- */
-export interface ThenableReference extends Reference, Promise<Reference> { }
-
 declare module '@firebase/database' {
   interface Database {
     /**

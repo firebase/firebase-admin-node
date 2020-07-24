@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../firebase-app';
-import { FirebaseAppOptions } from '../firebase-app-internal';
+import { FirebaseApp, FirebaseAppOptions } from '../firebase-app';
 import { ServiceAccountCredential, ComputeEngineCredential } from '../auth/credential';
 
 import * as validator from './validator';
