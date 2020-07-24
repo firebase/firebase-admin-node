@@ -15,25 +15,28 @@
  */
 
 import { FirebaseApp } from '../firebase-app';
-import * as admin from '../index';
-import * as firebaseRtdbApi from '@firebase/database';
+import * as firebaseAdmin from '../index';
 import * as firebaseRtdbTypesApi from '@firebase/database-types';
 
-export function database(app?: FirebaseApp): firebaseRtdbApi.Database {
+export function database(app?: FirebaseApp): firebaseRtdbTypesApi.FirebaseDatabase {
   if (typeof(app) === 'undefined') {
-    app = admin.app();
+    app = firebaseAdmin.app();
   }
   return app.database();
 }
 
-// We must define a namespace to make the typings work correctly. 
-// Otherwise `admin.database()` cannot be called like a function.
+/**
+ * We must define a namespace to make the typings work correctly. Otherwise
+ * `admin.database()` cannot be called like a function. Temporarily,
+ * admin.database is used as the namespace name because we cannot barrel 
+ * re-export the contents from @firebase/database-types. 
+ */
 /* eslint-disable @typescript-eslint/no-namespace */
-export namespace database {
+export namespace admin.database {
   // See https://github.com/microsoft/TypeScript/issues/4336
   /* eslint-disable @typescript-eslint/no-unused-vars */
-  // For context: github.com/typescript-eslint/typescript-eslint/issues/363
-  export import Database = firebaseRtdbApi.Database;
+  // See https://github.com/typescript-eslint/typescript-eslint/issues/363
+  export import Database = firebaseRtdbTypesApi.FirebaseDatabase;
   export import DataSnapshot = firebaseRtdbTypesApi.DataSnapshot;
   export import OnDisconnect = firebaseRtdbTypesApi.OnDisconnect;
   export import EventType = firebaseRtdbTypesApi.EventType;

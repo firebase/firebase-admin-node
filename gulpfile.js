@@ -111,8 +111,10 @@ gulp.task('compile_autogen_typing', function() {
     // Compile Typescript into .js and .d.ts files
     .pipe(buildAutogenTyping())
 
-    // Exclude typings that are unintended (only RTDB is expected to produce
-    // typings so far).
+    // Exclude typings that are unintended (only database is expected to
+    // produce typings so far). Moreover, all *-internal.d.ts typings
+    // should not be exposed to developers as it denotes internally used
+    // types.
     .pipe(filter([
       'lib/**/*.js',
       'lib/**/*.d.ts',

@@ -43,3 +43,33 @@ declare module '@firebase/database' {
     setRules(source: string | Buffer | object): Promise<void>;
   }
 }
+
+
+declare module '@firebase/database-types' {
+  interface FirebaseDatabase {
+    /**
+     * Gets the currently applied security rules as a string. The return value consists of
+     * the rules source including comments.
+     *
+     * @return A promise fulfilled with the rules as a raw string.
+     */
+    getRules(): Promise<string>;
+
+    /**
+     * Gets the currently applied security rules as a parsed JSON object. Any comments in
+     * the original source are stripped away.
+     *
+     * @return A promise fulfilled with the parsed rules object.
+     */
+    getRulesJSON(): Promise<object>;
+
+    /**
+     * Sets the specified rules on the Firebase Realtime Database instance. If the rules source is
+     * specified as a string or a Buffer, it may include comments.
+     *
+     * @param source Source of the rules to apply. Must not be `null` or empty.
+     * @return Resolves when the rules are set on the Realtime Database.
+     */
+    setRules(source: string | Buffer | object): Promise<void>;
+  }
+}
