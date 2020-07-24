@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import { Reference } from '@firebase/database';
-import '@firebase/database';
 
 declare module '@firebase/database' {
   interface Database {
