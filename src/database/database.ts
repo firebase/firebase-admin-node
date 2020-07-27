@@ -15,8 +15,8 @@
  */
 import { Reference } from '@firebase/database';
 
-declare module '@firebase/database' {
-  interface Database {
+declare module '@firebase/database-types' {
+  interface FirebaseDatabase {
     /**
      * Gets the currently applied security rules as a string. The return value consists of
      * the rules source including comments.

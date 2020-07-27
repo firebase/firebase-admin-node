@@ -16,10 +16,11 @@
 
 import { FirebaseApp } from '../firebase-app';
 import * as firebaseAdmin from '../index';
-import * as adminRtdbApi from './database';
+// import * as adminRtdbApi from './database';
 import * as firebaseRtdbApi from '@firebase/database';
+import * as firebaseRtdbTypesApi from '@firebase/database-types';
 
-export function database(app?: FirebaseApp): firebaseRtdbApi.Database {
+export function database(app?: FirebaseApp): firebaseRtdbTypesApi.FirebaseDatabase {
   if (typeof(app) === 'undefined') {
     app = firebaseAdmin.app();
   }
@@ -38,16 +39,16 @@ export namespace admin.database {
   // See https://github.com/microsoft/TypeScript/issues/4336
   /* eslint-disable @typescript-eslint/no-unused-vars */
   // See https://github.com/typescript-eslint/typescript-eslint/issues/363
-  export import DataSnapshot = firebaseRtdbApi.DataSnapshot;
-  export import OnDisconnect = firebaseRtdbApi.OnDisconnect;
-  export import EventType = adminRtdbApi.EventType;
-  export import Query = firebaseRtdbApi.Query;
-  export import Reference = firebaseRtdbApi.Reference;
-  export import ThenableReference = adminRtdbApi.ThenableReference;
-  export import enableLogging = firebaseRtdbApi.enableLogging;
+  export import DataSnapshot = firebaseRtdbTypesApi.DataSnapshot;
+  export import OnDisconnect = firebaseRtdbTypesApi.OnDisconnect;
+  export import EventType = firebaseRtdbTypesApi.EventType;
+  export import Query = firebaseRtdbTypesApi.Query;
+  export import Reference = firebaseRtdbTypesApi.Reference;
+  export import ThenableReference = firebaseRtdbTypesApi.ThenableReference;
+  export import enableLogging = firebaseRtdbTypesApi.enableLogging;
   export import ServerValue = firebaseRtdbApi.ServerValue;
   // There is a known bug where @firebase/database-types FirebaseDatabase
   // cannot be used as an interface for @firebase/database Database.
   // See https://github.com/firebase/firebase-js-sdk/issues/3476
-  export import Database = firebaseRtdbApi.Database;
+  export import Database = firebaseRtdbTypesApi.FirebaseDatabase;
 }

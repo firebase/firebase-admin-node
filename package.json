@@ -55,6 +55,7 @@
   "types": "./lib/index.d.ts",
   "dependencies": {
     "@firebase/database": "^0.6.0",
+    "@firebase/database-types": "^0.5.1",
     "@types/node": "^10.10.0",
     "dicer": "^0.3.0",
     "jsonwebtoken": "^8.5.1",
