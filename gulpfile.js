@@ -168,7 +168,7 @@ gulp.task('watch', function() {
   gulp.watch(paths.src.concat(paths.test), { ignoreInitial: false }, gulp.series('compile_all'));
 });
 
-// If the environment variable TYPE_GENERATION_MODE is set to AUTO then the
+// If the environment variable TYPE_GENERATION_MODE is set to auto then the
 // typings are automatically generated for services that support it.
 let buildSeries;
 if (process.env.TYPE_GENERATION_MODE == 'auto') {
