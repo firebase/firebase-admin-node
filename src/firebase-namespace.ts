@@ -33,7 +33,8 @@ import { Messaging } from './messaging/messaging';
 import { Storage } from './storage/storage';
 import { Database } from '@firebase/database';
 import { Firestore } from '@google-cloud/firestore';
-import { InstanceId } from './instance-id/instance-id';
+// import { InstanceId } from './instance-id/instance-id-internal';
+import { InstanceId as InstanceIdService } from './instance-id/instance-id-internal';
 import { ProjectManagement } from './project-management/project-management';
 import { SecurityRules } from './security-rules/security-rules';
 import { RemoteConfig } from './remote-config/remote-config';
@@ -421,11 +422,11 @@ export class FirebaseNamespace {
    * Gets the `InstanceId` service namespace. The returned namespace can be used to get the
    * `Instance` service for the default app or an explicitly specified app.
    */
-  get instanceId(): FirebaseServiceNamespace<InstanceId> {
-    const fn: FirebaseServiceNamespace<InstanceId> = (app?: FirebaseApp) => {
+  get instanceId(): FirebaseServiceNamespace<InstanceIdService> {
+    const fn: FirebaseServiceNamespace<InstanceIdService> = (app?: FirebaseApp) => {
       return this.ensureApp(app).instanceId();
     };
-    const instanceId = require('./instance-id/instance-id').InstanceId;
+    const instanceId: typeof InstanceIdService = require('./instance-id/instance-id-internal').InstanceId;
     return Object.assign(fn, { InstanceId: instanceId });
   }
 

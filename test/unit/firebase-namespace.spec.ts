@@ -48,7 +48,7 @@ import {
   v1beta1,
   setLogFunction,
 } from '@google-cloud/firestore';
-import { InstanceId } from '../../src/instance-id/instance-id';
+import { InstanceId } from '../../src/instance-id/instance-id-internal';
 import { ProjectManagement } from '../../src/project-management/project-management';
 import { SecurityRules } from '../../src/security-rules/security-rules';
 import { RemoteConfig } from '../../src/remote-config/remote-config';

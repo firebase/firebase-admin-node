@@ -30,6 +30,7 @@ var ts = require('gulp-typescript');
 var del = require('del');
 var header = require('gulp-header');
 var replace = require('gulp-replace');
+var filter = require('gulp-filter');
 
 
 /****************/
@@ -50,6 +51,7 @@ var paths = {
   ],
 
   build: 'lib/',
+  curatedTypings: ['lib/instance-id.d.ts'],
 };
 
 // Create a separate project for buildProject that overrides the rootDir
@@ -58,6 +60,8 @@ var paths = {
 var buildProject = ts.createProject('tsconfig.json', {rootDir: 'src'});
 
 var buildTest = ts.createProject('tsconfig.json');
+
+var buildAutogenTyping = ts.createProject('tsconfig.json', { rootDir: 'src', declaration: true });
 
 var banner = `/*! firebase-admin v${pkg.version} */\n`;
 
@@ -93,6 +97,46 @@ gulp.task('compile_test', function() {
     .pipe(buildTest())
 });
 
+/**
+ * Task used to verify TypeScript auto-generated typings. First, it builds
+ * the project generating both *.js and *.d.ts files. After, it removes
+ * declarations for all files terminating in -internal.d.ts because we do not
+ * want to expose internally exposed types to developers. As auto-generated
+ * typings are a work-in-progress, we remove the *.d.ts files for modules
+ * which we do not intend to auto-generate typings for yet.
+ */
+gulp.task('compile_autogen_typing', function() {
+  return gulp.src(paths.src)
+    // Compile Typescript into .js and .d.ts files
+    .pipe(buildAutogenTyping())
+
+    // Exclude typings that are unintended (only instance-id is expected to
+    // produce typings so far). Moreover, all *-internal.d.ts typings
+    // should not be exposed to developers as it denotes internally used
+    // types.
+    .pipe(filter([
+      'lib/**/*.js',
+      'lib/**/*.d.ts',
+      '!lib/*-internal.d.ts',
+      '!lib/default-namespace.d.ts',
+      '!lib/firebase-namespace.d.ts',
+      '!lib/firebase-app.d.ts',
+      '!lib/firebase-service.d.ts',
+      '!lib/auth/*.d.ts',
+      '!lib/database/*.d.ts',
+      '!lib/firestore/*.d.ts',
+      '!lib/machine-learning/*.d.ts',
+      '!lib/messaging/*.d.ts',
+      '!lib/project-management/*.d.ts',
+      '!lib/remote-config/*.d.ts',
+      '!lib/security-rules/*.d.ts',
+      '!lib/storage/*.d.ts',
+      '!lib/utils/*.d.ts']))
+
+    // Write to build directory
+    .pipe(gulp.dest(paths.build))
+});
+
 gulp.task('copyDatabase', function() {
   return gulp.src(paths.databaseSrc)
     // Add headers
@@ -112,6 +156,10 @@ gulp.task('copyTypings', function() {
     .pipe(gulp.dest(paths.build))
 });
 
+gulp.task('removeCuratedTypings', function() {
+  return del(paths.curatedTypings);
+});
+
 gulp.task('compile_all', gulp.series('compile', 'copyDatabase', 'copyTypings', 'compile_test'));
 
 // Regenerates js every time a source file changes
@@ -119,8 +167,17 @@ gulp.task('watch', function() {
   gulp.watch(paths.src.concat(paths.test), {ignoreInitial: false}, gulp.series('compile_all'));
 });
 
-// Build task
-gulp.task('build', gulp.series('cleanup', 'compile', 'copyDatabase', 'copyTypings'));
+// If the environment variable TYPE_GENERATION_MODE is set to auto then the
+// typings are automatically generated for services that support it.
+let buildSeries;
+if (process.env.TYPE_GENERATION_MODE == 'auto') {
+  buildSeries = gulp.series('cleanup', 'compile_autogen_typing', 'copyTypings', 'removeCuratedTypings');
+} else {
+  buildSeries = gulp.series('cleanup', 'compile', 'copyDatabase', 'copyTypings');
+}
+
+// Build task	// Build task
+gulp.task('build', gulp.series('cleanup', 'compile', 'copyDatabase', 'copyTypings'));	gulp.task('build', buildSeries);
 
 // Default task
 gulp.task('default', gulp.series('build'));

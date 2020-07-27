@@ -36,7 +36,7 @@ import { MachineLearning } from '../../src/machine-learning/machine-learning';
 import { Storage } from '../../src/storage/storage';
 import { Firestore } from '@google-cloud/firestore';
 import { Database } from '@firebase/database';
-import { InstanceId } from '../../src/instance-id/instance-id';
+import { InstanceId } from '../../src/instance-id/instance-id-internal';
 import { ProjectManagement } from '../../src/project-management/project-management';
 import { SecurityRules } from '../../src/security-rules/security-rules';
 import { FirebaseAppError, AppErrorCodes } from '../../src/utils/error';

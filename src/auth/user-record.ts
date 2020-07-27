@@ -148,7 +148,7 @@ export enum MultiFactorId {
  */
 export abstract class MultiFactorInfo {
   public readonly uid: string;
-  public readonly displayName: string | null;
+  public readonly displayName: string;
   public readonly factorId: MultiFactorId;
   public readonly enrollmentTime: string;
 
