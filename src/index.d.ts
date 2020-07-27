@@ -149,7 +149,7 @@ declare namespace admin {
      * [Authenticate with limited privileges](/docs/database/admin/start#authenticate-with-limited-privileges)
      * for detailed documentation and code samples.
      */
-    databaseAuthVariableOverride?: Object | null;
+    databaseAuthVariableOverride?: object | null;
 
     /**
      * The URL of the Realtime Database from which to read and write data.
@@ -737,7 +737,7 @@ declare namespace admin.credential {
     * @return A credential authenticated via the
     *   provided service account that can be used to initialize an app.
    */
-  function refreshToken(refreshTokenPathOrObject: string | Object, httpAgent?: Agent): admin.credential.Credential;
+  function refreshToken(refreshTokenPathOrObject: string | object, httpAgent?: Agent): admin.credential.Credential;
 }
 
 declare namespace admin.database {
