@@ -148,7 +148,7 @@ export enum MultiFactorId {
  */
 export abstract class MultiFactorInfo {
   public readonly uid: string;
-  public readonly displayName: string | null;
+  public readonly displayName: string;
   public readonly factorId: MultiFactorId;
   public readonly enrollmentTime: string;
 
@@ -265,7 +265,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
 
 /** Class representing multi-factor related properties of a user. */
 export class MultiFactor {
-  public readonly enrolledFactors: ReadonlyArray<MultiFactorInfo>;
+  public enrolledFactors: MultiFactorInfo[];
 
   /**
    * Initializes the MultiFactor object using the server side or JWT format response.
