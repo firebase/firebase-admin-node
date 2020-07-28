@@ -55,9 +55,11 @@ var paths = {
   curatedTypings: ['src/**/*.d.ts'],
 };
 
-// Create a separate project for buildProject that overrides the rootDir
+// Create a separate project for buildProject that overrides the rootDir.
 // This ensures that the generated production files are in their own root
-// rather than including both src and test in the lib dir.
+// rather than including both src and test in the lib dir. Declaration
+// is used by TypeScript to determine if auto-generated typings should be
+// emitted.
 const declaration = process.env.TYPE_GENERATION_MODE === 'auto';
 var buildProject = ts.createProject('tsconfig.json', { rootDir: 'src', declaration });
 
@@ -91,7 +93,7 @@ gulp.task('compile', function() {
     // Add header
     .pipe(header(banner));
   
-  // Exclude typings that are unintended (currently includes all auto-generated
+  // Exclude typings that are unintended (currently excludes all auto-generated
   // typings, but as services are refactored to auto-generate typings this will
   // change). Moreover, all *-internal.d.ts typings should not be exposed to 
   // developers as it denotes internally used types.
