@@ -13,7 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Reference } from '@firebase/database';
+
+// Required to perform module augmentation to FirebaseDatabase interface.
+import '@firebase/database-types';
 
 declare module '@firebase/database-types' {
   interface FirebaseDatabase {
@@ -43,14 +45,3 @@ declare module '@firebase/database-types' {
     setRules(source: string | Buffer | object): Promise<void>;
   }
 }
-
-// EventType and ThenableReference are temporarily defined here because they're
-// not exposed in @firebase/database.
-// See: https://github.com/firebase/firebase-js-sdk/issues/3479
-export type EventType = 'value' | 'child_added' | 'child_changed'
-  | 'child_moved' | 'child_removed';
-
-/**
- * @extends {Reference}
- */
-export interface ThenableReference extends Reference, Promise<Reference> { }
