@@ -213,7 +213,7 @@ export abstract class MultiFactorInfo {
     }
     utils.addReadonlyGetter(this, 'uid', response.mfaEnrollmentId);
     utils.addReadonlyGetter(this, 'factorId', factorId);
-    utils.addReadonlyGetter(this, 'displayName', response.displayName || null);
+    utils.addReadonlyGetter(this, 'displayName', response.displayName);
     // Encoded using [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format.
     // For example, "2017-01-15T01:30:15.01Z".
     // This can be parsed directly via Date constructor.
