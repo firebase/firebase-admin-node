@@ -230,7 +230,7 @@ export namespace admin.auth {
      * List of second factors enrolled with the current user.
      * Currently only phone second factors are supported.
      */
-    readonly enrolledFactors: ReadonlyArray<admin.auth.MultiFactorInfo>;
+    enrolledFactors: admin.auth.MultiFactorInfo[];
 
     /**
      * @return A JSON-serializable representation of this multi-factor object.
