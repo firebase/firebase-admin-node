@@ -55,6 +55,24 @@ var paths = {
   curatedTypings: ['src/*.d.ts'],
 };
 
+const TEMPORARY_TYPING_EXCLUDES = [
+  '!lib/default-namespace.d.ts',
+  '!lib/firebase-namespace.d.ts',
+  '!lib/firebase-app.d.ts',
+  '!lib/firebase-service.d.ts',
+  '!lib/auth/*.d.ts',
+  '!lib/database/*.d.ts',
+  '!lib/firestore/*.d.ts',
+  '!lib/instance-id/*.d.ts',
+  '!lib/machine-learning/*.d.ts',
+  '!lib/messaging/*.d.ts',
+  '!lib/project-management/*.d.ts',
+  '!lib/remote-config/*.d.ts',
+  '!lib/security-rules/*.d.ts',
+  '!lib/storage/*.d.ts',
+  '!lib/utils/*.d.ts'
+];
+
 // Create a separate project for buildProject that overrides the rootDir.
 // This ensures that the generated production files are in their own root
 // rather than including both src and test in the lib dir. Declaration
@@ -96,24 +114,6 @@ gulp.task('compile', function() {
   // change). Moreover, all *-internal.d.ts typings should not be exposed to 
   // developers as it denotes internally used types.
   if (declaration) {
-    const TEMPORARY_TYPING_EXCLUDES = [
-      '!lib/default-namespace.d.ts',
-      '!lib/firebase-namespace.d.ts',
-      '!lib/firebase-app.d.ts',
-      '!lib/firebase-service.d.ts',
-      '!lib/auth/*.d.ts',
-      '!lib/database/*.d.ts',
-      '!lib/firestore/*.d.ts',
-      '!lib/instance-id/*.d.ts',
-      '!lib/machine-learning/*.d.ts',
-      '!lib/messaging/*.d.ts',
-      '!lib/project-management/*.d.ts',
-      '!lib/remote-config/*.d.ts',
-      '!lib/security-rules/*.d.ts',
-      '!lib/storage/*.d.ts',
-      '!lib/utils/*.d.ts'
-    ];
-
     const configuration = [
       'lib/**/*.js',
       'lib/**/*.d.ts',
