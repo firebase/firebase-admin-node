@@ -107,8 +107,8 @@ export interface DecodedIdToken {
   picture?: string;
   sub: string;
   tenant?: string;
-  [key: string]: any;
   uid: string;
+  [key: string]: any;
 }
 
 
