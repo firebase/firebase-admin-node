@@ -52,7 +52,7 @@ var paths = {
 
   build: 'lib/',
 
-  curatedTypings: ['src/**/*.d.ts'],
+  curatedTypings: ['src/*.d.ts'],
 };
 
 // Create a separate project for buildProject that overrides the rootDir.
@@ -77,14 +77,12 @@ gulp.task('cleanup', function() {
   ]);
 });
 
-/**
- * Task used to compile the TypeScript project. If automatic typings
- * are set to be generated (determined by TYPE_GENERATION_MODE), declarations
- * for files terminating in -internal.d.ts are removed because we do not
- * want to expose internally used types to developers. As auto-generated
- * typings are a work-in-progress, we remove the *.d.ts files for modules
- * which we do not intend to auto-generate typings for yet.
- */
+// Task used to compile the TypeScript project. If automatic typings
+// are set to be generated (determined by TYPE_GENERATION_MODE), declarations
+// for files terminating in -internal.d.ts are removed because we do not
+// want to expose internally used types to developers. As auto-generated
+// typings are a work-in-progress, we remove the *.d.ts files for modules
+// which we do not intend to auto-generate typings for yet.
 gulp.task('compile', function() {
   let workflow = gulp.src(paths.src)
     // Compile Typescript into .js and .d.ts files
@@ -98,10 +96,7 @@ gulp.task('compile', function() {
   // change). Moreover, all *-internal.d.ts typings should not be exposed to 
   // developers as it denotes internally used types.
   if (declaration) {
-    workflow = workflow.pipe(filter([
-      'lib/**/*.js',
-      'lib/**/*.d.ts',
-      '!lib/**/*-internal.d.ts',
+    const TEMPORARY_TYPING_EXCLUDES = [
       '!lib/default-namespace.d.ts',
       '!lib/firebase-namespace.d.ts',
       '!lib/firebase-app.d.ts',
@@ -116,7 +111,16 @@ gulp.task('compile', function() {
       '!lib/remote-config/*.d.ts',
       '!lib/security-rules/*.d.ts',
       '!lib/storage/*.d.ts',
-      '!lib/utils/*.d.ts']))
+      '!lib/utils/*.d.ts'
+    ];
+
+    const configuration = [
+      'lib/**/*.js',
+      'lib/**/*.d.ts',
+      '!lib/**/*-internal.d.ts',
+    ].concat(TEMPORARY_TYPING_EXCLUDES);
+
+    workflow = workflow.pipe(filter(configuration));
   }
 
   // Write to build directory
