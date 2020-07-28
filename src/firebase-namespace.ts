@@ -31,7 +31,7 @@ import { Auth } from './auth/auth';
 import { MachineLearning } from './machine-learning/machine-learning';
 import { Messaging } from './messaging/messaging';
 import { Storage } from './storage/storage';
-import { Database } from '@firebase/database';
+import { FirebaseDatabase } from '@firebase/database-types';
 import { Firestore } from '@google-cloud/firestore';
 import { InstanceId } from './instance-id/instance-id';
 import { ProjectManagement } from './project-management/project-management';
@@ -339,8 +339,8 @@ export class FirebaseNamespace {
    * Gets the `Database` service namespace. The returned namespace can be used to get the
    * `Database` service for the default app or an explicitly specified app.
    */
-  get database(): FirebaseServiceNamespace<Database> {
-    const fn: FirebaseServiceNamespace<Database> = (app?: FirebaseApp) => {
+  get database(): FirebaseServiceNamespace<FirebaseDatabase> {
+    const fn: FirebaseServiceNamespace<FirebaseDatabase> = (app?: FirebaseApp) => {
       return this.ensureApp(app).database();
     };
 

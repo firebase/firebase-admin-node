@@ -35,7 +35,7 @@ import { Messaging } from '../../src/messaging/messaging';
 import { MachineLearning } from '../../src/machine-learning/machine-learning';
 import { Storage } from '../../src/storage/storage';
 import { Firestore } from '@google-cloud/firestore';
-import { Database } from '@firebase/database';
+import { FirebaseDatabase } from '@firebase/database-types';
 import { InstanceId } from '../../src/instance-id/instance-id';
 import { ProjectManagement } from '../../src/project-management/project-management';
 import { SecurityRules } from '../../src/security-rules/security-rules';
@@ -444,15 +444,15 @@ describe('FirebaseApp', () => {
 
     it('should return the Database', () => {
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-      const db: Database = app.database();
+      const db: FirebaseDatabase = app.database();
       expect(db).not.be.null;
     });
 
     it('should return the Database for different apps', () => {
       const app1 = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
       const app2 = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName + '-other');
-      const db1: Database = app1.database();
-      const db2: Database = app2.database();
+      const db1: FirebaseDatabase = app1.database();
+      const db2: FirebaseDatabase = app2.database();
       expect(db1).to.not.deep.equal(db2);
       expect(db1.ref().toString()).to.equal('https://databasename.firebaseio.com/');
       expect(db2.ref().toString()).to.equal('https://databasename.firebaseio.com/');
@@ -468,9 +468,9 @@ describe('FirebaseApp', () => {
 
     it('should return a cached version of Database on subsequent calls', () => {
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-      const db1: Database = app.database();
-      const db2: Database = app.database();
-      const db3: Database = app.database(mocks.appOptions.databaseURL);
+      const db1: FirebaseDatabase = app.database();
+      const db2: FirebaseDatabase = app.database();
+      const db3: FirebaseDatabase = app.database(mocks.appOptions.databaseURL);
       expect(db1).to.equal(db2);
       expect(db1).to.equal(db3);
       expect(db1.ref().toString()).to.equal('https://databasename.firebaseio.com/');
@@ -478,8 +478,8 @@ describe('FirebaseApp', () => {
 
     it('should return a Database instance for the specified URL', () => {
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-      const db1: Database = app.database();
-      const db2: Database = app.database('https://other-database.firebaseio.com');
+      const db1: FirebaseDatabase = app.database();
+      const db2: FirebaseDatabase = app.database('https://other-database.firebaseio.com');
       expect(db1.ref().toString()).to.equal('https://databasename.firebaseio.com/');
       expect(db2.ref().toString()).to.equal('https://other-database.firebaseio.com/');
     });
