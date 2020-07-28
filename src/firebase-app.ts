@@ -29,7 +29,7 @@ import { Database } from '@firebase/database';
 import { DatabaseService } from './database/database';
 import { Firestore } from '@google-cloud/firestore';
 import { FirestoreService } from './firestore/firestore';
-import { InstanceId }  from './instance-id/instance-id-internal';
+import { InstanceId } from './instance-id/instance-id-internal';
 
 import { ProjectManagement } from './project-management/project-management';
 import { SecurityRules } from './security-rules/security-rules';

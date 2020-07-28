@@ -425,7 +425,7 @@ export class FirebaseNamespace {
     const fn: FirebaseServiceNamespace<InstanceId> = (app?: FirebaseApp) => {
       return this.ensureApp(app).instanceId();
     };
-    const instanceId: typeof InstanceId = require('./instance-id/instance-id-internal').InstanceId;
+    const instanceId = require('./instance-id/instance-id-internal').InstanceId;
     return Object.assign(fn, { InstanceId: instanceId });
   }
 
