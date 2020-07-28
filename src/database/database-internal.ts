@@ -45,7 +45,7 @@ class DatabaseInternals implements FirebaseServiceInternalsInterface {
    */
   public delete(): Promise<void> {
     for (const dbUrl of Object.keys(this.databases)) {
-      const db: Database = (this.databases[dbUrl] as any);
+      const db: Database = ((this.databases[dbUrl] as unknown) as Database);
       db.INTERNAL.delete();
     }
     return Promise.resolve(undefined);
@@ -89,7 +89,7 @@ export class DatabaseService implements FirebaseServiceInterface {
     let db: FirebaseDatabase = this.INTERNAL.databases[dbUrl];
     if (typeof db === 'undefined') {
       const rtdb = require('@firebase/database'); // eslint-disable-line @typescript-eslint/no-var-requires
-      db = (rtdb.initStandalone(this.appInternal, dbUrl, getSdkVersion()).instance as any);
+      db = ((rtdb.initStandalone(this.appInternal, dbUrl, getSdkVersion()).instance as unknown) as FirebaseDatabase);
 
       const rulesClient = new DatabaseRulesClient(this.app, dbUrl);
       db.getRules = () => {
