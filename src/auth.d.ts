@@ -1459,7 +1459,7 @@ export namespace admin.auth {
      * See [Update a user](/docs/auth/admin/manage-users#update_a_user) for code
      * samples and detailed documentation.
      *
-     * @param uid The `uid` corresponding to the user to delete.
+     * @param uid The `uid` corresponding to the user to update.
      * @param properties The properties to update on
      *   the provided user.
      *

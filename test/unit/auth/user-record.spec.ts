@@ -173,7 +173,7 @@ function getUserJSON(tenantId?: string): object {
         },
         {
           uid: 'enrollmentId2',
-          displayName: null,
+          displayName: undefined,
           enrollmentTime: now.toUTCString(),
           phoneNumber: '+16505556789',
           factorId: 'phone',
@@ -294,7 +294,7 @@ describe('PhoneMultiFactorInfo', () => {
   describe('getters', () => {
     it('should set missing optional fields to null', () => {
       expect(phoneMultiFactorInfoMissingFields.uid).to.equal(serverResponse.mfaEnrollmentId);
-      expect(phoneMultiFactorInfoMissingFields.displayName).to.be.null;
+      expect(phoneMultiFactorInfoMissingFields.displayName).to.be.undefined;
       expect(phoneMultiFactorInfoMissingFields.phoneNumber).to.equal(serverResponse.phoneInfo);
       expect(phoneMultiFactorInfoMissingFields.enrollmentTime).to.be.null;
       expect(phoneMultiFactorInfoMissingFields.factorId).to.equal('phone');
@@ -365,7 +365,7 @@ describe('PhoneMultiFactorInfo', () => {
     it('should return expected JSON object with missing fields set to null', () => {
       expect(phoneMultiFactorInfoMissingFields.toJSON()).to.deep.equal({
         uid: 'enrollmentId1',
-        displayName: null,
+        displayName: undefined,
         enrollmentTime: null,
         phoneNumber: '+16505551234',
         factorId: 'phone',
