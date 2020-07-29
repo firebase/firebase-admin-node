@@ -33,7 +33,7 @@ import { Messaging } from './messaging/messaging';
 import { Storage } from './storage/storage';
 import { Database } from '@firebase/database';
 import { Firestore } from '@google-cloud/firestore';
-import { InstanceId } from './instance-id/instance-id-internal';
+import { InstanceId } from './instance-id/instance-id';
 import { ProjectManagement } from './project-management/project-management';
 import { SecurityRules } from './security-rules/security-rules';
 import { RemoteConfig } from './remote-config/remote-config';
@@ -425,7 +425,7 @@ export class FirebaseNamespace {
     const fn: FirebaseServiceNamespace<InstanceId> = (app?: FirebaseApp) => {
       return this.ensureApp(app).instanceId();
     };
-    const instanceId = require('./instance-id/instance-id-internal').InstanceId;
+    const instanceId = require('./instance-id/instance-id-internal').InstanceIdImpl;
     return Object.assign(fn, { InstanceId: instanceId });
   }
 

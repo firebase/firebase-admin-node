@@ -29,7 +29,8 @@ import { Database } from '@firebase/database';
 import { DatabaseService } from './database/database';
 import { Firestore } from '@google-cloud/firestore';
 import { FirestoreService } from './firestore/firestore';
-import { InstanceId } from './instance-id/instance-id-internal';
+import { InstanceId } from './instance-id/instance-id';
+import { InstanceIdImpl } from './instance-id/instance-id-internal';
 
 import { ProjectManagement } from './project-management/project-management';
 import { SecurityRules } from './security-rules/security-rules';
@@ -352,7 +353,7 @@ export class FirebaseApp {
    */
   public instanceId(): InstanceId {
     return this.ensureService_('iid', () => {
-      const iidService: typeof InstanceId = require('./instance-id/instance-id-internal').InstanceId;
+      const iidService: typeof InstanceIdImpl = require('./instance-id/instance-id-internal').InstanceIdImpl;
       return new iidService(this);
     });
   }
