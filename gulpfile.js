@@ -30,6 +30,7 @@ var ts = require('gulp-typescript');
 var del = require('del');
 var header = require('gulp-header');
 var replace = require('gulp-replace');
+var filter = require('gulp-filter');
 
 
 /****************/
@@ -50,12 +51,35 @@ var paths = {
   ],
 
   build: 'lib/',
+
+  curatedTypings: ['src/*.d.ts'],
 };
 
-// Create a separate project for buildProject that overrides the rootDir
+const TEMPORARY_TYPING_EXCLUDES = [
+  '!lib/default-namespace.d.ts',
+  '!lib/firebase-namespace.d.ts',
+  '!lib/firebase-app.d.ts',
+  '!lib/firebase-service.d.ts',
+  '!lib/auth/*.d.ts',
+  '!lib/database/*.d.ts',
+  '!lib/firestore/*.d.ts',
+  '!lib/instance-id/*.d.ts',
+  '!lib/machine-learning/*.d.ts',
+  '!lib/messaging/*.d.ts',
+  '!lib/project-management/*.d.ts',
+  '!lib/remote-config/*.d.ts',
+  '!lib/security-rules/*.d.ts',
+  '!lib/storage/*.d.ts',
+  '!lib/utils/*.d.ts'
+];
+
+// Create a separate project for buildProject that overrides the rootDir.
 // This ensures that the generated production files are in their own root
-// rather than including both src and test in the lib dir.
-var buildProject = ts.createProject('tsconfig.json', {rootDir: 'src'});
+// rather than including both src and test in the lib dir. Declaration
+// is used by TypeScript to determine if auto-generated typings should be
+// emitted.
+const declaration = process.env.TYPE_GENERATION_MODE === 'auto';
+var buildProject = ts.createProject('tsconfig.json', { rootDir: 'src', declaration });
 
 var buildTest = ts.createProject('tsconfig.json');
 
@@ -71,16 +95,36 @@ gulp.task('cleanup', function() {
   ]);
 });
 
+// Task used to compile the TypeScript project. If automatic typings
+// are set to be generated (determined by TYPE_GENERATION_MODE), declarations
+// for files terminating in -internal.d.ts are removed because we do not
+// want to expose internally used types to developers. As auto-generated
+// typings are a work-in-progress, we remove the *.d.ts files for modules
+// which we do not intend to auto-generate typings for yet.
 gulp.task('compile', function() {
-  return gulp.src(paths.src)
+  let workflow = gulp.src(paths.src)
     // Compile Typescript into .js and .d.ts files
     .pipe(buildProject())
 
     // Add header
-    .pipe(header(banner))
+    .pipe(header(banner));
+  
+  // Exclude typings that are unintended (currently excludes all auto-generated
+  // typings, but as services are refactored to auto-generate typings this will
+  // change). Moreover, all *-internal.d.ts typings should not be exposed to 
+  // developers as it denotes internally used types.
+  if (declaration) {
+    const configuration = [
+      'lib/**/*.js',
+      'lib/**/*.d.ts',
+      '!lib/**/*-internal.d.ts',
+    ].concat(TEMPORARY_TYPING_EXCLUDES);
 
-    // Write to build directory
-    .pipe(gulp.dest(paths.build))
+    workflow = workflow.pipe(filter(configuration));
+  }
+
+  // Write to build directory
+  return workflow.pipe(gulp.dest(paths.build))
 });
 
 /**
@@ -104,19 +148,23 @@ gulp.task('copyDatabase', function() {
 });
 
 gulp.task('copyTypings', function() {
-  return gulp.src('src/*.d.ts')
+  let workflow = gulp.src('src/*.d.ts')
     // Add header
-    .pipe(header(banner))
+    .pipe(header(banner));
+  
+  if (declaration) {
+    workflow = workflow.pipe(filter(paths.curatedTypings));
+  }
 
-    // Write to build directory
-    .pipe(gulp.dest(paths.build))
+  // Write to build directory
+  return workflow.pipe(gulp.dest(paths.build))
 });
 
 gulp.task('compile_all', gulp.series('compile', 'copyDatabase', 'copyTypings', 'compile_test'));
 
 // Regenerates js every time a source file changes
 gulp.task('watch', function() {
-  gulp.watch(paths.src.concat(paths.test), {ignoreInitial: false}, gulp.series('compile_all'));
+  gulp.watch(paths.src.concat(paths.test), { ignoreInitial: false }, gulp.series('compile_all'));
 });
 
 // Build task
