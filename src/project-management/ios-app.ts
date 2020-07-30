@@ -1,5 +1,5 @@
 /*!
- * Copyright 2018 Google Inc.
+ * Copyright 2020 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,76 +14,41 @@
  * limitations under the License.
  */
 
-import { FirebaseProjectManagementError } from '../utils/error';
-import * as validator from '../utils/validator';
-import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request';
-import { IosAppMetadata, AppPlatform } from './app-metadata';
+import { IosAppMetadata } from './app-metadata';
 
-export class IosApp {
-  private readonly resourceName: string;
-
-  constructor(
-      public readonly appId: string,
-      private readonly requestHandler: ProjectManagementRequestHandler) {
-    if (!validator.isNonEmptyString(appId)) {
-      throw new FirebaseProjectManagementError(
-        'invalid-argument', 'appId must be a non-empty string.');
-    }
-
-    this.resourceName = `projects/-/iosApps/${appId}`;
-  }
-
-  public getMetadata(): Promise<IosAppMetadata> {
-    return this.requestHandler.getResource(this.resourceName)
-      .then((responseData: any) => {
-        assertServerResponse(
-          validator.isNonNullObject(responseData),
-          responseData,
-          'getMetadata()\'s responseData must be a non-null object.');
-
-        const requiredFieldsList = ['name', 'appId', 'projectId', 'bundleId'];
-        requiredFieldsList.forEach((requiredField) => {
-          assertServerResponse(
-            validator.isNonEmptyString(responseData[requiredField]),
-            responseData,
-            `getMetadata()'s responseData.${requiredField} must be a non-empty string.`);
-        });
-
-        const metadata: IosAppMetadata = {
-          platform: AppPlatform.IOS,
-          resourceName: responseData.name,
-          appId: responseData.appId,
-          displayName: responseData.displayName || null,
-          projectId: responseData.projectId,
-          bundleId: responseData.bundleId,
-        };
-        return metadata;
-      });
-  }
-
-  public setDisplayName(newDisplayName: string): Promise<void> {
-    return this.requestHandler.setDisplayName(this.resourceName, newDisplayName);
-  }
+/**
+ * A reference to a Firebase iOS app.
+ *
+ * Do not call this constructor directly. Instead, use
+ * [`projectManagement.iosApp()`](admin.projectManagement.ProjectManagement#iosApp).
+ */
+export interface IosApp {
+  appId: string;
 
   /**
-   * @return {Promise<string>} A promise that resolves to a UTF-8 XML string, typically intended to
-   *     be written to a plist file.
+   * Retrieves metadata about this iOS app.
+   *
+   * @return {!Promise<IosAppMetadata>} A promise that
+   *     resolves to the retrieved metadata about this iOS app.
    */
-  public getConfig(): Promise<string> {
-    return this.requestHandler.getConfig(this.resourceName)
-      .then((responseData: any) => {
-        assertServerResponse(
-          validator.isNonNullObject(responseData),
-          responseData,
-          'getConfig()\'s responseData must be a non-null object.');
+  getMetadata(): Promise<IosAppMetadata>;
 
-        const base64ConfigFileContents = responseData.configFileContents;
-        assertServerResponse(
-          validator.isBase64String(base64ConfigFileContents),
-          responseData,
-          `getConfig()'s responseData.configFileContents must be a base64 string.`);
+  /**
+   * Sets the optional user-assigned display name of the app.
+   *
+   * @param newDisplayName The new display name to set.
+   *
+   * @return A promise that resolves when the display name has
+   *     been set.
+   */
+  setDisplayName(newDisplayName: string): Promise<void>;
 
-        return Buffer.from(base64ConfigFileContents, 'base64').toString('utf8');
-      });
-  }
+  /**
+   * Gets the configuration artifact associated with this app.
+   *
+   * @return A promise that resolves to the iOS app's Firebase
+   *     config file, in UTF-8 string format. This string is typically intended to
+   *     be written to a plist file that gets shipped with your iOS app.
+   */
+  getConfig(): Promise<string>;
 }

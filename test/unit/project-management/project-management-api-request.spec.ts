@@ -22,12 +22,12 @@ import * as _ from 'lodash';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import { FirebaseApp } from '../../../src/firebase-app';
-import { ProjectManagementRequestHandler } from '../../../src/project-management/project-management-api-request';
+import { ProjectManagementRequestHandler } from '../../../src/project-management/project-management-api-request-internal';
 import { HttpClient } from '../../../src/utils/api-request';
 import * as mocks from '../../resources/mocks';
 import * as utils from '../utils';
 import { getSdkVersion } from '../../../src/utils/index';
-import { ShaCertificate } from '../../../src/project-management/android-app';
+import { ShaCertificateImpl } from '../../../src/project-management/android-app-internal';
 import { AppPlatform } from '../../../src/project-management/app-metadata';
 
 chai.should();
@@ -474,7 +474,7 @@ describe('ProjectManagementRequestHandler', () => {
   });
 
   describe('addAndroidShaCertificate', () => {
-    const certificateToAdd = new ShaCertificate(VALID_SHA_1_HASH);
+    const certificateToAdd = new ShaCertificateImpl(VALID_SHA_1_HASH);
 
     testHttpErrors(
       () => requestHandler.addAndroidShaCertificate(ANDROID_APP_RESOURCE_NAME, certificateToAdd));

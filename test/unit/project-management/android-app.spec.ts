@@ -21,7 +21,8 @@ import * as _ from 'lodash';
 import * as sinon from 'sinon';
 import { FirebaseApp } from '../../../src/firebase-app';
 import { AndroidApp, ShaCertificate } from '../../../src/project-management/android-app';
-import { ProjectManagementRequestHandler } from '../../../src/project-management/project-management-api-request';
+import { AndroidAppImpl, ShaCertificateImpl } from '../../../src/project-management/android-app-internal';
+import { ProjectManagementRequestHandler } from '../../../src/project-management/project-management-api-request-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { FirebaseProjectManagementError } from '../../../src/utils/error';
 import * as mocks from '../../resources/mocks';
@@ -46,7 +47,7 @@ describe('AndroidApp', () => {
   beforeEach(() => {
     mockApp = mocks.app();
     requestHandler = new ProjectManagementRequestHandler(mockApp);
-    androidApp = new AndroidApp(APP_ID, requestHandler);
+    androidApp = new AndroidAppImpl(APP_ID, requestHandler);
   });
 
   afterEach(() => {
@@ -60,7 +61,7 @@ describe('AndroidApp', () => {
     invalidAppIds.forEach((invalidAppId) => {
       it('should throw given invalid app ID: ' + JSON.stringify(invalidAppId), () => {
         expect(() => {
-          const androidAppAny: any = AndroidApp;
+          const androidAppAny: any = AndroidAppImpl;
           return new androidAppAny(invalidAppId);
         }).to.throw('appId must be a non-empty string.');
       });
@@ -68,14 +69,14 @@ describe('AndroidApp', () => {
 
     it('should throw given no appId', () => {
       expect(() => {
-        const androidAppAny: any = AndroidApp;
+        const androidAppAny: any = AndroidAppImpl;
         return new androidAppAny();
       }).to.throw('appId must be a non-empty string.');
     });
 
     it('should not throw given a valid app ID', () => {
       expect(() => {
-        return new AndroidApp(APP_ID, requestHandler);
+        return new AndroidAppImpl(APP_ID, requestHandler);
       }).not.to.throw();
     });
   });
@@ -184,8 +185,8 @@ describe('AndroidApp', () => {
     };
 
     const VALID_ANDROID_CERTS: ShaCertificate[] = [
-      new ShaCertificate(VALID_SHA_1_HASH, testResourceName1),
-      new ShaCertificate(VALID_SHA_256_HASH, testResourceName2),
+      new ShaCertificateImpl(VALID_SHA_1_HASH, testResourceName1),
+      new ShaCertificateImpl(VALID_SHA_256_HASH, testResourceName2),
     ];
 
     it('should propagate API errors', () => {
@@ -267,7 +268,7 @@ describe('AndroidApp', () => {
   });
 
   describe('addShaCertificate', () => {
-    const certificateToAdd = new ShaCertificate(VALID_SHA_1_HASH);
+    const certificateToAdd = new ShaCertificateImpl(VALID_SHA_1_HASH);
 
     it('should propagate API errors', () => {
       const stub = sinon
@@ -288,9 +289,9 @@ describe('AndroidApp', () => {
   });
 
   describe('deleteShaCertificate', () => {
-    const certificateToDelete = new ShaCertificate(VALID_SHA_1_HASH);
+    const certificateToDelete = new ShaCertificateImpl(VALID_SHA_1_HASH);
     const certificateToDeleteWithResourceName =
-        new ShaCertificate(VALID_SHA_1_HASH, 'resource/name');
+        new ShaCertificateImpl(VALID_SHA_1_HASH, 'resource/name');
 
     it('should propagate API errors', () => {
       const stub = sinon
@@ -384,7 +385,7 @@ describe('ShaCertificate', () => {
     invalidShaHashes.forEach((invalidShaHash) => {
       it('should throw given invalid SHA hash: ' + JSON.stringify(invalidShaHash), () => {
         expect(() => {
-          const shaCertificateAny: any = ShaCertificate;
+          const shaCertificateAny: any = ShaCertificateImpl;
           return new shaCertificateAny(invalidShaHash);
         }).to.throw('shaHash must be either a sha256 hash or a sha1 hash.');
       });
@@ -392,20 +393,20 @@ describe('ShaCertificate', () => {
 
     it('should throw given no SHA hash', () => {
       expect(() => {
-        const shaCertificateAny: any = ShaCertificate;
+        const shaCertificateAny: any = ShaCertificateImpl;
         return new shaCertificateAny();
       }).to.throw('shaHash must be either a sha256 hash or a sha1 hash.');
     });
 
     it('should not throw given a valid SHA1 hash', () => {
       expect(() => {
-        return new ShaCertificate(VALID_SHA_1_HASH);
+        return new ShaCertificateImpl(VALID_SHA_1_HASH);
       }).not.to.throw();
     });
 
     it('should not throw given a valid SHA256 hash', () => {
       expect(() => {
-        return new ShaCertificate(VALID_SHA_256_HASH);
+        return new ShaCertificateImpl(VALID_SHA_256_HASH);
       }).not.to.throw();
     });
   });

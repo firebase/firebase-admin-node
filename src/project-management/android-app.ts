@@ -1,5 +1,5 @@
 /*!
- * Copyright 2018 Google Inc.
+ * Copyright 2020 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,146 +14,108 @@
  * limitations under the License.
  */
 
-import { FirebaseProjectManagementError } from '../utils/error';
-import * as validator from '../utils/validator';
-import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request';
-import { AndroidAppMetadata, AppPlatform } from './app-metadata';
+import { AndroidAppMetadata } from './app-metadata';
 
-export class AndroidApp {
-  private readonly resourceName: string;
-
-  constructor(
-      public readonly appId: string,
-      private readonly requestHandler: ProjectManagementRequestHandler) {
-    if (!validator.isNonEmptyString(appId)) {
-      throw new FirebaseProjectManagementError(
-        'invalid-argument', 'appId must be a non-empty string.');
-    }
-
-    this.resourceName = `projects/-/androidApps/${appId}`;
-  }
-
-  public getMetadata(): Promise<AndroidAppMetadata> {
-    return this.requestHandler.getResource(this.resourceName)
-      .then((responseData: any) => {
-        assertServerResponse(
-          validator.isNonNullObject(responseData),
-          responseData,
-          'getMetadata()\'s responseData must be a non-null object.');
-
-        const requiredFieldsList = ['name', 'appId', 'projectId', 'packageName'];
-        requiredFieldsList.forEach((requiredField) => {
-          assertServerResponse(
-            validator.isNonEmptyString(responseData[requiredField]),
-            responseData,
-            `getMetadata()'s responseData.${requiredField} must be a non-empty string.`);
-        });
-
-        const metadata: AndroidAppMetadata = {
-          platform: AppPlatform.ANDROID,
-          resourceName: responseData.name,
-          appId: responseData.appId,
-          displayName: responseData.displayName || null,
-          projectId: responseData.projectId,
-          packageName: responseData.packageName,
-        };
-        return metadata;
-      });
-  }
-
-  public setDisplayName(newDisplayName: string): Promise<void> {
-    return this.requestHandler.setDisplayName(this.resourceName, newDisplayName);
-  }
-
-  public getShaCertificates(): Promise<ShaCertificate[]> {
-    return this.requestHandler.getAndroidShaCertificates(this.resourceName)
-      .then((responseData: any) => {
-        assertServerResponse(
-          validator.isNonNullObject(responseData),
-          responseData,
-          'getShaCertificates()\'s responseData must be a non-null object.');
-
-        if (!responseData.certificates) {
-          return [];
-        }
-
-        assertServerResponse(
-          validator.isArray(responseData.certificates),
-          responseData,
-          '"certificates" field must be present in the getShaCertificates() response data.');
-
-        const requiredFieldsList = ['name', 'shaHash'];
-
-        return responseData.certificates.map((certificateJson: any) => {
-          requiredFieldsList.forEach((requiredField) => {
-            assertServerResponse(
-              validator.isNonEmptyString(certificateJson[requiredField]),
-              responseData,
-              `getShaCertificates()'s responseData.certificates[].${requiredField} must be a `
-                      + `non-empty string.`);
-          });
-
-          return new ShaCertificate(certificateJson.shaHash, certificateJson.name);
-        });
-      });
-  }
-
-  public addShaCertificate(certificateToAdd: ShaCertificate): Promise<void> {
-    return this.requestHandler.addAndroidShaCertificate(this.resourceName, certificateToAdd);
-  }
-
-  public deleteShaCertificate(certificateToDelete: ShaCertificate): Promise<void> {
-    if (!certificateToDelete.resourceName) {
-      throw new FirebaseProjectManagementError(
-        'invalid-argument',
-        'Specified certificate does not include a resourceName. (Use AndroidApp.getShaCertificates() to retrieve ' +
-              'certificates with a resourceName.');
-    }
-    return this.requestHandler.deleteResource(certificateToDelete.resourceName);
-  }
+/**
+ * A SHA-1 or SHA-256 certificate.
+ *
+ * Do not call this constructor directly. Instead, use
+ * [`projectManagement.shaCertificate()`](admin.projectManagement.ProjectManagement#shaCertificate).
+ */
+export interface ShaCertificate {
+  /**
+   * The SHA certificate type.
+   *
+   * @example
+   * ```javascript
+   * var certType = shaCertificate.certType;
+   * ```
+   */
+  certType: ('sha1' | 'sha256');
 
   /**
-   * @return {Promise<string>} A promise that resolves to a UTF-8 JSON string, typically intended to
-   *     be written to a JSON file.
+   * The SHA-1 or SHA-256 hash for this certificate.
+   *
+   * @example
+   * ```javascript
+   * var shaHash = shaCertificate.shaHash;
+   * ```
    */
-  public getConfig(): Promise<string> {
-    return this.requestHandler.getConfig(this.resourceName)
-      .then((responseData: any) => {
-        assertServerResponse(
-          validator.isNonNullObject(responseData),
-          responseData,
-          'getConfig()\'s responseData must be a non-null object.');
+  shaHash: string;
 
-        const base64ConfigFileContents = responseData.configFileContents;
-        assertServerResponse(
-          validator.isBase64String(base64ConfigFileContents),
-          responseData,
-          `getConfig()'s responseData.configFileContents must be a base64 string.`);
-
-        return Buffer.from(base64ConfigFileContents, 'base64').toString('utf8');
-      });
-  }
+  /**
+   * The fully-qualified resource name that identifies this sha-key.
+   *
+   * This is useful when manually constructing requests for Firebase's public API.
+   *
+   * @example
+   * ```javascript
+   * var resourceName = shaCertificate.resourceName;
+   * ```
+   */
+  resourceName?: string;
 }
 
-export class ShaCertificate {
-  public readonly certType: ('sha1' | 'sha256');
+/**
+   * A reference to a Firebase Android app.
+   *
+   * Do not call this constructor directly. Instead, use
+   * [`projectManagement.androidApp()`](admin.projectManagement.ProjectManagement#androidApp).
+   */
+export interface AndroidApp {
+  appId: string;
 
   /**
-   * Creates a ShaCertificate using the given hash. The ShaCertificate's type (eg. 'sha256') is
-   * automatically determined from the hash itself.
+   * Retrieves metadata about this Android app.
    *
-   * @param shaHash The sha256 or sha1 hash for this certificate.
-   * @param resourceName The Firebase resource name for this certificate. This does not need to be
-   *     set when creating a new certificate.
+   * @return A promise that resolves to the retrieved metadata about this Android app.
    */
-  constructor(public readonly shaHash: string, public readonly resourceName?: string) {
-    if (/^[a-fA-F0-9]{40}$/.test(shaHash)) {
-      this.certType = 'sha1';
-    } else if (/^[a-fA-F0-9]{64}$/.test(shaHash)) {
-      this.certType = 'sha256';
-    } else {
-      throw new FirebaseProjectManagementError(
-        'invalid-argument', 'shaHash must be either a sha256 hash or a sha1 hash.');
-    }
-  }
+  getMetadata(): Promise<AndroidAppMetadata>;
+
+  /**
+   * Sets the optional user-assigned display name of the app.
+   *
+   * @param newDisplayName The new display name to set.
+   *
+   * @return A promise that resolves when the display name has been set.
+   */
+  setDisplayName(newDisplayName: string): Promise<void>;
+
+  /**
+   * Gets the list of SHA certificates associated with this Android app in Firebase.
+   *
+   * @return The list of SHA-1 and SHA-256 certificates associated with this Android app in
+   *     Firebase.
+   */
+  getShaCertificates(): Promise<ShaCertificate[]>;
+
+  /**
+   * Adds the given SHA certificate to this Android app.
+   *
+   * @param certificateToAdd The SHA certificate to add.
+   *
+   * @return A promise that resolves when the given certificate
+   *     has been added to the Android app.
+   */
+  addShaCertificate(certificateToAdd: ShaCertificate): Promise<void>;
+
+  /**
+   * Deletes the specified SHA certificate from this Android app.
+   *
+   * @param  certificateToDelete The SHA certificate to delete.
+   *
+   * @return A promise that resolves when the specified
+   *     certificate has been removed from the Android app.
+   */
+  deleteShaCertificate(certificateToRemove: ShaCertificate): Promise<void>;
+
+  /**
+   * Gets the configuration artifact associated with this app.
+   *
+   * @return A promise that resolves to the Android app's
+   *     Firebase config file, in UTF-8 string format. This string is typically
+   *     intended to be written to a JSON file that gets shipped with your Android
+   *     app.
+   */
+  getConfig(): Promise<string>;
 }
