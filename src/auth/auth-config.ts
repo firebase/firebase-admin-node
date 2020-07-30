@@ -29,7 +29,7 @@ export interface AuthProviderConfigFilter {
 /** The base Auth provider configuration interface. */
 export interface AuthProviderConfig {
   providerId: string;
-  displayName?: string;
+  displayName: string;
   enabled: boolean;
 }
 
@@ -264,7 +264,7 @@ export class EmailSignInConfig implements EmailSignInProviderConfig {
  */
 export class SAMLConfig implements SAMLAuthProviderConfig {
   public readonly enabled: boolean;
-  public readonly displayName?: string;
+  public readonly displayName: string;
   public readonly providerId: string;
   public readonly idpEntityId: string;
   public readonly ssoURL: string;
@@ -503,7 +503,7 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
     this.x509Certificates = x509Certificates;
     // When enabled is undefined, it takes its default value of false.
     this.enabled = !!response.enabled;
-    this.displayName = response.displayName;
+    this.displayName = (response.displayName as string);
   }
 
   /** @return {SAMLAuthProviderConfig} The plain object representation of the SAMLConfig. */
@@ -528,7 +528,7 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
  */
 export class OIDCConfig implements OIDCAuthProviderConfig {
   public readonly enabled: boolean;
-  public readonly displayName?: string;
+  public readonly displayName: string;
   public readonly providerId: string;
   public readonly issuer: string;
   public readonly clientId: string;
@@ -687,7 +687,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
     this.issuer = response.issuer;
     // When enabled is undefined, it takes its default value of false.
     this.enabled = !!response.enabled;
-    this.displayName = response.displayName;
+    this.displayName = (response.displayName as string);
   }
 
   /** @return {OIDCAuthProviderConfig} The plain object representation of the OIDCConfig. */
