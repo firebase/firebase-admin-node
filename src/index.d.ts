@@ -66,7 +66,7 @@ declare namespace admin {
      * {@link https://firebase.google.com/support/ Firebase Support} to help
      * explain the cause of an error.
      */
-    stack?: string;
+    stack: string;
 
     /**
      * @return A JSON-serializable representation of this object.
