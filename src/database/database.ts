@@ -15,7 +15,7 @@
  */
 
 // Required to perform module augmentation to FirebaseDatabase interface.
-import '@firebase/database';
+import '@firebase/database-types';
 
 declare module '@firebase/database-types' {
   interface FirebaseDatabase {

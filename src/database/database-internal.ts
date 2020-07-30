@@ -22,12 +22,11 @@ import { FirebaseDatabaseError, AppErrorCodes, FirebaseAppError } from '../utils
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { Database } from '@firebase/database';
 import { FirebaseDatabase } from '@firebase/database-types';
-import './database';
+// import './database';
 
 import * as validator from '../utils/validator';
 import { AuthorizedHttpClient, HttpRequestConfig, HttpError } from '../utils/api-request';
 import { getSdkVersion } from '../utils/index';
-
 
 /**
  * Internals of a Database instance.
@@ -98,7 +97,7 @@ export class DatabaseService implements FirebaseServiceInterface {
       db.getRulesJSON = () => {
         return rulesClient.getRulesJSON();
       };
-      db.setRules = (source) => {
+      db.setRules = (source: string) => {
         return rulesClient.setRules(source);
       };
 
@@ -242,3 +241,31 @@ class DatabaseRulesClient {
   }
 }
 
+declare module '@firebase/database-types' {
+  interface FirebaseDatabase {
+    /**
+     * Gets the currently applied security rules as a string. The return value consists of
+     * the rules source including comments.
+     *
+     * @return A promise fulfilled with the rules as a raw string.
+     */
+    getRules(): Promise<string>;
+
+    /**
+     * Gets the currently applied security rules as a parsed JSON object. Any comments in
+     * the original source are stripped away.
+     *
+     * @return A promise fulfilled with the parsed rules object.
+     */
+    getRulesJSON(): Promise<object>;
+
+    /**
+     * Sets the specified rules on the Firebase Realtime Database instance. If the rules source is
+     * specified as a string or a Buffer, it may include comments.
+     *
+     * @param source Source of the rules to apply. Must not be `null` or empty.
+     * @return Resolves when the rules are set on the Realtime Database.
+     */
+    setRules(source: string | Buffer | object): Promise<void>;
+  }
+}
