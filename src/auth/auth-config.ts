@@ -29,7 +29,7 @@ export interface AuthProviderConfigFilter {
 /** The base Auth provider configuration interface. */
 export interface AuthProviderConfig {
   providerId: string;
-  displayName: string | undefined;
+  displayName: string;
   enabled: boolean;
 }
 
@@ -503,7 +503,7 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
     this.x509Certificates = x509Certificates;
     // When enabled is undefined, it takes its default value of false.
     this.enabled = !!response.enabled;
-    this.displayName = response.displayName ?? '';
+    this.displayName = (response.displayName as string);
   }
 
   /** @return {SAMLAuthProviderConfig} The plain object representation of the SAMLConfig. */
@@ -687,7 +687,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
     this.issuer = response.issuer;
     // When enabled is undefined, it takes its default value of false.
     this.enabled = !!response.enabled;
-    this.displayName = response.displayName ?? '';
+    this.displayName = (response.displayName as string);
   }
 
   /** @return {OIDCAuthProviderConfig} The plain object representation of the OIDCConfig. */
