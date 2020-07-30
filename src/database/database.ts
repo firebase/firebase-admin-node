@@ -15,7 +15,7 @@
  */
 
 // Required to perform module augmentation to FirebaseDatabase interface.
-import '@firebase/database-types';
+import { FirebaseDatabase } from '@firebase/database-types';
 
 declare module '@firebase/database-types' {
   interface FirebaseDatabase {
@@ -45,3 +45,5 @@ declare module '@firebase/database-types' {
     setRules(source: string | Buffer | object): Promise<void>;
   }
 }
+
+export { FirebaseDatabase as Database }

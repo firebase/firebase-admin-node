@@ -20,8 +20,8 @@ import * as path from 'path';
 import { FirebaseApp } from '../firebase-app';
 import { FirebaseDatabaseError, AppErrorCodes, FirebaseAppError } from '../utils/error';
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
-import { Database } from '@firebase/database';
-import { FirebaseDatabase } from '@firebase/database-types';
+import { Database as DatabaseImpl } from '@firebase/database';
+import { Database } from './database';
 // import './database';
 
 import * as validator from '../utils/validator';
@@ -34,7 +34,7 @@ import { getSdkVersion } from '../utils/index';
 class DatabaseInternals implements FirebaseServiceInternalsInterface {
 
   public databases: {
-    [dbUrl: string]: FirebaseDatabase;
+    [dbUrl: string]: Database;
   } = {};
 
   /**
@@ -44,7 +44,7 @@ class DatabaseInternals implements FirebaseServiceInternalsInterface {
    */
   public delete(): Promise<void> {
     for (const dbUrl of Object.keys(this.databases)) {
-      const db: Database = ((this.databases[dbUrl] as any) as Database);
+      const db: DatabaseImpl = ((this.databases[dbUrl] as any) as DatabaseImpl);
       db.INTERNAL.delete();
     }
     return Promise.resolve(undefined);
@@ -76,7 +76,7 @@ export class DatabaseService implements FirebaseServiceInterface {
     return this.appInternal;
   }
 
-  public getDatabase(url?: string): FirebaseDatabase {
+  public getDatabase(url?: string): Database {
     const dbUrl: string = this.ensureUrl(url);
     if (!validator.isNonEmptyString(dbUrl)) {
       throw new FirebaseDatabaseError({
@@ -85,7 +85,7 @@ export class DatabaseService implements FirebaseServiceInterface {
       });
     }
 
-    let db: FirebaseDatabase = this.INTERNAL.databases[dbUrl];
+    let db: Database = this.INTERNAL.databases[dbUrl];
     if (typeof db === 'undefined') {
       const rtdb = require('@firebase/database'); // eslint-disable-line @typescript-eslint/no-var-requires
       db = rtdb.initStandalone(this.appInternal, dbUrl, getSdkVersion()).instance;
