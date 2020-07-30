@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 /**
  * Metadata about a Firebase app.
  */
