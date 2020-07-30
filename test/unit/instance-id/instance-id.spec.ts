@@ -26,6 +26,7 @@ import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
 import { InstanceId } from '../../../src/instance-id/instance-id';
+import { InstanceIdImpl } from '../../../src/instance-id/instance-id-internal';
 import { FirebaseInstanceIdRequestHandler } from '../../../src/instance-id/instance-id-request';
 import { FirebaseApp } from '../../../src/firebase-app';
 import { FirebaseInstanceIdError, InstanceIdClientErrorCode } from '../../../src/utils/error';
@@ -57,14 +58,14 @@ describe('InstanceId', () => {
     mockApp = mocks.app();
     getTokenStub = utils.stubGetAccessToken(undefined, mockApp);
     mockCredentialApp = mocks.mockCredentialApp();
-    iid = new InstanceId(mockApp);
+    iid = new InstanceIdImpl(mockApp);
 
     googleCloudProject = process.env.GOOGLE_CLOUD_PROJECT;
     gcloudProject = process.env.GCLOUD_PROJECT;
 
-    nullAccessTokenClient = new InstanceId(mocks.appReturningNullAccessToken());
-    malformedAccessTokenClient = new InstanceId(mocks.appReturningMalformedAccessToken());
-    rejectedPromiseAccessTokenClient = new InstanceId(mocks.appRejectedWhileFetchingAccessToken());
+    nullAccessTokenClient = new InstanceIdImpl(mocks.appReturningNullAccessToken());
+    malformedAccessTokenClient = new InstanceIdImpl(mocks.appReturningMalformedAccessToken());
+    rejectedPromiseAccessTokenClient = new InstanceIdImpl(mocks.appRejectedWhileFetchingAccessToken());
   });
 
   afterEach(() => {
@@ -80,7 +81,7 @@ describe('InstanceId', () => {
     invalidApps.forEach((invalidApp) => {
       it('should throw given invalid app: ' + JSON.stringify(invalidApp), () => {
         expect(() => {
-          const iidAny: any = InstanceId;
+          const iidAny: any = InstanceIdImpl;
           return new iidAny(invalidApp);
         }).to.throw('First argument passed to admin.instanceId() must be a valid Firebase app instance.');
       });
@@ -88,7 +89,7 @@ describe('InstanceId', () => {
 
     it('should throw given no app', () => {
       expect(() => {
-        const iidAny: any = InstanceId;
+        const iidAny: any = InstanceIdImpl;
         return new iidAny();
       }).to.throw('First argument passed to admin.instanceId() must be a valid Firebase app instance.');
     });
@@ -97,14 +98,14 @@ describe('InstanceId', () => {
       // Project ID not set in the environment.
       delete process.env.GOOGLE_CLOUD_PROJECT;
       delete process.env.GCLOUD_PROJECT;
-      const instanceId = new InstanceId(mockCredentialApp);
+      const instanceId = new InstanceIdImpl(mockCredentialApp);
       return instanceId.deleteInstanceId('iid')
         .should.eventually.rejectedWith(noProjectIdError);
     });
 
     it('should not throw given a valid app', () => {
       expect(() => {
-        return new InstanceId(mockApp);
+        return new InstanceIdImpl(mockApp);
       }).not.to.throw();
     });
   });
@@ -118,7 +119,7 @@ describe('InstanceId', () => {
     it('is read-only', () => {
       expect(() => {
         (iid as any).app = mockApp;
-      }).to.throw('Cannot set property app of #<InstanceId> which has only a getter');
+      }).to.throw('Cannot set property app of #<InstanceIdImpl> which has only a getter');
     });
   });
 
