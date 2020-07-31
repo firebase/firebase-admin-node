@@ -20,8 +20,7 @@ import * as chai from 'chai';
 import * as _ from 'lodash';
 import * as sinon from 'sinon';
 import { FirebaseApp } from '../../../src/firebase-app';
-import { IosAppImpl } from '../../../src/project-management/ios-app-internal';
-import { IosApp } from '../../../src/project-management/ios-app';
+import { IosAppImpl as IosApp } from '../../../src/project-management/ios-app-internal';
 import { ProjectManagementRequestHandler } from '../../../src/project-management/project-management-api-request-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { FirebaseProjectManagementError } from '../../../src/utils/error';
@@ -44,7 +43,7 @@ describe('IosApp', () => {
   beforeEach(() => {
     mockApp = mocks.app();
     requestHandler = new ProjectManagementRequestHandler(mockApp);
-    iosApp = new IosAppImpl(APP_ID, requestHandler);
+    iosApp = new IosApp(APP_ID, requestHandler);
   });
 
   afterEach(() => {
@@ -58,7 +57,7 @@ describe('IosApp', () => {
     invalidAppIds.forEach((invalidAppId) => {
       it('should throw given invalid app ID: ' + JSON.stringify(invalidAppId), () => {
         expect(() => {
-          const iosAppAny: any = IosAppImpl;
+          const iosAppAny: any = IosApp;
           return new iosAppAny(invalidAppId);
         }).to.throw('appId must be a non-empty string.');
       });
@@ -66,14 +65,14 @@ describe('IosApp', () => {
 
     it('should throw given no appId', () => {
       expect(() => {
-        const iosAppAny: any = IosAppImpl;
+        const iosAppAny: any = IosApp;
         return new iosAppAny();
       }).to.throw('appId must be a non-empty string.');
     });
 
     it('should not throw given a valid app ID', () => {
       expect(() => {
-        return new IosAppImpl(APP_ID, requestHandler);
+        return new IosApp(APP_ID, requestHandler);
       }).not.to.throw();
     });
   });

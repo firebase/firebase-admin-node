@@ -41,11 +41,11 @@ export namespace admin.projectManagement {
   /* eslint-disable @typescript-eslint/no-unused-vars */
   // See https://github.com/typescript-eslint/typescript-eslint/issues/363
   export import AndroidApp = androidAppApi.AndroidApp;
-  export import ShaCertificate = androidAppApi.ShaCertificate;
   export import AndroidAppMetadata = appMetadataApi.AndroidAppMetadata;
   export import AppMetadata = appMetadataApi.AppMetadata;
   export import AppPlatform = appMetadataApi.AppPlatform;
   export import IosAppMetadata = appMetadataApi.IosAppMetadata;
   export import IosApp = iosAppApi.IosApp;
   export import ProjectManagement = projectManagementApi.ProjectManagement;
+  export import ShaCertificate = androidAppApi.ShaCertificate;
 }

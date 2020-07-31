@@ -20,8 +20,8 @@ import * as chai from 'chai';
 import * as _ from 'lodash';
 import * as sinon from 'sinon';
 import { FirebaseApp } from '../../../src/firebase-app';
-import { AndroidApp, ShaCertificate } from '../../../src/project-management/android-app';
-import { AndroidAppImpl, ShaCertificateImpl } from '../../../src/project-management/android-app-internal';
+import { ShaCertificate } from '../../../src/project-management/android-app';
+import { AndroidAppImpl as AndroidApp, ShaCertificateImpl } from '../../../src/project-management/android-app-internal';
 import { ProjectManagementRequestHandler } from '../../../src/project-management/project-management-api-request-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { FirebaseProjectManagementError } from '../../../src/utils/error';
@@ -47,7 +47,7 @@ describe('AndroidApp', () => {
   beforeEach(() => {
     mockApp = mocks.app();
     requestHandler = new ProjectManagementRequestHandler(mockApp);
-    androidApp = new AndroidAppImpl(APP_ID, requestHandler);
+    androidApp = new AndroidApp(APP_ID, requestHandler);
   });
 
   afterEach(() => {
@@ -61,7 +61,7 @@ describe('AndroidApp', () => {
     invalidAppIds.forEach((invalidAppId) => {
       it('should throw given invalid app ID: ' + JSON.stringify(invalidAppId), () => {
         expect(() => {
-          const androidAppAny: any = AndroidAppImpl;
+          const androidAppAny: any = AndroidApp;
           return new androidAppAny(invalidAppId);
         }).to.throw('appId must be a non-empty string.');
       });
@@ -69,14 +69,14 @@ describe('AndroidApp', () => {
 
     it('should throw given no appId', () => {
       expect(() => {
-        const androidAppAny: any = AndroidAppImpl;
+        const androidAppAny: any = AndroidApp;
         return new androidAppAny();
       }).to.throw('appId must be a non-empty string.');
     });
 
     it('should not throw given a valid app ID', () => {
       expect(() => {
-        return new AndroidAppImpl(APP_ID, requestHandler);
+        return new AndroidApp(APP_ID, requestHandler);
       }).not.to.throw();
     });
   });
