@@ -52,7 +52,11 @@ var paths = {
 
   build: 'lib/',
 
-  curatedTypings: ['src/*.d.ts', '!src/instance-id.d.ts', '!src/security-rules.d.ts'],
+  curatedTypings: [
+    'src/*.d.ts',
+    '!src/instance-id.d.ts',
+    '!src/security-rules.d.ts'
+  ],
 };
 
 const TEMPORARY_TYPING_EXCLUDES = [
