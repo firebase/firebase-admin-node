@@ -23,7 +23,7 @@ import { AppErrorCodes, FirebaseAppError } from './utils/error';
 
 import { Auth } from './auth/auth';
 import { MachineLearning } from './machine-learning/machine-learning';
-import { Messaging } from './messaging/messaging';
+import { Messaging } from './messaging/messaging-internal';
 import { Storage } from './storage/storage';
 import { Database } from '@firebase/database';
 import { DatabaseService } from './database/database';
