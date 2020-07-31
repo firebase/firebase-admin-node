@@ -20,8 +20,7 @@ import * as chai from 'chai';
 import * as _ from 'lodash';
 import * as sinon from 'sinon';
 import { FirebaseApp } from '../../../src/firebase-app';
-import { ShaCertificate } from '../../../src/project-management/android-app';
-import { AndroidAppImpl as AndroidApp, ShaCertificateImpl } from '../../../src/project-management/android-app-internal';
+import { AndroidAppImpl as AndroidApp, ShaCertificateImpl as ShaCertificate } from '../../../src/project-management/android-app-internal';
 import { ProjectManagementRequestHandler } from '../../../src/project-management/project-management-api-request-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { FirebaseProjectManagementError } from '../../../src/utils/error';
@@ -185,8 +184,8 @@ describe('AndroidApp', () => {
     };
 
     const VALID_ANDROID_CERTS: ShaCertificate[] = [
-      new ShaCertificateImpl(VALID_SHA_1_HASH, testResourceName1),
-      new ShaCertificateImpl(VALID_SHA_256_HASH, testResourceName2),
+      new ShaCertificate(VALID_SHA_1_HASH, testResourceName1),
+      new ShaCertificate(VALID_SHA_256_HASH, testResourceName2),
     ];
 
     it('should propagate API errors', () => {
@@ -268,7 +267,7 @@ describe('AndroidApp', () => {
   });
 
   describe('addShaCertificate', () => {
-    const certificateToAdd = new ShaCertificateImpl(VALID_SHA_1_HASH);
+    const certificateToAdd = new ShaCertificate(VALID_SHA_1_HASH);
 
     it('should propagate API errors', () => {
       const stub = sinon
@@ -289,9 +288,9 @@ describe('AndroidApp', () => {
   });
 
   describe('deleteShaCertificate', () => {
-    const certificateToDelete = new ShaCertificateImpl(VALID_SHA_1_HASH);
+    const certificateToDelete = new ShaCertificate(VALID_SHA_1_HASH);
     const certificateToDeleteWithResourceName =
-        new ShaCertificateImpl(VALID_SHA_1_HASH, 'resource/name');
+        new ShaCertificate(VALID_SHA_1_HASH, 'resource/name');
 
     it('should propagate API errors', () => {
       const stub = sinon
@@ -385,7 +384,7 @@ describe('ShaCertificate', () => {
     invalidShaHashes.forEach((invalidShaHash) => {
       it('should throw given invalid SHA hash: ' + JSON.stringify(invalidShaHash), () => {
         expect(() => {
-          const shaCertificateAny: any = ShaCertificateImpl;
+          const shaCertificateAny: any = ShaCertificate;
           return new shaCertificateAny(invalidShaHash);
         }).to.throw('shaHash must be either a sha256 hash or a sha1 hash.');
       });
@@ -393,20 +392,20 @@ describe('ShaCertificate', () => {
 
     it('should throw given no SHA hash', () => {
       expect(() => {
-        const shaCertificateAny: any = ShaCertificateImpl;
+        const shaCertificateAny: any = ShaCertificate;
         return new shaCertificateAny();
       }).to.throw('shaHash must be either a sha256 hash or a sha1 hash.');
     });
 
     it('should not throw given a valid SHA1 hash', () => {
       expect(() => {
-        return new ShaCertificateImpl(VALID_SHA_1_HASH);
+        return new ShaCertificate(VALID_SHA_1_HASH);
       }).not.to.throw();
     });
 
     it('should not throw given a valid SHA256 hash', () => {
       expect(() => {
-        return new ShaCertificateImpl(VALID_SHA_256_HASH);
+        return new ShaCertificate(VALID_SHA_256_HASH);
       }).not.to.throw();
     });
   });

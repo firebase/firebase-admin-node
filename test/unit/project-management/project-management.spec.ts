@@ -21,8 +21,7 @@ import * as _ from 'lodash';
 import * as sinon from 'sinon';
 import { FirebaseApp } from '../../../src/firebase-app';
 import { AndroidApp } from '../../../src/project-management/android-app';
-import { ProjectManagement } from '../../../src/project-management/project-management';
-import { ProjectManagementImpl } from '../../../src/project-management/project-management-internal';
+import { ProjectManagementImpl as ProjectManagement } from '../../../src/project-management/project-management-internal';
 import { ProjectManagementRequestHandler } from '../../../src/project-management/project-management-api-request-internal';
 import { FirebaseProjectManagementError } from '../../../src/utils/error';
 import * as mocks from '../../resources/mocks';
@@ -60,7 +59,7 @@ describe('ProjectManagement', () => {
   beforeEach(() => {
     mockApp = mocks.app();
     mockCredentialApp = mocks.mockCredentialApp();
-    projectManagement = new ProjectManagementImpl(mockApp);
+    projectManagement = new ProjectManagement(mockApp);
   });
 
   afterEach(() => {
@@ -74,7 +73,7 @@ describe('ProjectManagement', () => {
     invalidApps.forEach((invalidApp) => {
       it('should throw given invalid app: ' + JSON.stringify(invalidApp), () => {
         expect(() => {
-          const projectManagementAny: any = ProjectManagementImpl;
+          const projectManagementAny: any = ProjectManagement;
           return new projectManagementAny(invalidApp);
         }).to.throw(
           'First argument passed to admin.projectManagement() must be a valid Firebase app '
@@ -84,7 +83,7 @@ describe('ProjectManagement', () => {
 
     it('should throw given no app', () => {
       expect(() => {
-        const projectManagementAny: any = ProjectManagementImpl;
+        const projectManagementAny: any = ProjectManagement;
         return new projectManagementAny();
       }).to.throw(
         'First argument passed to admin.projectManagement() must be a valid Firebase app '
@@ -95,14 +94,14 @@ describe('ProjectManagement', () => {
       // Project ID not set in the environment.
       delete process.env.GOOGLE_CLOUD_PROJECT;
       delete process.env.GCLOUD_PROJECT;
-      const projectMgt = new ProjectManagementImpl(mockCredentialApp);
+      const projectMgt = new ProjectManagement(mockCredentialApp);
       return projectMgt.listIosApps()
         .should.eventually.rejectedWith(noProjectIdErrorMessage);
     });
 
     it('should not throw given a valid app', () => {
       expect(() => {
-        return new ProjectManagementImpl(mockApp);
+        return new ProjectManagement(mockApp);
       }).not.to.throw();
     });
   });
