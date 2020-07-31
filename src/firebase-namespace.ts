@@ -449,7 +449,7 @@ export class FirebaseNamespace {
     const fn: FirebaseServiceNamespace<SecurityRules> = (app?: FirebaseApp) => {
       return this.ensureApp(app).securityRules();
     };
-    const securityRules = require('./security-rules/security-rules').SecurityRules;
+    const securityRules = require('./security-rules/security-rules-internal').SecurityRulesImpl;
     return Object.assign(fn, { SecurityRules: securityRules });
   }
 

@@ -22,8 +22,9 @@ import * as sinon from 'sinon';
 import { SecurityRules } from '../../../src/security-rules/security-rules';
 import { FirebaseApp } from '../../../src/firebase-app';
 import * as mocks from '../../resources/mocks';
-import { SecurityRulesApiClient, RulesetContent } from '../../../src/security-rules/security-rules-api-client';
-import { FirebaseSecurityRulesError } from '../../../src/security-rules/security-rules-utils';
+import { SecurityRulesApiClient, RulesetContent } from '../../../src/security-rules/security-rules-api-client-internal';
+import { FirebaseSecurityRulesError } from '../../../src/security-rules/security-rules-utils-internal';
+import { SecurityRulesImpl } from '../../../src/security-rules/security-rules-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
 
 const expect = chai.expect;
@@ -77,7 +78,7 @@ describe('SecurityRules', () => {
   before(() => {
     mockApp = mocks.app();
     mockCredentialApp = mocks.mockCredentialApp();
-    securityRules = new SecurityRules(mockApp);
+    securityRules = new SecurityRulesImpl(mockApp);
   });
 
   after(() => {
@@ -105,7 +106,7 @@ describe('SecurityRules', () => {
     invalidApps.forEach((invalidApp) => {
       it('should throw given invalid app: ' + JSON.stringify(invalidApp), () => {
         expect(() => {
-          const securityRulesAny: any = SecurityRules;
+          const securityRulesAny: any = SecurityRulesImpl;
           return new securityRulesAny(invalidApp);
         }).to.throw(
           'First argument passed to admin.securityRules() must be a valid Firebase app '
@@ -115,7 +116,7 @@ describe('SecurityRules', () => {
 
     it('should throw given no app', () => {
       expect(() => {
-        const securityRulesAny: any = SecurityRules;
+        const securityRulesAny: any = SecurityRulesImpl;
         return new securityRulesAny();
       }).to.throw(
         'First argument passed to admin.securityRules() must be a valid Firebase app '
@@ -129,14 +130,14 @@ describe('SecurityRules', () => {
       const noProjectId = 'Failed to determine project ID. Initialize the SDK with service '
         + 'account credentials, or set project ID as an app option. Alternatively, set the '
         + 'GOOGLE_CLOUD_PROJECT environment variable.';
-      const rulesWithoutProjectId = new SecurityRules(mockCredentialApp);
+      const rulesWithoutProjectId = new SecurityRulesImpl(mockCredentialApp);
       return rulesWithoutProjectId.getRuleset('test')
         .should.eventually.rejectedWith(noProjectId);
     });
 
     it('should not throw given a valid app', () => {
       expect(() => {
-        return new SecurityRules(mockApp);
+        return new SecurityRulesImpl(mockApp);
       }).not.to.throw();
     });
   });

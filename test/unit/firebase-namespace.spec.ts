@@ -52,6 +52,7 @@ import { InstanceId } from '../../src/instance-id/instance-id';
 import { InstanceIdImpl } from '../../src/instance-id/instance-id-internal';
 import { ProjectManagement } from '../../src/project-management/project-management';
 import { SecurityRules } from '../../src/security-rules/security-rules';
+import { SecurityRulesImpl } from '../../src/security-rules/security-rules-internal';
 import { RemoteConfig } from '../../src/remote-config/remote-config';
 import { getSdkVersion } from '../../src/utils/index';
 
@@ -692,7 +693,7 @@ describe('FirebaseNamespace', () => {
 
     it('should return a reference to SecurityRules type', () => {
       expect(firebaseNamespace.securityRules.SecurityRules)
-        .to.be.deep.equal(SecurityRules);
+        .to.be.deep.equal(SecurityRulesImpl);
     });
   });
 
