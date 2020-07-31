@@ -267,7 +267,7 @@ export namespace admin.remoteConfig {
    * [`admin.remoteConfig()`](admin.remoteConfig#remoteConfig).
    */
   interface RemoteConfig {
-    app: admin.app.App;
+    app: _admin.app.App;
 
     /**
      * Gets the current active version of the {@link admin.remoteConfig.RemoteConfigTemplate
