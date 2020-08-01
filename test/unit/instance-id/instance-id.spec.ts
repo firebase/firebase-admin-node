@@ -118,7 +118,7 @@ describe('InstanceId', () => {
     it('is read-only', () => {
       expect(() => {
         (iid as any).app = mockApp;
-      }).to.throw('Cannot set property app of #<InstanceId> which has only a getter');
+      }).to.throw('Cannot set property app of #<InstanceIdImpl> which has only a getter');
     });
   });
 
