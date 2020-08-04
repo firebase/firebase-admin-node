@@ -1229,7 +1229,7 @@ export namespace admin.messaging {
       registrationToken: string | string[],
       payload: admin.messaging.MessagingPayload,
       options?: admin.messaging.MessagingOptions
-    ): Promise<admin.messaging.MessagingDevicesResponse>;
+    ): Promise<admin.messaging.MessagingDevicesResponse | admin.messaging.MessagingDeviceGroupResponse>;
 
     /**
      * Sends an FCM message to a device group corresponding to the provided
