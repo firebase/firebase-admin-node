@@ -29,7 +29,7 @@ import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../
 import {
   ErrorInfo, MessagingClientErrorCode, FirebaseMessagingError,
 } from '../utils/error';
-import { Messaging } from './messaging-types';
+import { Messaging } from './messaging';
 
 import * as utils from '../utils';
 import * as validator from '../utils/validator';
