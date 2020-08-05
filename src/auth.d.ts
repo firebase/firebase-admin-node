@@ -1072,7 +1072,7 @@ export namespace admin.auth {
      * The user-friendly display name to the current configuration. This name is
      * also used as the provider label in the Cloud Console.
      */
-    displayName: string;
+    displayName?: string;
 
     /**
      * Whether the provider configuration is enabled or disabled. A user
