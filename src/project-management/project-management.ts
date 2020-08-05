@@ -55,7 +55,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
    * @param {object} app The app for this ProjectManagement service.
    * @constructor
    */
-  public constructor(readonly app: FirebaseApp) {
+  constructor(readonly app: FirebaseApp) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseProjectManagementError(
         'invalid-argument',
