@@ -201,8 +201,16 @@ export class ShaCertificate {
    * automatically determined from the hash itself.
    *
    * @param shaHash The sha256 or sha1 hash for this certificate.
+   * @example
+   * ```javascript
+   * var shaHash = shaCertificate.shaHash;
+   * ```
    * @param resourceName The Firebase resource name for this certificate. This does not need to be
    *     set when creating a new certificate.
+   * @example
+   * ```javascript
+   * var resourceName = shaCertificate.resourceName;
+   * ```
    */
   constructor(public readonly shaHash: string, public readonly resourceName?: string) {
     if (/^[a-fA-F0-9]{40}$/.test(shaHash)) {

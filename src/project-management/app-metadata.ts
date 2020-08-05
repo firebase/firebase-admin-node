@@ -93,8 +93,20 @@ export interface AppMetadata {
   resourceName: string;
 }
 
+/**
+ * Metadata about a Firebase iOS App.
+ */
 export interface IosAppMetadata extends AppMetadata {
   platform: AppPlatform.IOS;
+
+  /**
+   * The canonical bundle ID of the iOS App as it would appear in the iOS App Store.
+   *
+   * @example
+   * ```javascript
+   * var bundleId = iosAppMetadata.bundleId;
+   *```
+   */
   bundleId: string;
 }
 
