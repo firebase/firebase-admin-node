@@ -27,7 +27,7 @@ import * as mocks from '../../resources/mocks';
 
 import { FirebaseApp } from '../../../src/firebase-app';
 import { HttpClient } from '../../../src/utils/api-request';
-import { FirebaseInstanceIdRequestHandler } from '../../../src/instance-id/instance-id-request';
+import { FirebaseInstanceIdRequestHandler } from '../../../src/instance-id/instance-id-request-internal';
 
 chai.should();
 chai.use(sinonChai);
