@@ -80,6 +80,7 @@ const TEMPORARY_TYPING_EXCLUDES = [
 // rather than including both src and test in the lib dir. Declaration
 // is used by TypeScript to determine if auto-generated typings should be
 // emitted.
+const declaration = process.env.TYPE_GENERATION_MODE === 'auto';
 var buildProject = ts.createProject('tsconfig.json', { rootDir: 'src', declaration });
 
 var buildTest = ts.createProject('tsconfig.json');
