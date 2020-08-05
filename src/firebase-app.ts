@@ -34,7 +34,6 @@ import { InstanceIdImpl } from './instance-id/instance-id-internal';
 
 import { ProjectManagement } from './project-management/project-management';
 import { SecurityRules } from './security-rules/security-rules';
-import { SecurityRulesImpl } from './security-rules/security-rules-internal';
 import { RemoteConfig } from './remote-config/remote-config';
 
 import { Agent } from 'http';
@@ -392,8 +391,8 @@ export class FirebaseApp {
    */
   public securityRules(): SecurityRules {
     return this.ensureService_('security-rules', () => {
-      const securityRulesService: typeof SecurityRulesImpl =
-          require('./security-rules/security-rules-internal').SecurityRulesImpl;
+      const securityRulesService: typeof SecurityRules =
+          require('./security-rules/security-rules').SecurityRules;
       return new securityRulesService(this);
     });
   }

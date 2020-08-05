@@ -23,7 +23,7 @@ import { FirebaseApp } from '../../../src/firebase-app';
 import * as mocks from '../../resources/mocks';
 import { SecurityRulesApiClient, RulesetContent } from '../../../src/security-rules/security-rules-api-client-internal';
 import { FirebaseSecurityRulesError } from '../../../src/security-rules/security-rules-utils-internal';
-import { SecurityRulesImpl as SecurityRules } from '../../../src/security-rules/security-rules-internal';
+import { SecurityRules } from '../../../src/security-rules/security-rules';
 import { deepCopy } from '../../../src/utils/deep-copy';
 
 const expect = chai.expect;

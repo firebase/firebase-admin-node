@@ -38,8 +38,10 @@ export namespace admin.securityRules {
   /* eslint-disable @typescript-eslint/no-unused-vars */
   // See https://github.com/typescript-eslint/typescript-eslint/issues/363
   export import RulesFile = securityRulesApi.RulesFile;
-  export import Ruleset = securityRulesApi.Ruleset;
   export import RulesetMetadata = securityRulesApi.RulesetMetadata;
   export import RulesetMetadataList = securityRulesApi.RulesetMetadataList;
-  export import SecurityRules = securityRulesApi.SecurityRules;
+  
+  /* eslint-disable @typescript-eslint/no-empty-interface */ 
+  export interface Ruleset extends securityRulesApi.Ruleset {}
+  export interface SecurityRules extends securityRulesApi.SecurityRules {}
 }
