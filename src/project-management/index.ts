@@ -40,12 +40,15 @@ export namespace admin.projectManagement {
   // See https://github.com/microsoft/TypeScript/issues/4336
   /* eslint-disable @typescript-eslint/no-unused-vars */
   // See https://github.com/typescript-eslint/typescript-eslint/issues/363
-  export import AndroidApp = androidAppApi.AndroidApp;
-  export import AndroidAppMetadata = appMetadataApi.AndroidAppMetadata;
-  export import AppMetadata = appMetadataApi.AppMetadata;
-  export import AppPlatform = appMetadataApi.AppPlatform;
-  export import IosAppMetadata = appMetadataApi.IosAppMetadata;
-  export import IosApp = iosAppApi.IosApp;
-  export import ProjectManagement = projectManagementApi.ProjectManagement;
-  export import ShaCertificate = androidAppApi.ShaCertificate;
+  export import AndroidAppMetadata = appMetadataApi.AndroidAppMetadata
+  export import AppMetadata = appMetadataApi.AppMetadata
+  export import AppPlatform = appMetadataApi.AppPlatform 
+  export import IosAppMetadata = appMetadataApi.IosAppMetadata
+
+  // Allows for exposing classes as interfaces in typings
+  /* eslint-disable @typescript-eslint/no-empty-interface */
+  export interface AndroidApp extends androidAppApi.AndroidApp {}
+  export interface IosApp extends iosAppApi.IosApp {}
+  export interface ProjectManagement extends projectManagementApi.ProjectManagement {}
+  export interface ShaCertificate extends androidAppApi.ShaCertificate {}
 }

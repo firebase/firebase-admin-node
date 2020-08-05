@@ -33,7 +33,7 @@ import { InstanceId } from './instance-id/instance-id';
 import { InstanceIdImpl } from './instance-id/instance-id-internal';
 
 import { ProjectManagement } from './project-management/project-management';
-import { ProjectManagementImpl } from './project-management/project-management-internal';
+import { ProjectManagementService } from './project-management/project-management-internal';
 import { SecurityRules } from './security-rules/security-rules';
 import { RemoteConfig } from './remote-config/remote-config';
 
@@ -379,8 +379,8 @@ export class FirebaseApp {
    */
   public projectManagement(): ProjectManagement {
     return this.ensureService_('project-management', () => {
-      const projectManagementService: typeof ProjectManagementImpl =
-          require('./project-management/project-management-internal').ProjectManagementImpl;
+      const projectManagementService: typeof ProjectManagementService =
+          require('./project-management/project-management-internal').ProjectManagementService;
       return new projectManagementService(this);
     });
   }

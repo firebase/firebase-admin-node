@@ -27,7 +27,7 @@ import { HttpClient } from '../../../src/utils/api-request';
 import * as mocks from '../../resources/mocks';
 import * as utils from '../utils';
 import { getSdkVersion } from '../../../src/utils/index';
-import { ShaCertificateImpl } from '../../../src/project-management/android-app-internal';
+import { ShaCertificate } from '../../../src/project-management/android-app';
 import { AppPlatform } from '../../../src/project-management/app-metadata';
 
 chai.should();
@@ -474,7 +474,7 @@ describe('ProjectManagementRequestHandler', () => {
   });
 
   describe('addAndroidShaCertificate', () => {
-    const certificateToAdd = new ShaCertificateImpl(VALID_SHA_1_HASH);
+    const certificateToAdd = new ShaCertificate(VALID_SHA_1_HASH);
 
     testHttpErrors(
       () => requestHandler.addAndroidShaCertificate(ANDROID_APP_RESOURCE_NAME, certificateToAdd));

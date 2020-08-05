@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-import { IosAppMetadata } from './app-metadata';
+import { FirebaseProjectManagementError } from '../utils/error';
+import * as validator from '../utils/validator';
+import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request-internal';
+import { IosAppMetadata, AppPlatform } from './app-metadata';
 
 /**
  * A reference to a Firebase iOS app.
@@ -22,16 +25,53 @@ import { IosAppMetadata } from './app-metadata';
  * Do not call this constructor directly. Instead, use
  * [`projectManagement.iosApp()`](admin.projectManagement.ProjectManagement#iosApp).
  */
-export interface IosApp {
-  appId: string;
+export class IosApp {
+  private readonly resourceName: string;
+
+  constructor(
+      public readonly appId: string,
+      private readonly requestHandler: ProjectManagementRequestHandler) {
+    if (!validator.isNonEmptyString(appId)) {
+      throw new FirebaseProjectManagementError(
+        'invalid-argument', 'appId must be a non-empty string.');
+    }
+
+    this.resourceName = `projects/-/iosApps/${appId}`;
+  }
 
   /**
    * Retrieves metadata about this iOS app.
    *
-   * @return {!Promise<IosAppMetadata>} A promise that
+   * @return {!Promise<admin.projectManagement.IosAppMetadata>} A promise that
    *     resolves to the retrieved metadata about this iOS app.
    */
-  getMetadata(): Promise<IosAppMetadata>;
+  public getMetadata(): Promise<IosAppMetadata> {
+    return this.requestHandler.getResource(this.resourceName)
+      .then((responseData: any) => {
+        assertServerResponse(
+          validator.isNonNullObject(responseData),
+          responseData,
+          'getMetadata()\'s responseData must be a non-null object.');
+
+        const requiredFieldsList = ['name', 'appId', 'projectId', 'bundleId'];
+        requiredFieldsList.forEach((requiredField) => {
+          assertServerResponse(
+            validator.isNonEmptyString(responseData[requiredField]),
+            responseData,
+            `getMetadata()'s responseData.${requiredField} must be a non-empty string.`);
+        });
+
+        const metadata: IosAppMetadata = {
+          platform: AppPlatform.IOS,
+          resourceName: responseData.name,
+          appId: responseData.appId,
+          displayName: responseData.displayName || null,
+          projectId: responseData.projectId,
+          bundleId: responseData.bundleId,
+        };
+        return metadata;
+      });
+  }
 
   /**
    * Sets the optional user-assigned display name of the app.
@@ -41,7 +81,9 @@ export interface IosApp {
    * @return A promise that resolves when the display name has
    *     been set.
    */
-  setDisplayName(newDisplayName: string): Promise<void>;
+  public setDisplayName(newDisplayName: string): Promise<void> {
+    return this.requestHandler.setDisplayName(this.resourceName, newDisplayName);
+  }
 
   /**
    * Gets the configuration artifact associated with this app.
@@ -50,5 +92,21 @@ export interface IosApp {
    *     config file, in UTF-8 string format. This string is typically intended to
    *     be written to a plist file that gets shipped with your iOS app.
    */
-  getConfig(): Promise<string>;
+  public getConfig(): Promise<string> {
+    return this.requestHandler.getConfig(this.resourceName)
+      .then((responseData: any) => {
+        assertServerResponse(
+          validator.isNonNullObject(responseData),
+          responseData,
+          'getConfig()\'s responseData must be a non-null object.');
+
+        const base64ConfigFileContents = responseData.configFileContents;
+        assertServerResponse(
+          validator.isBase64String(base64ConfigFileContents),
+          responseData,
+          `getConfig()'s responseData.configFileContents must be a base64 string.`);
+
+        return Buffer.from(base64ConfigFileContents, 'base64').toString('utf8');
+      });
+  }
 }

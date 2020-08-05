@@ -51,7 +51,7 @@ import {
 import { InstanceId } from '../../src/instance-id/instance-id';
 import { InstanceIdImpl } from '../../src/instance-id/instance-id-internal';
 import { ProjectManagement } from '../../src/project-management/project-management';
-import { ProjectManagementImpl } from '../../src/project-management/project-management-internal';
+import { ProjectManagementService } from '../../src/project-management/project-management-internal';
 import { SecurityRules } from '../../src/security-rules/security-rules';
 import { RemoteConfig } from '../../src/remote-config/remote-config';
 import { getSdkVersion } from '../../src/utils/index';
@@ -659,7 +659,7 @@ describe('FirebaseNamespace', () => {
 
     it('should return a reference to ProjectManagement type', () => {
       expect(firebaseNamespace.projectManagement.ProjectManagement)
-        .to.be.deep.equal(ProjectManagementImpl);
+        .to.be.deep.equal(ProjectManagementService);
     });
   });
 

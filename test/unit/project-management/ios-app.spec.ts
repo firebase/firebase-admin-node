@@ -20,7 +20,7 @@ import * as chai from 'chai';
 import * as _ from 'lodash';
 import * as sinon from 'sinon';
 import { FirebaseApp } from '../../../src/firebase-app';
-import { IosAppImpl as IosApp } from '../../../src/project-management/ios-app-internal';
+import { IosApp } from '../../../src/project-management/ios-app';
 import { ProjectManagementRequestHandler } from '../../../src/project-management/project-management-api-request-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { FirebaseProjectManagementError } from '../../../src/utils/error';

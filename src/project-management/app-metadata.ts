@@ -15,6 +15,27 @@
  */
 
 /**
+ * Platforms with which a Firebase App can be associated.
+ */
+export enum AppPlatform {
+
+  /**
+   * Unknown state. This is only used for distinguishing unset values.
+   */
+  PLATFORM_UNKNOWN = 'PLATFORM_UNKNOWN',
+
+  /**
+   * The Firebase App is associated with iOS.
+   */
+  IOS = 'IOS',
+
+  /**
+   * The Firebase App is associated with Android.
+   */
+  ANDROID = 'ANDROID',
+}
+
+/**
  * Metadata about a Firebase app.
  */
 export interface AppMetadata {
@@ -72,32 +93,10 @@ export interface AppMetadata {
   resourceName: string;
 }
 
-/**
- * Platforms with which a Firebase App can be associated.
- */
-export enum AppPlatform {
-
-  /**
-   * Unknown state. This is only used for distinguishing unset values.
-   */
-  PLATFORM_UNKNOWN = 'PLATFORM_UNKNOWN',
-
-  /**
-   * The Firebase App is associated with iOS.
-   */
-  IOS = 'IOS',
-
-  /**
-   * The Firebase App is associated with Android.
-   */
-  ANDROID = 'ANDROID',
-}
-
 export interface IosAppMetadata extends AppMetadata {
   platform: AppPlatform.IOS;
   bundleId: string;
 }
-
 
 /**
  * Metadata about a Firebase Android App.
