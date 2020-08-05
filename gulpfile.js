@@ -79,9 +79,7 @@ const TEMPORARY_TYPING_EXCLUDES = [
 // This ensures that the generated production files are in their own root
 // rather than including both src and test in the lib dir. Declaration
 // is used by TypeScript to determine if auto-generated typings should be
-// emitted. StripInternal is used to hide @internal annotated members
-// from appearing in the typings (ex: FirebaseServiceInterface INTERNAL)
-const declaration = process.env.TYPE_GENERATION_MODE === 'auto';
+// emitted.
 var buildProject = ts.createProject('tsconfig.json', { rootDir: 'src', declaration });
 
 var buildTest = ts.createProject('tsconfig.json');
