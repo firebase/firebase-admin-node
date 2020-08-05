@@ -46,17 +46,16 @@ class ProjectManagementInternals implements FirebaseServiceInternalsInterface {
  * [`admin.projectManagement()`](admin.projectManagement#projectManagement).
  */
 export class ProjectManagement implements FirebaseServiceInterface {
-  /** @internal */
   public readonly INTERNAL: ProjectManagementInternals = new ProjectManagementInternals();
 
-  protected readonly requestHandler: ProjectManagementRequestHandler;
-  protected projectId: string;
+  private readonly requestHandler: ProjectManagementRequestHandler;
+  private projectId: string;
 
   /**
    * @param {object} app The app for this ProjectManagement service.
    * @constructor
    */
-  protected constructor(readonly app: FirebaseApp) {
+  public constructor(readonly app: FirebaseApp) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseProjectManagementError(
         'invalid-argument',

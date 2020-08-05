@@ -19,12 +19,6 @@ import * as validator from '../utils/validator';
 import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request-internal';
 import { IosAppMetadata, AppPlatform } from './app-metadata';
 
-/**
- * A reference to a Firebase iOS app.
- *
- * Do not call this constructor directly. Instead, use
- * [`projectManagement.iosApp()`](admin.projectManagement.ProjectManagement#iosApp).
- */
 export class IosApp {
   private readonly resourceName: string;
 

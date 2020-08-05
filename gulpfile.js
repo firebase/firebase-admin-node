@@ -82,8 +82,7 @@ const TEMPORARY_TYPING_EXCLUDES = [
 // emitted. StripInternal is used to hide @internal annotated members
 // from appearing in the typings (ex: FirebaseServiceInterface INTERNAL)
 const declaration = process.env.TYPE_GENERATION_MODE === 'auto';
-var buildProject = ts.createProject('tsconfig.json',
-  { rootDir: 'src', declaration, stripInternal: declaration });
+var buildProject = ts.createProject('tsconfig.json', { rootDir: 'src', declaration });
 
 var buildTest = ts.createProject('tsconfig.json');
 

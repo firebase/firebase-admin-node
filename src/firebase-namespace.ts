@@ -437,7 +437,7 @@ export class FirebaseNamespace {
     const fn: FirebaseServiceNamespace<ProjectManagement> = (app?: FirebaseApp) => {
       return this.ensureApp(app).projectManagement();
     };
-    const projectManagement = require('./project-management/project-management-internal').ProjectManagementService;
+    const projectManagement = require('./project-management/project-management').ProjectManagement;
     return Object.assign(fn, { ProjectManagement: projectManagement });
   }
 

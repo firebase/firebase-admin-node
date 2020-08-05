@@ -19,12 +19,6 @@ import * as validator from '../utils/validator';
 import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request-internal';
 import { AndroidAppMetadata, AppPlatform } from './app-metadata';
 
-/**
- * A reference to a Firebase Android app.
- *
- * Do not call this constructor directly. Instead, use
- * [`projectManagement.androidApp()`](admin.projectManagement.ProjectManagement#androidApp).
- */
 export class AndroidApp {
   private readonly resourceName: string;
 
