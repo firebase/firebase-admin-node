@@ -51,6 +51,7 @@ class InstanceIdInternals implements FirebaseServiceInternalsInterface {
  *   current app.
  */
 export class InstanceId implements FirebaseServiceInterface {
+  /* @internal */
   public INTERNAL: InstanceIdInternals = new InstanceIdInternals();
 
   private app_: FirebaseApp;
