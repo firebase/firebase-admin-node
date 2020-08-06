@@ -52,7 +52,11 @@ var paths = {
 
   build: 'lib/',
 
-  curatedTypings: ['src/*.d.ts', '!src/instance-id.d.ts'],
+  curatedTypings: [
+    'src/*.d.ts',
+    '!src/instance-id.d.ts',
+    '!src/project-management.d.ts'
+  ],
 };
 
 const TEMPORARY_TYPING_EXCLUDES = [
@@ -65,7 +69,6 @@ const TEMPORARY_TYPING_EXCLUDES = [
   '!lib/firestore/*.d.ts',
   '!lib/machine-learning/*.d.ts',
   '!lib/messaging/*.d.ts',
-  '!lib/project-management/*.d.ts',
   '!lib/remote-config/*.d.ts',
   '!lib/security-rules/*.d.ts',
   '!lib/storage/*.d.ts',
