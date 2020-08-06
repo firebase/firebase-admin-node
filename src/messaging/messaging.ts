@@ -176,7 +176,6 @@ function mapRawResponseToTopicManagementResponse(response: object): MessagingTop
   return result;
 }
 
-
 /**
  * Internals of a Messaging instance.
  */
@@ -191,7 +190,6 @@ class MessagingInternals implements FirebaseServiceInternalsInterface {
     return Promise.resolve(undefined);
   }
 }
-
 
 /**
  * Messaging service bound to the provided app.
@@ -257,7 +255,7 @@ export class Messaging implements FirebaseServiceInterface {
     }
     return this.getUrlPath()
       .then((urlPath) => {
-        const request: {message: Message; validate_only?: boolean} = { message: copy };
+        const request: { message: Message; validate_only?: boolean } = { message: copy };
         if (dryRun) {
           request.validate_only = true;
         }
@@ -314,7 +312,7 @@ export class Messaging implements FirebaseServiceInterface {
       .then((urlPath) => {
         const requests: SubRequest[] = copy.map((message) => {
           validateMessage(message);
-          const request: {message: Message; validate_only?: boolean} = { message };
+          const request: { message: Message; validate_only?: boolean } = { message };
           if (dryRun) {
             request.validate_only = true;
           }
@@ -697,8 +695,8 @@ export class Messaging implements FirebaseServiceInterface {
           throw new FirebaseMessagingError(
             MessagingClientErrorCode.INVALID_ARGUMENT,
             'Failed to determine project ID for Messaging. Initialize the '
-              + 'SDK with service account credentials or set project ID as an app option. '
-              + 'Alternatively set the GOOGLE_CLOUD_PROJECT environment variable.',
+            + 'SDK with service account credentials or set project ID as an app option. '
+            + 'Alternatively set the GOOGLE_CLOUD_PROJECT environment variable.',
           );
         }
 
@@ -805,7 +803,7 @@ export class Messaging implements FirebaseServiceInterface {
       if (validPayloadKeys.indexOf(payloadKey) === -1) {
         throw new FirebaseMessagingError(
           MessagingClientErrorCode.INVALID_PAYLOAD,
-          `Messaging payload contains an invalid "${ payloadKey }" property. Valid properties are ` +
+          `Messaging payload contains an invalid "${payloadKey}" property. Valid properties are ` +
           `"data" and "notification".`,
         );
       } else {
@@ -826,7 +824,7 @@ export class Messaging implements FirebaseServiceInterface {
       if (!validator.isNonNullObject(value)) {
         throw new FirebaseMessagingError(
           MessagingClientErrorCode.INVALID_PAYLOAD,
-          `Messaging payload contains an invalid value for the "${ payloadKey }" property. ` +
+          `Messaging payload contains an invalid value for the "${payloadKey}" property. ` +
           `Value must be an object.`,
         );
       }
@@ -836,14 +834,14 @@ export class Messaging implements FirebaseServiceInterface {
           // Validate all sub-keys have a string value
           throw new FirebaseMessagingError(
             MessagingClientErrorCode.INVALID_PAYLOAD,
-            `Messaging payload contains an invalid value for the "${ payloadKey }.${ subKey }" ` +
+            `Messaging payload contains an invalid value for the "${payloadKey}.${subKey}" ` +
             `property. Values must be strings.`,
           );
         } else if (payloadKey === 'data' && /^google\./.test(subKey)) {
           // Validate the data payload does not contain keys which start with 'google.'.
           throw new FirebaseMessagingError(
             MessagingClientErrorCode.INVALID_PAYLOAD,
-            `Messaging payload contains the blacklisted "data.${ subKey }" property.`,
+            `Messaging payload contains the blacklisted "data.${subKey}" property.`,
           );
         }
       });
@@ -862,7 +860,7 @@ export class Messaging implements FirebaseServiceInterface {
         if (blacklistedKey in payloadCopy.data!) {
           throw new FirebaseMessagingError(
             MessagingClientErrorCode.INVALID_PAYLOAD,
-            `Messaging payload contains the blacklisted "data.${ blacklistedKey }" property.`,
+            `Messaging payload contains the blacklisted "data.${blacklistedKey}" property.`,
           );
         }
       });
@@ -892,7 +890,7 @@ export class Messaging implements FirebaseServiceInterface {
       if (blacklistedKey in optionsCopy) {
         throw new FirebaseMessagingError(
           MessagingClientErrorCode.INVALID_OPTIONS,
-          `Messaging options contains the blacklisted "${ blacklistedKey }" property.`,
+          `Messaging options contains the blacklisted "${blacklistedKey}" property.`,
         );
       }
     });
@@ -905,14 +903,14 @@ export class Messaging implements FirebaseServiceInterface {
       const keyName = ('collapseKey' in options) ? 'collapseKey' : 'collapse_key';
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_OPTIONS,
-        `Messaging options contains an invalid value for the "${ keyName }" property. Value must ` +
+        `Messaging options contains an invalid value for the "${keyName}" property. Value must ` +
         'be a non-empty string.',
       );
     } else if ('dry_run' in optionsCopy && !validator.isBoolean((optionsCopy as any).dry_run)) {
       const keyName = ('dryRun' in options) ? 'dryRun' : 'dry_run';
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_OPTIONS,
-        `Messaging options contains an invalid value for the "${ keyName }" property. Value must ` +
+        `Messaging options contains an invalid value for the "${keyName}" property. Value must ` +
         'be a boolean.',
       );
     } else if ('priority' in optionsCopy && !validator.isNonEmptyString(optionsCopy.priority)) {
@@ -922,32 +920,32 @@ export class Messaging implements FirebaseServiceInterface {
         'be a non-empty string.',
       );
     } else if ('restricted_package_name' in optionsCopy &&
-               !validator.isNonEmptyString((optionsCopy as any).restricted_package_name)) {
+      !validator.isNonEmptyString((optionsCopy as any).restricted_package_name)) {
       const keyName = ('restrictedPackageName' in options) ? 'restrictedPackageName' : 'restricted_package_name';
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_OPTIONS,
-        `Messaging options contains an invalid value for the "${ keyName }" property. Value must ` +
+        `Messaging options contains an invalid value for the "${keyName}" property. Value must ` +
         'be a non-empty string.',
       );
     } else if ('time_to_live' in optionsCopy && !validator.isNumber((optionsCopy as any).time_to_live)) {
       const keyName = ('timeToLive' in options) ? 'timeToLive' : 'time_to_live';
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_OPTIONS,
-        `Messaging options contains an invalid value for the "${ keyName }" property. Value must ` +
+        `Messaging options contains an invalid value for the "${keyName}" property. Value must ` +
         'be a number.',
       );
     } else if ('content_available' in optionsCopy && !validator.isBoolean((optionsCopy as any).content_available)) {
       const keyName = ('contentAvailable' in options) ? 'contentAvailable' : 'content_available';
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_OPTIONS,
-        `Messaging options contains an invalid value for the "${ keyName }" property. Value must ` +
+        `Messaging options contains an invalid value for the "${keyName}" property. Value must ` +
         'be a boolean.',
       );
     } else if ('mutable_content' in optionsCopy && !validator.isBoolean((optionsCopy as any).mutable_content)) {
       const keyName = ('mutableContent' in options) ? 'mutableContent' : 'mutable_content';
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_OPTIONS,
-        `Messaging options contains an invalid value for the "${ keyName }" property. Value must ` +
+        `Messaging options contains an invalid value for the "${keyName}" property. Value must ` +
         'be a boolean.',
       );
     }
@@ -968,7 +966,7 @@ export class Messaging implements FirebaseServiceInterface {
     errorInfo: ErrorInfo = MessagingClientErrorCode.INVALID_ARGUMENT,
   ): void {
     if (!validator.isNonEmptyArray(registrationTokenOrTokens) &&
-        !validator.isNonEmptyString(registrationTokenOrTokens)) {
+      !validator.isNonEmptyString(registrationTokenOrTokens)) {
       throw new FirebaseMessagingError(
         errorInfo,
         `Registration token(s) provided to ${methodName}() must be a non-empty string or a ` +
@@ -1064,7 +1062,7 @@ export class Messaging implements FirebaseServiceInterface {
    */
   private normalizeTopic(topic: string): string {
     if (!/^\/topics\//.test(topic)) {
-      topic = `/topics/${ topic }`;
+      topic = `/topics/${topic}`;
     }
     return topic;
   }

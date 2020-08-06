@@ -56,76 +56,266 @@ export interface MulticastMessage extends BaseMessage {
   tokens: string[];
 }
 
+/**
+ * A notification that can be included in {@link admin.messaging.Message}.
+ */
 export interface Notification {
+  /**
+   * The title of the notification.
+   */
   title?: string;
+  /**
+   * The notification body
+   */
   body?: string;
+  /**
+   * URL of an image to be displayed in the notification.
+   */
   imageUrl?: string;
 }
 
+/**
+ * Represents platform-independent options for features provided by the FCM SDKs.
+ */
 export interface FcmOptions {
+  /**
+   * The label associated with the message's analytics data.
+   */
   analyticsLabel?: string;
 }
 
+/**
+ * Represents the WebPush protocol options that can be included in an
+ * {@link admin.messaging.Message}.
+ */
 export interface WebpushConfig {
+
+  /**
+   * A collection of WebPush headers. Header values must be strings.
+   *
+   * See [WebPush specification](https://tools.ietf.org/html/rfc8030#section-5)
+   * for supported headers.
+   */
   headers?: { [key: string]: string };
+
+  /**
+   * A collection of data fields.
+   */
   data?: { [key: string]: string };
+
+  /**
+   * A WebPush notification payload to be included in the message.
+   */
   notification?: WebpushNotification;
+
+  /**
+   * Options for features provided by the FCM SDK for Web.
+   */
   fcmOptions?: WebpushFcmOptions;
 }
 
-export interface WebpushFcmOptions {
+/** Represents options for features provided by the FCM SDK for Web
+ * (which are not part of the Webpush standard).
+ */
+interface WebpushFcmOptions {
+
+  /**
+   * The link to open when the user clicks on the notification.
+   * For all URL values, HTTPS is required.
+   */
   link?: string;
 }
 
-export interface WebpushNotification {
+/**
+ * Represents the WebPush-specific notification options that can be included in
+ * {@link admin.messaging.WebpushConfig}. This supports most of the standard
+ * options as defined in the Web Notification
+ * [specification](https://developer.mozilla.org/en-US/docs/Web/API/notification/Notification).
+ */
+interface WebpushNotification {
+
+  /**
+   * Title text of the notification.
+   */
   title?: string;
+
+  /**
+   * An array of notification actions representing the actions
+   * available to the user when the notification is presented.
+   */
   actions?: Array<{
+
+    /**
+     * An action available to the user when the notification is presented
+     */
     action: string;
+
+    /**
+     * Optional icon for a notification action.
+     */
     icon?: string;
+
+    /**
+     * Title of the notification action.
+     */
     title: string;
   }>;
+
+  /**
+   * URL of the image used to represent the notification when there is
+   * not enough space to display the notification itself.
+   */
   badge?: string;
+
+  /**
+   * Body text of the notification.
+   */
   body?: string;
+
+  /**
+   * Arbitrary data that you want associated with the notification.
+   * This can be of any data type.
+   */
   data?: any;
+
+  /**
+   * The direction in which to display the notification. Must be one
+   * of `auto`, `ltr` or `rtl`.
+   */
   dir?: 'auto' | 'ltr' | 'rtl';
+
+  /**
+   * URL to the notification icon.
+   */
   icon?: string;
+
+  /**
+   * URL of an image to be displayed in the notification.
+   */
   image?: string;
+
+  /**
+   * The notification's language as a BCP 47 language tag.
+   */
   lang?: string;
+
+  /**
+   * A boolean specifying whether the user should be notified after a
+   * new notification replaces an old one. Defaults to false.
+   */
   renotify?: boolean;
+
+  /**
+   * Indicates that a notification should remain active until the user
+   * clicks or dismisses it, rather than closing automatically.
+   * Defaults to false.
+   */
   requireInteraction?: boolean;
+
+  /**
+   * A boolean specifying whether the notification should be silent.
+   * Defaults to false.
+   */
   silent?: boolean;
+
+  /**
+   * An identifying tag for the notification.
+   */
   tag?: string;
+
+  /**
+   * Timestamp of the notification. Refer to
+   * https://developer.mozilla.org/en-US/docs/Web/API/notification/timestamp
+   * for details.
+   */
   timestamp?: number;
+
+  /**
+   * A vibration pattern for the device's vibration hardware to emit
+   * when the notification fires.
+   */
   vibrate?: number | number[];
   [key: string]: any;
 }
 
+/**
+ * Represents the APNs-specific options that can be included in an
+ * {@link admin.messaging.Message}. Refer to
+ * [Apple documentation](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CommunicatingwithAPNs.html)
+ * for various headers and payload fields supported by APNs.
+ */
 export interface ApnsConfig {
+  /**
+   * A collection of APNs headers. Header values must be strings.
+   */
   headers?: { [key: string]: string };
+
+  /**
+   * An APNs payload to be included in the message.
+   */
   payload?: ApnsPayload;
+
+  /**
+   * Options for features provided by the FCM SDK for iOS.
+   */
   fcmOptions?: ApnsFcmOptions;
 }
-
+/**
+ * Represents the payload of an APNs message. Mainly consists of the `aps`
+ * dictionary. But may also contain other arbitrary custom keys.
+ */
 export interface ApnsPayload {
+
+  /**
+   * The `aps` dictionary to be included in the message.
+   */
   aps: Aps;
   [customData: string]: object;
 }
-
+/**
+ * Represents the [aps dictionary](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/PayloadKeyReference.html)
+ * that is part of APNs messages.
+ */
 export interface Aps {
-  alert?: string | ApsAlert;
-  badge?: number;
-  sound?: string | CriticalSound;
-  contentAvailable?: boolean;
-  category?: string;
-  threadId?: string;
-  mutableContent?: boolean;
-  [customData: string]: any;
-}
 
-export interface CriticalSound {
-  critical?: boolean;
-  name: string;
-  volume?: number;
+  /**
+   * Alert to be included in the message. This may be a string or an object of
+   * type `admin.messaging.ApsAlert`.
+   */
+  alert?: string | ApsAlert;
+
+  /**
+   * Badge to be displayed with the message. Set to 0 to remove the badge. When
+   * not specified, the badge will remain unchanged.
+   */
+  badge?: number;
+
+  /**
+   * Sound to be played with the message.
+   */
+  sound?: string | CriticalSound;
+
+  /**
+   * Specifies whether to configure a background update notification.
+   */
+  contentAvailable?: boolean;
+
+  /**
+   * Specifies whether to set the `mutable-content` property on the message
+   * so the clients can modify the notification via app extensions.
+   */
+  mutableContent?: boolean;
+
+  /**
+   * Type of the notification.
+   */
+  category?: string;
+
+  /**
+   * An app-specific identifier for grouping notifications.
+   */
+  threadId?: string;
+  [customData: string]: any;
 }
 
 export interface ApsAlert {
@@ -142,10 +332,47 @@ export interface ApsAlert {
   launchImage?: string;
 }
 
-export interface ApnsFcmOptions {
+/**
+ * Represents a critical sound configuration that can be included in the
+ * `aps` dictionary of an APNs payload.
+ */
+export interface CriticalSound {
+
+  /**
+   * The critical alert flag. Set to `true` to enable the critical alert.
+   */
+  critical?: boolean;
+
+  /**
+   * The name of a sound file in the app's main bundle or in the `Library/Sounds`
+   * folder of the app's container directory. Specify the string "default" to play
+   * the system sound.
+   */
+  name: string;
+
+  /**
+   * The volume for the critical alert's sound. Must be a value between 0.0
+   * (silent) and 1.0 (full volume).
+   */
+  volume?: number;
+}
+
+/**
+ * Represents options for features provided by the FCM SDK for iOS.
+ */
+interface ApnsFcmOptions {
+
+  /**
+   * The label associated with the message's analytics data.
+   */
   analyticsLabel?: string;
+
+  /**
+   * URL of an image to be displayed in the notification.
+   */
   imageUrl?: string;
 }
+
 
 /**
  * Represents the Android-specific options that can be included in an

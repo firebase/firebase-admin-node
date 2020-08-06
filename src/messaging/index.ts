@@ -35,8 +35,6 @@ export function messaging(app?: FirebaseApp): messagingApi.Messaging {
 /* eslint-disable @typescript-eslint/no-namespace */
 export namespace admin.messaging {
   // See https://github.com/microsoft/TypeScript/issues/4336
-  /* eslint-disable @typescript-eslint/no-unused-vars */
-  // See https://github.com/typescript-eslint/typescript-eslint/issues/363
   // Allows for exposing classes as interfaces in typings
   /* eslint-disable @typescript-eslint/no-empty-interface */
   export interface Messaging extends messagingApi.Messaging {}
