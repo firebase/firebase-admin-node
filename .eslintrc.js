@@ -29,6 +29,7 @@ module.exports = {
     // Following checks are temporarily disabled. We shall incrementally enable them in the
     // future, fixing any violations as we go.
     '@typescript-eslint/no-non-null-assertion': 0,
+    '@typescript-eslint/no-unused-vars': 0,
 
     // Disabled checks
     '@typescript-eslint/no-explicit-any': 0,
@@ -46,5 +47,10 @@ module.exports = {
         'allowHigherOrderFunctions': true
       }
     ],
-  }
+    '@typescript-eslint/no-unused-vars-experimental': 2,
+  },
+  // See github.com/typescript-eslint/typescript-eslint/issues/1320
+  parserOptions: {
+    project: './tsconfig.eslint.json',
+  },
 };
