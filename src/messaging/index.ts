@@ -13,3 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import { FirebaseApp } from '../firebase-app';
+import * as messagingApi from './messaging';
+import * as firebaseAdmin from '../index';
+
+export function messaging(app?: FirebaseApp): messagingApi.Messaging {
+  if (typeof(app) === 'undefined') {
+    app = firebaseAdmin.app();
+  }
+  return app.messaging();
+}
+
+/**
+ * We must define a namespace to make the typings work correctly. Otherwise
+ * `admin.messaging()` cannot be called like a function. Temporarily,
+ * admin.messaging is used as the namespace name because we cannot barrel 
+ * re-export the contents from messsaging, and we want it to
+ * match the namespacing in the re-export inside src/index.d.ts
+ */
+/* eslint-disable @typescript-eslint/no-namespace */
+export namespace admin.messaging {
+  // See https://github.com/microsoft/TypeScript/issues/4336
+  /* eslint-disable @typescript-eslint/no-unused-vars */
+  // See https://github.com/typescript-eslint/typescript-eslint/issues/363
+  // Allows for exposing classes as interfaces in typings
+  /* eslint-disable @typescript-eslint/no-empty-interface */
+  export interface Messaging extends messagingApi.Messaging {}
+}
