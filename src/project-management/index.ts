@@ -18,14 +18,14 @@ import { FirebaseApp } from '../firebase-app';
 import * as androidAppApi from './android-app';
 import * as appMetadataApi from './app-metadata';
 import * as iosAppApi from './ios-app';
-import * as projectManagementApi from './project-management';
+import * as remoteConfigApi from './remote-config';
 import * as firebaseAdmin from '../index';
 
-export function projectManagement(app?: FirebaseApp): projectManagementApi.ProjectManagement {
+export function remoteConfig(app?: FirebaseApp): projectManagementApi.ProjectManagement {
   if (typeof(app) === 'undefined') {
     app = firebaseAdmin.app();
   }
-  return app.projectManagement();
+  return app.remoteConfig();
 }
 
 /**
