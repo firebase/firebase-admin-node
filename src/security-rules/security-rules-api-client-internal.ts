@@ -16,7 +16,7 @@
 
 import { HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient } from '../utils/api-request';
 import { PrefixedFirebaseError } from '../utils/error';
-import { FirebaseSecurityRulesError, SecurityRulesErrorCode } from './security-rules-utils';
+import { FirebaseSecurityRulesError, SecurityRulesErrorCode } from './security-rules-internal';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { FirebaseApp } from '../firebase-app';
