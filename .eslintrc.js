@@ -29,11 +29,11 @@ module.exports = {
     // Following checks are temporarily disabled. We shall incrementally enable them in the
     // future, fixing any violations as we go.
     '@typescript-eslint/no-non-null-assertion': 0,
-    '@typescript-eslint/no-unused-vars': 0,
 
     // Disabled checks
     '@typescript-eslint/no-explicit-any': 0,
     '@typescript-eslint/no-use-before-define': 0,
+    '@typescript-eslint/no-unused-vars': 0,
 
     // Required checks
     'indent': ['error', 2],
