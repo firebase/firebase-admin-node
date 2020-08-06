@@ -37,5 +37,7 @@ export namespace admin.instanceId {
   // See https://github.com/microsoft/TypeScript/issues/4336
   /* eslint-disable @typescript-eslint/no-unused-vars */
   // See https://github.com/typescript-eslint/typescript-eslint/issues/363
-  export import InstanceId = instanceIdApi.InstanceId;
+  // Allows for exposing classes as interfaces in typings
+  /* eslint-disable @typescript-eslint/no-empty-interface */
+  export interface InstanceId extends instanceIdApi.InstanceId {}
 }
