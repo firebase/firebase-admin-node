@@ -19,8 +19,8 @@ import { FirebaseApp } from '../firebase-app';
 import * as validator from '../utils/validator';
 import {
   SecurityRulesApiClient, RulesetResponse, RulesetContent, ListRulesetsResponse,
-} from './security-rules-internal';
-import { FirebaseSecurityRulesError } from './security-rules-utils-internal';
+} from './security-rules-api-client-internal';
+import { FirebaseSecurityRulesError } from './security-rules-internal';
 
 /**
  * A source file containing some Firebase security rules. The content includes raw
