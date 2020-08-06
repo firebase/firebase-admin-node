@@ -49,9 +49,11 @@ import {
   setLogFunction,
 } from '@google-cloud/firestore';
 import { InstanceId } from '../../src/instance-id/instance-id';
+import { InstanceIdImpl } from '../../src/instance-id/instance-id-internal';
 import { ProjectManagement } from '../../src/project-management/project-management';
 import { SecurityRules } from '../../src/security-rules/security-rules';
 import { RemoteConfig } from '../../src/remote-config/remote-config';
+import { getSdkVersion } from '../../src/utils/index';
 
 chai.should();
 chai.use(sinonChai);
@@ -73,7 +75,7 @@ describe('FirebaseNamespace', () => {
 
   describe('#SDK_VERSION', () => {
     it('should return the SDK version', () => {
-      expect(firebaseNamespace.SDK_VERSION).to.equal('<XXX_SDK_VERSION_XXX>');
+      expect(firebaseNamespace.SDK_VERSION).to.equal(getSdkVersion());
     });
   });
 
@@ -622,7 +624,7 @@ describe('FirebaseNamespace', () => {
     });
 
     it('should return a reference to InstanceId type', () => {
-      expect(firebaseNamespace.instanceId.InstanceId).to.be.deep.equal(InstanceId);
+      expect(firebaseNamespace.instanceId.InstanceId).to.be.deep.equal(InstanceIdImpl);
     });
   });
 

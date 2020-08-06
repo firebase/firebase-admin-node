@@ -29,10 +29,18 @@ import { ComputeEngineCredential } from '../../../src/auth/credential';
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import { FirebaseAppError } from '../../../src/utils/error';
+import { getSdkVersion } from '../../../src/utils/index';
 
 interface Obj {
   [key: string]: any;
 }
+
+describe('SDK_VERSION', () => {
+  it('utils index should retrieve the SDK_VERSION from package.json', () => {
+    const { version } = require('../../../package.json'); // eslint-disable-line @typescript-eslint/no-var-requires
+    expect(getSdkVersion()).to.equal(version);
+  });
+});
 
 describe('addReadonlyGetter()', () => {
   it('should add a new property to the provided object', () => {

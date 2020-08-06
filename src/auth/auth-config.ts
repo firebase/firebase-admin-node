@@ -374,7 +374,7 @@ export function validateTestPhoneNumbers(
  * to a format that is understood by the Auth server.
  */
 export class EmailSignInConfig implements EmailSignInProviderConfig {
-  public readonly enabled?: boolean;
+  public readonly enabled: boolean;
   public readonly passwordRequired?: boolean;
 
   /**

@@ -23,7 +23,7 @@ import { FirebaseApp } from '../firebase-app';
 
 const RULES_V1_API = 'https://firebaserules.googleapis.com/v1';
 const FIREBASE_VERSION_HEADER = {
-  'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
+  'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`,
 };
 
 export interface Release {

@@ -35,6 +35,7 @@ import {
   Messaging, BLACKLISTED_OPTIONS_KEYS, BLACKLISTED_DATA_PAYLOAD_KEYS,
 } from '../../../src/messaging/messaging';
 import { HttpClient } from '../../../src/utils/api-request';
+import { getSdkVersion } from '../../../src/utils/index';
 
 chai.should();
 chai.use(sinonChai);
@@ -321,7 +322,7 @@ describe('Messaging', () => {
   const mockAccessToken: string = utils.generateRandomAccessToken();
   const expectedHeaders = {
     'Authorization': 'Bearer ' + mockAccessToken,
-    'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
+    'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
     'access_token_auth': 'true',
   };
   const emptyResponse = utils.responseFrom({});

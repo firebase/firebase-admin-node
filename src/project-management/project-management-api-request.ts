@@ -21,6 +21,7 @@ import {
 import { FirebaseProjectManagementError, ProjectManagementErrorCode } from '../utils/error';
 import * as validator from '../utils/validator';
 import { ShaCertificate } from './android-app';
+import { getSdkVersion } from '../utils/index';
 
 /** Project management backend host and port. */
 const PROJECT_MANAGEMENT_HOST_AND_PORT = 'firebase.googleapis.com:443';
@@ -30,7 +31,7 @@ const PROJECT_MANAGEMENT_PATH = '/v1/';
 const PROJECT_MANAGEMENT_BETA_PATH = '/v1beta1/';
 /** Project management request header. */
 const PROJECT_MANAGEMENT_HEADERS = {
-  'X-Client-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
+  'X-Client-Version': `Node/Admin/${getSdkVersion()}`,
 };
 /** Project management request timeout duration in milliseconds. */
 const PROJECT_MANAGEMENT_TIMEOUT_MILLIS = 10000;
