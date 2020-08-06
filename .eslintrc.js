@@ -33,6 +33,7 @@ module.exports = {
     // Disabled checks
     '@typescript-eslint/no-explicit-any': 0,
     '@typescript-eslint/no-use-before-define': 0,
+    '@typescript-eslint/no-unused-vars': 0,
 
     // Required checks
     'indent': ['error', 2],
@@ -46,5 +47,12 @@ module.exports = {
         'allowHigherOrderFunctions': true
       }
     ],
-  }
+    '@typescript-eslint/no-unused-vars-experimental': 2,
+  },
+  // Required by the @typescript-eslint/no-unused-vars-experimental rule.
+  // We use a separate tsconfig file for linting to reduce the time complexity of the operation.
+  // See github.com/typescript-eslint/typescript-eslint/issues/1320
+  parserOptions: {
+    project: './tsconfig.eslint.json',
+  },
 };
