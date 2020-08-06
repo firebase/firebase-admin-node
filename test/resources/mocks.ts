@@ -221,7 +221,7 @@ export function generateSessionCookie(overrides?: object, expiresIn?: number): s
 
 export function firebaseServiceFactory(
   firebaseApp: FirebaseApp,
-  extendApp?: (props: object) => void, // eslint-disable-line @typescript-eslint/no-unused-vars
+  _extendApp?: (props: object) => void,
 ): FirebaseServiceInterface {
   const result = {
     app: firebaseApp,

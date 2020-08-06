@@ -21,7 +21,7 @@ import * as _ from 'lodash';
 import * as sinon from 'sinon';
 import { FirebaseApp } from '../../../src/firebase-app';
 import { AndroidApp, ShaCertificate } from '../../../src/project-management/android-app';
-import { ProjectManagementRequestHandler } from '../../../src/project-management/project-management-api-request';
+import { ProjectManagementRequestHandler } from '../../../src/project-management/project-management-api-request-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { FirebaseProjectManagementError } from '../../../src/utils/error';
 import * as mocks from '../../resources/mocks';
