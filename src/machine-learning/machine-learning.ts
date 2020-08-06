@@ -17,7 +17,7 @@
 import { FirebaseApp } from '../firebase-app';
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { MachineLearningApiClient, ModelResponse, ModelOptions,
-  ModelUpdateOptions, ListModelsOptions } from './machine-learning-api-client';
+  ModelUpdateOptions, ListModelsOptions, isGcsTfliteModelOptions } from './machine-learning-api-client';
 import { FirebaseError } from '../utils/error';
 
 import * as validator from '../utils/validator';
@@ -195,10 +195,10 @@ export class MachineLearning implements FirebaseServiceInterface {
 
   private signUrlIfPresent(options: ModelOptions): Promise<ModelOptions> {
     const modelOptions = deepCopy(options);
-    if (modelOptions.tfliteModel?.gcsTfliteUri) {
+    if (isGcsTfliteModelOptions(modelOptions)) {
       return this.signUrl(modelOptions.tfliteModel.gcsTfliteUri)
-        .then ((uri: string) => {
-          modelOptions.tfliteModel!.gcsTfliteUri = uri;
+        .then((uri: string) => {
+          modelOptions.tfliteModel.gcsTfliteUri = uri;
           return modelOptions;
         })
         .catch((err: Error) => {
@@ -331,8 +331,6 @@ export class Model {
    *     a default will be used.
    */
   public waitForUnlocked(maxTimeMillis?: number): Promise<void> {
-    // Backend does not currently return locked models.
-    // This will likely change in future.
     if ((this.model.activeOperations?.length ?? 0) > 0) {
       // The client will always be defined on Models that have activeOperations
       // because models with active operations came back from the server and
@@ -357,6 +355,16 @@ export class Model {
         `Invalid Model response: ${JSON.stringify(model)}`);
     }
 
+    // If tflite Model is specified, it must have a source consisting of
+    // oneof {gcsTfliteUri, automlModel}
+    if (model.tfliteModel &&
+        !validator.isNonEmptyString(model.tfliteModel.gcsTfliteUri) &&
+        !validator.isNonEmptyString(model.tfliteModel.automlModel)) {
+      throw new FirebaseMachineLearningError(
+        'invalid-server-response',
+        `Invalid Model response: ${JSON.stringify(model, null, 2)}`);
+    }
+
     const tmpModel = deepCopy(model);
     // Remove '@type' field. We don't need it.
     if ((tmpModel as any)["@type"]) {
@@ -372,7 +380,9 @@ export class Model {
 export interface TFLiteModel {
   readonly sizeBytes: number;
 
-  readonly gcsTfliteUri: string;
+  // Oneof these two
+  readonly gcsTfliteUri?: string;
+  readonly automlModel?: string;
 }
 
 function extractModelId(resourceName: string): string {

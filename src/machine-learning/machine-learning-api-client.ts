@@ -37,17 +37,28 @@ export interface StatusErrorResponse {
 }
 
 /**
- * A Firebase ML Model input object
+ * Firebase ML Model input objects
  */
-export interface ModelOptions {
+export interface ModelOptionsBase {
   displayName?: string;
   tags?: string[];
-
-  tfliteModel?: { gcsTfliteUri: string };
 }
+export interface GcsTfliteModelOptions extends ModelOptionsBase {
+  tfliteModel: {
+    gcsTfliteUri: string;
+  };
+}
+export interface AutoMLTfliteModelOptions extends ModelOptionsBase {
+  tfliteModel: {
+    automlModel: string;
+  };
+}
+export type ModelOptions = ModelOptionsBase | GcsTfliteModelOptions | AutoMLTfliteModelOptions;
+export type ModelUpdateOptions = ModelOptions & { state?: { published?: boolean }};
 
-export interface ModelUpdateOptions extends ModelOptions {
-  state?: { published?: boolean };
+export function isGcsTfliteModelOptions(options: ModelOptions): options is GcsTfliteModelOptions {
+  return (options as GcsTfliteModelOptions).tfliteModel !== undefined &&
+         (options as GcsTfliteModelOptions).tfliteModel.gcsTfliteUri !== undefined;
 }
 
 /** Interface representing listModels options. */
@@ -65,7 +76,9 @@ export interface ModelContent {
     readonly published?: boolean;
   };
   readonly tfliteModel?: {
-    readonly gcsTfliteUri: string;
+    readonly gcsTfliteUri?: string;
+    readonly automlModel?: string;
+
     readonly sizeBytes: number;
   };
 }
