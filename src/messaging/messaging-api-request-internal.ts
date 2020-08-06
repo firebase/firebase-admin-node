@@ -35,6 +35,7 @@ const LEGACY_FIREBASE_MESSAGING_HEADERS = {
   'access_token_auth': 'true',
 };
 
+
 /**
  * Class that provides a mechanism to send requests to the Firebase Cloud Messaging backend.
  */
