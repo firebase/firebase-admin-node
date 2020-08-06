@@ -19,7 +19,7 @@ import { FirebaseApp } from '../firebase-app';
 import * as validator from '../utils/validator';
 import {
   SecurityRulesApiClient, RulesetResponse, RulesetContent, ListRulesetsResponse,
-} from './security-rules-api-client-internal';
+} from './security-rules-internal';
 import { FirebaseSecurityRulesError } from './security-rules-utils-internal';
 
 /**
