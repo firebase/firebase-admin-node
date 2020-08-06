@@ -279,7 +279,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfig {
     }
 
     if (typeof options.factorIds !== 'undefined') {
-      if(!validator.isArray(options.factorIds)) {
+      if (!validator.isArray(options.factorIds)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_CONFIG,
           '"MultiFactorConfig.factorIds" must be an array of valid "AuthFactorTypes".',
