@@ -17,6 +17,7 @@
 import { FirebaseApp } from '../firebase-app';
 import { deepCopy, deepExtend } from '../utils/deep-copy';
 import { SubRequest } from './batch-request-internal';
+import { BLACKLISTED_DATA_PAYLOAD_KEYS, BLACKLISTED_OPTIONS_KEYS } from './messaging-internal';
 import {
   Message, validateMessage, MessagingDevicesResponse,
   MessagingDeviceGroupResponse, MessagingTopicManagementResponse,
@@ -93,14 +94,6 @@ const MESSAGING_TOPIC_RESPONSE_KEYS_MAP = {
 const MESSAGING_CONDITION_RESPONSE_KEYS_MAP = {
   message_id: 'messageId',
 };
-
-// Keys which are not allowed in the messaging data payload object.
-export const BLACKLISTED_DATA_PAYLOAD_KEYS = ['from'];
-
-// Keys which are not allowed in the messaging options object.
-export const BLACKLISTED_OPTIONS_KEYS = [
-  'condition', 'data', 'notification', 'registrationIds', 'registration_ids', 'to',
-];
 
 /**
  * Maps a raw FCM server response to a MessagingDevicesResponse object.

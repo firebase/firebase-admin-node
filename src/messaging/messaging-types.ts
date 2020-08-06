@@ -861,7 +861,7 @@ export interface BatchResponse {
  * Interface representing the status of an individual message that was sent as
  * part of a batch request.
  */
-interface SendResponse {
+export interface SendResponse {
   /**
    * A boolean indicating if the message was successfully handed off to FCM or
    * not. When true, the `messageId` attribute is guaranteed to be set. When

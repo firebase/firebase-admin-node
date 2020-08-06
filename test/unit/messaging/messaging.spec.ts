@@ -34,7 +34,8 @@ import {
 /* import {
   Messaging,
 } from '../../../src/messaging/messaging'; */
-import { MessagingImpl as Messaging, BLACKLISTED_OPTIONS_KEYS, BLACKLISTED_DATA_PAYLOAD_KEYS } from '../../../src/messaging/messaging-internal';
+import { Messaging } from '../../../src/messaging/messaging';
+import { BLACKLISTED_OPTIONS_KEYS, BLACKLISTED_DATA_PAYLOAD_KEYS } from '../../../src/messaging/messaging-internal';
 import { HttpClient } from '../../../src/utils/api-request';
 import { getSdkVersion } from '../../../src/utils/index';
 

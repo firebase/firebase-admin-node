@@ -29,7 +29,7 @@ import {
 
 import { Auth } from './auth/auth';
 import { MachineLearning } from './machine-learning/machine-learning';
-import { Messaging } from './messaging/messaging-internal';
+import { Messaging } from './messaging/messaging';
 import { Storage } from './storage/storage';
 import { Database } from '@firebase/database';
 import { Firestore } from '@google-cloud/firestore';
@@ -356,7 +356,7 @@ export class FirebaseNamespace {
     const fn: FirebaseServiceNamespace<Messaging> = (app?: FirebaseApp) => {
       return this.ensureApp(app).messaging();
     };
-    const messaging = require('./messaging/messaging-internal').MessagingImpl;
+    const messaging = require('./messaging/messaging').Messaging;
     return Object.assign(fn, { Messaging: messaging });
   }
 
