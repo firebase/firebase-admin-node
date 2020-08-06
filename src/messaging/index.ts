@@ -38,34 +38,34 @@ export namespace admin.messaging {
   // See https://github.com/microsoft/TypeScript/issues/4336
   /* eslint-disable @typescript-eslint/no-unused-vars */
   // See https://github.com/typescript-eslint/typescript-eslint/issues/363
-  export import Message = messagingTypesApi.Message;
-  export import MulticastMessage = messagingTypesApi.MulticastMessage;
-  export import Notification = messagingTypesApi.Notification;
-  export import FcmOptions = messagingTypesApi.FcmOptions;
-  export import WebpushConfig = messagingTypesApi.WebpushConfig;
-  export import WebpushFcmOptions = messagingTypesApi.WebpushFcmOptions;
-  export import WebpushNotification = messagingTypesApi.WebpushNotification;
+  export import AndroidConfig = messagingTypesApi.AndroidConfig;
+  export import AndroidFcmOptions = messagingTypesApi.AndroidFcmOptions;
+  export import AndroidNotification = messagingTypesApi.AndroidNotification;
   export import ApnsConfig = messagingTypesApi.ApnsConfig;
+  export import ApnsFcmOptions = messagingTypesApi.ApnsFcmOptions;
   export import ApnsPayload = messagingTypesApi.ApnsPayload;
   export import Aps = messagingTypesApi.Aps;
   export import ApsAlert = messagingTypesApi.ApsAlert;
-  export import ApnsFcmOptions = messagingTypesApi.ApnsFcmOptions;
-  export import AndroidConfig = messagingTypesApi.AndroidConfig;
-  export import AndroidNotification = messagingTypesApi.AndroidNotification;
-  export import CriticalSound = messagingTypesApi.CriticalSound;
-  export import LightSettings = messagingTypesApi.LightSettings;
-  export import AndroidFcmOptions = messagingTypesApi.AndroidFcmOptions;
-  export import DataMessagePayload = messagingTypesApi.DataMessagePayload;
-  export import NotificationMessagePayload = messagingTypesApi.NotificationMessagePayload;
-  export import MessagingPayload = messagingTypesApi.MessagingPayload;
-  export import MessagingOptions = messagingTypesApi.MessagingOptions;
-  export import MessagingDeviceResult = messagingTypesApi.MessagingDeviceResult;
-  export import MessagingDeviceGroupResponse = messagingTypesApi.MessagingDeviceGroupResponse;
-  export import MessagingTopicResponse = messagingTypesApi.MessagingTopicResponse;
-  export import MessagingConditionResponse = messagingTypesApi.MessagingConditionResponse;
-  export import MessagingTopicManagementResponse = messagingTypesApi.MessagingTopicManagementResponse;
   export import BatchResponse = messagingTypesApi.BatchResponse;
+  export import CriticalSound = messagingTypesApi.CriticalSound;
+  export import DataMessagePayload = messagingTypesApi.DataMessagePayload;
+  export import FcmOptions = messagingTypesApi.FcmOptions;
+  export import LightSettings = messagingTypesApi.LightSettings;
+  export import Message = messagingTypesApi.Message;
+  export import MessagingConditionResponse = messagingTypesApi.MessagingConditionResponse;
+  export import MessagingDeviceGroupResponse = messagingTypesApi.MessagingDeviceGroupResponse;
+  export import MessagingDeviceResult = messagingTypesApi.MessagingDeviceResult;
+  export import MessagingOptions = messagingTypesApi.MessagingOptions;
+  export import MessagingPayload = messagingTypesApi.MessagingPayload;
+  export import MessagingTopicManagementResponse = messagingTypesApi.MessagingTopicManagementResponse;
+  export import MessagingTopicResponse = messagingTypesApi.MessagingTopicResponse;
+  export import MulticastMessage = messagingTypesApi.MulticastMessage;
+  export import Notification = messagingTypesApi.Notification;
+  export import NotificationMessagePayload = messagingTypesApi.NotificationMessagePayload;
   export import SendResponse = messagingTypesApi.SendResponse;
+  export import WebpushConfig = messagingTypesApi.WebpushConfig;
+  export import WebpushFcmOptions = messagingTypesApi.WebpushFcmOptions;
+  export import WebpushNotification = messagingTypesApi.WebpushNotification;
 
   // See https://github.com/microsoft/TypeScript/issues/4336
   // Allows for exposing classes as interfaces in typings

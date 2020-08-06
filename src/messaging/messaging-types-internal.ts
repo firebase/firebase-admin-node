@@ -13,23 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import { renameProperties } from '../utils/index';
 import { MessagingClientErrorCode, FirebaseMessagingError, } from '../utils/error';
 import {
-  AndroidConfig,
-  AndroidFcmOptions,
-  AndroidNotification,
-  ApsAlert,
-  ApnsConfig,
-  ApnsFcmOptions,
-  ApnsPayload,
-  Aps,
-  CriticalSound,
-  FcmOptions,
-  LightSettings,
-  Message,
-  Notification,
-  WebpushConfig
+  AndroidConfig, AndroidFcmOptions, AndroidNotification,
+  ApsAlert, ApnsConfig, ApnsFcmOptions,
+  ApnsPayload, Aps, CriticalSound,
+  FcmOptions, LightSettings,
+  Message, Notification, WebpushConfig
 } from './messaging-types';
 
 import * as validator from '../utils/validator';
