@@ -53,6 +53,7 @@ export namespace admin.messaging {
   export import LightSettings = messagingTypesApi.LightSettings;
   export import Message = messagingTypesApi.Message;
   export import MessagingConditionResponse = messagingTypesApi.MessagingConditionResponse;
+  export import MessagingDevicesResponse = messagingTypesApi.MessagingDevicesResponse;
   export import MessagingDeviceGroupResponse = messagingTypesApi.MessagingDeviceGroupResponse;
   export import MessagingDeviceResult = messagingTypesApi.MessagingDeviceResult;
   export import MessagingOptions = messagingTypesApi.MessagingOptions;
