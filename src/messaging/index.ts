@@ -48,21 +48,12 @@ export namespace admin.messaging {
   export import ApsAlert = messagingTypesApi.ApsAlert;
   export import BatchResponse = messagingTypesApi.BatchResponse;
   export import CriticalSound = messagingTypesApi.CriticalSound;
-  export import DataMessagePayload = messagingTypesApi.DataMessagePayload;
   export import FcmOptions = messagingTypesApi.FcmOptions;
   export import LightSettings = messagingTypesApi.LightSettings;
   export import Message = messagingTypesApi.Message;
-  export import MessagingConditionResponse = messagingTypesApi.MessagingConditionResponse;
-  export import MessagingDevicesResponse = messagingTypesApi.MessagingDevicesResponse;
-  export import MessagingDeviceGroupResponse = messagingTypesApi.MessagingDeviceGroupResponse;
-  export import MessagingDeviceResult = messagingTypesApi.MessagingDeviceResult;
-  export import MessagingOptions = messagingTypesApi.MessagingOptions;
-  export import MessagingPayload = messagingTypesApi.MessagingPayload;
   export import MessagingTopicManagementResponse = messagingTypesApi.MessagingTopicManagementResponse;
-  export import MessagingTopicResponse = messagingTypesApi.MessagingTopicResponse;
   export import MulticastMessage = messagingTypesApi.MulticastMessage;
   export import Notification = messagingTypesApi.Notification;
-  export import NotificationMessagePayload = messagingTypesApi.NotificationMessagePayload;
   export import SendResponse = messagingTypesApi.SendResponse;
   export import WebpushConfig = messagingTypesApi.WebpushConfig;
   export import WebpushFcmOptions = messagingTypesApi.WebpushFcmOptions;
@@ -72,4 +63,15 @@ export namespace admin.messaging {
   // Allows for exposing classes as interfaces in typings
   /* eslint-disable @typescript-eslint/no-empty-interface */
   export interface Messaging extends messagingApi.Messaging {}
+
+  // Legacy API types.
+  export import DataMessagePayload = messagingTypesApi.DataMessagePayload;
+  export import MessagingConditionResponse = messagingTypesApi.MessagingConditionResponse;
+  export import MessagingDeviceGroupResponse = messagingTypesApi.MessagingDeviceGroupResponse;
+  export import MessagingDevicesResponse = messagingTypesApi.MessagingDevicesResponse;
+  export import MessagingDeviceResult = messagingTypesApi.MessagingDeviceResult;
+  export import MessagingOptions = messagingTypesApi.MessagingOptions;
+  export import MessagingPayload = messagingTypesApi.MessagingPayload;
+  export import MessagingTopicResponse = messagingTypesApi.MessagingTopicResponse;
+  export import NotificationMessagePayload = messagingTypesApi.NotificationMessagePayload;
 }
