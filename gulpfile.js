@@ -19,24 +19,22 @@
 /**************/
 /*  REQUIRES  */
 /**************/
-var fs = require('fs');
-var _ = require('lodash');
-var gulp = require('gulp');
-var pkg = require('./package.json');
+const _ = require('lodash');
+const gulp = require('gulp');
+const pkg = require('./package.json');
 
 // File I/O
-var fs = require('fs');
-var ts = require('gulp-typescript');
-var del = require('del');
-var header = require('gulp-header');
-var replace = require('gulp-replace');
-var filter = require('gulp-filter');
+const fs = require('fs');
+const ts = require('gulp-typescript');
+const del = require('del');
+const header = require('gulp-header');
+const filter = require('gulp-filter');
 
 
 /****************/
 /*  FILE PATHS  */
 /****************/
-var paths = {
+const paths = {
   src: [
     'src/**/*.ts',
   ],
@@ -47,7 +45,7 @@ var paths = {
   ],
 
   databaseSrc: [
-    'src/**/*.js'
+    'src/**/*.js',
   ],
 
   build: 'lib/',
@@ -56,7 +54,7 @@ var paths = {
     'src/*.d.ts',
     '!src/instance-id.d.ts',
     '!src/security-rules.d.ts',
-    '!src/project-management.d.ts'
+    '!src/project-management.d.ts',
   ],
 };
 
@@ -72,7 +70,7 @@ const TEMPORARY_TYPING_EXCLUDES = [
   '!lib/messaging/*.d.ts',
   '!lib/remote-config/*.d.ts',
   '!lib/storage/*.d.ts',
-  '!lib/utils/*.d.ts'
+  '!lib/utils/*.d.ts',
 ];
 
 // Create a separate project for buildProject that overrides the rootDir.
@@ -81,11 +79,11 @@ const TEMPORARY_TYPING_EXCLUDES = [
 // is used by TypeScript to determine if auto-generated typings should be
 // emitted.
 const declaration = process.env.TYPE_GENERATION_MODE === 'auto';
-var buildProject = ts.createProject('tsconfig.json', { rootDir: 'src', declaration });
+const buildProject = ts.createProject('tsconfig.json', { rootDir: 'src', declaration });
 
-var buildTest = ts.createProject('tsconfig.json');
+const buildTest = ts.createProject('tsconfig.json');
 
-var banner = `/*! firebase-admin v${pkg.version} */\n`;
+const banner = `/*! firebase-admin v${pkg.version} */\n`;
 
 /***********/
 /*  TASKS  */
