@@ -54,6 +54,7 @@
   ],
   "types": "./lib/index.d.ts",
   "dependencies": {
+    "@firebase/auth-interop-types": "^0.1.5",
     "@firebase/database": "^0.6.10",
     "@firebase/database-types": "^0.5.2",
     "@types/node": "^10.10.0",
