@@ -17,14 +17,13 @@
 import { FirebaseApp } from '../firebase-app';
 import { deepCopy, deepExtend } from '../utils/deep-copy';
 import { SubRequest } from './batch-request-internal';
-import { BLACKLISTED_DATA_PAYLOAD_KEYS, BLACKLISTED_OPTIONS_KEYS } from './messaging-internal';
+import { validateMessage, BLACKLISTED_DATA_PAYLOAD_KEYS, BLACKLISTED_OPTIONS_KEYS } from './messaging-internal';
 import {
   Message, MessagingDevicesResponse,
   MessagingDeviceGroupResponse, MessagingTopicManagementResponse,
   MessagingPayload, MessagingOptions, MessagingTopicResponse,
   MessagingConditionResponse, BatchResponse, MulticastMessage, DataMessagePayload, NotificationMessagePayload,
 } from './messaging-types';
-import { validateMessage } from './messaging-types-internal';
 import { FirebaseMessagingRequestHandler } from './messaging-api-request-internal';
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import {
