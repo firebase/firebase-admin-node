@@ -1229,9 +1229,10 @@ declare namespace admin.machineLearning {
     /** The size of the model. */
     readonly sizeBytes: number;
 
-    // At most one of these two will be specified.
+    /** At most one of these two will be specified. */
     /** The URI from which the model was originally provided to Firebase. */
     readonly gcsTfliteUri?: string;
+    /** The AutoML URI from which the model was originally provided to Firebase. */
     readonly automlModel?: string;
   }
 

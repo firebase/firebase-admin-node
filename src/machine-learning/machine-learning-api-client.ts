@@ -57,8 +57,8 @@ export type ModelOptions = ModelOptionsBase | GcsTfliteModelOptions | AutoMLTfli
 export type ModelUpdateOptions = ModelOptions & { state?: { published?: boolean }};
 
 export function isGcsTfliteModelOptions(options: ModelOptions): options is GcsTfliteModelOptions {
-  return (options as GcsTfliteModelOptions).tfliteModel !== undefined &&
-         (options as GcsTfliteModelOptions).tfliteModel.gcsTfliteUri !== undefined;
+  const gcsUri = (options as GcsTfliteModelOptions)?.tfliteModel?.gcsTfliteUri;
+  return typeof gcsUri !== 'undefined'
 }
 
 /** Interface representing listModels options. */

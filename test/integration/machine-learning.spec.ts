@@ -111,6 +111,7 @@ describe('admin.machineLearning', () => {
         tags: ['tagAutoml'],
         tfliteModel: { automlModel: 'this will be replaced below' }
       };
+      // AutoML models require verification. This takes between 20 and 60 seconds
       this.timeout(60000); // Allow up to 60 seconds for this test.
       return getAutoMLModelReference()
         .then((automlRef: string) => {
@@ -137,6 +138,7 @@ describe('admin.machineLearning', () => {
         tags: ['tagAutoml'],
         tfliteModel: { automlModel: 'this will be replaced below' }
       };
+      // AutoML models require verification. This takes between 20 and 60 seconds
       this.timeout(60000); // Allow up to 60 seconds for this test.
       return getAutoMLModelReference()
         .then((automlRef: string) => {
@@ -262,6 +264,7 @@ describe('admin.machineLearning', () => {
     });
 
     it('updates the automl model', function () {
+      // AutoML models require verification. This takes between 20 and 60 seconds
       this.timeout(60000); // Allow up to 60 seconds for this test.
       return createTemporaryModel({
         displayName: 'node-integ-test-update-automl'
