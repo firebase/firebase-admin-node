@@ -22,8 +22,8 @@ import * as sinon from 'sinon';
 import { SecurityRules } from '../../../src/security-rules/security-rules';
 import { FirebaseApp } from '../../../src/firebase-app';
 import * as mocks from '../../resources/mocks';
-import { SecurityRulesApiClient, RulesetContent } from '../../../src/security-rules/security-rules-api-client';
-import { FirebaseSecurityRulesError } from '../../../src/security-rules/security-rules-utils';
+import { SecurityRulesApiClient, RulesetContent } from '../../../src/security-rules/security-rules-api-client-internal';
+import { FirebaseSecurityRulesError } from '../../../src/security-rules/security-rules-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
 
 const expect = chai.expect;
