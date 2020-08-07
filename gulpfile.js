@@ -57,7 +57,7 @@ var paths = {
     '!src/instance-id.d.ts',
     '!src/security-rules.d.ts',
     '!src/project-management.d.ts',
-    '!src/messaging.d.ts',
+    '!src/messaging.d.ts'
   ],
 };
 
