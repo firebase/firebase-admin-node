@@ -19,7 +19,7 @@ import * as remoteConfigApi from './remote-config';
 import * as remoteConfigClientApi from './remote-config-api-client';
 import * as firebaseAdmin from '../index';
 
-export function projectManagement(app?: FirebaseApp): remoteConfigApi.RemoteConfig {
+export function remoteConfig(app?: FirebaseApp): remoteConfigApi.RemoteConfig {
   if (typeof(app) === 'undefined') {
     app = firebaseAdmin.app();
   }
