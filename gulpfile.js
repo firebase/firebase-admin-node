@@ -55,8 +55,8 @@ var paths = {
   curatedTypings: [
     'src/*.d.ts',
     '!src/instance-id.d.ts',
-    '!src/project-management.d.ts',
     '!src/security-rules.d.ts',
+    '!src/project-management.d.ts',
     '!src/messaging.d.ts',
   ],
 };
