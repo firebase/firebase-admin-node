@@ -177,6 +177,7 @@ function mapRawResponseToTopicManagementResponse(response: object): MessagingTop
   return result;
 }
 
+
 /**
  * Internals of a Messaging instance.
  */
@@ -191,6 +192,7 @@ class MessagingInternals implements FirebaseServiceInternalsInterface {
     return Promise.resolve(undefined);
   }
 }
+
 
 /**
  * Messaging service bound to the provided app.

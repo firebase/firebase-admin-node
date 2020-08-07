@@ -257,6 +257,7 @@ export interface ApnsConfig {
    */
   fcmOptions?: ApnsFcmOptions;
 }
+
 /**
  * Represents the payload of an APNs message. Mainly consists of the `aps`
  * dictionary. But may also contain other arbitrary custom keys.
@@ -269,6 +270,7 @@ export interface ApnsPayload {
   aps: Aps;
   [customData: string]: object;
 }
+
 /**
  * Represents the [aps dictionary](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/PayloadKeyReference.html)
  * that is part of APNs messages.
