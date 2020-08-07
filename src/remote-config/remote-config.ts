@@ -17,7 +17,7 @@
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { FirebaseApp } from '../firebase-app';
 import * as validator from '../utils/validator';
-import { FirebaseRemoteConfigError } from './remote-config-utils';
+import { FirebaseRemoteConfigError } from './remote-config-utils-internal';
 import {
   RemoteConfigTemplate,
   RemoteConfigParameter,

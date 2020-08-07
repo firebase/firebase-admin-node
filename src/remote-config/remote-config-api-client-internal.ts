@@ -17,7 +17,7 @@
 import { RemoteConfigTemplate, ListVersionsOptions, ListVersionsResult } from './remote-config-api-client';
 import { HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient, HttpResponse } from '../utils/api-request';
 import { PrefixedFirebaseError } from '../utils/error';
-import { FirebaseRemoteConfigError, RemoteConfigErrorCode } from './remote-config-utils';
+import { FirebaseRemoteConfigError, RemoteConfigErrorCode } from './remote-config-utils-internal';
 import { FirebaseApp } from '../firebase-app';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';

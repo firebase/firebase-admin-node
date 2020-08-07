@@ -166,38 +166,119 @@ export interface RemoteConfigTemplate {
   version?: Version;
 }
 
-/** Interface representing a Remote Config version. */
+/**
+ * Interface representing a Remote Config template version.
+ * Output only, except for the version description. Contains metadata about a particular
+ * version of the Remote Config template. All fields are set at the time the specified Remote
+ * Config template is published. A version's description field may be specified in
+ * `publishTemplate` calls.
+ */
 export interface Version {
-  versionNumber?: string; // int64 format
-  updateTime?: string; // in UTC
+  /**
+   * The version number of a Remote Config template.
+   */
+  versionNumber?: string;
+
+  /**
+   * The timestamp of when this version of the Remote Config template was written to the
+   * Remote Config backend.
+   */
+  updateTime?: string;
+
+  /**
+   * The origin of the template update action.
+   */
   updateOrigin?: ('REMOTE_CONFIG_UPDATE_ORIGIN_UNSPECIFIED' | 'CONSOLE' |
     'REST_API' | 'ADMIN_SDK_NODE');
+
+  /**
+   * The type of the template update action.
+   */
   updateType?: ('REMOTE_CONFIG_UPDATE_TYPE_UNSPECIFIED' |
     'INCREMENTAL_UPDATE' | 'FORCED_UPDATE' | 'ROLLBACK');
+
+  /**
+   * Aggregation of all metadata fields about the account that performed the update.
+   */
   updateUser?: RemoteConfigUser;
+
+  /**
+   * The user-provided description of the corresponding Remote Config template.
+   */
   description?: string;
+
+  /**
+   * The version number of the Remote Config template that has become the current version
+   * due to a rollback. Only present if this version is the result of a rollback.
+   */
   rollbackSource?: string;
+
+  /**
+   * Indicates whether this Remote Config template was published before version history was
+   * supported.
+   */
   isLegacy?: boolean;
 }
 
 /** Interface representing a list of Remote Config template versions. */
 export interface ListVersionsResult {
+  /**
+   * A list of version metadata objects, sorted in reverse chronological order.
+   */
   versions: Version[];
+
+  /**
+   * Token to retrieve the next page of results, or empty if there are no more results
+   * in the list.
+   */
   nextPageToken?: string;
 }
 
-/** Interface representing a Remote Config list version options. */
+/** Interface representing options for Remote Config list versions operation. */
 export interface ListVersionsOptions {
+  /**
+   * The maximum number of items to return per page.
+   */
   pageSize?: number;
+
+  /**
+   * The `nextPageToken` value returned from a previous list versions request, if any.
+   */
   pageToken?: string;
+
+  /**
+   * Specifies the newest version number to include in the results.
+   * If specified, must be greater than zero. Defaults to the newest version.
+   */
   endVersionNumber?: string | number;
+
+  /**
+   * Specifies the earliest update time to include in the results. Any entries updated before this
+   * time are omitted.
+   */
   startTime?: Date | string;
+
+  /**
+   * Specifies the latest update time to include in the results. Any entries updated on or after
+   * this time are omitted.
+   */
   endTime?: Date | string;
 }
 
-/** Interface representing a Remote Config user. */
+/** Interface representing a Remote Config user.*/
 export interface RemoteConfigUser {
+  /**
+   * Email address. Output only.
+   */
   email: string;
+
+  /**
+   * Display name. Output only.
+   */
   name?: string;
+
+  /**
+   * Image URL. Output only.
+   */
   imageUrl?: string;
 }
