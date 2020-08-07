@@ -1,0 +1,12 @@
+// Used for @typescript-eslint/no-unused-vars-experimental to glob the entire
+// source. An alternative is createDefaultProgram: true but it has exponential
+// complexity. See: github.com/typescript-eslint/typescript-eslint/issues/967
+{
+  "compilerOptions": {
+    "strict": true,
+  },
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts",
+  ],
+}

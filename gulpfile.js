@@ -52,12 +52,35 @@ var paths = {
 
   build: 'lib/',
 
-  curatedTypings: ['src/**/*.d.ts', '!src/database.d.ts'],
+  curatedTypings: [
+    'src/*.d.ts',
+    '!src/database.d.ts',
+    '!src/instance-id.d.ts',
+    '!src/security-rules.d.ts',
+    '!src/project-management.d.ts'
+  ],
 };
 
-// Create a separate project for buildProject that overrides the rootDir
+const TEMPORARY_TYPING_EXCLUDES = [
+  '!lib/default-namespace.d.ts',
+  '!lib/firebase-namespace.d.ts',
+  '!lib/firebase-app.d.ts',
+  '!lib/firebase-service.d.ts',
+  '!lib/auth/*.d.ts',
+  '!lib/database/*.d.ts',
+  '!lib/firestore/*.d.ts',
+  '!lib/machine-learning/*.d.ts',
+  '!lib/messaging/*.d.ts',
+  '!lib/remote-config/*.d.ts',
+  '!lib/storage/*.d.ts',
+  '!lib/utils/*.d.ts'
+];
+
+// Create a separate project for buildProject that overrides the rootDir.
 // This ensures that the generated production files are in their own root
-// rather than including both src and test in the lib dir.
+// rather than including both src and test in the lib dir. Declaration
+// is used by TypeScript to determine if auto-generated typings should be
+// emitted.
 const declaration = process.env.TYPE_GENERATION_MODE === 'auto';
 var buildProject = ts.createProject('tsconfig.json', { rootDir: 'src', declaration });
 
@@ -75,45 +98,32 @@ gulp.task('cleanup', function() {
   ]);
 });
 
-/**
- * Task used to compile the TypeScript project. If automatic typings
- * are set to be generated (determined by TYPE_GENERATION_MODE), declarations
- * for files terminating in -internal.d.ts are removed because we do not
- * want to expose internally used types to developers. As auto-generated
- * typings are a work-in-progress, we remove the *.d.ts files for modules
- * which we do not intend to auto-generate typings for yet.
- */
+// Task used to compile the TypeScript project. If automatic typings
+// are set to be generated (determined by TYPE_GENERATION_MODE), declarations
+// for files terminating in -internal.d.ts are removed because we do not
+// want to expose internally used types to developers. As auto-generated
+// typings are a work-in-progress, we remove the *.d.ts files for modules
+// which we do not intend to auto-generate typings for yet.
 gulp.task('compile', function() {
-  let workflow =  gulp.src(paths.src)
+  let workflow = gulp.src(paths.src)
     // Compile Typescript into .js and .d.ts files
     .pipe(buildProject())
 
     // Add header
     .pipe(header(banner));
-
-  // Exclude typings that are unintended (only database is expected to
-  // produce typings so far). Moreover, all *-internal.d.ts typings
-  // should not be exposed to developers as it denotes internally used
-  // types.
+  
+  // Exclude typings that are unintended (currently excludes all auto-generated
+  // typings, but as services are refactored to auto-generate typings this will
+  // change). Moreover, all *-internal.d.ts typings should not be exposed to 
+  // developers as it denotes internally used types.
   if (declaration) {
-    workflow = workflow.pipe(filter([
+    const configuration = [
       'lib/**/*.js',
       'lib/**/*.d.ts',
       '!lib/**/*-internal.d.ts',
-      '!lib/default-namespace.d.ts',
-      '!lib/firebase-namespace.d.ts',
-      '!lib/firebase-app.d.ts',
-      '!lib/firebase-service.d.ts',
-      '!lib/auth/*.d.ts',
-      '!lib/firestore/*.d.ts',
-      '!lib/instance-id/*.d.ts',
-      '!lib/machine-learning/*.d.ts',
-      '!lib/messaging/*.d.ts',
-      '!lib/project-management/*.d.ts',
-      '!lib/remote-config/*.d.ts',
-      '!lib/security-rules/*.d.ts',
-      '!lib/storage/*.d.ts',
-      '!lib/utils/*.d.ts']))
+    ].concat(TEMPORARY_TYPING_EXCLUDES);
+
+    workflow = workflow.pipe(filter(configuration));
   }
 
   // Write to build directory
@@ -144,9 +154,9 @@ gulp.task('copyTypings', function() {
   let workflow = gulp.src('src/*.d.ts')
     // Add header
     .pipe(header(banner));
-
+  
   if (declaration) {
-    workflow = workflow.pipe(filter(paths.curatedTypings))
+    workflow = workflow.pipe(filter(paths.curatedTypings));
   }
 
   // Write to build directory

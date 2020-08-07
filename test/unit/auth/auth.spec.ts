@@ -161,6 +161,7 @@ function getDecodedIdToken(uid: string, authTime: Date, tenantId?: string): Deco
       sign_in_provider: 'custom', // eslint-disable-line @typescript-eslint/camelcase
       tenant: tenantId,
     },
+    uid,
   };
 }
 
@@ -186,6 +187,7 @@ function getDecodedSessionCookie(uid: string, authTime: Date, tenantId?: string)
       sign_in_provider: 'custom', // eslint-disable-line @typescript-eslint/camelcase
       tenant: tenantId,
     },
+    uid,
   };
 }
 

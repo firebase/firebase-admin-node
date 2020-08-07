@@ -1072,7 +1072,7 @@ export namespace admin.auth {
      * The user-friendly display name to the current configuration. This name is
      * also used as the provider label in the Cloud Console.
      */
-    displayName: string;
+    displayName?: string;
 
     /**
      * Whether the provider configuration is enabled or disabled. A user
@@ -1324,7 +1324,7 @@ export namespace admin.auth {
      * @return A promise fulfilled with a custom token for the
      *   provided `uid` and payload.
      */
-    createCustomToken(uid: string, developerClaims?: Object): Promise<string>;
+    createCustomToken(uid: string, developerClaims?: object): Promise<string>;
 
     /**
      * Creates a new user.
@@ -1459,7 +1459,7 @@ export namespace admin.auth {
      * See [Update a user](/docs/auth/admin/manage-users#update_a_user) for code
      * samples and detailed documentation.
      *
-     * @param uid The `uid` corresponding to the user to delete.
+     * @param uid The `uid` corresponding to the user to update.
      * @param properties The properties to update on
      *   the provided user.
      *
@@ -1513,7 +1513,7 @@ export namespace admin.auth {
      * @return A promise that resolves when the operation completes
      *   successfully.
      */
-    setCustomUserClaims(uid: string, customUserClaims: Object | null): Promise<void>;
+    setCustomUserClaims(uid: string, customUserClaims: object | null): Promise<void>;
 
     /**
      * Revokes all refresh tokens for an existing user.

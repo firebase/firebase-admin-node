@@ -285,8 +285,7 @@ export class Model {
     return false;
   }
 
-  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-  public waitForUnlocked(maxTimeSeconds?: number): Promise<void> {
+  public waitForUnlocked(_maxTimeSeconds?: number): Promise<void> {
     // Backend does not currently return locked models.
     // This will likely change in future.
     return Promise.resolve();
