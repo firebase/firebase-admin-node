@@ -55,6 +55,7 @@
   "types": "./lib/index.d.ts",
   "dependencies": {
     "@firebase/database": "^0.6.0",
+    "@google-cloud/automl": "^2.2.0",
     "@types/node": "^10.10.0",
     "dicer": "^0.3.0",
     "jsonwebtoken": "^8.5.1",
