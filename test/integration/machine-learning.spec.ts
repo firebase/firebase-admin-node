@@ -106,11 +106,6 @@ describe('admin.machineLearning', () => {
     });
 
     it('creates a new Model with valid AutoML TFLite ModelFormat', function () {
-      const modelOptions: admin.machineLearning.ModelOptions = {
-        displayName: 'node-integ-test-create-automl',
-        tags: ['tagAutoml'],
-        tfliteModel: { automlModel: 'this will be replaced below' }
-      };
       // AutoML models require verification. This takes between 20 and 60 seconds
       this.timeout(60000); // Allow up to 60 seconds for this test.
       return getAutoMLModelReference()
@@ -119,35 +114,11 @@ describe('admin.machineLearning', () => {
             this.skip();
             return;
           }
-          modelOptions.tfliteModel!.automlModel = automlRef;
-          return admin.machineLearning().createModel(modelOptions)
-            .then((model) => {
-              return model.waitForUnlocked(55000)
-                .then(() => {
-                  scheduleForDelete(model);
-                  verifyModel(model, modelOptions);
-                });
-            });
-        });
-    });
-
-    // Waiting for BE fix.
-    it.skip('rejects with Not Found if the AutoML TFLite does not exist', function() {
-      const modelOptions: admin.machineLearning.ModelOptions = {
-        displayName: 'node-integ-test-create-automl-2',
-        tags: ['tagAutoml'],
-        tfliteModel: { automlModel: 'this will be replaced below' }
-      };
-      // AutoML models require verification. This takes between 20 and 60 seconds
-      this.timeout(60000); // Allow up to 60 seconds for this test.
-      return getAutoMLModelReference()
-        .then((automlRef: string) => {
-          if (!automlRef) {
-            this.skip();
-            return;
-          }
-          // Add stuff to the automl model reference so it doesn't exist.
-          modelOptions.tfliteModel!.automlModel = automlRef + "123";
+          const modelOptions: admin.machineLearning.ModelOptions = {
+            displayName: 'node-integ-test-create-automl',
+            tags: ['tagAutoml'],
+            tfliteModel: { automlModel: automlRef }
+          };
           return admin.machineLearning().createModel(modelOptions)
             .then((model) => {
               return model.waitForUnlocked(55000)
@@ -269,9 +240,6 @@ describe('admin.machineLearning', () => {
       return createTemporaryModel({
         displayName: 'node-integ-test-update-automl'
       }).then((model) => {
-        const modelOptions: admin.machineLearning.ModelOptions = {
-          tfliteModel: { automlModel: 'this will be replaced below' },
-        };
 
         return getAutoMLModelReference()
           .then((automlRef: string) => {
@@ -279,7 +247,9 @@ describe('admin.machineLearning', () => {
               this.skip();
               return;
             }
-            modelOptions.tfliteModel!.automlModel = automlRef;
+            const modelOptions: admin.machineLearning.ModelOptions = {
+              tfliteModel: { automlModel: automlRef },
+            };
             return admin.machineLearning().updateModel(model.modelId, modelOptions)
               .then((updatedModel) => {
                 return updatedModel.waitForUnlocked(55000)
@@ -578,8 +548,8 @@ function verifyModel(model: admin.machineLearning.Model, expectedOptions: admin.
   }
 }
 
-function verifyGcsTfliteModel(model: admin.machineLearning.Model, gcsTfliteOptions: GcsTfliteModelOptions): void {
-  const expectedGcsTfliteUri = gcsTfliteOptions.tfliteModel.gcsTfliteUri;
+function verifyGcsTfliteModel(model: admin.machineLearning.Model, expectedOptions: GcsTfliteModelOptions): void {
+  const expectedGcsTfliteUri = expectedOptions.tfliteModel.gcsTfliteUri;
   expect(model.tfliteModel!.gcsTfliteUri).to.equal(expectedGcsTfliteUri);
   if (expectedGcsTfliteUri.endsWith('invalid_model.tflite')) {
     expect(model.modelHash).to.be.undefined;
@@ -590,8 +560,8 @@ function verifyGcsTfliteModel(model: admin.machineLearning.Model, gcsTfliteOptio
   }
 }
 
-function verifyAutomlTfliteModel(model: admin.machineLearning.Model, automlTfliteOptions: AutoMLTfliteModelOptions): void {
-  const expectedAutomlReference = automlTfliteOptions.tfliteModel.automlModel;
+function verifyAutomlTfliteModel(model: admin.machineLearning.Model, expectedOptions: AutoMLTfliteModelOptions): void {
+  const expectedAutomlReference = expectedOptions.tfliteModel.automlModel;
   expect(model.tfliteModel!.automlModel).to.equal(expectedAutomlReference);
   expect(model.validationError).to.be.undefined;
   expect(model.tfliteModel!.sizeBytes).to.not.be.undefined;
