@@ -69,7 +69,7 @@
   "devDependencies": {
     "@firebase/app": "^0.6.9",
     "@firebase/auth": "^0.14.9",
-    "@firebase/auth-types": "^0.9.3",
+    "@firebase/auth-types": "^0.10.1",
     "@types/bcrypt": "^2.0.0",
     "@types/chai": "^4.0.0",
     "@types/chai-as-promised": "^7.1.0",
