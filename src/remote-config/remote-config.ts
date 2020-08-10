@@ -17,7 +17,6 @@
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { FirebaseApp } from '../firebase-app';
 import * as validator from '../utils/validator';
-import { FirebaseRemoteConfigError } from './remote-config-utils-internal';
 import {
   RemoteConfigTemplate,
   RemoteConfigParameter,
@@ -28,7 +27,7 @@ import {
   RemoteConfigUser,
   Version,
 } from './remote-config-api-client';
-import { RemoteConfigApiClient } from './remote-config-api-client-internal';
+import { FirebaseRemoteConfigError, RemoteConfigApiClient } from './remote-config-api-client-internal';
 
 /**
  * Internals of an RemoteConfig service instance.

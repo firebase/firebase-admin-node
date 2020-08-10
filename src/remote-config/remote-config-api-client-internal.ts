@@ -17,7 +17,6 @@
 import { RemoteConfigTemplate, ListVersionsOptions, ListVersionsResult } from './remote-config-api-client';
 import { HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient, HttpResponse } from '../utils/api-request';
 import { PrefixedFirebaseError } from '../utils/error';
-import { FirebaseRemoteConfigError, RemoteConfigErrorCode } from './remote-config-utils-internal';
 import { FirebaseApp } from '../firebase-app';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
@@ -418,3 +417,29 @@ const ERROR_CODE_MAPPING: { [key: string]: RemoteConfigErrorCode } = {
   UNAUTHENTICATED: 'unauthenticated',
   UNKNOWN: 'unknown-error',
 };
+
+export type RemoteConfigErrorCode =
+  'aborted'
+  | 'already-exists'
+  | 'failed-precondition'
+  | 'internal-error'
+  | 'invalid-argument'
+  | 'not-found'
+  | 'out-of-range'
+  | 'permission-denied'
+  | 'resource-exhausted'
+  | 'unauthenticated'
+  | 'unknown-error';
+
+/**
+ * Firebase Remote Config error code structure. This extends PrefixedFirebaseError.
+ *
+ * @param {RemoteConfigErrorCode} code The error code.
+ * @param {string} message The error message.
+ * @constructor
+ */
+export class FirebaseRemoteConfigError extends PrefixedFirebaseError {
+  constructor(code: RemoteConfigErrorCode, message: string) {
+    super('remote-config', code, message);
+  }
+}

@@ -28,8 +28,7 @@ import {
   TagColor,
   ListVersionsResult,
 } from '../../../src/remote-config/remote-config-api-client';
-import { RemoteConfigApiClient } from '../../../src/remote-config/remote-config-api-client-internal';
-import { FirebaseRemoteConfigError } from '../../../src/remote-config/remote-config-utils-internal';
+import { FirebaseRemoteConfigError, RemoteConfigApiClient } from '../../../src/remote-config/remote-config-api-client-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
 
 const expect = chai.expect;

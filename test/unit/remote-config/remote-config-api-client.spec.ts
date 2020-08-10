@@ -25,8 +25,7 @@ import {
   ListVersionsResult,
   Version,
 } from '../../../src/remote-config/remote-config-api-client';
-import { RemoteConfigApiClient } from '../../../src/remote-config/remote-config-api-client-internal';
-import { FirebaseRemoteConfigError } from '../../../src/remote-config/remote-config-utils-internal';
+import { FirebaseRemoteConfigError, RemoteConfigApiClient } from '../../../src/remote-config/remote-config-api-client-internal';
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
