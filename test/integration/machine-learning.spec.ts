@@ -569,20 +569,18 @@ function verifyAutomlTfliteModel(model: admin.machineLearning.Model, expectedOpt
 }
 
 function getAutoMLModelReference(): Promise<string> {
-  try {
-    const { AutoMlClient } = require('@google-cloud/automl').v1;
-    const automl = new AutoMlClient()
-    const parent = automl.locationPath(projectId, 'us-central1');
-    return automl.listModels({ parent, filter:"displayName=admin_sdk_integ_test1" })
-      .then(([models]: [any]) => {
-        let modelRef = "";
-        for (const model of models) {
-          modelRef = model.name;
-        }
-        return modelRef;
-      });
-  } catch (error) {
-    // Returning an empty string will result in skipping the test.
-    return Promise.resolve("");
-  }
+  return import('@google-cloud/automl')
+    .then((automlImport) => {
+      const automl = new automlImport.AutoMlClient()
+      const parent = automl.locationPath(projectId, 'us-central1');
+      return automl.listModels({ parent, filter:"displayName=admin_sdk_integ_test1" })
+        .then(([models]) => {
+          let modelRef = "";
+          for (const model of models) {
+            modelRef = model.name!;
+          }
+          return modelRef;
+        });
+    })
+    .catch(() => '');
 }
