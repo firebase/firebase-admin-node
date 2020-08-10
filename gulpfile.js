@@ -56,7 +56,8 @@ var paths = {
     'src/*.d.ts',
     '!src/instance-id.d.ts',
     '!src/security-rules.d.ts',
-    '!src/project-management.d.ts'
+    '!src/project-management.d.ts',
+    '!src/messaging.d.ts',
   ],
 };
 
@@ -68,10 +69,9 @@ const TEMPORARY_TYPING_EXCLUDES = [
   '!lib/auth/*.d.ts',
   '!lib/database/*.d.ts',
   '!lib/machine-learning/*.d.ts',
-  '!lib/messaging/*.d.ts',
   '!lib/remote-config/*.d.ts',
   '!lib/storage/*.d.ts',
-  '!lib/utils/*.d.ts'
+  '!lib/utils/*.d.ts',
 ];
 
 // Create a separate project for buildProject that overrides the rootDir.
