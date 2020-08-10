@@ -24,7 +24,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from '../utils';
 
 import { HttpClient, HttpResponse, HttpRequestConfig, HttpError } from '../../../src/utils/api-request';
-import { SubRequest, BatchRequestClient } from '../../../src/messaging/batch-request';
+import { SubRequest, BatchRequestClient } from '../../../src/messaging/batch-request-internal';
 
 chai.should();
 chai.use(sinonChai);
