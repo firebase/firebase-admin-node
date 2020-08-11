@@ -1204,43 +1204,23 @@ declare namespace admin.securityRules {
 
 declare namespace admin.machineLearning {
   /**
-   * Interface representing options for listing Models.
+   * Firebase ML Model input objects
    */
-  interface ListModelsOptions {
-    /**
-     * An expression that specifies how to filter the results.
-     *
-     * Examples:
-     *
-     * ```
-     * display_name = your_model
-     * display_name : experimental_*
-     * tags: face_detector AND tags: experimental
-     * state.published = true
-     * ```
-     *
-     * See https://firebase.google.com/docs/ml-kit/manage-hosted-models#list_your_projects_models
-     */
-    filter?: string;
-
-    /** The number of results to return in each page. */
-    pageSize?: number;
-
-    /** A token that specifies the result page to return. */
-    pageToken?: string;
+  interface ModelOptionsBase {
+    displayName?: string;
+    tags?: string[];
   }
-
-  /** Response object for a listModels operation. */
-  interface ListModelsResult {
-    /** A list of models in your project. */
-    readonly models: Model[];
-
-    /**
-     * A token you can use to retrieve the next page of results. If null, the
-     * current page is the final page.
-     */
-    readonly pageToken?: string;
+  interface GcsTfliteModelOptions extends ModelOptionsBase {
+    tfliteModel: {
+      gcsTfliteUri: string;
+    };
   }
+  interface AutoMLTfliteModelOptions extends ModelOptionsBase {
+    tfliteModel: {
+      automlModel: string;
+    };
+  }
+  type ModelOptions = ModelOptionsBase | GcsTfliteModelOptions | AutoMLTfliteModelOptions;
 
   /**
    * A TensorFlow Lite Model output object
@@ -1251,24 +1231,8 @@ declare namespace admin.machineLearning {
 
     /** The URI from which the model was originally provided to Firebase. */
     readonly gcsTfliteUri?: string;
-  }
-
-  /**
-   * A Firebase ML Model input object
-   */
-  interface ModelOptions {
-    /** A name for the model. This is the name you use from your app to load the model. */
-    displayName?: string;
-
-    /** Tags for easier model management. */
-    tags?: string[];
-
-    /**
-     * An object containing the URI of the model in Cloud Storage.
-     *
-     * Example: `tfliteModel: { gcsTfliteUri: 'gs://your-bucket/your-model.tflite' }`
-     */
-    tfliteModel?: { gcsTfliteUri: string };
+    /** The AutoML URI from which the model was originally provided to Firebase. */
+    readonly automlModel?: string;
   }
 
   /**
@@ -1333,6 +1297,46 @@ declare namespace admin.machineLearning {
     /** Metadata about the model's TensorFlow Lite model file. */
     readonly tfliteModel?: TFLiteModel;
   }
+
+  /**
+   * Interface representing options for listing Models.
+   */
+  interface ListModelsOptions {
+    /**
+     * An expression that specifies how to filter the results.
+     *
+     * Examples:
+     *
+     * ```
+     * display_name = your_model
+     * display_name : experimental_*
+     * tags: face_detector AND tags: experimental
+     * state.published = true
+     * ```
+     *
+     * See https://firebase.google.com/docs/ml-kit/manage-hosted-models#list_your_projects_models
+     */
+    filter?: string;
+
+    /** The number of results to return in each page. */
+    pageSize?: number;
+
+    /** A token that specifies the result page to return. */
+    pageToken?: string;
+  }
+
+  /** Response object for a listModels operation. */
+  interface ListModelsResult {
+    /** A list of models in your project. */
+    readonly models: Model[];
+
+    /**
+     * A token you can use to retrieve the next page of results. If null, the
+     * current page is the final page.
+     */
+    readonly pageToken?: string;
+  }
+
 
   /**
    * The Firebase `MachineLearning` service interface.
