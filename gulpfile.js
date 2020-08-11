@@ -69,7 +69,6 @@ const TEMPORARY_TYPING_EXCLUDES = [
   '!lib/firebase-service.d.ts',
   '!lib/auth/*.d.ts',
   '!lib/database/*.d.ts',
-  '!lib/firestore/*.d.ts',
   '!lib/machine-learning/*.d.ts',
   '!lib/storage/*.d.ts',
   '!lib/utils/*.d.ts',
