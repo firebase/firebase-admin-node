@@ -23,13 +23,12 @@ import { RemoteConfig } from '../../../src/remote-config/remote-config';
 import { FirebaseApp } from '../../../src/firebase-app';
 import * as mocks from '../../resources/mocks';
 import {
-  RemoteConfigApiClient,
   RemoteConfigTemplate,
   RemoteConfigCondition,
   TagColor,
   ListVersionsResult,
 } from '../../../src/remote-config/remote-config-api-client';
-import { FirebaseRemoteConfigError } from '../../../src/remote-config/remote-config-utils';
+import { FirebaseRemoteConfigError, RemoteConfigApiClient } from '../../../src/remote-config/remote-config-api-client-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
 
 const expect = chai.expect;
