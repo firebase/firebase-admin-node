@@ -17,9 +17,7 @@
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { FirebaseApp } from '../firebase-app';
 import * as validator from '../utils/validator';
-import { FirebaseRemoteConfigError } from './remote-config-utils';
 import {
-  RemoteConfigApiClient,
   RemoteConfigTemplate,
   RemoteConfigParameter,
   RemoteConfigCondition,
@@ -29,6 +27,7 @@ import {
   RemoteConfigUser,
   Version,
 } from './remote-config-api-client';
+import { FirebaseRemoteConfigError, RemoteConfigApiClient } from './remote-config-api-client-internal';
 
 /**
  * Internals of an RemoteConfig service instance.
@@ -62,10 +61,11 @@ export class RemoteConfig implements FirebaseServiceInterface {
   }
 
   /**
-  * Gets the current active version of the Remote Config template of the project.
-  *
-  * @return {Promise<RemoteConfigTemplate>} A Promise that fulfills when the template is available.
-  */
+   * Gets the current active version of the {@link admin.remoteConfig.RemoteConfigTemplate
+   * `RemoteConfigTemplate`} of the project.
+   *
+   * @return A promise that fulfills with a `RemoteConfigTemplate`.
+   */
   public getTemplate(): Promise<RemoteConfigTemplate> {
     return this.client.getTemplate()
       .then((templateResponse) => {
@@ -74,12 +74,13 @@ export class RemoteConfig implements FirebaseServiceInterface {
   }
 
   /**
-  * Gets the requested version of the Remote Config template of the project.
-  *
-  * @param {number | string} versionNumber Version number of the Remote Config template to look up.
-  * 
-  * @return {Promise<RemoteConfigTemplate>} A Promise that fulfills when the template is available.
-  */
+   * Gets the requested version of the {@link admin.remoteConfig.RemoteConfigTemplate
+    * `RemoteConfigTemplate`} of the project.
+   * 
+   * @param versionNumber Version number of the Remote Config template to look up.
+   * 
+   * @return A promise that fulfills with a `RemoteConfigTemplate`.
+   */
   public getTemplateAtVersion(versionNumber: number | string): Promise<RemoteConfigTemplate> {
     return this.client.getTemplateAtVersion(versionNumber)
       .then((templateResponse) => {
@@ -88,11 +89,10 @@ export class RemoteConfig implements FirebaseServiceInterface {
   }
 
   /**
-   * Validates a Remote Config template.
+   * Validates a {@link admin.remoteConfig.RemoteConfigTemplate `RemoteConfigTemplate`}.
    *
-   * @param {RemoteConfigTemplate} template The Remote Config template to be validated.
-   *
-   * @return {Promise<RemoteConfigTemplate>} A Promise that fulfills when a template is validated.
+   * @param template The Remote Config template to be validated.
+   * @returns A promise that fulfills with the validated `RemoteConfigTemplate`.
    */
   public validateTemplate(template: RemoteConfigTemplate): Promise<RemoteConfigTemplate> {
     return this.client.validateTemplate(template)
@@ -104,10 +104,16 @@ export class RemoteConfig implements FirebaseServiceInterface {
   /**
    * Publishes a Remote Config template.
    *
-   * @param {RemoteConfigTemplate} template The Remote Config template to be validated.
-   * @param {any=} options Optional options object when publishing a Remote Config template.
+   * @param template The Remote Config template to be published.
+   * @param options Optional options object when publishing a Remote Config template:
+   *    - {boolean} `force` Setting this to `true` forces the Remote Config template to
+   *      be updated and circumvent the ETag. This approach is not recommended
+   *      because it risks causing the loss of updates to your Remote Config
+   *      template if multiple clients are updating the Remote Config template.
+   *      See {@link https://firebase.google.com/docs/remote-config/use-config-rest#etag_usage_and_forced_updates
+   *      ETag usage and forced updates}.
    *
-   * @return {Promise<RemoteConfigTemplate>} A Promise that fulfills when a template is published.
+   * @return A Promise that fulfills with the published `RemoteConfigTemplate`.
    */
   public publishTemplate(template: RemoteConfigTemplate, options?: { force: boolean }): Promise<RemoteConfigTemplate> {
     return this.client.publishTemplate(template, options)
@@ -117,13 +123,16 @@ export class RemoteConfig implements FirebaseServiceInterface {
   }
 
   /**
-   * Rollbacks a project's published Remote Config template to the specified version.
+   * Rolls back a project's published Remote Config template to the specified version.
    * A rollback is equivalent to getting a previously published Remote Config
-   * template, and re-publishing it using a force update.
-   *
-   * @param {number | string} versionNumber The version number of the Remote Config template
-   *    to rollback to.
-   * @return {Promise<RemoteConfigTemplate>} A Promise that fulfills with the published template.
+   * template and re-publishing it using a force update.
+   * 
+   * @param versionNumber The version number of the Remote Config template to roll back to.
+   *    The specified version number must be lower than the current version number, and not have
+   *    been deleted due to staleness. Only the last 300 versions are stored.
+   *    All versions that correspond to non-active Remote Config templates (that is, all except the
+   *    template that is being fetched by clients) are also deleted if they are more than 90 days old.
+   * @return A promise that fulfills with the published `RemoteConfigTemplate`.
    */
   public rollback(versionNumber: number | string): Promise<RemoteConfigTemplate> {
     return this.client.rollback(versionNumber)
@@ -133,14 +142,14 @@ export class RemoteConfig implements FirebaseServiceInterface {
   }
 
   /**
-  * Gets a list of Remote Config template versions that have been published, sorted in reverse 
-  * chronological order. Only the last 300 versions are stored.
-  * All versions that correspond to non-active Remote Config templates (i.e., all except the 
-  * template that is being fetched by clients) are also deleted if they are older than 90 days.
-  * 
-  * @param {ListVersionsOptions} options Optional options object for getting a list of versions.
-  * @return A promise that fulfills with a `ListVersionsResult`.
-  */
+   * Gets a list of Remote Config template versions that have been published, sorted in reverse 
+   * chronological order. Only the last 300 versions are stored.
+   * All versions that correspond to non-active Remote Config templates (i.e., all except the 
+   * template that is being fetched by clients) are also deleted if they are older than 90 days.
+   * 
+   * @param {ListVersionsOptions} options Optional options object for getting a list of versions.
+   * @return A promise that fulfills with a `ListVersionsResult`.
+   */
   public listVersions(options?: ListVersionsOptions): Promise<ListVersionsResult> {
     return this.client.listVersions(options)
       .then((listVersionsResponse) => {
@@ -154,9 +163,9 @@ export class RemoteConfig implements FirebaseServiceInterface {
   /**
    * Creates and returns a new Remote Config template from a JSON string.
    *
-   * @param {string} json The JSON string to populate a Remote Config template.
+   * @param json The JSON string to populate a Remote Config template.
    *
-   * @return {RemoteConfigTemplate} A new template instance.
+   * @return A new template instance.
    */
   public createTemplateFromJSON(json: string): RemoteConfigTemplate {
     if (!validator.isNonEmptyString(json)) {
