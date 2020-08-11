@@ -18,6 +18,8 @@ import * as validator from '../utils/validator';
 import { deepCopy } from '../utils/deep-copy';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 
+/** A maximum of 10 test phone number / code pairs can be configured. */
+export const MAXIMUM_TEST_PHONE_NUMBERS = 10;
 
 /** The filter interface used for listing provider configurations. */
 export interface AuthProviderConfigFilter {
@@ -158,6 +160,212 @@ export interface EmailSignInProviderConfig {
 export interface EmailSignInConfigServerRequest {
   allowPasswordSignup?: boolean;
   enableEmailLinkSignin?: boolean;
+}
+
+/** Identifies the public second factor type. */
+export type AuthFactorType = 'phone';
+
+/** Identifies the server side second factor type. */
+export type AuthFactorServerType = 'PHONE_SMS';
+
+/** Client Auth factor type to server auth factor type mapping. */
+export const AUTH_FACTOR_CLIENT_TO_SERVER_TYPE: {[key: string]: AuthFactorServerType} = {
+  phone: 'PHONE_SMS',
+};
+
+/** Server Auth factor type to client auth factor type mapping. */
+export const AUTH_FACTOR_SERVER_TO_CLIENT_TYPE: {[key: string]: AuthFactorType} =
+  Object.keys(AUTH_FACTOR_CLIENT_TO_SERVER_TYPE)
+    .reduce((res: {[key: string]: AuthFactorType}, key) => {
+      res[AUTH_FACTOR_CLIENT_TO_SERVER_TYPE[key]] = key as AuthFactorType;
+      return res;
+    }, {});
+
+/** Identifies a multi-factor configuration state. */
+export type MultiFactorConfigState =  'ENABLED' | 'DISABLED';
+
+/**
+ * Public API interface representing a multi-factor configuration.
+ */
+export interface MultiFactorConfig {
+  /**
+   * The multi-factor config state.
+   */
+  state: MultiFactorConfigState;
+
+  /**
+   * The list of identifiers for enabled second factors.
+   * Currently only ‘phone’ is supported.
+   */
+  factorIds?: AuthFactorType[];
+}
+
+/** Server side multi-factor configuration. */
+export interface MultiFactorAuthServerConfig {
+  state?: MultiFactorConfigState;
+  enabledProviders?: AuthFactorServerType[];
+}
+
+
+/**
+ * Defines the multi-factor config class used to convert client side MultiFactorConfig
+ * to a format that is understood by the Auth server.
+ */
+export class MultiFactorAuthConfig implements MultiFactorConfig {
+  public readonly state: MultiFactorConfigState;
+  public readonly factorIds: AuthFactorType[];
+
+  /**
+   * Static method to convert a client side request to a MultiFactorAuthServerConfig.
+   * Throws an error if validation fails.
+   *
+   * @param options The options object to convert to a server request.
+   * @return The resulting server request.
+   */
+  public static buildServerRequest(options: MultiFactorConfig): MultiFactorAuthServerConfig {
+    const request: MultiFactorAuthServerConfig = {};
+    MultiFactorAuthConfig.validate(options);
+    if (Object.prototype.hasOwnProperty.call(options, 'state')) {
+      request.state = options.state;
+    }
+    if (Object.prototype.hasOwnProperty.call(options, 'factorIds')) {
+      (options.factorIds || []).forEach((factorId) => {
+        if (typeof request.enabledProviders === 'undefined') {
+          request.enabledProviders = [];
+        }
+        request.enabledProviders.push(AUTH_FACTOR_CLIENT_TO_SERVER_TYPE[factorId]);
+      });
+      // In case an empty array is passed. Ensure it gets populated so the array is cleared.
+      if (options.factorIds && options.factorIds.length === 0) {
+        request.enabledProviders = [];
+      }
+    }
+    return request;
+  }
+
+  /**
+   * Validates the MultiFactorConfig options object. Throws an error on failure.
+   *
+   * @param options The options object to validate.
+   */
+  private static validate(options: MultiFactorConfig): void {
+    const validKeys = {
+      state: true,
+      factorIds: true,
+    };
+    if (!validator.isNonNullObject(options)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"MultiFactorConfig" must be a non-null object.',
+      );
+    }
+    // Check for unsupported top level attributes.
+    for (const key in options) {
+      if (!(key in validKeys)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          `"${key}" is not a valid MultiFactorConfig parameter.`,
+        );
+      }
+    }
+    // Validate content.
+    if (typeof options.state !== 'undefined' &&
+        options.state !== 'ENABLED' &&
+        options.state !== 'DISABLED') {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_CONFIG,
+        '"MultiFactorConfig.state" must be either "ENABLED" or "DISABLED".',
+      );
+    }
+
+    if (typeof options.factorIds !== 'undefined') {
+      if (!validator.isArray(options.factorIds)) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_CONFIG,
+          '"MultiFactorConfig.factorIds" must be an array of valid "AuthFactorTypes".',
+        );
+      }
+
+      // Validate content of array.
+      options.factorIds.forEach((factorId) => {
+        if (typeof AUTH_FACTOR_CLIENT_TO_SERVER_TYPE[factorId] === 'undefined') {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_CONFIG,
+            `"${factorId}" is not a valid "AuthFactorType".`,
+          );
+        }
+      });
+    }
+  }
+
+  /**
+   * The MultiFactorAuthConfig constructor.
+   *
+   * @param response The server side response used to initialize the
+   *     MultiFactorAuthConfig object.
+   * @constructor
+   */
+  constructor(response: MultiFactorAuthServerConfig) {
+    if (typeof response.state === 'undefined') {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Invalid multi-factor configuration response');
+    }
+    this.state = response.state;
+    this.factorIds = [];
+    (response.enabledProviders || []).forEach((enabledProvider) => {
+      // Ignore unsupported types. It is possible the current admin SDK version is
+      // not up to date and newer backend types are supported.
+      if (typeof AUTH_FACTOR_SERVER_TO_CLIENT_TYPE[enabledProvider] !== 'undefined') {
+        this.factorIds.push(AUTH_FACTOR_SERVER_TO_CLIENT_TYPE[enabledProvider]);
+      }
+    })
+  }
+
+  /** @return The plain object representation of the multi-factor config instance. */
+  public toJSON(): object {
+    return {
+      state: this.state,
+      factorIds: this.factorIds,
+    };
+  }
+}
+
+
+/**
+ * Validates the provided map of test phone number / code pairs.
+ * @param testPhoneNumbers The phone number / code pairs to validate.
+ */
+export function validateTestPhoneNumbers(
+  testPhoneNumbers: {[phoneNumber: string]: string},
+): void {
+  if (!validator.isObject(testPhoneNumbers)) {
+    throw new FirebaseAuthError(
+      AuthClientErrorCode.INVALID_ARGUMENT,
+      '"testPhoneNumbers" must be a map of phone number / code pairs.',
+    );
+  }
+  if (Object.keys(testPhoneNumbers).length > MAXIMUM_TEST_PHONE_NUMBERS) {
+    throw new FirebaseAuthError(AuthClientErrorCode.MAXIMUM_TEST_PHONE_NUMBER_EXCEEDED);
+  }
+  for (const phoneNumber in testPhoneNumbers) {
+    // Validate phone number.
+    if (!validator.isPhoneNumber(phoneNumber)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_TESTING_PHONE_NUMBER,
+        `"${phoneNumber}" is not a valid E.164 standard compliant phone number.`
+      );
+    }
+
+    // Validate code.
+    if (!validator.isString(testPhoneNumbers[phoneNumber]) ||
+        !/^[\d]{6}$/.test(testPhoneNumbers[phoneNumber])) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_TESTING_PHONE_NUMBER,
+        `"${testPhoneNumbers[phoneNumber]}" is not a valid 6 digit code string.`
+      );
+    }
+  }
 }
 
 

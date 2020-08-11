@@ -745,12 +745,29 @@ describe('admin.auth', () => {
         enabled: true,
         passwordRequired: true,
       },
+      multiFactorConfig: {
+        state: 'ENABLED',
+        factorIds: ['phone'],
+      },
+      // Add random phone number / code pairs.
+      testPhoneNumbers: {
+        '+16505551234': '019287',
+        '+16505550676': '985235',
+      },
     };
     const expectedCreatedTenant: any = {
       displayName: 'testTenant1',
       emailSignInConfig: {
         enabled: true,
         passwordRequired: true,
+      },
+      multiFactorConfig: {
+        state: 'ENABLED',
+        factorIds: ['phone'],
+      },
+      testPhoneNumbers: {
+        '+16505551234': '019287',
+        '+16505550676': '985235',
       },
     };
     const expectedUpdatedTenant: any = {
@@ -759,12 +776,23 @@ describe('admin.auth', () => {
         enabled: false,
         passwordRequired: true,
       },
+      multiFactorConfig: {
+        state: 'DISABLED',
+        factorIds: [],
+      },
+      testPhoneNumbers: {
+        '+16505551234': '123456',
+      },
     };
     const expectedUpdatedTenant2: any = {
       displayName: 'testTenantUpdated',
       emailSignInConfig: {
         enabled: true,
         passwordRequired: false,
+      },
+      multiFactorConfig: {
+        state: 'ENABLED',
+        factorIds: ['phone'],
       },
     };
 
@@ -1125,12 +1153,17 @@ describe('admin.auth', () => {
         emailSignInConfig: {
           enabled: false,
         },
+        multiFactorConfig: deepCopy(expectedUpdatedTenant.multiFactorConfig),
+        testPhoneNumbers: deepCopy(expectedUpdatedTenant.testPhoneNumbers),
       };
       const updatedOptions2: admin.auth.UpdateTenantRequest = {
         emailSignInConfig: {
           enabled: true,
           passwordRequired: false,
         },
+        multiFactorConfig: deepCopy(expectedUpdatedTenant2.multiFactorConfig),
+        // Test clearing of phone numbers.
+        testPhoneNumbers: null,
       };
       return admin.auth().tenantManager().updateTenant(createdTenantId, updatedOptions)
         .then((actualTenant) => {
