@@ -20,13 +20,12 @@ import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
 import {
-  RemoteConfigApiClient,
   RemoteConfigTemplate,
   TagColor,
   ListVersionsResult,
   Version,
 } from '../../../src/remote-config/remote-config-api-client';
-import { FirebaseRemoteConfigError } from '../../../src/remote-config/remote-config-utils';
+import { FirebaseRemoteConfigError, RemoteConfigApiClient } from '../../../src/remote-config/remote-config-api-client-internal';
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';

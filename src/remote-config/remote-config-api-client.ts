@@ -14,25 +14,9 @@
  * limitations under the License.
  */
 
-import { HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient, HttpResponse } from '../utils/api-request';
-import { PrefixedFirebaseError } from '../utils/error';
-import { FirebaseRemoteConfigError, RemoteConfigErrorCode } from './remote-config-utils';
-import { FirebaseApp } from '../firebase-app';
-import * as utils from '../utils/index';
-import * as validator from '../utils/validator';
-import { deepCopy } from '../utils/deep-copy';
-
-// Remote Config backend constants
-const FIREBASE_REMOTE_CONFIG_V1_API = 'https://firebaseremoteconfig.googleapis.com/v1';
-const FIREBASE_REMOTE_CONFIG_HEADERS = {
-  'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`,
-  // There is a known issue in which the ETag is not properly returned in cases where the request
-  // does not specify a compression type. Currently, it is required to include the header
-  // `Accept-Encoding: gzip` or equivalent in all requests.
-  // https://firebase.google.com/docs/remote-config/use-config-rest#etag_usage_and_forced_updates
-  'Accept-Encoding': 'gzip',
-};
-
+/**
+ * Colors that are associated with conditions for display purposes.
+ */
 export enum TagColor {
   BLUE = "Blue",
   BROWN = "Brown",
@@ -47,464 +31,254 @@ export enum TagColor {
   TEAL = "Teal",
 }
 
-/** Interface representing a Remote Config parameter `value` in value options. */
+/**
+ * Interface representing an explicit parameter value.
+ */
 export interface ExplicitParameterValue {
+  /**
+   * The `string` value that the parameter is set to.
+   */
   value: string;
 }
 
-/** Interface representing a Remote Config parameter `useInAppDefault` in value options. */
+/**
+ * Interface representing an in-app-default value.
+ */
 export interface InAppDefaultValue {
+  /**
+   * If `true`, the parameter is omitted from the parameter values returned to a client.
+   */
   useInAppDefault: boolean;
 }
 
+/**
+ * Type representing a Remote Config parameter value.
+ * A `RemoteConfigParameterValue` could be either an `ExplicitParameterValue` or
+ * an `InAppDefaultValue`.
+ */
 export type RemoteConfigParameterValue = ExplicitParameterValue | InAppDefaultValue;
 
-/** Interface representing a Remote Config parameter. */
+/**
+ * Interface representing a Remote Config parameter.
+ * At minimum, a `defaultValue` or a `conditionalValues` entry must be present for the
+ * parameter to have any effect.
+ */
 export interface RemoteConfigParameter {
+
+  /**
+   * The value to set the parameter to, when none of the named conditions evaluate to `true`.
+   */
   defaultValue?: RemoteConfigParameterValue;
+
+  /**
+   * A `(condition name, value)` map. The condition name of the highest priority
+   * (the one listed first in the Remote Config template's conditions list) determines the value of
+   * this parameter.
+   */
   conditionalValues?: { [key: string]: RemoteConfigParameterValue };
+
+  /**
+   * A description for this parameter. Should not be over 100 characters and may contain any
+   * Unicode characters.
+   */
   description?: string;
 }
 
-/** Interface representing a Remote Config parameter group. */
+/**
+ * Interface representing a Remote Config parameter group.
+ * Grouping parameters is only for management purposes and does not affect client-side
+ * fetching of parameter values.
+ */
 export interface RemoteConfigParameterGroup {
+  /**
+   * A description for the group. Its length must be less than or equal to 256 characters.
+   * A description may contain any Unicode characters.
+   */
   description?: string;
+
+  /**
+   * Map of parameter keys to their optional default values and optional conditional values for
+   * parameters that belong to this group. A parameter only appears once per
+   * Remote Config template. An ungrouped parameter appears at the top level, whereas a
+   * parameter organized within a group appears within its group's map of parameters.
+   */
   parameters: { [key: string]: RemoteConfigParameter };
 }
 
-/** Interface representing a Remote Config condition. */
+/**
+ * Interface representing a Remote Config condition.
+ * A condition targets a specific group of users. A list of these conditions make up
+ * part of a Remote Config template.
+ */
 export interface RemoteConfigCondition {
+
+  /**
+   * A non-empty and unique name of this condition.
+   */
   name: string;
+
+  /**
+   * The logic of this condition.
+   * See the documentation on
+   * {@link https://firebase.google.com/docs/remote-config/condition-reference condition expressions}
+   * for the expected syntax of this field.
+   */
   expression: string;
+
+  /**
+   * The color associated with this condition for display purposes in the Firebase Console.
+   * Not specifying this value results in the console picking an arbitrary color to associate
+   * with the condition.
+   */
   tagColor?: TagColor;
 }
 
-/** Interface representing a Remote Config template. */
+/**
+ * Interface representing a Remote Config template.
+ */
 export interface RemoteConfigTemplate {
+  /**
+   * A list of conditions in descending order by priority.
+   */
   conditions: RemoteConfigCondition[];
+
+  /**
+   * Map of parameter keys to their optional default values and optional conditional values.
+   */
   parameters: { [key: string]: RemoteConfigParameter };
+
+  /**
+   * Map of parameter group names to their parameter group objects.
+   * A group's name is mutable but must be unique among groups in the Remote Config template.
+   * The name is limited to 256 characters and intended to be human-readable. Any Unicode
+   * characters are allowed.
+   */
   parameterGroups: { [key: string]: RemoteConfigParameterGroup };
+
+  /**
+   * ETag of the current Remote Config template (readonly).
+   */
   readonly etag: string;
+
+  /**
+   * Version information for the current Remote Config template.
+   */
   version?: Version;
 }
 
-/** Interface representing a Remote Config version. */
+/**
+ * Interface representing a Remote Config template version.
+ * Output only, except for the version description. Contains metadata about a particular
+ * version of the Remote Config template. All fields are set at the time the specified Remote
+ * Config template is published. A version's description field may be specified in
+ * `publishTemplate` calls.
+ */
 export interface Version {
-  versionNumber?: string; // int64 format
-  updateTime?: string; // in UTC
+  /**
+   * The version number of a Remote Config template.
+   */
+  versionNumber?: string;
+
+  /**
+   * The timestamp of when this version of the Remote Config template was written to the
+   * Remote Config backend.
+   */
+  updateTime?: string;
+
+  /**
+   * The origin of the template update action.
+   */
   updateOrigin?: ('REMOTE_CONFIG_UPDATE_ORIGIN_UNSPECIFIED' | 'CONSOLE' |
     'REST_API' | 'ADMIN_SDK_NODE');
+
+  /**
+   * The type of the template update action.
+   */
   updateType?: ('REMOTE_CONFIG_UPDATE_TYPE_UNSPECIFIED' |
     'INCREMENTAL_UPDATE' | 'FORCED_UPDATE' | 'ROLLBACK');
+
+  /**
+   * Aggregation of all metadata fields about the account that performed the update.
+   */
   updateUser?: RemoteConfigUser;
+
+  /**
+   * The user-provided description of the corresponding Remote Config template.
+   */
   description?: string;
+
+  /**
+   * The version number of the Remote Config template that has become the current version
+   * due to a rollback. Only present if this version is the result of a rollback.
+   */
   rollbackSource?: string;
+
+  /**
+   * Indicates whether this Remote Config template was published before version history was
+   * supported.
+   */
   isLegacy?: boolean;
 }
 
 /** Interface representing a list of Remote Config template versions. */
 export interface ListVersionsResult {
+  /**
+   * A list of version metadata objects, sorted in reverse chronological order.
+   */
   versions: Version[];
+
+  /**
+   * Token to retrieve the next page of results, or empty if there are no more results
+   * in the list.
+   */
   nextPageToken?: string;
 }
 
-/** Interface representing a Remote Config list version options. */
+/** Interface representing options for Remote Config list versions operation. */
 export interface ListVersionsOptions {
+  /**
+   * The maximum number of items to return per page.
+   */
   pageSize?: number;
+
+  /**
+   * The `nextPageToken` value returned from a previous list versions request, if any.
+   */
   pageToken?: string;
+
+  /**
+   * Specifies the newest version number to include in the results.
+   * If specified, must be greater than zero. Defaults to the newest version.
+   */
   endVersionNumber?: string | number;
+
+  /**
+   * Specifies the earliest update time to include in the results. Any entries updated before this
+   * time are omitted.
+   */
   startTime?: Date | string;
+
+  /**
+   * Specifies the latest update time to include in the results. Any entries updated on or after
+   * this time are omitted.
+   */
   endTime?: Date | string;
 }
 
-/** Interface representing a Remote Config user. */
+/** Interface representing a Remote Config user.*/
 export interface RemoteConfigUser {
+  /**
+   * Email address. Output only.
+   */
   email: string;
+
+  /**
+   * Display name. Output only.
+   */
   name?: string;
+
+  /**
+   * Image URL. Output only.
+   */
   imageUrl?: string;
 }
-
-/**
- * Class that facilitates sending requests to the Firebase Remote Config backend API.
- *
- * @private
- */
-export class RemoteConfigApiClient {
-
-  private readonly httpClient: HttpClient;
-  private projectIdPrefix?: string;
-
-  constructor(private readonly app: FirebaseApp) {
-    if (!validator.isNonNullObject(app) || !('options' in app)) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument',
-        'First argument passed to admin.remoteConfig() must be a valid Firebase app instance.');
-    }
-
-    this.httpClient = new AuthorizedHttpClient(app);
-  }
-
-  public getTemplate(): Promise<RemoteConfigTemplate> {
-    return this.getUrl()
-      .then((url) => {
-        const request: HttpRequestConfig = {
-          method: 'GET',
-          url: `${url}/remoteConfig`,
-          headers: FIREBASE_REMOTE_CONFIG_HEADERS
-        };
-        return this.httpClient.send(request);
-      })
-      .then((resp) => {
-        return this.toRemoteConfigTemplate(resp);
-      })
-      .catch((err) => {
-        throw this.toFirebaseError(err);
-      });
-  }
-
-  public getTemplateAtVersion(versionNumber: number | string): Promise<RemoteConfigTemplate> {
-    const data = { versionNumber: this.validateVersionNumber(versionNumber) };
-    return this.getUrl()
-      .then((url) => {
-        const request: HttpRequestConfig = {
-          method: 'GET',
-          url: `${url}/remoteConfig`,
-          headers: FIREBASE_REMOTE_CONFIG_HEADERS,
-          data
-        };
-        return this.httpClient.send(request);
-      })
-      .then((resp) => {
-        return this.toRemoteConfigTemplate(resp);
-      })
-      .catch((err) => {
-        throw this.toFirebaseError(err);
-      });
-  }
-
-  public validateTemplate(template: RemoteConfigTemplate): Promise<RemoteConfigTemplate> {
-    template = this.validateInputRemoteConfigTemplate(template);
-    return this.sendPutRequest(template, template.etag, true)
-      .then((resp) => {
-        // validating a template returns an etag with the suffix -0 means that your update 
-        // was successfully validated. We set the etag back to the original etag of the template
-        // to allow future operations.
-        this.validateEtag(resp.headers['etag']);
-        return this.toRemoteConfigTemplate(resp, template.etag);
-      })
-      .catch((err) => {
-        throw this.toFirebaseError(err);
-      });
-  }
-
-  public publishTemplate(template: RemoteConfigTemplate, options?: { force: boolean }): Promise<RemoteConfigTemplate> {
-    template = this.validateInputRemoteConfigTemplate(template);
-    let ifMatch: string = template.etag;
-    if (options && options.force == true) {
-      // setting `If-Match: *` forces the Remote Config template to be updated
-      // and circumvent the ETag, and the protection from that it provides.
-      ifMatch = '*';
-    }
-    return this.sendPutRequest(template, ifMatch)
-      .then((resp) => {
-        return this.toRemoteConfigTemplate(resp);
-      })
-      .catch((err) => {
-        throw this.toFirebaseError(err);
-      });
-  }
-
-  public rollback(versionNumber: number | string): Promise<RemoteConfigTemplate> {
-    const data = { versionNumber: this.validateVersionNumber(versionNumber) };
-    return this.getUrl()
-      .then((url) => {
-        const request: HttpRequestConfig = {
-          method: 'POST',
-          url: `${url}/remoteConfig:rollback`,
-          headers: FIREBASE_REMOTE_CONFIG_HEADERS,
-          data
-        };
-        return this.httpClient.send(request);
-      })
-      .then((resp) => {
-        return this.toRemoteConfigTemplate(resp);
-      })
-      .catch((err) => {
-        throw this.toFirebaseError(err);
-      });
-  }
-
-  public listVersions(options?: ListVersionsOptions): Promise<ListVersionsResult> {
-    if (typeof options !== 'undefined') {
-      options = this.validateListVersionsOptions(options);
-    }
-    return this.getUrl()
-      .then((url) => {
-        const request: HttpRequestConfig = {
-          method: 'GET',
-          url: `${url}/remoteConfig:listVersions`,
-          headers: FIREBASE_REMOTE_CONFIG_HEADERS,
-          data: options
-        };
-        return this.httpClient.send(request);
-      })
-      .then((resp) => {
-        return resp.data;
-      })
-      .catch((err) => {
-        throw this.toFirebaseError(err);
-      });
-  }
-
-  private sendPutRequest(template: RemoteConfigTemplate, etag: string, validateOnly?: boolean): Promise<HttpResponse> {
-    let path = 'remoteConfig';
-    if (validateOnly) {
-      path += '?validate_only=true';
-    }
-    return this.getUrl()
-      .then((url) => {
-        const request: HttpRequestConfig = {
-          method: 'PUT',
-          url: `${url}/${path}`,
-          headers: { ...FIREBASE_REMOTE_CONFIG_HEADERS, 'If-Match': etag },
-          data: {
-            conditions: template.conditions,
-            parameters: template.parameters,
-            parameterGroups: template.parameterGroups,
-            version: template.version,
-          }
-        };
-        return this.httpClient.send(request);
-      });
-  }
-
-  private getUrl(): Promise<string> {
-    return this.getProjectIdPrefix()
-      .then((projectIdPrefix) => {
-        return `${FIREBASE_REMOTE_CONFIG_V1_API}/${projectIdPrefix}`;
-      });
-  }
-
-  private getProjectIdPrefix(): Promise<string> {
-    if (this.projectIdPrefix) {
-      return Promise.resolve(this.projectIdPrefix);
-    }
-
-    return utils.findProjectId(this.app)
-      .then((projectId) => {
-        if (!validator.isNonEmptyString(projectId)) {
-          throw new FirebaseRemoteConfigError(
-            'unknown-error',
-            'Failed to determine project ID. Initialize the SDK with service account credentials, or '
-            + 'set project ID as an app option. Alternatively, set the GOOGLE_CLOUD_PROJECT '
-            + 'environment variable.');
-        }
-
-        this.projectIdPrefix = `projects/${projectId}`;
-        return this.projectIdPrefix;
-      });
-  }
-
-  private toFirebaseError(err: HttpError): PrefixedFirebaseError {
-    if (err instanceof PrefixedFirebaseError) {
-      return err;
-    }
-
-    const response = err.response;
-    if (!response.isJson()) {
-      return new FirebaseRemoteConfigError(
-        'unknown-error',
-        `Unexpected response with status: ${response.status} and body: ${response.text}`);
-    }
-
-    const error: Error = (response.data as ErrorResponse).error || {};
-    let code: RemoteConfigErrorCode = 'unknown-error';
-    if (error.status && error.status in ERROR_CODE_MAPPING) {
-      code = ERROR_CODE_MAPPING[error.status];
-    }
-    const message = error.message || `Unknown server error: ${response.text}`;
-    return new FirebaseRemoteConfigError(code, message);
-  }
-
-  /**
-   * Creates a RemoteConfigTemplate from the API response.
-   * If provided, customEtag is used instead of the etag returned in the API response.
-   *
-   * @param {HttpResponse} resp API response object.
-   * @param {string} customEtag A custom etag to replace the etag fom the API response (Optional).
-   */
-  private toRemoteConfigTemplate(resp: HttpResponse, customEtag?: string): RemoteConfigTemplate {
-    const etag = (typeof customEtag == 'undefined') ? resp.headers['etag'] : customEtag;
-    this.validateEtag(etag);
-    return {
-      conditions: resp.data.conditions,
-      parameters: resp.data.parameters,
-      parameterGroups: resp.data.parameterGroups,
-      etag,
-      version: resp.data.version,
-    };
-  }
-
-  /**
-   * Checks if the given RemoteConfigTemplate object is valid.
-   * The object must have valid parameters, parameter groups, conditions, and an etag.
-   * Removes output only properties from version metadata.
-   *
-   * @param {RemoteConfigTemplate} template A RemoteConfigTemplate object to be validated.
-   * 
-   * @returns {RemoteConfigTemplate} The validated RemoteConfigTemplate object.
-   */
-  private validateInputRemoteConfigTemplate(template: RemoteConfigTemplate): RemoteConfigTemplate {
-    const templateCopy = deepCopy(template);
-    if (!validator.isNonNullObject(templateCopy)) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument',
-        `Invalid Remote Config template: ${JSON.stringify(templateCopy)}`);
-    }
-    if (!validator.isNonEmptyString(templateCopy.etag)) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument',
-        'ETag must be a non-empty string.');
-    }
-    if (!validator.isNonNullObject(templateCopy.parameters)) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument',
-        'Remote Config parameters must be a non-null object');
-    }
-    if (!validator.isNonNullObject(templateCopy.parameterGroups)) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument',
-        'Remote Config parameter groups must be a non-null object');
-    }
-    if (!validator.isArray(templateCopy.conditions)) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument',
-        'Remote Config conditions must be an array');
-    }
-    if (typeof templateCopy.version !== 'undefined') {
-      // exclude output only properties and keep the only input property: description
-      templateCopy.version = { description: templateCopy.version.description };
-    }
-    return templateCopy;
-  }
-
-  /**
-   * Checks if a given version number is valid.
-   * A version number must be an integer or a string in int64 format.
-   * If valid, returns the string representation of the provided version number.
-   *
-   * @param {string|number} versionNumber A version number to be validated.
-   * 
-   * @returns {string} The validated version number as a string.
-   */
-  private validateVersionNumber(versionNumber: string | number, propertyName = 'versionNumber'): string {
-    if (!validator.isNonEmptyString(versionNumber) &&
-      !validator.isNumber(versionNumber)) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument',
-        `${propertyName} must be a non-empty string in int64 format or a number`);
-    }
-    if (!Number.isInteger(Number(versionNumber))) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument',
-        `${propertyName} must be an integer or a string in int64 format`);
-    }
-    return versionNumber.toString();
-  }
-
-  private validateEtag(etag?: string): void {
-    if (!validator.isNonEmptyString(etag)) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument',
-        'ETag header is not present in the server response.');
-    }
-  }
-
-  /**
-   * Checks if a given `ListVersionsOptions` object is valid. If successful, creates a copy of the
-   * options object and convert `startTime` and `endTime` to RFC3339 UTC "Zulu" format, if present.
-   * 
-   * @param {ListVersionsOptions} options An options object to be validated.
-   * 
-   * @return {ListVersionsOptions} A copy of the provided options object with timestamps converted
-   * to UTC Zulu format.
-   */
-  private validateListVersionsOptions(options: ListVersionsOptions): ListVersionsOptions {
-    const optionsCopy = deepCopy(options);
-    if (!validator.isNonNullObject(optionsCopy)) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument',
-        'ListVersionsOptions must be a non-null object.');
-    }
-    if (typeof optionsCopy.pageSize !== 'undefined') {
-      if (!validator.isNumber(optionsCopy.pageSize)) {
-        throw new FirebaseRemoteConfigError(
-          'invalid-argument', 'pageSize must be a number.');
-      }
-      if (optionsCopy.pageSize < 1 || optionsCopy.pageSize > 300) {
-        throw new FirebaseRemoteConfigError(
-          'invalid-argument', 'pageSize must be a number between 1 and 300 (inclusive).');
-      }
-    }
-    if (typeof optionsCopy.pageToken !== 'undefined' && !validator.isNonEmptyString(optionsCopy.pageToken)) {
-      throw new FirebaseRemoteConfigError(
-        'invalid-argument', 'pageToken must be a string value.');
-    }
-    if (typeof optionsCopy.endVersionNumber !== 'undefined') {
-      optionsCopy.endVersionNumber = this.validateVersionNumber(optionsCopy.endVersionNumber, 'endVersionNumber');
-    }
-    if (typeof optionsCopy.startTime !== 'undefined') {
-      if (!(optionsCopy.startTime instanceof Date) && !validator.isUTCDateString(optionsCopy.startTime)) {
-        throw new FirebaseRemoteConfigError(
-          'invalid-argument', 'startTime must be a valid Date object or a UTC date string.');
-      }
-      // Convert startTime to RFC3339 UTC "Zulu" format.
-      if (optionsCopy.startTime instanceof Date) {
-        optionsCopy.startTime = optionsCopy.startTime.toISOString();
-      } else {
-        optionsCopy.startTime = new Date(optionsCopy.startTime).toISOString();
-      }
-    }
-    if (typeof optionsCopy.endTime !== 'undefined') {
-      if (!(optionsCopy.endTime instanceof Date) && !validator.isUTCDateString(optionsCopy.endTime)) {
-        throw new FirebaseRemoteConfigError(
-          'invalid-argument', 'endTime must be a valid Date object or a UTC date string.');
-      }
-      // Convert endTime to RFC3339 UTC "Zulu" format.
-      if (optionsCopy.endTime instanceof Date) {
-        optionsCopy.endTime = optionsCopy.endTime.toISOString();
-      } else {
-        optionsCopy.endTime = new Date(optionsCopy.endTime).toISOString();
-      }
-    }
-    // Remove undefined fields from optionsCopy
-    Object.keys(optionsCopy).forEach(key =>
-      (typeof (optionsCopy as any)[key] === 'undefined') && delete (optionsCopy as any)[key]
-    );
-    return optionsCopy;
-  }
-}
-
-interface ErrorResponse {
-  error?: Error;
-}
-
-interface Error {
-  code?: number;
-  message?: string;
-  status?: string;
-}
-
-const ERROR_CODE_MAPPING: { [key: string]: RemoteConfigErrorCode } = {
-  ABORTED: 'aborted',
-  ALREADY_EXISTS: `already-exists`,
-  INVALID_ARGUMENT: 'invalid-argument',
-  INTERNAL: 'internal-error',
-  FAILED_PRECONDITION: 'failed-precondition',
-  NOT_FOUND: 'not-found',
-  OUT_OF_RANGE: 'out-of-range',
-  PERMISSION_DENIED: 'permission-denied',
-  RESOURCE_EXHAUSTED: 'resource-exhausted',
-  UNAUTHENTICATED: 'unauthenticated',
-  UNKNOWN: 'unknown-error',
-};

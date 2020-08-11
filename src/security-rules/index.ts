@@ -15,29 +15,33 @@
  */
 
 import { FirebaseApp } from '../firebase-app';
-import * as instanceIdApi from './instance-id';
+import * as securityRulesApi from './security-rules';
 import * as firebaseAdmin from '../index';
 
-export function instanceId(app?: FirebaseApp): instanceIdApi.InstanceId {
+export function securityRules(app?: FirebaseApp): securityRulesApi.SecurityRules {
   if (typeof(app) === 'undefined') {
     app = firebaseAdmin.app();
   }
-  return app.instanceId();
+  return app.securityRules();
 }
 
 /**
  * We must define a namespace to make the typings work correctly. Otherwise
- * `admin.instanceId()` cannot be called like a function. Temporarily,
- * admin.instanceId is used as the namespace name because we cannot barrel 
- * re-export the contents from instance-id, and we want it to
+ * `admin.securityRules()` cannot be called like a function. Temporarily,
+ * admin.securityRules is used as the namespace name because we cannot barrel 
+ * re-export the contents from security-rules, and we want it to
  * match the namespacing in the re-export inside src/index.d.ts
  */
 /* eslint-disable @typescript-eslint/no-namespace */
-export namespace admin.instanceId {
+export namespace admin.securityRules {
   // See https://github.com/microsoft/TypeScript/issues/4336
   /* eslint-disable @typescript-eslint/no-unused-vars */
   // See https://github.com/typescript-eslint/typescript-eslint/issues/363
-  // Allows for exposing classes as interfaces in typings
-  /* eslint-disable @typescript-eslint/no-empty-interface */
-  export interface InstanceId extends instanceIdApi.InstanceId {}
+  export import RulesFile = securityRulesApi.RulesFile;
+  export import RulesetMetadata = securityRulesApi.RulesetMetadata;
+  export import RulesetMetadataList = securityRulesApi.RulesetMetadataList;
+  
+  /* eslint-disable @typescript-eslint/no-empty-interface */ 
+  export interface Ruleset extends securityRulesApi.Ruleset {}
+  export interface SecurityRules extends securityRulesApi.SecurityRules {}
 }

@@ -15,6 +15,26 @@
  */
 
 import { FirebaseApp } from '../firebase-app';
+import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
+import { FirebaseInstanceIdError, InstanceIdClientErrorCode } from '../utils/error';
+import { FirebaseInstanceIdRequestHandler } from './instance-id-request-internal';
+
+import * as validator from '../utils/validator';
+
+/**
+ * Internals of an InstanceId service instance.
+ */
+class InstanceIdInternals implements FirebaseServiceInternalsInterface {
+  /**
+   * Deletes the service and its associated resources.
+   *
+   * @return {Promise<()>} An empty Promise that will be fulfilled when the service is deleted.
+   */
+  public delete(): Promise<void> {
+    // There are no resources to clean up
+    return Promise.resolve(undefined);
+  }
+}
 
 /**
  * Gets the {@link InstanceId `InstanceId`} service for the
@@ -30,8 +50,27 @@ import { FirebaseApp } from '../firebase-app';
  * @return The `InstanceId` service for the
  *   current app.
  */
-export interface InstanceId {
-  app: FirebaseApp;
+export class InstanceId implements FirebaseServiceInterface {
+  public INTERNAL: InstanceIdInternals = new InstanceIdInternals();
+
+  private app_: FirebaseApp;
+  private requestHandler: FirebaseInstanceIdRequestHandler;
+
+  /**
+   * @param {FirebaseApp} app The app for this InstanceId service.
+   * @constructor
+   */
+  constructor(app: FirebaseApp) {
+    if (!validator.isNonNullObject(app) || !('options' in app)) {
+      throw new FirebaseInstanceIdError(
+        InstanceIdClientErrorCode.INVALID_ARGUMENT,
+        'First argument passed to admin.instanceId() must be a valid Firebase app instance.',
+      );
+    }
+
+    this.app_ = app;
+    this.requestHandler = new FirebaseInstanceIdRequestHandler(app);
+  }
 
   /**
    * Deletes the specified instance ID and the associated data from Firebase.
@@ -46,5 +85,19 @@ export interface InstanceId {
    *
    * @return A promise fulfilled when the instance ID is deleted.
    */
-  deleteInstanceId(instanceId: string): Promise<void>;
+  public deleteInstanceId(instanceId: string): Promise<void> {
+    return this.requestHandler.deleteInstanceId(instanceId)
+      .then(() => {
+        // Return nothing on success
+      });
+  }
+
+  /**
+   * Returns the app associated with this InstanceId instance.
+   *
+   * @return {FirebaseApp} The app associated with this InstanceId instance.
+   */
+  get app(): FirebaseApp {
+    return this.app_;
+  }
 }

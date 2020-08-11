@@ -1631,11 +1631,9 @@ export namespace admin.database {
    */
   interface ThenableReference extends admin.database.Reference, Promise<admin.database.Reference> { }
 
-  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
   function enableLogging(logger?: boolean | ((message: string) => any), persistent?: boolean): any;
 }
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
 export namespace admin.database.ServerValue {
 
   /**

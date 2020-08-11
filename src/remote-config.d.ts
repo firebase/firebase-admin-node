@@ -1,6 +1,5 @@
 import * as _admin from './index.d';
 
-/* eslint-disable-next-line @typescript-eslint/no-unused-vars */
 export namespace admin.remoteConfig {
 
   /**
