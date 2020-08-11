@@ -17,7 +17,8 @@
 import { FirebaseApp } from '../firebase-app';
 import { FirebaseFirestoreError } from '../utils/error';
 import { ServiceAccountCredential, isApplicationDefault } from '../auth/credential';
-import { Settings } from '@google-cloud/firestore';
+import { Settings, Firestore } from '@google-cloud/firestore';
+import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 
 import * as validator from '../utils/validator';
 import * as utils from '../utils/index';
@@ -58,4 +59,62 @@ export function getFirestoreOptions(app: FirebaseApp): Settings {
       'Must initialize the SDK with a certificate credential or application default credentials ' +
       'to use Cloud Firestore API.',
   });
+}
+
+/**
+ * Internals of a Firestore instance.
+ */
+class FirestoreInternals implements FirebaseServiceInternalsInterface {
+  /**
+   * Deletes the service and its associated resources.
+   *
+   * @return {Promise<()>} An empty Promise that will be fulfilled when the service is deleted.
+   */
+  public delete(): Promise<void> {
+    // There are no resources to clean up.
+    return Promise.resolve();
+  }
+}
+
+export class FirestoreService implements FirebaseServiceInterface {
+  public INTERNAL: FirestoreInternals = new FirestoreInternals();
+
+  private appInternal: FirebaseApp;
+  private firestoreClient: Firestore;
+
+  constructor(app: FirebaseApp) {
+    this.firestoreClient = initFirestore(app);
+    this.appInternal = app;
+  }
+
+  /**
+   * Returns the app associated with this Storage instance.
+   *
+   * @return {FirebaseApp} The app associated with this Storage instance.
+   */
+  get app(): FirebaseApp {
+    return this.appInternal;
+  }
+
+  get client(): Firestore {
+    return this.firestoreClient;
+  }
+}
+
+function initFirestore(app: FirebaseApp): Firestore {
+  const options = getFirestoreOptions(app);
+  let firestoreDatabase: typeof Firestore;
+  try {
+    // Lazy-load the Firestore implementation here, which in turns loads gRPC.
+    firestoreDatabase = require('@google-cloud/firestore').Firestore;
+  } catch (err) {
+    throw new FirebaseFirestoreError({
+      code: 'missing-dependencies',
+      message: 'Failed to import the Cloud Firestore client library for Node.js. '
+          + 'Make sure to install the "@google-cloud/firestore" npm package. '
+          + `Original error: ${err}`,
+    });
+  }
+
+  return new firestoreDatabase(options);
 }

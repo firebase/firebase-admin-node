@@ -18,7 +18,7 @@ import { FirebaseApp } from '../firebase-app';
 import * as _firestore from '@google-cloud/firestore';
 import * as firebaseAdmin from '../index';
 
-export function projectManagement(app?: FirebaseApp): _firestore.Firestore {
+export function firestore(app?: FirebaseApp): _firestore.Firestore {
   if (typeof (app) === 'undefined') {
     app = firebaseAdmin.app();
   }
