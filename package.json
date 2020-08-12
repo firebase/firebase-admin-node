@@ -54,10 +54,10 @@
   ],
   "types": "./lib/index.d.ts",
   "dependencies": {
-    "@firebase/database": "^0.6.0",
+    "@firebase/database": "^0.6.10",
+    "@firebase/database-types": "^0.5.2",
     "@types/node": "^10.10.0",
     "dicer": "^0.3.0",
-    "gulp-filter": "^6.0.0",
     "jsonwebtoken": "^8.5.1",
     "node-forge": "^0.9.1"
   },
@@ -66,9 +66,9 @@
     "@google-cloud/storage": "^5.0.0"
   },
   "devDependencies": {
-    "@firebase/app": "^0.6.1",
-    "@firebase/auth": "^0.13.3",
-    "@firebase/auth-types": "^0.9.3",
+    "@firebase/app": "^0.6.9",
+    "@firebase/auth": "^0.14.9",
+    "@firebase/auth-types": "^0.10.1",
     "@types/bcrypt": "^2.0.0",
     "@types/chai": "^4.0.0",
     "@types/chai-as-promised": "^7.1.0",
@@ -93,6 +93,7 @@
     "eslint": "^6.8.0",
     "firebase-token-generator": "^2.0.0",
     "gulp": "^4.0.2",
+    "gulp-filter": "^6.0.0",
     "gulp-header": "^1.8.8",
     "gulp-replace": "^0.5.4",
     "gulp-typescript": "^5.0.1",

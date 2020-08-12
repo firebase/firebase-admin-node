@@ -36,6 +36,7 @@ import {
   Reference,
   ServerValue,
 } from '@firebase/database';
+import { Database as FirebaseDatabase } from '../../src/database/database';
 import { Messaging } from '../../src/messaging/messaging';
 import { MachineLearning } from '../../src/machine-learning/machine-learning';
 import { Storage } from '../../src/storage/storage';
@@ -404,14 +405,14 @@ describe('FirebaseNamespace', () => {
 
     it('should return a valid namespace when the default app is initialized', () => {
       const app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions);
-      const db: Database = firebaseNamespace.database();
+      const db: FirebaseDatabase = firebaseNamespace.database();
       expect(db.app).to.be.deep.equal(app);
       return app.delete();
     });
 
     it('should return a valid namespace when the named app is initialized', () => {
       const app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
-      const db: Database = firebaseNamespace.database(app);
+      const db: FirebaseDatabase = firebaseNamespace.database(app);
       expect(db.app).to.be.deep.equal(app);
       return app.delete();
     });

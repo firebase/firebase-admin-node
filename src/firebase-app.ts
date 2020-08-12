@@ -25,8 +25,8 @@ import { Auth } from './auth/auth';
 import { MachineLearning } from './machine-learning/machine-learning';
 import { Messaging } from './messaging/messaging';
 import { Storage } from './storage/storage';
-import { Database } from '@firebase/database';
-import { DatabaseService } from './database/database';
+import { Database } from './database/database';
+import { DatabaseService } from './database/database-internal';
 import { Firestore } from '@google-cloud/firestore';
 import { FirestoreService } from './firestore/firestore-internal';
 import { InstanceId } from './instance-id/instance-id';
@@ -307,7 +307,7 @@ export class FirebaseApp {
    */
   public database(url?: string): Database {
     const service: DatabaseService = this.ensureService_('database', () => {
-      const dbService: typeof DatabaseService = require('./database/database').DatabaseService;
+      const dbService: typeof DatabaseService = require('./database/database-internal').DatabaseService;
       return new dbService(this);
     });
     return service.getDatabase(url);
