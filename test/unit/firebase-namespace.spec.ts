@@ -36,7 +36,7 @@ import {
   Reference,
   ServerValue,
 } from '@firebase/database';
-import { FirebaseDatabase } from '@firebase/database-types';
+import { Database as FirebaseDatabase } from '../../src/database/database';
 import { Messaging } from '../../src/messaging/messaging';
 import { MachineLearning } from '../../src/machine-learning/machine-learning';
 import { Storage } from '../../src/storage/storage';

@@ -40,15 +40,13 @@ export namespace admin.database {
   /* eslint-disable @typescript-eslint/no-unused-vars */
   // See https://github.com/typescript-eslint/typescript-eslint/issues/363
   export import DataSnapshot = firebaseDbTypesApi.DataSnapshot;
-  export import OnDisconnect = firebaseDbTypesApi.OnDisconnect;
+  export import Database = adminDb.Database;
   export import EventType = firebaseDbTypesApi.EventType;
+  export import OnDisconnect = firebaseDbTypesApi.OnDisconnect;
   export import Query = firebaseDbTypesApi.Query;
   export import Reference = firebaseDbTypesApi.Reference;
   export import ThenableReference = firebaseDbTypesApi.ThenableReference;
   export import enableLogging = firebaseDbTypesApi.enableLogging;
+
   export const ServerValue: firebaseDbTypesApi.ServerValue = sv;
-  // There is a known bug where @firebase/database-types FirebaseDatabase
-  // cannot be used as an interface for @firebase/database Database.
-  // See https://github.com/firebase/firebase-js-sdk/issues/3476
-  export import Database = adminDb.Database;
 }
