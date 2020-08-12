@@ -340,7 +340,7 @@ describe('Database', () => {
       });
 
       it('should set the rules when specified as an object', () => {
-        const db: Database = database.app.database();
+        const db: Database = database.getDatabase();
         const stub = stubSuccessfulResponse({});
         return db.setRules(rules).then(() => {
           return expect(stub).to.have.been.calledOnce.and.calledWith(
