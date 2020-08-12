@@ -78,6 +78,7 @@ export interface ModelContent {
   readonly tfliteModel?: {
     readonly gcsTfliteUri?: string;
     readonly automlModel?: string;
+    readonly managedModel?: boolean;
 
     readonly sizeBytes: number;
   };

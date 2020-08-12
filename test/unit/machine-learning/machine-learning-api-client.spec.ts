@@ -77,6 +77,20 @@ describe('MachineLearningApiClient', () => {
       sizeBytes: 3330033,
     },
   };
+  const MODEL_RESPONSE_MANAGED = {
+    name: 'projects/test-project/models/4567890',
+    createTime: '2020-07-15T18:13:25.123987Z',
+    updateTime: '2020-07-15T19:16:32.965435Z',
+    etag: 'etag456',
+    modelHash: 'modelHash456',
+    displayName: 'model_managed',
+    tags: ['tag_managed'],
+    state: { published: true },
+    tfliteModel: {
+      managedModel: true,
+      sizeBytes: 4440044,
+    },
+  }
 
   const PROJECT_ID = 'test-project';
   const PROJECT_NUMBER = '1234567';
@@ -477,6 +491,23 @@ describe('MachineLearningApiClient', () => {
       return apiClient.getModel(MODEL_ID)
         .then((resp) => {
           expect(resp.name).to.equal('bar');
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'GET',
+            url: `${BASE_URL}/projects/test-project/models/1234567`,
+            headers: EXPECTED_HEADERS,
+          });
+        });
+    });
+
+    it('should resolve with the requested managed model on success', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(MODEL_RESPONSE_MANAGED));
+      stubs.push(stub);
+      return apiClient.getModel(MODEL_ID)
+        .then((resp) => {
+          expect(resp.name).to.equal(MODEL_RESPONSE_MANAGED.name);
+          expect(resp.tfliteModel!.managedModel).to.be.true;
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'GET',
             url: `${BASE_URL}/projects/test-project/models/1234567`,

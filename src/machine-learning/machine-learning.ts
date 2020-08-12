@@ -356,10 +356,11 @@ export class Model {
     }
 
     // If tflite Model is specified, it must have a source consisting of
-    // oneof {gcsTfliteUri, automlModel}
+    // oneof {gcsTfliteUri, automlModel, managedModel}
     if (model.tfliteModel &&
         !validator.isNonEmptyString(model.tfliteModel.gcsTfliteUri) &&
-        !validator.isNonEmptyString(model.tfliteModel.automlModel)) {
+        !validator.isNonEmptyString(model.tfliteModel.automlModel) &&
+        !model.tfliteModel.managedModel) {
       throw new FirebaseMachineLearningError(
         'invalid-server-response',
         `Invalid Model response: ${JSON.stringify(model, null, 2)}`);

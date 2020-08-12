@@ -1233,6 +1233,8 @@ declare namespace admin.machineLearning {
     readonly gcsTfliteUri?: string;
     /** The AutoML URI from which the model was originally provided to Firebase. */
     readonly automlModel?: string;
+    /** An indicator that the model was uploaded through the Firebase console. */
+    readonly managedModel?: boolean;
   }
 
   /**
