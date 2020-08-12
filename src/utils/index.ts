@@ -152,23 +152,37 @@ export function formatString(str: string, params?: object): string {
  * Generates the update mask for the provided object.
  * Note this will ignore the last key with value undefined.
  *
- * @param {[key: string]: any} obj The object to generate the update mask for.
- * @return {Array<string>} The computed update mask list.
+ * @param obj The object to generate the update mask for.
+ * @param terminalPaths The optional map of keys for maximum paths to traverse.
+ *      Nested objects beyond that path will be ignored. This is useful for
+ *      keys with variable object values.
+ * @param root The path so far.
+ * @return The computed update mask list.
  */
-export function generateUpdateMask(obj: {[key: string]: any}): string[] {
+export function generateUpdateMask(
+  obj: any, terminalPaths: string[] = [], root = ''
+): string[] {
   const updateMask: string[] = [];
   if (!validator.isNonNullObject(obj)) {
     return updateMask;
   }
   for (const key in obj) {
-    if (Object.prototype.hasOwnProperty.call(obj, key) && typeof obj[key] !== 'undefined') {
-      const maskList = generateUpdateMask(obj[key]);
-      if (maskList.length > 0) {
-        maskList.forEach((mask) => {
-          updateMask.push(`${key}.${mask}`);
-        });
-      } else {
+    if (typeof obj[key] !== 'undefined') {
+      const nextPath = root ? `${root}.${key}` : key;
+      // We hit maximum path.
+      // Consider switching to Set<string> if the list grows too large.
+      if (terminalPaths.indexOf(nextPath) !== -1) {
+        // Add key and stop traversing this branch.
         updateMask.push(key);
+      } else {
+        const maskList = generateUpdateMask(obj[key], terminalPaths, nextPath);
+        if (maskList.length > 0) {
+          maskList.forEach((mask) => {
+            updateMask.push(`${key}.${mask}`);
+          });
+        } else {
+          updateMask.push(key);
+        }
       }
     }
   }

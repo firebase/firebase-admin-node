@@ -4454,11 +4454,27 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             enabled: true,
             passwordRequired: true,
           },
+          multiFactorConfig: {
+            state: 'ENABLED',
+            factorIds: ['phone'],
+          },
+          testPhoneNumbers: {
+            '+16505551234': '019287',
+            '+16505550676': '985235',
+          },
         };
         const expectedRequest = {
           displayName: 'TENANT-DISPLAY-NAME',
           allowPasswordSignup: true,
           enableEmailLinkSignin: false,
+          mfaConfig: {
+            state: 'ENABLED',
+            enabledProviders: ['PHONE_SMS'],
+          },
+          testPhoneNumbers: {
+            '+16505551234': '019287',
+            '+16505550676': '985235',
+          },
         };
         const expectedResult = utils.responseFrom(deepExtend({
           name: 'projects/project_id/tenants/tenant-id',
@@ -4560,24 +4576,41 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const path = '/v2/projects/project_id/tenants/tenant-id';
         const patchMethod = 'PATCH';
         const tenantId = 'tenant-id';
-        const tenantOptions = {
+        const tenantOptions: TenantOptions = {
           displayName: 'TENANT-DISPLAY-NAME',
           emailSignInConfig: {
             enabled: true,
             passwordRequired: true,
+          },
+          multiFactorConfig: {
+            state: 'ENABLED',
+            factorIds: ['phone'],
+          },
+          testPhoneNumbers: {
+            '+16505551234': '019287',
+            '+16505550676': '985235',
           },
         };
         const expectedRequest = {
           displayName: 'TENANT-DISPLAY-NAME',
           allowPasswordSignup: true,
           enableEmailLinkSignin: false,
+          mfaConfig: {
+            state: 'ENABLED',
+            enabledProviders: ['PHONE_SMS'],
+          },
+          testPhoneNumbers: {
+            '+16505551234': '019287',
+            '+16505550676': '985235',
+          },
         };
         const expectedResult = utils.responseFrom(deepExtend({
           name: 'projects/project_id/tenants/tenant-id',
         }, expectedRequest));
 
         it('should be fulfilled given full parameters', () => {
-          const expectedPath = path + '?updateMask=allowPasswordSignup,enableEmailLinkSignin,displayName';
+          const expectedPath = path + '?updateMask=allowPasswordSignup,enableEmailLinkSignin,displayName,' +
+            'mfaConfig.state,mfaConfig.enabledProviders,testPhoneNumbers';
           const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
           stubs.push(stub);
 
@@ -4663,7 +4696,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         });
 
         it('should be rejected when the backend returns a response missing name', () => {
-          const expectedPath = path + '?updateMask=allowPasswordSignup,enableEmailLinkSignin,displayName';
+          const expectedPath = path + '?updateMask=allowPasswordSignup,enableEmailLinkSignin,displayName,' +
+            'mfaConfig.state,mfaConfig.enabledProviders,testPhoneNumbers';
           const expectedError = new FirebaseAuthError(
             AuthClientErrorCode.INTERNAL_ERROR,
             'INTERNAL ASSERT FAILED: Unable to update tenant',
@@ -4683,7 +4717,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         });
 
         it('should be rejected when the backend returns a response missing tenant ID in response name', () => {
-          const expectedPath = path + '?updateMask=allowPasswordSignup,enableEmailLinkSignin,displayName';
+          const expectedPath = path + '?updateMask=allowPasswordSignup,enableEmailLinkSignin,displayName,' +
+            'mfaConfig.state,mfaConfig.enabledProviders,testPhoneNumbers';
           const expectedError = new FirebaseAuthError(
             AuthClientErrorCode.INTERNAL_ERROR,
             'INTERNAL ASSERT FAILED: Unable to update tenant',
@@ -4705,7 +4740,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         });
 
         it('should be rejected when the backend returns an error', () => {
-          const expectedPath = path + '?updateMask=allowPasswordSignup,enableEmailLinkSignin,displayName';
+          const expectedPath = path + '?updateMask=allowPasswordSignup,enableEmailLinkSignin,displayName,' +
+            'mfaConfig.state,mfaConfig.enabledProviders,testPhoneNumbers';
           const expectedServerError = utils.errorFrom({
             error: {
               message: 'INTERNAL_ERROR',
