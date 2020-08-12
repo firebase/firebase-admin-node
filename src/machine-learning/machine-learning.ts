@@ -271,7 +271,7 @@ export class Model {
     if (model.modelHash) {
       this.modelHash = model.modelHash;
     }
-    if (model.tfliteModel) {
+    if (model.tfliteModel?.gcsTfliteUri) {
       this.tfliteModel = {
         gcsTfliteUri: model.tfliteModel.gcsTfliteUri,
         sizeBytes: model.tfliteModel.sizeBytes,
