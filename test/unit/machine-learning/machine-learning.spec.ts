@@ -108,6 +108,21 @@ describe('MachineLearning', () => {
     },
   };
 
+  const MODEL_RESPONSE3: any = {
+    name: 'projects/test-project/models/3456789',
+    createTime: '2020-02-07T23:45:23.288047Z',
+    updateTime: '2020-02-08T23:45:23.288047Z',
+    etag: 'etag345',
+    modelHash: 'modelHash345',
+    displayName: 'model_3',
+    tags: ['tag_3', 'tag_4'],
+    state: { published: true },
+    tfliteModel: {
+      managedUpload: true,
+      sizeBytes: 22200222,
+    },
+  };
+
   const STATUS_ERROR_RESPONSE: {
     code: number;
     message: string;
@@ -310,6 +325,20 @@ describe('MachineLearning', () => {
       expect(tflite.gcsTfliteUri).to.be.equal(
         'gs://test-project-bucket/Firebase/ML/Models/model1.tflite');
       expect(tflite.sizeBytes).to.be.equal(16900988);
+    });
+
+    it('should accept unknown fields gracefully', () => {
+      const model = new Model(MODEL_RESPONSE3, mockClient);
+      expect(model.modelId).to.equal('3456789');
+      expect(model.displayName).to.equal('model_3');
+      expect(model.tags).to.deep.equal(['tag_3', 'tag_4']);
+      expect(model.createTime).to.equal(CREATE_TIME_UTC);
+      expect(model.updateTime).to.equal(UPDATE_TIME_UTC);
+      expect(model.validationError).to.be.undefined;
+      expect(model.published).to.be.true;
+      expect(model.etag).to.equal('etag345');
+      expect(model.modelHash).to.equal('modelHash345');
+      expect(model.tfliteModel).to.be.undefined;
     });
 
     it('should successfully serialize a model to JSON', () => {

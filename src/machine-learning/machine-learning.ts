@@ -354,18 +354,18 @@ export class Model {
         'invalid-server-response',
         `Invalid Model response: ${JSON.stringify(model)}`);
     }
+    const tmpModel = deepCopy(model);
 
     // If tflite Model is specified, it must have a source consisting of
     // oneof {gcsTfliteUri, automlModel}
     if (model.tfliteModel &&
         !validator.isNonEmptyString(model.tfliteModel.gcsTfliteUri) &&
         !validator.isNonEmptyString(model.tfliteModel.automlModel)) {
-      throw new FirebaseMachineLearningError(
-        'invalid-server-response',
-        `Invalid Model response: ${JSON.stringify(model, null, 2)}`);
+      // If we have some other source, ignore the whole tfliteModel.
+      delete (tmpModel as any).tfliteModel;
     }
 
-    const tmpModel = deepCopy(model);
+
     // Remove '@type' field. We don't need it.
     if ((tmpModel as any)["@type"]) {
       delete (tmpModel as any)["@type"];
