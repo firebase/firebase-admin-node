@@ -26,7 +26,8 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
-import { Auth, TenantAwareAuth, BaseAuth, DecodedIdToken } from '../../../src/auth/auth';
+import { TenantAwareAuth, BaseAuth, DecodedIdToken } from '../../../src/auth/auth';
+import { Auth } from '../../../src/auth/auth-internal';
 import { UserRecord, UpdateRequest } from '../../../src/auth/user-record';
 import { FirebaseApp } from '../../../src/firebase-app';
 import {
