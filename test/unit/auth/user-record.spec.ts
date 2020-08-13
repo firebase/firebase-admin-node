@@ -20,9 +20,14 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import { deepCopy } from '../../../src/utils/deep-copy';
 import {
-  UserInfo, UserMetadata, UserRecord, GetAccountInfoUserResponse, ProviderUserInfoResponse,
-  MultiFactor, PhoneMultiFactorInfo, MultiFactorInfo, MultiFactorInfoResponse,
+  UserInfo, UserMetadata, UserRecord,
+  PhoneMultiFactorInfo, MultiFactorInfo,
 } from '../../../src/auth/user-record';
+import { 
+  GetAccountInfoUserResponse, ProviderUserInfoResponse,
+  MultiFactorInfoResponse
+} from '../../../src/auth/user-record-internal';
+import { MultiFactor } from '../../../src/auth/user-record-internal';
 
 
 chai.should();

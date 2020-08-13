@@ -19,7 +19,7 @@ import * as chai from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import { ActionCodeSettingsBuilder } from '../../../src/auth/action-code-settings-builder';
+import { ActionCodeSettingsBuilder } from '../../../src/auth/action-code-settings-builder-internal';
 import { AuthClientErrorCode } from '../../../src/utils/error';
 
 

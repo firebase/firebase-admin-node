@@ -19,10 +19,12 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import { deepCopy } from '../../../src/utils/deep-copy';
-import {
-  UserImportBuilder, ValidatorFunction, UserImportResult, UserImportRecord,
-  UploadAccountRequest,
+import { 
+  UserImportResult, UserImportRecord 
 } from '../../../src/auth/user-import-builder';
+import { 
+  UserImportBuilder, ValidatorFunction, UploadAccountRequest 
+} from '../../../src/auth/user-import-builder-internal';
 import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
 import { toWebSafeBase64 } from '../../../src/utils';
 

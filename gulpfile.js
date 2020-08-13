@@ -54,6 +54,7 @@ var paths = {
 
   curatedTypings: [
     'src/*.d.ts',
+    '!src/auth.d.ts',
     '!src/database.d.ts',
     '!src/instance-id.d.ts',
     '!src/security-rules.d.ts',
@@ -68,7 +69,6 @@ const TEMPORARY_TYPING_EXCLUDES = [
   '!lib/firebase-namespace.d.ts',
   '!lib/firebase-app.d.ts',
   '!lib/firebase-service.d.ts',
-  '!lib/auth/*.d.ts',
   '!lib/machine-learning/*.d.ts',
   '!lib/storage/*.d.ts',
   '!lib/utils/*.d.ts',

@@ -22,10 +22,11 @@ import * as chaiAsPromised from 'chai-as-promised';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import {
   EmailSignInConfig, EmailSignInProviderConfig, MultiFactorAuthConfig,
-} from '../../../src/auth/auth-config';
+} from '../../../src/auth/auth-config-internal';
+import { Tenant } from '../../../src/auth/tenant';
 import {
-  Tenant, TenantOptions, TenantServerResponse,
-} from '../../../src/auth/tenant';
+  TenantOptions, TenantServerResponse,
+} from '../../../src/auth/tenant-internal';
 
 
 chai.should();

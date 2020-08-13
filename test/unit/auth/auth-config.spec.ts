@@ -21,13 +21,16 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import { deepCopy } from '../../../src/utils/deep-copy';
 import {
+  SAMLUpdateAuthProviderRequest, OIDCUpdateAuthProviderRequest,
+  SAMLAuthProviderConfig, OIDCAuthProviderConfig,
+  validateTestPhoneNumbers, MAXIMUM_TEST_PHONE_NUMBERS,
+} from '../../../src/auth/auth-config';
+import { 
   OIDCConfig, SAMLConfig, SAMLConfigServerRequest,
   SAMLConfigServerResponse, OIDCConfigServerRequest,
-  OIDCConfigServerResponse, SAMLUpdateAuthProviderRequest,
-  OIDCUpdateAuthProviderRequest, SAMLAuthProviderConfig, OIDCAuthProviderConfig,
-  EmailSignInConfig, MultiFactorAuthConfig, validateTestPhoneNumbers,
-  MAXIMUM_TEST_PHONE_NUMBERS,
-} from '../../../src/auth/auth-config';
+  OIDCConfigServerResponse, EmailSignInConfig,
+  MultiFactorAuthConfig,
+} from '../../../src/auth/auth-config-internal';
 
 
 chai.should();

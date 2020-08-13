@@ -35,14 +35,14 @@ import {
 import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
 
 import * as validator from '../../../src/utils/validator';
-import { FirebaseTokenVerifier } from '../../../src/auth/token-verifier';
-import {
-  AuthProviderConfigFilter, OIDCConfig, SAMLConfig,
-  OIDCConfigServerResponse, SAMLConfigServerResponse,
-} from '../../../src/auth/auth-config';
+import { FirebaseTokenVerifier } from '../../../src/auth/token-verifier-internal';
+import { AuthProviderConfigFilter } from '../../../src/auth/auth-config';
+import { OIDCConfig, SAMLConfig,
+  OIDCConfigServerResponse, SAMLConfigServerResponse
+} from '../../../src/auth/auth-config-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { TenantManager } from '../../../src/auth/tenant-manager';
-import { ServiceAccountCredential } from '../../../src/auth/credential';
+import { ServiceAccountCredential } from '../../../src/auth/credential-internal';
 import { HttpClient } from '../../../src/utils/api-request';
 
 chai.should();

@@ -55,24 +55,3 @@ export interface ProviderIdentifier {
  * Identifies a user to be looked up.
  */
 export type UserIdentifier = UidIdentifier | EmailIdentifier | PhoneIdentifier | ProviderIdentifier;
-
-/* User defined type guards. See
- * https://www.typescriptlang.org/docs/handbook/advanced-types.html#user-defined-type-guards
- */
-
-export function isUidIdentifier(id: UserIdentifier): id is UidIdentifier {
-  return (id as UidIdentifier).uid !== undefined;
-}
-
-export function isEmailIdentifier(id: UserIdentifier): id is EmailIdentifier {
-  return (id as EmailIdentifier).email !== undefined;
-}
-
-export function isPhoneIdentifier(id: UserIdentifier): id is PhoneIdentifier {
-  return (id as PhoneIdentifier).phoneNumber !== undefined;
-}
-
-export function isProviderIdentifier(id: ProviderIdentifier): id is ProviderIdentifier {
-  const pid = id as ProviderIdentifier;
-  return pid.providerId !== undefined && pid.providerUid !== undefined;
-}
