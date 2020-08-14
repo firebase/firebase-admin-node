@@ -84,17 +84,54 @@ export interface UserImportOptions {
   };
 }
 
-interface UserProviderRequest {
+/**
+ * User provider data to include when importing a user.
+ */
+export interface UserProviderRequest {
+
+  /**
+   * The user identifier for the linked provider.
+   */
   uid: string;
+
+  /**
+   * The display name for the linked provider.
+   */
   displayName?: string;
+
+  /**
+   * The email for the linked provider.
+   */
   email?: string;
+
+  /**
+   * The phone number for the linked provider.
+   */
   phoneNumber?: string;
+
+  /**
+   * The photo URL for the linked provider.
+   */
   photoURL?: string;
+
+  /**
+   * The linked provider ID (for example, "google.com" for the Google provider).
+   */
   providerId: string;
 }
 
-interface UserMetadataRequest {
+/**
+ * User metadata to include when importing a user.
+ */
+export interface UserMetadataRequest {
+  /**
+   * The date the user last signed in, formatted as a UTC string.
+   */
   lastSignInTime?: string;
+
+  /**
+   * The date the user was created, formatted as a UTC string.
+   */
   creationTime?: string;
 }
 

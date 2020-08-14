@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import * as utils from '../utils/index';
+import * as validator from '../utils/validator';
 import { UserRecord, CreateRequest, UpdateRequest } from './user-record';
 import { UserIdentifier } from './identifier';
 import {
@@ -22,23 +24,29 @@ import {
 import { FirebaseApp } from '../firebase-app';
 import { FirebaseTokenGenerator, cryptoSignerFromApp } from './token-generator-internal';
 import {
-  AbstractAuthRequestHandler, TenantAwareAuthRequestHandler,
-} from './auth-api-request';
-import { AuthClientErrorCode, FirebaseAuthError, ErrorInfo, FirebaseArrayIndexError } from '../utils/error';
+  AbstractAuthRequestHandler, TenantAwareAuthRequestHandler, AuthRequestHandler
+} from './auth-api-request-internal';
+import { 
+  AuthClientErrorCode, FirebaseAuthError,
+  ErrorInfo, FirebaseArrayIndexError
+} from '../utils/error';
 import {
   UserImportOptions, UserImportRecord, UserImportResult,
 } from './user-import-builder';
-
-import * as utils from '../utils/index';
-import * as validator from '../utils/validator';
-import { FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier } from './token-verifier-internal';
-import { ActionCodeSettings } from './action-code-settings-builder-internal';
+import { 
+  FirebaseTokenVerifier, createSessionCookieVerifier,
+  createIdTokenVerifier 
+} from './token-verifier-internal';
+import { ActionCodeSettings } from './action-code-settings-builder';
 import {
-  AuthProviderConfig, AuthProviderConfigFilter, ListProviderConfigResults, UpdateAuthProviderRequest,
+  AuthProviderConfig, AuthProviderConfigFilter,
+  ListProviderConfigResults, UpdateAuthProviderRequest,
 } from './auth-config';
 import {
   SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
 } from './auth-config-internal';
+import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
+import { TenantManager } from './tenant-manager';
 
 
 /** Represents the result of the {@link admin.auth.getUsers()} API. */
@@ -1199,5 +1207,55 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
         }
         return decodedClaims;
       });
+  }
+}
+
+/**
+ * Internals of an Auth instance.
+ */
+class AuthInternals implements FirebaseServiceInternalsInterface {
+  /**
+   * Deletes the service and its associated resources.
+   *
+   * @return {Promise<()>} An empty Promise that will be fulfilled when the service is deleted.
+   */
+  public delete(): Promise<void> {
+    // There are no resources to clean up
+    return Promise.resolve(undefined);
+  }
+}
+
+/**
+ * Auth service bound to the provided app.
+ * An Auth instance can have multiple tenants.
+ */
+export class Auth extends BaseAuth<AuthRequestHandler> implements FirebaseServiceInterface {
+
+  public INTERNAL: AuthInternals = new AuthInternals();
+  private readonly tenantManager_: TenantManager;
+  private readonly app_: FirebaseApp;
+
+  /**
+   * @param {object} app The app for this Auth service.
+   * @constructor
+   */
+  constructor(app: FirebaseApp) {
+    super(app, new AuthRequestHandler(app));
+    this.app_ = app;
+    this.tenantManager_ = new TenantManager(app);
+  }
+
+  /**
+   * Returns the app associated with this Auth instance.
+   *
+   * @return {FirebaseApp} The app associated with this Auth instance.
+   */
+  get app(): FirebaseApp {
+    return this.app_;
+  }
+
+  /** @return The current Auth instance's tenant manager. */
+  public tenantManager(): TenantManager {
+    return this.tenantManager_;
   }
 }

@@ -25,7 +25,7 @@ import {
   RefreshTokenCredential,
   ServiceAccountCredential,
   getApplicationDefault,
-} from './auth/credential';
+} from './auth/credential-internal';
 
 import { Auth } from './auth/auth';
 import { MachineLearning } from './machine-learning/machine-learning';

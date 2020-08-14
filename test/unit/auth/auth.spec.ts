@@ -27,12 +27,12 @@ import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
 import { TenantAwareAuth, BaseAuth, DecodedIdToken } from '../../../src/auth/auth';
-import { Auth } from '../../../src/auth/auth-internal';
+import { Auth } from '../../../src/auth/auth';
 import { UserRecord, UpdateRequest } from '../../../src/auth/user-record';
 import { FirebaseApp } from '../../../src/firebase-app';
 import {
   AuthRequestHandler, TenantAwareAuthRequestHandler, AbstractAuthRequestHandler,
-} from '../../../src/auth/auth-api-request';
+} from '../../../src/auth/auth-api-request-internal';
 import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
 
 import * as validator from '../../../src/utils/validator';

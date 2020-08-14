@@ -14,15 +14,24 @@
  * limitations under the License.
  */
 
-/*import { FirebaseApp } from '../firebase-app';
+import { FirebaseApp } from '../firebase-app';
 import * as firebaseAdmin from '../index';
 
-export function auth(app?: FirebaseApp): authapi.Auth {
-  if (typeof(app) === 'undefined') {
+import * as authApi from './auth';
+import * as actionCodeSettingsBuilderApi from './action-code-settings-builder';
+import * as authConfigApi from './auth-config';
+import * as identifierApi from './identifier';
+import * as tenantApi from './tenant';
+import * as tenantManagerApi from './tenant-manager';
+import * as userImportBuilderApi from './user-import-builder';
+import * as userRecordApi from './user-record';
+
+export function auth(app?: FirebaseApp): authApi.Auth {
+  if (typeof (app) === 'undefined') {
     app = firebaseAdmin.app();
   }
   return app.auth();
-} */
+}
 
 /**
  * We must define a namespace to make the typings work correctly. Otherwise
@@ -36,15 +45,56 @@ export namespace admin.auth {
   // See https://github.com/microsoft/TypeScript/issues/4336
   /* eslint-disable @typescript-eslint/no-unused-vars */
   // See https://github.com/typescript-eslint/typescript-eslint/issues/363
-  /* export import AndroidAppMetadata = appMetadataApi.AndroidAppMetadata
-  export import AppMetadata = appMetadataApi.AppMetadata
-  export import AppPlatform = appMetadataApi.AppPlatform 
-  export import IosAppMetadata = appMetadataApi.IosAppMetadata
+  export import ActionCodeSettings = actionCodeSettingsBuilderApi.ActionCodeSettings
+  export import AuthFactorType = authConfigApi.AuthFactorType
+  export import AuthProviderConfig = authConfigApi.AuthProviderConfig
+  export import AuthProviderConfigFilter = authConfigApi.AuthProviderConfigFilter
+  export import CreateMultiFactorInfoRequest = userRecordApi.CreateMultiFactorInfoRequest
+  export import CreatePhoneMultiFactorInfoRequest = userRecordApi.CreatePhoneMultiFactorInfoRequest
+  export import CreateRequest = userRecordApi.CreateRequest
+  export import DecodedIdToken = authApi.DecodedIdToken
+  export import DeleteUsersResult = authApi.DeleteUsersResult
+  export import EmailIdentifier = identifierApi.EmailIdentifier
+  export import GetUsersResult = authApi.GetUsersResult
+  export import ListProviderConfigResults = authConfigApi.ListProviderConfigResults
+  export import ListTenantsResult = tenantApi.ListTenantsResult
+  export import ListUsersResult = authApi.ListUsersResult
+  export import MultiFactorConfig = authConfigApi.MultiFactorConfig
+  export import MultiFactorConfigState = authConfigApi.MultiFactorConfigState
+  // export import MultiFactorCreateSettings = userRecordApi.MultiFactorCreateSettings
+  export import MultiFactorInfo = userRecordApi.MultiFactorInfo
+  // export import MultiFactorSettings = userRecordApi.MultiFactorSettings
+  export import MultiFactorUpdateSettings = userRecordApi.MultiFactorUpdateSettings
+  export import OIDCAuthProviderConfig = authConfigApi.OIDCAuthProviderConfig
+  export import OIDCUpdateAuthProviderRequest = authConfigApi.OIDCUpdateAuthProviderRequest
+  export import PhoneIdentifier = identifierApi.PhoneIdentifier
+  export import PhoneMultiFactorInfo = userRecordApi.PhoneMultiFactorInfo
+  export import ProviderIdentifier = identifierApi.ProviderIdentifier
+  export import SAMLAuthProviderConfig = authConfigApi.SAMLAuthProviderConfig
+  export import SAMLUpdateAuthProviderRequest = authConfigApi.SAMLUpdateAuthProviderRequest
+  export import SessionCookieOptions = authApi.SessionCookieOptions
+  export import UidIdentifier = identifierApi.UidIdentifier
+  export import UpdateMultiFactorInfoRequest = userRecordApi.UpdateMultiFactorInfoRequest
+  export import UpdatePhoneMultiFactorInfoRequest = userRecordApi.UpdatePhoneMultiFactorInfoRequest
+  export import UpdateRequest = userRecordApi.UpdateRequest
+  // export import UpdateTenantRequest = tenantManagerApi.UpdateTenantRequest // TODO, TenantOptions ?
+  export import UserImportOptions = userImportBuilderApi.UserImportOptions
+  export import UserImportRecord = userImportBuilderApi.UserImportRecord
+  export import UserImportResult = userImportBuilderApi.UserImportResult
+  export import UserMetadataRequest = userImportBuilderApi.UserMetadataRequest
+  export import UserProviderRequest = userImportBuilderApi.UserProviderRequest
+
+ //  export type CreateTenantRequest = UpdateTenantRequest
+  export type UpdateAuthProviderRequest = authConfigApi.SAMLUpdateAuthProviderRequest | OIDCUpdateAuthProviderRequest
+  export type UserIdentifier = UidIdentifier | EmailIdentifier | PhoneIdentifier | ProviderIdentifier
 
   // Allows for exposing classes as interfaces in typings */
   /* eslint-disable @typescript-eslint/no-empty-interface */
-  /* export interface AndroidApp extends androidAppApi.AndroidApp {}
-  export interface IosApp extends iosAppApi.IosApp {}
-  export interface ProjectManagement extends projectManagementApi.ProjectManagement {}
-  export interface ShaCertificate extends androidAppApi.ShaCertificate {} */
+  // export interface BaseAuth extends authApi.BaseAuth<AbstractAuthRequestHandler> { } // TODO
+  export interface TenantAwareAuth extends authApi.TenantAwareAuth { }
+  export interface TenantManager extends tenantManagerApi.TenantManager { }
+  export interface Tenant extends tenantApi.Tenant { }
+  export interface UserInfo extends userRecordApi.UserInfo { }
+  export interface UserMetadata extends userRecordApi.UserMetadata { }
+  export interface UserRecord extends userRecordApi.UserRecord { }
 }

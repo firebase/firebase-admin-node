@@ -37,7 +37,8 @@ import {
   UserImportBuilder, AuthFactorInfo, convertMultiFactorInfoToServerFormat
 } from './user-import-builder-internal';
 import * as utils from '../utils/index';
-import { ActionCodeSettings, ActionCodeSettingsBuilder } from './action-code-settings-builder-internal';
+import { ActionCodeSettings } from './action-code-settings-builder';
+import { ActionCodeSettingsBuilder } from './action-code-settings-builder-internal';
 import {
   AuthProviderConfig,
   OIDCUpdateAuthProviderRequest, SAMLUpdateAuthProviderRequest,

@@ -1,5 +1,5 @@
 /*!
- * Copyright 2018 Google Inc.
+ * Copyright 2020 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,22 +15,8 @@
  */
 
 import * as validator from '../utils/validator';
+import { ActionCodeSettings } from './action-code-settings-builder';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
-
-/** Defines the ActionCodeSettings interface. */
-export interface ActionCodeSettings {
-  url: string;
-  handleCodeInApp?: boolean;
-  iOS?: {
-    bundleId: string;
-  };
-  android?: {
-    packageName: string;
-    installApp?: boolean;
-    minimumVersion?: string;
-  };
-  dynamicLinkDomain?: string;
-}
 
 /** Defines the email action code server request. */
 interface EmailActionCodeRequest {
