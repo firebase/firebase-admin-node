@@ -35,7 +35,7 @@ import {
 import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
 
 import * as validator from '../../../src/utils/validator';
-import { FirebaseTokenVerifier } from '../../../src/auth/token-verifier';
+import { FirebaseTokenVerifier } from '../../../src/auth/token-verifier-internal';
 import {
   AuthProviderConfigFilter, OIDCConfig, SAMLConfig,
   OIDCConfigServerResponse, SAMLConfigServerResponse,

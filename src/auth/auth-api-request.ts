@@ -33,7 +33,8 @@ import {
   UserImportResult, AuthFactorInfo, convertMultiFactorInfoToServerFormat,
 } from './user-import-builder';
 import * as utils from '../utils/index';
-import { ActionCodeSettings, ActionCodeSettingsBuilder } from './action-code-settings-builder';
+import { ActionCodeSettings } from './action-code-settings-builder';
+import { ActionCodeSettingsBuilder } from './action-code-settings-builder-internal';
 import {
   SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
   OIDCConfigServerRequest, SAMLConfigServerRequest, AuthProviderConfig,
