@@ -14,21 +14,10 @@
  * limitations under the License.
  */
 
-import {
-  MultiFactorConfig, MultiFactorAuthServerConfig
-} from './auth-config';
+import { MultiFactorAuthServerConfig } from './auth-config';
 
-import {
-  EmailSignInConfigServerRequest, EmailSignInProviderConfig,
-} from './auth-config-internal';
+import { EmailSignInConfigServerRequest } from './auth-config-internal';
 
-/** The TenantOptions interface used for create/read/update tenant operations. */
-export interface TenantOptions {
-  displayName?: string;
-  emailSignInConfig?: EmailSignInProviderConfig;
-  multiFactorConfig?: MultiFactorConfig;
-  testPhoneNumbers?: { [phoneNumber: string]: string } | null;
-}
 
 /** The corresponding server side representation of a TenantOptions object. */
 export interface TenantOptionsServerRequest extends EmailSignInConfigServerRequest {

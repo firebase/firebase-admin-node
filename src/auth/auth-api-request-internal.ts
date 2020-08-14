@@ -46,8 +46,8 @@ import {
 import { 
   SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
   OIDCConfigServerRequest, SAMLConfigServerRequest } from './auth-config-internal';
-import { Tenant } from './tenant';
-import { TenantOptions, TenantServerResponse } from './tenant-internal';
+import { Tenant, TenantOptions } from './tenant';
+import { TenantServerResponse } from './tenant-internal';
 
 
 /** Firebase Auth request header. */

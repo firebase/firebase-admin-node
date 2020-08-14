@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { AbstractAuthRequestHandler } from './auth-api-request-internal';
 import { FirebaseApp } from '../firebase-app';
 import * as firebaseAdmin from '../index';
 
@@ -61,9 +62,8 @@ export namespace admin.auth {
   export import ListUsersResult = authApi.ListUsersResult
   export import MultiFactorConfig = authConfigApi.MultiFactorConfig
   export import MultiFactorConfigState = authConfigApi.MultiFactorConfigState
-  // export import MultiFactorCreateSettings = userRecordApi.MultiFactorCreateSettings
+  export import MultiFactorCreateSettings = userRecordApi.MultiFactorCreateSettings
   export import MultiFactorInfo = userRecordApi.MultiFactorInfo
-  // export import MultiFactorSettings = userRecordApi.MultiFactorSettings
   export import MultiFactorUpdateSettings = userRecordApi.MultiFactorUpdateSettings
   export import OIDCAuthProviderConfig = authConfigApi.OIDCAuthProviderConfig
   export import OIDCUpdateAuthProviderRequest = authConfigApi.OIDCUpdateAuthProviderRequest
@@ -77,23 +77,24 @@ export namespace admin.auth {
   export import UpdateMultiFactorInfoRequest = userRecordApi.UpdateMultiFactorInfoRequest
   export import UpdatePhoneMultiFactorInfoRequest = userRecordApi.UpdatePhoneMultiFactorInfoRequest
   export import UpdateRequest = userRecordApi.UpdateRequest
-  // export import UpdateTenantRequest = tenantManagerApi.UpdateTenantRequest // TODO, TenantOptions ?
+  export import UpdateTenantRequest = tenantApi.TenantOptions
   export import UserImportOptions = userImportBuilderApi.UserImportOptions
   export import UserImportRecord = userImportBuilderApi.UserImportRecord
   export import UserImportResult = userImportBuilderApi.UserImportResult
   export import UserMetadataRequest = userImportBuilderApi.UserMetadataRequest
   export import UserProviderRequest = userImportBuilderApi.UserProviderRequest
 
- //  export type CreateTenantRequest = UpdateTenantRequest
+  export type CreateTenantRequest = UpdateTenantRequest
   export type UpdateAuthProviderRequest = authConfigApi.SAMLUpdateAuthProviderRequest | OIDCUpdateAuthProviderRequest
   export type UserIdentifier = UidIdentifier | EmailIdentifier | PhoneIdentifier | ProviderIdentifier
 
   // Allows for exposing classes as interfaces in typings */
   /* eslint-disable @typescript-eslint/no-empty-interface */
-  // export interface BaseAuth extends authApi.BaseAuth<AbstractAuthRequestHandler> { } // TODO
+  export interface BaseAuth extends authApi.BaseAuth<AbstractAuthRequestHandler> { }
+  export interface MultiFactorSettings extends userRecordApi.MultiFactor { }
+  export interface Tenant extends tenantApi.Tenant { }
   export interface TenantAwareAuth extends authApi.TenantAwareAuth { }
   export interface TenantManager extends tenantManagerApi.TenantManager { }
-  export interface Tenant extends tenantApi.Tenant { }
   export interface UserInfo extends userRecordApi.UserInfo { }
   export interface UserMetadata extends userRecordApi.UserMetadata { }
   export interface UserRecord extends userRecordApi.UserRecord { }

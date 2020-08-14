@@ -18,7 +18,8 @@ import { AuthRequestHandler } from './auth-api-request-internal';
 import { FirebaseApp } from '../firebase-app';
 import { TenantAwareAuth } from './auth';
 import { Tenant, ListTenantsResult } from './tenant';
-import { TenantServerResponse, TenantOptions } from './tenant-internal';
+import { TenantServerResponse } from './tenant-internal';
+import { TenantOptions } from './tenant';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import * as validator from '../utils/validator';
 

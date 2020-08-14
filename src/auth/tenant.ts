@@ -21,7 +21,34 @@ import { validateTestPhoneNumbers } from './auth-config';
 import {
   EmailSignInConfig, MultiFactorAuthConfig, 
 } from './auth-config-internal';
-import { TenantOptions, TenantServerResponse, TenantOptionsServerRequest } from './tenant-internal';
+import { TenantServerResponse, TenantOptionsServerRequest } from './tenant-internal';
+import { EmailSignInProviderConfig } from './auth-config-internal';
+import { MultiFactorConfig } from './auth-config';
+
+
+/** The TenantOptions interface used for create/read/update tenant operations. */
+export interface TenantOptions {
+  /**
+   * The tenant display name.
+   */
+  displayName?: string;
+
+  /**
+   * The email sign in configuration.
+   */
+  emailSignInConfig?: EmailSignInProviderConfig;
+  /**
+   * The multi-factor auth configuration to update on the tenant.
+   */
+  multiFactorConfig?: MultiFactorConfig;
+
+  /**
+   * The updated map containing the test phone number / code pairs for the tenant.
+   * Passing null clears the previously save phone number / code pairs.
+   */
+  testPhoneNumbers?: { [phoneNumber: string]: string } | null;
+}
+
 
 /** The interface representing the listTenant API response. */
 export interface ListTenantsResult {

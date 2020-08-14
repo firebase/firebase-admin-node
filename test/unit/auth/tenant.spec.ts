@@ -23,9 +23,9 @@ import { deepCopy } from '../../../src/utils/deep-copy';
 import {
   EmailSignInConfig, EmailSignInProviderConfig, MultiFactorAuthConfig,
 } from '../../../src/auth/auth-config-internal';
-import { Tenant } from '../../../src/auth/tenant';
+import { Tenant, TenantOptions } from '../../../src/auth/tenant';
 import {
-  TenantOptions, TenantServerResponse,
+  TenantServerResponse,
 } from '../../../src/auth/tenant-internal';
 
 

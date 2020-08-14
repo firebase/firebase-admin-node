@@ -14,48 +14,9 @@
  * limitations under the License.
  */
 
-import { isNonNullObject } from '../utils/validator';
-import * as utils from '../utils';
-import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import { 
   MultiFactorInfo, PhoneMultiFactorInfo
 } from './user-record';
-
-/** Class representing multi-factor related properties of a user. */
-export class MultiFactor {
-  public enrolledFactors: MultiFactorInfo[];
-
-  /**
-   * Initializes the MultiFactor object using the server side or JWT format response.
-   *
-   * @param response The server side response.
-   */
-  constructor(response: GetAccountInfoUserResponse) {
-    const parsedEnrolledFactors: MultiFactorInfo[] = [];
-    if (!isNonNullObject(response)) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
-        'INTERNAL ASSERT FAILED: Invalid multi-factor response');
-    } else if (response.mfaInfo) {
-      response.mfaInfo.forEach((factorResponse) => {
-        const multiFactorInfo = initMultiFactorInfo(factorResponse);
-        if (multiFactorInfo) {
-          parsedEnrolledFactors.push(multiFactorInfo);
-        }
-      });
-    }
-    // Make enrolled factors immutable.
-    utils.addReadonlyGetter(
-      this, 'enrolledFactors', Object.freeze(parsedEnrolledFactors));
-  }
-
-  /** @return The plain object representation. */
-  public toJSON(): any {
-    return {
-      enrolledFactors: this.enrolledFactors.map((info) => info.toJSON()),
-    };
-  }
-}
 
 /**
  * Initializes the MultiFactorInfo associated subclass using the server side.
@@ -78,9 +39,7 @@ export function initMultiFactorInfo(response: MultiFactorInfoResponse): MultiFac
 /** Enums for multi-factor identifiers. */
 export enum MultiFactorId {
   Phone = 'phone',
-}
-
-
+} 
 export interface MultiFactorInfoResponse {
   mfaEnrollmentId: string;
   displayName?: string;

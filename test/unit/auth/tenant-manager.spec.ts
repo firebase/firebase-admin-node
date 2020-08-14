@@ -25,8 +25,8 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as mocks from '../../resources/mocks';
 import { FirebaseApp } from '../../../src/firebase-app';
 import { AuthRequestHandler } from '../../../src/auth/auth-api-request-internal';
-import { Tenant, ListTenantsResult } from '../../../src/auth/tenant';
-import { TenantOptions, TenantServerResponse } from '../../../src/auth/tenant-internal';
+import { Tenant, ListTenantsResult, TenantOptions } from '../../../src/auth/tenant';
+import { TenantServerResponse } from '../../../src/auth/tenant-internal';
 import { TenantManager } from '../../../src/auth/tenant-manager';
 import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
 

@@ -15,12 +15,13 @@
  */
 
 import { deepCopy } from '../utils/deep-copy';
+import { isNonNullObject } from '../utils/validator';
 import * as utils from '../utils';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import { 
-  GetAccountInfoUserResponse, MultiFactor,
-  MultiFactorId, MultiFactorInfoResponse,
-  ProviderUserInfoResponse
+  GetAccountInfoUserResponse, MultiFactorId,
+  MultiFactorInfoResponse, ProviderUserInfoResponse,
+  initMultiFactorInfo
 } from './user-record-internal';
 
 /**
@@ -174,7 +175,7 @@ export interface UpdateRequest {
 /**
  * The multi-factor related user settings for create operations.
  */
-interface MultiFactorCreateSettings {
+export interface MultiFactorCreateSettings {
   /**
    * The created user's list of enrolled second factors.
    */
@@ -608,5 +609,47 @@ export class UserRecord {
       json.providerData.push(entry.toJSON());
     }
     return json;
+  }
+}
+
+/**
+ * The multi-factor related user settings.
+ */
+export class MultiFactor {
+  /**
+   * List of second factors enrolled with the current user.
+   * Currently only phone second factors are supported.
+   */
+  public enrolledFactors: MultiFactorInfo[];
+
+  /**
+   * Initializes the MultiFactor object using the server side or JWT format response.
+   *
+   * @param response The server side response.
+   */
+  constructor(response: GetAccountInfoUserResponse) {
+    const parsedEnrolledFactors: MultiFactorInfo[] = [];
+    if (!isNonNullObject(response)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Invalid multi-factor response');
+    } else if (response.mfaInfo) {
+      response.mfaInfo.forEach((factorResponse) => {
+        const multiFactorInfo = initMultiFactorInfo(factorResponse);
+        if (multiFactorInfo) {
+          parsedEnrolledFactors.push(multiFactorInfo);
+        }
+      });
+    }
+    // Make enrolled factors immutable.
+    utils.addReadonlyGetter(
+      this, 'enrolledFactors', Object.freeze(parsedEnrolledFactors));
+  }
+
+  /** @return The plain object representation. */
+  public toJSON(): any {
+    return {
+      enrolledFactors: this.enrolledFactors.map((info) => info.toJSON()),
+    };
   }
 }

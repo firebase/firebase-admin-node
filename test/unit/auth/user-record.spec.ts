@@ -26,7 +26,8 @@ import {
   GetAccountInfoUserResponse, ProviderUserInfoResponse,
   MultiFactorInfoResponse
 } from '../../../src/auth/user-record-internal';
-import { MultiFactor, initMultiFactorInfo } from '../../../src/auth/user-record-internal';
+import { initMultiFactorInfo } from '../../../src/auth/user-record-internal';
+import { MultiFactor } from '../../../src/auth/user-record';
 
 
 chai.should();

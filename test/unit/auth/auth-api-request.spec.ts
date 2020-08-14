@@ -46,7 +46,7 @@ import {
 } from '../../../src/auth/auth-config';
 import { SAMLConfigServerResponse } from '../../../src/auth/auth-config-internal';
 import { UserIdentifier } from '../../../src/auth/identifier';
-import { TenantOptions } from '../../../src/auth/tenant-internal';
+import { TenantOptions } from '../../../src/auth/tenant';
 import { UpdateRequest, UpdateMultiFactorInfoRequest } from '../../../src/auth/user-record';
 import { expectUserImportResult } from './user-import-builder.spec';
 import { getSdkVersion } from '../../../src/utils/index';
