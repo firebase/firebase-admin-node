@@ -78,7 +78,7 @@ export interface UserImportRecord {
   customClaims?: {[key: string]: any};
   passwordHash?: Buffer;
   passwordSalt?: Buffer;
-  tenantId?: string;
+  tenantId?: string | null;
 }
 
 /** Interface representing an Auth second factor in Auth server format. */
@@ -114,7 +114,7 @@ interface UploadAccountUser {
   lastLoginAt?: number;
   createdAt?: number;
   customAttributes?: string;
-  tenantId?: string;
+  tenantId?: string | null;
 }
 
 

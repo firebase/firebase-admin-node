@@ -1174,6 +1174,11 @@ export namespace admin.auth {
      * configuration.
      */
     callbackURL?: string;
+
+    /**
+     * The ability for SAML provider to perform request signing.
+     */
+    enableRequestSigning?: boolean;
   }
 
   /**
@@ -1258,6 +1263,12 @@ export namespace admin.auth {
      * configuration's value is not modified.
      */
     callbackURL?: string;
+
+    /**
+     * Whether the SAML provider can sign requests. If not provided, the existing
+     * configuration's value is not modified.
+     */
+    enableRequestSigning?: boolean;
   }
 
   /**
