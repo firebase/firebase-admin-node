@@ -35,10 +35,13 @@ import {
 import * as utils from '../utils/index';
 import { ActionCodeSettings, ActionCodeSettingsBuilder } from './action-code-settings-builder';
 import {
-  SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
-  OIDCConfigServerRequest, SAMLConfigServerRequest, AuthProviderConfig,
-  OIDCUpdateAuthProviderRequest, SAMLUpdateAuthProviderRequest,
+  AuthProviderConfig, OIDCUpdateAuthProviderRequest,
+  SAMLUpdateAuthProviderRequest
 } from './auth-config';
+import { 
+  SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
+  OIDCConfigServerRequest, SAMLConfigServerRequest
+} from './auth-config-internal';
 import { Tenant, TenantOptions, TenantServerResponse } from './tenant';
 
 

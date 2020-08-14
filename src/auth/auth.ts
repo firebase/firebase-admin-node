@@ -35,8 +35,10 @@ import { FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifi
 import { ActionCodeSettings } from './action-code-settings-builder';
 import {
   AuthProviderConfig, AuthProviderConfigFilter, ListProviderConfigResults, UpdateAuthProviderRequest,
-  SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
 } from './auth-config';
+import {
+  SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
+} from './auth-config-internal';
 import { TenantManager } from './tenant-manager';
 
 
