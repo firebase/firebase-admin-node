@@ -1174,7 +1174,6 @@ export namespace admin.auth {
      * configuration.
      */
     callbackURL?: string;
-
   }
 
   /**
