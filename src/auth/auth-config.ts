@@ -147,9 +147,21 @@ export interface SAMLAuthProviderConfig extends AuthProviderConfig {
   enableRequestSigning?: boolean;
 }
 
-/** The public API response interface for listing provider configs. */
+/**
+ * The response interface for listing provider configs. This is only available
+ * when listing all identity providers' configurations via
+ * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#listProviderConfigs `listProviderConfigs()`}.
+ */
 export interface ListProviderConfigResults {
+
+  /**
+   * The list of providers for the specified type in the current page.
+   */
   providerConfigs: AuthProviderConfig[];
+
+  /**
+   * The next page token, if available.
+   */
   pageToken?: string;
 }
 
@@ -210,7 +222,7 @@ export type UpdateAuthProviderRequest = SAMLUpdateAuthProviderRequest | OIDCUpda
 export type AuthFactorType = 'phone';
 
 /** Identifies a multi-factor configuration state. */
-export type MultiFactorConfigState =  'ENABLED' | 'DISABLED';
+export type MultiFactorConfigState = 'ENABLED' | 'DISABLED';
 
 /**
  * Public API interface representing a multi-factor configuration.
@@ -239,7 +251,7 @@ export interface MultiFactorAuthServerConfig {
  * @param testPhoneNumbers The phone number / code pairs to validate.
  */
 export function validateTestPhoneNumbers(
-  testPhoneNumbers: {[phoneNumber: string]: string},
+  testPhoneNumbers: { [phoneNumber: string]: string },
 ): void {
   if (!validator.isObject(testPhoneNumbers)) {
     throw new FirebaseAuthError(
@@ -261,7 +273,7 @@ export function validateTestPhoneNumbers(
 
     // Validate code.
     if (!validator.isString(testPhoneNumbers[phoneNumber]) ||
-        !/^[\d]{6}$/.test(testPhoneNumbers[phoneNumber])) {
+      !/^[\d]{6}$/.test(testPhoneNumbers[phoneNumber])) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_TESTING_PHONE_NUMBER,
         `"${testPhoneNumbers[phoneNumber]}" is not a valid 6 digit code string.`
