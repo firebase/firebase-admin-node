@@ -857,6 +857,7 @@ declare namespace admin.remoteConfig {
   export import InAppDefaultValue = _remoteConfig.admin.remoteConfig.InAppDefaultValue;
   export import RemoteConfigParameterValue = _remoteConfig.admin.remoteConfig.RemoteConfigParameterValue;
   export import Version = _remoteConfig.admin.remoteConfig.Version;
+  export import ListVersionsOptions = _remoteConfig.admin.remoteConfig.ListVersionsOptions;
   export import ListVersionsResult = _remoteConfig.admin.remoteConfig.ListVersionsResult;
   export import RemoteConfigUser = _remoteConfig.admin.remoteConfig.RemoteConfigUser;
   export import RemoteConfig = _remoteConfig.admin.remoteConfig.RemoteConfig;
