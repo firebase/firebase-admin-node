@@ -820,7 +820,7 @@ export namespace admin.auth {
      * When not provided in an `admin.auth.TenantAwareAuth` context, the user is uploaded
      * to the tenant corresponding to that `TenantAwareAuth` instance's tenant ID.
      */
-    tenantId?: string | null;
+    tenantId?: string;
 
     /**
      * The user's multi-factor related properties.
@@ -1175,10 +1175,6 @@ export namespace admin.auth {
      */
     callbackURL?: string;
 
-    /**
-     * The ability for SAML provider to perform request signing.
-     */
-    enableRequestSigning?: boolean;
   }
 
   /**
@@ -1263,12 +1259,6 @@ export namespace admin.auth {
      * configuration's value is not modified.
      */
     callbackURL?: string;
-
-    /**
-     * Whether the SAML provider can sign requests. If not provided, the existing
-     * configuration's value is not modified.
-     */
-    enableRequestSigning?: boolean;
   }
 
   /**
