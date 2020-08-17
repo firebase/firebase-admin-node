@@ -141,6 +141,9 @@ export interface SAMLAuthProviderConfig extends AuthProviderConfig {
    * configuration.
    */
   callbackURL?: string;
+  /**
+   * @internal
+   */
   enableRequestSigning?: boolean;
 }
 
@@ -157,6 +160,9 @@ export interface SAMLUpdateAuthProviderRequest {
   x509Certificates?: string[];
   rpEntityId?: string;
   callbackURL?: string;
+  /**
+   * @internal
+   */
   enableRequestSigning?: boolean;
   enabled?: boolean;
   displayName?: string;
