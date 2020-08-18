@@ -1,0 +1,20 @@
+{
+  "metadata": {
+    "toolPackage": "@microsoft/api-extractor",
+    "toolVersion": "7.9.4",
+    "schemaVersion": 1003,
+    "oldestForwardsCompatibleVersion": 1001
+  },
+  "kind": "Package",
+  "canonicalReference": "firebase-admin!",
+  "docComment": "",
+  "name": "firebase-admin",
+  "members": [
+    {
+      "kind": "EntryPoint",
+      "canonicalReference": "firebase-admin!",
+      "name": "",
+      "members": []
+    }
+  ]
+}
