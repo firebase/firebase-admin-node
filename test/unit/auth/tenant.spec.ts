@@ -23,9 +23,8 @@ import { deepCopy } from '../../../src/utils/deep-copy';
 import {
   EmailSignInConfig, EmailSignInProviderConfig, MultiFactorAuthConfig,
 } from '../../../src/auth/auth-config';
-import {
-  Tenant, TenantOptions, TenantServerResponse,
-} from '../../../src/auth/tenant';
+import { Tenant, TenantOptions } from '../../../src/auth/tenant';
+import { TenantServerResponse } from '../../../src/auth/tenant-internal';
 
 
 chai.should();
