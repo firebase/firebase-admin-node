@@ -20,6 +20,6 @@ jobs:
     - name: Install, build and test
       run: |
         npm ci
-        npm run build
+        npm run build:noreport
         npm run build:tests
         npm test
