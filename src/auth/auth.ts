@@ -20,7 +20,7 @@ import {
 } from './identifier-internal';
 import { UserIdentifier } from './identifier';
 import { FirebaseApp } from '../firebase-app';
-import { FirebaseTokenGenerator, cryptoSignerFromApp } from './token-generator';
+import { FirebaseTokenGenerator, cryptoSignerFromApp } from './token-generator-internal';
 import {
   AbstractAuthRequestHandler, AuthRequestHandler, TenantAwareAuthRequestHandler,
 } from './auth-api-request';

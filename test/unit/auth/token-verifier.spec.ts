@@ -28,7 +28,9 @@ import * as chaiAsPromised from 'chai-as-promised';
 import LegacyFirebaseTokenGenerator = require('firebase-token-generator');
 
 import * as mocks from '../../resources/mocks';
-import { FirebaseTokenGenerator, ServiceAccountSigner } from '../../../src/auth/token-generator';
+import { 
+  FirebaseTokenGenerator, ServiceAccountSigner
+} from '../../../src/auth/token-generator-internal';
 import * as verifier from '../../../src/auth/token-verifier';
 
 import { ServiceAccountCredential } from '../../../src/auth/credential';
