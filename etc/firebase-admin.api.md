@@ -142,10 +142,6 @@ export interface FirebaseServiceNamespace<T> {
     [key: string]: any;
 }
 
-// @public (undocumented)
-export class Hello {
-}
-
 // @public
 export function initializeApp(options?: FirebaseAppOptions, appName?: string): FirebaseApp;
 

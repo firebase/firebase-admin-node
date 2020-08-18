@@ -76,7 +76,7 @@ gulp.task('compile', function() {
   return gulp.src(paths.src)
     // Compile Typescript into .js and .d.ts files
     .pipe(buildProject())
-    .pipe(filter(['**', '!lib/**/*-internal.d.ts', '!lib/internal/*.d.ts']))
+    //.pipe(filter(['**'])) //, '!lib/**/*-internal.d.ts', '!lib/internal/*.d.ts']))
 
     // Replace SDK version
     .pipe(replace(/\<XXX_SDK_VERSION_XXX\>/g, pkg.version))
