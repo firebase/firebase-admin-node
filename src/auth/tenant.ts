@@ -106,13 +106,13 @@ export class Tenant {
    */
   public readonly testPhoneNumbers?: {[phoneNumber: string]: string};
 
-  // TODO(hlazu): MOVE THESE OUT!
   /**
    * Builds the corresponding server request for a TenantOptions object.
    *
    * @param {TenantOptions} tenantOptions The properties to convert to a server request.
    * @param {boolean} createRequest Whether this is a create request.
    * @return {object} The equivalent server request.
+   * @internal
    */
   public static buildServerRequest(
     tenantOptions: TenantOptions, createRequest: boolean): TenantOptionsServerRequest {
@@ -139,6 +139,7 @@ export class Tenant {
    *
    * @param {string} resourceName The server side resource name
    * @return {?string} The tenant ID corresponding to the resource, null otherwise.
+   * @internal
    */
   public static getTenantIdFromResourceName(resourceName: string): string | null {
     // name is of form projects/project1/tenants/tenant1
