@@ -18,53 +18,95 @@ import * as validator from '../utils/validator';
 import { deepCopy } from '../utils/deep-copy';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
-  EmailSignInConfig, EmailSignInConfigServerRequest, EmailSignInProviderConfig,
-  MultiFactorConfig, MultiFactorAuthServerConfig, MultiFactorAuthConfig,
-  validateTestPhoneNumbers,
+  validateTestPhoneNumbers, EmailSignInConfig, MultiFactorAuthConfig,
 } from './auth-config';
+import { TenantServerResponse, TenantOptionsServerRequest } from './tenant-internal';
+import { EmailSignInProviderConfig, MultiFactorConfig  } from './auth-config';
 
 /** The TenantOptions interface used for create/read/update tenant operations. */
 export interface TenantOptions {
+  /**
+   * The tenant display name.
+   */
   displayName?: string;
+
+  /**
+   * The email sign in configuration.
+   */
   emailSignInConfig?: EmailSignInProviderConfig;
+  /**
+   * The multi-factor auth configuration to update on the tenant.
+   */
   multiFactorConfig?: MultiFactorConfig;
-  testPhoneNumbers?: {[phoneNumber: string]: string} | null;
+
+  /**
+   * The updated map containing the test phone number / code pairs for the tenant.
+   * Passing null clears the previously save phone number / code pairs.
+   */
+  testPhoneNumbers?: { [phoneNumber: string]: string } | null;
 }
 
-/** The corresponding server side representation of a TenantOptions object. */
-export interface TenantOptionsServerRequest extends EmailSignInConfigServerRequest {
-  displayName?: string;
-  mfaConfig?: MultiFactorAuthServerConfig;
-  testPhoneNumbers?: {[key: string]: string};
-}
-
-/** The tenant server response interface. */
-export interface TenantServerResponse {
-  name: string;
-  displayName?: string;
-  allowPasswordSignup?: boolean;
-  enableEmailLinkSignin?: boolean;
-  mfaConfig?: MultiFactorAuthServerConfig;
-  testPhoneNumbers?: {[key: string]: string};
-}
 
 /** The interface representing the listTenant API response. */
 export interface ListTenantsResult {
+  /**
+   * The list of {@link admin.auth.Tenant `Tenant`} objects for the downloaded batch.
+   */
   tenants: Tenant[];
+
+  /**
+   * The next page token if available. This is needed for the next batch download.
+   */
   pageToken?: string;
 }
 
-
 /**
- * Tenant class that defines a Firebase Auth tenant.
+ * Interface representing a tenant configuration.
+ *
+ * Multi-tenancy support requires Google Cloud's Identity Platform
+ * (GCIP). To learn more about GCIP, including pricing and features,
+ * see the [GCIP documentation](https://cloud.google.com/identity-platform)
+ *
+ * Before multi-tenancy can be used on a Google Cloud Identity Platform project,
+ * tenants must be allowed on that project via the Cloud Console UI.
+ *
+ * A tenant configuration provides information such as the display name, tenant
+ * identifier and email authentication configuration.
+ * For OIDC/SAML provider configuration management, `TenantAwareAuth` instances should
+ * be used instead of a `Tenant` to retrieve the list of configured IdPs on a tenant.
+ * When configuring these providers, note that tenants will inherit
+ * whitelisted domains and authenticated redirect URIs of their parent project.
+ *
+ * All other settings of a tenant will also be inherited. These will need to be managed
+ * from the Cloud Console UI.
  */
 export class Tenant {
+  /**
+   * The tenant identifier.
+   */
   public readonly tenantId: string;
+
+  /**
+   * The tenant display name.
+   */
   public readonly displayName?: string;
+
+  /**
+   * The email sign in provider configuration.
+   */
   public readonly emailSignInConfig?: EmailSignInConfig;
+
+  /**
+   * The multi-factor auth configuration on the current tenant.
+   */
   public readonly multiFactorConfig?: MultiFactorAuthConfig;
+
+  /**
+   * The map containing the test phone number / code pairs for the tenant.
+   */
   public readonly testPhoneNumbers?: {[phoneNumber: string]: string};
 
+  // TODO(hlazu): MOVE THESE OUT!
   /**
    * Builds the corresponding server request for a TenantOptions object.
    *
@@ -199,7 +241,9 @@ export class Tenant {
     }
   }
 
-  /** @return {object} The plain object representation of the tenant. */
+  /**
+   * @return A JSON-serializable representation of this object.
+   */
   public toJSON(): object {
     const json = {
       tenantId: this.tenantId,
@@ -217,4 +261,3 @@ export class Tenant {
     return json;
   }
 }
-

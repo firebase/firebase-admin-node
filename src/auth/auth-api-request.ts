@@ -18,8 +18,10 @@ import * as validator from '../utils/validator';
 
 import { deepCopy, deepExtend } from '../utils/deep-copy';
 import {
-  UserIdentifier, isUidIdentifier, isEmailIdentifier, isPhoneIdentifier,
-  isProviderIdentifier, UidIdentifier, EmailIdentifier, PhoneIdentifier,
+  isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, isProviderIdentifier
+} from './identifier-internal';
+import {
+  UserIdentifier, UidIdentifier, EmailIdentifier, PhoneIdentifier,
   ProviderIdentifier,
 } from './identifier';
 import { FirebaseApp } from '../firebase-app';
@@ -39,7 +41,8 @@ import {
   OIDCConfigServerRequest, SAMLConfigServerRequest, AuthProviderConfig,
   OIDCUpdateAuthProviderRequest, SAMLUpdateAuthProviderRequest,
 } from './auth-config';
-import { Tenant, TenantOptions, TenantServerResponse } from './tenant';
+import { Tenant, TenantOptions } from './tenant';
+import { TenantServerResponse } from './tenant-internal';
 
 
 /** Firebase Auth request header. */
