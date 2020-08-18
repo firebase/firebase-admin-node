@@ -52,7 +52,7 @@ jobs:
     - name: Install and build
       run: |
         npm ci
-        npm run build
+        npm run build:noreport
         npm run build:tests
 
     - name: Run unit tests
