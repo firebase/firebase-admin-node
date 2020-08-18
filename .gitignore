@@ -18,3 +18,6 @@ test/resources/apikey.txt
 firebase-admin-*.tgz
 
 docgen/html/
+
+# API extractor temporary files
+temp/
