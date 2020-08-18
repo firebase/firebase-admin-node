@@ -39,5 +39,8 @@ https://firebase.google.com/docs/web/setup
 export * from './firebase-namespace';
 export * from './firebase-app';
 
+export class Hello {
+
+}
 
 //export = firebase;
