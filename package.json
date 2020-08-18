@@ -9,7 +9,8 @@
     "node": "^8.13.0 || >=10.10.0"
   },
   "scripts": {
-    "build": "gulp build",
+    "build": "gulp build && api-extractor run --local",
+    "build:noreport": "gulp build && api-extractor run",
     "build:tests": "gulp compile_test",
     "clean": "rm -rf lib",
     "prebuildpackage": "npm run clean && npm run build && node lib/configure-package.js",
@@ -17,7 +18,7 @@
     "prepare": "npm run build",
     "lint": "run-p lint:src lint:test",
     "test": "run-s lint test:unit",
-    "integration": "run-s build test:integration",
+    "integration": "run-s build:noreport test:integration",
     "test:unit": "mocha test/unit/*.spec.ts --require ts-node/register",
     "test:integration": "mocha test/integration/*.ts --slow 5000 --timeout 20000 --require ts-node/register",
     "test:coverage": "nyc npm run test:unit",
