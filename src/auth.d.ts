@@ -820,7 +820,7 @@ export namespace admin.auth {
      * When not provided in an `admin.auth.TenantAwareAuth` context, the user is uploaded
      * to the tenant corresponding to that `TenantAwareAuth` instance's tenant ID.
      */
-    tenantId?: string | null;
+    tenantId?: string;
 
     /**
      * The user's multi-factor related properties.
