@@ -15,29 +15,38 @@
  */
 
 import { FirebaseApp } from '../firebase-app';
-import * as instanceIdApi from './instance-id';
+import { ServerValue as sv } from '@firebase/database';
+import * as adminDb from './database';
+import * as firebaseDbTypesApi from '@firebase/database-types';
 import * as firebaseAdmin from '../index';
 
-export function instanceId(app?: FirebaseApp): instanceIdApi.InstanceId {
+export function database(app?: FirebaseApp): adminDb.Database {
   if (typeof(app) === 'undefined') {
     app = firebaseAdmin.app();
   }
-  return app.instanceId();
+  return app.database();
 }
 
 /**
  * We must define a namespace to make the typings work correctly. Otherwise
- * `admin.instanceId()` cannot be called like a function. Temporarily,
- * admin.instanceId is used as the namespace name because we cannot barrel 
- * re-export the contents from instance-id, and we want it to
+ * `admin.database()` cannot be called like a function. Temporarily,
+ * admin.database is used as the namespace name because we cannot barrel
+ * re-export the contents from @firebase/database-types, and we want it to
  * match the namespacing in the re-export inside src/index.d.ts
  */
 /* eslint-disable @typescript-eslint/no-namespace */
-export namespace admin.instanceId {
+export namespace admin.database {
   // See https://github.com/microsoft/TypeScript/issues/4336
   /* eslint-disable @typescript-eslint/no-unused-vars */
   // See https://github.com/typescript-eslint/typescript-eslint/issues/363
-  // Allows for exposing classes as interfaces in typings
-  /* eslint-disable @typescript-eslint/no-empty-interface */
-  export interface InstanceId extends instanceIdApi.InstanceId {}
+  export import DataSnapshot = firebaseDbTypesApi.DataSnapshot;
+  export import Database = adminDb.Database;
+  export import EventType = firebaseDbTypesApi.EventType;
+  export import OnDisconnect = firebaseDbTypesApi.OnDisconnect;
+  export import Query = firebaseDbTypesApi.Query;
+  export import Reference = firebaseDbTypesApi.Reference;
+  export import ThenableReference = firebaseDbTypesApi.ThenableReference;
+  export import enableLogging = firebaseDbTypesApi.enableLogging;
+
+  export const ServerValue: firebaseDbTypesApi.ServerValue = sv;
 }

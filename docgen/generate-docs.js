@@ -265,6 +265,27 @@ function updateFirestoreHtml(contentBlock) {
 }
 
 /**
+ * TypeDoc needs to be executed in module mode in order to preserve the
+ * namespace prefix in filenames when running in auto-generated typings
+ * mode. However, module mode also introduces a prefix that we need to strip.
+ * 
+ * Ex: _auth_d_.admin.auth.auth.html
+ * We pick the _d_. to be a delimiter and only retain the substring after it.
+ */
+function removeModulePrefix() {
+  fs.readdirSync(docPath).forEach(filename => {
+    console.log(filename);
+    const delimiter = '_d_.';
+    const cutoff = filename.indexOf(delimiter);
+
+    if (cutoff !== -1) {
+      const renamedFilename = filename.substr(cutoff + delimiter.length);
+      fs.renameSync(`${docPath}/${filename}`, `${docPath}/${renamedFilename}`);
+    }
+  });   
+}
+
+/**
  * Adds Firestore type aliases to the auto-generated API docs. These are the
  * types that are imported from the @google-cloud/firestore package, and
  * then re-exported from the admin.firestore namespace. Typedoc currently
@@ -344,11 +365,13 @@ Promise.all([
   .then(() => {
     return Promise.all([
       // moveFilesToRoot('classes'),
-      // moveFilesToRoot('modules'),
-      // moveFilesToRoot('interfaces'),
-      // moveFilesToRoot('enums'),
+      moveFilesToRoot('modules'),
+      moveFilesToRoot('interfaces'),
+      moveFilesToRoot('enums'),
     ]);
   })
+  // Fix prefix in filenames if required (blocking).
+  .then(removeModulePrefix)
   // Check for files listed in TOC that are missing and warn if so.
   // Not blocking.
   .then(checkForMissingFilesAndFixFilenameCase)

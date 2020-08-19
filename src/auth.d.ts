@@ -820,7 +820,7 @@ export namespace admin.auth {
      * When not provided in an `admin.auth.TenantAwareAuth` context, the user is uploaded
      * to the tenant corresponding to that `TenantAwareAuth` instance's tenant ID.
      */
-    tenantId?: string | null;
+    tenantId?: string;
 
     /**
      * The user's multi-factor related properties.
@@ -972,9 +972,47 @@ export namespace admin.auth {
     };
 
     /**
+     * The multi-factor auth configuration on the current tenant.
+     */
+    multiFactorConfig?: admin.auth.MultiFactorConfig;
+
+    /**
+     * The map containing the test phone number / code pairs for the tenant.
+     */
+    testPhoneNumbers?: {[phoneNumber: string]: string};
+
+    /**
      * @return A JSON-serializable representation of this object.
      */
     toJSON(): Object;
+  }
+
+  /**
+   * Identifies a second factor type.
+   */
+  type AuthFactorType = 'phone';
+
+  /**
+   * Identifies a multi-factor configuration state.
+   */
+  type MultiFactorConfigState =  'ENABLED' | 'DISABLED';
+
+  /**
+   * Interface representing a multi-factor configuration.
+   * This can be used to define whether multi-factor authentication is enabled
+   * or disabled and the list of second factor challenges that are supported.
+   */
+  interface MultiFactorConfig {
+    /**
+     * The multi-factor config state.
+     */
+    state: admin.auth.MultiFactorConfigState;
+
+    /**
+     * The list of identifiers for enabled second factors.
+     * Currently only ‘phone’ is supported.
+     */
+    factorIds?: admin.auth.AuthFactorType[];
   }
 
   /**
@@ -1003,6 +1041,17 @@ export namespace admin.auth {
        */
       passwordRequired?: boolean;
     };
+
+    /**
+     * The multi-factor auth configuration to update on the tenant.
+     */
+    multiFactorConfig?: admin.auth.MultiFactorConfig;
+
+    /**
+     * The updated map containing the test phone number / code pairs for the tenant.
+     * Passing null clears the previously save phone number / code pairs.
+     */
+    testPhoneNumbers?: {[phoneNumber: string]: string} | null;
   }
 
   /**
@@ -1072,7 +1121,7 @@ export namespace admin.auth {
      * The user-friendly display name to the current configuration. This name is
      * also used as the provider label in the Cloud Console.
      */
-    displayName: string;
+    displayName?: string;
 
     /**
      * Whether the provider configuration is enabled or disabled. A user

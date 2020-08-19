@@ -22,7 +22,7 @@ import * as sinon from 'sinon';
 import { FirebaseApp } from '../../../src/firebase-app';
 import { AndroidApp } from '../../../src/project-management/android-app';
 import { ProjectManagement } from '../../../src/project-management/project-management';
-import { ProjectManagementRequestHandler } from '../../../src/project-management/project-management-api-request';
+import { ProjectManagementRequestHandler } from '../../../src/project-management/project-management-api-request-internal';
 import { FirebaseProjectManagementError } from '../../../src/utils/error';
 import * as mocks from '../../resources/mocks';
 import { IosApp } from '../../../src/project-management/ios-app';

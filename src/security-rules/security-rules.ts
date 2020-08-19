@@ -19,11 +19,14 @@ import { FirebaseApp } from '../firebase-app';
 import * as validator from '../utils/validator';
 import {
   SecurityRulesApiClient, RulesetResponse, RulesetContent, ListRulesetsResponse,
-} from './security-rules-api-client';
-import { FirebaseSecurityRulesError } from './security-rules-utils';
+} from './security-rules-api-client-internal';
+import { FirebaseSecurityRulesError } from './security-rules-internal';
 
 /**
- * A source file containing some Firebase security rules.
+ * A source file containing some Firebase security rules. The content includes raw
+ * source code including text formatting, indentation and comments. Use the
+ * [`securityRules.createRulesFileFromSource()`](admin.securityRules.SecurityRules#createRulesFileFromSource)
+ * method to create new instances of this type.
  */
 export interface RulesFile {
   readonly name: string;
@@ -31,10 +34,18 @@ export interface RulesFile {
 }
 
 /**
- * Additional metadata associated with a Ruleset.
+ * Required metadata associated with a ruleset.
  */
 export interface RulesetMetadata {
+  /**
+   * Name of the `Ruleset` as a short string. This can be directly passed into APIs
+   * like [`securityRules.getRuleset()`](admin.securityRules.SecurityRules#getRuleset)
+   * and [`securityRules.deleteRuleset()`](admin.securityRules.SecurityRules#deleteRuleset).
+   */
   readonly name: string;
+  /**
+   * Creation time of the `Ruleset` as a UTC timestamp string.
+   */
   readonly createTime: string;
 }
 
@@ -42,7 +53,13 @@ export interface RulesetMetadata {
  * A page of ruleset metadata.
  */
 export interface RulesetMetadataList {
+  /**
+   * A batch of ruleset metadata.
+   */
   readonly rulesets: RulesetMetadata[];
+  /**
+   * The next page token if available. This is needed to retrieve the next batch.
+   */
   readonly nextPageToken?: string;
 }
 
@@ -97,7 +114,10 @@ export class Ruleset implements RulesetMetadata {
 }
 
 /**
- * SecurityRules service bound to the provided app.
+ * The Firebase `SecurityRules` service interface.
+ *
+ * Do not call this constructor directly. Instead, use
+ * [`admin.securityRules()`](admin.securityRules#securityRules).
  */
 export class SecurityRules implements FirebaseServiceInterface {
 
@@ -235,12 +255,21 @@ export class SecurityRules implements FirebaseServiceInterface {
   }
 
   /**
-   * Creates a `RulesFile` with the given name and source. Throws if any of the arguments are invalid. This is a
-   * local operation, and does not involve any network API calls.
+   * Creates a {@link admin.securityRules.RulesFile `RuleFile`} with the given name
+   * and source. Throws an error if any of the arguments are invalid. This is a local
+   * operation, and does not involve any network API calls.
    *
-   * @param {string} name Name to assign to the rules file.
-   * @param {string|Buffer} source Contents of the rules file.
-   * @returns {RulesFile} A new rules file instance.
+   * @example
+   * ```javascript
+   * const source = '// Some rules source';
+   * const rulesFile = admin.securityRules().createRulesFileFromSource(
+   *   'firestore.rules', source);
+   * ```
+   *
+   * @param name Name to assign to the rules file. This is usually a short file name that
+   *   helps identify the file in a ruleset.
+   * @param source Contents of the rules file.
+   * @return A new rules file instance.
    */
   public createRulesFileFromSource(name: string, source: string | Buffer): RulesFile {
     if (!validator.isNonEmptyString(name)) {
@@ -265,10 +294,11 @@ export class SecurityRules implements FirebaseServiceInterface {
   }
 
   /**
-   * Creates a new `Ruleset` from the given `RulesFile`.
+   * Creates a new {@link admin.securityRules.Ruleset `Ruleset`} from the given
+   * {@link admin.securityRules.RulesFile `RuleFile`}.
    *
-   * @param {RulesFile} file Rules file to include in the new Ruleset.
-   * @returns {Promise<Ruleset>} A promise that fulfills with the newly created Ruleset.
+   * @param file Rules file to include in the new `Ruleset`.
+   * @returns A promise that fulfills with the newly created `Ruleset`.
    */
   public createRuleset(file: RulesFile): Promise<Ruleset> {
     const ruleset: RulesetContent = {
@@ -284,24 +314,27 @@ export class SecurityRules implements FirebaseServiceInterface {
   }
 
   /**
-   * Deletes the Ruleset identified by the given name. The input name should be the short name string without
-   * the project ID prefix. For example, to delete the `projects/project-id/rulesets/my-ruleset`, pass the
-   * short name "my-ruleset". Rejects with a `not-found` error if the specified Ruleset cannot be found.
+   * Deletes the {@link admin.securityRules.Ruleset `Ruleset`} identified by the given
+   * name. The input name should be the short name string without the project ID
+   * prefix. For example, to delete the `projects/project-id/rulesets/my-ruleset`,
+   * pass the  short name "my-ruleset". Rejects with a `not-found` error if the
+   * specified `Ruleset` cannot be found.
    *
-   * @param {string} name Name of the Ruleset to delete.
-   * @returns {Promise<Ruleset>} A promise that fulfills when the Ruleset is deleted.
+   * @param name Name of the `Ruleset` to delete.
+   * @return A promise that fulfills when the `Ruleset` is deleted.
    */
   public deleteRuleset(name: string): Promise<void> {
     return this.client.deleteRuleset(name);
   }
 
   /**
-   * Retrieves a page of rulesets.
+   * Retrieves a page of ruleset metadata.
    *
-   * @param {number=} pageSize The page size, 100 if undefined. This is also the maximum allowed limit.
-   * @param {string=} nextPageToken The next page token. If not specified, returns rulesets starting
-   *   without any offset.
-   * @returns {Promise<RulesetMetadataList>} A promise that fulfills a page of rulesets.
+   * @param pageSize The page size, 100 if undefined. This is also the maximum allowed
+   *   limit.
+   * @param nextPageToken The next page token. If not specified, returns rulesets
+   *   starting without any offset.
+   * @return A promise that fulfills with a page of rulesets.
    */
   public listRulesetMetadata(pageSize = 100, nextPageToken?: string): Promise<RulesetMetadataList> {
     return this.client.listRulesets(pageSize, nextPageToken)
