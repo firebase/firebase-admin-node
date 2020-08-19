@@ -56,6 +56,7 @@
   "dependencies": {
     "@firebase/database": "^0.6.10",
     "@firebase/database-types": "^0.5.2",
+    "@microsoft/api-extractor": "^7.9.6",
     "@types/node": "^10.10.0",
     "dicer": "^0.3.0",
     "jsonwebtoken": "^8.5.1",
