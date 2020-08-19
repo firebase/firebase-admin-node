@@ -194,7 +194,7 @@ function checkForUnlistedFiles(filenamesFromToc, shouldRemove) {
           console.log(
             `REMOVING ${docPath}/${filename}.html - not listed in toc.yaml.`
           );
-          removePromises.push(fs.unlink(`${docPath}/${filename}.html`));
+          // removePromises.push(fs.unlink(`${docPath}/${filename}.html`));
         } else {
           // This is just a warning, it doesn't need to finish before
           // the process continues.
@@ -344,9 +344,9 @@ Promise.all([
   .then(() => {
     return Promise.all([
       // moveFilesToRoot('classes'),
-      moveFilesToRoot('modules'),
-      moveFilesToRoot('interfaces'),
-      moveFilesToRoot('enums'),
+      // moveFilesToRoot('modules'),
+      // moveFilesToRoot('interfaces'),
+      // moveFilesToRoot('enums'),
     ]);
   })
   // Check for files listed in TOC that are missing and warn if so.

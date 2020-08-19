@@ -20,7 +20,7 @@ const options = {
   excludeExternals: true,
   ignoreCompilerErrors: true,
   name: 'Admin Node.js SDK',
-  mode: 'file',
+  mode: 'modules',
   hideGenerator: true
 };
 
