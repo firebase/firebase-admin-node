@@ -194,7 +194,7 @@ function checkForUnlistedFiles(filenamesFromToc, shouldRemove) {
           console.log(
             `REMOVING ${docPath}/${filename}.html - not listed in toc.yaml.`
           );
-          removePromises.push(fs.unlink(`${docPath}/${filename}.html`));
+          // removePromises.push(fs.unlink(`${docPath}/${filename}.html`));
         } else {
           // This is just a warning, it doesn't need to finish before
           // the process continues.
@@ -262,6 +262,26 @@ function updateFirestoreHtml(contentBlock) {
   const newSection = new jsdom.JSDOM(contentBlock);
   contentNode.appendChild(newSection.window.document.body.firstChild);
   fs.writeFileSync(firestoreHtmlPath, dom.window.document.documentElement.outerHTML);
+}
+
+/**
+ * TypeDoc needs to be executed in module mode in order to preserve the
+ * namespace prefix in filenames when running in auto-generated typings
+ * mode. However, module mode also introduces a prefix that we need to strip.
+ * 
+ * Ex: _auth_d_.admin.auth.auth.html
+ * We pick the _d_. to be a delimiter and only retain the substring after it.
+ */
+function removeModulePrefix() {
+  fs.readdirSync(docPath).forEach(filename => {
+    const delimiter = '_d_.';
+    const cutoff = filename.indexOf(delimiter);
+
+    if (cutoff !== -1) {
+      const renamedFilename = filename.substr(cutoff + delimiter.length);
+      fs.renameSync(`${docPath}/${filename}`, `${docPath}/${renamedFilename}`);
+    }
+  });   
 }
 
 /**
@@ -349,6 +369,8 @@ Promise.all([
       moveFilesToRoot('enums'),
     ]);
   })
+  // Fix prefix in filenames if required (blocking).
+  .then(removeModulePrefix)
   // Check for files listed in TOC that are missing and warn if so.
   // Not blocking.
   .then(checkForMissingFilesAndFixFilenameCase)
