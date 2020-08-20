@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import * as utils from '../utils/index';
-import * as validator from '../utils/validator';
 import { UserRecord, CreateRequest, UpdateRequest } from './user-record';
 import { 
   UserIdentifier, isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, 
@@ -26,13 +24,12 @@ import { FirebaseTokenGenerator, cryptoSignerFromApp } from './token-generator';
 import {
   AbstractAuthRequestHandler, TenantAwareAuthRequestHandler, AuthRequestHandler
 } from './auth-api-request-internal';
-import { 
-  AuthClientErrorCode, FirebaseAuthError,
-  ErrorInfo, FirebaseArrayIndexError
-} from '../utils/error';
+import {  AuthClientErrorCode, FirebaseAuthError, ErrorInfo, FirebaseArrayIndexError } from '../utils/error';
 import {
   UserImportOptions, UserImportRecord, UserImportResult,
 } from './user-import-builder';
+import * as utils from '../utils/index';
+import * as validator from '../utils/validator';
 import { 
   FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier } from './token-verifier';
 import { ActionCodeSettings } from './action-code-settings-builder';
@@ -43,6 +40,21 @@ import {
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { TenantManager } from './tenant-manager';
 
+
+/**
+ * Internals of an Auth instance.
+ */
+class AuthInternals implements FirebaseServiceInternalsInterface {
+  /**
+   * Deletes the service and its associated resources.
+   *
+   * @return {Promise<()>} An empty Promise that will be fulfilled when the service is deleted.
+   */
+  public delete(): Promise<void> {
+    // There are no resources to clean up
+    return Promise.resolve(undefined);
+  }
+}
 
 /** Represents the result of the {@link admin.auth.getUsers()} API. */
 export interface GetUsersResult {
@@ -1202,21 +1214,6 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
         }
         return decodedClaims;
       });
-  }
-}
-
-/**
- * Internals of an Auth instance.
- */
-class AuthInternals implements FirebaseServiceInternalsInterface {
-  /**
-   * Deletes the service and its associated resources.
-   *
-   * @return {Promise<()>} An empty Promise that will be fulfilled when the service is deleted.
-   */
-  public delete(): Promise<void> {
-    // There are no resources to clean up
-    return Promise.resolve(undefined);
   }
 }
 
