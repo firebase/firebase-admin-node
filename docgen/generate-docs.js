@@ -28,7 +28,7 @@ const repoPath = path.resolve(`${__dirname}/..`);
 // Command-line options.
 const { source: sourceFile } = yargs
   .option('source', {
-    default: `${repoPath}/src/*.d.ts`,
+    default: `${repoPath}/lib/*.d.ts ${repoPath}/lib/database/*.d.ts ${repoPath}/lib/firestore/*.d.ts ${repoPath}/lib/instance-id/*.d.ts ${repoPath}/lib/messaging/*.d.ts ${repoPath}/lib/project-management/*.d.ts ${repoPath}/lib/remote-config/*.d.ts ${repoPath}/lib/security-rules/*.d.ts`,
     describe: 'Typescript source file(s)',
     type: 'string'
   })
@@ -98,11 +98,35 @@ function fixLinks(file) {
       .replace(/\.\.\//g, '')
       .replace(/(modules|interfaces|classes|enums)\//g, '');
     let caseFixedLinks = flattenedLinks;
+
+    // Step #1: Case fix links
     for (const lower in lowerToUpperLookup) {
       const re = new RegExp(lower, 'g');
       caseFixedLinks = caseFixedLinks.replace(re, lowerToUpperLookup[lower]);
     }
-    return fs.writeFile(file, caseFixedLinks);
+
+    // Step #2: Remove the prefix breadcrumb name.
+    // Format:
+    // <li class="breadcrumb-name">
+		//   <small><a href="_auth_d_.html">"auth.d"</a>.</small>
+		// </li>
+    let removedPrefix = caseFixedLinks;
+    removedPrefix = removedPrefix.replace(/<li class="breadcrumb-name">(\r\n|\r|\n)+.*?<small><a href="[^"]*">&quot.*?&quot;<\/a>.<\/small>(\r\n|\r|\n)+.*?<\/li>/g, '');
+
+    console.log('ok');
+    const re = /href="([^"]+?_d_[^"]*?html)"/g;
+    let m;
+
+    do {
+      m = re.exec(removedPrefix);
+      if (m) {
+        console.log("!!" + m[1]);
+      } else {
+        console.log('nope');
+      }
+    } while(m);
+
+    return fs.writeFile(file, removedPrefix);
   });
 }
 
@@ -264,23 +288,86 @@ function updateFirestoreHtml(contentBlock) {
   fs.writeFileSync(firestoreHtmlPath, dom.window.document.documentElement.outerHTML);
 }
 
+// function 
+
 /**
- * TypeDoc needs to be executed in module mode in order to preserve the
- * namespace prefix in filenames when running in auto-generated typings
- * mode. However, module mode also introduces a prefix that we need to strip.
+ * TypeDoc needs to be executed in module mode to determine the namespace
+ * prefix in filenames when the typings are auto-generated. However,
+ * there needs to be extra processing for normalizing it to
+ * follow the filename convention established. 
  * 
- * Ex: _auth_d_.admin.auth.auth.html
- * We pick the _d_. to be a delimiter and only retain the substring after it.
+ * For example: admin.remoteConfig.RemoteConfigUser.html
+ * 
+ * There are two cases to consider:
+ * 
+ * Case #1: _auth_d_.admin.auth.auth.html
+ * The namespace is included after _d_ We pick the _d_. to be a delimiter 
+ * and only retain the substring after it. This is used when there is a 
+ * manually curated .d.ts file.
+ * 
+ * Case #2: _remote_config_remote_config_api_client_d_.remoteconfigparameter.html
+ * We pick the _d_. to be a delimiter, determine that remote-config is the
+ * namespace by examining folders in src, and then prepend it to the suffix.
+ * This is used for auto-generated typings.
  */
 function removeModulePrefix() {
   fs.readdirSync(docPath).forEach(filename => {
-    console.log(filename);
     const delimiter = '_d_.';
     const cutoff = filename.indexOf(delimiter);
 
     if (cutoff !== -1) {
-      const renamedFilename = filename.substr(cutoff + delimiter.length);
-      fs.renameSync(`${docPath}/${filename}`, `${docPath}/${renamedFilename}`);
+      const prefix = filename.substring(0, cutoff);
+      const suffix = filename.substring(cutoff + delimiter.length);
+
+      // If the suffix already contains admin, then we can simply strip
+      // the prefix (case 1). Otherwise, we need to infer the namespace based
+      // on the prefix (case 2).
+      // _remote_config_remote_config_api_client_d_.remoteconfigparameter.html
+      // ^-------------------------------------^    ^------------------------^
+      //             prefix                                 suffix
+      if (suffix.indexOf('admin') !== -1) {
+        const renamedFilename = filename.substr(cutoff + delimiter.length);
+        fs.renameSync(`${docPath}/${filename}`,
+          `${docPath}/${renamedFilename}`);
+      } else {
+        const srcPath = `${repoPath}/src`;
+        const tokens = prefix.split('_');
+        const services = fs.readdirSync(srcPath).filter(
+          f => fs.statSync(path.join(srcPath, f)).isDirectory());
+        
+        let serviceName = '';
+        let found = tokens.some((token) => {
+          if (serviceName.length !== 0) {
+            serviceName += '-';
+          }
+          serviceName += token;
+          if (services.includes(serviceName)) {
+            return true;
+          }
+        });
+        
+        // Despite being located in the respective folder, the class may not
+        // belong to a namespace and its inferred namespace should be
+        // discarded.
+        // For example: firebase.google.com/docs/reference/admin/node/TopicMessage
+        const noServiceNameList = [
+          'topicmessage.html', 'tokenmessage.html', 'conditionmessage.html'
+        ];
+        if (noServiceNameList.includes(suffix)) {
+          serviceName = '';
+        }
+
+        if (!found) {
+          console.log(`ERROR could not infer the namespace for ${prefix}`);
+        } else {
+          const camelCaseServiceName = serviceName.split('-').join('');
+
+          // Handles case of file without a namespace.
+          const renamedFilename = camelCaseServiceName.length !== 0 ?
+            `admin.${camelCaseServiceName}.${suffix}` : suffix;
+          fs.renameSync(`${docPath}/${filename}`, `${docPath}/${renamedFilename}`);
+        }
+      }
     }
   });   
 }
@@ -371,7 +458,7 @@ Promise.all([
     ]);
   })
   // Fix prefix in filenames if required (blocking).
-  .then(removeModulePrefix)
+  .then(() => removeModulePrefix())
   // Check for files listed in TOC that are missing and warn if so.
   // Not blocking.
   .then(checkForMissingFilesAndFixFilenameCase)
