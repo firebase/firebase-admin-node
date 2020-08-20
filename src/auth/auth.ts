@@ -16,8 +16,7 @@
 
 import { UserRecord, CreateRequest, UpdateRequest } from './user-record';
 import { 
-  UserIdentifier, isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, 
-  isProviderIdentifier,
+  UserIdentifier, isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, isProviderIdentifier,
 } from './identifier';
 import { FirebaseApp } from '../firebase-app';
 import { FirebaseTokenGenerator, cryptoSignerFromApp } from './token-generator';
@@ -25,19 +24,18 @@ import {
   AbstractAuthRequestHandler, TenantAwareAuthRequestHandler, AuthRequestHandler
 } from './auth-api-request-internal';
 import {  AuthClientErrorCode, FirebaseAuthError, ErrorInfo, FirebaseArrayIndexError } from '../utils/error';
+import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import {
   UserImportOptions, UserImportRecord, UserImportResult,
 } from './user-import-builder';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { 
-  FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier } from './token-verifier';
+import { FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier } from './token-verifier';
 import { ActionCodeSettings } from './action-code-settings-builder';
 import {
   AuthProviderConfig, AuthProviderConfigFilter, ListProviderConfigResults, UpdateAuthProviderRequest,
   SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
 } from './auth-config';
-import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { TenantManager } from './tenant-manager';
 
 
@@ -55,6 +53,7 @@ class AuthInternals implements FirebaseServiceInternalsInterface {
     return Promise.resolve(undefined);
   }
 }
+
 
 /** Represents the result of the {@link admin.auth.getUsers()} API. */
 export interface GetUsersResult {
@@ -270,7 +269,9 @@ export interface SessionCookieOptions {
   expiresIn: number;
 }
 
-
+/**	
+ * Base Auth class. Mainly used for user management APIs.	
+ */
 export class BaseAuth<T extends AbstractAuthRequestHandler> {
 
   protected readonly tokenGenerator: FirebaseTokenGenerator;
