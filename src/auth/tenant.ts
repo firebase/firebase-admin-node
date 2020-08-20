@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-import * as validator from '../utils/validator';
 import { deepCopy } from '../utils/deep-copy';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
-  validateTestPhoneNumbers, EmailSignInConfig, MultiFactorAuthConfig,
+  EmailSignInProviderConfig, EmailSignInConfig, MultiFactorAuthConfig,
+  MultiFactorConfig
 } from './auth-config';
-import { TenantServerResponse, TenantOptionsServerRequest } from './tenant-internal';
-import { EmailSignInProviderConfig, MultiFactorConfig  } from './auth-config';
+import { TenantServerResponse, TenantUtils } from './tenant-internal';
 
 /** The TenantOptions interface used for create/read/update tenant operations. */
 export interface TenantOptions {
@@ -107,117 +106,13 @@ export class Tenant {
   public readonly testPhoneNumbers?: {[phoneNumber: string]: string};
 
   /**
-   * Builds the corresponding server request for a TenantOptions object.
-   *
-   * @param {TenantOptions} tenantOptions The properties to convert to a server request.
-   * @param {boolean} createRequest Whether this is a create request.
-   * @return {object} The equivalent server request.
-   * @internal
-   */
-  public static buildServerRequest(
-    tenantOptions: TenantOptions, createRequest: boolean): TenantOptionsServerRequest {
-    Tenant.validate(tenantOptions, createRequest);
-    let request: TenantOptionsServerRequest = {};
-    if (typeof tenantOptions.emailSignInConfig !== 'undefined') {
-      request = EmailSignInConfig.buildServerRequest(tenantOptions.emailSignInConfig);
-    }
-    if (typeof tenantOptions.displayName !== 'undefined') {
-      request.displayName = tenantOptions.displayName;
-    }
-    if (typeof tenantOptions.multiFactorConfig !== 'undefined') {
-      request.mfaConfig = MultiFactorAuthConfig.buildServerRequest(tenantOptions.multiFactorConfig);
-    }
-    if (typeof tenantOptions.testPhoneNumbers !== 'undefined') {
-      // null will clear existing test phone numbers. Translate to empty object.
-      request.testPhoneNumbers = tenantOptions.testPhoneNumbers ?? {};
-    }
-    return request;
-  }
-
-  /**
-   * Returns the tenant ID corresponding to the resource name if available.
-   *
-   * @param {string} resourceName The server side resource name
-   * @return {?string} The tenant ID corresponding to the resource, null otherwise.
-   * @internal
-   */
-  public static getTenantIdFromResourceName(resourceName: string): string | null {
-    // name is of form projects/project1/tenants/tenant1
-    const matchTenantRes = resourceName.match(/\/tenants\/(.*)$/);
-    if (!matchTenantRes || matchTenantRes.length < 2) {
-      return null;
-    }
-    return matchTenantRes[1];
-  }
-
-  /**
-   * Validates a tenant options object. Throws an error on failure.
-   *
-   * @param {any} request The tenant options object to validate.
-   * @param {boolean} createRequest Whether this is a create request.
-   */
-  private static validate(request: any, createRequest: boolean): void {
-    const validKeys = {
-      displayName: true,
-      emailSignInConfig: true,
-      multiFactorConfig: true,
-      testPhoneNumbers: true,
-    };
-    const label = createRequest ? 'CreateTenantRequest' : 'UpdateTenantRequest';
-    if (!validator.isNonNullObject(request)) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_ARGUMENT,
-        `"${label}" must be a valid non-null object.`,
-      );
-    }
-    // Check for unsupported top level attributes.
-    for (const key in request) {
-      if (!(key in validKeys)) {
-        throw new FirebaseAuthError(
-          AuthClientErrorCode.INVALID_ARGUMENT,
-          `"${key}" is not a valid ${label} parameter.`,
-        );
-      }
-    }
-    // Validate displayName type if provided.
-    if (typeof request.displayName !== 'undefined' &&
-        !validator.isNonEmptyString(request.displayName)) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_ARGUMENT,
-        `"${label}.displayName" must be a valid non-empty string.`,
-      );
-    }
-    // Validate emailSignInConfig type if provided.
-    if (typeof request.emailSignInConfig !== 'undefined') {
-      // This will throw an error if invalid.
-      EmailSignInConfig.buildServerRequest(request.emailSignInConfig);
-    }
-    // Validate test phone numbers if provided.
-    if (typeof request.testPhoneNumbers !== 'undefined' &&
-        request.testPhoneNumbers !== null) {
-      validateTestPhoneNumbers(request.testPhoneNumbers);
-    } else if (request.testPhoneNumbers === null && createRequest) {
-      // null allowed only for update operations.
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_ARGUMENT,
-        `"${label}.testPhoneNumbers" must be a non-null object.`,
-      );
-    }
-    // Validate multiFactorConfig type if provided.
-    if (typeof request.multiFactorConfig !== 'undefined') {
-      // This will throw an error if invalid.
-      MultiFactorAuthConfig.buildServerRequest(request.multiFactorConfig);
-    }
-  }
-
-  /**
    * The Tenant object constructor.
    *
    * @param response The server side response used to initialize the Tenant object.
    * @constructor
    */
   constructor(response: TenantServerResponse) {
-    const tenantId = Tenant.getTenantIdFromResourceName(response.name);
+    const tenantId = TenantUtils.getTenantIdFromResourceName(response.name);
     if (!tenantId) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INTERNAL_ERROR,
