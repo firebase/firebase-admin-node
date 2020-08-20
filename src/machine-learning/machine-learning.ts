@@ -83,7 +83,7 @@ export class MachineLearning implements FirebaseServiceInterface {
   }
 
   /**
-   * Creates a model in Firebase ML.
+   * Creates a model in the current Firebase project.
    *
    * @param {ModelOptions} model The model to create.
    *
@@ -97,9 +97,9 @@ export class MachineLearning implements FirebaseServiceInterface {
   }
 
   /**
-   * Updates a model in Firebase ML.
+   * Updates a model's metadata or model file.
    *
-   * @param {string} modelId The id of the model to update.
+   * @param {string} modelId The ID of the model to update.
    * @param {ModelOptions} model The model fields to update.
    *
    * @return {Promise<Model>} A Promise fulfilled with the updated model.
@@ -113,9 +113,11 @@ export class MachineLearning implements FirebaseServiceInterface {
   }
 
   /**
-   * Publishes a model in Firebase ML.
+   * Publishes a Firebase ML model.
    *
-   * @param {string} modelId The id of the model to publish.
+   * A published model can be downloaded to client apps.
+   *
+   * @param {string} modelId The ID of the model to publish.
    *
    * @return {Promise<Model>} A Promise fulfilled with the published model.
    */
@@ -124,9 +126,9 @@ export class MachineLearning implements FirebaseServiceInterface {
   }
 
   /**
-   * Unpublishes a model in Firebase ML.
+   * Unpublishes a Firebase ML model.
    *
-   * @param {string} modelId The id of the model to unpublish.
+   * @param {string} modelId The ID of the model to unpublish.
    *
    * @return {Promise<Model>} A Promise fulfilled with the unpublished model.
    */
@@ -135,11 +137,11 @@ export class MachineLearning implements FirebaseServiceInterface {
   }
 
   /**
-   * Gets a model from Firebase ML.
+   * Gets the model specified by the given ID.
    *
-   * @param {string} modelId The id of the model to get.
+   * @param {string} modelId The ID of the model to get.
    *
-   * @return {Promise<Model>} A Promise fulfilled with the unpublished model.
+   * @return {Promise<Model>} A Promise fulfilled with the model.
    */
   public getModel(modelId: string): Promise<Model> {
     return this.client.getModel(modelId)
@@ -147,7 +149,7 @@ export class MachineLearning implements FirebaseServiceInterface {
   }
 
   /**
-   * Lists models from Firebase ML.
+   * Lists the current project's models.
    *
    * @param {ListModelsOptions} options The listing options.
    *
@@ -177,9 +179,9 @@ export class MachineLearning implements FirebaseServiceInterface {
   }
 
   /**
-   * Deletes a model from Firebase ML.
+   * Deletes a model from the current project.
    *
-   * @param {string} modelId The id of the model to delete.
+   * @param {string} modelId The ID of the model to delete.
    */
   public deleteModel(modelId: string): Promise<void> {
     return this.client.deleteModel(modelId);
@@ -244,42 +246,53 @@ export class Model {
     this.client = client;
   }
 
+  /** The ID of the model. */
   get modelId(): string {
     return extractModelId(this.model.name);
   }
 
+  /** The model's display name. This is the value you use to refer
+      to the model in the iOS and Android libraries. */
   get displayName(): string {
     return this.model.displayName!;
   }
 
+  /** The model's tags. */
   get tags(): string[] {
     return this.model.tags || [];
   }
 
+  /** The date and time the model was created (added to the project). */
   get createTime(): string {
     return new Date(this.model.createTime).toUTCString();
   }
 
+  /** The date and time the model was last updated. */
   get updateTime(): string {
     return new Date(this.model.updateTime).toUTCString();
   }
 
+  /** The validation error message, if the model isn't valid. */
   get validationError(): string | undefined {
     return this.model.state?.validationError?.message;
   }
 
+  /** True if the model is published and available to download. */
   get published(): boolean {
     return this.model.state?.published || false;
   }
 
+  /** The model's ETag. */
   get etag(): string {
     return this.model.etag;
   }
 
+  /** The SHA256 hash of the model file. */
   get modelHash(): string | undefined {
     return this.model.modelHash;
   }
 
+  /** The model's tflite file. */
   get tfliteModel(): TFLiteModel | undefined {
     // Make a copy so people can't directly modify the private this.model object.
     return deepCopy(this.model.tfliteModel);
@@ -376,6 +389,9 @@ export class Model {
 
 /**
  * A TFLite Model output object
+ *
+ * One of either the `gcsTfliteUri` or `automlModel` properties will be defined
+ * and non-empty.
  */
 export interface TFLiteModel {
   readonly sizeBytes: number;
