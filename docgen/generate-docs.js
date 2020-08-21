@@ -25,10 +25,18 @@ const yaml = require('js-yaml');
 
 const repoPath = path.resolve(`${__dirname}/..`);
 
+// We determine if auto-type generation was turned on
+const declaration = process.env.TYPE_GENERATION_MODE === 'auto';
+const defaultFiles = declaration ? 
+  `${repoPath}/lib/database/*.d.ts ${repoPath}/lib/firestore/*.d.ts
+  ${repoPath}/lib/instance-id/*.d.ts ${repoPath}/lib/messaging/*.d.ts
+  ${repoPath}/lib/project-management/*.d.ts ${repoPath}/lib/remote-config/*.d.ts
+  ${repoPath}/lib/security-rules/*.d.ts` : `${repoPath}/src/*.d.ts`;
+
 // Command-line options.
 const { source: sourceFile } = yargs
   .option('source', {
-    default: `${repoPath}/src/*.d.ts`,
+    default: defaultFiles,
     describe: 'Typescript source file(s)',
     type: 'string'
   })
