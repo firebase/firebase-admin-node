@@ -1224,6 +1224,9 @@ declare namespace admin.machineLearning {
 
   /**
    * A TensorFlow Lite Model output object
+   * 
+   * One of either the `gcsTfliteUri` or `automlModel` properties will be
+   * defined.
    */
   interface TFLiteModel {
     /** The size of the model. */
@@ -1231,7 +1234,10 @@ declare namespace admin.machineLearning {
 
     /** The URI from which the model was originally provided to Firebase. */
     readonly gcsTfliteUri?: string;
-    /** The AutoML URI from which the model was originally provided to Firebase. */
+    /**
+     * The AutoML model reference from which the model was originally provided
+     * to Firebase.
+     */
     readonly automlModel?: string;
   }
 
@@ -1242,10 +1248,16 @@ declare namespace admin.machineLearning {
     /** The ID of the model. */
     readonly modelId: string;
 
-    /** The model's name. This is the name you use from your app to load the model. */
+    /**
+     * The model's name. This is the name you use from your app to load the
+     * model.
+     */
     readonly displayName: string;
 
-    /** The model's tags. */
+    /**
+     * The model's tags, which can be used to group or filter models in list
+     * operations.
+     */
     readonly tags?: string[];
 
     /** The timestamp of the model's creation. */
@@ -1314,7 +1326,7 @@ declare namespace admin.machineLearning {
      * state.published = true
      * ```
      *
-     * See https://firebase.google.com/docs/ml-kit/manage-hosted-models#list_your_projects_models
+     * See https://firebase.google.com/docs/ml/manage-hosted-models#list_your_projects_models
      */
     filter?: string;
 
@@ -1352,7 +1364,7 @@ declare namespace admin.machineLearning {
     app: admin.app.App;
 
     /**
-     * Creates a model in Firebase ML.
+     * Creates a model in the current Firebase project.
      *
      * @param {ModelOptions} model The model to create.
      *
@@ -1361,7 +1373,7 @@ declare namespace admin.machineLearning {
     createModel(model: ModelOptions): Promise<Model>;
 
     /**
-     * Updates a model in Firebase ML.
+     * Updates a model's metadata or model file.
      *
      * @param {string} modelId The ID of the model to update.
      * @param {ModelOptions} model The model fields to update.
@@ -1371,7 +1383,9 @@ declare namespace admin.machineLearning {
     updateModel(modelId: string, model: ModelOptions): Promise<Model>;
 
     /**
-     * Publishes a model in Firebase ML.
+     * Publishes a Firebase ML model.
+     * 
+     * A published model can be downloaded to client apps.
      *
      * @param {string} modelId The ID of the model to publish.
      *
@@ -1380,7 +1394,7 @@ declare namespace admin.machineLearning {
     publishModel(modelId: string): Promise<Model>;
 
     /**
-     * Unpublishes a model in Firebase ML.
+     * Unpublishes a Firebase ML model.
      *
      * @param {string} modelId The ID of the model to unpublish.
      *
@@ -1389,7 +1403,7 @@ declare namespace admin.machineLearning {
     unpublishModel(modelId: string): Promise<Model>;
 
     /**
-     * Gets a model from Firebase ML.
+     * Gets the model specified by the given ID.
      *
      * @param {string} modelId The ID of the model to get.
      *
@@ -1398,7 +1412,7 @@ declare namespace admin.machineLearning {
     getModel(modelId: string): Promise<Model>;
 
     /**
-     * Lists models from Firebase ML.
+     * Lists the current project's models.
      *
      * @param {ListModelsOptions} options The listing options.
      *
@@ -1410,7 +1424,7 @@ declare namespace admin.machineLearning {
     listModels(options?: ListModelsOptions): Promise<ListModelsResult>;
 
     /**
-     * Deletes a model from Firebase ML.
+     * Deletes a model from the current project.
      *
      * @param {string} modelId The ID of the model to delete.
      */
