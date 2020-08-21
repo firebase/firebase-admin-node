@@ -1224,6 +1224,9 @@ declare namespace admin.machineLearning {
 
   /**
    * A TensorFlow Lite Model output object
+   * 
+   * One of either the `gcsTfliteUri` or `automlModel` properties will be
+   * defined.
    */
   interface TFLiteModel {
     /** The size of the model. */
@@ -1323,7 +1326,7 @@ declare namespace admin.machineLearning {
      * state.published = true
      * ```
      *
-     * See https://firebase.google.com/docs/ml-kit/manage-hosted-models#list_your_projects_models
+     * See https://firebase.google.com/docs/ml/manage-hosted-models#list_your_projects_models
      */
     filter?: string;
 
