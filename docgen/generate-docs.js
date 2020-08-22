@@ -88,10 +88,10 @@ function stripPath(path) {
  *   "androidconfig.html": "messaging",
  *   "androidfcmoptions.html": "messaging",
  *   ...
- *   "explicitparametervalue".html: "remote-config",
+ *   "explicitparametervalue.html": "remote-config",
  *   ...
  * }
- * If the same typename is exported across two namespaces an error is thrown.
+ * If the same typename is exported across two namespaces an error is logged.
  */
 function generateFilenameIndex() {
   const serviceFolders = fs.readdirSync(`${repoPath}/src`, { withFileTypes: true })
@@ -112,8 +112,16 @@ function generateFilenameIndex() {
         results = re.exec(data);
         if (results) {
           const typeName = `${results[2].toLowerCase()}.html`;
-          if (typeServiceMap[typeName] !== undefined) {
-            console.log(`ERROR: ${typeName} is defined in two namespaces!`);
+
+          // Both RTDB and Firestore export query, but Firestore is only an alias
+          if (typeServiceMap[typeName] !== undefined ||
+            (typeName === 'query.html' && serviceName === 'firestore')) {
+
+            // Only log if the duplicate is not Firestore query
+            if (typeName !== 'query.html' || serviceName !== 'firestore') {
+              console.log(`ERROR: ${typeName}:${serviceName} is defined in two namespaces!`);
+            }
+            continue;
           }
           
           // Normalizes service names to be camelCase instead of separated by dashes.
@@ -191,7 +199,7 @@ function generateTempHomeMdFile(tocRaw, homeRaw) {
   const { toc } = yaml.safeLoad(tocRaw);
   let tocPageLines = [homeRaw, '# API Reference'];
   toc.forEach(group => {
-    tocPageLines.push(`\n## [${group.title}](${stripPath(group.path)})`);
+    tocPageLines.push(`\n## [${group.title}](${stripPath(group.path)}.html)`);
     const section = group.section || [];
     section.forEach(item => {
       tocPageLines.push(`- [${item.title}](${stripPath(item.path)}.html)`);
