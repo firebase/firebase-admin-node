@@ -19,10 +19,7 @@ import { deepExtend } from './utils/deep-copy';
 import { AppErrorCodes, FirebaseAppError } from './utils/error';
 import { AppHook, FirebaseApp, FirebaseAppOptions } from './firebase-app';
 import { FirebaseServiceFactory, FirebaseServiceInterface } from './firebase-service';
-import {
-  CredentialService,
-  getApplicationDefault,
-} from './credential/credential';
+import { CredentialService, getApplicationDefault } from './credential/credential';
 
 import { Auth } from './auth/auth';
 import { MachineLearning } from './machine-learning/machine-learning';
@@ -263,35 +260,6 @@ export class FirebaseNamespaceInternals {
   }
 }
 
-
-/* 
-const firebaseCredential = {
-  cert: (serviceAccountPathOrObject: string | object, httpAgent?: Agent): Credential => {
-    const stringifiedServiceAccount = JSON.stringify(serviceAccountPathOrObject);
-    if (!(stringifiedServiceAccount in globalCertCreds)) {
-      globalCertCreds[stringifiedServiceAccount] = new ServiceAccountCredential(serviceAccountPathOrObject, httpAgent);
-    }
-    return globalCertCreds[stringifiedServiceAccount];
-  },
-
-  refreshToken: (refreshTokenPathOrObject: string | object, httpAgent?: Agent): Credential => {
-    const stringifiedRefreshToken = JSON.stringify(refreshTokenPathOrObject);
-    if (!(stringifiedRefreshToken in globalRefreshTokenCreds)) {
-      globalRefreshTokenCreds[stringifiedRefreshToken] = new RefreshTokenCredential(
-        refreshTokenPathOrObject, httpAgent);
-    }
-    return globalRefreshTokenCreds[stringifiedRefreshToken];
-  },
-
-  applicationDefault: (httpAgent?: Agent): Credential => {
-    if (typeof globalAppDefaultCred === 'undefined') {
-      globalAppDefaultCred = getApplicationDefault(httpAgent);
-    }
-    return globalAppDefaultCred;
-  },
-}; */
-
-
 /**
  * Global Firebase context object.
  */
@@ -301,7 +269,6 @@ export class FirebaseNamespace {
   public __esModule = true;
   /* tslint:enable:variable-name */
 
-  // public credential = firebaseCredential; // TODO(hlazu): Remove!
   public SDK_VERSION = getSdkVersion();
   public INTERNAL: FirebaseNamespaceInternals;
 

@@ -305,7 +305,7 @@ export class FirebaseApp {
   /**
    * Returns the Credential service instance associated with this app.
    *
-   * @return {Credential} The Auth service instance of this app.
+   * @return {Credential} The Credential service instance of this app.
    */
   public credential(): CredentialService {
     return this.ensureService_('credential', () => {
