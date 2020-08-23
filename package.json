@@ -59,7 +59,8 @@
     "@types/node": "^10.10.0",
     "dicer": "^0.3.0",
     "jsonwebtoken": "^8.5.1",
-    "node-forge": "^0.9.1"
+    "node-forge": "^0.9.1",
+    "typedoc": "^0.18.0"
   },
   "optionalDependencies": {
     "@google-cloud/firestore": "^4.0.0",
@@ -112,7 +113,6 @@
     "sinon": "^9.0.0",
     "sinon-chai": "^3.0.0",
     "ts-node": "^3.3.0",
-    "typedoc": "^0.15.0",
     "typescript": "^3.7.3",
     "yargs": "^13.2.2"
   }
