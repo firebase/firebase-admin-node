@@ -15,17 +15,14 @@
  */
 
 import fs = require('fs');
-import { Agent } from 'http';
 import { deepExtend } from './utils/deep-copy';
 import { AppErrorCodes, FirebaseAppError } from './utils/error';
 import { AppHook, FirebaseApp, FirebaseAppOptions } from './firebase-app';
 import { FirebaseServiceFactory, FirebaseServiceInterface } from './firebase-service';
 import {
-  Credential,
-  RefreshTokenCredential,
-  ServiceAccountCredential,
+  CredentialService,
   getApplicationDefault,
-} from './auth/credential';
+} from './credential/credential';
 
 import { Auth } from './auth/auth';
 import { MachineLearning } from './machine-learning/machine-learning';
@@ -49,12 +46,6 @@ const DEFAULT_APP_NAME = '[DEFAULT]';
  * otherwise it will be assumed to be pointing to a file.
  */
 export const FIREBASE_CONFIG_VAR = 'FIREBASE_CONFIG';
-
-
-let globalAppDefaultCred: Credential;
-const globalCertCreds: { [key: string]: ServiceAccountCredential } = {};
-const globalRefreshTokenCreds: { [key: string]: RefreshTokenCredential } = {};
-
 
 export interface FirebaseServiceNamespace <T> {
   (app?: FirebaseApp): T;
@@ -273,6 +264,7 @@ export class FirebaseNamespaceInternals {
 }
 
 
+/* 
 const firebaseCredential = {
   cert: (serviceAccountPathOrObject: string | object, httpAgent?: Agent): Credential => {
     const stringifiedServiceAccount = JSON.stringify(serviceAccountPathOrObject);
@@ -297,7 +289,7 @@ const firebaseCredential = {
     }
     return globalAppDefaultCred;
   },
-};
+}; */
 
 
 /**
@@ -309,7 +301,7 @@ export class FirebaseNamespace {
   public __esModule = true;
   /* tslint:enable:variable-name */
 
-  public credential = firebaseCredential;
+  // public credential = firebaseCredential; // TODO(hlazu): Remove!
   public SDK_VERSION = getSdkVersion();
   public INTERNAL: FirebaseNamespaceInternals;
 
@@ -333,6 +325,14 @@ export class FirebaseNamespace {
     };
     const auth = require('./auth/auth').Auth;
     return Object.assign(fn, { Auth: auth });
+  }
+
+  get credential(): FirebaseServiceNamespace<CredentialService> {
+    const fn: FirebaseServiceNamespace<CredentialService> = (app?: FirebaseApp) => {
+      return this.ensureApp(app).credential();
+    };
+    const credential = require('./credential/credential').CredentialService;
+    return Object.assign(fn, credential);
   }
 
   /**

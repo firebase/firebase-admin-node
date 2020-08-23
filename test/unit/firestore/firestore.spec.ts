@@ -21,7 +21,7 @@ import { expect } from 'chai';
 
 import * as mocks from '../../resources/mocks';
 import { FirebaseApp } from '../../../src/firebase-app';
-import { ComputeEngineCredential, RefreshTokenCredential } from '../../../src/auth/credential';
+import { ComputeEngineCredential, RefreshTokenCredential } from '../../../src/credential/credential';
 import { FirestoreService, getFirestoreOptions } from '../../../src/firestore/firestore-internal';
 
 describe('Firestore', () => {

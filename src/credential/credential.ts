@@ -20,8 +20,10 @@ import os = require('os');
 import path = require('path');
 
 import { AppErrorCodes, FirebaseAppError } from '../utils/error';
+import { FirebaseApp } from '../firebase-app';
 import { HttpClient, HttpRequestConfig, HttpError, HttpResponse } from '../utils/api-request';
 import { Agent } from 'http';
+import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import * as util from '../utils/validator';
 
 const GOOGLE_TOKEN_AUDIENCE = 'https://accounts.google.com/o/oauth2/token';
@@ -53,6 +55,11 @@ const REFRESH_TOKEN_PATH = '/oauth2/v4/token';
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 const JWT_ALGORITHM = 'RS256';
 
+let globalAppDefaultCred: Credential;
+const globalCertCreds: { [key: string]: ServiceAccountCredential } = {};
+const globalRefreshTokenCreds: { [key: string]: RefreshTokenCredential } = {};
+
+
 /**
  * Interface for Google OAuth 2.0 access tokens.
  */
@@ -68,6 +75,68 @@ export interface GoogleOAuthAccessToken {
  */
 export interface Credential {
   getAccessToken(): Promise<GoogleOAuthAccessToken>;
+}
+
+/**
+ * Internals of an InstanceId service instance.
+ */
+export class CredentialServiceInternals implements FirebaseServiceInternalsInterface {
+  /**
+   * Deletes the service and its associated resources.
+   *
+   * @return {Promise<()>} An empty Promise that will be fulfilled when the service is deleted.
+   */
+  public delete(): Promise<void> {
+    // There are no resources to clean up
+    return Promise.resolve(undefined);
+  }
+}
+
+
+export class CredentialService implements FirebaseServiceInterface {
+  public INTERNAL: CredentialServiceInternals = new CredentialServiceInternals();
+  private readonly app_: FirebaseApp;
+
+  /**
+   * @param {object} app The app for this Auth service.
+   * @constructor
+   */
+  constructor(app: FirebaseApp) {
+    this.app_ = app;
+  }
+
+  /**
+   * Returns the app associated with this Auth instance.
+   *
+   * @return {FirebaseApp} The app associated with this Auth instance.
+   */
+  get app(): FirebaseApp {
+    return this.app_;
+  }
+
+  static cert(serviceAccountPathOrObject: string | object, httpAgent?: Agent): Credential {
+    const stringifiedServiceAccount = JSON.stringify(serviceAccountPathOrObject);
+    if (!(stringifiedServiceAccount in globalCertCreds)) {
+      globalCertCreds[stringifiedServiceAccount] = new ServiceAccountCredential(serviceAccountPathOrObject, httpAgent);
+    }
+    return globalCertCreds[stringifiedServiceAccount];
+  }
+
+  static refreshToken(refreshTokenPathOrObject: string | object, httpAgent?: Agent): Credential {
+    const stringifiedRefreshToken = JSON.stringify(refreshTokenPathOrObject);
+    if (!(stringifiedRefreshToken in globalRefreshTokenCreds)) {
+      globalRefreshTokenCreds[stringifiedRefreshToken] = new RefreshTokenCredential(
+        refreshTokenPathOrObject, httpAgent);
+    }
+    return globalRefreshTokenCreds[stringifiedRefreshToken];
+  }
+
+  static applicationDefault(httpAgent?: Agent): Credential {
+    if (typeof globalAppDefaultCred === 'undefined') {
+      globalAppDefaultCred = getApplicationDefault(httpAgent);
+    }
+    return globalAppDefaultCred;
+  }
 }
 
 /**

@@ -42,7 +42,7 @@ import {
 } from '../../../src/auth/auth-config';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { TenantManager } from '../../../src/auth/tenant-manager';
-import { ServiceAccountCredential } from '../../../src/auth/credential';
+import { ServiceAccountCredential } from '../../../src/credential/credential';
 import { HttpClient } from '../../../src/utils/api-request';
 
 chai.should();

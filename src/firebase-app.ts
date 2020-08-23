@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-import { Credential, GoogleOAuthAccessToken, getApplicationDefault } from './auth/credential';
+import {
+  Credential, CredentialService, GoogleOAuthAccessToken, getApplicationDefault
+} from './credential/credential';
 import * as validator from './utils/validator';
 import { deepCopy, deepExtend } from './utils/deep-copy';
 import { FirebaseServiceInterface } from './firebase-service';
@@ -297,6 +299,18 @@ export class FirebaseApp {
     return this.ensureService_('auth', () => {
       const authService: typeof Auth = require('./auth/auth').Auth;
       return new authService(this);
+    });
+  }
+
+  /**
+   * Returns the Credential service instance associated with this app.
+   *
+   * @return {Credential} The Auth service instance of this app.
+   */
+  public credential(): CredentialService {
+    return this.ensureService_('credential', () => {
+      const credentialService: typeof CredentialService = require('./credential/credential').CredentialService;
+      return new credentialService(this);
     });
   }
 
