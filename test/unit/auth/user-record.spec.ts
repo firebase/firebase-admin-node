@@ -20,9 +20,11 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import { deepCopy } from '../../../src/utils/deep-copy';
 import {
-  UserInfo, UserMetadata, UserRecord, GetAccountInfoUserResponse, ProviderUserInfoResponse,
-  MultiFactor, PhoneMultiFactorInfo, MultiFactorInfo, MultiFactorInfoResponse,
+  UserInfo, UserMetadata, UserRecord, MultiFactor, PhoneMultiFactorInfo
 } from '../../../src/auth/user-record';
+import {
+  GetAccountInfoUserResponse, ProviderUserInfoResponse, MultiFactorInfoResponse, initMultiFactorInfo
+} from '../../../src/auth/user-record-internal';
 
 
 chai.should();
@@ -385,11 +387,11 @@ describe('MultiFactorInfo', () => {
 
   describe('initMultiFactorInfo', () => {
     it('should return expected PhoneMultiFactorInfo', () => {
-      expect(MultiFactorInfo.initMultiFactorInfo(serverResponse)).to.deep.equal(phoneMultiFactorInfo);
+      expect(initMultiFactorInfo(serverResponse)).to.deep.equal(phoneMultiFactorInfo);
     });
 
     it('should return null for invalid MultiFactorInfo', () => {
-      expect(MultiFactorInfo.initMultiFactorInfo(undefined as any)).to.be.null;
+      expect(initMultiFactorInfo(undefined as any)).to.be.null;
     });
   });
 });
