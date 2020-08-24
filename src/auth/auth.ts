@@ -15,7 +15,7 @@
  */
 
 import { UserRecord, CreateRequest, UpdateRequest } from './user-record';
-import { 
+import {
   UserIdentifier, isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, isProviderIdentifier,
 } from './identifier';
 import { FirebaseApp } from '../firebase-app';
@@ -23,7 +23,7 @@ import { FirebaseTokenGenerator, cryptoSignerFromApp } from './token-generator';
 import {
   AbstractAuthRequestHandler, TenantAwareAuthRequestHandler, AuthRequestHandler
 } from './auth-api-request-internal';
-import {  AuthClientErrorCode, FirebaseAuthError, ErrorInfo, FirebaseArrayIndexError } from '../utils/error';
+import { AuthClientErrorCode, FirebaseAuthError, ErrorInfo, FirebaseArrayIndexError } from '../utils/error';
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import {
   UserImportOptions, UserImportRecord, UserImportResult,
