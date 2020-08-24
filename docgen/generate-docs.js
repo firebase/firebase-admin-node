@@ -220,17 +220,26 @@ function fixLinks(file) {
       caseFixedLinks = caseFixedLinks.replace(propertyInternal, '');
 
       // Remove entire "Properties" section if INTERNAL was the only one
-      //const propertyContainer = /<h3>Properties<\/h3>(\r\n|\r|\n).*<ul class="tsd-index-list">(\s|(\r\n|\r|\n))*?<\/ul>/g;
-      //caseFixedLinks = caseFixedLinks.replace(propertyContainer, '');
+      const propertyContainer = /<h3>Properties<\/h3>(\r\n|\r|\n).*<ul class="tsd-index-list">(\s|(\r\n|\r|\n))*?<\/ul>/g;
+      caseFixedLinks = caseFixedLinks.replace(propertyContainer, '');
 
       const propertyInternalDetailed = /<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">(\r|\r\n|\n).*?<a name="internal" class="tsd-anchor"><\/a>(.|\r|\n)*?<\/section>/g;
       caseFixedLinks = caseFixedLinks.replace(propertyInternalDetailed, '');
 
-      /*const accessorsMedium = /<h3>Accessors<\/h3>/g;
+      const accessorsMedium = /<h3>Accessors<\/h3>/g;
       caseFixedLinks = caseFixedLinks.replace(accessorsMedium, '<h3>Properties</h3>');
 
+      const propertyContainerMedium = /<section class="tsd-panel-group tsd-member-group ">(\r|\r\n|\n).*?<h2>Properties<\/h2>((\r|\r\n|\n)*?.*?){1,2}?<\/section>/g;
+      caseFixedLinks = caseFixedLinks.replace(propertyContainerMedium, '');
+
       const accessorsLarge = /<h2>Accessors<\/h2>/g;
-      caseFixedLinks = caseFixedLinks.replace(accessorsLarge, '<h2>Properties</h2>'); */
+      caseFixedLinks = caseFixedLinks.replace(accessorsLarge, '<h2>Properties</h2>');
+
+      const firebaseAppTagContents = />FirebaseApp<\//g;
+      caseFixedLinks = caseFixedLinks.replace(firebaseAppTagContents, '>_admin.app.App<\/');
+
+      const accessorGet = /<span class="tsd-signature-symbol">get<\/span>/g;
+      caseFixedLinks = caseFixedLinks.replace(accessorGet, '');
     }
 
     for (const lower in lowerToUpperLookup) {
