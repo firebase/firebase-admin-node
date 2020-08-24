@@ -25,6 +25,14 @@ const yaml = require('js-yaml');
 
 const repoPath = path.resolve(`${__dirname}/..`);
 
+// The following files do not belong in any namespace, for example:
+// https://firebase.google.com/docs/reference/admin/node/TopicMessage
+const noNamespace = [
+  'topicmessage.html',
+  'tokenmessage.html',
+  'conditionmessage.html'
+];
+
 // We determine if auto-type generation is turned on, and provide per-service
 // paths to TypeDoc (as nested wildcard /lib/**/*.d.ts does not work).
 // Note: The d.ts files need to be generated beforehand, using `npm run build`
@@ -61,16 +69,23 @@ const contentPath = path.resolve(`${__dirname}/content-sources/node`);
 const tempHomePath = path.resolve(`${contentPath}/HOME_TEMP.md`);
 const devsitePath = `/docs/reference/admin/node/`;
 
+// Custom logic for 3rd party re-exported packages.
 const firestoreExcludes = ['v1', 'v1beta1', 'setLogFunction','DocumentData'];
+const databaseExcludes = ['enableLogging', 'EventType'];
+
 const firestoreHtmlPath = `${docPath}/admin.firestore.html`;
-const firestoreHeader = `<section class="tsd-panel-group tsd-member-group ">
+const databaseHtmlPath = `${docPath}/admin.database.html`;
+const thirdPartyFooter = '\n  </ul>\n</section>\n';
+
+function generateThirdPartyHeader(packageName) {
+  return `<section class="tsd-panel-group tsd-member-group ">
   <h2>Type aliases</h2>
   <div class="tsd-panel">
-    <p>Following types are defined in the <code>@google-cloud/firestore</code> package
+    <p>Following types are defined in the <code>${packageName}</code> package
     and re-exported from this namespace for convenience.</p>
   </div>
   <ul>`;
-const firestoreFooter = '\n  </ul>\n</section>\n';
+}
 
 /**
  * Strips path prefix and returns only filename.
@@ -124,7 +139,7 @@ function generateFilenameIndex() {
 
             // Only log if the duplicate is not Firestore query
             if (typeName !== 'query.html' || serviceName !== 'firestore') {
-              console.log(`ERROR: ${typeName}:${serviceName} is defined in two namespaces!`);
+              console.log(`ERROR ${typeName}:${serviceName} is defined in two namespaces!`);
             }
             continue;
           }
@@ -196,12 +211,14 @@ function fixLinks(file) {
         if (results) {
           const serviceName = filenameIndex[results[1]];
           
-          if (results[1].indexOf('admin') !== -1 || results[1].indexOf('http') !== -1) {
+          if (results[1].indexOf('admin') !== -1
+              || results[1].indexOf('http') !== -1
+              || noNamespace.includes(results[1])) {
             continue;
           }
 
           if (serviceName === undefined) {
-            console.log(`ERROR - Unknown file ${results[1]} from ${results[0]} in ${file}`);
+            console.log(`ERROR Unknown file ${results[1]} from ${results[0]} in ${file}`);
           } else {
             caseFixedLinks = caseFixedLinks.replace(
               results[0],
@@ -215,29 +232,35 @@ function fixLinks(file) {
       const implementsAnyRe = /<section class="tsd-panel">(\r\n|\r|\n)(\s)*<h3>Implements<\/h3>(.|\r\n|\r|\n)*?<\/section>/g;
       caseFixedLinks = caseFixedLinks.replace(implementsAnyRe, '');
 
-      // Remove "INTERNAL" property
+      // Remove "INTERNAL" property in overview
       const propertyInternal = /<li class="tsd-kind-property tsd-parent-kind-class"><a href="[^"]*?" class="tsd-kind-icon">INTERNAL<\/a>(\s|(\r\n|\r|\n))*?<\/li>/g;
       caseFixedLinks = caseFixedLinks.replace(propertyInternal, '');
 
-      // Remove entire "Properties" section if INTERNAL was the only one
+      // Remove entire "Properties" section overview if INTERNAL was the only entry
       const propertyContainer = /<h3>Properties<\/h3>(\r\n|\r|\n).*<ul class="tsd-index-list">(\s|(\r\n|\r|\n))*?<\/ul>/g;
       caseFixedLinks = caseFixedLinks.replace(propertyContainer, '');
 
+      // Remove "INTERNAL" property in detailed view
       const propertyInternalDetailed = /<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">(\r|\r\n|\n).*?<a name="internal" class="tsd-anchor"><\/a>(.|\r|\n)*?<\/section>/g;
       caseFixedLinks = caseFixedLinks.replace(propertyInternalDetailed, '');
 
-      const accessorsMedium = /<h3>Accessors<\/h3>/g;
-      caseFixedLinks = caseFixedLinks.replace(accessorsMedium, '<h3>Properties</h3>');
-
+      // Remove entire "Properties" section detailed view if INTERNAL was the only entry
       const propertyContainerMedium = /<section class="tsd-panel-group tsd-member-group ">(\r|\r\n|\n).*?<h2>Properties<\/h2>((\r|\r\n|\n)*?.*?){1,2}?<\/section>/g;
       caseFixedLinks = caseFixedLinks.replace(propertyContainerMedium, '');
 
+      // Replace Accessors with Properties
+      const accessorsMedium = /<h3>Accessors<\/h3>/g;
+      caseFixedLinks = caseFixedLinks.replace(accessorsMedium, '<h3>Properties</h3>');
+
+      // Replace Accessors with Properties
       const accessorsLarge = /<h2>Accessors<\/h2>/g;
       caseFixedLinks = caseFixedLinks.replace(accessorsLarge, '<h2>Properties</h2>');
 
+      // Replace FirebaseApp with _admin.app.App
       const firebaseAppTagContents = />FirebaseApp<\//g;
       caseFixedLinks = caseFixedLinks.replace(firebaseAppTagContents, '>_admin.app.App<\/');
 
+      // Remove the "GET" tag from Accessors
       const accessorGet = /<span class="tsd-signature-symbol">get<\/span>/g;
       caseFixedLinks = caseFixedLinks.replace(accessorGet, '');
     }
@@ -265,10 +288,14 @@ function generateTempHomeMdFile(tocRaw, homeRaw) {
   let tocPageLines = [homeRaw, '# API Reference'];
   toc.forEach(group => {
     tocPageLines.push(`\n## [${group.title}](${stripPath(group.path)}.html)`);
-    const section = group.section || [];
-    section.forEach(item => {
-      tocPageLines.push(`- [${item.title}](${stripPath(item.path)}.html)`);
-    });
+    // We ignore the contents in toc.yaml for admin.database because we will
+    // simply redirect the user to the JS SDK RTDB documentation
+    if (autoGeneratedTypingsEnabled && group.title !== 'admin.database') {
+      const section = group.section || [];
+      section.forEach(item => {
+        tocPageLines.push(`- [${item.title}](${stripPath(item.path)}.html)`);
+      });
+    }
   });
   return fs.writeFile(tempHomePath, tocPageLines.join('\n'));
 }
@@ -395,27 +422,45 @@ function fixAllLinks(htmlFiles) {
 }
 
 /**
- * Updates the auto-generated Firestore API references page, by appending
- * the specified HTML content block.
+ * Updates the auto-generated 3rd party module API references page,
+ * by appending the specified HTML content block.
  *
- * @param {string} contentBlock The HTML content block to be added to the Firestore docs.
+ * @param {string} contentBlock The HTML content block to be added to the
+ * body of the docs.
  */
-function updateFirestoreHtml(contentBlock) {
-  const dom = new jsdom.JSDOM(fs.readFileSync(firestoreHtmlPath));
+function updateThirdPartyModuleBodyHtml(contentBlock, filePath) {
+  const dom = new jsdom.JSDOM(fs.readFileSync(filePath));
   const contentNode = dom.window.document.body.querySelector('.col-12');
 
   const newSection = new jsdom.JSDOM(contentBlock);
   contentNode.appendChild(newSection.window.document.body.firstChild);
-  fs.writeFileSync(firestoreHtmlPath, dom.window.document.documentElement.outerHTML);
+  fs.writeFileSync(filePath, dom.window.document.documentElement.outerHTML);
 }
 
 /**
- * Adds Firestore type aliases to the auto-generated API docs. These are the
- * types that are imported from the @google-cloud/firestore package, and
- * then re-exported from the admin.firestore namespace. Typedoc currently
- * does not handle these correctly, so we need this solution instead.
+ * Removes all top-level content from the web-page, where top-level content
+ * is defined as the different sections such as "Index", "Variables", etc.
+ * 
+ * @param {string} filePath The file to remove all top-level content from.
  */
-function addFirestoreTypeAliases() {
+function removeAllNonTopLevelContent(filePath) {
+  const dom = new jsdom.JSDOM(fs.readFileSync(filePath));
+  const contentNode = dom.window.document.body.querySelector('.col-12');
+
+  while (contentNode.children.length >= 2) {
+    contentNode.removeChild(contentNode.children[1]);
+  }
+
+  fs.writeFileSync(filePath, dom.window.document.documentElement.outerHTML);
+}
+
+/**
+ * Adds third-party type aliases to the auto-generated API docs. These are the
+ * types that are imported from another package, and then re-exported from the
+ * an admin.* namespace. TypeDoc currently does not handle these correctly, so
+ * we need this solution instead.
+ */
+function addThirdPartyTypeAliases(header, footer, filePath, moduleName, baseUrl, blacklist) {
   return new Promise((resolve, reject) => {
     const fileStream = fs.createReadStream(`${repoPath}/src/index.d.ts`);
     fileStream.on('error', (err) => {
@@ -425,15 +470,15 @@ function addFirestoreTypeAliases() {
       input: fileStream,
     });
 
-    let contentBlock = firestoreHeader;
+    let contentBlock = header;
     lineReader.on('line', (line) => {
       line = line.trim();
-      if (line.startsWith('export import') && line.indexOf('_firestore.') >= 0) {
+      if (line.startsWith('export import') && line.indexOf(moduleName) >= 0) {
         const typeName = line.split(' ')[2];
-        if (firestoreExcludes.indexOf(typeName) === -1) {
+        if (blacklist.indexOf(typeName) === -1) {
           contentBlock += `
           <li>
-            <a href="https://googleapis.dev/nodejs/firestore/latest/${typeName}.html">${typeName}</a>
+            <a href="${baseUrl}${typeName}.html">${typeName}</a>
           </li>`;
         }
       }
@@ -441,8 +486,8 @@ function addFirestoreTypeAliases() {
 
     lineReader.on('close', () => {
       try {
-        contentBlock += firestoreFooter;
-        updateFirestoreHtml(contentBlock);
+        contentBlock += footer;
+        updateThirdPartyModuleBodyHtml(contentBlock, filePath);
         resolve();
       } catch (err) {
         reject(err);
@@ -451,8 +496,45 @@ function addFirestoreTypeAliases() {
   });
 }
 
-function renameUnmappedFiles() {
+function addPageTitleNamespace() {
+  fs.readdirSync(docPath).forEach(file => {
+    const indexedFilename = file.toLowerCase().substr(file.lastIndexOf('.', file.lastIndexOf('.') - 1) + 1);
+    const namespace = filenameIndex[indexedFilename];
+    
+    if (file.indexOf('.html') !== -1) {
+      const dom = new jsdom.JSDOM(fs.readFileSync(`${docPath}/${file}`));
+      const contentNode = dom.window.document.body.querySelector('.tsd-breadcrumb');
+      if (contentNode !== null && contentNode.children.length < 2) {
+        if (namespace !== undefined) {
+          const namespaceBreadcrumb = dom.window.document.createElement('div');
+          namespaceBreadcrumb.style = 'display:inline';
+          namespaceBreadcrumb.innerHTML = `<li class="breadcrumb-name">
+          <small><a href="admin.${namespace}.html">${namespace}</a>.</small>
+          </li>`;
 
+          contentNode.prepend(namespaceBreadcrumb);
+        }
+        const adminBreadcrumb = dom.window.document.createElement('div');
+        adminBreadcrumb.style = 'display:inline';
+        adminBreadcrumb.innerHTML = `<li class="breadcrumb-name">
+        <small><a href="admin.html">admin</a>.</small>
+        </li>`;
+
+        contentNode.prepend(adminBreadcrumb);
+      }
+
+      const variablesNode = dom.window.document.body.querySelector('.tsd-member-group');
+      if (variablesNode !== null) {
+        if (variablesNode.children[0].nodeName === 'H2' && variablesNode.children[0].innerHTML === 'Variables') {
+          variablesNode.remove();
+        }
+      }
+      fs.writeFileSync(`${docPath}/${file}`, dom.window.document.documentElement.outerHTML);
+    }
+  });
+}
+
+function renameUnmappedFiles() {
   if (!autoGeneratedTypingsEnabled) {
     return;
   }
@@ -471,7 +553,7 @@ function renameUnmappedFiles() {
         && !noServiceNameList.includes(filename)) {
       const serviceName = filenameIndex[filename];
       if (serviceName === undefined) {
-        console.log(`ERROR: Could not find a service for ${filename}`);
+        console.log(`ERROR Could not find a service for ${filename}`);
       } else {
         fs.renameSync(`${docPath}/${filename}`, `${docPath}/admin.${serviceName}.${filename}`);
       }
@@ -540,7 +622,24 @@ Promise.all([
   .then(fixAllLinks)
   // Add local variable include line to index.html (to access current SDK
   // version number).
-  .then(addFirestoreTypeAliases)
+  .then(() => addThirdPartyTypeAliases(
+    generateThirdPartyHeader('@google-cloud/firestore'),
+    thirdPartyFooter,
+    firestoreHtmlPath,
+    '_firestore.',
+    'https://googleapis.dev/nodejs/firestore/latest/',
+    firestoreExcludes,
+  ))
+  .then(() => removeAllNonTopLevelContent(databaseHtmlPath))
+  .then(() => addThirdPartyTypeAliases(
+    generateThirdPartyHeader('@firebase/database-types'),
+    thirdPartyFooter,
+    databaseHtmlPath,
+    '_database.',
+    'https://firebase.google.com/docs/reference/js/firebase.database.',
+    databaseExcludes
+  ))
+  .then(addPageTitleNamespace)
   .then(() => {
     fs.readFile(`${docPath}/index.html`, 'utf8').then(data => {
       // String to include devsite local variables.
