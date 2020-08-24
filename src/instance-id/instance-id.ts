@@ -59,6 +59,7 @@ export class InstanceId implements FirebaseServiceInterface {
   /**
    * @param {FirebaseApp} app The app for this InstanceId service.
    * @constructor
+   * @hidden
    */
   constructor(app: FirebaseApp) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {

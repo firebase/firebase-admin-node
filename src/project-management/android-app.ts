@@ -22,6 +22,7 @@ import { AndroidAppMetadata, AppPlatform } from './app-metadata';
 export class AndroidApp {
   private readonly resourceName: string;
 
+  /** @hidden */
   constructor(
       public readonly appId: string,
       private readonly requestHandler: ProjectManagementRequestHandler) {
@@ -205,6 +206,7 @@ export class ShaCertificate {
    * ```javascript
    * var resourceName = shaCertificate.resourceName;
    * ```
+   * @hidden
    */
   constructor(public readonly shaHash: string, public readonly resourceName?: string) {
     if (/^[a-fA-F0-9]{40}$/.test(shaHash)) {

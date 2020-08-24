@@ -45,7 +45,10 @@ class RemoteConfigInternals implements FirebaseServiceInternalsInterface {
 }
 
 /**
- * Remote Config service bound to the provided app.
+ * The Firebase `RemoteConfig` service interface.
+ *
+ * Do not call this constructor directly. Instead, use
+ * [`admin.remoteConfig()`](admin.remoteConfig#remoteConfig).
  */
 export class RemoteConfig implements FirebaseServiceInterface {
   public readonly INTERNAL: RemoteConfigInternals = new RemoteConfigInternals();
@@ -55,6 +58,7 @@ export class RemoteConfig implements FirebaseServiceInterface {
   /**
    * @param {FirebaseApp} app The app for this RemoteConfig service.
    * @constructor
+   * @hidden
    */
   constructor(readonly app: FirebaseApp) {
     this.client = new RemoteConfigApiClient(app);

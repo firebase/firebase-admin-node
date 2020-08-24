@@ -97,6 +97,7 @@ export class Ruleset implements RulesetMetadata {
   public readonly createTime: string;
   public readonly source: RulesFile[];
 
+  /** @hidden */
   constructor(ruleset: RulesetResponse) {
     if (!validator.isNonNullObject(ruleset) ||
       !validator.isNonEmptyString(ruleset.name) ||
@@ -131,6 +132,7 @@ export class SecurityRules implements FirebaseServiceInterface {
   /**
    * @param {object} app The app for this SecurityRules service.
    * @constructor
+   * @hidden
    */
   constructor(readonly app: FirebaseApp) {
     this.client = new SecurityRulesApiClient(app);

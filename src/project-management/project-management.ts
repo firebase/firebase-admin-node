@@ -46,6 +46,7 @@ class ProjectManagementInternals implements FirebaseServiceInternalsInterface {
  * [`admin.projectManagement()`](admin.projectManagement#projectManagement).
  */
 export class ProjectManagement implements FirebaseServiceInterface {
+  /** @hidden */
   public readonly INTERNAL: ProjectManagementInternals = new ProjectManagementInternals();
 
   private readonly requestHandler: ProjectManagementRequestHandler;
@@ -54,6 +55,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
   /**
    * @param {object} app The app for this ProjectManagement service.
    * @constructor
+   * @hidden
    */
   constructor(readonly app: FirebaseApp) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {

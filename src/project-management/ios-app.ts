@@ -22,6 +22,7 @@ import { IosAppMetadata, AppPlatform } from './app-metadata';
 export class IosApp {
   private readonly resourceName: string;
 
+  /** @hidden */
   constructor(
       public readonly appId: string,
       private readonly requestHandler: ProjectManagementRequestHandler) {

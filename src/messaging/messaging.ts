@@ -194,7 +194,17 @@ class MessagingInternals implements FirebaseServiceInternalsInterface {
 
 
 /**
- * Messaging service bound to the provided app.
+ * Gets the {@link admin.messaging.Messaging `Messaging`} service for the
+ * current app.
+ *
+ * @example
+ * ```javascript
+ * var messaging = app.messaging();
+ * // The above is shorthand for:
+ * // var messaging = admin.messaging(app);
+ * ```
+ *
+ * @return The `Messaging` service for the current app.
  */
 export class Messaging implements FirebaseServiceInterface {
 
@@ -204,19 +214,7 @@ export class Messaging implements FirebaseServiceInterface {
   private readonly appInternal: FirebaseApp;
   private readonly messagingRequestHandler: FirebaseMessagingRequestHandler;
 
-  /**
-   * Gets the {@link admin.messaging.Messaging `Messaging`} service for the
-   * current app.
-   *
-   * @example
-   * ```javascript
-   * var messaging = app.messaging();
-   * // The above is shorthand for:
-   * // var messaging = admin.messaging(app);
-   * ```
-   *
-   * @return The `Messaging` service for the current app.
-   */
+  /** @hidden */
   constructor(app: FirebaseApp) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseMessagingError(

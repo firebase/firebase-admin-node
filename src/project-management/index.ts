@@ -42,7 +42,7 @@ export namespace admin.projectManagement {
   // See https://github.com/typescript-eslint/typescript-eslint/issues/363
   export import AndroidAppMetadata = appMetadataApi.AndroidAppMetadata
   export import AppMetadata = appMetadataApi.AppMetadata
-  export import AppPlatform = appMetadataApi.AppPlatform 
+  export import AppPlatform = appMetadataApi.AppPlatform;
   export import IosAppMetadata = appMetadataApi.IosAppMetadata
 
   // Allows for exposing classes as interfaces in typings
