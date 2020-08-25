@@ -284,6 +284,9 @@ export abstract class MultiFactorInfo {
  * Interface representing a phone specific user enrolled second factor.
  */
 export class PhoneMultiFactorInfo extends MultiFactorInfo {
+  /**
+   * The phone number associated with a phone second factor.
+   */
   public readonly phoneNumber: string;
 
   /**
@@ -315,6 +318,48 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
    */
   protected getFactorId(response: MultiFactorInfoResponse): MultiFactorId | null {
     return (response && response.phoneInfo) ? MultiFactorId.Phone : null;
+  }
+}
+
+/**
+ * The multi-factor related user settings.
+ */
+export class MultiFactor {
+  /**
+   * List of second factors enrolled with the current user.
+   * Currently only phone second factors are supported.
+   */
+  public enrolledFactors: MultiFactorInfo[];
+
+  /**
+   * Initializes the MultiFactor object using the server side or JWT format response.
+   *
+   * @param response The server side response.
+   */
+  constructor(response: GetAccountInfoUserResponse) {
+    const parsedEnrolledFactors: MultiFactorInfo[] = [];
+    if (!isNonNullObject(response)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INTERNAL_ERROR,
+        'INTERNAL ASSERT FAILED: Invalid multi-factor response');
+    } else if (response.mfaInfo) {
+      response.mfaInfo.forEach((factorResponse) => {
+        const multiFactorInfo = initMultiFactorInfo(factorResponse);
+        if (multiFactorInfo) {
+          parsedEnrolledFactors.push(multiFactorInfo);
+        }
+      });
+    }
+    // Make enrolled factors immutable.
+    utils.addReadonlyGetter(
+      this, 'enrolledFactors', Object.freeze(parsedEnrolledFactors));
+  }
+
+  /** @return The plain object representation. */
+  public toJSON(): any {
+    return {
+      enrolledFactors: this.enrolledFactors.map((info) => info.toJSON()),
+    };
   }
 }
 
@@ -609,47 +654,5 @@ export class UserRecord {
       json.providerData.push(entry.toJSON());
     }
     return json;
-  }
-}
-
-/**
- * The multi-factor related user settings.
- */
-export class MultiFactor {
-  /**
-   * List of second factors enrolled with the current user.
-   * Currently only phone second factors are supported.
-   */
-  public enrolledFactors: MultiFactorInfo[];
-
-  /**
-   * Initializes the MultiFactor object using the server side or JWT format response.
-   *
-   * @param response The server side response.
-   */
-  constructor(response: GetAccountInfoUserResponse) {
-    const parsedEnrolledFactors: MultiFactorInfo[] = [];
-    if (!isNonNullObject(response)) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INTERNAL_ERROR,
-        'INTERNAL ASSERT FAILED: Invalid multi-factor response');
-    } else if (response.mfaInfo) {
-      response.mfaInfo.forEach((factorResponse) => {
-        const multiFactorInfo = initMultiFactorInfo(factorResponse);
-        if (multiFactorInfo) {
-          parsedEnrolledFactors.push(multiFactorInfo);
-        }
-      });
-    }
-    // Make enrolled factors immutable.
-    utils.addReadonlyGetter(
-      this, 'enrolledFactors', Object.freeze(parsedEnrolledFactors));
-  }
-
-  /** @return The plain object representation. */
-  public toJSON(): any {
-    return {
-      enrolledFactors: this.enrolledFactors.map((info) => info.toJSON()),
-    };
   }
 }
