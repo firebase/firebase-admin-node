@@ -29,7 +29,7 @@ import LegacyFirebaseTokenGenerator = require('firebase-token-generator');
 
 import * as mocks from '../../resources/mocks';
 import { FirebaseTokenGenerator, ServiceAccountSigner } from '../../../src/auth/token-generator';
-import * as verifier from '../../../src/auth/token-verifier';
+import * as verifier from '../../../src/auth/token-verifier-internal';
 
 import { ServiceAccountCredential } from '../../../src/auth/credential';
 import { AuthClientErrorCode } from '../../../src/utils/error';
