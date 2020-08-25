@@ -35,7 +35,7 @@ import {
 } from '../../../src/credential/credential';
 import {
   RefreshTokenCredential, ServiceAccountCredential,
-  ComputeEngineCredential, getApplicationDefault, isApplicationDefault,
+  ComputeEngineCredential, getApplicationDefault, isApplicationDefault
 } from '../../../src/credential/credential-internal';
 import { HttpClient } from '../../../src/utils/api-request';
 import { Agent } from 'https';
