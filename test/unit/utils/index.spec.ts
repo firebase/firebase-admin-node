@@ -25,7 +25,7 @@ import {
 } from '../../../src/utils/index';
 import { isNonEmptyString } from '../../../src/utils/validator';
 import { FirebaseApp, FirebaseAppOptions } from '../../../src/firebase-app';
-import { ComputeEngineCredential } from '../../../src/credential/credential';
+import { ComputeEngineCredential } from '../../../src/credential/credential-internal';
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import { FirebaseAppError } from '../../../src/utils/error';

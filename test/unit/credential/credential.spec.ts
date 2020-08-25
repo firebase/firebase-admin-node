@@ -31,9 +31,12 @@ import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
 import {
-  GoogleOAuthAccessToken, RefreshTokenCredential, ServiceAccountCredential,
-  ComputeEngineCredential, getApplicationDefault, isApplicationDefault, Credential,
+  GoogleOAuthAccessToken, Credential
 } from '../../../src/credential/credential';
+import {
+  RefreshTokenCredential, ServiceAccountCredential,
+  ComputeEngineCredential, getApplicationDefault, isApplicationDefault,
+} from '../../../src/credential/credential-internal';
 import { HttpClient } from '../../../src/utils/api-request';
 import { Agent } from 'https';
 import { FirebaseAppError } from '../../../src/utils/error';
