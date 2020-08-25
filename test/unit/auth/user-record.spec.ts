@@ -23,7 +23,8 @@ import {
   UserInfo, UserMetadata, UserRecord, MultiFactor, PhoneMultiFactorInfo
 } from '../../../src/auth/user-record';
 import {
-  GetAccountInfoUserResponse, ProviderUserInfoResponse, MultiFactorInfoResponse, initMultiFactorInfo
+  GetAccountInfoUserResponse, ProviderUserInfoResponse,
+  MultiFactorInfoResponse, MultiFactorInfoUtils
 } from '../../../src/auth/user-record-internal';
 
 
@@ -387,11 +388,11 @@ describe('MultiFactorInfo', () => {
 
   describe('initMultiFactorInfo', () => {
     it('should return expected PhoneMultiFactorInfo', () => {
-      expect(initMultiFactorInfo(serverResponse)).to.deep.equal(phoneMultiFactorInfo);
+      expect(MultiFactorInfoUtils.initMultiFactorInfo(serverResponse)).to.deep.equal(phoneMultiFactorInfo);
     });
 
     it('should return null for invalid MultiFactorInfo', () => {
-      expect(initMultiFactorInfo(undefined as any)).to.be.null;
+      expect(MultiFactorInfoUtils.initMultiFactorInfo(undefined as any)).to.be.null;
     });
   });
 });

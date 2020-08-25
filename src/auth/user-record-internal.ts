@@ -18,22 +18,24 @@ import {
   MultiFactorInfo, PhoneMultiFactorInfo
 } from './user-record';
   
-/**
- * Initializes the MultiFactorInfo associated subclass using the server side.
- * If no MultiFactorInfo is associated with the response, null is returned.
- *
- * @param response The server side response.
- * @constructor
- */
-export function initMultiFactorInfo(response: MultiFactorInfoResponse): MultiFactorInfo | null {
-  let multiFactorInfo: MultiFactorInfo | null = null;
-  // Only PhoneMultiFactorInfo currently available.
-  try {
-    multiFactorInfo = new PhoneMultiFactorInfo(response);
-  } catch (e) {
-    // Ignore error.
+export class MultiFactorInfoUtils {
+  /**
+   * Initializes the MultiFactorInfo associated subclass using the server side.
+   * If no MultiFactorInfo is associated with the response, null is returned.
+   *
+   * @param response The server side response.
+   * @constructor
+   */
+  static initMultiFactorInfo(response: MultiFactorInfoResponse): MultiFactorInfo | null {
+    let multiFactorInfo: MultiFactorInfo | null = null;
+    // Only PhoneMultiFactorInfo currently available.
+    try {
+      multiFactorInfo = new PhoneMultiFactorInfo(response);
+    } catch (e) {
+      // Ignore error.
+    }
+    return multiFactorInfo;
   }
-  return multiFactorInfo;
 }
 
 /** Enums for multi-factor identifiers. */

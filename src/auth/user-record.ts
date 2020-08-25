@@ -21,7 +21,7 @@ import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import { 
   GetAccountInfoUserResponse, MultiFactorId,
   MultiFactorInfoResponse, ProviderUserInfoResponse,
-  initMultiFactorInfo
+  MultiFactorInfoUtils,
 } from './user-record-internal';
 
 /**
@@ -344,7 +344,7 @@ export class MultiFactor {
         'INTERNAL ASSERT FAILED: Invalid multi-factor response');
     } else if (response.mfaInfo) {
       response.mfaInfo.forEach((factorResponse) => {
-        const multiFactorInfo = initMultiFactorInfo(factorResponse);
+        const multiFactorInfo = MultiFactorInfoUtils.initMultiFactorInfo(factorResponse);
         if (multiFactorInfo) {
           parsedEnrolledFactors.push(multiFactorInfo);
         }
