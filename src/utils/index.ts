@@ -15,7 +15,7 @@
  */
 
 import { FirebaseApp, FirebaseAppOptions } from '../firebase-app';
-import { ServiceAccountCredential, ComputeEngineCredential } from '../auth/credential';
+import { ServiceAccountCredential, ComputeEngineCredential } from '../credential/credential';
 
 import * as validator from './validator';
 

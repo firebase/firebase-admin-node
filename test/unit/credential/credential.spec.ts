@@ -33,7 +33,7 @@ import * as mocks from '../../resources/mocks';
 import {
   GoogleOAuthAccessToken, RefreshTokenCredential, ServiceAccountCredential,
   ComputeEngineCredential, getApplicationDefault, isApplicationDefault, Credential,
-} from '../../../src/auth/credential';
+} from '../../../src/credential/credential';
 import { HttpClient } from '../../../src/utils/api-request';
 import { Agent } from 'https';
 import { FirebaseAppError } from '../../../src/utils/error';

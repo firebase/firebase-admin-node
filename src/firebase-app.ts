@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-import { Credential, GoogleOAuthAccessToken, getApplicationDefault } from './auth/credential';
+import {
+  Credential, GoogleOAuthAccessToken, getApplicationDefault
+} from './credential/credential';
 import * as validator from './utils/validator';
 import { deepCopy, deepExtend } from './utils/deep-copy';
 import { FirebaseServiceInterface } from './firebase-service';

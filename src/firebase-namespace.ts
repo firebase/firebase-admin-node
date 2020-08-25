@@ -15,17 +15,13 @@
  */
 
 import fs = require('fs');
-import { Agent } from 'http';
 import { deepExtend } from './utils/deep-copy';
 import { AppErrorCodes, FirebaseAppError } from './utils/error';
 import { AppHook, FirebaseApp, FirebaseAppOptions } from './firebase-app';
 import { FirebaseServiceFactory, FirebaseServiceInterface } from './firebase-service';
 import {
-  Credential,
-  RefreshTokenCredential,
-  ServiceAccountCredential,
-  getApplicationDefault,
-} from './auth/credential';
+  getApplicationDefault, cert, refreshToken, applicationDefault
+} from './credential/credential';
 
 import { Auth } from './auth/auth';
 import { MachineLearning } from './machine-learning/machine-learning';
@@ -49,12 +45,6 @@ const DEFAULT_APP_NAME = '[DEFAULT]';
  * otherwise it will be assumed to be pointing to a file.
  */
 export const FIREBASE_CONFIG_VAR = 'FIREBASE_CONFIG';
-
-
-let globalAppDefaultCred: Credential;
-const globalCertCreds: { [key: string]: ServiceAccountCredential } = {};
-const globalRefreshTokenCreds: { [key: string]: RefreshTokenCredential } = {};
-
 
 export interface FirebaseServiceNamespace <T> {
   (app?: FirebaseApp): T;
@@ -272,31 +262,8 @@ export class FirebaseNamespaceInternals {
   }
 }
 
-
 const firebaseCredential = {
-  cert: (serviceAccountPathOrObject: string | object, httpAgent?: Agent): Credential => {
-    const stringifiedServiceAccount = JSON.stringify(serviceAccountPathOrObject);
-    if (!(stringifiedServiceAccount in globalCertCreds)) {
-      globalCertCreds[stringifiedServiceAccount] = new ServiceAccountCredential(serviceAccountPathOrObject, httpAgent);
-    }
-    return globalCertCreds[stringifiedServiceAccount];
-  },
-
-  refreshToken: (refreshTokenPathOrObject: string | object, httpAgent?: Agent): Credential => {
-    const stringifiedRefreshToken = JSON.stringify(refreshTokenPathOrObject);
-    if (!(stringifiedRefreshToken in globalRefreshTokenCreds)) {
-      globalRefreshTokenCreds[stringifiedRefreshToken] = new RefreshTokenCredential(
-        refreshTokenPathOrObject, httpAgent);
-    }
-    return globalRefreshTokenCreds[stringifiedRefreshToken];
-  },
-
-  applicationDefault: (httpAgent?: Agent): Credential => {
-    if (typeof globalAppDefaultCred === 'undefined') {
-      globalAppDefaultCred = getApplicationDefault(httpAgent);
-    }
-    return globalAppDefaultCred;
-  },
+  cert, refreshToken, applicationDefault
 };
 
 
