@@ -20,8 +20,7 @@ import { AppErrorCodes, FirebaseAppError } from './utils/error';
 import { AppHook, FirebaseApp, FirebaseAppOptions } from './firebase-app';
 import { FirebaseServiceFactory, FirebaseServiceInterface } from './firebase-service';
 import {
-  getApplicationDefault,
-  cert, refreshToken, applicationDefault
+  getApplicationDefault, cert, refreshToken, applicationDefault
 } from './credential/credential';
 
 import { Auth } from './auth/auth';
@@ -266,6 +265,7 @@ export class FirebaseNamespaceInternals {
 const firebaseCredential = {
   cert, refreshToken, applicationDefault
 };
+
 
 /**
  * Global Firebase context object.
