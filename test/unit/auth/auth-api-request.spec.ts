@@ -38,7 +38,7 @@ import {
 } from '../../../src/auth/auth-api-request';
 import { UserImportBuilder, UserImportRecord } from '../../../src/auth/user-import-builder';
 import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
-import { ActionCodeSettingsBuilder } from '../../../src/auth/action-code-settings-builder';
+import { ActionCodeSettingsBuilder } from '../../../src/auth/action-code-settings-builder-internal';
 import {
   OIDCAuthProviderConfig, SAMLAuthProviderConfig, OIDCUpdateAuthProviderRequest,
   SAMLUpdateAuthProviderRequest
