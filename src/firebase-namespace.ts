@@ -19,7 +19,10 @@ import { deepExtend } from './utils/deep-copy';
 import { AppErrorCodes, FirebaseAppError } from './utils/error';
 import { AppHook, FirebaseApp, FirebaseAppOptions } from './firebase-app';
 import { FirebaseServiceFactory, FirebaseServiceInterface } from './firebase-service';
-import { CredentialService, getApplicationDefault } from './credential/credential';
+import {
+  getApplicationDefault,
+  cert, refreshToken, applicationDefault
+} from './credential/credential';
 
 import { Auth } from './auth/auth';
 import { MachineLearning } from './machine-learning/machine-learning';
@@ -260,6 +263,10 @@ export class FirebaseNamespaceInternals {
   }
 }
 
+const firebaseCredential = {
+  cert, refreshToken, applicationDefault
+};
+
 /**
  * Global Firebase context object.
  */
@@ -269,6 +276,7 @@ export class FirebaseNamespace {
   public __esModule = true;
   /* tslint:enable:variable-name */
 
+  public credential = firebaseCredential;
   public SDK_VERSION = getSdkVersion();
   public INTERNAL: FirebaseNamespaceInternals;
 
@@ -292,14 +300,6 @@ export class FirebaseNamespace {
     };
     const auth = require('./auth/auth').Auth;
     return Object.assign(fn, { Auth: auth });
-  }
-
-  get credential(): FirebaseServiceNamespace<CredentialService> {
-    const fn: FirebaseServiceNamespace<CredentialService> = (app?: FirebaseApp) => {
-      return this.ensureApp(app).credential();
-    };
-    const credential = require('./credential/credential').CredentialService;
-    return Object.assign(fn, credential);
   }
 
   /**

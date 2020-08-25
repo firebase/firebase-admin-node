@@ -14,22 +14,11 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../firebase-app';
 import * as credentialApi from './credential';
-import * as firebaseAdmin from '../index';
-
-export function credential(app?: FirebaseApp): credentialApi.CredentialService {
-  if (typeof (app) === 'undefined') {
-    app = firebaseAdmin.app();
-  }
-  return app.credential();
-}
 
 /**
- * We must define a namespace to make the typings work correctly. Otherwise
- * `admin.credential()` cannot be called like a function. Temporarily,
- * admin.credential is used as the namespace name because we cannot barrel
- * re-export the contents from credential.ts, and we want it to
+ * Temporarily, admin.credential is used as the namespace name because we
+ * cannot barrel re-export the contents from credential.ts, and we want it to
  * match the namespacing in the re-export inside src/index.d.ts
  */
 /* eslint-disable @typescript-eslint/no-namespace */
@@ -40,7 +29,7 @@ export namespace admin.credential {
   // Allows for exposing classes as interfaces in typings
   /* eslint-disable @typescript-eslint/no-empty-interface */
   export import Credential = credentialApi.Credential;
-  export const applicationDefault = credentialApi.CredentialService.applicationDefault;
-  export const cert = credentialApi.CredentialService.cert;
-  export const refreshToken = credentialApi.CredentialService.refreshToken;
+  export const applicationDefault = credentialApi.applicationDefault;
+  export const cert = credentialApi.cert;
+  export const refreshToken = credentialApi.refreshToken;
 }
