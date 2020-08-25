@@ -24,7 +24,6 @@ export class MultiFactorInfoUtils {
    * If no MultiFactorInfo is associated with the response, null is returned.
    *
    * @param response The server side response.
-   * @constructor
    */
   static initMultiFactorInfo(response: MultiFactorInfoResponse): MultiFactorInfo | null {
     let multiFactorInfo: MultiFactorInfo | null = null;
@@ -41,7 +40,8 @@ export class MultiFactorInfoUtils {
 /** Enums for multi-factor identifiers. */
 export enum MultiFactorId {
   Phone = 'phone',
-} 
+}
+
 export interface MultiFactorInfoResponse {
   mfaEnrollmentId: string;
   displayName?: string;
