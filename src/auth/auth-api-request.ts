@@ -18,8 +18,10 @@ import * as validator from '../utils/validator';
 
 import { deepCopy, deepExtend } from '../utils/deep-copy';
 import {
-  UserIdentifier, isUidIdentifier, isEmailIdentifier, isPhoneIdentifier,
-  isProviderIdentifier, UidIdentifier, EmailIdentifier, PhoneIdentifier,
+  isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, isProviderIdentifier
+} from './identifier-internal';
+import {
+  UserIdentifier, UidIdentifier, EmailIdentifier, PhoneIdentifier,
   ProviderIdentifier,
 } from './identifier';
 import { FirebaseApp } from '../firebase-app';
@@ -39,11 +41,12 @@ import {
   AuthProviderConfig, OIDCUpdateAuthProviderRequest,
   SAMLUpdateAuthProviderRequest
 } from './auth-config';
+import { TenantOptions } from './tenant';
+import { TenantServerResponse, TenantUtils } from './tenant-internal';
 import { 
   SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
   OIDCConfigServerRequest, SAMLConfigServerRequest
 } from './auth-config-internal';
-import { Tenant, TenantOptions, TenantServerResponse } from './tenant';
 
 
 /** Firebase Auth request header. */
@@ -1809,7 +1812,7 @@ const UPDATE_TENANT = new ApiSettings('/tenants/{tenantId}?updateMask={updateMas
   .setResponseValidator((response: any) => {
     // Response should always contain at least the tenant name.
     if (!validator.isNonEmptyString(response.name) ||
-          !Tenant.getTenantIdFromResourceName(response.name)) {
+          !TenantUtils.getTenantIdFromResourceName(response.name)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Unable to update tenant',
@@ -1844,7 +1847,7 @@ const CREATE_TENANT = new ApiSettings('/tenants', 'POST')
   .setResponseValidator((response: any) => {
     // Response should always contain at least the tenant name.
     if (!validator.isNonEmptyString(response.name) ||
-          !Tenant.getTenantIdFromResourceName(response.name)) {
+          !TenantUtils.getTenantIdFromResourceName(response.name)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INTERNAL_ERROR,
         'INTERNAL ASSERT FAILED: Unable to create new tenant',
@@ -1962,7 +1965,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
   public createTenant(tenantOptions: TenantOptions): Promise<TenantServerResponse> {
     try {
       // Construct backend request.
-      const request = Tenant.buildServerRequest(tenantOptions, true);
+      const request = TenantUtils.buildServerRequest(tenantOptions, true);
       return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, CREATE_TENANT, request)
         .then((response: any) => {
           return response as TenantServerResponse;
@@ -1985,7 +1988,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
     }
     try {
       // Construct backend request.
-      const request = Tenant.buildServerRequest(tenantOptions, false);
+      const request = TenantUtils.buildServerRequest(tenantOptions, false);
       // Do not traverse deep into testPhoneNumbers. The entire content should be replaced
       // and not just specific phone numbers.
       const updateMask = utils.generateUpdateMask(request, ['testPhoneNumbers']);

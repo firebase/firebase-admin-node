@@ -17,18 +17,21 @@
 import { AuthRequestHandler } from './auth-api-request';
 import { FirebaseApp } from '../firebase-app';
 import { TenantAwareAuth } from './auth';
-import {
-  Tenant, TenantServerResponse, ListTenantsResult, TenantOptions,
-} from './tenant';
+import { ListTenantsResult, Tenant, TenantOptions } from './tenant';
+import { TenantServerResponse } from './tenant-internal';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import * as validator from '../utils/validator';
 
 /**
- * Data structure used to help manage tenant related operations.
+ * Defines the tenant manager used to help manage tenant related operations.
  * This includes:
- * - The ability to create, update, list, get and delete tenants for the underlying project.
- * - Getting a TenantAwareAuth instance for running Auth related operations (user mgmt, provider config mgmt, etc)
- *   in the context of a specified tenant.
+ * <ul>
+ * <li>The ability to create, update, list, get and delete tenants for the underlying
+ *     project.</li>
+ * <li>Getting a `TenantAwareAuth` instance for running Auth related operations
+ *     (user management, provider configuration management, token verification,
+ *     email link generation, etc) in the context of a specified tenant.</li>
+ * </ul>
  */
 export class TenantManager {
   private readonly authRequestHandler: AuthRequestHandler;
@@ -44,10 +47,9 @@ export class TenantManager {
   }
 
   /**
-   * Returns a TenantAwareAuth instance for the corresponding tenant ID.
+   * @param tenantId The tenant ID whose `TenantAwareAuth` instance is to be returned.
    *
-   * @param tenantId The tenant ID whose TenantAwareAuth is to be returned.
-   * @return The corresponding TenantAwareAuth instance.
+   * @return The `TenantAwareAuth` instance corresponding to this tenant identifier.
    */
   public authForTenant(tenantId: string): TenantAwareAuth {
     if (!validator.isNonEmptyString(tenantId)) {
@@ -60,11 +62,11 @@ export class TenantManager {
   }
 
   /**
-   * Looks up the tenant identified by the provided tenant ID and returns a promise that is
-   * fulfilled with the corresponding tenant if it is found.
+   * Gets the tenant configuration for the tenant corresponding to a given `tenantId`.
    *
-   * @param tenantId The tenant ID of the tenant to look up.
-   * @return A promise that resolves with the corresponding tenant.
+   * @param tenantId The tenant identifier corresponding to the tenant whose data to fetch.
+   *
+   * @return A promise fulfilled with the tenant configuration to the provided `tenantId`.
    */
   public getTenant(tenantId: string): Promise<Tenant> {
     return this.authRequestHandler.getTenant(tenantId)
@@ -74,16 +76,17 @@ export class TenantManager {
   }
 
   /**
-   * Exports a batch of tenant accounts. Batch size is determined by the maxResults argument.
-   * Starting point of the batch is determined by the pageToken argument.
+   * Retrieves a list of tenants (single batch only) with a size of `maxResults`
+   * starting from the offset as specified by `pageToken`. This is used to
+   * retrieve all the tenants of a specified project in batches.
    *
-   * @param maxResults The page size, 1000 if undefined. This is also the maximum
-   *     allowed limit.
-   * @param pageToken The next page token. If not specified, returns users starting
-   *     without any offset.
+   * @param maxResults The page size, 1000 if undefined. This is also
+   *   the maximum allowed limit.
+   * @param pageToken The next page token. If not specified, returns
+   *   tenants starting without any offset.
+   *
    * @return A promise that resolves with
-   *     the current batch of downloaded tenants and the next page token. For the last page, an
-   *     empty list of tenants and no page token are returned.
+   *   a batch of downloaded tenants and the next page token.
    */
   public listTenants(
     maxResults?: number,
@@ -110,21 +113,25 @@ export class TenantManager {
   }
 
   /**
-   * Deletes the tenant identified by the provided tenant ID and returns a promise that is
-   * fulfilled when the tenant is found and successfully deleted.
+   * Deletes an existing tenant.
    *
-   * @param tenantId The tenant ID of the tenant to delete.
-   * @return A promise that resolves when the tenant is successfully deleted.
+   * @param tenantId The `tenantId` corresponding to the tenant to delete.
+   *
+   * @return An empty promise fulfilled once the tenant has been deleted.
    */
   public deleteTenant(tenantId: string): Promise<void> {
     return this.authRequestHandler.deleteTenant(tenantId);
   }
 
   /**
-   * Creates a new tenant with the properties provided.
+   * Creates a new tenant.
+   * When creating new tenants, tenants that use separate billing and quota will require their
+   * own project and must be defined as `full_service`.
    *
-   * @param tenantOptions The properties to set on the new tenant to be created.
-   * @return A promise that resolves with the newly created tenant.
+   * @param tenantOptions The properties to set on the new tenant configuration to be created.
+   *
+   * @return A promise fulfilled with the tenant configuration corresponding to the newly
+   *   created tenant.
    */
   public createTenant(tenantOptions: TenantOptions): Promise<Tenant> {
     return this.authRequestHandler.createTenant(tenantOptions)
@@ -134,11 +141,12 @@ export class TenantManager {
   }
 
   /**
-   * Updates an existing tenant identified by the tenant ID with the properties provided.
+   * Updates an existing tenant configuration.
    *
-   * @param tenantId The tenant identifier of the tenant to update.
-   * @param tenantOptions The properties to update on the existing tenant.
-   * @return A promise that resolves with the modified tenant.
+   * @param tenantId The `tenantId` corresponding to the tenant to delete.
+   * @param tenantOptions The properties to update on the provided tenant.
+   *
+   * @return A promise fulfilled with the update tenant data.
    */
   public updateTenant(tenantId: string, tenantOptions: TenantOptions): Promise<Tenant> {
     return this.authRequestHandler.updateTenant(tenantId, tenantOptions)

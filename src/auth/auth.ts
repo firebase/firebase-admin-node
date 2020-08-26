@@ -16,10 +16,11 @@
 
 import { UserRecord, CreateRequest, UpdateRequest } from './user-record';
 import {
-  UserIdentifier, isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, isProviderIdentifier,
-} from './identifier';
+  isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, isProviderIdentifier,
+} from './identifier-internal';
+import { UserIdentifier } from './identifier';
 import { FirebaseApp } from '../firebase-app';
-import { FirebaseTokenGenerator, cryptoSignerFromApp } from './token-generator';
+import { FirebaseTokenGenerator, cryptoSignerFromApp } from './token-generator-internal';
 import {
   AbstractAuthRequestHandler, AuthRequestHandler, TenantAwareAuthRequestHandler,
 } from './auth-api-request';

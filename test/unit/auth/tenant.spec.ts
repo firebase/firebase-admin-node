@@ -23,10 +23,8 @@ import { deepCopy } from '../../../src/utils/deep-copy';
 import {
   EmailSignInConfig, EmailSignInProviderConfig, MultiFactorAuthConfig,
 } from '../../../src/auth/auth-config-internal';
-import {
-  Tenant, TenantOptions, TenantServerResponse,
-} from '../../../src/auth/tenant';
-
+import { Tenant, TenantOptions } from '../../../src/auth/tenant';
+import { TenantServerResponse, TenantUtils } from '../../../src/auth/tenant-internal';
 
 chai.should();
 chai.use(sinonChai);
@@ -89,7 +87,7 @@ describe('Tenant', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequestWithoutMfa);
         const tenantOptionsServerRequest = deepCopy(serverRequestWithoutMfa);
         delete tenantOptionsServerRequest.name;
-        expect(Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest))
+        expect(TenantUtils.buildServerRequest(tenantOptionsClientRequest, !createRequest))
           .to.deep.equal(tenantOptionsServerRequest);
       });
 
@@ -97,14 +95,14 @@ describe('Tenant', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest);
         const tenantOptionsServerRequest = deepCopy(serverRequest);
         delete tenantOptionsServerRequest.name;
-        expect(Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest))
+        expect(TenantUtils.buildServerRequest(tenantOptionsClientRequest, !createRequest))
           .to.deep.equal(tenantOptionsServerRequest);
       });
 
       it('should throw on invalid EmailSignInConfig object', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest);
         tenantOptionsClientRequest.emailSignInConfig = null as unknown as EmailSignInProviderConfig;
-        expect(() => Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest))
+        expect(() => TenantUtils.buildServerRequest(tenantOptionsClientRequest, !createRequest))
           .to.throw('"EmailSignInConfig" must be a non-null object.');
       });
 
@@ -112,7 +110,7 @@ describe('Tenant', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
         tenantOptionsClientRequest.emailSignInConfig.enabled = 'invalid';
         expect(() => {
-          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+          TenantUtils.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"EmailSignInConfig.enabled" must be a boolean.');
       });
 
@@ -120,7 +118,7 @@ describe('Tenant', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
         tenantOptionsClientRequest.multiFactorConfig.state = 'invalid';
         expect(() => {
-          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+          TenantUtils.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"MultiFactorConfig.state" must be either "ENABLED" or "DISABLED".');
       });
 
@@ -128,7 +126,7 @@ describe('Tenant', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
         tenantOptionsClientRequest.testPhoneNumbers = 'invalid';
         expect(() => {
-          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+          TenantUtils.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"testPhoneNumbers" must be a map of phone number / code pairs.');
       });
 
@@ -139,14 +137,14 @@ describe('Tenant', () => {
         delete tenantOptionsServerRequest.name;
         tenantOptionsServerRequest.testPhoneNumbers = {};
 
-        expect(Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest))
+        expect(TenantUtils.buildServerRequest(tenantOptionsClientRequest, !createRequest))
           .to.deep.equal(tenantOptionsServerRequest);
       });
 
       it('should not throw on valid client request object', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest);
         expect(() => {
-          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+          TenantUtils.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).not.to.throw;
       });
 
@@ -154,7 +152,7 @@ describe('Tenant', () => {
       nonObjects.forEach((request) => {
         it('should throw on invalid UpdateTenantRequest:' + JSON.stringify(request), () => {
           expect(() => {
-            Tenant.buildServerRequest(request as any, !createRequest);
+            TenantUtils.buildServerRequest(request as any, !createRequest);
           }).to.throw('"UpdateTenantRequest" must be a valid non-null object.');
         });
       });
@@ -163,7 +161,7 @@ describe('Tenant', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
         tenantOptionsClientRequest.unsupported = 'value';
         expect(() => {
-          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+          TenantUtils.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw(`"unsupported" is not a valid UpdateTenantRequest parameter.`);
       });
 
@@ -173,7 +171,7 @@ describe('Tenant', () => {
           const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
           tenantOptionsClientRequest.displayName = displayName;
           expect(() => {
-            Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+            TenantUtils.buildServerRequest(tenantOptionsClientRequest, !createRequest);
           }).to.throw('"UpdateTenantRequest.displayName" must be a valid non-empty string.');
         });
       });
@@ -185,7 +183,7 @@ describe('Tenant', () => {
         const tenantOptionsServerRequest: TenantServerResponse = deepCopy(serverRequestWithoutMfa);
         delete tenantOptionsServerRequest.name;
 
-        expect(Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest))
+        expect(TenantUtils.buildServerRequest(tenantOptionsClientRequest, createRequest))
           .to.deep.equal(tenantOptionsServerRequest);
       });
 
@@ -194,7 +192,7 @@ describe('Tenant', () => {
         const tenantOptionsServerRequest: TenantServerResponse = deepCopy(serverRequest);
         delete tenantOptionsServerRequest.name;
 
-        expect(Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest))
+        expect(TenantUtils.buildServerRequest(tenantOptionsClientRequest, createRequest))
           .to.deep.equal(tenantOptionsServerRequest);
       });
 
@@ -202,7 +200,7 @@ describe('Tenant', () => {
         const tenantOptionsClientRequest: TenantOptions = deepCopy(clientRequest);
         tenantOptionsClientRequest.emailSignInConfig = null as unknown as EmailSignInProviderConfig;
 
-        expect(() => Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest))
+        expect(() => TenantUtils.buildServerRequest(tenantOptionsClientRequest, createRequest))
           .to.throw('"EmailSignInConfig" must be a non-null object.');
       });
 
@@ -210,7 +208,7 @@ describe('Tenant', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
         tenantOptionsClientRequest.multiFactorConfig.factorIds = ['invalid'];
         expect(() => {
-          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+          TenantUtils.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw(`"invalid" is not a valid "AuthFactorType".`,);
       });
 
@@ -218,7 +216,7 @@ describe('Tenant', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
         tenantOptionsClientRequest.testPhoneNumbers = { 'invalid': '123456' };
         expect(() => {
-          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+          TenantUtils.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw(`"invalid" is not a valid E.164 standard compliant phone number.`);
       });
 
@@ -230,7 +228,7 @@ describe('Tenant', () => {
         tenantOptionsServerRequest.testPhoneNumbers = {};
 
         expect(() => {
-          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+          TenantUtils.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw(`"CreateTenantRequest.testPhoneNumbers" must be a non-null object.`);
       });
 
@@ -238,7 +236,7 @@ describe('Tenant', () => {
       nonObjects.forEach((request) => {
         it('should throw on invalid CreateTenantRequest:' + JSON.stringify(request), () => {
           expect(() => {
-            Tenant.buildServerRequest(request as any, createRequest);
+            TenantUtils.buildServerRequest(request as any, createRequest);
           }).to.throw('"CreateTenantRequest" must be a valid non-null object.');
         });
       });
@@ -247,7 +245,7 @@ describe('Tenant', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
         tenantOptionsClientRequest.unsupported = 'value';
         expect(() => {
-          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+          TenantUtils.buildServerRequest(tenantOptionsClientRequest, createRequest);
         }).to.throw(`"unsupported" is not a valid CreateTenantRequest parameter.`);
       });
 
@@ -257,7 +255,7 @@ describe('Tenant', () => {
           const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
           tenantOptionsClientRequest.displayName = displayName;
           expect(() => {
-            Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+            TenantUtils.buildServerRequest(tenantOptionsClientRequest, createRequest);
           }).to.throw('"CreateTenantRequest.displayName" must be a valid non-empty string.');
         });
       });
@@ -266,17 +264,17 @@ describe('Tenant', () => {
 
   describe('getTenantIdFromResourceName()', () => {
     it('should return the expected tenant ID from resource name', () => {
-      expect(Tenant.getTenantIdFromResourceName('projects/project1/tenants/TENANT-ID'))
+      expect(TenantUtils.getTenantIdFromResourceName('projects/project1/tenants/TENANT-ID'))
         .to.equal('TENANT-ID');
     });
 
     it('should return the expected tenant ID from resource name whose project ID contains "tenants" substring', () => {
-      expect(Tenant.getTenantIdFromResourceName('projects/projecttenants/tenants/TENANT-ID'))
+      expect(TenantUtils.getTenantIdFromResourceName('projects/projecttenants/tenants/TENANT-ID'))
         .to.equal('TENANT-ID');
     });
 
     it('should return null when no tenant ID is found', () => {
-      expect(Tenant.getTenantIdFromResourceName('projects/project1')).to.be.null;
+      expect(TenantUtils.getTenantIdFromResourceName('projects/project1')).to.be.null;
     });
   });
 
