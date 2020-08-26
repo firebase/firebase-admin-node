@@ -18,9 +18,11 @@ import * as validator from '../utils/validator';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import { TenantOptions } from './tenant';
 import {
-  EmailSignInConfigServerRequest, EmailSignInConfig, MultiFactorAuthConfig,
   MultiFactorAuthServerConfig, validateTestPhoneNumbers
 } from './auth-config';
+import {
+  EmailSignInConfigServerRequest, EmailSignInConfig, MultiFactorAuthConfig
+} from './auth-config-internal';
 
 /** The corresponding server side representation of a TenantOptions object. */
 export interface TenantOptionsServerRequest extends EmailSignInConfigServerRequest {

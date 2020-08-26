@@ -16,11 +16,10 @@
 
 import { deepCopy } from '../utils/deep-copy';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
-import {
-  EmailSignInProviderConfig, EmailSignInConfig, MultiFactorAuthConfig,
-  MultiFactorConfig
-} from './auth-config';
 import { TenantServerResponse, TenantUtils } from './tenant-internal';
+import { MultiFactorConfig } from './auth-config';
+import { EmailSignInConfig, EmailSignInProviderConfig, MultiFactorAuthConfig } from './auth-config-internal';
+
 
 /** The TenantOptions interface used for create/read/update tenant operations. */
 export interface TenantOptions {
