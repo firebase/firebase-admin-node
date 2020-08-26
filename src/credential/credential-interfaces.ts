@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+// TODO: According to the typings this is part of the Firebase Namespace today
+// and not credential; it will need to be moved accordingly.
 /**
  * Interface for Google OAuth 2.0 access tokens.
  */

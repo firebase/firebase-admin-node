@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Credential, GoogleOAuthAccessToken } from './credential/google-oauth-access-token';
+import { Credential, GoogleOAuthAccessToken } from './credential/credential-interfaces';
 import { getApplicationDefault } from './credential/credential-internal';
 import * as validator from './utils/validator';
 import { deepCopy, deepExtend } from './utils/deep-copy';

@@ -19,7 +19,7 @@ import { Agent } from 'http';
 import {
   ServiceAccountCredential, RefreshTokenCredential, getApplicationDefault 
 } from './credential-internal';
-import { Credential } from './google-oauth-access-token';
+import { Credential } from './credential-interfaces';
 
 let globalAppDefaultCred: Credential;
 const globalCertCreds: { [key: string]: ServiceAccountCredential } = {};
