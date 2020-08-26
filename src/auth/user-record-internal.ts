@@ -40,7 +40,6 @@ export class MultiFactorInfoUtils {
   }
 }
 
-
 export interface ProviderUserInfoResponse {
   rawId: string;
   displayName?: string;
