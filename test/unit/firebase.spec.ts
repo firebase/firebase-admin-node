@@ -29,7 +29,7 @@ import * as mocks from '../resources/mocks';
 import * as firebaseAdmin from '../../src/index';
 import {
   RefreshTokenCredential, ServiceAccountCredential, isApplicationDefault
-} from '../../src/credential/credential';
+} from '../../src/credential/credential-internal';
 
 chai.should();
 chai.use(chaiAsPromised);

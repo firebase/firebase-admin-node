@@ -15,6 +15,7 @@
  */
 
 import * as credentialApi from './credential';
+import * as credentialInterfacesApi from './credential-interfaces';
 
 /**
  * Temporarily, admin.credential is used as the namespace name because we
@@ -28,7 +29,7 @@ export namespace admin.credential {
   // See https://github.com/typescript-eslint/typescript-eslint/issues/363
   // Allows for exposing classes as interfaces in typings
   /* eslint-disable @typescript-eslint/no-empty-interface */
-  export import Credential = credentialApi.Credential;
+  export import Credential = credentialInterfacesApi.Credential;
   export const applicationDefault = credentialApi.applicationDefault;
   export const cert = credentialApi.cert;
   export const refreshToken = credentialApi.refreshToken;

@@ -15,7 +15,7 @@
  */
 
 import { FirebaseApp } from '../firebase-app';
-import { ServiceAccountCredential } from '../credential/credential';
+import { ServiceAccountCredential } from '../credential/credential-internal';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import { AuthorizedHttpClient, HttpError, HttpRequestConfig, HttpClient } from '../utils/api-request';
 

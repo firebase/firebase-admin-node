@@ -17,7 +17,7 @@
 import { FirebaseApp } from '../firebase-app';
 import { FirebaseError } from '../utils/error';
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
-import { ServiceAccountCredential, isApplicationDefault } from '../credential/credential';
+import { ServiceAccountCredential, isApplicationDefault } from '../credential/credential-internal';
 import { Bucket, Storage as StorageClient } from '@google-cloud/storage';
 
 import * as utils from '../utils/index';

@@ -27,7 +27,8 @@ import * as jwt from 'jsonwebtoken';
 import { FirebaseNamespace } from '../../src/firebase-namespace';
 import { FirebaseServiceInterface } from '../../src/firebase-service';
 import { FirebaseApp, FirebaseAppOptions } from '../../src/firebase-app';
-import { Credential, GoogleOAuthAccessToken, ServiceAccountCredential } from '../../src/credential/credential';
+import { Credential, GoogleOAuthAccessToken } from '../../src/credential/credential-interfaces';
+import { ServiceAccountCredential } from '../../src/credential/credential-internal';
 
 const ALGORITHM = 'RS256';
 const ONE_HOUR_IN_SECONDS = 60 * 60;

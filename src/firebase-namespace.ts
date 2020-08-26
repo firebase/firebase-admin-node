@@ -20,8 +20,9 @@ import { AppErrorCodes, FirebaseAppError } from './utils/error';
 import { AppHook, FirebaseApp, FirebaseAppOptions } from './firebase-app';
 import { FirebaseServiceFactory, FirebaseServiceInterface } from './firebase-service';
 import {
-  getApplicationDefault, cert, refreshToken, applicationDefault
+  cert, refreshToken, applicationDefault
 } from './credential/credential';
+import { getApplicationDefault } from './credential/credential-internal';
 
 import { Auth } from './auth/auth';
 import { MachineLearning } from './machine-learning/machine-learning';

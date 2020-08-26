@@ -28,7 +28,7 @@ import {
   BLACKLISTED_CLAIMS, FirebaseTokenGenerator, ServiceAccountSigner, IAMSigner,
 } from '../../../src/auth/token-generator';
 
-import { ServiceAccountCredential } from '../../../src/credential/credential';
+import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
 import { AuthorizedHttpClient, HttpClient } from '../../../src/utils/api-request';
 import { FirebaseApp } from '../../../src/firebase-app';
 import * as utils from '../utils';

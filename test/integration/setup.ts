@@ -19,7 +19,7 @@ import fs = require('fs');
 import minimist = require('minimist');
 import path = require('path');
 import { random } from 'lodash';
-import { Credential, GoogleOAuthAccessToken } from '../../src/credential/credential';
+import { Credential, GoogleOAuthAccessToken } from '../../src/credential/credential-interfaces';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const chalk = require('chalk');
