@@ -32,7 +32,7 @@ import * as mocks from '../../resources/mocks';
 
 import {
   GoogleOAuthAccessToken, Credential
-} from '../../../src/credential/credential';
+} from '../../../src/credential/google-oauth-access-token';
 import {
   RefreshTokenCredential, ServiceAccountCredential,
   ComputeEngineCredential, getApplicationDefault, isApplicationDefault
