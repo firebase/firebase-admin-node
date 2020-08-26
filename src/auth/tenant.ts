@@ -18,10 +18,13 @@ import * as validator from '../utils/validator';
 import { deepCopy } from '../utils/deep-copy';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
-  EmailSignInConfig, EmailSignInConfigServerRequest, EmailSignInProviderConfig,
-  MultiFactorConfig, MultiFactorAuthServerConfig, MultiFactorAuthConfig,
-  validateTestPhoneNumbers,
+  MultiFactorConfig, MultiFactorAuthServerConfig, validateTestPhoneNumbers
 } from './auth-config';
+import {
+  EmailSignInConfig, EmailSignInConfigServerRequest, EmailSignInProviderConfig,
+  MultiFactorAuthConfig,
+} from './auth-config-internal';
+
 
 /** The TenantOptions interface used for create/read/update tenant operations. */
 export interface TenantOptions {
