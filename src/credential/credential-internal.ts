@@ -19,7 +19,7 @@ import fs = require('fs');
 import os = require('os');
 import path = require('path');
 
-import { GoogleOAuthAccessToken, Credential } from './credential';
+import { GoogleOAuthAccessToken, Credential } from './google-oauth-access-token';
 import { AppErrorCodes, FirebaseAppError } from '../utils/error';
 import { HttpClient, HttpRequestConfig, HttpError, HttpResponse } from '../utils/api-request';
 import { Agent } from 'http';

@@ -19,43 +19,11 @@ import { Agent } from 'http';
 import {
   ServiceAccountCredential, RefreshTokenCredential, getApplicationDefault 
 } from './credential-internal';
+import { Credential } from './google-oauth-access-token';
 
 let globalAppDefaultCred: Credential;
 const globalCertCreds: { [key: string]: ServiceAccountCredential } = {};
 const globalRefreshTokenCreds: { [key: string]: RefreshTokenCredential } = {};
-
-/**
- * Interface for Google OAuth 2.0 access tokens.
- */
-export interface GoogleOAuthAccessToken {
-  /* tslint:disable:variable-name */
-  access_token: string;
-  expires_in: number;
-  /* tslint:enable:variable-name */
-}
-
-/**
- * Interface that provides Google OAuth2 access tokens used to authenticate
- * with Firebase services.
- *
- * In most cases, you will not need to implement this yourself and can instead
- * use the default implementations provided by
- * {@link admin.credential `admin.credential`}.
- */
-export interface Credential {
-  /**
-   * Returns a Google OAuth2 access token object used to authenticate with
-   * Firebase services.
-   *
-   * This object contains the following properties:
-   * * `access_token` (`string`): The actual Google OAuth2 access token.
-   * * `expires_in` (`number`): The number of seconds from when the token was
-   *   issued that it expires.
-   *
-   * @return A Google OAuth2 access token object.
-   */
-  getAccessToken(): Promise<GoogleOAuthAccessToken>;
-}
 
 /**
  * Returns a credential created from the
