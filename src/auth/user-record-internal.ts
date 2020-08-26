@@ -16,7 +16,10 @@
 
 import { 
   MultiFactorInfo, PhoneMultiFactorInfo
-} from './user-record';
+} from './multi-factor';
+import {
+  MultiFactorInfoResponse
+} from './multi-factor-internal';
   
 export class MultiFactorInfoUtils {
   /**
@@ -37,18 +40,6 @@ export class MultiFactorInfoUtils {
   }
 }
 
-/** Enums for multi-factor identifiers. */
-export enum MultiFactorId {
-  Phone = 'phone',
-}
-
-export interface MultiFactorInfoResponse {
-  mfaEnrollmentId: string;
-  displayName?: string;
-  phoneInfo?: string;
-  enrolledAt?: string;
-  [key: string]: any;
-}
 
 export interface ProviderUserInfoResponse {
   rawId: string;
