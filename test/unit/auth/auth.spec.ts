@@ -35,11 +35,12 @@ import {
 import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
 
 import * as validator from '../../../src/utils/validator';
-import { FirebaseTokenVerifier } from '../../../src/auth/token-verifier-internal';
+import { AuthProviderConfigFilter } from '../../../src/auth/auth-config';
 import {
-  AuthProviderConfigFilter, OIDCConfig, SAMLConfig,
+  OIDCConfig, SAMLConfig,
   OIDCConfigServerResponse, SAMLConfigServerResponse,
-} from '../../../src/auth/auth-config';
+} from '../../../src/auth/auth-config-internal';
+import { FirebaseTokenVerifier } from '../../../src/auth/token-verifier-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { TenantManager } from '../../../src/auth/tenant-manager';
 import { ServiceAccountCredential } from '../../../src/auth/credential';
