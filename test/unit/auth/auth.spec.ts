@@ -31,7 +31,7 @@ import { UserRecord, UpdateRequest } from '../../../src/auth/user-record';
 import { FirebaseApp } from '../../../src/firebase-app';
 import {
   AuthRequestHandler, TenantAwareAuthRequestHandler, AbstractAuthRequestHandler,
-} from '../../../src/auth/auth-api-request';
+} from '../../../src/auth/auth-api-request-internal';
 import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
 
 import * as validator from '../../../src/utils/validator';

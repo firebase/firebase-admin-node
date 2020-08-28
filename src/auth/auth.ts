@@ -22,14 +22,13 @@ import { UserIdentifier } from './identifier';
 import { FirebaseApp } from '../firebase-app';
 import { FirebaseTokenGenerator, cryptoSignerFromApp } from './token-generator-internal';
 import {
-  AbstractAuthRequestHandler, AuthRequestHandler, TenantAwareAuthRequestHandler,
-} from './auth-api-request';
+  AbstractAuthRequestHandler, TenantAwareAuthRequestHandler, AuthRequestHandler
+} from './auth-api-request-internal';
 import { AuthClientErrorCode, FirebaseAuthError, ErrorInfo, FirebaseArrayIndexError } from '../utils/error';
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import {
   UserImportOptions, UserImportRecord, UserImportResult,
 } from './user-import-builder';
-
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier } from './token-verifier-internal';
@@ -73,56 +72,208 @@ export interface GetUsersResult {
 }
 
 
-/** Response object for a listUsers operation. */
+/**
+ * Interface representing the object returned from a
+ * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#listUsers `listUsers()`} operation. Contains the list
+ * of users for the current batch and the next page token if available.
+ */
 export interface ListUsersResult {
+  /**
+   * The list of {@link admin.auth.UserRecord `UserRecord`} objects for the
+   * current downloaded batch.
+   */
   users: UserRecord[];
+
+  /**
+   * The next page token if available. This is needed for the next batch download.
+   */
   pageToken?: string;
 }
 
 
-/** Response object for deleteUsers operation. */
+/**
+ * Represents the result of the
+ * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#deleteUsers `deleteUsers()`}
+ * API.
+ */
 export interface DeleteUsersResult {
+  /**
+   * The number of user records that failed to be deleted (possibly zero).
+   */
   failureCount: number;
+  /**
+   * The number of users that were deleted successfully (possibly zero).
+   * Users that did not exist prior to calling `deleteUsers()` are
+   * considered to be successfully deleted.
+   */
   successCount: number;
+  /**
+   * A list of `FirebaseArrayIndexError` instances describing the errors that
+   * were encountered during the deletion. Length of this list is equal to
+   * the return value of [`failureCount`](#failureCount).
+   */
   errors: FirebaseArrayIndexError[];
 }
 
 
-/** Interface representing a decoded ID token. */
+/**
+ * Interface representing a decoded Firebase ID token, returned from the
+ * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#verifyidtoken `verifyIdToken()`} method.
+ *
+ * Firebase ID tokens are OpenID Connect spec-compliant JSON Web Tokens (JWTs).
+ * See the
+ * [ID Token section of the OpenID Connect spec](http://openid.net/specs/openid-connect-core-1_0.html#IDToken)
+ * for more information about the specific properties below.
+ */
 export interface DecodedIdToken {
+
+  /**
+   * The audience for which this token is intended.
+   *
+   * This value is a string equal to your Firebase project ID, the unique
+   * identifier for your Firebase project, which can be found in [your project's
+   * settings](https://console.firebase.google.com/project/_/settings/general/android:com.random.android).
+   */
   aud: string;
+
+  /**
+   * Time, in seconds since the Unix epoch, when the end-user authentication
+   * occurred.
+   *
+   * This value is not set when this particular ID token was created, but when the
+   * user initially logged in to this session. In a single session, the Firebase
+   * SDKs will refresh a user's ID tokens every hour. Each ID token will have a
+   * different [`iat`](#iat) value, but the same `auth_time` value.
+   */
   auth_time: number;
+
+  /**
+   * The email of the user to whom the ID token belongs, if available.
+   */
   email?: string;
+
+  /**
+   * Whether or not the email of the user to whom the ID token belongs is
+   * verified, provided the user has an email.
+   */
   email_verified?: boolean;
+
+  /**
+   * The ID token's expiration time, in seconds since the Unix epoch. That is, the
+   * time at which this ID token expires and should no longer be considered valid.
+   *
+   * The Firebase SDKs transparently refresh ID tokens every hour, issuing a new
+   * ID token with up to a one hour expiration.
+   */
   exp: number;
+
+  /**
+   * Information about the sign in event, including which sign in provider was
+   * used and provider-specific identity details.
+   *
+   * This data is provided by the Firebase Authentication service and is a
+   * reserved claim in the ID token.
+   */
   firebase: {
+
+    /**
+     * Provider-specific identity details corresponding
+     * to the provider used to sign in the user.
+     */
     identities: {
       [key: string]: any;
     };
+
+    /**
+     * The ID of the provider used to sign in the user.
+     * One of `"anonymous"`, `"password"`, `"facebook.com"`, `"github.com"`,
+     * `"google.com"`, `"twitter.com"`, or `"custom"`.
+     */
     sign_in_provider: string;
+
+    /**
+     * The type identifier or `factorId` of the second factor, provided the
+     * ID token was obtained from a multi-factor authenticated user.
+     * For phone, this is `"phone"`.
+     */
     sign_in_second_factor?: string;
+
+    /**
+     * The `uid` of the second factor used to sign in, provided the
+     * ID token was obtained from a multi-factor authenticated user.
+     */
     second_factor_identifier?: string;
+
     [key: string]: any;
   };
+
+  /**
+   * The ID token's issued-at time, in seconds since the Unix epoch. That is, the
+   * time at which this ID token was issued and should start to be considered
+   * valid.
+   *
+   * The Firebase SDKs transparently refresh ID tokens every hour, issuing a new
+   * ID token with a new issued-at time. If you want to get the time at which the
+   * user session corresponding to the ID token initially occurred, see the
+   * [`auth_time`](#auth_time) property.
+   */
   iat: number;
+
+  /**
+   * The issuer identifier for the issuer of the response.
+   *
+   * This value is a URL with the format
+   * `https://securetoken.google.com/<PROJECT_ID>`, where `<PROJECT_ID>` is the
+   * same project ID specified in the [`aud`](#aud) property.
+   */
   iss: string;
+
+  /**
+   * The phone number of the user to whom the ID token belongs, if available.
+   */
   phone_number?: string;
+
+  /**
+   * The photo URL for the user to whom the ID token belongs, if available.
+   */
   picture?: string;
+
+  /**
+   * The `uid` corresponding to the user who the ID token belonged to.
+   *
+   * As a convenience, this value is copied over to the [`uid`](#uid) property.
+   */
   sub: string;
+
+  /**
+   * The ID of the tenant the user belongs to, if available.
+   */
   tenant?: string;
+
+  /**
+   * The `uid` corresponding to the user who the ID token belonged to.
+   *
+   * This value is not actually in the JWT token claims itself. It is added as a
+   * convenience, and is set as the value of the [`sub`](#sub) property.
+   */
   uid: string;
   [key: string]: any;
 }
 
-
-/** Interface representing the session cookie options. */
+/**
+ * Interface representing the session cookie options needed for the
+ * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#createSessionCookie `createSessionCookie()`} method.
+ */
 export interface SessionCookieOptions {
+  /**
+   * The session cookie custom expiration in milliseconds. The minimum allowed is
+   * 5 minutes and the maxium allowed is 2 weeks.
+   */
   expiresIn: number;
 }
 
-
-/**
- * Base Auth class. Mainly used for user management APIs.
+/**	
+ * Base Auth class. Mainly used for user management APIs.	
  */
 export class BaseAuth<T extends AbstractAuthRequestHandler> {
 
@@ -153,29 +304,44 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   }
 
   /**
-   * Creates a new custom token that can be sent back to a client to use with
-   * signInWithCustomToken().
+   * Creates a new Firebase custom token (JWT) that can be sent back to a client
+   * device to use to sign in with the client SDKs' `signInWithCustomToken()`
+   * methods. (Tenant-aware instances will also embed the tenant ID in the
+   * token.)
    *
-   * @param {string} uid The uid to use as the JWT subject.
-   * @param {object=} developerClaims Optional additional claims to include in the JWT payload.
+   * See [Create Custom Tokens](/docs/auth/admin/create-custom-tokens) for code
+   * samples and detailed documentation.
    *
-   * @return {Promise<string>} A JWT for the provided payload.
+   * @param uid The `uid` to use as the custom token's subject.
+   * @param developerClaims Optional additional claims to include
+   *   in the custom token's payload.
+   *
+   * @return A promise fulfilled with a custom token for the
+   *   provided `uid` and payload.
    */
   public createCustomToken(uid: string, developerClaims?: object): Promise<string> {
     return this.tokenGenerator.createCustomToken(uid, developerClaims);
   }
 
   /**
-   * Verifies a JWT auth token. Returns a Promise with the tokens claims. Rejects
-   * the promise if the token could not be verified. If checkRevoked is set to true,
-   * verifies if the session corresponding to the ID token was revoked. If the corresponding
-   * user's session was invalidated, an auth/id-token-revoked error is thrown. If not specified
-   * the check is not applied.
+   * Verifies a Firebase ID token (JWT). If the token is valid, the promise is
+   * fulfilled with the token's decoded claims; otherwise, the promise is
+   * rejected.
+   * An optional flag can be passed to additionally check whether the ID token
+   * was revoked.
    *
-   * @param {string} idToken The JWT to verify.
-   * @param {boolean=} checkRevoked Whether to check if the ID token is revoked.
-   * @return {Promise<DecodedIdToken>} A Promise that will be fulfilled after a successful
-   *     verification.
+   * See [Verify ID Tokens](/docs/auth/admin/verify-id-tokens) for code samples
+   * and detailed documentation.
+   *
+   * @param idToken The ID token to verify.
+   * @param checkRevoked Whether to check if the ID token was revoked.
+   *   This requires an extra request to the Firebase Auth backend to check
+   *   the `tokensValidAfterTime` time for the corresponding user.
+   *   When not specified, this additional check is not applied.
+   *
+   * @return A promise fulfilled with the
+   *   token's decoded claims if the ID token is valid; otherwise, a rejected
+   *   promise.
    */
   public verifyIdToken(idToken: string, checkRevoked = false): Promise<DecodedIdToken> {
     return this.idTokenVerifier.verifyJWT(idToken)
@@ -191,11 +357,15 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   }
 
   /**
-   * Looks up the user identified by the provided user id and returns a promise that is
-   * fulfilled with a user record for the given user if that user is found.
+   * Gets the user data for the user corresponding to a given `uid`.
    *
-   * @param {string} uid The uid of the user to look up.
-   * @return {Promise<UserRecord>} A promise that resolves with the corresponding user record.
+   * See [Retrieve user data](/docs/auth/admin/manage-users#retrieve_user_data)
+   * for code samples and detailed documentation.
+   *
+   * @param uid The `uid` corresponding to the user whose data to fetch.
+   *
+   * @return A promise fulfilled with the user
+   *   data corresponding to the provided `uid`.
    */
   public getUser(uid: string): Promise<UserRecord> {
     return this.authRequestHandler.getAccountInfoByUid(uid)
@@ -206,11 +376,16 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   }
 
   /**
-   * Looks up the user identified by the provided email and returns a promise that is
-   * fulfilled with a user record for the given user if that user is found.
+   * Gets the user data for the user corresponding to a given email.
    *
-   * @param {string} email The email of the user to look up.
-   * @return {Promise<UserRecord>} A promise that resolves with the corresponding user record.
+   * See [Retrieve user data](/docs/auth/admin/manage-users#retrieve_user_data)
+   * for code samples and detailed documentation.
+   *
+   * @param email The email corresponding to the user whose data to
+   *   fetch.
+   *
+   * @return A promise fulfilled with the user
+   *   data corresponding to the provided email.
    */
   public getUserByEmail(email: string): Promise<UserRecord> {
     return this.authRequestHandler.getAccountInfoByEmail(email)
@@ -221,11 +396,17 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   }
 
   /**
-   * Looks up the user identified by the provided phone number and returns a promise that is
-   * fulfilled with a user record for the given user if that user is found.
+   * Gets the user data for the user corresponding to a given phone number. The
+   * phone number has to conform to the E.164 specification.
    *
-   * @param {string} phoneNumber The phone number of the user to look up.
-   * @return {Promise<UserRecord>} A promise that resolves with the corresponding user record.
+   * See [Retrieve user data](/docs/auth/admin/manage-users#retrieve_user_data)
+   * for code samples and detailed documentation.
+   *
+   * @param phoneNumber The phone number corresponding to the user whose
+   *   data to fetch.
+   *
+   * @return A promise fulfilled with the user
+   *   data corresponding to the provided phone number.
    */
   public getUserByPhoneNumber(phoneNumber: string): Promise<UserRecord> {
     return this.authRequestHandler.getAccountInfoByPhoneNumber(phoneNumber)
@@ -242,10 +423,10 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    * guaranteed to correspond to the nth entry in the input parameters list.
    *
    * Only a maximum of 100 identifiers may be supplied. If more than 100 identifiers are supplied,
-   * this method will immediately throw a FirebaseAuthError.
+   * this method throws a FirebaseAuthError.
    *
-   * @param identifiers The identifiers used to indicate which user records should be returned. Must
-   *     have <= 100 entries.
+   * @param identifiers The identifiers used to indicate which user records should be returned.
+   *     Must have <= 100 entries.
    * @return {Promise<GetUsersResult>} A promise that resolves to the corresponding user records.
    * @throws FirebaseAuthError If any of the identifiers are invalid or if more than 100
    *     identifiers are specified.
@@ -291,16 +472,19 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   }
 
   /**
-   * Exports a batch of user accounts. Batch size is determined by the maxResults argument.
-   * Starting point of the batch is determined by the pageToken argument.
+   * Retrieves a list of users (single batch only) with a size of `maxResults`
+   * starting from the offset as specified by `pageToken`. This is used to
+   * retrieve all the users of a specified project in batches.
    *
-   * @param {number=} maxResults The page size, 1000 if undefined. This is also the maximum
-   *     allowed limit.
-   * @param {string=} pageToken The next page token. If not specified, returns users starting
-   *     without any offset.
-   * @return {Promise<{users: UserRecord[], pageToken?: string}>} A promise that resolves with
-   *     the current batch of downloaded users and the next page token. For the last page, an
-   *     empty list of users and no page token are returned.
+   * See [List all users](/docs/auth/admin/manage-users#list_all_users)
+   * for code samples and detailed documentation.
+   *
+   * @param maxResults The page size, 1000 if undefined. This is also
+   *   the maximum allowed limit.
+   * @param pageToken The next page token. If not specified, returns
+   *   users starting without any offset.
+   * @return A promise that resolves with
+   *   the current batch of downloaded users and the next page token.
    */
   public listUsers(maxResults?: number, pageToken?: string): Promise<ListUsersResult> {
     return this.authRequestHandler.downloadAccount(maxResults, pageToken)
@@ -325,10 +509,16 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   }
 
   /**
-   * Creates a new user with the properties provided.
+   * Creates a new user.
    *
-   * @param {CreateRequest} properties The properties to set on the new user record to be created.
-   * @return {Promise<UserRecord>} A promise that resolves with the newly created user record.
+   * See [Create a user](/docs/auth/admin/manage-users#create_a_user) for code
+   * samples and detailed documentation.
+   *
+   * @param properties The properties to set on the
+   *   new user record to be created.
+   *
+   * @return A promise fulfilled with the user
+   *   data corresponding to the newly created user.
    */
   public createUser(properties: CreateRequest): Promise<UserRecord> {
     return this.authRequestHandler.createNewAccount(properties)
@@ -348,11 +538,15 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   }
 
   /**
-   * Deletes the user identified by the provided user id and returns a promise that is
-   * fulfilled when the user is found and successfully deleted.
+   * Deletes an existing user.
    *
-   * @param {string} uid The uid of the user to delete.
-   * @return {Promise<void>} A promise that resolves when the user is successfully deleted.
+   * See [Delete a user](/docs/auth/admin/manage-users#delete_a_user) for code
+   * samples and detailed documentation.
+   *
+   * @param uid The `uid` corresponding to the user to delete.
+   *
+   * @return An empty promise fulfilled once the user has been
+   *   deleted.
    */
   public deleteUser(uid: string): Promise<void> {
     return this.authRequestHandler.deleteAccount(uid)
@@ -361,6 +555,28 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
       });
   }
 
+  /**
+   * Deletes the users specified by the given uids.
+   *
+   * Deleting a non-existing user won't generate an error (i.e. this method
+   * is idempotent.) Non-existing users are considered to be successfully
+   * deleted, and are therefore counted in the
+   * `DeleteUsersResult.successCount` value.
+   *
+   * Only a maximum of 1000 identifiers may be supplied. If more than 1000
+   * identifiers are supplied, this method throws a FirebaseAuthError.
+   *
+   * This API is currently rate limited at the server to 1 QPS. If you exceed
+   * this, you may get a quota exceeded error. Therefore, if you want to
+   * delete more than 1000 users, you may need to add a delay to ensure you
+   * don't go over this limit.
+   *
+   * @param uids The `uids` corresponding to the users to delete.
+   *
+   * @return A Promise that resolves to the total number of successful/failed
+   *     deletions, as well as the array of errors that corresponds to the
+   *     failed deletions.
+   */
   public deleteUsers(uids: string[]): Promise<DeleteUsersResult> {
     if (!validator.isArray(uids)) {
       throw new FirebaseAuthError(
@@ -406,11 +622,17 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   }
 
   /**
-   * Updates an existing user with the properties provided.
+   * Updates an existing user.
    *
-   * @param {string} uid The uid identifier of the user to update.
-   * @param {UpdateRequest} properties The properties to update on the existing user.
-   * @return {Promise<UserRecord>} A promise that resolves with the modified user record.
+   * See [Update a user](/docs/auth/admin/manage-users#update_a_user) for code
+   * samples and detailed documentation.
+   *
+   * @param uid The `uid` corresponding to the user to update.
+   * @param properties The properties to update on
+   *   the provided user.
+   *
+   * @return A promise fulfilled with the
+   *   updated user data.
    */
   public updateUser(uid: string, properties: UpdateRequest): Promise<UserRecord> {
     return this.authRequestHandler.updateExistingAccount(uid, properties)
@@ -421,12 +643,27 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   }
 
   /**
-   * Sets additional developer claims on an existing user identified by the provided UID.
+   * Sets additional developer claims on an existing user identified by the
+   * provided `uid`, typically used to define user roles and levels of
+   * access. These claims should propagate to all devices where the user is
+   * already signed in (after token expiration or when token refresh is forced)
+   * and the next time the user signs in. If a reserved OIDC claim name
+   * is used (sub, iat, iss, etc), an error is thrown. They are set on the
+   * authenticated user's ID token JWT.
    *
-   * @param {string} uid The user to edit.
-   * @param {object} customUserClaims The developer claims to set.
-   * @return {Promise<void>} A promise that resolves when the operation completes
-   *     successfully.
+   * See
+   * [Defining user roles and access levels](/docs/auth/admin/custom-claims)
+   * for code samples and detailed documentation.
+   *
+   * @param uid The `uid` of the user to edit.
+   * @param customUserClaims The developer claims to set. If null is
+   *   passed, existing custom claims are deleted. Passing a custom claims payload
+   *   larger than 1000 bytes will throw an error. Custom claims are added to the
+   *   user's ID token which is transmitted on every authenticated request.
+   *   For profile non-access related user attributes, use database or other
+   *   separate storage systems.
+   * @return A promise that resolves when the operation completes
+   *   successfully.
    */
   public setCustomUserClaims(uid: string, customUserClaims: object | null): Promise<void> {
     return this.authRequestHandler.setCustomUserClaims(uid, customUserClaims)
@@ -436,14 +673,25 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   }
 
   /**
-   * Revokes all refresh tokens for the specified user identified by the provided UID.
-   * In addition to revoking all refresh tokens for a user, all ID tokens issued before
-   * revocation will also be revoked on the Auth backend. Any request with an ID token
-   * generated before revocation will be rejected with a token expired error.
+   * Revokes all refresh tokens for an existing user.
    *
-   * @param {string} uid The user whose tokens are to be revoked.
-   * @return {Promise<void>} A promise that resolves when the operation completes
-   *     successfully.
+   * This API will update the user's
+   * {@link admin.auth.UserRecord#tokensValidAfterTime `tokensValidAfterTime`} to
+   * the current UTC. It is important that the server on which this is called has
+   * its clock set correctly and synchronized.
+   *
+   * While this will revoke all sessions for a specified user and disable any
+   * new ID tokens for existing sessions from getting minted, existing ID tokens
+   * may remain active until their natural expiration (one hour). To verify that
+   * ID tokens are revoked, use
+   * {@link admin.auth.Auth#verifyIdToken `verifyIdToken(idToken, true)`}
+   * where `checkRevoked` is set to true.
+   *
+   * @param uid The `uid` corresponding to the user whose refresh tokens
+   *   are to be revoked.
+   *
+   * @return An empty promise fulfilled once the user's refresh
+   *   tokens have been revoked.
    */
   public revokeRefreshTokens(uid: string): Promise<void> {
     return this.authRequestHandler.revokeRefreshTokens(uid)
@@ -453,17 +701,21 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   }
 
   /**
-   * Imports the list of users provided to Firebase Auth. This is useful when
-   * migrating from an external authentication system without having to use the Firebase CLI SDK.
-   * At most, 1000 users are allowed to be imported one at a time.
-   * When importing a list of password users, UserImportOptions are required to be specified.
+   * Imports the provided list of users into Firebase Auth.
+   * A maximum of 1000 users are allowed to be imported one at a time.
+   * When importing users with passwords,
+   * {@link admin.auth.UserImportOptions `UserImportOptions`} are required to be
+   * specified.
+   * This operation is optimized for bulk imports and will ignore checks on `uid`,
+   * `email` and other identifier uniqueness which could result in duplications.
    *
-   * @param {UserImportRecord[]} users The list of user records to import to Firebase Auth.
-   * @param {UserImportOptions=} options The user import options, required when the users provided
-   *     include password credentials.
-   * @return {Promise<UserImportResult>} A promise that resolves when the operation completes
-   *     with the result of the import. This includes the number of successful imports, the number
-   *     of failed uploads and their corresponding errors.
+   * @param users The list of user records to import to Firebase Auth.
+   * @param options The user import options, required when the users provided include
+   *   password credentials.
+   * @return A promise that resolves when
+   *   the operation completes with the result of the import. This includes the
+   *   number of successful imports, the number of failed imports and their
+   *   corresponding errors.
    */
   public importUsers(
     users: UserImportRecord[], options?: UserImportOptions): Promise<UserImportResult> {
@@ -471,21 +723,27 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   }
 
   /**
-   * Creates a new Firebase session cookie with the specified options that can be used for
-   * session management (set as a server side session cookie with custom cookie policy).
-   * The session cookie JWT will have the same payload claims as the provided ID token.
+   * Creates a new Firebase session cookie with the specified options. The created
+   * JWT string can be set as a server-side session cookie with a custom cookie
+   * policy, and be used for session management. The session cookie JWT will have
+   * the same payload claims as the provided ID token.
    *
-   * @param {string} idToken The Firebase ID token to exchange for a session cookie.
-   * @param {SessionCookieOptions} sessionCookieOptions The session cookie options which includes
-   *     custom session duration.
+   * See [Manage Session Cookies](/docs/auth/admin/manage-cookies) for code
+   * samples and detailed documentation.
    *
-   * @return {Promise<string>} A promise that resolves on success with the created session cookie.
+   * @param idToken The Firebase ID token to exchange for a session
+   *   cookie.
+   * @param sessionCookieOptions The session
+   *   cookie options which includes custom session duration.
+   *
+   * @return A promise that resolves on success with the
+   *   created session cookie.
    */
   public createSessionCookie(
     idToken: string, sessionCookieOptions: SessionCookieOptions): Promise<string> {
     // Return rejected promise if expiresIn is not available.
     if (!validator.isNonNullObject(sessionCookieOptions) ||
-        !validator.isNumber(sessionCookieOptions.expiresIn)) {
+      !validator.isNumber(sessionCookieOptions.expiresIn)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_SESSION_COOKIE_DURATION));
     }
     return this.authRequestHandler.createSessionCookie(
@@ -493,16 +751,25 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   }
 
   /**
-   * Verifies a Firebase session cookie. Returns a Promise with the tokens claims. Rejects
-   * the promise if the token could not be verified. If checkRevoked is set to true,
-   * verifies if the session corresponding to the session cookie was revoked. If the corresponding
-   * user's session was invalidated, an auth/session-cookie-revoked error is thrown. If not
-   * specified the check is not performed.
+   * Verifies a Firebase session cookie. Returns a Promise with the cookie claims.
+   * Rejects the promise if the cookie could not be verified. If `checkRevoked` is
+   * set to true, verifies if the session corresponding to the session cookie was
+   * revoked. If the corresponding user's session was revoked, an
+   * `auth/session-cookie-revoked` error is thrown. If not specified the check is
+   * not performed.
    *
-   * @param {string} sessionCookie The session cookie to verify.
-   * @param {boolean=} checkRevoked Whether to check if the session cookie is revoked.
-   * @return {Promise<DecodedIdToken>} A Promise that will be fulfilled after a successful
-   *     verification.
+   * See [Verify Session Cookies](/docs/auth/admin/manage-cookies#verify_session_cookie_and_check_permissions)
+   * for code samples and detailed documentation
+   *
+   * @param sessionCookie The session cookie to verify.
+   * @param checkForRevocation  Whether to check if the session cookie was
+   *   revoked. This requires an extra request to the Firebase Auth backend to
+   *   check the `tokensValidAfterTime` time for the corresponding user.
+   *   When not specified, this additional check is not performed.
+   *
+   * @return A promise fulfilled with the
+   *   session cookie's decoded claims if the session cookie is valid; otherwise,
+   *   a rejected promise.
    */
   public verifySessionCookie(
     sessionCookie: string, checkRevoked = false): Promise<DecodedIdToken> {
@@ -519,57 +786,175 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   }
 
   /**
-   * Generates the out of band email action link for password reset flows for the
-   * email specified using the action code settings provided.
-   * Returns a promise that resolves with the generated link.
+   * Generates the out of band email action link to reset a user's password.
+   * The link is generated for the user with the specified email address. The
+   * optional  {@link admin.auth.ActionCodeSettings `ActionCodeSettings`} object
+   * defines whether the link is to be handled by a mobile app or browser and the
+   * additional state information to be passed in the deep link, etc.
    *
-   * @param {string} email The email of the user whose password is to be reset.
-   * @param {ActionCodeSettings=} actionCodeSettings The optional action code setings which defines whether
-   *     the link is to be handled by a mobile app and the additional state information to be passed in the
-   *     deep link, etc.
-   * @return {Promise<string>} A promise that resolves with the password reset link.
+   * @example
+   * ```javascript
+   * var actionCodeSettings = {
+   *   url: 'https://www.example.com/?email=user@example.com',
+   *   iOS: {
+   *     bundleId: 'com.example.ios'
+   *   },
+   *   android: {
+   *     packageName: 'com.example.android',
+   *     installApp: true,
+   *     minimumVersion: '12'
+   *   },
+   *   handleCodeInApp: true,
+   *   dynamicLinkDomain: 'custom.page.link'
+   * };
+   * admin.auth()
+   *     .generatePasswordResetLink('user@example.com', actionCodeSettings)
+   *     .then(function(link) {
+   *       // The link was successfully generated.
+   *     })
+   *     .catch(function(error) {
+   *       // Some error occurred, you can inspect the code: error.code
+   *     });
+   * ```
+   *
+   * @param email The email address of the user whose password is to be
+   *   reset.
+   * @param actionCodeSettings The action
+   *     code settings. If specified, the state/continue URL is set as the
+   *     "continueUrl" parameter in the password reset link. The default password
+   *     reset landing page will use this to display a link to go back to the app
+   *     if it is installed.
+   *     If the actionCodeSettings is not specified, no URL is appended to the
+   *     action URL.
+   *     The state URL provided must belong to a domain that is whitelisted by the
+   *     developer in the console. Otherwise an error is thrown.
+   *     Mobile app redirects are only applicable if the developer configures
+   *     and accepts the Firebase Dynamic Links terms of service.
+   *     The Android package name and iOS bundle ID are respected only if they
+   *     are configured in the same Firebase Auth project.
+   * @return A promise that resolves with the generated link.
    */
   public generatePasswordResetLink(email: string, actionCodeSettings?: ActionCodeSettings): Promise<string> {
     return this.authRequestHandler.getEmailActionLink('PASSWORD_RESET', email, actionCodeSettings);
   }
 
   /**
-   * Generates the out of band email action link for email verification flows for the
-   * email specified using the action code settings provided.
-   * Returns a promise that resolves with the generated link.
+   * Generates the out of band email action link to verify the user's ownership
+   * of the specified email. The
+   * {@link admin.auth.ActionCodeSettings `ActionCodeSettings`} object provided
+   * as an argument to this method defines whether the link is to be handled by a
+   * mobile app or browser along with additional state information to be passed in
+   * the deep link, etc.
    *
-   * @param {string} email The email of the user to be verified.
-   * @param {ActionCodeSettings=} actionCodeSettings The optional action code setings which defines whether
-   *     the link is to be handled by a mobile app and the additional state information to be passed in the
-   *     deep link, etc.
-   * @return {Promise<string>} A promise that resolves with the email verification link.
+   * @example
+   * ```javascript
+   * var actionCodeSettings = {
+   *   url: 'https://www.example.com/cart?email=user@example.com&cartId=123',
+   *   iOS: {
+   *     bundleId: 'com.example.ios'
+   *   },
+   *   android: {
+   *     packageName: 'com.example.android',
+   *     installApp: true,
+   *     minimumVersion: '12'
+   *   },
+   *   handleCodeInApp: true,
+   *   dynamicLinkDomain: 'custom.page.link'
+   * };
+   * admin.auth()
+   *     .generateEmailVerificationLink('user@example.com', actionCodeSettings)
+   *     .then(function(link) {
+   *       // The link was successfully generated.
+   *     })
+   *     .catch(function(error) {
+   *       // Some error occurred, you can inspect the code: error.code
+   *     });
+   * ```
+   *
+   * @param email The email account to verify.
+   * @param actionCodeSettings The action
+   *     code settings. If specified, the state/continue URL is set as the
+   *     "continueUrl" parameter in the email verification link. The default email
+   *     verification landing page will use this to display a link to go back to
+   *     the app if it is installed.
+   *     If the actionCodeSettings is not specified, no URL is appended to the
+   *     action URL.
+   *     The state URL provided must belong to a domain that is whitelisted by the
+   *     developer in the console. Otherwise an error is thrown.
+   *     Mobile app redirects are only applicable if the developer configures
+   *     and accepts the Firebase Dynamic Links terms of service.
+   *     The Android package name and iOS bundle ID are respected only if they
+   *     are configured in the same Firebase Auth project.
+   * @return A promise that resolves with the generated link.
    */
   public generateEmailVerificationLink(email: string, actionCodeSettings?: ActionCodeSettings): Promise<string> {
     return this.authRequestHandler.getEmailActionLink('VERIFY_EMAIL', email, actionCodeSettings);
   }
 
   /**
-   * Generates the out of band email action link for email link sign-in flows for the
-   * email specified using the action code settings provided.
-   * Returns a promise that resolves with the generated link.
+   * Generates the out of band email action link to sign in or sign up the owner
+   * of the specified email. The
+   * {@link admin.auth.ActionCodeSettings `ActionCodeSettings`} object provided
+   * as an argument to this method defines whether the link is to be handled by a
+   * mobile app or browser along with additional state information to be passed in
+   * the deep link, etc.
    *
-   * @param {string} email The email of the user signing in.
-   * @param {ActionCodeSettings} actionCodeSettings The required action code setings which defines whether
-   *     the link is to be handled by a mobile app and the additional state information to be passed in the
-   *     deep link, etc.
-   * @return {Promise<string>} A promise that resolves with the email sign-in link.
+   * @example
+   * ```javascript
+   * var actionCodeSettings = {
+   *   // The URL to redirect to for sign-in completion. This is also the deep
+   *   // link for mobile redirects. The domain (www.example.com) for this URL
+   *   // must be whitelisted in the Firebase Console.
+   *   url: 'https://www.example.com/finishSignUp?cartId=1234',
+   *   iOS: {
+   *     bundleId: 'com.example.ios'
+   *   },
+   *   android: {
+   *     packageName: 'com.example.android',
+   *     installApp: true,
+   *     minimumVersion: '12'
+   *   },
+   *   // This must be true.
+   *   handleCodeInApp: true,
+   *   dynamicLinkDomain: 'custom.page.link'
+   * };
+   * admin.auth()
+   *     .generateSignInWithEmailLink('user@example.com', actionCodeSettings)
+   *     .then(function(link) {
+   *       // The link was successfully generated.
+   *     })
+   *     .catch(function(error) {
+   *       // Some error occurred, you can inspect the code: error.code
+   *     });
+   * ```
+   *
+   * @param email The email account to sign in with.
+   * @param actionCodeSettings The action
+   *     code settings. These settings provide Firebase with instructions on how
+   *     to construct the email link. This includes the sign in completion URL or
+   *     the deep link for redirects and the mobile apps to use when the
+   *     sign-in link is opened on an Android or iOS device.
+   *     Mobile app redirects are only applicable if the developer configures
+   *     and accepts the Firebase Dynamic Links terms of service.
+   *     The Android package name and iOS bundle ID are respected only if they
+   *     are configured in the same Firebase Auth project.
+   * @return A promise that resolves with the generated link.
    */
   public generateSignInWithEmailLink(email: string, actionCodeSettings: ActionCodeSettings): Promise<string> {
     return this.authRequestHandler.getEmailActionLink('EMAIL_SIGNIN', email, actionCodeSettings);
   }
 
   /**
-   * Returns the list of existing provider configuation matching the filter provided.
-   * At most, 100 provider configs are allowed to be imported at a time.
+   * Returns the list of existing provider configurations matching the filter
+   * provided. At most, 100 provider configs can be listed at a time.
    *
-   * @param {AuthProviderConfigFilter} options The provider config filter to apply.
-   * @return {Promise<ListProviderConfigResults>} A promise that resolves with the list of provider configs
-   *     meeting the filter requirements.
+   * SAML and OIDC provider support requires Google Cloud's Identity Platform
+   * (GCIP). To learn more about GCIP, including pricing and features,
+   * see the [GCIP documentation](https://cloud.google.com/identity-platform).
+   *
+   * @param options The provider config filter to apply.
+   * @return A promise that resolves with the list of provider configs meeting the
+   *   filter requirements.
    */
   public listProviderConfigs(options: AuthProviderConfigFilter): Promise<ListProviderConfigResults> {
     const processResponse = (response: any, providerConfigs: AuthProviderConfig[]): ListProviderConfigResults => {
@@ -615,11 +1000,19 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   }
 
   /**
-   * Looks up an Auth provider configuration by ID.
-   * Returns a promise that resolves with the provider configuration corresponding to the provider ID specified.
+   * Looks up an Auth provider configuration by the provided ID.
+   * Returns a promise that resolves with the provider configuration
+   * corresponding to the provider ID specified. If the specified ID does not
+   * exist, an `auth/configuration-not-found` error is thrown.
    *
-   * @param {string} providerId  The provider ID corresponding to the provider config to return.
-   * @return {Promise<AuthProviderConfig>}
+   * SAML and OIDC provider support requires Google Cloud's Identity Platform
+   * (GCIP). To learn more about GCIP, including pricing and features,
+   * see the [GCIP documentation](https://cloud.google.com/identity-platform).
+   *
+   * @param providerId The provider ID corresponding to the provider
+   *     config to return.
+   * @return A promise that resolves
+   *     with the configuration corresponding to the provided ID.
    */
   public getProviderConfig(providerId: string): Promise<AuthProviderConfig> {
     if (OIDCConfig.isProviderId(providerId)) {
@@ -638,9 +1031,16 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
 
   /**
    * Deletes the provider configuration corresponding to the provider ID passed.
+   * If the specified ID does not exist, an `auth/configuration-not-found` error
+   * is thrown.
    *
-   * @param {string} providerId The provider ID corresponding to the provider config to delete.
-   * @return {Promise<void>} A promise that resolves on completion.
+   * SAML and OIDC provider support requires Google Cloud's Identity Platform
+   * (GCIP). To learn more about GCIP, including pricing and features,
+   * see the [GCIP documentation](https://cloud.google.com/identity-platform).
+   *
+   * @param providerId The provider ID corresponding to the provider
+   *     config to delete.
+   * @return A promise that resolves on completion.
    */
   public deleteProviderConfig(providerId: string): Promise<void> {
     if (OIDCConfig.isProviderId(providerId)) {
@@ -652,12 +1052,19 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   }
 
   /**
-   * Returns a promise that resolves with the updated AuthProviderConfig when the provider configuration corresponding
-   * to the provider ID specified is updated with the specified configuration.
+   * Returns a promise that resolves with the updated `AuthProviderConfig`
+   * corresponding to the provider ID specified.
+   * If the specified ID does not exist, an `auth/configuration-not-found` error
+   * is thrown.
    *
-   * @param {string} providerId The provider ID corresponding to the provider config to update.
-   * @param {UpdateAuthProviderRequest} updatedConfig The updated configuration.
-   * @return {Promise<AuthProviderConfig>} A promise that resolves with the updated provider configuration.
+   * SAML and OIDC provider support requires Google Cloud's Identity Platform
+   * (GCIP). To learn more about GCIP, including pricing and features,
+   * see the [GCIP documentation](https://cloud.google.com/identity-platform).
+   *
+   * @param providerId The provider ID corresponding to the provider
+   *     config to update.
+   * @param updatedConfig The updated configuration.
+   * @return A promise that resolves with the updated provider configuration.
    */
   public updateProviderConfig(
     providerId: string, updatedConfig: UpdateAuthProviderRequest): Promise<AuthProviderConfig> {
@@ -682,10 +1089,15 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   }
 
   /**
-   * Returns a promise that resolves with the newly created AuthProviderConfig when the new provider configuration is
-   * created.
-   * @param {AuthProviderConfig} config The provider configuration to create.
-   * @return {Promise<AuthProviderConfig>} A promise that resolves with the created provider configuration.
+   * Returns a promise that resolves with the newly created `AuthProviderConfig`
+   * when the new provider configuration is created.
+   *
+   * SAML and OIDC provider support requires Google Cloud's Identity Platform
+   * (GCIP). To learn more about GCIP, including pricing and features,
+   * see the [GCIP documentation](https://cloud.google.com/identity-platform).
+   *
+   * @param config The provider configuration to create.
+   * @return A promise that resolves with the created provider configuration.
    */
   public createProviderConfig(config: AuthProviderConfig): Promise<AuthProviderConfig> {
     if (!validator.isNonNullObject(config)) {
@@ -745,6 +1157,11 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
  * The tenant aware Auth class.
  */
 export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
+  /**
+   * The tenant identifier corresponding to this `TenantAwareAuth` instance.
+   * All calls to the user management APIs, OIDC/SAML provider management APIs, email link
+   * generation APIs, etc will only be applied within the scope of this tenant.
+   */
   public readonly tenantId: string;
 
   /**
@@ -761,18 +1178,7 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
     utils.addReadonlyGetter(this, 'tenantId', tenantId);
   }
 
-  /**
-   * Verifies a JWT auth token. Returns a Promise with the tokens claims. Rejects
-   * the promise if the token could not be verified. If checkRevoked is set to true,
-   * verifies if the session corresponding to the ID token was revoked. If the corresponding
-   * user's session was invalidated, an auth/id-token-revoked error is thrown. If not specified
-   * the check is not applied.
-   *
-   * @param {string} idToken The JWT to verify.
-   * @param {boolean=} checkRevoked Whether to check if the ID token is revoked.
-   * @return {Promise<DecodedIdToken>} A Promise that will be fulfilled after a successful
-   *     verification.
-   */
+  /** @inheritdoc */
   public verifyIdToken(idToken: string, checkRevoked = false): Promise<DecodedIdToken> {
     return super.verifyIdToken(idToken, checkRevoked)
       .then((decodedClaims) => {
@@ -784,17 +1190,7 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
       });
   }
 
-  /**
-   * Creates a new Firebase session cookie with the specified options that can be used for
-   * session management (set as a server side session cookie with custom cookie policy).
-   * The session cookie JWT will have the same payload claims as the provided ID token.
-   *
-   * @param {string} idToken The Firebase ID token to exchange for a session cookie.
-   * @param {SessionCookieOptions} sessionCookieOptions The session cookie options which includes
-   *     custom session duration.
-   *
-   * @return {Promise<string>} A promise that resolves on success with the created session cookie.
-   */
+  /** @inheritdoc */
   public createSessionCookie(
     idToken: string, sessionCookieOptions: SessionCookieOptions): Promise<string> {
     // Validate arguments before processing.
@@ -802,7 +1198,7 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_ID_TOKEN));
     }
     if (!validator.isNonNullObject(sessionCookieOptions) ||
-        !validator.isNumber(sessionCookieOptions.expiresIn)) {
+      !validator.isNumber(sessionCookieOptions.expiresIn)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_SESSION_COOKIE_DURATION));
     }
     // This will verify the ID token and then match the tenant ID before creating the session cookie.
@@ -812,18 +1208,7 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
       });
   }
 
-  /**
-   * Verifies a Firebase session cookie. Returns a Promise with the tokens claims. Rejects
-   * the promise if the token could not be verified. If checkRevoked is set to true,
-   * verifies if the session corresponding to the session cookie was revoked. If the corresponding
-   * user's session was invalidated, an auth/session-cookie-revoked error is thrown. If not
-   * specified the check is not performed.
-   *
-   * @param {string} sessionCookie The session cookie to verify.
-   * @param {boolean=} checkRevoked Whether to check if the session cookie is revoked.
-   * @return {Promise<DecodedIdToken>} A Promise that will be fulfilled after a successful
-   *     verification.
-   */
+  /** @inheritdoc */
   public verifySessionCookie(
     sessionCookie: string, checkRevoked = false): Promise<DecodedIdToken> {
     return super.verifySessionCookie(sessionCookie, checkRevoked)
@@ -835,7 +1220,6 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
       });
   }
 }
-
 
 /**
  * Auth service bound to the provided app.

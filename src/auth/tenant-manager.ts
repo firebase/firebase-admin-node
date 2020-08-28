@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { AuthRequestHandler } from './auth-api-request';
+import { AuthRequestHandler } from './auth-api-request-internal';
 import { FirebaseApp } from '../firebase-app';
 import { TenantAwareAuth } from './auth';
 import { ListTenantsResult, Tenant, TenantOptions } from './tenant';

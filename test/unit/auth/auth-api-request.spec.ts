@@ -35,7 +35,7 @@ import {
   FIREBASE_AUTH_SIGN_UP_NEW_USER, FIREBASE_AUTH_DOWNLOAD_ACCOUNT,
   RESERVED_CLAIMS, FIREBASE_AUTH_UPLOAD_ACCOUNT, FIREBASE_AUTH_CREATE_SESSION_COOKIE,
   EMAIL_ACTION_REQUEST_TYPES, TenantAwareAuthRequestHandler, AbstractAuthRequestHandler,
-} from '../../../src/auth/auth-api-request';
+} from '../../../src/auth/auth-api-request-internal';
 import { UserImportBuilder, UserImportRecord } from '../../../src/auth/user-import-builder';
 import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
 import { ActionCodeSettingsBuilder } from '../../../src/auth/action-code-settings-builder-internal';
