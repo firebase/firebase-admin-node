@@ -18,11 +18,6 @@ import * as utils from '../utils';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import { MultiFactorInfoResponse } from './multi-factor-internal';
 
-/** Enums for multi-factor identifiers. */
-export enum MultiFactorId {
-  Phone = 'phone',
-}
-
 /**
  * Interface representing the common properties of a user enrolled second factor.
  */
@@ -40,7 +35,7 @@ export abstract class MultiFactorInfo {
   /**
    * The type identifier of the second factor. For SMS second factors, this is `phone`.
    */
-  public readonly factorId: MultiFactorId;
+  public readonly factorId: string;
 
   /**
    * The optional date the second factor was enrolled, formatted as a UTC string.
@@ -76,7 +71,7 @@ export abstract class MultiFactorInfo {
    * @return The multi-factor ID associated with the provided response. If the response is
    *     not associated with any known multi-factor ID, null is returned.
    */
-  protected abstract getFactorId(response: MultiFactorInfoResponse): MultiFactorId | null;
+  protected abstract getFactorId(response: MultiFactorInfoResponse): string | null;
 
   /**
    * Initializes the MultiFactorInfo object using the provided server response.
@@ -143,7 +138,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
    * @return The multi-factor ID associated with the provided response. If the response is
    *     not associated with any known multi-factor ID, null is returned.
    */
-  protected getFactorId(response: MultiFactorInfoResponse): MultiFactorId | null {
-    return (response && response.phoneInfo) ? MultiFactorId.Phone : null;
+  protected getFactorId(response: MultiFactorInfoResponse): string | null {
+    return (response && response.phoneInfo) ? 'phone' : null;
   }
 }
