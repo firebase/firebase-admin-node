@@ -207,7 +207,7 @@ class MessagingInternals implements FirebaseServiceInternalsInterface {
  * @return The `Messaging` service for the current app.
  */
 export class Messaging implements FirebaseServiceInterface {
-
+  /** @hidden */
   public INTERNAL: MessagingInternals = new MessagingInternals();
 
   private urlPath: string;

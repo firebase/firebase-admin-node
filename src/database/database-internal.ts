@@ -51,7 +51,6 @@ class DatabaseInternals implements FirebaseServiceInternalsInterface {
 }
 
 export class DatabaseService implements FirebaseServiceInterface {
-
   public readonly INTERNAL: DatabaseInternals = new DatabaseInternals();
 
   private readonly appInternal: FirebaseApp;

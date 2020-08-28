@@ -125,6 +125,7 @@ export class SecurityRules implements FirebaseServiceInterface {
   private static readonly CLOUD_FIRESTORE = 'cloud.firestore';
   private static readonly FIREBASE_STORAGE = 'firebase.storage';
 
+  /** @hidden */
   public readonly INTERNAL = new SecurityRulesInternals();
 
   private readonly client: SecurityRulesApiClient;

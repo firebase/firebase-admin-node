@@ -51,6 +51,7 @@ class RemoteConfigInternals implements FirebaseServiceInternalsInterface {
  * [`admin.remoteConfig()`](admin.remoteConfig#remoteConfig).
  */
 export class RemoteConfig implements FirebaseServiceInterface {
+  /** @hidden */
   public readonly INTERNAL: RemoteConfigInternals = new RemoteConfigInternals();
 
   private readonly client: RemoteConfigApiClient;
