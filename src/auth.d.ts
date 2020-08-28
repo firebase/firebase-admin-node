@@ -74,6 +74,11 @@ export namespace admin.auth {
     toJSON(): Object;
   }
 
+  /** Enums for multi-factor identifiers. */
+  enum MultiFactorId {
+    Phone = 'phone',
+  }
+
   /**
    * Interface representing the common properties of a user enrolled second factor.
    */
@@ -97,7 +102,7 @@ export namespace admin.auth {
     /**
      * The type identifier of the second factor. For SMS second factors, this is `phone`.
      */
-    factorId: string;
+    factorId: MultiFactorId;
 
     /**
      * @return A JSON-serializable representation of this object.

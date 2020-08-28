@@ -16,7 +16,12 @@
 
 import * as utils from '../utils';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
-import { MultiFactorId, MultiFactorInfoResponse } from './multi-factor-internal';
+import { MultiFactorInfoResponse } from './multi-factor-internal';
+
+/** Enums for multi-factor identifiers. */
+export enum MultiFactorId {
+  Phone = 'phone',
+}
 
 /**
  * Interface representing the common properties of a user enrolled second factor.

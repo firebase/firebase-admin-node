@@ -14,11 +14,6 @@
  * limitations under the License.
  */
 
-/** Enums for multi-factor identifiers. */
-export enum MultiFactorId {
-  Phone = 'phone',
-}
-
 export interface MultiFactorInfoResponse {
   mfaEnrollmentId: string;
   displayName?: string;
