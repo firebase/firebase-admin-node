@@ -54,6 +54,7 @@ var paths = {
 
   curatedTypings: [
     'src/*.d.ts',
+    '!src/credential.d.ts',
     '!src/database.d.ts',
     '!src/instance-id.d.ts',
     '!src/security-rules.d.ts',
