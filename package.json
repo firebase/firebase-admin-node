@@ -84,7 +84,7 @@
     "@types/sinon-chai": "^3.0.0",
     "@typescript-eslint/eslint-plugin": "^2.20.0",
     "@typescript-eslint/parser": "^2.20.0",
-    "bcrypt": "^3.0.6",
+    "bcrypt": "^5.0.0",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.0.0",
     "chalk": "^1.1.3",
