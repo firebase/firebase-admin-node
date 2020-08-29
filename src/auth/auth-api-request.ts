@@ -1532,7 +1532,8 @@ export abstract class AbstractAuthRequestHandler {
       return Promise.reject(e);
     }
     const providerId = options.providerId;
-    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), CREATE_OAUTH_IDP_CONFIG, request, { providerId })
+    return this.invokeRequestHandler(
+      this.getProjectConfigUrlBuilder(), CREATE_OAUTH_IDP_CONFIG, request, { providerId })
       .then((response: any) => {
         if (!OIDCConfig.getProviderIdFromResourceName(response.name)) {
           throw new FirebaseAuthError(

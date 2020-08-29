@@ -171,14 +171,16 @@ describe('admin.auth', () => {
         const firstMultiFactor = userRecord.multiFactor!.enrolledFactors[0];
         expect(firstMultiFactor.uid).not.to.be.undefined;
         expect(firstMultiFactor.enrollmentTime).not.to.be.undefined;
-        expect((firstMultiFactor as admin.auth.PhoneMultiFactorInfo).phoneNumber).to.equal(enrolledFactors[0].phoneNumber);
+        expect((firstMultiFactor as admin.auth.PhoneMultiFactorInfo).phoneNumber).to.equal(
+          enrolledFactors[0].phoneNumber);
         expect(firstMultiFactor.displayName).to.equal(enrolledFactors[0].displayName);
         expect(firstMultiFactor.factorId).to.equal(enrolledFactors[0].factorId);
         // Confirm second enrolled second factor.
         const secondMultiFactor = userRecord.multiFactor!.enrolledFactors[1];
         expect(secondMultiFactor.uid).not.to.be.undefined;
         expect(secondMultiFactor.enrollmentTime).not.to.be.undefined;
-        expect((secondMultiFactor as admin.auth.PhoneMultiFactorInfo).phoneNumber).to.equal(enrolledFactors[1].phoneNumber);
+        expect((secondMultiFactor as admin.auth.PhoneMultiFactorInfo).phoneNumber).to.equal(
+          enrolledFactors[1].phoneNumber);
         expect(secondMultiFactor.displayName).to.equal(enrolledFactors[1].displayName);
         expect(secondMultiFactor.factorId).to.equal(enrolledFactors[1].factorId);
       });
@@ -218,7 +220,9 @@ describe('admin.auth', () => {
      * the uid, email, and phoneNumber fields. Works with at least UserRecord
      * and UserImportRecord instances.
      */
-    function mapUserRecordsToUidEmailPhones(values: Array<{ uid: string; email?: string; phoneNumber?: string}>): Array<{ uid: string; email?: string; phoneNumber?: string}> {
+    function mapUserRecordsToUidEmailPhones(
+      values: Array<{ uid: string; email?: string; phoneNumber?: string}>
+    ): Array<{ uid: string; email?: string; phoneNumber?: string}> {
       return values.map((ur) => ({ uid: ur.uid, email: ur.email, phoneNumber: ur.phoneNumber }));
     }
 
