@@ -22,7 +22,9 @@ import * as _ from 'lodash';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import { FirebaseApp } from '../../../src/firebase-app';
-import { ProjectManagementRequestHandler } from '../../../src/project-management/project-management-api-request-internal';
+import {
+  ProjectManagementRequestHandler
+} from '../../../src/project-management/project-management-api-request-internal';
 import { HttpClient } from '../../../src/utils/api-request';
 import * as mocks from '../../resources/mocks';
 import * as utils from '../utils';

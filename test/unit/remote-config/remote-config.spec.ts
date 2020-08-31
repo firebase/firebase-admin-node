@@ -28,7 +28,10 @@ import {
   TagColor,
   ListVersionsResult,
 } from '../../../src/remote-config/remote-config-api-client';
-import { FirebaseRemoteConfigError, RemoteConfigApiClient } from '../../../src/remote-config/remote-config-api-client-internal';
+import {
+  FirebaseRemoteConfigError,
+  RemoteConfigApiClient
+} from '../../../src/remote-config/remote-config-api-client-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
 
 const expect = chai.expect;
@@ -254,7 +257,7 @@ describe('RemoteConfig', () => {
         .should.eventually.be.rejected.and.deep.equal(INTERNAL_ERROR);
     });
 
-    ['', 'abc', 'a123b', 'a123', '123a', 1.2, '70.2', null, NaN, true, [], {}].forEach((invalidVersion) => {
+    ['', null, NaN, true, [], {}].forEach((invalidVersion) => {
       it(`should reject if the versionNumber is: ${invalidVersion}`, () => {
         const response = deepCopy(REMOTE_CONFIG_LIST_VERSIONS_RESULT);
         response.versions[0].versionNumber = invalidVersion as any;
@@ -263,7 +266,22 @@ describe('RemoteConfig', () => {
           .resolves(response);
         stubs.push(stub);
         return remoteConfig.listVersions()
-          .should.eventually.be.rejected.and.to.match(/^Error: Version number must be (a non-empty string in int64 format or a number|an integer or a string in int64 format)$/);
+          .should.eventually.be.rejected
+          .and.to.match(/^Error: Version number must be a non-empty string in int64 format or a number$/);
+      });
+    });
+
+    ['abc', 'a123b', 'a123', '123a', 1.2, '70.2'].forEach((invalidVersion) => {
+      it(`should reject if the versionNumber is: ${invalidVersion}`, () => {
+        const response = deepCopy(REMOTE_CONFIG_LIST_VERSIONS_RESULT);
+        response.versions[0].versionNumber = invalidVersion as any;
+        const stub = sinon
+          .stub(RemoteConfigApiClient.prototype, 'listVersions')
+          .resolves(response);
+        stubs.push(stub);
+        return remoteConfig.listVersions()
+          .should.eventually.be.rejected
+          .and.to.match(/^Error: Version number must be an integer or a string in int64 format$/);
       });
     });
 
@@ -415,7 +433,7 @@ describe('RemoteConfig', () => {
     INVALID_JSON_STRINGS.forEach((invalidJson) => {
       it(`should throw if the json string is ${JSON.stringify(invalidJson)}`, () => {
         expect(() => remoteConfig.createTemplateFromJSON(invalidJson))
-          .to.throw(/^Failed to parse the JSON string: ([\D\w]*)\. SyntaxError: Unexpected token ([\D\w]*) in JSON at position ([0-9]*)$/);
+          .to.throw(/Failed to parse the JSON string: ([\D\w]*)\./);
       });
     });
 

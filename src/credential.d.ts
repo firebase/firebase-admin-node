@@ -108,7 +108,9 @@ export namespace admin.credential {
    * @return A credential authenticated via the
    *   provided service account that can be used to initialize an app.
    */
-  function cert(serviceAccountPathOrObject: string | _admin.ServiceAccount, httpAgent?: Agent): admin.credential.Credential;
+  function cert(
+    serviceAccountPathOrObject: string | _admin.ServiceAccount,
+    httpAgent?: Agent): admin.credential.Credential;
 
   /**
    * Returns a credential created from the provided refresh token that grants
