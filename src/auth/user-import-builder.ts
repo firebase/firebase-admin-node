@@ -15,7 +15,7 @@
  */
 
 import { FirebaseArrayIndexError } from '../utils/error';
-import { SecondFactor } from './user-import-builder-internal';
+import { UpdateMultiFactorInfoRequest } from './user-record';
 
 /** Firebase Auth supported hashing algorithms for import operations. */
 export type HashAlgorithmType = 'SCRYPT' | 'STANDARD_SCRYPT' | 'HMAC_SHA512' |
@@ -193,7 +193,7 @@ export interface UserImportRecord {
    * The user's multi-factor related properties.
    */
   multiFactor?: {
-    enrolledFactors: SecondFactor[];
+    enrolledFactors: UpdateMultiFactorInfoRequest[];
   };
 
   /**

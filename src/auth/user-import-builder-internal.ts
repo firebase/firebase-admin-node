@@ -19,6 +19,7 @@ import * as utils from '../utils';
 import * as validator from '../utils/validator';
 import { UserImportRecord, UserImportResult, UserImportOptions } from './user-import-builder';
 import { AuthClientErrorCode, FirebaseAuthError, FirebaseArrayIndexError } from '../utils/error';
+import { UpdateMultiFactorInfoRequest, UpdatePhoneMultiFactorInfoRequest } from './user-record';
 
 
 /** UploadAccount endpoint request user interface. */
@@ -44,14 +45,6 @@ interface UploadAccountUser {
   createdAt?: number;
   customAttributes?: string;
   tenantId?: string | null;
-}
-
-export interface SecondFactor {
-  uid: string;
-  phoneNumber: string;
-  displayName?: string;
-  enrollmentTime?: string;
-  factorId: string;
 }
 
 /** Interface representing an Auth second factor in Auth server format. */
@@ -90,7 +83,8 @@ export type ValidatorFunction = (data: UploadAccountUser) => void;
  * @param multiFactorInfo The client format second factor.
  * @return The corresponding AuthFactorInfo server request format.
  */
-export function convertMultiFactorInfoToServerFormat(multiFactorInfo: SecondFactor): AuthFactorInfo {
+export function convertMultiFactorInfoToServerFormat(
+  multiFactorInfo: UpdateMultiFactorInfoRequest): AuthFactorInfo {
   let enrolledAt;
   if (typeof multiFactorInfo.enrollmentTime !== 'undefined') {
     if (validator.isUTCDateString(multiFactorInfo.enrollmentTime)) {
@@ -110,7 +104,7 @@ export function convertMultiFactorInfoToServerFormat(multiFactorInfo: SecondFact
       mfaEnrollmentId: multiFactorInfo.uid,
       displayName: multiFactorInfo.displayName,
       // Required for all phone second factors.
-      phoneInfo: multiFactorInfo.phoneNumber,
+      phoneInfo: (multiFactorInfo as UpdatePhoneMultiFactorInfoRequest).phoneNumber,
       enrolledAt,
     };
     for (const objKey in authFactorInfo) {
