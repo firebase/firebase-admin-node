@@ -53,6 +53,7 @@ import GetUsersResult = auth.GetUsersResult;
 import ListUsersResult = auth.ListUsersResult;
 import DeleteUsersResult = auth.DeleteUsersResult;
 import DecodedIdToken = auth.DecodedIdToken;
+import CustomTokenOptions = auth.CustomTokenOptions;
 import SessionCookieOptions = auth.SessionCookieOptions;
 import OIDCAuthProviderConfig = auth.OIDCAuthProviderConfig;
 import SAMLAuthProviderConfig = auth.SAMLAuthProviderConfig;
@@ -100,7 +101,20 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
    * @return {Promise<string>} A JWT for the provided payload.
    */
   public createCustomToken(uid: string, developerClaims?: object): Promise<string> {
-    return this.tokenGenerator.createCustomToken(uid, developerClaims);
+    return this.createCustomTokenWithOptions(uid, { developerClaims });
+  }
+
+  /**
+   * Creates a new custom token that can be sent back to a client to use with
+   * signInWithCustomToken().
+   *
+   * @param {string} uid The uid to use as the JWT subject.
+   * @param {CustomTokenOptions=} options Options to use when creating the JWT.
+   *
+   * @return {Promise<string>} A JWT for the provided payload.
+   */
+  public createCustomTokenWithOptions(uid: string, options?: CustomTokenOptions): Promise<string> {
+    return this.tokenGenerator.createCustomToken(uid, options);
   }
 
   /**
