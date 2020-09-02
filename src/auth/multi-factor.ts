@@ -47,6 +47,7 @@ export abstract class MultiFactorInfo {
    *
    * @param response The server side response.
    * @constructor
+   * @internal
    */
   constructor(response: MultiFactorInfoResponse) {
     this.initFromServerResponse(response);
@@ -70,6 +71,7 @@ export abstract class MultiFactorInfo {
    * @param response The server side response.
    * @return The multi-factor ID associated with the provided response. If the response is
    *     not associated with any known multi-factor ID, null is returned.
+   * @internal
    */
   protected abstract getFactorId(response: MultiFactorInfoResponse): string | null;
 
@@ -77,6 +79,7 @@ export abstract class MultiFactorInfo {
    * Initializes the MultiFactorInfo object using the provided server response.
    *
    * @param response The server side response.
+   * @internal
    */
   private initFromServerResponse(response: MultiFactorInfoResponse): void {
     const factorId = response && this.getFactorId(response);
@@ -116,6 +119,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
    *
    * @param response The server side response.
    * @constructor
+   * @internal
    */
   constructor(response: MultiFactorInfoResponse) {
     super(response);
@@ -137,6 +141,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
    * @param response The server side response.
    * @return The multi-factor ID associated with the provided response. If the response is
    *     not associated with any known multi-factor ID, null is returned.
+   * @internal
    */
   protected getFactorId(response: MultiFactorInfoResponse): string | null {
     return (response && response.phoneInfo) ? 'phone' : null;

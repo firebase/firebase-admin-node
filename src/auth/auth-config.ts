@@ -14,13 +14,6 @@
  * limitations under the License.
  */
 
-import * as validator from '../utils/validator';
-import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
-import { AuthFactorServerType } from './auth-config-internal';
-
-/** A maximum of 10 test phone number / code pairs can be configured. */
-export const MAXIMUM_TEST_PHONE_NUMBERS = 10;
-
 /**
  * The filter interface used for listing provider configurations. This is used
  * when specifying how to list configured identity providers via
@@ -240,44 +233,18 @@ export interface MultiFactorConfig {
   factorIds?: AuthFactorType[];
 }
 
-/** Server side multi-factor configuration. */
-export interface MultiFactorAuthServerConfig {
-  state?: MultiFactorConfigState;
-  enabledProviders?: AuthFactorServerType[];
-}
-
 /**
- * Validates the provided map of test phone number / code pairs.
- * @param testPhoneNumbers The phone number / code pairs to validate.
+ * The email sign in provider configuration.
  */
-export function validateTestPhoneNumbers(
-  testPhoneNumbers: { [phoneNumber: string]: string },
-): void {
-  if (!validator.isObject(testPhoneNumbers)) {
-    throw new FirebaseAuthError(
-      AuthClientErrorCode.INVALID_ARGUMENT,
-      '"testPhoneNumbers" must be a map of phone number / code pairs.',
-    );
-  }
-  if (Object.keys(testPhoneNumbers).length > MAXIMUM_TEST_PHONE_NUMBERS) {
-    throw new FirebaseAuthError(AuthClientErrorCode.MAXIMUM_TEST_PHONE_NUMBER_EXCEEDED);
-  }
-  for (const phoneNumber in testPhoneNumbers) {
-    // Validate phone number.
-    if (!validator.isPhoneNumber(phoneNumber)) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_TESTING_PHONE_NUMBER,
-        `"${phoneNumber}" is not a valid E.164 standard compliant phone number.`
-      );
-    }
+export interface EmailSignInProviderConfig {
+  /**
+   * Whether email provider is enabled.
+   */
+  enabled?: boolean;
 
-    // Validate code.
-    if (!validator.isString(testPhoneNumbers[phoneNumber]) ||
-      !/^[\d]{6}$/.test(testPhoneNumbers[phoneNumber])) {
-      throw new FirebaseAuthError(
-        AuthClientErrorCode.INVALID_TESTING_PHONE_NUMBER,
-        `"${testPhoneNumbers[phoneNumber]}" is not a valid 6 digit code string.`
-      );
-    }
-  }
+  /**
+   * Whether password is required for email sign-in. When not required,
+   * email sign-in can be performed with password or via email link sign-in.
+   */
+  passwordRequired?: boolean; // In the backend API, default is true if not provided
 }

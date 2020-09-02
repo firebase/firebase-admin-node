@@ -17,8 +17,8 @@
 import { deepCopy } from '../utils/deep-copy';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import { TenantServerResponse, TenantUtils } from './tenant-internal';
-import { MultiFactorConfig } from './auth-config';
-import { EmailSignInConfig, EmailSignInProviderConfig, MultiFactorAuthConfig } from './auth-config-internal';
+import { EmailSignInProviderConfig, MultiFactorConfig } from './auth-config';
+import { EmailSignInConfig, MultiFactorAuthConfig } from './auth-config-internal';
 
 
 /** The TenantOptions interface used for create/read/update tenant operations. */
@@ -90,25 +90,20 @@ export class Tenant {
   public readonly displayName?: string;
 
   /**
-   * The email sign in provider configuration.
-   */
-  public readonly emailSignInConfig?: EmailSignInConfig;
-
-  /**
-   * The multi-factor auth configuration on the current tenant.
-   */
-  public readonly multiFactorConfig?: MultiFactorAuthConfig;
-
-  /**
    * The map containing the test phone number / code pairs for the tenant.
    */
   public readonly testPhoneNumbers?: {[phoneNumber: string]: string};
+
+  private readonly _emailSignInConfig?: EmailSignInConfig;
+
+  private readonly _multiFactorConfig?: MultiFactorAuthConfig;
 
   /**
    * The Tenant object constructor.
    *
    * @param response The server side response used to initialize the Tenant object.
    * @constructor
+   * @internal
    */
   constructor(response: TenantServerResponse) {
     const tenantId = TenantUtils.getTenantIdFromResourceName(response.name);
@@ -121,19 +116,33 @@ export class Tenant {
     this.tenantId = tenantId;
     this.displayName = response.displayName;
     try {
-      this.emailSignInConfig = new EmailSignInConfig(response);
+      this._emailSignInConfig = new EmailSignInConfig(response);
     } catch (e) {
       // If allowPasswordSignup is undefined, it is disabled by default.
-      this.emailSignInConfig = new EmailSignInConfig({
+      this._emailSignInConfig = new EmailSignInConfig({
         allowPasswordSignup: false,
       });
     }
     if (typeof response.mfaConfig !== 'undefined') {
-      this.multiFactorConfig = new MultiFactorAuthConfig(response.mfaConfig);
+      this._multiFactorConfig = new MultiFactorAuthConfig(response.mfaConfig);
     }
     if (typeof response.testPhoneNumbers !== 'undefined') {
       this.testPhoneNumbers = deepCopy(response.testPhoneNumbers || {});
     }
+  }
+
+  /**
+   * The email sign in provider configuration.
+   */
+  public get emailSignInConfig(): EmailSignInProviderConfig | undefined {
+    return this._emailSignInConfig;
+  }
+
+  /**
+   * The multi-factor auth configuration on the current tenant.
+   */
+  public get multiFactorConfig(): MultiFactorConfig | undefined {
+    return this._multiFactorConfig;
   }
 
   /**
@@ -143,8 +152,8 @@ export class Tenant {
     const json = {
       tenantId: this.tenantId,
       displayName: this.displayName,
-      emailSignInConfig: this.emailSignInConfig?.toJSON(),
-      multiFactorConfig: this.multiFactorConfig?.toJSON(),
+      emailSignInConfig: this._emailSignInConfig?.toJSON(),
+      multiFactorConfig: this._multiFactorConfig?.toJSON(),
       testPhoneNumbers: this.testPhoneNumbers,
     };
     if (typeof json.multiFactorConfig === 'undefined') {

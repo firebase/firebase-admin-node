@@ -272,13 +272,21 @@ export interface SessionCookieOptions {
   expiresIn: number;
 }
 
-/**	
- * Base Auth class. Mainly used for user management APIs.	
+/**
+ * Base Auth class. Mainly used for user management APIs.
  */
-export class BaseAuth<T extends AbstractAuthRequestHandler> {
-
+export class BaseAuth {
+  /**
+   * @internal
+   */
   protected readonly tokenGenerator: FirebaseTokenGenerator;
+  /**
+   * @internal
+   */
   protected readonly idTokenVerifier: FirebaseTokenVerifier;
+  /**
+   * @internal
+   */
   protected readonly sessionCookieVerifier: FirebaseTokenVerifier;
 
   /**
@@ -290,8 +298,14 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    *     (non-tenant-aware) instance will be created. Use this paramter to
    *     specify a tenant-aware tokenGenerator.
    * @constructor
+   * @internal
    */
-  constructor(app: FirebaseApp, protected readonly authRequestHandler: T, tokenGenerator?: FirebaseTokenGenerator) {
+  constructor(
+    app: FirebaseApp,
+    /** @internal */
+    protected readonly authRequestHandler: AbstractAuthRequestHandler,
+    tokenGenerator?: FirebaseTokenGenerator) {
+
     if (tokenGenerator) {
       this.tokenGenerator = tokenGenerator;
     } else {
@@ -1156,7 +1170,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
 /**
  * The tenant aware Auth class.
  */
-export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
+export class TenantAwareAuth extends BaseAuth {
   /**
    * The tenant identifier corresponding to this `TenantAwareAuth` instance.
    * All calls to the user management APIs, OIDC/SAML provider management APIs, email link
@@ -1170,6 +1184,7 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
    * @param {object} app The app that created this tenant.
    * @param tenantId The corresponding tenant ID.
    * @constructor
+   * @internal
    */
   constructor(app: FirebaseApp, tenantId: string) {
     const cryptoSigner = cryptoSignerFromApp(app);
@@ -1225,7 +1240,7 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
  * Auth service bound to the provided app.
  * An Auth instance can have multiple tenants.
  */
-export class Auth extends BaseAuth<AuthRequestHandler> implements FirebaseServiceInterface {
+export class Auth extends BaseAuth implements FirebaseServiceInterface {
 
   public INTERNAL: AuthInternals = new AuthInternals();
   private readonly tenantManager_: TenantManager;
@@ -1234,6 +1249,7 @@ export class Auth extends BaseAuth<AuthRequestHandler> implements FirebaseServic
   /**
    * @param {object} app The app for this Auth service.
    * @constructor
+   * @internal
    */
   constructor(app: FirebaseApp) {
     super(app, new AuthRequestHandler(app));

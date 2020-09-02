@@ -23,13 +23,15 @@ import { deepCopy } from '../../../src/utils/deep-copy';
 import {
   SAMLUpdateAuthProviderRequest, OIDCUpdateAuthProviderRequest,
   SAMLAuthProviderConfig, OIDCAuthProviderConfig,
-  validateTestPhoneNumbers, MAXIMUM_TEST_PHONE_NUMBERS,
 } from '../../../src/auth/auth-config';
 import {
   OIDCConfig, SAMLConfig, SAMLConfigServerRequest,
   SAMLConfigServerResponse, OIDCConfigServerRequest,
-  OIDCConfigServerResponse, EmailSignInConfig, MultiFactorAuthConfig 
+  OIDCConfigServerResponse, EmailSignInConfig, MultiFactorAuthConfig,
 } from '../../../src/auth/auth-config-internal';
+import {
+  validateTestPhoneNumbers, MAXIMUM_TEST_PHONE_NUMBERS,
+} from '../../../src/auth/tenant-internal';
 
 
 chai.should();

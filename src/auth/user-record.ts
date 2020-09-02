@@ -18,7 +18,7 @@ import { deepCopy } from '../utils/deep-copy';
 import { isNonNullObject } from '../utils/validator';
 import * as utils from '../utils';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
-import { 
+import {
   GetAccountInfoUserResponse, ProviderUserInfoResponse, MultiFactorInfoUtils
 } from './user-record-internal';
 import { MultiFactorInfo } from './multi-factor';
@@ -210,6 +210,7 @@ export class MultiFactor {
    * Initializes the MultiFactor object using the server side or JWT format response.
    *
    * @param response The server side response.
+   * @internal
    */
   constructor(response: GetAccountInfoUserResponse) {
     const parsedEnrolledFactors: MultiFactorInfo[] = [];
@@ -261,7 +262,8 @@ export class UserMetadata {
 
   /**
    * @param response The server side response returned from the getAccountInfo
-   *     endpoint. 
+   *     endpoint.
+   * @internal
    */
   constructor(response: GetAccountInfoUserResponse) {
     // Creation date should always be available but due to some backend bugs there
@@ -318,6 +320,7 @@ export class UserInfo {
   /**
    * @param response The server side response returned from the getAccountInfo
    *     endpoint.
+   * @internal
    */
   constructor(response: ProviderUserInfoResponse) {
     // Provider user id and provider id are required.
@@ -450,6 +453,7 @@ export class UserRecord {
   /**
    * @param response The server side response returned from the getAccountInfo
    *     endpoint.
+   * @internal
    */
   constructor(response: GetAccountInfoUserResponse) {
     // The Firebase user id is required.

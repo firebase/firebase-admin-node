@@ -16,9 +16,9 @@
 
 import { deepCopy } from '../utils/deep-copy';
 import * as validator from '../utils/validator';
-import { 
+import {
   AuthFactorType, OIDCUpdateAuthProviderRequest,
-  MultiFactorConfig, MultiFactorConfigState, MultiFactorAuthServerConfig,
+  MultiFactorConfig, MultiFactorConfigState,
   SAMLAuthProviderConfig, SAMLAuthProviderRequest, OIDCAuthProviderConfig,
 } from './auth-config';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
@@ -88,10 +88,10 @@ export interface OIDCAuthProviderRequest extends OIDCUpdateAuthProviderRequest {
   providerId?: string;
 }
 
-/** The email provider configuration interface. */
-export interface EmailSignInProviderConfig {
-  enabled?: boolean;
-  passwordRequired?: boolean; // In the backend API, default is true if not provided
+/** Server side multi-factor configuration. */
+export interface MultiFactorAuthServerConfig {
+  state?: MultiFactorConfigState;
+  enabledProviders?: AuthFactorServerType[];
 }
 
 /** Identifies the server side second factor type. */

@@ -56,9 +56,9 @@ const expect = chai.expect;
 interface AuthTest {
   name: string;
   supportsTenantManagement: boolean;
-  Auth: new (...args: any[]) => BaseAuth<AbstractAuthRequestHandler>;
+  Auth: new (...args: any[]) => BaseAuth;
   RequestHandler: new (...args: any[]) => AbstractAuthRequestHandler;
-  init(app: FirebaseApp): BaseAuth<AbstractAuthRequestHandler>;
+  init(app: FirebaseApp): BaseAuth;
 }
 
 
@@ -260,13 +260,13 @@ const AUTH_CONFIGS: AuthTest[] = [
 ];
 AUTH_CONFIGS.forEach((testConfig) => {
   describe(testConfig.name, () => {
-    let auth: BaseAuth<AbstractAuthRequestHandler>;
+    let auth: BaseAuth;
     let mockApp: FirebaseApp;
     let getTokenStub: sinon.SinonStub;
     let oldProcessEnv: NodeJS.ProcessEnv;
-    let nullAccessTokenAuth: BaseAuth<AbstractAuthRequestHandler>;
-    let malformedAccessTokenAuth: BaseAuth<AbstractAuthRequestHandler>;
-    let rejectedPromiseAccessTokenAuth: BaseAuth<AbstractAuthRequestHandler>;
+    let nullAccessTokenAuth: BaseAuth;
+    let malformedAccessTokenAuth: BaseAuth;
+    let rejectedPromiseAccessTokenAuth: BaseAuth;
 
     beforeEach(() => {
       mockApp = mocks.app();
