@@ -39,7 +39,9 @@ class StorageInternals implements FirebaseServiceInternalsInterface {
 }
 
 /**
- * Storage service bound to the provided app.
+ * The default `Storage` service if no
+ * app is provided or the `Storage` service associated with the provided
+ * app.
  */
 export class Storage implements FirebaseServiceInterface {
   public readonly INTERNAL: StorageInternals = new StorageInternals();
@@ -50,6 +52,7 @@ export class Storage implements FirebaseServiceInterface {
   /**
    * @param {FirebaseApp} app The app for this Storage service.
    * @constructor
+   * @internal
    */
   constructor(app: FirebaseApp) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
@@ -98,12 +101,10 @@ export class Storage implements FirebaseServiceInterface {
   }
 
   /**
-   * Returns a reference to a Google Cloud Storage bucket. Returned reference can be used to upload
-   * and download content from Google Cloud Storage.
-   *
-   * @param {string=} name Optional name of the bucket to be retrieved. If name is not specified,
-   *   retrieves a reference to the default bucket.
-   * @return {Bucket} A Bucket object from the @google-cloud/storage library.
+   * @param name Optional name of the bucket to be retrieved. If name is not specified,
+   * retrieves a reference to the default bucket.
+   * @returns A [Bucket](https://cloud.google.com/nodejs/docs/reference/storage/latest/Bucket)
+   * instance as defined in the `@google-cloud/storage` package.
    */
   public bucket(name?: string): Bucket {
     const bucketName = (typeof name !== 'undefined')
@@ -120,9 +121,7 @@ export class Storage implements FirebaseServiceInterface {
   }
 
   /**
-   * Returns the app associated with this Storage instance.
-   *
-   * @return {FirebaseApp} The app associated with this Storage instance.
+   * @return The app associated with this Storage instance.
    */
   get app(): FirebaseApp {
     return this.appInternal;

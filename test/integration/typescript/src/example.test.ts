@@ -20,6 +20,7 @@ import { Bucket } from '@google-cloud/storage';
 import { Firestore } from '@google-cloud/firestore';
 
 import * as admin from 'firebase-admin';
+import { admin } from '../../../../src/storage';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const serviceAccount = require('../mock.key.json');
@@ -71,7 +72,8 @@ describe('Init App', () => {
   });
 
   it('Should return a Cloud Storage client', () => {
-    const bucket: Bucket = app.storage().bucket('TestBucket');
+    const storage: admin.storage.Storage = app.storage();
+    const bucket: Bucket = storage.bucket('TestBucket');
     expect(bucket.name).to.equal('TestBucket');
   });
 

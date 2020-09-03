@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { Bucket } from '@google-cloud/storage';
 import * as _firestore from '@google-cloud/firestore';
 import { Agent } from 'http';
 
@@ -26,6 +25,7 @@ import * as _instanceId from './instance-id';
 import * as _projectManagement from './project-management';
 import * as _remoteConfig from './remote-config';
 import * as _securityRules from './security-rules';
+import * as _storage from './storage';
 
 /* eslint-disable @typescript-eslint/ban-types */
 
@@ -651,24 +651,7 @@ declare namespace admin.messaging {
 }
 
 declare namespace admin.storage {
-
-  /**
-   * The default `Storage` service if no
-   * app is provided or the `Storage` service associated with the provided
-   * app.
-   */
-  interface Storage {
-    /**
-     * Optional app whose `Storage` service to
-     * return. If not provided, the default `Storage` service will be returned.
-     */
-    app: admin.app.App;
-    /**
-     * @returns A [Bucket](https://cloud.google.com/nodejs/docs/reference/storage/latest/Bucket)
-     * instance as defined in the `@google-cloud/storage` package.
-     */
-    bucket(name?: string): Bucket;
-  }
+  export import Storage = _storage.admin.storage.Storage;
 }
 
 declare namespace admin.firestore {
