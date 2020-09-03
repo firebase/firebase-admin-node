@@ -57,10 +57,11 @@ var paths = {
     '!src/credential.d.ts',
     '!src/database.d.ts',
     '!src/instance-id.d.ts',
-    '!src/security-rules.d.ts',
+    '!src/messaging.d.ts',
     '!src/project-management.d.ts',
     '!src/remote-config.d.ts',
-    '!src/messaging.d.ts',
+    '!src/security-rules.d.ts',
+    '!src/storage.d.ts',
   ],
 };
 
@@ -71,7 +72,6 @@ const TEMPORARY_TYPING_EXCLUDES = [
   '!lib/firebase-service.d.ts',
   '!lib/auth/*.d.ts',
   '!lib/machine-learning/*.d.ts',
-  '!lib/storage/*.d.ts',
   '!lib/utils/*.d.ts',
 ];
 
@@ -110,10 +110,10 @@ gulp.task('compile', function() {
 
     // Add header
     .pipe(header(banner));
-  
+
   // Exclude typings that are unintended (currently excludes all auto-generated
   // typings, but as services are refactored to auto-generate typings this will
-  // change). Moreover, all *-internal.d.ts typings should not be exposed to 
+  // change). Moreover, all *-internal.d.ts typings should not be exposed to
   // developers as it denotes internally used types.
   if (declaration) {
     const configuration = [
@@ -153,7 +153,7 @@ gulp.task('copyTypings', function() {
   let workflow = gulp.src('src/*.d.ts')
     // Add header
     .pipe(header(banner));
-  
+
   if (declaration) {
     workflow = workflow.pipe(filter(paths.curatedTypings));
   }
