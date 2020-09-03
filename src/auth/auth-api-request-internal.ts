@@ -31,9 +31,11 @@ import {
 } from '../utils/api-request';
 import { CreateRequest, UpdateRequest } from './user-record';
 import {
-  UserImportBuilder, UserImportOptions, UserImportRecord,
-  UserImportResult, AuthFactorInfo, convertMultiFactorInfoToServerFormat,
+  UserImportOptions, UserImportRecord, UserImportResult
 } from './user-import-builder';
+import {
+  UserImportBuilder, AuthFactorInfo, convertMultiFactorInfoToServerFormat,
+} from './user-import-builder-internal';
 import * as utils from '../utils/index';
 import { ActionCodeSettings } from './action-code-settings-builder';
 import { ActionCodeSettingsBuilder } from './action-code-settings-builder-internal';
