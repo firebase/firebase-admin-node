@@ -20,7 +20,6 @@ import { Bucket } from '@google-cloud/storage';
 import { Firestore } from '@google-cloud/firestore';
 
 import * as admin from 'firebase-admin';
-import { admin } from '../../../../src/storage';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const serviceAccount = require('../mock.key.json');
