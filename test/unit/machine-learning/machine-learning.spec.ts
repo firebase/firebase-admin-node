@@ -62,7 +62,7 @@ describe('MachineLearning', () => {
     modelHash: 'modelHash123',
     displayName: 'model_1',
     tags: ['tag_1', 'tag_2'],
-    state: {published: true},
+    state: { published: true },
     tfliteModel: {
       gcsTfliteUri: 'gs://test-project-bucket/Firebase/ML/Models/model1.tflite',
       sizeBytes: 16900988,
@@ -97,13 +97,28 @@ describe('MachineLearning', () => {
     modelHash: 'modelHash234',
     displayName: 'model_2',
     tags: ['tag_2', 'tag_3'],
-    state: {published: false},
+    state: { published: false },
     tfliteModel: {
       gcsTfliteUri: 'gs://test-project-bucket/Firebase/ML/Models/model2.tflite',
       sizeBytes: 22200222,
     },
   };
   const MODEL2 = new Model(MODEL_RESPONSE2);
+
+  const MODEL_RESPONSE3: any = {
+    name: 'projects/test-project/models/3456789',
+    createTime: '2020-02-07T23:45:23.288047Z',
+    updateTime: '2020-02-08T23:45:23.288047Z',
+    etag: 'etag345',
+    modelHash: 'modelHash345',
+    displayName: 'model_3',
+    tags: ['tag_3', 'tag_4'],
+    state: { published: true },
+    tfliteModel: {
+      managedUpload: true,
+      sizeBytes: 22200222,
+    },
+  };
 
   const STATUS_ERROR_RESPONSE: {
     code: number;
@@ -209,7 +224,7 @@ describe('MachineLearning', () => {
           displayName: 'foo',
           tfliteModel: {
             gcsTfliteUri: 'gs://some-bucket/model.tflite',
-          }});
+          } });
       }).to.throw(expectedError);
     });
 
@@ -235,7 +250,7 @@ describe('MachineLearning', () => {
       expect(model.tags).to.deep.equal(['tag_1', 'tag_2']);
       expect(model.createTime).to.equal(CREATE_TIME_UTC);
       expect(model.updateTime).to.equal(UPDATE_TIME_UTC);
-      expect(model.validationError).to.be.empty;
+      expect(model.validationError).to.be.undefined;
       expect(model.published).to.be.true;
       expect(model.etag).to.equal('etag123');
       expect(model.modelHash).to.equal('modelHash123');
@@ -245,7 +260,24 @@ describe('MachineLearning', () => {
         'gs://test-project-bucket/Firebase/ML/Models/model1.tflite');
       expect(tflite.sizeBytes).to.be.equal(16900988);
     });
+
+    it('should accept unknown fields gracefully', () => {
+      const model = new Model(MODEL_RESPONSE3);
+      expect(model.modelId).to.equal('3456789');
+      expect(model.displayName).to.equal('model_3');
+      expect(model.tags).to.deep.equal(['tag_3', 'tag_4']);
+      expect(model.createTime).to.equal(CREATE_TIME_UTC);
+      expect(model.updateTime).to.equal(UPDATE_TIME_UTC);
+      expect(model.validationError).to.be.undefined;
+      expect(model.published).to.be.true;
+      expect(model.etag).to.equal('etag345');
+      expect(model.modelHash).to.equal('modelHash345');
+      expect(model.tfliteModel).to.be.undefined;
+    });
+
   });
+
+
 
   describe('getModel', () => {
     it('should propagate API errors', () => {
@@ -260,7 +292,7 @@ describe('MachineLearning', () => {
     it('should reject when API response is invalid', () => {
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'getModel')
-        .resolves(null);
+        .resolves(null as any);
       stubs.push(stub);
       return machineLearning.getModel(MODEL_ID)
         .should.eventually.be.rejected.and.have.property(
@@ -362,7 +394,7 @@ describe('MachineLearning', () => {
     it('should reject when API response is invalid', () => {
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'listModels')
-        .resolves(null);
+        .resolves(null as any);
       stubs.push(stub);
       return machineLearning.listModels()
         .should.eventually.be.rejected.and.have.property(
@@ -397,7 +429,7 @@ describe('MachineLearning', () => {
     it('should resolve on success', () => {
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'deleteModel')
-        .resolves({});
+        .resolves();
       stubs.push(stub);
 
       return machineLearning.deleteModel(MODEL_ID);
@@ -430,7 +462,7 @@ describe('MachineLearning', () => {
     it('should reject when API response is invalid', () => {
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'createModel')
-        .resolves(null);
+        .resolves(null as any);
       stubs.push(stub);
       return machineLearning.createModel(MODEL_OPTIONS_WITH_GCS)
         .should.eventually.be.rejected.and.have.property(
@@ -547,7 +579,7 @@ describe('MachineLearning', () => {
     it('should reject when API response is invalid', () => {
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'updateModel')
-        .resolves(null);
+        .resolves(null as any);
       stubs.push(stub);
       return machineLearning.updateModel(MODEL_ID, MODEL_OPTIONS_WITH_GCS)
         .should.eventually.be.rejected.and.have.property(
@@ -651,7 +683,7 @@ describe('MachineLearning', () => {
     it('should reject when API response is invalid', () => {
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'updateModel')
-        .resolves(null);
+        .resolves(null as any);
       stubs.push(stub);
       return machineLearning.publishModel(MODEL_ID)
         .should.eventually.be.rejected.and.have.property(
@@ -755,7 +787,7 @@ describe('MachineLearning', () => {
     it('should reject when API response is invalid', () => {
       const stub = sinon
         .stub(MachineLearningApiClient.prototype, 'updateModel')
-        .resolves(null);
+        .resolves(null as any);
       stubs.push(stub);
       return machineLearning.unpublishModel(MODEL_ID)
         .should.eventually.be.rejected.and.have.property(

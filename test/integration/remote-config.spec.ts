@@ -246,7 +246,7 @@ describe('admin.remoteConfig', () => {
     INVALID_JSON_STRINGS.forEach((invalidJson) => {
       it(`should throw if the json string is ${JSON.stringify(invalidJson)}`, () => {
         expect(() => admin.remoteConfig().createTemplateFromJSON(invalidJson))
-          .to.throw(/^Failed to parse the JSON string: ([\D\w]*)\. SyntaxError: Unexpected token ([\D\w]*) in JSON at position ([0-9]*)$/);
+          .to.throw(/Failed to parse the JSON string/);
       });
     });
 

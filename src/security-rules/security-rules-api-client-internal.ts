@@ -16,14 +16,14 @@
 
 import { HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient } from '../utils/api-request';
 import { PrefixedFirebaseError } from '../utils/error';
-import { FirebaseSecurityRulesError, SecurityRulesErrorCode } from './security-rules-utils';
+import { FirebaseSecurityRulesError, SecurityRulesErrorCode } from './security-rules-internal';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { FirebaseApp } from '../firebase-app';
 
 const RULES_V1_API = 'https://firebaserules.googleapis.com/v1';
 const FIREBASE_VERSION_HEADER = {
-  'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
+  'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`,
 };
 
 export interface Release {
@@ -170,7 +170,7 @@ export class SecurityRulesApiClient {
             const request: HttpRequestConfig = {
               method: 'PATCH',
               url: `${url}/releases/${name}`,
-              data: {release},
+              data: { release },
             };
             return this.sendRequest<Release>(request);
           });

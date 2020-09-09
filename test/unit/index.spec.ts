@@ -27,7 +27,6 @@ import './utils/api-request.spec';
 
 // Auth
 import './auth/auth.spec';
-import './auth/credential.spec';
 import './auth/user-record.spec';
 import './auth/token-generator.spec';
 import './auth/token-verifier.spec';
@@ -37,6 +36,9 @@ import './auth/action-code-settings-builder.spec';
 import './auth/auth-config.spec';
 import './auth/tenant.spec';
 import './auth/tenant-manager.spec';
+
+// Credential
+import './credential/credential.spec';
 
 // Database
 import './database/database.spec';

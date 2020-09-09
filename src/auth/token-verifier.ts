@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {AuthClientErrorCode, FirebaseAuthError, ErrorInfo} from '../utils/error';
+import { AuthClientErrorCode, FirebaseAuthError, ErrorInfo } from '../utils/error';
 
 import * as util from '../utils/index';
 import * as validator from '../utils/validator';

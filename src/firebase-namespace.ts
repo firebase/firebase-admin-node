@@ -15,30 +15,28 @@
  */
 
 import fs = require('fs');
-import {Agent} from 'http';
-import {deepExtend} from './utils/deep-copy';
-import {AppErrorCodes, FirebaseAppError} from './utils/error';
-import {AppHook, FirebaseApp, FirebaseAppOptions} from './firebase-app';
-import {FirebaseServiceFactory, FirebaseServiceInterface} from './firebase-service';
+import { deepExtend } from './utils/deep-copy';
+import { AppErrorCodes, FirebaseAppError } from './utils/error';
+import { AppHook, FirebaseApp, FirebaseAppOptions } from './firebase-app';
+import { FirebaseServiceFactory, FirebaseServiceInterface } from './firebase-service';
 import {
-  Credential,
-  RefreshTokenCredential,
-  ServiceAccountCredential,
-  getApplicationDefault,
-} from './auth/credential';
+  cert, refreshToken, applicationDefault
+} from './credential/credential';
+import { getApplicationDefault } from './credential/credential-internal';
 
-import {Auth} from './auth/auth';
-import {MachineLearning} from './machine-learning/machine-learning';
-import {Messaging} from './messaging/messaging';
-import {Storage} from './storage/storage';
-import {Database} from '@firebase/database';
-import {Firestore} from '@google-cloud/firestore';
-import {InstanceId} from './instance-id/instance-id';
-import {ProjectManagement} from './project-management/project-management';
+import { Auth } from './auth/auth';
+import { MachineLearning } from './machine-learning/machine-learning';
+import { Messaging } from './messaging/messaging';
+import { Storage } from './storage/storage';
+import { Database } from './database/database';
+import { Firestore } from '@google-cloud/firestore';
+import { InstanceId } from './instance-id/instance-id';
+import { ProjectManagement } from './project-management/project-management';
 import { SecurityRules } from './security-rules/security-rules';
 import { RemoteConfig } from './remote-config/remote-config';
 
 import * as validator from './utils/validator';
+import { getSdkVersion } from './utils/index';
 
 const DEFAULT_APP_NAME = '[DEFAULT]';
 
@@ -48,12 +46,6 @@ const DEFAULT_APP_NAME = '[DEFAULT]';
  * otherwise it will be assumed to be pointing to a file.
  */
 export const FIREBASE_CONFIG_VAR = 'FIREBASE_CONFIG';
-
-
-let globalAppDefaultCred: Credential;
-const globalCertCreds: { [key: string]: ServiceAccountCredential } = {};
-const globalRefreshTokenCreds: { [key: string]: RefreshTokenCredential } = {};
-
 
 export interface FirebaseServiceNamespace <T> {
   (app?: FirebaseApp): T;
@@ -271,31 +263,8 @@ export class FirebaseNamespaceInternals {
   }
 }
 
-
 const firebaseCredential = {
-  cert: (serviceAccountPathOrObject: string | object, httpAgent?: Agent): Credential => {
-    const stringifiedServiceAccount = JSON.stringify(serviceAccountPathOrObject);
-    if (!(stringifiedServiceAccount in globalCertCreds)) {
-      globalCertCreds[stringifiedServiceAccount] = new ServiceAccountCredential(serviceAccountPathOrObject, httpAgent);
-    }
-    return globalCertCreds[stringifiedServiceAccount];
-  },
-
-  refreshToken: (refreshTokenPathOrObject: string | object, httpAgent?: Agent): Credential => {
-    const stringifiedRefreshToken = JSON.stringify(refreshTokenPathOrObject);
-    if (!(stringifiedRefreshToken in globalRefreshTokenCreds)) {
-      globalRefreshTokenCreds[stringifiedRefreshToken] = new RefreshTokenCredential(
-        refreshTokenPathOrObject, httpAgent);
-    }
-    return globalRefreshTokenCreds[stringifiedRefreshToken];
-  },
-
-  applicationDefault: (httpAgent?: Agent): Credential => {
-    if (typeof globalAppDefaultCred === 'undefined') {
-      globalAppDefaultCred = getApplicationDefault(httpAgent);
-    }
-    return globalAppDefaultCred;
-  },
+  cert, refreshToken, applicationDefault
 };
 
 
@@ -309,7 +278,7 @@ export class FirebaseNamespace {
   /* tslint:enable:variable-name */
 
   public credential = firebaseCredential;
-  public SDK_VERSION = '<XXX_SDK_VERSION_XXX>';
+  public SDK_VERSION = getSdkVersion();
   public INTERNAL: FirebaseNamespaceInternals;
 
   /* tslint:disable */
@@ -331,7 +300,7 @@ export class FirebaseNamespace {
       return this.ensureApp(app).auth();
     };
     const auth = require('./auth/auth').Auth;
-    return Object.assign(fn, {Auth: auth});
+    return Object.assign(fn, { Auth: auth });
   }
 
   /**
@@ -356,7 +325,7 @@ export class FirebaseNamespace {
       return this.ensureApp(app).messaging();
     };
     const messaging = require('./messaging/messaging').Messaging;
-    return Object.assign(fn, {Messaging: messaging});
+    return Object.assign(fn, { Messaging: messaging });
   }
 
   /**
@@ -368,7 +337,7 @@ export class FirebaseNamespace {
       return this.ensureApp(app).storage();
     };
     const storage = require('./storage/storage').Storage;
-    return Object.assign(fn, {Storage: storage});
+    return Object.assign(fn, { Storage: storage });
   }
 
   /**
@@ -413,7 +382,7 @@ export class FirebaseNamespace {
         };
     const machineLearning =
         require('./machine-learning/machine-learning').MachineLearning;
-    return Object.assign(fn, {MachineLearning: machineLearning});
+    return Object.assign(fn, { MachineLearning: machineLearning });
   }
 
   /**
@@ -425,7 +394,7 @@ export class FirebaseNamespace {
       return this.ensureApp(app).instanceId();
     };
     const instanceId = require('./instance-id/instance-id').InstanceId;
-    return Object.assign(fn, {InstanceId: instanceId});
+    return Object.assign(fn, { InstanceId: instanceId });
   }
 
   /**
@@ -437,7 +406,7 @@ export class FirebaseNamespace {
       return this.ensureApp(app).projectManagement();
     };
     const projectManagement = require('./project-management/project-management').ProjectManagement;
-    return Object.assign(fn, {ProjectManagement: projectManagement});
+    return Object.assign(fn, { ProjectManagement: projectManagement });
   }
 
   /**
@@ -449,7 +418,7 @@ export class FirebaseNamespace {
       return this.ensureApp(app).securityRules();
     };
     const securityRules = require('./security-rules/security-rules').SecurityRules;
-    return Object.assign(fn, {SecurityRules: securityRules});
+    return Object.assign(fn, { SecurityRules: securityRules });
   }
 
   /**

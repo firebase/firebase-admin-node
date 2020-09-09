@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {HttpError} from '../utils/api-request';
-import {FirebaseMessagingError, MessagingClientErrorCode} from '../utils/error';
+import { HttpError } from '../utils/api-request';
+import { FirebaseMessagingError, MessagingClientErrorCode } from '../utils/error';
 import * as validator from '../utils/validator';
 
 /**

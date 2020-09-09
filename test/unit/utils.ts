@@ -19,8 +19,8 @@ import * as sinon from 'sinon';
 
 import * as mocks from '../resources/mocks';
 
-import {FirebaseNamespace} from '../../src/firebase-namespace';
-import {FirebaseApp, FirebaseAppOptions, FirebaseAppInternals, FirebaseAccessToken} from '../../src/firebase-app';
+import { FirebaseNamespace } from '../../src/firebase-namespace';
+import { FirebaseApp, FirebaseAppOptions, FirebaseAppInternals, FirebaseAccessToken } from '../../src/firebase-app';
 import { HttpError, HttpResponse } from '../../src/utils/api-request';
 
 /**
