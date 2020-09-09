@@ -19,12 +19,7 @@
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
-import {
-  RemoteConfigTemplate,
-  TagColor,
-  ListVersionsResult,
-  Version,
-} from '../../../src/remote-config/remote-config-api-client';
+import { remoteConfig } from '../../../src/remote-config/index';
 import {
   FirebaseRemoteConfigError,
   RemoteConfigApiClient
@@ -38,6 +33,10 @@ import { deepCopy } from '../../../src/utils/deep-copy';
 import { getSdkVersion } from '../../../src/utils/index';
 
 const expect = chai.expect;
+
+import RemoteConfigTemplate = remoteConfig.RemoteConfigTemplate;
+import Version = remoteConfig.Version;
+import ListVersionsResult = remoteConfig.ListVersionsResult;
 
 describe('RemoteConfigApiClient', () => {
 
@@ -124,7 +123,7 @@ describe('RemoteConfigApiClient', () => {
       {
         name: 'ios',
         expression: 'device.os == \'ios\'',
-        tagColor: TagColor.PINK,
+        tagColor: 'PINK',
       },
     ],
     parameters: {

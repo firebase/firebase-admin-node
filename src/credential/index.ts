@@ -23,7 +23,7 @@ import * as credentialInterfacesApi from './credential-interfaces';
  * match the namespacing in the re-export inside src/index.d.ts
  */
 /* eslint-disable @typescript-eslint/no-namespace */
-export namespace admin.credential {
+export namespace credential {
   // See https://github.com/microsoft/TypeScript/issues/4336
   /* eslint-disable @typescript-eslint/no-unused-vars */
   // See https://github.com/typescript-eslint/typescript-eslint/issues/363
