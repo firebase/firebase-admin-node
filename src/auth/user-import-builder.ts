@@ -18,68 +18,13 @@ import { deepCopy, deepExtend } from '../utils/deep-copy';
 import * as utils from '../utils';
 import * as validator from '../utils/validator';
 import { AuthClientErrorCode, FirebaseAuthError, FirebaseArrayIndexError } from '../utils/error';
+import { auth } from './index';
 
-/** Firebase Auth supported hashing algorithms for import operations. */
-export type HashAlgorithmType = 'SCRYPT' | 'STANDARD_SCRYPT' | 'HMAC_SHA512' |
-    'HMAC_SHA256' | 'HMAC_SHA1' | 'HMAC_MD5' | 'MD5' | 'PBKDF_SHA1' | 'BCRYPT' |
-    'PBKDF2_SHA256' | 'SHA512' | 'SHA256' | 'SHA1';
-
-
-/** User import options for bulk account imports. */
-export interface UserImportOptions {
-  hash: {
-    algorithm: HashAlgorithmType;
-    key?: Buffer;
-    saltSeparator?: Buffer;
-    rounds?: number;
-    memoryCost?: number;
-    parallelization?: number;
-    blockSize?: number;
-    derivedKeyLength?: number;
-  };
-}
-
-interface SecondFactor {
-  uid: string;
-  phoneNumber: string;
-  displayName?: string;
-  enrollmentTime?: string;
-  factorId: string;
-}
-
-interface UserProviderRequest {
-  uid: string;
-  displayName?: string;
-  email?: string;
-  phoneNumber?: string;
-  photoURL?: string;
-  providerId: string;
-}
-
-interface UserMetadataRequest {
-  lastSignInTime?: string;
-  creationTime?: string;
-}
-
-/** User import record as accepted from developer. */
-export interface UserImportRecord {
-  uid: string;
-  email?: string;
-  emailVerified?: boolean;
-  displayName?: string;
-  phoneNumber?: string;
-  photoURL?: string;
-  disabled?: boolean;
-  metadata?: UserMetadataRequest;
-  providerData?: Array<UserProviderRequest>;
-  multiFactor?: {
-    enrolledFactors: SecondFactor[];
-  };
-  customClaims?: {[key: string]: any};
-  passwordHash?: Buffer;
-  passwordSalt?: Buffer;
-  tenantId?: string;
-}
+import UserImportOptions = auth.UserImportOptions;
+import UserImportRecord = auth.UserImportRecord;
+import UpdateMultiFactorInfoRequest = auth.UpdateMultiFactorInfoRequest;
+import UpdatePhoneMultiFactorInfoRequest = auth.UpdatePhoneMultiFactorInfoRequest;
+import UserImportResult = auth.UserImportResult;
 
 /** Interface representing an Auth second factor in Auth server format. */
 export interface AuthFactorInfo {
@@ -119,7 +64,7 @@ interface UploadAccountUser {
 
 
 /** UploadAccount endpoint request hash options. */
-export interface UploadAccountOptions {
+interface UploadAccountOptions {
   hashAlgorithm?: string;
   signerKey?: string;
   rounds?: number;
@@ -133,16 +78,8 @@ export interface UploadAccountOptions {
 
 
 /** UploadAccount endpoint complete request interface. */
-export interface UploadAccountRequest extends UploadAccountOptions {
+interface UploadAccountRequest extends UploadAccountOptions {
   users?: UploadAccountUser[];
-}
-
-
-/** Response object for importUsers operation. */
-export interface UserImportResult {
-  failureCount: number;
-  successCount: number;
-  errors: FirebaseArrayIndexError[];
 }
 
 
@@ -155,7 +92,7 @@ export type ValidatorFunction = (data: UploadAccountUser) => void;
  * @param multiFactorInfo The client format second factor.
  * @return The corresponding AuthFactorInfo server request format.
  */
-export function convertMultiFactorInfoToServerFormat(multiFactorInfo: SecondFactor): AuthFactorInfo {
+export function convertMultiFactorInfoToServerFormat(multiFactorInfo: UpdateMultiFactorInfoRequest): AuthFactorInfo {
   let enrolledAt;
   if (typeof multiFactorInfo.enrollmentTime !== 'undefined') {
     if (validator.isUTCDateString(multiFactorInfo.enrollmentTime)) {
@@ -175,7 +112,7 @@ export function convertMultiFactorInfoToServerFormat(multiFactorInfo: SecondFact
       mfaEnrollmentId: multiFactorInfo.uid,
       displayName: multiFactorInfo.displayName,
       // Required for all phone second factors.
-      phoneInfo: multiFactorInfo.phoneNumber,
+      phoneInfo: (multiFactorInfo as UpdatePhoneMultiFactorInfoRequest).phoneNumber,
       enrolledAt,
     };
     for (const objKey in authFactorInfo) {

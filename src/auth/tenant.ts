@@ -18,18 +18,13 @@ import * as validator from '../utils/validator';
 import { deepCopy } from '../utils/deep-copy';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
-  EmailSignInConfig, EmailSignInConfigServerRequest, EmailSignInProviderConfig,
-  MultiFactorConfig, MultiFactorAuthServerConfig, MultiFactorAuthConfig,
+  EmailSignInConfig, EmailSignInConfigServerRequest,
+  MultiFactorAuthServerConfig, MultiFactorAuthConfig,
   validateTestPhoneNumbers,
 } from './auth-config';
+import { auth } from './index';
 
-/** The TenantOptions interface used for create/read/update tenant operations. */
-export interface TenantOptions {
-  displayName?: string;
-  emailSignInConfig?: EmailSignInProviderConfig;
-  multiFactorConfig?: MultiFactorConfig;
-  testPhoneNumbers?: {[phoneNumber: string]: string} | null;
-}
+import TenantOptions = auth.UpdateTenantRequest;
 
 /** The corresponding server side representation of a TenantOptions object. */
 export interface TenantOptionsServerRequest extends EmailSignInConfigServerRequest {
@@ -48,17 +43,11 @@ export interface TenantServerResponse {
   testPhoneNumbers?: {[key: string]: string};
 }
 
-/** The interface representing the listTenant API response. */
-export interface ListTenantsResult {
-  tenants: Tenant[];
-  pageToken?: string;
-}
-
 
 /**
  * Tenant class that defines a Firebase Auth tenant.
  */
-export class Tenant {
+export class Tenant implements auth.Tenant {
   public readonly tenantId: string;
   public readonly displayName?: string;
   public readonly emailSignInConfig?: EmailSignInConfig;

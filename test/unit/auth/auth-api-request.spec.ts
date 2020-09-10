@@ -36,18 +36,24 @@ import {
   RESERVED_CLAIMS, FIREBASE_AUTH_UPLOAD_ACCOUNT, FIREBASE_AUTH_CREATE_SESSION_COOKIE,
   EMAIL_ACTION_REQUEST_TYPES, TenantAwareAuthRequestHandler, AbstractAuthRequestHandler,
 } from '../../../src/auth/auth-api-request';
-import { UserImportBuilder, UserImportRecord } from '../../../src/auth/user-import-builder';
+import { UserImportBuilder } from '../../../src/auth/user-import-builder';
 import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
 import { ActionCodeSettingsBuilder } from '../../../src/auth/action-code-settings-builder';
-import {
-  OIDCAuthProviderConfig, SAMLAuthProviderConfig, OIDCUpdateAuthProviderRequest,
-  SAMLUpdateAuthProviderRequest, SAMLConfigServerResponse,
-} from '../../../src/auth/auth-config';
-import { UserIdentifier } from '../../../src/auth/identifier';
-import { TenantOptions } from '../../../src/auth/tenant';
-import { UpdateRequest, UpdateMultiFactorInfoRequest } from '../../../src/auth/user-record';
+import { SAMLConfigServerResponse } from '../../../src/auth/auth-config';
 import { expectUserImportResult } from './user-import-builder.spec';
 import { getSdkVersion } from '../../../src/utils/index';
+
+import { auth } from '../../../src/auth/index';
+
+import UserImportRecord = auth.UserImportRecord;
+import OIDCAuthProviderConfig = auth.OIDCAuthProviderConfig;
+import SAMLAuthProviderConfig = auth.SAMLAuthProviderConfig;
+import OIDCUpdateAuthProviderRequest = auth.OIDCUpdateAuthProviderRequest;
+import SAMLUpdateAuthProviderRequest = auth.SAMLUpdateAuthProviderRequest;
+import UserIdentifier = auth.UserIdentifier;
+import UpdateRequest = auth.UpdateRequest;
+import UpdateMultiFactorInfoRequest = auth.UpdateMultiFactorInfoRequest;
+import UpdateTenantRequest = auth.UpdateTenantRequest;
 
 chai.should();
 chai.use(sinonChai);
@@ -4448,7 +4454,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       describe('createTenant', () => {
         const path = '/v2/projects/project_id/tenants';
         const postMethod = 'POST';
-        const tenantOptions: TenantOptions = {
+        const tenantOptions: UpdateTenantRequest = {
           displayName: 'TENANT-DISPLAY-NAME',
           emailSignInConfig: {
             enabled: true,
@@ -4576,7 +4582,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const path = '/v2/projects/project_id/tenants/tenant-id';
         const patchMethod = 'PATCH';
         const tenantId = 'tenant-id';
-        const tenantOptions: TenantOptions = {
+        const tenantOptions: UpdateTenantRequest = {
           displayName: 'TENANT-DISPLAY-NAME',
           emailSignInConfig: {
             enabled: true,

@@ -9,6 +9,7 @@ import * as validator from './utils/validator';
 import { FirebaseNamespaceInternals } from './firebase-namespace';
 import { FirebaseServiceFactory } from './firebase-service';
 
+export { auth } from './auth/index';
 export { remoteConfig } from './remote-config/index';
 
 const DEFAULT_APP_NAME = '[DEFAULT]';

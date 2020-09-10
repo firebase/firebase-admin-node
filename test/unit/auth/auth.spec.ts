@@ -26,8 +26,8 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
-import { Auth, TenantAwareAuth, BaseAuth, DecodedIdToken } from '../../../src/auth/auth';
-import { UserRecord, UpdateRequest } from '../../../src/auth/user-record';
+import { Auth, TenantAwareAuth } from '../../../src/auth/auth';
+import { UserRecord } from '../../../src/auth/user-record';
 import { FirebaseApp } from '../../../src/firebase-app';
 import {
   AuthRequestHandler, TenantAwareAuthRequestHandler, AbstractAuthRequestHandler,
@@ -37,13 +37,18 @@ import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error
 import * as validator from '../../../src/utils/validator';
 import { FirebaseTokenVerifier } from '../../../src/auth/token-verifier';
 import {
-  AuthProviderConfigFilter, OIDCConfig, SAMLConfig,
-  OIDCConfigServerResponse, SAMLConfigServerResponse,
+  OIDCConfig, SAMLConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
 } from '../../../src/auth/auth-config';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { TenantManager } from '../../../src/auth/tenant-manager';
 import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
 import { HttpClient } from '../../../src/utils/api-request';
+import { auth } from '../../../src/auth/index';
+
+import DecodedIdToken = auth.DecodedIdToken;
+import UpdateRequest = auth.UpdateRequest;
+import AuthProviderConfigFilter = auth.AuthProviderConfigFilter;
+import BaseAuth = auth.BaseAuth;
 
 chai.should();
 chai.use(sinonChai);
@@ -55,9 +60,9 @@ const expect = chai.expect;
 interface AuthTest {
   name: string;
   supportsTenantManagement: boolean;
-  Auth: new (...args: any[]) => BaseAuth<AbstractAuthRequestHandler>;
+  Auth: new (...args: any[]) => BaseAuth;
   RequestHandler: new (...args: any[]) => AbstractAuthRequestHandler;
-  init(app: FirebaseApp): BaseAuth<AbstractAuthRequestHandler>;
+  init(app: FirebaseApp): BaseAuth;
 }
 
 
@@ -259,13 +264,13 @@ const AUTH_CONFIGS: AuthTest[] = [
 ];
 AUTH_CONFIGS.forEach((testConfig) => {
   describe(testConfig.name, () => {
-    let auth: BaseAuth<AbstractAuthRequestHandler>;
+    let auth: BaseAuth;
     let mockApp: FirebaseApp;
     let getTokenStub: sinon.SinonStub;
     let oldProcessEnv: NodeJS.ProcessEnv;
-    let nullAccessTokenAuth: BaseAuth<AbstractAuthRequestHandler>;
-    let malformedAccessTokenAuth: BaseAuth<AbstractAuthRequestHandler>;
-    let rejectedPromiseAccessTokenAuth: BaseAuth<AbstractAuthRequestHandler>;
+    let nullAccessTokenAuth: BaseAuth;
+    let malformedAccessTokenAuth: BaseAuth;
+    let rejectedPromiseAccessTokenAuth: BaseAuth;
 
     beforeEach(() => {
       mockApp = mocks.app();

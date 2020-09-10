@@ -17,39 +17,10 @@
 import * as validator from '../utils/validator';
 import { deepCopy } from '../utils/deep-copy';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
+import { auth } from './index';
 
 /** A maximum of 10 test phone number / code pairs can be configured. */
 export const MAXIMUM_TEST_PHONE_NUMBERS = 10;
-
-/** The filter interface used for listing provider configurations. */
-export interface AuthProviderConfigFilter {
-  type: 'saml' | 'oidc';
-  maxResults?: number;
-  pageToken?: string;
-}
-
-/** The base Auth provider configuration interface. */
-export interface AuthProviderConfig {
-  providerId: string;
-  displayName?: string;
-  enabled: boolean;
-}
-
-/** The OIDC Auth provider configuration interface. */
-export interface OIDCAuthProviderConfig extends AuthProviderConfig {
-  clientId: string;
-  issuer: string;
-}
-
-/** The SAML Auth provider configuration interface. */
-export interface SAMLAuthProviderConfig extends AuthProviderConfig {
-  idpEntityId: string;
-  ssoURL: string;
-  x509Certificates: string[];
-  rpEntityId: string;
-  callbackURL?: string;
-  enableRequestSigning?: boolean;
-}
 
 /** The server side SAML configuration request interface. */
 export interface SAMLConfigServerRequest {
@@ -111,100 +82,36 @@ export interface OIDCConfigServerResponse {
   enabled?: boolean;
 }
 
-/** The public API response interface for listing provider configs. */
-export interface ListProviderConfigResults {
-  providerConfigs: AuthProviderConfig[];
-  pageToken?: string;
-}
-
-/** The public API request interface for updating a SAML Auth provider. */
-export interface SAMLUpdateAuthProviderRequest {
-  idpEntityId?: string;
-  ssoURL?: string;
-  x509Certificates?: string[];
-  rpEntityId?: string;
-  callbackURL?: string;
-  enableRequestSigning?: boolean;
-  enabled?: boolean;
-  displayName?: string;
-}
-
-/** The generic request interface for updating/creating a SAML Auth provider. */
-export interface SAMLAuthProviderRequest extends SAMLUpdateAuthProviderRequest {
-  providerId?: string;
-}
-
-/** The public API request interface for updating an OIDC Auth provider. */
-export interface OIDCUpdateAuthProviderRequest {
-  clientId?: string;
-  issuer?: string;
-  enabled?: boolean;
-  displayName?: string;
-}
-
-/** The generic request interface for updating/creating an OIDC Auth provider. */
-export interface OIDCAuthProviderRequest extends OIDCUpdateAuthProviderRequest {
-  providerId?: string;
-}
-
-/** The public API request interface for updating a generic Auth provider. */
-export type UpdateAuthProviderRequest = SAMLUpdateAuthProviderRequest | OIDCUpdateAuthProviderRequest;
-
-/** The email provider configuration interface. */
-export interface EmailSignInProviderConfig {
-  enabled?: boolean;
-  passwordRequired?: boolean; // In the backend API, default is true if not provided
-}
-
 /** The server side email configuration request interface. */
 export interface EmailSignInConfigServerRequest {
   allowPasswordSignup?: boolean;
   enableEmailLinkSignin?: boolean;
 }
 
-/** Identifies the public second factor type. */
-export type AuthFactorType = 'phone';
-
 /** Identifies the server side second factor type. */
-export type AuthFactorServerType = 'PHONE_SMS';
+type AuthFactorServerType = 'PHONE_SMS';
 
 /** Client Auth factor type to server auth factor type mapping. */
-export const AUTH_FACTOR_CLIENT_TO_SERVER_TYPE: {[key: string]: AuthFactorServerType} = {
+const AUTH_FACTOR_CLIENT_TO_SERVER_TYPE: {[key: string]: AuthFactorServerType} = {
   phone: 'PHONE_SMS',
 };
 
 /** Server Auth factor type to client auth factor type mapping. */
-export const AUTH_FACTOR_SERVER_TO_CLIENT_TYPE: {[key: string]: AuthFactorType} =
+const AUTH_FACTOR_SERVER_TO_CLIENT_TYPE: {[key: string]: AuthFactorType} =
   Object.keys(AUTH_FACTOR_CLIENT_TO_SERVER_TYPE)
     .reduce((res: {[key: string]: AuthFactorType}, key) => {
       res[AUTH_FACTOR_CLIENT_TO_SERVER_TYPE[key]] = key as AuthFactorType;
       return res;
     }, {});
 
-/** Identifies a multi-factor configuration state. */
-export type MultiFactorConfigState =  'ENABLED' | 'DISABLED';
-
-/**
- * Public API interface representing a multi-factor configuration.
- */
-export interface MultiFactorConfig {
-  /**
-   * The multi-factor config state.
-   */
-  state: MultiFactorConfigState;
-
-  /**
-   * The list of identifiers for enabled second factors.
-   * Currently only ‘phone’ is supported.
-   */
-  factorIds?: AuthFactorType[];
-}
-
 /** Server side multi-factor configuration. */
 export interface MultiFactorAuthServerConfig {
-  state?: MultiFactorConfigState;
+  state?: auth.MultiFactorConfigState;
   enabledProviders?: AuthFactorServerType[];
 }
+
+import MultiFactorConfig = auth.MultiFactorConfig;
+import AuthFactorType = auth.AuthFactorType;
 
 
 /**
@@ -212,7 +119,7 @@ export interface MultiFactorAuthServerConfig {
  * to a format that is understood by the Auth server.
  */
 export class MultiFactorAuthConfig implements MultiFactorConfig {
-  public readonly state: MultiFactorConfigState;
+  public readonly state: auth.MultiFactorConfigState;
   public readonly factorIds: AuthFactorType[];
 
   /**
@@ -368,6 +275,7 @@ export function validateTestPhoneNumbers(
   }
 }
 
+import EmailSignInProviderConfig = auth.EmailSignInProviderConfig;
 
 /**
  * Defines the email sign-in config class used to convert client side EmailSignInConfig
@@ -465,12 +373,11 @@ export class EmailSignInConfig implements EmailSignInProviderConfig {
   }
 }
 
-
 /**
  * Defines the SAMLConfig class used to convert a client side configuration to its
  * server side representation.
  */
-export class SAMLConfig implements SAMLAuthProviderConfig {
+export class SAMLConfig implements auth.SAMLAuthProviderConfig {
   public readonly enabled: boolean;
   public readonly displayName?: string;
   public readonly providerId: string;
@@ -492,7 +399,7 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
    * @return {?SAMLConfigServerRequest} The resulting server request or null if not valid.
    */
   public static buildServerRequest(
-    options: SAMLAuthProviderRequest,
+    options: Partial<auth.SAMLAuthProviderConfig>,
     ignoreMissingFields = false): SAMLConfigServerRequest | null {
     const makeRequest = validator.isNonNullObject(options) &&
         (options.providerId || ignoreMissingFields);
@@ -509,7 +416,7 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
       request.idpConfig = {
         idpEntityId: options.idpEntityId,
         ssoUrl: options.ssoURL,
-        signRequest: options.enableRequestSigning,
+        signRequest: (options as any).enableRequestSigning,
         idpCertificates: typeof options.x509Certificates === 'undefined' ? undefined : [],
       };
       if (options.x509Certificates) {
@@ -554,10 +461,12 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
   /**
    * Validates the SAMLConfig options object. Throws an error on failure.
    *
-   * @param {SAMLAuthProviderRequest} options The options object to validate.
+   * @param {SAMLAuthProviderConfig} options The options object to validate.
    * @param {boolean=} ignoreMissingFields Whether to ignore missing fields.
    */
-  public static validate(options: SAMLAuthProviderRequest, ignoreMissingFields = false): void {
+  public static validate(
+    options: Partial<auth.SAMLAuthProviderConfig>,
+    ignoreMissingFields = false): void {
     const validKeys = {
       enabled: true,
       displayName: true,
@@ -643,8 +552,8 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
         );
       }
     });
-    if (typeof options.enableRequestSigning !== 'undefined' &&
-        !validator.isBoolean(options.enableRequestSigning)) {
+    if (typeof (options as any).enableRequestSigning !== 'undefined' &&
+        !validator.isBoolean((options as any).enableRequestSigning)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_CONFIG,
         '"SAMLAuthProviderConfig.enableRequestSigning" must be a boolean.',
@@ -714,8 +623,8 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
     this.displayName = response.displayName;
   }
 
-  /** @return {SAMLAuthProviderConfig} The plain object representation of the SAMLConfig. */
-  public toJSON(): SAMLAuthProviderConfig {
+  /** @return The plain object representation of the SAMLConfig. */
+  public toJSON(): object {
     return {
       enabled: this.enabled,
       displayName: this.displayName,
@@ -734,7 +643,7 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
  * Defines the OIDCConfig class used to convert a client side configuration to its
  * server side representation.
  */
-export class OIDCConfig implements OIDCAuthProviderConfig {
+export class OIDCConfig implements auth.OIDCAuthProviderConfig {
   public readonly enabled: boolean;
   public readonly displayName?: string;
   public readonly providerId: string;
@@ -752,7 +661,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
    * @return {?OIDCConfigServerRequest} The resulting server request or null if not valid.
    */
   public static buildServerRequest(
-    options: OIDCAuthProviderRequest,
+    options: Partial<auth.OIDCAuthProviderConfig>,
     ignoreMissingFields = false): OIDCConfigServerRequest | null {
     const makeRequest = validator.isNonNullObject(options) &&
         (options.providerId || ignoreMissingFields);
@@ -798,7 +707,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
    * @param {OIDCAuthProviderRequest} options The options object to validate.
    * @param {boolean=} ignoreMissingFields Whether to ignore missing fields.
    */
-  public static validate(options: OIDCAuthProviderRequest, ignoreMissingFields = false): void {
+  public static validate(options: Partial<auth.OIDCAuthProviderConfig>, ignoreMissingFields = false): void {
     const validKeys = {
       enabled: true,
       displayName: true,
@@ -899,7 +808,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
   }
 
   /** @return {OIDCAuthProviderConfig} The plain object representation of the OIDCConfig. */
-  public toJSON(): OIDCAuthProviderConfig {
+  public toJSON(): auth.OIDCAuthProviderConfig {
     return {
       enabled: this.enabled,
       displayName: this.displayName,
