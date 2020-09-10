@@ -20,12 +20,16 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import { deepCopy } from '../../../src/utils/deep-copy';
 import {
-  UserImportBuilder, ValidatorFunction, UserImportResult, UserImportRecord,
+  UserImportBuilder, ValidatorFunction,
   UploadAccountRequest,
 } from '../../../src/auth/user-import-builder';
 import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
 import { toWebSafeBase64 } from '../../../src/utils';
+import { auth } from '../../../src/auth/index';
 
+import UserImportResult = auth.UserImportResult;
+import UserImportRecord = auth.UserImportRecord;
+import UpdatePhoneMultiFactorInfoRequest = auth.UpdatePhoneMultiFactorInfoRequest;
 
 chai.should();
 chai.use(sinonChai);
@@ -652,19 +656,18 @@ describe('UserImportBuilder', () => {
     });
 
     it('should ignore users with invalid second factor enrollment time', () => {
+      const factor: UpdatePhoneMultiFactorInfoRequest = {
+        uid: 'enrolledSecondFactor1',
+        phoneNumber: '+16505557348',
+        displayName: 'Spouse\'s phone number',
+        factorId: 'phone',
+        enrollmentTime: 'invalid',
+      };
       const invalidMultiFactorUsers: UserImportRecord[] = [
         {
           uid: '1234',
           multiFactor: {
-            enrolledFactors: [
-              {
-                uid: 'enrolledSecondFactor1',
-                phoneNumber: '+16505557348',
-                displayName: 'Spouse\'s phone number',
-                factorId: 'phone',
-                enrollmentTime: 'invalid',
-              },
-            ],
+            enrolledFactors: [factor],
           },
         },
         { uid: '5678', phoneNumber: '+16505550102' },

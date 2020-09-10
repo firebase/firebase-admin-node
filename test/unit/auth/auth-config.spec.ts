@@ -23,12 +23,16 @@ import { deepCopy } from '../../../src/utils/deep-copy';
 import {
   OIDCConfig, SAMLConfig, SAMLConfigServerRequest,
   SAMLConfigServerResponse, OIDCConfigServerRequest,
-  OIDCConfigServerResponse, SAMLUpdateAuthProviderRequest,
-  OIDCUpdateAuthProviderRequest, SAMLAuthProviderConfig, OIDCAuthProviderConfig,
+  OIDCConfigServerResponse,
   EmailSignInConfig, MultiFactorAuthConfig, validateTestPhoneNumbers,
   MAXIMUM_TEST_PHONE_NUMBERS,
 } from '../../../src/auth/auth-config';
+import { auth } from '../../../src/auth/index';
 
+import SAMLUpdateAuthProviderRequest = auth.SAMLUpdateAuthProviderRequest;
+import OIDCUpdateAuthProviderRequest = auth.OIDCUpdateAuthProviderRequest;
+import SAMLAuthProviderConfig = auth.SAMLAuthProviderConfig;
+import OIDCAuthProviderConfig = auth.OIDCAuthProviderConfig;
 
 chai.should();
 chai.use(sinonChai);
@@ -386,7 +390,6 @@ describe('SAMLConfig', () => {
     idpConfig: {
       idpEntityId: 'IDP_ENTITY_ID',
       ssoUrl: 'https://example.com/login',
-      signRequest: true,
       idpCertificates: [
         { x509Certificate: 'CERT1' },
         { x509Certificate: 'CERT2' },
@@ -406,7 +409,6 @@ describe('SAMLConfig', () => {
     x509Certificates: ['CERT1', 'CERT2'],
     rpEntityId: 'RP_ENTITY_ID',
     callbackURL: 'https://projectId.firebaseapp.com/__/auth/handler',
-    enableRequestSigning: true,
     enabled: true,
     displayName: 'samlProviderName',
   };

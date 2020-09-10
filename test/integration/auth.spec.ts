@@ -27,9 +27,11 @@ import {
 } from './setup';
 import url = require('url');
 import * as mocks from '../resources/mocks';
-import { AuthProviderConfig } from '../../src/auth/auth-config';
+import { auth } from '../../src/auth/index';
 import { deepExtend, deepCopy } from '../../src/utils/deep-copy';
 import { User, FirebaseAuth } from '@firebase/auth-types';
+
+import AuthProviderConfig = auth.AuthProviderConfig;
 
 const chalk = require('chalk'); // eslint-disable-line @typescript-eslint/no-var-requires
 

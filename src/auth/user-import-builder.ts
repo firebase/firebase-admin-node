@@ -78,7 +78,7 @@ interface UploadAccountOptions {
 
 
 /** UploadAccount endpoint complete request interface. */
-interface UploadAccountRequest extends UploadAccountOptions {
+export interface UploadAccountRequest extends UploadAccountOptions {
   users?: UploadAccountUser[];
 }
 
