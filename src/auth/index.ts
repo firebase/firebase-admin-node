@@ -26,63 +26,63 @@ import * as _user from './user-record';
 
 /* eslint-disable @typescript-eslint/no-namespace */
 export namespace admin.auth {
-    /* eslint-disable @typescript-eslint/no-empty-interface */
-    export import ActionCodeSettings = _actionCode.ActionCodeSettings;
+  /* eslint-disable @typescript-eslint/no-empty-interface */
+  export import ActionCodeSettings = _actionCode.ActionCodeSettings;
 
-    export interface Auth extends _auth.Auth {}
-    export import DecodedIdToken = _auth.DecodedIdToken;
-    export import DeleteUsersResult = _auth.DeleteUsersResult;
-    export import GetUsersResult = _auth.GetUsersResult;
-    export import ListUsersResult = _auth.ListUsersResult;
-    export import SessionCookieOptions = _auth.SessionCookieOptions;
-    export interface TenantAwareAuth extends _auth.TenantAwareAuth {}
+  export interface Auth extends _auth.Auth { }
+  export import DecodedIdToken = _auth.DecodedIdToken;
+  export import DeleteUsersResult = _auth.DeleteUsersResult;
+  export import GetUsersResult = _auth.GetUsersResult;
+  export import ListUsersResult = _auth.ListUsersResult;
+  export import SessionCookieOptions = _auth.SessionCookieOptions;
+  export interface TenantAwareAuth extends _auth.TenantAwareAuth { }
 
-    export import AuthFactorType = _config.AuthFactorType;
-    export import AuthProviderConfig = _config.AuthProviderConfig;
-    export import AuthProviderConfigFilter = _config.AuthProviderConfigFilter;
-    export import EmailSignInProviderConfig = _config.EmailSignInProviderConfig;
-    export import ListProviderConfigResults = _config.ListProviderConfigResults;
-    export import MultiFactorConfig = _config.MultiFactorConfig;
-    export import MultiFactorConfigState = _config.MultiFactorConfigState;
-    export import OIDCAuthProviderConfig = _config.OIDCAuthProviderConfig;
-    export import OIDCUpdateAuthProviderRequest = _config.OIDCUpdateAuthProviderRequest;
-    export import SAMLAuthProviderConfig = _config.SAMLAuthProviderConfig;
-    export import SAMLAuthProviderRequest = _config.SAMLAuthProviderRequest;
-    export import SAMLUpdateAuthProviderRequest = _config.SAMLUpdateAuthProviderRequest;
-    export import UpdateAuthProviderRequest = _config.UpdateAuthProviderRequest;
+  export import AuthFactorType = _config.AuthFactorType;
+  export import AuthProviderConfig = _config.AuthProviderConfig;
+  export import AuthProviderConfigFilter = _config.AuthProviderConfigFilter;
+  export import EmailSignInProviderConfig = _config.EmailSignInProviderConfig;
+  export import ListProviderConfigResults = _config.ListProviderConfigResults;
+  export import MultiFactorConfig = _config.MultiFactorConfig;
+  export import MultiFactorConfigState = _config.MultiFactorConfigState;
+  export import OIDCAuthProviderConfig = _config.OIDCAuthProviderConfig;
+  export import OIDCUpdateAuthProviderRequest = _config.OIDCUpdateAuthProviderRequest;
+  export import SAMLAuthProviderConfig = _config.SAMLAuthProviderConfig;
+  export import SAMLAuthProviderRequest = _config.SAMLAuthProviderRequest;
+  export import SAMLUpdateAuthProviderRequest = _config.SAMLUpdateAuthProviderRequest;
+  export import UpdateAuthProviderRequest = _config.UpdateAuthProviderRequest;
 
-    export import EmailIdentifier = _identifier.EmailIdentifier;
-    export import PhoneIdentifier = _identifier.PhoneIdentifier;
-    export import ProviderIdentifier = _identifier.ProviderIdentifier;
-    export import UidIdentifier = _identifier.UidIdentifier;
-    export import UserIdentifier = _identifier.UserIdentifier;
+  export import EmailIdentifier = _identifier.EmailIdentifier;
+  export import PhoneIdentifier = _identifier.PhoneIdentifier;
+  export import ProviderIdentifier = _identifier.ProviderIdentifier;
+  export import UidIdentifier = _identifier.UidIdentifier;
+  export import UserIdentifier = _identifier.UserIdentifier;
 
-    export import HashAlgorithmType = _import.HashAlgorithmType;
-    export import UserImportOptions = _import.UserImportOptions;
-    export import UserImportRecord = _import.UserImportRecord;
-    export import UserImportResult = _import.UserImportResult;
-    export import UserMetadataRequest = _import.UserMetadataRequest;
-    export import UserProviderRequest = _import.UserProviderRequest;
+  export import HashAlgorithmType = _import.HashAlgorithmType;
+  export import UserImportOptions = _import.UserImportOptions;
+  export import UserImportRecord = _import.UserImportRecord;
+  export import UserImportResult = _import.UserImportResult;
+  export import UserMetadataRequest = _import.UserMetadataRequest;
+  export import UserProviderRequest = _import.UserProviderRequest;
 
-    export interface MultiFactorInfo extends _mfa.MultiFactorInfo {}
-    export interface PhoneMultiFactorInfo extends _mfa.PhoneMultiFactorInfo {}
+  export interface MultiFactorInfo extends _mfa.MultiFactorInfo { }
+  export interface PhoneMultiFactorInfo extends _mfa.PhoneMultiFactorInfo { }
 
-    export import ListTenantsResult = _tenant.ListTenantsResult;
-    export interface Tenant extends _tenant.Tenant {}
-    export import TenantOptions = _tenant.TenantOptions;
+  export import ListTenantsResult = _tenant.ListTenantsResult;
+  export interface Tenant extends _tenant.Tenant { }
+  export import TenantOptions = _tenant.TenantOptions;
 
-    export interface TenantManager extends _tenantManager.TenantManager {}
+  export interface TenantManager extends _tenantManager.TenantManager { }
 
-    export import CreateMultiFactorInfoRequest = _user.CreateMultiFactorInfoRequest;
-    export import CreatePhoneMultiFactorInfoRequest = _user.CreatePhoneMultiFactorInfoRequest;
-    export import CreateRequest = _user.CreateRequest;
-    export interface MultiFactor extends _user.MultiFactor {}
-    export import MultiFactorCreateSettings = _user.MultiFactorCreateSettings;
-    export import MultiFactorUpdateSettings = _user.MultiFactorUpdateSettings;
-    export import UpdateMultiFactorInfoRequest = _user.UpdateMultiFactorInfoRequest;
-    export import UpdatePhoneMultiFactorInfoRequest = _user.UpdatePhoneMultiFactorInfoRequest;
-    export import UpdateRequest = _user.UpdateRequest;
-    export interface UserInfo extends _user.UserInfo {}
-    export interface UserMetadata extends _user.UserMetadata {}
-    export interface UserRecord extends _user.UserRecord {}
+  export import CreateMultiFactorInfoRequest = _user.CreateMultiFactorInfoRequest;
+  export import CreatePhoneMultiFactorInfoRequest = _user.CreatePhoneMultiFactorInfoRequest;
+  export import CreateRequest = _user.CreateRequest;
+  export interface MultiFactor extends _user.MultiFactor { }
+  export import MultiFactorCreateSettings = _user.MultiFactorCreateSettings;
+  export import MultiFactorUpdateSettings = _user.MultiFactorUpdateSettings;
+  export import UpdateMultiFactorInfoRequest = _user.UpdateMultiFactorInfoRequest;
+  export import UpdatePhoneMultiFactorInfoRequest = _user.UpdatePhoneMultiFactorInfoRequest;
+  export import UpdateRequest = _user.UpdateRequest;
+  export interface UserInfo extends _user.UserInfo { }
+  export interface UserMetadata extends _user.UserMetadata { }
+  export interface UserRecord extends _user.UserRecord { }
 }
