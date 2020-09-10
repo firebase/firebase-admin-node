@@ -390,6 +390,7 @@ describe('SAMLConfig', () => {
     idpConfig: {
       idpEntityId: 'IDP_ENTITY_ID',
       ssoUrl: 'https://example.com/login',
+      signRequest: true,
       idpCertificates: [
         { x509Certificate: 'CERT1' },
         { x509Certificate: 'CERT2' },
@@ -527,7 +528,9 @@ describe('SAMLConfig', () => {
 
   describe('buildServerRequest()', () => {
     it('should return expected server request on valid input', () => {
-      expect(SAMLConfig.buildServerRequest(clientRequest)).to.deep.equal(serverRequest);
+      const copy = deepCopy(serverRequest);
+      copy.idpConfig!.signRequest = undefined;
+      expect(SAMLConfig.buildServerRequest(clientRequest)).to.deep.equal(copy);
     });
 
     it('should ignore missing fields if not required', () => {
