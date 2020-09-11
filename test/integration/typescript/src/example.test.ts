@@ -71,7 +71,8 @@ describe('Init App', () => {
   });
 
   it('Should return a Cloud Storage client', () => {
-    const bucket: Bucket = app.storage().bucket('TestBucket');
+    const storage: admin.storage.Storage = app.storage();
+    const bucket: Bucket = storage.bucket('TestBucket');
     expect(bucket.name).to.equal('TestBucket');
   });
 

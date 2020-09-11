@@ -20,19 +20,22 @@ import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
 import {
-  RemoteConfigApiClient,
   RemoteConfigTemplate,
   TagColor,
   ListVersionsResult,
   Version,
 } from '../../../src/remote-config/remote-config-api-client';
-import { FirebaseRemoteConfigError } from '../../../src/remote-config/remote-config-utils';
+import {
+  FirebaseRemoteConfigError,
+  RemoteConfigApiClient
+} from '../../../src/remote-config/remote-config-api-client-internal';
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 import { FirebaseAppError } from '../../../src/utils/error';
 import { FirebaseApp } from '../../../src/firebase-app';
 import { deepCopy } from '../../../src/utils/deep-copy';
+import { getSdkVersion } from '../../../src/utils/index';
 
 const expect = chai.expect;
 
@@ -47,13 +50,14 @@ describe('RemoteConfigApiClient', () => {
   };
 
   const VALIDATION_ERROR_MESSAGES = [
-    "[VALIDATION_ERROR]: [foo] are not valid condition names. All keys in all conditional value maps must be valid condition names.",
+    "[VALIDATION_ERROR]: [foo] are not valid condition names. All keys in all conditional value" +
+    " maps must be valid condition names.",
     "[VERSION_MISMATCH]: Expected version 6, found 8 for project: 123456789012"
   ];
 
   const EXPECTED_HEADERS = {
     'Authorization': 'Bearer mock-token',
-    'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
+    'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
     'Accept-Encoding': 'gzip',
   };
 
@@ -529,11 +533,19 @@ describe('RemoteConfigApiClient', () => {
       });
     });
 
-    ['', 'abc', 'a123b', 'a123', '123a', 1.2, '70.2', null, NaN, true, [], {}].forEach(
+    ['', null, NaN, true, [], {}].forEach(
       (invalidVersion) => {
         it(`should throw if the endVersionNumber is: ${invalidVersion}`, () => {
           expect(() => apiClient.listVersions({ endVersionNumber: invalidVersion } as any))
-            .to.throw(/^endVersionNumber must be (a non-empty string in int64 format or a number|an integer or a string in int64 format)$/);
+            .to.throw(/^endVersionNumber must be a non-empty string in int64 format or a number$/);
+        });
+      });
+
+    ['abc', 'a123b', 'a123', '123a', 1.2, '70.2'].forEach(
+      (invalidVersion) => {
+        it(`should throw if the endVersionNumber is: ${invalidVersion}`, () => {
+          expect(() => apiClient.listVersions({ endVersionNumber: invalidVersion } as any))
+            .to.throw(/^endVersionNumber must be an integer or a string in int64 format$/);
         });
       });
 
@@ -655,10 +667,17 @@ describe('RemoteConfigApiClient', () => {
   });
 
   function runTemplateVersionNumberTests(rcOperation: Function): void {
-    ['', 'abc', 'a123b', 'a123', '123a', 1.2, '70.2', null, NaN, true, [], {}].forEach((invalidVersion) => {
+    ['', null, NaN, true, [], {}].forEach((invalidVersion) => {
       it(`should reject if the versionNumber is: ${invalidVersion}`, () => {
         expect(() => rcOperation(invalidVersion as any))
-          .to.throw(/^versionNumber must be (a non-empty string in int64 format or a number|an integer or a string in int64 format)$/);
+          .to.throw(/^versionNumber must be a non-empty string in int64 format or a number$/);
+      });
+    });
+
+    ['abc', 'a123b', 'a123', '123a', 1.2, '70.2'].forEach((invalidVersion) => {
+      it(`should reject if the versionNumber is: ${invalidVersion}`, () => {
+        expect(() => rcOperation(invalidVersion as any))
+          .to.throw(/^versionNumber must be an integer or a string in int64 format$/);
       });
     });
   }

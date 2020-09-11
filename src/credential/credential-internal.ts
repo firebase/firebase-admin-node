@@ -1,5 +1,5 @@
 /*!
- * Copyright 2017 Google Inc.
+ * Copyright 2020 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import fs = require('fs');
 import os = require('os');
 import path = require('path');
 
+import { GoogleOAuthAccessToken, Credential } from './credential-interfaces';
 import { AppErrorCodes, FirebaseAppError } from '../utils/error';
 import { HttpClient, HttpRequestConfig, HttpError, HttpResponse } from '../utils/api-request';
 import { Agent } from 'http';
@@ -52,23 +53,6 @@ const REFRESH_TOKEN_PATH = '/oauth2/v4/token';
 
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 const JWT_ALGORITHM = 'RS256';
-
-/**
- * Interface for Google OAuth 2.0 access tokens.
- */
-export interface GoogleOAuthAccessToken {
-  /* tslint:disable:variable-name */
-  access_token: string;
-  expires_in: number;
-  /* tslint:enable:variable-name */
-}
-
-/**
- * Interface for things that generate access tokens.
- */
-export interface Credential {
-  getAccessToken(): Promise<GoogleOAuthAccessToken>;
-}
 
 /**
  * Implementation of Credential that uses a service account.
@@ -347,6 +331,21 @@ class RefreshToken {
   }
 }
 
+
+/**
+ * Checks if the given credential was loaded via the application default credentials mechanism. This
+ * includes all ComputeEngineCredential instances, and the ServiceAccountCredential and RefreshTokenCredential
+ * instances that were loaded from well-known files or environment variables, rather than being explicitly
+ * instantiated.
+ *
+ * @param credential The credential instance to check.
+ */
+export function isApplicationDefault(credential?: Credential): boolean {
+  return credential instanceof ComputeEngineCredential ||
+    (credential instanceof ServiceAccountCredential && credential.implicit) ||
+    (credential instanceof RefreshTokenCredential && credential.implicit);
+}
+
 export function getApplicationDefault(httpAgent?: Agent): Credential {
   if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
     return credentialFromFile(process.env.GOOGLE_APPLICATION_CREDENTIALS, httpAgent);
@@ -361,20 +360,6 @@ export function getApplicationDefault(httpAgent?: Agent): Credential {
   }
 
   return new ComputeEngineCredential(httpAgent);
-}
-
-/**
- * Checks if the given credential was loaded via the application default credentials mechanism. This
- * includes all ComputeEngineCredential instances, and the ServiceAccountCredential and RefreshTokenCredential
- * instances that were loaded from well-known files or environment variables, rather than being explicitly
- * instantiated.
- *
- * @param credential The credential instance to check.
- */
-export function isApplicationDefault(credential?: Credential): boolean {
-  return credential instanceof ComputeEngineCredential ||
-    (credential instanceof ServiceAccountCredential && credential.implicit) ||
-    (credential instanceof RefreshTokenCredential && credential.implicit);
 }
 
 /**

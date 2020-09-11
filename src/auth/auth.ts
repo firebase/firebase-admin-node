@@ -99,6 +99,7 @@ export interface DecodedIdToken {
     sign_in_provider: string;
     sign_in_second_factor?: string;
     second_factor_identifier?: string;
+    tenant?: string;
     [key: string]: any;
   };
   iat: number;
@@ -106,7 +107,7 @@ export interface DecodedIdToken {
   phone_number?: string;
   picture?: string;
   sub: string;
-  tenant?: string;
+  uid: string;
   [key: string]: any;
 }
 
@@ -424,7 +425,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    * @return {Promise<void>} A promise that resolves when the operation completes
    *     successfully.
    */
-  public setCustomUserClaims(uid: string, customUserClaims: object): Promise<void> {
+  public setCustomUserClaims(uid: string, customUserClaims: object | null): Promise<void> {
     return this.authRequestHandler.setCustomUserClaims(uid, customUserClaims)
       .then(() => {
         // Return nothing on success.

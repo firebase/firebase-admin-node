@@ -15,23 +15,20 @@
  */
 
 import fs = require('fs');
-import { Agent } from 'http';
 import { deepExtend } from './utils/deep-copy';
 import { AppErrorCodes, FirebaseAppError } from './utils/error';
 import { AppHook, FirebaseApp, FirebaseAppOptions } from './firebase-app';
 import { FirebaseServiceFactory, FirebaseServiceInterface } from './firebase-service';
 import {
-  Credential,
-  RefreshTokenCredential,
-  ServiceAccountCredential,
-  getApplicationDefault,
-} from './auth/credential';
+  cert, refreshToken, applicationDefault
+} from './credential/credential';
+import { getApplicationDefault } from './credential/credential-internal';
 
 import { Auth } from './auth/auth';
 import { MachineLearning } from './machine-learning/machine-learning';
 import { Messaging } from './messaging/messaging';
 import { Storage } from './storage/storage';
-import { Database } from '@firebase/database';
+import { Database } from './database/database';
 import { Firestore } from '@google-cloud/firestore';
 import { InstanceId } from './instance-id/instance-id';
 import { ProjectManagement } from './project-management/project-management';
@@ -39,6 +36,7 @@ import { SecurityRules } from './security-rules/security-rules';
 import { RemoteConfig } from './remote-config/remote-config';
 
 import * as validator from './utils/validator';
+import { getSdkVersion } from './utils/index';
 
 const DEFAULT_APP_NAME = '[DEFAULT]';
 
@@ -48,12 +46,6 @@ const DEFAULT_APP_NAME = '[DEFAULT]';
  * otherwise it will be assumed to be pointing to a file.
  */
 export const FIREBASE_CONFIG_VAR = 'FIREBASE_CONFIG';
-
-
-let globalAppDefaultCred: Credential;
-const globalCertCreds: { [key: string]: ServiceAccountCredential } = {};
-const globalRefreshTokenCreds: { [key: string]: RefreshTokenCredential } = {};
-
 
 export interface FirebaseServiceNamespace <T> {
   (app?: FirebaseApp): T;
@@ -271,31 +263,8 @@ export class FirebaseNamespaceInternals {
   }
 }
 
-
 const firebaseCredential = {
-  cert: (serviceAccountPathOrObject: string | object, httpAgent?: Agent): Credential => {
-    const stringifiedServiceAccount = JSON.stringify(serviceAccountPathOrObject);
-    if (!(stringifiedServiceAccount in globalCertCreds)) {
-      globalCertCreds[stringifiedServiceAccount] = new ServiceAccountCredential(serviceAccountPathOrObject, httpAgent);
-    }
-    return globalCertCreds[stringifiedServiceAccount];
-  },
-
-  refreshToken: (refreshTokenPathOrObject: string | object, httpAgent?: Agent): Credential => {
-    const stringifiedRefreshToken = JSON.stringify(refreshTokenPathOrObject);
-    if (!(stringifiedRefreshToken in globalRefreshTokenCreds)) {
-      globalRefreshTokenCreds[stringifiedRefreshToken] = new RefreshTokenCredential(
-        refreshTokenPathOrObject, httpAgent);
-    }
-    return globalRefreshTokenCreds[stringifiedRefreshToken];
-  },
-
-  applicationDefault: (httpAgent?: Agent): Credential => {
-    if (typeof globalAppDefaultCred === 'undefined') {
-      globalAppDefaultCred = getApplicationDefault(httpAgent);
-    }
-    return globalAppDefaultCred;
-  },
+  cert, refreshToken, applicationDefault
 };
 
 
@@ -309,7 +278,7 @@ export class FirebaseNamespace {
   /* tslint:enable:variable-name */
 
   public credential = firebaseCredential;
-  public SDK_VERSION = '<XXX_SDK_VERSION_XXX>';
+  public SDK_VERSION = getSdkVersion();
   public INTERNAL: FirebaseNamespaceInternals;
 
   /* tslint:disable */

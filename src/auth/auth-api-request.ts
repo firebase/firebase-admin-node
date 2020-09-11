@@ -44,7 +44,7 @@ import { Tenant, TenantOptions, TenantServerResponse } from './tenant';
 
 /** Firebase Auth request header. */
 const FIREBASE_AUTH_HEADER = {
-  'X-Client-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
+  'X-Client-Version': `Node/Admin/${utils.getSdkVersion()}`,
 };
 /** Firebase Auth request timeout duration in milliseconds. */
 const FIREBASE_AUTH_TIMEOUT = 25000;
@@ -1532,7 +1532,8 @@ export abstract class AbstractAuthRequestHandler {
       return Promise.reject(e);
     }
     const providerId = options.providerId;
-    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), CREATE_OAUTH_IDP_CONFIG, request, { providerId })
+    return this.invokeRequestHandler(
+      this.getProjectConfigUrlBuilder(), CREATE_OAUTH_IDP_CONFIG, request, { providerId })
       .then((response: any) => {
         if (!OIDCConfig.getProviderIdFromResourceName(response.name)) {
           throw new FirebaseAuthError(
@@ -1801,7 +1802,7 @@ const DELETE_TENANT = new ApiSettings('/tenants/{tenantId}', 'DELETE');
 
 /** Instantiates the updateTenant endpoint settings. */
 const UPDATE_TENANT = new ApiSettings('/tenants/{tenantId}?updateMask={updateMask}', 'PATCH')
-// Set response validator.
+  // Set response validator.
   .setResponseValidator((response: any) => {
     // Response should always contain at least the tenant name.
     if (!validator.isNonEmptyString(response.name) ||
@@ -1982,7 +1983,9 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
     try {
       // Construct backend request.
       const request = Tenant.buildServerRequest(tenantOptions, false);
-      const updateMask = utils.generateUpdateMask(request);
+      // Do not traverse deep into testPhoneNumbers. The entire content should be replaced
+      // and not just specific phone numbers.
+      const updateMask = utils.generateUpdateMask(request, ['testPhoneNumbers']);
       return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, UPDATE_TENANT, request,
         { tenantId, updateMask: updateMask.join(',') })
         .then((response: any) => {

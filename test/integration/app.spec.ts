@@ -27,6 +27,20 @@ describe('admin', () => {
     expect(storageBucket).to.be.not.empty;
   });
 
+  it('does not load RTDB by default', () => {
+    const firebaseRtdb = require.cache[require.resolve('@firebase/database')];
+    expect(firebaseRtdb).to.be.undefined;
+    const rtdbInternal = require.cache[require.resolve('../../lib/database/database-internal')];
+    expect(rtdbInternal).to.be.undefined;
+  });
+
+  it('loads RTDB when calling admin.database', () => {
+    const rtdbNamespace = admin.database;
+    expect(rtdbNamespace).to.not.be.null;
+    const firebaseRtdb = require.cache[require.resolve('@firebase/database')];
+    expect(firebaseRtdb).to.not.be.undefined;
+  });
+
   it('does not load Firestore by default', () => {
     const gcloud = require.cache[require.resolve('@google-cloud/firestore')];
     expect(gcloud).to.be.undefined;

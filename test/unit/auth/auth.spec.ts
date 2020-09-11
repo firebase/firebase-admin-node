@@ -42,7 +42,7 @@ import {
 } from '../../../src/auth/auth-config';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { TenantManager } from '../../../src/auth/tenant-manager';
-import { ServiceAccountCredential } from '../../../src/auth/credential';
+import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
 import { HttpClient } from '../../../src/utils/api-request';
 
 chai.should();
@@ -161,6 +161,7 @@ function getDecodedIdToken(uid: string, authTime: Date, tenantId?: string): Deco
       sign_in_provider: 'custom', // eslint-disable-line @typescript-eslint/camelcase
       tenant: tenantId,
     },
+    uid,
   };
 }
 
@@ -186,6 +187,7 @@ function getDecodedSessionCookie(uid: string, authTime: Date, tenantId?: string)
       sign_in_provider: 'custom', // eslint-disable-line @typescript-eslint/camelcase
       tenant: tenantId,
     },
+    uid,
   };
 }
 

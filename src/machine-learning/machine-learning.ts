@@ -365,7 +365,6 @@ export class Model {
       delete (tmpModel as any).tfliteModel;
     }
 
-
     // Remove '@type' field. We don't need it.
     if ((tmpModel as any)["@type"]) {
       delete (tmpModel as any)["@type"];

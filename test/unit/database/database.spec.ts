@@ -22,8 +22,8 @@ import * as sinon from 'sinon';
 
 import * as mocks from '../../resources/mocks';
 import { FirebaseApp } from '../../../src/firebase-app';
-import { DatabaseService } from '../../../src/database/database';
-import { Database } from '@firebase/database';
+import { DatabaseService } from '../../../src/database/database-internal';
+import { Database } from '../../../src/database/database';
 import * as utils from '../utils';
 import { HttpClient, HttpRequestConfig } from '../../../src/utils/api-request';
 

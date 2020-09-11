@@ -36,6 +36,7 @@ import {
   Reference,
   ServerValue,
 } from '@firebase/database';
+import { Database as FirebaseDatabase } from '../../src/database/database';
 import { Messaging } from '../../src/messaging/messaging';
 import { MachineLearning } from '../../src/machine-learning/machine-learning';
 import { Storage } from '../../src/storage/storage';
@@ -52,6 +53,7 @@ import { InstanceId } from '../../src/instance-id/instance-id';
 import { ProjectManagement } from '../../src/project-management/project-management';
 import { SecurityRules } from '../../src/security-rules/security-rules';
 import { RemoteConfig } from '../../src/remote-config/remote-config';
+import { getSdkVersion } from '../../src/utils/index';
 
 chai.should();
 chai.use(sinonChai);
@@ -73,7 +75,7 @@ describe('FirebaseNamespace', () => {
 
   describe('#SDK_VERSION', () => {
     it('should return the SDK version', () => {
-      expect(firebaseNamespace.SDK_VERSION).to.equal('<XXX_SDK_VERSION_XXX>');
+      expect(firebaseNamespace.SDK_VERSION).to.equal(getSdkVersion());
     });
   });
 
@@ -403,14 +405,14 @@ describe('FirebaseNamespace', () => {
 
     it('should return a valid namespace when the default app is initialized', () => {
       const app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions);
-      const db: Database = firebaseNamespace.database();
+      const db: FirebaseDatabase = firebaseNamespace.database();
       expect(db.app).to.be.deep.equal(app);
       return app.delete();
     });
 
     it('should return a valid namespace when the named app is initialized', () => {
       const app: FirebaseApp = firebaseNamespace.initializeApp(mocks.appOptions, 'testApp');
-      const db: Database = firebaseNamespace.database(app);
+      const db: FirebaseDatabase = firebaseNamespace.database(app);
       expect(db.app).to.be.deep.equal(app);
       return app.delete();
     });

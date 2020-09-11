@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import { HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient, ExponentialBackoffPoller } from '../utils/api-request';
+import { HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient,
+  ExponentialBackoffPoller } from '../utils/api-request';
 import { PrefixedFirebaseError } from '../utils/error';
 import { FirebaseMachineLearningError, MachineLearningErrorCode } from './machine-learning-utils';
 import * as utils from '../utils/index';
@@ -23,7 +24,7 @@ import { FirebaseApp } from '../firebase-app';
 
 const ML_V1BETA2_API = 'https://firebaseml.googleapis.com/v1beta2';
 const FIREBASE_VERSION_HEADER = {
-  'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
+  'X-Firebase-Client': `fire-admin-node/${utils.getSdkVersion()}`,
 };
 
 // Operation polling defaults

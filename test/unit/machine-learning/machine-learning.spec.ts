@@ -389,6 +389,8 @@ describe('MachineLearning', () => {
     });
   });
 
+
+
   describe('getModel', () => {
     it('should propagate API errors', () => {
       const stub = sinon

@@ -171,14 +171,16 @@ describe('admin.auth', () => {
         const firstMultiFactor = userRecord.multiFactor!.enrolledFactors[0];
         expect(firstMultiFactor.uid).not.to.be.undefined;
         expect(firstMultiFactor.enrollmentTime).not.to.be.undefined;
-        expect((firstMultiFactor as admin.auth.PhoneMultiFactorInfo).phoneNumber).to.equal(enrolledFactors[0].phoneNumber);
+        expect((firstMultiFactor as admin.auth.PhoneMultiFactorInfo).phoneNumber).to.equal(
+          enrolledFactors[0].phoneNumber);
         expect(firstMultiFactor.displayName).to.equal(enrolledFactors[0].displayName);
         expect(firstMultiFactor.factorId).to.equal(enrolledFactors[0].factorId);
         // Confirm second enrolled second factor.
         const secondMultiFactor = userRecord.multiFactor!.enrolledFactors[1];
         expect(secondMultiFactor.uid).not.to.be.undefined;
         expect(secondMultiFactor.enrollmentTime).not.to.be.undefined;
-        expect((secondMultiFactor as admin.auth.PhoneMultiFactorInfo).phoneNumber).to.equal(enrolledFactors[1].phoneNumber);
+        expect((secondMultiFactor as admin.auth.PhoneMultiFactorInfo).phoneNumber).to.equal(
+          enrolledFactors[1].phoneNumber);
         expect(secondMultiFactor.displayName).to.equal(enrolledFactors[1].displayName);
         expect(secondMultiFactor.factorId).to.equal(enrolledFactors[1].factorId);
       });
@@ -218,7 +220,9 @@ describe('admin.auth', () => {
      * the uid, email, and phoneNumber fields. Works with at least UserRecord
      * and UserImportRecord instances.
      */
-    function mapUserRecordsToUidEmailPhones(values: Array<{ uid: string; email?: string; phoneNumber?: string}>): Array<{ uid: string; email?: string; phoneNumber?: string}> {
+    function mapUserRecordsToUidEmailPhones(
+      values: Array<{ uid: string; email?: string; phoneNumber?: string}>
+    ): Array<{ uid: string; email?: string; phoneNumber?: string}> {
       return values.map((ur) => ({ uid: ur.uid, email: ur.email, phoneNumber: ur.phoneNumber }));
     }
 
@@ -745,12 +749,29 @@ describe('admin.auth', () => {
         enabled: true,
         passwordRequired: true,
       },
+      multiFactorConfig: {
+        state: 'ENABLED',
+        factorIds: ['phone'],
+      },
+      // Add random phone number / code pairs.
+      testPhoneNumbers: {
+        '+16505551234': '019287',
+        '+16505550676': '985235',
+      },
     };
     const expectedCreatedTenant: any = {
       displayName: 'testTenant1',
       emailSignInConfig: {
         enabled: true,
         passwordRequired: true,
+      },
+      multiFactorConfig: {
+        state: 'ENABLED',
+        factorIds: ['phone'],
+      },
+      testPhoneNumbers: {
+        '+16505551234': '019287',
+        '+16505550676': '985235',
       },
     };
     const expectedUpdatedTenant: any = {
@@ -759,12 +780,23 @@ describe('admin.auth', () => {
         enabled: false,
         passwordRequired: true,
       },
+      multiFactorConfig: {
+        state: 'DISABLED',
+        factorIds: [],
+      },
+      testPhoneNumbers: {
+        '+16505551234': '123456',
+      },
     };
     const expectedUpdatedTenant2: any = {
       displayName: 'testTenantUpdated',
       emailSignInConfig: {
         enabled: true,
         passwordRequired: false,
+      },
+      multiFactorConfig: {
+        state: 'ENABLED',
+        factorIds: ['phone'],
       },
     };
 
@@ -1125,12 +1157,17 @@ describe('admin.auth', () => {
         emailSignInConfig: {
           enabled: false,
         },
+        multiFactorConfig: deepCopy(expectedUpdatedTenant.multiFactorConfig),
+        testPhoneNumbers: deepCopy(expectedUpdatedTenant.testPhoneNumbers),
       };
       const updatedOptions2: admin.auth.UpdateTenantRequest = {
         emailSignInConfig: {
           enabled: true,
           passwordRequired: false,
         },
+        multiFactorConfig: deepCopy(expectedUpdatedTenant2.multiFactorConfig),
+        // Test clearing of phone numbers.
+        testPhoneNumbers: null,
       };
       return admin.auth().tenantManager().updateTenant(createdTenantId, updatedOptions)
         .then((actualTenant) => {

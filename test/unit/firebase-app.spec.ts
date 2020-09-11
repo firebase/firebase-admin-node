@@ -25,7 +25,8 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from './utils';
 import * as mocks from '../resources/mocks';
 
-import { GoogleOAuthAccessToken, ServiceAccountCredential } from '../../src/auth/credential';
+import { GoogleOAuthAccessToken } from '../../src/credential/credential-interfaces';
+import { ServiceAccountCredential } from '../../src/credential/credential-internal';
 import { FirebaseServiceInterface } from '../../src/firebase-service';
 import { FirebaseApp, FirebaseAccessToken } from '../../src/firebase-app';
 import { FirebaseNamespace, FirebaseNamespaceInternals, FIREBASE_CONFIG_VAR } from '../../src/firebase-namespace';
@@ -35,7 +36,7 @@ import { Messaging } from '../../src/messaging/messaging';
 import { MachineLearning } from '../../src/machine-learning/machine-learning';
 import { Storage } from '../../src/storage/storage';
 import { Firestore } from '@google-cloud/firestore';
-import { Database } from '@firebase/database';
+import { Database } from '../../src/database/database';
 import { InstanceId } from '../../src/instance-id/instance-id';
 import { ProjectManagement } from '../../src/project-management/project-management';
 import { SecurityRules } from '../../src/security-rules/security-rules';
