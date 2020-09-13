@@ -20,8 +20,10 @@ import * as validator from '../utils/validator';
 import {AuthClientErrorCode, FirebaseAuthError, FirebaseArrayIndexError} from '../utils/error';
 
 /** Firebase Auth supported hashing algorithms for import operations. */
+/** Client side values for password hash order types. **/
 export type HashInputOrderType = 'SALT_FIRST' | 'PASSWORD_FIRST';
 
+/** Server side values for password hash order types. **/
 export type PasswordHashOrderType = 'SALT_AND_PASSWORD' | 'PASSWORD_AND_SALT';
 
 export type HashAlgorithmType = 'SCRYPT' | 'STANDARD_SCRYPT' | 'HMAC_SHA512' |
@@ -377,9 +379,9 @@ export class UserImportBuilder {
   }
 
   /**
-   * Checks whether is a hashInputOrder-supported hashing algorithm.
-   * @param {HashAlgorithmType | undefined} hashAlgorithmType Hash algorithm type.
-   * @return {boolean} Whether is hashInputOrderSupported.
+   * Checks whether hash input order is supported by the provided hashing algorithm.
+   * @param hashAlgorithmType Hash algorithm type.
+   * @return Whether hash input order is supported.
    */
   private hashInputOrderSupported(hashAlgorithmType: HashAlgorithmType): boolean {
     switch(hashAlgorithmType) {
@@ -391,8 +393,9 @@ export class UserImportBuilder {
     case 'SHA256':
     case 'SHA1':
       return true;
+    default:
+      return false;
     }
-    return false;
   }
 
   /**
@@ -429,6 +432,7 @@ export class UserImportBuilder {
     }
 
     let rounds: number;
+    let minRounds: number;
     switch (options.hash.algorithm) {
     case 'HMAC_SHA512':
     case 'HMAC_SHA256':
@@ -448,12 +452,33 @@ export class UserImportBuilder {
       break;
 
     case 'MD5':
+      // MD5 is [0,8192]
+      rounds = getNumberField(options.hash, 'rounds');
+      minRounds = 0;
+      if (isNaN(rounds) || rounds < 0 || rounds > 8192) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_HASH_ROUNDS,
+          `A valid "hash.rounds" number between ${minRounds} and 8192 must be provided for ` +
+            `hash algorithm ${options.hash.algorithm}.`,
+        );
+      }
+      if (options.hash.inputOrder) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.UNSUPPORTED_ALGORITHM_FOR_HASH_INPUT_ORDER,
+          `The ${options.hash.algorithm} algorithm does not support specifying hash input order.`,
+        );
+      }
+      populatedOptions = {
+        hashAlgorithm: options.hash.algorithm,
+        rounds,
+      };
+      break;
     case 'SHA1':
     case 'SHA256':
     case 'SHA512': {
-      // MD5 is [0,8192] but SHA1, SHA256, and SHA512 are [1,8192]
+      // SHA1, SHA256, and SHA512 are [1,8192]
       rounds = getNumberField(options.hash, 'rounds');
-      const minRounds = options.hash.algorithm === 'MD5' ? 0 : 1;
+      minRounds = 1;
       if (isNaN(rounds) || rounds < minRounds || rounds > 8192) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_ROUNDS,
@@ -475,6 +500,12 @@ export class UserImportBuilder {
           AuthClientErrorCode.INVALID_HASH_ROUNDS,
           `A valid "hash.rounds" number between 0 and 120000 must be provided for ` +
             `hash algorithm ${options.hash.algorithm}.`,
+        );
+      }
+      if (options.hash.inputOrder) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.UNSUPPORTED_ALGORITHM_FOR_HASH_INPUT_ORDER,
+          `The ${options.hash.algorithm} algorithm does not support specifying hash input order.`,
         );
       }
       populatedOptions = {
@@ -514,6 +545,12 @@ export class UserImportBuilder {
           `"hash.saltSeparator" must be a byte buffer.`,
         );
       }
+      if (options.hash.inputOrder) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.UNSUPPORTED_ALGORITHM_FOR_HASH_INPUT_ORDER,
+          `The ${options.hash.algorithm} algorithm does not support specifying hash input order.`,
+        );
+      }
       populatedOptions = {
         hashAlgorithm: options.hash.algorithm,
         signerKey: utils.toWebSafeBase64(options.hash.key),
@@ -524,6 +561,12 @@ export class UserImportBuilder {
       break;
     }
     case 'BCRYPT':
+      if (options.hash.inputOrder) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.UNSUPPORTED_ALGORITHM_FOR_HASH_INPUT_ORDER,
+          `The ${options.hash.algorithm} algorithm does not support specifying hash input order.`,
+        );
+      }
       populatedOptions = {
         hashAlgorithm: options.hash.algorithm,
       };
@@ -560,6 +603,12 @@ export class UserImportBuilder {
           AuthClientErrorCode.INVALID_HASH_DERIVED_KEY_LENGTH,
           `A valid "hash.derivedKeyLength" number must be provided for ` +
             `hash algorithm ${options.hash.algorithm}.`,
+        );
+      }
+      if (options.hash.inputOrder) {
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.UNSUPPORTED_ALGORITHM_FOR_HASH_INPUT_ORDER,
+          `The ${options.hash.algorithm} algorithm does not support specifying hash input order.`,
         );
       }
       populatedOptions = {

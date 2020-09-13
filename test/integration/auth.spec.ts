@@ -31,7 +31,6 @@ import * as mocks from '../resources/mocks';
 import { AuthProviderConfig } from '../../src/auth/auth-config';
 import { deepExtend, deepCopy } from '../../src/utils/deep-copy';
 import { User, FirebaseAuth } from '@firebase/auth-types';
-import { HashInputOrderType } from '../../src/auth/user-import-builder';
 
 const chalk = require('chalk'); // eslint-disable-line @typescript-eslint/no-var-requires
 
@@ -78,9 +77,7 @@ interface UserImportTest {
   importOptions: admin.auth.UserImportOptions;
   rawPassword: string;
   rawSalt?: string;
-  computePasswordHash(userImportTest: UserImportTest, inputOrder?: HashInputOrderType): Buffer;
-  computeSaltFirstPasswordHash?(userImportTest: UserImportTest): Buffer;
-  computePasswordFirstPasswordHash?(userImportTest: UserImportTest): Buffer;
+  computePasswordHash(userImportTest: UserImportTest): Buffer;
 }
 
 /** @return Random generated SAML provider ID. */
@@ -1661,21 +1658,16 @@ describe('admin.auth', () => {
           hash: {
             algorithm: 'HMAC_MD5',
             key: Buffer.from('secret'),
+            inputOrder: 'SALT_FIRST',
           },
         } as any,
-        computeSaltFirstPasswordHash: (userImportTest: UserImportTest): Buffer => {
-          return userImportTest.computePasswordHash(userImportTest, 'SALT_FIRST');
-        },
-        computePasswordFirstPasswordHash: (userImportTest: UserImportTest): Buffer => {
-          return userImportTest.computePasswordHash(userImportTest, 'PASSWORD_FIRST');
-        },
-        computePasswordHash: (userImportTest: UserImportTest, inputOrder?: HashInputOrderType): Buffer => {
+        computePasswordHash: (userImportTest: UserImportTest): Buffer => {
           expect(userImportTest.importOptions.hash.key).to.exist;
           const currentHashKey = userImportTest.importOptions.hash.key!.toString('utf8');
           const currentRawPassword = userImportTest.rawPassword;
           const currentRawSalt = userImportTest.rawSalt;
           const stringToHash =
-            inputOrder === 'SALT_FIRST' ? currentRawSalt + currentRawPassword : currentRawPassword + currentRawSalt;
+            userImportTest.importOptions.hash.inputOrder === 'SALT_FIRST' ? currentRawSalt + currentRawPassword : currentRawPassword + currentRawSalt;
           return crypto.createHmac('md5', currentHashKey).update(stringToHash).digest();
         },
         rawPassword,
@@ -1687,21 +1679,16 @@ describe('admin.auth', () => {
           hash: {
             algorithm: 'HMAC_SHA1',
             key: Buffer.from('secret'),
+            inputOrder: 'SALT_FIRST',
           },
         } as any,
-        computeSaltFirstPasswordHash: (userImportTest: UserImportTest): Buffer => {
-          return userImportTest.computePasswordHash(userImportTest, 'SALT_FIRST');
-        },
-        computePasswordFirstPasswordHash: (userImportTest: UserImportTest): Buffer => {
-          return userImportTest.computePasswordHash(userImportTest, 'PASSWORD_FIRST');
-        },
-        computePasswordHash: (userImportTest: UserImportTest, inputOrder?: HashInputOrderType): Buffer => {
+        computePasswordHash: (userImportTest: UserImportTest): Buffer => {
           expect(userImportTest.importOptions.hash.key).to.exist;
           const currentHashKey = userImportTest.importOptions.hash.key!.toString('utf8');
           const currentRawPassword = userImportTest.rawPassword;
           const currentRawSalt = userImportTest.rawSalt;
           const stringToHash =
-            inputOrder === 'SALT_FIRST' ? currentRawSalt + currentRawPassword : currentRawPassword + currentRawSalt;
+            userImportTest.importOptions.hash.inputOrder === 'SALT_FIRST' ? currentRawSalt + currentRawPassword : currentRawPassword + currentRawSalt;
           return crypto.createHmac('sha1', currentHashKey).update(stringToHash).digest();
         },
         rawPassword,
@@ -1713,21 +1700,16 @@ describe('admin.auth', () => {
           hash: {
             algorithm: 'HMAC_SHA256',
             key: Buffer.from('secret'),
+            inputOrder: 'SALT_FIRST',
           },
         } as any,
-        computeSaltFirstPasswordHash: (userImportTest: UserImportTest): Buffer => {
-          return userImportTest.computePasswordHash(userImportTest, 'SALT_FIRST');
-        },
-        computePasswordFirstPasswordHash: (userImportTest: UserImportTest): Buffer => {
-          return userImportTest.computePasswordHash(userImportTest, 'PASSWORD_FIRST');
-        },
-        computePasswordHash: (userImportTest: UserImportTest, inputOrder?: HashInputOrderType): Buffer => {
+        computePasswordHash: (userImportTest: UserImportTest): Buffer => {
           expect(userImportTest.importOptions.hash.key).to.exist;
           const currentHashKey = userImportTest.importOptions.hash.key!.toString('utf8');
           const currentRawPassword = userImportTest.rawPassword;
           const currentRawSalt = userImportTest.rawSalt;
           const stringToHash =
-            inputOrder === 'SALT_FIRST' ? currentRawSalt + currentRawPassword : currentRawPassword + currentRawSalt;
+            userImportTest.importOptions.hash.inputOrder === 'SALT_FIRST' ? currentRawSalt + currentRawPassword : currentRawPassword + currentRawSalt;
           return crypto.createHmac('sha256', currentHashKey).update(stringToHash).digest();
         },
         rawPassword,
@@ -1739,21 +1721,16 @@ describe('admin.auth', () => {
           hash: {
             algorithm: 'HMAC_SHA512',
             key: Buffer.from('secret'),
+            inputOrder: 'SALT_FIRST',
           },
         } as any,
-        computeSaltFirstPasswordHash: (userImportTest: UserImportTest): Buffer => {
-          return userImportTest.computePasswordHash(userImportTest, 'SALT_FIRST');
-        },
-        computePasswordFirstPasswordHash: (userImportTest: UserImportTest): Buffer => {
-          return userImportTest.computePasswordHash(userImportTest, 'PASSWORD_FIRST');
-        },
-        computePasswordHash: (userImportTest: UserImportTest, inputOrder?: HashInputOrderType): Buffer => {
+        computePasswordHash: (userImportTest: UserImportTest): Buffer => {
           expect(userImportTest.importOptions.hash.key).to.exist;
           const currentHashKey = userImportTest.importOptions.hash.key!.toString('utf8');
           const currentRawPassword = userImportTest.rawPassword;
           const currentRawSalt = userImportTest.rawSalt;
           const stringToHash =
-            inputOrder === 'SALT_FIRST' ? currentRawSalt + currentRawPassword : currentRawPassword + currentRawSalt;
+            userImportTest.importOptions.hash.inputOrder === 'SALT_FIRST' ? currentRawSalt + currentRawPassword : currentRawPassword + currentRawSalt;
           return crypto.createHmac('sha512', currentHashKey).update(stringToHash).digest();
         },
         rawPassword,
@@ -1782,19 +1759,14 @@ describe('admin.auth', () => {
           hash: {
             algorithm: 'SHA1',
             rounds: 1,
+            inputOrder: 'SALT_FIRST',
           },
         } as any,
-        computeSaltFirstPasswordHash: (userImportTest: UserImportTest): Buffer => {
-          return userImportTest.computePasswordHash(userImportTest, 'SALT_FIRST');
-        },
-        computePasswordFirstPasswordHash: (userImportTest: UserImportTest): Buffer => {
-          return userImportTest.computePasswordHash(userImportTest, 'PASSWORD_FIRST');
-        },
-        computePasswordHash: (userImportTest: UserImportTest, inputOrder?: HashInputOrderType): Buffer => {
+        computePasswordHash: (userImportTest: UserImportTest): Buffer => {
           const currentRawPassword = userImportTest.rawPassword;
           const currentRawSalt = userImportTest.rawSalt;
           const stringToHash =
-            inputOrder === 'SALT_FIRST' ? currentRawSalt + currentRawPassword : currentRawPassword + currentRawSalt;
+            userImportTest.importOptions.hash.inputOrder === 'SALT_FIRST' ? currentRawSalt + currentRawPassword : currentRawPassword + currentRawSalt;
           return crypto.createHash('sha1').update(stringToHash).digest();
         },
         rawPassword,
@@ -1806,19 +1778,14 @@ describe('admin.auth', () => {
           hash: {
             algorithm: 'SHA256',
             rounds: 1,
+            inputOrder: 'SALT_FIRST',
           },
         } as any,
-        computeSaltFirstPasswordHash: (userImportTest: UserImportTest): Buffer => {
-          return userImportTest.computePasswordHash(userImportTest, 'SALT_FIRST');
-        },
-        computePasswordFirstPasswordHash: (userImportTest: UserImportTest): Buffer => {
-          return userImportTest.computePasswordHash(userImportTest, 'PASSWORD_FIRST');
-        },
-        computePasswordHash: (userImportTest: UserImportTest, inputOrder?: HashInputOrderType): Buffer => {
+        computePasswordHash: (userImportTest: UserImportTest): Buffer => {
           const currentRawPassword = userImportTest.rawPassword;
           const currentRawSalt = userImportTest.rawSalt;
           const stringToHash =
-            inputOrder === 'SALT_FIRST' ? currentRawSalt + currentRawPassword : currentRawPassword + currentRawSalt;
+            userImportTest.importOptions.hash.inputOrder === 'SALT_FIRST' ? currentRawSalt + currentRawPassword : currentRawPassword + currentRawSalt;
           return crypto.createHash('sha256').update(stringToHash).digest();
         },
         rawPassword,
@@ -1830,19 +1797,14 @@ describe('admin.auth', () => {
           hash: {
             algorithm: 'SHA512',
             rounds: 1,
+            inputOrder: 'SALT_FIRST',
           },
         } as any,
-        computeSaltFirstPasswordHash: (userImportTest: UserImportTest): Buffer => {
-          return userImportTest.computePasswordHash(userImportTest, 'SALT_FIRST');
-        },
-        computePasswordFirstPasswordHash: (userImportTest: UserImportTest): Buffer => {
-          return userImportTest.computePasswordHash(userImportTest, 'PASSWORD_FIRST');
-        },
-        computePasswordHash: (userImportTest: UserImportTest, inputOrder?: HashInputOrderType): Buffer => {
+        computePasswordHash: (userImportTest: UserImportTest): Buffer => {
           const currentRawPassword = userImportTest.rawPassword;
           const currentRawSalt = userImportTest.rawSalt;
           const stringToHash =
-            inputOrder === 'SALT_FIRST' ? currentRawSalt + currentRawPassword : currentRawPassword + currentRawSalt;
+            userImportTest.importOptions.hash.inputOrder === 'SALT_FIRST' ? currentRawSalt + currentRawPassword : currentRawPassword + currentRawSalt;
           return crypto.createHash('sha512').update(stringToHash).digest();
         },
         rawPassword,
@@ -1927,13 +1889,13 @@ describe('admin.auth', () => {
     ];
 
     fixtures.forEach((fixture) => {
-      if ('computeSaltFirstPasswordHash' in fixture && 'computePasswordFirstPasswordHash' in fixture) {
+      if (fixture.importOptions && fixture.importOptions.hash && fixture.importOptions.hash.inputOrder) {
         it(`successfully imports users with ${fixture.name} to Firebase Auth w/ explicit salt-first hash.`, () => {
           importUserRecord = {
             uid: randomUid,
             email: randomUid + '@example.com',
           };
-          importUserRecord.passwordHash = fixture.computeSaltFirstPasswordHash!(fixture);
+          importUserRecord.passwordHash = fixture.computePasswordHash!(fixture);
           if (typeof fixture.rawSalt !== 'undefined') {
             importUserRecord.passwordSalt = Buffer.from(fixture.rawSalt);
           }
@@ -1951,7 +1913,9 @@ describe('admin.auth', () => {
             uid: randomUid,
             email: randomUid + '@example.com',
           };
-          importUserRecord.passwordHash = fixture.computePasswordFirstPasswordHash!(fixture);
+          // Update input order in import options.
+          fixture.importOptions.hash.inputOrder = 'PASSWORD_FIRST';
+          importUserRecord.passwordHash = fixture.computePasswordHash!(fixture);
           if (typeof fixture.rawSalt !== 'undefined') {
             importUserRecord.passwordSalt = Buffer.from(fixture.rawSalt);
           }
