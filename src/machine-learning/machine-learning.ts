@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-import {FirebaseApp} from '../firebase-app';
-import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {MachineLearningApiClient, ModelResponse, OperationResponse,
-  ModelOptions, ModelUpdateOptions, ListModelsOptions} from './machine-learning-api-client';
-import {FirebaseError} from '../utils/error';
+import { FirebaseApp } from '../firebase-app';
+import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
+import { MachineLearningApiClient, ModelResponse, OperationResponse,
+  ModelOptions, ModelUpdateOptions, ListModelsOptions } from './machine-learning-api-client';
+import { FirebaseError } from '../utils/error';
 
 import * as validator from '../utils/validator';
-import {FirebaseMachineLearningError} from './machine-learning-utils';
+import { FirebaseMachineLearningError } from './machine-learning-utils';
 import { deepCopy } from '../utils/deep-copy';
 import * as utils from '../utils';
 
@@ -166,7 +166,7 @@ export class MachineLearning implements FirebaseServiceInterface {
         if (resp.models) {
           models = resp.models.map((rs) =>  new Model(rs));
         }
-        const result: ListModelsResult = {models};
+        const result: ListModelsResult = { models };
         if (resp.nextPageToken) {
           result.pageToken = resp.nextPageToken;
         }
@@ -185,7 +185,7 @@ export class MachineLearning implements FirebaseServiceInterface {
 
   private setPublishStatus(modelId: string, publish: boolean): Promise<Model> {
     const updateMask = ['state.published'];
-    const options: ModelUpdateOptions = {state: {published: publish}};
+    const options: ModelUpdateOptions = { state: { published: publish } };
     return this.client.updateModel(modelId, options, updateMask)
       .then((operation) => handleOperation(operation));
   }
@@ -271,7 +271,7 @@ export class Model {
     if (model.modelHash) {
       this.modelHash = model.modelHash;
     }
-    if (model.tfliteModel) {
+    if (model.tfliteModel?.gcsTfliteUri) {
       this.tfliteModel = {
         gcsTfliteUri: model.tfliteModel.gcsTfliteUri,
         sizeBytes: model.tfliteModel.sizeBytes,
@@ -285,8 +285,7 @@ export class Model {
     return false;
   }
 
-  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-  public waitForUnlocked(maxTimeSeconds?: number): Promise<void> {
+  public waitForUnlocked(_maxTimeSeconds?: number): Promise<void> {
     // Backend does not currently return locked models.
     // This will likely change in future.
     return Promise.resolve();

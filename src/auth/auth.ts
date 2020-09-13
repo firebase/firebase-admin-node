@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-import {UserRecord, CreateRequest, UpdateRequest} from './user-record';
+import { UserRecord, CreateRequest, UpdateRequest } from './user-record';
 import {
   UserIdentifier, isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, isProviderIdentifier,
 } from './identifier';
-import {FirebaseApp} from '../firebase-app';
-import {FirebaseTokenGenerator, cryptoSignerFromApp} from './token-generator';
+import { FirebaseApp } from '../firebase-app';
+import { FirebaseTokenGenerator, cryptoSignerFromApp } from './token-generator';
 import {
   AbstractAuthRequestHandler, AuthRequestHandler, TenantAwareAuthRequestHandler,
 } from './auth-api-request';
-import {AuthClientErrorCode, FirebaseAuthError, ErrorInfo, FirebaseArrayIndexError} from '../utils/error';
-import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
+import { AuthClientErrorCode, FirebaseAuthError, ErrorInfo, FirebaseArrayIndexError } from '../utils/error';
+import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import {
   UserImportOptions, UserImportRecord, UserImportResult,
 } from './user-import-builder';
@@ -32,12 +32,12 @@ import {
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier } from './token-verifier';
-import {ActionCodeSettings} from './action-code-settings-builder';
+import { ActionCodeSettings } from './action-code-settings-builder';
 import {
   AuthProviderConfig, AuthProviderConfigFilter, ListProviderConfigResults, UpdateAuthProviderRequest,
   SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
 } from './auth-config';
-import {TenantManager} from './tenant-manager';
+import { TenantManager } from './tenant-manager';
 
 
 /**
@@ -99,6 +99,7 @@ export interface DecodedIdToken {
     sign_in_provider: string;
     sign_in_second_factor?: string;
     second_factor_identifier?: string;
+    tenant?: string;
     [key: string]: any;
   };
   iat: number;
@@ -106,7 +107,7 @@ export interface DecodedIdToken {
   phone_number?: string;
   picture?: string;
   sub: string;
-  tenant?: string;
+  uid: string;
   [key: string]: any;
 }
 
@@ -424,7 +425,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    * @return {Promise<void>} A promise that resolves when the operation completes
    *     successfully.
    */
-  public setCustomUserClaims(uid: string, customUserClaims: object): Promise<void> {
+  public setCustomUserClaims(uid: string, customUserClaims: object | null): Promise<void> {
     return this.authRequestHandler.setCustomUserClaims(uid, customUserClaims)
       .then(() => {
         // Return nothing on success.

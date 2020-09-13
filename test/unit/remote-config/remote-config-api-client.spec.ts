@@ -20,19 +20,22 @@ import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
 import {
-  RemoteConfigApiClient,
   RemoteConfigTemplate,
   TagColor,
   ListVersionsResult,
   Version,
 } from '../../../src/remote-config/remote-config-api-client';
-import { FirebaseRemoteConfigError } from '../../../src/remote-config/remote-config-utils';
+import {
+  FirebaseRemoteConfigError,
+  RemoteConfigApiClient
+} from '../../../src/remote-config/remote-config-api-client-internal';
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 import { FirebaseAppError } from '../../../src/utils/error';
 import { FirebaseApp } from '../../../src/firebase-app';
 import { deepCopy } from '../../../src/utils/deep-copy';
+import { getSdkVersion } from '../../../src/utils/index';
 
 const expect = chai.expect;
 
@@ -47,13 +50,14 @@ describe('RemoteConfigApiClient', () => {
   };
 
   const VALIDATION_ERROR_MESSAGES = [
-    "[VALIDATION_ERROR]: [foo] are not valid condition names. All keys in all conditional value maps must be valid condition names.",
+    "[VALIDATION_ERROR]: [foo] are not valid condition names. All keys in all conditional value" +
+    " maps must be valid condition names.",
     "[VERSION_MISMATCH]: Expected version 6, found 8 for project: 123456789012"
   ];
 
   const EXPECTED_HEADERS = {
     'Authorization': 'Bearer mock-token',
-    'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
+    'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
     'Accept-Encoding': 'gzip',
   };
 
@@ -344,7 +348,7 @@ describe('RemoteConfigApiClient', () => {
         stubs.push(stub);
         const expected = new FirebaseRemoteConfigError('failed-precondition', message);
         return apiClient.validateTemplate(REMOTE_CONFIG_TEMPLATE)
-          .should.eventually.be.rejected.and.deep.equal(expected);
+          .should.eventually.be.rejected.and.deep.include(expected);
       });
     });
   });
@@ -439,7 +443,7 @@ describe('RemoteConfigApiClient', () => {
         stubs.push(stub);
         const expected = new FirebaseRemoteConfigError('failed-precondition', message);
         return apiClient.publishTemplate(REMOTE_CONFIG_TEMPLATE)
-          .should.eventually.be.rejected.and.deep.equal(expected);
+          .should.eventually.be.rejected.and.deep.include(expected);
       });
     });
   });
@@ -529,11 +533,19 @@ describe('RemoteConfigApiClient', () => {
       });
     });
 
-    ['', 'abc', 'a123b', 'a123', '123a', 1.2, '70.2', null, NaN, true, [], {}].forEach(
+    ['', null, NaN, true, [], {}].forEach(
       (invalidVersion) => {
         it(`should throw if the endVersionNumber is: ${invalidVersion}`, () => {
           expect(() => apiClient.listVersions({ endVersionNumber: invalidVersion } as any))
-            .to.throw(/^endVersionNumber must be (a non-empty string in int64 format or a number|an integer or a string in int64 format)$/);
+            .to.throw(/^endVersionNumber must be a non-empty string in int64 format or a number$/);
+        });
+      });
+
+    ['abc', 'a123b', 'a123', '123a', 1.2, '70.2'].forEach(
+      (invalidVersion) => {
+        it(`should throw if the endVersionNumber is: ${invalidVersion}`, () => {
+          expect(() => apiClient.listVersions({ endVersionNumber: invalidVersion } as any))
+            .to.throw(/^endVersionNumber must be an integer or a string in int64 format$/);
         });
       });
 
@@ -655,10 +667,17 @@ describe('RemoteConfigApiClient', () => {
   });
 
   function runTemplateVersionNumberTests(rcOperation: Function): void {
-    ['', 'abc', 'a123b', 'a123', '123a', 1.2, '70.2', null, NaN, true, [], {}].forEach((invalidVersion) => {
+    ['', null, NaN, true, [], {}].forEach((invalidVersion) => {
       it(`should reject if the versionNumber is: ${invalidVersion}`, () => {
         expect(() => rcOperation(invalidVersion as any))
-          .to.throw(/^versionNumber must be (a non-empty string in int64 format or a number|an integer or a string in int64 format)$/);
+          .to.throw(/^versionNumber must be a non-empty string in int64 format or a number$/);
+      });
+    });
+
+    ['abc', 'a123b', 'a123', '123a', 1.2, '70.2'].forEach((invalidVersion) => {
+      it(`should reject if the versionNumber is: ${invalidVersion}`, () => {
+        expect(() => rcOperation(invalidVersion as any))
+          .to.throw(/^versionNumber must be an integer or a string in int64 format$/);
       });
     });
   }
@@ -672,7 +691,7 @@ describe('RemoteConfigApiClient', () => {
       const expected = new FirebaseRemoteConfigError('invalid-argument',
         'ETag header is not present in the server response.');
       return rcOperation()
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
   }
 
@@ -684,7 +703,7 @@ describe('RemoteConfigApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseRemoteConfigError('not-found', 'Requested entity not found');
       return rcOperation()
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with unknown-error when error code is not present', () => {
@@ -694,7 +713,7 @@ describe('RemoteConfigApiClient', () => {
       stubs.push(stub);
       const expected = new FirebaseRemoteConfigError('unknown-error', 'Unknown server error: {}');
       return rcOperation()
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject with unknown-error for non-json response', () => {
@@ -705,7 +724,7 @@ describe('RemoteConfigApiClient', () => {
       const expected = new FirebaseRemoteConfigError(
         'unknown-error', 'Unexpected response with status: 404 and body: not json');
       return rcOperation()
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
 
     it('should reject when rejected with a FirebaseAppError', () => {
@@ -715,7 +734,7 @@ describe('RemoteConfigApiClient', () => {
         .rejects(expected);
       stubs.push(stub);
       return rcOperation()
-        .should.eventually.be.rejected.and.deep.equal(expected);
+        .should.eventually.be.rejected.and.deep.include(expected);
     });
   }
 

@@ -18,13 +18,13 @@ import * as chai from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import {deepCopy} from '../../../src/utils/deep-copy';
+import { deepCopy } from '../../../src/utils/deep-copy';
 import {
   UserImportBuilder, ValidatorFunction, UserImportResult, UserImportRecord,
   UploadAccountRequest,
 } from '../../../src/auth/user-import-builder';
-import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/utils/error';
-import {toWebSafeBase64} from '../../../src/utils';
+import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
+import { toWebSafeBase64 } from '../../../src/utils';
 
 
 chai.should();
@@ -32,6 +32,17 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
 const expect = chai.expect;
+
+export function expectUserImportResult(result: UserImportResult, expected: UserImportResult): void {
+  expect(result.successCount).to.equal(expected.successCount);
+  expect(result.failureCount).to.equal(expected.failureCount);
+  expect(result.errors.length).to.equal(expected.errors.length);
+  result.errors.forEach((err, idx) => {
+    const want = expected.errors[idx];
+    expect(err.index).to.equal(want.index);
+    expect(err.error).to.deep.include(want.error);
+  });
+}
 
 describe('UserImportBuilder', () => {
   const now = new Date('2019-10-25T04:30:52.000Z');
@@ -69,7 +80,7 @@ describe('UserImportBuilder', () => {
           providerId: 'google.com',
         },
       ],
-      customClaims: {admin: true},
+      customClaims: { admin: true },
       tenantId: 'TENANT-ID',
     },
     {
@@ -78,7 +89,7 @@ describe('UserImportBuilder', () => {
       passwordHash: Buffer.from('userpass'),
       passwordSalt: Buffer.from('NaCl'),
     },
-    {uid: '5678', phoneNumber: '+16505550101'},
+    { uid: '5678', phoneNumber: '+16505550101' },
     {
       uid: '3456',
       email: 'janedoe@example.com',
@@ -122,7 +133,7 @@ describe('UserImportBuilder', () => {
           providerId: 'google.com',
         },
       ],
-      customAttributes: JSON.stringify({admin: true}),
+      customAttributes: JSON.stringify({ admin: true }),
       tenantId: 'TENANT-ID',
     },
     {
@@ -198,8 +209,8 @@ describe('UserImportBuilder', () => {
 
     it('should not throw when no hash options are provided and no hashing is needed', () => {
       const noHashUsers = [
-        {uid: '1234', email: 'user@example.com'},
-        {uid: '5678', phoneNumber: '+16505550101'},
+        { uid: '1234', email: 'user@example.com' },
+        { uid: '5678', phoneNumber: '+16505550101' },
       ];
       expect(() =>  {
         return new UserImportBuilder(noHashUsers, undefined, userRequestValidator);
@@ -733,7 +744,7 @@ describe('UserImportBuilder', () => {
         } as any,
       );
       testUsers.push(
-        {uid: 'INVALID2', email: 'other@domain.com', passwordHash: 'not a buffer'} as any,
+        { uid: 'INVALID2', email: 'other@domain.com', passwordHash: 'not a buffer' } as any,
       );
       const expectedRequest = {
         hashAlgorithm: algorithm,
@@ -749,13 +760,13 @@ describe('UserImportBuilder', () => {
 
     it('should return expected request with no hash options when not required', () => {
       const noHashUsers = [
-        {uid: '1234', email: 'user@example.com'},
-        {uid: '5678', phoneNumber: '+16505550101'},
+        { uid: '1234', email: 'user@example.com' },
+        { uid: '5678', phoneNumber: '+16505550101' },
       ];
       const expectedRequest = {
         users: [
-          {localId: '1234', email: 'user@example.com'},
-          {localId: '5678', phoneNumber: '+16505550101'},
+          { localId: '1234', email: 'user@example.com' },
+          { localId: '5678', phoneNumber: '+16505550101' },
         ],
       };
       const userImportBuilder =
@@ -765,13 +776,13 @@ describe('UserImportBuilder', () => {
 
     it('should return expected request with no multi-factor fields when not available', () => {
       const noMultiFactorUsers: any[] = [
-        {uid: '1234', email: 'user@example.com', multiFactor: null},
-        {uid: '5678', phoneNumber: '+16505550101', multiFactor: {enrolledFactors: []}},
+        { uid: '1234', email: 'user@example.com', multiFactor: null },
+        { uid: '5678', phoneNumber: '+16505550101', multiFactor: { enrolledFactors: [] } },
       ];
       const expectedRequest = {
         users: [
-          {localId: '1234', email: 'user@example.com'},
-          {localId: '5678', phoneNumber: '+16505550101'},
+          { localId: '1234', email: 'user@example.com' },
+          { localId: '5678', phoneNumber: '+16505550101' },
         ],
       };
       const userImportBuilder =
@@ -795,11 +806,11 @@ describe('UserImportBuilder', () => {
             ],
           },
         },
-        {uid: '5678', phoneNumber: '+16505550102'},
+        { uid: '5678', phoneNumber: '+16505550102' },
       ];
       const expectedRequest: UploadAccountRequest = {
         users: [
-          {localId: '5678', phoneNumber: '+16505550102'},
+          { localId: '5678', phoneNumber: '+16505550102' },
         ],
       };
       const userImportBuilder =
@@ -822,11 +833,11 @@ describe('UserImportBuilder', () => {
             ],
           },
         },
-        {uid: '5678', phoneNumber: '+16505550102'},
+        { uid: '5678', phoneNumber: '+16505550102' },
       ];
       const expectedRequest: UploadAccountRequest = {
         users: [
-          {localId: '5678', phoneNumber: '+16505550102'},
+          { localId: '5678', phoneNumber: '+16505550102' },
         ],
       };
       const userImportBuilder =
@@ -852,13 +863,14 @@ describe('UserImportBuilder', () => {
       };
       const userImportBuilder =
           new UserImportBuilder(users, validOptions as any, userRequestValidator);
-      expect(userImportBuilder.buildResponse(successfulServerResponse))
-        .to.deep.equal(successfulUserImportResponse);
+      expectUserImportResult(
+        userImportBuilder.buildResponse(successfulServerResponse),
+        successfulUserImportResponse);
     });
 
     it('should return the expected response for import with server side errors', () => {
       const failingServerResponse = [
-        {index: 1, message: 'Some error occurred!'},
+        { index: 1, message: 'Some error occurred!' },
       ];
       const serverErrorUserImportResponse = {
         successCount: 3,
@@ -876,31 +888,33 @@ describe('UserImportBuilder', () => {
       };
       const userImportBuilder =
           new UserImportBuilder(users, validOptions as any, userRequestValidator);
-      expect(userImportBuilder.buildResponse(failingServerResponse))
-        .to.deep.equal(serverErrorUserImportResponse);
+      expectUserImportResult(
+        userImportBuilder.buildResponse(failingServerResponse),
+        serverErrorUserImportResponse);
     });
 
     it('should return the expected response for import with client side errors', () => {
       const successfulServerResponse: any = [];
-      const clientErrorUserImportResponse: UserImportResult = {
+      const clientErrorUserImportResponse = {
         successCount: 3,
         failureCount: 1,
         errors: [
-          {index: 2, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER)},
+          { index: 2, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER) },
         ],
       };
       // userRequestValidatorWithError will throw on the 3rd user (index = 2).
       const userImportBuilder =
           new UserImportBuilder(users, validOptions as any, userRequestValidatorWithError);
-      expect(userImportBuilder.buildResponse(successfulServerResponse))
-        .to.deep.equal(clientErrorUserImportResponse);
+      expectUserImportResult(
+        userImportBuilder.buildResponse(successfulServerResponse),
+        clientErrorUserImportResponse);
     });
 
     it('should return the expected response for import with mixed client/server errors', () => {
       // Server errors will occur on USER3 and USER6 passed to backend.
       const failingServerResponse = [
-        {index: 1, message: 'Some error occurred in USER3!'},
-        {index: 3, message: 'Another error occurred in USER6!'},
+        { index: 1, message: 'Some error occurred in USER3!' },
+        { index: 3, message: 'Another error occurred in USER6!' },
       ];
       const userRequestValidatorWithMultipleErrors: ValidatorFunction = (request) => {
         // Simulate a validation error is thrown for specific users.
@@ -916,13 +930,13 @@ describe('UserImportBuilder', () => {
       // Seventh, eighth and nineth user will throw a client side error due to invalid type provided.
       // Tenth user will throw a client side error due to an unsupported second factor.
       const testUsers = [
-        {uid: 'USER1'},
-        {uid: 'USER2', email: 'invalid', passwordHash: Buffer.from('userpass')},
-        {uid: 'USER3'},
-        {uid: 'USER4', email: 'user@example.com', phoneNumber: 'invalid'},
-        {uid: 'USER5', email: 'johndoe@example.com', passwordHash: Buffer.from('password')},
-        {uid: 'USER6', phoneNumber: '+16505550101'},
-        {uid: 'USER7', email: 'other@domain.com', passwordHash: 'not a buffer' as any},
+        { uid: 'USER1' },
+        { uid: 'USER2', email: 'invalid', passwordHash: Buffer.from('userpass') },
+        { uid: 'USER3' },
+        { uid: 'USER4', email: 'user@example.com', phoneNumber: 'invalid' },
+        { uid: 'USER5', email: 'johndoe@example.com', passwordHash: Buffer.from('password') },
+        { uid: 'USER6', phoneNumber: '+16505550101' },
+        { uid: 'USER7', email: 'other@domain.com', passwordHash: 'not a buffer' as any },
         {
           uid: 'USER8',
           email: 'other@domain.com',
@@ -961,7 +975,7 @@ describe('UserImportBuilder', () => {
         failureCount: 8,
         errors: [
           // Client side detected error.
-          {index: 1, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL)},
+          { index: 1, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_EMAIL) },
           // Server side detected error.
           {
             index: 2,
@@ -971,7 +985,7 @@ describe('UserImportBuilder', () => {
             ),
           },
           // Client side detected error.
-          {index: 3, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER)},
+          { index: 3, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PHONE_NUMBER) },
           // Server side detected error.
           {
             index: 5,
@@ -981,8 +995,8 @@ describe('UserImportBuilder', () => {
             ),
           },
           // Client side errors.
-          {index: 6, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PASSWORD_HASH)},
-          {index: 7, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PASSWORD_SALT)},
+          { index: 6, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PASSWORD_HASH) },
+          { index: 7, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PASSWORD_SALT) },
           {
             index: 8,
             error: new FirebaseAuthError(
@@ -1000,9 +1014,9 @@ describe('UserImportBuilder', () => {
       };
       const userImportBuilder = new UserImportBuilder(
         testUsers, validOptions as any, userRequestValidatorWithMultipleErrors);
-      expect(userImportBuilder.buildResponse(failingServerResponse))
-        .to.deep.equal(mixedErrorUserImportResponse);
+      expectUserImportResult(
+        userImportBuilder.buildResponse(failingServerResponse),
+        mixedErrorUserImportResponse);
     });
   });
-
 });

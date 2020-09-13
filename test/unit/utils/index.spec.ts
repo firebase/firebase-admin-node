@@ -15,7 +15,7 @@
  */
 
 import * as _ from 'lodash';
-import {expect} from 'chai';
+import { expect } from 'chai';
 import * as sinon from 'sinon';
 
 import * as mocks from '../../resources/mocks';
@@ -23,16 +23,24 @@ import {
   addReadonlyGetter, getExplicitProjectId, findProjectId,
   toWebSafeBase64, formatString, generateUpdateMask,
 } from '../../../src/utils/index';
-import {isNonEmptyString} from '../../../src/utils/validator';
-import {FirebaseApp, FirebaseAppOptions} from '../../../src/firebase-app';
-import { ComputeEngineCredential } from '../../../src/auth/credential';
+import { isNonEmptyString } from '../../../src/utils/validator';
+import { FirebaseApp, FirebaseAppOptions } from '../../../src/firebase-app';
+import { ComputeEngineCredential } from '../../../src/credential/credential-internal';
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import { FirebaseAppError } from '../../../src/utils/error';
+import { getSdkVersion } from '../../../src/utils/index';
 
 interface Obj {
   [key: string]: any;
 }
+
+describe('SDK_VERSION', () => {
+  it('utils index should retrieve the SDK_VERSION from package.json', () => {
+    const { version } = require('../../../package.json'); // eslint-disable-line @typescript-eslint/no-var-requires
+    expect(getSdkVersion()).to.equal(version);
+  });
+});
 
 describe('addReadonlyGetter()', () => {
   it('should add a new property to the provided object', () => {
@@ -327,10 +335,32 @@ describe('formatString()', () => {
 });
 
 describe('generateUpdateMask()', () => {
+  const obj: any = {
+    a: undefined,
+    b: 'something',
+    c: ['stuff'],
+    d: false,
+    e: {},
+    f: {
+      g: 1,
+      h: 0,
+      i: {
+        j: 2,
+      },
+    },
+    k: {
+      i: null,
+      j: undefined,
+    },
+    l: {
+      m: undefined,
+    },
+    n: [],
+  };
   const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
   nonObjects.forEach((nonObject) => {
     it(`should return empty array for non object ${JSON.stringify(nonObject)}`, () => {
-      expect(generateUpdateMask(nonObject as any)).to.deep.equal([]);
+      expect(generateUpdateMask(nonObject)).to.deep.equal([]);
     });
   });
 
@@ -339,30 +369,16 @@ describe('generateUpdateMask()', () => {
   });
 
   it('should return expected update mask array for nested object', () => {
-    const obj: any = {
-      a: undefined,
-      b: 'something',
-      c: ['stuff'],
-      d: false,
-      e: {},
-      f: {
-        g: 1,
-        h: 0,
-        i: {
-          j: 2,
-        },
-      },
-      k: {
-        i: null,
-        j: undefined,
-      },
-      l: {
-        m: undefined,
-      },
-    };
     const expectedMaskArray = [
-      'b', 'c', 'd', 'e', 'f.g', 'f.h', 'f.i.j', 'k.i', 'l',
+      'b', 'c', 'd', 'e', 'f.g', 'f.h', 'f.i.j', 'k.i', 'l', 'n',
     ];
     expect(generateUpdateMask(obj)).to.deep.equal(expectedMaskArray);
+  });
+
+  it('should return expected update mask array with max paths for nested object', () => {
+    expect(generateUpdateMask(obj, ['f.i', 'k']))
+      .to.deep.equal(['b', 'c', 'd', 'e', 'f.g', 'f.h', 'f.i', 'k', 'l', 'n']);
+    expect(generateUpdateMask(obj, ['notfound', 'b', 'f', 'k', 'l']))
+      .to.deep.equal(['b', 'c', 'd', 'e', 'f', 'k', 'l', 'n']);
   });
 });

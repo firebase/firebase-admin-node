@@ -15,9 +15,9 @@
  */
 
 import initApp from './example';
-import {expect} from 'chai';
-import {Bucket} from '@google-cloud/storage';
-import {Firestore} from '@google-cloud/firestore';
+import { expect } from 'chai';
+import { Bucket } from '@google-cloud/storage';
+import { Firestore } from '@google-cloud/firestore';
 
 import * as admin from 'firebase-admin';
 
@@ -71,7 +71,8 @@ describe('Init App', () => {
   });
 
   it('Should return a Cloud Storage client', () => {
-    const bucket: Bucket = app.storage().bucket('TestBucket');
+    const storage: admin.storage.Storage = app.storage();
+    const bucket: Bucket = storage.bucket('TestBucket');
     expect(bucket.name).to.equal('TestBucket');
   });
 

@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import {deepCopy, deepExtend} from '../utils/deep-copy';
+import { deepCopy, deepExtend } from '../utils/deep-copy';
 import * as utils from '../utils';
 import * as validator from '../utils/validator';
-import {AuthClientErrorCode, FirebaseAuthError, FirebaseArrayIndexError} from '../utils/error';
+import { AuthClientErrorCode, FirebaseAuthError, FirebaseArrayIndexError } from '../utils/error';
 
 /** Firebase Auth supported hashing algorithms for import operations. */
 /** Client side values for password hash order types. **/
@@ -341,7 +341,7 @@ export class UserImportBuilder {
     const users = this.validatedUsers.map((user) => {
       return deepCopy(user);
     });
-    return deepExtend({users}, deepCopy(this.validatedOptions)) as UploadAccountRequest;
+    return deepExtend({ users }, deepCopy(this.validatedOptions)) as UploadAccountRequest;
   }
 
   /**

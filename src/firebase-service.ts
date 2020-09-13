@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import {FirebaseApp} from './firebase-app';
+import { FirebaseApp } from './firebase-app';
 
 
 /**

@@ -14,23 +14,24 @@
  * limitations under the License.
  */
 
-import {FirebaseApp} from '../firebase-app';
+import { FirebaseApp } from '../firebase-app';
 import {
   HttpMethod, AuthorizedHttpClient, HttpRequestConfig, HttpError, HttpResponse,
 } from '../utils/api-request';
-import { createFirebaseError, getErrorCode } from './messaging-errors';
-import { SubRequest, BatchRequestClient } from './batch-request';
+import { createFirebaseError, getErrorCode } from './messaging-errors-internal';
+import { SubRequest, BatchRequestClient } from './batch-request-internal';
 import { SendResponse, BatchResponse } from './messaging-types';
+import { getSdkVersion } from '../utils/index';
 
 // FCM backend constants
 const FIREBASE_MESSAGING_TIMEOUT = 10000;
 const FIREBASE_MESSAGING_BATCH_URL = 'https://fcm.googleapis.com/batch';
 const FIREBASE_MESSAGING_HTTP_METHOD: HttpMethod = 'POST';
 const FIREBASE_MESSAGING_HEADERS = {
-  'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
+  'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
 };
 const LEGACY_FIREBASE_MESSAGING_HEADERS = {
-  'X-Firebase-Client': 'fire-admin-node/<XXX_SDK_VERSION_XXX>',
+  'X-Firebase-Client': `fire-admin-node/${getSdkVersion()}`,
   'access_token_auth': 'true',
 };
 

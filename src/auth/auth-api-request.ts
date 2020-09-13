@@ -16,35 +16,35 @@
 
 import * as validator from '../utils/validator';
 
-import {deepCopy, deepExtend} from '../utils/deep-copy';
+import { deepCopy, deepExtend } from '../utils/deep-copy';
 import {
   UserIdentifier, isUidIdentifier, isEmailIdentifier, isPhoneIdentifier,
   isProviderIdentifier, UidIdentifier, EmailIdentifier, PhoneIdentifier,
   ProviderIdentifier,
 } from './identifier';
-import {FirebaseApp} from '../firebase-app';
-import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
+import { FirebaseApp } from '../firebase-app';
+import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
   ApiSettings, AuthorizedHttpClient, HttpRequestConfig, HttpError,
 } from '../utils/api-request';
-import {CreateRequest, UpdateRequest} from './user-record';
+import { CreateRequest, UpdateRequest } from './user-record';
 import {
   UserImportBuilder, UserImportOptions, UserImportRecord,
   UserImportResult, AuthFactorInfo, convertMultiFactorInfoToServerFormat,
 } from './user-import-builder';
 import * as utils from '../utils/index';
-import {ActionCodeSettings, ActionCodeSettingsBuilder} from './action-code-settings-builder';
+import { ActionCodeSettings, ActionCodeSettingsBuilder } from './action-code-settings-builder';
 import {
   SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
   OIDCConfigServerRequest, SAMLConfigServerRequest, AuthProviderConfig,
   OIDCUpdateAuthProviderRequest, SAMLUpdateAuthProviderRequest,
 } from './auth-config';
-import {Tenant, TenantOptions, TenantServerResponse} from './tenant';
+import { Tenant, TenantOptions, TenantServerResponse } from './tenant';
 
 
 /** Firebase Auth request header. */
 const FIREBASE_AUTH_HEADER = {
-  'X-Client-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
+  'X-Client-Version': `Node/Admin/${utils.getSdkVersion()}`,
 };
 /** Firebase Auth request timeout duration in milliseconds. */
 const FIREBASE_AUTH_TIMEOUT = 25000;
@@ -195,7 +195,7 @@ class TenantAwareAuthResourceUrlBuilder extends AuthResourceUrlBuilder {
   public getUrl(api?: string, params?: object): Promise<string> {
     return super.getUrl(api, params)
       .then((url) => {
-        return utils.formatString(url, {tenantId: this.tenantId});
+        return utils.formatString(url, { tenantId: this.tenantId });
       });
   }
 }
@@ -1039,7 +1039,7 @@ export abstract class AbstractAuthRequestHandler {
    */
   public getAccountInfoByIdentifiers(identifiers: UserIdentifier[]): Promise<object> {
     if (identifiers.length === 0) {
-      return Promise.resolve({users: []});
+      return Promise.resolve({ users: [] });
     } else if (identifiers.length > MAX_GET_ACCOUNTS_BATCH_SIZE) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.MAXIMUM_USER_COUNT_EXCEEDED,
@@ -1428,7 +1428,7 @@ export abstract class AbstractAuthRequestHandler {
   public getEmailActionLink(
     requestType: string, email: string,
     actionCodeSettings?: ActionCodeSettings): Promise<string> {
-    let request = {requestType, email, returnOobLink: true};
+    let request = { requestType, email, returnOobLink: true };
     // ActionCodeSettings required for email link sign-in to determine the url where the sign-in will
     // be completed.
     if (typeof actionCodeSettings === 'undefined' && requestType === 'EMAIL_SIGNIN') {
@@ -1464,7 +1464,7 @@ export abstract class AbstractAuthRequestHandler {
     if (!OIDCConfig.isProviderId(providerId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
     }
-    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), GET_OAUTH_IDP_CONFIG, {}, {providerId});
+    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), GET_OAUTH_IDP_CONFIG, {}, { providerId });
   }
 
   /**
@@ -1510,7 +1510,7 @@ export abstract class AbstractAuthRequestHandler {
     if (!OIDCConfig.isProviderId(providerId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
     }
-    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), DELETE_OAUTH_IDP_CONFIG, {}, {providerId})
+    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), DELETE_OAUTH_IDP_CONFIG, {}, { providerId })
       .then(() => {
         // Return nothing.
       });
@@ -1532,7 +1532,8 @@ export abstract class AbstractAuthRequestHandler {
       return Promise.reject(e);
     }
     const providerId = options.providerId;
-    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), CREATE_OAUTH_IDP_CONFIG, request, {providerId})
+    return this.invokeRequestHandler(
+      this.getProjectConfigUrlBuilder(), CREATE_OAUTH_IDP_CONFIG, request, { providerId })
       .then((response: any) => {
         if (!OIDCConfig.getProviderIdFromResourceName(response.name)) {
           throw new FirebaseAuthError(
@@ -1565,7 +1566,7 @@ export abstract class AbstractAuthRequestHandler {
     }
     const updateMask = utils.generateUpdateMask(request);
     return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), UPDATE_OAUTH_IDP_CONFIG, request,
-      {providerId, updateMask: updateMask.join(',')})
+      { providerId, updateMask: updateMask.join(',') })
       .then((response: any) => {
         if (!OIDCConfig.getProviderIdFromResourceName(response.name)) {
           throw new FirebaseAuthError(
@@ -1586,7 +1587,7 @@ export abstract class AbstractAuthRequestHandler {
     if (!SAMLConfig.isProviderId(providerId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
     }
-    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), GET_INBOUND_SAML_CONFIG, {}, {providerId});
+    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), GET_INBOUND_SAML_CONFIG, {}, { providerId });
   }
 
   /**
@@ -1632,7 +1633,7 @@ export abstract class AbstractAuthRequestHandler {
     if (!SAMLConfig.isProviderId(providerId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID));
     }
-    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), DELETE_INBOUND_SAML_CONFIG, {}, {providerId})
+    return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), DELETE_INBOUND_SAML_CONFIG, {}, { providerId })
       .then(() => {
         // Return nothing.
       });
@@ -1655,7 +1656,7 @@ export abstract class AbstractAuthRequestHandler {
     }
     const providerId = options.providerId;
     return this.invokeRequestHandler(
-      this.getProjectConfigUrlBuilder(), CREATE_INBOUND_SAML_CONFIG, request, {providerId})
+      this.getProjectConfigUrlBuilder(), CREATE_INBOUND_SAML_CONFIG, request, { providerId })
       .then((response: any) => {
         if (!SAMLConfig.getProviderIdFromResourceName(response.name)) {
           throw new FirebaseAuthError(
@@ -1688,7 +1689,7 @@ export abstract class AbstractAuthRequestHandler {
     }
     const updateMask = utils.generateUpdateMask(request);
     return this.invokeRequestHandler(this.getProjectConfigUrlBuilder(), UPDATE_INBOUND_SAML_CONFIG, request,
-      {providerId, updateMask: updateMask.join(',')})
+      { providerId, updateMask: updateMask.join(',') })
       .then((response: any) => {
         if (!SAMLConfig.getProviderIdFromResourceName(response.name)) {
           throw new FirebaseAuthError(
@@ -1801,7 +1802,7 @@ const DELETE_TENANT = new ApiSettings('/tenants/{tenantId}', 'DELETE');
 
 /** Instantiates the updateTenant endpoint settings. */
 const UPDATE_TENANT = new ApiSettings('/tenants/{tenantId}?updateMask={updateMask}', 'PATCH')
-// Set response validator.
+  // Set response validator.
   .setResponseValidator((response: any) => {
     // Response should always contain at least the tenant name.
     if (!validator.isNonEmptyString(response.name) ||
@@ -1893,7 +1894,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
     if (!validator.isNonEmptyString(tenantId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID));
     }
-    return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, GET_TENANT, {}, {tenantId})
+    return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, GET_TENANT, {}, { tenantId })
       .then((response: any) => {
         return response as TenantServerResponse;
       });
@@ -1943,7 +1944,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
     if (!validator.isNonEmptyString(tenantId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID));
     }
-    return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, DELETE_TENANT, {}, {tenantId})
+    return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, DELETE_TENANT, {}, { tenantId })
       .then(() => {
         // Return nothing.
       });
@@ -1982,9 +1983,11 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
     try {
       // Construct backend request.
       const request = Tenant.buildServerRequest(tenantOptions, false);
-      const updateMask = utils.generateUpdateMask(request);
+      // Do not traverse deep into testPhoneNumbers. The entire content should be replaced
+      // and not just specific phone numbers.
+      const updateMask = utils.generateUpdateMask(request, ['testPhoneNumbers']);
       return this.invokeRequestHandler(this.tenantMgmtResourceBuilder, UPDATE_TENANT, request,
-        {tenantId, updateMask: updateMask.join(',')})
+        { tenantId, updateMask: updateMask.join(',') })
         .then((response: any) => {
           return response as TenantServerResponse;
         });
