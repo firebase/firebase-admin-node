@@ -1703,7 +1703,8 @@ describe('admin.auth', () => {
           const currentRawPassword = userImportTest.rawPassword;
           const currentRawSalt = userImportTest.rawSalt;
           const stringToHash =
-            userImportTest.importOptions.hash.inputOrder === 'SALT_FIRST' ? currentRawSalt + currentRawPassword : currentRawPassword + currentRawSalt;
+            userImportTest.importOptions.hash.inputOrder === 'SALT_FIRST' ?
+              currentRawSalt + currentRawPassword : currentRawPassword + currentRawSalt;
           return crypto.createHmac('md5', currentHashKey).update(stringToHash).digest();
         },
         rawPassword,
@@ -1724,7 +1725,8 @@ describe('admin.auth', () => {
           const currentRawPassword = userImportTest.rawPassword;
           const currentRawSalt = userImportTest.rawSalt;
           const stringToHash =
-            userImportTest.importOptions.hash.inputOrder === 'SALT_FIRST' ? currentRawSalt + currentRawPassword : currentRawPassword + currentRawSalt;
+            userImportTest.importOptions.hash.inputOrder === 'SALT_FIRST' ?
+              currentRawSalt + currentRawPassword : currentRawPassword + currentRawSalt;
           return crypto.createHmac('sha1', currentHashKey).update(stringToHash).digest();
         },
         rawPassword,
@@ -1745,7 +1747,8 @@ describe('admin.auth', () => {
           const currentRawPassword = userImportTest.rawPassword;
           const currentRawSalt = userImportTest.rawSalt;
           const stringToHash =
-            userImportTest.importOptions.hash.inputOrder === 'SALT_FIRST' ? currentRawSalt + currentRawPassword : currentRawPassword + currentRawSalt;
+            userImportTest.importOptions.hash.inputOrder === 'SALT_FIRST' ?
+              currentRawSalt + currentRawPassword : currentRawPassword + currentRawSalt;
           return crypto.createHmac('sha256', currentHashKey).update(stringToHash).digest();
         },
         rawPassword,
@@ -1766,7 +1769,8 @@ describe('admin.auth', () => {
           const currentRawPassword = userImportTest.rawPassword;
           const currentRawSalt = userImportTest.rawSalt;
           const stringToHash =
-            userImportTest.importOptions.hash.inputOrder === 'SALT_FIRST' ? currentRawSalt + currentRawPassword : currentRawPassword + currentRawSalt;
+            userImportTest.importOptions.hash.inputOrder === 'SALT_FIRST' ?
+              currentRawSalt + currentRawPassword : currentRawPassword + currentRawSalt;
           return crypto.createHmac('sha512', currentHashKey).update(stringToHash).digest();
         },
         rawPassword,
@@ -1802,7 +1806,8 @@ describe('admin.auth', () => {
           const currentRawPassword = userImportTest.rawPassword;
           const currentRawSalt = userImportTest.rawSalt;
           const stringToHash =
-            userImportTest.importOptions.hash.inputOrder === 'SALT_FIRST' ? currentRawSalt + currentRawPassword : currentRawPassword + currentRawSalt;
+            userImportTest.importOptions.hash.inputOrder === 'SALT_FIRST' ?
+              currentRawSalt + currentRawPassword : currentRawPassword + currentRawSalt;
           return crypto.createHash('sha1').update(stringToHash).digest();
         },
         rawPassword,
@@ -1821,7 +1826,8 @@ describe('admin.auth', () => {
           const currentRawPassword = userImportTest.rawPassword;
           const currentRawSalt = userImportTest.rawSalt;
           const stringToHash =
-            userImportTest.importOptions.hash.inputOrder === 'SALT_FIRST' ? currentRawSalt + currentRawPassword : currentRawPassword + currentRawSalt;
+            userImportTest.importOptions.hash.inputOrder === 'SALT_FIRST' ?
+              currentRawSalt + currentRawPassword : currentRawPassword + currentRawSalt;
           return crypto.createHash('sha256').update(stringToHash).digest();
         },
         rawPassword,
@@ -1840,7 +1846,8 @@ describe('admin.auth', () => {
           const currentRawPassword = userImportTest.rawPassword;
           const currentRawSalt = userImportTest.rawSalt;
           const stringToHash =
-            userImportTest.importOptions.hash.inputOrder === 'SALT_FIRST' ? currentRawSalt + currentRawPassword : currentRawPassword + currentRawSalt;
+            userImportTest.importOptions.hash.inputOrder === 'SALT_FIRST' ?
+              currentRawSalt + currentRawPassword : currentRawPassword + currentRawSalt;
           return crypto.createHash('sha512').update(stringToHash).digest();
         },
         rawPassword,

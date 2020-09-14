@@ -384,7 +384,7 @@ export class UserImportBuilder {
    * @return Whether hash input order is supported.
    */
   private hashInputOrderSupported(hashAlgorithmType: HashAlgorithmType): boolean {
-    switch(hashAlgorithmType) {
+    switch (hashAlgorithmType) {
     case 'HMAC_SHA512':
     case 'HMAC_SHA256':
     case 'HMAC_SHA1':
@@ -645,7 +645,7 @@ export class UserImportBuilder {
     populatedOptions: UploadAccountOptions,
     inputOrder?: HashInputOrderType,
   ): UploadAccountOptions {
-    const populatedOptionsCopy = {...populatedOptions};
+    const populatedOptionsCopy = { ...populatedOptions };
 
     if (typeof inputOrder !== 'undefined') {
       if (inputOrder !== 'SALT_FIRST' && inputOrder !== 'PASSWORD_FIRST') {
