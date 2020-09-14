@@ -23,7 +23,7 @@ import { MachineLearning, Model } from '../../../src/machine-learning/machine-le
 import { FirebaseApp } from '../../../src/firebase-app';
 import * as mocks from '../../resources/mocks';
 import { MachineLearningApiClient, StatusErrorResponse,
-  ModelOptions, ModelResponse } from '../../../src/machine-learning/machine-learning-api-client';
+  ModelOptions, ModelResponse, OperationResponse } from '../../../src/machine-learning/machine-learning-api-client';
 import { FirebaseMachineLearningError } from '../../../src/machine-learning/machine-learning-utils';
 import { deepCopy } from '../../../src/utils/deep-copy';
 
@@ -32,6 +32,10 @@ const expect = chai.expect;
 describe('MachineLearning', () => {
 
   const MODEL_ID = '1234567';
+  const PROJECT_ID = 'test-project';
+  const PROJECT_NUMBER = '987654';
+  const OPERATION_ID = '456789';
+  const OPERATION_NAME = `projects/${PROJECT_NUMBER}/operations/${OPERATION_ID}`
   const EXPECTED_ERROR = new FirebaseMachineLearningError('internal-error', 'message');
   const CREATE_TIME_UTC = 'Fri, 07 Feb 2020 23:45:23 GMT';
   const UPDATE_TIME_UTC = 'Sat, 08 Feb 2020 23:45:23 GMT';
@@ -68,7 +72,7 @@ describe('MachineLearning', () => {
       sizeBytes: 16900988,
     },
   };
-  const MODEL1 = new Model(MODEL_RESPONSE);
+
 
   const MODEL_RESPONSE2: {
     name: string;
@@ -103,7 +107,6 @@ describe('MachineLearning', () => {
       sizeBytes: 22200222,
     },
   };
-  const MODEL2 = new Model(MODEL_RESPONSE2);
 
   const MODEL_RESPONSE3: any = {
     name: 'projects/test-project/models/3456789',
@@ -130,6 +133,7 @@ describe('MachineLearning', () => {
 
   const OPERATION_RESPONSE: {
     name?: string;
+    metadata?: any;
     done: boolean;
     error?: StatusErrorResponse;
     response?: {
@@ -159,6 +163,7 @@ describe('MachineLearning', () => {
 
   const OPERATION_RESPONSE_ERROR: {
     name?: string;
+    metadata?: any;
     done: boolean;
     error?: {
       code: number;
@@ -170,18 +175,79 @@ describe('MachineLearning', () => {
     error: STATUS_ERROR_RESPONSE,
   };
 
+  const OPERATION_RESPONSE_NOT_DONE: {
+    name?: string;
+    metadata?: any;
+    done: boolean;
+    error?: {
+      code: number;
+      message: string;
+    };
+    response?: ModelResponse;
+  } = {
+    name: OPERATION_NAME,
+    metadata: {
+      '@type': 'type.googleapis.com/google.firebase.ml.v1beta2.ModelOperationMetadata',
+      name: `projects/${PROJECT_ID}/models/${MODEL_ID}`,
+      basicOperationStatus: 'BASIC_OPERATION_STATUS_UPLOADING'
+    },
+    done: false,
+  };
+
+  const MODEL_RESPONSE_LOCKED: {
+      name: string;
+      createTime: string;
+      updateTime: string;
+      etag: string;
+      modelHash: string;
+      displayName?: string;
+      tags?: string[];
+      activeOperations?: OperationResponse[];
+      state?: {
+        validationError?: {
+          code: number;
+          message: string;
+        };
+        published?: boolean;
+      };
+      tfliteModel?: {
+        gcsTfliteUri: string;
+        sizeBytes: number;
+      };
+    } = {
+      name: 'projects/test-project/models/1234567',
+      createTime: '2020-02-07T23:45:23.288047Z',
+      updateTime: '2020-02-08T23:45:23.288047Z',
+      etag: 'etag123',
+      modelHash: 'modelHash123',
+      displayName: 'model_1',
+      tags: ['tag_1', 'tag_2'],
+      activeOperations: [OPERATION_RESPONSE_NOT_DONE],
+      state: { published: true },
+      tfliteModel: {
+        gcsTfliteUri: 'gs://test-project-bucket/Firebase/ML/Models/model1.tflite',
+        sizeBytes: 16900988,
+      },
+    };
 
 
   let machineLearning: MachineLearning;
   let mockApp: FirebaseApp;
+  let mockClient: MachineLearningApiClient;
   let mockCredentialApp: FirebaseApp;
+
+  let model1: Model;
+  let model2: Model;
 
   const stubs: sinon.SinonStub[] = [];
 
   before(() => {
     mockApp = mocks.app();
+    mockClient = new MachineLearningApiClient(mockApp);
     mockCredentialApp = mocks.mockCredentialApp();
     machineLearning = new MachineLearning(mockApp);
+    model1 = new Model(MODEL_RESPONSE, mockClient);
+    model2 = new Model(MODEL_RESPONSE2, mockClient);
   });
 
   after(() => {
@@ -244,7 +310,7 @@ describe('MachineLearning', () => {
 
   describe('Model', () => {
     it('should successfully construct a model', () => {
-      const model = new Model(MODEL_RESPONSE);
+      const model = new Model(MODEL_RESPONSE, mockClient);
       expect(model.modelId).to.equal(MODEL_ID);
       expect(model.displayName).to.equal('model_1');
       expect(model.tags).to.deep.equal(['tag_1', 'tag_2']);
@@ -262,7 +328,7 @@ describe('MachineLearning', () => {
     });
 
     it('should accept unknown fields gracefully', () => {
-      const model = new Model(MODEL_RESPONSE3);
+      const model = new Model(MODEL_RESPONSE3, mockClient);
       expect(model.modelId).to.equal('3456789');
       expect(model.displayName).to.equal('model_3');
       expect(model.tags).to.deep.equal(['tag_3', 'tag_4']);
@@ -275,6 +341,52 @@ describe('MachineLearning', () => {
       expect(model.tfliteModel).to.be.undefined;
     });
 
+    it('should successfully serialize a model to JSON', () => {
+      const model = new Model(MODEL_RESPONSE, mockClient);
+      const expectedModel = {
+        modelId: MODEL_ID,
+        displayName: 'model_1',
+        tags: ['tag_1', 'tag_2'],
+        createTime: CREATE_TIME_UTC,
+        updateTime: UPDATE_TIME_UTC,
+        published: true,
+        etag: 'etag123',
+        locked: false,
+        modelHash: 'modelHash123',
+        tfliteModel: {
+          gcsTfliteUri: 'gs://test-project-bucket/Firebase/ML/Models/model1.tflite',
+          sizeBytes: 16900988,
+        }
+      }
+      const jsonString = JSON.stringify(model);
+      expect(JSON.parse(jsonString)).to.deep.equal(expectedModel);
+    })
+
+    it('should return locked when active operations are present', () => {
+      const model = new Model(MODEL_RESPONSE_LOCKED, mockClient);
+      expect(model.locked).to.be.true;
+    });
+
+    it('should return locked as false when no active operations are present', () => {
+      const model = new Model(MODEL_RESPONSE, mockClient);
+      expect(model.locked).to.be.false;
+    });
+
+    it('should successfully update a model from a Response', () => {
+      const model = new Model(MODEL_RESPONSE_LOCKED, mockClient);
+      expect(model.locked).to.be.true;
+
+      const stub = sinon
+        .stub(MachineLearningApiClient.prototype, 'handleOperation')
+        .resolves(MODEL_RESPONSE2);
+      stubs.push(stub);
+
+      model.waitForUnlocked()
+        .then(() => {
+          expect(model.locked).to.be.false;
+          expect(model).to.deep.equal(model2);
+        });
+    });
   });
 
 
@@ -367,7 +479,7 @@ describe('MachineLearning', () => {
 
       return machineLearning.getModel(MODEL_ID)
         .then((model) => {
-          expect(model).to.deep.equal(MODEL1);
+          expect(model).to.deep.equal(model1);
         });
     });
   });
@@ -409,8 +521,8 @@ describe('MachineLearning', () => {
       return machineLearning.listModels()
         .then((result) => {
           expect(result.models.length).equals(2);
-          expect(result.models[0]).to.deep.equal(MODEL1);
-          expect(result.models[1]).to.deep.equal(MODEL2);
+          expect(result.models[0]).to.deep.equal(model1);
+          expect(result.models[1]).to.deep.equal(model2);
           expect(result.pageToken).to.equal(LIST_MODELS_RESPONSE.nextPageToken);
         });
     });
@@ -537,7 +649,7 @@ describe('MachineLearning', () => {
 
       return machineLearning.createModel(MODEL_OPTIONS_WITH_GCS)
         .then((model) => {
-          expect(model).to.deep.equal(MODEL1);
+          expect(model).to.deep.equal(model1);
         });
     });
 
@@ -654,7 +766,7 @@ describe('MachineLearning', () => {
 
       return machineLearning.updateModel(MODEL_ID, MODEL_OPTIONS_WITH_GCS)
         .then((model) => {
-          expect(model).to.deep.equal(MODEL1);
+          expect(model).to.deep.equal(model1);
         });
     });
 
@@ -758,7 +870,7 @@ describe('MachineLearning', () => {
 
       return machineLearning.publishModel(MODEL_ID)
         .then((model) => {
-          expect(model).to.deep.equal(MODEL1);
+          expect(model).to.deep.equal(model1);
         });
     });
 
@@ -862,7 +974,7 @@ describe('MachineLearning', () => {
 
       return machineLearning.unpublishModel(MODEL_ID)
         .then((model) => {
-          expect(model).to.deep.equal(MODEL1);
+          expect(model).to.deep.equal(model1);
         });
     });
 
