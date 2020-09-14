@@ -155,8 +155,15 @@ toc:
     path: /docs/reference/admin/node/admin.machineLearning.MachineLearning
   - title: "Model"
     path: /docs/reference/admin/node/admin.machineLearning.Model
+  - title: "ModelOptionsBase"
+    path: /docs/reference/admin/node/admin.machineLearning.ModelOptionsBase
+  - title: "GcsTfliteModelOptions"
+    path: /docs/reference/admin/node/admin.machineLearning.GcsTfliteModelOptions
+  - title: "AutoMLTfliteModelOptions"
+    path: /docs/reference/admin/node/admin.machineLearning.AutoMLTfliteModelOptions
   - title: "ModelOptions"
     path: /docs/reference/admin/node/admin.machineLearning.ModelOptions
+
   - title: "TFLiteModel"
     path: /docs/reference/admin/node/admin.machineLearning.TFLiteModel
 
