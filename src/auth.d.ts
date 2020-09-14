@@ -1,4 +1,5 @@
 import * as _admin from './index.d';
+import { HashInputOrderType, HashAlgorithmType } from '../src/auth/user-import-builder';
 
 /* eslint-disable @typescript-eslint/ban-types */
 
@@ -569,12 +570,6 @@ export namespace admin.auth {
      */
     pageToken?: string;
   }
-
-  type HashInputOrderType = 'SALT_FIRST' | 'PASSWORD_FIRST';
-
-  type HashAlgorithmType = 'SCRYPT' | 'STANDARD_SCRYPT' | 'HMAC_SHA512' |
-    'HMAC_SHA256' | 'HMAC_SHA1' | 'HMAC_MD5' | 'MD5' | 'PBKDF_SHA1' | 'BCRYPT' |
-    'PBKDF2_SHA256' | 'SHA512' | 'SHA256' | 'SHA1';
 
   /**
    * Interface representing the user import options needed for
