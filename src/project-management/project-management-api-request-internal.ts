@@ -276,7 +276,7 @@ export class ProjectManagementRequestHandler {
 
   private pollRemoteOperationWithExponentialBackoff(
     operationResourceName: string): Promise<object> {
-    const poller = new ExponentialBackoffPoller();
+    const poller = new ExponentialBackoffPoller<object>();
 
     return poller.poll(() => {
       return this.invokeRequestHandler('GET', operationResourceName, /* requestData */ null)
