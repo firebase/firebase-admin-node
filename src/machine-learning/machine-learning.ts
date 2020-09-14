@@ -16,8 +16,8 @@
 
 import { FirebaseApp } from '../firebase-app';
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
-import { MachineLearningApiClient, ModelResponse, OperationResponse,
-  ModelOptions, ModelUpdateOptions, ListModelsOptions } from './machine-learning-api-client';
+import { MachineLearningApiClient, ModelResponse, ModelOptions,
+  ModelUpdateOptions, ListModelsOptions, isGcsTfliteModelOptions } from './machine-learning-api-client';
 import { FirebaseError } from '../utils/error';
 
 import * as validator from '../utils/validator';
@@ -92,7 +92,8 @@ export class MachineLearning implements FirebaseServiceInterface {
   public createModel(model: ModelOptions): Promise<Model> {
     return this.signUrlIfPresent(model)
       .then((modelContent) => this.client.createModel(modelContent))
-      .then((operation) => handleOperation(operation));
+      .then((operation) => this.client.handleOperation(operation))
+      .then((modelResponse) => new Model(modelResponse, this.client));
   }
 
   /**
@@ -107,7 +108,8 @@ export class MachineLearning implements FirebaseServiceInterface {
     const updateMask = utils.generateUpdateMask(model);
     return this.signUrlIfPresent(model)
       .then((modelContent) => this.client.updateModel(modelId, modelContent, updateMask))
-      .then((operation) => handleOperation(operation));
+      .then((operation) => this.client.handleOperation(operation))
+      .then((modelResponse) => new Model(modelResponse, this.client));
   }
 
   /**
@@ -141,7 +143,7 @@ export class MachineLearning implements FirebaseServiceInterface {
    */
   public getModel(modelId: string): Promise<Model> {
     return this.client.getModel(modelId)
-      .then((modelResponse) => new Model(modelResponse));
+      .then((modelResponse) => new Model(modelResponse, this.client));
   }
 
   /**
@@ -164,7 +166,7 @@ export class MachineLearning implements FirebaseServiceInterface {
         }
         let models: Model[] = [];
         if (resp.models) {
-          models = resp.models.map((rs) =>  new Model(rs));
+          models = resp.models.map((rs) =>  new Model(rs, this.client));
         }
         const result: ListModelsResult = { models };
         if (resp.nextPageToken) {
@@ -187,15 +189,16 @@ export class MachineLearning implements FirebaseServiceInterface {
     const updateMask = ['state.published'];
     const options: ModelUpdateOptions = { state: { published: publish } };
     return this.client.updateModel(modelId, options, updateMask)
-      .then((operation) => handleOperation(operation));
+      .then((operation) => this.client.handleOperation(operation))
+      .then((modelResponse) => new Model(modelResponse, this.client));
   }
 
   private signUrlIfPresent(options: ModelOptions): Promise<ModelOptions> {
     const modelOptions = deepCopy(options);
-    if (modelOptions.tfliteModel?.gcsTfliteUri) {
+    if (isGcsTfliteModelOptions(modelOptions)) {
       return this.signUrl(modelOptions.tfliteModel.gcsTfliteUri)
-        .then ((uri: string) => {
-          modelOptions.tfliteModel!.gcsTfliteUri = uri;
+        .then((uri: string) => {
+          modelOptions.tfliteModel.gcsTfliteUri = uri;
           return modelOptions;
         })
         .catch((err: Error) => {
@@ -229,66 +232,144 @@ export class MachineLearning implements FirebaseServiceInterface {
   }
 }
 
-
 /**
  * A Firebase ML Model output object.
  */
 export class Model {
-  public readonly modelId: string;
-  public readonly displayName: string;
-  public readonly tags?: string[];
-  public readonly createTime: string;
-  public readonly updateTime: string;
-  public readonly validationError?: string;
-  public readonly published: boolean;
-  public readonly etag: string;
-  public readonly modelHash?: string;
+  private model: ModelResponse;
+  private readonly client?: MachineLearningApiClient;
 
-  public readonly tfliteModel?: TFLiteModel;
+  constructor(model: ModelResponse, client: MachineLearningApiClient) {
+    this.model = Model.validateAndClone(model);
+    this.client = client;
+  }
 
-  constructor(model: ModelResponse) {
+  get modelId(): string {
+    return extractModelId(this.model.name);
+  }
+
+  get displayName(): string {
+    return this.model.displayName!;
+  }
+
+  get tags(): string[] {
+    return this.model.tags || [];
+  }
+
+  get createTime(): string {
+    return new Date(this.model.createTime).toUTCString();
+  }
+
+  get updateTime(): string {
+    return new Date(this.model.updateTime).toUTCString();
+  }
+
+  get validationError(): string | undefined {
+    return this.model.state?.validationError?.message;
+  }
+
+  get published(): boolean {
+    return this.model.state?.published || false;
+  }
+
+  get etag(): string {
+    return this.model.etag;
+  }
+
+  get modelHash(): string | undefined {
+    return this.model.modelHash;
+  }
+
+  get tfliteModel(): TFLiteModel | undefined {
+    // Make a copy so people can't directly modify the private this.model object.
+    return deepCopy(this.model.tfliteModel);
+  }
+
+  /**
+   * Locked indicates if there are active long running operations on the model.
+   * Models may not be modified when they are locked.
+   */
+  public get locked(): boolean {
+    return (this.model.activeOperations?.length ?? 0) > 0;
+  }
+
+  public toJSON(): {[key: string]: any} {
+    // We can't just return this.model because it has extra fields and
+    // different formats etc. So we build the expected model object.
+    const jsonModel: {[key: string]: any}  = {
+      modelId: this.modelId,
+      displayName: this.displayName,
+      tags: this.tags,
+      createTime: this.createTime,
+      updateTime: this.updateTime,
+      published: this.published,
+      etag: this.etag,
+      locked: this.locked,
+    };
+
+    // Also add possibly undefined fields if they exist.
+
+    if (this.validationError) {
+      jsonModel['validationError'] = this.validationError;
+    }
+
+    if (this.modelHash) {
+      jsonModel['modelHash'] = this.modelHash;
+    }
+
+    if (this.tfliteModel) {
+      jsonModel['tfliteModel'] = this.tfliteModel;
+    }
+
+    return jsonModel;
+  }
+
+
+  /**
+   * Wait for the active operations on the model to complete.
+   * @param maxTimeMillis The number of milliseconds to wait for the model to be unlocked. If unspecified,
+   *     a default will be used.
+   */
+  public waitForUnlocked(maxTimeMillis?: number): Promise<void> {
+    if ((this.model.activeOperations?.length ?? 0) > 0) {
+      // The client will always be defined on Models that have activeOperations
+      // because models with active operations came back from the server and
+      // were constructed with a non-empty client.
+      return this.client!.handleOperation(this.model.activeOperations![0], { wait: true, maxTimeMillis })
+        .then((modelResponse) => {
+          this.model = Model.validateAndClone(modelResponse);
+        });
+    }
+    return Promise.resolve();
+  }
+
+  private static validateAndClone(model: ModelResponse): ModelResponse {
     if (!validator.isNonNullObject(model) ||
-      !validator.isNonEmptyString(model.name) ||
-      !validator.isNonEmptyString(model.createTime) ||
-      !validator.isNonEmptyString(model.updateTime) ||
-      !validator.isNonEmptyString(model.displayName) ||
-      !validator.isNonEmptyString(model.etag)) {
+    !validator.isNonEmptyString(model.name) ||
+    !validator.isNonEmptyString(model.createTime) ||
+    !validator.isNonEmptyString(model.updateTime) ||
+    !validator.isNonEmptyString(model.displayName) ||
+    !validator.isNonEmptyString(model.etag)) {
       throw new FirebaseMachineLearningError(
         'invalid-server-response',
         `Invalid Model response: ${JSON.stringify(model)}`);
     }
+    const tmpModel = deepCopy(model);
 
-    this.modelId = extractModelId(model.name);
-    this.displayName = model.displayName;
-    this.tags = model.tags || [];
-    this.createTime = new Date(model.createTime).toUTCString();
-    this.updateTime = new Date(model.updateTime).toUTCString();
-    if (model.state?.validationError?.message) {
-      this.validationError = model.state?.validationError?.message;
+    // If tflite Model is specified, it must have a source consisting of
+    // oneof {gcsTfliteUri, automlModel}
+    if (model.tfliteModel &&
+        !validator.isNonEmptyString(model.tfliteModel.gcsTfliteUri) &&
+        !validator.isNonEmptyString(model.tfliteModel.automlModel)) {
+      // If we have some other source, ignore the whole tfliteModel.
+      delete (tmpModel as any).tfliteModel;
     }
-    this.published = model.state?.published || false;
-    this.etag = model.etag;
-    if (model.modelHash) {
-      this.modelHash = model.modelHash;
-    }
-    if (model.tfliteModel?.gcsTfliteUri) {
-      this.tfliteModel = {
-        gcsTfliteUri: model.tfliteModel.gcsTfliteUri,
-        sizeBytes: model.tfliteModel.sizeBytes,
-      };
-    }
-  }
 
-  public get locked(): boolean {
-    // Backend does not currently return locked models.
-    // This will likely change in future.
-    return false;
-  }
-
-  public waitForUnlocked(_maxTimeSeconds?: number): Promise<void> {
-    // Backend does not currently return locked models.
-    // This will likely change in future.
-    return Promise.resolve();
+    // Remove '@type' field. We don't need it.
+    if ((tmpModel as any)["@type"]) {
+      delete (tmpModel as any)["@type"];
+    }
+    return tmpModel;
   }
 }
 
@@ -298,25 +379,11 @@ export class Model {
 export interface TFLiteModel {
   readonly sizeBytes: number;
 
-  readonly gcsTfliteUri: string;
+  // Oneof these two
+  readonly gcsTfliteUri?: string;
+  readonly automlModel?: string;
 }
 
 function extractModelId(resourceName: string): string {
   return resourceName.split('/').pop()!;
-}
-
-function handleOperation(op: OperationResponse): Model {
-  // Backend currently does not return operations that are not done.
-  if (op.done) {
-    // Done operations must have either a response or an error.
-    if (op.response) {
-      return new Model(op.response);
-    } else if (op.error) {
-      throw FirebaseMachineLearningError.fromOperationError(
-        op.error.code, op.error.message);
-    }
-  }
-  throw new FirebaseMachineLearningError(
-    'invalid-server-response',
-    `Invalid Operation response: ${JSON.stringify(op)}`);
 }
