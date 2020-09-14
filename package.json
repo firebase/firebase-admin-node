@@ -59,7 +59,7 @@
     "@types/node": "^10.10.0",
     "dicer": "^0.3.0",
     "jsonwebtoken": "^8.5.1",
-    "node-forge": "^0.9.1"
+    "node-forge": "^0.10.0"
   },
   "optionalDependencies": {
     "@google-cloud/firestore": "^4.0.0",
