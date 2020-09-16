@@ -23,9 +23,9 @@ import * as credentialInterfacesApi from './credential-interfaces';
  * match the namespacing in the re-export inside src/index.d.ts
  */
 /* eslint-disable @typescript-eslint/no-namespace */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 export namespace admin.credential {
   // See https://github.com/microsoft/TypeScript/issues/4336
-  /* eslint-disable @typescript-eslint/no-unused-vars */
   // See https://github.com/typescript-eslint/typescript-eslint/issues/363
   // Allows for exposing classes as interfaces in typings
   /* eslint-disable @typescript-eslint/no-empty-interface */

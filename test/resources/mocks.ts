@@ -220,6 +220,7 @@ export function generateSessionCookie(overrides?: object, expiresIn?: number): s
   return jwt.sign(developerClaims, certificateObject.private_key, options);
 }
 
+/* eslint-disable @typescript-eslint/no-unused-vars */
 export function firebaseServiceFactory(
   firebaseApp: FirebaseApp,
   _extendApp?: (props: object) => void,
@@ -230,6 +231,7 @@ export function firebaseServiceFactory(
   };
   return result as FirebaseServiceInterface;
 }
+/* eslint-enable @typescript-eslint/no-unused-vars */
 
 /** Mock socket emitter class. */
 export class MockSocketEmitter extends events.EventEmitter {
