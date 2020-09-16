@@ -1,6 +1,6 @@
 {
   "name": "firebase-admin",
-  "version": "9.1.1",
+  "version": "9.2.0",
   "description": "Firebase admin SDK for Node.js",
   "author": "Firebase <firebase-support@google.com> (https://firebase.google.com/)",
   "license": "Apache-2.0",
@@ -59,7 +59,7 @@
     "@types/node": "^10.10.0",
     "dicer": "^0.3.0",
     "jsonwebtoken": "^8.5.1",
-    "node-forge": "^0.9.1"
+    "node-forge": "^0.10.0"
   },
   "optionalDependencies": {
     "@google-cloud/firestore": "^4.0.0",
