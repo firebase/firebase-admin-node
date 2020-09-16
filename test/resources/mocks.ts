@@ -27,7 +27,7 @@ import * as jwt from 'jsonwebtoken';
 import { FirebaseNamespace } from '../../src/firebase-namespace';
 import { FirebaseServiceInterface } from '../../src/firebase-service';
 import { FirebaseApp, FirebaseAppOptions } from '../../src/firebase-app';
-import { Credential, GoogleOAuthAccessToken } from '../../src/credential/credential-interfaces';
+import { credential as _credential, GoogleOAuthAccessToken } from '../../src/credential/index';
 import { ServiceAccountCredential } from '../../src/credential/credential-internal';
 
 const ALGORITHM = 'RS256';
@@ -79,7 +79,7 @@ export const appOptionsAuthDB: FirebaseAppOptions = {
   databaseURL,
 };
 
-export class MockCredential implements Credential {
+export class MockCredential implements _credential.Credential {
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
     return Promise.resolve({
       access_token: 'mock-token', // eslint-disable-line @typescript-eslint/camelcase
