@@ -83,7 +83,6 @@ gulp.task('compile', function() {
 
   const configuration = [
     'lib/**/*.js',
-    'lib/credential/index.d.ts',
   ];
 
   workflow = workflow.pipe(filter(configuration));
