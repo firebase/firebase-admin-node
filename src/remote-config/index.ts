@@ -17,19 +17,13 @@
 import { FirebaseApp } from '../firebase-app';
 import * as remoteConfigApi from './remote-config';
 import * as remoteConfigClientApi from './remote-config-api-client';
-import * as firebaseAdmin from '../index';
 
-export function remoteConfig(app?: FirebaseApp): remoteConfigApi.RemoteConfig {
-  if (typeof(app) === 'undefined') {
-    app = firebaseAdmin.app();
-  }
-  return app.remoteConfig();
-}
+export declare function remoteConfig(app?: FirebaseApp): remoteConfigApi.RemoteConfig;
 
 /**
  * We must define a namespace to make the typings work correctly. Otherwise
  * `admin.remoteConfig()` cannot be called like a function. Temporarily,
- * admin.remoteConfig is used as the namespace name because we cannot barrel 
+ * admin.remoteConfig is used as the namespace name because we cannot barrel
  * re-export the contents from remote-config, and we want it to
  * match the namespacing in the re-export inside src/index.d.ts
  */

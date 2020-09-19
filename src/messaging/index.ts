@@ -17,14 +17,8 @@
 import { FirebaseApp } from '../firebase-app';
 import * as messagingApi from './messaging';
 import * as messagingTypesApi from './messaging-types';
-import * as firebaseAdmin from '../index';
 
-export function messaging(app?: FirebaseApp): messagingApi.Messaging {
-  if (typeof(app) === 'undefined') {
-    app = firebaseAdmin.app();
-  }
-  return app.messaging();
-}
+export declare function messaging(app?: FirebaseApp): messagingApi.Messaging;
 
 /**
  * We must define a namespace to make the typings work correctly. Otherwise

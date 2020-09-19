@@ -14,8 +14,5 @@
  * limitations under the License.
  */
 
-export {
-  credential,
-  GoogleOAuthAccessToken,
-  ServiceAccount,
-} from './credential/index';
+export * from './credential/index';
+export * from './firebase-namespace-api';

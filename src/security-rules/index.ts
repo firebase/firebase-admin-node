@@ -16,19 +16,13 @@
 
 import { FirebaseApp } from '../firebase-app';
 import * as securityRulesApi from './security-rules';
-import * as firebaseAdmin from '../index';
 
-export function securityRules(app?: FirebaseApp): securityRulesApi.SecurityRules {
-  if (typeof(app) === 'undefined') {
-    app = firebaseAdmin.app();
-  }
-  return app.securityRules();
-}
+export declare function securityRules(app?: FirebaseApp): securityRulesApi.SecurityRules;
 
 /**
  * We must define a namespace to make the typings work correctly. Otherwise
  * `admin.securityRules()` cannot be called like a function. Temporarily,
- * admin.securityRules is used as the namespace name because we cannot barrel 
+ * admin.securityRules is used as the namespace name because we cannot barrel
  * re-export the contents from security-rules, and we want it to
  * match the namespacing in the re-export inside src/index.d.ts
  */
@@ -40,8 +34,8 @@ export namespace admin.securityRules {
   export import RulesFile = securityRulesApi.RulesFile;
   export import RulesetMetadata = securityRulesApi.RulesetMetadata;
   export import RulesetMetadataList = securityRulesApi.RulesetMetadataList;
-  
-  /* eslint-disable @typescript-eslint/no-empty-interface */ 
+
+  /* eslint-disable @typescript-eslint/no-empty-interface */
   export interface Ruleset extends securityRulesApi.Ruleset {}
   export interface SecurityRules extends securityRulesApi.SecurityRules {}
 }

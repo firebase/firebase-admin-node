@@ -18,14 +18,8 @@ import { FirebaseApp } from '../firebase-app';
 import { ServerValue as sv } from '@firebase/database';
 import * as adminDb from './database';
 import * as firebaseDbTypesApi from '@firebase/database-types';
-import * as firebaseAdmin from '../index';
 
-export function database(app?: FirebaseApp): adminDb.Database {
-  if (typeof(app) === 'undefined') {
-    app = firebaseAdmin.app();
-  }
-  return app.database();
-}
+export declare function database(app?: FirebaseApp): adminDb.Database;
 
 /**
  * We must define a namespace to make the typings work correctly. Otherwise

@@ -16,19 +16,13 @@
 
 import { FirebaseApp } from '../firebase-app';
 import * as _firestore from '@google-cloud/firestore';
-import * as firebaseAdmin from '../index';
 
-export function firestore(app?: FirebaseApp): _firestore.Firestore {
-  if (typeof (app) === 'undefined') {
-    app = firebaseAdmin.app();
-  }
-  return app.firestore();
-}
+export declare function firestore(app?: FirebaseApp): _firestore.Firestore;
 
 /**
  * We must define a namespace to make the typings work correctly. Otherwise
  * `admin.firestore()` cannot be called like a function. Temporarily,
- * admin.firestore is used as the namespace name because we cannot barrel 
+ * admin.firestore is used as the namespace name because we cannot barrel
  * re-export the contents from firestore, and we want it to
  * match the namespacing in the re-export inside src/index.d.ts
  */
