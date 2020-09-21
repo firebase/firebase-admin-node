@@ -1,5 +1,10 @@
 [![Build Status](https://github.com/firebase/firebase-admin-node/workflows/Continuous%20Integration/badge.svg)](https://github.com/firebase/firebase-admin-node/actions)
 
+# TODO
+
+* Copy generated d.ts files to the build directory.
+* Re-enable the `npm run build:tests` in CI.
+
 # Firebase Admin Node.js SDK
 
 

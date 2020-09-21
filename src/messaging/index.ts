@@ -29,7 +29,7 @@ export function messaging(app?: FirebaseApp): messagingApi.Messaging {
 /**
  * We must define a namespace to make the typings work correctly. Otherwise
  * `admin.messaging()` cannot be called like a function. Temporarily,
- * admin.messaging is used as the namespace name because we cannot barrel 
+ * admin.messaging is used as the namespace name because we cannot barrel
  * re-export the contents from messsaging, and we want it to
  * match the namespacing in the re-export inside src/index.d.ts
  */
