@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-// Use untyped import syntax for Node built-ins
 import fs = require('fs');
 import os = require('os');
 import path = require('path');
 
-import { GoogleOAuthAccessToken, Credential } from './credential-interfaces';
+import { Agent } from 'http';
+import { credential, GoogleOAuthAccessToken } from './index';
 import { AppErrorCodes, FirebaseAppError } from '../utils/error';
 import { HttpClient, HttpRequestConfig, HttpError, HttpResponse } from '../utils/api-request';
-import { Agent } from 'http';
 import * as util from '../utils/validator';
+
+import Credential = credential.Credential;
 
 const GOOGLE_TOKEN_AUDIENCE = 'https://accounts.google.com/o/oauth2/token';
 const GOOGLE_AUTH_TOKEN_HOST = 'accounts.google.com';

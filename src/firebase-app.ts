@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Credential, GoogleOAuthAccessToken } from './credential/credential-interfaces';
+import { credential, GoogleOAuthAccessToken } from './credential/index';
 import { getApplicationDefault } from './credential/credential-internal';
 import * as validator from './utils/validator';
 import { deepCopy, deepExtend } from './utils/deep-copy';
@@ -37,6 +37,8 @@ import { SecurityRules } from './security-rules/security-rules';
 import { RemoteConfig } from './remote-config/remote-config';
 
 import { Agent } from 'http';
+
+import Credential = credential.Credential;
 
 /**
  * Type representing a callback which is called every time an app lifecycle event occurs.
