@@ -16,6 +16,7 @@
 
 import { Agent } from 'http';
 import { credential } from './credential/index';
+import { remoteConfig } from './remote-config/index';
 
 /**
  * `FirebaseError` is a subclass of the standard JavaScript `Error` object. In
@@ -211,6 +212,8 @@ export namespace app {
      * ```
      */
     options: AppOptions;
+
+    remoteConfig(): remoteConfig.RemoteConfig;
 
     /**
      * Renders this local `FirebaseApp` unusable and frees the resources of

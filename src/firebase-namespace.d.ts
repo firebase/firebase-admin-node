@@ -16,3 +16,4 @@
 
 export * from './credential/index';
 export * from './firebase-namespace-api';
+export * from './remote-config/index';
