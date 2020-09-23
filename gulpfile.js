@@ -84,6 +84,7 @@ gulp.task('compile', function() {
   const configuration = [
     'lib/**/*.js',
     'lib/credential/index.d.ts',
+    'lib/firebase-namespace-api.d.ts',
   ];
 
   workflow = workflow.pipe(filter(configuration));

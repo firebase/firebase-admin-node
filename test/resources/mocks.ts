@@ -24,9 +24,10 @@ import stream = require('stream');
 import * as _ from 'lodash';
 import * as jwt from 'jsonwebtoken';
 
+import { AppOptions } from '../../src/firebase-namespace-api';
 import { FirebaseNamespace } from '../../src/firebase-namespace';
 import { FirebaseServiceInterface } from '../../src/firebase-service';
-import { FirebaseApp, FirebaseAppOptions } from '../../src/firebase-app';
+import { FirebaseApp } from '../../src/firebase-app';
 import { credential as _credential, GoogleOAuthAccessToken } from '../../src/credential/index';
 import { ServiceAccountCredential } from '../../src/credential/credential-internal';
 
@@ -52,13 +53,13 @@ export const storageBucket = 'bucketName.appspot.com';
 
 export const credential = new ServiceAccountCredential(path.resolve(__dirname, './mock.key.json'));
 
-export const appOptions: FirebaseAppOptions = {
+export const appOptions: AppOptions = {
   credential,
   databaseURL,
   storageBucket,
 };
 
-export const appOptionsWithOverride: FirebaseAppOptions = {
+export const appOptionsWithOverride: AppOptions = {
   credential,
   databaseAuthVariableOverride,
   databaseURL,
@@ -66,15 +67,15 @@ export const appOptionsWithOverride: FirebaseAppOptions = {
   projectId,
 };
 
-export const appOptionsNoAuth: FirebaseAppOptions = {
+export const appOptionsNoAuth: AppOptions = {
   databaseURL,
 };
 
-export const appOptionsNoDatabaseUrl: FirebaseAppOptions = {
+export const appOptionsNoDatabaseUrl: AppOptions = {
   credential,
 };
 
-export const appOptionsAuthDB: FirebaseAppOptions = {
+export const appOptionsAuthDB: AppOptions = {
   credential,
   databaseURL,
 };
@@ -101,7 +102,7 @@ export function mockCredentialApp(): FirebaseApp {
   }, appName, new FirebaseNamespace().INTERNAL);
 }
 
-export function appWithOptions(options: FirebaseAppOptions): FirebaseApp {
+export function appWithOptions(options: AppOptions): FirebaseApp {
   const namespaceInternals = new FirebaseNamespace().INTERNAL;
   namespaceInternals.removeApp = _.noop;
   return new FirebaseApp(options, appName, namespaceInternals);

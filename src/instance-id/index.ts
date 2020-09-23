@@ -16,19 +16,13 @@
 
 import { FirebaseApp } from '../firebase-app';
 import * as instanceIdApi from './instance-id';
-import * as firebaseAdmin from '../index';
 
-export function instanceId(app?: FirebaseApp): instanceIdApi.InstanceId {
-  if (typeof(app) === 'undefined') {
-    app = firebaseAdmin.app();
-  }
-  return app.instanceId();
-}
+export declare function instanceId(app?: FirebaseApp): instanceIdApi.InstanceId;
 
 /**
  * We must define a namespace to make the typings work correctly. Otherwise
  * `admin.instanceId()` cannot be called like a function. Temporarily,
- * admin.instanceId is used as the namespace name because we cannot barrel 
+ * admin.instanceId is used as the namespace name because we cannot barrel
  * re-export the contents from instance-id, and we want it to
  * match the namespacing in the re-export inside src/index.d.ts
  */

@@ -17,7 +17,8 @@
 import fs = require('fs');
 import { deepExtend } from './utils/deep-copy';
 import { AppErrorCodes, FirebaseAppError } from './utils/error';
-import { AppHook, FirebaseApp, FirebaseAppOptions } from './firebase-app';
+import { AppOptions } from './firebase-namespace-api';
+import { AppHook, FirebaseApp } from './firebase-app';
 import { FirebaseServiceFactory, FirebaseServiceInterface } from './firebase-service';
 import {
   cert, refreshToken, applicationDefault
@@ -52,7 +53,6 @@ export interface FirebaseServiceNamespace <T> {
   [key: string]: any;
 }
 
-
 /**
  * Internals of a FirebaseNamespace instance.
  */
@@ -76,7 +76,7 @@ export class FirebaseNamespaceInternals {
    *
    * @return {FirebaseApp} A new FirebaseApp instance.
    */
-  public initializeApp(options?: FirebaseAppOptions, appName = DEFAULT_APP_NAME): FirebaseApp {
+  public initializeApp(options?: AppOptions, appName = DEFAULT_APP_NAME): FirebaseApp {
     if (typeof options === 'undefined') {
       options = this.loadOptionsFromEnvVar();
       options.credential = getApplicationDefault();
@@ -245,14 +245,14 @@ export class FirebaseNamespaceInternals {
    * If the environment variable contains a string that starts with '{' it will be parsed as JSON,
    * otherwise it will be assumed to be pointing to a file.
    */
-  private loadOptionsFromEnvVar(): FirebaseAppOptions {
+  private loadOptionsFromEnvVar(): AppOptions {
     const config = process.env[FIREBASE_CONFIG_VAR];
     if (!validator.isNonEmptyString(config)) {
       return {};
     }
     try {
       const contents = config.startsWith('{') ? config : fs.readFileSync(config, 'utf8');
-      return JSON.parse(contents) as FirebaseAppOptions;
+      return JSON.parse(contents) as AppOptions;
     } catch (error) {
       // Throw a nicely formed error message if the file contents cannot be parsed
       throw new FirebaseAppError(
@@ -266,7 +266,6 @@ export class FirebaseNamespaceInternals {
 const firebaseCredential = {
   cert, refreshToken, applicationDefault
 };
-
 
 /**
  * Global Firebase context object.
@@ -433,18 +432,20 @@ export class FirebaseNamespace {
     return Object.assign(fn, { RemoteConfig: remoteConfig });
   }
 
+  // TODO: Change the return types to app.App in the following methods.
+
   /**
    * Initializes the FirebaseApp instance.
    *
-   * @param {FirebaseAppOptions} [options] Optional options for the FirebaseApp instance.
+   * @param options Optional options for the FirebaseApp instance.
    *   If none present will try to initialize from the FIREBASE_CONFIG environment variable.
    *   If the environment variable contains a string that starts with '{' it will be parsed as JSON,
    *   otherwise it will be assumed to be pointing to a file.
-   * @param {string} [appName] Optional name of the FirebaseApp instance.
+   * @param appName Optional name of the FirebaseApp instance.
    *
-   * @return {FirebaseApp} A new FirebaseApp instance.
+   * @return A new FirebaseApp instance.
    */
-  public initializeApp(options?: FirebaseAppOptions, appName?: string): FirebaseApp {
+  public initializeApp(options?: AppOptions, appName?: string): FirebaseApp {
     return this.INTERNAL.initializeApp(options, appName);
   }
 
@@ -452,8 +453,8 @@ export class FirebaseNamespace {
    * Returns the FirebaseApp instance with the provided name (or the default FirebaseApp instance
    * if no name is provided).
    *
-   * @param {string} [appName] Optional name of the FirebaseApp instance to return.
-   * @return {FirebaseApp} The FirebaseApp instance which has the provided name.
+   * @param appName Optional name of the FirebaseApp instance to return.
+   * @return The FirebaseApp instance which has the provided name.
    */
   public app(appName?: string): FirebaseApp {
     return this.INTERNAL.app(appName);
@@ -461,8 +462,6 @@ export class FirebaseNamespace {
 
   /*
    * Returns an array of all the non-deleted FirebaseApp instances.
-   *
-   * @return {Array<FirebaseApp>} An array of all the non-deleted FirebaseApp instances
    */
   public get apps(): FirebaseApp[] {
     return this.INTERNAL.apps;
@@ -470,7 +469,7 @@ export class FirebaseNamespace {
 
   private ensureApp(app?: FirebaseApp): FirebaseApp {
     if (typeof app === 'undefined') {
-      app = this.app();
+      app = this.app() as FirebaseApp;
     }
     return app;
   }

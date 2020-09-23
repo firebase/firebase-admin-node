@@ -20,18 +20,19 @@ import * as sinon from 'sinon';
 import * as mocks from '../resources/mocks';
 
 import { FirebaseNamespace } from '../../src/firebase-namespace';
-import { FirebaseApp, FirebaseAppOptions, FirebaseAppInternals, FirebaseAccessToken } from '../../src/firebase-app';
+import { AppOptions } from '../../src/firebase-namespace-api';
+import { FirebaseApp, FirebaseAppInternals, FirebaseAccessToken } from '../../src/firebase-app';
 import { HttpError, HttpResponse } from '../../src/utils/api-request';
 
 /**
  * Returns a new FirebaseApp instance with the provided options.
  *
- * @param {object} options The options for the FirebaseApp instance to create.
- * @return {FirebaseApp} A new FirebaseApp instance with the provided options.
+ * @param options The options for the FirebaseApp instance to create.
+ * @return A new FirebaseApp instance with the provided options.
  */
 export function createAppWithOptions(options: object): FirebaseApp {
   const mockFirebaseNamespaceInternals = new FirebaseNamespace().INTERNAL;
-  return new FirebaseApp(options as FirebaseAppOptions, mocks.appName, mockFirebaseNamespaceInternals);
+  return new FirebaseApp(options as AppOptions, mocks.appName, mockFirebaseNamespaceInternals);
 }
 
 

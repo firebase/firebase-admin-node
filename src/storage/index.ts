@@ -16,14 +16,8 @@
 
 import * as _storage from './storage';
 import { FirebaseApp } from '../firebase-app';
-import * as firebaseAdmin from '../index';
 
-export function storage(app?: FirebaseApp): _storage.Storage {
-  if (typeof(app) === 'undefined') {
-    app = firebaseAdmin.app();
-  }
-  return app.storage();
-}
+export declare function storage(app?: FirebaseApp): _storage.Storage;
 
 /* eslint-disable @typescript-eslint/no-namespace */
 export namespace admin.storage {
