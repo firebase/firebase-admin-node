@@ -16,6 +16,7 @@
 
 import { Agent } from 'http';
 import { credential } from './credential/index';
+import { messaging } from './messaging/index';
 import { remoteConfig } from './remote-config/index';
 
 /**
@@ -51,7 +52,7 @@ export interface FirebaseError {
    * {@link https://firebase.google.com/support/ Firebase Support} to help
    * explain the cause of an error.
    */
-  stack: string;
+  stack?: string;
 
   /**
    * @return A JSON-serializable representation of this object.
@@ -213,6 +214,7 @@ export namespace app {
      */
     options: AppOptions;
 
+    messaging(): messaging.Messaging;
     remoteConfig(): remoteConfig.RemoteConfig;
 
     /**

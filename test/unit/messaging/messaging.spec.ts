@@ -27,10 +27,7 @@ import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
 import { FirebaseApp } from '../../../src/firebase-app';
-import {
-  Message, MessagingOptions, MessagingPayload, MessagingDevicesResponse, MessagingDeviceGroupResponse,
-  MessagingTopicManagementResponse, BatchResponse, SendResponse, MulticastMessage,
-} from '../../../src/messaging/messaging-types';
+import { messaging } from '../../../src/messaging/index';
 import { Messaging } from '../../../src/messaging/messaging';
 import { BLACKLISTED_OPTIONS_KEYS, BLACKLISTED_DATA_PAYLOAD_KEYS } from '../../../src/messaging/messaging-internal';
 import { HttpClient } from '../../../src/utils/api-request';
@@ -41,6 +38,16 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
 const expect = chai.expect;
+
+import Message = messaging.Message;
+import MessagingOptions = messaging.MessagingOptions;
+import MessagingPayload = messaging.MessagingPayload;
+import MessagingDevicesResponse = messaging.MessagingDevicesResponse;
+import MessagingDeviceGroupResponse = messaging.MessagingDeviceGroupResponse
+import MessagingTopicManagementResponse = messaging.MessagingTopicManagementResponse;
+import BatchResponse = messaging.BatchResponse;
+import SendResponse = messaging.SendResponse;
+import MulticastMessage = messaging.MulticastMessage;
 
 // FCM endpoints
 const FCM_SEND_HOST = 'fcm.googleapis.com';
@@ -1417,6 +1424,9 @@ describe('Messaging', () => {
           mocks.messaging.registrationToken + '0',
           mocks.messaging.registrationToken + '1',
         ],
+        canonicalRegistrationTokenCount: -1,
+        multicastId: -1,
+        results: [],
       });
     });
 
@@ -1667,6 +1677,7 @@ describe('Messaging', () => {
         results: [
           { messageId: `0:${ mocks.messaging.messageId }` },
         ],
+        failedRegistrationTokens: [],
       });
     });
 
