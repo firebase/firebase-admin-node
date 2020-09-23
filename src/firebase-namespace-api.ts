@@ -81,7 +81,7 @@ export interface FirebaseError {
  *     console.log("Error subscribing to topic:", error);
  *   });
  *```
-  */
+ */
 export interface FirebaseArrayIndexError {
 
   /**
