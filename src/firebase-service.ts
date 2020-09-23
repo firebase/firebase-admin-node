@@ -16,7 +16,6 @@
 
 import { FirebaseApp } from './firebase-app';
 
-
 /**
  * Internals of a FirebaseService instance.
  */
