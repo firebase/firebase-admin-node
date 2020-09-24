@@ -18,6 +18,7 @@ import { deepCopy } from '../utils/deep-copy';
 import { isNonNullObject } from '../utils/validator';
 import * as utils from '../utils';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
+import { auth } from './index';
 
 /**
  * 'REDACTED', encoded as a base64 string.
@@ -40,64 +41,6 @@ function parseDate(time: any): string | null {
     // Do nothing. null will be returned.
   }
   return null;
-}
-
-/**
- * Interface representing base properties of a user enrolled second factor for a
- * `CreateRequest`.
- */
-export interface CreateMultiFactorInfoRequest {
-  displayName?: string;
-  factorId: string;
-}
-
-/**
- * Interface representing a phone specific user enrolled second factor for a
- * `CreateRequest`.
- */
-export interface CreatePhoneMultiFactorInfoRequest extends CreateMultiFactorInfoRequest {
-  phoneNumber: string;
-}
-
-/**
- * Interface representing common properties of a user enrolled second factor
- * for an `UpdateRequest`.
- */
-export interface UpdateMultiFactorInfoRequest {
-  uid?: string;
-  displayName?: string;
-  enrollmentTime?: string;
-  factorId: string;
-}
-
-/**
- * Interface representing a phone specific user enrolled second factor
- * for an `UpdateRequest`.
- */
-export interface UpdatePhoneMultiFactorInfoRequest extends UpdateMultiFactorInfoRequest {
-  phoneNumber: string;
-}
-
-/** Parameters for update user operation */
-export interface UpdateRequest {
-  disabled?: boolean;
-  displayName?: string | null;
-  email?: string;
-  emailVerified?: boolean;
-  password?: string;
-  phoneNumber?: string | null;
-  photoURL?: string | null;
-  multiFactor?: {
-    enrolledFactors: UpdateMultiFactorInfoRequest[] | null;
-  };
-}
-
-/** Parameters for create user operation */
-export interface CreateRequest extends UpdateRequest {
-  uid?: string;
-  multiFactor?: {
-    enrolledFactors: CreateMultiFactorInfoRequest[];
-  };
 }
 
 export interface MultiFactorInfoResponse {
@@ -138,18 +81,17 @@ export interface GetAccountInfoUserResponse {
   [key: string]: any;
 }
 
-/** Enums for multi-factor identifiers. */
-export enum MultiFactorId {
+enum MultiFactorId {
   Phone = 'phone',
 }
 
 /**
  * Abstract class representing a multi-factor info interface.
  */
-export abstract class MultiFactorInfo {
+export abstract class MultiFactorInfo implements auth.MultiFactorInfo {
   public readonly uid: string;
   public readonly displayName?: string;
-  public readonly factorId: MultiFactorId;
+  public readonly factorId: string;
   public readonly enrollmentTime?: string;
 
   /**
@@ -197,7 +139,7 @@ export abstract class MultiFactorInfo {
    * @return The multi-factor ID associated with the provided response. If the response is
    *     not associated with any known multi-factor ID, null is returned.
    */
-  protected abstract getFactorId(response: MultiFactorInfoResponse): MultiFactorId | null;
+  protected abstract getFactorId(response: MultiFactorInfoResponse): string | null;
 
   /**
    * Initializes the MultiFactorInfo object using the provided server response.
@@ -228,7 +170,7 @@ export abstract class MultiFactorInfo {
 }
 
 /** Class representing a phone MultiFactorInfo object. */
-export class PhoneMultiFactorInfo extends MultiFactorInfo {
+export class PhoneMultiFactorInfo extends MultiFactorInfo implements auth.PhoneMultiFactorInfo {
   public readonly phoneNumber: string;
 
   /**
@@ -258,13 +200,13 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
    * @return The multi-factor ID associated with the provided response. If the response is
    *     not associated with any known multi-factor ID, null is returned.
    */
-  protected getFactorId(response: MultiFactorInfoResponse): MultiFactorId | null {
+  protected getFactorId(response: MultiFactorInfoResponse): string | null {
     return (response && response.phoneInfo) ? MultiFactorId.Phone : null;
   }
 }
 
 /** Class representing multi-factor related properties of a user. */
-export class MultiFactor {
+export class MultiFactor implements auth.MultiFactorSettings {
   public enrolledFactors: MultiFactorInfo[];
 
   /**
@@ -308,7 +250,7 @@ export class MultiFactor {
  *     endpoint.
  * @constructor
  */
-export class UserMetadata {
+export class UserMetadata implements auth.UserMetadata {
   public readonly creationTime: string;
   public readonly lastSignInTime: string;
 
@@ -347,7 +289,7 @@ export class UserMetadata {
  *     endpoint.
  * @constructor
  */
-export class UserInfo {
+export class UserInfo implements auth.UserInfo {
   public readonly uid: string;
   public readonly displayName: string;
   public readonly email: string;
@@ -392,7 +334,7 @@ export class UserInfo {
  *     endpoint.
  * @constructor
  */
-export class UserRecord {
+export class UserRecord implements auth.UserRecord {
   public readonly uid: string;
   public readonly email: string;
   public readonly emailVerified: boolean;

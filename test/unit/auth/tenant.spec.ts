@@ -20,13 +20,12 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import { deepCopy } from '../../../src/utils/deep-copy';
-import {
-  EmailSignInConfig, EmailSignInProviderConfig, MultiFactorAuthConfig,
-} from '../../../src/auth/auth-config';
-import {
-  Tenant, TenantOptions, TenantServerResponse,
-} from '../../../src/auth/tenant';
+import { EmailSignInConfig, MultiFactorAuthConfig } from '../../../src/auth/auth-config';
+import { Tenant, TenantServerResponse } from '../../../src/auth/tenant';
+import { auth } from '../../../src/auth/index';
 
+import EmailSignInProviderConfig = auth.EmailSignInProviderConfig;
+import UpdateTenantRequest = auth.UpdateTenantRequest;
 
 chai.should();
 chai.use(sinonChai);
@@ -50,7 +49,7 @@ describe('Tenant', () => {
     },
   };
 
-  const clientRequest: TenantOptions = {
+  const clientRequest: UpdateTenantRequest = {
     displayName: 'TENANT-DISPLAY-NAME',
     emailSignInConfig: {
       enabled: true,
@@ -73,7 +72,7 @@ describe('Tenant', () => {
     enableEmailLinkSignin: true,
   };
 
-  const clientRequestWithoutMfa: TenantOptions = {
+  const clientRequestWithoutMfa: UpdateTenantRequest = {
     displayName: 'TENANT-DISPLAY-NAME',
     emailSignInConfig: {
       enabled: true,
@@ -181,7 +180,7 @@ describe('Tenant', () => {
 
     describe('for a create request', () => {
       it('should return the expected server request without multi-factor and phone config', () => {
-        const tenantOptionsClientRequest: TenantOptions = deepCopy(clientRequestWithoutMfa);
+        const tenantOptionsClientRequest: UpdateTenantRequest = deepCopy(clientRequestWithoutMfa);
         const tenantOptionsServerRequest: TenantServerResponse = deepCopy(serverRequestWithoutMfa);
         delete tenantOptionsServerRequest.name;
 
@@ -190,7 +189,7 @@ describe('Tenant', () => {
       });
 
       it('should return the expected server request with multi-factor and phone config', () => {
-        const tenantOptionsClientRequest: TenantOptions = deepCopy(clientRequest);
+        const tenantOptionsClientRequest: UpdateTenantRequest = deepCopy(clientRequest);
         const tenantOptionsServerRequest: TenantServerResponse = deepCopy(serverRequest);
         delete tenantOptionsServerRequest.name;
 
@@ -199,7 +198,7 @@ describe('Tenant', () => {
       });
 
       it('should throw on invalid EmailSignInConfig', () => {
-        const tenantOptionsClientRequest: TenantOptions = deepCopy(clientRequest);
+        const tenantOptionsClientRequest: UpdateTenantRequest = deepCopy(clientRequest);
         tenantOptionsClientRequest.emailSignInConfig = null as unknown as EmailSignInProviderConfig;
 
         expect(() => Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest))

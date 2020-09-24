@@ -83,6 +83,7 @@ gulp.task('compile', function() {
 
   const configuration = [
     'lib/**/*.js',
+    'lib/auth/index.d.ts',
     'lib/credential/index.d.ts',
     'lib/firebase-namespace-api.d.ts',
     'lib/database/index.d.ts',
