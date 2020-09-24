@@ -829,6 +829,24 @@ export namespace admin.auth {
   }
 
   /**
+   * Interface representing the custom token options needed for the
+   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#createcustomtoken `createCustomToken()`} method.
+   */
+  interface CustomTokenOptions {
+
+    /** 
+     * Optional additional claims to include in the JWT payload. 
+     */
+    developerClaims?: { [key: string]: any };
+
+    /** 
+     * The JWT expiration in milliseconds. The minimum allowed is X and the maximum allowed is 1 hour.
+     * Defaults to 1 hour. 
+     */
+    expiresIn?: number;
+  }
+
+  /**
    * Interface representing the session cookie options needed for the
    * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#createSessionCookie `createSessionCookie()`} method.
    */
@@ -1374,6 +1392,23 @@ export namespace admin.auth {
      *   provided `uid` and payload.
      */
     createCustomToken(uid: string, developerClaims?: object): Promise<string>;
+
+    /**
+     * Creates a new Firebase custom token (JWT) that can be sent back to a client
+     * device to use to sign in with the client SDKs' `signInWithCustomToken()`
+     * methods. (Tenant-aware instances will also embed the tenant ID in the
+     * token.)
+     *
+     * See [Create Custom Tokens](/docs/auth/admin/create-custom-tokens) for code
+     * samples and detailed documentation.
+     *
+     * @param uid The `uid` to use as the custom token's subject.
+     * @param {CustomTokenOptions=} options Options to use when creating the JWT.
+     *
+     * @return A promise fulfilled with a custom token for the
+     *   provided `uid` and payload.
+     */
+    createCustomTokenWithOptions(uid: string, options?: CustomTokenOptions): Promise<string>;
 
     /**
      * Creates a new user.

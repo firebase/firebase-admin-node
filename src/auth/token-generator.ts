@@ -24,7 +24,8 @@ import { toWebSafeBase64 } from '../utils';
 
 
 const ALGORITHM_RS256 = 'RS256';
-const ONE_HOUR_IN_SECONDS = 60 * 60;
+const MIN_JWT_EXPIRES_IN_MS = 1000;
+const ONE_HOUR_IN_MS = 60 * 60 * 1000;
 
 // List of blacklisted claims which cannot be provided when creating a custom token
 export const BLACKLISTED_CLAIMS = [
@@ -231,6 +232,12 @@ export function cryptoSignerFromApp(app: FirebaseApp): CryptoSigner {
   return new IAMSigner(new AuthorizedHttpClient(app), app.options.serviceAccountId);
 }
 
+/** Interface representing the create custom token options. */
+export interface FirebaseTokenOptions {
+  developerClaims?: { [key: string]: any };
+  expiresIn?: number;
+}
+
 /**
  * Class for generating different types of Firebase Auth tokens (JWTs).
  */
@@ -262,37 +269,43 @@ export class FirebaseTokenGenerator {
    * Creates a new Firebase Auth Custom token.
    *
    * @param uid The user ID to use for the generated Firebase Auth Custom token.
-   * @param developerClaims Optional developer claims to include in the generated Firebase
-   *     Auth Custom token.
+   * @param options Options to use when creating the JWT..
    * @return A Promise fulfilled with a Firebase Auth Custom token signed with a
    *     service account key and containing the provided payload.
    */
-  public createCustomToken(uid: string, developerClaims?: {[key: string]: any}): Promise<string> {
+  public createCustomToken(uid: string, options?: FirebaseTokenOptions): Promise<string> {
     let errorMessage: string | undefined;
     if (!validator.isNonEmptyString(uid)) {
       errorMessage = '`uid` argument must be a non-empty string uid.';
     } else if (uid.length > 128) {
       errorMessage = '`uid` argument must a uid with less than or equal to 128 characters.';
-    } else if (!this.isDeveloperClaimsValid_(developerClaims)) {
-      errorMessage = '`developerClaims` argument must be a valid, non-null object containing the developer claims.';
+    } else if (typeof options !== 'undefined' && !validator.isObject(options)) {
+      errorMessage = '`options` argument must be a valid object.';
+    } else if (!this.isDeveloperClaimsValid_(options?.developerClaims)) {
+      errorMessage = '`options.developerClaims` argument must be a valid, non-null object containing ' +
+        'the developer claims.';
+    } else if (typeof options?.expiresIn !== 'undefined' && (!validator.isNumber(options.expiresIn) ||
+      options.expiresIn < MIN_JWT_EXPIRES_IN_MS || options.expiresIn > ONE_HOUR_IN_MS)) {
+      errorMessage = `\`options.expiresIn\` argument must be a valid number between ${MIN_JWT_EXPIRES_IN_MS} ` +
+        `and ${ONE_HOUR_IN_MS}.`;
     }
 
     if (errorMessage) {
       throw new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, errorMessage);
     }
 
-    const claims: {[key: string]: any} = {};
-    if (typeof developerClaims !== 'undefined') {
-      for (const key in developerClaims) {
+    const claims: { [key: string]: any } = {};
+    if (typeof options?.developerClaims !== 'undefined') {
+      for (const key in options.developerClaims) {
         /* istanbul ignore else */
-        if (Object.prototype.hasOwnProperty.call(developerClaims, key)) {
+        if (Object.prototype.hasOwnProperty.call(options.developerClaims, key)) {
           if (BLACKLISTED_CLAIMS.indexOf(key) !== -1) {
             throw new FirebaseAuthError(
               AuthClientErrorCode.INVALID_ARGUMENT,
               `Developer claim "${key}" is reserved and cannot be specified.`,
             );
           }
-          claims[key] = developerClaims[key];
+          claims[key] = options.developerClaims[key];
         }
       }
     }
@@ -305,7 +318,7 @@ export class FirebaseTokenGenerator {
       const body: JWTBody = {
         aud: FIREBASE_AUDIENCE,
         iat,
-        exp: iat + ONE_HOUR_IN_SECONDS,
+        exp: iat + Math.floor((options?.expiresIn || ONE_HOUR_IN_MS) / 1000),
         iss: account,
         sub: account,
         uid,

@@ -64,7 +64,7 @@ export function isBoolean(value: any): boolean {
  * @param {any} value The value to validate.
  * @return {boolean} Whether the value is a number or not.
  */
-export function isNumber(value: any): boolean {
+export function isNumber(value: any): value is number {
   return typeof value === 'number' && !isNaN(value);
 }
 
@@ -111,7 +111,7 @@ export function isNonEmptyString(value: any): value is string {
  * @param {any} value The value to validate.
  * @return {boolean} Whether the value is an object or not.
  */
-export function isObject(value: any): boolean {
+export function isObject(value: any): value is object {
   return typeof value === 'object' && !isArray(value);
 }
 

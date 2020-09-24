@@ -19,7 +19,7 @@ import {
   UserIdentifier, isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, isProviderIdentifier,
 } from './identifier';
 import { FirebaseApp } from '../firebase-app';
-import { FirebaseTokenGenerator, cryptoSignerFromApp } from './token-generator';
+import { FirebaseTokenGenerator, cryptoSignerFromApp, FirebaseTokenOptions } from './token-generator';
 import {
   AbstractAuthRequestHandler, AuthRequestHandler, TenantAwareAuthRequestHandler,
 } from './auth-api-request';
@@ -111,6 +111,8 @@ export interface DecodedIdToken {
   [key: string]: any;
 }
 
+/** The public API interface representing the create custom token options. */
+export type CustomTokenOptions = FirebaseTokenOptions;
 
 /** Interface representing the session cookie options. */
 export interface SessionCookieOptions {
@@ -159,7 +161,20 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    * @return {Promise<string>} A JWT for the provided payload.
    */
   public createCustomToken(uid: string, developerClaims?: object): Promise<string> {
-    return this.tokenGenerator.createCustomToken(uid, developerClaims);
+    return this.createCustomTokenWithOptions(uid, { developerClaims });
+  }
+
+  /**
+   * Creates a new custom token that can be sent back to a client to use with
+   * signInWithCustomToken().
+   *
+   * @param {string} uid The uid to use as the JWT subject.
+   * @param {CustomTokenOptions=} options Options to use when creating the JWT.
+   *
+   * @return {Promise<string>} A JWT for the provided payload.
+   */
+  public createCustomTokenWithOptions(uid: string, options?: CustomTokenOptions): Promise<string> {
+    return this.tokenGenerator.createCustomToken(uid, options);
   }
 
   /**

@@ -349,22 +349,40 @@ describe('FirebaseTokenGenerator', () => {
         }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
       });
 
+      it('should throw given a non-object options', () => {
+        const invalidOptions: any[] = [NaN, [], true, false, '', 'a', 0, 1, Infinity, _.noop];
+        invalidOptions.forEach((opts) => {
+          expect(() => {
+            tokenGenerator.createCustomToken(mocks.uid, opts);
+          }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
+        });
+      });
+
       it('should throw given a non-object developer claims', () => {
         const invalidDeveloperClaims: any[] = [null, NaN, [], true, false, '', 'a', 0, 1, Infinity, _.noop];
         invalidDeveloperClaims.forEach((invalidDevClaims) => {
           expect(() => {
-            tokenGenerator.createCustomToken(mocks.uid, invalidDevClaims);
+            tokenGenerator.createCustomToken(mocks.uid, { developerClaims: invalidDevClaims });
           }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
         });
       });
 
       BLACKLISTED_CLAIMS.forEach((blacklistedClaim) => {
         it('should throw given a developer claims object with a blacklisted claim: ' + blacklistedClaim, () => {
-          const blacklistedDeveloperClaims: {[key: string]: any} = _.clone(mocks.developerClaims);
+          const blacklistedDeveloperClaims: { [key: string]: any } = _.clone(mocks.developerClaims);
           blacklistedDeveloperClaims[blacklistedClaim] = true;
           expect(() => {
-            tokenGenerator.createCustomToken(mocks.uid, blacklistedDeveloperClaims);
+            tokenGenerator.createCustomToken(mocks.uid, { developerClaims: blacklistedDeveloperClaims });
           }).to.throw(FirebaseAuthError, blacklistedClaim).with.property('code', 'auth/argument-error');
+        });
+      });
+
+      it('should throw given an invalid expiresIn', () => {
+        const invalidExpiresIns: any[] = [null, NaN, Infinity, _.noop, 0, 999, 3600001];
+        invalidExpiresIns.forEach((invalidExpiresIn) => {
+          expect(() => {
+            tokenGenerator.createCustomToken(mocks.uid, { expiresIn: invalidExpiresIn });
+          }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
         });
       });
 
@@ -373,11 +391,20 @@ describe('FirebaseTokenGenerator', () => {
       });
 
       it('should be fulfilled given a valid uid and empty object developer claims', () => {
-        return tokenGenerator.createCustomToken(mocks.uid, {});
+        return tokenGenerator.createCustomToken(mocks.uid, { developerClaims: {} });
       });
 
       it('should be fulfilled given a valid uid and valid developer claims', () => {
-        return tokenGenerator.createCustomToken(mocks.uid, mocks.developerClaims);
+        return tokenGenerator.createCustomToken(mocks.uid, { developerClaims: mocks.developerClaims });
+      });
+
+      it('should be fulfilled given a valid uid, empty object developer claims and valid expiresIn', () => {
+        return tokenGenerator.createCustomToken(mocks.uid, { developerClaims: {}, expiresIn: 1000 });
+      });
+
+      it('should be fulfilled given a valid uid, valid developer claims and valid expiresIn', () => {
+        return tokenGenerator
+          .createCustomToken(mocks.uid, { developerClaims: mocks.developerClaims, expiresIn: 3600000 });
       });
 
       it('should be fulfilled with a Firebase Custom JWT', () => {
@@ -412,7 +439,7 @@ describe('FirebaseTokenGenerator', () => {
       it('should be fulfilled with a JWT with the developer claims in its decoded payload', () => {
         clock = sinon.useFakeTimers(1000);
 
-        return tokenGenerator.createCustomToken(mocks.uid, mocks.developerClaims)
+        return tokenGenerator.createCustomToken(mocks.uid, { developerClaims: mocks.developerClaims })
           .then((token) => {
             const decoded = jwt.decode(token);
 
@@ -427,6 +454,32 @@ describe('FirebaseTokenGenerator', () => {
                 one: 'uno',
                 two: 'dos',
               },
+            };
+
+            if (tokenGenerator.tenantId) {
+              // eslint-disable-next-line @typescript-eslint/camelcase
+              expected.tenant_id = tokenGenerator.tenantId;
+            }
+
+            expect(decoded).to.deep.equal(expected);
+          });
+      });
+
+      it('should be fulfilled with a JWT with the expiresIn in its exp payload', () => {
+        clock = sinon.useFakeTimers(2000);
+        const expiresIn = 300900
+
+        return tokenGenerator.createCustomToken(mocks.uid, { expiresIn })
+          .then((token) => {
+            const decoded = jwt.decode(token);
+
+            const expected: { [key: string]: any } = {
+              uid: mocks.uid,
+              iat: 2,
+              exp: 302,
+              aud: FIREBASE_AUDIENCE,
+              iss: mocks.certificateObject.client_email,
+              sub: mocks.certificateObject.client_email,
             };
 
             if (tokenGenerator.tenantId) {
@@ -495,7 +548,7 @@ describe('FirebaseTokenGenerator', () => {
           foo: 'bar',
         };
         const clonedClaims = _.clone(originalClaims);
-        return tokenGenerator.createCustomToken(mocks.uid, clonedClaims)
+        return tokenGenerator.createCustomToken(mocks.uid, { developerClaims: clonedClaims })
           .then(() => {
             expect(originalClaims).to.deep.equal(clonedClaims);
           });
