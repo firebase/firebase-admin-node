@@ -36,12 +36,14 @@ import { Messaging } from '../../src/messaging/messaging';
 import { MachineLearning } from '../../src/machine-learning/machine-learning';
 import { Storage } from '../../src/storage/storage';
 import { Firestore } from '@google-cloud/firestore';
-import { Database } from '../../src/database/database';
+import { database } from '../../src/database/index';
 import { InstanceId } from '../../src/instance-id/instance-id';
 import { ProjectManagement } from '../../src/project-management/project-management';
 import { SecurityRules } from '../../src/security-rules/security-rules';
 import { FirebaseAppError, AppErrorCodes } from '../../src/utils/error';
 import { RemoteConfig } from '../../src/remote-config/remote-config';
+
+import Database = database.Database;
 
 chai.should();
 chai.use(sinonChai);

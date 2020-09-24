@@ -16,6 +16,7 @@
 
 import { Agent } from 'http';
 import { credential } from './credential/index';
+import { database } from './database/index';
 import { messaging } from './messaging/index';
 import { remoteConfig } from './remote-config/index';
 
@@ -214,6 +215,7 @@ export namespace app {
      */
     options: AppOptions;
 
+    database(url?: string): database.Database;
     messaging(): messaging.Messaging;
     remoteConfig(): remoteConfig.RemoteConfig;
 

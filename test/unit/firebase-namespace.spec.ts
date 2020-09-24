@@ -36,7 +36,7 @@ import {
   Reference,
   ServerValue,
 } from '@firebase/database';
-import { Database as FirebaseDatabase } from '../../src/database/database';
+import { database } from '../../src/database/index';
 import { Messaging } from '../../src/messaging/messaging';
 import { MachineLearning } from '../../src/machine-learning/machine-learning';
 import { Storage } from '../../src/storage/storage';
@@ -54,6 +54,8 @@ import { ProjectManagement } from '../../src/project-management/project-manageme
 import { SecurityRules } from '../../src/security-rules/security-rules';
 import { RemoteConfig } from '../../src/remote-config/remote-config';
 import { getSdkVersion } from '../../src/utils/index';
+
+import FirebaseDatabase = database.Database;
 
 chai.should();
 chai.use(sinonChai);

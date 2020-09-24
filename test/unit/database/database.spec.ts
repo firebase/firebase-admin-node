@@ -23,9 +23,11 @@ import * as sinon from 'sinon';
 import * as mocks from '../../resources/mocks';
 import { FirebaseApp } from '../../../src/firebase-app';
 import { DatabaseService } from '../../../src/database/database-internal';
-import { Database } from '../../../src/database/database';
+import { database } from '../../../src/database/index';
 import * as utils from '../utils';
 import { HttpClient, HttpRequestConfig } from '../../../src/utils/api-request';
+
+import Database = database.Database;
 
 describe('Database', () => {
   let mockApp: FirebaseApp;

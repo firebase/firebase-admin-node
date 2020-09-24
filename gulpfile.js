@@ -85,6 +85,7 @@ gulp.task('compile', function() {
     'lib/**/*.js',
     'lib/credential/index.d.ts',
     'lib/firebase-namespace-api.d.ts',
+    'lib/database/index.d.ts',
     'lib/messaging/index.d.ts',
     'lib/remote-config/index.d.ts',
   ];

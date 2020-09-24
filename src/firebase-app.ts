@@ -27,7 +27,7 @@ import { Auth } from './auth/auth';
 import { MachineLearning } from './machine-learning/machine-learning';
 import { Messaging } from './messaging/messaging';
 import { Storage } from './storage/storage';
-import { Database } from './database/database';
+import { database } from './database/index';
 import { DatabaseService } from './database/database-internal';
 import { Firestore } from '@google-cloud/firestore';
 import { FirestoreService } from './firestore/firestore-internal';
@@ -37,6 +37,7 @@ import { SecurityRules } from './security-rules/security-rules';
 import { RemoteConfig } from './remote-config/remote-config';
 
 import Credential = credential.Credential;
+import Database = database.Database;
 
 /**
  * Type representing a callback which is called every time an app lifecycle event occurs.
