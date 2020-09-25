@@ -23,7 +23,8 @@ import { FirebaseTokenGenerator, cryptoSignerFromApp } from './token-generator';
 import {
   AbstractAuthRequestHandler, AuthRequestHandler, TenantAwareAuthRequestHandler,
 } from './auth-api-request';
-import { AuthClientErrorCode, FirebaseAuthError, ErrorInfo, FirebaseArrayIndexError } from '../utils/error';
+import { AuthClientErrorCode, FirebaseAuthError, ErrorInfo } from '../utils/error';
+import { FirebaseArrayIndexError } from '../firebase-namespace-api';
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import {
   UserImportOptions, UserImportRecord, UserImportResult,

@@ -17,7 +17,8 @@
 import { deepCopy, deepExtend } from '../utils/deep-copy';
 import * as utils from '../utils';
 import * as validator from '../utils/validator';
-import { AuthClientErrorCode, FirebaseAuthError, FirebaseArrayIndexError } from '../utils/error';
+import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
+import { FirebaseArrayIndexError } from '../firebase-namespace-api';
 
 /** Firebase Auth supported hashing algorithms for import operations. */
 export type HashAlgorithmType = 'SCRYPT' | 'STANDARD_SCRYPT' | 'HMAC_SHA512' |

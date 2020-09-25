@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import { FirebaseError as FireabseErrorInterface } from '../firebase-namespace-api';
 import { deepCopy } from '../utils/deep-copy';
 
 /**
@@ -22,11 +23,6 @@ import { deepCopy } from '../utils/deep-copy';
 export interface ErrorInfo {
   code: string;
   message: string;
-}
-
-export interface FirebaseArrayIndexError {
-  index: number;
-  error: FirebaseError;
 }
 
 /**
@@ -42,7 +38,7 @@ interface ServerToClientCode {
  * @param {ErrorInfo} errorInfo The error information (code and message).
  * @constructor
  */
-export class FirebaseError extends Error {
+export class FirebaseError extends Error implements FireabseErrorInterface {
   constructor(private errorInfo: ErrorInfo) {
     super(errorInfo.message);
 
