@@ -242,8 +242,10 @@ export class FirebaseTokenGenerator {
    * @param tenantId The tenant ID to use for the generated Firebase Auth
    *     Custom token. If absent, then no tenant ID claim will be set in the
    *     resulting JWT.
+   * @param useEmulator When true we should generate tokens on behalf of the
+   *     Auth Emulator, which means no signature.
    */
-  constructor(signer: CryptoSigner, public readonly tenantId?: string) {
+  constructor(signer: CryptoSigner, public readonly tenantId?: string, public readonly useEmulator?: boolean) {
     if (!validator.isNonNullObject(signer)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_CREDENTIAL,
@@ -297,8 +299,13 @@ export class FirebaseTokenGenerator {
       }
     }
     return this.signer.getAccountId().then((account) => {
+      // When communicating with the Auth Emulator we don't sign custom tokens which means:
+      //  - Algorithm is 'none'
+      //  - Third token segment (signature) is empty
+      const alg = this.useEmulator ? 'none' : ALGORITHM_RS256;
+
       const header: JWTHeader = {
-        alg: ALGORITHM_RS256,
+        alg,
         typ: 'JWT',
       };
       const iat = Math.floor(Date.now() / 1000);
@@ -318,7 +325,15 @@ export class FirebaseTokenGenerator {
         body.claims = claims;
       }
       const token = `${this.encodeSegment(header)}.${this.encodeSegment(body)}`;
-      const signPromise = this.signer.sign(Buffer.from(token));
+
+      // When running inside the Auth emulator we generate unsigned custom tokens
+      let signPromise;
+      if (this.useEmulator) {
+        signPromise = Promise.resolve(Buffer.from(""));
+      } else {
+        signPromise = this.signer.sign(Buffer.from(token));
+      }
+
       return Promise.all([token, signPromise]);
     }).then(([token, signature]) => {
       return `${token}.${this.encodeSegment(signature)}`;

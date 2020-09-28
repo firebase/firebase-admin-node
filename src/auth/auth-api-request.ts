@@ -85,13 +85,25 @@ const MAX_SESSION_COOKIE_DURATION_SECS = 14 * 24 * 60 * 60;
 /** Maximum allowed number of provider configurations to batch download at one time. */
 const MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE = 100;
 
+/** Environment variable to set the auth emulator's host */
+const EMULATOR_HOST_ENV = 'FIREBASE_AUTH_EMULATOR_HOST';
+
 /** The Firebase Auth backend base URL format. */
 const FIREBASE_AUTH_BASE_URL_FORMAT =
     'https://identitytoolkit.googleapis.com/{version}/projects/{projectId}{api}';
 
+/** Firebase Auth base URlLformat when using the auth emultor. */
+const FIREBASE_AUTH_EMULATOR_BASE_URL_FORMAT =
+  'http://{host}/identitytoolkit.googleapis.com/{version}/projects/{projectId}{api}';
+
 /** The Firebase Auth backend multi-tenancy base URL format. */
 const FIREBASE_AUTH_TENANT_URL_FORMAT = FIREBASE_AUTH_BASE_URL_FORMAT.replace(
   'projects/{projectId}', 'projects/{projectId}/tenants/{tenantId}');
+
+/** Firebase Auth base URL format when using the auth emultor with multi-tenancy. */
+const FIREBASE_AUTH_EMULATOR_TENANT_URL_FORMAT = FIREBASE_AUTH_EMULATOR_BASE_URL_FORMAT.replace(
+  'projects/{projectId}', 'projects/{projectId}/tenants/{tenantId}');
+
 
 /** Maximum allowed number of tenants to download at one time. */
 const MAX_LIST_TENANT_PAGE_SIZE = 1000;
@@ -121,7 +133,13 @@ class AuthResourceUrlBuilder {
    * @constructor
    */
   constructor(protected app: FirebaseApp, protected version: string = 'v1') {
-    this.urlFormat = FIREBASE_AUTH_BASE_URL_FORMAT;
+    if (process && process.env[EMULATOR_HOST_ENV]) {
+      this.urlFormat = utils.formatString(FIREBASE_AUTH_EMULATOR_BASE_URL_FORMAT, { 
+        host: process.env[EMULATOR_HOST_ENV]
+      });
+    } else {
+      this.urlFormat = FIREBASE_AUTH_BASE_URL_FORMAT;
+    }
   }
 
   /**
@@ -181,7 +199,13 @@ class TenantAwareAuthResourceUrlBuilder extends AuthResourceUrlBuilder {
    */
   constructor(protected app: FirebaseApp, protected version: string, protected tenantId: string) {
     super(app, version);
-    this.urlFormat = FIREBASE_AUTH_TENANT_URL_FORMAT;
+    if (process && process.env[EMULATOR_HOST_ENV]) {
+      this.urlFormat = utils.formatString(FIREBASE_AUTH_EMULATOR_TENANT_URL_FORMAT, { 
+        host: process.env[EMULATOR_HOST_ENV]
+      });
+    } else {
+      this.urlFormat = FIREBASE_AUTH_TENANT_URL_FORMAT;
+    }
   }
 
   /**

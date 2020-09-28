@@ -142,7 +142,8 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
       this.tokenGenerator = tokenGenerator;
     } else {
       const cryptoSigner = cryptoSignerFromApp(app);
-      this.tokenGenerator = new FirebaseTokenGenerator(cryptoSigner);
+      const useEmulator = !!process.env.FIREBASE_AUTH_EMULATOR_HOST;
+      this.tokenGenerator = new FirebaseTokenGenerator(cryptoSigner, undefined, useEmulator);
     }
 
     this.sessionCookieVerifier = createSessionCookieVerifier(app);
@@ -753,7 +754,8 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
    */
   constructor(app: FirebaseApp, tenantId: string) {
     const cryptoSigner = cryptoSignerFromApp(app);
-    const tokenGenerator = new FirebaseTokenGenerator(cryptoSigner, tenantId);
+    const useEmulator = !!process.env.FIREBASE_AUTH_EMULATOR_HOST;
+    const tokenGenerator = new FirebaseTokenGenerator(cryptoSigner, tenantId, useEmulator);
     super(app, new TenantAwareAuthRequestHandler(app, tenantId), tokenGenerator);
     utils.addReadonlyGetter(this, 'tenantId', tenantId);
   }
