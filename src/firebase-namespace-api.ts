@@ -16,6 +16,7 @@
 
 import { Agent } from 'http';
 import { credential } from './credential/index';
+import { instanceId } from './instance-id/index';
 import { messaging } from './messaging/index';
 import { remoteConfig } from './remote-config/index';
 
@@ -214,6 +215,7 @@ export namespace app {
      */
     options: AppOptions;
 
+    instanceId(): instanceId.InstanceId;
     messaging(): messaging.Messaging;
     remoteConfig(): remoteConfig.RemoteConfig;
 
