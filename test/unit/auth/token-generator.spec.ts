@@ -316,9 +316,11 @@ describe('FirebaseTokenGenerator', () => {
       const claims = { foo: 'bar' };
       const token = await tokenGenerator.createCustomToken(uid, claims);
       
-      const decoded = jwt.verify(token, 'invalid', {
-        algorithms: ['none']
+      expect(jwt.verify(token, null, { algorithms: ['none' ] })).to.throw().that.satisfies((err: Error) => {
+        return err.toString().includes('jwt signature is required');
       });
+
+      const decoded = jwt.decode(token);
 
       const expected: {[key: string]: any} = {
         uid,
