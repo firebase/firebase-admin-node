@@ -327,12 +327,9 @@ export class FirebaseTokenGenerator {
       const token = `${this.encodeSegment(header)}.${this.encodeSegment(body)}`;
 
       // When running inside the Auth emulator we generate unsigned custom tokens
-      let signPromise;
-      if (this.useEmulator) {
-        signPromise = Promise.resolve(Buffer.from(""));
-      } else {
-        signPromise = this.signer.sign(Buffer.from(token));
-      }
+      const signPromise = this.useEmulator
+        ? Promise.resolve(Buffer.from(""))
+        : this.signer.sign(Buffer.from(token));
 
       return Promise.all([token, signPromise]);
     }).then(([token, signature]) => {
