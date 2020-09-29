@@ -37,15 +37,15 @@ import { app } from '../firebase-namespace-api';
  * // Get the Instance ID service for a given app
  * var otherInstanceId = admin.instanceId(otherApp);
  *```
-  *
-  * @param app Optional app whose `InstanceId` service to
-  *   return. If not provided, the default `InstanceId` service will be
-  *   returned.
-  *
-  * @return The default `InstanceId` service if
-  *   no app is provided or the `InstanceId` service associated with the
-  *   provided app.
-  */
+ *
+ * @param app Optional app whose `InstanceId` service to
+ *   return. If not provided, the default `InstanceId` service will be
+ *   returned.
+ *
+ * @return The default `InstanceId` service if
+ *   no app is provided or the `InstanceId` service associated with the
+ *   provided app.
+ */
 export declare function instanceId(app?: app.App): instanceId.InstanceId;
 
 /* eslint-disable @typescript-eslint/no-namespace */
