@@ -21,47 +21,13 @@ import {
   SecurityRulesApiClient, RulesetResponse, RulesetContent, ListRulesetsResponse,
 } from './security-rules-api-client-internal';
 import { FirebaseSecurityRulesError } from './security-rules-internal';
+import { securityRules } from './index';
 
-/**
- * A source file containing some Firebase security rules. The content includes raw
- * source code including text formatting, indentation and comments. Use the
- * [`securityRules.createRulesFileFromSource()`](admin.securityRules.SecurityRules#createRulesFileFromSource)
- * method to create new instances of this type.
- */
-export interface RulesFile {
-  readonly name: string;
-  readonly content: string;
-}
-
-/**
- * Required metadata associated with a ruleset.
- */
-export interface RulesetMetadata {
-  /**
-   * Name of the `Ruleset` as a short string. This can be directly passed into APIs
-   * like [`securityRules.getRuleset()`](admin.securityRules.SecurityRules#getRuleset)
-   * and [`securityRules.deleteRuleset()`](admin.securityRules.SecurityRules#deleteRuleset).
-   */
-  readonly name: string;
-  /**
-   * Creation time of the `Ruleset` as a UTC timestamp string.
-   */
-  readonly createTime: string;
-}
-
-/**
- * A page of ruleset metadata.
- */
-export interface RulesetMetadataList {
-  /**
-   * A batch of ruleset metadata.
-   */
-  readonly rulesets: RulesetMetadata[];
-  /**
-   * The next page token if available. This is needed to retrieve the next batch.
-   */
-  readonly nextPageToken?: string;
-}
+import RulesFile = securityRules.RulesFile;
+import RulesetMetadata = securityRules.RulesetMetadata;
+import RulesetMetadataList = securityRules.RulesetMetadataList;
+import RulesetInterface = securityRules.Ruleset;
+import SecurityRulesInterface = securityRules.SecurityRules;
 
 class RulesetMetadataListImpl implements RulesetMetadataList {
 
@@ -91,7 +57,7 @@ class RulesetMetadataListImpl implements RulesetMetadataList {
 /**
  * Represents a set of Firebase security rules.
  */
-export class Ruleset implements RulesetMetadata {
+export class Ruleset implements RulesetInterface {
 
   public readonly name: string;
   public readonly createTime: string;
@@ -119,7 +85,7 @@ export class Ruleset implements RulesetMetadata {
  * Do not call this constructor directly. Instead, use
  * [`admin.securityRules()`](admin.securityRules#securityRules).
  */
-export class SecurityRules implements FirebaseServiceInterface {
+export class SecurityRules implements FirebaseServiceInterface, SecurityRulesInterface {
 
   private static readonly CLOUD_FIRESTORE = 'cloud.firestore';
   private static readonly FIREBASE_STORAGE = 'firebase.storage';

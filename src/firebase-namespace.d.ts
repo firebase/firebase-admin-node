@@ -19,3 +19,4 @@ export * from './firebase-namespace-api';
 export * from './instance-id/index';
 export * from './messaging/index';
 export * from './remote-config/index';
+export * from './security-rules/index';
