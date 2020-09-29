@@ -85,9 +85,6 @@ const MAX_SESSION_COOKIE_DURATION_SECS = 14 * 24 * 60 * 60;
 /** Maximum allowed number of provider configurations to batch download at one time. */
 const MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE = 100;
 
-/** Environment variable to set the auth emulator's host */
-const EMULATOR_HOST_ENV = 'FIREBASE_AUTH_EMULATOR_HOST';
-
 /** The Firebase Auth backend base URL format. */
 const FIREBASE_AUTH_BASE_URL_FORMAT =
     'https://identitytoolkit.googleapis.com/{version}/projects/{projectId}{api}';
@@ -133,9 +130,10 @@ class AuthResourceUrlBuilder {
    * @constructor
    */
   constructor(protected app: FirebaseApp, protected version: string = 'v1') {
-    if (process && process.env[EMULATOR_HOST_ENV]) {
+    const emulatorHost = process.env.FIREBASE_AUTH_EMULATOR_HOST;
+    if (emulatorHost) {
       this.urlFormat = utils.formatString(FIREBASE_AUTH_EMULATOR_BASE_URL_FORMAT, { 
-        host: process.env[EMULATOR_HOST_ENV]
+        host: emulatorHost
       });
     } else {
       this.urlFormat = FIREBASE_AUTH_BASE_URL_FORMAT;
@@ -199,9 +197,10 @@ class TenantAwareAuthResourceUrlBuilder extends AuthResourceUrlBuilder {
    */
   constructor(protected app: FirebaseApp, protected version: string, protected tenantId: string) {
     super(app, version);
-    if (process && process.env[EMULATOR_HOST_ENV]) {
+    const emulatorHost = process.env.FIREBASE_AUTH_EMULATOR_HOST
+    if (emulatorHost) {
       this.urlFormat = utils.formatString(FIREBASE_AUTH_EMULATOR_TENANT_URL_FORMAT, { 
-        host: process.env[EMULATOR_HOST_ENV]
+        host: emulatorHost
       });
     } else {
       this.urlFormat = FIREBASE_AUTH_TENANT_URL_FORMAT;
