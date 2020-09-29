@@ -118,10 +118,86 @@ describe('MachineLearning', () => {
     tags: ['tag_3', 'tag_4'],
     state: { published: true },
     tfliteModel: {
+      automlModel: 'projects/12456/locations/us-central1/model/ICN123456',
+      sizeBytes: 22200222,
+    },
+  };
+
+  const MODEL_RESPONSE4: any = {
+    name: 'projects/test-project/models/3456789',
+    createTime: '2020-02-07T23:45:23.288047Z',
+    updateTime: '2020-02-08T23:45:23.288047Z',
+    etag: 'etag345',
+    modelHash: 'modelHash345',
+    displayName: 'model_3',
+    tags: ['tag_3', 'tag_4'],
+    state: { published: true },
+    tfliteModel: {
       managedUpload: true,
       sizeBytes: 22200222,
     },
   };
+
+  const MODEL_RESPONSE5: any = {
+    name: 'projects/test-project/models/3456789',
+    createTime: '2020-02-07T23:45:23.288047Z',
+    updateTime: '2020-02-08T23:45:23.288047Z',
+    etag: 'etag345',
+    modelHash: 'modelHash345',
+    displayName: 'model_3',
+    tags: ['tag_3', 'tag_4'],
+    state: { published: true },
+    tfliteModel: {
+      foo: true,
+      sizeBytes: 22200222,
+    },
+  };
+
+  const MODEL_RESPONSE6: any = {
+    name: 'projects/test-project/models/3456789',
+    createTime: '2020-02-07T23:45:23.288047Z',
+    updateTime: '2020-02-08T23:45:23.288047Z',
+    etag: 'etag345',
+    modelHash: 'modelHash345',
+    displayName: 'model_3',
+    tags: ['tag_3', 'tag_4'],
+    state: { published: true },
+    coremlModel: {
+      gcsCoremlUri: 'gs://test-project-bucket/Firebase/ML/Models/model6.mlmodel',
+      sizeBytes: 33300333,
+    },
+  };
+
+  const MODEL_RESPONSE7: any = {
+    name: 'projects/test-project/models/3456789',
+    createTime: '2020-02-07T23:45:23.288047Z',
+    updateTime: '2020-02-08T23:45:23.288047Z',
+    etag: 'etag345',
+    modelHash: 'modelHash345',
+    displayName: 'model_3',
+    tags: ['tag_3', 'tag_4'],
+    state: { published: true },
+    coremlModel: {
+      managedUpload: true,
+      sizeBytes: 33300333,
+    },
+  };
+
+  const MODEL_RESPONSE8: any = {
+    name: 'projects/test-project/models/3456789',
+    createTime: '2020-02-07T23:45:23.288047Z',
+    updateTime: '2020-02-08T23:45:23.288047Z',
+    etag: 'etag345',
+    modelHash: 'modelHash345',
+    displayName: 'model_3',
+    tags: ['tag_3', 'tag_4'],
+    state: { published: true },
+    coremlModel: {
+      foo: true,
+      sizeBytes: 33300333,
+    },
+  }
+
 
   const STATUS_ERROR_RESPONSE: {
     code: number;
@@ -309,7 +385,7 @@ describe('MachineLearning', () => {
   });
 
   describe('Model', () => {
-    it('should successfully construct a model', () => {
+    it('should successfully construct a gcs tflite model', () => {
       const model = new Model(MODEL_RESPONSE, mockClient);
       expect(model.modelId).to.equal(MODEL_ID);
       expect(model.displayName).to.equal('model_1');
@@ -325,9 +401,10 @@ describe('MachineLearning', () => {
       expect(tflite.gcsTfliteUri).to.be.equal(
         'gs://test-project-bucket/Firebase/ML/Models/model1.tflite');
       expect(tflite.sizeBytes).to.be.equal(16900988);
+      expect(model.coremlModel).to.be.undefined;
     });
 
-    it('should accept unknown fields gracefully', () => {
+    it('should successfully construct an automl tflite model', () => {
       const model = new Model(MODEL_RESPONSE3, mockClient);
       expect(model.modelId).to.equal('3456789');
       expect(model.displayName).to.equal('model_3');
@@ -338,7 +415,93 @@ describe('MachineLearning', () => {
       expect(model.published).to.be.true;
       expect(model.etag).to.equal('etag345');
       expect(model.modelHash).to.equal('modelHash345');
+      const tflite = model.tfliteModel!;
+      expect(tflite.automlModel).to.be.equal(
+        'projects/12456/locations/us-central1/model/ICN123456');
+      expect(tflite.sizeBytes).to.be.equal(22200222);
+      expect(model.coremlModel).to.be.undefined;
+    });
+
+    it('should successfully construct a managedUpload tflite model', () => {
+      const model = new Model(MODEL_RESPONSE4, mockClient);
+      expect(model.modelId).to.equal('3456789');
+      expect(model.displayName).to.equal('model_3');
+      expect(model.tags).to.deep.equal(['tag_3', 'tag_4']);
+      expect(model.createTime).to.equal(CREATE_TIME_UTC);
+      expect(model.updateTime).to.equal(UPDATE_TIME_UTC);
+      expect(model.validationError).to.be.undefined;
+      expect(model.published).to.be.true;
+      expect(model.etag).to.equal('etag345');
+      expect(model.modelHash).to.equal('modelHash345');
+      const tflite = model.tfliteModel!;
+      expect(tflite.managedUpload).to.be.true;
+      expect(tflite.sizeBytes).to.be.equal(22200222);
+      expect(model.coremlModel).to.be.undefined;
+    });
+
+    it('should accept unknown tflite fields gracefully', () => {
+      const model = new Model(MODEL_RESPONSE5, mockClient);
+      expect(model.modelId).to.equal('3456789');
+      expect(model.displayName).to.equal('model_3');
+      expect(model.tags).to.deep.equal(['tag_3', 'tag_4']);
+      expect(model.createTime).to.equal(CREATE_TIME_UTC);
+      expect(model.updateTime).to.equal(UPDATE_TIME_UTC);
+      expect(model.validationError).to.be.undefined;
+      expect(model.published).to.be.true;
+      expect(model.etag).to.equal('etag345');
+      expect(model.modelHash).to.equal('modelHash345');
       expect(model.tfliteModel).to.be.undefined;
+      expect(model.coremlModel).to.be.undefined;
+    });
+
+    it('should successfully construct a gcs coreml model', () => {
+      const model = new Model(MODEL_RESPONSE6, mockClient);
+      expect(model.modelId).to.equal('3456789');
+      expect(model.displayName).to.equal('model_3');
+      expect(model.tags).to.deep.equal(['tag_3', 'tag_4']);
+      expect(model.createTime).to.equal(CREATE_TIME_UTC);
+      expect(model.updateTime).to.equal(UPDATE_TIME_UTC);
+      expect(model.validationError).to.be.undefined;
+      expect(model.published).to.be.true;
+      expect(model.etag).to.equal('etag345');
+      expect(model.modelHash).to.equal('modelHash345');
+      const coreml = model.coremlModel!;
+      expect(coreml.gcsCoremlUri).to.be.equal(
+        'gs://test-project-bucket/Firebase/ML/Models/model6.mlmodel');
+      expect(coreml.sizeBytes).to.be.equal(33300333);
+      expect(model.tfliteModel).to.be.undefined;
+    });
+
+    it('should successfully construct a managedUpload coreml model', () => {
+      const model = new Model(MODEL_RESPONSE7, mockClient);
+      expect(model.modelId).to.equal('3456789');
+      expect(model.displayName).to.equal('model_3');
+      expect(model.tags).to.deep.equal(['tag_3', 'tag_4']);
+      expect(model.createTime).to.equal(CREATE_TIME_UTC);
+      expect(model.updateTime).to.equal(UPDATE_TIME_UTC);
+      expect(model.validationError).to.be.undefined;
+      expect(model.published).to.be.true;
+      expect(model.etag).to.equal('etag345');
+      expect(model.modelHash).to.equal('modelHash345');
+      const coreml = model.coremlModel!;
+      expect(coreml.managedUpload).to.be.true;
+      expect(coreml.sizeBytes).to.be.equal(33300333);
+      expect(model.tfliteModel).to.be.undefined;
+    });
+
+    it('should accept unknown coreml fields gracefully', () => {
+      const model = new Model(MODEL_RESPONSE8, mockClient);
+      expect(model.modelId).to.equal('3456789');
+      expect(model.displayName).to.equal('model_3');
+      expect(model.tags).to.deep.equal(['tag_3', 'tag_4']);
+      expect(model.createTime).to.equal(CREATE_TIME_UTC);
+      expect(model.updateTime).to.equal(UPDATE_TIME_UTC);
+      expect(model.validationError).to.be.undefined;
+      expect(model.published).to.be.true;
+      expect(model.etag).to.equal('etag345');
+      expect(model.modelHash).to.equal('modelHash345');
+      expect(model.tfliteModel).to.be.undefined;
+      expect(model.coremlModel).to.be.undefined;
     });
 
     it('should successfully serialize a model to JSON', () => {
