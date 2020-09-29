@@ -138,16 +138,17 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    * @constructor
    */
   constructor(app: FirebaseApp, protected readonly authRequestHandler: T, tokenGenerator?: FirebaseTokenGenerator) {
+    const useEmulator = !!process.env.FIREBASE_AUTH_EMULATOR_HOST;
+
     if (tokenGenerator) {
       this.tokenGenerator = tokenGenerator;
     } else {
       const cryptoSigner = cryptoSignerFromApp(app);
-      const useEmulator = !!process.env.FIREBASE_AUTH_EMULATOR_HOST;
       this.tokenGenerator = new FirebaseTokenGenerator(cryptoSigner, undefined, useEmulator);
     }
 
-    this.sessionCookieVerifier = createSessionCookieVerifier(app);
-    this.idTokenVerifier = createIdTokenVerifier(app);
+    this.sessionCookieVerifier = createSessionCookieVerifier(app, useEmulator);
+    this.idTokenVerifier = createIdTokenVerifier(app, useEmulator);
   }
 
   /**

@@ -315,16 +315,17 @@ describe('FirebaseTokenGenerator', () => {
       const uid = 'uid123';
       const claims = { foo: 'bar' };
       const token = await tokenGenerator.createCustomToken(uid, claims);
-      
-      expect(() => { 
-        jwt.verify(token, 'invalidkey', { algorithms: ['none' ] }) 
-      }).to.throw().that.satisfies((err: Error) => {
-        return err.toString().includes('jwt signature is required');
-      });
 
-      const decoded = jwt.decode(token) as { [key: string]: any };
-      expect(decoded['uid']).to.equal(uid);
-      expect(decoded['claims']).to.deep.equal(claims);
+      // Check that verify doesn't throw
+      // Note: the types for jsonwebtoken are wrong so we have to disguise the 'null'
+      jwt.verify(token, null as any, { algorithms: ['none'] });
+
+      // Decode and check all three segments
+      const { header, payload, signature } = jwt.decode(token, { complete: true }) as { [key: string]: any };
+      expect(header).to.deep.equal({ alg: 'none', typ: 'JWT' });
+      expect(payload['uid']).to.equal(uid);
+      expect(payload['claims']).to.deep.equal(claims);
+      expect(signature).to.equal('');
     });
 
   });

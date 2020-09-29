@@ -104,6 +104,17 @@ function mockFailedFetchPublicKeys(): nock.Scope {
     .replyWithError('message');
 }
 
+function createTokenVerifier(app: FirebaseApp, useEmulator: boolean): verifier.FirebaseTokenVerifier {
+  return new verifier.FirebaseTokenVerifier(
+    'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com',
+    'RS256',
+    'https://securetoken.google.com/',
+    verifier.ID_TOKEN_INFO,
+    app,
+    useEmulator
+  );
+}
+
 
 describe('FirebaseTokenVerifier', () => {
   let app: FirebaseApp;
@@ -116,13 +127,7 @@ describe('FirebaseTokenVerifier', () => {
     app = mocks.app();
     const cert = new ServiceAccountCredential(mocks.certificateObject);
     tokenGenerator = new FirebaseTokenGenerator(new ServiceAccountSigner(cert));
-    tokenVerifier = new verifier.FirebaseTokenVerifier(
-      'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com',
-      'RS256',
-      'https://securetoken.google.com/',
-      verifier.ID_TOKEN_INFO,
-      app,
-    );
+    tokenVerifier = createTokenVerifier(app, false);
     httpsSpy = sinon.spy(https, 'request');
   });
 
@@ -533,6 +538,28 @@ describe('FirebaseTokenVerifier', () => {
           sub: mocks.uid,
           uid: mocks.uid,
         });
+    });
+
+    it('should decode an unsigned token when using the emulator', async () => {
+      clock = sinon.useFakeTimers(1000);
+
+      const emulatorVerifier = createTokenVerifier(app, true);
+      const mockIdToken = mocks.generateIdToken({
+        algorithm: 'none',
+        header: {}
+      });
+
+      const decoded = await emulatorVerifier.verifyJWT(mockIdToken);
+      expect(decoded).to.deep.equal({
+        one: 'uno',
+        two: 'dos',
+        iat: 1,
+        exp: ONE_HOUR_IN_SECONDS + 1,
+        aud: mocks.projectId,
+        iss: 'https://securetoken.google.com/' + mocks.projectId,
+        sub: mocks.uid,
+        uid: mocks.uid,
+      });
     });
 
     it('should use the given HTTP Agent', () => {

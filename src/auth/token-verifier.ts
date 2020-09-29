@@ -75,9 +75,15 @@ export class FirebaseTokenVerifier {
   private publicKeysExpireAt: number;
   private readonly shortNameArticle: string;
 
-  constructor(private clientCertUrl: string, private algorithm: string,
+  constructor(private clientCertUrl: string, private algorithm: jwt.Algorithm,
               private issuer: string, private tokenInfo: FirebaseTokenInfo,
-              private readonly app: FirebaseApp) {
+              private readonly app: FirebaseApp, 
+              private readonly useEmulator: boolean = false) {
+
+    if (this.useEmulator) {
+      this.algorithm = 'none';
+    }
+                
     if (!validator.isURL(clientCertUrl)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
@@ -142,6 +148,10 @@ export class FirebaseTokenVerifier {
         AuthClientErrorCode.INVALID_ARGUMENT,
         `First argument to ${this.tokenInfo.verifyApiName} must be a ${this.tokenInfo.jwtName} string.`,
       );
+    }
+
+    if (this.useEmulator) {
+      return this.verifyJwtSignatureWithKey(jwtToken, null);
     }
 
     return util.findProjectId(this.app)
@@ -237,13 +247,15 @@ export class FirebaseTokenVerifier {
    * @return {Promise<DecodedIdToken>} A promise that resolves with the decoded JWT claims on successful
    *     verification.
    */
-  private verifyJwtSignatureWithKey(jwtToken: string, publicKey: string): Promise<DecodedIdToken> {
+  private verifyJwtSignatureWithKey(jwtToken: string, publicKey: string | null): Promise<DecodedIdToken> {
     const verifyJwtTokenDocsMessage = ` See ${this.tokenInfo.url} ` +
       `for details on how to retrieve ${this.shortNameArticle} ${this.tokenInfo.shortName}.`;
     return new Promise((resolve, reject) => {
-      jwt.verify(jwtToken, publicKey, {
+      // The types are wrong here so it won't accept 'null' for publicKey, but testing (including our unit tests)
+      // confirms that this works and is the required value when validating a token with alg: 'none'
+      jwt.verify(jwtToken, publicKey as any, {
         algorithms: [this.algorithm],
-      }, (error: jwt.VerifyErrors, decodedToken: string | object) => {
+      }, (error: jwt.VerifyErrors | null, decodedToken: object | undefined) => {
         if (error) {
           if (error.name === 'TokenExpiredError') {
             const errorMessage = `${this.tokenInfo.jwtName} has expired. Get a fresh ${this.tokenInfo.shortName}` +
@@ -256,19 +268,9 @@ export class FirebaseTokenVerifier {
           }
           return reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, error.message));
         } else {
-          // TODO(rsgowman): I think the typing on jwt.verify is wrong. It claims that this can be either a string or an
-          // object, but the code always seems to call it as an object. Investigate and upstream typing changes if this
-          // is actually correct.
-          if (typeof decodedToken === 'string') {
-            return reject(new FirebaseAuthError(
-              AuthClientErrorCode.INTERNAL_ERROR,
-              "Unexpected decodedToken. Expected an object but got a string: '" + decodedToken + "'",
-            ));
-          } else {
-            const decodedIdToken = (decodedToken as DecodedIdToken);
-            decodedIdToken.uid = decodedIdToken.sub;
-            resolve(decodedIdToken);
-          }
+          const decodedIdToken = (decodedToken as DecodedIdToken);
+          decodedIdToken.uid = decodedIdToken.sub;
+          resolve(decodedIdToken);
         }
       });
     });
@@ -337,13 +339,14 @@ export class FirebaseTokenVerifier {
  * @param {FirebaseApp} app Firebase app instance.
  * @return {FirebaseTokenVerifier}
  */
-export function createIdTokenVerifier(app: FirebaseApp): FirebaseTokenVerifier {
+export function createIdTokenVerifier(app: FirebaseApp, useEmulator = false): FirebaseTokenVerifier {
   return new FirebaseTokenVerifier(
     CLIENT_CERT_URL,
     ALGORITHM_RS256,
     'https://securetoken.google.com/',
     ID_TOKEN_INFO,
     app,
+    useEmulator
   );
 }
 
@@ -353,12 +356,13 @@ export function createIdTokenVerifier(app: FirebaseApp): FirebaseTokenVerifier {
  * @param {FirebaseApp} app Firebase app instance.
  * @return {FirebaseTokenVerifier}
  */
-export function createSessionCookieVerifier(app: FirebaseApp): FirebaseTokenVerifier {
+export function createSessionCookieVerifier(app: FirebaseApp, useEmulator = false): FirebaseTokenVerifier {
   return new FirebaseTokenVerifier(
     SESSION_COOKIE_CERT_URL,
     ALGORITHM_RS256,
     'https://session.firebase.google.com/',
     SESSION_COOKIE_INFO,
     app,
+    useEmulator
   );
 }
