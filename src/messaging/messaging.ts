@@ -43,7 +43,7 @@ const FCM_TOPIC_MANAGEMENT_ADD_PATH = '/iid/v1:batchAdd';
 const FCM_TOPIC_MANAGEMENT_REMOVE_PATH = '/iid/v1:batchRemove';
 
 // Maximum messages that can be included in a batch request.
-const FCM_MAX_BATCH_SIZE = 500;
+export const FCM_MAX_BATCH_SIZE = 500;
 
 // Key renames for the messaging notification payload object.
 const CAMELCASED_NOTIFICATION_PAYLOAD_KEYS_MAP = {
