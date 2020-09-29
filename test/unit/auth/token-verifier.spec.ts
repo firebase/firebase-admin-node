@@ -562,6 +562,23 @@ describe('FirebaseTokenVerifier', () => {
       });
     });
 
+    it('should not decode an unsigned token when not using the emulator', async () => {
+      clock = sinon.useFakeTimers(1000);
+
+      const idTokenNoAlg = mocks.generateIdToken({
+        algorithm: 'none',
+      });
+      await tokenVerifier.verifyJWT(idTokenNoAlg)
+        .should.eventually.be.rejectedWith('Firebase ID token has incorrect algorithm.');
+
+      const idTokenNoHeader = mocks.generateIdToken({
+        algorithm: 'none',
+        header: {}
+      });
+      await tokenVerifier.verifyJWT(idTokenNoHeader)
+        .should.eventually.be.rejectedWith('Firebase ID token has no "kid" claim.');
+    });
+
     it('should use the given HTTP Agent', () => {
       const agent = new https.Agent();
       const appWithAgent = mocks.appWithOptions({
