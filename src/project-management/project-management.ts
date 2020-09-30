@@ -22,7 +22,11 @@ import * as validator from '../utils/validator';
 import { AndroidApp, ShaCertificate } from './android-app';
 import { IosApp } from './ios-app';
 import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request-internal';
-import { AppMetadata, AppPlatform } from './app-metadata';
+import { projectManagement } from './index';
+
+import AppMetadata = projectManagement.AppMetadata;
+import AppPlatform = projectManagement.AppPlatform;
+import ProjectManagementInterface = projectManagement.ProjectManagement;
 
 /**
  * Internals of a Project Management instance.
@@ -45,7 +49,7 @@ class ProjectManagementInternals implements FirebaseServiceInternalsInterface {
  * Do not call this constructor directly. Instead, use
  * [`admin.projectManagement()`](admin.projectManagement#projectManagement).
  */
-export class ProjectManagement implements FirebaseServiceInterface {
+export class ProjectManagement implements FirebaseServiceInterface, ProjectManagementInterface {
   public readonly INTERNAL: ProjectManagementInternals = new ProjectManagementInternals();
 
   private readonly requestHandler: ProjectManagementRequestHandler;
