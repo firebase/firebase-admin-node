@@ -36,7 +36,7 @@ describe('MachineLearningApiClient', () => {
   const BASE_URL = 'https://firebaseml.googleapis.com/v1beta2';
 
   const MODEL_ID = '1234567';
-  const MODEL_RESPONSE = {
+  const TFLITE_GCS_MODEL_RESPONSE = {
     name: 'projects/test-project/models/1234567',
     createTime: '2020-02-07T23:45:23.288047Z',
     updateTime: '2020-02-08T23:45:23.288047Z',
@@ -50,7 +50,7 @@ describe('MachineLearningApiClient', () => {
       sizeBytes: 16900988,
     },
   };
-  const MODEL_RESPONSE2 = {
+  const TFLITE_GCS_MODEL_RESPONSE2 = {
     name: 'projects/test-project/models/2345678',
     createTime: '2020-02-07T23:45:22.288047Z',
     updateTime: '2020-02-08T23:45:22.288047Z',
@@ -64,7 +64,7 @@ describe('MachineLearningApiClient', () => {
       sizeBytes: 2220022,
     },
   };
-  const MODEL_RESPONSE_AUTOML = {
+  const TFLITE_AUTOML_RESPONSE = {
     name: 'projects/test-project/models/3456789',
     createTime: '2020-07-15T18:12:25.123987Z',
     updateTime: '2020-07-15T19:15:32.965435Z',
@@ -76,6 +76,48 @@ describe('MachineLearningApiClient', () => {
     tfliteModel: {
       automlModel: 'projects/65432/models/ICN123',
       sizeBytes: 3330033,
+    },
+  };
+  const TFLITE_MANAGED_RESPONSE = {
+    name: 'projects/test-project/models/3456789',
+    createTime: '2020-07-15T18:12:25.123987Z',
+    updateTime: '2020-07-15T19:15:32.965435Z',
+    etag: 'etag345',
+    modelHash: 'modelHash345',
+    displayName: 'model_automl',
+    tags: ['tag_automl'],
+    state: { published: true },
+    tfliteModel: {
+      managedUpload: true,
+      sizeBytes: 3330033,
+    },
+  };
+  const COREML_GCS_RESPONSE = {
+    name: 'projects/test-project/models/2345678',
+    createTime: '2020-02-07T23:45:22.288047Z',
+    updateTime: '2020-02-08T23:45:22.288047Z',
+    etag: 'etag234',
+    modelHash: 'modelHash234',
+    displayName: 'model_2',
+    tags: ['tag_2', 'tag_3'],
+    state: { published: true },
+    coremlModel: {
+      gcsCoremlUri: 'gs://test-project-bucket/Firebase/ML/Models/model.mlmodel',
+      sizeBytes: 33300333,
+    },
+  };
+  const COREML_MANAGED_RESPONSE = {
+    name: 'projects/test-project/models/2345678',
+    createTime: '2020-02-07T23:45:22.288047Z',
+    updateTime: '2020-02-08T23:45:22.288047Z',
+    etag: 'etag234',
+    modelHash: 'modelHash234',
+    displayName: 'model_2',
+    tags: ['tag_2', 'tag_3'],
+    state: { published: true },
+    coremlModel: {
+      managedUpload: true,
+      sizeBytes: 33300333,
     },
   };
 
@@ -90,7 +132,7 @@ describe('MachineLearningApiClient', () => {
   };
   const OPERATION_SUCCESS_RESPONSE = {
     done: true,
-    response: MODEL_RESPONSE,
+    response: TFLITE_GCS_MODEL_RESPONSE,
   };
   const OPERATION_ERROR_RESPONSE = {
     done: true,
@@ -107,7 +149,11 @@ describe('MachineLearningApiClient', () => {
   };
   const OPERATION_AUTOML_RESPONSE = {
     done: true,
-    response: MODEL_RESPONSE_AUTOML,
+    response: TFLITE_AUTOML_RESPONSE,
+  };
+  const OPERATION_COREML_GCS_RESPONSE = {
+    done: true,
+    response: COREML_GCS_RESPONSE,
   };
   const LOCKED_MODEL_RESPONSE = {
     name: 'projects/test-project/models/1234567',
@@ -173,7 +219,7 @@ describe('MachineLearningApiClient', () => {
 
   describe('createModel', () => {
     const NAME_ONLY_OPTIONS: ModelOptions = { displayName: 'name1' };
-    const GCS_OPTIONS: ModelOptions = {
+    const TFLITE_GCS_OPTIONS: ModelOptions = {
       displayName: 'name2',
       tfliteModel: {
         gcsTfliteUri: 'gcsUri1',
@@ -184,6 +230,12 @@ describe('MachineLearningApiClient', () => {
       tfliteModel: {
         automlModel: 'automlModel',
       },
+    };
+    const COREML_GCS_OPTIONS: ModelOptions = {
+      displayName: 'coreml_gcs',
+      coremlModel: {
+        gcsCoremlUri: 'gcsUri2',
+      }
     };
 
     const invalidContent: any[] = [null, undefined, {}, { tags: [] }];
@@ -219,7 +271,7 @@ describe('MachineLearningApiClient', () => {
         .then((resp) => {
           expect(resp.done).to.be.true;
           expect(resp.name).to.be.undefined;
-          expect(resp.response).to.deep.equal(MODEL_RESPONSE);
+          expect(resp.response).to.deep.equal(TFLITE_GCS_MODEL_RESPONSE);
         });
     });
 
@@ -228,11 +280,11 @@ describe('MachineLearningApiClient', () => {
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(OPERATION_SUCCESS_RESPONSE));
       stubs.push(stub);
-      return apiClient.createModel(GCS_OPTIONS)
+      return apiClient.createModel(TFLITE_GCS_OPTIONS)
         .then((resp) => {
           expect(resp.done).to.be.true;
           expect(resp.name).to.be.undefined;
-          expect(resp.response).to.deep.equal(MODEL_RESPONSE);
+          expect(resp.response).to.deep.equal(TFLITE_GCS_MODEL_RESPONSE);
         });
     });
 
@@ -245,7 +297,20 @@ describe('MachineLearningApiClient', () => {
         .then((resp) => {
           expect(resp.done).to.be.true;
           expect(resp.name).to.be.undefined;
-          expect(resp.response).to.deep.equal(MODEL_RESPONSE_AUTOML);
+          expect(resp.response).to.deep.equal(TFLITE_AUTOML_RESPONSE);
+        });
+    });
+
+    it('should accept Coreml GCS option', () =>  {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(OPERATION_COREML_GCS_RESPONSE));
+      stubs.push(stub);
+      return apiClient.createModel(COREML_GCS_OPTIONS)
+        .then((resp) => {
+          expect(resp.done).to.be.true;
+          expect(resp.name).to.be.undefined;
+          expect(resp.response).to.deep.equal(COREML_GCS_RESPONSE);
         });
     });
 
@@ -296,7 +361,7 @@ describe('MachineLearningApiClient', () => {
 
   describe('updateModel', () => {
     const NAME_ONLY_OPTIONS: ModelOptions = { displayName: 'name1' };
-    const GCS_OPTIONS: ModelOptions = {
+    const TFLITE_GCS_OPTIONS: ModelOptions = {
       displayName: 'name2',
       tfliteModel: {
         gcsTfliteUri: 'gcsUri1',
@@ -308,14 +373,22 @@ describe('MachineLearningApiClient', () => {
         automlModel: 'automlModel',
       },
     };
+    const COREML_GCS_OPTIONS: ModelOptions = {
+      displayName: 'coreml_gcs',
+      coremlModel: {
+        gcsCoremlUri: 'gcsUri2',
+      }
+    };
 
     const NAME_ONLY_MASK_LIST = ['displayName'];
-    const GCS_MASK_LIST = ['displayName', 'tfliteModel.gcsTfliteUri'];
+    const TFLITE_GCS_MASK_LIST = ['displayName', 'tfliteModel.gcsTfliteUri'];
     const AUTOML_MASK_LIST = ['displayName', 'tfliteModel.automlModel'];
+    const COREML_GCS_MASK_LIST = ['displayName', 'coremlModel.gcsCoremlUri'];
 
     const NAME_ONLY_UPDATE_MASK_STRING = "updateMask=displayName";
-    const GCS_UPDATE_MASK_STRING = "updateMask=displayName,tfliteModel.gcsTfliteUri";
+    const TFLITE_GCS_UPDATE_MASK_STRING = "updateMask=displayName,tfliteModel.gcsTfliteUri";
     const AUTOML_UPDATE_MASK_STRING = "updateMask=displayName,tfliteModel.automlModel";
+    const COREML_UPDATE_MASK_STRING = "updateMask=displayName,coremlModel.gcsCoremlUri";
 
     const invalidOptions: any[] = [null, undefined];
     invalidOptions.forEach((option) => {
@@ -356,7 +429,7 @@ describe('MachineLearningApiClient', () => {
         .then((resp) => {
           expect(resp.done).to.be.true;
           expect(resp.name).to.be.undefined;
-          expect(resp.response).to.deep.equal(MODEL_RESPONSE);
+          expect(resp.response).to.deep.equal(TFLITE_GCS_MODEL_RESPONSE);
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'PATCH',
             headers: EXPECTED_HEADERS,
@@ -366,21 +439,21 @@ describe('MachineLearningApiClient', () => {
         });
     });
 
-    it('should resolve with the updated GCS resource on success', () => {
+    it('should resolve with the updated Tflite GCS resource on success', () => {
       const stub = sinon
         .stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(OPERATION_SUCCESS_RESPONSE));
       stubs.push(stub);
-      return apiClient.updateModel(MODEL_ID, GCS_OPTIONS, GCS_MASK_LIST)
+      return apiClient.updateModel(MODEL_ID, TFLITE_GCS_OPTIONS, TFLITE_GCS_MASK_LIST)
         .then((resp) => {
           expect(resp.done).to.be.true;
           expect(resp.name).to.be.undefined;
-          expect(resp.response).to.deep.equal(MODEL_RESPONSE);
+          expect(resp.response).to.deep.equal(TFLITE_GCS_MODEL_RESPONSE);
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'PATCH',
             headers: EXPECTED_HEADERS,
-            url: `${BASE_URL}/projects/test-project/models/${MODEL_ID}?${GCS_UPDATE_MASK_STRING}`,
-            data: GCS_OPTIONS,
+            url: `${BASE_URL}/projects/test-project/models/${MODEL_ID}?${TFLITE_GCS_UPDATE_MASK_STRING}`,
+            data: TFLITE_GCS_OPTIONS,
           });
         });
     });
@@ -394,12 +467,31 @@ describe('MachineLearningApiClient', () => {
         .then((resp) => {
           expect(resp.done).to.be.true;
           expect(resp.name).to.be.undefined;
-          expect(resp.response).to.deep.equal(MODEL_RESPONSE);
+          expect(resp.response).to.deep.equal(TFLITE_GCS_MODEL_RESPONSE);
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: 'PATCH',
             headers: EXPECTED_HEADERS,
             url: `${BASE_URL}/projects/test-project/models/${MODEL_ID}?${AUTOML_UPDATE_MASK_STRING}`,
             data: AUTOML_OPTIONS,
+          });
+        });
+    });
+
+    it('should resolve with the updated Coreml GCS resource on success', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(OPERATION_COREML_GCS_RESPONSE));
+      stubs.push(stub);
+      return apiClient.updateModel(MODEL_ID, COREML_GCS_OPTIONS, COREML_GCS_MASK_LIST)
+        .then((resp) => {
+          expect(resp.done).to.be.true;
+          expect(resp.name).to.be.undefined;
+          expect(resp.response).to.deep.equal(COREML_GCS_RESPONSE);
+          expect(stub).to.have.been.calledOnce.and.calledWith({
+            method: 'PATCH',
+            headers: EXPECTED_HEADERS,
+            url: `${BASE_URL}/projects/test-project/models/${MODEL_ID}?${COREML_UPDATE_MASK_STRING}`,
+            data: COREML_GCS_OPTIONS,
           });
         });
     });
@@ -484,6 +576,32 @@ describe('MachineLearningApiClient', () => {
             headers: EXPECTED_HEADERS,
           });
         });
+    });
+
+    it('should resolve with Model for tflite managed model response', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(TFLITE_MANAGED_RESPONSE));
+      stubs.push(stub);
+      return apiClient.getModel(MODEL_ID)
+        .then((resp) => {
+          expect(resp.name).to.equal('projects/test-project/models/3456789');
+          expect(resp.tfliteModel?.managedUpload).to.be.true;
+          expect(resp.tfliteModel?.sizeBytes).to.be.equal(3330033);
+        })
+    });
+
+    it('should resolve with Model for coreml managed model response', () => {
+      const stub = sinon
+        .stub(HttpClient.prototype, 'send')
+        .resolves(utils.responseFrom(COREML_MANAGED_RESPONSE));
+      stubs.push(stub);
+      return apiClient.getModel(MODEL_ID)
+        .then((resp) => {
+          expect(resp.name).to.equal('projects/test-project/models/2345678');
+          expect(resp.coremlModel?.managedUpload).to.be.true;
+          expect(resp.coremlModel?.sizeBytes).to.be.equal(33300333);
+        })
     });
 
     it('should reject when a full platform error response is received', () => {
@@ -591,7 +709,7 @@ describe('MachineLearningApiClient', () => {
     it('handles a done operation with result', () => {
       return apiClient.handleOperation(OPERATION_SUCCESS_RESPONSE)
         .then((resp) => {
-          expect(resp).deep.equals(MODEL_RESPONSE);
+          expect(resp).deep.equals(TFLITE_GCS_MODEL_RESPONSE);
         });
     });
 
@@ -628,7 +746,7 @@ describe('MachineLearningApiClient', () => {
         baseWaitMillis: 2,
         maxWaitMillis: 5 })
         .then((resp) => {
-          expect(resp).to.deep.equal(MODEL_RESPONSE);
+          expect(resp).to.deep.equal(TFLITE_GCS_MODEL_RESPONSE);
           expect(stub).to.have.been.calledTwice.and.calledWith({
             method: 'GET',
             url: `${BASE_URL}/projects/${PROJECT_NUMBER}/operations/${OPERATION_ID}`,
@@ -677,7 +795,7 @@ describe('MachineLearningApiClient', () => {
 
   describe('listModels', () => {
     const LIST_RESPONSE = {
-      models: [MODEL_RESPONSE, MODEL_RESPONSE2],
+      models: [TFLITE_GCS_MODEL_RESPONSE, TFLITE_GCS_MODEL_RESPONSE2],
       nextPageToken: 'next',
     };
 
@@ -754,8 +872,8 @@ describe('MachineLearningApiClient', () => {
           .then((resp) => {
             expect(resp.models).not.to.be.empty;
             expect(resp.models!.length).to.equal(2);
-            expect(resp.models![0]).to.deep.equal(MODEL_RESPONSE);
-            expect(resp.models![1]).to.deep.equal(MODEL_RESPONSE2);
+            expect(resp.models![0]).to.deep.equal(TFLITE_GCS_MODEL_RESPONSE);
+            expect(resp.models![1]).to.deep.equal(TFLITE_GCS_MODEL_RESPONSE2);
             expect(stub).to.have.been.calledOnce.and.calledWith({
               method: 'GET',
               url: `${BASE_URL}/projects/test-project/models`,

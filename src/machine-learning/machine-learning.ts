@@ -16,8 +16,8 @@
 
 import { FirebaseApp } from '../firebase-app';
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
-import { MachineLearningApiClient, ModelResponse, ModelOptions,
-  ModelUpdateOptions, ListModelsOptions, isGcsTfliteModelOptions } from './machine-learning-api-client';
+import { MachineLearningApiClient, ModelResponse, ModelOptions, ModelUpdateOptions,
+  ListModelsOptions, isGcsTfliteModelOptions, isGcsCoremlModelOptions } from './machine-learning-api-client';
 import { FirebaseError } from '../utils/error';
 
 import * as validator from '../utils/validator';
@@ -207,6 +207,18 @@ export class MachineLearning implements FirebaseServiceInterface {
             `Error during signing upload url: ${err.message}`);
         });
     }
+    if (isGcsCoremlModelOptions(modelOptions)) {
+      return this.signUrl(modelOptions.coremlModel.gcsCoremlUri)
+        .then((uri: string) => {
+          modelOptions.coremlModel.gcsCoremlUri = uri;
+          return modelOptions;
+        })
+        .catch((err: Error) => {
+          throw new FirebaseMachineLearningError(
+            'internal-error',
+            `Error during signing upload url: ${err.message}`);
+        });
+    }
     return Promise.resolve(modelOptions);
   }
 
@@ -285,6 +297,11 @@ export class Model {
     return deepCopy(this.model.tfliteModel);
   }
 
+  get coremlModel(): CoreMlModel | undefined {
+    // Make a copy so people can't directly modify the private this.model object.
+    return deepCopy(this.model.coremlModel);
+  }
+
   /**
    * Locked indicates if there are active long running operations on the model.
    * Models may not be modified when they are locked.
@@ -319,6 +336,10 @@ export class Model {
 
     if (this.tfliteModel) {
       jsonModel['tfliteModel'] = this.tfliteModel;
+    }
+
+    if (this.coremlModel) {
+      jsonModel['coremlModel'] = this.coremlModel;
     }
 
     return jsonModel;
@@ -357,12 +378,22 @@ export class Model {
     const tmpModel = deepCopy(model);
 
     // If tflite Model is specified, it must have a source consisting of
-    // oneof {gcsTfliteUri, automlModel}
+    // oneof {gcsTfliteUri, automlModel, managedUpload}
     if (model.tfliteModel &&
         !validator.isNonEmptyString(model.tfliteModel.gcsTfliteUri) &&
-        !validator.isNonEmptyString(model.tfliteModel.automlModel)) {
+        !validator.isNonEmptyString(model.tfliteModel.automlModel) &&
+        !model.tfliteModel.managedUpload) {
       // If we have some other source, ignore the whole tfliteModel.
       delete (tmpModel as any).tfliteModel;
+    }
+
+    // If coreml Model is specified, it must have a source consisting of
+    // oneof {gcsCoremlUri, managedUpload}
+    if (model.coremlModel &&
+        !validator.isNonEmptyString(model.coremlModel.gcsCoremlUri) &&
+        !model.coremlModel.managedUpload) {
+      // If we have some other source, ignore the whole coremlModel.
+      delete (tmpModel as any).coremlModel;
     }
 
     // Remove '@type' field. We don't need it.
@@ -379,9 +410,21 @@ export class Model {
 export interface TFLiteModel {
   readonly sizeBytes: number;
 
-  // Oneof these two
+  // Oneof these three
   readonly gcsTfliteUri?: string;
   readonly automlModel?: string;
+  readonly managedUpload?: boolean;
+}
+
+/**
+ * A Core ML Model output object
+ */
+export interface CoreMlModel {
+  readonly sizeBytes: number;
+
+  // Oneof these two
+  readonly gcsCoremlUri?: string;
+  readonly managedUpload?: boolean;
 }
 
 function extractModelId(resourceName: string): string {

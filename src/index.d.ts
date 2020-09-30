@@ -734,7 +734,12 @@ declare namespace admin.machineLearning {
       automlModel: string;
     };
   }
-  type ModelOptions = ModelOptionsBase | GcsTfliteModelOptions | AutoMLTfliteModelOptions;
+  interface GcsCoremlModelOptions extends ModelOptionsBase {
+    coremlModel: {
+      gcsCoremlUri: string;
+    };
+  }
+  type ModelOptions = ModelOptionsBase | GcsTfliteModelOptions | AutoMLTfliteModelOptions | GcsCoremlModelOptions;
 
   /**
    * A TensorFlow Lite Model output object
@@ -753,6 +758,24 @@ declare namespace admin.machineLearning {
      * to Firebase.
      */
     readonly automlModel?: string;
+    /** Indicates that the TFLite model was uploaded through the console. */
+    readonly managedUpload?: boolean;
+  }
+
+  /**
+   * A Core ML Model output object
+   */
+  interface CoreMlModel {
+    /** The size of the model. */
+    readonly sizeBytes: number;
+
+    // One of the following 2 will be set:
+
+    /** The URI from which the model was originally provided to Firebase. */
+    readonly gcsCoremlUri?: string;
+
+    /** Indicates that the Core ML model was uploaded through the console. */
+    readonly managedUpload?: boolean;
   }
 
   /**
@@ -820,8 +843,12 @@ declare namespace admin.machineLearning {
      */
     toJSON(): {[key: string]: any};
 
+    // At most one of the following will be specified.
+
     /** Metadata about the model's TensorFlow Lite model file. */
     readonly tfliteModel?: TFLiteModel;
+    /** Metadata about the model's Core ML model file. */
+    readonly coremlModel?: CoreMlModel;
   }
 
   /**

@@ -44,23 +44,39 @@ export interface ModelOptionsBase {
   displayName?: string;
   tags?: string[];
 }
+
 export interface GcsTfliteModelOptions extends ModelOptionsBase {
   tfliteModel: {
     gcsTfliteUri: string;
   };
 }
+
 export interface AutoMLTfliteModelOptions extends ModelOptionsBase {
   tfliteModel: {
     automlModel: string;
   };
 }
-export type ModelOptions = ModelOptionsBase | GcsTfliteModelOptions | AutoMLTfliteModelOptions;
+
+export interface GcsCoremlModelOptions extends ModelOptionsBase {
+  coremlModel: {
+    gcsCoremlUri: string;
+  };
+}
+
+export type ModelOptions = ModelOptionsBase | GcsTfliteModelOptions | AutoMLTfliteModelOptions | GcsCoremlModelOptions;
+
 export type ModelUpdateOptions = ModelOptions & { state?: { published?: boolean }};
 
 export function isGcsTfliteModelOptions(options: ModelOptions): options is GcsTfliteModelOptions {
   const gcsUri = (options as GcsTfliteModelOptions)?.tfliteModel?.gcsTfliteUri;
   return typeof gcsUri !== 'undefined'
 }
+
+export function isGcsCoremlModelOptions(options: ModelOptions): options is GcsCoremlModelOptions {
+  const gcsUri = (options as GcsCoremlModelOptions)?.coremlModel?.gcsCoremlUri;
+  return typeof gcsUri !== 'undefined'
+}
+
 
 /** Interface representing listModels options. */
 export interface ListModelsOptions {
@@ -79,6 +95,13 @@ export interface ModelContent {
   readonly tfliteModel?: {
     readonly gcsTfliteUri?: string;
     readonly automlModel?: string;
+    readonly managedUpload?: boolean;
+
+    readonly sizeBytes: number;
+  };
+  readonly coremlModel?: {
+    readonly gcsCoremlUri?: string;
+    readonly managedUpload?: boolean;
 
     readonly sizeBytes: number;
   };
