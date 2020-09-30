@@ -18,6 +18,7 @@ import { Agent } from 'http';
 import { credential } from './credential/index';
 import { database } from './database/index';
 import { instanceId } from './instance-id/index';
+import { machineLearning } from './machine-learning/index';
 import { messaging } from './messaging/index';
 import { projectManagement } from './project-management/index';
 import { remoteConfig } from './remote-config/index';
@@ -220,6 +221,7 @@ export namespace app {
 
     database(url?: string): database.Database;
     instanceId(): instanceId.InstanceId;
+    machineLearning(): machineLearning.MachineLearning;
     messaging(): messaging.Messaging;
     projectManagement(): projectManagement.ProjectManagement;
     remoteConfig(): remoteConfig.RemoteConfig;

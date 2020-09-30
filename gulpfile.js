@@ -87,6 +87,7 @@ gulp.task('compile', function() {
     'lib/firebase-namespace-api.d.ts',
     'lib/database/index.d.ts',
     'lib/instance-id/index.d.ts',
+    'lib/machine-learning/index.d.ts',
     'lib/messaging/index.d.ts',
     'lib/project-management/index.d.ts',
     'lib/remote-config/index.d.ts',

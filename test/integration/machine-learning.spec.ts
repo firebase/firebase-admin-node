@@ -20,12 +20,11 @@ import * as chai from 'chai';
 import * as admin from '../../lib/index';
 import { projectId } from './setup';
 import { Bucket } from '@google-cloud/storage';
-import { GcsTfliteModelOptions, AutoMLTfliteModelOptions } from
-  '../../src/machine-learning/machine-learning-api-client';
+
+import AutoMLTfliteModelOptions = admin.machineLearning.AutoMLTfliteModelOptions;
+import GcsTfliteModelOptions = admin.machineLearning.GcsTfliteModelOptions;
 
 const expect = chai.expect;
-
-
 
 describe('admin.machineLearning', () => {
 
