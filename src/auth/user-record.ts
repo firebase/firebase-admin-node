@@ -20,6 +20,13 @@ import * as utils from '../utils';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import { auth } from './index';
 
+import MultiFactorInfoInterface = auth.MultiFactorInfo;
+import PhoneMultiFactorInfoInterface = auth.PhoneMultiFactorInfo;
+import MultiFactorSettings = auth.MultiFactorSettings;
+import UserMetadataInterface = auth.UserMetadata;
+import UserInfoInterface = auth.UserInfo;
+import UserRecordInterface = auth.UserRecord;
+
 /**
  * 'REDACTED', encoded as a base64 string.
  */
@@ -88,7 +95,7 @@ enum MultiFactorId {
 /**
  * Abstract class representing a multi-factor info interface.
  */
-export abstract class MultiFactorInfo implements auth.MultiFactorInfo {
+export abstract class MultiFactorInfo implements MultiFactorInfoInterface {
   public readonly uid: string;
   public readonly displayName?: string;
   public readonly factorId: string;
@@ -170,7 +177,7 @@ export abstract class MultiFactorInfo implements auth.MultiFactorInfo {
 }
 
 /** Class representing a phone MultiFactorInfo object. */
-export class PhoneMultiFactorInfo extends MultiFactorInfo implements auth.PhoneMultiFactorInfo {
+export class PhoneMultiFactorInfo extends MultiFactorInfo implements PhoneMultiFactorInfoInterface {
   public readonly phoneNumber: string;
 
   /**
@@ -206,7 +213,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo implements auth.PhoneM
 }
 
 /** Class representing multi-factor related properties of a user. */
-export class MultiFactor implements auth.MultiFactorSettings {
+export class MultiFactor implements MultiFactorSettings {
   public enrolledFactors: MultiFactorInfo[];
 
   /**
@@ -250,7 +257,7 @@ export class MultiFactor implements auth.MultiFactorSettings {
  *     endpoint.
  * @constructor
  */
-export class UserMetadata implements auth.UserMetadata {
+export class UserMetadata implements UserMetadataInterface {
   public readonly creationTime: string;
   public readonly lastSignInTime: string;
 
@@ -289,7 +296,7 @@ export class UserMetadata implements auth.UserMetadata {
  *     endpoint.
  * @constructor
  */
-export class UserInfo implements auth.UserInfo {
+export class UserInfo implements UserInfoInterface {
   public readonly uid: string;
   public readonly displayName: string;
   public readonly email: string;
@@ -334,7 +341,7 @@ export class UserInfo implements auth.UserInfo {
  *     endpoint.
  * @constructor
  */
-export class UserRecord implements auth.UserRecord {
+export class UserRecord implements UserRecordInterface {
   public readonly uid: string;
   public readonly email: string;
   public readonly emailVerified: boolean;

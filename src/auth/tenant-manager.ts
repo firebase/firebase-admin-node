@@ -24,6 +24,8 @@ import { auth } from './index';
 
 import ListTenantsResult = auth.ListTenantsResult;
 import TenantManagerInterface = auth.TenantManager;
+import CreateTenantRequest = auth.CreateTenantRequest;
+import UpdateTenantRequest = auth.UpdateTenantRequest;
 
 /**
  * Data structure used to help manage tenant related operations.
@@ -128,7 +130,7 @@ export class TenantManager implements TenantManagerInterface {
    * @param tenantOptions The properties to set on the new tenant to be created.
    * @return A promise that resolves with the newly created tenant.
    */
-  public createTenant(tenantOptions: auth.CreateTenantRequest): Promise<Tenant> {
+  public createTenant(tenantOptions: CreateTenantRequest): Promise<Tenant> {
     return this.authRequestHandler.createTenant(tenantOptions)
       .then((response: TenantServerResponse) => {
         return new Tenant(response);
@@ -142,7 +144,7 @@ export class TenantManager implements TenantManagerInterface {
    * @param tenantOptions The properties to update on the existing tenant.
    * @return A promise that resolves with the modified tenant.
    */
-  public updateTenant(tenantId: string, tenantOptions: auth.UpdateTenantRequest): Promise<Tenant> {
+  public updateTenant(tenantId: string, tenantOptions: UpdateTenantRequest): Promise<Tenant> {
     return this.authRequestHandler.updateTenant(tenantId, tenantOptions)
       .then((response: TenantServerResponse) => {
         return new Tenant(response);
