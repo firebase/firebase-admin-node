@@ -29,7 +29,7 @@ import { Auth } from './auth/auth';
 import { MachineLearning } from './machine-learning/machine-learning';
 import { Messaging } from './messaging/messaging';
 import { Storage } from './storage/storage';
-import { Database } from './database/database';
+import { database } from './database/index';
 import { Firestore } from '@google-cloud/firestore';
 import { InstanceId } from './instance-id/instance-id';
 import { ProjectManagement } from './project-management/project-management';
@@ -38,6 +38,8 @@ import { RemoteConfig } from './remote-config/remote-config';
 
 import * as validator from './utils/validator';
 import { getSdkVersion } from './utils/index';
+
+import Database = database.Database;
 
 const DEFAULT_APP_NAME = '[DEFAULT]';
 
