@@ -89,6 +89,7 @@ gulp.task('compile', function() {
     'lib/instance-id/index.d.ts',
     'lib/messaging/index.d.ts',
     'lib/remote-config/index.d.ts',
+    'lib/security-rules/index.d.ts',
   ];
 
   workflow = workflow.pipe(filter(configuration));

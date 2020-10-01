@@ -20,6 +20,7 @@ import { database } from './database/index';
 import { instanceId } from './instance-id/index';
 import { messaging } from './messaging/index';
 import { remoteConfig } from './remote-config/index';
+import { securityRules } from './security-rules/index';
 
 /**
  * `FirebaseError` is a subclass of the standard JavaScript `Error` object. In
@@ -220,6 +221,7 @@ export namespace app {
     instanceId(): instanceId.InstanceId;
     messaging(): messaging.Messaging;
     remoteConfig(): remoteConfig.RemoteConfig;
+    securityRules(): securityRules.SecurityRules;
 
     /**
      * Renders this local `FirebaseApp` unusable and frees the resources of
