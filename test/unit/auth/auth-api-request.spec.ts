@@ -40,7 +40,6 @@ import { UserImportBuilder } from '../../../src/auth/user-import-builder';
 import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
 import { ActionCodeSettingsBuilder } from '../../../src/auth/action-code-settings-builder';
 import { SAMLConfigServerResponse } from '../../../src/auth/auth-config';
-import {  } from '../../../src/auth/user-record';
 import { expectUserImportResult } from './user-import-builder.spec';
 import { getSdkVersion } from '../../../src/utils/index';
 import { auth } from '../../../src/auth/index';

@@ -441,7 +441,7 @@ describe('SAMLConfig', () => {
     });
 
     it('should set readonly property enableRequestSigning', () => {
-      expect(config.enableRequestSigning).to.be.undefined;
+      expect(config.enableRequestSigning).to.be.true;
     });
 
     it('should set readonly property x509Certificates', () => {
@@ -528,7 +528,9 @@ describe('SAMLConfig', () => {
 
   describe('buildServerRequest()', () => {
     it('should return expected server request on valid input', () => {
-      expect(SAMLConfig.buildServerRequest(clientRequest)).to.deep.equal(serverRequest);
+      const request = deepCopy(clientRequest);
+      (request as any).enableRequestSigning = true;
+      expect(SAMLConfig.buildServerRequest(request)).to.deep.equal(serverRequest);
     });
 
     it('should ignore missing fields if not required', () => {

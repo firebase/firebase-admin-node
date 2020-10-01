@@ -50,6 +50,11 @@ import ListUsersResult = auth.ListUsersResult;
 import DeleteUsersResult = auth.DeleteUsersResult;
 import DecodedIdToken = auth.DecodedIdToken;
 import SessionCookieOptions = auth.SessionCookieOptions;
+import OIDCAuthProviderConfig = auth.OIDCAuthProviderConfig;
+import SAMLAuthProviderConfig = auth.SAMLAuthProviderConfig;
+import BaseAuthInterface = auth.BaseAuth;
+import AuthInterface = auth.Auth;
+import TenantAwareAuthInterface = auth.TenantAwareAuth;
 
 /**
  * Internals of an Auth instance.
@@ -70,7 +75,7 @@ class AuthInternals implements FirebaseServiceInternalsInterface {
 /**
  * Base Auth class. Mainly used for user management APIs.
  */
-export class BaseAuth<T extends AbstractAuthRequestHandler> implements auth.BaseAuth {
+export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthInterface {
 
   protected readonly tokenGenerator: FirebaseTokenGenerator;
   protected readonly idTokenVerifier: FirebaseTokenVerifier;
@@ -641,12 +646,12 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements auth.Base
       ));
     }
     if (OIDCConfig.isProviderId(config.providerId)) {
-      return this.authRequestHandler.createOAuthIdpConfig(config as auth.OIDCAuthProviderConfig)
+      return this.authRequestHandler.createOAuthIdpConfig(config as OIDCAuthProviderConfig)
         .then((response) => {
           return new OIDCConfig(response);
         });
     } else if (SAMLConfig.isProviderId(config.providerId)) {
-      return this.authRequestHandler.createInboundSamlConfig(config as auth.SAMLAuthProviderConfig)
+      return this.authRequestHandler.createInboundSamlConfig(config as SAMLAuthProviderConfig)
         .then((response) => {
           return new SAMLConfig(response);
         });
@@ -690,7 +695,10 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements auth.Base
 /**
  * The tenant aware Auth class.
  */
-export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> implements auth.TenantAwareAuth {
+export class TenantAwareAuth
+  extends BaseAuth<TenantAwareAuthRequestHandler>
+  implements TenantAwareAuthInterface {
+
   public readonly tenantId: string;
 
   /**
@@ -787,7 +795,8 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> imp
  * Auth service bound to the provided app.
  * An Auth instance can have multiple tenants.
  */
-export class Auth extends BaseAuth<AuthRequestHandler> implements FirebaseServiceInterface, auth.Auth {
+export class Auth extends BaseAuth<AuthRequestHandler>
+  implements FirebaseServiceInterface, AuthInterface {
 
   public INTERNAL: AuthInternals = new AuthInternals();
   private readonly tenantManager_: TenantManager;
