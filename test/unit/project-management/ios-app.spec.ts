@@ -27,7 +27,10 @@ import {
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { FirebaseProjectManagementError } from '../../../src/utils/error';
 import * as mocks from '../../resources/mocks';
-import { IosAppMetadata, AppPlatform } from '../../../src/project-management/app-metadata';
+import { projectManagement } from '../../../src/project-management/index';
+
+import IosAppMetadata = projectManagement.IosAppMetadata;
+import AppPlatform = projectManagement.AppPlatform;
 
 const expect = chai.expect;
 

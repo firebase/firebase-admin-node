@@ -19,6 +19,7 @@ import { credential } from './credential/index';
 import { database } from './database/index';
 import { instanceId } from './instance-id/index';
 import { messaging } from './messaging/index';
+import { projectManagement } from './project-management/index';
 import { remoteConfig } from './remote-config/index';
 import { securityRules } from './security-rules/index';
 
@@ -220,6 +221,7 @@ export namespace app {
     database(url?: string): database.Database;
     instanceId(): instanceId.InstanceId;
     messaging(): messaging.Messaging;
+    projectManagement(): projectManagement.ProjectManagement;
     remoteConfig(): remoteConfig.RemoteConfig;
     securityRules(): securityRules.SecurityRules;
 

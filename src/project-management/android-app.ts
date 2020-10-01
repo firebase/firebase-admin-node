@@ -17,9 +17,14 @@
 import { FirebaseProjectManagementError } from '../utils/error';
 import * as validator from '../utils/validator';
 import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request-internal';
-import { AndroidAppMetadata, AppPlatform } from './app-metadata';
+import { projectManagement } from './index';
 
-export class AndroidApp {
+import AndroidAppInterface = projectManagement.AndroidApp;
+import AndroidAppMetadata = projectManagement.AndroidAppMetadata;
+import AppPlatform = projectManagement.AppPlatform;
+import ShaCertificateInterface = projectManagement.ShaCertificate;
+
+export class AndroidApp implements AndroidAppInterface {
   private readonly resourceName: string;
 
   constructor(
@@ -179,7 +184,7 @@ export class AndroidApp {
  * Do not call this constructor directly. Instead, use
  * [`projectManagement.shaCertificate()`](admin.projectManagement.ProjectManagement#shaCertificate).
  */
-export class ShaCertificate {
+export class ShaCertificate implements ShaCertificateInterface {
   /**
    * The SHA certificate type.
    *

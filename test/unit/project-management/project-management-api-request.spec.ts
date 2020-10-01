@@ -30,7 +30,9 @@ import * as mocks from '../../resources/mocks';
 import * as utils from '../utils';
 import { getSdkVersion } from '../../../src/utils/index';
 import { ShaCertificate } from '../../../src/project-management/android-app';
-import { AppPlatform } from '../../../src/project-management/app-metadata';
+import { projectManagement } from '../../../src/project-management/index';
+
+import AppPlatform = projectManagement.AppPlatform;
 
 chai.should();
 chai.use(sinonChai);

@@ -27,8 +27,11 @@ import {
 } from '../../../src/project-management/project-management-api-request-internal';
 import { FirebaseProjectManagementError } from '../../../src/utils/error';
 import * as mocks from '../../resources/mocks';
-import { IosApp } from '../../../src/project-management/ios-app';
-import { AppPlatform, AppMetadata } from '../../../src/project-management/app-metadata';
+import { projectManagement } from '../../../src/project-management/index';
+
+import AppMetadata = projectManagement.AppMetadata;
+import AppPlatform = projectManagement.AppPlatform;
+import IosApp = projectManagement.IosApp;
 
 const expect = chai.expect;
 
