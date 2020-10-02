@@ -17,12 +17,14 @@
 import { Agent } from 'http';
 import { credential } from './credential/index';
 import { database } from './database/index';
+import { firestore } from './firestore/index';
 import { instanceId } from './instance-id/index';
 import { machineLearning } from './machine-learning/index';
 import { messaging } from './messaging/index';
 import { projectManagement } from './project-management/index';
 import { remoteConfig } from './remote-config/index';
 import { securityRules } from './security-rules/index';
+import { storage } from './storage/index';
 
 /**
  * `FirebaseError` is a subclass of the standard JavaScript `Error` object. In
@@ -220,12 +222,14 @@ export namespace app {
     options: AppOptions;
 
     database(url?: string): database.Database;
+    firestore(): firestore.Firestore;
     instanceId(): instanceId.InstanceId;
     machineLearning(): machineLearning.MachineLearning;
     messaging(): messaging.Messaging;
     projectManagement(): projectManagement.ProjectManagement;
     remoteConfig(): remoteConfig.RemoteConfig;
     securityRules(): securityRules.SecurityRules;
+    storage(): storage.Storage;
 
     /**
      * Renders this local `FirebaseApp` unusable and frees the resources of
