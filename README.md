@@ -3,7 +3,6 @@
 # TODO
 
 * Copy generated d.ts files to the build directory.
-* Re-enable the `npm run build:tests` in CI.
 * Update return types in the methods of `FirebaseNamespace` class.
 
 # Firebase Admin Node.js SDK
