@@ -15,6 +15,7 @@
  */
 
 import { Agent } from 'http';
+import { auth } from './auth/index';
 import { credential } from './credential/index';
 import { database } from './database/index';
 import { instanceId } from './instance-id/index';
@@ -218,6 +219,7 @@ export namespace app {
      */
     options: AppOptions;
 
+    auth(): auth.Auth;
     database(url?: string): database.Database;
     instanceId(): instanceId.InstanceId;
     messaging(): messaging.Messaging;

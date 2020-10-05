@@ -25,9 +25,14 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as mocks from '../../resources/mocks';
 import { FirebaseApp } from '../../../src/firebase-app';
 import { AuthRequestHandler } from '../../../src/auth/auth-api-request';
-import { Tenant, TenantOptions, TenantServerResponse, ListTenantsResult } from '../../../src/auth/tenant';
+import { Tenant, TenantServerResponse } from '../../../src/auth/tenant';
 import { TenantManager } from '../../../src/auth/tenant-manager';
 import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
+import { auth } from '../../../src/auth/index';
+
+import CreateTenantRequest = auth.CreateTenantRequest;
+import UpdateTenantRequest = auth.UpdateTenantRequest;
+import ListTenantsResult = auth.ListTenantsResult;
 
 chai.should();
 chai.use(sinonChai);
@@ -377,7 +382,7 @@ describe('TenantManager', () => {
   });
 
   describe('createTenant()', () => {
-    const tenantOptions: TenantOptions = {
+    const tenantOptions: CreateTenantRequest = {
       displayName: 'TENANT-DISPLAY-NAME',
       emailSignInConfig: {
         enabled: true,
@@ -469,7 +474,7 @@ describe('TenantManager', () => {
 
   describe('updateTenant()', () => {
     const tenantId = 'tenant-id';
-    const tenantOptions: TenantOptions = {
+    const tenantOptions: UpdateTenantRequest = {
       displayName: 'TENANT-DISPLAY-NAME',
       emailSignInConfig: {
         enabled: true,
@@ -509,7 +514,7 @@ describe('TenantManager', () => {
     });
 
     it('should be rejected given invalid TenantOptions', () => {
-      return tenantManager.updateTenant(tenantId, null as unknown as TenantOptions)
+      return tenantManager.updateTenant(tenantId, null as unknown as UpdateTenantRequest)
         .then(() => {
           throw new Error('Unexpected success');
         })
