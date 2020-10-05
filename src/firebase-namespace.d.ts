@@ -16,6 +16,7 @@
 
 export * from './credential/index';
 export * from './firebase-namespace-api';
+export * from './auth/index';
 export * from './database/index';
 export * from './instance-id/index';
 export * from './machine-learning/index';

@@ -18,29 +18,42 @@ import * as validator from '../utils/validator';
 
 import { deepCopy, deepExtend } from '../utils/deep-copy';
 import {
-  UserIdentifier, isUidIdentifier, isEmailIdentifier, isPhoneIdentifier,
-  isProviderIdentifier, UidIdentifier, EmailIdentifier, PhoneIdentifier,
-  ProviderIdentifier,
+  isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, isProviderIdentifier
 } from './identifier';
 import { FirebaseApp } from '../firebase-app';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
   ApiSettings, AuthorizedHttpClient, HttpRequestConfig, HttpError,
 } from '../utils/api-request';
-import { CreateRequest, UpdateRequest } from './user-record';
 import {
-  UserImportBuilder, UserImportOptions, UserImportRecord,
-  UserImportResult, AuthFactorInfo, convertMultiFactorInfoToServerFormat,
+  UserImportBuilder, AuthFactorInfo, convertMultiFactorInfoToServerFormat,
 } from './user-import-builder';
 import * as utils from '../utils/index';
-import { ActionCodeSettings, ActionCodeSettingsBuilder } from './action-code-settings-builder';
+import { ActionCodeSettingsBuilder } from './action-code-settings-builder';
 import {
   SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
-  OIDCConfigServerRequest, SAMLConfigServerRequest, AuthProviderConfig,
-  OIDCUpdateAuthProviderRequest, SAMLUpdateAuthProviderRequest,
+  OIDCConfigServerRequest, SAMLConfigServerRequest,
 } from './auth-config';
-import { Tenant, TenantOptions, TenantServerResponse } from './tenant';
+import { Tenant, TenantServerResponse } from './tenant';
+import { auth } from './index';
 
+import CreateRequest = auth.CreateRequest;
+import UpdateRequest = auth.UpdateRequest;
+import UserIdentifier = auth.UserIdentifier;
+import UidIdentifier = auth.UidIdentifier;
+import EmailIdentifier = auth.EmailIdentifier;
+import PhoneIdentifier = auth.PhoneIdentifier;
+import ProviderIdentifier = auth.ProviderIdentifier;
+import UserImportOptions = auth.UserImportOptions;
+import UserImportRecord = auth.UserImportRecord;
+import UserImportResult = auth.UserImportResult;
+import ActionCodeSettings = auth.ActionCodeSettings;
+import OIDCAuthProviderConfig = auth.OIDCAuthProviderConfig;
+import SAMLAuthProviderConfig = auth.SAMLAuthProviderConfig;
+import OIDCUpdateAuthProviderRequest = auth.OIDCUpdateAuthProviderRequest;
+import SAMLUpdateAuthProviderRequest = auth.SAMLUpdateAuthProviderRequest;
+import CreateTenantRequest = auth.CreateTenantRequest;
+import UpdateTenantRequest = auth.UpdateTenantRequest;
 
 /** Firebase Auth request header. */
 const FIREBASE_AUTH_HEADER = {
@@ -1523,7 +1536,7 @@ export abstract class AbstractAuthRequestHandler {
    * @return {Promise<OIDCConfigServerResponse>} A promise that resolves with the newly created OIDC
    *     configuration.
    */
-  public createOAuthIdpConfig(options: AuthProviderConfig): Promise<OIDCConfigServerResponse> {
+  public createOAuthIdpConfig(options: OIDCAuthProviderConfig): Promise<OIDCConfigServerResponse> {
     // Construct backend request.
     let request;
     try {
@@ -1646,7 +1659,7 @@ export abstract class AbstractAuthRequestHandler {
    * @return {Promise<SAMLConfigServerResponse>} A promise that resolves with the newly created SAML
    *     configuration.
    */
-  public createInboundSamlConfig(options: AuthProviderConfig): Promise<SAMLConfigServerResponse> {
+  public createInboundSamlConfig(options: SAMLAuthProviderConfig): Promise<SAMLConfigServerResponse> {
     // Construct backend request.
     let request;
     try {
@@ -1956,7 +1969,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
    * @param {TenantOptions} tenantOptions The properties to set on the new tenant to be created.
    * @return {Promise<TenantServerResponse>} A promise that resolves with the newly created tenant object.
    */
-  public createTenant(tenantOptions: TenantOptions): Promise<TenantServerResponse> {
+  public createTenant(tenantOptions: CreateTenantRequest): Promise<TenantServerResponse> {
     try {
       // Construct backend request.
       const request = Tenant.buildServerRequest(tenantOptions, true);
@@ -1976,7 +1989,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
    * @param {TenantOptions} tenantOptions The properties to update on the existing tenant.
    * @return {Promise<TenantServerResponse>} A promise that resolves with the modified tenant object.
    */
-  public updateTenant(tenantId: string, tenantOptions: TenantOptions): Promise<TenantServerResponse> {
+  public updateTenant(tenantId: string, tenantOptions: UpdateTenantRequest): Promise<TenantServerResponse> {
     if (!validator.isNonEmptyString(tenantId)) {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_TENANT_ID));
     }
