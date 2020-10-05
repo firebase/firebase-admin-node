@@ -52,6 +52,7 @@ import SAMLUpdateAuthProviderRequest = auth.SAMLUpdateAuthProviderRequest;
 import UserIdentifier = auth.UserIdentifier;
 import UpdateRequest = auth.UpdateRequest;
 import UpdateMultiFactorInfoRequest = auth.UpdateMultiFactorInfoRequest;
+import CreateTenantRequest = auth.CreateTenantRequest;
 import UpdateTenantRequest = auth.UpdateTenantRequest;
 
 chai.should();
@@ -4453,7 +4454,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       describe('createTenant', () => {
         const path = '/v2/projects/project_id/tenants';
         const postMethod = 'POST';
-        const tenantOptions: UpdateTenantRequest = {
+        const tenantOptions: CreateTenantRequest = {
           displayName: 'TENANT-DISPLAY-NAME',
           emailSignInConfig: {
             enabled: true,

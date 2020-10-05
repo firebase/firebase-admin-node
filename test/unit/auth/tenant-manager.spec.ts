@@ -25,11 +25,12 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as mocks from '../../resources/mocks';
 import { FirebaseApp } from '../../../src/firebase-app';
 import { AuthRequestHandler } from '../../../src/auth/auth-api-request';
-import { Tenant, TenantServerResponse  } from '../../../src/auth/tenant';
+import { Tenant, TenantServerResponse } from '../../../src/auth/tenant';
 import { TenantManager } from '../../../src/auth/tenant-manager';
 import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
 import { auth } from '../../../src/auth/index';
 
+import CreateTenantRequest = auth.CreateTenantRequest;
 import UpdateTenantRequest = auth.UpdateTenantRequest;
 import ListTenantsResult = auth.ListTenantsResult;
 
@@ -381,7 +382,7 @@ describe('TenantManager', () => {
   });
 
   describe('createTenant()', () => {
-    const tenantOptions: UpdateTenantRequest = {
+    const tenantOptions: CreateTenantRequest = {
       displayName: 'TENANT-DISPLAY-NAME',
       emailSignInConfig: {
         enabled: true,

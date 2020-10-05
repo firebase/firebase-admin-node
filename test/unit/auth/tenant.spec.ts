@@ -25,6 +25,7 @@ import { Tenant, TenantServerResponse } from '../../../src/auth/tenant';
 import { auth } from '../../../src/auth/index';
 
 import EmailSignInProviderConfig = auth.EmailSignInProviderConfig;
+import CreateTenantRequest = auth.CreateTenantRequest;
 import UpdateTenantRequest = auth.UpdateTenantRequest;
 
 chai.should();
@@ -180,7 +181,7 @@ describe('Tenant', () => {
 
     describe('for a create request', () => {
       it('should return the expected server request without multi-factor and phone config', () => {
-        const tenantOptionsClientRequest: UpdateTenantRequest = deepCopy(clientRequestWithoutMfa);
+        const tenantOptionsClientRequest: CreateTenantRequest = deepCopy(clientRequestWithoutMfa);
         const tenantOptionsServerRequest: TenantServerResponse = deepCopy(serverRequestWithoutMfa);
         delete tenantOptionsServerRequest.name;
 
@@ -189,7 +190,7 @@ describe('Tenant', () => {
       });
 
       it('should return the expected server request with multi-factor and phone config', () => {
-        const tenantOptionsClientRequest: UpdateTenantRequest = deepCopy(clientRequest);
+        const tenantOptionsClientRequest: CreateTenantRequest = deepCopy(clientRequest);
         const tenantOptionsServerRequest: TenantServerResponse = deepCopy(serverRequest);
         delete tenantOptionsServerRequest.name;
 
@@ -198,7 +199,7 @@ describe('Tenant', () => {
       });
 
       it('should throw on invalid EmailSignInConfig', () => {
-        const tenantOptionsClientRequest: UpdateTenantRequest = deepCopy(clientRequest);
+        const tenantOptionsClientRequest: CreateTenantRequest = deepCopy(clientRequest);
         tenantOptionsClientRequest.emailSignInConfig = null as unknown as EmailSignInProviderConfig;
 
         expect(() => Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest))
