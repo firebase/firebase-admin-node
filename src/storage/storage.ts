@@ -19,9 +19,11 @@ import { FirebaseError } from '../utils/error';
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { ServiceAccountCredential, isApplicationDefault } from '../credential/credential-internal';
 import { Bucket, Storage as StorageClient } from '@google-cloud/storage';
-
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
+import { storage } from './index';
+
+import StorageInterface  = storage.Storage;
 
 /**
  * Internals of a Storage instance.
@@ -43,7 +45,7 @@ class StorageInternals implements FirebaseServiceInternalsInterface {
  * app is provided or the `Storage` service associated with the provided
  * app.
  */
-export class Storage implements FirebaseServiceInterface {
+export class Storage implements FirebaseServiceInterface, StorageInterface {
   public readonly INTERNAL: StorageInternals = new StorageInternals();
 
   private readonly appInternal: FirebaseApp;

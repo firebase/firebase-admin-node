@@ -14,21 +14,13 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../firebase-app';
+import { app } from '../firebase-namespace-api';
 import * as _firestore from '@google-cloud/firestore';
 
-export declare function firestore(app?: FirebaseApp): _firestore.Firestore;
+export declare function firestore(app?: app.App): _firestore.Firestore;
 
-/**
- * We must define a namespace to make the typings work correctly. Otherwise
- * `admin.firestore()` cannot be called like a function. Temporarily,
- * admin.firestore is used as the namespace name because we cannot barrel
- * re-export the contents from firestore, and we want it to
- * match the namespacing in the re-export inside src/index.d.ts
- */
 /* eslint-disable @typescript-eslint/no-namespace */
-export namespace admin.firestore {
-  // See https://github.com/microsoft/TypeScript/issues/4336
+export namespace firestore {
   /* eslint-disable @typescript-eslint/no-unused-vars */
   // See https://github.com/typescript-eslint/typescript-eslint/issues/363
   export import v1beta1 = _firestore.v1beta1;
