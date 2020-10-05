@@ -14,49 +14,16 @@
  * limitations under the License.
  */
 
-/**
- * Used for looking up an account by uid.
- *
- * See auth.getUsers()
- */
-export interface UidIdentifier {
-  uid: string;
-}
+import { auth } from './index';
 
-/**
- * Used for looking up an account by email.
- *
- * See auth.getUsers()
- */
-export interface EmailIdentifier {
-  email: string;
-}
+import UserIdentifier = auth.UserIdentifier;
+import UidIdentifier = auth.UidIdentifier;
+import EmailIdentifier = auth.EmailIdentifier;
+import PhoneIdentifier = auth.PhoneIdentifier;
+import ProviderIdentifier = auth.ProviderIdentifier;
 
-/**
- * Used for looking up an account by phone number.
- *
- * See auth.getUsers()
- */
-export interface PhoneIdentifier {
-  phoneNumber: string;
-}
-
-/**
- * Used for looking up an account by federated provider.
- *
- * See auth.getUsers()
- */
-export interface ProviderIdentifier {
-  providerId: string;
-  providerUid: string;
-}
-
-/**
- * Identifies a user to be looked up.
- */
-export type UserIdentifier = UidIdentifier | EmailIdentifier | PhoneIdentifier | ProviderIdentifier;
-
-/* User defined type guards. See
+/*
+ * User defined type guards. See
  * https://www.typescriptlang.org/docs/handbook/advanced-types.html#user-defined-type-guards
  */
 
