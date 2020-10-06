@@ -2,6 +2,11 @@
 
 # Firebase Admin Node.js SDK
 
+## Current issues with doc generation
+
+* Firestore typing aliases listed as variables.
+* RTDB typing aliases listed as variables.
+
 
 ## Table of Contents
 

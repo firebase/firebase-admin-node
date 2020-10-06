@@ -28,7 +28,7 @@ const repoPath = path.resolve(`${__dirname}/..`);
 // Command-line options.
 const { source: sourceFile } = yargs
   .option('source', {
-    default: `${repoPath}/src/*.d.ts`,
+    default: `${repoPath}/lib/*.d.ts ${repoPath}/lib/**/*.d.ts`,
     describe: 'Typescript source file(s)',
     type: 'string'
   })
@@ -151,12 +151,12 @@ function checkForMissingFilesAndFixFilenameCase() {
     // toc.yaml.
     const tocFilePath = `${docPath}/${filename}.html`;
     // Generated filename from Typedoc will be lowercase.
-    const generatedFilePath = `${docPath}/${filename.toLowerCase()}.html`;
+    const generatedFilePath = `${docPath}/${filename.toLowerCase().replace('admin.', '')}.html`;
     return fs.exists(generatedFilePath).then(exists => {
       if (exists) {
         // Store in a lookup table for link fixing.
         lowerToUpperLookup[
-          `${filename.toLowerCase()}.html`
+          `${filename.toLowerCase().replace('admin.', '')}.html`
         ] = `${filename}.html`;
         return fs.rename(generatedFilePath, tocFilePath);
       } else {
@@ -167,6 +167,7 @@ function checkForMissingFilesAndFixFilenameCase() {
       }
     });
   });
+  fileCheckPromises.push(fs.rename(`${docPath}/globals.html`, `${docPath}/admin.html`));
   return Promise.all(fileCheckPromises).then(() => filenames);
 }
 
@@ -272,7 +273,7 @@ function updateFirestoreHtml(contentBlock) {
  */
 function addFirestoreTypeAliases() {
   return new Promise((resolve, reject) => {
-    const fileStream = fs.createReadStream(`${repoPath}/src/index.d.ts`);
+    const fileStream = fs.createReadStream(`${repoPath}/lib/firestore/index.d.ts`);
     fileStream.on('error', (err) => {
       reject(err);
     });
