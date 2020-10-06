@@ -27,6 +27,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as mocks from '../resources/mocks';
 
 import * as firebaseAdmin from '../../src/index';
+import { FirebaseApp, FirebaseAppInternals } from '../../src/firebase-app';
 import {
   RefreshTokenCredential, ServiceAccountCredential, isApplicationDefault
 } from '../../src/credential/credential-internal';
@@ -115,7 +116,7 @@ describe('Firebase', () => {
       });
 
       expect(isApplicationDefault(firebaseAdmin.app().options.credential)).to.be.false;
-      return firebaseAdmin.app().INTERNAL.getToken()
+      return getAppInternals().getToken()
         .should.eventually.have.keys(['accessToken', 'expirationTime']);
     });
 
@@ -126,7 +127,7 @@ describe('Firebase', () => {
       });
 
       expect(isApplicationDefault(firebaseAdmin.app().options.credential)).to.be.false;
-      return firebaseAdmin.app().INTERNAL.getToken()
+      return getAppInternals().getToken()
         .should.eventually.have.keys(['accessToken', 'expirationTime']);
     });
 
@@ -138,7 +139,7 @@ describe('Firebase', () => {
       });
 
       expect(isApplicationDefault(firebaseAdmin.app().options.credential)).to.be.true;
-      return firebaseAdmin.app().INTERNAL.getToken().then((token) => {
+      return getAppInternals().getToken().then((token) => {
         if (typeof credPath === 'undefined') {
           delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
         } else {
@@ -160,7 +161,7 @@ describe('Firebase', () => {
       });
 
       expect(isApplicationDefault(firebaseAdmin.app().options.credential)).to.be.false;
-      return firebaseAdmin.app().INTERNAL.getToken()
+      return getAppInternals().getToken()
         .should.eventually.have.keys(['accessToken', 'expirationTime']);
     });
   });
@@ -247,4 +248,8 @@ describe('Firebase', () => {
       }).not.to.throw();
     });
   });
+
+  function getAppInternals(): FirebaseAppInternals {
+    return (firebaseAdmin.app() as FirebaseApp).INTERNAL;
+  }
 });

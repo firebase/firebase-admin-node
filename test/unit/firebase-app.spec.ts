@@ -31,19 +31,28 @@ import { FirebaseServiceInterface } from '../../src/firebase-service';
 import { FirebaseApp, FirebaseAccessToken } from '../../src/firebase-app';
 import { FirebaseNamespace, FirebaseNamespaceInternals, FIREBASE_CONFIG_VAR } from '../../src/firebase-namespace';
 
-import { Auth } from '../../src/auth/auth';
-import { Messaging } from '../../src/messaging/messaging';
-import { MachineLearning } from '../../src/machine-learning/machine-learning';
-import { Storage } from '../../src/storage/storage';
-import { Firestore } from '@google-cloud/firestore';
+import { auth } from '../../src/auth/index';
+import { messaging } from '../../src/messaging/index';
+import { machineLearning } from '../../src/machine-learning/index';
+import { storage } from '../../src/storage/index';
+import { firestore } from '../../src/firestore/index';
 import { database } from '../../src/database/index';
-import { InstanceId } from '../../src/instance-id/instance-id';
-import { ProjectManagement } from '../../src/project-management/project-management';
-import { SecurityRules } from '../../src/security-rules/security-rules';
+import { instanceId } from '../../src/instance-id/index';
+import { projectManagement } from '../../src/project-management/index';
+import { securityRules } from '../../src/security-rules/index';
+import { remoteConfig } from '../../src/remote-config/index';
 import { FirebaseAppError, AppErrorCodes } from '../../src/utils/error';
-import { RemoteConfig } from '../../src/remote-config/remote-config';
 
+import Auth = auth.Auth;
 import Database = database.Database;
+import Messaging = messaging.Messaging;
+import MachineLearning = machineLearning.MachineLearning;
+import Storage = storage.Storage;
+import Firestore = firestore.Firestore;
+import InstanceId = instanceId.InstanceId;
+import ProjectManagement = projectManagement.ProjectManagement;
+import SecurityRules = securityRules.SecurityRules;
+import RemoteConfig = remoteConfig.RemoteConfig;
 
 chai.should();
 chai.use(sinonChai);
