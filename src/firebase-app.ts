@@ -42,7 +42,7 @@ import Database = database.Database;
 /**
  * Type representing a callback which is called every time an app lifecycle event occurs.
  */
-export type AppHook = (event: string, app: FirebaseApp) => void;
+export type AppHook = (event: string, app: app.App) => void;
 
 /**
  * Type representing a Firebase OAuth access token (derived from a Google OAuth2 access token) which

@@ -1,10 +1,5 @@
 [![Build Status](https://github.com/firebase/firebase-admin-node/workflows/Continuous%20Integration/badge.svg)](https://github.com/firebase/firebase-admin-node/actions)
 
-# TODO
-
-* Copy generated d.ts files to the build directory.
-* Update return types in the methods of `FirebaseNamespace` class.
-
 # Firebase Admin Node.js SDK
 
 

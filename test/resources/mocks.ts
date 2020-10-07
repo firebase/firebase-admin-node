@@ -28,6 +28,7 @@ import { AppOptions } from '../../src/firebase-namespace-api';
 import { FirebaseNamespace } from '../../src/firebase-namespace';
 import { FirebaseServiceInterface } from '../../src/firebase-service';
 import { FirebaseApp } from '../../src/firebase-app';
+import { app as _app } from '../../src/firebase-namespace-api';
 import { credential as _credential, GoogleOAuthAccessToken } from '../../src/credential/index';
 import { ServiceAccountCredential } from '../../src/credential/credential-internal';
 
@@ -223,7 +224,7 @@ export function generateSessionCookie(overrides?: object, expiresIn?: number): s
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 export function firebaseServiceFactory(
-  firebaseApp: FirebaseApp,
+  firebaseApp: _app.App,
   _extendApp?: (props: object) => void,
 ): FirebaseServiceInterface {
   const result = {
