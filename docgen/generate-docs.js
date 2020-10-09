@@ -46,7 +46,7 @@ const contentPath = path.resolve(`${__dirname}/content-sources/node`);
 const tempHomePath = path.resolve(`${contentPath}/HOME_TEMP.md`);
 const devsitePath = `/docs/reference/admin/node/`;
 
-const firestoreExcludes = ['v1', 'v1beta1', 'setLogFunction','DocumentData', 'enableLogging'];
+const firestoreExcludes = ['v1', 'v1beta1', 'setLogFunction','DocumentData'];
 const firestoreHtmlPath = `${docPath}/admin.firestore.html`;
 const firestoreHeader = `<section class="tsd-panel-group tsd-member-group ">
   <h2>Type aliases</h2>
@@ -57,6 +57,7 @@ const firestoreHeader = `<section class="tsd-panel-group tsd-member-group ">
   <ul>`;
 const firestoreFooter = '\n  </ul>\n</section>\n';
 
+const databaseExcludes = ['enableLogging'];
 const databaseHtmlPath = `${docPath}/admin.database.html`;
 const databaseHeader = `<section class="tsd-panel-group tsd-member-group ">
   <h2>Type aliases</h2>
@@ -166,7 +167,7 @@ function checkForMissingFilesAndFixFilenameCase() {
     // Preferred filename for devsite should be capitalized and taken from
     // toc.yaml.
     const tocFilePath = `${docPath}/${filename}.html`;
-    // Generated filename from Typedoc will be lowercase.
+    // Generated filename from Typedoc will be lowercase and won't have the admin prefix.
     const generatedFilePath = `${docPath}/${filename.toLowerCase().replace('admin.', '')}.html`;
     return fs.exists(generatedFilePath).then(exists => {
       if (exists) {
@@ -183,7 +184,7 @@ function checkForMissingFilesAndFixFilenameCase() {
       }
     });
   });
-  fileCheckPromises.push(fs.rename(`${docPath}/globals.html`, `${docPath}/admin.html`));
+
   return Promise.all(fileCheckPromises).then(() => filenames);
 }
 
@@ -345,7 +346,7 @@ function addDatabaseTypeAliases() {
       line = line.trim();
       if (line.startsWith('export import') && line.indexOf('rtdb.') >= 0) {
         const typeName = line.split(' ')[2];
-        if (firestoreExcludes.indexOf(typeName) === -1) {
+        if (databaseExcludes.indexOf(typeName) === -1) {
           contentBlock += `
           <li>
             <a href="/docs/reference/js/firebase.database.${typeName}.html">${typeName}</a>
@@ -409,6 +410,8 @@ Promise.all([
       moveFilesToRoot('enums'),
     ]);
   })
+  // Rename the globals file to be the top-level admin doc.
+  .then(() => fs.rename(`${docPath}/globals.html`, `${docPath}/admin.html`))
   // Check for files listed in TOC that are missing and warn if so.
   // Not blocking.
   .then(checkForMissingFilesAndFixFilenameCase)
