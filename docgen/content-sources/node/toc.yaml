@@ -36,6 +36,8 @@ toc:
     path: /docs/reference/admin/node/admin.auth.CreatePhoneMultiFactorInfoRequest
   - title: "CreateRequest"
     path: /docs/reference/admin/node/admin.auth.CreateRequest
+  - title: "EmailSignInProviderConfig"
+    path: /docs/reference/admin/node/admin.auth.EmailSignInProviderConfig
   - title: "ListProviderConfigResults"
     path: /docs/reference/admin/node/admin.auth.ListProviderConfigResults
   - title: "ListTenantsResult"
@@ -121,19 +123,7 @@ toc:
   path: /docs/reference/admin/node/admin.database
   section:
   - title: "Database"
-    path: /docs/reference/admin/node/_database_types_.FirebaseDatabase
-  - title: "DataSnapshot"
-    path: /docs/reference/admin/node/admin.database.DataSnapshot
-  - title: "OnDisconnect"
-    path: /docs/reference/admin/node/admin.database.OnDisconnect
-  - title: "Query"
-    path: /docs/reference/admin/node/admin.database.Query
-  - title: "Reference"
-    path: /docs/reference/admin/node/admin.database.Reference
-  - title: "ServerValue"
-    path: /docs/reference/admin/node/admin.database.ServerValue
-  - title: "ThenableReference"
-    path: /docs/reference/admin/node/admin.database.ThenableReference
+    path: /docs/reference/admin/node/admin.database.Database-1
 
 - title: "admin.firestore"
   path: /docs/reference/admin/node/admin.firestore
@@ -167,6 +157,8 @@ toc:
 - title: "admin.messaging"
   path: /docs/reference/admin/node/admin.messaging
   section:
+  - title: "BaseMessage"
+    path: /docs/reference/admin/node/admin.messaging.BaseMessage
   - title: "TopicMessage"
     path: /docs/reference/admin/node/admin.messaging.TopicMessage
   - title: "TokenMessage"

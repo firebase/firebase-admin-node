@@ -25,10 +25,16 @@ const yaml = require('js-yaml');
 
 const repoPath = path.resolve(`${__dirname}/..`);
 
+const defaultSources = [
+  `${repoPath}/lib/firebase-namespace.d.ts`,
+  `${repoPath}/lib/firebase-namespace-api.d.ts`,
+  `${repoPath}/lib/**/*.d.ts`,
+];
+
 // Command-line options.
 const { source: sourceFile } = yargs
   .option('source', {
-    default: `${repoPath}/lib/*.d.ts ${repoPath}/lib/**/*.d.ts`,
+    default: defaultSources.join(' '),
     describe: 'Typescript source file(s)',
     type: 'string'
   })
@@ -40,7 +46,7 @@ const contentPath = path.resolve(`${__dirname}/content-sources/node`);
 const tempHomePath = path.resolve(`${contentPath}/HOME_TEMP.md`);
 const devsitePath = `/docs/reference/admin/node/`;
 
-const firestoreExcludes = ['v1', 'v1beta1', 'setLogFunction','DocumentData'];
+const firestoreExcludes = ['v1', 'v1beta1', 'setLogFunction','DocumentData', 'enableLogging'];
 const firestoreHtmlPath = `${docPath}/admin.firestore.html`;
 const firestoreHeader = `<section class="tsd-panel-group tsd-member-group ">
   <h2>Type aliases</h2>
@@ -50,6 +56,16 @@ const firestoreHeader = `<section class="tsd-panel-group tsd-member-group ">
   </div>
   <ul>`;
 const firestoreFooter = '\n  </ul>\n</section>\n';
+
+const databaseHtmlPath = `${docPath}/admin.database.html`;
+const databaseHeader = `<section class="tsd-panel-group tsd-member-group ">
+  <h2>Type aliases</h2>
+  <div class="tsd-panel">
+    <p>Following types are defined in the <code>@firebase/database</code> package
+    and re-exported from this namespace for convenience.</p>
+  </div>
+  <ul>`;
+const databaseFooter = '\n  </ul>\n</section>\n';
 
 /**
  * Strips path prefix and returns only filename.
@@ -119,7 +135,7 @@ function generateTempHomeMdFile(tocRaw, homeRaw) {
   const { toc } = yaml.safeLoad(tocRaw);
   let tocPageLines = [homeRaw, '# API Reference'];
   toc.forEach(group => {
-    tocPageLines.push(`\n## [${group.title}](${stripPath(group.path)})`);
+    tocPageLines.push(`\n## [${group.title}](${stripPath(group.path)}.html)`);
     const section = group.section || [];
     section.forEach(item => {
       tocPageLines.push(`- [${item.title}](${stripPath(item.path)}.html)`);
@@ -256,13 +272,13 @@ function fixAllLinks(htmlFiles) {
  *
  * @param {string} contentBlock The HTML content block to be added to the Firestore docs.
  */
-function updateFirestoreHtml(contentBlock) {
-  const dom = new jsdom.JSDOM(fs.readFileSync(firestoreHtmlPath));
+function updateHtml(htmlPath, contentBlock) {
+  const dom = new jsdom.JSDOM(fs.readFileSync(htmlPath));
   const contentNode = dom.window.document.body.querySelector('.col-12');
 
   const newSection = new jsdom.JSDOM(contentBlock);
   contentNode.appendChild(newSection.window.document.body.firstChild);
-  fs.writeFileSync(firestoreHtmlPath, dom.window.document.documentElement.outerHTML);
+  fs.writeFileSync(htmlPath, dom.window.document.documentElement.outerHTML);
 }
 
 /**
@@ -298,7 +314,49 @@ function addFirestoreTypeAliases() {
     lineReader.on('close', () => {
       try {
         contentBlock += firestoreFooter;
-        updateFirestoreHtml(contentBlock);
+        updateHtml(firestoreHtmlPath, contentBlock);
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
+    });
+  });
+}
+
+/**
+ * Adds RTDB type aliases to the auto-generated API docs. These are the
+ * types that are imported from the @firebase/database package, and
+ * then re-exported from the admin.database namespace. Typedoc currently
+ * does not handle these correctly, so we need this solution instead.
+ */
+function addDatabaseTypeAliases() {
+  return new Promise((resolve, reject) => {
+    const fileStream = fs.createReadStream(`${repoPath}/lib/database/index.d.ts`);
+    fileStream.on('error', (err) => {
+      reject(err);
+    });
+    const lineReader = readline.createInterface({
+      input: fileStream,
+    });
+
+    let contentBlock = databaseHeader;
+    lineReader.on('line', (line) => {
+      line = line.trim();
+      if (line.startsWith('export import') && line.indexOf('rtdb.') >= 0) {
+        const typeName = line.split(' ')[2];
+        if (firestoreExcludes.indexOf(typeName) === -1) {
+          contentBlock += `
+          <li>
+            <a href="/docs/reference/js/firebase.database.${typeName}.html">${typeName}</a>
+          </li>`;
+        }
+      }
+    });
+
+    lineReader.on('close', () => {
+      try {
+        contentBlock += databaseFooter;
+        updateHtml(databaseHtmlPath, contentBlock);
         resolve();
       } catch (err) {
         reject(err);
@@ -367,6 +425,7 @@ Promise.all([
   // Add local variable include line to index.html (to access current SDK
   // version number).
   .then(addFirestoreTypeAliases)
+  .then(addDatabaseTypeAliases)
   .then(() => {
     fs.readFile(`${docPath}/index.html`, 'utf8').then(data => {
       // String to include devsite local variables.
