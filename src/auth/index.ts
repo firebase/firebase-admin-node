@@ -17,12 +17,12 @@
 import { app, FirebaseArrayIndexError } from '../firebase-namespace-api';
 
 /**
- * Gets the {@link admin.auth.Auth `Auth`} service for the default app or a
+ * Gets the {@link auth.Auth `Auth`} service for the default app or a
  * given app.
  *
  * `admin.auth()` can be called with no arguments to access the default app's
- * {@link admin.auth.Auth `Auth`} service or as `admin.auth(app)` to access the
- * {@link admin.auth.Auth `Auth`} service associated with a specific app.
+ * {@link auth.Auth `Auth`} service or as `admin.auth(app)` to access the
+ * {@link auth.Auth `Auth`} service associated with a specific app.
  *
  * @example
  * ```javascript
@@ -575,7 +575,7 @@ export namespace auth {
     [key: string]: any;
   }
 
-  /** Represents the result of the {@link admin.auth.getUsers()} API. */
+  /** Represents the result of the {@link auth.Auth.getUsers} API. */
   export interface GetUsersResult {
     /**
      * Set of user records, corresponding to the set of users that were
@@ -596,7 +596,7 @@ export namespace auth {
   export interface ListUsersResult {
 
     /**
-     * The list of {@link admin.auth.UserRecord `UserRecord`} objects for the
+     * The list of {@link auth.UserRecord `UserRecord`} objects for the
      * current downloaded batch.
      */
     users: UserRecord[];
@@ -840,7 +840,7 @@ export namespace auth {
     /**
      * The buffer of bytes representing the user's hashed password.
      * When a user is to be imported with a password hash,
-     * {@link admin.auth.UserImportOptions `UserImportOptions`} are required to be
+     * {@link auth.UserImportOptions `UserImportOptions`} are required to be
      * specified to identify the hashing algorithm used to generate this hash.
      */
     passwordHash?: Buffer;
@@ -1109,7 +1109,7 @@ export namespace auth {
   export interface ListTenantsResult {
 
     /**
-     * The list of {@link admin.auth.Tenant `Tenant`} objects for the downloaded batch.
+     * The list of {@link auth.Tenant `Tenant`} objects for the downloaded batch.
      */
     tenants: Tenant[];
 
@@ -1610,7 +1610,7 @@ export namespace auth {
      * Revokes all refresh tokens for an existing user.
      *
      * This API will update the user's
-     * {@link admin.auth.UserRecord#tokensValidAfterTime `tokensValidAfterTime`} to
+     * {@link auth.UserRecord#tokensValidAfterTime `tokensValidAfterTime`} to
      * the current UTC. It is important that the server on which this is called has
      * its clock set correctly and synchronized.
      *
@@ -1618,7 +1618,7 @@ export namespace auth {
      * new ID tokens for existing sessions from getting minted, existing ID tokens
      * may remain active until their natural expiration (one hour). To verify that
      * ID tokens are revoked, use
-     * {@link admin.auth.Auth#verifyIdToken `verifyIdToken(idToken, true)`}
+     * {@link auth.Auth#verifyIdToken `verifyIdToken(idToken, true)`}
      * where `checkRevoked` is set to true.
      *
      * @param uid The `uid` corresponding to the user whose refresh tokens
@@ -1633,7 +1633,7 @@ export namespace auth {
      * Imports the provided list of users into Firebase Auth.
      * A maximum of 1000 users are allowed to be imported one at a time.
      * When importing users with passwords,
-     * {@link admin.auth.UserImportOptions `UserImportOptions`} are required to be
+     * {@link auth.UserImportOptions `UserImportOptions`} are required to be
      * specified.
      * This operation is optimized for bulk imports and will ignore checks on `uid`,
      * `email` and other identifier uniqueness which could result in duplications.
@@ -1702,7 +1702,7 @@ export namespace auth {
     /**
      * Generates the out of band email action link to reset a user's password.
      * The link is generated for the user with the specified email address. The
-     * optional  {@link admin.auth.ActionCodeSettings `ActionCodeSettings`} object
+     * optional  {@link auth.ActionCodeSettings `ActionCodeSettings`} object
      * defines whether the link is to be handled by a mobile app or browser and the
      * additional state information to be passed in the deep link, etc.
      *
@@ -1756,7 +1756,7 @@ export namespace auth {
     /**
      * Generates the out of band email action link to verify the user's ownership
      * of the specified email. The
-     * {@link admin.auth.ActionCodeSettings `ActionCodeSettings`} object provided
+     * {@link auth.ActionCodeSettings `ActionCodeSettings`} object provided
      * as an argument to this method defines whether the link is to be handled by a
      * mobile app or browser along with additional state information to be passed in
      * the deep link, etc.
@@ -1810,7 +1810,7 @@ export namespace auth {
     /**
      * Generates the out of band email action link to sign in or sign up the owner
      * of the specified email. The
-     * {@link admin.auth.ActionCodeSettings `ActionCodeSettings`} object provided
+     * {@link auth.ActionCodeSettings `ActionCodeSettings`} object provided
      * as an argument to this method defines whether the link is to be handled by a
      * mobile app or browser along with additional state information to be passed in
      * the deep link, etc.

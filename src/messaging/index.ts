@@ -17,13 +17,13 @@
 import { app, FirebaseError, FirebaseArrayIndexError } from '../firebase-namespace-api';
 
 /**
- * Gets the {@link admin.messaging.Messaging `Messaging`} service for the
+ * Gets the {@link messaging.Messaging `Messaging`} service for the
  * default app or a given app.
  *
  * `admin.messaging()` can be called with no arguments to access the default
- * app's {@link admin.messaging.Messaging `Messaging`} service or as
+ * app's {@link messaging.Messaging `Messaging`} service or as
  * `admin.messaging(app)` to access the
- * {@link admin.messaging.Messaging `Messaging`} service associated with a
+ * {@link messaging.Messaging `Messaging`} service associated with a
  * specific app.
  *
  * @example
@@ -85,7 +85,7 @@ export namespace messaging {
   }
 
   /**
-   * A notification that can be included in {@link admin.messaging.Message}.
+   * A notification that can be included in {@link messaging.Message}.
    */
   export interface Notification {
     /**
@@ -114,7 +114,7 @@ export namespace messaging {
 
   /**
    * Represents the WebPush protocol options that can be included in an
-   * {@link admin.messaging.Message}.
+   * {@link messaging.Message}.
    */
   export interface WebpushConfig {
 
@@ -156,7 +156,7 @@ export namespace messaging {
 
   /**
    * Represents the WebPush-specific notification options that can be included in
-   * {@link admin.messaging.WebpushConfig}. This supports most of the standard
+   * {@link messaging.WebpushConfig}. This supports most of the standard
    * options as defined in the Web Notification
    * [specification](https://developer.mozilla.org/en-US/docs/Web/API/notification/Notification).
    */
@@ -268,7 +268,7 @@ export namespace messaging {
 
   /**
    * Represents the APNs-specific options that can be included in an
-   * {@link admin.messaging.Message}. Refer to
+   * {@link messaging.Message}. Refer to
    * [Apple documentation](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/CommunicatingwithAPNs.html)
    * for various headers and payload fields supported by APNs.
    */
@@ -406,7 +406,7 @@ export namespace messaging {
 
   /**
    * Represents the Android-specific options that can be included in an
-   * {@link admin.messaging.Message}.
+   * {@link messaging.Message}.
    */
   export interface AndroidConfig {
 
@@ -454,7 +454,7 @@ export namespace messaging {
 
   /**
     * Represents the Android-specific notification options that can be included in
-    * {@link admin.messaging.AndroidConfig}.
+    * {@link messaging.AndroidConfig}.
     */
   export interface AndroidNotification {
     /**
@@ -634,7 +634,7 @@ export namespace messaging {
 
   /**
     * Represents settings to control notification LED that can be included in
-    * {@link admin.messaging.AndroidNotification}.
+    * {@link messaging.AndroidNotification}.
     */
   export interface LightSettings {
     /**
@@ -1141,7 +1141,7 @@ export namespace messaging {
 
   export interface Messaging {
     /**
-     * The {@link admin.app.App app} associated with the current `Messaging` service
+     * The {@link app.App app} associated with the current `Messaging` service
      * instance.
      *
      * @example

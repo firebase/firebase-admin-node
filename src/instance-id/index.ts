@@ -17,13 +17,13 @@
 import { app } from '../firebase-namespace-api';
 
 /**
- * Gets the {@link admin.instanceId.InstanceId `InstanceId`} service for the
+ * Gets the {@link instanceId.InstanceId `InstanceId`} service for the
  * default app or a given app.
  *
  * `admin.instanceId()` can be called with no arguments to access the default
- * app's {@link admin.instanceId.InstanceId `InstanceId`} service or as
+ * app's {@link instanceId.InstanceId `InstanceId`} service or as
  * `admin.instanceId(app)` to access the
- * {@link admin.instanceId.InstanceId `InstanceId`} service associated with a
+ * {@link instanceId.InstanceId `InstanceId`} service associated with a
  * specific app.
  *
  * @example

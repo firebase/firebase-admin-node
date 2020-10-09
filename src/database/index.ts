@@ -19,13 +19,13 @@ import { ServerValue as sv } from '@firebase/database';
 import * as rtdb from '@firebase/database-types';
 
 /**
- * Gets the {@link admin.database.Database `Database`} service for the default
+ * Gets the {@link database.Database `Database`} service for the default
  * app or a given app.
  *
  * `admin.database()` can be called with no arguments to access the default
- * app's {@link admin.database.Database `Database`} service or as
+ * app's {@link database.Database `Database`} service or as
  * `admin.database(app)` to access the
- * {@link admin.database.Database `Database`} service associated with a specific
+ * {@link database.Database `Database`} service associated with a specific
  * app.
  *
  * `admin.database` is also a namespace that can be used to access global

@@ -17,13 +17,13 @@
 import { app } from '../firebase-namespace-api';
 
 /**
- * Gets the {@link admin.remoteConfig.RemoteConfig `RemoteConfig`} service for the
+ * Gets the {@link remoteConfig.RemoteConfig `RemoteConfig`} service for the
  * default app or a given app.
  *
  * `admin.remoteConfig()` can be called with no arguments to access the default
- * app's {@link admin.remoteConfig.RemoteConfig `RemoteConfig`} service or as
+ * app's {@link remoteConfig.RemoteConfig `RemoteConfig`} service or as
  * `admin.remoteConfig(app)` to access the
- * {@link admin.remoteConfig.RemoteConfig `RemoteConfig`} service associated with a
+ * {@link remoteConfig.RemoteConfig `RemoteConfig`} service associated with a
  * specific app.
  *
  * @example
@@ -315,15 +315,12 @@ export namespace remoteConfig {
 
   /**
    * The Firebase `RemoteConfig` service interface.
-   *
-   * Do not call this constructor directly. Instead, use
-   * [`admin.remoteConfig()`](admin.remoteConfig#remoteConfig).
    */
   export interface RemoteConfig {
     app: app.App;
 
     /**
-     * Gets the current active version of the {@link admin.remoteConfig.RemoteConfigTemplate
+     * Gets the current active version of the {@link remoteConfig.RemoteConfigTemplate
      * `RemoteConfigTemplate`} of the project.
      *
      * @return A promise that fulfills with a `RemoteConfigTemplate`.
@@ -331,7 +328,7 @@ export namespace remoteConfig {
     getTemplate(): Promise<RemoteConfigTemplate>;
 
     /**
-     * Gets the requested version of the {@link admin.remoteConfig.RemoteConfigTemplate
+     * Gets the requested version of the {@link remoteConfig.RemoteConfigTemplate
      * `RemoteConfigTemplate`} of the project.
      *
      * @param versionNumber Version number of the Remote Config template to look up.
@@ -341,7 +338,7 @@ export namespace remoteConfig {
     getTemplateAtVersion(versionNumber: number | string): Promise<RemoteConfigTemplate>;
 
     /**
-     * Validates a {@link admin.remoteConfig.RemoteConfigTemplate `RemoteConfigTemplate`}.
+     * Validates a {@link remoteConfig.RemoteConfigTemplate `RemoteConfigTemplate`}.
      *
      * @param template The Remote Config template to be validated.
      * @returns A promise that fulfills with the validated `RemoteConfigTemplate`.
@@ -384,7 +381,7 @@ export namespace remoteConfig {
     * All versions that correspond to non-active Remote Config templates (that is, all except the
     * template that is being fetched by clients) are also deleted if they are more than 90 days old.
     *
-    * @param options Optional {@link admin.remoteConfig.ListVersionsOptions `ListVersionsOptions`}
+    * @param options Optional {@link remoteConfig.ListVersionsOptions `ListVersionsOptions`}
     *    object for getting a list of template versions.
     * @return A promise that fulfills with a `ListVersionsResult`.
     */

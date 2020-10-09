@@ -83,7 +83,7 @@ export class Ruleset implements RulesetInterface {
  * The Firebase `SecurityRules` service interface.
  *
  * Do not call this constructor directly. Instead, use
- * [`admin.securityRules()`](admin.securityRules#securityRules).
+ * [`admin.securityRules()`](securityRules#securityRules).
  */
 export class SecurityRules implements FirebaseServiceInterface, SecurityRulesInterface {
 
@@ -221,7 +221,7 @@ export class SecurityRules implements FirebaseServiceInterface, SecurityRulesInt
   }
 
   /**
-   * Creates a {@link admin.securityRules.RulesFile `RuleFile`} with the given name
+   * Creates a {@link securityRules.RulesFile `RuleFile`} with the given name
    * and source. Throws an error if any of the arguments are invalid. This is a local
    * operation, and does not involve any network API calls.
    *
@@ -260,8 +260,8 @@ export class SecurityRules implements FirebaseServiceInterface, SecurityRulesInt
   }
 
   /**
-   * Creates a new {@link admin.securityRules.Ruleset `Ruleset`} from the given
-   * {@link admin.securityRules.RulesFile `RuleFile`}.
+   * Creates a new {@link securityRules.Ruleset `Ruleset`} from the given
+   * {@link securityRules.RulesFile `RuleFile`}.
    *
    * @param file Rules file to include in the new `Ruleset`.
    * @returns A promise that fulfills with the newly created `Ruleset`.
@@ -280,7 +280,7 @@ export class SecurityRules implements FirebaseServiceInterface, SecurityRulesInt
   }
 
   /**
-   * Deletes the {@link admin.securityRules.Ruleset `Ruleset`} identified by the given
+   * Deletes the {@link securityRules.Ruleset `Ruleset`} identified by the given
    * name. The input name should be the short name string without the project ID
    * prefix. For example, to delete the `projects/project-id/rulesets/my-ruleset`,
    * pass the  short name "my-ruleset". Rejects with a `not-found` error if the

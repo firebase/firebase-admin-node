@@ -17,13 +17,13 @@
 import { app } from '../firebase-namespace-api';
 
 /**
- * Gets the {@link admin.projectManagement.ProjectManagement
+ * Gets the {@link projectManagement.ProjectManagement
  * `ProjectManagement`} service for the default app or a given app.
  *
  * `admin.projectManagement()` can be called with no arguments to access the
- * default app's {@link admin.projectManagement.ProjectManagement
+ * default app's {@link projectManagement.ProjectManagement
  * `ProjectManagement`} service, or as `admin.projectManagement(app)` to access
- * the {@link admin.projectManagement.ProjectManagement `ProjectManagement`}
+ * the {@link projectManagement.ProjectManagement `ProjectManagement`}
  * service associated with a specific app.
  *
  * @example
@@ -165,7 +165,7 @@ export namespace projectManagement {
    * A reference to a Firebase Android app.
    *
    * Do not call this constructor directly. Instead, use
-   * [`projectManagement.androidApp()`](admin.projectManagement.ProjectManagement#androidApp).
+   * [`projectManagement.androidApp()`](projectManagement.ProjectManagement#androidApp).
    */
   export interface AndroidApp {
     appId: string;
@@ -229,7 +229,7 @@ export namespace projectManagement {
    * A reference to a Firebase iOS app.
    *
    * Do not call this constructor directly. Instead, use
-   * [`projectManagement.iosApp()`](admin.projectManagement.ProjectManagement#iosApp).
+   * [`projectManagement.iosApp()`](projectManagement.ProjectManagement#iosApp).
    */
   export interface IosApp {
     appId: string;
@@ -266,7 +266,7 @@ export namespace projectManagement {
    * A SHA-1 or SHA-256 certificate.
    *
    * Do not call this constructor directly. Instead, use
-   * [`projectManagement.shaCertificate()`](admin.projectManagement.ProjectManagement#shaCertificate).
+   * [`projectManagement.shaCertificate()`](projectManagement.ProjectManagement#shaCertificate).
    */
   export interface ShaCertificate {
 
@@ -307,7 +307,7 @@ export namespace projectManagement {
    * The Firebase ProjectManagement service interface.
    *
    * Do not call this constructor directly. Instead, use
-   * [`admin.projectManagement()`](admin.projectManagement#projectManagement).
+   * [`admin.projectManagement()`](projectManagement#projectManagement).
    */
   export interface ProjectManagement {
     app: app.App;
