@@ -1002,7 +1002,7 @@ export namespace messaging {
 
   /**
    * Interface representing the server response from the
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.messaging.Messaging#sendToDeviceGroup `sendToDeviceGroup()`}
+   * {@link messaging.Messaging.sendToDeviceGroup `sendToDeviceGroup()`}
    * method.
    *
    * See
@@ -1029,7 +1029,7 @@ export namespace messaging {
 
   /**
    * Interface representing the server response from the legacy
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.messaging.Messaging#sendToTopic `sendToTopic()`} method.
+   * {@link messaging.Messaging.sendToTopic `sendToTopic()`} method.
    *
    * See
    * [Send to a topic](/docs/cloud-messaging/admin/send-messages#send_to_a_topic)
@@ -1045,7 +1045,7 @@ export namespace messaging {
 
   /**
    * Interface representing the server response from the legacy
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.messaging.Messaging#sendToCondition `sendToCondition()`} method.
+   * {@link messaging.Messaging.sendToCondition `sendToCondition()`} method.
    *
    * See
    * [Send to a condition](/docs/cloud-messaging/admin/send-messages#send_to_a_condition)
@@ -1061,10 +1061,8 @@ export namespace messaging {
 
   /**
    * Interface representing the server response from the
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.messaging.Messaging#subscribeToTopic `subscribeToTopic()`} and
-   * {@link
-   *   admin.messaging.Messaging#unsubscribeFromTopic
-   *   `unsubscribeFromTopic()`}
+   * {@link messaging.Messaging.subscribeToTopic `subscribeToTopic()`} and
+   * {@link messaging.Messaging.unsubscribeFromTopic `unsubscribeFromTopic()`}
    * methods.
    *
    * See
@@ -1093,8 +1091,8 @@ export namespace messaging {
 
   /**
    * Interface representing the server response from the
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.messaging.Messaging#sendAll `sendAll()`} and
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.messaging.Messaging#sendMulticast `sendMulticast()`} methods.
+   * {@link messaging.Messaging.sendAll `sendAll()`} and
+   * {@link messaging.Messaging.sendMulticast `sendMulticast()`} methods.
    */
   export interface BatchResponse {
 

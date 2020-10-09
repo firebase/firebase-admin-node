@@ -210,7 +210,7 @@ export namespace auth {
      * when uploading this user, as is typical when migrating from another Auth
      * system, this will be an empty string. If no password is set, this is
      * null. This is only available when the user is obtained from
-     * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#listUsers `listUsers()`}.
+     * {@link auth.Auth.listUsers `listUsers()`}.
      *
      */
     passwordHash?: string;
@@ -221,7 +221,7 @@ export namespace auth {
      * upload this user, typical when migrating from another Auth system, this will
      * be an empty string. If no password is set, this is null. This is only
      * available when the user is obtained from
-     * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#listUsers `listUsers()`}.
+     * {@link auth.Auth.listUsers `listUsers()`}.
      *
      */
     passwordSalt?: string;
@@ -230,14 +230,14 @@ export namespace auth {
      * The user's custom claims object if available, typically used to define
      * user roles and propagated to an authenticated user's ID token.
      * This is set via
-     * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#setCustomUserClaims `setCustomUserClaims()`}
+     * {@link auth.Auth.setCustomUserClaims `setCustomUserClaims()`}
      */
     customClaims?: { [key: string]: any };
 
     /**
      * The date the user's tokens are valid after, formatted as a UTC string.
      * This is updated every time the user's refresh token are revoked either
-     * from the {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#revokeRefreshTokens `revokeRefreshTokens()`}
+     * from the {@link auth.Auth.revokeRefreshTokens `revokeRefreshTokens()`}
      * API or from the Firebase Auth backend on big account changes (password
      * resets, password or email updates, etc).
      */
@@ -434,7 +434,7 @@ export namespace auth {
 
   /**
    * Interface representing a decoded Firebase ID token, returned from the
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#verifyidtoken `verifyIdToken()`} method.
+   * {@link auth.Auth.verifyIdToken `verifyIdToken()`} method.
    *
    * Firebase ID tokens are OpenID Connect spec-compliant JSON Web Tokens (JWTs).
    * See the
@@ -590,7 +590,7 @@ export namespace auth {
 
   /**
    * Interface representing the object returned from a
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#listUsers `listUsers()`} operation. Contains the list
+   * {@link auth.Auth.listUsers `listUsers()`} operation. Contains the list
    * of users for the current batch and the next page token if available.
    */
   export interface ListUsersResult {
@@ -613,7 +613,7 @@ export namespace auth {
 
   /**
    * Interface representing the user import options needed for
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#importUsers `importUsers()`} method. This is used to
+   * {@link auth.Auth.importUsers `importUsers()`} method. This is used to
    * provide the password hashing algorithm information.
    */
   export interface UserImportOptions {
@@ -679,7 +679,7 @@ export namespace auth {
 
   /**
    * Interface representing the response from the
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#importUsers `importUsers()`} method for batch
+   * {@link auth.Auth.importUsers `importUsers()`} method for batch
    * importing users to Firebase Auth.
    */
   export interface UserImportResult {
@@ -703,7 +703,7 @@ export namespace auth {
 
   /**
    * Represents the result of the
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#deleteUsers `deleteUsers()`}
+   * {@link auth.Auth.deleteUsers `deleteUsers()`}
    * API.
    */
   export interface DeleteUsersResult {
@@ -781,7 +781,7 @@ export namespace auth {
 
   /**
    * Interface representing a user to import to Firebase Auth via the
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#importUsers `importUsers()`} method.
+   * {@link auth.Auth.importUsers `importUsers()`} method.
    */
   export interface UserImportRecord {
 
@@ -867,7 +867,7 @@ export namespace auth {
 
   /**
    * Interface representing the session cookie options needed for the
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#createSessionCookie `createSessionCookie()`} method.
+   * {@link auth.Auth.createSessionCookie `createSessionCookie()`} method.
    */
   export interface SessionCookieOptions {
 
@@ -1102,7 +1102,7 @@ export namespace auth {
 
   /**
    * Interface representing the object returned from a
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#listTenants `listTenants()`}
+   * {@link auth.TenantManager.listTenants `listTenants()`}
    * operation.
    * Contains the list of tenants for the current batch and the next page token if available.
    */
@@ -1122,7 +1122,7 @@ export namespace auth {
   /**
    * The filter interface used for listing provider configurations. This is used
    * when specifying how to list configured identity providers via
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#listProviderConfigs `listProviderConfigs()`}.
+   * {@link auth.Auth.listProviderConfigs `listProviderConfigs()`}.
    */
   export interface AuthProviderConfigFilter {
 
@@ -1175,7 +1175,7 @@ export namespace auth {
    * The
    * [SAML](http://docs.oasis-open.org/security/saml/Post2.0/sstc-saml-tech-overview-2.0.html)
    * Auth provider configuration interface. A SAML provider can be created via
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#createProviderConfig `createProviderConfig()`}.
+   * {@link auth.Auth.createProviderConfig `createProviderConfig()`}.
    */
   export interface SAMLAuthProviderConfig extends AuthProviderConfig {
 
@@ -1220,7 +1220,7 @@ export namespace auth {
   /**
    * The [OIDC](https://openid.net/specs/openid-connect-core-1_0-final.html) Auth
    * provider configuration interface. An OIDC provider can be created via
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#createProviderConfig `createProviderConfig()`}.
+   * {@link auth.Auth.createProviderConfig `createProviderConfig()`}.
    */
   export interface OIDCAuthProviderConfig extends AuthProviderConfig {
 
@@ -1254,7 +1254,7 @@ export namespace auth {
   /**
    * The request interface for updating a SAML Auth provider. This is used
    * when updating a SAML provider's configuration via
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#updateProviderConfig `updateProviderConfig()`}.
+   * {@link auth.Auth.updateProviderConfig `updateProviderConfig()`}.
    */
   export interface SAMLUpdateAuthProviderRequest {
 
@@ -1304,7 +1304,7 @@ export namespace auth {
   /**
    * The request interface for updating an OIDC Auth provider. This is used
    * when updating an OIDC provider's configuration via
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#updateProviderConfig `updateProviderConfig()`}.
+   * {@link auth.Auth.updateProviderConfig `updateProviderConfig()`}.
    */
   export interface OIDCUpdateAuthProviderRequest {
 
@@ -1336,7 +1336,7 @@ export namespace auth {
   /**
    * The response interface for listing provider configs. This is only available
    * when listing all identity providers' configurations via
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#listProviderConfigs `listProviderConfigs()`}.
+   * {@link auth.Auth.listProviderConfigs `listProviderConfigs()`}.
    */
   export interface ListProviderConfigResults {
 
@@ -1610,7 +1610,7 @@ export namespace auth {
      * Revokes all refresh tokens for an existing user.
      *
      * This API will update the user's
-     * {@link auth.UserRecord#tokensValidAfterTime `tokensValidAfterTime`} to
+     * {@link auth.UserRecord.tokensValidAfterTime `tokensValidAfterTime`} to
      * the current UTC. It is important that the server on which this is called has
      * its clock set correctly and synchronized.
      *
@@ -1618,7 +1618,7 @@ export namespace auth {
      * new ID tokens for existing sessions from getting minted, existing ID tokens
      * may remain active until their natural expiration (one hour). To verify that
      * ID tokens are revoked, use
-     * {@link auth.Auth#verifyIdToken `verifyIdToken(idToken, true)`}
+     * {@link auth.Auth.verifyIdToken `verifyIdToken(idToken, true)`}
      * where `checkRevoked` is set to true.
      *
      * @param uid The `uid` corresponding to the user whose refresh tokens
