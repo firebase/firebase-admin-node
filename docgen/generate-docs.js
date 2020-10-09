@@ -270,6 +270,7 @@ function fixAllLinks(htmlFiles) {
  * Updates the auto-generated Firestore API references page, by appending
  * the specified HTML content block.
  *
+ * @param {string} htmlPath Path of the HTML file to update.
  * @param {string} contentBlock The HTML content block to be added to the Firestore docs.
  */
 function updateHtml(htmlPath, contentBlock) {
