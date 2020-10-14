@@ -19,7 +19,7 @@ import {
   UserIdentifier, isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, isProviderIdentifier,
 } from './identifier';
 import { FirebaseApp } from '../firebase-app';
-import { FirebaseTokenGenerator, cryptoSignerFromApp } from './token-generator';
+import { FirebaseTokenGenerator, EmulatedSigner, cryptoSignerFromApp } from './token-generator';
 import {
   AbstractAuthRequestHandler, AuthRequestHandler, TenantAwareAuthRequestHandler,
 } from './auth-api-request';
@@ -31,13 +31,15 @@ import {
 
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier } from './token-verifier';
+import { FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier, ALGORITHM_RS256 } from './token-verifier';
 import { ActionCodeSettings } from './action-code-settings-builder';
 import {
   AuthProviderConfig, AuthProviderConfigFilter, ListProviderConfigResults, UpdateAuthProviderRequest,
   SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
 } from './auth-config';
 import { TenantManager } from './tenant-manager';
+import { Algorithm } from 'jsonwebtoken';
+import { timeStamp } from 'console';
 
 
 /**
@@ -127,6 +129,10 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   protected readonly idTokenVerifier: FirebaseTokenVerifier;
   protected readonly sessionCookieVerifier: FirebaseTokenVerifier;
 
+  protected static useEmulator(): boolean {
+    return !!process.env.FIREBASE_AUTH_EMULATOR_HOST;
+  }
+
   /**
    * The BaseAuth class constructor.
    *
@@ -138,17 +144,16 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    * @constructor
    */
   constructor(app: FirebaseApp, protected readonly authRequestHandler: T, tokenGenerator?: FirebaseTokenGenerator) {
-    const useEmulator = !!process.env.FIREBASE_AUTH_EMULATOR_HOST;
-
     if (tokenGenerator) {
       this.tokenGenerator = tokenGenerator;
     } else {
-      const cryptoSigner = cryptoSignerFromApp(app);
-      this.tokenGenerator = new FirebaseTokenGenerator(cryptoSigner, undefined, useEmulator);
+      const cryptoSigner = BaseAuth.useEmulator() ? new EmulatedSigner() : cryptoSignerFromApp(app);
+      this.tokenGenerator = new FirebaseTokenGenerator(cryptoSigner);
     }
 
-    this.sessionCookieVerifier = createSessionCookieVerifier(app, useEmulator);
-    this.idTokenVerifier = createIdTokenVerifier(app, useEmulator);
+    const tokenAlgorithm: Algorithm = BaseAuth.useEmulator() ? "none" : "RS256";
+    this.sessionCookieVerifier = createSessionCookieVerifier(app, tokenAlgorithm);
+    this.idTokenVerifier = createIdTokenVerifier(app, tokenAlgorithm);
   }
 
   /**
@@ -737,6 +742,16 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
         return decodedIdToken;
       });
   }
+
+  /**
+   * Enable or disable ID token verification. This is used to safely short-circuit token verification with the
+   * Auth emulator. When disabled ONLY unsigned tokens will pass verification, production tokens will not pass.
+   */
+  private setIdTokenVerificationEnabled(enabled: boolean) {
+    const algorithm = enabled ? ALGORITHM_RS256 : "none";
+    this.idTokenVerifier.setAlgorithm(algorithm)
+    this.sessionCookieVerifier.setAlgorithm(algorithm);
+  }
 }
 
 
@@ -754,9 +769,8 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
    * @constructor
    */
   constructor(app: FirebaseApp, tenantId: string) {
-    const cryptoSigner = cryptoSignerFromApp(app);
-    const useEmulator = !!process.env.FIREBASE_AUTH_EMULATOR_HOST;
-    const tokenGenerator = new FirebaseTokenGenerator(cryptoSigner, tenantId, useEmulator);
+    const cryptoSigner = BaseAuth.useEmulator() ? new EmulatedSigner() : cryptoSignerFromApp(app);
+    const tokenGenerator = new FirebaseTokenGenerator(cryptoSigner, tenantId);
     super(app, new TenantAwareAuthRequestHandler(app, tenantId), tokenGenerator);
     utils.addReadonlyGetter(this, 'tenantId', tenantId);
   }

@@ -30,7 +30,7 @@ import { FirebaseApp, FirebaseAppOptions } from '../../src/firebase-app';
 import { Credential, GoogleOAuthAccessToken } from '../../src/credential/credential-interfaces';
 import { ServiceAccountCredential } from '../../src/credential/credential-internal';
 
-const ALGORITHM = 'RS256' as 'RS256';
+const ALGORITHM = 'RS256' as const;
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 
 export const uid = 'someUid';

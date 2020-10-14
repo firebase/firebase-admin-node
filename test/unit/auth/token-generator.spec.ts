@@ -25,7 +25,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import * as mocks from '../../resources/mocks';
 import {
-  BLACKLISTED_CLAIMS, FirebaseTokenGenerator, ServiceAccountSigner, IAMSigner,
+  BLACKLISTED_CLAIMS, FirebaseTokenGenerator, ServiceAccountSigner, IAMSigner, EmulatedSigner
 } from '../../../src/auth/token-generator';
 
 import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
@@ -309,7 +309,8 @@ describe('FirebaseTokenGenerator', () => {
   }];
 
   describe('Emulator', () => {
-    const tokenGenerator = new FirebaseTokenGenerator(new ServiceAccountSigner(cert), undefined, true);
+    const signer = new EmulatedSigner();
+    const tokenGenerator = new FirebaseTokenGenerator(signer);
     
     it('should generate a valid unsigned token', async () => {
       const uid = 'uid123';
@@ -318,7 +319,7 @@ describe('FirebaseTokenGenerator', () => {
 
       // Check that verify doesn't throw
       // Note: the types for jsonwebtoken are wrong so we have to disguise the 'null'
-      jwt.verify(token, null as any, { algorithms: ['none'] });
+      jwt.verify(token, "", { algorithms: ['none'] });
 
       // Decode and check all three segments
       const { header, payload, signature } = jwt.decode(token, { complete: true }) as { [key: string]: any };

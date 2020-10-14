@@ -34,6 +34,7 @@ import * as verifier from '../../../src/auth/token-verifier';
 import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
 import { AuthClientErrorCode } from '../../../src/utils/error';
 import { FirebaseApp } from '../../../src/firebase-app';
+import { Algorithm } from "jsonwebtoken";
 
 chai.should();
 chai.use(sinonChai);
@@ -104,14 +105,14 @@ function mockFailedFetchPublicKeys(): nock.Scope {
     .replyWithError('message');
 }
 
-function createTokenVerifier(app: FirebaseApp, useEmulator: boolean): verifier.FirebaseTokenVerifier {
+function createTokenVerifier(app: FirebaseApp, options: { algorithm?: Algorithm } = {}): verifier.FirebaseTokenVerifier {
+  const algorithm = options.algorithm || "RS256";
   return new verifier.FirebaseTokenVerifier(
     'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com',
-    'RS256',
+    algorithm,
     'https://securetoken.google.com/',
     verifier.ID_TOKEN_INFO,
-    app,
-    useEmulator
+    app
   );
 }
 
@@ -127,7 +128,7 @@ describe('FirebaseTokenVerifier', () => {
     app = mocks.app();
     const cert = new ServiceAccountCredential(mocks.certificateObject);
     tokenGenerator = new FirebaseTokenGenerator(new ServiceAccountSigner(cert));
-    tokenVerifier = createTokenVerifier(app, false);
+    tokenVerifier = createTokenVerifier(app);
     httpsSpy = sinon.spy(https, 'request');
   });
 
@@ -543,7 +544,7 @@ describe('FirebaseTokenVerifier', () => {
     it('should decode an unsigned token when using the emulator', async () => {
       clock = sinon.useFakeTimers(1000);
 
-      const emulatorVerifier = createTokenVerifier(app, true);
+      const emulatorVerifier = createTokenVerifier(app, { algorithm: "none" });
       const mockIdToken = mocks.generateIdToken({
         algorithm: 'none',
         header: {}

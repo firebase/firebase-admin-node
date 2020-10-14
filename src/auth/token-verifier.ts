@@ -77,12 +77,7 @@ export class FirebaseTokenVerifier {
 
   constructor(private clientCertUrl: string, private algorithm: jwt.Algorithm,
               private issuer: string, private tokenInfo: FirebaseTokenInfo,
-              private readonly app: FirebaseApp, 
-              private readonly useEmulator: boolean = false) {
-
-    if (this.useEmulator) {
-      this.algorithm = 'none';
-    }
+              private readonly app: FirebaseApp) {
                 
     if (!validator.isURL(clientCertUrl)) {
       throw new FirebaseAuthError(
@@ -150,14 +145,18 @@ export class FirebaseTokenVerifier {
       );
     }
 
-    if (this.useEmulator) {
-      return this.verifyJwtSignatureWithKey(jwtToken, null);
-    }
-
     return util.findProjectId(this.app)
       .then((projectId) => {
         return this.verifyJWTWithProjectId(jwtToken, projectId);
       });
+  }
+
+  /**
+   * Override the JWT signing algorithm.
+   * @param algorithm the new signing algorithm.
+   */
+  public setAlgorithm(algorithm: jwt.Algorithm) {
+    this.algorithm = algorithm;
   }
 
   private verifyJWTWithProjectId(jwtToken: string, projectId: string | null): Promise<DecodedIdToken> {
@@ -223,6 +222,12 @@ export class FirebaseTokenVerifier {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, errorMessage));
     }
 
+    // When the algorithm is set to "none" there will be no signature and therefore we don't check
+    // the public keys.
+    if (this.algorithm === "none") {
+      return this.verifyJwtSignatureWithKey(jwtToken, null);
+    }
+
     return this.fetchPublicKeys().then((publicKeys) => {
       if (!Object.prototype.hasOwnProperty.call(publicKeys, header.kid)) {
         return Promise.reject(
@@ -251,9 +256,7 @@ export class FirebaseTokenVerifier {
     const verifyJwtTokenDocsMessage = ` See ${this.tokenInfo.url} ` +
       `for details on how to retrieve ${this.shortNameArticle} ${this.tokenInfo.shortName}.`;
     return new Promise((resolve, reject) => {
-      // The types are wrong here so it won't accept 'null' for publicKey, but testing (including our unit tests)
-      // confirms that this works and is the required value when validating a token with alg: 'none'
-      jwt.verify(jwtToken, publicKey as any, {
+      jwt.verify(jwtToken, publicKey || "", {
         algorithms: [this.algorithm],
       }, (error: jwt.VerifyErrors | null, decodedToken: object | undefined) => {
         if (error) {
@@ -339,14 +342,13 @@ export class FirebaseTokenVerifier {
  * @param {FirebaseApp} app Firebase app instance.
  * @return {FirebaseTokenVerifier}
  */
-export function createIdTokenVerifier(app: FirebaseApp, useEmulator = false): FirebaseTokenVerifier {
+export function createIdTokenVerifier(app: FirebaseApp, algorithm: jwt.Algorithm = ALGORITHM_RS256): FirebaseTokenVerifier {
   return new FirebaseTokenVerifier(
     CLIENT_CERT_URL,
-    ALGORITHM_RS256,
+    algorithm,
     'https://securetoken.google.com/',
     ID_TOKEN_INFO,
-    app,
-    useEmulator
+    app
   );
 }
 
@@ -356,13 +358,12 @@ export function createIdTokenVerifier(app: FirebaseApp, useEmulator = false): Fi
  * @param {FirebaseApp} app Firebase app instance.
  * @return {FirebaseTokenVerifier}
  */
-export function createSessionCookieVerifier(app: FirebaseApp, useEmulator = false): FirebaseTokenVerifier {
+export function createSessionCookieVerifier(app: FirebaseApp, algorithm: jwt.Algorithm = ALGORITHM_RS256): FirebaseTokenVerifier {
   return new FirebaseTokenVerifier(
     SESSION_COOKIE_CERT_URL,
-    ALGORITHM_RS256,
+    algorithm,
     'https://session.firebase.google.com/',
     SESSION_COOKIE_INFO,
-    app,
-    useEmulator
+    app
   );
 }

@@ -21,9 +21,12 @@ import { AuthorizedHttpClient, HttpError, HttpRequestConfig, HttpClient } from '
 
 import * as validator from '../utils/validator';
 import { toWebSafeBase64 } from '../utils';
+import { Algorithm } from "jsonwebtoken";
 
 
-const ALGORITHM_RS256 = 'RS256';
+const ALGORITHM_RS256: Algorithm = 'RS256' as const;
+const ALGORITHM_NONE: Algorithm = 'none' as const;
+
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 
 // List of blacklisted claims which cannot be provided when creating a custom token
@@ -39,6 +42,12 @@ const FIREBASE_AUDIENCE = 'https://identitytoolkit.googleapis.com/google.identit
  * CryptoSigner interface represents an object that can be used to sign JWTs.
  */
 export interface CryptoSigner {
+
+  /**
+   * The name of the signing algorithm.
+   */
+  algorithm: Algorithm;
+
   /**
    * Cryptographically signs a buffer of data.
    *
@@ -82,6 +91,8 @@ interface JWTBody {
  * sign data. Performs all operations locally, and does not make any RPC calls.
  */
 export class ServiceAccountSigner implements CryptoSigner {
+  
+  algorithm = ALGORITHM_RS256;
 
   /**
    * Creates a new CryptoSigner instance from the given service account credential.
@@ -124,6 +135,8 @@ export class ServiceAccountSigner implements CryptoSigner {
  * @see https://cloud.google.com/compute/docs/storing-retrieving-metadata
  */
 export class IAMSigner implements CryptoSigner {
+  algorithm = ALGORITHM_RS256;
+
   private readonly httpClient: AuthorizedHttpClient;
   private serviceAccountId?: string;
 
@@ -213,6 +226,36 @@ export class IAMSigner implements CryptoSigner {
       );
     });
   }
+
+  /**
+   * @inheritdoc
+   */
+  public getAlgorithm(): string {
+    return ALGORITHM_RS256;
+  }
+}
+
+/**
+ * A CryptoSigner implementation that is used when communicating with the Auth emulator.
+ * It produces unsigned tokens.
+ */
+export class EmulatedSigner implements CryptoSigner {
+
+  algorithm = ALGORITHM_NONE;
+
+  /**
+   * @inheritDoc
+   */
+  public sign(buffer: Buffer): Promise<Buffer> {
+    return Promise.resolve(Buffer.from(""));
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public getAccountId(): Promise<string> {
+    return Promise.resolve("firebase-auth-emulator@example.com");
+  }
 }
 
 /**
@@ -242,17 +285,15 @@ export class FirebaseTokenGenerator {
    * @param tenantId The tenant ID to use for the generated Firebase Auth
    *     Custom token. If absent, then no tenant ID claim will be set in the
    *     resulting JWT.
-   * @param useEmulator When true we should generate tokens on behalf of the
-   *     Auth Emulator, which means no signature.
    */
-  constructor(signer: CryptoSigner, public readonly tenantId?: string, public readonly useEmulator?: boolean) {
+  constructor(signer: CryptoSigner, public readonly tenantId?: string) {
     if (!validator.isNonNullObject(signer)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_CREDENTIAL,
         'INTERNAL ASSERT: Must provide a CryptoSigner to use FirebaseTokenGenerator.',
       );
     }
-    if (typeof tenantId !== 'undefined' && !validator.isNonEmptyString(tenantId)) {
+    if (typeof this.tenantId !== 'undefined' && !validator.isNonEmptyString(this.tenantId)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
         '`tenantId` argument must be a non-empty string.');
@@ -299,13 +340,8 @@ export class FirebaseTokenGenerator {
       }
     }
     return this.signer.getAccountId().then((account) => {
-      // When communicating with the Auth Emulator we don't sign custom tokens which means:
-      //  - Algorithm is 'none'
-      //  - Third token segment (signature) is empty
-      const alg = this.useEmulator ? 'none' : ALGORITHM_RS256;
-
       const header: JWTHeader = {
-        alg,
+        alg: this.signer.algorithm,
         typ: 'JWT',
       };
       const iat = Math.floor(Date.now() / 1000);
@@ -325,11 +361,7 @@ export class FirebaseTokenGenerator {
         body.claims = claims;
       }
       const token = `${this.encodeSegment(header)}.${this.encodeSegment(body)}`;
-
-      // When running inside the Auth emulator we generate unsigned custom tokens
-      const signPromise = this.useEmulator
-        ? Promise.resolve(Buffer.from(""))
-        : this.signer.sign(Buffer.from(token));
+      const signPromise = this.signer.sign(Buffer.from(token));
 
       return Promise.all([token, signPromise]);
     }).then(([token, signature]) => {
