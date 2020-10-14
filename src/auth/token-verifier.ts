@@ -155,7 +155,7 @@ export class FirebaseTokenVerifier {
    * Override the JWT signing algorithm.
    * @param algorithm the new signing algorithm.
    */
-  public setAlgorithm(algorithm: jwt.Algorithm) {
+  public setAlgorithm(algorithm: jwt.Algorithm): void {
     this.algorithm = algorithm;
   }
 
@@ -342,7 +342,10 @@ export class FirebaseTokenVerifier {
  * @param {FirebaseApp} app Firebase app instance.
  * @return {FirebaseTokenVerifier}
  */
-export function createIdTokenVerifier(app: FirebaseApp, algorithm: jwt.Algorithm = ALGORITHM_RS256): FirebaseTokenVerifier {
+export function createIdTokenVerifier(
+  app: FirebaseApp, 
+  algorithm: jwt.Algorithm = ALGORITHM_RS256
+): FirebaseTokenVerifier {
   return new FirebaseTokenVerifier(
     CLIENT_CERT_URL,
     algorithm,
@@ -358,7 +361,10 @@ export function createIdTokenVerifier(app: FirebaseApp, algorithm: jwt.Algorithm
  * @param {FirebaseApp} app Firebase app instance.
  * @return {FirebaseTokenVerifier}
  */
-export function createSessionCookieVerifier(app: FirebaseApp, algorithm: jwt.Algorithm = ALGORITHM_RS256): FirebaseTokenVerifier {
+export function createSessionCookieVerifier(
+  app: FirebaseApp,
+  algorithm: jwt.Algorithm = ALGORITHM_RS256
+): FirebaseTokenVerifier {
   return new FirebaseTokenVerifier(
     SESSION_COOKIE_CERT_URL,
     algorithm,

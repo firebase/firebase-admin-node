@@ -246,15 +246,15 @@ export class EmulatedSigner implements CryptoSigner {
   /**
    * @inheritDoc
    */
-  public sign(buffer: Buffer): Promise<Buffer> {
-    return Promise.resolve(Buffer.from(""));
+  public sign(_: Buffer): Promise<Buffer> {
+    return Promise.resolve(Buffer.from(''));
   }
 
   /**
    * @inheritDoc
    */
   public getAccountId(): Promise<string> {
-    return Promise.resolve("firebase-auth-emulator@example.com");
+    return Promise.resolve('firebase-auth-emulator@example.com');
   }
 }
 

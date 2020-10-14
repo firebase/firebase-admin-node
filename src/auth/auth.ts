@@ -31,7 +31,9 @@ import {
 
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier, ALGORITHM_RS256 } from './token-verifier';
+import { 
+  FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier, ALGORITHM_RS256 
+} from './token-verifier';
 import { ActionCodeSettings } from './action-code-settings-builder';
 import {
   AuthProviderConfig, AuthProviderConfigFilter, ListProviderConfigResults, UpdateAuthProviderRequest,
@@ -752,8 +754,8 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    * Enable or disable ID token verification. This is used to safely short-circuit token verification with the
    * Auth emulator. When disabled ONLY unsigned tokens will pass verification, production tokens will not pass.
    */
-  // @ts-ignore: This private method will be used in the Functions emulator
-  private setIdTokenVerificationEnabled(enabled: boolean) {
+  // @ts-expect-error: This private method will be used in the Functions emulator
+  private setIdTokenVerificationEnabled(enabled: boolean): void {
     const algorithm = enabled ? ALGORITHM_RS256 : "none";
     this.idTokenVerifier.setAlgorithm(algorithm)
     this.sessionCookieVerifier.setAlgorithm(algorithm);
