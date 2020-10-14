@@ -34,7 +34,7 @@ import * as verifier from '../../../src/auth/token-verifier';
 import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
 import { AuthClientErrorCode } from '../../../src/utils/error';
 import { FirebaseApp } from '../../../src/firebase-app';
-import { Algorithm } from "jsonwebtoken";
+import { Algorithm } from 'jsonwebtoken';
 
 chai.should();
 chai.use(sinonChai);
@@ -547,7 +547,7 @@ describe('FirebaseTokenVerifier', () => {
     it('should decode an unsigned token when the algorithm is set to none (emulator)', async () => {
       clock = sinon.useFakeTimers(1000);
 
-      const emulatorVerifier = createTokenVerifier(app, { algorithm: "none" });
+      const emulatorVerifier = createTokenVerifier(app, { algorithm: 'none' });
       const mockIdToken = mocks.generateIdToken({
         algorithm: 'none',
         header: {}
@@ -569,7 +569,7 @@ describe('FirebaseTokenVerifier', () => {
     it('should not decode a signed token when the algorithm is set to none (emulator)', async () => {
       clock = sinon.useFakeTimers(1000);
 
-      const emulatorVerifier = createTokenVerifier(app, { algorithm: "none" });
+      const emulatorVerifier = createTokenVerifier(app, { algorithm: 'none' });
       const mockIdToken = mocks.generateIdToken();
 
       await emulatorVerifier.verifyJWT(mockIdToken)

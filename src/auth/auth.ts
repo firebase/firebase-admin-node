@@ -130,18 +130,6 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   protected readonly sessionCookieVerifier: FirebaseTokenVerifier;
 
   /**
-   * When true the SDK should communicate with the Auth Emulator for all API
-   * calls and also produce unsigned tokens.
-   * 
-   * This alone does <b>NOT<b> short-circuit ID Token verification. 
-   * For security reasons that must be explicitly disabled through
-   * setIdTokenVerificationEnabled(false);
-   */
-  protected static useEmulator(): boolean {
-    return !!process.env.FIREBASE_AUTH_EMULATOR_HOST;
-  }
-
-  /**
    * The BaseAuth class constructor.
    *
    * @param app The FirebaseApp to associate with this Auth instance.
@@ -155,7 +143,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
     if (tokenGenerator) {
       this.tokenGenerator = tokenGenerator;
     } else {
-      const cryptoSigner = BaseAuth.useEmulator() ? new EmulatedSigner() : cryptoSignerFromApp(app);
+      const cryptoSigner = useEmulator() ? new EmulatedSigner() : cryptoSignerFromApp(app);
       this.tokenGenerator = new FirebaseTokenGenerator(cryptoSigner);
     }
 
@@ -753,10 +741,11 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   /**
    * Enable or disable ID token verification. This is used to safely short-circuit token verification with the
    * Auth emulator. When disabled ONLY unsigned tokens will pass verification, production tokens will not pass.
+   * 
+   * @internal
    */
-  // @ts-expect-error: This private method will be used in the Functions emulator
-  private setIdTokenVerificationEnabled(enabled: boolean): void {
-    const algorithm = enabled ? ALGORITHM_RS256 : "none";
+  public setJwtVerificationEnabled(enabled: boolean): void {
+    const algorithm = enabled ? ALGORITHM_RS256 : 'none';
     this.idTokenVerifier.setAlgorithm(algorithm)
     this.sessionCookieVerifier.setAlgorithm(algorithm);
   }
@@ -777,7 +766,7 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
    * @constructor
    */
   constructor(app: FirebaseApp, tenantId: string) {
-    const cryptoSigner = BaseAuth.useEmulator() ? new EmulatedSigner() : cryptoSignerFromApp(app);
+    const cryptoSigner = useEmulator() ? new EmulatedSigner() : cryptoSignerFromApp(app);
     const tokenGenerator = new FirebaseTokenGenerator(cryptoSigner, tenantId);
     super(app, new TenantAwareAuthRequestHandler(app, tenantId), tokenGenerator);
     utils.addReadonlyGetter(this, 'tenantId', tenantId);
@@ -892,4 +881,16 @@ export class Auth extends BaseAuth<AuthRequestHandler> implements FirebaseServic
   public tenantManager(): TenantManager {
     return this.tenantManager_;
   }
+}
+
+/**
+ * When true the SDK should communicate with the Auth Emulator for all API
+ * calls and also produce unsigned tokens.
+ * 
+ * This alone does <b>NOT<b> short-circuit ID Token verification. 
+ * For security reasons that must be explicitly disabled through
+ * setJwtVerificationEnabled(false);
+ */
+function useEmulator(): boolean {
+  return !!process.env.FIREBASE_AUTH_EMULATOR_HOST;
 }

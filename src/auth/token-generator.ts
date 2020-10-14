@@ -21,7 +21,7 @@ import { AuthorizedHttpClient, HttpError, HttpRequestConfig, HttpClient } from '
 
 import * as validator from '../utils/validator';
 import { toWebSafeBase64 } from '../utils';
-import { Algorithm } from "jsonwebtoken";
+import { Algorithm } from 'jsonwebtoken';
 
 
 const ALGORITHM_RS256: Algorithm = 'RS256' as const;
@@ -46,7 +46,7 @@ export interface CryptoSigner {
   /**
    * The name of the signing algorithm.
    */
-  algorithm: Algorithm;
+  readonly algorithm: Algorithm;
 
   /**
    * Cryptographically signs a buffer of data.
@@ -225,13 +225,6 @@ export class IAMSigner implements CryptoSigner {
         `account with iam.serviceAccounts.signBlob permission. Original error: ${err}`,
       );
     });
-  }
-
-  /**
-   * @inheritdoc
-   */
-  public getAlgorithm(): string {
-    return ALGORITHM_RS256;
   }
 }
 

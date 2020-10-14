@@ -3212,6 +3212,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         // Check the decoded token has the right algorithm
         const decoded = jwt.decode(token, { complete: true });
         expect(decoded).to.have.property('header').that.has.property('alg', 'none');
+        expect(decoded).to.have.property('payload').that.has.property('uid', 'uid1');
 
         // Make sure this doesn't throw
         jwt.verify(token, '', { algorithms: ['none'] });
@@ -3227,7 +3228,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
 
       it('verifyIdToken() accepts an unsigned token when the private method is called', async () => {
-        (mockAuth as any).setIdTokenVerificationEnabled(false);
+        mockAuth.setJwtVerificationEnabled(false);
 
         let claims = {};
         if (testConfig.Auth === TenantAwareAuth) {

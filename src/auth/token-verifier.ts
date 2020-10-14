@@ -184,7 +184,7 @@ export class FirebaseTokenVerifier {
     if (!fullDecodedToken) {
       errorMessage = `Decoding ${this.tokenInfo.jwtName} failed. Make sure you passed the entire string JWT ` +
         `which represents ${this.shortNameArticle} ${this.tokenInfo.shortName}.` + verifyJwtTokenDocsMessage;
-    } else if (typeof header.kid === 'undefined' && this.algorithm !== "none") {
+    } else if (typeof header.kid === 'undefined' && this.algorithm !== 'none') {
       const isCustomToken = (payload.aud === FIREBASE_AUDIENCE);
       const isLegacyCustomToken = (header.alg === 'HS256' && payload.v === 0 && 'd' in payload && 'uid' in payload.d);
 
@@ -222,9 +222,9 @@ export class FirebaseTokenVerifier {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, errorMessage));
     }
 
-    // When the algorithm is set to "none" there will be no signature and therefore we don't check
+    // When the algorithm is set to 'none' there will be no signature and therefore we don't check
     // the public keys.
-    if (this.algorithm === "none") {
+    if (this.algorithm === 'none') {
       return this.verifyJwtSignatureWithKey(jwtToken, null);
     }
 
@@ -342,13 +342,10 @@ export class FirebaseTokenVerifier {
  * @param {FirebaseApp} app Firebase app instance.
  * @return {FirebaseTokenVerifier}
  */
-export function createIdTokenVerifier(
-  app: FirebaseApp, 
-  algorithm: jwt.Algorithm = ALGORITHM_RS256
-): FirebaseTokenVerifier {
+export function createIdTokenVerifier(app: FirebaseApp): FirebaseTokenVerifier {
   return new FirebaseTokenVerifier(
     CLIENT_CERT_URL,
-    algorithm,
+    ALGORITHM_RS256,
     'https://securetoken.google.com/',
     ID_TOKEN_INFO,
     app
@@ -361,13 +358,10 @@ export function createIdTokenVerifier(
  * @param {FirebaseApp} app Firebase app instance.
  * @return {FirebaseTokenVerifier}
  */
-export function createSessionCookieVerifier(
-  app: FirebaseApp,
-  algorithm: jwt.Algorithm = ALGORITHM_RS256
-): FirebaseTokenVerifier {
+export function createSessionCookieVerifier(app: FirebaseApp): FirebaseTokenVerifier {
   return new FirebaseTokenVerifier(
     SESSION_COOKIE_CERT_URL,
-    algorithm,
+    ALGORITHM_RS256,
     'https://session.firebase.google.com/',
     SESSION_COOKIE_INFO,
     app
