@@ -3192,5 +3192,59 @@ AUTH_CONFIGS.forEach((testConfig) => {
         });
       });
     }
+
+    describe('auth emulator support', () => {
+
+      let mockAuth = testConfig.init(mocks.app());
+
+      beforeEach(() => {
+        process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
+        mockAuth = testConfig.init(mocks.app());
+      });
+
+      afterEach(() => {
+        delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
+      });
+
+      it('createCustomToken() generates an unsigned token', async () => {
+        const token = await mockAuth.createCustomToken('uid1');
+
+        // Check the decoded token has the right algorithm
+        const decoded = jwt.decode(token, { complete: true });
+        expect(decoded).to.have.property('header').that.has.property('alg', 'none');
+
+        // Make sure this doesn't throw
+        jwt.verify(token, '', { algorithms: ['none'] });
+      });
+
+      it('verifyIdToken() throws on unsigned token when only the env var is set', async () => {
+        const unsignedToken = mocks.generateIdToken({
+          algorithm: 'none'
+        });
+        
+        await expect(mockAuth.verifyIdToken(unsignedToken))
+          .to.be.rejectedWith('Firebase ID token has incorrect algorithm. Expected "RS256"')
+      });
+
+      it('verifyIdToken() accepts an unsigned token when the private method is called', async () => {
+        (mockAuth as any).setIdTokenVerificationEnabled(false);
+
+        let claims = {};
+        if (testConfig.Auth === TenantAwareAuth) {
+          claims = { 
+            firebase: {
+              tenant: TENANT_ID
+            }
+          }
+        }
+
+        const unsignedToken = mocks.generateIdToken({
+          algorithm: 'none'
+        }, claims);
+        
+        const decoded = await mockAuth.verifyIdToken(unsignedToken);
+        expect(decoded).to.be.ok;
+      });
+    });
   });
 });

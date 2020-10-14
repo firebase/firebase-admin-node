@@ -181,9 +181,10 @@ export const x509CertPairs = [
  * Generates a mocked Firebase ID token.
  *
  * @param {object} overrides Overrides for the generated token's attributes.
+ * @param {object} claims Extra claims to add to the token.
  * @return {string} A mocked Firebase ID token with any provided overrides included.
  */
-export function generateIdToken(overrides?: object): string {
+export function generateIdToken(overrides?: object, claims?: object): string {
   const options = _.assign({
     audience: projectId,
     expiresIn: ONE_HOUR_IN_SECONDS,
@@ -195,7 +196,12 @@ export function generateIdToken(overrides?: object): string {
     },
   }, overrides);
 
-  return jwt.sign(developerClaims, certificateObject.private_key, options);
+  const payload = {
+    ...developerClaims,
+    ...claims,
+  };
+
+  return jwt.sign(payload, certificateObject.private_key, options);
 }
 
 /**
