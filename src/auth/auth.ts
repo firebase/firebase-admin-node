@@ -38,8 +38,6 @@ import {
   SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
 } from './auth-config';
 import { TenantManager } from './tenant-manager';
-import { Algorithm } from 'jsonwebtoken';
-import { timeStamp } from 'console';
 
 
 /**
@@ -129,6 +127,14 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   protected readonly idTokenVerifier: FirebaseTokenVerifier;
   protected readonly sessionCookieVerifier: FirebaseTokenVerifier;
 
+  /**
+   * When true the SDK should communicate with the Auth Emulator for all API
+   * calls and also produce unsigned tokens.
+   * 
+   * This alone does <b>NOT<b> short-circuit ID Token verification. 
+   * For security reasons that must be explicitly disabled through
+   * setIdTokenVerificationEnabled(false);
+   */
   protected static useEmulator(): boolean {
     return !!process.env.FIREBASE_AUTH_EMULATOR_HOST;
   }
@@ -151,9 +157,8 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
       this.tokenGenerator = new FirebaseTokenGenerator(cryptoSigner);
     }
 
-    const tokenAlgorithm: Algorithm = BaseAuth.useEmulator() ? "none" : "RS256";
-    this.sessionCookieVerifier = createSessionCookieVerifier(app, tokenAlgorithm);
-    this.idTokenVerifier = createIdTokenVerifier(app, tokenAlgorithm);
+    this.sessionCookieVerifier = createSessionCookieVerifier(app);
+    this.idTokenVerifier = createIdTokenVerifier(app);
   }
 
   /**
@@ -747,6 +752,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    * Enable or disable ID token verification. This is used to safely short-circuit token verification with the
    * Auth emulator. When disabled ONLY unsigned tokens will pass verification, production tokens will not pass.
    */
+  // @ts-ignore: This private method will be used in the Functions emulator
   private setIdTokenVerificationEnabled(enabled: boolean) {
     const algorithm = enabled ? ALGORITHM_RS256 : "none";
     this.idTokenVerifier.setAlgorithm(algorithm)

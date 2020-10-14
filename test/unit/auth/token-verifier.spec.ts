@@ -541,7 +541,7 @@ describe('FirebaseTokenVerifier', () => {
         });
     });
 
-    it('should decode an unsigned token when using the emulator', async () => {
+    it('should decode an unsigned token when the algorithm is set to none (emulator)', async () => {
       clock = sinon.useFakeTimers(1000);
 
       const emulatorVerifier = createTokenVerifier(app, { algorithm: "none" });
@@ -563,7 +563,17 @@ describe('FirebaseTokenVerifier', () => {
       });
     });
 
-    it('should not decode an unsigned token when not using the emulator', async () => {
+    it('should not decode a signed token when the algorithm is set to none (emulator)', async () => {
+      clock = sinon.useFakeTimers(1000);
+
+      const emulatorVerifier = createTokenVerifier(app, { algorithm: "none" });
+      const mockIdToken = mocks.generateIdToken();
+
+      await emulatorVerifier.verifyJWT(mockIdToken)
+        .should.eventually.be.rejectedWith('Firebase ID token has incorrect algorithm. Expected "none"');
+    });
+
+    it('should not decode an unsigned token when the algorithm is not overridden (emulator)', async () => {
       clock = sinon.useFakeTimers(1000);
 
       const idTokenNoAlg = mocks.generateIdToken({

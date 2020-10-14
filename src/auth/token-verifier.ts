@@ -184,7 +184,7 @@ export class FirebaseTokenVerifier {
     if (!fullDecodedToken) {
       errorMessage = `Decoding ${this.tokenInfo.jwtName} failed. Make sure you passed the entire string JWT ` +
         `which represents ${this.shortNameArticle} ${this.tokenInfo.shortName}.` + verifyJwtTokenDocsMessage;
-    } else if (typeof header.kid === 'undefined') {
+    } else if (typeof header.kid === 'undefined' && this.algorithm !== "none") {
       const isCustomToken = (payload.aud === FIREBASE_AUDIENCE);
       const isLegacyCustomToken = (header.alg === 'HS256' && payload.v === 0 && 'd' in payload && 'uid' in payload.d);
 
