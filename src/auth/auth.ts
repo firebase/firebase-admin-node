@@ -742,11 +742,21 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    * Enable or disable ID token verification. This is used to safely short-circuit token verification with the
    * Auth emulator. When disabled ONLY unsigned tokens will pass verification, production tokens will not pass.
    * 
+   * WARNING: This is a dangerous method that will compromise your app's security and break your app in
+   * production. Developers should never call this method, it is for internal testing use only.
+   * 
    * @internal
    */
-  public setJwtVerificationEnabled(enabled: boolean): void {
+  // @ts-expect-error: this method appears unused but is used privately.
+  private setJwtVerificationEnabled(enabled: boolean): void {
+    if (!enabled && !useEmulator()) {
+      // We only allow verification to be disabled in conjunction with
+      // the emulator environment variable.
+      return;
+    }
+
     const algorithm = enabled ? ALGORITHM_RS256 : 'none';
-    this.idTokenVerifier.setAlgorithm(algorithm)
+    this.idTokenVerifier.setAlgorithm(algorithm);
     this.sessionCookieVerifier.setAlgorithm(algorithm);
   }
 }

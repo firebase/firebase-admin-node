@@ -3218,17 +3218,17 @@ AUTH_CONFIGS.forEach((testConfig) => {
         jwt.verify(token, '', { algorithms: ['none'] });
       });
 
-      it('verifyIdToken() throws on unsigned token when only the env var is set', async () => {
+      it('verifyIdToken() rejects an unsigned token when only the env var is set', async () => {
         const unsignedToken = mocks.generateIdToken({
           algorithm: 'none'
         });
         
         await expect(mockAuth.verifyIdToken(unsignedToken))
-          .to.be.rejectedWith('Firebase ID token has incorrect algorithm. Expected "RS256"')
+          .to.be.rejectedWith('Firebase ID token has incorrect algorithm. Expected "RS256"');
       });
 
-      it('verifyIdToken() accepts an unsigned token when the private method is called', async () => {
-        mockAuth.setJwtVerificationEnabled(false);
+      it('verifyIdToken() accepts an unsigned token when private method is called and env var is set', async () => {
+        (mockAuth as any).setJwtVerificationEnabled(false);
 
         let claims = {};
         if (testConfig.Auth === TenantAwareAuth) {
@@ -3245,6 +3245,18 @@ AUTH_CONFIGS.forEach((testConfig) => {
         
         const decoded = await mockAuth.verifyIdToken(unsignedToken);
         expect(decoded).to.be.ok;
+      });
+
+      it('verifyIdToken() rejects an unsigned token when private method is called but env var is unset', async () => {
+        delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
+        (mockAuth as any).setJwtVerificationEnabled(false);
+
+        const unsignedToken = mocks.generateIdToken({
+          algorithm: 'none'
+        });
+        
+        await expect(mockAuth.verifyIdToken(unsignedToken))
+          .to.be.rejectedWith('Firebase ID token has incorrect algorithm. Expected "RS256"');
       });
     });
   });
