@@ -89,9 +89,18 @@ const MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE = 100;
 const FIREBASE_AUTH_BASE_URL_FORMAT =
     'https://identitytoolkit.googleapis.com/{version}/projects/{projectId}{api}';
 
+/** Firebase Auth base URlLformat when using the auth emultor. */
+const FIREBASE_AUTH_EMULATOR_BASE_URL_FORMAT =
+  'http://{host}/identitytoolkit.googleapis.com/{version}/projects/{projectId}{api}';
+
 /** The Firebase Auth backend multi-tenancy base URL format. */
 const FIREBASE_AUTH_TENANT_URL_FORMAT = FIREBASE_AUTH_BASE_URL_FORMAT.replace(
   'projects/{projectId}', 'projects/{projectId}/tenants/{tenantId}');
+
+/** Firebase Auth base URL format when using the auth emultor with multi-tenancy. */
+const FIREBASE_AUTH_EMULATOR_TENANT_URL_FORMAT = FIREBASE_AUTH_EMULATOR_BASE_URL_FORMAT.replace(
+  'projects/{projectId}', 'projects/{projectId}/tenants/{tenantId}');
+
 
 /** Maximum allowed number of tenants to download at one time. */
 const MAX_LIST_TENANT_PAGE_SIZE = 1000;
@@ -121,7 +130,14 @@ class AuthResourceUrlBuilder {
    * @constructor
    */
   constructor(protected app: FirebaseApp, protected version: string = 'v1') {
-    this.urlFormat = FIREBASE_AUTH_BASE_URL_FORMAT;
+    const emulatorHost = process.env.FIREBASE_AUTH_EMULATOR_HOST;
+    if (emulatorHost) {
+      this.urlFormat = utils.formatString(FIREBASE_AUTH_EMULATOR_BASE_URL_FORMAT, { 
+        host: emulatorHost
+      });
+    } else {
+      this.urlFormat = FIREBASE_AUTH_BASE_URL_FORMAT;
+    }
   }
 
   /**
@@ -181,7 +197,14 @@ class TenantAwareAuthResourceUrlBuilder extends AuthResourceUrlBuilder {
    */
   constructor(protected app: FirebaseApp, protected version: string, protected tenantId: string) {
     super(app, version);
-    this.urlFormat = FIREBASE_AUTH_TENANT_URL_FORMAT;
+    const emulatorHost = process.env.FIREBASE_AUTH_EMULATOR_HOST
+    if (emulatorHost) {
+      this.urlFormat = utils.formatString(FIREBASE_AUTH_EMULATOR_TENANT_URL_FORMAT, { 
+        host: emulatorHost
+      });
+    } else {
+      this.urlFormat = FIREBASE_AUTH_TENANT_URL_FORMAT;
+    }
   }
 
   /**
