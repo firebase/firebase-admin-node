@@ -3250,7 +3250,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       it('private method throws when env var is unset', async () => {
         delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
         await expect(() => (mockAuth as any).setJwtVerificationEnabled(false))
-          .to.be.rejectedWith('This method is only available when connected to the Authentication emulator.')
+          .to.throw('This method is only available when connected to the Authentication emulator.')
       });
     });
   });
