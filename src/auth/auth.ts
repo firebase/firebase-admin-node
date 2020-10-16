@@ -752,7 +752,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
     if (!enabled && !useEmulator()) {
       // We only allow verification to be disabled in conjunction with
       // the emulator environment variable.
-      return;
+      throw new Error('This method is only available when connected to the Authentication emulator.');
     }
 
     const algorithm = enabled ? ALGORITHM_RS256 : 'none';

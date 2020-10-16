@@ -3247,16 +3247,10 @@ AUTH_CONFIGS.forEach((testConfig) => {
         expect(decoded).to.be.ok;
       });
 
-      it('verifyIdToken() rejects an unsigned token when private method is called but env var is unset', async () => {
+      it('private method throws when env var is unset', async () => {
         delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
-        (mockAuth as any).setJwtVerificationEnabled(false);
-
-        const unsignedToken = mocks.generateIdToken({
-          algorithm: 'none'
-        });
-        
-        await expect(mockAuth.verifyIdToken(unsignedToken))
-          .to.be.rejectedWith('Firebase ID token has incorrect algorithm. Expected "RS256"');
+        await expect(() => (mockAuth as any).setJwtVerificationEnabled(false))
+          .to.be.rejectedWith('This method is only available when connected to the Authentication emulator.')
       });
     });
   });
