@@ -51,15 +51,15 @@ function createMultipartResponse(success: object[], failures: object[] = []): Ht
   const multipart: Buffer[] = [];
   success.forEach((part) => {
     let payload = '';
-    payload += `HTTP/1.1 200 OK\r\n`;
-    payload += `Content-type: application/json\r\n\r\n`;
+    payload += 'HTTP/1.1 200 OK\r\n';
+    payload += 'Content-type: application/json\r\n\r\n';
     payload += `${JSON.stringify(part)}\r\n`;
     multipart.push(Buffer.from(payload, 'utf-8'));
   });
   failures.forEach((part) => {
     let payload = '';
-    payload += `HTTP/1.1 500 Internal Server Error\r\n`;
-    payload += `Content-type: application/json\r\n\r\n`;
+    payload += 'HTTP/1.1 500 Internal Server Error\r\n';
+    payload += 'Content-type: application/json\r\n\r\n';
     payload += `${JSON.stringify(part)}\r\n`;
     multipart.push(Buffer.from(payload, 'utf-8'));
   });

@@ -113,7 +113,7 @@ export class AndroidApp implements AndroidAppInterface {
               validator.isNonEmptyString(certificateJson[requiredField]),
               responseData,
               `getShaCertificates()'s responseData.certificates[].${requiredField} must be a `
-                      + `non-empty string.`);
+                      + 'non-empty string.');
           });
 
           return new ShaCertificate(certificateJson.shaHash, certificateJson.name);
@@ -171,7 +171,7 @@ export class AndroidApp implements AndroidAppInterface {
         assertServerResponse(
           validator.isBase64String(base64ConfigFileContents),
           responseData,
-          `getConfig()'s responseData.configFileContents must be a base64 string.`);
+          'getConfig()\'s responseData.configFileContents must be a base64 string.');
 
         return Buffer.from(base64ConfigFileContents, 'base64').toString('utf8');
       });

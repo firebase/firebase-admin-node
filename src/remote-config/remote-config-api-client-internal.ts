@@ -410,7 +410,7 @@ interface Error {
 
 const ERROR_CODE_MAPPING: { [key: string]: RemoteConfigErrorCode } = {
   ABORTED: 'aborted',
-  ALREADY_EXISTS: `already-exists`,
+  ALREADY_EXISTS: 'already-exists',
   INVALID_ARGUMENT: 'invalid-argument',
   INTERNAL: 'internal-error',
   FAILED_PRECONDITION: 'failed-precondition',

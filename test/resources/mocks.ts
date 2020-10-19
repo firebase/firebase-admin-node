@@ -268,7 +268,7 @@ export const messaging = {
   topic: 'mock-topic',
   topicWithPrefix: '/topics/mock-topic',
   topicWithPrivatePrefix: '/topics/private/mock-topic',
-  condition: "'mock-topic-0' in topics || ('mock-topic-1' in topics && 'mock-topic-2' in topics)",
+  condition: '\'mock-topic-0\' in topics || (\'mock-topic-1\' in topics && \'mock-topic-2\' in topics)',
   messageId: 1212121212,
   multicastId: 1234567890,
   notificationKey: 'mock-notification-key',

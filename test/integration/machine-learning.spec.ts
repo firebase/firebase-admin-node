@@ -576,13 +576,13 @@ function getAutoMLModelReference(): Promise<string> {
   }
   catch (error) {
     // Returning an empty string will result in skipping the test.
-    return Promise.resolve("");
+    return Promise.resolve('');
   }
 
   const parent = automl.locationPath(projectId, 'us-central1');
-  return automl.listModels({ parent, filter:"displayName=admin_sdk_integ_test1" })
+  return automl.listModels({ parent, filter:'displayName=admin_sdk_integ_test1' })
     .then(([models]: [any]) => {
-      let modelRef = "";
+      let modelRef = '';
       for (const model of models) {
         modelRef = model.name;
       }

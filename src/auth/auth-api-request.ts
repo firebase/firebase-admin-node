@@ -266,7 +266,7 @@ function validateAuthFactorInfo(request: AuthFactorInfo, writeOperationType: Wri
       !validator.isNonEmptyString(request.mfaEnrollmentId)) {
     throw new FirebaseAuthError(
       AuthClientErrorCode.INVALID_UID,
-      `The second factor "uid" must be a valid non-empty string.`,
+      'The second factor "uid" must be a valid non-empty string.',
     );
   }
   if (typeof request.displayName !== 'undefined' &&
@@ -282,7 +282,7 @@ function validateAuthFactorInfo(request: AuthFactorInfo, writeOperationType: Wri
     throw new FirebaseAuthError(
       AuthClientErrorCode.INVALID_ENROLLMENT_TIME,
       `The second factor "enrollmentTime" for "${authFactorInfoIdentifier}" must be a valid ` +
-      `UTC date string.`);
+      'UTC date string.');
   }
   // Validate required fields depending on second factor type.
   if (typeof request.phoneInfo !== 'undefined') {
@@ -291,14 +291,14 @@ function validateAuthFactorInfo(request: AuthFactorInfo, writeOperationType: Wri
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_PHONE_NUMBER,
         `The second factor "phoneNumber" for "${authFactorInfoIdentifier}" must be a non-empty ` +
-        `E.164 standard compliant identifier string.`);
+        'E.164 standard compliant identifier string.');
     }
   } else {
     // Invalid second factor. For example, a phone second factor may have been provided without
     // a phone number. A TOTP based second factor may require a secret key, etc.
     throw new FirebaseAuthError(
       AuthClientErrorCode.INVALID_ENROLLED_FACTORS,
-      `MFAInfo object provided is invalid.`);
+      'MFAInfo object provided is invalid.');
   }
 }
 
@@ -601,7 +601,7 @@ export const FIREBASE_AUTH_DOWNLOAD_ACCOUNT = new ApiSettings('/accounts:batchGe
         request.maxResults > MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        `Required "maxResults" must be a positive integer that does not exceed ` +
+        'Required "maxResults" must be a positive integer that does not exceed ' +
         `${MAX_DOWNLOAD_ACCOUNT_PAGE_SIZE}.`,
       );
     }
@@ -742,14 +742,14 @@ export const FIREBASE_AUTH_SIGN_UP_NEW_USER = new ApiSettings('/accounts', 'POST
     if (typeof request.customAttributes !== 'undefined') {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        `"customAttributes" cannot be set when creating a new user.`,
+        '"customAttributes" cannot be set when creating a new user.',
       );
     }
     // signupNewUser does not support validSince.
     if (typeof request.validSince !== 'undefined') {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        `"validSince" cannot be set when creating a new user.`,
+        '"validSince" cannot be set when creating a new user.',
       );
     }
     // Throw error when tenantId is passed in POST body.
@@ -852,7 +852,7 @@ const LIST_OAUTH_IDP_CONFIGS = new ApiSettings('/oauthIdpConfigs', 'GET')
         request.pageSize > MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        `Required "maxResults" must be a positive integer that does not exceed ` +
+        'Required "maxResults" must be a positive integer that does not exceed ' +
         `${MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE}.`,
       );
     }
@@ -915,7 +915,7 @@ const LIST_INBOUND_SAML_CONFIGS = new ApiSettings('/inboundSamlConfigs', 'GET')
         request.pageSize > MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        `Required "maxResults" must be a positive integer that does not exceed ` +
+        'Required "maxResults" must be a positive integer that does not exceed ' +
         `${MAX_LIST_PROVIDER_CONFIGURATION_PAGE_SIZE}.`,
       );
     }
@@ -1471,7 +1471,7 @@ export abstract class AbstractAuthRequestHandler {
       return Promise.reject(
         new FirebaseAuthError(
           AuthClientErrorCode.INVALID_ARGUMENT,
-          "`actionCodeSettings` is required when `requestType` === 'EMAIL_SIGNIN'",
+          '`actionCodeSettings` is required when `requestType` === \'EMAIL_SIGNIN\'',
         ),
       );
     }
@@ -1865,7 +1865,7 @@ const LIST_TENANTS = new ApiSettings('/tenants', 'GET')
         request.pageSize > MAX_LIST_TENANT_PAGE_SIZE) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        `Required "maxResults" must be a positive non-zero number that does not exceed ` +
+        'Required "maxResults" must be a positive non-zero number that does not exceed ' +
         `the allowed ${MAX_LIST_TENANT_PAGE_SIZE}.`,
       );
     }

@@ -220,8 +220,8 @@ export class IAMSigner implements CryptoSigner {
     }).catch((err) => {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_CREDENTIAL,
-        `Failed to determine service account. Make sure to initialize ` +
-        `the SDK with a service account credential. Alternatively specify a service ` +
+        'Failed to determine service account. Make sure to initialize ' +
+        'the SDK with a service account credential. Alternatively specify a service ' +
         `account with iam.serviceAccounts.signBlob permission. Original error: ${err}`,
       );
     });

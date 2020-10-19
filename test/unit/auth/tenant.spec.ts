@@ -164,7 +164,7 @@ describe('Tenant', () => {
         tenantOptionsClientRequest.unsupported = 'value';
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
-        }).to.throw(`"unsupported" is not a valid UpdateTenantRequest parameter.`);
+        }).to.throw('"unsupported" is not a valid UpdateTenantRequest parameter.');
       });
 
       const invalidTenantNames = [null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
@@ -211,7 +211,7 @@ describe('Tenant', () => {
         tenantOptionsClientRequest.multiFactorConfig.factorIds = ['invalid'];
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-        }).to.throw(`"invalid" is not a valid "AuthFactorType".`,);
+        }).to.throw('"invalid" is not a valid "AuthFactorType".',);
       });
 
       it('should throw on invalid testPhoneNumbers attribute', () => {
@@ -219,7 +219,7 @@ describe('Tenant', () => {
         tenantOptionsClientRequest.testPhoneNumbers = { 'invalid': '123456' };
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-        }).to.throw(`"invalid" is not a valid E.164 standard compliant phone number.`);
+        }).to.throw('"invalid" is not a valid E.164 standard compliant phone number.');
       });
 
       it('should throw on null testPhoneNumbers attribute', () => {
@@ -231,7 +231,7 @@ describe('Tenant', () => {
 
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-        }).to.throw(`"CreateTenantRequest.testPhoneNumbers" must be a non-null object.`);
+        }).to.throw('"CreateTenantRequest.testPhoneNumbers" must be a non-null object.');
       });
 
       const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
@@ -248,7 +248,7 @@ describe('Tenant', () => {
         tenantOptionsClientRequest.unsupported = 'value';
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-        }).to.throw(`"unsupported" is not a valid CreateTenantRequest parameter.`);
+        }).to.throw('"unsupported" is not a valid CreateTenantRequest parameter.');
       });
 
       const invalidTenantNames = [null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];

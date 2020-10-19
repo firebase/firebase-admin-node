@@ -164,7 +164,7 @@ export class FirebaseNamespaceInternals {
     if (typeof appName === 'undefined') {
       throw new FirebaseAppError(
         AppErrorCodes.INVALID_APP_NAME,
-        `No Firebase app name provided. App name must be a non-empty string.`,
+        'No Firebase app name provided. App name must be a non-empty string.',
       );
     }
 
@@ -189,7 +189,7 @@ export class FirebaseNamespaceInternals {
     appHook?: AppHook): FirebaseServiceNamespace<FirebaseServiceInterface> {
     let errorMessage;
     if (typeof serviceName === 'undefined') {
-      errorMessage = `No service name provided. Service name must be a non-empty string.`;
+      errorMessage = 'No service name provided. Service name must be a non-empty string.';
     } else if (typeof serviceName !== 'string' || serviceName === '') {
       errorMessage = `Invalid service name "${serviceName}" provided. Service name must be a non-empty string.`;
     } else if (serviceName in this.serviceFactories) {

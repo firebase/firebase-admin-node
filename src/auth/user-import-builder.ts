@@ -103,7 +103,7 @@ export function convertMultiFactorInfoToServerFormat(multiFactorInfo: UpdateMult
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ENROLLMENT_TIME,
         `The second factor "enrollmentTime" for "${multiFactorInfo.uid}" must be a valid ` +
-        `UTC date string.`);
+        'UTC date string.');
     }
   }
   // Currently only phone second factors are supported.
@@ -334,14 +334,14 @@ export class UserImportBuilder {
     if (!validator.isNonNullObject(options.hash)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.MISSING_HASH_ALGORITHM,
-        `"hash.algorithm" is missing from the provided "UserImportOptions".`,
+        '"hash.algorithm" is missing from the provided "UserImportOptions".',
       );
     }
     if (typeof options.hash.algorithm === 'undefined' ||
         !validator.isNonEmptyString(options.hash.algorithm)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_HASH_ALGORITHM,
-        `"hash.algorithm" must be a string matching the list of supported algorithms.`,
+        '"hash.algorithm" must be a string matching the list of supported algorithms.',
       );
     }
 
@@ -354,7 +354,7 @@ export class UserImportBuilder {
       if (!validator.isBuffer(options.hash.key)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_KEY,
-          `A non-empty "hash.key" byte buffer must be provided for ` +
+          'A non-empty "hash.key" byte buffer must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
         );
       }
@@ -390,7 +390,7 @@ export class UserImportBuilder {
       if (isNaN(rounds) || rounds < 0 || rounds > 120000) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_ROUNDS,
-          `A valid "hash.rounds" number between 0 and 120000 must be provided for ` +
+          'A valid "hash.rounds" number between 0 and 120000 must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
         );
       }
@@ -404,7 +404,7 @@ export class UserImportBuilder {
       if (!validator.isBuffer(options.hash.key)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_KEY,
-          `A "hash.key" byte buffer must be provided for ` +
+          'A "hash.key" byte buffer must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
         );
       }
@@ -412,7 +412,7 @@ export class UserImportBuilder {
       if (isNaN(rounds) || rounds <= 0 || rounds > 8) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_ROUNDS,
-          `A valid "hash.rounds" number between 1 and 8 must be provided for ` +
+          'A valid "hash.rounds" number between 1 and 8 must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
         );
       }
@@ -420,7 +420,7 @@ export class UserImportBuilder {
       if (isNaN(memoryCost) || memoryCost <= 0 || memoryCost > 14) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_MEMORY_COST,
-          `A valid "hash.memoryCost" number between 1 and 14 must be provided for ` +
+          'A valid "hash.memoryCost" number between 1 and 14 must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
         );
       }
@@ -428,7 +428,7 @@ export class UserImportBuilder {
             !validator.isBuffer(options.hash.saltSeparator)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_SALT_SEPARATOR,
-          `"hash.saltSeparator" must be a byte buffer.`,
+          '"hash.saltSeparator" must be a byte buffer.',
         );
       }
       populatedOptions = {
@@ -451,7 +451,7 @@ export class UserImportBuilder {
       if (isNaN(cpuMemCost)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_MEMORY_COST,
-          `A valid "hash.memoryCost" number must be provided for ` +
+          'A valid "hash.memoryCost" number must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
         );
       }
@@ -459,7 +459,7 @@ export class UserImportBuilder {
       if (isNaN(parallelization)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_PARALLELIZATION,
-          `A valid "hash.parallelization" number must be provided for ` +
+          'A valid "hash.parallelization" number must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
         );
       }
@@ -467,7 +467,7 @@ export class UserImportBuilder {
       if (isNaN(blockSize)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_BLOCK_SIZE,
-          `A valid "hash.blockSize" number must be provided for ` +
+          'A valid "hash.blockSize" number must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
         );
       }
@@ -475,7 +475,7 @@ export class UserImportBuilder {
       if (isNaN(dkLen)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_DERIVED_KEY_LENGTH,
-          `A valid "hash.derivedKeyLength" number must be provided for ` +
+          'A valid "hash.derivedKeyLength" number must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
         );
       }

@@ -564,7 +564,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
     return Promise.reject(
       new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        `"AuthProviderConfigFilter.type" must be either "saml' or "oidc"`));
+        '"AuthProviderConfigFilter.type" must be either "saml\' or "oidc"'));
   }
 
   /**

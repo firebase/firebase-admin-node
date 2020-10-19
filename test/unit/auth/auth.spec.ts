@@ -431,7 +431,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       // Set auth_time of token to expected user's tokensValidAfterTime.
       expect(
         expectedUserRecord.tokensValidAfterTime,
-        "getValidUserRecord didn't properly set tokensValueAfterTime",
+        'getValidUserRecord didn\'t properly set tokensValueAfterTime',
       ).to.exist;
       const validSince = new Date(expectedUserRecord.tokensValidAfterTime!);
       // Set expected uid to expected user's.
@@ -675,7 +675,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       const expectedUserRecord = getValidUserRecord(getValidGetAccountInfoResponse(tenantId));
       // Set auth_time of token to expected user's tokensValidAfterTime.
       if (!expectedUserRecord.tokensValidAfterTime) {
-        throw new Error("getValidUserRecord didn't properly set tokensValidAfterTime.");
+        throw new Error('getValidUserRecord didn\'t properly set tokensValidAfterTime.');
       }
       const validSince = new Date(expectedUserRecord.tokensValidAfterTime);
       // Set expected uid to expected user's.
@@ -1159,7 +1159,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
 
       it('should throw when given a non array parameter', () => {
-        const nonArrayValues = [ null, undefined, 42, 3.14, "i'm not an array", {} ];
+        const nonArrayValues = [ null, undefined, 42, 3.14, 'i\'m not an array', {} ];
         nonArrayValues.forEach((v) => {
           expect(() => auth.getUsers(v as any))
             .to.throw(FirebaseAuthError)
@@ -2086,7 +2086,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       const expectedUserRecord = getValidUserRecord(getValidGetAccountInfoResponse(tenantId));
       // Set auth_time of token to expected user's tokensValidAfterTime.
       if (!expectedUserRecord.tokensValidAfterTime) {
-        throw new Error("getValidUserRecord didn't properly set tokensValidAfterTime.");
+        throw new Error('getValidUserRecord didn\'t properly set tokensValidAfterTime.');
       }
       const validSince = new Date(expectedUserRecord.tokensValidAfterTime);
       // Set expected uid to expected user's.

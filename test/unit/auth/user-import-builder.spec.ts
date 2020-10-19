@@ -200,7 +200,7 @@ describe('UserImportBuilder', () => {
     it('should throw when an invalid hash algorithm is provided', () => {
       const expectedError = new FirebaseAuthError(
         AuthClientErrorCode.INVALID_HASH_ALGORITHM,
-        `Unsupported hash algorithm provider "invalid".`,
+        'Unsupported hash algorithm provider "invalid".',
       );
       const invalidOptions = {
         hash: {
@@ -229,7 +229,7 @@ describe('UserImportBuilder', () => {
           it(`should throw when non-Buffer ${JSON.stringify(key)} hash key is provided`, () => {
             const expectedError = new FirebaseAuthError(
               AuthClientErrorCode.INVALID_HASH_KEY,
-              `A non-empty "hash.key" byte buffer must be provided for ` +
+              'A non-empty "hash.key" byte buffer must be provided for ' +
               `hash algorithm ${algorithm}.`,
             );
             const invalidOptions = {
@@ -337,7 +337,7 @@ describe('UserImportBuilder', () => {
         it(`should throw when ${JSON.stringify(key)} key provided`, () => {
           const expectedError = new FirebaseAuthError(
             AuthClientErrorCode.INVALID_HASH_KEY,
-            `A "hash.key" byte buffer must be provided for ` +
+            'A "hash.key" byte buffer must be provided for ' +
             `hash algorithm ${algorithm}.`,
           );
           const invalidOptions = {
@@ -358,7 +358,7 @@ describe('UserImportBuilder', () => {
         it(`should throw when ${JSON.stringify(rounds)} rounds provided`, () => {
           const expectedError = new FirebaseAuthError(
             AuthClientErrorCode.INVALID_HASH_ROUNDS,
-            `A valid "hash.rounds" number between 1 and 8 must be provided for ` +
+            'A valid "hash.rounds" number between 1 and 8 must be provided for ' +
             `hash algorithm ${algorithm}.`,
           );
           const invalidOptions = {
@@ -379,7 +379,7 @@ describe('UserImportBuilder', () => {
         it(`should throw when ${JSON.stringify(memoryCost)} memoryCost provided`, () => {
           const expectedError = new FirebaseAuthError(
             AuthClientErrorCode.INVALID_HASH_MEMORY_COST,
-            `A valid "hash.memoryCost" number between 1 and 14 must be provided for ` +
+            'A valid "hash.memoryCost" number between 1 and 14 must be provided for ' +
             `hash algorithm ${algorithm}.`,
           );
           const invalidOptions = {
@@ -400,7 +400,7 @@ describe('UserImportBuilder', () => {
         it(`should throw when ${JSON.stringify(saltSeparator)} saltSeparator provided`, () => {
           const expectedError = new FirebaseAuthError(
             AuthClientErrorCode.INVALID_HASH_SALT_SEPARATOR,
-            `"hash.saltSeparator" must be a byte buffer.`,
+            '"hash.saltSeparator" must be a byte buffer.',
           );
           const invalidOptions = {
             hash: {
@@ -468,7 +468,7 @@ describe('UserImportBuilder', () => {
         it(`should throw when ${JSON.stringify(memoryCost)} memoryCost provided`, () => {
           const expectedError = new FirebaseAuthError(
             AuthClientErrorCode.INVALID_HASH_MEMORY_COST,
-            `A valid "hash.memoryCost" number must be provided for ` +
+            'A valid "hash.memoryCost" number must be provided for ' +
             `hash algorithm ${algorithm}.`,
           );
           const invalidOptions = {
@@ -490,7 +490,7 @@ describe('UserImportBuilder', () => {
         it(`should throw when ${JSON.stringify(parallelization)} parallelization provided`, () => {
           const expectedError = new FirebaseAuthError(
             AuthClientErrorCode.INVALID_HASH_MEMORY_COST,
-            `A valid "hash.parallelization" number must be provided for ` +
+            'A valid "hash.parallelization" number must be provided for ' +
             `hash algorithm ${algorithm}.`,
           );
           const invalidOptions = {
@@ -512,7 +512,7 @@ describe('UserImportBuilder', () => {
         it(`should throw when ${JSON.stringify(blockSize)} blockSize provided`, () => {
           const expectedError = new FirebaseAuthError(
             AuthClientErrorCode.INVALID_HASH_BLOCK_SIZE,
-            `A valid "hash.blockSize" number must be provided for ` +
+            'A valid "hash.blockSize" number must be provided for ' +
             `hash algorithm ${algorithm}.`,
           );
           const invalidOptions = {
@@ -534,7 +534,7 @@ describe('UserImportBuilder', () => {
         it(`should throw when ${JSON.stringify(derivedKeyLength)} dkLen provided`, () => {
           const expectedError = new FirebaseAuthError(
             AuthClientErrorCode.INVALID_HASH_DERIVED_KEY_LENGTH,
-            `A valid "hash.derivedKeyLength" number must be provided for ` +
+            'A valid "hash.derivedKeyLength" number must be provided for ' +
             `hash algorithm ${algorithm}.`,
           );
           const invalidOptions = {
@@ -864,8 +864,8 @@ describe('UserImportBuilder', () => {
             index: 8,
             error: new FirebaseAuthError(
               AuthClientErrorCode.INVALID_ENROLLMENT_TIME,
-              `The second factor "enrollmentTime" for "enrollmentId1" must be a valid ` +
-              `UTC date string.`),
+              'The second factor "enrollmentTime" for "enrollmentId1" must be a valid ' +
+              'UTC date string.'),
           },
           {
             index: 9,

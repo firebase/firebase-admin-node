@@ -368,8 +368,8 @@ export class Model implements ModelInterface {
     }
 
     // Remove '@type' field. We don't need it.
-    if ((tmpModel as any)["@type"]) {
-      delete (tmpModel as any)["@type"];
+    if ((tmpModel as any)['@type']) {
+      delete (tmpModel as any)['@type'];
     }
     return tmpModel;
   }

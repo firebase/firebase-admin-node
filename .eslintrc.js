@@ -44,7 +44,7 @@ module.exports = {
         'ignoreUrls': true
       }
     ],
-    "object-curly-spacing": [2, "always"],
+    'object-curly-spacing': [2, 'always'],
     '@typescript-eslint/explicit-function-return-type': [
       'error',
       {
@@ -54,6 +54,7 @@ module.exports = {
       }
     ],
     'no-unused-vars': 'off', // Must be disabled to enable the next rule
-    '@typescript-eslint/no-unused-vars': ['error']
+    '@typescript-eslint/no-unused-vars': ['error'],
+    'quotes': ['error', 'single']
   }
 };

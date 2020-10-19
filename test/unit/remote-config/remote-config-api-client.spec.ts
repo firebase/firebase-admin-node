@@ -49,9 +49,9 @@ describe('RemoteConfigApiClient', () => {
   };
 
   const VALIDATION_ERROR_MESSAGES = [
-    "[VALIDATION_ERROR]: [foo] are not valid condition names. All keys in all conditional value" +
-    " maps must be valid condition names.",
-    "[VERSION_MISMATCH]: Expected version 6, found 8 for project: 123456789012"
+    '[VALIDATION_ERROR]: [foo] are not valid condition names. All keys in all conditional value' +
+    ' maps must be valid condition names.',
+    '[VERSION_MISMATCH]: Expected version 6, found 8 for project: 123456789012'
   ];
 
   const EXPECTED_HEADERS = {
@@ -180,7 +180,7 @@ describe('RemoteConfigApiClient', () => {
   });
 
   describe('getTemplate', () => {
-    it(`should reject when project id is not available`, () => {
+    it('should reject when project id is not available', () => {
       return clientWithoutProjectId.getTemplate()
         .should.eventually.be.rejectedWith(noProjectId);
     });
@@ -211,7 +211,7 @@ describe('RemoteConfigApiClient', () => {
   });
 
   describe('getTemplateAtVersion', () => {
-    it(`should reject when project id is not available`, () => {
+    it('should reject when project id is not available', () => {
       return clientWithoutProjectId.getTemplateAtVersion(65)
         .should.eventually.be.rejectedWith(noProjectId);
     });
@@ -262,7 +262,7 @@ describe('RemoteConfigApiClient', () => {
   });
 
   describe('validateTemplate', () => {
-    it(`should reject when project id is not available`, () => {
+    it('should reject when project id is not available', () => {
       return clientWithoutProjectId.validateTemplate(REMOTE_CONFIG_TEMPLATE)
         .should.eventually.be.rejectedWith(noProjectId);
     });
@@ -341,7 +341,7 @@ describe('RemoteConfigApiClient', () => {
             error: {
               code: 400,
               message: message,
-              status: "FAILED_PRECONDITION"
+              status: 'FAILED_PRECONDITION'
             }
           }, 400));
         stubs.push(stub);
@@ -353,7 +353,7 @@ describe('RemoteConfigApiClient', () => {
   });
 
   describe('publishTemplate', () => {
-    it(`should reject when project id is not available`, () => {
+    it('should reject when project id is not available', () => {
       return clientWithoutProjectId.publishTemplate(REMOTE_CONFIG_TEMPLATE)
         .should.eventually.be.rejectedWith(noProjectId);
     });
@@ -436,7 +436,7 @@ describe('RemoteConfigApiClient', () => {
             error: {
               code: 400,
               message: message,
-              status: "FAILED_PRECONDITION"
+              status: 'FAILED_PRECONDITION'
             }
           }, 400));
         stubs.push(stub);
@@ -448,7 +448,7 @@ describe('RemoteConfigApiClient', () => {
   });
 
   describe('rollback', () => {
-    it(`should reject when project id is not available`, () => {
+    it('should reject when project id is not available', () => {
       return clientWithoutProjectId.rollback('60')
         .should.eventually.be.rejectedWith(noProjectId);
     });
@@ -503,7 +503,7 @@ describe('RemoteConfigApiClient', () => {
   });
 
   describe('listVersions', () => {
-    it(`should reject when project id is not available`, () => {
+    it('should reject when project id is not available', () => {
       return clientWithoutProjectId.listVersions()
         .should.eventually.be.rejectedWith(noProjectId);
     });

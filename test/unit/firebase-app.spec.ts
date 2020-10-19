@@ -144,7 +144,7 @@ describe('FirebaseApp', () => {
     it('should be read-only', () => {
       expect(() => {
         (mockApp as any).name = 'foo';
-      }).to.throw(`Cannot set property name of #<FirebaseApp> which has only a getter`);
+      }).to.throw('Cannot set property name of #<FirebaseApp> which has only a getter');
     });
   });
 
@@ -164,7 +164,7 @@ describe('FirebaseApp', () => {
     it('should be read-only', () => {
       expect(() => {
         (mockApp as any).options = {};
-      }).to.throw(`Cannot set property options of #<FirebaseApp> which has only a getter`);
+      }).to.throw('Cannot set property options of #<FirebaseApp> which has only a getter');
     });
 
     it('should not return an object which can mutate the underlying options', () => {
@@ -186,28 +186,28 @@ describe('FirebaseApp', () => {
       process.env[FIREBASE_CONFIG_VAR] = './test/resources/non_existant.json';
       expect(() => {
         firebaseNamespace.initializeApp();
-      }).to.throw(`Failed to parse app options file: Error: ENOENT: no such file or directory`);
+      }).to.throw('Failed to parse app options file: Error: ENOENT: no such file or directory');
     });
 
     it('should throw when the environment variable contains bad json', () => {
       process.env[FIREBASE_CONFIG_VAR] = '{,,';
       expect(() => {
         firebaseNamespace.initializeApp();
-      }).to.throw(`Failed to parse app options file: SyntaxError: Unexpected token ,`);
+      }).to.throw('Failed to parse app options file: SyntaxError: Unexpected token ,');
     });
 
     it('should throw when the environment variable points to an empty file', () => {
       process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config_empty.json';
       expect(() => {
         firebaseNamespace.initializeApp();
-      }).to.throw(`Failed to parse app options file`);
+      }).to.throw('Failed to parse app options file');
     });
 
     it('should throw when the environment variable points to bad json', () => {
       process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config_bad.json';
       expect(() => {
         firebaseNamespace.initializeApp();
-      }).to.throw(`Failed to parse app options file`);
+      }).to.throw('Failed to parse app options file');
     });
 
     it('should ignore a bad config key in the config file', () => {

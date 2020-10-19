@@ -489,7 +489,7 @@ describe('RemoteConfig', () => {
       expect(newTemplate.etag).to.equal('etag-123456789012-5');
       // verify that the etag is read-only
       expect(() => {
-        (newTemplate as any).etag = "new-etag";
+        (newTemplate as any).etag = 'new-etag';
       }).to.throw(
         'Cannot set property etag of #<RemoteConfigTemplateImpl> which has only a getter');
 
@@ -552,7 +552,7 @@ describe('RemoteConfig', () => {
       stubs.push(stub);
       return rcOperation()
         .should.eventually.be.rejected.and.have.property(
-          'message', `Remote Config parameters must be a non-null object`);
+          'message', 'Remote Config parameters must be a non-null object');
     });
 
     it('should reject when API response does not contain valid parameter groups', () => {
@@ -564,7 +564,7 @@ describe('RemoteConfig', () => {
       stubs.push(stub);
       return rcOperation()
         .should.eventually.be.rejected.and.have.property(
-          'message', `Remote Config parameter groups must be a non-null object`);
+          'message', 'Remote Config parameter groups must be a non-null object');
     });
 
     it('should reject when API response does not contain valid conditions', () => {
@@ -576,7 +576,7 @@ describe('RemoteConfig', () => {
       stubs.push(stub);
       return rcOperation()
         .should.eventually.be.rejected.and.have.property(
-          'message', `Remote Config conditions must be an array`);
+          'message', 'Remote Config conditions must be an array');
     });
   }
 
@@ -643,7 +643,7 @@ describe('RemoteConfig', () => {
           expect(template.etag).to.equal('etag-123456789012-5');
           // verify that etag is read-only
           expect(() => {
-            (template as any).etag = "new-etag";
+            (template as any).etag = 'new-etag';
           }).to.throw(
             'Cannot set property etag of #<RemoteConfigTemplateImpl> which has only a getter');
 
