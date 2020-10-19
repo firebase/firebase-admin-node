@@ -17,13 +17,13 @@
 import { app } from '../firebase-namespace-api';
 
 /**
- * Gets the {@link admin.securityRules.SecurityRules
+ * Gets the {@link securityRules.SecurityRules
  * `SecurityRules`} service for the default app or a given app.
  *
  * `admin.securityRules()` can be called with no arguments to access the
- * default app's {@link admin.securityRules.SecurityRules
+ * default app's {@link securityRules.SecurityRules
  * `SecurityRules`} service, or as `admin.securityRules(app)` to access
- * the {@link admin.securityRules.SecurityRules `SecurityRules`}
+ * the {@link securityRules.SecurityRules `SecurityRules`}
  * service associated with a specific app.
  *
  * @example
@@ -51,7 +51,7 @@ export namespace securityRules {
   /**
    * A source file containing some Firebase security rules. The content includes raw
    * source code including text formatting, indentation and comments. Use the
-   * [`securityRules.createRulesFileFromSource()`](admin.securityRules.SecurityRules#createRulesFileFromSource)
+   * [`securityRules.createRulesFileFromSource()`](securityRules.SecurityRules#createRulesFileFromSource)
    * method to create new instances of this type.
    */
   export interface RulesFile {
@@ -65,8 +65,8 @@ export namespace securityRules {
   export interface RulesetMetadata {
     /**
      * Name of the `Ruleset` as a short string. This can be directly passed into APIs
-     * like [`securityRules.getRuleset()`](admin.securityRules.SecurityRules#getRuleset)
-     * and [`securityRules.deleteRuleset()`](admin.securityRules.SecurityRules#deleteRuleset).
+     * like {@link securityRules.SecurityRules.getRuleset `securityRules.getRuleset()`}
+     * and {@link securityRules.SecurityRules.deleteRuleset `securityRules.deleteRuleset()`}.
      */
     readonly name: string;
     /**
@@ -98,15 +98,12 @@ export namespace securityRules {
 
   /**
    * The Firebase `SecurityRules` service interface.
-   *
-   * Do not call this constructor directly. Instead, use
-   * [`admin.securityRules()`](admin.securityRules#securityRules).
    */
   export interface SecurityRules {
     app: app.App;
 
     /**
-     * Creates a {@link admin.securityRules.RulesFile `RuleFile`} with the given name
+     * Creates a {@link securityRules.RulesFile `RuleFile`} with the given name
      * and source. Throws an error if any of the arguments are invalid. This is a local
      * operation, and does not involve any network API calls.
      *
@@ -125,8 +122,8 @@ export namespace securityRules {
     createRulesFileFromSource(name: string, source: string | Buffer): RulesFile;
 
     /**
-     * Creates a new {@link admin.securityRules.Ruleset `Ruleset`} from the given
-     * {@link admin.securityRules.RulesFile `RuleFile`}.
+     * Creates a new {@link securityRules.Ruleset `Ruleset`} from the given
+     * {@link securityRules.RulesFile `RuleFile`}.
      *
      * @param file Rules file to include in the new `Ruleset`.
      * @returns A promise that fulfills with the newly created `Ruleset`.
@@ -134,7 +131,7 @@ export namespace securityRules {
     createRuleset(file: RulesFile): Promise<Ruleset>;
 
     /**
-     * Gets the {@link admin.securityRules.Ruleset `Ruleset`} identified by the given
+     * Gets the {@link securityRules.Ruleset `Ruleset`} identified by the given
      * name. The input name should be the short name string without the project ID
      * prefix. For example, to retrieve the `projects/project-id/rulesets/my-ruleset`,
      * pass the short name "my-ruleset". Rejects with a `not-found` error if the
@@ -146,7 +143,7 @@ export namespace securityRules {
     getRuleset(name: string): Promise<Ruleset>;
 
     /**
-     * Deletes the {@link admin.securityRules.Ruleset `Ruleset`} identified by the given
+     * Deletes the {@link securityRules.Ruleset `Ruleset`} identified by the given
      * name. The input name should be the short name string without the project ID
      * prefix. For example, to delete the `projects/project-id/rulesets/my-ruleset`,
      * pass the  short name "my-ruleset". Rejects with a `not-found` error if the
@@ -170,7 +167,7 @@ export namespace securityRules {
       pageSize?: number, nextPageToken?: string): Promise<RulesetMetadataList>;
 
     /**
-     * Gets the {@link admin.securityRules.Ruleset `Ruleset`} currently applied to
+     * Gets the {@link securityRules.Ruleset `Ruleset`} currently applied to
      * Cloud Firestore. Rejects with a `not-found` error if no ruleset is applied
      * on Firestore.
      *
@@ -179,7 +176,7 @@ export namespace securityRules {
     getFirestoreRuleset(): Promise<Ruleset>;
 
     /**
-     * Creates a new {@link admin.securityRules.Ruleset `Ruleset`} from the given
+     * Creates a new {@link securityRules.Ruleset `Ruleset`} from the given
      * source, and applies it to Cloud Firestore.
      *
      * @param source Rules source to apply.
@@ -188,7 +185,7 @@ export namespace securityRules {
     releaseFirestoreRulesetFromSource(source: string | Buffer): Promise<Ruleset>;
 
     /**
-     * Applies the specified {@link admin.securityRules.Ruleset `Ruleset`} ruleset
+     * Applies the specified {@link securityRules.Ruleset `Ruleset`} ruleset
      * to Cloud Firestore.
      *
      * @param ruleset Name of the ruleset to apply or a `RulesetMetadata` object
@@ -198,7 +195,7 @@ export namespace securityRules {
     releaseFirestoreRuleset(ruleset: string | RulesetMetadata): Promise<void>;
 
     /**
-     * Gets the {@link admin.securityRules.Ruleset `Ruleset`} currently applied to a
+     * Gets the {@link securityRules.Ruleset `Ruleset`} currently applied to a
      * Cloud Storage bucket. Rejects with a `not-found` error if no ruleset is applied
      * on the bucket.
      *
@@ -210,27 +207,27 @@ export namespace securityRules {
     getStorageRuleset(bucket?: string): Promise<Ruleset>;
 
     /**
-     * Creates a new {@link admin.securityRules.Ruleset `Ruleset`} from the given
+     * Creates a new {@link securityRules.Ruleset `Ruleset`} from the given
      * source, and applies it to a Cloud Storage bucket.
      *
      * @param source Rules source to apply.
      * @param bucket Optional name of the Cloud Storage bucket to apply the rules on. If
      *   not specified, applies the ruleset on the default bucket configured via
-     *   {@link admin.AppOptions `AppOptions`}.
+     *   {@link AppOptions `AppOptions`}.
      * @return A promise that fulfills when the ruleset is created and released.
      */
     releaseStorageRulesetFromSource(
       source: string | Buffer, bucket?: string): Promise<Ruleset>;
 
     /**
-     * Applies the specified {@link admin.securityRules.Ruleset `Ruleset`} ruleset
+     * Applies the specified {@link securityRules.Ruleset `Ruleset`} ruleset
      * to a Cloud Storage bucket.
      *
      * @param ruleset Name of the ruleset to apply or a `RulesetMetadata` object
      *   containing the name.
      * @param bucket Optional name of the Cloud Storage bucket to apply the rules on. If
      *   not specified, applies the ruleset on the default bucket configured via
-     *   {@link admin.AppOptions `AppOptions`}.
+     *   {@link AppOptions `AppOptions`}.
      * @return A promise that fulfills when the ruleset is released.
      */
     releaseStorageRuleset(

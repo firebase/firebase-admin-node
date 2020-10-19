@@ -62,7 +62,7 @@ export class RemoteConfig implements FirebaseServiceInterface, RemoteConfigInter
   }
 
   /**
-   * Gets the current active version of the {@link admin.remoteConfig.RemoteConfigTemplate
+   * Gets the current active version of the {@link remoteConfig.RemoteConfigTemplate
    * `RemoteConfigTemplate`} of the project.
    *
    * @return A promise that fulfills with a `RemoteConfigTemplate`.
@@ -75,7 +75,7 @@ export class RemoteConfig implements FirebaseServiceInterface, RemoteConfigInter
   }
 
   /**
-   * Gets the requested version of the {@link admin.remoteConfig.RemoteConfigTemplate
+   * Gets the requested version of the {@link remoteConfig.RemoteConfigTemplate
     * `RemoteConfigTemplate`} of the project.
    *
    * @param versionNumber Version number of the Remote Config template to look up.
@@ -90,7 +90,7 @@ export class RemoteConfig implements FirebaseServiceInterface, RemoteConfigInter
   }
 
   /**
-   * Validates a {@link admin.remoteConfig.RemoteConfigTemplate `RemoteConfigTemplate`}.
+   * Validates a {@link remoteConfig.RemoteConfigTemplate `RemoteConfigTemplate`}.
    *
    * @param template The Remote Config template to be validated.
    * @returns A promise that fulfills with the validated `RemoteConfigTemplate`.

@@ -213,7 +213,7 @@ export class Messaging implements FirebaseServiceInterface, MessagingInterface {
   private readonly messagingRequestHandler: FirebaseMessagingRequestHandler;
 
   /**
-   * Gets the {@link admin.messaging.Messaging `Messaging`} service for the
+   * Gets the {@link messaging.Messaging `Messaging`} service for the
    * current app.
    *
    * @example

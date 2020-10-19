@@ -18,13 +18,13 @@ import { Bucket } from '@google-cloud/storage';
 import { app } from '../firebase-namespace-api';
 
 /**
- * Gets the {@link admin.storage.Storage `Storage`} service for the
+ * Gets the {@link storage.Storage `Storage`} service for the
  * default app or a given app.
  *
  * `admin.storage()` can be called with no arguments to access the default
- * app's {@link admin.storage.Storage `Storage`} service or as
+ * app's {@link storage.Storage `Storage`} service or as
  * `admin.storage(app)` to access the
- * {@link admin.storage.Storage `Storage`} service associated with a
+ * {@link storage.Storage `Storage`} service associated with a
  * specific app.
  *
  * @example

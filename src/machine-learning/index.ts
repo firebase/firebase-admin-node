@@ -17,13 +17,13 @@
 import { app } from '../firebase-namespace-api';
 
 /**
- * Gets the {@link admin.machineLearning.MachineLearning `MachineLearning`} service for the
+ * Gets the {@link machineLearning.MachineLearning `MachineLearning`} service for the
  * default app or a given app.
  *
  * `admin.machineLearning()` can be called with no arguments to access the
- * default app's {@link admin.machineLearning.MachineLearning
+ * default app's {@link machineLearning.MachineLearning
  * `MachineLearning`} service or as `admin.machineLearning(app)` to access
- * the {@link admin.machineLearning.MachineLearning `MachineLearning`}
+ * the {@link machineLearning.MachineLearning `MachineLearning`}
  * service associated with a specific app.
  *
  * @example
@@ -207,7 +207,7 @@ export namespace machineLearning {
    */
   export interface MachineLearning {
     /**
-     *  The {@link admin.app.App} associated with the current `MachineLearning`
+     *  The {@link app.App} associated with the current `MachineLearning`
      *  service instance.
      */
     app: app.App;

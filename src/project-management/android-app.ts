@@ -182,7 +182,7 @@ export class AndroidApp implements AndroidAppInterface {
  * A SHA-1 or SHA-256 certificate.
  *
  * Do not call this constructor directly. Instead, use
- * [`projectManagement.shaCertificate()`](admin.projectManagement.ProjectManagement#shaCertificate).
+ * [`projectManagement.shaCertificate()`](projectManagement.ProjectManagement#shaCertificate).
  */
 export class ShaCertificate implements ShaCertificateInterface {
   /**

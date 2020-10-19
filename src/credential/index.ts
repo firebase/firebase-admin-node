@@ -38,7 +38,7 @@ export namespace credential {
    *
    * In most cases, you will not need to implement this yourself and can instead
    * use the default implementations provided by
-   * {@link admin.credential `admin.credential`}.
+   * {@link credential `admin.credential`}.
    */
   export interface Credential {
     /**

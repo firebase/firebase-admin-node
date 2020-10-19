@@ -19,13 +19,13 @@ import { ServerValue as sv } from '@firebase/database';
 import * as rtdb from '@firebase/database-types';
 
 /**
- * Gets the {@link admin.database.Database `Database`} service for the default
+ * Gets the {@link database.Database `Database`} service for the default
  * app or a given app.
  *
  * `admin.database()` can be called with no arguments to access the default
- * app's {@link admin.database.Database `Database`} service or as
+ * app's {@link database.Database `Database`} service or as
  * `admin.database(app)` to access the
- * {@link admin.database.Database `Database`} service associated with a specific
+ * {@link database.Database `Database`} service associated with a specific
  * app.
  *
  * `admin.database` is also a namespace that can be used to access global
@@ -51,8 +51,9 @@ import * as rtdb from '@firebase/database-types';
  */
 export declare function database(app?: app.App): database.Database;
 
-declare module '@firebase/database-types' {
-  interface FirebaseDatabase {
+/* eslint-disable @typescript-eslint/no-namespace */
+export namespace database {
+  export interface Database extends rtdb.FirebaseDatabase {
     /**
      * Gets the currently applied security rules as a string. The return value consists of
      * the rules source including comments.
@@ -78,12 +79,8 @@ declare module '@firebase/database-types' {
      */
     setRules(source: string | Buffer | object): Promise<void>;
   }
-}
 
-/* eslint-disable @typescript-eslint/no-namespace */
-export namespace database {
   /* eslint-disable @typescript-eslint/no-unused-vars */
-  export import Database = rtdb.FirebaseDatabase;
   export import DataSnapshot = rtdb.DataSnapshot;
   export import EventType = rtdb.EventType;
   export import OnDisconnect = rtdb.OnDisconnect;
@@ -92,5 +89,9 @@ export namespace database {
   export import ThenableReference = rtdb.ThenableReference;
   export import enableLogging = rtdb.enableLogging;
 
+  /**
+   * [`ServerValue`](https://firebase.google.com/docs/reference/js/firebase.database.ServerValue)
+   * module from the `@firebase/database` package.
+   */
   export const ServerValue: rtdb.ServerValue = sv;
 }

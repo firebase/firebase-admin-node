@@ -47,7 +47,7 @@ class ProjectManagementInternals implements FirebaseServiceInternalsInterface {
  * The Firebase ProjectManagement service interface.
  *
  * Do not call this constructor directly. Instead, use
- * [`admin.projectManagement()`](admin.projectManagement#projectManagement).
+ * [`admin.projectManagement()`](projectManagement#projectManagement).
  */
 export class ProjectManagement implements FirebaseServiceInterface, ProjectManagementInterface {
   public readonly INTERNAL: ProjectManagementInternals = new ProjectManagementInternals();

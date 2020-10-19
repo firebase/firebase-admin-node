@@ -112,7 +112,7 @@ export interface FirebaseArrayIndexError {
 export interface AppOptions {
 
   /**
-   * A {@link admin.credential.Credential `Credential`} object used to
+   * A {@link credential.Credential `Credential`} object used to
    * authenticate the Admin SDK.
    *
    * See [Initialize the SDK](/docs/admin/setup#initialize_the_sdk) for detailed
