@@ -55,6 +55,6 @@ module.exports = {
     ],
     'no-unused-vars': 'off', // Must be disabled to enable the next rule
     '@typescript-eslint/no-unused-vars': ['error'],
-    'quotes': ['error', 'single']
+    'quotes': ['error', 'single', {'avoidEscape': true}]
   }
 };

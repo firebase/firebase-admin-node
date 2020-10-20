@@ -145,7 +145,7 @@ class AuthResourceUrlBuilder {
   constructor(protected app: FirebaseApp, protected version: string = 'v1') {
     const emulatorHost = process.env.FIREBASE_AUTH_EMULATOR_HOST;
     if (emulatorHost) {
-      this.urlFormat = utils.formatString(FIREBASE_AUTH_EMULATOR_BASE_URL_FORMAT, { 
+      this.urlFormat = utils.formatString(FIREBASE_AUTH_EMULATOR_BASE_URL_FORMAT, {
         host: emulatorHost
       });
     } else {
@@ -212,7 +212,7 @@ class TenantAwareAuthResourceUrlBuilder extends AuthResourceUrlBuilder {
     super(app, version);
     const emulatorHost = process.env.FIREBASE_AUTH_EMULATOR_HOST
     if (emulatorHost) {
-      this.urlFormat = utils.formatString(FIREBASE_AUTH_EMULATOR_TENANT_URL_FORMAT, { 
+      this.urlFormat = utils.formatString(FIREBASE_AUTH_EMULATOR_TENANT_URL_FORMAT, {
         host: emulatorHost
       });
     } else {
@@ -1471,7 +1471,7 @@ export abstract class AbstractAuthRequestHandler {
       return Promise.reject(
         new FirebaseAuthError(
           AuthClientErrorCode.INVALID_ARGUMENT,
-          '`actionCodeSettings` is required when `requestType` === \'EMAIL_SIGNIN\'',
+          "`actionCodeSettings` is required when `requestType` === 'EMAIL_SIGNIN'",
         ),
       );
     }
