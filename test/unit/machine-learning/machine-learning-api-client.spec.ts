@@ -316,9 +316,9 @@ describe('MachineLearningApiClient', () => {
     const GCS_MASK_LIST = ['displayName', 'tfliteModel.gcsTfliteUri'];
     const AUTOML_MASK_LIST = ['displayName', 'tfliteModel.automlModel'];
 
-    const NAME_ONLY_UPDATE_MASK_STRING = "updateMask=displayName";
-    const GCS_UPDATE_MASK_STRING = "updateMask=displayName,tfliteModel.gcsTfliteUri";
-    const AUTOML_UPDATE_MASK_STRING = "updateMask=displayName,tfliteModel.automlModel";
+    const NAME_ONLY_UPDATE_MASK_STRING = 'updateMask=displayName';
+    const GCS_UPDATE_MASK_STRING = 'updateMask=displayName,tfliteModel.gcsTfliteUri';
+    const AUTOML_UPDATE_MASK_STRING = 'updateMask=displayName,tfliteModel.automlModel';
 
     const invalidOptions: any[] = [null, undefined];
     invalidOptions.forEach((option) => {
@@ -462,13 +462,13 @@ describe('MachineLearningApiClient', () => {
       });
     });
 
-    it(`should reject when called with prefixed name`, () => {
+    it('should reject when called with prefixed name', () => {
       return apiClient.getModel('projects/foo/models/bar')
         .should.eventually.be.rejected.and.have.property(
           'message', 'Model ID must not contain any "/" characters.');
     });
 
-    it(`should reject when project id is not available`, () => {
+    it('should reject when project id is not available', () => {
       return clientWithoutProjectId.getModel(MODEL_ID)
         .should.eventually.be.rejectedWith(noProjectId);
     });
@@ -821,13 +821,13 @@ describe('MachineLearningApiClient', () => {
       });
     });
 
-    it(`should reject when called with prefixed name`, () => {
+    it('should reject when called with prefixed name', () => {
       return apiClient.deleteModel('projects/foo/rulesets/bar')
         .should.eventually.be.rejected.and.have.property(
           'message', 'Model ID must not contain any "/" characters.');
     });
 
-    it(`should reject when project id is not available`, () => {
+    it('should reject when project id is not available', () => {
       return clientWithoutProjectId.deleteModel(MODEL_ID)
         .should.eventually.be.rejectedWith(noProjectId);
     });

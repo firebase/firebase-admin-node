@@ -625,7 +625,7 @@ describe('SAMLConfig', () => {
       const invalidClientRequest = deepCopy(clientRequest) as any;
       invalidClientRequest.unsupported = 'value';
       expect(() => SAMLConfig.validate(invalidClientRequest))
-        .to.throw(`"unsupported" is not a valid SAML config parameter.`);
+        .to.throw('"unsupported" is not a valid SAML config parameter.');
     });
 
     const invalidProviderIds = [
@@ -904,7 +904,7 @@ describe('OIDCConfig', () => {
       const invalidClientRequest = deepCopy(clientRequest) as any;
       invalidClientRequest.unsupported = 'value';
       expect(() => OIDCConfig.validate(invalidClientRequest))
-        .to.throw(`"unsupported" is not a valid OIDC config parameter.`);
+        .to.throw('"unsupported" is not a valid OIDC config parameter.');
     });
 
     const invalidProviderIds = [

@@ -824,7 +824,7 @@ export class Messaging implements FirebaseServiceInterface, MessagingInterface {
         throw new FirebaseMessagingError(
           MessagingClientErrorCode.INVALID_PAYLOAD,
           `Messaging payload contains an invalid "${payloadKey}" property. Valid properties are ` +
-          `"data" and "notification".`,
+          '"data" and "notification".',
         );
       } else {
         containsDataOrNotificationKey = true;
@@ -845,7 +845,7 @@ export class Messaging implements FirebaseServiceInterface, MessagingInterface {
         throw new FirebaseMessagingError(
           MessagingClientErrorCode.INVALID_PAYLOAD,
           `Messaging payload contains an invalid value for the "${payloadKey}" property. ` +
-          `Value must be an object.`,
+          'Value must be an object.',
         );
       }
 
@@ -855,7 +855,7 @@ export class Messaging implements FirebaseServiceInterface, MessagingInterface {
           throw new FirebaseMessagingError(
             MessagingClientErrorCode.INVALID_PAYLOAD,
             `Messaging payload contains an invalid value for the "${payloadKey}.${subKey}" ` +
-            `property. Values must be strings.`,
+            'property. Values must be strings.',
           );
         } else if (payloadKey === 'data' && /^google\./.test(subKey)) {
           // Validate the data payload does not contain keys which start with 'google.'.

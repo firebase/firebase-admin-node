@@ -247,7 +247,7 @@ export class FirebaseApp implements app.App {
     if (!validator.isNonNullObject(this.options_)) {
       throw new FirebaseAppError(
         AppErrorCodes.INVALID_APP_OPTIONS,
-        `Invalid Firebase app options passed as the first argument to initializeApp() for the ` +
+        'Invalid Firebase app options passed as the first argument to initializeApp() for the ' +
         `app named "${this.name_}". Options must be a non-null object.`,
       );
     }
@@ -261,9 +261,9 @@ export class FirebaseApp implements app.App {
     if (typeof credential !== 'object' || credential === null || typeof credential.getAccessToken !== 'function') {
       throw new FirebaseAppError(
         AppErrorCodes.INVALID_APP_OPTIONS,
-        `Invalid Firebase app options passed as the first argument to initializeApp() for the ` +
+        'Invalid Firebase app options passed as the first argument to initializeApp() for the ' +
         `app named "${this.name_}". The "credential" property must be an object which implements ` +
-        `the Credential interface.`,
+        'the Credential interface.',
       );
     }
 

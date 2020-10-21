@@ -362,7 +362,7 @@ describe('AndroidApp', () => {
         .should.eventually.be.rejected
         .and.have.property(
           'message',
-          `getConfig()'s responseData.configFileContents must be a base64 string. `
+          'getConfig()\'s responseData.configFileContents must be a base64 string. '
                   + `Response data: ${JSON.stringify(apiResponse, null, 2)}`);
     });
 

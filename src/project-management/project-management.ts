@@ -153,7 +153,7 @@ export class ProjectManagement implements FirebaseServiceInterface, ProjectManag
         assertServerResponse(
           validator.isNonEmptyString(responseData.appId),
           responseData,
-          `"responseData.appId" field must be present in createAndroidApp()'s response data.`);
+          '"responseData.appId" field must be present in createAndroidApp()\'s response data.');
         return new AndroidApp(responseData.appId, this.requestHandler);
       });
   }
@@ -181,7 +181,7 @@ export class ProjectManagement implements FirebaseServiceInterface, ProjectManag
         assertServerResponse(
           validator.isNonEmptyString(responseData.appId),
           responseData,
-          `"responseData.appId" field must be present in createIosApp()'s response data.`);
+          '"responseData.appId" field must be present in createIosApp()\'s response data.');
         return new IosApp(responseData.appId, this.requestHandler);
       });
   }
@@ -229,11 +229,11 @@ export class ProjectManagement implements FirebaseServiceInterface, ProjectManag
       assertServerResponse(
         validator.isNonEmptyString(appJson.appId),
         responseData,
-        `"apps[].appId" field must be present in the listAppMetadata() response data.`);
+        '"apps[].appId" field must be present in the listAppMetadata() response data.');
       assertServerResponse(
         validator.isNonEmptyString(appJson.platform),
         responseData,
-        `"apps[].platform" field must be present in the listAppMetadata() response data.`);
+        '"apps[].platform" field must be present in the listAppMetadata() response data.');
       const metadata: AppMetadata = {
         appId: appJson.appId,
         platform: (AppPlatform as any)[appJson.platform] || AppPlatform.PLATFORM_UNKNOWN,

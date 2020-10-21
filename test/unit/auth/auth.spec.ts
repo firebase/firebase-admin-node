@@ -3226,7 +3226,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         const unsignedToken = mocks.generateIdToken({
           algorithm: 'none'
         });
-        
+
         await expect(mockAuth.verifyIdToken(unsignedToken))
           .to.be.rejectedWith('Firebase ID token has incorrect algorithm. Expected "RS256"');
       });
@@ -3236,7 +3236,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
         let claims = {};
         if (testConfig.Auth === TenantAwareAuth) {
-          claims = { 
+          claims = {
             firebase: {
               tenant: TENANT_ID
             }
@@ -3246,7 +3246,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         const unsignedToken = mocks.generateIdToken({
           algorithm: 'none'
         }, claims);
-        
+
         const decoded = await mockAuth.verifyIdToken(unsignedToken);
         expect(decoded).to.be.ok;
       });

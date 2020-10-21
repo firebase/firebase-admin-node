@@ -109,7 +109,7 @@ function createTokenVerifier(
   app: FirebaseApp, 
   options: { algorithm?: Algorithm } = {}
 ): verifier.FirebaseTokenVerifier {
-  const algorithm = options.algorithm || "RS256";
+  const algorithm = options.algorithm || 'RS256';
   return new verifier.FirebaseTokenVerifier(
     'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com',
     algorithm,

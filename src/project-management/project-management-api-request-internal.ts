@@ -173,11 +173,11 @@ export class ProjectManagementRequestHandler {
         assertServerResponse(
           validator.isNonNullObject(responseData),
           responseData,
-          `createAndroidApp's responseData must be a non-null object.`);
+          'createAndroidApp\'s responseData must be a non-null object.');
         assertServerResponse(
           validator.isNonEmptyString(responseData.name),
           responseData,
-          `createAndroidApp's responseData.name must be a non-empty string.`);
+          'createAndroidApp\'s responseData.name must be a non-empty string.');
         return this.pollRemoteOperationWithExponentialBackoff(responseData.name);
       });
   }
@@ -200,11 +200,11 @@ export class ProjectManagementRequestHandler {
         assertServerResponse(
           validator.isNonNullObject(responseData),
           responseData,
-          `createIosApp's responseData must be a non-null object.`);
+          'createIosApp\'s responseData must be a non-null object.');
         assertServerResponse(
           validator.isNonEmptyString(responseData.name),
           responseData,
-          `createIosApp's responseData.name must be a non-empty string.`);
+          'createIosApp\'s responseData.name must be a non-empty string.');
         return this.pollRemoteOperationWithExponentialBackoff(responseData.name);
       });
   }
