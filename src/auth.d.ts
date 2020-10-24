@@ -570,9 +570,11 @@ export namespace admin.auth {
     pageToken?: string;
   }
 
+  type HashInputOrderType = 'SALT_FIRST' | 'PASSWORD_FIRST';
+
   type HashAlgorithmType = 'SCRYPT' | 'STANDARD_SCRYPT' | 'HMAC_SHA512' |
-    'HMAC_SHA256' | 'HMAC_SHA1' | 'HMAC_MD5' | 'MD5' | 'PBKDF_SHA1' | 'BCRYPT' |
-    'PBKDF2_SHA256' | 'SHA512' | 'SHA256' | 'SHA1';
+  'HMAC_SHA256' | 'HMAC_SHA1' | 'HMAC_MD5' | 'MD5' | 'PBKDF_SHA1' | 'BCRYPT' |
+  'PBKDF2_SHA256' | 'SHA512' | 'SHA256' | 'SHA1';
 
   /**
    * Interface representing the user import options needed for
@@ -632,11 +634,21 @@ export namespace admin.auth {
        * `STANDARD_SCRYPT` algorithm.
        */
       blockSize?: number;
+
       /**
        * The derived key length of the hashing algorithm. Required for the
        * `STANDARD_SCRYPT` algorithm.
        */
       derivedKeyLength?: number;
+
+      /**
+       * The hash input order for certain hashing algorithms. The following
+       * orders are supported:
+       * 'SALT_FIRST', 'PASSWORD_FIRST'.
+       * Optional for `HMAC_SHA512`, `HMAC_SHA256`, `HMAC_SHA1`,
+       * `HMAC_MD5`, `SHA512`, `SHA256` and `SHA1`.
+       */
+      inputOrder?: HashInputOrderType;
     };
   }
 

@@ -562,6 +562,7 @@ declare namespace admin.auth {
   export import CreateRequest = _auth.admin.auth.CreateRequest;
   export import DecodedIdToken = _auth.admin.auth.DecodedIdToken;
   export import ListUsersResult = _auth.admin.auth.ListUsersResult;
+  export import HashInputOrderType = _auth.admin.auth.HashInputOrderType;
   export import HashAlgorithmType = _auth.admin.auth.HashAlgorithmType;
   export import UserImportOptions = _auth.admin.auth.UserImportOptions;
   export import UserImportResult = _auth.admin.auth.UserImportResult;

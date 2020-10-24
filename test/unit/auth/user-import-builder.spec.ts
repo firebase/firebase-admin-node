@@ -167,9 +167,7 @@ describe('UserImportBuilder', () => {
   ];
 
   const hmacAlgorithms = ['HMAC_SHA512', 'HMAC_SHA256', 'HMAC_SHA1', 'HMAC_MD5'];
-  const md5ShaPbkdfAlgorithms = [
-    'MD5', 'SHA1', 'SHA256', 'SHA512', 'PBKDF_SHA1', 'PBKDF2_SHA256',
-  ];
+  const md5ShaPbkdfAlgorithms = ['MD5', 'SHA1', 'SHA256', 'SHA512', 'PBKDF_SHA1', 'PBKDF2_SHA256'];
   describe('constructor', () =>  {
     const invalidUserImportOptions = [10, 'invalid', undefined, null, true, ['a']];
     invalidUserImportOptions.forEach((invalidOption) => {
@@ -241,15 +239,31 @@ describe('UserImportBuilder', () => {
           });
         });
 
-        it('should not throw with valid options and should generate expected request', () => {
+        it('should throw when an invalid hash input order option is provided', () => {
+          const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_HASH_INPUT_ORDER);
+          const invalidOptions = {
+            hash: {
+              algorithm,
+              inputOrder: 'INVALID_HASH_INPUT_ORDER',
+              key: Buffer.from('secret'),
+            },
+          };
+          expect(() =>  {
+            return new UserImportBuilder(users, invalidOptions as any, userRequestValidator);
+          }).to.throw(expectedError.message);
+        });
+
+        it('should not throw with valid PASSWORD_FIRST options and should generate expected request', () => {
           const validOptions = {
             hash: {
               algorithm,
+              inputOrder: 'PASSWORD_FIRST',
               key: Buffer.from('secret'),
             },
           };
           const expectedRequest = {
             hashAlgorithm: algorithm,
+            passwordHashOrder: 'PASSWORD_AND_SALT',
             signerKey: toWebSafeBase64(Buffer.from('secret')),
             users: expectedUsersRequest,
           };
@@ -257,6 +271,26 @@ describe('UserImportBuilder', () => {
               new UserImportBuilder(users, validOptions as any, userRequestValidator);
           expect(userImportBuilder.buildRequest()).to.deep.equal(expectedRequest);
         });
+
+        it('should not throw with valid SALT_FIRST options and should generate expected request', () => {
+          const validOptions = {
+            hash: {
+              algorithm,
+              inputOrder: "SALT_FIRST",
+              key: Buffer.from('secret'),
+            },
+          };
+          const expectedRequest = {
+            hashAlgorithm: algorithm,
+            passwordHashOrder: 'SALT_AND_PASSWORD',
+            signerKey: toWebSafeBase64(Buffer.from('secret')),
+            users: expectedUsersRequest,
+          };
+          const userImportBuilder =
+              new UserImportBuilder(users, validOptions as any, userRequestValidator);
+          expect(userImportBuilder.buildRequest()).to.deep.equal(expectedRequest);
+        });
+
       });
     });
 
@@ -303,24 +337,77 @@ describe('UserImportBuilder', () => {
             }).to.throw(expectedError.message);
           });
         });
+        
+        // Algorithms 'PBKDF_SHA1', 'PBKDF2_SHA256', and 'MD5' don't supported hash input order.
+        if (algorithm !== 'PBKDF_SHA1' && algorithm !== 'PBKDF2_SHA256' && algorithm !== 'MD5') {
+          it('should throw when invalid hash input order options is provided', () => {
+            const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_HASH_INPUT_ORDER);
+            const invalidOptions = {
+              hash: {
+                algorithm,
+                inputOrder: 'INVALID_HASH_INPUT_ORDER',
+                rounds: maxRounds,
+              },
+            };
+            expect(() =>  {
+              return new UserImportBuilder(users, invalidOptions as any, userRequestValidator);
+            }).to.throw(expectedError.message);
+          });
 
-        it('should not throw with valid options and should generate expected request', () => {
-          const validOptions = {
-            hash: {
-              algorithm,
+          it('should not throw with valid SALT_FIRST options and should generate expected request', () => {
+            const validOptions = {
+              hash: {
+                algorithm,
+                inputOrder: 'SALT_FIRST',
+                rounds: maxRounds,
+              },
+            };
+            const expectedRequest = {
+              hashAlgorithm: algorithm,
+              passwordHashOrder: 'SALT_AND_PASSWORD',
               rounds: maxRounds,
-            },
-          };
-          const expectedRequest = {
-            hashAlgorithm: algorithm,
-            rounds: maxRounds,
-            users: expectedUsersRequest,
-          };
-          const userImportBuilder =
-              new UserImportBuilder(users, validOptions as any, userRequestValidator);
-          expect(userImportBuilder.buildRequest()).to.deep.equal(expectedRequest);
-        });
+              users: expectedUsersRequest,
+            };
+            const userImportBuilder =
+                new UserImportBuilder(users, validOptions as any, userRequestValidator);
+            expect(userImportBuilder.buildRequest()).to.deep.equal(expectedRequest);
+          });
 
+          it('should not throw with valid PASSWORD_FIRST options and should generate expected request', () => {
+            const validOptions = {
+              hash: {
+                algorithm,
+                inputOrder: 'PASSWORD_FIRST',
+                rounds: maxRounds,
+              },
+            };
+            const expectedRequest = {
+              hashAlgorithm: algorithm,
+              passwordHashOrder: 'PASSWORD_AND_SALT',
+              rounds: maxRounds,
+              users: expectedUsersRequest,
+            };
+            const userImportBuilder =
+                new UserImportBuilder(users, validOptions as any, userRequestValidator);
+            expect(userImportBuilder.buildRequest()).to.deep.equal(expectedRequest);
+          });
+        } else {
+          it('should throw when algorithms do not support specifying hash input order', () => {
+            const expectedError = new FirebaseAuthError(AuthClientErrorCode.UNSUPPORTED_ALGORITHM_FOR_HASH_INPUT_ORDER,
+              `The ${algorithm} algorithm does not support specifying hash input order.`,
+            );
+            const invalidOptions = {
+              hash: {
+                algorithm,
+                inputOrder: 'SALT_FIRST',
+                rounds: maxRounds,
+              },
+            };
+            expect(() =>  {
+              return new UserImportBuilder(users, invalidOptions as any, userRequestValidator);
+            }).to.throw(expectedError.message);
+          });
+        }
       });
     });
 
@@ -414,6 +501,24 @@ describe('UserImportBuilder', () => {
         });
       });
 
+      it('should throw because ‘SCRYPT’ do not support specifying hash input order', () => {       
+        const expectedError = new FirebaseAuthError(AuthClientErrorCode.UNSUPPORTED_ALGORITHM_FOR_HASH_INPUT_ORDER,
+          `The ${algorithm} algorithm does not support specifying hash input order.`,
+        );
+        const invalidOptions = {
+          hash: {
+            algorithm,
+            key: Buffer.from('secret'),
+            rounds: 4,
+            memoryCost: 12,
+            inputOrder: 'SALT_FIRST',
+          },
+        };
+        expect(() =>  {
+          return new UserImportBuilder(users, invalidOptions as any, userRequestValidator);
+        }).to.throw(expectedError.message);
+      });
+
       it('should not throw with valid options and should generate expected request', () => {
         const validOptions = {
           hash: {
@@ -439,6 +544,21 @@ describe('UserImportBuilder', () => {
 
     describe('BCRYPT', () => {
       const algorithm = 'BCRYPT';
+      it('should throw because ‘BCRYPT’ do not support specifying hash input order', () => {
+        const expectedError = new FirebaseAuthError(AuthClientErrorCode.UNSUPPORTED_ALGORITHM_FOR_HASH_INPUT_ORDER,
+          `The ${algorithm} algorithm does not support specifying hash input order.`,
+        );
+        const invalidOptions = {
+          hash: {
+            algorithm,
+            inputOrder: 'SALT_FIRST',
+          },
+        };
+        expect(() =>  {
+          return new UserImportBuilder(users, invalidOptions as any, userRequestValidator);
+        }).to.throw(expectedError.message);
+      });
+
       it('should not throw with valid options and should generate expected request', () => {
         const validOptions = {
           hash: {
@@ -547,6 +667,25 @@ describe('UserImportBuilder', () => {
             return new UserImportBuilder(users, invalidOptions as any, userRequestValidator);
           }).to.throw(expectedError.message);
         });
+      });
+
+      it('should throw because ‘STANDARD_SCRYPT’ do not support specifying hash input order', () => {
+        const expectedError = new FirebaseAuthError(AuthClientErrorCode.UNSUPPORTED_ALGORITHM_FOR_HASH_INPUT_ORDER,
+          `The ${algorithm} algorithm does not support specifying hash input order.`,
+        );
+        const invalidOptions = {
+          hash: {
+            algorithm,
+            memoryCost : 1024,
+            parallelization: 16,
+            blockSize: 8,
+            derivedKeyLength: 64,
+            inputOrder: 'SALT_FIRST',
+          },
+        };
+        expect(() =>  {
+          return new UserImportBuilder(users, invalidOptions as any, userRequestValidator);
+        }).to.throw(expectedError.message);
       });
 
       it('should not throw with valid options and should generate expected request', () => {

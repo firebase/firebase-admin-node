@@ -373,6 +373,10 @@ export class AuthClientErrorCode {
     code: 'invalid-config',
     message: 'The provided configuration is invalid.',
   };
+  public static INVALID_HASH_INPUT_ORDER = {
+    code: 'invalid-hash-input-order',
+    message: 'The hash input order must be either "SALT_FIRST" or "PASSWORD_FIRST".',
+  };
   public static EMAIL_ALREADY_EXISTS = {
     code: 'email-already-exists',
     message: 'The email address is already in use by another account.',
@@ -670,6 +674,10 @@ export class AuthClientErrorCode {
     message: 'The domain of the continue URL is not whitelisted. Whitelist the domain in the ' +
              'Firebase console.',
   };
+  public static UNSUPPORTED_ALGORITHM_FOR_HASH_INPUT_ORDER = {
+    code: 'unsupported_algorithm_for_hash_input_order',
+    message: 'The algorithm does not support specifying hash input order.',
+  };
   public static UNSUPPORTED_FIRST_FACTOR = {
     code: 'unsupported-first-factor',
     message: 'A multi-factor user requires a supported first factor.',
@@ -867,6 +875,8 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   INVALID_EMAIL: 'INVALID_EMAIL',
   // Invalid tenant display name. This can be thrown on CreateTenant and UpdateTenant.
   INVALID_DISPLAY_NAME: 'INVALID_DISPLAY_NAME',
+  // Invalid hash input order name.
+  INVALID_HASH_INPUT_ORDER: 'INVALID_HASH_INPUT_ORDER',
   // Invalid ID token provided.
   INVALID_ID_TOKEN: 'INVALID_ID_TOKEN',
   // Invalid tenant/parent resource name.
@@ -932,6 +942,8 @@ const AUTH_SERVER_TO_CLIENT_CODE: ServerToClientCode = {
   TOKEN_EXPIRED: 'ID_TOKEN_EXPIRED',
   // Continue URL provided in ActionCodeSettings has a domain that is not whitelisted.
   UNAUTHORIZED_DOMAIN: 'UNAUTHORIZED_DOMAIN',
+  // Algorithms do not support hash input order.
+  UNSUPPORTED_ALGORITHM_FOR_HASH_INPUT_ORDER: 'UNSUPPORTED_ALGORITHM_FOR_HASH_INPUT_ORDER',
   // A multi-factor user requires a supported first factor.
   UNSUPPORTED_FIRST_FACTOR: 'UNSUPPORTED_FIRST_FACTOR',
   // The request specified an unsupported type of second factor.
