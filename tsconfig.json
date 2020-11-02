@@ -12,10 +12,8 @@
     "strictNullChecks": true,
     "strictFunctionTypes": true,
     //"strictPropertyInitialization": true,
-    "lib": ["es2015"],
+    "lib": ["es2018"],
     "outDir": "lib",
-    // We manually craft typings in src/index.d.ts instead of auto-generating them.
-    // "declaration": true,
     "rootDir": "."
   },
   "files": [
