@@ -21,11 +21,13 @@ import { FirebaseApp } from '../firebase-app';
 import { FirebaseDatabaseError, AppErrorCodes, FirebaseAppError } from '../utils/error';
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { Database as DatabaseImpl } from '@firebase/database';
-import { Database } from './database';
+import { database } from './index';
 
 import * as validator from '../utils/validator';
 import { AuthorizedHttpClient, HttpRequestConfig, HttpError } from '../utils/api-request';
 import { getSdkVersion } from '../utils/index';
+
+import Database = database.Database;
 
 /**
  * Internals of a Database instance.

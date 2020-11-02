@@ -131,7 +131,7 @@ describe('CryptoSigner', () => {
       const input = Buffer.from('input');
       const signRequest = {
         method: 'POST',
-        url: `https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/test-service-account:signBlob`,
+        url: 'https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/test-service-account:signBlob',
         headers: { Authorization: `Bearer ${mockAccessToken}` },
         data: { payload: input.toString('base64') },
       };
@@ -182,12 +182,12 @@ describe('CryptoSigner', () => {
       const response = { signedBlob: Buffer.from('testsignature').toString('base64') };
       const metadataRequest = {
         method: 'GET',
-        url: `http://metadata/computeMetadata/v1/instance/service-accounts/default/email`,
+        url: 'http://metadata/computeMetadata/v1/instance/service-accounts/default/email',
         headers: { 'Metadata-Flavor': 'Google' },
       };
       const signRequest = {
         method: 'POST',
-        url: `https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/discovered-service-account:signBlob`,
+        url: 'https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/discovered-service-account:signBlob',
         headers: { Authorization: `Bearer ${mockAccessToken}` },
         data: { payload: input.toString('base64') },
       };

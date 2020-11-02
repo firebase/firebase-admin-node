@@ -14,33 +14,49 @@
  * limitations under the License.
  */
 
-import { UserRecord, CreateRequest, UpdateRequest } from './user-record';
+import { UserRecord } from './user-record';
 import {
-  UserIdentifier, isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, isProviderIdentifier,
+  isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, isProviderIdentifier,
 } from './identifier';
 import { FirebaseApp } from '../firebase-app';
 import { FirebaseTokenGenerator, EmulatedSigner, cryptoSignerFromApp } from './token-generator';
 import {
   AbstractAuthRequestHandler, AuthRequestHandler, TenantAwareAuthRequestHandler,
 } from './auth-api-request';
-import { AuthClientErrorCode, FirebaseAuthError, ErrorInfo, FirebaseArrayIndexError } from '../utils/error';
+import { AuthClientErrorCode, FirebaseAuthError, ErrorInfo } from '../utils/error';
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
-import {
-  UserImportOptions, UserImportRecord, UserImportResult,
-} from './user-import-builder';
-
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { 
-  FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier, ALGORITHM_RS256 
-} from './token-verifier';
-import { ActionCodeSettings } from './action-code-settings-builder';
+import { auth } from './index';
 import {
-  AuthProviderConfig, AuthProviderConfigFilter, ListProviderConfigResults, UpdateAuthProviderRequest,
+  FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier, ALGORITHM_RS256
+} from './token-verifier';
+import {
   SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
 } from './auth-config';
 import { TenantManager } from './tenant-manager';
 
+import UserIdentifier = auth.UserIdentifier;
+import CreateRequest = auth.CreateRequest;
+import UpdateRequest = auth.UpdateRequest;
+import ActionCodeSettings = auth.ActionCodeSettings;
+import UserImportOptions = auth.UserImportOptions;
+import UserImportRecord = auth.UserImportRecord;
+import UserImportResult = auth.UserImportResult;
+import AuthProviderConfig = auth.AuthProviderConfig;
+import AuthProviderConfigFilter = auth.AuthProviderConfigFilter;
+import ListProviderConfigResults = auth.ListProviderConfigResults;
+import UpdateAuthProviderRequest = auth.UpdateAuthProviderRequest;
+import GetUsersResult = auth.GetUsersResult;
+import ListUsersResult = auth.ListUsersResult;
+import DeleteUsersResult = auth.DeleteUsersResult;
+import DecodedIdToken = auth.DecodedIdToken;
+import SessionCookieOptions = auth.SessionCookieOptions;
+import OIDCAuthProviderConfig = auth.OIDCAuthProviderConfig;
+import SAMLAuthProviderConfig = auth.SAMLAuthProviderConfig;
+import BaseAuthInterface = auth.BaseAuth;
+import AuthInterface = auth.Auth;
+import TenantAwareAuthInterface = auth.TenantAwareAuth;
 
 /**
  * Internals of an Auth instance.
@@ -58,72 +74,10 @@ class AuthInternals implements FirebaseServiceInternalsInterface {
 }
 
 
-/** Represents the result of the {@link admin.auth.getUsers()} API. */
-export interface GetUsersResult {
-  /**
-   * Set of user records, corresponding to the set of users that were
-   * requested. Only users that were found are listed here. The result set is
-   * unordered.
-   */
-  users: UserRecord[];
-
-  /** Set of identifiers that were requested, but not found. */
-  notFound: UserIdentifier[];
-}
-
-
-/** Response object for a listUsers operation. */
-export interface ListUsersResult {
-  users: UserRecord[];
-  pageToken?: string;
-}
-
-
-/** Response object for deleteUsers operation. */
-export interface DeleteUsersResult {
-  failureCount: number;
-  successCount: number;
-  errors: FirebaseArrayIndexError[];
-}
-
-
-/** Interface representing a decoded ID token. */
-export interface DecodedIdToken {
-  aud: string;
-  auth_time: number;
-  email?: string;
-  email_verified?: boolean;
-  exp: number;
-  firebase: {
-    identities: {
-      [key: string]: any;
-    };
-    sign_in_provider: string;
-    sign_in_second_factor?: string;
-    second_factor_identifier?: string;
-    tenant?: string;
-    [key: string]: any;
-  };
-  iat: number;
-  iss: string;
-  phone_number?: string;
-  picture?: string;
-  sub: string;
-  uid: string;
-  [key: string]: any;
-}
-
-
-/** Interface representing the session cookie options. */
-export interface SessionCookieOptions {
-  expiresIn: number;
-}
-
-
 /**
  * Base Auth class. Mainly used for user management APIs.
  */
-export class BaseAuth<T extends AbstractAuthRequestHandler> {
+export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthInterface {
 
   protected readonly tokenGenerator: FirebaseTokenGenerator;
   protected readonly idTokenVerifier: FirebaseTokenVerifier;
@@ -610,7 +564,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
     return Promise.reject(
       new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        `"AuthProviderConfigFilter.type" must be either "saml' or "oidc"`));
+        '"AuthProviderConfigFilter.type" must be either "saml" or "oidc"'));
   }
 
   /**
@@ -694,12 +648,12 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
       ));
     }
     if (OIDCConfig.isProviderId(config.providerId)) {
-      return this.authRequestHandler.createOAuthIdpConfig(config)
+      return this.authRequestHandler.createOAuthIdpConfig(config as OIDCAuthProviderConfig)
         .then((response) => {
           return new OIDCConfig(response);
         });
     } else if (SAMLConfig.isProviderId(config.providerId)) {
-      return this.authRequestHandler.createInboundSamlConfig(config)
+      return this.authRequestHandler.createInboundSamlConfig(config as SAMLAuthProviderConfig)
         .then((response) => {
           return new SAMLConfig(response);
         });
@@ -741,10 +695,10 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   /**
    * Enable or disable ID token verification. This is used to safely short-circuit token verification with the
    * Auth emulator. When disabled ONLY unsigned tokens will pass verification, production tokens will not pass.
-   * 
+   *
    * WARNING: This is a dangerous method that will compromise your app's security and break your app in
    * production. Developers should never call this method, it is for internal testing use only.
-   * 
+   *
    * @internal
    */
   // @ts-expect-error: this method appears unused but is used privately.
@@ -765,7 +719,10 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
 /**
  * The tenant aware Auth class.
  */
-export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
+export class TenantAwareAuth
+  extends BaseAuth<TenantAwareAuthRequestHandler>
+  implements TenantAwareAuthInterface {
+
   public readonly tenantId: string;
 
   /**
@@ -862,7 +819,8 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
  * Auth service bound to the provided app.
  * An Auth instance can have multiple tenants.
  */
-export class Auth extends BaseAuth<AuthRequestHandler> implements FirebaseServiceInterface {
+export class Auth extends BaseAuth<AuthRequestHandler>
+  implements FirebaseServiceInterface, AuthInterface {
 
   public INTERNAL: AuthInternals = new AuthInternals();
   private readonly tenantManager_: TenantManager;
@@ -896,8 +854,8 @@ export class Auth extends BaseAuth<AuthRequestHandler> implements FirebaseServic
 /**
  * When true the SDK should communicate with the Auth Emulator for all API
  * calls and also produce unsigned tokens.
- * 
- * This alone does <b>NOT<b> short-circuit ID Token verification. 
+ *
+ * This alone does <b>NOT<b> short-circuit ID Token verification.
  * For security reasons that must be explicitly disabled through
  * setJwtVerificationEnabled(false);
  */

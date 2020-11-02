@@ -22,7 +22,11 @@ import * as validator from '../utils/validator';
 import { AndroidApp, ShaCertificate } from './android-app';
 import { IosApp } from './ios-app';
 import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request-internal';
-import { AppMetadata, AppPlatform } from './app-metadata';
+import { projectManagement } from './index';
+
+import AppMetadata = projectManagement.AppMetadata;
+import AppPlatform = projectManagement.AppPlatform;
+import ProjectManagementInterface = projectManagement.ProjectManagement;
 
 /**
  * Internals of a Project Management instance.
@@ -43,9 +47,9 @@ class ProjectManagementInternals implements FirebaseServiceInternalsInterface {
  * The Firebase ProjectManagement service interface.
  *
  * Do not call this constructor directly. Instead, use
- * [`admin.projectManagement()`](admin.projectManagement#projectManagement).
+ * [`admin.projectManagement()`](projectManagement#projectManagement).
  */
-export class ProjectManagement implements FirebaseServiceInterface {
+export class ProjectManagement implements FirebaseServiceInterface, ProjectManagementInterface {
   public readonly INTERNAL: ProjectManagementInternals = new ProjectManagementInternals();
 
   private readonly requestHandler: ProjectManagementRequestHandler;
@@ -149,7 +153,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
         assertServerResponse(
           validator.isNonEmptyString(responseData.appId),
           responseData,
-          `"responseData.appId" field must be present in createAndroidApp()'s response data.`);
+          '"responseData.appId" field must be present in createAndroidApp()\'s response data.');
         return new AndroidApp(responseData.appId, this.requestHandler);
       });
   }
@@ -177,7 +181,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
         assertServerResponse(
           validator.isNonEmptyString(responseData.appId),
           responseData,
-          `"responseData.appId" field must be present in createIosApp()'s response data.`);
+          '"responseData.appId" field must be present in createIosApp()\'s response data.');
         return new IosApp(responseData.appId, this.requestHandler);
       });
   }
@@ -225,11 +229,11 @@ export class ProjectManagement implements FirebaseServiceInterface {
       assertServerResponse(
         validator.isNonEmptyString(appJson.appId),
         responseData,
-        `"apps[].appId" field must be present in the listAppMetadata() response data.`);
+        '"apps[].appId" field must be present in the listAppMetadata() response data.');
       assertServerResponse(
         validator.isNonEmptyString(appJson.platform),
         responseData,
-        `"apps[].platform" field must be present in the listAppMetadata() response data.`);
+        '"apps[].platform" field must be present in the listAppMetadata() response data.');
       const metadata: AppMetadata = {
         appId: appJson.appId,
         platform: (AppPlatform as any)[appJson.platform] || AppPlatform.PLATFORM_UNKNOWN,

@@ -18,8 +18,10 @@ import { FirebaseApp } from '../firebase-app';
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { FirebaseInstanceIdError, InstanceIdClientErrorCode } from '../utils/error';
 import { FirebaseInstanceIdRequestHandler } from './instance-id-request-internal';
-
+import { instanceId } from './index';
 import * as validator from '../utils/validator';
+
+import InstanceIdInterface = instanceId.InstanceId;
 
 /**
  * Internals of an InstanceId service instance.
@@ -50,7 +52,7 @@ class InstanceIdInternals implements FirebaseServiceInternalsInterface {
  * @return The `InstanceId` service for the
  *   current app.
  */
-export class InstanceId implements FirebaseServiceInterface {
+export class InstanceId implements FirebaseServiceInterface, InstanceIdInterface {
   public INTERNAL: InstanceIdInternals = new InstanceIdInternals();
 
   private app_: FirebaseApp;

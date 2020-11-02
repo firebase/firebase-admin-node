@@ -36,18 +36,24 @@ import {
   RESERVED_CLAIMS, FIREBASE_AUTH_UPLOAD_ACCOUNT, FIREBASE_AUTH_CREATE_SESSION_COOKIE,
   EMAIL_ACTION_REQUEST_TYPES, TenantAwareAuthRequestHandler, AbstractAuthRequestHandler,
 } from '../../../src/auth/auth-api-request';
-import { UserImportBuilder, UserImportRecord } from '../../../src/auth/user-import-builder';
+import { UserImportBuilder } from '../../../src/auth/user-import-builder';
 import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
 import { ActionCodeSettingsBuilder } from '../../../src/auth/action-code-settings-builder';
-import {
-  OIDCAuthProviderConfig, SAMLAuthProviderConfig, OIDCUpdateAuthProviderRequest,
-  SAMLUpdateAuthProviderRequest, SAMLConfigServerResponse,
-} from '../../../src/auth/auth-config';
-import { UserIdentifier } from '../../../src/auth/identifier';
-import { TenantOptions } from '../../../src/auth/tenant';
-import { UpdateRequest, UpdateMultiFactorInfoRequest } from '../../../src/auth/user-record';
+import { SAMLConfigServerResponse } from '../../../src/auth/auth-config';
 import { expectUserImportResult } from './user-import-builder.spec';
 import { getSdkVersion } from '../../../src/utils/index';
+import { auth } from '../../../src/auth/index';
+
+import UserImportRecord = auth.UserImportRecord;
+import OIDCAuthProviderConfig = auth.OIDCAuthProviderConfig;
+import SAMLAuthProviderConfig = auth.SAMLAuthProviderConfig;
+import OIDCUpdateAuthProviderRequest = auth.OIDCUpdateAuthProviderRequest;
+import SAMLUpdateAuthProviderRequest = auth.SAMLUpdateAuthProviderRequest;
+import UserIdentifier = auth.UserIdentifier;
+import UpdateRequest = auth.UpdateRequest;
+import UpdateMultiFactorInfoRequest = auth.UpdateMultiFactorInfoRequest;
+import CreateTenantRequest = auth.CreateTenantRequest;
+import UpdateTenantRequest = auth.UpdateTenantRequest;
 
 chai.should();
 chai.use(sinonChai);
@@ -616,7 +622,7 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
         const largeClaims = JSON.stringify({ key: createRandomString(991) });
         expect(() => {
           return requestValidator({ localId: '1234', customAttributes: largeClaims });
-        }).to.throw(`Developer claims payload should not exceed 1000 characters.`);
+        }).to.throw('Developer claims payload should not exceed 1000 characters.');
       });
       RESERVED_CLAIMS.forEach((invalidClaim) => {
         it(`should fail with customAttributes containing blacklisted claim: ${invalidClaim}`, () => {
@@ -635,7 +641,7 @@ describe('FIREBASE_AUTH_SET_ACCOUNT_INFO', () => {
             auth_time: 'time', // eslint-disable-line @typescript-eslint/camelcase
           };
           return requestValidator({ localId: '1234', customAttributes: JSON.stringify(claims) });
-        }).to.throw(`Developer claims "auth_time", "sub" are reserved and cannot be specified.`);
+        }).to.throw('Developer claims "auth_time", "sub" are reserved and cannot be specified.');
       });
       it('should fail with invalid validSince', () => {
         expect(() => {
@@ -1378,7 +1384,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       it('should throw on invalid options without making an underlying API call', () => {
         const expectedError = new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_ALGORITHM,
-          `Unsupported hash algorithm provider "invalid".`,
+          'Unsupported hash algorithm provider "invalid".',
         );
         const invalidOptions = {
           hash: {
@@ -1398,7 +1404,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       it('should throw when 1001 UserImportRecords are provided', () => {
         const expectedError = new FirebaseAuthError(
           AuthClientErrorCode.MAXIMUM_USER_COUNT_EXCEEDED,
-          `A maximum of 1000 users can be imported at once.`,
+          'A maximum of 1000 users can be imported at once.',
         );
         const stub = sinon.stub(HttpClient.prototype, 'send');
         stubs.push(stub);
@@ -1660,7 +1666,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               index: 9,
               error: new FirebaseAuthError(
                 AuthClientErrorCode.FORBIDDEN_CLAIM,
-                `Developer claim "aud" is reserved and cannot be specified.`,
+                'Developer claim "aud" is reserved and cannot be specified.',
               ),
             },
             { index: 10, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PASSWORD_HASH) },
@@ -1669,28 +1675,28 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               index: 12,
               error: new FirebaseAuthError(
                 AuthClientErrorCode.INVALID_UID,
-                `The provider "uid" for "google.com" must be a valid non-empty string.`,
+                'The provider "uid" for "google.com" must be a valid non-empty string.',
               ),
             },
             {
               index: 13,
               error: new FirebaseAuthError(
                 AuthClientErrorCode.INVALID_DISPLAY_NAME,
-                `The provider "displayName" for "google.com" must be a valid string.`,
+                'The provider "displayName" for "google.com" must be a valid string.',
               ),
             },
             {
               index: 14,
               error: new FirebaseAuthError(
                 AuthClientErrorCode.INVALID_EMAIL,
-                `The provider "email" for "google.com" must be a valid email string.`,
+                'The provider "email" for "google.com" must be a valid email string.',
               ),
             },
             {
               index: 15,
               error: new FirebaseAuthError(
                 AuthClientErrorCode.INVALID_PHOTO_URL,
-                `The provider "photoURL" for "google.com" must be a valid URL string.`,
+                'The provider "photoURL" for "google.com" must be a valid URL string.',
               ),
             },
             { index: 16, error: new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID) },
@@ -1699,29 +1705,29 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               index: 18,
               error: new FirebaseAuthError(
                 AuthClientErrorCode.INVALID_UID,
-                `The second factor "uid" must be a valid non-empty string.`,
+                'The second factor "uid" must be a valid non-empty string.',
               ),
             },
             {
               index: 19,
               error: new FirebaseAuthError(
                 AuthClientErrorCode.INVALID_DISPLAY_NAME,
-                `The second factor "displayName" for "mfaUid1" must be a valid string.`,
+                'The second factor "displayName" for "mfaUid1" must be a valid string.',
               ),
             },
             {
               index: 20,
               error: new FirebaseAuthError(
                 AuthClientErrorCode.INVALID_ENROLLMENT_TIME,
-                `The second factor "enrollmentTime" for "mfaUid2" must be a valid UTC date string.`,
+                'The second factor "enrollmentTime" for "mfaUid2" must be a valid UTC date string.',
               ),
             },
             {
               index: 21,
               error: new FirebaseAuthError(
                 AuthClientErrorCode.INVALID_PHONE_NUMBER,
-                `The second factor "phoneNumber" for "mfaUid3" must be a non-empty ` +
-                `E.164 standard compliant identifier string.`,
+                'The second factor "phoneNumber" for "mfaUid3" must be a non-empty ' +
+                'E.164 standard compliant identifier string.',
               ),
             },
             {
@@ -1752,7 +1758,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         });
         const expectedError = new FirebaseAuthError(
           AuthClientErrorCode.INTERNAL_ERROR,
-          `An internal error has occurred. Raw server response: ` +
+          'An internal error has occurred. Raw server response: ' +
           `"${JSON.stringify(expectedServerError.response.data)}"`,
         );
         const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedServerError);
@@ -1832,8 +1838,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       it('should be rejected given an invalid maxResults', () => {
         const expectedError = new FirebaseAuthError(
           AuthClientErrorCode.INVALID_ARGUMENT,
-          `Required "maxResults" must be a positive integer that does not ` +
-          `exceed 1000.`,
+          'Required "maxResults" must be a positive integer that does not ' +
+          'exceed 1000.',
         );
 
         const requestHandler = handler.init(mockApp);
@@ -2221,7 +2227,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           name: 'invalid second factor uid',
           error: new FirebaseAuthError(
             AuthClientErrorCode.INVALID_UID,
-            `The second factor "uid" must be a valid non-empty string.`,
+            'The second factor "uid" must be a valid non-empty string.',
           ),
           secondFactor: {
             uid: ['enrollmentId'],
@@ -2234,7 +2240,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           name: 'invalid second factor display name',
           error: new FirebaseAuthError(
             AuthClientErrorCode.INVALID_DISPLAY_NAME,
-            `The second factor "displayName" for "enrolledSecondFactor1" must be a valid string.`,
+            'The second factor "displayName" for "enrolledSecondFactor1" must be a valid string.',
           ),
           secondFactor: {
             uid: 'enrolledSecondFactor1',
@@ -2247,8 +2253,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           name: 'invalid second factor phone number',
           error: new FirebaseAuthError(
             AuthClientErrorCode.INVALID_PHONE_NUMBER,
-            `The second factor "phoneNumber" for "enrolledSecondFactor1" must be a non-empty ` +
-            `E.164 standard compliant identifier string.`),
+            'The second factor "phoneNumber" for "enrolledSecondFactor1" must be a non-empty ' +
+            'E.164 standard compliant identifier string.'),
           secondFactor: {
             uid: 'enrolledSecondFactor1',
             phoneNumber: 'invalid',
@@ -2260,8 +2266,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           name: 'invalid second factor enrollment time',
           error: new FirebaseAuthError(
             AuthClientErrorCode.INVALID_ENROLLMENT_TIME,
-            `The second factor "enrollmentTime" for "enrolledSecondFactor1" must be a valid ` +
-            `UTC date string.`),
+            'The second factor "enrollmentTime" for "enrolledSecondFactor1" must be a valid ' +
+            'UTC date string.'),
           secondFactor: {
             uid: 'enrolledSecondFactor1',
             phoneNumber: '+16505557348',
@@ -2439,7 +2445,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         // Expected error when invalid claims are provided.
         const expectedError = new FirebaseAuthError(
           AuthClientErrorCode.FORBIDDEN_CLAIM,
-          `Developer claim "aud" is reserved and cannot be specified.`,
+          'Developer claim "aud" is reserved and cannot be specified.',
         );
         const requestHandler = handler.init(mockApp);
         const blacklistedClaims = { admin: true, aud: 'bla' };
@@ -2718,7 +2724,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             name: 'invalid second factor display name',
             error: new FirebaseAuthError(
               AuthClientErrorCode.INVALID_DISPLAY_NAME,
-              `The second factor "displayName" for "+16505557348" must be a valid string.`,
+              'The second factor "displayName" for "+16505557348" must be a valid string.',
             ),
             secondFactor: {
               phoneNumber: '+16505557348',
@@ -2730,8 +2736,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
             name: 'invalid second factor phone number',
             error: new FirebaseAuthError(
               AuthClientErrorCode.INVALID_PHONE_NUMBER,
-              `The second factor "phoneNumber" for "invalid" must be a non-empty ` +
-              `E.164 standard compliant identifier string.`),
+              'The second factor "phoneNumber" for "invalid" must be a non-empty ' +
+              'E.164 standard compliant identifier string.'),
             secondFactor: {
               phoneNumber: 'invalid',
               displayName: 'Spouse\'s phone number',
@@ -3100,7 +3106,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const invalidRequestType = 'invalid';
         const expectedError = new FirebaseAuthError(
           AuthClientErrorCode.INVALID_ARGUMENT,
-          `"invalid" is not a supported email action request type.`,
+          '"invalid" is not a supported email action request type.',
         );
 
         const requestHandler = handler.init(mockApp);
@@ -3307,8 +3313,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       it('should be rejected given an invalid maxResults', () => {
         const expectedError = new FirebaseAuthError(
           AuthClientErrorCode.INVALID_ARGUMENT,
-          `Required "maxResults" must be a positive integer that does not ` +
-          `exceed 100.`,
+          'Required "maxResults" must be a positive integer that does not ' +
+          'exceed 100.',
         );
 
         const requestHandler = handler.init(mockApp);
@@ -3796,8 +3802,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       it('should be rejected given an invalid maxResults', () => {
         const expectedError = new FirebaseAuthError(
           AuthClientErrorCode.INVALID_ARGUMENT,
-          `Required "maxResults" must be a positive integer that does not ` +
-          `exceed 100.`,
+          'Required "maxResults" must be a positive integer that does not ' +
+          'exceed 100.',
         );
 
         const requestHandler = handler.init(mockApp);
@@ -4339,8 +4345,8 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         it('should be rejected given an invalid maxResults', () => {
           const expectedError = new FirebaseAuthError(
             AuthClientErrorCode.INVALID_ARGUMENT,
-            `Required "maxResults" must be a positive non-zero number that does not ` +
-            `exceed the allowed 1000.`,
+            'Required "maxResults" must be a positive non-zero number that does not ' +
+            'exceed the allowed 1000.',
           );
 
           const requestHandler = handler.init(mockApp) as AuthRequestHandler;
@@ -4448,7 +4454,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       describe('createTenant', () => {
         const path = '/v2/projects/project_id/tenants';
         const postMethod = 'POST';
-        const tenantOptions: TenantOptions = {
+        const tenantOptions: CreateTenantRequest = {
           displayName: 'TENANT-DISPLAY-NAME',
           emailSignInConfig: {
             enabled: true,
@@ -4555,7 +4561,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           });
           const expectedError = new FirebaseAuthError(
             AuthClientErrorCode.INTERNAL_ERROR,
-            `An internal error has occurred. Raw server response: ` +
+            'An internal error has occurred. Raw server response: ' +
             `"${JSON.stringify(expectedServerError.response.data)}"`,
           );
           const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedServerError);
@@ -4576,7 +4582,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         const path = '/v2/projects/project_id/tenants/tenant-id';
         const patchMethod = 'PATCH';
         const tenantId = 'tenant-id';
-        const tenantOptions: TenantOptions = {
+        const tenantOptions: UpdateTenantRequest = {
           displayName: 'TENANT-DISPLAY-NAME',
           emailSignInConfig: {
             enabled: true,
@@ -4749,7 +4755,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
           });
           const expectedError = new FirebaseAuthError(
             AuthClientErrorCode.INTERNAL_ERROR,
-            `An internal error has occurred. Raw server response: ` +
+            'An internal error has occurred. Raw server response: ' +
             `"${JSON.stringify(expectedServerError.response.data)}"`,
           );
           const stub = sinon.stub(HttpClient.prototype, 'send').rejects(expectedServerError);

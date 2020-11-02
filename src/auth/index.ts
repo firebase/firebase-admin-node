@@ -1,13 +1,50 @@
-import * as _admin from './index.d';
+/*!
+ * Copyright 2020 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-/* eslint-disable @typescript-eslint/ban-types */
+import { app, FirebaseArrayIndexError } from '../firebase-namespace-api';
 
-export namespace admin.auth {
+/**
+ * Gets the {@link auth.Auth `Auth`} service for the default app or a
+ * given app.
+ *
+ * `admin.auth()` can be called with no arguments to access the default app's
+ * {@link auth.Auth `Auth`} service or as `admin.auth(app)` to access the
+ * {@link auth.Auth `Auth`} service associated with a specific app.
+ *
+ * @example
+ * ```javascript
+ * // Get the Auth service for the default app
+ * var defaultAuth = admin.auth();
+ * ```
+ *
+ * @example
+ * ```javascript
+ * // Get the Auth service for a given app
+ * var otherAuth = admin.auth(otherApp);
+ * ```
+ *
+ */
+export declare function auth(app?: app.App): auth.Auth;
 
+/* eslint-disable @typescript-eslint/no-namespace */
+export namespace auth {
   /**
-  * Interface representing a user's metadata.
-  */
-  interface UserMetadata {
+   * Interface representing a user's metadata.
+   */
+  export interface UserMetadata {
 
     /**
      * The date the user last signed in, formatted as a UTC string.
@@ -24,19 +61,19 @@ export namespace admin.auth {
      * formatted as a UTC Date string (eg 'Sat, 03 Feb 2001 04:05:06 GMT').
      * Returns null if the user was never active.
      */
-    lastRefreshTime?: string|null;
+    lastRefreshTime?: string | null;
 
     /**
      * @return A JSON-serializable representation of this object.
      */
-    toJSON(): Object;
+    toJSON(): object;
   }
 
   /**
    * Interface representing a user's info from a third-party identity provider
    * such as Google or Facebook.
    */
-  interface UserInfo {
+  export interface UserInfo {
 
     /**
      * The user identifier for the linked provider.
@@ -71,13 +108,13 @@ export namespace admin.auth {
     /**
      * @return A JSON-serializable representation of this object.
      */
-    toJSON(): Object;
+    toJSON(): object;
   }
 
   /**
    * Interface representing the common properties of a user enrolled second factor.
    */
-  interface MultiFactorInfo {
+  export interface MultiFactorInfo {
 
     /**
      * The ID of the enrolled second factor. This ID is unique to the user.
@@ -102,13 +139,13 @@ export namespace admin.auth {
     /**
      * @return A JSON-serializable representation of this object.
      */
-    toJSON(): Object;
+    toJSON(): object;
   }
 
   /**
    * Interface representing a phone specific user enrolled second factor.
    */
-  interface PhoneMultiFactorInfo extends MultiFactorInfo {
+  export interface PhoneMultiFactorInfo extends MultiFactorInfo {
 
     /**
      * The phone number associated with a phone second factor.
@@ -119,7 +156,7 @@ export namespace admin.auth {
   /**
    * Interface representing a user.
    */
-  interface UserRecord {
+  export interface UserRecord {
 
     /**
      * The user's `uid`.
@@ -160,12 +197,12 @@ export namespace admin.auth {
     /**
      * Additional metadata about the user.
      */
-    metadata: admin.auth.UserMetadata;
+    metadata: UserMetadata;
 
     /**
      * An array of providers (for example, Google, Facebook) linked to the user.
      */
-    providerData: admin.auth.UserInfo[];
+    providerData: UserInfo[];
 
     /**
      * The user's hashed password (base64-encoded), only if Firebase Auth hashing
@@ -173,7 +210,7 @@ export namespace admin.auth {
      * when uploading this user, as is typical when migrating from another Auth
      * system, this will be an empty string. If no password is set, this is
      * null. This is only available when the user is obtained from
-     * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#listUsers `listUsers()`}.
+     * {@link auth.Auth.listUsers `listUsers()`}.
      *
      */
     passwordHash?: string;
@@ -184,7 +221,7 @@ export namespace admin.auth {
      * upload this user, typical when migrating from another Auth system, this will
      * be an empty string. If no password is set, this is null. This is only
      * available when the user is obtained from
-     * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#listUsers `listUsers()`}.
+     * {@link auth.Auth.listUsers `listUsers()`}.
      *
      */
     passwordSalt?: string;
@@ -193,14 +230,14 @@ export namespace admin.auth {
      * The user's custom claims object if available, typically used to define
      * user roles and propagated to an authenticated user's ID token.
      * This is set via
-     * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#setCustomUserClaims `setCustomUserClaims()`}
+     * {@link auth.Auth.setCustomUserClaims `setCustomUserClaims()`}
      */
-    customClaims?: {[key: string]: any};
+    customClaims?: { [key: string]: any };
 
     /**
      * The date the user's tokens are valid after, formatted as a UTC string.
      * This is updated every time the user's refresh token are revoked either
-     * from the {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#revokeRefreshTokens `revokeRefreshTokens()`}
+     * from the {@link auth.Auth.revokeRefreshTokens `revokeRefreshTokens()`}
      * API or from the Firebase Auth backend on big account changes (password
      * resets, password or email updates, etc).
      */
@@ -214,59 +251,59 @@ export namespace admin.auth {
     /**
      * The multi-factor related properties for the current user, if available.
      */
-    multiFactor?: admin.auth.MultiFactorSettings;
+    multiFactor?: MultiFactorSettings;
 
     /**
      * @return A JSON-serializable representation of this object.
      */
-    toJSON(): Object;
+    toJSON(): object;
   }
 
   /**
    * The multi-factor related user settings.
    */
-  interface MultiFactorSettings {
+  export interface MultiFactorSettings {
     /**
      * List of second factors enrolled with the current user.
      * Currently only phone second factors are supported.
      */
-    enrolledFactors: admin.auth.MultiFactorInfo[];
+    enrolledFactors: MultiFactorInfo[];
 
     /**
      * @return A JSON-serializable representation of this multi-factor object.
      */
-    toJSON(): Object;
+    toJSON(): object;
   }
 
   /**
    * The multi-factor related user settings for create operations.
    */
-  interface MultiFactorCreateSettings {
+  export interface MultiFactorCreateSettings {
 
     /**
      * The created user's list of enrolled second factors.
      */
-    enrolledFactors: admin.auth.CreateMultiFactorInfoRequest[];
+    enrolledFactors: CreateMultiFactorInfoRequest[];
   }
 
   /**
    * The multi-factor related user settings for update operations.
    */
-  interface MultiFactorUpdateSettings {
+  export interface MultiFactorUpdateSettings {
 
     /**
      * The updated list of enrolled second factors. The provided list overwrites the user's
      * existing list of second factors.
      * When null is passed, all of the user's existing second factors are removed.
      */
-    enrolledFactors: admin.auth.UpdateMultiFactorInfoRequest[] | null;
+    enrolledFactors: UpdateMultiFactorInfoRequest[] | null;
   }
 
   /**
    * Interface representing common properties of a user enrolled second factor
    * for an `UpdateRequest`.
    */
-  interface UpdateMultiFactorInfoRequest {
+  export interface UpdateMultiFactorInfoRequest {
 
     /**
      * The ID of the enrolled second factor. This ID is unique to the user. When not provided,
@@ -294,7 +331,7 @@ export namespace admin.auth {
    * Interface representing a phone specific user enrolled second factor
    * for an `UpdateRequest`.
    */
-  interface UpdatePhoneMultiFactorInfoRequest extends UpdateMultiFactorInfoRequest {
+  export interface UpdatePhoneMultiFactorInfoRequest extends UpdateMultiFactorInfoRequest {
 
     /**
      * The phone number associated with a phone second factor.
@@ -305,7 +342,7 @@ export namespace admin.auth {
   /**
    * Interface representing the properties to update on the provided user.
    */
-  interface UpdateRequest {
+  export interface UpdateRequest {
 
     /**
      * Whether or not the user is disabled: `true` for disabled;
@@ -346,14 +383,14 @@ export namespace admin.auth {
     /**
      * The user's updated multi-factor related properties.
      */
-    multiFactor?: admin.auth.MultiFactorUpdateSettings;
+    multiFactor?: MultiFactorUpdateSettings;
   }
 
   /**
    * Interface representing base properties of a user enrolled second factor for a
    * `CreateRequest`.
    */
-  interface CreateMultiFactorInfoRequest {
+  export interface CreateMultiFactorInfoRequest {
 
     /**
      * The optional display name for an enrolled second factor.
@@ -370,7 +407,7 @@ export namespace admin.auth {
    * Interface representing a phone specific user enrolled second factor for a
    * `CreateRequest`.
    */
-  interface CreatePhoneMultiFactorInfoRequest extends CreateMultiFactorInfoRequest {
+  export interface CreatePhoneMultiFactorInfoRequest extends CreateMultiFactorInfoRequest {
 
     /**
      * The phone number associated with a phone second factor.
@@ -382,7 +419,7 @@ export namespace admin.auth {
    * Interface representing the properties to set on a new user record to be
    * created.
    */
-  interface CreateRequest extends UpdateRequest {
+  export interface CreateRequest extends UpdateRequest {
 
     /**
      * The user's `uid`.
@@ -392,19 +429,19 @@ export namespace admin.auth {
     /**
      * The user's multi-factor related properties.
      */
-    multiFactor?: admin.auth.MultiFactorCreateSettings;
+    multiFactor?: MultiFactorCreateSettings;
   }
 
   /**
    * Interface representing a decoded Firebase ID token, returned from the
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#verifyidtoken `verifyIdToken()`} method.
+   * {@link auth.Auth.verifyIdToken `verifyIdToken()`} method.
    *
    * Firebase ID tokens are OpenID Connect spec-compliant JSON Web Tokens (JWTs).
    * See the
    * [ID Token section of the OpenID Connect spec](http://openid.net/specs/openid-connect-core-1_0.html#IDToken)
    * for more information about the specific properties below.
    */
-  interface DecodedIdToken {
+  export interface DecodedIdToken {
 
     /**
      * The audience for which this token is intended.
@@ -538,8 +575,8 @@ export namespace admin.auth {
     [key: string]: any;
   }
 
-  /** Represents the result of the {@link admin.auth.getUsers()} API. */
-  interface GetUsersResult {
+  /** Represents the result of the {@link auth.Auth.getUsers} API. */
+  export interface GetUsersResult {
     /**
      * Set of user records, corresponding to the set of users that were
      * requested. Only users that were found are listed here. The result set is
@@ -553,16 +590,16 @@ export namespace admin.auth {
 
   /**
    * Interface representing the object returned from a
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#listUsers `listUsers()`} operation. Contains the list
+   * {@link auth.Auth.listUsers `listUsers()`} operation. Contains the list
    * of users for the current batch and the next page token if available.
    */
-  interface ListUsersResult {
+  export interface ListUsersResult {
 
     /**
-     * The list of {@link admin.auth.UserRecord `UserRecord`} objects for the
+     * The list of {@link auth.UserRecord `UserRecord`} objects for the
      * current downloaded batch.
      */
-    users: admin.auth.UserRecord[];
+    users: UserRecord[];
 
     /**
      * The next page token if available. This is needed for the next batch download.
@@ -570,16 +607,16 @@ export namespace admin.auth {
     pageToken?: string;
   }
 
-  type HashAlgorithmType = 'SCRYPT' | 'STANDARD_SCRYPT' | 'HMAC_SHA512' |
+  export type HashAlgorithmType = 'SCRYPT' | 'STANDARD_SCRYPT' | 'HMAC_SHA512' |
     'HMAC_SHA256' | 'HMAC_SHA1' | 'HMAC_MD5' | 'MD5' | 'PBKDF_SHA1' | 'BCRYPT' |
     'PBKDF2_SHA256' | 'SHA512' | 'SHA256' | 'SHA1';
 
   /**
    * Interface representing the user import options needed for
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#importUsers `importUsers()`} method. This is used to
+   * {@link auth.Auth.importUsers `importUsers()`} method. This is used to
    * provide the password hashing algorithm information.
    */
-  interface UserImportOptions {
+  export interface UserImportOptions {
 
     /**
      * The password hashing information.
@@ -642,10 +679,10 @@ export namespace admin.auth {
 
   /**
    * Interface representing the response from the
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#importUsers `importUsers()`} method for batch
+   * {@link auth.Auth.importUsers `importUsers()`} method for batch
    * importing users to Firebase Auth.
    */
-  interface UserImportResult {
+  export interface UserImportResult {
 
     /**
      * The number of user records that failed to import to Firebase Auth.
@@ -661,15 +698,15 @@ export namespace admin.auth {
      * An array of errors corresponding to the provided users to import. The
      * length of this array is equal to [`failureCount`](#failureCount).
      */
-    errors: _admin.FirebaseArrayIndexError[];
+    errors: FirebaseArrayIndexError[];
   }
 
   /**
    * Represents the result of the
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#deleteUsers `deleteUsers()`}
+   * {@link auth.Auth.deleteUsers `deleteUsers()`}
    * API.
    */
-  interface DeleteUsersResult {
+  export interface DeleteUsersResult {
     /**
      * The number of user records that failed to be deleted (possibly zero).
      */
@@ -687,13 +724,13 @@ export namespace admin.auth {
      * were encountered during the deletion. Length of this list is equal to
      * the return value of [`failureCount`](#failureCount).
      */
-    errors: _admin.FirebaseArrayIndexError[];
+    errors: FirebaseArrayIndexError[];
   }
 
   /**
    * User metadata to include when importing a user.
    */
-  interface UserMetadataRequest {
+  export interface UserMetadataRequest {
 
     /**
      * The date the user last signed in, formatted as a UTC string.
@@ -709,7 +746,7 @@ export namespace admin.auth {
   /**
    * User provider data to include when importing a user.
    */
-  interface UserProviderRequest {
+  export interface UserProviderRequest {
 
     /**
      * The user identifier for the linked provider.
@@ -744,9 +781,9 @@ export namespace admin.auth {
 
   /**
    * Interface representing a user to import to Firebase Auth via the
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#importUsers `importUsers()`} method.
+   * {@link auth.Auth.importUsers `importUsers()`} method.
    */
-  interface UserImportRecord {
+  export interface UserImportRecord {
 
     /**
      * The user's `uid`.
@@ -787,23 +824,23 @@ export namespace admin.auth {
     /**
      * Additional metadata about the user.
      */
-    metadata?: admin.auth.UserMetadataRequest;
+    metadata?: UserMetadataRequest;
 
     /**
      * An array of providers (for example, Google, Facebook) linked to the user.
      */
-    providerData?: admin.auth.UserProviderRequest[];
+    providerData?: UserProviderRequest[];
 
     /**
      * The user's custom claims object if available, typically used to define
      * user roles and propagated to an authenticated user's ID token.
      */
-    customClaims?: {[key: string]: any};
+    customClaims?: { [key: string]: any };
 
     /**
      * The buffer of bytes representing the user's hashed password.
      * When a user is to be imported with a password hash,
-     * {@link admin.auth.UserImportOptions `UserImportOptions`} are required to be
+     * {@link auth.UserImportOptions `UserImportOptions`} are required to be
      * specified to identify the hashing algorithm used to generate this hash.
      */
     passwordHash?: Buffer;
@@ -825,14 +862,14 @@ export namespace admin.auth {
     /**
      * The user's multi-factor related properties.
      */
-    multiFactor?: admin.auth.MultiFactorUpdateSettings;
+    multiFactor?: MultiFactorUpdateSettings;
   }
 
   /**
    * Interface representing the session cookie options needed for the
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#createSessionCookie `createSessionCookie()`} method.
+   * {@link auth.Auth.createSessionCookie `createSessionCookie()`} method.
    */
-  interface SessionCookieOptions {
+  export interface SessionCookieOptions {
 
     /**
      * The session cookie custom expiration in milliseconds. The minimum allowed is
@@ -845,7 +882,7 @@ export namespace admin.auth {
    * This is the interface that defines the required continue/state URL with
    * optional Android and iOS bundle identifiers.
    */
-  interface ActionCodeSettings {
+  export interface ActionCodeSettings {
 
     /**
      * Defines the link continue/state URL, which has different meanings in
@@ -942,7 +979,7 @@ export namespace admin.auth {
    * All other settings of a tenant will also be inherited. These will need to be managed
    * from the Cloud Console UI.
    */
-  interface Tenant {
+  export interface Tenant {
 
     /**
      * The tenant identifier.
@@ -974,51 +1011,67 @@ export namespace admin.auth {
     /**
      * The multi-factor auth configuration on the current tenant.
      */
-    multiFactorConfig?: admin.auth.MultiFactorConfig;
+    multiFactorConfig?: MultiFactorConfig;
 
     /**
      * The map containing the test phone number / code pairs for the tenant.
      */
-    testPhoneNumbers?: {[phoneNumber: string]: string};
+    testPhoneNumbers?: { [phoneNumber: string]: string };
 
     /**
      * @return A JSON-serializable representation of this object.
      */
-    toJSON(): Object;
+    toJSON(): object;
   }
 
   /**
    * Identifies a second factor type.
    */
-  type AuthFactorType = 'phone';
+  export type AuthFactorType = 'phone';
 
   /**
    * Identifies a multi-factor configuration state.
    */
-  type MultiFactorConfigState =  'ENABLED' | 'DISABLED';
+  export type MultiFactorConfigState = 'ENABLED' | 'DISABLED';
 
   /**
    * Interface representing a multi-factor configuration.
    * This can be used to define whether multi-factor authentication is enabled
    * or disabled and the list of second factor challenges that are supported.
    */
-  interface MultiFactorConfig {
+  export interface MultiFactorConfig {
     /**
      * The multi-factor config state.
      */
-    state: admin.auth.MultiFactorConfigState;
+    state: MultiFactorConfigState;
 
     /**
      * The list of identifiers for enabled second factors.
      * Currently only ‘phone’ is supported.
      */
-    factorIds?: admin.auth.AuthFactorType[];
+    factorIds?: AuthFactorType[];
+  }
+
+  /**
+   * The email sign in configuration.
+   */
+  export interface EmailSignInProviderConfig {
+    /**
+     * Whether email provider is enabled.
+     */
+    enabled: boolean;
+
+    /**
+     * Whether password is required for email sign-in. When not required,
+     * email sign-in can be performed with password or via email link sign-in.
+     */
+    passwordRequired?: boolean; // In the backend API, default is true if not provided
   }
 
   /**
    * Interface representing the properties to update on the provided tenant.
    */
-  interface UpdateTenantRequest {
+  export interface UpdateTenantRequest {
 
     /**
      * The tenant display name.
@@ -1028,49 +1081,37 @@ export namespace admin.auth {
     /**
      * The email sign in configuration.
      */
-    emailSignInConfig?: {
-
-      /**
-       * Whether email provider is enabled.
-       */
-      enabled: boolean;
-
-      /**
-       * Whether password is required for email sign-in. When not required,
-       * email sign-in can be performed with password or via email link sign-in.
-       */
-      passwordRequired?: boolean;
-    };
+    emailSignInConfig?: EmailSignInProviderConfig;
 
     /**
      * The multi-factor auth configuration to update on the tenant.
      */
-    multiFactorConfig?: admin.auth.MultiFactorConfig;
+    multiFactorConfig?: MultiFactorConfig;
 
     /**
      * The updated map containing the test phone number / code pairs for the tenant.
      * Passing null clears the previously save phone number / code pairs.
      */
-    testPhoneNumbers?: {[phoneNumber: string]: string} | null;
+    testPhoneNumbers?: { [phoneNumber: string]: string } | null;
   }
 
   /**
    * Interface representing the properties to set on a new tenant.
    */
-  type CreateTenantRequest = UpdateTenantRequest;
+  export type CreateTenantRequest = UpdateTenantRequest;
 
   /**
    * Interface representing the object returned from a
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#listTenants `listTenants()`}
+   * {@link auth.TenantManager.listTenants `listTenants()`}
    * operation.
    * Contains the list of tenants for the current batch and the next page token if available.
    */
-  interface ListTenantsResult {
+  export interface ListTenantsResult {
 
     /**
-     * The list of {@link admin.auth.Tenant `Tenant`} objects for the downloaded batch.
+     * The list of {@link auth.Tenant `Tenant`} objects for the downloaded batch.
      */
-    tenants: admin.auth.Tenant[];
+    tenants: Tenant[];
 
     /**
      * The next page token if available. This is needed for the next batch download.
@@ -1081,9 +1122,9 @@ export namespace admin.auth {
   /**
    * The filter interface used for listing provider configurations. This is used
    * when specifying how to list configured identity providers via
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#listProviderConfigs `listProviderConfigs()`}.
+   * {@link auth.Auth.listProviderConfigs `listProviderConfigs()`}.
    */
-  interface AuthProviderConfigFilter {
+  export interface AuthProviderConfigFilter {
 
     /**
      * The Auth provider configuration filter. This can be either `saml` or `oidc`.
@@ -1108,7 +1149,7 @@ export namespace admin.auth {
   /**
    * The base Auth provider configuration interface.
    */
-  interface AuthProviderConfig {
+  export interface AuthProviderConfig {
 
     /**
      * The provider ID defined by the developer.
@@ -1134,9 +1175,9 @@ export namespace admin.auth {
    * The
    * [SAML](http://docs.oasis-open.org/security/saml/Post2.0/sstc-saml-tech-overview-2.0.html)
    * Auth provider configuration interface. A SAML provider can be created via
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#createProviderConfig `createProviderConfig()`}.
+   * {@link auth.Auth.createProviderConfig `createProviderConfig()`}.
    */
-  interface SAMLAuthProviderConfig extends admin.auth.AuthProviderConfig {
+  export interface SAMLAuthProviderConfig extends AuthProviderConfig {
 
     /**
      * The SAML IdP entity identifier.
@@ -1179,9 +1220,9 @@ export namespace admin.auth {
   /**
    * The [OIDC](https://openid.net/specs/openid-connect-core-1_0-final.html) Auth
    * provider configuration interface. An OIDC provider can be created via
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#createProviderConfig `createProviderConfig()`}.
+   * {@link auth.Auth.createProviderConfig `createProviderConfig()`}.
    */
-  interface OIDCAuthProviderConfig extends admin.auth.AuthProviderConfig {
+  export interface OIDCAuthProviderConfig extends AuthProviderConfig {
 
     /**
      * This is the required client ID used to confirm the audience of an OIDC
@@ -1213,9 +1254,9 @@ export namespace admin.auth {
   /**
    * The request interface for updating a SAML Auth provider. This is used
    * when updating a SAML provider's configuration via
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#updateProviderConfig `updateProviderConfig()`}.
+   * {@link auth.Auth.updateProviderConfig `updateProviderConfig()`}.
    */
-  interface SAMLUpdateAuthProviderRequest {
+  export interface SAMLUpdateAuthProviderRequest {
 
     /**
      * The SAML provider's updated display name. If not provided, the existing
@@ -1263,9 +1304,9 @@ export namespace admin.auth {
   /**
    * The request interface for updating an OIDC Auth provider. This is used
    * when updating an OIDC provider's configuration via
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#updateProviderConfig `updateProviderConfig()`}.
+   * {@link auth.Auth.updateProviderConfig `updateProviderConfig()`}.
    */
-  interface OIDCUpdateAuthProviderRequest {
+  export interface OIDCUpdateAuthProviderRequest {
 
     /**
      * The OIDC provider's updated display name. If not provided, the existing
@@ -1295,14 +1336,14 @@ export namespace admin.auth {
   /**
    * The response interface for listing provider configs. This is only available
    * when listing all identity providers' configurations via
-   * {@link https://firebase.google.com/docs/reference/admin/node/admin.auth.Auth#listProviderConfigs `listProviderConfigs()`}.
+   * {@link auth.Auth.listProviderConfigs `listProviderConfigs()`}.
    */
-  interface ListProviderConfigResults {
+  export interface ListProviderConfigResults {
 
     /**
      * The list of providers for the specified type in the current page.
      */
-    providerConfigs: admin.auth.AuthProviderConfig[];
+    providerConfigs: AuthProviderConfig[];
 
     /**
      * The next page token, if available.
@@ -1310,15 +1351,15 @@ export namespace admin.auth {
     pageToken?: string;
   }
 
-  type UpdateAuthProviderRequest =
-    admin.auth.SAMLUpdateAuthProviderRequest | admin.auth.OIDCUpdateAuthProviderRequest;
+  export type UpdateAuthProviderRequest =
+    SAMLUpdateAuthProviderRequest | OIDCUpdateAuthProviderRequest;
 
   /**
    * Used for looking up an account by uid.
    *
    * See auth.getUsers()
    */
-  interface UidIdentifier {
+  export interface UidIdentifier {
     uid: string;
   }
 
@@ -1327,7 +1368,7 @@ export namespace admin.auth {
    *
    * See auth.getUsers()
    */
-  interface EmailIdentifier {
+  export interface EmailIdentifier {
     email: string;
   }
 
@@ -1336,7 +1377,7 @@ export namespace admin.auth {
    *
    * See auth.getUsers()
    */
-  interface PhoneIdentifier {
+  export interface PhoneIdentifier {
     phoneNumber: string;
   }
 
@@ -1345,7 +1386,7 @@ export namespace admin.auth {
    *
    * See auth.getUsers()
    */
-  interface ProviderIdentifier {
+  export interface ProviderIdentifier {
     providerId: string;
     providerUid: string;
   }
@@ -1353,9 +1394,10 @@ export namespace admin.auth {
   /**
    * Identifies a user to be looked up.
    */
-  type UserIdentifier = UidIdentifier | EmailIdentifier | PhoneIdentifier | ProviderIdentifier;
+  export type UserIdentifier =
+    UidIdentifier | EmailIdentifier | PhoneIdentifier | ProviderIdentifier;
 
-  interface BaseAuth {
+  export interface BaseAuth {
 
     /**
      * Creates a new Firebase custom token (JWT) that can be sent back to a client
@@ -1387,7 +1429,7 @@ export namespace admin.auth {
      * @return A promise fulfilled with the user
      *   data corresponding to the newly created user.
      */
-    createUser(properties: admin.auth.CreateRequest): Promise<admin.auth.UserRecord>;
+    createUser(properties: CreateRequest): Promise<UserRecord>;
 
     /**
      * Deletes an existing user.
@@ -1424,7 +1466,7 @@ export namespace admin.auth {
      *     deletions, as well as the array of errors that corresponds to the
      *     failed deletions.
      */
-    deleteUsers(uids: string[]): Promise<admin.auth.DeleteUsersResult>;
+    deleteUsers(uids: string[]): Promise<DeleteUsersResult>;
 
     /**
      * Gets the user data for the user corresponding to a given `uid`.
@@ -1437,7 +1479,7 @@ export namespace admin.auth {
      * @return A promise fulfilled with the user
      *   data corresponding to the provided `uid`.
      */
-    getUser(uid: string): Promise<admin.auth.UserRecord>;
+    getUser(uid: string): Promise<UserRecord>;
 
     /**
      * Gets the user data for the user corresponding to a given email.
@@ -1451,7 +1493,7 @@ export namespace admin.auth {
      * @return A promise fulfilled with the user
      *   data corresponding to the provided email.
      */
-    getUserByEmail(email: string): Promise<admin.auth.UserRecord>;
+    getUserByEmail(email: string): Promise<UserRecord>;
 
     /**
      * Gets the user data for the user corresponding to a given phone number. The
@@ -1466,7 +1508,7 @@ export namespace admin.auth {
      * @return A promise fulfilled with the user
      *   data corresponding to the provided phone number.
      */
-    getUserByPhoneNumber(phoneNumber: string): Promise<admin.auth.UserRecord>;
+    getUserByPhoneNumber(phoneNumber: string): Promise<UserRecord>;
 
     /**
      * Gets the user data corresponding to the specified identifiers.
@@ -1483,7 +1525,7 @@ export namespace admin.auth {
      * @throws FirebaseAuthError If any of the identifiers are invalid or if more than 100
      *     identifiers are specified.
      */
-    getUsers(identifiers: admin.auth.UserIdentifier[]): Promise<GetUsersResult>;
+    getUsers(identifiers: UserIdentifier[]): Promise<GetUsersResult>;
 
     /**
      * Retrieves a list of users (single batch only) with a size of `maxResults`
@@ -1500,7 +1542,7 @@ export namespace admin.auth {
      * @return A promise that resolves with
      *   the current batch of downloaded users and the next page token.
      */
-    listUsers(maxResults?: number, pageToken?: string): Promise<admin.auth.ListUsersResult>;
+    listUsers(maxResults?: number, pageToken?: string): Promise<ListUsersResult>;
 
     /**
      * Updates an existing user.
@@ -1515,7 +1557,7 @@ export namespace admin.auth {
      * @return A promise fulfilled with the
      *   updated user data.
      */
-    updateUser(uid: string, properties: admin.auth.UpdateRequest): Promise<admin.auth.UserRecord>;
+    updateUser(uid: string, properties: UpdateRequest): Promise<UserRecord>;
 
     /**
      * Verifies a Firebase ID token (JWT). If the token is valid, the promise is
@@ -1537,7 +1579,7 @@ export namespace admin.auth {
      *   token's decoded claims if the ID token is valid; otherwise, a rejected
      *   promise.
      */
-    verifyIdToken(idToken: string, checkRevoked?: boolean): Promise<admin.auth.DecodedIdToken>;
+    verifyIdToken(idToken: string, checkRevoked?: boolean): Promise<DecodedIdToken>;
 
     /**
      * Sets additional developer claims on an existing user identified by the
@@ -1568,7 +1610,7 @@ export namespace admin.auth {
      * Revokes all refresh tokens for an existing user.
      *
      * This API will update the user's
-     * {@link admin.auth.UserRecord#tokensValidAfterTime `tokensValidAfterTime`} to
+     * {@link auth.UserRecord.tokensValidAfterTime `tokensValidAfterTime`} to
      * the current UTC. It is important that the server on which this is called has
      * its clock set correctly and synchronized.
      *
@@ -1576,7 +1618,7 @@ export namespace admin.auth {
      * new ID tokens for existing sessions from getting minted, existing ID tokens
      * may remain active until their natural expiration (one hour). To verify that
      * ID tokens are revoked, use
-     * {@link admin.auth.Auth#verifyIdToken `verifyIdToken(idToken, true)`}
+     * {@link auth.Auth.verifyIdToken `verifyIdToken(idToken, true)`}
      * where `checkRevoked` is set to true.
      *
      * @param uid The `uid` corresponding to the user whose refresh tokens
@@ -1591,7 +1633,7 @@ export namespace admin.auth {
      * Imports the provided list of users into Firebase Auth.
      * A maximum of 1000 users are allowed to be imported one at a time.
      * When importing users with passwords,
-     * {@link admin.auth.UserImportOptions `UserImportOptions`} are required to be
+     * {@link auth.UserImportOptions `UserImportOptions`} are required to be
      * specified.
      * This operation is optimized for bulk imports and will ignore checks on `uid`,
      * `email` and other identifier uniqueness which could result in duplications.
@@ -1605,9 +1647,9 @@ export namespace admin.auth {
      *   corresponding errors.
     */
     importUsers(
-      users: admin.auth.UserImportRecord[],
-      options?: admin.auth.UserImportOptions,
-    ): Promise<admin.auth.UserImportResult>;
+      users: UserImportRecord[],
+      options?: UserImportOptions,
+    ): Promise<UserImportResult>;
 
     /**
      * Creates a new Firebase session cookie with the specified options. The created
@@ -1628,7 +1670,7 @@ export namespace admin.auth {
      */
     createSessionCookie(
       idToken: string,
-      sessionCookieOptions: admin.auth.SessionCookieOptions,
+      sessionCookieOptions: SessionCookieOptions,
     ): Promise<string>;
 
     /**
@@ -1655,12 +1697,12 @@ export namespace admin.auth {
     verifySessionCookie(
       sessionCookie: string,
       checkForRevocation?: boolean,
-    ): Promise<admin.auth.DecodedIdToken>;
+    ): Promise<DecodedIdToken>;
 
     /**
      * Generates the out of band email action link to reset a user's password.
      * The link is generated for the user with the specified email address. The
-     * optional  {@link admin.auth.ActionCodeSettings `ActionCodeSettings`} object
+     * optional  {@link auth.ActionCodeSettings `ActionCodeSettings`} object
      * defines whether the link is to be handled by a mobile app or browser and the
      * additional state information to be passed in the deep link, etc.
      *
@@ -1708,13 +1750,13 @@ export namespace admin.auth {
      */
     generatePasswordResetLink(
       email: string,
-      actionCodeSettings?: admin.auth.ActionCodeSettings,
+      actionCodeSettings?: ActionCodeSettings,
     ): Promise<string>;
 
     /**
      * Generates the out of band email action link to verify the user's ownership
      * of the specified email. The
-     * {@link admin.auth.ActionCodeSettings `ActionCodeSettings`} object provided
+     * {@link auth.ActionCodeSettings `ActionCodeSettings`} object provided
      * as an argument to this method defines whether the link is to be handled by a
      * mobile app or browser along with additional state information to be passed in
      * the deep link, etc.
@@ -1762,13 +1804,13 @@ export namespace admin.auth {
      */
     generateEmailVerificationLink(
       email: string,
-      actionCodeSettings?: admin.auth.ActionCodeSettings,
+      actionCodeSettings?: ActionCodeSettings,
     ): Promise<string>;
 
     /**
      * Generates the out of band email action link to sign in or sign up the owner
      * of the specified email. The
-     * {@link admin.auth.ActionCodeSettings `ActionCodeSettings`} object provided
+     * {@link auth.ActionCodeSettings `ActionCodeSettings`} object provided
      * as an argument to this method defines whether the link is to be handled by a
      * mobile app or browser along with additional state information to be passed in
      * the deep link, etc.
@@ -1816,7 +1858,7 @@ export namespace admin.auth {
      */
     generateSignInWithEmailLink(
       email: string,
-      actionCodeSettings: admin.auth.ActionCodeSettings,
+      actionCodeSettings: ActionCodeSettings,
     ): Promise<string>;
 
     /**
@@ -1832,8 +1874,8 @@ export namespace admin.auth {
      *   filter requirements.
      */
     listProviderConfigs(
-      options: admin.auth.AuthProviderConfigFilter
-    ): Promise<admin.auth.ListProviderConfigResults>;
+      options: AuthProviderConfigFilter
+    ): Promise<ListProviderConfigResults>;
 
     /**
      * Looks up an Auth provider configuration by the provided ID.
@@ -1850,7 +1892,7 @@ export namespace admin.auth {
      * @return A promise that resolves
      *     with the configuration corresponding to the provided ID.
      */
-    getProviderConfig(providerId: string): Promise<admin.auth.AuthProviderConfig>;
+    getProviderConfig(providerId: string): Promise<AuthProviderConfig>;
 
     /**
      * Deletes the provider configuration corresponding to the provider ID passed.
@@ -1883,8 +1925,8 @@ export namespace admin.auth {
      * @return A promise that resolves with the updated provider configuration.
      */
     updateProviderConfig(
-      providerId: string, updatedConfig: admin.auth.UpdateAuthProviderRequest
-    ): Promise<admin.auth.AuthProviderConfig>;
+      providerId: string, updatedConfig: UpdateAuthProviderRequest
+    ): Promise<AuthProviderConfig>;
 
     /**
      * Returns a promise that resolves with the newly created `AuthProviderConfig`
@@ -1898,8 +1940,8 @@ export namespace admin.auth {
      * @return A promise that resolves with the created provider configuration.
      */
     createProviderConfig(
-      config: admin.auth.AuthProviderConfig
-    ): Promise<admin.auth.AuthProviderConfig>;
+      config: AuthProviderConfig
+    ): Promise<AuthProviderConfig>;
   }
 
   /**
@@ -1919,7 +1961,7 @@ export namespace admin.auth {
    * `TenantAwareAuth` instances for a specific `tenantId` can be instantiated by calling
    * `auth.tenantManager().authForTenant(tenantId)`.
    */
-  interface TenantAwareAuth extends BaseAuth {
+  export interface TenantAwareAuth extends BaseAuth {
 
     /**
      * The tenant identifier corresponding to this `TenantAwareAuth` instance.
@@ -1929,13 +1971,13 @@ export namespace admin.auth {
     tenantId: string;
   }
 
-  interface Auth extends admin.auth.BaseAuth {
-    app: _admin.app.App;
+  export interface Auth extends BaseAuth {
+    app: app.App;
 
     /**
      * @return The tenant manager instance associated with the current project.
      */
-    tenantManager(): admin.auth.TenantManager;
+    tenantManager(): TenantManager;
   }
 
   /**
@@ -1949,13 +1991,13 @@ export namespace admin.auth {
    *     email link generation, etc) in the context of a specified tenant.</li>
    * </ul>
    */
-  interface TenantManager {
+  export interface TenantManager {
     /**
      * @param tenantId The tenant ID whose `TenantAwareAuth` instance is to be returned.
      *
      * @return The `TenantAwareAuth` instance corresponding to this tenant identifier.
      */
-    authForTenant(tenantId: string): admin.auth.TenantAwareAuth;
+    authForTenant(tenantId: string): TenantAwareAuth;
 
     /**
      * Gets the tenant configuration for the tenant corresponding to a given `tenantId`.
@@ -1964,7 +2006,7 @@ export namespace admin.auth {
      *
      * @return A promise fulfilled with the tenant configuration to the provided `tenantId`.
      */
-    getTenant(tenantId: string): Promise<admin.auth.Tenant>;
+    getTenant(tenantId: string): Promise<Tenant>;
 
     /**
      * Retrieves a list of tenants (single batch only) with a size of `maxResults`
@@ -1979,7 +2021,7 @@ export namespace admin.auth {
      * @return A promise that resolves with
      *   a batch of downloaded tenants and the next page token.
      */
-    listTenants(maxResults?: number, pageToken?: string): Promise<admin.auth.ListTenantsResult>;
+    listTenants(maxResults?: number, pageToken?: string): Promise<ListTenantsResult>;
 
     /**
      * Deletes an existing tenant.
@@ -2000,7 +2042,7 @@ export namespace admin.auth {
      * @return A promise fulfilled with the tenant configuration corresponding to the newly
      *   created tenant.
      */
-    createTenant(tenantOptions: admin.auth.CreateTenantRequest): Promise<admin.auth.Tenant>;
+    createTenant(tenantOptions: CreateTenantRequest): Promise<Tenant>;
 
     /**
      * Updates an existing tenant configuration.
@@ -2010,6 +2052,6 @@ export namespace admin.auth {
      *
      * @return A promise fulfilled with the update tenant data.
      */
-    updateTenant(tenantId: string, tenantOptions: admin.auth.UpdateTenantRequest): Promise<admin.auth.Tenant>;
+    updateTenant(tenantId: string, tenantOptions: UpdateTenantRequest): Promise<Tenant>;
   }
 }

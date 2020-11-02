@@ -31,8 +31,8 @@ import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
 import {
-  GoogleOAuthAccessToken, Credential
-} from '../../../src/credential/credential-interfaces';
+  GoogleOAuthAccessToken, credential
+} from '../../../src/credential/index';
 import {
   RefreshTokenCredential, ServiceAccountCredential,
   ComputeEngineCredential, getApplicationDefault, isApplicationDefault
@@ -555,7 +555,7 @@ describe('Credential', () => {
     });
 
     it('should return false for custom credential', () => {
-      const c: Credential = {
+      const c: credential.Credential = {
         getAccessToken: () => {
           throw new Error();
         },

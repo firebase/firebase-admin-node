@@ -19,17 +19,14 @@
 /**************/
 /*  REQUIRES  */
 /**************/
-var fs = require('fs');
 var _ = require('lodash');
 var gulp = require('gulp');
 var pkg = require('./package.json');
 
 // File I/O
-var fs = require('fs');
 var ts = require('gulp-typescript');
 var del = require('del');
 var header = require('gulp-header');
-var replace = require('gulp-replace');
 var filter = require('gulp-filter');
 
 
@@ -46,42 +43,15 @@ var paths = {
     '!test/integration/typescript/src/example*.ts',
   ],
 
-  databaseSrc: [
-    'src/**/*.js'
-  ],
-
   build: 'lib/',
-
-  curatedTypings: [
-    'src/*.d.ts',
-    '!src/credential.d.ts',
-    '!src/database.d.ts',
-    '!src/instance-id.d.ts',
-    '!src/messaging.d.ts',
-    '!src/project-management.d.ts',
-    '!src/remote-config.d.ts',
-    '!src/security-rules.d.ts',
-    '!src/storage.d.ts',
-  ],
 };
-
-const TEMPORARY_TYPING_EXCLUDES = [
-  '!lib/default-namespace.d.ts',
-  '!lib/firebase-namespace.d.ts',
-  '!lib/firebase-app.d.ts',
-  '!lib/firebase-service.d.ts',
-  '!lib/auth/*.d.ts',
-  '!lib/machine-learning/*.d.ts',
-  '!lib/utils/*.d.ts',
-];
 
 // Create a separate project for buildProject that overrides the rootDir.
 // This ensures that the generated production files are in their own root
 // rather than including both src and test in the lib dir. Declaration
 // is used by TypeScript to determine if auto-generated typings should be
 // emitted.
-const declaration = process.env.TYPE_GENERATION_MODE === 'auto';
-var buildProject = ts.createProject('tsconfig.json', { rootDir: 'src', declaration });
+var buildProject = ts.createProject('tsconfig.json', { rootDir: 'src' });
 
 var buildTest = ts.createProject('tsconfig.json');
 
@@ -111,19 +81,14 @@ gulp.task('compile', function() {
     // Add header
     .pipe(header(banner));
 
-  // Exclude typings that are unintended (currently excludes all auto-generated
-  // typings, but as services are refactored to auto-generate typings this will
-  // change). Moreover, all *-internal.d.ts typings should not be exposed to
-  // developers as it denotes internally used types.
-  if (declaration) {
-    const configuration = [
-      'lib/**/*.js',
-      'lib/**/*.d.ts',
-      '!lib/**/*-internal.d.ts',
-    ].concat(TEMPORARY_TYPING_EXCLUDES);
+  const configuration = [
+    'lib/**/*.js',
+    'lib/**/index.d.ts',
+    'lib/firebase-namespace-api.d.ts',
+    '!lib/utils/index.d.ts',
+  ];
 
-    workflow = workflow.pipe(filter(configuration));
-  }
+  workflow = workflow.pipe(filter(configuration));
 
   // Write to build directory
   return workflow.pipe(gulp.dest(paths.build))
@@ -139,30 +104,14 @@ gulp.task('compile_test', function() {
     .pipe(buildTest())
 });
 
-gulp.task('copyDatabase', function() {
-  return gulp.src(paths.databaseSrc)
-    // Add headers
-    .pipe(header(fs.readFileSync('third_party/database-license.txt', 'utf8')))
+gulp.task('copyTypings', function() {
+  return gulp.src(['src/index.d.ts', 'src/firebase-namespace.d.ts'])
+    // Add header
     .pipe(header(banner))
-
-    // Write to build directory
     .pipe(gulp.dest(paths.build))
 });
 
-gulp.task('copyTypings', function() {
-  let workflow = gulp.src('src/*.d.ts')
-    // Add header
-    .pipe(header(banner));
-
-  if (declaration) {
-    workflow = workflow.pipe(filter(paths.curatedTypings));
-  }
-
-  // Write to build directory
-  return workflow.pipe(gulp.dest(paths.build))
-});
-
-gulp.task('compile_all', gulp.series('compile', 'copyDatabase', 'copyTypings', 'compile_test'));
+gulp.task('compile_all', gulp.series('compile', 'copyTypings', 'compile_test'));
 
 // Regenerates js every time a source file changes
 gulp.task('watch', function() {
@@ -170,7 +119,7 @@ gulp.task('watch', function() {
 });
 
 // Build task
-gulp.task('build', gulp.series('cleanup', 'compile', 'copyDatabase', 'copyTypings'));
+gulp.task('build', gulp.series('cleanup', 'compile', 'copyTypings'));
 
 // Default task
 gulp.task('default', gulp.series('build'));

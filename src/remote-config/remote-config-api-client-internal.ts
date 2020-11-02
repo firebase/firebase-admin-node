@@ -14,13 +14,17 @@
  * limitations under the License.
  */
 
-import { RemoteConfigTemplate, ListVersionsOptions, ListVersionsResult } from './remote-config-api-client';
+import { remoteConfig } from './index';
 import { HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient, HttpResponse } from '../utils/api-request';
 import { PrefixedFirebaseError } from '../utils/error';
 import { FirebaseApp } from '../firebase-app';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { deepCopy } from '../utils/deep-copy';
+
+import RemoteConfigTemplate = remoteConfig.RemoteConfigTemplate;
+import ListVersionsOptions = remoteConfig.ListVersionsOptions;
+import ListVersionsResult = remoteConfig.ListVersionsResult;
 
 // Remote Config backend constants
 const FIREBASE_REMOTE_CONFIG_V1_API = 'https://firebaseremoteconfig.googleapis.com/v1';
@@ -95,7 +99,7 @@ export class RemoteConfigApiClient {
     template = this.validateInputRemoteConfigTemplate(template);
     return this.sendPutRequest(template, template.etag, true)
       .then((resp) => {
-        // validating a template returns an etag with the suffix -0 means that your update 
+        // validating a template returns an etag with the suffix -0 means that your update
         // was successfully validated. We set the etag back to the original etag of the template
         // to allow future operations.
         this.validateEtag(resp.headers['etag']);
@@ -260,7 +264,7 @@ export class RemoteConfigApiClient {
    * Removes output only properties from version metadata.
    *
    * @param {RemoteConfigTemplate} template A RemoteConfigTemplate object to be validated.
-   * 
+   *
    * @returns {RemoteConfigTemplate} The validated RemoteConfigTemplate object.
    */
   private validateInputRemoteConfigTemplate(template: RemoteConfigTemplate): RemoteConfigTemplate {
@@ -303,7 +307,7 @@ export class RemoteConfigApiClient {
    * If valid, returns the string representation of the provided version number.
    *
    * @param {string|number} versionNumber A version number to be validated.
-   * 
+   *
    * @returns {string} The validated version number as a string.
    */
   private validateVersionNumber(versionNumber: string | number, propertyName = 'versionNumber'): string {
@@ -332,9 +336,9 @@ export class RemoteConfigApiClient {
   /**
    * Checks if a given `ListVersionsOptions` object is valid. If successful, creates a copy of the
    * options object and convert `startTime` and `endTime` to RFC3339 UTC "Zulu" format, if present.
-   * 
+   *
    * @param {ListVersionsOptions} options An options object to be validated.
-   * 
+   *
    * @return {ListVersionsOptions} A copy of the provided options object with timestamps converted
    * to UTC Zulu format.
    */
@@ -406,7 +410,7 @@ interface Error {
 
 const ERROR_CODE_MAPPING: { [key: string]: RemoteConfigErrorCode } = {
   ABORTED: 'aborted',
-  ALREADY_EXISTS: `already-exists`,
+  ALREADY_EXISTS: 'already-exists',
   INVALID_ARGUMENT: 'invalid-argument',
   INTERNAL: 'internal-error',
   FAILED_PRECONDITION: 'failed-precondition',

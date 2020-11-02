@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
+import { app } from './firebase-namespace-api';
 import { FirebaseApp } from './firebase-app';
 
+import App = app.App;
 
 /**
  * Internals of a FirebaseService instance.
@@ -28,7 +30,7 @@ export interface FirebaseServiceInternalsInterface {
  * Services are exposed through instances, each of which is associated with a FirebaseApp.
  */
 export interface FirebaseServiceInterface {
-  app: FirebaseApp;
+  app: App;
   INTERNAL: FirebaseServiceInternalsInterface;
 }
 

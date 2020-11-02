@@ -20,12 +20,11 @@ import * as chai from 'chai';
 import * as admin from '../../lib/index';
 import { projectId } from './setup';
 import { Bucket } from '@google-cloud/storage';
-import { GcsTfliteModelOptions, AutoMLTfliteModelOptions } from
-  '../../src/machine-learning/machine-learning-api-client';
+
+import AutoMLTfliteModelOptions = admin.machineLearning.AutoMLTfliteModelOptions;
+import GcsTfliteModelOptions = admin.machineLearning.GcsTfliteModelOptions;
 
 const expect = chai.expect;
-
-
 
 describe('admin.machineLearning', () => {
 
@@ -577,13 +576,13 @@ function getAutoMLModelReference(): Promise<string> {
   }
   catch (error) {
     // Returning an empty string will result in skipping the test.
-    return Promise.resolve("");
+    return Promise.resolve('');
   }
 
   const parent = automl.locationPath(projectId, 'us-central1');
-  return automl.listModels({ parent, filter:"displayName=admin_sdk_integ_test1" })
+  return automl.listModels({ parent, filter:'displayName=admin_sdk_integ_test1' })
     .then(([models]: [any]) => {
-      let modelRef = "";
+      let modelRef = '';
       for (const model of models) {
         modelRef = model.name;
       }

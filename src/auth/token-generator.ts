@@ -91,7 +91,7 @@ interface JWTBody {
  * sign data. Performs all operations locally, and does not make any RPC calls.
  */
 export class ServiceAccountSigner implements CryptoSigner {
-  
+
   algorithm = ALGORITHM_RS256;
 
   /**
@@ -220,8 +220,8 @@ export class IAMSigner implements CryptoSigner {
     }).catch((err) => {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_CREDENTIAL,
-        `Failed to determine service account. Make sure to initialize ` +
-        `the SDK with a service account credential. Alternatively specify a service ` +
+        'Failed to determine service account. Make sure to initialize ' +
+        'the SDK with a service account credential. Alternatively specify a service ' +
         `account with iam.serviceAccounts.signBlob permission. Original error: ${err}`,
       );
     });
@@ -239,7 +239,8 @@ export class EmulatedSigner implements CryptoSigner {
   /**
    * @inheritDoc
    */
-  public sign(_: Buffer): Promise<Buffer> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  public sign(buffer: Buffer): Promise<Buffer> {
     return Promise.resolve(Buffer.from(''));
   }
 

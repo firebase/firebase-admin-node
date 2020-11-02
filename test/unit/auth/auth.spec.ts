@@ -26,8 +26,8 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
-import { Auth, TenantAwareAuth, BaseAuth, DecodedIdToken } from '../../../src/auth/auth';
-import { UserRecord, UpdateRequest } from '../../../src/auth/user-record';
+import { Auth, TenantAwareAuth, BaseAuth } from '../../../src/auth/auth';
+import { UserRecord } from '../../../src/auth/user-record';
 import { FirebaseApp } from '../../../src/firebase-app';
 import {
   AuthRequestHandler, TenantAwareAuthRequestHandler, AbstractAuthRequestHandler,
@@ -37,13 +37,17 @@ import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error
 import * as validator from '../../../src/utils/validator';
 import { FirebaseTokenVerifier } from '../../../src/auth/token-verifier';
 import {
-  AuthProviderConfigFilter, OIDCConfig, SAMLConfig,
-  OIDCConfigServerResponse, SAMLConfigServerResponse,
+  OIDCConfig, SAMLConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
 } from '../../../src/auth/auth-config';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { TenantManager } from '../../../src/auth/tenant-manager';
 import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
 import { HttpClient } from '../../../src/utils/api-request';
+import { auth } from '../../../src/auth/index';
+
+import DecodedIdToken = auth.DecodedIdToken;
+import UpdateRequest = auth.UpdateRequest;
+import AuthProviderConfigFilter = auth.AuthProviderConfigFilter;
 
 chai.should();
 chai.use(sinonChai);
@@ -3222,7 +3226,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         const unsignedToken = mocks.generateIdToken({
           algorithm: 'none'
         });
-        
+
         await expect(mockAuth.verifyIdToken(unsignedToken))
           .to.be.rejectedWith('Firebase ID token has incorrect algorithm. Expected "RS256"');
       });
@@ -3232,7 +3236,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
         let claims = {};
         if (testConfig.Auth === TenantAwareAuth) {
-          claims = { 
+          claims = {
             firebase: {
               tenant: TENANT_ID
             }
@@ -3242,7 +3246,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         const unsignedToken = mocks.generateIdToken({
           algorithm: 'none'
         }, claims);
-        
+
         const decoded = await mockAuth.verifyIdToken(unsignedToken);
         expect(decoded).to.be.ok;
       });

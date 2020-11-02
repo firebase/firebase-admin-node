@@ -19,7 +19,7 @@ import fs = require('fs');
 import minimist = require('minimist');
 import path = require('path');
 import { random } from 'lodash';
-import { Credential, GoogleOAuthAccessToken } from '../../src/credential/credential-interfaces';
+import { GoogleOAuthAccessToken } from '../../src/credential/index';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const chalk = require('chalk');
@@ -106,7 +106,7 @@ after(() => {
   ]);
 });
 
-class CertificatelessCredential implements Credential {
+class CertificatelessCredential implements admin.credential.Credential {
   private readonly delegate: admin.credential.Credential;
 
   constructor(delegate: admin.credential.Credential) {

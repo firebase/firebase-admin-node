@@ -90,13 +90,13 @@ describe('SecurityRulesApiClient', () => {
       });
     });
 
-    it(`should reject when called with prefixed name`, () => {
+    it('should reject when called with prefixed name', () => {
       return apiClient.getRuleset('projects/foo/rulesets/bar')
         .should.eventually.be.rejected.and.have.property(
           'message', 'Ruleset name must not contain any "/" characters.');
     });
 
-    it(`should reject when project id is not available`, () => {
+    it('should reject when project id is not available', () => {
       return clientWithoutProjectId.getRuleset(RULESET_NAME)
         .should.eventually.be.rejectedWith(noProjectId);
     });
@@ -180,7 +180,7 @@ describe('SecurityRulesApiClient', () => {
       });
     });
 
-    it(`should reject when project id is not available`, () => {
+    it('should reject when project id is not available', () => {
       return clientWithoutProjectId.createRuleset({
         source: {
           files: [RULES_FILE],
@@ -328,7 +328,7 @@ describe('SecurityRulesApiClient', () => {
       });
     });
 
-    it(`should reject when project id is not available`, () => {
+    it('should reject when project id is not available', () => {
       return clientWithoutProjectId.listRulesets()
         .should.eventually.be.rejectedWith(noProjectId);
     });
@@ -427,7 +427,7 @@ describe('SecurityRulesApiClient', () => {
   });
 
   describe('getRelease', () => {
-    it(`should reject when project id is not available`, () => {
+    it('should reject when project id is not available', () => {
       return clientWithoutProjectId.getRelease(RELEASE_NAME)
         .should.eventually.be.rejectedWith(noProjectId);
     });
@@ -491,7 +491,7 @@ describe('SecurityRulesApiClient', () => {
   });
 
   describe('updateRelease', () => {
-    it(`should reject when project id is not available`, () => {
+    it('should reject when project id is not available', () => {
       return clientWithoutProjectId.updateRelease(RELEASE_NAME, RULESET_NAME)
         .should.eventually.be.rejectedWith(noProjectId);
     });
@@ -570,13 +570,13 @@ describe('SecurityRulesApiClient', () => {
       });
     });
 
-    it(`should reject when called with prefixed name`, () => {
+    it('should reject when called with prefixed name', () => {
       return apiClient.deleteRuleset('projects/foo/rulesets/bar')
         .should.eventually.be.rejected.and.have.property(
           'message', 'Ruleset name must not contain any "/" characters.');
     });
 
-    it(`should reject when project id is not available`, () => {
+    it('should reject when project id is not available', () => {
       return clientWithoutProjectId.deleteRuleset(RULESET_NAME)
         .should.eventually.be.rejectedWith(noProjectId);
     });
