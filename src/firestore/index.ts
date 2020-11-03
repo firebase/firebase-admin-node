@@ -26,19 +26,30 @@ export namespace firestore {
   export import v1beta1 = _firestore.v1beta1;
   export import v1 = _firestore.v1;
 
+  export import BulkWriter = _firestore.BulkWriter;
+  export import BulkWriterOptions = _firestore.BulkWriterOptions;
+  export import CollectionGroup = _firestore.CollectionGroup;
   export import CollectionReference = _firestore.CollectionReference;
+  export import DocumentChangeType = _firestore.DocumentChangeType;
   export import DocumentData = _firestore.DocumentData;
   export import DocumentReference = _firestore.DocumentReference;
   export import DocumentSnapshot = _firestore.DocumentSnapshot;
   export import FieldPath = _firestore.FieldPath;
   export import FieldValue = _firestore.FieldValue;
   export import Firestore = _firestore.Firestore;
+  export import FirestoreDataConverter = _firestore.FirestoreDataConverter;
   export import GeoPoint = _firestore.GeoPoint;
+  export import GrpcStatus = _firestore.GrpcStatus;
+  export import Precondition = _firestore.Precondition;
   export import Query = _firestore.Query;
   export import QueryDocumentSnapshot = _firestore.QueryDocumentSnapshot;
+  export import QueryPartition = _firestore.QueryPartition;
   export import QuerySnapshot = _firestore.QuerySnapshot;
+  export import ReadOptions = _firestore.ReadOptions;
+  export import Settings = _firestore.Settings;
   export import Timestamp = _firestore.Timestamp;
   export import Transaction = _firestore.Transaction;
+  export import UpdateData = _firestore.UpdateData;
   export import WriteBatch = _firestore.WriteBatch;
   export import WriteResult = _firestore.WriteResult;
 
