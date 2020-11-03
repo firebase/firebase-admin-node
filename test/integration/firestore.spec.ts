@@ -126,17 +126,11 @@ describe('admin.firestore', () => {
         };
       },
       fromFirestore: (snap: admin.firestore.QueryDocumentSnapshot) => {
-        return {
-          localId: snap.data().name,
-          people: snap.data().population,
-        };
+        return new City(snap.data().name, snap.data().population);
       }
     };
 
-    const expected: City = {
-      localId: 'Sunnyvale',
-      people: 153185,
-    };
+    const expected: City = new City('Sunnyvale', 153185);
     const refWithConverter: admin.firestore.DocumentReference<City> = admin.firestore()
       .collection('cities')
       .doc()
@@ -146,11 +140,9 @@ describe('admin.firestore', () => {
         return refWithConverter.get();
       })
       .then((snapshot: admin.firestore.DocumentSnapshot<City>) => {
-        const city: City = snapshot.data()!;
-        expect(city).to.deep.equal(expected);
+        expect(snapshot.data()).to.be.instanceOf(City);
         return refWithConverter.delete();
-      })
-      .should.eventually.be.fulfilled;
+      });
   });
 
   it('supports saving references in documents', () => {
@@ -191,7 +183,6 @@ describe('admin.firestore', () => {
   });
 });
 
-interface City {
-  localId: string;
-  people: number;
+class City {
+  constructor(readonly localId: string, readonly people: number) { }
 }
