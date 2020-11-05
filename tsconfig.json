@@ -4,7 +4,6 @@
     "target": "es5",
     "declaration": true,
     "sourceMap": true,
-    "declarationMap": true,
     "noImplicitAny": true,
     "noUnusedLocals": true,
     // TODO(rsgowman): enable `"strict": true,` and remove explicit setting of: noImplicitAny, noImplicitThis, alwaysStrict, strictBindCallApply, strictNullChecks, strictFunctionTypes, strictPropertyInitialization.
