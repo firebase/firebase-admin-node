@@ -369,7 +369,7 @@ describe('FIREBASE_AUTH_GET_ACCOUNT_INFO', () => {
   describe('responseValidator', () => {
     const responseValidator = FIREBASE_AUTH_GET_ACCOUNT_INFO.getResponseValidator();
     it('should succeed with users returned', () => {
-      const validResponse: object = { users: [{ localId: "foo" }] };
+      const validResponse: object = { users: [{ localId: 'foo' }] };
       expect(() => {
         return responseValidator(validResponse);
       }).not.to.throw();
