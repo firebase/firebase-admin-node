@@ -374,13 +374,13 @@ describe('FIREBASE_AUTH_GET_ACCOUNT_INFO', () => {
         return responseValidator(validResponse);
       }).not.to.throw();
     });
-    it('should fail when users is empty', () => {
+    it('should fail when the response object is empty', () => {
       const invalidResponse = {};
       expect(() => {
         responseValidator(invalidResponse);
       }).to.throw();
     });
-    it('should fail when users is not returned', () => {
+    it('should fail when the response object has an empty list of users', () => {
       const invalidResponse = { users: [] };
       expect(() => {
         responseValidator(invalidResponse);
