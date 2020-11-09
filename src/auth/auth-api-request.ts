@@ -23,7 +23,7 @@ import {
 import { FirebaseApp } from '../firebase-app';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
-  ApiSettings, AuthorizedHttpClient, HttpRequestConfig, HttpError,
+  ApiSettings, AuthorizedHttpClient, HttpRequestConfig, HttpError, HttpClient, EmulatorHttpClient,
 } from '../utils/api-request';
 import {
   UserImportBuilder, AuthFactorInfo, convertMultiFactorInfoToServerFormat,
@@ -926,7 +926,7 @@ const LIST_INBOUND_SAML_CONFIGS = new ApiSettings('/inboundSamlConfigs', 'GET')
  */
 export abstract class AbstractAuthRequestHandler {
 
-  protected readonly httpClient: AuthorizedHttpClient;
+  protected readonly httpClient: HttpClient;
   private authUrlBuilder: AuthResourceUrlBuilder;
   private projectConfigUrlBuilder: AuthResourceUrlBuilder;
 
@@ -981,9 +981,10 @@ export abstract class AbstractAuthRequestHandler {
 
   /**
    * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
+   * @param {HttpClient} httpClient Optional HttpClient override.
    * @constructor
    */
-  constructor(protected readonly app: FirebaseApp) {
+  constructor(protected readonly app: FirebaseApp, httpClient?: HttpClient) {
     if (typeof app !== 'object' || app === null || !('options' in app)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
@@ -991,7 +992,11 @@ export abstract class AbstractAuthRequestHandler {
       );
     }
 
-    this.httpClient = new AuthorizedHttpClient(app);
+    if (httpClient) {
+      this.httpClient = httpClient;
+    } else {
+      this.httpClient = new AuthorizedHttpClient(app);
+    }
   }
 
   /**
@@ -1899,10 +1904,11 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
    * The FirebaseAuthRequestHandler constructor used to initialize an instance using a FirebaseApp.
    *
    * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
+   * @param {HttpClient} httpClient Optional HttpClient override.
    * @constructor.
    */
-  constructor(app: FirebaseApp) {
-    super(app);
+  constructor(app: FirebaseApp, httpClient?: HttpClient) {
+    super(app, httpClient);
     this.tenantMgmtResourceBuilder =  new AuthResourceUrlBuilder(app, 'v2');
   }
 
@@ -2045,10 +2051,11 @@ export class TenantAwareAuthRequestHandler extends AbstractAuthRequestHandler {
    *
    * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
    * @param {string} tenantId The request handler's tenant ID.
+   * @param {HttpClient} httpClient Optional HttpClient override.
    * @constructor
    */
-  constructor(app: FirebaseApp, private readonly tenantId: string) {
-    super(app);
+  constructor(app: FirebaseApp, private readonly tenantId: string, httpClient?: HttpClient) {
+    super(app, httpClient);
   }
 
   /**
