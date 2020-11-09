@@ -369,13 +369,19 @@ describe('FIREBASE_AUTH_GET_ACCOUNT_INFO', () => {
   describe('responseValidator', () => {
     const responseValidator = FIREBASE_AUTH_GET_ACCOUNT_INFO.getResponseValidator();
     it('should succeed with users returned', () => {
-      const validResponse: object = { users: [] };
+      const validResponse: object = { users: [{ localId: 'foo' }] };
       expect(() => {
         return responseValidator(validResponse);
       }).not.to.throw();
     });
-    it('should fail when users is not returned', () => {
+    it('should fail when the response object is empty', () => {
       const invalidResponse = {};
+      expect(() => {
+        responseValidator(invalidResponse);
+      }).to.throw();
+    });
+    it('should fail when the response object has an empty list of users', () => {
+      const invalidResponse = { users: [] };
       expect(() => {
         responseValidator(invalidResponse);
       }).to.throw();

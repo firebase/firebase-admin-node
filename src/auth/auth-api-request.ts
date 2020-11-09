@@ -629,7 +629,7 @@ export const FIREBASE_AUTH_GET_ACCOUNT_INFO = new ApiSettings('/accounts:lookup'
   })
   // Set response validator.
   .setResponseValidator((response: any) => {
-    if (!response.users) {
+    if (!response.users || !response.users.length) {
       throw new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
     }
   });
