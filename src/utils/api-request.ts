@@ -852,7 +852,7 @@ export class EmulatorHttpClient extends BaseAuthorizedHttpClient {
   }
 
   public getToken(): Promise<string> {
-    return Promise.resolve("owner");
+    return Promise.resolve('owner');
   }
   public getHttpAgent(): http.Agent | undefined {
     return this.app.options.httpAgent;
