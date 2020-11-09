@@ -51,7 +51,7 @@ var paths = {
 // rather than including both src and test in the lib dir. Declaration
 // is used by TypeScript to determine if auto-generated typings should be
 // emitted.
-var buildProject = ts.createProject('tsconfig.json', { rootDir: 'src' });
+var buildProject = ts.createProject('tsconfig.json', { rootDir: 'src', declarationMap: true });
 
 var buildTest = ts.createProject('tsconfig.json');
 
