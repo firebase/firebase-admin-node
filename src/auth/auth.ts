@@ -57,7 +57,6 @@ import SAMLAuthProviderConfig = auth.SAMLAuthProviderConfig;
 import BaseAuthInterface = auth.BaseAuth;
 import AuthInterface = auth.Auth;
 import TenantAwareAuthInterface = auth.TenantAwareAuth;
-import { AuthorizedHttpClient } from '../utils/api-request';
 
 /**
  * Internals of an Auth instance.
@@ -72,22 +71,6 @@ class AuthInternals implements FirebaseServiceInternalsInterface {
     // There are no resources to clean up
     return Promise.resolve(undefined);
   }
-}
-
-/**
- * Auth-specific HTTP client which uses the special "owner" token
- * when communicating with the Auth Emulator.
- */
-class AuthHttpClient extends AuthorizedHttpClient {
-
-  protected getToken(): Promise<string> {
-    if (useEmulator()) {
-      return Promise.resolve('owner');
-    }
-
-    return super.getToken();
-  }
-
 }
 
 /**
@@ -751,7 +734,7 @@ export class TenantAwareAuth
   constructor(app: FirebaseApp, tenantId: string) {
     const cryptoSigner = useEmulator() ? new EmulatedSigner() : cryptoSignerFromApp(app);
     const tokenGenerator = new FirebaseTokenGenerator(cryptoSigner, tenantId);
-    super(app, new TenantAwareAuthRequestHandler(app, tenantId, new AuthHttpClient(app)), tokenGenerator);
+    super(app, new TenantAwareAuthRequestHandler(app, tenantId), tokenGenerator);
     utils.addReadonlyGetter(this, 'tenantId', tenantId);
   }
 
@@ -847,7 +830,7 @@ export class Auth extends BaseAuth<AuthRequestHandler>
    * @constructor
    */
   constructor(app: FirebaseApp) {
-    super(app, new AuthRequestHandler(app, new AuthHttpClient(app)));
+    super(app, new AuthRequestHandler(app));
     this.app_ = app;
     this.tenantManager_ = new TenantManager(app);
   }
@@ -875,6 +858,6 @@ export class Auth extends BaseAuth<AuthRequestHandler>
  * For security reasons that must be explicitly disabled through
  * setJwtVerificationEnabled(false);
  */
-function useEmulator(): boolean {
+export function useEmulator(): boolean {
   return !!process.env.FIREBASE_AUTH_EMULATOR_HOST;
 }
