@@ -5,6 +5,7 @@ npm-debug.log
 
 lib/
 .tmp/
+temp/
 typings/
 coverage/
 node_modules/
