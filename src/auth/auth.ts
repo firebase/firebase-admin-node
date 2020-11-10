@@ -73,6 +73,7 @@ class AuthInternals implements FirebaseServiceInternalsInterface {
   }
 }
 
+
 /**
  * Base Auth class. Mainly used for user management APIs.
  */

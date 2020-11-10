@@ -23,7 +23,7 @@ import {
 import { FirebaseApp } from '../firebase-app';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
-  ApiSettings, AuthorizedHttpClient, HttpRequestConfig, HttpError, HttpClient
+  ApiSettings, AuthorizedHttpClient, HttpRequestConfig, HttpError
 } from '../utils/api-request';
 import {
   UserImportBuilder, AuthFactorInfo, convertMultiFactorInfoToServerFormat,
@@ -942,7 +942,7 @@ const LIST_INBOUND_SAML_CONFIGS = new ApiSettings('/inboundSamlConfigs', 'GET')
  */
 export abstract class AbstractAuthRequestHandler {
 
-  protected readonly httpClient: HttpClient;
+  protected readonly httpClient: AuthorizedHttpClient;
   private authUrlBuilder: AuthResourceUrlBuilder;
   private projectConfigUrlBuilder: AuthResourceUrlBuilder;
 
