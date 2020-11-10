@@ -35,7 +35,6 @@ import {
   SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
 } from './auth-config';
 import { TenantManager } from './tenant-manager';
-import { EmulatorHttpClient } from '../utils/api-request';
 
 import UserIdentifier = auth.UserIdentifier;
 import CreateRequest = auth.CreateRequest;
@@ -58,6 +57,7 @@ import SAMLAuthProviderConfig = auth.SAMLAuthProviderConfig;
 import BaseAuthInterface = auth.BaseAuth;
 import AuthInterface = auth.Auth;
 import TenantAwareAuthInterface = auth.TenantAwareAuth;
+import { AuthorizedHttpClient } from '../utils/api-request';
 
 /**
  * Internals of an Auth instance.
@@ -74,6 +74,21 @@ class AuthInternals implements FirebaseServiceInternalsInterface {
   }
 }
 
+/**
+ * Auth-specific HTTP client which uses the special "owner" token
+ * when communicating with the Auth Emulator.
+ */
+class AuthHttpClient extends AuthorizedHttpClient {
+
+  protected getToken(): Promise<string> {
+    if (useEmulator()) {
+      return Promise.resolve('owner');
+    }
+
+    return super.getToken();
+  }
+
+}
 
 /**
  * Base Auth class. Mainly used for user management APIs.
@@ -734,10 +749,9 @@ export class TenantAwareAuth
    * @constructor
    */
   constructor(app: FirebaseApp, tenantId: string) {
-    const httpClient = useEmulator() ? new EmulatorHttpClient(app) : undefined;
     const cryptoSigner = useEmulator() ? new EmulatedSigner() : cryptoSignerFromApp(app);
     const tokenGenerator = new FirebaseTokenGenerator(cryptoSigner, tenantId);
-    super(app, new TenantAwareAuthRequestHandler(app, tenantId, httpClient), tokenGenerator);
+    super(app, new TenantAwareAuthRequestHandler(app, tenantId, new AuthHttpClient(app)), tokenGenerator);
     utils.addReadonlyGetter(this, 'tenantId', tenantId);
   }
 
@@ -824,7 +838,7 @@ export class TenantAwareAuth
 export class Auth extends BaseAuth<AuthRequestHandler>
   implements FirebaseServiceInterface, AuthInterface {
 
-  public INTERNAL: AuthInternals;
+  public INTERNAL: AuthInternals = new AuthInternals();
   private readonly tenantManager_: TenantManager;
   private readonly app_: FirebaseApp;
 
@@ -833,9 +847,7 @@ export class Auth extends BaseAuth<AuthRequestHandler>
    * @constructor
    */
   constructor(app: FirebaseApp) {
-    const httpClient = useEmulator() ? new EmulatorHttpClient(app) : undefined;
-    super(app, new AuthRequestHandler(app, httpClient));
-    this.INTERNAL = new AuthInternals();
+    super(app, new AuthRequestHandler(app, new AuthHttpClient(app)));
     this.app_ = app;
     this.tenantManager_ = new TenantManager(app);
   }

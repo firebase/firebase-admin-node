@@ -808,10 +808,10 @@ class HttpRequestConfigImpl implements HttpRequestConfig {
   }
 }
 
-export abstract class BaseAuthorizedHttpClient extends HttpClient {
-
-  public abstract getToken(): Promise<string>;
-  public abstract getHttpAgent(): http.Agent | undefined;
+export class AuthorizedHttpClient extends HttpClient {
+  constructor(private readonly app: FirebaseApp) {
+    super();
+  }
 
   public send(request: HttpRequestConfig): Promise<HttpResponse> {
     return this.getToken().then((token) => {
@@ -820,42 +820,18 @@ export abstract class BaseAuthorizedHttpClient extends HttpClient {
       const authHeader = 'Authorization';
       requestCopy.headers[authHeader] = `Bearer ${token}`;
 
-      const agent = this.getHttpAgent();
-      if (!requestCopy.httpAgent && agent) {
-        requestCopy.httpAgent = agent;
+      if (!requestCopy.httpAgent && this.app.options.httpAgent) {
+        requestCopy.httpAgent = this.app.options.httpAgent;
       }
       return super.send(requestCopy);
     });
   }
-}
 
-export class AuthorizedHttpClient extends BaseAuthorizedHttpClient {
-  constructor(private readonly app: FirebaseApp) {
-    super();
-  }
-
-  public getToken(): Promise<string> {
+  protected getToken(): Promise<string> {
     return this.app.INTERNAL.getToken()
       .then((accessTokenObj) => {
         return accessTokenObj.accessToken;
       })
-  }
-
-  public getHttpAgent(): http.Agent | undefined {
-    return this.app.options.httpAgent;
-  }
-}
-
-export class EmulatorHttpClient extends BaseAuthorizedHttpClient {
-  constructor(private readonly app: FirebaseApp) {
-    super();
-  }
-
-  public getToken(): Promise<string> {
-    return Promise.resolve('owner');
-  }
-  public getHttpAgent(): http.Agent | undefined {
-    return this.app.options.httpAgent;
   }
 }
 
