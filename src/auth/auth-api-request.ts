@@ -23,7 +23,7 @@ import {
 import { FirebaseApp } from '../firebase-app';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
-  ApiSettings, AuthorizedHttpClient, HttpRequestConfig, HttpError
+  ApiSettings, AuthorizedHttpClient, HttpRequestConfig, HttpError,
 } from '../utils/api-request';
 import {
   UserImportBuilder, AuthFactorInfo, convertMultiFactorInfoToServerFormat,
