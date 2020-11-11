@@ -143,7 +143,7 @@ class AuthResourceUrlBuilder {
    * @constructor
    */
   constructor(protected app: FirebaseApp, protected version: string = 'v1') {
-    if (emulatorHost()) {
+    if (useEmulator()) {
       this.urlFormat = utils.formatString(FIREBASE_AUTH_EMULATOR_BASE_URL_FORMAT, {
         host: emulatorHost()
       });
@@ -209,7 +209,7 @@ class TenantAwareAuthResourceUrlBuilder extends AuthResourceUrlBuilder {
    */
   constructor(protected app: FirebaseApp, protected version: string, protected tenantId: string) {
     super(app, version);
-    if (emulatorHost()) {
+    if (useEmulator()) {
       this.urlFormat = utils.formatString(FIREBASE_AUTH_EMULATOR_TENANT_URL_FORMAT, {
         host: emulatorHost()
       });
