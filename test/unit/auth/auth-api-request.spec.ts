@@ -865,6 +865,10 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       'X-Client-Version': `Node/Admin/${getSdkVersion()}`,
       'Authorization': 'Bearer ' + mockAccessToken,
     };
+    const expectedHeadersEmulator: {[key: string]: string} = {
+      'X-Client-Version': `Node/Admin/${getSdkVersion()}`,
+      'Authorization': 'Bearer owner',
+    };
     const callParams = (path: string, method: any, data: any): HttpRequestConfig => {
       return {
         method,
@@ -899,6 +903,59 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         expect(() => {
           return handler.init(mockApp);
         }).not.to.throw(Error);
+      });
+    });
+
+    describe('Emulator Support', () => {
+      const method = 'POST';
+      const path = handler.path('v1', '/accounts:lookup', 'project_id');
+      const expectedResult = utils.responseFrom({
+        users : [
+          { localId: 'uid' },
+        ],
+      });
+      const data = { localId: ['uid'] };
+
+      after(() => {
+        delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
+      })
+
+      it('should call a prod URL with a real token when emulator is not running', () => {
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+
+        const requestHandler = handler.init(mockApp);
+
+        return requestHandler.getAccountInfoByUid('uid')
+          .then(() => {
+            expect(stub).to.have.been.calledOnce.and.calledWith({
+              method,
+              url: `https://${host}${path}`,
+              data,
+              headers: expectedHeaders,
+              timeout,
+            });          
+          });
+      });
+
+      it('should call a local URL with a mock token when the emulator is running', () => {
+        const emulatorHost = 'localhost:9099';
+        process.env.FIREBASE_AUTH_EMULATOR_HOST = emulatorHost;
+
+        const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
+        stubs.push(stub);
+
+        const requestHandler = handler.init(mockApp);
+        return requestHandler.getAccountInfoByUid('uid')
+          .then(() => {
+            expect(stub).to.have.been.calledOnce.and.calledWith({
+              method,
+              url: `http://${emulatorHost}/identitytoolkit.googleapis.com${path}`,
+              data,
+              headers: expectedHeadersEmulator,
+              timeout,
+            });          
+          });
       });
     });
 

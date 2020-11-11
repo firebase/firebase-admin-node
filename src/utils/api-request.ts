@@ -831,7 +831,7 @@ export class AuthorizedHttpClient extends HttpClient {
     return this.app.INTERNAL.getToken()
       .then((accessTokenObj) => {
         return accessTokenObj.accessToken;
-      })
+      });
   }
 }
 

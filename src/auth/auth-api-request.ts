@@ -36,7 +36,6 @@ import {
 } from './auth-config';
 import { Tenant, TenantServerResponse } from './tenant';
 import { auth } from './index';
-import { useEmulator } from './auth';
 
 import CreateRequest = auth.CreateRequest;
 import UpdateRequest = auth.UpdateRequest;
@@ -144,10 +143,9 @@ class AuthResourceUrlBuilder {
    * @constructor
    */
   constructor(protected app: FirebaseApp, protected version: string = 'v1') {
-    const emulatorHost = process.env.FIREBASE_AUTH_EMULATOR_HOST;
-    if (emulatorHost) {
+    if (emulatorHost()) {
       this.urlFormat = utils.formatString(FIREBASE_AUTH_EMULATOR_BASE_URL_FORMAT, {
-        host: emulatorHost
+        host: emulatorHost()
       });
     } else {
       this.urlFormat = FIREBASE_AUTH_BASE_URL_FORMAT;
@@ -211,10 +209,9 @@ class TenantAwareAuthResourceUrlBuilder extends AuthResourceUrlBuilder {
    */
   constructor(protected app: FirebaseApp, protected version: string, protected tenantId: string) {
     super(app, version);
-    const emulatorHost = process.env.FIREBASE_AUTH_EMULATOR_HOST
-    if (emulatorHost) {
+    if (emulatorHost()) {
       this.urlFormat = utils.formatString(FIREBASE_AUTH_EMULATOR_TENANT_URL_FORMAT, {
-        host: emulatorHost
+        host: emulatorHost()
       });
     } else {
       this.urlFormat = FIREBASE_AUTH_TENANT_URL_FORMAT;
@@ -2110,4 +2107,20 @@ export class TenantAwareAuthRequestHandler extends AbstractAuthRequestHandler {
     });
     return super.uploadAccount(users, options);
   }
+}
+
+function emulatorHost(): string | undefined {
+  return process.env.FIREBASE_AUTH_EMULATOR_HOST
+}
+
+/**
+ * When true the SDK should communicate with the Auth Emulator for all API
+ * calls and also produce unsigned tokens.
+ *
+ * This alone does <b>NOT<b> short-circuit ID Token verification.
+ * For security reasons that must be explicitly disabled through
+ * setJwtVerificationEnabled(false);
+ */
+export function useEmulator(): boolean {
+  return !!emulatorHost();
 }
