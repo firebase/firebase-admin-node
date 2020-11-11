@@ -814,17 +814,24 @@ export class AuthorizedHttpClient extends HttpClient {
   }
 
   public send(request: HttpRequestConfig): Promise<HttpResponse> {
-    return this.app.INTERNAL.getToken().then((accessTokenObj) => {
+    return this.getToken().then((token) => {
       const requestCopy = Object.assign({}, request);
       requestCopy.headers = Object.assign({}, request.headers);
       const authHeader = 'Authorization';
-      requestCopy.headers[authHeader] = `Bearer ${accessTokenObj.accessToken}`;
+      requestCopy.headers[authHeader] = `Bearer ${token}`;
 
       if (!requestCopy.httpAgent && this.app.options.httpAgent) {
         requestCopy.httpAgent = this.app.options.httpAgent;
       }
       return super.send(requestCopy);
     });
+  }
+
+  protected getToken(): Promise<string> {
+    return this.app.INTERNAL.getToken()
+      .then((accessTokenObj) => {
+        return accessTokenObj.accessToken;
+      });
   }
 }
 

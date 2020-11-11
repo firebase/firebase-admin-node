@@ -21,7 +21,7 @@ import {
 import { FirebaseApp } from '../firebase-app';
 import { FirebaseTokenGenerator, EmulatedSigner, cryptoSignerFromApp } from './token-generator';
 import {
-  AbstractAuthRequestHandler, AuthRequestHandler, TenantAwareAuthRequestHandler,
+  AbstractAuthRequestHandler, AuthRequestHandler, TenantAwareAuthRequestHandler, useEmulator,
 } from './auth-api-request';
 import { AuthClientErrorCode, FirebaseAuthError, ErrorInfo } from '../utils/error';
 import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
@@ -849,16 +849,4 @@ export class Auth extends BaseAuth<AuthRequestHandler>
   public tenantManager(): TenantManager {
     return this.tenantManager_;
   }
-}
-
-/**
- * When true the SDK should communicate with the Auth Emulator for all API
- * calls and also produce unsigned tokens.
- *
- * This alone does <b>NOT<b> short-circuit ID Token verification.
- * For security reasons that must be explicitly disabled through
- * setJwtVerificationEnabled(false);
- */
-function useEmulator(): boolean {
-  return !!process.env.FIREBASE_AUTH_EMULATOR_HOST;
 }

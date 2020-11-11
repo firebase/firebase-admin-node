@@ -143,10 +143,9 @@ class AuthResourceUrlBuilder {
    * @constructor
    */
   constructor(protected app: FirebaseApp, protected version: string = 'v1') {
-    const emulatorHost = process.env.FIREBASE_AUTH_EMULATOR_HOST;
-    if (emulatorHost) {
+    if (useEmulator()) {
       this.urlFormat = utils.formatString(FIREBASE_AUTH_EMULATOR_BASE_URL_FORMAT, {
-        host: emulatorHost
+        host: emulatorHost()
       });
     } else {
       this.urlFormat = FIREBASE_AUTH_BASE_URL_FORMAT;
@@ -210,10 +209,9 @@ class TenantAwareAuthResourceUrlBuilder extends AuthResourceUrlBuilder {
    */
   constructor(protected app: FirebaseApp, protected version: string, protected tenantId: string) {
     super(app, version);
-    const emulatorHost = process.env.FIREBASE_AUTH_EMULATOR_HOST
-    if (emulatorHost) {
+    if (useEmulator()) {
       this.urlFormat = utils.formatString(FIREBASE_AUTH_EMULATOR_TENANT_URL_FORMAT, {
-        host: emulatorHost
+        host: emulatorHost()
       });
     } else {
       this.urlFormat = FIREBASE_AUTH_TENANT_URL_FORMAT;
@@ -236,6 +234,21 @@ class TenantAwareAuthResourceUrlBuilder extends AuthResourceUrlBuilder {
   }
 }
 
+/**
+ * Auth-specific HTTP client which uses the special "owner" token
+ * when communicating with the Auth Emulator.
+ */
+class AuthHttpClient extends AuthorizedHttpClient {
+
+  protected getToken(): Promise<string> {
+    if (useEmulator()) {
+      return Promise.resolve('owner');
+    }
+
+    return super.getToken();
+  }
+
+}
 
 /**
  * Validates an AuthFactorInfo object. All unsupported parameters
@@ -991,7 +1004,7 @@ export abstract class AbstractAuthRequestHandler {
       );
     }
 
-    this.httpClient = new AuthorizedHttpClient(app);
+    this.httpClient = new AuthHttpClient(app);
   }
 
   /**
@@ -2094,4 +2107,20 @@ export class TenantAwareAuthRequestHandler extends AbstractAuthRequestHandler {
     });
     return super.uploadAccount(users, options);
   }
+}
+
+function emulatorHost(): string | undefined {
+  return process.env.FIREBASE_AUTH_EMULATOR_HOST
+}
+
+/**
+ * When true the SDK should communicate with the Auth Emulator for all API
+ * calls and also produce unsigned tokens.
+ *
+ * This alone does <b>NOT<b> short-circuit ID Token verification.
+ * For security reasons that must be explicitly disabled through
+ * setJwtVerificationEnabled(false);
+ */
+export function useEmulator(): boolean {
+  return !!emulatorHost();
 }
