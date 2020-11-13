@@ -64,7 +64,7 @@ describe('RemoteConfig', () => {
       email: 'firebase-adminsdk@gserviceaccount.com'
     },
     description: 'production version',
-    updateTime: '2020-06-15T16:45:03.000Z'
+    updateTime: '2020-06-15T16:45:03.541527Z'
   };
 
   const REMOTE_CONFIG_RESPONSE: {
@@ -123,7 +123,7 @@ describe('RemoteConfig', () => {
     versions: [
       {
         versionNumber: '78',
-        updateTime: '2020-05-07T18:46:09.495Z',
+        updateTime: '2020-05-07T18:46:09.495234Z',
         updateUser: {
           email: 'user@gmail.com',
           imageUrl: 'https://photo.jpg'
