@@ -366,16 +366,12 @@ class VersionImpl implements Version {
     // as UTC date strings. If a developer uses a previously obtained template with UTC timestamps
     // we could still validate it below.
     if (typeof version.updateTime !== 'undefined') {
-      if (!validator.isISODateString(version.updateTime) &&
-        !validator.isUTCDateString(version.updateTime)) {
+      if (!this.isValidTimestamp(version.updateTime)) {
         throw new FirebaseRemoteConfigError(
           'invalid-argument',
           'Version update time must be a valid date string');
       }
-      if (validator.isISODateString(version.updateTime)) {
-        // timestamps in output `Version` obtained from the API should be in UTC.
-        this.updateTime = new Date(version.updateTime).toUTCString();
-      }
+      this.updateTime = new Date(version.updateTime).toUTCString();
     }
   }
 
@@ -393,5 +389,9 @@ class VersionImpl implements Version {
       isLegacy: this.isLegacy,
       updateTime: this.updateTime,
     }
+  }
+
+  private isValidTimestamp(timestamp: string): boolean {
+    return validator.isNonEmptyString(timestamp) && (new Date(timestamp)).getTime() > 0;
   }
 }

@@ -64,7 +64,7 @@ describe('RemoteConfig', () => {
       email: 'firebase-adminsdk@gserviceaccount.com'
     },
     description: 'production version',
-    updateTime: '2020-06-15T16:45:03.000Z'
+    updateTime: '2020-06-15T16:45:03.541527Z'
   };
 
   const REMOTE_CONFIG_RESPONSE: {
@@ -123,7 +123,7 @@ describe('RemoteConfig', () => {
     versions: [
       {
         versionNumber: '78',
-        updateTime: '2020-05-07T18:46:09.495Z',
+        updateTime: '2020-05-07T18:46:09.495234Z',
         updateUser: {
           email: 'user@gmail.com',
           imageUrl: 'https://photo.jpg'
@@ -678,6 +678,58 @@ describe('RemoteConfig', () => {
           expectedVersion.updateTime = new Date(expectedVersion.updateTime).toUTCString();
           expectedTemplate.version = expectedVersion;
           expect(parsed).deep.equals(expectedTemplate);
+        });
+    });
+
+    it('should resolve with template when Version updateTime contains only 3 ms places', () => {
+      const response = deepCopy(REMOTE_CONFIG_RESPONSE);
+      const versionInfo = deepCopy(VERSION_INFO);
+      versionInfo.updateTime = '2020-11-03T20:24:15.203Z';
+      response.version = versionInfo;
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, operationName)
+        .resolves(response);
+      stubs.push(stub);
+
+      return rcOperation()
+        .then((template) => {
+          expect(template.etag).to.equal('etag-123456789012-5');
+
+          const version = template.version!;
+          expect(version.versionNumber).to.equal('86');
+          expect(version.updateOrigin).to.equal('ADMIN_SDK_NODE');
+          expect(version.updateType).to.equal('INCREMENTAL_UPDATE');
+          expect(version.updateUser).to.deep.equal({
+            email: 'firebase-adminsdk@gserviceaccount.com'
+          });
+          expect(version.description).to.equal('production version');
+          expect(version.updateTime).to.equal('Tue, 03 Nov 2020 20:24:15 GMT');
+        });
+    });
+
+    it('should resolve with template when Version updateTime contains 6 ms places', () => {
+      const response = deepCopy(REMOTE_CONFIG_RESPONSE);
+      const versionInfo = deepCopy(VERSION_INFO);
+      versionInfo.updateTime = '2020-11-13T17:01:36.541527Z';
+      response.version = versionInfo;
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, operationName)
+        .resolves(response);
+      stubs.push(stub);
+
+      return rcOperation()
+        .then((template) => {
+          expect(template.etag).to.equal('etag-123456789012-5');
+
+          const version = template.version!;
+          expect(version.versionNumber).to.equal('86');
+          expect(version.updateOrigin).to.equal('ADMIN_SDK_NODE');
+          expect(version.updateType).to.equal('INCREMENTAL_UPDATE');
+          expect(version.updateUser).to.deep.equal({
+            email: 'firebase-adminsdk@gserviceaccount.com'
+          });
+          expect(version.description).to.equal('production version');
+          expect(version.updateTime).to.equal('Fri, 13 Nov 2020 17:01:36 GMT');
         });
     });
   }
