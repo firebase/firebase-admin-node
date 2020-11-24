@@ -299,7 +299,7 @@ export namespace messaging {
      * The `aps` dictionary to be included in the message.
      */
     aps: Aps;
-    [customData: string]: object;
+    [customData: string]: any;
   }
 
   /**
