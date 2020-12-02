@@ -711,7 +711,7 @@ describe('HttpClient', () => {
     const scope = nock('https://' + mockHost)
       .get(mockPath)
       .times(5)
-      .socketDelay(2000)
+      .delayConnection(2000)
       .reply(200, respData, {
         'content-type': 'application/json',
       });
