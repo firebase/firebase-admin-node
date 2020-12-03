@@ -56,8 +56,8 @@
   ],
   "types": "./lib/index.d.ts",
   "dependencies": {
-    "@firebase/database": "^0.6.10",
-    "@firebase/database-types": "^0.5.2",
+    "@firebase/database": "^0.8.1",
+    "@firebase/database-types": "^0.6.1",
     "@types/node": "^10.10.0",
     "dicer": "^0.3.0",
     "jsonwebtoken": "^8.5.1",
@@ -68,8 +68,8 @@
     "@google-cloud/storage": "^5.3.0"
   },
   "devDependencies": {
-    "@firebase/app": "^0.6.9",
-    "@firebase/auth": "^0.14.9",
+    "@firebase/app": "^0.6.13",
+    "@firebase/auth": "^0.15.2",
     "@firebase/auth-types": "^0.10.1",
     "@microsoft/api-extractor": "^7.11.2",
     "@types/bcrypt": "^2.0.0",
@@ -104,9 +104,9 @@
     "jsdom": "^15.0.0",
     "lodash": "^4.17.15",
     "minimist": "^1.2.0",
-    "mocha": "^5.2.0",
+    "mocha": "^8.0.0",
     "mz": "^2.7.0",
-    "nock": "^9.6.0",
+    "nock": "^13.0.0",
     "npm-run-all": "^4.1.5",
     "nyc": "^14.1.0",
     "request": "^2.75.0",
@@ -114,8 +114,8 @@
     "run-sequence": "^1.1.5",
     "sinon": "^9.0.0",
     "sinon-chai": "^3.0.0",
-    "ts-node": "^3.3.0",
-    "typedoc": "^0.15.0",
+    "ts-node": "^9.0.0",
+    "typedoc": "^0.19.2",
     "typescript": "^3.7.3",
     "yargs": "^16.0.0"
   }
