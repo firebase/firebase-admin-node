@@ -23,6 +23,15 @@ export interface ServiceAccount {
 }
 
 /**
+ * Interface matching downloadable serviceAccount.json
+ */
+export interface ServiceAccountJson {
+  project_id?: string;
+  client_email?: string;
+  private_key?: string;
+}
+
+/**
  * Interface for Google OAuth 2.0 access tokens.
  */
 export interface GoogleOAuthAccessToken {
@@ -137,7 +146,7 @@ export namespace credential {
    *   provided service account that can be used to initialize an app.
    */
   export declare function cert(
-    serviceAccountPathOrObject: string | ServiceAccount, httpAgent?: Agent): Credential;
+    serviceAccountPathOrObject: string | ServiceAccount | ServiceAccountJson, httpAgent?: Agent): Credential;
 
   /**
    * Returns a credential created from the provided refresh token that grants

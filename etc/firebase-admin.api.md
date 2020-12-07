@@ -395,7 +395,7 @@ export namespace auth {
 // @public (undocumented)
 export namespace credential {
     export function applicationDefault(httpAgent?: Agent): Credential;
-    export function cert(serviceAccountPathOrObject: string | ServiceAccount, httpAgent?: Agent): Credential;
+    export function cert(serviceAccountPathOrObject: string | ServiceAccount | ServiceAccountJson, httpAgent?: Agent): Credential;
     export interface Credential {
         getAccessToken(): Promise<GoogleOAuthAccessToken>;
     }
@@ -1042,12 +1042,22 @@ export namespace securityRules {
 
 // @public (undocumented)
 export interface ServiceAccount {
-    // (undocumented)
-    clientEmail?: string;
-    // (undocumented)
-    privateKey?: string;
-    // (undocumented)
-    projectId?: string;
+  // (undocumented)
+  clientEmail?: string;
+  // (undocumented)
+  privateKey?: string;
+  // (undocumented)
+  projectId?: string;
+}
+
+// @public (undocumented)
+export interface ServiceAccountJson {
+  // (undocumented)
+  client_email?: string;
+  // (undocumented)
+  private_key?: string;
+  // (undocumented)
+  project_id?: string;
 }
 
 // @public
