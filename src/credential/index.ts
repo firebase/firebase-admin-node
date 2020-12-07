@@ -22,9 +22,6 @@ export interface ServiceAccount {
   privateKey?: string;
 }
 
-/**
- * Interface matching downloadable serviceAccount.json
- */
 export interface ServiceAccountJson {
   project_id?: string;
   client_email?: string;
