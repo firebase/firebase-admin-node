@@ -1042,22 +1042,22 @@ export namespace securityRules {
 
 // @public (undocumented)
 export interface ServiceAccount {
-  // (undocumented)
-  clientEmail?: string;
-  // (undocumented)
-  privateKey?: string;
-  // (undocumented)
-  projectId?: string;
+    // (undocumented)
+    clientEmail?: string;
+    // (undocumented)
+    privateKey?: string;
+    // (undocumented)
+    projectId?: string;
 }
 
 // @public (undocumented)
 export interface ServiceAccountJson {
-  // (undocumented)
-  client_email?: string;
-  // (undocumented)
-  private_key?: string;
-  // (undocumented)
-  project_id?: string;
+    // (undocumented)
+    client_email?: string;
+    // (undocumented)
+    private_key?: string;
+    // (undocumented)
+    project_id?: string;
 }
 
 // @public
