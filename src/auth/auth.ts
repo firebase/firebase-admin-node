@@ -197,22 +197,22 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
    *
    * @param providerId The provider ID, for example, "google.com" for the
    *   Google provider.
-   * @param providerUid The user identifier for the given provider.
+   * @param uid The user identifier for the given provider.
    *
    * @return A promise fulfilled with the user data corresponding to the
    *   given provider id.
    */
-  public getUserByProviderUid(providerId: string, providerUid: string): Promise<UserRecord> {
+  public getUserByProviderUid(providerId: string, uid: string): Promise<UserRecord> {
     // Although we don't really advertise it, we want to also handle
     // non-federated idps with this call. So if we detect one of them, we'll
     // reroute this request appropriately.
     if (providerId === 'phone') {
-      return this.getUserByPhoneNumber(providerUid);
+      return this.getUserByPhoneNumber(uid);
     } else if (providerId === 'email') {
-      return this.getUserByEmail(providerUid);
+      return this.getUserByEmail(uid);
     }
 
-    return this.authRequestHandler.getAccountInfoByFederatedUid(providerId, providerUid)
+    return this.authRequestHandler.getAccountInfoByFederatedUid(providerId, uid)
       .then((response: any) => {
         // Returns the user record populated with server response.
         return new UserRecord(response.users[0]);

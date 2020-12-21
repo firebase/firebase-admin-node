@@ -635,7 +635,7 @@ describe('admin.auth', () => {
       .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
   });
 
-  it('getUserByProviderUid() fails when called with a non-existing federated id', () => {
+  it('getUserByProviderUid() fails when called with a non-existing provider id', () => {
     return admin.auth().getUserByProviderUid('google.com', nonexistentUid)
       .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
   });
