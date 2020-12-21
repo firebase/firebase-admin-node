@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,15 +15,15 @@
  * limitations under the License.
  */
 
-import {FirebaseApp} from '../firebase-app';
-import {AppErrorCodes, FirebaseAppError} from './error';
+import { FirebaseApp } from '../firebase-app';
+import { AppErrorCodes, FirebaseAppError } from './error';
 import * as validator from './validator';
 
 import http = require('http');
 import https = require('https');
 import url = require('url');
-import {EventEmitter} from 'events';
-import {Readable} from 'stream';
+import { EventEmitter } from 'events';
+import { Readable } from 'stream';
 import * as zlibmod from 'zlib';
 
 /** Http method type definition. */
@@ -213,7 +214,7 @@ export function defaultRetryConfig(): RetryConfig {
  *
  * @param retry The configuration to be validated.
  */
-function validateRetryConfig(retry: RetryConfig) {
+function validateRetryConfig(retry: RetryConfig): void {
   if (!validator.isNumber(retry.maxRetries) || retry.maxRetries < 0) {
     throw new FirebaseAppError(
       AppErrorCodes.INVALID_ARGUMENT, 'maxRetries must be a non-negative integer');
@@ -274,7 +275,7 @@ export class HttpClient {
    * @param {number} retryAttempts Number of retries performed up to now.
    * @return {Promise<HttpResponse>} A promise that resolves with the response details.
    */
-  private sendWithRetry(config: HttpRequestConfig, retryAttempts: number = 0): Promise<HttpResponse> {
+  private sendWithRetry(config: HttpRequestConfig, retryAttempts = 0): Promise<HttpResponse> {
     return AsyncHttpCall.invoke(config)
       .then((resp) => {
         return this.createHttpResponse(resp);
@@ -481,7 +482,7 @@ class AsyncHttpCall {
     }
   }
 
-  private execute() {
+  private execute(): void {
     const transport: any = this.options.protocol === 'https:' ? https : http;
     const req: http.ClientRequest = transport.request(this.options, (res: http.IncomingMessage) => {
       this.handleResponse(res, req);
@@ -496,11 +497,15 @@ class AsyncHttpCall {
     });
 
     const timeout: number | undefined = this.config.timeout;
+    const timeoutCallback: () => void = () => {
+      req.abort();
+      this.rejectWithError(`timeout of ${timeout}ms exceeded`, 'ETIMEDOUT', req);
+    };
     if (timeout) {
       // Listen to timeouts and throw an error.
-      req.setTimeout(timeout, () => {
-        req.abort();
-        this.rejectWithError(`timeout of ${timeout}ms exceeded`, 'ETIMEDOUT', req);
+      req.setTimeout(timeout, timeoutCallback);
+      req.on('socket', (socket) => {
+        socket.setTimeout(timeout, timeoutCallback);
       });
     }
 
@@ -508,15 +513,15 @@ class AsyncHttpCall {
     req.end(this.entity);
   }
 
-  private handleResponse(res: http.IncomingMessage, req: http.ClientRequest) {
+  private handleResponse(res: http.IncomingMessage, req: http.ClientRequest): void {
     if (req.aborted) {
       return;
     }
 
     if (!res.statusCode) {
       throw new FirebaseAppError(
-          AppErrorCodes.INTERNAL_ERROR,
-          'Expected a statusCode on the response from a ClientRequest');
+        AppErrorCodes.INTERNAL_ERROR,
+        'Expected a statusCode on the response from a ClientRequest');
     }
 
     const response: LowLevelResponse = {
@@ -572,7 +577,7 @@ class AsyncHttpCall {
     const encodings = ['gzip', 'compress', 'deflate'];
     if (res.headers['content-encoding'] && encodings.indexOf(res.headers['content-encoding']) !== -1) {
       // Add the unzipper to the body stream processing pipeline.
-      const zlib: typeof zlibmod = require('zlib');
+      const zlib: typeof zlibmod = require('zlib'); // eslint-disable-line @typescript-eslint/no-var-requires
       respStream = respStream.pipe(zlib.createUnzip());
       // Remove the content-encoding in order to not confuse downstream operations.
       delete res.headers['content-encoding'];
@@ -581,10 +586,10 @@ class AsyncHttpCall {
   }
 
   private handleMultipartResponse(
-    response: LowLevelResponse, respStream: Readable, boundary: string) {
+    response: LowLevelResponse, respStream: Readable, boundary: string): void {
 
-    const dicer = require('dicer');
-    const multipartParser = new dicer({boundary});
+    const dicer = require('dicer'); // eslint-disable-line @typescript-eslint/no-var-requires
+    const multipartParser = new dicer({ boundary });
     const responseBuffer: Buffer[] = [];
     multipartParser.on('part', (part: any) => {
       const tempBuffers: Buffer[] = [];
@@ -607,7 +612,7 @@ class AsyncHttpCall {
     respStream.pipe(multipartParser);
   }
 
-  private handleRegularResponse(response: LowLevelResponse, respStream: Readable) {
+  private handleRegularResponse(response: LowLevelResponse, respStream: Readable): void {
     const responseBuffer: Buffer[] = [];
     respStream.on('data', (chunk: Buffer) => {
       responseBuffer.push(chunk);
@@ -631,7 +636,7 @@ class AsyncHttpCall {
    * Finalizes the current HTTP call in-flight by either resolving or rejecting the associated
    * promise. In the event of an error, adds additional useful information to the returned error.
    */
-  private finalizeResponse(response: LowLevelResponse) {
+  private finalizeResponse(response: LowLevelResponse): void {
     if (response.status >= 200 && response.status < 300) {
       this.resolve(response);
     } else {
@@ -652,7 +657,7 @@ class AsyncHttpCall {
     message: string,
     code?: string | null,
     request?: http.ClientRequest | null,
-    response?: LowLevelResponse) {
+    response?: LowLevelResponse): void {
 
     const error = new Error(message);
     this.enhanceAndReject(error, code, request, response);
@@ -662,7 +667,7 @@ class AsyncHttpCall {
     error: any,
     code?: string | null,
     request?: http.ClientRequest | null,
-    response?: LowLevelResponse) {
+    response?: LowLevelResponse): void {
 
     this.reject(this.enhanceError(error, code, request, response));
   }
@@ -778,7 +783,7 @@ class HttpRequestConfigImpl implements HttpRequestConfig {
     const parsedUrl = new url.URL(fullUrl);
     const dataObj = this.data as {[key: string]: string};
     for (const key in dataObj) {
-      if (dataObj.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(dataObj, key)) {
         parsedUrl.searchParams.append(key, dataObj[key]);
       }
     }
@@ -810,17 +815,24 @@ export class AuthorizedHttpClient extends HttpClient {
   }
 
   public send(request: HttpRequestConfig): Promise<HttpResponse> {
-    return this.app.INTERNAL.getToken().then((accessTokenObj) => {
+    return this.getToken().then((token) => {
       const requestCopy = Object.assign({}, request);
       requestCopy.headers = Object.assign({}, request.headers);
       const authHeader = 'Authorization';
-      requestCopy.headers[authHeader] = `Bearer ${accessTokenObj.accessToken}`;
+      requestCopy.headers[authHeader] = `Bearer ${token}`;
 
       if (!requestCopy.httpAgent && this.app.options.httpAgent) {
         requestCopy.httpAgent = this.app.options.httpAgent;
       }
       return super.send(requestCopy);
     });
+  }
+
+  protected getToken(): Promise<string> {
+    return this.app.INTERNAL.getToken()
+      .then((accessTokenObj) => {
+        return accessTokenObj.accessToken;
+      });
   }
 }
 
@@ -837,7 +849,7 @@ export class ApiSettings {
 
   constructor(private endpoint: string, private httpMethod: HttpMethod = 'POST') {
     this.setRequestValidator(null)
-        .setResponseValidator(null);
+      .setResponseValidator(null);
   }
 
   /** @return {string} The backend API endpoint. */
@@ -855,7 +867,7 @@ export class ApiSettings {
    * @return {ApiSettings} The current API settings instance.
    */
   public setRequestValidator(requestValidator: ApiCallbackFunction | null): ApiSettings {
-    const nullFunction: (_: object) => void = (_: object) => undefined;
+    const nullFunction: ApiCallbackFunction = () => undefined;
     this.requestValidator = requestValidator || nullFunction;
     return this;
   }
@@ -870,7 +882,7 @@ export class ApiSettings {
    * @return {ApiSettings} The current API settings instance.
    */
   public setResponseValidator(responseValidator: ApiCallbackFunction | null): ApiSettings {
-    const nullFunction: (_: object) => void = (_: object) => undefined;
+    const nullFunction: ApiCallbackFunction = () => undefined;
     this.responseValidator = responseValidator || nullFunction;
     return this;
   }
@@ -905,15 +917,15 @@ export class ApiSettings {
  *     });
  * ```
  */
-export class ExponentialBackoffPoller extends EventEmitter {
+export class ExponentialBackoffPoller<T> extends EventEmitter {
   private numTries = 0;
   private completed = false;
 
   private masterTimer: NodeJS.Timer;
   private repollTimer: NodeJS.Timer;
 
-  private pollCallback?: () => Promise<object>;
-  private resolve: (result: object) => void;
+  private pollCallback?: () => Promise<T>;
+  private resolve: (result: T) => void;
   private reject: (err: object) => void;
 
   constructor(
@@ -926,13 +938,13 @@ export class ExponentialBackoffPoller extends EventEmitter {
   /**
    * Poll the provided callback with exponential backoff.
    *
-   * @param {() => Promise<object>} callback The callback to be called for each poll. If the
+   * @param {() => Promise<T>} callback The callback to be called for each poll. If the
    *     callback resolves to a falsey value, polling will continue. Otherwise, the truthy
    *     resolution will be used to resolve the promise returned by this method.
-   * @return {Promise<object>} A Promise which resolves to the truthy value returned by the provided
+   * @return {Promise<T>} A Promise which resolves to the truthy value returned by the provided
    *     callback when polling is complete.
    */
-  public poll(callback: () => Promise<object>): Promise<object> {
+  public poll(callback: () => Promise<T>): Promise<T> {
     if (this.pollCallback) {
       throw new Error('poll() can only be called once per instance of ExponentialBackoffPoller');
     }
@@ -949,7 +961,7 @@ export class ExponentialBackoffPoller extends EventEmitter {
       this.reject(new Error('ExponentialBackoffPoller deadline exceeded - Master timeout reached'));
     }, this.masterTimeoutMillis);
 
-    return new Promise<object>((resolve, reject) => {
+    return new Promise<T>((resolve, reject) => {
       this.resolve = resolve;
       this.reject = reject;
       this.repoll();
@@ -958,29 +970,29 @@ export class ExponentialBackoffPoller extends EventEmitter {
 
   private repoll(): void {
     this.pollCallback!()
-        .then((result) => {
-          if (this.completed) {
-            return;
-          }
+      .then((result) => {
+        if (this.completed) {
+          return;
+        }
 
-          if (!result) {
-            this.repollTimer =
+        if (!result) {
+          this.repollTimer =
                 setTimeout(() => this.emit('poll'), this.getPollingDelayMillis());
-            this.numTries++;
-            return;
-          }
+          this.numTries++;
+          return;
+        }
 
-          this.markCompleted();
-          this.resolve(result);
-        })
-        .catch((err) => {
-          if (this.completed) {
-            return;
-          }
+        this.markCompleted();
+        this.resolve(result);
+      })
+      .catch((err) => {
+        if (this.completed) {
+          return;
+        }
 
-          this.markCompleted();
-          this.reject(err);
-        });
+        this.markCompleted();
+        this.reject(err);
+      });
   }
 
   private getPollingDelayMillis(): number {

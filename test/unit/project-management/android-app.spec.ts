@@ -21,11 +21,16 @@ import * as _ from 'lodash';
 import * as sinon from 'sinon';
 import { FirebaseApp } from '../../../src/firebase-app';
 import { AndroidApp, ShaCertificate } from '../../../src/project-management/android-app';
-import { ProjectManagementRequestHandler } from '../../../src/project-management/project-management-api-request';
+import {
+  ProjectManagementRequestHandler
+} from '../../../src/project-management/project-management-api-request-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { FirebaseProjectManagementError } from '../../../src/utils/error';
 import * as mocks from '../../resources/mocks';
-import { AndroidAppMetadata, AppPlatform } from '../../../src/project-management/app-metadata';
+import { projectManagement } from '../../../src/project-management/index';
+
+import AndroidAppMetadata = projectManagement.AndroidAppMetadata;
+import AppPlatform = projectManagement.AppPlatform;
 
 const expect = chai.expect;
 
@@ -100,22 +105,22 @@ describe('AndroidApp', () => {
 
     it('should propagate API errors', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getResource')
-          .returns(Promise.reject(EXPECTED_ERROR));
+        .stub(ProjectManagementRequestHandler.prototype, 'getResource')
+        .returns(Promise.reject(EXPECTED_ERROR));
       stubs.push(stub);
       return androidApp.getMetadata().should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
     });
 
     it('should throw with null API response', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getResource')
-          .returns(Promise.resolve(null));
+        .stub(ProjectManagementRequestHandler.prototype, 'getResource')
+        .resolves(null as any);
       stubs.push(stub);
       return androidApp.getMetadata()
-          .should.eventually.be.rejected
-          .and.have.property(
-              'message',
-              'getMetadata()\'s responseData must be a non-null object. Response data: null');
+        .should.eventually.be.rejected
+        .and.have.property(
+          'message',
+          'getMetadata()\'s responseData must be a non-null object. Response data: null');
     });
 
     const requiredFieldsList = ['name', 'appId', 'projectId', 'packageName'];
@@ -125,22 +130,22 @@ describe('AndroidApp', () => {
         delete partialApiResponse[requiredField];
 
         const stub = sinon
-            .stub(ProjectManagementRequestHandler.prototype, 'getResource')
-            .returns(Promise.resolve(partialApiResponse));
+          .stub(ProjectManagementRequestHandler.prototype, 'getResource')
+          .returns(Promise.resolve(partialApiResponse));
         stubs.push(stub);
         return androidApp.getMetadata()
-            .should.eventually.be.rejected
-            .and.have.property(
-                'message',
-                `getMetadata()\'s responseData.${requiredField} must be a non-empty string. `
+          .should.eventually.be.rejected
+          .and.have.property(
+            'message',
+            `getMetadata()'s responseData.${requiredField} must be a non-empty string. `
                     + `Response data: ${JSON.stringify(partialApiResponse, null, 2)}`);
       });
     });
 
     it('should resolve with metadata on success', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getResource')
-          .returns(Promise.resolve(VALID_ANDROID_APP_METADATA_API_RESPONSE));
+        .stub(ProjectManagementRequestHandler.prototype, 'getResource')
+        .returns(Promise.resolve(VALID_ANDROID_APP_METADATA_API_RESPONSE));
       stubs.push(stub);
       return androidApp.getMetadata().should.eventually.deep.equal(VALID_ANDROID_APP_METADATA);
     });
@@ -151,17 +156,17 @@ describe('AndroidApp', () => {
 
     it('should propagate API errors', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'setDisplayName')
-          .returns(Promise.reject(EXPECTED_ERROR));
+        .stub(ProjectManagementRequestHandler.prototype, 'setDisplayName')
+        .returns(Promise.reject(EXPECTED_ERROR));
       stubs.push(stub);
       return androidApp.setDisplayName(newDisplayName)
-          .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
     });
 
     it('should resolve on success', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'setDisplayName')
-          .returns(Promise.resolve());
+        .stub(ProjectManagementRequestHandler.prototype, 'setDisplayName')
+        .returns(Promise.resolve());
       stubs.push(stub);
       return androidApp.setDisplayName(newDisplayName).should.eventually.be.fulfilled;
     });
@@ -190,23 +195,23 @@ describe('AndroidApp', () => {
 
     it('should propagate API errors', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getAndroidShaCertificates')
-          .returns(Promise.reject(EXPECTED_ERROR));
+        .stub(ProjectManagementRequestHandler.prototype, 'getAndroidShaCertificates')
+        .returns(Promise.reject(EXPECTED_ERROR));
       stubs.push(stub);
       return androidApp.getShaCertificates()
-          .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
     });
 
     it('should throw with null API response', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getAndroidShaCertificates')
-          .returns(Promise.resolve(null));
+        .stub(ProjectManagementRequestHandler.prototype, 'getAndroidShaCertificates')
+        .resolves(null as any);
       stubs.push(stub);
       return androidApp.getShaCertificates()
-          .should.eventually.be.rejected
-          .and.have.property(
-              'message',
-              'getShaCertificates()\'s responseData must be a non-null object. Response data: '
+        .should.eventually.be.rejected
+        .and.have.property(
+          'message',
+          'getShaCertificates()\'s responseData must be a non-null object. Response data: '
                   + 'null');
     });
 
@@ -214,25 +219,25 @@ describe('AndroidApp', () => {
       const partialApiResponse = {};
 
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getAndroidShaCertificates')
-          .returns(Promise.resolve(partialApiResponse));
+        .stub(ProjectManagementRequestHandler.prototype, 'getAndroidShaCertificates')
+        .returns(Promise.resolve(partialApiResponse));
       stubs.push(stub);
       return androidApp.getShaCertificates()
-          .should.eventually.deep.equal([]);
+        .should.eventually.deep.equal([]);
     });
 
     it('should throw when API response has non-array "certificates" field', () => {
       const partialApiResponse = { certificates: 'none' };
 
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getAndroidShaCertificates')
-          .returns(Promise.resolve(partialApiResponse));
+        .stub(ProjectManagementRequestHandler.prototype, 'getAndroidShaCertificates')
+        .returns(Promise.resolve(partialApiResponse));
       stubs.push(stub);
       return androidApp.getShaCertificates()
-          .should.eventually.be.rejected
-          .and.have.property(
-              'message',
-              '"certificates" field must be present in the getShaCertificates() response data. '
+        .should.eventually.be.rejected
+        .and.have.property(
+          'message',
+          '"certificates" field must be present in the getShaCertificates() response data. '
                   + 'Response data: ' + JSON.stringify(partialApiResponse, null, 2));
     });
 
@@ -243,14 +248,14 @@ describe('AndroidApp', () => {
         delete partialApiResponse.certificates[1][requiredField];
 
         const stub = sinon
-            .stub(ProjectManagementRequestHandler.prototype, 'getAndroidShaCertificates')
-            .returns(Promise.resolve(partialApiResponse));
+          .stub(ProjectManagementRequestHandler.prototype, 'getAndroidShaCertificates')
+          .returns(Promise.resolve(partialApiResponse));
         stubs.push(stub);
         return androidApp.getShaCertificates()
-            .should.eventually.be.rejected
-            .and.have.property(
-                'message',
-                `getShaCertificates()\'s responseData.certificates[].${requiredField} must be a `
+          .should.eventually.be.rejected
+          .and.have.property(
+            'message',
+            `getShaCertificates()'s responseData.certificates[].${requiredField} must be a `
                     + 'non-empty string. Response data: '
                     + JSON.stringify(partialApiResponse, null, 2));
       });
@@ -258,11 +263,11 @@ describe('AndroidApp', () => {
 
     it('should resolve with metadata on success', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getAndroidShaCertificates')
-          .returns(Promise.resolve(VALID_ANDROID_CERTS_API_RESPONSE));
+        .stub(ProjectManagementRequestHandler.prototype, 'getAndroidShaCertificates')
+        .returns(Promise.resolve(VALID_ANDROID_CERTS_API_RESPONSE));
       stubs.push(stub);
       return androidApp.getShaCertificates()
-          .should.eventually.deep.equal(VALID_ANDROID_CERTS);
+        .should.eventually.deep.equal(VALID_ANDROID_CERTS);
     });
   });
 
@@ -271,17 +276,17 @@ describe('AndroidApp', () => {
 
     it('should propagate API errors', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'addAndroidShaCertificate')
-          .returns(Promise.reject(EXPECTED_ERROR));
+        .stub(ProjectManagementRequestHandler.prototype, 'addAndroidShaCertificate')
+        .returns(Promise.reject(EXPECTED_ERROR));
       stubs.push(stub);
       return androidApp.addShaCertificate(certificateToAdd)
-          .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
     });
 
     it('should resolve on success', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'addAndroidShaCertificate')
-          .returns(Promise.resolve());
+        .stub(ProjectManagementRequestHandler.prototype, 'addAndroidShaCertificate')
+        .returns(Promise.resolve());
       stubs.push(stub);
       return androidApp.addShaCertificate(certificateToAdd).should.eventually.be.fulfilled;
     });
@@ -294,28 +299,28 @@ describe('AndroidApp', () => {
 
     it('should propagate API errors', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'deleteResource')
-          .returns(Promise.reject(EXPECTED_ERROR));
+        .stub(ProjectManagementRequestHandler.prototype, 'deleteResource')
+        .returns(Promise.reject(EXPECTED_ERROR));
       stubs.push(stub);
       return androidApp
-          .deleteShaCertificate(certificateToDeleteWithResourceName)
-          .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+        .deleteShaCertificate(certificateToDeleteWithResourceName)
+        .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
     });
 
     it('should fail on certificate without resourceName', () => {
       expect(() => androidApp.deleteShaCertificate(certificateToDelete))
-          .to.throw(FirebaseProjectManagementError)
-          .with.property('code', 'project-management/invalid-argument');
+        .to.throw(FirebaseProjectManagementError)
+        .with.property('code', 'project-management/invalid-argument');
     });
 
     it('should resolve on success', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'deleteResource')
-          .returns(Promise.resolve());
+        .stub(ProjectManagementRequestHandler.prototype, 'deleteResource')
+        .returns(Promise.resolve());
       stubs.push(stub);
       return androidApp
-          .deleteShaCertificate(certificateToDeleteWithResourceName)
-          .should.eventually.be.fulfilled;
+        .deleteShaCertificate(certificateToDeleteWithResourceName)
+        .should.eventually.be.fulfilled;
     });
   });
 
@@ -327,22 +332,22 @@ describe('AndroidApp', () => {
 
     it('should propagate API errors', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getConfig')
-          .returns(Promise.reject(EXPECTED_ERROR));
+        .stub(ProjectManagementRequestHandler.prototype, 'getConfig')
+        .returns(Promise.reject(EXPECTED_ERROR));
       stubs.push(stub);
       return androidApp.getConfig().should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
     });
 
     it('should throw with null API response', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getConfig')
-          .returns(Promise.resolve(null));
+        .stub(ProjectManagementRequestHandler.prototype, 'getConfig')
+        .resolves(null as any);
       stubs.push(stub);
       return androidApp.getConfig()
-          .should.eventually.be.rejected
-          .and.have.property(
-              'message',
-              'getConfig()\'s responseData must be a non-null object. Response data: null');
+        .should.eventually.be.rejected
+        .and.have.property(
+          'message',
+          'getConfig()\'s responseData must be a non-null object. Response data: null');
     });
 
     it('should throw with non-base64 response.configFileContents', () => {
@@ -350,21 +355,21 @@ describe('AndroidApp', () => {
       apiResponse.configFileContents = '1' + apiResponse.configFileContents;
 
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getConfig')
-          .returns(Promise.resolve(apiResponse));
+        .stub(ProjectManagementRequestHandler.prototype, 'getConfig')
+        .returns(Promise.resolve(apiResponse));
       stubs.push(stub);
       return androidApp.getConfig()
-          .should.eventually.be.rejected
-          .and.have.property(
-              'message',
-              `getConfig()\'s responseData.configFileContents must be a base64 string. `
+        .should.eventually.be.rejected
+        .and.have.property(
+          'message',
+          'getConfig()\'s responseData.configFileContents must be a base64 string. '
                   + `Response data: ${JSON.stringify(apiResponse, null, 2)}`);
     });
 
     it('should resolve with metadata on success', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getConfig')
-          .returns(Promise.resolve(VALID_ANDROID_CONFIG_API_RESPONSE));
+        .stub(ProjectManagementRequestHandler.prototype, 'getConfig')
+        .returns(Promise.resolve(VALID_ANDROID_CONFIG_API_RESPONSE));
       stubs.push(stub);
       return androidApp.getConfig().should.eventually.deep.equal(VALID_ANDROID_CONFIG);
     });

@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,10 +26,10 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import * as mocks from '../../resources/mocks';
 import {
-  BLACKLISTED_CLAIMS, FirebaseTokenGenerator, ServiceAccountSigner, IAMSigner,
+  BLACKLISTED_CLAIMS, FirebaseTokenGenerator, ServiceAccountSigner, IAMSigner, EmulatedSigner
 } from '../../../src/auth/token-generator';
 
-import { ServiceAccountCredential } from '../../../src/auth/credential';
+import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
 import { AuthorizedHttpClient, HttpClient } from '../../../src/utils/api-request';
 import { FirebaseApp } from '../../../src/firebase-app';
 import * as utils from '../utils';
@@ -84,6 +85,7 @@ describe('CryptoSigner', () => {
       const payload = Buffer.from('test');
       const cert = new ServiceAccountCredential(mocks.certificateObject);
 
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const crypto = require('crypto');
       const rsa = crypto.createSign('RSA-SHA256');
       rsa.update(payload);
@@ -126,13 +128,13 @@ describe('CryptoSigner', () => {
     });
 
     describe('explicit service account ID', () => {
-      const response = {signature: Buffer.from('testsignature').toString('base64')};
+      const response = { signedBlob: Buffer.from('testsignature').toString('base64') };
       const input = Buffer.from('input');
       const signRequest = {
         method: 'POST',
-        url: `https://iam.googleapis.com/v1/projects/-/serviceAccounts/test-service-account:signBlob`,
-        headers: {Authorization: `Bearer ${mockAccessToken}`},
-        data: {bytesToSign: input.toString('base64')},
+        url: 'https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/test-service-account:signBlob',
+        headers: { Authorization: `Bearer ${mockAccessToken}` },
+        data: { payload: input.toString('base64') },
       };
       let stub: sinon.SinonStub;
 
@@ -146,7 +148,7 @@ describe('CryptoSigner', () => {
         const requestHandler = new AuthorizedHttpClient(mockApp);
         const signer = new IAMSigner(requestHandler, 'test-service-account');
         return signer.sign(input).then((signature) => {
-          expect(signature.toString('base64')).to.equal(response.signature);
+          expect(signature.toString('base64')).to.equal(response.signedBlob);
           expect(stub).to.have.been.calledOnce.and.calledWith(signRequest);
         });
       });
@@ -178,17 +180,17 @@ describe('CryptoSigner', () => {
 
     describe('auto discovered service account', () => {
       const input = Buffer.from('input');
-      const response = {signature: Buffer.from('testsignature').toString('base64')};
+      const response = { signedBlob: Buffer.from('testsignature').toString('base64') };
       const metadataRequest = {
         method: 'GET',
-        url: `http://metadata/computeMetadata/v1/instance/service-accounts/default/email`,
-        headers: {'Metadata-Flavor': 'Google'},
+        url: 'http://metadata/computeMetadata/v1/instance/service-accounts/default/email',
+        headers: { 'Metadata-Flavor': 'Google' },
       };
       const signRequest = {
         method: 'POST',
-        url: `https://iam.googleapis.com/v1/projects/-/serviceAccounts/discovered-service-account:signBlob`,
-        headers: {Authorization: `Bearer ${mockAccessToken}`},
-        data: {bytesToSign: input.toString('base64')},
+        url: 'https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/discovered-service-account:signBlob',
+        headers: { Authorization: `Bearer ${mockAccessToken}` },
+        data: { payload: input.toString('base64') },
       };
       let stub: sinon.SinonStub;
 
@@ -203,7 +205,7 @@ describe('CryptoSigner', () => {
         const requestHandler = new AuthorizedHttpClient(mockApp);
         const signer = new IAMSigner(requestHandler);
         return signer.sign(input).then((signature) => {
-          expect(signature.toString('base64')).to.equal(response.signature);
+          expect(signature.toString('base64')).to.equal(response.signedBlob);
           expect(stub).to.have.been.calledTwice;
           expect(stub.getCall(0).args[0]).to.deep.equal(metadataRequest);
           expect(stub.getCall(1).args[0]).to.deep.equal(signRequest);
@@ -307,6 +309,29 @@ describe('FirebaseTokenGenerator', () => {
     tokenGenerator: new FirebaseTokenGenerator(new ServiceAccountSigner(cert), tenantId),
   }];
 
+  describe('Emulator', () => {
+    const signer = new EmulatedSigner();
+    const tokenGenerator = new FirebaseTokenGenerator(signer);
+
+    it('should generate a valid unsigned token', async () => {
+      const uid = 'uid123';
+      const claims = { foo: 'bar' };
+      const token = await tokenGenerator.createCustomToken(uid, claims);
+
+      // Check that verify doesn't throw
+      // Note: the types for jsonwebtoken are wrong so we have to disguise the 'null'
+      jwt.verify(token, '', { algorithms: ['none'] });
+
+      // Decode and check all three segments
+      const { header, payload, signature } = jwt.decode(token, { complete: true }) as { [key: string]: any };
+      expect(header).to.deep.equal({ alg: 'none', typ: 'JWT' });
+      expect(payload['uid']).to.equal(uid);
+      expect(payload['claims']).to.deep.equal(claims);
+      expect(signature).to.equal('');
+    });
+
+  });
+
   tokenGeneratorConfigs.forEach((tokenGeneratorConfig) => {
     describe(tokenGeneratorConfig.name, () => {
       const tokenGenerator = tokenGeneratorConfig.tokenGenerator;
@@ -372,7 +397,7 @@ describe('FirebaseTokenGenerator', () => {
       });
 
       it('should be fulfilled given a valid uid and empty object developer claims', () => {
-         return tokenGenerator.createCustomToken(mocks.uid, {});
+        return tokenGenerator.createCustomToken(mocks.uid, {});
       });
 
       it('should be fulfilled given a valid uid and valid developer claims', () => {
@@ -400,6 +425,7 @@ describe('FirebaseTokenGenerator', () => {
             };
 
             if (tokenGenerator.tenantId) {
+              // eslint-disable-next-line @typescript-eslint/camelcase
               expected.tenant_id = tokenGenerator.tenantId;
             }
 
@@ -428,6 +454,7 @@ describe('FirebaseTokenGenerator', () => {
             };
 
             if (tokenGenerator.tenantId) {
+              // eslint-disable-next-line @typescript-eslint/camelcase
               expected.tenant_id = tokenGenerator.tenantId;
             }
 

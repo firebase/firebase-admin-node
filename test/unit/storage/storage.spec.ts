@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,11 +18,11 @@
 'use strict';
 
 import * as _ from 'lodash';
-import {expect} from 'chai';
+import { expect } from 'chai';
 
 import * as mocks from '../../resources/mocks';
-import {FirebaseApp} from '../../../src/firebase-app';
-import {Storage} from '../../../src/storage/storage';
+import { FirebaseApp } from '../../../src/firebase-app';
+import { Storage } from '../../../src/storage/storage';
 
 describe('Storage', () => {
   let mockApp: FirebaseApp;
@@ -90,14 +91,14 @@ describe('Storage', () => {
     const expectedError = 'Bucket name not specified or invalid. Specify a valid bucket name via ' +
         'the storageBucket option when initializing the app, or specify the bucket name ' +
         'explicitly when calling the getBucket() method.';
-    const invalidNames = [null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1}, _.noop];
+    const invalidNames = [null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
     invalidNames.forEach((invalidName) => {
-        it(`should throw given invalid bucket name: ${ JSON.stringify(invalidName) }`, () => {
-            expect(() => {
-                const bucketAny: any = storage.bucket;
-                bucketAny(invalidName);
-            }).to.throw(expectedError);
-        });
+      it(`should throw given invalid bucket name: ${ JSON.stringify(invalidName) }`, () => {
+        expect(() => {
+          const bucketAny: any = storage.bucket;
+          bucketAny(invalidName);
+        }).to.throw(expectedError);
+      });
     });
   });
 

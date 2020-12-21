@@ -19,8 +19,8 @@ import * as chai from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import {ActionCodeSettingsBuilder} from '../../../src/auth/action-code-settings-builder';
-import {AuthClientErrorCode} from '../../../src/utils/error';
+import { ActionCodeSettingsBuilder } from '../../../src/auth/action-code-settings-builder';
+import { AuthClientErrorCode } from '../../../src/utils/error';
 
 
 chai.should();
@@ -139,7 +139,7 @@ describe('ActionCodeSettingsBuilder', () => {
           return new ActionCodeSettingsBuilder({
             url: 'https://www.example.com/path/file?a=1&b=2',
             handleCodeInApp: true,
-            iOS: {bundleId},
+            iOS: { bundleId },
           } as any);
         }).to.throw('"ActionCodeSettings.iOS.bundleId" must be a valid non-empty string.');
       });
@@ -164,8 +164,8 @@ describe('ActionCodeSettingsBuilder', () => {
           url: 'https://www.example.com/path/file?a=1&b=2',
           handleCodeInApp: true,
           android: {},
-         } as any);
-       }).to.throw(AuthClientErrorCode.MISSING_ANDROID_PACKAGE_NAME.message);
+        } as any);
+      }).to.throw(AuthClientErrorCode.MISSING_ANDROID_PACKAGE_NAME.message);
     });
 
     const invalidPackageNames = [null, NaN, 0, 1, true, false, '', ['com.example.android'], _.noop];
@@ -175,7 +175,7 @@ describe('ActionCodeSettingsBuilder', () => {
           return new ActionCodeSettingsBuilder({
             url: 'https://www.example.com/path/file?a=1&b=2',
             handleCodeInApp: true,
-            android: {packageName},
+            android: { packageName },
           } as any);
         }).to.throw('"ActionCodeSettings.android.packageName" must be a valid non-empty string.');
       });

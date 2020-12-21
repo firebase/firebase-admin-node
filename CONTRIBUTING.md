@@ -87,7 +87,7 @@ information on using pull requests.
 
 ### Prerequisites
 
-1. Node.js 8.13.0 or higher.
+1. Node.js 10.10.0 or higher.
 2. NPM 5 or higher (NPM 6 recommended).
 3. Google Cloud SDK ([`gcloud`](https://cloud.google.com/sdk/downloads) utility)
 
@@ -155,13 +155,17 @@ Then set up your Firebase/GCP project as follows:
    Firebase Console. Select the "Sign-in method" tab, and enable the
    "Email/Password" sign-in method, including the Email link (passwordless
    sign-in) option.
-3. Enable the IAM API: Go to the
+3. Enable the Firebase ML API: Go to the
+   [Google Developers Console](
+   https://console.developers.google.com/apis/api/firebaseml.googleapis.com/overview)
+   and make sure your project is selected. If the API is not already enabled, click Enable.
+4. Enable the IAM API: Go to the
    [Google Cloud Platform Console](https://console.cloud.google.com) and make
    sure your Firebase/GCP project is selected. Select "APIs & Services >
    Dashboard" from the main menu, and click the "ENABLE APIS AND SERVICES"
    button. Search for and enable the "Identity and Access Management (IAM)
    API".
-4. Grant your service account the 'Firebase Authentication Admin' role. This is
+5. Grant your service account the 'Firebase Authentication Admin' role. This is
    required to ensure that exported user records contain the password hashes of
    the user accounts:
    1. Go to [Google Cloud Platform Console / IAM & admin](https://console.cloud.google.com/iam-admin).

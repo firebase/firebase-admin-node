@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,10 +15,21 @@
  * limitations under the License.
  */
 
-import {FirebaseApp, FirebaseAppOptions} from '../firebase-app';
-import {ServiceAccountCredential, ComputeEngineCredential} from '../auth/credential';
-
+import { app as _app } from '../firebase-namespace-api';
+import {
+  ServiceAccountCredential, ComputeEngineCredential
+} from '../credential/credential-internal';
 import * as validator from './validator';
+
+let sdkVersion: string;
+
+export function getSdkVersion(): string {
+  if (!sdkVersion) {
+    const { version } = require('../../package.json'); // eslint-disable-line @typescript-eslint/no-var-requires
+    sdkVersion = version;
+  }
+  return sdkVersion;
+}
 
 /**
  * Renames properties on an object given a mapping from old to new property names.
@@ -60,12 +72,12 @@ export function addReadonlyGetter(obj: object, prop: string, value: any): void {
  * specified in either the Firebase app options, credentials or the local environment.
  * Otherwise returns null.
  *
- * @param {FirebaseApp} app A Firebase app to get the project ID from.
+ * @param app A Firebase app to get the project ID from.
  *
- * @return {string} A project ID string or null.
+ * @return A project ID string or null.
  */
-export function getExplicitProjectId(app: FirebaseApp): string | null {
-  const options: FirebaseAppOptions = app.options;
+export function getExplicitProjectId(app: _app.App): string | null {
+  const options = app.options;
   if (validator.isNonEmptyString(options.projectId)) {
     return options.projectId;
   }
@@ -89,11 +101,11 @@ export function getExplicitProjectId(app: FirebaseApp): string | null {
  * configured, but the SDK has been initialized with ComputeEngineCredentials, this
  * method attempts to discover the project ID from the local metadata service.
  *
- * @param {FirebaseApp} app A Firebase app to get the project ID from.
+ * @param app A Firebase app to get the project ID from.
  *
- * @return {Promise<string | null>} A project ID string or null.
+ * @return A project ID string or null.
  */
-export function findProjectId(app: FirebaseApp): Promise<string | null> {
+export function findProjectId(app: _app.App): Promise<string | null> {
   const projectId = getExplicitProjectId(app);
   if (projectId) {
     return Promise.resolve(projectId);
@@ -132,8 +144,8 @@ export function formatString(str: string, params?: object): string {
   let formatted = str;
   Object.keys(params || {}).forEach((key) => {
     formatted = formatted.replace(
-        new RegExp('{' + key + '}', 'g'),
-        (params as {[key: string]: string})[key]);
+      new RegExp('{' + key + '}', 'g'),
+      (params as {[key: string]: string})[key]);
   });
   return formatted;
 }
@@ -142,23 +154,37 @@ export function formatString(str: string, params?: object): string {
  * Generates the update mask for the provided object.
  * Note this will ignore the last key with value undefined.
  *
- * @param {[key: string]: any} obj The object to generate the update mask for.
- * @return {Array<string>} The computed update mask list.
+ * @param obj The object to generate the update mask for.
+ * @param terminalPaths The optional map of keys for maximum paths to traverse.
+ *      Nested objects beyond that path will be ignored. This is useful for
+ *      keys with variable object values.
+ * @param root The path so far.
+ * @return The computed update mask list.
  */
-export function generateUpdateMask(obj: {[key: string]: any}): string[] {
+export function generateUpdateMask(
+  obj: any, terminalPaths: string[] = [], root = ''
+): string[] {
   const updateMask: string[] = [];
   if (!validator.isNonNullObject(obj)) {
     return updateMask;
   }
   for (const key in obj) {
-    if (obj.hasOwnProperty(key) && typeof obj[key] !== 'undefined') {
-      const maskList = generateUpdateMask(obj[key]);
-      if (maskList.length > 0) {
-        maskList.forEach((mask) => {
-          updateMask.push(`${key}.${mask}`);
-        });
-      } else {
+    if (typeof obj[key] !== 'undefined') {
+      const nextPath = root ? `${root}.${key}` : key;
+      // We hit maximum path.
+      // Consider switching to Set<string> if the list grows too large.
+      if (terminalPaths.indexOf(nextPath) !== -1) {
+        // Add key and stop traversing this branch.
         updateMask.push(key);
+      } else {
+        const maskList = generateUpdateMask(obj[key], terminalPaths, nextPath);
+        if (maskList.length > 0) {
+          maskList.forEach((mask) => {
+            updateMask.push(`${key}.${mask}`);
+          });
+        } else {
+          updateMask.push(key);
+        }
       }
     }
   }

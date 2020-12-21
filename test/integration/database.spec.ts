@@ -17,11 +17,10 @@
 import * as admin from '../../lib/index';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import {defaultApp, nullApp, nonNullApp, cmdArgs, databaseUrl} from './setup';
+import { defaultApp, nullApp, nonNullApp, cmdArgs, databaseUrl } from './setup';
 
-/* tslint:disable:no-var-requires */
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const chalk = require('chalk');
-/* tslint:enable:no-var-requires */
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -171,14 +170,12 @@ describe('admin.database', () => {
   });
 });
 
-// Check for type compilation. This method is not invoked by any
-// tests. But it will trigger a TS compilation failure if the RTDB
-// typings were not loaded correctly.
-//
-// @ts-ignore: purposely unused method.
-function addValueEventListener(
-    db: admin.database.Database,
-    callback: (s: admin.database.DataSnapshot | null) => any) {
+// Check for type compilation. This method is not invoked by any tests. But it
+// will trigger a TS compilation failure if the RTDB typings were not loaded
+// correctly. (Marked as export to avoid compilation warning.)
+export function addValueEventListener(
+  db: admin.database.Database,
+  callback: (s: admin.database.DataSnapshot | null) => any): void {
   const eventType: admin.database.EventType = 'value';
   db.ref().on(eventType, callback);
 }

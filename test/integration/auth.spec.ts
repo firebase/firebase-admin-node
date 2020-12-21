@@ -19,22 +19,18 @@ import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
-import * as scrypt from 'scrypt';
 import firebase from '@firebase/app';
 import '@firebase/auth';
-import {clone} from 'lodash';
+import { clone } from 'lodash';
 import {
   generateRandomString, projectId, apiKey, noServiceAccountApp, cmdArgs,
 } from './setup';
 import url = require('url');
 import * as mocks from '../resources/mocks';
-import { AuthProviderConfig } from '../../src/auth/auth-config';
 import { deepExtend, deepCopy } from '../../src/utils/deep-copy';
 import { User, FirebaseAuth } from '@firebase/auth-types';
 
-/* tslint:disable:no-var-requires */
-const chalk = require('chalk');
-/* tslint:enable:no-var-requires */
+const chalk = require('chalk'); // eslint-disable-line @typescript-eslint/no-var-requires
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -43,6 +39,7 @@ const expect = chai.expect;
 
 const newUserUid = generateRandomString(20);
 const nonexistentUid = generateRandomString(20);
+const newMultiFactorUserUid = generateRandomString(20);
 const sessionCookieUids = [
   generateRandomString(20),
   generateRandomString(20),
@@ -140,6 +137,54 @@ describe('admin.auth', () => {
       });
   });
 
+  it('createUser() creates a new user with enrolled second factors', () => {
+    const enrolledFactors = [
+      {
+        phoneNumber: '+16505550001',
+        displayName: 'Work phone number',
+        factorId: 'phone',
+      },
+      {
+        phoneNumber: '+16505550002',
+        displayName: 'Personal phone number',
+        factorId: 'phone',
+      },
+    ];
+    const newUserData: any = {
+      uid: newMultiFactorUserUid,
+      email: generateRandomString(20).toLowerCase() + '@example.com',
+      emailVerified: true,
+      password: 'password',
+      multiFactor: {
+        enrolledFactors,
+      },
+    };
+    return admin.auth().createUser(newUserData)
+      .then((userRecord) => {
+        expect(userRecord.uid).to.equal(newMultiFactorUserUid);
+        // Confirm expected email.
+        expect(userRecord.email).to.equal(newUserData.email);
+        // Confirm second factors added to user.
+        expect(userRecord.multiFactor!.enrolledFactors.length).to.equal(2);
+        // Confirm first enrolled second factor.
+        const firstMultiFactor = userRecord.multiFactor!.enrolledFactors[0];
+        expect(firstMultiFactor.uid).not.to.be.undefined;
+        expect(firstMultiFactor.enrollmentTime).not.to.be.undefined;
+        expect((firstMultiFactor as admin.auth.PhoneMultiFactorInfo).phoneNumber).to.equal(
+          enrolledFactors[0].phoneNumber);
+        expect(firstMultiFactor.displayName).to.equal(enrolledFactors[0].displayName);
+        expect(firstMultiFactor.factorId).to.equal(enrolledFactors[0].factorId);
+        // Confirm second enrolled second factor.
+        const secondMultiFactor = userRecord.multiFactor!.enrolledFactors[1];
+        expect(secondMultiFactor.uid).not.to.be.undefined;
+        expect(secondMultiFactor.enrollmentTime).not.to.be.undefined;
+        expect((secondMultiFactor as admin.auth.PhoneMultiFactorInfo).phoneNumber).to.equal(
+          enrolledFactors[1].phoneNumber);
+        expect(secondMultiFactor.displayName).to.equal(enrolledFactors[1].displayName);
+        expect(secondMultiFactor.factorId).to.equal(enrolledFactors[1].factorId);
+      });
+  });
+
   it('createUser() fails when the UID is already in use', () => {
     const newUserData: any = clone(mockUserData);
     newUserData.uid = newUserUid;
@@ -181,14 +226,12 @@ describe('admin.auth', () => {
       metadata: {
         lastSignInTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
         creationTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
-        toJSON: () => { throw new Error('Unimplemented'); },
       },
       providerData: [{
         displayName: 'User Name',
         email: 'user@example.com',
         phoneNumber: '+15555550000',
         photoURL: 'http://example.com/user',
-        toJSON: () => { throw new Error('Unimplemented'); },
         providerId: 'google.com',
         uid: 'google_uid',
       }],
@@ -204,6 +247,158 @@ describe('admin.auth', () => {
     } finally {
       await safeDelete(importUser.uid);
     }
+  });
+
+  describe('getUsers()', () => {
+    /**
+     * Filters a list of object to another list of objects that only contains
+     * the uid, email, and phoneNumber fields. Works with at least UserRecord
+     * and UserImportRecord instances.
+     */
+    function mapUserRecordsToUidEmailPhones(
+      values: Array<{ uid: string; email?: string; phoneNumber?: string}>
+    ): Array<{ uid: string; email?: string; phoneNumber?: string}> {
+      return values.map((ur) => ({ uid: ur.uid, email: ur.email, phoneNumber: ur.phoneNumber }));
+    }
+
+    const testUser1 = { uid: 'uid1', email: 'user1@example.com', phoneNumber: '+15555550001' };
+    const testUser2 = { uid: 'uid2', email: 'user2@example.com', phoneNumber: '+15555550002' };
+    const testUser3 = { uid: 'uid3', email: 'user3@example.com', phoneNumber: '+15555550003' };
+    const usersToCreate = [ testUser1, testUser2, testUser3 ];
+
+    // Also create a user with a provider config. (You can't create a user with
+    // a provider config. But you *can* import one.)
+    const importUser1: admin.auth.UserImportRecord = {
+      uid: 'uid4',
+      email: 'user4@example.com',
+      phoneNumber: '+15555550004',
+      emailVerified: true,
+      disabled: false,
+      metadata: {
+        lastSignInTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
+        creationTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
+      },
+      providerData: [{
+        displayName: 'User Four',
+        email: 'user4@example.com',
+        phoneNumber: '+15555550004',
+        photoURL: 'http://example.com/user4',
+        providerId: 'google.com',
+        uid: 'google_uid4',
+      }],
+    };
+
+    const testUser4 = mapUserRecordsToUidEmailPhones([importUser1])[0];
+
+    before(async () => {
+      // Delete all the users that we're about to create (in case they were
+      // left over from a prior run).
+      const uidsToDelete = usersToCreate.map((user) => user.uid);
+      uidsToDelete.push(importUser1.uid);
+      await deleteUsersWithDelay(uidsToDelete);
+
+      // Create/import users required by these tests
+      await Promise.all(usersToCreate.map((user) => admin.auth().createUser(user)));
+      await admin.auth().importUsers([importUser1]);
+    });
+
+    after(async () => {
+      const uidsToDelete = usersToCreate.map((user) => user.uid);
+      uidsToDelete.push(importUser1.uid);
+      await deleteUsersWithDelay(uidsToDelete);
+    });
+
+    it('returns users by various identifier types in a single call', async () => {
+      const users = await admin.auth().getUsers([
+        { uid: 'uid1' },
+        { email: 'user2@example.com' },
+        { phoneNumber: '+15555550003' },
+        { providerId: 'google.com', providerUid: 'google_uid4' },
+      ])
+        .then((getUsersResult) => getUsersResult.users)
+        .then(mapUserRecordsToUidEmailPhones);
+
+      expect(users).to.have.deep.members([testUser1, testUser2, testUser3, testUser4]);
+    });
+
+    it('returns found users and ignores non-existing users', async () => {
+      const users = await admin.auth().getUsers([
+        { uid: 'uid1' },
+        { uid: 'uid_that_doesnt_exist' },
+        { uid: 'uid3' },
+      ]);
+      expect(users.notFound).to.have.deep.members([{ uid: 'uid_that_doesnt_exist' }]);
+
+      const foundUsers = mapUserRecordsToUidEmailPhones(users.users);
+      expect(foundUsers).to.have.deep.members([testUser1, testUser3]);
+    });
+
+    it('returns nothing when queried for only non-existing users', async () => {
+      const notFoundIds = [{ uid: 'non-existing user' }];
+      const users = await admin.auth().getUsers(notFoundIds);
+
+      expect(users.users).to.be.empty;
+      expect(users.notFound).to.deep.equal(notFoundIds);
+    });
+
+    it('de-dups duplicate users', async () => {
+      const users = await admin.auth().getUsers([
+        { uid: 'uid1' },
+        { uid: 'uid1' },
+      ])
+        .then((getUsersResult) => getUsersResult.users)
+        .then(mapUserRecordsToUidEmailPhones);
+
+      expect(users).to.deep.equal([testUser1]);
+    });
+
+    it('returns users with a lastRefreshTime', async () => {
+      const isUTCString = (s: string): boolean => {
+        return new Date(s).toUTCString() === s;
+      };
+
+      const newUserRecord = await admin.auth().createUser({
+        uid: 'lastRefreshTimeUser',
+        email: 'lastRefreshTimeUser@example.com',
+        password: 'p4ssword',
+      });
+
+      try {
+        // New users should not have a lastRefreshTime set.
+        expect(newUserRecord.metadata.lastRefreshTime).to.be.null;
+
+        // Login to set the lastRefreshTime.
+        await firebase.auth!().signInWithEmailAndPassword('lastRefreshTimeUser@example.com', 'p4ssword')
+          .then(async () => {
+            // Attempt to retrieve the user 3 times (with a small delay between
+            // each attempt). Occassionally, this call retrieves the user data
+            // without the lastLoginTime/lastRefreshTime set; possibly because
+            // it's hitting a different server than the login request uses.
+            let userRecord = null;
+
+            for (let i = 0; i < 3; i++) {
+              userRecord = await admin.auth().getUser('lastRefreshTimeUser');
+              if (userRecord.metadata.lastRefreshTime) {
+                break;
+              }
+
+              await new Promise((resolve) => {
+                setTimeout(resolve, 1000 * Math.pow(2, i));
+              });
+            }
+
+            const metadata = userRecord!.metadata;
+            expect(metadata.lastRefreshTime).to.exist;
+            expect(isUTCString(metadata.lastRefreshTime!));
+            const creationTime = new Date(metadata.creationTime).getTime();
+            const lastRefreshTime = new Date(metadata.lastRefreshTime!).getTime();
+            expect(creationTime).lte(lastRefreshTime);
+            expect(lastRefreshTime).lte(creationTime + 3600 * 1000);
+          });
+      } finally {
+        admin.auth().deleteUser('lastRefreshTimeUser');
+      }
+    });
   });
 
   it('listUsers() returns up to the specified number of users', () => {
@@ -230,16 +425,16 @@ describe('admin.auth', () => {
         expect(listUsersResult.users[0].uid).to.equal(uids[1]);
 
         expect(
-            listUsersResult.users[0].passwordHash,
-            'Missing passwordHash field. A common cause would be forgetting to '
+          listUsersResult.users[0].passwordHash,
+          'Missing passwordHash field. A common cause would be forgetting to '
             + 'add the "Firebase Authentication Admin" permission. See '
             + 'instructions in CONTRIBUTING.md',
         ).to.be.ok;
         expect(listUsersResult.users[0].passwordHash!.length).greaterThan(0);
 
         expect(
-            listUsersResult.users[0].passwordSalt,
-            'Missing passwordSalt field. A common cause would be forgetting to '
+          listUsersResult.users[0].passwordSalt,
+          'Missing passwordSalt field. A common cause would be forgetting to '
             + 'add the "Firebase Authentication Admin" permission. See '
             + 'instructions in CONTRIBUTING.md',
         ).to.be.ok;
@@ -256,7 +451,7 @@ describe('admin.auth', () => {
     let currentUser: User;
     // Sign in with an email and password account.
     return clientAuth().signInWithEmailAndPassword(mockUserData.email, mockUserData.password)
-      .then(({user}) => {
+      .then(({ user }) => {
         expect(user).to.exist;
         currentUser = user!;
         // Get user's ID token.
@@ -291,9 +486,9 @@ describe('admin.auth', () => {
       .then(() => {
         // New sign-in should succeed.
         return clientAuth().signInWithEmailAndPassword(
-            mockUserData.email, mockUserData.password);
+          mockUserData.email, mockUserData.password);
       })
-      .then(({user}) => {
+      .then(({ user }) => {
         // Get new session's ID token.
         expect(user).to.exist;
         return user!.getIdToken();
@@ -318,19 +513,19 @@ describe('admin.auth', () => {
         return clientAuth().signInWithEmailAndPassword(
           userRecord.email!, mockUserData.password);
       })
-      .then(({user}) => {
+      .then(({ user }) => {
         // Get the user's ID token.
         expect(user).to.exist;
         return user!.getIdToken();
       })
       .then((idToken) => {
-         // Verify ID token contents.
-         return admin.auth().verifyIdToken(idToken);
+        // Verify ID token contents.
+        return admin.auth().verifyIdToken(idToken);
       })
       .then((decodedIdToken: {[key: string]: any}) => {
         // Confirm expected claims set on the user's ID token.
         for (const key in customClaims) {
-          if (customClaims.hasOwnProperty(key)) {
+          if (Object.prototype.hasOwnProperty.call(customClaims, key)) {
             expect(decodedIdToken[key]).to.equal(customClaims[key]);
           }
         }
@@ -350,24 +545,45 @@ describe('admin.auth', () => {
       .then((idToken) => {
         // Verify ID token contents.
         return admin.auth().verifyIdToken(idToken);
-     })
-     .then((decodedIdToken: {[key: string]: any}) => {
-       // Confirm all custom claims are cleared.
-       for (const key in customClaims) {
-         if (customClaims.hasOwnProperty(key)) {
-           expect(decodedIdToken[key]).to.be.undefined;
-         }
-       }
-     });
+      })
+      .then((decodedIdToken: {[key: string]: any}) => {
+        // Confirm all custom claims are cleared.
+        for (const key in customClaims) {
+          if (Object.prototype.hasOwnProperty.call(customClaims, key)) {
+            expect(decodedIdToken[key]).to.be.undefined;
+          }
+        }
+      });
   });
 
   it('updateUser() updates the user record with the given parameters', () => {
     const updatedDisplayName = 'Updated User ' + newUserUid;
+    const now = new Date(1476235905000).toUTCString();
+    // Update user with enrolled second factors.
+    const enrolledFactors = [
+      {
+        uid: 'mfaUid1',
+        phoneNumber: '+16505550001',
+        displayName: 'Work phone number',
+        factorId: 'phone',
+        enrollmentTime: now,
+      },
+      {
+        uid: 'mfaUid2',
+        phoneNumber: '+16505550002',
+        displayName: 'Personal phone number',
+        factorId: 'phone',
+        enrollmentTime: now,
+      },
+    ];
     return admin.auth().updateUser(newUserUid, {
       email: updatedEmail,
       phoneNumber: updatedPhone,
       emailVerified: true,
       displayName: updatedDisplayName,
+      multiFactor: {
+        enrolledFactors,
+      },
     })
       .then((userRecord) => {
         expect(userRecord.emailVerified).to.be.true;
@@ -376,6 +592,31 @@ describe('admin.auth', () => {
         expect(userRecord.email).to.equal(updatedEmail);
         // Confirm expected phone number.
         expect(userRecord.phoneNumber).to.equal(updatedPhone);
+        // Confirm second factors added to user.
+        const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
+        expect(actualUserRecord.multiFactor.enrolledFactors.length).to.equal(2);
+        expect(actualUserRecord.multiFactor.enrolledFactors).to.deep.equal(enrolledFactors);
+        // Update list of second factors.
+        return admin.auth().updateUser(newUserUid, {
+          multiFactor: {
+            enrolledFactors: [enrolledFactors[0]],
+          },
+        });
+      })
+      .then((userRecord) => {
+        expect(userRecord.multiFactor!.enrolledFactors.length).to.equal(1);
+        const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
+        expect(actualUserRecord.multiFactor.enrolledFactors[0]).to.deep.equal(enrolledFactors[0]);
+        // Remove all second factors.
+        return admin.auth().updateUser(newUserUid, {
+          multiFactor: {
+            enrolledFactors: null,
+          },
+        });
+      })
+      .then((userRecord) => {
+        // Confirm all second factors removed.
+        expect(userRecord.multiFactor).to.be.undefined;
       });
   });
 
@@ -414,40 +655,40 @@ describe('admin.auth', () => {
     return admin.auth().createCustomToken(newUserUid, {
       isAdmin: true,
     })
-    .then((customToken) => {
-      return clientAuth().signInWithCustomToken(customToken);
-    })
-    .then(({user}) => {
-      expect(user).to.exist;
-      return user!.getIdToken();
-    })
-    .then((idToken) => {
-      return admin.auth().verifyIdToken(idToken);
-    })
-    .then((token) => {
-      expect(token.uid).to.equal(newUserUid);
-      expect(token.isAdmin).to.be.true;
-    });
+      .then((customToken) => {
+        return clientAuth().signInWithCustomToken(customToken);
+      })
+      .then(({ user }) => {
+        expect(user).to.exist;
+        return user!.getIdToken();
+      })
+      .then((idToken) => {
+        return admin.auth().verifyIdToken(idToken);
+      })
+      .then((token) => {
+        expect(token.uid).to.equal(newUserUid);
+        expect(token.isAdmin).to.be.true;
+      });
   });
 
   it('createCustomToken() can mint JWTs without a service account', () => {
     return admin.auth(noServiceAccountApp).createCustomToken(newUserUid, {
       isAdmin: true,
     })
-    .then((customToken) => {
-      return clientAuth().signInWithCustomToken(customToken);
-    })
-    .then(({user}) => {
-      expect(user).to.exist;
-      return user!.getIdToken();
-    })
-    .then((idToken) => {
-      return admin.auth(noServiceAccountApp).verifyIdToken(idToken);
-    })
-    .then((token) => {
-      expect(token.uid).to.equal(newUserUid);
-      expect(token.isAdmin).to.be.true;
-    });
+      .then((customToken) => {
+        return clientAuth().signInWithCustomToken(customToken);
+      })
+      .then(({ user }) => {
+        expect(user).to.exist;
+        return user!.getIdToken();
+      })
+      .then((idToken) => {
+        return admin.auth(noServiceAccountApp).verifyIdToken(idToken);
+      })
+      .then((token) => {
+        expect(token.uid).to.equal(newUserUid);
+        expect(token.isAdmin).to.be.true;
+      });
   });
 
   it('verifyIdToken() fails when called with an invalid token', () => {
@@ -483,8 +724,8 @@ describe('admin.auth', () => {
 
     it('generatePasswordResetLink() should return a password reset link', () => {
       // Ensure old password set on created user.
-      return admin.auth().updateUser(uid, {password: 'password'})
-        .then((userRecord) => {
+      return admin.auth().updateUser(uid, { password: 'password' })
+        .then(() => {
           return admin.auth().generatePasswordResetLink(email, actionCodeSettings);
         })
         .then((link) => {
@@ -505,7 +746,7 @@ describe('admin.auth', () => {
 
     it('generateEmailVerificationLink() should return a verification link', () => {
       // Ensure the user's email is unverified.
-      return admin.auth().updateUser(uid, {password: 'password', emailVerified: false})
+      return admin.auth().updateUser(uid, { password: 'password', emailVerified: false })
         .then((userRecord) => {
           expect(userRecord.emailVerified).to.be.false;
           return admin.auth().generateEmailVerificationLink(email, actionCodeSettings);
@@ -548,12 +789,29 @@ describe('admin.auth', () => {
         enabled: true,
         passwordRequired: true,
       },
+      multiFactorConfig: {
+        state: 'ENABLED',
+        factorIds: ['phone'],
+      },
+      // Add random phone number / code pairs.
+      testPhoneNumbers: {
+        '+16505551234': '019287',
+        '+16505550676': '985235',
+      },
     };
     const expectedCreatedTenant: any = {
       displayName: 'testTenant1',
       emailSignInConfig: {
         enabled: true,
         passwordRequired: true,
+      },
+      multiFactorConfig: {
+        state: 'ENABLED',
+        factorIds: ['phone'],
+      },
+      testPhoneNumbers: {
+        '+16505551234': '019287',
+        '+16505550676': '985235',
       },
     };
     const expectedUpdatedTenant: any = {
@@ -562,12 +820,23 @@ describe('admin.auth', () => {
         enabled: false,
         passwordRequired: true,
       },
+      multiFactorConfig: {
+        state: 'DISABLED',
+        factorIds: [],
+      },
+      testPhoneNumbers: {
+        '+16505551234': '123456',
+      },
     };
     const expectedUpdatedTenant2: any = {
       displayName: 'testTenantUpdated',
       emailSignInConfig: {
         enabled: true,
         passwordRequired: false,
+      },
+      multiFactorConfig: {
+        state: 'ENABLED',
+        factorIds: ['phone'],
       },
     };
 
@@ -591,8 +860,8 @@ describe('admin.auth', () => {
       const promises: Array<Promise<any>> = [];
       createdTenants.forEach((tenantId) => {
         promises.push(
-            admin.auth().tenantManager().deleteTenant(tenantId)
-                .catch((error) => {/** Ignore. */}));
+          admin.auth().tenantManager().deleteTenant(tenantId)
+            .catch(() => {/** Ignore. */}));
       });
       return Promise.all(promises);
     });
@@ -638,7 +907,7 @@ describe('admin.auth', () => {
         // If user successfully created, make sure it is deleted at the end of the test suite.
         if (createdUserUid) {
           return tenantAwareAuth.deleteUser(createdUserUid)
-            .catch((error) => {
+            .catch(() => {
               // Ignore error.
             });
         }
@@ -672,12 +941,12 @@ describe('admin.auth', () => {
           email: updatedEmail,
           phoneNumber: updatedPhone,
         })
-        .then((userRecord) => {
-          expect(userRecord.uid).to.equal(createdUserUid);
-          expect(userRecord.tenantId).to.equal(createdTenantId);
-          expect(userRecord.email).to.equal(updatedEmail);
-          expect(userRecord.phoneNumber).to.equal(updatedPhone);
-        });
+          .then((userRecord) => {
+            expect(userRecord.uid).to.equal(createdUserUid);
+            expect(userRecord.tenantId).to.equal(createdTenantId);
+            expect(userRecord.email).to.equal(updatedEmail);
+            expect(userRecord.phoneNumber).to.equal(updatedPhone);
+          });
       });
 
       it('generateEmailVerificationLink() should generate the link for tenant specific user', () => {
@@ -775,7 +1044,7 @@ describe('admin.auth', () => {
           clientAuth().tenantId = createdTenantId;
 
           const customToken = await tenantAwareAuth.createCustomToken('uid1');
-          const {user} = await clientAuth().signInWithCustomToken(customToken);
+          const { user } = await clientAuth().signInWithCustomToken(customToken);
           expect(user).to.not.be.null;
           const idToken = await user!.getIdToken();
           const token = await tenantAwareAuth.verifyIdToken(idToken);
@@ -825,7 +1094,7 @@ describe('admin.auth', () => {
       after(() => {
         if (tenantAwareAuth) {
           return tenantAwareAuth.deleteProviderConfig(authProviderConfig.providerId)
-            .catch((error) => {
+            .catch(() => {
               // Ignore error.
             });
         }
@@ -844,7 +1113,7 @@ describe('admin.auth', () => {
           })
           .then((config) => {
             const modifiedConfig = deepExtend(
-                {providerId: authProviderConfig.providerId}, modifiedConfigOptions);
+              { providerId: authProviderConfig.providerId }, modifiedConfigOptions);
             assertDeepEqualUnordered(modifiedConfig, config);
             return tenantAwareAuth.deleteProviderConfig(authProviderConfig.providerId);
           })
@@ -852,7 +1121,7 @@ describe('admin.auth', () => {
             return tenantAwareAuth.getProviderConfig(authProviderConfig.providerId)
               .should.eventually.be.rejected.and.have.property('code', 'auth/configuration-not-found');
           });
-        });
+      });
     });
 
     describe('OIDC management APIs', () => {
@@ -883,7 +1152,7 @@ describe('admin.auth', () => {
       after(() => {
         if (tenantAwareAuth) {
           return tenantAwareAuth.deleteProviderConfig(authProviderConfig.providerId)
-            .catch((error) => {
+            .catch(() => {
               // Ignore error.
             });
         }
@@ -902,7 +1171,7 @@ describe('admin.auth', () => {
           })
           .then((config) => {
             const modifiedConfig = deepExtend(
-                {providerId: authProviderConfig.providerId}, modifiedConfigOptions);
+              { providerId: authProviderConfig.providerId }, modifiedConfigOptions);
             assertDeepEqualUnordered(modifiedConfig, config);
             return tenantAwareAuth.deleteProviderConfig(authProviderConfig.providerId);
           })
@@ -910,7 +1179,7 @@ describe('admin.auth', () => {
             return tenantAwareAuth.getProviderConfig(authProviderConfig.providerId)
               .should.eventually.be.rejected.and.have.property('code', 'auth/configuration-not-found');
           });
-        });
+      });
     });
 
     it('getTenant() should resolve with expected tenant', () => {
@@ -928,12 +1197,17 @@ describe('admin.auth', () => {
         emailSignInConfig: {
           enabled: false,
         },
+        multiFactorConfig: deepCopy(expectedUpdatedTenant.multiFactorConfig),
+        testPhoneNumbers: deepCopy(expectedUpdatedTenant.testPhoneNumbers),
       };
       const updatedOptions2: admin.auth.UpdateTenantRequest = {
         emailSignInConfig: {
           enabled: true,
           passwordRequired: false,
         },
+        multiFactorConfig: deepCopy(expectedUpdatedTenant2.multiFactorConfig),
+        // Test clearing of phone numbers.
+        testPhoneNumbers: null,
       };
       return admin.auth().tenantManager().updateTenant(createdTenantId, updatedOptions)
         .then((actualTenant) => {
@@ -979,7 +1253,7 @@ describe('admin.auth', () => {
         .then(() => {
           return admin.auth().tenantManager().getTenant(createdTenantId);
         })
-        .then((result) => {
+        .then(() => {
           throw new Error('unexpected success');
         })
         .catch((error) => {
@@ -1012,10 +1286,10 @@ describe('admin.auth', () => {
       enableRequestSigning: true,
     };
 
-    const removeTempConfigs = () => {
+    const removeTempConfigs = (): Promise<any> => {
       return Promise.all([
-        admin.auth().deleteProviderConfig(authProviderConfig1.providerId).catch((error) => {/* empty */}),
-        admin.auth().deleteProviderConfig(authProviderConfig2.providerId).catch((error) => {/* empty */}),
+        admin.auth().deleteProviderConfig(authProviderConfig1.providerId).catch(() => {/* empty */}),
+        admin.auth().deleteProviderConfig(authProviderConfig2.providerId).catch(() => {/* empty */}),
       ]);
     };
 
@@ -1043,11 +1317,11 @@ describe('admin.auth', () => {
     });
 
     it('listProviderConfig() successfully returns the list of SAML providers', () => {
-      const configs: AuthProviderConfig[] = [];
+      const configs: admin.auth.AuthProviderConfig[] = [];
       const listProviders: any = (type: 'saml' | 'oidc', maxResults?: number, pageToken?: string) => {
-        return admin.auth().listProviderConfigs({type, maxResults, pageToken})
+        return admin.auth().listProviderConfigs({ type, maxResults, pageToken })
           .then((result) => {
-            result.providerConfigs.forEach((config: AuthProviderConfig) => {
+            result.providerConfigs.forEach((config: admin.auth.AuthProviderConfig) => {
               configs.push(config);
             });
             if (result.pageToken) {
@@ -1087,7 +1361,7 @@ describe('admin.auth', () => {
       return admin.auth().updateProviderConfig(authProviderConfig1.providerId, modifiedConfigOptions)
         .then((config) => {
           const modifiedConfig = deepExtend(
-              {providerId: authProviderConfig1.providerId}, modifiedConfigOptions);
+            { providerId: authProviderConfig1.providerId }, modifiedConfigOptions);
           assertDeepEqualUnordered(modifiedConfig, config);
         });
     });
@@ -1115,7 +1389,7 @@ describe('admin.auth', () => {
       return admin.auth().updateProviderConfig(authProviderConfig1.providerId, deltaChanges)
         .then((config) => {
           const modifiedConfig = deepExtend(
-              {providerId: authProviderConfig1.providerId}, modifiedConfigOptions);
+            { providerId: authProviderConfig1.providerId }, modifiedConfigOptions);
           assertDeepEqualUnordered(modifiedConfig, config);
         });
     });
@@ -1144,10 +1418,10 @@ describe('admin.auth', () => {
       clientId: 'CLIENT_ID2',
     };
 
-    const removeTempConfigs = () => {
+    const removeTempConfigs = (): Promise<any> => {
       return Promise.all([
-        admin.auth().deleteProviderConfig(authProviderConfig1.providerId).catch((error) => {/* empty */}),
-        admin.auth().deleteProviderConfig(authProviderConfig2.providerId).catch((error) => {/* empty */}),
+        admin.auth().deleteProviderConfig(authProviderConfig1.providerId).catch(() => {/* empty */}),
+        admin.auth().deleteProviderConfig(authProviderConfig2.providerId).catch(() => {/* empty */}),
       ]);
     };
 
@@ -1175,11 +1449,11 @@ describe('admin.auth', () => {
     });
 
     it('listProviderConfig() successfully returns the list of OIDC providers', () => {
-      const configs: AuthProviderConfig[] = [];
+      const configs: admin.auth.AuthProviderConfig[] = [];
       const listProviders: any = (type: 'saml' | 'oidc', maxResults?: number, pageToken?: string) => {
-        return admin.auth().listProviderConfigs({type, maxResults, pageToken})
+        return admin.auth().listProviderConfigs({ type, maxResults, pageToken })
           .then((result) => {
-            result.providerConfigs.forEach((config: AuthProviderConfig) => {
+            result.providerConfigs.forEach((config: admin.auth.AuthProviderConfig) => {
               configs.push(config);
             });
             if (result.pageToken) {
@@ -1215,7 +1489,7 @@ describe('admin.auth', () => {
       return admin.auth().updateProviderConfig(authProviderConfig1.providerId, modifiedConfigOptions)
         .then((config) => {
           const modifiedConfig = deepExtend(
-            {providerId: authProviderConfig1.providerId}, modifiedConfigOptions);
+            { providerId: authProviderConfig1.providerId }, modifiedConfigOptions);
           assertDeepEqualUnordered(modifiedConfig, config);
         });
     });
@@ -1235,7 +1509,7 @@ describe('admin.auth', () => {
       return admin.auth().updateProviderConfig(authProviderConfig1.providerId, deltaChanges)
         .then((config) => {
           const modifiedConfig = deepExtend(
-            {providerId: authProviderConfig1.providerId}, modifiedConfigOptions);
+            { providerId: authProviderConfig1.providerId }, modifiedConfigOptions);
           assertDeepEqualUnordered(modifiedConfig, config);
         });
     });
@@ -1251,8 +1525,66 @@ describe('admin.auth', () => {
   it('deleteUser() deletes the user with the given UID', () => {
     return Promise.all([
       admin.auth().deleteUser(newUserUid),
+      admin.auth().deleteUser(newMultiFactorUserUid),
       admin.auth().deleteUser(uidFromCreateUserWithoutUid),
     ]).should.eventually.be.fulfilled;
+  });
+
+  describe('deleteUsers()', () => {
+    it('deletes users', async () => {
+      const uid1 = await admin.auth().createUser({}).then((ur) => ur.uid);
+      const uid2 = await admin.auth().createUser({}).then((ur) => ur.uid);
+      const uid3 = await admin.auth().createUser({}).then((ur) => ur.uid);
+      const ids = [{ uid: uid1 }, { uid: uid2 }, { uid: uid3 }];
+
+      return deleteUsersWithDelay([uid1, uid2, uid3])
+        .then((deleteUsersResult) => {
+          expect(deleteUsersResult.successCount).to.equal(3);
+          expect(deleteUsersResult.failureCount).to.equal(0);
+          expect(deleteUsersResult.errors).to.have.length(0);
+
+          return admin.auth().getUsers(ids);
+        })
+        .then((getUsersResult) => {
+          expect(getUsersResult.users).to.have.length(0);
+          expect(getUsersResult.notFound).to.have.deep.members(ids);
+        });
+    });
+
+    it('deletes users that exist even when non-existing users also specified', async () => {
+      const uid1 = await admin.auth().createUser({}).then((ur) => ur.uid);
+      const uid2 = 'uid-that-doesnt-exist';
+      const ids = [{ uid: uid1 }, { uid: uid2 }];
+
+      return deleteUsersWithDelay([uid1, uid2])
+        .then((deleteUsersResult) => {
+          expect(deleteUsersResult.successCount).to.equal(2);
+          expect(deleteUsersResult.failureCount).to.equal(0);
+          expect(deleteUsersResult.errors).to.have.length(0);
+
+          return admin.auth().getUsers(ids);
+        })
+        .then((getUsersResult) => {
+          expect(getUsersResult.users).to.have.length(0);
+          expect(getUsersResult.notFound).to.have.deep.members(ids);
+        });
+    });
+
+    it('is idempotent', async () => {
+      const uid = await admin.auth().createUser({}).then((ur) => ur.uid);
+
+      return deleteUsersWithDelay([uid])
+        .then((deleteUsersResult) => {
+          expect(deleteUsersResult.successCount).to.equal(1);
+          expect(deleteUsersResult.failureCount).to.equal(0);
+        })
+        // Delete the user again, ensuring that everything still counts as a success.
+        .then(() => deleteUsersWithDelay([uid]))
+        .then((deleteUsersResult) => {
+          expect(deleteUsersResult.successCount).to.equal(1);
+          expect(deleteUsersResult.failureCount).to.equal(0);
+        });
+    });
   });
 
   describe('createSessionCookie()', () => {
@@ -1266,9 +1598,9 @@ describe('admin.auth', () => {
     const uid3 = sessionCookieUids[2];
 
     it('creates a valid Firebase session cookie', () => {
-      return admin.auth().createCustomToken(uid, {admin: true, groupId: '1234'})
+      return admin.auth().createCustomToken(uid, { admin: true, groupId: '1234' })
         .then((customToken) => clientAuth().signInWithCustomToken(customToken))
-        .then(({user}) => {
+        .then(({ user }) => {
           expect(user).to.exist;
           return user!.getIdToken();
         })
@@ -1279,12 +1611,12 @@ describe('admin.auth', () => {
           expectedExp = Math.floor((new Date().getTime() + expiresIn) / 1000);
           payloadClaims = decodedIdTokenClaims;
           payloadClaims.iss = payloadClaims.iss.replace(
-              'securetoken.google.com', 'session.firebase.google.com');
+            'securetoken.google.com', 'session.firebase.google.com');
           delete payloadClaims.exp;
           delete payloadClaims.iat;
           expectedIat = Math.floor(new Date().getTime() / 1000);
           // One day long session cookie.
-          return admin.auth().createSessionCookie(currentIdToken, {expiresIn});
+          return admin.auth().createSessionCookie(currentIdToken, { expiresIn });
         })
         .then((sessionCookie) => admin.auth().verifySessionCookie(sessionCookie))
         .then((decodedIdToken) => {
@@ -1304,13 +1636,13 @@ describe('admin.auth', () => {
       let currentSessionCookie: string;
       return admin.auth().createCustomToken(uid2)
         .then((customToken) => clientAuth().signInWithCustomToken(customToken))
-        .then(({user}) => {
+        .then(({ user }) => {
           expect(user).to.exist;
           return user!.getIdToken();
         })
         .then((idToken) => {
           // One day long session cookie.
-          return admin.auth().createSessionCookie(idToken, {expiresIn});
+          return admin.auth().createSessionCookie(idToken, { expiresIn });
         })
         .then((sessionCookie) => {
           currentSessionCookie = sessionCookie;
@@ -1329,9 +1661,9 @@ describe('admin.auth', () => {
     });
 
     it('fails when called with a revoked ID token', () => {
-      return admin.auth().createCustomToken(uid3, {admin: true, groupId: '1234'})
+      return admin.auth().createCustomToken(uid3, { admin: true, groupId: '1234' })
         .then((customToken) => clientAuth().signInWithCustomToken(customToken))
-        .then(({user}) => {
+        .then(({ user }) => {
           expect(user).to.exist;
           return user!.getIdToken();
         })
@@ -1342,7 +1674,7 @@ describe('admin.auth', () => {
           ), 1000));
         })
         .then(() => {
-          return admin.auth().createSessionCookie(currentIdToken, {expiresIn})
+          return admin.auth().createSessionCookie(currentIdToken, { expiresIn })
             .should.eventually.be.rejected.and.have.property('code', 'auth/id-token-expired');
         });
     });
@@ -1359,7 +1691,7 @@ describe('admin.auth', () => {
     it('fails when called with a Firebase ID token', () => {
       return admin.auth().createCustomToken(uid)
         .then((customToken) => clientAuth().signInWithCustomToken(customToken))
-        .then(({user}) => {
+        .then(({ user }) => {
           expect(user).to.exist;
           return user!.getIdToken();
         })
@@ -1372,7 +1704,7 @@ describe('admin.auth', () => {
 
   describe('importUsers()', () => {
     const randomUid = 'import_' + generateRandomString(20).toLowerCase();
-    let importUserRecord: any;
+    let importUserRecord: admin.auth.UserImportRecord;
     const rawPassword = 'password';
     const rawSalt = 'NaCl';
     // Simulate a user stored using SCRYPT being migrated to Firebase Auth via importUsers.
@@ -1410,7 +1742,7 @@ describe('admin.auth', () => {
           const currentRawPassword = userImportTest.rawPassword;
           const currentRawSalt = userImportTest.rawSalt;
           return crypto.createHmac('sha256', currentHashKey)
-                       .update(currentRawPassword + currentRawSalt).digest();
+            .update(currentRawPassword + currentRawSalt).digest();
         },
         rawPassword,
         rawSalt,
@@ -1443,7 +1775,7 @@ describe('admin.auth', () => {
           const currentRawPassword = userImportTest.rawPassword;
           const currentRawSalt = userImportTest.rawSalt;
           return Buffer.from(crypto.createHash('md5')
-                                   .update(currentRawSalt + currentRawPassword).digest('hex'));
+            .update(currentRawSalt + currentRawPassword).digest('hex'));
         },
         rawPassword,
         rawSalt,
@@ -1489,8 +1821,14 @@ describe('admin.auth', () => {
           expect(userImportTest.importOptions.hash.derivedKeyLength).to.exist;
           const dkLen = userImportTest.importOptions.hash.derivedKeyLength!;
 
-          return Buffer.from(scrypt.hashSync(
-              currentRawPassword, {N, r, p}, dkLen, Buffer.from(currentRawSalt)));
+          return Buffer.from(
+            crypto.scryptSync(
+              currentRawPassword,
+              Buffer.from(currentRawSalt),
+              dkLen,
+              {
+                N, r, p,
+              }));
         },
         rawPassword,
         rawSalt,
@@ -1510,7 +1848,7 @@ describe('admin.auth', () => {
           expect(userImportTest.importOptions.hash.rounds).to.exist;
           const currentRounds = userImportTest.importOptions.hash.rounds!;
           return crypto.pbkdf2Sync(
-              currentRawPassword, currentRawSalt, currentRounds, 64, 'sha256');
+            currentRawPassword, currentRawSalt, currentRounds, 64, 'sha256');
         },
         rawPassword,
         rawSalt,
@@ -1518,7 +1856,7 @@ describe('admin.auth', () => {
       {
         name: 'SCRYPT',
         importOptions: scryptHashOptions as any,
-        computePasswordHash: (userImportTest: UserImportTest): Buffer => {
+        computePasswordHash: (): Buffer => {
           return Buffer.from(scryptPasswordHash, 'base64');
         },
         rawPassword,
@@ -1556,7 +1894,7 @@ describe('admin.auth', () => {
         photoURL,
         phoneNumber: '+15554446666',
         disabled: false,
-        customClaims: {admin: true},
+        customClaims: { admin: true },
         metadata: {
           lastSignInTime: now,
           creationTime: now,
@@ -1586,25 +1924,85 @@ describe('admin.auth', () => {
           return admin.auth().getUser(uid);
         }).then((userRecord) => {
           // The phone number provider will be appended to the list of accounts.
-          importUserRecord.providerData.push({
-            uid: importUserRecord.phoneNumber,
+          importUserRecord.providerData?.push({
+            uid: importUserRecord.phoneNumber!,
             providerId: 'phone',
-            phoneNumber: importUserRecord.phoneNumber,
+            phoneNumber: importUserRecord.phoneNumber!,
           });
           const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
           for (const key of Object.keys(importUserRecord)) {
             expect(JSON.stringify(actualUserRecord[key]))
-              .to.be.equal(JSON.stringify(importUserRecord[key]));
+              .to.be.equal(JSON.stringify((importUserRecord as any)[key]));
           }
+        }).should.eventually.be.fulfilled;
+    });
+
+    it('successfully imports users with enrolled second factors', () => {
+      const uid = generateRandomString(20).toLowerCase();
+      const email = uid + '@example.com';
+      const now = new Date(1476235905000).toUTCString();
+      const enrolledFactors: admin.auth.UpdatePhoneMultiFactorInfoRequest[] = [
+        {
+          uid: 'mfaUid1',
+          phoneNumber: '+16505550001',
+          displayName: 'Work phone number',
+          factorId: 'phone',
+          enrollmentTime: now,
+        } ,
+        {
+          uid: 'mfaUid2',
+          phoneNumber: '+16505550002',
+          displayName: 'Personal phone number',
+          factorId: 'phone',
+          enrollmentTime: now,
+        },
+      ];
+
+      importUserRecord = {
+        uid,
+        email,
+        emailVerified: true,
+        displayName: 'Test User',
+        disabled: false,
+        metadata: {
+          lastSignInTime: now,
+          creationTime: now,
+        },
+        providerData: [
+          {
+            uid: uid + '-facebook',
+            displayName: 'Facebook User',
+            email,
+            providerId: 'facebook.com',
+          },
+        ],
+        multiFactor: {
+          enrolledFactors,
+        },
+      };
+      uids.push(importUserRecord.uid);
+
+      return admin.auth().importUsers([importUserRecord])
+        .then((result) => {
+          expect(result.failureCount).to.equal(0);
+          expect(result.successCount).to.equal(1);
+          expect(result.errors.length).to.equal(0);
+          return admin.auth().getUser(uid);
+        }).then((userRecord) => {
+          // Confirm second factors added to user.
+          const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
+          expect(actualUserRecord.multiFactor.enrolledFactors.length).to.equal(2);
+          expect(actualUserRecord.multiFactor.enrolledFactors)
+            .to.deep.equal(importUserRecord.multiFactor?.enrolledFactors);
         }).should.eventually.be.fulfilled;
     });
 
     it('fails when invalid users are provided', () => {
       const users = [
-        {uid: generateRandomString(20).toLowerCase(), phoneNumber: '+1error'},
-        {uid: generateRandomString(20).toLowerCase(), email: 'invalid'},
-        {uid: generateRandomString(20).toLowerCase(), phoneNumber: '+1invalid'},
-        {uid: generateRandomString(20).toLowerCase(), emailVerified: 'invalid'} as any,
+        { uid: generateRandomString(20).toLowerCase(), phoneNumber: '+1error' },
+        { uid: generateRandomString(20).toLowerCase(), email: 'invalid' },
+        { uid: generateRandomString(20).toLowerCase(), phoneNumber: '+1invalid' },
+        { uid: generateRandomString(20).toLowerCase(), emailVerified: 'invalid' } as any,
       ];
       return admin.auth().importUsers(users)
         .then((result) => {
@@ -1634,7 +2032,9 @@ describe('admin.auth', () => {
  * @retunr {Promise<void>} A promise that resolved on success.
  */
 function testImportAndSignInUser(
-    importUserRecord: any, importOptions: any, rawPassword: string): Promise<void> {
+  importUserRecord: admin.auth.UserImportRecord,
+  importOptions: any,
+  rawPassword: string): Promise<void> {
   const users = [importUserRecord];
   // Import the user record.
   return admin.auth().importUsers(users, importOptions)
@@ -1644,9 +2044,9 @@ function testImportAndSignInUser(
       expect(result.successCount).to.equal(1);
       expect(result.errors.length).to.equal(0);
       // Sign in with an email and password to the imported account.
-      return clientAuth().signInWithEmailAndPassword(users[0].email, rawPassword);
+      return clientAuth().signInWithEmailAndPassword(users[0].email!, rawPassword);
     })
-    .then(({user}) => {
+    .then(({ user }) => {
       // Confirm successful sign-in.
       expect(user).to.exist;
       expect(user!.email).to.equal(users[0].email);
@@ -1662,7 +2062,7 @@ function testImportAndSignInUser(
  * @return {Promise} A promise that resolves when the user is deleted
  *     or is found not to exist.
  */
-function deletePhoneNumberUser(phoneNumber: string) {
+function deletePhoneNumberUser(phoneNumber: string): Promise<void> {
   return admin.auth().getUserByPhoneNumber(phoneNumber)
     .then((userRecord) => {
       return safeDelete(userRecord.uid);
@@ -1681,7 +2081,7 @@ function deletePhoneNumberUser(phoneNumber: string) {
  *
  * @return {Promise} A promise that resolves when test preparations are ready.
  */
-function cleanup() {
+function cleanup(): Promise<any> {
   // Delete any existing users that could affect the test outcome.
   const promises: Array<Promise<void>> = [
     deletePhoneNumberUser(testPhoneNumber),
@@ -1759,10 +2159,26 @@ function safeDelete(uid: string): Promise<void> {
       }
     });
   // Suppress errors in delete queue to not spill over to next item in queue.
-  deleteQueue = deletePromise.catch((error) => {
+  deleteQueue = deletePromise.catch(() => {
     // Do nothing.
   });
   return deletePromise;
+}
+
+/**
+ * Deletes the specified list of users by calling the `deleteUsers()` API. This
+ * API is rate limited at 1 QPS, and therefore this helper function staggers
+ * subsequent invocations by adding 1 second delay to each call.
+ *
+ * @param {string[]} uids The list of user identifiers to delete.
+ * @return {Promise} A promise that resolves when delete operation resolves.
+ */
+function deleteUsersWithDelay(uids: string[]): Promise<admin.auth.DeleteUsersResult> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, 1000);
+  }).then(() => {
+    return admin.auth().deleteUsers(uids);
+  });
 }
 
 /**
@@ -1772,9 +2188,9 @@ function safeDelete(uid: string): Promise<void> {
  * @param {[key: string]: any} expected object.
  * @param {[key: string]: any} actual object.
  */
-function assertDeepEqualUnordered(expected: {[key: string]: any}, actual: {[key: string]: any}) {
+function assertDeepEqualUnordered(expected: {[key: string]: any}, actual: {[key: string]: any}): void {
   for (const key in expected) {
-    if (expected.hasOwnProperty(key)) {
+    if (Object.prototype.hasOwnProperty.call(expected, key)) {
       expect(actual[key])
         .to.deep.equal(expected[key]);
     }

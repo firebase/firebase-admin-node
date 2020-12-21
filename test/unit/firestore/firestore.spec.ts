@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,19 +17,19 @@
 
 'use strict';
 
-import path = require('path');
 import * as _ from 'lodash';
-import {expect} from 'chai';
+import { expect } from 'chai';
 
 import * as mocks from '../../resources/mocks';
-import {FirebaseApp} from '../../../src/firebase-app';
-import { ComputeEngineCredential } from '../../../src/auth/credential';
-import {FirestoreService, getFirestoreOptions} from '../../../src/firestore/firestore';
+import { FirebaseApp } from '../../../src/firebase-app';
+import {
+  ComputeEngineCredential, RefreshTokenCredential
+} from '../../../src/credential/credential-internal';
+import { FirestoreService, getFirestoreOptions } from '../../../src/firestore/firestore-internal';
 
 describe('Firestore', () => {
   let mockApp: FirebaseApp;
   let mockCredentialApp: FirebaseApp;
-  let defaultCredentialApp: FirebaseApp;
   let projectIdApp: FirebaseApp;
   let firestore: any;
 
@@ -40,8 +41,22 @@ describe('Firestore', () => {
     + 'credentials. Must initialize the SDK with a certificate credential or application default '
     + 'credentials to use Cloud Firestore API.';
 
-  const mockServiceAccount = path.resolve(__dirname, '../../resources/mock.key.json');
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const { version: firebaseVersion } = require('../../../package.json');
+  const defaultCredentialApps = [
+    {
+      name: 'ComputeEngineCredentials',
+      app: mocks.appWithOptions({
+        credential: new ComputeEngineCredential(),
+      }),
+    },
+    {
+      name: 'RefreshTokenCredentials',
+      app: mocks.appWithOptions({
+        credential: new RefreshTokenCredential(mocks.refreshToken, undefined, true),
+      }),
+    },
+  ];
 
   beforeEach(() => {
     appCredentials = process.env.GOOGLE_APPLICATION_CREDENTIALS;
@@ -51,9 +66,6 @@ describe('Firestore', () => {
 
     mockApp = mocks.app();
     mockCredentialApp = mocks.mockCredentialApp();
-    defaultCredentialApp = mocks.appWithOptions({
-      credential: new ComputeEngineCredential(),
-    });
     projectIdApp = mocks.appWithOptions({
       credential: mocks.credential,
       projectId: 'explicit-project-id',
@@ -121,14 +133,15 @@ describe('Firestore', () => {
       }).not.to.throw();
     });
 
-    it('should not throw given application default credentials without project ID', () => {
-      // Project ID not set in the environment.
-      delete process.env.GOOGLE_CLOUD_PROJECT;
-      delete process.env.GCLOUD_PROJECT;
-      process.env.GOOGLE_APPLICATION_CREDENTIALS = mockServiceAccount;
-      expect(() => {
-        return new FirestoreService(defaultCredentialApp);
-      }).not.to.throw();
+    defaultCredentialApps.forEach((config) => {
+      it(`should not throw given default ${config.name} without project ID`, () => {
+        // Project ID not set in the environment.
+        delete process.env.GOOGLE_CLOUD_PROJECT;
+        delete process.env.GCLOUD_PROJECT;
+        expect(() => {
+          return new FirestoreService(config.app);
+        }).not.to.throw();
+      });
     });
   });
 
@@ -169,18 +182,18 @@ describe('Firestore', () => {
       expect(options.projectId).to.equal('explicit-project-id');
     });
 
-    it('should return a string when GOOGLE_CLOUD_PROJECT is set', () => {
-      process.env.GOOGLE_CLOUD_PROJECT = 'env-project-id';
-      process.env.GOOGLE_APPLICATION_CREDENTIALS = mockServiceAccount;
-      const options = getFirestoreOptions(defaultCredentialApp);
-      expect(options.projectId).to.equal('env-project-id');
-    });
+    defaultCredentialApps.forEach((config) => {
+      it(`should return a string when GOOGLE_CLOUD_PROJECT is set with ${config.name}`, () => {
+        process.env.GOOGLE_CLOUD_PROJECT = 'env-project-id';
+        const options = getFirestoreOptions(config.app);
+        expect(options.projectId).to.equal('env-project-id');
+      });
 
-    it('should return a string when GCLOUD_PROJECT is set', () => {
-      process.env.GCLOUD_PROJECT = 'env-project-id';
-      process.env.GOOGLE_APPLICATION_CREDENTIALS = mockServiceAccount;
-      const options = getFirestoreOptions(defaultCredentialApp);
-      expect(options.projectId).to.equal('env-project-id');
+      it(`should return a string when GCLOUD_PROJECT is set with ${config.name}`, () => {
+        process.env.GCLOUD_PROJECT = 'env-project-id';
+        const options = getFirestoreOptions(config.app);
+        expect(options.projectId).to.equal('env-project-id');
+      });
     });
   });
 
@@ -190,9 +203,11 @@ describe('Firestore', () => {
       expect(options.firebaseVersion).to.equal(firebaseVersion);
     });
 
-    it('should return firebaseVersion when using credential without service account certificate', () => {
-      const options = getFirestoreOptions(defaultCredentialApp);
-      expect(options.firebaseVersion).to.equal(firebaseVersion);
+    defaultCredentialApps.forEach((config) => {
+      it(`should return firebaseVersion when using default ${config.name}`, () => {
+        const options = getFirestoreOptions(config.app);
+        expect(options.firebaseVersion).to.equal(firebaseVersion);
+      });
     });
   });
 });

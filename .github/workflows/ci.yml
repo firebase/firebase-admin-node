@@ -1,6 +1,6 @@
 name: Continuous Integration
 
-on: [push, pull_request]
+on: pull_request
 
 jobs:
   build:
@@ -9,7 +9,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [8.x, 10.x]
+        node-version: [10.x, 12.x, 14.x]
 
     steps:
     - uses: actions/checkout@v1
@@ -21,6 +21,6 @@ jobs:
       run: |
         npm ci
         npm run build
+        npm run build:tests
         npm test
-      env:
-        CI: true
+        npm run api-extractor

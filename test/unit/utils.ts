@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,19 +20,20 @@ import * as sinon from 'sinon';
 
 import * as mocks from '../resources/mocks';
 
-import {FirebaseNamespace} from '../../src/firebase-namespace';
-import {FirebaseApp, FirebaseAppOptions, FirebaseAppInternals, FirebaseAccessToken} from '../../src/firebase-app';
+import { FirebaseNamespace } from '../../src/firebase-namespace';
+import { AppOptions } from '../../src/firebase-namespace-api';
+import { FirebaseApp, FirebaseAppInternals, FirebaseAccessToken } from '../../src/firebase-app';
 import { HttpError, HttpResponse } from '../../src/utils/api-request';
 
 /**
  * Returns a new FirebaseApp instance with the provided options.
  *
- * @param {object} options The options for the FirebaseApp instance to create.
- * @return {FirebaseApp} A new FirebaseApp instance with the provided options.
+ * @param options The options for the FirebaseApp instance to create.
+ * @return A new FirebaseApp instance with the provided options.
  */
-export function createAppWithOptions(options: object) {
+export function createAppWithOptions(options: object): FirebaseApp {
   const mockFirebaseNamespaceInternals = new FirebaseNamespace().INTERNAL;
-  return new FirebaseApp(options as FirebaseAppOptions, mocks.appName, mockFirebaseNamespaceInternals);
+  return new FirebaseApp(options as AppOptions, mocks.appName, mockFirebaseNamespaceInternals);
 }
 
 
@@ -71,7 +73,7 @@ export function stubGetAccessToken(accessToken?: string, app?: FirebaseApp): sin
  * @param {*=} headers HTTP headers to be included in the ersponse.
  * @return {HttpResponse} An HTTP response object.
  */
-export function responseFrom(data: object | string, status: number = 200, headers: any = {}): HttpResponse {
+export function responseFrom(data: object | string, status = 200, headers: any = {}): HttpResponse {
   let responseData: any;
   let responseText: string;
   if (typeof data === 'object') {
@@ -94,6 +96,6 @@ export function responseFrom(data: object | string, status: number = 200, header
   };
 }
 
-export function errorFrom(data: any, status: number = 500): HttpError {
+export function errorFrom(data: any, status = 500): HttpError {
   return new HttpError(responseFrom(data, status));
 }

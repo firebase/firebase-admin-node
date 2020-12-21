@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,17 +20,15 @@
 /**************/
 /*  REQUIRES  */
 /**************/
-var fs = require('fs');
 var _ = require('lodash');
 var gulp = require('gulp');
 var pkg = require('./package.json');
 
 // File I/O
-var fs = require('fs');
 var ts = require('gulp-typescript');
 var del = require('del');
 var header = require('gulp-header');
-var replace = require('gulp-replace');
+var filter = require('gulp-filter');
 
 
 /****************/
@@ -45,17 +44,15 @@ var paths = {
     '!test/integration/typescript/src/example*.ts',
   ],
 
-  databaseSrc: [
-    'src/**/*.js'
-  ],
-
   build: 'lib/',
 };
 
-// Create a separate project for buildProject that overrides the rootDir
+// Create a separate project for buildProject that overrides the rootDir.
 // This ensures that the generated production files are in their own root
-// rather than including both src and test in the lib dir.
-var buildProject = ts.createProject('tsconfig.json', {rootDir: 'src'});
+// rather than including both src and test in the lib dir. Declaration
+// is used by TypeScript to determine if auto-generated typings should be
+// emitted.
+var buildProject = ts.createProject('tsconfig.json', { rootDir: 'src', declarationMap: true });
 
 var buildTest = ts.createProject('tsconfig.json');
 
@@ -71,19 +68,31 @@ gulp.task('cleanup', function() {
   ]);
 });
 
+// Task used to compile the TypeScript project. If automatic typings
+// are set to be generated (determined by TYPE_GENERATION_MODE), declarations
+// for files terminating in -internal.d.ts are removed because we do not
+// want to expose internally used types to developers. As auto-generated
+// typings are a work-in-progress, we remove the *.d.ts files for modules
+// which we do not intend to auto-generate typings for yet.
 gulp.task('compile', function() {
-  return gulp.src(paths.src)
+  let workflow = gulp.src(paths.src)
     // Compile Typescript into .js and .d.ts files
     .pipe(buildProject())
 
-    // Replace SDK version
-    .pipe(replace(/\<XXX_SDK_VERSION_XXX\>/g, pkg.version))
-
     // Add header
-    .pipe(header(banner))
+    .pipe(header(banner));
 
-    // Write to build directory
-    .pipe(gulp.dest(paths.build))
+  const configuration = [
+    'lib/**/*.js',
+    'lib/**/index.d.ts',
+    'lib/firebase-namespace-api.d.ts',
+    '!lib/utils/index.d.ts',
+  ];
+
+  workflow = workflow.pipe(filter(configuration));
+
+  // Write to build directory
+  return workflow.pipe(gulp.dest(paths.build))
 });
 
 /**
@@ -96,34 +105,22 @@ gulp.task('compile_test', function() {
     .pipe(buildTest())
 });
 
-gulp.task('copyDatabase', function() {
-  return gulp.src(paths.databaseSrc)
-    // Add headers
-    .pipe(header(fs.readFileSync('third_party/database-license.txt', 'utf8')))
-    .pipe(header(banner))
-
-    // Write to build directory
-    .pipe(gulp.dest(paths.build))
-});
-
 gulp.task('copyTypings', function() {
-  return gulp.src('src/index.d.ts')
+  return gulp.src(['src/index.d.ts', 'src/firebase-namespace.d.ts'])
     // Add header
     .pipe(header(banner))
-
-    // Write to build directory
     .pipe(gulp.dest(paths.build))
 });
 
-gulp.task('compile_all', gulp.series('compile', 'copyDatabase', 'copyTypings', 'compile_test'));
+gulp.task('compile_all', gulp.series('compile', 'copyTypings', 'compile_test'));
 
 // Regenerates js every time a source file changes
 gulp.task('watch', function() {
-  gulp.watch(paths.src.concat(paths.test), {ignoreInitial: false}, gulp.series('compile_all'));
+  gulp.watch(paths.src.concat(paths.test), { ignoreInitial: false }, gulp.series('compile_all'));
 });
 
 // Build task
-gulp.task('build', gulp.series('cleanup', 'compile', 'copyDatabase', 'copyTypings'));
+gulp.task('build', gulp.series('cleanup', 'compile', 'copyTypings'));
 
 // Default task
 gulp.task('default', gulp.series('build'));

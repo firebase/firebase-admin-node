@@ -17,9 +17,9 @@
 import * as admin from '../../lib/index';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import {Bucket, File} from '@google-cloud/storage';
+import { Bucket, File } from '@google-cloud/storage';
 
-import {projectId} from './setup';
+import { projectId } from './setup';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -59,7 +59,7 @@ function verifyBucket(bucket: Bucket, testName: string): Promise<void> {
       expect(data[0].toString()).to.equal(expected);
       return file.delete();
     })
-    .then((resp) => {
+    .then(() => {
       return file.exists();
     })
     .then((data) => {

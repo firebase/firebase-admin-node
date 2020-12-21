@@ -25,10 +25,16 @@ const yaml = require('js-yaml');
 
 const repoPath = path.resolve(`${__dirname}/..`);
 
+const defaultSources = [
+  `${repoPath}/lib/firebase-namespace.d.ts`,
+  `${repoPath}/lib/firebase-namespace-api.d.ts`,
+  `${repoPath}/lib/**/*.d.ts`,
+];
+
 // Command-line options.
 const { source: sourceFile } = yargs
   .option('source', {
-    default: `${repoPath}/src/index.d.ts`,
+    default: defaultSources.join(' '),
     describe: 'Typescript source file(s)',
     type: 'string'
   })
@@ -50,6 +56,17 @@ const firestoreHeader = `<section class="tsd-panel-group tsd-member-group ">
   </div>
   <ul>`;
 const firestoreFooter = '\n  </ul>\n</section>\n';
+
+const databaseExcludes = ['enableLogging'];
+const databaseHtmlPath = `${docPath}/admin.database.html`;
+const databaseHeader = `<section class="tsd-panel-group tsd-member-group ">
+  <h2>Type aliases</h2>
+  <div class="tsd-panel">
+    <p>Following types are defined in the <code>@firebase/database</code> package
+    and re-exported from this namespace for convenience.</p>
+  </div>
+  <ul>`;
+const databaseFooter = '\n  </ul>\n</section>\n';
 
 /**
  * Strips path prefix and returns only filename.
@@ -99,7 +116,7 @@ function fixLinks(file) {
       .replace(/(modules|interfaces|classes|enums)\//g, '');
     let caseFixedLinks = flattenedLinks;
     for (const lower in lowerToUpperLookup) {
-      const re = new RegExp(lower, 'g');
+      const re = new RegExp('\\b' + lower, 'g');
       caseFixedLinks = caseFixedLinks.replace(re, lowerToUpperLookup[lower]);
     }
     return fs.writeFile(file, caseFixedLinks);
@@ -119,7 +136,7 @@ function generateTempHomeMdFile(tocRaw, homeRaw) {
   const { toc } = yaml.safeLoad(tocRaw);
   let tocPageLines = [homeRaw, '# API Reference'];
   toc.forEach(group => {
-    tocPageLines.push(`\n## [${group.title}](${stripPath(group.path)})`);
+    tocPageLines.push(`\n## [${group.title}](${stripPath(group.path)}.html)`);
     const section = group.section || [];
     section.forEach(item => {
       tocPageLines.push(`- [${item.title}](${stripPath(item.path)}.html)`);
@@ -150,13 +167,13 @@ function checkForMissingFilesAndFixFilenameCase() {
     // Preferred filename for devsite should be capitalized and taken from
     // toc.yaml.
     const tocFilePath = `${docPath}/${filename}.html`;
-    // Generated filename from Typedoc will be lowercase.
-    const generatedFilePath = `${docPath}/${filename.toLowerCase()}.html`;
+    // Generated filename from Typedoc will be lowercase and won't have the admin prefix.
+    const generatedFilePath = `${docPath}/${filename.toLowerCase().replace('admin.', '')}.html`;
     return fs.exists(generatedFilePath).then(exists => {
       if (exists) {
         // Store in a lookup table for link fixing.
         lowerToUpperLookup[
-          `${filename.toLowerCase()}.html`
+          `${filename.toLowerCase().replace('admin.', '')}.html`
         ] = `${filename}.html`;
         return fs.rename(generatedFilePath, tocFilePath);
       } else {
@@ -167,6 +184,7 @@ function checkForMissingFilesAndFixFilenameCase() {
       }
     });
   });
+
   return Promise.all(fileCheckPromises).then(() => filenames);
 }
 
@@ -253,15 +271,16 @@ function fixAllLinks(htmlFiles) {
  * Updates the auto-generated Firestore API references page, by appending
  * the specified HTML content block.
  *
+ * @param {string} htmlPath Path of the HTML file to update.
  * @param {string} contentBlock The HTML content block to be added to the Firestore docs.
  */
-function updateFirestoreHtml(contentBlock) {
-  const dom = new jsdom.JSDOM(fs.readFileSync(firestoreHtmlPath));
+function updateHtml(htmlPath, contentBlock) {
+  const dom = new jsdom.JSDOM(fs.readFileSync(htmlPath));
   const contentNode = dom.window.document.body.querySelector('.col-12');
 
   const newSection = new jsdom.JSDOM(contentBlock);
   contentNode.appendChild(newSection.window.document.body.firstChild);
-  fs.writeFileSync(firestoreHtmlPath, dom.window.document.documentElement.outerHTML);
+  fs.writeFileSync(htmlPath, dom.window.document.documentElement.outerHTML);
 }
 
 /**
@@ -272,7 +291,7 @@ function updateFirestoreHtml(contentBlock) {
  */
 function addFirestoreTypeAliases() {
   return new Promise((resolve, reject) => {
-    const fileStream = fs.createReadStream(`${repoPath}/src/index.d.ts`);
+    const fileStream = fs.createReadStream(`${repoPath}/lib/firestore/index.d.ts`);
     fileStream.on('error', (err) => {
       reject(err);
     });
@@ -283,7 +302,7 @@ function addFirestoreTypeAliases() {
     let contentBlock = firestoreHeader;
     lineReader.on('line', (line) => {
       line = line.trim();
-      if (line.startsWith('export import') && line.indexOf('_firestore.')) {
+      if (line.startsWith('export import') && line.indexOf('_firestore.') >= 0) {
         const typeName = line.split(' ')[2];
         if (firestoreExcludes.indexOf(typeName) === -1) {
           contentBlock += `
@@ -297,7 +316,49 @@ function addFirestoreTypeAliases() {
     lineReader.on('close', () => {
       try {
         contentBlock += firestoreFooter;
-        updateFirestoreHtml(contentBlock);
+        updateHtml(firestoreHtmlPath, contentBlock);
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
+    });
+  });
+}
+
+/**
+ * Adds RTDB type aliases to the auto-generated API docs. These are the
+ * types that are imported from the @firebase/database package, and
+ * then re-exported from the admin.database namespace. Typedoc currently
+ * does not handle these correctly, so we need this solution instead.
+ */
+function addDatabaseTypeAliases() {
+  return new Promise((resolve, reject) => {
+    const fileStream = fs.createReadStream(`${repoPath}/lib/database/index.d.ts`);
+    fileStream.on('error', (err) => {
+      reject(err);
+    });
+    const lineReader = readline.createInterface({
+      input: fileStream,
+    });
+
+    let contentBlock = databaseHeader;
+    lineReader.on('line', (line) => {
+      line = line.trim();
+      if (line.startsWith('export import') && line.indexOf('rtdb.') >= 0) {
+        const typeName = line.split(' ')[2];
+        if (databaseExcludes.indexOf(typeName) === -1) {
+          contentBlock += `
+          <li>
+            <a href="/docs/reference/js/firebase.database.${typeName}.html">${typeName}</a>
+          </li>`;
+        }
+      }
+    });
+
+    lineReader.on('close', () => {
+      try {
+        contentBlock += databaseFooter;
+        updateHtml(databaseHtmlPath, contentBlock);
         resolve();
       } catch (err) {
         reject(err);
@@ -349,6 +410,8 @@ Promise.all([
       moveFilesToRoot('enums'),
     ]);
   })
+  // Rename the globals file to be the top-level admin doc.
+  .then(() => fs.rename(`${docPath}/globals.html`, `${docPath}/admin.html`))
   // Check for files listed in TOC that are missing and warn if so.
   // Not blocking.
   .then(checkForMissingFilesAndFixFilenameCase)
@@ -366,6 +429,7 @@ Promise.all([
   // Add local variable include line to index.html (to access current SDK
   // version number).
   .then(addFirestoreTypeAliases)
+  .then(addDatabaseTypeAliases)
   .then(() => {
     fs.readFile(`${docPath}/index.html`, 'utf8').then(data => {
       // String to include devsite local variables.

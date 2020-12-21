@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,28 +16,40 @@
  */
 
 import fs = require('fs');
-import {Agent} from 'http';
-import {deepExtend} from './utils/deep-copy';
-import {AppErrorCodes, FirebaseAppError} from './utils/error';
-import {AppHook, FirebaseApp, FirebaseAppOptions} from './firebase-app';
-import {FirebaseServiceFactory, FirebaseServiceInterface} from './firebase-service';
-import {
-  Credential,
-  RefreshTokenCredential,
-  ServiceAccountCredential,
-  getApplicationDefault,
-} from './auth/credential';
 
-import {Auth} from './auth/auth';
-import {Messaging} from './messaging/messaging';
-import {Storage} from './storage/storage';
-import {Database} from '@firebase/database';
-import {Firestore} from '@google-cloud/firestore';
-import {InstanceId} from './instance-id/instance-id';
-import {ProjectManagement} from './project-management/project-management';
-import { SecurityRules } from './security-rules/security-rules';
+import { deepExtend } from './utils/deep-copy';
+import { AppErrorCodes, FirebaseAppError } from './utils/error';
+import { AppOptions, app } from './firebase-namespace-api';
+import { AppHook, FirebaseApp } from './firebase-app';
+import { FirebaseServiceFactory, FirebaseServiceInterface } from './firebase-service';
+import { cert, refreshToken, applicationDefault } from './credential/credential';
+import { getApplicationDefault } from './credential/credential-internal';
+
+import { auth } from './auth/index';
+import { database } from './database/index';
+import { firestore } from './firestore/index';
+import { instanceId } from './instance-id/index';
+import { machineLearning } from './machine-learning/index';
+import { messaging } from './messaging/index';
+import { projectManagement } from './project-management/index';
+import { remoteConfig } from './remote-config/index';
+import { securityRules } from './security-rules/index';
+import { storage } from './storage/index';
 
 import * as validator from './utils/validator';
+import { getSdkVersion } from './utils/index';
+
+import App = app.App;
+import Auth = auth.Auth;
+import Database = database.Database;
+import Firestore = firestore.Firestore;
+import InstanceId = instanceId.InstanceId;
+import MachineLearning = machineLearning.MachineLearning;
+import Messaging = messaging.Messaging;
+import ProjectManagement = projectManagement.ProjectManagement;
+import RemoteConfig = remoteConfig.RemoteConfig;
+import SecurityRules = securityRules.SecurityRules;
+import Storage = storage.Storage;
 
 const DEFAULT_APP_NAME = '[DEFAULT]';
 
@@ -45,19 +58,12 @@ const DEFAULT_APP_NAME = '[DEFAULT]';
  * If the environment variable contains a string that starts with '{' it will be parsed as JSON,
  * otherwise it will be assumed to be pointing to a file.
  */
-export const FIREBASE_CONFIG_VAR: string = 'FIREBASE_CONFIG';
-
-
-let globalAppDefaultCred: Credential;
-const globalCertCreds: { [key: string]: ServiceAccountCredential } = {};
-const globalRefreshTokenCreds: { [key: string]: RefreshTokenCredential } = {};
-
+export const FIREBASE_CONFIG_VAR = 'FIREBASE_CONFIG';
 
 export interface FirebaseServiceNamespace <T> {
-  (app?: FirebaseApp): T;
+  (app?: App): T;
   [key: string]: any;
 }
-
 
 /**
  * Internals of a FirebaseNamespace instance.
@@ -65,24 +71,23 @@ export interface FirebaseServiceNamespace <T> {
 export class FirebaseNamespaceInternals {
   public serviceFactories: {[serviceName: string]: FirebaseServiceFactory} = {};
 
-  private apps_: {[appName: string]: FirebaseApp} = {};
+  private apps_: {[appName: string]: App} = {};
   private appHooks_: {[service: string]: AppHook} = {};
 
   constructor(public firebase_: {[key: string]: any}) {}
 
   /**
-   * Initializes the FirebaseApp instance.
+   * Initializes the App instance.
    *
-   * @param {FirebaseAppOptions} options Optional options for the FirebaseApp instance. If none present
-   *                             will try to initialize from the FIREBASE_CONFIG environment variable.
-   *                             If the environment variable contains a string that starts with '{'
-   *                             it will be parsed as JSON,
-   *                             otherwise it will be assumed to be pointing to a file.
-   * @param {string} [appName] Optional name of the FirebaseApp instance.
+   * @param options Optional options for the App instance. If none present will try to initialize
+   *   from the FIREBASE_CONFIG environment variable. If the environment variable contains a string
+   *   that starts with '{' it will be parsed as JSON, otherwise it will be assumed to be pointing
+   *   to a file.
+   * @param appName Optional name of the FirebaseApp instance.
    *
-   * @return {FirebaseApp} A new FirebaseApp instance.
+   * @return A new App instance.
    */
-  public initializeApp(options?: FirebaseAppOptions, appName = DEFAULT_APP_NAME): FirebaseApp {
+  public initializeApp(options?: AppOptions, appName = DEFAULT_APP_NAME): App {
     if (typeof options === 'undefined') {
       options = this.loadOptionsFromEnvVar();
       options.credential = getApplicationDefault();
@@ -122,13 +127,13 @@ export class FirebaseNamespaceInternals {
   }
 
   /**
-   * Returns the FirebaseApp instance with the provided name (or the default FirebaseApp instance
+   * Returns the App instance with the provided name (or the default App instance
    * if no name is provided).
    *
-   * @param {string} [appName=DEFAULT_APP_NAME] Optional name of the FirebaseApp instance to return.
-   * @return {FirebaseApp} The FirebaseApp instance which has the provided name.
+   * @param appName Optional name of the FirebaseApp instance to return.
+   * @return The App instance which has the provided name.
    */
-  public app(appName = DEFAULT_APP_NAME): FirebaseApp {
+  public app(appName = DEFAULT_APP_NAME): App {
     if (typeof appName !== 'string' || appName === '') {
       throw new FirebaseAppError(
         AppErrorCodes.INVALID_APP_NAME,
@@ -146,25 +151,21 @@ export class FirebaseNamespaceInternals {
   }
 
   /*
-   * Returns an array of all the non-deleted FirebaseApp instances.
-   *
-   * @return {Array<FirebaseApp>} An array of all the non-deleted FirebaseApp instances
+   * Returns an array of all the non-deleted App instances.
    */
-  public get apps(): FirebaseApp[] {
+  public get apps(): App[] {
     // Return a copy so the caller cannot mutate the array
     return Object.keys(this.apps_).map((appName) => this.apps_[appName]);
   }
 
   /*
-   * Removes the specified FirebaseApp instance.
-   *
-   * @param {string} appName The name of the FirebaseApp instance to remove.
+   * Removes the specified App instance.
    */
   public removeApp(appName: string): void {
     if (typeof appName === 'undefined') {
       throw new FirebaseAppError(
         AppErrorCodes.INVALID_APP_NAME,
-        `No Firebase app name provided. App name must be a non-empty string.`,
+        'No Firebase app name provided. App name must be a non-empty string.',
       );
     }
 
@@ -173,22 +174,23 @@ export class FirebaseNamespaceInternals {
     delete this.apps_[appName];
   }
 
-  /*
+  /**
    * Registers a new service on this Firebase namespace.
    *
-   * @param {string} serviceName The name of the Firebase service to register.
-   * @param {FirebaseServiceFactory} createService A factory method to generate an instance of the Firebase service.
-   * @param {object} [serviceProperties] Optional properties to extend this Firebase namespace with.
-   * @param {AppHook} [appHook] Optional callback that handles app-related events like app creation and deletion.
-   * @return {FirebaseServiceNamespace<FirebaseServiceInterface>} The Firebase service's namespace.
+   * @param serviceName The name of the Firebase service to register.
+   * @param createService A factory method to generate an instance of the Firebase service.
+   * @param serviceProperties Optional properties to extend this Firebase namespace with.
+   * @param appHook Optional callback that handles app-related events like app creation and deletion.
+   * @return The Firebase service's namespace.
    */
-  public registerService(serviceName: string,
-                         createService: FirebaseServiceFactory,
-                         serviceProperties?: object,
-                         appHook?: AppHook): FirebaseServiceNamespace<FirebaseServiceInterface> {
+  public registerService(
+    serviceName: string,
+    createService: FirebaseServiceFactory,
+    serviceProperties?: object,
+    appHook?: AppHook): FirebaseServiceNamespace<FirebaseServiceInterface> {
     let errorMessage;
     if (typeof serviceName === 'undefined') {
-      errorMessage = `No service name provided. Service name must be a non-empty string.`;
+      errorMessage = 'No service name provided. Service name must be a non-empty string.';
     } else if (typeof serviceName !== 'string' || serviceName === '') {
       errorMessage = `Invalid service name "${serviceName}" provided. Service name must be a non-empty string.`;
     } else if (serviceName in this.serviceFactories) {
@@ -207,11 +209,9 @@ export class FirebaseNamespaceInternals {
       this.appHooks_[serviceName] = appHook;
     }
 
-    let serviceNamespace: FirebaseServiceNamespace<FirebaseServiceInterface>;
-
     // The service namespace is an accessor function which takes a FirebaseApp instance
     // or uses the default app if no FirebaseApp instance is provided
-    serviceNamespace = (appArg?: FirebaseApp) => {
+    const serviceNamespace: FirebaseServiceNamespace<FirebaseServiceInterface> = (appArg?: App) => {
       if (typeof appArg === 'undefined') {
         appArg = this.app();
       }
@@ -233,12 +233,12 @@ export class FirebaseNamespaceInternals {
 
   /**
    * Calls the app hooks corresponding to the provided event name for each service within the
-   * provided FirebaseApp instance.
+   * provided App instance.
    *
-   * @param {FirebaseApp} app The FirebaseApp instance whose app hooks to call.
-   * @param {string} eventName The event name representing which app hooks to call.
+   * @param app The App instance whose app hooks to call.
+   * @param eventName The event name representing which app hooks to call.
    */
-  private callAppHooks_(app: FirebaseApp, eventName: string) {
+  private callAppHooks_(app: App, eventName: string): void {
     Object.keys(this.serviceFactories).forEach((serviceName) => {
       if (this.appHooks_[serviceName]) {
         this.appHooks_[serviceName](eventName, app);
@@ -252,14 +252,14 @@ export class FirebaseNamespaceInternals {
    * If the environment variable contains a string that starts with '{' it will be parsed as JSON,
    * otherwise it will be assumed to be pointing to a file.
    */
-  private loadOptionsFromEnvVar(): FirebaseAppOptions {
+  private loadOptionsFromEnvVar(): AppOptions {
     const config = process.env[FIREBASE_CONFIG_VAR];
     if (!validator.isNonEmptyString(config)) {
       return {};
     }
     try {
       const contents = config.startsWith('{') ? config : fs.readFileSync(config, 'utf8');
-      return JSON.parse(contents) as FirebaseAppOptions;
+      return JSON.parse(contents) as AppOptions;
     } catch (error) {
       // Throw a nicely formed error message if the file contents cannot be parsed
       throw new FirebaseAppError(
@@ -270,33 +270,9 @@ export class FirebaseNamespaceInternals {
   }
 }
 
-
 const firebaseCredential = {
-  cert: (serviceAccountPathOrObject: string | object, httpAgent?: Agent): Credential => {
-    const stringifiedServiceAccount = JSON.stringify(serviceAccountPathOrObject);
-    if (!(stringifiedServiceAccount in globalCertCreds)) {
-      globalCertCreds[stringifiedServiceAccount] = new ServiceAccountCredential(serviceAccountPathOrObject, httpAgent);
-    }
-    return globalCertCreds[stringifiedServiceAccount];
-  },
-
-  refreshToken: (refreshTokenPathOrObject: string | object, httpAgent?: Agent): Credential => {
-    const stringifiedRefreshToken = JSON.stringify(refreshTokenPathOrObject);
-    if (!(stringifiedRefreshToken in globalRefreshTokenCreds)) {
-      globalRefreshTokenCreds[stringifiedRefreshToken] = new RefreshTokenCredential(
-        refreshTokenPathOrObject, httpAgent);
-    }
-    return globalRefreshTokenCreds[stringifiedRefreshToken];
-  },
-
-  applicationDefault: (httpAgent?: Agent): Credential => {
-    if (typeof globalAppDefaultCred === 'undefined') {
-      globalAppDefaultCred = getApplicationDefault(httpAgent);
-    }
-    return globalAppDefaultCred;
-  },
+  cert, refreshToken, applicationDefault
 };
-
 
 /**
  * Global Firebase context object.
@@ -308,7 +284,7 @@ export class FirebaseNamespace {
   /* tslint:enable:variable-name */
 
   public credential = firebaseCredential;
-  public SDK_VERSION = '<XXX_SDK_VERSION_XXX>';
+  public SDK_VERSION = getSdkVersion();
   public INTERNAL: FirebaseNamespaceInternals;
 
   /* tslint:disable */
@@ -326,11 +302,11 @@ export class FirebaseNamespace {
    * `Auth` service for the default app or an explicitly specified app.
    */
   get auth(): FirebaseServiceNamespace<Auth> {
-    const fn: FirebaseServiceNamespace<Auth> = (app?: FirebaseApp) => {
+    const fn: FirebaseServiceNamespace<Auth> = (app?: App) => {
       return this.ensureApp(app).auth();
     };
     const auth = require('./auth/auth').Auth;
-    return Object.assign(fn, {Auth: auth});
+    return Object.assign(fn, { Auth: auth });
   }
 
   /**
@@ -338,9 +314,11 @@ export class FirebaseNamespace {
    * `Database` service for the default app or an explicitly specified app.
    */
   get database(): FirebaseServiceNamespace<Database> {
-    const fn: FirebaseServiceNamespace<Database> = (app?: FirebaseApp) => {
+    const fn: FirebaseServiceNamespace<Database> = (app?: App) => {
       return this.ensureApp(app).database();
     };
+
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     return Object.assign(fn, require('@firebase/database'));
   }
 
@@ -349,11 +327,11 @@ export class FirebaseNamespace {
    * `Messaging` service for the default app or an explicitly specified app.
    */
   get messaging(): FirebaseServiceNamespace<Messaging> {
-    const fn: FirebaseServiceNamespace<Messaging> = (app?: FirebaseApp) => {
+    const fn: FirebaseServiceNamespace<Messaging> = (app?: App) => {
       return this.ensureApp(app).messaging();
     };
     const messaging = require('./messaging/messaging').Messaging;
-    return Object.assign(fn, {Messaging: messaging});
+    return Object.assign(fn, { Messaging: messaging });
   }
 
   /**
@@ -361,11 +339,11 @@ export class FirebaseNamespace {
    * `Storage` service for the default app or an explicitly specified app.
    */
   get storage(): FirebaseServiceNamespace<Storage> {
-    const fn: FirebaseServiceNamespace<Storage> = (app?: FirebaseApp) => {
+    const fn: FirebaseServiceNamespace<Storage> = (app?: App) => {
       return this.ensureApp(app).storage();
     };
     const storage = require('./storage/storage').Storage;
-    return Object.assign(fn, {Storage: storage});
+    return Object.assign(fn, { Storage: storage });
   }
 
   /**
@@ -373,9 +351,11 @@ export class FirebaseNamespace {
    * `Firestore` service for the default app or an explicitly specified app.
    */
   get firestore(): FirebaseServiceNamespace<Firestore> {
-    let fn: FirebaseServiceNamespace<Firestore> = (app?: FirebaseApp) => {
+    let fn: FirebaseServiceNamespace<Firestore> = (app?: App) => {
       return this.ensureApp(app).firestore();
     };
+
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const firestore = require('@google-cloud/firestore');
 
     fn = Object.assign(fn, firestore.Firestore);
@@ -397,15 +377,30 @@ export class FirebaseNamespace {
   }
 
   /**
+   * Gets the `MachineLearning` service namespace. The returned namespace can be
+   * used to get the `MachineLearning` service for the default app or an
+   * explicityly specified app.
+   */
+  get machineLearning(): FirebaseServiceNamespace<MachineLearning> {
+    const fn: FirebaseServiceNamespace<MachineLearning> =
+        (app?: App) => {
+          return this.ensureApp(app).machineLearning();
+        };
+    const machineLearning =
+        require('./machine-learning/machine-learning').MachineLearning;
+    return Object.assign(fn, { MachineLearning: machineLearning });
+  }
+
+  /**
    * Gets the `InstanceId` service namespace. The returned namespace can be used to get the
    * `Instance` service for the default app or an explicitly specified app.
    */
   get instanceId(): FirebaseServiceNamespace<InstanceId> {
-    const fn: FirebaseServiceNamespace<InstanceId> = (app?: FirebaseApp) => {
+    const fn: FirebaseServiceNamespace<InstanceId> = (app?: App) => {
       return this.ensureApp(app).instanceId();
     };
     const instanceId = require('./instance-id/instance-id').InstanceId;
-    return Object.assign(fn, {InstanceId: instanceId});
+    return Object.assign(fn, { InstanceId: instanceId });
   }
 
   /**
@@ -413,11 +408,11 @@ export class FirebaseNamespace {
    * `ProjectManagement` service for the default app or an explicitly specified app.
    */
   get projectManagement(): FirebaseServiceNamespace<ProjectManagement> {
-    const fn: FirebaseServiceNamespace<ProjectManagement> = (app?: FirebaseApp) => {
+    const fn: FirebaseServiceNamespace<ProjectManagement> = (app?: App) => {
       return this.ensureApp(app).projectManagement();
     };
     const projectManagement = require('./project-management/project-management').ProjectManagement;
-    return Object.assign(fn, {ProjectManagement: projectManagement});
+    return Object.assign(fn, { ProjectManagement: projectManagement });
   }
 
   /**
@@ -425,25 +420,39 @@ export class FirebaseNamespace {
    * `SecurityRules` service for the default app or an explicitly specified app.
    */
   get securityRules(): FirebaseServiceNamespace<SecurityRules> {
-    const fn: FirebaseServiceNamespace<SecurityRules> = (app?: FirebaseApp) => {
+    const fn: FirebaseServiceNamespace<SecurityRules> = (app?: App) => {
       return this.ensureApp(app).securityRules();
     };
     const securityRules = require('./security-rules/security-rules').SecurityRules;
-    return Object.assign(fn, {SecurityRules: securityRules});
+    return Object.assign(fn, { SecurityRules: securityRules });
   }
+
+  /**
+   * Gets the `RemoteConfig` service namespace. The returned namespace can be used to get the
+   * `RemoteConfig` service for the default app or an explicitly specified app.
+   */
+  get remoteConfig(): FirebaseServiceNamespace<RemoteConfig> {
+    const fn: FirebaseServiceNamespace<RemoteConfig> = (app?: App) => {
+      return this.ensureApp(app).remoteConfig();
+    };
+    const remoteConfig = require('./remote-config/remote-config').RemoteConfig;
+    return Object.assign(fn, { RemoteConfig: remoteConfig });
+  }
+
+  // TODO: Change the return types to app.App in the following methods.
 
   /**
    * Initializes the FirebaseApp instance.
    *
-   * @param {FirebaseAppOptions} [options] Optional options for the FirebaseApp instance.
+   * @param options Optional options for the FirebaseApp instance.
    *   If none present will try to initialize from the FIREBASE_CONFIG environment variable.
    *   If the environment variable contains a string that starts with '{' it will be parsed as JSON,
    *   otherwise it will be assumed to be pointing to a file.
-   * @param {string} [appName] Optional name of the FirebaseApp instance.
+   * @param appName Optional name of the FirebaseApp instance.
    *
-   * @return {FirebaseApp} A new FirebaseApp instance.
+   * @return A new FirebaseApp instance.
    */
-  public initializeApp(options?: FirebaseAppOptions, appName?: string): FirebaseApp {
+  public initializeApp(options?: AppOptions, appName?: string): App {
     return this.INTERNAL.initializeApp(options, appName);
   }
 
@@ -451,23 +460,21 @@ export class FirebaseNamespace {
    * Returns the FirebaseApp instance with the provided name (or the default FirebaseApp instance
    * if no name is provided).
    *
-   * @param {string} [appName] Optional name of the FirebaseApp instance to return.
-   * @return {FirebaseApp} The FirebaseApp instance which has the provided name.
+   * @param appName Optional name of the FirebaseApp instance to return.
+   * @return The FirebaseApp instance which has the provided name.
    */
-  public app(appName?: string): FirebaseApp {
+  public app(appName?: string): App {
     return this.INTERNAL.app(appName);
   }
 
   /*
    * Returns an array of all the non-deleted FirebaseApp instances.
-   *
-   * @return {Array<FirebaseApp>} An array of all the non-deleted FirebaseApp instances
    */
-  public get apps(): FirebaseApp[] {
+  public get apps(): App[] {
     return this.INTERNAL.apps;
   }
 
-  private ensureApp(app?: FirebaseApp): FirebaseApp {
+  private ensureApp(app?: App): App {
     if (typeof app === 'undefined') {
       app = this.app();
     }

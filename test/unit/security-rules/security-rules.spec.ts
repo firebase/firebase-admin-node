@@ -22,8 +22,8 @@ import * as sinon from 'sinon';
 import { SecurityRules } from '../../../src/security-rules/security-rules';
 import { FirebaseApp } from '../../../src/firebase-app';
 import * as mocks from '../../resources/mocks';
-import { SecurityRulesApiClient, RulesetContent } from '../../../src/security-rules/security-rules-api-client';
-import { FirebaseSecurityRulesError } from '../../../src/security-rules/security-rules-utils';
+import { SecurityRulesApiClient, RulesetContent } from '../../../src/security-rules/security-rules-api-client-internal';
+import { FirebaseSecurityRulesError } from '../../../src/security-rules/security-rules-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
 
 const expect = chai.expect;
@@ -31,15 +31,7 @@ const expect = chai.expect;
 describe('SecurityRules', () => {
 
   const EXPECTED_ERROR = new FirebaseSecurityRulesError('internal-error', 'message');
-  const FIRESTORE_RULESET_RESPONSE: {
-    // This type is effectively a RulesetResponse, but with non-readonly fields
-    // to allow easier use from within the tests. An improvement would be to
-    // alter this into a helper that creates customized RulesetResponses based
-    // on the needs of the test, as that would ensure type-safety.
-    name: string,
-    createTime: string,
-    source: object | null,
-  } = {
+  const FIRESTORE_RULESET_RESPONSE = {
     name: 'projects/test-project/rulesets/foo',
     createTime: '2019-03-08T23:45:23.288047Z',
     source: {
@@ -51,20 +43,24 @@ describe('SecurityRules', () => {
       ],
     },
   };
+  const FIRESTORE_RULESET_RELEASE = {
+    name: 'projects/test-project/releases/firestore.release',
+    rulesetName: 'projects/test-project/rulesets/foo',
+  };
   const CREATE_TIME_UTC = 'Fri, 08 Mar 2019 23:45:23 GMT';
 
   const INVALID_RULESET_ERROR = new FirebaseSecurityRulesError(
     'invalid-argument',
     'ruleset must be a non-empty name or a RulesetMetadata object.',
   );
-  const INVALID_RULESETS: any[] = [null, undefined, '', 1, true, {}, [], {name: ''}];
+  const INVALID_RULESETS: any[] = [null, undefined, '', 1, true, {}, [], { name: '' }];
 
   const INVALID_BUCKET_ERROR = new FirebaseSecurityRulesError(
     'invalid-argument',
     'Bucket name not specified or invalid. Specify a default bucket name via the ' +
     'storageBucket option when initializing the app, or specify the bucket name ' +
     'explicitly when calling the rules API.',
-    );
+  );
   const INVALID_BUCKET_NAMES: any[] = [null, '', true, false, 1, 0, {}, []];
 
   const INVALID_SOURCES: any[] = [null, undefined, '', 1, true, {}, []];
@@ -99,9 +95,7 @@ describe('SecurityRules', () => {
       .resolves(FIRESTORE_RULESET_RESPONSE);
     const updateRelease = sinon
       .stub(SecurityRulesApiClient.prototype, 'updateRelease')
-      .resolves({
-        rulesetName: 'projects/test-project/rulesets/foo',
-      });
+      .resolves(FIRESTORE_RULESET_RELEASE);
     stubs.push(createRuleset, updateRelease);
     return [createRuleset, updateRelease];
   }
@@ -114,7 +108,7 @@ describe('SecurityRules', () => {
           const securityRulesAny: any = SecurityRules;
           return new securityRulesAny(invalidApp);
         }).to.throw(
-            'First argument passed to admin.securityRules() must be a valid Firebase app '
+          'First argument passed to admin.securityRules() must be a valid Firebase app '
                 + 'instance.');
       });
     });
@@ -124,7 +118,7 @@ describe('SecurityRules', () => {
         const securityRulesAny: any = SecurityRules;
         return new securityRulesAny();
       }).to.throw(
-          'First argument passed to admin.securityRules() must be a valid Firebase app '
+        'First argument passed to admin.securityRules() must be a valid Firebase app '
               + 'instance.');
     });
 
@@ -161,13 +155,13 @@ describe('SecurityRules', () => {
         .rejects(EXPECTED_ERROR);
       stubs.push(stub);
       return securityRules.getRuleset('foo')
-        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.deep.include(EXPECTED_ERROR);
     });
 
     it('should reject when API response is invalid', () => {
       const stub = sinon
         .stub(SecurityRulesApiClient.prototype, 'getRuleset')
-        .resolves(null);
+        .resolves(null as any);
       stubs.push(stub);
       return securityRules.getRuleset('foo')
         .should.eventually.be.rejected.and.have.property(
@@ -200,10 +194,10 @@ describe('SecurityRules', () => {
 
     it('should reject when API response does not contain a source', () => {
       const response = deepCopy(FIRESTORE_RULESET_RESPONSE);
-      response.source = null;
+      response.source = null as any;
       const stub = sinon
-          .stub(SecurityRulesApiClient.prototype, 'getRuleset')
-          .resolves(response);
+        .stub(SecurityRulesApiClient.prototype, 'getRuleset')
+        .resolves(response);
       stubs.push(stub);
       return securityRules.getRuleset('foo')
         .should.eventually.be.rejected.and.have.property(
@@ -236,13 +230,13 @@ describe('SecurityRules', () => {
         .rejects(EXPECTED_ERROR);
       stubs.push(stub);
       return securityRules.getFirestoreRuleset()
-        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.deep.include(EXPECTED_ERROR);
     });
 
     it('should reject when getRelease response is invalid', () => {
       const stub = sinon
         .stub(SecurityRulesApiClient.prototype, 'getRelease')
-        .resolves({});
+        .resolves({} as any);
       stubs.push(stub);
 
       return securityRules.getFirestoreRuleset()
@@ -253,9 +247,7 @@ describe('SecurityRules', () => {
     it('should resolve with Ruleset on success', () => {
       const getRelease = sinon
         .stub(SecurityRulesApiClient.prototype, 'getRelease')
-        .resolves({
-          rulesetName: 'projects/test-project/rulesets/foo',
-        });
+        .resolves(FIRESTORE_RULESET_RELEASE);
       const getRuleset = sinon
         .stub(SecurityRulesApiClient.prototype, 'getRuleset')
         .resolves(FIRESTORE_RULESET_RESPONSE);
@@ -281,7 +273,7 @@ describe('SecurityRules', () => {
     INVALID_BUCKET_NAMES.forEach((bucketName) => {
       it(`should reject when called with: ${JSON.stringify(bucketName)}`, () => {
         return securityRules.getStorageRuleset(bucketName)
-          .should.eventually.be.rejected.and.deep.equal(INVALID_BUCKET_ERROR);
+          .should.eventually.be.rejected.and.deep.include(INVALID_BUCKET_ERROR);
       });
     });
 
@@ -291,13 +283,13 @@ describe('SecurityRules', () => {
         .rejects(EXPECTED_ERROR);
       stubs.push(stub);
       return securityRules.getStorageRuleset()
-        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.deep.include(EXPECTED_ERROR);
     });
 
     it('should reject when getRelease response is invalid', () => {
       const stub = sinon
         .stub(SecurityRulesApiClient.prototype, 'getRelease')
-        .resolves({});
+        .resolves({} as any);
       stubs.push(stub);
 
       return securityRules.getStorageRuleset()
@@ -308,9 +300,7 @@ describe('SecurityRules', () => {
     it('should resolve with Ruleset for the default bucket on success', () => {
       const getRelease = sinon
         .stub(SecurityRulesApiClient.prototype, 'getRelease')
-        .resolves({
-          rulesetName: 'projects/test-project/rulesets/foo',
-        });
+        .resolves(FIRESTORE_RULESET_RELEASE);
       const getRuleset = sinon
         .stub(SecurityRulesApiClient.prototype, 'getRuleset')
         .resolves(FIRESTORE_RULESET_RESPONSE);
@@ -334,9 +324,7 @@ describe('SecurityRules', () => {
     it('should resolve with Ruleset for the specified bucket on success', () => {
       const getRelease = sinon
         .stub(SecurityRulesApiClient.prototype, 'getRelease')
-        .resolves({
-          rulesetName: 'projects/test-project/rulesets/foo',
-        });
+        .resolves(FIRESTORE_RULESET_RELEASE);
       const getRuleset = sinon
         .stub(SecurityRulesApiClient.prototype, 'getRuleset')
         .resolves(FIRESTORE_RULESET_RESPONSE);
@@ -362,7 +350,7 @@ describe('SecurityRules', () => {
     INVALID_RULESETS.forEach((invalidRuleset) => {
       it(`should reject when called with: ${JSON.stringify(invalidRuleset)}`, () => {
         return securityRules.releaseFirestoreRuleset(invalidRuleset)
-          .should.eventually.be.rejected.and.deep.equal(INVALID_RULESET_ERROR);
+          .should.eventually.be.rejected.and.deep.include(INVALID_RULESET_ERROR);
       });
     });
 
@@ -372,15 +360,13 @@ describe('SecurityRules', () => {
         .rejects(EXPECTED_ERROR);
       stubs.push(stub);
       return securityRules.releaseFirestoreRuleset('foo')
-        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.deep.include(EXPECTED_ERROR);
     });
 
     it('should resolve on success when the ruleset specified by name', () => {
       const stub = sinon
         .stub(SecurityRulesApiClient.prototype, 'updateRelease')
-        .resolves({
-          rulesetName: 'projects/test-project/rulesets/foo',
-        });
+        .resolves(FIRESTORE_RULESET_RELEASE);
       stubs.push(stub);
 
       return securityRules.releaseFirestoreRuleset('foo')
@@ -392,12 +378,10 @@ describe('SecurityRules', () => {
     it('should resolve on success when the ruleset specified as an object', () => {
       const stub = sinon
         .stub(SecurityRulesApiClient.prototype, 'updateRelease')
-        .resolves({
-          rulesetName: 'projects/test-project/rulesets/foo',
-        });
+        .resolves(FIRESTORE_RULESET_RELEASE);
       stubs.push(stub);
 
-      return securityRules.releaseFirestoreRuleset({name: 'foo', createTime: 'time'})
+      return securityRules.releaseFirestoreRuleset({ name: 'foo', createTime: 'time' })
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith('cloud.firestore', 'foo');
         });
@@ -413,7 +397,7 @@ describe('SecurityRules', () => {
     INVALID_SOURCES.forEach((invalidSource) => {
       it(`should reject when called with: ${JSON.stringify(invalidSource)}`, () => {
         return securityRules.releaseFirestoreRulesetFromSource(invalidSource)
-          .should.eventually.be.rejected.and.deep.equal(INVALID_SOURCE_ERROR);
+          .should.eventually.be.rejected.and.deep.include(INVALID_SOURCE_ERROR);
       });
     });
 
@@ -423,7 +407,7 @@ describe('SecurityRules', () => {
         .rejects(EXPECTED_ERROR);
       stubs.push(stub);
       return securityRules.releaseFirestoreRulesetFromSource('foo')
-        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.deep.include(EXPECTED_ERROR);
     });
 
     const sources: {[key: string]: string | Buffer} = {
@@ -462,14 +446,14 @@ describe('SecurityRules', () => {
     INVALID_RULESETS.forEach((invalidRuleset) => {
       it(`should reject when called with: ${JSON.stringify(invalidRuleset)}`, () => {
         return securityRules.releaseStorageRuleset(invalidRuleset)
-          .should.eventually.be.rejected.and.deep.equal(INVALID_RULESET_ERROR);
+          .should.eventually.be.rejected.and.deep.include(INVALID_RULESET_ERROR);
       });
     });
 
     INVALID_BUCKET_NAMES.forEach((bucketName) => {
       it(`should reject when called with: ${JSON.stringify(bucketName)}`, () => {
         return securityRules.releaseStorageRuleset('foo', bucketName)
-          .should.eventually.be.rejected.and.deep.equal(INVALID_BUCKET_ERROR);
+          .should.eventually.be.rejected.and.deep.include(INVALID_BUCKET_ERROR);
       });
     });
 
@@ -479,15 +463,13 @@ describe('SecurityRules', () => {
         .rejects(EXPECTED_ERROR);
       stubs.push(stub);
       return securityRules.releaseStorageRuleset('foo')
-        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.deep.include(EXPECTED_ERROR);
     });
 
     it('should resolve on success when the ruleset specified by name', () => {
       const stub = sinon
         .stub(SecurityRulesApiClient.prototype, 'updateRelease')
-        .resolves({
-          rulesetName: 'projects/test-project/rulesets/foo',
-        });
+        .resolves(FIRESTORE_RULESET_RELEASE);
       stubs.push(stub);
 
       return securityRules.releaseStorageRuleset('foo')
@@ -500,9 +482,7 @@ describe('SecurityRules', () => {
     it('should resolve on success when a custom bucket name is specified', () => {
       const stub = sinon
         .stub(SecurityRulesApiClient.prototype, 'updateRelease')
-        .resolves({
-          rulesetName: 'projects/test-project/rulesets/foo',
-        });
+        .resolves(FIRESTORE_RULESET_RELEASE);
       stubs.push(stub);
 
       return securityRules.releaseStorageRuleset('foo', 'other.appspot.com')
@@ -515,12 +495,10 @@ describe('SecurityRules', () => {
     it('should resolve on success when the ruleset specified as an object', () => {
       const stub = sinon
         .stub(SecurityRulesApiClient.prototype, 'updateRelease')
-        .resolves({
-          rulesetName: 'projects/test-project/rulesets/foo',
-        });
+        .resolves(FIRESTORE_RULESET_RELEASE);
       stubs.push(stub);
 
-      return securityRules.releaseStorageRuleset({name: 'foo', createTime: 'time'})
+      return securityRules.releaseStorageRuleset({ name: 'foo', createTime: 'time' })
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith(
             'firebase.storage/bucketName.appspot.com', 'foo');
@@ -544,14 +522,14 @@ describe('SecurityRules', () => {
     INVALID_SOURCES.forEach((invalidSource) => {
       it(`should reject when called with source: ${JSON.stringify(invalidSource)}`, () => {
         return securityRules.releaseStorageRulesetFromSource(invalidSource)
-          .should.eventually.be.rejected.and.deep.equal(INVALID_SOURCE_ERROR);
+          .should.eventually.be.rejected.and.deep.include(INVALID_SOURCE_ERROR);
       });
     });
 
     INVALID_BUCKET_NAMES.forEach((invalidBucket) => {
       it(`should reject when called with bucket: ${JSON.stringify(invalidBucket)}`, () => {
         return securityRules.releaseStorageRulesetFromSource(RULES_FILE.content, invalidBucket)
-          .should.eventually.be.rejected.and.deep.equal(INVALID_BUCKET_ERROR);
+          .should.eventually.be.rejected.and.deep.include(INVALID_BUCKET_ERROR);
       });
     });
 
@@ -561,7 +539,7 @@ describe('SecurityRules', () => {
         .rejects(EXPECTED_ERROR);
       stubs.push(stub);
       return securityRules.releaseStorageRulesetFromSource('foo')
-        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.deep.include(EXPECTED_ERROR);
     });
 
     const sources: {[key: string]: string | Buffer} = {
@@ -654,13 +632,13 @@ describe('SecurityRules', () => {
         .rejects(EXPECTED_ERROR);
       stubs.push(stub);
       return securityRules.createRuleset(RULES_FILE)
-        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.deep.include(EXPECTED_ERROR);
     });
 
     it('should reject when API response is invalid', () => {
       const stub = sinon
         .stub(SecurityRulesApiClient.prototype, 'createRuleset')
-        .resolves(null);
+        .resolves(null as any);
       stubs.push(stub);
       return securityRules.createRuleset(RULES_FILE)
         .should.eventually.be.rejected.and.have.property(
@@ -726,13 +704,13 @@ describe('SecurityRules', () => {
         .rejects(EXPECTED_ERROR);
       stubs.push(stub);
       return securityRules.deleteRuleset('foo')
-        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.deep.include(EXPECTED_ERROR);
     });
 
     it('should resolve on success', () => {
       const stub = sinon
         .stub(SecurityRulesApiClient.prototype, 'deleteRuleset')
-        .resolves({});
+        .resolves();
       stubs.push(stub);
 
       return securityRules.deleteRuleset('foo');
@@ -760,13 +738,13 @@ describe('SecurityRules', () => {
         .rejects(EXPECTED_ERROR);
       stubs.push(stub);
       return securityRules.listRulesetMetadata()
-        .should.eventually.be.rejected.and.deep.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.deep.include(EXPECTED_ERROR);
     });
 
     it('should reject when API response is invalid', () => {
       const stub = sinon
         .stub(SecurityRulesApiClient.prototype, 'listRulesets')
-        .resolves(null);
+        .resolves(null as any);
       stubs.push(stub);
       return securityRules.listRulesetMetadata()
         .should.eventually.be.rejected.and.have.property(

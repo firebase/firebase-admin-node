@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,24 +27,28 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
-import {Auth, TenantAwareAuth, BaseAuth, DecodedIdToken} from '../../../src/auth/auth';
-import {UserRecord, UpdateRequest} from '../../../src/auth/user-record';
-import {FirebaseApp} from '../../../src/firebase-app';
+import { Auth, TenantAwareAuth, BaseAuth } from '../../../src/auth/auth';
+import { UserRecord } from '../../../src/auth/user-record';
+import { FirebaseApp } from '../../../src/firebase-app';
 import {
   AuthRequestHandler, TenantAwareAuthRequestHandler, AbstractAuthRequestHandler,
 } from '../../../src/auth/auth-api-request';
-import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/utils/error';
+import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
 
 import * as validator from '../../../src/utils/validator';
 import { FirebaseTokenVerifier } from '../../../src/auth/token-verifier';
 import {
-  AuthProviderConfigFilter, OIDCConfig, SAMLConfig,
-  OIDCConfigServerResponse, SAMLConfigServerResponse,
+  OIDCConfig, SAMLConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
 } from '../../../src/auth/auth-config';
-import {deepCopy} from '../../../src/utils/deep-copy';
+import { deepCopy } from '../../../src/utils/deep-copy';
 import { TenantManager } from '../../../src/auth/tenant-manager';
-import { ServiceAccountCredential } from '../../../src/auth/credential';
+import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
 import { HttpClient } from '../../../src/utils/api-request';
+import { auth } from '../../../src/auth/index';
+
+import DecodedIdToken = auth.DecodedIdToken;
+import UpdateRequest = auth.UpdateRequest;
+import AuthProviderConfigFilter = auth.AuthProviderConfigFilter;
 
 chai.should();
 chai.use(sinonChai);
@@ -73,7 +78,7 @@ interface EmailActionTest {
  * @return {object} A sample valid server response as returned from getAccountInfo
  *     endpoint.
  */
-function getValidGetAccountInfoResponse(tenantId?: string) {
+function getValidGetAccountInfoResponse(tenantId?: string): {kind: string; users: any[]} {
   const userResponse: any = {
     localId: 'abcdefghijklmnopqrstuvwxyz',
     email: 'user@gmail.com',
@@ -103,6 +108,18 @@ function getValidGetAccountInfoResponse(tenantId?: string) {
         rawId: '+11234567890',
       },
     ],
+    mfaInfo: [
+      {
+        mfaEnrollmentId: 'enrolledSecondFactor1',
+        phoneInfo: '+16505557348',
+        displayName: 'Spouse\'s phone number',
+        enrolledAt: new Date().toISOString(),
+      },
+      {
+        mfaEnrollmentId: 'enrolledSecondFactor2',
+        phoneInfo: '+16505551000',
+      },
+    ],
     photoUrl: 'https://lh3.googleusercontent.com/1234567890/photo.jpg',
     validSince: '1476136676',
     lastLoginAt: '1476235905000',
@@ -123,7 +140,7 @@ function getValidGetAccountInfoResponse(tenantId?: string) {
  * @param {any} serverResponse Raw getAccountInfo response.
  * @return {Object} The corresponding user record.
  */
-function getValidUserRecord(serverResponse: any) {
+function getValidUserRecord(serverResponse: any): UserRecord {
   return new UserRecord(serverResponse.users[0]);
 }
 
@@ -140,15 +157,16 @@ function getDecodedIdToken(uid: string, authTime: Date, tenantId?: string): Deco
   return {
     iss: 'https://securetoken.google.com/project123456789',
     aud: 'project123456789',
-    auth_time: Math.floor(authTime.getTime() / 1000),
+    auth_time: Math.floor(authTime.getTime() / 1000), // eslint-disable-line @typescript-eslint/camelcase
     sub: uid,
     iat: Math.floor(authTime.getTime() / 1000),
     exp: Math.floor(authTime.getTime() / 1000 + 3600),
     firebase: {
       identities: {},
-      sign_in_provider: 'custom',
+      sign_in_provider: 'custom', // eslint-disable-line @typescript-eslint/camelcase
       tenant: tenantId,
     },
+    uid,
   };
 }
 
@@ -165,15 +183,16 @@ function getDecodedSessionCookie(uid: string, authTime: Date, tenantId?: string)
   return {
     iss: 'https://session.firebase.google.com/project123456789',
     aud: 'project123456789',
-    auth_time: Math.floor(authTime.getTime() / 1000),
+    auth_time: Math.floor(authTime.getTime() / 1000), // eslint-disable-line @typescript-eslint/camelcase
     sub: uid,
     iat: Math.floor(authTime.getTime() / 1000),
     exp: Math.floor(authTime.getTime() / 1000 + 3600),
     firebase: {
       identities: {},
-      sign_in_provider: 'custom',
+      sign_in_provider: 'custom', // eslint-disable-line @typescript-eslint/camelcase
       tenant: tenantId,
     },
+    uid,
   };
 }
 
@@ -208,8 +227,8 @@ function getSAMLConfigServerResponse(providerId: string): SAMLConfigServerRespon
       ssoUrl: 'https://example.com/login',
       signRequest: true,
       idpCertificates: [
-        {x509Certificate: 'CERT1'},
-        {x509Certificate: 'CERT2'},
+        { x509Certificate: 'CERT1' },
+        { x509Certificate: 'CERT2' },
       ],
     },
     spConfig: {
@@ -341,7 +360,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
     describe('createCustomToken()', () => {
       it('should return a jwt', async () => {
         const token = await auth.createCustomToken('uid1');
-        const decodedToken = jwt.decode(token, {complete: true});
+        const decodedToken = jwt.decode(token, { complete: true });
         expect(decodedToken).to.have.property('header').that.has.property('typ', 'JWT');
       });
 
@@ -366,14 +385,16 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
 
       it('should be fulfilled given an app which returns null access tokens', () => {
-        getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken').resolves(null);
+        getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken')
+          .resolves(null as any);
         // createCustomToken() does not rely on an access token and therefore works in this scenario.
         return auth.createCustomToken(mocks.uid, mocks.developerClaims)
           .should.eventually.be.fulfilled;
       });
 
       it('should be fulfilled given an app which returns invalid access tokens', () => {
-        getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken').resolves('malformed');
+        getTokenStub = sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken')
+          .resolves('malformed' as any);
         // createCustomToken() does not rely on an access token and therefore works in this scenario.
         return auth.createCustomToken(mocks.uid, mocks.developerClaims)
           .should.eventually.be.fulfilled;
@@ -524,7 +545,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         stubs.push(getUserStub);
         // Verify ID token while checking if revoked.
         return auth.verifyIdToken(mockIdToken, true)
-          .then((result) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -561,7 +582,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         // Verify ID token while checking if revoked.
         // This should fail with the underlying RPC error.
         return auth.verifyIdToken(mockIdToken, true)
-          .then((result) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -603,7 +624,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         // Verify ID token while checking if revoked.
         // This should fail with the underlying token generator verifyIdToken error.
         return auth.verifyIdToken(mockIdToken, true)
-          .then((result) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm expected error returned.
@@ -621,11 +642,11 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .returns(Promise.resolve(getDecodedIdToken(uid, validSince)));
           // Verify ID token.
           return auth.verifyIdToken(mockIdToken)
-            .then((result) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm expected error returned.
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
             });
         });
 
@@ -638,11 +659,11 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .returns(Promise.resolve(getDecodedIdToken(uid, validSince, 'otherTenantId')));
           // Verify ID token.
           return auth.verifyIdToken(mockIdToken)
-            .then((result) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm expected error returned.
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
             });
         });
       }
@@ -768,7 +789,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         stubs.push(getUserStub);
         // Verify session cookie while checking if revoked.
         return auth.verifySessionCookie(mockSessionCookie, true)
-          .then((result) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -805,7 +826,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         // Verify session cookie while checking if revoked.
         // This should fail with the underlying RPC error.
         return auth.verifySessionCookie(mockSessionCookie, true)
-          .then((result) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -847,7 +868,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         // Verify session cookie while checking if revoked.
         // This should fail with the underlying token generator verifySessionCookie error.
         return auth.verifySessionCookie(mockSessionCookie, true)
-          .then((result) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm expected error returned.
@@ -865,11 +886,11 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .returns(Promise.resolve(getDecodedSessionCookie(uid, validSince)));
           // Verify session cookie token.
           return auth.verifySessionCookie(mockSessionCookie)
-            .then((result) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm expected error returned.
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
             });
         });
 
@@ -882,11 +903,11 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .returns(Promise.resolve(getDecodedSessionCookie(uid, validSince, 'otherTenantId')));
           // Verify session cookie token.
           return auth.verifySessionCookie(mockSessionCookie)
-            .then((result) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm expected error returned.
-              expect(error).to.deep.equal(expectedError);
+              expect(error).to.deep.include(expectedError);
             });
         });
       }
@@ -960,7 +981,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           .rejects(expectedError);
         stubs.push(stub);
         return auth.getUser(uid)
-          .then((userRecord) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -1039,7 +1060,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           .rejects(expectedError);
         stubs.push(stub);
         return auth.getUserByEmail(email)
-          .then((userRecord) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -1119,7 +1140,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           .rejects(expectedError);
         stubs.push(stub);
         return auth.getUserByPhoneNumber(phoneNumber)
-          .then((userRecord) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -1244,9 +1265,86 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
     });
 
+    describe('getUsers()', () => {
+      let stubs: sinon.SinonStub[] = [];
+
+      afterEach(() => {
+        stubs.forEach((stub) => stub.restore());
+        stubs = [];
+      });
+
+      it('should throw when given a non array parameter', () => {
+        const nonArrayValues = [ null, undefined, 42, 3.14, "i'm not an array", {} ];
+        nonArrayValues.forEach((v) => {
+          expect(() => auth.getUsers(v as any))
+            .to.throw(FirebaseAuthError)
+            .with.property('code', 'auth/argument-error');
+        });
+      });
+
+      it('should return no results when given no identifiers', () => {
+        return auth.getUsers([])
+          .then((getUsersResult) => {
+            expect(getUsersResult.users).to.deep.equal([]);
+            expect(getUsersResult.notFound).to.deep.equal([]);
+          });
+      });
+
+      it('should return no users when given identifiers that do not exist', () => {
+        const stub = sinon.stub(testConfig.RequestHandler.prototype, 'getAccountInfoByIdentifiers')
+          .resolves({});
+        stubs.push(stub);
+        const notFoundIds = [{ uid: 'id that doesnt exist' }];
+        return auth.getUsers(notFoundIds)
+          .then((getUsersResult) => {
+            expect(getUsersResult.users).to.deep.equal([]);
+            expect(getUsersResult.notFound).to.deep.equal(notFoundIds);
+          });
+      });
+
+      it('returns users by various identifier types in a single call', async () => {
+        const mockUsers = [{
+          localId: 'uid1',
+          email: 'user1@example.com',
+          phoneNumber: '+15555550001',
+        }, {
+          localId: 'uid2',
+          email: 'user2@example.com',
+          phoneNumber: '+15555550002',
+        }, {
+          localId: 'uid3',
+          email: 'user3@example.com',
+          phoneNumber: '+15555550003',
+        }, {
+          localId: 'uid4',
+          email: 'user4@example.com',
+          phoneNumber: '+15555550004',
+          providerUserInfo: [{
+            providerId: 'google.com',
+            rawId: 'google_uid4',
+          }],
+        }];
+
+        const stub = sinon.stub(testConfig.RequestHandler.prototype, 'getAccountInfoByIdentifiers')
+          .resolves({ users: mockUsers });
+        stubs.push(stub);
+
+        const users = await auth.getUsers([
+          { uid: 'uid1' },
+          { email: 'user2@example.com' },
+          { phoneNumber: '+15555550003' },
+          { providerId: 'google.com', providerUid: 'google_uid4' },
+          { uid: 'this-user-doesnt-exist' },
+        ]);
+
+        expect(users.users).to.have.deep.members(mockUsers.map((u) => new UserRecord(u)));
+        expect(users.notFound).to.have.deep.members([{ uid: 'this-user-doesnt-exist' }]);
+      });
+    });
+
     describe('deleteUser()', () => {
       const uid = 'abcdefghijklmnopqrstuvwxyz';
-      const expectedDeleteAccountResult = {kind: 'identitytoolkit#DeleteAccountResponse'};
+      const expectedDeleteAccountResult = { kind: 'identitytoolkit#DeleteAccountResponse' };
       const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
 
       // Stubs used to simulate underlying api calls.
@@ -1318,6 +1416,64 @@ AUTH_CONFIGS.forEach((testConfig) => {
             // Confirm expected error returned.
             expect(error).to.equal(expectedError);
           });
+      });
+    });
+
+    describe('deleteUsers()', () => {
+      it('should succeed given an empty list', () => {
+        return auth.deleteUsers([])
+          .then((deleteUsersResult) => {
+            expect(deleteUsersResult.successCount).to.equal(0);
+            expect(deleteUsersResult.failureCount).to.equal(0);
+            expect(deleteUsersResult.errors).to.have.length(0);
+          });
+      });
+
+      it('should index errors correctly in result', async () => {
+        const stub = sinon.stub(testConfig.RequestHandler.prototype, 'deleteAccounts')
+          .resolves({
+            errors: [{
+              index: 0,
+              localId: 'uid1',
+              message: 'NOT_DISABLED : Disable the account before batch deletion.',
+            }, {
+              index: 2,
+              localId: 'uid3',
+              message: 'something awful',
+            }],
+          });
+
+        try {
+          const deleteUsersResult = await auth.deleteUsers(['uid1', 'uid2', 'uid3', 'uid4']);
+
+          expect(deleteUsersResult.successCount).to.equal(2);
+          expect(deleteUsersResult.failureCount).to.equal(2);
+          expect(deleteUsersResult.errors).to.have.length(2);
+          expect(deleteUsersResult.errors[0].index).to.equal(0);
+          expect(deleteUsersResult.errors[0].error).to.have.property('code', 'auth/user-not-disabled');
+          expect(deleteUsersResult.errors[1].index).to.equal(2);
+          expect(deleteUsersResult.errors[1].error).to.have.property('code', 'auth/internal-error');
+        } finally {
+          stub.restore();
+        }
+      });
+
+      it('should resolve with void on success', async () => {
+        const stub = sinon.stub(testConfig.RequestHandler.prototype, 'deleteAccounts')
+          .resolves({});
+        try {
+          await auth.deleteUsers(['uid1', 'uid2', 'uid3'])
+            .then((result) => {
+              // Confirm underlying API called with expected parameters.
+              expect(stub).to.have.been.calledOnce.and.calledWith(['uid1', 'uid2', 'uid3']);
+
+              expect(result.failureCount).to.equal(0);
+              expect(result.successCount).to.equal(3);
+              expect(result.errors).to.be.empty;
+            });
+        } finally {
+          stub.restore();
+        }
       });
     });
 
@@ -1405,7 +1561,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           .rejects(expectedError);
         stubs.push(createUserStub);
         return auth.createUser(propertiesToCreate)
-          .then((userRecord) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -1426,7 +1582,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         stubs.push(createUserStub);
         stubs.push(getUserStub);
         return auth.createUser(propertiesToCreate)
-          .then((userRecord) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -1447,7 +1603,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         stubs.push(createUserStub);
         stubs.push(getUserStub);
         return auth.createUser(propertiesToCreate)
-          .then((userRecord) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -1559,7 +1715,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           .rejects(expectedError);
         stubs.push(updateUserStub);
         return auth.updateUser(uid, propertiesToEdit)
-          .then((userRecord) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -1579,7 +1735,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         stubs.push(updateUserStub);
         stubs.push(getUserStub);
         return auth.updateUser(uid, propertiesToEdit)
-          .then((userRecord) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -1699,17 +1855,17 @@ AUTH_CONFIGS.forEach((testConfig) => {
       const maxResult = 500;
       const downloadAccountResponse: any = {
         users: [
-          {localId: 'UID1'},
-          {localId: 'UID2'},
-          {localId: 'UID3'},
+          { localId: 'UID1' },
+          { localId: 'UID2' },
+          { localId: 'UID3' },
         ],
         nextPageToken: 'NEXT_PAGE_TOKEN',
       };
       const expectedResult: any = {
         users: [
-          new UserRecord({localId: 'UID1'}),
-          new UserRecord({localId: 'UID2'}),
-          new UserRecord({localId: 'UID3'}),
+          new UserRecord({ localId: 'UID1' }),
+          new UserRecord({ localId: 'UID2' }),
+          new UserRecord({ localId: 'UID3' }),
         ],
         pageToken: 'NEXT_PAGE_TOKEN',
       };
@@ -1823,7 +1979,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           .rejects(expectedError);
         stubs.push(downloadAccountStub);
         return auth.listUsers(maxResult, pageToken)
-          .then((results) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -1885,7 +2041,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         // Stub revokeRefreshTokens to return expected uid.
         const revokeRefreshTokensStub =
             sinon.stub(testConfig.RequestHandler.prototype, 'revokeRefreshTokens')
-            .resolves(uid);
+              .resolves(uid);
         stubs.push(revokeRefreshTokensStub);
         return auth.revokeRefreshTokens(uid)
           .then((result) => {
@@ -1900,10 +2056,10 @@ AUTH_CONFIGS.forEach((testConfig) => {
         // Stub revokeRefreshTokens to throw a backend error.
         const revokeRefreshTokensStub =
             sinon.stub(testConfig.RequestHandler.prototype, 'revokeRefreshTokens')
-            .rejects(expectedError);
+              .rejects(expectedError);
         stubs.push(revokeRefreshTokensStub);
         return auth.revokeRefreshTokens(uid)
-          .then((result) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -1916,8 +2072,8 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
     describe('importUsers()', () => {
       const users = [
-        {uid: '1234', email: 'user@example.com', passwordHash: Buffer.from('password')},
-        {uid: '5678', phoneNumber: 'invalid'},
+        { uid: '1234', email: 'user@example.com', passwordHash: Buffer.from('password') },
+        { uid: '5678', phoneNumber: 'invalid' },
       ];
       const options = {
         hash: {
@@ -1966,7 +2122,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         // Stub uploadAccount to return expected result.
         const uploadAccountStub =
             sinon.stub(testConfig.RequestHandler.prototype, 'uploadAccount')
-            .resolves(expectedUserImportResult);
+              .resolves(expectedUserImportResult);
         stubs.push(uploadAccountStub);
         return auth.importUsers(users, options)
           .then((result) => {
@@ -1981,10 +2137,10 @@ AUTH_CONFIGS.forEach((testConfig) => {
         // Stub uploadAccount to reject with expected error.
         const uploadAccountStub =
             sinon.stub(testConfig.RequestHandler.prototype, 'uploadAccount')
-            .rejects(expectedServerError);
+              .rejects(expectedServerError);
         stubs.push(uploadAccountStub);
         return auth.importUsers(users, options)
-          .then((result) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -1998,10 +2154,10 @@ AUTH_CONFIGS.forEach((testConfig) => {
         // Stub uploadAccount to throw with expected error.
         const uploadAccountStub =
             sinon.stub(testConfig.RequestHandler.prototype, 'uploadAccount')
-            .throws(expectedOptionsError);
+              .throws(expectedOptionsError);
         stubs.push(uploadAccountStub);
         expect(() => {
-          return auth.importUsers(users, {hash: {algorithm: 'invalid' as any}});
+          return auth.importUsers(users, { hash: { algorithm: 'invalid' as any } });
         }).to.throw(expectedOptionsError);
       });
 
@@ -2019,7 +2175,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           // Stub uploadAccount to return expected result.
           const uploadAccountStub =
               sinon.stub(testConfig.RequestHandler.prototype, 'uploadAccount')
-              .returns(Promise.resolve(expectedUserImportResult));
+                .returns(Promise.resolve(expectedUserImportResult));
           const usersCopy = deepCopy(users);
           usersCopy.forEach((user) => {
             (user as any).tenantId = TENANT_ID;
@@ -2039,7 +2195,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
     describe('createSessionCookie()', () => {
       const tenantId = testConfig.supportsTenantManagement ? undefined : TENANT_ID;
       const idToken = 'ID_TOKEN';
-      const options = {expiresIn: 60 * 60 * 24 * 1000};
+      const options = { expiresIn: 60 * 60 * 24 * 1000 };
       const sessionCookie = 'SESSION_COOKIE';
       const expectedError = new FirebaseAuthError(AuthClientErrorCode.INVALID_ID_TOKEN);
       const expectedUserRecord = getValidUserRecord(getValidGetAccountInfoResponse(tenantId));
@@ -2105,7 +2261,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         stubs.push(sinon.stub(testConfig.Auth.prototype, 'verifyIdToken')
           .returns(Promise.resolve(decodedIdToken)));
         // 1 minute duration.
-        const invalidOptions = {expiresIn: 60 * 1000};
+        const invalidOptions = { expiresIn: 60 * 1000 };
         return auth.createSessionCookie(idToken, invalidOptions)
           .should.eventually.be.rejected.and.have.property(
             'code', 'auth/invalid-session-cookie-duration');
@@ -2140,7 +2296,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
         // Stub createSessionCookie to return expected sessionCookie.
         const createSessionCookieStub =
             sinon.stub(testConfig.RequestHandler.prototype, 'createSessionCookie')
-            .resolves(sessionCookie);
+              .resolves(sessionCookie);
         stubs.push(createSessionCookieStub);
         return auth.createSessionCookie(idToken, options)
           .then((result) => {
@@ -2166,10 +2322,10 @@ AUTH_CONFIGS.forEach((testConfig) => {
         // Stub createSessionCookie to throw a backend error.
         const createSessionCookieStub =
             sinon.stub(testConfig.RequestHandler.prototype, 'createSessionCookie')
-            .rejects(expectedError);
+              .rejects(expectedError);
         stubs.push(createSessionCookieStub);
         return auth.createSessionCookie(idToken, options)
-          .then((result) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
@@ -2187,7 +2343,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .returns(Promise.reject(expectedError));
           stubs.push(verifyIdTokenStub);
           return auth.createSessionCookie(idToken, options)
-            .then((result) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm underlying API called with expected parameters.
@@ -2201,9 +2357,9 @@ AUTH_CONFIGS.forEach((testConfig) => {
     });
 
     const emailActionFlows: EmailActionTest[] = [
-      {api: 'generatePasswordResetLink', requestType: 'PASSWORD_RESET', requiresSettings: false},
-      {api: 'generateEmailVerificationLink', requestType: 'VERIFY_EMAIL', requiresSettings: false},
-      {api: 'generateSignInWithEmailLink', requestType: 'EMAIL_SIGNIN', requiresSettings: true},
+      { api: 'generatePasswordResetLink', requestType: 'PASSWORD_RESET', requiresSettings: false },
+      { api: 'generateEmailVerificationLink', requestType: 'VERIFY_EMAIL', requiresSettings: false },
+      { api: 'generateSignInWithEmailLink', requestType: 'EMAIL_SIGNIN', requiresSettings: true },
     ];
     emailActionFlows.forEach((emailActionFlow) => {
       describe(`${emailActionFlow.api}()`, () => {
@@ -2271,7 +2427,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .then((actualLink: string) => {
               // Confirm underlying API called with expected parameters.
               expect(getEmailActionLinkStub).to.have.been.calledOnce.and.calledWith(
-                  emailActionFlow.requestType, email, actionCodeSettings);
+                emailActionFlow.requestType, email, actionCodeSettings);
               // Confirm expected user record response returned.
               expect(actualLink).to.equal(expectedLink);
             });
@@ -2292,7 +2448,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
               .then((actualLink: string) => {
                 // Confirm underlying API called with expected parameters.
                 expect(getEmailActionLinkStub).to.have.been.calledOnce.and.calledWith(
-                    emailActionFlow.requestType, email, undefined);
+                  emailActionFlow.requestType, email, undefined);
                 // Confirm expected user record response returned.
                 expect(actualLink).to.equal(expectedLink);
               });
@@ -2305,12 +2461,12 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .rejects(expectedError);
           stubs.push(getEmailActionLinkStub);
           return (auth as any)[emailActionFlow.api](email, actionCodeSettings)
-            .then((actualLink: string) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error: any) => {
               // Confirm underlying API called with expected parameters.
               expect(getEmailActionLinkStub).to.have.been.calledOnce.and.calledWith(
-                  emailActionFlow.requestType, email, actionCodeSettings);
+                emailActionFlow.requestType, email, actionCodeSettings);
               // Confirm expected error returned.
               expect(error).to.equal(expectedError);
             });
@@ -2332,7 +2488,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
 
       const invalidProviderIds = [
-          undefined, null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
+        undefined, null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
       invalidProviderIds.forEach((invalidProviderId) => {
         it(`should be rejected given an invalid provider ID "${JSON.stringify(invalidProviderId)}"`, () => {
           return (auth as Auth).getProviderConfig(invalidProviderId as any)
@@ -2395,7 +2551,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .rejects(expectedError);
           stubs.push(stub);
           return (auth as Auth).getProviderConfig(providerId)
-            .then((config) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm underlying API called with expected parameters.
@@ -2415,8 +2571,8 @@ AUTH_CONFIGS.forEach((testConfig) => {
             ssoUrl: 'https://example.com/login',
             signRequest: true,
             idpCertificates: [
-              {x509Certificate: 'CERT1'},
-              {x509Certificate: 'CERT2'},
+              { x509Certificate: 'CERT1' },
+              { x509Certificate: 'CERT2' },
             ],
           },
           spConfig: {
@@ -2449,7 +2605,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .rejects(expectedError);
           stubs.push(stub);
           return (auth as Auth).getProviderConfig(providerId)
-            .then((config) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm underlying API called with expected parameters.
@@ -2551,7 +2707,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .stub(testConfig.RequestHandler.prototype, 'listOAuthIdpConfigs')
             .resolves(listConfigsResponse);
           stubs.push(listConfigsStub);
-          return (auth as Auth).listProviderConfigs({type: 'oidc'})
+          return (auth as Auth).listProviderConfigs({ type: 'oidc' })
             .then((response) => {
               expect(response).to.deep.equal(expectedResult);
               // Confirm underlying API called with expected parameters.
@@ -2583,7 +2739,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .rejects(expectedError);
           stubs.push(listConfigsStub);
           return auth.listProviderConfigs(filterOptions)
-            .then((results) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm underlying API called with expected parameters.
@@ -2646,7 +2802,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .stub(testConfig.RequestHandler.prototype, 'listInboundSamlConfigs')
             .resolves(listConfigsResponse);
           stubs.push(listConfigsStub);
-          return (auth as Auth).listProviderConfigs({type: 'saml'})
+          return (auth as Auth).listProviderConfigs({ type: 'saml' })
             .then((response) => {
               expect(response).to.deep.equal(expectedResult);
               // Confirm underlying API called with expected parameters.
@@ -2678,7 +2834,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .rejects(expectedError);
           stubs.push(listConfigsStub);
           return auth.listProviderConfigs(filterOptions)
-            .then((results) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm underlying API called with expected parameters.
@@ -2757,7 +2913,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .rejects(expectedError);
           stubs.push(stub);
           return (auth as Auth).deleteProviderConfig(providerId)
-            .then((config) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm underlying API called with expected parameters.
@@ -2792,7 +2948,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
             .rejects(expectedError);
           stubs.push(stub);
           return (auth as Auth).deleteProviderConfig(providerId)
-            .then((config) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm underlying API called with expected parameters.
@@ -2903,7 +3059,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           stubs.push(updateConfigStub);
 
           return auth.updateProviderConfig(providerId, configOptions)
-            .then((actualConfig) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm underlying API called with expected parameters.
@@ -2933,8 +3089,8 @@ AUTH_CONFIGS.forEach((testConfig) => {
             ssoUrl: 'https://example.com/login',
             signRequest: true,
             idpCertificates: [
-              {x509Certificate: 'CERT1'},
-              {x509Certificate: 'CERT2'},
+              { x509Certificate: 'CERT1' },
+              { x509Certificate: 'CERT2' },
             ],
           },
           spConfig: {
@@ -2969,7 +3125,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           stubs.push(updateConfigStub);
 
           return auth.updateProviderConfig(providerId, configOptions)
-            .then((actualConfig) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm underlying API called with expected parameters.
@@ -3069,7 +3225,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           stubs.push(createConfigStub);
 
           return (auth as Auth).createProviderConfig(configOptions)
-            .then((actualConfig) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm underlying API called with expected parameters.
@@ -3100,8 +3256,8 @@ AUTH_CONFIGS.forEach((testConfig) => {
             ssoUrl: 'https://example.com/login',
             signRequest: true,
             idpCertificates: [
-              {x509Certificate: 'CERT1'},
-              {x509Certificate: 'CERT2'},
+              { x509Certificate: 'CERT1' },
+              { x509Certificate: 'CERT2' },
             ],
           },
           spConfig: {
@@ -3136,7 +3292,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           stubs.push(createConfigStub);
 
           return (auth as Auth).createProviderConfig(configOptions)
-            .then((actualConfig) => {
+            .then(() => {
               throw new Error('Unexpected success');
             }, (error) => {
               // Confirm underlying API called with expected parameters.
@@ -3155,5 +3311,66 @@ AUTH_CONFIGS.forEach((testConfig) => {
         });
       });
     }
+
+    describe('auth emulator support', () => {
+
+      let mockAuth = testConfig.init(mocks.app());
+
+      beforeEach(() => {
+        process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
+        mockAuth = testConfig.init(mocks.app());
+      });
+
+      afterEach(() => {
+        delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
+      });
+
+      it('createCustomToken() generates an unsigned token', async () => {
+        const token = await mockAuth.createCustomToken('uid1');
+
+        // Check the decoded token has the right algorithm
+        const decoded = jwt.decode(token, { complete: true });
+        expect(decoded).to.have.property('header').that.has.property('alg', 'none');
+        expect(decoded).to.have.property('payload').that.has.property('uid', 'uid1');
+
+        // Make sure this doesn't throw
+        jwt.verify(token, '', { algorithms: ['none'] });
+      });
+
+      it('verifyIdToken() rejects an unsigned token when only the env var is set', async () => {
+        const unsignedToken = mocks.generateIdToken({
+          algorithm: 'none'
+        });
+
+        await expect(mockAuth.verifyIdToken(unsignedToken))
+          .to.be.rejectedWith('Firebase ID token has incorrect algorithm. Expected "RS256"');
+      });
+
+      it('verifyIdToken() accepts an unsigned token when private method is called and env var is set', async () => {
+        (mockAuth as any).setJwtVerificationEnabled(false);
+
+        let claims = {};
+        if (testConfig.Auth === TenantAwareAuth) {
+          claims = {
+            firebase: {
+              tenant: TENANT_ID
+            }
+          }
+        }
+
+        const unsignedToken = mocks.generateIdToken({
+          algorithm: 'none'
+        }, claims);
+
+        const decoded = await mockAuth.verifyIdToken(unsignedToken);
+        expect(decoded).to.be.ok;
+      });
+
+      it('private method throws when env var is unset', async () => {
+        delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
+        await expect(() => (mockAuth as any).setJwtVerificationEnabled(false))
+          .to.throw('This method is only available when connected to the Authentication emulator.')
+      });
+    });
   });
 });

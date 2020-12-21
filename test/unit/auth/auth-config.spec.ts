@@ -19,15 +19,20 @@ import * as chai from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import {deepCopy} from '../../../src/utils/deep-copy';
+import { deepCopy } from '../../../src/utils/deep-copy';
 import {
   OIDCConfig, SAMLConfig, SAMLConfigServerRequest,
   SAMLConfigServerResponse, OIDCConfigServerRequest,
-  OIDCConfigServerResponse, SAMLUpdateAuthProviderRequest,
-  OIDCUpdateAuthProviderRequest, SAMLAuthProviderConfig, OIDCAuthProviderConfig,
-  EmailSignInConfig,
+  OIDCConfigServerResponse,
+  EmailSignInConfig, MultiFactorAuthConfig, validateTestPhoneNumbers,
+  MAXIMUM_TEST_PHONE_NUMBERS,
 } from '../../../src/auth/auth-config';
+import { auth } from '../../../src/auth/index';
 
+import SAMLUpdateAuthProviderRequest = auth.SAMLUpdateAuthProviderRequest;
+import OIDCUpdateAuthProviderRequest = auth.OIDCUpdateAuthProviderRequest;
+import SAMLAuthProviderConfig = auth.SAMLAuthProviderConfig;
+import OIDCAuthProviderConfig = auth.OIDCAuthProviderConfig;
 
 chai.should();
 chai.use(sinonChai);
@@ -152,6 +157,216 @@ describe('EmailSignInConfig', () => {
   });
 });
 
+describe('MultiFactorAuthConfig', () => {
+  describe('constructor', () => {
+    const validConfig = new MultiFactorAuthConfig({
+      state: 'ENABLED',
+      enabledProviders: ['PHONE_SMS'],
+    });
+
+    it('should throw on missing state', () => {
+      expect(() => new MultiFactorAuthConfig({
+        enabledProviders: ['PHONE_SMS'],
+      } as any)).to.throw('INTERNAL ASSERT FAILED: Invalid multi-factor configuration response');
+    });
+
+    it('should set readonly property "state" to ENABLED on state enabled', () => {
+      expect(validConfig.state).to.equals('ENABLED');
+    });
+
+    it('should set readonly property "state" to DISABLED on state disabled', () => {
+      const disabledState = new MultiFactorAuthConfig({
+        state: 'DISABLED',
+        enabledProviders: ['PHONE_SMS'],
+      });
+      expect(disabledState.state).to.equals('DISABLED');
+    });
+
+    it('should set readonly property "factorIds"', () => {
+      expect(validConfig.factorIds).to.deep.equal(['phone']);
+    });
+
+    it('should ignore unsupported backend types if found', () => {
+      const unsupportedType = new MultiFactorAuthConfig({
+        state: 'ENABLED',
+        enabledProviders: ['UNSUPPORTED_TYPE', 'PHONE_SMS'],
+      } as any);
+      expect(unsupportedType.factorIds).to.deep.equal(['phone']);
+    });
+
+    it('should return empty factorIds array if no supported types are found', () => {
+      const unsupportedType = new MultiFactorAuthConfig({
+        state: 'ENABLED',
+        enabledProviders: ['UNSUPPORTED_TYPE'],
+      } as any);
+      expect(unsupportedType.factorIds).to.deep.equal([]);
+    });
+  });
+
+  describe('toJSON()', () => {
+    it('should return expected JSON representation', () => {
+      const config = new MultiFactorAuthConfig({
+        state: 'ENABLED',
+        enabledProviders: ['PHONE_SMS'],
+      });
+      expect(config.toJSON()).to.deep.equal({
+        state: 'ENABLED',
+        factorIds: ['phone'],
+      });
+    });
+  });
+
+  describe('buildServerRequest()', () => {
+    it('should return expected server request on valid state and factorIds', () => {
+      expect(MultiFactorAuthConfig.buildServerRequest({
+        state: 'ENABLED',
+        factorIds: ['phone'],
+      })).to.deep.equal({
+        state: 'ENABLED',
+        enabledProviders: ['PHONE_SMS'],
+      });
+    });
+
+    it('should return expected server request on valid state without factorIds', () => {
+      expect(MultiFactorAuthConfig.buildServerRequest({
+        state: 'DISABLED',
+      })).to.deep.equal({
+        state: 'DISABLED',
+      });
+    });
+
+    it('should return empty enabledProviders when an empty "options.factorIds" is provided', () => {
+      expect(MultiFactorAuthConfig.buildServerRequest({
+        state: 'DISABLED',
+        factorIds: [],
+      })).to.deep.equal({
+        state: 'DISABLED',
+        enabledProviders: [],
+      });
+    });
+
+    const invalidOptions = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
+    invalidOptions.forEach((options) => {
+      it('should throw on invalid MultiFactorAuthConfig:' + JSON.stringify(options), () => {
+        expect(() => {
+          MultiFactorAuthConfig.buildServerRequest(options as any);
+        }).to.throw('"MultiFactorConfig" must be a non-null object.');
+      });
+    });
+
+    it('should throw on MultiFactorAuthConfig with unsupported attribute', () => {
+      expect(() => {
+        MultiFactorAuthConfig.buildServerRequest({
+          unsupported: true,
+          state: 'ENABLED',
+          factorIds: ['phone'],
+        } as any);
+      }).to.throw('"unsupported" is not a valid MultiFactorConfig parameter.');
+    });
+
+    const invalidState = [
+      null, NaN, 0, 1, '', 'a', [], [1, 'a'], {}, { a: 1 }, _.noop, true, false,
+    ];
+    invalidState.forEach((state) => {
+      it('should throw on invalid MultiFactorConfig.state:' + JSON.stringify(state), () => {
+        expect(() => {
+          MultiFactorAuthConfig.buildServerRequest({
+            state,
+            factorIds: ['phone'],
+          } as any);
+        }).to.throw('"MultiFactorConfig.state" must be either "ENABLED" or "DISABLED".');
+      });
+    });
+
+    it('should throw on non-array MultiFactorAuthConfig.factorIds', () => {
+      expect(() => {
+        MultiFactorAuthConfig.buildServerRequest({
+          state: 'ENABLED',
+          factorIds: 'phone',
+        } as any);
+      }).to.throw('"MultiFactorConfig.factorIds" must be an array of valid "AuthFactorTypes".');
+    });
+
+    const invalidFactorIds = invalidState;
+    invalidFactorIds.forEach((factorId) => {
+      it('should throw on invalid MultiFactorConfig.factorIds:' + JSON.stringify(factorId), () => {
+        expect(() => {
+          MultiFactorAuthConfig.buildServerRequest({
+            state: 'ENABLED',
+            factorIds: [factorId],
+          } as any);
+        }).to.throw(`"${factorId}" is not a valid "AuthFactorType".`);
+      });
+    });
+  });
+});
+
+describe('validateTestPhoneNumbers', () => {
+  it('should not throw an error on empty object', () => {
+    expect(() => validateTestPhoneNumbers({})).not.to.throw();
+  });
+
+  it('should not throw an error on valid phone number / code pairs', () => {
+    const pairs = {
+      '+16505551234': '019287',
+      '+16505550676': '985235',
+      '+1 (123) 456-7890': '098765',
+      '+1 800 FLOwerS': '000000',
+    };
+
+    expect(() => validateTestPhoneNumbers(pairs)).not.to.throw();
+  });
+
+  it(`should not throw when ${MAXIMUM_TEST_PHONE_NUMBERS} pairs are provided`, () => {
+    const pairs: {[key: string]: string} = {};
+    for (let i = 0; i < MAXIMUM_TEST_PHONE_NUMBERS; i++) {
+      pairs[`+1650555${'0'.repeat(4 - i.toString().length)}${i}`] = '012938';
+    }
+
+    expect(() => validateTestPhoneNumbers(pairs)).not.to.throw();
+  });
+
+  it(`should throw when >${MAXIMUM_TEST_PHONE_NUMBERS} pairs are provided`, () => {
+    const pairs: {[key: string]: string} = {};
+    for (let i = 0; i < MAXIMUM_TEST_PHONE_NUMBERS + 1; i++) {
+      pairs[`+1650555${'0'.repeat(4 - i.toString().length)}${i}`] = '012938';
+    }
+
+    expect(() => validateTestPhoneNumbers(pairs)).to.throw();
+  });
+
+  const nonObjects = [NaN, 0, 1, true, false, '', 'a', _.noop];
+  nonObjects.forEach((nonObject) => {
+    it(`should throw when non-object ${JSON.stringify(nonObject)} is provided`, () => {
+      expect(() => validateTestPhoneNumbers(nonObject as any)).to.throw();
+    });
+  });
+
+  const invalidPhoneNumbers = [
+    null, NaN, 0, 1, true, false, [], ['a'], {}, { a: 1 }, _.noop, '+', '+ ()-',
+  ];
+  invalidPhoneNumbers.forEach((invalidPhoneNumber) => {
+    it(`should throw when "${JSON.stringify(invalidPhoneNumber)}" is used as phone number`, () => {
+      const pairs = {
+        [invalidPhoneNumber as any]: '123456',
+      };
+      expect(() => validateTestPhoneNumbers(pairs)).to.throw();
+    });
+  });
+
+  const invalidCodes = [
+    NaN, 0, 1, true, false, '', 'a', _.noop, '12345', '1234567', '123a56', '12 345', 123456,
+  ];
+  invalidCodes.forEach((invalidCode) => {
+    it(`should throw when an invalid code ${JSON.stringify(invalidCode)} is provided`, () => {
+      const pairs = {
+        '+16505551234': invalidCode,
+      };
+      expect(() => validateTestPhoneNumbers(pairs as any)).to.throw();
+    });
+  });
+});
+
 describe('SAMLConfig', () => {
   const serverRequest: SAMLConfigServerRequest = {
     idpConfig: {
@@ -159,8 +374,8 @@ describe('SAMLConfig', () => {
       ssoUrl: 'https://example.com/login',
       signRequest: true,
       idpCertificates: [
-        {x509Certificate: 'CERT1'},
-        {x509Certificate: 'CERT2'},
+        { x509Certificate: 'CERT1' },
+        { x509Certificate: 'CERT2' },
       ],
     },
     spConfig: {
@@ -177,8 +392,8 @@ describe('SAMLConfig', () => {
       ssoUrl: 'https://example.com/login',
       signRequest: true,
       idpCertificates: [
-        {x509Certificate: 'CERT1'},
-        {x509Certificate: 'CERT2'},
+        { x509Certificate: 'CERT1' },
+        { x509Certificate: 'CERT2' },
       ],
     },
     spConfig: {
@@ -195,7 +410,6 @@ describe('SAMLConfig', () => {
     x509Certificates: ['CERT1', 'CERT2'],
     rpEntityId: 'RP_ENTITY_ID',
     callbackURL: 'https://projectId.firebaseapp.com/__/auth/handler',
-    enableRequestSigning: true,
     enabled: true,
     displayName: 'samlProviderName',
   };
@@ -271,9 +485,9 @@ describe('SAMLConfig', () => {
     });
 
     const invalidResourceNames: string[] = [
-        '', 'incorrectsaml.', 'saml.provider', 'saml', 'oidc.provider',
-        'projects/project1/prefixinboundSamlConfigs/saml.provider',
-        'projects/project1/oauthIdpConfigs/saml.provider'];
+      '', 'incorrectsaml.', 'saml.provider', 'saml', 'oidc.provider',
+      'projects/project1/prefixinboundSamlConfigs/saml.provider',
+      'projects/project1/oauthIdpConfigs/saml.provider'];
     invalidResourceNames.forEach((invalidResourceName) => {
       it(`should return null for invalid resource name "${invalidResourceName}"`, () => {
         expect(SAMLConfig.getProviderIdFromResourceName(invalidResourceName)).to.be.null;
@@ -287,8 +501,8 @@ describe('SAMLConfig', () => {
     });
 
     const invalidProviderIds = [
-        null, NaN, 0, 1, true, false, '', 'incorrectsaml.', 'saml', 'oidc.provider', 'other', [], [1, 'a'],
-        {}, { a: 1 }, _.noop];
+      null, NaN, 0, 1, true, false, '', 'incorrectsaml.', 'saml', 'oidc.provider', 'other', [], [1, 'a'],
+      {}, { a: 1 }, _.noop];
     invalidProviderIds.forEach((invalidProviderId) => {
       it(`should return false on invalid SAML provider ID "${JSON.stringify(invalidProviderId)}"`, () => {
         expect(SAMLConfig.isProviderId(invalidProviderId)).to.be.false;
@@ -314,7 +528,9 @@ describe('SAMLConfig', () => {
 
   describe('buildServerRequest()', () => {
     it('should return expected server request on valid input', () => {
-      expect(SAMLConfig.buildServerRequest(clientRequest)).to.deep.equal(serverRequest);
+      const request = deepCopy(clientRequest);
+      (request as any).enableRequestSigning = true;
+      expect(SAMLConfig.buildServerRequest(request)).to.deep.equal(serverRequest);
     });
 
     it('should ignore missing fields if not required', () => {
@@ -347,7 +563,7 @@ describe('SAMLConfig', () => {
         .to.throw('"SAMLAuthProviderConfig.providerId" must be a valid non-empty string prefixed with "saml.".');
     });
 
-    const nonAuthConfigOptions = [null, undefined, {}, {other: 'value'}];
+    const nonAuthConfigOptions = [null, undefined, {}, { other: 'value' }];
     nonAuthConfigOptions.forEach((nonAuthConfig) => {
       it('should return null when no AuthConfig is provided: ' + JSON.stringify(nonAuthConfig), () => {
         expect(SAMLConfig.buildServerRequest(nonAuthConfig as any))
@@ -409,11 +625,11 @@ describe('SAMLConfig', () => {
       const invalidClientRequest = deepCopy(clientRequest) as any;
       invalidClientRequest.unsupported = 'value';
       expect(() => SAMLConfig.validate(invalidClientRequest))
-        .to.throw(`"unsupported" is not a valid SAML config parameter.`);
+        .to.throw('"unsupported" is not a valid SAML config parameter.');
     });
 
     const invalidProviderIds = [
-        null, NaN, 0, 1, true, false, '', 'oidc.provider', 'other', [], [1, 'a'], {}, { a: 1 }, _.noop];
+      null, NaN, 0, 1, true, false, '', 'oidc.provider', 'other', [], [1, 'a'], {}, { a: 1 }, _.noop];
     invalidProviderIds.forEach((providerId) => {
       it('should throw on invalid providerId:' + JSON.stringify(providerId), () => {
         const invalidClientRequest = deepCopy(clientRequest) as any;
@@ -582,9 +798,9 @@ describe('OIDCConfig', () => {
     });
 
     const invalidResourceNames: string[] = [
-        '', 'incorrectsaml.', 'oidc.provider', 'oidc', 'saml.provider',
-        'projects/project1/prefixoauthIdpConfigs/oidc.provider',
-        'projects/project1/inboundSamlConfigs/oidc.provider'];
+      '', 'incorrectsaml.', 'oidc.provider', 'oidc', 'saml.provider',
+      'projects/project1/prefixoauthIdpConfigs/oidc.provider',
+      'projects/project1/inboundSamlConfigs/oidc.provider'];
     invalidResourceNames.forEach((invalidResourceName) => {
       it(`should return null for invalid resource name "${invalidResourceName}"`, () => {
         expect(OIDCConfig.getProviderIdFromResourceName(invalidResourceName)).to.be.null;
@@ -598,8 +814,8 @@ describe('OIDCConfig', () => {
     });
 
     const invalidProviderIds = [
-        null, NaN, 0, 1, true, false, '', 'incorrectoidc.', 'oidc', 'saml.provider', 'other', [], [1, 'a'],
-        {}, { a: 1 }, _.noop];
+      null, NaN, 0, 1, true, false, '', 'incorrectoidc.', 'oidc', 'saml.provider', 'other', [], [1, 'a'],
+      {}, { a: 1 }, _.noop];
     invalidProviderIds.forEach((invalidProviderId) => {
       it(`should return false on invalid OIDC provider ID "${JSON.stringify(invalidProviderId)}"`, () => {
         expect(OIDCConfig.isProviderId(invalidProviderId)).to.be.false;
@@ -645,7 +861,7 @@ describe('OIDCConfig', () => {
         .to.throw('"OIDCAuthProviderConfig.providerId" must be a valid non-empty string prefixed with "oidc.".');
     });
 
-    const nonAuthConfigOptions = [null, undefined, {}, {other: 'value'}];
+    const nonAuthConfigOptions = [null, undefined, {}, { other: 'value' }];
     nonAuthConfigOptions.forEach((nonAuthConfig) => {
       it('should return null when no AuthConfig is provided: ' + JSON.stringify(nonAuthConfig), () => {
         expect(OIDCConfig.buildServerRequest(nonAuthConfig as any)).to.be.null;
@@ -688,11 +904,11 @@ describe('OIDCConfig', () => {
       const invalidClientRequest = deepCopy(clientRequest) as any;
       invalidClientRequest.unsupported = 'value';
       expect(() => OIDCConfig.validate(invalidClientRequest))
-        .to.throw(`"unsupported" is not a valid OIDC config parameter.`);
+        .to.throw('"unsupported" is not a valid OIDC config parameter.');
     });
 
     const invalidProviderIds = [
-        null, NaN, 0, 1, true, false, '', 'other', 'saml.provider', [], [1, 'a'], {}, { a: 1 }, _.noop];
+      null, NaN, 0, 1, true, false, '', 'other', 'saml.provider', [], [1, 'a'], {}, { a: 1 }, _.noop];
     invalidProviderIds.forEach((providerId) => {
       it('should throw on invalid providerId:' + JSON.stringify(providerId), () => {
         const invalidClientRequest = deepCopy(clientRequest) as any;
