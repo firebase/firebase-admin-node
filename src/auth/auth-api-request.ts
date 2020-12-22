@@ -1300,6 +1300,8 @@ export abstract class AbstractAuthRequestHandler {
         ),
       );
     } else if (validator.isNonNullObject(properties.providerToLink)) {
+      // TODO(rsgowman): These checks overlap somewhat with
+      // validateProviderUserInfo. It may be possible to refactor a bit.
       if (!validator.isNonEmptyString(properties.providerToLink.providerId)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_ARGUMENT,
