@@ -1254,7 +1254,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
           .rejects(expectedError);
         stubs.push(stub);
         return auth.getUserByProviderUid(providerId, providerUid)
-          .then((userRecord) => {
+          .then(() => {
             throw new Error('Unexpected success');
           }, (error) => {
             // Confirm underlying API called with expected parameters.
