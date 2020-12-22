@@ -396,16 +396,16 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
         delete properties.providerToLink;
       }
     }
-    if (validator.isNonNullObject(properties) && typeof properties.providersToDelete !== 'undefined') {
-      if (properties.providersToDelete.indexOf('phone') !== -1) {
+    if (validator.isNonNullObject(properties) && typeof properties.providersToUnlink !== 'undefined') {
+      if (properties.providersToUnlink.indexOf('phone') !== -1) {
         // If we've been told to unlink the phone provider both via setting
-        // phoneNumber to null *and* by setting providersToDelete to include
+        // phoneNumber to null *and* by setting providersToUnlink to include
         // 'phone', then we'll reject that. Though it might also be reasonable
         // to relax this restriction and just unlink it.
         if (properties.phoneNumber === null) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_ARGUMENT,
-            "Both UpdateRequest.phoneNumber=null and UpdateRequest.providersToDelete=['phone'] were set. To "
+            "Both UpdateRequest.phoneNumber=null and UpdateRequest.providersToUnlink=['phone'] were set. To "
             + 'unlink from a phone provider, only specify the UpdateRequest.phoneNumber=null field.');
         }
       }

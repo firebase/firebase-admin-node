@@ -1617,13 +1617,13 @@ AUTH_CONFIGS.forEach((testConfig) => {
             + JSON.stringify(invalidProviderId), () => {
           expect(() => {
             auth.updateUser(uid, {
-              providersToDelete: [ invalidProviderId as any ],
+              providersToUnlink: [ invalidProviderId as any ],
             });
           }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
         });
       });
 
-      it('should merge deletion of phone provider with the providersToDelete list', async () => {
+      it('should merge deletion of phone provider with the providersToUnlink list', async () => {
         const invokeRequestHandlerStub = sinon.stub(testConfig.RequestHandler.prototype, 'invokeRequestHandler')
           .resolves({
             localId: uid,
@@ -1639,7 +1639,7 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
         await auth.updateUser(uid, {
           phoneNumber: null,
-          providersToDelete: [ 'google.com' ],
+          providersToUnlink: [ 'google.com' ],
         });
 
         expect(invokeRequestHandlerStub).to.have.been.calledOnce.and.calledWith(
@@ -1727,11 +1727,11 @@ AUTH_CONFIGS.forEach((testConfig) => {
             });
         });
 
-        it('specifying both phoneNumber=null and providersToDelete=phone should be rejected', () => {
+        it('specifying both phoneNumber=null and providersToUnlink=phone should be rejected', () => {
           expect(() => {
             auth.updateUser(uid, {
               phoneNumber: null,
-              providersToDelete: ['phone'],
+              providersToUnlink: ['phone'],
             });
           }).to.throw(FirebaseAuthError).with.property('code', 'auth/argument-error');
         });

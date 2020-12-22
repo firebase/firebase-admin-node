@@ -1310,18 +1310,18 @@ export abstract class AbstractAuthRequestHandler {
           AuthClientErrorCode.INVALID_ARGUMENT,
           'providerToLink.uid of properties argument must be a non-empty string.');
       }
-    } else if (typeof properties.providersToDelete !== 'undefined') {
-      if (!validator.isArray(properties.providersToDelete)) {
+    } else if (typeof properties.providersToUnlink !== 'undefined') {
+      if (!validator.isArray(properties.providersToUnlink)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_ARGUMENT,
-          'providersToDelete of properties argument must be an array of strings.');
+          'providersToUnlink of properties argument must be an array of strings.');
       }
 
-      properties.providersToDelete.forEach((providerId) => {
+      properties.providersToUnlink.forEach((providerId) => {
         if (!validator.isNonEmptyString(providerId)) {
           throw new FirebaseAuthError(
             AuthClientErrorCode.INVALID_ARGUMENT,
-            'providersToDelete of properties argument must be an array of strings.');
+            'providersToUnlink of properties argument must be an array of strings.');
         }
       });
     }
@@ -1371,12 +1371,12 @@ export abstract class AbstractAuthRequestHandler {
       delete request.linkProviderUserInfo.uid;
     }
 
-    if (typeof(request.providersToDelete) !== 'undefined') {
+    if (typeof(request.providersToUnlink) !== 'undefined') {
       if (!validator.isArray(request.deleteProvider)) {
         request.deleteProvider = [];
       }
-      request.deleteProvider = request.deleteProvider.concat(request.providersToDelete);
-      delete request.providersToDelete;
+      request.deleteProvider = request.deleteProvider.concat(request.providersToUnlink);
+      delete request.providersToUnlink;
     }
 
     // Rewrite photoURL to photoUrl.

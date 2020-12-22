@@ -624,7 +624,7 @@ describe('admin.auth', () => {
       expect(providerIds).to.deep.include('google.com');
 
       userRecord = await admin.auth().updateUser(updateUser.uid, {
-        providersToDelete: ['google.com'],
+        providersToUnlink: ['google.com'],
       });
 
       providerUids = userRecord.providerData.map((userInfo) => userInfo.uid);
@@ -659,7 +659,7 @@ describe('admin.auth', () => {
       expect(providerIds).to.deep.include.members(['google.com', 'facebook.com', 'phone']);
 
       userRecord = await admin.auth().updateUser(updateUser.uid, {
-        providersToDelete: ['google.com', 'facebook.com', 'phone'],
+        providersToUnlink: ['google.com', 'facebook.com', 'phone'],
       });
 
       providerUids = userRecord.providerData.map((userInfo) => userInfo.uid);
@@ -668,11 +668,11 @@ describe('admin.auth', () => {
       expect(providerIds).to.not.deep.include.members(['google.com', 'facebook.com', 'phone']);
     });
 
-    it('noops successfully when given an empty providersToDelete list', async () => {
+    it('noops successfully when given an empty providersToUnlink list', async () => {
       const userRecord = await createTestUser('NoopWithEmptyProvidersToDeleteUser');
       try {
         const updatedUserRecord = await admin.auth().updateUser(userRecord.uid, {
-          providersToDelete: [],
+          providersToUnlink: [],
         });
 
         expect(updatedUserRecord).to.deep.equal(userRecord);

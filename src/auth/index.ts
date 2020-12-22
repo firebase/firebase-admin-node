@@ -439,7 +439,7 @@ export namespace auth {
     /**
      * Unlinks this user from the specified providers.
      */
-    providersToDelete?: string[];
+    providersToUnlink?: string[];
   }
 
   /**
