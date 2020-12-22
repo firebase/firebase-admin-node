@@ -17,7 +17,7 @@
 set -e
 set -u
 
-echo "//wombat-dressing-room.appspot.com/:_authToken=${NPM_AUTH_TOKEN}" >> ~/.npmrc
+echo "//wombat-dressing-room.appspot.com/:_authToken=${NPM_AUTH_TOKEN}" >> .npmrc
 
 readonly UNPREFIXED_VERSION=`echo ${VERSION} | cut -c 2-`
-npm publish dist/firebase-admin-${UNPREFIXED_VERSION}.tgz --registry https://wombat-dressing-room.appspot.com
+npm publish ./dist/firebase-admin-${UNPREFIXED_VERSION}.tgz --registry https://wombat-dressing-room.appspot.com

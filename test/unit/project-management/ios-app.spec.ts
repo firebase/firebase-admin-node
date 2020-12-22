@@ -21,11 +21,16 @@ import * as _ from 'lodash';
 import * as sinon from 'sinon';
 import { FirebaseApp } from '../../../src/firebase-app';
 import { IosApp } from '../../../src/project-management/ios-app';
-import { ProjectManagementRequestHandler } from '../../../src/project-management/project-management-api-request';
+import {
+  ProjectManagementRequestHandler
+} from '../../../src/project-management/project-management-api-request-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { FirebaseProjectManagementError } from '../../../src/utils/error';
 import * as mocks from '../../resources/mocks';
-import { IosAppMetadata, AppPlatform } from '../../../src/project-management/app-metadata';
+import { projectManagement } from '../../../src/project-management/index';
+
+import IosAppMetadata = projectManagement.IosAppMetadata;
+import AppPlatform = projectManagement.AppPlatform;
 
 const expect = chai.expect;
 
@@ -108,7 +113,7 @@ describe('IosApp', () => {
     it('should throw with null API response', () => {
       const stub = sinon
         .stub(ProjectManagementRequestHandler.prototype, 'getResource')
-        .returns(Promise.resolve(null));
+        .resolves(null as any);
       stubs.push(stub);
       return iosApp.getMetadata()
         .should.eventually.be.rejected
@@ -183,7 +188,7 @@ describe('IosApp', () => {
     it('should throw with null API response', () => {
       const stub = sinon
         .stub(ProjectManagementRequestHandler.prototype, 'getConfig')
-        .returns(Promise.resolve(null));
+        .resolves(null as any);
       stubs.push(stub);
       return iosApp.getConfig()
         .should.eventually.be.rejected
@@ -204,7 +209,7 @@ describe('IosApp', () => {
         .should.eventually.be.rejected
         .and.have.property(
           'message',
-          `getConfig()'s responseData.configFileContents must be a base64 string. `
+          'getConfig()\'s responseData.configFileContents must be a base64 string. '
                   + `Response data: ${JSON.stringify(apiResponse, null, 2)}`);
     });
 

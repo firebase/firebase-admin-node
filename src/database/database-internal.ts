@@ -1,14 +1,33 @@
-import {URL} from 'url';
+/*!
+ * Copyright 2020 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { URL } from 'url';
 import * as path from 'path';
 
-import {FirebaseApp} from '../firebase-app';
-import {FirebaseDatabaseError, AppErrorCodes, FirebaseAppError} from '../utils/error';
-import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {Database} from '@firebase/database';
+import { FirebaseApp } from '../firebase-app';
+import { FirebaseDatabaseError, AppErrorCodes, FirebaseAppError } from '../utils/error';
+import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
+import { Database as DatabaseImpl } from '@firebase/database';
+import { database } from './index';
 
 import * as validator from '../utils/validator';
 import { AuthorizedHttpClient, HttpRequestConfig, HttpError } from '../utils/api-request';
+import { getSdkVersion } from '../utils/index';
 
+import Database = database.Database;
 
 /**
  * Internals of a Database instance.
@@ -26,18 +45,10 @@ class DatabaseInternals implements FirebaseServiceInternalsInterface {
    */
   public delete(): Promise<void> {
     for (const dbUrl of Object.keys(this.databases)) {
-      const db: Database = this.databases[dbUrl];
+      const db: DatabaseImpl = ((this.databases[dbUrl] as any) as DatabaseImpl);
       db.INTERNAL.delete();
     }
     return Promise.resolve(undefined);
-  }
-}
-
-declare module '@firebase/database' {
-  interface Database {
-    getRules(): Promise<string>;
-    getRulesJSON(): Promise<object>;
-    setRules(source: string | Buffer | object): Promise<void>;
   }
 }
 
@@ -78,8 +89,7 @@ export class DatabaseService implements FirebaseServiceInterface {
     let db: Database = this.INTERNAL.databases[dbUrl];
     if (typeof db === 'undefined') {
       const rtdb = require('@firebase/database'); // eslint-disable-line @typescript-eslint/no-var-requires
-      const { version } = require('../../package.json'); // eslint-disable-line @typescript-eslint/no-var-requires
-      db = rtdb.initStandalone(this.appInternal, dbUrl, version).instance;
+      db = rtdb.initStandalone(this.appInternal, dbUrl, getSdkVersion()).instance;
 
       const rulesClient = new DatabaseRulesClient(this.app, dbUrl);
       db.getRules = () => {
@@ -88,7 +98,7 @@ export class DatabaseService implements FirebaseServiceInterface {
       db.getRulesJSON = () => {
         return rulesClient.getRulesJSON();
       };
-      db.setRules = (source) => {
+      db.setRules = (source: string) => {
         return rulesClient.setRules(source);
       };
 
@@ -160,7 +170,7 @@ class DatabaseRulesClient {
     const req: HttpRequestConfig = {
       method: 'GET',
       url: this.dbUrl,
-      data: {format: 'strict'},
+      data: { format: 'strict' },
     };
     return this.httpClient.send(req)
       .then((resp) => {
@@ -181,7 +191,7 @@ class DatabaseRulesClient {
    */
   public setRules(source: string | Buffer | object): Promise<void> {
     if (!validator.isNonEmptyString(source) &&
-      !validator.isBuffer(source)  &&
+      !validator.isBuffer(source) &&
       !validator.isNonNullObject(source)) {
       const error = new FirebaseDatabaseError({
         code: 'invalid-argument',
@@ -220,7 +230,7 @@ class DatabaseRulesClient {
   private getErrorMessage(err: HttpError): string {
     const intro = 'Error while accessing security rules';
     try {
-      const body: {error?: string} = err.response.data;
+      const body: { error?: string } = err.response.data;
       if (body && body.error) {
         return `${intro}: ${body.error.trim()}`;
       }

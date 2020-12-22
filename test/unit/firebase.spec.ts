@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +28,10 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as mocks from '../resources/mocks';
 
 import * as firebaseAdmin from '../../src/index';
-import {RefreshTokenCredential, ServiceAccountCredential, isApplicationDefault} from '../../src/auth/credential';
+import { FirebaseApp, FirebaseAppInternals } from '../../src/firebase-app';
+import {
+  RefreshTokenCredential, ServiceAccountCredential, isApplicationDefault
+} from '../../src/credential/credential-internal';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -113,7 +117,7 @@ describe('Firebase', () => {
       });
 
       expect(isApplicationDefault(firebaseAdmin.app().options.credential)).to.be.false;
-      return firebaseAdmin.app().INTERNAL.getToken()
+      return getAppInternals().getToken()
         .should.eventually.have.keys(['accessToken', 'expirationTime']);
     });
 
@@ -124,7 +128,7 @@ describe('Firebase', () => {
       });
 
       expect(isApplicationDefault(firebaseAdmin.app().options.credential)).to.be.false;
-      return firebaseAdmin.app().INTERNAL.getToken()
+      return getAppInternals().getToken()
         .should.eventually.have.keys(['accessToken', 'expirationTime']);
     });
 
@@ -136,7 +140,7 @@ describe('Firebase', () => {
       });
 
       expect(isApplicationDefault(firebaseAdmin.app().options.credential)).to.be.true;
-      return firebaseAdmin.app().INTERNAL.getToken().then((token) => {
+      return getAppInternals().getToken().then((token) => {
         if (typeof credPath === 'undefined') {
           delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
         } else {
@@ -158,7 +162,7 @@ describe('Firebase', () => {
       });
 
       expect(isApplicationDefault(firebaseAdmin.app().options.credential)).to.be.false;
-      return firebaseAdmin.app().INTERNAL.getToken()
+      return getAppInternals().getToken()
         .should.eventually.have.keys(['accessToken', 'expirationTime']);
     });
   });
@@ -216,6 +220,21 @@ describe('Firebase', () => {
     });
   });
 
+  describe('#remoteConfig', () => {
+    it('should throw if the app has not be initialized', () => {
+      expect(() => {
+        return firebaseAdmin.remoteConfig();
+      }).to.throw('The default Firebase app does not exist.');
+    });
+
+    it('should return the remoteConfig service', () => {
+      firebaseAdmin.initializeApp(mocks.appOptions);
+      expect(() => {
+        return firebaseAdmin.remoteConfig();
+      }).not.to.throw();
+    });
+  });
+
   describe('#storage', () => {
     it('should throw if the app has not be initialized', () => {
       expect(() => {
@@ -230,4 +249,8 @@ describe('Firebase', () => {
       }).not.to.throw();
     });
   });
+
+  function getAppInternals(): FirebaseAppInternals {
+    return (firebaseAdmin.app() as FirebaseApp).INTERNAL;
+  }
 });

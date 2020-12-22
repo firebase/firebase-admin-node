@@ -15,22 +15,23 @@
  */
 
 import * as validator from '../utils/validator';
-import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
+import { deepCopy } from '../utils/deep-copy';
+import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
-  EmailSignInConfig, EmailSignInConfigServerRequest, EmailSignInProviderConfig,
+  EmailSignInConfig, EmailSignInConfigServerRequest, MultiFactorAuthServerConfig,
+  MultiFactorAuthConfig, validateTestPhoneNumbers,
 } from './auth-config';
+import { auth } from './index';
 
-/** The TenantOptions interface used for create/read/update tenant operations. */
-export interface TenantOptions {
-  displayName?: string;
-  emailSignInConfig?: EmailSignInProviderConfig;
-  anonymousSignInEnabled?: boolean;
-}
+import TenantInterface = auth.Tenant;
+import UpdateTenantRequest = auth.UpdateTenantRequest;
 
 /** The corresponding server side representation of a TenantOptions object. */
 export interface TenantOptionsServerRequest extends EmailSignInConfigServerRequest {
   displayName?: string;
   enableAnonymousUser?: boolean;
+  mfaConfig?: MultiFactorAuthServerConfig;
+  testPhoneNumbers?: {[key: string]: string};
 }
 
 /** The tenant server response interface. */
@@ -40,23 +41,20 @@ export interface TenantServerResponse {
   allowPasswordSignup?: boolean;
   enableEmailLinkSignin?: boolean;
   enableAnonymousUser?: boolean;
+  mfaConfig?: MultiFactorAuthServerConfig;
+  testPhoneNumbers?: {[key: string]: string};
 }
-
-/** The interface representing the listTenant API response. */
-export interface ListTenantsResult {
-  tenants: Tenant[];
-  pageToken?: string;
-}
-
 
 /**
  * Tenant class that defines a Firebase Auth tenant.
  */
-export class Tenant {
+export class Tenant implements TenantInterface {
   public readonly tenantId: string;
   public readonly displayName?: string;
   public readonly emailSignInConfig?: EmailSignInConfig;
   public readonly anonymousSignInEnabled?: boolean;
+  public readonly multiFactorConfig?: MultiFactorAuthConfig;
+  public readonly testPhoneNumbers?: {[phoneNumber: string]: string};
 
   /**
    * Builds the corresponding server request for a TenantOptions object.
@@ -66,7 +64,7 @@ export class Tenant {
    * @return {object} The equivalent server request.
    */
   public static buildServerRequest(
-    tenantOptions: TenantOptions, createRequest: boolean): TenantOptionsServerRequest {
+    tenantOptions: UpdateTenantRequest, createRequest: boolean): TenantOptionsServerRequest {
     Tenant.validate(tenantOptions, createRequest);
     let request: TenantOptionsServerRequest = {};
     if (typeof tenantOptions.emailSignInConfig !== 'undefined') {
@@ -77,6 +75,13 @@ export class Tenant {
     }
     if (typeof tenantOptions.anonymousSignInEnabled !== 'undefined') {
       request.enableAnonymousUser = tenantOptions.anonymousSignInEnabled;
+    }
+    if (typeof tenantOptions.multiFactorConfig !== 'undefined') {
+      request.mfaConfig = MultiFactorAuthConfig.buildServerRequest(tenantOptions.multiFactorConfig);
+    }
+    if (typeof tenantOptions.testPhoneNumbers !== 'undefined') {
+      // null will clear existing test phone numbers. Translate to empty object.
+      request.testPhoneNumbers = tenantOptions.testPhoneNumbers ?? {};
     }
     return request;
   }
@@ -107,6 +112,8 @@ export class Tenant {
       displayName: true,
       emailSignInConfig: true,
       anonymousSignInEnabled: true,
+      multiFactorConfig: true,
+      testPhoneNumbers: true,
     };
     const label = createRequest ? 'CreateTenantRequest' : 'UpdateTenantRequest';
     if (!validator.isNonNullObject(request)) {
@@ -137,15 +144,31 @@ export class Tenant {
       // This will throw an error if invalid.
       EmailSignInConfig.buildServerRequest(request.emailSignInConfig);
     }
+    // Validate test phone numbers if provided.
+    if (typeof request.testPhoneNumbers !== 'undefined' &&
+        request.testPhoneNumbers !== null) {
+      validateTestPhoneNumbers(request.testPhoneNumbers);
+    } else if (request.testPhoneNumbers === null && createRequest) {
+      // null allowed only for update operations.
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        `"${label}.testPhoneNumbers" must be a non-null object.`,
+      );
+    }
+    // Validate multiFactorConfig type if provided.
+    if (typeof request.multiFactorConfig !== 'undefined') {
+      // This will throw an error if invalid.
+      MultiFactorAuthConfig.buildServerRequest(request.multiFactorConfig);
+    }
   }
 
   /**
    * The Tenant object constructor.
    *
-   * @param {any} response The server side response used to initialize the Tenant object.
+   * @param response The server side response used to initialize the Tenant object.
    * @constructor
    */
-  constructor(response: any) {
+  constructor(response: TenantServerResponse) {
     const tenantId = Tenant.getTenantIdFromResourceName(response.name);
     if (!tenantId) {
       throw new FirebaseAuthError(
@@ -164,16 +187,31 @@ export class Tenant {
       });
     }
     this.anonymousSignInEnabled = !!response.enableAnonymousUser;
+    if (typeof response.mfaConfig !== 'undefined') {
+      this.multiFactorConfig = new MultiFactorAuthConfig(response.mfaConfig);
+    }
+    if (typeof response.testPhoneNumbers !== 'undefined') {
+      this.testPhoneNumbers = deepCopy(response.testPhoneNumbers || {});
+    }
   }
 
   /** @return {object} The plain object representation of the tenant. */
   public toJSON(): object {
-    return {
+    const json = {
       tenantId: this.tenantId,
       displayName: this.displayName,
-      emailSignInConfig: this.emailSignInConfig && this.emailSignInConfig.toJSON(),
+      emailSignInConfig: this.emailSignInConfig?.toJSON(),
       anonymousSignInEnabled: this.anonymousSignInEnabled,
+      multiFactorConfig: this.multiFactorConfig?.toJSON(),
+      testPhoneNumbers: this.testPhoneNumbers,
     };
+    if (typeof json.multiFactorConfig === 'undefined') {
+      delete json.multiFactorConfig;
+    }
+    if (typeof json.testPhoneNumbers === 'undefined') {
+      delete json.testPhoneNumbers;
+    }
+    return json;
   }
 }
 

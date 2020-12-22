@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,15 +16,18 @@
  */
 
 import { FirebaseApp } from '../firebase-app';
-import {ServiceAccountCredential} from './credential';
-import {AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
+import { ServiceAccountCredential } from '../credential/credential-internal';
+import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import { AuthorizedHttpClient, HttpError, HttpRequestConfig, HttpClient } from '../utils/api-request';
 
 import * as validator from '../utils/validator';
 import { toWebSafeBase64 } from '../utils';
+import { Algorithm } from 'jsonwebtoken';
 
 
-const ALGORITHM_RS256 = 'RS256';
+const ALGORITHM_RS256: Algorithm = 'RS256' as const;
+const ALGORITHM_NONE: Algorithm = 'none' as const;
+
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 
 // List of blacklisted claims which cannot be provided when creating a custom token
@@ -39,6 +43,12 @@ const FIREBASE_AUDIENCE = 'https://identitytoolkit.googleapis.com/google.identit
  * CryptoSigner interface represents an object that can be used to sign JWTs.
  */
 export interface CryptoSigner {
+
+  /**
+   * The name of the signing algorithm.
+   */
+  readonly algorithm: Algorithm;
+
   /**
    * Cryptographically signs a buffer of data.
    *
@@ -83,6 +93,8 @@ interface JWTBody {
  */
 export class ServiceAccountSigner implements CryptoSigner {
 
+  algorithm = ALGORITHM_RS256;
+
   /**
    * Creates a new CryptoSigner instance from the given service account credential.
    *
@@ -124,6 +136,8 @@ export class ServiceAccountSigner implements CryptoSigner {
  * @see https://cloud.google.com/compute/docs/storing-retrieving-metadata
  */
 export class IAMSigner implements CryptoSigner {
+  algorithm = ALGORITHM_RS256;
+
   private readonly httpClient: AuthorizedHttpClient;
   private serviceAccountId?: string;
 
@@ -151,13 +165,13 @@ export class IAMSigner implements CryptoSigner {
     return this.getAccountId().then((serviceAccount) => {
       const request: HttpRequestConfig = {
         method: 'POST',
-        url: `https://iam.googleapis.com/v1/projects/-/serviceAccounts/${serviceAccount}:signBlob`,
-        data: {bytesToSign: buffer.toString('base64')},
+        url: `https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/${serviceAccount}:signBlob`,
+        data: { payload: buffer.toString('base64') },
       };
       return this.httpClient.send(request);
     }).then((response: any) => {
       // Response from IAM is base64 encoded. Decode it into a buffer and return.
-      return Buffer.from(response.data.signature, 'base64');
+      return Buffer.from(response.data.signedBlob, 'base64');
     }).catch((err) => {
       if (err instanceof HttpError) {
         const error = err.response.data;
@@ -207,11 +221,35 @@ export class IAMSigner implements CryptoSigner {
     }).catch((err) => {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_CREDENTIAL,
-        `Failed to determine service account. Make sure to initialize ` +
-        `the SDK with a service account credential. Alternatively specify a service ` +
+        'Failed to determine service account. Make sure to initialize ' +
+        'the SDK with a service account credential. Alternatively specify a service ' +
         `account with iam.serviceAccounts.signBlob permission. Original error: ${err}`,
       );
     });
+  }
+}
+
+/**
+ * A CryptoSigner implementation that is used when communicating with the Auth emulator.
+ * It produces unsigned tokens.
+ */
+export class EmulatedSigner implements CryptoSigner {
+
+  algorithm = ALGORITHM_NONE;
+
+  /**
+   * @inheritDoc
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  public sign(buffer: Buffer): Promise<Buffer> {
+    return Promise.resolve(Buffer.from(''));
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public getAccountId(): Promise<string> {
+    return Promise.resolve('firebase-auth-emulator@example.com');
   }
 }
 
@@ -250,7 +288,7 @@ export class FirebaseTokenGenerator {
         'INTERNAL ASSERT: Must provide a CryptoSigner to use FirebaseTokenGenerator.',
       );
     }
-    if (typeof tenantId !== 'undefined' && !validator.isNonEmptyString(tenantId)) {
+    if (typeof this.tenantId !== 'undefined' && !validator.isNonEmptyString(this.tenantId)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
         '`tenantId` argument must be a non-empty string.');
@@ -298,7 +336,7 @@ export class FirebaseTokenGenerator {
     }
     return this.signer.getAccountId().then((account) => {
       const header: JWTHeader = {
-        alg: ALGORITHM_RS256,
+        alg: this.signer.algorithm,
         typ: 'JWT',
       };
       const iat = Math.floor(Date.now() / 1000);
@@ -319,6 +357,7 @@ export class FirebaseTokenGenerator {
       }
       const token = `${this.encodeSegment(header)}.${this.encodeSegment(body)}`;
       const signPromise = this.signer.sign(Buffer.from(token));
+
       return Promise.all([token, signPromise]);
     }).then(([token, signature]) => {
       return `${token}.${this.encodeSegment(signature)}`;

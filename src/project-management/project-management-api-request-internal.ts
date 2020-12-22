@@ -21,6 +21,7 @@ import {
 import { FirebaseProjectManagementError, ProjectManagementErrorCode } from '../utils/error';
 import * as validator from '../utils/validator';
 import { ShaCertificate } from './android-app';
+import { getSdkVersion } from '../utils/index';
 
 /** Project management backend host and port. */
 const PROJECT_MANAGEMENT_HOST_AND_PORT = 'firebase.googleapis.com:443';
@@ -30,7 +31,7 @@ const PROJECT_MANAGEMENT_PATH = '/v1/';
 const PROJECT_MANAGEMENT_BETA_PATH = '/v1beta1/';
 /** Project management request header. */
 const PROJECT_MANAGEMENT_HEADERS = {
-  'X-Client-Version': 'Node/Admin/<XXX_SDK_VERSION_XXX>',
+  'X-Client-Version': `Node/Admin/${getSdkVersion()}`,
 };
 /** Project management request timeout duration in milliseconds. */
 const PROJECT_MANAGEMENT_TIMEOUT_MILLIS = 10000;
@@ -172,11 +173,11 @@ export class ProjectManagementRequestHandler {
         assertServerResponse(
           validator.isNonNullObject(responseData),
           responseData,
-          `createAndroidApp's responseData must be a non-null object.`);
+          'createAndroidApp\'s responseData must be a non-null object.');
         assertServerResponse(
           validator.isNonEmptyString(responseData.name),
           responseData,
-          `createAndroidApp's responseData.name must be a non-empty string.`);
+          'createAndroidApp\'s responseData.name must be a non-empty string.');
         return this.pollRemoteOperationWithExponentialBackoff(responseData.name);
       });
   }
@@ -199,11 +200,11 @@ export class ProjectManagementRequestHandler {
         assertServerResponse(
           validator.isNonNullObject(responseData),
           responseData,
-          `createIosApp's responseData must be a non-null object.`);
+          'createIosApp\'s responseData must be a non-null object.');
         assertServerResponse(
           validator.isNonEmptyString(responseData.name),
           responseData,
-          `createIosApp's responseData.name must be a non-empty string.`);
+          'createIosApp\'s responseData.name must be a non-empty string.');
         return this.pollRemoteOperationWithExponentialBackoff(responseData.name);
       });
   }
@@ -275,7 +276,7 @@ export class ProjectManagementRequestHandler {
 
   private pollRemoteOperationWithExponentialBackoff(
     operationResourceName: string): Promise<object> {
-    const poller = new ExponentialBackoffPoller();
+    const poller = new ExponentialBackoffPoller<object>();
 
     return poller.poll(() => {
       return this.invokeRequestHandler('GET', operationResourceName, /* requestData */ null)

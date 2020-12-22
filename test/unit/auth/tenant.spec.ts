@@ -19,12 +19,14 @@ import * as chai from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import {deepCopy} from '../../../src/utils/deep-copy';
-import {EmailSignInConfig, EmailSignInProviderConfig} from '../../../src/auth/auth-config';
-import {
-  Tenant, TenantOptions, TenantServerResponse,
-} from '../../../src/auth/tenant';
+import { deepCopy } from '../../../src/utils/deep-copy';
+import { EmailSignInConfig, MultiFactorAuthConfig } from '../../../src/auth/auth-config';
+import { Tenant, TenantServerResponse } from '../../../src/auth/tenant';
+import { auth } from '../../../src/auth/index';
 
+import EmailSignInProviderConfig = auth.EmailSignInProviderConfig;
+import CreateTenantRequest = auth.CreateTenantRequest;
+import UpdateTenantRequest = auth.UpdateTenantRequest;
 
 chai.should();
 chai.use(sinonChai);
@@ -38,9 +40,40 @@ describe('Tenant', () => {
     displayName: 'TENANT-DISPLAY-NAME',
     allowPasswordSignup: true,
     enableEmailLinkSignin: true,
+    mfaConfig: {
+      state: 'ENABLED',
+      enabledProviders: ['PHONE_SMS'],
+    },
+    testPhoneNumbers: {
+      '+16505551234': '019287',
+      '+16505550676': '985235',
+    },
   };
 
-  const clientRequest: TenantOptions = {
+  const clientRequest: UpdateTenantRequest = {
+    displayName: 'TENANT-DISPLAY-NAME',
+    emailSignInConfig: {
+      enabled: true,
+      passwordRequired: false,
+    },
+    multiFactorConfig: {
+      state: 'ENABLED',
+      factorIds: ['phone'],
+    },
+    testPhoneNumbers: {
+      '+16505551234': '019287',
+      '+16505550676': '985235',
+    },
+  };
+
+  const serverRequestWithoutMfa: TenantServerResponse = {
+    name: 'projects/project1/tenants/TENANT-ID',
+    displayName: 'TENANT-DISPLAY-NAME',
+    allowPasswordSignup: true,
+    enableEmailLinkSignin: true,
+  };
+
+  const clientRequestWithoutMfa: UpdateTenantRequest = {
     displayName: 'TENANT-DISPLAY-NAME',
     emailSignInConfig: {
       enabled: true,
@@ -52,7 +85,15 @@ describe('Tenant', () => {
     const createRequest = true;
 
     describe('for an update request', () => {
-      it('should return the expected server request', () => {
+      it('should return the expected server request without multi-factor and phone config', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequestWithoutMfa);
+        const tenantOptionsServerRequest = deepCopy(serverRequestWithoutMfa);
+        delete tenantOptionsServerRequest.name;
+        expect(Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest))
+          .to.deep.equal(tenantOptionsServerRequest);
+      });
+
+      it('should return the expected server request with multi-factor and phone config', () => {
         const tenantOptionsClientRequest = deepCopy(clientRequest);
         const tenantOptionsServerRequest = deepCopy(serverRequest);
         delete tenantOptionsServerRequest.name;
@@ -73,6 +114,33 @@ describe('Tenant', () => {
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
         }).to.throw('"EmailSignInConfig.enabled" must be a boolean.');
+      });
+
+      it('should throw on invalid MultiFactorConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.multiFactorConfig.state = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"MultiFactorConfig.state" must be either "ENABLED" or "DISABLED".');
+      });
+
+      it('should throw on invalid testPhoneNumbers attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.testPhoneNumbers = 'invalid';
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
+        }).to.throw('"testPhoneNumbers" must be a map of phone number / code pairs.');
+      });
+
+      it('should not throw on null testPhoneNumbers attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest);
+        const tenantOptionsServerRequest = deepCopy(serverRequest);
+        tenantOptionsClientRequest.testPhoneNumbers = null;
+        delete tenantOptionsServerRequest.name;
+        tenantOptionsServerRequest.testPhoneNumbers = {};
+
+        expect(Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest))
+          .to.deep.equal(tenantOptionsServerRequest);
       });
 
       it('should not throw on valid client request object', () => {
@@ -96,7 +164,7 @@ describe('Tenant', () => {
         tenantOptionsClientRequest.unsupported = 'value';
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
-        }).to.throw(`"unsupported" is not a valid UpdateTenantRequest parameter.`);
+        }).to.throw('"unsupported" is not a valid UpdateTenantRequest parameter.');
       });
 
       const invalidTenantNames = [null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
@@ -112,8 +180,17 @@ describe('Tenant', () => {
     });
 
     describe('for a create request', () => {
-      it('should return the expected server request', () => {
-        const tenantOptionsClientRequest: TenantOptions = deepCopy(clientRequest);
+      it('should return the expected server request without multi-factor and phone config', () => {
+        const tenantOptionsClientRequest: CreateTenantRequest = deepCopy(clientRequestWithoutMfa);
+        const tenantOptionsServerRequest: TenantServerResponse = deepCopy(serverRequestWithoutMfa);
+        delete tenantOptionsServerRequest.name;
+
+        expect(Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest))
+          .to.deep.equal(tenantOptionsServerRequest);
+      });
+
+      it('should return the expected server request with multi-factor and phone config', () => {
+        const tenantOptionsClientRequest: CreateTenantRequest = deepCopy(clientRequest);
         const tenantOptionsServerRequest: TenantServerResponse = deepCopy(serverRequest);
         delete tenantOptionsServerRequest.name;
 
@@ -122,11 +199,39 @@ describe('Tenant', () => {
       });
 
       it('should throw on invalid EmailSignInConfig', () => {
-        const tenantOptionsClientRequest: TenantOptions = deepCopy(clientRequest);
+        const tenantOptionsClientRequest: CreateTenantRequest = deepCopy(clientRequest);
         tenantOptionsClientRequest.emailSignInConfig = null as unknown as EmailSignInProviderConfig;
 
         expect(() => Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest))
           .to.throw('"EmailSignInConfig" must be a non-null object.');
+      });
+
+      it('should throw on invalid MultiFactorConfig attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.multiFactorConfig.factorIds = ['invalid'];
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"invalid" is not a valid "AuthFactorType".',);
+      });
+
+      it('should throw on invalid testPhoneNumbers attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest) as any;
+        tenantOptionsClientRequest.testPhoneNumbers = { 'invalid': '123456' };
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"invalid" is not a valid E.164 standard compliant phone number.');
+      });
+
+      it('should throw on null testPhoneNumbers attribute', () => {
+        const tenantOptionsClientRequest = deepCopy(clientRequest);
+        const tenantOptionsServerRequest = deepCopy(serverRequest);
+        tenantOptionsClientRequest.testPhoneNumbers = null;
+        delete tenantOptionsServerRequest.name;
+        tenantOptionsServerRequest.testPhoneNumbers = {};
+
+        expect(() => {
+          Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
+        }).to.throw('"CreateTenantRequest.testPhoneNumbers" must be a non-null object.');
       });
 
       const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
@@ -143,7 +248,7 @@ describe('Tenant', () => {
         tenantOptionsClientRequest.unsupported = 'value';
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-        }).to.throw(`"unsupported" is not a valid CreateTenantRequest parameter.`);
+        }).to.throw('"unsupported" is not a valid CreateTenantRequest parameter.');
       });
 
       const invalidTenantNames = [null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
@@ -198,6 +303,19 @@ describe('Tenant', () => {
       expect(tenant.emailSignInConfig).to.deep.equal(expectedEmailSignInConfig);
     });
 
+    it('should set readonly property multiFactorConfig', () => {
+      const expectedMultiFactorConfig = new MultiFactorAuthConfig({
+        state: 'ENABLED',
+        enabledProviders: ['PHONE_SMS'],
+      });
+      expect(tenant.multiFactorConfig).to.deep.equal(expectedMultiFactorConfig);
+    });
+
+    it('should set readonly property testPhoneNumbers', () => {
+      expect(tenant.testPhoneNumbers).to.deep.equal(
+        deepCopy(clientRequest.testPhoneNumbers));
+    });
+
     it('should throw when no tenant ID is provided', () => {
       const invalidOptions = deepCopy(serverRequest);
       // Use resource name that does not include a tenant ID.
@@ -227,6 +345,24 @@ describe('Tenant', () => {
     const serverRequestCopy: TenantServerResponse = deepCopy(serverRequest);
     it('should return the expected object representation of a tenant', () => {
       expect(new Tenant(serverRequestCopy).toJSON()).to.deep.equal({
+        tenantId: 'TENANT-ID',
+        displayName: 'TENANT-DISPLAY-NAME',
+        emailSignInConfig: {
+          enabled: true,
+          passwordRequired: false,
+        },
+        anonymousSignInEnabled: false,
+        multiFactorConfig: deepCopy(clientRequest.multiFactorConfig),
+        testPhoneNumbers: deepCopy(clientRequest.testPhoneNumbers),
+      });
+    });
+
+    it('should not populate optional fields if not available', () => {
+      const serverRequestCopyWithoutMfa: TenantServerResponse = deepCopy(serverRequest);
+      delete serverRequestCopyWithoutMfa.mfaConfig;
+      delete serverRequestCopyWithoutMfa.testPhoneNumbers;
+
+      expect(new Tenant(serverRequestCopyWithoutMfa).toJSON()).to.deep.equal({
         tenantId: 'TENANT-ID',
         displayName: 'TENANT-DISPLAY-NAME',
         emailSignInConfig: {

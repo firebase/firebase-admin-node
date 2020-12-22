@@ -28,12 +28,13 @@ import * as chaiAsPromised from 'chai-as-promised';
 import LegacyFirebaseTokenGenerator = require('firebase-token-generator');
 
 import * as mocks from '../../resources/mocks';
-import {FirebaseTokenGenerator, ServiceAccountSigner} from '../../../src/auth/token-generator';
+import { FirebaseTokenGenerator, ServiceAccountSigner } from '../../../src/auth/token-generator';
 import * as verifier from '../../../src/auth/token-verifier';
 
-import {ServiceAccountCredential} from '../../../src/auth/credential';
+import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
 import { AuthClientErrorCode } from '../../../src/utils/error';
 import { FirebaseApp } from '../../../src/firebase-app';
+import { Algorithm } from 'jsonwebtoken';
 
 chai.should();
 chai.use(sinonChai);
@@ -104,6 +105,20 @@ function mockFailedFetchPublicKeys(): nock.Scope {
     .replyWithError('message');
 }
 
+function createTokenVerifier(
+  app: FirebaseApp, 
+  options: { algorithm?: Algorithm } = {}
+): verifier.FirebaseTokenVerifier {
+  const algorithm = options.algorithm || 'RS256';
+  return new verifier.FirebaseTokenVerifier(
+    'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com',
+    algorithm,
+    'https://securetoken.google.com/',
+    verifier.ID_TOKEN_INFO,
+    app
+  );
+}
+
 
 describe('FirebaseTokenVerifier', () => {
   let app: FirebaseApp;
@@ -116,13 +131,7 @@ describe('FirebaseTokenVerifier', () => {
     app = mocks.app();
     const cert = new ServiceAccountCredential(mocks.certificateObject);
     tokenGenerator = new FirebaseTokenGenerator(new ServiceAccountSigner(cert));
-    tokenVerifier = new verifier.FirebaseTokenVerifier(
-      'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com',
-      'RS256',
-      'https://securetoken.google.com/',
-      verifier.ID_TOKEN_INFO,
-      app,
-    );
+    tokenVerifier = createTokenVerifier(app);
     httpsSpy = sinon.spy(https, 'request');
   });
 
@@ -336,7 +345,7 @@ describe('FirebaseTokenVerifier', () => {
 
     it('should be rejected given a Firebase JWT token with no kid', () => {
       const mockIdToken = mocks.generateIdToken({
-        header: {foo: 'bar'},
+        header: { foo: 'bar' },
       });
       return tokenVerifier.verifyJWT(mockIdToken)
         .should.eventually.be.rejectedWith('Firebase ID token has no "kid" claim');
@@ -533,6 +542,55 @@ describe('FirebaseTokenVerifier', () => {
           sub: mocks.uid,
           uid: mocks.uid,
         });
+    });
+
+    it('should decode an unsigned token when the algorithm is set to none (emulator)', async () => {
+      clock = sinon.useFakeTimers(1000);
+
+      const emulatorVerifier = createTokenVerifier(app, { algorithm: 'none' });
+      const mockIdToken = mocks.generateIdToken({
+        algorithm: 'none',
+        header: {}
+      });
+
+      const decoded = await emulatorVerifier.verifyJWT(mockIdToken);
+      expect(decoded).to.deep.equal({
+        one: 'uno',
+        two: 'dos',
+        iat: 1,
+        exp: ONE_HOUR_IN_SECONDS + 1,
+        aud: mocks.projectId,
+        iss: 'https://securetoken.google.com/' + mocks.projectId,
+        sub: mocks.uid,
+        uid: mocks.uid,
+      });
+    });
+
+    it('should not decode a signed token when the algorithm is set to none (emulator)', async () => {
+      clock = sinon.useFakeTimers(1000);
+
+      const emulatorVerifier = createTokenVerifier(app, { algorithm: 'none' });
+      const mockIdToken = mocks.generateIdToken();
+
+      await emulatorVerifier.verifyJWT(mockIdToken)
+        .should.eventually.be.rejectedWith('Firebase ID token has incorrect algorithm. Expected "none"');
+    });
+
+    it('should not decode an unsigned token when the algorithm is not overridden (emulator)', async () => {
+      clock = sinon.useFakeTimers(1000);
+
+      const idTokenNoAlg = mocks.generateIdToken({
+        algorithm: 'none',
+      });
+      await tokenVerifier.verifyJWT(idTokenNoAlg)
+        .should.eventually.be.rejectedWith('Firebase ID token has incorrect algorithm.');
+
+      const idTokenNoHeader = mocks.generateIdToken({
+        algorithm: 'none',
+        header: {}
+      });
+      await tokenVerifier.verifyJWT(idTokenNoHeader)
+        .should.eventually.be.rejectedWith('Firebase ID token has no "kid" claim.');
     });
 
     it('should use the given HTTP Agent', () => {

@@ -1,5 +1,5 @@
 /*!
- * Copyright 2019 Google Inc.
+ * Copyright 2020 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,26 +14,15 @@
  * limitations under the License.
  */
 
-export enum AppPlatform {
-  PLATFORM_UNKNOWN = 'PLATFORM_UNKNOWN',
-  IOS = 'IOS',
-  ANDROID = 'ANDROID',
-}
-
-export interface AppMetadata {
-  appId: string;
-  displayName?: string;
-  platform: AppPlatform;
-  projectId: string;
-  resourceName: string;
-}
-
-export interface AndroidAppMetadata extends AppMetadata {
-  platform: AppPlatform.ANDROID;
-  packageName: string;
-}
-
-export interface IosAppMetadata extends AppMetadata {
-  platform: AppPlatform.IOS;
-  bundleId: string;
-}
+export * from './credential/index';
+export * from './firebase-namespace-api';
+export * from './auth/index';
+export * from './database/index';
+export * from './firestore/index';
+export * from './instance-id/index';
+export * from './machine-learning/index';
+export * from './messaging/index';
+export * from './project-management/index';
+export * from './remote-config/index';
+export * from './security-rules/index';
+export * from './storage/index';

@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,20 +26,34 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from './utils';
 import * as mocks from '../resources/mocks';
 
-import {GoogleOAuthAccessToken, ServiceAccountCredential} from '../../src/auth/credential';
-import {FirebaseServiceInterface} from '../../src/firebase-service';
-import {FirebaseApp, FirebaseAccessToken} from '../../src/firebase-app';
-import {FirebaseNamespace, FirebaseNamespaceInternals, FIREBASE_CONFIG_VAR} from '../../src/firebase-namespace';
+import { GoogleOAuthAccessToken } from '../../src/credential/index';
+import { ServiceAccountCredential } from '../../src/credential/credential-internal';
+import { FirebaseServiceInterface } from '../../src/firebase-service';
+import { FirebaseApp, FirebaseAccessToken } from '../../src/firebase-app';
+import { FirebaseNamespace, FirebaseNamespaceInternals, FIREBASE_CONFIG_VAR } from '../../src/firebase-namespace';
 
-import {Auth} from '../../src/auth/auth';
-import {Messaging} from '../../src/messaging/messaging';
-import {Storage} from '../../src/storage/storage';
-import {Firestore} from '@google-cloud/firestore';
-import {Database} from '@firebase/database';
-import {InstanceId} from '../../src/instance-id/instance-id';
-import {ProjectManagement} from '../../src/project-management/project-management';
-import { SecurityRules } from '../../src/security-rules/security-rules';
+import { auth } from '../../src/auth/index';
+import { messaging } from '../../src/messaging/index';
+import { machineLearning } from '../../src/machine-learning/index';
+import { storage } from '../../src/storage/index';
+import { firestore } from '../../src/firestore/index';
+import { database } from '../../src/database/index';
+import { instanceId } from '../../src/instance-id/index';
+import { projectManagement } from '../../src/project-management/index';
+import { securityRules } from '../../src/security-rules/index';
+import { remoteConfig } from '../../src/remote-config/index';
 import { FirebaseAppError, AppErrorCodes } from '../../src/utils/error';
+
+import Auth = auth.Auth;
+import Database = database.Database;
+import Messaging = messaging.Messaging;
+import MachineLearning = machineLearning.MachineLearning;
+import Storage = storage.Storage;
+import Firestore = firestore.Firestore;
+import InstanceId = instanceId.InstanceId;
+import ProjectManagement = projectManagement.ProjectManagement;
+import SecurityRules = securityRules.SecurityRules;
+import RemoteConfig = remoteConfig.RemoteConfig;
 
 chai.should();
 chai.use(sinonChai);
@@ -130,7 +145,7 @@ describe('FirebaseApp', () => {
     it('should be read-only', () => {
       expect(() => {
         (mockApp as any).name = 'foo';
-      }).to.throw(`Cannot set property name of #<FirebaseApp> which has only a getter`);
+      }).to.throw('Cannot set property name of #<FirebaseApp> which has only a getter');
     });
   });
 
@@ -150,7 +165,7 @@ describe('FirebaseApp', () => {
     it('should be read-only', () => {
       expect(() => {
         (mockApp as any).options = {};
-      }).to.throw(`Cannot set property options of #<FirebaseApp> which has only a getter`);
+      }).to.throw('Cannot set property options of #<FirebaseApp> which has only a getter');
     });
 
     it('should not return an object which can mutate the underlying options', () => {
@@ -172,28 +187,28 @@ describe('FirebaseApp', () => {
       process.env[FIREBASE_CONFIG_VAR] = './test/resources/non_existant.json';
       expect(() => {
         firebaseNamespace.initializeApp();
-      }).to.throw(`Failed to parse app options file: Error: ENOENT: no such file or directory`);
+      }).to.throw('Failed to parse app options file: Error: ENOENT: no such file or directory');
     });
 
     it('should throw when the environment variable contains bad json', () => {
       process.env[FIREBASE_CONFIG_VAR] = '{,,';
       expect(() => {
         firebaseNamespace.initializeApp();
-      }).to.throw(`Failed to parse app options file: SyntaxError: Unexpected token ,`);
+      }).to.throw('Failed to parse app options file: SyntaxError: Unexpected token ,');
     });
 
     it('should throw when the environment variable points to an empty file', () => {
       process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config_empty.json';
       expect(() => {
         firebaseNamespace.initializeApp();
-      }).to.throw(`Failed to parse app options file`);
+      }).to.throw('Failed to parse app options file');
     });
 
     it('should throw when the environment variable points to bad json', () => {
       process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config_bad.json';
       expect(() => {
         firebaseNamespace.initializeApp();
-      }).to.throw(`Failed to parse app options file`);
+      }).to.throw('Failed to parse app options file');
     });
 
     it('should ignore a bad config key in the config file', () => {
@@ -395,6 +410,32 @@ describe('FirebaseApp', () => {
     });
   });
 
+  describe('machineLearning()', () => {
+    it('should throw if the app has already been deleted', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      return app.delete().then(() => {
+        expect(() => {
+          return app.machineLearning();
+        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
+      });
+    });
+
+    it('should return the machineLearning client', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      const machineLearning: MachineLearning = app.machineLearning();
+      expect(machineLearning).to.not.be.null;
+    });
+
+    it('should return a cached version of MachineLearning on subsequent calls', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+      const service1: MachineLearning = app.machineLearning();
+      const service2: MachineLearning = app.machineLearning();
+      expect(service1).to.equal(service2);
+    });
+  });
+
   describe('database()', () => {
     afterEach(() => {
       try {
@@ -496,7 +537,7 @@ describe('FirebaseApp', () => {
       expect(gcsNamespace).not.be.null;
     });
 
-    it('should return a cached version of Messaging on subsequent calls', () => {
+    it('should return a cached version of Storage on subsequent calls', () => {
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
       const serviceNamespace1: Storage = app.storage();
       const serviceNamespace2: Storage = app.storage();
@@ -608,6 +649,32 @@ describe('FirebaseApp', () => {
     });
   });
 
+  describe('remoteConfig()', () => {
+    it('should throw if the app has already been deleted', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      return app.delete().then(() => {
+        expect(() => {
+          return app.remoteConfig();
+        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
+      });
+    });
+
+    it('should return the RemoteConfig client', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+
+      const remoteConfig: RemoteConfig = app.remoteConfig();
+      expect(remoteConfig).to.not.be.null;
+    });
+
+    it('should return a cached version of RemoteConfig on subsequent calls', () => {
+      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
+      const service1: RemoteConfig = app.remoteConfig();
+      const service2: RemoteConfig = app.remoteConfig();
+      expect(service1).to.equal(service2);
+    });
+  });
+
   describe('#[service]()', () => {
     it('should throw if the app has already been deleted', () => {
       firebaseNamespace.INTERNAL.registerService(mocks.serviceName, mockServiceFactory);
@@ -674,7 +741,7 @@ describe('FirebaseApp', () => {
         getAccessToken: () => Promise.resolve(oracle),
       };
 
-      const app = utils.createAppWithOptions({credential});
+      const app = utils.createAppWithOptions({ credential });
 
       return app.INTERNAL.getToken().then((token) => {
         expect(token.accessToken).to.equal(oracle.access_token);

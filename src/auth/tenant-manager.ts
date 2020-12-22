@@ -14,14 +14,18 @@
  * limitations under the License.
  */
 
-import {AuthRequestHandler} from './auth-api-request';
-import {FirebaseApp} from '../firebase-app';
-import {TenantAwareAuth} from './auth';
-import {
-  Tenant, TenantServerResponse, ListTenantsResult, TenantOptions,
-} from './tenant';
-import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
+import { AuthRequestHandler } from './auth-api-request';
+import { FirebaseApp } from '../firebase-app';
+import { TenantAwareAuth } from './auth';
+import { Tenant, TenantServerResponse } from './tenant';
+import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import * as validator from '../utils/validator';
+import { auth } from './index';
+
+import ListTenantsResult = auth.ListTenantsResult;
+import TenantManagerInterface = auth.TenantManager;
+import CreateTenantRequest = auth.CreateTenantRequest;
+import UpdateTenantRequest = auth.UpdateTenantRequest;
 
 /**
  * Data structure used to help manage tenant related operations.
@@ -30,7 +34,7 @@ import * as validator from '../utils/validator';
  * - Getting a TenantAwareAuth instance for running Auth related operations (user mgmt, provider config mgmt, etc)
  *   in the context of a specified tenant.
  */
-export class TenantManager {
+export class TenantManager implements TenantManagerInterface {
   private readonly authRequestHandler: AuthRequestHandler;
   private readonly tenantsMap: {[key: string]: TenantAwareAuth};
 
@@ -126,7 +130,7 @@ export class TenantManager {
    * @param tenantOptions The properties to set on the new tenant to be created.
    * @return A promise that resolves with the newly created tenant.
    */
-  public createTenant(tenantOptions: TenantOptions): Promise<Tenant> {
+  public createTenant(tenantOptions: CreateTenantRequest): Promise<Tenant> {
     return this.authRequestHandler.createTenant(tenantOptions)
       .then((response: TenantServerResponse) => {
         return new Tenant(response);
@@ -140,7 +144,7 @@ export class TenantManager {
    * @param tenantOptions The properties to update on the existing tenant.
    * @return A promise that resolves with the modified tenant.
    */
-  public updateTenant(tenantId: string, tenantOptions: TenantOptions): Promise<Tenant> {
+  public updateTenant(tenantId: string, tenantOptions: UpdateTenantRequest): Promise<Tenant> {
     return this.authRequestHandler.updateTenant(tenantId, tenantOptions)
       .then((response: TenantServerResponse) => {
         return new Tenant(response);

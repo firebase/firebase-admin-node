@@ -15,7 +15,7 @@
  */
 
 import * as admin from '../../lib/index';
-import {expect} from 'chai';
+import { expect } from 'chai';
 import {
   defaultApp, nullApp, nonNullApp, databaseUrl, projectId, storageBucket,
 } from './setup';
@@ -25,6 +25,20 @@ describe('admin', () => {
     expect(databaseUrl).to.be.not.empty;
     expect(projectId).to.be.not.empty;
     expect(storageBucket).to.be.not.empty;
+  });
+
+  it('does not load RTDB by default', () => {
+    const firebaseRtdb = require.cache[require.resolve('@firebase/database')];
+    expect(firebaseRtdb).to.be.undefined;
+    const rtdbInternal = require.cache[require.resolve('../../lib/database/database-internal')];
+    expect(rtdbInternal).to.be.undefined;
+  });
+
+  it('loads RTDB when calling admin.database', () => {
+    const rtdbNamespace = admin.database;
+    expect(rtdbNamespace).to.not.be.null;
+    const firebaseRtdb = require.cache[require.resolve('@firebase/database')];
+    expect(firebaseRtdb).to.not.be.undefined;
   });
 
   it('does not load Firestore by default', () => {

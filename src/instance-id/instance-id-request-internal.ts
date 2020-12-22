@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,8 +15,8 @@
  * limitations under the License.
  */
 
-import {FirebaseApp} from '../firebase-app';
-import {FirebaseInstanceIdError, InstanceIdClientErrorCode} from '../utils/error';
+import { FirebaseApp } from '../firebase-app';
+import { FirebaseInstanceIdError, InstanceIdClientErrorCode } from '../utils/error';
 import {
   ApiSettings, AuthorizedHttpClient, HttpRequestConfig, HttpError,
 } from '../utils/api-request';

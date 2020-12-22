@@ -4,7 +4,7 @@
     "moduleResolution": "node",
     "target": "es5",
     "noImplicitAny": false,
-    "lib": ["es2015"],
+    "lib": ["es2018"],
     "outDir": "lib",
     "typeRoots": [
       "node_modules/@types"

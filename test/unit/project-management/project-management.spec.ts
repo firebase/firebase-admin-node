@@ -22,11 +22,16 @@ import * as sinon from 'sinon';
 import { FirebaseApp } from '../../../src/firebase-app';
 import { AndroidApp } from '../../../src/project-management/android-app';
 import { ProjectManagement } from '../../../src/project-management/project-management';
-import { ProjectManagementRequestHandler } from '../../../src/project-management/project-management-api-request';
+import {
+  ProjectManagementRequestHandler
+} from '../../../src/project-management/project-management-api-request-internal';
 import { FirebaseProjectManagementError } from '../../../src/utils/error';
 import * as mocks from '../../resources/mocks';
-import { IosApp } from '../../../src/project-management/ios-app';
-import { AppPlatform, AppMetadata } from '../../../src/project-management/app-metadata';
+import { projectManagement } from '../../../src/project-management/index';
+
+import AppMetadata = projectManagement.AppMetadata;
+import AppPlatform = projectManagement.AppPlatform;
+import IosApp = projectManagement.IosApp;
 
 const expect = chai.expect;
 
@@ -126,7 +131,7 @@ describe('ProjectManagement', () => {
     it('should throw with null API response', () => {
       const stub = sinon
         .stub(ProjectManagementRequestHandler.prototype, 'listAndroidApps')
-        .returns(Promise.resolve(null));
+        .resolves(null as any);
       stubs.push(stub);
       return projectManagement.listAndroidApps()
         .should.eventually.be.rejected
@@ -210,7 +215,7 @@ describe('ProjectManagement', () => {
     it('should throw with null API response', () => {
       const stub = sinon
         .stub(ProjectManagementRequestHandler.prototype, 'listIosApps')
-        .returns(Promise.resolve(null));
+        .resolves(null as any);
       stubs.push(stub);
       return projectManagement.listIosApps()
         .should.eventually.be.rejected
@@ -307,7 +312,7 @@ describe('ProjectManagement', () => {
     it('should throw when initial API response is null', () => {
       const stub = sinon
         .stub(ProjectManagementRequestHandler.prototype, 'createAndroidApp')
-        .returns(Promise.resolve(null));
+        .resolves(null as any);
       stubs.push(stub);
       return projectManagement.createAndroidApp(PACKAGE_NAME)
         .should.eventually.be.rejected
@@ -355,7 +360,7 @@ describe('ProjectManagement', () => {
     it('should throw when initial API response is null', () => {
       const stub = sinon
         .stub(ProjectManagementRequestHandler.prototype, 'createIosApp')
-        .returns(Promise.resolve(null));
+        .resolves(null as any);
       stubs.push(stub);
       return projectManagement.createIosApp(BUNDLE_ID)
         .should.eventually.be.rejected
@@ -425,7 +430,7 @@ describe('ProjectManagement', () => {
     it('should throw with null API response', () => {
       const stub = sinon
         .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
-        .returns(Promise.resolve(null));
+        .resolves(null as any);
       stubs.push(stub);
       return projectManagement.listAppMetadata()
         .should.eventually.be.rejected

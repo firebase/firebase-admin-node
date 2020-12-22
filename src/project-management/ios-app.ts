@@ -16,10 +16,14 @@
 
 import { FirebaseProjectManagementError } from '../utils/error';
 import * as validator from '../utils/validator';
-import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request';
-import { IosAppMetadata, AppPlatform } from './app-metadata';
+import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request-internal';
+import { projectManagement } from './index';
 
-export class IosApp {
+import IosAppInterface = projectManagement.IosApp;
+import IosAppMetadata = projectManagement.IosAppMetadata;
+import AppPlatform = projectManagement.AppPlatform;
+
+export class IosApp implements IosAppInterface {
   private readonly resourceName: string;
 
   constructor(
@@ -33,6 +37,12 @@ export class IosApp {
     this.resourceName = `projects/-/iosApps/${appId}`;
   }
 
+  /**
+   * Retrieves metadata about this iOS app.
+   *
+   * @return {!Promise<admin.projectManagement.IosAppMetadata>} A promise that
+   *     resolves to the retrieved metadata about this iOS app.
+   */
   public getMetadata(): Promise<IosAppMetadata> {
     return this.requestHandler.getResource(this.resourceName)
       .then((responseData: any) => {
@@ -61,13 +71,24 @@ export class IosApp {
       });
   }
 
+  /**
+   * Sets the optional user-assigned display name of the app.
+   *
+   * @param newDisplayName The new display name to set.
+   *
+   * @return A promise that resolves when the display name has
+   *     been set.
+   */
   public setDisplayName(newDisplayName: string): Promise<void> {
     return this.requestHandler.setDisplayName(this.resourceName, newDisplayName);
   }
 
   /**
-   * @return {Promise<string>} A promise that resolves to a UTF-8 XML string, typically intended to
-   *     be written to a plist file.
+   * Gets the configuration artifact associated with this app.
+   *
+   * @return A promise that resolves to the iOS app's Firebase
+   *     config file, in UTF-8 string format. This string is typically intended to
+   *     be written to a plist file that gets shipped with your iOS app.
    */
   public getConfig(): Promise<string> {
     return this.requestHandler.getConfig(this.resourceName)
@@ -81,7 +102,7 @@ export class IosApp {
         assertServerResponse(
           validator.isBase64String(base64ConfigFileContents),
           responseData,
-          `getConfig()'s responseData.configFileContents must be a base64 string.`);
+          'getConfig()\'s responseData.configFileContents must be a base64 string.');
 
         return Buffer.from(base64ConfigFileContents, 'base64').toString('utf8');
       });

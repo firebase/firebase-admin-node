@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,7 +34,7 @@ const expect = chai.expect;
 describe('FirebaseError', () => {
   const code = 'code';
   const message = 'message';
-  const errorInfo = {code, message};
+  const errorInfo = { code, message };
   it('should initialize successfully with error info specified', () => {
     const error = new FirebaseError(errorInfo);
     expect(error.code).to.be.equal(code);
@@ -49,7 +50,7 @@ describe('FirebaseError', () => {
 
   it('toJSON() should resolve with the expected object', () => {
     const error = new FirebaseError(errorInfo);
-    expect(error.toJSON()).to.deep.equal({code, message});
+    expect(error.toJSON()).to.deep.equal({ code, message });
   });
 });
 

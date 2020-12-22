@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,15 +15,15 @@
  * limitations under the License.
  */
 
-import {FirebaseApp} from '../firebase-app';
-import {AppErrorCodes, FirebaseAppError} from './error';
+import { FirebaseApp } from '../firebase-app';
+import { AppErrorCodes, FirebaseAppError } from './error';
 import * as validator from './validator';
 
 import http = require('http');
 import https = require('https');
 import url = require('url');
-import {EventEmitter} from 'events';
-import {Readable} from 'stream';
+import { EventEmitter } from 'events';
+import { Readable } from 'stream';
 import * as zlibmod from 'zlib';
 
 /** Http method type definition. */
@@ -496,11 +497,15 @@ class AsyncHttpCall {
     });
 
     const timeout: number | undefined = this.config.timeout;
+    const timeoutCallback: () => void = () => {
+      req.abort();
+      this.rejectWithError(`timeout of ${timeout}ms exceeded`, 'ETIMEDOUT', req);
+    };
     if (timeout) {
       // Listen to timeouts and throw an error.
-      req.setTimeout(timeout, () => {
-        req.abort();
-        this.rejectWithError(`timeout of ${timeout}ms exceeded`, 'ETIMEDOUT', req);
+      req.setTimeout(timeout, timeoutCallback);
+      req.on('socket', (socket) => {
+        socket.setTimeout(timeout, timeoutCallback);
       });
     }
 
@@ -584,7 +589,7 @@ class AsyncHttpCall {
     response: LowLevelResponse, respStream: Readable, boundary: string): void {
 
     const dicer = require('dicer'); // eslint-disable-line @typescript-eslint/no-var-requires
-    const multipartParser = new dicer({boundary});
+    const multipartParser = new dicer({ boundary });
     const responseBuffer: Buffer[] = [];
     multipartParser.on('part', (part: any) => {
       const tempBuffers: Buffer[] = [];
@@ -810,17 +815,24 @@ export class AuthorizedHttpClient extends HttpClient {
   }
 
   public send(request: HttpRequestConfig): Promise<HttpResponse> {
-    return this.app.INTERNAL.getToken().then((accessTokenObj) => {
+    return this.getToken().then((token) => {
       const requestCopy = Object.assign({}, request);
       requestCopy.headers = Object.assign({}, request.headers);
       const authHeader = 'Authorization';
-      requestCopy.headers[authHeader] = `Bearer ${accessTokenObj.accessToken}`;
+      requestCopy.headers[authHeader] = `Bearer ${token}`;
 
       if (!requestCopy.httpAgent && this.app.options.httpAgent) {
         requestCopy.httpAgent = this.app.options.httpAgent;
       }
       return super.send(requestCopy);
     });
+  }
+
+  protected getToken(): Promise<string> {
+    return this.app.INTERNAL.getToken()
+      .then((accessTokenObj) => {
+        return accessTokenObj.accessToken;
+      });
   }
 }
 
@@ -905,15 +917,15 @@ export class ApiSettings {
  *     });
  * ```
  */
-export class ExponentialBackoffPoller extends EventEmitter {
+export class ExponentialBackoffPoller<T> extends EventEmitter {
   private numTries = 0;
   private completed = false;
 
   private masterTimer: NodeJS.Timer;
   private repollTimer: NodeJS.Timer;
 
-  private pollCallback?: () => Promise<object>;
-  private resolve: (result: object) => void;
+  private pollCallback?: () => Promise<T>;
+  private resolve: (result: T) => void;
   private reject: (err: object) => void;
 
   constructor(
@@ -926,13 +938,13 @@ export class ExponentialBackoffPoller extends EventEmitter {
   /**
    * Poll the provided callback with exponential backoff.
    *
-   * @param {() => Promise<object>} callback The callback to be called for each poll. If the
+   * @param {() => Promise<T>} callback The callback to be called for each poll. If the
    *     callback resolves to a falsey value, polling will continue. Otherwise, the truthy
    *     resolution will be used to resolve the promise returned by this method.
-   * @return {Promise<object>} A Promise which resolves to the truthy value returned by the provided
+   * @return {Promise<T>} A Promise which resolves to the truthy value returned by the provided
    *     callback when polling is complete.
    */
-  public poll(callback: () => Promise<object>): Promise<object> {
+  public poll(callback: () => Promise<T>): Promise<T> {
     if (this.pollCallback) {
       throw new Error('poll() can only be called once per instance of ExponentialBackoffPoller');
     }
@@ -949,7 +961,7 @@ export class ExponentialBackoffPoller extends EventEmitter {
       this.reject(new Error('ExponentialBackoffPoller deadline exceeded - Master timeout reached'));
     }, this.masterTimeoutMillis);
 
-    return new Promise<object>((resolve, reject) => {
+    return new Promise<T>((resolve, reject) => {
       this.resolve = resolve;
       this.reject = reject;
       this.repoll();

@@ -14,56 +14,27 @@
  * limitations under the License.
  */
 
-import {deepCopy, deepExtend} from '../utils/deep-copy';
+import { deepCopy, deepExtend } from '../utils/deep-copy';
 import * as utils from '../utils';
 import * as validator from '../utils/validator';
-import {AuthClientErrorCode, FirebaseAuthError, FirebaseArrayIndexError} from '../utils/error';
+import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
+import { FirebaseArrayIndexError } from '../firebase-namespace-api';
+import { auth } from './index';
 
-/** Firebase Auth supported hashing algorithms for import operations. */
-export type HashAlgorithmType = 'SCRYPT' | 'STANDARD_SCRYPT' | 'HMAC_SHA512' |
-    'HMAC_SHA256' | 'HMAC_SHA1' | 'HMAC_MD5' | 'MD5' | 'PBKDF_SHA1' | 'BCRYPT' |
-    'PBKDF2_SHA256' | 'SHA512' | 'SHA256' | 'SHA1';
+import UpdateMultiFactorInfoRequest = auth.UpdateMultiFactorInfoRequest;
+import UpdatePhoneMultiFactorInfoRequest = auth.UpdatePhoneMultiFactorInfoRequest;
+import UserImportRecord = auth.UserImportRecord;
+import UserImportOptions = auth.UserImportOptions;
+import UserImportResult = auth.UserImportResult;
 
-
-/** User import options for bulk account imports. */
-export interface UserImportOptions {
-  hash: {
-    algorithm: HashAlgorithmType;
-    key?: Buffer;
-    saltSeparator?: Buffer;
-    rounds?: number;
-    memoryCost?: number;
-    parallelization?: number;
-    blockSize?: number;
-    derivedKeyLength?: number;
-  };
-}
-
-
-/** User import record as accepted from developer. */
-export interface UserImportRecord {
-  uid: string;
-  email?: string;
-  emailVerified?: boolean;
+/** Interface representing an Auth second factor in Auth server format. */
+export interface AuthFactorInfo {
+  // Not required for signupNewUser endpoint.
+  mfaEnrollmentId?: string;
   displayName?: string;
-  phoneNumber?: string;
-  photoURL?: string;
-  disabled?: boolean;
-  metadata?: {
-    lastSignInTime?: string;
-    creationTime?: string;
-  };
-  providerData?: Array<{
-    uid: string;
-    displayName?: string;
-    email?: string;
-    photoURL?: string;
-    providerId: string;
-  }>;
-  customClaims?: object;
-  passwordHash?: Buffer;
-  passwordSalt?: Buffer;
-  tenantId?: string;
+  phoneInfo?: string;
+  enrolledAt?: string;
+  [key: string]: any;
 }
 
 
@@ -83,6 +54,7 @@ interface UploadAccountUser {
     displayName?: string;
     photoUrl?: string;
   }>;
+  mfaInfo?: AuthFactorInfo[];
   passwordHash?: string;
   salt?: string;
   lastLoginAt?: number;
@@ -112,17 +84,56 @@ export interface UploadAccountRequest extends UploadAccountOptions {
 }
 
 
-/** Response object for importUsers operation. */
-export interface UserImportResult {
-  failureCount: number;
-  successCount: number;
-  errors: FirebaseArrayIndexError[];
-}
-
-
 /** Callback function to validate an UploadAccountUser object. */
 export type ValidatorFunction = (data: UploadAccountUser) => void;
 
+
+/**
+ * Converts a client format second factor object to server format.
+ * @param multiFactorInfo The client format second factor.
+ * @return The corresponding AuthFactorInfo server request format.
+ */
+export function convertMultiFactorInfoToServerFormat(multiFactorInfo: UpdateMultiFactorInfoRequest): AuthFactorInfo {
+  let enrolledAt;
+  if (typeof multiFactorInfo.enrollmentTime !== 'undefined') {
+    if (validator.isUTCDateString(multiFactorInfo.enrollmentTime)) {
+      // Convert from UTC date string (client side format) to ISO date string (server side format).
+      enrolledAt = new Date(multiFactorInfo.enrollmentTime).toISOString();
+    } else {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ENROLLMENT_TIME,
+        `The second factor "enrollmentTime" for "${multiFactorInfo.uid}" must be a valid ` +
+        'UTC date string.');
+    }
+  }
+  // Currently only phone second factors are supported.
+  if (isPhoneFactor(multiFactorInfo)) {
+    // If any required field is missing or invalid, validation will still fail later.
+    const authFactorInfo: AuthFactorInfo = {
+      mfaEnrollmentId: multiFactorInfo.uid,
+      displayName: multiFactorInfo.displayName,
+      // Required for all phone second factors.
+      phoneInfo: multiFactorInfo.phoneNumber,
+      enrolledAt,
+    };
+    for (const objKey in authFactorInfo) {
+      if (typeof authFactorInfo[objKey] === 'undefined') {
+        delete authFactorInfo[objKey];
+      }
+    }
+    return authFactorInfo;
+  } else {
+    // Unsupported second factor.
+    throw new FirebaseAuthError(
+      AuthClientErrorCode.UNSUPPORTED_SECOND_FACTOR,
+      `Unsupported second factor "${JSON.stringify(multiFactorInfo)}" provided.`);
+  }
+}
+
+function isPhoneFactor(multiFactorInfo: UpdateMultiFactorInfoRequest):
+  multiFactorInfo is UpdatePhoneMultiFactorInfoRequest {
+  return multiFactorInfo.factorId === 'phone';
+}
 
 /**
  * @param {any} obj The object to check for number field within.
@@ -155,6 +166,7 @@ function populateUploadAccountUser(
     photoUrl: user.photoURL,
     phoneNumber: user.phoneNumber,
     providerUserInfo: [],
+    mfaInfo: [],
     tenantId: user.tenantId,
     customAttributes: user.customClaims && JSON.stringify(user.customClaims),
   };
@@ -193,6 +205,15 @@ function populateUploadAccountUser(
       });
     });
   }
+
+  // Convert user.multiFactor.enrolledFactors to server format.
+  if (validator.isNonNullObject(user.multiFactor) &&
+      validator.isNonEmptyArray(user.multiFactor.enrolledFactors)) {
+    user.multiFactor.enrolledFactors.forEach((multiFactorInfo) => {
+      result.mfaInfo!.push(convertMultiFactorInfoToServerFormat(multiFactorInfo));
+    });
+  }
+
   // Remove blank fields.
   let key: keyof UploadAccountUser;
   for (key in result) {
@@ -202,6 +223,9 @@ function populateUploadAccountUser(
   }
   if (result.providerUserInfo!.length === 0) {
     delete result.providerUserInfo;
+  }
+  if (result.mfaInfo!.length === 0) {
+    delete result.mfaInfo;
   }
   // Validate the constructured user individual request. This will throw if an error
   // is detected.
@@ -251,7 +275,7 @@ export class UserImportBuilder {
     const users = this.validatedUsers.map((user) => {
       return deepCopy(user);
     });
-    return deepExtend({users}, deepCopy(this.validatedOptions)) as UploadAccountRequest;
+    return deepExtend({ users }, deepCopy(this.validatedOptions)) as UploadAccountRequest;
   }
 
   /**
@@ -310,14 +334,14 @@ export class UserImportBuilder {
     if (!validator.isNonNullObject(options.hash)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.MISSING_HASH_ALGORITHM,
-        `"hash.algorithm" is missing from the provided "UserImportOptions".`,
+        '"hash.algorithm" is missing from the provided "UserImportOptions".',
       );
     }
     if (typeof options.hash.algorithm === 'undefined' ||
         !validator.isNonEmptyString(options.hash.algorithm)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_HASH_ALGORITHM,
-        `"hash.algorithm" must be a string matching the list of supported algorithms.`,
+        '"hash.algorithm" must be a string matching the list of supported algorithms.',
       );
     }
 
@@ -330,7 +354,7 @@ export class UserImportBuilder {
       if (!validator.isBuffer(options.hash.key)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_KEY,
-          `A non-empty "hash.key" byte buffer must be provided for ` +
+          'A non-empty "hash.key" byte buffer must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
         );
       }
@@ -366,7 +390,7 @@ export class UserImportBuilder {
       if (isNaN(rounds) || rounds < 0 || rounds > 120000) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_ROUNDS,
-          `A valid "hash.rounds" number between 0 and 120000 must be provided for ` +
+          'A valid "hash.rounds" number between 0 and 120000 must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
         );
       }
@@ -380,7 +404,7 @@ export class UserImportBuilder {
       if (!validator.isBuffer(options.hash.key)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_KEY,
-          `A "hash.key" byte buffer must be provided for ` +
+          'A "hash.key" byte buffer must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
         );
       }
@@ -388,7 +412,7 @@ export class UserImportBuilder {
       if (isNaN(rounds) || rounds <= 0 || rounds > 8) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_ROUNDS,
-          `A valid "hash.rounds" number between 1 and 8 must be provided for ` +
+          'A valid "hash.rounds" number between 1 and 8 must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
         );
       }
@@ -396,7 +420,7 @@ export class UserImportBuilder {
       if (isNaN(memoryCost) || memoryCost <= 0 || memoryCost > 14) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_MEMORY_COST,
-          `A valid "hash.memoryCost" number between 1 and 14 must be provided for ` +
+          'A valid "hash.memoryCost" number between 1 and 14 must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
         );
       }
@@ -404,7 +428,7 @@ export class UserImportBuilder {
             !validator.isBuffer(options.hash.saltSeparator)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_SALT_SEPARATOR,
-          `"hash.saltSeparator" must be a byte buffer.`,
+          '"hash.saltSeparator" must be a byte buffer.',
         );
       }
       populatedOptions = {
@@ -427,7 +451,7 @@ export class UserImportBuilder {
       if (isNaN(cpuMemCost)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_MEMORY_COST,
-          `A valid "hash.memoryCost" number must be provided for ` +
+          'A valid "hash.memoryCost" number must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
         );
       }
@@ -435,7 +459,7 @@ export class UserImportBuilder {
       if (isNaN(parallelization)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_PARALLELIZATION,
-          `A valid "hash.parallelization" number must be provided for ` +
+          'A valid "hash.parallelization" number must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
         );
       }
@@ -443,7 +467,7 @@ export class UserImportBuilder {
       if (isNaN(blockSize)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_BLOCK_SIZE,
-          `A valid "hash.blockSize" number must be provided for ` +
+          'A valid "hash.blockSize" number must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
         );
       }
@@ -451,7 +475,7 @@ export class UserImportBuilder {
       if (isNaN(dkLen)) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_HASH_DERIVED_KEY_LENGTH,
-          `A valid "hash.derivedKeyLength" number must be provided for ` +
+          'A valid "hash.derivedKeyLength" number must be provided for ' +
             `hash algorithm ${options.hash.algorithm}.`,
         );
       }

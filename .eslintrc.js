@@ -36,6 +36,15 @@ module.exports = {
 
     // Required checks
     'indent': ['error', 2],
+    'keyword-spacing': ['error'],
+    'max-len': [
+      'error',
+      {
+        'code': 120,
+        'ignoreUrls': true
+      }
+    ],
+    'object-curly-spacing': [2, 'always'],
     '@typescript-eslint/explicit-function-return-type': [
       'error',
       {
@@ -44,5 +53,8 @@ module.exports = {
         'allowHigherOrderFunctions': true
       }
     ],
+    'no-unused-vars': 'off', // Must be disabled to enable the next rule
+    '@typescript-eslint/no-unused-vars': ['error'],
+    'quotes': ['error', 'single', {'avoidEscape': true}]
   }
 };

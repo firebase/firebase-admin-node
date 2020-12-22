@@ -15,22 +15,10 @@
  */
 
 import * as validator from '../utils/validator';
-import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
+import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
+import { auth } from './index';
 
-/** Defines the ActionCodeSettings interface. */
-export interface ActionCodeSettings {
-  url: string;
-  handleCodeInApp?: boolean;
-  iOS?: {
-    bundleId: string;
-  };
-  android?: {
-    packageName: string;
-    installApp?: boolean;
-    minimumVersion?: string;
-  };
-  dynamicLinkDomain?: string;
-}
+import ActionCodeSettings = auth.ActionCodeSettings;
 
 /** Defines the email action code server request. */
 interface EmailActionCodeRequest {

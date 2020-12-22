@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,10 +26,10 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
-import {InstanceId} from '../../../src/instance-id/instance-id';
-import {FirebaseInstanceIdRequestHandler} from '../../../src/instance-id/instance-id-request';
-import {FirebaseApp} from '../../../src/firebase-app';
-import {FirebaseInstanceIdError, InstanceIdClientErrorCode} from '../../../src/utils/error';
+import { InstanceId } from '../../../src/instance-id/instance-id';
+import { FirebaseInstanceIdRequestHandler } from '../../../src/instance-id/instance-id-request-internal';
+import { FirebaseApp } from '../../../src/firebase-app';
+import { FirebaseInstanceIdError, InstanceIdClientErrorCode } from '../../../src/utils/error';
 
 chai.should();
 chai.use(sinonChai);
@@ -161,7 +162,7 @@ describe('InstanceId', () => {
 
     it('should resolve without errors on success', () => {
       const stub = sinon.stub(FirebaseInstanceIdRequestHandler.prototype, 'deleteInstanceId')
-        .returns(Promise.resolve(null));
+        .resolves();
       stubs.push(stub);
       return iid.deleteInstanceId(testInstanceId)
         .then(() => {

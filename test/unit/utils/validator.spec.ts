@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,6 +23,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import {
   isArray, isNonEmptyArray, isBoolean, isNumber, isString, isNonEmptyString, isNonNullObject,
   isEmail, isPassword, isURL, isUid, isPhoneNumber, isObject, isBuffer,
+  isUTCDateString, isISODateString,
 } from '../../../src/utils/validator';
 
 
@@ -306,7 +308,7 @@ describe('isUid()', () => {
   });
 
   it('should return false with an invalid type', () => {
-    expect(isUid({uid: createRandomString(1)})).to.be.false;
+    expect(isUid({ uid: createRandomString(1) })).to.be.false;
   });
 
   it('should return false with an empty string', () => {
@@ -354,7 +356,7 @@ describe('isEmail()', () => {
   });
 
   it('should return false with a non string', () => {
-    expect(isEmail({email: 'user@example.com'})).to.be.false;
+    expect(isEmail({ email: 'user@example.com' })).to.be.false;
   });
 
   it('show return true with a valid email string', () => {
@@ -472,5 +474,59 @@ describe('isBuffer()', () => {
 
   it('should return true given a buffer', () => {
     expect(isBuffer(Buffer.from('I am a buffer'))).to.be.true;
+  });
+});
+
+describe('isUTCDateString()', () => {
+  const validUTCDateString = 'Fri, 25 Oct 2019 04:01:21 GMT';
+  it('should return false given no argument', () => {
+    expect(isUTCDateString(undefined as any)).to.be.false;
+  });
+
+  const nonUTCDateStrings = [
+    null, NaN, 0, 1, true, false, [], ['a'], {}, { a: 1 }, _.noop,
+    new Date().getTime(),
+    new Date().getTime().toString(),
+    new Date().toISOString(),
+    'Fri, 25 Oct 2019 04:01:21',
+    '25 Oct 2019', 'Fri, 25 Oct 2019',
+    '2019-10-25', '2019-10-25T04:07:34.036',
+    new Date().toDateString(),
+  ];
+  nonUTCDateStrings.forEach((nonUTCDateString) => {
+    it('should return false given an invalid UTC date string: ' + JSON.stringify(nonUTCDateString), () => {
+      expect(isUTCDateString(nonUTCDateString as any)).to.be.false;
+    });
+  });
+
+  it('should return true given a valid UTC date string', () => {
+    expect(isUTCDateString(validUTCDateString)).to.be.true;
+  });
+});
+
+describe('isISODateString()', () => {
+  const validISODateString = '2019-10-25T04:07:34.036Z';
+  it('should return false given no argument', () => {
+    expect(isISODateString(undefined as any)).to.be.false;
+  });
+
+  const nonISODateStrings = [
+    null, NaN, 0, 1, true, false, [], ['a'], {}, { a: 1 }, _.noop,
+    new Date().getTime(),
+    new Date().getTime().toString(),
+    new Date().toUTCString(),
+    'Fri, 25 Oct 2019 04:01:21',
+    '25 Oct 2019', 'Fri, 25 Oct 2019',
+    '2019-10-25', '2019-10-25T04:07:34.036',
+    new Date().toDateString(),
+  ];
+  nonISODateStrings.forEach((nonISODateString) => {
+    it('should return false given an invalid ISO date string: ' + JSON.stringify(nonISODateString), () => {
+      expect(isISODateString(nonISODateString as any)).to.be.false;
+    });
+  });
+
+  it('should return true given a valid ISO date string', () => {
+    expect(isISODateString(validISODateString)).to.be.true;
   });
 });

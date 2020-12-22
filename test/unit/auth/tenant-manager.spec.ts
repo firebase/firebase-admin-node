@@ -23,11 +23,16 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import * as mocks from '../../resources/mocks';
-import {FirebaseApp} from '../../../src/firebase-app';
-import {AuthRequestHandler} from '../../../src/auth/auth-api-request';
-import {Tenant, TenantOptions, TenantServerResponse, ListTenantsResult} from '../../../src/auth/tenant';
-import {TenantManager} from '../../../src/auth/tenant-manager';
-import {AuthClientErrorCode, FirebaseAuthError} from '../../../src/utils/error';
+import { FirebaseApp } from '../../../src/firebase-app';
+import { AuthRequestHandler } from '../../../src/auth/auth-api-request';
+import { Tenant, TenantServerResponse } from '../../../src/auth/tenant';
+import { TenantManager } from '../../../src/auth/tenant-manager';
+import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
+import { auth } from '../../../src/auth/index';
+
+import CreateTenantRequest = auth.CreateTenantRequest;
+import UpdateTenantRequest = auth.UpdateTenantRequest;
+import ListTenantsResult = auth.ListTenantsResult;
 
 chai.should();
 chai.use(sinonChai);
@@ -176,15 +181,15 @@ describe('TenantManager', () => {
     const maxResult = 500;
     const listTenantsResponse: any = {
       tenants : [
-        {name: 'projects/project-id/tenants/tenant-id1'},
-        {name: 'projects/project-id/tenants/tenant-id2'},
+        { name: 'projects/project-id/tenants/tenant-id1' },
+        { name: 'projects/project-id/tenants/tenant-id2' },
       ],
       nextPageToken: 'NEXT_PAGE_TOKEN',
     };
     const expectedResult: ListTenantsResult = {
       tenants: [
-        new Tenant({name: 'projects/project-id/tenants/tenant-id1'}),
-        new Tenant({name: 'projects/project-id/tenants/tenant-id2'}),
+        new Tenant({ name: 'projects/project-id/tenants/tenant-id1' }),
+        new Tenant({ name: 'projects/project-id/tenants/tenant-id2' }),
       ],
       pageToken: 'NEXT_PAGE_TOKEN',
     };
@@ -378,7 +383,7 @@ describe('TenantManager', () => {
   });
 
   describe('createTenant()', () => {
-    const tenantOptions: TenantOptions = {
+    const tenantOptions: CreateTenantRequest = {
       displayName: 'TENANT-DISPLAY-NAME',
       emailSignInConfig: {
         enabled: true,
@@ -414,7 +419,7 @@ describe('TenantManager', () => {
 
     it('should be rejected given TenantOptions with invalid type property', () => {
       // Create tenant using invalid type. This should throw an argument error.
-      return tenantManager.createTenant({type: 'invalid'} as any)
+      return tenantManager.createTenant({ type: 'invalid' } as any)
         .then(() => {
           throw new Error('Unexpected success');
         })
@@ -471,7 +476,7 @@ describe('TenantManager', () => {
 
   describe('updateTenant()', () => {
     const tenantId = 'tenant-id';
-    const tenantOptions: TenantOptions = {
+    const tenantOptions: UpdateTenantRequest = {
       displayName: 'TENANT-DISPLAY-NAME',
       emailSignInConfig: {
         enabled: true,
@@ -512,7 +517,7 @@ describe('TenantManager', () => {
     });
 
     it('should be rejected given invalid TenantOptions', () => {
-      return tenantManager.updateTenant(tenantId, null as unknown as TenantOptions)
+      return tenantManager.updateTenant(tenantId, null as unknown as UpdateTenantRequest)
         .then(() => {
           throw new Error('Unexpected success');
         })
@@ -524,7 +529,7 @@ describe('TenantManager', () => {
     it('should be rejected given TenantOptions with invalid update property', () => {
       // Updating the tenantId of an existing tenant will throw an error as tenantId is
       // an immutable property.
-      return tenantManager.updateTenant(tenantId, {tenantId: 'unmodifiable'} as any)
+      return tenantManager.updateTenant(tenantId, { tenantId: 'unmodifiable' } as any)
         .then(() => {
           throw new Error('Unexpected success');
         })

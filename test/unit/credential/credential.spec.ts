@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,11 +32,14 @@ import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
 import {
-  GoogleOAuthAccessToken, RefreshTokenCredential, ServiceAccountCredential,
-  ComputeEngineCredential, getApplicationDefault, isApplicationDefault, Credential,
-} from '../../../src/auth/credential';
+  GoogleOAuthAccessToken, credential
+} from '../../../src/credential/index';
+import {
+  RefreshTokenCredential, ServiceAccountCredential,
+  ComputeEngineCredential, getApplicationDefault, isApplicationDefault
+} from '../../../src/credential/credential-internal';
 import { HttpClient } from '../../../src/utils/api-request';
-import {Agent} from 'https';
+import { Agent } from 'https';
 import { FirebaseAppError } from '../../../src/utils/error';
 
 chai.should();
@@ -325,7 +329,7 @@ describe('Credential', () => {
         expect(httpStub).to.have.been.calledOnce.and.calledWith({
           method: 'GET',
           url: 'http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token',
-          headers: {'Metadata-Flavor': 'Google'},
+          headers: { 'Metadata-Flavor': 'Google' },
           httpAgent: undefined,
         });
       });
@@ -342,7 +346,7 @@ describe('Credential', () => {
         expect(httpStub).to.have.been.calledOnce.and.calledWith({
           method: 'GET',
           url: 'http://metadata.google.internal/computeMetadata/v1/project/project-id',
-          headers: {'Metadata-Flavor': 'Google'},
+          headers: { 'Metadata-Flavor': 'Google' },
           httpAgent: undefined,
         });
       });
@@ -364,7 +368,7 @@ describe('Credential', () => {
           expect(httpStub).to.have.been.calledOnce.and.calledWith({
             method: 'GET',
             url: 'http://metadata.google.internal/computeMetadata/v1/project/project-id',
-            headers: {'Metadata-Flavor': 'Google'},
+            headers: { 'Metadata-Flavor': 'Google' },
             httpAgent: undefined,
           });
         });
@@ -552,7 +556,7 @@ describe('Credential', () => {
     });
 
     it('should return false for custom credential', () => {
-      const c: Credential = {
+      const c: credential.Credential = {
         getAccessToken: () => {
           throw new Error();
         },

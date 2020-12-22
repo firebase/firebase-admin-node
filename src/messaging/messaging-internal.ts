@@ -1,5 +1,5 @@
 /*!
- * Copyright 2019 Google Inc.
+ * Copyright 2020 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,281 +14,33 @@
  * limitations under the License.
  */
 
-import {renameProperties} from '../utils/index';
-import {
-  MessagingClientErrorCode, FirebaseMessagingError, FirebaseArrayIndexError, FirebaseError,
-} from '../utils/error';
-
+import { renameProperties } from '../utils/index';
+import { MessagingClientErrorCode, FirebaseMessagingError, } from '../utils/error';
+import { messaging } from './index';
 import * as validator from '../utils/validator';
 
-interface BaseMessage {
-  data?: {[key: string]: string};
-  notification?: Notification;
-  android?: AndroidConfig;
-  webpush?: WebpushConfig;
-  apns?: ApnsConfig;
-  fcmOptions?: FcmOptions;
-}
+import AndroidConfig = messaging.AndroidConfig;
+import AndroidFcmOptions = messaging.AndroidFcmOptions;
+import AndroidNotification = messaging.AndroidNotification;
+import ApsAlert = messaging.ApsAlert;
+import ApnsConfig = messaging.ApnsConfig;
+import ApnsFcmOptions = messaging.ApnsFcmOptions;
+import ApnsPayload = messaging.ApnsPayload;
+import Aps = messaging.Aps;
+import CriticalSound = messaging.CriticalSound;
+import FcmOptions = messaging.FcmOptions;
+import LightSettings = messaging.LightSettings;
+import Message = messaging.Message;
+import Notification = messaging.Notification;
+import WebpushConfig = messaging.WebpushConfig;
 
-interface TokenMessage extends BaseMessage {
-  token: string;
-}
+// Keys which are not allowed in the messaging data payload object.
+export const BLACKLISTED_DATA_PAYLOAD_KEYS = ['from'];
 
-interface TopicMessage extends BaseMessage {
-  topic: string;
-}
-
-interface ConditionMessage extends BaseMessage {
-  condition: string;
-}
-
-/**
- * Payload for the admin.messaging.send() operation. The payload contains all the fields
- * in the BaseMessage type, and exactly one of token, topic or condition.
- */
-export type Message = TokenMessage | TopicMessage | ConditionMessage;
-
-/**
- * Payload for the admin.messaing.sendMulticase() method. The payload contains all the fields
- * in the BaseMessage type, and a list of tokens.
- */
-export interface MulticastMessage extends BaseMessage {
-  tokens: string[];
-}
-
-export interface Notification {
-  title?: string;
-  body?: string;
-  imageUrl?: string;
-}
-
-export interface FcmOptions {
-  analyticsLabel?: string;
-}
-
-export interface WebpushConfig {
-  headers?: {[key: string]: string};
-  data?: {[key: string]: string};
-  notification?: WebpushNotification;
-  fcmOptions?: WebpushFcmOptions;
-}
-
-export interface WebpushFcmOptions {
-  link?: string;
-}
-
-export interface WebpushNotification {
-  title?: string;
-  actions?: Array<{
-    action: string;
-    icon?: string;
-    title: string;
-  }>;
-  badge?: string;
-  body?: string;
-  data?: any;
-  dir?: 'auto' | 'ltr' | 'rtl';
-  icon?: string;
-  image?: string;
-  lang?: string;
-  renotify?: boolean;
-  requireInteraction?: boolean;
-  silent?: boolean;
-  tag?: string;
-  timestamp?: number;
-  vibrate?: number | number[];
-  [key: string]: any;
-}
-
-export interface ApnsConfig {
-  headers?: {[key: string]: string};
-  payload?: ApnsPayload;
-  fcmOptions?: ApnsFcmOptions;
-}
-
-export interface ApnsPayload {
-  aps: Aps;
-  [customData: string]: object;
-}
-
-export interface Aps {
-  alert?: string | ApsAlert;
-  badge?: number;
-  sound?: string | CriticalSound;
-  contentAvailable?: boolean;
-  category?: string;
-  threadId?: string;
-  mutableContent?: boolean;
-  [customData: string]: any;
-}
-
-export interface CriticalSound {
-  critical?: boolean;
-  name: string;
-  volume?: number;
-}
-
-export interface ApsAlert {
-  title?: string;
-  subtitle?: string;
-  body?: string;
-  locKey?: string;
-  locArgs?: string[];
-  titleLocKey?: string;
-  titleLocArgs?: string[];
-  subtitleLocKey?: string;
-  subtitleLocArgs?: string[];
-  actionLocKey?: string;
-  launchImage?: string;
-}
-
-export interface ApnsFcmOptions {
-  analyticsLabel?: string;
-  imageUrl?: string;
-}
-
-export interface AndroidConfig {
-  collapseKey?: string;
-  priority?: ('high' | 'normal');
-  ttl?: number;
-  restrictedPackageName?: string;
-  data?: {[key: string]: string};
-  notification?: AndroidNotification;
-  fcmOptions?: AndroidFcmOptions;
-}
-
-export interface AndroidNotification {
-  title?: string;
-  body?: string;
-  icon?: string;
-  color?: string;
-  sound?: string;
-  tag?: string;
-  imageUrl?: string;
-  clickAction?: string;
-  bodyLocKey?: string;
-  bodyLocArgs?: string[];
-  titleLocKey?: string;
-  titleLocArgs?: string[];
-  channelId?: string;
-  ticker?: string;
-  sticky?: boolean;
-  eventTimestamp?: Date;
-  localOnly?: boolean;
-  priority?: ('min' | 'low' | 'default' | 'high' | 'max');
-  vibrateTimingsMillis?: number[];
-  defaultVibrateTimings?: boolean;
-  defaultSound?: boolean;
-  lightSettings?: LightSettings;
-  defaultLightSettings?: boolean;
-  visibility?: ('private' | 'public' | 'secret');
-  notificationCount?: number;
-}
-
-export interface LightSettings {
-  color: string;
-  lightOnDurationMillis: number;
-  lightOffDurationMillis: number;
-}
-
-export interface AndroidFcmOptions {
-  analyticsLabel?: string;
-}
-
-/* Payload for data messages */
-export interface DataMessagePayload {
-  [key: string]: string;
-}
-
-/* Payload for notification messages */
-export interface NotificationMessagePayload {
-  tag?: string;
-  body?: string;
-  icon?: string;
-  badge?: string;
-  color?: string;
-  sound?: string;
-  title?: string;
-  bodyLocKey?: string;
-  bodyLocArgs?: string;
-  clickAction?: string;
-  titleLocKey?: string;
-  titleLocArgs?: string;
-  [other: string]: string | undefined;
-}
-
-/* Composite messaging payload (data and notification payloads are both optional) */
-export interface MessagingPayload {
-  data?: DataMessagePayload;
-  notification?: NotificationMessagePayload;
-}
-
-/* Options that can passed along with messages */
-export interface MessagingOptions {
-  dryRun?: boolean;
-  priority?: string;
-  timeToLive?: number;
-  collapseKey?: string;
-  mutableContent?: boolean;
-  contentAvailable?: boolean;
-  restrictedPackageName?: string;
-  [other: string]: any;
-}
-
-/* Individual status response payload from single devices */
-export interface MessagingDeviceResult {
-  error?: FirebaseError;
-  messageId?: string;
-  canonicalRegistrationToken?: string;
-}
-
-/* Response payload from sending to a single device ID or array of device IDs */
-export interface MessagingDevicesResponse {
-  canonicalRegistrationTokenCount: number;
-  failureCount: number;
-  multicastId: number;
-  results: MessagingDeviceResult[];
-  successCount: number;
-}
-
-/* Response payload from sending to a device group */
-export interface MessagingDeviceGroupResponse {
-  successCount: number;
-  failureCount: number;
-  failedRegistrationTokens: string[];
-}
-
-/* Response payload from sending to a topic */
-export interface MessagingTopicResponse {
-  messageId: number;
-}
-
-/* Response payload from sending to a condition */
-export interface MessagingConditionResponse {
-  messageId: number;
-}
-
-
-/* Response payload from sending to a single registration token or array of registration tokens */
-export interface MessagingTopicManagementResponse {
-  failureCount: number;
-  successCount: number;
-  errors: FirebaseArrayIndexError[];
-}
-
-/* Response from sending a batch of messages. */
-export interface BatchResponse {
-  responses: SendResponse[];
-  failureCount: number;
-  successCount: number;
-}
-
-/* The result of a sub request sent in a batch. */
-export interface SendResponse {
-  success: boolean;
-  messageId?: string;
-  error?: FirebaseError;
-}
+// Keys which are not allowed in the messaging options object.
+export const BLACKLISTED_OPTIONS_KEYS = [
+  'condition', 'data', 'notification', 'registrationIds', 'registration_ids', 'to',
+];
 
 /**
  * Checks if the given Message object is valid. Recursively validates all the child objects
@@ -337,7 +89,7 @@ export function validateMessage(message: Message): void {
  * @param {object} map An object to be validated.
  * @param {string} label A label to be included in the errors thrown.
  */
-function validateStringMap(map: {[key: string]: any} | undefined, label: string): void {
+function validateStringMap(map: { [key: string]: any } | undefined, label: string): void {
   if (typeof map === 'undefined') {
     return;
   } else if (!validator.isNonNullObject(map)) {
@@ -400,7 +152,7 @@ function validateApnsFcmOptions(fcmOptions: ApnsFcmOptions | undefined): void {
   }
 
   if (typeof fcmOptions.imageUrl !== 'undefined' &&
-      !validator.isURL(fcmOptions.imageUrl)) {
+    !validator.isURL(fcmOptions.imageUrl)) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD,
       'imageUrl must be a valid URL string');
@@ -411,7 +163,7 @@ function validateApnsFcmOptions(fcmOptions: ApnsFcmOptions | undefined): void {
       MessagingClientErrorCode.INVALID_PAYLOAD, 'analyticsLabel must be a string value');
   }
 
-  const propertyMappings: {[key: string]: string} = {
+  const propertyMappings: { [key: string]: string } = {
     imageUrl: 'image',
   };
   Object.keys(propertyMappings).forEach((key) => {
@@ -461,7 +213,7 @@ function validateNotification(notification: Notification | undefined): void {
       MessagingClientErrorCode.INVALID_PAYLOAD, 'notification.imageUrl must be a valid URL string');
   }
 
-  const propertyMappings: {[key: string]: string} = {
+  const propertyMappings: { [key: string]: string } = {
     imageUrl: 'image',
   };
   Object.keys(propertyMappings).forEach((key) => {
@@ -505,7 +257,7 @@ function validateAps(aps: Aps): void {
   validateApsAlert(aps.alert);
   validateApsSound(aps.sound);
 
-  const propertyMappings: {[key: string]: string} = {
+  const propertyMappings: { [key: string]: string } = {
     contentAvailable: 'content-available',
     mutableContent: 'mutable-content',
     threadId: 'thread-id',
@@ -564,7 +316,7 @@ function validateApsSound(sound: string | CriticalSound | undefined): void {
         'apns.payload.aps.sound.volume must be in the interval [0, 1]');
     }
   }
-  const soundObject = sound as {[key: string]: any};
+  const soundObject = sound as { [key: string]: any };
   const key = 'critical';
   const critical = soundObject[key];
   if (typeof critical !== 'undefined' && critical !== 1) {
@@ -594,19 +346,19 @@ function validateApsAlert(alert: string | ApsAlert | undefined): void {
 
   const apsAlert: ApsAlert = alert as ApsAlert;
   if (validator.isNonEmptyArray(apsAlert.locArgs) &&
-      !validator.isNonEmptyString(apsAlert.locKey)) {
+    !validator.isNonEmptyString(apsAlert.locKey)) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD,
       'apns.payload.aps.alert.locKey is required when specifying locArgs');
   }
   if (validator.isNonEmptyArray(apsAlert.titleLocArgs) &&
-      !validator.isNonEmptyString(apsAlert.titleLocKey)) {
+    !validator.isNonEmptyString(apsAlert.titleLocKey)) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD,
       'apns.payload.aps.alert.titleLocKey is required when specifying titleLocArgs');
   }
   if (validator.isNonEmptyArray(apsAlert.subtitleLocArgs) &&
-  !validator.isNonEmptyString(apsAlert.subtitleLocKey)) {
+    !validator.isNonEmptyString(apsAlert.subtitleLocKey)) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD,
       'apns.payload.aps.alert.subtitleLocKey is required when specifying subtitleLocArgs');
@@ -680,19 +432,19 @@ function validateAndroidNotification(notification: AndroidNotification | undefin
       MessagingClientErrorCode.INVALID_PAYLOAD, 'android.notification.color must be in the form #RRGGBB');
   }
   if (validator.isNonEmptyArray(notification.bodyLocArgs) &&
-      !validator.isNonEmptyString(notification.bodyLocKey)) {
+    !validator.isNonEmptyString(notification.bodyLocKey)) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD,
       'android.notification.bodyLocKey is required when specifying bodyLocArgs');
   }
   if (validator.isNonEmptyArray(notification.titleLocArgs) &&
-      !validator.isNonEmptyString(notification.titleLocKey)) {
+    !validator.isNonEmptyString(notification.titleLocKey)) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD,
       'android.notification.titleLocKey is required when specifying titleLocArgs');
   }
   if (typeof notification.imageUrl !== 'undefined' &&
-      !validator.isURL(notification.imageUrl)) {
+    !validator.isURL(notification.imageUrl)) {
     throw new FirebaseMessagingError(
       MessagingClientErrorCode.INVALID_PAYLOAD,
       'android.notification.imageUrl must be a valid URL string');

@@ -47,7 +47,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v1
       with:
-        node-version: 8.x
+        node-version: 10.x
 
     - name: Install and build
       run: |
@@ -57,6 +57,9 @@ jobs:
 
     - name: Run unit tests
       run: npm test
+
+    - name: Verify public API
+      run: npm run api-extractor
 
     - name: Run integration tests
       run: ./.github/scripts/run_integration_tests.sh
@@ -78,11 +81,10 @@ jobs:
         name: dist
         path: dist
 
-    # TODO: Move this script to .github/scripts.
     - name: Verify tarball
       run: |
         PACKAGE_TARBALL=`ls firebase-admin-*.tgz`
-        ./verifyReleaseTarball.sh $PACKAGE_TARBALL
+        ./.github/scripts/verify_package.sh $PACKAGE_TARBALL
 
   publish_release:
     needs: stage_release
@@ -113,7 +115,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v1
       with:
-        node-version: 8.x
+        node-version: 10.x
 
     - name: Publish preflight check
       id: preflight
@@ -146,7 +148,7 @@ jobs:
       uses: ./.github/actions/send-tweet
       with:
         status: >
-          ${{ steps.preflight.outputs.version }} of @Firebase Admin Node.js SDK is avaialble.
+          ${{ steps.preflight.outputs.version }} of @Firebase Admin Node.js SDK is available.
           https://github.com/firebase/firebase-admin-node/releases/tag/${{ steps.preflight.outputs.version }}
         consumer-key: ${{ secrets.TWITTER_CONSUMER_KEY }}
         consumer-secret: ${{ secrets.TWITTER_CONSUMER_SECRET }}

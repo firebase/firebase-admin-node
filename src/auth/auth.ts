@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,28 +15,49 @@
  * limitations under the License.
  */
 
-import {UserRecord, CreateRequest, UpdateRequest} from './user-record';
-import {FirebaseApp} from '../firebase-app';
-import {FirebaseTokenGenerator, cryptoSignerFromApp} from './token-generator';
+import { UserRecord } from './user-record';
 import {
-  AbstractAuthRequestHandler, AuthRequestHandler, TenantAwareAuthRequestHandler,
+  isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, isProviderIdentifier,
+} from './identifier';
+import { FirebaseApp } from '../firebase-app';
+import { FirebaseTokenGenerator, EmulatedSigner, cryptoSignerFromApp } from './token-generator';
+import {
+  AbstractAuthRequestHandler, AuthRequestHandler, TenantAwareAuthRequestHandler, useEmulator,
 } from './auth-api-request';
-import {AuthClientErrorCode, FirebaseAuthError, ErrorInfo} from '../utils/error';
-import {FirebaseServiceInterface, FirebaseServiceInternalsInterface} from '../firebase-service';
-import {
-  UserImportOptions, UserImportRecord, UserImportResult,
-} from './user-import-builder';
-
+import { AuthClientErrorCode, FirebaseAuthError, ErrorInfo } from '../utils/error';
+import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier } from './token-verifier';
-import {ActionCodeSettings} from './action-code-settings-builder';
+import { auth } from './index';
 import {
-  AuthProviderConfig, AuthProviderConfigFilter, ListProviderConfigResults, UpdateAuthProviderRequest,
+  FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier, ALGORITHM_RS256
+} from './token-verifier';
+import {
   SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
 } from './auth-config';
-import {TenantManager} from './tenant-manager';
+import { TenantManager } from './tenant-manager';
 
+import UserIdentifier = auth.UserIdentifier;
+import CreateRequest = auth.CreateRequest;
+import UpdateRequest = auth.UpdateRequest;
+import ActionCodeSettings = auth.ActionCodeSettings;
+import UserImportOptions = auth.UserImportOptions;
+import UserImportRecord = auth.UserImportRecord;
+import UserImportResult = auth.UserImportResult;
+import AuthProviderConfig = auth.AuthProviderConfig;
+import AuthProviderConfigFilter = auth.AuthProviderConfigFilter;
+import ListProviderConfigResults = auth.ListProviderConfigResults;
+import UpdateAuthProviderRequest = auth.UpdateAuthProviderRequest;
+import GetUsersResult = auth.GetUsersResult;
+import ListUsersResult = auth.ListUsersResult;
+import DeleteUsersResult = auth.DeleteUsersResult;
+import DecodedIdToken = auth.DecodedIdToken;
+import SessionCookieOptions = auth.SessionCookieOptions;
+import OIDCAuthProviderConfig = auth.OIDCAuthProviderConfig;
+import SAMLAuthProviderConfig = auth.SAMLAuthProviderConfig;
+import BaseAuthInterface = auth.BaseAuth;
+import AuthInterface = auth.Auth;
+import TenantAwareAuthInterface = auth.TenantAwareAuth;
 
 /**
  * Internals of an Auth instance.
@@ -53,43 +75,10 @@ class AuthInternals implements FirebaseServiceInternalsInterface {
 }
 
 
-/** Response object for a listUsers operation. */
-export interface ListUsersResult {
-  users: UserRecord[];
-  pageToken?: string;
-}
-
-
-/** Interface representing a decoded ID token. */
-export interface DecodedIdToken {
-  aud: string;
-  auth_time: number;
-  exp: number;
-  firebase: {
-    identities: {
-      [key: string]: any;
-    };
-    sign_in_provider: string;
-    [key: string]: any;
-  };
-  iat: number;
-  iss: string;
-  sub: string;
-  tenant?: string;
-  [key: string]: any;
-}
-
-
-/** Interface representing the session cookie options. */
-export interface SessionCookieOptions {
-  expiresIn: number;
-}
-
-
 /**
  * Base Auth class. Mainly used for user management APIs.
  */
-export class BaseAuth<T extends AbstractAuthRequestHandler> {
+export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthInterface {
 
   protected readonly tokenGenerator: FirebaseTokenGenerator;
   protected readonly idTokenVerifier: FirebaseTokenVerifier;
@@ -109,7 +98,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
     if (tokenGenerator) {
       this.tokenGenerator = tokenGenerator;
     } else {
-      const cryptoSigner = cryptoSignerFromApp(app);
+      const cryptoSigner = useEmulator() ? new EmulatedSigner() : cryptoSignerFromApp(app);
       this.tokenGenerator = new FirebaseTokenGenerator(cryptoSigner);
     }
 
@@ -201,6 +190,61 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
   }
 
   /**
+   * Gets the user data corresponding to the specified identifiers.
+   *
+   * There are no ordering guarantees; in particular, the nth entry in the result list is not
+   * guaranteed to correspond to the nth entry in the input parameters list.
+   *
+   * Only a maximum of 100 identifiers may be supplied. If more than 100 identifiers are supplied,
+   * this method will immediately throw a FirebaseAuthError.
+   *
+   * @param identifiers The identifiers used to indicate which user records should be returned. Must
+   *     have <= 100 entries.
+   * @return {Promise<GetUsersResult>} A promise that resolves to the corresponding user records.
+   * @throws FirebaseAuthError If any of the identifiers are invalid or if more than 100
+   *     identifiers are specified.
+   */
+  public getUsers(identifiers: UserIdentifier[]): Promise<GetUsersResult> {
+    if (!validator.isArray(identifiers)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT, '`identifiers` parameter must be an array');
+    }
+    return this.authRequestHandler
+      .getAccountInfoByIdentifiers(identifiers)
+      .then((response: any) => {
+        /**
+         * Checks if the specified identifier is within the list of
+         * UserRecords.
+         */
+        const isUserFound = ((id: UserIdentifier, userRecords: UserRecord[]): boolean => {
+          return !!userRecords.find((userRecord) => {
+            if (isUidIdentifier(id)) {
+              return id.uid === userRecord.uid;
+            } else if (isEmailIdentifier(id)) {
+              return id.email === userRecord.email;
+            } else if (isPhoneIdentifier(id)) {
+              return id.phoneNumber === userRecord.phoneNumber;
+            } else if (isProviderIdentifier(id)) {
+              const matchingUserInfo = userRecord.providerData.find((userInfo) => {
+                return id.providerId === userInfo.providerId;
+              });
+              return !!matchingUserInfo && id.providerUid === matchingUserInfo.uid;
+            } else {
+              throw new FirebaseAuthError(
+                AuthClientErrorCode.INTERNAL_ERROR,
+                'Unhandled identifier type');
+            }
+          });
+        });
+
+        const users = response.users ? response.users.map((user: any) => new UserRecord(user)) : [];
+        const notFound = identifiers.filter((id) => !isUserFound(id, users));
+
+        return { users, notFound };
+      });
+  }
+
+  /**
    * Exports a batch of user accounts. Batch size is determined by the maxResults argument.
    * Starting point of the batch is determined by the pageToken argument.
    *
@@ -271,6 +315,50 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
       });
   }
 
+  public deleteUsers(uids: string[]): Promise<DeleteUsersResult> {
+    if (!validator.isArray(uids)) {
+      throw new FirebaseAuthError(
+        AuthClientErrorCode.INVALID_ARGUMENT, '`uids` parameter must be an array');
+    }
+    return this.authRequestHandler.deleteAccounts(uids, /*force=*/true)
+      .then((batchDeleteAccountsResponse) => {
+        const result: DeleteUsersResult = {
+          failureCount: 0,
+          successCount: uids.length,
+          errors: [],
+        };
+
+        if (!validator.isNonEmptyArray(batchDeleteAccountsResponse.errors)) {
+          return result;
+        }
+
+        result.failureCount = batchDeleteAccountsResponse.errors.length;
+        result.successCount = uids.length - batchDeleteAccountsResponse.errors.length;
+        result.errors = batchDeleteAccountsResponse.errors.map((batchDeleteErrorInfo) => {
+          if (batchDeleteErrorInfo.index === undefined) {
+            throw new FirebaseAuthError(
+              AuthClientErrorCode.INTERNAL_ERROR,
+              'Corrupt BatchDeleteAccountsResponse detected');
+          }
+
+          const errMsgToError = (msg?: string): FirebaseAuthError => {
+            // We unconditionally set force=true, so the 'NOT_DISABLED' error
+            // should not be possible.
+            const code = msg && msg.startsWith('NOT_DISABLED') ?
+              AuthClientErrorCode.USER_NOT_DISABLED : AuthClientErrorCode.INTERNAL_ERROR;
+            return new FirebaseAuthError(code, batchDeleteErrorInfo.message);
+          };
+
+          return {
+            index: batchDeleteErrorInfo.index,
+            error: errMsgToError(batchDeleteErrorInfo.message),
+          };
+        });
+
+        return result;
+      });
+  }
+
   /**
    * Updates an existing user with the properties provided.
    *
@@ -294,7 +382,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
    * @return {Promise<void>} A promise that resolves when the operation completes
    *     successfully.
    */
-  public setCustomUserClaims(uid: string, customUserClaims: object): Promise<void> {
+  public setCustomUserClaims(uid: string, customUserClaims: object | null): Promise<void> {
     return this.authRequestHandler.setCustomUserClaims(uid, customUserClaims)
       .then(() => {
         // Return nothing on success.
@@ -477,7 +565,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
     return Promise.reject(
       new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
-        `"AuthProviderConfigFilter.type" must be either "saml' or "oidc"`));
+        '"AuthProviderConfigFilter.type" must be either "saml" or "oidc"'));
   }
 
   /**
@@ -561,12 +649,12 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
       ));
     }
     if (OIDCConfig.isProviderId(config.providerId)) {
-      return this.authRequestHandler.createOAuthIdpConfig(config)
+      return this.authRequestHandler.createOAuthIdpConfig(config as OIDCAuthProviderConfig)
         .then((response) => {
           return new OIDCConfig(response);
         });
     } else if (SAMLConfig.isProviderId(config.providerId)) {
-      return this.authRequestHandler.createInboundSamlConfig(config)
+      return this.authRequestHandler.createInboundSamlConfig(config as SAMLAuthProviderConfig)
         .then((response) => {
           return new SAMLConfig(response);
         });
@@ -604,13 +692,38 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> {
         return decodedIdToken;
       });
   }
+
+  /**
+   * Enable or disable ID token verification. This is used to safely short-circuit token verification with the
+   * Auth emulator. When disabled ONLY unsigned tokens will pass verification, production tokens will not pass.
+   *
+   * WARNING: This is a dangerous method that will compromise your app's security and break your app in
+   * production. Developers should never call this method, it is for internal testing use only.
+   *
+   * @internal
+   */
+  // @ts-expect-error: this method appears unused but is used privately.
+  private setJwtVerificationEnabled(enabled: boolean): void {
+    if (!enabled && !useEmulator()) {
+      // We only allow verification to be disabled in conjunction with
+      // the emulator environment variable.
+      throw new Error('This method is only available when connected to the Authentication emulator.');
+    }
+
+    const algorithm = enabled ? ALGORITHM_RS256 : 'none';
+    this.idTokenVerifier.setAlgorithm(algorithm);
+    this.sessionCookieVerifier.setAlgorithm(algorithm);
+  }
 }
 
 
 /**
  * The tenant aware Auth class.
  */
-export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
+export class TenantAwareAuth
+  extends BaseAuth<TenantAwareAuthRequestHandler>
+  implements TenantAwareAuthInterface {
+
   public readonly tenantId: string;
 
   /**
@@ -621,7 +734,7 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
    * @constructor
    */
   constructor(app: FirebaseApp, tenantId: string) {
-    const cryptoSigner = cryptoSignerFromApp(app);
+    const cryptoSigner = useEmulator() ? new EmulatedSigner() : cryptoSignerFromApp(app);
     const tokenGenerator = new FirebaseTokenGenerator(cryptoSigner, tenantId);
     super(app, new TenantAwareAuthRequestHandler(app, tenantId), tokenGenerator);
     utils.addReadonlyGetter(this, 'tenantId', tenantId);
@@ -707,7 +820,8 @@ export class TenantAwareAuth extends BaseAuth<TenantAwareAuthRequestHandler> {
  * Auth service bound to the provided app.
  * An Auth instance can have multiple tenants.
  */
-export class Auth extends BaseAuth<AuthRequestHandler> implements FirebaseServiceInterface {
+export class Auth extends BaseAuth<AuthRequestHandler>
+  implements FirebaseServiceInterface, AuthInterface {
 
   public INTERNAL: AuthInternals = new AuthInternals();
   private readonly tenantManager_: TenantManager;

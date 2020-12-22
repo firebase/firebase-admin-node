@@ -24,7 +24,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from '../utils';
 
 import { HttpClient, HttpResponse, HttpRequestConfig, HttpError } from '../../../src/utils/api-request';
-import { SubRequest, BatchRequestClient } from '../../../src/messaging/batch-request';
+import { SubRequest, BatchRequestClient } from '../../../src/messaging/batch-request-internal';
 
 chai.should();
 chai.use(sinonChai);
@@ -51,21 +51,21 @@ function createMultipartResponse(success: object[], failures: object[] = []): Ht
   const multipart: Buffer[] = [];
   success.forEach((part) => {
     let payload = '';
-    payload += `HTTP/1.1 200 OK\r\n`;
-    payload += `Content-type: application/json\r\n\r\n`;
+    payload += 'HTTP/1.1 200 OK\r\n';
+    payload += 'Content-type: application/json\r\n\r\n';
     payload += `${JSON.stringify(part)}\r\n`;
     multipart.push(Buffer.from(payload, 'utf-8'));
   });
   failures.forEach((part) => {
     let payload = '';
-    payload += `HTTP/1.1 500 Internal Server Error\r\n`;
-    payload += `Content-type: application/json\r\n\r\n`;
+    payload += 'HTTP/1.1 500 Internal Server Error\r\n';
+    payload += 'Content-type: application/json\r\n\r\n';
     payload += `${JSON.stringify(part)}\r\n`;
     multipart.push(Buffer.from(payload, 'utf-8'));
   });
   return {
     status: 200,
-    headers: {'Content-Type': 'multipart/mixed; boundary=boundary'},
+    headers: { 'Content-Type': 'multipart/mixed; boundary=boundary' },
     multipart,
     text: '',
     data: null,
@@ -93,7 +93,7 @@ describe('BatchRequestClient', () => {
       createMultipartResponse([responseObject]));
     stubs.push(stub);
     const requests: SubRequest[] = [
-      {url: 'https://example.com', body: {foo: 1}},
+      { url: 'https://example.com', body: { foo: 1 } },
     ];
     const batch = new BatchRequestClient(httpClient, batchUrl);
 
@@ -110,9 +110,9 @@ describe('BatchRequestClient', () => {
       createMultipartResponse([responseObject, responseObject, responseObject]));
     stubs.push(stub);
     const requests: SubRequest[] = [
-      {url: 'https://example.com', body: {foo: 1}},
-      {url: 'https://example.com', body: {foo: 2}},
-      {url: 'https://example.com', body: {foo: 3}},
+      { url: 'https://example.com', body: { foo: 1 } },
+      { url: 'https://example.com', body: { foo: 2 } },
+      { url: 'https://example.com', body: { foo: 3 } },
     ];
     const batch = new BatchRequestClient(httpClient, batchUrl);
 
@@ -131,9 +131,9 @@ describe('BatchRequestClient', () => {
       createMultipartResponse([responseObject, responseObject], [responseObject]));
     stubs.push(stub);
     const requests: SubRequest[] = [
-      {url: 'https://example.com', body: {foo: 1}},
-      {url: 'https://example.com', body: {foo: 2}},
-      {url: 'https://example.com', body: {foo: 3}},
+      { url: 'https://example.com', body: { foo: 1 } },
+      { url: 'https://example.com', body: { foo: 2 } },
+      { url: 'https://example.com', body: { foo: 3 } },
     ];
     const batch = new BatchRequestClient(httpClient, batchUrl);
 
@@ -150,12 +150,12 @@ describe('BatchRequestClient', () => {
 
   it('should reject on top-level HTTP error responses', async () => {
     const stub = sinon.stub(httpClient, 'send').rejects(
-      utils.errorFrom({error: 'test'}));
+      utils.errorFrom({ error: 'test' }));
     stubs.push(stub);
     const requests: SubRequest[] = [
-      {url: 'https://example.com', body: {foo: 1}},
-      {url: 'https://example.com', body: {foo: 2}},
-      {url: 'https://example.com', body: {foo: 3}},
+      { url: 'https://example.com', body: { foo: 1 } },
+      { url: 'https://example.com', body: { foo: 2 } },
+      { url: 'https://example.com', body: { foo: 3 } },
     ];
     const batch = new BatchRequestClient(httpClient, batchUrl);
 
@@ -174,10 +174,10 @@ describe('BatchRequestClient', () => {
       createMultipartResponse([responseObject]));
     stubs.push(stub);
     const requests: SubRequest[] = [
-      {url: 'https://example.com', body: {foo: 1}},
-      {url: 'https://example.com', body: {foo: 2}},
+      { url: 'https://example.com', body: { foo: 1 } },
+      { url: 'https://example.com', body: { foo: 2 } },
     ];
-    const commonHeaders = {'X-Custom-Header': 'value'};
+    const commonHeaders = { 'X-Custom-Header': 'value' };
     const batch = new BatchRequestClient(httpClient, batchUrl, commonHeaders);
 
     const responses: HttpResponse[] = await batch.send(requests);
@@ -200,8 +200,8 @@ describe('BatchRequestClient', () => {
       createMultipartResponse([responseObject]));
     stubs.push(stub);
     const requests: SubRequest[] = [
-      {url: 'https://example.com', body: {foo: 1}, headers: {'X-Custom-Header': 'value'}},
-      {url: 'https://example.com', body: {foo: 1}, headers: {'X-Custom-Header': 'value'}},
+      { url: 'https://example.com', body: { foo: 1 }, headers: { 'X-Custom-Header': 'value' } },
+      { url: 'https://example.com', body: { foo: 1 }, headers: { 'X-Custom-Header': 'value' } },
     ];
     const batch = new BatchRequestClient(httpClient, batchUrl);
 
@@ -223,10 +223,10 @@ describe('BatchRequestClient', () => {
       createMultipartResponse([responseObject]));
     stubs.push(stub);
     const requests: SubRequest[] = [
-      {url: 'https://example.com', body: {foo: 1}, headers: {'X-Custom-Header': 'overwrite'}},
-      {url: 'https://example.com', body: {foo: 1}, headers: {'X-Custom-Header': 'overwrite'}},
+      { url: 'https://example.com', body: { foo: 1 }, headers: { 'X-Custom-Header': 'overwrite' } },
+      { url: 'https://example.com', body: { foo: 1 }, headers: { 'X-Custom-Header': 'overwrite' } },
     ];
-    const commonHeaders = {'X-Custom-Header': 'value'};
+    const commonHeaders = { 'X-Custom-Header': 'value' };
     const batch = new BatchRequestClient(httpClient, batchUrl, commonHeaders);
 
     const responses: HttpResponse[] = await batch.send(requests);
