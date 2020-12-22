@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,8 +15,10 @@
  * limitations under the License.
  */
 
-import {FirebaseApp} from './firebase-app';
+import { app } from './firebase-namespace-api';
+import { FirebaseApp } from './firebase-app';
 
+import App = app.App;
 
 /**
  * Internals of a FirebaseService instance.
@@ -28,7 +31,7 @@ export interface FirebaseServiceInternalsInterface {
  * Services are exposed through instances, each of which is associated with a FirebaseApp.
  */
 export interface FirebaseServiceInterface {
-  app: FirebaseApp;
+  app: App;
   INTERNAL: FirebaseServiceInternalsInterface;
 }
 

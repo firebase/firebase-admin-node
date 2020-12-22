@@ -18,12 +18,11 @@ import * as admin from '../../lib/index';
 import fs = require('fs');
 import minimist = require('minimist');
 import path = require('path');
-import {random} from 'lodash';
-import { Credential, GoogleOAuthAccessToken } from '../../src/auth/credential';
+import { random } from 'lodash';
+import { GoogleOAuthAccessToken } from '../../src/credential/index';
 
-/* tslint:disable:no-var-requires */
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const chalk = require('chalk');
-/* tslint:enable:no-var-requires */
 
 export let databaseUrl: string;
 export let storageBucket: string;
@@ -107,7 +106,7 @@ after(() => {
   ]);
 });
 
-class CertificatelessCredential implements Credential {
+class CertificatelessCredential implements admin.credential.Credential {
   private readonly delegate: admin.credential.Credential;
 
   constructor(delegate: admin.credential.Credential) {
@@ -126,7 +125,7 @@ class CertificatelessCredential implements Credential {
  * @param allowNumbers Whether to allow numbers in the generated string. The default is true.
  * @return A random string of the provided length.
  */
-export function generateRandomString(length: number, allowNumbers: boolean = true): string {
+export function generateRandomString(length: number, allowNumbers = true): string {
   const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' +
       (allowNumbers ? '0123456789' : '');
   let text = '';

@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +28,6 @@ import './utils/api-request.spec';
 
 // Auth
 import './auth/auth.spec';
-import './auth/credential.spec';
 import './auth/user-record.spec';
 import './auth/token-generator.spec';
 import './auth/token-verifier.spec';
@@ -38,12 +38,19 @@ import './auth/auth-config.spec';
 import './auth/tenant.spec';
 import './auth/tenant-manager.spec';
 
+// Credential
+import './credential/credential.spec';
+
 // Database
 import './database/database.spec';
 
 // Messaging
 import './messaging/messaging.spec';
 import './messaging/batch-requests.spec';
+
+// Machine Learning
+import './machine-learning/machine-learning.spec';
+import './machine-learning/machine-learning-api-client.spec';
 
 // Storage
 import './storage/storage.spec';
@@ -64,3 +71,7 @@ import './project-management/ios-app.spec';
 // SecurityRules
 import './security-rules/security-rules.spec';
 import './security-rules/security-rules-api-client.spec';
+
+// RemoteConfig
+import './remote-config/remote-config.spec';
+import './remote-config/remote-config-api-client.spec';

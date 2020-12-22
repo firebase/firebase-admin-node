@@ -21,11 +21,16 @@ import * as _ from 'lodash';
 import * as sinon from 'sinon';
 import { FirebaseApp } from '../../../src/firebase-app';
 import { IosApp } from '../../../src/project-management/ios-app';
-import { ProjectManagementRequestHandler } from '../../../src/project-management/project-management-api-request';
+import {
+  ProjectManagementRequestHandler
+} from '../../../src/project-management/project-management-api-request-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { FirebaseProjectManagementError } from '../../../src/utils/error';
 import * as mocks from '../../resources/mocks';
-import { IosAppMetadata, AppPlatform } from '../../../src/project-management/app-metadata';
+import { projectManagement } from '../../../src/project-management/index';
+
+import IosAppMetadata = projectManagement.IosAppMetadata;
+import AppPlatform = projectManagement.AppPlatform;
 
 const expect = chai.expect;
 
@@ -99,22 +104,22 @@ describe('IosApp', () => {
 
     it('should propagate API errors', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getResource')
-          .returns(Promise.reject(expectedError));
+        .stub(ProjectManagementRequestHandler.prototype, 'getResource')
+        .returns(Promise.reject(expectedError));
       stubs.push(stub);
       return iosApp.getMetadata().should.eventually.be.rejected.and.equal(expectedError);
     });
 
     it('should throw with null API response', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getResource')
-          .returns(Promise.resolve(null));
+        .stub(ProjectManagementRequestHandler.prototype, 'getResource')
+        .resolves(null as any);
       stubs.push(stub);
       return iosApp.getMetadata()
-          .should.eventually.be.rejected
-          .and.have.property(
-              'message',
-              'getMetadata()\'s responseData must be a non-null object. Response data: null');
+        .should.eventually.be.rejected
+        .and.have.property(
+          'message',
+          'getMetadata()\'s responseData must be a non-null object. Response data: null');
     });
 
     const requiredFieldsList = ['name', 'appId', 'projectId', 'bundleId'];
@@ -124,22 +129,22 @@ describe('IosApp', () => {
         delete partialApiResponse[requiredField];
 
         const stub = sinon
-            .stub(ProjectManagementRequestHandler.prototype, 'getResource')
-            .returns(Promise.resolve(partialApiResponse));
+          .stub(ProjectManagementRequestHandler.prototype, 'getResource')
+          .returns(Promise.resolve(partialApiResponse));
         stubs.push(stub);
         return iosApp.getMetadata()
-            .should.eventually.be.rejected
-            .and.have.property(
-                'message',
-                `getMetadata()\'s responseData.${requiredField} must be a non-empty string. `
+          .should.eventually.be.rejected
+          .and.have.property(
+            'message',
+            `getMetadata()'s responseData.${requiredField} must be a non-empty string. `
                     + `Response data: ${JSON.stringify(partialApiResponse, null, 2)}`);
       });
     });
 
     it('should resolve with metadata on success', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getResource')
-          .returns(Promise.resolve(VALID_IOS_APP_METADATA_API_RESPONSE));
+        .stub(ProjectManagementRequestHandler.prototype, 'getResource')
+        .returns(Promise.resolve(VALID_IOS_APP_METADATA_API_RESPONSE));
       stubs.push(stub);
       return iosApp.getMetadata().should.eventually.deep.equal(VALID_IOS_APP_METADATA);
     });
@@ -150,17 +155,17 @@ describe('IosApp', () => {
 
     it('should propagate API errors', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'setDisplayName')
-          .returns(Promise.reject(EXPECTED_ERROR));
+        .stub(ProjectManagementRequestHandler.prototype, 'setDisplayName')
+        .returns(Promise.reject(EXPECTED_ERROR));
       stubs.push(stub);
       return iosApp.setDisplayName(newDisplayName)
-          .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
     });
 
     it('should resolve on success', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'setDisplayName')
-          .returns(Promise.resolve());
+        .stub(ProjectManagementRequestHandler.prototype, 'setDisplayName')
+        .returns(Promise.resolve());
       stubs.push(stub);
       return iosApp.setDisplayName(newDisplayName).should.eventually.be.fulfilled;
     });
@@ -174,22 +179,22 @@ describe('IosApp', () => {
 
     it('should propagate API errors', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getConfig')
-          .returns(Promise.reject(EXPECTED_ERROR));
+        .stub(ProjectManagementRequestHandler.prototype, 'getConfig')
+        .returns(Promise.reject(EXPECTED_ERROR));
       stubs.push(stub);
       return iosApp.getConfig().should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
     });
 
     it('should throw with null API response', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getConfig')
-          .returns(Promise.resolve(null));
+        .stub(ProjectManagementRequestHandler.prototype, 'getConfig')
+        .resolves(null as any);
       stubs.push(stub);
       return iosApp.getConfig()
-          .should.eventually.be.rejected
-          .and.have.property(
-              'message',
-              'getConfig()\'s responseData must be a non-null object. Response data: null');
+        .should.eventually.be.rejected
+        .and.have.property(
+          'message',
+          'getConfig()\'s responseData must be a non-null object. Response data: null');
     });
 
     it('should throw with non-base64 response.configFileContents', () => {
@@ -197,21 +202,21 @@ describe('IosApp', () => {
       apiResponse.configFileContents = '1' + apiResponse.configFileContents;
 
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getConfig')
-          .returns(Promise.resolve(apiResponse));
+        .stub(ProjectManagementRequestHandler.prototype, 'getConfig')
+        .returns(Promise.resolve(apiResponse));
       stubs.push(stub);
       return iosApp.getConfig()
-          .should.eventually.be.rejected
-          .and.have.property(
-              'message',
-              `getConfig()\'s responseData.configFileContents must be a base64 string. `
+        .should.eventually.be.rejected
+        .and.have.property(
+          'message',
+          'getConfig()\'s responseData.configFileContents must be a base64 string. '
                   + `Response data: ${JSON.stringify(apiResponse, null, 2)}`);
     });
 
     it('should resolve with metadata on success', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'getConfig')
-          .returns(Promise.resolve(VALID_IOS_CONFIG_API_RESPONSE));
+        .stub(ProjectManagementRequestHandler.prototype, 'getConfig')
+        .returns(Promise.resolve(VALID_IOS_CONFIG_API_RESPONSE));
       stubs.push(stub);
       return iosApp.getConfig().should.eventually.deep.equal(VALID_IOS_CONFIG);
     });

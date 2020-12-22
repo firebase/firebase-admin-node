@@ -22,21 +22,26 @@ import * as sinon from 'sinon';
 import { FirebaseApp } from '../../../src/firebase-app';
 import { AndroidApp } from '../../../src/project-management/android-app';
 import { ProjectManagement } from '../../../src/project-management/project-management';
-import { ProjectManagementRequestHandler } from '../../../src/project-management/project-management-api-request';
+import {
+  ProjectManagementRequestHandler
+} from '../../../src/project-management/project-management-api-request-internal';
 import { FirebaseProjectManagementError } from '../../../src/utils/error';
 import * as mocks from '../../resources/mocks';
-import { IosApp } from '../../../src/project-management/ios-app';
-import { AppPlatform, AppMetadata } from '../../../src/project-management/app-metadata';
+import { projectManagement } from '../../../src/project-management/index';
+
+import AppMetadata = projectManagement.AppMetadata;
+import AppPlatform = projectManagement.AppPlatform;
+import IosApp = projectManagement.IosApp;
 
 const expect = chai.expect;
 
 const APP_ID = 'test-app-id';
-const APP_ID_ANDROID: string = 'test-app-id-android';
-const APP_ID_IOS: string = 'test-app-id-ios';
+const APP_ID_ANDROID = 'test-app-id-android';
+const APP_ID_IOS = 'test-app-id-ios';
 const PACKAGE_NAME = 'test-package-name';
 const BUNDLE_ID = 'test-bundle-id';
-const DISPLAY_NAME_ANDROID: string = 'test-display-name-android';
-const DISPLAY_NAME_IOS: string = 'test-display-name-ios';
+const DISPLAY_NAME_ANDROID = 'test-display-name-android';
+const DISPLAY_NAME_IOS = 'test-display-name-ios';
 const EXPECTED_ERROR = new FirebaseProjectManagementError('internal-error', 'message');
 const RESOURCE_NAME = 'projects/test/resources-name';
 const RESOURCE_NAME_ANDROID = 'projects/test/resources-name:android';
@@ -76,7 +81,7 @@ describe('ProjectManagement', () => {
           const projectManagementAny: any = ProjectManagement;
           return new projectManagementAny(invalidApp);
         }).to.throw(
-            'First argument passed to admin.projectManagement() must be a valid Firebase app '
+          'First argument passed to admin.projectManagement() must be a valid Firebase app '
                 + 'instance.');
       });
     });
@@ -86,7 +91,7 @@ describe('ProjectManagement', () => {
         const projectManagementAny: any = ProjectManagement;
         return new projectManagementAny();
       }).to.throw(
-          'First argument passed to admin.projectManagement() must be a valid Firebase app '
+        'First argument passed to admin.projectManagement() must be a valid Firebase app '
               + 'instance.');
     });
 
@@ -116,48 +121,48 @@ describe('ProjectManagement', () => {
   describe('listAndroidApps', () => {
     it('should propagate API errors', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'listAndroidApps')
-          .returns(Promise.reject(EXPECTED_ERROR));
+        .stub(ProjectManagementRequestHandler.prototype, 'listAndroidApps')
+        .returns(Promise.reject(EXPECTED_ERROR));
       stubs.push(stub);
       return projectManagement.listAndroidApps()
-          .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
     });
 
     it('should throw with null API response', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'listAndroidApps')
-          .returns(Promise.resolve(null));
+        .stub(ProjectManagementRequestHandler.prototype, 'listAndroidApps')
+        .resolves(null as any);
       stubs.push(stub);
       return projectManagement.listAndroidApps()
-          .should.eventually.be.rejected
-          .and.have.property(
-              'message',
-              'listAndroidApps()\'s responseData must be a non-null object. Response data: null');
+        .should.eventually.be.rejected
+        .and.have.property(
+          'message',
+          'listAndroidApps()\'s responseData must be a non-null object. Response data: null');
     });
 
     it('should return empty array when API response missing "apps" field', () => {
       const partialApiResponse = {};
 
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'listAndroidApps')
-          .returns(Promise.resolve(partialApiResponse));
+        .stub(ProjectManagementRequestHandler.prototype, 'listAndroidApps')
+        .returns(Promise.resolve(partialApiResponse));
       stubs.push(stub);
       return projectManagement.listAndroidApps()
-          .should.eventually.deep.equal([]);
+        .should.eventually.deep.equal([]);
     });
 
     it('should throw when API response has non-array "apps" field', () => {
       const partialApiResponse = { apps: 'none' };
 
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'listAndroidApps')
-          .returns(Promise.resolve(partialApiResponse));
+        .stub(ProjectManagementRequestHandler.prototype, 'listAndroidApps')
+        .returns(Promise.resolve(partialApiResponse));
       stubs.push(stub);
       return projectManagement.listAndroidApps()
-          .should.eventually.be.rejected
-          .and.have.property(
-              'message',
-              '"apps" field must be present in the listAndroidApps() response data. Response data: '
+        .should.eventually.be.rejected
+        .and.have.property(
+          'message',
+          '"apps" field must be present in the listAndroidApps() response data. Response data: '
                   + JSON.stringify(partialApiResponse, null, 2));
     });
 
@@ -167,14 +172,14 @@ describe('ProjectManagement', () => {
       };
 
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'listAndroidApps')
-          .returns(Promise.resolve(partialApiResponse));
+        .stub(ProjectManagementRequestHandler.prototype, 'listAndroidApps')
+        .returns(Promise.resolve(partialApiResponse));
       stubs.push(stub);
       return projectManagement.listAndroidApps()
-          .should.eventually.be.rejected
-          .and.have.property(
-              'message',
-              '"apps[].appId" field must be present in the listAndroidApps() response data. '
+        .should.eventually.be.rejected
+        .and.have.property(
+          'message',
+          '"apps[].appId" field must be present in the listAndroidApps() response data. '
                   + `Response data: ${JSON.stringify(partialApiResponse, null, 2)}`);
     });
 
@@ -185,11 +190,11 @@ describe('ProjectManagement', () => {
       };
 
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'listAndroidApps')
-          .returns(Promise.resolve(validListAndroidAppsApiResponse));
+        .stub(ProjectManagementRequestHandler.prototype, 'listAndroidApps')
+        .returns(Promise.resolve(validListAndroidAppsApiResponse));
       stubs.push(stub);
       return projectManagement.listAndroidApps()
-          .should.eventually.deep.equal(validAndroidApps);
+        .should.eventually.deep.equal(validAndroidApps);
     });
   });
 
@@ -200,48 +205,48 @@ describe('ProjectManagement', () => {
 
     it('should propagate API errors', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'listIosApps')
-          .returns(Promise.reject(EXPECTED_ERROR));
+        .stub(ProjectManagementRequestHandler.prototype, 'listIosApps')
+        .returns(Promise.reject(EXPECTED_ERROR));
       stubs.push(stub);
       return projectManagement.listIosApps()
-          .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
     });
 
     it('should throw with null API response', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'listIosApps')
-          .returns(Promise.resolve(null));
+        .stub(ProjectManagementRequestHandler.prototype, 'listIosApps')
+        .resolves(null as any);
       stubs.push(stub);
       return projectManagement.listIosApps()
-          .should.eventually.be.rejected
-          .and.have.property(
-              'message',
-              'listIosApps()\'s responseData must be a non-null object. Response data: null');
+        .should.eventually.be.rejected
+        .and.have.property(
+          'message',
+          'listIosApps()\'s responseData must be a non-null object. Response data: null');
     });
 
     it('should return empty array when API response missing "apps" field', () => {
       const partialApiResponse = {};
 
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'listIosApps')
-          .returns(Promise.resolve(partialApiResponse));
+        .stub(ProjectManagementRequestHandler.prototype, 'listIosApps')
+        .returns(Promise.resolve(partialApiResponse));
       stubs.push(stub);
       return projectManagement.listIosApps()
-          .should.eventually.deep.equal([]);
+        .should.eventually.deep.equal([]);
     });
 
     it('should throw when API response has non-array "apps" field', () => {
       const partialApiResponse = { apps: 'none' };
 
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'listIosApps')
-          .returns(Promise.resolve(partialApiResponse));
+        .stub(ProjectManagementRequestHandler.prototype, 'listIosApps')
+        .returns(Promise.resolve(partialApiResponse));
       stubs.push(stub);
       return projectManagement.listIosApps()
-          .should.eventually.be.rejected
-          .and.have.property(
-              'message',
-              '"apps" field must be present in the listIosApps() response data. Response data: '
+        .should.eventually.be.rejected
+        .and.have.property(
+          'message',
+          '"apps" field must be present in the listIosApps() response data. Response data: '
                   + JSON.stringify(partialApiResponse, null, 2));
     });
 
@@ -251,14 +256,14 @@ describe('ProjectManagement', () => {
       };
 
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'listIosApps')
-          .returns(Promise.resolve(partialApiResponse));
+        .stub(ProjectManagementRequestHandler.prototype, 'listIosApps')
+        .returns(Promise.resolve(partialApiResponse));
       stubs.push(stub);
       return projectManagement.listIosApps()
-          .should.eventually.be.rejected
-          .and.have.property(
-              'message',
-              '"apps[].appId" field must be present in the listIosApps() response data. '
+        .should.eventually.be.rejected
+        .and.have.property(
+          'message',
+          '"apps[].appId" field must be present in the listIosApps() response data. '
                   + `Response data: ${JSON.stringify(partialApiResponse, null, 2)}`);
     });
 
@@ -266,11 +271,11 @@ describe('ProjectManagement', () => {
       const validIosApps: IosApp[] = [projectManagement.iosApp(APP_ID)];
 
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'listIosApps')
-          .returns(Promise.resolve(VALID_LIST_IOS_APPS_API_RESPONSE));
+        .stub(ProjectManagementRequestHandler.prototype, 'listIosApps')
+        .returns(Promise.resolve(VALID_LIST_IOS_APPS_API_RESPONSE));
       stubs.push(stub);
       return projectManagement.listIosApps()
-          .should.eventually.deep.equal(validIosApps);
+        .should.eventually.deep.equal(validIosApps);
     });
   });
 
@@ -297,35 +302,35 @@ describe('ProjectManagement', () => {
   describe('createAndroidApp', () => {
     it('should propagate intial API response errors', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'createAndroidApp')
-          .returns(Promise.reject(EXPECTED_ERROR));
+        .stub(ProjectManagementRequestHandler.prototype, 'createAndroidApp')
+        .returns(Promise.reject(EXPECTED_ERROR));
       stubs.push(stub);
       return projectManagement.createAndroidApp(PACKAGE_NAME)
-          .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
     });
 
     it('should throw when initial API response is null', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'createAndroidApp')
-          .returns(Promise.resolve(null));
+        .stub(ProjectManagementRequestHandler.prototype, 'createAndroidApp')
+        .resolves(null as any);
       stubs.push(stub);
       return projectManagement.createAndroidApp(PACKAGE_NAME)
-          .should.eventually.be.rejected
-          .and.have.property(
-              'message',
-              'createAndroidApp()\'s responseData must be a non-null object. Response data: null');
+        .should.eventually.be.rejected
+        .and.have.property(
+          'message',
+          'createAndroidApp()\'s responseData must be a non-null object. Response data: null');
     });
 
     it('should throw when initial API response.appId is undefined', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'createAndroidApp')
-          .returns(Promise.resolve({}));
+        .stub(ProjectManagementRequestHandler.prototype, 'createAndroidApp')
+        .returns(Promise.resolve({}));
       stubs.push(stub);
       return projectManagement.createAndroidApp(PACKAGE_NAME)
-          .should.eventually.be.rejected
-          .and.have.property(
-              'message',
-              '"responseData.appId" field must be present in createAndroidApp()\'s response data. '
+        .should.eventually.be.rejected
+        .and.have.property(
+          'message',
+          '"responseData.appId" field must be present in createAndroidApp()\'s response data. '
                   + 'Response data: {}');
     });
 
@@ -334,46 +339,46 @@ describe('ProjectManagement', () => {
       const validCreateAppResponse = { appId: APP_ID };
 
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'createAndroidApp')
-          .returns(Promise.resolve(validCreateAppResponse));
+        .stub(ProjectManagementRequestHandler.prototype, 'createAndroidApp')
+        .returns(Promise.resolve(validCreateAppResponse));
       stubs.push(stub);
       return projectManagement.createAndroidApp(PACKAGE_NAME)
-          .should.eventually.deep.equal(createdAndroidApp);
+        .should.eventually.deep.equal(createdAndroidApp);
     });
   });
 
   describe('createIosApp', () => {
     it('should propagate intial API response errors', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'createIosApp')
-          .returns(Promise.reject(EXPECTED_ERROR));
+        .stub(ProjectManagementRequestHandler.prototype, 'createIosApp')
+        .returns(Promise.reject(EXPECTED_ERROR));
       stubs.push(stub);
       return projectManagement.createIosApp(BUNDLE_ID)
-          .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
     });
 
     it('should throw when initial API response is null', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'createIosApp')
-          .returns(Promise.resolve(null));
+        .stub(ProjectManagementRequestHandler.prototype, 'createIosApp')
+        .resolves(null as any);
       stubs.push(stub);
       return projectManagement.createIosApp(BUNDLE_ID)
-          .should.eventually.be.rejected
-          .and.have.property(
-              'message',
-              'createIosApp()\'s responseData must be a non-null object. Response data: null');
+        .should.eventually.be.rejected
+        .and.have.property(
+          'message',
+          'createIosApp()\'s responseData must be a non-null object. Response data: null');
     });
 
     it('should throw when initial API response.appId is undefined', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'createIosApp')
-          .returns(Promise.resolve({}));
+        .stub(ProjectManagementRequestHandler.prototype, 'createIosApp')
+        .returns(Promise.resolve({}));
       stubs.push(stub);
       return projectManagement.createIosApp(BUNDLE_ID)
-          .should.eventually.be.rejected
-          .and.have.property(
-              'message',
-              '"responseData.appId" field must be present in createIosApp()\'s response data. '
+        .should.eventually.be.rejected
+        .and.have.property(
+          'message',
+          '"responseData.appId" field must be present in createIosApp()\'s response data. '
                   + 'Response data: {}');
     });
 
@@ -382,11 +387,11 @@ describe('ProjectManagement', () => {
       const validCreateAppResponse = { appId: APP_ID };
 
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'createIosApp')
-          .returns(Promise.resolve(validCreateAppResponse));
+        .stub(ProjectManagementRequestHandler.prototype, 'createIosApp')
+        .returns(Promise.resolve(validCreateAppResponse));
       stubs.push(stub);
       return projectManagement.createIosApp(BUNDLE_ID)
-          .should.eventually.deep.equal(createdIosApp);
+        .should.eventually.deep.equal(createdIosApp);
     });
   });
 
@@ -415,48 +420,48 @@ describe('ProjectManagement', () => {
 
     it('should propagate API errors', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
-          .returns(Promise.reject(EXPECTED_ERROR));
+        .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
+        .returns(Promise.reject(EXPECTED_ERROR));
       stubs.push(stub);
       return projectManagement.listAppMetadata()
-          .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
     });
 
     it('should throw with null API response', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
-          .returns(Promise.resolve(null));
+        .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
+        .resolves(null as any);
       stubs.push(stub);
       return projectManagement.listAppMetadata()
-          .should.eventually.be.rejected
-          .and.have.property(
-              'message',
-              'listAppMetadata()\'s responseData must be a non-null object. Response data: null');
+        .should.eventually.be.rejected
+        .and.have.property(
+          'message',
+          'listAppMetadata()\'s responseData must be a non-null object. Response data: null');
     });
 
     it('should return empty array when API response missing "apps" field', () => {
       const partialApiResponse = {};
 
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
-          .returns(Promise.resolve(partialApiResponse));
+        .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
+        .returns(Promise.resolve(partialApiResponse));
       stubs.push(stub);
       return projectManagement.listAppMetadata()
-          .should.eventually.deep.equal([]);
+        .should.eventually.deep.equal([]);
     });
 
     it('should throw when API response has non-array "apps" field', () => {
       const partialApiResponse = { apps: 'none' };
 
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
-          .returns(Promise.resolve(partialApiResponse));
+        .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
+        .returns(Promise.resolve(partialApiResponse));
       stubs.push(stub);
       return projectManagement.listAppMetadata()
-          .should.eventually.be.rejected
-          .and.have.property(
-              'message',
-              '"apps" field must be present in the listAppMetadata() response data. Response data: '
+        .should.eventually.be.rejected
+        .and.have.property(
+          'message',
+          '"apps" field must be present in the listAppMetadata() response data. Response data: '
                   + JSON.stringify(partialApiResponse, null, 2));
     });
 
@@ -466,14 +471,14 @@ describe('ProjectManagement', () => {
       };
 
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
-          .returns(Promise.resolve(partialApiResponse));
+        .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
+        .returns(Promise.resolve(partialApiResponse));
       stubs.push(stub);
       return projectManagement.listAppMetadata()
-          .should.eventually.be.rejected
-          .and.have.property(
-              'message',
-              '"apps[].appId" field must be present in the listAppMetadata() response data. '
+        .should.eventually.be.rejected
+        .and.have.property(
+          'message',
+          '"apps[].appId" field must be present in the listAppMetadata() response data. '
                   + `Response data: ${JSON.stringify(partialApiResponse, null, 2)}`);
     });
 
@@ -485,14 +490,14 @@ describe('ProjectManagement', () => {
       };
 
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
-          .returns(Promise.resolve(missingPlatformApiResponse));
+        .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
+        .returns(Promise.resolve(missingPlatformApiResponse));
       stubs.push(stub);
       return projectManagement.listAppMetadata()
-          .should.eventually.be.rejected
-          .and.have.property(
-              'message',
-              '"apps[].platform" field must be present in the listAppMetadata() response data. '
+        .should.eventually.be.rejected
+        .and.have.property(
+          'message',
+          '"apps[].platform" field must be present in the listAppMetadata() response data. '
                   + `Response data: ${JSON.stringify(missingPlatformApiResponse, null, 2)}`);
     });
 
@@ -520,11 +525,11 @@ describe('ProjectManagement', () => {
         },
       ];
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
-          .returns(Promise.resolve(VALID_LIST_APP_METADATA_API_RESPONSE));
+        .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
+        .returns(Promise.resolve(VALID_LIST_APP_METADATA_API_RESPONSE));
       stubs.push(stub);
       return projectManagement.listAppMetadata()
-          .should.eventually.deep.equal(expectedAppMetadata);
+        .should.eventually.deep.equal(expectedAppMetadata);
     });
 
     it('should resolve with "apps[].platform" to be "PLATFORM_UNKNOWN" for web app', () => {
@@ -543,28 +548,28 @@ describe('ProjectManagement', () => {
       }];
 
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
-          .returns(Promise.resolve(webPlatformApiResponse));
+        .stub(ProjectManagementRequestHandler.prototype, 'listAppMetadata')
+        .returns(Promise.resolve(webPlatformApiResponse));
       stubs.push(stub);
       return projectManagement.listAppMetadata()
-          .should.eventually.deep.equal(expectedAppMetadata);
+        .should.eventually.deep.equal(expectedAppMetadata);
     });
   });
 
   describe('setDisplayName', () => {
     it('should propagate API errors', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'setDisplayName')
-          .returns(Promise.reject(EXPECTED_ERROR));
+        .stub(ProjectManagementRequestHandler.prototype, 'setDisplayName')
+        .returns(Promise.reject(EXPECTED_ERROR));
       stubs.push(stub);
       return projectManagement.setDisplayName(DISPLAY_NAME_ANDROID)
-          .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
+        .should.eventually.be.rejected.and.equal(EXPECTED_ERROR);
     });
 
     it('should resolve on success', () => {
       const stub = sinon
-          .stub(ProjectManagementRequestHandler.prototype, 'setDisplayName')
-          .returns(Promise.resolve());
+        .stub(ProjectManagementRequestHandler.prototype, 'setDisplayName')
+        .returns(Promise.resolve());
       stubs.push(stub);
       return projectManagement.setDisplayName(DISPLAY_NAME_ANDROID).should.eventually.be.fulfilled;
     });

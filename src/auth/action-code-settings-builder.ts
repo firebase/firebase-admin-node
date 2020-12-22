@@ -15,22 +15,10 @@
  */
 
 import * as validator from '../utils/validator';
-import {AuthClientErrorCode, FirebaseAuthError} from '../utils/error';
+import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
+import { auth } from './index';
 
-/** Defines the ActionCodeSettings interface. */
-export interface ActionCodeSettings {
-  url: string;
-  handleCodeInApp?: boolean;
-  iOS?: {
-    bundleId: string;
-  };
-  android?: {
-    packageName: string;
-    installApp?: boolean;
-    minimumVersion?: string;
-  };
-  dynamicLinkDomain?: string;
-}
+import ActionCodeSettings = auth.ActionCodeSettings;
 
 /** Defines the email action code server request. */
 interface EmailActionCodeRequest {
@@ -68,7 +56,7 @@ export class ActionCodeSettingsBuilder {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
         '"ActionCodeSettings" must be a non-null object.',
-     );
+      );
     }
     if (typeof actionCodeSettings.url === 'undefined') {
       throw new FirebaseAuthError(
@@ -84,8 +72,8 @@ export class ActionCodeSettingsBuilder {
     if (typeof actionCodeSettings.handleCodeInApp !== 'undefined' &&
         !validator.isBoolean(actionCodeSettings.handleCodeInApp)) {
       throw new FirebaseAuthError(
-         AuthClientErrorCode.INVALID_ARGUMENT,
-         '"ActionCodeSettings.handleCodeInApp" must be a boolean.',
+        AuthClientErrorCode.INVALID_ARGUMENT,
+        '"ActionCodeSettings.handleCodeInApp" must be a boolean.',
       );
     }
     this.canHandleCodeInApp = actionCodeSettings.handleCodeInApp || false;
@@ -169,7 +157,7 @@ export class ActionCodeSettingsBuilder {
     };
     // Remove all null and undefined fields from request.
     for (const key in request) {
-      if (request.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(request, key)) {
         if (typeof request[key] === 'undefined' || request[key] === null) {
           delete request[key];
         }
