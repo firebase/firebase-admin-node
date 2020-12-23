@@ -250,6 +250,7 @@ export namespace auth {
         expiresIn: number;
     }
     export interface Tenant {
+        anonymousSignInEnabled?: boolean;
         displayName?: string;
         emailSignInConfig?: {
             enabled: boolean;
@@ -300,6 +301,7 @@ export namespace auth {
         photoURL?: string | null;
     }
     export interface UpdateTenantRequest {
+        anonymousSignInEnabled?: boolean;
         displayName?: string;
         emailSignInConfig?: EmailSignInProviderConfig;
         multiFactorConfig?: MultiFactorConfig;
