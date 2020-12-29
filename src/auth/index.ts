@@ -503,7 +503,13 @@ export namespace auth {
       /**
        * The ID of the provider used to sign in the user.
        * One of `"anonymous"`, `"password"`, `"facebook.com"`, `"github.com"`,
-       * `"google.com"`, `"twitter.com"`, or `"custom"`.
+       * `"google.com"`, `"twitter.com"`, `"apple.com"`, `"microsoft.com"`,
+       * "yahoo.com"`, `"phone"`, `"playgames.google.com"`, `"gc.apple.com"`,
+       * or `"custom"`.
+       *
+       * Additional Identity Platform provider IDs include `"linkedin.com"`,
+       * OIDC and SAML identity providers prefixed with `"saml."` and `"oidc."`
+       * respectively.
        */
       sign_in_provider: string;
 
