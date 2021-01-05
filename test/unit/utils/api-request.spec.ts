@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -711,7 +712,7 @@ describe('HttpClient', () => {
     const scope = nock('https://' + mockHost)
       .get(mockPath)
       .times(5)
-      .socketDelay(2000)
+      .delayConnection(2000)
       .reply(200, respData, {
         'content-type': 'application/json',
       });

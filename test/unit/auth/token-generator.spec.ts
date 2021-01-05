@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -311,7 +312,7 @@ describe('FirebaseTokenGenerator', () => {
   describe('Emulator', () => {
     const signer = new EmulatedSigner();
     const tokenGenerator = new FirebaseTokenGenerator(signer);
-    
+
     it('should generate a valid unsigned token', async () => {
       const uid = 'uid123';
       const claims = { foo: 'bar' };

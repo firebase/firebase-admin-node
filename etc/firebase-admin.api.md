@@ -625,7 +625,7 @@ export namespace messaging {
     }
     export interface ApnsPayload {
         // (undocumented)
-        [customData: string]: object;
+        [customData: string]: any;
         aps: Aps;
     }
     export interface Aps {

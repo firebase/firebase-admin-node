@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -934,7 +935,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               data,
               headers: expectedHeaders,
               timeout,
-            });          
+            });
           });
       });
 
@@ -954,7 +955,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
               data,
               headers: expectedHeadersEmulator,
               timeout,
-            });          
+            });
           });
       });
     });
