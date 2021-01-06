@@ -19,7 +19,6 @@
 
 import * as _ from 'lodash';
 import * as chai from 'chai';
-import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
@@ -259,15 +258,6 @@ describe('FirebaseNamespace', () => {
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
       expect(firebaseNamespace.app(mocks.appName)).to.deep.equal(app);
     });
-
-    it('should call the "create" app hook for the new app', () => {
-      const appHook = sinon.spy();
-      firebaseNamespace.INTERNAL.registerService(mocks.serviceName, mocks.firebaseServiceFactory, undefined, appHook);
-
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      expect(appHook).to.have.been.calledOnce.and.calledWith('create', app);
-    });
   });
 
   describe('#INTERNAL.removeApp()', () => {
@@ -327,58 +317,6 @@ describe('FirebaseNamespace', () => {
       expect(() => {
         firebaseNamespace.INTERNAL.removeApp(mocks.appName);
       }).to.throw(`Firebase app named "${mocks.appName}" does not exist.`);
-    });
-
-    it('should call the "delete" app hook for the deleted app', () => {
-      const appHook = sinon.spy();
-      firebaseNamespace.INTERNAL.registerService(mocks.serviceName, mocks.firebaseServiceFactory, undefined, appHook);
-
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      appHook.resetHistory();
-
-      firebaseNamespace.INTERNAL.removeApp(mocks.appName);
-
-      expect(appHook).to.have.been.calledOnce.and.calledWith('delete', app);
-    });
-  });
-
-  describe('#INTERNAL.registerService()', () => {
-    // TODO(jwenger): finish writing tests for regsiterService() to get more code coverage
-
-    it('should throw given no service name', () => {
-      expect(() => {
-        firebaseNamespace.INTERNAL.registerService(undefined as unknown as string, mocks.firebaseServiceFactory);
-      }).to.throw('No service name provided. Service name must be a non-empty string.');
-    });
-
-    const invalidServiceNames = [null, NaN, 0, 1, true, false, [], ['a'], {}, { a: 1 }, _.noop];
-    invalidServiceNames.forEach((invalidServiceName) => {
-      it('should throw given non-string service name: ' + JSON.stringify(invalidServiceName), () => {
-        expect(() => {
-          firebaseNamespace.INTERNAL.registerService(invalidServiceName as any, mocks.firebaseServiceFactory);
-        }).to.throw(`Invalid service name "${invalidServiceName}" provided. Service name must be a non-empty string.`);
-      });
-    });
-
-    it('should throw given an empty string service name', () => {
-      expect(() => {
-        firebaseNamespace.INTERNAL.registerService('', mocks.firebaseServiceFactory);
-      }).to.throw('Invalid service name "" provided. Service name must be a non-empty string.');
-    });
-
-    it('should throw given a service name which has already been registered', () => {
-      firebaseNamespace.INTERNAL.registerService(mocks.serviceName, mocks.firebaseServiceFactory);
-      expect(() => {
-        firebaseNamespace.INTERNAL.registerService(mocks.serviceName, mocks.firebaseServiceFactory);
-      }).to.throw(`Firebase service named "${mocks.serviceName}" has already been registered.`);
-    });
-
-    it('should throw given a service name which has already been registered', () => {
-      firebaseNamespace.INTERNAL.registerService(mocks.serviceName, mocks.firebaseServiceFactory);
-      expect(() => {
-        firebaseNamespace.INTERNAL.registerService(mocks.serviceName, mocks.firebaseServiceFactory);
-      }).to.throw(`Firebase service named "${mocks.serviceName}" has already been registered.`);
     });
   });
 

@@ -3190,14 +3190,6 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
     });
 
-    if (testConfig.Auth === Auth) {
-      describe('INTERNAL.delete()', () => {
-        it('should delete Auth instance', () => {
-          (auth as Auth).INTERNAL.delete().should.eventually.be.fulfilled;
-        });
-      });
-    }
-
     describe('auth emulator support', () => {
 
       let mockAuth = testConfig.init(mocks.app());
