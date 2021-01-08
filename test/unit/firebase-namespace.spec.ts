@@ -354,7 +354,7 @@ describe('FirebaseNamespace', () => {
       firebaseNamespace.initializeApp(mocks.appOptions);
       const serviceNamespace1: Auth = firebaseNamespace.auth();
       const serviceNamespace2: Auth = firebaseNamespace.auth();
-      expect(serviceNamespace1).to.deep.equal(serviceNamespace2);
+      expect(serviceNamespace1).to.equal(serviceNamespace2);
     });
   });
 
@@ -418,7 +418,7 @@ describe('FirebaseNamespace', () => {
       const app = firebaseNamespace.initializeApp(mocks.appOptions);
       const db1: Database = firebaseNamespace.database();
       const db2: Database = firebaseNamespace.database();
-      expect(db1).to.deep.equal(db2);
+      expect(db1).to.equal(db2);
       return app.delete();
     });
   });
@@ -457,7 +457,7 @@ describe('FirebaseNamespace', () => {
       firebaseNamespace.initializeApp(mocks.appOptions);
       const serviceNamespace1: Messaging = firebaseNamespace.messaging();
       const serviceNamespace2: Messaging = firebaseNamespace.messaging();
-      expect(serviceNamespace1).to.deep.equal(serviceNamespace2);
+      expect(serviceNamespace1).to.equal(serviceNamespace2);
     });
   });
 
@@ -534,7 +534,7 @@ describe('FirebaseNamespace', () => {
       firebaseNamespace.initializeApp(mocks.appOptions);
       const serviceNamespace1: Storage = firebaseNamespace.storage();
       const serviceNamespace2: Storage = firebaseNamespace.storage();
-      expect(serviceNamespace1).to.deep.equal(serviceNamespace2);
+      expect(serviceNamespace1).to.equal(serviceNamespace2);
     });
   });
 
@@ -596,7 +596,7 @@ describe('FirebaseNamespace', () => {
       firebaseNamespace.initializeApp(mocks.appOptions);
       const service1: Firestore = firebaseNamespace.firestore();
       const service2: Firestore = firebaseNamespace.firestore();
-      expect(service1).to.deep.equal(service2);
+      expect(service1).to.equal(service2);
     });
   });
 
