@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Stage Release
+name: Nightly Builds
 
 on:
   # Runs every day at 06:00 AM (PT) and 06:00 PM (PT) / 02:00 AM (UTC) and 02:00 PM (UTC)
@@ -20,7 +20,7 @@ on:
     - cron: "0 2,14 * * *"
 
 jobs:
-  stage_release:
+  nightly:
 
     runs-on: ubuntu-latest
 
