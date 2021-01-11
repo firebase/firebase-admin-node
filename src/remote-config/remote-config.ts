@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { FirebaseApp } from '../firebase-app';
 import * as validator from '../utils/validator';
 import { remoteConfig } from './index';
@@ -31,25 +30,9 @@ import Version = remoteConfig.Version;
 import RemoteConfigInterface = remoteConfig.RemoteConfig;
 
 /**
- * Internals of an RemoteConfig service instance.
- */
-class RemoteConfigInternals implements FirebaseServiceInternalsInterface {
-  /**
-   * Deletes the service and its associated resources.
-   *
-   * @return {Promise<()>} An empty Promise that will be fulfilled when the service is deleted.
-   */
-  public delete(): Promise<void> {
-    // There are no resources to clean up
-    return Promise.resolve(undefined);
-  }
-}
-
-/**
  * Remote Config service bound to the provided app.
  */
-export class RemoteConfig implements FirebaseServiceInterface, RemoteConfigInterface {
-  public readonly INTERNAL: RemoteConfigInternals = new RemoteConfigInternals();
+export class RemoteConfig implements RemoteConfigInterface {
 
   private readonly client: RemoteConfigApiClient;
 

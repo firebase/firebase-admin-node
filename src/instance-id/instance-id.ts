@@ -15,28 +15,12 @@
  */
 
 import { FirebaseApp } from '../firebase-app';
-import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { FirebaseInstanceIdError, InstanceIdClientErrorCode } from '../utils/error';
 import { FirebaseInstanceIdRequestHandler } from './instance-id-request-internal';
 import { instanceId } from './index';
 import * as validator from '../utils/validator';
 
 import InstanceIdInterface = instanceId.InstanceId;
-
-/**
- * Internals of an InstanceId service instance.
- */
-class InstanceIdInternals implements FirebaseServiceInternalsInterface {
-  /**
-   * Deletes the service and its associated resources.
-   *
-   * @return {Promise<()>} An empty Promise that will be fulfilled when the service is deleted.
-   */
-  public delete(): Promise<void> {
-    // There are no resources to clean up
-    return Promise.resolve(undefined);
-  }
-}
 
 /**
  * Gets the {@link InstanceId `InstanceId`} service for the
@@ -52,8 +36,7 @@ class InstanceIdInternals implements FirebaseServiceInternalsInterface {
  * @return The `InstanceId` service for the
  *   current app.
  */
-export class InstanceId implements FirebaseServiceInterface, InstanceIdInterface {
-  public INTERNAL: InstanceIdInternals = new InstanceIdInternals();
+export class InstanceId implements InstanceIdInterface {
 
   private app_: FirebaseApp;
   private requestHandler: FirebaseInstanceIdRequestHandler;

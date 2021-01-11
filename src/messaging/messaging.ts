@@ -21,7 +21,6 @@ import { SubRequest } from './batch-request-internal';
 import { validateMessage, BLACKLISTED_DATA_PAYLOAD_KEYS, BLACKLISTED_OPTIONS_KEYS } from './messaging-internal';
 import { messaging } from './index';
 import { FirebaseMessagingRequestHandler } from './messaging-api-request-internal';
-import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { ErrorInfo, MessagingClientErrorCode, FirebaseMessagingError } from '../utils/error';
 import * as utils from '../utils';
 import * as validator from '../utils/validator';
@@ -187,27 +186,9 @@ function mapRawResponseToTopicManagementResponse(response: object): MessagingTop
 
 
 /**
- * Internals of a Messaging instance.
- */
-class MessagingInternals implements FirebaseServiceInternalsInterface {
-  /**
-   * Deletes the service and its associated resources.
-   *
-   * @return {Promise<()>} An empty Promise that will be fulfilled when the service is deleted.
-   */
-  public delete(): Promise<void> {
-    // There are no resources to clean up.
-    return Promise.resolve(undefined);
-  }
-}
-
-
-/**
  * Messaging service bound to the provided app.
  */
-export class Messaging implements FirebaseServiceInterface, MessagingInterface {
-
-  public INTERNAL: MessagingInternals = new MessagingInternals();
+export class Messaging implements MessagingInterface {
 
   private urlPath: string;
   private readonly appInternal: FirebaseApp;

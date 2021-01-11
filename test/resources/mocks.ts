@@ -27,9 +27,7 @@ import * as jwt from 'jsonwebtoken';
 
 import { AppOptions } from '../../src/firebase-namespace-api';
 import { FirebaseNamespace } from '../../src/firebase-namespace';
-import { FirebaseServiceInterface } from '../../src/firebase-service';
 import { FirebaseApp } from '../../src/firebase-app';
-import { app as _app } from '../../src/firebase-namespace-api';
 import { credential as _credential, GoogleOAuthAccessToken } from '../../src/credential/index';
 import { ServiceAccountCredential } from '../../src/credential/credential-internal';
 
@@ -228,19 +226,6 @@ export function generateSessionCookie(overrides?: object, expiresIn?: number): s
 
   return jwt.sign(developerClaims, certificateObject.private_key, options);
 }
-
-/* eslint-disable @typescript-eslint/no-unused-vars */
-export function firebaseServiceFactory(
-  firebaseApp: _app.App,
-  _extendApp?: (props: object) => void,
-): FirebaseServiceInterface {
-  const result = {
-    app: firebaseApp,
-    INTERNAL: {},
-  };
-  return result as FirebaseServiceInterface;
-}
-/* eslint-enable @typescript-eslint/no-unused-vars */
 
 /** Mock socket emitter class. */
 export class MockSocketEmitter extends events.EventEmitter {

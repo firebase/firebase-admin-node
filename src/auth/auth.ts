@@ -25,7 +25,6 @@ import {
   AbstractAuthRequestHandler, AuthRequestHandler, TenantAwareAuthRequestHandler, useEmulator,
 } from './auth-api-request';
 import { AuthClientErrorCode, FirebaseAuthError, ErrorInfo } from '../utils/error';
-import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { auth } from './index';
@@ -58,22 +57,6 @@ import SAMLAuthProviderConfig = auth.SAMLAuthProviderConfig;
 import BaseAuthInterface = auth.BaseAuth;
 import AuthInterface = auth.Auth;
 import TenantAwareAuthInterface = auth.TenantAwareAuth;
-
-/**
- * Internals of an Auth instance.
- */
-class AuthInternals implements FirebaseServiceInternalsInterface {
-  /**
-   * Deletes the service and its associated resources.
-   *
-   * @return {Promise<()>} An empty Promise that will be fulfilled when the service is deleted.
-   */
-  public delete(): Promise<void> {
-    // There are no resources to clean up
-    return Promise.resolve(undefined);
-  }
-}
-
 
 /**
  * Base Auth class. Mainly used for user management APIs.
@@ -820,10 +803,8 @@ export class TenantAwareAuth
  * Auth service bound to the provided app.
  * An Auth instance can have multiple tenants.
  */
-export class Auth extends BaseAuth<AuthRequestHandler>
-  implements FirebaseServiceInterface, AuthInterface {
+export class Auth extends BaseAuth<AuthRequestHandler> implements AuthInterface {
 
-  public INTERNAL: AuthInternals = new AuthInternals();
   private readonly tenantManager_: TenantManager;
   private readonly app_: FirebaseApp;
 
