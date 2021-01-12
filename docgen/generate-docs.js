@@ -28,6 +28,7 @@ const repoPath = path.resolve(`${__dirname}/..`);
 const defaultSources = [
   `${repoPath}/lib/firebase-namespace.d.ts`,
   `${repoPath}/lib/firebase-namespace-api.d.ts`,
+  `${repoPath}/lib/core.d.ts`,
   `${repoPath}/lib/**/*.d.ts`,
 ];
 
