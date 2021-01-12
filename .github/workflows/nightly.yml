@@ -17,7 +17,7 @@ name: Nightly Builds
 on:
   # Runs every day at 06:00 AM (PT) and 06:00 PM (PT) / 02:00 AM (UTC) and 02:00 PM (UTC)
   schedule:
-    - cron: "0 2,14 * * *"
+    - cron: "0 4,14 * * *"
 
 jobs:
   nightly:
@@ -66,8 +66,3 @@ jobs:
       with:
         name: dist
         path: dist
-
-    - name: Verify tarball
-      run: |
-        PACKAGE_TARBALL=`ls firebase-admin-*.tgz`
-        ./.github/scripts/verify_package.sh $PACKAGE_TARBALL
