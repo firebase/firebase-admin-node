@@ -19,8 +19,7 @@ import { AppOptions, app } from './firebase-namespace-api';
 import { credential, GoogleOAuthAccessToken } from './credential/index';
 import { getApplicationDefault } from './credential/credential-internal';
 import * as validator from './utils/validator';
-import { deepCopy, deepExtend } from './utils/deep-copy';
-import { FirebaseServiceInterface } from './firebase-service';
+import { deepCopy } from './utils/deep-copy';
 import { FirebaseNamespaceInternals } from './firebase-namespace';
 import { AppErrorCodes, FirebaseAppError } from './utils/error';
 
@@ -238,7 +237,7 @@ export class FirebaseApp implements app.App {
 
   private name_: string;
   private options_: AppOptions;
-  private services_: {[name: string]: FirebaseServiceInterface} = {};
+  private services_: {[name: string]: unknown} = {};
   private isDeleted_ = false;
 
   constructor(options: AppOptions, name: string, private firebaseInternals_: FirebaseNamespaceInternals) {
@@ -267,11 +266,6 @@ export class FirebaseApp implements app.App {
         'the Credential interface.',
       );
     }
-
-    Object.keys(firebaseInternals_.serviceFactories).forEach((serviceName) => {
-      // Defer calling createService() until the service is accessed
-      (this as {[key: string]: any})[serviceName] = this.getService_.bind(this, serviceName);
-    });
 
     this.INTERNAL = new FirebaseAppInternals(credential);
   }
@@ -428,51 +422,24 @@ export class FirebaseApp implements app.App {
     this.INTERNAL.delete();
 
     return Promise.all(Object.keys(this.services_).map((serviceName) => {
-      return this.services_[serviceName].INTERNAL.delete();
+      const service = this.services_[serviceName];
+      if (isStateful(service)) {
+        return service.delete();
+      }
+      return Promise.resolve();
     })).then(() => {
       this.services_ = {};
       this.isDeleted_ = true;
     });
   }
 
-  private ensureService_<T extends FirebaseServiceInterface>(serviceName: string, initializer: () => T): T {
+  private ensureService_<T>(serviceName: string, initializer: () => T): T {
     this.checkDestroyed_();
-
-    let service: T;
-    if (serviceName in this.services_) {
-      service = this.services_[serviceName] as T;
-    } else {
-      service = initializer();
-      this.services_[serviceName] = service;
-    }
-    return service;
-  }
-
-  /**
-   * Returns the service instance associated with this FirebaseApp instance (creating it on demand
-   * if needed). This is used for looking up monkeypatched service instances.
-   *
-   * @param serviceName The name of the service instance to return.
-   * @return The service instance with the provided name.
-   */
-  private getService_(serviceName: string): FirebaseServiceInterface {
-    this.checkDestroyed_();
-
     if (!(serviceName in this.services_)) {
-      this.services_[serviceName] = this.firebaseInternals_.serviceFactories[serviceName](
-        this,
-        this.extendApp_.bind(this),
-      );
+      this.services_[serviceName] = initializer();
     }
 
-    return this.services_[serviceName];
-  }
-
-  /**
-   * Callback function used to extend an App instance at the time of service instance creation.
-   */
-  private extendApp_(props: {[prop: string]: any}): void {
-    deepExtend(this, props);
+    return this.services_[serviceName] as T;
   }
 
   /**
@@ -486,4 +453,12 @@ export class FirebaseApp implements app.App {
       );
     }
   }
+}
+
+interface StatefulFirebaseService {
+  delete(): Promise<void>;
+}
+
+function isStateful(service: any): service is StatefulFirebaseService {
+  return typeof service.delete === 'function';
 }
