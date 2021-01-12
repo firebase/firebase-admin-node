@@ -27,8 +27,7 @@ import { storage } from './storage/index';
 
 import { App as AppCore, AppOptions } from './core';
 
-export { App } from './core';
-export { AppOptions };
+export * from './core';
 
 /**
  * `FirebaseError` is a subclass of the standard JavaScript `Error` object. In
