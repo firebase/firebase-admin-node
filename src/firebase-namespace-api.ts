@@ -25,8 +25,9 @@ import { remoteConfig } from './remote-config/index';
 import { securityRules } from './security-rules/index';
 import { storage } from './storage/index';
 
-import { AppOptions, App as AppCore } from './core';
+import { App as AppCore, AppOptions } from './core';
 
+export { App } from './core';
 export { AppOptions };
 
 /**

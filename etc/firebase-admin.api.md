@@ -10,16 +10,22 @@ import * as _firestore from '@google-cloud/firestore';
 import * as rtdb from '@firebase/database-types';
 
 // @public (undocumented)
+export interface App {
+    delete(): Promise<void>;
+    name: string;
+    options: AppOptions;
+}
+
+// @public (undocumented)
 export function app(name?: string): app.App;
 
 // @public (undocumented)
 export namespace app {
-    export interface App {
+    export interface App extends App {
         // (undocumented)
         auth(): auth.Auth;
         // (undocumented)
         database(url?: string): database.Database;
-        delete(): Promise<void>;
         // (undocumented)
         firestore(): firestore.Firestore;
         // (undocumented)
@@ -28,8 +34,6 @@ export namespace app {
         machineLearning(): machineLearning.MachineLearning;
         // (undocumented)
         messaging(): messaging.Messaging;
-        name: string;
-        options: AppOptions;
         // (undocumented)
         projectManagement(): projectManagement.ProjectManagement;
         // (undocumented)
