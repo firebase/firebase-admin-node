@@ -15,7 +15,7 @@
 name: Nightly Builds
 
 on:
-  # Runs every day at 06:00 AM (PT) and 06:00 PM (PT) / 02:00 AM (UTC) and 02:00 PM (UTC)
+  # Runs every day at 06:00 AM (PT) and 08:00 PM (PT) / 04:00 AM (UTC) and 02:00 PM (UTC)
   schedule:
     - cron: "0 4,14 * * *"
 
