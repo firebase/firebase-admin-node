@@ -17,11 +17,9 @@
 
 import fs = require('fs');
 
-import { deepExtend } from './utils/deep-copy';
 import { AppErrorCodes, FirebaseAppError } from './utils/error';
 import { AppOptions, app } from './firebase-namespace-api';
-import { AppHook, FirebaseApp } from './firebase-app';
-import { FirebaseServiceFactory, FirebaseServiceInterface } from './firebase-service';
+import { FirebaseApp } from './firebase-app';
 import { cert, refreshToken, applicationDefault } from './credential/credential';
 import { getApplicationDefault } from './credential/credential-internal';
 
@@ -69,11 +67,8 @@ export interface FirebaseServiceNamespace <T> {
  * Internals of a FirebaseNamespace instance.
  */
 export class FirebaseNamespaceInternals {
-  public serviceFactories: {[serviceName: string]: FirebaseServiceFactory} = {};
 
   private apps_: {[appName: string]: App} = {};
-  private appHooks_: {[service: string]: AppHook} = {};
-
   constructor(public firebase_: {[key: string]: any}) {}
 
   /**
@@ -118,11 +113,7 @@ export class FirebaseNamespaceInternals {
     }
 
     const app = new FirebaseApp(options, appName, this);
-
     this.apps_[appName] = app;
-
-    this.callAppHooks_(app, 'create');
-
     return app;
   }
 
@@ -170,80 +161,7 @@ export class FirebaseNamespaceInternals {
     }
 
     const appToRemove = this.app(appName);
-    this.callAppHooks_(appToRemove, 'delete');
-    delete this.apps_[appName];
-  }
-
-  /**
-   * Registers a new service on this Firebase namespace.
-   *
-   * @param serviceName The name of the Firebase service to register.
-   * @param createService A factory method to generate an instance of the Firebase service.
-   * @param serviceProperties Optional properties to extend this Firebase namespace with.
-   * @param appHook Optional callback that handles app-related events like app creation and deletion.
-   * @return The Firebase service's namespace.
-   */
-  public registerService(
-    serviceName: string,
-    createService: FirebaseServiceFactory,
-    serviceProperties?: object,
-    appHook?: AppHook): FirebaseServiceNamespace<FirebaseServiceInterface> {
-    let errorMessage;
-    if (typeof serviceName === 'undefined') {
-      errorMessage = 'No service name provided. Service name must be a non-empty string.';
-    } else if (typeof serviceName !== 'string' || serviceName === '') {
-      errorMessage = `Invalid service name "${serviceName}" provided. Service name must be a non-empty string.`;
-    } else if (serviceName in this.serviceFactories) {
-      errorMessage = `Firebase service named "${serviceName}" has already been registered.`;
-    }
-
-    if (typeof errorMessage !== 'undefined') {
-      throw new FirebaseAppError(
-        AppErrorCodes.INTERNAL_ERROR,
-        `INTERNAL ASSERT FAILED: ${errorMessage}`,
-      );
-    }
-
-    this.serviceFactories[serviceName] = createService;
-    if (appHook) {
-      this.appHooks_[serviceName] = appHook;
-    }
-
-    // The service namespace is an accessor function which takes a FirebaseApp instance
-    // or uses the default app if no FirebaseApp instance is provided
-    const serviceNamespace: FirebaseServiceNamespace<FirebaseServiceInterface> = (appArg?: App) => {
-      if (typeof appArg === 'undefined') {
-        appArg = this.app();
-      }
-
-      // Forward service instance lookup to the FirebaseApp
-      return (appArg as any)[serviceName]();
-    };
-
-    // ... and a container for service-level properties.
-    if (serviceProperties !== undefined) {
-      deepExtend(serviceNamespace, serviceProperties);
-    }
-
-    // Monkey-patch the service namespace onto the Firebase namespace
-    this.firebase_[serviceName] = serviceNamespace;
-
-    return serviceNamespace;
-  }
-
-  /**
-   * Calls the app hooks corresponding to the provided event name for each service within the
-   * provided App instance.
-   *
-   * @param app The App instance whose app hooks to call.
-   * @param eventName The event name representing which app hooks to call.
-   */
-  private callAppHooks_(app: App, eventName: string): void {
-    Object.keys(this.serviceFactories).forEach((serviceName) => {
-      if (this.appHooks_[serviceName]) {
-        this.appHooks_[serviceName](eventName, app);
-      }
-    });
+    delete this.apps_[appToRemove.name];
   }
 
   /**
