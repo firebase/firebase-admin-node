@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { FirebaseApp } from '../firebase-app';
 import * as validator from '../utils/validator';
 import { remoteConfig } from './index';
@@ -31,25 +30,9 @@ import Version = remoteConfig.Version;
 import RemoteConfigInterface = remoteConfig.RemoteConfig;
 
 /**
- * Internals of an RemoteConfig service instance.
- */
-class RemoteConfigInternals implements FirebaseServiceInternalsInterface {
-  /**
-   * Deletes the service and its associated resources.
-   *
-   * @return {Promise<()>} An empty Promise that will be fulfilled when the service is deleted.
-   */
-  public delete(): Promise<void> {
-    // There are no resources to clean up
-    return Promise.resolve(undefined);
-  }
-}
-
-/**
  * Remote Config service bound to the provided app.
  */
-export class RemoteConfig implements FirebaseServiceInterface, RemoteConfigInterface {
-  public readonly INTERNAL: RemoteConfigInternals = new RemoteConfigInternals();
+export class RemoteConfig implements RemoteConfigInterface {
 
   private readonly client: RemoteConfigApiClient;
 
@@ -362,8 +345,8 @@ class VersionImpl implements Version {
       this.isLegacy = version.isLegacy;
     }
 
-    // The backend API provides timestamps as ISO date strings. The Admin SDK exposes timestamps
-    // as UTC date strings. If a developer uses a previously obtained template with UTC timestamps
+    // The backend API provides timestamps in ISO date strings. The Admin SDK exposes timestamps
+    // in UTC date strings. If a developer uses a previously obtained template with UTC timestamps
     // we could still validate it below.
     if (typeof version.updateTime !== 'undefined') {
       if (!this.isValidTimestamp(version.updateTime)) {
@@ -392,6 +375,8 @@ class VersionImpl implements Version {
   }
 
   private isValidTimestamp(timestamp: string): boolean {
+    // This validation fails for timestamps earlier than January 1, 1970 and considers strings
+    // such as "1.2" as valid timestamps.
     return validator.isNonEmptyString(timestamp) && (new Date(timestamp)).getTime() > 0;
   }
 }

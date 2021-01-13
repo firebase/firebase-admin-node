@@ -17,30 +17,13 @@
 
 import { FirebaseApp } from '../firebase-app';
 import { FirebaseFirestoreError } from '../utils/error';
-import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { ServiceAccountCredential, isApplicationDefault } from '../credential/credential-internal';
 import { Firestore, Settings } from '@google-cloud/firestore';
 
 import * as validator from '../utils/validator';
 import * as utils from '../utils/index';
 
-/**
- * Internals of a Firestore instance.
- */
-class FirestoreInternals implements FirebaseServiceInternalsInterface {
-  /**
-   * Deletes the service and its associated resources.
-   *
-   * @return {Promise<()>} An empty Promise that will be fulfilled when the service is deleted.
-   */
-  public delete(): Promise<void> {
-    // There are no resources to clean up.
-    return Promise.resolve();
-  }
-}
-
-export class FirestoreService implements FirebaseServiceInterface {
-  public INTERNAL: FirestoreInternals = new FirestoreInternals();
+export class FirestoreService {
 
   private appInternal: FirebaseApp;
   private firestoreClient: Firestore;

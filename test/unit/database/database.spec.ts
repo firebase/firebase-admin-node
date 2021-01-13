@@ -40,7 +40,7 @@ describe('Database', () => {
   });
 
   afterEach(() => {
-    return database.INTERNAL.delete().then(() => {
+    return database.delete().then(() => {
       return mockApp.delete();
     });
   });

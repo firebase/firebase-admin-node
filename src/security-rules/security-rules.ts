@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { FirebaseApp } from '../firebase-app';
 import * as validator from '../utils/validator';
 import {
@@ -85,12 +84,10 @@ export class Ruleset implements RulesetInterface {
  * Do not call this constructor directly. Instead, use
  * [`admin.securityRules()`](securityRules#securityRules).
  */
-export class SecurityRules implements FirebaseServiceInterface, SecurityRulesInterface {
+export class SecurityRules implements SecurityRulesInterface {
 
   private static readonly CLOUD_FIRESTORE = 'cloud.firestore';
   private static readonly FIREBASE_STORAGE = 'firebase.storage';
-
-  public readonly INTERNAL = new SecurityRulesInternals();
 
   private readonly client: SecurityRulesApiClient;
 
@@ -349,12 +346,6 @@ export class SecurityRules implements FirebaseServiceInterface, SecurityRulesInt
     }
 
     return bucketName;
-  }
-}
-
-class SecurityRulesInternals implements FirebaseServiceInternalsInterface {
-  public delete(): Promise<void> {
-    return Promise.resolve();
   }
 }
 
