@@ -23,7 +23,7 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import * as mocks from '../../resources/mocks';
-import { FirebaseApp } from '../../../src/firebase-app';
+import { FirebaseApp } from '../../../src/app/firebase-app';
 import { AuthRequestHandler } from '../../../src/auth/auth-api-request';
 import { Tenant, TenantServerResponse } from '../../../src/auth/tenant';
 import { TenantManager } from '../../../src/auth/tenant-manager';

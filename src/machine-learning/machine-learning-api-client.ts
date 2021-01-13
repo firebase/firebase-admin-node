@@ -21,7 +21,7 @@ import { PrefixedFirebaseError } from '../utils/error';
 import { FirebaseMachineLearningError, MachineLearningErrorCode } from './machine-learning-utils';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { FirebaseApp } from '../firebase-app';
+import { FirebaseApp } from '../app/firebase-app';
 import { machineLearning } from './index';
 
 import GcsTfliteModelOptions = machineLearning.GcsTfliteModelOptions;

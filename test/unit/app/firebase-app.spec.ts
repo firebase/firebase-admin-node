@@ -23,25 +23,27 @@ import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import * as utils from './utils';
-import * as mocks from '../resources/mocks';
+import * as utils from '../utils';
+import * as mocks from '../../resources/mocks';
 
-import { GoogleOAuthAccessToken } from '../../src/credential/index';
-import { ServiceAccountCredential } from '../../src/credential/credential-internal';
-import { FirebaseApp, FirebaseAccessToken } from '../../src/firebase-app';
-import { FirebaseNamespace, FirebaseNamespaceInternals, FIREBASE_CONFIG_VAR } from '../../src/firebase-namespace';
+import { GoogleOAuthAccessToken } from '../../../src/credential/index';
+import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
+import { FirebaseApp, FirebaseAccessToken } from '../../../src/app/firebase-app';
+import {
+  FirebaseNamespace, FirebaseNamespaceInternals, FIREBASE_CONFIG_VAR
+} from '../../../src/app/firebase-namespace';
 
-import { auth } from '../../src/auth/index';
-import { messaging } from '../../src/messaging/index';
-import { machineLearning } from '../../src/machine-learning/index';
-import { storage } from '../../src/storage/index';
-import { firestore } from '../../src/firestore/index';
-import { database } from '../../src/database/index';
-import { instanceId } from '../../src/instance-id/index';
-import { projectManagement } from '../../src/project-management/index';
-import { securityRules } from '../../src/security-rules/index';
-import { remoteConfig } from '../../src/remote-config/index';
-import { FirebaseAppError, AppErrorCodes } from '../../src/utils/error';
+import { auth } from '../../../src/auth/index';
+import { messaging } from '../../../src/messaging/index';
+import { machineLearning } from '../../../src/machine-learning/index';
+import { storage } from '../../../src/storage/index';
+import { firestore } from '../../../src/firestore/index';
+import { database } from '../../../src/database/index';
+import { instanceId } from '../../../src/instance-id/index';
+import { projectManagement } from '../../../src/project-management/index';
+import { securityRules } from '../../../src/security-rules/index';
+import { remoteConfig } from '../../../src/remote-config/index';
+import { FirebaseAppError, AppErrorCodes } from '../../../src/utils/error';
 
 import Auth = auth.Auth;
 import Database = database.Database;

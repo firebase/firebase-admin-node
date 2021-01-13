@@ -31,7 +31,7 @@ import {
 
 import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
 import { AuthorizedHttpClient, HttpClient } from '../../../src/utils/api-request';
-import { FirebaseApp } from '../../../src/firebase-app';
+import { FirebaseApp } from '../../../src/app/firebase-app';
 import * as utils from '../utils';
 import { FirebaseAuthError } from '../../../src/utils/error';
 

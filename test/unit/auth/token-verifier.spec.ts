@@ -33,7 +33,7 @@ import * as verifier from '../../../src/auth/token-verifier';
 
 import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
 import { AuthClientErrorCode } from '../../../src/utils/error';
-import { FirebaseApp } from '../../../src/firebase-app';
+import { FirebaseApp } from '../../../src/app/firebase-app';
 import { Algorithm } from 'jsonwebtoken';
 
 chai.should();
@@ -106,7 +106,7 @@ function mockFailedFetchPublicKeys(): nock.Scope {
 }
 
 function createTokenVerifier(
-  app: FirebaseApp, 
+  app: FirebaseApp,
   options: { algorithm?: Algorithm } = {}
 ): verifier.FirebaseTokenVerifier {
   const algorithm = options.algorithm || 'RS256';

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../firebase-app';
+import { FirebaseApp } from '../app/firebase-app';
 import {
   MachineLearningApiClient, ModelResponse, ModelUpdateOptions, isGcsTfliteModelOptions
 } from './machine-learning-api-client';

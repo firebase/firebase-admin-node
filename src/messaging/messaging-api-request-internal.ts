@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../firebase-app';
+import { FirebaseApp } from '../app/firebase-app';
 import {
   HttpMethod, AuthorizedHttpClient, HttpRequestConfig, HttpError, HttpResponse,
 } from '../utils/api-request';

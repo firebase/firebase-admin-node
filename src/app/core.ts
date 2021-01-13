@@ -16,7 +16,7 @@
 
 import { Agent } from 'http';
 
-import { credential } from './credential/index';
+import { credential } from '../credential/index';
 
 /**
  * Available options to pass to [`initializeApp()`](admin#.initializeApp).

@@ -21,7 +21,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as _ from 'lodash';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
-import { FirebaseApp } from '../../../src/firebase-app';
+import { FirebaseApp } from '../../../src/app/firebase-app';
 import {
   ProjectManagementRequestHandler
 } from '../../../src/project-management/project-management-api-request-internal';

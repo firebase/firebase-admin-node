@@ -17,25 +17,25 @@
 
 import fs = require('fs');
 
-import { AppErrorCodes, FirebaseAppError } from './utils/error';
-import { AppOptions, app } from './firebase-namespace-api';
+import { AppErrorCodes, FirebaseAppError } from '../utils/error';
+import { AppOptions, app } from '../firebase-namespace-api';
 import { FirebaseApp } from './firebase-app';
-import { cert, refreshToken, applicationDefault } from './credential/credential';
-import { getApplicationDefault } from './credential/credential-internal';
+import { cert, refreshToken, applicationDefault } from '../credential/credential';
+import { getApplicationDefault } from '../credential/credential-internal';
 
-import { auth } from './auth/index';
-import { database } from './database/index';
-import { firestore } from './firestore/index';
-import { instanceId } from './instance-id/index';
-import { machineLearning } from './machine-learning/index';
-import { messaging } from './messaging/index';
-import { projectManagement } from './project-management/index';
-import { remoteConfig } from './remote-config/index';
-import { securityRules } from './security-rules/index';
-import { storage } from './storage/index';
+import { auth } from '../auth/index';
+import { database } from '../database/index';
+import { firestore } from '../firestore/index';
+import { instanceId } from '../instance-id/index';
+import { machineLearning } from '../machine-learning/index';
+import { messaging } from '../messaging/index';
+import { projectManagement } from '../project-management/index';
+import { remoteConfig } from '../remote-config/index';
+import { securityRules } from '../security-rules/index';
+import { storage } from '../storage/index';
 
-import * as validator from './utils/validator';
-import { getSdkVersion } from './utils/index';
+import * as validator from '../utils/validator';
+import { getSdkVersion } from '../utils/index';
 
 import App = app.App;
 import Auth = auth.Auth;
@@ -223,7 +223,7 @@ export class FirebaseNamespace {
     const fn: FirebaseServiceNamespace<Auth> = (app?: App) => {
       return this.ensureApp(app).auth();
     };
-    const auth = require('./auth/auth').Auth;
+    const auth = require('../auth/auth').Auth;
     return Object.assign(fn, { Auth: auth });
   }
 
@@ -248,7 +248,7 @@ export class FirebaseNamespace {
     const fn: FirebaseServiceNamespace<Messaging> = (app?: App) => {
       return this.ensureApp(app).messaging();
     };
-    const messaging = require('./messaging/messaging').Messaging;
+    const messaging = require('../messaging/messaging').Messaging;
     return Object.assign(fn, { Messaging: messaging });
   }
 
@@ -260,7 +260,7 @@ export class FirebaseNamespace {
     const fn: FirebaseServiceNamespace<Storage> = (app?: App) => {
       return this.ensureApp(app).storage();
     };
-    const storage = require('./storage/storage').Storage;
+    const storage = require('../storage/storage').Storage;
     return Object.assign(fn, { Storage: storage });
   }
 
@@ -305,7 +305,7 @@ export class FirebaseNamespace {
           return this.ensureApp(app).machineLearning();
         };
     const machineLearning =
-        require('./machine-learning/machine-learning').MachineLearning;
+        require('../machine-learning/machine-learning').MachineLearning;
     return Object.assign(fn, { MachineLearning: machineLearning });
   }
 
@@ -317,7 +317,7 @@ export class FirebaseNamespace {
     const fn: FirebaseServiceNamespace<InstanceId> = (app?: App) => {
       return this.ensureApp(app).instanceId();
     };
-    const instanceId = require('./instance-id/instance-id').InstanceId;
+    const instanceId = require('../instance-id/instance-id').InstanceId;
     return Object.assign(fn, { InstanceId: instanceId });
   }
 
@@ -329,7 +329,7 @@ export class FirebaseNamespace {
     const fn: FirebaseServiceNamespace<ProjectManagement> = (app?: App) => {
       return this.ensureApp(app).projectManagement();
     };
-    const projectManagement = require('./project-management/project-management').ProjectManagement;
+    const projectManagement = require('../project-management/project-management').ProjectManagement;
     return Object.assign(fn, { ProjectManagement: projectManagement });
   }
 
@@ -341,7 +341,7 @@ export class FirebaseNamespace {
     const fn: FirebaseServiceNamespace<SecurityRules> = (app?: App) => {
       return this.ensureApp(app).securityRules();
     };
-    const securityRules = require('./security-rules/security-rules').SecurityRules;
+    const securityRules = require('../security-rules/security-rules').SecurityRules;
     return Object.assign(fn, { SecurityRules: securityRules });
   }
 
@@ -353,7 +353,7 @@ export class FirebaseNamespace {
     const fn: FirebaseServiceNamespace<RemoteConfig> = (app?: App) => {
       return this.ensureApp(app).remoteConfig();
     };
-    const remoteConfig = require('./remote-config/remote-config').RemoteConfig;
+    const remoteConfig = require('../remote-config/remote-config').RemoteConfig;
     return Object.assign(fn, { RemoteConfig: remoteConfig });
   }
 

@@ -427,6 +427,9 @@ export namespace database {
     const ServerValue: rtdb.ServerValue;
 }
 
+// @public (undocumented)
+export function deleteApp(app: App): Promise<void>;
+
 // @public
 export interface FirebaseArrayIndexError {
     error: FirebaseError;

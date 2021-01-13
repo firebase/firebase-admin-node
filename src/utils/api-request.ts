@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../firebase-app';
+import { FirebaseApp } from '../app/firebase-app';
 import { AppErrorCodes, FirebaseAppError } from './error';
 import * as validator from './validator';
 

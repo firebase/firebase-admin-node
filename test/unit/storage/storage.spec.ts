@@ -21,7 +21,7 @@ import * as _ from 'lodash';
 import { expect } from 'chai';
 
 import * as mocks from '../../resources/mocks';
-import { FirebaseApp } from '../../../src/firebase-app';
+import { FirebaseApp } from '../../../src/app/firebase-app';
 import { Storage } from '../../../src/storage/storage';
 
 describe('Storage', () => {

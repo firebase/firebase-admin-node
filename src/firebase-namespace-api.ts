@@ -25,9 +25,9 @@ import { remoteConfig } from './remote-config/index';
 import { securityRules } from './security-rules/index';
 import { storage } from './storage/index';
 
-import { App as AppCore, AppOptions } from './core';
+import { App as AppCore, AppOptions } from './app/index';
 
-export * from './core';
+export * from './app/index';
 
 /**
  * `FirebaseError` is a subclass of the standard JavaScript `Error` object. In

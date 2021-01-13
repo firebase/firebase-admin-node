@@ -19,7 +19,7 @@
 import * as chai from 'chai';
 import * as _ from 'lodash';
 import * as sinon from 'sinon';
-import { FirebaseApp } from '../../../src/firebase-app';
+import { FirebaseApp } from '../../../src/app/firebase-app';
 import { AndroidApp } from '../../../src/project-management/android-app';
 import { ProjectManagement } from '../../../src/project-management/project-management';
 import {
