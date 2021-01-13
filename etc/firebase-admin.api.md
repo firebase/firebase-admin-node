@@ -428,7 +428,7 @@ export namespace database {
 }
 
 // @public (undocumented)
-export function deleteApp(app: App): Promise<void>;
+export function deleteApp(appToDelete: App): Promise<void>;
 
 // @public
 export interface FirebaseArrayIndexError {
@@ -479,6 +479,9 @@ export namespace firestore {
     import WriteResult = _firestore.WriteResult;
     import setLogFunction = _firestore.setLogFunction;
 }
+
+// @public (undocumented)
+export function getApps(): App[];
 
 // @public
 export interface GoogleOAuthAccessToken {
