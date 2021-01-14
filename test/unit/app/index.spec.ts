@@ -23,7 +23,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as mocks from '../../resources/mocks';
 import * as sinon from 'sinon';
 
-import { initializeApp, app, getApps, deleteApp } from '../../../src/app/index';
+import { initializeApp, getApp, getApps, deleteApp, SDK_VERSION } from '../../../src/app/index';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -91,34 +91,34 @@ describe('firebase-admin/app', () => {
     });
   });
 
-  describe('#app()', () => {
+  describe('#getApp()', () => {
     const invalidOptions: any[] = [null, NaN, 0, 1, true, false, '', [], _.noop];
     invalidOptions.forEach((invalidOption: any) => {
       it('should throw given invalid app name: ' + JSON.stringify(invalidOption), () => {
         expect(() => {
-          app(invalidOption);
+          getApp(invalidOption);
         }).to.throw('Invalid Firebase app name');
       });
     });
 
     it('should return default app when name not specified', () => {
       initializeApp(mocks.appOptionsNoAuth);
-      const defaulApp = app();
+      const defaulApp = getApp();
       expect(defaulApp.name).to.equal('[DEFAULT]');
     });
 
     it('should return named app when available', () => {
       initializeApp(mocks.appOptionsNoAuth, 'testApp');
-      const testApp = app('testApp');
+      const testApp = getApp('testApp');
       expect(testApp.name).to.equal('testApp');
     });
 
     it('should throw when the default app does not exist', () => {
-      expect(() => app()).to.throw('The default Firebase app does not exist');
+      expect(() => getApp()).to.throw('The default Firebase app does not exist');
     });
 
     it('should throw when the specified app does not exist', () => {
-      expect(() => app('testApp')).to.throw('Firebase app named "testApp" does not exist');
+      expect(() => getApp('testApp')).to.throw('Firebase app named "testApp" does not exist');
     });
   });
 
@@ -152,7 +152,7 @@ describe('firebase-admin/app', () => {
   describe('#deleteApp()', () => {
     it('should delete the specified app', () => {
       const app = initializeApp(mocks.appOptionsNoAuth);
-      const spy = sinon.spy(app, 'delete');
+      const spy = sinon.spy(app as any, 'delete');
       deleteApp(app);
       expect(getApps()).to.be.empty;
       expect(spy.calledOnce);
@@ -171,6 +171,13 @@ describe('firebase-admin/app', () => {
           deleteApp(invalidOption);
         }).to.throw('Invalid app argument');
       });
+    });
+  });
+
+  describe('SDK_VERSION', () => {
+    it('should indicate the current version of the SDK', () => {
+      const { version } = require('../../../package.json'); // eslint-disable-line @typescript-eslint/no-var-requires
+      expect(SDK_VERSION).to.equal(version);
     });
   });
 });

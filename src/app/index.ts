@@ -14,5 +14,9 @@
  * limitations under the License.
  */
 
+import { getSdkVersion } from '../utils';
+
 export { App, AppOptions } from './core'
-export { initializeApp, app, getApps, deleteApp } from './lifecycle';
+export { initializeApp, getApp, getApps, deleteApp } from './lifecycle';
+
+export const SDK_VERSION = getSdkVersion();
