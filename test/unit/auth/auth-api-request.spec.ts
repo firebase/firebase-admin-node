@@ -27,7 +27,7 @@ import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
 import { deepCopy, deepExtend } from '../../../src/utils/deep-copy';
-import { FirebaseApp } from '../../../src/firebase-app';
+import { FirebaseApp } from '../../../src/app/firebase-app';
 import { HttpClient, HttpRequestConfig } from '../../../src/utils/api-request';
 import * as validator from '../../../src/utils/validator';
 import {

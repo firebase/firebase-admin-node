@@ -17,7 +17,7 @@
 import { remoteConfig } from './index';
 import { HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient, HttpResponse } from '../utils/api-request';
 import { PrefixedFirebaseError } from '../utils/error';
-import { FirebaseApp } from '../firebase-app';
+import { FirebaseApp } from '../app/firebase-app';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { deepCopy } from '../utils/deep-copy';

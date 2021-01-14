@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../firebase-app';
+import { FirebaseApp } from '../app/firebase-app';
 import * as validator from '../utils/validator';
 import {
   SecurityRulesApiClient, RulesetResponse, RulesetContent, ListRulesetsResponse,

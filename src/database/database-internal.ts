@@ -17,7 +17,7 @@
 import { URL } from 'url';
 import * as path from 'path';
 
-import { FirebaseApp } from '../firebase-app';
+import { FirebaseApp } from '../app/firebase-app';
 import { FirebaseDatabaseError, AppErrorCodes, FirebaseAppError } from '../utils/error';
 import { Database as DatabaseImpl } from '@firebase/database';
 import { database } from './index';

@@ -25,7 +25,7 @@ import {
   toWebSafeBase64, formatString, generateUpdateMask,
 } from '../../../src/utils/index';
 import { isNonEmptyString } from '../../../src/utils/validator';
-import { FirebaseApp } from '../../../src/firebase-app';
+import { FirebaseApp } from '../../../src/app/firebase-app';
 import { ComputeEngineCredential } from '../../../src/credential/credential-internal';
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';

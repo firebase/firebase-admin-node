@@ -22,9 +22,9 @@ import * as chai from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import * as mocks from '../resources/mocks';
+import * as mocks from '../../resources/mocks';
 
-import { FirebaseNamespace } from '../../src/firebase-namespace';
+import { FirebaseNamespace } from '../../../src/app/firebase-namespace';
 import {
   enableLogging,
   Database as DatabaseImpl,
@@ -43,28 +43,28 @@ import {
   v1beta1,
   setLogFunction,
 } from '@google-cloud/firestore';
-import { getSdkVersion } from '../../src/utils/index';
+import { getSdkVersion } from '../../../src/utils/index';
 
-import { app } from '../../src/firebase-namespace-api';
-import { auth } from '../../src/auth/index';
-import { messaging } from '../../src/messaging/index';
-import { machineLearning } from '../../src/machine-learning/index';
-import { storage } from '../../src/storage/index';
-import { firestore } from '../../src/firestore/index';
-import { database } from '../../src/database/index';
-import { instanceId } from '../../src/instance-id/index';
-import { projectManagement } from '../../src/project-management/index';
-import { securityRules } from '../../src/security-rules/index';
-import { remoteConfig } from '../../src/remote-config/index';
+import { app } from '../../../src/firebase-namespace-api';
+import { auth } from '../../../src/auth/index';
+import { messaging } from '../../../src/messaging/index';
+import { machineLearning } from '../../../src/machine-learning/index';
+import { storage } from '../../../src/storage/index';
+import { firestore } from '../../../src/firestore/index';
+import { database } from '../../../src/database/index';
+import { instanceId } from '../../../src/instance-id/index';
+import { projectManagement } from '../../../src/project-management/index';
+import { securityRules } from '../../../src/security-rules/index';
+import { remoteConfig } from '../../../src/remote-config/index';
 
-import { Auth as AuthImpl } from '../../src/auth/auth';
-import { InstanceId as InstanceIdImpl } from '../../src/instance-id/instance-id';
-import { MachineLearning as MachineLearningImpl } from '../../src/machine-learning/machine-learning';
-import { Messaging as MessagingImpl } from '../../src/messaging/messaging';
-import { ProjectManagement as ProjectManagementImpl } from '../../src/project-management/project-management';
-import { RemoteConfig as RemoteConfigImpl } from '../../src/remote-config/remote-config';
-import { SecurityRules as SecurityRulesImpl } from '../../src/security-rules/security-rules';
-import { Storage as StorageImpl } from '../../src/storage/storage';
+import { Auth as AuthImpl } from '../../../src/auth/auth';
+import { InstanceId as InstanceIdImpl } from '../../../src/instance-id/instance-id';
+import { MachineLearning as MachineLearningImpl } from '../../../src/machine-learning/machine-learning';
+import { Messaging as MessagingImpl } from '../../../src/messaging/messaging';
+import { ProjectManagement as ProjectManagementImpl } from '../../../src/project-management/project-management';
+import { RemoteConfig as RemoteConfigImpl } from '../../../src/remote-config/remote-config';
+import { SecurityRules as SecurityRulesImpl } from '../../../src/security-rules/security-rules';
+import { Storage as StorageImpl } from '../../../src/storage/storage';
 
 import App = app.App;
 import Auth = auth.Auth;

@@ -19,7 +19,7 @@ import * as util from '../utils/index';
 import * as validator from '../utils/validator';
 import * as jwt from 'jsonwebtoken';
 import { HttpClient, HttpRequestConfig, HttpError } from '../utils/api-request';
-import { FirebaseApp } from '../firebase-app';
+import { FirebaseApp } from '../app/firebase-app';
 import { auth } from './index';
 
 import DecodedIdToken = auth.DecodedIdToken;
@@ -79,7 +79,7 @@ export class FirebaseTokenVerifier {
   constructor(private clientCertUrl: string, private algorithm: jwt.Algorithm,
               private issuer: string, private tokenInfo: FirebaseTokenInfo,
               private readonly app: FirebaseApp) {
-                
+
     if (!validator.isURL(clientCertUrl)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,

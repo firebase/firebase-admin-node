@@ -27,7 +27,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
-import { FirebaseApp } from '../../../src/firebase-app';
+import { FirebaseApp } from '../../../src/app/firebase-app';
 import { messaging } from '../../../src/messaging/index';
 import { Messaging } from '../../../src/messaging/messaging';
 import { BLACKLISTED_OPTIONS_KEYS, BLACKLISTED_DATA_PAYLOAD_KEYS } from '../../../src/messaging/messaging-internal';

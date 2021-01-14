@@ -45,10 +45,10 @@
    *
    * SUPPORTED TOKENS: <projectFolder>, <packageName>, <unscopedPackageName>
    */
-  // We point to the firebase-namespace.d.ts file since index.d.ts uses namespace imports that are
+  // We point to the default-namespace.d.ts file since index.d.ts uses namespace imports that are
   // not supported by API Extractor. See https://github.com/microsoft/rushstack/issues/1029 and
   // https://github.com/microsoft/rushstack/issues/2338.
-  "mainEntryPointFilePath": "<projectFolder>/lib/firebase-namespace.d.ts",
+  "mainEntryPointFilePath": "<projectFolder>/lib/default-namespace.d.ts",
 
   /**
    * A list of NPM package names whose exports should be treated as part of this package.

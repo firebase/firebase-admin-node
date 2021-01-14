@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2021 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,7 +17,7 @@
 
 import { Agent } from 'http';
 
-import { credential } from './credential/index';
+import { credential } from '../credential/index';
 
 /**
  * Available options to pass to [`initializeApp()`](admin#.initializeApp).
@@ -121,23 +122,4 @@ export interface App {
    * ```
    */
   options: AppOptions;
-
-  /**
-   * Renders this local `FirebaseApp` unusable and frees the resources of
-   * all associated services (though it does *not* clean up any backend
-   * resources). When running the SDK locally, this method
-   * must be called to ensure graceful termination of the process.
-   *
-   * @example
-   * ```javascript
-   * app.delete()
-   *   .then(function() {
-   *     console.log("App deleted successfully");
-   *   })
-   *   .catch(function(error) {
-   *     console.log("Error deleting app:", error);
-   *   });
-   * ```
-   */
-  delete(): Promise<void>;
 }

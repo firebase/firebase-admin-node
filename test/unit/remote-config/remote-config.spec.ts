@@ -20,7 +20,7 @@ import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
 import { RemoteConfig } from '../../../src/remote-config/remote-config';
-import { FirebaseApp } from '../../../src/firebase-app';
+import { FirebaseApp } from '../../../src/app/firebase-app';
 import * as mocks from '../../resources/mocks';
 import { remoteConfig } from '../../../src/remote-config/index';
 import {

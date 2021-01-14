@@ -11,7 +11,6 @@ import * as rtdb from '@firebase/database-types';
 
 // @public (undocumented)
 export interface App {
-    delete(): Promise<void>;
     name: string;
     options: AppOptions;
 }
@@ -26,6 +25,7 @@ export namespace app {
         auth(): auth.Auth;
         // (undocumented)
         database(url?: string): database.Database;
+        delete(): Promise<void>;
         // (undocumented)
         firestore(): firestore.Firestore;
         // (undocumented)
@@ -427,6 +427,9 @@ export namespace database {
     const ServerValue: rtdb.ServerValue;
 }
 
+// @public (undocumented)
+export function deleteApp(app: App): Promise<void>;
+
 // @public
 export interface FirebaseArrayIndexError {
     error: FirebaseError;
@@ -476,6 +479,12 @@ export namespace firestore {
     import WriteResult = _firestore.WriteResult;
     import setLogFunction = _firestore.setLogFunction;
 }
+
+// @public (undocumented)
+export function getApp(name?: string): App;
+
+// @public (undocumented)
+export function getApps(): App[];
 
 // @public
 export interface GoogleOAuthAccessToken {

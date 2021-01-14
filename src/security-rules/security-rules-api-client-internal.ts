@@ -19,7 +19,7 @@ import { PrefixedFirebaseError } from '../utils/error';
 import { FirebaseSecurityRulesError, SecurityRulesErrorCode } from './security-rules-internal';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { FirebaseApp } from '../firebase-app';
+import { FirebaseApp } from '../app/firebase-app';
 
 const RULES_V1_API = 'https://firebaserules.googleapis.com/v1';
 const FIREBASE_VERSION_HEADER = {

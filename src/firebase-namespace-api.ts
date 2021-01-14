@@ -25,9 +25,9 @@ import { remoteConfig } from './remote-config/index';
 import { securityRules } from './security-rules/index';
 import { storage } from './storage/index';
 
-import { App as AppCore, AppOptions } from './core';
+import { App as AppCore, AppOptions } from './app/index';
 
-export * from './core';
+export * from './app/index';
 
 /**
  * `FirebaseError` is a subclass of the standard JavaScript `Error` object. In
@@ -131,6 +131,25 @@ export namespace app {
     remoteConfig(): remoteConfig.RemoteConfig;
     securityRules(): securityRules.SecurityRules;
     storage(): storage.Storage;
+
+    /**
+     * Renders this local `FirebaseApp` unusable and frees the resources of
+     * all associated services (though it does *not* clean up any backend
+     * resources). When running the SDK locally, this method
+     * must be called to ensure graceful termination of the process.
+     *
+     * @example
+     * ```javascript
+     * app.delete()
+     *   .then(function() {
+     *     console.log("App deleted successfully");
+     *   })
+     *   .catch(function(error) {
+     *     console.log("Error deleting app:", error);
+     *   });
+     * ```
+     */
+    delete(): Promise<void>;
   }
 }
 

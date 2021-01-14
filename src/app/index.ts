@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2017 Google Inc.
+ * Copyright 2021 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,17 +15,9 @@
  * limitations under the License.
  */
 
-import { defaultNamespace as firebaseAdmin } from './app/lifecycle';
+import { getSdkVersion } from '../utils';
 
-// Inject a circular default export to allow users to use both:
-//
-//   import firebaseAdmin from 'firebase-admin';
-//   which becomes: var firebaseAdmin = require('firebase-admin').default;
-//
-// as well as the more correct:
-//
-//   import * as firebaseAdmin from 'firebase-admin';
-//   which becomes: var firebaseAdmin = require('firebase-admin');
-(firebaseAdmin as any).default = firebaseAdmin;
+export { App, AppOptions } from './core'
+export { initializeApp, getApp, getApps, deleteApp } from './lifecycle';
 
-export = firebaseAdmin;
+export const SDK_VERSION = getSdkVersion();

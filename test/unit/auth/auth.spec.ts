@@ -29,7 +29,7 @@ import * as mocks from '../../resources/mocks';
 
 import { Auth, TenantAwareAuth, BaseAuth } from '../../../src/auth/auth';
 import { UserRecord } from '../../../src/auth/user-record';
-import { FirebaseApp } from '../../../src/firebase-app';
+import { FirebaseApp } from '../../../src/app/firebase-app';
 import {
   AuthRequestHandler, TenantAwareAuthRequestHandler, AbstractAuthRequestHandler,
 } from '../../../src/auth/auth-api-request';

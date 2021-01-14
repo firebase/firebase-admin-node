@@ -21,7 +21,7 @@ import { deepCopy, deepExtend } from '../utils/deep-copy';
 import {
   isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, isProviderIdentifier
 } from './identifier';
-import { FirebaseApp } from '../firebase-app';
+import { FirebaseApp } from '../app/firebase-app';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
   ApiSettings, AuthorizedHttpClient, HttpRequestConfig, HttpError,

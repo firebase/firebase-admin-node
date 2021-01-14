@@ -15,26 +15,26 @@
  * limitations under the License.
  */
 
-import { AppOptions, app } from './firebase-namespace-api';
-import { credential, GoogleOAuthAccessToken } from './credential/index';
-import { getApplicationDefault } from './credential/credential-internal';
-import * as validator from './utils/validator';
-import { deepCopy } from './utils/deep-copy';
+import { AppOptions, app } from '../firebase-namespace-api';
+import { credential, GoogleOAuthAccessToken } from '../credential/index';
+import { getApplicationDefault } from '../credential/credential-internal';
+import * as validator from '../utils/validator';
+import { deepCopy } from '../utils/deep-copy';
 import { FirebaseNamespaceInternals } from './firebase-namespace';
-import { AppErrorCodes, FirebaseAppError } from './utils/error';
+import { AppErrorCodes, FirebaseAppError } from '../utils/error';
 
-import { Auth } from './auth/auth';
-import { MachineLearning } from './machine-learning/machine-learning';
-import { Messaging } from './messaging/messaging';
-import { Storage } from './storage/storage';
-import { database } from './database/index';
-import { DatabaseService } from './database/database-internal';
+import { Auth } from '../auth/auth';
+import { MachineLearning } from '../machine-learning/machine-learning';
+import { Messaging } from '../messaging/messaging';
+import { Storage } from '../storage/storage';
+import { database } from '../database/index';
+import { DatabaseService } from '../database/database-internal';
 import { Firestore } from '@google-cloud/firestore';
-import { FirestoreService } from './firestore/firestore-internal';
-import { InstanceId } from './instance-id/instance-id';
-import { ProjectManagement } from './project-management/project-management';
-import { SecurityRules } from './security-rules/security-rules';
-import { RemoteConfig } from './remote-config/remote-config';
+import { FirestoreService } from '../firestore/firestore-internal';
+import { InstanceId } from '../instance-id/instance-id';
+import { ProjectManagement } from '../project-management/project-management';
+import { SecurityRules } from '../security-rules/security-rules';
+import { RemoteConfig } from '../remote-config/remote-config';
 
 import Credential = credential.Credential;
 import Database = database.Database;
@@ -277,7 +277,7 @@ export class FirebaseApp implements app.App {
    */
   public auth(): Auth {
     return this.ensureService_('auth', () => {
-      const authService: typeof Auth = require('./auth/auth').Auth;
+      const authService: typeof Auth = require('../auth/auth').Auth;
       return new authService(this);
     });
   }
@@ -289,7 +289,7 @@ export class FirebaseApp implements app.App {
    */
   public database(url?: string): Database {
     const service: DatabaseService = this.ensureService_('database', () => {
-      const dbService: typeof DatabaseService = require('./database/database-internal').DatabaseService;
+      const dbService: typeof DatabaseService = require('../database/database-internal').DatabaseService;
       return new dbService(this);
     });
     return service.getDatabase(url);
@@ -302,7 +302,7 @@ export class FirebaseApp implements app.App {
    */
   public messaging(): Messaging {
     return this.ensureService_('messaging', () => {
-      const messagingService: typeof Messaging = require('./messaging/messaging').Messaging;
+      const messagingService: typeof Messaging = require('../messaging/messaging').Messaging;
       return new messagingService(this);
     });
   }
@@ -314,14 +314,14 @@ export class FirebaseApp implements app.App {
    */
   public storage(): Storage {
     return this.ensureService_('storage', () => {
-      const storageService: typeof Storage = require('./storage/storage').Storage;
+      const storageService: typeof Storage = require('../storage/storage').Storage;
       return new storageService(this);
     });
   }
 
   public firestore(): Firestore {
     const service: FirestoreService = this.ensureService_('firestore', () => {
-      const firestoreService: typeof FirestoreService = require('./firestore/firestore-internal').FirestoreService;
+      const firestoreService: typeof FirestoreService = require('../firestore/firestore-internal').FirestoreService;
       return new firestoreService(this);
     });
     return service.client;
@@ -334,7 +334,7 @@ export class FirebaseApp implements app.App {
    */
   public instanceId(): InstanceId {
     return this.ensureService_('iid', () => {
-      const iidService: typeof InstanceId = require('./instance-id/instance-id').InstanceId;
+      const iidService: typeof InstanceId = require('../instance-id/instance-id').InstanceId;
       return new iidService(this);
     });
   }
@@ -347,7 +347,7 @@ export class FirebaseApp implements app.App {
   public machineLearning(): MachineLearning {
     return this.ensureService_('machine-learning', () => {
       const machineLearningService: typeof MachineLearning =
-          require('./machine-learning/machine-learning').MachineLearning;
+          require('../machine-learning/machine-learning').MachineLearning;
       return new machineLearningService(this);
     });
   }
@@ -360,7 +360,7 @@ export class FirebaseApp implements app.App {
   public projectManagement(): ProjectManagement {
     return this.ensureService_('project-management', () => {
       const projectManagementService: typeof ProjectManagement =
-          require('./project-management/project-management').ProjectManagement;
+          require('../project-management/project-management').ProjectManagement;
       return new projectManagementService(this);
     });
   }
@@ -373,7 +373,7 @@ export class FirebaseApp implements app.App {
   public securityRules(): SecurityRules {
     return this.ensureService_('security-rules', () => {
       const securityRulesService: typeof SecurityRules =
-          require('./security-rules/security-rules').SecurityRules;
+          require('../security-rules/security-rules').SecurityRules;
       return new securityRulesService(this);
     });
   }
@@ -385,7 +385,7 @@ export class FirebaseApp implements app.App {
    */
   public remoteConfig(): RemoteConfig {
     return this.ensureService_('remoteConfig', () => {
-      const remoteConfigService: typeof RemoteConfig = require('./remote-config/remote-config').RemoteConfig;
+      const remoteConfigService: typeof RemoteConfig = require('../remote-config/remote-config').RemoteConfig;
       return new remoteConfigService(this);
     });
   }

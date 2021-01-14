@@ -15,6 +15,7 @@
     //"strictPropertyInitialization": true,
     "lib": ["es2018"],
     "outDir": "lib",
+    "stripInternal": true,
     "rootDir": "."
   },
   "files": [

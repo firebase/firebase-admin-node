@@ -24,7 +24,7 @@ import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 import { FirebaseAppError } from '../../../src/utils/error';
-import { FirebaseApp } from '../../../src/firebase-app';
+import { FirebaseApp } from '../../../src/app/firebase-app';
 import { getSdkVersion } from '../../../src/utils/index';
 import { MachineLearningApiClient } from '../../../src/machine-learning/machine-learning-api-client';
 import { machineLearning } from '../../../src/machine-learning/index';

@@ -19,7 +19,7 @@ import { UserRecord } from './user-record';
 import {
   isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, isProviderIdentifier,
 } from './identifier';
-import { FirebaseApp } from '../firebase-app';
+import { FirebaseApp } from '../app/firebase-app';
 import { FirebaseTokenGenerator, EmulatedSigner, cryptoSignerFromApp } from './token-generator';
 import {
   AbstractAuthRequestHandler, AuthRequestHandler, TenantAwareAuthRequestHandler, useEmulator,

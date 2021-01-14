@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../firebase-app';
+import { FirebaseApp } from '../app/firebase-app';
 import { FirebaseError } from '../utils/error';
 import { ServiceAccountCredential, isApplicationDefault } from '../credential/credential-internal';
 import { Bucket, Storage as StorageClient } from '@google-cloud/storage';

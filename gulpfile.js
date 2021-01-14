@@ -87,6 +87,7 @@ gulp.task('compile', function() {
     'lib/**/index.d.ts',
     'lib/firebase-namespace-api.d.ts',
     'lib/core.d.ts',
+    'lib/app/*.d.ts',
     '!lib/utils/index.d.ts',
   ];
 
@@ -107,7 +108,7 @@ gulp.task('compile_test', function() {
 });
 
 gulp.task('copyTypings', function() {
-  return gulp.src(['src/index.d.ts', 'src/firebase-namespace.d.ts'])
+  return gulp.src(['src/index.d.ts', 'src/default-namespace.d.ts'])
     // Add header
     .pipe(header(banner))
     .pipe(gulp.dest(paths.build))
