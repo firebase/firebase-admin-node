@@ -17,13 +17,12 @@
 
 'use strict';
 
-import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import * as mocks from '../../resources/mocks';
-import { App, deleteApp } from '../../../src/app/index';
+import { App } from '../../../src/app/index';
 import { instanceId, InstanceId } from '../../../src/instance-id/index';
 
 chai.should();
@@ -43,10 +42,6 @@ describe('InstanceId', () => {
   beforeEach(() => {
     mockApp = mocks.app();
     mockCredentialApp = mocks.mockCredentialApp();
-  });
-
-  afterEach(() => {
-    return deleteApp(mockApp);
   });
 
   describe('instanceId()', () => {
