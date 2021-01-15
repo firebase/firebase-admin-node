@@ -498,15 +498,18 @@ export interface GoogleOAuthAccessToken {
 export function initializeApp(options?: AppOptions, name?: string): app.App;
 
 // @public
-export function instanceId(app?: app.App): instanceId.InstanceId;
+export class InstanceId {
+    get app(): App;
+    deleteInstanceId(instanceId: string): Promise<void>;
+    }
+
+// @public
+export function instanceId(app?: App): InstanceId;
 
 // @public (undocumented)
 export namespace instanceId {
-    export interface InstanceId {
-        // (undocumented)
-        app: app.App;
-        deleteInstanceId(instanceId: string): Promise<void>;
-    }
+    // (undocumented)
+    export type InstanceId = InstanceId;
 }
 
 // @public

@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+import { App } from '../app/index';
 import { FirebaseApp } from '../app/firebase-app';
 import { FirebaseInstanceIdError, InstanceIdClientErrorCode } from '../utils/error';
 import {
@@ -54,12 +55,12 @@ export class FirebaseInstanceIdRequestHandler {
   private path: string;
 
   /**
-   * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
+   * @param app The app used to fetch access tokens to sign API requests.
    *
    * @constructor
    */
-  constructor(private readonly app: FirebaseApp) {
-    this.httpClient = new AuthorizedHttpClient(app);
+  constructor(private readonly app: App) {
+    this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
   }
 
   public deleteInstanceId(instanceId: string): Promise<void> {

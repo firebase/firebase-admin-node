@@ -83,7 +83,7 @@ describe('InstanceId', () => {
         expect(() => {
           const iidAny: any = InstanceId;
           return new iidAny(invalidApp);
-        }).to.throw('First argument passed to admin.instanceId() must be a valid Firebase app instance.');
+        }).to.throw('First argument passed to instanceId() must be a valid Firebase app instance.');
       });
     });
 
@@ -91,7 +91,7 @@ describe('InstanceId', () => {
       expect(() => {
         const iidAny: any = InstanceId;
         return new iidAny();
-      }).to.throw('First argument passed to admin.instanceId() must be a valid Firebase app instance.');
+      }).to.throw('First argument passed to instanceId() must be a valid Firebase app instance.');
     });
 
     it('should reject given an invalid credential without project ID', () => {
