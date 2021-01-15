@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
-import { app } from '../firebase-namespace-api';
+import { FirebaseApp } from '../app/firebase-app';
+import { App, getApp } from '../app/index';
+import { InstanceId } from './instance-id';
+
+export { InstanceId };
 
 /**
  * Gets the {@link instanceId.InstanceId `InstanceId`} service for the
@@ -46,40 +50,18 @@ import { app } from '../firebase-namespace-api';
  *   no app is provided or the `InstanceId` service associated with the
  *   provided app.
  */
-export declare function instanceId(app?: app.App): instanceId.InstanceId;
+export function instanceId(app?: App): InstanceId {
+  if (typeof app === 'undefined') {
+    app = getApp();
+  }
+
+  const firebaseApp: FirebaseApp = app as FirebaseApp;
+  return firebaseApp.getOrInitService('instanceId', (app) => new InstanceId(app));
+}
+
+import { InstanceId as TInstanceId } from './instance-id';
 
 /* eslint-disable @typescript-eslint/no-namespace */
 export namespace instanceId {
-  /**
-   * Gets the {@link InstanceId `InstanceId`} service for the
-   * current app.
-   *
-   * @example
-   * ```javascript
-   * var instanceId = app.instanceId();
-   * // The above is shorthand for:
-   * // var instanceId = admin.instanceId(app);
-   * ```
-   *
-   * @return The `InstanceId` service for the
-   *   current app.
-   */
-  export interface InstanceId {
-    app: app.App;
-
-    /**
-     * Deletes the specified instance ID and the associated data from Firebase.
-     *
-     * Note that Google Analytics for Firebase uses its own form of Instance ID to
-     * keep track of analytics data. Therefore deleting a Firebase Instance ID does
-     * not delete Analytics data. See
-     * [Delete an Instance ID](/support/privacy/manage-iids#delete_an_instance_id)
-     * for more information.
-     *
-     * @param instanceId The instance ID to be deleted.
-     *
-     * @return A promise fulfilled when the instance ID is deleted.
-     */
-    deleteInstanceId(instanceId: string): Promise<void>;
-  }
+  export type InstanceId = TInstanceId;
 }

@@ -14,13 +14,10 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../app/firebase-app';
+import { App } from '../app/index';
 import { FirebaseInstanceIdError, InstanceIdClientErrorCode } from '../utils/error';
 import { FirebaseInstanceIdRequestHandler } from './instance-id-request-internal';
-import { instanceId } from './index';
 import * as validator from '../utils/validator';
-
-import InstanceIdInterface = instanceId.InstanceId;
 
 /**
  * Gets the {@link InstanceId `InstanceId`} service for the
@@ -36,20 +33,21 @@ import InstanceIdInterface = instanceId.InstanceId;
  * @return The `InstanceId` service for the
  *   current app.
  */
-export class InstanceId implements InstanceIdInterface {
+export class InstanceId {
 
-  private app_: FirebaseApp;
+  private app_: App;
   private requestHandler: FirebaseInstanceIdRequestHandler;
 
   /**
-   * @param {FirebaseApp} app The app for this InstanceId service.
+   * @param app The app for this InstanceId service.
    * @constructor
+   * @internal
    */
-  constructor(app: FirebaseApp) {
+  constructor(app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseInstanceIdError(
         InstanceIdClientErrorCode.INVALID_ARGUMENT,
-        'First argument passed to admin.instanceId() must be a valid Firebase app instance.',
+        'First argument passed to instanceId() must be a valid Firebase app instance.',
       );
     }
 
@@ -80,9 +78,9 @@ export class InstanceId implements InstanceIdInterface {
   /**
    * Returns the app associated with this InstanceId instance.
    *
-   * @return {FirebaseApp} The app associated with this InstanceId instance.
+   * @return The app associated with this InstanceId instance.
    */
-  get app(): FirebaseApp {
+  get app(): App {
     return this.app_;
   }
 }

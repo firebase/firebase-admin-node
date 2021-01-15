@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { app as _app } from '../firebase-namespace-api';
+import { App } from '../app/index';
 import {
   ServiceAccountCredential, ComputeEngineCredential
 } from '../credential/credential-internal';
@@ -23,6 +23,7 @@ import * as validator from './validator';
 
 let sdkVersion: string;
 
+// TODO: Move to firebase-admin/app as an internal member.
 export function getSdkVersion(): string {
   if (!sdkVersion) {
     const { version } = require('../../package.json'); // eslint-disable-line @typescript-eslint/no-var-requires
@@ -76,7 +77,7 @@ export function addReadonlyGetter(obj: object, prop: string, value: any): void {
  *
  * @return A project ID string or null.
  */
-export function getExplicitProjectId(app: _app.App): string | null {
+export function getExplicitProjectId(app: App): string | null {
   const options = app.options;
   if (validator.isNonEmptyString(options.projectId)) {
     return options.projectId;
@@ -105,7 +106,7 @@ export function getExplicitProjectId(app: _app.App): string | null {
  *
  * @return A project ID string or null.
  */
-export function findProjectId(app: _app.App): Promise<string | null> {
+export function findProjectId(app: App): Promise<string | null> {
   const projectId = getExplicitProjectId(app);
   if (projectId) {
     return Promise.resolve(projectId);

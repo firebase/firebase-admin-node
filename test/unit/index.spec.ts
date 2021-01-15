@@ -60,6 +60,7 @@ import './storage/storage.spec';
 import './firestore/firestore.spec';
 
 // InstanceId
+import './instance-id/index.spec';
 import './instance-id/instance-id.spec';
 import './instance-id/instance-id-request.spec';
 
