@@ -31,7 +31,7 @@ import * as firebaseAdmin from '../../src/index';
 import { FirebaseApp, FirebaseAppInternals } from '../../src/app/firebase-app';
 import {
   RefreshTokenCredential, ServiceAccountCredential, isApplicationDefault
-} from '../../src/credential/credential-internal';
+} from '../../src/app/credential-internal';
 
 chai.should();
 chai.use(chaiAsPromised);

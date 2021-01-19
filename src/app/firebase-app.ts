@@ -17,7 +17,7 @@
 
 import { AppOptions, app } from '../firebase-namespace-api';
 import { credential, GoogleOAuthAccessToken } from '../credential/index';
-import { getApplicationDefault } from '../credential/credential-internal';
+import { getApplicationDefault } from './credential-internal';
 import * as validator from '../utils/validator';
 import { deepCopy } from '../utils/deep-copy';
 import { FirebaseNamespaceInternals } from './firebase-namespace';

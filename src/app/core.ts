@@ -17,7 +17,7 @@
 
 import { Agent } from 'http';
 
-import { credential } from '../credential/index';
+import { Credential } from './credential';
 
 /**
  * Available options to pass to [`initializeApp()`](admin#.initializeApp).
@@ -25,13 +25,13 @@ import { credential } from '../credential/index';
 export interface AppOptions {
 
   /**
-   * A {@link credential.Credential `Credential`} object used to
+   * A {@link Credential `Credential`} object used to
    * authenticate the Admin SDK.
    *
    * See [Initialize the SDK](/docs/admin/setup#initialize_the_sdk) for detailed
    * documentation and code samples.
    */
-  credential?: credential.Credential;
+  credential?: Credential;
 
   /**
    * The object to use as the [`auth`](/docs/reference/security/database/#auth)

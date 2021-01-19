@@ -45,9 +45,12 @@ export namespace app {
     }
 }
 
+// @public (undocumented)
+export function applicationDefault(httpAgent?: Agent): Credential;
+
 // @public
 export interface AppOptions {
-    credential?: credential.Credential;
+    credential?: Credential;
     databaseAuthVariableOverride?: object | null;
     databaseURL?: string;
     httpAgent?: Agent;
@@ -397,13 +400,19 @@ export namespace auth {
 }
 
 // @public (undocumented)
+export function cert(serviceAccountPathOrObject: string | ServiceAccount, httpAgent?: Agent): Credential;
+
+// @public (undocumented)
+export interface Credential {
+    getAccessToken(): Promise<GoogleOAuthAccessToken>;
+}
+
+// @public (undocumented)
 export namespace credential {
-    export function applicationDefault(httpAgent?: Agent): Credential;
-    export function cert(serviceAccountPathOrObject: string | ServiceAccount, httpAgent?: Agent): Credential;
-    export interface Credential {
-        getAccessToken(): Promise<GoogleOAuthAccessToken>;
-    }
-    export function refreshToken(refreshTokenPathOrObject: string | object, httpAgent?: Agent): Credential;
+    export type Credential = Credential;
+    const applicationDefault: typeof applicationDefault;
+    const cert: typeof cert;
+    const refreshToken: typeof refreshToken;
 }
 
 // @public
@@ -929,6 +938,9 @@ export namespace projectManagement {
         shaHash: string;
     }
 }
+
+// @public (undocumented)
+export function refreshToken(refreshTokenPathOrObject: string | object, httpAgent?: Agent): Credential;
 
 // @public
 export function remoteConfig(app?: app.App): remoteConfig.RemoteConfig;

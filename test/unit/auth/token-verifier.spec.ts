@@ -31,7 +31,7 @@ import * as mocks from '../../resources/mocks';
 import { FirebaseTokenGenerator, ServiceAccountSigner } from '../../../src/auth/token-generator';
 import * as verifier from '../../../src/auth/token-verifier';
 
-import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
+import { ServiceAccountCredential } from '../../../src/app/credential-internal';
 import { AuthClientErrorCode } from '../../../src/utils/error';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { Algorithm } from 'jsonwebtoken';

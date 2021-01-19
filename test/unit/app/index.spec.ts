@@ -17,13 +17,19 @@
 
 'use strict';
 
+import path = require('path');
+
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as mocks from '../../resources/mocks';
 import * as sinon from 'sinon';
 
-import { initializeApp, getApp, getApps, deleteApp, SDK_VERSION } from '../../../src/app/index';
+import {
+  initializeApp, getApp, getApps, deleteApp, SDK_VERSION,
+  Credential, applicationDefault, cert, refreshToken,
+} from '../../../src/app/index';
+import { clearGlobalAppDefaultCred } from '../../../src/app/credential-factory';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -179,5 +185,65 @@ describe('firebase-admin/app', () => {
       const { version } = require('../../../package.json'); // eslint-disable-line @typescript-eslint/no-var-requires
       expect(SDK_VERSION).to.equal(version);
     });
+  });
+
+  describe('#cert()', () => {
+    it('should create a service account credential from object', () => {
+      const mockCertificateObject = mocks.certificateObject;
+      const credential: Credential = cert(mockCertificateObject);
+      expect(credential).to.deep.include({
+        projectId: mockCertificateObject.project_id,
+        clientEmail: mockCertificateObject.client_email,
+        privateKey: mockCertificateObject.private_key,
+        implicit: false,
+      });
+    });
+
+    it('should create a service account credential from file path', () => {
+      const filePath = path.resolve(__dirname, '../../resources/mock.key.json');
+      const mockCertificateObject = mocks.certificateObject;
+      const credential: Credential = cert(filePath);
+      expect(credential).to.deep.include({
+        projectId: mockCertificateObject.project_id,
+        clientEmail: mockCertificateObject.client_email,
+        privateKey: mockCertificateObject.private_key,
+        implicit: false,
+      });
+    });
+  });
+
+  describe('#refreshToken()', () => {
+    it('should create a refresh token credential from object', () => {
+      const mockRefreshToken = mocks.refreshToken;
+      const credential: Credential = refreshToken(mockRefreshToken);
+      expect(credential).to.deep.include({
+        implicit: false,
+      });
+    });
+  });
+
+  describe('#applicationDefault()', () => {
+    before(() => {
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../../resources/mock.key.json');
+    });
+
+    it('should create application default credentials from environment', () => {
+      const mockCertificateObject = mocks.certificateObject;
+      const credential: Credential = applicationDefault();
+      expect(credential).to.deep.include({
+        projectId: mockCertificateObject.project_id,
+        clientEmail: mockCertificateObject.client_email,
+        privateKey: mockCertificateObject.private_key,
+        implicit: true,
+      });
+    });
+
+    it('should cache application default credentials globally', () => {
+      const credential1: Credential = applicationDefault();
+      const credential2: Credential = applicationDefault();
+      expect(credential1).to.equal(credential2);
+    });
+
+    after(clearGlobalAppDefaultCred);
   });
 });

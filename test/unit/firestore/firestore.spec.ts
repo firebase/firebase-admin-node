@@ -24,7 +24,7 @@ import * as mocks from '../../resources/mocks';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import {
   ComputeEngineCredential, RefreshTokenCredential
-} from '../../../src/credential/credential-internal';
+} from '../../../src/app/credential-internal';
 import { FirestoreService, getFirestoreOptions } from '../../../src/firestore/firestore-internal';
 
 describe('Firestore', () => {

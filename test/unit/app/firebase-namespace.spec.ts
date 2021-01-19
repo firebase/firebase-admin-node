@@ -17,6 +17,8 @@
 
 'use strict';
 
+import path = require('path');
+
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinonChai from 'sinon-chai';
@@ -65,6 +67,8 @@ import { ProjectManagement as ProjectManagementImpl } from '../../../src/project
 import { RemoteConfig as RemoteConfigImpl } from '../../../src/remote-config/remote-config';
 import { SecurityRules as SecurityRulesImpl } from '../../../src/security-rules/security-rules';
 import { Storage as StorageImpl } from '../../../src/storage/storage';
+
+import { clearGlobalAppDefaultCred } from '../../../src/app/credential-factory';
 
 import App = app.App;
 import Auth = auth.Auth;
@@ -461,7 +465,7 @@ describe('FirebaseNamespace', () => {
     });
   });
 
-  describe('#machine-learning()', () => {
+  describe('#machineLearning()', () => {
     it('should throw when called before initializating an app', () => {
       expect(() => {
         firebaseNamespace.machineLearning();
@@ -758,5 +762,40 @@ describe('FirebaseNamespace', () => {
       const service2: RemoteConfig = firebaseNamespace.remoteConfig();
       expect(service1).to.equal(service2);
     });
+  });
+
+  describe('credentials', () => {
+    it('should create a service account credential from object', () => {
+      const mockCertificateObject = mocks.certificateObject;
+      const credential = firebaseNamespace.credential.cert(mockCertificateObject);
+      expect(credential).to.deep.include({
+        projectId: mockCertificateObject.project_id,
+        clientEmail: mockCertificateObject.client_email,
+        privateKey: mockCertificateObject.private_key,
+        implicit: false,
+      });
+    });
+
+    it('should create a refresh token credential from object', () => {
+      const mockRefreshToken = mocks.refreshToken;
+      const credential = firebaseNamespace.credential.refreshToken(mockRefreshToken);
+      expect(credential).to.deep.include({
+        implicit: false,
+      });
+    });
+
+    it('should create application default credentials from environment', () => {
+      process.env.GOOGLE_APPLICATION_CREDENTIALS = path.resolve(__dirname, '../../resources/mock.key.json');
+      const mockCertificateObject = mocks.certificateObject;
+      const credential = firebaseNamespace.credential.applicationDefault();
+      expect(credential).to.deep.include({
+        projectId: mockCertificateObject.project_id,
+        clientEmail: mockCertificateObject.client_email,
+        privateKey: mockCertificateObject.private_key,
+        implicit: true,
+      });
+    });
+
+    after(clearGlobalAppDefaultCred);
   });
 });

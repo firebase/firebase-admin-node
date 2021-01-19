@@ -28,8 +28,7 @@ import * as jwt from 'jsonwebtoken';
 import { AppOptions } from '../../src/firebase-namespace-api';
 import { FirebaseNamespace } from '../../src/app/firebase-namespace';
 import { FirebaseApp } from '../../src/app/firebase-app';
-import { credential as _credential, GoogleOAuthAccessToken } from '../../src/credential/index';
-import { ServiceAccountCredential } from '../../src/credential/credential-internal';
+import { Credential, GoogleOAuthAccessToken, cert } from '../../src/app/index';
 
 const ALGORITHM = 'RS256' as const;
 const ONE_HOUR_IN_SECONDS = 60 * 60;
@@ -51,7 +50,7 @@ export const databaseAuthVariableOverride = { 'some#string': 'some#val' };
 
 export const storageBucket = 'bucketName.appspot.com';
 
-export const credential = new ServiceAccountCredential(path.resolve(__dirname, './mock.key.json'));
+export const credential = cert(path.resolve(__dirname, './mock.key.json'));
 
 export const appOptions: AppOptions = {
   credential,
@@ -80,7 +79,7 @@ export const appOptionsAuthDB: AppOptions = {
   databaseURL,
 };
 
-export class MockCredential implements _credential.Credential {
+export class MockCredential implements Credential {
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
     return Promise.resolve({
       access_token: 'mock-token', // eslint-disable-line @typescript-eslint/camelcase

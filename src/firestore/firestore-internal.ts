@@ -17,7 +17,7 @@
 
 import { FirebaseApp } from '../app/firebase-app';
 import { FirebaseFirestoreError } from '../utils/error';
-import { ServiceAccountCredential, isApplicationDefault } from '../credential/credential-internal';
+import { ServiceAccountCredential, isApplicationDefault } from '../app/credential-internal';
 import { Firestore, Settings } from '@google-cloud/firestore';
 
 import * as validator from '../utils/validator';
