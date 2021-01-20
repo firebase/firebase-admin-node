@@ -838,16 +838,19 @@ describe('Messaging', () => {
       ];
       mockedRequests.push(mockBatchRequest(messageIds));
       const validMessageWithUndefinedDataProp = { ...validMessage, data: undefined }
-      return messaging.sendAll([validMessageWithUndefinedDataProp, validMessageWithUndefinedDataProp, validMessageWithUndefinedDataProp])
-        .then((response: BatchResponse) => {
-          expect(response.successCount).to.equal(3);
-          expect(response.failureCount).to.equal(0);
-          response.responses.forEach((resp, idx) => {
-            expect(resp.success).to.be.true;
-            expect(resp.messageId).to.equal(messageIds[idx]);
-            expect(resp.error).to.be.undefined;
-          });
+      return messaging.sendAll([
+        validMessageWithUndefinedDataProp,
+        validMessageWithUndefinedDataProp,
+        validMessageWithUndefinedDataProp
+      ]).then((response: BatchResponse) => {
+        expect(response.successCount).to.equal(3);
+        expect(response.failureCount).to.equal(0);
+        response.responses.forEach((resp, idx) => {
+          expect(resp.success).to.be.true;
+          expect(resp.messageId).to.equal(messageIds[idx]);
+          expect(resp.error).to.be.undefined;
         });
+      });
     })
   });
 
@@ -2432,7 +2435,10 @@ describe('Messaging', () => {
     it('should not throws when the payload contains the data property with undefined value', () => {
       mockedRequests.push(mockSendToDeviceStringRequest());
 
-      return messaging.sendToDevice(mocks.messaging.registrationToken, { ...mocks.messaging.payloadDataOnly, data: undefined });
+      return messaging.sendToDevice(mocks.messaging.registrationToken, {
+        ...mocks.messaging.payloadDataOnly,
+        data: undefined,
+      });
     });
 
     const invalidImages = ['', 'a', 'foo', 'image.jpg'];
