@@ -857,7 +857,7 @@ export class Messaging implements MessagingInterface {
     }
 
     // Validate the data payload object does not contain blacklisted properties
-    if ('data' in payloadCopy) {
+    if ('data' in payloadCopy && payloadCopy.data !== undefined) {
       BLACKLISTED_DATA_PAYLOAD_KEYS.forEach((blacklistedKey) => {
         if (blacklistedKey in payloadCopy.data!) {
           throw new FirebaseMessagingError(
