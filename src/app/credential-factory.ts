@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2017 Google Inc.
+ * Copyright 2021 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,35 +15,45 @@
  * limitations under the License.
  */
 
+import { Agent } from 'http';
+
+import { Credential, ServiceAccount } from './credential';
 import {
   ServiceAccountCredential, RefreshTokenCredential, getApplicationDefault
 } from './credential-internal';
-import { credential } from './index';
 
-let globalAppDefaultCred: credential.Credential;
+let globalAppDefaultCred: Credential | undefined;
 const globalCertCreds: { [key: string]: ServiceAccountCredential } = {};
 const globalRefreshTokenCreds: { [key: string]: RefreshTokenCredential } = {};
 
-export const applicationDefault: typeof credential.applicationDefault = (httpAgent?) => {
+export function applicationDefault(httpAgent?: Agent): Credential {
   if (typeof globalAppDefaultCred === 'undefined') {
     globalAppDefaultCred = getApplicationDefault(httpAgent);
   }
   return globalAppDefaultCred;
 }
 
-export const cert: typeof credential.cert = (serviceAccountPathOrObject, httpAgent?) => {
+export function cert(serviceAccountPathOrObject: string | ServiceAccount, httpAgent?: Agent): Credential {
   const stringifiedServiceAccount = JSON.stringify(serviceAccountPathOrObject);
   if (!(stringifiedServiceAccount in globalCertCreds)) {
-    globalCertCreds[stringifiedServiceAccount] = new ServiceAccountCredential(serviceAccountPathOrObject, httpAgent);
+    globalCertCreds[stringifiedServiceAccount] = new ServiceAccountCredential(
+      serviceAccountPathOrObject, httpAgent);
   }
   return globalCertCreds[stringifiedServiceAccount];
 }
 
-export const refreshToken: typeof credential.refreshToken = (refreshTokenPathOrObject, httpAgent) => {
+export function refreshToken(refreshTokenPathOrObject: string | object, httpAgent?: Agent): Credential {
   const stringifiedRefreshToken = JSON.stringify(refreshTokenPathOrObject);
   if (!(stringifiedRefreshToken in globalRefreshTokenCreds)) {
     globalRefreshTokenCreds[stringifiedRefreshToken] = new RefreshTokenCredential(
       refreshTokenPathOrObject, httpAgent);
   }
   return globalRefreshTokenCreds[stringifiedRefreshToken];
+}
+
+/**
+ * Clears the global ADC cache. Exported for testing.
+ */
+export function clearGlobalAppDefaultCred(): void {
+  globalAppDefaultCred = undefined;
 }

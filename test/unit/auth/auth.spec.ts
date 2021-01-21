@@ -42,7 +42,7 @@ import {
 } from '../../../src/auth/auth-config';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { TenantManager } from '../../../src/auth/tenant-manager';
-import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
+import { ServiceAccountCredential } from '../../../src/app/credential-internal';
 import { HttpClient } from '../../../src/utils/api-request';
 import { auth } from '../../../src/auth/index';
 

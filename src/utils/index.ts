@@ -18,7 +18,7 @@
 import { App } from '../app/index';
 import {
   ServiceAccountCredential, ComputeEngineCredential
-} from '../credential/credential-internal';
+} from '../app/credential-internal';
 import * as validator from './validator';
 
 let sdkVersion: string;

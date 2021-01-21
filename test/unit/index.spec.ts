@@ -17,6 +17,7 @@
 
 // General
 import './firebase.spec';
+import './app/credential-internal.spec';
 import './app/index.spec';
 import './app/firebase-app.spec';
 import './app/firebase-namespace.spec';
@@ -38,9 +39,6 @@ import './auth/action-code-settings-builder.spec';
 import './auth/auth-config.spec';
 import './auth/tenant.spec';
 import './auth/tenant-manager.spec';
-
-// Credential
-import './credential/credential.spec';
 
 // Database
 import './database/database.spec';

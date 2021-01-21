@@ -32,12 +32,12 @@ import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
 import {
-  GoogleOAuthAccessToken, credential
-} from '../../../src/credential/index';
+  GoogleOAuthAccessToken, Credential
+} from '../../../src/app/index';
 import {
   RefreshTokenCredential, ServiceAccountCredential,
   ComputeEngineCredential, getApplicationDefault, isApplicationDefault
-} from '../../../src/credential/credential-internal';
+} from '../../../src/app/credential-internal';
 import { HttpClient } from '../../../src/utils/api-request';
 import { Agent } from 'https';
 import { FirebaseAppError } from '../../../src/utils/error';
@@ -556,7 +556,7 @@ describe('Credential', () => {
     });
 
     it('should return false for custom credential', () => {
-      const c: credential.Credential = {
+      const c: Credential = {
         getAccessToken: () => {
           throw new Error();
         },

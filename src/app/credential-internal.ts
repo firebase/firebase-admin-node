@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2020 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,12 +20,10 @@ import os = require('os');
 import path = require('path');
 
 import { Agent } from 'http';
-import { credential, GoogleOAuthAccessToken } from './index';
+import { Credential, GoogleOAuthAccessToken } from './credential';
 import { AppErrorCodes, FirebaseAppError } from '../utils/error';
 import { HttpClient, HttpRequestConfig, HttpError, HttpResponse } from '../utils/api-request';
 import * as util from '../utils/validator';
-
-import Credential = credential.Credential;
 
 const GOOGLE_TOKEN_AUDIENCE = 'https://accounts.google.com/o/oauth2/token';
 const GOOGLE_AUTH_TOKEN_HOST = 'accounts.google.com';

@@ -20,4 +20,7 @@ import { getSdkVersion } from '../utils';
 export { App, AppOptions } from './core'
 export { initializeApp, getApp, getApps, deleteApp } from './lifecycle';
 
+export { Credential, ServiceAccount, GoogleOAuthAccessToken } from './credential';
+export { applicationDefault, cert, refreshToken } from './credential-factory';
+
 export const SDK_VERSION = getSdkVersion();

@@ -16,8 +16,8 @@
  */
 
 import { AppOptions, app } from '../firebase-namespace-api';
-import { credential, GoogleOAuthAccessToken } from '../credential/index';
-import { getApplicationDefault } from '../credential/credential-internal';
+import { Credential, GoogleOAuthAccessToken } from './credential';
+import { getApplicationDefault } from './credential-internal';
 import * as validator from '../utils/validator';
 import { deepCopy } from '../utils/deep-copy';
 import { FirebaseNamespaceInternals } from './firebase-namespace';
@@ -36,7 +36,6 @@ import { ProjectManagement } from '../project-management/project-management';
 import { SecurityRules } from '../security-rules/security-rules';
 import { RemoteConfig } from '../remote-config/remote-config';
 
-import Credential = credential.Credential;
 import Database = database.Database;
 
 /**

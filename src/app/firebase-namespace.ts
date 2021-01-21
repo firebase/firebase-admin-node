@@ -20,8 +20,8 @@ import fs = require('fs');
 import { AppErrorCodes, FirebaseAppError } from '../utils/error';
 import { AppOptions, app } from '../firebase-namespace-api';
 import { FirebaseApp } from './firebase-app';
-import { cert, refreshToken, applicationDefault } from '../credential/credential';
-import { getApplicationDefault } from '../credential/credential-internal';
+import { cert, refreshToken, applicationDefault } from './credential-factory';
+import { getApplicationDefault } from './credential-internal';
 
 import { auth } from '../auth/index';
 import { database } from '../database/index';

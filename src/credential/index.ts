@@ -14,21 +14,14 @@
  * limitations under the License.
  */
 
-import { Agent } from 'http';
+import {
+  Credential as TCredential,
+  applicationDefault as applicationDefaultFn,
+  cert as certFn,
+  refreshToken as refreshTokenFn,
+} from '../app/index';
 
-export interface ServiceAccount {
-  projectId?: string;
-  clientEmail?: string;
-  privateKey?: string;
-}
-
-/**
- * Interface for Google OAuth 2.0 access tokens.
- */
-export interface GoogleOAuthAccessToken {
-  access_token: string;
-  expires_in: number;
-}
+export { ServiceAccount, GoogleOAuthAccessToken } from '../app/index';
 
 /* eslint-disable @typescript-eslint/no-namespace */
 export namespace credential {
@@ -40,20 +33,7 @@ export namespace credential {
    * use the default implementations provided by
    * {@link credential `admin.credential`}.
    */
-  export interface Credential {
-    /**
-     * Returns a Google OAuth2 access token object used to authenticate with
-     * Firebase services.
-     *
-     * This object contains the following properties:
-     * * `access_token` (`string`): The actual Google OAuth2 access token.
-     * * `expires_in` (`number`): The number of seconds from when the token was
-     *   issued that it expires.
-     *
-     * @return A Google OAuth2 access token object.
-     */
-    getAccessToken(): Promise<GoogleOAuthAccessToken>;
-  }
+  export type Credential = TCredential;
 
   /**
    * Returns a credential created from the
@@ -89,7 +69,7 @@ export namespace credential {
    * @return {!admin.credential.Credential} A credential authenticated via Google
    *   Application Default Credentials that can be used to initialize an app.
    */
-  export declare function applicationDefault(httpAgent?: Agent): Credential;
+  export const applicationDefault = applicationDefaultFn;
 
   /**
    * Returns a credential created from the provided service account that grants
@@ -136,8 +116,7 @@ export namespace credential {
    * @return A credential authenticated via the
    *   provided service account that can be used to initialize an app.
    */
-  export declare function cert(
-    serviceAccountPathOrObject: string | ServiceAccount, httpAgent?: Agent): Credential;
+  export const cert = certFn;
 
   /**
    * Returns a credential created from the provided refresh token that grants
@@ -172,6 +151,5 @@ export namespace credential {
    * @return A credential authenticated via the
    *   provided service account that can be used to initialize an app.
    */
-  export declare function refreshToken(
-    refreshTokenPathOrObject: string | object, httpAgent?: Agent): Credential;
+  export const refreshToken = refreshTokenFn;
 }
