@@ -21,54 +21,54 @@ export {
 } from './auth';
 
 export {
+  AuthFactorType,
+  AuthProviderConfig,
+  AuthProviderConfigFilter,
+  CreateMultiFactorInfoRequest,
+  CreatePhoneMultiFactorInfoRequest,
+  CreateRequest,
+  EmailSignInProviderConfig,
+  ListProviderConfigResults,
   MultiFactorConfig,
   MultiFactorConfigState,
-  AuthFactorType,
-  EmailSignInProviderConfig,
-  AuthProviderConfig,
-  SAMLAuthProviderConfig,
-  OIDCAuthProviderConfig,
-  SAMLUpdateAuthProviderRequest,
-  OIDCUpdateAuthProviderRequest,
-  UpdateAuthProviderRequest,
-  ListProviderConfigResults,
-  AuthProviderConfigFilter,
+  MultiFactorCreateSettings,
   MultiFactorUpdateSettings,
+  OIDCAuthProviderConfig,
+  OIDCUpdateAuthProviderRequest,
+  SAMLAuthProviderConfig,
+  SAMLUpdateAuthProviderRequest,
+  UpdateAuthProviderRequest,
   UpdateMultiFactorInfoRequest,
   UpdatePhoneMultiFactorInfoRequest,
   UpdateRequest,
-  CreateRequest,
-  CreateMultiFactorInfoRequest,
-  CreatePhoneMultiFactorInfoRequest,
-  MultiFactorCreateSettings,
 } from './auth-config';
 
 export {
+  BaseAuth,
   DeleteUsersResult,
   GetUsersResult,
   ListUsersResult,
   SessionCookieOptions,
-  BaseAuth,
 } from './base-auth';
 
 export {
-  UserIdentifier,
-  UidIdentifier,
-  PhoneIdentifier,
   EmailIdentifier,
+  PhoneIdentifier,
   ProviderIdentifier,
+  UidIdentifier,
+  UserIdentifier,
 } from './identifier';
 
 export {
-  Tenant,
   CreateTenantRequest,
+  Tenant,
   UpdateTenantRequest,
 } from './tenant';
 
 export {
-  TenantManager,
   ListTenantsResult,
   TenantAwareAuth,
+  TenantManager,
 } from './tenant-manager';
 
 export { DecodedIdToken } from './token-verifier';
@@ -76,19 +76,19 @@ export { DecodedIdToken } from './token-verifier';
 export {
   HashAlgorithmType,
   UserImportOptions,
-  UserMetadataRequest,
-  UserProviderRequest,
   UserImportRecord,
   UserImportResult,
+  UserMetadataRequest,
+  UserProviderRequest,
 } from './user-import-builder';
 
 export {
-  UserRecord,
-  UserMetadata,
-  UserInfo,
-  PhoneMultiFactorInfo,
   MultiFactorInfo,
   MultiFactorSettings,
+  PhoneMultiFactorInfo,
+  UserInfo,
+  UserMetadata,
+  UserRecord,
 } from './user-record';
 
 export { auth } from './auth-namespace';
