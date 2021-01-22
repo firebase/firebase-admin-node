@@ -27,7 +27,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
-import { Auth, TenantAwareAuth, BaseAuth } from '../../../src/auth/auth';
+import { Auth, TenantAwareAuth, BaseAuth } from '../../../src/auth/index';
 import { UserRecord } from '../../../src/auth/user-record';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import {
@@ -44,11 +44,7 @@ import { deepCopy } from '../../../src/utils/deep-copy';
 import { TenantManager } from '../../../src/auth/tenant-manager';
 import { ServiceAccountCredential } from '../../../src/app/credential-internal';
 import { HttpClient } from '../../../src/utils/api-request';
-import { auth } from '../../../src/auth/index';
-
-import DecodedIdToken = auth.DecodedIdToken;
-import UpdateRequest = auth.UpdateRequest;
-import AuthProviderConfigFilter = auth.AuthProviderConfigFilter;
+import { DecodedIdToken, UpdateRequest, AuthProviderConfigFilter } from '../../../src/auth/index';
 
 chai.should();
 chai.use(sinonChai);
@@ -60,9 +56,9 @@ const expect = chai.expect;
 interface AuthTest {
   name: string;
   supportsTenantManagement: boolean;
-  Auth: new (...args: any[]) => BaseAuth<AbstractAuthRequestHandler>;
+  Auth: new (...args: any[]) => BaseAuth;
   RequestHandler: new (...args: any[]) => AbstractAuthRequestHandler;
-  init(app: FirebaseApp): BaseAuth<AbstractAuthRequestHandler>;
+  init(app: FirebaseApp): BaseAuth;
 }
 
 
@@ -264,13 +260,13 @@ const AUTH_CONFIGS: AuthTest[] = [
 ];
 AUTH_CONFIGS.forEach((testConfig) => {
   describe(testConfig.name, () => {
-    let auth: BaseAuth<AbstractAuthRequestHandler>;
+    let auth: BaseAuth;
     let mockApp: FirebaseApp;
     let getTokenStub: sinon.SinonStub;
     let oldProcessEnv: NodeJS.ProcessEnv;
-    let nullAccessTokenAuth: BaseAuth<AbstractAuthRequestHandler>;
-    let malformedAccessTokenAuth: BaseAuth<AbstractAuthRequestHandler>;
-    let rejectedPromiseAccessTokenAuth: BaseAuth<AbstractAuthRequestHandler>;
+    let nullAccessTokenAuth: BaseAuth;
+    let malformedAccessTokenAuth: BaseAuth;
+    let rejectedPromiseAccessTokenAuth: BaseAuth;
 
     beforeEach(() => {
       mockApp = mocks.app();

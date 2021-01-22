@@ -17,44 +17,31 @@
 
 import * as validator from '../utils/validator';
 
-import { deepCopy, deepExtend } from '../utils/deep-copy';
-import {
-  isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, isProviderIdentifier
-} from './identifier';
+import { App } from '../app/index';
 import { FirebaseApp } from '../app/firebase-app';
+import { deepCopy, deepExtend } from '../utils/deep-copy';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
 import {
   ApiSettings, AuthorizedHttpClient, HttpRequestConfig, HttpError,
 } from '../utils/api-request';
+import * as utils from '../utils/index';
+
 import {
+  UserImportOptions, UserImportRecord, UserImportResult,
   UserImportBuilder, AuthFactorInfo, convertMultiFactorInfoToServerFormat,
 } from './user-import-builder';
-import * as utils from '../utils/index';
-import { ActionCodeSettingsBuilder } from './action-code-settings-builder';
+import { ActionCodeSettings, ActionCodeSettingsBuilder } from './action-code-settings-builder';
+import { Tenant, TenantServerResponse, CreateTenantRequest, UpdateTenantRequest } from './tenant';
+import {
+  isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, isProviderIdentifier,
+  UserIdentifier, UidIdentifier, EmailIdentifier,PhoneIdentifier, ProviderIdentifier,
+} from './identifier';
 import {
   SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
-  OIDCConfigServerRequest, SAMLConfigServerRequest,
+  OIDCConfigServerRequest, SAMLConfigServerRequest, CreateRequest, UpdateRequest,
+  OIDCAuthProviderConfig, SAMLAuthProviderConfig, OIDCUpdateAuthProviderRequest,
+  SAMLUpdateAuthProviderRequest
 } from './auth-config';
-import { Tenant, TenantServerResponse } from './tenant';
-import { auth } from './index';
-
-import CreateRequest = auth.CreateRequest;
-import UpdateRequest = auth.UpdateRequest;
-import UserIdentifier = auth.UserIdentifier;
-import UidIdentifier = auth.UidIdentifier;
-import EmailIdentifier = auth.EmailIdentifier;
-import PhoneIdentifier = auth.PhoneIdentifier;
-import ProviderIdentifier = auth.ProviderIdentifier;
-import UserImportOptions = auth.UserImportOptions;
-import UserImportRecord = auth.UserImportRecord;
-import UserImportResult = auth.UserImportResult;
-import ActionCodeSettings = auth.ActionCodeSettings;
-import OIDCAuthProviderConfig = auth.OIDCAuthProviderConfig;
-import SAMLAuthProviderConfig = auth.SAMLAuthProviderConfig;
-import OIDCUpdateAuthProviderRequest = auth.OIDCUpdateAuthProviderRequest;
-import SAMLUpdateAuthProviderRequest = auth.SAMLUpdateAuthProviderRequest;
-import CreateTenantRequest = auth.CreateTenantRequest;
-import UpdateTenantRequest = auth.UpdateTenantRequest;
 
 /** Firebase Auth request header. */
 const FIREBASE_AUTH_HEADER = {
@@ -143,7 +130,7 @@ class AuthResourceUrlBuilder {
    * @param {string} version The endpoint API version.
    * @constructor
    */
-  constructor(protected app: FirebaseApp, protected version: string = 'v1') {
+  constructor(protected app: App, protected version: string = 'v1') {
     if (useEmulator()) {
       this.urlFormat = utils.formatString(FIREBASE_AUTH_EMULATOR_BASE_URL_FORMAT, {
         host: emulatorHost()
@@ -208,7 +195,7 @@ class TenantAwareAuthResourceUrlBuilder extends AuthResourceUrlBuilder {
    * @param {string} tenantId The tenant ID.
    * @constructor
    */
-  constructor(protected app: FirebaseApp, protected version: string, protected tenantId: string) {
+  constructor(protected app: App, protected version: string, protected tenantId: string) {
     super(app, version);
     if (useEmulator()) {
       this.urlFormat = utils.formatString(FIREBASE_AUTH_EMULATOR_TENANT_URL_FORMAT, {
@@ -571,7 +558,11 @@ function validateCreateEditRequest(request: any, writeOperationType: WriteOperat
 }
 
 
-/** Instantiates the createSessionCookie endpoint settings. */
+/**
+ * Instantiates the createSessionCookie endpoint settings.
+ *
+ * @internal
+ */
 export const FIREBASE_AUTH_CREATE_SESSION_COOKIE =
     new ApiSettings(':createSessionCookie', 'POST')
     // Set request validator.
@@ -596,11 +587,19 @@ export const FIREBASE_AUTH_CREATE_SESSION_COOKIE =
       });
 
 
-/** Instantiates the uploadAccount endpoint settings. */
+/**
+ * Instantiates the uploadAccount endpoint settings.
+ *
+ * @internal
+ */
 export const FIREBASE_AUTH_UPLOAD_ACCOUNT = new ApiSettings('/accounts:batchCreate', 'POST');
 
 
-/** Instantiates the downloadAccount endpoint settings. */
+/**
+ * Instantiates the downloadAccount endpoint settings.
+ *
+ * @internal
+ */
 export const FIREBASE_AUTH_DOWNLOAD_ACCOUNT = new ApiSettings('/accounts:batchGet', 'GET')
   // Set request validator.
   .setRequestValidator((request: any) => {
@@ -631,7 +630,11 @@ interface GetAccountInfoRequest {
   }>;
 }
 
-/** Instantiates the getAccountInfo endpoint settings. */
+/**
+ * Instantiates the getAccountInfo endpoint settings.
+ *
+ * @internal
+ */
 export const FIREBASE_AUTH_GET_ACCOUNT_INFO = new ApiSettings('/accounts:lookup', 'POST')
   // Set request validator.
   .setRequestValidator((request: GetAccountInfoRequest) => {
@@ -651,6 +654,8 @@ export const FIREBASE_AUTH_GET_ACCOUNT_INFO = new ApiSettings('/accounts:lookup'
 /**
  * Instantiates the getAccountInfo endpoint settings for use when fetching info
  * for multiple accounts.
+ *
+ * @internal
  */
 export const FIREBASE_AUTH_GET_ACCOUNTS_INFO = new ApiSettings('/accounts:lookup', 'POST')
   // Set request validator.
@@ -663,7 +668,11 @@ export const FIREBASE_AUTH_GET_ACCOUNTS_INFO = new ApiSettings('/accounts:lookup
   });
 
 
-/** Instantiates the deleteAccount endpoint settings. */
+/**
+ * Instantiates the deleteAccount endpoint settings.
+ *
+ * @internal
+ */
 export const FIREBASE_AUTH_DELETE_ACCOUNT = new ApiSettings('/accounts:delete', 'POST')
   // Set request validator.
   .setRequestValidator((request: any) => {
@@ -689,6 +698,9 @@ export interface BatchDeleteAccountsResponse {
   errors?: BatchDeleteErrorInfo[];
 }
 
+/**
+ * @internal
+ */
 export const FIREBASE_AUTH_BATCH_DELETE_ACCOUNTS = new ApiSettings('/accounts:batchDelete', 'POST')
   .setRequestValidator((request: BatchDeleteAccountsRequest) => {
     if (!request.localIds) {
@@ -719,7 +731,11 @@ export const FIREBASE_AUTH_BATCH_DELETE_ACCOUNTS = new ApiSettings('/accounts:ba
     });
   });
 
-/** Instantiates the setAccountInfo endpoint settings for updating existing accounts. */
+/**
+ * Instantiates the setAccountInfo endpoint settings for updating existing accounts.
+ *
+ * @internal
+ */
 export const FIREBASE_AUTH_SET_ACCOUNT_INFO = new ApiSettings('/accounts:update', 'POST')
   // Set request validator.
   .setRequestValidator((request: any) => {
@@ -748,6 +764,8 @@ export const FIREBASE_AUTH_SET_ACCOUNT_INFO = new ApiSettings('/accounts:update'
 /**
  * Instantiates the signupNewUser endpoint settings for creating a new user with or without
  * uid being specified. The backend will create a new one if not provided and return it.
+ *
+ * @internal
  */
 export const FIREBASE_AUTH_SIGN_UP_NEW_USER = new ApiSettings('/accounts', 'POST')
   // Set request validator.
@@ -809,7 +827,11 @@ const FIREBASE_AUTH_GET_OOB_CODE = new ApiSettings('/accounts:sendOobCode', 'POS
     }
   });
 
-/** Instantiates the retrieve OIDC configuration endpoint settings. */
+/**
+ * Instantiates the retrieve OIDC configuration endpoint settings.
+ *
+ * @internal
+ */
 const GET_OAUTH_IDP_CONFIG = new ApiSettings('/oauthIdpConfigs/{providerId}', 'GET')
   // Set response validator.
   .setResponseValidator((response: any) => {
@@ -822,10 +844,18 @@ const GET_OAUTH_IDP_CONFIG = new ApiSettings('/oauthIdpConfigs/{providerId}', 'G
     }
   });
 
-/** Instantiates the delete OIDC configuration endpoint settings. */
+/**
+ * Instantiates the delete OIDC configuration endpoint settings.
+ *
+ * @internal
+ */
 const DELETE_OAUTH_IDP_CONFIG = new ApiSettings('/oauthIdpConfigs/{providerId}', 'DELETE');
 
-/** Instantiates the create OIDC configuration endpoint settings. */
+/**
+ * Instantiates the create OIDC configuration endpoint settings.
+ *
+ * @internal
+ */
 const CREATE_OAUTH_IDP_CONFIG = new ApiSettings('/oauthIdpConfigs?oauthIdpConfigId={providerId}', 'POST')
   // Set response validator.
   .setResponseValidator((response: any) => {
@@ -838,7 +868,11 @@ const CREATE_OAUTH_IDP_CONFIG = new ApiSettings('/oauthIdpConfigs?oauthIdpConfig
     }
   });
 
-/** Instantiates the update OIDC configuration endpoint settings. */
+/**
+ * Instantiates the update OIDC configuration endpoint settings.
+ *
+ * @internal
+ */
 const UPDATE_OAUTH_IDP_CONFIG = new ApiSettings('/oauthIdpConfigs/{providerId}?updateMask={updateMask}', 'PATCH')
   // Set response validator.
   .setResponseValidator((response: any) => {
@@ -851,7 +885,11 @@ const UPDATE_OAUTH_IDP_CONFIG = new ApiSettings('/oauthIdpConfigs/{providerId}?u
     }
   });
 
-/** Instantiates the list OIDC configuration endpoint settings. */
+/**
+ * Instantiates the list OIDC configuration endpoint settings.
+ *
+ * @internal
+ */
 const LIST_OAUTH_IDP_CONFIGS = new ApiSettings('/oauthIdpConfigs', 'GET')
   // Set request validator.
   .setRequestValidator((request: any) => {
@@ -872,7 +910,11 @@ const LIST_OAUTH_IDP_CONFIGS = new ApiSettings('/oauthIdpConfigs', 'GET')
     }
   });
 
-/** Instantiates the retrieve SAML configuration endpoint settings. */
+/**
+ * Instantiates the retrieve SAML configuration endpoint settings.
+ *
+ * @internal
+ */
 const GET_INBOUND_SAML_CONFIG = new ApiSettings('/inboundSamlConfigs/{providerId}', 'GET')
   // Set response validator.
   .setResponseValidator((response: any) => {
@@ -885,10 +927,18 @@ const GET_INBOUND_SAML_CONFIG = new ApiSettings('/inboundSamlConfigs/{providerId
     }
   });
 
-/** Instantiates the delete SAML configuration endpoint settings. */
+/**
+ * Instantiates the delete SAML configuration endpoint settings.
+ *
+ * @internal
+ */
 const DELETE_INBOUND_SAML_CONFIG = new ApiSettings('/inboundSamlConfigs/{providerId}', 'DELETE');
 
-/** Instantiates the create SAML configuration endpoint settings. */
+/**
+ * Instantiates the create SAML configuration endpoint settings.
+ *
+ * @internal
+ */
 const CREATE_INBOUND_SAML_CONFIG = new ApiSettings('/inboundSamlConfigs?inboundSamlConfigId={providerId}', 'POST')
   // Set response validator.
   .setResponseValidator((response: any) => {
@@ -901,7 +951,11 @@ const CREATE_INBOUND_SAML_CONFIG = new ApiSettings('/inboundSamlConfigs?inboundS
     }
   });
 
-/** Instantiates the update SAML configuration endpoint settings. */
+/**
+ * Instantiates the update SAML configuration endpoint settings.
+ *
+ * @internal
+ */
 const UPDATE_INBOUND_SAML_CONFIG = new ApiSettings('/inboundSamlConfigs/{providerId}?updateMask={updateMask}', 'PATCH')
   // Set response validator.
   .setResponseValidator((response: any) => {
@@ -914,7 +968,11 @@ const UPDATE_INBOUND_SAML_CONFIG = new ApiSettings('/inboundSamlConfigs/{provide
     }
   });
 
-/** Instantiates the list SAML configuration endpoint settings. */
+/**
+ * Instantiates the list SAML configuration endpoint settings.
+ *
+ * @internal
+ */
 const LIST_INBOUND_SAML_CONFIGS = new ApiSettings('/inboundSamlConfigs', 'GET')
   // Set request validator.
   .setRequestValidator((request: any) => {
@@ -937,6 +995,8 @@ const LIST_INBOUND_SAML_CONFIGS = new ApiSettings('/inboundSamlConfigs', 'GET')
 
 /**
  * Class that provides the mechanism to send requests to the Firebase Auth backend endpoints.
+ *
+ * @internal
  */
 export abstract class AbstractAuthRequestHandler {
 
@@ -997,7 +1057,7 @@ export abstract class AbstractAuthRequestHandler {
    * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
    * @constructor
    */
-  constructor(protected readonly app: FirebaseApp) {
+  constructor(protected readonly app: App) {
     if (typeof app !== 'object' || app === null || !('options' in app)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
@@ -1005,7 +1065,7 @@ export abstract class AbstractAuthRequestHandler {
       );
     }
 
-    this.httpClient = new AuthHttpClient(app);
+    this.httpClient = new AuthHttpClient(app as FirebaseApp);
   }
 
   /**
@@ -1915,7 +1975,7 @@ export class AuthRequestHandler extends AbstractAuthRequestHandler {
    * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
    * @constructor.
    */
-  constructor(app: FirebaseApp) {
+  constructor(app: App) {
     super(app);
     this.tenantMgmtResourceBuilder =  new AuthResourceUrlBuilder(app, 'v2');
   }
@@ -2061,7 +2121,7 @@ export class TenantAwareAuthRequestHandler extends AbstractAuthRequestHandler {
    * @param {string} tenantId The request handler's tenant ID.
    * @constructor
    */
-  constructor(app: FirebaseApp, private readonly tenantId: string) {
+  constructor(app: App, private readonly tenantId: string) {
     super(app);
   }
 

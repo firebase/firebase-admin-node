@@ -19,14 +19,6 @@ import { deepCopy } from '../utils/deep-copy';
 import { isNonNullObject } from '../utils/validator';
 import * as utils from '../utils';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
-import { auth } from './index';
-
-import MultiFactorInfoInterface = auth.MultiFactorInfo;
-import PhoneMultiFactorInfoInterface = auth.PhoneMultiFactorInfo;
-import MultiFactorSettings = auth.MultiFactorSettings;
-import UserMetadataInterface = auth.UserMetadata;
-import UserInfoInterface = auth.UserInfo;
-import UserRecordInterface = auth.UserRecord;
 
 /**
  * 'REDACTED', encoded as a base64 string.
@@ -96,7 +88,7 @@ enum MultiFactorId {
 /**
  * Abstract class representing a multi-factor info interface.
  */
-export abstract class MultiFactorInfo implements MultiFactorInfoInterface {
+export abstract class MultiFactorInfo {
   public readonly uid: string;
   public readonly displayName?: string;
   public readonly factorId: string;
@@ -107,7 +99,7 @@ export abstract class MultiFactorInfo implements MultiFactorInfoInterface {
    * If no MultiFactorInfo is associated with the response, null is returned.
    *
    * @param response The server side response.
-   * @constructor
+   * @internal
    */
   public static initMultiFactorInfo(response: MultiFactorInfoResponse): MultiFactorInfo | null {
     let multiFactorInfo: MultiFactorInfo | null = null;
@@ -125,6 +117,7 @@ export abstract class MultiFactorInfo implements MultiFactorInfoInterface {
    *
    * @param response The server side response.
    * @constructor
+   * @internal
    */
   constructor(response: MultiFactorInfoResponse) {
     this.initFromServerResponse(response);
@@ -146,6 +139,8 @@ export abstract class MultiFactorInfo implements MultiFactorInfoInterface {
    * @param response The server side response.
    * @return The multi-factor ID associated with the provided response. If the response is
    *     not associated with any known multi-factor ID, null is returned.
+   *
+   * @internal
    */
   protected abstract getFactorId(response: MultiFactorInfoResponse): string | null;
 
@@ -178,7 +173,7 @@ export abstract class MultiFactorInfo implements MultiFactorInfoInterface {
 }
 
 /** Class representing a phone MultiFactorInfo object. */
-export class PhoneMultiFactorInfo extends MultiFactorInfo implements PhoneMultiFactorInfoInterface {
+export class PhoneMultiFactorInfo extends MultiFactorInfo {
   public readonly phoneNumber: string;
 
   /**
@@ -186,6 +181,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo implements PhoneMultiF
    *
    * @param response The server side response.
    * @constructor
+   * @internal
    */
   constructor(response: MultiFactorInfoResponse) {
     super(response);
@@ -207,6 +203,8 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo implements PhoneMultiF
    * @param response The server side response.
    * @return The multi-factor ID associated with the provided response. If the response is
    *     not associated with any known multi-factor ID, null is returned.
+   *
+   * @internal
    */
   protected getFactorId(response: MultiFactorInfoResponse): string | null {
     return (response && response.phoneInfo) ? MultiFactorId.Phone : null;
@@ -214,7 +212,7 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo implements PhoneMultiF
 }
 
 /** Class representing multi-factor related properties of a user. */
-export class MultiFactor implements MultiFactorSettings {
+export class MultiFactorSettings {
   public enrolledFactors: MultiFactorInfo[];
 
   /**
@@ -222,6 +220,7 @@ export class MultiFactor implements MultiFactorSettings {
    *
    * @param response The server side response.
    * @constructor
+   * @internal
    */
   constructor(response: GetAccountInfoUserResponse) {
     const parsedEnrolledFactors: MultiFactorInfo[] = [];
@@ -253,12 +252,8 @@ export class MultiFactor implements MultiFactorSettings {
 /**
  * User metadata class that provides metadata information like user account creation
  * and last sign in time.
- *
- * @param response The server side response returned from the getAccountInfo
- *     endpoint.
- * @constructor
  */
-export class UserMetadata implements UserMetadataInterface {
+export class UserMetadata {
   public readonly creationTime: string;
   public readonly lastSignInTime: string;
 
@@ -269,6 +264,12 @@ export class UserMetadata implements UserMetadataInterface {
    */
   public readonly lastRefreshTime: string | null;
 
+  /**
+   * @param response The server side response returned from the getAccountInfo
+   *     endpoint.
+   * @constructor
+   * @internal
+   */
   constructor(response: GetAccountInfoUserResponse) {
     // Creation date should always be available but due to some backend bugs there
     // were cases in the past where users did not have creation date properly set.
@@ -292,12 +293,8 @@ export class UserMetadata implements UserMetadataInterface {
 /**
  * User info class that provides provider user information for different
  * Firebase providers like google.com, facebook.com, password, etc.
- *
- * @param response The server side response returned from the getAccountInfo
- *     endpoint.
- * @constructor
  */
-export class UserInfo implements UserInfoInterface {
+export class UserInfo {
   public readonly uid: string;
   public readonly displayName: string;
   public readonly email: string;
@@ -305,6 +302,13 @@ export class UserInfo implements UserInfoInterface {
   public readonly providerId: string;
   public readonly phoneNumber: string;
 
+
+  /**
+   * @param response The server side response returned from the getAccountInfo
+   *     endpoint.
+   * @constructor
+   * @internal
+   */
   constructor(response: ProviderUserInfoResponse) {
     // Provider user id and provider id are required.
     if (!response.rawId || !response.providerId) {
@@ -342,7 +346,7 @@ export class UserInfo implements UserInfoInterface {
  *     endpoint.
  * @constructor
  */
-export class UserRecord implements UserRecordInterface {
+export class UserRecord {
   public readonly uid: string;
   public readonly email: string;
   public readonly emailVerified: boolean;
@@ -357,8 +361,14 @@ export class UserRecord implements UserRecordInterface {
   public readonly customClaims: {[key: string]: any};
   public readonly tenantId?: string | null;
   public readonly tokensValidAfterTime?: string;
-  public readonly multiFactor?: MultiFactor;
+  public readonly multiFactor?: MultiFactorSettings;
 
+  /**
+   * @param response The server side response returned from the getAccountInfo
+   *     endpoint.
+   * @constructor
+   * @internal
+   */
   constructor(response: GetAccountInfoUserResponse) {
     // The Firebase user id is required.
     if (!response.localId) {
@@ -404,7 +414,7 @@ export class UserRecord implements UserRecordInterface {
     }
     utils.addReadonlyGetter(this, 'tokensValidAfterTime', validAfterTime || undefined);
     utils.addReadonlyGetter(this, 'tenantId', response.tenantId);
-    const multiFactor = new MultiFactor(response);
+    const multiFactor = new MultiFactorSettings(response);
     if (multiFactor.enrolledFactors.length > 0) {
       utils.addReadonlyGetter(this, 'multiFactor', multiFactor);
     }

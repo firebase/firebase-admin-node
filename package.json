@@ -22,7 +22,7 @@
     "lint:test": "eslint test/ --ext .ts",
     "apidocs": "node docgen/generate-docs.js --api node",
     "api-extractor": "api-extractor run",
-    "api-extractor:local": "api-extractor run --local"
+    "api-extractor:local": "npm run build && api-extractor run --local"
   },
   "nyc": {
     "extension": [
