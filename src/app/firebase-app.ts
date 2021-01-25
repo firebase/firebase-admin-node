@@ -277,7 +277,7 @@ export class FirebaseApp implements app.App {
    * @return The Auth service instance of this app.
    */
   public auth(): Auth {
-    const fn = require('../auth/index').auth;
+    const fn = require('../auth/index').getAuth;
     return fn(this);
   }
 
@@ -332,7 +332,7 @@ export class FirebaseApp implements app.App {
    * @return The InstanceId service instance of this app.
    */
   public instanceId(): InstanceId {
-    const fn = require('../instance-id/index').instanceId;
+    const fn = require('../instance-id/index').getInstanceId;
     return fn(this);
   }
 

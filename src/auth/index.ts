@@ -91,4 +91,4 @@ export {
   UserRecord,
 } from './user-record';
 
-export { auth } from './auth-namespace';
+export { getAuth, auth } from './auth-namespace';

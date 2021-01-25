@@ -84,7 +84,7 @@ export class Auth extends BaseAuth {
     }
 
 // @public
-export function auth(app?: App): Auth;
+export function auth(app?: App): auth.Auth;
 
 // @public (undocumented)
 export namespace auth {
@@ -400,6 +400,12 @@ export function getApp(name?: string): App;
 // @public (undocumented)
 export function getApps(): App[];
 
+// @public (undocumented)
+export function getAuth(app?: App): Auth;
+
+// @public (undocumented)
+export function getInstanceId(app?: App): InstanceId;
+
 // @public
 export interface GetUsersResult {
     notFound: UserIdentifier[];
@@ -427,7 +433,7 @@ export class InstanceId {
     }
 
 // @public
-export function instanceId(app?: App): InstanceId;
+export function instanceId(app?: App): instanceId.InstanceId;
 
 // @public (undocumented)
 export namespace instanceId {

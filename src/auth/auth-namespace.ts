@@ -95,6 +95,15 @@ import {
   UserRecord as TUserRecord,
 } from './user-record';
 
+export function getAuth(app?: App): Auth {
+  if (typeof app === 'undefined') {
+    app = getApp();
+  }
+
+  const firebaseApp: FirebaseApp = app as FirebaseApp;
+  return firebaseApp.getOrInitService('auth', (app) => new Auth(app));
+}
+
 /**
  * Gets the {@link auth.Auth `Auth`} service for the default app or a
  * given app.
@@ -116,14 +125,7 @@ import {
  * ```
  *
  */
-export function auth(app?: App): Auth {
-  if (typeof app === 'undefined') {
-    app = getApp();
-  }
-
-  const firebaseApp: FirebaseApp = app as FirebaseApp;
-  return firebaseApp.getOrInitService('auth', (app) => new Auth(app));
-}
+export declare function auth(app?: App): auth.Auth;
 
 /* eslint-disable @typescript-eslint/no-namespace */
 export namespace auth {

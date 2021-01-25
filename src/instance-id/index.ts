@@ -20,6 +20,15 @@ import { InstanceId } from './instance-id';
 
 export { InstanceId };
 
+export function getInstanceId(app?: App): InstanceId {
+  if (typeof app === 'undefined') {
+    app = getApp();
+  }
+
+  const firebaseApp: FirebaseApp = app as FirebaseApp;
+  return firebaseApp.getOrInitService('instanceId', (app) => new InstanceId(app));
+}
+
 /**
  * Gets the {@link instanceId.InstanceId `InstanceId`} service for the
  * default app or a given app.
@@ -50,14 +59,7 @@ export { InstanceId };
  *   no app is provided or the `InstanceId` service associated with the
  *   provided app.
  */
-export function instanceId(app?: App): InstanceId {
-  if (typeof app === 'undefined') {
-    app = getApp();
-  }
-
-  const firebaseApp: FirebaseApp = app as FirebaseApp;
-  return firebaseApp.getOrInitService('instanceId', (app) => new InstanceId(app));
-}
+export declare function instanceId(app?: App): instanceId.InstanceId;
 
 import { InstanceId as TInstanceId } from './instance-id';
 
