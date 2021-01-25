@@ -9,6 +9,21 @@ import { Bucket } from '@google-cloud/storage';
 import * as _firestore from '@google-cloud/firestore';
 import * as rtdb from '@firebase/database-types';
 
+// @public
+export interface ActionCodeSettings {
+    android?: {
+        packageName: string;
+        installApp?: boolean;
+        minimumVersion?: string;
+    };
+    dynamicLinkDomain?: string;
+    handleCodeInApp?: boolean;
+    iOS?: {
+        bundleId: string;
+    };
+    url: string;
+}
+
 // @public (undocumented)
 export interface App {
     name: string;
@@ -63,344 +78,188 @@ export interface AppOptions {
 export const apps: (app.App | null)[];
 
 // @public
-export function auth(app?: app.App): auth.Auth;
+export class Auth extends BaseAuth {
+    get app(): App;
+    tenantManager(): TenantManager;
+    }
+
+// @public
+export function auth(app?: App): Auth;
 
 // @public (undocumented)
 export namespace auth {
-    export interface ActionCodeSettings {
-        android?: {
-            packageName: string;
-            installApp?: boolean;
-            minimumVersion?: string;
-        };
-        dynamicLinkDomain?: string;
-        handleCodeInApp?: boolean;
-        iOS?: {
-            bundleId: string;
-        };
-        url: string;
-    }
     // (undocumented)
-    export interface Auth extends BaseAuth {
-        // (undocumented)
-        app: app.App;
-        tenantManager(): TenantManager;
-    }
-    export type AuthFactorType = 'phone';
-    export interface AuthProviderConfig {
-        displayName?: string;
-        enabled: boolean;
-        providerId: string;
-    }
-    export interface AuthProviderConfigFilter {
-        maxResults?: number;
-        pageToken?: string;
-        type: 'saml' | 'oidc';
-    }
+    export type ActionCodeSettings = ActionCodeSettings;
     // (undocumented)
-    export interface BaseAuth {
-        createCustomToken(uid: string, developerClaims?: object): Promise<string>;
-        createProviderConfig(config: AuthProviderConfig): Promise<AuthProviderConfig>;
-        createSessionCookie(idToken: string, sessionCookieOptions: SessionCookieOptions): Promise<string>;
-        createUser(properties: CreateRequest): Promise<UserRecord>;
-        deleteProviderConfig(providerId: string): Promise<void>;
-        deleteUser(uid: string): Promise<void>;
-        deleteUsers(uids: string[]): Promise<DeleteUsersResult>;
-        generateEmailVerificationLink(email: string, actionCodeSettings?: ActionCodeSettings): Promise<string>;
-        generatePasswordResetLink(email: string, actionCodeSettings?: ActionCodeSettings): Promise<string>;
-        generateSignInWithEmailLink(email: string, actionCodeSettings: ActionCodeSettings): Promise<string>;
-        getProviderConfig(providerId: string): Promise<AuthProviderConfig>;
-        getUser(uid: string): Promise<UserRecord>;
-        getUserByEmail(email: string): Promise<UserRecord>;
-        getUserByPhoneNumber(phoneNumber: string): Promise<UserRecord>;
-        getUsers(identifiers: UserIdentifier[]): Promise<GetUsersResult>;
-        importUsers(users: UserImportRecord[], options?: UserImportOptions): Promise<UserImportResult>;
-        listProviderConfigs(options: AuthProviderConfigFilter): Promise<ListProviderConfigResults>;
-        listUsers(maxResults?: number, pageToken?: string): Promise<ListUsersResult>;
-        revokeRefreshTokens(uid: string): Promise<void>;
-        setCustomUserClaims(uid: string, customUserClaims: object | null): Promise<void>;
-        updateProviderConfig(providerId: string, updatedConfig: UpdateAuthProviderRequest): Promise<AuthProviderConfig>;
-        updateUser(uid: string, properties: UpdateRequest): Promise<UserRecord>;
-        verifyIdToken(idToken: string, checkRevoked?: boolean): Promise<DecodedIdToken>;
-        verifySessionCookie(sessionCookie: string, checkForRevocation?: boolean): Promise<DecodedIdToken>;
-    }
-    export interface CreateMultiFactorInfoRequest {
-        displayName?: string;
-        factorId: string;
-    }
-    export interface CreatePhoneMultiFactorInfoRequest extends CreateMultiFactorInfoRequest {
-        phoneNumber: string;
-    }
-    export interface CreateRequest extends UpdateRequest {
-        multiFactor?: MultiFactorCreateSettings;
-        uid?: string;
-    }
-    export type CreateTenantRequest = UpdateTenantRequest;
-    export interface DecodedIdToken {
-        // (undocumented)
-        [key: string]: any;
-        aud: string;
-        auth_time: number;
-        email?: string;
-        email_verified?: boolean;
-        exp: number;
-        firebase: {
-            identities: {
-                [key: string]: any;
-            };
-            sign_in_provider: string;
-            sign_in_second_factor?: string;
-            second_factor_identifier?: string;
-            tenant?: string;
-            [key: string]: any;
-        };
-        iat: number;
-        iss: string;
-        phone_number?: string;
-        picture?: string;
-        sub: string;
-        uid: string;
-    }
-    export interface DeleteUsersResult {
-        errors: FirebaseArrayIndexError[];
-        failureCount: number;
-        successCount: number;
-    }
-    export interface EmailIdentifier {
-        // (undocumented)
-        email: string;
-    }
-    export interface EmailSignInProviderConfig {
-        enabled: boolean;
-        passwordRequired?: boolean;
-    }
-    export interface GetUsersResult {
-        notFound: UserIdentifier[];
-        users: UserRecord[];
-    }
+    export type Auth = Auth;
     // (undocumented)
-    export type HashAlgorithmType = 'SCRYPT' | 'STANDARD_SCRYPT' | 'HMAC_SHA512' | 'HMAC_SHA256' | 'HMAC_SHA1' | 'HMAC_MD5' | 'MD5' | 'PBKDF_SHA1' | 'BCRYPT' | 'PBKDF2_SHA256' | 'SHA512' | 'SHA256' | 'SHA1';
-    export interface ListProviderConfigResults {
-        pageToken?: string;
-        providerConfigs: AuthProviderConfig[];
-    }
-    export interface ListTenantsResult {
-        pageToken?: string;
-        tenants: Tenant[];
-    }
-    export interface ListUsersResult {
-        pageToken?: string;
-        users: UserRecord[];
-    }
-    export interface MultiFactorConfig {
-        factorIds?: AuthFactorType[];
-        state: MultiFactorConfigState;
-    }
-    export type MultiFactorConfigState = 'ENABLED' | 'DISABLED';
-    export interface MultiFactorCreateSettings {
-        enrolledFactors: CreateMultiFactorInfoRequest[];
-    }
-    export interface MultiFactorInfo {
-        displayName?: string;
-        enrollmentTime?: string;
-        factorId: string;
-        toJSON(): object;
-        uid: string;
-    }
-    export interface MultiFactorSettings {
-        enrolledFactors: MultiFactorInfo[];
-        toJSON(): object;
-    }
-    export interface MultiFactorUpdateSettings {
-        enrolledFactors: UpdateMultiFactorInfoRequest[] | null;
-    }
-    export interface OIDCAuthProviderConfig extends AuthProviderConfig {
-        clientId: string;
-        issuer: string;
-    }
-    export interface OIDCUpdateAuthProviderRequest {
-        clientId?: string;
-        displayName?: string;
-        enabled?: boolean;
-        issuer?: string;
-    }
-    export interface PhoneIdentifier {
-        // (undocumented)
-        phoneNumber: string;
-    }
-    export interface PhoneMultiFactorInfo extends MultiFactorInfo {
-        phoneNumber: string;
-    }
-    export interface ProviderIdentifier {
-        // (undocumented)
-        providerId: string;
-        // (undocumented)
-        providerUid: string;
-    }
-    export interface SAMLAuthProviderConfig extends AuthProviderConfig {
-        callbackURL?: string;
-        idpEntityId: string;
-        rpEntityId: string;
-        ssoURL: string;
-        x509Certificates: string[];
-    }
-    export interface SAMLUpdateAuthProviderRequest {
-        callbackURL?: string;
-        displayName?: string;
-        enabled?: boolean;
-        idpEntityId?: string;
-        rpEntityId?: string;
-        ssoURL?: string;
-        x509Certificates?: string[];
-    }
-    export interface SessionCookieOptions {
-        expiresIn: number;
-    }
-    export interface Tenant {
-        displayName?: string;
-        emailSignInConfig?: {
-            enabled: boolean;
-            passwordRequired?: boolean;
-        };
-        multiFactorConfig?: MultiFactorConfig;
-        tenantId: string;
-        testPhoneNumbers?: {
-            [phoneNumber: string]: string;
-        };
-        toJSON(): object;
-    }
-    export interface TenantAwareAuth extends BaseAuth {
-        tenantId: string;
-    }
-    export interface TenantManager {
-        // (undocumented)
-        authForTenant(tenantId: string): TenantAwareAuth;
-        createTenant(tenantOptions: CreateTenantRequest): Promise<Tenant>;
-        deleteTenant(tenantId: string): Promise<void>;
-        getTenant(tenantId: string): Promise<Tenant>;
-        listTenants(maxResults?: number, pageToken?: string): Promise<ListTenantsResult>;
-        updateTenant(tenantId: string, tenantOptions: UpdateTenantRequest): Promise<Tenant>;
-    }
-    export interface UidIdentifier {
-        // (undocumented)
-        uid: string;
-    }
+    export type AuthFactorType = AuthFactorType;
     // (undocumented)
-    export type UpdateAuthProviderRequest = SAMLUpdateAuthProviderRequest | OIDCUpdateAuthProviderRequest;
-    export interface UpdateMultiFactorInfoRequest {
-        displayName?: string;
-        enrollmentTime?: string;
-        factorId: string;
-        uid?: string;
-    }
-    export interface UpdatePhoneMultiFactorInfoRequest extends UpdateMultiFactorInfoRequest {
-        phoneNumber: string;
-    }
-    export interface UpdateRequest {
-        disabled?: boolean;
-        displayName?: string | null;
-        email?: string;
-        emailVerified?: boolean;
-        multiFactor?: MultiFactorUpdateSettings;
-        password?: string;
-        phoneNumber?: string | null;
-        photoURL?: string | null;
-    }
-    export interface UpdateTenantRequest {
-        displayName?: string;
-        emailSignInConfig?: EmailSignInProviderConfig;
-        multiFactorConfig?: MultiFactorConfig;
-        testPhoneNumbers?: {
-            [phoneNumber: string]: string;
-        } | null;
-    }
-    export type UserIdentifier = UidIdentifier | EmailIdentifier | PhoneIdentifier | ProviderIdentifier;
-    export interface UserImportOptions {
-        hash: {
-            algorithm: HashAlgorithmType;
-            key?: Buffer;
-            saltSeparator?: Buffer;
-            rounds?: number;
-            memoryCost?: number;
-            parallelization?: number;
-            blockSize?: number;
-            derivedKeyLength?: number;
-        };
-    }
-    export interface UserImportRecord {
-        customClaims?: {
-            [key: string]: any;
-        };
-        disabled?: boolean;
-        displayName?: string;
-        email?: string;
-        emailVerified?: boolean;
-        metadata?: UserMetadataRequest;
-        multiFactor?: MultiFactorUpdateSettings;
-        passwordHash?: Buffer;
-        passwordSalt?: Buffer;
-        phoneNumber?: string;
-        photoURL?: string;
-        providerData?: UserProviderRequest[];
-        tenantId?: string;
-        uid: string;
-    }
-    export interface UserImportResult {
-        errors: FirebaseArrayIndexError[];
-        failureCount: number;
-        successCount: number;
-    }
-    export interface UserInfo {
-        displayName: string;
-        email: string;
-        phoneNumber: string;
-        photoURL: string;
-        providerId: string;
-        toJSON(): object;
-        uid: string;
-    }
-    export interface UserMetadata {
-        creationTime: string;
-        lastRefreshTime?: string | null;
-        lastSignInTime: string;
-        toJSON(): object;
-    }
-    export interface UserMetadataRequest {
-        creationTime?: string;
-        lastSignInTime?: string;
-    }
-    export interface UserProviderRequest {
-        displayName?: string;
-        email?: string;
-        phoneNumber?: string;
-        photoURL?: string;
-        providerId: string;
-        uid: string;
-    }
-    export interface UserRecord {
-        customClaims?: {
-            [key: string]: any;
-        };
-        disabled: boolean;
-        displayName?: string;
-        email?: string;
-        emailVerified: boolean;
-        metadata: UserMetadata;
-        multiFactor?: MultiFactorSettings;
-        passwordHash?: string;
-        passwordSalt?: string;
-        phoneNumber?: string;
-        photoURL?: string;
-        providerData: UserInfo[];
-        tenantId?: string | null;
-        toJSON(): object;
-        tokensValidAfterTime?: string;
-        uid: string;
-    }
+    export type AuthProviderConfig = AuthProviderConfig;
+    // (undocumented)
+    export type AuthProviderConfigFilter = AuthProviderConfigFilter;
+    // (undocumented)
+    export type BaseAuth = BaseAuth;
+    // (undocumented)
+    export type CreateMultiFactorInfoRequest = CreateMultiFactorInfoRequest;
+    // (undocumented)
+    export type CreatePhoneMultiFactorInfoRequest = CreatePhoneMultiFactorInfoRequest;
+    // (undocumented)
+    export type CreateRequest = CreateRequest;
+    // (undocumented)
+    export type CreateTenantRequest = CreateTenantRequest;
+    // (undocumented)
+    export type DecodedIdToken = DecodedIdToken;
+    // (undocumented)
+    export type DeleteUsersResult = DeleteUsersResult;
+    // (undocumented)
+    export type EmailIdentifier = EmailIdentifier;
+    // (undocumented)
+    export type EmailSignInProviderConfig = EmailSignInProviderConfig;
+    // (undocumented)
+    export type GetUsersResult = GetUsersResult;
+    // (undocumented)
+    export type HashAlgorithmType = HashAlgorithmType;
+    // (undocumented)
+    export type ListProviderConfigResults = ListProviderConfigResults;
+    // (undocumented)
+    export type ListTenantsResult = ListTenantsResult;
+    // (undocumented)
+    export type ListUsersResult = ListUsersResult;
+    // (undocumented)
+    export type MultiFactorConfig = MultiFactorConfig;
+    // (undocumented)
+    export type MultiFactorConfigState = MultiFactorConfigState;
+    // (undocumented)
+    export type MultiFactorCreateSettings = MultiFactorCreateSettings;
+    // (undocumented)
+    export type MultiFactorInfo = MultiFactorInfo;
+    // (undocumented)
+    export type MultiFactorSettings = MultiFactorSettings;
+    // (undocumented)
+    export type MultiFactorUpdateSettings = MultiFactorUpdateSettings;
+    // (undocumented)
+    export type OIDCAuthProviderConfig = OIDCAuthProviderConfig;
+    // (undocumented)
+    export type OIDCUpdateAuthProviderRequest = OIDCUpdateAuthProviderRequest;
+    // (undocumented)
+    export type PhoneIdentifier = PhoneIdentifier;
+    // (undocumented)
+    export type PhoneMultiFactorInfo = PhoneMultiFactorInfo;
+    // (undocumented)
+    export type ProviderIdentifier = ProviderIdentifier;
+    // (undocumented)
+    export type SAMLAuthProviderConfig = SAMLAuthProviderConfig;
+    // (undocumented)
+    export type SAMLUpdateAuthProviderRequest = SAMLUpdateAuthProviderRequest;
+    // (undocumented)
+    export type SessionCookieOptions = SessionCookieOptions;
+    // (undocumented)
+    export type Tenant = Tenant;
+    // (undocumented)
+    export type TenantAwareAuth = TenantAwareAuth;
+    // (undocumented)
+    export type TenantManager = TenantManager;
+    // (undocumented)
+    export type UidIdentifier = UidIdentifier;
+    // (undocumented)
+    export type UpdateAuthProviderRequest = UpdateAuthProviderRequest;
+    // (undocumented)
+    export type UpdateMultiFactorInfoRequest = UpdateMultiFactorInfoRequest;
+    // (undocumented)
+    export type UpdatePhoneMultiFactorInfoRequest = UpdatePhoneMultiFactorInfoRequest;
+    // (undocumented)
+    export type UpdateRequest = UpdateRequest;
+    // (undocumented)
+    export type UpdateTenantRequest = UpdateTenantRequest;
+    // (undocumented)
+    export type UserIdentifier = UserIdentifier;
+    // (undocumented)
+    export type UserImportOptions = UserImportOptions;
+    // (undocumented)
+    export type UserImportRecord = UserImportRecord;
+    // (undocumented)
+    export type UserImportResult = UserImportResult;
+    // (undocumented)
+    export type UserInfo = UserInfo;
+    // (undocumented)
+    export type UserMetadata = UserMetadata;
+    // (undocumented)
+    export type UserMetadataRequest = UserMetadataRequest;
+    // (undocumented)
+    export type UserProviderRequest = UserProviderRequest;
+    // (undocumented)
+    export type UserRecord = UserRecord;
+}
+
+// @public
+export type AuthFactorType = 'phone';
+
+// @public
+export interface AuthProviderConfig {
+    displayName?: string;
+    enabled: boolean;
+    providerId: string;
+}
+
+// @public
+export interface AuthProviderConfigFilter {
+    maxResults?: number;
+    pageToken?: string;
+    type: 'saml' | 'oidc';
+}
+
+// @public
+export class BaseAuth {
+    createCustomToken(uid: string, developerClaims?: object): Promise<string>;
+    createProviderConfig(config: AuthProviderConfig): Promise<AuthProviderConfig>;
+    createSessionCookie(idToken: string, sessionCookieOptions: SessionCookieOptions): Promise<string>;
+    createUser(properties: CreateRequest): Promise<UserRecord>;
+    deleteProviderConfig(providerId: string): Promise<void>;
+    deleteUser(uid: string): Promise<void>;
+    // (undocumented)
+    deleteUsers(uids: string[]): Promise<DeleteUsersResult>;
+    generateEmailVerificationLink(email: string, actionCodeSettings?: ActionCodeSettings): Promise<string>;
+    generatePasswordResetLink(email: string, actionCodeSettings?: ActionCodeSettings): Promise<string>;
+    generateSignInWithEmailLink(email: string, actionCodeSettings: ActionCodeSettings): Promise<string>;
+    getProviderConfig(providerId: string): Promise<AuthProviderConfig>;
+    getUser(uid: string): Promise<UserRecord>;
+    getUserByEmail(email: string): Promise<UserRecord>;
+    getUserByPhoneNumber(phoneNumber: string): Promise<UserRecord>;
+    getUsers(identifiers: UserIdentifier[]): Promise<GetUsersResult>;
+    importUsers(users: UserImportRecord[], options?: UserImportOptions): Promise<UserImportResult>;
+    listProviderConfigs(options: AuthProviderConfigFilter): Promise<ListProviderConfigResults>;
+    listUsers(maxResults?: number, pageToken?: string): Promise<ListUsersResult>;
+    revokeRefreshTokens(uid: string): Promise<void>;
+    setCustomUserClaims(uid: string, customUserClaims: object | null): Promise<void>;
+    updateProviderConfig(providerId: string, updatedConfig: UpdateAuthProviderRequest): Promise<AuthProviderConfig>;
+    updateUser(uid: string, properties: UpdateRequest): Promise<UserRecord>;
+    verifyIdToken(idToken: string, checkRevoked?: boolean): Promise<DecodedIdToken>;
+    verifySessionCookie(sessionCookie: string, checkRevoked?: boolean): Promise<DecodedIdToken>;
 }
 
 // @public (undocumented)
 export function cert(serviceAccountPathOrObject: string | ServiceAccount, httpAgent?: Agent): Credential;
+
+// @public
+export interface CreateMultiFactorInfoRequest {
+    displayName?: string;
+    factorId: string;
+}
+
+// @public
+export interface CreatePhoneMultiFactorInfoRequest extends CreateMultiFactorInfoRequest {
+    phoneNumber: string;
+}
+
+// @public
+export interface CreateRequest extends UpdateRequest {
+    multiFactor?: MultiFactorCreateSettings;
+    uid?: string;
+}
+
+// @public
+export type CreateTenantRequest = UpdateTenantRequest;
 
 // @public (undocumented)
 export interface Credential {
@@ -436,8 +295,54 @@ export namespace database {
     const ServerValue: rtdb.ServerValue;
 }
 
+// @public
+export interface DecodedIdToken {
+    // (undocumented)
+    [key: string]: any;
+    aud: string;
+    auth_time: number;
+    email?: string;
+    email_verified?: boolean;
+    exp: number;
+    firebase: {
+        identities: {
+            [key: string]: any;
+        };
+        sign_in_provider: string;
+        sign_in_second_factor?: string;
+        second_factor_identifier?: string;
+        tenant?: string;
+        [key: string]: any;
+    };
+    iat: number;
+    iss: string;
+    phone_number?: string;
+    picture?: string;
+    sub: string;
+    uid: string;
+}
+
 // @public (undocumented)
 export function deleteApp(app: App): Promise<void>;
+
+// @public
+export interface DeleteUsersResult {
+    errors: FirebaseArrayIndexError[];
+    failureCount: number;
+    successCount: number;
+}
+
+// @public
+export interface EmailIdentifier {
+    // (undocumented)
+    email: string;
+}
+
+// @public
+export interface EmailSignInProviderConfig {
+    enabled: boolean;
+    passwordRequired?: boolean;
+}
 
 // @public
 export interface FirebaseArrayIndexError {
@@ -496,12 +401,21 @@ export function getApp(name?: string): App;
 export function getApps(): App[];
 
 // @public
+export interface GetUsersResult {
+    notFound: UserIdentifier[];
+    users: UserRecord[];
+}
+
+// @public
 export interface GoogleOAuthAccessToken {
     // (undocumented)
     access_token: string;
     // (undocumented)
     expires_in: number;
 }
+
+// @public (undocumented)
+export type HashAlgorithmType = 'SCRYPT' | 'STANDARD_SCRYPT' | 'HMAC_SHA512' | 'HMAC_SHA256' | 'HMAC_SHA1' | 'HMAC_MD5' | 'MD5' | 'PBKDF_SHA1' | 'BCRYPT' | 'PBKDF2_SHA256' | 'SHA512' | 'SHA256' | 'SHA1';
 
 // @public (undocumented)
 export function initializeApp(options?: AppOptions, name?: string): app.App;
@@ -519,6 +433,24 @@ export function instanceId(app?: App): InstanceId;
 export namespace instanceId {
     // (undocumented)
     export type InstanceId = InstanceId;
+}
+
+// @public
+export interface ListProviderConfigResults {
+    pageToken?: string;
+    providerConfigs: AuthProviderConfig[];
+}
+
+// @public
+export interface ListTenantsResult {
+    pageToken?: string;
+    tenants: Tenant[];
+}
+
+// @public
+export interface ListUsersResult {
+    pageToken?: string;
+    users: UserRecord[];
 }
 
 // @public
@@ -875,6 +807,72 @@ export namespace messaging {
     {};
 }
 
+// @public (undocumented)
+export interface MultiFactorConfig {
+    factorIds?: AuthFactorType[];
+    state: MultiFactorConfigState;
+}
+
+// @public
+export type MultiFactorConfigState = 'ENABLED' | 'DISABLED';
+
+// @public
+export interface MultiFactorCreateSettings {
+    enrolledFactors: CreateMultiFactorInfoRequest[];
+}
+
+// @public
+export abstract class MultiFactorInfo {
+    // (undocumented)
+    readonly displayName?: string;
+    // (undocumented)
+    readonly enrollmentTime?: string;
+    // (undocumented)
+    readonly factorId: string;
+    toJSON(): any;
+    // (undocumented)
+    readonly uid: string;
+}
+
+// @public
+export class MultiFactorSettings {
+    // (undocumented)
+    enrolledFactors: MultiFactorInfo[];
+    toJSON(): any;
+}
+
+// @public
+export interface MultiFactorUpdateSettings {
+    enrolledFactors: UpdateMultiFactorInfoRequest[] | null;
+}
+
+// @public
+export interface OIDCAuthProviderConfig extends AuthProviderConfig {
+    clientId: string;
+    issuer: string;
+}
+
+// @public
+export interface OIDCUpdateAuthProviderRequest {
+    clientId?: string;
+    displayName?: string;
+    enabled?: boolean;
+    issuer?: string;
+}
+
+// @public
+export interface PhoneIdentifier {
+    // (undocumented)
+    phoneNumber: string;
+}
+
+// @public
+export class PhoneMultiFactorInfo extends MultiFactorInfo {
+    // (undocumented)
+    readonly phoneNumber: string;
+    toJSON(): any;
+}
+
 // @public
 export function projectManagement(app?: app.App): projectManagement.ProjectManagement;
 
@@ -937,6 +935,14 @@ export namespace projectManagement {
         resourceName?: string;
         shaHash: string;
     }
+}
+
+// @public
+export interface ProviderIdentifier {
+    // (undocumented)
+    providerId: string;
+    // (undocumented)
+    providerUid: string;
 }
 
 // @public (undocumented)
@@ -1025,6 +1031,26 @@ export namespace remoteConfig {
     }
 }
 
+// @public
+export interface SAMLAuthProviderConfig extends AuthProviderConfig {
+    callbackURL?: string;
+    idpEntityId: string;
+    rpEntityId: string;
+    ssoURL: string;
+    x509Certificates: string[];
+}
+
+// @public
+export interface SAMLUpdateAuthProviderRequest {
+    callbackURL?: string;
+    displayName?: string;
+    enabled?: boolean;
+    idpEntityId?: string;
+    rpEntityId?: string;
+    ssoURL?: string;
+    x509Certificates?: string[];
+}
+
 // @public (undocumented)
 export const SDK_VERSION: string;
 
@@ -1079,6 +1105,11 @@ export interface ServiceAccount {
 }
 
 // @public
+export interface SessionCookieOptions {
+    expiresIn: number;
+}
+
+// @public
 export function storage(app?: app.App): storage.Storage;
 
 // @public (undocumented)
@@ -1088,6 +1119,210 @@ export namespace storage {
         // (undocumented)
         bucket(name?: string): Bucket;
     }
+}
+
+// @public
+export class Tenant {
+    // (undocumented)
+    readonly displayName?: string;
+    // (undocumented)
+    get emailSignInConfig(): EmailSignInProviderConfig | undefined;
+    // (undocumented)
+    get multiFactorConfig(): MultiFactorConfig | undefined;
+    // (undocumented)
+    readonly tenantId: string;
+    // (undocumented)
+    readonly testPhoneNumbers?: {
+        [phoneNumber: string]: string;
+    };
+    toJSON(): object;
+    }
+
+// @public
+export class TenantAwareAuth extends BaseAuth {
+    createSessionCookie(idToken: string, sessionCookieOptions: SessionCookieOptions): Promise<string>;
+    // (undocumented)
+    readonly tenantId: string;
+    verifyIdToken(idToken: string, checkRevoked?: boolean): Promise<DecodedIdToken>;
+    verifySessionCookie(sessionCookie: string, checkRevoked?: boolean): Promise<DecodedIdToken>;
+}
+
+// @public
+export class TenantManager {
+    authForTenant(tenantId: string): TenantAwareAuth;
+    createTenant(tenantOptions: CreateTenantRequest): Promise<Tenant>;
+    deleteTenant(tenantId: string): Promise<void>;
+    getTenant(tenantId: string): Promise<Tenant>;
+    listTenants(maxResults?: number, pageToken?: string): Promise<ListTenantsResult>;
+    updateTenant(tenantId: string, tenantOptions: UpdateTenantRequest): Promise<Tenant>;
+}
+
+// @public
+export interface UidIdentifier {
+    // (undocumented)
+    uid: string;
+}
+
+// @public (undocumented)
+export type UpdateAuthProviderRequest = SAMLUpdateAuthProviderRequest | OIDCUpdateAuthProviderRequest;
+
+// @public
+export interface UpdateMultiFactorInfoRequest {
+    displayName?: string;
+    enrollmentTime?: string;
+    factorId: string;
+    uid?: string;
+}
+
+// @public
+export interface UpdatePhoneMultiFactorInfoRequest extends UpdateMultiFactorInfoRequest {
+    phoneNumber: string;
+}
+
+// @public
+export interface UpdateRequest {
+    disabled?: boolean;
+    displayName?: string | null;
+    email?: string;
+    emailVerified?: boolean;
+    multiFactor?: MultiFactorUpdateSettings;
+    password?: string;
+    phoneNumber?: string | null;
+    photoURL?: string | null;
+}
+
+// @public
+export interface UpdateTenantRequest {
+    displayName?: string;
+    emailSignInConfig?: EmailSignInProviderConfig;
+    multiFactorConfig?: MultiFactorConfig;
+    testPhoneNumbers?: {
+        [phoneNumber: string]: string;
+    } | null;
+}
+
+// @public
+export type UserIdentifier = UidIdentifier | EmailIdentifier | PhoneIdentifier | ProviderIdentifier;
+
+// @public
+export interface UserImportOptions {
+    hash: {
+        algorithm: HashAlgorithmType;
+        key?: Buffer;
+        saltSeparator?: Buffer;
+        rounds?: number;
+        memoryCost?: number;
+        parallelization?: number;
+        blockSize?: number;
+        derivedKeyLength?: number;
+    };
+}
+
+// @public
+export interface UserImportRecord {
+    customClaims?: {
+        [key: string]: any;
+    };
+    disabled?: boolean;
+    displayName?: string;
+    email?: string;
+    emailVerified?: boolean;
+    metadata?: UserMetadataRequest;
+    multiFactor?: MultiFactorUpdateSettings;
+    passwordHash?: Buffer;
+    passwordSalt?: Buffer;
+    phoneNumber?: string;
+    photoURL?: string;
+    providerData?: UserProviderRequest[];
+    tenantId?: string;
+    uid: string;
+}
+
+// @public
+export interface UserImportResult {
+    errors: FirebaseArrayIndexError[];
+    failureCount: number;
+    successCount: number;
+}
+
+// @public
+export class UserInfo {
+    // (undocumented)
+    readonly displayName: string;
+    // (undocumented)
+    readonly email: string;
+    // (undocumented)
+    readonly phoneNumber: string;
+    // (undocumented)
+    readonly photoURL: string;
+    // (undocumented)
+    readonly providerId: string;
+    toJSON(): object;
+    // (undocumented)
+    readonly uid: string;
+}
+
+// @public
+export class UserMetadata {
+    // (undocumented)
+    readonly creationTime: string;
+    readonly lastRefreshTime: string | null;
+    // (undocumented)
+    readonly lastSignInTime: string;
+    toJSON(): object;
+}
+
+// @public
+export interface UserMetadataRequest {
+    creationTime?: string;
+    lastSignInTime?: string;
+}
+
+// @public
+export interface UserProviderRequest {
+    displayName?: string;
+    email?: string;
+    phoneNumber?: string;
+    photoURL?: string;
+    providerId: string;
+    uid: string;
+}
+
+// @public
+export class UserRecord {
+    // (undocumented)
+    readonly customClaims: {
+        [key: string]: any;
+    };
+    // (undocumented)
+    readonly disabled: boolean;
+    // (undocumented)
+    readonly displayName: string;
+    // (undocumented)
+    readonly email: string;
+    // (undocumented)
+    readonly emailVerified: boolean;
+    // (undocumented)
+    readonly metadata: UserMetadata;
+    // (undocumented)
+    readonly multiFactor?: MultiFactorSettings;
+    // (undocumented)
+    readonly passwordHash?: string;
+    // (undocumented)
+    readonly passwordSalt?: string;
+    // (undocumented)
+    readonly phoneNumber: string;
+    // (undocumented)
+    readonly photoURL: string;
+    // (undocumented)
+    readonly providerData: UserInfo[];
+    // (undocumented)
+    readonly tenantId?: string | null;
+    toJSON(): object;
+    // (undocumented)
+    readonly tokensValidAfterTime?: string;
+    // (undocumented)
+    readonly uid: string;
 }
 
 

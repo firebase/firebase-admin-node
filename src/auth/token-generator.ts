@@ -23,6 +23,7 @@ import { AuthorizedHttpClient, HttpError, HttpRequestConfig, HttpClient } from '
 import * as validator from '../utils/validator';
 import { toWebSafeBase64 } from '../utils';
 import { Algorithm } from 'jsonwebtoken';
+import { App } from '../app';
 
 
 const ALGORITHM_RS256: Algorithm = 'RS256' as const;
@@ -260,13 +261,13 @@ export class EmulatedSigner implements CryptoSigner {
  * @param {FirebaseApp} app A FirebaseApp instance.
  * @return {CryptoSigner} A CryptoSigner instance.
  */
-export function cryptoSignerFromApp(app: FirebaseApp): CryptoSigner {
+export function cryptoSignerFromApp(app: App): CryptoSigner {
   const credential = app.options.credential;
   if (credential instanceof ServiceAccountCredential) {
     return new ServiceAccountSigner(credential);
   }
 
-  return new IAMSigner(new AuthorizedHttpClient(app), app.options.serviceAccountId);
+  return new IAMSigner(new AuthorizedHttpClient(app as FirebaseApp), app.options.serviceAccountId);
 }
 
 /**

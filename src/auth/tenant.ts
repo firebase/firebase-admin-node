@@ -17,14 +17,45 @@
 import * as validator from '../utils/validator';
 import { deepCopy } from '../utils/deep-copy';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
+
 import {
   EmailSignInConfig, EmailSignInConfigServerRequest, MultiFactorAuthServerConfig,
-  MultiFactorAuthConfig, validateTestPhoneNumbers,
+  MultiFactorConfig, validateTestPhoneNumbers, EmailSignInProviderConfig,
+  MultiFactorAuthConfig,
 } from './auth-config';
-import { auth } from './index';
 
-import TenantInterface = auth.Tenant;
-import UpdateTenantRequest = auth.UpdateTenantRequest;
+/**
+ * Interface representing the properties to update on the provided tenant.
+ */
+export interface UpdateTenantRequest {
+
+  /**
+   * The tenant display name.
+   */
+  displayName?: string;
+
+  /**
+   * The email sign in configuration.
+   */
+  emailSignInConfig?: EmailSignInProviderConfig;
+
+  /**
+   * The multi-factor auth configuration to update on the tenant.
+   */
+  multiFactorConfig?: MultiFactorConfig;
+
+  /**
+   * The updated map containing the test phone number / code pairs for the tenant.
+   * Passing null clears the previously save phone number / code pairs.
+   */
+  testPhoneNumbers?: { [phoneNumber: string]: string } | null;
+}
+
+/**
+ * Interface representing the properties to set on a new tenant.
+ */
+export type CreateTenantRequest = UpdateTenantRequest;
+
 
 /** The corresponding server side representation of a TenantOptions object. */
 export interface TenantOptionsServerRequest extends EmailSignInConfigServerRequest {
@@ -46,11 +77,12 @@ export interface TenantServerResponse {
 /**
  * Tenant class that defines a Firebase Auth tenant.
  */
-export class Tenant implements TenantInterface {
+export class Tenant {
+
   public readonly tenantId: string;
   public readonly displayName?: string;
-  public readonly emailSignInConfig?: EmailSignInConfig;
-  public readonly multiFactorConfig?: MultiFactorAuthConfig;
+  private readonly emailSignInConfig_?: EmailSignInConfig;
+  private readonly multiFactorConfig_?: MultiFactorAuthConfig;
   public readonly testPhoneNumbers?: {[phoneNumber: string]: string};
 
   /**
@@ -59,6 +91,8 @@ export class Tenant implements TenantInterface {
    * @param {TenantOptions} tenantOptions The properties to convert to a server request.
    * @param {boolean} createRequest Whether this is a create request.
    * @return {object} The equivalent server request.
+   *
+   * @internal
    */
   public static buildServerRequest(
     tenantOptions: UpdateTenantRequest, createRequest: boolean): TenantOptionsServerRequest {
@@ -85,6 +119,8 @@ export class Tenant implements TenantInterface {
    *
    * @param {string} resourceName The server side resource name
    * @return {?string} The tenant ID corresponding to the resource, null otherwise.
+   *
+   * @internal
    */
   public static getTenantIdFromResourceName(resourceName: string): string | null {
     // name is of form projects/project1/tenants/tenant1
@@ -160,6 +196,7 @@ export class Tenant implements TenantInterface {
    *
    * @param response The server side response used to initialize the Tenant object.
    * @constructor
+   * @internal
    */
   constructor(response: TenantServerResponse) {
     const tenantId = Tenant.getTenantIdFromResourceName(response.name);
@@ -172,19 +209,27 @@ export class Tenant implements TenantInterface {
     this.tenantId = tenantId;
     this.displayName = response.displayName;
     try {
-      this.emailSignInConfig = new EmailSignInConfig(response);
+      this.emailSignInConfig_ = new EmailSignInConfig(response);
     } catch (e) {
       // If allowPasswordSignup is undefined, it is disabled by default.
-      this.emailSignInConfig = new EmailSignInConfig({
+      this.emailSignInConfig_ = new EmailSignInConfig({
         allowPasswordSignup: false,
       });
     }
     if (typeof response.mfaConfig !== 'undefined') {
-      this.multiFactorConfig = new MultiFactorAuthConfig(response.mfaConfig);
+      this.multiFactorConfig_ = new MultiFactorAuthConfig(response.mfaConfig);
     }
     if (typeof response.testPhoneNumbers !== 'undefined') {
       this.testPhoneNumbers = deepCopy(response.testPhoneNumbers || {});
     }
+  }
+
+  get emailSignInConfig(): EmailSignInProviderConfig | undefined {
+    return this.emailSignInConfig_;
+  }
+
+  get multiFactorConfig(): MultiFactorConfig | undefined {
+    return this.multiFactorConfig_;
   }
 
   /** @return {object} The plain object representation of the tenant. */
@@ -192,8 +237,8 @@ export class Tenant implements TenantInterface {
     const json = {
       tenantId: this.tenantId,
       displayName: this.displayName,
-      emailSignInConfig: this.emailSignInConfig?.toJSON(),
-      multiFactorConfig: this.multiFactorConfig?.toJSON(),
+      emailSignInConfig: this.emailSignInConfig_?.toJSON(),
+      multiFactorConfig: this.multiFactorConfig_?.toJSON(),
       testPhoneNumbers: this.testPhoneNumbers,
     };
     if (typeof json.multiFactorConfig === 'undefined') {

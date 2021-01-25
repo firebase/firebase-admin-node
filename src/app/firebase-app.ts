@@ -277,10 +277,8 @@ export class FirebaseApp implements app.App {
    * @return The Auth service instance of this app.
    */
   public auth(): Auth {
-    return this.ensureService_('auth', () => {
-      const authService: typeof Auth = require('../auth/auth').Auth;
-      return new authService(this);
-    });
+    const fn = require('../auth/index').auth;
+    return fn(this);
   }
 
   /**

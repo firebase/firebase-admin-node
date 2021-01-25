@@ -24,11 +24,9 @@ import {
 } from '../../../src/auth/user-import-builder';
 import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
 import { toWebSafeBase64 } from '../../../src/utils';
-import { auth } from '../../../src/auth/index';
-
-import UpdatePhoneMultiFactorInfoRequest = auth.UpdatePhoneMultiFactorInfoRequest;
-import UserImportResult = auth.UserImportResult;
-import UserImportRecord = auth.UserImportRecord;
+import {
+  UpdatePhoneMultiFactorInfoRequest, UserImportResult, UserImportRecord,
+} from '../../../src/auth';
 
 chai.should();
 chai.use(sinonChai);

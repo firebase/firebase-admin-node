@@ -27,12 +27,10 @@ import {
   EmailSignInConfig, MultiFactorAuthConfig, validateTestPhoneNumbers,
   MAXIMUM_TEST_PHONE_NUMBERS,
 } from '../../../src/auth/auth-config';
-import { auth } from '../../../src/auth/index';
-
-import SAMLUpdateAuthProviderRequest = auth.SAMLUpdateAuthProviderRequest;
-import OIDCUpdateAuthProviderRequest = auth.OIDCUpdateAuthProviderRequest;
-import SAMLAuthProviderConfig = auth.SAMLAuthProviderConfig;
-import OIDCAuthProviderConfig = auth.OIDCAuthProviderConfig;
+import {
+  SAMLUpdateAuthProviderRequest, OIDCUpdateAuthProviderRequest,
+  SAMLAuthProviderConfig, OIDCAuthProviderConfig,
+} from '../../../src/auth/index';
 
 chai.should();
 chai.use(sinonChai);

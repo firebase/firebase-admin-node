@@ -28,11 +28,9 @@ import { AuthRequestHandler } from '../../../src/auth/auth-api-request';
 import { Tenant, TenantServerResponse } from '../../../src/auth/tenant';
 import { TenantManager } from '../../../src/auth/tenant-manager';
 import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
-import { auth } from '../../../src/auth/index';
-
-import CreateTenantRequest = auth.CreateTenantRequest;
-import UpdateTenantRequest = auth.UpdateTenantRequest;
-import ListTenantsResult = auth.ListTenantsResult;
+import {
+  CreateTenantRequest, UpdateTenantRequest, ListTenantsResult,
+} from '../../../src/auth/index';
 
 chai.should();
 chai.use(sinonChai);

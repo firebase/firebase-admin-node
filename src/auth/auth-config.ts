@@ -17,14 +17,293 @@
 import * as validator from '../utils/validator';
 import { deepCopy } from '../utils/deep-copy';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
-import { auth } from './index';
 
-import MultiFactorConfigInterface = auth.MultiFactorConfig;
-import MultiFactorConfigState = auth.MultiFactorConfigState;
-import AuthFactorType = auth.AuthFactorType;
-import EmailSignInProviderConfig = auth.EmailSignInProviderConfig;
-import OIDCAuthProviderConfig = auth.OIDCAuthProviderConfig;
-import SAMLAuthProviderConfig = auth.SAMLAuthProviderConfig;
+/**
+ * Interface representing base properties of a user enrolled second factor for a
+ * `CreateRequest`.
+ */
+export interface CreateMultiFactorInfoRequest {
+
+  /**
+   * The optional display name for an enrolled second factor.
+   */
+  displayName?: string;
+
+  /**
+   * The type identifier of the second factor. For SMS second factors, this is `phone`.
+   */
+  factorId: string;
+}
+
+/**
+ * Interface representing a phone specific user enrolled second factor for a
+ * `CreateRequest`.
+ */
+export interface CreatePhoneMultiFactorInfoRequest extends CreateMultiFactorInfoRequest {
+
+  /**
+   * The phone number associated with a phone second factor.
+   */
+  phoneNumber: string;
+}
+
+/**
+ * Interface representing common properties of a user enrolled second factor
+ * for an `UpdateRequest`.
+ */
+export interface UpdateMultiFactorInfoRequest {
+
+  /**
+   * The ID of the enrolled second factor. This ID is unique to the user. When not provided,
+   * a new one is provisioned by the Auth server.
+   */
+  uid?: string;
+
+  /**
+   * The optional display name for an enrolled second factor.
+   */
+  displayName?: string;
+
+  /**
+   * The optional date the second factor was enrolled, formatted as a UTC string.
+   */
+  enrollmentTime?: string;
+
+  /**
+   * The type identifier of the second factor. For SMS second factors, this is `phone`.
+   */
+  factorId: string;
+}
+
+/**
+ * Interface representing a phone specific user enrolled second factor
+ * for an `UpdateRequest`.
+ */
+export interface UpdatePhoneMultiFactorInfoRequest extends UpdateMultiFactorInfoRequest {
+
+  /**
+   * The phone number associated with a phone second factor.
+   */
+  phoneNumber: string;
+}
+
+/**
+ * The multi-factor related user settings for create operations.
+ */
+export interface MultiFactorCreateSettings {
+
+  /**
+   * The created user's list of enrolled second factors.
+   */
+  enrolledFactors: CreateMultiFactorInfoRequest[];
+}
+
+/**
+ * The multi-factor related user settings for update operations.
+ */
+export interface MultiFactorUpdateSettings {
+
+  /**
+   * The updated list of enrolled second factors. The provided list overwrites the user's
+   * existing list of second factors.
+   * When null is passed, all of the user's existing second factors are removed.
+   */
+  enrolledFactors: UpdateMultiFactorInfoRequest[] | null;
+}
+
+/**
+ * Interface representing the properties to update on the provided user.
+ */
+export interface UpdateRequest {
+
+  /**
+   * Whether or not the user is disabled: `true` for disabled;
+   * `false` for enabled.
+   */
+  disabled?: boolean;
+
+  /**
+   * The user's display name.
+   */
+  displayName?: string | null;
+
+  /**
+   * The user's primary email.
+   */
+  email?: string;
+
+  /**
+   * Whether or not the user's primary email is verified.
+   */
+  emailVerified?: boolean;
+
+  /**
+   * The user's unhashed password.
+   */
+  password?: string;
+
+  /**
+   * The user's primary phone number.
+   */
+  phoneNumber?: string | null;
+
+  /**
+   * The user's photo URL.
+   */
+  photoURL?: string | null;
+
+  /**
+   * The user's updated multi-factor related properties.
+   */
+  multiFactor?: MultiFactorUpdateSettings;
+}
+
+/**
+ * Interface representing the properties to set on a new user record to be
+ * created.
+ */
+export interface CreateRequest extends UpdateRequest {
+
+  /**
+   * The user's `uid`.
+   */
+  uid?: string;
+
+  /**
+   * The user's multi-factor related properties.
+   */
+  multiFactor?: MultiFactorCreateSettings;
+}
+
+/**
+ * The response interface for listing provider configs. This is only available
+ * when listing all identity providers' configurations via
+ * {@link auth.Auth.listProviderConfigs `listProviderConfigs()`}.
+ */
+export interface ListProviderConfigResults {
+
+  /**
+   * The list of providers for the specified type in the current page.
+   */
+  providerConfigs: AuthProviderConfig[];
+
+  /**
+   * The next page token, if available.
+   */
+  pageToken?: string;
+}
+
+/**
+ * The filter interface used for listing provider configurations. This is used
+ * when specifying how to list configured identity providers via
+ * {@link auth.Auth.listProviderConfigs `listProviderConfigs()`}.
+ */
+export interface AuthProviderConfigFilter {
+
+  /**
+   * The Auth provider configuration filter. This can be either `saml` or `oidc`.
+   * The former is used to look up SAML providers only, while the latter is used
+   * for OIDC providers.
+   */
+  type: 'saml' | 'oidc';
+
+  /**
+   * The maximum number of results to return per page. The default and maximum is
+   * 100.
+   */
+  maxResults?: number;
+
+  /**
+   * The next page token. When not specified, the lookup starts from the beginning
+   * of the list.
+   */
+  pageToken?: string;
+}
+
+/**
+ * The request interface for updating a SAML Auth provider. This is used
+ * when updating a SAML provider's configuration via
+ * {@link auth.Auth.updateProviderConfig `updateProviderConfig()`}.
+ */
+export interface SAMLUpdateAuthProviderRequest {
+
+  /**
+   * The SAML provider's updated display name. If not provided, the existing
+   * configuration's value is not modified.
+   */
+  displayName?: string;
+
+  /**
+   * Whether the SAML provider is enabled or not. If not provided, the existing
+   * configuration's setting is not modified.
+   */
+  enabled?: boolean;
+
+  /**
+   * The SAML provider's updated IdP entity ID. If not provided, the existing
+   * configuration's value is not modified.
+   */
+  idpEntityId?: string;
+
+  /**
+   * The SAML provider's updated SSO URL. If not provided, the existing
+   * configuration's value is not modified.
+   */
+  ssoURL?: string;
+
+  /**
+   * The SAML provider's updated list of X.509 certificated. If not provided, the
+   * existing configuration list is not modified.
+   */
+  x509Certificates?: string[];
+
+  /**
+   * The SAML provider's updated RP entity ID. If not provided, the existing
+   * configuration's value is not modified.
+   */
+  rpEntityId?: string;
+
+  /**
+   * The SAML provider's callback URL. If not provided, the existing
+   * configuration's value is not modified.
+   */
+  callbackURL?: string;
+}
+
+/**
+ * The request interface for updating an OIDC Auth provider. This is used
+ * when updating an OIDC provider's configuration via
+ * {@link auth.Auth.updateProviderConfig `updateProviderConfig()`}.
+ */
+export interface OIDCUpdateAuthProviderRequest {
+
+  /**
+   * The OIDC provider's updated display name. If not provided, the existing
+   * configuration's value is not modified.
+   */
+  displayName?: string;
+
+  /**
+   * Whether the OIDC provider is enabled or not. If not provided, the existing
+   * configuration's setting is not modified.
+   */
+  enabled?: boolean;
+
+  /**
+   * The OIDC provider's updated client ID. If not provided, the existing
+   * configuration's value is not modified.
+   */
+  clientId?: string;
+
+  /**
+   * The OIDC provider's updated issuer. If not provided, the existing
+   * configuration's value is not modified.
+   */
+  issuer?: string;
+}
+
+export type UpdateAuthProviderRequest =
+  SAMLUpdateAuthProviderRequest | OIDCUpdateAuthProviderRequest;
 
 /** A maximum of 10 test phone number / code pairs can be configured. */
 export const MAXIMUM_TEST_PHONE_NUMBERS = 10;
@@ -118,10 +397,34 @@ export interface MultiFactorAuthServerConfig {
 }
 
 /**
+ * Identifies a second factor type.
+ */
+export type AuthFactorType = 'phone';
+
+/**
+ * Identifies a multi-factor configuration state.
+ */
+export type MultiFactorConfigState = 'ENABLED' | 'DISABLED';
+
+export interface MultiFactorConfig {
+  /**
+   * The multi-factor config state.
+   */
+  state: MultiFactorConfigState;
+
+  /**
+   * The list of identifiers for enabled second factors.
+   * Currently only ‘phone’ is supported.
+   */
+  factorIds?: AuthFactorType[];
+}
+
+/**
  * Defines the multi-factor config class used to convert client side MultiFactorConfig
  * to a format that is understood by the Auth server.
  */
-export class MultiFactorAuthConfig implements MultiFactorConfigInterface {
+export class MultiFactorAuthConfig implements MultiFactorConfig {
+
   public readonly state: MultiFactorConfigState;
   public readonly factorIds: AuthFactorType[];
 
@@ -131,8 +434,9 @@ export class MultiFactorAuthConfig implements MultiFactorConfigInterface {
    *
    * @param options The options object to convert to a server request.
    * @return The resulting server request.
+   * @internal
    */
-  public static buildServerRequest(options: MultiFactorConfigInterface): MultiFactorAuthServerConfig {
+  public static buildServerRequest(options: MultiFactorConfig): MultiFactorAuthServerConfig {
     const request: MultiFactorAuthServerConfig = {};
     MultiFactorAuthConfig.validate(options);
     if (Object.prototype.hasOwnProperty.call(options, 'state')) {
@@ -158,7 +462,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfigInterface {
    *
    * @param options The options object to validate.
    */
-  private static validate(options: MultiFactorConfigInterface): void {
+  private static validate(options: MultiFactorConfig): void {
     const validKeys = {
       state: true,
       factorIds: true,
@@ -214,6 +518,7 @@ export class MultiFactorAuthConfig implements MultiFactorConfigInterface {
    * @param response The server side response used to initialize the
    *     MultiFactorAuthConfig object.
    * @constructor
+   * @internal
    */
   constructor(response: MultiFactorAuthServerConfig) {
     if (typeof response.state === 'undefined') {
@@ -278,10 +583,28 @@ export function validateTestPhoneNumbers(
   }
 }
 
+/**
+ * The email sign in configuration.
+ */
+export interface EmailSignInProviderConfig {
+  /**
+   * Whether email provider is enabled.
+   */
+  enabled: boolean;
+
+  /**
+   * Whether password is required for email sign-in. When not required,
+   * email sign-in can be performed with password or via email link sign-in.
+   */
+  passwordRequired?: boolean; // In the backend API, default is true if not provided
+}
+
 
 /**
  * Defines the email sign-in config class used to convert client side EmailSignInConfig
  * to a format that is understood by the Auth server.
+ *
+ * @internal
  */
 export class EmailSignInConfig implements EmailSignInProviderConfig {
   public readonly enabled: boolean;
@@ -293,6 +616,7 @@ export class EmailSignInConfig implements EmailSignInProviderConfig {
    *
    * @param {any} options The options object to convert to a server request.
    * @return {EmailSignInConfigServerRequest} The resulting server request.
+   * @internal
    */
   public static buildServerRequest(options: EmailSignInProviderConfig): EmailSignInConfigServerRequest {
     const request: EmailSignInConfigServerRequest = {};
@@ -375,10 +699,117 @@ export class EmailSignInConfig implements EmailSignInProviderConfig {
   }
 }
 
+/**
+ * The base Auth provider configuration interface.
+ */
+export interface AuthProviderConfig {
+
+  /**
+   * The provider ID defined by the developer.
+   * For a SAML provider, this is always prefixed by `saml.`.
+   * For an OIDC provider, this is always prefixed by `oidc.`.
+   */
+  providerId: string;
+
+  /**
+   * The user-friendly display name to the current configuration. This name is
+   * also used as the provider label in the Cloud Console.
+   */
+  displayName?: string;
+
+  /**
+   * Whether the provider configuration is enabled or disabled. A user
+   * cannot sign in using a disabled provider.
+   */
+  enabled: boolean;
+}
+
+/**
+ * The
+ * [SAML](http://docs.oasis-open.org/security/saml/Post2.0/sstc-saml-tech-overview-2.0.html)
+ * Auth provider configuration interface. A SAML provider can be created via
+ * {@link auth.Auth.createProviderConfig `createProviderConfig()`}.
+ */
+export interface SAMLAuthProviderConfig extends AuthProviderConfig {
+
+  /**
+   * The SAML IdP entity identifier.
+   */
+  idpEntityId: string;
+
+  /**
+   * The SAML IdP SSO URL. This must be a valid URL.
+   */
+  ssoURL: string;
+
+  /**
+   * The list of SAML IdP X.509 certificates issued by CA for this provider.
+   * Multiple certificates are accepted to prevent outages during
+   * IdP key rotation (for example ADFS rotates every 10 days). When the Auth
+   * server receives a SAML response, it will match the SAML response with the
+   * certificate on record. Otherwise the response is rejected.
+   * Developers are expected to manage the certificate updates as keys are
+   * rotated.
+   */
+  x509Certificates: string[];
+
+  /**
+   * The SAML relying party (service provider) entity ID.
+   * This is defined by the developer but needs to be provided to the SAML IdP.
+   */
+  rpEntityId: string;
+
+  /**
+   * This is fixed and must always be the same as the OAuth redirect URL
+   * provisioned by Firebase Auth,
+   * `https://project-id.firebaseapp.com/__/auth/handler` unless a custom
+   * `authDomain` is used.
+   * The callback URL should also be provided to the SAML IdP during
+   * configuration.
+   */
+  callbackURL?: string;
+}
+
+/**
+ * The [OIDC](https://openid.net/specs/openid-connect-core-1_0-final.html) Auth
+ * provider configuration interface. An OIDC provider can be created via
+ * {@link auth.Auth.createProviderConfig `createProviderConfig()`}.
+ */
+export interface OIDCAuthProviderConfig extends AuthProviderConfig {
+
+  /**
+   * This is the required client ID used to confirm the audience of an OIDC
+   * provider's
+   * [ID token](https://openid.net/specs/openid-connect-core-1_0-final.html#IDToken).
+   */
+  clientId: string;
+
+  /**
+   * This is the required provider issuer used to match the provider issuer of
+   * the ID token and to determine the corresponding OIDC discovery document, eg.
+   * [`/.well-known/openid-configuration`](https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderConfig).
+   * This is needed for the following:
+   * <ul>
+   * <li>To verify the provided issuer.</li>
+   * <li>Determine the authentication/authorization endpoint during the OAuth
+   *     `id_token` authentication flow.</li>
+   * <li>To retrieve the public signing keys via `jwks_uri` to verify the OIDC
+   *     provider's ID token's signature.</li>
+   * <li>To determine the claims_supported to construct the user attributes to be
+   *     returned in the additional user info response.</li>
+   * </ul>
+   * ID token validation will be performed as defined in the
+   * [spec](https://openid.net/specs/openid-connect-core-1_0.html#IDTokenValidation).
+   */
+  issuer: string;
+}
+
 
 /**
  * Defines the SAMLConfig class used to convert a client side configuration to its
  * server side representation.
+ *
+ * @internal
  */
 export class SAMLConfig implements SAMLAuthProviderConfig {
   public readonly enabled: boolean;
@@ -643,6 +1074,8 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
 /**
  * Defines the OIDCConfig class used to convert a client side configuration to its
  * server side representation.
+ *
+ * @internal
  */
 export class OIDCConfig implements OIDCAuthProviderConfig {
   public readonly enabled: boolean;
