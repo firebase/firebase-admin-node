@@ -81,8 +81,8 @@ export class Tenant {
 
   public readonly tenantId: string;
   public readonly displayName?: string;
-  private readonly _emailSignInConfig?: EmailSignInConfig;
-  private readonly _multiFactorConfig?: MultiFactorAuthConfig;
+  private readonly emailSignInConfig_?: EmailSignInConfig;
+  private readonly multiFactorConfig_?: MultiFactorAuthConfig;
   public readonly testPhoneNumbers?: {[phoneNumber: string]: string};
 
   /**
@@ -209,15 +209,15 @@ export class Tenant {
     this.tenantId = tenantId;
     this.displayName = response.displayName;
     try {
-      this._emailSignInConfig = new EmailSignInConfig(response);
+      this.emailSignInConfig_ = new EmailSignInConfig(response);
     } catch (e) {
       // If allowPasswordSignup is undefined, it is disabled by default.
-      this._emailSignInConfig = new EmailSignInConfig({
+      this.emailSignInConfig_ = new EmailSignInConfig({
         allowPasswordSignup: false,
       });
     }
     if (typeof response.mfaConfig !== 'undefined') {
-      this._multiFactorConfig = new MultiFactorAuthConfig(response.mfaConfig);
+      this.multiFactorConfig_ = new MultiFactorAuthConfig(response.mfaConfig);
     }
     if (typeof response.testPhoneNumbers !== 'undefined') {
       this.testPhoneNumbers = deepCopy(response.testPhoneNumbers || {});
@@ -225,11 +225,11 @@ export class Tenant {
   }
 
   get emailSignInConfig(): EmailSignInProviderConfig | undefined {
-    return this._emailSignInConfig;
+    return this.emailSignInConfig_;
   }
 
   get multiFactorConfig(): MultiFactorConfig | undefined {
-    return this._multiFactorConfig;
+    return this.multiFactorConfig_;
   }
 
   /** @return {object} The plain object representation of the tenant. */
@@ -237,8 +237,8 @@ export class Tenant {
     const json = {
       tenantId: this.tenantId,
       displayName: this.displayName,
-      emailSignInConfig: this._emailSignInConfig?.toJSON(),
-      multiFactorConfig: this._multiFactorConfig?.toJSON(),
+      emailSignInConfig: this.emailSignInConfig_?.toJSON(),
+      multiFactorConfig: this.multiFactorConfig_?.toJSON(),
       testPhoneNumbers: this.testPhoneNumbers,
     };
     if (typeof json.multiFactorConfig === 'undefined') {

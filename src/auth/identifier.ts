@@ -15,10 +15,10 @@
  */
 
 /**
-   * Used for looking up an account by uid.
-   *
-   * See auth.getUsers()
-   */
+ * Used for looking up an account by uid.
+ *
+ * See auth.getUsers()
+ */
 export interface UidIdentifier {
   uid: string;
 }
