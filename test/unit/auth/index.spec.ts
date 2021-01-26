@@ -23,7 +23,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import * as mocks from '../../resources/mocks';
 import { App } from '../../../src/app/index';
-import { getInstanceId, InstanceId } from '../../../src/instance-id/index';
+import { getAuth, Auth } from '../../../src/auth/index';
 
 chai.should();
 chai.use(sinonChai);
@@ -35,7 +35,7 @@ describe('InstanceId', () => {
   let mockApp: App;
   let mockCredentialApp: App;
 
-  const noProjectIdError = 'Failed to determine project ID for InstanceId. Initialize the SDK '
+  const noProjectIdError = 'Failed to determine project ID for Auth. Initialize the SDK '
   + 'with service account credentials or set project ID as an app option. Alternatively set the '
   + 'GOOGLE_CLOUD_PROJECT environment variable.';
 
@@ -44,10 +44,10 @@ describe('InstanceId', () => {
     mockCredentialApp = mocks.mockCredentialApp();
   });
 
-  describe('getInstanceId()', () => {
+  describe('getAuth()', () => {
     it('should throw when default app is not available', () => {
       expect(() => {
-        return getInstanceId();
+        return getAuth();
       }).to.throw('The default Firebase app does not exist.');
     });
 
@@ -55,21 +55,21 @@ describe('InstanceId', () => {
       // Project ID not set in the environment.
       delete process.env.GOOGLE_CLOUD_PROJECT;
       delete process.env.GCLOUD_PROJECT;
-      const iid = getInstanceId(mockCredentialApp);
-      return iid.deleteInstanceId('iid')
+      const auth = getAuth(mockCredentialApp);
+      return auth.getUser('uid')
         .should.eventually.rejectedWith(noProjectIdError);
     });
 
     it('should not throw given a valid app', () => {
       expect(() => {
-        return getInstanceId(mockApp);
+        return getAuth(mockApp);
       }).not.to.throw();
     });
 
     it('should return the same instance for a given app instance', () => {
-      const iid1: InstanceId = getInstanceId(mockApp);
-      const iid2: InstanceId = getInstanceId(mockApp);
-      expect(iid1).to.equal(iid2);
+      const auth1: Auth = getAuth(mockApp);
+      const auth2: Auth = getAuth(mockApp);
+      expect(auth1).to.equal(auth2);
     });
   });
 });
