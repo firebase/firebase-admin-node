@@ -23,7 +23,9 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import * as mocks from '../../resources/mocks';
 import { App } from '../../../src/app/index';
-import { getDatabase, getDatabaseWithUrl, Database } from '../../../src/database/index';
+import {
+  getDatabase, getDatabaseWithUrl, Database, ServerValue, enableLogging ,
+} from '../../../src/database/index';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 
 chai.should();
@@ -83,5 +85,16 @@ describe('Database', () => {
       expect(db1).to.equal(db2);
       expect(db1).to.not.equal(db3);
     });
+  });
+
+  it('should expose ServerValue sentinel', () => {
+    expect(() => ServerValue.increment(1)).to.not.throw();
+  });
+
+  it('should expose enableLogging global function', () => {
+    expect(() => {
+      enableLogging(console.log);
+      enableLogging(false);
+    }).to.not.throw();
   });
 });
