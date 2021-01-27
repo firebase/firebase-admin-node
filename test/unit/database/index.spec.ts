@@ -23,7 +23,8 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import * as mocks from '../../resources/mocks';
 import { App } from '../../../src/app/index';
-import { getAuth, Auth } from '../../../src/auth/index';
+import { getDatabase, getDatabaseWithUrl, Database } from '../../../src/database/index';
+import { FirebaseApp } from '../../../src/app/firebase-app';
 
 chai.should();
 chai.use(sinonChai);
@@ -31,45 +32,56 @@ chai.use(chaiAsPromised);
 
 const expect = chai.expect;
 
-describe('Auth', () => {
+describe('Database', () => {
   let mockApp: App;
-  let mockCredentialApp: App;
-
-  const noProjectIdError = 'Failed to determine project ID for Auth. Initialize the SDK '
-  + 'with service account credentials or set project ID as an app option. Alternatively set the '
-  + 'GOOGLE_CLOUD_PROJECT environment variable.';
 
   beforeEach(() => {
     mockApp = mocks.app();
-    mockCredentialApp = mocks.mockCredentialApp();
   });
 
-  describe('getAuth()', () => {
+  afterEach(() => {
+    return (mockApp as FirebaseApp).delete();
+  });
+
+  describe('getDatabase()', () => {
     it('should throw when default app is not available', () => {
       expect(() => {
-        return getAuth();
+        return getDatabase();
       }).to.throw('The default Firebase app does not exist.');
-    });
-
-    it('should reject given an invalid credential without project ID', () => {
-      // Project ID not set in the environment.
-      delete process.env.GOOGLE_CLOUD_PROJECT;
-      delete process.env.GCLOUD_PROJECT;
-      const auth = getAuth(mockCredentialApp);
-      return auth.getUser('uid')
-        .should.eventually.rejectedWith(noProjectIdError);
     });
 
     it('should not throw given a valid app', () => {
       expect(() => {
-        return getAuth(mockApp);
+        return getDatabase(mockApp);
       }).not.to.throw();
     });
 
     it('should return the same instance for a given app instance', () => {
-      const auth1: Auth = getAuth(mockApp);
-      const auth2: Auth = getAuth(mockApp);
-      expect(auth1).to.equal(auth2);
+      const db1: Database = getDatabase(mockApp);
+      const db2: Database = getDatabase(mockApp);
+      expect(db1).to.equal(db2);
+    });
+  });
+
+  describe('getDatabaseWithUrl()', () => {
+    it('should throw when default app is not available', () => {
+      expect(() => {
+        return getDatabaseWithUrl('https://test.firebaseio.com');
+      }).to.throw('The default Firebase app does not exist.');
+    });
+
+    it('should not throw given a valid app', () => {
+      expect(() => {
+        return getDatabaseWithUrl('https://test.firebaseio.com', mockApp);
+      }).not.to.throw();
+    });
+
+    it('should return the same instance for a given app instance', () => {
+      const db1: Database = getDatabaseWithUrl('https://test.firebaseio.com', mockApp);
+      const db2: Database = getDatabaseWithUrl('https://test.firebaseio.com', mockApp);
+      const db3: Database = getDatabaseWithUrl('https://other.firebaseio.com', mockApp);
+      expect(db1).to.equal(db2);
+      expect(db1).to.not.equal(db3);
     });
   });
 });

@@ -27,16 +27,13 @@ import { Auth } from '../auth/auth';
 import { MachineLearning } from '../machine-learning/machine-learning';
 import { Messaging } from '../messaging/messaging';
 import { Storage } from '../storage/storage';
-import { database } from '../database/index';
-import { DatabaseService } from '../database/database-internal';
+import { Database } from '../database/index';
 import { Firestore } from '@google-cloud/firestore';
 import { FirestoreService } from '../firestore/firestore-internal';
 import { InstanceId } from '../instance-id/index';
 import { ProjectManagement } from '../project-management/project-management';
 import { SecurityRules } from '../security-rules/security-rules';
 import { RemoteConfig } from '../remote-config/remote-config';
-
-import Database = database.Database;
 
 /**
  * Type representing a callback which is called every time an app lifecycle event occurs.
@@ -287,11 +284,8 @@ export class FirebaseApp implements app.App {
    * @return The Database service instance of this app.
    */
   public database(url?: string): Database {
-    const service: DatabaseService = this.ensureService_('database', () => {
-      const dbService: typeof DatabaseService = require('../database/database-internal').DatabaseService;
-      return new dbService(this);
-    });
-    return service.getDatabase(url);
+    const fn = require('../database/index').getDatabaseWithUrl;
+    return fn(url, this);
   }
 
   /**

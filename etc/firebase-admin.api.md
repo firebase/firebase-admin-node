@@ -6,8 +6,15 @@
 
 import { Agent } from 'http';
 import { Bucket } from '@google-cloud/storage';
+import { DataSnapshot } from '@firebase/database-types';
+import { EventType } from '@firebase/database-types';
+import { FirebaseDatabase } from '@firebase/database-types';
 import * as _firestore from '@google-cloud/firestore';
+import { OnDisconnect } from '@firebase/database-types';
+import { Query } from '@firebase/database-types';
+import { Reference } from '@firebase/database-types';
 import * as rtdb from '@firebase/database-types';
+import { ThenableReference } from '@firebase/database-types';
 
 // @public
 export interface ActionCodeSettings {
@@ -274,26 +281,38 @@ export namespace credential {
     const refreshToken: typeof refreshToken;
 }
 
+// @public (undocumented)
+export interface Database extends FirebaseDatabase {
+    getRules(): Promise<string>;
+    getRulesJSON(): Promise<object>;
+    setRules(source: string | Buffer | object): Promise<void>;
+}
+
 // @public
-export function database(app?: app.App): database.Database;
+export function database(app?: App): database.Database;
 
 // @public (undocumented)
 export namespace database {
     // (undocumented)
-    export interface Database extends rtdb.FirebaseDatabase {
-        getRules(): Promise<string>;
-        getRulesJSON(): Promise<object>;
-        setRules(source: string | Buffer | object): Promise<void>;
-    }
-    import DataSnapshot = rtdb.DataSnapshot;
-    import EventType = rtdb.EventType;
-    import OnDisconnect = rtdb.OnDisconnect;
-    import Query = rtdb.Query;
-    import Reference = rtdb.Reference;
-    import ThenableReference = rtdb.ThenableReference;
-    import enableLogging = rtdb.enableLogging;
+    export type Database = Database;
+    // (undocumented)
+    export type DataSnapshot = rtdb.DataSnapshot;
+    // (undocumented)
+    export type EventType = rtdb.EventType;
+    // (undocumented)
+    export type OnDisconnect = rtdb.OnDisconnect;
+    // (undocumented)
+    export type Query = rtdb.Query;
+    // (undocumented)
+    export type Reference = rtdb.Reference;
+    // (undocumented)
+    export type ThenableReference = rtdb.ThenableReference;
+    const // (undocumented)
+    enableLogging: typeof rtdb.enableLogging;
     const ServerValue: rtdb.ServerValue;
 }
+
+export { DataSnapshot }
 
 // @public
 export interface DecodedIdToken {
@@ -343,6 +362,11 @@ export interface EmailSignInProviderConfig {
     enabled: boolean;
     passwordRequired?: boolean;
 }
+
+// @public (undocumented)
+export const enableLogging: typeof rtdb.enableLogging;
+
+export { EventType }
 
 // @public
 export interface FirebaseArrayIndexError {
@@ -402,6 +426,12 @@ export function getApps(): App[];
 
 // @public (undocumented)
 export function getAuth(app?: App): Auth;
+
+// @public (undocumented)
+export function getDatabase(app?: App): Database;
+
+// @public (undocumented)
+export function getDatabaseWithUrl(url: string, app?: App): Database;
 
 // @public (undocumented)
 export function getInstanceId(app?: App): InstanceId;
@@ -866,6 +896,8 @@ export interface OIDCUpdateAuthProviderRequest {
     issuer?: string;
 }
 
+export { OnDisconnect }
+
 // @public
 export interface PhoneIdentifier {
     // (undocumented)
@@ -950,6 +982,10 @@ export interface ProviderIdentifier {
     // (undocumented)
     providerUid: string;
 }
+
+export { Query }
+
+export { Reference }
 
 // @public (undocumented)
 export function refreshToken(refreshTokenPathOrObject: string | object, httpAgent?: Agent): Credential;
@@ -1101,6 +1137,9 @@ export namespace securityRules {
 }
 
 // @public (undocumented)
+export const ServerValue: rtdb.ServerValue;
+
+// @public (undocumented)
 export interface ServiceAccount {
     // (undocumented)
     clientEmail?: string;
@@ -1162,6 +1201,8 @@ export class TenantManager {
     listTenants(maxResults?: number, pageToken?: string): Promise<ListTenantsResult>;
     updateTenant(tenantId: string, tenantOptions: UpdateTenantRequest): Promise<Tenant>;
 }
+
+export { ThenableReference }
 
 // @public
 export interface UidIdentifier {
