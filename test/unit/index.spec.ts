@@ -43,6 +43,7 @@ import './auth/tenant-manager.spec';
 
 // Database
 import './database/database.spec';
+import './database/index.spec';
 
 // Messaging
 import './messaging/messaging.spec';

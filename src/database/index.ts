@@ -14,9 +14,48 @@
  * limitations under the License.
  */
 
-import { app } from '../firebase-namespace-api';
-import { ServerValue as sv } from '@firebase/database';
 import * as rtdb from '@firebase/database-types';
+import {
+  enableLogging as enableLoggingFunc,
+  ServerValue as serverValueConst,
+} from '@firebase/database';
+
+import { App, getApp } from '../app';
+import { FirebaseApp } from '../app/firebase-app';
+import { Database, DatabaseService } from './database';
+import { Database as TDatabase } from './database';
+
+export { Database };
+export {
+  DataSnapshot,
+  EventType,
+  OnDisconnect,
+  Query,
+  Reference,
+  ThenableReference,
+} from '@firebase/database-types';
+
+export const enableLogging: typeof rtdb.enableLogging = enableLoggingFunc;
+export const ServerValue: rtdb.ServerValue = serverValueConst;
+
+export function getDatabase(app?: App): Database {
+  return getDatabaseInstance({ app });
+}
+
+export function getDatabaseWithUrl(url: string, app?: App): Database {
+  return getDatabaseInstance({ url, app });
+}
+
+function  getDatabaseInstance(options: { url?: string; app?: App }): Database {
+  let { app } = options;
+  if (typeof app === 'undefined') {
+    app = getApp();
+  }
+
+  const firebaseApp: FirebaseApp = app as FirebaseApp;
+  const dbService = firebaseApp.getOrInitService('database', (app) => new DatabaseService(app));
+  return dbService.getDatabase(options.url);
+}
 
 /**
  * Gets the {@link database.Database `Database`} service for the default
@@ -49,49 +88,23 @@ import * as rtdb from '@firebase/database-types';
  * @return The default `Database` service if no app
  *   is provided or the `Database` service associated with the provided app.
  */
-export declare function database(app?: app.App): database.Database;
+export declare function database(app?: App): database.Database;
 
 /* eslint-disable @typescript-eslint/no-namespace */
 export namespace database {
-  export interface Database extends rtdb.FirebaseDatabase {
-    /**
-     * Gets the currently applied security rules as a string. The return value consists of
-     * the rules source including comments.
-     *
-     * @return A promise fulfilled with the rules as a raw string.
-     */
-    getRules(): Promise<string>;
+  export type Database = TDatabase;
+  export type DataSnapshot = rtdb.DataSnapshot;
+  export type EventType = rtdb.EventType;
+  export type OnDisconnect = rtdb.OnDisconnect;
+  export type Query = rtdb.Query;
+  export type Reference = rtdb.Reference;
+  export type ThenableReference = rtdb.ThenableReference;
 
-    /**
-     * Gets the currently applied security rules as a parsed JSON object. Any comments in
-     * the original source are stripped away.
-     *
-     * @return A promise fulfilled with the parsed rules object.
-     */
-    getRulesJSON(): Promise<object>;
-
-    /**
-     * Sets the specified rules on the Firebase Realtime Database instance. If the rules source is
-     * specified as a string or a Buffer, it may include comments.
-     *
-     * @param source Source of the rules to apply. Must not be `null` or empty.
-     * @return Resolves when the rules are set on the Realtime Database.
-     */
-    setRules(source: string | Buffer | object): Promise<void>;
-  }
-
-  /* eslint-disable @typescript-eslint/no-unused-vars */
-  export import DataSnapshot = rtdb.DataSnapshot;
-  export import EventType = rtdb.EventType;
-  export import OnDisconnect = rtdb.OnDisconnect;
-  export import Query = rtdb.Query;
-  export import Reference = rtdb.Reference;
-  export import ThenableReference = rtdb.ThenableReference;
-  export import enableLogging = rtdb.enableLogging;
+  export declare const enableLogging: typeof rtdb.enableLogging;
 
   /**
    * [`ServerValue`](https://firebase.google.com/docs/reference/js/firebase.database.ServerValue)
    * module from the `@firebase/database` package.
    */
-  export const ServerValue: rtdb.ServerValue = sv;
+  export declare const ServerValue: rtdb.ServerValue;
 }

@@ -31,7 +31,7 @@ chai.use(chaiAsPromised);
 
 const expect = chai.expect;
 
-describe('InstanceId', () => {
+describe('Auth', () => {
   let mockApp: App;
   let mockCredentialApp: App;
 

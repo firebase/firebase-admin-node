@@ -17,26 +17,52 @@
 import { URL } from 'url';
 import * as path from 'path';
 
+import { Database as DatabaseImpl } from '@firebase/database';
+import { FirebaseDatabase } from '@firebase/database-types';
+
+import { App } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import { FirebaseDatabaseError, AppErrorCodes, FirebaseAppError } from '../utils/error';
-import { Database as DatabaseImpl } from '@firebase/database';
-import { database } from './index';
-
 import * as validator from '../utils/validator';
 import { AuthorizedHttpClient, HttpRequestConfig, HttpError } from '../utils/api-request';
 import { getSdkVersion } from '../utils/index';
 
-import Database = database.Database;
+export interface Database extends FirebaseDatabase {
+  /**
+   * Gets the currently applied security rules as a string. The return value consists of
+   * the rules source including comments.
+   *
+   * @return A promise fulfilled with the rules as a raw string.
+   */
+  getRules(): Promise<string>;
+
+  /**
+   * Gets the currently applied security rules as a parsed JSON object. Any comments in
+   * the original source are stripped away.
+   *
+   * @return A promise fulfilled with the parsed rules object.
+   */
+  getRulesJSON(): Promise<object>;
+
+  /**
+   * Sets the specified rules on the Firebase Realtime Database instance. If the rules source is
+   * specified as a string or a Buffer, it may include comments.
+   *
+   * @param source Source of the rules to apply. Must not be `null` or empty.
+   * @return Resolves when the rules are set on the Realtime Database.
+   */
+  setRules(source: string | Buffer | object): Promise<void>;
+}
 
 export class DatabaseService {
 
-  private readonly appInternal: FirebaseApp;
+  private readonly appInternal: App;
 
   private databases: {
     [dbUrl: string]: Database;
   } = {};
 
-  constructor(app: FirebaseApp) {
+  constructor(app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseDatabaseError({
         code: 'invalid-argument',
@@ -63,9 +89,9 @@ export class DatabaseService {
   /**
    * Returns the app associated with this DatabaseService instance.
    *
-   * @return {FirebaseApp} The app associated with this DatabaseService instance.
+   * @return The app associated with this DatabaseService instance.
    */
-  get app(): FirebaseApp {
+  get app(): App {
     return this.appInternal;
   }
 
@@ -122,11 +148,11 @@ class DatabaseRulesClient {
   private readonly dbUrl: string;
   private readonly httpClient: AuthorizedHttpClient;
 
-  constructor(app: FirebaseApp, dbUrl: string) {
+  constructor(app: App, dbUrl: string) {
     const parsedUrl = new URL(dbUrl);
     parsedUrl.pathname = path.join(parsedUrl.pathname, RULES_URL_PATH);
     this.dbUrl = parsedUrl.toString();
-    this.httpClient = new AuthorizedHttpClient(app);
+    this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
   }
 
   /**
