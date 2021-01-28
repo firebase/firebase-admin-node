@@ -47,7 +47,7 @@ export function skipForEmulator(): void {
 
 before(() => {
   let getCredential: () => {credential?: admin.credential.Credential};
-  let client_email;
+  let serviceAccountId: string;
 
   /* tslint:disable:no-console */
   if (isEmulator) {
@@ -58,7 +58,7 @@ before(() => {
     getCredential = () => ({});
     projectId = process.env.GCLOUD_PROJECT!;
     apiKey = 'fake-api-key';
-    client_email = 'fake-client-email@example.com';
+    serviceAccountId = 'fake-client-email@example.com';
   } else {
     let serviceAccount: any;
     try {
@@ -82,9 +82,9 @@ before(() => {
       ));
       throw error;
     }
-    getCredential = () => ({credential: admin.credential.cert(serviceAccount)});
+    getCredential = () => ({ credential: admin.credential.cert(serviceAccount) });
     projectId = serviceAccount.project_id;
-    client_email = serviceAccount.client_email;
+    serviceAccountId = serviceAccount.client_email;
   }
   /* tslint:enable:no-console */
 
@@ -123,7 +123,7 @@ before(() => {
   }
   noServiceAccountApp = admin.initializeApp({
     ...noServiceAccountAppCreds,
-    serviceAccountId: client_email,
+    serviceAccountId,
     projectId,
   }, 'noServiceAccount');
 

@@ -704,7 +704,7 @@ describe('admin.auth', () => {
       });
 
       it('verifyIdToken() fails when called with a token with wrong project', () => {
-        const unsignedToken = mocks.generateIdToken({algorithm: 'none', audience: 'nosuch'});
+        const unsignedToken = mocks.generateIdToken({ algorithm: 'none', audience: 'nosuch' });
         return admin.auth().verifyIdToken(unsignedToken)
           .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
       });
