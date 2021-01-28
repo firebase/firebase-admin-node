@@ -216,9 +216,8 @@ export class FirebaseTokenVerifier {
       return Promise.reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, errorMessage));
     }
 
-    // When the algorithm is set to 'none' there will be no signature and therefore we don't check
-    // the public keys.
     if (useEmulator()) {
+      // Signature checks skipped for emulator; no need to fetch public keys.
       return this.verifyJwtSignatureWithKey(jwtToken, null);
     }
 
