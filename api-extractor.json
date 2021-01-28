@@ -16,7 +16,7 @@
     "enabled": false
   },
   "tsdocMetadata": {
-
+    "enabled": false
   },
   "messages": {
     "compilerMessageReporting": {

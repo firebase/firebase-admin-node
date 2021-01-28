@@ -15,9 +15,10 @@
  * limitations under the License.
  */
 
-const { exec } = require('child-process-promise');
+const path = require('path');
 const fs = require('mz/fs');
 const yargs = require('yargs');
+const { Extractor, ExtractorConfig } = require('@microsoft/api-extractor');
 
 const { local: localMode } = yargs
   .option('local', {
@@ -39,8 +40,6 @@ const entryPoints = {
   'firebase-admin/instance-id': './lib/instance-id/index.d.ts',
 };
 
-const apiExtractorBin = './node_modules/.bin/api-extractor run';
-
 const tempConfigFile = 'api-extractor.tmp';
 
 async function generateReports() {
@@ -50,31 +49,37 @@ async function generateReports() {
 }
 
 async function generateReportForEntryPoint(key) {
-  console.log(`Generating API report for ${key}`)
+  console.log(`\nGenerating API report for ${key}`)
   console.log('========================================================\n');
 
+  const safeName = key.replace('/', '.');
   console.log('Updating configuration for entry point...');
-  config.apiReport.reportFileName = `${key.replace('/', '.')}.api.md`;
+  config.apiReport.reportFileName = `${safeName}.api.md`;
   config.mainEntryPointFilePath = entryPoints[key];
   console.log(`Report file name: ${config.apiReport.reportFileName}`);
   console.log(`Entry point declaration: ${config.mainEntryPointFilePath}`);
   await fs.writeFile(tempConfigFile, JSON.stringify(config));
 
-  let command = `${apiExtractorBin} -c ${tempConfigFile}`;
-  if (localMode) {
-    command += ' --local';
-  }
-
-  console.log(`Running command: ${command}`);
   try {
-    const output = await exec(command);
-    console.log(output.stdout);
-  } catch (err) {
-    if (err.stdout) {
-      console.log(err.stdout);
+    const configFile = ExtractorConfig.loadFile(tempConfigFile);
+    const extractorConfig = ExtractorConfig.prepare({
+      configObject: configFile,
+      configObjectFullPath: path.resolve(tempConfigFile),
+      packageJson: {
+        name: safeName,
+      },
+      packageJsonFullPath: path.resolve('package.json'),
+    });
+    const extractorResult = Extractor.invoke(extractorConfig, {
+      localBuild: localMode,
+      showVerboseMessages: true
+    });
+    if (!extractorResult.succeeded) {
+      throw new Error(`API Extractor completed with ${extractorResult.errorCount} errors`
+        + ` and ${extractorResult.warningCount} warnings`);
     }
 
-    throw err.stderr;
+    console.error(`API Extractor completed successfully`);
   } finally {
     await fs.unlink(tempConfigFile);
   }
