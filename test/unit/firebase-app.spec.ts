@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,23 +26,33 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from './utils';
 import * as mocks from '../resources/mocks';
 
-import { GoogleOAuthAccessToken } from '../../src/credential/credential-interfaces';
+import { GoogleOAuthAccessToken } from '../../src/credential/index';
 import { ServiceAccountCredential } from '../../src/credential/credential-internal';
-import { FirebaseServiceInterface } from '../../src/firebase-service';
 import { FirebaseApp, FirebaseAccessToken } from '../../src/firebase-app';
 import { FirebaseNamespace, FirebaseNamespaceInternals, FIREBASE_CONFIG_VAR } from '../../src/firebase-namespace';
 
-import { Auth } from '../../src/auth/auth';
-import { Messaging } from '../../src/messaging/messaging';
-import { MachineLearning } from '../../src/machine-learning/machine-learning';
-import { Storage } from '../../src/storage/storage';
-import { Firestore } from '@google-cloud/firestore';
-import { Database } from '../../src/database/database';
-import { InstanceId } from '../../src/instance-id/instance-id';
-import { ProjectManagement } from '../../src/project-management/project-management';
-import { SecurityRules } from '../../src/security-rules/security-rules';
+import { auth } from '../../src/auth/index';
+import { messaging } from '../../src/messaging/index';
+import { machineLearning } from '../../src/machine-learning/index';
+import { storage } from '../../src/storage/index';
+import { firestore } from '../../src/firestore/index';
+import { database } from '../../src/database/index';
+import { instanceId } from '../../src/instance-id/index';
+import { projectManagement } from '../../src/project-management/index';
+import { securityRules } from '../../src/security-rules/index';
+import { remoteConfig } from '../../src/remote-config/index';
 import { FirebaseAppError, AppErrorCodes } from '../../src/utils/error';
-import { RemoteConfig } from '../../src/remote-config/remote-config';
+
+import Auth = auth.Auth;
+import Database = database.Database;
+import Messaging = messaging.Messaging;
+import MachineLearning = machineLearning.MachineLearning;
+import Storage = storage.Storage;
+import Firestore = firestore.Firestore;
+import InstanceId = instanceId.InstanceId;
+import ProjectManagement = projectManagement.ProjectManagement;
+import SecurityRules = securityRules.SecurityRules;
+import RemoteConfig = remoteConfig.RemoteConfig;
 
 chai.should();
 chai.use(sinonChai);
@@ -53,13 +64,14 @@ const ONE_HOUR_IN_SECONDS = 60 * 60;
 const ONE_MINUTE_IN_MILLISECONDS = 60 * 1000;
 
 const deleteSpy = sinon.spy();
-function mockServiceFactory(app: FirebaseApp): FirebaseServiceInterface {
-  return {
-    app,
-    INTERNAL: {
-      delete: deleteSpy.bind(null, app.name),
-    },
-  };
+
+class TestService {
+  public deleted = false;
+
+  public delete(): Promise<void> {
+    this.deleted = true;
+    return Promise.resolve();
+  }
 }
 
 
@@ -133,7 +145,7 @@ describe('FirebaseApp', () => {
     it('should be read-only', () => {
       expect(() => {
         (mockApp as any).name = 'foo';
-      }).to.throw(`Cannot set property name of #<FirebaseApp> which has only a getter`);
+      }).to.throw('Cannot set property name of #<FirebaseApp> which has only a getter');
     });
   });
 
@@ -153,7 +165,7 @@ describe('FirebaseApp', () => {
     it('should be read-only', () => {
       expect(() => {
         (mockApp as any).options = {};
-      }).to.throw(`Cannot set property options of #<FirebaseApp> which has only a getter`);
+      }).to.throw('Cannot set property options of #<FirebaseApp> which has only a getter');
     });
 
     it('should not return an object which can mutate the underlying options', () => {
@@ -175,28 +187,28 @@ describe('FirebaseApp', () => {
       process.env[FIREBASE_CONFIG_VAR] = './test/resources/non_existant.json';
       expect(() => {
         firebaseNamespace.initializeApp();
-      }).to.throw(`Failed to parse app options file: Error: ENOENT: no such file or directory`);
+      }).to.throw('Failed to parse app options file: Error: ENOENT: no such file or directory');
     });
 
     it('should throw when the environment variable contains bad json', () => {
       process.env[FIREBASE_CONFIG_VAR] = '{,,';
       expect(() => {
         firebaseNamespace.initializeApp();
-      }).to.throw(`Failed to parse app options file: SyntaxError: Unexpected token ,`);
+      }).to.throw('Failed to parse app options file: SyntaxError: Unexpected token ,');
     });
 
     it('should throw when the environment variable points to an empty file', () => {
       process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config_empty.json';
       expect(() => {
         firebaseNamespace.initializeApp();
-      }).to.throw(`Failed to parse app options file`);
+      }).to.throw('Failed to parse app options file');
     });
 
     it('should throw when the environment variable points to bad json', () => {
       process.env[FIREBASE_CONFIG_VAR] = './test/resources/firebase_config_bad.json';
       expect(() => {
         firebaseNamespace.initializeApp();
-      }).to.throw(`Failed to parse app options file`);
+      }).to.throw('Failed to parse app options file');
     });
 
     it('should ignore a bad config key in the config file', () => {
@@ -330,18 +342,15 @@ describe('FirebaseApp', () => {
     });
 
     it('should call delete() on each service\'s internals', () => {
-      firebaseNamespace.INTERNAL.registerService(mocks.serviceName, mockServiceFactory);
-      firebaseNamespace.INTERNAL.registerService(mocks.serviceName + '2', mockServiceFactory);
-
       const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      (app as {[key: string]: any})[mocks.serviceName]();
-      (app as {[key: string]: any})[mocks.serviceName + '2']();
+      const svc1 = new TestService();
+      const svc2 = new TestService();
+      (app as any).ensureService_(mocks.serviceName, () => svc1);
+      (app as any).ensureService_(mocks.serviceName + '2', () => svc2);
 
       return app.delete().then(() => {
-        expect(deleteSpy).to.have.been.calledTwice;
-        expect(deleteSpy.firstCall.args).to.deep.equal([mocks.appName]);
-        expect(deleteSpy.secondCall.args).to.deep.equal([mocks.appName]);
+        expect(svc1.deleted).to.be.true;
+        expect(svc2.deleted).to.be.true;
       });
     });
   });
@@ -660,45 +669,6 @@ describe('FirebaseApp', () => {
       const service1: RemoteConfig = app.remoteConfig();
       const service2: RemoteConfig = app.remoteConfig();
       expect(service1).to.equal(service2);
-    });
-  });
-
-  describe('#[service]()', () => {
-    it('should throw if the app has already been deleted', () => {
-      firebaseNamespace.INTERNAL.registerService(mocks.serviceName, mockServiceFactory);
-
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      return app.delete().then(() => {
-        expect(() => {
-          return (app as {[key: string]: any})[mocks.serviceName]();
-        }).to.throw(`Firebase app named "${mocks.appName}" has already been deleted.`);
-      });
-    });
-
-    it('should return the service namespace', () => {
-      firebaseNamespace.INTERNAL.registerService(mocks.serviceName, mockServiceFactory);
-
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      const serviceNamespace = (app as {[key: string]: any})[mocks.serviceName]();
-      expect(serviceNamespace).to.have.keys(['app', 'INTERNAL']);
-    });
-
-    it('should return a cached version of the service on subsequent calls', () => {
-      const createServiceSpy = sinon.spy();
-      firebaseNamespace.INTERNAL.registerService(mocks.serviceName, createServiceSpy);
-
-      const app = firebaseNamespace.initializeApp(mocks.appOptions, mocks.appName);
-
-      expect(createServiceSpy).to.not.have.been.called;
-
-      const serviceNamespace1 = (app as {[key: string]: any})[mocks.serviceName]();
-      expect(createServiceSpy).to.have.been.calledOnce;
-
-      const serviceNamespace2 = (app as {[key: string]: any})[mocks.serviceName]();
-      expect(createServiceSpy).to.have.been.calledOnce;
-      expect(serviceNamespace1).to.deep.equal(serviceNamespace2);
     });
   });
 

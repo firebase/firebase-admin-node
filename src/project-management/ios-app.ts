@@ -17,9 +17,13 @@
 import { FirebaseProjectManagementError } from '../utils/error';
 import * as validator from '../utils/validator';
 import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request-internal';
-import { IosAppMetadata, AppPlatform } from './app-metadata';
+import { projectManagement } from './index';
 
-export class IosApp {
+import IosAppInterface = projectManagement.IosApp;
+import IosAppMetadata = projectManagement.IosAppMetadata;
+import AppPlatform = projectManagement.AppPlatform;
+
+export class IosApp implements IosAppInterface {
   private readonly resourceName: string;
 
   constructor(
@@ -98,7 +102,7 @@ export class IosApp {
         assertServerResponse(
           validator.isBase64String(base64ConfigFileContents),
           responseData,
-          `getConfig()'s responseData.configFileContents must be a base64 string.`);
+          'getConfig()\'s responseData.configFileContents must be a base64 string.');
 
         return Buffer.from(base64ConfigFileContents, 'base64').toString('utf8');
       });

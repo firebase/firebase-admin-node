@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,13 +25,13 @@ import stream = require('stream');
 import * as _ from 'lodash';
 import * as jwt from 'jsonwebtoken';
 
+import { AppOptions } from '../../src/firebase-namespace-api';
 import { FirebaseNamespace } from '../../src/firebase-namespace';
-import { FirebaseServiceInterface } from '../../src/firebase-service';
-import { FirebaseApp, FirebaseAppOptions } from '../../src/firebase-app';
-import { Credential, GoogleOAuthAccessToken } from '../../src/credential/credential-interfaces';
+import { FirebaseApp } from '../../src/firebase-app';
+import { credential as _credential, GoogleOAuthAccessToken } from '../../src/credential/index';
 import { ServiceAccountCredential } from '../../src/credential/credential-internal';
 
-const ALGORITHM = 'RS256';
+const ALGORITHM = 'RS256' as const;
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 
 export const uid = 'someUid';
@@ -52,13 +53,13 @@ export const storageBucket = 'bucketName.appspot.com';
 
 export const credential = new ServiceAccountCredential(path.resolve(__dirname, './mock.key.json'));
 
-export const appOptions: FirebaseAppOptions = {
+export const appOptions: AppOptions = {
   credential,
   databaseURL,
   storageBucket,
 };
 
-export const appOptionsWithOverride: FirebaseAppOptions = {
+export const appOptionsWithOverride: AppOptions = {
   credential,
   databaseAuthVariableOverride,
   databaseURL,
@@ -66,20 +67,20 @@ export const appOptionsWithOverride: FirebaseAppOptions = {
   projectId,
 };
 
-export const appOptionsNoAuth: FirebaseAppOptions = {
+export const appOptionsNoAuth: AppOptions = {
   databaseURL,
 };
 
-export const appOptionsNoDatabaseUrl: FirebaseAppOptions = {
+export const appOptionsNoDatabaseUrl: AppOptions = {
   credential,
 };
 
-export const appOptionsAuthDB: FirebaseAppOptions = {
+export const appOptionsAuthDB: AppOptions = {
   credential,
   databaseURL,
 };
 
-export class MockCredential implements Credential {
+export class MockCredential implements _credential.Credential {
   public getAccessToken(): Promise<GoogleOAuthAccessToken> {
     return Promise.resolve({
       access_token: 'mock-token', // eslint-disable-line @typescript-eslint/camelcase
@@ -101,7 +102,7 @@ export function mockCredentialApp(): FirebaseApp {
   }, appName, new FirebaseNamespace().INTERNAL);
 }
 
-export function appWithOptions(options: FirebaseAppOptions): FirebaseApp {
+export function appWithOptions(options: AppOptions): FirebaseApp {
   const namespaceInternals = new FirebaseNamespace().INTERNAL;
   namespaceInternals.removeApp = _.noop;
   return new FirebaseApp(options, appName, namespaceInternals);
@@ -181,9 +182,10 @@ export const x509CertPairs = [
  * Generates a mocked Firebase ID token.
  *
  * @param {object} overrides Overrides for the generated token's attributes.
+ * @param {object} claims Extra claims to add to the token.
  * @return {string} A mocked Firebase ID token with any provided overrides included.
  */
-export function generateIdToken(overrides?: object): string {
+export function generateIdToken(overrides?: object, claims?: object): string {
   const options = _.assign({
     audience: projectId,
     expiresIn: ONE_HOUR_IN_SECONDS,
@@ -195,7 +197,12 @@ export function generateIdToken(overrides?: object): string {
     },
   }, overrides);
 
-  return jwt.sign(developerClaims, certificateObject.private_key, options);
+  const payload = {
+    ...developerClaims,
+    ...claims,
+  };
+
+  return jwt.sign(payload, certificateObject.private_key, options);
 }
 
 /**
@@ -218,17 +225,6 @@ export function generateSessionCookie(overrides?: object, expiresIn?: number): s
   }, overrides);
 
   return jwt.sign(developerClaims, certificateObject.private_key, options);
-}
-
-export function firebaseServiceFactory(
-  firebaseApp: FirebaseApp,
-  _extendApp?: (props: object) => void,
-): FirebaseServiceInterface {
-  const result = {
-    app: firebaseApp,
-    INTERNAL: {},
-  };
-  return result as FirebaseServiceInterface;
 }
 
 /** Mock socket emitter class. */

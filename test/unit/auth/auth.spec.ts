@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,8 +27,8 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
-import { Auth, TenantAwareAuth, BaseAuth, DecodedIdToken } from '../../../src/auth/auth';
-import { UserRecord, UpdateRequest } from '../../../src/auth/user-record';
+import { Auth, TenantAwareAuth, BaseAuth } from '../../../src/auth/auth';
+import { UserRecord } from '../../../src/auth/user-record';
 import { FirebaseApp } from '../../../src/firebase-app';
 import {
   AuthRequestHandler, TenantAwareAuthRequestHandler, AbstractAuthRequestHandler,
@@ -37,13 +38,17 @@ import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error
 import * as validator from '../../../src/utils/validator';
 import { FirebaseTokenVerifier } from '../../../src/auth/token-verifier';
 import {
-  AuthProviderConfigFilter, OIDCConfig, SAMLConfig,
-  OIDCConfigServerResponse, SAMLConfigServerResponse,
+  OIDCConfig, SAMLConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
 } from '../../../src/auth/auth-config';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { TenantManager } from '../../../src/auth/tenant-manager';
 import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
 import { HttpClient } from '../../../src/utils/api-request';
+import { auth } from '../../../src/auth/index';
+
+import DecodedIdToken = auth.DecodedIdToken;
+import UpdateRequest = auth.UpdateRequest;
+import AuthProviderConfigFilter = auth.AuthProviderConfigFilter;
 
 chai.should();
 chai.use(sinonChai);
@@ -3185,12 +3190,65 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
     });
 
-    if (testConfig.Auth === Auth) {
-      describe('INTERNAL.delete()', () => {
-        it('should delete Auth instance', () => {
-          (auth as Auth).INTERNAL.delete().should.eventually.be.fulfilled;
-        });
+    describe('auth emulator support', () => {
+
+      let mockAuth = testConfig.init(mocks.app());
+
+      beforeEach(() => {
+        process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
+        mockAuth = testConfig.init(mocks.app());
       });
-    }
+
+      afterEach(() => {
+        delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
+      });
+
+      it('createCustomToken() generates an unsigned token', async () => {
+        const token = await mockAuth.createCustomToken('uid1');
+
+        // Check the decoded token has the right algorithm
+        const decoded = jwt.decode(token, { complete: true });
+        expect(decoded).to.have.property('header').that.has.property('alg', 'none');
+        expect(decoded).to.have.property('payload').that.has.property('uid', 'uid1');
+
+        // Make sure this doesn't throw
+        jwt.verify(token, '', { algorithms: ['none'] });
+      });
+
+      it('verifyIdToken() rejects an unsigned token when only the env var is set', async () => {
+        const unsignedToken = mocks.generateIdToken({
+          algorithm: 'none'
+        });
+
+        await expect(mockAuth.verifyIdToken(unsignedToken))
+          .to.be.rejectedWith('Firebase ID token has incorrect algorithm. Expected "RS256"');
+      });
+
+      it('verifyIdToken() accepts an unsigned token when private method is called and env var is set', async () => {
+        (mockAuth as any).setJwtVerificationEnabled(false);
+
+        let claims = {};
+        if (testConfig.Auth === TenantAwareAuth) {
+          claims = {
+            firebase: {
+              tenant: TENANT_ID
+            }
+          }
+        }
+
+        const unsignedToken = mocks.generateIdToken({
+          algorithm: 'none'
+        }, claims);
+
+        const decoded = await mockAuth.verifyIdToken(unsignedToken);
+        expect(decoded).to.be.ok;
+      });
+
+      it('private method throws when env var is unset', async () => {
+        delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
+        await expect(() => (mockAuth as any).setJwtVerificationEnabled(false))
+          .to.throw('This method is only available when connected to the Authentication emulator.')
+      });
+    });
   });
 });

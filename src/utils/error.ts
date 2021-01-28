@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,6 +15,7 @@
  * limitations under the License.
  */
 
+import { FirebaseError as FirebaseErrorInterface } from '../firebase-namespace-api';
 import { deepCopy } from '../utils/deep-copy';
 
 /**
@@ -22,11 +24,6 @@ import { deepCopy } from '../utils/deep-copy';
 export interface ErrorInfo {
   code: string;
   message: string;
-}
-
-export interface FirebaseArrayIndexError {
-  index: number;
-  error: FirebaseError;
 }
 
 /**
@@ -42,7 +39,7 @@ interface ServerToClientCode {
  * @param {ErrorInfo} errorInfo The error information (code and message).
  * @constructor
  */
-export class FirebaseError extends Error {
+export class FirebaseError extends Error implements FirebaseErrorInterface {
   constructor(private errorInfo: ErrorInfo) {
     super(errorInfo.message);
 

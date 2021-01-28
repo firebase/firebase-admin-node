@@ -22,17 +22,17 @@ import * as sinon from 'sinon';
 import { RemoteConfig } from '../../../src/remote-config/remote-config';
 import { FirebaseApp } from '../../../src/firebase-app';
 import * as mocks from '../../resources/mocks';
-import {
-  RemoteConfigTemplate,
-  RemoteConfigCondition,
-  TagColor,
-  ListVersionsResult,
-} from '../../../src/remote-config/remote-config-api-client';
+import { remoteConfig } from '../../../src/remote-config/index';
 import {
   FirebaseRemoteConfigError,
   RemoteConfigApiClient
 } from '../../../src/remote-config/remote-config-api-client-internal';
 import { deepCopy } from '../../../src/utils/deep-copy';
+
+import RemoteConfigTemplate = remoteConfig.RemoteConfigTemplate;
+import RemoteConfigCondition = remoteConfig.RemoteConfigCondition;
+import TagColor = remoteConfig.TagColor;
+import ListVersionsResult = remoteConfig.ListVersionsResult;
 
 const expect = chai.expect;
 
@@ -64,7 +64,7 @@ describe('RemoteConfig', () => {
       email: 'firebase-adminsdk@gserviceaccount.com'
     },
     description: 'production version',
-    updateTime: '2020-06-15T16:45:03.000Z'
+    updateTime: '2020-06-15T16:45:03.541527Z'
   };
 
   const REMOTE_CONFIG_RESPONSE: {
@@ -82,7 +82,7 @@ describe('RemoteConfig', () => {
       {
         name: 'ios',
         expression: 'device.os == \'ios\'',
-        tagColor: TagColor.BLUE,
+        tagColor: 'BLUE',
       },
     ],
     parameters: {
@@ -102,7 +102,7 @@ describe('RemoteConfig', () => {
     conditions: [{
       name: 'ios',
       expression: 'device.os == \'ios\'',
-      tagColor: TagColor.PINK,
+      tagColor: 'PINK',
     }],
     parameters: {
       // eslint-disable-next-line @typescript-eslint/camelcase
@@ -123,7 +123,7 @@ describe('RemoteConfig', () => {
     versions: [
       {
         versionNumber: '78',
-        updateTime: '2020-05-07T18:46:09.495Z',
+        updateTime: '2020-05-07T18:46:09.495234Z',
         updateUser: {
           email: 'user@gmail.com',
           imageUrl: 'https://photo.jpg'
@@ -484,12 +484,12 @@ describe('RemoteConfig', () => {
       expect(newTemplate.conditions.length).to.equal(1);
       expect(newTemplate.conditions[0].name).to.equal('ios');
       expect(newTemplate.conditions[0].expression).to.equal('device.os == \'ios\'');
-      expect(newTemplate.conditions[0].tagColor).to.equal(TagColor.BLUE);
+      expect(newTemplate.conditions[0].tagColor).to.equal('BLUE');
       // verify that the etag is unchanged
       expect(newTemplate.etag).to.equal('etag-123456789012-5');
       // verify that the etag is read-only
       expect(() => {
-        (newTemplate as any).etag = "new-etag";
+        (newTemplate as any).etag = 'new-etag';
       }).to.throw(
         'Cannot set property etag of #<RemoteConfigTemplateImpl> which has only a getter');
 
@@ -506,7 +506,7 @@ describe('RemoteConfig', () => {
       const cond = c as RemoteConfigCondition;
       expect(cond.name).to.equal('ios');
       expect(cond.expression).to.equal('device.os == \'ios\'');
-      expect(cond.tagColor).to.equal(TagColor.BLUE);
+      expect(cond.tagColor).to.equal('BLUE');
     });
   });
 
@@ -552,7 +552,7 @@ describe('RemoteConfig', () => {
       stubs.push(stub);
       return rcOperation()
         .should.eventually.be.rejected.and.have.property(
-          'message', `Remote Config parameters must be a non-null object`);
+          'message', 'Remote Config parameters must be a non-null object');
     });
 
     it('should reject when API response does not contain valid parameter groups', () => {
@@ -564,7 +564,7 @@ describe('RemoteConfig', () => {
       stubs.push(stub);
       return rcOperation()
         .should.eventually.be.rejected.and.have.property(
-          'message', `Remote Config parameter groups must be a non-null object`);
+          'message', 'Remote Config parameter groups must be a non-null object');
     });
 
     it('should reject when API response does not contain valid conditions', () => {
@@ -576,7 +576,7 @@ describe('RemoteConfig', () => {
       stubs.push(stub);
       return rcOperation()
         .should.eventually.be.rejected.and.have.property(
-          'message', `Remote Config conditions must be an array`);
+          'message', 'Remote Config conditions must be an array');
     });
   }
 
@@ -639,11 +639,11 @@ describe('RemoteConfig', () => {
           expect(template.conditions.length).to.equal(1);
           expect(template.conditions[0].name).to.equal('ios');
           expect(template.conditions[0].expression).to.equal('device.os == \'ios\'');
-          expect(template.conditions[0].tagColor).to.equal(TagColor.BLUE);
+          expect(template.conditions[0].tagColor).to.equal('BLUE');
           expect(template.etag).to.equal('etag-123456789012-5');
           // verify that etag is read-only
           expect(() => {
-            (template as any).etag = "new-etag";
+            (template as any).etag = 'new-etag';
           }).to.throw(
             'Cannot set property etag of #<RemoteConfigTemplateImpl> which has only a getter');
 
@@ -670,7 +670,7 @@ describe('RemoteConfig', () => {
           const cond = c as RemoteConfigCondition;
           expect(cond.name).to.equal('ios');
           expect(cond.expression).to.equal('device.os == \'ios\'');
-          expect(cond.tagColor).to.equal(TagColor.BLUE);
+          expect(cond.tagColor).to.equal('BLUE');
 
           const parsed = JSON.parse(JSON.stringify(template));
           const expectedTemplate = deepCopy(REMOTE_CONFIG_RESPONSE);
@@ -678,6 +678,84 @@ describe('RemoteConfig', () => {
           expectedVersion.updateTime = new Date(expectedVersion.updateTime).toUTCString();
           expectedTemplate.version = expectedVersion;
           expect(parsed).deep.equals(expectedTemplate);
+        });
+    });
+
+    it('should resolve with template when Version updateTime contains 3 digits in fractional seconds', () => {
+      const response = deepCopy(REMOTE_CONFIG_RESPONSE);
+      const versionInfo = deepCopy(VERSION_INFO);
+      versionInfo.updateTime = '2020-10-03T17:14:10.203Z';
+      response.version = versionInfo;
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, operationName)
+        .resolves(response);
+      stubs.push(stub);
+
+      return rcOperation()
+        .then((template) => {
+          expect(template.etag).to.equal('etag-123456789012-5');
+
+          const version = template.version!;
+          expect(version.versionNumber).to.equal('86');
+          expect(version.updateOrigin).to.equal('ADMIN_SDK_NODE');
+          expect(version.updateType).to.equal('INCREMENTAL_UPDATE');
+          expect(version.updateUser).to.deep.equal({
+            email: 'firebase-adminsdk@gserviceaccount.com'
+          });
+          expect(version.description).to.equal('production version');
+          expect(version.updateTime).to.equal('Sat, 03 Oct 2020 17:14:10 GMT');
+        });
+    });
+
+    it('should resolve with template when Version updateTime contains 6 digits in fractional seconds', () => {
+      const response = deepCopy(REMOTE_CONFIG_RESPONSE);
+      const versionInfo = deepCopy(VERSION_INFO);
+      versionInfo.updateTime = '2020-08-14T17:01:36.541527Z';
+      response.version = versionInfo;
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, operationName)
+        .resolves(response);
+      stubs.push(stub);
+
+      return rcOperation()
+        .then((template) => {
+          expect(template.etag).to.equal('etag-123456789012-5');
+
+          const version = template.version!;
+          expect(version.versionNumber).to.equal('86');
+          expect(version.updateOrigin).to.equal('ADMIN_SDK_NODE');
+          expect(version.updateType).to.equal('INCREMENTAL_UPDATE');
+          expect(version.updateUser).to.deep.equal({
+            email: 'firebase-adminsdk@gserviceaccount.com'
+          });
+          expect(version.description).to.equal('production version');
+          expect(version.updateTime).to.equal('Fri, 14 Aug 2020 17:01:36 GMT');
+        });
+    });
+
+    it('should resolve with template when Version updateTime contains 9 digits in fractional seconds', () => {
+      const response = deepCopy(REMOTE_CONFIG_RESPONSE);
+      const versionInfo = deepCopy(VERSION_INFO);
+      versionInfo.updateTime = '2020-11-15T06:57:26.342763941Z';
+      response.version = versionInfo;
+      const stub = sinon
+        .stub(RemoteConfigApiClient.prototype, operationName)
+        .resolves(response);
+      stubs.push(stub);
+
+      return rcOperation()
+        .then((template) => {
+          expect(template.etag).to.equal('etag-123456789012-5');
+
+          const version = template.version!;
+          expect(version.versionNumber).to.equal('86');
+          expect(version.updateOrigin).to.equal('ADMIN_SDK_NODE');
+          expect(version.updateType).to.equal('INCREMENTAL_UPDATE');
+          expect(version.updateUser).to.deep.equal({
+            email: 'firebase-adminsdk@gserviceaccount.com'
+          });
+          expect(version.description).to.equal('production version');
+          expect(version.updateTime).to.equal('Sun, 15 Nov 2020 06:57:26 GMT');
         });
     });
   }

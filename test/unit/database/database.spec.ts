@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,9 +24,11 @@ import * as sinon from 'sinon';
 import * as mocks from '../../resources/mocks';
 import { FirebaseApp } from '../../../src/firebase-app';
 import { DatabaseService } from '../../../src/database/database-internal';
-import { Database } from '../../../src/database/database';
+import { database } from '../../../src/database/index';
 import * as utils from '../utils';
 import { HttpClient, HttpRequestConfig } from '../../../src/utils/api-request';
+
+import Database = database.Database;
 
 describe('Database', () => {
   let mockApp: FirebaseApp;
@@ -37,7 +40,7 @@ describe('Database', () => {
   });
 
   afterEach(() => {
-    return database.INTERNAL.delete().then(() => {
+    return database.delete().then(() => {
       return mockApp.delete();
     });
   });

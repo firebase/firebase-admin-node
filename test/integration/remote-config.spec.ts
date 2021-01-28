@@ -84,7 +84,7 @@ describe('admin.remoteConfig', () => {
 
   it('verify that the etag is read-only', () => {
     expect(() => {
-      (currentTemplate as any).etag = "new-etag";
+      (currentTemplate as any).etag = 'new-etag';
     }).to.throw('Cannot set property etag of #<RemoteConfigTemplateImpl> which has only a getter');
   });
 
@@ -273,7 +273,7 @@ describe('admin.remoteConfig', () => {
       const newTemplate = admin.remoteConfig().createTemplateFromJSON(jsonString);
       expect(newTemplate.etag).to.equal(sourceTemplate.etag);
       expect(() => {
-        (currentTemplate as any).etag = "new-etag";
+        (currentTemplate as any).etag = 'new-etag';
       }).to.throw(
         'Cannot set property etag of #<RemoteConfigTemplateImpl> which has only a getter'
       );

@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,7 +25,7 @@ import {
   toWebSafeBase64, formatString, generateUpdateMask,
 } from '../../../src/utils/index';
 import { isNonEmptyString } from '../../../src/utils/validator';
-import { FirebaseApp, FirebaseAppOptions } from '../../../src/firebase-app';
+import { FirebaseApp } from '../../../src/firebase-app';
 import { ComputeEngineCredential } from '../../../src/credential/credential-internal';
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';
@@ -104,7 +105,7 @@ describe('getExplicitProjectId()', () => {
   });
 
   it('should return the explicitly specified project ID from app options', () => {
-    const options: FirebaseAppOptions = {
+    const options = {
       credential: new mocks.MockCredential(),
       projectId: 'explicit-project-id',
     };
@@ -172,7 +173,7 @@ describe('findProjectId()', () => {
   });
 
   it('should return the explicitly specified project ID from app options', () => {
-    const options: FirebaseAppOptions = {
+    const options = {
       credential: new mocks.MockCredential(),
       projectId: 'explicit-project-id',
     };
@@ -246,7 +247,7 @@ describe('findProjectId()', () => {
   });
 
   it('should return the explicitly specified project ID from app options', () => {
-    const options: FirebaseAppOptions = {
+    const options = {
       credential: new mocks.MockCredential(),
       projectId: 'explicit-project-id',
     };

@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,35 +17,20 @@
 
 import { FirebaseApp } from '../firebase-app';
 import { FirebaseError } from '../utils/error';
-import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { ServiceAccountCredential, isApplicationDefault } from '../credential/credential-internal';
 import { Bucket, Storage as StorageClient } from '@google-cloud/storage';
-
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
+import { storage } from './index';
 
-/**
- * Internals of a Storage instance.
- */
-class StorageInternals implements FirebaseServiceInternalsInterface {
-  /**
-   * Deletes the service and its associated resources.
-   *
-   * @return {Promise<()>} An empty Promise that will be fulfilled when the service is deleted.
-   */
-  public delete(): Promise<void> {
-    // There are no resources to clean up.
-    return Promise.resolve();
-  }
-}
+import StorageInterface  = storage.Storage;
 
 /**
  * The default `Storage` service if no
  * app is provided or the `Storage` service associated with the provided
  * app.
  */
-export class Storage implements FirebaseServiceInterface {
-  public readonly INTERNAL: StorageInternals = new StorageInternals();
+export class Storage implements StorageInterface {
 
   private readonly appInternal: FirebaseApp;
   private readonly storageClient: StorageClient;

@@ -113,6 +113,38 @@ describe('admin.firestore', () => {
     expect(typeof admin.firestore.WriteResult).to.be.not.undefined;
   });
 
+  it('admin.firestore.GrpcStatus type is defined', () => {
+    expect(typeof admin.firestore.GrpcStatus).to.be.not.undefined;
+  });
+
+  it('supports operations with custom type converters', () => {
+    const converter: admin.firestore.FirestoreDataConverter<City> = {
+      toFirestore: (city: City) => {
+        return {
+          name: city.localId,
+          population: city.people,
+        };
+      },
+      fromFirestore: (snap: admin.firestore.QueryDocumentSnapshot) => {
+        return new City(snap.data().name, snap.data().population);
+      }
+    };
+
+    const expected: City = new City('Sunnyvale', 153185);
+    const refWithConverter: admin.firestore.DocumentReference<City> = admin.firestore()
+      .collection('cities')
+      .doc()
+      .withConverter(converter);
+    return refWithConverter.set(expected)
+      .then(() => {
+        return refWithConverter.get();
+      })
+      .then((snapshot: admin.firestore.DocumentSnapshot<City>) => {
+        expect(snapshot.data()).to.be.instanceOf(City);
+        return refWithConverter.delete();
+      });
+  });
+
   it('supports saving references in documents', () => {
     const source = admin.firestore().collection('cities').doc();
     const target = admin.firestore().collection('cities').doc();
@@ -150,3 +182,7 @@ describe('admin.firestore', () => {
       });
   });
 });
+
+class City {
+  constructor(readonly localId: string, readonly people: number) { }
+}

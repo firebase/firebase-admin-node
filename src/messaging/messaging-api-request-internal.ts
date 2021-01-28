@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,8 +21,11 @@ import {
 } from '../utils/api-request';
 import { createFirebaseError, getErrorCode } from './messaging-errors-internal';
 import { SubRequest, BatchRequestClient } from './batch-request-internal';
-import { SendResponse, BatchResponse } from './messaging-types';
+import { messaging } from './index';
 import { getSdkVersion } from '../utils/index';
+
+import SendResponse = messaging.SendResponse;
+import BatchResponse = messaging.BatchResponse;
 
 // FCM backend constants
 const FIREBASE_MESSAGING_TIMEOUT = 10000;

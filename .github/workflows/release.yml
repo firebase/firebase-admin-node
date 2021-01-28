@@ -58,6 +58,9 @@ jobs:
     - name: Run unit tests
       run: npm test
 
+    - name: Verify public API
+      run: npm run api-extractor
+
     - name: Run integration tests
       run: ./.github/scripts/run_integration_tests.sh
       env:

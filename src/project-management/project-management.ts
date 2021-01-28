@@ -15,38 +15,25 @@
  */
 
 import { FirebaseApp } from '../firebase-app';
-import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { FirebaseProjectManagementError } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { AndroidApp, ShaCertificate } from './android-app';
 import { IosApp } from './ios-app';
 import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request-internal';
-import { AppMetadata, AppPlatform } from './app-metadata';
+import { projectManagement } from './index';
 
-/**
- * Internals of a Project Management instance.
- */
-class ProjectManagementInternals implements FirebaseServiceInternalsInterface {
-  /**
-   * Deletes the service and its associated resources.
-   *
-   * @return {Promise<void>} An empty Promise that will be resolved when the service is deleted.
-   */
-  public delete(): Promise<void> {
-    // There are no resources to clean up.
-    return Promise.resolve();
-  }
-}
+import AppMetadata = projectManagement.AppMetadata;
+import AppPlatform = projectManagement.AppPlatform;
+import ProjectManagementInterface = projectManagement.ProjectManagement;
 
 /**
  * The Firebase ProjectManagement service interface.
  *
  * Do not call this constructor directly. Instead, use
- * [`admin.projectManagement()`](admin.projectManagement#projectManagement).
+ * [`admin.projectManagement()`](projectManagement#projectManagement).
  */
-export class ProjectManagement implements FirebaseServiceInterface {
-  public readonly INTERNAL: ProjectManagementInternals = new ProjectManagementInternals();
+export class ProjectManagement implements ProjectManagementInterface {
 
   private readonly requestHandler: ProjectManagementRequestHandler;
   private projectId: string;
@@ -149,7 +136,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
         assertServerResponse(
           validator.isNonEmptyString(responseData.appId),
           responseData,
-          `"responseData.appId" field must be present in createAndroidApp()'s response data.`);
+          '"responseData.appId" field must be present in createAndroidApp()\'s response data.');
         return new AndroidApp(responseData.appId, this.requestHandler);
       });
   }
@@ -177,7 +164,7 @@ export class ProjectManagement implements FirebaseServiceInterface {
         assertServerResponse(
           validator.isNonEmptyString(responseData.appId),
           responseData,
-          `"responseData.appId" field must be present in createIosApp()'s response data.`);
+          '"responseData.appId" field must be present in createIosApp()\'s response data.');
         return new IosApp(responseData.appId, this.requestHandler);
       });
   }
@@ -225,11 +212,11 @@ export class ProjectManagement implements FirebaseServiceInterface {
       assertServerResponse(
         validator.isNonEmptyString(appJson.appId),
         responseData,
-        `"apps[].appId" field must be present in the listAppMetadata() response data.`);
+        '"apps[].appId" field must be present in the listAppMetadata() response data.');
       assertServerResponse(
         validator.isNonEmptyString(appJson.platform),
         responseData,
-        `"apps[].platform" field must be present in the listAppMetadata() response data.`);
+        '"apps[].platform" field must be present in the listAppMetadata() response data.');
       const metadata: AppMetadata = {
         appId: appJson.appId,
         platform: (AppPlatform as any)[appJson.platform] || AppPlatform.PLATFORM_UNKNOWN,

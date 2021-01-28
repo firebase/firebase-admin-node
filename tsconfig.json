@@ -2,6 +2,8 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "es5",
+    "declaration": true,
+    "sourceMap": true,
     "noImplicitAny": true,
     "noUnusedLocals": true,
     // TODO(rsgowman): enable `"strict": true,` and remove explicit setting of: noImplicitAny, noImplicitThis, alwaysStrict, strictBindCallApply, strictNullChecks, strictFunctionTypes, strictPropertyInitialization.
@@ -11,10 +13,8 @@
     "strictNullChecks": true,
     "strictFunctionTypes": true,
     //"strictPropertyInitialization": true,
-    "lib": ["es2015"],
+    "lib": ["es2018"],
     "outDir": "lib",
-    // We manually craft typings in src/index.d.ts instead of auto-generating them.
-    // "declaration": true,
     "rootDir": "."
   },
   "files": [

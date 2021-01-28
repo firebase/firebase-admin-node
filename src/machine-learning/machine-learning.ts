@@ -15,43 +15,27 @@
  */
 
 import { FirebaseApp } from '../firebase-app';
-import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
-import { MachineLearningApiClient, ModelResponse, ModelOptions,
-  ModelUpdateOptions, ListModelsOptions, isGcsTfliteModelOptions } from './machine-learning-api-client';
+import {
+  MachineLearningApiClient, ModelResponse, ModelUpdateOptions, isGcsTfliteModelOptions
+} from './machine-learning-api-client';
 import { FirebaseError } from '../utils/error';
-
 import * as validator from '../utils/validator';
 import { FirebaseMachineLearningError } from './machine-learning-utils';
 import { deepCopy } from '../utils/deep-copy';
 import * as utils from '../utils';
+import { machineLearning } from './index';
 
-/**
- * Internals of an ML instance.
- */
-class MachineLearningInternals implements FirebaseServiceInternalsInterface {
-  /**
-   * Deletes the service and its associated resources.
-   *
-   * @return {Promise<void>} An empty Promise that will be resolved when the
-   *     service is deleted.
-   */
-  public delete(): Promise<void> {
-    // There are no resources to clean up.
-    return Promise.resolve();
-  }
-}
-
-/** Response object for a listModels operation. */
-export interface ListModelsResult {
-  models: Model[];
-  pageToken?: string;
-}
+import ListModelsOptions = machineLearning.ListModelsOptions;
+import ListModelsResult = machineLearning.ListModelsResult;
+import MachineLearningInterface = machineLearning.MachineLearning;
+import ModelInterface = machineLearning.Model;
+import ModelOptions = machineLearning.ModelOptions;
+import TFLiteModel = machineLearning.TFLiteModel;
 
 /**
  * The Firebase Machine Learning class
  */
-export class MachineLearning implements FirebaseServiceInterface {
-  public readonly INTERNAL = new MachineLearningInternals();
+export class MachineLearning implements MachineLearningInterface {
 
   private readonly client: MachineLearningApiClient;
   private readonly appInternal: FirebaseApp;
@@ -168,7 +152,7 @@ export class MachineLearning implements FirebaseServiceInterface {
         if (resp.models) {
           models = resp.models.map((rs) =>  new Model(rs, this.client));
         }
-        const result: ListModelsResult = { models };
+        const result: { models: Model[]; pageToken?: string } = { models };
         if (resp.nextPageToken) {
           result.pageToken = resp.nextPageToken;
         }
@@ -235,7 +219,7 @@ export class MachineLearning implements FirebaseServiceInterface {
 /**
  * A Firebase ML Model output object.
  */
-export class Model {
+export class Model implements ModelInterface {
   private model: ModelResponse;
   private readonly client?: MachineLearningApiClient;
 
@@ -366,22 +350,11 @@ export class Model {
     }
 
     // Remove '@type' field. We don't need it.
-    if ((tmpModel as any)["@type"]) {
-      delete (tmpModel as any)["@type"];
+    if ((tmpModel as any)['@type']) {
+      delete (tmpModel as any)['@type'];
     }
     return tmpModel;
   }
-}
-
-/**
- * A TFLite Model output object
- */
-export interface TFLiteModel {
-  readonly sizeBytes: number;
-
-  // Oneof these two
-  readonly gcsTfliteUri?: string;
-  readonly automlModel?: string;
 }
 
 function extractModelId(resourceName: string): string {

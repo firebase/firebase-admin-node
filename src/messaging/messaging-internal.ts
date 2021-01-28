@@ -16,15 +16,23 @@
 
 import { renameProperties } from '../utils/index';
 import { MessagingClientErrorCode, FirebaseMessagingError, } from '../utils/error';
-import {
-  AndroidConfig, AndroidFcmOptions, AndroidNotification,
-  ApsAlert, ApnsConfig, ApnsFcmOptions,
-  ApnsPayload, Aps, CriticalSound,
-  FcmOptions, LightSettings,
-  Message, Notification, WebpushConfig
-} from './messaging-types';
-
+import { messaging } from './index';
 import * as validator from '../utils/validator';
+
+import AndroidConfig = messaging.AndroidConfig;
+import AndroidFcmOptions = messaging.AndroidFcmOptions;
+import AndroidNotification = messaging.AndroidNotification;
+import ApsAlert = messaging.ApsAlert;
+import ApnsConfig = messaging.ApnsConfig;
+import ApnsFcmOptions = messaging.ApnsFcmOptions;
+import ApnsPayload = messaging.ApnsPayload;
+import Aps = messaging.Aps;
+import CriticalSound = messaging.CriticalSound;
+import FcmOptions = messaging.FcmOptions;
+import LightSettings = messaging.LightSettings;
+import Message = messaging.Message;
+import Notification = messaging.Notification;
+import WebpushConfig = messaging.WebpushConfig;
 
 // Keys which are not allowed in the messaging data payload object.
 export const BLACKLISTED_DATA_PAYLOAD_KEYS = ['from'];

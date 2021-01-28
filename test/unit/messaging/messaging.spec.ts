@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,10 +28,7 @@ import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
 import { FirebaseApp } from '../../../src/firebase-app';
-import {
-  Message, MessagingOptions, MessagingPayload, MessagingDevicesResponse, MessagingDeviceGroupResponse,
-  MessagingTopicManagementResponse, BatchResponse, SendResponse, MulticastMessage,
-} from '../../../src/messaging/messaging-types';
+import { messaging } from '../../../src/messaging/index';
 import { Messaging } from '../../../src/messaging/messaging';
 import { BLACKLISTED_OPTIONS_KEYS, BLACKLISTED_DATA_PAYLOAD_KEYS } from '../../../src/messaging/messaging-internal';
 import { HttpClient } from '../../../src/utils/api-request';
@@ -41,6 +39,16 @@ chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
 const expect = chai.expect;
+
+import Message = messaging.Message;
+import MessagingOptions = messaging.MessagingOptions;
+import MessagingPayload = messaging.MessagingPayload;
+import MessagingDevicesResponse = messaging.MessagingDevicesResponse;
+import MessagingDeviceGroupResponse = messaging.MessagingDeviceGroupResponse
+import MessagingTopicManagementResponse = messaging.MessagingTopicManagementResponse;
+import BatchResponse = messaging.BatchResponse;
+import SendResponse = messaging.SendResponse;
+import MulticastMessage = messaging.MulticastMessage;
 
 // FCM endpoints
 const FCM_SEND_HOST = 'fcm.googleapis.com';
@@ -103,15 +111,15 @@ function createMultipartPayloadWithErrors(
   success.forEach((part) => {
     payload += `--${boundary}\r\n`;
     payload += 'Content-type: application/http\r\n\r\n';
-    payload += `HTTP/1.1 200 OK\r\n`;
-    payload += `Content-type: application/json\r\n\r\n`;
+    payload += 'HTTP/1.1 200 OK\r\n';
+    payload += 'Content-type: application/json\r\n\r\n';
     payload += `${JSON.stringify(part)}\r\n`;
   });
   failures.forEach((part) => {
     payload += `--${boundary}\r\n`;
     payload += 'Content-type: application/http\r\n\r\n';
-    payload += `HTTP/1.1 500 Internal Server Error\r\n`;
-    payload += `Content-type: application/json\r\n\r\n`;
+    payload += 'HTTP/1.1 500 Internal Server Error\r\n';
+    payload += 'Content-type: application/json\r\n\r\n';
     payload += `${JSON.stringify(part)}\r\n`;
   });
   payload += `--${boundary}--\r\n`;
@@ -1417,6 +1425,9 @@ describe('Messaging', () => {
           mocks.messaging.registrationToken + '0',
           mocks.messaging.registrationToken + '1',
         ],
+        canonicalRegistrationTokenCount: -1,
+        multicastId: -1,
+        results: [],
       });
     });
 
@@ -1667,6 +1678,7 @@ describe('Messaging', () => {
         results: [
           { messageId: `0:${ mocks.messaging.messageId }` },
         ],
+        failedRegistrationTokens: [],
       });
     });
 
@@ -2438,7 +2450,7 @@ describe('Messaging', () => {
       });
     });
 
-    it(`should throw given an empty vibrateTimingsMillis array`, () => {
+    it('should throw given an empty vibrateTimingsMillis array', () => {
       const message: Message = {
         condition: 'topic-name',
         android: {
@@ -2472,7 +2484,7 @@ describe('Messaging', () => {
       });
     });
 
-    it(`should throw given a negative light on duration`, () => {
+    it('should throw given a negative light on duration', () => {
       const message: Message = {
         condition: 'topic-name',
         android: {
@@ -2491,7 +2503,7 @@ describe('Messaging', () => {
         'android.notification.lightSettings.lightOnDurationMillis must be a non-negative duration in milliseconds');
     });
 
-    it(`should throw given a negative light off duration`, () => {
+    it('should throw given a negative light off duration', () => {
       const message: Message = {
         condition: 'topic-name',
         android: {
@@ -2638,7 +2650,7 @@ describe('Messaging', () => {
     });
 
     invalidImages.forEach((imageUrl) => {
-      it(`should throw given invalid URL string for imageUrl`, () => {
+      it('should throw given invalid URL string for imageUrl', () => {
         expect(() => {
           messaging.send({ apns: { fcmOptions: { imageUrl } }, topic: 'test' });
         }).to.throw('imageUrl must be a valid URL string');
@@ -2677,7 +2689,7 @@ describe('Messaging', () => {
         }).to.throw('apns.payload.aps must be a non-null object');
       });
     });
-    it(`should throw given APNS payload with duplicate fields`, () => {
+    it('should throw given APNS payload with duplicate fields', () => {
       expect(() => {
         messaging.send({
           apns: {
@@ -3994,11 +4006,5 @@ describe('Messaging', () => {
 
   describe('unsubscribeFromTopic()', () => {
     tokenSubscriptionTests('unsubscribeFromTopic');
-  });
-
-  describe('INTERNAL.delete()', () => {
-    it('should delete Messaging instance', () => {
-      messaging.INTERNAL.delete().should.eventually.be.fulfilled;
-    });
   });
 });

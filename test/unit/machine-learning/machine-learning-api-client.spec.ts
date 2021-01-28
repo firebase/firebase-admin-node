@@ -19,8 +19,6 @@
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
-import { MachineLearningApiClient, ListModelsOptions,
-  ModelOptions } from '../../../src/machine-learning/machine-learning-api-client';
 import { FirebaseMachineLearningError } from '../../../src/machine-learning/machine-learning-utils';
 import { HttpClient } from '../../../src/utils/api-request';
 import * as utils from '../utils';
@@ -28,6 +26,11 @@ import * as mocks from '../../resources/mocks';
 import { FirebaseAppError } from '../../../src/utils/error';
 import { FirebaseApp } from '../../../src/firebase-app';
 import { getSdkVersion } from '../../../src/utils/index';
+import { MachineLearningApiClient } from '../../../src/machine-learning/machine-learning-api-client';
+import { machineLearning } from '../../../src/machine-learning/index';
+
+import ListModelsOptions = machineLearning.ListModelsOptions;
+import ModelOptions = machineLearning.ModelOptions;
 
 const expect = chai.expect;
 
@@ -313,9 +316,9 @@ describe('MachineLearningApiClient', () => {
     const GCS_MASK_LIST = ['displayName', 'tfliteModel.gcsTfliteUri'];
     const AUTOML_MASK_LIST = ['displayName', 'tfliteModel.automlModel'];
 
-    const NAME_ONLY_UPDATE_MASK_STRING = "updateMask=displayName";
-    const GCS_UPDATE_MASK_STRING = "updateMask=displayName,tfliteModel.gcsTfliteUri";
-    const AUTOML_UPDATE_MASK_STRING = "updateMask=displayName,tfliteModel.automlModel";
+    const NAME_ONLY_UPDATE_MASK_STRING = 'updateMask=displayName';
+    const GCS_UPDATE_MASK_STRING = 'updateMask=displayName,tfliteModel.gcsTfliteUri';
+    const AUTOML_UPDATE_MASK_STRING = 'updateMask=displayName,tfliteModel.automlModel';
 
     const invalidOptions: any[] = [null, undefined];
     invalidOptions.forEach((option) => {
@@ -459,13 +462,13 @@ describe('MachineLearningApiClient', () => {
       });
     });
 
-    it(`should reject when called with prefixed name`, () => {
+    it('should reject when called with prefixed name', () => {
       return apiClient.getModel('projects/foo/models/bar')
         .should.eventually.be.rejected.and.have.property(
           'message', 'Model ID must not contain any "/" characters.');
     });
 
-    it(`should reject when project id is not available`, () => {
+    it('should reject when project id is not available', () => {
       return clientWithoutProjectId.getModel(MODEL_ID)
         .should.eventually.be.rejectedWith(noProjectId);
     });
@@ -818,13 +821,13 @@ describe('MachineLearningApiClient', () => {
       });
     });
 
-    it(`should reject when called with prefixed name`, () => {
+    it('should reject when called with prefixed name', () => {
       return apiClient.deleteModel('projects/foo/rulesets/bar')
         .should.eventually.be.rejected.and.have.property(
           'message', 'Model ID must not contain any "/" characters.');
     });
 
-    it(`should reject when project id is not available`, () => {
+    it('should reject when project id is not available', () => {
       return clientWithoutProjectId.deleteModel(MODEL_ID)
         .should.eventually.be.rejectedWith(noProjectId);
     });

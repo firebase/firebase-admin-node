@@ -14,45 +14,42 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../firebase-app';
+import { app } from '../firebase-namespace-api';
 import * as _firestore from '@google-cloud/firestore';
-import * as firebaseAdmin from '../index';
 
-export function firestore(app?: FirebaseApp): _firestore.Firestore {
-  if (typeof (app) === 'undefined') {
-    app = firebaseAdmin.app();
-  }
-  return app.firestore();
-}
+export declare function firestore(app?: app.App): _firestore.Firestore;
 
-/**
- * We must define a namespace to make the typings work correctly. Otherwise
- * `admin.firestore()` cannot be called like a function. Temporarily,
- * admin.firestore is used as the namespace name because we cannot barrel 
- * re-export the contents from firestore, and we want it to
- * match the namespacing in the re-export inside src/index.d.ts
- */
 /* eslint-disable @typescript-eslint/no-namespace */
-export namespace admin.firestore {
-  // See https://github.com/microsoft/TypeScript/issues/4336
+export namespace firestore {
   /* eslint-disable @typescript-eslint/no-unused-vars */
   // See https://github.com/typescript-eslint/typescript-eslint/issues/363
   export import v1beta1 = _firestore.v1beta1;
   export import v1 = _firestore.v1;
 
+  export import BulkWriter = _firestore.BulkWriter;
+  export import BulkWriterOptions = _firestore.BulkWriterOptions;
+  export import CollectionGroup = _firestore.CollectionGroup;
   export import CollectionReference = _firestore.CollectionReference;
+  export import DocumentChangeType = _firestore.DocumentChangeType;
   export import DocumentData = _firestore.DocumentData;
   export import DocumentReference = _firestore.DocumentReference;
   export import DocumentSnapshot = _firestore.DocumentSnapshot;
   export import FieldPath = _firestore.FieldPath;
   export import FieldValue = _firestore.FieldValue;
   export import Firestore = _firestore.Firestore;
+  export import FirestoreDataConverter = _firestore.FirestoreDataConverter;
   export import GeoPoint = _firestore.GeoPoint;
+  export import GrpcStatus = _firestore.GrpcStatus;
+  export import Precondition = _firestore.Precondition;
   export import Query = _firestore.Query;
   export import QueryDocumentSnapshot = _firestore.QueryDocumentSnapshot;
+  export import QueryPartition = _firestore.QueryPartition;
   export import QuerySnapshot = _firestore.QuerySnapshot;
+  export import ReadOptions = _firestore.ReadOptions;
+  export import Settings = _firestore.Settings;
   export import Timestamp = _firestore.Timestamp;
   export import Transaction = _firestore.Transaction;
+  export import UpdateData = _firestore.UpdateData;
   export import WriteBatch = _firestore.WriteBatch;
   export import WriteResult = _firestore.WriteResult;
 

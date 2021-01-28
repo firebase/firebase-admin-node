@@ -23,12 +23,16 @@ import { deepCopy } from '../../../src/utils/deep-copy';
 import {
   OIDCConfig, SAMLConfig, SAMLConfigServerRequest,
   SAMLConfigServerResponse, OIDCConfigServerRequest,
-  OIDCConfigServerResponse, SAMLUpdateAuthProviderRequest,
-  OIDCUpdateAuthProviderRequest, SAMLAuthProviderConfig, OIDCAuthProviderConfig,
+  OIDCConfigServerResponse,
   EmailSignInConfig, MultiFactorAuthConfig, validateTestPhoneNumbers,
   MAXIMUM_TEST_PHONE_NUMBERS,
 } from '../../../src/auth/auth-config';
+import { auth } from '../../../src/auth/index';
 
+import SAMLUpdateAuthProviderRequest = auth.SAMLUpdateAuthProviderRequest;
+import OIDCUpdateAuthProviderRequest = auth.OIDCUpdateAuthProviderRequest;
+import SAMLAuthProviderConfig = auth.SAMLAuthProviderConfig;
+import OIDCAuthProviderConfig = auth.OIDCAuthProviderConfig;
 
 chai.should();
 chai.use(sinonChai);
@@ -406,7 +410,6 @@ describe('SAMLConfig', () => {
     x509Certificates: ['CERT1', 'CERT2'],
     rpEntityId: 'RP_ENTITY_ID',
     callbackURL: 'https://projectId.firebaseapp.com/__/auth/handler',
-    enableRequestSigning: true,
     enabled: true,
     displayName: 'samlProviderName',
   };
@@ -525,7 +528,9 @@ describe('SAMLConfig', () => {
 
   describe('buildServerRequest()', () => {
     it('should return expected server request on valid input', () => {
-      expect(SAMLConfig.buildServerRequest(clientRequest)).to.deep.equal(serverRequest);
+      const request = deepCopy(clientRequest);
+      (request as any).enableRequestSigning = true;
+      expect(SAMLConfig.buildServerRequest(request)).to.deep.equal(serverRequest);
     });
 
     it('should ignore missing fields if not required', () => {
@@ -620,7 +625,7 @@ describe('SAMLConfig', () => {
       const invalidClientRequest = deepCopy(clientRequest) as any;
       invalidClientRequest.unsupported = 'value';
       expect(() => SAMLConfig.validate(invalidClientRequest))
-        .to.throw(`"unsupported" is not a valid SAML config parameter.`);
+        .to.throw('"unsupported" is not a valid SAML config parameter.');
     });
 
     const invalidProviderIds = [
@@ -899,7 +904,7 @@ describe('OIDCConfig', () => {
       const invalidClientRequest = deepCopy(clientRequest) as any;
       invalidClientRequest.unsupported = 'value';
       expect(() => OIDCConfig.validate(invalidClientRequest))
-        .to.throw(`"unsupported" is not a valid OIDC config parameter.`);
+        .to.throw('"unsupported" is not a valid OIDC config parameter.');
     });
 
     const invalidProviderIds = [

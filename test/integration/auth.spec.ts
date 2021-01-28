@@ -27,7 +27,6 @@ import {
 } from './setup';
 import url = require('url');
 import * as mocks from '../resources/mocks';
-import { AuthProviderConfig } from '../../src/auth/auth-config';
 import { deepExtend, deepCopy } from '../../src/utils/deep-copy';
 import { User, FirebaseAuth } from '@firebase/auth-types';
 
@@ -1277,11 +1276,11 @@ describe('admin.auth', () => {
     });
 
     it('listProviderConfig() successfully returns the list of SAML providers', () => {
-      const configs: AuthProviderConfig[] = [];
+      const configs: admin.auth.AuthProviderConfig[] = [];
       const listProviders: any = (type: 'saml' | 'oidc', maxResults?: number, pageToken?: string) => {
         return admin.auth().listProviderConfigs({ type, maxResults, pageToken })
           .then((result) => {
-            result.providerConfigs.forEach((config: AuthProviderConfig) => {
+            result.providerConfigs.forEach((config: admin.auth.AuthProviderConfig) => {
               configs.push(config);
             });
             if (result.pageToken) {
@@ -1409,11 +1408,11 @@ describe('admin.auth', () => {
     });
 
     it('listProviderConfig() successfully returns the list of OIDC providers', () => {
-      const configs: AuthProviderConfig[] = [];
+      const configs: admin.auth.AuthProviderConfig[] = [];
       const listProviders: any = (type: 'saml' | 'oidc', maxResults?: number, pageToken?: string) => {
         return admin.auth().listProviderConfigs({ type, maxResults, pageToken })
           .then((result) => {
-            result.providerConfigs.forEach((config: AuthProviderConfig) => {
+            result.providerConfigs.forEach((config: admin.auth.AuthProviderConfig) => {
               configs.push(config);
             });
             if (result.pageToken) {

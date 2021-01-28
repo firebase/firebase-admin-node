@@ -17,13 +17,13 @@ toc:
   path: /docs/reference/admin/node/admin.app
   section:
   - title: "App"
-    path: /docs/reference/admin/node/admin.app.App
+    path: /docs/reference/admin/node/admin.app.App-1
 
 - title: "admin.auth"
   path: /docs/reference/admin/node/admin.auth
   section:
   - title: "Auth"
-    path: /docs/reference/admin/node/admin.auth.Auth
+    path: /docs/reference/admin/node/admin.auth.Auth-1
   - title: "ActionCodeSettings"
     path: /docs/reference/admin/node/admin.auth.ActionCodeSettings
   - title: "AuthProviderConfig"
@@ -36,6 +36,8 @@ toc:
     path: /docs/reference/admin/node/admin.auth.CreatePhoneMultiFactorInfoRequest
   - title: "CreateRequest"
     path: /docs/reference/admin/node/admin.auth.CreateRequest
+  - title: "EmailSignInProviderConfig"
+    path: /docs/reference/admin/node/admin.auth.EmailSignInProviderConfig
   - title: "ListProviderConfigResults"
     path: /docs/reference/admin/node/admin.auth.ListProviderConfigResults
   - title: "ListTenantsResult"
@@ -115,25 +117,13 @@ toc:
   path: /docs/reference/admin/node/admin.credential
   section:
   - title: "Credential"
-    path: /docs/reference/admin/node/admin.credential.Credential
+    path: /docs/reference/admin/node/admin.credential.Credential-1
 
 - title: "admin.database"
   path: /docs/reference/admin/node/admin.database
   section:
   - title: "Database"
-    path: /docs/reference/admin/node/admin.database.Database
-  - title: "DataSnapshot"
-    path: /docs/reference/admin/node/admin.database.DataSnapshot
-  - title: "OnDisconnect"
-    path: /docs/reference/admin/node/admin.database.OnDisconnect
-  - title: "Query"
-    path: /docs/reference/admin/node/admin.database.Query
-  - title: "Reference"
-    path: /docs/reference/admin/node/admin.database.Reference
-  - title: "ServerValue"
-    path: /docs/reference/admin/node/admin.database.ServerValue
-  - title: "ThenableReference"
-    path: /docs/reference/admin/node/admin.database.ThenableReference
+    path: /docs/reference/admin/node/admin.database.Database-1
 
 - title: "admin.firestore"
   path: /docs/reference/admin/node/admin.firestore
@@ -142,7 +132,7 @@ toc:
   path: /docs/reference/admin/node/admin.instanceId
   section:
   - title: "InstanceId"
-    path: /docs/reference/admin/node/admin.instanceId.InstanceId
+    path: /docs/reference/admin/node/admin.instanceId.InstanceId-1
 
 - title: "admin.machineLearning"
   path: /docs/reference/admin/node/admin.machineLearning
@@ -152,7 +142,7 @@ toc:
   - title: "ListModelsResult"
     path: /docs/reference/admin/node/admin.machineLearning.ListModelsResult
   - title: "MachineLearning"
-    path: /docs/reference/admin/node/admin.machineLearning.MachineLearning
+    path: /docs/reference/admin/node/admin.machineLearning.MachineLearning-1
   - title: "Model"
     path: /docs/reference/admin/node/admin.machineLearning.Model
   - title: "ModelOptionsBase"
@@ -167,12 +157,14 @@ toc:
 - title: "admin.messaging"
   path: /docs/reference/admin/node/admin.messaging
   section:
+  - title: "BaseMessage"
+    path: /docs/reference/admin/node/admin.messaging.BaseMessage
   - title: "TopicMessage"
-    path: /docs/reference/admin/node/TopicMessage
+    path: /docs/reference/admin/node/admin.messaging.TopicMessage
   - title: "TokenMessage"
-    path: /docs/reference/admin/node/TokenMessage
+    path: /docs/reference/admin/node/admin.messaging.TokenMessage
   - title: "ConditionMessage"
-    path: /docs/reference/admin/node/ConditionMessage
+    path: /docs/reference/admin/node/admin.messaging.ConditionMessage
   - title: "AndroidConfig"
     path: /docs/reference/admin/node/admin.messaging.AndroidConfig
   - title: "AndroidFcmOptions"
@@ -184,7 +176,7 @@ toc:
   - title: "LightSettings"
     path: /docs/reference/admin/node/admin.messaging.LightSettings
   - title: "Messaging"
-    path: /docs/reference/admin/node/admin.messaging.Messaging
+    path: /docs/reference/admin/node/admin.messaging.Messaging-1
   - title: "MessagingConditionResponse"
     path: /docs/reference/admin/node/admin.messaging.MessagingConditionResponse
   - title: "MessagingDeviceGroupResponse"
@@ -248,7 +240,7 @@ toc:
   - title: "IosAppMetadata"
     path: /docs/reference/admin/node/admin.projectManagement.IosAppMetadata
   - title: "ProjectManagement"
-    path: /docs/reference/admin/node/admin.projectManagement.ProjectManagement
+    path: /docs/reference/admin/node/admin.projectManagement.ProjectManagement-1
   - title: "ShaCertificate"
     path: /docs/reference/admin/node/admin.projectManagement.ShaCertificate
 
@@ -264,19 +256,19 @@ toc:
   - title: "RulesetMetadataList"
     path: /docs/reference/admin/node/admin.securityRules.RulesetMetadataList
   - title: "SecurityRules"
-    path: /docs/reference/admin/node/admin.securityRules.SecurityRules
+    path: /docs/reference/admin/node/admin.securityRules.SecurityRules-1
 
 - title: "admin.storage"
   path: /docs/reference/admin/node/admin.storage
   section:
   - title: "Storage"
-    path: /docs/reference/admin/node/admin.storage.Storage
+    path: /docs/reference/admin/node/admin.storage.Storage-1
 
 - title: "admin.remoteConfig"
   path: /docs/reference/admin/node/admin.remoteConfig
   section:
   - title: "RemoteConfig"
-    path: /docs/reference/admin/node/admin.remoteConfig.RemoteConfig
+    path: /docs/reference/admin/node/admin.remoteConfig.RemoteConfig-1
   - title: "RemoteConfigTemplate"
     path: /docs/reference/admin/node/admin.remoteConfig.RemoteConfigTemplate
   - title: "RemoteConfigParameter"

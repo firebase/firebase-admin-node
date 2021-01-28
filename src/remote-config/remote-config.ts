@@ -14,46 +14,30 @@
  * limitations under the License.
  */
 
-import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { FirebaseApp } from '../firebase-app';
 import * as validator from '../utils/validator';
-import {
-  RemoteConfigTemplate,
-  RemoteConfigParameter,
-  RemoteConfigCondition,
-  RemoteConfigParameterGroup,
-  ListVersionsOptions,
-  ListVersionsResult,
-  RemoteConfigUser,
-  Version,
-} from './remote-config-api-client';
+import { remoteConfig } from './index';
 import { FirebaseRemoteConfigError, RemoteConfigApiClient } from './remote-config-api-client-internal';
 
-/**
- * Internals of an RemoteConfig service instance.
- */
-class RemoteConfigInternals implements FirebaseServiceInternalsInterface {
-  /**
-   * Deletes the service and its associated resources.
-   *
-   * @return {Promise<()>} An empty Promise that will be fulfilled when the service is deleted.
-   */
-  public delete(): Promise<void> {
-    // There are no resources to clean up
-    return Promise.resolve(undefined);
-  }
-}
+import RemoteConfigTemplate = remoteConfig.RemoteConfigTemplate;
+import RemoteConfigParameter = remoteConfig.RemoteConfigParameter;
+import RemoteConfigCondition = remoteConfig.RemoteConfigCondition;
+import RemoteConfigParameterGroup = remoteConfig.RemoteConfigParameterGroup;
+import ListVersionsOptions = remoteConfig.ListVersionsOptions;
+import ListVersionsResult = remoteConfig.ListVersionsResult;
+import RemoteConfigUser = remoteConfig.RemoteConfigUser;
+import Version = remoteConfig.Version;
+import RemoteConfigInterface = remoteConfig.RemoteConfig;
 
 /**
  * Remote Config service bound to the provided app.
  */
-export class RemoteConfig implements FirebaseServiceInterface {
-  public readonly INTERNAL: RemoteConfigInternals = new RemoteConfigInternals();
+export class RemoteConfig implements RemoteConfigInterface {
 
   private readonly client: RemoteConfigApiClient;
 
   /**
-   * @param {FirebaseApp} app The app for this RemoteConfig service.
+   * @param app The app for this RemoteConfig service.
    * @constructor
    */
   constructor(readonly app: FirebaseApp) {
@@ -61,7 +45,7 @@ export class RemoteConfig implements FirebaseServiceInterface {
   }
 
   /**
-   * Gets the current active version of the {@link admin.remoteConfig.RemoteConfigTemplate
+   * Gets the current active version of the {@link remoteConfig.RemoteConfigTemplate
    * `RemoteConfigTemplate`} of the project.
    *
    * @return A promise that fulfills with a `RemoteConfigTemplate`.
@@ -74,11 +58,11 @@ export class RemoteConfig implements FirebaseServiceInterface {
   }
 
   /**
-   * Gets the requested version of the {@link admin.remoteConfig.RemoteConfigTemplate
+   * Gets the requested version of the {@link remoteConfig.RemoteConfigTemplate
     * `RemoteConfigTemplate`} of the project.
-   * 
+   *
    * @param versionNumber Version number of the Remote Config template to look up.
-   * 
+   *
    * @return A promise that fulfills with a `RemoteConfigTemplate`.
    */
   public getTemplateAtVersion(versionNumber: number | string): Promise<RemoteConfigTemplate> {
@@ -89,7 +73,7 @@ export class RemoteConfig implements FirebaseServiceInterface {
   }
 
   /**
-   * Validates a {@link admin.remoteConfig.RemoteConfigTemplate `RemoteConfigTemplate`}.
+   * Validates a {@link remoteConfig.RemoteConfigTemplate `RemoteConfigTemplate`}.
    *
    * @param template The Remote Config template to be validated.
    * @returns A promise that fulfills with the validated `RemoteConfigTemplate`.
@@ -126,7 +110,7 @@ export class RemoteConfig implements FirebaseServiceInterface {
    * Rolls back a project's published Remote Config template to the specified version.
    * A rollback is equivalent to getting a previously published Remote Config
    * template and re-publishing it using a force update.
-   * 
+   *
    * @param versionNumber The version number of the Remote Config template to roll back to.
    *    The specified version number must be lower than the current version number, and not have
    *    been deleted due to staleness. Only the last 300 versions are stored.
@@ -142,12 +126,12 @@ export class RemoteConfig implements FirebaseServiceInterface {
   }
 
   /**
-   * Gets a list of Remote Config template versions that have been published, sorted in reverse 
+   * Gets a list of Remote Config template versions that have been published, sorted in reverse
    * chronological order. Only the last 300 versions are stored.
-   * All versions that correspond to non-active Remote Config templates (i.e., all except the 
+   * All versions that correspond to non-active Remote Config templates (i.e., all except the
    * template that is being fetched by clients) are also deleted if they are older than 90 days.
-   * 
-   * @param {ListVersionsOptions} options Optional options object for getting a list of versions.
+   *
+   * @param options Optional options object for getting a list of versions.
    * @return A promise that fulfills with a `ListVersionsResult`.
    */
   public listVersions(options?: ListVersionsOptions): Promise<ListVersionsResult> {
@@ -361,20 +345,16 @@ class VersionImpl implements Version {
       this.isLegacy = version.isLegacy;
     }
 
-    // The backend API provides timestamps as ISO date strings. The Admin SDK exposes timestamps
-    // as UTC date strings. If a developer uses a previously obtained template with UTC timestamps
+    // The backend API provides timestamps in ISO date strings. The Admin SDK exposes timestamps
+    // in UTC date strings. If a developer uses a previously obtained template with UTC timestamps
     // we could still validate it below.
     if (typeof version.updateTime !== 'undefined') {
-      if (!validator.isISODateString(version.updateTime) &&
-        !validator.isUTCDateString(version.updateTime)) {
+      if (!this.isValidTimestamp(version.updateTime)) {
         throw new FirebaseRemoteConfigError(
           'invalid-argument',
           'Version update time must be a valid date string');
       }
-      if (validator.isISODateString(version.updateTime)) {
-        // timestamps in output `Version` obtained from the API should be in UTC.
-        this.updateTime = new Date(version.updateTime).toUTCString();
-      }
+      this.updateTime = new Date(version.updateTime).toUTCString();
     }
   }
 
@@ -392,5 +372,11 @@ class VersionImpl implements Version {
       isLegacy: this.isLegacy,
       updateTime: this.updateTime,
     }
+  }
+
+  private isValidTimestamp(timestamp: string): boolean {
+    // This validation fails for timestamps earlier than January 1, 1970 and considers strings
+    // such as "1.2" as valid timestamps.
+    return validator.isNonEmptyString(timestamp) && (new Date(timestamp)).getTime() > 0;
   }
 }

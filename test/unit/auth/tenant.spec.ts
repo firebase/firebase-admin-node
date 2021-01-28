@@ -20,13 +20,13 @@ import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
 import { deepCopy } from '../../../src/utils/deep-copy';
-import {
-  EmailSignInConfig, EmailSignInProviderConfig, MultiFactorAuthConfig,
-} from '../../../src/auth/auth-config';
-import {
-  Tenant, TenantOptions, TenantServerResponse,
-} from '../../../src/auth/tenant';
+import { EmailSignInConfig, MultiFactorAuthConfig } from '../../../src/auth/auth-config';
+import { Tenant, TenantServerResponse } from '../../../src/auth/tenant';
+import { auth } from '../../../src/auth/index';
 
+import EmailSignInProviderConfig = auth.EmailSignInProviderConfig;
+import CreateTenantRequest = auth.CreateTenantRequest;
+import UpdateTenantRequest = auth.UpdateTenantRequest;
 
 chai.should();
 chai.use(sinonChai);
@@ -50,7 +50,7 @@ describe('Tenant', () => {
     },
   };
 
-  const clientRequest: TenantOptions = {
+  const clientRequest: UpdateTenantRequest = {
     displayName: 'TENANT-DISPLAY-NAME',
     emailSignInConfig: {
       enabled: true,
@@ -73,7 +73,7 @@ describe('Tenant', () => {
     enableEmailLinkSignin: true,
   };
 
-  const clientRequestWithoutMfa: TenantOptions = {
+  const clientRequestWithoutMfa: UpdateTenantRequest = {
     displayName: 'TENANT-DISPLAY-NAME',
     emailSignInConfig: {
       enabled: true,
@@ -164,7 +164,7 @@ describe('Tenant', () => {
         tenantOptionsClientRequest.unsupported = 'value';
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, !createRequest);
-        }).to.throw(`"unsupported" is not a valid UpdateTenantRequest parameter.`);
+        }).to.throw('"unsupported" is not a valid UpdateTenantRequest parameter.');
       });
 
       const invalidTenantNames = [null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];
@@ -181,7 +181,7 @@ describe('Tenant', () => {
 
     describe('for a create request', () => {
       it('should return the expected server request without multi-factor and phone config', () => {
-        const tenantOptionsClientRequest: TenantOptions = deepCopy(clientRequestWithoutMfa);
+        const tenantOptionsClientRequest: CreateTenantRequest = deepCopy(clientRequestWithoutMfa);
         const tenantOptionsServerRequest: TenantServerResponse = deepCopy(serverRequestWithoutMfa);
         delete tenantOptionsServerRequest.name;
 
@@ -190,7 +190,7 @@ describe('Tenant', () => {
       });
 
       it('should return the expected server request with multi-factor and phone config', () => {
-        const tenantOptionsClientRequest: TenantOptions = deepCopy(clientRequest);
+        const tenantOptionsClientRequest: CreateTenantRequest = deepCopy(clientRequest);
         const tenantOptionsServerRequest: TenantServerResponse = deepCopy(serverRequest);
         delete tenantOptionsServerRequest.name;
 
@@ -199,7 +199,7 @@ describe('Tenant', () => {
       });
 
       it('should throw on invalid EmailSignInConfig', () => {
-        const tenantOptionsClientRequest: TenantOptions = deepCopy(clientRequest);
+        const tenantOptionsClientRequest: CreateTenantRequest = deepCopy(clientRequest);
         tenantOptionsClientRequest.emailSignInConfig = null as unknown as EmailSignInProviderConfig;
 
         expect(() => Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest))
@@ -211,7 +211,7 @@ describe('Tenant', () => {
         tenantOptionsClientRequest.multiFactorConfig.factorIds = ['invalid'];
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-        }).to.throw(`"invalid" is not a valid "AuthFactorType".`,);
+        }).to.throw('"invalid" is not a valid "AuthFactorType".',);
       });
 
       it('should throw on invalid testPhoneNumbers attribute', () => {
@@ -219,7 +219,7 @@ describe('Tenant', () => {
         tenantOptionsClientRequest.testPhoneNumbers = { 'invalid': '123456' };
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-        }).to.throw(`"invalid" is not a valid E.164 standard compliant phone number.`);
+        }).to.throw('"invalid" is not a valid E.164 standard compliant phone number.');
       });
 
       it('should throw on null testPhoneNumbers attribute', () => {
@@ -231,7 +231,7 @@ describe('Tenant', () => {
 
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-        }).to.throw(`"CreateTenantRequest.testPhoneNumbers" must be a non-null object.`);
+        }).to.throw('"CreateTenantRequest.testPhoneNumbers" must be a non-null object.');
       });
 
       const nonObjects = [null, NaN, 0, 1, true, false, '', 'a', [], [1, 'a'], _.noop];
@@ -248,7 +248,7 @@ describe('Tenant', () => {
         tenantOptionsClientRequest.unsupported = 'value';
         expect(() => {
           Tenant.buildServerRequest(tenantOptionsClientRequest, createRequest);
-        }).to.throw(`"unsupported" is not a valid CreateTenantRequest parameter.`);
+        }).to.throw('"unsupported" is not a valid CreateTenantRequest parameter.');
       });
 
       const invalidTenantNames = [null, NaN, 0, 1, true, false, '', [], [1, 'a'], {}, { a: 1 }, _.noop];

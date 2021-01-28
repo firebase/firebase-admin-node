@@ -17,9 +17,14 @@
 import { FirebaseProjectManagementError } from '../utils/error';
 import * as validator from '../utils/validator';
 import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request-internal';
-import { AndroidAppMetadata, AppPlatform } from './app-metadata';
+import { projectManagement } from './index';
 
-export class AndroidApp {
+import AndroidAppInterface = projectManagement.AndroidApp;
+import AndroidAppMetadata = projectManagement.AndroidAppMetadata;
+import AppPlatform = projectManagement.AppPlatform;
+import ShaCertificateInterface = projectManagement.ShaCertificate;
+
+export class AndroidApp implements AndroidAppInterface {
   private readonly resourceName: string;
 
   constructor(
@@ -108,7 +113,7 @@ export class AndroidApp {
               validator.isNonEmptyString(certificateJson[requiredField]),
               responseData,
               `getShaCertificates()'s responseData.certificates[].${requiredField} must be a `
-                      + `non-empty string.`);
+                      + 'non-empty string.');
           });
 
           return new ShaCertificate(certificateJson.shaHash, certificateJson.name);
@@ -166,7 +171,7 @@ export class AndroidApp {
         assertServerResponse(
           validator.isBase64String(base64ConfigFileContents),
           responseData,
-          `getConfig()'s responseData.configFileContents must be a base64 string.`);
+          'getConfig()\'s responseData.configFileContents must be a base64 string.');
 
         return Buffer.from(base64ConfigFileContents, 'base64').toString('utf8');
       });
@@ -177,9 +182,9 @@ export class AndroidApp {
  * A SHA-1 or SHA-256 certificate.
  *
  * Do not call this constructor directly. Instead, use
- * [`projectManagement.shaCertificate()`](admin.projectManagement.ProjectManagement#shaCertificate).
+ * [`projectManagement.shaCertificate()`](projectManagement.ProjectManagement#shaCertificate).
  */
-export class ShaCertificate {
+export class ShaCertificate implements ShaCertificateInterface {
   /**
    * The SHA certificate type.
    *

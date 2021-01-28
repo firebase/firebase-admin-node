@@ -14,39 +14,84 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../firebase-app';
+import { app } from '../firebase-namespace-api';
 import { ServerValue as sv } from '@firebase/database';
-import * as adminDb from './database';
-import * as firebaseDbTypesApi from '@firebase/database-types';
-import * as firebaseAdmin from '../index';
-
-export function database(app?: FirebaseApp): adminDb.Database {
-  if (typeof(app) === 'undefined') {
-    app = firebaseAdmin.app();
-  }
-  return app.database();
-}
+import * as rtdb from '@firebase/database-types';
 
 /**
- * We must define a namespace to make the typings work correctly. Otherwise
- * `admin.database()` cannot be called like a function. Temporarily,
- * admin.database is used as the namespace name because we cannot barrel
- * re-export the contents from @firebase/database-types, and we want it to
- * match the namespacing in the re-export inside src/index.d.ts
+ * Gets the {@link database.Database `Database`} service for the default
+ * app or a given app.
+ *
+ * `admin.database()` can be called with no arguments to access the default
+ * app's {@link database.Database `Database`} service or as
+ * `admin.database(app)` to access the
+ * {@link database.Database `Database`} service associated with a specific
+ * app.
+ *
+ * `admin.database` is also a namespace that can be used to access global
+ * constants and methods associated with the `Database` service.
+ *
+ * @example
+ * ```javascript
+ * // Get the Database service for the default app
+ * var defaultDatabase = admin.database();
+ * ```
+ *
+ * @example
+ * ```javascript
+ * // Get the Database service for a specific app
+ * var otherDatabase = admin.database(app);
+ * ```
+ *
+ * @param App whose `Database` service to
+ *   return. If not provided, the default `Database` service will be returned.
+ *
+ * @return The default `Database` service if no app
+ *   is provided or the `Database` service associated with the provided app.
  */
-/* eslint-disable @typescript-eslint/no-namespace */
-export namespace admin.database {
-  // See https://github.com/microsoft/TypeScript/issues/4336
-  /* eslint-disable @typescript-eslint/no-unused-vars */
-  // See https://github.com/typescript-eslint/typescript-eslint/issues/363
-  export import DataSnapshot = firebaseDbTypesApi.DataSnapshot;
-  export import Database = adminDb.Database;
-  export import EventType = firebaseDbTypesApi.EventType;
-  export import OnDisconnect = firebaseDbTypesApi.OnDisconnect;
-  export import Query = firebaseDbTypesApi.Query;
-  export import Reference = firebaseDbTypesApi.Reference;
-  export import ThenableReference = firebaseDbTypesApi.ThenableReference;
-  export import enableLogging = firebaseDbTypesApi.enableLogging;
+export declare function database(app?: app.App): database.Database;
 
-  export const ServerValue: firebaseDbTypesApi.ServerValue = sv;
+/* eslint-disable @typescript-eslint/no-namespace */
+export namespace database {
+  export interface Database extends rtdb.FirebaseDatabase {
+    /**
+     * Gets the currently applied security rules as a string. The return value consists of
+     * the rules source including comments.
+     *
+     * @return A promise fulfilled with the rules as a raw string.
+     */
+    getRules(): Promise<string>;
+
+    /**
+     * Gets the currently applied security rules as a parsed JSON object. Any comments in
+     * the original source are stripped away.
+     *
+     * @return A promise fulfilled with the parsed rules object.
+     */
+    getRulesJSON(): Promise<object>;
+
+    /**
+     * Sets the specified rules on the Firebase Realtime Database instance. If the rules source is
+     * specified as a string or a Buffer, it may include comments.
+     *
+     * @param source Source of the rules to apply. Must not be `null` or empty.
+     * @return Resolves when the rules are set on the Realtime Database.
+     */
+    setRules(source: string | Buffer | object): Promise<void>;
+  }
+
+  /* eslint-disable @typescript-eslint/no-unused-vars */
+  export import DataSnapshot = rtdb.DataSnapshot;
+  export import EventType = rtdb.EventType;
+  export import OnDisconnect = rtdb.OnDisconnect;
+  export import Query = rtdb.Query;
+  export import Reference = rtdb.Reference;
+  export import ThenableReference = rtdb.ThenableReference;
+  export import enableLogging = rtdb.enableLogging;
+
+  /**
+   * [`ServerValue`](https://firebase.google.com/docs/reference/js/firebase.database.ServerValue)
+   * module from the `@firebase/database` package.
+   */
+  export const ServerValue: rtdb.ServerValue = sv;
 }

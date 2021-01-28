@@ -14,13 +14,19 @@
  * limitations under the License.
  */
 
-import { HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient,
-  ExponentialBackoffPoller } from '../utils/api-request';
+import {
+  HttpRequestConfig, HttpClient, HttpError, AuthorizedHttpClient, ExponentialBackoffPoller
+} from '../utils/api-request';
 import { PrefixedFirebaseError } from '../utils/error';
 import { FirebaseMachineLearningError, MachineLearningErrorCode } from './machine-learning-utils';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { FirebaseApp } from '../firebase-app';
+import { machineLearning } from './index';
+
+import GcsTfliteModelOptions = machineLearning.GcsTfliteModelOptions;
+import ListModelsOptions = machineLearning.ListModelsOptions;
+import ModelOptions = machineLearning.ModelOptions;
 
 const ML_V1BETA2_API = 'https://firebaseml.googleapis.com/v1beta2';
 const FIREBASE_VERSION_HEADER = {
@@ -37,36 +43,12 @@ export interface StatusErrorResponse {
     readonly message: string;
 }
 
-/**
- * Firebase ML Model input objects
- */
-export interface ModelOptionsBase {
-  displayName?: string;
-  tags?: string[];
-}
-export interface GcsTfliteModelOptions extends ModelOptionsBase {
-  tfliteModel: {
-    gcsTfliteUri: string;
-  };
-}
-export interface AutoMLTfliteModelOptions extends ModelOptionsBase {
-  tfliteModel: {
-    automlModel: string;
-  };
-}
-export type ModelOptions = ModelOptionsBase | GcsTfliteModelOptions | AutoMLTfliteModelOptions;
+
 export type ModelUpdateOptions = ModelOptions & { state?: { published?: boolean }};
 
 export function isGcsTfliteModelOptions(options: ModelOptions): options is GcsTfliteModelOptions {
   const gcsUri = (options as GcsTfliteModelOptions)?.tfliteModel?.gcsTfliteUri;
   return typeof gcsUri !== 'undefined'
-}
-
-/** Interface representing listModels options. */
-export interface ListModelsOptions {
-  filter?: string;
-  pageSize?: number;
-  pageToken?: string;
 }
 
 export interface ModelContent {

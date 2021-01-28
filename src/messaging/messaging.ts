@@ -1,4 +1,5 @@
 /*!
+ * @license
  * Copyright 2017 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,20 +19,27 @@ import { FirebaseApp } from '../firebase-app';
 import { deepCopy, deepExtend } from '../utils/deep-copy';
 import { SubRequest } from './batch-request-internal';
 import { validateMessage, BLACKLISTED_DATA_PAYLOAD_KEYS, BLACKLISTED_OPTIONS_KEYS } from './messaging-internal';
-import {
-  Message, MessagingDevicesResponse,
-  MessagingDeviceGroupResponse, MessagingTopicManagementResponse,
-  MessagingPayload, MessagingOptions, MessagingTopicResponse,
-  MessagingConditionResponse, BatchResponse, MulticastMessage, DataMessagePayload, NotificationMessagePayload,
-} from './messaging-types';
+import { messaging } from './index';
 import { FirebaseMessagingRequestHandler } from './messaging-api-request-internal';
-import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
-import {
-  ErrorInfo, MessagingClientErrorCode, FirebaseMessagingError,
-} from '../utils/error';
-
+import { ErrorInfo, MessagingClientErrorCode, FirebaseMessagingError } from '../utils/error';
 import * as utils from '../utils';
 import * as validator from '../utils/validator';
+
+import MessagingInterface = messaging.Messaging;
+import Message = messaging.Message;
+import BatchResponse = messaging.BatchResponse;
+import MulticastMessage = messaging.MulticastMessage;
+import MessagingTopicManagementResponse = messaging.MessagingTopicManagementResponse;
+
+// Legacy API types
+import MessagingDevicesResponse = messaging.MessagingDevicesResponse;
+import MessagingDeviceGroupResponse = messaging.MessagingDeviceGroupResponse;
+import MessagingPayload = messaging.MessagingPayload;
+import MessagingOptions = messaging.MessagingOptions;
+import MessagingTopicResponse = messaging.MessagingTopicResponse;
+import MessagingConditionResponse = messaging.MessagingConditionResponse;
+import DataMessagePayload = messaging.DataMessagePayload;
+import NotificationMessagePayload = messaging.NotificationMessagePayload;
 
 /* eslint-disable @typescript-eslint/camelcase */
 
@@ -178,34 +186,16 @@ function mapRawResponseToTopicManagementResponse(response: object): MessagingTop
 
 
 /**
- * Internals of a Messaging instance.
- */
-class MessagingInternals implements FirebaseServiceInternalsInterface {
-  /**
-   * Deletes the service and its associated resources.
-   *
-   * @return {Promise<()>} An empty Promise that will be fulfilled when the service is deleted.
-   */
-  public delete(): Promise<void> {
-    // There are no resources to clean up.
-    return Promise.resolve(undefined);
-  }
-}
-
-
-/**
  * Messaging service bound to the provided app.
  */
-export class Messaging implements FirebaseServiceInterface {
-
-  public INTERNAL: MessagingInternals = new MessagingInternals();
+export class Messaging implements MessagingInterface {
 
   private urlPath: string;
   private readonly appInternal: FirebaseApp;
   private readonly messagingRequestHandler: FirebaseMessagingRequestHandler;
 
   /**
-   * Gets the {@link admin.messaging.Messaging `Messaging`} service for the
+   * Gets the {@link messaging.Messaging `Messaging`} service for the
    * current app.
    *
    * @example
@@ -399,7 +389,7 @@ export class Messaging implements FirebaseServiceInterface {
     registrationTokenOrTokens: string | string[],
     payload: MessagingPayload,
     options: MessagingOptions = {},
-  ): Promise<MessagingDevicesResponse | MessagingDeviceGroupResponse> {
+  ): Promise<MessagingDevicesResponse> {
     // Validate the input argument types. Since these are common developer errors when getting
     // started, throw an error instead of returning a rejected promise.
     this.validateRegistrationTokensType(
@@ -437,7 +427,13 @@ export class Messaging implements FirebaseServiceInterface {
         if ('multicast_id' in response) {
           return mapRawResponseToDevicesResponse(response);
         } else {
-          return mapRawResponseToDeviceGroupResponse(response);
+          const groupResponse = mapRawResponseToDeviceGroupResponse(response);
+          return {
+            ...groupResponse,
+            canonicalRegistrationTokenCount: -1,
+            multicastId: -1,
+            results: [],
+          }
         }
       });
   }
@@ -463,7 +459,7 @@ export class Messaging implements FirebaseServiceInterface {
     notificationKey: string,
     payload: MessagingPayload,
     options: MessagingOptions = {},
-  ): Promise<MessagingDeviceGroupResponse | MessagingDevicesResponse> {
+  ): Promise<MessagingDeviceGroupResponse> {
     if (!validator.isNonEmptyString(notificationKey)) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_RECIPIENT,
@@ -515,7 +511,11 @@ export class Messaging implements FirebaseServiceInterface {
               'Notification key provided to sendToDeviceGroup() is invalid.',
             );
           } else {
-            return mapRawResponseToDevicesResponse(response);
+            const devicesResponse = mapRawResponseToDevicesResponse(response);
+            return {
+              ...devicesResponse,
+              failedRegistrationTokens: [],
+            }
           }
         }
 
@@ -806,7 +806,7 @@ export class Messaging implements FirebaseServiceInterface {
         throw new FirebaseMessagingError(
           MessagingClientErrorCode.INVALID_PAYLOAD,
           `Messaging payload contains an invalid "${payloadKey}" property. Valid properties are ` +
-          `"data" and "notification".`,
+          '"data" and "notification".',
         );
       } else {
         containsDataOrNotificationKey = true;
@@ -827,7 +827,7 @@ export class Messaging implements FirebaseServiceInterface {
         throw new FirebaseMessagingError(
           MessagingClientErrorCode.INVALID_PAYLOAD,
           `Messaging payload contains an invalid value for the "${payloadKey}" property. ` +
-          `Value must be an object.`,
+          'Value must be an object.',
         );
       }
 
@@ -837,7 +837,7 @@ export class Messaging implements FirebaseServiceInterface {
           throw new FirebaseMessagingError(
             MessagingClientErrorCode.INVALID_PAYLOAD,
             `Messaging payload contains an invalid value for the "${payloadKey}.${subKey}" ` +
-            `property. Values must be strings.`,
+            'property. Values must be strings.',
           );
         } else if (payloadKey === 'data' && /^google\./.test(subKey)) {
           // Validate the data payload does not contain keys which start with 'google.'.
