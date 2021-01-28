@@ -23,6 +23,7 @@ import { FirebaseApp } from '../firebase-app';
 import { auth } from './index';
 
 import DecodedIdToken = auth.DecodedIdToken;
+import { useEmulator } from './auth-api-request';
 
 // Audience to use for Firebase Auth Custom tokens
 const FIREBASE_AUDIENCE = 'https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit';
@@ -79,7 +80,7 @@ export class FirebaseTokenVerifier {
   constructor(private clientCertUrl: string, private algorithm: jwt.Algorithm,
               private issuer: string, private tokenInfo: FirebaseTokenInfo,
               private readonly app: FirebaseApp) {
-                
+
     if (!validator.isURL(clientCertUrl)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,
@@ -152,14 +153,6 @@ export class FirebaseTokenVerifier {
       });
   }
 
-  /**
-   * Override the JWT signing algorithm.
-   * @param algorithm the new signing algorithm.
-   */
-  public setAlgorithm(algorithm: jwt.Algorithm): void {
-    this.algorithm = algorithm;
-  }
-
   private verifyJWTWithProjectId(jwtToken: string, projectId: string | null): Promise<DecodedIdToken> {
     if (!validator.isNonEmptyString(projectId)) {
       throw new FirebaseAuthError(
@@ -185,7 +178,7 @@ export class FirebaseTokenVerifier {
     if (!fullDecodedToken) {
       errorMessage = `Decoding ${this.tokenInfo.jwtName} failed. Make sure you passed the entire string JWT ` +
         `which represents ${this.shortNameArticle} ${this.tokenInfo.shortName}.` + verifyJwtTokenDocsMessage;
-    } else if (typeof header.kid === 'undefined' && this.algorithm !== 'none') {
+    } else if (!useEmulator() && typeof header.kid === 'undefined') {
       const isCustomToken = (payload.aud === FIREBASE_AUDIENCE);
       const isLegacyCustomToken = (header.alg === 'HS256' && payload.v === 0 && 'd' in payload && 'uid' in payload.d);
 
@@ -200,7 +193,7 @@ export class FirebaseTokenVerifier {
       }
 
       errorMessage += verifyJwtTokenDocsMessage;
-    } else if (header.alg !== this.algorithm) {
+    } else if (!useEmulator() && header.alg !== this.algorithm) {
       errorMessage = `${this.tokenInfo.jwtName} has incorrect algorithm. Expected "` + this.algorithm + '" but got ' +
         '"' + header.alg + '".' + verifyJwtTokenDocsMessage;
     } else if (payload.aud !== projectId) {
@@ -209,7 +202,7 @@ export class FirebaseTokenVerifier {
         verifyJwtTokenDocsMessage;
     } else if (payload.iss !== this.issuer + projectId) {
       errorMessage = `${this.tokenInfo.jwtName} has incorrect "iss" (issuer) claim. Expected ` +
-        `"${this.issuer}"` + projectId + '" but got "' +
+        `"${this.issuer}` + projectId + '" but got "' +
         payload.iss + '".' + projectIdMatchMessage + verifyJwtTokenDocsMessage;
     } else if (typeof payload.sub !== 'string') {
       errorMessage = `${this.tokenInfo.jwtName} has no "sub" (subject) claim.` + verifyJwtTokenDocsMessage;
@@ -225,7 +218,7 @@ export class FirebaseTokenVerifier {
 
     // When the algorithm is set to 'none' there will be no signature and therefore we don't check
     // the public keys.
-    if (this.algorithm === 'none') {
+    if (useEmulator()) {
       return this.verifyJwtSignatureWithKey(jwtToken, null);
     }
 
@@ -257,26 +250,29 @@ export class FirebaseTokenVerifier {
     const verifyJwtTokenDocsMessage = ` See ${this.tokenInfo.url} ` +
       `for details on how to retrieve ${this.shortNameArticle} ${this.tokenInfo.shortName}.`;
     return new Promise((resolve, reject) => {
-      jwt.verify(jwtToken, publicKey || '', {
-        algorithms: [this.algorithm],
-      }, (error: jwt.VerifyErrors | null, decodedToken: object | undefined) => {
-        if (error) {
-          if (error.name === 'TokenExpiredError') {
-            const errorMessage = `${this.tokenInfo.jwtName} has expired. Get a fresh ${this.tokenInfo.shortName}` +
-              ` from your client app and try again (auth/${this.tokenInfo.expiredErrorCode.code}).` +
-              verifyJwtTokenDocsMessage;
-            return reject(new FirebaseAuthError(this.tokenInfo.expiredErrorCode, errorMessage));
-          } else if (error.name === 'JsonWebTokenError') {
-            const errorMessage = `${this.tokenInfo.jwtName} has invalid signature.` + verifyJwtTokenDocsMessage;
-            return reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, errorMessage));
+      const verifyOptions: jwt.VerifyOptions = {};
+      if (!useEmulator()) {
+        verifyOptions.algorithms = [this.algorithm];
+      }
+      jwt.verify(jwtToken, publicKey || '', verifyOptions,
+        (error: jwt.VerifyErrors | null, decodedToken: object | undefined) => {
+          if (error) {
+            if (error.name === 'TokenExpiredError') {
+              const errorMessage = `${this.tokenInfo.jwtName} has expired. Get a fresh ${this.tokenInfo.shortName}` +
+                ` from your client app and try again (auth/${this.tokenInfo.expiredErrorCode.code}).` +
+                verifyJwtTokenDocsMessage;
+              return reject(new FirebaseAuthError(this.tokenInfo.expiredErrorCode, errorMessage));
+            } else if (error.name === 'JsonWebTokenError') {
+              const errorMessage = `${this.tokenInfo.jwtName} has invalid signature.` + verifyJwtTokenDocsMessage;
+              return reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, errorMessage));
+            }
+            return reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, error.message));
+          } else {
+            const decodedIdToken = (decodedToken as DecodedIdToken);
+            decodedIdToken.uid = decodedIdToken.sub;
+            resolve(decodedIdToken);
           }
-          return reject(new FirebaseAuthError(AuthClientErrorCode.INVALID_ARGUMENT, error.message));
-        } else {
-          const decodedIdToken = (decodedToken as DecodedIdToken);
-          decodedIdToken.uid = decodedIdToken.sub;
-          resolve(decodedIdToken);
-        }
-      });
+        });
     });
   }
 

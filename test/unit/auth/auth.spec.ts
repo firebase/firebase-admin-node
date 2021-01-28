@@ -3214,41 +3214,6 @@ AUTH_CONFIGS.forEach((testConfig) => {
         // Make sure this doesn't throw
         jwt.verify(token, '', { algorithms: ['none'] });
       });
-
-      it('verifyIdToken() rejects an unsigned token when only the env var is set', async () => {
-        const unsignedToken = mocks.generateIdToken({
-          algorithm: 'none'
-        });
-
-        await expect(mockAuth.verifyIdToken(unsignedToken))
-          .to.be.rejectedWith('Firebase ID token has incorrect algorithm. Expected "RS256"');
-      });
-
-      it('verifyIdToken() accepts an unsigned token when private method is called and env var is set', async () => {
-        (mockAuth as any).setJwtVerificationEnabled(false);
-
-        let claims = {};
-        if (testConfig.Auth === TenantAwareAuth) {
-          claims = {
-            firebase: {
-              tenant: TENANT_ID
-            }
-          }
-        }
-
-        const unsignedToken = mocks.generateIdToken({
-          algorithm: 'none'
-        }, claims);
-
-        const decoded = await mockAuth.verifyIdToken(unsignedToken);
-        expect(decoded).to.be.ok;
-      });
-
-      it('private method throws when env var is unset', async () => {
-        delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
-        await expect(() => (mockAuth as any).setJwtVerificationEnabled(false))
-          .to.throw('This method is only available when connected to the Authentication emulator.')
-      });
     });
   });
 });
