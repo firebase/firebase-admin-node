@@ -16,13 +16,13 @@
 
 export * from './credential/index';
 export * from './firebase-namespace-api';
-export * from './auth/index';
-export * from './database/index';
-export * from './firestore/index';
-export * from './instance-id/index';
-export * from './machine-learning/index';
-export * from './messaging/index';
-export * from './project-management/index';
-export * from './remote-config/index';
-export * from './security-rules/index';
-export * from './storage/index';
+export { auth } from './auth/index';
+export { database } from './database/index';
+export { firestore } from './firestore/index';
+export { instanceId } from './instance-id/index';
+export { machineLearning } from './machine-learning/index';
+export { messaging } from './messaging/index';
+export { projectManagement } from './project-management/index';
+export { remoteConfig } from './remote-config/index';
+export { securityRules } from './security-rules/index';
+export { storage } from './storage/index';

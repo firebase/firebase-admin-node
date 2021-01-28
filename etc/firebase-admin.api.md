@@ -6,30 +6,9 @@
 
 import { Agent } from 'http';
 import { Bucket } from '@google-cloud/storage';
-import { DataSnapshot } from '@firebase/database-types';
-import { EventType } from '@firebase/database-types';
 import { FirebaseDatabase } from '@firebase/database-types';
 import * as _firestore from '@google-cloud/firestore';
-import { OnDisconnect } from '@firebase/database-types';
-import { Query } from '@firebase/database-types';
-import { Reference } from '@firebase/database-types';
 import * as rtdb from '@firebase/database-types';
-import { ThenableReference } from '@firebase/database-types';
-
-// @public
-export interface ActionCodeSettings {
-    android?: {
-        packageName: string;
-        installApp?: boolean;
-        minimumVersion?: string;
-    };
-    dynamicLinkDomain?: string;
-    handleCodeInApp?: boolean;
-    iOS?: {
-        bundleId: string;
-    };
-    url: string;
-}
 
 // @public (undocumented)
 export interface App {
@@ -85,188 +64,218 @@ export interface AppOptions {
 export const apps: (app.App | null)[];
 
 // @public
-export class Auth extends BaseAuth {
-    get app(): App;
-    tenantManager(): TenantManager;
-    }
-
-// @public
 export function auth(app?: App): auth.Auth;
 
 // @public (undocumented)
 export namespace auth {
+    // Warning: (ae-forgotten-export) The symbol "ActionCodeSettings" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type ActionCodeSettings = ActionCodeSettings;
+    // Warning: (ae-forgotten-export) The symbol "Auth" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type Auth = Auth;
+    // Warning: (ae-forgotten-export) The symbol "AuthFactorType" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type AuthFactorType = AuthFactorType;
+    // Warning: (ae-forgotten-export) The symbol "AuthProviderConfig" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type AuthProviderConfig = AuthProviderConfig;
+    // Warning: (ae-forgotten-export) The symbol "AuthProviderConfigFilter" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type AuthProviderConfigFilter = AuthProviderConfigFilter;
+    // Warning: (ae-forgotten-export) The symbol "BaseAuth" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type BaseAuth = BaseAuth;
+    // Warning: (ae-forgotten-export) The symbol "CreateMultiFactorInfoRequest" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type CreateMultiFactorInfoRequest = CreateMultiFactorInfoRequest;
+    // Warning: (ae-forgotten-export) The symbol "CreatePhoneMultiFactorInfoRequest" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type CreatePhoneMultiFactorInfoRequest = CreatePhoneMultiFactorInfoRequest;
+    // Warning: (ae-forgotten-export) The symbol "CreateRequest" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type CreateRequest = CreateRequest;
+    // Warning: (ae-forgotten-export) The symbol "CreateTenantRequest" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type CreateTenantRequest = CreateTenantRequest;
+    // Warning: (ae-forgotten-export) The symbol "DecodedIdToken" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type DecodedIdToken = DecodedIdToken;
+    // Warning: (ae-forgotten-export) The symbol "DeleteUsersResult" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type DeleteUsersResult = DeleteUsersResult;
+    // Warning: (ae-forgotten-export) The symbol "EmailIdentifier" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type EmailIdentifier = EmailIdentifier;
+    // Warning: (ae-forgotten-export) The symbol "EmailSignInProviderConfig" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type EmailSignInProviderConfig = EmailSignInProviderConfig;
+    // Warning: (ae-forgotten-export) The symbol "GetUsersResult" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type GetUsersResult = GetUsersResult;
+    // Warning: (ae-forgotten-export) The symbol "HashAlgorithmType" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type HashAlgorithmType = HashAlgorithmType;
+    // Warning: (ae-forgotten-export) The symbol "ListProviderConfigResults" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type ListProviderConfigResults = ListProviderConfigResults;
+    // Warning: (ae-forgotten-export) The symbol "ListTenantsResult" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type ListTenantsResult = ListTenantsResult;
+    // Warning: (ae-forgotten-export) The symbol "ListUsersResult" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type ListUsersResult = ListUsersResult;
+    // Warning: (ae-forgotten-export) The symbol "MultiFactorConfig" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type MultiFactorConfig = MultiFactorConfig;
+    // Warning: (ae-forgotten-export) The symbol "MultiFactorConfigState" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type MultiFactorConfigState = MultiFactorConfigState;
+    // Warning: (ae-forgotten-export) The symbol "MultiFactorCreateSettings" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type MultiFactorCreateSettings = MultiFactorCreateSettings;
+    // Warning: (ae-forgotten-export) The symbol "MultiFactorInfo" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type MultiFactorInfo = MultiFactorInfo;
+    // Warning: (ae-forgotten-export) The symbol "MultiFactorSettings" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type MultiFactorSettings = MultiFactorSettings;
+    // Warning: (ae-forgotten-export) The symbol "MultiFactorUpdateSettings" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type MultiFactorUpdateSettings = MultiFactorUpdateSettings;
+    // Warning: (ae-forgotten-export) The symbol "OIDCAuthProviderConfig" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type OIDCAuthProviderConfig = OIDCAuthProviderConfig;
+    // Warning: (ae-forgotten-export) The symbol "OIDCUpdateAuthProviderRequest" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type OIDCUpdateAuthProviderRequest = OIDCUpdateAuthProviderRequest;
+    // Warning: (ae-forgotten-export) The symbol "PhoneIdentifier" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type PhoneIdentifier = PhoneIdentifier;
+    // Warning: (ae-forgotten-export) The symbol "PhoneMultiFactorInfo" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type PhoneMultiFactorInfo = PhoneMultiFactorInfo;
+    // Warning: (ae-forgotten-export) The symbol "ProviderIdentifier" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type ProviderIdentifier = ProviderIdentifier;
+    // Warning: (ae-forgotten-export) The symbol "SAMLAuthProviderConfig" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type SAMLAuthProviderConfig = SAMLAuthProviderConfig;
+    // Warning: (ae-forgotten-export) The symbol "SAMLUpdateAuthProviderRequest" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type SAMLUpdateAuthProviderRequest = SAMLUpdateAuthProviderRequest;
+    // Warning: (ae-forgotten-export) The symbol "SessionCookieOptions" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type SessionCookieOptions = SessionCookieOptions;
+    // Warning: (ae-forgotten-export) The symbol "Tenant" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type Tenant = Tenant;
+    // Warning: (ae-forgotten-export) The symbol "TenantAwareAuth" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type TenantAwareAuth = TenantAwareAuth;
+    // Warning: (ae-forgotten-export) The symbol "TenantManager" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type TenantManager = TenantManager;
+    // Warning: (ae-forgotten-export) The symbol "UidIdentifier" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type UidIdentifier = UidIdentifier;
+    // Warning: (ae-forgotten-export) The symbol "UpdateAuthProviderRequest" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type UpdateAuthProviderRequest = UpdateAuthProviderRequest;
+    // Warning: (ae-forgotten-export) The symbol "UpdateMultiFactorInfoRequest" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type UpdateMultiFactorInfoRequest = UpdateMultiFactorInfoRequest;
+    // Warning: (ae-forgotten-export) The symbol "UpdatePhoneMultiFactorInfoRequest" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type UpdatePhoneMultiFactorInfoRequest = UpdatePhoneMultiFactorInfoRequest;
+    // Warning: (ae-forgotten-export) The symbol "UpdateRequest" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type UpdateRequest = UpdateRequest;
+    // Warning: (ae-forgotten-export) The symbol "UpdateTenantRequest" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type UpdateTenantRequest = UpdateTenantRequest;
+    // Warning: (ae-forgotten-export) The symbol "UserIdentifier" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type UserIdentifier = UserIdentifier;
+    // Warning: (ae-forgotten-export) The symbol "UserImportOptions" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type UserImportOptions = UserImportOptions;
+    // Warning: (ae-forgotten-export) The symbol "UserImportRecord" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type UserImportRecord = UserImportRecord;
+    // Warning: (ae-forgotten-export) The symbol "UserImportResult" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type UserImportResult = UserImportResult;
+    // Warning: (ae-forgotten-export) The symbol "UserInfo" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type UserInfo = UserInfo;
+    // Warning: (ae-forgotten-export) The symbol "UserMetadata" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type UserMetadata = UserMetadata;
+    // Warning: (ae-forgotten-export) The symbol "UserMetadataRequest" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type UserMetadataRequest = UserMetadataRequest;
+    // Warning: (ae-forgotten-export) The symbol "UserProviderRequest" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type UserProviderRequest = UserProviderRequest;
+    // Warning: (ae-forgotten-export) The symbol "UserRecord" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type UserRecord = UserRecord;
 }
 
-// @public
-export type AuthFactorType = 'phone';
-
-// @public
-export interface AuthProviderConfig {
-    displayName?: string;
-    enabled: boolean;
-    providerId: string;
-}
-
-// @public
-export interface AuthProviderConfigFilter {
-    maxResults?: number;
-    pageToken?: string;
-    type: 'saml' | 'oidc';
-}
-
-// @public
-export class BaseAuth {
-    createCustomToken(uid: string, developerClaims?: object): Promise<string>;
-    createProviderConfig(config: AuthProviderConfig): Promise<AuthProviderConfig>;
-    createSessionCookie(idToken: string, sessionCookieOptions: SessionCookieOptions): Promise<string>;
-    createUser(properties: CreateRequest): Promise<UserRecord>;
-    deleteProviderConfig(providerId: string): Promise<void>;
-    deleteUser(uid: string): Promise<void>;
-    // (undocumented)
-    deleteUsers(uids: string[]): Promise<DeleteUsersResult>;
-    generateEmailVerificationLink(email: string, actionCodeSettings?: ActionCodeSettings): Promise<string>;
-    generatePasswordResetLink(email: string, actionCodeSettings?: ActionCodeSettings): Promise<string>;
-    generateSignInWithEmailLink(email: string, actionCodeSettings: ActionCodeSettings): Promise<string>;
-    getProviderConfig(providerId: string): Promise<AuthProviderConfig>;
-    getUser(uid: string): Promise<UserRecord>;
-    getUserByEmail(email: string): Promise<UserRecord>;
-    getUserByPhoneNumber(phoneNumber: string): Promise<UserRecord>;
-    getUsers(identifiers: UserIdentifier[]): Promise<GetUsersResult>;
-    importUsers(users: UserImportRecord[], options?: UserImportOptions): Promise<UserImportResult>;
-    listProviderConfigs(options: AuthProviderConfigFilter): Promise<ListProviderConfigResults>;
-    listUsers(maxResults?: number, pageToken?: string): Promise<ListUsersResult>;
-    revokeRefreshTokens(uid: string): Promise<void>;
-    setCustomUserClaims(uid: string, customUserClaims: object | null): Promise<void>;
-    updateProviderConfig(providerId: string, updatedConfig: UpdateAuthProviderRequest): Promise<AuthProviderConfig>;
-    updateUser(uid: string, properties: UpdateRequest): Promise<UserRecord>;
-    verifyIdToken(idToken: string, checkRevoked?: boolean): Promise<DecodedIdToken>;
-    verifySessionCookie(sessionCookie: string, checkRevoked?: boolean): Promise<DecodedIdToken>;
-}
-
 // @public (undocumented)
 export function cert(serviceAccountPathOrObject: string | ServiceAccount, httpAgent?: Agent): Credential;
-
-// @public
-export interface CreateMultiFactorInfoRequest {
-    displayName?: string;
-    factorId: string;
-}
-
-// @public
-export interface CreatePhoneMultiFactorInfoRequest extends CreateMultiFactorInfoRequest {
-    phoneNumber: string;
-}
-
-// @public
-export interface CreateRequest extends UpdateRequest {
-    multiFactor?: MultiFactorCreateSettings;
-    uid?: string;
-}
-
-// @public
-export type CreateTenantRequest = UpdateTenantRequest;
 
 // @public (undocumented)
 export interface Credential {
@@ -281,18 +290,13 @@ export namespace credential {
     const refreshToken: typeof refreshToken;
 }
 
-// @public (undocumented)
-export interface Database extends FirebaseDatabase {
-    getRules(): Promise<string>;
-    getRulesJSON(): Promise<object>;
-    setRules(source: string | Buffer | object): Promise<void>;
-}
-
 // @public
 export function database(app?: App): database.Database;
 
 // @public (undocumented)
 export namespace database {
+    // Warning: (ae-forgotten-export) The symbol "Database" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type Database = Database;
     // (undocumented)
@@ -312,61 +316,8 @@ export namespace database {
     const ServerValue: rtdb.ServerValue;
 }
 
-export { DataSnapshot }
-
-// @public
-export interface DecodedIdToken {
-    // (undocumented)
-    [key: string]: any;
-    aud: string;
-    auth_time: number;
-    email?: string;
-    email_verified?: boolean;
-    exp: number;
-    firebase: {
-        identities: {
-            [key: string]: any;
-        };
-        sign_in_provider: string;
-        sign_in_second_factor?: string;
-        second_factor_identifier?: string;
-        tenant?: string;
-        [key: string]: any;
-    };
-    iat: number;
-    iss: string;
-    phone_number?: string;
-    picture?: string;
-    sub: string;
-    uid: string;
-}
-
 // @public (undocumented)
 export function deleteApp(app: App): Promise<void>;
-
-// @public
-export interface DeleteUsersResult {
-    errors: FirebaseArrayIndexError[];
-    failureCount: number;
-    successCount: number;
-}
-
-// @public
-export interface EmailIdentifier {
-    // (undocumented)
-    email: string;
-}
-
-// @public
-export interface EmailSignInProviderConfig {
-    enabled: boolean;
-    passwordRequired?: boolean;
-}
-
-// @public (undocumented)
-export const enableLogging: typeof rtdb.enableLogging;
-
-export { EventType }
 
 // @public
 export interface FirebaseArrayIndexError {
@@ -424,24 +375,6 @@ export function getApp(name?: string): App;
 // @public (undocumented)
 export function getApps(): App[];
 
-// @public (undocumented)
-export function getAuth(app?: App): Auth;
-
-// @public (undocumented)
-export function getDatabase(app?: App): Database;
-
-// @public (undocumented)
-export function getDatabaseWithUrl(url: string, app?: App): Database;
-
-// @public (undocumented)
-export function getInstanceId(app?: App): InstanceId;
-
-// @public
-export interface GetUsersResult {
-    notFound: UserIdentifier[];
-    users: UserRecord[];
-}
-
 // @public
 export interface GoogleOAuthAccessToken {
     // (undocumented)
@@ -451,42 +384,17 @@ export interface GoogleOAuthAccessToken {
 }
 
 // @public (undocumented)
-export type HashAlgorithmType = 'SCRYPT' | 'STANDARD_SCRYPT' | 'HMAC_SHA512' | 'HMAC_SHA256' | 'HMAC_SHA1' | 'HMAC_MD5' | 'MD5' | 'PBKDF_SHA1' | 'BCRYPT' | 'PBKDF2_SHA256' | 'SHA512' | 'SHA256' | 'SHA1';
-
-// @public (undocumented)
 export function initializeApp(options?: AppOptions, name?: string): app.App;
-
-// @public
-export class InstanceId {
-    get app(): App;
-    deleteInstanceId(instanceId: string): Promise<void>;
-    }
 
 // @public
 export function instanceId(app?: App): instanceId.InstanceId;
 
 // @public (undocumented)
 export namespace instanceId {
+    // Warning: (ae-forgotten-export) The symbol "InstanceId" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
     export type InstanceId = InstanceId;
-}
-
-// @public
-export interface ListProviderConfigResults {
-    pageToken?: string;
-    providerConfigs: AuthProviderConfig[];
-}
-
-// @public
-export interface ListTenantsResult {
-    pageToken?: string;
-    tenants: Tenant[];
-}
-
-// @public
-export interface ListUsersResult {
-    pageToken?: string;
-    users: UserRecord[];
 }
 
 // @public
@@ -843,74 +751,6 @@ export namespace messaging {
     {};
 }
 
-// @public (undocumented)
-export interface MultiFactorConfig {
-    factorIds?: AuthFactorType[];
-    state: MultiFactorConfigState;
-}
-
-// @public
-export type MultiFactorConfigState = 'ENABLED' | 'DISABLED';
-
-// @public
-export interface MultiFactorCreateSettings {
-    enrolledFactors: CreateMultiFactorInfoRequest[];
-}
-
-// @public
-export abstract class MultiFactorInfo {
-    // (undocumented)
-    readonly displayName?: string;
-    // (undocumented)
-    readonly enrollmentTime?: string;
-    // (undocumented)
-    readonly factorId: string;
-    toJSON(): any;
-    // (undocumented)
-    readonly uid: string;
-}
-
-// @public
-export class MultiFactorSettings {
-    // (undocumented)
-    enrolledFactors: MultiFactorInfo[];
-    toJSON(): any;
-}
-
-// @public
-export interface MultiFactorUpdateSettings {
-    enrolledFactors: UpdateMultiFactorInfoRequest[] | null;
-}
-
-// @public
-export interface OIDCAuthProviderConfig extends AuthProviderConfig {
-    clientId: string;
-    issuer: string;
-}
-
-// @public
-export interface OIDCUpdateAuthProviderRequest {
-    clientId?: string;
-    displayName?: string;
-    enabled?: boolean;
-    issuer?: string;
-}
-
-export { OnDisconnect }
-
-// @public
-export interface PhoneIdentifier {
-    // (undocumented)
-    phoneNumber: string;
-}
-
-// @public
-export class PhoneMultiFactorInfo extends MultiFactorInfo {
-    // (undocumented)
-    readonly phoneNumber: string;
-    toJSON(): any;
-}
-
 // @public
 export function projectManagement(app?: app.App): projectManagement.ProjectManagement;
 
@@ -974,18 +814,6 @@ export namespace projectManagement {
         shaHash: string;
     }
 }
-
-// @public
-export interface ProviderIdentifier {
-    // (undocumented)
-    providerId: string;
-    // (undocumented)
-    providerUid: string;
-}
-
-export { Query }
-
-export { Reference }
 
 // @public (undocumented)
 export function refreshToken(refreshTokenPathOrObject: string | object, httpAgent?: Agent): Credential;
@@ -1073,26 +901,6 @@ export namespace remoteConfig {
     }
 }
 
-// @public
-export interface SAMLAuthProviderConfig extends AuthProviderConfig {
-    callbackURL?: string;
-    idpEntityId: string;
-    rpEntityId: string;
-    ssoURL: string;
-    x509Certificates: string[];
-}
-
-// @public
-export interface SAMLUpdateAuthProviderRequest {
-    callbackURL?: string;
-    displayName?: string;
-    enabled?: boolean;
-    idpEntityId?: string;
-    rpEntityId?: string;
-    ssoURL?: string;
-    x509Certificates?: string[];
-}
-
 // @public (undocumented)
 export const SDK_VERSION: string;
 
@@ -1137,9 +945,6 @@ export namespace securityRules {
 }
 
 // @public (undocumented)
-export const ServerValue: rtdb.ServerValue;
-
-// @public (undocumented)
 export interface ServiceAccount {
     // (undocumented)
     clientEmail?: string;
@@ -1147,11 +952,6 @@ export interface ServiceAccount {
     privateKey?: string;
     // (undocumented)
     projectId?: string;
-}
-
-// @public
-export interface SessionCookieOptions {
-    expiresIn: number;
 }
 
 // @public
@@ -1164,212 +964,6 @@ export namespace storage {
         // (undocumented)
         bucket(name?: string): Bucket;
     }
-}
-
-// @public
-export class Tenant {
-    // (undocumented)
-    readonly displayName?: string;
-    // (undocumented)
-    get emailSignInConfig(): EmailSignInProviderConfig | undefined;
-    // (undocumented)
-    get multiFactorConfig(): MultiFactorConfig | undefined;
-    // (undocumented)
-    readonly tenantId: string;
-    // (undocumented)
-    readonly testPhoneNumbers?: {
-        [phoneNumber: string]: string;
-    };
-    toJSON(): object;
-    }
-
-// @public
-export class TenantAwareAuth extends BaseAuth {
-    createSessionCookie(idToken: string, sessionCookieOptions: SessionCookieOptions): Promise<string>;
-    // (undocumented)
-    readonly tenantId: string;
-    verifyIdToken(idToken: string, checkRevoked?: boolean): Promise<DecodedIdToken>;
-    verifySessionCookie(sessionCookie: string, checkRevoked?: boolean): Promise<DecodedIdToken>;
-}
-
-// @public
-export class TenantManager {
-    authForTenant(tenantId: string): TenantAwareAuth;
-    createTenant(tenantOptions: CreateTenantRequest): Promise<Tenant>;
-    deleteTenant(tenantId: string): Promise<void>;
-    getTenant(tenantId: string): Promise<Tenant>;
-    listTenants(maxResults?: number, pageToken?: string): Promise<ListTenantsResult>;
-    updateTenant(tenantId: string, tenantOptions: UpdateTenantRequest): Promise<Tenant>;
-}
-
-export { ThenableReference }
-
-// @public
-export interface UidIdentifier {
-    // (undocumented)
-    uid: string;
-}
-
-// @public (undocumented)
-export type UpdateAuthProviderRequest = SAMLUpdateAuthProviderRequest | OIDCUpdateAuthProviderRequest;
-
-// @public
-export interface UpdateMultiFactorInfoRequest {
-    displayName?: string;
-    enrollmentTime?: string;
-    factorId: string;
-    uid?: string;
-}
-
-// @public
-export interface UpdatePhoneMultiFactorInfoRequest extends UpdateMultiFactorInfoRequest {
-    phoneNumber: string;
-}
-
-// @public
-export interface UpdateRequest {
-    disabled?: boolean;
-    displayName?: string | null;
-    email?: string;
-    emailVerified?: boolean;
-    multiFactor?: MultiFactorUpdateSettings;
-    password?: string;
-    phoneNumber?: string | null;
-    photoURL?: string | null;
-}
-
-// @public
-export interface UpdateTenantRequest {
-    displayName?: string;
-    emailSignInConfig?: EmailSignInProviderConfig;
-    multiFactorConfig?: MultiFactorConfig;
-    testPhoneNumbers?: {
-        [phoneNumber: string]: string;
-    } | null;
-}
-
-// @public
-export type UserIdentifier = UidIdentifier | EmailIdentifier | PhoneIdentifier | ProviderIdentifier;
-
-// @public
-export interface UserImportOptions {
-    hash: {
-        algorithm: HashAlgorithmType;
-        key?: Buffer;
-        saltSeparator?: Buffer;
-        rounds?: number;
-        memoryCost?: number;
-        parallelization?: number;
-        blockSize?: number;
-        derivedKeyLength?: number;
-    };
-}
-
-// @public
-export interface UserImportRecord {
-    customClaims?: {
-        [key: string]: any;
-    };
-    disabled?: boolean;
-    displayName?: string;
-    email?: string;
-    emailVerified?: boolean;
-    metadata?: UserMetadataRequest;
-    multiFactor?: MultiFactorUpdateSettings;
-    passwordHash?: Buffer;
-    passwordSalt?: Buffer;
-    phoneNumber?: string;
-    photoURL?: string;
-    providerData?: UserProviderRequest[];
-    tenantId?: string;
-    uid: string;
-}
-
-// @public
-export interface UserImportResult {
-    errors: FirebaseArrayIndexError[];
-    failureCount: number;
-    successCount: number;
-}
-
-// @public
-export class UserInfo {
-    // (undocumented)
-    readonly displayName: string;
-    // (undocumented)
-    readonly email: string;
-    // (undocumented)
-    readonly phoneNumber: string;
-    // (undocumented)
-    readonly photoURL: string;
-    // (undocumented)
-    readonly providerId: string;
-    toJSON(): object;
-    // (undocumented)
-    readonly uid: string;
-}
-
-// @public
-export class UserMetadata {
-    // (undocumented)
-    readonly creationTime: string;
-    readonly lastRefreshTime: string | null;
-    // (undocumented)
-    readonly lastSignInTime: string;
-    toJSON(): object;
-}
-
-// @public
-export interface UserMetadataRequest {
-    creationTime?: string;
-    lastSignInTime?: string;
-}
-
-// @public
-export interface UserProviderRequest {
-    displayName?: string;
-    email?: string;
-    phoneNumber?: string;
-    photoURL?: string;
-    providerId: string;
-    uid: string;
-}
-
-// @public
-export class UserRecord {
-    // (undocumented)
-    readonly customClaims: {
-        [key: string]: any;
-    };
-    // (undocumented)
-    readonly disabled: boolean;
-    // (undocumented)
-    readonly displayName: string;
-    // (undocumented)
-    readonly email: string;
-    // (undocumented)
-    readonly emailVerified: boolean;
-    // (undocumented)
-    readonly metadata: UserMetadata;
-    // (undocumented)
-    readonly multiFactor?: MultiFactorSettings;
-    // (undocumented)
-    readonly passwordHash?: string;
-    // (undocumented)
-    readonly passwordSalt?: string;
-    // (undocumented)
-    readonly phoneNumber: string;
-    // (undocumented)
-    readonly photoURL: string;
-    // (undocumented)
-    readonly providerData: UserInfo[];
-    // (undocumented)
-    readonly tenantId?: string | null;
-    toJSON(): object;
-    // (undocumented)
-    readonly tokensValidAfterTime?: string;
-    // (undocumented)
-    readonly uid: string;
 }
 
 

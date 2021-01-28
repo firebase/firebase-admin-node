@@ -21,8 +21,8 @@
     "lint:src": "eslint src/ --ext .ts",
     "lint:test": "eslint test/ --ext .ts",
     "apidocs": "node docgen/generate-docs.js --api node",
-    "api-extractor": "api-extractor run",
-    "api-extractor:local": "npm run build && api-extractor run --local"
+    "api-extractor": "node generate-reports.js",
+    "api-extractor:local": "npm run build && node generate-reports.js --local"
   },
   "nyc": {
     "extension": [
