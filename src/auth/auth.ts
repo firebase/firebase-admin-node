@@ -118,12 +118,12 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
     return this.idTokenVerifier.verifyJWT(idToken)
       .then((decodedIdToken: DecodedIdToken) => {
         // Whether to check if the token was revoked.
-        if (!checkRevoked && !useEmulator()) {
-          return decodedIdToken;
+        if (checkRevoked || useEmulator()) {
+          return this.verifyDecodedJWTNotRevoked(
+            decodedIdToken,
+            AuthClientErrorCode.ID_TOKEN_REVOKED);
         }
-        return this.verifyDecodedJWTNotRevoked(
-          decodedIdToken,
-          AuthClientErrorCode.ID_TOKEN_REVOKED);
+        return decodedIdToken;
       });
   }
 

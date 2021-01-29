@@ -442,12 +442,12 @@ describe('admin.auth', () => {
       })
       .then(() => {
         const verifyingIdToken = admin.auth().verifyIdToken(currentIdToken)
-        if (!authEmulatorHost) {
-          // verifyIdToken without checking revocation should still succeed.
-          return verifyingIdToken.should.eventually.be.fulfilled;
-        } else {
+        if (authEmulatorHost) {
           // Check revocation is forced in emulator-mode and this should throw.
           return verifyingIdToken.should.eventually.be.rejected;
+        } else {
+          // verifyIdToken without checking revocation should still succeed.
+          return verifyingIdToken.should.eventually.be.fulfilled;
         }
       })
       .then(() => {

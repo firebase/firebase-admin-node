@@ -3195,7 +3195,8 @@ AUTH_CONFIGS.forEach((testConfig) => {
       let mockAuth = testConfig.init(mocks.app());
 
       beforeEach(() => {
-        process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
+        // Using an unroutable address for tests below.
+        process.env.FIREBASE_AUTH_EMULATOR_HOST = '0.0.0.0:0';
         mockAuth = testConfig.init(mocks.app());
       });
 
@@ -3213,6 +3214,17 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
         // Make sure this doesn't throw
         jwt.verify(token, '', { algorithms: ['none'] });
+      });
+
+      it('verifyIdToken() rejects an unsigned token if auth emulator is unreachable', async () => {
+        const unsignedToken = mocks.generateIdToken({
+          algorithm: 'none'
+        });
+
+        // Since revocation check is forced on in emulator mode, this will try
+        // to reach to FIREBASE_AUTH_EMULATOR_HOST and fail since it is 0.0.0.0.
+        await expect(mockAuth.verifyIdToken(unsignedToken))
+          .to.be.rejectedWith(/EADDRNOTAVAIL/);
       });
     });
   });
