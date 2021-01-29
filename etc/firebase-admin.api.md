@@ -334,7 +334,7 @@ export interface FirebaseError {
 }
 
 // @public (undocumented)
-export function firestore(app?: app.App): _firestore.Firestore;
+export function firestore(app?: App): _firestore.Firestore;
 
 // @public (undocumented)
 export namespace firestore {

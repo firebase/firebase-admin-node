@@ -29,7 +29,6 @@ import { Messaging } from '../messaging/messaging';
 import { Storage } from '../storage/storage';
 import { Database } from '../database/index';
 import { Firestore } from '@google-cloud/firestore';
-import { FirestoreService } from '../firestore/firestore-internal';
 import { InstanceId } from '../instance-id/index';
 import { ProjectManagement } from '../project-management/project-management';
 import { SecurityRules } from '../security-rules/security-rules';
@@ -313,11 +312,8 @@ export class FirebaseApp implements app.App {
   }
 
   public firestore(): Firestore {
-    const service: FirestoreService = this.ensureService_('firestore', () => {
-      const firestoreService: typeof FirestoreService = require('../firestore/firestore-internal').FirestoreService;
-      return new firestoreService(this);
-    });
-    return service.client;
+    const fn = require('../firestore/index').getFirestore;
+    return fn(this);
   }
 
   /**

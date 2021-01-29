@@ -37,6 +37,7 @@ const entryPoints = {
   'firebase-admin/app': './lib/app/index.d.ts',
   'firebase-admin/auth': './lib/auth/index.d.ts',
   'firebase-admin/database': './lib/database/index.d.ts',
+  'firebase-admin/firestore': './lib/firestore/index.d.ts',
   'firebase-admin/instance-id': './lib/instance-id/index.d.ts',
 };
 

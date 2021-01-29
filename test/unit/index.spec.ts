@@ -58,6 +58,7 @@ import './storage/storage.spec';
 
 // Firestore
 import './firestore/firestore.spec';
+import './firestore/index.spec';
 
 // InstanceId
 import './instance-id/index.spec';
