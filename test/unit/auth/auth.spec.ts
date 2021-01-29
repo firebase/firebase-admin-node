@@ -3194,13 +3194,14 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
       let mockAuth = testConfig.init(mocks.app());
 
+      const stubs: sinon.SinonStub[] = [];
       beforeEach(() => {
-        // Using an unroutable address for tests below.
-        process.env.FIREBASE_AUTH_EMULATOR_HOST = '0.0.0.0:0';
+        process.env.FIREBASE_AUTH_EMULATOR_HOST = '127.0.0.1:9099';
         mockAuth = testConfig.init(mocks.app());
       });
 
       afterEach(() => {
+        _.forEach(stubs, (s) => s.restore());
         delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
       });
 
@@ -3221,10 +3222,14 @@ AUTH_CONFIGS.forEach((testConfig) => {
           algorithm: 'none'
         });
 
-        // Since revocation check is forced on in emulator mode, this will try
-        // to reach to FIREBASE_AUTH_EMULATOR_HOST and fail since it is 0.0.0.0.
+        const errorMessage = 'Error while making request: connect ECONNREFUSED 127.0.0.1. Error code: ECONNREFUSED';
+        const getUserStub = sinon.stub(testConfig.Auth.prototype, 'getUser').rejects(new Error(errorMessage));
+        stubs.push(getUserStub);
+
+        // Since revocation check is forced on in emulator mode, this will call
+        // the getUser method and get rejected (instead of succeed locally).
         await expect(mockAuth.verifyIdToken(unsignedToken))
-          .to.be.rejectedWith(/EADDRNOTAVAIL/);
+          .to.be.rejectedWith(errorMessage);
       });
     });
   });
