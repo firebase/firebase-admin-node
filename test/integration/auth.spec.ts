@@ -1628,12 +1628,6 @@ describe('admin.auth', () => {
     const uid2 = sessionCookieUids[1];
     const uid3 = sessionCookieUids[2];
 
-    before(function () {
-      if (authEmulatorHost) {
-        return this.skip();  // Not implemented yet.
-      }
-    });
-
     it('creates a valid Firebase session cookie', () => {
       return admin.auth().createCustomToken(uid, { admin: true, groupId: '1234' })
         .then((customToken) => clientAuth().signInWithCustomToken(customToken))
@@ -1688,8 +1682,14 @@ describe('admin.auth', () => {
           ), 1000));
         })
         .then(() => {
-          return admin.auth().verifySessionCookie(currentSessionCookie)
-            .should.eventually.be.fulfilled;
+          const verifyingSessionCookie = admin.auth().verifySessionCookie(currentSessionCookie);
+          if (authEmulatorHost) {
+            // Check revocation is forced in emulator-mode and this should throw.
+            return verifyingSessionCookie.should.eventually.be.rejected;
+          } else {
+            // verifyIdToken without checking revocation should still succeed.
+            return verifyingSessionCookie.should.eventually.be.fulfilled;
+          }
         })
         .then(() => {
           return admin.auth().verifySessionCookie(currentSessionCookie, true)
