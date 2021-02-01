@@ -135,11 +135,11 @@ export class FirebaseTokenVerifier {
    * Verifies the format and signature of a Firebase Auth JWT token.
    *
    * @param {string} jwtToken The Firebase Auth JWT token to verify.
-   * @param {boolean} isEmulator Whether to accept Auth Emulator tokens.
+   * @param {boolean=} isEmulator Whether to accept Auth Emulator tokens.
    * @return {Promise<DecodedIdToken>} A promise fulfilled with the decoded claims of the Firebase Auth ID
    *                           token.
    */
-  public verifyJWT(jwtToken: string, isEmulator: boolean): Promise<DecodedIdToken> {
+  public verifyJWT(jwtToken: string, isEmulator = false): Promise<DecodedIdToken> {
     if (!validator.isString(jwtToken)) {
       throw new FirebaseAuthError(
         AuthClientErrorCode.INVALID_ARGUMENT,

@@ -544,32 +544,27 @@ describe('FirebaseTokenVerifier', () => {
         });
     });
 
-    it('should decode an unsigned token when auth emulator host env var is set', async () => {
+    it('should decode an unsigned token if isEmulator=true', async () => {
       clock = sinon.useFakeTimers(1000);
 
-      try {
-        process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
+      const emulatorVerifier = createTokenVerifier(app);
+      const mockIdToken = mocks.generateIdToken({
+        algorithm: 'none',
+        header: {}
+      });
 
-        const emulatorVerifier = createTokenVerifier(app);
-        const mockIdToken = mocks.generateIdToken({
-          algorithm: 'none',
-          header: {}
-        });
-
-        const decoded = await emulatorVerifier.verifyJWT(mockIdToken);
-        expect(decoded).to.deep.equal({
-          one: 'uno',
-          two: 'dos',
-          iat: 1,
-          exp: ONE_HOUR_IN_SECONDS + 1,
-          aud: mocks.projectId,
-          iss: 'https://securetoken.google.com/' + mocks.projectId,
-          sub: mocks.uid,
-          uid: mocks.uid,
-        });
-      } finally {
-        delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
-      }
+      const isEmulator = true;
+      const decoded = await emulatorVerifier.verifyJWT(mockIdToken, isEmulator);
+      expect(decoded).to.deep.equal({
+        one: 'uno',
+        two: 'dos',
+        iat: 1,
+        exp: ONE_HOUR_IN_SECONDS + 1,
+        aud: mocks.projectId,
+        iss: 'https://securetoken.google.com/' + mocks.projectId,
+        sub: mocks.uid,
+        uid: mocks.uid,
+      });
     });
 
     it('should not decode a signed token when the algorithm is set to none (emulator)', async () => {
