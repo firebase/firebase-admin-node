@@ -50,9 +50,6 @@ const FCM_TOPIC_MANAGEMENT_HOST = 'iid.googleapis.com';
 const FCM_TOPIC_MANAGEMENT_ADD_PATH = '/iid/v1:batchAdd';
 const FCM_TOPIC_MANAGEMENT_REMOVE_PATH = '/iid/v1:batchRemove';
 
-// Maximum messages that can be included in a batch request.
-export const FCM_MAX_BATCH_SIZE = 500;
-
 // Key renames for the messaging notification payload object.
 const CAMELCASED_NOTIFICATION_PAYLOAD_KEYS_MAP = {
   bodyLocArgs: 'body_loc_args',
@@ -190,6 +187,9 @@ function mapRawResponseToTopicManagementResponse(response: object): MessagingTop
  */
 export class Messaging implements MessagingInterface {
 
+  // Maximum messages that can be included in a batch request.
+  public static readonly FCM_MAX_BATCH_SIZE = 500;
+  
   private urlPath: string;
   private readonly appInternal: FirebaseApp;
   private readonly messagingRequestHandler: FirebaseMessagingRequestHandler;
@@ -290,10 +290,10 @@ export class Messaging implements MessagingInterface {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT, 'messages must be a non-empty array');
     }
-    if (copy.length > FCM_MAX_BATCH_SIZE) {
+    if (copy.length > this.FCM_MAX_BATCH_SIZE) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT,
-        `messages list must not contain more than ${FCM_MAX_BATCH_SIZE} items`);
+        `messages list must not contain more than ${this.FCM_MAX_BATCH_SIZE} items`);
     }
     if (typeof dryRun !== 'undefined' && !validator.isBoolean(dryRun)) {
       throw new FirebaseMessagingError(
@@ -345,10 +345,10 @@ export class Messaging implements MessagingInterface {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT, 'tokens must be a non-empty array');
     }
-    if (copy.tokens.length > FCM_MAX_BATCH_SIZE) {
+    if (copy.tokens.length > this.FCM_MAX_BATCH_SIZE) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT,
-        `tokens list must not contain more than ${FCM_MAX_BATCH_SIZE} items`);
+        `tokens list must not contain more than ${this.FCM_MAX_BATCH_SIZE} items`);
     }
 
     const messages: Message[] = copy.tokens.map((token) => {
