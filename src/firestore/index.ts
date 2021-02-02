@@ -14,10 +14,54 @@
  * limitations under the License.
  */
 
-import { app } from '../firebase-namespace-api';
 import * as _firestore from '@google-cloud/firestore';
+import { App, getApp } from '../app';
+import { FirebaseApp } from '../app/firebase-app';
+import { FirestoreService } from './firestore-internal';
 
-export declare function firestore(app?: app.App): _firestore.Firestore;
+export {
+  BulkWriter,
+  BulkWriterOptions,
+  CollectionGroup,
+  CollectionReference,
+  DocumentChangeType,
+  DocumentData,
+  DocumentReference,
+  DocumentSnapshot,
+  FieldPath,
+  FieldValue,
+  Firestore,
+  FirestoreDataConverter,
+  GeoPoint,
+  GrpcStatus,
+  Precondition,
+  Query,
+  QueryDocumentSnapshot,
+  QueryPartition,
+  QuerySnapshot,
+  ReadOptions,
+  Settings,
+  Timestamp,
+  Transaction,
+  UpdateData,
+  WriteBatch,
+  WriteResult,
+  v1,
+  setLogFunction,
+} from '@google-cloud/firestore';
+
+export function getFirestore(app?: App): _firestore.Firestore {
+  if (typeof app === 'undefined') {
+    app = getApp();
+  }
+
+  const firebaseApp: FirebaseApp = app as FirebaseApp;
+  const firestoreService = firebaseApp.getOrInitService(
+    'firestore', (app) => new FirestoreService(app));
+  return firestoreService.client;
+}
+
+export declare function firestore(app?: App): _firestore.Firestore;
 
 /* eslint-disable @typescript-eslint/no-namespace */
 export namespace firestore {
