@@ -76,5 +76,6 @@ import './security-rules/security-rules.spec';
 import './security-rules/security-rules-api-client.spec';
 
 // RemoteConfig
+import './remote-config/index.spec';
 import './remote-config/remote-config.spec';
 import './remote-config/remote-config-api-client.spec';

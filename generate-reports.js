@@ -39,6 +39,7 @@ const entryPoints = {
   'firebase-admin/database': './lib/database/index.d.ts',
   'firebase-admin/firestore': './lib/firestore/index.d.ts',
   'firebase-admin/instance-id': './lib/instance-id/index.d.ts',
+  'firebase-admin/remote-config': './lib/remote-config/index.d.ts',
 };
 
 const tempConfigFile = 'api-extractor.tmp';

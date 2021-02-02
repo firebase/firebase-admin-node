@@ -14,33 +14,33 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../app/firebase-app';
+import { App } from '../app';
 import * as validator from '../utils/validator';
-import { remoteConfig } from './index';
 import { FirebaseRemoteConfigError, RemoteConfigApiClient } from './remote-config-api-client-internal';
-
-import RemoteConfigTemplate = remoteConfig.RemoteConfigTemplate;
-import RemoteConfigParameter = remoteConfig.RemoteConfigParameter;
-import RemoteConfigCondition = remoteConfig.RemoteConfigCondition;
-import RemoteConfigParameterGroup = remoteConfig.RemoteConfigParameterGroup;
-import ListVersionsOptions = remoteConfig.ListVersionsOptions;
-import ListVersionsResult = remoteConfig.ListVersionsResult;
-import RemoteConfigUser = remoteConfig.RemoteConfigUser;
-import Version = remoteConfig.Version;
-import RemoteConfigInterface = remoteConfig.RemoteConfig;
+import {
+  ListVersionsOptions,
+  ListVersionsResult,
+  RemoteConfigCondition,
+  RemoteConfigParameter,
+  RemoteConfigParameterGroup,
+  RemoteConfigTemplate,
+  RemoteConfigUser,
+  Version,
+} from './remote-config-api';
 
 /**
  * Remote Config service bound to the provided app.
  */
-export class RemoteConfig implements RemoteConfigInterface {
+export class RemoteConfig {
 
   private readonly client: RemoteConfigApiClient;
 
   /**
    * @param app The app for this RemoteConfig service.
    * @constructor
+   * @internal
    */
-  constructor(readonly app: FirebaseApp) {
+  constructor(readonly app: App) {
     this.client = new RemoteConfigApiClient(app);
   }
 
