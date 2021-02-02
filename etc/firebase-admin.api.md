@@ -819,86 +819,62 @@ export namespace projectManagement {
 export function refreshToken(refreshTokenPathOrObject: string | object, httpAgent?: Agent): Credential;
 
 // @public
-export function remoteConfig(app?: app.App): remoteConfig.RemoteConfig;
+export function remoteConfig(app?: App): remoteConfig.RemoteConfig;
 
 // @public (undocumented)
 export namespace remoteConfig {
-    export interface ExplicitParameterValue {
-        value: string;
-    }
-    export interface InAppDefaultValue {
-        useInAppDefault: boolean;
-    }
-    export interface ListVersionsOptions {
-        endTime?: Date | string;
-        endVersionNumber?: string | number;
-        pageSize?: number;
-        pageToken?: string;
-        startTime?: Date | string;
-    }
-    export interface ListVersionsResult {
-        nextPageToken?: string;
-        versions: Version[];
-    }
-    export interface RemoteConfig {
-        // (undocumented)
-        app: app.App;
-        createTemplateFromJSON(json: string): RemoteConfigTemplate;
-        getTemplate(): Promise<RemoteConfigTemplate>;
-        getTemplateAtVersion(versionNumber: number | string): Promise<RemoteConfigTemplate>;
-        listVersions(options?: ListVersionsOptions): Promise<ListVersionsResult>;
-        publishTemplate(template: RemoteConfigTemplate, options?: {
-            force: boolean;
-        }): Promise<RemoteConfigTemplate>;
-        rollback(versionNumber: string | number): Promise<RemoteConfigTemplate>;
-        validateTemplate(template: RemoteConfigTemplate): Promise<RemoteConfigTemplate>;
-    }
-    export interface RemoteConfigCondition {
-        expression: string;
-        name: string;
-        tagColor?: TagColor;
-    }
-    export interface RemoteConfigParameter {
-        conditionalValues?: {
-            [key: string]: RemoteConfigParameterValue;
-        };
-        defaultValue?: RemoteConfigParameterValue;
-        description?: string;
-    }
-    export interface RemoteConfigParameterGroup {
-        description?: string;
-        parameters: {
-            [key: string]: RemoteConfigParameter;
-        };
-    }
-    export type RemoteConfigParameterValue = ExplicitParameterValue | InAppDefaultValue;
-    export interface RemoteConfigTemplate {
-        conditions: RemoteConfigCondition[];
-        readonly etag: string;
-        parameterGroups: {
-            [key: string]: RemoteConfigParameterGroup;
-        };
-        parameters: {
-            [key: string]: RemoteConfigParameter;
-        };
-        version?: Version;
-    }
-    export interface RemoteConfigUser {
-        email: string;
-        imageUrl?: string;
-        name?: string;
-    }
-    export type TagColor = 'BLUE' | 'BROWN' | 'CYAN' | 'DEEP_ORANGE' | 'GREEN' | 'INDIGO' | 'LIME' | 'ORANGE' | 'PINK' | 'PURPLE' | 'TEAL';
-    export interface Version {
-        description?: string;
-        isLegacy?: boolean;
-        rollbackSource?: string;
-        updateOrigin?: ('REMOTE_CONFIG_UPDATE_ORIGIN_UNSPECIFIED' | 'CONSOLE' | 'REST_API' | 'ADMIN_SDK_NODE');
-        updateTime?: string;
-        updateType?: ('REMOTE_CONFIG_UPDATE_TYPE_UNSPECIFIED' | 'INCREMENTAL_UPDATE' | 'FORCED_UPDATE' | 'ROLLBACK');
-        updateUser?: RemoteConfigUser;
-        versionNumber?: string;
-    }
+    // Warning: (ae-forgotten-export) The symbol "ExplicitParameterValue" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type ExplicitParameterValue = ExplicitParameterValue;
+    // Warning: (ae-forgotten-export) The symbol "InAppDefaultValue" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type InAppDefaultValue = InAppDefaultValue;
+    // Warning: (ae-forgotten-export) The symbol "ListVersionsOptions" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type ListVersionsOptions = ListVersionsOptions;
+    // Warning: (ae-forgotten-export) The symbol "ListVersionsResult" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type ListVersionsResult = ListVersionsResult;
+    // Warning: (ae-forgotten-export) The symbol "RemoteConfig" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type RemoteConfig = RemoteConfig;
+    // Warning: (ae-forgotten-export) The symbol "RemoteConfigCondition" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type RemoteConfigCondition = RemoteConfigCondition;
+    // Warning: (ae-forgotten-export) The symbol "RemoteConfigParameter" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type RemoteConfigParameter = RemoteConfigParameter;
+    // Warning: (ae-forgotten-export) The symbol "RemoteConfigParameterGroup" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type RemoteConfigParameterGroup = RemoteConfigParameterGroup;
+    // Warning: (ae-forgotten-export) The symbol "RemoteConfigParameterValue" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type RemoteConfigParameterValue = RemoteConfigParameterValue;
+    // Warning: (ae-forgotten-export) The symbol "RemoteConfigTemplate" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type RemoteConfigTemplate = RemoteConfigTemplate;
+    // Warning: (ae-forgotten-export) The symbol "RemoteConfigUser" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type RemoteConfigUser = RemoteConfigUser;
+    // Warning: (ae-forgotten-export) The symbol "TagColor" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type TagColor = TagColor;
+    // Warning: (ae-forgotten-export) The symbol "Version" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type Version = Version;
 }
 
 // @public (undocumented)

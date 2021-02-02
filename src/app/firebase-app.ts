@@ -32,7 +32,7 @@ import { Firestore } from '@google-cloud/firestore';
 import { InstanceId } from '../instance-id/index';
 import { ProjectManagement } from '../project-management/project-management';
 import { SecurityRules } from '../security-rules/security-rules';
-import { RemoteConfig } from '../remote-config/remote-config';
+import { RemoteConfig } from '../remote-config/index';
 
 /**
  * Type representing a callback which is called every time an app lifecycle event occurs.
@@ -371,10 +371,8 @@ export class FirebaseApp implements app.App {
    * @return The RemoteConfig service instance of this app.
    */
   public remoteConfig(): RemoteConfig {
-    return this.ensureService_('remoteConfig', () => {
-      const remoteConfigService: typeof RemoteConfig = require('../remote-config/remote-config').RemoteConfig;
-      return new remoteConfigService(this);
-    });
+    const fn = require('../remote-config/index').getRemoteConfig;
+    return fn(this);
   }
 
   /**
