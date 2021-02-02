@@ -290,10 +290,10 @@ export class Messaging implements MessagingInterface {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT, 'messages must be a non-empty array');
     }
-    if (copy.length > this.FCM_MAX_BATCH_SIZE) {
+    if (copy.length > Messaging.FCM_MAX_BATCH_SIZE) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT,
-        `messages list must not contain more than ${this.FCM_MAX_BATCH_SIZE} items`);
+        `messages list must not contain more than ${Messaging.FCM_MAX_BATCH_SIZE} items`);
     }
     if (typeof dryRun !== 'undefined' && !validator.isBoolean(dryRun)) {
       throw new FirebaseMessagingError(
@@ -345,10 +345,10 @@ export class Messaging implements MessagingInterface {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT, 'tokens must be a non-empty array');
     }
-    if (copy.tokens.length > this.FCM_MAX_BATCH_SIZE) {
+    if (copy.tokens.length > Messaging.FCM_MAX_BATCH_SIZE) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT,
-        `tokens list must not contain more than ${this.FCM_MAX_BATCH_SIZE} items`);
+        `tokens list must not contain more than ${Messaging.FCM_MAX_BATCH_SIZE} items`);
     }
 
     const messages: Message[] = copy.tokens.map((token) => {
