@@ -31,7 +31,7 @@ chai.use(chaiAsPromised);
 
 const expect = chai.expect;
 
-describe('Auth', () => {
+describe('RemoteConfig', () => {
   let mockApp: App;
   let mockCredentialApp: App;
 
