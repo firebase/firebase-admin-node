@@ -33,7 +33,7 @@ describe('Typescript', () => {
     const tokenMessage: messaging.TokenMessage = { token: '' };
     const topicMessage: messaging.TopicMessage = { topic: '' };
     const conditionMessage: messaging.ConditionMessage = { condition: '' };
-    const allMessages: messaging.Message = [tokenMessage, topicMessage, conditionMessage]
+    const allMessages: messaging.Message[] = [tokenMessage, topicMessage, conditionMessage]
     
     allMessages.forEach((m) => expect(m).to.not.be.undefined);
   });
