@@ -3193,16 +3193,22 @@ AUTH_CONFIGS.forEach((testConfig) => {
     describe('auth emulator support', () => {
 
       let mockAuth = testConfig.init(mocks.app());
+      const userRecord = getValidUserRecord(getValidGetAccountInfoResponse());
+      const validSince = new Date(userRecord.tokensValidAfterTime!);
 
       const stubs: sinon.SinonStub[] = [];
+      let clock: sinon.SinonFakeTimers;
+
       beforeEach(() => {
         process.env.FIREBASE_AUTH_EMULATOR_HOST = '127.0.0.1:9099';
         mockAuth = testConfig.init(mocks.app());
+        clock = sinon.useFakeTimers(validSince.getTime());
       });
 
       afterEach(() => {
         _.forEach(stubs, (s) => s.restore());
         delete process.env.FIREBASE_AUTH_EMULATOR_HOST;
+        clock.restore();
       });
 
       it('createCustomToken() generates an unsigned token', async () => {
@@ -3215,6 +3221,65 @@ AUTH_CONFIGS.forEach((testConfig) => {
 
         // Make sure this doesn't throw
         jwt.verify(token, '', { algorithms: ['none'] });
+      });
+
+      it('verifyIdToken() should reject revoked ID tokens', () => {
+        const uid = userRecord.uid;
+        // One second before validSince.
+        const oneSecBeforeValidSince = Math.floor(validSince.getTime() / 1000 - 1);
+        const getUserStub = sinon.stub(testConfig.Auth.prototype, 'getUser')
+          .resolves(userRecord);
+        stubs.push(getUserStub);
+
+        const unsignedToken = mocks.generateIdToken({
+          algorithm: 'none',
+          subject: uid,
+        }, {
+          iat: oneSecBeforeValidSince,
+          auth_time: oneSecBeforeValidSince, // eslint-disable-line @typescript-eslint/camelcase
+        });
+
+        // verifyIdToken should force checking revocation in emulator mode,
+        // even if checkRevoked=false.
+        return mockAuth.verifyIdToken(unsignedToken, false)
+          .then(() => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Confirm expected error returned.
+            expect(error).to.have.property('code', 'auth/id-token-revoked');
+            // Confirm underlying API called with expected parameters.
+            expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+          });
+      });
+
+      it('verifySessionCookie() should reject revoked session cookies', () => {
+        const uid = userRecord.uid;
+        // One second before validSince.
+        const oneSecBeforeValidSince = Math.floor(validSince.getTime() / 1000 - 1);
+        const getUserStub = sinon.stub(testConfig.Auth.prototype, 'getUser')
+          .resolves(userRecord);
+        stubs.push(getUserStub);
+
+        const unsignedToken = mocks.generateIdToken({
+          algorithm: 'none',
+          subject: uid,
+          issuer: 'https://session.firebase.google.com/' + mocks.projectId,
+        }, {
+          iat: oneSecBeforeValidSince,
+          auth_time: oneSecBeforeValidSince, // eslint-disable-line @typescript-eslint/camelcase
+        });
+
+        // verifyIdToken should force checking revocation in emulator mode,
+        // even if checkRevoked=false.
+        return mockAuth.verifySessionCookie(unsignedToken, false)
+          .then(() => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Confirm expected error returned.
+            expect(error).to.have.property('code', 'auth/session-cookie-revoked');
+            // Confirm underlying API called with expected parameters.
+            expect(getUserStub).to.have.been.calledOnce.and.calledWith(uid);
+          });
       });
 
       it('verifyIdToken() rejects an unsigned token if auth emulator is unreachable', async () => {
