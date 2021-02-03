@@ -23,12 +23,12 @@ import { deepCopy } from '../utils/deep-copy';
 import { FirebaseNamespaceInternals } from './firebase-namespace';
 import { AppErrorCodes, FirebaseAppError } from '../utils/error';
 
-import { Auth } from '../auth/auth';
+import { Auth } from '../auth/index';
 import { MachineLearning } from '../machine-learning/machine-learning';
-import { Messaging } from '../messaging/messaging';
+import { Messaging } from '../messaging/index';
 import { Storage } from '../storage/storage';
 import { Database } from '../database/index';
-import { Firestore } from '@google-cloud/firestore';
+import { Firestore } from '../firestore/index';
 import { InstanceId } from '../instance-id/index';
 import { ProjectManagement } from '../project-management/project-management';
 import { SecurityRules } from '../security-rules/security-rules';
@@ -293,10 +293,8 @@ export class FirebaseApp implements app.App {
    * @return The Messaging service instance of this app.
    */
   public messaging(): Messaging {
-    return this.ensureService_('messaging', () => {
-      const messagingService: typeof Messaging = require('../messaging/messaging').Messaging;
-      return new messagingService(this);
-    });
+    const fn = require('../messaging/index').getMessaging;
+    return fn(this);
   }
 
   /**

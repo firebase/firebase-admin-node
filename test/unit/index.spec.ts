@@ -46,6 +46,7 @@ import './database/database.spec';
 import './database/index.spec';
 
 // Messaging
+import './messaging/index.spec';
 import './messaging/messaging.spec';
 import './messaging/batch-requests.spec';
 

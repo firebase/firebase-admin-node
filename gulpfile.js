@@ -92,6 +92,7 @@ gulp.task('compile', function() {
     'lib/database/*.d.ts',
     'lib/firestore/*.d.ts',
     'lib/instance-id/*.d.ts',
+    'lib/messaging/*.d.ts',
     'lib/remote-config/*.d.ts',
     '!lib/utils/index.d.ts',
   ];
