@@ -1138,6 +1138,8 @@ export namespace messaging {
   }
 
   export interface Messaging {
+    readonly FCM_MAX_BATCH_SIZE;
+
     /**
      * The {@link app.App app} associated with the current `Messaging` service
      * instance.
