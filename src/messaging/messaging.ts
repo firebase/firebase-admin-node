@@ -187,7 +187,9 @@ function mapRawResponseToTopicManagementResponse(response: object): MessagingTop
  */
 export class Messaging implements MessagingInterface {
 
-  // Maximum messages that can be included in a batch request.
+  /**
+   * Maximum messages that can be included in a batch request.
+   */
   readonly FCM_MAX_BATCH_SIZE = 500;
   
   private urlPath: string;

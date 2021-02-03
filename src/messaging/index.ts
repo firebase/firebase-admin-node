@@ -1138,6 +1138,9 @@ export namespace messaging {
   }
 
   export interface Messaging {
+    /**
+     * Maximum messages that can be included in a batch request.
+     */
     readonly FCM_MAX_BATCH_SIZE: number;
 
     /**

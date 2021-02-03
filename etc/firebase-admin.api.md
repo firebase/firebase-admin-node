@@ -712,6 +712,7 @@ export namespace messaging {
     // (undocumented)
     export interface Messaging {
         app: app.App;
+        readonly FCM_MAX_BATCH_SIZE: number;
         send(message: Message, dryRun?: boolean): Promise<string>;
         sendAll(messages: Array<Message>, dryRun?: boolean): Promise<BatchResponse>;
         sendMulticast(message: MulticastMessage, dryRun?: boolean): Promise<BatchResponse>;
