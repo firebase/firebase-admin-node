@@ -37,13 +37,6 @@ export let noServiceAccountApp: admin.app.App;
 export let cmdArgs: any;
 
 export const isEmulator = !!process.env.FIREBASE_EMULATOR_HUB;
-export function skipForEmulator(): void {
-  before(function () {
-    if (isEmulator) {
-      this.skip();
-    }
-  });
-}
 
 before(() => {
   let getCredential: () => {credential?: admin.credential.Credential};
