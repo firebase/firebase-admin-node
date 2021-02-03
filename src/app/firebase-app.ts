@@ -31,7 +31,7 @@ import { Database } from '../database/index';
 import { Firestore } from '../firestore/index';
 import { InstanceId } from '../instance-id/index';
 import { ProjectManagement } from '../project-management/project-management';
-import { SecurityRules } from '../security-rules/security-rules';
+import { SecurityRules } from '../security-rules/index';
 import { RemoteConfig } from '../remote-config/index';
 
 /**
@@ -356,11 +356,8 @@ export class FirebaseApp implements app.App {
    * @return The SecurityRules service instance of this app.
    */
   public securityRules(): SecurityRules {
-    return this.ensureService_('security-rules', () => {
-      const securityRulesService: typeof SecurityRules =
-          require('../security-rules/security-rules').SecurityRules;
-      return new securityRulesService(this);
-    });
+    const fn = require('../security-rules/index').getSecurityRules;
+    return fn(this);
   }
 
   /**

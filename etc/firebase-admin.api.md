@@ -736,43 +736,30 @@ export namespace remoteConfig {
 export const SDK_VERSION: string;
 
 // @public
-export function securityRules(app?: app.App): securityRules.SecurityRules;
+export function securityRules(app?: App): securityRules.SecurityRules;
 
 // @public (undocumented)
 export namespace securityRules {
-    export interface Ruleset extends RulesetMetadata {
-        // (undocumented)
-        readonly source: RulesFile[];
-    }
-    export interface RulesetMetadata {
-        readonly createTime: string;
-        readonly name: string;
-    }
-    export interface RulesetMetadataList {
-        readonly nextPageToken?: string;
-        readonly rulesets: RulesetMetadata[];
-    }
-    export interface RulesFile {
-        // (undocumented)
-        readonly content: string;
-        // (undocumented)
-        readonly name: string;
-    }
-    export interface SecurityRules {
-        // (undocumented)
-        app: app.App;
-        createRuleset(file: RulesFile): Promise<Ruleset>;
-        createRulesFileFromSource(name: string, source: string | Buffer): RulesFile;
-        deleteRuleset(name: string): Promise<void>;
-        getFirestoreRuleset(): Promise<Ruleset>;
-        getRuleset(name: string): Promise<Ruleset>;
-        getStorageRuleset(bucket?: string): Promise<Ruleset>;
-        listRulesetMetadata(pageSize?: number, nextPageToken?: string): Promise<RulesetMetadataList>;
-        releaseFirestoreRuleset(ruleset: string | RulesetMetadata): Promise<void>;
-        releaseFirestoreRulesetFromSource(source: string | Buffer): Promise<Ruleset>;
-        releaseStorageRuleset(ruleset: string | RulesetMetadata, bucket?: string): Promise<void>;
-        releaseStorageRulesetFromSource(source: string | Buffer, bucket?: string): Promise<Ruleset>;
-    }
+    // Warning: (ae-forgotten-export) The symbol "Ruleset" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type Ruleset = Ruleset;
+    // Warning: (ae-forgotten-export) The symbol "RulesetMetadata" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type RulesetMetadata = RulesetMetadata;
+    // Warning: (ae-forgotten-export) The symbol "RulesetMetadataList" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type RulesetMetadataList = RulesetMetadataList;
+    // Warning: (ae-forgotten-export) The symbol "RulesFile" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type RulesFile = RulesFile;
+    // Warning: (ae-forgotten-export) The symbol "SecurityRules" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type SecurityRules = SecurityRules;
 }
 
 // @public (undocumented)

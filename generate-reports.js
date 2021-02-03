@@ -40,6 +40,7 @@ const entryPoints = {
   'firebase-admin/firestore': './lib/firestore/index.d.ts',
   'firebase-admin/instance-id': './lib/instance-id/index.d.ts',
   'firebase-admin/messaging': './lib/messaging/index.d.ts',
+  'firebase-admin/security-rules': './lib/security-rules/index.d.ts',
   'firebase-admin/remote-config': './lib/remote-config/index.d.ts',
 };
 
