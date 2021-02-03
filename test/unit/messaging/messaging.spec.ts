@@ -41,6 +41,7 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 import Message = messaging.Message;
+import TokenMessage = messaging.TokenMessage;
 import MessagingOptions = messaging.MessagingOptions;
 import MessagingPayload = messaging.MessagingPayload;
 import MessagingDevicesResponse = messaging.MessagingDevicesResponse;
@@ -887,7 +888,7 @@ describe('Messaging', () => {
           expect(messages.length).to.equal(3);
           expect(stub!.args[0][1]).to.be.undefined;
           messages.forEach((message, idx) => {
-            expect((message as any).token).to.equal(tokens[idx]);
+            expect((message as TokenMessage).token).to.equal(tokens[idx]);
             expect(message.android).to.be.undefined;
             expect(message.apns).to.be.undefined;
             expect(message.data).to.be.undefined;
@@ -917,7 +918,7 @@ describe('Messaging', () => {
           expect(messages.length).to.equal(3);
           expect(stub!.args[0][1]).to.be.undefined;
           messages.forEach((message, idx) => {
-            expect((message as any).token).to.equal(tokens[idx]);
+            expect((message as TokenMessage).token).to.equal(tokens[idx]);
             expect(message.android).to.deep.equal(multicast.android);
             expect(message.apns).to.be.deep.equal(multicast.apns);
             expect(message.data).to.be.deep.equal(multicast.data);
