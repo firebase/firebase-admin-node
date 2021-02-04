@@ -566,6 +566,12 @@ describe('Messaging', () => {
         { token: 'mock-token' },
       ).should.eventually.be.rejected.and.have.property('code', 'messaging/invalid-argument');
     });
+
+    it('should not throws when the payload contains the data property with undefined value', () => {
+      mockedRequests.push(mockSendRequest());
+      const message = { token: 'a', data: undefined };
+      return messaging.send(message).should.eventually.equal('projects/projec_id/messages/message_id');
+    })
   });
 
   describe('sendAll()', () => {
@@ -823,6 +829,29 @@ describe('Messaging', () => {
         [validMessage],
       ).should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
     });
+
+    it('should not throws when the payload contains the data property with undefined value', () => {
+      const messageIds = [
+        'projects/projec_id/messages/1',
+        'projects/projec_id/messages/2',
+        'projects/projec_id/messages/3',
+      ];
+      mockedRequests.push(mockBatchRequest(messageIds));
+      const validMessageWithUndefinedDataProp = { ...validMessage, data: undefined }
+      return messaging.sendAll([
+        validMessageWithUndefinedDataProp,
+        validMessageWithUndefinedDataProp,
+        validMessageWithUndefinedDataProp
+      ]).then((response: BatchResponse) => {
+        expect(response.successCount).to.equal(3);
+        expect(response.failureCount).to.equal(0);
+        response.responses.forEach((resp, idx) => {
+          expect(resp.success).to.be.true;
+          expect(resp.messageId).to.equal(messageIds[idx]);
+          expect(resp.error).to.be.undefined;
+        });
+      });
+    })
   });
 
   describe('sendMulticast()', () => {
@@ -1117,6 +1146,31 @@ describe('Messaging', () => {
         { tokens: ['a'] },
       ).should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
     });
+
+    it('should not throws when the payload contains the data property with undefined value', () => {
+      const messageIds = [
+        'projects/projec_id/messages/1',
+        'projects/projec_id/messages/2',
+        'projects/projec_id/messages/3',
+      ];
+      mockedRequests.push(mockBatchRequest(messageIds));
+      return messaging.sendMulticast({
+        tokens: ['a', 'b', 'c'],
+        android: { ttl: 100 },
+        apns: { payload: { aps: { badge: 42 } } },
+        data: undefined,
+        notification: { title: 'test title' },
+        webpush: { data: { webKey: 'webValue' } },
+      }).then((response: BatchResponse) => {
+        expect(response.successCount).to.equal(3);
+        expect(response.failureCount).to.equal(0);
+        response.responses.forEach((resp, idx) => {
+          expect(resp.success).to.be.true;
+          expect(resp.messageId).to.equal(messageIds[idx]);
+          expect(resp.error).to.be.undefined;
+        });
+      });
+    })
 
     function checkSendResponseSuccess(response: SendResponse, messageId: string): void {
       expect(response.success).to.be.true;
@@ -1457,6 +1511,16 @@ describe('Messaging', () => {
         expect(mockOptionsClone).to.deep.equal(mocks.messaging.options);
       });
     });
+
+    it('should not throws when the payload contains the data property with undefined value', () => {
+      mockedRequests.push(mockSendToDeviceStringRequest());
+
+      return messaging.sendToDevice(
+        mocks.messaging.registrationToken,
+        { ...mocks.messaging.payload, data: undefined },
+        mocks.messaging.options,
+      );
+    })
   });
 
   describe('sendToDeviceGroup()', () => {
@@ -1708,6 +1772,15 @@ describe('Messaging', () => {
         expect(mockOptionsClone).to.deep.equal(mocks.messaging.options);
       });
     });
+
+    it('should not throws when the payload contains the data property with undefined value', () => {
+      mockedRequests.push(mockSendToDeviceGroupRequest());
+
+      return messaging.sendToDeviceGroup(
+        mocks.messaging.notificationKey,
+        { ...mocks.messaging.payloadDataOnly, data: undefined },
+      );
+    });
   });
 
   describe('sendToTopic()', () => {
@@ -1935,6 +2008,15 @@ describe('Messaging', () => {
         expect(mockOptionsClone).to.deep.equal(mocks.messaging.options);
       });
     });
+
+    it('should not throws when the payload contains the data property with undefined value', () => {
+      mockedRequests.push(mockSendToTopicRequest());
+
+      return messaging.sendToTopic(
+        mocks.messaging.topic,
+        { ...mocks.messaging.payload, data: undefined },
+      );
+    });
   });
 
   describe('sendToCondition()', () => {
@@ -2115,6 +2197,15 @@ describe('Messaging', () => {
       ).then(() => {
         expect(mockOptionsClone).to.deep.equal(mocks.messaging.options);
       });
+    });
+
+    it('should not throws when the payload contains the data property with undefined value', () => {
+      mockedRequests.push(mockSendToConditionRequest());
+
+      return messaging.sendToCondition(
+        mocks.messaging.condition,
+        { ...mocks.messaging.payloadDataOnly, data: undefined },
+      );
     });
   });
 
@@ -2338,6 +2429,15 @@ describe('Messaging', () => {
         mockPayloadClone,
       ).then(() => {
         expect(mockPayloadClone).to.deep.equal(mocks.messaging.payload);
+      });
+    });
+
+    it('should not throws when the payload contains the data property with undefined value', () => {
+      mockedRequests.push(mockSendToDeviceStringRequest());
+
+      return messaging.sendToDevice(mocks.messaging.registrationToken, {
+        ...mocks.messaging.payloadDataOnly,
+        data: undefined,
       });
     });
 
