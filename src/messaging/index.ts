@@ -58,15 +58,15 @@ export namespace messaging {
     fcmOptions?: FcmOptions;
   }
 
-  interface TokenMessage extends BaseMessage {
+  export interface TokenMessage extends BaseMessage {
     token: string;
   }
 
-  interface TopicMessage extends BaseMessage {
+  export interface TopicMessage extends BaseMessage {
     topic: string;
   }
 
-  interface ConditionMessage extends BaseMessage {
+  export interface ConditionMessage extends BaseMessage {
     condition: string;
   }
 

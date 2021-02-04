@@ -36,51 +36,72 @@ export let noServiceAccountApp: admin.app.App;
 
 export let cmdArgs: any;
 
-before(() => {
-  /* tslint:disable:no-console */
-  let serviceAccount: any;
-  try {
-    serviceAccount = require('../resources/key.json');
-  } catch (error) {
-    console.log(chalk.red(
-      'The integration test suite requires a service account JSON file for a ' +
-      'Firebase project to be saved to `test/resources/key.json`.',
-      error,
-    ));
-    throw error;
-  }
+export const isEmulator = !!process.env.FIREBASE_EMULATOR_HUB;
 
-  try {
-    apiKey = fs.readFileSync(path.join(__dirname, '../resources/apikey.txt')).toString().trim();
-  } catch (error) {
-    console.log(chalk.red(
-      'The integration test suite requires an API key for a ' +
-      'Firebase project to be saved to `test/resources/apikey.txt`.',
-      error,
+before(() => {
+  let getCredential: () => {credential?: admin.credential.Credential};
+  let serviceAccountId: string;
+
+  /* tslint:disable:no-console */
+  if (isEmulator) {
+    console.log(chalk.yellow(
+      'Running integration tests against Emulator Suite. ' +
+      'Some tests may be skipped due to lack of emulator support.',
     ));
-    throw error;
+    getCredential = () => ({});
+    projectId = process.env.GCLOUD_PROJECT!;
+    apiKey = 'fake-api-key';
+    serviceAccountId = 'fake-client-email@example.com';
+  } else {
+    let serviceAccount: any;
+    try {
+      serviceAccount = require('../resources/key.json');
+    } catch (error) {
+      console.log(chalk.red(
+        'The integration test suite requires a service account JSON file for a ' +
+        'Firebase project to be saved to `test/resources/key.json`.',
+        error,
+      ));
+      throw error;
+    }
+
+    try {
+      apiKey = fs.readFileSync(path.join(__dirname, '../resources/apikey.txt')).toString().trim();
+    } catch (error) {
+      console.log(chalk.red(
+        'The integration test suite requires an API key for a ' +
+        'Firebase project to be saved to `test/resources/apikey.txt`.',
+        error,
+      ));
+      throw error;
+    }
+    getCredential = () => ({ credential: admin.credential.cert(serviceAccount) });
+    projectId = serviceAccount.project_id;
+    serviceAccountId = serviceAccount.client_email;
   }
   /* tslint:enable:no-console */
 
-  projectId = serviceAccount.project_id;
   databaseUrl = 'https://' + projectId + '.firebaseio.com';
   storageBucket = projectId + '.appspot.com';
 
   defaultApp = admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
+    ...getCredential(),
+    projectId,
     databaseURL: databaseUrl,
     storageBucket,
   });
 
   nullApp = admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
+    ...getCredential(),
+    projectId,
     databaseURL: databaseUrl,
     databaseAuthVariableOverride: null,
     storageBucket,
   }, 'null');
 
   nonNullApp = admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
+    ...getCredential(),
+    projectId,
     databaseURL: databaseUrl,
     databaseAuthVariableOverride: {
       uid: generateRandomString(20),
@@ -88,9 +109,14 @@ before(() => {
     storageBucket,
   }, 'nonNull');
 
+  const noServiceAccountAppCreds = getCredential();
+  if (noServiceAccountAppCreds.credential) {
+    noServiceAccountAppCreds.credential = new CertificatelessCredential(
+      noServiceAccountAppCreds.credential)
+  }
   noServiceAccountApp = admin.initializeApp({
-    credential: new CertificatelessCredential(admin.credential.cert(serviceAccount)),
-    serviceAccountId: serviceAccount.client_email,
+    ...noServiceAccountAppCreds,
+    serviceAccountId,
     projectId,
   }, 'noServiceAccount');
 

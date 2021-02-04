@@ -1,0 +1,68 @@
+# Copyright 2021 Google Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+name: Nightly Builds
+
+on:
+  # Runs every day at 06:00 AM (PT) and 08:00 PM (PT) / 04:00 AM (UTC) and 02:00 PM (UTC)
+  schedule:
+    - cron: "0 4,14 * * *"
+
+jobs:
+  nightly:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout source for staging
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.client_payload.ref || github.ref }}
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v1
+      with:
+        node-version: 10.x
+
+    - name: Install and build
+      run: |
+        npm ci
+        npm run build
+        npm run build:tests
+
+    - name: Run unit tests
+      run: npm test
+
+    - name: Verify public API
+      run: npm run api-extractor
+
+    - name: Run integration tests
+      run: ./.github/scripts/run_integration_tests.sh
+      env:
+        FIREBASE_SERVICE_ACCT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCT_KEY }}
+        FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+
+    - name: Package release artifacts
+      run: |
+        npm pack
+        mkdir -p dist
+        cp *.tgz dist/
+
+    # Attach the packaged artifacts to the workflow output. These can be manually
+    # downloaded for later inspection if necessary.
+    - name: Archive artifacts
+      uses: actions/upload-artifact@v1
+      with:
+        name: dist
+        path: dist

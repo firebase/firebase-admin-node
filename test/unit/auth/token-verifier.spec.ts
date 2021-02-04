@@ -106,7 +106,7 @@ function mockFailedFetchPublicKeys(): nock.Scope {
 }
 
 function createTokenVerifier(
-  app: FirebaseApp, 
+  app: FirebaseApp,
   options: { algorithm?: Algorithm } = {}
 ): verifier.FirebaseTokenVerifier {
   const algorithm = options.algorithm || 'RS256';
@@ -544,16 +544,17 @@ describe('FirebaseTokenVerifier', () => {
         });
     });
 
-    it('should decode an unsigned token when the algorithm is set to none (emulator)', async () => {
+    it('should decode an unsigned token if isEmulator=true', async () => {
       clock = sinon.useFakeTimers(1000);
 
-      const emulatorVerifier = createTokenVerifier(app, { algorithm: 'none' });
+      const emulatorVerifier = createTokenVerifier(app);
       const mockIdToken = mocks.generateIdToken({
         algorithm: 'none',
         header: {}
       });
 
-      const decoded = await emulatorVerifier.verifyJWT(mockIdToken);
+      const isEmulator = true;
+      const decoded = await emulatorVerifier.verifyJWT(mockIdToken, isEmulator);
       expect(decoded).to.deep.equal({
         one: 'uno',
         two: 'dos',

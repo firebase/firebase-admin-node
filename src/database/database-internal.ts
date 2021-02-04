@@ -19,7 +19,6 @@ import * as path from 'path';
 
 import { FirebaseApp } from '../firebase-app';
 import { FirebaseDatabaseError, AppErrorCodes, FirebaseAppError } from '../utils/error';
-import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { Database as DatabaseImpl } from '@firebase/database';
 import { database } from './index';
 
@@ -29,34 +28,13 @@ import { getSdkVersion } from '../utils/index';
 
 import Database = database.Database;
 
-/**
- * Internals of a Database instance.
- */
-class DatabaseInternals implements FirebaseServiceInternalsInterface {
-
-  public databases: {
-    [dbUrl: string]: Database;
-  } = {};
-
-  /**
-   * Deletes the service and its associated resources.
-   *
-   * @return {Promise<()>} An empty Promise that will be fulfilled when the service is deleted.
-   */
-  public delete(): Promise<void> {
-    for (const dbUrl of Object.keys(this.databases)) {
-      const db: DatabaseImpl = ((this.databases[dbUrl] as any) as DatabaseImpl);
-      db.INTERNAL.delete();
-    }
-    return Promise.resolve(undefined);
-  }
-}
-
-export class DatabaseService implements FirebaseServiceInterface {
-
-  public readonly INTERNAL: DatabaseInternals = new DatabaseInternals();
+export class DatabaseService {
 
   private readonly appInternal: FirebaseApp;
+
+  private databases: {
+    [dbUrl: string]: Database;
+  } = {};
 
   constructor(app: FirebaseApp) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
@@ -66,6 +44,20 @@ export class DatabaseService implements FirebaseServiceInterface {
       });
     }
     this.appInternal = app;
+  }
+
+  /**
+   * @internal
+   */
+  public delete(): Promise<void> {
+    const promises = [];
+    for (const dbUrl of Object.keys(this.databases)) {
+      const db: DatabaseImpl = ((this.databases[dbUrl] as any) as DatabaseImpl);
+      promises.push(db.INTERNAL.delete());
+    }
+    return Promise.all(promises).then(() => {
+      this.databases = {};
+    });
   }
 
   /**
@@ -86,7 +78,7 @@ export class DatabaseService implements FirebaseServiceInterface {
       });
     }
 
-    let db: Database = this.INTERNAL.databases[dbUrl];
+    let db: Database = this.databases[dbUrl];
     if (typeof db === 'undefined') {
       const rtdb = require('@firebase/database'); // eslint-disable-line @typescript-eslint/no-var-requires
       db = rtdb.initStandalone(this.appInternal, dbUrl, getSdkVersion()).instance;
@@ -102,7 +94,7 @@ export class DatabaseService implements FirebaseServiceInterface {
         return rulesClient.setRules(source);
       };
 
-      this.INTERNAL.databases[dbUrl] = db;
+      this.databases[dbUrl] = db;
     }
     return db;
   }

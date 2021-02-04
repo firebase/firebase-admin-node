@@ -15,7 +15,6 @@
  */
 
 import { FirebaseApp } from '../firebase-app';
-import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import {
   MachineLearningApiClient, ModelResponse, ModelUpdateOptions, isGcsTfliteModelOptions
 } from './machine-learning-api-client';
@@ -34,26 +33,9 @@ import ModelOptions = machineLearning.ModelOptions;
 import TFLiteModel = machineLearning.TFLiteModel;
 
 /**
- * Internals of an ML instance.
- */
-class MachineLearningInternals implements FirebaseServiceInternalsInterface {
-  /**
-   * Deletes the service and its associated resources.
-   *
-   * @return {Promise<void>} An empty Promise that will be resolved when the
-   *     service is deleted.
-   */
-  public delete(): Promise<void> {
-    // There are no resources to clean up.
-    return Promise.resolve();
-  }
-}
-
-/**
  * The Firebase Machine Learning class
  */
-export class MachineLearning implements FirebaseServiceInterface, MachineLearningInterface {
-  public readonly INTERNAL = new MachineLearningInternals();
+export class MachineLearning implements MachineLearningInterface {
 
   private readonly client: MachineLearningApiClient;
   private readonly appInternal: FirebaseApp;

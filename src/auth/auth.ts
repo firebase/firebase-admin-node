@@ -25,12 +25,11 @@ import {
   AbstractAuthRequestHandler, AuthRequestHandler, TenantAwareAuthRequestHandler, useEmulator,
 } from './auth-api-request';
 import { AuthClientErrorCode, FirebaseAuthError, ErrorInfo } from '../utils/error';
-import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { auth } from './index';
 import {
-  FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier, ALGORITHM_RS256
+  FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier
 } from './token-verifier';
 import {
   SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
@@ -58,22 +57,6 @@ import SAMLAuthProviderConfig = auth.SAMLAuthProviderConfig;
 import BaseAuthInterface = auth.BaseAuth;
 import AuthInterface = auth.Auth;
 import TenantAwareAuthInterface = auth.TenantAwareAuth;
-
-/**
- * Internals of an Auth instance.
- */
-class AuthInternals implements FirebaseServiceInternalsInterface {
-  /**
-   * Deletes the service and its associated resources.
-   *
-   * @return {Promise<()>} An empty Promise that will be fulfilled when the service is deleted.
-   */
-  public delete(): Promise<void> {
-    // There are no resources to clean up
-    return Promise.resolve(undefined);
-  }
-}
-
 
 /**
  * Base Auth class. Mainly used for user management APIs.
@@ -132,15 +115,16 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
    *     verification.
    */
   public verifyIdToken(idToken: string, checkRevoked = false): Promise<DecodedIdToken> {
-    return this.idTokenVerifier.verifyJWT(idToken)
+    const isEmulator = useEmulator();
+    return this.idTokenVerifier.verifyJWT(idToken, isEmulator)
       .then((decodedIdToken: DecodedIdToken) => {
         // Whether to check if the token was revoked.
-        if (!checkRevoked) {
-          return decodedIdToken;
+        if (checkRevoked || isEmulator) {
+          return this.verifyDecodedJWTNotRevoked(
+            decodedIdToken,
+            AuthClientErrorCode.ID_TOKEN_REVOKED);
         }
-        return this.verifyDecodedJWTNotRevoked(
-          decodedIdToken,
-          AuthClientErrorCode.ID_TOKEN_REVOKED);
+        return decodedIdToken;
       });
   }
 
@@ -460,15 +444,16 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
    */
   public verifySessionCookie(
     sessionCookie: string, checkRevoked = false): Promise<DecodedIdToken> {
-    return this.sessionCookieVerifier.verifyJWT(sessionCookie)
+    const isEmulator = useEmulator();
+    return this.sessionCookieVerifier.verifyJWT(sessionCookie, isEmulator)
       .then((decodedIdToken: DecodedIdToken) => {
         // Whether to check if the token was revoked.
-        if (!checkRevoked) {
-          return decodedIdToken;
+        if (checkRevoked || isEmulator) {
+          return this.verifyDecodedJWTNotRevoked(
+            decodedIdToken,
+            AuthClientErrorCode.SESSION_COOKIE_REVOKED);
         }
-        return this.verifyDecodedJWTNotRevoked(
-          decodedIdToken,
-          AuthClientErrorCode.SESSION_COOKIE_REVOKED);
+        return decodedIdToken;
       });
   }
 
@@ -692,28 +677,6 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
         return decodedIdToken;
       });
   }
-
-  /**
-   * Enable or disable ID token verification. This is used to safely short-circuit token verification with the
-   * Auth emulator. When disabled ONLY unsigned tokens will pass verification, production tokens will not pass.
-   *
-   * WARNING: This is a dangerous method that will compromise your app's security and break your app in
-   * production. Developers should never call this method, it is for internal testing use only.
-   *
-   * @internal
-   */
-  // @ts-expect-error: this method appears unused but is used privately.
-  private setJwtVerificationEnabled(enabled: boolean): void {
-    if (!enabled && !useEmulator()) {
-      // We only allow verification to be disabled in conjunction with
-      // the emulator environment variable.
-      throw new Error('This method is only available when connected to the Authentication emulator.');
-    }
-
-    const algorithm = enabled ? ALGORITHM_RS256 : 'none';
-    this.idTokenVerifier.setAlgorithm(algorithm);
-    this.sessionCookieVerifier.setAlgorithm(algorithm);
-  }
 }
 
 
@@ -820,10 +783,8 @@ export class TenantAwareAuth
  * Auth service bound to the provided app.
  * An Auth instance can have multiple tenants.
  */
-export class Auth extends BaseAuth<AuthRequestHandler>
-  implements FirebaseServiceInterface, AuthInterface {
+export class Auth extends BaseAuth<AuthRequestHandler> implements AuthInterface {
 
-  public INTERNAL: AuthInternals = new AuthInternals();
   private readonly tenantManager_: TenantManager;
   private readonly app_: FirebaseApp;
 
