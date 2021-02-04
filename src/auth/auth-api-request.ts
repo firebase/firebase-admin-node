@@ -2117,10 +2117,6 @@ function emulatorHost(): string | undefined {
 /**
  * When true the SDK should communicate with the Auth Emulator for all API
  * calls and also produce unsigned tokens.
- *
- * This alone does <b>NOT<b> short-circuit ID Token verification.
- * For security reasons that must be explicitly disabled through
- * setJwtVerificationEnabled(false);
  */
 export function useEmulator(): boolean {
   return !!emulatorHost();

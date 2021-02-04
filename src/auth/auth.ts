@@ -29,7 +29,7 @@ import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { auth } from './index';
 import {
-  FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier, ALGORITHM_RS256
+  FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier
 } from './token-verifier';
 import {
   SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
@@ -115,15 +115,16 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
    *     verification.
    */
   public verifyIdToken(idToken: string, checkRevoked = false): Promise<DecodedIdToken> {
-    return this.idTokenVerifier.verifyJWT(idToken)
+    const isEmulator = useEmulator();
+    return this.idTokenVerifier.verifyJWT(idToken, isEmulator)
       .then((decodedIdToken: DecodedIdToken) => {
         // Whether to check if the token was revoked.
-        if (!checkRevoked) {
-          return decodedIdToken;
+        if (checkRevoked || isEmulator) {
+          return this.verifyDecodedJWTNotRevoked(
+            decodedIdToken,
+            AuthClientErrorCode.ID_TOKEN_REVOKED);
         }
-        return this.verifyDecodedJWTNotRevoked(
-          decodedIdToken,
-          AuthClientErrorCode.ID_TOKEN_REVOKED);
+        return decodedIdToken;
       });
   }
 
@@ -443,15 +444,16 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
    */
   public verifySessionCookie(
     sessionCookie: string, checkRevoked = false): Promise<DecodedIdToken> {
-    return this.sessionCookieVerifier.verifyJWT(sessionCookie)
+    const isEmulator = useEmulator();
+    return this.sessionCookieVerifier.verifyJWT(sessionCookie, isEmulator)
       .then((decodedIdToken: DecodedIdToken) => {
         // Whether to check if the token was revoked.
-        if (!checkRevoked) {
-          return decodedIdToken;
+        if (checkRevoked || isEmulator) {
+          return this.verifyDecodedJWTNotRevoked(
+            decodedIdToken,
+            AuthClientErrorCode.SESSION_COOKIE_REVOKED);
         }
-        return this.verifyDecodedJWTNotRevoked(
-          decodedIdToken,
-          AuthClientErrorCode.SESSION_COOKIE_REVOKED);
+        return decodedIdToken;
       });
   }
 
@@ -674,28 +676,6 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
         // All checks above passed. Return the decoded token.
         return decodedIdToken;
       });
-  }
-
-  /**
-   * Enable or disable ID token verification. This is used to safely short-circuit token verification with the
-   * Auth emulator. When disabled ONLY unsigned tokens will pass verification, production tokens will not pass.
-   *
-   * WARNING: This is a dangerous method that will compromise your app's security and break your app in
-   * production. Developers should never call this method, it is for internal testing use only.
-   *
-   * @internal
-   */
-  // @ts-expect-error: this method appears unused but is used privately.
-  private setJwtVerificationEnabled(enabled: boolean): void {
-    if (!enabled && !useEmulator()) {
-      // We only allow verification to be disabled in conjunction with
-      // the emulator environment variable.
-      throw new Error('This method is only available when connected to the Authentication emulator.');
-    }
-
-    const algorithm = enabled ? ALGORITHM_RS256 : 'none';
-    this.idTokenVerifier.setAlgorithm(algorithm);
-    this.sessionCookieVerifier.setAlgorithm(algorithm);
   }
 }
 

@@ -37,6 +37,8 @@ chai.use(chaiAsPromised);
 
 const expect = chai.expect;
 
+const authEmulatorHost = process.env.FIREBASE_AUTH_EMULATOR_HOST;
+
 const newUserUid = generateRandomString(20);
 const nonexistentUid = generateRandomString(20);
 const newMultiFactorUserUid = generateRandomString(20);
@@ -102,6 +104,9 @@ describe('admin.auth', () => {
       apiKey,
       authDomain: projectId + '.firebaseapp.com',
     });
+    if (authEmulatorHost) {
+      (clientAuth() as any).useEmulator('http://' + authEmulatorHost);
+    }
     return cleanup();
   });
 
@@ -137,7 +142,10 @@ describe('admin.auth', () => {
       });
   });
 
-  it('createUser() creates a new user with enrolled second factors', () => {
+  it('createUser() creates a new user with enrolled second factors', function () {
+    if (authEmulatorHost) {
+      return this.skip(); // Not yet supported in Auth Emulator.
+    }
     const enrolledFactors = [
       {
         phoneNumber: '+16505550001',
@@ -353,7 +361,7 @@ describe('admin.auth', () => {
 
             const metadata = userRecord!.metadata;
             expect(metadata.lastRefreshTime).to.exist;
-            expect(isUTCString(metadata.lastRefreshTime!));
+            expect(isUTCString(metadata.lastRefreshTime!)).to.be.true;
             const creationTime = new Date(metadata.creationTime).getTime();
             const lastRefreshTime = new Date(metadata.lastRefreshTime!).getTime();
             expect(creationTime).lte(lastRefreshTime);
@@ -410,7 +418,7 @@ describe('admin.auth', () => {
       });
   });
 
-  it('revokeRefreshTokens() invalidates existing sessions and ID tokens', () => {
+  it('revokeRefreshTokens() invalidates existing sessions and ID tokens', async () => {
     let currentIdToken: string;
     let currentUser: User;
     // Sign in with an email and password account.
@@ -433,9 +441,14 @@ describe('admin.auth', () => {
         ), 1000));
       })
       .then(() => {
-        // verifyIdToken without checking revocation should still succeed.
-        return admin.auth().verifyIdToken(currentIdToken)
-          .should.eventually.be.fulfilled;
+        const verifyingIdToken = admin.auth().verifyIdToken(currentIdToken)
+        if (authEmulatorHost) {
+          // Check revocation is forced in emulator-mode and this should throw.
+          return verifyingIdToken.should.eventually.be.rejected;
+        } else {
+          // verifyIdToken without checking revocation should still succeed.
+          return verifyingIdToken.should.eventually.be.fulfilled;
+        }
       })
       .then(() => {
         // verifyIdToken while checking for revocation should fail.
@@ -522,6 +535,27 @@ describe('admin.auth', () => {
 
   it('updateUser() updates the user record with the given parameters', () => {
     const updatedDisplayName = 'Updated User ' + newUserUid;
+    return admin.auth().updateUser(newUserUid, {
+      email: updatedEmail,
+      phoneNumber: updatedPhone,
+      emailVerified: true,
+      displayName: updatedDisplayName,
+    })
+      .then((userRecord) => {
+        expect(userRecord.emailVerified).to.be.true;
+        expect(userRecord.displayName).to.equal(updatedDisplayName);
+        // Confirm expected email.
+        expect(userRecord.email).to.equal(updatedEmail);
+        // Confirm expected phone number.
+        expect(userRecord.phoneNumber).to.equal(updatedPhone);
+      });
+  });
+
+  it('updateUser() creates, updates, and removes second factors', function () {
+    if (authEmulatorHost) {
+      return this.skip(); // Not yet supported in Auth Emulator.
+    }
+
     const now = new Date(1476235905000).toUTCString();
     // Update user with enrolled second factors.
     const enrolledFactors = [
@@ -541,21 +575,11 @@ describe('admin.auth', () => {
       },
     ];
     return admin.auth().updateUser(newUserUid, {
-      email: updatedEmail,
-      phoneNumber: updatedPhone,
-      emailVerified: true,
-      displayName: updatedDisplayName,
       multiFactor: {
         enrolledFactors,
       },
     })
       .then((userRecord) => {
-        expect(userRecord.emailVerified).to.be.true;
-        expect(userRecord.displayName).to.equal(updatedDisplayName);
-        // Confirm expected email.
-        expect(userRecord.email).to.equal(updatedEmail);
-        // Confirm expected phone number.
-        expect(userRecord.phoneNumber).to.equal(updatedPhone);
         // Confirm second factors added to user.
         const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
         expect(actualUserRecord.multiFactor.enrolledFactors.length).to.equal(2);
@@ -654,6 +678,49 @@ describe('admin.auth', () => {
     return admin.auth().verifyIdToken('invalid-token')
       .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
   });
+
+  if (authEmulatorHost) {
+    describe('Auth emulator support', () => {
+      const uid = 'authEmulatorUser';
+      before(() => {
+        return admin.auth().createUser({
+          uid,
+          email: 'lastRefreshTimeUser@example.com',
+          password: 'p4ssword',
+        });
+      });
+      after(() => {
+        return admin.auth().deleteUser(uid);
+      });
+
+      it('verifyIdToken() succeeds when called with an unsigned token', () => {
+        const unsignedToken = mocks.generateIdToken({
+          algorithm: 'none',
+          audience: projectId,
+          issuer: 'https://securetoken.google.com/' + projectId,
+          subject: uid,
+        });
+        return admin.auth().verifyIdToken(unsignedToken);
+      });
+
+      it('verifyIdToken() fails when called with a token with wrong project', () => {
+        const unsignedToken = mocks.generateIdToken({ algorithm: 'none', audience: 'nosuch' });
+        return admin.auth().verifyIdToken(unsignedToken)
+          .should.eventually.be.rejected.and.have.property('code', 'auth/argument-error');
+      });
+
+      it('verifyIdToken() fails when called with a token that does not belong to a user', () => {
+        const unsignedToken = mocks.generateIdToken({
+          algorithm: 'none',
+          audience: projectId,
+          issuer: 'https://securetoken.google.com/' + projectId,
+          subject: 'nosuch',
+        });
+        return admin.auth().verifyIdToken(unsignedToken)
+          .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
+      });
+    });
+  }
 
   describe('Link operations', () => {
     const uid = generateRandomString(20).toLowerCase();
@@ -1253,7 +1320,10 @@ describe('admin.auth', () => {
     };
 
     // Clean up temp configurations used for test.
-    before(() => {
+    before(function () {
+      if (authEmulatorHost) {
+        return this.skip(); // Not implemented.
+      }
       return removeTempConfigs().then(() => admin.auth().createProviderConfig(authProviderConfig1));
     });
 
@@ -1385,7 +1455,10 @@ describe('admin.auth', () => {
     };
 
     // Clean up temp configurations used for test.
-    before(() => {
+    before(function () {
+      if (authEmulatorHost) {
+        return this.skip(); // Not implemented.
+      }
       return removeTempConfigs().then(() => admin.auth().createProviderConfig(authProviderConfig1));
     });
 
@@ -1484,7 +1557,6 @@ describe('admin.auth', () => {
   it('deleteUser() deletes the user with the given UID', () => {
     return Promise.all([
       admin.auth().deleteUser(newUserUid),
-      admin.auth().deleteUser(newMultiFactorUserUid),
       admin.auth().deleteUser(uidFromCreateUserWithoutUid),
     ]).should.eventually.be.fulfilled;
   });
@@ -1610,8 +1682,14 @@ describe('admin.auth', () => {
           ), 1000));
         })
         .then(() => {
-          return admin.auth().verifySessionCookie(currentSessionCookie)
-            .should.eventually.be.fulfilled;
+          const verifyingSessionCookie = admin.auth().verifySessionCookie(currentSessionCookie);
+          if (authEmulatorHost) {
+            // Check revocation is forced in emulator-mode and this should throw.
+            return verifyingSessionCookie.should.eventually.be.rejected;
+          } else {
+            // verifyIdToken without checking revocation should still succeed.
+            return verifyingSessionCookie.should.eventually.be.fulfilled;
+          }
         })
         .then(() => {
           return admin.auth().verifySessionCookie(currentSessionCookie, true)
@@ -1824,7 +1902,10 @@ describe('admin.auth', () => {
     ];
 
     fixtures.forEach((fixture) => {
-      it(`successfully imports users with ${fixture.name} to Firebase Auth.`, () => {
+      it(`successfully imports users with ${fixture.name} to Firebase Auth.`, function () {
+        if (authEmulatorHost) {
+          return this.skip(); // Auth Emulator does not support real hashes.
+        }
         importUserRecord = {
           uid: randomUid,
           email: randomUid + '@example.com',
@@ -1893,10 +1974,13 @@ describe('admin.auth', () => {
             expect(JSON.stringify(actualUserRecord[key]))
               .to.be.equal(JSON.stringify((importUserRecord as any)[key]));
           }
-        }).should.eventually.be.fulfilled;
+        });
     });
 
-    it('successfully imports users with enrolled second factors', () => {
+    it('successfully imports users with enrolled second factors', function () {
+      if (authEmulatorHost) {
+        return this.skip(); // Not yet implemented.
+      }
       const uid = generateRandomString(20).toLowerCase();
       const email = uid + '@example.com';
       const now = new Date(1476235905000).toUTCString();
@@ -1958,25 +2042,41 @@ describe('admin.auth', () => {
 
     it('fails when invalid users are provided', () => {
       const users = [
-        { uid: generateRandomString(20).toLowerCase(), phoneNumber: '+1error' },
         { uid: generateRandomString(20).toLowerCase(), email: 'invalid' },
-        { uid: generateRandomString(20).toLowerCase(), phoneNumber: '+1invalid' },
         { uid: generateRandomString(20).toLowerCase(), emailVerified: 'invalid' } as any,
       ];
       return admin.auth().importUsers(users)
         .then((result) => {
           expect(result.successCount).to.equal(0);
-          expect(result.failureCount).to.equal(4);
-          expect(result.errors.length).to.equal(4);
+          expect(result.failureCount).to.equal(2);
+          expect(result.errors.length).to.equal(2);
+          expect(result.errors[0].index).to.equal(0);
+          expect(result.errors[0].error.code).to.equals('auth/invalid-email');
+          expect(result.errors[1].index).to.equal(1);
+          expect(result.errors[1].error.code).to.equals('auth/invalid-email-verified');
+        });
+    });
+
+    it('fails when users with invalid phone numbers are provided', function () {
+      if (authEmulatorHost) {
+        // Auth Emulator's phoneNumber validation is also lax and won't throw.
+        return this.skip();
+      }
+      const users = [
+        // These phoneNumbers passes local (lax) validator but fails remotely.
+        { uid: generateRandomString(20).toLowerCase(), phoneNumber: '+1error' },
+        { uid: generateRandomString(20).toLowerCase(), phoneNumber: '+1invalid' },
+      ];
+      return admin.auth().importUsers(users)
+        .then((result) => {
+          expect(result.successCount).to.equal(0);
+          expect(result.failureCount).to.equal(2);
+          expect(result.errors.length).to.equal(2);
           expect(result.errors[0].index).to.equal(0);
           expect(result.errors[0].error.code).to.equals('auth/invalid-user-import');
           expect(result.errors[1].index).to.equal(1);
-          expect(result.errors[1].error.code).to.equals('auth/invalid-email');
-          expect(result.errors[2].index).to.equal(2);
-          expect(result.errors[2].error.code).to.equals('auth/invalid-user-import');
-          expect(result.errors[3].index).to.equal(3);
-          expect(result.errors[3].error.code).to.equals('auth/invalid-email-verified');
-        }).should.eventually.be.fulfilled;
+          expect(result.errors[1].error.code).to.equals('auth/invalid-user-import');
+        });
     });
   });
 });
@@ -2132,12 +2232,11 @@ function safeDelete(uid: string): Promise<void> {
  * @param {string[]} uids The list of user identifiers to delete.
  * @return {Promise} A promise that resolves when delete operation resolves.
  */
-function deleteUsersWithDelay(uids: string[]): Promise<admin.auth.DeleteUsersResult> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, 1000);
-  }).then(() => {
-    return admin.auth().deleteUsers(uids);
-  });
+async function deleteUsersWithDelay(uids: string[]): Promise<admin.auth.DeleteUsersResult> {
+  if (!authEmulatorHost) {
+    await new Promise((resolve) => { setTimeout(resolve, 1000); });
+  }
+  return admin.auth().deleteUsers(uids);
 }
 
 /**
