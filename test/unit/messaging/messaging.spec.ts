@@ -824,6 +824,31 @@ describe('Messaging', () => {
         [validMessage],
       ).should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
     });
+
+    it('should be fulfilled when called with different message types', () => {
+      const messageIds = [
+        'projects/projec_id/messages/1',
+        'projects/projec_id/messages/2',
+        'projects/projec_id/messages/3',
+      ];
+      const tokenMessage: TokenMessage = {token: 'test'};
+      const topicMessage: TopicMessage = {topic: 'test'};
+      const conditionMessage: ConditionMessage = {condition: 'test'};
+      const messages: Message[] = [tokenMessage, topicMessage, conditionMessage];
+      
+      mockedRequests.push(mockBatchRequest(messageIds));
+      
+      return messaging.sendAll(messages)
+        .then((response: BatchResponse) => {
+          expect(response.successCount).to.equal(3);
+          expect(response.failureCount).to.equal(0);
+          response.responses.forEach((resp, idx) => {
+            expect(resp.success).to.be.true;
+            expect(resp.messageId).to.equal(messageIds[idx]);
+            expect(resp.error).to.be.undefined;
+          });
+        });
+    });    
   });
 
   describe('sendMulticast()', () => {
