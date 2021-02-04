@@ -41,6 +41,9 @@ chai.use(chaiAsPromised);
 const expect = chai.expect;
 
 import Message = messaging.Message;
+import TokenMessage = messaging.TokenMessage;
+import TopicMessage = messaging.TopicMessage;
+import ConditionMessage = messaging.ConditionMessage;
 import MessagingOptions = messaging.MessagingOptions;
 import MessagingPayload = messaging.MessagingPayload;
 import MessagingDevicesResponse = messaging.MessagingDevicesResponse;
@@ -823,6 +826,32 @@ describe('Messaging', () => {
         [validMessage],
       ).should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
     });
+
+    // This test was added to also verify https://github.com/firebase/firebase-admin-node/issues/1146
+    it('should be fulfilled when called with different message types', () => {
+      const messageIds = [
+        'projects/projec_id/messages/1',
+        'projects/projec_id/messages/2',
+        'projects/projec_id/messages/3',
+      ];
+      const tokenMessage: TokenMessage = { token: 'test' };
+      const topicMessage: TopicMessage = { topic: 'test' };
+      const conditionMessage: ConditionMessage = { condition: 'test' };
+      const messages: Message[] = [tokenMessage, topicMessage, conditionMessage];
+      
+      mockedRequests.push(mockBatchRequest(messageIds));
+      
+      return messaging.sendAll(messages)
+        .then((response: BatchResponse) => {
+          expect(response.successCount).to.equal(3);
+          expect(response.failureCount).to.equal(0);
+          response.responses.forEach((resp, idx) => {
+            expect(resp.success).to.be.true;
+            expect(resp.messageId).to.equal(messageIds[idx]);
+            expect(resp.error).to.be.undefined;
+          });
+        });
+    });    
   });
 
   describe('sendMulticast()', () => {
@@ -887,7 +916,7 @@ describe('Messaging', () => {
           expect(messages.length).to.equal(3);
           expect(stub!.args[0][1]).to.be.undefined;
           messages.forEach((message, idx) => {
-            expect((message as any).token).to.equal(tokens[idx]);
+            expect((message as TokenMessage).token).to.equal(tokens[idx]);
             expect(message.android).to.be.undefined;
             expect(message.apns).to.be.undefined;
             expect(message.data).to.be.undefined;
@@ -917,7 +946,7 @@ describe('Messaging', () => {
           expect(messages.length).to.equal(3);
           expect(stub!.args[0][1]).to.be.undefined;
           messages.forEach((message, idx) => {
-            expect((message as any).token).to.equal(tokens[idx]);
+            expect((message as TokenMessage).token).to.equal(tokens[idx]);
             expect(message.android).to.deep.equal(multicast.android);
             expect(message.apns).to.be.deep.equal(multicast.apns);
             expect(message.data).to.be.deep.equal(multicast.data);
