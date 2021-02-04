@@ -69,7 +69,7 @@
   },
   "devDependencies": {
     "@firebase/app": "^0.6.13",
-    "@firebase/auth": "^0.15.2",
+    "@firebase/auth": "^0.16.2",
     "@firebase/auth-types": "^0.10.1",
     "@microsoft/api-extractor": "^7.11.2",
     "@types/bcrypt": "^2.0.0",

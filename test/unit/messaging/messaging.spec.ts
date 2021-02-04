@@ -4007,10 +4007,4 @@ describe('Messaging', () => {
   describe('unsubscribeFromTopic()', () => {
     tokenSubscriptionTests('unsubscribeFromTopic');
   });
-
-  describe('INTERNAL.delete()', () => {
-    it('should delete Messaging instance', () => {
-      messaging.INTERNAL.delete().should.eventually.be.fulfilled;
-    });
-  });
 });
