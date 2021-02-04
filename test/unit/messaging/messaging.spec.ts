@@ -42,6 +42,8 @@ const expect = chai.expect;
 
 import Message = messaging.Message;
 import TokenMessage = messaging.TokenMessage;
+import TopicMessage = messaging.TopicMessage;
+import ConditionMessage = messaging.ConditionMessage;
 import MessagingOptions = messaging.MessagingOptions;
 import MessagingPayload = messaging.MessagingPayload;
 import MessagingDevicesResponse = messaging.MessagingDevicesResponse;
@@ -825,6 +827,7 @@ describe('Messaging', () => {
       ).should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
     });
 
+    // This test was added to also verify https://github.com/firebase/firebase-admin-node/issues/1146
     it('should be fulfilled when called with different message types', () => {
       const messageIds = [
         'projects/projec_id/messages/1',
