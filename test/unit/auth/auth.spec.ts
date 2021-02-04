@@ -3269,8 +3269,8 @@ AUTH_CONFIGS.forEach((testConfig) => {
           auth_time: oneSecBeforeValidSince, // eslint-disable-line @typescript-eslint/camelcase
         });
 
-        // verifyIdToken should force checking revocation in emulator mode,
-        // even if checkRevoked=false.
+        // verifySessionCookie should force checking revocation in emulator
+        // mode, even if checkRevoked=false.
         return mockAuth.verifySessionCookie(unsignedToken, false)
           .then(() => {
             throw new Error('Unexpected success');
