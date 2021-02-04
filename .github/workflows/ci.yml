@@ -17,10 +17,16 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    - name: Install, build and test
+    - name: Install and build
       run: |
         npm ci
         npm run build
         npm run build:tests
+    - name: Lint and run unit tests
+      run: |
         npm test
         npm run api-extractor
+    - name: Run emulator-based integration tests
+      run: |
+        npm install -g firebase-tools
+        npm run integration:emulator
