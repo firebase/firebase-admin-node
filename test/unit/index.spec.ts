@@ -67,6 +67,7 @@ import './instance-id/instance-id.spec';
 import './instance-id/instance-id-request.spec';
 
 // ProjectManagement
+import './project-management/index.spec';
 import './project-management/project-management.spec';
 import './project-management/project-management-api-request.spec';
 import './project-management/android-app.spec';

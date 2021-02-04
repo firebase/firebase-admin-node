@@ -29,10 +29,7 @@ import { HttpClient } from '../../../src/utils/api-request';
 import * as mocks from '../../resources/mocks';
 import * as utils from '../utils';
 import { getSdkVersion } from '../../../src/utils/index';
-import { ShaCertificate } from '../../../src/project-management/android-app';
-import { projectManagement } from '../../../src/project-management/index';
-
-import AppPlatform = projectManagement.AppPlatform;
+import { AppPlatform, ShaCertificate } from '../../../src/project-management/index';
 
 chai.should();
 chai.use(sinonChai);

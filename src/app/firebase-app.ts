@@ -30,7 +30,7 @@ import { Storage } from '../storage/storage';
 import { Database } from '../database/index';
 import { Firestore } from '../firestore/index';
 import { InstanceId } from '../instance-id/index';
-import { ProjectManagement } from '../project-management/project-management';
+import { ProjectManagement } from '../project-management/index';
 import { SecurityRules } from '../security-rules/index';
 import { RemoteConfig } from '../remote-config/index';
 
@@ -343,11 +343,8 @@ export class FirebaseApp implements app.App {
    * @return The ProjectManagement service instance of this app.
    */
   public projectManagement(): ProjectManagement {
-    return this.ensureService_('project-management', () => {
-      const projectManagementService: typeof ProjectManagement =
-          require('../project-management/project-management').ProjectManagement;
-      return new projectManagementService(this);
-    });
+    const fn = require('../project-management/index').getProjectManagement;
+    return fn(this);
   }
 
   /**

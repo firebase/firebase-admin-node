@@ -17,15 +17,31 @@
 import { FirebaseProjectManagementError } from '../utils/error';
 import * as validator from '../utils/validator';
 import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request-internal';
-import { projectManagement } from './index';
+import { AppMetadata, AppPlatform } from './app-metadata';
 
-import IosAppInterface = projectManagement.IosApp;
-import IosAppMetadata = projectManagement.IosAppMetadata;
-import AppPlatform = projectManagement.AppPlatform;
+/**
+ * Metadata about a Firebase iOS App.
+ */
+export interface IosAppMetadata extends AppMetadata {
+  platform: AppPlatform.IOS;
 
-export class IosApp implements IosAppInterface {
+  /**
+   * The canonical bundle ID of the iOS App as it would appear in the iOS App Store.
+   *
+   * @example
+   * ```javascript
+   * var bundleId = iosAppMetadata.bundleId;
+   *```
+    */
+  bundleId: string;
+}
+
+export class IosApp {
   private readonly resourceName: string;
 
+  /**
+   * @internal
+   */
   constructor(
       public readonly appId: string,
       private readonly requestHandler: ProjectManagementRequestHandler) {

@@ -14,18 +14,14 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../app/firebase-app';
+import { App } from '../app';
 import { FirebaseProjectManagementError } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { AndroidApp, ShaCertificate } from './android-app';
 import { IosApp } from './ios-app';
 import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request-internal';
-import { projectManagement } from './index';
-
-import AppMetadata = projectManagement.AppMetadata;
-import AppPlatform = projectManagement.AppPlatform;
-import ProjectManagementInterface = projectManagement.ProjectManagement;
+import { AppMetadata, AppPlatform } from './app-metadata';
 
 /**
  * The Firebase ProjectManagement service interface.
@@ -33,16 +29,17 @@ import ProjectManagementInterface = projectManagement.ProjectManagement;
  * Do not call this constructor directly. Instead, use
  * [`admin.projectManagement()`](projectManagement#projectManagement).
  */
-export class ProjectManagement implements ProjectManagementInterface {
+export class ProjectManagement {
 
   private readonly requestHandler: ProjectManagementRequestHandler;
   private projectId: string;
 
   /**
-   * @param {object} app The app for this ProjectManagement service.
+   * @param app The app for this ProjectManagement service.
    * @constructor
+   * @internal
    */
-  constructor(readonly app: FirebaseApp) {
+  constructor(readonly app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseProjectManagementError(
         'invalid-argument',

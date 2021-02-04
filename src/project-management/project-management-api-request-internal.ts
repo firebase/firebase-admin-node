@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
+import { App } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import {
   AuthorizedHttpClient, HttpError, HttpMethod, HttpRequestConfig, ExponentialBackoffPoller,
 } from '../utils/api-request';
 import { FirebaseProjectManagementError, ProjectManagementErrorCode } from '../utils/error';
+import { getSdkVersion } from '../utils/index';
 import * as validator from '../utils/validator';
 import { ShaCertificate } from './android-app';
-import { getSdkVersion } from '../utils/index';
+
 
 /** Project management backend host and port. */
 const PROJECT_MANAGEMENT_HOST_AND_PORT = 'firebase.googleapis.com:443';
@@ -112,11 +114,11 @@ export class ProjectManagementRequestHandler {
   }
 
   /**
-   * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
+   * @param app The app used to fetch access tokens to sign API requests.
    * @constructor
    */
-  constructor(app: FirebaseApp) {
-    this.httpClient = new AuthorizedHttpClient(app);
+  constructor(app: App) {
+    this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
   }
 
   /**
