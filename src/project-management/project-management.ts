@@ -15,7 +15,6 @@
  */
 
 import { FirebaseApp } from '../firebase-app';
-import { FirebaseServiceInterface, FirebaseServiceInternalsInterface } from '../firebase-service';
 import { FirebaseProjectManagementError } from '../utils/error';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
@@ -29,28 +28,12 @@ import AppPlatform = projectManagement.AppPlatform;
 import ProjectManagementInterface = projectManagement.ProjectManagement;
 
 /**
- * Internals of a Project Management instance.
- */
-class ProjectManagementInternals implements FirebaseServiceInternalsInterface {
-  /**
-   * Deletes the service and its associated resources.
-   *
-   * @return {Promise<void>} An empty Promise that will be resolved when the service is deleted.
-   */
-  public delete(): Promise<void> {
-    // There are no resources to clean up.
-    return Promise.resolve();
-  }
-}
-
-/**
  * The Firebase ProjectManagement service interface.
  *
  * Do not call this constructor directly. Instead, use
  * [`admin.projectManagement()`](projectManagement#projectManagement).
  */
-export class ProjectManagement implements FirebaseServiceInterface, ProjectManagementInterface {
-  public readonly INTERNAL: ProjectManagementInternals = new ProjectManagementInternals();
+export class ProjectManagement implements ProjectManagementInterface {
 
   private readonly requestHandler: ProjectManagementRequestHandler;
   private projectId: string;
