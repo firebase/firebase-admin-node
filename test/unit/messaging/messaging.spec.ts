@@ -834,9 +834,9 @@ describe('Messaging', () => {
         'projects/projec_id/messages/2',
         'projects/projec_id/messages/3',
       ];
-      const tokenMessage: TokenMessage = {token: 'test'};
-      const topicMessage: TopicMessage = {topic: 'test'};
-      const conditionMessage: ConditionMessage = {condition: 'test'};
+      const tokenMessage: TokenMessage = { token: 'test' };
+      const topicMessage: TopicMessage = { topic: 'test' };
+      const conditionMessage: ConditionMessage = { condition: 'test' };
       const messages: Message[] = [tokenMessage, topicMessage, conditionMessage];
       
       mockedRequests.push(mockBatchRequest(messageIds));
