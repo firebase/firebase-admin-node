@@ -468,287 +468,142 @@ export namespace machineLearning {
 }
 
 // @public
-export function messaging(app?: app.App): messaging.Messaging;
+export function messaging(app?: App): messaging.Messaging;
 
 // @public (undocumented)
 export namespace messaging {
-    export interface AndroidConfig {
-        collapseKey?: string;
-        data?: {
-            [key: string]: string;
-        };
-        fcmOptions?: AndroidFcmOptions;
-        notification?: AndroidNotification;
-        priority?: ('high' | 'normal');
-        restrictedPackageName?: string;
-        ttl?: number;
-    }
-    export interface AndroidFcmOptions {
-        analyticsLabel?: string;
-    }
-    export interface AndroidNotification {
-        body?: string;
-        bodyLocArgs?: string[];
-        bodyLocKey?: string;
-        channelId?: string;
-        clickAction?: string;
-        color?: string;
-        defaultLightSettings?: boolean;
-        defaultSound?: boolean;
-        defaultVibrateTimings?: boolean;
-        eventTimestamp?: Date;
-        icon?: string;
-        imageUrl?: string;
-        lightSettings?: LightSettings;
-        localOnly?: boolean;
-        notificationCount?: number;
-        priority?: ('min' | 'low' | 'default' | 'high' | 'max');
-        sound?: string;
-        sticky?: boolean;
-        tag?: string;
-        ticker?: string;
-        title?: string;
-        titleLocArgs?: string[];
-        titleLocKey?: string;
-        vibrateTimingsMillis?: number[];
-        visibility?: ('private' | 'public' | 'secret');
-    }
-    export interface ApnsConfig {
-        fcmOptions?: ApnsFcmOptions;
-        headers?: {
-            [key: string]: string;
-        };
-        payload?: ApnsPayload;
-    }
-    export interface ApnsFcmOptions {
-        analyticsLabel?: string;
-        imageUrl?: string;
-    }
-    export interface ApnsPayload {
-        // (undocumented)
-        [customData: string]: any;
-        aps: Aps;
-    }
-    export interface Aps {
-        // (undocumented)
-        [customData: string]: any;
-        alert?: string | ApsAlert;
-        badge?: number;
-        category?: string;
-        contentAvailable?: boolean;
-        mutableContent?: boolean;
-        sound?: string | CriticalSound;
-        threadId?: string;
-    }
+    // Warning: (ae-forgotten-export) The symbol "AndroidConfig" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
-    export interface ApsAlert {
-        // (undocumented)
-        actionLocKey?: string;
-        // (undocumented)
-        body?: string;
-        // (undocumented)
-        launchImage?: string;
-        // (undocumented)
-        locArgs?: string[];
-        // (undocumented)
-        locKey?: string;
-        // (undocumented)
-        subtitle?: string;
-        // (undocumented)
-        subtitleLocArgs?: string[];
-        // (undocumented)
-        subtitleLocKey?: string;
-        // (undocumented)
-        title?: string;
-        // (undocumented)
-        titleLocArgs?: string[];
-        // (undocumented)
-        titleLocKey?: string;
-    }
+    export type AndroidConfig = AndroidConfig;
+    // Warning: (ae-forgotten-export) The symbol "AndroidFcmOptions" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
-    export interface BaseMessage {
-        // (undocumented)
-        android?: AndroidConfig;
-        // (undocumented)
-        apns?: ApnsConfig;
-        // (undocumented)
-        data?: {
-            [key: string]: string;
-        };
-        // (undocumented)
-        fcmOptions?: FcmOptions;
-        // (undocumented)
-        notification?: Notification;
-        // (undocumented)
-        webpush?: WebpushConfig;
-    }
-    export interface BatchResponse {
-        failureCount: number;
-        responses: SendResponse[];
-        successCount: number;
-    }
+    export type AndroidFcmOptions = AndroidFcmOptions;
+    // Warning: (ae-forgotten-export) The symbol "AndroidNotification" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
-    export interface ConditionMessage extends BaseMessage {
-        // (undocumented)
-        condition: string;
-    }
-    export interface CriticalSound {
-        critical?: boolean;
-        name: string;
-        volume?: number;
-    }
-    export interface DataMessagePayload {
-        // (undocumented)
-        [key: string]: string;
-    }
-    export interface FcmOptions {
-        analyticsLabel?: string;
-    }
-    export interface LightSettings {
-        color: string;
-        lightOffDurationMillis: number;
-        lightOnDurationMillis: number;
-    }
-    export type Message = TokenMessage | TopicMessage | ConditionMessage;
+    export type AndroidNotification = AndroidNotification;
+    // Warning: (ae-forgotten-export) The symbol "ApnsConfig" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
-    export interface Messaging {
-        app: app.App;
-        send(message: Message, dryRun?: boolean): Promise<string>;
-        sendAll(messages: Array<Message>, dryRun?: boolean): Promise<BatchResponse>;
-        sendMulticast(message: MulticastMessage, dryRun?: boolean): Promise<BatchResponse>;
-        sendToCondition(condition: string, payload: MessagingPayload, options?: MessagingOptions): Promise<MessagingConditionResponse>;
-        sendToDevice(registrationToken: string | string[], payload: MessagingPayload, options?: MessagingOptions): Promise<MessagingDevicesResponse>;
-        sendToDeviceGroup(notificationKey: string, payload: MessagingPayload, options?: MessagingOptions): Promise<MessagingDeviceGroupResponse>;
-        sendToTopic(topic: string, payload: MessagingPayload, options?: MessagingOptions): Promise<MessagingTopicResponse>;
-        subscribeToTopic(registrationTokens: string | string[], topic: string): Promise<MessagingTopicManagementResponse>;
-        unsubscribeFromTopic(registrationTokens: string | string[], topic: string): Promise<MessagingTopicManagementResponse>;
-    }
-    export interface MessagingConditionResponse {
-        messageId: number;
-    }
-    export interface MessagingDeviceGroupResponse {
-        failedRegistrationTokens: string[];
-        failureCount: number;
-        successCount: number;
-    }
+    export type ApnsConfig = ApnsConfig;
+    // Warning: (ae-forgotten-export) The symbol "ApnsFcmOptions" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
-    export interface MessagingDeviceResult {
-        canonicalRegistrationToken?: string;
-        error?: FirebaseError;
-        messageId?: string;
-    }
-    export interface MessagingDevicesResponse {
-        // (undocumented)
-        canonicalRegistrationTokenCount: number;
-        // (undocumented)
-        failureCount: number;
-        // (undocumented)
-        multicastId: number;
-        // (undocumented)
-        results: MessagingDeviceResult[];
-        // (undocumented)
-        successCount: number;
-    }
-    export interface MessagingOptions {
-        // (undocumented)
-        [key: string]: any | undefined;
-        collapseKey?: string;
-        contentAvailable?: boolean;
-        dryRun?: boolean;
-        mutableContent?: boolean;
-        priority?: string;
-        restrictedPackageName?: string;
-        timeToLive?: number;
-    }
-    export interface MessagingPayload {
-        data?: DataMessagePayload;
-        notification?: NotificationMessagePayload;
-    }
-    export interface MessagingTopicManagementResponse {
-        errors: FirebaseArrayIndexError[];
-        failureCount: number;
-        successCount: number;
-    }
-    export interface MessagingTopicResponse {
-        messageId: number;
-    }
-    export interface MulticastMessage extends BaseMessage {
-        // (undocumented)
-        tokens: string[];
-    }
-    export interface Notification {
-        body?: string;
-        imageUrl?: string;
-        title?: string;
-    }
-    export interface NotificationMessagePayload {
-        // (undocumented)
-        [key: string]: string | undefined;
-        badge?: string;
-        body?: string;
-        bodyLocArgs?: string;
-        bodyLocKey?: string;
-        clickAction?: string;
-        color?: string;
-        icon?: string;
-        sound?: string;
-        tag?: string;
-        title?: string;
-        titleLocArgs?: string;
-        titleLocKey?: string;
-    }
-    export interface SendResponse {
-        error?: FirebaseError;
-        messageId?: string;
-        success: boolean;
-    }
+    export type ApnsFcmOptions = ApnsFcmOptions;
+    // Warning: (ae-forgotten-export) The symbol "ApnsPayload" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
-    export interface TokenMessage extends BaseMessage {
-        // (undocumented)
-        token: string;
-    }
+    export type ApnsPayload = ApnsPayload;
+    // Warning: (ae-forgotten-export) The symbol "Aps" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
-    export interface TopicMessage extends BaseMessage {
-        // (undocumented)
-        topic: string;
-    }
-    export interface WebpushConfig {
-        data?: {
-            [key: string]: string;
-        };
-        fcmOptions?: WebpushFcmOptions;
-        headers?: {
-            [key: string]: string;
-        };
-        notification?: WebpushNotification;
-    }
-    export interface WebpushFcmOptions {
-        link?: string;
-    }
-    export interface WebpushNotification {
-        // (undocumented)
-        [key: string]: any;
-        actions?: Array<{
-            action: string;
-            icon?: string;
-            title: string;
-        }>;
-        badge?: string;
-        body?: string;
-        data?: any;
-        dir?: 'auto' | 'ltr' | 'rtl';
-        icon?: string;
-        image?: string;
-        lang?: string;
-        renotify?: boolean;
-        requireInteraction?: boolean;
-        silent?: boolean;
-        tag?: string;
-        timestamp?: number;
-        title?: string;
-        vibrate?: number | number[];
-    }
-    {};
+    export type Aps = Aps;
+    // Warning: (ae-forgotten-export) The symbol "ApsAlert" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type ApsAlert = ApsAlert;
+    // Warning: (ae-forgotten-export) The symbol "BatchResponse" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type BatchResponse = BatchResponse;
+    // Warning: (ae-forgotten-export) The symbol "ConditionMessage" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type ConditionMessage = ConditionMessage;
+    // Warning: (ae-forgotten-export) The symbol "CriticalSound" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type CriticalSound = CriticalSound;
+    // Warning: (ae-forgotten-export) The symbol "DataMessagePayload" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type DataMessagePayload = DataMessagePayload;
+    // Warning: (ae-forgotten-export) The symbol "FcmOptions" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type FcmOptions = FcmOptions;
+    // Warning: (ae-forgotten-export) The symbol "LightSettings" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type LightSettings = LightSettings;
+    // Warning: (ae-forgotten-export) The symbol "Message" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type Message = Message;
+    // Warning: (ae-forgotten-export) The symbol "Messaging" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type Messaging = Messaging;
+    // Warning: (ae-forgotten-export) The symbol "MessagingConditionResponse" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type MessagingConditionResponse = MessagingConditionResponse;
+    // Warning: (ae-forgotten-export) The symbol "MessagingDeviceGroupResponse" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type MessagingDeviceGroupResponse = MessagingDeviceGroupResponse;
+    // Warning: (ae-forgotten-export) The symbol "MessagingDeviceResult" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type MessagingDeviceResult = MessagingDeviceResult;
+    // Warning: (ae-forgotten-export) The symbol "MessagingDevicesResponse" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type MessagingDevicesResponse = MessagingDevicesResponse;
+    // Warning: (ae-forgotten-export) The symbol "MessagingOptions" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type MessagingOptions = MessagingOptions;
+    // Warning: (ae-forgotten-export) The symbol "MessagingPayload" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type MessagingPayload = MessagingPayload;
+    // Warning: (ae-forgotten-export) The symbol "MessagingTopicManagementResponse" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type MessagingTopicManagementResponse = MessagingTopicManagementResponse;
+    // Warning: (ae-forgotten-export) The symbol "MessagingTopicResponse" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type MessagingTopicResponse = MessagingTopicResponse;
+    // Warning: (ae-forgotten-export) The symbol "MulticastMessage" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type MulticastMessage = MulticastMessage;
+    // Warning: (ae-forgotten-export) The symbol "Notification" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type Notification = Notification;
+    // Warning: (ae-forgotten-export) The symbol "NotificationMessagePayload" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type NotificationMessagePayload = NotificationMessagePayload;
+    // Warning: (ae-forgotten-export) The symbol "SendResponse" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type SendResponse = SendResponse;
+    // Warning: (ae-forgotten-export) The symbol "TokenMessage" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type TokenMessage = TokenMessage;
+    // Warning: (ae-forgotten-export) The symbol "TopicMessage" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type TopicMessage = TopicMessage;
+    // Warning: (ae-forgotten-export) The symbol "WebpushConfig" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type WebpushConfig = WebpushConfig;
+    // Warning: (ae-forgotten-export) The symbol "WebpushFcmOptions" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type WebpushFcmOptions = WebpushFcmOptions;
+    // Warning: (ae-forgotten-export) The symbol "WebpushNotification" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type WebpushNotification = WebpushNotification;
 }
 
 // @public

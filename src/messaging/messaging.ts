@@ -15,31 +15,32 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../app/firebase-app';
+import { App } from '../app';
 import { deepCopy, deepExtend } from '../utils/deep-copy';
 import { SubRequest } from './batch-request-internal';
-import { validateMessage, BLACKLISTED_DATA_PAYLOAD_KEYS, BLACKLISTED_OPTIONS_KEYS } from './messaging-internal';
-import { messaging } from './index';
-import { FirebaseMessagingRequestHandler } from './messaging-api-request-internal';
 import { ErrorInfo, MessagingClientErrorCode, FirebaseMessagingError } from '../utils/error';
 import * as utils from '../utils';
 import * as validator from '../utils/validator';
+import { validateMessage, BLACKLISTED_DATA_PAYLOAD_KEYS, BLACKLISTED_OPTIONS_KEYS } from './messaging-internal';
+import { FirebaseMessagingRequestHandler } from './messaging-api-request-internal';
 
-import MessagingInterface = messaging.Messaging;
-import Message = messaging.Message;
-import BatchResponse = messaging.BatchResponse;
-import MulticastMessage = messaging.MulticastMessage;
-import MessagingTopicManagementResponse = messaging.MessagingTopicManagementResponse;
+import {
+  BatchResponse,
+  Message,
+  MessagingTopicManagementResponse,
+  MulticastMessage,
 
-// Legacy API types
-import MessagingDevicesResponse = messaging.MessagingDevicesResponse;
-import MessagingDeviceGroupResponse = messaging.MessagingDeviceGroupResponse;
-import MessagingPayload = messaging.MessagingPayload;
-import MessagingOptions = messaging.MessagingOptions;
-import MessagingTopicResponse = messaging.MessagingTopicResponse;
-import MessagingConditionResponse = messaging.MessagingConditionResponse;
-import DataMessagePayload = messaging.DataMessagePayload;
-import NotificationMessagePayload = messaging.NotificationMessagePayload;
+  // Legacy API types
+  MessagingDevicesResponse,
+  MessagingDeviceGroupResponse,
+  MessagingPayload,
+  MessagingOptions,
+  MessagingTopicResponse,
+  MessagingConditionResponse,
+  DataMessagePayload,
+  NotificationMessagePayload,
+} from './messaging-api';
+
 
 /* eslint-disable @typescript-eslint/camelcase */
 
@@ -188,10 +189,10 @@ function mapRawResponseToTopicManagementResponse(response: object): MessagingTop
 /**
  * Messaging service bound to the provided app.
  */
-export class Messaging implements MessagingInterface {
+export class Messaging {
 
   private urlPath: string;
-  private readonly appInternal: FirebaseApp;
+  private readonly appInternal: App;
   private readonly messagingRequestHandler: FirebaseMessagingRequestHandler;
 
   /**
@@ -207,7 +208,7 @@ export class Messaging implements MessagingInterface {
    *
    * @return The `Messaging` service for the current app.
    */
-  constructor(app: FirebaseApp) {
+  constructor(app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseMessagingError(
         MessagingClientErrorCode.INVALID_ARGUMENT,
@@ -222,9 +223,9 @@ export class Messaging implements MessagingInterface {
   /**
    * Returns the app associated with this Messaging instance.
    *
-   * @return {FirebaseApp} The app associated with this Messaging instance.
+   * @return The app associated with this Messaging instance.
    */
-  get app(): FirebaseApp {
+  get app(): App {
     return this.appInternal;
   }
 

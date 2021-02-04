@@ -15,17 +15,16 @@
  * limitations under the License.
  */
 
+import { App } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import {
   HttpMethod, AuthorizedHttpClient, HttpRequestConfig, HttpError, HttpResponse,
 } from '../utils/api-request';
 import { createFirebaseError, getErrorCode } from './messaging-errors-internal';
 import { SubRequest, BatchRequestClient } from './batch-request-internal';
-import { messaging } from './index';
 import { getSdkVersion } from '../utils/index';
+import { SendResponse, BatchResponse } from './messaging-api';
 
-import SendResponse = messaging.SendResponse;
-import BatchResponse = messaging.BatchResponse;
 
 // FCM backend constants
 const FIREBASE_MESSAGING_TIMEOUT = 10000;
@@ -48,11 +47,11 @@ export class FirebaseMessagingRequestHandler {
   private readonly batchClient: BatchRequestClient;
 
   /**
-   * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
+   * @param app The app used to fetch access tokens to sign API requests.
    * @constructor
    */
-  constructor(app: FirebaseApp) {
-    this.httpClient = new AuthorizedHttpClient(app);
+  constructor(app: App) {
+    this.httpClient = new AuthorizedHttpClient(app as FirebaseApp);
     this.batchClient = new BatchRequestClient(
       this.httpClient, FIREBASE_MESSAGING_BATCH_URL, FIREBASE_MESSAGING_HEADERS);
   }
