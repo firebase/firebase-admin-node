@@ -14,25 +14,48 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../app/firebase-app';
+import { App } from '../app';
 import * as validator from '../utils/validator';
 import {
   SecurityRulesApiClient, RulesetResponse, RulesetContent, ListRulesetsResponse,
 } from './security-rules-api-client-internal';
 import { FirebaseSecurityRulesError } from './security-rules-internal';
-import { securityRules } from './index';
 
-import RulesFile = securityRules.RulesFile;
-import RulesetMetadata = securityRules.RulesetMetadata;
-import RulesetMetadataList = securityRules.RulesetMetadataList;
-import RulesetInterface = securityRules.Ruleset;
-import SecurityRulesInterface = securityRules.SecurityRules;
+/**
+ * A source file containing some Firebase security rules. The content includes raw
+ * source code including text formatting, indentation and comments. Use the
+ * [`securityRules.createRulesFileFromSource()`](securityRules.SecurityRules#createRulesFileFromSource)
+ * method to create new instances of this type.
+ */
+export interface RulesFile {
+  readonly name: string;
+  readonly content: string;
+}
 
-class RulesetMetadataListImpl implements RulesetMetadataList {
+/**
+ * Required metadata associated with a ruleset.
+ */
+export interface RulesetMetadata {
+  /**
+   * Name of the `Ruleset` as a short string. This can be directly passed into APIs
+   * like {@link securityRules.SecurityRules.getRuleset `securityRules.getRuleset()`}
+   * and {@link securityRules.SecurityRules.deleteRuleset `securityRules.deleteRuleset()`}.
+   */
+  readonly name: string;
+  /**
+   * Creation time of the `Ruleset` as a UTC timestamp string.
+   */
+  readonly createTime: string;
+}
+
+export class RulesetMetadataList {
 
   public readonly rulesets: RulesetMetadata[];
   public readonly nextPageToken?: string;
 
+  /**
+   * @internal
+   */
   constructor(response: ListRulesetsResponse) {
     if (!validator.isNonNullObject(response) || !validator.isArray(response.rulesets)) {
       throw new FirebaseSecurityRulesError(
@@ -56,12 +79,15 @@ class RulesetMetadataListImpl implements RulesetMetadataList {
 /**
  * Represents a set of Firebase security rules.
  */
-export class Ruleset implements RulesetInterface {
+export class Ruleset {
 
   public readonly name: string;
   public readonly createTime: string;
   public readonly source: RulesFile[];
 
+  /**
+   * @internal
+   */
   constructor(ruleset: RulesetResponse) {
     if (!validator.isNonNullObject(ruleset) ||
       !validator.isNonEmptyString(ruleset.name) ||
@@ -84,7 +110,7 @@ export class Ruleset implements RulesetInterface {
  * Do not call this constructor directly. Instead, use
  * [`admin.securityRules()`](securityRules#securityRules).
  */
-export class SecurityRules implements SecurityRulesInterface {
+export class SecurityRules {
 
   private static readonly CLOUD_FIRESTORE = 'cloud.firestore';
   private static readonly FIREBASE_STORAGE = 'firebase.storage';
@@ -92,10 +118,11 @@ export class SecurityRules implements SecurityRulesInterface {
   private readonly client: SecurityRulesApiClient;
 
   /**
-   * @param {object} app The app for this SecurityRules service.
+   * @param app The app for this SecurityRules service.
    * @constructor
+   * @internal
    */
-  constructor(readonly app: FirebaseApp) {
+  constructor(readonly app: App) {
     this.client = new SecurityRulesApiClient(app);
   }
 
@@ -302,7 +329,7 @@ export class SecurityRules implements SecurityRulesInterface {
   public listRulesetMetadata(pageSize = 100, nextPageToken?: string): Promise<RulesetMetadataList> {
     return this.client.listRulesets(pageSize, nextPageToken)
       .then((response) => {
-        return new RulesetMetadataListImpl(response);
+        return new RulesetMetadataList(response);
       });
   }
 

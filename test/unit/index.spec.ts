@@ -73,6 +73,7 @@ import './project-management/android-app.spec';
 import './project-management/ios-app.spec';
 
 // SecurityRules
+import './security-rules/index.spec';
 import './security-rules/security-rules.spec';
 import './security-rules/security-rules-api-client.spec';
 
