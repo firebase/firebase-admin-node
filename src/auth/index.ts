@@ -1017,7 +1017,7 @@ export namespace auth {
     /**
      * Whether the anonymous provider is enabled.
      */
-    anonymousSignInEnabled?: boolean;
+    anonymousSignInEnabled: boolean;
 
     /**
      * The multi-factor auth configuration on the current tenant.

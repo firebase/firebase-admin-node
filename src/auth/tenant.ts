@@ -52,7 +52,7 @@ export class Tenant implements TenantInterface {
   public readonly tenantId: string;
   public readonly displayName?: string;
   public readonly emailSignInConfig?: EmailSignInConfig;
-  public readonly anonymousSignInEnabled?: boolean;
+  public readonly anonymousSignInEnabled: boolean;
   public readonly multiFactorConfig?: MultiFactorAuthConfig;
   public readonly testPhoneNumbers?: {[phoneNumber: string]: string};
 
