@@ -250,7 +250,7 @@ export namespace auth {
         expiresIn: number;
     }
     export interface Tenant {
-        anonymousSignInEnabled?: boolean;
+        anonymousSignInEnabled: boolean;
         displayName?: string;
         emailSignInConfig?: {
             enabled: boolean;
