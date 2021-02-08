@@ -359,7 +359,8 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
     // but also provides a providerToLink with a 'phone' provider id. In that
     // case, we'll throw an error.
     properties = deepCopy(properties);
-    if (validator.isNonNullObject(properties) && typeof properties.providerToLink !== 'undefined') {
+
+    if (properties?.providerToLink) {
       if (properties.providerToLink.providerId === 'email') {
         if (typeof properties.email !== 'undefined') {
           throw new FirebaseAuthError(
@@ -380,7 +381,7 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
         delete properties.providerToLink;
       }
     }
-    if (validator.isNonNullObject(properties) && typeof properties.providersToUnlink !== 'undefined') {
+    if (properties?.providersToUnlink) {
       if (properties.providersToUnlink.indexOf('phone') !== -1) {
         // If we've been told to unlink the phone provider both via setting
         // phoneNumber to null *and* by setting providersToUnlink to include

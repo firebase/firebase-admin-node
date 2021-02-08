@@ -1674,7 +1674,6 @@ AUTH_CONFIGS.forEach((testConfig) => {
           getAccountInfoByUidStub.restore();
         });
 
-
         it('specifying both email and providerId=email should be rejected', () => {
           expect(() => {
             auth.updateUser(uid, {

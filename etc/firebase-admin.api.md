@@ -400,7 +400,6 @@ export namespace auth {
         tokensValidAfterTime?: string;
         uid: string;
     }
-    {};
 }
 
 // @public (undocumented)
