@@ -95,6 +95,7 @@ gulp.task('compile', function() {
     'lib/messaging/*.d.ts',
     'lib/project-management/*.d.ts',
     'lib/security-rules/*.d.ts',
+    'lib/storage/*.d.ts',
     'lib/remote-config/*.d.ts',
     '!lib/utils/index.d.ts',
   ];

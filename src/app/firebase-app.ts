@@ -26,7 +26,7 @@ import { AppErrorCodes, FirebaseAppError } from '../utils/error';
 import { Auth } from '../auth/index';
 import { MachineLearning } from '../machine-learning/machine-learning';
 import { Messaging } from '../messaging/index';
-import { Storage } from '../storage/storage';
+import { Storage } from '../storage/index';
 import { Database } from '../database/index';
 import { Firestore } from '../firestore/index';
 import { InstanceId } from '../instance-id/index';
@@ -303,10 +303,8 @@ export class FirebaseApp implements app.App {
    * @return The Storage service instance of this app.
    */
   public storage(): Storage {
-    return this.ensureService_('storage', () => {
-      const storageService: typeof Storage = require('../storage/storage').Storage;
-      return new storageService(this);
-    });
+    const fn = require('../storage/index').getStorage;
+    return fn(this);
   }
 
   public firestore(): Firestore {

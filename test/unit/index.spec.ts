@@ -56,6 +56,7 @@ import './machine-learning/machine-learning-api-client.spec';
 
 // Storage
 import './storage/storage.spec';
+import './storage/index.spec';
 
 // Firestore
 import './firestore/firestore.spec';
