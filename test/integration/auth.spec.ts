@@ -257,6 +257,20 @@ describe('admin.auth', () => {
     }
   });
 
+  it('getUserByProviderUid() redirects to getUserByEmail if given an email', () => {
+    return admin.auth().getUserByProviderUid('email', mockUserData.email)
+      .then((userRecord) => {
+        expect(userRecord.uid).to.equal(newUserUid);
+      });
+  });
+
+  it('getUserByProviderUid() redirects to getUserByPhoneNumber if given a phone number', () => {
+    return admin.auth().getUserByProviderUid('phone', mockUserData.phoneNumber)
+      .then((userRecord) => {
+        expect(userRecord.uid).to.equal(newUserUid);
+      });
+  });
+
   describe('getUsers()', () => {
     /**
      * Filters a list of object to another list of objects that only contains
