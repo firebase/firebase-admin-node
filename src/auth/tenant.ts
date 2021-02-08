@@ -29,6 +29,7 @@ import UpdateTenantRequest = auth.UpdateTenantRequest;
 /** The corresponding server side representation of a TenantOptions object. */
 export interface TenantOptionsServerRequest extends EmailSignInConfigServerRequest {
   displayName?: string;
+  enableAnonymousUser?: boolean;
   mfaConfig?: MultiFactorAuthServerConfig;
   testPhoneNumbers?: {[key: string]: string};
 }
@@ -39,6 +40,7 @@ export interface TenantServerResponse {
   displayName?: string;
   allowPasswordSignup?: boolean;
   enableEmailLinkSignin?: boolean;
+  enableAnonymousUser?: boolean;
   mfaConfig?: MultiFactorAuthServerConfig;
   testPhoneNumbers?: {[key: string]: string};
 }
@@ -50,6 +52,7 @@ export class Tenant implements TenantInterface {
   public readonly tenantId: string;
   public readonly displayName?: string;
   public readonly emailSignInConfig?: EmailSignInConfig;
+  public readonly anonymousSignInEnabled: boolean;
   public readonly multiFactorConfig?: MultiFactorAuthConfig;
   public readonly testPhoneNumbers?: {[phoneNumber: string]: string};
 
@@ -69,6 +72,9 @@ export class Tenant implements TenantInterface {
     }
     if (typeof tenantOptions.displayName !== 'undefined') {
       request.displayName = tenantOptions.displayName;
+    }
+    if (typeof tenantOptions.anonymousSignInEnabled !== 'undefined') {
+      request.enableAnonymousUser = tenantOptions.anonymousSignInEnabled;
     }
     if (typeof tenantOptions.multiFactorConfig !== 'undefined') {
       request.mfaConfig = MultiFactorAuthConfig.buildServerRequest(tenantOptions.multiFactorConfig);
@@ -105,6 +111,7 @@ export class Tenant implements TenantInterface {
     const validKeys = {
       displayName: true,
       emailSignInConfig: true,
+      anonymousSignInEnabled: true,
       multiFactorConfig: true,
       testPhoneNumbers: true,
     };
@@ -179,6 +186,7 @@ export class Tenant implements TenantInterface {
         allowPasswordSignup: false,
       });
     }
+    this.anonymousSignInEnabled = !!response.enableAnonymousUser;
     if (typeof response.mfaConfig !== 'undefined') {
       this.multiFactorConfig = new MultiFactorAuthConfig(response.mfaConfig);
     }
@@ -193,6 +201,7 @@ export class Tenant implements TenantInterface {
       tenantId: this.tenantId,
       displayName: this.displayName,
       emailSignInConfig: this.emailSignInConfig?.toJSON(),
+      anonymousSignInEnabled: this.anonymousSignInEnabled,
       multiFactorConfig: this.multiFactorConfig?.toJSON(),
       testPhoneNumbers: this.testPhoneNumbers,
     };

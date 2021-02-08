@@ -886,6 +886,7 @@ describe('admin.auth', () => {
         enabled: true,
         passwordRequired: true,
       },
+      anonymousSignInEnabled: false,
       multiFactorConfig: {
         state: 'ENABLED',
         factorIds: ['phone'],
@@ -901,6 +902,7 @@ describe('admin.auth', () => {
         enabled: false,
         passwordRequired: true,
       },
+      anonymousSignInEnabled: false,
       multiFactorConfig: {
         state: 'DISABLED',
         factorIds: [],
@@ -915,6 +917,7 @@ describe('admin.auth', () => {
         enabled: true,
         passwordRequired: false,
       },
+      anonymousSignInEnabled: false,
       multiFactorConfig: {
         state: 'ENABLED',
         factorIds: ['phone'],
@@ -955,6 +958,20 @@ describe('admin.auth', () => {
           expectedCreatedTenant.tenantId = createdTenantId;
           expect(actualTenant.toJSON()).to.deep.equal(expectedCreatedTenant);
         });
+    });
+
+    it('createTenant() can enable anonymous users', async () => {
+      const tenant = await admin.auth().tenantManager().createTenant({
+        displayName: 'testTenantWithAnon',
+        emailSignInConfig: {
+          enabled: false,
+          passwordRequired: true,
+        },
+        anonymousSignInEnabled: true,
+      });
+      createdTenants.push(tenant.tenantId);
+
+      expect(tenant.anonymousSignInEnabled).to.be.true;
     });
 
     // Sanity check user management + email link generation + custom attribute APIs.
@@ -1298,6 +1315,25 @@ describe('admin.auth', () => {
         .then((actualTenant) => {
           expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant2);
         });
+    });
+
+    it('updateTenant() should be able to enable/disable anon provider', async () => {
+      const tenantManager = admin.auth().tenantManager();
+      let tenant = await tenantManager.createTenant({
+        displayName: 'testTenantUpdateAnon',
+      });
+      createdTenants.push(tenant.tenantId);
+      expect(tenant.anonymousSignInEnabled).to.be.false;
+
+      tenant = await tenantManager.updateTenant(tenant.tenantId, {
+        anonymousSignInEnabled: true,
+      });
+      expect(tenant.anonymousSignInEnabled).to.be.true;
+
+      tenant = await tenantManager.updateTenant(tenant.tenantId, {
+        anonymousSignInEnabled: false,
+      });
+      expect(tenant.anonymousSignInEnabled).to.be.false;
     });
 
     it('listTenants() should resolve with expected number of tenants', () => {

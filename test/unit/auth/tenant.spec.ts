@@ -351,6 +351,7 @@ describe('Tenant', () => {
           enabled: true,
           passwordRequired: false,
         },
+        anonymousSignInEnabled: false,
         multiFactorConfig: deepCopy(clientRequest.multiFactorConfig),
         testPhoneNumbers: deepCopy(clientRequest.testPhoneNumbers),
       });
@@ -368,6 +369,7 @@ describe('Tenant', () => {
           enabled: true,
           passwordRequired: false,
         },
+        anonymousSignInEnabled: false,
       });
     });
   });
