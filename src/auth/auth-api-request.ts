@@ -1079,6 +1079,21 @@ export abstract class AbstractAuthRequestHandler {
     return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_GET_ACCOUNT_INFO, request);
   }
 
+  public getAccountInfoByFederatedUid(providerId: string, rawId: string): Promise<object> {
+    if (!validator.isNonEmptyString(providerId) || !validator.isNonEmptyString(rawId)) {
+      throw new FirebaseAuthError(AuthClientErrorCode.INVALID_PROVIDER_ID);
+    }
+
+    const request = {
+      federatedUserId: [{
+        providerId,
+        rawId,
+      }],
+    };
+
+    return this.invokeRequestHandler(this.getAuthUrlBuilder(), FIREBASE_AUTH_GET_ACCOUNT_INFO, request);
+  }
+
   /**
    * Looks up multiple users by their identifiers (uid, email, etc).
    *

@@ -1151,6 +1151,120 @@ AUTH_CONFIGS.forEach((testConfig) => {
       });
     });
 
+    describe('getUserByProviderUid()', () => {
+      const providerId = 'google.com';
+      const providerUid = 'google_uid';
+      const tenantId = testConfig.supportsTenantManagement ? undefined : TENANT_ID;
+      const expectedGetAccountInfoResult = getValidGetAccountInfoResponse(tenantId);
+      const expectedUserRecord = getValidUserRecord(expectedGetAccountInfoResult);
+      const expectedError = new FirebaseAuthError(AuthClientErrorCode.USER_NOT_FOUND);
+
+      // Stubs used to simulate underlying api calls.
+      let stubs: sinon.SinonStub[] = [];
+      beforeEach(() => sinon.spy(validator, 'isEmail'));
+      afterEach(() => {
+        (validator.isEmail as any).restore();
+        _.forEach(stubs, (stub) => stub.restore());
+        stubs = [];
+      });
+
+      it('should be rejected given no provider id', () => {
+        expect(() => (auth as any).getUserByProviderUid())
+          .to.throw(FirebaseAuthError)
+          .with.property('code', 'auth/invalid-provider-id');
+      });
+
+      it('should be rejected given an invalid provider id', () => {
+        expect(() => auth.getUserByProviderUid('', 'uid'))
+          .to.throw(FirebaseAuthError)
+          .with.property('code', 'auth/invalid-provider-id');
+      });
+
+      it('should be rejected given an invalid provider uid', () => {
+        expect(() => auth.getUserByProviderUid('id', ''))
+          .to.throw(FirebaseAuthError)
+          .with.property('code', 'auth/invalid-provider-id');
+      });
+
+      it('should be rejected given an app which returns null access tokens', () => {
+        return nullAccessTokenAuth.getUserByProviderUid(providerId, providerUid)
+          .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+      });
+
+      it('should be rejected given an app which returns invalid access tokens', () => {
+        return malformedAccessTokenAuth.getUserByProviderUid(providerId, providerUid)
+          .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+      });
+
+      it('should be rejected given an app which fails to generate access tokens', () => {
+        return rejectedPromiseAccessTokenAuth.getUserByProviderUid(providerId, providerUid)
+          .should.eventually.be.rejected.and.have.property('code', 'app/invalid-credential');
+      });
+
+      it('should resolve with a UserRecord on success', () => {
+        // Stub getAccountInfoByEmail to return expected result.
+        const stub = sinon.stub(testConfig.RequestHandler.prototype, 'getAccountInfoByFederatedUid')
+          .resolves(expectedGetAccountInfoResult);
+        stubs.push(stub);
+        return auth.getUserByProviderUid(providerId, providerUid)
+          .then((userRecord) => {
+            // Confirm underlying API called with expected parameters.
+            expect(stub).to.have.been.calledOnce.and.calledWith(providerId, providerUid);
+            // Confirm expected user record response returned.
+            expect(userRecord).to.deep.equal(expectedUserRecord);
+          });
+      });
+
+      describe('non-federated providers', () => {
+        let invokeRequestHandlerStub: sinon.SinonStub;
+        beforeEach(() => {
+          invokeRequestHandlerStub = sinon.stub(testConfig.RequestHandler.prototype, 'invokeRequestHandler')
+            .resolves({
+              // nothing here is checked; we just need enough to not crash.
+              users: [{
+                localId: 1,
+              }],
+            });
+
+        });
+        afterEach(() => {
+          invokeRequestHandlerStub.restore();
+        });
+
+        it('phone lookups should use phoneNumber field', async () => {
+          await auth.getUserByProviderUid('phone', '+15555550001');
+          expect(invokeRequestHandlerStub).to.have.been.calledOnce.and.calledWith(
+            sinon.match.any, sinon.match.any, {
+              phoneNumber: ['+15555550001'],
+            });
+        });
+
+        it('email lookups should use email field', async () => {
+          await auth.getUserByProviderUid('email', 'user@example.com');
+          expect(invokeRequestHandlerStub).to.have.been.calledOnce.and.calledWith(
+            sinon.match.any, sinon.match.any, {
+              email: ['user@example.com'],
+            });
+        });
+      });
+
+      it('should throw an error when the backend returns an error', () => {
+        // Stub getAccountInfoByFederatedUid to throw a backend error.
+        const stub = sinon.stub(testConfig.RequestHandler.prototype, 'getAccountInfoByFederatedUid')
+          .rejects(expectedError);
+        stubs.push(stub);
+        return auth.getUserByProviderUid(providerId, providerUid)
+          .then(() => {
+            throw new Error('Unexpected success');
+          }, (error) => {
+            // Confirm underlying API called with expected parameters.
+            expect(stub).to.have.been.calledOnce.and.calledWith(providerId, providerUid);
+            // Confirm expected error returned.
+            expect(error).to.equal(expectedError);
+          });
+      });
+    });
+
     describe('getUsers()', () => {
       let stubs: sinon.SinonStub[] = [];
 

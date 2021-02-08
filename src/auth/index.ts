@@ -1517,6 +1517,21 @@ export namespace auth {
     getUserByPhoneNumber(phoneNumber: string): Promise<UserRecord>;
 
     /**
+     * Gets the user data for the user corresponding to a given provider ID.
+     *
+     * See [Retrieve user data](/docs/auth/admin/manage-users#retrieve_user_data)
+     * for code samples and detailed documentation.
+     *
+     * @param providerId The provider ID, for example, "google.com" for the
+     *   Google provider.
+     * @param uid The user identifier for the given provider.
+     *
+     * @return A promise fulfilled with the user data corresponding to the
+     *   given provider id.
+     */
+    getUserByProviderUid(providerId: string, uid: string): Promise<UserRecord>;
+
+    /**
      * Gets the user data corresponding to the specified identifiers.
      *
      * There are no ordering guarantees; in particular, the nth entry in the result list is not
