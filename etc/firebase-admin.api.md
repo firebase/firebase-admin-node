@@ -607,67 +607,42 @@ export namespace messaging {
 }
 
 // @public
-export function projectManagement(app?: app.App): projectManagement.ProjectManagement;
+export function projectManagement(app?: App): projectManagement.ProjectManagement;
 
 // @public (undocumented)
 export namespace projectManagement {
-    export interface AndroidApp {
-        addShaCertificate(certificateToAdd: ShaCertificate): Promise<void>;
-        // (undocumented)
-        appId: string;
-        deleteShaCertificate(certificateToRemove: ShaCertificate): Promise<void>;
-        getConfig(): Promise<string>;
-        getMetadata(): Promise<AndroidAppMetadata>;
-        getShaCertificates(): Promise<ShaCertificate[]>;
-        setDisplayName(newDisplayName: string): Promise<void>;
-    }
-    export interface AndroidAppMetadata extends AppMetadata {
-        packageName: string;
-        // (undocumented)
-        platform: AppPlatform.ANDROID;
-    }
-    export interface AppMetadata {
-        appId: string;
-        displayName?: string;
-        platform: AppPlatform;
-        projectId: string;
-        resourceName: string;
-    }
-    export enum AppPlatform {
-        ANDROID = "ANDROID",
-        IOS = "IOS",
-        PLATFORM_UNKNOWN = "PLATFORM_UNKNOWN"
-    }
-    export interface IosApp {
-        // (undocumented)
-        appId: string;
-        getConfig(): Promise<string>;
-        getMetadata(): Promise<IosAppMetadata>;
-        setDisplayName(newDisplayName: string): Promise<void>;
-    }
-    export interface IosAppMetadata extends AppMetadata {
-        bundleId: string;
-        // (undocumented)
-        platform: AppPlatform.IOS;
-    }
-    export interface ProjectManagement {
-        androidApp(appId: string): AndroidApp;
-        // (undocumented)
-        app: app.App;
-        createAndroidApp(packageName: string, displayName?: string): Promise<AndroidApp>;
-        createIosApp(bundleId: string, displayName?: string): Promise<IosApp>;
-        iosApp(appId: string): IosApp;
-        listAndroidApps(): Promise<AndroidApp[]>;
-        listAppMetadata(): Promise<AppMetadata[]>;
-        listIosApps(): Promise<IosApp[]>;
-        setDisplayName(newDisplayName: string): Promise<void>;
-        shaCertificate(shaHash: string): ShaCertificate;
-    }
-    export interface ShaCertificate {
-        certType: ('sha1' | 'sha256');
-        resourceName?: string;
-        shaHash: string;
-    }
+    // Warning: (ae-forgotten-export) The symbol "AndroidApp" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type AndroidApp = AndroidApp;
+    // Warning: (ae-forgotten-export) The symbol "AndroidAppMetadata" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type AndroidAppMetadata = AndroidAppMetadata;
+    // Warning: (ae-forgotten-export) The symbol "AppMetadata" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type AppMetadata = AppMetadata;
+    // Warning: (ae-forgotten-export) The symbol "AppPlatform" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type AppPlatform = AppPlatform;
+    // Warning: (ae-forgotten-export) The symbol "IosApp" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type IosApp = IosApp;
+    // Warning: (ae-forgotten-export) The symbol "IosAppMetadata" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type IosAppMetadata = IosAppMetadata;
+    // Warning: (ae-forgotten-export) The symbol "ProjectManagement" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type ProjectManagement = ProjectManagement;
+    // Warning: (ae-forgotten-export) The symbol "ShaCertificate" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type ShaCertificate = ShaCertificate;
 }
 
 // @public (undocumented)

@@ -20,18 +20,14 @@ import * as chai from 'chai';
 import * as _ from 'lodash';
 import * as sinon from 'sinon';
 import { FirebaseApp } from '../../../src/app/firebase-app';
-import { AndroidApp } from '../../../src/project-management/android-app';
-import { ProjectManagement } from '../../../src/project-management/project-management';
 import {
   ProjectManagementRequestHandler
 } from '../../../src/project-management/project-management-api-request-internal';
 import { FirebaseProjectManagementError } from '../../../src/utils/error';
 import * as mocks from '../../resources/mocks';
-import { projectManagement } from '../../../src/project-management/index';
-
-import AppMetadata = projectManagement.AppMetadata;
-import AppPlatform = projectManagement.AppPlatform;
-import IosApp = projectManagement.IosApp;
+import {
+  AndroidApp, AppMetadata, AppPlatform, IosApp, ProjectManagement,
+} from '../../../src/project-management/index';
 
 const expect = chai.expect;
 

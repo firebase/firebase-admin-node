@@ -17,16 +17,34 @@
 import { FirebaseProjectManagementError } from '../utils/error';
 import * as validator from '../utils/validator';
 import { ProjectManagementRequestHandler, assertServerResponse } from './project-management-api-request-internal';
-import { projectManagement } from './index';
+import { AppMetadata, AppPlatform } from './app-metadata';
 
-import AndroidAppInterface = projectManagement.AndroidApp;
-import AndroidAppMetadata = projectManagement.AndroidAppMetadata;
-import AppPlatform = projectManagement.AppPlatform;
-import ShaCertificateInterface = projectManagement.ShaCertificate;
 
-export class AndroidApp implements AndroidAppInterface {
+/**
+ * Metadata about a Firebase Android App.
+ */
+export interface AndroidAppMetadata extends AppMetadata {
+
+  platform: AppPlatform.ANDROID;
+
+  /**
+   * The canonical package name of the Android App, as would appear in the Google Play Developer
+   * Console.
+   *
+   * @example
+   * ```javascript
+   * var packageName = androidAppMetadata.packageName;
+   * ```
+   */
+  packageName: string;
+}
+
+export class AndroidApp {
   private readonly resourceName: string;
 
+  /**
+   * @internal
+   */
   constructor(
       public readonly appId: string,
       private readonly requestHandler: ProjectManagementRequestHandler) {
@@ -184,7 +202,7 @@ export class AndroidApp implements AndroidAppInterface {
  * Do not call this constructor directly. Instead, use
  * [`projectManagement.shaCertificate()`](projectManagement.ProjectManagement#shaCertificate).
  */
-export class ShaCertificate implements ShaCertificateInterface {
+export class ShaCertificate {
   /**
    * The SHA certificate type.
    *
@@ -210,6 +228,8 @@ export class ShaCertificate implements ShaCertificateInterface {
    * ```javascript
    * var resourceName = shaCertificate.resourceName;
    * ```
+   *
+   * @internal
    */
   constructor(public readonly shaHash: string, public readonly resourceName?: string) {
     if (/^[a-fA-F0-9]{40}$/.test(shaHash)) {
