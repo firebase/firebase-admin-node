@@ -14,37 +14,63 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../app/firebase-app';
-import {
-  MachineLearningApiClient, ModelResponse, ModelUpdateOptions, isGcsTfliteModelOptions
-} from './machine-learning-api-client';
+import { App } from '../app';
+import { getStorage } from '../storage/index';
 import { FirebaseError } from '../utils/error';
 import * as validator from '../utils/validator';
-import { FirebaseMachineLearningError } from './machine-learning-utils';
 import { deepCopy } from '../utils/deep-copy';
 import * as utils from '../utils';
-import { machineLearning } from './index';
+import {
+  MachineLearningApiClient, ModelResponse, ModelUpdateOptions, isGcsTfliteModelOptions,
+  ListModelsOptions, ModelOptions,
+} from './machine-learning-api-client';
+import { FirebaseMachineLearningError } from './machine-learning-utils';
 
-import ListModelsOptions = machineLearning.ListModelsOptions;
-import ListModelsResult = machineLearning.ListModelsResult;
-import MachineLearningInterface = machineLearning.MachineLearning;
-import ModelInterface = machineLearning.Model;
-import ModelOptions = machineLearning.ModelOptions;
-import TFLiteModel = machineLearning.TFLiteModel;
+/** Response object for a listModels operation. */
+export interface ListModelsResult {
+  /** A list of models in your project. */
+  readonly models: Model[];
+
+  /**
+   * A token you can use to retrieve the next page of results. If null, the
+   * current page is the final page.
+   */
+  readonly pageToken?: string;
+}
+
+/**
+ * A TensorFlow Lite Model output object
+ *
+ * One of either the `gcsTfliteUri` or `automlModel` properties will be
+ * defined.
+ */
+export interface TFLiteModel {
+  /** The size of the model. */
+  readonly sizeBytes: number;
+
+  /** The URI from which the model was originally provided to Firebase. */
+  readonly gcsTfliteUri?: string;
+  /**
+   * The AutoML model reference from which the model was originally provided
+   * to Firebase.
+   */
+  readonly automlModel?: string;
+}
 
 /**
  * The Firebase Machine Learning class
  */
-export class MachineLearning implements MachineLearningInterface {
+export class MachineLearning {
 
   private readonly client: MachineLearningApiClient;
-  private readonly appInternal: FirebaseApp;
+  private readonly appInternal: App;
 
   /**
-   * @param {FirebaseApp} app The app for this ML service.
+   * @param app The app for this ML service.
    * @constructor
+   * @internal
    */
-  constructor(app: FirebaseApp) {
+  constructor(app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseError({
         code: 'machine-learning/invalid-argument',
@@ -60,9 +86,9 @@ export class MachineLearning implements MachineLearningInterface {
   /**
    * Returns the app associated with this ML instance.
    *
-   * @return {FirebaseApp} The app associated with this ML instance.
+   * @return The app associated with this ML instance.
    */
-  public get app(): FirebaseApp {
+  public get app(): App {
     return this.appInternal;
   }
 
@@ -207,7 +233,7 @@ export class MachineLearning implements MachineLearningInterface {
     }
     const bucketName = matches[1];
     const blobName = matches[2];
-    const bucket = this.appInternal.storage().bucket(bucketName);
+    const bucket = getStorage(this.app).bucket(bucketName);
     const blob = bucket.file(blobName);
     return blob.getSignedUrl({
       action: 'read',
@@ -219,10 +245,13 @@ export class MachineLearning implements MachineLearningInterface {
 /**
  * A Firebase ML Model output object.
  */
-export class Model implements ModelInterface {
+export class Model {
   private model: ModelResponse;
   private readonly client?: MachineLearningApiClient;
 
+  /**
+   * @internal
+   */
   constructor(model: ModelResponse, client: MachineLearningApiClient) {
     this.model = Model.validateAndClone(model);
     this.client = client;
@@ -307,7 +336,6 @@ export class Model implements ModelInterface {
 
     return jsonModel;
   }
-
 
   /**
    * Wait for the active operations on the model to complete.

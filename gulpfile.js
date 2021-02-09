@@ -84,20 +84,7 @@ gulp.task('compile', function() {
 
   const configuration = [
     'lib/**/*.js',
-    'lib/**/index.d.ts',
-    'lib/firebase-namespace-api.d.ts',
-    'lib/core.d.ts',
-    'lib/app/*.d.ts',
-    'lib/auth/*.d.ts',
-    'lib/database/*.d.ts',
-    'lib/firestore/*.d.ts',
-    'lib/instance-id/*.d.ts',
-    'lib/messaging/*.d.ts',
-    'lib/project-management/*.d.ts',
-    'lib/security-rules/*.d.ts',
-    'lib/storage/*.d.ts',
-    'lib/remote-config/*.d.ts',
-    '!lib/utils/index.d.ts',
+    'lib/**/*.d.ts',
   ];
 
   workflow = workflow.pipe(filter(configuration));

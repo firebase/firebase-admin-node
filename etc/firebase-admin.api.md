@@ -398,73 +398,46 @@ export namespace instanceId {
 }
 
 // @public
-export function machineLearning(app?: app.App): machineLearning.MachineLearning;
+export function machineLearning(app?: App): machineLearning.MachineLearning;
 
 // @public (undocumented)
 export namespace machineLearning {
+    // Warning: (ae-forgotten-export) The symbol "AutoMLTfliteModelOptions" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
-    export interface AutoMLTfliteModelOptions extends ModelOptionsBase {
-        // (undocumented)
-        tfliteModel: {
-            automlModel: string;
-        };
-    }
+    export type AutoMLTfliteModelOptions = AutoMLTfliteModelOptions;
+    // Warning: (ae-forgotten-export) The symbol "GcsTfliteModelOptions" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
-    export interface GcsTfliteModelOptions extends ModelOptionsBase {
-        // (undocumented)
-        tfliteModel: {
-            gcsTfliteUri: string;
-        };
-    }
-    export interface ListModelsOptions {
-        filter?: string;
-        pageSize?: number;
-        pageToken?: string;
-    }
-    export interface ListModelsResult {
-        readonly models: Model[];
-        readonly pageToken?: string;
-    }
-    export interface MachineLearning {
-        app: app.App;
-        createModel(model: ModelOptions): Promise<Model>;
-        deleteModel(modelId: string): Promise<void>;
-        getModel(modelId: string): Promise<Model>;
-        listModels(options?: ListModelsOptions): Promise<ListModelsResult>;
-        publishModel(modelId: string): Promise<Model>;
-        unpublishModel(modelId: string): Promise<Model>;
-        updateModel(modelId: string, model: ModelOptions): Promise<Model>;
-    }
-    export interface Model {
-        readonly createTime: string;
-        readonly displayName: string;
-        readonly etag: string;
-        readonly locked: boolean;
-        readonly modelHash?: string;
-        readonly modelId: string;
-        readonly published: boolean;
-        readonly tags?: string[];
-        readonly tfliteModel?: TFLiteModel;
-        toJSON(): {
-            [key: string]: any;
-        };
-        readonly updateTime: string;
-        readonly validationError?: string;
-        waitForUnlocked(maxTimeMillis?: number): Promise<void>;
-    }
+    export type GcsTfliteModelOptions = GcsTfliteModelOptions;
+    // Warning: (ae-forgotten-export) The symbol "ListModelsOptions" needs to be exported by the entry point default-namespace.d.ts
+    //
     // (undocumented)
-    export type ModelOptions = ModelOptionsBase | GcsTfliteModelOptions | AutoMLTfliteModelOptions;
-    export interface ModelOptionsBase {
-        // (undocumented)
-        displayName?: string;
-        // (undocumented)
-        tags?: string[];
-    }
-    export interface TFLiteModel {
-        readonly automlModel?: string;
-        readonly gcsTfliteUri?: string;
-        readonly sizeBytes: number;
-    }
+    export type ListModelsOptions = ListModelsOptions;
+    // Warning: (ae-forgotten-export) The symbol "ListModelsResult" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type ListModelsResult = ListModelsResult;
+    // Warning: (ae-forgotten-export) The symbol "MachineLearning" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type MachineLearning = MachineLearning;
+    // Warning: (ae-forgotten-export) The symbol "Model" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type Model = Model;
+    // Warning: (ae-forgotten-export) The symbol "ModelOptions" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type ModelOptions = ModelOptions;
+    // Warning: (ae-forgotten-export) The symbol "ModelOptionsBase" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type ModelOptionsBase = ModelOptionsBase;
+    // Warning: (ae-forgotten-export) The symbol "TFLiteModel" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type TFLiteModel = TFLiteModel;
 }
 
 // @public

@@ -24,7 +24,7 @@ import { FirebaseNamespaceInternals } from './firebase-namespace';
 import { AppErrorCodes, FirebaseAppError } from '../utils/error';
 
 import { Auth } from '../auth/index';
-import { MachineLearning } from '../machine-learning/machine-learning';
+import { MachineLearning } from '../machine-learning/index';
 import { Messaging } from '../messaging/index';
 import { Storage } from '../storage/index';
 import { Database } from '../database/index';
@@ -328,11 +328,8 @@ export class FirebaseApp implements app.App {
    * @return The Machine Learning service instance of this app
    */
   public machineLearning(): MachineLearning {
-    return this.ensureService_('machine-learning', () => {
-      const machineLearningService: typeof MachineLearning =
-          require('../machine-learning/machine-learning').MachineLearning;
-      return new machineLearningService(this);
-    });
+    const fn = require('../machine-learning/index').getMachineLearning;
+    return fn(this);
   }
 
   /**
