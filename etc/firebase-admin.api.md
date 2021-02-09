@@ -300,6 +300,8 @@ export namespace auth {
         password?: string;
         phoneNumber?: string | null;
         photoURL?: string | null;
+        providersToUnlink?: string[];
+        providerToLink?: UserProvider;
     }
     export interface UpdateTenantRequest {
         anonymousSignInEnabled?: boolean;
@@ -365,6 +367,14 @@ export namespace auth {
         creationTime?: string;
         lastSignInTime?: string;
     }
+    export interface UserProvider {
+        displayName?: string;
+        email?: string;
+        phoneNumber?: string;
+        photoURL?: string;
+        providerId?: string;
+        uid?: string;
+    }
     export interface UserProviderRequest {
         displayName?: string;
         email?: string;
@@ -393,6 +403,7 @@ export namespace auth {
         tokensValidAfterTime?: string;
         uid: string;
     }
+    {};
 }
 
 // @public (undocumented)
