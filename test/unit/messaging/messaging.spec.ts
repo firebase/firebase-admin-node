@@ -31,9 +31,8 @@ import { FirebaseApp } from '../../../src/app/firebase-app';
 import {
   Message, MessagingOptions, MessagingPayload, MessagingDevicesResponse,
   MessagingDeviceGroupResponse, MessagingTopicManagementResponse, BatchResponse,
-  SendResponse, MulticastMessage,
+  SendResponse, MulticastMessage, Messaging,
 } from '../../../src/messaging/index';
-import { Messaging } from '../../../src/messaging/messaging';
 import { BLACKLISTED_OPTIONS_KEYS, BLACKLISTED_DATA_PAYLOAD_KEYS } from '../../../src/messaging/messaging-internal';
 import { HttpClient } from '../../../src/utils/api-request';
 import { getSdkVersion } from '../../../src/utils/index';

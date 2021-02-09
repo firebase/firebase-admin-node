@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { FirebaseArrayIndexError, FirebaseError } from '../firebase-namespace-api';
+import { FirebaseArrayIndexError, FirebaseError } from '../app/index';
 
 export interface BaseMessage {
   data?: { [key: string]: string };

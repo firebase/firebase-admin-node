@@ -17,7 +17,7 @@
 
 import { getSdkVersion } from '../utils';
 
-export { App, AppOptions } from './core'
+export { App, AppOptions, FirebaseArrayIndexError, FirebaseError } from './core'
 export { initializeApp, getApp, getApps, deleteApp } from './lifecycle';
 
 export { Credential, ServiceAccount, GoogleOAuthAccessToken } from './credential';

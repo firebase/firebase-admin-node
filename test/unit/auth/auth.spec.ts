@@ -27,8 +27,6 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
-import { Auth, TenantAwareAuth, BaseAuth } from '../../../src/auth/index';
-import { UserRecord } from '../../../src/auth/user-record';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import {
   AuthRequestHandler, TenantAwareAuthRequestHandler, AbstractAuthRequestHandler,
@@ -41,10 +39,12 @@ import {
   OIDCConfig, SAMLConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
 } from '../../../src/auth/auth-config';
 import { deepCopy } from '../../../src/utils/deep-copy';
-import { TenantManager } from '../../../src/auth/tenant-manager';
 import { ServiceAccountCredential } from '../../../src/app/credential-internal';
 import { HttpClient } from '../../../src/utils/api-request';
-import { DecodedIdToken, UpdateRequest, AuthProviderConfigFilter } from '../../../src/auth/index';
+import {
+  Auth, TenantAwareAuth, BaseAuth, UserRecord, DecodedIdToken,
+  UpdateRequest, AuthProviderConfigFilter, TenantManager,
+} from '../../../src/auth/index';
 
 chai.should();
 chai.use(sinonChai);
