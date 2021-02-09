@@ -14,8 +14,22 @@
  * limitations under the License.
  */
 
-import { Bucket } from '@google-cloud/storage';
-import { app } from '../firebase-namespace-api';
+import { App, getApp } from '../app';
+import { FirebaseApp } from '../app/firebase-app';
+import { Storage } from './storage';
+
+export { Storage } from './storage';
+
+export function getStorage(app?: App): Storage {
+  if (typeof app === 'undefined') {
+    app = getApp();
+  }
+
+  const firebaseApp: FirebaseApp = app as FirebaseApp;
+  return firebaseApp.getOrInitService('storage', (app) => new Storage(app));
+}
+
+import { Storage as TStorage } from './storage';
 
 /**
  * Gets the {@link storage.Storage `Storage`} service for the
@@ -39,25 +53,9 @@ import { app } from '../firebase-namespace-api';
  * var otherStorage = admin.storage(otherApp);
  * ```
  */
-export declare function storage(app?: app.App): storage.Storage;
+export declare function storage(app?: App): storage.Storage;
 
 /* eslint-disable @typescript-eslint/no-namespace */
 export namespace storage {
-  /**
-   * The default `Storage` service if no
-   * app is provided or the `Storage` service associated with the provided
-   * app.
-   */
-  export interface Storage {
-    /**
-     * Optional app whose `Storage` service to
-     * return. If not provided, the default `Storage` service will be returned.
-     */
-    app: app.App;
-    /**
-     * @returns A [Bucket](https://cloud.google.com/nodejs/docs/reference/storage/latest/Bucket)
-     * instance as defined in the `@google-cloud/storage` package.
-     */
-    bucket(name?: string): Bucket;
-  }
+  export type Storage = TStorage;
 }

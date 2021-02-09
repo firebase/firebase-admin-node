@@ -15,32 +15,29 @@
  * limitations under the License.
  */
 
-import { FirebaseApp } from '../app/firebase-app';
+import { App } from '../app';
 import { FirebaseError } from '../utils/error';
 import { ServiceAccountCredential, isApplicationDefault } from '../app/credential-internal';
 import { Bucket, Storage as StorageClient } from '@google-cloud/storage';
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
-import { storage } from './index';
-
-import StorageInterface  = storage.Storage;
 
 /**
  * The default `Storage` service if no
  * app is provided or the `Storage` service associated with the provided
  * app.
  */
-export class Storage implements StorageInterface {
+export class Storage {
 
-  private readonly appInternal: FirebaseApp;
+  private readonly appInternal: App;
   private readonly storageClient: StorageClient;
 
   /**
-   * @param {FirebaseApp} app The app for this Storage service.
+   * @param app The app for this Storage service.
    * @constructor
    * @internal
    */
-  constructor(app: FirebaseApp) {
+  constructor(app: App) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
       throw new FirebaseError({
         code: 'storage/invalid-argument',
@@ -109,7 +106,7 @@ export class Storage implements StorageInterface {
   /**
    * @return The app associated with this Storage instance.
    */
-  get app(): FirebaseApp {
+  get app(): App {
     return this.appInternal;
   }
 }

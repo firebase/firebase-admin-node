@@ -42,6 +42,7 @@ const entryPoints = {
   'firebase-admin/messaging': './lib/messaging/index.d.ts',
   'firebase-admin/project-management': './lib/project-management/index.d.ts',
   'firebase-admin/security-rules': './lib/security-rules/index.d.ts',
+  'firebase-admin/storage': './lib/storage/index.d.ts',
   'firebase-admin/remote-config': './lib/remote-config/index.d.ts',
 };
 

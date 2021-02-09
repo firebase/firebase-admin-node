@@ -748,15 +748,14 @@ export interface ServiceAccount {
 }
 
 // @public
-export function storage(app?: app.App): storage.Storage;
+export function storage(app?: App): storage.Storage;
 
 // @public (undocumented)
 export namespace storage {
-    export interface Storage {
-        app: app.App;
-        // (undocumented)
-        bucket(name?: string): Bucket;
-    }
+    // Warning: (ae-forgotten-export) The symbol "Storage" needs to be exported by the entry point default-namespace.d.ts
+    //
+    // (undocumented)
+    export type Storage = Storage;
 }
 
 
