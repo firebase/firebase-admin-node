@@ -1071,6 +1071,11 @@ export namespace auth {
     };
 
     /**
+     * Whether the anonymous provider is enabled.
+     */
+    anonymousSignInEnabled: boolean;
+
+    /**
      * The multi-factor auth configuration on the current tenant.
      */
     multiFactorConfig?: MultiFactorConfig;
@@ -1144,6 +1149,11 @@ export namespace auth {
      * The email sign in configuration.
      */
     emailSignInConfig?: EmailSignInProviderConfig;
+
+    /**
+     * Whether the anonymous provider is enabled.
+     */
+    anonymousSignInEnabled?: boolean;
 
     /**
      * The multi-factor auth configuration to update on the tenant.
