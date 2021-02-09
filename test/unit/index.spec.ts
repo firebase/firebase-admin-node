@@ -51,6 +51,7 @@ import './messaging/messaging.spec';
 import './messaging/batch-requests.spec';
 
 // Machine Learning
+import './machine-learning/index.spec';
 import './machine-learning/machine-learning.spec';
 import './machine-learning/machine-learning-api-client.spec';
 
