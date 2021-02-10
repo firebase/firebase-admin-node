@@ -360,6 +360,12 @@ describe('FIREBASE_AUTH_GET_ACCOUNT_INFO', () => {
         return requestValidator(validRequest);
       }).not.to.throw();
     });
+    it('should succeed with federatedUserId passed', () => {
+      const validRequest = { federatedUserId: { providerId: 'google.com', rawId: 'google_uid_1234' } };
+      expect(() => {
+        return requestValidator(validRequest);
+      }).not.to.throw();
+    });
     it('should fail when neither localId, email or phoneNumber are passed', () => {
       const invalidRequest = { bla: ['1234'] };
       expect(() => {

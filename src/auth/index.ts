@@ -154,6 +154,42 @@ export namespace auth {
   }
 
   /**
+   * Represents a user identity provider that can be associated with a Firebase user.
+   */
+  interface UserProvider {
+
+    /**
+     * The user identifier for the linked provider.
+     */
+    uid?: string;
+
+    /**
+     * The display name for the linked provider.
+     */
+    displayName?: string;
+
+    /**
+     * The email for the linked provider.
+     */
+    email?: string;
+
+    /**
+     * The phone number for the linked provider.
+     */
+    phoneNumber?: string;
+
+    /**
+     * The photo URL for the linked provider.
+     */
+    photoURL?: string;
+
+    /**
+     * The linked provider ID (for example, "google.com" for the Google provider).
+     */
+    providerId?: string;
+  }
+
+  /**
    * Interface representing a user.
    */
   export interface UserRecord {
@@ -384,6 +420,26 @@ export namespace auth {
      * The user's updated multi-factor related properties.
      */
     multiFactor?: MultiFactorUpdateSettings;
+
+    /**
+     * Links this user to the specified provider.
+     *
+     * Linking a provider to an existing user account does not invalidate the
+     * refresh token of that account. In other words, the existing account
+     * would continue to be able to access resources, despite not having used
+     * the newly linked provider to log in. If you wish to force the user to
+     * authenticate with this new provider, you need to (a) revoke their
+     * refresh token (see
+     * https://firebase.google.com/docs/auth/admin/manage-sessions#revoke_refresh_tokens),
+     * and (b) ensure no other authentication methods are present on this
+     * account.
+     */
+    providerToLink?: UserProvider;
+
+    /**
+     * Unlinks this user from the specified providers.
+     */
+    providersToUnlink?: string[];
   }
 
   /**
@@ -1015,6 +1071,11 @@ export namespace auth {
     };
 
     /**
+     * Whether the anonymous provider is enabled.
+     */
+    anonymousSignInEnabled: boolean;
+
+    /**
      * The multi-factor auth configuration on the current tenant.
      */
     multiFactorConfig?: MultiFactorConfig;
@@ -1088,6 +1149,11 @@ export namespace auth {
      * The email sign in configuration.
      */
     emailSignInConfig?: EmailSignInProviderConfig;
+
+    /**
+     * Whether the anonymous provider is enabled.
+     */
+    anonymousSignInEnabled?: boolean;
 
     /**
      * The multi-factor auth configuration to update on the tenant.
@@ -1515,6 +1581,21 @@ export namespace auth {
      *   data corresponding to the provided phone number.
      */
     getUserByPhoneNumber(phoneNumber: string): Promise<UserRecord>;
+
+    /**
+     * Gets the user data for the user corresponding to a given provider ID.
+     *
+     * See [Retrieve user data](/docs/auth/admin/manage-users#retrieve_user_data)
+     * for code samples and detailed documentation.
+     *
+     * @param providerId The provider ID, for example, "google.com" for the
+     *   Google provider.
+     * @param uid The user identifier for the given provider.
+     *
+     * @return A promise fulfilled with the user data corresponding to the
+     *   given provider id.
+     */
+    getUserByProviderUid(providerId: string, uid: string): Promise<UserRecord>;
 
     /**
      * Gets the user data corresponding to the specified identifiers.

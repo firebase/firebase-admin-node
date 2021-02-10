@@ -221,6 +221,56 @@ describe('admin.auth', () => {
       });
   });
 
+  it('getUserByProviderUid() returns a user record with the matching provider id', async () => {
+    // TODO(rsgowman): Once we can link a provider id with a user, just do that
+    // here instead of creating a new user.
+    const randomUid = 'import_' + generateRandomString(20).toLowerCase();
+    const importUser: admin.auth.UserImportRecord = {
+      uid: randomUid,
+      email: 'user@example.com',
+      phoneNumber: '+15555550000',
+      emailVerified: true,
+      disabled: false,
+      metadata: {
+        lastSignInTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
+        creationTime: 'Thu, 01 Jan 1970 00:00:00 UTC',
+      },
+      providerData: [{
+        displayName: 'User Name',
+        email: 'user@example.com',
+        phoneNumber: '+15555550000',
+        photoURL: 'http://example.com/user',
+        providerId: 'google.com',
+        uid: 'google_uid',
+      }],
+    };
+
+    await admin.auth().importUsers([importUser]);
+
+    try {
+      await admin.auth().getUserByProviderUid('google.com', 'google_uid')
+        .then((userRecord) => {
+          expect(userRecord.uid).to.equal(importUser.uid);
+        });
+    } finally {
+      await safeDelete(importUser.uid);
+    }
+  });
+
+  it('getUserByProviderUid() redirects to getUserByEmail if given an email', () => {
+    return admin.auth().getUserByProviderUid('email', mockUserData.email)
+      .then((userRecord) => {
+        expect(userRecord.uid).to.equal(newUserUid);
+      });
+  });
+
+  it('getUserByProviderUid() redirects to getUserByPhoneNumber if given a phone number', () => {
+    return admin.auth().getUserByProviderUid('phone', mockUserData.phoneNumber)
+      .then((userRecord) => {
+        expect(userRecord.uid).to.equal(newUserUid);
+      });
+  });
+
   describe('getUsers()', () => {
     /**
      * Filters a list of object to another list of objects that only contains
@@ -533,79 +583,177 @@ describe('admin.auth', () => {
       });
   });
 
-  it('updateUser() updates the user record with the given parameters', () => {
-    const updatedDisplayName = 'Updated User ' + newUserUid;
-    return admin.auth().updateUser(newUserUid, {
-      email: updatedEmail,
-      phoneNumber: updatedPhone,
-      emailVerified: true,
-      displayName: updatedDisplayName,
-    })
-      .then((userRecord) => {
-        expect(userRecord.emailVerified).to.be.true;
-        expect(userRecord.displayName).to.equal(updatedDisplayName);
-        // Confirm expected email.
-        expect(userRecord.email).to.equal(updatedEmail);
-        // Confirm expected phone number.
-        expect(userRecord.phoneNumber).to.equal(updatedPhone);
+  describe('updateUser()', () => {
+    /**
+     * Creates a new user for testing purposes. The user's uid will be
+     * '$name_$tenRandomChars' and email will be
+     * '$name_$tenRandomChars@example.com'.
+     */
+    // TODO(rsgowman): This function could usefully be employed throughout this file.
+    function createTestUser(name: string): Promise<admin.auth.UserRecord> {
+      const tenRandomChars = generateRandomString(10);
+      return admin.auth().createUser({
+        uid: name + '_' + tenRandomChars,
+        displayName: name,
+        email: name + '_' + tenRandomChars + '@example.com',
       });
-  });
-
-  it('updateUser() creates, updates, and removes second factors', function () {
-    if (authEmulatorHost) {
-      return this.skip(); // Not yet supported in Auth Emulator.
     }
 
-    const now = new Date(1476235905000).toUTCString();
-    // Update user with enrolled second factors.
-    const enrolledFactors = [
-      {
-        uid: 'mfaUid1',
-        phoneNumber: '+16505550001',
-        displayName: 'Work phone number',
-        factorId: 'phone',
-        enrollmentTime: now,
-      },
-      {
-        uid: 'mfaUid2',
-        phoneNumber: '+16505550002',
-        displayName: 'Personal phone number',
-        factorId: 'phone',
-        enrollmentTime: now,
-      },
-    ];
-    return admin.auth().updateUser(newUserUid, {
-      multiFactor: {
-        enrolledFactors,
-      },
-    })
-      .then((userRecord) => {
-        // Confirm second factors added to user.
-        const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
-        expect(actualUserRecord.multiFactor.enrolledFactors.length).to.equal(2);
-        expect(actualUserRecord.multiFactor.enrolledFactors).to.deep.equal(enrolledFactors);
-        // Update list of second factors.
-        return admin.auth().updateUser(newUserUid, {
-          multiFactor: {
-            enrolledFactors: [enrolledFactors[0]],
-          },
-        });
+    let updateUser: admin.auth.UserRecord;
+    before(async () => {
+      updateUser = await createTestUser('UpdateUser');
+    });
+
+    after(() => {
+      return safeDelete(updateUser.uid);
+    });
+
+    it('updates the user record with the given parameters', () => {
+      const updatedDisplayName = 'Updated User ' + updateUser.uid;
+      return admin.auth().updateUser(updateUser.uid, {
+        email: updatedEmail,
+        phoneNumber: updatedPhone,
+        emailVerified: true,
+        displayName: updatedDisplayName,
       })
-      .then((userRecord) => {
-        expect(userRecord.multiFactor!.enrolledFactors.length).to.equal(1);
-        const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
-        expect(actualUserRecord.multiFactor.enrolledFactors[0]).to.deep.equal(enrolledFactors[0]);
-        // Remove all second factors.
-        return admin.auth().updateUser(newUserUid, {
-          multiFactor: {
-            enrolledFactors: null,
-          },
+        .then((userRecord) => {
+          expect(userRecord.emailVerified).to.be.true;
+          expect(userRecord.displayName).to.equal(updatedDisplayName);
+          // Confirm expected email.
+          expect(userRecord.email).to.equal(updatedEmail);
+          // Confirm expected phone number.
+          expect(userRecord.phoneNumber).to.equal(updatedPhone);
         });
+    });
+
+    it('creates, updates, and removes second factors', function () {
+      if (authEmulatorHost) {
+        return this.skip(); // Not yet supported in Auth Emulator.
+      }
+
+      const now = new Date(1476235905000).toUTCString();
+      // Update user with enrolled second factors.
+      const enrolledFactors = [
+        {
+          uid: 'mfaUid1',
+          phoneNumber: '+16505550001',
+          displayName: 'Work phone number',
+          factorId: 'phone',
+          enrollmentTime: now,
+        },
+        {
+          uid: 'mfaUid2',
+          phoneNumber: '+16505550002',
+          displayName: 'Personal phone number',
+          factorId: 'phone',
+          enrollmentTime: now,
+        },
+      ];
+      return admin.auth().updateUser(updateUser.uid, {
+        multiFactor: {
+          enrolledFactors,
+        },
       })
-      .then((userRecord) => {
-        // Confirm all second factors removed.
-        expect(userRecord.multiFactor).to.be.undefined;
+        .then((userRecord) => {
+          // Confirm second factors added to user.
+          const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
+          expect(actualUserRecord.multiFactor.enrolledFactors.length).to.equal(2);
+          expect(actualUserRecord.multiFactor.enrolledFactors).to.deep.equal(enrolledFactors);
+          // Update list of second factors.
+          return admin.auth().updateUser(updateUser.uid, {
+            multiFactor: {
+              enrolledFactors: [enrolledFactors[0]],
+            },
+          });
+        })
+        .then((userRecord) => {
+          expect(userRecord.multiFactor!.enrolledFactors.length).to.equal(1);
+          const actualUserRecord: {[key: string]: any} = userRecord.toJSON();
+          expect(actualUserRecord.multiFactor.enrolledFactors[0]).to.deep.equal(enrolledFactors[0]);
+          // Remove all second factors.
+          return admin.auth().updateUser(updateUser.uid, {
+            multiFactor: {
+              enrolledFactors: null,
+            },
+          });
+        })
+        .then((userRecord) => {
+          // Confirm all second factors removed.
+          expect(userRecord.multiFactor).to.be.undefined;
+        });
+    });
+
+    it('can link/unlink with a federated provider', async () => {
+      const googleFederatedUid = 'google_uid_' + generateRandomString(10);
+      let userRecord = await admin.auth().updateUser(updateUser.uid, {
+        providerToLink: {
+          providerId: 'google.com',
+          uid: googleFederatedUid,
+        },
       });
+
+      let providerUids = userRecord.providerData.map((userInfo) => userInfo.uid);
+      let providerIds = userRecord.providerData.map((userInfo) => userInfo.providerId);
+      expect(providerUids).to.deep.include(googleFederatedUid);
+      expect(providerIds).to.deep.include('google.com');
+
+      userRecord = await admin.auth().updateUser(updateUser.uid, {
+        providersToUnlink: ['google.com'],
+      });
+
+      providerUids = userRecord.providerData.map((userInfo) => userInfo.uid);
+      providerIds = userRecord.providerData.map((userInfo) => userInfo.providerId);
+      expect(providerUids).to.not.deep.include(googleFederatedUid);
+      expect(providerIds).to.not.deep.include('google.com');
+    });
+
+    it('can unlink multiple providers at once, incl a non-federated provider', async () => {
+      await deletePhoneNumberUser('+15555550001');
+
+      const googleFederatedUid = 'google_uid_' + generateRandomString(10);
+      const facebookFederatedUid = 'facebook_uid_' + generateRandomString(10);
+
+      let userRecord = await admin.auth().updateUser(updateUser.uid, {
+        phoneNumber: '+15555550001',
+        providerToLink: {
+          providerId: 'google.com',
+          uid: googleFederatedUid,
+        },
+      });
+      userRecord = await admin.auth().updateUser(updateUser.uid, {
+        providerToLink: {
+          providerId: 'facebook.com',
+          uid: facebookFederatedUid,
+        },
+      });
+
+      let providerUids = userRecord.providerData.map((userInfo) => userInfo.uid);
+      let providerIds = userRecord.providerData.map((userInfo) => userInfo.providerId);
+      expect(providerUids).to.deep.include.members([googleFederatedUid, facebookFederatedUid, '+15555550001']);
+      expect(providerIds).to.deep.include.members(['google.com', 'facebook.com', 'phone']);
+
+      userRecord = await admin.auth().updateUser(updateUser.uid, {
+        providersToUnlink: ['google.com', 'facebook.com', 'phone'],
+      });
+
+      providerUids = userRecord.providerData.map((userInfo) => userInfo.uid);
+      providerIds = userRecord.providerData.map((userInfo) => userInfo.providerId);
+      expect(providerUids).to.not.deep.include.members([googleFederatedUid, facebookFederatedUid, '+15555550001']);
+      expect(providerIds).to.not.deep.include.members(['google.com', 'facebook.com', 'phone']);
+    });
+
+    it('noops successfully when given an empty providersToUnlink list', async () => {
+      const userRecord = await createTestUser('NoopWithEmptyProvidersToDeleteUser');
+      try {
+        const updatedUserRecord = await admin.auth().updateUser(userRecord.uid, {
+          providersToUnlink: [],
+        });
+
+        expect(updatedUserRecord).to.deep.equal(userRecord);
+      } finally {
+        safeDelete(userRecord.uid);
+      }
+    });
   });
 
   it('getUser() fails when called with a non-existing UID', () => {
@@ -620,6 +768,11 @@ describe('admin.auth', () => {
 
   it('getUserByPhoneNumber() fails when called with a non-existing phone number', () => {
     return admin.auth().getUserByPhoneNumber(nonexistentPhoneNumber)
+      .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
+  });
+
+  it('getUserByProviderUid() fails when called with a non-existing provider id', () => {
+    return admin.auth().getUserByProviderUid('google.com', nonexistentUid)
       .should.eventually.be.rejected.and.have.property('code', 'auth/user-not-found');
   });
 
@@ -831,6 +984,7 @@ describe('admin.auth', () => {
         enabled: true,
         passwordRequired: true,
       },
+      anonymousSignInEnabled: false,
       multiFactorConfig: {
         state: 'ENABLED',
         factorIds: ['phone'],
@@ -846,6 +1000,7 @@ describe('admin.auth', () => {
         enabled: false,
         passwordRequired: true,
       },
+      anonymousSignInEnabled: false,
       multiFactorConfig: {
         state: 'DISABLED',
         factorIds: [],
@@ -860,6 +1015,7 @@ describe('admin.auth', () => {
         enabled: true,
         passwordRequired: false,
       },
+      anonymousSignInEnabled: false,
       multiFactorConfig: {
         state: 'ENABLED',
         factorIds: ['phone'],
@@ -900,6 +1056,20 @@ describe('admin.auth', () => {
           expectedCreatedTenant.tenantId = createdTenantId;
           expect(actualTenant.toJSON()).to.deep.equal(expectedCreatedTenant);
         });
+    });
+
+    it('createTenant() can enable anonymous users', async () => {
+      const tenant = await admin.auth().tenantManager().createTenant({
+        displayName: 'testTenantWithAnon',
+        emailSignInConfig: {
+          enabled: false,
+          passwordRequired: true,
+        },
+        anonymousSignInEnabled: true,
+      });
+      createdTenants.push(tenant.tenantId);
+
+      expect(tenant.anonymousSignInEnabled).to.be.true;
     });
 
     // Sanity check user management + email link generation + custom attribute APIs.
@@ -1243,6 +1413,25 @@ describe('admin.auth', () => {
         .then((actualTenant) => {
           expect(actualTenant.toJSON()).to.deep.equal(expectedUpdatedTenant2);
         });
+    });
+
+    it('updateTenant() should be able to enable/disable anon provider', async () => {
+      const tenantManager = admin.auth().tenantManager();
+      let tenant = await tenantManager.createTenant({
+        displayName: 'testTenantUpdateAnon',
+      });
+      createdTenants.push(tenant.tenantId);
+      expect(tenant.anonymousSignInEnabled).to.be.false;
+
+      tenant = await tenantManager.updateTenant(tenant.tenantId, {
+        anonymousSignInEnabled: true,
+      });
+      expect(tenant.anonymousSignInEnabled).to.be.true;
+
+      tenant = await tenantManager.updateTenant(tenant.tenantId, {
+        anonymousSignInEnabled: false,
+      });
+      expect(tenant.anonymousSignInEnabled).to.be.false;
     });
 
     it('listTenants() should resolve with expected number of tenants', () => {
@@ -2117,8 +2306,8 @@ function testImportAndSignInUser(
 /**
  * Helper function that deletes the user with the specified phone number
  * if it exists.
- * @param {string} phoneNumber The phone number of the user to delete.
- * @return {Promise} A promise that resolves when the user is deleted
+ * @param phoneNumber The phone number of the user to delete.
+ * @return A promise that resolves when the user is deleted
  *     or is found not to exist.
  */
 function deletePhoneNumberUser(phoneNumber: string): Promise<void> {

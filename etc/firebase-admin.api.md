@@ -106,6 +106,7 @@ export namespace auth {
         getUser(uid: string): Promise<UserRecord>;
         getUserByEmail(email: string): Promise<UserRecord>;
         getUserByPhoneNumber(phoneNumber: string): Promise<UserRecord>;
+        getUserByProviderUid(providerId: string, uid: string): Promise<UserRecord>;
         getUsers(identifiers: UserIdentifier[]): Promise<GetUsersResult>;
         importUsers(users: UserImportRecord[], options?: UserImportOptions): Promise<UserImportResult>;
         listProviderConfigs(options: AuthProviderConfigFilter): Promise<ListProviderConfigResults>;
@@ -250,6 +251,7 @@ export namespace auth {
         expiresIn: number;
     }
     export interface Tenant {
+        anonymousSignInEnabled: boolean;
         displayName?: string;
         emailSignInConfig?: {
             enabled: boolean;
@@ -298,8 +300,11 @@ export namespace auth {
         password?: string;
         phoneNumber?: string | null;
         photoURL?: string | null;
+        providersToUnlink?: string[];
+        providerToLink?: UserProvider;
     }
     export interface UpdateTenantRequest {
+        anonymousSignInEnabled?: boolean;
         displayName?: string;
         emailSignInConfig?: EmailSignInProviderConfig;
         multiFactorConfig?: MultiFactorConfig;
@@ -362,6 +367,14 @@ export namespace auth {
         creationTime?: string;
         lastSignInTime?: string;
     }
+    export interface UserProvider {
+        displayName?: string;
+        email?: string;
+        phoneNumber?: string;
+        photoURL?: string;
+        providerId?: string;
+        uid?: string;
+    }
     export interface UserProviderRequest {
         displayName?: string;
         email?: string;
@@ -390,6 +403,7 @@ export namespace auth {
         tokensValidAfterTime?: string;
         uid: string;
     }
+    {};
 }
 
 // @public (undocumented)

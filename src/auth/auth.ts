@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 
+import { deepCopy } from '../utils/deep-copy';
 import { UserRecord } from './user-record';
 import {
   isUidIdentifier, isEmailIdentifier, isPhoneIdentifier, isProviderIdentifier,
@@ -167,6 +168,36 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
    */
   public getUserByPhoneNumber(phoneNumber: string): Promise<UserRecord> {
     return this.authRequestHandler.getAccountInfoByPhoneNumber(phoneNumber)
+      .then((response: any) => {
+        // Returns the user record populated with server response.
+        return new UserRecord(response.users[0]);
+      });
+  }
+
+  /**
+   * Gets the user data for the user corresponding to a given provider id.
+   *
+   * See [Retrieve user data](/docs/auth/admin/manage-users#retrieve_user_data)
+   * for code samples and detailed documentation.
+   *
+   * @param providerId The provider ID, for example, "google.com" for the
+   *   Google provider.
+   * @param uid The user identifier for the given provider.
+   *
+   * @return A promise fulfilled with the user data corresponding to the
+   *   given provider id.
+   */
+  public getUserByProviderUid(providerId: string, uid: string): Promise<UserRecord> {
+    // Although we don't really advertise it, we want to also handle
+    // non-federated idps with this call. So if we detect one of them, we'll
+    // reroute this request appropriately.
+    if (providerId === 'phone') {
+      return this.getUserByPhoneNumber(uid);
+    } else if (providerId === 'email') {
+      return this.getUserByEmail(uid);
+    }
+
+    return this.authRequestHandler.getAccountInfoByFederatedUid(providerId, uid)
       .then((response: any) => {
         // Returns the user record populated with server response.
         return new UserRecord(response.users[0]);
@@ -351,6 +382,50 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
    * @return {Promise<UserRecord>} A promise that resolves with the modified user record.
    */
   public updateUser(uid: string, properties: UpdateRequest): Promise<UserRecord> {
+    // Although we don't really advertise it, we want to also handle linking of
+    // non-federated idps with this call. So if we detect one of them, we'll
+    // adjust the properties parameter appropriately. This *does* imply that a
+    // conflict could arise, e.g. if the user provides a phoneNumber property,
+    // but also provides a providerToLink with a 'phone' provider id. In that
+    // case, we'll throw an error.
+    properties = deepCopy(properties);
+
+    if (properties?.providerToLink) {
+      if (properties.providerToLink.providerId === 'email') {
+        if (typeof properties.email !== 'undefined') {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_ARGUMENT,
+            "Both UpdateRequest.email and UpdateRequest.providerToLink.providerId='email' were set. To "
+            + 'link to the email/password provider, only specify the UpdateRequest.email field.');
+        }
+        properties.email = properties.providerToLink.uid;
+        delete properties.providerToLink;
+      } else if (properties.providerToLink.providerId === 'phone') {
+        if (typeof properties.phoneNumber !== 'undefined') {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_ARGUMENT,
+            "Both UpdateRequest.phoneNumber and UpdateRequest.providerToLink.providerId='phone' were set. To "
+            + 'link to a phone provider, only specify the UpdateRequest.phoneNumber field.');
+        }
+        properties.phoneNumber = properties.providerToLink.uid;
+        delete properties.providerToLink;
+      }
+    }
+    if (properties?.providersToUnlink) {
+      if (properties.providersToUnlink.indexOf('phone') !== -1) {
+        // If we've been told to unlink the phone provider both via setting
+        // phoneNumber to null *and* by setting providersToUnlink to include
+        // 'phone', then we'll reject that. Though it might also be reasonable
+        // to relax this restriction and just unlink it.
+        if (properties.phoneNumber === null) {
+          throw new FirebaseAuthError(
+            AuthClientErrorCode.INVALID_ARGUMENT,
+            "Both UpdateRequest.phoneNumber=null and UpdateRequest.providersToUnlink=['phone'] were set. To "
+            + 'unlink from a phone provider, only specify the UpdateRequest.phoneNumber=null field.');
+        }
+      }
+    }
+
     return this.authRequestHandler.updateExistingAccount(uid, properties)
       .then((existingUid) => {
         // Return the corresponding user record.
