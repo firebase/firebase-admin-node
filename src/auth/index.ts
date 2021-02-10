@@ -156,7 +156,7 @@ export namespace auth {
   /**
    * Represents a user identity provider that can be associated with a Firebase user.
    */
-  interface UserProvider {
+  export interface UserProvider {
 
     /**
      * The user identifier for the linked provider.
