@@ -20,6 +20,36 @@ import { InstanceId } from './instance-id';
 
 export { InstanceId };
 
+/**
+ * Gets the {@link InstanceId `InstanceId`} service for the
+ * default app or a given app.
+ *
+ * `getInstanceId()` can be called with no arguments to access the default
+ * app's {@link InstanceId `InstanceId`} service or as
+ * `getInstanceId(app)` to access the
+ * {@link InstanceId `InstanceId`} service associated with a
+ * specific app.
+ *
+ * @example
+ * ```javascript
+ * // Get the Instance ID service for the default app
+ * const defaultInstanceId = getInstanceId();
+ * ```
+ *
+ * @example
+ * ```javascript
+ * // Get the Instance ID service for a given app
+ * const otherInstanceId = getInstanceId(otherApp);
+ *```
+ *
+ * @param app Optional app whose `InstanceId` service to
+ *   return. If not provided, the default `InstanceId` service will be
+ *   returned.
+ *
+ * @return The default `InstanceId` service if
+ *   no app is provided or the `InstanceId` service associated with the
+ *   provided app.
+ */
 export function getInstanceId(app?: App): InstanceId {
   if (typeof app === 'undefined') {
     app = getApp();

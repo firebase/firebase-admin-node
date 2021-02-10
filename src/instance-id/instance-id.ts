@@ -20,18 +20,8 @@ import { FirebaseInstanceIdRequestHandler } from './instance-id-request-internal
 import * as validator from '../utils/validator';
 
 /**
- * Gets the {@link InstanceId `InstanceId`} service for the
- * current app.
- *
- * @example
- * ```javascript
- * var instanceId = app.instanceId();
- * // The above is shorthand for:
- * // var instanceId = admin.instanceId(app);
- * ```
- *
- * @return The `InstanceId` service for the
- *   current app.
+ * The `InstanceId` service enables deleting the Firebase instance IDs
+ * associated with Firebase client app instances.
  */
 export class InstanceId {
 
