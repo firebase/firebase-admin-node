@@ -46,7 +46,11 @@ const contentPath = path.resolve(`${__dirname}/content-sources/node`);
 const tempHomePath = path.resolve(`${contentPath}/HOME_TEMP.md`);
 const devsitePath = `/docs/reference/admin/node/`;
 
-const firestoreExcludes = ['v1', 'v1beta1', 'setLogFunction','DocumentData'];
+const firestoreExcludes = [
+  'v1', 'v1beta1', 'setLogFunction','DocumentData',
+  'BulkWriterOptions', 'DocumentChangeType', 'FirestoreDataConverter',
+  'GrpcStatus', 'Precondition', 'ReadOptions', 'UpdateData', 'Settings',
+];
 const firestoreHtmlPath = `${docPath}/admin.firestore.html`;
 const firestoreHeader = `<section class="tsd-panel-group tsd-member-group ">
   <h2>Type aliases</h2>
@@ -277,6 +281,18 @@ function fixAllLinks(htmlFiles) {
 function updateHtml(htmlPath, contentBlock) {
   const dom = new jsdom.JSDOM(fs.readFileSync(htmlPath));
   const contentNode = dom.window.document.body.querySelector('.col-12');
+
+  // Recent versions of Typedoc generates an additional index section and a variables
+  // section for namespaces with re-exports. We iterate through these nodes and remove
+  // them from the output.
+  const sections = [];
+  contentNode.childNodes.forEach((child) => {
+    if (child.nodeName === 'SECTION') {
+      sections.push(child);
+    }
+  });
+  contentNode.removeChild(sections[1]);
+  contentNode.removeChild(sections[2]);
 
   const newSection = new jsdom.JSDOM(contentBlock);
   contentNode.appendChild(newSection.window.document.body.firstChild);
