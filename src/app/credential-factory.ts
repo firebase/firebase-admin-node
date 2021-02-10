@@ -26,6 +26,40 @@ let globalAppDefaultCred: Credential | undefined;
 const globalCertCreds: { [key: string]: ServiceAccountCredential } = {};
 const globalRefreshTokenCreds: { [key: string]: RefreshTokenCredential } = {};
 
+/**
+ * Returns a credential created from the
+ * {@link
+ *    https://developers.google.com/identity/protocols/application-default-credentials
+ *    Google Application Default Credentials}
+ * that grants admin access to Firebase services. This credential can be used
+ * in the call to
+ * {@link
+ *   https://firebase.google.com/docs/reference/admin/node/admin#.initializeApp
+ *  `admin.initializeApp()`}.
+ *
+ * Google Application Default Credentials are available on any Google
+ * infrastructure, such as Google App Engine and Google Compute Engine.
+ *
+ * See
+ * {@link
+ *   https://firebase.google.com/docs/admin/setup#initialize_the_sdk
+ *   Initialize the SDK}
+ * for more details.
+ *
+ * @example
+ * ```javascript
+ * initializeApp({
+ *   credential: applicationDefault(),
+ *   databaseURL: "https://<DATABASE_NAME>.firebaseio.com"
+ * });
+ * ```
+ *
+ * @param httpAgent Optional [HTTP Agent](https://nodejs.org/api/http.html#http_class_http_agent)
+ *   to be used when retrieving access tokens from Google token servers.
+ *
+ * @return A credential authenticated via Google
+ *   Application Default Credentials that can be used to initialize an app.
+ */
 export function applicationDefault(httpAgent?: Agent): Credential {
   if (typeof globalAppDefaultCred === 'undefined') {
     globalAppDefaultCred = getApplicationDefault(httpAgent);
@@ -33,6 +67,51 @@ export function applicationDefault(httpAgent?: Agent): Credential {
   return globalAppDefaultCred;
 }
 
+/**
+ * Returns a credential created from the provided service account that grants
+ * admin access to Firebase services. This credential can be used in the call
+ * to
+ * {@link
+ *   https://firebase.google.com/docs/reference/admin/node/admin#.initializeApp
+ *   `admin.initializeApp()`}.
+ *
+ * See
+ * {@link
+ *   https://firebase.google.com/docs/admin/setup#initialize_the_sdk
+ *   Initialize the SDK}
+ * for more details.
+ *
+ * @example
+ * ```javascript
+ * // Providing a path to a service account key JSON file
+ * const serviceAccount = require("path/to/serviceAccountKey.json");
+ * initializeApp({
+ *   credential: cert(serviceAccount),
+ *   databaseURL: "https://<DATABASE_NAME>.firebaseio.com"
+ * });
+ * ```
+ *
+ * @example
+ * ```javascript
+ * // Providing a service account object inline
+ * initializeApp({
+ *   credential: cert({
+ *     projectId: "<PROJECT_ID>",
+ *     clientEmail: "foo@<PROJECT_ID>.iam.gserviceaccount.com",
+ *     privateKey: "-----BEGIN PRIVATE KEY-----<KEY>-----END PRIVATE KEY-----\n"
+ *   }),
+ *   databaseURL: "https://<DATABASE_NAME>.firebaseio.com"
+ * });
+ * ```
+ *
+ * @param serviceAccountPathOrObject The path to a service
+ *   account key JSON file or an object representing a service account key.
+ * @param httpAgent Optional [HTTP Agent](https://nodejs.org/api/http.html#http_class_http_agent)
+ *   to be used when retrieving access tokens from Google token servers.
+ *
+ * @return A credential authenticated via the
+ *   provided service account that can be used to initialize an app.
+ */
 export function cert(serviceAccountPathOrObject: string | ServiceAccount, httpAgent?: Agent): Credential {
   const stringifiedServiceAccount = JSON.stringify(serviceAccountPathOrObject);
   if (!(stringifiedServiceAccount in globalCertCreds)) {
@@ -42,6 +121,39 @@ export function cert(serviceAccountPathOrObject: string | ServiceAccount, httpAg
   return globalCertCreds[stringifiedServiceAccount];
 }
 
+/**
+ * Returns a credential created from the provided refresh token that grants
+ * admin access to Firebase services. This credential can be used in the call
+ * to
+ * {@link
+ *   https://firebase.google.com/docs/reference/admin/node/admin#.initializeApp
+ *   `admin.initializeApp()`}.
+ *
+ * See
+ * {@link
+ *   https://firebase.google.com/docs/admin/setup#initialize_the_sdk
+ *   Initialize the SDK}
+ * for more details.
+ *
+ * @example
+ * ```javascript
+ * // Providing a path to a refresh token JSON file
+ * const refreshToken = require("path/to/refreshToken.json");
+ * initializeApp({
+ *   credential: refreshToken(refreshToken),
+ *   databaseURL: "https://<DATABASE_NAME>.firebaseio.com"
+ * });
+ * ```
+ *
+ * @param refreshTokenPathOrObject The path to a Google
+ *   OAuth2 refresh token JSON file or an object representing a Google OAuth2
+ *   refresh token.
+ * @param httpAgent Optional [HTTP Agent](https://nodejs.org/api/http.html#http_class_http_agent)
+ *   to be used when retrieving access tokens from Google token servers.
+ *
+ * @return A credential authenticated via the
+ *   provided service account that can be used to initialize an app.
+ */
 export function refreshToken(refreshTokenPathOrObject: string | object, httpAgent?: Agent): Credential {
   const stringifiedRefreshToken = JSON.stringify(refreshTokenPathOrObject);
   if (!(stringifiedRefreshToken in globalRefreshTokenCreds)) {

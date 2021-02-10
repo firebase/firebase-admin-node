@@ -29,6 +29,14 @@ export interface GoogleOAuthAccessToken {
   expires_in: number;
 }
 
+/**
+ * Interface that provides Google OAuth2 access tokens used to authenticate
+ * with Firebase services.
+ *
+ * In most cases, you will not need to implement this yourself and can instead
+ * use the default implementations provided by
+ * {@link credential `admin.credential`}.
+ */
 export interface Credential {
   /**
    * Returns a Google OAuth2 access token object used to authenticate with

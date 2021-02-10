@@ -84,6 +84,16 @@ export interface AppOptions {
   httpAgent?: Agent;
 }
 
+/**
+ * A Firebase app holds the initialization information for a collection of
+ * services.
+ *
+ * Do not call this constructor directly. Instead, use
+ * {@link
+ *   https://firebase.google.com/docs/reference/admin/node/admin#.initializeApp
+ *   `admin.initializeApp()`}
+ * to create an app.
+ */
 export interface App {
 
   /**
@@ -94,14 +104,14 @@ export interface App {
    * @example
    * ```javascript
    * // The default app's name is "[DEFAULT]"
-   * admin.initializeApp(defaultAppConfig);
+   * initializeApp(defaultAppConfig);
    * console.log(admin.app().name);  // "[DEFAULT]"
    * ```
    *
    * @example
    * ```javascript
    * // A named app's name is what you provide to initializeApp()
-   * var otherApp = admin.initializeApp(otherAppConfig, "other");
+   * const otherApp = initializeApp(otherAppConfig, "other");
    * console.log(otherApp.name);  // "other"
    * ```
    */
@@ -116,7 +126,7 @@ export interface App {
    *
    * @example
    * ```javascript
-   * var app = admin.initializeApp(config);
+   * const app = initializeApp(config);
    * console.log(app.options.credential === config.credential);  // true
    * console.log(app.options.databaseURL === config.databaseURL);  // true
    * ```

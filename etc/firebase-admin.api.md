@@ -10,7 +10,7 @@ import { FirebaseDatabase } from '@firebase/database-types';
 import * as _firestore from '@google-cloud/firestore';
 import * as rtdb from '@firebase/database-types';
 
-// @public (undocumented)
+// @public
 export interface App {
     name: string;
     options: AppOptions;
@@ -46,7 +46,7 @@ export namespace app {
     }
 }
 
-// @public (undocumented)
+// @public
 export function applicationDefault(httpAgent?: Agent): Credential;
 
 // @public
@@ -274,10 +274,10 @@ export namespace auth {
     export type UserRecord = UserRecord;
 }
 
-// @public (undocumented)
+// @public
 export function cert(serviceAccountPathOrObject: string | ServiceAccount, httpAgent?: Agent): Credential;
 
-// @public (undocumented)
+// @public
 export interface Credential {
     getAccessToken(): Promise<GoogleOAuthAccessToken>;
 }
@@ -316,7 +316,7 @@ export namespace database {
     const ServerValue: rtdb.ServerValue;
 }
 
-// @public (undocumented)
+// @public
 export function deleteApp(app: App): Promise<void>;
 
 // @public
@@ -618,7 +618,7 @@ export namespace projectManagement {
     export type ShaCertificate = ShaCertificate;
 }
 
-// @public (undocumented)
+// @public
 export function refreshToken(refreshTokenPathOrObject: string | object, httpAgent?: Agent): Credential;
 
 // @public
