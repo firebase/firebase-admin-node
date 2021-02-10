@@ -147,7 +147,7 @@ And then:
 
 ```bash
   firebase emulators:exec --project fake-project-id --only auth,database,firestore \
-    'mocha \"test/integration/{auth,database,firestore}.spec.ts\" --slow 5000 --timeout 20000 --require ts-node/register'
+    'npx mocha \"test/integration/{auth,database,firestore}.spec.ts\" --slow 5000 --timeout 20000 --require ts-node/register'
 ```
 
 Currently, only the Auth, Database, and Firestore test suites work. Some test
