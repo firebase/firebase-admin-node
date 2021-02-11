@@ -94,6 +94,8 @@ toc:
     path: /docs/reference/admin/node/admin.auth.UserProviderRequest
   - title: "UserRecord"
     path: /docs/reference/admin/node/admin.auth.UserRecord
+  - title: "UserProvider"
+    path: /docs/reference/admin/node/admin.auth.UserProvider
   - title: "SessionCookieOptions"
     path: /docs/reference/admin/node/admin.auth.SessionCookieOptions
   - title: "BaseAuth"
