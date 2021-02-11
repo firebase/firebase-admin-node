@@ -26,7 +26,7 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as utils from '../utils';
 import * as mocks from '../../resources/mocks';
 
-import { InstanceId } from '../../../src/instance-id/instance-id';
+import { InstanceId } from '../../../src/instance-id/index';
 import { FirebaseInstanceIdRequestHandler } from '../../../src/instance-id/instance-id-request-internal';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { FirebaseInstanceIdError, InstanceIdClientErrorCode } from '../../../src/utils/error';

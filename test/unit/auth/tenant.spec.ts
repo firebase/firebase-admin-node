@@ -21,9 +21,9 @@ import * as chaiAsPromised from 'chai-as-promised';
 
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { EmailSignInConfig, MultiFactorAuthConfig } from '../../../src/auth/auth-config';
-import { Tenant, TenantServerResponse } from '../../../src/auth/tenant';
+import { TenantServerResponse } from '../../../src/auth/tenant';
 import {
-  CreateTenantRequest, UpdateTenantRequest, EmailSignInProviderConfig,
+  CreateTenantRequest, UpdateTenantRequest, EmailSignInProviderConfig, Tenant,
 } from '../../../src/auth/index';
 
 chai.should();

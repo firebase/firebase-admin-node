@@ -25,11 +25,10 @@ import * as chaiAsPromised from 'chai-as-promised';
 import * as mocks from '../../resources/mocks';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { AuthRequestHandler } from '../../../src/auth/auth-api-request';
-import { Tenant, TenantServerResponse } from '../../../src/auth/tenant';
-import { TenantManager } from '../../../src/auth/tenant-manager';
+import { TenantServerResponse } from '../../../src/auth/tenant';
 import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
 import {
-  CreateTenantRequest, UpdateTenantRequest, ListTenantsResult,
+  CreateTenantRequest, UpdateTenantRequest, ListTenantsResult, Tenant, TenantManager,
 } from '../../../src/auth/index';
 
 chai.should();

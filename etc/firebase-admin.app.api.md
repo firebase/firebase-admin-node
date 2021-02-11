@@ -37,6 +37,20 @@ export interface Credential {
 // @public (undocumented)
 export function deleteApp(app: App): Promise<void>;
 
+// @public
+export interface FirebaseArrayIndexError {
+    error: FirebaseError;
+    index: number;
+}
+
+// @public
+export interface FirebaseError {
+    code: string;
+    message: string;
+    stack?: string;
+    toJSON(): object;
+}
+
 // @public (undocumented)
 export function getApp(name?: string): App;
 

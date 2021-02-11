@@ -19,7 +19,6 @@
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as sinon from 'sinon';
-import { remoteConfig } from '../../../src/remote-config/index';
 import {
   FirebaseRemoteConfigError,
   RemoteConfigApiClient
@@ -31,10 +30,9 @@ import { FirebaseAppError } from '../../../src/utils/error';
 import { FirebaseApp } from '../../../src/app/firebase-app';
 import { deepCopy } from '../../../src/utils/deep-copy';
 import { getSdkVersion } from '../../../src/utils/index';
-
-import RemoteConfigTemplate = remoteConfig.RemoteConfigTemplate;
-import Version = remoteConfig.Version;
-import ListVersionsResult = remoteConfig.ListVersionsResult;
+import {
+  RemoteConfigTemplate, Version, ListVersionsResult,
+} from '../../../src/remote-config/index';
 
 const expect = chai.expect;
 

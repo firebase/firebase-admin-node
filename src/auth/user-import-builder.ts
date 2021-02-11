@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
+import { FirebaseArrayIndexError } from '../app/index';
 import { deepCopy, deepExtend } from '../utils/deep-copy';
 import * as utils from '../utils';
 import * as validator from '../utils/validator';
 import { AuthClientErrorCode, FirebaseAuthError } from '../utils/error';
-import { FirebaseArrayIndexError } from '../firebase-namespace-api';
 import {
   UpdateMultiFactorInfoRequest, UpdatePhoneMultiFactorInfoRequest, MultiFactorUpdateSettings
 } from './auth-config';
