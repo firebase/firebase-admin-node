@@ -77,3 +77,8 @@ import './security-rules/security-rules-api-client.spec';
 // RemoteConfig
 import './remote-config/remote-config.spec';
 import './remote-config/remote-config-api-client.spec';
+
+// AppCheck
+import './app-check/app-check.spec';
+import './app-check/app-check-api-client-internal.spec';
+import './app-check/token-generator.spec';
