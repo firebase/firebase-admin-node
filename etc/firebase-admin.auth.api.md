@@ -155,14 +155,13 @@ export interface AuthProviderConfigFilter {
 }
 
 // @public
-export class BaseAuth {
+export abstract class BaseAuth {
     createCustomToken(uid: string, developerClaims?: object): Promise<string>;
     createProviderConfig(config: AuthProviderConfig): Promise<AuthProviderConfig>;
     createSessionCookie(idToken: string, sessionCookieOptions: SessionCookieOptions): Promise<string>;
     createUser(properties: CreateRequest): Promise<UserRecord>;
     deleteProviderConfig(providerId: string): Promise<void>;
     deleteUser(uid: string): Promise<void>;
-    // (undocumented)
     deleteUsers(uids: string[]): Promise<DeleteUsersResult>;
     generateEmailVerificationLink(email: string, actionCodeSettings?: ActionCodeSettings): Promise<string>;
     generatePasswordResetLink(email: string, actionCodeSettings?: ActionCodeSettings): Promise<string>;
@@ -205,7 +204,6 @@ export type CreateTenantRequest = UpdateTenantRequest;
 
 // @public
 export interface DecodedIdToken {
-    // (undocumented)
     [key: string]: any;
     aud: string;
     auth_time: number;
@@ -250,7 +248,7 @@ export interface EmailSignInProviderConfig {
     passwordRequired?: boolean;
 }
 
-// @public (undocumented)
+// @public
 export function getAuth(app?: App): Auth;
 
 // @public
@@ -280,7 +278,7 @@ export interface ListUsersResult {
     users: UserRecord[];
 }
 
-// @public (undocumented)
+// @public
 export interface MultiFactorConfig {
     factorIds?: AuthFactorType[];
     state: MultiFactorConfigState;
@@ -296,20 +294,15 @@ export interface MultiFactorCreateSettings {
 
 // @public
 export abstract class MultiFactorInfo {
-    // (undocumented)
     readonly displayName?: string;
-    // (undocumented)
     readonly enrollmentTime?: string;
-    // (undocumented)
     readonly factorId: string;
-    toJSON(): any;
-    // (undocumented)
+    toJSON(): object;
     readonly uid: string;
 }
 
 // @public
 export class MultiFactorSettings {
-    // (undocumented)
     enrolledFactors: MultiFactorInfo[];
     toJSON(): any;
 }
@@ -341,9 +334,8 @@ export interface PhoneIdentifier {
 
 // @public
 export class PhoneMultiFactorInfo extends MultiFactorInfo {
-    // (undocumented)
     readonly phoneNumber: string;
-    toJSON(): any;
+    toJSON(): object;
 }
 
 // @public
@@ -381,15 +373,10 @@ export interface SessionCookieOptions {
 
 // @public
 export class Tenant {
-    // (undocumented)
     readonly displayName?: string;
-    // (undocumented)
     get emailSignInConfig(): EmailSignInProviderConfig | undefined;
-    // (undocumented)
     get multiFactorConfig(): MultiFactorConfig | undefined;
-    // (undocumented)
     readonly tenantId: string;
-    // (undocumented)
     readonly testPhoneNumbers?: {
         [phoneNumber: string]: string;
     };
@@ -399,7 +386,6 @@ export class Tenant {
 // @public
 export class TenantAwareAuth extends BaseAuth {
     createSessionCookie(idToken: string, sessionCookieOptions: SessionCookieOptions): Promise<string>;
-    // (undocumented)
     readonly tenantId: string;
     verifyIdToken(idToken: string, checkRevoked?: boolean): Promise<DecodedIdToken>;
     verifySessionCookie(sessionCookie: string, checkRevoked?: boolean): Promise<DecodedIdToken>;
@@ -505,27 +491,19 @@ export interface UserImportResult {
 
 // @public
 export class UserInfo {
-    // (undocumented)
     readonly displayName: string;
-    // (undocumented)
     readonly email: string;
-    // (undocumented)
     readonly phoneNumber: string;
-    // (undocumented)
     readonly photoURL: string;
-    // (undocumented)
     readonly providerId: string;
     toJSON(): object;
-    // (undocumented)
     readonly uid: string;
 }
 
 // @public
 export class UserMetadata {
-    // (undocumented)
     readonly creationTime: string;
     readonly lastRefreshTime: string | null;
-    // (undocumented)
     readonly lastSignInTime: string;
     toJSON(): object;
 }
@@ -548,38 +526,23 @@ export interface UserProviderRequest {
 
 // @public
 export class UserRecord {
-    // (undocumented)
-    readonly customClaims: {
+    readonly customClaims?: {
         [key: string]: any;
     };
-    // (undocumented)
     readonly disabled: boolean;
-    // (undocumented)
-    readonly displayName: string;
-    // (undocumented)
-    readonly email: string;
-    // (undocumented)
+    readonly displayName?: string;
+    readonly email?: string;
     readonly emailVerified: boolean;
-    // (undocumented)
     readonly metadata: UserMetadata;
-    // (undocumented)
     readonly multiFactor?: MultiFactorSettings;
-    // (undocumented)
     readonly passwordHash?: string;
-    // (undocumented)
     readonly passwordSalt?: string;
-    // (undocumented)
-    readonly phoneNumber: string;
-    // (undocumented)
-    readonly photoURL: string;
-    // (undocumented)
+    readonly phoneNumber?: string;
+    readonly photoURL?: string;
     readonly providerData: UserInfo[];
-    // (undocumented)
     readonly tenantId?: string | null;
     toJSON(): object;
-    // (undocumented)
     readonly tokensValidAfterTime?: string;
-    // (undocumented)
     readonly uid: string;
 }
 

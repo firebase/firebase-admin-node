@@ -167,6 +167,10 @@ export interface DecodedIdToken {
    * convenience, and is set as the value of the [`sub`](#sub) property.
    */
   uid: string;
+
+  /**
+   * Other arbitrary claims included in the ID token.
+   */
   [key: string]: any;
 }
 

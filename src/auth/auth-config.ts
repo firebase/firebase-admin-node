@@ -406,6 +406,11 @@ export type AuthFactorType = 'phone';
  */
 export type MultiFactorConfigState = 'ENABLED' | 'DISABLED';
 
+/**
+ * Interface representing a multi-factor configuration.
+ * This can be used to define whether multi-factor authentication is enabled
+ * or disabled and the list of second factor challenges that are supported.
+ */
 export interface MultiFactorConfig {
   /**
    * The multi-factor config state.
@@ -584,7 +589,7 @@ export function validateTestPhoneNumbers(
 }
 
 /**
- * The email sign in configuration.
+ * The email sign in provider configuration.
  */
 export interface EmailSignInProviderConfig {
   /**
@@ -1010,7 +1015,7 @@ export class SAMLConfig implements SAMLAuthProviderConfig {
   /**
    * The SAMLConfig constructor.
    *
-   * @param {any} response The server side response used to initialize the SAMLConfig object.
+   * @param response The server side response used to initialize the SAMLConfig object.
    * @constructor
    */
   constructor(response: SAMLConfigServerResponse) {
@@ -1211,7 +1216,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
   /**
    * The OIDCConfig constructor.
    *
-   * @param {any} response The server side response used to initialize the OIDCConfig object.
+   * @param response The server side response used to initialize the OIDCConfig object.
    * @constructor
    */
   constructor(response: OIDCConfigServerResponse) {

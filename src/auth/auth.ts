@@ -49,7 +49,9 @@ export class Auth extends BaseAuth {
     return this.app_;
   }
 
-  /** @return The current Auth instance's tenant manager. */
+  /**
+   * @return The tenant manager instance associated with the current project.
+   */
   public tenantManager(): TenantManager {
     return this.tenantManager_;
   }

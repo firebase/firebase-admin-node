@@ -75,22 +75,51 @@ export interface TenantServerResponse {
 }
 
 /**
- * Tenant class that defines a Firebase Auth tenant.
+ * Represents a tenant configuration.
+ *
+ * Multi-tenancy support requires Google Cloud's Identity Platform
+ * (GCIP). To learn more about GCIP, including pricing and features,
+ * see the [GCIP documentation](https://cloud.google.com/identity-platform)
+ *
+ * Before multi-tenancy can be used on a Google Cloud Identity Platform project,
+ * tenants must be allowed on that project via the Cloud Console UI.
+ *
+ * A tenant configuration provides information such as the display name, tenant
+ * identifier and email authentication configuration.
+ * For OIDC/SAML provider configuration management, `TenantAwareAuth` instances should
+ * be used instead of a `Tenant` to retrieve the list of configured IdPs on a tenant.
+ * When configuring these providers, note that tenants will inherit
+ * whitelisted domains and authenticated redirect URIs of their parent project.
+ *
+ * All other settings of a tenant will also be inherited. These will need to be managed
+ * from the Cloud Console UI.
  */
 export class Tenant {
 
+  /**
+   * The tenant identifier.
+   */
   public readonly tenantId: string;
+
+  /**
+   * The tenant display name.
+   */
   public readonly displayName?: string;
+
+  /**
+   * The map containing the test phone number / code pairs for the tenant.
+   */
+  public readonly testPhoneNumbers?: {[phoneNumber: string]: string};
+
   private readonly emailSignInConfig_?: EmailSignInConfig;
   private readonly multiFactorConfig_?: MultiFactorAuthConfig;
-  public readonly testPhoneNumbers?: {[phoneNumber: string]: string};
 
   /**
    * Builds the corresponding server request for a TenantOptions object.
    *
-   * @param {TenantOptions} tenantOptions The properties to convert to a server request.
-   * @param {boolean} createRequest Whether this is a create request.
-   * @return {object} The equivalent server request.
+   * @param tenantOptions The properties to convert to a server request.
+   * @param createRequest Whether this is a create request.
+   * @return The equivalent server request.
    *
    * @internal
    */
@@ -224,15 +253,23 @@ export class Tenant {
     }
   }
 
+  /**
+   * The email sign in provider configuration.
+   */
   get emailSignInConfig(): EmailSignInProviderConfig | undefined {
     return this.emailSignInConfig_;
   }
 
+  /**
+   * The multi-factor auth configuration on the current tenant.
+   */
   get multiFactorConfig(): MultiFactorConfig | undefined {
     return this.multiFactorConfig_;
   }
 
-  /** @return {object} The plain object representation of the tenant. */
+  /**
+   * @return A JSON-serializable representation of this object.
+   */
   public toJSON(): object {
     const json = {
       tenantId: this.tenantId,
