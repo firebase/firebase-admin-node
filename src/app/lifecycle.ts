@@ -41,6 +41,23 @@ export function getApps(): App[] {
   return defaultNamespace.apps;
 }
 
+/**
+ * Renders this given `App` unusable and frees the resources of
+ * all associated services (though it does *not* clean up any backend
+ * resources). When running the SDK locally, this method
+ * must be called to ensure graceful termination of the process.
+ *
+ * @example
+ * ```javascript
+ * deleteApp(app)
+ *   .then(function() {
+ *     console.log("App deleted successfully");
+ *   })
+ *   .catch(function(error) {
+ *     console.log("Error deleting app:", error);
+ *   });
+ * ```
+ */
 export function deleteApp(app: App): Promise<void> {
   if (typeof app !== 'object' || app === null || !('options' in app)) {
     throw new FirebaseAppError(AppErrorCodes.INVALID_ARGUMENT, 'Invalid app argument.');

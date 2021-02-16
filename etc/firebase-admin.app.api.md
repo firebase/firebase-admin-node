@@ -6,13 +6,13 @@
 
 import { Agent } from 'http';
 
-// @public (undocumented)
+// @public
 export interface App {
     name: string;
     options: AppOptions;
 }
 
-// @public (undocumented)
+// @public
 export function applicationDefault(httpAgent?: Agent): Credential;
 
 // @public
@@ -26,15 +26,15 @@ export interface AppOptions {
     storageBucket?: string;
 }
 
-// @public (undocumented)
+// @public
 export function cert(serviceAccountPathOrObject: string | ServiceAccount, httpAgent?: Agent): Credential;
 
-// @public (undocumented)
+// @public
 export interface Credential {
     getAccessToken(): Promise<GoogleOAuthAccessToken>;
 }
 
-// @public (undocumented)
+// @public
 export function deleteApp(app: App): Promise<void>;
 
 // @public
@@ -68,7 +68,7 @@ export interface GoogleOAuthAccessToken {
 // @public (undocumented)
 export function initializeApp(options?: AppOptions, name?: string): App;
 
-// @public (undocumented)
+// @public
 export function refreshToken(refreshTokenPathOrObject: string | object, httpAgent?: Agent): Credential;
 
 // @public (undocumented)
