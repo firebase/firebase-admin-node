@@ -39,7 +39,14 @@ export interface AndroidAppMetadata extends AppMetadata {
   packageName: string;
 }
 
+/**
+ * A reference to a Firebase Android app.
+ *
+ * Do not call this constructor directly. Instead, use
+ * [`projectManagement.androidApp()`](projectManagement.ProjectManagement#androidApp).
+ */
 export class AndroidApp {
+
   private readonly resourceName: string;
 
   /**

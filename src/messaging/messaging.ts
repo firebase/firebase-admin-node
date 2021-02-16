@@ -221,9 +221,13 @@ export class Messaging {
   }
 
   /**
-   * Returns the app associated with this Messaging instance.
+   * The {@link app.App app} associated with the current `Messaging` service
+   * instance.
    *
-   * @return The app associated with this Messaging instance.
+   * @example
+   * ```javascript
+   * var app = messaging.app;
+   * ```
    */
   get app(): App {
     return this.appInternal;

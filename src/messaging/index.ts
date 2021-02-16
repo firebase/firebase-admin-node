@@ -60,6 +60,35 @@ export {
   NotificationMessagePayload,
 } from './messaging-api';
 
+/**
+ * Gets the {@link messaging.Messaging `Messaging`} service for the
+ * default app or a given app.
+ *
+ * `admin.messaging()` can be called with no arguments to access the default
+ * app's {@link messaging.Messaging `Messaging`} service or as
+ * `admin.messaging(app)` to access the
+ * {@link messaging.Messaging `Messaging`} service associated with a
+ * specific app.
+ *
+ * @example
+ * ```javascript
+ * // Get the Messaging service for the default app
+ * const defaultMessaging = getMessaging();
+ * ```
+ *
+ * @example
+ * ```javascript
+ * // Get the Messaging service for a given app
+ * const otherMessaging = getMessaging(otherApp);
+ * ```
+ *
+ * @param app Optional app whose `Messaging` service to
+ *   return. If not provided, the default `Messaging` service will be returned.
+ *
+ * @return The default `Messaging` service if no
+ *   app is provided or the `Messaging` service associated with the provided
+ *   app.
+ */
 export function getMessaging(app?: App): Messaging {
   if (typeof app === 'undefined') {
     app = getApp();

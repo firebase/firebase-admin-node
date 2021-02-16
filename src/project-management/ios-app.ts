@@ -36,7 +36,14 @@ export interface IosAppMetadata extends AppMetadata {
   bundleId: string;
 }
 
+/**
+ * A reference to a Firebase iOS app.
+ *
+ * Do not call this constructor directly. Instead, use
+ * [`projectManagement.iosApp()`](projectManagement.ProjectManagement#iosApp).
+ */
 export class IosApp {
+
   private readonly resourceName: string;
 
   /**
@@ -56,7 +63,7 @@ export class IosApp {
   /**
    * Retrieves metadata about this iOS app.
    *
-   * @return {!Promise<admin.projectManagement.IosAppMetadata>} A promise that
+   * @return A promise that
    *     resolves to the retrieved metadata about this iOS app.
    */
   public getMetadata(): Promise<IosAppMetadata> {
