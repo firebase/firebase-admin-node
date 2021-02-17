@@ -58,7 +58,7 @@ export interface TFLiteModel {
 }
 
 /**
- * The Firebase Machine Learning class
+ * The Firebase `MachineLearning` service interface.
  */
 export class MachineLearning {
 
@@ -84,20 +84,19 @@ export class MachineLearning {
   }
 
   /**
-   * Returns the app associated with this ML instance.
-   *
-   * @return The app associated with this ML instance.
+   *  The {@link app.App} associated with the current `MachineLearning`
+   *  service instance.
    */
   public get app(): App {
     return this.appInternal;
   }
 
   /**
-   * Creates a model in Firebase ML.
+   * Creates a model in the current Firebase project.
    *
-   * @param {ModelOptions} model The model to create.
+   * @param model The model to create.
    *
-   * @return {Promise<Model>} A Promise fulfilled with the created model.
+   * @return A Promise fulfilled with the created model.
    */
   public createModel(model: ModelOptions): Promise<Model> {
     return this.signUrlIfPresent(model)
@@ -107,12 +106,12 @@ export class MachineLearning {
   }
 
   /**
-   * Updates a model in Firebase ML.
+   * Updates a model's metadata or model file.
    *
-   * @param {string} modelId The id of the model to update.
-   * @param {ModelOptions} model The model fields to update.
+   * @param modelId The ID of the model to update.
+   * @param model The model fields to update.
    *
-   * @return {Promise<Model>} A Promise fulfilled with the updated model.
+   * @return A Promise fulfilled with the updated model.
    */
   public updateModel(modelId: string, model: ModelOptions): Promise<Model> {
     const updateMask = utils.generateUpdateMask(model);
@@ -123,33 +122,35 @@ export class MachineLearning {
   }
 
   /**
-   * Publishes a model in Firebase ML.
+   * Publishes a Firebase ML model.
    *
-   * @param {string} modelId The id of the model to publish.
+   * A published model can be downloaded to client apps.
    *
-   * @return {Promise<Model>} A Promise fulfilled with the published model.
+   * @param modelId The ID of the model to publish.
+   *
+   * @return A Promise fulfilled with the published model.
    */
   public publishModel(modelId: string): Promise<Model> {
     return this.setPublishStatus(modelId, true);
   }
 
   /**
-   * Unpublishes a model in Firebase ML.
+   * Unpublishes a Firebase ML model.
    *
-   * @param {string} modelId The id of the model to unpublish.
+   * @param modelId The ID of the model to unpublish.
    *
-   * @return {Promise<Model>} A Promise fulfilled with the unpublished model.
+   * @return A Promise fulfilled with the unpublished model.
    */
   public unpublishModel(modelId: string): Promise<Model> {
     return this.setPublishStatus(modelId, false);
   }
 
   /**
-   * Gets a model from Firebase ML.
+   * Gets the model specified by the given ID.
    *
-   * @param {string} modelId The id of the model to get.
+   * @param modelId The ID of the model to get.
    *
-   * @return {Promise<Model>} A Promise fulfilled with the unpublished model.
+   * @return A Promise fulfilled with the model object.
    */
   public getModel(modelId: string): Promise<Model> {
     return this.client.getModel(modelId)
@@ -157,14 +158,14 @@ export class MachineLearning {
   }
 
   /**
-   * Lists models from Firebase ML.
+   * Lists the current project's models.
    *
-   * @param {ListModelsOptions} options The listing options.
+   * @param options The listing options.
    *
-   * @return {Promise<{models: Model[], pageToken?: string}>} A promise that
+   * @return A promise that
    *     resolves with the current (filtered) list of models and the next page
-   *     token. For the last page, an empty list of models and no page token are
-   *     returned.
+   *     token. For the last page, an empty list of models and no page token
+   *     are returned.
    */
   public listModels(options: ListModelsOptions = {}): Promise<ListModelsResult> {
     return this.client.listModels(options)
@@ -187,9 +188,9 @@ export class MachineLearning {
   }
 
   /**
-   * Deletes a model from Firebase ML.
+   * Deletes a model from the current project.
    *
-   * @param {string} modelId The id of the model to delete.
+   * @param modelId The ID of the model to delete.
    */
   public deleteModel(modelId: string): Promise<void> {
     return this.client.deleteModel(modelId);
@@ -257,55 +258,80 @@ export class Model {
     this.client = client;
   }
 
+  /** The ID of the model. */
   get modelId(): string {
     return extractModelId(this.model.name);
   }
 
+  /**
+   * The model's name. This is the name you use from your app to load the
+   * model.
+   */
   get displayName(): string {
     return this.model.displayName!;
   }
 
+  /**
+   * The model's tags, which can be used to group or filter models in list
+   * operations.
+   */
   get tags(): string[] {
     return this.model.tags || [];
   }
 
+  /** The timestamp of the model's creation. */
   get createTime(): string {
     return new Date(this.model.createTime).toUTCString();
   }
 
+  /** The timestamp of the model's most recent update. */
   get updateTime(): string {
     return new Date(this.model.updateTime).toUTCString();
   }
 
+  /** Error message when model validation fails. */
   get validationError(): string | undefined {
     return this.model.state?.validationError?.message;
   }
 
+  /** True if the model is published. */
   get published(): boolean {
     return this.model.state?.published || false;
   }
 
+  /**
+   * The ETag identifier of the current version of the model. This value
+   * changes whenever you update any of the model's properties.
+   */
   get etag(): string {
     return this.model.etag;
   }
 
+  /**
+   * The hash of the model's `tflite` file. This value changes only when
+   * you upload a new TensorFlow Lite model.
+   */
   get modelHash(): string | undefined {
     return this.model.modelHash;
   }
 
+  /** Metadata about the model's TensorFlow Lite model file. */
   get tfliteModel(): TFLiteModel | undefined {
     // Make a copy so people can't directly modify the private this.model object.
     return deepCopy(this.model.tfliteModel);
   }
 
   /**
-   * Locked indicates if there are active long running operations on the model.
-   * Models may not be modified when they are locked.
+   * True if the model is locked by a server-side operation. You can't make
+   * changes to a locked model. See {@link waitForUnlocked `waitForUnlocked()`}.
    */
   public get locked(): boolean {
     return (this.model.activeOperations?.length ?? 0) > 0;
   }
 
+  /**
+   * Return the model as a JSON object.
+   */
   public toJSON(): {[key: string]: any} {
     // We can't just return this.model because it has extra fields and
     // different formats etc. So we build the expected model object.
@@ -338,9 +364,13 @@ export class Model {
   }
 
   /**
-   * Wait for the active operations on the model to complete.
-   * @param maxTimeMillis The number of milliseconds to wait for the model to be unlocked. If unspecified,
-   *     a default will be used.
+   * Wait for the model to be unlocked.
+   *
+   * @param maxTimeMillis The maximum time in milliseconds to wait.
+   *     If not specified, a default maximum of 2 minutes is used.
+   *
+   * @return A promise that resolves when the model is unlocked
+   *   or the maximum wait time has passed.
    */
   public waitForUnlocked(maxTimeMillis?: number): Promise<void> {
     if ((this.model.activeOperations?.length ?? 0) > 0) {

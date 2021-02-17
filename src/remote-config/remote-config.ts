@@ -29,7 +29,7 @@ import {
 } from './remote-config-api';
 
 /**
- * Remote Config service bound to the provided app.
+ * The Firebase `RemoteConfig` service interface.
  */
 export class RemoteConfig {
 
@@ -234,16 +234,16 @@ class RemoteConfigTemplateImpl implements RemoteConfigTemplate {
   /**
    * Gets the ETag of the template.
    *
-   * @return {string} The ETag of the Remote Config template.
+   * @return The ETag of the Remote Config template.
    */
   get etag(): string {
     return this.etagInternal;
   }
 
   /**
-   * @return {RemoteConfigTemplate} A JSON-serializable representation of this object.
+   * @return A JSON-serializable representation of this object.
    */
-  public toJSON(): RemoteConfigTemplate {
+  public toJSON(): object {
     return {
       conditions: this.conditions,
       parameters: this.parameters,
@@ -359,9 +359,9 @@ class VersionImpl implements Version {
   }
 
   /**
-   * @return {Version} A JSON-serializable representation of this object.
+   * @return A JSON-serializable representation of this object.
    */
-  public toJSON(): Version {
+  public toJSON(): object {
     return {
       versionNumber: this.versionNumber,
       updateOrigin: this.updateOrigin,

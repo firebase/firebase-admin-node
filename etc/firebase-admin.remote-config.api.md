@@ -13,7 +13,7 @@ export interface ExplicitParameterValue {
 
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
+// @public
 export function getRemoteConfig(app?: App): RemoteConfig;
 
 // @public

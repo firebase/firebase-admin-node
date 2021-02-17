@@ -32,6 +32,35 @@ export {
   ModelOptionsBase,
 } from './machine-learning-api-client';
 
+/**
+ * Gets the {@link machineLearning.MachineLearning `MachineLearning`} service for the
+ * default app or a given app.
+ *
+ * `getMachineLearning()` can be called with no arguments to access the
+ * default app's {@link machineLearning.MachineLearning
+  * `MachineLearning`} service or as `getMachineLearning(app)` to access
+  * the {@link machineLearning.MachineLearning `MachineLearning`}
+  * service associated with a specific app.
+  *
+  * @example
+  * ```javascript
+  * // Get the MachineLearning service for the default app
+  * const defaultMachineLearning = getMachineLearning();
+  * ```
+  *
+  * @example
+  * ```javascript
+  * // Get the MachineLearning service for a given app
+  * const otherMachineLearning = getMachineLearning(otherApp);
+  * ```
+  *
+  * @param app Optional app whose `MachineLearning` service to
+  *   return. If not provided, the default `MachineLearning` service
+  *   will be returned.
+  *
+  * @return The default `MachineLearning` service if no app is provided or the
+  *   `MachineLearning` service associated with the provided app.
+  */
 export function getMachineLearning(app?: App): MachineLearning {
   if (typeof app === 'undefined') {
     app = getApp();

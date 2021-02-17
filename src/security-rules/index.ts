@@ -34,6 +34,34 @@ import {
   SecurityRules as TSecurityRules,
 } from './security-rules';
 
+/**
+ * Gets the {@link securityRules.SecurityRules
+ * `SecurityRules`} service for the default app or a given app.
+ *
+ * `admin.securityRules()` can be called with no arguments to access the
+ * default app's {@link securityRules.SecurityRules
+ * `SecurityRules`} service, or as `admin.securityRules(app)` to access
+ * the {@link securityRules.SecurityRules `SecurityRules`}
+ * service associated with a specific app.
+ *
+ * @example
+ * ```javascript
+ * // Get the SecurityRules service for the default app
+ * const defaultSecurityRules = getSecurityRules();
+ * ```
+ *
+ * @example
+ *   ```javascript
+ * // Get the SecurityRules service for a given app
+ * const otherSecurityRules = getSecurityRules(otherApp);
+ * ```
+ *
+ * @param app Optional app to return the `SecurityRules` service
+ *     for. If not provided, the default `SecurityRules` service
+ *     is returned.
+ * @return The default `SecurityRules` service if no app is provided, or the
+ *   `SecurityRules` service associated with the provided app.
+ */
 export function getSecurityRules(app?: App): SecurityRules {
   if (typeof app === 'undefined') {
     app = getApp();

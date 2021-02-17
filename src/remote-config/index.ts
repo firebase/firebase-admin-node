@@ -34,6 +34,35 @@ export {
 } from './remote-config-api';
 export { RemoteConfig } from './remote-config';
 
+/**
+ * Gets the {@link remoteConfig.RemoteConfig `RemoteConfig`} service for the
+ * default app or a given app.
+ *
+ * `getRemoteConfig()` can be called with no arguments to access the default
+ * app's {@link remoteConfig.RemoteConfig `RemoteConfig`} service or as
+ * `getRemoteConfig(app)` to access the
+ * {@link remoteConfig.RemoteConfig `RemoteConfig`} service associated with a
+ * specific app.
+ *
+ * @example
+ * ```javascript
+ * // Get the `RemoteConfig` service for the default app
+ * const defaultRemoteConfig = getRemoteConfig();
+ * ```
+ *
+ * @example
+ * ```javascript
+ * // Get the `RemoteConfig` service for a given app
+ * const otherRemoteConfig = getRemoteConfig(otherApp);
+ * ```
+ *
+ * @param app Optional app for which to return the `RemoteConfig` service.
+ *   If not provided, the default `RemoteConfig` service is returned.
+ *
+ * @return The default `RemoteConfig` service if no
+ *   app is provided, or the `RemoteConfig` service associated with the provided
+ *   app.
+ */
 export function getRemoteConfig(app?: App): RemoteConfig {
   if (typeof app === 'undefined') {
     app = getApp();
