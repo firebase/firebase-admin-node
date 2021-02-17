@@ -35,13 +35,78 @@ export {
   ThenableReference,
 } from '@firebase/database-types';
 
+/**
+ * [`enableLogging`](https://firebase.google.com/docs/reference/js/firebase.database#enablelogging)
+ * function from the `@firebase/database` package.
+ */
 export const enableLogging: typeof rtdb.enableLogging = enableLoggingFunc;
+
+/**
+ * [`ServerValue`](https://firebase.google.com/docs/reference/js/firebase.database.ServerValue)
+ * module from the `@firebase/database` package.
+ */
 export const ServerValue: rtdb.ServerValue = serverValueConst;
 
+/**
+ * Gets the {@link database.Database `Database`} service for the default
+ * app or a given app.
+ *
+ * `getDatabase()` can be called with no arguments to access the default
+ * app's {@link database.Database `Database`} service or as
+ * `getDatabase(app)` to access the
+ * {@link database.Database `Database`} service associated with a specific
+ * app.
+ *
+ * @example
+ * ```javascript
+ * // Get the Database service for the default app
+ * const defaultDatabase = getDatabase();
+ * ```
+ *
+ * @example
+ * ```javascript
+ * // Get the Database service for a specific app
+ * const otherDatabase = getDatabase(app);
+ * ```
+ *
+ * @param App whose `Database` service to
+ *   return. If not provided, the default `Database` service will be returned.
+ *
+ * @return The default `Database` service if no app
+ *   is provided or the `Database` service associated with the provided app.
+ */
 export function getDatabase(app?: App): Database {
   return getDatabaseInstance({ app });
 }
 
+/**
+ * Gets the {@link database.Database `Database`} service for the default
+ * app or a given app.
+ *
+ * `getDatabaseWithUrl()` can be called with no arguments to access the default
+ * app's {@link database.Database `Database`} service or as
+ * `getDatabaseWithUrl(app)` to access the
+ * {@link database.Database `Database`} service associated with a specific
+ * app.
+ *
+ * @example
+ * ```javascript
+ * // Get the Database service for the default app
+ * const defaultDatabase = getDatabaseWithUrl('https://example.firebaseio.com');
+ * ```
+ *
+ * @example
+ * ```javascript
+ * // Get the Database service for a specific app
+ * const otherDatabase = getDatabaseWithUrl('https://example.firebaseio.com', app);
+ * ```
+ *
+ * @param App whose `Database` service to
+ *   return. If not provided, the default `Database` service will be returned.
+ *
+ * @return The default `Database` service if no app
+ *   is provided or the `Database` service associated with the provided app.
+ */
 export function getDatabaseWithUrl(url: string, app?: App): Database {
   return getDatabaseInstance({ url, app });
 }

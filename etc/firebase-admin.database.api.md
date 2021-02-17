@@ -49,15 +49,15 @@ export namespace database {
 
 export { DataSnapshot }
 
-// @public (undocumented)
+// @public
 export const enableLogging: typeof rtdb.enableLogging;
 
 export { EventType }
 
-// @public (undocumented)
+// @public
 export function getDatabase(app?: App): Database;
 
-// @public (undocumented)
+// @public
 export function getDatabaseWithUrl(url: string, app?: App): Database;
 
 export { OnDisconnect }
@@ -66,7 +66,7 @@ export { Query }
 
 export { Reference }
 
-// @public (undocumented)
+// @public
 export const ServerValue: rtdb.ServerValue;
 
 export { ThenableReference }

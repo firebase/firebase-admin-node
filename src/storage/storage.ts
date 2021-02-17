@@ -84,6 +84,8 @@ export class Storage {
   }
 
   /**
+   * Gets a reference to a Cloud Storage bucket.
+   *
    * @param name Optional name of the bucket to be retrieved. If name is not specified,
    * retrieves a reference to the default bucket.
    * @returns A [Bucket](https://cloud.google.com/nodejs/docs/reference/storage/latest/Bucket)
@@ -104,7 +106,8 @@ export class Storage {
   }
 
   /**
-   * @return The app associated with this Storage instance.
+   * Optional app whose `Storage` service to
+   * return. If not provided, the default `Storage` service will be returned.
    */
   get app(): App {
     return this.appInternal;
