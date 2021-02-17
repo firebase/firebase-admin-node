@@ -86,12 +86,28 @@ enum MultiFactorId {
 }
 
 /**
- * Abstract class representing a multi-factor info interface.
+ * Interface representing the common properties of a user enrolled second factor.
  */
 export abstract class MultiFactorInfo {
+
+  /**
+   * The ID of the enrolled second factor. This ID is unique to the user.
+   */
   public readonly uid: string;
+
+  /**
+   * The optional display name of the enrolled second factor.
+   */
   public readonly displayName?: string;
+
+  /**
+   * The type identifier of the second factor. For SMS second factors, this is `phone`.
+   */
   public readonly factorId: string;
+
+  /**
+   * The optional date the second factor was enrolled, formatted as a UTC string.
+   */
   public readonly enrollmentTime?: string;
 
   /**
@@ -123,8 +139,10 @@ export abstract class MultiFactorInfo {
     this.initFromServerResponse(response);
   }
 
-  /** @return The plain object representation. */
-  public toJSON(): any {
+  /**
+   * @return A JSON-serializable representation of this object.
+   */
+  public toJSON(): object {
     return {
       uid: this.uid,
       displayName: this.displayName,
@@ -172,8 +190,14 @@ export abstract class MultiFactorInfo {
   }
 }
 
-/** Class representing a phone MultiFactorInfo object. */
+/**
+ * Interface representing a phone specific user enrolled second factor.
+ */
 export class PhoneMultiFactorInfo extends MultiFactorInfo {
+
+  /**
+   * The phone number associated with a phone second factor.
+   */
   public readonly phoneNumber: string;
 
   /**
@@ -188,8 +212,10 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
     utils.addReadonlyGetter(this, 'phoneNumber', response.phoneInfo);
   }
 
-  /** @return The plain object representation. */
-  public toJSON(): any {
+  /**
+   * {@inheritdoc MultiFactorInfo.toJSON}
+   */
+  public toJSON(): object {
     return Object.assign(
       super.toJSON(),
       {
@@ -211,8 +237,15 @@ export class PhoneMultiFactorInfo extends MultiFactorInfo {
   }
 }
 
-/** Class representing multi-factor related properties of a user. */
+/**
+ * The multi-factor related user settings.
+ */
 export class MultiFactorSettings {
+
+  /**
+   * List of second factors enrolled with the current user.
+   * Currently only phone second factors are supported.
+   */
   public enrolledFactors: MultiFactorInfo[];
 
   /**
@@ -241,7 +274,9 @@ export class MultiFactorSettings {
       this, 'enrolledFactors', Object.freeze(parsedEnrolledFactors));
   }
 
-  /** @return The plain object representation. */
+  /**
+   * @return A JSON-serializable representation of this multi-factor object.
+   */
   public toJSON(): any {
     return {
       enrolledFactors: this.enrolledFactors.map((info) => info.toJSON()),
@@ -250,17 +285,24 @@ export class MultiFactorSettings {
 }
 
 /**
- * User metadata class that provides metadata information like user account creation
- * and last sign in time.
+ * Represents a user's metadata.
  */
 export class UserMetadata {
+
+  /**
+   * The date the user was created, formatted as a UTC string.
+   */
   public readonly creationTime: string;
+
+  /**
+   * The date the user last signed in, formatted as a UTC string.
+   */
   public readonly lastSignInTime: string;
 
   /**
-   * The time at which the user was last active (ID token refreshed), or null
-   * if the user was never active. Formatted as a UTC Date string (eg
-   * 'Sat, 03 Feb 2001 04:05:06 GMT')
+   * The time at which the user was last active (ID token refreshed),
+   * formatted as a UTC Date string (eg 'Sat, 03 Feb 2001 04:05:06 GMT').
+   * Returns null if the user was never active.
    */
   public readonly lastRefreshTime: string | null;
 
@@ -281,7 +323,9 @@ export class UserMetadata {
     utils.addReadonlyGetter(this, 'lastRefreshTime', lastRefreshAt);
   }
 
-  /** @return The plain object representation of the user's metadata. */
+  /**
+   * @return A JSON-serializable representation of this object.
+   */
   public toJSON(): object {
     return {
       lastSignInTime: this.lastSignInTime,
@@ -291,15 +335,39 @@ export class UserMetadata {
 }
 
 /**
- * User info class that provides provider user information for different
- * Firebase providers like google.com, facebook.com, password, etc.
+ * Represents a user's info from a third-party identity provider
+ * such as Google or Facebook.
  */
 export class UserInfo {
+
+  /**
+   * The user identifier for the linked provider.
+   */
   public readonly uid: string;
+
+  /**
+   * The display name for the linked provider.
+   */
   public readonly displayName: string;
+
+  /**
+   * The email for the linked provider.
+   */
   public readonly email: string;
+
+  /**
+   * The photo URL for the linked provider.
+   */
   public readonly photoURL: string;
+
+  /**
+   * The linked provider ID (for example, "google.com" for the Google provider).
+   */
   public readonly providerId: string;
+
+  /**
+   * The phone number for the linked provider.
+   */
   public readonly phoneNumber: string;
 
 
@@ -325,7 +393,9 @@ export class UserInfo {
     utils.addReadonlyGetter(this, 'phoneNumber', response.phoneNumber);
   }
 
-  /** @return The plain object representation of the current provider data. */
+  /**
+   * @return A JSON-serializable representation of this object.
+   */
   public toJSON(): object {
     return {
       uid: this.uid,
@@ -339,28 +409,101 @@ export class UserInfo {
 }
 
 /**
- * User record class that defines the Firebase user object populated from
- * the Firebase Auth getAccountInfo response.
- *
- * @param response The server side response returned from the getAccountInfo
- *     endpoint.
- * @constructor
+ * Represents a user.
  */
 export class UserRecord {
+
+  /**
+   * The user's `uid`.
+   */
   public readonly uid: string;
-  public readonly email: string;
+
+  /**
+   * The user's primary email, if set.
+   */
+  public readonly email?: string;
+
+  /**
+   * Whether or not the user's primary email is verified.
+   */
   public readonly emailVerified: boolean;
-  public readonly displayName: string;
-  public readonly photoURL: string;
-  public readonly phoneNumber: string;
+
+  /**
+   * The user's display name.
+   */
+  public readonly displayName?: string;
+
+  /**
+   * The user's photo URL.
+   */
+  public readonly photoURL?: string;
+
+  /**
+   * The user's primary phone number, if set.
+   */
+  public readonly phoneNumber?: string;
+
+  /**
+   * Whether or not the user is disabled: `true` for disabled; `false` for
+   * enabled.
+   */
   public readonly disabled: boolean;
+
+  /**
+   * Additional metadata about the user.
+   */
   public readonly metadata: UserMetadata;
+
+  /**
+   * An array of providers (for example, Google, Facebook) linked to the user.
+   */
   public readonly providerData: UserInfo[];
+
+  /**
+   * The user's hashed password (base64-encoded), only if Firebase Auth hashing
+   * algorithm (SCRYPT) is used. If a different hashing algorithm had been used
+   * when uploading this user, as is typical when migrating from another Auth
+   * system, this will be an empty string. If no password is set, this is
+   * null. This is only available when the user is obtained from
+   * {@link auth.Auth.listUsers `listUsers()`}.
+   */
   public readonly passwordHash?: string;
+
+  /**
+   * The user's password salt (base64-encoded), only if Firebase Auth hashing
+   * algorithm (SCRYPT) is used. If a different hashing algorithm had been used to
+   * upload this user, typical when migrating from another Auth system, this will
+   * be an empty string. If no password is set, this is null. This is only
+   * available when the user is obtained from
+   * {@link auth.Auth.listUsers `listUsers()`}.
+   */
   public readonly passwordSalt?: string;
-  public readonly customClaims: {[key: string]: any};
+
+  /**
+   * The user's custom claims object if available, typically used to define
+   * user roles and propagated to an authenticated user's ID token.
+   * This is set via
+   * {@link auth.Auth.setCustomUserClaims `setCustomUserClaims()`}
+   */
+  public readonly customClaims?: {[key: string]: any};
+
+  /**
+   * The ID of the tenant the user belongs to, if available.
+   */
   public readonly tenantId?: string | null;
+
+  /**
+   * The date the user's tokens are valid after, formatted as a UTC string.
+   * This is updated every time the user's refresh token are revoked either
+   * from the {@link auth.Auth.revokeRefreshTokens `revokeRefreshTokens()`}
+   * API or from the Firebase Auth backend on big account changes (password
+   * resets, password or email updates, etc).
+   */
   public readonly tokensValidAfterTime?: string;
+
+  /**
+   * The multi-factor related properties for the current user, if available.
+   */
   public readonly multiFactor?: MultiFactorSettings;
 
   /**
@@ -420,7 +563,9 @@ export class UserRecord {
     }
   }
 
-  /** @return The plain object representation of the user record. */
+  /**
+   * @return A JSON-serializable representation of this object.
+   */
   public toJSON(): object {
     const json: any = {
       uid: this.uid,

@@ -95,6 +95,27 @@ import {
   UserRecord as TUserRecord,
 } from './user-record';
 
+/**
+ * Gets the {@link auth.Auth `Auth`} service for the default app or a
+ * given app.
+ *
+ * `getAuth()` can be called with no arguments to access the default app's
+ * {@link auth.Auth `Auth`} service or as `getAuth(app)` to access the
+ * {@link auth.Auth `Auth`} service associated with a specific app.
+ *
+ * @example
+ * ```javascript
+ * // Get the Auth service for the default app
+ * const defaultAuth = getAuth();
+ * ```
+ *
+ * @example
+ * ```javascript
+ * // Get the Auth service for a given app
+ * const otherAuth = getAuth(otherApp);
+ * ```
+ *
+ */
 export function getAuth(app?: App): Auth {
   if (typeof app === 'undefined') {
     app = getApp();
