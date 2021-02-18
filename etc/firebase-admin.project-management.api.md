@@ -6,7 +6,7 @@
 
 import { Agent } from 'http';
 
-// @public (undocumented)
+// @public
 export class AndroidApp {
     addShaCertificate(certificateToAdd: ShaCertificate): Promise<void>;
     // (undocumented)
@@ -43,10 +43,10 @@ export enum AppPlatform {
 
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
+// @public
 export function getProjectManagement(app?: App): ProjectManagement;
 
-// @public (undocumented)
+// @public
 export class IosApp {
     // (undocumented)
     readonly appId: string;

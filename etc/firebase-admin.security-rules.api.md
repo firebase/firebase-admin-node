@@ -8,14 +8,12 @@ import { Agent } from 'http';
 
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
+// @public
 export function getSecurityRules(app?: App): SecurityRules;
 
 // @public
-export class Ruleset {
-    // (undocumented)
+export class Ruleset implements RulesetMetadata {
     readonly createTime: string;
-    // (undocumented)
     readonly name: string;
     // (undocumented)
     readonly source: RulesFile[];
@@ -27,11 +25,9 @@ export interface RulesetMetadata {
     readonly name: string;
 }
 
-// @public (undocumented)
+// @public
 export class RulesetMetadataList {
-    // (undocumented)
     readonly nextPageToken?: string;
-    // (undocumented)
     readonly rulesets: RulesetMetadata[];
 }
 

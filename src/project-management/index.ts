@@ -23,6 +23,34 @@ export { ProjectManagement } from './project-management';
 export { AndroidApp, AndroidAppMetadata, ShaCertificate } from './android-app';
 export { IosApp, IosAppMetadata } from './ios-app';
 
+/**
+ * Gets the {@link projectManagement.ProjectManagement
+ * `ProjectManagement`} service for the default app or a given app.
+ *
+ * `getProjectManagement()` can be called with no arguments to access the
+ * default app's {@link projectManagement.ProjectManagement
+ * `ProjectManagement`} service, or as `getProjectManagement(app)` to access
+ * the {@link projectManagement.ProjectManagement `ProjectManagement`}
+ * service associated with a specific app.
+ *
+ * @example
+ * ```javascript
+ * // Get the ProjectManagement service for the default app
+ * const defaultProjectManagement = getProjectManagement();
+ * ```
+ *
+ * @example
+ * ```javascript
+ * // Get the ProjectManagement service for a given app
+ * const otherProjectManagement = getProjectManagement(otherApp);
+ * ```
+ *
+ * @param app Optional app whose `ProjectManagement` service
+ *     to return. If not provided, the default `ProjectManagement` service will
+ *     be returned. *
+ * @return The default `ProjectManagement` service if no app is provided or the
+ *   `ProjectManagement` service associated with the provided app.
+ */
 export function getProjectManagement(app?: App): ProjectManagement {
   if (typeof app === 'undefined') {
     app = getApp();

@@ -24,7 +24,7 @@ export interface GcsTfliteModelOptions extends ModelOptionsBase {
 
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
+// @public
 export function getMachineLearning(app?: App): MachineLearning;
 
 // @public
@@ -79,30 +79,19 @@ export namespace machineLearning {
 
 // @public
 export class Model {
-    // (undocumented)
     get createTime(): string;
-    // (undocumented)
     get displayName(): string;
-    // (undocumented)
     get etag(): string;
     get locked(): boolean;
-    // (undocumented)
     get modelHash(): string | undefined;
-    // (undocumented)
     get modelId(): string;
-    // (undocumented)
     get published(): boolean;
-    // (undocumented)
     get tags(): string[];
-    // (undocumented)
     get tfliteModel(): TFLiteModel | undefined;
-    // (undocumented)
     toJSON(): {
         [key: string]: any;
     };
-    // (undocumented)
     get updateTime(): string;
-    // (undocumented)
     get validationError(): string | undefined;
     waitForUnlocked(maxTimeMillis?: number): Promise<void>;
 }

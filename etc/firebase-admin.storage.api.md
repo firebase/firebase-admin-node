@@ -9,13 +9,12 @@ import { Bucket } from '@google-cloud/storage';
 
 // Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
 //
-// @public (undocumented)
+// @public
 export function getStorage(app?: App): Storage;
 
 // @public
 export class Storage {
     get app(): App;
-    // (undocumented)
     bucket(name?: string): Bucket;
     }
 
