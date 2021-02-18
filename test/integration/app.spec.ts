@@ -30,7 +30,7 @@ describe('admin', () => {
   it('does not load RTDB by default', () => {
     const firebaseRtdb = require.cache[require.resolve('@firebase/database')];
     expect(firebaseRtdb).to.be.undefined;
-    const rtdbInternal = require.cache[require.resolve('../../lib/database/database-internal')];
+    const rtdbInternal = require.cache[require.resolve('../../lib/database/database')];
     expect(rtdbInternal).to.be.undefined;
   });
 
