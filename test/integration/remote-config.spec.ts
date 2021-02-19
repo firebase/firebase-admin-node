@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import * as admin from '../../lib/index';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { deepCopy } from '../../src/utils/deep-copy';
+import { RemoteConfigCondition, RemoteConfigTemplate, getRemoteConfig, } from '../../lib/remote-config/index';
 
 chai.should();
 chai.use(chaiAsPromised);
@@ -57,7 +57,7 @@ const VALID_PARAMETER_GROUPS = {
   },
 };
 
-const VALID_CONDITIONS: admin.remoteConfig.RemoteConfigCondition[] = [
+const VALID_CONDITIONS: RemoteConfigCondition[] = [
   {
     name: 'ios',
     expression: 'device.os == \'ios\'',
@@ -74,12 +74,12 @@ const VALID_VERSION = {
   description: `template description ${Date.now()}`,
 }
 
-let currentTemplate: admin.remoteConfig.RemoteConfigTemplate;
+let currentTemplate: RemoteConfigTemplate;
 
 describe('admin.remoteConfig', () => {
   before(async () => {
     // obtain the most recent template (etag) to perform operations
-    currentTemplate = await admin.remoteConfig().getTemplate();
+    currentTemplate = await getRemoteConfig().getTemplate();
   });
 
   it('verify that the etag is read-only', () => {
@@ -95,7 +95,7 @@ describe('admin.remoteConfig', () => {
       currentTemplate.parameters = VALID_PARAMETERS;
       currentTemplate.parameterGroups = VALID_PARAMETER_GROUPS;
       currentTemplate.version = VALID_VERSION;
-      return admin.remoteConfig().validateTemplate(currentTemplate)
+      return getRemoteConfig().validateTemplate(currentTemplate)
         .then((template) => {
           expect(template.etag).matches(/^etag-[0-9]*-[0-9]*$/);
           expect(template.conditions.length).to.equal(2);
@@ -113,7 +113,7 @@ describe('admin.remoteConfig', () => {
       currentTemplate.parameters = VALID_PARAMETERS;
       currentTemplate.parameterGroups = VALID_PARAMETER_GROUPS;
       currentTemplate.version = VALID_VERSION;
-      return admin.remoteConfig().validateTemplate(currentTemplate)
+      return getRemoteConfig().validateTemplate(currentTemplate)
         .should.eventually.be.rejected.and.have.property('code', 'remote-config/invalid-argument');
     });
   });
@@ -125,7 +125,7 @@ describe('admin.remoteConfig', () => {
       currentTemplate.parameters = VALID_PARAMETERS;
       currentTemplate.parameterGroups = VALID_PARAMETER_GROUPS;
       currentTemplate.version = VALID_VERSION;
-      return admin.remoteConfig().publishTemplate(currentTemplate)
+      return getRemoteConfig().publishTemplate(currentTemplate)
         .then((template) => {
           expect(template.etag).matches(/^etag-[0-9]*-[0-9]*$/);
           expect(template.conditions.length).to.equal(2);
@@ -143,14 +143,14 @@ describe('admin.remoteConfig', () => {
       currentTemplate.parameters = VALID_PARAMETERS;
       currentTemplate.parameterGroups = VALID_PARAMETER_GROUPS;
       currentTemplate.version = VALID_VERSION;
-      return admin.remoteConfig().publishTemplate(currentTemplate)
+      return getRemoteConfig().publishTemplate(currentTemplate)
         .should.eventually.be.rejected.and.have.property('code', 'remote-config/invalid-argument');
     });
   });
 
   describe('getTemplate', () => {
     it('should return the most recently published template', () => {
-      return admin.remoteConfig().getTemplate()
+      return getRemoteConfig().getTemplate()
         .then((template) => {
           expect(template.etag).matches(/^etag-[0-9]*-[0-9]*$/);
           expect(template.conditions.length).to.equal(2);
@@ -171,23 +171,23 @@ describe('admin.remoteConfig', () => {
   describe('getTemplateAtVersion', () => {
     before(async () => {
       // obtain the current active template
-      let activeTemplate = await admin.remoteConfig().getTemplate();
+      let activeTemplate = await getRemoteConfig().getTemplate();
 
       // publish a new template to create a new version number
       activeTemplate.version = { description: versionOneDescription };
-      activeTemplate = await admin.remoteConfig().publishTemplate(activeTemplate)
+      activeTemplate = await getRemoteConfig().publishTemplate(activeTemplate)
       expect(activeTemplate.version).to.be.not.undefined;
       versionOneNumber = activeTemplate.version!.versionNumber!;
 
       // publish another template to create a second version number
       activeTemplate.version = { description: versionTwoDescription };
-      activeTemplate = await admin.remoteConfig().publishTemplate(activeTemplate)
+      activeTemplate = await getRemoteConfig().publishTemplate(activeTemplate)
       expect(activeTemplate.version).to.be.not.undefined;
       versionTwoNumber = activeTemplate.version!.versionNumber!;
     });
 
     it('should return the requested template version v1', () => {
-      return admin.remoteConfig().getTemplateAtVersion(versionOneNumber)
+      return getRemoteConfig().getTemplateAtVersion(versionOneNumber)
         .then((template) => {
           expect(template.etag).matches(/^etag-[0-9]*-[0-9]*$/);
           expect(template.version).to.be.not.undefined;
@@ -199,7 +199,7 @@ describe('admin.remoteConfig', () => {
 
   describe('listVersions', () => {
     it('should return the most recently published 2 versions', () => {
-      return admin.remoteConfig().listVersions({
+      return getRemoteConfig().listVersions({
         pageSize: 2,
       })
         .then((response) => {
@@ -215,7 +215,7 @@ describe('admin.remoteConfig', () => {
 
   describe('rollback', () => {
     it('verify the most recent template version before rollback to the one prior', () => {
-      return admin.remoteConfig().getTemplate()
+      return getRemoteConfig().getTemplate()
         .then((template) => {
           expect(template.version).to.be.not.undefined;
           expect(template.version!.versionNumber).equals(versionTwoNumber);
@@ -223,7 +223,7 @@ describe('admin.remoteConfig', () => {
     });
 
     it('should rollback to the requested version', () => {
-      return admin.remoteConfig().rollback(versionOneNumber)
+      return getRemoteConfig().rollback(versionOneNumber)
         .then((template) => {
           expect(template.version).to.be.not.undefined;
           expect(template.version!.updateType).equals('ROLLBACK');
@@ -238,14 +238,14 @@ describe('admin.remoteConfig', () => {
 
     INVALID_STRINGS.forEach((invalidJson) => {
       it(`should throw if the json string is ${JSON.stringify(invalidJson)}`, () => {
-        expect(() => admin.remoteConfig().createTemplateFromJSON(invalidJson))
+        expect(() => getRemoteConfig().createTemplateFromJSON(invalidJson))
           .to.throw('JSON string must be a valid non-empty string');
       });
     });
 
     INVALID_JSON_STRINGS.forEach((invalidJson) => {
       it(`should throw if the json string is ${JSON.stringify(invalidJson)}`, () => {
-        expect(() => admin.remoteConfig().createTemplateFromJSON(invalidJson))
+        expect(() => getRemoteConfig().createTemplateFromJSON(invalidJson))
           .to.throw(/Failed to parse the JSON string/);
       });
     });
@@ -263,14 +263,14 @@ describe('admin.remoteConfig', () => {
       invalidEtagTemplate.etag = invalidEtag;
       const jsonString = JSON.stringify(invalidEtagTemplate);
       it(`should throw if the ETag is ${JSON.stringify(invalidEtag)}`, () => {
-        expect(() => admin.remoteConfig().createTemplateFromJSON(jsonString))
+        expect(() => getRemoteConfig().createTemplateFromJSON(jsonString))
           .to.throw(`Invalid Remote Config template: ${jsonString}`);
       });
     });
 
     it('should succeed when a valid json string is provided', () => {
       const jsonString = JSON.stringify(sourceTemplate);
-      const newTemplate = admin.remoteConfig().createTemplateFromJSON(jsonString);
+      const newTemplate = getRemoteConfig().createTemplateFromJSON(jsonString);
       expect(newTemplate.etag).to.equal(sourceTemplate.etag);
       expect(() => {
         (currentTemplate as any).etag = 'new-etag';

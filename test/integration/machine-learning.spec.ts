@@ -17,12 +17,12 @@
 
 import path = require('path');
 import * as chai from 'chai';
-import * as admin from '../../lib/index';
 import { projectId } from './setup';
 import { Bucket } from '@google-cloud/storage';
-
-import AutoMLTfliteModelOptions = admin.machineLearning.AutoMLTfliteModelOptions;
-import GcsTfliteModelOptions = admin.machineLearning.GcsTfliteModelOptions;
+import { getStorage } from '../../lib/storage/index';
+import {
+  AutoMLTfliteModelOptions, GcsTfliteModelOptions, Model, ModelOptions, getMachineLearning,
+} from '../../lib/machine-learning/index';
 
 const expect = chai.expect;
 
@@ -30,32 +30,31 @@ describe('admin.machineLearning', () => {
 
   const modelsToDelete: string[] = [];
 
-  function scheduleForDelete(model: admin.machineLearning.Model): void {
+  function scheduleForDelete(model: Model): void {
     modelsToDelete.push(model.modelId);
   }
 
-  function unscheduleForDelete(model: admin.machineLearning.Model): void {
+  function unscheduleForDelete(model: Model): void {
     modelsToDelete.splice(modelsToDelete.indexOf(model.modelId), 1);
   }
 
   function deleteTempModels(): Promise<void[]> {
     const promises: Array<Promise<void>> = [];
     modelsToDelete.forEach((modelId) => {
-      promises.push(admin.machineLearning().deleteModel(modelId));
+      promises.push(getMachineLearning().deleteModel(modelId));
     });
     modelsToDelete.splice(0, modelsToDelete.length);  // Clear out the array.
     return Promise.all(promises);
   }
 
-  function createTemporaryModel(options?: admin.machineLearning.ModelOptions):
-    Promise<admin.machineLearning.Model> {
-    let modelOptions: admin.machineLearning.ModelOptions = {
+  function createTemporaryModel(options?: ModelOptions): Promise<Model> {
+    let modelOptions: ModelOptions = {
       displayName: 'nodejs_integration_temp_model',
     };
     if (options) {
       modelOptions = options;
     }
-    return admin.machineLearning().createModel(modelOptions)
+    return getMachineLearning().createModel(modelOptions)
       .then((model) => {
         scheduleForDelete(model);
         return model;
@@ -63,7 +62,7 @@ describe('admin.machineLearning', () => {
   }
 
   function uploadModelToGcs(localFileName: string, gcsFileName: string): Promise<string> {
-    const bucket: Bucket = admin.storage().bucket();
+    const bucket: Bucket = getStorage().bucket();
     const tfliteFileName = path.join(__dirname, `../resources/${localFileName}`);
     return bucket.upload(tfliteFileName, { destination: gcsFileName })
       .then(() => {
@@ -77,11 +76,11 @@ describe('admin.machineLearning', () => {
 
   describe('createModel()', () => {
     it('creates a new Model without ModelFormat', () => {
-      const modelOptions: admin.machineLearning.ModelOptions = {
+      const modelOptions: ModelOptions = {
         displayName: 'node-integ-test-create-1',
         tags: ['tag123', 'tag345']
       };
-      return admin.machineLearning().createModel(modelOptions)
+      return getMachineLearning().createModel(modelOptions)
         .then((model) => {
           scheduleForDelete(model);
           verifyModel(model, modelOptions);
@@ -89,7 +88,7 @@ describe('admin.machineLearning', () => {
     });
 
     it('creates a new Model with valid GCS TFLite ModelFormat', () => {
-      const modelOptions: admin.machineLearning.ModelOptions = {
+      const modelOptions: ModelOptions = {
         displayName: 'node-integ-test-create-2',
         tags: ['tag234', 'tag456'],
         tfliteModel: { gcsTfliteUri: 'this will be replaced below' },
@@ -97,7 +96,7 @@ describe('admin.machineLearning', () => {
       return uploadModelToGcs('model1.tflite', 'valid_model.tflite')
         .then((fileName: string) => {
           modelOptions.tfliteModel!.gcsTfliteUri = fileName;
-          return admin.machineLearning().createModel(modelOptions)
+          return getMachineLearning().createModel(modelOptions)
             .then((model) => {
               scheduleForDelete(model);
               verifyModel(model, modelOptions);
@@ -114,12 +113,12 @@ describe('admin.machineLearning', () => {
             this.skip();
             return;
           }
-          const modelOptions: admin.machineLearning.ModelOptions = {
+          const modelOptions: ModelOptions = {
             displayName: 'node-integ-test-create-automl',
             tags: ['tagAutoml'],
             tfliteModel: { automlModel: automlRef }
           };
-          return admin.machineLearning().createModel(modelOptions)
+          return getMachineLearning().createModel(modelOptions)
             .then((model) => {
               return model.waitForUnlocked(55000)
                 .then(() => {
@@ -132,7 +131,7 @@ describe('admin.machineLearning', () => {
 
     it('creates a new Model with invalid ModelFormat', () => {
       // Upload a file to default gcs bucket
-      const modelOptions: admin.machineLearning.ModelOptions = {
+      const modelOptions: ModelOptions = {
         displayName: 'node-integ-test-create-3',
         tags: ['tag234', 'tag456'],
         tfliteModel: { gcsTfliteUri: 'this will be replaced below' },
@@ -140,7 +139,7 @@ describe('admin.machineLearning', () => {
       return uploadModelToGcs('invalid_model.tflite', 'invalid_model.tflite')
         .then((fileName: string) => {
           modelOptions.tfliteModel!.gcsTfliteUri = fileName;
-          return admin.machineLearning().createModel(modelOptions)
+          return getMachineLearning().createModel(modelOptions)
             .then((model) => {
               scheduleForDelete(model);
               verifyModel(model, modelOptions);
@@ -149,39 +148,39 @@ describe('admin.machineLearning', () => {
     });
 
     it ('rejects with invalid-argument when modelOptions are invalid', () => {
-      const modelOptions: admin.machineLearning.ModelOptions = {
+      const modelOptions: ModelOptions = {
         displayName: 'Invalid Name#*^!',
       };
-      return admin.machineLearning().createModel(modelOptions)
+      return getMachineLearning().createModel(modelOptions)
         .should.eventually.be.rejected.and.have.property('code', 'machine-learning/invalid-argument');
     });
   });
 
   describe('updateModel()', () => {
 
-    const UPDATE_NAME: admin.machineLearning.ModelOptions = {
+    const UPDATE_NAME: ModelOptions = {
       displayName: 'update-model-new-name',
     };
 
     it('rejects with not-found when the Model does not exist', () => {
       const nonExistingId = '00000000';
-      return admin.machineLearning().updateModel(nonExistingId, UPDATE_NAME)
+      return getMachineLearning().updateModel(nonExistingId, UPDATE_NAME)
         .should.eventually.be.rejected.and.have.property(
           'code', 'machine-learning/not-found');
     });
 
     it('rejects with invalid-argument when the ModelId is invalid', () => {
-      return admin.machineLearning().updateModel('invalid-model-id', UPDATE_NAME)
+      return getMachineLearning().updateModel('invalid-model-id', UPDATE_NAME)
         .should.eventually.be.rejected.and.have.property(
           'code', 'machine-learning/invalid-argument');
     });
 
     it ('rejects with invalid-argument when modelOptions are invalid', () => {
-      const modelOptions: admin.machineLearning.ModelOptions = {
+      const modelOptions: ModelOptions = {
         displayName: 'Invalid Name#*^!',
       };
       return createTemporaryModel({ displayName: 'node-integ-invalid-argument' })
-        .then((model) => admin.machineLearning().updateModel(model.modelId, modelOptions)
+        .then((model) => getMachineLearning().updateModel(model.modelId, modelOptions)
           .should.eventually.be.rejected.and.have.property(
             'code', 'machine-learning/invalid-argument'));
     });
@@ -190,10 +189,10 @@ describe('admin.machineLearning', () => {
       const DISPLAY_NAME = 'node-integ-test-update-1b';
       return createTemporaryModel({ displayName: 'node-integ-test-update-1a' })
         .then((model) => {
-          const modelOptions: admin.machineLearning.ModelOptions = {
+          const modelOptions: ModelOptions = {
             displayName: DISPLAY_NAME,
           };
-          return admin.machineLearning().updateModel(model.modelId, modelOptions)
+          return getMachineLearning().updateModel(model.modelId, modelOptions)
             .then((updatedModel) => {
               verifyModel(updatedModel, modelOptions);
             });
@@ -208,10 +207,10 @@ describe('admin.machineLearning', () => {
         displayName: 'node-integ-test-update-2',
         tags: ORIGINAL_TAGS,
       }).then((expectedModel) => {
-        const modelOptions: admin.machineLearning.ModelOptions = {
+        const modelOptions: ModelOptions = {
           tags: NEW_TAGS,
         };
-        return admin.machineLearning().updateModel(expectedModel.modelId, modelOptions)
+        return getMachineLearning().updateModel(expectedModel.modelId, modelOptions)
           .then((actualModel) => {
             expect(actualModel.tags!.length).to.equal(2);
             expect(actualModel.tags).to.have.same.members(NEW_TAGS);
@@ -224,10 +223,10 @@ describe('admin.machineLearning', () => {
         createTemporaryModel(),
         uploadModelToGcs('model1.tflite', 'valid_model.tflite')])
         .then(([model, fileName]) => {
-          const modelOptions: admin.machineLearning.ModelOptions = {
+          const modelOptions: ModelOptions = {
             tfliteModel: { gcsTfliteUri: fileName },
           };
-          return admin.machineLearning().updateModel(model.modelId, modelOptions)
+          return getMachineLearning().updateModel(model.modelId, modelOptions)
             .then((updatedModel) => {
               verifyModel(updatedModel, modelOptions);
             });
@@ -247,10 +246,10 @@ describe('admin.machineLearning', () => {
               this.skip();
               return;
             }
-            const modelOptions: admin.machineLearning.ModelOptions = {
+            const modelOptions: ModelOptions = {
               tfliteModel: { automlModel: automlRef },
             };
-            return admin.machineLearning().updateModel(model.modelId, modelOptions)
+            return getMachineLearning().updateModel(model.modelId, modelOptions)
               .then((updatedModel) => {
                 return updatedModel.waitForUnlocked(55000)
                   .then(() => {
@@ -266,11 +265,11 @@ describe('admin.machineLearning', () => {
       const TAGS = ['node-integ-tag-1', 'node-integ-tag-2'];
       return createTemporaryModel({ displayName: 'node-integ-test-update-3a' })
         .then((model) => {
-          const modelOptions: admin.machineLearning.ModelOptions = {
+          const modelOptions: ModelOptions = {
             displayName: DISPLAY_NAME,
             tags: TAGS,
           };
-          return admin.machineLearning().updateModel(model.modelId, modelOptions)
+          return getMachineLearning().updateModel(model.modelId, modelOptions)
             .then((updatedModel) => {
               expect(updatedModel.displayName).to.equal(DISPLAY_NAME);
               expect(updatedModel.tags).to.have.same.members(TAGS);
@@ -282,19 +281,19 @@ describe('admin.machineLearning', () => {
   describe('publishModel()', () => {
     it('should reject when model does not exist', () => {
       const nonExistingName = '00000000';
-      return admin.machineLearning().publishModel(nonExistingName)
+      return getMachineLearning().publishModel(nonExistingName)
         .should.eventually.be.rejected.and.have.property(
           'code', 'machine-learning/not-found');
     });
 
     it('rejects with invalid-argument when the ModelId is invalid', () => {
-      return admin.machineLearning().publishModel('invalid-model-id')
+      return getMachineLearning().publishModel('invalid-model-id')
         .should.eventually.be.rejected.and.have.property(
           'code', 'machine-learning/invalid-argument');
     });
 
     it('publishes the model successfully', () => {
-      const modelOptions: admin.machineLearning.ModelOptions = {
+      const modelOptions: ModelOptions = {
         displayName: 'node-integ-test-publish-1',
         tfliteModel: { gcsTfliteUri: 'this will be replaced below' },
       };
@@ -305,7 +304,7 @@ describe('admin.machineLearning', () => {
             .then((createdModel) => {
               expect(createdModel.validationError).to.be.undefined;
               expect(createdModel.published).to.be.false;
-              return admin.machineLearning().publishModel(createdModel.modelId)
+              return getMachineLearning().publishModel(createdModel.modelId)
                 .then((publishedModel) => {
                   expect(publishedModel.published).to.be.true;
                 });
@@ -317,19 +316,19 @@ describe('admin.machineLearning', () => {
   describe('unpublishModel()', () => {
     it('should reject when model does not exist', () => {
       const nonExistingName = '00000000';
-      return admin.machineLearning().unpublishModel(nonExistingName)
+      return getMachineLearning().unpublishModel(nonExistingName)
         .should.eventually.be.rejected.and.have.property(
           'code', 'machine-learning/not-found');
     });
 
     it('rejects with invalid-argument when the ModelId is invalid', () => {
-      return admin.machineLearning().unpublishModel('invalid-model-id')
+      return getMachineLearning().unpublishModel('invalid-model-id')
         .should.eventually.be.rejected.and.have.property(
           'code', 'machine-learning/invalid-argument');
     });
 
     it('unpublishes the model successfully', () => {
-      const modelOptions: admin.machineLearning.ModelOptions = {
+      const modelOptions: ModelOptions = {
         displayName: 'node-integ-test-unpublish-1',
         tfliteModel: { gcsTfliteUri: 'this will be replaced below' },
       };
@@ -340,10 +339,10 @@ describe('admin.machineLearning', () => {
             .then((createdModel) => {
               expect(createdModel.validationError).to.be.undefined;
               expect(createdModel.published).to.be.false;
-              return admin.machineLearning().publishModel(createdModel.modelId)
+              return getMachineLearning().publishModel(createdModel.modelId)
                 .then((publishedModel) => {
                   expect(publishedModel.published).to.be.true;
-                  return admin.machineLearning().unpublishModel(publishedModel.modelId)
+                  return getMachineLearning().unpublishModel(publishedModel.modelId)
                     .then((unpublishedModel) => {
                       expect(unpublishedModel.published).to.be.false;
                     });
@@ -357,13 +356,13 @@ describe('admin.machineLearning', () => {
   describe('getModel()', () => {
     it('rejects with not-found when the Model does not exist', () => {
       const nonExistingName = '00000000';
-      return admin.machineLearning().getModel(nonExistingName)
+      return getMachineLearning().getModel(nonExistingName)
         .should.eventually.be.rejected.and.have.property(
           'code', 'machine-learning/not-found');
     });
 
     it('rejects with invalid-argument when the ModelId is invalid', () => {
-      return admin.machineLearning().getModel('invalid-model-id')
+      return getMachineLearning().getModel('invalid-model-id')
         .should.eventually.be.rejected.and.have.property(
           'code', 'machine-learning/invalid-argument');
     });
@@ -371,7 +370,7 @@ describe('admin.machineLearning', () => {
     it('resolves with existing Model', () => {
       return createTemporaryModel()
         .then((expectedModel) =>
-          admin.machineLearning().getModel(expectedModel.modelId)
+          getMachineLearning().getModel(expectedModel.modelId)
             .then((actualModel) => {
               expect(actualModel).to.deep.equal(expectedModel);
             }),
@@ -380,25 +379,25 @@ describe('admin.machineLearning', () => {
   });
 
   describe('listModels()', () => {
-    let model1: admin.machineLearning.Model;
-    let model2: admin.machineLearning.Model;
-    let model3: admin.machineLearning.Model;
+    let model1: Model;
+    let model2: Model;
+    let model3: Model;
 
     before(() => {
       return Promise.all([
-        admin.machineLearning().createModel({
+        getMachineLearning().createModel({
           displayName: 'node-integ-list1',
           tags: ['node-integ-tag-1'],
         }),
-        admin.machineLearning().createModel({
+        getMachineLearning().createModel({
           displayName: 'node-integ-list2',
           tags: ['node-integ-tag-1'],
         }),
-        admin.machineLearning().createModel({
+        getMachineLearning().createModel({
           displayName: 'node-integ-list3',
           tags: ['node-integ-tag-1'],
         })])
-        .then(([m1, m2, m3]: admin.machineLearning.Model[]) => {
+        .then(([m1, m2, m3]: Model[]) => {
           model1 = m1;
           model2 = m2;
           model3 = m3;
@@ -407,14 +406,14 @@ describe('admin.machineLearning', () => {
 
     after(() => {
       return Promise.all([
-        admin.machineLearning().deleteModel(model1.modelId),
-        admin.machineLearning().deleteModel(model2.modelId),
-        admin.machineLearning().deleteModel(model3.modelId),
+        getMachineLearning().deleteModel(model1.modelId),
+        getMachineLearning().deleteModel(model2.modelId),
+        getMachineLearning().deleteModel(model3.modelId),
       ]);
     });
 
     it('resolves with a list of models', () => {
-      return admin.machineLearning().listModels({ pageSize: 100 })
+      return getMachineLearning().listModels({ pageSize: 100 })
         .then((modelList) => {
           expect(modelList.models.length).to.be.at.least(2);
           expect(modelList.models).to.deep.include(model1);
@@ -424,7 +423,7 @@ describe('admin.machineLearning', () => {
     });
 
     it('respects page size', () => {
-      return admin.machineLearning().listModels({ pageSize: 2 })
+      return getMachineLearning().listModels({ pageSize: 2 })
         .then((modelList) => {
           expect(modelList.models.length).to.equal(2);
           expect(modelList.pageToken).not.to.be.empty;
@@ -432,7 +431,7 @@ describe('admin.machineLearning', () => {
     });
 
     it('filters by exact displayName', () => {
-      return admin.machineLearning().listModels({ filter: 'displayName=node-integ-list1' })
+      return getMachineLearning().listModels({ filter: 'displayName=node-integ-list1' })
         .then((modelList) => {
           expect(modelList.models.length).to.equal(1);
           expect(modelList.models[0]).to.deep.equal(model1);
@@ -441,7 +440,7 @@ describe('admin.machineLearning', () => {
     });
 
     it('filters by displayName prefix', () => {
-      return admin.machineLearning().listModels({ filter: 'displayName:node-integ-list*', pageSize: 100 })
+      return getMachineLearning().listModels({ filter: 'displayName:node-integ-list*', pageSize: 100 })
         .then((modelList) => {
           expect(modelList.models.length).to.be.at.least(3);
           expect(modelList.models).to.deep.include(model1);
@@ -452,7 +451,7 @@ describe('admin.machineLearning', () => {
     });
 
     it('filters by tag', () => {
-      return admin.machineLearning().listModels({ filter: 'tags:node-integ-tag-1', pageSize: 100 })
+      return getMachineLearning().listModels({ filter: 'tags:node-integ-tag-1', pageSize: 100 })
         .then((modelList) => {
           expect(modelList.models.length).to.be.at.least(3);
           expect(modelList.models).to.deep.include(model1);
@@ -463,11 +462,11 @@ describe('admin.machineLearning', () => {
     });
 
     it('handles pageTokens properly', () => {
-      return admin.machineLearning().listModels({ filter: 'displayName:node-integ-list*', pageSize: 2 })
+      return getMachineLearning().listModels({ filter: 'displayName:node-integ-list*', pageSize: 2 })
         .then((modelList) => {
           expect(modelList.models.length).to.equal(2);
           expect(modelList.pageToken).not.to.be.undefined;
-          return admin.machineLearning().listModels({
+          return getMachineLearning().listModels({
             filter: 'displayName:node-integ-list*',
             pageSize: 2,
             pageToken: modelList.pageToken
@@ -480,7 +479,7 @@ describe('admin.machineLearning', () => {
     });
 
     it('successfully returns an empty list of models', () => {
-      return admin.machineLearning().listModels({ filter: 'displayName=non-existing-model' })
+      return getMachineLearning().listModels({ filter: 'displayName=non-existing-model' })
         .then((modelList) => {
           expect(modelList.models.length).to.equal(0);
           expect(modelList.pageToken).to.be.undefined;
@@ -488,7 +487,7 @@ describe('admin.machineLearning', () => {
     });
 
     it('rejects with invalid argument if the filter is invalid', () => {
-      return admin.machineLearning().listModels({ filter: 'invalidFilterItem=foo' })
+      return getMachineLearning().listModels({ filter: 'invalidFilterItem=foo' })
         .should.eventually.be.rejected.and.have.property(
           'code', 'machine-learning/invalid-argument');
     });
@@ -497,22 +496,22 @@ describe('admin.machineLearning', () => {
   describe('deleteModel()', () => {
     it('rejects with not-found when the Model does not exist', () => {
       const nonExistingName = '00000000';
-      return admin.machineLearning().deleteModel(nonExistingName)
+      return getMachineLearning().deleteModel(nonExistingName)
         .should.eventually.be.rejected.and.have.property(
           'code', 'machine-learning/not-found');
     });
 
     it('rejects with invalid-argument when the Model ID is invalid', () => {
-      return admin.machineLearning().deleteModel('invalid-model-id')
+      return getMachineLearning().deleteModel('invalid-model-id')
         .should.eventually.be.rejected.and.have.property(
           'code', 'machine-learning/invalid-argument');
     });
 
     it('deletes existing Model', () => {
       return createTemporaryModel().then((model) => {
-        return admin.machineLearning().deleteModel(model.modelId)
+        return getMachineLearning().deleteModel(model.modelId)
           .then(() => {
-            return admin.machineLearning().getModel(model.modelId)
+            return getMachineLearning().getModel(model.modelId)
               .should.eventually.be.rejected.and.have.property('code', 'machine-learning/not-found');
           })
           .then(() => {
@@ -524,7 +523,7 @@ describe('admin.machineLearning', () => {
 
 });
 
-function verifyModel(model: admin.machineLearning.Model, expectedOptions: admin.machineLearning.ModelOptions): void {
+function verifyModel(model: Model, expectedOptions: ModelOptions): void {
   if (expectedOptions.displayName) {
     expect(model.displayName).to.equal(expectedOptions.displayName);
   } else {
@@ -548,7 +547,7 @@ function verifyModel(model: admin.machineLearning.Model, expectedOptions: admin.
   }
 }
 
-function verifyGcsTfliteModel(model: admin.machineLearning.Model, expectedOptions: GcsTfliteModelOptions): void {
+function verifyGcsTfliteModel(model: Model, expectedOptions: GcsTfliteModelOptions): void {
   const expectedGcsTfliteUri = expectedOptions.tfliteModel.gcsTfliteUri;
   expect(model.tfliteModel!.gcsTfliteUri).to.equal(expectedGcsTfliteUri);
   if (expectedGcsTfliteUri.endsWith('invalid_model.tflite')) {
@@ -560,7 +559,7 @@ function verifyGcsTfliteModel(model: admin.machineLearning.Model, expectedOption
   }
 }
 
-function verifyAutomlTfliteModel(model: admin.machineLearning.Model, expectedOptions: AutoMLTfliteModelOptions): void {
+function verifyAutomlTfliteModel(model: Model, expectedOptions: AutoMLTfliteModelOptions): void {
   const expectedAutomlReference = expectedOptions.tfliteModel.automlModel;
   expect(model.tfliteModel!.automlModel).to.equal(expectedAutomlReference);
   expect(model.validationError).to.be.undefined;
