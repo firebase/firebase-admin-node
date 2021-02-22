@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-import * as admin from '../../lib/index';
 import fs = require('fs');
 import minimist = require('minimist');
 import path = require('path');
 import { random } from 'lodash';
-import { GoogleOAuthAccessToken } from '../../src/credential/index';
+import {
+  App, Credential, GoogleOAuthAccessToken, cert, deleteApp, initializeApp,
+} from '../../lib/app/index'
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const chalk = require('chalk');
@@ -29,10 +30,10 @@ export let storageBucket: string;
 export let projectId: string;
 export let apiKey: string;
 
-export let defaultApp: admin.app.App;
-export let nullApp: admin.app.App;
-export let nonNullApp: admin.app.App;
-export let noServiceAccountApp: admin.app.App;
+export let defaultApp: App;
+export let nullApp: App;
+export let nonNullApp: App;
+export let noServiceAccountApp: App;
 
 export let cmdArgs: any;
 
@@ -66,21 +67,21 @@ before(() => {
   databaseUrl = 'https://' + projectId + '.firebaseio.com';
   storageBucket = projectId + '.appspot.com';
 
-  defaultApp = admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
+  defaultApp = initializeApp({
+    credential: cert(serviceAccount),
     databaseURL: databaseUrl,
     storageBucket,
   });
 
-  nullApp = admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
+  nullApp = initializeApp({
+    credential: cert(serviceAccount),
     databaseURL: databaseUrl,
     databaseAuthVariableOverride: null,
     storageBucket,
   }, 'null');
 
-  nonNullApp = admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
+  nonNullApp = initializeApp({
+    credential: cert(serviceAccount),
     databaseURL: databaseUrl,
     databaseAuthVariableOverride: {
       uid: generateRandomString(20),
@@ -88,8 +89,8 @@ before(() => {
     storageBucket,
   }, 'nonNull');
 
-  noServiceAccountApp = admin.initializeApp({
-    credential: new CertificatelessCredential(admin.credential.cert(serviceAccount)),
+  noServiceAccountApp = initializeApp({
+    credential: new CertificatelessCredential(cert(serviceAccount)),
     serviceAccountId: serviceAccount.client_email,
     projectId,
   }, 'noServiceAccount');
@@ -99,17 +100,17 @@ before(() => {
 
 after(() => {
   return Promise.all([
-    defaultApp.delete(),
-    nullApp.delete(),
-    nonNullApp.delete(),
-    noServiceAccountApp.delete(),
+    deleteApp(defaultApp),
+    deleteApp(nullApp),
+    deleteApp(nonNullApp),
+    deleteApp(noServiceAccountApp),
   ]);
 });
 
-class CertificatelessCredential implements admin.credential.Credential {
-  private readonly delegate: admin.credential.Credential;
+class CertificatelessCredential implements Credential {
+  private readonly delegate: Credential;
 
-  constructor(delegate: admin.credential.Credential) {
+  constructor(delegate: Credential) {
     this.delegate = delegate;
   }
 
