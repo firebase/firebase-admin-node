@@ -1,0 +1,4 @@
+{
+  "main": "../lib/remote-config/index.js",
+  "types": "../lib/remote-config/index.d.ts"
+}

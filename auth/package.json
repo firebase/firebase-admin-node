@@ -1,0 +1,4 @@
+{
+  "main": "../lib/auth/index.js",
+  "types": "../lib/auth/index.d.ts"
+}

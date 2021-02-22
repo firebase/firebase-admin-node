@@ -1,0 +1,4 @@
+{
+  "main": "../lib/instance-id/index.js",
+  "types": "../lib/instance-id/index.d.ts"
+}

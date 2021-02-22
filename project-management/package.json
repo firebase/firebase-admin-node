@@ -1,0 +1,4 @@
+{
+  "main": "../lib/project-management/index.js",
+  "types": "../lib/project-management/index.d.ts"
+}

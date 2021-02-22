@@ -1,0 +1,4 @@
+{
+  "main": "../lib/firestore/index.js",
+  "types": "../lib/firestore/index.d.ts"
+}

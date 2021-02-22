@@ -25,8 +25,12 @@ import * as admin from 'firebase-admin';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const serviceAccount = require('../mock.key.json');
 
-describe('Init App', () => {
-  const app: admin.app.App = initApp(serviceAccount, 'TestApp');
+describe('Legacy API', () => {
+  let app: admin.app.App;
+
+  before(() => {
+    app = initApp(serviceAccount, 'TestApp');
+  });
 
   after(() => {
     return app.delete();
