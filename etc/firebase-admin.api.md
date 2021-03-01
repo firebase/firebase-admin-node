@@ -23,6 +23,8 @@ export namespace app {
         // (undocumented)
         firestore(): firestore.Firestore;
         // (undocumented)
+        installations(): installations.Installations;
+        // (undocumented)
         instanceId(): instanceId.InstanceId;
         // (undocumented)
         machineLearning(): machineLearning.MachineLearning;
@@ -496,6 +498,18 @@ export interface GoogleOAuthAccessToken {
 
 // @public (undocumented)
 export function initializeApp(options?: AppOptions, name?: string): app.App;
+
+// @public
+export function installations(app?: app.App): installations.Installations;
+
+// @public (undocumented)
+export namespace installations {
+    export interface Installations {
+        // (undocumented)
+        app: app.App;
+        deleteInstallation(fid: string): Promise<void>;
+    }
+}
 
 // @public
 export function instanceId(app?: app.App): instanceId.InstanceId;

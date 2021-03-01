@@ -15,8 +15,9 @@
  */
 
 import { FirebaseApp } from '../firebase-app';
-import { FirebaseInstanceIdError, InstanceIdClientErrorCode } from '../utils/error';
-import { FirebaseInstanceIdRequestHandler } from './instance-id-request-internal';
+import {
+  FirebaseInstallationsError, FirebaseInstanceIdError, InstallationsClientErrorCode, InstanceIdClientErrorCode,
+} from '../utils/error';
 import { instanceId } from './index';
 import * as validator from '../utils/validator';
 
@@ -39,10 +40,9 @@ import InstanceIdInterface = instanceId.InstanceId;
 export class InstanceId implements InstanceIdInterface {
 
   private app_: FirebaseApp;
-  private requestHandler: FirebaseInstanceIdRequestHandler;
 
   /**
-   * @param {FirebaseApp} app The app for this InstanceId service.
+   * @param app The app for this InstanceId service.
    * @constructor
    */
   constructor(app: FirebaseApp) {
@@ -54,7 +54,6 @@ export class InstanceId implements InstanceIdInterface {
     }
 
     this.app_ = app;
-    this.requestHandler = new FirebaseInstanceIdRequestHandler(app);
   }
 
   /**
@@ -71,16 +70,25 @@ export class InstanceId implements InstanceIdInterface {
    * @return A promise fulfilled when the instance ID is deleted.
    */
   public deleteInstanceId(instanceId: string): Promise<void> {
-    return this.requestHandler.deleteInstanceId(instanceId)
-      .then(() => {
-        // Return nothing on success
+    return this.app.installations().deleteInstallation(instanceId)
+      .catch((err) => {
+        if (err instanceof FirebaseInstallationsError) {
+          let code = err.code.replace('installations/', '');
+          if (code === InstallationsClientErrorCode.INVALID_INSTALLATION_ID.code) {
+            code = InstanceIdClientErrorCode.INVALID_INSTANCE_ID.code;
+          }
+
+          throw new FirebaseInstanceIdError({ code, message: err.message });
+        }
+
+        throw err;
       });
   }
 
   /**
    * Returns the app associated with this InstanceId instance.
    *
-   * @return {FirebaseApp} The app associated with this InstanceId instance.
+   * @return The app associated with this InstanceId instance.
    */
   get app(): FirebaseApp {
     return this.app_;

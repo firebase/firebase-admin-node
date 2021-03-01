@@ -1,6 +1,6 @@
 /*!
  * @license
- * Copyright 2017 Google Inc.
+ * Copyright 2021 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
  */
 
 import { FirebaseApp } from '../firebase-app';
-import { FirebaseInstanceIdError, InstanceIdClientErrorCode } from '../utils/error';
+import { FirebaseInstallationsError, InstallationsClientErrorCode } from '../utils/error';
 import {
   ApiSettings, AuthorizedHttpClient, HttpRequestConfig, HttpError,
 } from '../utils/api-request';
@@ -33,10 +33,10 @@ const FIREBASE_IID_TIMEOUT = 10000;
 
 /** HTTP error codes raised by the backend server. */
 const ERROR_CODES: {[key: number]: string} = {
-  400: 'Malformed instance ID argument.',
+  400: 'Malformed installation ID argument.',
   401: 'Request not authorized.',
-  403: 'Project does not match instance ID or the client does not have sufficient privileges.',
-  404: 'Failed to find the instance ID.',
+  403: 'Project does not match installation ID or the client does not have sufficient privileges.',
+  404: 'Failed to find the installation ID.',
   409: 'Already deleted.',
   429: 'Request throttled out by the backend server.',
   500: 'Internal server error.',
@@ -44,9 +44,9 @@ const ERROR_CODES: {[key: number]: string} = {
 };
 
 /**
- * Class that provides mechanism to send requests to the Firebase Instance ID backend endpoints.
+ * Class that provides mechanism to send requests to the FIS backend endpoints.
  */
-export class FirebaseInstanceIdRequestHandler {
+export class FirebaseInstallationsRequestHandler {
 
   private readonly host: string = FIREBASE_IID_HOST;
   private readonly timeout: number = FIREBASE_IID_TIMEOUT;
@@ -54,7 +54,7 @@ export class FirebaseInstanceIdRequestHandler {
   private path: string;
 
   /**
-   * @param {FirebaseApp} app The app used to fetch access tokens to sign API requests.
+   * @param app The app used to fetch access tokens to sign API requests.
    *
    * @constructor
    */
@@ -62,21 +62,21 @@ export class FirebaseInstanceIdRequestHandler {
     this.httpClient = new AuthorizedHttpClient(app);
   }
 
-  public deleteInstanceId(instanceId: string): Promise<void> {
-    if (!validator.isNonEmptyString(instanceId)) {
-      return Promise.reject(new FirebaseInstanceIdError(
-        InstanceIdClientErrorCode.INVALID_INSTANCE_ID,
-        'Instance ID must be a non-empty string.',
+  public deleteInstallation(fid: string): Promise<void> {
+    if (!validator.isNonEmptyString(fid)) {
+      return Promise.reject(new FirebaseInstallationsError(
+        InstallationsClientErrorCode.INVALID_INSTALLATION_ID,
+        'Installation ID must be a non-empty string.',
       ));
     }
-    return this.invokeRequestHandler(new ApiSettings(instanceId, 'DELETE'));
+    return this.invokeRequestHandler(new ApiSettings(fid, 'DELETE'));
   }
 
   /**
    * Invokes the request handler based on the API settings object passed.
    *
-   * @param {ApiSettings} apiSettings The API endpoint settings to apply to request and response.
-   * @return {Promise<void>} A promise that resolves when the request is complete.
+   * @param apiSettings The API endpoint settings to apply to request and response.
+   * @return A promise that resolves when the request is complete.
    */
   private invokeRequestHandler(apiSettings: ApiSettings): Promise<void> {
     return this.getPathPrefix()
@@ -98,8 +98,8 @@ export class FirebaseInstanceIdRequestHandler {
             response.data.error : response.text;
           const template: string = ERROR_CODES[response.status];
           const message: string = template ?
-            `Instance ID "${apiSettings.getEndpoint()}": ${template}` : errorMessage;
-          throw new FirebaseInstanceIdError(InstanceIdClientErrorCode.API_ERROR, message);
+            `Installation ID "${apiSettings.getEndpoint()}": ${template}` : errorMessage;
+          throw new FirebaseInstallationsError(InstallationsClientErrorCode.API_ERROR, message);
         }
         // In case of timeouts and other network errors, the HttpClient returns a
         // FirebaseError wrapped in the response. Simply throw it here.
@@ -116,9 +116,9 @@ export class FirebaseInstanceIdRequestHandler {
       .then((projectId) => {
         if (!validator.isNonEmptyString(projectId)) {
           // Assert for an explicit projct ID (either via AppOptions or the cert itself).
-          throw new FirebaseInstanceIdError(
-            InstanceIdClientErrorCode.INVALID_PROJECT_ID,
-            'Failed to determine project ID for InstanceId. Initialize the '
+          throw new FirebaseInstallationsError(
+            InstallationsClientErrorCode.INVALID_PROJECT_ID,
+            'Failed to determine project ID for Installations. Initialize the '
             + 'SDK with service account credentials or set project ID as an app option. '
             + 'Alternatively set the GOOGLE_CLOUD_PROJECT environment variable.',
           );

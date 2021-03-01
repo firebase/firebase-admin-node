@@ -28,7 +28,7 @@ import * as mocks from '../../resources/mocks';
 
 import { FirebaseApp } from '../../../src/firebase-app';
 import { HttpClient } from '../../../src/utils/api-request';
-import { FirebaseInstanceIdRequestHandler } from '../../../src/instance-id/instance-id-request-internal';
+import { FirebaseInstallationsRequestHandler } from '../../../src/installations/installations-request-handler';
 
 chai.should();
 chai.use(sinonChai);
@@ -36,7 +36,7 @@ chai.use(chaiAsPromised);
 
 const expect = chai.expect;
 
-describe('FirebaseInstanceIdRequestHandler', () => {
+describe('FirebaseInstallationsRequestHandler', () => {
   const projectId = 'project_id';
   const mockAccessToken: string = utils.generateRandomAccessToken();
   let stubs: sinon.SinonStub[] = [];
@@ -69,24 +69,24 @@ describe('FirebaseInstanceIdRequestHandler', () => {
   describe('Constructor', () => {
     it('should succeed with a FirebaseApp instance', () => {
       expect(() => {
-        return new FirebaseInstanceIdRequestHandler(mockApp);
+        return new FirebaseInstallationsRequestHandler(mockApp);
       }).not.to.throw(Error);
     });
   });
 
-  describe('deleteInstanceId', () => {
+  describe('deleteInstallation', () => {
     const httpMethod = 'DELETE';
     const host = 'console.firebase.google.com';
-    const path = `/v1/project/${projectId}/instanceId/test-iid`;
+    const path = `/v1/project/${projectId}/instanceId/test-fid`;
     const timeout = 10000;
 
-    it('should be fulfilled given a valid instance ID', () => {
+    it('should be fulfilled given a valid installation ID', () => {
       const stub = sinon.stub(HttpClient.prototype, 'send')
         .resolves(utils.responseFrom(''));
       stubs.push(stub);
 
-      const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp);
-      return requestHandler.deleteInstanceId('test-iid')
+      const requestHandler = new FirebaseInstallationsRequestHandler(mockApp);
+      return requestHandler.deleteInstallation('test-fid')
         .then(() => {
           expect(stub).to.have.been.calledOnce.and.calledWith({
             method: httpMethod,
@@ -102,14 +102,14 @@ describe('FirebaseInstanceIdRequestHandler', () => {
         .rejects(utils.errorFrom({}, 404));
       stubs.push(stub);
 
-      const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp);
-      return requestHandler.deleteInstanceId('test-iid')
+      const requestHandler = new FirebaseInstallationsRequestHandler(mockApp);
+      return requestHandler.deleteInstallation('test-fid')
         .then(() => {
           throw new Error('Unexpected success');
         })
         .catch((error) => {
-          expect(error.code).to.equal('instance-id/api-error');
-          expect(error.message).to.equal('Instance ID "test-iid": Failed to find the instance ID.');
+          expect(error.code).to.equal('installations/api-error');
+          expect(error.message).to.equal('Installation ID "test-fid": Failed to find the installation ID.');
         });
     });
 
@@ -118,14 +118,14 @@ describe('FirebaseInstanceIdRequestHandler', () => {
         .rejects(utils.errorFrom({}, 409));
       stubs.push(stub);
 
-      const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp);
-      return requestHandler.deleteInstanceId('test-iid')
+      const requestHandler = new FirebaseInstallationsRequestHandler(mockApp);
+      return requestHandler.deleteInstallation('test-fid')
         .then(() => {
           throw new Error('Unexpected success');
         })
         .catch((error) => {
-          expect(error.code).to.equal('instance-id/api-error');
-          expect(error.message).to.equal('Instance ID "test-iid": Already deleted.');
+          expect(error.code).to.equal('installations/api-error');
+          expect(error.message).to.equal('Installation ID "test-fid": Already deleted.');
         });
     });
 
@@ -135,13 +135,13 @@ describe('FirebaseInstanceIdRequestHandler', () => {
         .rejects(utils.errorFrom(expectedResult, 511));
       stubs.push(stub);
 
-      const requestHandler = new FirebaseInstanceIdRequestHandler(mockApp);
-      return requestHandler.deleteInstanceId('test-iid')
+      const requestHandler = new FirebaseInstallationsRequestHandler(mockApp);
+      return requestHandler.deleteInstallation('test-fid')
         .then(() => {
           throw new Error('Unexpected success');
         })
         .catch((error) => {
-          expect(error.code).to.equal('instance-id/api-error');
+          expect(error.code).to.equal('installations/api-error');
           expect(error.message).to.equal('test error');
         });
     });

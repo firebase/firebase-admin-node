@@ -38,6 +38,9 @@ import { app } from '../firebase-namespace-api';
  * var otherInstanceId = admin.instanceId(otherApp);
  *```
  *
+ * This API is deprecated. Developers are advised to use the `admin.installations()`
+ * API to delete their instance IDs and other Firebase installation IDs.
+ *
  * @param app Optional app whose `InstanceId` service to
  *   return. If not provided, the default `InstanceId` service will be
  *   returned.
@@ -75,6 +78,9 @@ export namespace instanceId {
      * not delete Analytics data. See
      * [Delete an Instance ID](/support/privacy/manage-iids#delete_an_instance_id)
      * for more information.
+     *
+     * This API is deprecated. Developers are advised to use the `Installations.deleteInstallation()`
+     * API instead.
      *
      * @param instanceId The instance ID to be deleted.
      *
