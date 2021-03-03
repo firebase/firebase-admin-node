@@ -1,4 +1,0 @@
-{
-  "main": "../lib/security-rules/index.js",
-  "types": "../lib/security-rules/index.d.ts"
-}

@@ -1,4 +1,0 @@
-{
-  "main": "../lib/messaging/index.js",
-  "types": "../lib/messaging/index.d.ts"
-}

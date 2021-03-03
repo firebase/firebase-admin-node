@@ -1,4 +1,0 @@
-{
-  "main": "../lib/database/index.js",
-  "types": "../lib/database/index.d.ts"
-}

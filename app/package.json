@@ -1,4 +1,0 @@
-{
-  "main": "../lib/app/index.js",
-  "types": "../lib/app/index.d.ts"
-}

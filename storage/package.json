@@ -1,4 +1,0 @@
-{
-  "main": "../lib/storage/index.js",
-  "types": "../lib/storage/index.d.ts"
-}

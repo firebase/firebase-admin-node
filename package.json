@@ -6,7 +6,7 @@
   "license": "Apache-2.0",
   "homepage": "https://firebase.google.com/",
   "engines": {
-    "node": ">=10.10.0"
+    "node": ">=12.7.0"
   },
   "scripts": {
     "build": "gulp build",
@@ -52,20 +52,24 @@
     "lib/",
     "LICENSE",
     "README.md",
-    "package.json",
-    "app/",
-    "auth/",
-    "database/",
-    "firestore/",
-    "instance-id/",
-    "machine-learning",
-    "messaging/",
-    "project-management/",
-    "remote-config/",
-    "security-rules/",
-    "storage/"
+    "package.json"
   ],
   "types": "./lib/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "app": ["lib/app"],
+      "auth": ["lib/auth"],
+      "database": ["lib/database"],
+      "firestore": ["lib/firestore"],
+      "instance-id": ["lib/instance-id"],
+      "machine-learning": ["lib/machine-learning"],
+      "messaging": ["lib/messaging"],
+      "project-management": ["lib/project-management"],
+      "remote-config": ["lib/remote-config"],
+      "security-rules": ["lib/security-rules"],
+      "storage": ["lib/storage"]
+    }
+  },
   "exports": {
     ".": "./lib/index.js",
     "./app": "./lib/app/index.js",

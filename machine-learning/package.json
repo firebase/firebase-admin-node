@@ -1,4 +1,0 @@
-{
-  "main": "../lib/machine-learning/index.js",
-  "types": "../lib/machine-learning/index.d.ts"
-}
