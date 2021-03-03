@@ -174,7 +174,7 @@ describe('Installations', () => {
     it('should throw an error when the backend returns an error', () => {
       // Stub deleteInstallation to throw a backend error.
       const stub = sinon.stub(FirebaseInstallationsRequestHandler.prototype, 'deleteInstallation')
-        .returns(Promise.reject(expectedError));
+        .rejects(expectedError);
       stubs.push(stub);
       return fis.deleteInstallation(testInstallationId)
         .then(() => {

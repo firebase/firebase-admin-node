@@ -511,14 +511,16 @@ export namespace installations {
     }
 }
 
-// @public
+// @public @deprecated
 export function instanceId(app?: app.App): instanceId.InstanceId;
 
 // @public (undocumented)
 export namespace instanceId {
+    // @deprecated
     export interface InstanceId {
         // (undocumented)
         app: app.App;
+        // @deprecated
         deleteInstanceId(instanceId: string): Promise<void>;
     }
 }
