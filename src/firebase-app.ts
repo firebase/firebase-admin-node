@@ -334,7 +334,7 @@ export class FirebaseApp implements app.App {
    * @return The Installations service instance of this app.
    */
   public installations(): Installations {
-    return this.ensureService_('iid', () => {
+    return this.ensureService_('installations', () => {
       const fisService: typeof Installations = require('./installations/installations').Installations;
       return new fisService(this);
     });

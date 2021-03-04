@@ -227,6 +227,7 @@ export namespace app {
     database(url?: string): database.Database;
     firestore(): firestore.Firestore;
     installations(): installations.Installations;
+    /** @deprecated */
     instanceId(): instanceId.InstanceId;
     machineLearning(): machineLearning.MachineLearning;
     messaging(): messaging.Messaging;

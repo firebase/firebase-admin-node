@@ -24,7 +24,7 @@ export namespace app {
         firestore(): firestore.Firestore;
         // (undocumented)
         installations(): installations.Installations;
-        // (undocumented)
+        // @deprecated (undocumented)
         instanceId(): instanceId.InstanceId;
         // (undocumented)
         machineLearning(): machineLearning.MachineLearning;
