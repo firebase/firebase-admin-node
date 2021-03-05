@@ -6,7 +6,7 @@
   "license": "Apache-2.0",
   "homepage": "https://firebase.google.com/",
   "engines": {
-    "node": ">=10.10.0"
+    "node": ">=12.7.0"
   },
   "scripts": {
     "build": "gulp build",
@@ -55,6 +55,35 @@
     "package.json"
   ],
   "types": "./lib/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "app": ["lib/app"],
+      "auth": ["lib/auth"],
+      "database": ["lib/database"],
+      "firestore": ["lib/firestore"],
+      "instance-id": ["lib/instance-id"],
+      "machine-learning": ["lib/machine-learning"],
+      "messaging": ["lib/messaging"],
+      "project-management": ["lib/project-management"],
+      "remote-config": ["lib/remote-config"],
+      "security-rules": ["lib/security-rules"],
+      "storage": ["lib/storage"]
+    }
+  },
+  "exports": {
+    ".": "./lib/index.js",
+    "./app": "./lib/app/index.js",
+    "./auth": "./lib/auth/index.js",
+    "./database": "./lib/database/index.js",
+    "./firestore": "./lib/firestore/index.js",
+    "./instance-id": "./lib/instance-id/index.js",
+    "./machine-learning": "./lib/machine-learning/index.js",
+    "./messaging": "./lib/messaging/index.js",
+    "./project-management": "./lib/project-management/index.js",
+    "./remote-config": "./lib/remote-config/index.js",
+    "./security-rules": "./lib/security-rules/index.js",
+    "./storage": "./lib/storage/index.js"
+  },
   "dependencies": {
     "@firebase/database": "^0.8.1",
     "@firebase/database-types": "^0.6.1",
