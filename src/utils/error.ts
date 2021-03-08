@@ -339,9 +339,27 @@ export class AppErrorCodes {
 }
 
 /**
+ * Base class for client error codes and their default messages.
+ */
+export class BaseClientErrorCode {
+  public static INVALID_ARGUMENT = {
+    code: 'argument-error',
+    message: 'Invalid argument provided.',
+  };
+  public static INVALID_CREDENTIAL = {
+    code: 'invalid-credential',
+    message: 'Invalid credential object provided.',
+  };
+  public static INTERNAL_ERROR = {
+    code: 'internal-error',
+    message: 'An internal error has occurred.',
+  };
+}
+
+/**
  * Auth client error codes and their default messages.
  */
-export class AuthClientErrorCode {
+export class AuthClientErrorCode extends BaseClientErrorCode {
   public static BILLING_NOT_ENABLED = {
     code: 'billing-not-enabled',
     message: 'Feature requires billing to be enabled.',

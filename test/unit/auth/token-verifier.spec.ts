@@ -29,10 +29,10 @@ import LegacyFirebaseTokenGenerator = require('firebase-token-generator');
 
 import * as mocks from '../../resources/mocks';
 import { FirebaseTokenGenerator, ServiceAccountSigner } from '../../../src/auth/token-generator';
-import * as verifier from '../../../src/auth/token-verifier';
+import * as verifier from '../../../src/utils/token-verifier';
 
 import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
-import { AuthClientErrorCode } from '../../../src/utils/error';
+import { AuthClientErrorCode, FirebaseAuthError } from '../../../src/utils/error';
 import { FirebaseApp } from '../../../src/firebase-app';
 import { Algorithm } from 'jsonwebtoken';
 
@@ -160,6 +160,8 @@ describe('FirebaseTokenVerifier', () => {
             jwtName: 'Important Token',
             shortName: 'token',
             expiredErrorCode: AuthClientErrorCode.INVALID_ARGUMENT,
+            errorCodeType: AuthClientErrorCode,
+            errorType: FirebaseAuthError,
           },
           app,
         );
@@ -224,6 +226,8 @@ describe('FirebaseTokenVerifier', () => {
               jwtName: 'Important Token',
               shortName: 'token',
               expiredErrorCode: AuthClientErrorCode.INVALID_ARGUMENT,
+              errorCodeType: AuthClientErrorCode,
+              errorType: FirebaseAuthError,
             },
             app,
           );
@@ -245,6 +249,8 @@ describe('FirebaseTokenVerifier', () => {
               jwtName: invalidJwtName as any,
               shortName: 'token',
               expiredErrorCode: AuthClientErrorCode.INVALID_ARGUMENT,
+              errorCodeType: AuthClientErrorCode,
+              errorType: FirebaseAuthError,
             },
             app,
           );
@@ -266,6 +272,8 @@ describe('FirebaseTokenVerifier', () => {
               jwtName: 'Important Token',
               shortName: invalidShortName as any,
               expiredErrorCode: AuthClientErrorCode.INVALID_ARGUMENT,
+              errorCodeType: AuthClientErrorCode,
+              errorType: FirebaseAuthError,
             },
             app,
           );
@@ -287,11 +295,39 @@ describe('FirebaseTokenVerifier', () => {
               jwtName: 'Important Token',
               shortName: 'token',
               expiredErrorCode: invalidExpiredErrorCode as any,
+              errorCodeType: AuthClientErrorCode,
+              errorType: FirebaseAuthError,
             },
             app,
           );
         }).to.throw('The JWT expiration error code must be a non-null ErrorInfo object.');
       });
+    });
+  });
+
+  const errorTypes = [
+    { type: FirebaseAuthError, code: AuthClientErrorCode },
+  ];
+  errorTypes.forEach((errorType) => {
+    it('should throw with the correct error type set in token info', () => {
+      expect(() => {
+        new verifier.FirebaseTokenVerifier(
+          'https://www.example.com/publicKeys',
+          'RS256',
+          'https://www.example.com/issuer/',
+          {
+            url: 'https://docs.example.com/verify-tokens',
+            verifyApiName: 'verifyToken()',
+            jwtName: 'Important Token',
+            shortName: '',
+            expiredErrorCode: errorType.code.INVALID_ARGUMENT,
+            errorCodeType: errorType.code,
+            errorType: errorType.type,
+          },
+          app,
+        );
+      }).to.throw(errorType.type)
+        .with.property('code').and.match(/(auth|messaging)\/argument-error/);
     });
   });
 

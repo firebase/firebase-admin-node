@@ -31,7 +31,7 @@ import * as validator from '../utils/validator';
 import { auth } from './index';
 import {
   FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier
-} from './token-verifier';
+} from '../utils/token-verifier';
 import {
   SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
 } from './auth-config';
