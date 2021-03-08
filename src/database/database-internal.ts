@@ -123,12 +123,15 @@ class DatabaseRulesClient {
   private readonly httpClient: AuthorizedHttpClient;
 
   constructor(app: FirebaseApp, dbUrl: string) {
+    let parsedUrl = new URL(dbUrl);
     const emulatorHost = process.env.FIREBASE_DATABASE_EMULATOR_HOST;
     if (emulatorHost) {
-      dbUrl = `http://${emulatorHost}`;
+      const hostname = parsedUrl.hostname;
+      const dotIndex = hostname.indexOf('.');
+      const namespace = hostname.substring(0, dotIndex).toLowerCase();
+      parsedUrl = new URL(`http://${emulatorHost}?ns=${namespace}`);
     }
 
-    const parsedUrl = new URL(dbUrl);
     parsedUrl.pathname = path.join(parsedUrl.pathname, RULES_URL_PATH);
     this.dbUrl = parsedUrl.toString();
     this.httpClient = new AuthorizedHttpClient(app);

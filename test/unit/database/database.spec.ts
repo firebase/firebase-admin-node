@@ -408,40 +408,91 @@ describe('Database', () => {
     });
 
     describe('emulator mode', () => {
-      before(() => {
-        process.env.FIREBASE_DATABASE_EMULATOR_HOST = 'localhost:9090';
-      });
+      const namespacedRulesPath = `${rulesPath}?ns=databasename`;
 
-      after(() => {
-        delete process.env.FIREBASE_DATABASE_EMULATOR_HOST;
-      });
+      describe('from environment variable', () => {
+        before(() => {
+          process.env.FIREBASE_DATABASE_EMULATOR_HOST = 'localhost:9090';
+        });
 
-      it('getRules should connect to the emulator', () => {
-        const db: Database = database.getDatabase();
-        const stub = stubSuccessfulResponse(rules);
-        return db.getRules().then((result) => {
-          expect(result).to.equal(rulesString);
-          return expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParamsForGet({ url: `http://localhost:9090/${rulesPath}` }));
+        after(() => {
+          delete process.env.FIREBASE_DATABASE_EMULATOR_HOST;
+        });
+
+        it('getRules should connect to the emulator', () => {
+          const db: Database = database.getDatabase();
+          const stub = stubSuccessfulResponse(rules);
+          return db.getRules().then((result) => {
+            expect(result).to.equal(rulesString);
+            return expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParamsForGet({ url: `http://localhost:9090/${namespacedRulesPath}` }));
+          });
+        });
+
+        it('getRulesJSON should connect to the emulator', () => {
+          const db: Database = database.getDatabase();
+          const stub = stubSuccessfulResponse(rules);
+          return db.getRulesJSON().then((result) => {
+            expect(result).to.equal(rules);
+            return expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParamsForGet({ strict: true, url: `http://localhost:9090/${namespacedRulesPath}` }));
+          });
+        });
+
+        it('setRules should connect to the emulator', () => {
+          const db: Database = database.getDatabase();
+          const stub = stubSuccessfulResponse({});
+          return db.setRules(rulesString).then(() => {
+            return expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParamsForPut(rulesString, `http://localhost:9090/${namespacedRulesPath}`));
+          });
         });
       });
 
-      it('getRulesJSON should connect to the emulator', () => {
-        const db: Database = database.getDatabase();
-        const stub = stubSuccessfulResponse(rules);
-        return db.getRulesJSON().then((result) => {
-          expect(result).to.equal(rules);
-          return expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParamsForGet({ strict: true, url: `http://localhost:9090/${rulesPath}` }));
-        });
-      });
+      describe('from app options', () => {
+        let emulatorApp: FirebaseApp;
+        let emulatorDatabase: DatabaseService;
 
-      it('setRules should connect to the emulator', () => {
-        const db: Database = database.getDatabase();
-        const stub = stubSuccessfulResponse({});
-        return db.setRules(rulesString).then(() => {
-          return expect(stub).to.have.been.calledOnce.and.calledWith(
-            callParamsForPut(rulesString, `http://localhost:9090/${rulesPath}`));
+        beforeEach(() => {
+          emulatorApp = mocks.appWithOptions({
+            databaseURL: 'http://localhost:9091?ns=databasename',
+          });
+          emulatorDatabase = new DatabaseService(emulatorApp);
+        });
+
+        afterEach(() => {
+          return emulatorDatabase.delete().then(() => {
+            return emulatorApp.delete();
+          });
+        });
+
+        it('getRules should connect to the emulator', () => {
+          const db: Database = emulatorDatabase.getDatabase();
+          const stub = stubSuccessfulResponse(rules);
+          return db.getRules().then((result) => {
+            expect(result).to.equal(rulesString);
+            return expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParamsForGet({ url: `http://localhost:9091/${namespacedRulesPath}` }));
+          });
+        });
+
+        it('getRulesJSON should connect to the emulator', () => {
+          const db: Database = emulatorDatabase.getDatabase();
+          const stub = stubSuccessfulResponse(rules);
+          return db.getRulesJSON().then((result) => {
+            expect(result).to.equal(rules);
+            return expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParamsForGet({ strict: true, url: `http://localhost:9091/${namespacedRulesPath}` }));
+          });
+        });
+
+        it('setRules should connect to the emulator', () => {
+          const db: Database = emulatorDatabase.getDatabase();
+          const stub = stubSuccessfulResponse({});
+          return db.setRules(rulesString).then(() => {
+            return expect(stub).to.have.been.calledOnce.and.calledWith(
+              callParamsForPut(rulesString, `http://localhost:9091/${namespacedRulesPath}`));
+          });
         });
       });
     });
