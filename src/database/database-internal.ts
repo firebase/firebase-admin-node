@@ -126,9 +126,7 @@ class DatabaseRulesClient {
     let parsedUrl = new URL(dbUrl);
     const emulatorHost = process.env.FIREBASE_DATABASE_EMULATOR_HOST;
     if (emulatorHost) {
-      const hostname = parsedUrl.hostname;
-      const dotIndex = hostname.indexOf('.');
-      const namespace = hostname.substring(0, dotIndex).toLowerCase();
+      const namespace = extractNamespace(parsedUrl);
       parsedUrl = new URL(`http://${emulatorHost}?ns=${namespace}`);
     }
 
@@ -240,4 +238,15 @@ class DatabaseRulesClient {
 
     return `${intro}: ${err.response.text}`;
   }
+}
+
+function extractNamespace(parsedUrl: URL): string {
+  const ns = parsedUrl.searchParams.get('ns');
+  if (ns) {
+    return ns;
+  }
+
+  const hostname = parsedUrl.hostname;
+  const dotIndex = hostname.indexOf('.');
+  return hostname.substring(0, dotIndex).toLowerCase();
 }
