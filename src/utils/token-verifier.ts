@@ -58,51 +58,24 @@ export class FirebaseTokenVerifier {
               private readonly app: FirebaseApp) {
 
     if (!validator.isURL(clientCertUrl)) {
-      throw new this.tokenInfo.errorType(
-        this.tokenInfo.errorCodeConfig.invalidArg,
-        'The provided public client certificate URL is an invalid URL.',
-      );
-
+      throw new Error('The provided public client certificate URL is an invalid URL.');
     } else if (!validator.isNonEmptyString(algorithm)) {
-      throw new this.tokenInfo.errorType(
-        this.tokenInfo.errorCodeConfig.invalidArg,
-        'The provided JWT algorithm is an empty string.',
-      );
+      throw new Error('The provided JWT algorithm is an empty string.');
     } else if (!validator.isURL(issuer)) {
-      throw new this.tokenInfo.errorType(
-        this.tokenInfo.errorCodeConfig.invalidArg,
-        'The provided JWT issuer is an invalid URL.',
-      );
+      throw new Error('The provided JWT issuer is an invalid URL.');
     } else if (!validator.isNonNullObject(tokenInfo)) {
-      throw new this.tokenInfo.errorType(
-        this.tokenInfo.errorCodeConfig.invalidArg,
-        'The provided JWT information is not an object or null.',
-      );
+      throw new Error('The provided JWT information is not an object or null.');
     } else if (!validator.isURL(tokenInfo.url)) {
-      throw new this.tokenInfo.errorType(
-        this.tokenInfo.errorCodeConfig.invalidArg,
-        'The provided JWT verification documentation URL is invalid.',
-      );
+      throw new Error('The provided JWT verification documentation URL is invalid.');
     } else if (!validator.isNonEmptyString(tokenInfo.verifyApiName)) {
-      throw new this.tokenInfo.errorType(
-        this.tokenInfo.errorCodeConfig.invalidArg,
-        'The JWT verify API name must be a non-empty string.',
-      );
+      throw new Error('The JWT verify API name must be a non-empty string.');
     } else if (!validator.isNonEmptyString(tokenInfo.jwtName)) {
-      throw new this.tokenInfo.errorType(
-        this.tokenInfo.errorCodeConfig.invalidArg,
-        'The JWT public full name must be a non-empty string.',
-      );
+      throw new Error('The JWT public full name must be a non-empty string.');
     } else if (!validator.isNonEmptyString(tokenInfo.shortName)) {
-      throw new this.tokenInfo.errorType(
-        this.tokenInfo.errorCodeConfig.invalidArg,
-        'The JWT public short name must be a non-empty string.',
-      );
-    } else if (!validator.isNonNullObject(tokenInfo.expiredErrorCode) || !('code' in tokenInfo.expiredErrorCode)) {
-      throw new this.tokenInfo.errorType(
-        this.tokenInfo.errorCodeConfig.invalidArg,
-        'The JWT expiration error code must be a non-null ErrorInfo object.',
-      );
+      throw new Error('The JWT public short name must be a non-empty string.');
+    } else if (!validator.isNonNullObject(tokenInfo.expiredErrorCode) ||
+      !('code' in tokenInfo.expiredErrorCode)) {
+      throw new Error('The JWT expiration error code must be a non-null ErrorInfo object.');
     }
     this.shortNameArticle = tokenInfo.shortName.charAt(0).match(/[aeiou]/i) ? 'an' : 'a';
 

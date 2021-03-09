@@ -316,24 +316,27 @@ describe('FirebaseTokenVerifier', () => {
     { type: FirebaseAuthError, code: AUTH_ERROR_CODE_CONFIG },
   ];
   errorTypes.forEach((errorType) => {
-    it('should throw with the correct error type set in token info', () => {
+    const tokenVerifier = new verifier.FirebaseTokenVerifier(
+      'https://www.example.com/publicKeys',
+      'RS256',
+      'https://www.example.com/issuer/',
+      {
+        url: 'https://docs.example.com/verify-tokens',
+        verifyApiName: 'verifyToken()',
+        jwtName: 'Important Token',
+        shortName: 'token',
+        expiredErrorCode: errorType.code.invalidArg,
+        errorCodeConfig: errorType.code,
+        errorType: errorType.type,
+      },
+      app,
+    );
+    it('should throw with the correct error type and code set in token info', () => {
       expect(() => {
-        new verifier.FirebaseTokenVerifier(
-          'https://www.example.com/publicKeys',
-          'RS256',
-          'https://www.example.com/issuer/',
-          {
-            url: 'https://docs.example.com/verify-tokens',
-            verifyApiName: 'verifyToken()',
-            jwtName: 'Important Token',
-            shortName: '',
-            expiredErrorCode: errorType.code.invalidArg,
-            errorCodeConfig: errorType.code,
-            errorType: errorType.type,
-          },
-          app,
-        );
-      }).to.throw(errorType.type).with.property('code', 'auth/argument-error');
+        (tokenVerifier as any).verifyJWT();
+      }).to.throw(errorType.type).with.property('code').match(
+        new RegExp(`(.*)/${errorType.code.invalidArg.code}`)
+      );
     });
   });
 
