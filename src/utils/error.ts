@@ -34,6 +34,15 @@ interface ServerToClientCode {
 }
 
 /**
+ * Defines a type that stores commonly used error codes.
+ */
+export interface ErrorCodeConfig {
+  invalidArg: ErrorInfo;
+  invalidCredential: ErrorInfo;
+  internalError: ErrorInfo;
+}
+
+/**
  * Firebase error code structure. This extends Error.
  *
  * @param {ErrorInfo} errorInfo The error information (code and message).
@@ -339,27 +348,9 @@ export class AppErrorCodes {
 }
 
 /**
- * Base class for client error codes and their default messages.
- */
-export class BaseClientErrorCode {
-  public static INVALID_ARGUMENT = {
-    code: 'argument-error',
-    message: 'Invalid argument provided.',
-  };
-  public static INVALID_CREDENTIAL = {
-    code: 'invalid-credential',
-    message: 'Invalid credential object provided.',
-  };
-  public static INTERNAL_ERROR = {
-    code: 'internal-error',
-    message: 'An internal error has occurred.',
-  };
-}
-
-/**
  * Auth client error codes and their default messages.
  */
-export class AuthClientErrorCode extends BaseClientErrorCode {
+export class AuthClientErrorCode {
   public static BILLING_NOT_ENABLED = {
     code: 'billing-not-enabled',
     message: 'Feature requires billing to be enabled.',

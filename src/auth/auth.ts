@@ -29,9 +29,8 @@ import { AuthClientErrorCode, FirebaseAuthError, ErrorInfo } from '../utils/erro
 import * as utils from '../utils/index';
 import * as validator from '../utils/validator';
 import { auth } from './index';
-import {
-  FirebaseTokenVerifier, createSessionCookieVerifier, createIdTokenVerifier
-} from '../utils/token-verifier';
+import { FirebaseTokenVerifier } from '../utils/token-verifier';
+import { createSessionCookieVerifier, createIdTokenVerifier } from './token-verifier-util';
 import {
   SAMLConfig, OIDCConfig, OIDCConfigServerResponse, SAMLConfigServerResponse,
 } from './auth-config';
