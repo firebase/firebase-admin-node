@@ -312,34 +312,6 @@ describe('FirebaseTokenVerifier', () => {
     });
   });
 
-  const errorTypes = [
-    { type: FirebaseAuthError, code: AUTH_ERROR_CODE_CONFIG },
-  ];
-  errorTypes.forEach((errorType) => {
-    const tokenVerifier = new verifier.FirebaseTokenVerifier(
-      'https://www.example.com/publicKeys',
-      'RS256',
-      'https://www.example.com/issuer/',
-      {
-        url: 'https://docs.example.com/verify-tokens',
-        verifyApiName: 'verifyToken()',
-        jwtName: 'Important Token',
-        shortName: 'token',
-        expiredErrorCode: errorType.code.invalidArg,
-        errorCodeConfig: errorType.code,
-        errorType: errorType.type,
-      },
-      app,
-    );
-    it('should throw with the correct error type and code set in token info', () => {
-      expect(() => {
-        (tokenVerifier as any).verifyJWT();
-      }).to.throw(errorType.type).with.property('code').match(
-        new RegExp(`(.*)/${errorType.code.invalidArg.code}`)
-      );
-    });
-  });
-
   describe('verifyJWT()', () => {
     let mockedRequests: nock.Scope[] = [];
 
@@ -352,6 +324,34 @@ describe('FirebaseTokenVerifier', () => {
       expect(() => {
         (tokenVerifier as any).verifyJWT();
       }).to.throw('First argument to verifyIdToken() must be a Firebase ID token');
+    });
+
+    const errorTypes = [
+      { type: FirebaseAuthError, config: AUTH_ERROR_CODE_CONFIG },
+    ];
+    errorTypes.forEach((errorType) => {
+      const tokenVerifier = new verifier.FirebaseTokenVerifier(
+        'https://www.example.com/publicKeys',
+        'RS256',
+        'https://www.example.com/issuer/',
+        {
+          url: 'https://docs.example.com/verify-tokens',
+          verifyApiName: 'verifyToken()',
+          jwtName: 'Important Token',
+          shortName: 'token',
+          expiredErrorCode: errorType.config.invalidArg,
+          errorCodeConfig: errorType.config,
+          errorType: errorType.type,
+        },
+        app,
+      );
+      it('should throw with the correct error type and code set in token info', () => {
+        expect(() => {
+          (tokenVerifier as any).verifyJWT();
+        }).to.throw(errorType.type).with.property('code').match(
+          new RegExp(`(.*)/${errorType.config.invalidArg.code}`)
+        );
+      });
     });
 
     const invalidIdTokens = [null, NaN, 0, 1, true, false, [], {}, { a: 1 }, _.noop];
