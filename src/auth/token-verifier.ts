@@ -27,11 +27,20 @@ const CLIENT_CERT_URL = 'https://www.googleapis.com/robot/v1/metadata/x509/secur
 // URL containing the public keys for Firebase session cookies. This will be updated to a different URL soon.
 const SESSION_COOKIE_CERT_URL = 'https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys';
 
-/** Error codes that matches the FirebaseAuthError type */
-const AUTH_ERROR_CODE_CONFIG: ErrorCodeConfig = {
+/** Matching Auth error code config for ID token */
+export const ID_TOKEN_ERROR_CODE_CONFIG: ErrorCodeConfig = {
   invalidArg: AuthClientErrorCode.INVALID_ARGUMENT,
   invalidCredential: AuthClientErrorCode.INVALID_CREDENTIAL,
   internalError: AuthClientErrorCode.INTERNAL_ERROR,
+  expiredError: AuthClientErrorCode.ID_TOKEN_EXPIRED,
+}
+
+/** Matching Auth error code config for session cookie */
+export const SESSION_COOKIE_ERROR_CODE_CONFIG: ErrorCodeConfig = {
+  invalidArg: AuthClientErrorCode.INVALID_ARGUMENT,
+  invalidCredential: AuthClientErrorCode.INVALID_CREDENTIAL,
+  internalError: AuthClientErrorCode.INTERNAL_ERROR,
+  expiredError: AuthClientErrorCode.SESSION_COOKIE_EXPIRED,
 }
 
 /** User facing token information related to the Firebase ID token. */
@@ -40,8 +49,7 @@ export const ID_TOKEN_INFO: FirebaseTokenInfo = {
   verifyApiName: 'verifyIdToken()',
   jwtName: 'Firebase ID token',
   shortName: 'ID token',
-  expiredErrorCode: AuthClientErrorCode.ID_TOKEN_EXPIRED,
-  errorCodeConfig: AUTH_ERROR_CODE_CONFIG,
+  errorCodeConfig: ID_TOKEN_ERROR_CODE_CONFIG,
   errorType: FirebaseAuthError,
 };
 
@@ -51,8 +59,7 @@ export const SESSION_COOKIE_INFO: FirebaseTokenInfo = {
   verifyApiName: 'verifySessionCookie()',
   jwtName: 'Firebase session cookie',
   shortName: 'session cookie',
-  expiredErrorCode: AuthClientErrorCode.SESSION_COOKIE_EXPIRED,
-  errorCodeConfig: AUTH_ERROR_CODE_CONFIG,
+  errorCodeConfig: SESSION_COOKIE_ERROR_CODE_CONFIG,
   errorType: FirebaseAuthError,
 };
 

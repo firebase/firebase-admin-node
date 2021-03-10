@@ -37,8 +37,6 @@ export interface FirebaseTokenInfo {
   jwtName: string;
   /** The JWT short name. */
   shortName: string;
-  /** JWT Expiration error code. */
-  expiredErrorCode: ErrorInfo;
   /** Error code config of the public error type. */
   errorCodeConfig: ErrorCodeConfig;
   /** Public error type. */
@@ -73,9 +71,14 @@ export class FirebaseTokenVerifier {
       throw new Error('The JWT public full name must be a non-empty string.');
     } else if (!validator.isNonEmptyString(tokenInfo.shortName)) {
       throw new Error('The JWT public short name must be a non-empty string.');
-    } else if (!validator.isNonNullObject(tokenInfo.expiredErrorCode) ||
-      !('code' in tokenInfo.expiredErrorCode)) {
-      throw new Error('The JWT expiration error code must be a non-null ErrorInfo object.');
+    } else if (!(typeof tokenInfo.errorType === 'function' && tokenInfo.errorType !== null)) {
+      throw new Error('The provided error type must be a non-null PrefixedFirebaseError type.');
+    } else if (!validator.isNonNullObject(tokenInfo.errorCodeConfig) ||
+      !('invalidArg' in tokenInfo.errorCodeConfig ||
+        'invalidCredential' in tokenInfo.errorCodeConfig ||
+        'internalError' in tokenInfo.errorCodeConfig ||
+        'expiredError' in tokenInfo.errorCodeConfig)) {
+      throw new Error('The provided error code config must be a non-null ErrorCodeInfo object.');
     }
     this.shortNameArticle = tokenInfo.shortName.charAt(0).match(/[aeiou]/i) ? 'an' : 'a';
 
@@ -213,9 +216,9 @@ export class FirebaseTokenVerifier {
           if (error) {
             if (error.name === 'TokenExpiredError') {
               const errorMessage = `${this.tokenInfo.jwtName} has expired. Get a fresh ${this.tokenInfo.shortName}` +
-                ` from your client app and try again (auth/${this.tokenInfo.expiredErrorCode.code}).` +
+                ` from your client app and try again (auth/${this.tokenInfo.errorCodeConfig.expiredError.code}).` +
                 verifyJwtTokenDocsMessage;
-              return reject(new this.tokenInfo.errorType(this.tokenInfo.expiredErrorCode, errorMessage));
+              return reject(new this.tokenInfo.errorType(this.tokenInfo.errorCodeConfig.expiredError, errorMessage));
             } else if (error.name === 'JsonWebTokenError') {
               const errorMessage = `${this.tokenInfo.jwtName} has invalid signature.` + verifyJwtTokenDocsMessage;
               return reject(new this.tokenInfo.errorType(this.tokenInfo.errorCodeConfig.invalidArg, errorMessage));

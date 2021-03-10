@@ -40,6 +40,7 @@ export interface ErrorCodeConfig {
   invalidArg: ErrorInfo;
   invalidCredential: ErrorInfo;
   internalError: ErrorInfo;
+  expiredError: ErrorInfo;
 }
 
 /**

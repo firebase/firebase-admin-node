@@ -30,10 +30,10 @@ import LegacyFirebaseTokenGenerator = require('firebase-token-generator');
 import * as mocks from '../../resources/mocks';
 import { FirebaseTokenGenerator, ServiceAccountSigner } from '../../../src/auth/token-generator';
 import * as verifier from '../../../src/utils/token-verifier';
-import * as verifierUtil from '../../../src/auth/token-verifier-util';
+import * as verifierUtil from '../../../src/auth/token-verifier';
 
 import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
-import { AuthClientErrorCode, ErrorCodeConfig, FirebaseAuthError } from '../../../src/utils/error';
+import { FirebaseAuthError } from '../../../src/utils/error';
 import { FirebaseApp } from '../../../src/firebase-app';
 import { Algorithm } from 'jsonwebtoken';
 
@@ -45,12 +45,6 @@ const expect = chai.expect;
 
 const ONE_HOUR_IN_SECONDS = 60 * 60;
 const idTokenPublicCertPath = '/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com';
-
-const AUTH_ERROR_CODE_CONFIG: ErrorCodeConfig = {
-  invalidArg: AuthClientErrorCode.INVALID_ARGUMENT,
-  invalidCredential: AuthClientErrorCode.INVALID_CREDENTIAL,
-  internalError: AuthClientErrorCode.INTERNAL_ERROR,
-}
 
 /**
  * Returns a mocked out success response from the URL containing the public keys for the Google certs.
@@ -166,8 +160,7 @@ describe('FirebaseTokenVerifier', () => {
             verifyApiName: 'verifyToken()',
             jwtName: 'Important Token',
             shortName: 'token',
-            expiredErrorCode: AuthClientErrorCode.INVALID_ARGUMENT,
-            errorCodeConfig: AUTH_ERROR_CODE_CONFIG,
+            errorCodeConfig: verifierUtil.ID_TOKEN_ERROR_CODE_CONFIG,
             errorType: FirebaseAuthError,
           },
           app,
@@ -232,8 +225,7 @@ describe('FirebaseTokenVerifier', () => {
               verifyApiName: invalidVerifyApiName as any,
               jwtName: 'Important Token',
               shortName: 'token',
-              expiredErrorCode: AuthClientErrorCode.INVALID_ARGUMENT,
-              errorCodeConfig: AUTH_ERROR_CODE_CONFIG,
+              errorCodeConfig: verifierUtil.ID_TOKEN_ERROR_CODE_CONFIG,
               errorType: FirebaseAuthError,
             },
             app,
@@ -255,8 +247,7 @@ describe('FirebaseTokenVerifier', () => {
               verifyApiName: 'verifyToken()',
               jwtName: invalidJwtName as any,
               shortName: 'token',
-              expiredErrorCode: AuthClientErrorCode.INVALID_ARGUMENT,
-              errorCodeConfig: AUTH_ERROR_CODE_CONFIG,
+              errorCodeConfig: verifierUtil.ID_TOKEN_ERROR_CODE_CONFIG,
               errorType: FirebaseAuthError,
             },
             app,
@@ -278,8 +269,7 @@ describe('FirebaseTokenVerifier', () => {
               verifyApiName: 'verifyToken()',
               jwtName: 'Important Token',
               shortName: invalidShortName as any,
-              expiredErrorCode: AuthClientErrorCode.INVALID_ARGUMENT,
-              errorCodeConfig: AUTH_ERROR_CODE_CONFIG,
+              errorCodeConfig: verifierUtil.ID_TOKEN_ERROR_CODE_CONFIG,
               errorType: FirebaseAuthError,
             },
             app,
@@ -288,9 +278,9 @@ describe('FirebaseTokenVerifier', () => {
       });
     });
 
-    const invalidExpiredErrorCodes = [null, NaN, 0, 1, true, false, [], {}, { a: 1 }, _.noop, '', 'test'];
-    invalidExpiredErrorCodes.forEach((invalidExpiredErrorCode) => {
-      it('should throw given an invalid expiration error code: ' + JSON.stringify(invalidExpiredErrorCode), () => {
+    const invalidErrorCodeTypes = [null, NaN, 0, 1, true, false, [], {}, { a: 1 }, _.noop, '', 'test'];
+    invalidErrorCodeTypes.forEach((invalidErrorCodeType) => {
+      it('should throw given an invalid error code config: ' + JSON.stringify(invalidErrorCodeType), () => {
         expect(() => {
           new verifier.FirebaseTokenVerifier(
             'https://www.example.com/publicKeys',
@@ -301,13 +291,34 @@ describe('FirebaseTokenVerifier', () => {
               verifyApiName: 'verifyToken()',
               jwtName: 'Important Token',
               shortName: 'token',
-              expiredErrorCode: invalidExpiredErrorCode as any,
-              errorCodeConfig: AUTH_ERROR_CODE_CONFIG,
+              errorCodeConfig: verifierUtil.ID_TOKEN_ERROR_CODE_CONFIG,
+              errorType: invalidErrorCodeTypes as any,
+            },
+            app,
+          );
+        }).to.throw('The provided error type must be a non-null PrefixedFirebaseError type.');
+      });
+    });
+
+    const invalidErrorCodeConfigs = [null, NaN, 0, 1, true, false, [], {}, { a: 1 }, _.noop, '', 'test'];
+    invalidErrorCodeConfigs.forEach((invalidErrorCodeConfig) => {
+      it('should throw given an invalid error code config: ' + JSON.stringify(invalidErrorCodeConfig), () => {
+        expect(() => {
+          new verifier.FirebaseTokenVerifier(
+            'https://www.example.com/publicKeys',
+            'RS256',
+            'https://www.example.com/issuer/',
+            {
+              url: 'https://docs.example.com/verify-tokens',
+              verifyApiName: 'verifyToken()',
+              jwtName: 'Important Token',
+              shortName: 'token',
+              errorCodeConfig: invalidErrorCodeConfig as any,
               errorType: FirebaseAuthError,
             },
             app,
           );
-        }).to.throw('The JWT expiration error code must be a non-null ErrorInfo object.');
+        }).to.throw('The provided error code config must be a non-null ErrorCodeInfo object.');
       });
     });
   });
@@ -326,10 +337,9 @@ describe('FirebaseTokenVerifier', () => {
       }).to.throw('First argument to verifyIdToken() must be a Firebase ID token');
     });
 
-    const errorTypes = [
-      { type: FirebaseAuthError, config: AUTH_ERROR_CODE_CONFIG },
-    ];
-    errorTypes.forEach((errorType) => {
+    it('should throw with the correct error type and code set in token info', () => {
+      const errorType = FirebaseAuthError;
+      const errorCodeConfig = verifierUtil.ID_TOKEN_ERROR_CODE_CONFIG;
       const tokenVerifier = new verifier.FirebaseTokenVerifier(
         'https://www.example.com/publicKeys',
         'RS256',
@@ -339,19 +349,14 @@ describe('FirebaseTokenVerifier', () => {
           verifyApiName: 'verifyToken()',
           jwtName: 'Important Token',
           shortName: 'token',
-          expiredErrorCode: errorType.config.invalidArg,
-          errorCodeConfig: errorType.config,
-          errorType: errorType.type,
+          errorCodeConfig: errorCodeConfig,
+          errorType,
         },
         app,
       );
-      it('should throw with the correct error type and code set in token info', () => {
-        expect(() => {
-          (tokenVerifier as any).verifyJWT();
-        }).to.throw(errorType.type).with.property('code').match(
-          new RegExp(`(.*)/${errorType.config.invalidArg.code}`)
-        );
-      });
+      expect(() => {
+        (tokenVerifier as any).verifyJWT();
+      }).to.throw(errorType).with.property('code').equal(`auth/${errorCodeConfig.invalidArg.code}`);
     });
 
     const invalidIdTokens = [null, NaN, 0, 1, true, false, [], {}, { a: 1 }, _.noop];
