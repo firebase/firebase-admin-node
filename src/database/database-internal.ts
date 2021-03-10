@@ -63,7 +63,7 @@ export class DatabaseService {
   /**
    * Returns the app associated with this DatabaseService instance.
    *
-   * @return  The app associated with this DatabaseService instance.
+   * @return The app associated with this DatabaseService instance.
    */
   get app(): FirebaseApp {
     return this.appInternal;
