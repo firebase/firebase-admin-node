@@ -118,7 +118,7 @@ describe('Storage', () => {
 
   describe('Emulator Support', () => {
     it('sets STORAGE_EMULATOR_HOST if FIREBASE_STORAGE_EMULATOR_HOST is set', () => {
-      const EMULATOR_HOST = "http://localhost:9199";
+      const EMULATOR_HOST = 'http://localhost:9199';
       delete process.env.STORAGE_EMULATOR_HOST;
       process.env.FIREBASE_STORAGE_EMULATOR_HOST = EMULATOR_HOST;
 
