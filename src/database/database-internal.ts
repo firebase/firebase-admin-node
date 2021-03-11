@@ -63,7 +63,7 @@ export class DatabaseService {
   /**
    * Returns the app associated with this DatabaseService instance.
    *
-   * @return {FirebaseApp} The app associated with this DatabaseService instance.
+   * @return The app associated with this DatabaseService instance.
    */
   get app(): FirebaseApp {
     return this.appInternal;
@@ -123,7 +123,13 @@ class DatabaseRulesClient {
   private readonly httpClient: AuthorizedHttpClient;
 
   constructor(app: FirebaseApp, dbUrl: string) {
-    const parsedUrl = new URL(dbUrl);
+    let parsedUrl = new URL(dbUrl);
+    const emulatorHost = process.env.FIREBASE_DATABASE_EMULATOR_HOST;
+    if (emulatorHost) {
+      const namespace = extractNamespace(parsedUrl);
+      parsedUrl = new URL(`http://${emulatorHost}?ns=${namespace}`);
+    }
+
     parsedUrl.pathname = path.join(parsedUrl.pathname, RULES_URL_PATH);
     this.dbUrl = parsedUrl.toString();
     this.httpClient = new AuthorizedHttpClient(app);
@@ -133,7 +139,7 @@ class DatabaseRulesClient {
    * Gets the currently applied security rules as a string. The return value consists of
    * the rules source including comments.
    *
-   * @return {Promise<string>} A promise fulfilled with the rules as a raw string.
+   * @return A promise fulfilled with the rules as a raw string.
    */
   public getRules(): Promise<string> {
     const req: HttpRequestConfig = {
@@ -232,4 +238,15 @@ class DatabaseRulesClient {
 
     return `${intro}: ${err.response.text}`;
   }
+}
+
+function extractNamespace(parsedUrl: URL): string {
+  const ns = parsedUrl.searchParams.get('ns');
+  if (ns) {
+    return ns;
+  }
+
+  const hostname = parsedUrl.hostname;
+  const dotIndex = hostname.indexOf('.');
+  return hostname.substring(0, dotIndex).toLowerCase();
 }

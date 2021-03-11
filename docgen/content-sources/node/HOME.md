@@ -1,6 +1,6 @@
 # Firebase Admin Node.js SDK Reference
 
-The Admin SDK lets you interact with Firebase from privileged environments.
+The Admin SDK is a set of server libraries that lets you interact with Firebase from privileged environments.
 You can install it via our [npm package](https://www.npmjs.com/package/firebase-admin).
 
 To get started using the Firebase Admin Node.js SDK, see
