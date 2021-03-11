@@ -31,6 +31,8 @@ import Database = database.Database;
 export class DatabaseService {
 
   private readonly appInternal: FirebaseApp;
+  private tokenRefresh: boolean;
+  private tokenRefreshTimeout: NodeJS.Timeout;
 
   private databases: {
     [dbUrl: string]: Database;
@@ -50,6 +52,12 @@ export class DatabaseService {
    * @internal
    */
   public delete(): Promise<void> {
+    if (this.tokenRefresh) {
+      this.appInternal.INTERNAL.removeAuthTokenListener(this.onTokenChange);
+      clearTimeout(this.tokenRefreshTimeout);
+      this.tokenRefresh = false;
+    }
+
     const promises = [];
     for (const dbUrl of Object.keys(this.databases)) {
       const db: DatabaseImpl = ((this.databases[dbUrl] as any) as DatabaseImpl);
@@ -96,7 +104,44 @@ export class DatabaseService {
 
       this.databases[dbUrl] = db;
     }
+
+    if (!this.tokenRefresh) {
+      this.tokenRefresh = true;
+      this.appInternal.INTERNAL.addAuthTokenListener(this.onTokenChange);
+    }
+
     return db;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private onTokenChange(_: string): void {
+    this.appInternal.INTERNAL.getToken()
+      .then((token) => {
+        clearTimeout(this.tokenRefreshTimeout);
+        const delayMillis = token.expirationTime - 5 * 60 * 1000 - Date.now();
+        // If the new token is set to expire in next 5 minutes (unlikely), do nothing.
+        // Somebody will eventually notice and refresh the token, at which point this callback
+        // will fire again.
+        if (delayMillis > 0) {
+          this.scheduleTokenRefresh(delayMillis);
+        }
+      })
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      .catch((_) => {
+        // Unlikely error, since a new token was just fetched before the callback fired.
+        // Just here to prevent the promise chain from crashing.
+      });
+  }
+
+  private scheduleTokenRefresh(delayMillis: number): void {
+    this.tokenRefreshTimeout = setTimeout(() => {
+      this.appInternal.INTERNAL.getToken(true)
+        .catch(() => {
+          // Ignore the error since this might just be an intermittent failure. If we really cannot
+          // refresh the token, an error will be logged once the existing token expires and we try
+          // to fetch a fresh one.
+        });
+    }, delayMillis);
   }
 
   private ensureUrl(url?: string): string {

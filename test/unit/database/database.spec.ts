@@ -25,6 +25,7 @@ import * as mocks from '../../resources/mocks';
 import { FirebaseApp } from '../../../src/firebase-app';
 import { DatabaseService } from '../../../src/database/database-internal';
 import { database } from '../../../src/database/index';
+import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
 import * as utils from '../utils';
 import { HttpClient, HttpRequestConfig } from '../../../src/utils/api-request';
 
@@ -115,6 +116,179 @@ describe('Database', () => {
           (database as any).getDatabase(url);
         }).to.throw('Database URL must be a valid, non-empty URL string.');
       });
+    });
+  });
+
+  describe('Token refresh', () => {
+    const MINUTE_IN_MILLIS = 60 * 1000;
+
+    let clock: sinon.SinonFakeTimers;
+    let getTokenStub: sinon.SinonStub;
+
+    beforeEach(() => {
+      getTokenStub = stubCredentials();
+      clock = sinon.useFakeTimers(1000);
+    });
+
+    afterEach(() => {
+      getTokenStub.restore();
+      clock.restore();
+    });
+
+    function stubCredentials(options?: {
+      accessToken?: string;
+      expiresIn?: number;
+      err?: any;
+    }): sinon.SinonStub {
+      if (options?.err) {
+        return sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken')
+          .rejects(options.err);
+      }
+
+      return sinon.stub(ServiceAccountCredential.prototype, 'getAccessToken')
+        .resolves({
+          access_token: options?.accessToken || 'mock-access-token', // eslint-disable-line @typescript-eslint/camelcase
+          expires_in: options?.expiresIn || 3600, // eslint-disable-line @typescript-eslint/camelcase
+        });
+    }
+
+    it('should refresh the token 5 minutes before expiration', () => {
+      database.getDatabase(mockApp.options.databaseURL);
+      expect(getTokenStub).to.have.not.been.called;
+      mockApp.INTERNAL.getToken()
+        .then((token) => {
+          expect(getTokenStub).to.have.been.calledOnce;
+
+          const expiryInMillis = token.expirationTime - Date.now();
+          clock.tick(expiryInMillis - (5 * MINUTE_IN_MILLIS) - 1000);
+          expect(getTokenStub).to.have.been.calledOnce;
+
+          clock.tick(1000);
+          expect(getTokenStub).to.have.been.calledTwice;
+        });
+    });
+
+    it('should not start multiple token refresher tasks', () => {
+      database.getDatabase(mockApp.options.databaseURL);
+      database.getDatabase('https://other-database.firebaseio.com');
+      expect(getTokenStub).to.have.not.been.called;
+      mockApp.INTERNAL.getToken()
+        .then((token) => {
+          expect(getTokenStub).to.have.been.calledOnce;
+
+          const expiryInMillis = token.expirationTime - Date.now();
+          clock.tick(expiryInMillis - (5 * MINUTE_IN_MILLIS));
+          expect(getTokenStub).to.have.been.calledTwice;
+        });
+    });
+
+    it('should reschedule the token refresher when the underlying token changes', () => {
+      database.getDatabase(mockApp.options.databaseURL);
+      mockApp.INTERNAL.getToken()
+        .then((token1) => {
+          expect(getTokenStub).to.have.been.calledOnce;
+
+          // Forward the clock to 30 minutes before expiry.
+          const expiryInMillis = token1.expirationTime - Date.now();
+          clock.tick(expiryInMillis - (30 * MINUTE_IN_MILLIS));
+
+          // Force a token refresh
+          return mockApp.INTERNAL.getToken(true)
+            .then((token2) => {
+              expect(getTokenStub).to.have.been.calledTwice;
+              // Forward the clock to 5 minutes before old expiry time.
+              clock.tick(25 * MINUTE_IN_MILLIS);
+              expect(getTokenStub).to.have.been.calledTwice;
+
+              // Forward the clock 1 second past old expiry time.
+              clock.tick(5 * MINUTE_IN_MILLIS + 1000);
+              expect(getTokenStub).to.have.been.calledTwice;
+
+              const newExpiryTimeInMillis = token2.expirationTime - Date.now();
+              clock.tick(newExpiryTimeInMillis - (5 * MINUTE_IN_MILLIS));
+              expect(getTokenStub).to.have.been.calledThrice;
+            });
+        });
+    });
+
+    it('should not reschedule when the token is about to expire in 5 minutes', () => {
+      database.getDatabase(mockApp.options.databaseURL);
+      mockApp.INTERNAL.getToken()
+        .then((token1) => {
+          expect(getTokenStub).to.have.been.calledOnce;
+
+          // Forward the clock to 30 minutes before expiry.
+          const expiryInMillis = token1.expirationTime - Date.now();
+          clock.tick(expiryInMillis - (30 * MINUTE_IN_MILLIS));
+
+          getTokenStub.restore();
+          getTokenStub = stubCredentials({ expiresIn: 5 * 60 });
+          // Force a token refresh
+          return mockApp.INTERNAL.getToken(true);
+        })
+        .then((token2) => {
+          expect(getTokenStub).to.have.been.calledTwice;
+
+          const newExpiryTimeInMillis = token2.expirationTime - Date.now();
+          clock.tick(newExpiryTimeInMillis);
+          expect(getTokenStub).to.have.been.calledTwice;
+
+          getTokenStub.restore();
+          getTokenStub = stubCredentials({ expiresIn: 60 * 60 });
+          // Force a token refresh
+          return mockApp.INTERNAL.getToken(true);
+        })
+        .then((token3) => {
+          expect(getTokenStub).to.have.been.calledThrice;
+
+          const newExpiryTimeInMillis = token3.expirationTime - Date.now();
+          clock.tick(newExpiryTimeInMillis - (5 * MINUTE_IN_MILLIS));
+          expect(getTokenStub).to.have.callCount(4);
+        });
+    });
+
+    it('should gracefully handle errors during token refresh', () => {
+      database.getDatabase(mockApp.options.databaseURL);
+      mockApp.INTERNAL.getToken()
+        .then((token1) => {
+          expect(getTokenStub).to.have.been.calledOnce;
+
+          getTokenStub.restore();
+          getTokenStub = stubCredentials({ err: new Error('Test error') });
+          expect(getTokenStub).to.have.not.been.called;
+
+          const expiryInMillis = token1.expirationTime - Date.now();
+          clock.tick(expiryInMillis);
+          expect(getTokenStub).to.have.been.calledOnce;
+
+          getTokenStub.restore();
+          getTokenStub = stubCredentials();
+          expect(getTokenStub).to.have.not.been.called;
+          // Force a token refresh
+          return mockApp.INTERNAL.getToken(true);
+        })
+        .then((token2) => {
+          expect(getTokenStub).to.have.been.calledOnce;
+
+          const newExpiryTimeInMillis = token2.expirationTime - Date.now();
+          clock.tick(newExpiryTimeInMillis - (5 * MINUTE_IN_MILLIS));
+          expect(getTokenStub).to.have.been.calledTwice;
+        });
+    });
+
+    it('should stop the token refresher task at delete', () => {
+      database.getDatabase(mockApp.options.databaseURL);
+      mockApp.INTERNAL.getToken()
+        .then((token) => {
+          expect(getTokenStub).to.have.been.calledOnce;
+          return database.delete()
+            .then(() => {
+              // Forward the clock to five minutes before expiry.
+              const expiryInMillis = token.expirationTime - Date.now();
+              clock.tick(expiryInMillis - (5 * MINUTE_IN_MILLIS));
+              expect(getTokenStub).to.have.been.calledOnce;
+            });
+        });
     });
   });
 
