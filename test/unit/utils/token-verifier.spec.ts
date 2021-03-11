@@ -30,7 +30,9 @@ import LegacyFirebaseTokenGenerator = require('firebase-token-generator');
 import * as mocks from '../../resources/mocks';
 import { FirebaseTokenGenerator, ServiceAccountSigner } from '../../../src/auth/token-generator';
 import * as verifier from '../../../src/utils/token-verifier';
-import * as verifierAuth from '../../../src/auth/token-verifier';
+import {
+  ID_TOKEN_ERROR_CODE_CONFIG, ID_TOKEN_INFO, SESSION_COOKIE_INFO
+} from '../../../src/auth/token-verifier';
 
 import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
 import { FirebaseAuthError } from '../../../src/utils/error';
@@ -115,7 +117,7 @@ function createTokenVerifier(
     'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com',
     algorithm,
     'https://securetoken.google.com/',
-    verifierAuth.ID_TOKEN_INFO,
+    ID_TOKEN_INFO,
     app
   );
 }
@@ -160,7 +162,7 @@ describe('FirebaseTokenVerifier', () => {
             verifyApiName: 'verifyToken()',
             jwtName: 'Important Token',
             shortName: 'token',
-            errorCodeConfig: verifierAuth.ID_TOKEN_ERROR_CODE_CONFIG,
+            errorCodeConfig: ID_TOKEN_ERROR_CODE_CONFIG,
             errorType: FirebaseAuthError,
           },
           app,
@@ -176,7 +178,7 @@ describe('FirebaseTokenVerifier', () => {
             invalidCertUrl as any,
             'RS256',
             'https://www.example.com/issuer/',
-            verifierAuth.ID_TOKEN_INFO,
+            ID_TOKEN_INFO,
             app,
           );
         }).to.throw('The provided public client certificate URL is an invalid URL.');
@@ -191,7 +193,7 @@ describe('FirebaseTokenVerifier', () => {
             'https://www.example.com/publicKeys',
             invalidAlgorithm as any,
             'https://www.example.com/issuer/',
-            verifierAuth.ID_TOKEN_INFO,
+            ID_TOKEN_INFO,
             app);
         }).to.throw('The provided JWT algorithm is an empty string.');
       });
@@ -205,7 +207,7 @@ describe('FirebaseTokenVerifier', () => {
             'https://www.example.com/publicKeys',
             'RS256',
             invalidIssuer as any,
-            verifierAuth.ID_TOKEN_INFO,
+            ID_TOKEN_INFO,
             app,
           );
         }).to.throw('The provided JWT issuer is an invalid URL.');
@@ -225,7 +227,7 @@ describe('FirebaseTokenVerifier', () => {
               verifyApiName: invalidVerifyApiName as any,
               jwtName: 'Important Token',
               shortName: 'token',
-              errorCodeConfig: verifierAuth.ID_TOKEN_ERROR_CODE_CONFIG,
+              errorCodeConfig: ID_TOKEN_ERROR_CODE_CONFIG,
               errorType: FirebaseAuthError,
             },
             app,
@@ -247,7 +249,7 @@ describe('FirebaseTokenVerifier', () => {
               verifyApiName: 'verifyToken()',
               jwtName: invalidJwtName as any,
               shortName: 'token',
-              errorCodeConfig: verifierAuth.ID_TOKEN_ERROR_CODE_CONFIG,
+              errorCodeConfig: ID_TOKEN_ERROR_CODE_CONFIG,
               errorType: FirebaseAuthError,
             },
             app,
@@ -269,7 +271,7 @@ describe('FirebaseTokenVerifier', () => {
               verifyApiName: 'verifyToken()',
               jwtName: 'Important Token',
               shortName: invalidShortName as any,
-              errorCodeConfig: verifierAuth.ID_TOKEN_ERROR_CODE_CONFIG,
+              errorCodeConfig: ID_TOKEN_ERROR_CODE_CONFIG,
               errorType: FirebaseAuthError,
             },
             app,
@@ -278,9 +280,9 @@ describe('FirebaseTokenVerifier', () => {
       });
     });
 
-    const invalidErrorCodeTypes = [null, NaN, 0, 1, true, false, [], {}, { a: 1 }, _.noop, '', 'test'];
-    invalidErrorCodeTypes.forEach((invalidErrorCodeType) => {
-      it('should throw given an invalid error code config: ' + JSON.stringify(invalidErrorCodeType), () => {
+    const invalidErrorTypes = [null, NaN, 0, 1, true, false, [], {}, { a: 1 }, undefined, '', 'test'];
+    invalidErrorTypes.forEach((invalidErrorType) => {
+      it('should throw given an invalid error type: ' + JSON.stringify(invalidErrorType), () => {
         expect(() => {
           new verifier.FirebaseTokenVerifier(
             'https://www.example.com/publicKeys',
@@ -291,8 +293,8 @@ describe('FirebaseTokenVerifier', () => {
               verifyApiName: 'verifyToken()',
               jwtName: 'Important Token',
               shortName: 'token',
-              errorCodeConfig: verifierAuth.ID_TOKEN_ERROR_CODE_CONFIG,
-              errorType: invalidErrorCodeTypes as any,
+              errorCodeConfig: ID_TOKEN_ERROR_CODE_CONFIG,
+              errorType: invalidErrorType as any,
             },
             app,
           );
@@ -339,7 +341,7 @@ describe('FirebaseTokenVerifier', () => {
 
     it('should throw with the correct error type and code set in token info', () => {
       const errorType = FirebaseAuthError;
-      const errorCodeConfig = verifierAuth.ID_TOKEN_ERROR_CODE_CONFIG;
+      const errorCodeConfig = ID_TOKEN_ERROR_CODE_CONFIG;
       const tokenVerifier = new verifier.FirebaseTokenVerifier(
         'https://www.example.com/publicKeys',
         'RS256',
@@ -383,7 +385,7 @@ describe('FirebaseTokenVerifier', () => {
         'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com',
         'RS256',
         'https://securetoken.google.com/',
-        verifierAuth.ID_TOKEN_INFO,
+        ID_TOKEN_INFO,
         mocks.mockCredentialApp(),
       );
       const mockIdToken = mocks.generateIdToken();
@@ -480,7 +482,7 @@ describe('FirebaseTokenVerifier', () => {
         // Token should now be invalid
         return tokenVerifier.verifyJWT(mockIdToken)
           .should.eventually.be.rejectedWith('Firebase ID token has expired. Get a fresh ID token from your client ' +
-            'app and try again (auth/id-token-expired)')
+            'app and try again (id-token-expired)')
           .and.have.property('code', 'auth/id-token-expired');
       });
     });
@@ -490,7 +492,7 @@ describe('FirebaseTokenVerifier', () => {
         'https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys',
         'RS256',
         'https://session.firebase.google.com/',
-        verifierAuth.SESSION_COOKIE_INFO,
+        SESSION_COOKIE_INFO,
         app,
       );
       mockedRequests.push(mockFetchPublicKeys('/identitytoolkit/v3/relyingparty/publicKeys'));
@@ -508,7 +510,7 @@ describe('FirebaseTokenVerifier', () => {
         // Cookie should now be invalid
         return tokenVerifierSessionCookie.verifyJWT(mockSessionCookie)
           .should.eventually.be.rejectedWith('Firebase session cookie has expired. Get a fresh session cookie from ' +
-            'your client app and try again (auth/session-cookie-expired).')
+            'your client app and try again (session-cookie-expired).')
           .and.have.property('code', 'auth/session-cookie-expired');
       });
     });
@@ -535,7 +537,7 @@ describe('FirebaseTokenVerifier', () => {
         'https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys',
         'RS256',
         'https://session.firebase.google.com/',
-        verifierAuth.SESSION_COOKIE_INFO,
+        SESSION_COOKIE_INFO,
         app,
       );
       return tokenGenerator.createCustomToken(mocks.uid)
@@ -561,7 +563,7 @@ describe('FirebaseTokenVerifier', () => {
         'https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys',
         'RS256',
         'https://session.firebase.google.com/',
-        verifierAuth.SESSION_COOKIE_INFO,
+        SESSION_COOKIE_INFO,
         app,
       );
       const legacyTokenGenerator = new LegacyFirebaseTokenGenerator('foo');
@@ -590,7 +592,6 @@ describe('FirebaseTokenVerifier', () => {
           aud: mocks.projectId,
           iss: 'https://securetoken.google.com/' + mocks.projectId,
           sub: mocks.uid,
-          uid: mocks.uid,
         });
     });
 
@@ -613,7 +614,6 @@ describe('FirebaseTokenVerifier', () => {
         aud: mocks.projectId,
         iss: 'https://securetoken.google.com/' + mocks.projectId,
         sub: mocks.uid,
-        uid: mocks.uid,
       });
     });
 
@@ -654,7 +654,7 @@ describe('FirebaseTokenVerifier', () => {
         'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com',
         'RS256',
         'https://securetoken.google.com/',
-        verifierAuth.ID_TOKEN_INFO,
+        ID_TOKEN_INFO,
         appWithAgent,
       );
       mockedRequests.push(mockFetchPublicKeys());
@@ -677,7 +677,7 @@ describe('FirebaseTokenVerifier', () => {
         'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com',
         'RS256',
         'https://securetoken.google.com/',
-        verifierAuth.ID_TOKEN_INFO,
+        ID_TOKEN_INFO,
         app,
       );
       expect(https.request).not.to.have.been.called;

@@ -25,12 +25,12 @@ import './utils/index.spec';
 import './utils/error.spec';
 import './utils/validator.spec';
 import './utils/api-request.spec';
+import './utils/token-verifier.spec';
 
 // Auth
 import './auth/auth.spec';
 import './auth/user-record.spec';
 import './auth/token-generator.spec';
-import './auth/token-verifier.spec';
 import './auth/auth-api-request.spec';
 import './auth/user-import-builder.spec';
 import './auth/action-code-settings-builder.spec';

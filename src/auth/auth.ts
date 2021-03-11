@@ -116,8 +116,9 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
    */
   public verifyIdToken(idToken: string, checkRevoked = false): Promise<DecodedIdToken> {
     const isEmulator = useEmulator();
-    return this.idTokenVerifier.verifyJWT(idToken, isEmulator)
+    return this.idTokenVerifier.verifyJWT<DecodedIdToken>(idToken, isEmulator)
       .then((decodedIdToken: DecodedIdToken) => {
+        decodedIdToken.uid = decodedIdToken.sub;
         // Whether to check if the token was revoked.
         if (checkRevoked || isEmulator) {
           return this.verifyDecodedJWTNotRevoked(
@@ -519,8 +520,9 @@ export class BaseAuth<T extends AbstractAuthRequestHandler> implements BaseAuthI
   public verifySessionCookie(
     sessionCookie: string, checkRevoked = false): Promise<DecodedIdToken> {
     const isEmulator = useEmulator();
-    return this.sessionCookieVerifier.verifyJWT(sessionCookie, isEmulator)
+    return this.sessionCookieVerifier.verifyJWT<DecodedIdToken>(sessionCookie, isEmulator)
       .then((decodedIdToken: DecodedIdToken) => {
+        decodedIdToken.uid = decodedIdToken.sub;
         // Whether to check if the token was revoked.
         if (checkRevoked || isEmulator) {
           return this.verifyDecodedJWTNotRevoked(
