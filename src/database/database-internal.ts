@@ -126,17 +126,15 @@ export class DatabaseService {
           this.scheduleTokenRefresh(delayMillis);
         }
       })
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      .catch((_) => {
-        // Unlikely error, since a new token was just fetched before the callback fired.
-        // Just here to prevent the promise chain from crashing.
+      .catch((err) => {
+        console.error('Unexpected error while attempting to schedule a token refresh:', err);
       });
   }
 
   private scheduleTokenRefresh(delayMillis: number): void {
     clearTimeout(this.tokenRefreshTimeout);
     this.tokenRefreshTimeout = setTimeout(() => {
-      this.appInternal.INTERNAL.getToken(true)
+      this.appInternal.INTERNAL.getToken(/*forceRefresh=*/ true)
         .catch(() => {
           // Ignore the error since this might just be an intermittent failure. If we really cannot
           // refresh the token, an error will be logged once the existing token expires and we try
