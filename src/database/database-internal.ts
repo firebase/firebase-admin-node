@@ -28,6 +28,8 @@ import { getSdkVersion } from '../utils/index';
 
 import Database = database.Database;
 
+const TOKEN_REFRESH_THRESHOLD_MILLIS = 5 * 60 * 1000;
+
 export class DatabaseService {
 
   private readonly appInternal: FirebaseApp;
@@ -117,11 +119,9 @@ export class DatabaseService {
   private onTokenChange(_: string): void {
     this.appInternal.INTERNAL.getToken()
       .then((token) => {
-        clearTimeout(this.tokenRefreshTimeout);
-        const delayMillis = token.expirationTime - 5 * 60 * 1000 - Date.now();
-        // If the new token is set to expire in next 5 minutes (unlikely), do nothing.
-        // Somebody will eventually notice and refresh the token, at which point this callback
-        // will fire again.
+        const delayMillis = token.expirationTime - TOKEN_REFRESH_THRESHOLD_MILLIS - Date.now();
+        // If the new token is set to expire soon (unlikely), do nothing. Somebody will eventually
+        // notice and refresh the token, at which point this callback will fire again.
         if (delayMillis > 0) {
           this.scheduleTokenRefresh(delayMillis);
         }
@@ -134,6 +134,7 @@ export class DatabaseService {
   }
 
   private scheduleTokenRefresh(delayMillis: number): void {
+    clearTimeout(this.tokenRefreshTimeout);
     this.tokenRefreshTimeout = setTimeout(() => {
       this.appInternal.INTERNAL.getToken(true)
         .catch(() => {
