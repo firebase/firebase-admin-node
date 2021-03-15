@@ -56,23 +56,6 @@ export class SecurityRules {
     releaseStorageRulesetFromSource(source: string | Buffer, bucket?: string): Promise<Ruleset>;
 }
 
-// @public
-export function securityRules(app?: App): securityRules.SecurityRules;
-
-// @public (undocumented)
-export namespace securityRules {
-    // (undocumented)
-    export type Ruleset = Ruleset;
-    // (undocumented)
-    export type RulesetMetadata = RulesetMetadata;
-    // (undocumented)
-    export type RulesetMetadataList = RulesetMetadataList;
-    // (undocumented)
-    export type RulesFile = RulesFile;
-    // (undocumented)
-    export type SecurityRules = SecurityRules;
-}
-
 
 // (No @packageDocumentation comment for this package)
 

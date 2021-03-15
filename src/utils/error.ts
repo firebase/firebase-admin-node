@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-import { FirebaseError as FireabseErrorInterface } from '../firebase-namespace-api';
+import { FirebaseError as FireabseErrorInterface } from '../app';
 import { deepCopy } from '../utils/deep-copy';
 
 /**

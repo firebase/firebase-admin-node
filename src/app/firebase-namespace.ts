@@ -18,21 +18,13 @@
 import fs = require('fs');
 
 import { AppErrorCodes, FirebaseAppError } from '../utils/error';
-import { AppOptions, app } from '../firebase-namespace-api';
+import {
+  app, auth, messaging, machineLearning, storage, firestore, database,
+  instanceId, projectManagement, securityRules , remoteConfig, AppOptions,
+} from '../firebase-namespace-api';
 import { FirebaseApp } from './firebase-app';
 import { cert, refreshToken, applicationDefault } from './credential-factory';
 import { getApplicationDefault } from './credential-internal';
-
-import { auth } from '../auth/index';
-import { database } from '../database/index';
-import { firestore } from '../firestore/index';
-import { instanceId } from '../instance-id/index';
-import { machineLearning } from '../machine-learning/index';
-import { messaging } from '../messaging/index';
-import { projectManagement } from '../project-management/index';
-import { remoteConfig } from '../remote-config/index';
-import { securityRules } from '../security-rules/index';
-import { storage } from '../storage/index';
 
 import * as validator from '../utils/validator';
 import { getSdkVersion } from '../utils/index';

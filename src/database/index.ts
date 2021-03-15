@@ -23,7 +23,6 @@ import {
 import { App, getApp } from '../app';
 import { FirebaseApp } from '../app/firebase-app';
 import { Database, DatabaseService } from './database';
-import { Database as TDatabase } from './database';
 
 export { Database };
 export {
@@ -120,56 +119,4 @@ function  getDatabaseInstance(options: { url?: string; app?: App }): Database {
   const firebaseApp: FirebaseApp = app as FirebaseApp;
   const dbService = firebaseApp.getOrInitService('database', (app) => new DatabaseService(app));
   return dbService.getDatabase(options.url);
-}
-
-/**
- * Gets the {@link database.Database `Database`} service for the default
- * app or a given app.
- *
- * `admin.database()` can be called with no arguments to access the default
- * app's {@link database.Database `Database`} service or as
- * `admin.database(app)` to access the
- * {@link database.Database `Database`} service associated with a specific
- * app.
- *
- * `admin.database` is also a namespace that can be used to access global
- * constants and methods associated with the `Database` service.
- *
- * @example
- * ```javascript
- * // Get the Database service for the default app
- * var defaultDatabase = admin.database();
- * ```
- *
- * @example
- * ```javascript
- * // Get the Database service for a specific app
- * var otherDatabase = admin.database(app);
- * ```
- *
- * @param App whose `Database` service to
- *   return. If not provided, the default `Database` service will be returned.
- *
- * @return The default `Database` service if no app
- *   is provided or the `Database` service associated with the provided app.
- */
-export declare function database(app?: App): database.Database;
-
-/* eslint-disable @typescript-eslint/no-namespace */
-export namespace database {
-  export type Database = TDatabase;
-  export type DataSnapshot = rtdb.DataSnapshot;
-  export type EventType = rtdb.EventType;
-  export type OnDisconnect = rtdb.OnDisconnect;
-  export type Query = rtdb.Query;
-  export type Reference = rtdb.Reference;
-  export type ThenableReference = rtdb.ThenableReference;
-
-  export declare const enableLogging: typeof rtdb.enableLogging;
-
-  /**
-   * [`ServerValue`](https://firebase.google.com/docs/reference/js/firebase.database.ServerValue)
-   * module from the `@firebase/database` package.
-   */
-  export declare const ServerValue: rtdb.ServerValue;
 }

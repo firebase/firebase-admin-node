@@ -47,18 +47,10 @@ import {
 } from '@google-cloud/firestore';
 import { getSdkVersion } from '../../../src/utils/index';
 
-import { app } from '../../../src/firebase-namespace-api';
-import { auth } from '../../../src/auth/index';
-import { messaging } from '../../../src/messaging/index';
-import { machineLearning } from '../../../src/machine-learning/index';
-import { storage } from '../../../src/storage/index';
-import { firestore } from '../../../src/firestore/index';
-import { database } from '../../../src/database/index';
-import { instanceId } from '../../../src/instance-id/index';
-import { projectManagement } from '../../../src/project-management/index';
-import { securityRules } from '../../../src/security-rules/index';
-import { remoteConfig } from '../../../src/remote-config/index';
-
+import {
+  app, auth, messaging, machineLearning, storage, firestore, database,
+  instanceId, projectManagement, securityRules , remoteConfig,
+} from '../../../src/firebase-namespace-api';
 import { Auth as AuthImpl } from '../../../src/auth/auth';
 import { InstanceId as InstanceIdImpl } from '../../../src/instance-id/instance-id';
 import { MachineLearning as MachineLearningImpl } from '../../../src/machine-learning/machine-learning';

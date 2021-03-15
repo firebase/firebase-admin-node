@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-import { App } from '../app';
-import { FirebaseArrayIndexError } from '../firebase-namespace-api';
+import { App, FirebaseArrayIndexError } from '../app';
 import { AuthClientErrorCode, ErrorInfo, FirebaseAuthError } from '../utils/error';
 import * as validator from '../utils/validator';
 
