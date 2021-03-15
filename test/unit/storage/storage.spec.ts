@@ -123,7 +123,6 @@ describe('Storage', () => {
       process.env.FIREBASE_STORAGE_EMULATOR_HOST = EMULATOR_HOST;
 
       mockApp = mocks.app();
-      mockCredentialApp = mocks.mockCredentialApp();
       storage = new Storage(mockApp);
 
       expect(process.env.STORAGE_EMULATOR_HOST).to.equal(EMULATOR_HOST);
@@ -132,7 +131,6 @@ describe('Storage', () => {
     afterEach(() => {
       delete process.env.STORAGE_EMULATOR_HOST;
       delete process.env.FIREBASE_STORAGE_EMULATOR_HOST;
-      return mockApp.delete();
     });
   })
 });
