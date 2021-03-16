@@ -15,7 +15,7 @@
  */
 
 import { FirebaseApp } from '../firebase-app';
-import { FirebaseInstanceIdError, InstanceIdClientErrorCode } from '../utils/error';
+import { FirebaseInstallationsError, InstallationsClientErrorCode } from '../utils/error';
 import { FirebaseInstallationsRequestHandler } from './installations-request-handler';
 import { installations } from './index';
 import * as validator from '../utils/validator';
@@ -31,13 +31,13 @@ export class Installations implements InstallationsInterface {
   private requestHandler: FirebaseInstallationsRequestHandler;
 
   /**
-   * @param app The app for this InstanceId service.
+   * @param app The app for this Installations service.
    * @constructor
    */
   constructor(app: FirebaseApp) {
     if (!validator.isNonNullObject(app) || !('options' in app)) {
-      throw new FirebaseInstanceIdError(
-        InstanceIdClientErrorCode.INVALID_ARGUMENT,
+      throw new FirebaseInstallationsError(
+        InstallationsClientErrorCode.INVALID_ARGUMENT,
         'First argument passed to admin.installations() must be a valid Firebase app instance.',
       );
     }
@@ -51,16 +51,16 @@ export class Installations implements InstallationsInterface {
    *
    * @param fid The Firebase installation ID to be deleted.
    *
-   * @return A promise fulfilled when the instance ID is deleted.
+   * @return A promise fulfilled when the installation ID is deleted.
    */
   public deleteInstallation(fid: string): Promise<void> {
     return this.requestHandler.deleteInstallation(fid);
   }
 
   /**
-   * Returns the app associated with this InstanceId instance.
+   * Returns the app associated with this Installations instance.
    *
-   * @return The app associated with this InstanceId instance.
+   * @return The app associated with this Installations instance.
    */
   get app(): FirebaseApp {
     return this.app_;
