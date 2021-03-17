@@ -329,9 +329,9 @@ export class FirebaseApp implements app.App {
   }
 
   /**
-   * Returns the Installations service instance associated with this app.
+   * Returns the `Installations` service instance associated with this app.
    *
-   * @return The Installations service instance of this app.
+   * @return The `Installations` service instance of this app.
    */
   public installations(): Installations {
     return this.ensureService_('installations', () => {

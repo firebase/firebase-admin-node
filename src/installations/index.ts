@@ -73,7 +73,7 @@ export namespace installations {
      * Note that Google Analytics for Firebase uses its own form of Instance ID to
      * keep track of analytics data. Therefore deleting a Firebase installation ID does
      * not delete Analytics data. See
-     * [Delete an Instance ID](/support/privacy/manage-iids#delete_an_instance_id)
+     * [Delete an Instance ID](/docs/projects/manage-installations#delete-installation)
      * for more information.
      *
      * @param fid The Firebase installation ID to be deleted.

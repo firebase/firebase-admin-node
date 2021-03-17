@@ -229,7 +229,7 @@ export class FirebaseInstanceIdError extends FirebaseError {
 }
 
 /**
- * Firebase Installations service error code structure. This extends FirebaseError.
+ * Firebase Installations service error code structure. This extends `FirebaseError`.
  *
  * @param info The error code info.
  * @param message The error message. This will override the default
