@@ -28,9 +28,13 @@ import { getSdkVersion } from '../utils/index';
 
 import Database = database.Database;
 
+const TOKEN_REFRESH_THRESHOLD_MILLIS = 5 * 60 * 1000;
+
 export class DatabaseService {
 
   private readonly appInternal: FirebaseApp;
+  private tokenListenerRegistered: boolean;
+  private tokenRefreshTimeout: NodeJS.Timeout;
 
   private databases: {
     [dbUrl: string]: Database;
@@ -50,6 +54,12 @@ export class DatabaseService {
    * @internal
    */
   public delete(): Promise<void> {
+    if (this.tokenListenerRegistered) {
+      this.appInternal.INTERNAL.removeAuthTokenListener(this.onTokenChange);
+      clearTimeout(this.tokenRefreshTimeout);
+      this.tokenListenerRegistered = false;
+    }
+
     const promises = [];
     for (const dbUrl of Object.keys(this.databases)) {
       const db: DatabaseImpl = ((this.databases[dbUrl] as any) as DatabaseImpl);
@@ -96,7 +106,41 @@ export class DatabaseService {
 
       this.databases[dbUrl] = db;
     }
+
+    if (!this.tokenListenerRegistered) {
+      this.tokenListenerRegistered = true;
+      this.appInternal.INTERNAL.addAuthTokenListener(this.onTokenChange);
+    }
+
     return db;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  private onTokenChange(_: string): void {
+    this.appInternal.INTERNAL.getToken()
+      .then((token) => {
+        const delayMillis = token.expirationTime - TOKEN_REFRESH_THRESHOLD_MILLIS - Date.now();
+        // If the new token is set to expire soon (unlikely), do nothing. Somebody will eventually
+        // notice and refresh the token, at which point this callback will fire again.
+        if (delayMillis > 0) {
+          this.scheduleTokenRefresh(delayMillis);
+        }
+      })
+      .catch((err) => {
+        console.error('Unexpected error while attempting to schedule a token refresh:', err);
+      });
+  }
+
+  private scheduleTokenRefresh(delayMillis: number): void {
+    clearTimeout(this.tokenRefreshTimeout);
+    this.tokenRefreshTimeout = setTimeout(() => {
+      this.appInternal.INTERNAL.getToken(/*forceRefresh=*/ true)
+        .catch(() => {
+          // Ignore the error since this might just be an intermittent failure. If we really cannot
+          // refresh the token, an error will be logged once the existing token expires and we try
+          // to fetch a fresh one.
+        });
+    }, delayMillis);
   }
 
   private ensureUrl(url?: string): string {
