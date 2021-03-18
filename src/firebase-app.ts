@@ -39,7 +39,7 @@ import { RemoteConfig } from './remote-config/remote-config';
 import Credential = credential.Credential;
 import Database = database.Database;
 
-const TOKEN_REFRESH_THRESHOLD_MILLIS = 5 * 60 * 1000;
+const TOKEN_EXPIRY_THRESHOLD_MILLIS = 5 * 60 * 1000;
 
 /**
  * Type representing a callback which is called every time an app lifecycle event occurs.
@@ -126,7 +126,7 @@ export class FirebaseAppInternals {
   }
 
   private shouldRefresh(): boolean {
-    return !this.cachedToken_ || (this.cachedToken_.expirationTime - Date.now()) <= TOKEN_REFRESH_THRESHOLD_MILLIS;
+    return !this.cachedToken_ || (this.cachedToken_.expirationTime - Date.now()) <= TOKEN_EXPIRY_THRESHOLD_MILLIS;
   }
 
   /**
