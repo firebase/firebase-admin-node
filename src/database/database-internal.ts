@@ -33,7 +33,7 @@ const TOKEN_REFRESH_THRESHOLD_MILLIS = 5 * 60 * 1000;
 export class DatabaseService {
 
   private readonly appInternal: FirebaseApp;
-  private tokenListenerRegistered: boolean;
+  private tokenListener: (token: string) => void;
   private tokenRefreshTimeout: NodeJS.Timeout;
 
   private databases: {
@@ -54,10 +54,9 @@ export class DatabaseService {
    * @internal
    */
   public delete(): Promise<void> {
-    if (this.tokenListenerRegistered) {
-      this.appInternal.INTERNAL.removeAuthTokenListener(this.onTokenChange);
+    if (this.tokenListener) {
+      this.appInternal.INTERNAL.removeAuthTokenListener(this.tokenListener);
       clearTimeout(this.tokenRefreshTimeout);
-      this.tokenListenerRegistered = false;
     }
 
     const promises = [];
@@ -107,9 +106,9 @@ export class DatabaseService {
       this.databases[dbUrl] = db;
     }
 
-    if (!this.tokenListenerRegistered) {
-      this.tokenListenerRegistered = true;
-      this.appInternal.INTERNAL.addAuthTokenListener(this.onTokenChange);
+    if (!this.tokenListener) {
+      this.tokenListener = this.onTokenChange.bind(this);
+      this.appInternal.INTERNAL.addAuthTokenListener(this.tokenListener);
     }
 
     return db;
