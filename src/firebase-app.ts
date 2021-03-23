@@ -16,7 +16,7 @@
  */
 
 import { AppOptions, app } from './firebase-namespace-api';
-import { credential, GoogleOAuthAccessToken } from './credential/index';
+import { credential } from './credential/index';
 import { getApplicationDefault } from './credential/credential-internal';
 import * as validator from './utils/validator';
 import { deepCopy } from './utils/deep-copy';
@@ -39,6 +39,8 @@ import { RemoteConfig } from './remote-config/remote-config';
 import Credential = credential.Credential;
 import Database = database.Database;
 
+const TOKEN_EXPIRY_THRESHOLD_MILLIS = 5 * 60 * 1000;
+
 /**
  * Type representing a callback which is called every time an app lifecycle event occurs.
  */
@@ -57,129 +59,80 @@ export interface FirebaseAccessToken {
  * Internals of a FirebaseApp instance.
  */
 export class FirebaseAppInternals {
-  private isDeleted_ = false;
   private cachedToken_: FirebaseAccessToken;
-  private cachedTokenPromise_: Promise<FirebaseAccessToken> | null;
   private tokenListeners_: Array<(token: string) => void>;
-  private tokenRefreshTimeout_: NodeJS.Timer;
 
   constructor(private credential_: Credential) {
     this.tokenListeners_ = [];
   }
 
-  /**
-   * Gets an auth token for the associated app.
-   *
-   * @param {boolean} forceRefresh Whether or not to force a token refresh.
-   * @return {Promise<FirebaseAccessToken>} A Promise that will be fulfilled with the current or
-   *   new token.
-   */
-  public getToken(forceRefresh?: boolean): Promise<FirebaseAccessToken> {
-    const expired = this.cachedToken_ && this.cachedToken_.expirationTime < Date.now();
-    if (this.cachedTokenPromise_ && !forceRefresh && !expired) {
-      return this.cachedTokenPromise_
-        .catch((error) => {
-          // Update the cached token promise to avoid caching errors. Set it to resolve with the
-          // cached token if we have one (and return that promise since the token has still not
-          // expired).
-          if (this.cachedToken_) {
-            this.cachedTokenPromise_ = Promise.resolve(this.cachedToken_);
-            return this.cachedTokenPromise_;
-          }
-
-          // Otherwise, set the cached token promise to null so that it will force a refresh next
-          // time getToken() is called.
-          this.cachedTokenPromise_ = null;
-
-          // And re-throw the caught error.
-          throw error;
-        });
-    } else {
-      // Clear the outstanding token refresh timeout. This is a noop if the timeout is undefined.
-      clearTimeout(this.tokenRefreshTimeout_);
-
-      // this.credential_ may be an external class; resolving it in a promise helps us
-      // protect against exceptions and upgrades the result to a promise in all cases.
-      this.cachedTokenPromise_ = Promise.resolve(this.credential_.getAccessToken())
-        .then((result: GoogleOAuthAccessToken) => {
-          // Since the developer can provide the credential implementation, we want to weakly verify
-          // the return type until the type is properly exported.
-          if (!validator.isNonNullObject(result) ||
-            typeof result.expires_in !== 'number' ||
-            typeof result.access_token !== 'string') {
-            throw new FirebaseAppError(
-              AppErrorCodes.INVALID_CREDENTIAL,
-              `Invalid access token generated: "${JSON.stringify(result)}". Valid access ` +
-              'tokens must be an object with the "expires_in" (number) and "access_token" ' +
-              '(string) properties.',
-            );
-          }
-
-          const token: FirebaseAccessToken = {
-            accessToken: result.access_token,
-            expirationTime: Date.now() + (result.expires_in * 1000),
-          };
-
-          const hasAccessTokenChanged = (this.cachedToken_ && this.cachedToken_.accessToken !== token.accessToken);
-          const hasExpirationChanged = (this.cachedToken_ && this.cachedToken_.expirationTime !== token.expirationTime);
-          if (!this.cachedToken_ || hasAccessTokenChanged || hasExpirationChanged) {
-            this.cachedToken_ = token;
-            this.tokenListeners_.forEach((listener) => {
-              listener(token.accessToken);
-            });
-          }
-
-          // Establish a timeout to proactively refresh the token every minute starting at five
-          // minutes before it expires. Once a token refresh succeeds, no further retries are
-          // needed; if it fails, retry every minute until the token expires (resulting in a total
-          // of four retries: at 4, 3, 2, and 1 minutes).
-          let refreshTimeInSeconds = (result.expires_in - (5 * 60));
-          let numRetries = 4;
-
-          // In the rare cases the token is short-lived (that is, it expires in less than five
-          // minutes from when it was fetched), establish the timeout to refresh it after the
-          // current minute ends and update the number of retries that should be attempted before
-          // the token expires.
-          if (refreshTimeInSeconds <= 0) {
-            refreshTimeInSeconds = result.expires_in % 60;
-            numRetries = Math.floor(result.expires_in / 60) - 1;
-          }
-
-          // The token refresh timeout keeps the Node.js process alive, so only create it if this
-          // instance has not already been deleted.
-          if (numRetries && !this.isDeleted_) {
-            this.setTokenRefreshTimeout(refreshTimeInSeconds * 1000, numRetries);
-          }
-
-          return token;
-        })
-        .catch((error) => {
-          let errorMessage = (typeof error === 'string') ? error : error.message;
-
-          errorMessage = 'Credential implementation provided to initializeApp() via the ' +
-            '"credential" property failed to fetch a valid Google OAuth2 access token with the ' +
-            `following error: "${errorMessage}".`;
-
-          if (errorMessage.indexOf('invalid_grant') !== -1) {
-            errorMessage += ' There are two likely causes: (1) your server time is not properly ' +
-            'synced or (2) your certificate key file has been revoked. To solve (1), re-sync the ' +
-            'time on your server. To solve (2), make sure the key ID for your key file is still ' +
-            'present at https://console.firebase.google.com/iam-admin/serviceaccounts/project. If ' +
-            'not, generate a new key file at ' +
-            'https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk.';
-          }
-
-          throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
-        });
-
-      return this.cachedTokenPromise_;
+  public getToken(forceRefresh = false): Promise<FirebaseAccessToken> {
+    if (forceRefresh || this.shouldRefresh()) {
+      return this.refreshToken();
     }
+
+    return Promise.resolve(this.cachedToken_);
+  }
+
+  private refreshToken(): Promise<FirebaseAccessToken> {
+    return Promise.resolve(this.credential_.getAccessToken())
+      .then((result) => {
+        // Since the developer can provide the credential implementation, we want to weakly verify
+        // the return type until the type is properly exported.
+        if (!validator.isNonNullObject(result) ||
+          typeof result.expires_in !== 'number' ||
+          typeof result.access_token !== 'string') {
+          throw new FirebaseAppError(
+            AppErrorCodes.INVALID_CREDENTIAL,
+            `Invalid access token generated: "${JSON.stringify(result)}". Valid access ` +
+            'tokens must be an object with the "expires_in" (number) and "access_token" ' +
+            '(string) properties.',
+          );
+        }
+
+        const token = {
+          accessToken: result.access_token,
+          expirationTime: Date.now() + (result.expires_in * 1000),
+        };
+        if (!this.cachedToken_
+          || this.cachedToken_.accessToken !== token.accessToken
+          || this.cachedToken_.expirationTime !== token.expirationTime) {
+          this.cachedToken_ = token;
+          this.tokenListeners_.forEach((listener) => {
+            listener(token.accessToken);
+          });
+        }
+
+        return token;
+      })
+      .catch((error) => {
+        let errorMessage = (typeof error === 'string') ? error : error.message;
+
+        errorMessage = 'Credential implementation provided to initializeApp() via the ' +
+          '"credential" property failed to fetch a valid Google OAuth2 access token with the ' +
+          `following error: "${errorMessage}".`;
+
+        if (errorMessage.indexOf('invalid_grant') !== -1) {
+          errorMessage += ' There are two likely causes: (1) your server time is not properly ' +
+          'synced or (2) your certificate key file has been revoked. To solve (1), re-sync the ' +
+          'time on your server. To solve (2), make sure the key ID for your key file is still ' +
+          'present at https://console.firebase.google.com/iam-admin/serviceaccounts/project. If ' +
+          'not, generate a new key file at ' +
+          'https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk.';
+        }
+
+        throw new FirebaseAppError(AppErrorCodes.INVALID_CREDENTIAL, errorMessage);
+      });
+  }
+
+  private shouldRefresh(): boolean {
+    return !this.cachedToken_ || (this.cachedToken_.expirationTime - Date.now()) <= TOKEN_EXPIRY_THRESHOLD_MILLIS;
   }
 
   /**
    * Adds a listener that is called each time a token changes.
    *
-   * @param {function(string)} listener The listener that will be called with each new token.
+   * @param listener The listener that will be called with each new token.
    */
   public addAuthTokenListener(listener: (token: string) => void): void {
     this.tokenListeners_.push(listener);
@@ -191,41 +144,10 @@ export class FirebaseAppInternals {
   /**
    * Removes a token listener.
    *
-   * @param {function(string)} listener The listener to remove.
+   * @param listener The listener to remove.
    */
   public removeAuthTokenListener(listener: (token: string) => void): void {
     this.tokenListeners_ = this.tokenListeners_.filter((other) => other !== listener);
-  }
-
-  /**
-   * Deletes the FirebaseAppInternals instance.
-   */
-  public delete(): void {
-    this.isDeleted_ = true;
-
-    // Clear the token refresh timeout so it doesn't keep the Node.js process alive.
-    clearTimeout(this.tokenRefreshTimeout_);
-  }
-
-  /**
-   * Establishes timeout to refresh the Google OAuth2 access token used by the SDK.
-   *
-   * @param {number} delayInMilliseconds The delay to use for the timeout.
-   * @param {number} numRetries The number of times to retry fetching a new token if the prior fetch
-   *   failed.
-   */
-  private setTokenRefreshTimeout(delayInMilliseconds: number, numRetries: number): void {
-    this.tokenRefreshTimeout_ = setTimeout(() => {
-      this.getToken(/* forceRefresh */ true)
-        .catch(() => {
-          // Ignore the error since this might just be an intermittent failure. If we really cannot
-          // refresh the token, an error will be logged once the existing token expires and we try
-          // to fetch a fresh one.
-          if (numRetries > 0) {
-            this.setTokenRefreshTimeout(60 * 1000, numRetries - 1);
-          }
-        });
-    }, delayInMilliseconds);
   }
 }
 
@@ -418,8 +340,6 @@ export class FirebaseApp implements app.App {
   public delete(): Promise<void> {
     this.checkDestroyed_();
     this.firebaseInternals_.removeApp(this.name_);
-
-    this.INTERNAL.delete();
 
     return Promise.all(Object.keys(this.services_).map((serviceName) => {
       const service = this.services_[serviceName];
