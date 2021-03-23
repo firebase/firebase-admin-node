@@ -17,7 +17,7 @@
 import * as admin from '../../lib/index';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import { defaultApp, nullApp, nonNullApp, cmdArgs, databaseUrl } from './setup';
+import { defaultApp, nullApp, nonNullApp, cmdArgs, databaseUrl, isEmulator } from './setup';
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const chalk = require('chalk');
@@ -64,7 +64,13 @@ describe('admin.database', () => {
       .should.eventually.be.fulfilled;
   });
 
-  it('App with null auth overrides is blocked by security rules', () => {
+  it('App with null auth overrides is blocked by security rules', function () {
+    if (isEmulator) {
+      // RTDB emulator has open security rules by default and won't block this.
+      // TODO(https://github.com/firebase/firebase-admin-node/issues/1149):
+      //     remove this once updating security rules through admin is in place.
+      return this.skip();
+    }
     return nullApp.database().ref('blocked').set(admin.database.ServerValue.TIMESTAMP)
       .should.eventually.be.rejectedWith('PERMISSION_DENIED: Permission denied');
   });
@@ -157,13 +163,21 @@ describe('admin.database', () => {
     });
   });
 
-  it('admin.database().getRules() returns currently defined rules as a string', () => {
+  it('admin.database().getRules() returns currently defined rules as a string', function () {
+    if (isEmulator) {
+      // https://github.com/firebase/firebase-admin-node/issues/1149
+      return this.skip();
+    }
     return admin.database().getRules().then((result) => {
       return expect(result).to.be.not.empty;
     });
   });
 
-  it('admin.database().getRulesJSON() returns currently defined rules as an object', () => {
+  it('admin.database().getRulesJSON() returns currently defined rules as an object', function () {
+    if (isEmulator) {
+      // https://github.com/firebase/firebase-admin-node/issues/1149
+      return this.skip();
+    }
     return admin.database().getRulesJSON().then((result) => {
       return expect(result).to.be.not.undefined;
     });

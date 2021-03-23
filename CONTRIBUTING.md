@@ -123,6 +123,8 @@ There are two test suites: unit and integration. The unit test suite is intended
 development, and the integration test suite is intended to be run before packaging up release
 candidates.
 
+#### Unit Tests
+
 To run the unit test suite:
 
 ```bash
@@ -135,7 +137,26 @@ If you wish to skip the linter, and only run the unit tests:
 $ npm run test:unit
 ```
 
-The integration tests run against an actual Firebase project. Create a new
+#### Integration Tests with Emulator Suite
+
+Some of the integration tests work with the Emulator Suite and you can run them
+without an actual Firebase project.
+
+First, make sure to [install Firebase CLI](https://firebase.google.com/docs/cli#install_the_firebase_cli).
+And then:
+
+```bash
+  firebase emulators:exec --project fake-project-id --only auth,database,firestore \
+    'npx mocha \"test/integration/{auth,database,firestore}.spec.ts\" --slow 5000 --timeout 20000 --require ts-node/register'
+```
+
+Currently, only the Auth, Database, and Firestore test suites work. Some test
+cases will be automatically skipped due to lack of emulator support. The section
+below covers how to run the full test suite against an actual Firebase project.
+
+#### Integration Tests with an actual Firebase project
+
+Other integration tests require an actual Firebase project. Create a new
 project in the [Firebase Console](https://console.firebase.google.com), if you
 do not already have one suitable for running the tests against. Then obtain the
 following credentials from the project:
