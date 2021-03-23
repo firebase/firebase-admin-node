@@ -26,75 +26,36 @@ export type DecodedToken = {
 }
 
 /**
- * Class for decoding and verifying general purpose Firebase JWTs.
+ * Decodes general purpose Firebase JWTs.
  */
-export class JwtDecoder {
-
-  constructor(private algorithm: jwt.Algorithm) {
-
-    if (!validator.isNonEmptyString(algorithm)) {
-      throw new Error('The provided JWT algorithm is an empty string.');
-    }
+export function decodeJwt(jwtToken: string): Promise<DecodedToken> {
+  if (!validator.isString(jwtToken)) {
+    return Promise.reject(new JwtDecoderError({
+      code: JwtDecoderErrorCode.INVALID_ARGUMENT,
+      message: 'The provided token must be a string.'
+    }));
   }
 
-  public decodeToken(jwtToken: string): DecodedToken {
-    if (!validator.isString(jwtToken)) {
-      throw new JwtDecoderError({
-        code: JwtDecoderErrorCode.INVALID_ARGUMENT,
-        message: 'The provided token must be a string.'
-      });
-    }
+  const fullDecodedToken: any = jwt.decode(jwtToken, {
+    complete: true,
+  });
 
-    const fullDecodedToken: any = jwt.decode(jwtToken, {
-      complete: true,
-    });
-
-    if (!fullDecodedToken) {
-      throw new JwtDecoderError({
-        code: JwtDecoderErrorCode.INVALID_ARGUMENT,
-        message: 'Decoding token failed.'
-      });
-    }
-
-    const header = fullDecodedToken?.header;
-    const payload = fullDecodedToken?.payload;
-
-    return { header, payload };
+  if (!fullDecodedToken) {
+    return Promise.reject(new JwtDecoderError({
+      code: JwtDecoderErrorCode.INVALID_ARGUMENT,
+      message: 'Decoding token failed.'
+    }));
   }
 
-  public isSignatureValid(jwtToken: string, publicKey: string | null): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      const verifyOptions: jwt.VerifyOptions = {};
-      if (publicKey !== null) {
-        verifyOptions.algorithms = [this.algorithm];
-      }
-      jwt.verify(jwtToken, publicKey || '', verifyOptions,
-        (error: jwt.VerifyErrors | null) => {
-          if (!error) {
-            return resolve(true);
-          }
-          if (error.name === 'TokenExpiredError') {
-            return reject(new JwtDecoderError({
-              code: JwtDecoderErrorCode.TOKEN_EXPIRED,
-              message: 'The provided token has expired. Get a fresh token from your ' +
-                'client app and try again.',
-            }));
-          } else if (error.name === 'JsonWebTokenError') {
-            return resolve(false);
-          }
-          return reject(new JwtDecoderError({
-            code: JwtDecoderErrorCode.INVALID_ARGUMENT,
-            message: error.message
-          }));
-        });
-    });
-  }
+  const header = fullDecodedToken?.header;
+  const payload = fullDecodedToken?.payload;
+
+  return Promise.resolve({ header, payload });
 }
 
 /**
  * JwtDecoder error code structure.
  *
- * @param {ProjectManagementErrorCode} code The error code.
  * @param {ErrorInfo} errorInfo The error information (code and message).
  * @constructor
  */
@@ -116,10 +77,10 @@ export class JwtDecoderError extends Error {
 }
 
 /**
- * Crypto Signer error codes and their default messages.
+ * JWT decoder error codes.
  */
-export class JwtDecoderErrorCode {
-  public static INVALID_ARGUMENT = 'invalid-argument';
-  public static INVALID_CREDENTIAL = 'invalid-credential';
-  public static TOKEN_EXPIRED = 'token-expired';
+export enum JwtDecoderErrorCode {
+  INVALID_ARGUMENT = 'invalid-argument',
+  INVALID_CREDENTIAL = 'invalid-credential',
+  TOKEN_EXPIRED = 'token-expired',
 }
