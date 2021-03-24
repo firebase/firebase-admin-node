@@ -17,8 +17,7 @@
 import * as validator from './validator';
 import * as jwt from 'jsonwebtoken';
 import { HttpClient, HttpRequestConfig, HttpError } from '../utils/api-request';
-
-import http = require('http');
+import { Agent } from 'http';
 
 export type Dictionary = {[key: string]: any}
 
@@ -39,7 +38,7 @@ export class UrlKeyFetcher implements KeyFetcher {
   private publicKeys: { [key: string]: string };
   private publicKeysExpireAt: number;
 
-  constructor(private clientCertUrl: string, private readonly httpAgent?: http.Agent) {
+  constructor(private clientCertUrl: string, private readonly httpAgent?: Agent) {
     if (!validator.isURL(clientCertUrl)) {
       throw new Error(
         'The provided public client certificate URL is an invalid URL.',
