@@ -16,23 +16,30 @@
 
 import * as validator from './validator';
 import * as jwt from 'jsonwebtoken';
-import { ErrorInfo } from './error';
 import { HttpClient, HttpRequestConfig, HttpError } from '../utils/api-request';
-import { FirebaseApp } from '../firebase-app';
+
+import http = require('http');
+
+export type Dictionary = {[key: string]: any}
+
+export type DecodedToken = {
+  header: Dictionary;
+  payload: Dictionary;
+}
 
 export interface SignatureVerifier {
   verify(token: string): Promise<void>;
 }
 
-interface KeyFetcher<T extends {} | []> {
-  fetchPublicKeys(): Promise<T>;
+interface KeyFetcher {
+  fetchPublicKeys(): Promise<{ [key: string]: string }>;
 }
 
-class PublicKeyFetcher implements KeyFetcher<{ [key: string]: string }> {
+export class UrlKeyFetcher implements KeyFetcher {
   private publicKeys: { [key: string]: string };
   private publicKeysExpireAt: number;
 
-  constructor(private clientCertUrl: string, private readonly app: FirebaseApp) {
+  constructor(private clientCertUrl: string, private readonly httpAgent?: http.Agent) {
     if (!validator.isURL(clientCertUrl)) {
       throw new Error(
         'The provided public client certificate URL is an invalid URL.',
@@ -43,21 +50,28 @@ class PublicKeyFetcher implements KeyFetcher<{ [key: string]: string }> {
   /**
    * Fetches the public keys for the Google certs.
    *
-   * @return {Promise<object>} A promise fulfilled with public keys for the Google certs.
+   * @return A promise fulfilled with public keys for the Google certs.
    */
   public fetchPublicKeys(): Promise<{ [key: string]: string }> {
+    if (this.shouldRefresh()) {
+      return this.refresh();
+    }
+    return Promise.resolve(this.publicKeys);
+  }
+
+  private shouldRefresh(): boolean {
     const publicKeysExist = (typeof this.publicKeys !== 'undefined');
     const publicKeysExpiredExists = (typeof this.publicKeysExpireAt !== 'undefined');
     const publicKeysStillValid = (publicKeysExpiredExists && Date.now() < this.publicKeysExpireAt);
-    if (publicKeysExist && publicKeysStillValid) {
-      return Promise.resolve(this.publicKeys);
-    }
+    return !(publicKeysExist && publicKeysStillValid);
+  }
 
+  private refresh(): Promise<{ [key: string]: string }> {
     const client = new HttpClient();
     const request: HttpRequestConfig = {
       method: 'GET',
       url: this.clientCertUrl,
-      httpAgent: this.app.options.httpAgent,
+      httpAgent: this.httpAgent,
     };
     return client.send(request).then((resp) => {
       if (!resp.isJson() || resp.data.error) {
@@ -90,53 +104,39 @@ class PublicKeyFetcher implements KeyFetcher<{ [key: string]: string }> {
         } else {
           errorMessage += `${resp.text}`;
         }
-        throw new SignatureVerifierError({
-          code: SignatureVerifierErrorCode.INTERNAL_ERROR,
-          message: errorMessage
-        });
+        throw new JwtError(JwtErrorCode.INTERNAL_ERROR, errorMessage);
       }
       throw err;
     });
   }
 }
 
+/**
+ * Verifies JWT signature with a public key.
+ */
 export class PublicKeySignatureVerifier implements SignatureVerifier {
-  private publicKeyProvider: PublicKeyFetcher;
-  private getKeyHandler: jwt.GetPublicKeyOrSecret;
-
-  constructor(clientCertUrl: string, private algorithm: jwt.Algorithm,
-    readonly app: FirebaseApp) {
-    if (!validator.isURL(clientCertUrl)) {
-      throw new Error(
-        'The provided public client certificate URL is an invalid URL.',
-      );
+  constructor(private keyFetcher: UrlKeyFetcher) {
+    if (!validator.isNonNullObject(keyFetcher)) {
+      throw new Error('The provided key fetcher is not an object or null.');
     }
-    else if (!validator.isNonEmptyString(algorithm)) {
-      throw new Error('The provided JWT algorithm is an empty string.');
-    }
-
-    this.publicKeyProvider = new PublicKeyFetcher(clientCertUrl, app);
-    this.getKeyHandler = this.getKey.bind(this);
   }
 
   public verify(token: string): Promise<void> {
-    const error = new SignatureVerifierError({
-      code: SignatureVerifierErrorCode.INVALID_TOKEN,
-      message: 'The provided token has invalid signature.'
-    });
-
-    const verifyOptions: jwt.VerifyOptions = {};
-    verifyOptions.algorithms = [this.algorithm];
-
-    return isSignatureValid(token, this.getKeyHandler, verifyOptions)
+    const ALGORITHM_RS256: jwt.Algorithm = 'RS256' as const;
+    const error = new JwtError(JwtErrorCode.INVALID_TOKEN,
+      'The provided token has invalid signature.');
+    return isSignatureValid(token, getKeyCallback(this.keyFetcher),
+      { algorithms: [ALGORITHM_RS256] })
       .then(isValid => {
         return isValid ? Promise.resolve() : Promise.reject(error);
       });
   }
+}
 
-  private getKey(header: jwt.JwtHeader, callback: jwt.SigningKeyCallback): void {
+function getKeyCallback(fetcher: KeyFetcher): jwt.GetPublicKeyOrSecret {
+  return (header: jwt.JwtHeader, callback: jwt.SigningKeyCallback) => {
     const kid = header.kid || '';
-    this.publicKeyProvider.fetchPublicKeys().then((publicKeys) => {
+    fetcher.fetchPublicKeys().then((publicKeys) => {
       if (!Object.prototype.hasOwnProperty.call(publicKeys, kid)) {
         callback(new Error(NO_MATCHING_KID_ERROR_MESSAGE));
       } else {
@@ -150,12 +150,9 @@ export class PublicKeySignatureVerifier implements SignatureVerifier {
 }
 
 export class EmulatorSignatureVerifier implements SignatureVerifier {
-  
   public verify(token: string): Promise<void> {
-    const error = new SignatureVerifierError({
-      code: SignatureVerifierErrorCode.INVALID_TOKEN,
-      message: 'The provided token has invalid signature.'
-    });
+    const error = new JwtError(JwtErrorCode.INVALID_TOKEN,
+      'The provided token has invalid signature.');
 
     // Signature checks skipped for emulator; no need to fetch public keys.
     return isSignatureValid(token, '')
@@ -174,62 +171,71 @@ function isSignatureValid(token: string, secretOrPublicKey: jwt.Secret | jwt.Get
           return resolve(true);
         }
         if (error.name === 'TokenExpiredError') {
-          return reject(new SignatureVerifierError({
-            code: SignatureVerifierErrorCode.TOKEN_EXPIRED,
-            message: 'The provided token has expired. Get a fresh token from your ' +
-              'client app and try again.',
-          }));
+          return reject(new JwtError(JwtErrorCode.TOKEN_EXPIRED,
+            'The provided token has expired. Get a fresh token from your ' +
+            'client app and try again.'));
         } else if (error.name === 'JsonWebTokenError') {
           const prefix = 'error in secret or public key callback: ';
           if (error.message && error.message.includes(prefix)) {
-            const message = error.message.split(prefix).pop();
-            return reject(new SignatureVerifierError({
-              code: SignatureVerifierErrorCode.INVALID_ARGUMENT,
-              message: message || 'Error fetching public keys.',
-            }));
+            const message = error.message.split(prefix).pop() || 'Error fetching public keys.';
+            const code = (message === NO_MATCHING_KID_ERROR_MESSAGE) ? JwtErrorCode.NO_MATCHING_KID :
+              JwtErrorCode.INVALID_ARGUMENT;
+            return reject(new JwtError(code, message));
           }
           return resolve(false);
         }
-        return reject(new SignatureVerifierError({
-          code: SignatureVerifierErrorCode.INVALID_TOKEN,
-          message: error.message
-        }));
+        return reject(new JwtError(JwtErrorCode.INVALID_TOKEN, error.message));
       });
   });
 }
 
 /**
- * SignatureVerifier error code structure.
+ * Decodes general purpose Firebase JWTs.
+ */
+export function decodeJwt(jwtToken: string): Promise<DecodedToken> {
+  if (!validator.isString(jwtToken)) {
+    return Promise.reject(new JwtError(JwtErrorCode.INVALID_ARGUMENT,
+      'The provided token must be a string.'));
+  }
+
+  const fullDecodedToken: any = jwt.decode(jwtToken, {
+    complete: true,
+  });
+
+  if (!fullDecodedToken) {
+    return Promise.reject(new JwtError(JwtErrorCode.INVALID_ARGUMENT,
+      'Decoding token failed.'));
+  }
+
+  const header = fullDecodedToken?.header;
+  const payload = fullDecodedToken?.payload;
+  return Promise.resolve({ header, payload });
+}
+
+/**
+ * Jwt error code structure.
  *
- * @param {ErrorInfo} errorInfo The error information (code and message).
+ * @param code The error code.
+ * @param message The error message.
  * @constructor
  */
-export class SignatureVerifierError extends Error {
-  constructor(private errorInfo: ErrorInfo) {
-    super(errorInfo.message);
-    (this as any).__proto__ = SignatureVerifierError.prototype;
-  }
-
-  /** @return {string} The error code. */
-  public get code(): string {
-    return this.errorInfo.code;
-  }
-
-  /** @return {string} The error message. */
-  public get message(): string {
-    return this.errorInfo.message;
+export class JwtError extends Error {
+  constructor(readonly code: JwtErrorCode, readonly message: string) {
+    super(message);
+    (this as any).__proto__ = JwtError.prototype;
   }
 }
 
 /**
- * SignatureVerifier error codes.
+ * JWT error codes.
  */
-export enum SignatureVerifierErrorCode {
+export enum JwtErrorCode {
   INVALID_ARGUMENT = 'invalid-argument',
-  INVALID_TOKEN = 'invalid-token',
   INVALID_CREDENTIAL = 'invalid-credential',
   TOKEN_EXPIRED = 'token-expired',
+  INVALID_TOKEN = 'invalid-token',
+  NO_MATCHING_KID = 'no-matching-kid-error',
   INTERNAL_ERROR = 'internal-error',
 }
 
-export const NO_MATCHING_KID_ERROR_MESSAGE = 'no-matching-kid-error';
+const NO_MATCHING_KID_ERROR_MESSAGE = 'no-matching-kid-error';
