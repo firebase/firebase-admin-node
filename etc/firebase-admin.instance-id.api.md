@@ -17,15 +17,6 @@ export class InstanceId {
     deleteInstanceId(instanceId: string): Promise<void>;
     }
 
-// @public
-export function instanceId(app?: App): instanceId.InstanceId;
-
-// @public (undocumented)
-export namespace instanceId {
-    // (undocumented)
-    export type InstanceId = InstanceId;
-}
-
 
 // (No @packageDocumentation comment for this package)
 

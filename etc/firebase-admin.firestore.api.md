@@ -57,48 +57,12 @@ export { FieldValue }
 
 export { Firestore }
 
-// Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
-//
-// @public (undocumented)
-export function firestore(app?: App): _firestore.Firestore;
-
-// @public (undocumented)
-export namespace firestore {
-    import v1beta1 = _firestore.v1beta1;
-    import v1 = _firestore.v1;
-    import BulkWriter = _firestore.BulkWriter;
-    import BulkWriterOptions = _firestore.BulkWriterOptions;
-    import CollectionGroup = _firestore.CollectionGroup;
-    import CollectionReference = _firestore.CollectionReference;
-    import DocumentChangeType = _firestore.DocumentChangeType;
-    import DocumentData = _firestore.DocumentData;
-    import DocumentReference = _firestore.DocumentReference;
-    import DocumentSnapshot = _firestore.DocumentSnapshot;
-    import FieldPath = _firestore.FieldPath;
-    import FieldValue = _firestore.FieldValue;
-    import Firestore = _firestore.Firestore;
-    import FirestoreDataConverter = _firestore.FirestoreDataConverter;
-    import GeoPoint = _firestore.GeoPoint;
-    import GrpcStatus = _firestore.GrpcStatus;
-    import Precondition = _firestore.Precondition;
-    import Query = _firestore.Query;
-    import QueryDocumentSnapshot = _firestore.QueryDocumentSnapshot;
-    import QueryPartition = _firestore.QueryPartition;
-    import QuerySnapshot = _firestore.QuerySnapshot;
-    import ReadOptions = _firestore.ReadOptions;
-    import Settings = _firestore.Settings;
-    import Timestamp = _firestore.Timestamp;
-    import Transaction = _firestore.Transaction;
-    import UpdateData = _firestore.UpdateData;
-    import WriteBatch = _firestore.WriteBatch;
-    import WriteResult = _firestore.WriteResult;
-    import setLogFunction = _firestore.setLogFunction;
-}
-
 export { FirestoreDataConverter }
 
 export { GeoPoint }
 
+// Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
+//
 // @public (undocumented)
 export function getFirestore(app?: App): _firestore.Firestore;
 

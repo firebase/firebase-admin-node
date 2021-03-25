@@ -18,15 +18,6 @@ export class Storage {
     bucket(name?: string): Bucket;
     }
 
-// @public
-export function storage(app?: App): storage.Storage;
-
-// @public (undocumented)
-export namespace storage {
-    // (undocumented)
-    export type Storage = Storage;
-}
-
 
 // (No @packageDocumentation comment for this package)
 

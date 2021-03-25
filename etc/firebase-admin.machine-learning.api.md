@@ -53,31 +53,6 @@ export class MachineLearning {
 }
 
 // @public
-export function machineLearning(app?: App): machineLearning.MachineLearning;
-
-// @public (undocumented)
-export namespace machineLearning {
-    // (undocumented)
-    export type AutoMLTfliteModelOptions = AutoMLTfliteModelOptions;
-    // (undocumented)
-    export type GcsTfliteModelOptions = GcsTfliteModelOptions;
-    // (undocumented)
-    export type ListModelsOptions = ListModelsOptions;
-    // (undocumented)
-    export type ListModelsResult = ListModelsResult;
-    // (undocumented)
-    export type MachineLearning = MachineLearning;
-    // (undocumented)
-    export type Model = Model;
-    // (undocumented)
-    export type ModelOptions = ModelOptions;
-    // (undocumented)
-    export type ModelOptionsBase = ModelOptionsBase;
-    // (undocumented)
-    export type TFLiteModel = TFLiteModel;
-}
-
-// @public
 export class Model {
     get createTime(): string;
     get displayName(): string;

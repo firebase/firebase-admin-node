@@ -1,5 +1,5 @@
 /*!
- * Copyright 2020 Google Inc.
+ * Copyright 2021 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-import { auth } from './auth/index';
-import { database } from './database/index';
-import { firestore } from './firestore/index';
-import { instanceId } from './instance-id/index';
-import { machineLearning } from './machine-learning/index';
-import { messaging } from './messaging/index';
-import { projectManagement } from './project-management/index';
-import { remoteConfig } from './remote-config/index';
-import { securityRules } from './security-rules/index';
-import { storage } from './storage/index';
+import { auth } from './auth/auth-namespace';
+import { database } from './database/database-namespace';
+import { firestore } from './firestore/firestore-namespace';
+import { instanceId } from './instance-id/instance-id-namespace';
+import { machineLearning } from './machine-learning/machine-learning-namespace';
+import { messaging } from './messaging/messaging-namespace';
+import { projectManagement } from './project-management/project-management-namespace';
+import { remoteConfig } from './remote-config/remote-config-namespace';
+import { securityRules } from './security-rules/security-rules-namespace';
+import { storage } from './storage/storage-namespace';
 
 import { App as AppCore, AppOptions } from './app/index';
 
-export * from './app/index';
+export { App, AppOptions, FirebaseError, FirebaseArrayIndexError } from './app/index';
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export namespace app {
@@ -73,6 +73,18 @@ export namespace app {
     delete(): Promise<void>;
   }
 }
+
+export * from './credential/index';
+export { auth } from './auth/auth-namespace';
+export { database } from './database/database-namespace';
+export { firestore } from './firestore/firestore-namespace';
+export { instanceId } from './instance-id/instance-id-namespace';
+export { machineLearning } from './machine-learning/machine-learning-namespace';
+export { messaging } from './messaging/messaging-namespace';
+export { projectManagement } from './project-management/project-management-namespace';
+export { remoteConfig } from './remote-config/remote-config-namespace';
+export { securityRules } from './security-rules/security-rules-namespace';
+export { storage } from './storage/storage-namespace';
 
 // Declare other top-level members of the admin namespace below. Unfortunately, there's no
 // compile-time mechanism to ensure that the FirebaseNamespace class actually provides these

@@ -32,17 +32,10 @@ import { FirebaseApp, FirebaseAccessToken } from '../../../src/app/firebase-app'
 import {
   FirebaseNamespace, FirebaseNamespaceInternals, FIREBASE_CONFIG_VAR
 } from '../../../src/app/firebase-namespace';
-
-import { auth } from '../../../src/auth/index';
-import { messaging } from '../../../src/messaging/index';
-import { machineLearning } from '../../../src/machine-learning/index';
-import { storage } from '../../../src/storage/index';
-import { firestore } from '../../../src/firestore/index';
-import { database } from '../../../src/database/index';
-import { instanceId } from '../../../src/instance-id/index';
-import { projectManagement } from '../../../src/project-management/index';
-import { securityRules } from '../../../src/security-rules/index';
-import { remoteConfig } from '../../../src/remote-config/index';
+import {
+  auth, messaging, machineLearning, storage, firestore, database,
+  instanceId, projectManagement, securityRules , remoteConfig,
+} from '../../../src/firebase-namespace-api';
 import { FirebaseAppError, AppErrorCodes } from '../../../src/utils/error';
 
 import Auth = auth.Auth;

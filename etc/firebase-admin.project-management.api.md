@@ -78,29 +78,6 @@ export class ProjectManagement {
     }
 
 // @public
-export function projectManagement(app?: App): projectManagement.ProjectManagement;
-
-// @public (undocumented)
-export namespace projectManagement {
-    // (undocumented)
-    export type AndroidApp = AndroidApp;
-    // (undocumented)
-    export type AndroidAppMetadata = AndroidAppMetadata;
-    // (undocumented)
-    export type AppMetadata = AppMetadata;
-    // (undocumented)
-    export type AppPlatform = AppPlatform;
-    // (undocumented)
-    export type IosApp = IosApp;
-    // (undocumented)
-    export type IosAppMetadata = IosAppMetadata;
-    // (undocumented)
-    export type ProjectManagement = ProjectManagement;
-    // (undocumented)
-    export type ShaCertificate = ShaCertificate;
-}
-
-// @public
 export class ShaCertificate {
     readonly certType: ('sha1' | 'sha256');
     // (undocumented)

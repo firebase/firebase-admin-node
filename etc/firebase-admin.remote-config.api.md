@@ -52,39 +52,6 @@ export class RemoteConfig {
 }
 
 // @public
-export function remoteConfig(app?: App): remoteConfig.RemoteConfig;
-
-// @public (undocumented)
-export namespace remoteConfig {
-    // (undocumented)
-    export type ExplicitParameterValue = ExplicitParameterValue;
-    // (undocumented)
-    export type InAppDefaultValue = InAppDefaultValue;
-    // (undocumented)
-    export type ListVersionsOptions = ListVersionsOptions;
-    // (undocumented)
-    export type ListVersionsResult = ListVersionsResult;
-    // (undocumented)
-    export type RemoteConfig = RemoteConfig;
-    // (undocumented)
-    export type RemoteConfigCondition = RemoteConfigCondition;
-    // (undocumented)
-    export type RemoteConfigParameter = RemoteConfigParameter;
-    // (undocumented)
-    export type RemoteConfigParameterGroup = RemoteConfigParameterGroup;
-    // (undocumented)
-    export type RemoteConfigParameterValue = RemoteConfigParameterValue;
-    // (undocumented)
-    export type RemoteConfigTemplate = RemoteConfigTemplate;
-    // (undocumented)
-    export type RemoteConfigUser = RemoteConfigUser;
-    // (undocumented)
-    export type TagColor = TagColor;
-    // (undocumented)
-    export type Version = Version;
-}
-
-// @public
 export interface RemoteConfigCondition {
     expression: string;
     name: string;

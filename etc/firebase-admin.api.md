@@ -47,10 +47,8 @@ export namespace app {
 }
 
 // @public
-export function applicationDefault(httpAgent?: Agent): Credential;
-
-// @public
 export interface AppOptions {
+    // Warning: (ae-forgotten-export) The symbol "Credential" needs to be exported by the entry point default-namespace.d.ts
     credential?: Credential;
     databaseAuthVariableOverride?: object | null;
     databaseURL?: string;
@@ -274,20 +272,15 @@ export namespace auth {
     export type UserRecord = UserRecord;
 }
 
-// @public
-export function cert(serviceAccountPathOrObject: string | ServiceAccount, httpAgent?: Agent): Credential;
-
-// @public
-export interface Credential {
-    getAccessToken(): Promise<GoogleOAuthAccessToken>;
-}
-
 // @public (undocumented)
 export namespace credential {
     export type Credential = Credential;
-    const applicationDefault: typeof applicationDefault;
-    const cert: typeof cert;
-    const refreshToken: typeof refreshToken;
+    const // Warning: (ae-forgotten-export) The symbol "applicationDefault" needs to be exported by the entry point default-namespace.d.ts
+    applicationDefault: typeof applicationDefault;
+    const // Warning: (ae-forgotten-export) The symbol "cert" needs to be exported by the entry point default-namespace.d.ts
+    cert: typeof cert;
+    const // Warning: (ae-forgotten-export) The symbol "refreshToken" needs to be exported by the entry point default-namespace.d.ts
+    refreshToken: typeof refreshToken;
 }
 
 // @public
@@ -315,9 +308,6 @@ export namespace database {
     enableLogging: typeof rtdb.enableLogging;
     const ServerValue: rtdb.ServerValue;
 }
-
-// @public
-export function deleteApp(app: App): Promise<void>;
 
 // @public
 export interface FirebaseArrayIndexError {
@@ -368,12 +358,6 @@ export namespace firestore {
     import WriteResult = _firestore.WriteResult;
     import setLogFunction = _firestore.setLogFunction;
 }
-
-// @public (undocumented)
-export function getApp(name?: string): App;
-
-// @public (undocumented)
-export function getApps(): App[];
 
 // @public
 export interface GoogleOAuthAccessToken {
@@ -617,9 +601,6 @@ export namespace projectManagement {
     // (undocumented)
     export type ShaCertificate = ShaCertificate;
 }
-
-// @public
-export function refreshToken(refreshTokenPathOrObject: string | object, httpAgent?: Agent): Credential;
 
 // @public
 export function remoteConfig(app?: App): remoteConfig.RemoteConfig;

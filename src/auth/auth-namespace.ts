@@ -14,9 +14,7 @@
  * limitations under the License.
  */
 
-import { App, getApp } from '../app/index';
-import { Auth } from './auth';
-import { FirebaseApp } from '../app/firebase-app';
+import { App } from '../app/index';
 
 // Import all public types with aliases, and re-export from the auth namespace.
 
@@ -94,36 +92,6 @@ import {
   UserMetadata as TUserMetadata,
   UserRecord as TUserRecord,
 } from './user-record';
-
-/**
- * Gets the {@link auth.Auth `Auth`} service for the default app or a
- * given app.
- *
- * `getAuth()` can be called with no arguments to access the default app's
- * {@link auth.Auth `Auth`} service or as `getAuth(app)` to access the
- * {@link auth.Auth `Auth`} service associated with a specific app.
- *
- * @example
- * ```javascript
- * // Get the Auth service for the default app
- * const defaultAuth = getAuth();
- * ```
- *
- * @example
- * ```javascript
- * // Get the Auth service for a given app
- * const otherAuth = getAuth(otherApp);
- * ```
- *
- */
-export function getAuth(app?: App): Auth {
-  if (typeof app === 'undefined') {
-    app = getApp();
-  }
-
-  const firebaseApp: FirebaseApp = app as FirebaseApp;
-  return firebaseApp.getOrInitService('auth', (app) => new Auth(app));
-}
 
 /**
  * Gets the {@link auth.Auth `Auth`} service for the default app or a

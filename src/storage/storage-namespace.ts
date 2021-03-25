@@ -1,5 +1,5 @@
 /*!
- * Copyright 2020 Google Inc.
+ * Copyright 2021 Google Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,39 +14,34 @@
  * limitations under the License.
  */
 
-import { App, getApp } from '../app';
-import { FirebaseApp } from '../app/firebase-app';
-import { Storage } from './storage';
-
-export { Storage } from './storage';
+import { App } from '../app';
+import { Storage as TStorage } from './storage';
 
 /**
  * Gets the {@link storage.Storage `Storage`} service for the
  * default app or a given app.
  *
- * `getStorage()` can be called with no arguments to access the default
+ * `admin.storage()` can be called with no arguments to access the default
  * app's {@link storage.Storage `Storage`} service or as
- * `getStorage(app)` to access the
+ * `admin.storage(app)` to access the
  * {@link storage.Storage `Storage`} service associated with a
  * specific app.
  *
  * @example
  * ```javascript
  * // Get the Storage service for the default app
- * const defaultStorage = getStorage();
+ * var defaultStorage = admin.storage();
  * ```
  *
  * @example
  * ```javascript
  * // Get the Storage service for a given app
- * const otherStorage = getStorage(otherApp);
+ * var otherStorage = admin.storage(otherApp);
  * ```
  */
-export function getStorage(app?: App): Storage {
-  if (typeof app === 'undefined') {
-    app = getApp();
-  }
+export declare function storage(app?: App): storage.Storage;
 
-  const firebaseApp: FirebaseApp = app as FirebaseApp;
-  return firebaseApp.getOrInitService('storage', (app) => new Storage(app));
+/* eslint-disable @typescript-eslint/no-namespace */
+export namespace storage {
+  export type Storage = TStorage;
 }

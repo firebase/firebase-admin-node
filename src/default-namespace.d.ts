@@ -14,15 +14,4 @@
  * limitations under the License.
  */
 
-export * from './credential/index';
 export * from './firebase-namespace-api';
-export { auth } from './auth/index';
-export { database } from './database/index';
-export { firestore } from './firestore/index';
-export { instanceId } from './instance-id/index';
-export { machineLearning } from './machine-learning/index';
-export { messaging } from './messaging/index';
-export { projectManagement } from './project-management/index';
-export { remoteConfig } from './remote-config/index';
-export { securityRules } from './security-rules/index';
-export { storage } from './storage/index';

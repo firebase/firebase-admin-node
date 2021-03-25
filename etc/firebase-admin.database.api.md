@@ -21,32 +21,6 @@ export interface Database extends FirebaseDatabase {
     setRules(source: string | Buffer | object): Promise<void>;
 }
 
-// Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
-//
-// @public
-export function database(app?: App): database.Database;
-
-// @public (undocumented)
-export namespace database {
-    // (undocumented)
-    export type Database = Database;
-    // (undocumented)
-    export type DataSnapshot = rtdb.DataSnapshot;
-    // (undocumented)
-    export type EventType = rtdb.EventType;
-    // (undocumented)
-    export type OnDisconnect = rtdb.OnDisconnect;
-    // (undocumented)
-    export type Query = rtdb.Query;
-    // (undocumented)
-    export type Reference = rtdb.Reference;
-    // (undocumented)
-    export type ThenableReference = rtdb.ThenableReference;
-    const // (undocumented)
-    enableLogging: typeof rtdb.enableLogging;
-    const ServerValue: rtdb.ServerValue;
-}
-
 export { DataSnapshot }
 
 // @public
@@ -54,6 +28,8 @@ export const enableLogging: typeof rtdb.enableLogging;
 
 export { EventType }
 
+// Warning: (ae-forgotten-export) The symbol "App" needs to be exported by the entry point index.d.ts
+//
 // @public
 export function getDatabase(app?: App): Database;
 
