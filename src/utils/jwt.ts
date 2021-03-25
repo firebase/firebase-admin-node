@@ -19,6 +19,16 @@ import * as jwt from 'jsonwebtoken';
 import { HttpClient, HttpRequestConfig, HttpError } from '../utils/api-request';
 import { Agent } from 'http';
 
+const ALGORITHM_RS256: jwt.Algorithm = 'RS256' as const;
+
+// `jsonwebtoken` converts errors from the `getKey` callback to its own `JsonWebTokenError` type
+// and prefixes the error message with the following. Use the prefix to identify errors thrown
+// from the key provider callback.
+// https://github.com/auth0/node-jsonwebtoken/blob/d71e383862fc735991fd2e759181480f066bf138/verify.js#L96
+const JWT_CALLBACK_ERROR_PREFIX = 'error in secret or public key callback: ';
+
+const NO_MATCHING_KID_ERROR_MESSAGE = 'no-matching-kid-error';
+
 export type Dictionary = {[key: string]: any}
 
 export type DecodedToken = {
@@ -34,9 +44,9 @@ interface KeyFetcher {
   fetchPublicKeys(): Promise<{ [key: string]: string }>;
 }
 
-export class UrlKeyFetcher implements KeyFetcher {
+class UrlKeyFetcher implements KeyFetcher {
   private publicKeys: { [key: string]: string };
-  private publicKeysExpireAt: number;
+  private publicKeysExpireAt = 0;
 
   constructor(private clientCertUrl: string, private readonly httpAgent?: Agent) {
     if (!validator.isURL(clientCertUrl)) {
@@ -59,10 +69,7 @@ export class UrlKeyFetcher implements KeyFetcher {
   }
 
   private shouldRefresh(): boolean {
-    const publicKeysExist = (typeof this.publicKeys !== 'undefined');
-    const publicKeysExpiredExists = (typeof this.publicKeysExpireAt !== 'undefined');
-    const publicKeysStillValid = (publicKeysExpiredExists && Date.now() < this.publicKeysExpireAt);
-    return !(publicKeysExist && publicKeysStillValid);
+    return !this.publicKeys || this.publicKeysExpireAt <= Date.now();
   }
 
   private refresh(): Promise<{ [key: string]: string }> {
@@ -78,6 +85,8 @@ export class UrlKeyFetcher implements KeyFetcher {
         // error responses.
         throw new HttpError(resp);
       }
+      // reset expire at from previous set of keys.
+      this.publicKeysExpireAt = 0;
       if (Object.prototype.hasOwnProperty.call(resp.headers, 'cache-control')) {
         const cacheControlHeader: string = resp.headers['cache-control'];
         const parts = cacheControlHeader.split(',');
@@ -103,7 +112,7 @@ export class UrlKeyFetcher implements KeyFetcher {
         } else {
           errorMessage += `${resp.text}`;
         }
-        throw new JwtError(JwtErrorCode.INTERNAL_ERROR, errorMessage);
+        throw new Error(errorMessage);
       }
       throw err;
     });
@@ -114,21 +123,18 @@ export class UrlKeyFetcher implements KeyFetcher {
  * Verifies JWT signature with a public key.
  */
 export class PublicKeySignatureVerifier implements SignatureVerifier {
-  constructor(private keyFetcher: UrlKeyFetcher) {
+  constructor(private keyFetcher: KeyFetcher) {
     if (!validator.isNonNullObject(keyFetcher)) {
       throw new Error('The provided key fetcher is not an object or null.');
     }
   }
 
+  public static withCertificateUrl(clientCertUrl: string, httpAgent?: Agent): PublicKeySignatureVerifier {
+    return new PublicKeySignatureVerifier(new UrlKeyFetcher(clientCertUrl, httpAgent));
+  }
+
   public verify(token: string): Promise<void> {
-    const ALGORITHM_RS256: jwt.Algorithm = 'RS256' as const;
-    const error = new JwtError(JwtErrorCode.INVALID_TOKEN,
-      'The provided token has invalid signature.');
-    return isSignatureValid(token, getKeyCallback(this.keyFetcher),
-      { algorithms: [ALGORITHM_RS256] })
-      .then(isValid => {
-        return isValid ? Promise.resolve() : Promise.reject(error);
-      });
+    return verifyJwtSignature(token, getKeyCallback(this.keyFetcher), { algorithms: [ALGORITHM_RS256] });
   }
 }
 
@@ -150,40 +156,34 @@ function getKeyCallback(fetcher: KeyFetcher): jwt.GetPublicKeyOrSecret {
 
 export class EmulatorSignatureVerifier implements SignatureVerifier {
   public verify(token: string): Promise<void> {
-    const error = new JwtError(JwtErrorCode.INVALID_TOKEN,
-      'The provided token has invalid signature.');
-
     // Signature checks skipped for emulator; no need to fetch public keys.
-    return isSignatureValid(token, '')
-      .then(isValid => {
-        return isValid ? Promise.resolve() : Promise.reject(error);
-      });
+    return verifyJwtSignature(token, '');
   }
 }
 
-function isSignatureValid(token: string, secretOrPublicKey: jwt.Secret | jwt.GetPublicKeyOrSecret,
-  options?: jwt.VerifyOptions): Promise<boolean> {
+function verifyJwtSignature(token: string, secretOrPublicKey: jwt.Secret | jwt.GetPublicKeyOrSecret,
+  options?: jwt.VerifyOptions): Promise<void> {
   return new Promise((resolve, reject) => {
     jwt.verify(token, secretOrPublicKey, options,
       (error: jwt.VerifyErrors | null) => {
         if (!error) {
-          return resolve(true);
+          return resolve();
         }
         if (error.name === 'TokenExpiredError') {
           return reject(new JwtError(JwtErrorCode.TOKEN_EXPIRED,
             'The provided token has expired. Get a fresh token from your ' +
             'client app and try again.'));
         } else if (error.name === 'JsonWebTokenError') {
-          const prefix = 'error in secret or public key callback: ';
-          if (error.message && error.message.includes(prefix)) {
-            const message = error.message.split(prefix).pop() || 'Error fetching public keys.';
-            const code = (message === NO_MATCHING_KID_ERROR_MESSAGE) ? JwtErrorCode.NO_MATCHING_KID :
+          if (error.message && error.message.includes(JWT_CALLBACK_ERROR_PREFIX)) {
+            const message = error.message.split(JWT_CALLBACK_ERROR_PREFIX).pop() || 'Error fetching public keys.';
+            const code = (message === NO_MATCHING_KID_ERROR_MESSAGE) ? JwtErrorCode.KEY_FETCH_ERROR :
               JwtErrorCode.INVALID_ARGUMENT;
             return reject(new JwtError(code, message));
           }
-          return resolve(false);
+          return reject(new JwtError(JwtErrorCode.INVALID_SIGNATURE,
+            'The provided token has invalid signature.'));
         }
-        return reject(new JwtError(JwtErrorCode.INVALID_TOKEN, error.message));
+        return reject(new JwtError(JwtErrorCode.INVALID_SIGNATURE, error.message));
       });
   });
 }
@@ -232,9 +232,6 @@ export enum JwtErrorCode {
   INVALID_ARGUMENT = 'invalid-argument',
   INVALID_CREDENTIAL = 'invalid-credential',
   TOKEN_EXPIRED = 'token-expired',
-  INVALID_TOKEN = 'invalid-token',
-  NO_MATCHING_KID = 'no-matching-kid-error',
-  INTERNAL_ERROR = 'internal-error',
+  INVALID_SIGNATURE = 'invalid-token',
+  KEY_FETCH_ERROR = 'no-matching-kid-error',
 }
-
-const NO_MATCHING_KID_ERROR_MESSAGE = 'no-matching-kid-error';

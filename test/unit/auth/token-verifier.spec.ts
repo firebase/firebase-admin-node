@@ -34,7 +34,6 @@ import * as verifier from '../../../src/auth/token-verifier';
 import { ServiceAccountCredential } from '../../../src/credential/credential-internal';
 import { AuthClientErrorCode } from '../../../src/utils/error';
 import { FirebaseApp } from '../../../src/firebase-app';
-import { Algorithm } from 'jsonwebtoken';
 
 chai.should();
 chai.use(sinonChai);
@@ -106,13 +105,10 @@ function mockFailedFetchPublicKeys(): nock.Scope {
 }
 
 function createTokenVerifier(
-  app: FirebaseApp,
-  options: { algorithm?: Algorithm } = {}
+  app: FirebaseApp
 ): verifier.FirebaseTokenVerifier {
-  const algorithm = options.algorithm || 'RS256';
   return new verifier.FirebaseTokenVerifier(
     'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com',
-    algorithm,
     'https://securetoken.google.com/',
     verifier.ID_TOKEN_INFO,
     app
@@ -152,7 +148,6 @@ describe('FirebaseTokenVerifier', () => {
       expect(() => {
         tokenVerifier = new verifier.FirebaseTokenVerifier(
           'https://www.example.com/publicKeys',
-          'RS256',
           'https://www.example.com/issuer/',
           {
             url: 'https://docs.example.com/verify-tokens',
@@ -172,26 +167,11 @@ describe('FirebaseTokenVerifier', () => {
         expect(() => {
           new verifier.FirebaseTokenVerifier(
             invalidCertUrl as any,
-            'RS256',
             'https://www.example.com/issuer/',
             verifier.ID_TOKEN_INFO,
             app,
           );
         }).to.throw('The provided public client certificate URL is an invalid URL.');
-      });
-    });
-
-    const invalidAlgorithms = [null, NaN, 0, 1, true, false, [], {}, { a: 1 }, _.noop, ''];
-    invalidAlgorithms.forEach((invalidAlgorithm) => {
-      it('should throw given an invalid algorithm: ' + JSON.stringify(invalidAlgorithm), () => {
-        expect(() => {
-          new verifier.FirebaseTokenVerifier(
-            'https://www.example.com/publicKeys',
-            invalidAlgorithm as any,
-            'https://www.example.com/issuer/',
-            verifier.ID_TOKEN_INFO,
-            app);
-        }).to.throw('The provided JWT algorithm is an empty string.');
       });
     });
 
@@ -201,7 +181,6 @@ describe('FirebaseTokenVerifier', () => {
         expect(() => {
           new verifier.FirebaseTokenVerifier(
             'https://www.example.com/publicKeys',
-            'RS256',
             invalidIssuer as any,
             verifier.ID_TOKEN_INFO,
             app,
@@ -216,7 +195,6 @@ describe('FirebaseTokenVerifier', () => {
         expect(() => {
           new verifier.FirebaseTokenVerifier(
             'https://www.example.com/publicKeys',
-            'RS256',
             'https://www.example.com/issuer/',
             {
               url: 'https://docs.example.com/verify-tokens',
@@ -237,7 +215,6 @@ describe('FirebaseTokenVerifier', () => {
         expect(() => {
           new verifier.FirebaseTokenVerifier(
             'https://www.example.com/publicKeys',
-            'RS256',
             'https://www.example.com/issuer/',
             {
               url: 'https://docs.example.com/verify-tokens',
@@ -258,7 +235,6 @@ describe('FirebaseTokenVerifier', () => {
         expect(() => {
           new verifier.FirebaseTokenVerifier(
             'https://www.example.com/publicKeys',
-            'RS256',
             'https://www.example.com/issuer/',
             {
               url: 'https://docs.example.com/verify-tokens',
@@ -279,7 +255,6 @@ describe('FirebaseTokenVerifier', () => {
         expect(() => {
           new verifier.FirebaseTokenVerifier(
             'https://www.example.com/publicKeys',
-            'RS256',
             'https://www.example.com/issuer/',
             {
               url: 'https://docs.example.com/verify-tokens',
@@ -331,7 +306,6 @@ describe('FirebaseTokenVerifier', () => {
     it('should throw if the token verifier was initialized with no "project_id"', () => {
       const tokenVerifierWithNoProjectId = new verifier.FirebaseTokenVerifier(
         'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com',
-        'RS256',
         'https://securetoken.google.com/',
         verifier.ID_TOKEN_INFO,
         mocks.mockCredentialApp(),
@@ -438,7 +412,6 @@ describe('FirebaseTokenVerifier', () => {
     it('should be rejected given an expired Firebase session cookie', () => {
       const tokenVerifierSessionCookie = new verifier.FirebaseTokenVerifier(
         'https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys',
-        'RS256',
         'https://session.firebase.google.com/',
         verifier.SESSION_COOKIE_INFO,
         app,
@@ -483,7 +456,6 @@ describe('FirebaseTokenVerifier', () => {
     it('should be rejected given a custom token with error using article "a" before JWT short name', () => {
       const tokenVerifierSessionCookie = new verifier.FirebaseTokenVerifier(
         'https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys',
-        'RS256',
         'https://session.firebase.google.com/',
         verifier.SESSION_COOKIE_INFO,
         app,
@@ -509,7 +481,6 @@ describe('FirebaseTokenVerifier', () => {
     it('should be rejected given a legacy custom token with error using article "a" before JWT short name', () => {
       const tokenVerifierSessionCookie = new verifier.FirebaseTokenVerifier(
         'https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys',
-        'RS256',
         'https://session.firebase.google.com/',
         verifier.SESSION_COOKIE_INFO,
         app,
@@ -567,16 +538,6 @@ describe('FirebaseTokenVerifier', () => {
       });
     });
 
-    it('should not decode a signed token when the algorithm is set to none (emulator)', async () => {
-      clock = sinon.useFakeTimers(1000);
-
-      const emulatorVerifier = createTokenVerifier(app, { algorithm: 'none' });
-      const mockIdToken = mocks.generateIdToken();
-
-      await emulatorVerifier.verifyJWT(mockIdToken)
-        .should.eventually.be.rejectedWith('Firebase ID token has incorrect algorithm. Expected "none"');
-    });
-
     it('should not decode an unsigned token when the algorithm is not overridden (emulator)', async () => {
       clock = sinon.useFakeTimers(1000);
 
@@ -602,7 +563,6 @@ describe('FirebaseTokenVerifier', () => {
       });
       tokenVerifier = new verifier.FirebaseTokenVerifier(
         'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com',
-        'RS256',
         'https://securetoken.google.com/',
         verifier.ID_TOKEN_INFO,
         appWithAgent,
@@ -625,7 +585,6 @@ describe('FirebaseTokenVerifier', () => {
 
       const testTokenVerifier = new verifier.FirebaseTokenVerifier(
         'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com',
-        'RS256',
         'https://securetoken.google.com/',
         verifier.ID_TOKEN_INFO,
         app,
