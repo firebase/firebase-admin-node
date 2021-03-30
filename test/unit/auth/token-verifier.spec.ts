@@ -16,15 +16,14 @@
 
 'use strict';
 
-// Use untyped import syntax for Node built-ins
-import https = require('https');
-
 import * as _ from 'lodash';
 import * as chai from 'chai';
 import * as nock from 'nock';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as chaiAsPromised from 'chai-as-promised';
+import { Agent } from 'http';
+
 import LegacyFirebaseTokenGenerator = require('firebase-token-generator');
 
 import * as mocks from '../../resources/mocks';
@@ -61,14 +60,12 @@ describe('FirebaseTokenVerifier', () => {
   let tokenVerifier: verifier.FirebaseTokenVerifier;
   let tokenGenerator: FirebaseTokenGenerator;
   let clock: sinon.SinonFakeTimers | undefined;
-  let httpsSpy: sinon.SinonSpy;
   beforeEach(() => {
     // Needed to generate custom token for testing.
     app = mocks.app();
     const cert = new ServiceAccountCredential(mocks.certificateObject);
     tokenGenerator = new FirebaseTokenGenerator(new ServiceAccountSigner(cert));
     tokenVerifier = createTokenVerifier(app);
-    httpsSpy = sinon.spy(https, 'request');
   });
 
   afterEach(() => {
@@ -76,7 +73,6 @@ describe('FirebaseTokenVerifier', () => {
       clock.restore();
       clock = undefined;
     }
-    httpsSpy.restore();
   });
 
   after(() => {
@@ -379,6 +375,17 @@ describe('FirebaseTokenVerifier', () => {
         .should.eventually.be.rejectedWith('Firebase ID token has invalid signature');
     });
 
+    it('should be rejected when the verifier throws key fetch error.', () => {
+      const verifierStub = sinon.stub(PublicKeySignatureVerifier.prototype, 'verify')
+        .rejects(new JwtError(JwtErrorCode.KEY_FETCH_ERROR, 'Error fetching public keys.'));
+      stubs.push(verifierStub);
+
+      const mockIdToken = mocks.generateIdToken();
+
+      return tokenVerifier.verifyJWT(mockIdToken)
+        .should.eventually.be.rejectedWith('Error fetching public keys.');
+    });
+
     it('should be rejected given a custom token with error using article "an" before JWT short name', () => {
       return tokenGenerator.createCustomToken(mocks.uid)
         .then((customToken) => {
@@ -427,6 +434,22 @@ describe('FirebaseTokenVerifier', () => {
       return tokenVerifierSessionCookie.verifyJWT(legacyCustomToken)
         .should.eventually.be.rejectedWith(
           'verifySessionCookie() expects a session cookie, but was given a legacy custom token');
+    });
+
+    it('AppOptions.httpAgent should be passed to the verifier', () => {
+      const mockAppWithAgent = mocks.appWithOptions({
+        httpAgent: new Agent()
+      });
+      const agentForApp = mockAppWithAgent.options.httpAgent;
+      const verifierSpy = sinon.spy(PublicKeySignatureVerifier, 'withCertificateUrl');
+
+      expect(verifierSpy.args).to.be.empty;
+
+      createTokenVerifier(mockAppWithAgent);
+
+      expect(verifierSpy.args[0][1]).to.equal(agentForApp);
+      
+      verifierSpy.restore();
     });
 
     it('should be fulfilled with decoded claims given a valid Firebase JWT token', () => {
