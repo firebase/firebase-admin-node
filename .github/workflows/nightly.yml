@@ -77,7 +77,9 @@ jobs:
         to: ${{ secrets.ADMIN_GITHUB_NOTIFICATION_EMAIL }}
         subject: '[${{github.repository}}] Nightly build failed!'
         html: >
-          <b>Nightly build failed on:</b> github.com/${{github.repository}}
+          <b>Nightly workflow failed on: ${{github.repository}}</b>
+          <br /><br /> Checkout the 
+          <a href="github.com/${{github.repository}}/actions/workflows/nightly.yml">failed workflow</a>.
       continue-on-error: true
 
     - name: Send email on cancelled
@@ -90,5 +92,7 @@ jobs:
         to: ${{ secrets.ADMIN_GITHUB_NOTIFICATION_EMAIL }}
         subject: '[${{github.repository}}] Nightly build got cancelled!'
         html: >
-          <b>Nightly build got cancelled on:</b> github.com/${{github.repository}}
+          <b>Nightly workflow cancelled on: ${{github.repository}}</b>
+          <br /><br /> Checkout the 
+          <a href="github.com/${{github.repository}}/actions/workflows/nightly.yml">cancelled workflow</a>.
       continue-on-error: true
