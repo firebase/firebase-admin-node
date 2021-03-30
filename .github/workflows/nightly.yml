@@ -66,3 +66,29 @@ jobs:
       with:
         name: dist
         path: dist
+
+    - name: Send email on failure
+      if: failure()
+      uses: ./.github/actions/send-email
+      with:
+        api-key: ${{ secrets.OSS_BOT_MAILGUN_KEY }}
+        domain: ${{ secrets.OSS_BOT_MAILGUN_DOMAIN }}
+        from: 'GitHub <admin-github@${{ secrets.OSS_BOT_MAILGUN_DOMAIN }}>'
+        to: ${{ secrets.ADMIN_GITHUB_NOTIFICATION_EMAIL }}
+        subject: '[${{github.repository}}] Nightly build failed!'
+        html: >
+          <b>Nightly build failed on:</b> github.com/${{github.repository}}
+      continue-on-error: true
+
+    - name: Send email on cancelled
+      if: cancelled()
+      uses: ./.github/actions/send-email
+      with:
+        api-key: ${{ secrets.OSS_BOT_MAILGUN_KEY }}
+        domain: ${{ secrets.OSS_BOT_MAILGUN_DOMAIN }}
+        from: 'GitHub <admin-github@${{ secrets.OSS_BOT_MAILGUN_DOMAIN }}>'
+        to: ${{ secrets.ADMIN_GITHUB_NOTIFICATION_EMAIL }}
+        subject: '[${{github.repository}}] Nightly build got cancelled!'
+        html: >
+          <b>Nightly build got cancelled on:</b> github.com/${{github.repository}}
+      continue-on-error: true
