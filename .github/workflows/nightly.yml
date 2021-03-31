@@ -66,3 +66,33 @@ jobs:
       with:
         name: dist
         path: dist
+
+    - name: Send email on failure
+      if: failure()
+      uses: ./.github/actions/send-email
+      with:
+        api-key: ${{ secrets.OSS_BOT_MAILGUN_KEY }}
+        domain: ${{ secrets.OSS_BOT_MAILGUN_DOMAIN }}
+        from: 'GitHub <admin-github@${{ secrets.OSS_BOT_MAILGUN_DOMAIN }}>'
+        to: ${{ secrets.FIREBASE_ADMIN_GITHUB_EMAIL }}
+        subject: '[${{github.repository}}] Nightly build failed!'
+        html: >
+          <b>Nightly workflow failed on: ${{github.repository}}</b>
+          <br /><br />Navigate to the 
+          <a href="https://github.com/firebase/firebase-admin-node/actions">failed workflow</a>.
+      continue-on-error: true
+
+    - name: Send email on cancelled
+      if: cancelled()
+      uses: ./.github/actions/send-email
+      with:
+        api-key: ${{ secrets.OSS_BOT_MAILGUN_KEY }}
+        domain: ${{ secrets.OSS_BOT_MAILGUN_DOMAIN }}
+        from: 'GitHub <admin-github@${{ secrets.OSS_BOT_MAILGUN_DOMAIN }}>'
+        to: ${{ secrets.FIREBASE_ADMIN_GITHUB_EMAIL }}
+        subject: '[${{github.repository}}] Nightly build got cancelled!'
+        html: >
+          <b>Nightly workflow cancelled on: ${{github.repository}}</b>
+          <br /><br />Navigate to the 
+          <a href="https://github.com/firebase/firebase-admin-node/actions">cancelled workflow</a>.
+      continue-on-error: true
