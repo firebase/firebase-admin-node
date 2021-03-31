@@ -17,7 +17,9 @@
 const core = require('@actions/core');
 const formData = require('form-data');
 const Mailgun = require('mailgun.js');
+
 const mailgun = new Mailgun(formData);
+const optionalFields = ['cc', 'text', 'html'];
 
 function loadConfig() {
   return {
@@ -34,14 +36,14 @@ function loadConfig() {
 
 function validate(config) {
   for (param in config) {
-    if (['cc', 'text', 'html'].includes(param)) {
+    if (optionalFields.includes(param)) {
       continue;
     }
-    validateParameter(config[param], `'${param}'`);
+    validateRequiredParameter(config[param], `'${param}'`);
   }
 }
 
-function validateParameter(value, name) {
+function validateRequiredParameter(value, name) {
   if (!isNonEmptyString(value)) {
     throw new Error(`${name} must be a non-empty string.`);
   }
