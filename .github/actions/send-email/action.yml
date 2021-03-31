@@ -23,7 +23,7 @@ inputs:
     required: true
   from:
     description: Senders name and email address.
-    required: false
+    required: true
   to:
     description: Recipient's email address. You can use commas to separate multiple recipients.
     required: true

@@ -19,37 +19,42 @@ const formData = require('form-data');
 const Mailgun = require('mailgun.js');
 const mailgun = new Mailgun(formData);
 
-const apiKey = core.getInput('api-key');
-const domain = core.getInput('domain');
-const to = core.getInput('to');
+function loadConfig() {
+  return {
+    apiKey: core.getInput('api-key'),
+    domain: core.getInput('domain'),
+    to: core.getInput('to'),
+    from: core.getInput('from'),
+    cc: core.getInput('cc'),
+    subject: core.getInput('subject'),
+    text: core.getInput('text'),
+    html: core.getInput('html'),
+  }
+}
 
-function sendEmail() {
-  validate();
+function validate(config) {
+  for (param in config) {
+    if (['cc', 'text', 'html'].includes(param)) {
+      continue;
+    }
+    validateParameter(config[param], `'${param}'`);
+  }
+}
 
+function validateParameter(value, name) {
+  if (!isNonEmptyString(value)) {
+    throw new Error(`${name} must be a non-empty string.`);
+  }
+}
+
+function sendEmail(config) {
   const mg = mailgun.client({
     username: 'api',
-    key: apiKey,
+    key: config.apiKey,
   });
 
-  let from = core.getInput('from');
-  const cc = core.getInput('cc');
-  const subject = core.getInput('subject');
-  const text = core.getInput('text');
-  const html = core.getInput('html');
-
-  if (!isNonEmptyString(from)) {
-    from = `user@${domain}`;
-  }
-
   return mg.messages
-    .create(domain, {
-      from,
-      to,
-      cc,
-      subject,
-      text,
-      html,
-    })
+    .create(domain, config)
     .then((resp) => {
       core.setOutput('response', resp.message);
       return;
@@ -59,22 +64,10 @@ function sendEmail() {
     });
 }
 
-function validate() {
-  if (!isNonEmptyString(apiKey)) {
-    throw new Error('Mailgun API key must be a non-empty string.');
-  }
-  if (!isNonEmptyString(domain)) {
-    throw new Error('Mailgun domain name must be a non-empty string.');
-  }
-  if (!isNonEmptyString(to)) {
-    throw new Error(
-      "Recipient's email addresses must be a non-empty string."
-    );
-  }
-}
-
 function isNonEmptyString(value) {
   return typeof value === 'string' && value !== '';
 }
 
-sendEmail();
+const config = loadConfig();
+validate(config);
+sendEmail(config);

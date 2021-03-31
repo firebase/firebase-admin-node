@@ -1,6 +1,6 @@
 # Send Email GitHub Action
 
-This is a minimalistic GitHub Action for sending emails via Mailgun API.
+This is a minimalistic GitHub Action for sending emails using the Mailgun API.
 Specify the Mailgun API key along with the Mailgun domain and message to
 be sent.
 
@@ -16,7 +16,7 @@ be sent.
 
 ### `from`
 
-Sender's email address. Ex: 'Hello User <hello@example.com>' (defaults to 'user@{domain}`).
+**Required** Sender's email address. Ex: 'Hello User <hello@example.com>' (defaults to 'user@{domain}`).
 
 ### `to`
 

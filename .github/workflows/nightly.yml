@@ -78,8 +78,8 @@ jobs:
         subject: '[${{github.repository}}] Nightly build failed!'
         html: >
           <b>Nightly workflow failed on: ${{github.repository}}</b>
-          <br /><br />Checkout the 
-          <a href="github.com/${{github.repository}}/actions/workflows/nightly.yml">failed workflow</a>.
+          <br /><br />Navigate to the 
+          <a href="https://github.com/firebase/firebase-admin-node/actions">failed workflow</a>.
       continue-on-error: true
 
     - name: Send email on cancelled
@@ -93,6 +93,6 @@ jobs:
         subject: '[${{github.repository}}] Nightly build got cancelled!'
         html: >
           <b>Nightly workflow cancelled on: ${{github.repository}}</b>
-          <br /><br />Checkout the 
-          <a href="github.com/${{github.repository}}/actions/workflows/nightly.yml">cancelled workflow</a>.
+          <br /><br />Navigate to the 
+          <a href="https://github.com/firebase/firebase-admin-node/actions">cancelled workflow</a>.
       continue-on-error: true
