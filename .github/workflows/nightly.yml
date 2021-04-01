@@ -16,8 +16,11 @@ name: Nightly Builds
 
 on:
   # Runs every day at 06:00 AM (PT) and 08:00 PM (PT) / 04:00 AM (UTC) and 02:00 PM (UTC)
+  # or on 'firebase_build' repository dispatch event.
   schedule:
     - cron: "0 4,14 * * *"
+  repository_dispatch:
+    types: [firebase_build]
 
 jobs:
   nightly:
@@ -75,11 +78,11 @@ jobs:
         domain: ${{ secrets.OSS_BOT_MAILGUN_DOMAIN }}
         from: 'GitHub <admin-github@${{ secrets.OSS_BOT_MAILGUN_DOMAIN }}>'
         to: ${{ secrets.FIREBASE_ADMIN_GITHUB_EMAIL }}
-        subject: '[${{github.repository}}] Nightly build failed!'
+        subject: 'Nightly build ${{github.run_id}} of ${{github.repository}} failed!'
         html: >
-          <b>Nightly workflow failed on: ${{github.repository}}</b>
+          <b>Nightly workflow ${{github.run_id}} failed on: ${{github.repository}}</b>
           <br /><br />Navigate to the 
-          <a href="https://github.com/firebase/firebase-admin-node/actions">failed workflow</a>.
+          <a href="https://github.com/firebase/firebase-admin-node/actions/runs/${{github.run_id}}">failed workflow</a>.
       continue-on-error: true
 
     - name: Send email on cancelled
@@ -90,9 +93,9 @@ jobs:
         domain: ${{ secrets.OSS_BOT_MAILGUN_DOMAIN }}
         from: 'GitHub <admin-github@${{ secrets.OSS_BOT_MAILGUN_DOMAIN }}>'
         to: ${{ secrets.FIREBASE_ADMIN_GITHUB_EMAIL }}
-        subject: '[${{github.repository}}] Nightly build got cancelled!'
+        subject: 'Nightly build ${{github.run_id}} of ${{github.repository}} cancelled!'
         html: >
-          <b>Nightly workflow cancelled on: ${{github.repository}}</b>
+          <b>Nightly workflow ${{github.run_id}} cancelled on: ${{github.repository}}</b>
           <br /><br />Navigate to the 
-          <a href="https://github.com/firebase/firebase-admin-node/actions">cancelled workflow</a>.
+          <a href="https://github.com/firebase/firebase-admin-node/actions/runs/${{github.run_id}}">cancelled workflow</a>.
       continue-on-error: true
