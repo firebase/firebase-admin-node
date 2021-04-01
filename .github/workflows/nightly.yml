@@ -16,11 +16,11 @@ name: Nightly Builds
 
 on:
   # Runs every day at 06:00 AM (PT) and 08:00 PM (PT) / 04:00 AM (UTC) and 02:00 PM (UTC)
-  # or on 'firebase_build' repository dispatch event.
+  # or on 'firebase_nightly_build' repository dispatch event.
   schedule:
     - cron: "0 4,14 * * *"
   repository_dispatch:
-    types: [firebase_build]
+    types: [firebase_nightly_build]
 
 jobs:
   nightly:
