@@ -276,7 +276,14 @@ function sendEmail(config) {
   });
 
   return mg.messages
-    .create(domain, config)
+    .create(config.domain, {
+      from: config.from,
+      to: config.to,
+      cc: config.cc,
+      subject: config.subject,
+      text: config.text,
+      html: config.html,
+    })
     .then((resp) => {
       core.setOutput('response', resp.message);
       return;
