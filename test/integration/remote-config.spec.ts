@@ -88,12 +88,6 @@ describe('admin.remoteConfig', () => {
     }).to.throw('Cannot set property etag of #<RemoteConfigTemplateImpl> which has only a getter');
   });
 
-  // A failing integration test to trigger the send email action.
-  // Remove this once the testing is complete.
-  it('A failing integration test to trigger nightly email notifications', () => {
-    expect('a').to.be.equal('b');
-  });
-
   describe('validateTemplate', () => {
     it('should succeed with a vaild template', () => {
       // set parameters, groups, and conditions
