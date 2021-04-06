@@ -1292,21 +1292,20 @@ export namespace auth {
   /**
    * The interface representing OIDC provider's response object for OAuth
    * authorization flow.
-   * We need either one of them or both true. There are three different cases:
-   * If idToken true, code false, then we are doing hybrid flow.
-   * If idToken false, code true, then we are doing code flow.
-   * If idToken true, code true, then we are doing idToken flow.
+   * We need either of them to be true, there are two cases:
+   * If set code to true, then we are doing code flow.
+   * If set idToken to true, then we are doing idToken flow.
    */
   export interface OAuthResponseType {
     /**
      * Whether ID token is returned from IdP's authorization endpoint.
      */ 
-    idToken: boolean;
+    idToken?: boolean;
 
     /**
      * Whether authorization code is returned from IdP's authorization endpoint.
      */
-    code: boolean;
+    code?: boolean;
   }
 
   /**

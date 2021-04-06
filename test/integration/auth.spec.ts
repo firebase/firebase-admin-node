@@ -1648,7 +1648,6 @@ describe('admin.auth', () => {
       clientId: 'CLIENT_ID1',
       responseType: {
         idToken: true,
-        code: false,
       },
     };
     const authProviderConfig2 = {
@@ -1659,7 +1658,6 @@ describe('admin.auth', () => {
       clientId: 'CLIENT_ID2',
       clientSecret: 'CLIENT_SECRET',
       responseType: {
-        idToken: false,
         code: true,
       },
     };
@@ -1728,8 +1726,8 @@ describe('admin.auth', () => {
         });
     });
 
-    it('updateProviderConfig() successfully overwrites an OIDC config', () => {
-      const modifiedConfigOptions = {
+    it('updateProviderConfig() successfully partially modifies an OIDC config', () => {
+      const deltaChanges = {
         displayName: 'OIDC_DISPLAY_NAME3',
         enabled: false,
         issuer: 'https://oidc.com/issuer3',
@@ -1740,34 +1738,15 @@ describe('admin.auth', () => {
           code: true,
         },
       };
-      return admin.auth().updateProviderConfig(authProviderConfig1.providerId, modifiedConfigOptions)
-        .then((config) => {
-          const modifiedConfig = deepExtend(
-            { providerId: authProviderConfig1.providerId }, modifiedConfigOptions);
-          assertDeepEqualUnordered(modifiedConfig, config);
-        });
-    });
-
-    it('updateProviderConfig() successfully partially modifies an OIDC config', () => {
-      const deltaChanges = {
-        displayName: 'OIDC_DISPLAY_NAME4',
-        issuer: 'https://oidc.com/issuer4',
-        clientSecret: '',
-        responseType: {
-          idToken: true,
-          code: false,
-        },
-      };
       // Only above fields should be modified.
       const modifiedConfigOptions = {
-        displayName: 'OIDC_DISPLAY_NAME4',
+        displayName: 'OIDC_DISPLAY_NAME3',
         enabled: false,
-        issuer: 'https://oidc.com/issuer4',
+        issuer: 'https://oidc.com/issuer3',
         clientId: 'CLIENT_ID3',
-        clientSecret: '',
+        clientSecret: 'CLIENT_SECRET',
         responseType: {
-          idToken: true,
-          code: false,
+          code: true,
         },
       };
       return admin.auth().updateProviderConfig(authProviderConfig1.providerId, deltaChanges)

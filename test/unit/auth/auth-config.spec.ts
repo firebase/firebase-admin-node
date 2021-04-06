@@ -741,7 +741,6 @@ describe('OIDCConfig', () => {
     enabled: true,
     clientSecret: 'CLIENT_SECRET',
     responseType: {
-      idToken: false,
       code: true,
     },
   };
@@ -790,7 +789,6 @@ describe('OIDCConfig', () => {
 
     it('should set readonly property expected responseType', () => {
       const expectedResponseType = {
-        idToken: false,
         code: true,
       };
       expect(config.responseType).to.deep.equal(expectedResponseType);
@@ -801,7 +799,6 @@ describe('OIDCConfig', () => {
       delete serverResponse.responseType;
       const expectedResponseType = {
         idToken: true,
-        code: false,
       };
       const testConfig = new OIDCConfig(serverResponse);
       expect(testConfig.responseType).to.deep.equal(expectedResponseType);
@@ -871,7 +868,6 @@ describe('OIDCConfig', () => {
         clientId: 'CLIENT_ID',
         clientSecret: 'CLIENT_SECRET',
         responseType: {
-          idToken: false,
           code: true,
         },
       });
@@ -887,12 +883,22 @@ describe('OIDCConfig', () => {
       const updateRequest: OIDCUpdateAuthProviderRequest = {
         clientId: 'CLIENT_ID',
         displayName: 'OIDC_PROVIDER_DISPLAY_NAME',
+        clientSecret: 'CLIENT_SECRET',
+        responseType: {
+          idToken: false,
+          code: true,
+        }
       };
       const updateServerRequest: OIDCConfigServerRequest = {
         clientId: 'CLIENT_ID',
         displayName: 'OIDC_PROVIDER_DISPLAY_NAME',
         issuer: undefined,
         enabled: undefined,
+        clientSecret: 'CLIENT_SECRET',
+        responseType: {
+          idToken: false,
+          code: true,
+        }
       };
       expect(OIDCConfig.buildServerRequest(updateRequest, true)).to.deep.equal(updateServerRequest);
     });
