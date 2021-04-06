@@ -195,7 +195,7 @@ export abstract class MultiFactorInfo {
 // @public
 export class MultiFactorSettings {
     enrolledFactors: MultiFactorInfo[];
-    toJSON(): any;
+    toJSON(): object;
 }
 
 // @public

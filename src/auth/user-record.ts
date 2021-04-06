@@ -78,6 +78,7 @@ export interface GetAccountInfoUserResponse {
   mfaInfo?: MultiFactorInfoResponse[];
   createdAt?: string;
   lastLoginAt?: string;
+  lastRefreshAt?: string;
   [key: string]: any;
 }
 
@@ -277,7 +278,7 @@ export class MultiFactorSettings {
   /**
    * @return A JSON-serializable representation of this multi-factor object.
    */
-  public toJSON(): any {
+  public toJSON(): object {
     return {
       enrolledFactors: this.enrolledFactors.map((info) => info.toJSON()),
     };
