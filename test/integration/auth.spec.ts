@@ -1338,12 +1338,21 @@ describe('admin.auth', () => {
         enabled: true,
         issuer: 'https://oidc.com/issuer1',
         clientId: 'CLIENT_ID1',
+        responseType: {
+          idToken: true,
+          code: false,
+        },
       };
       const modifiedConfigOptions = {
         displayName: 'OIDC_DISPLAY_NAME3',
         enabled: false,
         issuer: 'https://oidc.com/issuer3',
         clientId: 'CLIENT_ID3',
+        clientSecret: 'CLIENT_SECRET',
+        responseType: {
+          idToken: false,
+          code: true,
+        },
       };
 
       before(function() {
@@ -1637,6 +1646,10 @@ describe('admin.auth', () => {
       enabled: true,
       issuer: 'https://oidc.com/issuer1',
       clientId: 'CLIENT_ID1',
+      responseType: {
+        idToken: true,
+        code: false,
+      },
     };
     const authProviderConfig2 = {
       providerId: randomOidcProviderId(),
@@ -1644,6 +1657,11 @@ describe('admin.auth', () => {
       enabled: true,
       issuer: 'https://oidc.com/issuer2',
       clientId: 'CLIENT_ID2',
+      clientSecret: 'CLIENT_SECRET',
+      responseType: {
+        idToken: false,
+        code: true,
+      },
     };
 
     const removeTempConfigs = (): Promise<any> => {
@@ -1716,6 +1734,11 @@ describe('admin.auth', () => {
         enabled: false,
         issuer: 'https://oidc.com/issuer3',
         clientId: 'CLIENT_ID3',
+        clientSecret: 'CLIENT_SECRET',
+        responseType: {
+          idToken: false,
+          code: true,
+        },
       };
       return admin.auth().updateProviderConfig(authProviderConfig1.providerId, modifiedConfigOptions)
         .then((config) => {
@@ -1729,6 +1752,11 @@ describe('admin.auth', () => {
       const deltaChanges = {
         displayName: 'OIDC_DISPLAY_NAME4',
         issuer: 'https://oidc.com/issuer4',
+        clientSecret: '',
+        responseType: {
+          idToken: true,
+          code: false,
+        },
       };
       // Only above fields should be modified.
       const modifiedConfigOptions = {
@@ -1736,6 +1764,11 @@ describe('admin.auth', () => {
         enabled: false,
         issuer: 'https://oidc.com/issuer4',
         clientId: 'CLIENT_ID3',
+        clientSecret: '',
+        responseType: {
+          idToken: true,
+          code: false,
+        },
       };
       return admin.auth().updateProviderConfig(authProviderConfig1.providerId, deltaChanges)
         .then((config) => {
