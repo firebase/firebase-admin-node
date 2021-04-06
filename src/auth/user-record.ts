@@ -304,7 +304,7 @@ export class UserMetadata {
    * formatted as a UTC Date string (eg 'Sat, 03 Feb 2001 04:05:06 GMT').
    * Returns null if the user was never active.
    */
-  public readonly lastRefreshTime: string | null;
+  public readonly lastRefreshTime?: string | null;
 
   /**
    * @param response The server side response returned from the getAccountInfo
