@@ -816,7 +816,9 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
                 `"OIDCAuthProviderConfig.responseType.${responseTypeKey}" must be a boolean.`,
               );
             }
-            idTokenType = options.responseType && options.responseType.idToken;
+            if (options.responseType && options.responseType.idToken) {
+              idTokenType = options.responseType.idToken;
+            }
           } else if (responseTypeKey == 'code') {
             if (!validator.isBoolean(options.responseType.code)) {
               throw new FirebaseAuthError(
@@ -824,7 +826,9 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
                 `"OIDCAuthProviderConfig.responseType.${responseTypeKey}" must be a boolean.`,
               );
             }
-            codeType = options.responseType && options.responseType.code;
+            if (options.responseType && options.responseType.code) {
+              codeType = options.responseType.code;
+            }
           }
         }
       }
@@ -889,7 +893,6 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
     } else {
       const responseType = {
         idToken: true,
-        code: false,
       }
       this.responseType = responseType;
     }

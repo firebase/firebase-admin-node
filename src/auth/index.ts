@@ -1301,12 +1301,12 @@ export namespace auth {
     /**
      * Whether ID token is returned from IdP's authorization endpoint.
      */ 
-    idToken: boolean;
+    idToken?: boolean;
 
     /**
      * Whether authorization code is returned from IdP's authorization endpoint.
      */
-    code: boolean;
+    code?: boolean;
   }
 
   /**
