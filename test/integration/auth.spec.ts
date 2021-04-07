@@ -441,8 +441,12 @@ describe('admin.auth', () => {
       .then((listUsersResult) => {
         // Confirm expected number of users.
         expect(listUsersResult.users.length).to.equal(2);
-        // Confirm next page token present.
-        expect(typeof listUsersResult.pageToken).to.equal('string');
+        // TODO(yuchenshi): Investigate on why this is flaky in emulator.
+        if (!authEmulatorHost) {
+          // Confirm next page token present.
+          expect(typeof listUsersResult.pageToken).to.equal('string');
+        }
+
         // Confirm each user's uid and the hashed passwords.
         expect(listUsersResult.users[0].uid).to.equal(uids[1]);
 
@@ -683,7 +687,10 @@ describe('admin.auth', () => {
         });
     });
 
-    it('can link/unlink with a federated provider', async () => {
+    it('can link/unlink with a federated provider', async function () {
+      if (authEmulatorHost) {
+        return this.skip(); // Not yet supported in Auth Emulator.
+      }
       const googleFederatedUid = 'google_uid_' + generateRandomString(10);
       let userRecord = await admin.auth().updateUser(updateUser.uid, {
         providerToLink: {
@@ -707,7 +714,10 @@ describe('admin.auth', () => {
       expect(providerIds).to.not.deep.include('google.com');
     });
 
-    it('can unlink multiple providers at once, incl a non-federated provider', async () => {
+    it('can unlink multiple providers at once, incl a non-federated provider', async function () {
+      if (authEmulatorHost) {
+        return this.skip(); // Not yet supported in Auth Emulator.
+      }
       await deletePhoneNumberUser('+15555550001');
 
       const googleFederatedUid = 'google_uid_' + generateRandomString(10);
