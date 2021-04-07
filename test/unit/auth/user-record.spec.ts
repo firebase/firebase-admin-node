@@ -685,6 +685,15 @@ describe('UserMetadata', () => {
     it('should return expected lastRefreshTime', () => {
       expect(actualMetadata.lastRefreshTime).to.equal(new Date(expectedLastRefreshAt).toUTCString())
     });
+
+    it('should return null when lastRefreshTime is not available', () => {
+      const metadata: UserMetadata = new UserMetadata({
+        localId: 'uid123',
+        lastLoginAt: expectedLastLoginAt.toString(),
+        createdAt: expectedCreatedAt.toString(),
+      });
+      expect(metadata.lastRefreshTime).to.be.null;
+    });
   });
 
   describe('toJSON', () => {
