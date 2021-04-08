@@ -78,6 +78,7 @@ export interface GetAccountInfoUserResponse {
   mfaInfo?: MultiFactorInfoResponse[];
   createdAt?: string;
   lastLoginAt?: string;
+  lastRefreshAt?: string;
   [key: string]: any;
 }
 
@@ -277,7 +278,7 @@ export class MultiFactorSettings {
   /**
    * @return A JSON-serializable representation of this multi-factor object.
    */
-  public toJSON(): any {
+  public toJSON(): object {
     return {
       enrolledFactors: this.enrolledFactors.map((info) => info.toJSON()),
     };
@@ -304,7 +305,7 @@ export class UserMetadata {
    * formatted as a UTC Date string (eg 'Sat, 03 Feb 2001 04:05:06 GMT').
    * Returns null if the user was never active.
    */
-  public readonly lastRefreshTime: string | null;
+  public readonly lastRefreshTime?: string | null;
 
   /**
    * @param response The server side response returned from the getAccountInfo

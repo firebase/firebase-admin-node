@@ -195,7 +195,7 @@ export abstract class MultiFactorInfo {
 // @public
 export class MultiFactorSettings {
     enrolledFactors: MultiFactorInfo[];
-    toJSON(): any;
+    toJSON(): object;
 }
 
 // @public
@@ -394,7 +394,7 @@ export class UserInfo {
 // @public
 export class UserMetadata {
     readonly creationTime: string;
-    readonly lastRefreshTime: string | null;
+    readonly lastRefreshTime?: string | null;
     readonly lastSignInTime: string;
     toJSON(): object;
 }
