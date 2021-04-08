@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}ProjectManagement class{% endblock title %}
-{% block body %}
 The Firebase ProjectManagement service interface.
 
 Do not call this constructor directly. Instead, use \[`admin.projectManagement()`<!-- -->\](projectManagement\#projectManagement).
@@ -212,4 +209,3 @@ shaCertificate(shaHash: string): ShaCertificate;
 
 [ShaCertificate](./firebase-admin.project-management.shacertificate.md#shacertificate_class)
 
-{% endblock body %}

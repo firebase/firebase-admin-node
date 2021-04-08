@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}firebase-admin.remote-config package{% endblock title %}
-{% block body %}
 
 ## Classes
 
@@ -95,4 +92,3 @@ Colors that are associated with conditions for display purposes.
 ```typescript
 export declare type TagColor = 'BLUE' | 'BROWN' | 'CYAN' | 'DEEP_ORANGE' | 'GREEN' | 'INDIGO' | 'LIME' | 'ORANGE' | 'PINK' | 'PURPLE' | 'TEAL';
 ```
-{% endblock body %}

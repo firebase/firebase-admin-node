@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}MultiFactorUpdateSettings interface{% endblock title %}
-{% block body %}
 The multi-factor related user settings for update operations.
 
 <b>Signature:</b>
@@ -24,4 +21,3 @@ The updated list of enrolled second factors. The provided list overwrites the us
 ```typescript
 enrolledFactors: UpdateMultiFactorInfoRequest[] | null;
 ```
-{% endblock body %}

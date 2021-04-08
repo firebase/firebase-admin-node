@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}UpdateRequest interface{% endblock title %}
-{% block body %}
 Interface representing the properties to update on the provided user.
 
 <b>Signature:</b>
@@ -101,4 +98,3 @@ The user's photo URL.
 ```typescript
 photoURL?: string | null;
 ```
-{% endblock body %}

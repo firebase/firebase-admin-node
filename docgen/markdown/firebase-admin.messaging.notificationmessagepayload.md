@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}NotificationMessagePayload interface{% endblock title %}
-{% block body %}
 Interface representing an FCM legacy API notification message payload. Notification messages let developers send up to 4KB of predefined key-value pairs. Accepted keys are outlined below.
 
 See \[Build send requests\](/docs/cloud-messaging/send-message) for code samples and detailed documentation.
@@ -203,4 +200,3 @@ The key to the title string in the app's string resources to use to localize the
 ```typescript
 titleLocKey?: string;
 ```
-{% endblock body %}

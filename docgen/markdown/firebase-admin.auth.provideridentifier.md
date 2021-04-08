@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}ProviderIdentifier interface{% endblock title %}
-{% block body %}
 Used for looking up an account by federated provider.
 
 See `auth.getUsers()`
@@ -33,4 +30,3 @@ providerId: string;
 ```typescript
 providerUid: string;
 ```
-{% endblock body %}

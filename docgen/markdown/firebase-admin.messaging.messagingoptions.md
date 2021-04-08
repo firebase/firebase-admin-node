@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}MessagingOptions interface{% endblock title %}
-{% block body %}
 Interface representing the options that can be provided when sending a message via the FCM legacy APIs.
 
 See \[Build send requests\](/docs/cloud-messaging/send-message) for code samples and detailed documentation.
@@ -118,4 +115,3 @@ How long (in seconds) the message should be kept in FCM storage if the device is
 ```typescript
 timeToLive?: number;
 ```
-{% endblock body %}

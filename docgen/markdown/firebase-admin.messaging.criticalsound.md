@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}CriticalSound interface{% endblock title %}
-{% block body %}
 Represents a critical sound configuration that can be included in the `aps` dictionary of an APNs payload.
 
 <b>Signature:</b>
@@ -46,4 +43,3 @@ The volume for the critical alert's sound. Must be a value between 0.0 (silent) 
 ```typescript
 volume?: number;
 ```
-{% endblock body %}

@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}FcmOptions interface{% endblock title %}
-{% block body %}
 Represents platform-independent options for features provided by the FCM SDKs.
 
 <b>Signature:</b>
@@ -24,4 +21,3 @@ The label associated with the message's analytics data.
 ```typescript
 analyticsLabel?: string;
 ```
-{% endblock body %}

@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}TenantManager class{% endblock title %}
-{% block body %}
 Defines the tenant manager used to help manage tenant related operations. This includes: <ul> <li>The ability to create, update, list, get and delete tenants for the underlying project.</li> <li>Getting a `TenantAwareAuth` instance for running Auth related operations (user management, provider configuration management, token verification, email link generation, etc) in the context of a specified tenant.</li> </ul>
 
 <b>Signature:</b>
@@ -142,4 +139,3 @@ updateTenant(tenantId: string, tenantOptions: UpdateTenantRequest): Promise<Tena
 
 Promise&lt;[Tenant](./firebase-admin.auth.tenant.md#tenant_class)<!-- -->&gt;
 
-{% endblock body %}

@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}GcsTfliteModelOptions interface{% endblock title %}
-{% block body %}
 <b>Signature:</b>
 
 ```typescript
@@ -23,4 +20,3 @@ tfliteModel: {
         gcsTfliteUri: string;
     };
 ```
-{% endblock body %}

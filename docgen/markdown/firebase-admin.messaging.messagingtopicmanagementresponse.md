@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}MessagingTopicManagementResponse interface{% endblock title %}
-{% block body %}
 Interface representing the server response from the  and  methods.
 
 See \[Manage topics from the server\](/docs/cloud-messaging/manage-topics) for code samples and detailed documentation.
@@ -48,4 +45,3 @@ The number of registration tokens that were successfully subscribed to the topic
 ```typescript
 successCount: number;
 ```
-{% endblock body %}

@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}AndroidApp class{% endblock title %}
-{% block body %}
 A reference to a Firebase Android app.
 
 Do not call this constructor directly. Instead, use \[`projectManagement.androidApp()`<!-- -->\](projectManagement.ProjectManagement\#androidApp).
@@ -141,4 +138,3 @@ setDisplayName(newDisplayName: string): Promise<void>;
 
 Promise&lt;void&gt;
 
-{% endblock body %}

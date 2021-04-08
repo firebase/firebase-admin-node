@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}Version interface{% endblock title %}
-{% block body %}
 Interface representing a Remote Config template version. Output only, except for the version description. Contains metadata about a particular version of the Remote Config template. All fields are set at the time the specified Remote Config template is published. A version's description field may be specified in `publishTemplate` calls.
 
 <b>Signature:</b>
@@ -101,4 +98,3 @@ The version number of a Remote Config template.
 ```typescript
 versionNumber?: string;
 ```
-{% endblock body %}

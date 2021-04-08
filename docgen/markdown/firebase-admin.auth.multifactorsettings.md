@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}MultiFactorSettings class{% endblock title %}
-{% block body %}
 The multi-factor related user settings.
 
 <b>Signature:</b>
@@ -44,4 +41,3 @@ toJSON(): object;
 
 object
 
-{% endblock body %}

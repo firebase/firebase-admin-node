@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}UserImportOptions interface{% endblock title %}
-{% block body %}
 Interface representing the user import options needed for  method. This is used to provide the password hashing algorithm information.
 
 <b>Signature:</b>
@@ -33,4 +30,3 @@ hash: {
         derivedKeyLength?: number;
     };
 ```
-{% endblock body %}

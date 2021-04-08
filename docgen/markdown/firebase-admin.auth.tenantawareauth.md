@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}TenantAwareAuth class{% endblock title %}
-{% block body %}
 Tenant-aware `Auth` interface used for managing users, configuring SAML/OIDC providers, generating email links for password reset, email verification, etc for specific tenants.
 
 Multi-tenancy support requires Google Cloud's Identity Platform (GCIP). To learn more about GCIP, including pricing and features, see the \[GCIP documentation\](https://cloud.google.com/identity-platform)
@@ -109,4 +106,3 @@ verifySessionCookie(sessionCookie: string, checkRevoked?: boolean): Promise<Deco
 
 Promise&lt;[DecodedIdToken](./firebase-admin.auth.decodedidtoken.md#decodedidtoken_interface)<!-- -->&gt;
 
-{% endblock body %}

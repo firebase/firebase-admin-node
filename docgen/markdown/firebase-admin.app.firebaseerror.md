@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}FirebaseError interface{% endblock title %}
-{% block body %}
 `FirebaseError` is a subclass of the standard JavaScript `Error` object. In addition to a message string and stack trace, it contains a string code.
 
 <b>Signature:</b>
@@ -72,4 +69,3 @@ toJSON(): object;
 
 object
 
-{% endblock body %}

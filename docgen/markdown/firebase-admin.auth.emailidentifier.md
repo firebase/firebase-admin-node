@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}EmailIdentifier interface{% endblock title %}
-{% block body %}
 Used for looking up an account by email.
 
 See `auth.getUsers()`
@@ -24,4 +21,3 @@ export interface EmailIdentifier
 ```typescript
 email: string;
 ```
-{% endblock body %}

@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}ListModelsOptions interface{% endblock title %}
-{% block body %}
 Interface representing options for listing Models.
 
 <b>Signature:</b>
@@ -65,4 +62,3 @@ A token that specifies the result page to return.
 ```typescript
 pageToken?: string;
 ```
-{% endblock body %}

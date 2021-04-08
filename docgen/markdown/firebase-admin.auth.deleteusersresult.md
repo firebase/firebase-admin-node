@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}DeleteUsersResult interface{% endblock title %}
-{% block body %}
 Represents the result of the  API.
 
 <b>Signature:</b>
@@ -46,4 +43,3 @@ The number of users that were deleted successfully (possibly zero). Users that d
 ```typescript
 successCount: number;
 ```
-{% endblock body %}

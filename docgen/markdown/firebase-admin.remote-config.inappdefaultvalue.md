@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}InAppDefaultValue interface{% endblock title %}
-{% block body %}
 Interface representing an in-app-default value.
 
 <b>Signature:</b>
@@ -24,4 +21,3 @@ If `true`<!-- -->, the parameter is omitted from the parameter values returned t
 ```typescript
 useInAppDefault: boolean;
 ```
-{% endblock body %}

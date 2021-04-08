@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}TFLiteModel interface{% endblock title %}
-{% block body %}
 A TensorFlow Lite Model output object
 
 One of either the `gcsTfliteUri` or `automlModel` properties will be defined.
@@ -48,4 +45,3 @@ The size of the model.
 ```typescript
 readonly sizeBytes: number;
 ```
-{% endblock body %}

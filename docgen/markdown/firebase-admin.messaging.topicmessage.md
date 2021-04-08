@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}TopicMessage interface{% endblock title %}
-{% block body %}
 <b>Signature:</b>
 
 ```typescript
@@ -21,4 +18,3 @@ export interface TopicMessage extends BaseMessage
 ```typescript
 topic: string;
 ```
-{% endblock body %}

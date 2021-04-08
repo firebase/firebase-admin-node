@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}firebase-admin.auth package{% endblock title %}
-{% block body %}
 
 ## Classes
 
@@ -169,4 +166,3 @@ Identifies a user to be looked up.
 ```typescript
 export declare type UserIdentifier = UidIdentifier | EmailIdentifier | PhoneIdentifier | ProviderIdentifier;
 ```
-{% endblock body %}

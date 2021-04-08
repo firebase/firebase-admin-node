@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}CreateMultiFactorInfoRequest interface{% endblock title %}
-{% block body %}
 Interface representing base properties of a user enrolled second factor for a `CreateRequest`<!-- -->.
 
 <b>Signature:</b>
@@ -35,4 +32,3 @@ The type identifier of the second factor. For SMS second factors, this is `phone
 ```typescript
 factorId: string;
 ```
-{% endblock body %}

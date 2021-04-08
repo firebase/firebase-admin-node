@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}MessagingDeviceGroupResponse interface{% endblock title %}
-{% block body %}
 Interface representing the server response from the  method.
 
 See \[Send messages to device groups\](/docs/cloud-messaging/send-message?authuser=0\#send\_messages\_to\_device\_groups) for code samples and detailed documentation.
@@ -48,4 +45,3 @@ The number of messages that could not be processed and resulted in an error.
 ```typescript
 successCount: number;
 ```
-{% endblock body %}

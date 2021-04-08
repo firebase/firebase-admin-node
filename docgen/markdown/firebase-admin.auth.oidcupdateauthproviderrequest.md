@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}OIDCUpdateAuthProviderRequest interface{% endblock title %}
-{% block body %}
 The request interface for updating an OIDC Auth provider. This is used when updating an OIDC provider's configuration via .
 
 <b>Signature:</b>
@@ -57,4 +54,3 @@ The OIDC provider's updated issuer. If not provided, the existing configuration'
 ```typescript
 issuer?: string;
 ```
-{% endblock body %}

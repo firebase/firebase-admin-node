@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}Ruleset class{% endblock title %}
-{% block body %}
 A set of Firebase security rules.
 
 <b>Signature:</b>
@@ -45,4 +42,3 @@ readonly name: string;
 ```typescript
 readonly source: RulesFile[];
 ```
-{% endblock body %}

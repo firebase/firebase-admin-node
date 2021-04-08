@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}Tenant class{% endblock title %}
-{% block body %}
 Represents a tenant configuration.
 
 Multi-tenancy support requires Google Cloud's Identity Platform (GCIP). To learn more about GCIP, including pricing and features, see the \[GCIP documentation\](https://cloud.google.com/identity-platform)
@@ -98,4 +95,3 @@ toJSON(): object;
 
 object
 
-{% endblock body %}

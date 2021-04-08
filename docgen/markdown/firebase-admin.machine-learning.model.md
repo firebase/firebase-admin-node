@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}Model class{% endblock title %}
-{% block body %}
 A Firebase ML Model output object.
 
 <b>Signature:</b>
@@ -177,4 +174,3 @@ waitForUnlocked(maxTimeMillis?: number): Promise<void>;
 
 Promise&lt;void&gt;
 
-{% endblock body %}

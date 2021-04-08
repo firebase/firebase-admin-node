@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}AuthProviderConfig interface{% endblock title %}
-{% block body %}
 The base Auth provider configuration interface.
 
 <b>Signature:</b>
@@ -46,4 +43,3 @@ The provider ID defined by the developer. For a SAML provider, this is always pr
 ```typescript
 providerId: string;
 ```
-{% endblock body %}

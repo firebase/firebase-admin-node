@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}firebase-admin.project-management package{% endblock title %}
-{% block body %}
 
 ## Classes
 
@@ -89,4 +86,3 @@ export declare enum AppPlatform
 |  IOS | <code>&quot;IOS&quot;</code> | The Firebase App is associated with iOS. |
 |  PLATFORM\_UNKNOWN | <code>&quot;PLATFORM_UNKNOWN&quot;</code> | Unknown state. This is only used for distinguishing unset values. |
 
-{% endblock body %}

@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}firebase-admin.messaging package{% endblock title %}
-{% block body %}
 
 ## Classes
 
@@ -106,4 +103,3 @@ Payload for the admin.messaging.send() operation. The payload contains all the f
 ```typescript
 export declare type Message = TokenMessage | TopicMessage | ConditionMessage;
 ```
-{% endblock body %}

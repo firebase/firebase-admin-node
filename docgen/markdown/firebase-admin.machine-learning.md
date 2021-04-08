@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}firebase-admin.machine-learning package{% endblock title %}
-{% block body %}
 
 ## Classes
 
@@ -79,4 +76,3 @@ const otherMachineLearning = getMachineLearning(otherApp);
 ```typescript
 export declare type ModelOptions = ModelOptionsBase | GcsTfliteModelOptions | AutoMLTfliteModelOptions;
 ```
-{% endblock body %}

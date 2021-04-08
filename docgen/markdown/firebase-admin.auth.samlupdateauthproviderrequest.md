@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}SAMLUpdateAuthProviderRequest interface{% endblock title %}
-{% block body %}
 The request interface for updating a SAML Auth provider. This is used when updating a SAML provider's configuration via .
 
 <b>Signature:</b>
@@ -90,4 +87,3 @@ The SAML provider's updated list of X.509 certificated. If not provided, the exi
 ```typescript
 x509Certificates?: string[];
 ```
-{% endblock body %}

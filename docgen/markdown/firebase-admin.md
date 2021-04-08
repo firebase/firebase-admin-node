@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}firebase-admin package{% endblock title %}
-{% block body %}
 
 ## Functions
 
@@ -481,4 +478,3 @@ apps: (app.App | null)[]
 ```typescript
 SDK_VERSION: string
 ```
-{% endblock body %}

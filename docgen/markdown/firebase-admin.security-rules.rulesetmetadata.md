@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}RulesetMetadata interface{% endblock title %}
-{% block body %}
 Required metadata associated with a ruleset.
 
 <b>Signature:</b>
@@ -35,4 +32,3 @@ Name of the `Ruleset` as a short string. This can be directly passed into APIs l
 ```typescript
 readonly name: string;
 ```
-{% endblock body %}

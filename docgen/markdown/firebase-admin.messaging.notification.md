@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}Notification interface{% endblock title %}
-{% block body %}
 A notification that can be included in .
 
 <b>Signature:</b>
@@ -46,4 +43,3 @@ The title of the notification.
 ```typescript
 title?: string;
 ```
-{% endblock body %}

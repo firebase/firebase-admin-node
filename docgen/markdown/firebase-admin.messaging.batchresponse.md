@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}BatchResponse interface{% endblock title %}
-{% block body %}
 Interface representing the server response from the  and  methods.
 
 <b>Signature:</b>
@@ -46,4 +43,3 @@ The number of messages that were successfully handed off for sending.
 ```typescript
 successCount: number;
 ```
-{% endblock body %}

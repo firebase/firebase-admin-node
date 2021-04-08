@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}Database interface{% endblock title %}
-{% block body %}
 <b>Signature:</b>
 
 ```typescript
@@ -66,4 +63,3 @@ setRules(source: string | Buffer | object): Promise<void>;
 
 Promise&lt;void&gt;
 
-{% endblock body %}

@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}GetUsersResult interface{% endblock title %}
-{% block body %}
 Represents the result of the  API.
 
 <b>Signature:</b>
@@ -35,4 +32,3 @@ Set of user records, corresponding to the set of users that were requested. Only
 ```typescript
 users: UserRecord[];
 ```
-{% endblock body %}

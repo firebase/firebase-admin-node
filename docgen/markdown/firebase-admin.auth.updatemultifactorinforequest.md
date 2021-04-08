@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}UpdateMultiFactorInfoRequest interface{% endblock title %}
-{% block body %}
 Interface representing common properties of a user enrolled second factor for an `UpdateRequest`<!-- -->.
 
 <b>Signature:</b>
@@ -57,4 +54,3 @@ The ID of the enrolled second factor. This ID is unique to the user. When not pr
 ```typescript
 uid?: string;
 ```
-{% endblock body %}

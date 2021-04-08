@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}MultiFactorInfo class{% endblock title %}
-{% block body %}
 Interface representing the common properties of a user enrolled second factor.
 
 <b>Signature:</b>
@@ -77,4 +74,3 @@ toJSON(): object;
 
 object
 
-{% endblock body %}

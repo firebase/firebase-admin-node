@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}firebase-admin.app package{% endblock title %}
-{% block body %}
 
 ## Functions
 
@@ -244,4 +241,3 @@ initializeApp({
 ```typescript
 SDK_VERSION: string
 ```
-{% endblock body %}

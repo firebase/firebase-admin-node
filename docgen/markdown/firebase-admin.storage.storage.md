@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}Storage class{% endblock title %}
-{% block body %}
 The default `Storage` service if no app is provided or the `Storage` service associated with the provided app.
 
 <b>Signature:</b>
@@ -53,4 +50,3 @@ Bucket
 
 A \[Bucket\](https://cloud.google.com/nodejs/docs/reference/storage/latest/Bucket) instance as defined in the `@google-cloud/storage` package.
 
-{% endblock body %}

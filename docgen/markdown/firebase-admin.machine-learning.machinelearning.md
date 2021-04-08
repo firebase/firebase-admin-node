@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}MachineLearning class{% endblock title %}
-{% block body %}
 The Firebase `MachineLearning` service interface.
 
 <b>Signature:</b>
@@ -180,4 +177,3 @@ updateModel(modelId: string, model: ModelOptions): Promise<Model>;
 
 Promise&lt;[Model](./firebase-admin.machine-learning.model.md#model_class)<!-- -->&gt;
 
-{% endblock body %}

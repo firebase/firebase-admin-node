@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}UidIdentifier interface{% endblock title %}
-{% block body %}
 Used for looking up an account by uid.
 
 See `auth.getUsers()`
@@ -24,4 +21,3 @@ export interface UidIdentifier
 ```typescript
 uid: string;
 ```
-{% endblock body %}

@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}WebpushConfig interface{% endblock title %}
-{% block body %}
 Represents the WebPush protocol options that can be included in an .
 
 <b>Signature:</b>
@@ -63,4 +60,3 @@ A WebPush notification payload to be included in the message.
 ```typescript
 notification?: WebpushNotification;
 ```
-{% endblock body %}

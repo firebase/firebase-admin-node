@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}RemoteConfigParameter interface{% endblock title %}
-{% block body %}
 Interface representing a Remote Config parameter. At minimum, a `defaultValue` or a `conditionalValues` entry must be present for the parameter to have any effect.
 
 <b>Signature:</b>
@@ -48,4 +45,3 @@ A description for this parameter. Should not be over 100 characters and may cont
 ```typescript
 description?: string;
 ```
-{% endblock body %}

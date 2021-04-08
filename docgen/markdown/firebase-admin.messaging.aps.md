@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}Aps interface{% endblock title %}
-{% block body %}
 Represents the \[aps dictionary\](https://developer.apple.com/library/content/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/PayloadKeyReference.html) that is part of APNs messages.
 
 <b>Signature:</b>
@@ -90,4 +87,3 @@ An app-specific identifier for grouping notifications.
 ```typescript
 threadId?: string;
 ```
-{% endblock body %}

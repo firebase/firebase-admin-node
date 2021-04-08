@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}RemoteConfig class{% endblock title %}
-{% block body %}
 The Firebase `RemoteConfig` service interface.
 
 <b>Signature:</b>
@@ -175,4 +172,3 @@ Promise&lt;[RemoteConfigTemplate](./firebase-admin.remote-config.remoteconfigtem
 
 A promise that fulfills with the validated `RemoteConfigTemplate`<!-- -->.
 
-{% endblock body %}

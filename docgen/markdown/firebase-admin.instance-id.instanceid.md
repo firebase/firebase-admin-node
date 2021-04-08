@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}InstanceId class{% endblock title %}
-{% block body %}
 The `InstanceId` service enables deleting the Firebase instance IDs associated with Firebase client app instances.
 
 <b>Signature:</b>
@@ -55,4 +52,3 @@ deleteInstanceId(instanceId: string): Promise<void>;
 
 Promise&lt;void&gt;
 
-{% endblock body %}

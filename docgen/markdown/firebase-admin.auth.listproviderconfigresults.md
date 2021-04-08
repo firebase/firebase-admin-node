@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}ListProviderConfigResults interface{% endblock title %}
-{% block body %}
 The response interface for listing provider configs. This is only available when listing all identity providers' configurations via .
 
 <b>Signature:</b>
@@ -35,4 +32,3 @@ The list of providers for the specified type in the current page.
 ```typescript
 providerConfigs: AuthProviderConfig[];
 ```
-{% endblock body %}

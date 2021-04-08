@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}AndroidNotification interface{% endblock title %}
-{% block body %}
 Represents the Android-specific notification options that can be included in .
 
 <b>Signature:</b>
@@ -288,4 +285,3 @@ Sets the visibility of the notification. Must be either `private`<!-- -->, `publ
 ```typescript
 visibility?: ('private' | 'public' | 'secret');
 ```
-{% endblock body %}

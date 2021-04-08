@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}Messaging class{% endblock title %}
-{% block body %}
 Messaging service bound to the provided app.
 
 <b>Signature:</b>
@@ -289,4 +286,3 @@ unsubscribeFromTopic(registrationTokenOrTokens: string | string[], topic: string
 
 Promise&lt;[MessagingTopicManagementResponse](./firebase-admin.messaging.messagingtopicmanagementresponse.md#messagingtopicmanagementresponse_interface)<!-- -->&gt;
 
-{% endblock body %}

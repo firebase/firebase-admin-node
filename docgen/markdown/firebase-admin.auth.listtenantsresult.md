@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}ListTenantsResult interface{% endblock title %}
-{% block body %}
 Interface representing the object returned from a  operation. Contains the list of tenants for the current batch and the next page token if available.
 
 <b>Signature:</b>
@@ -35,4 +32,3 @@ The list of  objects for the downloaded batch.
 ```typescript
 tenants: Tenant[];
 ```
-{% endblock body %}

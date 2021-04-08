@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}Auth class{% endblock title %}
-{% block body %}
 Auth service bound to the provided app. An Auth instance can have multiple tenants.
 
 <b>Signature:</b>
@@ -47,4 +44,3 @@ tenantManager(): TenantManager;
 
 [TenantManager](./firebase-admin.auth.tenantmanager.md#tenantmanager_class)
 
-{% endblock body %}

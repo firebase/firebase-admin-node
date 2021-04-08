@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}BaseMessage interface{% endblock title %}
-{% block body %}
 <b>Signature:</b>
 
 ```typescript
@@ -67,4 +64,3 @@ notification?: Notification;
 ```typescript
 webpush?: WebpushConfig;
 ```
-{% endblock body %}

@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}UserRecord class{% endblock title %}
-{% block body %}
 Represents a user.
 
 <b>Signature:</b>
@@ -200,4 +197,3 @@ toJSON(): object;
 
 object
 
-{% endblock body %}

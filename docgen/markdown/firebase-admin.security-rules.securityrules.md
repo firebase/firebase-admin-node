@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}SecurityRules class{% endblock title %}
-{% block body %}
 The Firebase `SecurityRules` service interface.
 
 <b>Signature:</b>
@@ -270,4 +267,3 @@ releaseStorageRulesetFromSource(source: string | Buffer, bucket?: string): Promi
 
 Promise&lt;[Ruleset](./firebase-admin.security-rules.ruleset.md#ruleset_class)<!-- -->&gt;
 
-{% endblock body %}

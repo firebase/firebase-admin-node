@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}AndroidConfig interface{% endblock title %}
-{% block body %}
 Represents the Android-specific options that can be included in an .
 
 <b>Signature:</b>
@@ -92,4 +89,3 @@ Time-to-live duration of the message in milliseconds.
 ```typescript
 ttl?: number;
 ```
-{% endblock body %}

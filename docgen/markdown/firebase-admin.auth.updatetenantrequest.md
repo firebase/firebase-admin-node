@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}UpdateTenantRequest interface{% endblock title %}
-{% block body %}
 Interface representing the properties to update on the provided tenant.
 
 <b>Signature:</b>
@@ -59,4 +56,3 @@ testPhoneNumbers?: {
         [phoneNumber: string]: string;
     } | null;
 ```
-{% endblock body %}

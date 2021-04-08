@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}PhoneIdentifier interface{% endblock title %}
-{% block body %}
 Used for looking up an account by phone number.
 
 See `auth.getUsers()`
@@ -24,4 +21,3 @@ export interface PhoneIdentifier
 ```typescript
 phoneNumber: string;
 ```
-{% endblock body %}

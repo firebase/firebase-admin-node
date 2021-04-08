@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}BaseAuth class{% endblock title %}
-{% block body %}
 Common parent interface for both `Auth` and `TenantAwareAuth` APIs.
 
 <b>Signature:</b>
@@ -666,4 +663,3 @@ verifySessionCookie(sessionCookie: string, checkRevoked?: boolean): Promise<Deco
 
 Promise&lt;[DecodedIdToken](./firebase-admin.auth.decodedidtoken.md#decodedidtoken_interface)<!-- -->&gt;
 
-{% endblock body %}

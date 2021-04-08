@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}MulticastMessage interface{% endblock title %}
-{% block body %}
 Payload for the admin.messaing.sendMulticast() method. The payload contains all the fields in the BaseMessage type, and a list of tokens.
 
 <b>Signature:</b>
@@ -23,4 +20,3 @@ export interface MulticastMessage extends BaseMessage
 ```typescript
 tokens: string[];
 ```
-{% endblock body %}

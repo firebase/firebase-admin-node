@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}Credential interface{% endblock title %}
-{% block body %}
 Interface that provides Google OAuth2 access tokens used to authenticate with Firebase services.
 
 In most cases, you will not need to implement this yourself and can instead use the default implementations provided by .
@@ -34,4 +31,3 @@ getAccessToken(): Promise<GoogleOAuthAccessToken>;
 
 Promise&lt;[GoogleOAuthAccessToken](./firebase-admin.app.googleoauthaccesstoken.md#googleoauthaccesstoken_interface)<!-- -->&gt;
 
-{% endblock body %}

@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}App interface{% endblock title %}
-{% block body %}
 A Firebase app holds the initialization information for a collection of services.
 
 Do not call this constructor directly. Instead, use  to create an app.
@@ -70,4 +67,3 @@ console.log(app.options.databaseURL === config.databaseURL);  // true
 
 ```
 
-{% endblock body %}

@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}SendResponse interface{% endblock title %}
-{% block body %}
 Interface representing the status of an individual message that was sent as part of a batch request.
 
 <b>Signature:</b>
@@ -46,4 +43,3 @@ A boolean indicating if the message was successfully handed off to FCM or not. W
 ```typescript
 success: boolean;
 ```
-{% endblock body %}

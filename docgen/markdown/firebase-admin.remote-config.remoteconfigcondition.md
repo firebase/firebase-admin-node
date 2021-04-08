@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}RemoteConfigCondition interface{% endblock title %}
-{% block body %}
 Interface representing a Remote Config condition. A condition targets a specific group of users. A list of these conditions make up part of a Remote Config template.
 
 <b>Signature:</b>
@@ -46,4 +43,3 @@ The color associated with this condition for display purposes in the Firebase Co
 ```typescript
 tagColor?: TagColor;
 ```
-{% endblock body %}

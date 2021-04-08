@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}ListVersionsResult interface{% endblock title %}
-{% block body %}
 Interface representing a list of Remote Config template versions.
 
 <b>Signature:</b>
@@ -35,4 +32,3 @@ A list of version metadata objects, sorted in reverse chronological order.
 ```typescript
 versions: Version[];
 ```
-{% endblock body %}

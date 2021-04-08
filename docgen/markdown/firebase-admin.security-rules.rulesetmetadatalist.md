@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}RulesetMetadataList class{% endblock title %}
-{% block body %}
 A page of ruleset metadata.
 
 <b>Signature:</b>
@@ -35,4 +32,3 @@ A batch of ruleset metadata.
 ```typescript
 readonly rulesets: RulesetMetadata[];
 ```
-{% endblock body %}

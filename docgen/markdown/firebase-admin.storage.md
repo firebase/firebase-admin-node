@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}firebase-admin.storage package{% endblock title %}
-{% block body %}
 
 ## Classes
 
@@ -54,4 +51,3 @@ const otherStorage = getStorage(otherApp);
 
 ```
 
-{% endblock body %}

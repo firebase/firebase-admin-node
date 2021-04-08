@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}firebase-admin.database package{% endblock title %}
-{% block body %}
 
 ## Functions
 
@@ -122,4 +119,3 @@ enableLogging: typeof rtdb.enableLogging
 ```typescript
 ServerValue: rtdb.ServerValue
 ```
-{% endblock body %}

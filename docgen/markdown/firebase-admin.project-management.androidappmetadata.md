@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}AndroidAppMetadata interface{% endblock title %}
-{% block body %}
 Metadata about a Firebase Android App.
 
 <b>Signature:</b>
@@ -42,4 +39,3 @@ var packageName = androidAppMetadata.packageName;
 ```typescript
 platform: AppPlatform.ANDROID;
 ```
-{% endblock body %}

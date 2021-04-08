@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}UserMetadata class{% endblock title %}
-{% block body %}
 Represents a user's metadata.
 
 <b>Signature:</b>
@@ -66,4 +63,3 @@ toJSON(): object;
 
 object
 
-{% endblock body %}

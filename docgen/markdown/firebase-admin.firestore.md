@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}firebase-admin.firestore package{% endblock title %}
-{% block body %}
 
 ## Functions
 
@@ -26,4 +23,3 @@ export declare function getFirestore(app?: App): _firestore.Firestore;
 
 \_firestore.Firestore
 
-{% endblock body %}

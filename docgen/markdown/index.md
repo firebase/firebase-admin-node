@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}API Reference{% endblock title %}
-{% block body %}
 
 ## Packages
 
@@ -19,4 +16,3 @@
 |  [firebase-admin.security-rules](./firebase-admin.security-rules.md#firebase-adminsecurity-rules_package) |  |
 |  [firebase-admin.storage](./firebase-admin.storage.md#firebase-adminstorage_package) |  |
 
-{% endblock body %}

@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}ActionCodeSettings interface{% endblock title %}
-{% block body %}
 This is the interface that defines the required continue/state URL with optional Android and iOS bundle identifiers.
 
 <b>Signature:</b>
@@ -74,4 +71,3 @@ Defines the link continue/state URL, which has different meanings in different c
 ```typescript
 url: string;
 ```
-{% endblock body %}

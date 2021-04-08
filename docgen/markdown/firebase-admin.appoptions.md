@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}AppOptions interface{% endblock title %}
-{% block body %}
 Available options to pass to \[`initializeApp()`<!-- -->\](admin\#.initializeApp).
 
 <b>Signature:</b>
@@ -98,4 +95,3 @@ The name of the Google Cloud Storage bucket used for storing application data. U
 ```typescript
 storageBucket?: string;
 ```
-{% endblock body %}

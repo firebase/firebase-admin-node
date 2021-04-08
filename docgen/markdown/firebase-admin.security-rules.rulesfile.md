@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}RulesFile interface{% endblock title %}
-{% block body %}
 A source file containing some Firebase security rules. The content includes raw source code including text formatting, indentation and comments. Use the \[`securityRules.createRulesFileFromSource()`<!-- -->\](securityRules.SecurityRules\#createRulesFileFromSource) method to create new instances of this type.
 
 <b>Signature:</b>
@@ -31,4 +28,3 @@ readonly content: string;
 ```typescript
 readonly name: string;
 ```
-{% endblock body %}

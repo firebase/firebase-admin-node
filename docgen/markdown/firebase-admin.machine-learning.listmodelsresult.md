@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}ListModelsResult interface{% endblock title %}
-{% block body %}
 Response object for a listModels operation.
 
 <b>Signature:</b>
@@ -35,4 +32,3 @@ A token you can use to retrieve the next page of results. If null, the current p
 ```typescript
 readonly pageToken?: string;
 ```
-{% endblock body %}

@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}UserInfo class{% endblock title %}
-{% block body %}
 Represents a user's info from a third-party identity provider such as Google or Facebook.
 
 <b>Signature:</b>
@@ -99,4 +96,3 @@ toJSON(): object;
 
 object
 
-{% endblock body %}

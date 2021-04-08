@@ -1,6 +1,3 @@
-{% extends "_internal/templates/reference.html" %}
-{% block title %}SessionCookieOptions interface{% endblock title %}
-{% block body %}
 Interface representing the session cookie options needed for the  method.
 
 <b>Signature:</b>
@@ -24,4 +21,3 @@ The session cookie custom expiration in milliseconds. The minimum allowed is 5 m
 ```typescript
 expiresIn: number;
 ```
-{% endblock body %}
