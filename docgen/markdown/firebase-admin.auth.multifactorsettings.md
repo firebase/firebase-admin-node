@@ -38,10 +38,10 @@ enrolledFactors: MultiFactorInfo[];
 <b>Signature:</b>
 
 ```typescript
-toJSON(): any;
+toJSON(): object;
 ```
 <b>Returns:</b>
 
-any
+object
 
 {% endblock body %}

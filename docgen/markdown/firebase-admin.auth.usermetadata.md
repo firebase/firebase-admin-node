@@ -40,7 +40,7 @@ The time at which the user was last active (ID token refreshed), formatted as a 
 <b>Signature:</b>
 
 ```typescript
-readonly lastRefreshTime: string | null;
+readonly lastRefreshTime?: string | null;
 ```
 
 ## UserMetadata.lastSignInTime
