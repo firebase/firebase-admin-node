@@ -123,6 +123,8 @@ describe('Storage', () => {
     });
 
     it('sets STORAGE_EMULATOR_HOST if FIREBASE_STORAGE_EMULATOR_HOST is set', () => {
+      new Storage(mockApp);
+      
       expect(process.env.STORAGE_EMULATOR_HOST).to.equal(EMULATOR_HOST);
     });
   
