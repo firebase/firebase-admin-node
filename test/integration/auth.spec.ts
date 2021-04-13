@@ -441,12 +441,8 @@ describe('admin.auth', () => {
       .then((listUsersResult) => {
         // Confirm expected number of users.
         expect(listUsersResult.users.length).to.equal(2);
-        // TODO(yuchenshi): Investigate on why this is flaky in emulator.
-        if (!authEmulatorHost) {
-          // Confirm next page token present.
-          expect(typeof listUsersResult.pageToken).to.equal('string');
-        }
-
+        // Confirm next page token present.
+        expect(typeof listUsersResult.pageToken).to.equal('string');
         // Confirm each user's uid and the hashed passwords.
         expect(listUsersResult.users[0].uid).to.equal(uids[1]);
 
