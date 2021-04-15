@@ -958,8 +958,7 @@ describe('OIDCConfig', () => {
 
     it('should not throw when only idToken responseType is set to true', () => {
       const validRequest = deepCopy(clientRequest) as any;
-      const validResponseType = { idToken: true };
-      validRequest.responseType = validResponseType;
+      validRequest.responseType = { idToken: true };
       expect(() => OIDCConfig.validate(validRequest, true)).not.to.throw();
     });
 
