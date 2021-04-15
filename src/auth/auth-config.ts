@@ -655,7 +655,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
   public readonly providerId: string;
   public readonly issuer: string;
   public readonly clientId: string;
-  public readonly clientSecret: string;
+  public readonly clientSecret?: string;
   public readonly responseType: OAuthResponseType;
 
   /**
@@ -799,9 +799,11 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
         '"OIDCAuthProviderConfig.clientSecret" must be a valid string.',
       );
     }
-    if (typeof options.responseType !== 'undefined') {
-      let idTokenType = false;
-      let codeType = false;
+    if (validator.isNonNullObject(options.responseType) && typeof options.responseType !== 'undefined') {
+      let idTokenType;
+      let codeType;
+      let setIdTokenType = false;
+      let setCodeType = false;
       for (const responseTypeKey in options.responseType) {
         if (!(responseTypeKey in validResponseTypes)) {
           throw new FirebaseAuthError(
@@ -809,36 +811,39 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
             `"${responseTypeKey}" is not a valid OAuthResponseType parameter.`,
           );
         } else {
-          if (responseTypeKey == 'idToken') {
+          if (responseTypeKey === 'idToken') {
             if (!validator.isBoolean(options.responseType.idToken)) {
               throw new FirebaseAuthError(
                 AuthClientErrorCode.INVALID_ARGUMENT,
-                `"OIDCAuthProviderConfig.responseType.${responseTypeKey}" must be a boolean.`,
+                '"OIDCAuthProviderConfig.responseType.idToken" must be a boolean.',
               );
             }
-            if (options.responseType && options.responseType.idToken) {
+            if (typeof options.responseType.idToken !== 'undefined') {
               idTokenType = options.responseType.idToken;
+              setIdTokenType = true;
             }
-          } else if (responseTypeKey == 'code') {
+          } else if (responseTypeKey === 'code') {
             if (!validator.isBoolean(options.responseType.code)) {
               throw new FirebaseAuthError(
                 AuthClientErrorCode.INVALID_ARGUMENT,
-                `"OIDCAuthProviderConfig.responseType.${responseTypeKey}" must be a boolean.`,
+                '"OIDCAuthProviderConfig.responseType.code" must be a boolean.',
               );
             }
-            if (options.responseType && options.responseType.code) {
+            if (typeof options.responseType.code !== 'undefined') {
               codeType = options.responseType.code;
+              setCodeType = true;
             }
           }
         }
       }
 
-      // Exact one of OAuth response type needs to be set to true.
-      if ((idTokenType && codeType) ||
-          (!idTokenType && !codeType)) {
+      // Only one of OAuth response types can be set to true.
+      if ((setIdTokenType && setCodeType) &&
+          ((idTokenType && codeType) ||
+          (!idTokenType && !codeType))) {
         throw new FirebaseAuthError(
           AuthClientErrorCode.INVALID_OAUTH_RESPONSETYPE,
-          'Only exact one of the OAuth response types has to be set to true.',
+          'Only exactly one OAuth responseType should be set to true.',
         );
       }
       // If code flow is enabled, client secret must be provided.
@@ -891,10 +896,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
     if (typeof response.responseType !== 'undefined') {
       this.responseType = response.responseType;
     } else {
-      const responseType = {
-        idToken: true,
-      }
-      this.responseType = responseType;
+      this.responseType = { idToken: true };
     }
   }
 
