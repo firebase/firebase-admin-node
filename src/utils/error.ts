@@ -523,7 +523,7 @@ export class AuthClientErrorCode {
   };
   public static INVALID_OAUTH_RESPONSETYPE = {
     code: 'invalid-oauth-responsetype',
-    message: 'The oauth response type object must set exact one response type to true',
+    message: 'Only exactly one OAuth responseType should be set to true.',
   };
   public static INVALID_SESSION_COOKIE_DURATION = {
     code: 'invalid-session-cookie-duration',

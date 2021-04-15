@@ -795,12 +795,13 @@ describe('OIDCConfig', () => {
     });
 
     it('should set readonly property default responseType', () => {
-      delete serverResponse.clientSecret;
-      delete serverResponse.responseType;
+      const testResponse = deepCopy(serverResponse);
+      delete testResponse.clientSecret;
+      delete testResponse.responseType;
       const expectedResponseType = {
         idToken: true,
       };
-      const testConfig = new OIDCConfig(serverResponse);
+      const testConfig = new OIDCConfig(testResponse);
       expect(testConfig.responseType).to.deep.equal(expectedResponseType);
     });
 
@@ -943,15 +944,29 @@ describe('OIDCConfig', () => {
 
     it('should throw on OAuth responseType contains invalid parameters', () => {
       const invalidRequest = deepCopy(clientRequest) as any;
-      invalidRequest.responseType.token = true;
+      invalidRequest.responseType.unknownField = true;
       expect(() => OIDCConfig.validate(invalidRequest, true))
-        .to.throw('"token" is not a valid OAuthResponseType parameter.');
+        .to.throw('"unknownField" is not a valid OAuthResponseType parameter.');
     });
 
-    it('should not throw when exact one OAuth responseType is true', () => {
+    it('should not throw when exactly one OAuth responseType is true', () => {
       const validRequest = deepCopy(clientRequest) as any;
       validRequest.responseType.code = false;
       validRequest.responseType.idToken = true;
+      expect(() => OIDCConfig.validate(validRequest, true)).not.to.throw();
+    });
+
+    it('should not throw when only idToken responseType is set to true', () => {
+      const validRequest = deepCopy(clientRequest) as any;
+      const validResponseType = { idToken: true };
+      validRequest.responseType = validResponseType;
+      expect(() => OIDCConfig.validate(validRequest, true)).not.to.throw();
+    });
+
+    it('should not throw when only code responseType is set to true', () => {
+      const validRequest = deepCopy(clientRequest) as any;
+      const validResponseType = { code: true };
+      validRequest.responseType = validResponseType;
       expect(() => OIDCConfig.validate(validRequest, true)).not.to.throw();
     });
 
@@ -960,7 +975,7 @@ describe('OIDCConfig', () => {
       invalidRequest.responseType.idToken = true;
       invalidRequest.responseType.code = true;
       expect(() => OIDCConfig.validate(invalidRequest, true))
-        .to.throw('Only exact one of the OAuth response types has to be set to true.');
+        .to.throw('Only exactly one OAuth responseType should be set to true.');
     });
 
     it('should throw on no OAuth responseType set to true', () => {
@@ -968,7 +983,13 @@ describe('OIDCConfig', () => {
       invalidRequest.responseType.idToken = false;
       invalidRequest.responseType.code = false;
       expect(() => OIDCConfig.validate(invalidRequest, true))
-        .to.throw('Only exact one of the OAuth response types has to be set to true.');
+        .to.throw('Only exactly one OAuth responseType should be set to true.');
+    });
+
+    it('should not throw when responseType is empty', () => {
+      const testRequest = deepCopy(clientRequest) as any;
+      testRequest.responseType = {};
+      expect(() => OIDCConfig.validate(testRequest, true)).not.to.throw();
     });
 
     it('should throw on no client secret when OAuth responseType code flow set to true', () => {
