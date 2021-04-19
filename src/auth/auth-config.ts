@@ -884,12 +884,8 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
     if (typeof response.clientSecret !== 'undefined') {
       this.clientSecret = response.clientSecret;
     }
-    // If we do not set responseType, we have idToken flow
-    // set to true by default.
     if (typeof response.responseType !== 'undefined') {
       this.responseType = response.responseType;
-    } else {
-      this.responseType = { idToken: true };
     }
   }
 
