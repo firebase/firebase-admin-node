@@ -794,17 +794,6 @@ describe('OIDCConfig', () => {
       expect(config.responseType).to.deep.equal(expectedResponseType);
     });
 
-    it('should set readonly property default responseType', () => {
-      const testResponse = deepCopy(serverResponse);
-      delete testResponse.clientSecret;
-      delete testResponse.responseType;
-      const expectedResponseType = {
-        idToken: true,
-      };
-      const testConfig = new OIDCConfig(testResponse);
-      expect(testConfig.responseType).to.deep.equal(expectedResponseType);
-    });
-
     it('should throw on missing issuer', () => {
       const invalidResponse = deepCopy(serverResponse);
       delete invalidResponse.issuer;
