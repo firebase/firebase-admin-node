@@ -71,6 +71,7 @@ export {
   OIDCUpdateAuthProviderRequest,
   SAMLAuthProviderConfig,
   SAMLUpdateAuthProviderRequest,
+  UserProvider,
   UpdateAuthProviderRequest,
   UpdateMultiFactorInfoRequest,
   UpdatePhoneMultiFactorInfoRequest,

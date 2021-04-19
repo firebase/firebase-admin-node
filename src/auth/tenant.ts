@@ -40,6 +40,11 @@ export interface UpdateTenantRequest {
   emailSignInConfig?: EmailSignInProviderConfig;
 
   /**
+   * Whether the anonymous provider is enabled.
+   */
+  anonymousSignInEnabled?: boolean;
+
+  /**
    * The multi-factor auth configuration to update on the tenant.
    */
   multiFactorConfig?: MultiFactorConfig;
@@ -60,6 +65,7 @@ export type CreateTenantRequest = UpdateTenantRequest;
 /** The corresponding server side representation of a TenantOptions object. */
 export interface TenantOptionsServerRequest extends EmailSignInConfigServerRequest {
   displayName?: string;
+  enableAnonymousUser?: boolean;
   mfaConfig?: MultiFactorAuthServerConfig;
   testPhoneNumbers?: {[key: string]: string};
 }
@@ -70,6 +76,7 @@ export interface TenantServerResponse {
   displayName?: string;
   allowPasswordSignup?: boolean;
   enableEmailLinkSignin?: boolean;
+  enableAnonymousUser?: boolean;
   mfaConfig?: MultiFactorAuthServerConfig;
   testPhoneNumbers?: {[key: string]: string};
 }
@@ -106,6 +113,8 @@ export class Tenant {
    */
   public readonly displayName?: string;
 
+  public readonly anonymousSignInEnabled: boolean;
+
   /**
    * The map containing the test phone number / code pairs for the tenant.
    */
@@ -132,6 +141,9 @@ export class Tenant {
     }
     if (typeof tenantOptions.displayName !== 'undefined') {
       request.displayName = tenantOptions.displayName;
+    }
+    if (typeof tenantOptions.anonymousSignInEnabled !== 'undefined') {
+      request.enableAnonymousUser = tenantOptions.anonymousSignInEnabled;
     }
     if (typeof tenantOptions.multiFactorConfig !== 'undefined') {
       request.mfaConfig = MultiFactorAuthConfig.buildServerRequest(tenantOptions.multiFactorConfig);
@@ -170,6 +182,7 @@ export class Tenant {
     const validKeys = {
       displayName: true,
       emailSignInConfig: true,
+      anonymousSignInEnabled: true,
       multiFactorConfig: true,
       testPhoneNumbers: true,
     };
@@ -245,6 +258,7 @@ export class Tenant {
         allowPasswordSignup: false,
       });
     }
+    this.anonymousSignInEnabled = !!response.enableAnonymousUser;
     if (typeof response.mfaConfig !== 'undefined') {
       this.multiFactorConfig_ = new MultiFactorAuthConfig(response.mfaConfig);
     }
@@ -276,6 +290,7 @@ export class Tenant {
       displayName: this.displayName,
       emailSignInConfig: this.emailSignInConfig_?.toJSON(),
       multiFactorConfig: this.multiFactorConfig_?.toJSON(),
+      anonymousSignInEnabled: this.anonymousSignInEnabled,
       testPhoneNumbers: this.testPhoneNumbers,
     };
     if (typeof json.multiFactorConfig === 'undefined') {

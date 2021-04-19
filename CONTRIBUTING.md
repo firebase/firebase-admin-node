@@ -123,6 +123,8 @@ There are two test suites: unit and integration. The unit test suite is intended
 development, and the integration test suite is intended to be run before packaging up release
 candidates.
 
+#### Unit Tests
+
 To run the unit test suite:
 
 ```bash
@@ -135,7 +137,26 @@ If you wish to skip the linter, and only run the unit tests:
 $ npm run test:unit
 ```
 
-The integration tests run against an actual Firebase project. Create a new
+#### Integration Tests with Emulator Suite
+
+Some of the integration tests work with the Emulator Suite and you can run them
+without an actual Firebase project.
+
+First, make sure to [install Firebase CLI](https://firebase.google.com/docs/cli#install_the_firebase_cli).
+And then:
+
+```bash
+  firebase emulators:exec --project fake-project-id --only auth,database,firestore \
+    'npx mocha \"test/integration/{auth,database,firestore}.spec.ts\" --slow 5000 --timeout 20000 --require ts-node/register'
+```
+
+Currently, only the Auth, Database, and Firestore test suites work. Some test
+cases will be automatically skipped due to lack of emulator support. The section
+below covers how to run the full test suite against an actual Firebase project.
+
+#### Integration Tests with an actual Firebase project
+
+Other integration tests require an actual Firebase project. Create a new
 project in the [Firebase Console](https://console.firebase.google.com), if you
 do not already have one suitable for running the tests against. Then obtain the
 following credentials from the project:
@@ -146,7 +167,7 @@ following credentials from the project:
 2. *Web API key*: This is displayed in the "Settings > General" tab of the
    console. Copy it and save to a new text file at `test/resources/apikey.txt`.
 
-Then set up your Firebase/GCP project as follows:
+Then set up your Firebase/Google Cloud project as follows:
 
 1. Enable Firestore: Go to the Firebase Console, and select "Database" from
    the "Develop" menu. Click on the "Create database" button. You may choose
@@ -160,15 +181,15 @@ Then set up your Firebase/GCP project as follows:
    https://console.developers.google.com/apis/api/firebaseml.googleapis.com/overview)
    and make sure your project is selected. If the API is not already enabled, click Enable.
 4. Enable the IAM API: Go to the
-   [Google Cloud Platform Console](https://console.cloud.google.com) and make
-   sure your Firebase/GCP project is selected. Select "APIs & Services >
+   [Google Cloud Console](https://console.cloud.google.com) and make
+   sure your Firebase/Google Cloud project is selected. Select "APIs & Services >
    Dashboard" from the main menu, and click the "ENABLE APIS AND SERVICES"
    button. Search for and enable the "Identity and Access Management (IAM)
    API".
 5. Grant your service account the 'Firebase Authentication Admin' role. This is
    required to ensure that exported user records contain the password hashes of
    the user accounts:
-   1. Go to [Google Cloud Platform Console / IAM & admin](https://console.cloud.google.com/iam-admin).
+   1. Go to [Google Cloud Console / IAM & admin](https://console.cloud.google.com/iam-admin).
    2. Find your service account in the list, and click the 'pencil' icon to edit it's permissions.
    3. Click 'ADD ANOTHER ROLE' and choose 'Firebase Authentication Admin'.
    4. Click 'SAVE'.
