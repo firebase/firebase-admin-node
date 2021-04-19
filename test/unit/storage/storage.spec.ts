@@ -113,4 +113,24 @@ describe('Storage', () => {
       expect(storage.bucket('foo').name).to.equal('foo');
     });
   });
+
+  describe('Emulator mode', () => {
+    const EMULATOR_HOST = 'http://localhost:9199';
+
+    before(() => {
+      delete process.env.STORAGE_EMULATOR_HOST;
+      process.env.FIREBASE_STORAGE_EMULATOR_HOST = EMULATOR_HOST;
+    });
+
+    it('sets STORAGE_EMULATOR_HOST if FIREBASE_STORAGE_EMULATOR_HOST is set', () => {
+      new Storage(mockApp);
+      
+      expect(process.env.STORAGE_EMULATOR_HOST).to.equal(EMULATOR_HOST);
+    });
+  
+    after(() => {
+      delete process.env.STORAGE_EMULATOR_HOST;
+      delete process.env.FIREBASE_STORAGE_EMULATOR_HOST;
+    });
+  })
 });
