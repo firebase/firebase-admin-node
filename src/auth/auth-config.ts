@@ -810,13 +810,11 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
       });
       
       const idToken = options.responseType.idToken;
-      if (typeof idToken !== 'undefined') {
-        if (!validator.isBoolean(idToken)) {
-          throw new FirebaseAuthError(
-            AuthClientErrorCode.INVALID_ARGUMENT,
-            '"OIDCAuthProviderConfig.responseType.idToken" must be a boolean.',
-          );
-        }
+      if (typeof idToken !== 'undefined' && !validator.isBoolean(idToken)) { 
+        throw new FirebaseAuthError(
+          AuthClientErrorCode.INVALID_ARGUMENT,
+          '"OIDCAuthProviderConfig.responseType.idToken" must be a boolean.',
+        );
       }
       
       const code = options.responseType.code;
@@ -829,7 +827,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
         }
         
         // If code flow is enabled, client secret must be provided.
-        if (typeof options.clientSecret === 'undefined') {
+        if (code === true && typeof options.clientSecret === 'undefined') {
           throw new FirebaseAuthError(
             AuthClientErrorCode.MISSING_OAUTH_CLIENT_SECRET,
             'The OAuth configuration client secret is required to enable OIDC code flow.',
@@ -897,8 +895,8 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
       providerId: this.providerId,
       issuer: this.issuer,
       clientId: this.clientId,
-      clientSecret: this.clientSecret,
-      responseType: this.responseType,
+      clientSecret: deepCopy(this.clientSecret),
+      responseType: deepCopy(this.responseType),
     };
   }
 }

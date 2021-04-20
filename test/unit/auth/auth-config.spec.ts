@@ -788,10 +788,14 @@ describe('OIDCConfig', () => {
     });
 
     it('should set readonly property expected responseType', () => {
-      const expectedResponseType = {
-        code: true,
-      };
-      expect(config.responseType).to.deep.equal(expectedResponseType);
+      expect(config.responseType).to.deep.equal({ code: true });
+    });
+
+    it('should not throw on no responseType and clientSecret', () => {
+      const testResponse = deepCopy(serverResponse);
+      delete testResponse.clientSecret;
+      delete testResponse.responseType;
+      expect(() => new OIDCConfig(testResponse)).not.to.throw();
     });
 
     it('should throw on missing issuer', () => {
