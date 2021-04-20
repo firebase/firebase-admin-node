@@ -3503,12 +3503,20 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         enabled: true,
         clientId: 'CLIENT_ID',
         issuer: 'https://oidc.com/issuer',
+        clientSecret: 'CLIENT_SECRET',
+        responseType: {
+          code: true,
+        },
       };
       const expectedRequest = {
         displayName: 'OIDC_DISPLAY_NAME',
         enabled: true,
         clientId: 'CLIENT_ID',
         issuer: 'https://oidc.com/issuer',
+        clientSecret: 'CLIENT_SECRET',
+        responseType: {
+          code: true,
+        },
       };
       const expectedResult = utils.responseFrom(deepExtend({
         name: `projects/project1/oauthIdpConfigs/${providerId}`,
@@ -3594,12 +3602,20 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         enabled: true,
         clientId: 'CLIENT_ID',
         issuer: 'https://oidc.com/issuer',
+        clientSecret: 'CLIENT_SECRET',
+        responseType: {
+          code: true,
+        },
       };
       const expectedRequest = {
         displayName: 'OIDC_DISPLAY_NAME',
         enabled: true,
         clientId: 'CLIENT_ID',
         issuer: 'https://oidc.com/issuer',
+        clientSecret: 'CLIENT_SECRET',
+        responseType: {
+          code: true,
+        },
       };
       const expectedResult = utils.responseFrom(deepExtend({
         name: `projects/project_id/oauthIdpConfigs/${providerId}`,
@@ -3611,10 +3627,14 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
         enabled: false,
         clientId: 'NEW_CLIENT_ID',
         issuer: 'https://oidc.com/issuer2',
+        clientSecret: 'CLIENT_SECRET',
+        responseType: {
+          code: true,
+        },
       }));
 
       it('should be fulfilled given full parameters', () => {
-        const expectedPath = path + '?updateMask=enabled,displayName,issuer,clientId';
+        const expectedPath = path + '?updateMask=enabled,displayName,issuer,clientId,clientSecret,responseType.code';
         const stub = sinon.stub(HttpClient.prototype, 'send').resolves(expectedResult);
         stubs.push(stub);
 
@@ -3708,7 +3728,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
 
       it('should be rejected when the backend returns a response missing name', () => {
-        const expectedPath = path + '?updateMask=enabled,displayName,issuer,clientId';
+        const expectedPath = path + '?updateMask=enabled,displayName,issuer,clientId,clientSecret,responseType.code';
         const expectedError = new FirebaseAuthError(
           AuthClientErrorCode.INTERNAL_ERROR,
           'INTERNAL ASSERT FAILED: Unable to update OIDC configuration',
@@ -3728,7 +3748,7 @@ AUTH_REQUEST_HANDLER_TESTS.forEach((handler) => {
       });
 
       it('should be rejected when the backend returns an error', () => {
-        const expectedPath = path + '?updateMask=enabled,displayName,issuer,clientId';
+        const expectedPath = path + '?updateMask=enabled,displayName,issuer,clientId,clientSecret,responseType.code';
         const expectedServerError = utils.errorFrom({
           error: {
             message: 'INVALID_CONFIG',
