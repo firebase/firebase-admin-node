@@ -1756,7 +1756,6 @@ describe('admin.auth', () => {
   it('deleteUser() deletes the user with the given UID', () => {
     return Promise.all([
       getAuth().deleteUser(newUserUid),
-      getAuth().deleteUser(newMultiFactorUserUid),
       getAuth().deleteUser(uidFromCreateUserWithoutUid),
     ]).should.eventually.be.fulfilled;
   });
