@@ -186,11 +186,6 @@ const CLIENT_CERT_URL = 'https://www.googleapis.com/robot/v1/metadata/x509/secur
 // URL containing the public keys for Firebase session cookies. This will be updated to a different URL soon.
 const SESSION_COOKIE_CERT_URL = 'https://www.googleapis.com/identitytoolkit/v3/relyingparty/publicKeys';
 
-/**
- * User facing token information related to the Firebase ID token.
- *
- * @internal
- */
 const EMULATOR_VERIFIER = new EmulatorSignatureVerifier();
 
 /**
