@@ -116,18 +116,15 @@ export class DatabaseService {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private onTokenChange(_: string): void {
-    this.appInternal.INTERNAL.getToken()
-      .then((token) => {
-        const delayMillis = token.expirationTime - TOKEN_REFRESH_THRESHOLD_MILLIS - Date.now();
-        // If the new token is set to expire soon (unlikely), do nothing. Somebody will eventually
-        // notice and refresh the token, at which point this callback will fire again.
-        if (delayMillis > 0) {
-          this.scheduleTokenRefresh(delayMillis);
-        }
-      })
-      .catch((err) => {
-        console.error('Unexpected error while attempting to schedule a token refresh:', err);
-      });
+    const token = this.appInternal.INTERNAL.getCachedToken();
+    if (token) {
+      const delayMillis = token.expirationTime - TOKEN_REFRESH_THRESHOLD_MILLIS - Date.now();
+      // If the new token is set to expire soon (unlikely), do nothing. Somebody will eventually
+      // notice and refresh the token, at which point this callback will fire again.
+      if (delayMillis > 0) {
+        this.scheduleTokenRefresh(delayMillis);
+      }
+    }
   }
 
   private scheduleTokenRefresh(delayMillis: number): void {
