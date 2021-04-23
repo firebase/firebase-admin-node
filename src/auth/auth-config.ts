@@ -827,7 +827,7 @@ export class OIDCConfig implements OIDCAuthProviderConfig {
         }
         
         // If code flow is enabled, client secret must be provided.
-        if (code === true && typeof options.clientSecret === 'undefined') {
+        if (code && typeof options.clientSecret === 'undefined') {
           throw new FirebaseAuthError(
             AuthClientErrorCode.MISSING_OAUTH_CLIENT_SECRET,
             'The OAuth configuration client secret is required to enable OIDC code flow.',
